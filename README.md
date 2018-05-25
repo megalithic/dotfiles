@@ -59,7 +59,7 @@ The file hierarchy:
 - **topic/\<platform\>.sh**: Platform-specific installers to handle additional
   things that you may need to happen for that topic.
 
-### .localrc and sensitive data
+### Sensitive data
 
 Use `~/.localrc` as your location for sensitive information. Optionally, you
 can let `bin/dotup` handle the cloning of your private repo to
