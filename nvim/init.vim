@@ -39,8 +39,8 @@ call plug#begin( '~/.config/nvim/plugged')
 " # CSS
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
   Plug 'hail2u/vim-css3-syntax', { 'for': ['css', 'scss', 'sass'] } " css3-specific syntax
-  " Plug 'ap/vim-css-color', { 'for': ['css', 'scss', 'sass'] }
-  Plug 'chrisbra/Colorizer', { 'for': ['css', 'scss', 'sass'] }
+  Plug 'ap/vim-css-color', { 'for': ['css', 'scss', 'sass'] }
+  " Plug 'chrisbra/Colorizer', { 'for': ['css', 'scss', 'sass'] }
 
 " # HTML
   " Plug 'othree/html5.vim', { 'for': ['html', 'haml'] }
@@ -123,7 +123,8 @@ call plug#begin( '~/.config/nvim/plugged')
   endif
 
 " ## Random/Misc/Docs
-  Plug 'junegunn/goyo.vim', { 'for': ['tex','text','txt','markdown','ghmarkdown','md'] }
+  Plug 'junegunn/limelight.vim'
+  Plug 'junegunn/goyo.vim'
   Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto `=` under the visual selection
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
@@ -150,7 +151,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
   Plug 'benjifisher/matchit.zip'
   Plug 'tpope/vim-rhubarb'
-  Plug 'tpope/vim-surround'
+  Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive'
   Plug 'tpope/vim-eunuch'
@@ -191,22 +192,10 @@ let g:mapleader = ","                                                           
 
 set background=dark                                                             "Set background to dark
 silent! colorscheme nova
-" silent! colorscheme PaperColor
-" silent! colorscheme OceanicNext
-  " let g:oceanic_next_terminal_bold = 1
-  " let g:oceanic_next_terminal_italic = 1
-  " let g:PaperColor_Theme_Options = {
-  "   \   'theme': {
-  "   \     'default.dark': {
-  "   \       'allow_bold': 1,
-  "   \       'allow_italic': 1,
-  "   \       'transparent_background': 0
-  "   \     }
-  "   \   }
-  "   \ }
 
 set termguicolors
-set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
+set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
+" set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
 set guifont=FuraCode\ Nerd\ Font\ Retina:h16
 
 if has('termguicolors')
@@ -233,7 +222,7 @@ set cmdheight=2
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
 set gdefault                                                                    "Set global flag for search and replace
 set gcr=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
-"set cursorline                                                                  "Highlight current line
+set cursorline                                                                  "Highlight current line
 set smartcase                                                                   "Smart case search if there is uppercase
 set ignorecase                                                                  "case insensitive search
 set mouse=a                                                                     "Enable mouse usage
@@ -254,7 +243,11 @@ set conceallevel=2 concealcursor=i                                              
 set splitright                                                                  "Set up new vertical splits positions
 set splitbelow                                                                  "Set up new horizontal splits positions
 set path+=**                                                                    "Allow recursive search
-set inccommand=nosplit                                                          "Show substitute changes immidiately in separate split
+if (has('nvim'))
+  " show results of substition as they're happening
+  " but don't open a split
+  set inccommand=nosplit
+endif
 set fillchars+=vert:\│                                                          "Make vertical split separator full line
 set pumheight=30                                                                "Maximum number of entries in autocomplete popup
 set exrc                                                                        "Allow using local vimrc
@@ -355,10 +348,15 @@ set nofoldenable
 
 augroup vimrc
   autocmd!
-  " au QuickFixCmdPost [^l]* cwindow                                     "Open quickfix window after grepping
+
+  " automatically source vim configs
+  autocmd BufWritePost .vimrc,.vimrc.local,init.vim source %
+  autocmd BufWritePost .vimrc.local source %
+
+  " save all files on focus lost, ignoring warnings about untitled buffers
+  autocmd FocusLost * silent! wa
+
   au BufWritePre * call StripTrailingWhitespaces()                     "Auto-remove trailing spaces
-  "au InsertEnter * set nocul                                           "Remove cursorline highlight
-  "au InsertLeave * set cul                                             "Add cursorline highlight in normal mode
   au FocusGained,BufEnter * checktime                                  "Refresh file when vim gets focus
 
   " Handle window resizing
@@ -397,7 +395,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Markdown
-  au BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*} set nolazyredraw ft=ghmarkdown
+  au BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*} set nolazyredraw ft=markdown
   au FileType markdown,text,html setlocal spell complete+=kspell
   au FileType markdown set tw=80
 
@@ -409,6 +407,13 @@ augroup vimrc
   " ## SSH
   au BufNewFile,BufRead */ssh/config  setf sshconfig
   au BufNewFile,BufRead ssh_config,*/.dotfiles/private/ssh/config  setf sshconfig
+
+  " ----------------------------------------------------------------------------
+  " ## Misc filetypes
+  au FileType zsh set ts=2 sts=2 sw=2
+  au FileType sh set ts=2 sts=2 sw=2
+  au FileType bash set ts=2 sts=2 sw=2
+  au FileType tmux set ts=2 sts=2 sw=2
 
   " ----------------------------------------------------------------------------
   " ## Completions
@@ -811,10 +816,32 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
 
 " ## goyo
-  let g:goyo_width = 80
-  let g:goyo_height = '100%'
-  let g:goyo_margin_top = 3
-  let g:goyo_margin_bottom = 3
+  " let g:goyo_width = 80
+  " let g:goyo_height = '100%'
+  " let g:goyo_margin_top = 3
+  " let g:goyo_margin_bottom = 3
+  " Writing in vim {{{{
+      let g:limelight_conceal_ctermfg = 240
+      let g:goyo_entered = 0
+      function! s:goyo_enter()
+        silent !tmux set status off
+        let g:goyo_entered = 1
+        set noshowmode
+        set noshowcmd
+        set scrolloff=999
+        Limelight
+      endfunction
+
+      function! s:goyo_leave()
+        silent !tmux set status on
+        let g:goyo_entered = 0
+        set showmode
+        set showcmd
+        set scrolloff=5
+        Limelight!
+      endfunction
+      autocmd! User GoyoEnter nested call <SID>goyo_enter()
+      autocmd! User GoyoLeave nested call <SID>goyo_leave()
 
 " ## vim-qf
   " nmap qp <Plug>qf_qf_previous
@@ -1759,6 +1786,9 @@ nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
   " Some custom spell-checking colors
   "highlight SpellBad   term=underline cterm=underline ctermbg=NONE ctermfg=205
   highlight clear SpellBad
+
+  " highlight conflicts
+  match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
   highlight SpellBad   term=underline cterm=underline gui=underline ctermfg=red guifg=#ff2929 guibg=NONE
   highlight SpellCap   term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=33
