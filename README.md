@@ -56,7 +56,7 @@ The file hierarchy:
   your `$HOME`. This is so you can keep all of those versioned in your dotfiles
   but still keep those autoloaded files in your home directory. These get
   symlinked in when you run `bin/dotup`.
-- **topic/<platform>.sh**: Platform-specific installers to handle additional
+- **topic/\<platform\>.sh**: Platform-specific installers to handle additional
   things that you may need to happen for that topic.
 
 ### .localrc and sensitive data
