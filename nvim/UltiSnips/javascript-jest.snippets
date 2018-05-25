@@ -1,0 +1,44 @@
+global !p
+from snippet_helpers import *
+endglobal
+
+### -- Testing ---------------------------------------------------------------
+
+snippet des "describe('...', () => { ... });" b
+describe('${1}', () => {
+	${0:${VISUAL}}
+});
+endsnippet
+
+snippet cont "context() block" b
+context('${1}', () => {
+	${0:${VISUAL}}
+});
+endsnippet
+
+snippet bef "beforeEach() block" b
+beforeEach(() => {
+	${0:${VISUAL}}
+});
+endsnippet
+
+snippet aft "afterEach() block" b
+afterEach(() => {
+	${0:${VISUAL}}
+});
+endsnippet
+
+snippet it "it() block" b
+it('${1}', () => {
+	${0:${VISUAL}}
+});
+endsnippet
+
+snippet exp "expect() assertion" b
+expect(${1})${2}.to${3}(${0:${VISUAL}});
+endsnippet
+
+# Subject pattern
+snippet sub "subject" b
+const subject = () => ${1:shallow}(<${2:`!p snip.rv = path_to_component_name(path, pascal_case_basename)`} {...props} />);$0
+endsnippet

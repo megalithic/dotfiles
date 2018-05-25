@@ -1,0 +1,42 @@
+# RSpec
+
+snippet des "describe '...' do ... end" b
+describe '$1' do
+	${0:${VISUAL}}
+end
+endsnippet
+
+snippet con "context '...' do ... end" b
+context '$1' do
+	${0:${VISUAL}}
+end
+endsnippet
+
+snippet itt "it { ... }" b
+it { ${0:${VISUAL}} }
+endsnippet
+
+snippet its "its(:...) { ... }" b
+its(:$1) { ${0:${VISUAL}} }
+endsnippet
+
+snippet it "it '...' do ... end" b
+it '$1' do
+	${0:${VISUAL}}
+end
+endsnippet
+
+snippet let "let(:...) { ... }" b
+let(:$1) { ${0:${VISUAL}} }
+endsnippet
+
+snippet bef "before do ... end" b
+before do
+	${0:${VISUAL}}
+end
+endsnippet
+
+snippet exp "expect" b
+expect($1).to $0
+endsnippet
+

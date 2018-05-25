@@ -1,0 +1,26 @@
+global !p
+from snippet_helpers import *
+endglobal
+
+### -- General ---------------------------------------------------------------
+
+snippet log "console.log (basic)" b
+console.log('$1', ${1})$0
+endsnippet
+
+snippet warn "console.warn (basic)" b
+console.warn('$1', ${1})$0
+endsnippet
+
+snippet info "console.info (basic)" b
+console.info('$1', ${1})$0
+endsnippet
+
+snippet error "console.error (basic)" b
+console.error('$1', ${1})$0
+endsnippet
+
+
+### -- Testing ---------------------------------------------------------------
+
+extends javascript-jest
