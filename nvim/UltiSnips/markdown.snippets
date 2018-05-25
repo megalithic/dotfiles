@@ -1,5 +1,9 @@
 priority 100
 
+snippet a "Simple Link"
+[${1:text}](${2:http://})
+endsnippet
+
 snippet link "Link to something"
 [${1:${VISUAL:Text}}](${3:http://${2:www.url.com}})$0
 endsnippet
@@ -10,4 +14,9 @@ endsnippet
 
 snippet - "Todo"
 - [${2: }] ${1:New Todo}$0
+endsnippet
+
+snippet code "Insert code fence" b
+\`\`\`${1}
+\`\`\`
 endsnippet

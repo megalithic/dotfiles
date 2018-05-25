@@ -29,7 +29,7 @@ call plug#begin( '~/.config/nvim/plugged')
 
 " # TS
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
-  " Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
+  Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'ianks/vim-tsx', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 
 " # Fn
@@ -146,7 +146,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'tpope/vim-endwise'
   Plug 'Raimondi/delimitMate'
   Plug 'gregsexton/MatchTag', { 'for': ['html', 'javascript.jsx', 'javascript', 'typescript', 'typescriptreact', 'typescript.tsx'] }
-  Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'javascript', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
+  " Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'javascript', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
   Plug 'jiangmiao/auto-pairs'
   Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
   Plug 'benjifisher/matchit.zip'
@@ -1688,6 +1688,9 @@ noremap  <Leader>: :<Up>
 " remap q for recording to Q
 nnoremap Q q
 nnoremap q <Nop>
+
+" switch between current and last buffer
+nmap <leader>. <c-^>
 
 " allow deleting selection without updating the clipboard (yank buffer)
 vnoremap x "_x
