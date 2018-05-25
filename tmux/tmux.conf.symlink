@@ -11,7 +11,7 @@ set -g prefix C-a
 bind C-a send-prefix
 bind-key C-a send-prefix
 
-bind C-d detach			# the same as d so you don't have to depress Ctrl
+bind C-d detach			# prefix, d
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
 bind-key r refresh-client
 
@@ -19,24 +19,17 @@ bind-key r refresh-client
 bind -r C-b copy-mode -u
 
 # Splitting panes
-bind '|' select-pane -P bg=black \; split-window -h -c "#{pane_current_path}" \; select-pane -P bg=default
-bind '\' select-pane -P bg=black \; split-window -h -c "#{pane_current_path}" \; select-pane -P bg=default
-bind '_' select-pane -P bg=black \; split-window -v -c "#{pane_current_path}" \; select-pane -P bg=default
-bind '-' select-pane -P bg=black \; split-window -v -c "#{pane_current_path}" \; select-pane -P bg=default
+bind '|'  split-window -h -c "#{pane_current_path}" \;
+bind '\'  split-window -h -c "#{pane_current_path}" \;
+bind '_'  split-window -v -c "#{pane_current_path}" \;
+bind '-'  split-window -v -c "#{pane_current_path}" \;
 bind -r C-t new-window -c "#{pane_current_path}"
 
 bind -r C-x kill-pane
 bind -r C-q kill-pane
 bind p previous-window
-
 bind -r C-] previous-window
 bind -r C-[ previous-window
-
-# bind -r C-[ prev
-# bind -r C-] next
-
-# bind -r C-[ swap-window -t -1
-# bind -r C-] swap-window -t +1
 
 # Resizing panes
 bind-key -n C-Up resize-pane -U 15
@@ -52,69 +45,50 @@ bind -r up resize-pane -U 8
 
 # Smart pane switching with awareness of vim splits (from https://github.com/christoomey/vim-tmux-navigator)
 is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(weechat|emacs|view|n?vim?x?)(diff)?$"'
-bind -n C-h if-shell "$is_vim" "send-keys C-h" "select-pane -P bg=black \; select-pane -L \; select-pane -P bg=default"
-bind -n C-j if-shell "$is_vim" "send-keys C-j" "select-pane -P bg=black \; select-pane -D \; select-pane -P bg=default"
-bind -n C-k if-shell "$is_vim" "send-keys C-k" "select-pane -P bg=black \; select-pane -U \; select-pane -P bg=default"
-bind -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -P bg=black \; select-pane -R \; select-pane -P bg=default"
+bind -n C-h if-shell "$is_vim" "send-keys C-h" "select-pane -L \;"
+bind -n C-j if-shell "$is_vim" "send-keys C-j" "select-pane -D \;"
+bind -n C-k if-shell "$is_vim" "send-keys C-k" "select-pane -U \;"
+bind -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R \;"
 
 bind-key -T copy-mode-vi C-h select-pane -L
 bind-key -T copy-mode-vi C-j select-pane -D
 bind-key -T copy-mode-vi C-k select-pane -U
 bind-key -T copy-mode-vi C-l select-pane -R
 
-# tmux 2.4 incremental search
-# bind-key -T copy-mode-vi / command-prompt -i -p "search down" "send -X search-forward-incremental \"%%%\""
-# bind-key -T copy-mode-vi ? command-prompt -i -p "search up" "send -X search-backward-incremental \"%%%\""
-
-# bind-key -T copy-mode-vi 'v' send -X begin-selection
-# bind-key -T copy-mode-vi 'y' send -X copy-selection
 
 # GENERAL SETTINGS
 # ===========================================================================
 # set -sg	update-environment TERM_PROFILE
 set -g history-limit 25000
 set -g set-titles on
-
 set -g default-shell "$SHELL"
-
 # fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
 # https://github.com/nathanaelkane/dotfiles/commit/9607d826b9d408595de2e3fe7de0abec1e94fa87
 set -g default-terminal "tmux-256color"
 set -ga terminal-overrides ',xterm-256color:Tc'
 set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
 set -as terminal-overrides ',xterm*:sitm=\E[3m'
+set -g base-index 1                                                 # Start window numbers from 1
+set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
+set -g mouse on                                                     # mices!
+set -g focus-events on                                              # enable focus events for wincent/terminus
+setw -g monitor-activity on
+setw -g visual-activity off
+setw -g xterm-keys on
+setw -g automatic-rename on
+setw -g aggressive-resize on
+set -g display-time 1000                                            # Display alert messages for 1.0 seconds
+set -g assume-paste-time 0                                          # Disable assume-paste-time, so that iTerm2's "Send Hex Codes" feature works with tmux 2.1. (https://github.com/edruder/maximum-awesome/commit/9e3d07f450ac60ec142c82e8b2ffb2777bf99fb4)
+set -g repeat-time 0                                                # Allow the arrow key to be used immediately after changing windows
+set -g escape-time 2                                                # nvim trickery
+set -w -g wrap-search off                                           # Don't wrap searches; it's super confusing given tmux's reverse-ordering of position info in copy mode.
 
-# Start window numbers from 1
-set -g base-index 1
-# Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
-set -g default-command "reattach-to-user-namespace -l $SHELL"
-# set -g default-command "which reattach-to-user-namespace > /dev/null && reattach-to-user-namespace -l $SHELL || $SHELL"
-
-# mices!
-set -g mouse on
-
-# enable focus events for wincent/terminus
-set -g focus-events on
-
-# Disable assume-paste-time, so that iTerm2's "Send Hex Codes" feature works with tmux 2.1.
-# https://github.com/edruder/maximum-awesome/commit/9e3d07f450ac60ec142c82e8b2ffb2777bf99fb4
-set -g assume-paste-time 0
-
-# Allow the arrow key to be used immediately after changing windows
-set -g repeat-time 0
-
-# nvim trickery
-set -g escape-time 2
-
-# Don't wrap searches; it's super confusing given tmux's reverse-ordering of
-# position info in copy mode.
-set -w -g wrap-search off
 
 # VI MODE
 # ===========================================================================
 bind Escape copy-mode
-# Use vim keybindings
-setw -g mode-keys vi
+setw -g mode-keys vi                                                # Use vim keybindings
+
 
 # STATUS BAR
 # ===========================================================================
@@ -122,109 +96,32 @@ setw -g mode-keys vi
 # ---------------------------------------------------------
 set -g status on
 set -g status-interval 1
-set -g status-justify "centre" #don't change this spelling
+set -g status-justify "centre"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
 
-setw -g monitor-activity on
-setw -g visual-activity off
-setw -g xterm-keys on
-setw -g automatic-rename on
-setw -g aggressive-resize on
-
-# Display alert messages for 1.0 seconds
-set -g display-time 1000
-
 # Colors
 # ---------------------------------------------------------
-
-# NEW ACTIVE/INACTIVE PANE/WINDOW color stuff
-# http://stackoverflow.com/questions/25532773/change-background-color-of-active-or-inactive-pane-in-tmux/33553372#33553372
-# set inactive/active window styles
-
-# To list tmux colours (http://superuser.com/a/285400):
-# for i in {0..255}; do
-#  printf "\x1b[38;5;${i}mcolour${i}\x1b[0m\n"
-# done
-
-# FIXME: this is NOT working so well, specifically for loading vim within an
-# ---
-# Active window/pane. the background is way darker outside of vim:
-# set -g window-style 'fg=default,bg=colour232' ##1A1D23 (http://colllor.com/2b303b)
-# set -g window-style 'bg=black'
-# set -g window-active-style 'bg=default'
-# set -g window-active-style 'fg=default,bg=default'
-
-# colors for the pane # overlay when hitting <C-a q>
-set -g display-panes-active-colour colour33
-set -g display-panes-colour colour166
-
-# highlight current/active pane borders
-set -g pane-border-fg colour232
-# set -g pane-border-bg colour236
-set -g pane-active-border-fg colour208
-set -g pane-active-border-bg colour232
-
-set -g status-bg colour235
-set -g status-fg yellow
-set -g status-attr dim
-
-setw -g window-status-bg colour234
-setw -g window-status-fg colour239
-setw -g window-status-attr dim
-setw -g window-status-activity-attr bold
-
-setw -g window-status-current-bg colour236
-setw -g window-status-current-attr bright
-
-# colorize messages in the tmux command line
-# set-option -g message-fg colour166
-set -g message-bg black #base02
-set -g message-fg brightred #orange
-set -g message-attr bold
-
-setw -g clock-mode-colour colour64
-
-# statusbar format
-setw -g window-status-format ' ◦ #W '
-setw -g window-status-current-format "#[fg=blue] ● #W #[fg=colour28]"
+# -- active pane decorations (places a green line in the panes' gutter, alters fg colors)
+set -g pane-border-style 'bg=#3C4C55,fg=#1E272C'
+set -g pane-active-border-style 'bg=#3C4C55,fg=red'
+set -g window-style 'fg=black,bg=#3C4C55'
+set -g window-active-style 'fg=white,bg=#3C4C55'
 
 # Bar Layout
 # ---------------------------------------------------------
+# -- statusbar windows
+setw -g window-status-format ' ◦ #W '
+setw -g window-status-current-format "#[fg=blue] ● #W #[fg=colour28]"
+
+# -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left-length 60
 set -g status-left "#[fg=green]#S ⧉ #(~/.dotfiles/bin/ip-tmux) #{prefix_highlight}"
-# set -g status-left "#[fg=green]#S ⧉ #(~/.dotfiles/bin/ip-tmux) #{prefix_highlight}"
+
+# -- statusbar right
 set -g status-right-length 120
 set -g status-right "#(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
-# set -g status-right "#(~/.dotfiles/bin/tmux-spotify) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
-
-
-# Nova colorscheme stuffs
-# ---------------------------------------------------------------------------
-set -g pane-border-style 'bg=black,fg=#1E272C'
-set -g pane-active-border-style 'bg=black,fg=#1E272C'
-set -g status-style 'bg=#1E272C,fg=#6A7D89'
-set-window-option -g window-status-current-bg '#1E272C'
-set-window-option -g window-status-current-fg cyan
-set -wg mode-style 'bg=cyan,fg=black'
-set -g message-style 'bg=black,fg=cyan'
-set -g clock-mode-colour cyan
-
-# set -ga terminal-overrides ",xterm-256color:Tc"
-# set -g default-terminal "xterm-256color"
-set -g status-style 'bg=#1E272C,fg=#6A7D89'
-set -g window-status-current-style 'fg=cyan'
-set -g mode-style 'bg=cyan,fg=black'
-set -g message-style 'bg=black,fg=cyan'
-set -g pane-border-style 'bg=black,fg=#1E272C'
-set -g pane-active-border-style 'bg=black,fg=#1E272C'
-
-# set color of active pane
-set -g pane-border-fg colour235
-set -g pane-border-bg black
-set -g pane-active-border-fg green
-set -g pane-active-border-bg black
 
 
 # TMUX PLUGIN MANAGER
