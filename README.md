@@ -55,7 +55,7 @@ The file hierarchy:
 - **topic/\*.symlink**: Any files ending in `*.symlink` get symlinked into
   your `$HOME`. This is so you can keep all of those versioned in your dotfiles
   but still keep those autoloaded files in your home directory. These get
-  symlinked in when you run `bin/dotup`.
+  symlinked in when you run `bin/dotup`, or you can explicitly run `bin/symlinks`.
 - **topic/\<platform\>.sh**: Platform-specific installers to handle additional
   things that you may need to happen for that topic.
 
