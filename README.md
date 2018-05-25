@@ -6,7 +6,6 @@
  ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
  @megalithic
 
-
 ```
 
 
@@ -38,16 +37,16 @@ A few of the tools I roll with:
 
 - [ `brew` ](https://brew.sh/)
 - [ Hammerspoon ](http://www.hammerspoon.org/)
-- [ `tmux` ](https://github.com/tmux/tmux/wiki) -- Several shell scripts for
-getting the info I want on my tmux statusbar (see `tmux-*` files in
+- [ `tmux` ](https://github.com/tmux/tmux/wiki)
+  * additional tmux statusbar binaries available (see `tmux-*` files in
 ~/.dotfiles/bin).
 - [FuraCode Nerd Font](https://nerdfonts.com/)
 - [ `kitty` ](https://github.com/kovidgoyal/kitty)
-  * colors: [Nova](https://github.com/trevordmiller/nova-colors)
+  * [Nova](https://github.com/trevordmiller/nova-colors)
 - [ `nvim` ](https://neovim.io/)
 - [ `zsh` ](https://www.zsh.org/)
-  * manager: [prezto](https://github.com/sorin-ionescu/prezto)
-  * prompt: customized version of [pure](https://github.com/sindresorhus/pure), with some extra git things
+  * [prezto](https://github.com/sorin-ionescu/prezto)
+  * [pure](https://github.com/sindresorhus/pure), customized with some extra git things
 
 The file hierarchy:
 
