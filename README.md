@@ -11,7 +11,7 @@
 
 ### Installation
 
-If you want to kick the tires, then you can simply:
+If you want to kick the tires, you can simply:
 
 ```sh
 curl -fsSL \
@@ -39,7 +39,7 @@ A few of the tools I roll with:
 - [ Hammerspoon ](http://www.hammerspoon.org/)
 - [ `tmux` ](https://github.com/tmux/tmux/wiki)
   * additional tmux statusbar binaries available (see `tmux-*` files in
-  ~/.dotfiles/bin).
+  `~/.dotfiles/bin`).
 - [FuraCode Nerd Font](https://nerdfonts.com/)
 - [ `kitty` ](https://github.com/kovidgoyal/kitty)
   * [Nova](https://github.com/trevordmiller/nova-colors)
