@@ -41,6 +41,7 @@ A few of the tools I roll with:
   * additional tmux statusbar binaries available (see `tmux-*` files in
   `~/.dotfiles/bin`).
 - [FuraCode Nerd Font](https://nerdfonts.com/)
+  * installed via `brew`
 - [ `kitty` ](https://github.com/kovidgoyal/kitty)
   * [Nova](https://github.com/trevordmiller/nova-colors)
 - [ `nvim` ](https://neovim.io/)
@@ -65,3 +66,8 @@ Use `~/.localrc` as your location for sensitive information. Optionally, you
 can let `bin/dotup` handle the cloning of your private repo to
 ~/.dotfiles/private, which will execute an install script, assuming it's
 located at `~/.dotfiles/private/install.sh`.
+
+### TODO
+
+[] migrate my custom zsh things
+[] confirm that i can run all my ruby things with just rbenv (no chruby)
