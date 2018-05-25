@@ -1475,10 +1475,6 @@ nnoremap p p`]
 vnoremap y y`]
 vnoremap p p`]
 
-" Move selected lines up and down
-vnoremap J :m '>+1<CR>gv=gv
-vnoremap K :m '<-2<CR>gv=gv
-
 " Handle syntastic error window
 nnoremap <Leader>e :lopen<CR>
 nnoremap <silent><Leader>q :call CloseBuffer()<CR>
@@ -1506,10 +1502,6 @@ nnoremap <Leader>F :call Search(1)<CR>
 xnoremap <s-tab> <gv
 xnoremap <tab> >gv
 
-" Resize window with shift + and shift -
-nnoremap + <c-w>5>
-nnoremap _ <c-w>5<
-
 " Center highlighted search
 nnoremap n nzz
 nnoremap N Nzz
@@ -1520,7 +1512,10 @@ map Q <Nop>
 " Jump to definition in vertical split
 nnoremap <Leader>] <C-W>v<C-]>
 
-" ------------------------------------------------------------------
+map <leader>ev :vnew! ~/.dotfiles/nvim/init.vim<cr>
+map <leader>eg :vnew! ~/.gitconfig<cr>
+map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<cr>
+map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<cr>
 
 nnoremap <C-s> :call ScratchOpen()<cr>
 
