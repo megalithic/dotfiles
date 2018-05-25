@@ -102,6 +102,9 @@ set -g allow-rename off
 
 # Colors
 # ---------------------------------------------------------
+
+# TODO: https://github.com/nicknisi/dotfiles/blob/master/tmux/base16.sh
+
 # -- active pane decorations (places a green line in the panes' gutter, alters fg colors)
 set -g pane-border-style 'bg=#3C4C55,fg=#1E272C'
 set -g pane-active-border-style 'bg=#3C4C55,fg=red'

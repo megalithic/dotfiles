@@ -154,6 +154,9 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive'
+  Plug 'junegunn/gv.vim'
+  Plug 'sodapopcan/vim-twiggy'
+  Plug 'christoomey/vim-conflicted'
   Plug 'tpope/vim-eunuch'
 
   Plug 'w0rp/ale'
