@@ -45,16 +45,21 @@ endsnippet
 
 snippet rsc "create stateless functional component" b
 import React from 'react'
+import { RouteComponentProps } from 'react-router',
 import styles from './_${2:`!v expand('%:t:r')`}.scss';
 
-export const ${1:`!p snip.rv = ComponentName(snip.basename)`} = ({${2:prop}}) => {
-	$0
+type Props = RouteComponentProps<{ id: string }> & {
+	children?: React.ReactNode
+}
+
+export const ${1:`!p snip.rv = ComponentName(snip.basename)`}: React.SFC<Props> = ({${2:children}}) => {
 	return (
 		${3:<div>
-			$4
+			${4:{children}}$0
 		</div>}
 	)
 }
+
 $1.displayName = '$1'
 endsnippet
 
