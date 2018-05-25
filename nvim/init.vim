@@ -1,7 +1,7 @@
 " =============================================================================
 "
 "   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-"   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > vimrc
+"   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > nvim/init.vim
 "   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
 "   Brought to you by: Seth Messer / @megalithic
 "
@@ -30,7 +30,7 @@ call plug#begin( '~/.config/nvim/plugged')
 " # TS
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
-  Plug 'ianks/vim-tsx', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
+  " Plug 'ianks/vim-tsx', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 
 " # Fn
   " Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
@@ -823,7 +823,7 @@ endfunction
   " let g:goyo_height = '100%'
   " let g:goyo_margin_top = 3
   " let g:goyo_margin_bottom = 3
-  " Writing in vim {{{{
+  " Writing in vim
       let g:limelight_conceal_ctermfg = 240
       let g:goyo_entered = 0
       function! s:goyo_enter()
