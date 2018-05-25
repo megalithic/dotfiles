@@ -1,0 +1,86 @@
+#!/bin/zsh
+
+echo '
+
+    ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
+    │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: dots & things
+    ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+    @megalithic
+
+
+Setting up dotfiles. If the ~/.dotfiles folder does not exist, it will be cloned
+down from https://github.com/megalithic/dotfiles. The ZShell configuration uses the
+Prezto framework, which will be installed or updated at this time.
+'
+
+if [[ "$(uname -s)" != "Darwin" ]]
+then
+  echo "this installer only runs on macOS; aborting."
+  exit 1
+fi
+
+if [[ "$(which git)" == "" ]]
+then
+  echo "this installer needs git"
+  echo "do you want to install xcode ?"
+  read answer
+  if [[ $answer != [yY] ]]
+  then
+    exit 0
+  fi
+
+  echo "installing xcode"
+  xcode-select --install
+  # exit 0
+fi
+
+set -e
+
+echo "::beginning the dotfiling.."
+
+# Echo "updating submodules"
+# git submodule init && git submodule update
+
+cd
+git clone https://github.com/megalithic/bits-and-bobs .dotfiles
+cd .dotfiles
+
+# app/system installers
+scripts/homebrew
+
+# TODO: get these working again, but take care of order of things
+# scripts/generic
+# scripts/platform
+
+# setup all zsh things
+sh zsh/install.sh
+
+# node packages and versions
+sh node/install.sh
+
+# ruby packages and versions
+sh ruby/install.sh
+
+# python packages and versions
+sh python/install.sh
+
+# nvim plugins
+sh nvim/install.sh
+
+# tmux plugins
+sh tmux/install.sh
+
+# terminfo configuration
+sh terminfo/install.sh
+
+# macOS defaults changes and tweaks
+sh osx/install.sh
+
+# symlink all the things to all their places
+scripts/symlinks
+
+# keyboard/karabiner specific configurations
+sh keyboard/install.sh
+
+# setup private repo things for secretz
+scripts/private

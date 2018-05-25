@@ -1,0 +1,14 @@
+bundler
+coderay
+curses
+fastri
+foreman
+neovim
+pry
+rcodetools
+rubocop
+sidekiq
+terminal-notifier
+weechat
+language_server
+nokogiri

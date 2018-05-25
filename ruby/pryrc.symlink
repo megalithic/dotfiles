@@ -1,0 +1,14 @@
+# Use the solarized pry theme
+Pry.config.theme = "solarized"
+
+# Use MacVim as an interactive editor
+Pry.config.editor = "nvim"
+
+if defined?(Rails)
+  # Use the current rails app name for the pry prompt
+  Pry.config.prompt_name = Rails.application.class.parent_name.to_s.underscore.titleize
+else
+  # Use the current directory name for the pry prompt
+  Pry.config.prompt_name = Dir.pwd.split('/').last
+end
+

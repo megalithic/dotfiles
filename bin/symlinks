@@ -1,0 +1,16 @@
+#!/bin/zsh
+
+echo 'Symlinking *.symlink files to $HOMEDIR/.<file>...'
+
+for found in **/*.symlink; do
+  source="$DOTS/$found"
+  dest="$HOMEDIR/.`basename \"${found%.*}\"`"
+
+  if [ -f $dest ] || [ -d $dest ]; then
+    rm -rf $dest
+    echo "Removed existing symlink: $dest"
+  fi
+
+  ln -sf $source $dest
+  echo "Symlinked $source to $dest"
+done

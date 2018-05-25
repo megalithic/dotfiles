@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+cat $DOTS/python/packages | xargs pip3 install -U --user

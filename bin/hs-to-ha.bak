@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+# REFS:
+# http://www.thegeekstuff.com/2010/07/bash-case-statement/
+# https://home-assistant.io/developers/rest_api/
+
+# USAGE:
+# $ hs-to-ha switch.office_lamp off
+
+# case "$1" in
+# 'switch')
+#   curl -X POST -H "x-ha-access: $HA_PASS" -d '{"entity_id": "'"$1"'"}' https://megalithic.dyndns.org:443/api/services/switch/turn_$2
+# ;;
+
+# 'ha')
+#   curl -X POST -H "x-ha-access: $HA_PASS" -d '{"entity_id": "'"$1"'"}' https://megalithic.dyndns.org:443/api/services/homeassistant/turn_on
+# ;;
+
+# 'restart')
+#   echo "Usage: $0 [start|stop]"
+# ;;
+# esac
+
+curl -X POST -H "x-ha-access: $HA_PASS" -d '{"entity_id": "'"$1"'"}' https://megalithic.dyndns.org:443/api/services/homeassistant/turn_on

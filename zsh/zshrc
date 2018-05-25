@@ -1,0 +1,28 @@
+# Executes commands at the start of an interactive session.
+
+source "$HOME/.zsh/components/zshrc/prezto.zsh"
+source "$HOME/.zsh/components/zshrc/vi-mode.zsh"
+# source "$HOME/.zsh/components/zshrc/motd.zsh"
+source "$HOME/.zsh/components/zshrc/fasd.zsh"
+# source "$HOME/.zsh/components/zshrc/autoenv.zsh"
+source "$HOME/.zsh/components/zshrc/ruby.zsh"
+source "$HOME/.zsh/components/zshrc/git.zsh"
+source "$HOME/.zsh/components/zshrc/tmux.zsh"
+# source "$HOME/.zsh/components/zshrc/travis.zsh"
+source "$HOME/.zsh/components/zshrc/k.zsh"
+source "$HOME/.zsh/components/zshrc/tag.zsh"
+source "$HOME/.zsh/components/zshrc/weather.zsh"
+
+# Keybindings
+bindkey -M vicmd '/' history-incremental-search-backward
+
+# Misc
+unsetopt correct
+alias scotty_joke_funny="ruby -e 'puts %(#scottyjoke is #{ [true,false,false,false,false].sample ? nil : %(not ) }funny.)'"
+
+# added by travis gem
+[ -f /Users/philtr/.travis/travis.sh ] && source /Users/philtr/.travis/travis.sh
+
+# I DONT LIKE THIS BUT IT'S MY ONLY OPTION
+export GPG_TTY=$(tty)
+

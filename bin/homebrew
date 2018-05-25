@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+if [ "$(uname -s)" == "Darwin" ]
+then
+  set -e
+
+  cd "$(dirname "$0")"
+
+  export HOMEBREW_CASK_OPTS="--appdir=/Applications"
+
+  echo "checking for existing homebrew install"
+
+  if test ! $(which brew)
+  then
+    echo "existing install not found, installing homebrew"
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    echo "installed homebrew"
+  fi
+
+  echo "updating homebrew"
+
+  brew update
+
+  echo "updated homebrew"
+
+
+  echo "installing homebrew bundler"
+
+  ln -sfv ~/.dotfiles/homebrew/Brewfile ~/Brewfile
+
+  brew tap homebrew/bundle
+  brew bundle --file=~/Brewfile
+  sudo xcodebuild -license accept
+  
+  ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
+  # createuser -s -r postgres
+
+# system "/usr/local/opt/fzf/install"
+# system "echo /usr/local/bin/bash >> /etc/shells"
+# system "chsh -s /usr/local/bin/bash"
+
+  echo "finished homebrew setup"
+fi

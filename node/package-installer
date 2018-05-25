@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+cat $DOTS/node/packages | xargs npm i -g

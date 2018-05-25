@@ -1,0 +1,206 @@
+#!/bin/zsh
+
+echo '
+
+    ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
+    │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: dots & things
+    ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+    @megalithic
+
+Setting up dotfiles. If the ~/.dotfiles folder does not exist, it will be
+cloned from https://github.com/megalithic/dotfiles. The zsh config uses the
+Prezto framework, which will be installed or updated at this time.
+'
+
+# HOMEDIR export exists?
+if [[ -z $HOMEDIR ]]
+then
+  export HOMEDIR=$HOME
+fi
+
+# DOTDIR export exists?
+if [[ -z $DOTS ]]
+then
+  export DOTS="$HOMEDIR/.dotfiles"
+  export DOTDIR="$HOMEDIR/.dotfiles"
+  export DIRDOTS="$HOMEDIR/.dotfiles"
+fi
+
+# git exists?
+if [[ "$(which git)" == "" ]]
+then
+  echo "git not installed; requires xcode to continue.. install xcode? [y]"
+  read answer
+
+  if [[ $answer == [yY] ]]
+  then
+    echo "installing xcode"
+    xcode-select --install
+  fi
+fi
+
+# ~/.dotfiles dir exists?
+if [[ ! -d $DOTS ]]
+then
+  echo "Cloning dotfiles..."
+  mkdir -p $DOTS
+  git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
+else
+  if [[ -z $SKIP_DOTFILES_UPDATE ]]
+  then
+    cd $DOTS
+    git add -u .
+    git stash
+    git pull --recurse-submodules --rebase origin master
+    git push origin master
+    git stash pop
+    cd $HOMEDIR
+  fi
+fi
+
+# Install Homebrew
+if ! type "brew" > /dev/null; then
+  echo "Installing Homebrew..."
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+
+echo "Brewing things..."
+brew update
+brew bundle --file=$DOTS/homebrew/Brewfile
+if [[ -a $DOTS/homebrew/Brewfile.local ]]
+then
+  # brew "private"/"local" Brewfile
+  brew bundle --file=$DOTS/homebrew/Brewfile.local
+fi
+
+# Install Prezto
+if [[ ! -d $HOMEDIR/.zprezto ]]
+then
+  echo "Installing Prezto (https://github.com/sorin-ionescu/prezto)..."
+  git clone --recursive git://github.com/sorin-ionescu/prezto.git "$HOMEDIR/.zprezto"
+else
+  cd $HOMEDIR/.zprezto
+  git reset --hard
+  git pull origin master -f
+  cd $HOMEDIR
+fi
+
+# Link $DOTS/bin files to $HOMEDIR/.bin
+echo "Symlinking $DOTS/bin files to $HOMEDIR/.bin/..."
+mkdir -p $HOMEDIR/.bin
+rm -f $HOMEDIR/.bin/*
+for found in $DOTS/bin/*; do
+  source="$DOTS/$found"
+  dest="$HOMEDIR/.bin/`basename \"${found%.*}\"`"
+
+  ln -sf $source $dest
+  echo "Symlinked binary $source to $dest"
+done
+
+# Run generic installers
+$DOTS/bin/generic
+
+# Run platform-based installers
+$DOTS/bin/platform
+
+# Symlink all the things
+$DOTS/bin/symlinks
+
+# Setup private repo and things
+$DOTS/bin/private
+
+# # Link zsh configuration files
+# echo "Linking ZSH configuration files..."
+# rm -f $HOMEDIR/.zlogin    \
+#       $HOMEDIR/.zlogout   \
+#       $HOMEDIR/.zpreztorc \
+#       $HOMEDIR/.zprofile  \
+#       $HOMEDIR/.zshenv    \
+#       $HOMEDIR/.zshrc     \
+#       $HOMEDIR/.zsh
+
+# ln -s $DOTS/zsh/zlogin            $HOMEDIR/.zlogin
+# ln -s $DOTS/zsh/zlogout           $HOMEDIR/.zlogout
+# ln -s $DOTS/zsh/zpreztorc         $HOMEDIR/.zpreztorc
+# ln -s $DOTS/zsh/zprofile          $HOMEDIR/.zprofile
+# ln -s $DOTS/zsh/zshenv            $HOMEDIR/.zshenv
+# ln -s $DOTS/zsh/zshrc             $HOMEDIR/.zshrc
+# ln -s $DOTS/zsh                   $HOMEDIR/.zsh
+
+# # Link git configuration files
+# echo "Linking Git configuration files..."
+# rm -f $HOMEDIR/.gitconfig \
+#       $HOMEDIR/.gitignore
+
+# ln -s $DOTS/git/gitconfig         $HOMEDIR/.gitconfig
+# ln -s $DOTS/git/gitignore         $HOMEDIR/.gitignore
+
+# # Link Silver Searcher (Ag) configuration files
+# echo "Linking Silver Searcher configuration files..."
+# rm -f $HOMEDIR/.ignore
+
+# ln -s $DOTS/ag/ignore           $HOMEDIR/.ignore
+
+
+# # Link ruby configuration
+# echo "Linking Ruby-related configurations..."
+# mkdir -p  $HOMEDIR/.bundle
+# rm  -rf   $HOMEDIR/.bundle/config \
+#           $HOMEDIR/.gemrc         \
+#           $HOMEDIR/.pryrc         \
+#           $HOMEDIR/.rubocop.yml   \
+#           $HOMEDIR/.reek
+
+# ln -s $DOTS/ruby/bundler          $HOMEDIR/.bundle/config
+# ln -s $DOTS/ruby/gemrc            $HOMEDIR/.gemrc
+# ln -s $DOTS/ruby/pryrc            $HOMEDIR/.pryrc
+# ln -s $DOTS/ruby/rubocop.yml      $HOMEDIR/.rubocop.yml
+# ln -s $DOTS/ruby/reek.yml         $HOMEDIR/.reek
+
+# # Link vim configuration
+# echo "Linking vim configuration files..."
+# rm  -rf $HOMEDIR/.vim     \
+#         $HOMEDIR/.vimrc   \
+#         $HOMEDIR/.gvimrc
+
+# ln -s $DOTS/vim                   $HOMEDIR/.vim
+# ln -s $DOTS/vim/settings/vimrc    $HOMEDIR/.vimrc
+# ln -s $DOTS/vim/settings/gvimrc   $HOMEDIR/.gvimrc
+
+# echo "Installing Vim plugins..."
+# vim +PlugInstall +qall
+
+# # Link tmux configuration
+# echo "Linking tmux configuration files..."
+# rm -rf $HOMEDIR/.tmux.conf
+# ln -s  $DOTS/tmux/tmux.conf $HOMEDIR/.tmux.conf
+
+# # Link karabiner configuration
+# echo "Linking Karabiner configuration files..."
+# rm -rf $HOMEDIR/.config/karabiner
+# mkdir -p $HOMEDIR/.config
+# ln -s  $DOTS/karabiner $HOMEDIR/.config/karabiner
+
+# # BitBar shared env
+# echo "Setting up BitBar..."
+# if [[ ! -a $DOTS/bitbar/shared/env.sh ]]
+# then
+#   echo "  - Copying example environment file into place"
+#   cp $DOTS/bitbar/shared/env.sh.example $DOTS/bitbar/shored/env.sh
+# fi
+
+# Print Manual Instructions
+echo "\n\nATTENTION! Further Instructions:\n"
+
+echo "  * Set ZShell as your login shell"
+echo "    - run \`chsh\`"
+echo "    - enter your password"
+echo "    - type '/bin/zsh' at the prompt"
+
+# iTerm2
+echo "  * Set iTerm configuration to load config"
+echo "    - Open iTerm preferences"
+echo "    - Check \"Load preferences from a user-defined folder or URL\""
+echo "    - Put in $DOTS/iterm2"
+
+# zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

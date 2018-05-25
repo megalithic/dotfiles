@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+# Google Play Music Desktop Player playback output for tmux
+# - requires ag (https://github.com/ggreer/the_silver_searcher)
+# - requires jq (https://stedolan.github.io/jq)
+#
+# Seth Messer
+# https://twitter.com/megalithic
+# -----------------------------------------------------------------------------
+
+is_running=$( ps auxwww | ag "[G]oogle Play Music Desktop Player" )
+has_jq=$( which jq )
+playback="$HOME/Library/Application Support/Google Play Music Desktop Player/json_store/playback.json"
+
+# has jq installed and the playback.json file, so we can parse and render
+if [[ ! -z $has_jq ]] && [[ -f "$playback" ]]; then
+  is_playing=$( cat "$playback" | jq '.playing' )
+  artist=$( cat "$playback" | jq '.song.artist' )
+  title=$( cat "$playback" | jq '.song.title' )
+
+  # not running the app
+  if [ "$is_running" = "" ]; then
+    output=""
+  else
+    # is running the app
+    if [ "$is_playing" = true ]; then
+      # PLAYING
+      output="#[fg=colour247] ♫ $title - $artist #[fg=default]"
+    else
+      # PAUSED
+      output="#[fg=colour240] ♫ paused #[fg=default]"
+    fi
+  fi
+
+  # output with quotes stripped
+  echo $output | sed "s/\"//g"
+fi
+
