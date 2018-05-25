@@ -1,12 +1,10 @@
-#!/bin/sh
+#!/bin/zsh
 
-echo "does keyboard things"
-
-set -e
+echo "Handling keyboard things..."
 
 # Prepare custom settings for Karabiner-Elements
 # https://github.com/tekezo/Karabiner-Elements/issues/597#issuecomment-282760186
-ln -sfvn ~/.dotfiles/keyboard/karabiner ~/.config
+ln -sfvn $DOTS/keyboard/karabiner ~/.config
 
 # Disable Dock icon for Hammerspoon
 defaults write org.hammerspoon.Hammerspoon MJShowDockIconKey -bool FALSE

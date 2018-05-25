@@ -1,0 +1,4 @@
+#!/bin/zsh
+
+echo "## NEOVIM..."
+
