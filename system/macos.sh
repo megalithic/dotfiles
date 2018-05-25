@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
 # ------------------
 # great reference:
@@ -16,10 +16,10 @@ osascript -e 'tell application "System Preferences" to quit'
 # get password up front
 sudo -v
 
+# handy folders we always use/seem to need
 if [ ! -d "$HOME/code" ]; then
   mkdir -p $HOME/code
 fi
-
 if [ ! -d "$HOME/tmp" ]; then
   mkdir -p $HOME/tmp
 fi
