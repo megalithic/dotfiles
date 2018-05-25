@@ -447,8 +447,8 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Toggle colorcolumn when in insert mode for visual 80char indicator
-  au BufEnter,FocusGained,InsertLeave * silent set relativenumber
-  au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber
+  au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
+  au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
   au InsertEnter * silent set colorcolumn=80
   au InsertLeave * silent set colorcolumn=""
   " au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>81v.\+', -1)
