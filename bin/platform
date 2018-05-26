@@ -1,20 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 #
 # Run all dotfiles installers.
 
-set -e
-
 # find mac installers and run them interactively
-platform="unknown"
-if [[ "$(uname)" == "Darwin" ]]; then
-   platform="osx"
-elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
-   platform="linux"
-elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]]; then
-    platform="windows"
-fi
 
-echo "Running installers for $platform"
+echo "Running installers for $PLATFORM..."
 
-find . -name $platform.sh | while read installer ; do sh "${installer}" > /dev/null ; done
+find . -name $PLATFORM.sh | while read installer ; do sh "${installer}" > /dev/null ; done
 

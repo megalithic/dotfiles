@@ -1,24 +1,21 @@
-#!/usr/bin/env bash
-
-set -e
+#!/bin/zsh
 
 # setup private github repo stuff
-echo "Attempting to clone your private dotfiles repo to $HOME/.dotfiles/private ..."
+echo "Attempting to clone your private dotfiles repo to $PRIVATES..."
 
 echo "Note: if you have 2-factor authentication enabled, you'll need to enter a personal access token when using https:// repo urls."
 echo ' - What is your private github repo address? (Leave blank to skip)'
 read -e git_privaterepo
 
-if [ "$git_privaterepo" == "" ]
+if [ "$git_privaterepo" != "" ]
 then
-  echo "Skipping private repo setup ..."
-else
-  if [[ ! -e ~/.dotfiles/private ]]; then
-    git clone $git_privaterepo ~/.dotfiles/private
-    echo "cloned $git_privaterepo to ~/.dotfiles/private"
+  if [[ ! -e $PRIVATES ]]; then
+    git clone $git_privaterepo $PRIVATES
+    echo "cloned $git_privaterepo to $PRIVATES"
   fi
 
-  sh ~/.dotfiles/private/install.sh
-  echo 'executed private dotfiles repo install script'
+  sh $PRIVATES/install.sh
+else
+  echo "Skipping private repo cloning and setup..."
 fi
 

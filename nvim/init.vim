@@ -129,6 +129,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
+  Plug 'brooth/far.vim'
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean'
   Plug 'wsdjeg/vim-fetch' " open files at line number

@@ -1,0 +1,153 @@
+#
+# Defines environment variables.
+#
+
+#
+# Exports
+#
+if [[ -f "$DOTS/zsh/components/zshrc/env.zsh" ]] ; then
+  source "$DOTS/zsh/components/zshrc/env.zsh"
+fi
+
+#
+# Paths
+#
+typeset -gU cdpath fpath mailpath path
+typeset -gxU MANPATH
+typeset -gxUT INFOPATH infopath
+
+# Set the the list of directories that cd searches.
+# cdpath=(
+#   $cdpath
+# )
+
+# Set the list of directories that info searches for manuals.
+infopath=(
+  /usr/local/share/info
+  /usr/share/info
+  $infopath
+)
+
+# Set the list of directories that man searches for manuals.
+manpath=(
+  /usr/local/share/man
+  /usr/share/man
+  $manpath
+)
+
+for path_file in /etc/manpaths.d/*(.N); do
+  manpath+=($(<$path_file))
+done
+unset path_file
+
+export GOPATH=$HOME/.go
+export GOBIN=$GOPATH/bin
+export CARGOPATH=$HOME/.cargo
+export CARGOBIN=$CARGOPATH/bin
+
+# Set the list of directories that Zsh searches for programs.
+path=()
+path=(
+  ./bin
+  ./.bin
+  ./vendor/bundle/bin
+  $HOME/.rbenv/bin
+  $HOME/bin
+  $HOME/.bin
+  $HOME/.dotfiles/bin
+  $HOME/.rubies
+  $GOBIN
+  $CARGOBIN
+  /usr/local/{bin,sbin}
+  /usr/local/share/npm/bin
+  /usr/local/lib/node_modules
+  $HOME/.yarn/bin
+  $HOME/.config/yarn/global/node_modules/.bin
+  /usr/local/opt/gnu-sed/libexec/gnubin
+  /usr/local/opt/imagemagick@6/bin
+  /usr/local/opt/qt@5.5/bin
+  /usr/local/opt/mysql@5.6/bin
+  /usr/local/opt/curl/bin
+  /usr/local/lib/python2.7/site-packages
+  $HOME/Library/Python/3.6/lib/python/site-packages
+  /usr/{bin,sbin}
+  /{bin,sbin}
+  $path
+)
+
+for path_file in /etc/paths.d/*(.N); do
+  path+=($(<$path_file))
+done
+unset path_file
+
+
+#
+# Function Paths
+#
+export ZSH_HOME="$DOTS/zsh"
+fpath=(
+  $ZSH_HOME/themes # loads our themes/prompts
+  $ZSH_HOME/functions
+  $fpath
+)
+
+
+#
+# Temporary Files
+#
+if [[ -d "$TMPDIR" ]]; then
+  export TMPPREFIX="${TMPDIR%/}/zsh"
+  if [[ ! -d "$TMPPREFIX" ]]; then
+    mkdir -p "$TMPPREFIX"
+  fi
+fi
+
+
+##
+## NVM - Node Version Manager
+##
+#export NVM_DIR="$HOME/.nvm"
+#[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+
+
+#
+# chruby - Ruby Version Manager
+#
+source /usr/local/share/chruby/auto.sh
+source /usr/local/share/chruby/chruby.sh
+RUBIES=(~/.rubies/*)
+
+
+#
+# rbenv - Ruby Version Manager
+#
+eval "$(rbenv init --no-rehash -)"
+(rbenv rehash &) 2> /dev/null
+
+
+#
+# n - Node Version Manager
+#
+export N_PREFIX="$HOME/.n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
+[[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
+
+
+##
+## FZF
+##
+## consider these handy fzf functions: https://github.com/junegunn/dotfiles/blob/master/bashrc#L267
+#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+## these must be set *after* loading fzf:
+#export FZF_COMPLETION_TRIGGER=''
+#bindkey '^G' fzf-completion
+#bindkey '^I' $fzf_default_completion
+
+
+#
+# Privates
+#
+if [[ -f "$HOME/.zprivate" ]] ; then
+  source "$HOME/.zprivate"
+fi
+
+

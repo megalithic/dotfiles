@@ -12,18 +12,45 @@ cloned from https://github.com/megalithic/dotfiles. The zsh config uses the
 Prezto framework, which will be installed or updated at this time.
 '
 
+# Detect OS
+if [[ -z $PLATFORM ]]
+then
+  # unamestr=`uname`
+  platform="unknown"
+
+  if [[ "$(uname)" == "Darwin" ]]; then
+    platform="macos"
+  elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+    platform="linux"
+  elif [[ "$(expr substr $(uname -s) 1 5)" == 'FreeBSD' ]]; then
+    platform='freebsd'
+  elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]]; then
+    platform="windows"
+  fi
+
+  export PLATFORM=$platform
+fi
+
+
 # HOMEDIR export exists?
 if [[ -z $HOMEDIR ]]
 then
   export HOMEDIR=$HOME
 fi
 
+# PRIVATES export exists?
+if [[ -z $PRIVATES ]]
+then
+  export PRIVATES=$DOTS/private
+  export PRIVATE=$DOTS/private
+fi
+
 # DOTDIR export exists?
 if [[ -z $DOTS ]]
 then
-  export DOTS="$HOMEDIR/.dotfiles"
-  export DOTDIR="$HOMEDIR/.dotfiles"
-  export DIRDOTS="$HOMEDIR/.dotfiles"
+  export DOTS="$HOME/.dotfiles"
+  export DOTDIR="$HOME/.dotfiles"
+  export DIRDOTS="$HOME/.dotfiles"
 fi
 
 # git exists?
@@ -54,7 +81,7 @@ else
     git pull --recurse-submodules --rebase origin master
     git push origin master
     git stash pop
-    cd $HOMEDIR
+    cd $HOME
   fi
 fi
 
@@ -65,8 +92,13 @@ if ! type "brew" > /dev/null; then
 fi
 
 echo "Brewing things..."
+export HOMEBREW_CASK_OPTS="--appdir=/Applications"
+
 brew update
 brew bundle --file=$DOTS/homebrew/Brewfile
+
+sudo xcodebuild -license accept
+ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
 if [[ -a $DOTS/homebrew/Brewfile.local ]]
 then
   # brew "private"/"local" Brewfile
@@ -74,24 +106,24 @@ then
 fi
 
 # Install Prezto
-if [[ ! -d $HOMEDIR/.zprezto ]]
+if [[ ! -d $HOME/.zprezto ]]
 then
   echo "Installing Prezto (https://github.com/sorin-ionescu/prezto)..."
-  git clone --recursive git://github.com/sorin-ionescu/prezto.git "$HOMEDIR/.zprezto"
+  git clone --recursive git://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
 else
-  cd $HOMEDIR/.zprezto
+  cd $HOME/.zprezto
   git reset --hard
   git pull origin master -f
-  cd $HOMEDIR
+  cd $HOME
 fi
 
-# Link $DOTS/bin files to $HOMEDIR/.bin
-echo "Symlinking $DOTS/bin files to $HOMEDIR/.bin/..."
-mkdir -p $HOMEDIR/.bin
-rm -f $HOMEDIR/.bin/*
+# Link $DOTS/bin files to $HOME/.bin
+echo "Symlinking $DOTS/bin files to $HOME/.bin/..."
+mkdir -p $HOME/.bin
+rm -f $HOME/.bin/*
 for found in $DOTS/bin/*; do
   source="$DOTS/$found"
-  dest="$HOMEDIR/.bin/`basename \"${found%.*}\"`"
+  dest="$HOME/.bin/`basename \"${found%.*}\"`"
 
   ln -sf $source $dest
   echo "Symlinked binary $source to $dest"
@@ -111,75 +143,75 @@ $DOTS/bin/private
 
 # # Link zsh configuration files
 # echo "Linking ZSH configuration files..."
-# rm -f $HOMEDIR/.zlogin    \
-#       $HOMEDIR/.zlogout   \
-#       $HOMEDIR/.zpreztorc \
-#       $HOMEDIR/.zprofile  \
-#       $HOMEDIR/.zshenv    \
-#       $HOMEDIR/.zshrc     \
-#       $HOMEDIR/.zsh
+# rm -f $HOME/.zlogin    \
+#       $HOME/.zlogout   \
+#       $HOME/.zpreztorc \
+#       $HOME/.zprofile  \
+#       $HOME/.zshenv    \
+#       $HOME/.zshrc     \
+#       $HOME/.zsh
 
-# ln -s $DOTS/zsh/zlogin            $HOMEDIR/.zlogin
-# ln -s $DOTS/zsh/zlogout           $HOMEDIR/.zlogout
-# ln -s $DOTS/zsh/zpreztorc         $HOMEDIR/.zpreztorc
-# ln -s $DOTS/zsh/zprofile          $HOMEDIR/.zprofile
-# ln -s $DOTS/zsh/zshenv            $HOMEDIR/.zshenv
-# ln -s $DOTS/zsh/zshrc             $HOMEDIR/.zshrc
-# ln -s $DOTS/zsh                   $HOMEDIR/.zsh
+# ln -s $DOTS/zsh/zlogin            $HOME/.zlogin
+# ln -s $DOTS/zsh/zlogout           $HOME/.zlogout
+# ln -s $DOTS/zsh/zpreztorc         $HOME/.zpreztorc
+# ln -s $DOTS/zsh/zprofile          $HOME/.zprofile
+# ln -s $DOTS/zsh/zshenv            $HOME/.zshenv
+# ln -s $DOTS/zsh/zshrc             $HOME/.zshrc
+# ln -s $DOTS/zsh                   $HOME/.zsh
 
 # # Link git configuration files
 # echo "Linking Git configuration files..."
-# rm -f $HOMEDIR/.gitconfig \
-#       $HOMEDIR/.gitignore
+# rm -f $HOME/.gitconfig \
+#       $HOME/.gitignore
 
-# ln -s $DOTS/git/gitconfig         $HOMEDIR/.gitconfig
-# ln -s $DOTS/git/gitignore         $HOMEDIR/.gitignore
+# ln -s $DOTS/git/gitconfig         $HOME/.gitconfig
+# ln -s $DOTS/git/gitignore         $HOME/.gitignore
 
 # # Link Silver Searcher (Ag) configuration files
 # echo "Linking Silver Searcher configuration files..."
-# rm -f $HOMEDIR/.ignore
+# rm -f $HOME/.ignore
 
-# ln -s $DOTS/ag/ignore           $HOMEDIR/.ignore
+# ln -s $DOTS/ag/ignore           $HOME/.ignore
 
 
 # # Link ruby configuration
 # echo "Linking Ruby-related configurations..."
-# mkdir -p  $HOMEDIR/.bundle
-# rm  -rf   $HOMEDIR/.bundle/config \
-#           $HOMEDIR/.gemrc         \
-#           $HOMEDIR/.pryrc         \
-#           $HOMEDIR/.rubocop.yml   \
-#           $HOMEDIR/.reek
+# mkdir -p  $HOME/.bundle
+# rm  -rf   $HOME/.bundle/config \
+#           $HOME/.gemrc         \
+#           $HOME/.pryrc         \
+#           $HOME/.rubocop.yml   \
+#           $HOME/.reek
 
-# ln -s $DOTS/ruby/bundler          $HOMEDIR/.bundle/config
-# ln -s $DOTS/ruby/gemrc            $HOMEDIR/.gemrc
-# ln -s $DOTS/ruby/pryrc            $HOMEDIR/.pryrc
-# ln -s $DOTS/ruby/rubocop.yml      $HOMEDIR/.rubocop.yml
-# ln -s $DOTS/ruby/reek.yml         $HOMEDIR/.reek
+# ln -s $DOTS/ruby/bundler          $HOME/.bundle/config
+# ln -s $DOTS/ruby/gemrc            $HOME/.gemrc
+# ln -s $DOTS/ruby/pryrc            $HOME/.pryrc
+# ln -s $DOTS/ruby/rubocop.yml      $HOME/.rubocop.yml
+# ln -s $DOTS/ruby/reek.yml         $HOME/.reek
 
 # # Link vim configuration
 # echo "Linking vim configuration files..."
-# rm  -rf $HOMEDIR/.vim     \
-#         $HOMEDIR/.vimrc   \
-#         $HOMEDIR/.gvimrc
+# rm  -rf $HOME/.vim     \
+#         $HOME/.vimrc   \
+#         $HOME/.gvimrc
 
-# ln -s $DOTS/vim                   $HOMEDIR/.vim
-# ln -s $DOTS/vim/settings/vimrc    $HOMEDIR/.vimrc
-# ln -s $DOTS/vim/settings/gvimrc   $HOMEDIR/.gvimrc
+# ln -s $DOTS/vim                   $HOME/.vim
+# ln -s $DOTS/vim/settings/vimrc    $HOME/.vimrc
+# ln -s $DOTS/vim/settings/gvimrc   $HOME/.gvimrc
 
 # echo "Installing Vim plugins..."
 # vim +PlugInstall +qall
 
 # # Link tmux configuration
 # echo "Linking tmux configuration files..."
-# rm -rf $HOMEDIR/.tmux.conf
-# ln -s  $DOTS/tmux/tmux.conf $HOMEDIR/.tmux.conf
+# rm -rf $HOME/.tmux.conf
+# ln -s  $DOTS/tmux/tmux.conf $HOME/.tmux.conf
 
 # # Link karabiner configuration
 # echo "Linking Karabiner configuration files..."
-# rm -rf $HOMEDIR/.config/karabiner
-# mkdir -p $HOMEDIR/.config
-# ln -s  $DOTS/karabiner $HOMEDIR/.config/karabiner
+# rm -rf $HOME/.config/karabiner
+# mkdir -p $HOME/.config
+# ln -s  $DOTS/karabiner $HOME/.config/karabiner
 
 # # BitBar shared env
 # echo "Setting up BitBar..."

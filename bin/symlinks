@@ -1,10 +1,10 @@
 #!/bin/zsh
 
-echo 'Symlinking *.symlink files to $HOMEDIR/.<file>...'
+echo 'Symlinking *.symlink files to $HOME/.<file>...'
 
 for found in **/*.symlink; do
   source="$DOTS/$found"
-  dest="$HOMEDIR/.`basename \"${found%.*}\"`"
+  dest="$HOME/.`basename \"${found%.*}\"`"
 
   if [ -f $dest ] || [ -d $dest ]; then
     rm -rf $dest

@@ -1,0 +1,17 @@
+# Executes commands at the start of an interactive session.
+
+source "$HOME/.zsh/components/zshrc/prezto.zsh"
+source "$HOME/.zsh/components/zshrc/aliases.zsh"
+source "$HOME/.zsh/components/zshrc/keybindings.zsh"
+source "$HOME/.zsh/components/zshrc/opts.zsh"
+# source "$HOME/.zsh/components/zshrc/vi-mode.zsh"
+source "$HOME/.zsh/components/zshrc/fasd.zsh"
+source "$HOME/.zsh/components/zshrc/ruby.zsh"
+source "$HOME/.zsh/components/zshrc/node.zsh"
+source "$HOME/.zsh/components/zshrc/git.zsh"
+source "$HOME/.zsh/components/zshrc/tmux.zsh"
+source "$HOME/.zsh/components/zshrc/fzf.zsh"
+source "$HOME/.zsh/components/zshrc/k.zsh"
+# source "$HOME/.zsh/components/zshrc/tag.zsh"
+source "$HOME/.zsh/components/zshrc/weather.zsh"
+
