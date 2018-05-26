@@ -132,7 +132,7 @@ done
 # Run generic installers
 $DOTS/bin/generic
 
-# Run platform-based installers
+# Run platform-based installers (macos, linux, windows, freebsd)
 $DOTS/bin/platform
 
 # Symlink all the things
