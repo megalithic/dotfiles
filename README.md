@@ -25,7 +25,8 @@ you guessed it, symlinked. For example: `~/.dotfiles/zsh/zshrc.symlink` gets
 symlinked to `~/.zshrc`.
 
 This also sets up things like homebrew if you're on a mac, and even allows for a
-private repo setup.
+private repo setup. **Please note**, this repo supports multiple platforms, but
+has really only been extensively used and tested on macos.
 
 I highly recommend you dig into the scripts and configs to see what all
 is going on (because it does a lot that I'm not describing here) before you
@@ -56,7 +57,7 @@ The file hierarchy:
 - **topic/\*.symlink**: Any files ending in `*.symlink` get symlinked into
   your `$HOME`. This is so you can keep all of those versioned in your dotfiles
   but still keep those autoloaded files in your home directory. These get
-  symlinked in when you run `bin/dotup`, or you can explicitly run `bin/symlinks`.
+  symlinked when you run `bin/dotup`, or you can explicitly run `bin/symlinks`.
 - **topic/\<platform\>.sh**: Platform-specific installers to handle additional
   things that you may need to happen for that topic.
 
