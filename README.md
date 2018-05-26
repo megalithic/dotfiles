@@ -69,7 +69,7 @@ located at `~/.dotfiles/private/install.sh`.
 
 ### Attribution
 
-- Originally based on the dotfiles of the esteemed from the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
+- Originally based on the dotfiles of the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
 - Presently a delicate combination of [Wynn Netherland's](https://github.com/pengwynn/dotfiles) and [Phillip Ridlen's](https://github.com/philtr/dotfiles) respective dotfiles
 
 ### TODO
