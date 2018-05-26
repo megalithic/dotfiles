@@ -69,5 +69,5 @@ located at `~/.dotfiles/private/install.sh`.
 
 ### TODO
 
-- [] migrate my custom zsh things from old setup
-- [] confirm that i can run all my ruby things with just rbenv (no chruby)
+- [ ] migrate my custom zsh things from old setup
+- [ ] confirm that i can run all my ruby things with just rbenv (no chruby)
