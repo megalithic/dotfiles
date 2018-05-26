@@ -67,6 +67,11 @@ can let `bin/dotup` handle the cloning of your private repo to
 ~/.dotfiles/private, which will execute an install script, assuming it's
 located at `~/.dotfiles/private/install.sh`.
 
+### Attribution
+
+- Originally based on the dotfiles of the esteemed from the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
+- Presently a delicate combination of [Wynn Netherland's](https://github.com/pengwynn/dotfiles) and [Phillip Ridlen's](https://github.com/philtr/dotfiles) respective dotfiles
+
 ### TODO
 
 - [ ] migrate my custom zsh things from old setup
