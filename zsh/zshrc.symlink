@@ -47,6 +47,5 @@ then
   source ~/.localrc
 fi
 
-# initialize autocomplete here, otherwise functions won't be loaded
-autoload -U compinit
-compinit
+autoload -U compinit; compinit
+autoload -U promptinit; promptinit; prompt pure

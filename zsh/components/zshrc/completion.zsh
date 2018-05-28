@@ -48,3 +48,36 @@ zstyle '*' single-ignored show
 
 # pasting with tabs doesn't perform completion
 zstyle ':completion:*' insert-tab pending
+
+# Uses git's autocompletion for inner commands. Assumes an install of git's
+# bash `git-completion` script at $completion below (this is where Homebrew
+# tosses it, at least).
+completion='$(brew --prefix)/share/zsh/site-functions/_git'
+
+if test -f $completion
+then
+  source $completion
+fi
+
+# Stolen from
+#   https://github.com/sstephenson/rbenv/blob/master/completions/rbenv.zsh
+
+if [[ ! -o interactive ]]; then
+    return
+fi
+
+compctl -K _rbenv rbenv
+
+_rbenv() {
+  local word words completions
+  read -cA words
+  word="${words[2]}"
+
+  if [ "${#words}" -eq 2 ]; then
+    completions="$(rbenv commands)"
+  else
+    completions="$(rbenv completions "${word}")"
+  fi
+
+  reply=("${(ps:\n:)completions}")
+}
