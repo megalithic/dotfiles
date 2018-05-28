@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 #
 # Defines environment variables.
 #
@@ -103,45 +105,9 @@ if [[ -d "$TMPDIR" ]]; then
 fi
 
 
-##
-## NVM - Node Version Manager
-##
-#export NVM_DIR="$HOME/.nvm"
-#[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-
-
-#
-# chruby - Ruby Version Manager
-#
-source /usr/local/share/chruby/auto.sh
-source /usr/local/share/chruby/chruby.sh
-RUBIES=(~/.rubies/*)
-
-
-#
-# rbenv - Ruby Version Manager
-#
-eval "$(rbenv init --no-rehash -)"
-(rbenv rehash &) 2> /dev/null
-
-
-#
-# n - Node Version Manager
-#
-export N_PREFIX="$HOME/.n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
-[[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
-
-
-##
-## FZF
-##
-## consider these handy fzf functions: https://github.com/junegunn/dotfiles/blob/master/bashrc#L267
-#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-## these must be set *after* loading fzf:
-#export FZF_COMPLETION_TRIGGER=''
-#bindkey '^G' fzf-completion
-#bindkey '^I' $fzf_default_completion
-
+source "$ZSH_HOME/components/zshrc/ruby.zsh"
+source "$ZSH_HOME/components/zshrc/node.zsh"
+source "$ZSH_HOME/colors.zsh"
 
 #
 # Privates
@@ -149,5 +115,4 @@ export N_PREFIX="$HOME/.n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_P
 if [[ -f "$HOME/.zprivate" ]] ; then
   source "$HOME/.zprivate"
 fi
-
 

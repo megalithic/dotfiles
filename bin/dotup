@@ -91,31 +91,33 @@ if ! type "brew" > /dev/null; then
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
-echo "Brewing things..."
+echo "Brewing all the things..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-
 brew update
 brew bundle --file=$DOTS/homebrew/Brewfile
 
+echo "Doing post-brew things..."
 sudo xcodebuild -license accept
 ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
+
 if [[ -a $DOTS/homebrew/Brewfile.local ]]
 then
+  echo "Brewing private/local things..."
   # brew "private"/"local" Brewfile
   brew bundle --file=$DOTS/homebrew/Brewfile.local
 fi
 
 # Install Prezto
-if [[ ! -d $HOME/.zprezto ]]
-then
-  echo "Installing Prezto (https://github.com/sorin-ionescu/prezto)..."
-  git clone --recursive git://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
-else
-  cd $HOME/.zprezto
-  git reset --hard
-  git pull origin master -f
-  cd $HOME
-fi
+# if [[ ! -d $HOME/.zprezto ]]
+# then
+#   echo "Installing Prezto (https://github.com/sorin-ionescu/prezto)..."
+#   git clone --recursive git://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
+# else
+#   cd $HOME/.zprezto
+#   git reset --hard
+#   git pull origin master -f
+#   cd $HOME
+# fi
 
 # Link $DOTS/bin files to $HOME/.bin
 echo "Symlinking $DOTS/bin files to $HOME/.bin/..."
@@ -221,18 +223,25 @@ $DOTS/bin/private
 #   cp $DOTS/bitbar/shared/env.sh.example $DOTS/bitbar/shored/env.sh
 # fi
 
-# Print Manual Instructions
-echo "\n\nATTENTION! Further Instructions:\n"
 
-echo "  * Set ZShell as your login shell"
-echo "    - run \`chsh\`"
-echo "    - enter your password"
-echo "    - type '/bin/zsh' at the prompt"
+echo "Changing your shell to brewed zsh..."
+zsh_path=$(which zsh)
+grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
+chsh -s "$zsh_path" $USER
+zsh
 
-# iTerm2
-echo "  * Set iTerm configuration to load config"
-echo "    - Open iTerm preferences"
-echo "    - Check \"Load preferences from a user-defined folder or URL\""
-echo "    - Put in $DOTS/iterm2"
+# # Print Manual Instructions
+# echo "\n\nATTENTION! Further Instructions:\n"
+
+# echo "  * Set ZShell as your login shell"
+# echo "    - run \`chsh\`"
+# echo "    - enter your password"
+# echo "    - type '/bin/zsh' at the prompt"
+
+# # iTerm2
+# echo "  * Set iTerm configuration to load config"
+# echo "    - Open iTerm preferences"
+# echo "    - Check \"Load preferences from a user-defined folder or URL\""
+# echo "    - Put in $DOTS/iterm2"
 
 # zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

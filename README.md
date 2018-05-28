@@ -47,7 +47,6 @@ A few of the tools I roll with:
   * [Nova](https://github.com/trevordmiller/nova-colors)
 - [ `nvim` ](https://neovim.io/)
 - [ `zsh` ](https://www.zsh.org/)
-  * [prezto](https://github.com/sorin-ionescu/prezto)
   * [pure](https://github.com/sindresorhus/pure), customized with some extra git things
 
 The file hierarchy:

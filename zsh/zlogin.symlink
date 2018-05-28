@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 #
 # Executes commands at login post-zshrc.
 #
@@ -11,5 +13,3 @@
   fi
 } &!
 
-# ### Added by the Heroku Toolbelt
-# export PATH="/usr/local/heroku/bin:$PATH"

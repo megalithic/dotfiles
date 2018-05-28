@@ -111,6 +111,15 @@ set -g pane-active-border-style 'bg=#3C4C55,fg=red'
 set -g window-style 'fg=black,bg=#3C4C55'
 set -g window-active-style 'fg=white,bg=#3C4C55'
 
+# set-window-option -g window-status-current-bg '#1E272C'
+# set-window-option -g window-status-current-fg cyan
+set -g clock-mode-colour cyan
+set -g status-style 'bg=#1E272C,fg=#6A7D89'
+set -g window-status-current-style 'fg=cyan'
+set -g mode-style 'bg=cyan,fg=black'
+set -g message-style 'bg=black,fg=cyan'
+set-window-option -g window-status-activity-attr none
+
 # Bar Layout
 # ---------------------------------------------------------
 # -- statusbar windows
