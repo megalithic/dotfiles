@@ -51,6 +51,6 @@ fi
 autoload -U compinit; compinit
 
 # My customized pure theme:
-source "$DOTS/zsh/themes/gitstatus.zsh"
+# source "$DOTS/zsh/themes/gitstatus.zsh"
 source "$DOTS/zsh/themes/prompt_pure_setup"
-source "$DOTS/zsh/themes/async"
+# source "$DOTS/zsh/themes/async"
