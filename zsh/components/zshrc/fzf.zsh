@@ -3,6 +3,7 @@
 # setup fzf
 # consider these handy fzf functions: https://github.com/junegunn/dotfiles/blob/master/bashrc#L267
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 # these must be set *after* loading fzf:
 export FZF_COMPLETION_TRIGGER=''
 bindkey '^G' fzf-completion
