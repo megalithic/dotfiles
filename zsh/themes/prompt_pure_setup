@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 # Pure
 # by Sindre Sorhus
 # https://github.com/sindresorhus/pure
@@ -124,12 +126,11 @@ prompt_pure_preprompt_render() {
   # Initialize the preprompt array.
   local -a preprompt_parts
 
-  # Set the path.
+  # Set the path (optionally, truncated).
   if (( ${PURE_TRUNCATE_CWD:-1} )); then
     local pwd="${PWD/#$HOME/~}"
     if [[ "$pwd" == (#m)[/~] ]]; then
-      # echo "$MATCH"
-      # unset MATCH
+      preprompt_parts+=("~")
     else
       preprompt_parts+=("${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}")
     fi
@@ -140,7 +141,8 @@ prompt_pure_preprompt_render() {
   # Add git branch and dirty status info.
   typeset -gA prompt_pure_vcs_info
   if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-    preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
+    # preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
+    preprompt_parts+=("%F{$git_color}%f"'$(git_super_status)%f') # <- fancier, more useful git info
   fi
   # Git pull/push arrows.
   if [[ -n $prompt_pure_git_arrows ]]; then
@@ -560,6 +562,7 @@ prompt_pure_setup() {
 
   autoload -Uz add-zsh-hook
   autoload -Uz vcs_info
+  autoload -Uz git_super_status
   autoload -Uz async && async
 
   add-zsh-hook precmd prompt_pure_precmd

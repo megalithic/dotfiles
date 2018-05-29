@@ -1,4 +1,16 @@
 #
+# Locations
+#
+
+export HOMEDIR=$HOME
+export ZDOTDIR=$HOME
+export DOTS=$HOME/.dotfiles
+export DOTDIR=$DOTS
+export DOTSDIR=$DOTS
+export DOTFILES=$DOTS
+export ZSH_HOME=$DOTS/zsh
+
+#
 # Browser
 #
 
@@ -39,7 +51,6 @@ if (( $+commands[lesspipe.sh] )); then
 fi
 
 
-export ZDOTDIR=$HOME
 export HOMEBREW_NO_ANALYTICS=1
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 export BREW_PATH="$(brew --prefix)"

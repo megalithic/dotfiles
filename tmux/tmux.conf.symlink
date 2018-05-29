@@ -69,7 +69,7 @@ set -ga terminal-overrides ',xterm-256color:Tc'
 set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
 set -as terminal-overrides ',xterm*:sitm=\E[3m'
 set -g base-index 1                                                 # Start window numbers from 1
-set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
+# set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
 set -g mouse on                                                     # mices!
 set -g focus-events on                                              # enable focus events for wincent/terminus
 setw -g monitor-activity on

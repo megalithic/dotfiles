@@ -33,7 +33,7 @@ export CLICOLOR=1
 
 # -------- do not want here right now; breaking stuff
 # # color stuffs
-eval `gdircolors $HOME/.dotfiles/zsh/dircolors.ansi-dark`
+eval `gdircolors $HOME/.dir_colors.ansi-dark`
 
 # Fallback to built in ls colors
 # zstyle ':completion:*' list-colors ''
