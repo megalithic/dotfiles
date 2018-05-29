@@ -53,7 +53,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'tpope/vim-markdown', { 'for': ['markdown', 'md', 'mdown'] }
   Plug 'jtratner/vim-flavored-markdown', { 'for': ['markdown'] }
   Plug 'tyru/markdown-codehl-onthefly.vim', { 'for': ['markdown', 'md', 'mdown'] }
-  Plug 'rhysd/vim-gfm-syntax'
+  " Plug 'rhysd/vim-gfm-syntax'
   " Plug 'euclio/vim-markdown-composer', { 'do': 'cargo build --release' }
 
 " # RoR

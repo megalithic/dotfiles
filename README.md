@@ -38,6 +38,7 @@ A few of the tools I roll with:
 
 - [ `brew` ](https://brew.sh/)
 - [ Hammerspoon ](http://www.hammerspoon.org/)
+- [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements), see `keyboard`
 - [ `tmux` ](https://github.com/tmux/tmux/wiki)
   * additional tmux statusbar binaries available (see `tmux-*` files in
   `~/.dotfiles/bin`).
