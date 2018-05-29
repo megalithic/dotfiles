@@ -8,8 +8,7 @@ echo '
     @megalithic
 
 Setting up dotfiles. If the ~/.dotfiles folder does not exist, it will be
-cloned from https://github.com/megalithic/dotfiles. The zsh config uses the
-Prezto framework, which will be installed or updated at this time.
+cloned from https://github.com/megalithic/dotfiles. The zsh config is all.
 '
 
 # Detect OS
@@ -31,12 +30,6 @@ then
   export PLATFORM=$platform
 fi
 
-
-# HOMEDIR export exists?
-if [[ -z $HOMEDIR ]]
-then
-  export HOMEDIR=$HOME
-fi
 
 # PRIVATES export exists?
 if [[ -z $PRIVATES ]]
@@ -107,18 +100,6 @@ then
   brew bundle --file=$DOTS/homebrew/Brewfile.local
 fi
 
-# Install Prezto
-# if [[ ! -d $HOME/.zprezto ]]
-# then
-#   echo "Installing Prezto (https://github.com/sorin-ionescu/prezto)..."
-#   git clone --recursive git://github.com/sorin-ionescu/prezto.git "$HOME/.zprezto"
-# else
-#   cd $HOME/.zprezto
-#   git reset --hard
-#   git pull origin master -f
-#   cd $HOME
-# fi
-
 # Link $DOTS/bin files to $HOME/.bin
 echo "Symlinking $DOTS/bin files to $HOME/.bin/..."
 mkdir -p $HOME/.bin
@@ -143,86 +124,6 @@ $DOTS/bin/symlinks
 # Setup private repo and things
 $DOTS/bin/private
 
-# # Link zsh configuration files
-# echo "Linking ZSH configuration files..."
-# rm -f $HOME/.zlogin    \
-#       $HOME/.zlogout   \
-#       $HOME/.zpreztorc \
-#       $HOME/.zprofile  \
-#       $HOME/.zshenv    \
-#       $HOME/.zshrc     \
-#       $HOME/.zsh
-
-# ln -s $DOTS/zsh/zlogin            $HOME/.zlogin
-# ln -s $DOTS/zsh/zlogout           $HOME/.zlogout
-# ln -s $DOTS/zsh/zpreztorc         $HOME/.zpreztorc
-# ln -s $DOTS/zsh/zprofile          $HOME/.zprofile
-# ln -s $DOTS/zsh/zshenv            $HOME/.zshenv
-# ln -s $DOTS/zsh/zshrc             $HOME/.zshrc
-# ln -s $DOTS/zsh                   $HOME/.zsh
-
-# # Link git configuration files
-# echo "Linking Git configuration files..."
-# rm -f $HOME/.gitconfig \
-#       $HOME/.gitignore
-
-# ln -s $DOTS/git/gitconfig         $HOME/.gitconfig
-# ln -s $DOTS/git/gitignore         $HOME/.gitignore
-
-# # Link Silver Searcher (Ag) configuration files
-# echo "Linking Silver Searcher configuration files..."
-# rm -f $HOME/.ignore
-
-# ln -s $DOTS/ag/ignore           $HOME/.ignore
-
-
-# # Link ruby configuration
-# echo "Linking Ruby-related configurations..."
-# mkdir -p  $HOME/.bundle
-# rm  -rf   $HOME/.bundle/config \
-#           $HOME/.gemrc         \
-#           $HOME/.pryrc         \
-#           $HOME/.rubocop.yml   \
-#           $HOME/.reek
-
-# ln -s $DOTS/ruby/bundler          $HOME/.bundle/config
-# ln -s $DOTS/ruby/gemrc            $HOME/.gemrc
-# ln -s $DOTS/ruby/pryrc            $HOME/.pryrc
-# ln -s $DOTS/ruby/rubocop.yml      $HOME/.rubocop.yml
-# ln -s $DOTS/ruby/reek.yml         $HOME/.reek
-
-# # Link vim configuration
-# echo "Linking vim configuration files..."
-# rm  -rf $HOME/.vim     \
-#         $HOME/.vimrc   \
-#         $HOME/.gvimrc
-
-# ln -s $DOTS/vim                   $HOME/.vim
-# ln -s $DOTS/vim/settings/vimrc    $HOME/.vimrc
-# ln -s $DOTS/vim/settings/gvimrc   $HOME/.gvimrc
-
-# echo "Installing Vim plugins..."
-# vim +PlugInstall +qall
-
-# # Link tmux configuration
-# echo "Linking tmux configuration files..."
-# rm -rf $HOME/.tmux.conf
-# ln -s  $DOTS/tmux/tmux.conf $HOME/.tmux.conf
-
-# # Link karabiner configuration
-# echo "Linking Karabiner configuration files..."
-# rm -rf $HOME/.config/karabiner
-# mkdir -p $HOME/.config
-# ln -s  $DOTS/karabiner $HOME/.config/karabiner
-
-# # BitBar shared env
-# echo "Setting up BitBar..."
-# if [[ ! -a $DOTS/bitbar/shared/env.sh ]]
-# then
-#   echo "  - Copying example environment file into place"
-#   cp $DOTS/bitbar/shared/env.sh.example $DOTS/bitbar/shored/env.sh
-# fi
-
 
 echo "Changing your shell to brewed zsh..."
 zsh_path=$(which zsh)
@@ -230,18 +131,12 @@ grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells
 chsh -s "$zsh_path" $USER
 zsh
 
-# # Print Manual Instructions
-# echo "\n\nATTENTION! Further Instructions:\n"
+# Print Manual Instructions
+echo "\n\nATTENTION! Further Instructions:\n"
 
-# echo "  * Set ZShell as your login shell"
-# echo "    - run \`chsh\`"
-# echo "    - enter your password"
-# echo "    - type '/bin/zsh' at the prompt"
-
-# # iTerm2
-# echo "  * Set iTerm configuration to load config"
-# echo "    - Open iTerm preferences"
-# echo "    - Check \"Load preferences from a user-defined folder or URL\""
-# echo "    - Put in $DOTS/iterm2"
+echo "  * Set ZShell as your login shell"
+echo "    - run \`chsh\`"
+echo "    - enter your password"
+echo "    - type '/bin/zsh' at the prompt"
 
 # zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
