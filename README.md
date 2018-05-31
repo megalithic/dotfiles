@@ -43,7 +43,7 @@ A few of the tools I roll with:
 
 - [ `brew` ](https://brew.sh/)
 - [ Hammerspoon ](http://www.hammerspoon.org/)
-- [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements), see `keyboard`
+- [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements), see `~/.dotfiles/keyboard`
 - [ `tmux` ](https://github.com/tmux/tmux/wiki)
   * additional tmux statusbar binaries available (see `tmux-*` files in
   `~/.dotfiles/bin`).
@@ -53,7 +53,7 @@ A few of the tools I roll with:
   * [Nova](https://github.com/trevordmiller/nova-colors)
 - [ `nvim` ](https://neovim.io/)
 - [ `zsh` ](https://www.zsh.org/)
-  * [pure](https://github.com/sindresorhus/pure), customized with some extra git things (see `zsh/themes`)
+  * [pure](https://github.com/sindresorhus/pure), customized with some extra git things (see `~/.dotfiles/zsh/themes`)
 
 The file hierarchy:
 
