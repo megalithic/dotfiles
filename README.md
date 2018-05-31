@@ -78,4 +78,4 @@ located at `~/.dotfiles/private/install.sh`.
 - [ ] migrate my custom zsh things from old setup
 - [ ] confirm that i can run all my ruby things with just rbenv (no chruby)
 
-<img style="text-align:center;" height="100" src="megadotfiles.png" alt="megadotfiles" />
+<span style="display:block; text-align:center">![megadotfiles](megadotfiles.png)</span>
