@@ -79,5 +79,7 @@ located at `~/.dotfiles/private/install.sh`.
 - [ ] confirm that i can run all my ruby things with just rbenv (no chruby)
 
 <p align="center">
-  <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
+  <p>
+    <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
+  </p>
 </p>
