@@ -9,6 +9,11 @@
 ```
 
 
+<p align="center">
+  <img src="screenshot.png" alt="screenshot" />
+</p>
+
+
 ### Installation
 
 If you want to kick the tires, you can simply:
