@@ -51,9 +51,9 @@ call plug#begin( '~/.config/nvim/plugged')
 
 " # MD
   " Plug 'tpope/vim-markdown', { 'for': ['markdown', 'md', 'mdown'] }
-  Plug 'jtratner/vim-flavored-markdown', { 'for': ['markdown'] }
-  Plug 'tyru/markdown-codehl-onthefly.vim', { 'for': ['markdown', 'md', 'mdown'] }
-  " Plug 'rhysd/vim-gfm-syntax'
+  Plug 'jtratner/vim-flavored-markdown', { 'for': ['markdown', 'ghmarkdown'] }
+  Plug 'tyru/markdown-codehl-onthefly.vim', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
+  Plug 'rhysd/vim-gfm-syntax', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
   " Plug 'euclio/vim-markdown-composer', { 'do': 'cargo build --release' }
 
 " # RoR
@@ -399,7 +399,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Markdown
-  au BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*} set nolazyredraw ft=markdown
+  au BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*} set nolazyredraw ft=ghmarkdown
   au FileType markdown,text,html setlocal spell complete+=kspell
   au FileType markdown set tw=80
 
@@ -422,7 +422,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## Completions
   au FileType * setl omnifunc=syntaxcomplete#Complete
-  au FileType html,markdown setl omnifunc=htmlcomplete#CompleteTags
+  au FileType html,markdown,ghmarkdown setl omnifunc=htmlcomplete#CompleteTags
   au FileType css,scss,sass,less,scss.css,sass.css setl omnifunc=csscomplete#CompleteCSS noci
 
   au FileType coffee setl omnifunc=javascriptcomplete#CompleteJS
@@ -556,33 +556,21 @@ set sidescroll=5
 hi User1 guifg=#FF0000 guibg=#504945 gui=bold
 hi User2 guifg=#FFFFFF guibg=#FF1111 gui=bold
 hi User3 guifg=#2C323C guibg=#E5C07B gui=bold
-" Override statusline as you like
-hi fzf1 ctermfg=161 ctermbg=251
-hi fzf2 ctermfg=23 ctermbg=251
-hi fzf3 ctermfg=237 ctermbg=251
 set statusline=\ %{toupper(mode())}                                             "Mode
 set statusline+=\ \│\ %{fugitive#head()!=''?'\ \ '.fugitive#head().'\ ':''}    "Git branch
-" set statusline+=\ \│\ %{fugitive#head()}                                      "Git branch
 set statusline+=%{GitFileStatus()}                                              "Git file status
-" set statusline+=\ \│\ %<%{pathshorten(getcwd())}\                             "File path
-" set statusline+=\ \│\ %4F                                                     "File path
 set statusline+=\ \│\ %{FilepathStatusline()}                                   "File path
 set statusline+=\%{FilenameStatusline()}                                        "File name
 set statusline+=\ %1*%m%*                                                       "Modified indicator
-" set statusline+=\ %w                                                            "Preview indicator
+set statusline+=\ %w                                                            "Preview indicator
 set statusline+=%{&readonly?'\ ':''}                                           "Read only indicator
-" set statusline+=\ %r                                                          "Read only indicator
 set statusline+=\ %q                                                            "Quickfix list indicator
 set statusline+=\ %=                                                            "Start right side layout
 set statusline+=\ %{&enc}                                                       "Encoding
 set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}                         "DevIcon/Filetype
-" set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}\ %{&filetype}         "Filetype
-" set statusline+=\ \│\ %y                                                      "Filetype
 set statusline+=\ \│\ %p%%                                                      "Percentage
 set statusline+=\ \│\ %c                                                        "Column number
 set statusline+=\ \│\ %l/%L                                                     "Current line number/Total line numbers
-" set statusline+=\ \│\ %#fzf1#\ >\ %#fzf2#fz%#fzf3#f                              "FZF
-" set statusline+=\ %{gutentags#statusline('\│\ ')}                               "Tags status
 set statusline+=\ %2*%{AleStatusline('error')}%*                                "Errors count
 set statusline+=%3*%{AleStatusline('warning')}%*                                "Warning count
 
@@ -598,6 +586,7 @@ cnoreabbrev Bd bd
 cnoreabbrev bD bd
 cnoreabbrev wrap set wrap
 cnoreabbrev nowrap set nowrap
+cnoreabbrev ft set ft
 
 " }}}
 " ================ Functions ======================== {{{
@@ -625,7 +614,7 @@ function! ScratchOpen()
   let scr_bufnr = bufnr('__scratch__')
   if scr_bufnr == -1
     vnew
-    setlocal filetype=markdown
+    setlocal filetype=ghmarkdown
     setlocal bufhidden=hide
     setlocal nobuflisted
     setlocal buftype=nofile
@@ -935,12 +924,15 @@ endfunction
   let g:vim_markdown_frontmatter = 1
   let g:vim_markdown_toc_autofit = 1
   let g:markdown_fenced_languages = [
-                          \ 'javascript',
-                          \ 'typescript',
-                          \ 'json',
-                          \ 'python',
-                          \ 'html',
-                          \ 'bash=sh']
+        \ 'javascript',
+        \ 'typescript',
+        \ 'typescriptreact',
+        \ 'scss',
+        \ 'ruby',
+        \ 'json',
+        \ 'python',
+        \ 'html',
+        \ 'bash=sh']
 
 " ## vim-json
   let g:vim_json_syntax_conceal = 0
@@ -1034,6 +1026,7 @@ endfunction
   let g:test#strategy = 'terminal_split'
   let test#ruby#rspec#options = '-f d'
   let test#ruby#bundle_exec = 1
+  let test#ruby#rspec#executable = 'bin/rspec --format doc --no-color'
 
 " ## FZF
   let g:fzf_buffers_jump = 1
