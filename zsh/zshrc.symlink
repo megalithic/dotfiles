@@ -21,25 +21,28 @@ export DOTS=$DOTFILES
 #   source $file
 # done
 
+# zsh core config
 source "$DOTS/zsh/components/zshrc/env.zsh"
 source "$DOTS/zsh/components/zshrc/aliases.zsh"
-source "$DOTS/zsh/components/zshrc/keybindings.zsh"
+source "$DOTS/zsh/components/zshrc/colors.zsh"
+source "$DOTS/zsh/components/zshrc/completion.zsh"
 source "$DOTS/zsh/components/zshrc/opts.zsh"
-# source "$DOTS/zsh/components/zshrc/vi-mode.zsh"
+source "$DOTS/zsh/components/zshrc/keybindings.zsh"
+
+# ancillary config
 source "$DOTS/zsh/components/zshrc/fasd.zsh"
 source "$DOTS/zsh/components/zshrc/ruby.zsh"
 source "$DOTS/zsh/components/zshrc/node.zsh"
 source "$DOTS/zsh/components/zshrc/git.zsh"
 source "$DOTS/zsh/components/zshrc/tmux.zsh"
-source "$DOTS/zsh/components/zshrc/fzf.zsh"
 source "$DOTS/zsh/components/zshrc/k.zsh"
-# source "$DOTS/zsh/components/zshrc/tag.zsh"
-source "$DOTS/zsh/components/zshrc/weather.zsh"
-source "$DOTS/zsh/components/zshrc/colors.zsh"
-source "$DOTS/zsh/components/zshrc/completion.zsh"
+
+# plugin config
+source "$DOTS/zsh/components/zshrc/fzf.zsh"
 source "$DOTS/zsh/components/zshrc/z.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.zsh"
 source "$DOTS/zsh/components/zshrc/syntax-highlighting.zsh"
+
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
@@ -48,9 +51,6 @@ then
   source ~/.localrc
 fi
 
-autoload -U compinit; compinit
 
 # My customized pure theme:
-# source "$DOTS/zsh/themes/gitstatus.zsh"
-source "$DOTS/zsh/themes/prompt_pure_setup"
-# source "$DOTS/zsh/themes/async"
+source "$DOTS/zsh/themes/prompt_pure.zsh"

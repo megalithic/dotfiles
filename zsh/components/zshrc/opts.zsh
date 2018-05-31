@@ -14,15 +14,15 @@ umask 022
 
 # autoload -U $ZSH/functions/*(:t)
 
-# HISTFILE=~/.zsh_history
-# HISTSIZE=10000
-# SAVEHIST=10000
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
 
 # for eager loading all files for ternjs
 #  - https://github.com/carlitux/deoplete-ternjs
 ulimit -n 2048
 
-setopt NO_BG_NICE # don't nice background tasks
+setopt NO_BG_NICE # don\'t nice background tasks
 setopt NO_HUP
 setopt NO_LIST_BEEP
 setopt LOCAL_OPTIONS # allow functions to have local options
