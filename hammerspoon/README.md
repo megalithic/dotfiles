@@ -1,14 +1,12 @@
-### [ Hammerspoon ](https://www.hammerspoon.org)
+## [ Hammerspoon ](https://www.hammerspoon.org)
 
-#### What even is this?
+### What even is this?
 
 The simplest answer, is that Hammerspoon is a Lua-based automation framework for
-your macOS-based computer.
+your macOS-based computer. It has a robust and well-documented Lua layer on top
+of the macOS core libraries and APIs.
 
-It has a robust and well-documented Lua layer on top of the macOS core libraries
-and APIs.
-
-#### So, what does my config do?
+### So, what does my config do?
 
 - **Push-to-Talk**: includes a handy menubar icon for current "talk" status. Bound to `alt+cmd`.
 
@@ -20,8 +18,8 @@ as well as Volume Up and Volume Down. Bound to `ctrl+shift+[`, `ctrl+shift+]`,
 `cmd+ctrl+shift+l`.
 
 - **Application Toggling**:
-  * Finder: `ctrl+```
-  * Chrome: `cmd+```
+  * Finder: ``ctrl+```
+  * Chrome: ``cmd+```
   * Kitty: `ctrl+space`
   * Slack: `cmd+ctrl+shift+s`
   * Spark: `cmd+ctrl+shift+m`
@@ -35,10 +33,12 @@ as well as Volume Up and Volume Down. Bound to `ctrl+shift+[`, `ctrl+shift+]`,
   * Manual window placement and sizing. Bound to `cmd+ctrl+j/k/l/h`.
 
 - **Automatic USB**:
-  * When docking my laptop (plugging in the TB3 cable), it automatically
-  switches my Karabiner-Elements profile to the one for my Vortex Pok3r
-  mechanical keyboard. It automatically turns off WiFi. It automatically
-  switches my audio output devices to my AudioEngine D1.
+  * When docking my laptop (plugging in the TB3 cable, aka using the laptop in
+  desktop mode), it automatically switches my Karabiner-Elements profile to the
+  one for my Vortex Pok3r mechanical keyboard. It automatically turns off WiFi.
+  It automatically switches my audio output devices to my AudioEngine D1.
+  It does the reverse to all these things to switch everything to be tied to
+  my laptop in laptop mode.
 
 - **[Home Assistant](https://www.home-assistant.io/) Integration**:
   * When logging into the computer, and I'm at home, it will fire off certain
