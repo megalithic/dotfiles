@@ -99,7 +99,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'calebeby/ncm-css', { 'for': ['scss', 'css', 'sass', 'less'] }
   " Plug 'roxma/ncm-rct-complete'
   Plug 'Shougo/echodoc.vim'
-  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': ':UpdateRemotePlugins' }
+  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
   Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }

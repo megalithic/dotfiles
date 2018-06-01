@@ -175,6 +175,12 @@ fstash() {
     done
 }
 
+# Use `fzf` to browse/select a recent git branch
+# h/t @jeremywrowe
+cb() {
+  git checkout $(git short-recent | fzf)
+}
+
 # - GIT ------------------
 # fs [FUZZY PATTERN] - Select selected tmux session
 #   - Bypass fuzzy finder if there's only one match (--select-1)
