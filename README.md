@@ -65,7 +65,7 @@ The file hierarchy:
   but still keep those autoloaded files in your home directory. These get
   symlinked when you run `bin/dotup`, or you can explicitly run `bin/symlinks`.
 - **topic/\<platform\>.sh**: Platform-specific installers to handle additional
-  things that you may need to happen for that topic.
+  things that you may need to happen for that topic. `all | macos | linux | freebsd | windows`
 
 ### Sensitive data
 
