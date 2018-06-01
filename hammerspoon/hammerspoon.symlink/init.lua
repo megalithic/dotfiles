@@ -58,9 +58,9 @@ keyUpDown = function(modifiers, key)
 end
 
 -- :: media
-hotkey.bind(ctrlShift, '[', function() utils.handleMediaKeyEvents('PREVIOUS', "⇤ previous") end) -- < - > 27
-hotkey.bind(ctrlShift, '\\', function() utils.handleMediaKeyEvents('PLAY', 'play/pause') end)   -- < \ >
-hotkey.bind(ctrlShift, ']', function() utils.handleMediaKeyEvents('NEXT', 'next ⇥') end)         -- < = > 24
+hotkey.bind(ctrlShift, '[', function() utils.handleSpotifyEvents('previous', "⇤ previous") end) -- < - > 27
+hotkey.bind(ctrlShift, '\\', function() utils.handleSpotifyEvents('playpause', 'play/pause') end)   -- < \ >
+hotkey.bind(ctrlShift, ']', function() utils.handleSpotifyEvents('next', 'next ⇥') end)         -- < = > 24
 
 hotkey.bind(ctrlShift, 27, function() utils.handleMediaKeyEvents('SOUND_DOWN', '') end) -- < - > 27
 hotkey.bind(ctrlShift, 24, function() utils.handleMediaKeyEvents('SOUND_UP', '') end)         -- < = > 24

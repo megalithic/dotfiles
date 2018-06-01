@@ -86,13 +86,28 @@ end
 
 utils.handleMediaKeyEvents = function (event, alertText)
   hs.eventtap.event.newSystemKeyEvent(event, true):post()
+end
+
+utils.handleSpotifyEvents = function (event, alertText)
+  if event == 'playpause' then
+    hs.spotify.playpause()
+  elseif event == 'next' then
+    hs.spotify.next()
+  elseif event == 'previous' then
+    hs.spotify.previous()
+  end
+
   utils.log.df('[hotkeys] event; %s', event)
 
   if alertText then
     hs.alert.closeAll()
     -- hs.alert.show(alertText, 0.5)
     hs.timer.doAfter(0.5, function ()
-      hs.alert.show(hs.spotify.getCurrentArtist() .. " - " .. hs.spotify.getCurrentTrack(), 1)
+      if event == 'playpause' and not hs.spotify.isPlaying() then
+        hs.alert.show('Spotify Paused')
+      else
+        hs.alert.show(hs.spotify.getCurrentArtist() .. " - " .. hs.spotify.getCurrentTrack(), 1)
+      end
     end)
   end
 end
