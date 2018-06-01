@@ -18,8 +18,8 @@ as well as Volume Up and Volume Down. Bound to `ctrl+shift+[`, `ctrl+shift+]`,
 `cmd+ctrl+shift+l`.
 
 - **Application Toggling**:
-  * Finder: ``ctrl+```
-  * Chrome: ``cmd+```
+  * Finder: `ctrl+backtick`
+  * Chrome: `cmd+backtick`
   * Kitty: `ctrl+space`
   * Slack: `cmd+ctrl+shift+s`
   * Spark: `cmd+ctrl+shift+m`
