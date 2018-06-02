@@ -1,0 +1,26 @@
+{
+  "ecmaVersion": 6,
+  "libs": [
+    "browser",
+    "ecma5",
+    "ecma6",
+    "jquery",
+    "underscore",
+    "lodash",
+    "ramda",
+    "chai"
+  ],
+  "plugins": {
+    "node": {},
+    "node_require": {},
+    "es_modules": {},
+    "complete_strings": {},
+    "doc_comment": {},
+    "modules": {},
+    "requirejs": {
+      "baseURL": "./",
+      "paths": {}
+    },
+    "webpack": {}
+  }
+}

@@ -52,7 +52,7 @@ then
 fi
 
 
-# My customized pure theme:
-# source "$DOTS/zsh/themes/prompt_pure.zsh"
+# prompt!!!
 autoload -U promptinit; promptinit
-prompt pure
+# prompt pure
+prompt spaceship
