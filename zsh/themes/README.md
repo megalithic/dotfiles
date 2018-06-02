@@ -1,8 +1,10 @@
 ### Pure Prompt Setup
 
-The goal here is to ensure the 2 zsh files live under a location that zsh picks up in $fpath, in my case, that'd be under `$HOME/.dotfiles/zsh/themes`.
+The goal here is to ensure the 3 zsh files live under a location that zsh picks up in $fpath,
+in my case, that'd be under `/usr/local/share/zsh/site-functions`.
 
 ```
-ln -s "$PWD/pure.zsh" $HOME/.dotfiles/zsh/themes/pure/prompt_pure_setup
-ln -s "$PWD/async.zsh" $HOME/.dotfiles/zsh/themes/pure/async
+ln -sfv $DOTS/zsh/themes/prompt_pure.zsh /usr/local/share/zsh/site-functions/prompt_pure_setup
+ln -sfv $DOTS/zsh/themes/async.zsh /usr/local/share/zsh/site-functions/async
+ln -sfv $DOTS/zsh/themes/gitstatus.zsh /usr/local/share/zsh/site-functions/gitstatus
 ```

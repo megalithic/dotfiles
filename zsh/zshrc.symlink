@@ -53,4 +53,6 @@ fi
 
 
 # My customized pure theme:
-source "$DOTS/zsh/themes/prompt_pure.zsh"
+# source "$DOTS/zsh/themes/prompt_pure.zsh"
+autoload -U promptinit; promptinit
+prompt pure

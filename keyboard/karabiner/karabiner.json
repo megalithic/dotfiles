@@ -301,7 +301,7 @@
                 }
             ],
             "name": "pok3r",
-            "selected": false,
+            "selected": true,
             "simple_modifications": [
                 {
                     "from": {
@@ -569,7 +569,7 @@
                 }
             ],
             "name": "internal",
-            "selected": true,
+            "selected": false,
             "simple_modifications": [],
             "virtual_hid_keyboard": {
                 "caps_lock_delay_milliseconds": 0,

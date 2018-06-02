@@ -25,8 +25,8 @@
 # \e[K  => clears everything after the cursor on the current line
 # \e[2K => clear everything on the current line
 
-source "$DOTS/zsh/themes/gitstatus.zsh"
-source "$DOTS/zsh/themes/async.zsh"
+# source "$DOTS/zsh/themes/gitstatus.zsh"
+# source "$DOTS/zsh/themes/async.zsh"
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
