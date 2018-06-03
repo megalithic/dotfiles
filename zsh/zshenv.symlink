@@ -88,8 +88,8 @@ unset path_file
 #
 
 fpath=(
-  $HOME/.dotfiles/zsh/themes # loads our themes/prompts; check theme README.md
-  $HOME/.dotfiles/zsh/functions
+  # $HOME/.dotfiles/zsh/themes # loads our themes/prompts; check theme README.md
+  # $HOME/.dotfiles/zsh/functions
   $fpath
 )
 

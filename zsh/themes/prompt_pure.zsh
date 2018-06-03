@@ -5,6 +5,8 @@
 # https://github.com/sindresorhus/pure
 # MIT License
 
+# HEAVILY modified by Seth Messer (@megalithic)
+
 # For my own and others sanity
 # git:
 # %b => current branch
@@ -25,8 +27,125 @@
 # \e[K  => clears everything after the cursor on the current line
 # \e[2K => clear everything on the current line
 
-# source "$DOTS/zsh/themes/gitstatus.zsh"
-# source "$DOTS/zsh/themes/async.zsh"
+
+# git configuration
+PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
+PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" ["}"
+PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="]"}"
+PURE_GIT_STATUS_COLOR="${PURE_GIT_STATUS_COLOR="red"}"
+PURE_GIT_STATUS_UNTRACKED="${PURE_GIT_STATUS_UNTRACKED="?"}"
+PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="+"}"
+PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="!"}"
+PURE_GIT_STATUS_RENAMED="${PURE_GIT_STATUS_RENAMED="»"}"
+PURE_GIT_STATUS_DELETED="${PURE_GIT_STATUS_DELETED="✘"}"
+PURE_GIT_STATUS_STASHED="${PURE_GIT_STATUS_STASHED="$"}"
+PURE_GIT_STATUS_UNMERGED="${PURE_GIT_STATUS_UNMERGED="="}"
+PURE_GIT_STATUS_AHEAD="${PURE_GIT_STATUS_AHEAD="↑"}"
+PURE_GIT_STATUS_BEHIND="${PURE_GIT_STATUS_BEHIND="↓"}"
+PURE_GIT_STATUS_DIVERGED="${PURE_GIT_STATUS_DIVERGED="⇕"}"
+
+
+# Determination of pure working directory
+# https://git.io/vdBH7
+if [[ -z "$PURE_ROOT" ]]; then
+  if [[ "${(%):-%N}" == '(eval)' ]]; then
+    if [[ "$0" == '-antigen-load' ]] && [[ -r "${PWD}/prompt_pure.zsh" ]]; then
+      # Antigen uses eval to load things so it can change the plugin (!!)
+      # https://github.com/zsh-users/antigen/issues/581
+      export PURE_ROOT=$PWD
+    else
+      print -P "%F{red}You must set PURE_ROOT to work from within an (eval).%f"
+      return 1
+    fi
+  else
+    # Get the path to file this code is executing in; then
+    # get the absolute path and strip the filename.
+    # See https://stackoverflow.com/a/28336473/108857
+    export PURE_ROOT=${${(%):-%x}:A:h}
+  fi
+fi
+
+prompt_pure_git_status() {
+  local INDEX git_status=""
+
+  INDEX=$(command git status --porcelain -b 2> /dev/null)
+
+  # Check for untracked files
+  if $(echo "$INDEX" | command grep -E '^\?\? ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_UNTRACKED$git_status"
+  fi
+
+  # Check for staged files
+  if $(echo "$INDEX" | command grep '^A[ MDAU] ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_ADDED$git_status"
+  elif $(echo "$INDEX" | command grep '^M[ MD] ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_ADDED$git_status"
+  elif $(echo "$INDEX" | command grep '^UA' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_ADDED$git_status"
+  fi
+
+  # Check for modified files
+  if $(echo "$INDEX" | command grep '^[ MARC]M ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_MODIFIED$git_status"
+  fi
+
+  # Check for renamed files
+  if $(echo "$INDEX" | command grep '^R[ MD] ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_RENAMED$git_status"
+  fi
+
+  # Check for deleted files
+  if $(echo "$INDEX" | command grep '^[MARCDU ]D ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_DELETED$git_status"
+  elif $(echo "$INDEX" | command grep '^D[ UM] ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_DELETED$git_status"
+  fi
+
+  # Check for stashes
+  if $(command git rev-parse --verify refs/stash >/dev/null 2>&1); then
+    git_status="$PURE_GIT_STATUS_STASHED$git_status"
+  fi
+
+  # Check for unmerged files
+  if $(echo "$INDEX" | command grep '^U[UDA] ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_UNMERGED$git_status"
+  elif $(echo "$INDEX" | command grep '^AA ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_UNMERGED$git_status"
+  elif $(echo "$INDEX" | command grep '^DD ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_UNMERGED$git_status"
+  elif $(echo "$INDEX" | command grep '^[DA]U ' &> /dev/null); then
+    git_status="$PURE_GIT_STATUS_UNMERGED$git_status"
+  fi
+
+  # Check whether branch is ahead
+  local is_ahead=false
+  if $(echo "$INDEX" | command grep '^## [^ ]\+ .*ahead' &> /dev/null); then
+    is_ahead=true
+  fi
+
+  # Check whether branch is behind
+  local is_behind=false
+  if $(echo "$INDEX" | command grep '^## [^ ]\+ .*behind' &> /dev/null); then
+    is_behind=true
+  fi
+
+  # Check wheather branch has diverged
+  if [[ "$is_ahead" == true && "$is_behind" == true ]]; then
+    git_status="$PURE_GIT_STATUS_DIVERGED$git_status"
+  else
+    [[ "$is_ahead" == true ]] && git_status="$PURE_GIT_STATUS_AHEAD$git_status"
+    [[ "$is_behind" == true ]] && git_status="$PURE_GIT_STATUS_BEHIND$git_status"
+  fi
+
+  if [[ -n $git_status ]]; then
+    # # Status prefixes are colorized
+    # pure::section \
+    #   "$PURE_GIT_STATUS_COLOR" \
+    #   "$PURE_GIT_STATUS_PREFIX$git_status$PURE_GIT_STATUS_SUFFIX"
+  fi
+
+  print -n "%F{$PURE_GIT_STATUS_COLOR}$PURE_GIT_STATUS_PREFIX$git_status$PURE_GIT_STATUS_SUFFIX%f"
+}
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
@@ -143,8 +262,8 @@ prompt_pure_preprompt_render() {
   # Add git branch and dirty status info.
   typeset -gA prompt_pure_vcs_info
   if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-    # preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
-    preprompt_parts+=("%F{$git_color}%f"'$(git_super_status)%f') # <- fancier, more useful git info
+    preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
+    # preprompt_parts+=("%F{$git_color}%f"'$(git_super_status)%f') # <- fancier, more useful git info (from gitstatus.zsh/gitstatus.py)
   fi
   # Git pull/push arrows.
   if [[ -n $prompt_pure_git_arrows ]]; then
@@ -282,6 +401,11 @@ prompt_pure_async_git_dirty() {
   return $?
 }
 
+# prompt_pure_async_git_status() {
+#   prompt_pure_git_status
+#   # print -r - ${prompt_pure_git_status}
+# }
+
 prompt_pure_async_git_fetch() {
   setopt localoptions noshwordsplit
   # use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
@@ -361,6 +485,8 @@ prompt_pure_async_tasks() {
 
   async_job "prompt_pure" prompt_pure_async_vcs_info $PWD
 
+  # async_job "prompt_pure" prompt_pure_async_git_status $PWD
+
   # # only perform tasks inside git working tree
   [[ -n $prompt_pure_vcs_info[top] ]] || return
 
@@ -389,9 +515,11 @@ prompt_pure_async_refresh() {
   integer time_since_last_dirty_check=$(( EPOCHSECONDS - ${prompt_pure_git_last_dirty_check_timestamp:-0} ))
   if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
     unset prompt_pure_git_last_dirty_check_timestamp
-    # check check if there is anything to pull
+    # check if there is anything to pull
     async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $PWD
   fi
+
+  async_job "prompt_pure" prompt_pure_async_git_status $PWD
 }
 
 prompt_pure_check_git_arrows() {
@@ -447,12 +575,20 @@ prompt_pure_async_callback() {
         prompt_pure_git_fetch_pattern+="|$output"
       fi
       ;;
+    # prompt_pure_async_git_status)
+    #   echo "OUTPUT = $output"
+    #   typeset -g prompt_pure_git_dirty=$output
+    #   do_render=1
+    #   ;;
     prompt_pure_async_git_dirty)
       local prev_dirty=$prompt_pure_git_dirty
       if (( code == 0 )); then
         unset prompt_pure_git_dirty
       else
-        typeset -g prompt_pure_git_dirty="*"
+        # typeset -g prompt_pure_git_dirty="*"
+        # typeset -g things="$(prompt_pure_git_status)"
+        # echo "things=${things}"
+        typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
       fi
 
       [[ $prev_dirty != $prompt_pure_git_dirty ]] && do_render=1
@@ -550,9 +686,11 @@ prompt_pure_setup() {
   # Prevent percentage showing up if output doesn't end with a newline.
   export PROMPT_EOL_MARK=''
 
-  prompt_opts=(subst percent)
+  # This variable is a magic variable used when loading themes with zsh's prompt
+  # function. It will ensure the proper prompt options are set.
+  prompt_opts=(cr percent sp subst)
 
-  # borrowed from promptinit, sets the prompt options in case pure was not
+  # borrowed from promptinit, sets the prompt options in case the prompt was not
   # initialized via promptinit.
   setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
 
@@ -567,7 +705,8 @@ prompt_pure_setup() {
 
   autoload -Uz add-zsh-hook
   autoload -Uz vcs_info
-  autoload -Uz git_super_status
+
+  # autoload -Uz git_super_status
   autoload -Uz async && async
 
   add-zsh-hook precmd prompt_pure_precmd
