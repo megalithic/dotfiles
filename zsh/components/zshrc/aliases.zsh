@@ -107,7 +107,7 @@ alias ec='emacsclient'
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-alias updatenvim="brew update; pip3 install --upgrade neovim; npm install -g neovim; nvim +PlugUpgrade +qall; nvim +PlugUpdate +qall; nvim +UpdateRemotePlugins +qall; wget https://raw.githubusercontent.com/pangloss/vim-javascript/master/indent/javascript.vim -O ~/.config/nvim/after/indent/javascript.vim; brew outdated"
+alias updatenvim="brew update; pip3 install --upgrade neovim; npm install -g neovim; nvim +PlugUpgrade +qall; nvim +PlugUpdate +qall; nvim +UpdateRemotePlugins +qall; brew outdated"
 alias nvimupdate=updatenvim
 alias nv="nvim"
 alias im="nvim"
@@ -128,18 +128,18 @@ alias vi="/usr/local/bin/vim"
 # -----------------------------------------------------------------------------
 alias ez="nvim ~/.zshrc"
 alias ezz="nvim ~/.zshenv"
-alias eza="nvim ~/.dotfiles/zsh/aliases.zsh"
-alias ezf="nvim ~/.dotfiles/zsh/functions.zsh"
-alias vars="nvim ~/.localrc"
 alias ezl="nvim ~/.localrc"
-alias ezo="nvim ~/.dotfiles/zsh/config.zsh"
-alias ezc="nvim ~/.dotfiles/zsh/config.zsh"
-alias eze="nvim ~/.dotfiles/zsh/env.zsh"
-alias ezp="nvim ~/.dotfiles/zsh/path.zsh"
-alias ezkb="nvim ~/.dotfiles/zsh/keybindings.zsh"
+alias eza="nvim ~/.dotfiles/zsh/**/aliases.zsh"
+alias ezf="nvim ~/.dotfiles/zsh/**/functions.zsh"
+alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"
+alias ezc=ezo
+alias eze="nvim ~/.dotfiles/zsh/**/env.zsh"
+alias ezp="nvim ~/.zshenv +:/\vpath\="
+alias ezfp=ezz
+alias ezkb=ezz
 alias ev="nvim ~/.dotfiles/nvim/init.vim"
-# alias evs="nvim ~/.dotfiles/nvim/settings.vim"
 alias ea="nvim ~/.dotfiles/alacritty/alacritty.yml.symlink"
+alias ek="nvim ~/.dotfiles/kitty/kitty.conf"
 alias et="nvim ~/.dotfiles/tmux/tmux.conf.symlink"
 
 # FOLDERS
@@ -148,8 +148,6 @@ alias dot="cd ~/.dotfiles"
 alias ot=dot
 alias code="cd ~/code"
 alias dev="cd ~/code"
-alias music="cd ~/music/Audio"
-alias sand="cd ~/code/sandbox"
 alias repos="cd ~/code"
 alias logs="cd ~/code/logs/"
 alias docs="cd ~/Documents"
