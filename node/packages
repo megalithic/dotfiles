@@ -16,7 +16,6 @@ neovim
 prettier
 prettier-eslint
 prettier-eslint-cli
-spaceship-prompt
 stylelint
 stylelint-config-standard
 javascript-typescript-langserver

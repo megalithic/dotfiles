@@ -1353,7 +1353,9 @@ endfunction
   " endif
 
 " ## deoplete
-  " call deoplete#enable() " which of these startups are needed?
+  " REFS:
+  " https://github.com/roflcopter4/PersonalDotFiles/blob/master/.Vim/deoplete.vim
+  " https://github.com/CameronDiver/dotfiles/blob/master/.SpaceVim/config/plugins/deoplete.vim
   let g:deoplete#enable_at_startup = 1
   let g:deoplete#auto_complete_delay = 0
   let g:echodoc_enable_at_startup=1
@@ -1370,21 +1372,26 @@ endfunction
   let g:deoplete#file#enable_buffer_path=1
   call deoplete#custom#source('buffer', 'mark', 'B')
   call deoplete#custom#source('tern', 'mark', '')
+  call deoplete#custom#source('ternjs', 'mark', '')
   call deoplete#custom#source('omni', 'mark', '⌾')
   call deoplete#custom#source('file', 'mark', '')
-  " call deoplete#custom#source('jedi', 'mark', '')
   call deoplete#custom#source('ultisnips', 'mark', '')
   call deoplete#custom#source('typescript', 'mark', '')
-  " call deoplete#custom#source('neosnippet', 'mark', '')
   call deoplete#custom#source('LanguageClient', 'mark', 'LC')
-  call deoplete#custom#source('typescript', 'rank', 630)
-  call deoplete#custom#source('ultisnips', 'rank', 999)
-  call deoplete#custom#source('LanguageClient', 'rank', 629)
+  call deoplete#custom#source('ultisnips', 'rank', 9999)
+  call deoplete#custom#source('typescript', 'rank', 1000)
+  call deoplete#custom#source('tern', 'rank', 1000)
+  call deoplete#custom#source('ternjs', 'rank', 1000)
+  call deoplete#custom#source('LanguageClient', 'rank', 750)
   call deoplete#custom#source('ultisnips', 'matchers', ['matcher_fuzzy'])
-  " let g:deoplete#sources = {}
   let g:deoplete#omni_patterns = {}
   let g:deoplete#omni_patterns.html = ''
   let g:deoplete#omni_patterns.css = ''
+  let g:deoplete#omni_patterns.lua = get(g:deoplete#omni_patterns, 'lua', '.')
+  let g:deoplete#omni#input_patterns = {}
+  let g:deoplete#omni#input_patterns.gitcommit = get(g:deoplete#omni#input_patterns, 'gitcommit', [
+        \'[ ]#[ 0-9a-zA-Z]*',
+        \])
   function! Preview_func()
     if &pvw
       setlocal nonumber norelativenumber
@@ -1395,6 +1402,7 @@ endfunction
   let g:deoplete#ignore_sources._ = ['around']
   let g:deoplete#ignore_sources.typescript = get(g:deoplete#ignore_sources, 'typescript', ['LanguageClient'])
   let g:deoplete#ignore_sources.typescriptreact = get(g:deoplete#ignore_sources, 'typescriptreact', ['LanguageClient'])
+  let g:deoplete#ignore_sources.gitcommit = get(g:deoplete#ignore_sources, 'gitcommit', ['neosnippet'])
 
   " let g:deoplete#enable_debug = 1
   " let g:deoplete#enable_profile = 1
