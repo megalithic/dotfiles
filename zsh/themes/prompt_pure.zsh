@@ -28,23 +28,6 @@
 # \e[2K => clear everything on the current line
 
 
-# git configuration
-PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
-PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" ["}"
-PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="]"}"
-PURE_GIT_STATUS_COLOR="${PURE_GIT_STATUS_COLOR="red"}"
-PURE_GIT_STATUS_UNTRACKED="${PURE_GIT_STATUS_UNTRACKED="?"}"
-PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="+"}"
-PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="!"}"
-PURE_GIT_STATUS_RENAMED="${PURE_GIT_STATUS_RENAMED="»"}"
-PURE_GIT_STATUS_DELETED="${PURE_GIT_STATUS_DELETED="✘"}"
-PURE_GIT_STATUS_STASHED="${PURE_GIT_STATUS_STASHED="$"}"
-PURE_GIT_STATUS_UNMERGED="${PURE_GIT_STATUS_UNMERGED="="}"
-PURE_GIT_STATUS_AHEAD="${PURE_GIT_STATUS_AHEAD="↑"}"
-PURE_GIT_STATUS_BEHIND="${PURE_GIT_STATUS_BEHIND="↓"}"
-PURE_GIT_STATUS_DIVERGED="${PURE_GIT_STATUS_DIVERGED="⇕"}"
-
-
 # Determination of pure working directory
 # https://git.io/vdBH7
 if [[ -z "$PURE_ROOT" ]]; then
@@ -64,6 +47,27 @@ if [[ -z "$PURE_ROOT" ]]; then
     export PURE_ROOT=${${(%):-%x}:A:h}
   fi
 fi
+
+# Extended git status information
+#
+# REF to the original implementations I was using:
+# gitstatus.py: https://github.com/megalithic/dotfiles/blob/3c68b00635c531d5db4367acbe4cd2d0dc9fd359/zsh/themes/gitstatus.py
+# gitstatus.zsh: https://github.com/megalithic/dotfiles/blob/3c68b00635c531d5db4367acbe4cd2d0dc9fd359/zsh/themes/gitstatus.zsh
+#
+PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
+PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" ["}"
+PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="]"}"
+PURE_GIT_STATUS_COLOR="${PURE_GIT_STATUS_COLOR="red"}"
+PURE_GIT_STATUS_UNTRACKED="${PURE_GIT_STATUS_UNTRACKED="…"}"
+PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="+"}"
+PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="•"}"
+PURE_GIT_STATUS_RENAMED="${PURE_GIT_STATUS_RENAMED="»"}"
+PURE_GIT_STATUS_DELETED="${PURE_GIT_STATUS_DELETED="×"}"
+PURE_GIT_STATUS_STASHED="${PURE_GIT_STATUS_STASHED="⚑"}"
+PURE_GIT_STATUS_UNMERGED="${PURE_GIT_STATUS_UNMERGED="="}"
+PURE_GIT_STATUS_AHEAD="${PURE_GIT_STATUS_AHEAD="↑"}"
+PURE_GIT_STATUS_BEHIND="${PURE_GIT_STATUS_BEHIND="↓"}"
+PURE_GIT_STATUS_DIVERGED="${PURE_GIT_STATUS_DIVERGED="⇕"}"
 
 prompt_pure_git_status() {
   local INDEX git_status=""
@@ -138,13 +142,10 @@ prompt_pure_git_status() {
   fi
 
   if [[ -n $git_status ]]; then
-    # # Status prefixes are colorized
-    # pure::section \
-    #   "$PURE_GIT_STATUS_COLOR" \
-    #   "$PURE_GIT_STATUS_PREFIX$git_status$PURE_GIT_STATUS_SUFFIX"
+    # TODO: colorize specific status indicators, see REF at method signature
+    print -n "%F{$PURE_GIT_STATUS_COLOR}$PURE_GIT_STATUS_PREFIX$git_status$PURE_GIT_STATUS_SUFFIX%f"
   fi
 
-  print -n "%F{$PURE_GIT_STATUS_COLOR}$PURE_GIT_STATUS_PREFIX$git_status$PURE_GIT_STATUS_SUFFIX%f"
 }
 
 # turns seconds into human readable time
@@ -263,7 +264,6 @@ prompt_pure_preprompt_render() {
   typeset -gA prompt_pure_vcs_info
   if [[ -n $prompt_pure_vcs_info[branch] ]]; then
     preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
-    # preprompt_parts+=("%F{$git_color}%f"'$(git_super_status)%f') # <- fancier, more useful git info (from gitstatus.zsh/gitstatus.py)
   fi
   # Git pull/push arrows.
   if [[ -n $prompt_pure_git_arrows ]]; then
@@ -401,11 +401,6 @@ prompt_pure_async_git_dirty() {
   return $?
 }
 
-# prompt_pure_async_git_status() {
-#   prompt_pure_git_status
-#   # print -r - ${prompt_pure_git_status}
-# }
-
 prompt_pure_async_git_fetch() {
   setopt localoptions noshwordsplit
   # use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
@@ -485,8 +480,6 @@ prompt_pure_async_tasks() {
 
   async_job "prompt_pure" prompt_pure_async_vcs_info $PWD
 
-  # async_job "prompt_pure" prompt_pure_async_git_status $PWD
-
   # # only perform tasks inside git working tree
   [[ -n $prompt_pure_vcs_info[top] ]] || return
 
@@ -518,8 +511,6 @@ prompt_pure_async_refresh() {
     # check if there is anything to pull
     async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $PWD
   fi
-
-  async_job "prompt_pure" prompt_pure_async_git_status $PWD
 }
 
 prompt_pure_check_git_arrows() {
@@ -575,19 +566,11 @@ prompt_pure_async_callback() {
         prompt_pure_git_fetch_pattern+="|$output"
       fi
       ;;
-    # prompt_pure_async_git_status)
-    #   echo "OUTPUT = $output"
-    #   typeset -g prompt_pure_git_dirty=$output
-    #   do_render=1
-    #   ;;
     prompt_pure_async_git_dirty)
       local prev_dirty=$prompt_pure_git_dirty
       if (( code == 0 )); then
         unset prompt_pure_git_dirty
       else
-        # typeset -g prompt_pure_git_dirty="*"
-        # typeset -g things="$(prompt_pure_git_status)"
-        # echo "things=${things}"
         typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
       fi
 
@@ -706,7 +689,6 @@ prompt_pure_setup() {
   autoload -Uz add-zsh-hook
   autoload -Uz vcs_info
 
-  # autoload -Uz git_super_status
   autoload -Uz async && async
 
   add-zsh-hook precmd prompt_pure_precmd
