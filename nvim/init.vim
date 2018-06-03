@@ -398,13 +398,14 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Markdown
-  au BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*} set nolazyredraw ft=ghmarkdown
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0 " ft=ghmarkdown
   au FileType markdown,text,html setlocal spell complete+=kspell
   au FileType markdown set tw=80
 
   " ----------------------------------------------------------------------------
   " ## Ruby
   au FileType ruby setl iskeyword+=_
+  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake} set ft=ruby
 
   " ----------------------------------------------------------------------------
   " ## SSH
@@ -552,26 +553,156 @@ set sidescroll=5
 " definitely:
 " https://gabri.me/blog/diy-vim-statusline/
 
+let g:currentmode={
+      \ 'n'  : 'N ',
+      \ 'no' : 'N·Operator Pending ',
+      \ 'v'  : 'V ',
+      \ 'V'  : 'V·Line ',
+      \ '' : 'V·Block ',
+      \ 's'  : 'Select ',
+      \ 'S'  : 'S·Line ',
+      \ '' : 'S·Block ',
+      \ 'i'  : 'I ',
+      \ 'R'  : 'R ',
+      \ 'Rv' : 'V·Replace ',
+      \ 'c'  : 'Command ',
+      \ 'cv' : 'Vim Ex ',
+      \ 'ce' : 'Ex ',
+      \ 'r'  : 'Prompt ',
+      \ 'rm' : 'More ',
+      \ 'r?' : 'Confirm ',
+      \ '!'  : 'Shell ',
+      \ 't'  : 'Terminal '
+      \}
+let fgcolor=synIDattr(synIDtrans(hlID("Normal")), "fg", "gui")
+let bgcolor=synIDattr(synIDtrans(hlID("Normal")), "bg", "gui")
+
 hi User1 guifg=#FF0000 guibg=#504945 gui=bold
 hi User2 guifg=#FFFFFF guibg=#FF1111 gui=bold
 hi User3 guifg=#2C323C guibg=#E5C07B gui=bold
-set statusline=\ %{toupper(mode())}                                             "Mode
-set statusline+=\ \│\ %{fugitive#head()!=''?'\ \ '.fugitive#head().'\ ':''}    "Git branch
+
+" highlight User1 cterm=None gui=None ctermfg=007 guifg=fgcolor
+" highlight User2 cterm=None gui=None ctermfg=008 guifg=bgcolor
+" highlight User3 cterm=None gui=None ctermfg=008 guifg=bgcolor
+highlight User4 cterm=None gui=None ctermfg=008 guifg=bgcolor
+highlight User5 cterm=None gui=None ctermfg=008 guifg=bgcolor
+highlight User7 cterm=None gui=None ctermfg=008 guifg=bgcolor
+highlight User8 cterm=None gui=None ctermfg=008 guifg=bgcolor
+highlight User9 cterm=None gui=None ctermfg=007 guifg=fgcolor
+
+set statusline=
+set statusline+=%{ChangeStatuslineColor()}                                      "Changing the statusline color
+set statusline+=\ %0*\ %{toupper(g:currentmode[mode()])}                        "Current mode
+set statusline+=\│\ %{fugitive#head()!=''?'\ \ '.fugitive#head().'\ ':''}      "Git branch
 set statusline+=%{GitFileStatus()}                                              "Git file status
 set statusline+=\ \│\ %{FilepathStatusline()}                                   "File path
 set statusline+=\%{FilenameStatusline()}                                        "File name
 set statusline+=\ %1*%m%*                                                       "Modified indicator
 set statusline+=\ %w                                                            "Preview indicator
-set statusline+=%{&readonly?'\ ':''}                                           "Read only indicator
+set statusline+=%{ReadOnly()}                                                   "Read only indicator
 set statusline+=\ %q                                                            "Quickfix list indicator
 set statusline+=\ %=                                                            "Start right side layout
 set statusline+=\ %{&enc}                                                       "Encoding
 set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}                         "DevIcon/Filetype
+set statusline+=\ \│\ %{FileSize()}                                             "File size
 set statusline+=\ \│\ %p%%                                                      "Percentage
 set statusline+=\ \│\ %c                                                        "Column number
-set statusline+=\ \│\ %l/%L                                                     "Current line number/Total line numbers
+set statusline+=\ \│\\ %l/%L                                                   "Current line number/Total line numbers
 set statusline+=\ %2*%{AleStatusline('error')}%*                                "Errors count
 set statusline+=%3*%{AleStatusline('warning')}%*                                "Warning count
+
+function! ReadOnly()
+  if &readonly || !&modifiable
+    return ''
+  else
+    return ''
+endfunction
+
+" Automatically change the statusline color depending on mode
+function! ChangeStatuslineColor()
+  if (mode() =~# '\v(n|no)')
+    exe 'hi! StatusLine ctermfg=008 guifg=fgcolor gui=None cterm=None'
+  elseif (mode() =~# '\v(v|V)' || g:currentmode[mode()] ==# 'V·Block' || get(g:currentmode, mode(), '') ==# 't')
+    exe 'hi! StatusLine ctermfg=005 guifg=#00ff00 gui=None cterm=None'
+  elseif (mode() ==# 'i')
+    exe 'hi! StatusLine ctermfg=004 guifg=#6CBCE8 gui=None cterm=None'
+  else
+    exe 'hi! StatusLine ctermfg=006 guifg=orange gui=None cterm=None'
+  endif
+
+  return ''
+endfunction
+
+function! FilepathStatusline() abort
+  if !empty(expand('%:t'))
+    let fn = winwidth(0) <# 55
+          \ ? '../'
+          \ : winwidth(0) ># 85
+          \ ? expand('%:~:.:h') . '/'
+          \ : pathshorten(expand('%:~:.:h')) . '/'
+  else
+    let fn = ''
+  endif
+  return fn
+endfunction
+
+function! FilenameStatusline() abort
+  let fn = !empty(expand('%:t'))
+        \ ? expand('%:p:t')
+        \ : '[No Name]'
+  return fn . (&readonly ? ' ' : '')
+endfunction
+"
+" Find out current buffer's size and output it.
+function! FileSize()
+  let bytes = getfsize(expand('%:p'))
+  if (bytes >= 1024)
+    let kbytes = bytes / 1024
+  endif
+  if (exists('kbytes') && kbytes >= 1000)
+    let mbytes = kbytes / 1000
+  endif
+
+  if bytes <= 0
+    return '0'
+  endif
+
+  if (exists('mbytes'))
+    return mbytes . 'MB '
+  elseif (exists('kbytes'))
+    return kbytes . 'KB '
+  else
+    return bytes . 'B '
+  endif
+endfunction
+
+function! AleStatusline(type)
+  let count = ale#statusline#Count(bufnr(''))
+  if a:type == 'error' && count['error']
+    return printf(' %d E ', count['error'])
+  endif
+
+  if a:type == 'warning' && count['warning']
+    let l:space = count['error'] ? ' ': ''
+    return printf('%s %d W ', l:space, count['warning'])
+  endif
+
+  return ''
+endfunction
+
+function! GitFileStatus()
+  if !exists('b:gitgutter')
+    return ''
+  endif
+  let l:summary = get(b:gitgutter, 'summary', [0, 0, 0])
+  let l:result = l:summary[0] == 0 ? '' : ' +'.l:summary[0]
+  let l:result .= l:summary[1] == 0 ? '' : ' ~'.l:summary[1]
+  let l:result .= l:summary[2] == 0 ? '' : ' -'.l:summary[2]
+  if l:result != ''
+    return ' '.l:result
+  endif
+  return l:result
+endfunction
 
 "}}}
 " ================ Abbreviations ==================== {{{
@@ -640,54 +771,6 @@ function! Search(...)
     let path = input('Path: ', '', 'file')
     execute 'CtrlSF "'.term.'" '.path
   endif
-endfunction
-
-function! FilepathStatusline() abort
-  if !empty(expand('%:t'))
-    let fn = winwidth(0) <# 55
-          \ ? '../'
-          \ : winwidth(0) ># 85
-          \ ? expand('%:~:.:h') . '/'
-          \ : pathshorten(expand('%:~:.:h')) . '/'
-  else
-    let fn = ''
-  endif
-  return fn
-endfun
-
-function! FilenameStatusline() abort
-  let fn = !empty(expand('%:t'))
-        \ ? expand('%:p:t')
-        \ : '[No Name]'
-  return fn . (&readonly ? ' ' : '')
-endfun
-
-function! AleStatusline(type)
-  let count = ale#statusline#Count(bufnr(''))
-  if a:type == 'error' && count['error']
-    return printf(' %d E ', count['error'])
-  endif
-
-  if a:type == 'warning' && count['warning']
-    let l:space = count['error'] ? ' ': ''
-    return printf('%s %d W ', l:space, count['warning'])
-  endif
-
-  return ''
-endfunction
-
-function! GitFileStatus()
-  if !exists('b:gitgutter')
-    return ''
-  endif
-  let l:summary = get(b:gitgutter, 'summary', [0, 0, 0])
-  let l:result = l:summary[0] == 0 ? '' : ' +'.l:summary[0]
-  let l:result .= l:summary[1] == 0 ? '' : ' ~'.l:summary[1]
-  let l:result .= l:summary[2] == 0 ? '' : ' -'.l:summary[2]
-  if l:result != ''
-    return ' '.l:result
-  endif
-  return l:result
 endfunction
 
 function! CloseBuffer() abort
@@ -813,27 +896,37 @@ endfunction
   " let g:goyo_margin_top = 3
   " let g:goyo_margin_bottom = 3
   " Writing in vim
-      let g:limelight_conceal_ctermfg = 240
-      let g:goyo_entered = 0
-      function! s:goyo_enter()
-        silent !tmux set status off
-        let g:goyo_entered = 1
-        set noshowmode
-        set noshowcmd
-        set scrolloff=999
-        Limelight
-      endfunction
+    let g:limelight_conceal_ctermfg = 240
+    let g:goyo_entered = 0
+    function! s:goyo_enter()
+      silent !tmux set status off
+      let g:goyo_entered = 1
+      set noshowmode
+      set noshowcmd
+      set scrolloff=999
+      Limelight
+    endfunction
 
-      function! s:goyo_leave()
-        silent !tmux set status on
-        let g:goyo_entered = 0
-        set showmode
-        set showcmd
-        set scrolloff=5
-        Limelight!
-      endfunction
-      autocmd! User GoyoEnter nested call <SID>goyo_enter()
-      autocmd! User GoyoLeave nested call <SID>goyo_leave()
+    function! s:goyo_leave()
+      silent !tmux set status on
+      let g:goyo_entered = 0
+      set showmode
+      set showcmd
+      set scrolloff=5
+      Limelight!
+    endfunction
+    autocmd! User GoyoEnter nested call <SID>goyo_enter()
+    autocmd! User GoyoLeave nested call <SID>goyo_leave()
+    " " Activate goyo with Markdown files
+    " function! s:auto_goyo()
+    "   if &ft == 'markdown'
+    "     Goyo 120
+    "   elseif exists('#goyo')
+    "     let bufnr = bufnr('%')
+    "     Goyo!
+    "     execute 'b '.bufnr
+    "   endif
+    " endfunction
 
 " ## vim-qf
   " nmap qp <Plug>qf_qf_previous
