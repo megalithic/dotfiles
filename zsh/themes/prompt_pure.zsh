@@ -254,7 +254,7 @@ prompt_pure_preprompt_render() {
     if [[ "$pwd" == (#m)[/~] ]]; then
       preprompt_parts+=("~")
     else
-      preprompt_parts+=("${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}")
+      preprompt_parts+=("%F{blue}${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}%f")
     fi
   else
     preprompt_parts+=('%F{blue}%~%f')

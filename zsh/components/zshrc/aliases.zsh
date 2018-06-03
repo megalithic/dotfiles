@@ -134,9 +134,10 @@ alias ezf="nvim ~/.dotfiles/zsh/**/functions.zsh"
 alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"
 alias ezc=ezo
 alias eze="nvim ~/.dotfiles/zsh/**/env.zsh"
-alias ezp="nvim ~/.zshenv +:/\vpath\="
+alias ezpr="nvim ~/.dotfiles/zsh/themes/prompt_pure.zsh"
+alias ezp=ezz
 alias ezfp=ezz
-alias ezkb=ezz
+alias ezkb="nvim ~/.dotfiles/zsh/**/keybindings.zsh"
 alias ev="nvim ~/.dotfiles/nvim/init.vim"
 alias ea="nvim ~/.dotfiles/alacritty/alacritty.yml.symlink"
 alias ek="nvim ~/.dotfiles/kitty/kitty.conf"
