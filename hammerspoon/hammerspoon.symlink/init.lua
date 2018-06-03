@@ -9,16 +9,9 @@
 
 
 -- :: imports/requires
--- require 'mpd'
 -- require 'redshift'
--- require('control-escape') -- is now handled by karabiner-elements
--- require('delete-words')
--- require('hyper')
 -- require('markdown')
 -- require('microphone')
--- require('panes')
--- require('super')
--- require('windows')
 local utils = require 'utils'
 local wm = require 'wm'
 local hotkey = require 'hs.hotkey'
