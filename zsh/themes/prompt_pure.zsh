@@ -48,9 +48,9 @@ if [[ -z "$PURE_ROOT" ]]; then
   fi
 fi
 
-# Extended git status information
+# Extended git status information (graciously taken from spaceship-prompt)
 #
-# REF to the original implementations I was using:
+# REFS to the original implementations I was using:
 # gitstatus.py: https://github.com/megalithic/dotfiles/blob/3c68b00635c531d5db4367acbe4cd2d0dc9fd359/zsh/themes/gitstatus.py
 # gitstatus.zsh: https://github.com/megalithic/dotfiles/blob/3c68b00635c531d5db4367acbe4cd2d0dc9fd359/zsh/themes/gitstatus.zsh
 #
