@@ -105,11 +105,11 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'natebosch/vim-lsc' " https://github.com/natebosch/vim-lsc/blob/master/doc/lsc.txt
 
 " ## Tags
-  if executable('ctags')
-    Plug 'ludovicchabant/vim-gutentags'
-    Plug 'majutsushi/tagbar'
-    " Plug 'kristijanhusak/vim-js-file-import'
-  endif
+  " if executable('ctags')
+  "   Plug 'ludovicchabant/vim-gutentags'
+  "   Plug 'majutsushi/tagbar'
+  "   " Plug 'kristijanhusak/vim-js-file-import'
+  " endif
 
 " ## Snippets
   if has('python3')
