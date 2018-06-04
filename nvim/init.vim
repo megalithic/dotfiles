@@ -128,7 +128,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
-  Plug 'brooth/far.vim'
+  Plug 'brooth/far.vim' " find and replace
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean'
   Plug 'wsdjeg/vim-fetch' " open files at line number
@@ -160,7 +160,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
 
   Plug 'w0rp/ale'
-  " Plug 'mattn/emmet-vim', { 'for': ['html', 'css', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx'] }
+  Plug 'mattn/emmet-vim', { 'for': ['html', 'css', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'eruby'] }
   " Plug 'mhinz/vim-signify'
   " Plug 'airblade/vim-gitgutter'
 
@@ -590,8 +590,7 @@ highlight User7 cterm=None gui=None ctermfg=008 guifg=bgcolor
 highlight User8 cterm=None gui=None ctermfg=008 guifg=bgcolor
 highlight User9 cterm=None gui=None ctermfg=007 guifg=fgcolor
 
-set statusline=
-set statusline+=%{ChangeStatuslineColor()}                                      "Changing the statusline color
+set statusline=%{ChangeStatuslineColor()}                                       "Changing the statusline color
 set statusline+=\ %0*\ %{toupper(g:currentmode[mode()])}                        "Current mode
 set statusline+=\│\ %{fugitive#head()!=''?'\ \ '.fugitive#head().'\ ':''}      "Git branch
 set statusline+=%{GitFileStatus()}                                              "Git file status
@@ -603,7 +602,7 @@ set statusline+=%{ReadOnly()}                                                   
 set statusline+=\ %q                                                            "Quickfix list indicator
 set statusline+=\ %=                                                            "Start right side layout
 set statusline+=\ %{&enc}                                                       "Encoding
-set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}                         "DevIcon/Filetype
+set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}\                        "DevIcon/Filetype
 set statusline+=\ \│\ %{FileSize()}                                             "File size
 set statusline+=\ \│\ %p%%                                                      "Percentage
 set statusline+=\ \│\ %c                                                        "Column number
@@ -957,13 +956,16 @@ endfunction
   let g:qs_enable = 0
 
 " ## emmet
-  " let g:user_emmet_leader_key = '<c-e>'                                           "Change trigger emmet key
-  " let g:user_emmet_leader_key='<Tab>'
-  " let g:user_emmet_settings = {
-  "       \  'javascript.jsx' : {
-  "       \      'extends' : 'jsx',
-  "       \  },
-  "       \}
+  let g:user_emmet_leader_key = '<c-e>'                                           "Change trigger emmet key
+  let g:user_emmet_leader_key='<Tab>'
+  let g:user_emmet_settings = {
+        \  'javascript.jsx' : {
+        \      'extends' : 'jsx',
+        \  },
+        \  'typescriptreact' : {
+        \      'extends' : 'jsx',
+        \  },
+        \}
 
 " # delimitMate
   let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
