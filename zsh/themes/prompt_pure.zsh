@@ -12,8 +12,10 @@
 # %b => current branch
 # %a => current action (rebase/merge)
 # prompt:
-# %F => color dict
+# %F => color dict; example: %F{blue}this will be blue%f
 # %f => reset color
+# %{%B%} => bold
+# %{%b%} => reset bold
 # %~ => current path
 # %* => time
 # %n => username
@@ -57,21 +59,21 @@ fi
 PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
 PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" ["}"
 PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="]"}"
-PURE_GIT_STATUS_COLOR="${PURE_GIT_STATUS_COLOR="red"}"
-PURE_GIT_STATUS_CLEAN="${PURE_GIT_STATUS_CLEAN="✓"}"
+PURE_GIT_STATUS_COLOR="${PURE_GIT_STATUS_COLOR="white"}"
+PURE_GIT_STATUS_CLEAN="${PURE_GIT_STATUS_CLEAN="%{%B%}%F{green}✓%f%{%b%}"}"
 PURE_GIT_STATUS_UNTRACKED="${PURE_GIT_STATUS_UNTRACKED="…"}"
-PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="+"}"
-PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="•"}" # ?
+PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="%F{blue}+%f"}"
+PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="%F{red}•%f"}" # ?
 PURE_GIT_STATUS_RENAMED="${PURE_GIT_STATUS_RENAMED="»"}"
-PURE_GIT_STATUS_DELETED="${PURE_GIT_STATUS_DELETED="×"}"
+PURE_GIT_STATUS_DELETED="${PURE_GIT_STATUS_DELETED="%F{red}×%f"}"
 PURE_GIT_STATUS_STASHED="${PURE_GIT_STATUS_STASHED="⚑"}"
-PURE_GIT_STATUS_UNMERGED="${PURE_GIT_STATUS_UNMERGED="="}"
+PURE_GIT_STATUS_UNMERGED="${PURE_GIT_STATUS_UNMERGED="%F{orange}=%f"}"
 PURE_GIT_STATUS_AHEAD="${PURE_GIT_STATUS_AHEAD="↑"}"
 PURE_GIT_STATUS_BEHIND="${PURE_GIT_STATUS_BEHIND="↓"}"
 PURE_GIT_STATUS_DIVERGED="${PURE_GIT_STATUS_DIVERGED="⇕"}"
 
 prompt_pure_git_status() {
-  local INDEX git_status=""
+  local INDEX git_status="" untracked_dirty=$1
 
   INDEX=$(command git status --porcelain -b 2> /dev/null)
 
@@ -143,10 +145,12 @@ prompt_pure_git_status() {
   fi
 
   # Check if we have a clean repo
-  # if $(echo "$INDEX" | command grep '^R[ MD] ' &> /dev/null); then
-  #   # %{$fg_bold[green]%}%{✓%G%}
-  #   git_status="$PURE_GIT_STATUS_CLEAN$git_status"
-  # fi
+  if [[ $untracked_dirty = 0 ]]; then
+    # %{$fg_bold[green]%}%{✓%G%}
+    # git_status="%{$fg_bold[green]%}%{$PURE_GIT_STATUS_CLEAN%G%}$git_status"
+    # git_status="%F{green}$PURE_GIT_STATUS_CLEAN%f$git_status"
+    git_status="$PURE_GIT_STATUS_CLEAN$git_status"
+  fi
 
   if [[ -n $git_status ]]; then
     # TODO: colorize specific status indicators, see REF at method signature
@@ -575,12 +579,14 @@ prompt_pure_async_callback() {
       ;;
     prompt_pure_async_git_dirty)
       local prev_dirty=$prompt_pure_git_dirty
-      # if (( code == 0 )); then
-      #   unset prompt_pure_git_dirty
-      # else
-      #   typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
-      # fi
-      typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
+      if (( code == 0 )); then
+        # unset prompt_pure_git_dirty
+        # clean = 0
+        typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status 0)"
+      else
+        # dirty = 1
+        typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status 1)"
+      fi
 
       [[ $prev_dirty != $prompt_pure_git_dirty ]] && do_render=1
 
