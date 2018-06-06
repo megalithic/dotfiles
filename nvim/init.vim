@@ -399,7 +399,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Markdown
-  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0 " ft=ghmarkdown
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0
   au FileType markdown,text,html setlocal spell complete+=kspell
   au FileType markdown set tw=80
 
@@ -423,7 +423,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## Completions
   au FileType * setl omnifunc=syntaxcomplete#Complete
-  au FileType html,markdown,ghmarkdown setl omnifunc=htmlcomplete#CompleteTags
+  au FileType html,markdown setl omnifunc=htmlcomplete#CompleteTags
   au FileType css,scss,sass,less,scss.css,sass.css setl omnifunc=csscomplete#CompleteCSS noci
 
   au FileType coffee setl omnifunc=javascriptcomplete#CompleteJS
@@ -1019,6 +1019,7 @@ endfunction
   let g:vim_markdown_frontmatter = 1
   let g:vim_markdown_toc_autofit = 1
   let g:vim_markdown_new_list_item_indent = 2
+  let g:vim_markdown_conceal = 0
   let g:markdown_fenced_languages = [
         \ 'javascript',
         \ 'typescript',
