@@ -380,7 +380,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## JavaScript
-  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses " consistently fails *shrug*
+  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
   au BufNewFile,BufRead *.tsx set ft=typescriptreact "forces typescript.tsx -> typescriptreact
@@ -406,7 +406,8 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## Ruby
   au FileType ruby setl iskeyword+=_
-  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake} set ft=ruby
+  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
+  au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
 
   " ----------------------------------------------------------------------------
   " ## SSH
@@ -1020,15 +1021,15 @@ endfunction
   let g:vim_markdown_toc_autofit = 1
   let g:vim_markdown_new_list_item_indent = 2
   let g:vim_markdown_conceal = 0
+  let g:vim_markdown_folding_disabled = 1
   let g:markdown_fenced_languages = [
-        \ 'javascript',
+        \ 'javascript', 'js=javascript', 'json=javascript',
         \ 'typescript',
         \ 'typescriptreact',
-        \ 'scss',
-        \ 'ruby',
-        \ 'json',
+        \ 'css', 'scss', 'sass',
+        \ 'ruby', 'erb=eruby',
         \ 'python',
-        \ 'html',
+        \ 'haml', 'html',
         \ 'bash=sh']
 
 " ## vim-json
@@ -1151,35 +1152,11 @@ endfunction
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
-    " command! -bang -nargs=* Rg
-    "       \ call fzf#vim#grep(
-    "       \   'rg --column --line-number --no-heading --color=always --glob "!.git/*" '.shellescape(<q-args>), 1,
-    "       \   <bang>0 ? fzf#vim#with_preview('up:60%')
-    "       \           : fzf#vim#with_preview('right:50%:hidden', '?'),
-    "       \   <bang>0)
-    " command! -bang -nargs=* Rg
-    "       \ call fzf#vim#grep(
-    "       \   'rg --column --line-number --ignore-case --no-heading --no-messages --hidden --color=always '
-    "       \   . <q-args>, 1,
-    "       \   <bang>0 ? fzf#vim#with_preview('up:60%')
-    "       \           : fzf#vim#with_preview('right:50%:hidden', '?'),
-    "       \   <bang>0)
     command! -bang -nargs=? -complete=dir Files
           \ call fzf#vim#files(<q-args>,
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
-    " command! -bang -nargs=* Find
-    "       \ call fzf#vim#grep('rg --column --line-number --no-heading --fixed-strings --ignore-case --no-ignore --hidden --follow --glob "!.git/*" --color "always" '.shellescape(<q-args>).'| tr -d "\017"',
-    "       \   1,
-    "       \   <bang>0)
-
-    " command! -bang -nargs=* F
-    "       \ call fzf#vim#grep(
-    "       \   'rg --column --line-number --no-heading --glob "!.git/*" --color=always '.shellescape(<q-args>), 1,
-    "       \   <bang>0 ? fzf#vim#with_preview('up:60%')
-    "       \           : fzf#vim#with_preview('right:50%:hidden', '?'),
-    "       \   <bang>0)
   endif
 
 " ## ag
@@ -1198,11 +1175,9 @@ endfunction
     let g:ctrlp_user_command = b:ag_command
   endif
 
-
 " ## gist.vim
   let g:gist_open_url = 1
   let g:gist_default_private = 1
-
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger		= "<c-e>"
@@ -1211,14 +1186,6 @@ endfunction
   let g:UltiSnipsJumpBackwardTrigger	= "<s-tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
-
-
-" ## neosnippet
-  " let g:neosnippet#enable_completed_snippet = 1
-  " let g:neosnippet#enable_snipmate_compatibility = 1
-  " " let g:neosnippet#snippets_directory='~/GitHub/ionic-snippets'
-  " let g:neosnippet#expand_word_boundary = 1
-
 
 " ## LanguageClient
   let g:LanguageClient_diagnosticsList = v:null
@@ -1231,6 +1198,7 @@ endfunction
   " catch
   "   let g:LanguageClient_diagnosticsList = ''
   " endtry
+
   " PREFER nvim-typescript for most things, as it's faster
   augroup LanguageClientConfig
     autocmd!
@@ -1701,14 +1669,13 @@ vmap " S"
 " ## Splits with vim-tmux-navigator
 let g:tmux_navigator_no_mappings = 1
 let g:tmux_navigator_save_on_switch = 1
-" nnoremap <silent> <BS>  :TmuxNavigateLeft<cr>
 nnoremap <silent> <C-h> :TmuxNavigateLeft<cr>
 nnoremap <silent> <C-j> :TmuxNavigateDown<cr>
 nnoremap <silent> <C-k> :TmuxNavigateUp<cr>
 nnoremap <silent> <C-l> :TmuxNavigateRight<cr>
 nnoremap <silent> <C-\> :TmuxNavigatePrevious<cr>
-nnoremap <C-o> :vnew<cr>:e<space><c-d>
-nnoremap <C-t> :tabe<cr>:e<space><c-d>
+nnoremap <C-o> :vsp <c-d>
+nnoremap <C-t> :tabe <c-d>
 
 if(has('nvim'))
   tnoremap <C-w>h <C-\><C-n><C-w><C-h>
