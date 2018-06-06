@@ -58,6 +58,7 @@ PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
 PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" ["}"
 PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="]"}"
 PURE_GIT_STATUS_COLOR="${PURE_GIT_STATUS_COLOR="red"}"
+PURE_GIT_STATUS_CLEAN="${PURE_GIT_STATUS_CLEAN="✓"}"
 PURE_GIT_STATUS_UNTRACKED="${PURE_GIT_STATUS_UNTRACKED="…"}"
 PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="+"}"
 PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="•"}" # ?
@@ -133,13 +134,19 @@ prompt_pure_git_status() {
     is_behind=true
   fi
 
-  # Check wheather branch has diverged
+  # Check whether branch has diverged
   if [[ "$is_ahead" == true && "$is_behind" == true ]]; then
     git_status="$PURE_GIT_STATUS_DIVERGED$git_status"
   else
     [[ "$is_ahead" == true ]] && git_status="$PURE_GIT_STATUS_AHEAD$git_status"
     [[ "$is_behind" == true ]] && git_status="$PURE_GIT_STATUS_BEHIND$git_status"
   fi
+
+  # Check if we have a clean repo
+  # if $(echo "$INDEX" | command grep '^R[ MD] ' &> /dev/null); then
+  #   # %{$fg_bold[green]%}%{✓%G%}
+  #   git_status="$PURE_GIT_STATUS_CLEAN$git_status"
+  # fi
 
   if [[ -n $git_status ]]; then
     # TODO: colorize specific status indicators, see REF at method signature
@@ -568,11 +575,12 @@ prompt_pure_async_callback() {
       ;;
     prompt_pure_async_git_dirty)
       local prev_dirty=$prompt_pure_git_dirty
-      if (( code == 0 )); then
-        unset prompt_pure_git_dirty
-      else
-        typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
-      fi
+      # if (( code == 0 )); then
+      #   unset prompt_pure_git_dirty
+      # else
+      #   typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
+      # fi
+      typeset -g prompt_pure_git_dirty="$(prompt_pure_git_status)"
 
       [[ $prev_dirty != $prompt_pure_git_dirty ]] && do_render=1
 

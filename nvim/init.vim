@@ -1495,9 +1495,9 @@ endfunction
   autocmd WinEnter * call Preview_func()
   let g:deoplete#ignore_sources = {}
   let g:deoplete#ignore_sources._ = ['around']
-  let g:deoplete#ignore_sources.typescript = get(g:deoplete#ignore_sources, 'typescript', ['LanguageClient'])
-  let g:deoplete#ignore_sources.typescriptreact = get(g:deoplete#ignore_sources, 'typescriptreact', ['LanguageClient'])
-  let g:deoplete#ignore_sources.gitcommit = get(g:deoplete#ignore_sources, 'gitcommit', ['neosnippet'])
+  " let g:deoplete#ignore_sources.typescript = get(g:deoplete#ignore_sources, 'typescript', ['LanguageClient'])
+  " let g:deoplete#ignore_sources.typescriptreact = get(g:deoplete#ignore_sources, 'typescriptreact', ['LanguageClient'])
+  " let g:deoplete#ignore_sources.gitcommit = get(g:deoplete#ignore_sources, 'gitcommit', ['ultisnips'])
 
   " let g:deoplete#enable_debug = 1
   " let g:deoplete#enable_profile = 1
