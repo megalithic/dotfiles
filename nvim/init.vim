@@ -49,7 +49,8 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'martin-svk/vim-yaml', { 'for': ['yaml'] }
 
 " # MD
-  " Plug 'tpope/vim-markdown', { 'for': ['markdown', 'md', 'mdown'] }
+  Plug 'tpope/vim-markdown', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
+  Plug 'plasticboy/vim-markdown', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
   Plug 'jtratner/vim-flavored-markdown', { 'for': ['markdown', 'ghmarkdown'] }
   Plug 'tyru/markdown-codehl-onthefly.vim', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
   Plug 'rhysd/vim-gfm-syntax', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
@@ -867,7 +868,7 @@ endfunction
 " ================ Plugin Config/Settings ======================== {{{
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'graphql', 'jsx']
+  let g:polyglot_disabled = ['typescript', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown']
 
 " ## vim-devicons
   " let g:NERDTreeGitStatusNodeColorization = 1
@@ -972,7 +973,7 @@ endfunction
 
 " ## ALE
   let g:ale_enabled = 1
-  let g:ale_lint_delay = 100
+  let g:ale_lint_delay = 1000
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linters = {
@@ -1017,6 +1018,7 @@ endfunction
 " ## vim-markdown
   let g:vim_markdown_frontmatter = 1
   let g:vim_markdown_toc_autofit = 1
+  let g:vim_markdown_new_list_item_indent = 2
   let g:markdown_fenced_languages = [
         \ 'javascript',
         \ 'typescript',
@@ -1219,8 +1221,8 @@ endfunction
 
 " ## LanguageClient
   let g:LanguageClient_diagnosticsList = v:null
-  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
-  let g:LanguageClient_loadSettings = 0
+  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
+  let g:LanguageClient_loadSettings = 1
   let g:LanguageClient_loggingLevel = 'INFO'
   " Don't populate lists since it overrides Neomake lists
   " try
@@ -1466,8 +1468,8 @@ endfunction
   endfunction
   let g:deoplete#file#enable_buffer_path=1
   call deoplete#custom#source('buffer', 'mark', 'B')
-  call deoplete#custom#source('tern', 'mark', '')
-  call deoplete#custom#source('ternjs', 'mark', '')
+  " call deoplete#custom#source('tern', 'mark', '')
+  " call deoplete#custom#source('ternjs', 'mark', '')
   call deoplete#custom#source('omni', 'mark', '⌾')
   call deoplete#custom#source('file', 'mark', '')
   call deoplete#custom#source('ultisnips', 'mark', '')
@@ -1475,8 +1477,8 @@ endfunction
   call deoplete#custom#source('LanguageClient', 'mark', 'LC')
   call deoplete#custom#source('ultisnips', 'rank', 9999)
   call deoplete#custom#source('typescript', 'rank', 1000)
-  call deoplete#custom#source('tern', 'rank', 1000)
-  call deoplete#custom#source('ternjs', 'rank', 1000)
+  " call deoplete#custom#source('tern', 'rank', 1000)
+  " call deoplete#custom#source('ternjs', 'rank', 1000)
   call deoplete#custom#source('LanguageClient', 'rank', 750)
   call deoplete#custom#source('ultisnips', 'matchers', ['matcher_fuzzy'])
   let g:deoplete#omni_patterns = {}
@@ -1614,6 +1616,7 @@ map Q <Nop>
 nnoremap <Leader>] <C-W>v<C-]>
 
 map <leader>ev :vnew! ~/.dotfiles/nvim/init.vim<cr>
+map <leader>ek :vnew! ~/.dotfiles/kitty/kitty.conf<cr>
 map <leader>eg :vnew! ~/.gitconfig<cr>
 map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<cr>
 map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<cr>

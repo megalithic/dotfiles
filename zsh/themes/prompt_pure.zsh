@@ -5,7 +5,9 @@
 # https://github.com/sindresorhus/pure
 # MIT License
 
+# ---------------------------------------------
 # HEAVILY modified by Seth Messer (@megalithic)
+# ---------------------------------------------
 
 # For my own and others sanity
 # git:
@@ -28,6 +30,11 @@
 # \e8   => restore cursor position
 # \e[K  => clears everything after the cursor on the current line
 # \e[2K => clear everything on the current line
+
+
+# Pure defaults
+PURE_GIT_UP_ARROW="↑" # ⇡↑
+PURE_GIT_DOWN_ARROW="↓" # ⇡↓
 
 
 # Determination of pure working directory
@@ -56,6 +63,7 @@ fi
 # gitstatus.py: https://github.com/megalithic/dotfiles/blob/3c68b00635c531d5db4367acbe4cd2d0dc9fd359/zsh/themes/gitstatus.py
 # gitstatus.zsh: https://github.com/megalithic/dotfiles/blob/3c68b00635c531d5db4367acbe4cd2d0dc9fd359/zsh/themes/gitstatus.zsh
 #
+PURE_GIT_BRANCH_COLOR="${PURE_GIT_BRANCH_COLOR="130"}"
 PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
 PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" %F{247}[%f"}"
 PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="%F{247}]%f"}"
@@ -139,8 +147,9 @@ prompt_pure_git_status() {
   if [[ "$is_ahead" == true && "$is_behind" == true ]]; then
     git_status="$PURE_GIT_STATUS_DIVERGED$git_status"
   else
-    [[ "$is_ahead" == true ]] && git_status="$PURE_GIT_STATUS_AHEAD$git_status"
-    [[ "$is_behind" == true ]] && git_status="$PURE_GIT_STATUS_BEHIND$git_status"
+    # We use pure's async arrows for these features:
+    # [[ "$is_ahead" == true ]] && git_status="$PURE_GIT_STATUS_AHEAD$git_status"
+    # [[ "$is_behind" == true ]] && git_status="$PURE_GIT_STATUS_BEHIND$git_status"
   fi
 
   # Check if we have a clean repo
@@ -251,8 +260,7 @@ prompt_pure_preprompt_render() {
 
   # Set color for git branch/dirty status, change color if dirty checking has
   # been delayed.
-  local git_color=130
-  [[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
+  [[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && PURE_GIT_BRANCH_COLOR=red
 
   # Initialize the preprompt array.
   local -a preprompt_parts
@@ -272,7 +280,7 @@ prompt_pure_preprompt_render() {
   # Add git branch and dirty status info.
   typeset -gA prompt_pure_vcs_info
   if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-    preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
+    preprompt_parts+=("%F{$PURE_GIT_BRANCH_COLOR}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
   fi
   # Git pull/push arrows.
   if [[ -n $prompt_pure_git_arrows ]]; then
