@@ -36,3 +36,4 @@ vim-lsp.log
 .cache
 repos
 tags
+**/__pycache__

@@ -172,7 +172,7 @@ cask 'usb-overdrive'
 # cask 'yubiswitch'
 cask 'visual-studio-code'
 # cask 'yubico-authenticator'
-cask 'yakyak' # https://github.com/yakyak/yakyak/issues/919#issuecomment-389866711
+cask 'yakyak'
 
 mas 'Fantastical2', id: 975937182
 mas 'Spark', id: 1176895641
