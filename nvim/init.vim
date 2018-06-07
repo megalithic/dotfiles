@@ -125,6 +125,7 @@ call plug#begin( '~/.config/nvim/plugged')
 " ## Random/Misc/Docs
   Plug 'junegunn/limelight.vim'
   Plug 'junegunn/goyo.vim'
+  Plug 'raghur/vim-ghost', {'do': ':GhostInstall'} " just run :GhostStart in nvim and click the vim-ghost icon in Chrome/Firefox
   Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto `=` under the visual selection
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby

@@ -10,8 +10,9 @@
 
 -- :: imports/requires
 -- require 'redshift'
--- require('markdown')
--- require('microphone')
+-- require 'markdown'
+-- require 'microphone'
+
 local utils = require 'utils'
 local wm = require 'wm'
 local hotkey = require 'hs.hotkey'
@@ -49,6 +50,9 @@ keyUpDown = function(modifiers, key)
   -- log.d('Sending keystroke:', hs.inspect(modifiers), key)
   hs.eventtap.keyStroke(modifiers, key, 0)
 end
+
+-- :: find dat cursor
+hotkey.bind(mashShift, 'return', function() utils.mouseHighlight() end)
 
 -- :: media
 hotkey.bind(ctrlShift, '[', function() utils.handleSpotifyEvents('previous', "⇤ previous") end) -- < - > 27
