@@ -161,7 +161,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
 
   Plug 'w0rp/ale'
-  Plug 'mattn/emmet-vim', { 'for': ['html', 'css', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'eruby'] }
+  " Plug 'mattn/emmet-vim', { 'for': ['html', 'css', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'eruby'] }
   " Plug 'mhinz/vim-signify'
   " Plug 'airblade/vim-gitgutter'
 
@@ -959,7 +959,6 @@ endfunction
 
 " ## emmet
   let g:user_emmet_leader_key = '<c-e>'                                           "Change trigger emmet key
-  let g:user_emmet_leader_key='<Tab>'
   let g:user_emmet_settings = {
         \  'javascript.jsx' : {
         \      'extends' : 'jsx',
