@@ -26,6 +26,7 @@ export DOTS=$DOTFILES
 # zsh core config
 source "$DOTS/zsh/components/zshrc/env.zsh"
 source "$DOTS/zsh/components/zshrc/aliases.zsh"
+source "$DOTS/zsh/components/zshrc/functions.zsh" # something here is killing tmux
 source "$DOTS/zsh/components/zshrc/colors.zsh"
 source "$DOTS/zsh/components/zshrc/completion.zsh"
 source "$DOTS/zsh/components/zshrc/opts.zsh"

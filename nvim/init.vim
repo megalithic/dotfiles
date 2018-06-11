@@ -102,7 +102,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
-  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
   " Plug 'natebosch/vim-lsc' " https://github.com/natebosch/vim-lsc/blob/master/doc/lsc.txt
 
 " ## Tags
@@ -125,7 +125,7 @@ call plug#begin( '~/.config/nvim/plugged')
 " ## Random/Misc/Docs
   Plug 'junegunn/limelight.vim'
   Plug 'junegunn/goyo.vim'
-  Plug 'raghur/vim-ghost', {'do': ':GhostInstall'} " just run :GhostStart in nvim and click the vim-ghost icon in Chrome/Firefox
+  " Plug 'raghur/vim-ghost', {'do': ':GhostInstall'} " just run :GhostStart in nvim and click the vim-ghost icon in Chrome/Firefox
   Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto `=` under the visual selection
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
@@ -384,7 +384,8 @@ augroup vimrc
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
-  au BufNewFile,BufRead *.tsx set ft=typescriptreact "forces typescript.tsx -> typescriptreact
+  au BufNewFile,BufRead *.tsx set ft=typescriptreact " forces typescript.tsx -> typescriptreact
+  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " for some reason it keeps defaulting the commentstring to `/* %s */`
 
   " ----------------------------------------------------------------------------
   " ## CSS/SCSS
@@ -980,9 +981,9 @@ endfunction
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint'],
+        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
@@ -1024,13 +1025,12 @@ endfunction
   let g:vim_markdown_folding_disabled = 1
   let g:markdown_fenced_languages = [
         \ 'javascript', 'js=javascript', 'json=javascript',
-        \ 'typescript',
-        \ 'typescriptreact',
+        \ 'typescript', 'typescriptreact=typescript',
         \ 'css', 'scss', 'sass',
         \ 'ruby', 'erb=eruby',
         \ 'python',
         \ 'haml', 'html',
-        \ 'bash=sh']
+        \ 'bash=sh', 'zsh']
 
 " ## vim-json
   let g:vim_json_syntax_conceal = 0
@@ -1106,10 +1106,10 @@ endfunction
 
 " ## colorizer
   let g:colorizer_auto_filetype='css,scss'
-  let g:colorizer_colornames = 0
+  let g:colorizer_colornames = 1
 
 " ## rainbow_parentheses.vim
-  let g:rainbow#max_level = 16
+  let g:rainbow#max_level = 8
   let g:rainbow#pairs = [['(', ')'], ['[', ']'], ['{', '}']]
 
 " ## vim-surround
@@ -1138,6 +1138,7 @@ endfunction
         \ }
 
   if executable("rg")
+    " ## rg
     set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
     function! s:CompleteRg(arg_lead, line, pos)
       let l:args = join(split(a:line)[1:])
@@ -1157,10 +1158,8 @@ endfunction
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
-  endif
-
-" ## ag
-  if executable("ag")
+  elseif executable("ag")
+    " ## ag
     " Note we extract the column as well as the file and line number
     set grepprg=ag\ --nogroup\ --nocolor\ --column
     set grepformat=%f:%l:%c%m
@@ -1189,7 +1188,7 @@ endfunction
 
 " ## LanguageClient
   let g:LanguageClient_diagnosticsList = v:null
-  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
+  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
   let g:LanguageClient_loadSettings = 1
   let g:LanguageClient_loggingLevel = 'INFO'
   " Don't populate lists since it overrides Neomake lists

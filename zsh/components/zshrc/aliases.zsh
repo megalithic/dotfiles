@@ -332,7 +332,7 @@ alias elmserve='elm-reactor -p 8080'
 alias rn='react-native'
 
 alias geo='curl -s "http://www.geoiptool.com/en/?IP=${IP}" | textutil -stdin -format html -stdout -convert txt | sed -n "/Host Name/,/Postal code/p"'
-
+# alias geoip="curl ipinfo.io/"
 alias sleepdisplay='pmset displaysleepnow'
 
 # Lock the screen (when going AFK)
