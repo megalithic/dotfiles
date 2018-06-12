@@ -12,6 +12,7 @@ alias cp='nocorrect cp'
 alias stack='nocorrect stack'
 alias sudo='nocorrect sudo'
 alias git="nocorrect git"
+alias nmap="nocorrect nmap"
 # alias avn='nocorrect avn'
 
 # Files & directories

@@ -8,6 +8,7 @@ pry
 rcodetools
 rubocop
 sidekiq
+solargraph -v 0.18.0
 terminal-notifier
 weechat
 language_server

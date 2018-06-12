@@ -71,6 +71,7 @@ brew 'mycli'
 brew 'ncdu'
 brew 'ncurses'
 brew 'neovim', args: ['with-lua', 'with-perl', 'with-ruby']
+brew 'nmap'
 brew 'openssl'
 brew 'p7zip'
 brew 'perl'

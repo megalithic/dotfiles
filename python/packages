@@ -6,6 +6,7 @@ saws
 neovim
 pygments
 setuptools
+solargraph-utils.py
 glances
 psutil
 python-language-server

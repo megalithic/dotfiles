@@ -92,6 +92,8 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'prabirshrestha/asyncomplete-tscompletejob.vim'
   " Plug 'yami-beta/asyncomplete-omni.vim'
 
+  " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
+
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
   Plug 'Shougo/neoinclude.vim'
   " Plug 'roxma/nvim-completion-manager'
@@ -99,11 +101,14 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'calebeby/ncm-css', { 'for': ['scss', 'css', 'sass', 'less'] }
   " Plug 'roxma/ncm-rct-complete'
   Plug 'Shougo/echodoc.vim'
-  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'Shougo/neco-vim'
+  Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['ts', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+
+  " solargraph-utils.py is failing with: https://github.com/uplus/solargraph-utils.py/issues/4
+  " Plug 'uplus/deoplete-solargraph', { 'for': 'ruby', 'do': 'gem install solargraph -v 0.18.0; pip install solargraph-utils.py --user; yard gems; yard config --gem-install-yri' }
 
 " ## Language Servers
   " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
-  " Plug 'natebosch/vim-lsc' " https://github.com/natebosch/vim-lsc/blob/master/doc/lsc.txt
 
 " ## Tags
   " if executable('ctags')
@@ -500,6 +505,7 @@ augroup MakeQuickFixPrettier
                 \| endif
 augroup END
 
+" # vim-lsp
 " augroup language_mappings
 "   autocmd!
 
@@ -866,6 +872,22 @@ function! s:vjump(dir) abort
     \        : ((bot < top ? bot : top) - line('.')).'j'
 endfunction
 
+function! EnsureSolargraphRunning()
+  let s:start_server = empty(system("ps | grep solargraph | grep -v grep"))
+  if s:start_server == 1
+    let s:job = jobstart("solargraph socket")
+    if s:job == 0
+      echohl Error | echomsg 'Solargraph: Invalid arguments' | echohl None
+      return 0
+    elseif s:job == -1
+      echohl Error | echomsg 'Solargraph: Not installed' | echohl None
+      return 0
+    else
+      return 1
+    endif
+  endif
+endfunction
+call EnsureSolargraphRunning()
 
 " }}}
 " ================ Plugin Config/Settings ======================== {{{
@@ -1242,6 +1264,9 @@ endfunction
   if executable('json-languageserver')
     let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
   endif
+  if executable('solargraph')
+    let g:LanguageClient_serverCommands.ruby = ['tcp://127.0.0.1:7658']
+  endif
   " Signs and highlighting for errors, etc. TODO: move this elsewhere and fix
   " up. ref: https://github.com/euclio/vimrc/blob/master/plugins.vim
   let s:error_sign = '⨉'
@@ -1476,6 +1501,35 @@ endfunction
   " call deoplete#custom#source('typescript', 'debug_enabled', 1)
   " call deoplete#custom#source('typescriptreact', 'debug_enabled', 1)
 
+" coc.nvim
+  let g:coc_timeout = 300
+  let g:coc_ignore_git_ignore = 0
+  let g:coc_use_noselect = 1
+  let g:coc_chars_guifg = '#ffffff'
+  let g:coc_chars_guibg = '#b180a4'
+  let g:coc_increment_highlight = 1
+  let g:coc_source_config = {
+        \  'languageclient': {
+        \    'filetypes': ['wxml', 'vue'],
+        \    'disabled': 0,
+        \  },
+        \  'omni': {
+        \    'filetypes': ['css', 'html', 'wxss'],
+        \  },
+        \  'file': {
+        \    'ignorePatterns': ['*.bundle.js'],
+        \  },
+        \  'tern': {
+        \    'ternRoot': expand('~/lib/tern'),
+        \  },
+        \  'jedi': {
+        \    'settings': {
+        \       'dynamic_params': v:true,
+        \       'dynamic_params_for_other_modules': v:true
+        \    },
+        \  },
+        \}
+
 " ## tagbar
   let g:tagbar_sort = 0
   let g:tagbar_compact = 1
@@ -1522,9 +1576,20 @@ endfunction
 " ================ Custom Mappings ======================== {{{
 
 " - deoplete + ultisnips
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~ '\s'
+endfunction
+
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<cr>"
+
+" - coc
+" inoremap <silent><expr> <TAB>
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<TAB>" :
+"       \ coc#refresh()
 
 " Down is really the next line
 nnoremap j gj
