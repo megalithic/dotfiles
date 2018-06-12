@@ -102,8 +102,8 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'roxma/ncm-rct-complete'
   Plug 'Shougo/echodoc.vim'
   Plug 'Shougo/neco-vim'
-  Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['ts', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
-
+  Plug 'mhartington/nvim-typescript', { 'for': ['ts', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  " Plug 'fishbullet/deoplete-ruby', { 'for': ['ruby', 'haml', 'eruby'] }
   " solargraph-utils.py is failing with: https://github.com/uplus/solargraph-utils.py/issues/4
   " Plug 'uplus/deoplete-solargraph', { 'for': 'ruby', 'do': 'gem install solargraph -v 0.18.0; pip install solargraph-utils.py --user; yard gems; yard config --gem-install-yri' }
 
@@ -1266,6 +1266,9 @@ call EnsureSolargraphRunning()
   endif
   if executable('solargraph')
     let g:LanguageClient_serverCommands.ruby = ['tcp://127.0.0.1:7658']
+  endif
+  if executable('language_server-ruby')
+    let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
   endif
   " Signs and highlighting for errors, etc. TODO: move this elsewhere and fix
   " up. ref: https://github.com/euclio/vimrc/blob/master/plugins.vim
