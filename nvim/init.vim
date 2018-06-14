@@ -222,8 +222,7 @@ endif
 " let g:ruby_host_prog = '$RUBY_ROOT/bin/ruby'
 let g:python_host_prog = '/usr/local/bin/python2.7'
 let g:python3_host_prog = '/usr/local/bin/python3'
-" find a better way to get this:
-let g:node_host_prog = "/Users/replicant/.n/bin/neovim-node-host"
+let g:node_host_prog = $HOME."/.n/bin/neovim-node-host"
 
 set title                                                                       "change the terminal's title
 set number                                                                      "Line numbers are good
@@ -1085,6 +1084,15 @@ endfunction
 " ## rainbow_parentheses.vim
   let g:rainbow#max_level = 8
   let g:rainbow#pairs = [['(', ')'], ['[', ']'], ['{', '}']]
+  let g:rainbow_levels = [
+      \{'ctermfg': 84,  'guifg': '#50fa7b'},
+      \{'ctermfg': 117, 'guifg': '#8be9fd'},
+      \{'ctermfg': 61,  'guifg': '#6272a4'},
+      \{'ctermfg': 212, 'guifg': '#ff79c6'},
+      \{'ctermfg': 203, 'guifg': '#ffb86c'},
+      \{'ctermfg': 228, 'guifg': '#f1fa8c'},
+      \{'ctermfg': 15,  'guifg': '#f8f8f2'},
+      \{'ctermfg': 231, 'guifg': '#525563'}]
 
 " ## vim-surround
   let g:surround_indent = 0
@@ -1099,6 +1107,7 @@ endfunction
   let test#ruby#rspec#options = '-f d'
   let test#ruby#bundle_exec = 1
   let test#ruby#rspec#executable = 'bin/rspec --format doc --no-color'
+  let g:test#runner_commands = ['Jest', 'RSpec', 'Cypress']
 
 " ## FZF
   let g:fzf_buffers_jump = 1
@@ -1661,6 +1670,7 @@ nnoremap <leader>gb :Gblame<cr>
 nmap <silent> <leader>t :TestFile<CR>
 nmap <silent> <leader>T :TestNearest<CR>
 nmap <silent> <leader>l :TestLast<CR>
+nnoremap <Leader>u :Jest <C-r>=escape(expand("%"), ' ') . ' ' . '--updateSnapshot'<CR><CR>
 " nmap <silent> <leader>a :TestSuite<CR>
 " nmap <silent> <leader>g :TestVisit<CR>
 " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
@@ -1774,6 +1784,7 @@ nnoremap q <Nop>
 
 " switch between current and last buffer
 nmap <leader>. <c-^>
+nmap <leader><leader> <c-^>
 
 " allow deleting selection without updating the clipboard (yank buffer)
 vnoremap x "_x
@@ -1813,6 +1824,7 @@ nnoremap =- V`]=
 " ## Misc (organize this please!)
 " Insert newline below
 nnoremap <cr><cr> o<ESC>
+
 " push newline
 nnoremap <S-CR>   mzO<Esc>j`z
 nnoremap <C-CR>   mzo<Esc>k`z
@@ -1849,6 +1861,9 @@ nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
 " inoremap <c-e> <esc>A
 " Ctrl-a: Go to begin of line
 " inoremap <c-a> <esc>I
+
+cnoremap <C-a> <Home>
+cnoremap <C-e> <End>
 
 
 " }}}
