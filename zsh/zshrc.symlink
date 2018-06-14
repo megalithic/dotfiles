@@ -59,4 +59,5 @@ fi
 autoload -U promptinit; promptinit
 prompt pure
 
+# we handle fzf things in fzf.zsh
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

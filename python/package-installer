@@ -1,3 +1,4 @@
 #!/bin/zsh
 
+cat $DOTS/python/packages | xargs pip2 install -U --user
 cat $DOTS/python/packages | xargs pip3 install -U --user

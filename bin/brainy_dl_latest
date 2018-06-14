@@ -1,0 +1,30 @@
+#!/bin/sh
+
+echo "Looking for latest brainy compact backup ..."
+s3_file=`aws s3 ls s3://first-io-backup/production/ | egrep '\bpostgresql-compact-backup-.*\.dump' | tail -1 | sed -e 's/^.* //'`
+
+backup_date=`expr $s3_file : '.*\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)'`
+echo "Downloading compact backup for $backup_date."
+
+# Grab a list of already-downloaded backups to prompt for deletion later
+# (but don't include the one we're downloading; it might be there if this
+# is a retry after a failed download attempt).
+# existing_backups=`ls postgresql-*.dump | fgrep -v $s3_file`
+#
+aws s3 cp s3://first-io-backup/production/$s3_file .
+
+# if [ `count $existing_backups` -gt 0 ]
+#   echo "Removing old backups:"
+#   rm -i $existing_backups
+# fi
+
+echo -n $s3_file | pbcopy
+echo "The dump filename has been copied to the clipboard."
+
+# To pg_restore, do the following:
+#
+# dropdb brainy_development
+# createdb brainy_development
+# createuser -s -r brainy_ro
+# createuser -s -r brainy
+# pg_restore --jobs 8 -d brainy_development $s3_file

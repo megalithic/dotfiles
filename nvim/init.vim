@@ -10,7 +10,7 @@
 " ================ Plugins ==================== {{{
 call plug#begin( '~/.config/nvim/plugged')
 
-" Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
+  Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
@@ -100,12 +100,10 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'roxma/nvim-cm-tern',  {'do': 'npm install'}
   " Plug 'calebeby/ncm-css', { 'for': ['scss', 'css', 'sass', 'less'] }
   " Plug 'roxma/ncm-rct-complete'
-  Plug 'Shougo/echodoc.vim'
-  Plug 'Shougo/neco-vim'
+  " Plug 'Shougo/echodoc.vim'
+  " Plug 'Shougo/neco-vim'
   Plug 'mhartington/nvim-typescript', { 'for': ['ts', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'fishbullet/deoplete-ruby', { 'for': ['ruby', 'haml', 'eruby'] }
-  " solargraph-utils.py is failing with: https://github.com/uplus/solargraph-utils.py/issues/4
-  " Plug 'uplus/deoplete-solargraph', { 'for': 'ruby', 'do': 'gem install solargraph -v 0.18.0; pip install solargraph-utils.py --user; yard gems; yard config --gem-install-yri' }
 
 " ## Language Servers
   " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
@@ -165,6 +163,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'sodapopcan/vim-twiggy'
   Plug 'christoomey/vim-conflicted'
   Plug 'tpope/vim-eunuch'
+  Plug 'dyng/ctrlsf.vim'
 
   Plug 'w0rp/ale'
   " Plug 'mattn/emmet-vim', { 'for': ['html', 'css', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'eruby'] }
@@ -182,7 +181,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'kana/vim-textobj-function'                                                  " Function text object (vaf)
   Plug 'kana/vim-textobj-indent', { 'on': [ '<Plug>(textobj-indent' ] }             " for indent level (vai)
   Plug 'kana/vim-textobj-line', { 'on': [ '<Plug>(textobj-line' ] }                 " for current line (val)
-  Plug 'nelstrom/vim-textobj-rubyblock'                                             " Ruby block text object (vir)
+  Plug 'nelstrom/vim-textobj-rubyblock', { 'on': [ '<Plug>(textobj-rubyblock' ] }   " Ruby block text object (vir)
   Plug 'glts/vim-textobj-comment'                                                   " Comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
   Plug 'machakann/vim-textobj-delimited', { 'on': [ '<Plug>(textobj-delimited' ] }  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
@@ -221,6 +220,10 @@ if has('termguicolors')
 endif
 
 " let g:ruby_host_prog = '$RUBY_ROOT/bin/ruby'
+let g:python_host_prog = '/usr/local/bin/python2.7'
+let g:python3_host_prog = '/usr/local/bin/python3'
+" find a better way to get this:
+let g:node_host_prog = "/Users/replicant/.n/bin/neovim-node-host"
 
 set title                                                                       "change the terminal's title
 set number                                                                      "Line numbers are good
@@ -254,8 +257,7 @@ set splitright                                                                  
 set splitbelow                                                                  "Set up new horizontal splits positions
 set path+=**                                                                    "Allow recursive search
 if (has('nvim'))
-  " show results of substition as they're happening
-  " but don't open a split
+  " show results of substition as they're happening but don't open a split
   set inccommand=nosplit
 endif
 set fillchars+=vert:\│                                                          "Make vertical split separator full line
@@ -387,6 +389,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
+  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set expandtab st=4 sts=4 ts=4
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
   au BufNewFile,BufRead *.tsx set ft=typescriptreact " forces typescript.tsx -> typescriptreact
@@ -444,24 +447,17 @@ augroup vimrc
   au FileType ruby setl omnifunc=rubycomplete#Complete
 
   " ----------------------------------------------------------------------------
-  " ## Fixing/Linting
-
-  " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
   au WinEnter,BufEnter * silent set number relativenumber syntax=on " call :RainbowParentheses  cul
   au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call :RainbowParentheses! nocul
-
-  " ----------------------------------------------------------------------------
-  " ## Automagically update remote homeassistant files upon editing locally
-  au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
-
-  " ----------------------------------------------------------------------------
-  " ## Toggle colorcolumn when in insert mode for visual 80char indicator
   au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
   au InsertEnter * silent set colorcolumn=80
   au InsertLeave * silent set colorcolumn=""
-  " au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>81v.\+', -1)
+
+  " ----------------------------------------------------------------------------
+  " ## Automagically update remote homeassistant files upon editing locally
+  au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
 
   " ----------------------------------------------------------------------------
   " ## Manage GIT related scenarios
@@ -477,14 +473,6 @@ augroup vimrc
   autocmd! TermOpen * if &buftype == 'terminal'
         \| set nonumber norelativenumber
         \| endif
-
-  " " Start NERDTree automatically when vim starts up on opening a directory
-  " autocmd StdinReadPre * let s:std_in=1
-  " autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
-  " autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | endif
-
-  " " Close vim if the only window left open is a NERDTree
-  " autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 augroup END
 
 " Automatically close vim if only the quickfix window is open
@@ -730,24 +718,6 @@ cnoreabbrev ft set ft
 " }}}
 " ================ Functions ======================== {{{
 
-" Keybinding for visiting the GitHub page of the plugin defined on the current line
-autocmd FileType vim nnoremap <silent> <leader>op :call OpenPluginHomepage()<CR>
-function! OpenPluginHomepage()
-  " Get line under cursor
-  let line = getline(".")
-
-  " Matches for instance Plug 'tpope/surround' -> tpope/surround
-  " Greedy match in order to not capture trailing comments
-  let plugin_name = '\w\+ \([''"]\)\(.\{-}\)\1'
-  let repository = matchlist(line, plugin_name)[2]
-
-  " Open the corresponding GitHub homepage with $BROWSER
-  " You need to set the BROWSER environment variable in order for this to work
-  " For MacOS, you can set the following for opening it in your default
-  " browser: 'export BROWSER=open'
-  silent exec "!$BROWSER https://github.com/".repository
-endfunction
-
 " Scratch buffer
 function! ScratchOpen()
   let scr_bufnr = bufnr('__scratch__')
@@ -872,24 +842,6 @@ function! s:vjump(dir) abort
     \        : ((bot < top ? bot : top) - line('.')).'j'
 endfunction
 
-function! EnsureSolargraphRunning()
-  let s:start_server = empty(system("ps | grep solargraph | grep -v grep"))
-  if s:start_server == 1
-    let s:job = jobstart("solargraph socket")
-    if s:job == 0
-      echohl Error | echomsg 'Solargraph: Invalid arguments' | echohl None
-      return 0
-    elseif s:job == -1
-      echohl Error | echomsg 'Solargraph: Not installed' | echohl None
-      return 0
-    else
-      return 1
-    endif
-  endif
-endfunction
-call EnsureSolargraphRunning()
-
-" }}}
 " ================ Plugin Config/Settings ======================== {{{
 
 " ## polyglot
@@ -1210,6 +1162,7 @@ call EnsureSolargraphRunning()
 
 " ## LanguageClient
   let g:LanguageClient_diagnosticsList = v:null
+  let g:LanguageClient_diagnosticsEnable = 1
   let g:LanguageClient_autoStart = 1 " Automatically start language servers.
   let g:LanguageClient_loadSettings = 1
   let g:LanguageClient_loggingLevel = 'INFO'
@@ -1248,9 +1201,9 @@ call EnsureSolargraphRunning()
   if executable('javascript-typescript-stdio')
     let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
     let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
+    " let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
+    " let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
+    " let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
   endif
   if executable('css-languageserver')
     let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
@@ -1264,12 +1217,9 @@ call EnsureSolargraphRunning()
   if executable('json-languageserver')
     let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
   endif
-  if executable('solargraph')
-    let g:LanguageClient_serverCommands.ruby = ['tcp://127.0.0.1:7658']
-  endif
-  if executable('language_server-ruby')
-    let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
-  endif
+  " if executable('language_server-ruby')
+  "   let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
+  " endif
   " Signs and highlighting for errors, etc. TODO: move this elsewhere and fix
   " up. ref: https://github.com/euclio/vimrc/blob/master/plugins.vim
   let s:error_sign = '⨉'
@@ -1617,12 +1567,6 @@ vnoremap p p`]
 " Handle syntastic error window
 nnoremap <Leader>e :lopen<CR>
 nnoremap <silent><Leader>q :call CloseBuffer()<CR>
-
-" " Find current file in NERDTree
-" nnoremap <Leader>hf :NERDTreeFind<CR>
-" " Open NERDTree
-" " nnoremap <Leader>n :NERDTreeToggle<CR>
-" nnoremap <f3> :NERDTreeToggle<CR>
 
 " tagbar
 nnoremap <f4> :TagbarToggle<CR>
