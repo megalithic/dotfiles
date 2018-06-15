@@ -71,8 +71,6 @@ call plug#begin( '~/.config/nvim/plugged')
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
-  " Plug 'scrooloose/nerdtree'
-  " Plug 'Xuyuanp/nerdtree-git-plugin'
   Plug 'ryanoasis/vim-devicons'
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
@@ -93,7 +91,6 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'yami-beta/asyncomplete-omni.vim'
 
   " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
-
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
   Plug 'Shougo/neoinclude.vim'
   " Plug 'roxma/nvim-completion-manager'
@@ -102,8 +99,8 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'roxma/ncm-rct-complete'
   " Plug 'Shougo/echodoc.vim'
   " Plug 'Shougo/neco-vim'
-  Plug 'mhartington/nvim-typescript', { 'for': ['ts', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'fishbullet/deoplete-ruby', { 'for': ['ruby', 'haml', 'eruby'] }
+  Plug 'mhartington/nvim-typescript', { 'for': ['ts', 'tsx', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
   " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
@@ -388,7 +385,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
-  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set expandtab st=4 sts=4 ts=4
+  " au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set expandtab st=4 sts=4 ts=4
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
   au BufNewFile,BufRead *.tsx set ft=typescriptreact " forces typescript.tsx -> typescriptreact
