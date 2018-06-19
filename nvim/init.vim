@@ -373,7 +373,7 @@ augroup vimrc
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set sw=2 ts=2 sts=2 et
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
-  au BufNewFile,BufRead *.tsx set ft=typescriptreact " forces typescript.tsx -> typescriptreact
+  au BufNewFile,BufReadPost *.tsx setl ft=typescriptreact " forces typescript.tsx -> typescriptreact
   au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
 
   " ----------------------------------------------------------------------------
@@ -931,7 +931,7 @@ endfunction
   let g:ale_lint_delay = 1000
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
-  let g:ale_linter_aliases = {'tsx': 'ts'}
+  let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['typescript']}
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
