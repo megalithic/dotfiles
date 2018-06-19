@@ -967,17 +967,6 @@ endfunction
 " ## quickscope
   let g:qs_enable = 0
 
-" ## emmet
-  let g:user_emmet_leader_key = '<c-e>'                                           "Change trigger emmet key
-  let g:user_emmet_settings = {
-        \  'javascript.jsx' : {
-        \      'extends' : 'jsx',
-        \  },
-        \  'typescriptreact' : {
-        \      'extends' : 'jsx',
-        \  },
-        \}
-
 " # delimitMate
   let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
 
