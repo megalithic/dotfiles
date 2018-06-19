@@ -71,6 +71,50 @@ revert() {
   git reset --hard #updates working copy to reflect the new commit
 }
 
+note () {
+  local notes_dir="$HOME/Dropbox/notes"
+  case "$1" in
+    c)
+      cd "$notes_dir"
+      ;;
+    l)
+      ls "$notes_dir"
+      ;;
+    *)
+      pushd "$notes_dir"
+      nvim "$1"
+      popd
+  esac
+}
+
+# Codi
+# Usage: codi [filetype] [filename]
+codi() {
+  local syntax="${1:-python}"
+  shift
+  nvim -c \
+    "let g:startify_disable_at_vimenter = 1 |\
+    set bt=nofile ls=0 noru nonu nornu |\
+    hi ColorColumn ctermbg=NONE |\
+    hi VertSplit ctermbg=NONE |\
+    hi NonText ctermfg=0 |\
+    Codi $syntax" "$@"
+}
+
+# iron.nvim
+# Usage: repl [filetype] [filename]
+repl() {
+  local syntax="${1:-javascript}"
+  shift
+  nvim -c \
+    "let g:startify_disable_at_vimenter = 1 |\
+    set bt=nofile ls=0 noru nonu nornu |\
+    hi ColorColumn ctermbg=NONE |\
+    hi VertSplit ctermbg=NONE |\
+    hi NonText ctermfg=0 |\
+    call IronStartRepl('$syntax', 0, 1)"
+}
+
 
 # -------------------------------------------------------------------
 # any function from http://onethingwell.org/post/14669173541/any

@@ -103,7 +103,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'mhartington/nvim-typescript', { 'for': ['ts', 'tsx', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
-  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
 " ## Tags
   " if executable('ctags')
@@ -126,7 +126,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'junegunn/limelight.vim'
   Plug 'junegunn/goyo.vim'
   " Plug 'raghur/vim-ghost', {'do': ':GhostInstall'} " just run :GhostStart in nvim and click the vim-ghost icon in Chrome/Firefox
-  Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto `=` under the visual selection
+  Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto underline with `=` under the visual selection
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
@@ -136,8 +136,8 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'wsdjeg/vim-fetch' " open files at line number
   " Plug 'nelstrom/vim-visual-star-search'
   Plug 'tpope/vim-commentary' " (un)comment code
-  " Plug 'shougo/vimproc.vim', { 'do': 'make' } " for rct/rails things?
-  " Plug 'xolox/vim-misc' " for lua things
+  Plug 'shougo/vimproc.vim', { 'do': 'make' } " for rct/rails things?
+  Plug 'xolox/vim-misc' " for lua things
   Plug 'sickill/vim-pasta' " context-aware pasting
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
@@ -145,9 +145,9 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
-  Plug 'tpope/vim-endwise'
+  Plug 'tpope/vim-endwise', { 'for': ['ruby', 'eruby', 'lua', 'elixir', 'viml', 'vimscript', 'vim', 'bash', 'sh', 'zsh'] }
   Plug 'Raimondi/delimitMate'
-  Plug 'gregsexton/MatchTag', { 'for': ['html', 'javascript.jsx', 'javascript', 'typescript', 'typescriptreact', 'typescript.tsx'] }
+  Plug 'gregsexton/MatchTag', { 'for': ['html', 'eruby', 'javascript.jsx', 'javascript', 'typescript', 'typescriptreact', 'typescript.tsx'] }
   " Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'javascript', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
   Plug 'jiangmiao/auto-pairs'
   Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
@@ -161,11 +161,9 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'christoomey/vim-conflicted'
   Plug 'tpope/vim-eunuch'
   Plug 'dyng/ctrlsf.vim'
-
+  Plug 'metakirby5/codi.vim'
+  " Plug 'BurningEther/iron.nvim'
   Plug 'w0rp/ale'
-  " Plug 'mattn/emmet-vim', { 'for': ['html', 'css', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'eruby'] }
-  " Plug 'mhinz/vim-signify'
-  " Plug 'airblade/vim-gitgutter'
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -188,6 +186,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
   Plug 'wellle/targets.vim'                                                         " Improved targets line cin) next parens
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
+
 
 call plug#end()
 
@@ -389,7 +388,7 @@ augroup vimrc
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
   au BufNewFile,BufRead *.tsx set ft=typescriptreact " forces typescript.tsx -> typescriptreact
-  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " for some reason it keeps defaulting the commentstring to `/* %s */`
+  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
 
   " ----------------------------------------------------------------------------
   " ## CSS/SCSS
@@ -444,8 +443,8 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
-  au WinEnter,BufEnter * silent set number relativenumber syntax=on " call :RainbowParentheses  cul
-  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call :RainbowParentheses! nocul
+  au WinEnter,BufEnter * silent set number relativenumber syntax=on " exec RainbowParentheses
+  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " exec RainbowParentheses!
   au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
   au InsertEnter * silent set colorcolumn=80
@@ -494,16 +493,16 @@ augroup END
 "   autocmd!
 
 "   " TypeScript
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<cr>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :LspRename<cr>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :LspDocumentDiagnostics<cr>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f10> :LspDocumentSymbol<cr>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f11> :LspReferences<cr>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f12> :LspDefinition<cr>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.ts<cr>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :LspRename<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :LspDocumentDiagnostics<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f10> :LspDocumentSymbol<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f11> :LspReferences<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f12> :LspDefinition<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.ts<CR>
 
 "   " Vim
-"   autocmd FileType vim command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.vim<cr>
+"   autocmd FileType vim command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.vim<CR>
 " augroup END
 
 " }}}
@@ -838,6 +837,38 @@ function! s:vjump(dir) abort
     \        : ((bot < top ? bot : top) - line('.')).'j'
 endfunction
 
+" improved ultisnips complete
+function! SnipComplete()
+  let line = getline('.')
+  let start = col('.') - 1
+  while start > 0 && line[start - 1] =~# '\k'
+    let start -= 1
+  endwhile
+  let suggestions = []
+  let snips =  UltiSnips#SnippetsInCurrentScope(0)
+  for item in keys(snips)
+    let entry = {'word': item, 'menu': snips[item]}
+    call add(suggestions, entry)
+  endfor
+  if empty(suggestions)
+    echohl Error | echon 'no match' | echohl None
+  elseif len(suggestions) == 1
+    let pos = getcurpos()
+    if start == 0
+      let str = trigger
+    else
+      let str = line[0:start - 1] . trigger
+    endif
+    call setline('.', str)
+    let pos[2] = len(str) + 1
+    call setpos('.', pos)
+    call UltiSnips#ExpandSnippet()
+  else
+    call complete(start + 1, suggestions)
+  endif
+  return ''
+endfunction
+
 " ================ Plugin Config/Settings ======================== {{{
 
 " ## polyglot
@@ -862,6 +893,13 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['json'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['md'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
+
+
+" ## codi
+  let g:codi#rightalign=0
+
+" ## iron.nvim
+  let g:iron_map_defaults=0
 
 " ## goyo
   " let g:goyo_width = 80
@@ -1028,14 +1066,14 @@ endfunction
   " " let g:nvim_typescript#type_info_on_hold=1
   let g:nvim_typescript#javascript_support=1
   " let g:nvim_typescript#vue_support=1
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :TSRename<cr>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f3> :TSDefPreview<cr>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :TSDef<cr>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f9> :TSDoc<cr>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f10> :TSType<cr>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>K :TSType<cr>
-  " autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f11> :TSRefs<cr>
-  " autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f12> :TSTypeDef<cr>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :TSRename<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f3> :TSDefPreview<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :TSDef<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f9> :TSDoc<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f10> :TSType<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>K :TSType<CR>
+  " autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f11> :TSRefs<CR>
+  " autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f12> :TSTypeDef<CR>
   let g:nvim_typescript#kind_symbols = {
       \ 'keyword': 'keyword',
       \ 'class': '',
@@ -1183,20 +1221,20 @@ endfunction
   augroup LanguageClientConfig
     autocmd!
     " " <leader>ld to go to definition
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ld :call LanguageClient_textDocument_definition()<cr>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ld :call LanguageClient_textDocument_definition()<CR>
     " " <leader>lf to autoformat document
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lf :call LanguageClient_textDocument_formatting()<cr>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lf :call LanguageClient_textDocument_formatting()<CR>
     " " <leader>lh for type info under cursor
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lh :call LanguageClient_textDocument_hover()<cr>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lh :call LanguageClient_textDocument_hover()<CR>
     " " <leader>lr to rename variable under cursor
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lr :call LanguageClient_textDocument_rename()<cr>
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<cr>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lr :call LanguageClient_textDocument_rename()<CR>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
     " " <leader>lc to switch omnifunc to LanguageClient
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lc :setlocal omnifunc=LanguageClient#complete<cr>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lc :setlocal omnifunc=LanguageClient#complete<CR>
     " " <leader>ls to fuzzy find the symbols in the current document
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ls :call LanguageClient_textDocument_documentSymbol()<cr>
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>@ :call LanguageClient_textDocument_documentSymbol()<cr>
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader># :call LanguageClient_workspace_symbol()<cr>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>@ :call LanguageClient_textDocument_documentSymbol()<CR>
+    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader># :call LanguageClient_workspace_symbol()<CR>
     " " Use as omnifunc by default
     autocmd FileType javascript,javascript.jsx,python,json,css,less,html setlocal omnifunc=LanguageClient#complete
   augroup END
@@ -1542,7 +1580,9 @@ endfunction
 
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<cr>"
+inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
+" ultisnips
+inoremap <C-e> <C-R>=SnipComplete()<CR>
 
 " - coc
 " inoremap <silent><expr> <TAB>
@@ -1569,10 +1609,6 @@ nnoremap <Leader>h viw"0p
 nnoremap p p`]
 vnoremap y y`]
 vnoremap p p`]
-
-" Handle syntastic error window
-nnoremap <Leader>e :lopen<CR>
-nnoremap <silent><Leader>q :call CloseBuffer()<CR>
 
 " tagbar
 nnoremap <f4> :TagbarToggle<CR>
@@ -1601,13 +1637,13 @@ map Q <Nop>
 " Jump to definition in vertical split
 nnoremap <Leader>] <C-W>v<C-]>
 
-map <leader>ev :vnew! ~/.dotfiles/nvim/init.vim<cr>
-map <leader>ek :vnew! ~/.dotfiles/kitty/kitty.conf<cr>
-map <leader>eg :vnew! ~/.gitconfig<cr>
-map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<cr>
-map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<cr>
+map <leader>ev :vnew! ~/.dotfiles/nvim/init.vim<CR>
+map <leader>ek :vnew! ~/.dotfiles/kitty/kitty.conf<CR>
+map <leader>eg :vnew! ~/.gitconfig<CR>
+map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<CR>
+map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
-nnoremap <C-s> :call ScratchOpen()<cr>
+nnoremap <C-s> :call SCRatchOpen()<CR>
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)
@@ -1621,21 +1657,21 @@ nnoremap <C-s> :call ScratchOpen()<cr>
 nnoremap <leader><space> za
 
 " ## vim-commentary
-nmap <leader>c :Commentary<cr>
-vmap <leader>c :Commentary<cr>
+nmap <leader>c :Commentary<CR>
+vmap <leader>c :Commentary<CR>
 
 " ## FZF
-nnoremap <silent> <leader>m <esc>:FZF<cr>
+nnoremap <silent> <leader>m <esc>:FZF<CR>
 nnoremap <leader>a <esc>:Rg<space>
-nnoremap <silent> <leader>A  <esc>:exe('Rg '.expand('<cword>'))<cr>
+nnoremap <silent> <leader>A  <esc>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
 nnoremap \ :Rg<SPACE>
 
 " ## vim-plug
-noremap <F5> :PlugUpdate<cr>
-map <F5> :PlugUpdate<cr>
-noremap <S-F5> :PlugClean!<cr>
-map <S-F5> :PlugClean!<cr>
+noremap <F5> :PlugUpdate<CR>
+map <F5> :PlugUpdate<CR>
+noremap <S-F5> :PlugClean!<CR>
+map <S-F5> :PlugClean!<CR>
 
 " ## vim-sneak
 " map f <Plug>Sneak_f
@@ -1659,9 +1695,9 @@ vnoremap <expr> <silent> t Quick_scope_selective('t')
 vnoremap <expr> <silent> T Quick_scope_selective('T')
 
 " ## Fugitive
-nnoremap <leader>H :Gbrowse<cr>
-vnoremap <leader>H :Gbrowse<cr>
-nnoremap <leader>gb :Gblame<cr>
+nnoremap <leader>H :Gbrowse<CR>
+vnoremap <leader>H :Gbrowse<CR>
+nnoremap <leader>gb :Gblame<CR>
 
 " ## Testing vim-test
 nmap <silent> <leader>t :TestFile<CR>
@@ -1675,7 +1711,7 @@ nnoremap <Leader>u :Jest <C-r>=escape(expand("%"), ' ') . ' ' . '--updateSnapsho
 " ## Gist/Github
 " Send visual selection to gist.github.com as a private, filetyped Gist
 " Requires the gist command line too (brew install gist)
-vnoremap <leader>G :Gist -po<cr>
+vnoremap <leader>G :Gist -po<CR>
 
 " ## Surround
 vmap [ S]
@@ -1687,11 +1723,11 @@ vmap " S"
 " ## Splits with vim-tmux-navigator
 let g:tmux_navigator_no_mappings = 1
 let g:tmux_navigator_save_on_switch = 1
-nnoremap <silent> <C-h> :TmuxNavigateLeft<cr>
-nnoremap <silent> <C-j> :TmuxNavigateDown<cr>
-nnoremap <silent> <C-k> :TmuxNavigateUp<cr>
-nnoremap <silent> <C-l> :TmuxNavigateRight<cr>
-nnoremap <silent> <C-\> :TmuxNavigatePrevious<cr>
+nnoremap <silent> <C-h> :TmuxNavigateLeft<CR>
+nnoremap <silent> <C-j> :TmuxNavigateDown<CR>
+nnoremap <silent> <C-k> :TmuxNavigateUp<CR>
+nnoremap <silent> <C-l> :TmuxNavigateRight<CR>
+nnoremap <silent> <C-\> :TmuxNavigatePrevious<CR>
 nnoremap <C-o> :vsp <c-d>
 nnoremap <C-t> :tabe <c-d>
 
@@ -1708,8 +1744,8 @@ inoremap <C-w>k <ESC><C-w><C-k>
 inoremap <C-w>l <ESC><C-w><C-l>
 
 " ## Writing / quitting
-nnoremap <silent> <leader>w :w<cr>
-nnoremap <leader>q :q<cr>
+nnoremap <silent> <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
 " Sudo write (,W)
 noremap <silent><leader>W :w !sudo tee %<CR>
 
@@ -1721,7 +1757,7 @@ nnoremap / /\v
 vnoremap / /\v
 
 " clear incsearch term
-nnoremap  <silent><ESC> :syntax sync fromstart<cr>:nohlsearch<cr>:redrawstatus!<cr><ESC>
+nnoremap  <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
 
 " Start substitute on current word under the cursor
 nnoremap ,s :%s///gc<Left><Left><Left>
@@ -1820,7 +1856,7 @@ nnoremap =- V`]=
 
 " ## Misc (organize this please!)
 " Insert newline below
-nnoremap <cr><cr> o<ESC>
+nnoremap <CR><CR> o<ESC>
 
 " push newline
 nnoremap <S-CR>   mzO<Esc>j`z
@@ -1840,7 +1876,7 @@ nnoremap D d$
 nnoremap X Vx
 
 " Redraw my screen
-nnoremap U :syntax sync fromstart<cr>:redraw!<cr>
+nnoremap U :syntax sync fromstart<CR>:redraw!<CR>
 
 " Select (charwise) the contents of the current line, excluding indentation.
 " Great for pasting Python lines into REPLs.
@@ -1851,7 +1887,7 @@ nnoremap vv ^vg_
 nnoremap J mzJ`z
 " Split line (sister to [J]oin lines above)
 " The normal use of S is covered by cc, so don't worry about shadowing it.
-nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
+nnoremap S i<CR><esc>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 
 " Insert mode movements
 " Ctrl-e: Go to end of line
