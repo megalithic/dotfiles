@@ -14,7 +14,7 @@ call plug#begin( '~/.config/nvim/plugged')
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
-  " Plug 'mhartington/oceanic-next'
+  Plug 'mhartington/oceanic-next'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
 
 " ## Syntax
@@ -39,7 +39,8 @@ call plug#begin( '~/.config/nvim/plugged')
 " # CSS
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
   Plug 'hail2u/vim-css3-syntax', { 'for': ['css', 'scss', 'sass'] } " css3-specific syntax
-  Plug 'ap/vim-css-color', { 'for': ['css', 'scss', 'sass'] }
+  " Plug 'ap/vim-css-color', { 'for': ['css', 'scss', 'sass'] }
+  Plug 'lilydjwg/colorizer'
 
 " # HTML
   " Plug 'othree/html5.vim', { 'for': ['html', 'haml'] }
@@ -64,7 +65,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'thoughtbot/vim-rspec', { 'for': 'ruby' } " rspec commands and highlight
 
  " #Misc
-  " Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } " all the luas
+  Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } " all the luas
   " Plug 'tmux-plugins/vim-tmux', { 'for': ['tmux'] }
   " Plug 'vim-scripts/fish.vim',   { 'for': 'fish' }
 
@@ -90,7 +91,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['ts', 'tsx', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
-  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
 " ## Tags
   " if executable('ctags')
@@ -179,6 +180,9 @@ let g:mapleader = ","                                                           
 
 set background=dark                                                             "Set background to dark
 silent! colorscheme nova
+" let g:oceanic_next_terminal_bold = 1
+" let g:oceanic_next_terminal_italic = 1
+" silent! colorscheme OceanicNext
 
 set termguicolors
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -425,8 +429,8 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
-  au WinEnter,BufEnter * silent set number relativenumber syntax=on " exec RainbowParentheses
-  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " exec RainbowParentheses!
+  au WinEnter,BufEnter * silent set number relativenumber syntax=on " call RainbowParentheses
+  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call RainbowParentheses!
   au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
   au InsertEnter * silent set colorcolumn=80
@@ -469,23 +473,6 @@ augroup MakeQuickFixPrettier
                 \| setlocal nolist
                 \| endif
 augroup END
-
-" # vim-lsp
-" augroup language_mappings
-"   autocmd!
-
-"   " TypeScript
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<CR>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :LspRename<CR>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :LspDocumentDiagnostics<CR>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f10> :LspDocumentSymbol<CR>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f11> :LspReferences<CR>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f12> :LspDefinition<CR>
-"   autocmd FileType typescript,typescriptreact,typescript.tsx command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.ts<CR>
-
-"   " Vim
-"   autocmd FileType vim command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.vim<CR>
-" augroup END
 
 " }}}
 " ================ Completion ======================= {{{
@@ -944,17 +931,18 @@ endfunction
   let g:ale_lint_delay = 1000
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
+  let g:ale_linter_aliases = {'tsx': 'ts'}
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
+        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
         \   'ruby': []
         \ }                                                                       "Lint js with eslint
-  "   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-  "   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-  "   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -1021,9 +1009,10 @@ endfunction
   " let g:nvim_typescript#max_completion_detail=100
   let g:nvim_typescript#completion_mark=''
   let g:nvim_typescript#default_mappings=0
-  " " let g:nvim_typescript#type_info_on_hold=1
+  let g:nvim_typescript#type_info_on_hold=0
   let g:nvim_typescript#javascript_support=1
-  " let g:nvim_typescript#vue_support=1
+  let g:nvim_typescript#signature_complete=1
+  let g:nvim_typescript#diagnosticsEnable=0
   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :TSRename<CR>
   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f3> :TSDefPreview<CR>
   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :TSDef<CR>
@@ -1168,7 +1157,7 @@ endfunction
   let g:LanguageClient_diagnosticsEnable = 1
   let g:LanguageClient_autoStart = 1 " Automatically start language servers.
   let g:LanguageClient_autoStop = 0
-  let g:LanguageClient_loadSettings = 1
+  let g:LanguageClient_loadSettings = 0
   let g:LanguageClient_loggingLevel = 'INFO'
   " Don't populate lists since it overrides Neomake lists
   " try
@@ -1227,47 +1216,6 @@ endfunction
   if executable('solargraph')
     let g:LanguageClient_serverCommands.ruby = ['tcp://localhost:7658']
   endif
-  " Signs and highlighting for errors, etc. TODO: move this elsewhere and fix
-  " up. ref: https://github.com/euclio/vimrc/blob/master/plugins.vim
-  let s:error_sign = '⨉'
-  let s:error_sign_hl = 'DiagnosticErrorSign'
-  let s:error_hl = 'DiagnosticError'
-  let s:warning_sign = '♦'
-  let s:warning_sign_hl = 'DiagnosticWarningSign'
-  let s:warning_hl = 'DiagnosticWarning'
-  let s:message_sign = '→'
-  let s:message_sign_hl = 'DiagnosticMessageSign'
-  let s:message_hl = 'DiagnosticMessage'
-  let s:info_sign = '…'
-  let s:info_sign_hl = s:message_sign_hl
-  let s:info_hl = s:message_hl
-  " let g:LanguageClient_diagnosticsDisplay = v:null
-  " let g:LanguageClient_diagnosticsDisplay = {
-  "       \  1: {
-  "       \    'name': 'Error',
-  "       \    'texthl': s:error_hl,
-  "       \    'signText': s:error_sign,
-  "       \    'signTexthl': s:error_sign_hl,
-  "       \  },
-  "       \  2: {
-  "       \    'name': 'Warning',
-  "       \    'texthl': s:warning_hl,
-  "       \    'signText': s:warning_sign,
-  "       \    'signTexthl': s:warning_sign_hl,
-  "       \  },
-  "       \  3: {
-  "       \    'name': 'Information',
-  "       \    'texthl': s:info_hl,
-  "       \    'signText': s:info_sign,
-  "       \    'signTexthl': s:info_sign_hl,
-  "       \  },
-  "       \  4: {
-  "       \    'name': 'Hint',
-  "       \    'texthl': s:message_hl,
-  "       \    'signText': s:message_sign,
-  "       \    'signTexthl': s:message_sign_hl,
-  "       \  },
-  "       \ }
 
 
 " ## deoplete
@@ -1729,9 +1677,12 @@ nnoremap S i<CR><esc>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
+map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
+
 
 " }}}
 " ================ Highlights and Colors ======================== {{{
+  hi clear SpellBad
   hi htmlArg cterm=italic gui=italic
   hi xmlAttrib cterm=italic gui=italic
   hi Type cterm=italic gui=italic
@@ -1740,20 +1691,16 @@ cnoremap <C-e> <End>
   hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
   hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
-  hi Search gui=underline term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#afaf87 guifg=#333333
-  hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
-
-  " Some custom spell-checking colors
-  "highlight SpellBad   term=underline cterm=underline ctermbg=NONE ctermfg=205
-  hi clear SpellBad
+  hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
+  hi Search gui=underline term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#333333 gui=bold
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-  hi SpellBad   term=underline cterm=underline gui=underline ctermfg=red guifg=#ff2929 guibg=NONE
-  hi SpellCap   term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=33
-  hi SpellRare  term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=217
-  hi SpellLocal term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=72
+  hi SpellBad   term=underline cterm=underline gui=undercurl ctermfg=red guifg=#cc6666 guibg=NONE
+  hi SpellCap   term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=33 guifg=#cc6666 guibg=NONE
+  hi SpellRare  term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=217 guifg=#cc6666 guibg=NONE
+  hi SpellLocal term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=72 guifg=#cc6666 guibg=NONE
 
   " Markdown could be more fruit salady
   hi link markdownH1 PreProc
@@ -1765,27 +1712,18 @@ cnoremap <C-e> <End>
   hi link markdownCodeBlock Delimiter
   hi link markdownListMarker Todo
 
-  " Configure how vim-lsc highlights errors.
-  hi lscDiagnosticError term=none ctermbg=none cterm=undercurl ctermfg=red gui=undercurl guisp=#ff2929
-  hi lscDiagnosticWarning term=none ctermbg=none cterm=undercurl ctermfg=magenta gui=undercurl guisp=magenta
-  hi lscDiagnosticHint term=none ctermbg=none cterm=undercurl ctermfg=cyan gui=undercurl guisp=cyan
-  hi lscDiagnosticInfo term=none ctermbg=none cterm=undercurl ctermfg=grey gui=undercurl guisp=grey
-
   " hi DiffChange guibg=#444444 ctermbg=238
   " hi DiffText guibg=#777777 ctermbg=244
   " hi DiffAdd guibg=#4f8867 ctermbg=29
   " hi DiffDelete guibg=#870000 ctermbg=88
 
-  hi ALEErrorSign ctermfg=9 ctermbg=15 guifg=#cc6666 guibg=NONE
+  hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
   hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
-
   hi link ALEError SpellBad
   hi link ALEWarning SpellBad
-
-  hi GitGutterAdd guibg=NONE
-  hi GitGutterChange guibg=NONE
-  hi GitGutterDelete guibg=NONE
-  hi GitGutterChangeDelete guibg=NONE
+  hi link Debug SpellBad
+  hi link ErrorMsg SpellBad
+  hi link Exception SpellBad
 
   " Nord
   hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
@@ -1798,6 +1736,7 @@ cnoremap <C-e> <End>
   hi! RainbowLevel7 ctermbg=234 guibg=#09193a
   hi! RainbowLevel8 ctermbg=233 guibg=#041538
   hi! RainbowLevel9 ctermbg=232 guibg=#001030
+
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
