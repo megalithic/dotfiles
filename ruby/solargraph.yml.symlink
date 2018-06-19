@@ -1,0 +1,12 @@
+---
+include:
+- "**/*.rb"
+exclude:
+- spec/**/*
+- test/**/*
+- vendor/**/*
+require:
+- rails
+reporters: []
+domains: []
+plugins: []

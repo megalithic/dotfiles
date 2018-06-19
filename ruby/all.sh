@@ -26,3 +26,4 @@ ln -sfv $DOTS/ruby/bundler          $HOME/.bundle/config
 # ln -s $DOTS/ruby/rubocop.yml      $HOME/.rubocop.yml
 # ln -s $DOTS/ruby/reek.yml         $HOME/.reek
 
+yard config --gem-install-yri

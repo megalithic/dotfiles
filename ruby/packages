@@ -8,8 +8,9 @@ pry
 rcodetools
 rubocop
 sidekiq
-solargraph -v 0.18.0
+solargraph
 terminal-notifier
 weechat
 language_server
 nokogiri
+yard
