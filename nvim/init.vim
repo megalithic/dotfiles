@@ -77,30 +77,17 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'tmux-plugins/vim-tmux-focus-events'
   Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
+  Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
 " ## Completions
-  " Plug 'prabirshrestha/asyncomplete.vim'
-  " Plug 'prabirshrestha/async.vim'
-  " Plug 'prabirshrestha/vim-lsp'
-  " Plug 'prabirshrestha/asyncomplete-lsp.vim'
-  " Plug 'prabirshrestha/asyncomplete-buffer.vim'
-  " Plug 'prabirshrestha/asyncomplete-file.vim'
-  " Plug 'prabirshrestha/asyncomplete-tags.vim'
-  " Plug 'prabirshrestha/asyncomplete-ultisnips.vim'
-  " Plug 'prabirshrestha/asyncomplete-tscompletejob.vim'
-  " Plug 'yami-beta/asyncomplete-omni.vim'
-
   " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
   Plug 'Shougo/neoinclude.vim'
-  " Plug 'roxma/nvim-completion-manager'
   " Plug 'roxma/nvim-cm-tern',  {'do': 'npm install'}
   " Plug 'calebeby/ncm-css', { 'for': ['scss', 'css', 'sass', 'less'] }
-  " Plug 'roxma/ncm-rct-complete'
   " Plug 'Shougo/echodoc.vim'
   " Plug 'Shougo/neco-vim'
-  " Plug 'fishbullet/deoplete-ruby', { 'for': ['ruby', 'haml', 'eruby'] }
-  Plug 'mhartington/nvim-typescript', { 'for': ['ts', 'tsx', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['ts', 'tsx', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
   Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
@@ -128,7 +115,6 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'raghur/vim-ghost', {'do': ':GhostInstall'} " just run :GhostStart in nvim and click the vim-ghost icon in Chrome/Firefox
   Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto underline with `=` under the visual selection
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
-  Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
   Plug 'brooth/far.vim' " find and replace
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
@@ -145,13 +131,9 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
-  Plug 'tpope/vim-endwise', { 'for': ['ruby', 'eruby', 'lua', 'elixir', 'viml', 'vimscript', 'vim', 'bash', 'sh', 'zsh'] }
-  Plug 'Raimondi/delimitMate'
-  Plug 'gregsexton/MatchTag', { 'for': ['html', 'eruby', 'javascript.jsx', 'javascript', 'typescript', 'typescriptreact', 'typescript.tsx'] }
-  " Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'javascript', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
-  Plug 'jiangmiao/auto-pairs'
+  Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
   Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
-  Plug 'benjifisher/matchit.zip'
+  Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-rhubarb'
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
   Plug 'tpope/vim-repeat'
@@ -171,20 +153,20 @@ call plug#begin( '~/.config/nvim/plugged')
   " -- provide al and il for current line
   " -- provide a_ and i_ for underscores
   " -- provide a- and i-
-  Plug 'kana/vim-textobj-user'                                                      " https://github.com/kana/vim-textobj-user/wiki
-  Plug 'kana/vim-textobj-entire'                                                    " Entire buffer text object (vae)
-  Plug 'kana/vim-textobj-function'                                                  " Function text object (vaf)
+  Plug 'kana/vim-textobj-user', { 'on': [ '<Plug>(textobj-user' ] }                 " https://github.com/kana/vim-textobj-user/wiki
+  Plug 'kana/vim-textobj-entire', { 'on': [ '<Plug>(textobj-entire' ] }             " entire buffer text object (vae)
+  Plug 'kana/vim-textobj-function', { 'on': [ '<Plug>(textobj-function' ] }         " function text object (vaf)
   Plug 'kana/vim-textobj-indent', { 'on': [ '<Plug>(textobj-indent' ] }             " for indent level (vai)
   Plug 'kana/vim-textobj-line', { 'on': [ '<Plug>(textobj-line' ] }                 " for current line (val)
-  Plug 'nelstrom/vim-textobj-rubyblock', { 'on': [ '<Plug>(textobj-rubyblock' ] }   " Ruby block text object (vir)
-  Plug 'glts/vim-textobj-comment'                                                   " Comment text object (vac)
+  Plug 'nelstrom/vim-textobj-rubyblock', { 'on': [ '<Plug>(textobj-rubyblock' ] }   " ruby block text object (vir)
+  Plug 'glts/vim-textobj-comment', { 'on': [ '<Plug>(textobj-comment' ] }           " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
   Plug 'machakann/vim-textobj-delimited', { 'on': [ '<Plug>(textobj-delimited' ] }  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
   Plug 'gilligan/textobj-lastpaste', { 'on': [ '<Plug>(textobj-lastpaste' ] }       " - P     for last paste
   Plug 'mattn/vim-textobj-url', { 'on': [ '<Plug>(textobj-url' ] }                  " - u     for url
-  Plug 'rhysd/vim-textobj-anyblock'
+  Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }
   Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
-  Plug 'wellle/targets.vim'                                                         " Improved targets line cin) next parens
+  Plug 'wellle/targets.vim'                                                         " improved targets line cin) next parens
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
@@ -384,7 +366,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
-  " au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set expandtab st=4 sts=4 ts=4
+  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set sw=2 ts=2 sts=2 et
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
   au BufNewFile,BufRead *.tsx set ft=typescriptreact " forces typescript.tsx -> typescriptreact
@@ -432,14 +414,14 @@ augroup vimrc
   au FileType html,markdown setl omnifunc=htmlcomplete#CompleteTags
   au FileType css,scss,sass,less,scss.css,sass.css setl omnifunc=csscomplete#CompleteCSS noci
 
-  au FileType coffee setl omnifunc=javascriptcomplete#CompleteJS
-  au FileType javascript,javascript.jsx,jsx setl omnifunc=javascriptcomplete#CompleteJS " default
-  au FileType javascript,javascript.jsx,jsx setl completefunc=jspc#omni " jspc
-  au FileType javascript,javascript.jsx,jsx setl omnifunc=tern#Complete " tern
+  " au FileType javascript,javascript.jsx,jsx setl omnifunc=javascriptcomplete#CompleteJS " default
+  " au FileType javascript,javascript.jsx,jsx setl completefunc=jspc#omni " jspc
+  " au FileType javascript,javascript.jsx,jsx setl omnifunc=tern#Complete " tern
 
   au FileType python setl omnifunc=pythoncomplete#Complete
   au FileType xml setl omnifunc=xmlcomplete#CompleteTags
-  au FileType ruby setl omnifunc=rubycomplete#Complete
+  " au FileType ruby setl omnifunc=rubycomplete#Complete
+  au FileType ruby setl omnifunc=LanguageClient#complete
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -752,15 +734,9 @@ function! CloseBuffer() abort
     bd
     return 1
   endif
-  " let l:nerdtreeOpen = g:NERDTree.IsOpen()
   let l:windowCount = winnr('$')
   let l:command = 'bd'
   let l:totalBuffers = len(getbufinfo({ 'buflisted': 1 }))
-  " let l:isNerdtreeLast = l:nerdtreeOpen && l:windowCount ==? 2
-  " let l:noSplits = !l:nerdtreeOpen && l:windowCount ==? 1
-  " if l:totalBuffers > 1 && (l:isNerdtreeLast || l:noSplits)
-  "   let l:command = 'bp|bd#'
-  " endif
   silent exe l:command
 endfunction
 
@@ -869,14 +845,13 @@ function! SnipComplete()
   return ''
 endfunction
 
+" }}}
 " ================ Plugin Config/Settings ======================== {{{
 
 " ## polyglot
   let g:polyglot_disabled = ['typescript', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown']
 
 " ## vim-devicons
-  " let g:NERDTreeGitStatusNodeColorization = 1
-  " 
   " let g:webdevicons_enable_denite = 0
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
   let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
@@ -953,12 +928,6 @@ endfunction
   let g:AutoPairsShortcutToggle = ''
   let g:AutoPairsMapCR = 0 " https://www.reddit.com/r/neovim/comments/4st4i6/making_ultisnips_and_deoplete_work_together_nicely/d6m73rh/
 
-" " ## NERDtree
-"   let g:NERDTreeChDirMode = 2                                                     "Always change the root directory
-"   let g:NERDTreeMinimalUI = 1                                                     "Disable help text and bookmark title
-"   let g:NERDTreeShowHidden = 1                                                    "Show hidden files in NERDTree
-"   let g:NERDTreeUpdateOnCursorHold = 0                                            "Disable nerdtree git plugin updating on cursor hold
-
 " ## vim-sneak
   let g:sneak#label = 1
   let g:sneak#use_ic_scs = 1
@@ -967,8 +936,8 @@ endfunction
 " ## quickscope
   let g:qs_enable = 0
 
-" # delimitMate
-  let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
+" # lexima
+  let g:lexima_enable_endwise_rules = 1
 
 " ## ALE
   let g:ale_enabled = 1
@@ -978,14 +947,14 @@ endfunction
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
         \   'ruby': []
         \ }                                                                       "Lint js with eslint
+  "   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+  "   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+  "   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -1129,7 +1098,8 @@ endfunction
   let g:test#custom_strategies = {'terminal_split': function('SplitStrategy')}
   let g:test#strategy = 'terminal_split'
   let test#ruby#rspec#options = '-f d'
-  let test#ruby#bundle_exec = 1
+  " let test#ruby#bundle_exec = 1
+  let test#ruby#use_binstubs = 1
   let test#ruby#rspec#executable = 'bin/rspec --format doc --no-color'
   let g:test#runner_commands = ['Jest', 'RSpec', 'Cypress']
 
@@ -1197,6 +1167,7 @@ endfunction
   let g:LanguageClient_diagnosticsList = v:null
   let g:LanguageClient_diagnosticsEnable = 1
   let g:LanguageClient_autoStart = 1 " Automatically start language servers.
+  let g:LanguageClient_autoStop = 0
   let g:LanguageClient_loadSettings = 1
   let g:LanguageClient_loggingLevel = 'INFO'
   " Don't populate lists since it overrides Neomake lists
@@ -1250,9 +1221,12 @@ endfunction
   if executable('json-languageserver')
     let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
   endif
-  " if executable('language_server-ruby')
-  "   let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
-  " endif
+  if executable('language_server-ruby')
+    let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
+  endif
+  if executable('solargraph')
+    let g:LanguageClient_serverCommands.ruby = ['tcp://localhost:7658']
+  endif
   " Signs and highlighting for errors, etc. TODO: move this elsewhere and fix
   " up. ref: https://github.com/euclio/vimrc/blob/master/plugins.vim
   let s:error_sign = '⨉'
@@ -1295,138 +1269,6 @@ endfunction
   "       \  },
   "       \ }
 
-
-" ## vim-lsc
-  " let g:lsc_enable_autocomplete = v:true
-  " let g:lsc_auto_map = v:true
-  " let g:lsc_preview_split_direction = 'below'
-  " let g:lsc_enable_apply_edit = v:true
-  " let g:lsc_enable_incremental_sync = v:true
-  " let g:lsc_server_commands = {}
-  " if executable('pyls')
-  "   let g:lsc_server_commands.python = 'pyls'
-  " endif
-  " if executable('go-langserver')
-  "   let g:lsc_server_commands.go = 'go-langserver'
-  " endif
-  " if executable('lua-lsp')
-  "   let g:lsc_server_commands.lua = 'lua-lsp'
-  " endif
-  " if executable('dart_language_server')
-  "   let g:lsc_server_commands.dart = 'dart_language_server'
-  " endif
-  " if executable('javascript-typescript-stdio')
-  "   let g:lsc_server_commands.javascript = 'javascript-typescript-stdio'
-  "   let g:lsc_server_commands['javascript.jsx'] = 'javascript-typescript-stdio'
-  "   let g:lsc_server_commands.typescript = 'javascript-typescript-stdio'
-  "   let g:lsc_server_commands.typescriptreact = 'javascript-typescript-stdio'
-  "   let g:lsc_server_commands['typescript.tsx'] = 'javascript-typescript-stdio'
-  " endif
-  " if executable('css-languageserver')
-  "   let g:lsc_server_commands.css = 'css-languageserver --stdio'
-  "   let g:lsc_server_commands.less = 'css-languageserver --stdio'
-  "   let g:lsc_server_commands.scss = 'css-languageserver --stdio'
-  "   let g:lsc_server_commands.sass = 'css-languageserver --stdio'
-  " endif
-  " if executable('html-languageserver')
-  "   let g:lsc_server_commands.html = 'html-languageserver --stdio'
-  " endif
-  " if executable('json-languageserver')
-  "   let g:lsc_server_commands.json = 'json-languageserver --stdio'
-  " endif
-  " if executable('language_server-ruby')
-  "   let g:lsc_server_commands.ruby = 'language_server-ruby'
-  " endif
-  " autocmd FileType javascript,javascript.jsx,python,typescript,typescriptreact,typescript.tsx,json,css,less,html setlocal omnifunc=lsc#complete
-
-" ## asyncomplete.vim/asynccomplete/vim-lsp
-  " let g:asyncomplete_auto_popup = 1
-  " let g:asyncomplete_remove_duplicates = 0
-  " let g:asyncomplete_smart_completion = 1
-  " let g:asyncomplete_min_chars = 2
-  " let g:lsp_signs_enabled = 1         " enable signs
-  " let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
-  " let g:lsp_signs_error = {'text': '⤫'}
-  " let g:lsp_signs_warning = {'text': '~'}
-  " let g:lsp_signs_hint = {'text': '?'}
-  " " let g:lsp_signs_warning = {'text': '~', 'icon': '/path/to/some/icon'} " icons require GUI
-  " " let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
-  " " let g:lsp_log_verbose = 0
-  " " let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
-  " let g:asyncomplete_log_file = expand('~/.config/nvim/asyncomplete.log')
-  " set completeopt+=preview
-  " if has('python3')
-  "   let g:UltiSnipsExpandTrigger="<c-e>"
-  "   au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#ultisnips#get_source_options({
-  "         \ 'name': 'ultisnips',
-  "         \ 'whitelist': ['*'],
-  "         \ 'completor': function('asyncomplete#sources#ultisnips#completor'),
-  "         \ }))
-  " endif
-  " au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#buffer#get_source_options({
-  "       \ 'name': 'buffer',
-  "       \ 'whitelist': ['*'],
-  "       \ 'blacklist': ['go'],
-  "       \ 'completor': function('asyncomplete#sources#buffer#completor'),
-  "       \ }))
-  " au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#file#get_source_options({
-  "       \ 'name': 'file',
-  "       \ 'whitelist': ['*'],
-  "       \ 'blacklist': ['typescript', 'javascript', 'javascript.js'],
-  "       \ 'priority': 10,
-  "       \ 'completor': function('asyncomplete#sources#file#completor')
-  "       \ }))
-  " if executable('ctags')
-  "   au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#tags#get_source_options({
-  "       \ 'name': 'tags',
-  "       \ 'whitelist': ['typescript', 'javascript', 'javascript.jsx'],
-  "       \ 'completor': function('asyncomplete#sources#tags#completor'),
-  "       \ 'config': {
-  "       \    'max_file_size': 150000000,
-  "       \  },
-  "       \ }))
-  " endif
-  " au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#omni#get_source_options({
-  "       \ 'name': 'omni',
-  "       \ 'whitelist': ['*'],
-  "       \ 'blacklist': ['c', 'cpp', 'html'],
-  "       \ 'completor': function('asyncomplete#sources#omni#completor')
-  "       \  }))
-  " au User asynccomplete_setup call asyncomplete#register_source(asyncomplete#sources#tscompletejob#get_source_options({
-  "       \ 'name': 'tscompletejob',
-  "       \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
-  "       \ 'completor': function('asyncomplete#sources#tscompletejob#completor'),
-  "       \ }))
-  " if executable('typescript-language-server')
-  "   au User lsp_setup call lsp#register_server({
-  "         \ 'name': 'typescript-language-server',
-  "         \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server', '--stdio']},
-  "         \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-  "         \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
-  "         \ })
-  " endif
-  " if executable('css-languageserver')
-  "   au User lsp_setup call lsp#register_server({
-  "         \ 'name': 'css-languageserver',
-  "         \ 'cmd': {server_info->[&shell, &shellcmdflag, 'css-languageserver --stdio']},
-  "         \ 'whitelist': ['css', 'less', 'sass', 'scss'],
-  "         \ })
-  " endif
-  " if executable('ocaml-language-server')
-  "   au User lsp_setup call lsp#register_server({
-  "         \ 'name': 'ocaml-language-server',
-  "         \ 'cmd': {server_info->[&shell, &shellcmdflag, 'ocaml-language-server --stdio']},
-  "         \ 'whitelist': ['reason', 'ocaml'],
-  "         \ })
-  " endif
-  " if executable('pyls')
-  "   " pip install python-language-server
-  "   au User lsp_setup call lsp#register_server({
-  "         \ 'name': 'pyls',
-  "         \ 'cmd': {server_info->['pyls']},
-  "         \ 'whitelist': ['python'],
-  "         \ })
-  " endif
 
 " ## deoplete
   " REFS:
@@ -1903,25 +1745,25 @@ cnoremap <C-e> <End>
 
   " Some custom spell-checking colors
   "highlight SpellBad   term=underline cterm=underline ctermbg=NONE ctermfg=205
-  highlight clear SpellBad
+  hi clear SpellBad
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-  highlight SpellBad   term=underline cterm=underline gui=underline ctermfg=red guifg=#ff2929 guibg=NONE
-  highlight SpellCap   term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=33
-  highlight SpellRare  term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=217
-  highlight SpellLocal term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=72
+  hi SpellBad   term=underline cterm=underline gui=underline ctermfg=red guifg=#ff2929 guibg=NONE
+  hi SpellCap   term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=33
+  hi SpellRare  term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=217
+  hi SpellLocal term=underline cterm=underline gui=underline ctermbg=NONE ctermfg=72
 
   " Markdown could be more fruit salady
-  highlight link markdownH1 PreProc
-  highlight link markdownH2 PreProc
-  highlight link markdownLink Character
-  highlight link markdownBold String
-  highlight link markdownItalic Statement
-  highlight link markdownCode Delimiter
-  highlight link markdownCodeBlock Delimiter
-  highlight link markdownListMarker Todo
+  hi link markdownH1 PreProc
+  hi link markdownH2 PreProc
+  hi link markdownLink Character
+  hi link markdownBold String
+  hi link markdownItalic Statement
+  hi link markdownCode Delimiter
+  hi link markdownCodeBlock Delimiter
+  hi link markdownListMarker Todo
 
   " Configure how vim-lsc highlights errors.
   hi lscDiagnosticError term=none ctermbg=none cterm=undercurl ctermfg=red gui=undercurl guisp=#ff2929
@@ -1934,13 +1776,28 @@ cnoremap <C-e> <End>
   " hi DiffAdd guibg=#4f8867 ctermbg=29
   " hi DiffDelete guibg=#870000 ctermbg=88
 
-  highlight ALEErrorSign ctermfg=9 ctermbg=15 guifg=#cc6666 guibg=NONE
-  highlight ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
+  hi ALEErrorSign ctermfg=9 ctermbg=15 guifg=#cc6666 guibg=NONE
+  hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
 
-  highlight GitGutterAdd guibg=NONE
-  highlight GitGutterChange guibg=NONE
-  highlight GitGutterDelete guibg=NONE
-  highlight GitGutterChangeDelete guibg=NONE
+  hi link ALEError SpellBad
+  hi link ALEWarning SpellBad
+
+  hi GitGutterAdd guibg=NONE
+  hi GitGutterChange guibg=NONE
+  hi GitGutterDelete guibg=NONE
+  hi GitGutterChangeDelete guibg=NONE
+
+  " Nord
+  hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
+  hi! RainbowLevel1 ctermbg=240 guibg=#2E3440
+  hi! RainbowLevel2 ctermbg=239 guibg=#252d3d
+  hi! RainbowLevel3 ctermbg=238 guibg=#1f293d
+  hi! RainbowLevel4 ctermbg=237 guibg=#18243d
+  hi! RainbowLevel5 ctermbg=236 guibg=#131f38
+  hi! RainbowLevel6 ctermbg=235 guibg=#0f1c38
+  hi! RainbowLevel7 ctermbg=234 guibg=#09193a
+  hi! RainbowLevel8 ctermbg=233 guibg=#041538
+  hi! RainbowLevel9 ctermbg=232 guibg=#001030
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
