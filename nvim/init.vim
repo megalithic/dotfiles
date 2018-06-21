@@ -21,33 +21,21 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'sheerun/vim-polyglot'
 
 " # JS
-  " Plug 'othree/yajs.vim', { 'for': ['javascript', 'javascript.jsx', 'jsx'] }
-  " Plug 'chemzqm/vim-jsx-improve', { 'for': ['javascript', 'javascript.jsx', 'jsx', 'js'] }
-  " Plug 'mxw/vim-jsx', { 'for': ['javascript', 'javascript.jsx', 'jsx', 'js'] }
-  " Plug 'elzr/vim-json', { 'for': ['json'] }
   Plug 'jparise/vim-graphql', { 'for': ['javascript', 'javascript.jsx', 'jsx', 'js'] }
 
 " # TS
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
-  " Plug 'ianks/vim-tsx', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 
 " # Fn
-  " Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
-  " Plug 'reasonml-editor/vim-reason-plus', { 'for': ['reason'] }
+  Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
+  Plug 'reasonml-editor/vim-reason-plus', { 'for': ['reason'] }
 
 " # CSS
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
   Plug 'hail2u/vim-css3-syntax', { 'for': ['css', 'scss', 'sass'] } " css3-specific syntax
   " Plug 'ap/vim-css-color', { 'for': ['css', 'scss', 'sass'] }
   Plug 'lilydjwg/colorizer'
-
-" # HTML
-  " Plug 'othree/html5.vim', { 'for': ['html', 'haml'] }
-  " Plug 'othree/xml.vim', { 'for': ['xml'] }
-
-" # Cfg
-  " Plug 'martin-svk/vim-yaml', { 'for': ['yaml'] }
 
 " # MD
   Plug 'tpope/vim-markdown', { 'for': ['markdown', 'md', 'mdown', 'ghmarkdown'] }
@@ -58,16 +46,10 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'euclio/vim-markdown-composer', { 'do': 'cargo build --release' }
 
 " # RoR
-  " Plug 'vim-ruby/vim-ruby', { 'for': ['ruby'] }
-  " Plug 'tpope/vim-haml', { 'for': ['haml'] }
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
-  " Plug 'tpope/vim-bundler', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
-  " Plug 'thoughtbot/vim-rspec', { 'for': 'ruby' } " rspec commands and highlight
 
  " #Misc
   Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } " all the luas
-  " Plug 'tmux-plugins/vim-tmux', { 'for': ['tmux'] }
-  " Plug 'vim-scripts/fish.vim',   { 'for': 'fish' }
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -81,17 +63,11 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
 " ## Completions
-  " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-  Plug 'Shougo/neoinclude.vim'
-  " Plug 'roxma/nvim-cm-tern',  {'do': 'npm install'}
-  " Plug 'calebeby/ncm-css', { 'for': ['scss', 'css', 'sass', 'less'] }
-  " Plug 'Shougo/echodoc.vim'
-  " Plug 'Shougo/neco-vim'
-  Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['ts', 'tsx', 'typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
-  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
 " ## Tags
   " if executable('ctags')
@@ -102,12 +78,7 @@ call plug#begin( '~/.config/nvim/plugged')
 
 " ## Snippets
   if has('python3')
-    " Plug 'Shougo/neosnippet.vim'
-    " Plug 'Shougo/neosnippet-snippets'
     Plug 'SirVer/ultisnips'
-    " Plug 'honza/vim-snippets'
-    " Plug 'epilande/vim-es2015-snippets'
-    " Plug 'epilande/vim-react-snippets'
   endif
 
 " ## Random/Misc/Docs
@@ -133,6 +104,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
   Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
+  Plug 'Raimondi/delimitMate'
   Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
   Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-rhubarb'
@@ -347,7 +319,7 @@ augroup vimrc
   autocmd BufWritePost .vimrc.local source %
 
   " save all files on focus lost, ignoring warnings about untitled buffers
-  autocmd FocusLost * silent! wa
+  " autocmd FocusLost * silent! wa
 
   au BufWritePre * call StripTrailingWhitespaces()                     "Auto-remove trailing spaces
   au FocusGained,BufEnter * checktime                                  "Refresh file when vim gets focus
@@ -836,7 +808,7 @@ endfunction
 " ================ Plugin Config/Settings ======================== {{{
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown']
+  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown']
 
 " ## vim-devicons
   " let g:webdevicons_enable_denite = 0
@@ -890,30 +862,21 @@ endfunction
     endfunction
     autocmd! User GoyoEnter nested call <SID>goyo_enter()
     autocmd! User GoyoLeave nested call <SID>goyo_leave()
-    " " Activate goyo with Markdown files
-    " function! s:auto_goyo()
-    "   if &ft == 'markdown'
-    "     Goyo 120
-    "   elseif exists('#goyo')
-    "     let bufnr = bufnr('%')
-    "     Goyo!
-    "     execute 'b '.bufnr
-    "   endif
-    " endfunction
-
-" ## vim-qf
-  " nmap qp <Plug>qf_qf_previous
-  " nmap qn <Plug>qf_qf_next
-  " nmap qc <Plug>qf_qf_stay_toggle
+    " Activate goyo with Markdown files
+    function! s:auto_goyo()
+      if &ft == 'markdown'
+        Goyo 120
+      elseif exists('#goyo')
+        let bufnr = bufnr('%')
+        Goyo!
+        execute 'b '.bufnr
+      endif
+    endfunction
 
 " ## golden-ratio
   let g:golden_ratio_exclude_nonmodifiable = 1
   let g:golden_ratio_wrap_ignored = 0
   let g:golden_ratio_ignore_horizontal_splits = 1
-
-" ## auto-pairs
-  let g:AutoPairsShortcutToggle = ''
-  let g:AutoPairsMapCR = 0 " https://www.reddit.com/r/neovim/comments/4st4i6/making_ultisnips_and_deoplete_work_together_nicely/d6m73rh/
 
 " ## vim-sneak
   let g:sneak#label = 1
@@ -924,7 +887,7 @@ endfunction
   let g:qs_enable = 0
 
 " # lexima
-  let g:lexima_enable_endwise_rules = 1
+  " let g:lexima_enable_endwise_rules = 1
 
 " ## ALE
   let g:ale_enabled = 1
@@ -1064,17 +1027,17 @@ endfunction
   let g:colorizer_colornames = 1
 
 " ## rainbow_parentheses.vim
-  let g:rainbow#max_level = 8
+  let g:rainbow#max_level = 10
   let g:rainbow#pairs = [['(', ')'], ['[', ']'], ['{', '}']]
-  let g:rainbow_levels = [
-      \{'ctermfg': 84,  'guifg': '#50fa7b'},
-      \{'ctermfg': 117, 'guifg': '#8be9fd'},
-      \{'ctermfg': 61,  'guifg': '#6272a4'},
-      \{'ctermfg': 212, 'guifg': '#ff79c6'},
-      \{'ctermfg': 203, 'guifg': '#ffb86c'},
-      \{'ctermfg': 228, 'guifg': '#f1fa8c'},
-      \{'ctermfg': 15,  'guifg': '#f8f8f2'},
-      \{'ctermfg': 231, 'guifg': '#525563'}]
+  " let g:rainbow_levels = [
+  "     \{'ctermfg': 84,  'guifg': '#50fa7b'},
+  "     \{'ctermfg': 117, 'guifg': '#8be9fd'},
+  "     \{'ctermfg': 61,  'guifg': '#6272a4'},
+  "     \{'ctermfg': 212, 'guifg': '#ff79c6'},
+  "     \{'ctermfg': 203, 'guifg': '#ffb86c'},
+  "     \{'ctermfg': 228, 'guifg': '#f1fa8c'},
+  "     \{'ctermfg': 15,  'guifg': '#f8f8f2'},
+  "     \{'ctermfg': 231, 'guifg': '#525563'}]
 
 " ## vim-surround
   let g:surround_indent = 0
@@ -1154,7 +1117,7 @@ endfunction
 
 " ## LanguageClient
   let g:LanguageClient_diagnosticsList = v:null
-  let g:LanguageClient_diagnosticsEnable = 1
+  let g:LanguageClient_diagnosticsEnable = 0
   let g:LanguageClient_autoStart = 1 " Automatically start language servers.
   let g:LanguageClient_autoStop = 0
   let g:LanguageClient_loadSettings = 0
@@ -1277,35 +1240,6 @@ endfunction
   " call deoplete#custom#source('typescript', 'debug_enabled', 1)
   " call deoplete#custom#source('typescriptreact', 'debug_enabled', 1)
 
-" coc.nvim
-  let g:coc_timeout = 300
-  let g:coc_ignore_git_ignore = 0
-  let g:coc_use_noselect = 1
-  let g:coc_chars_guifg = '#ffffff'
-  let g:coc_chars_guibg = '#b180a4'
-  let g:coc_increment_highlight = 1
-  let g:coc_source_config = {
-        \  'languageclient': {
-        \    'filetypes': ['wxml', 'vue'],
-        \    'disabled': 0,
-        \  },
-        \  'omni': {
-        \    'filetypes': ['css', 'html', 'wxss'],
-        \  },
-        \  'file': {
-        \    'ignorePatterns': ['*.bundle.js'],
-        \  },
-        \  'tern': {
-        \    'ternRoot': expand('~/lib/tern'),
-        \  },
-        \  'jedi': {
-        \    'settings': {
-        \       'dynamic_params': v:true,
-        \       'dynamic_params_for_other_modules': v:true
-        \    },
-        \  },
-        \}
-
 " ## tagbar
   let g:tagbar_sort = 0
   let g:tagbar_compact = 1
@@ -1352,22 +1286,17 @@ endfunction
 " ================ Custom Mappings ======================== {{{
 
 " - deoplete + ultisnips
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~ '\s'
-endfunction
+" function! s:check_back_space() abort
+"   let col = col('.') - 1
+"   return !col || getline('.')[col - 1]  =~ '\s'
+" endfunction
 
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
+
 " ultisnips
 inoremap <C-e> <C-R>=SnipComplete()<CR>
-
-" - coc
-" inoremap <silent><expr> <TAB>
-"       \ pumvisible() ? "\<C-n>" :
-"       \ <SID>check_back_space() ? "\<TAB>" :
-"       \ coc#refresh()
 
 " Down is really the next line
 nnoremap j gj
@@ -1422,7 +1351,7 @@ map <leader>eg :vnew! ~/.gitconfig<CR>
 map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<CR>
 map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
-nnoremap <C-s> :call SCRatchOpen()<CR>
+nnoremap <C-s> :call ScratchOpen()<CR>
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)
@@ -1726,16 +1655,16 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi link Exception SpellBad
 
   " Nord
-  hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
-  hi! RainbowLevel1 ctermbg=240 guibg=#2E3440
-  hi! RainbowLevel2 ctermbg=239 guibg=#252d3d
-  hi! RainbowLevel3 ctermbg=238 guibg=#1f293d
-  hi! RainbowLevel4 ctermbg=237 guibg=#18243d
-  hi! RainbowLevel5 ctermbg=236 guibg=#131f38
-  hi! RainbowLevel6 ctermbg=235 guibg=#0f1c38
-  hi! RainbowLevel7 ctermbg=234 guibg=#09193a
-  hi! RainbowLevel8 ctermbg=233 guibg=#041538
-  hi! RainbowLevel9 ctermbg=232 guibg=#001030
+  " hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
+  " hi! RainbowLevel1 ctermbg=240 guibg=#2E3440
+  " hi! RainbowLevel2 ctermbg=239 guibg=#252d3d
+  " hi! RainbowLevel3 ctermbg=238 guibg=#1f293d
+  " hi! RainbowLevel4 ctermbg=237 guibg=#18243d
+  " hi! RainbowLevel5 ctermbg=236 guibg=#131f38
+  " hi! RainbowLevel6 ctermbg=235 guibg=#0f1c38
+  " hi! RainbowLevel7 ctermbg=234 guibg=#09193a
+  " hi! RainbowLevel8 ctermbg=233 guibg=#041538
+  " hi! RainbowLevel9 ctermbg=232 guibg=#001030
 
 " }}}
 
