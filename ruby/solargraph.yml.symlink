@@ -5,8 +5,12 @@ exclude:
 - spec/**/*
 - test/**/*
 - vendor/**/*
-require:
-- rails
-reporters: []
+- ".bundle/**/*"
+require: []
 domains: []
-plugins: []
+reporters:
+- rubocop
+- require_not_found
+plugins:
+- runtime
+max_files: 5000
