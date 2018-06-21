@@ -64,7 +64,9 @@ call plug#begin( '~/.config/nvim/plugged')
 
 " ## Completions
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+  Plug 'Shougo/echodoc.vim'
   Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  " Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
   Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
@@ -104,10 +106,10 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
   Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
-  Plug 'Raimondi/delimitMate'
   Plug 'jiangmiao/auto-pairs'
   " Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
-  Plug 'tpope/vim-endwise', { 'for': ['ruby', 'eruby', 'lua', 'elixir', 'viml', 'vimscript', 'vim', 'bash', 'sh', 'zsh'] }
+  " Plug 'tpope/vim-endwise', { 'for': ['ruby', 'eruby', 'lua', 'elixir', 'viml', 'vimscript', 'vim', 'bash', 'sh', 'zsh'] }
+  Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-rhubarb'
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
@@ -373,6 +375,7 @@ augroup vimrc
   au FileType ruby setl iskeyword+=_
   au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
   au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
+  " au BufRead,BufNewFile *.rb exe EnsureSolargraphRunning()
 
   " ----------------------------------------------------------------------------
   " ## SSH
@@ -399,7 +402,7 @@ augroup vimrc
   au FileType python setl omnifunc=pythoncomplete#Complete
   au FileType xml setl omnifunc=xmlcomplete#CompleteTags
   " au FileType ruby setl omnifunc=rubycomplete#Complete
-  au FileType ruby setl omnifunc=LanguageClient#complete
+  au FileType ruby setl omnifunc=LanguageClient#complete " using solargraph
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -806,6 +809,22 @@ function! SnipComplete()
   return ''
 endfunction
 
+function! EnsureSolargraphRunning()
+  let s:start_server = empty(system("ps | grep solargraph | grep -v grep"))
+  if s:start_server == 1
+    let s:job = jobstart("solargraph socket")
+    if s:job == 0
+      echohl Error | echomsg 'Solargraph: Invalid arguments' | echohl None
+      return 0
+    elseif s:job == -1
+      echohl Error | echomsg 'Solargraph: Not installed' | echohl None
+      return 0
+    else
+      return 1
+    endif
+  endif
+endfunction
+
 " }}}
 " ================ Plugin Config/Settings ======================== {{{
 
@@ -887,6 +906,10 @@ endfunction
 
 " ## quickscope
   let g:qs_enable = 0
+
+" ## auto-pairs
+  let g:AutoPairsShortcutToggle = ''
+  let g:AutoPairsMapCR = 0 " https://www.reddit.com/r/neovim/comments/4st4i6/making_ultisnips_and_deoplete_work_together_nicely/d6m73rh/
 
 " # delimitMate
   let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
@@ -974,21 +997,20 @@ endfunction
   let g:used_javascript_libs = 'underscore,chai,react,flux,mocha,redux,lodash,angularjs,angularui,enzyme,ramda,d3'
 
 " ## nvim-typescript
-  " let g:nvim_typescript#max_completion_detail=100
   let g:nvim_typescript#completion_mark=''
   let g:nvim_typescript#default_mappings=0
   let g:nvim_typescript#type_info_on_hold=0
-  let g:nvim_typescript#javascript_support=1
-  let g:nvim_typescript#signature_complete=1
+  let g:nvim_typescript#max_completion_detail=100
+  let g:nvim_typescript#javascript_support=0
+  let g:nvim_typescript#signature_complete=0
   let g:nvim_typescript#diagnosticsEnable=0
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f2> :TSRename<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f3> :TSDefPreview<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f8> :TSDef<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f9> :TSDoc<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f10> :TSType<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>K :TSType<CR>
-  " autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f11> :TSRefs<CR>
-  " autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <f12> :TSTypeDef<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
+  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
   let g:nvim_typescript#kind_symbols = {
       \ 'keyword': 'keyword',
       \ 'class': '',
@@ -1127,12 +1149,8 @@ endfunction
   let g:LanguageClient_autoStop = 0
   let g:LanguageClient_loadSettings = 0
   let g:LanguageClient_loggingLevel = 'INFO'
-  " Don't populate lists since it overrides Neomake lists
-  " try
-  "   let g:LanguageClient_diagnosticsList = v:null
-  " catch
-  "   let g:LanguageClient_diagnosticsList = ''
-  " endtry
+  " let g:LanguageClient_devel = 1 " Use debug build
+  " let g:LanguageClient_loggingLevel = 'DEBUG' " Use highest logging level
 
   " PREFER nvim-typescript for most things, as it's faster
   augroup LanguageClientConfig
