@@ -105,7 +105,9 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
   Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
   Plug 'Raimondi/delimitMate'
-  Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
+  Plug 'jiangmiao/auto-pairs'
+  " Plug 'cohama/lexima.vim' " auto-closes many delimiters and can repeat with a `.`
+  Plug 'tpope/vim-endwise', { 'for': ['ruby', 'eruby', 'lua', 'elixir', 'viml', 'vimscript', 'vim', 'bash', 'sh', 'zsh'] }
   Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-rhubarb'
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
@@ -342,7 +344,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
-  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set sw=2 ts=2 sts=2 et
+  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set ts=2 sts=2 sw=2
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
   au BufNewFile,BufReadPost *.tsx setl ft=typescriptreact " forces typescript.tsx -> typescriptreact
@@ -375,7 +377,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## SSH
   au BufNewFile,BufRead */ssh/config  setf sshconfig
-  au BufNewFile,BufRead ssh_config,*/.dotfiles/private/ssh/config  setf sshconfig
+  au BufNewFile,BufRead ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
 
   " ----------------------------------------------------------------------------
   " ## Misc filetypes
@@ -886,8 +888,11 @@ endfunction
 " ## quickscope
   let g:qs_enable = 0
 
+" # delimitMate
+  let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
+
 " # lexima
-  " let g:lexima_enable_endwise_rules = 1
+  " let g:lexima_enable_endwise_rules = 0
 
 " ## ALE
   let g:ale_enabled = 1
