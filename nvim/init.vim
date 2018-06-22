@@ -1155,22 +1155,20 @@ endfunction
   " PREFER nvim-typescript for most things, as it's faster
   augroup LanguageClientConfig
     autocmd!
-    " " <leader>ld to go to definition
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ld :call LanguageClient_textDocument_definition()<CR>
-    " " <leader>lf to autoformat document
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lf :call LanguageClient_textDocument_formatting()<CR>
-    " " <leader>lh for type info under cursor
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lh :call LanguageClient_textDocument_hover()<CR>
-    " " <leader>lr to rename variable under cursor
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lr :call LanguageClient_textDocument_rename()<CR>
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
-    " " <leader>lc to switch omnifunc to LanguageClient
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lc :setlocal omnifunc=LanguageClient#complete<CR>
-    " " <leader>ls to fuzzy find the symbols in the current document
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>@ :call LanguageClient_textDocument_documentSymbol()<CR>
-    " autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader># :call LanguageClient_workspace_symbol()<CR>
-    " " Use as omnifunc by default
+    " <F2> to rename variable under cursor
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+    " <F8> to go to definition
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F8> :call LanguageClient_textDocument_definition()<CR>
+    " <F6> to autoformat document
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F7> :call LanguageClient_textDocument_references()<CR>
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F6> :call LanguageClient_textDocument_implementation()<CR>
+    " <F7> for type info under cursor
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lh :call LanguageClient_textDocument_hover()<CR>
+    " <F9> to fuzzy find the symbols in the current document
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>@ :call LanguageClient_textDocument_documentSymbol()<CR>
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader># :call LanguageClient_workspace_symbol()<CR>
+    " Use as omnifunc by default
     autocmd FileType javascript,javascript.jsx,python,json,css,less,html setlocal omnifunc=LanguageClient#complete
   augroup END
   let g:LanguageClient_serverCommands = {}
