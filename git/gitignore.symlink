@@ -17,7 +17,6 @@ zeus.json
 ~/.config/nvim/plugged
 ~/.config/nvim/.init.*
 **/plugged
-**/autoload
 **/.init.vim*
 ~/.dotfiles/config/config.symlink/nvim/plugged
 ~/.dotfiles/config/config.symlink/nvim/autoload

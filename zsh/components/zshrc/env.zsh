@@ -55,15 +55,24 @@ export HOMEBREW_NO_ANALYTICS=1
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 export BREW_PATH="$(brew --prefix)"
 export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
-export NVIMRUNTIME='/usr/local/share/nvim/runtime'
 export TERMINFO=$HOME/.terminfo
 # export TERMINFO=/usr/share/terminfo
 # export NVIM_PYTHON_LOG_FILE='~/tmp/nvim_python.log'
 # export NVIM_PYTHON_LOG_LEVEL=DEBUG
 # export PYTHONPATH="$BREW_PATH/bin/python3.5"
 export _Z_DATA="$HOME/.z-history"
-export NVIM_TUI_ENABLE_TRUE_COLOR=1
 export TERM_ITALICS="TRUE"
+
+#
+# NVIM
+#
+
+export NVIMRUNTIME='/usr/local/share/nvim/runtime'
+export NVIM_TUI_ENABLE_TRUE_COLOR=1
+export NVIM_COC_LOG_FILE='~/tmp/nvim/coc-nvim-debug.log'
+export NVIM_COC_LOG_LEVEL='debug'
+export NVIM_NODE_LOG_FILE='~/tmp/nvim/nvim-node-debug.log'
+export NVIM_NODE_LOG_LEVEL='debug'
 
 # by default: export WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
 # we take out the slash, period, angle brackets, dash here.

@@ -10,3 +10,4 @@ solargraph-utils.py
 glances
 psutil
 python-language-server
+typing

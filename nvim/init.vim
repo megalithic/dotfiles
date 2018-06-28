@@ -28,8 +28,8 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 
 " # Fn
-  Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
-  Plug 'reasonml-editor/vim-reason-plus', { 'for': ['reason'] }
+  " Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
+  " Plug 'reasonml-editor/vim-reason-plus', { 'for': ['reason'] }
 
 " # CSS
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
@@ -63,22 +63,22 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 
 " ## Completions
-  Plug 'prabirshrestha/asyncomplete.vim'
-  Plug 'prabirshrestha/async.vim'
-  Plug 'prabirshrestha/vim-lsp'
-  Plug 'prabirshrestha/asyncomplete-lsp.vim'
-  Plug 'prabirshrestha/asyncomplete-buffer.vim'
-  Plug 'prabirshrestha/asyncomplete-file.vim'
-  Plug 'prabirshrestha/asyncomplete-tags.vim'
-  Plug 'prabirshrestha/asyncomplete-ultisnips.vim'
-  " Plug 'runoshun/tscompletejob'
-  " Plug 'prabirshrestha/asyncomplete-tscompletejob.vim'
-  Plug 'yami-beta/asyncomplete-omni.vim'
+  " Plug 'prabirshrestha/asyncomplete.vim'
+  " Plug 'prabirshrestha/async.vim'
+  " Plug 'prabirshrestha/vim-lsp'
+  " Plug 'prabirshrestha/asyncomplete-lsp.vim'
+  " Plug 'prabirshrestha/asyncomplete-buffer.vim'
+  " Plug 'prabirshrestha/asyncomplete-file.vim'
+  " Plug 'prabirshrestha/asyncomplete-tags.vim'
+  " Plug 'prabirshrestha/asyncomplete-ultisnips.vim'
+  " " Plug 'runoshun/tscompletejob'
+  " " Plug 'prabirshrestha/asyncomplete-tscompletejob.vim'
+  " Plug 'yami-beta/asyncomplete-omni.vim'
 
-  " Plug 'neoclide/coc.nvim', { 'do': 'yarn install' }
+  " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-  " Plug 'Shougo/echodoc.vim'
-  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'Shougo/echodoc.vim'
+  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
@@ -97,13 +97,13 @@ call plug#begin( '~/.config/nvim/plugged')
   endif
 
 " ## Random/Misc/Docs
-  Plug 'junegunn/limelight.vim'
-  Plug 'junegunn/goyo.vim'
+  " Plug 'junegunn/limelight.vim'
+  " Plug 'junegunn/goyo.vim'
   " Plug 'raghur/vim-ghost', {'do': ':GhostInstall'} " just run :GhostStart in nvim and click the vim-ghost icon in Chrome/Firefox
   Plug 'drmikehenry/vim-extline' " https://github.com/drmikehenry/vim-extline/blob/master/doc/extline.txt / Ctrl+L Ctrl+L to auto underline with `=` under the visual selection
   " Plug 'Galooshi/vim-import-js' "https://github.com/Galooshi/vim-import-js#default-mappings
 
-  Plug 'brooth/far.vim' " find and replace
+  " Plug 'brooth/far.vim' " find and replace
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean'
   Plug 'wsdjeg/vim-fetch' " open files at line number
@@ -894,37 +894,37 @@ endfunction
   " let g:goyo_margin_top = 3
   " let g:goyo_margin_bottom = 3
   " Writing in vim
-    let g:limelight_conceal_ctermfg = 240
-    let g:goyo_entered = 0
-    function! s:goyo_enter()
-      silent !tmux set status off
-      let g:goyo_entered = 1
-      set noshowmode
-      set noshowcmd
-      set scrolloff=999
-      Limelight
-    endfunction
+    " let g:limelight_conceal_ctermfg = 240
+    " let g:goyo_entered = 0
+    " function! s:goyo_enter()
+    "   silent !tmux set status off
+    "   let g:goyo_entered = 1
+    "   set noshowmode
+    "   set noshowcmd
+    "   set scrolloff=999
+    "   Limelight
+    " endfunction
 
-    function! s:goyo_leave()
-      silent !tmux set status on
-      let g:goyo_entered = 0
-      set showmode
-      set showcmd
-      set scrolloff=5
-      Limelight!
-    endfunction
-    autocmd! User GoyoEnter nested call <SID>goyo_enter()
-    autocmd! User GoyoLeave nested call <SID>goyo_leave()
-    " Activate goyo with Markdown files
-    function! s:auto_goyo()
-      if &ft == 'markdown'
-        Goyo 120
-      elseif exists('#goyo')
-        let bufnr = bufnr('%')
-        Goyo!
-        execute 'b '.bufnr
-      endif
-    endfunction
+    " function! s:goyo_leave()
+    "   silent !tmux set status on
+    "   let g:goyo_entered = 0
+    "   set showmode
+    "   set showcmd
+    "   set scrolloff=5
+    "   Limelight!
+    " endfunction
+    " autocmd! User GoyoEnter nested call <SID>goyo_enter()
+    " autocmd! User GoyoLeave nested call <SID>goyo_leave()
+    " " Activate goyo with Markdown files
+    " function! s:auto_goyo()
+    "   if &ft == 'markdown'
+    "     Goyo 120
+    "   elseif exists('#goyo')
+    "     let bufnr = bufnr('%')
+    "     Goyo!
+    "     execute 'b '.bufnr
+    "   endif
+    " endfunction
 
 " ## golden-ratio
   let g:golden_ratio_exclude_nonmodifiable = 1
@@ -1109,9 +1109,8 @@ endfunction
   let g:test#custom_strategies = {'terminal_split': function('SplitStrategy')}
   let g:test#strategy = 'terminal_split'
   let test#ruby#rspec#options = '-f d'
-  " let test#ruby#bundle_exec = 1
-  let test#ruby#use_binstubs = 1
-  let test#ruby#rspec#executable = 'bin/rspec --format doc --no-color'
+  let test#ruby#bundle_exec = 1
+  " let test#ruby#use_binstubs = 1
   let g:test#runner_commands = ['Jest', 'RSpec', 'Cypress']
 
 " ## FZF
@@ -1146,20 +1145,6 @@ endfunction
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
-  elseif executable("ag")
-    " ## ag
-    " Note we extract the column as well as the file and line number
-    set grepprg=ag\ --nogroup\ --nocolor\ --column
-    set grepformat=%f:%l:%c%m
-    " Have the silver searcher ignore all the same things as wilgignore
-    let b:ag_command = 'ag %s -i --nogroup'
-    let g:ag_prg = 'ag %s -i --nogroup'
-    for i in split(&wildignore, ",")
-      let i = substitute(i, '\*/\(.*\)/\*', '\1', 'g')
-      let b:ag_command = b:ag_command . ' --ignore "' . substitute(i, '\*/\(.*\)/\*', '\1', 'g') . '"'
-    endfor
-    let b:ag_command = b:ag_command . ' --hidden -g ""'
-    let g:ctrlp_user_command = b:ag_command
   endif
 
 " ## gist.vim
@@ -1232,6 +1217,9 @@ endfunction
   " if executable('solargraph')
   "   let g:LanguageClient_serverCommands.ruby = ['tcp://localhost:7658']
   " endif
+  " if executable('bash-language-server')
+  "   let g:LanguageClient_serverCommands.sh = ['bash-language-server', 'start']
+  " endif
 
 
 " ## coc.nvim
@@ -1241,27 +1229,27 @@ endfunction
   " let g:coc_chars_guifg = '#ffffff'
   " let g:coc_chars_guibg = '#b180a4'
   " let g:coc_increment_highlight = 1
-  " " let g:coc_source_config = {
-  " "       \  'languageclient': {
-  " "       \    'filetypes': ['wxml', 'vue'],
-  " "       \    'disabled': 0,
-  " "       \  },
-  " "       \  'omni': {
-  " "       \    'filetypes': ['css', 'html', 'wxss'],
-  " "       \  },
-  " "       \  'file': {
-  " "       \    'ignorePatterns': ['*.bundle.js'],
-  " "       \  },
-  " "       \  'tern': {
-  " "       \    'ternRoot': expand('~/lib/tern'),
-  " "       \  },
-  " "       \  'jedi': {
-  " "       \    'settings': {
-  " "       \       'dynamic_params': v:true,
-  " "       \       'dynamic_params_for_other_modules': v:true
-  " "       \    },
-  " "       \  },
-  " "       \}
+  " let g:coc_source_config = {
+  "       \  'languageclient': {
+  "       \    'filetypes': ['wxml', 'vue'],
+  "       \    'disabled': 0,
+  "       \  },
+  "       \  'omni': {
+  "       \    'filetypes': ['css', 'html', 'wxss'],
+  "       \  },
+  "       \  'file': {
+  "       \    'ignorePatterns': ['*.bundle.js'],
+  "       \  },
+  "       \  'tern': {
+  "       \    'ternRoot': expand('~/lib/tern'),
+  "       \  },
+  "       \  'jedi': {
+  "       \    'settings': {
+  "       \       'dynamic_params': v:true,
+  "       \       'dynamic_params_for_other_modules': v:true
+  "       \    },
+  "       \  },
+  "       \}
 
 " ## deoplete
   " REFS:
@@ -1314,7 +1302,6 @@ endfunction
   " let g:deoplete#ignore_sources.typescript = get(g:deoplete#ignore_sources, 'typescript', ['LanguageClient'])
   " let g:deoplete#ignore_sources.typescriptreact = get(g:deoplete#ignore_sources, 'typescriptreact', ['LanguageClient'])
   " let g:deoplete#ignore_sources.gitcommit = get(g:deoplete#ignore_sources, 'gitcommit', ['ultisnips'])
-
   " let g:deoplete#enable_debug = 1
   " let g:deoplete#enable_profile = 1
   " let g:deoplete#enable_logging = {'level': 'DEBUG','logfile': 'deoplete.log'}
