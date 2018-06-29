@@ -82,7 +82,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
-  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
 " ## Tags
   " if executable('ctags')
@@ -214,11 +214,11 @@ set nostartofline                                                               
 set timeoutlen=1000 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
 set fileencoding=utf-8                                                          "Set utf-8 encoding on write
 set linebreak
-set textwidth=79 " will auto wrap content when set
-set nowrap " `on` is 'wrap'
+" set textwidth=79 " will auto wrap content when set regardless of nowrap being set
+set nowrap " `wrap` to turn it on
 set wrapscan
 set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
-set nolist " list to enable                                                                        "Enable listchars
+set nolist " `list` to enable                                                     "Enable listchars
 set lazyredraw                                                                  "Do not redraw on registers and macros
 set ttyfast
 set hidden                                                                      "Hide buffers in background
@@ -1160,66 +1160,66 @@ endfunction
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
 " ## LanguageClient
-  " let g:LanguageClient_diagnosticsList = v:null
-  " let g:LanguageClient_diagnosticsEnable = 0
-  " let g:LanguageClient_autoStart = 1 " Automatically start language servers.
-  " let g:LanguageClient_autoStop = 0
-  " let g:LanguageClient_loadSettings = 0
-  " let g:LanguageClient_loggingLevel = 'INFO'
-  " " let g:LanguageClient_devel = 1 " Use debug build
-  " " let g:LanguageClient_loggingLevel = 'DEBUG' " Use highest logging level
+  let g:LanguageClient_diagnosticsList = v:null
+  let g:LanguageClient_diagnosticsEnable = 0
+  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
+  let g:LanguageClient_autoStop = 0
+  let g:LanguageClient_loadSettings = 0
+  let g:LanguageClient_loggingLevel = 'INFO'
+  " let g:LanguageClient_devel = 1 " Use debug build
+  " let g:LanguageClient_loggingLevel = 'DEBUG' " Use highest logging level
 
-  " " PREFER nvim-typescript for most things, as it's faster
-  " augroup LanguageClientConfig
-  "   autocmd!
-  "   " <F2> to rename variable under cursor
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
-  "   " <F8> to go to definition
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F8> :call LanguageClient_textDocument_definition()<CR>
-  "   " <F6> to autoformat document
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F7> :call LanguageClient_textDocument_references()<CR>
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F6> :call LanguageClient_textDocument_implementation()<CR>
-  "   " <F7> for type info under cursor
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lh :call LanguageClient_textDocument_hover()<CR>
-  "   " <F9> to fuzzy find the symbols in the current document
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>@ :call LanguageClient_textDocument_documentSymbol()<CR>
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader># :call LanguageClient_workspace_symbol()<CR>
-  "   " Use as omnifunc by default
-  "   autocmd FileType javascript,javascript.jsx,python,json,css,less,html setlocal omnifunc=LanguageClient#complete
-  " augroup END
-  " let g:LanguageClient_serverCommands = {}
-  " if executable('pyls')
-  "   let g:LanguageClient_serverCommands.python = ['pyls']
-  " endif
-  " if executable('javascript-typescript-stdio')
-  "   let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
-  "   let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-  "   " let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
-  "   " let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
-  "   " let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
-  " endif
-  " if executable('css-languageserver')
-  "   let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
-  "   let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
-  "   let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
-  "   let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
-  " endif
-  " if executable('html-languageserver')
-  "   let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
-  " endif
-  " if executable('json-languageserver')
-  "   let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
-  " endif
-  " if executable('language_server-ruby')
-  "   let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
-  " endif
-  " if executable('solargraph')
-  "   let g:LanguageClient_serverCommands.ruby = ['tcp://localhost:7658']
-  " endif
-  " if executable('bash-language-server')
-  "   let g:LanguageClient_serverCommands.sh = ['bash-language-server', 'start']
-  " endif
+  " PREFER nvim-typescript for most things, as it's faster
+  augroup LanguageClientConfig
+    autocmd!
+    " <F2> to rename variable under cursor
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+    " <F8> to go to definition
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F8> :call LanguageClient_textDocument_definition()<CR>
+    " <F6> to autoformat document
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F7> :call LanguageClient_textDocument_references()<CR>
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <F6> :call LanguageClient_textDocument_implementation()<CR>
+    " <F7> for type info under cursor
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>lh :call LanguageClient_textDocument_hover()<CR>
+    " <F9> to fuzzy find the symbols in the current document
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader>@ :call LanguageClient_textDocument_documentSymbol()<CR>
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html nnoremap <silent> <leader># :call LanguageClient_workspace_symbol()<CR>
+    " Use as omnifunc by default
+    autocmd FileType javascript,javascript.jsx,python,json,css,less,html setlocal omnifunc=LanguageClient#complete
+  augroup END
+  let g:LanguageClient_serverCommands = {}
+  if executable('pyls')
+    let g:LanguageClient_serverCommands.python = ['pyls']
+  endif
+  if executable('javascript-typescript-stdio')
+    let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
+    " let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
+    " let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
+    " let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
+  endif
+  if executable('css-languageserver')
+    let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
+  endif
+  if executable('html-languageserver')
+    let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
+  endif
+  if executable('json-languageserver')
+    let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
+  endif
+  if executable('language_server-ruby')
+    let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
+  endif
+  if executable('solargraph')
+    let g:LanguageClient_serverCommands.ruby = ['tcp://localhost:7658']
+  endif
+  if executable('bash-language-server')
+    let g:LanguageClient_serverCommands.sh = ['bash-language-server', 'start']
+  endif
 
 
 " ## coc.nvim
