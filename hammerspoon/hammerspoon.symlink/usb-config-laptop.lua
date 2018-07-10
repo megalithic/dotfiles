@@ -21,6 +21,7 @@ handleEvent = (function(event)
         selectProfile('pok3r')
         toggleWifi('off')
         selectAudioOutput('"Audioengine D1"')
+        hs.reload()
       end)
     else
       log.i('Pok3r keyboard unplugged; laptop presumably undocked.')
@@ -28,6 +29,7 @@ handleEvent = (function(event)
         selectProfile('internal')
         toggleWifi('on')
         selectAudioOutput('"Built-in Output"')
+        hs.reload()
       end)
     end
   end

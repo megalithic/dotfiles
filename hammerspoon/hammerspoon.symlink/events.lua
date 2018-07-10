@@ -143,6 +143,9 @@ function handleWindowEvent(window, event, watcher, info)
   else
     utils.log.wf('[error] window error; unexpected window event (%d) received', event)
   end
+
+  -- utils.log.df('[window] event; applying action for window (%s)', window)
+  -- config.applyAction(window)
 end
 
 function handleScreenEvent()
@@ -208,6 +211,11 @@ function watchWindow(window)
     if config.layout[bundleID] then
       utils.log.df('[window] event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
       config.layout[bundleID](window)
+    end
+
+    if config.action[bundleID] then
+      utils.log.df('[window] event; setting up action for  %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
+      config.action[bundleID](window)
     end
 
     -- Watch for window-closed events.
@@ -311,6 +319,7 @@ function events.initEventHandling ()
   caffeinateWatcher:start()
 
   config.applyLayout()
+  -- config.applyAction()
 end
 
 -- TEAR DOWN ALL THE EVENTS

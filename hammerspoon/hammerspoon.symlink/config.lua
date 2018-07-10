@@ -49,6 +49,15 @@ config.grid = {
   centeredSmall =   '3,3 2x2',
 }
 
+-- ACTION SETUP
+-------------------------------------------------------------------------------
+config.action = {
+  ['us.zoom.xos'] = (function(window)
+    utils.log.df('[actions] event; window: %s', window)
+    -- if windowZoom Meeting ID
+  end),
+}
+
 -- LAYOUT SETUP
 -------------------------------------------------------------------------------
 config.layout = {
@@ -224,6 +233,23 @@ function config.applyLayout(screenCountOverride)
   end
 
   config.layout._after_()
+end
+
+function config.applyAction(window)
+  utils.log.df('[action] event; applying actions for window %s', window)
+
+  for bundleID, callback in pairs(config.action) do
+    local application = hs.application.get(bundleID)
+    if application then
+      local windows = application:visibleWindows()
+      for _, window in pairs(windows) do
+        if utils.canManageWindow(window) then
+          callback(window)
+          utils.log.df('[action] event; action applied for app: %s, window: %s', application:name(), window:title())
+        end
+      end
+    end
+  end
 end
 
 return config

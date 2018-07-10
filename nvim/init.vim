@@ -78,8 +78,7 @@ call plug#begin( '~/.config/nvim/plugged')
   " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
   Plug 'Shougo/echodoc.vim'
-  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
-  " Plug 'mhartington/nvim-typescript', { 'branch': 'feat-diagnostics', 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
   Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
@@ -1211,11 +1210,11 @@ endfunction
   if executable('json-languageserver')
     let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
   endif
-  if executable('language_server-ruby')
-    let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
-  endif
+  " if executable('language_server-ruby')
+  "   let g:LanguageClient_serverCommands.ruby = ['language_server-ruby']
+  " endif
   if executable('solargraph')
-    let g:LanguageClient_serverCommands.ruby = ['tcp://localhost:7658']
+    let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
   endif
   if executable('bash-language-server')
     let g:LanguageClient_serverCommands.sh = ['bash-language-server', 'start']
@@ -1278,7 +1277,7 @@ endfunction
   call deoplete#custom#source('typescript', 'mark', '')
   call deoplete#custom#source('LanguageClient', 'mark', 'LC')
   call deoplete#custom#source('ultisnips', 'rank', 9999)
-  call deoplete#custom#source('typescript', 'rank', 1000)
+  call deoplete#custom#source('typescript', 'rank', 2000)
   " call deoplete#custom#source('tern', 'rank', 1000)
   " call deoplete#custom#source('ternjs', 'rank', 1000)
   call deoplete#custom#source('LanguageClient', 'rank', 750)
