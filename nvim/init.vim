@@ -61,6 +61,7 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
+  Plug 'ruanyl/coverage.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] }
 
 " ## Completions
   " Plug 'prabirshrestha/asyncomplete.vim'
@@ -414,7 +415,7 @@ augroup vimrc
   au FileType python setl omnifunc=pythoncomplete#Complete
   au FileType xml setl omnifunc=xmlcomplete#CompleteTags
   " au FileType ruby setl omnifunc=rubycomplete#Complete
-  " au FileType ruby setl omnifunc=LanguageClient#complete " using solargraph
+  au FileType ruby setl omnifunc=LanguageClient#complete " using solargraph
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -446,21 +447,21 @@ augroup vimrc
 augroup END
 
 " # vim-lsp
-augroup language_mappings
-  autocmd!
+" augroup language_mappings
+"   autocmd!
 
-  " TypeScript
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspDocumentDiagnostics<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :LspReferences<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :LspDefinition<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :LspDocumentSymbol<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.ts<CR>
+"   " TypeScript
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspDocumentDiagnostics<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :LspReferences<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :LspDefinition<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :LspDocumentSymbol<CR>
+"   autocmd FileType typescript,typescriptreact,typescript.tsx command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.ts<CR>
 
-  " Vim
-  autocmd FileType vim command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.vim<CR>
-augroup END
+"   " Vim
+"   autocmd FileType vim command! ProjectSearch -nargs=1 vimgrep /<args>/gj ./**/*.vim<CR>
+" augroup END
 
 " Automatically close vim if only the quickfix window is open
 " http://stackoverflow.com/a/7477056/3720597
@@ -947,6 +948,11 @@ endfunction
 
 " # lexima
   " let g:lexima_enable_endwise_rules = 0
+
+" ## coverage
+  let g:coverage_sign_covered = ''
+  let g:coverage_sign_uncovered = ''
+  " let g:coverage_json_report_path = 'coverage/coverage.json'
 
 " ## ALE
   let g:ale_enabled = 1

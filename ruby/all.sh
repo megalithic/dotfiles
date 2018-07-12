@@ -27,3 +27,5 @@ ln -sfv $DOTS/ruby/bundler          $HOME/.bundle/config
 # ln -s $DOTS/ruby/reek.yml         $HOME/.reek
 
 yard config --gem-install-yri
+
+ln -sfv $DOTS/ruby/invoker.ini $HOME/invoker.ini
