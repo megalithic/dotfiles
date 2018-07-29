@@ -71,6 +71,8 @@ path=(
   /usr/local/opt/imagemagick@6/bin
   /usr/local/opt/qt@5.5/bin
   /usr/local/opt/mysql@5.6/bin
+  /usr/local/opt/postgresql@9.5/bin
+  /Applications/Postgres.app/Contents/Versions/9.5/bin
   /usr/local/opt/curl/bin
   /usr/local/lib/python2.7/site-packages
   $HOME/Library/Python/3.6/lib/python/site-packages

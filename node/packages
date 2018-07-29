@@ -12,6 +12,7 @@ eslint-config-prettier
 eslint-plugin-react
 eslint-plugin-prettier
 exp
+expo-cli
 import-js
 jest
 neovim

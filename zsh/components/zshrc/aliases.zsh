@@ -109,7 +109,7 @@ alias ec='emacsclient'
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-alias updatenvim="brew update; pip3 install --upgrade neovim; npm install -g neovim; nvim +PlugUpgrade +qall; nvim +PlugUpdate +qall; nvim +UpdateRemotePlugins +qall; brew outdated"
+alias updatenvim="brew update; pip3 install --upgrade neovim; npm install -g neovim; gem install neovim; nvim +PlugUpgrade +qall; nvim +PlugUpdate +qall; nvim +UpdateRemotePlugins +qall; brew outdated"
 alias nvimupdate=updatenvim
 alias nv="nvim"
 alias im="nvim"
@@ -208,7 +208,8 @@ alias zz=z
 alias cls="clr && ls"
 alias ip="ifconfig"
 alias get="curl -OL"
-alias g="grep -r -i --color='auto'"
+# alias g="grep -r -i --color='auto'"
+alias g="rg -F"
 alias nvm='n'
 alias irc="weechat-curses"
 # alias weechat=" weechat-curses"

@@ -16,6 +16,8 @@ call plug#begin( '~/.config/nvim/plugged')
   Plug 'trevordmiller/nova-vim'
   Plug 'mhartington/oceanic-next'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
+  Plug 'vim-airline/vim-airline'
+  Plug 'vim-airline/vim-airline-themes'
 
 " ## Syntax
   Plug 'sheerun/vim-polyglot'
@@ -76,10 +78,28 @@ call plug#begin( '~/.config/nvim/plugged')
   " " Plug 'prabirshrestha/asyncomplete-tscompletejob.vim'
   " Plug 'yami-beta/asyncomplete-omni.vim'
 
+  Plug 'ncm2/ncm2'
+  Plug 'roxma/nvim-yarp'
+  Plug 'ncm2/ncm2-ultisnips'
+  Plug 'ncm2/ncm2-bufword'
+  Plug 'ncm2/ncm2-tmux'
+  Plug 'ncm2/ncm2-path'
+  " Plug 'ncm2/ncm2-match-highlight' " the fonts used are wonky
+  Plug 'ncm2/ncm2-html-subscope'
+  Plug 'ncm2/ncm2-markdown-subscope'
+  Plug 'ncm2/ncm2-jedi'
+  Plug 'ncm2/ncm2-pyclang'
+  Plug 'ncm2/ncm2-tern'
+  Plug 'ncm2/ncm2-cssomni'
+  Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
+  Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
+
   " Plug 'neoclide/coc.nvim', { 'do': 'npm install' }
-  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-  Plug 'Shougo/echodoc.vim'
-  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  " Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+  " Plug 'Shougo/echodoc.vim'
+  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Language Servers
   Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
@@ -509,170 +529,6 @@ set sidescrolloff=15
 set sidescroll=5
 
 " }}}
-" ================ Statusline ======================== {{{
-
-" TODO: change statusline based on focus:
-" https://github.com/VagabondAzulien/dotfiles/blob/master/vim/vimrc#L88
-" or:
-" https://www.reddit.com/r/vim/comments/6b7b08/my_custom_statusline/
-" or:
-" https://kadekillary.work/post/statusline/
-" or:
-" https://github.com/KabbAmine/myVimFiles/blob/master/config/statusline.vim
-" definitely:
-" https://gabri.me/blog/diy-vim-statusline/
-
-let g:currentmode={
-      \ 'n'  : 'N ',
-      \ 'no' : 'N·Operator Pending ',
-      \ 'v'  : 'V ',
-      \ 'V'  : 'V·Line ',
-      \ '' : 'V·Block ',
-      \ 's'  : 'Select ',
-      \ 'S'  : 'S·Line ',
-      \ '' : 'S·Block ',
-      \ 'i'  : 'I ',
-      \ 'R'  : 'R ',
-      \ 'Rv' : 'V·Replace ',
-      \ 'c'  : 'Command ',
-      \ 'cv' : 'Vim Ex ',
-      \ 'ce' : 'Ex ',
-      \ 'r'  : 'Prompt ',
-      \ 'rm' : 'More ',
-      \ 'r?' : 'Confirm ',
-      \ '!'  : 'Shell ',
-      \ 't'  : 'Terminal '
-      \}
-let fgcolor=synIDattr(synIDtrans(hlID("Normal")), "fg", "gui")
-let bgcolor=synIDattr(synIDtrans(hlID("Normal")), "bg", "gui")
-
-hi User1 guifg=#FF0000 guibg=#504945 gui=bold
-hi User2 guifg=#FFFFFF guibg=#FF1111 gui=bold
-hi User3 guifg=#2C323C guibg=#E5C07B gui=bold
-
-" highlight User1 cterm=None gui=None ctermfg=007 guifg=fgcolor
-" highlight User2 cterm=None gui=None ctermfg=008 guifg=bgcolor
-" highlight User3 cterm=None gui=None ctermfg=008 guifg=bgcolor
-highlight User4 cterm=None gui=None ctermfg=008 guifg=bgcolor
-highlight User5 cterm=None gui=None ctermfg=008 guifg=bgcolor
-highlight User7 cterm=None gui=None ctermfg=008 guifg=bgcolor
-highlight User8 cterm=None gui=None ctermfg=008 guifg=bgcolor
-highlight User9 cterm=None gui=None ctermfg=007 guifg=fgcolor
-
-set statusline=%{ChangeStatuslineColor()}                                       "Changing the statusline color
-set statusline+=\ %0*\ %{toupper(g:currentmode[mode()])}                        "Current mode
-set statusline+=\│\ %{fugitive#head()!=''?'\ \ '.fugitive#head().'\ ':''}      "Git branch
-set statusline+=%{GitFileStatus()}                                              "Git file status
-set statusline+=\ \│\ %{FilepathStatusline()}                                   "File path
-set statusline+=\%{FilenameStatusline()}                                        "File name
-set statusline+=\ %1*%m%*                                                       "Modified indicator
-set statusline+=\ %w                                                            "Preview indicator
-set statusline+=%{ReadOnly()}                                                   "Read only indicator
-set statusline+=\ %q                                                            "Quickfix list indicator
-set statusline+=\ %=                                                            "Start right side layout
-set statusline+=\ %{&enc}                                                       "Encoding
-set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}\                        "DevIcon/Filetype
-set statusline+=\ \│\ %{FileSize()}                                             "File size
-set statusline+=\ \│\ %p%%                                                      "Percentage
-set statusline+=\ \│\ %c                                                        "Column number
-set statusline+=\ \│\\ %l/%L                                                   "Current line number/Total line numbers
-set statusline+=\ %2*%{AleStatusline('error')}%*                                "Errors count
-set statusline+=%3*%{AleStatusline('warning')}%*                                "Warning count
-
-function! ReadOnly()
-  if &readonly || !&modifiable
-    return ''
-  else
-    return ''
-endfunction
-
-" Automatically change the statusline color depending on mode
-function! ChangeStatuslineColor()
-  if (mode() =~# '\v(n|no)')
-    exe 'hi! StatusLine ctermfg=008 guifg=fgcolor gui=None cterm=None'
-  elseif (mode() =~# '\v(v|V)' || g:currentmode[mode()] ==# 'V·Block' || get(g:currentmode, mode(), '') ==# 't')
-    exe 'hi! StatusLine ctermfg=005 guifg=#00ff00 gui=None cterm=None'
-  elseif (mode() ==# 'i')
-    exe 'hi! StatusLine ctermfg=004 guifg=#6CBCE8 gui=None cterm=None'
-  else
-    exe 'hi! StatusLine ctermfg=006 guifg=orange gui=None cterm=None'
-  endif
-
-  return ''
-endfunction
-
-function! FilepathStatusline() abort
-  if !empty(expand('%:t'))
-    let fn = winwidth(0) <# 55
-          \ ? '../'
-          \ : winwidth(0) ># 85
-          \ ? expand('%:~:.:h') . '/'
-          \ : pathshorten(expand('%:~:.:h')) . '/'
-  else
-    let fn = ''
-  endif
-  return fn
-endfunction
-
-function! FilenameStatusline() abort
-  let fn = !empty(expand('%:t'))
-        \ ? expand('%:p:t')
-        \ : '[No Name]'
-  return fn . (&readonly ? ' ' : '')
-endfunction
-"
-" Find out current buffer's size and output it.
-function! FileSize()
-  let bytes = getfsize(expand('%:p'))
-  if (bytes >= 1024)
-    let kbytes = bytes / 1024
-  endif
-  if (exists('kbytes') && kbytes >= 1000)
-    let mbytes = kbytes / 1000
-  endif
-
-  if bytes <= 0
-    return '0'
-  endif
-
-  if (exists('mbytes'))
-    return mbytes . 'MB '
-  elseif (exists('kbytes'))
-    return kbytes . 'KB '
-  else
-    return bytes . 'B '
-  endif
-endfunction
-
-function! AleStatusline(type)
-  let count = ale#statusline#Count(bufnr(''))
-  if a:type == 'error' && count['error']
-    return printf(' %d E ', count['error'])
-  endif
-
-  if a:type == 'warning' && count['warning']
-    let l:space = count['error'] ? ' ': ''
-    return printf('%s %d W ', l:space, count['warning'])
-  endif
-
-  return ''
-endfunction
-
-function! GitFileStatus()
-  if !exists('b:gitgutter')
-    return ''
-  endif
-  let l:summary = get(b:gitgutter, 'summary', [0, 0, 0])
-  let l:result = l:summary[0] == 0 ? '' : ' +'.l:summary[0]
-  let l:result .= l:summary[1] == 0 ? '' : ' ~'.l:summary[1]
-  let l:result .= l:summary[2] == 0 ? '' : ' -'.l:summary[2]
-  if l:result != ''
-    return ' '.l:result
-  endif
-  return l:result
-endfunction
-
-"}}}
 " ================ Abbreviations ==================== {{{
 
 cnoreabbrev Wq wq
@@ -947,7 +803,7 @@ endfunction
   let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
 
 " # lexima
-  " let g:lexima_enable_endwise_rules = 0
+  " let g:lexima_enable_endwise_rules = 1
 
 " ## coverage
   let g:coverage_sign_covered = ''
@@ -1158,7 +1014,7 @@ endfunction
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger		= "<c-e>"
-  " let g:UltiSnipsExpandTrigger		= "<Plug>(ultisnips_expand)"
+  let g:UltiSnipsExpandTrigger		= "<Plug>(ultisnips_expand)"
   let g:UltiSnipsJumpForwardTrigger	= "<tab>"
   let g:UltiSnipsJumpBackwardTrigger	= "<s-tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
@@ -1169,8 +1025,10 @@ endfunction
   let g:LanguageClient_diagnosticsEnable = 0
   let g:LanguageClient_autoStart = 1 " Automatically start language servers.
   let g:LanguageClient_autoStop = 0
-  let g:LanguageClient_loadSettings = 0
+  let g:LanguageClient_loadSettings = 1
+  let g:LanguageClient_settingsPath = "~/.config/nvim/settings.json"
   let g:LanguageClient_loggingLevel = 'INFO'
+  let g:LanguageClient_completionPreferTextEdit = 1
   " let g:LanguageClient_devel = 1 " Use debug build
   " let g:LanguageClient_loggingLevel = 'DEBUG' " Use highest logging level
 
@@ -1200,9 +1058,9 @@ endfunction
   if executable('javascript-typescript-stdio')
     let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
     let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-    " let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
-    " let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
-    " let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
   endif
   if executable('css-languageserver')
     let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
@@ -1256,63 +1114,74 @@ endfunction
   "       \  },
   "       \}
 
-" ## deoplete
-  " REFS:
-  " https://github.com/roflcopter4/PersonalDotFiles/blob/master/.Vim/deoplete.vim
-  " https://github.com/CameronDiver/dotfiles/blob/master/.SpaceVim/config/plugins/deoplete.vim
-  let g:deoplete#enable_at_startup = 1
-  let g:deoplete#auto_complete_delay = 0
-  let g:echodoc_enable_at_startup=1
-  set splitbelow
-  set completeopt+=noselect,menuone
-  set completeopt-=preview
 
-  function! Multiple_cursors_before()
-    let b:deoplete_disable_auto_complete=2
-  endfunction
-  function! Multiple_cursors_after()
-    let b:deoplete_disable_auto_complete=0
-  endfunction
-  let g:deoplete#file#enable_buffer_path=1
-  call deoplete#custom#source('buffer', 'mark', 'B')
-  " call deoplete#custom#source('tern', 'mark', '')
-  " call deoplete#custom#source('ternjs', 'mark', '')
-  call deoplete#custom#source('omni', 'mark', '⌾')
-  call deoplete#custom#source('file', 'mark', '')
-  call deoplete#custom#source('ultisnips', 'mark', '')
-  call deoplete#custom#source('typescript', 'mark', '')
-  call deoplete#custom#source('LanguageClient', 'mark', 'LC')
-  call deoplete#custom#source('ultisnips', 'rank', 9999)
-  call deoplete#custom#source('typescript', 'rank', 2000)
-  " call deoplete#custom#source('tern', 'rank', 1000)
-  " call deoplete#custom#source('ternjs', 'rank', 1000)
-  call deoplete#custom#source('LanguageClient', 'rank', 750)
-  call deoplete#custom#source('ultisnips', 'matchers', ['matcher_fuzzy'])
-  let g:deoplete#omni_patterns = {}
-  let g:deoplete#omni_patterns.html = ''
-  let g:deoplete#omni_patterns.css = ''
-  let g:deoplete#omni_patterns.lua = get(g:deoplete#omni_patterns, 'lua', '.')
-  let g:deoplete#omni#input_patterns = {}
-  let g:deoplete#omni#input_patterns.gitcommit = get(g:deoplete#omni#input_patterns, 'gitcommit', [
-        \'[ ]#[ 0-9a-zA-Z]*',
-        \])
-  function! Preview_func()
-    if &pvw
-      setlocal nonumber norelativenumber
-     endif
-  endfunction
-  autocmd WinEnter * call Preview_func()
-  let g:deoplete#ignore_sources = {}
-  let g:deoplete#ignore_sources._ = ['around']
-  " let g:deoplete#ignore_sources.typescript = get(g:deoplete#ignore_sources, 'typescript', ['LanguageClient'])
-  " let g:deoplete#ignore_sources.typescriptreact = get(g:deoplete#ignore_sources, 'typescriptreact', ['LanguageClient'])
-  " let g:deoplete#ignore_sources.gitcommit = get(g:deoplete#ignore_sources, 'gitcommit', ['ultisnips'])
-  " let g:deoplete#enable_debug = 1
-  " let g:deoplete#enable_profile = 1
-  " let g:deoplete#enable_logging = {'level': 'DEBUG','logfile': 'deoplete.log'}
-  " call deoplete#enable_logging('DEBUG', 'deoplete.log')
-  " call deoplete#custom#source('typescript', 'debug_enabled', 1)
-  " call deoplete#custom#source('typescriptreact', 'debug_enabled', 1)
+" ## ncm2
+  au BufEnter * call ncm2#enable_for_buffer()
+  set completeopt=noinsert,menuone,noselect
+  set shortmess+=c
+  au TextChangedI * call ncm2#auto_trigger()
+  let g:ncm2#matcher = 'abbrfuzzy'
+  let g:ncm2#sorter = 'abbrfuzzy'
+  " let g:ncm2#match_highlight = 'sans-serif-bold'
+
+
+" " ## deoplete
+"   " REFS:
+"   " https://github.com/roflcopter4/PersonalDotFiles/blob/master/.Vim/deoplete.vim
+"   " https://github.com/CameronDiver/dotfiles/blob/master/.SpaceVim/config/plugins/deoplete.vim
+"   let g:deoplete#enable_at_startup = 0
+"   let g:deoplete#auto_complete_delay = 0
+"   let g:echodoc_enable_at_startup=1
+"   set splitbelow
+"   set completeopt+=noselect,menuone
+"   set completeopt-=preview
+
+"   function! Multiple_cursors_before()
+"     let b:deoplete_disable_auto_complete=2
+"   endfunction
+"   function! Multiple_cursors_after()
+"     let b:deoplete_disable_auto_complete=0
+"   endfunction
+"   let g:deoplete#file#enable_buffer_path=1
+"   call deoplete#custom#source('buffer', 'mark', 'B')
+"   " call deoplete#custom#source('tern', 'mark', '')
+"   " call deoplete#custom#source('ternjs', 'mark', '')
+"   call deoplete#custom#source('omni', 'mark', '⌾')
+"   call deoplete#custom#source('file', 'mark', '')
+"   call deoplete#custom#source('ultisnips', 'mark', '')
+"   call deoplete#custom#source('typescript', 'mark', '')
+"   call deoplete#custom#source('LanguageClient', 'mark', 'LC')
+"   call deoplete#custom#source('ultisnips', 'rank', 9999)
+"   call deoplete#custom#source('typescript', 'rank', 2000)
+"   " call deoplete#custom#source('tern', 'rank', 1000)
+"   " call deoplete#custom#source('ternjs', 'rank', 1000)
+"   call deoplete#custom#source('LanguageClient', 'rank', 750)
+"   call deoplete#custom#source('ultisnips', 'matchers', ['matcher_fuzzy'])
+"   let g:deoplete#omni_patterns = {}
+"   let g:deoplete#omni_patterns.html = ''
+"   let g:deoplete#omni_patterns.css = ''
+"   let g:deoplete#omni_patterns.lua = get(g:deoplete#omni_patterns, 'lua', '.')
+"   let g:deoplete#omni#input_patterns = {}
+"   let g:deoplete#omni#input_patterns.gitcommit = get(g:deoplete#omni#input_patterns, 'gitcommit', [
+"         \'[ ]#[ 0-9a-zA-Z]*',
+"         \])
+"   function! Preview_func()
+"     if &pvw
+"       setlocal nonumber norelativenumber
+"      endif
+"   endfunction
+"   autocmd WinEnter * call Preview_func()
+"   let g:deoplete#ignore_sources = {}
+"   let g:deoplete#ignore_sources._ = ['around']
+"   " let g:deoplete#ignore_sources.typescript = get(g:deoplete#ignore_sources, 'typescript', ['LanguageClient'])
+"   " let g:deoplete#ignore_sources.typescriptreact = get(g:deoplete#ignore_sources, 'typescriptreact', ['LanguageClient'])
+"   " let g:deoplete#ignore_sources.gitcommit = get(g:deoplete#ignore_sources, 'gitcommit', ['ultisnips'])
+"   " let g:deoplete#enable_debug = 1
+"   " let g:deoplete#enable_profile = 1
+"   " let g:deoplete#enable_logging = {'level': 'DEBUG','logfile': 'deoplete.log'}
+"   " call deoplete#enable_logging('DEBUG', 'deoplete.log')
+"   " call deoplete#custom#source('typescript', 'debug_enabled', 1)
+"   " call deoplete#custom#source('typescriptreact', 'debug_enabled', 1)
 
 
 " ## asyncomplete.vim/asynccomplete/vim-lsp
@@ -1462,8 +1331,16 @@ inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
 
+" - ncm2
+inoremap <c-c> <ESC>
+inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<c-y>\<cr>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>" ))
+imap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+smap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+inoremap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+" smap <silent> <c-u> <Plug>(ultisnips_expand)
+
 " ultisnips
-inoremap <C-e> <C-R>=SnipComplete()<CR>
+" inoremap <C-e> <C-R>=SnipComplete()<CR>
 
 " - coc.nvim
   " " nmap <silent>gj <Plug>(coc-jump-definition)
