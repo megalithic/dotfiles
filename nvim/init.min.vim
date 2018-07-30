@@ -10,108 +10,123 @@
 
 " ================ Plugins {{{
 
-call plug#begin( '~/.config/nvim/plugged')
+if (!isdirectory(expand("$HOME/.config/nvim/repos/github.com/Shougo/dein.vim")))
+  call system(expand("mkdir -p $HOME/.config/nvim/repos/github.com"))
+  call system(expand("git clone https://github.com/Shougo/dein.vim $HOME/.config/nvim/repos/github.com/Shougo/dein.vim"))
+endif
+
+set runtimepath+=~/.config/nvim/repos/github.com/Shougo/dein.vim/
+call dein#begin(expand('~/.config/nvim'))
+
 " ## UI/Interface
-  Plug 'mhartington/oceanic-next'
-  Plug 'trevordmiller/nova-vim'
-  Plug 'megalithic/golden-ratio' " vertical split layout manager
-  Plug 'vim-airline/vim-airline'
-  Plug 'vim-airline/vim-airline-themes'
+  call dein#add('mhartington/oceanic-next')
+  call dein#add('trevordmiller/nova-vim')
+  call dein#add('megalithic/golden-ratio') " vertical split layout manager
+  call dein#add('vim-airline/vim-airline')
+  call dein#add('vim-airline/vim-airline-themes')
 
 " ## Syntax
-  Plug 'sheerun/vim-polyglot'
-  Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
-  Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
-  Plug 'lilydjwg/colorizer'
-  Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
+  call dein#add('sheerun/vim-polyglot')
+  call dein#add('HerringtonDarkholme/yats.vim', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx'] })
+  call dein#add('leafgarland/typescript-vim', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx'] })
+  call dein#add('lilydjwg/colorizer')
+  call dein#add('tpope/vim-rails', { 'on_ft': ['ruby', 'eruby', 'haml', 'slim'] })
 
 " ## Completion
-Plug 'ncm2/ncm2'
-  Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
-  Plug 'roxma/nvim-yarp'
-  Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
-  Plug 'ncm2/ncm2-ultisnips'
-  Plug 'ncm2/ncm2-bufword'
-  Plug 'ncm2/ncm2-tmux'
-  Plug 'ncm2/ncm2-path'
-  " Plug 'ncm2/ncm2-match-highlight' " the fonts used are wonky
-  Plug 'ncm2/ncm2-html-subscope'
-  Plug 'ncm2/ncm2-markdown-subscope'
-  " Plug 'ncm2/ncm2-jedi'
-  " Plug 'ncm2/ncm2-pyclang'
-  Plug 'ncm2/ncm2-tern'
-  Plug 'ncm2/ncm2-cssomni'
-  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
-  " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
-  " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
-  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+call dein#add('ncm2/ncm2')
+  call dein#add('othree/csscomplete.vim', { 'on_ft': ['css', 'scss', 'sass'] }) " css completion
+  call dein#add('roxma/nvim-yarp')
+  " call dein#add('xolox/vim-lua-ftplugin', { 'on_ft': ['lua'] }) | Plug 'xolox/vim-misc'
+  call dein#add('ncm2/ncm2-ultisnips')
+  call dein#add('ncm2/ncm2-bufword')
+  call dein#add('ncm2/ncm2-tmux')
+  call dein#add('ncm2/ncm2-path')
+  " call dein#add('ncm2/ncm2-match-highlight' " the fonts used are wonky
+  call dein#add('ncm2/ncm2-html-subscope')
+  call dein#add('ncm2/ncm2-markdown-subscope')
+  " call dein#add('ncm2/ncm2-jedi')
+  " call dein#add('ncm2/ncm2-pyclang')
+  call dein#add('ncm2/ncm2-tern')
+  call dein#add('ncm2/ncm2-cssomni')
+  " call dein#add('ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  " call dein#add('ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
+  " call dein#add('ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  " call dein#add('ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
+  call dein#add('mhartington/nvim-typescript', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx'], 'build': './install.sh' })
 
 " ## Language Servers
-  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  call dein#add('autozimu/LanguageClient-neovim', { 'branch': 'next', 'build': 'bash install.sh' })
 
 " ## Snippets
-  Plug 'SirVer/ultisnips'
+  call dein#add('SirVer/ultisnips')
 
 " ## Project/Code Navigation
-  Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-  Plug 'junegunn/fzf.vim'
-  Plug 'ryanoasis/vim-devicons'
-  Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
-  Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
-  Plug 'tmux-plugins/vim-tmux-focus-events'
-  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
-  " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
+  call dein#add('junegunn/fzf', { 'dir': '~/.fzf', 'build': './install --all' })
+  call dein#add('junegunn/fzf.vim')
+  call dein#add('christoomey/vim-tmux-navigator') " needed for tmux/hotkey integration with vim
+  call dein#add('christoomey/vim-tmux-runner') " needed for tmux/hotkey integration with vim
+  call dein#add('tmux-plugins/vim-tmux-focus-events')
+  call dein#add('unblevable/quick-scope') " highlights f/t type of motions, for quick horizontal movements
+  " call dein#add('justinmk/vim-sneak.git') " https://github.com/justinmk/vim-sneak
 
 " ## Utils
-  Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
-  Plug 'EinfachToll/DidYouMean'
-  Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
-  Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
-  Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
-  Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
-  Plug 'jiangmiao/auto-pairs'
-  Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
-  " Plug 'ruanyl/coverage.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] }
-  Plug 'tpope/vim-commentary' " (un)comment code
-  Plug 'sickill/vim-pasta' " context-aware pasting
-  Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
-  Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
-  Plug 'Raimondi/delimitMate'
-  Plug 'andymass/vim-matchup'
-  Plug 'tpope/vim-rhubarb'
-  Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
-  Plug 'tpope/vim-repeat'
-  Plug 'tpope/vim-fugitive'
-  Plug 'junegunn/gv.vim'
-  Plug 'sodapopcan/vim-twiggy'
-  Plug 'christoomey/vim-conflicted'
-  Plug 'tpope/vim-eunuch'
-  Plug 'dyng/ctrlsf.vim'
-  Plug 'w0rp/ale'
+  call dein#add('jordwalke/VimAutoMakeDirectory') " auto-makes the dir for you if it doesn't exist in the path
+  call dein#add('EinfachToll/DidYouMean')
+  call dein#add('junegunn/rainbow_parentheses.vim') " nicely colors nested pairs of [], (), {}
+  call dein#add('docunext/closetag.vim') " will auto-close the opening tag as soon as you type </
+  call dein#add('tpope/vim-ragtag', { 'on_ft': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] }) " a set of mappings for several langs: html, xml, erb, php, more
+  call dein#add('Valloric/MatchTagAlways', { 'on_ft': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] }) " highlights the opening/closing tags for the block you're in
+  call dein#add('jiangmiao/auto-pairs')
+  call dein#add('janko-m/vim-test', {'on_cmd': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] }) " tester for js and ruby
+  " call dein#add('ruanyl/coverage.vim', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] })
+  call dein#add('tpope/vim-commentary') " (un)comment code
+  call dein#add('sickill/vim-pasta') " context-aware pasting
+  call dein#add('zenbro/mirror.vim') " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
+  call dein#add('keith/gist.vim', { 'build': 'chmod -HR 0600 ~/.netrc' })
+  call dein#add('Raimondi/delimitMate')
+  call dein#add('andymass/vim-matchup')
+  call dein#add('tpope/vim-rhubarb')
+  call dein#add('tpope/vim-surround') " soon to replace with machakann/vim-sandwich
+  call dein#add('tpope/vim-repeat')
+  call dein#add('tpope/vim-fugitive')
+  call dein#add('junegunn/gv.vim')
+  call dein#add('sodapopcan/vim-twiggy')
+  call dein#add('christoomey/vim-conflicted')
+  call dein#add('tpope/vim-eunuch')
+  call dein#add('dyng/ctrlsf.vim')
+  call dein#add('w0rp/ale')
 
 " ## Movements/Text Objects, et al
-  Plug 'kana/vim-operator-user'
+  call dein#add('kana/vim-operator-user')
   " -- provide ai and ii for indent blocks
   " -- provide al and il for current line
   " -- provide a_ and i_ for underscores
   " -- provide a- and i-
-  Plug 'kana/vim-textobj-user', { 'on': [ '<Plug>(textobj-user' ] }                 " https://github.com/kana/vim-textobj-user/wiki
-  Plug 'kana/vim-textobj-entire', { 'on': [ '<Plug>(textobj-entire' ] }             " entire buffer text object (vae)
-  Plug 'kana/vim-textobj-function', { 'on': [ '<Plug>(textobj-function' ] }         " function text object (vaf)
-  Plug 'kana/vim-textobj-indent', { 'on': [ '<Plug>(textobj-indent' ] }             " for indent level (vai)
-  Plug 'kana/vim-textobj-line', { 'on': [ '<Plug>(textobj-line' ] }                 " for current line (val)
-  Plug 'nelstrom/vim-textobj-rubyblock', { 'on': [ '<Plug>(textobj-rubyblock' ] }   " ruby block text object (vir)
-  Plug 'glts/vim-textobj-comment', { 'on': [ '<Plug>(textobj-comment' ] }           " comment text object (vac)
-  Plug 'michaeljsmith/vim-indent-object'
-  Plug 'machakann/vim-textobj-delimited', { 'on': [ '<Plug>(textobj-delimited' ] }  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
-  Plug 'gilligan/textobj-lastpaste', { 'on': [ '<Plug>(textobj-lastpaste' ] }       " - P     for last paste
-  Plug 'mattn/vim-textobj-url', { 'on': [ '<Plug>(textobj-url' ] }                  " - u     for url
-  Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }
-  Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
-  Plug 'wellle/targets.vim'                                                         " improved targets line cin) next parens
+  call dein#add('kana/vim-textobj-user', { 'on_cmd': [ '<Plug>(textobj-user' ] })                 " https://github.com/kana/vim-textobj-user/wiki
+  call dein#add('kana/vim-textobj-entire', { 'on_cmd': [ '<Plug>(textobj-entire' ] })             " entire buffer text object (vae)
+  call dein#add('kana/vim-textobj-function', { 'on_cmd': [ '<Plug>(textobj-function' ] })         " function text object (vaf)
+  call dein#add('kana/vim-textobj-indent', { 'on_cmd': [ '<Plug>(textobj-indent' ] })             " for indent level (vai)
+  call dein#add('kana/vim-textobj-line', { 'on_cmd': [ '<Plug>(textobj-line' ] })                 " for current line (val)
+  call dein#add('nelstrom/vim-textobj-rubyblock', { 'on_cmd': [ '<Plug>(textobj-rubyblock' ] })   " ruby block text object (vir)
+  call dein#add('glts/vim-textobj-comment', { 'on_cmd': [ '<Plug>(textobj-comment' ] })           " comment text object (vac)
+  call dein#add('michaeljsmith/vim-indent-object')
+  call dein#add('machakann/vim-textobj-delimited', { 'on_cmd': [ '<Plug>(textobj-delimited' ] })  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+  call dein#add('gilligan/textobj-lastpaste', { 'on_cmd': [ '<Plug>(textobj-lastpaste' ] })       " - P     for last paste
+  call dein#add('mattn/vim-textobj-url', { 'on_cmd': [ '<Plug>(textobj-url' ] })                  " - u     for url
+  call dein#add('rhysd/vim-textobj-anyblock', { 'on_cmd': [ '<Plug>(textobj-anyblock' ] })
+  call dein#add('whatyouhide/vim-textobj-xmlattr', { 'on_cmd': [ '<Plug>(textobj-xmlattr' ] })    " - x     for xml
+  call dein#add('wellle/targets.vim')                                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
-call plug#end()
+
+  call dein#add('ryanoasis/vim-devicons') " has to be last according to docs
+
+if dein#check_install()
+  call dein#install()
+  let pluginsExist=1
+endif
+
+call dein#end()
+filetype plugin indent on
 
 "}}}
 " ================ General Config/Setup {{{
@@ -526,23 +541,21 @@ endfunction
     let g:airline_symbols = {}
   endif
 
-  let g:airline#extensions#tabline#fnamemod = ':t'
-  let g:airline#extensions#tabline#buffer_idx_mode = 1
   let g:airline_powerline_fonts = 0
   let g:airline_symbols.branch = ''
   let g:airline_theme='nova'
   " let g:airline#extensions#branch#format = 1
-  let g:airline_detect_spelllang=0
-  let g:airline_detect_spell=0
+  " let g:airline_detect_spelllang=0
+  " let g:airline_detect_spell=0
   " let g:airline#extensions#hunks#enabled = 1
   " let g:airline#extensions#wordcount#enabled = 1
   " let g:airline#extensions#whitespace#enabled = 1
   " let g:airline_section_c = '%f%m'
   " let g:airline_section_x = ''
   " let g:airline_section_y = '%{WebDevIconsGetFileFormatSymbol()}'
-  let g:airline_section_y = ''
+  " let g:airline_section_y = ''
   " let g:webdevicons_enable_airline_statusline_fileformat_symbols = 0
-  let g:airline_section_z = '%l:%c'
+  " let g:airline_section_z = '%l:%c'
   " let g:airline_section_z = '%{LineNoIndicator()} :%2c'
   " let g:airline#parts#ffenc#skip_expected_string=''
   " let g:line_no_indicator_chars = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']

@@ -402,6 +402,7 @@ augroup vimrc
   " au FileType javascript,javascript.jsx,jsx setl omnifunc=javascriptcomplete#CompleteJS " default
   " au FileType javascript,javascript.jsx,jsx setl completefunc=jspc#omni " jspc
   " au FileType javascript,javascript.jsx,jsx setl omnifunc=tern#Complete " tern
+  autocmd FileType typescript.jsx,typescript,typescriptreact setl omnifunc=TSOmnicFunc
 
   au FileType python setl omnifunc=pythoncomplete#Complete
   au FileType xml setl omnifunc=xmlcomplete#CompleteTags
@@ -681,23 +682,21 @@ endfunction
     let g:airline_symbols = {}
   endif
 
-  let g:airline#extensions#tabline#fnamemod = ':t'
-  let g:airline#extensions#tabline#buffer_idx_mode = 1
-  let g:airline_powerline_fonts = 1
+  let g:airline_powerline_fonts = 0
   let g:airline_symbols.branch = ''
   let g:airline_theme='nova'
   " let g:airline#extensions#branch#format = 1
-  let g:airline_detect_spelllang=0
-  let g:airline_detect_spell=0
+  " let g:airline_detect_spelllang=0
+  " let g:airline_detect_spell=0
   " let g:airline#extensions#hunks#enabled = 1
   " let g:airline#extensions#wordcount#enabled = 1
   " let g:airline#extensions#whitespace#enabled = 1
   " let g:airline_section_c = '%f%m'
   " let g:airline_section_x = ''
   " let g:airline_section_y = '%{WebDevIconsGetFileFormatSymbol()}'
-  let g:airline_section_y = ''
+  " let g:airline_section_y = ''
   " let g:webdevicons_enable_airline_statusline_fileformat_symbols = 0
-  let g:airline_section_z = '%l:%c'
+  " let g:airline_section_z = '%l:%c'
   " let g:airline_section_z = '%{LineNoIndicator()} :%2c'
   " let g:airline#parts#ffenc#skip_expected_string=''
   " let g:line_no_indicator_chars = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']

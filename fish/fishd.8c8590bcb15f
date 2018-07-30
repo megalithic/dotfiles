@@ -34,6 +34,6 @@ SET fish_pager_color_completion:\x1d
 SET fish_pager_color_description:B3A06D\x1eyellow
 SET fish_pager_color_prefix:white\x1e\x2d\x2dbold\x1e\x2d\x2dunderline
 SET fish_pager_color_progress:brwhite\x1e\x2d\x2dbackground\x3dcyan
-SET fish_user_paths:/Users/replicant/\x2efzf/bin
+SET fish_user_paths:/Users/replicant/\x2efzf/bin\x1e/Users/replicant/\x2edotfiles/nvim/repos/github\x2ecom/junegunn/fzf/bin
 SET fisher_active_prompt:pure
 SET fisher_dependency_count:pure\x1e\x1ez
