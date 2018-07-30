@@ -7,6 +7,6 @@
 "
 " =============================================================================
 
-source ~/.config/nvim/init.max.vim
+source ~/.config/nvim/init.min.vim
 
 " vim:foldenable:foldmethod=marker:ft=vim

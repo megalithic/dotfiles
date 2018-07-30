@@ -171,7 +171,7 @@ set cmdheight=2
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
 set gdefault                                                                    "Set global flag for search and replace
 set gcr=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
-" set cursorline                                                                  "Highlight current line
+set cursorline                                                                "Highlight current line
 set smartcase                                                                   "Smart case search if there is uppercase
 set ignorecase                                                                  "case insensitive search
 set mouse=a                                                                     "Enable mouse usage
@@ -322,7 +322,7 @@ augroup vimrc
   autocmd!
 
   " automatically source vim configs
-  autocmd BufWritePost .vimrc,.vimrc.local,init.vim,init.min.vim,init.max.vim source %
+  autocmd BufWritePost .vimrc,.vimrc.local,init.vim source %
   autocmd BufWritePost .vimrc.local source %
 
   " save all files on focus lost, ignoring warnings about untitled buffers
@@ -744,7 +744,7 @@ endfunction
 " ## FZF
   let g:fzf_buffers_jump = 1
   let g:fzf_filemru_bufwrite = 1
-  let g:fzf_layout = { 'down': '~25%' }
+  let g:fzf_layout = { 'down': '~15%' }
   let g:fzf_action = {
         \ 'ctrl-t': 'tab split',
         \ 'ctrl-x': 'split',
@@ -1173,6 +1173,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi Comment cterm=italic term=italic gui=italic
   hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
+  hi CursorLine guibg=#333333 guifg=#db9c5e
   hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
   hi Search gui=underline term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#333333 gui=bold
