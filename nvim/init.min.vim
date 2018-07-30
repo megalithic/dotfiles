@@ -421,11 +421,8 @@ function! BufEnterCommit()
     start
   end
 
-  " disable for gitcommit messages
-  call deoplete#disable()
-  let b:deoplete_disable_auto_complete=1
-  let g:deoplete_disable_auto_complete=1
-  call deoplete#custom#buffer_option('auto_complete', v:false)
+  " disable completion for gitcommit messages
+  call ncm2#disable_for_buffer()
 
   " Allow automatic formatting of bulleted lists and blockquotes
   " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
@@ -752,28 +749,28 @@ endfunction
         \ 'enter': 'vsplit'
         \ }
 
-"   if executable("rg")
-"     " ## rg
-"     set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
-"     function! s:CompleteRg(arg_lead, line, pos)
-"       let l:args = join(split(a:line)[1:])
-"       return systemlist('get_completions rg ' . l:args)
-"     endfunction
+  if executable("rg")
+    " ## rg
+    set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
+    function! s:CompleteRg(arg_lead, line, pos)
+      let l:args = join(split(a:line)[1:])
+      return systemlist('get_completions rg ' . l:args)
+    endfunction
 
-"     " Add support for ripgrep
-"     " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
-"     command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
-"           \ call fzf#vim#grep(
-"           \   'rg --column --line-number --no-heading --color=always --glob "!.git/*" '.shellescape(<q-args>), 1,
-"           \   <bang>0 ? fzf#vim#with_preview('up:60%')
-"           \           : fzf#vim#with_preview('right:50%', '?'),
-"           \   <bang>0)
-"     command! -bang -nargs=? -complete=dir Files
-"           \ call fzf#vim#files(<q-args>,
-"           \   <bang>0 ? fzf#vim#with_preview('up:60%')
-"           \           : fzf#vim#with_preview('right:50%', '?'),
-"           \   <bang>0)
-"   endif
+    " Add support for ripgrep
+    " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
+    command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
+          \ call fzf#vim#grep(
+          \   'rg --column --line-number --no-heading --color=always --glob "!.git/*" '.shellescape(<q-args>), 1,
+          \   <bang>0 ? fzf#vim#with_preview('up:60%')
+          \           : fzf#vim#with_preview('right:50%', '?'),
+          \   <bang>0)
+    command! -bang -nargs=? -complete=dir Files
+          \ call fzf#vim#files(<q-args>,
+          \   <bang>0 ? fzf#vim#with_preview('up:60%')
+          \           : fzf#vim#with_preview('right:50%', '?'),
+          \   <bang>0)
+  endif
 
 " ## gist.vim
   let g:gist_open_url = 1
