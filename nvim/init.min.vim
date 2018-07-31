@@ -19,7 +19,6 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## UI/Interface
-  Plug 'mhartington/oceanic-next'
   Plug 'trevordmiller/nova-vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'vim-airline/vim-airline'
@@ -55,10 +54,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
 
 " ## Language Servers
-  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
 " ## Snippets
   Plug 'SirVer/ultisnips'
@@ -134,9 +133,6 @@ filetype plugin indent on
 let g:mapleader = ","                                                           "Change leader to a comma
 
 set background=dark                                                             "Set background to dark
-let g:oceanic_next_terminal_bold = 1
-let g:oceanic_next_terminal_italic = 1
-silent! colorscheme OceanicNext
 silent! colorscheme nova
 
 set termguicolors
@@ -889,12 +885,41 @@ endfunction
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
+" ## asyncomplete.vim/asynccomplete/vim-lsp
+  let g:lsp_auto_enable = 1
+  let g:lsp_signs_enabled = 0         " enable diagnostic signs / we use ALE for now
+  let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
+  let g:lsp_signs_error = {'text': '⤫'}
+  let g:lsp_signs_warning = {'text': '~'}
+  let g:lsp_signs_hint = {'text': '?'}
+  " let g:lsp_signs_warning = {'text': '~', 'icon': '/path/to/some/icon'} " icons require GUI
+  " let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
+  " let g:lsp_log_verbose = 0
+  " let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
+  " let g:asyncomplete_log_file = expand('~/.config/nvim/asyncomplete.log')
+  " set completeopt+=preview
+  if executable('typescript-language-server')
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'typescript-language-server',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
+          \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
+          \ 'whitelist': ['typescript', 'typescriptreact'],
+          \ })
+  endif
+  if executable('css-languageserver')
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'css-languageserver',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'css-languageserver --stdio']},
+          \ 'whitelist': ['css', 'less', 'sass', 'scss'],
+          \ })
+  endif
+
 " ## LanguageClient
   let g:LanguageClient_diagnosticsList = v:null
   let g:LanguageClient_diagnosticsEnable = 0
-  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
+  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
   let g:LanguageClient_autoStop = 0
-  let g:LanguageClient_loadSettings = 1
+  let g:LanguageClient_loadSettings = 0
   let g:LanguageClient_settingsPath = "~/.config/nvim/settings.json"
   let g:LanguageClient_loggingLevel = 'INFO'
   let g:LanguageClient_completionPreferTextEdit = 1
