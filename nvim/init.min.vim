@@ -885,7 +885,7 @@ endfunction
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
-" ## asyncomplete.vim/asynccomplete/vim-lsp
+" ## async/vim-lsp
   let g:lsp_auto_enable = 1
   let g:lsp_signs_enabled = 0         " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
@@ -913,46 +913,12 @@ endfunction
           \ 'whitelist': ['css', 'less', 'sass', 'scss'],
           \ })
   endif
-
-" ## LanguageClient
-  let g:LanguageClient_diagnosticsList = v:null
-  let g:LanguageClient_diagnosticsEnable = 0
-  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
-  let g:LanguageClient_autoStop = 0
-  let g:LanguageClient_loadSettings = 0
-  let g:LanguageClient_settingsPath = "~/.config/nvim/settings.json"
-  let g:LanguageClient_loggingLevel = 'INFO'
-  let g:LanguageClient_completionPreferTextEdit = 1
-  " let g:LanguageClient_devel = 1 " Use debug build
-  " let g:LanguageClient_loggingLevel = 'DEBUG' " Use highest logging level
-  let g:LanguageClient_serverCommands = {}
-  if executable('pyls')
-    let g:LanguageClient_serverCommands.python = ['pyls']
-  endif
-  if executable('javascript-typescript-stdio')
-    let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
-  endif
-  if executable('css-languageserver')
-    let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
-    let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
-    let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
-    let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
-  endif
-  if executable('html-languageserver')
-    let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
-  endif
-  if executable('json-languageserver')
-    let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
-  endif
   if executable('solargraph')
-    let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
-  endif
-  if executable('bash-language-server')
-    let g:LanguageClient_serverCommands.sh = ['bash-language-server', 'start']
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'solargraph',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
+          \ 'whitelist': ['ruby'],
+          \ })
   endif
 
 " ## ncm2
