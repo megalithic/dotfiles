@@ -7,125 +7,125 @@
 "
 " =============================================================================
 
-
 " ================ Plugins {{{
 
-if (!isdirectory(expand("$HOME/.config/nvim/repos/github.com/Shougo/dein.vim")))
-  call system(expand("mkdir -p $HOME/.config/nvim/repos/github.com"))
-  call system(expand("git clone https://github.com/Shougo/dein.vim $HOME/.config/nvim/repos/github.com/Shougo/dein.vim"))
+if empty(glob('~/.config/nvim/autoload/plug.vim'))
+  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  au VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
+set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
-set runtimepath+=~/.config/nvim/repos/github.com/Shougo/dein.vim/
-call dein#begin(expand('~/.config/nvim'))
+silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## UI/Interface
-  call dein#add('mhartington/oceanic-next')
-  call dein#add('trevordmiller/nova-vim')
-  call dein#add('megalithic/golden-ratio') " vertical split layout manager
-  call dein#add('vim-airline/vim-airline')
-  call dein#add('vim-airline/vim-airline-themes')
+  Plug 'mhartington/oceanic-next'
+  Plug 'trevordmiller/nova-vim'
+  Plug 'megalithic/golden-ratio' " vertical split layout manager
+  Plug 'vim-airline/vim-airline'
+  Plug 'vim-airline/vim-airline-themes'
+  Plug 'ryanoasis/vim-devicons' " has to be last according to docs
+  Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
 
 " ## Syntax
-  call dein#add('sheerun/vim-polyglot')
-  call dein#add('HerringtonDarkholme/yats.vim', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx'] })
-  call dein#add('leafgarland/typescript-vim', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx'] })
-  call dein#add('lilydjwg/colorizer')
-  call dein#add('tpope/vim-rails', { 'on_ft': ['ruby', 'eruby', 'haml', 'slim'] })
+  Plug 'sheerun/vim-polyglot'
+  Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
+  Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
+  Plug 'lilydjwg/colorizer'
+  Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
 " ## Completion
-call dein#add('ncm2/ncm2')
-  call dein#add('othree/csscomplete.vim', { 'on_ft': ['css', 'scss', 'sass'] }) " css completion
-  call dein#add('roxma/nvim-yarp')
-  " call dein#add('xolox/vim-lua-ftplugin', { 'on_ft': ['lua'] }) | Plug 'xolox/vim-misc'
-  call dein#add('ncm2/ncm2-ultisnips')
-  call dein#add('ncm2/ncm2-bufword')
-  call dein#add('ncm2/ncm2-tmux')
-  call dein#add('ncm2/ncm2-path')
-  " call dein#add('ncm2/ncm2-match-highlight' " the fonts used are wonky
-  call dein#add('ncm2/ncm2-html-subscope')
-  call dein#add('ncm2/ncm2-markdown-subscope')
-  " call dein#add('ncm2/ncm2-jedi')
-  " call dein#add('ncm2/ncm2-pyclang')
-  call dein#add('ncm2/ncm2-tern')
-  call dein#add('ncm2/ncm2-cssomni')
-  " call dein#add('ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
-  " call dein#add('ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
-  " call dein#add('ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  " call dein#add('ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
-  call dein#add('mhartington/nvim-typescript', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx'], 'build': './install.sh' })
+  Plug 'ncm2/ncm2'
+  Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
+  Plug 'roxma/nvim-yarp'
+  Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
+  Plug 'ncm2/ncm2-ultisnips'
+  Plug 'ncm2/ncm2-bufword'
+  Plug 'ncm2/ncm2-tmux'
+  Plug 'ncm2/ncm2-path'
+  " Plug 'ncm2/ncm2-match-highlight' " the fonts used are wonky
+  Plug 'ncm2/ncm2-html-subscope'
+  Plug 'ncm2/ncm2-markdown-subscope'
+  Plug 'ncm2/ncm2-tern'
+  Plug 'ncm2/ncm2-cssomni'
+  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  " Plug 'ncm2/nvim-typescript', {'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh'}
+  " Plug 'ncm2/ncm2-jedi'
+  " Plug 'ncm2/ncm2-pyclang'
+  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
+  " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
 
 " ## Language Servers
-  call dein#add('autozimu/LanguageClient-neovim', { 'branch': 'next', 'build': 'bash install.sh' })
+  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
 
 " ## Snippets
-  call dein#add('SirVer/ultisnips')
+  Plug 'SirVer/ultisnips'
 
 " ## Project/Code Navigation
-  call dein#add('junegunn/fzf', { 'dir': '~/.fzf', 'build': './install --all' })
-  call dein#add('junegunn/fzf.vim')
-  call dein#add('christoomey/vim-tmux-navigator') " needed for tmux/hotkey integration with vim
-  call dein#add('christoomey/vim-tmux-runner') " needed for tmux/hotkey integration with vim
-  call dein#add('tmux-plugins/vim-tmux-focus-events')
-  call dein#add('unblevable/quick-scope') " highlights f/t type of motions, for quick horizontal movements
-  " call dein#add('justinmk/vim-sneak.git') " https://github.com/justinmk/vim-sneak
+  Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+  Plug 'junegunn/fzf.vim'
+  Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
+  Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
+  Plug 'tmux-plugins/vim-tmux-focus-events'
+  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
 
 " ## Utils
-  call dein#add('jordwalke/VimAutoMakeDirectory') " auto-makes the dir for you if it doesn't exist in the path
-  call dein#add('EinfachToll/DidYouMean')
-  call dein#add('junegunn/rainbow_parentheses.vim') " nicely colors nested pairs of [], (), {}
-  call dein#add('docunext/closetag.vim') " will auto-close the opening tag as soon as you type </
-  call dein#add('tpope/vim-ragtag', { 'on_ft': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] }) " a set of mappings for several langs: html, xml, erb, php, more
-  call dein#add('Valloric/MatchTagAlways', { 'on_ft': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] }) " highlights the opening/closing tags for the block you're in
-  call dein#add('jiangmiao/auto-pairs')
-  call dein#add('janko-m/vim-test', {'on_cmd': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] }) " tester for js and ruby
-  " call dein#add('ruanyl/coverage.vim', { 'on_ft': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] })
-  call dein#add('tpope/vim-commentary') " (un)comment code
-  call dein#add('sickill/vim-pasta') " context-aware pasting
-  call dein#add('zenbro/mirror.vim') " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
-  call dein#add('keith/gist.vim', { 'build': 'chmod -HR 0600 ~/.netrc' })
-  call dein#add('Raimondi/delimitMate')
-  call dein#add('andymass/vim-matchup')
-  call dein#add('tpope/vim-rhubarb')
-  call dein#add('tpope/vim-surround') " soon to replace with machakann/vim-sandwich
-  call dein#add('tpope/vim-repeat')
-  call dein#add('tpope/vim-fugitive')
-  call dein#add('junegunn/gv.vim')
-  call dein#add('sodapopcan/vim-twiggy')
-  call dein#add('christoomey/vim-conflicted')
-  call dein#add('tpope/vim-eunuch')
-  call dein#add('dyng/ctrlsf.vim')
-  call dein#add('w0rp/ale')
+  Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
+  Plug 'EinfachToll/DidYouMean'
+  Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
+  Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
+  Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
+  Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
+  Plug 'jiangmiao/auto-pairs'
+  " Plug 'tpope/vim-endwise'
+  Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
+  " Plug 'ruanyl/coverage.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] }
+  Plug 'tpope/vim-commentary' " (un)comment code
+  Plug 'sickill/vim-pasta' " context-aware pasting
+  Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
+  Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
+  Plug 'Raimondi/delimitMate'
+  Plug 'andymass/vim-matchup'
+  Plug 'tpope/vim-rhubarb'
+  Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
+  Plug 'tpope/vim-repeat'
+  Plug 'tpope/vim-fugitive'
+  Plug 'prakashdanish/vim-githubinator'
+  Plug 'junegunn/gv.vim'
+  Plug 'sodapopcan/vim-twiggy'
+  Plug 'christoomey/vim-conflicted'
+  Plug 'tpope/vim-eunuch'
+  Plug 'dyng/ctrlsf.vim'
+  Plug 'w0rp/ale'
 
 " ## Movements/Text Objects, et al
-  call dein#add('kana/vim-operator-user')
+  Plug 'kana/vim-operator-user'
   " -- provide ai and ii for indent blocks
   " -- provide al and il for current line
   " -- provide a_ and i_ for underscores
   " -- provide a- and i-
-  call dein#add('kana/vim-textobj-user', { 'on_cmd': [ '<Plug>(textobj-user' ] })                 " https://github.com/kana/vim-textobj-user/wiki
-  call dein#add('kana/vim-textobj-entire', { 'on_cmd': [ '<Plug>(textobj-entire' ] })             " entire buffer text object (vae)
-  call dein#add('kana/vim-textobj-function', { 'on_cmd': [ '<Plug>(textobj-function' ] })         " function text object (vaf)
-  call dein#add('kana/vim-textobj-indent', { 'on_cmd': [ '<Plug>(textobj-indent' ] })             " for indent level (vai)
-  call dein#add('kana/vim-textobj-line', { 'on_cmd': [ '<Plug>(textobj-line' ] })                 " for current line (val)
-  call dein#add('nelstrom/vim-textobj-rubyblock', { 'on_cmd': [ '<Plug>(textobj-rubyblock' ] })   " ruby block text object (vir)
-  call dein#add('glts/vim-textobj-comment', { 'on_cmd': [ '<Plug>(textobj-comment' ] })           " comment text object (vac)
-  call dein#add('michaeljsmith/vim-indent-object')
-  call dein#add('machakann/vim-textobj-delimited', { 'on_cmd': [ '<Plug>(textobj-delimited' ] })  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
-  call dein#add('gilligan/textobj-lastpaste', { 'on_cmd': [ '<Plug>(textobj-lastpaste' ] })       " - P     for last paste
-  call dein#add('mattn/vim-textobj-url', { 'on_cmd': [ '<Plug>(textobj-url' ] })                  " - u     for url
-  call dein#add('rhysd/vim-textobj-anyblock', { 'on_cmd': [ '<Plug>(textobj-anyblock' ] })
-  call dein#add('whatyouhide/vim-textobj-xmlattr', { 'on_cmd': [ '<Plug>(textobj-xmlattr' ] })    " - x     for xml
-  call dein#add('wellle/targets.vim')                                                         " improved targets line cin) next parens)
+  Plug 'kana/vim-textobj-user', { 'on': [ '<Plug>(textobj-user' ] }                 " https://github.com/kana/vim-textobj-user/wiki
+  Plug 'kana/vim-textobj-entire', { 'on': [ '<Plug>(textobj-entire' ] }             " entire buffer text object (vae)
+  Plug 'kana/vim-textobj-function', { 'on': [ '<Plug>(textobj-function' ] }         " function text object (vaf)
+  Plug 'kana/vim-textobj-indent', { 'on': [ '<Plug>(textobj-indent' ] }             " for indent level (vai)
+  Plug 'kana/vim-textobj-line', { 'on': [ '<Plug>(textobj-line' ] }                 " for current line (val)
+  Plug 'nelstrom/vim-textobj-rubyblock', { 'on': [ '<Plug>(textobj-rubyblock' ] }   " ruby block text object (vir)
+  Plug 'glts/vim-textobj-comment', { 'on': [ '<Plug>(textobj-comment' ] }           " comment text object (vac)
+  Plug 'michaeljsmith/vim-indent-object'
+  Plug 'machakann/vim-textobj-delimited', { 'on': [ '<Plug>(textobj-delimited' ] }  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+  Plug 'gilligan/textobj-lastpaste', { 'on': [ '<Plug>(textobj-lastpaste' ] }       " - P     for last paste
+  Plug 'mattn/vim-textobj-url', { 'on': [ '<Plug>(textobj-url' ] }                  " - u     for url
+  Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }
+  Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
+  Plug 'wellle/targets.vim'                                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
-  call dein#add('ryanoasis/vim-devicons') " has to be last according to docs
-
-if dein#check_install()
-  call dein#install()
-  let pluginsExist=1
+call plug#end()
 endif
 
-call dein#end()
 filetype plugin indent on
 
 "}}}
@@ -319,11 +319,14 @@ set shortmess+=c
 " }}}
 " ================ Autocommands {{{
 augroup vimrc
-  autocmd!
+  au!
+
+  " identLine coloring things
+  au! User indentLine doautocmd indentLine Syntax
 
   " automatically source vim configs
-  autocmd BufWritePost .vimrc,.vimrc.local,init.vim source %
-  autocmd BufWritePost .vimrc.local source %
+  au BufWritePost .vimrc,.vimrc.local,init.vim source %
+  au BufWritePost .vimrc.local source %
 
   " save all files on focus lost, ignoring warnings about untitled buffers
   " autocmd FocusLost * silent! wa
@@ -338,13 +341,13 @@ augroup vimrc
   au BufNewFile,BufEnter * set formatoptions-=o
 
   " Remember cursor position between vim sessions
-  autocmd BufReadPost *
+  au BufReadPost *
         \ if line("'\"") > 0 && line ("'\"") <= line("$") |
         \   exe "normal! g'\"" |
         \ endif
 
   " Auto-close preview window when completion is done.
-  autocmd! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
+  au! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
   " ----------------------------------------------------------------------------
   " ## JavaScript
@@ -352,8 +355,107 @@ augroup vimrc
   " au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set ts=2 sts=2 sw=2
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
   au BufNewFile,BufRead .tern-project set ft=json
-  " au BufNewFile,BufReadPost *.tsx setl ft=typescript.tsx " forces typescript.tsx -> typescriptreact
+  " au BufNewFile,BufReadPost *.tsx setl ft=typescriptreact " forces typescript.tsx -> typescriptreact
   au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
+
+  " ----------------------------------------------------------------------------
+  " ## CSS/SCSS
+  " make sure `complete` works as expected for CSS class names whithout
+  " messing with motions (eg. '.foo-bar__baz') and we make sure all
+  " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
+  au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
+  au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
+  " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
+  au FileType css,css.scss,sass,scss setl iskeyword+=-
+  " au FileType scss set iskeyword+=-
+  au FileType css,css.scss,sass,scss setl formatoptions+=croql
+
+  " ----------------------------------------------------------------------------
+  " ## Markdown
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0
+  au FileType markdown,text,html setlocal spell complete+=kspell
+  au FileType markdown set tw=80
+
+  " ----------------------------------------------------------------------------
+  " ## Ruby
+  au FileType ruby setl iskeyword+=_
+  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
+  au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
+
+  " ----------------------------------------------------------------------------
+  " ## SSH
+  au BufNewFile,BufRead */ssh/config  setf sshconfig
+  au BufNewFile,BufRead ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
+
+  " ----------------------------------------------------------------------------
+  " ## Misc filetypes
+  au FileType zsh set ts=2 sts=2 sw=2
+  au FileType sh set ts=2 sts=2 sw=2
+  au FileType bash set ts=2 sts=2 sw=2
+  au FileType tmux set ts=2 sts=2 sw=2
+
+  " ----------------------------------------------------------------------------
+  " ## Completions
+  " au FileType * setl omnifunc=syntaxcomplete#Complete
+  " au FileType html,markdown setl omnifunc=htmlcomplete#CompleteTags
+  " au FileType css,scss,sass,less,scss.css,sass.css setl omnifunc=csscomplete#CompleteCSS noci
+
+  " " au FileType javascript,javascript.jsx,jsx setl omnifunc=javascriptcomplete#CompleteJS " default
+  " " au FileType javascript,javascript.jsx,jsx setl completefunc=jspc#omni " jspc
+  " " au FileType javascript,javascript.jsx,jsx setl omnifunc=tern#Complete " tern
+  " au FileType typescript.jsx,typescript,typescriptreact setl omnifunc=TSOmnicFunc
+
+  " au FileType python setl omnifunc=pythoncomplete#Complete
+  " au FileType xml setl omnifunc=xmlcomplete#CompleteTags
+  " " au FileType ruby setl omnifunc=rubycomplete#Complete
+  " au FileType ruby setl omnifunc=LanguageClient#complete " using solargraph
+
+  " ----------------------------------------------------------------------------
+  " ## Toggle certain accoutrements when entering and leaving a buffer & window
+  au WinEnter,BufEnter * silent set number relativenumber syntax=on " call RainbowParentheses
+  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call RainbowParentheses!
+  au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
+  au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
+  au InsertEnter * silent set colorcolumn=80
+  au InsertLeave * silent set colorcolumn=""
+
+  " ----------------------------------------------------------------------------
+  " ## Automagically update remote homeassistant files upon editing locally
+  au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
+
+  " ----------------------------------------------------------------------------
+  " ## Manage GIT related scenarios
+  au Filetype gitcommit setl spell textwidth=72
+  au BufNewFile,BufRead .git/index setlocal nolist
+  au BufReadPost fugitive://* set bufhidden=delete
+  au BufReadCmd *.git/index exe BufReadIndex()
+  au BufEnter *.git/index silent normal gg0j
+  au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
+  au Filetype gitcommit exe BufEnterCommit()
+
+  autocmd! TermOpen * setlocal nonumber norelativenumber
+  autocmd! TermOpen * if &buftype == 'terminal'
+        \| set nonumber norelativenumber
+        \| endif
+augroup END
+
+" Automatically close vim if only the quickfix window is open
+" http://stackoverflow.com/a/7477056/3720597
+augroup QuickFixClose
+    autocmd!
+    autocmd WinEnter * if winnr('$') == 1 &&
+                \getbufvar(winbufnr(winnr()), "&buftype") == "quickfix"
+                \| q
+                \| endif
+augroup END
+
+augroup MakeQuickFixPrettier
+    autocmd!
+    autocmd BufRead * if &buftype == 'quickfix'
+                \| setlocal colorcolumn=
+                \| setlocal nolist
+                \| endif
+augroup END
 
 augroup END
 
@@ -515,7 +617,6 @@ endfunction
   let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown']
 
 " ## vim-devicons
-  " let g:webdevicons_enable_denite = 0
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
   let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
   let g:WebDevIconsOS = 'Darwin'
@@ -593,6 +694,10 @@ endfunction
 
 " # lexima
   " let g:lexima_enable_endwise_rules = 1
+
+" # indentLine
+  let g:indentLine_color_term = 239
+  let g:indentLine_color_gui = '#616161'
 
 " ## ALE
   let g:ale_enabled = 1
@@ -802,9 +907,9 @@ endfunction
   if executable('javascript-typescript-stdio')
     let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
     let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-    " let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
-    " let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
-    " let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands.typescript = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands.typescriptreact = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands['typescript.tsx'] = ['javascript-typescript-stdio']
   endif
   if executable('css-languageserver')
     let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
@@ -1170,7 +1275,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi Comment cterm=italic term=italic gui=italic
   hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
-  hi CursorLine guibg=#333333 guifg=#db9c5e
+  hi CursorLine guibg=#333333 " guifg=#db9c5e
   hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
   hi Search gui=underline term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#333333 gui=bold
