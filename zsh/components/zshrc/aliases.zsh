@@ -141,6 +141,7 @@ alias ezp=ezz
 alias ezfp=ezz
 alias ezkb="nvim ~/.dotfiles/zsh/**/keybindings.zsh"
 alias ev="nvim ~/.dotfiles/nvim/init.vim"
+alias evm="nvim ~/.dotfiles/nvim/init.min.vim"
 alias ea="nvim ~/.dotfiles/alacritty/alacritty.yml.symlink"
 alias ek="nvim ~/.dotfiles/kitty/kitty.conf"
 alias et="nvim ~/.dotfiles/tmux/tmux.conf.symlink"

@@ -391,22 +391,6 @@ augroup vimrc
   au FileType tmux set ts=2 sts=2 sw=2
 
   " ----------------------------------------------------------------------------
-  " ## Completions
-  " au FileType * setl omnifunc=syntaxcomplete#Complete
-  " au FileType html,markdown setl omnifunc=htmlcomplete#CompleteTags
-  " au FileType css,scss,sass,less,scss.css,sass.css setl omnifunc=csscomplete#CompleteCSS noci
-
-  " " au FileType javascript,javascript.jsx,jsx setl omnifunc=javascriptcomplete#CompleteJS " default
-  " " au FileType javascript,javascript.jsx,jsx setl completefunc=jspc#omni " jspc
-  " " au FileType javascript,javascript.jsx,jsx setl omnifunc=tern#Complete " tern
-  " au FileType typescript.jsx,typescript,typescriptreact setl omnifunc=TSOmnicFunc
-
-  " au FileType python setl omnifunc=pythoncomplete#Complete
-  " au FileType xml setl omnifunc=xmlcomplete#CompleteTags
-  " " au FileType ruby setl omnifunc=rubycomplete#Complete
-  " au FileType ruby setl omnifunc=LanguageClient#complete " using solargraph
-
-  " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
   au WinEnter,BufEnter * silent set number relativenumber syntax=on " call RainbowParentheses
   au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call RainbowParentheses!
@@ -435,6 +419,18 @@ augroup vimrc
         \| endif
 augroup END
 
+" # vim-lsp
+augroup LspMappings
+  au!
+  " TypeScript
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspDocumentDiagnostics<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :LspReferences<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :LspDefinition<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :LspDocumentSymbol<CR>
+augroup END
+
 " Automatically close vim if only the quickfix window is open
 " http://stackoverflow.com/a/7477056/3720597
 augroup QuickFixClose
@@ -451,8 +447,6 @@ augroup MakeQuickFixPrettier
                 \| setlocal colorcolumn=
                 \| setlocal nolist
                 \| endif
-augroup END
-
 augroup END
 
 " }}}
@@ -918,6 +912,14 @@ endfunction
           \ 'name': 'solargraph',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
           \ 'whitelist': ['ruby'],
+          \ })
+  endif
+  if executable('pyls')
+    " pip install python-language-server
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'pyls',
+          \ 'cmd': {server_info->['pyls']},
+          \ 'whitelist': ['python'],
           \ })
   endif
 
