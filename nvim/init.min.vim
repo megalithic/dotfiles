@@ -92,7 +92,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive'
-  Plug 'prakashdanish/vim-githubinator'
   Plug 'junegunn/gv.vim'
   Plug 'sodapopcan/vim-twiggy'
   Plug 'christoomey/vim-conflicted'
@@ -886,18 +885,15 @@ endfunction
   let g:lsp_signs_error = {'text': '⤫'}
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
-  " let g:lsp_signs_warning = {'text': '~', 'icon': '/path/to/some/icon'} " icons require GUI
-  " let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
-  " let g:lsp_log_verbose = 0
-  " let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
-  " let g:asyncomplete_log_file = expand('~/.config/nvim/asyncomplete.log')
-  " set completeopt+=preview
+  let g:lsp_signs_information = {'text': '!!'}
+  let g:lsp_log_verbose = 0
+  let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'typescript-language-server',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-          \ 'whitelist': ['typescript', 'typescriptreact'],
+          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
           \ })
   endif
   if executable('css-languageserver')
@@ -911,7 +907,7 @@ endfunction
     au User lsp_setup call lsp#register_server({
           \ 'name': 'solargraph',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
-          \ 'whitelist': ['ruby'],
+          \ 'whitelist': ['ruby', 'eruby'],
           \ })
   endif
   if executable('pyls')
@@ -924,7 +920,11 @@ endfunction
   endif
 
 " ## ncm2
-  au BufEnter * call ncm2#enable_for_buffer()
+  " NOTE: source changes must happen before the source is loaded
+  let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
+  " let g:ncm2_vim_lsp#source = {'priority': 9, 'mark': ''} " not working as a source
+
+  au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
   set shortmess+=c
   au TextChangedI * call ncm2#auto_trigger()
