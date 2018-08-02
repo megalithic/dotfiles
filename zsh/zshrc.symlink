@@ -34,7 +34,7 @@ source "$DOTS/zsh/components/zshrc/keybindings.zsh"
 
 # ancillary config
 source "$DOTS/zsh/components/zshrc/fasd.zsh"
-source "$DOTS/zsh/components/zshrc/ruby.zsh"
+# source "$DOTS/zsh/components/zshrc/ruby.zsh"
 source "$DOTS/zsh/components/zshrc/node.zsh"
 source "$DOTS/zsh/components/zshrc/git.zsh"
 source "$DOTS/zsh/components/zshrc/tmux.zsh"
@@ -61,3 +61,5 @@ prompt pure
 
 # we handle fzf things in fzf.zsh
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+source "$DOTS/zsh/components/zshrc/asdf.zsh"

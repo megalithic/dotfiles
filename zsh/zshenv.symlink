@@ -58,6 +58,7 @@ path=(
   $HOME/.bin
   $HOME/.dotfiles/bin
   $HOME/.rubies
+  $GEM_PATH
   $GOBIN
   $CARGOBIN
   /usr/local/{bin,sbin}
@@ -112,10 +113,11 @@ fi
 #
 # Ruby/Node/Misc
 #
-
-source "$HOME/.dotfiles/zsh/components/zshrc/ruby.zsh"
+# source "$HOME/.dotfiles/zsh/components/zshrc/ruby.zsh"
+source "$HOME/.dotfiles/zsh/components/zshrc/completion.zsh"
 source "$HOME/.dotfiles/zsh/components/zshrc/node.zsh"
 source "$HOME/.dotfiles/zsh/components/zshrc/colors.zsh"
+source "$HOME/.dotfiles/zsh/components/zshrc/asdf.zsh"
 
 
 #

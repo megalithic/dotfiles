@@ -48,7 +48,9 @@ brew 'git-flow'
 brew 'gnutls'
 brew 'gnupg'
 brew 'gnu-sed', args: ['with-default-names']
+brew 'gpg' # required for asdf-nodejs
 brew 'grc'
+brew 'grv'
 brew 'gcc49'
 brew 'hub'
 brew 'highlight'

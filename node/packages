@@ -22,6 +22,7 @@ prettier-eslint-cli
 stylelint
 stylelint-config-standard
 javascript-typescript-langserver
+taskbook
 typescript
 typescript-language-server
 vscode-css-languageserver-bin

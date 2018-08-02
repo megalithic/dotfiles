@@ -18,6 +18,8 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugged')
 
+  Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
+
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
@@ -70,6 +72,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tmux-plugins/vim-tmux-focus-events'
   Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
+  Plug 'AndrewRadev/splitjoin.vim'
 
 " ## Utils
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
@@ -86,17 +89,16 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'sickill/vim-pasta' " context-aware pasting
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
-  Plug 'Raimondi/delimitMate'
+  " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
-  Plug 'tpope/vim-rhubarb'
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
   Plug 'tpope/vim-repeat'
-  Plug 'tpope/vim-fugitive'
+  Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
   Plug 'junegunn/gv.vim'
   Plug 'sodapopcan/vim-twiggy'
   Plug 'christoomey/vim-conflicted'
   Plug 'tpope/vim-eunuch'
-  Plug 'dyng/ctrlsf.vim'
+  " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
 
 " ## Movements/Text Objects, et al
@@ -151,7 +153,7 @@ if has('termguicolors')
   endif
 endif
 
-" let g:ruby_host_prog = '$RUBY_ROOT/bin/ruby'
+" let g:ruby_host_prog = system('rbenv which ruby')
 let g:python_host_prog = '/usr/local/bin/python2.7'
 let g:python3_host_prog = '/usr/local/bin/python3'
 let g:node_host_prog = $HOME."/.n/bin/neovim-node-host"
@@ -348,9 +350,7 @@ augroup vimrc
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
   " au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set ts=2 sts=2 sw=2
-  au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json set ft=json
-  au BufNewFile,BufRead .tern-project set ft=json
-  " au BufNewFile,BufReadPost *.tsx setl ft=typescriptreact " forces typescript.tsx -> typescriptreact
+  au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
   au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
 
   " ----------------------------------------------------------------------------
@@ -379,8 +379,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## SSH
-  au BufNewFile,BufRead */ssh/config  setf sshconfig
-  au BufNewFile,BufRead ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
+  au BufNewFile,BufRead */ssh/config,ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
 
   " ----------------------------------------------------------------------------
   " ## Misc filetypes
@@ -514,6 +513,7 @@ function! BufEnterCommit()
 
   " disable completion for gitcommit messages
   call ncm2#disable_for_buffer()
+  au InsertEnter * call ncm2#disable_for_buffer()
 
   " Allow automatic formatting of bulleted lists and blockquotes
   " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
@@ -886,7 +886,7 @@ endfunction
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
-  let g:lsp_log_verbose = 0
+  let g:lsp_log_verbose = 1
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
@@ -907,6 +907,7 @@ endfunction
     au User lsp_setup call lsp#register_server({
           \ 'name': 'solargraph',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
+          \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Gemfile'))},
           \ 'whitelist': ['ruby', 'eruby'],
           \ })
   endif
@@ -1245,6 +1246,14 @@ nnoremap J mzJ`z
 " Split line (sister to [J]oin lines above)
 " The normal use of S is covered by cc, so don't worry about shadowing it.
 nnoremap S i<CR><esc>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
+
+" ## splitjoin.vim
+" let g:splitjoin_split_mapping = ''
+" let g:splitjoin_join_mapping = ''
+" nmap J :SplitjoinJoin<cr>
+" nmap S :SplitjoinSplit<cr>
+" nmap sS :SplitjoinSplit<cr>
+" nmap sJ :SplitjoinJoin<cr>
 
 " Insert mode movements
 " Ctrl-e: Go to end of line
