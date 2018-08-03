@@ -421,12 +421,12 @@ augroup END
 augroup LspMappings
   au!
   " TypeScript
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <leader>h :LspHover<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspDocumentDiagnostics<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :LspReferences<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :LspDefinition<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :LspDocumentSymbol<CR>
+  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <leader>h :LspHover<CR>
+  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F2> :LspRename<CR>
+  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F7> :LspDocumentDiagnostics<CR>
+  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F8> :LspReferences<CR>
+  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F9> :LspDefinition<CR>
+  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F10> :LspDocumentSymbol<CR>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
@@ -697,9 +697,9 @@ endfunction
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tslint', 'typecheck'],
+        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tslint', 'typecheck'],
+        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tslint', 'typecheck'],
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
@@ -880,9 +880,9 @@ endfunction
 
 " ## async/vim-lsp
   let g:lsp_auto_enable = 1
-  let g:lsp_signs_enabled = 0         " enable diagnostic signs / we use ALE for now
+  let g:lsp_signs_enabled = 1         " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
-  let g:lsp_signs_error = {'text': '⤫'}
+  let g:lsp_signs_error = {'text': '✖'}
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}

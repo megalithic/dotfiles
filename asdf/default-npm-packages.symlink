@@ -20,6 +20,7 @@ stylelint
 stylelint-config-standard
 javascript-typescript-langserver
 taskbook
+tsserver
 typescript
 typescript-language-server
 vscode-css-languageserver-bin
