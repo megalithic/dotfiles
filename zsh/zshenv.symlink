@@ -63,8 +63,8 @@ path=(
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin
   /usr/local/lib/node_modules
-  $HOME/.yarn/bin
-  $HOME/.config/yarn/global/node_modules/.bin
+  # $HOME/.yarn/bin
+  # $HOME/.config/yarn/global/node_modules/.bin
   /usr/local/opt/gnu-sed/libexec/gnubin
   /usr/local/opt/imagemagick@6/bin
   /usr/local/opt/qt@5.5/bin

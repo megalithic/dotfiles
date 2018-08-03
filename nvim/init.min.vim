@@ -154,7 +154,7 @@ if has('termguicolors')
 endif
 
 let g:ruby_host_prog = $HOME."/.asdf/shims/neovim-ruby-host"
-let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
+" let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host" " presently installed via yarn
 let g:python_host_prog = '/usr/local/bin/python2.7'
 let g:python3_host_prog = '/usr/local/bin/python3'
 
