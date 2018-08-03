@@ -14,7 +14,7 @@ export DOTFILES=$HOME/.dotfiles
 export DOTDIR=$DOTFILES
 export DOTS=$DOTFILES
 
-# # WIP - all of our zsh files
+# # TODO: all of our zsh files
 # typeset -U components
 # components=($ZSH/components/zshrc/*.zsh)
 # # load zshrc components
@@ -23,6 +23,8 @@ export DOTS=$DOTFILES
 #   source $file
 # done
 
+# NOTE: source order matters!
+#
 # zsh core config
 source "$DOTS/zsh/components/zshrc/env.zsh"
 source "$DOTS/zsh/components/zshrc/aliases.zsh"
@@ -34,8 +36,6 @@ source "$DOTS/zsh/components/zshrc/keybindings.zsh"
 
 # ancillary config
 source "$DOTS/zsh/components/zshrc/fasd.zsh"
-# source "$DOTS/zsh/components/zshrc/ruby.zsh"
-source "$DOTS/zsh/components/zshrc/node.zsh"
 source "$DOTS/zsh/components/zshrc/git.zsh"
 source "$DOTS/zsh/components/zshrc/tmux.zsh"
 source "$DOTS/zsh/components/zshrc/k.zsh"
@@ -45,6 +45,7 @@ source "$DOTS/zsh/components/zshrc/fzf.zsh"
 source "$DOTS/zsh/components/zshrc/z.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.zsh"
 source "$DOTS/zsh/components/zshrc/syntax-highlighting.zsh"
+source "$DOTS/zsh/components/zshrc/asdf.zsh"
 
 
 # use .localrc for SUPER SECRET STUFF that you don't
@@ -62,4 +63,4 @@ prompt pure
 # we handle fzf things in fzf.zsh
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-source "$DOTS/zsh/components/zshrc/asdf.zsh"
+

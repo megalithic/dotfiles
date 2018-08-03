@@ -20,9 +20,7 @@ brew 'ansifilter'
 brew 'applesimutils'
 brew 'autoconf'
 brew 'automake'
-brew 'asdf'
 brew 'aspell', args: ['--with-lang-en']
-brew 'chruby'
 brew 'cmake'
 brew 'coreutils'
 brew 'curl'
@@ -85,11 +83,6 @@ brew 'python'
 brew 'python3'
 brew 'python@2'
 brew 'rabbitmq'
-brew 'rbenv'
-brew "rbenv-binstubs"
-brew "rbenv-bundle-exec"
-brew "rbenv-bundler"
-brew "rbenv-ctags"
 brew 'readline'
 brew 'reattach-to-user-namespace', args: ['wrap-pbcopy-and-pbpaste']
 brew 'ren'

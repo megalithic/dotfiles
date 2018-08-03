@@ -106,6 +106,8 @@ export RUBY_GC_HEAP_FREE_SLOTS=500000
 export RUBY_GC_HEAP_INIT_SLOTS=40000
 export RUBY_CONFIGURE_OPTS=--with-readline-dir="$(brew --prefix readline)"
 
+export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
+
 export ECLIPSE_HOME=/Applications/Eclipse
 export SSL_CERT_FILE=''
 unset SSL_CERT_FILE
@@ -114,6 +116,9 @@ export CURL_CA_BUNDLE=''
 
 # GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg
 export GNUPGHOME=$(mktemp -d) #; echo $GNUPGHOME
+
+# https://github.com/asdf-vm/asdf-nodejs#using-a-dedicated-openpgp-keyring
+# export GNUPGHOME="${ASDF_DIR:-$HOME/.asdf}/keyrings/nodejs" && mkdir -p "$GNUPGHOME" && chmod 0700 "$GNUPGHOME"
 
 # This setting is for the new UTF-8 terminal support
 export LC_CTYPE=en_US.UTF-8

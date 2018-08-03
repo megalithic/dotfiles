@@ -1,10 +1,5 @@
 #!/bin/zsh
 
-typeset -U ruby_version
-ruby_version="$(cat $DOTS/ruby/ruby-version.symlink)"
-rbenv shell $ruby_version
-unset ruby_version
-
-cat $DOTS/ruby/packages | xargs gem install
+cat $DOTS/asdf/default-gems.symlink | xargs gem install
 
 

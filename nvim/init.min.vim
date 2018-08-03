@@ -153,10 +153,10 @@ if has('termguicolors')
   endif
 endif
 
-" let g:ruby_host_prog = system('rbenv which ruby')
+let g:ruby_host_prog = $HOME."/.asdf/shims/neovim-ruby-host"
+let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
 let g:python_host_prog = '/usr/local/bin/python2.7'
 let g:python3_host_prog = '/usr/local/bin/python3'
-let g:node_host_prog = $HOME."/.n/bin/neovim-node-host"
 
 set title                                                                       "change the terminal's title
 set number                                                                      "Line numbers are good
@@ -906,7 +906,7 @@ endfunction
   if executable('solargraph')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'solargraph',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.gem/ruby/2.3.1/bin/solargraph stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Gemfile'))},
           \ 'whitelist': ['ruby', 'eruby'],
           \ })

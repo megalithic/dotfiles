@@ -46,6 +46,7 @@ export GOPATH=$HOME/.go
 export GOBIN=$GOPATH/bin
 export CARGOPATH=$HOME/.cargo
 export CARGOBIN=$CARGOPATH/bin
+export ASDF_BIN=$ASDF_DIR/shims
 
 # Set the list of directories that Zsh searches for programs.
 path=()
@@ -53,20 +54,16 @@ path=(
   ./bin
   ./.bin
   ./vendor/bundle/bin
-  $HOME/.rbenv/bin
   $HOME/bin
   $HOME/.bin
   $HOME/.dotfiles/bin
-  $HOME/.rubies
-  $GEM_PATH
+  $ASDF_BIN
   $GOBIN
   $CARGOBIN
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin
   /usr/local/lib/node_modules
   $HOME/.yarn/bin
-  $HOME/.n/bin
-  $HOME/.n/lib/node_modules
   $HOME/.config/yarn/global/node_modules/.bin
   /usr/local/opt/gnu-sed/libexec/gnubin
   /usr/local/opt/imagemagick@6/bin
@@ -111,11 +108,9 @@ fi
 
 
 #
-# Ruby/Node/Misc
+# asdf/ruby/node/misc
 #
-# source "$HOME/.dotfiles/zsh/components/zshrc/ruby.zsh"
 source "$HOME/.dotfiles/zsh/components/zshrc/completion.zsh"
-source "$HOME/.dotfiles/zsh/components/zshrc/node.zsh"
 source "$HOME/.dotfiles/zsh/components/zshrc/colors.zsh"
 source "$HOME/.dotfiles/zsh/components/zshrc/asdf.zsh"
 
