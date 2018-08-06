@@ -36,11 +36,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
 " ## Completion
-  Plug 'ncm2/ncm2'
+  Plug 'ncm2/ncm2' | Plug 'roxma/nvim-yarp'
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
-  Plug 'roxma/nvim-yarp'
   Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
-  Plug 'ncm2/ncm2-ultisnips'
+  Plug 'ncm2/ncm2-ultisnips' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-bufword'
   Plug 'ncm2/ncm2-tmux'
   Plug 'ncm2/ncm2-path'
@@ -56,13 +55,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
-
-" ## Language Servers
-  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
-
-" ## Snippets
-  Plug 'SirVer/ultisnips'
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -86,6 +79,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
   " Plug 'ruanyl/coverage.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] }
   Plug 'tpope/vim-commentary' " (un)comment code
+  Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
   Plug 'sickill/vim-pasta' " context-aware pasting
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
@@ -605,6 +599,12 @@ endfunction
 " ## polyglot
   let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown']
 
+" ## vim-matchup
+  " let g:matchup_matchparen_enabled = 0
+  " let g:matchup_motion_enabled = 0
+  " let g:matchup_text_obj_enabled = 0
+  let g:matchup_matchparen_status_offscreen = 0
+
 " ## vim-devicons
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
   let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
@@ -693,7 +693,7 @@ endfunction
   let g:ale_lint_delay = 1000
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
-  let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['typescript']}
+  let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
@@ -905,11 +905,12 @@ endfunction
   endif
   if executable('solargraph')
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'solargraph',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.gem/ruby/2.3.1/bin/solargraph stdio']},
-          \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Gemfile'))},
-          \ 'whitelist': ['ruby', 'eruby'],
-          \ })
+        \ 'name': 'solargraph',
+        \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
+        \ 'initialization_options': {"diagnostics": "true"},
+        \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Gemfile'))},
+        \ 'whitelist': ['ruby', 'eruby'],
+        \ })
   endif
   if executable('pyls')
     " pip install python-language-server
@@ -1277,7 +1278,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi Comment cterm=italic term=italic gui=italic
   hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
-  hi CursorLine guibg=#333333 " guifg=#db9c5e
+  hi CursorLine guibg=#333333
   hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
   hi Search gui=underline term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#333333 gui=bold
@@ -1312,6 +1313,9 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi link Debug SpellBad
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
+
+
+  hi MatchParen cterm=italic gui=italic guibg=#937f6e
 
   " Nord
   " hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
