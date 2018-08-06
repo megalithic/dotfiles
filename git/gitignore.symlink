@@ -28,3 +28,6 @@ node_modules
 .nyc_output
 public/components/eezy-editor
 **/db/structure.sql
+bin/rails
+bin/rake
+bin/rspec

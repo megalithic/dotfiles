@@ -974,8 +974,8 @@ endfunction
   let g:test#custom_strategies = {'terminal_split': function('SplitStrategy')}
   let g:test#strategy = 'terminal_split'
   let test#ruby#rspec#options = '-f d'
-  let test#ruby#bundle_exec = 1
-  " let test#ruby#use_binstubs = 1
+  " let test#ruby#bundle_exec = 1
+  let test#ruby#use_binstubs = 1
   let g:test#runner_commands = ['Jest', 'RSpec', 'Cypress']
 
 " ## FZF
@@ -1032,7 +1032,7 @@ endfunction
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
-  let g:lsp_log_verbose = 1
+  let g:lsp_log_verbose = 0
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
