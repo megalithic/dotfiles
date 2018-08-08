@@ -55,7 +55,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -843,13 +843,13 @@ endfunction
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tslint', 'typecheck'],
-        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tslint', 'typecheck'],
-        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tslint', 'typecheck'],
+        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
-        \   'ruby': []
+        \   'ruby': ['rubocop']
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -1026,9 +1026,9 @@ endfunction
 
 " ## async/vim-lsp
   let g:lsp_auto_enable = 1
-  let g:lsp_signs_enabled = 1         " enable diagnostic signs / we use ALE for now
-  let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
-  let g:lsp_signs_error = {'text': '✖'}
+  let g:lsp_signs_enabled = 0             " enable diagnostic signs / we use ALE for now
+  let g:lsp_diagnostics_echo_cursor = 0   " enable echo under cursor when in normal mode
+  let g:lsp_signs_error = {'text': '⤫'}
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
@@ -1054,7 +1054,6 @@ endfunction
         \ 'name': 'solargraph',
         \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
         \ 'initialization_options': {"diagnostics": "true"},
-        \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Gemfile'))},
         \ 'whitelist': ['ruby', 'eruby'],
         \ })
   endif
@@ -1460,8 +1459,13 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
+  hi link LspErrorText ALEErrorSign
+  hi link LspWarningText ALEWarningSign
+  hi link LspError ALEError
+  hi link LspWarning ALEWarning
 
-  hi MatchParen cterm=italic gui=italic guibg=#937f6e
+
+  hi MatchParen cterm=bold gui=bold guibg=#222222
 
   " Nord
   " hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
