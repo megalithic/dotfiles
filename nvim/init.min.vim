@@ -27,6 +27,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'vim-airline/vim-airline-themes'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
+  Plug 'RRethy/vim-illuminate'
 
 " ## Syntax
   Plug 'sheerun/vim-polyglot'
@@ -48,7 +49,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-tern'
   Plug 'ncm2/ncm2-cssomni'
-  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'ncm2/nvim-typescript', {'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh'}
   " Plug 'ncm2/ncm2-jedi'
   " Plug 'ncm2/ncm2-pyclang'
@@ -578,13 +579,13 @@ augroup END
 " # vim-lsp
 augroup LspMappings
   au!
-  " TypeScript
-  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <leader>h :LspHover<CR>
-  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F2> :LspRename<CR>
-  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F7> :LspDocumentDiagnostics<CR>
-  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F8> :LspReferences<CR>
-  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F9> :LspDefinition<CR>
-  au FileType eruby,ruby,typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx nnoremap <F10> :LspDocumentSymbol<CR>
+  " ruby/javascript (using nvim-typescript for typescript-specific mappings)
+  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <leader>h :LspHover<CR>
+  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F2> :LspRename<CR>
+  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F7> :LspDocumentDiagnostics<CR>
+  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F8> :LspReferences<CR>
+  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F9> :LspDefinition<CR>
+  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F10> :LspDocumentSymbol<CR>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
@@ -914,10 +915,12 @@ endfunction
   let g:nvim_typescript#completion_mark=''
   let g:nvim_typescript#default_mappings=0
   let g:nvim_typescript#type_info_on_hold=0
-  let g:nvim_typescript#max_completion_detail=100
-  let g:nvim_typescript#javascript_support=0
+  let g:nvim_typescript#max_completion_detail=50
+  let g:nvim_typescript#javascript_support=1
   let g:nvim_typescript#signature_complete=0
   let g:nvim_typescript#diagnosticsEnable=0
+  let $NVIM_NODE_LOG_FILE='~/.config/nvim/nvim-node.log'
+  let $NVIM_NODE_LOG_LEVEL='warn'
   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
   autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
@@ -1034,14 +1037,14 @@ endfunction
   let g:lsp_signs_information = {'text': '!!'}
   let g:lsp_log_verbose = 0
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
-  if executable('typescript-language-server')
-    au User lsp_setup call lsp#register_server({
-          \ 'name': 'typescript-language-server',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
-          \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
-          \ })
-  endif
+  " if executable('typescript-language-server')
+  "   au User lsp_setup call lsp#register_server({
+  "         \ 'name': 'typescript-language-server',
+  "         \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
+  "         \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
+  "         \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
+  "         \ })
+  " endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'css-languageserver',
@@ -1069,6 +1072,7 @@ endfunction
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
+  " let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
   " let g:ncm2_vim_lsp#source = {'priority': 9, 'mark': ''} " not working as a source
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
@@ -1465,7 +1469,8 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi link LspWarning ALEWarning
 
 
-  hi MatchParen cterm=bold gui=bold guibg=#222222
+  hi illuminatedWord cterm=underline gui=underline
+  hi MatchParen cterm=bold gui=bold guibg=#db9c5e guifg=#222222
 
   " Nord
   " hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
