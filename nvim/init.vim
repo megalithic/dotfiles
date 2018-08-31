@@ -50,7 +50,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-tern'
   Plug 'ncm2/ncm2-cssomni'
-  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
+  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'ncm2/nvim-typescript', {'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh'}
   " Plug 'ncm2/ncm2-jedi'
   " Plug 'ncm2/ncm2-pyclang'
@@ -923,13 +923,16 @@ endfunction
   let g:nvim_typescript#diagnosticsEnable=0
   let $NVIM_NODE_LOG_FILE='~/.config/nvim/nvim-node.log'
   let $NVIM_NODE_LOG_LEVEL='warn'
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
-  autocmd FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
+  augroup TSMappings
+    au!
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
+    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
+  augroup END
   let g:nvim_typescript#kind_symbols = {
       \ 'keyword': 'keyword',
       \ 'class': '',
@@ -1044,8 +1047,10 @@ endfunction
           \ 'name': 'typescript-language-server',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
+          \ 'whitelist': ['javascript', 'javascript.jsx', 'javascriptreact'],
           \ })
+    " \ 'whitelist': ['javascript', 'javascript.jsx', 'javascriptreact'],
+    " \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
   endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
@@ -1074,7 +1079,7 @@ endfunction
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
-  " let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
+  let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
   " let g:ncm2_vim_lsp#source = {'priority': 9, 'mark': ''} " not working as a source
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
