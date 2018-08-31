@@ -39,6 +39,7 @@ then
 fi
 alias s="ls"
 alias last='ls *(.om[1])'
+alias cat='bat'
 
 alias webcam="sudo killall VDCAssistant"
 alias dsnuke="find . -name '*.DS_Store' -type f -ls -delete"

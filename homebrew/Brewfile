@@ -21,6 +21,7 @@ brew 'applesimutils'
 brew 'autoconf'
 brew 'automake'
 brew 'aspell', args: ['--with-lang-en']
+brew 'bat'
 brew 'cmake'
 brew 'coreutils'
 brew 'curl'

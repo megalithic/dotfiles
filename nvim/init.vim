@@ -851,7 +851,6 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
-        \   'ruby': ['rubocop']
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -862,7 +861,6 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
-        \   'ruby': ['rubocop']
         \ }                                                                       "Fix eslint errors
   let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
   let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
