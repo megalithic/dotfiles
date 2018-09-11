@@ -10,6 +10,7 @@ rcodetools
 rubocop
 sidekiq
 solargraph
+teamocil
 terminal-notifier
 weechat
 language_server

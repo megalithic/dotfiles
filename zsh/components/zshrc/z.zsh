@@ -1,4 +1,4 @@
 #!/bin/zsh
 
 # z init
-source $DOTS/bin/z
+# source $DOTS/bin/z

@@ -40,6 +40,8 @@ fi
 alias s="ls"
 alias last='ls *(.om[1])'
 alias cat='bat'
+alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
+alias help='tldr'
 
 alias webcam="sudo killall VDCAssistant"
 alias dsnuke="find . -name '*.DS_Store' -type f -ls -delete"
@@ -210,6 +212,7 @@ alias zz=z
 alias cls="clr && ls"
 alias ip="ifconfig"
 alias get="curl -OL"
+alias get="http --download"
 # alias g="grep -r -i --color='auto'"
 alias g="rg -F"
 alias nvm='n'
@@ -222,6 +225,7 @@ alias rc=irc
 alias ip="ipconfig getifaddr"
 alias clr=clear
 alias syncoctoprint="scp pi@octopi.local:/home/pi/.octoprint/config.yaml $HOME/Dropbox/3d/configs/octoprint"
+alias dif="kitty +kitten diff"
 
 # Intuitive map function
 # For example, to list all directories that contain a certain file:

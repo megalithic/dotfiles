@@ -22,9 +22,13 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
+  Plug 'mhartington/oceanic-next'
+  Plug 'joshdick/onedark.vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
-  Plug 'vim-airline/vim-airline'
-  Plug 'vim-airline/vim-airline-themes'
+  " Plug 'vim-airline/vim-airline'
+  " Plug 'vim-airline/vim-airline-themes'
+  Plug 'itchyny/lightline.vim'
+  Plug 'NovaDev94/lightline-onedark'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
@@ -50,8 +54,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-tern'
   Plug 'ncm2/ncm2-cssomni'
-  Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
-  " Plug 'ncm2/nvim-typescript', {'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh'}
+  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'ncm2/ncm2-jedi'
   " Plug 'ncm2/ncm2-pyclang'
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
@@ -131,6 +134,8 @@ let g:mapleader = ","                                                           
 
 set background=dark                                                             "Set background to dark
 silent! colorscheme nova
+" silent! colorscheme onedark
+" let g:onedark_terminal_italics = 1
 
 set termguicolors
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -160,7 +165,7 @@ set relativenumber                                                              
 set signcolumn=yes
 set history=500                                                                 "Store lots of :cmdline history
 set showcmd                                                                     "Show incomplete cmds down the bottom
-set cmdheight=2
+" set cmdheight=2
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
 set gdefault                                                                    "Set global flag for search and replace
 set gcr=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
@@ -588,6 +593,19 @@ augroup LspMappings
   au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F9> :LspDefinition<CR>
   au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F10> :LspDocumentSymbol<CR>
 augroup END
+augroup TSMappings
+  au!
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :LspDefinition<CR>
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspReferences<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
+  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
+augroup END
 
 " Automatically close vim if only the quickfix window is open
 " http://stackoverflow.com/a/7477056/3720597
@@ -808,6 +826,11 @@ endfunction
     \ 'S'  : 'S',
     \ '' : 'S',
     \ }
+
+" ## lightline.vim
+let g:lightline = {
+      \ 'colorscheme': 'onedark',
+      \ }
 
 " ## golden-ratio
   let g:golden_ratio_exclude_nonmodifiable = 1
@@ -1045,7 +1068,7 @@ endfunction
           \ 'name': 'typescript-language-server',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-          \ 'whitelist': ['javascript', 'javascript.jsx', 'javascriptreact'],
+          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
           \ })
     " \ 'whitelist': ['javascript', 'javascript.jsx', 'javascriptreact'],
     " \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],

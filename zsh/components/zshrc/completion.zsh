@@ -69,18 +69,9 @@ if [[ ! -o interactive ]]; then
     return
 fi
 
-compctl -K _rbenv rbenv
 
-_rbenv() {
-  local word words completions
-  read -cA words
-  word="${words[2]}"
+# Completion for teamocil autocompletion definitions: http://www.teamocil.com/#zsh-autocompletion
+compctl -g '~/.teamocil/*(:t:r)' teamocil
 
-  if [ "${#words}" -eq 2 ]; then
-    completions="$(rbenv commands)"
-  else
-    completions="$(rbenv completions "${word}")"
-  fi
-
-  reply=("${(ps:\n:)completions}")
-}
+# Completion for kitty (https://sw.kovidgoyal.net/kitty/#zsh)
+# kitty + complete setup zsh | source /dev/stdin

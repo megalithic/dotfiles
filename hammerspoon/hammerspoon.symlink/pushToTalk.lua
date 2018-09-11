@@ -158,13 +158,6 @@ function initMenubarIcon()
           settings.pushToTalk = false
         end
       end},
-      -- {title = "Disable", checked = not settings.pushToTalk, fn = function()
-      --   if settings.pushToTalk == true then
-      --     muted = false
-      --     changeMicrophoneState(false)
-      --     settings.pushToTalk = false
-      --   end
-      -- end},
       {title = "-"},
       {title = "Hotkey: " .. table.concat(modifierKeys, " + ")}
     }

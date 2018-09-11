@@ -1,0 +1,31 @@
+name: "first"
+windows:
+  - name: "dots"
+    root: "~/.dotfiles"
+    panes:
+      - commands:
+        - ls
+  - name: "services"
+    root: "~/code/first"
+    layout: tiled
+    focus: true
+    panes:
+      - commands:
+        - cd brainy
+        - bundle
+        - bin/rake db:migrate
+        - bin/rails s
+        focus: true
+      - commands:
+        - cd brainy
+        - yarn start
+      - commands:
+        - cd brainy
+        - ngbrainy
+      - commands:
+        - cd brainy
+        - bundle exec sidekiq -e development -c 10
+  - name: "code"
+    root: "~/code/first/brainy"
+    panes:
+      - ls -gha
