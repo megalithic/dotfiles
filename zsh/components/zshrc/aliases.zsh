@@ -74,8 +74,8 @@ alias teama="tmux attach-session -t default"
 alias team="cd ~ && teamocil --here default"
 alias defa=teama
 alias def=team
-alias toka="tmux attach-session -t welltok"
-alias tok="cd ~; teamocil --here welltok"
+alias firsta="tmux attach-session -t first"
+alias first="cd ~; teamocil --here first"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents
