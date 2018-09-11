@@ -251,6 +251,7 @@ alias gpreq="~/.dotfiles/bin/git-pr"
 alias preq=gpreq
 alias req=gpreq
 alias changes="git diff --cached"
+alias clean="git clean -f"
 alias reset="git reset --hard HEAD"
 alias log="git log --stat"
 alias show='git show --pretty="format:" --name-only '
