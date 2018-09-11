@@ -29,6 +29,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'vim-airline/vim-airline-themes'
   Plug 'itchyny/lightline.vim'
   Plug 'NovaDev94/lightline-onedark'
+  Plug 'maximbaz/lightline-ale'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
@@ -808,7 +809,6 @@ endfunction
   if !exists('g:airline_symbols')
     let g:airline_symbols = {}
   endif
-
   let g:airline_powerline_fonts = 0
   let g:airline_symbols.branch = ''
   let g:airline_theme='nova'
@@ -827,10 +827,100 @@ endfunction
     \ '' : 'S',
     \ }
 
-" ## lightline.vim
-let g:lightline = {
-      \ 'colorscheme': 'onedark',
-      \ }
+  " ## lightline.vim
+  let g:lightline = {
+        \   'colorscheme': 'onedark',
+        \   'component_function': {
+        \    'filetype': 'IconsFileType',
+        \    'fileformat': 'IconsFileFormat',
+        \    'gitbranch': 'fugitive#head',
+        \   },
+        \   'component_expand': {
+        \     'linter_checking': 'lightline#ale#checking',
+        \     'linter_warnings': 'lightline#ale#warnings',
+        \     'linter_errors': 'lightline#ale#errors',
+        \     'linter_ok': 'lightline#ale#ok',
+        \     'lineinfo': 'WordCount',
+        \   },
+        \   'component_type': {
+        \     'readonly': 'error',
+        \     'modified': 'error',
+        \     'linter_checking': 'left',
+        \     'linter_warnings': 'warning',
+        \     'linter_errors': 'error',
+        \     'linter_ok': 'left',
+        \   },
+        \   'active': {
+        \     'left': [
+        \       ['mode', 'paste'],
+        \       ['gitbranch', 'readonly', 'filename', 'modified'],
+        \     ],
+        \     'right': [
+        \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
+        \       ['percent', 'lineinfo'],
+        \       ['fileformat'],
+        \       ['filetype'],
+        \     ],
+        \   },
+        \ }
+  let g:lightline.component_expand = {
+        \  'linter_checking': 'lightline#ale#checking',
+        \  'linter_warnings': 'lightline#ale#warnings',
+        \  'linter_errors': 'lightline#ale#errors',
+        \  'linter_ok': 'lightline#ale#ok',
+        \ }
+  let g:lightline.component_type = {
+        \     'linter_checking': 'left',
+        \     'linter_warnings': 'warning',
+        \     'linter_errors': 'error',
+        \     'linter_ok': 'left',
+        \ }
+
+  function! IconsFileType()
+    return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype . ' ' . WebDevIconsGetFileTypeSymbol() : 'no ft') : ''
+  endfunction
+  function! IconsFileFormat()
+    return winwidth(0) > 70 ? (&fileformat . ' ' . WebDevIconsGetFileFormatSymbol()) : ''
+  endfunction
+  function! LightlineLinterWarnings() abort
+    let l:counts = ale#statusline#Count(bufnr(''))
+    let l:all_errors = l:counts.error + l:counts.style_error
+    let l:all_non_errors = l:counts.total - l:all_errors
+    return l:counts.total == 0 ? '' : printf('%d !', all_non_errors)
+  endfunction
+  function! LightlineLinterErrors() abort
+    let l:counts = ale#statusline#Count(bufnr(''))
+    let l:all_errors = l:counts.error + l:counts.style_error
+    let l:all_non_errors = l:counts.total - l:all_errors
+    return l:all_errors == 0 ? '' : printf('%d x', all_errors)
+  endfunction
+  function! WordCount() abort
+    if v:version >= 800
+      return wordcount()['words']
+    else
+      " not supported for older versions
+      return -1
+    endif
+  endfunction
+  augroup AutoWordCount
+    autocmd!
+    autocmd BufWritePost * call s:word_count()
+  augroup END
+
+  function! s:word_count()
+    call WordCount()
+    call lightline#update()
+  endfunction
+  " Update and show lightline but only if it's visible (e.g., not in Goyo)
+  augroup ALEUpdateLightline
+    autocmd!
+    autocmd User ALELint call s:MaybeUpdateLightline()
+  augroup END
+  function! s:MaybeUpdateLightline() abort
+    if exists('#lightline')
+      call lightline#update()
+    end
+  endfunction
 
 " ## golden-ratio
   let g:golden_ratio_exclude_nonmodifiable = 1
