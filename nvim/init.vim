@@ -71,9 +71,9 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
-  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   Plug 't9md/vim-smalls'
-  " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
+  Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak
   Plug 'AndrewRadev/splitjoin.vim'
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
@@ -88,7 +88,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
   Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
   Plug 'jiangmiao/auto-pairs'
-  " Plug 'tpope/vim-endwise'
+  Plug 'tpope/vim-endwise'
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
   " Plug 'ruanyl/coverage.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] }
   Plug 'tpope/vim-commentary' " (un)comment code
@@ -600,6 +600,11 @@ augroup LspMappings
   au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F8> :LspReferences<CR>
   au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F9> :LspDefinition<CR>
   au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F10> :LspDocumentSymbol<CR>
+
+  nnoremap <leader>ld :LspDefinition<CR>
+  nnoremap <leader>lf :LspDocumentFormat<CR>
+  nnoremap <leader>lh :LspHover<CR>
+  nnoremap <leader>lr :LspReferences<CR>
 augroup END
 augroup TSMappings
   au!
@@ -717,7 +722,7 @@ function! BufEnterCommit()
   " setl nonumber
 endfunction
 
-" QuickScope, used in conjunction with keybinding overrides
+" quick-scope, used in conjunction with keybinding overrides
 function! Quick_scope_selective(movement)
   let needs_disabling = 0
   if !g:qs_enable
@@ -905,7 +910,7 @@ endfunction
         \     's' : 'S',
         \     'S' : 'S-LINE',
         \     "\<C-s>": 'S-BLOCK',
-        \     't': '󰀣 ',
+        \     't': 'T',
         \   },
         \ }
         " \   'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
@@ -949,7 +954,8 @@ endfunction
   endfunction
 
   function! LightlineReadonly()
-    return PrintStatusline(&ro ? "\ue0a2" : '')
+    " return PrintStatusline(&ro ? "\ue0a2" : '')
+    return PrintStatusline(&readonly && &filetype !=# 'help' ? '\ue0a2' : '')
   endfunction
 
   function! LightlineModified()
@@ -958,8 +964,45 @@ endfunction
   endfunction
 
   function! LightlineFileName()
-    let l:fname = expand('%:t')
-    return PrintStatusline(l:fname !=# '' ? l:fname : '[No Name]')
+    " Get the full path of the current file.
+    let filepath =  expand('%:p')
+
+    " If the filename is empty, then display nothing as appropriate.
+    if empty(filepath)
+      return '[No Name]'
+    endif
+
+    " Find the correct expansion depending on whether Vim has autochdir.
+    let mod = (exists('+acd') && &acd) ? ':~' : ':~:.'
+
+    " Apply the above expansion to the expanded file path and split by the separator.
+    let shortened_filepath = fnamemodify(filepath, mod)
+    if len(shortened_filepath) < 45
+        return shortened_filepath
+    endif
+
+    " Ensure that we have the correct slash for the OS.
+    let dirsep = has('win32') && ! &shellslash ? '\\' : '/'
+
+    " Check if the filepath was shortened above.
+    let was_shortened = filepath != shortened_filepath
+
+    " Split the filepath.
+    let filepath_parts = split(shortened_filepath, dirsep)
+
+    " Take the first character from each part of the path (except the tidle and filename).
+    let initial_position = was_shortened ? 0 : 1
+    let excluded_parts = filepath_parts[initial_position:-2]
+    let shortened_paths = map(excluded_parts, 'v:val[0]')
+
+    " Recombine the shortened paths with the tilde and filename.
+    let combined_parts = shortened_paths + [filepath_parts[-1]]
+    let combined_parts = (was_shortened ? [] : [filepath_parts[0]]) + combined_parts
+
+    " Recombine into a single string.
+    let finalpath = join(combined_parts, dirsep)
+    return PrintStatusline(finalpath)
+    " return finalpath
   endfunction
 
   function! LightlineScrollbar()
@@ -1029,6 +1072,9 @@ endfunction
   let delimitMate_nesting_quotes = ['"', '`']
   let delimitMate_excluded_regions = ""
   let delimitMate_balance_matchpairs = 1
+
+" # endwise
+  let g:endwise_no_mappings = 1
 
 " # lexima
   " let g:lexima_enable_endwise_rules = 1
@@ -1224,8 +1270,8 @@ endfunction
   let g:gist_default_private = 1
 
 " ## ultisnips
-  let g:UltiSnipsExpandTrigger		= "<c-e>"
-  let g:UltiSnipsExpandTrigger		= "<Plug>(ultisnips_expand)"
+  let g:UltiSnipsExpandTrigger = "<c-e>"
+  let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
   let g:UltiSnipsJumpForwardTrigger	= "<tab>"
   let g:UltiSnipsJumpBackwardTrigger	= "<s-tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
@@ -1297,12 +1343,11 @@ inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
 inoremap <c-c> <ESC>
-inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<c-y>\<cr>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>" ))
+inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<c-y>\<cr>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
+" inoremap <silent> <expr> <CR> pumvisible() ? "\<C-R>=ExpandSnippetOrCarriageReturn()\<CR>" : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>"
 imap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 smap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 inoremap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
-" smap <silent> <c-u> <Plug>(ultisnips_expand)
-" inoremap <C-e> <C-R>=SnipComplete()<CR>
 "
 " Down is really the next line
 nnoremap j gj
@@ -1388,25 +1433,33 @@ noremap <S-F5> :PlugClean!<CR>
 map <S-F5> :PlugClean!<CR>
 
 " ## vim-sneak
-" map f <Plug>Sneak_f
-" map F <Plug>Sneak_F
-" map t <Plug>Sneak_t
-" map T <Plug>Sneak_T
-" map <M-;> <Plug>Sneak_,
+nmap f <Plug>Sneak_f
+nmap F <Plug>Sneak_F
+xmap f <Plug>Sneak_f
+xmap F <Plug>Sneak_F
+omap f <Plug>Sneak_f
+omap F <Plug>Sneak_F
+
+nmap t <Plug>Sneak_t
+nmap T <Plug>Sneak_T
+xmap t <Plug>Sneak_t
+xmap T <Plug>Sneak_T
+omap t <Plug>Sneak_t
+omap T <Plug>Sneak_T
 
 " ## vim-js-file-import
 " nmap <C-i> <Plug>(JsFileImport)
 " nmap <C-u> <Plug>(PromptJsFileImport)
 
-" ## QuickScope
-nnoremap <expr> <silent> f Quick_scope_selective('f')
-nnoremap <expr> <silent> F Quick_scope_selective('F')
-nnoremap <expr> <silent> t Quick_scope_selective('t')
-nnoremap <expr> <silent> T Quick_scope_selective('T')
-vnoremap <expr> <silent> f Quick_scope_selective('f')
-vnoremap <expr> <silent> F Quick_scope_selective('F')
-vnoremap <expr> <silent> t Quick_scope_selective('t')
-vnoremap <expr> <silent> T Quick_scope_selective('T')
+" ## quick-scope
+" nnoremap <expr> <silent> f Quick_scope_selective('f')
+" nnoremap <expr> <silent> F Quick_scope_selective('F')
+" nnoremap <expr> <silent> t Quick_scope_selective('t')
+" nnoremap <expr> <silent> T Quick_scope_selective('T')
+" vnoremap <expr> <silent> f Quick_scope_selective('f')
+" vnoremap <expr> <silent> F Quick_scope_selective('F')
+" vnoremap <expr> <silent> t Quick_scope_selective('t')
+" vnoremap <expr> <silent> T Quick_scope_selective('T')
 
 " ## Fugitive
 nnoremap <leader>H :Gbrowse<CR>
