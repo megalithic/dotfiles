@@ -127,6 +127,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'mattn/vim-textobj-url', { 'on': [ '<Plug>(textobj-url' ] }                  " - u     for url
   Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }
   Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
+  Plug 'arthurxavierx/vim-caser'                                                    " https://github.com/arthurxavierx/vim-caser#usage
   Plug 'wellle/targets.vim'                                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
@@ -610,14 +611,14 @@ augroup TSMappings
   au!
   " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
   au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
   " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
   au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :LspDefinition<CR>
   " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
   au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspReferences<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
+  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
@@ -889,8 +890,7 @@ endfunction
         \     ],
         \     'right': [
         \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
-        \       ['lineinfo'],
-        \       ['percent'],
+        \       ['lineinfo', 'percent'],
         \       ['fileformat'],
         \       ['filetype'],
         \     ],
@@ -955,7 +955,7 @@ endfunction
 
   function! LightlineReadonly()
     " return PrintStatusline(&ro ? "\ue0a2" : '')
-    return PrintStatusline(&readonly && &filetype !=# 'help' ? '\ue0a2' : '')
+    return PrintStatusline(&readonly && &filetype !=# 'help' ? '' : '')
   endfunction
 
   function! LightlineModified()
@@ -1053,6 +1053,9 @@ endfunction
 
 " ## incsearch.vim
   let g:incsearch#auto_nohlsearch = 1
+  let g:incsearch#consistent_n_direction = 1
+  let g:incsearch#do_not_save_error_message_history = 1
+  let g:incsearch#separate_highlight = 1
   map / <Plug>(incsearch-forward)
   map ? <Plug>(incsearch-backward)
   map g/ <Plug>(incsearch-stay)
@@ -1168,16 +1171,6 @@ endfunction
   let g:nvim_typescript#diagnosticsEnable=0
   let $NVIM_NODE_LOG_FILE='~/.config/nvim/nvim-node.log'
   let $NVIM_NODE_LOG_LEVEL='warn'
-  augroup TSMappings
-    au!
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
-    au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
-  augroup END
   let g:nvim_typescript#kind_symbols = {
       \ 'keyword': 'keyword',
       \ 'class': '',
@@ -1689,7 +1682,9 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi CursorLine guibg=#333333
   hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
-  hi Search gui=underline term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#333333 gui=bold
+  hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
+  hi IncSearch ctermfg=red ctermbg=0 guibg=#000000 guifg=#FF0000 gui=bold
+  hi IncSearchOnCursor ctermfg=red ctermbg=0 guibg=#000000 guifg=#FF0000 gui=bold
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
