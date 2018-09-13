@@ -30,9 +30,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'itchyny/lightline.vim'
   Plug 'NovaDev94/lightline-onedark'
   Plug 'maximbaz/lightline-ale'
+  " Plug 'gcavallanti/vim-noscrollbar'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
+  Plug 'cskeeters/vim-smooth-scroll'
 
 " ## Syntax
   Plug 'sheerun/vim-polyglot'
@@ -70,8 +72,13 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
   Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  Plug 't9md/vim-smalls'
   " Plug 'justinmk/vim-sneak.git' " https://github.com/justinmk/vim-sneak
   Plug 'AndrewRadev/splitjoin.vim'
+  Plug 'haya14busa/incsearch.vim'                             " Incremental search
+  Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
+  Plug 'osyo-manga/vim-anzu'                                  " Show search count
+  Plug 'haya14busa/vim-asterisk'                              " Star * improvements
 
 " ## Utils
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
@@ -828,98 +835,152 @@ endfunction
     \ }
 
   " ## lightline.vim
+  let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
   let g:lightline = {
         \   'colorscheme': 'onedark',
+        \   'component': {
+        \     'modified': '%#ModifiedColor#%{LightlineModified()}',
+        \   },
         \   'component_function': {
-        \    'filetype': 'IconsFileType',
-        \    'fileformat': 'IconsFileFormat',
-        \    'gitbranch': 'fugitive#head',
+        \     'readonly': 'LightlineReadonly',
+        \     'filename': 'LightlineFileName',
+        \     'filetype': 'LightlineFileType',
+        \     'fileformat': 'LightlineFileFormat',
+        \     'branch': 'LightlineBranch',
+        \     'lineinfo': 'LightlineLineInfo',
+        \     'percent': 'LightlinePercent',
         \   },
         \   'component_expand': {
         \     'linter_checking': 'lightline#ale#checking',
         \     'linter_warnings': 'lightline#ale#warnings',
         \     'linter_errors': 'lightline#ale#errors',
         \     'linter_ok': 'lightline#ale#ok',
-        \     'lineinfo': 'WordCount',
         \   },
         \   'component_type': {
         \     'readonly': 'error',
-        \     'modified': 'error',
+        \     'modified': 'raw',
         \     'linter_checking': 'left',
         \     'linter_warnings': 'warning',
         \     'linter_errors': 'error',
         \     'linter_ok': 'left',
         \   },
+        \   'component_function_visible_condition': {
+        \     'branch': '&buftype!="nofile"',
+        \     'filename': '&buftype!="nofile"',
+        \     'fileformat': '&buftype!="nofile"',
+        \     'fileencoding': '&buftype!="nofile"',
+        \     'filetype': '&buftype!="nofile"',
+        \     'percent': '&buftype!="nofile"',
+        \     'lineinfo': '&buftype!="nofile"',
+        \     'time': '&buftype!="nofile"',
+        \   },
         \   'active': {
         \     'left': [
-        \       ['mode', 'paste'],
-        \       ['gitbranch', 'readonly', 'filename', 'modified'],
+        \       ['mode'],
+        \       ['branch'],
+        \       ['filename'],
+        \       ['paste', 'readonly', 'modified'],
+        \       ['spell'],
         \     ],
         \     'right': [
         \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
-        \       ['percent', 'lineinfo'],
+        \       ['lineinfo'],
+        \       ['percent'],
         \       ['fileformat'],
         \       ['filetype'],
         \     ],
         \   },
+        \   'inactive': {
+        \     'left': [ ['filename'], ['readonly', 'modified'] ],
+        \     'right': [ ['lineinfo'], ['fileinfo' ] ],
+        \   },
+        \   'mode_map': {
+        \     'n' : 'N',
+        \     'i' : 'I',
+        \     'R' : 'R',
+        \     'v' : 'V',
+        \     'V' : 'V-LINE',
+        \     "\<C-v>": 'V-BLOCK',
+        \     'c' : 'C',
+        \     's' : 'S',
+        \     'S' : 'S-LINE',
+        \     "\<C-s>": 'S-BLOCK',
+        \     't': '󰀣 ',
+        \   },
         \ }
-  let g:lightline.component_expand = {
-        \  'linter_checking': 'lightline#ale#checking',
-        \  'linter_warnings': 'lightline#ale#warnings',
-        \  'linter_errors': 'lightline#ale#errors',
-        \  'linter_ok': 'lightline#ale#ok',
-        \ }
-  let g:lightline.component_type = {
-        \     'linter_checking': 'left',
-        \     'linter_warnings': 'warning',
-        \     'linter_errors': 'error',
-        \     'linter_ok': 'left',
-        \ }
+        " \   'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+        " \   'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
 
-  function! IconsFileType()
-    return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype . ' ' . WebDevIconsGetFileTypeSymbol() : 'no ft') : ''
-  endfunction
-  function! IconsFileFormat()
-    return winwidth(0) > 70 ? (&fileformat . ' ' . WebDevIconsGetFileFormatSymbol()) : ''
-  endfunction
-  function! LightlineLinterWarnings() abort
-    let l:counts = ale#statusline#Count(bufnr(''))
-    let l:all_errors = l:counts.error + l:counts.style_error
-    let l:all_non_errors = l:counts.total - l:all_errors
-    return l:counts.total == 0 ? '' : printf('%d !', all_non_errors)
-  endfunction
-  function! LightlineLinterErrors() abort
-    let l:counts = ale#statusline#Count(bufnr(''))
-    let l:all_errors = l:counts.error + l:counts.style_error
-    let l:all_non_errors = l:counts.total - l:all_errors
-    return l:all_errors == 0 ? '' : printf('%d x', all_errors)
-  endfunction
-  function! WordCount() abort
-    if v:version >= 800
-      return wordcount()['words']
-    else
-      " not supported for older versions
-      return -1
-    endif
-  endfunction
-  augroup AutoWordCount
-    autocmd!
-    autocmd BufWritePost * call s:word_count()
-  augroup END
+  let g:lightline#ale#indicator_ok = "✔"
+  let g:lightline#ale#indicator_warnings = ' '
+  let g:lightline#ale#indicator_errors = ' '
+  let g:lightline#ale#indicator_checking = ' '
 
-  function! s:word_count()
-    call WordCount()
+  function! UpdateStatusBar(timer)
     call lightline#update()
   endfunction
-  " Update and show lightline but only if it's visible (e.g., not in Goyo)
-  augroup ALEUpdateLightline
-    autocmd!
-    autocmd User ALELint call s:MaybeUpdateLightline()
-  augroup END
-  function! s:MaybeUpdateLightline() abort
-    if exists('#lightline')
-      call lightline#update()
-    end
+
+  function! PrintStatusline(v)
+    return &buftype == 'nofile' ? '' : a:v
+  endfunction
+
+  function! LightlineFileType()
+    return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
+  endfunction
+
+  function! LightlineFileFormat()
+    return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
+  endfunction
+
+  function! LightlineBranch()
+    if exists('*fugitive#head')
+      let l:branch = fugitive#head()
+      return PrintStatusline(branch !=# '' ? " " . l:branch : '')
+    endif
+    return ''
+  endfunction
+
+  function! LightlineLineInfo()
+    return PrintStatusline(printf("\ue0a1 %d/%d %d:%d", line('.'), line('$'), col('.'), col('$')))
+  endfunction
+
+  function! LightlinePercent()
+    return PrintStatusline(line('.') * 100 / line('$') . '%')
+  endfunction
+
+  function! LightlineReadonly()
+    return PrintStatusline(&ro ? "\ue0a2" : '')
+  endfunction
+
+  function! LightlineModified()
+    return PrintStatusline(!&modifiable ? '-' : &modified ?
+          \ '[ ⦿ ]' : '')
+  endfunction
+
+  function! LightlineFileName()
+    let l:fname = expand('%:t')
+    return PrintStatusline(l:fname !=# '' ? l:fname : '[No Name]')
+  endfunction
+
+  function! LightlineScrollbar()
+    let top_line = str2nr(line('w0'))
+    let bottom_line = str2nr(line('w$'))
+    let lines_count = str2nr(line('$'))
+
+    if bottom_line - top_line + 1 >= lines_count
+      return ''
+    endif
+
+    let window_width = winwidth(0)
+    if window_width < 90
+      let scrollbar_width = 6
+    elseif window_width < 120
+      let scrollbar_width = 9
+    else
+      let scrollbar_width = 12
+    endif
+
+    return noscrollbar#statusline(scrollbar_width, '-', '#')
   endfunction
 
 " ## golden-ratio
@@ -932,15 +993,42 @@ endfunction
   let g:sneak#use_ic_scs = 1
   let g:sneak#absolute_dir = 1
 
-" ## quickscope
+" ## quick-scope
   let g:qs_enable = 0
+
+" ## vim-smalls
+  let g:smalls_auto_jump = 1
+  nmap s <Plug>(smalls)
+  xmap s <Plug>(smalls)
+  omap s <Plug>(smalls)
+
+" ## vim-asterisk
+  map *  <Plug>(incsearch-nohl0)<Plug>(asterisk-z*)
+  map #  <Plug>(incsearch-nohl0)<Plug>(asterisk-z#)
+  map g* <Plug>(incsearch-nohl0)<Plug>(asterisk-gz*)
+  map g# <Plug>(incsearch-nohl0)<Plug>(asterisk-gz#)
+
+" ## incsearch.vim
+  let g:incsearch#auto_nohlsearch = 1
+  map / <Plug>(incsearch-forward)
+  map ? <Plug>(incsearch-backward)
+  map g/ <Plug>(incsearch-stay)
+  map z/ <Plug>(incsearch-fuzzy-/)
+  map z? <Plug>(incsearch-fuzzy-?)
+  map zg/ <Plug>(incsearch-fuzzy-stay)
+  map n <Plug>(incsearch-nohl)<Plug>(anzu-n-with-echo)zMzv
+  map N <Plug>(incsearch-nohl)<Plug>(anzu-N-with-echo)zMzv
 
 " ## auto-pairs
   let g:AutoPairsShortcutToggle = ''
   let g:AutoPairsMapCR = 0 " https://www.reddit.com/r/neovim/comments/4st4i6/making_ultisnips_and_deoplete_work_together_nicely/d6m73rh/
 
 " # delimitMate
-  let g:delimitMate_expand_cr = 2                                                 "Auto indent on enter
+  let delimitMate_expand_cr = 2
+  let delimitMate_expand_space = 1
+  let delimitMate_nesting_quotes = ['"', '`']
+  let delimitMate_excluded_regions = ""
+  let delimitMate_balance_matchpairs = 1
 
 " # lexima
   " let g:lexima_enable_endwise_rules = 1
@@ -1586,6 +1674,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi link LspError ALEError
   hi link LspWarning ALEWarning
 
+  hi ModifiedColor ctermfg=196 ctermbg=NONE guifg=#cc6666 guibg=NONE term=bold cterm=bold gui=bold
 
   hi illuminatedWord cterm=underline gui=underline
   hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
