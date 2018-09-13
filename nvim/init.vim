@@ -1684,7 +1684,6 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
   hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
   hi IncSearch ctermfg=red ctermbg=0 guibg=#000000 guifg=#FF0000 gui=bold
-  hi IncSearchOnCursor ctermfg=red ctermbg=0 guibg=#000000 guifg=#FF0000 gui=bold
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
