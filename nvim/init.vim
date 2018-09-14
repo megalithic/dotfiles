@@ -1491,12 +1491,9 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
 " }}}
 " ================ Highlights and Colors {{{
   hi clear SpellBad
-  " hi Visual term=NONE guibg=#70495d ctermbg=95
-  hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi htmlArg cterm=italic gui=italic
   hi xmlAttrib cterm=italic gui=italic
   hi Type cterm=italic gui=italic
-  hi Normal ctermbg=none guibg=NONE
   hi Comment cterm=italic term=italic gui=italic
   hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
@@ -1524,11 +1521,6 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi link markdownCodeBlock Delimiter
   hi link markdownListMarker Todo
 
-  " hi DiffChange guibg=#444444 ctermbg=238
-  " hi DiffText guibg=#777777 ctermbg=244
-  " hi DiffAdd guibg=#4f8867 ctermbg=29
-  " hi DiffDelete guibg=#870000 ctermbg=88
-
   hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
   hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
   hi link ALEError SpellBad
@@ -1545,6 +1537,10 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi ModifiedColor ctermfg=196 ctermbg=NONE guifg=#cc6666 guibg=NONE term=bold cterm=bold gui=bold
   hi illuminatedWord cterm=underline gui=underline
   hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
+
+  " spring-night overrides
+  hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
+  hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
 
   " ## -----------------------------------------------------------------------
   " COLLECTION OF ALL THE COLORS USED IN SPRING-NIGHT:
