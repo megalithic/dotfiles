@@ -35,7 +35,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
-  Plug 'cskeeters/vim-smooth-scroll'
+  " Plug 'cskeeters/vim-smooth-scroll'
 
 " ## Syntax
   Plug 'sheerun/vim-polyglot'
@@ -1541,6 +1541,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   " spring-night overrides
   hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
+  hi gitCommitOverflow term=NONE guibg=#fd8489 guifg=#333333 ctermbg=210
 
   " ## -----------------------------------------------------------------------
   " COLLECTION OF ALL THE COLORS USED IN SPRING-NIGHT:

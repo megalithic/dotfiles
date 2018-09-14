@@ -22,6 +22,10 @@ local ptt = require 'pushToTalk'
 -- :: initialize all the things!
 wm.events.initEventHandling()
 
+-- spoons
+-------------------------------------------------------------------------------
+-- hs.loadSpoon()
+
 -- key bindings
 -------------------------------------------------------------------------------
 cmdAlt = {'cmd', 'alt'}
