@@ -23,6 +23,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
   Plug 'mhartington/oceanic-next'
+  Plug 'rhysd/vim-color-spring-night'
   Plug 'joshdick/onedark.vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   " Plug 'vim-airline/vim-airline'
@@ -103,7 +104,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
   Plug 'junegunn/gv.vim'
   Plug 'sodapopcan/vim-twiggy'
-  Plug 'christoomey/vim-conflicted'
+  " Plug 'christoomey/vim-conflicted'
+  Plug 'rhysd/conflict-marker.vim'
   Plug 'tpope/vim-eunuch'
   " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
@@ -143,6 +145,8 @@ let g:mapleader = ","                                                           
 
 set background=dark                                                             "Set background to dark
 silent! colorscheme nova
+let g:spring_night_cterm_italic = 1
+silent! colorscheme spring-night
 " silent! colorscheme onedark
 " let g:onedark_terminal_italics = 1
 
@@ -324,170 +328,6 @@ set wildignore+=*.png,*.jpg,*.gif
 set shortmess+=c
 
 " }}}
-" ================ Statusline {{{
-
-" TODO: change statusline based on focus:
-" https://github.com/VagabondAzulien/dotfiles/blob/master/vim/vimrc#L88
-" or:
-" https://www.reddit.com/r/vim/comments/6b7b08/my_custom_statusline/
-" or:
-" https://kadekillary.work/post/statusline/
-" or:
-" https://github.com/KabbAmine/myVimFiles/blob/master/config/statusline.vim
-" definitely:
-" https://gabri.me/blog/diy-vim-statusline/
-
-"let g:currentmode={
-"      \ 'n'  : 'N ',
-"      \ 'no' : 'N·Operator Pending ',
-"      \ 'v'  : 'V ',
-"      \ 'V'  : 'V·Line ',
-"      \ '' : 'V·Block ',
-"      \ 's'  : 'Select ',
-"      \ 'S'  : 'S·Line ',
-"      \ '' : 'S·Block ',
-"      \ 'i'  : 'I ',
-"      \ 'R'  : 'R ',
-"      \ 'Rv' : 'V·Replace ',
-"      \ 'c'  : 'Command ',
-"      \ 'cv' : 'Vim Ex ',
-"      \ 'ce' : 'Ex ',
-"      \ 'r'  : 'Prompt ',
-"      \ 'rm' : 'More ',
-"      \ 'r?' : 'Confirm ',
-"      \ '!'  : 'Shell ',
-"      \ 't'  : 'Terminal '
-"      \}
-"let fgcolor=synIDattr(synIDtrans(hlID("Normal")), "fg", "gui")
-"let bgcolor=synIDattr(synIDtrans(hlID("Normal")), "bg", "gui")
-
-"hi User1 guifg=#DF8C8C guibg=#504945 gui=bold
-"hi User2 guifg=#FFFFFF guibg=#FF1111 gui=bold
-"hi User3 guifg=#2C323C guibg=#E5C07B gui=bold
-
-"" highlight User1 cterm=None gui=None ctermfg=007 guifg=fgcolor
-"" highlight User2 cterm=None gui=None ctermfg=008 guifg=bgcolor
-"" highlight User3 cterm=None gui=None ctermfg=008 guifg=bgcolor
-"highlight User4 cterm=None gui=None ctermfg=008 guifg=bgcolor
-"highlight User5 cterm=None gui=None ctermfg=008 guifg=bgcolor
-"highlight User7 cterm=None gui=None ctermfg=008 guifg=bgcolor
-"highlight User8 cterm=None gui=None ctermfg=008 guifg=bgcolor
-"highlight User9 cterm=None gui=None ctermfg=007 guifg=fgcolor
-
-"set statusline=%{ChangeStatuslineColor()}                                       "Changing the statusline color
-"set statusline+=\ %0*\ %{toupper(g:currentmode[mode()])}                        "Current mode
-"set statusline+=\│\ %{fugitive#head()!=''?'\ \ '.fugitive#head().'\ ':''}      "Git branch
-"set statusline+=%{GitFileStatus()}                                              "Git file status
-"set statusline+=\ \│\ %{FilepathStatusline()}                                   "File path
-"set statusline+=\%{FilenameStatusline()}                                        "File name
-"set statusline+=\ %1*%m%*                                                       "Modified indicator
-"set statusline+=\ %w                                                            "Preview indicator
-"set statusline+=%{ReadOnly()}                                                   "Read only indicator
-"set statusline+=\ %q                                                            "Quickfix list indicator
-"set statusline+=\ %=                                                            "Start right side layout
-"set statusline+=\ %{&enc}                                                       "Encoding
-"set statusline+=\ \│\ %{WebDevIconsGetFileTypeSymbol()}\                        "DevIcon/Filetype
-"set statusline+=\ \│\ %{FileSize()}                                             "File size
-"set statusline+=\ \│\ %p%%                                                      "Percentage
-"set statusline+=\ \│\ %c                                                        "Column number
-"set statusline+=\ \│\\ %l/%L                                                   "Current line number/Total line numbers
-"set statusline+=\ %2*%{AleStatusline('error')}%*                                "Errors count
-"set statusline+=%3*%{AleStatusline('warning')}%*                                "Warning count
-
-"function! ReadOnly()
-"  if &readonly || !&modifiable
-"    return ''
-"  else
-"    return ''
-"endfunction
-
-"" Automatically change the statusline color depending on mode
-"function! ChangeStatuslineColor()
-"  if (mode() =~# '\v(n|no)')
-"    exe 'hi! StatusLine ctermfg=008 guifg=fgcolor gui=None cterm=None'
-"  elseif (mode() =~# '\v(v|V)' || g:currentmode[mode()] ==# 'V·Block' || get(g:currentmode, mode(), '') ==# 't')
-"    exe 'hi! StatusLine ctermfg=005 guifg=#00ff00 gui=None cterm=None'
-"  elseif (mode() ==# 'i')
-"    exe 'hi! StatusLine ctermfg=004 guifg=#6CBCE8 gui=None cterm=None'
-"  else
-"    exe 'hi! StatusLine ctermfg=006 guifg=orange gui=None cterm=None'
-"  endif
-
-"  return ''
-"endfunction
-
-"function! FilepathStatusline() abort
-"  if !empty(expand('%:t'))
-"    let fn = winwidth(0) <# 55
-"          \ ? '../'
-"          \ : winwidth(0) ># 85
-"          \ ? expand('%:~:.:h') . '/'
-"          \ : pathshorten(expand('%:~:.:h')) . '/'
-"  else
-"    let fn = ''
-"  endif
-"  return fn
-"endfunction
-
-"function! FilenameStatusline() abort
-"  let fn = !empty(expand('%:t'))
-"        \ ? expand('%:p:t')
-"        \ : '[No Name]'
-"  return fn . (&readonly ? ' ' : '')
-"endfunction
-""
-"" Find out current buffer's size and output it.
-"function! FileSize()
-"  let bytes = getfsize(expand('%:p'))
-"  if (bytes >= 1024)
-"    let kbytes = bytes / 1024
-"  endif
-"  if (exists('kbytes') && kbytes >= 1000)
-"    let mbytes = kbytes / 1000
-"  endif
-
-"  if bytes <= 0
-"    return '0'
-"  endif
-
-"  if (exists('mbytes'))
-"    return mbytes . 'MB '
-"  elseif (exists('kbytes'))
-"    return kbytes . 'KB '
-"  else
-"    return bytes . 'B '
-"  endif
-"endfunction
-
-"function! AleStatusline(type)
-"  let count = ale#statusline#Count(bufnr(''))
-"  if a:type == 'error' && count['error']
-"    return printf(' %d E ', count['error'])
-"  endif
-
-"  if a:type == 'warning' && count['warning']
-"    let l:space = count['error'] ? ' ': ''
-"    return printf('%s %d W ', l:space, count['warning'])
-"  endif
-
-"  return ''
-"endfunction
-
-"function! GitFileStatus()
-"  if !exists('b:gitgutter')
-"    return ''
-"  endif
-"  let l:summary = get(b:gitgutter, 'summary', [0, 0, 0])
-"  let l:result = l:summary[0] == 0 ? '' : ' +'.l:summary[0]
-"  let l:result .= l:summary[1] == 0 ? '' : ' ~'.l:summary[1]
-"  let l:result .= l:summary[2] == 0 ? '' : ' -'.l:summary[2]
-"  if l:result != ''
-"    return ' '.l:result
-"  endif
-"  return l:result
-"endfunction
-
-"}}}
 " ================ Autocommands {{{
 augroup vimrc
   au!
@@ -816,29 +656,6 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['json'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['md'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
-
-" ## vim-airline
-  let g:webdevicons_enable_airline_statusline = 1
-  if !exists('g:airline_symbols')
-    let g:airline_symbols = {}
-  endif
-  let g:airline_powerline_fonts = 0
-  let g:airline_symbols.branch = ''
-  let g:airline_theme='nova'
-  let g:airline_section_x = ''
-  let g:airline_mode_map = {
-    \ '__' : '-',
-    \ 'n'  : 'N',
-    \ 'i'  : 'I',
-    \ 'R'  : 'R',
-    \ 'c'  : 'C',
-    \ 'v'  : 'V',
-    \ 'V'  : 'V',
-    \ '' : 'V',
-    \ 's'  : 'S',
-    \ 'S'  : 'S',
-    \ '' : 'S',
-    \ }
 
   " ## lightline.vim
   let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
@@ -1725,19 +1542,6 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
 
   hi illuminatedWord cterm=underline gui=underline
   hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
-
-  " Nord
-  " hi! RainbowLevel0 ctermbg=240 guibg=#2C3441
-  " hi! RainbowLevel1 ctermbg=240 guibg=#2E3440
-  " hi! RainbowLevel2 ctermbg=239 guibg=#252d3d
-  " hi! RainbowLevel3 ctermbg=238 guibg=#1f293d
-  " hi! RainbowLevel4 ctermbg=237 guibg=#18243d
-  " hi! RainbowLevel5 ctermbg=236 guibg=#131f38
-  " hi! RainbowLevel6 ctermbg=235 guibg=#0f1c38
-  " hi! RainbowLevel7 ctermbg=234 guibg=#09193a
-  " hi! RainbowLevel8 ctermbg=233 guibg=#041538
-  " hi! RainbowLevel9 ctermbg=232 guibg=#001030
-
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim

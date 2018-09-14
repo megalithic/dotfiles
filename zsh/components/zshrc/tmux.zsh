@@ -16,3 +16,14 @@ function txs() {
     exec tmux attach-session -t "$tmux_session"
   fi
 }
+
+# try and autoload tmux session
+if [[ -z $TMUX ]]; then
+  function tmux() {
+    if [[ $# == 0 ]] && tmux has-session 2>/dev/null; then
+      command tmux attach-session
+    else
+      command tmux "$@"
+    fi
+  }
+fi
