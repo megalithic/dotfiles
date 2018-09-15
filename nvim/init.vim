@@ -144,13 +144,14 @@ filetype plugin indent on
 let g:mapleader = ","                                                           "Change leader to a comma
 
 set background=dark                                                             "Set background to dark
-" silent! colorscheme nova
 
 let g:spring_night_cterm_italic = 1
 silent! colorscheme spring-night
 
 " let g:onedark_terminal_italics = 1
 " silent! colorscheme onedark
+
+silent! colorscheme nova
 
 set termguicolors
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -1523,6 +1524,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
 
   hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
   hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
+
   hi link ALEError SpellBad
   hi link ALEWarning SpellBad
   hi link Debug SpellBad
@@ -1542,6 +1544,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
   hi gitCommitOverflow term=NONE guibg=#fd8489 guifg=#333333 ctermbg=210
+  hi ALEError term=NONE guibg=#ab6560 ctermbg=167
 
   " ## -----------------------------------------------------------------------
   " COLLECTION OF ALL THE COLORS USED IN SPRING-NIGHT:
