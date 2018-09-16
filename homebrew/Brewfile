@@ -47,6 +47,7 @@ brew 'gist'
 brew 'git'
 brew 'git-extras'
 brew 'git-flow'
+brew 'global', args: ['with-ctags', 'with-pygments']
 brew 'gnutls'
 brew 'gnupg'
 brew 'gnu-sed', args: ['with-default-names']

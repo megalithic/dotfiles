@@ -36,7 +36,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'cskeeters/vim-smooth-scroll'
 
 " ## Syntax
-  Plug 'sheerun/vim-polyglot'
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'lilydjwg/colorizer'
@@ -46,7 +45,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir', 'eelixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
-
+  Plug 'sheerun/vim-polyglot'
 
 " ## Completion
   Plug 'ncm2/ncm2' | Plug 'roxma/nvim-yarp'
@@ -86,6 +85,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
+  Plug 'jsfaint/gen_tags.vim'
 
 " ## Utils
   Plug 'junegunn/vim-peekaboo'
@@ -119,7 +119,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
   " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
-  Plug 'megalithic/codi.vim'
+  Plug 'metakirby5/codi.vim'
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -475,6 +475,31 @@ augroup TSMappings
   " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
 augroup END
 
+augroup elm
+  au!
+  au FileType elm nn <buffer> K :ElmShowDocs<CR>
+  au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
+  au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
+augroup END
+
+augroup elixir
+  autocmd!
+  autocmd FileType elixir nnoremap <buffer> <leader>h :call alchemist#exdoc()<CR>
+  autocmd FileType elixir nnoremap <buffer> <leader>d :call alchemist#exdef()<CR>
+  autocmd FileType elixir setlocal matchpairs=(:),{:},[:]
+
+  " Enable html syntax highlighting in all .eex files
+  " autocmd BufReadPost *.html.eex set syntax=html
+
+  autocmd FileType elixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
+  autocmd FileType elixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
+
+  " :Eix => open iex with current file compiled
+  command! Iex :!iex %<cr>
+  autocmd FileType elixir nnoremap <leader>e :!elixir %<CR>
+  autocmd FileType elixir nnoremap <leader>ee :!iex -r % -S mix<CR>
+augroup END
+
 " Automatically close vim if only the quickfix window is open
 " http://stackoverflow.com/a/7477056/3720597
 augroup QuickFixClose
@@ -683,7 +708,7 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
-
+  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
 
   " ## lightline.vim
   let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
@@ -957,6 +982,7 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
+        \   'elm': ['elm-format'],
         \ }                                                                       "Fix eslint errors
   let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
   let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
@@ -1047,6 +1073,17 @@ endfunction
       \ 'constructor': '',
       \}
 
+" ## elm.nvim
+  " let g:elm_jump_to_error = 0
+  let g:elm_make_output_file = "elm.js"
+  let g:elm_make_show_warnings = 0
+  let g:elm_syntastic_show_warnings = 0
+  " let g:elm_browser_command = ""
+  let g:elm_detailed_complete = 1
+  let g:elm_format_autosave = 1
+  let g:elm_format_fail_silently = 0
+  let g:elm_setup_keybindings = 1
+
 " ## elixir.nvim
   " let g:elixir_autobuild = 1
   " let g:elixir_showerror = 1
@@ -1054,7 +1091,10 @@ endfunction
   let g:elixir_docpreview = 1
 
 " ## alchemist.vim
-  let g:alchemist_tag_disable = 1
+  let g:alchemist_tag_disable       = 1 "Use Universal ctags instead
+  let g:alchemist_iex_term_size     = 10
+  let g:alchemist_tag_map           = '<C-]>'
+  let g:alchemist_tag_stack_map     = '<C-T>'
 
 " ## colorizer
   let g:colorizer_auto_filetype='css,scss'
@@ -1070,7 +1110,6 @@ endfunction
 
 " ## vim-sandwich
   runtime macros/sandwich/keymap/surround.vim " loads vim-surround keymaps
-
 
 " ## vim-test
   function! SplitStrategy(cmd)
@@ -1139,6 +1178,11 @@ endfunction
   let g:gist_open_url = 1
   let g:gist_default_private = 1
 
+" ## gen_tags
+  let g:gen_tags#use_cache_dir  = 0
+  let g:gen_tags#ctags_auto_gen = 1
+  let g:gen_tags#gtags_auto_gen = 1
+
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<c-e>"
   let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
@@ -1159,7 +1203,7 @@ endfunction
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'typescript-language-server',
+          \ 'name': 'typescript-ls',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
           \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
@@ -1167,7 +1211,7 @@ endfunction
   endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'css-languageserver',
+          \ 'name': 'css-ls',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'css-languageserver --stdio']},
           \ 'whitelist': ['css', 'less', 'sass', 'scss'],
           \ })
@@ -1203,7 +1247,11 @@ endfunction
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
   let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
   let g:ncm2_alchemist#source = {'priority': 9, 'mark': "\ue62d"} " unicode for the elixir logo for nerdfonts
-  " let g:ncm2_vim_lsp#source = {'priority': 9, 'mark': ''} " not working as a source
+  " let g:ncm2_gtags#source = {'priority': 7, 'mark': "\uf9fa"}
+  " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
+  " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
+  call ncm2#override_source('ncm2_vim_lsp_solargraph', { 'priority': 9, 'mark': "\ue23e", 'popup_limit': 10 })
+  call ncm2#override_source('ncm2_vim_lsp_typescript-ls', { 'priority': 9, 'mark': "\ue628", 'popup_limit': 10 })
 
   " == elixir support
   " au User Ncm2Plugin call ncm2#register_source({
