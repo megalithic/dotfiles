@@ -94,7 +94,7 @@ codi() {
   shift
   nvim -c \
     "startinsert |\
-    set bt=$syntax ft=$syntax ls=0 noru nonu nornu |\
+    set bt=nofile ls=0 noru nonu nornu |\
     hi ColorColumn guibg=NONE |\
     hi VertSplit guibg=NONE |\
     hi NonText guifg=0 |\
@@ -108,7 +108,7 @@ iron() {
   shift
   nvim -c \
     "startinsert |\
-    set bt=$syntax ft=$syntax ls=0 noru nonu nornu |\
+    set bt=nofile ls=0 noru nonu nornu |\
     hi ColorColumn ctermbg=NONE |\
     hi VertSplit ctermbg=NONE |\
     hi NonText ctermfg=0 |\

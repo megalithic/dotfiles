@@ -108,7 +108,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'rhysd/devdocs.vim'
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
-  " Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
+  " Plug 'tpope/vim-surround'
   Plug 'machakann/vim-sandwich'
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
@@ -1068,6 +1068,10 @@ endfunction
   let g:surround_indent = 0
   " let g:surround_no_insert_mappings = 1
 
+" ## vim-sandwich
+  runtime macros/sandwich/keymap/surround.vim " loads vim-surround keymaps
+
+
 " ## vim-test
   function! SplitStrategy(cmd)
     vert new | call termopen(a:cmd) | startinsert
@@ -1158,7 +1162,7 @@ endfunction
           \ 'name': 'typescript-language-server',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'javascriptreact'],
+          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
           \ })
   endif
   if executable('css-languageserver')
@@ -1184,21 +1188,21 @@ endfunction
           \ 'whitelist': ['python'],
           \ })
   endif
-  if executable($HOME.'/.elixir-ls/language_server.sh')
-    au User lsp_setup call lsp#register_server({
-          \ 'name': 'elixir-ls',
-          \ 'cmd': {server_info->[$HOME.'/.elixir-ls/language_server.sh']},
-          \ 'whitelist': ['elixir', 'eelixir'],
-          \ 'workspace_config': {'dialyzerEnabled': v:false},
-          \ 'initialization_options': {'dialyzerEnabled': v:false},
-          \ })
-  endif
+  " FIXME: presently this explodes CPU, via beam.smp going bonkers
+  " if executable($HOME.'/.elixir-ls/language_server.sh')
+  "   au User lsp_setup call lsp#register_server({
+  "         \ 'name': 'elixir-ls',
+  "         \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.dotfiles/elixir/elixir-ls.symlink/language_server.sh']},
+  "         \ 'whitelist': ['elixir', 'eelixir'],
+  "         \ 'workspace_config': {'dialyzerEnabled': v:false},
+  "         \ })
+  " endif
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
   let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
-  let g:ncm2_alchemist#source = {'priority': 9, 'mark': '\ue62d'}
+  let g:ncm2_alchemist#source = {'priority': 9, 'mark': "\ue62d"} " unicode for the elixir logo for nerdfonts
   " let g:ncm2_vim_lsp#source = {'priority': 9, 'mark': ''} " not working as a source
 
   " == elixir support
@@ -1380,6 +1384,26 @@ vmap ( S)
 vmap { S}
 vmap ' S'
 vmap " S"
+
+" ## vim-sandwich
+" ref: https://github.com/machakann/vim-sandwich/wiki/Introduce-vim-surround-keymappings#textobjects
+xmap is <Plug>(textobj-sandwich-query-i)
+xmap as <Plug>(textobj-sandwich-query-a)
+omap is <Plug>(textobj-sandwich-query-i)
+omap as <Plug>(textobj-sandwich-query-a)
+xmap iss <Plug>(textobj-sandwich-auto-i)
+xmap ass <Plug>(textobj-sandwich-auto-a)
+omap iss <Plug>(textobj-sandwich-auto-i)
+omap ass <Plug>(textobj-sandwich-auto-a)
+xmap im <Plug>(textobj-sandwich-literal-query-i)
+xmap am <Plug>(textobj-sandwich-literal-query-a)
+omap im <Plug>(textobj-sandwich-literal-query-i)
+omap am <Plug>(textobj-sandwich-literal-query-a)
+" in middle (of) {'_'  '.' ',' '/' '-')
+xmap i_ im_
+xmap a_ im_
+omap i_ im_
+omap a_ am_
 
 " ## Splits with vim-tmux-navigator
 let g:tmux_navigator_no_mappings = 1
