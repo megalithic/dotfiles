@@ -63,7 +63,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-cssomni'
   Plug 'filipekiss/ncm2-look.vim'
   " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
-  " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
+  Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
   " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'ncm2/ncm2-jedi'
   " Plug 'ncm2/ncm2-pyclang'
@@ -119,6 +119,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
   " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
+  Plug 'megalithic/codi.vim'
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -137,7 +138,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'machakann/vim-textobj-delimited', { 'on': [ '<Plug>(textobj-delimited' ] }  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
   Plug 'gilligan/textobj-lastpaste', { 'on': [ '<Plug>(textobj-lastpaste' ] }       " - P     for last paste
   Plug 'mattn/vim-textobj-url', { 'on': [ '<Plug>(textobj-url' ] }                  " - u     for url
-  Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }
+  Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }        " - '', \"\", (), {}, [], <>
   Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
   Plug 'arthurxavierx/vim-caser'                                                    " https://github.com/arthurxavierx/vim-caser#usage
   Plug 'wellle/targets.vim'                                                         " improved targets line cin) next parens)
@@ -661,6 +662,9 @@ endfunction
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
 
+" ## codi
+  let g:codi#rightalign=0
+
 " ## vim-devicons
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
   let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
@@ -677,6 +681,9 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['json'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['md'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
+  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
+  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
+
 
   " ## lightline.vim
   let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
@@ -1179,12 +1186,14 @@ endfunction
           \ 'whitelist': ['python'],
           \ })
   endif
-  au User lsp_setup call lsp#register_server({
-        \ 'name': 'elixir-ls',
-        \ 'cmd': {server_info->[$HOME.'/.elixir-ls/language_server.sh']},
-        \ 'whitelist': ['elixir', 'eelixir'],
-        \ 'workspace_config': {'dialyzerEnabled': v:false},
-        \ })
+  if executable($HOME.'/.elixir-ls/language_server.sh')
+    " au User lsp_setup call lsp#register_server({
+    "       \ 'name': 'elixir-ls',
+    "       \ 'cmd': {server_info->[$HOME.'/.elixir-ls/language_server.sh']},
+    "       \ 'whitelist': ['elixir', 'eelixir'],
+    "       \ 'workspace_config': {'dialyzerEnabled': v:false},
+    "       \ })
+  endif
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded

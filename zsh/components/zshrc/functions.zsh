@@ -90,25 +90,25 @@ note () {
 # Codi
 # Usage: codi [filetype] [filename]
 codi() {
-  local syntax="${1:-python}"
+  local syntax="${1:-javascript}"
   shift
   nvim -c \
-    "let g:startify_disable_at_vimenter = 1 |\
-    set bt=nofile ls=0 noru nonu nornu |\
-    hi ColorColumn ctermbg=NONE |\
-    hi VertSplit ctermbg=NONE |\
-    hi NonText ctermfg=0 |\
+    "startinsert |\
+    set bt=$syntax ft=$syntax ls=0 noru nonu nornu |\
+    hi ColorColumn guibg=NONE |\
+    hi VertSplit guibg=NONE |\
+    hi NonText guifg=0 |\
     Codi $syntax" "$@"
 }
 
 # iron.nvim
 # Usage: repl [filetype] [filename]
-repl() {
+iron() {
   local syntax="${1:-javascript}"
   shift
   nvim -c \
-    "let g:startify_disable_at_vimenter = 1 |\
-    set bt=nofile ls=0 noru nonu nornu |\
+    "startinsert |\
+    set bt=$syntax ft=$syntax ls=0 noru nonu nornu |\
     hi ColorColumn ctermbg=NONE |\
     hi VertSplit ctermbg=NONE |\
     hi NonText ctermfg=0 |\
