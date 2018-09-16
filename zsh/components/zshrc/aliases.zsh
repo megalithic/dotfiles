@@ -33,7 +33,9 @@ if $(gls &>/dev/null)
 then
   alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
   alias ls="gls -FA"
+  alias lst="gls -FAt"
   alias l="gls -lAh"
+  alias lt="gls -lAht"
   alias ll="gls -l"
   alias la="gls -A"
 fi

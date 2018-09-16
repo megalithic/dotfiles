@@ -1,4 +1,4 @@
-" =============================================================================
+" ============================================================================xr=
 "
 "   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
 "   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > nvim/init.min.vim
@@ -44,6 +44,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'lilydjwg/colorizer'
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
   Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
+  Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+  Plug 'elixir-editors/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+  Plug 'mhinz/vim-mix-format'
+  Plug 'mattreduce/vim-mix'
+
 
 " ## Completion
   Plug 'ncm2/ncm2' | Plug 'roxma/nvim-yarp'
@@ -58,6 +63,9 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-tern'
   Plug 'ncm2/ncm2-cssomni'
+  Plug 'filipekiss/ncm2-look.vim'
+  " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
+  " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
   " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'ncm2/ncm2-jedi'
   " Plug 'ncm2/ncm2-pyclang'
@@ -97,6 +105,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'sickill/vim-pasta' " context-aware pasting
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
+  Plug 'thinca/vim-ref'
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
@@ -634,11 +643,26 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
+function! s:devdocs(query) abort
+  if a:query ==# ''
+    let cword = expand('<cword>')
+    if cword ==# ''
+      MiniBrowser http://devdocs.io/
+    else
+      execute 'MiniBrowser' 'http://devdocs.io/#q='.escape(cword, ' \')
+    endif
+    return
+  endif
+
+  execute 'MiniBrowser' 'http://devdocs.io/#q='.escape(a:query, ' \')
+endfunction
+command! -nargs=* DevDocs call <SID>devdocs(<q-args>)
+
 " }}}
 " ================ Plugin Config/Settings {{{
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm']
+  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir', 'eelixir']
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -921,6 +945,7 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
+        \   'elixir': ['mix', 'credo', 'dogma'],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -1020,6 +1045,15 @@ endfunction
       \ 'call': 'call',
       \ 'constructor': '',
       \}
+
+" ## elixir.nvim
+  " let g:elixir_autobuild = 1
+  " let g:elixir_showerror = 1
+  let g:elixir_maxpreviews = 20
+  let g:elixir_docpreview = 1
+
+" ## alchemist.vim
+  let g:alchemist_tag_disable = 1
 
 " ## colorizer
   let g:colorizer_auto_filetype='css,scss'
@@ -1133,19 +1167,40 @@ endfunction
           \ 'whitelist': ['python'],
           \ })
   endif
+  au User lsp_setup call lsp#register_server({
+        \ 'name': 'elixir-ls',
+        \ 'cmd': {server_info->[$HOME.'/.elixir-ls/language_server.sh']},
+        \ 'whitelist': ['elixir', 'eelixir'],
+        \ 'workspace_config': {'dialyzerEnabled': v:false},
+        \ })
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
   let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
+  let g:ncm2_alchemist#source = {'priority': 9, 'mark': '\ue62d'}
   " let g:ncm2_vim_lsp#source = {'priority': 9, 'mark': ''} " not working as a source
+
+  " == elixir support
+  " au User Ncm2Plugin call ncm2#register_source({
+  "       \ 'name' : 'elixir',
+  "       \ 'priority': 9,
+  "       \ 'subscope_enable': 1,
+  "       \ 'scope': ['elixir'],
+  "       \ 'mark': 'elixir',
+  "       \ 'word_pattern': '[\w\-]+',
+  "       \ 'complete_pattern': ':\s*',
+  "       \ 'on_complete': ['ncm2#on_complete#omni',
+  "       \               'elixircomplete#auto_complete'],
+  "       \ })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
   set shortmess+=c
   au TextChangedI * call ncm2#auto_trigger()
-  let g:ncm2#matcher = 'abbrfuzzy'
+  let g:ncm2#matcher = 'substrfuzzy'
   let g:ncm2#sorter = 'abbrfuzzy'
+  let g:ncm2#popup_limit = 27
   " let g:ncm2#match_highlight = 'sans-serif-bold'
 
 " }}}
@@ -1215,7 +1270,11 @@ map <leader>eg :vnew! ~/.gitconfig<CR>
 map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<CR>
 map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
+" open scratch buffer
 nnoremap <C-s> :call ScratchOpen()<CR>
+
+" browse devdocs
+nnoremap <leader>d :<C-u>MiniBrowser <C-r><C-p><CR>
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)

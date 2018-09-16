@@ -38,3 +38,4 @@ vim-lsp.log
 repos
 tags
 **/__pycache__
+.elixir_ls
