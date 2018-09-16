@@ -1158,10 +1158,8 @@ endfunction
           \ 'name': 'typescript-language-server',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
+          \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'javascriptreact'],
           \ })
-    " \ 'whitelist': ['javascript', 'javascript.jsx', 'javascriptreact'],
-    " \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
   endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
@@ -1187,12 +1185,13 @@ endfunction
           \ })
   endif
   if executable($HOME.'/.elixir-ls/language_server.sh')
-    " au User lsp_setup call lsp#register_server({
-    "       \ 'name': 'elixir-ls',
-    "       \ 'cmd': {server_info->[$HOME.'/.elixir-ls/language_server.sh']},
-    "       \ 'whitelist': ['elixir', 'eelixir'],
-    "       \ 'workspace_config': {'dialyzerEnabled': v:false},
-    "       \ })
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'elixir-ls',
+          \ 'cmd': {server_info->[$HOME.'/.elixir-ls/language_server.sh']},
+          \ 'whitelist': ['elixir', 'eelixir'],
+          \ 'workspace_config': {'dialyzerEnabled': v:false},
+          \ 'initialization_options': {'dialyzerEnabled': v:false},
+          \ })
   endif
 
 " ## ncm2
