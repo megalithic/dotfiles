@@ -22,8 +22,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
-  Plug 'mhartington/oceanic-next'
-  Plug 'rhysd/vim-color-spring-night'
   Plug 'joshdick/onedark.vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   " Plug 'vim-airline/vim-airline'
@@ -90,6 +88,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
 
 " ## Utils
+  Plug 'junegunn/vim-peekaboo'
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean'
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
@@ -106,9 +105,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
   Plug 'thinca/vim-ref'
+  Plug 'rhysd/devdocs.vim'
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
-  Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
+  " Plug 'tpope/vim-surround' " soon to replace with machakann/vim-sandwich
+  Plug 'machakann/vim-sandwich'
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
   Plug 'junegunn/gv.vim'
@@ -153,12 +154,6 @@ filetype plugin indent on
 let g:mapleader = ","                                                           "Change leader to a comma
 
 set background=dark                                                             "Set background to dark
-
-let g:spring_night_cterm_italic = 1
-silent! colorscheme spring-night
-
-" let g:onedark_terminal_italics = 1
-" silent! colorscheme onedark
 
 silent! colorscheme nova
 
@@ -371,6 +366,12 @@ augroup vimrc
 
   " Auto-close preview window when completion is done.
   au! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
+
+  " Hide status bar while using fzf commands
+  if has('nvim')
+    autocmd! FileType fzf
+    autocmd  FileType fzf set laststatus=0 | autocmd BufLeave,WinLeave <buffer> set laststatus=2
+  endif
 
   " ----------------------------------------------------------------------------
   " ## JavaScript
@@ -643,26 +644,19 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
-function! s:devdocs(query) abort
-  if a:query ==# ''
-    let cword = expand('<cword>')
-    if cword ==# ''
-      MiniBrowser http://devdocs.io/
-    else
-      execute 'MiniBrowser' 'http://devdocs.io/#q='.escape(cword, ' \')
-    endif
-    return
-  endif
-
-  execute 'MiniBrowser' 'http://devdocs.io/#q='.escape(a:query, ' \')
-endfunction
-command! -nargs=* DevDocs call <SID>devdocs(<q-args>)
-
 " }}}
 " ================ Plugin Config/Settings {{{
 
 " ## polyglot
   let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir', 'eelixir']
+
+" ## devdocs.vim
+  let g:devdocs_filetype_map = {
+      \   'ruby': 'rails',
+      \   'javascript.jsx': 'react',
+      \   'typescript.tsx': 'react',
+      \   'javascript.test': 'jest',
+      \ }
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -1082,11 +1076,29 @@ command! -nargs=* DevDocs call <SID>devdocs(<q-args>)
   let g:fzf_buffers_jump = 1
   let g:fzf_filemru_bufwrite = 1
   let g:fzf_layout = { 'down': '~15%' }
+  " let g:fzf_files_options =
+  "       \ '--preview "(~/dev/termpix/bin/termpix --width 50 --true-color {} || cat {}) 2> /dev/null "'
   let g:fzf_action = {
         \ 'ctrl-t': 'tab split',
         \ 'ctrl-x': 'split',
         \ 'ctrl-v': 'vsplit',
         \ 'enter': 'vsplit'
+        \ }
+
+  let g:fzf_colors = {
+        \ 'fg':      ['fg', 'Normal'],
+        \ 'bg':      ['bg', 'Normal'],
+        \ 'hl':      ['fg', 'SpellBad'],
+        \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+        \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+        \ 'hl+':     ['fg', 'CursorLineNr'],
+        \ 'info':    ['fg', 'PreProc'],
+        \ 'border':  ['fg', 'Ignore'],
+        \ 'prompt':  ['fg', 'Conditional'],
+        \ 'pointer': ['fg', 'Exception'],
+        \ 'marker':  ['fg', 'Keyword'],
+        \ 'spinner': ['fg', 'Label'],
+        \ 'header':  ['fg', 'Comment']
         \ }
 
   if executable("rg")
@@ -1101,7 +1113,7 @@ command! -nargs=* DevDocs call <SID>devdocs(<q-args>)
     " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
     command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
           \ call fzf#vim#grep(
-          \   'rg --column --line-number --no-heading --color=always --glob "!.git/*" '.shellescape(<q-args>), 1,
+          \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --no-ignore --hidden --follow --glob "!{.git,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
@@ -1274,7 +1286,9 @@ map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 nnoremap <C-s> :call ScratchOpen()<CR>
 
 " browse devdocs
-nnoremap <leader>d :<C-u>MiniBrowser <C-r><C-p><CR>
+nnoremap <leader>d :DevDocs
+nnoremap <leader>dd :DevDocsAll
+nmap K <Plug>(devdocs-under-cursor)
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)
@@ -1599,11 +1613,10 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi illuminatedWord cterm=underline gui=underline
   hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
 
-  " spring-night overrides
   hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
-  hi gitCommitOverflow term=NONE guibg=#fd8489 guifg=#333333 ctermbg=210
-  hi ALEError term=NONE guibg=#ab6560 ctermbg=167
+  hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
+  hi ALEError term=NONE guibg=#cc6666 ctermbg=167
 
   " ## -----------------------------------------------------------------------
   " COLLECTION OF ALL THE COLORS USED IN SPRING-NIGHT:
