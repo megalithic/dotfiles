@@ -52,6 +52,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
   Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'SirVer/ultisnips'
+  Plug 'honza/vim-snippets'
   Plug 'ncm2/ncm2-bufword'
   Plug 'ncm2/ncm2-tmux'
   Plug 'ncm2/ncm2-path'
@@ -1203,7 +1204,7 @@ endfunction
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'typescript-ls',
+          \ 'name': 'typescript',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
           \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
@@ -1211,7 +1212,7 @@ endfunction
   endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'css-ls',
+          \ 'name': 'css',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'css-languageserver --stdio']},
           \ 'whitelist': ['css', 'less', 'sass', 'scss'],
           \ })
@@ -1227,7 +1228,7 @@ endfunction
   if executable('pyls')
     " pip install python-language-server
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'pyls',
+          \ 'name': 'python',
           \ 'cmd': {server_info->['pyls']},
           \ 'whitelist': ['python'],
           \ })
@@ -1235,7 +1236,7 @@ endfunction
   " FIXME: presently this explodes CPU, via beam.smp going bonkers
   " if executable($HOME.'/.elixir-ls/language_server.sh')
   "   au User lsp_setup call lsp#register_server({
-  "         \ 'name': 'elixir-ls',
+  "         \ 'name': 'elixir',
   "         \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.dotfiles/elixir/elixir-ls.symlink/language_server.sh']},
   "         \ 'whitelist': ['elixir', 'eelixir'],
   "         \ 'workspace_config': {'dialyzerEnabled': v:false},
@@ -1247,24 +1248,39 @@ endfunction
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
   let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
   let g:ncm2_alchemist#source = {'priority': 9, 'mark': "\ue62d"} " unicode for the elixir logo for nerdfonts
-  " let g:ncm2_gtags#source = {'priority': 7, 'mark': "\uf9fa"}
+  let g:ncm2_elm#source = {'priority': 9, 'mark': "\ue62c"} " unicode for the elixir logo for nerdfonts
+  let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
-  call ncm2#override_source('ncm2_vim_lsp_solargraph', { 'priority': 9, 'mark': "\ue23e", 'popup_limit': 10 })
-  call ncm2#override_source('ncm2_vim_lsp_typescript-ls', { 'priority': 9, 'mark': "\ue628", 'popup_limit': 10 })
+  call ncm2#override_source('ncm2_vim_lsp_solargraph', { 'priority': 9, 'mark': "\ue23e"})
+  call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
+  call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
+
+  " == elm support
+  au User Ncm2Plugin call ncm2#register_source({
+        \ 'name' : 'elm',
+        \ 'priority': 9,
+        \ 'subscope_enable': 1,
+        \ 'scope': ['elm'],
+        \ 'mark': "\ue62c",
+        \ 'word_pattern': '[\w\-]+',
+        \ 'complete_pattern': ':\s*',
+        \ 'on_complete': ['ncm2#on_complete#omni',
+        \               'elm#Complete'],
+        \ })
 
   " == elixir support
-  " au User Ncm2Plugin call ncm2#register_source({
-  "       \ 'name' : 'elixir',
-  "       \ 'priority': 9,
-  "       \ 'subscope_enable': 1,
-  "       \ 'scope': ['elixir'],
-  "       \ 'mark': 'elixir',
-  "       \ 'word_pattern': '[\w\-]+',
-  "       \ 'complete_pattern': ':\s*',
-  "       \ 'on_complete': ['ncm2#on_complete#omni',
-  "       \               'elixircomplete#auto_complete'],
-  "       \ })
+  au User Ncm2Plugin call ncm2#register_source({
+        \ 'name' : 'elixir',
+        \ 'priority': 9,
+        \ 'subscope_enable': 1,
+        \ 'scope': ['elixir', 'eelixir'],
+        \ 'mark': "\ue62d",
+        \ 'word_pattern': '[\w\-]+',
+        \ 'complete_pattern': ':\s*',
+        \ 'on_complete': ['ncm2#on_complete#omni',
+        \               'elixircomplete#auto_complete'],
+        \ })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
@@ -1272,7 +1288,7 @@ endfunction
   au TextChangedI * call ncm2#auto_trigger()
   let g:ncm2#matcher = 'substrfuzzy'
   let g:ncm2#sorter = 'abbrfuzzy'
-  let g:ncm2#popup_limit = 27
+  let g:ncm2#popup_limit = 25
   " let g:ncm2#match_highlight = 'sans-serif-bold'
 
 " }}}
