@@ -61,6 +61,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-tern'
   Plug 'ncm2/ncm2-cssomni'
+  Plug 'yuki-ycino/ncm2-dictionary'
   Plug 'filipekiss/ncm2-look.vim'
   " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
   Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
@@ -1712,7 +1713,7 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
   hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
-  hi ALEError term=NONE guibg=#cc6666 ctermbg=167
+  hi ALEError term=NONE guibg=#cc6666 guifg=#C5D4DD ctermbg=167
 
   " ## -----------------------------------------------------------------------
   " COLLECTION OF ALL THE COLORS USED IN SPRING-NIGHT:

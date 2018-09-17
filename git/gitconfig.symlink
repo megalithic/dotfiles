@@ -119,6 +119,8 @@
 	hist = for-each-ref --count=5 --sort=-committerdate --format='%(refname:short)' refs/heads/
   refresh = !ssh-add -l && STASH=$(git stash) && git fetch && git rebase origin/master && test \"$STASH\" != \"No local changes to save\" && git stash pop
 
+  up = !git pull --autostash --rebase && git lg HEAD@{1}..
+
 [mergetool]
   prompt = true
 
@@ -175,6 +177,10 @@
 [rebase]
 	autosquash = true
 	autostash = true
+	autoStash = true
+
+[pull]
+	rebase = true
 
 [rerere]
   enabled = true
