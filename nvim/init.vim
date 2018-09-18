@@ -21,15 +21,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
 
 " ## UI/Interface
-  Plug 'trevordmiller/nova-vim'
-  Plug 'joshdick/onedark.vim'
+  Plug 'megalithic/nova-vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
-  " Plug 'vim-airline/vim-airline'
-  " Plug 'vim-airline/vim-airline-themes'
   Plug 'itchyny/lightline.vim'
-  Plug 'NovaDev94/lightline-onedark'
   Plug 'maximbaz/lightline-ale'
-  " Plug 'gcavallanti/vim-noscrollbar'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
@@ -90,7 +85,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'jsfaint/gen_tags.vim'
 
 " ## Utils
-  Plug 'junegunn/vim-peekaboo'
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean'
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
@@ -715,7 +709,7 @@ endfunction
   " ## lightline.vim
   let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
   let g:lightline = {
-        \   'colorscheme': 'onedark',
+        \   'colorscheme': 'nova',
         \   'component': {
         \     'modified': '%#ModifiedColor#%{LightlineModified()}',
         \   },
@@ -822,7 +816,7 @@ endfunction
   endfunction
 
   function! LightlinePercent()
-    return PrintStatusline(line('.') * 100 / line('$') . '%')
+    return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '%')
   endfunction
 
   function! LightlineReadonly()
