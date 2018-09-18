@@ -11,6 +11,7 @@ eslint-plugin-react
 eslint-plugin-prettier
 exp
 expo-cli
+flow-language-server
 jest
 neovim
 prettier

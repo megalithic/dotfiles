@@ -57,15 +57,12 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-match-highlight' " the fonts used are wonky
   Plug 'ncm2/ncm2-html-subscope'
   Plug 'ncm2/ncm2-markdown-subscope'
-  Plug 'ncm2/ncm2-tern'
   Plug 'ncm2/ncm2-cssomni'
-  Plug 'yuki-ycino/ncm2-dictionary'
+  " Plug 'yuki-ycino/ncm2-dictionary'
   Plug 'filipekiss/ncm2-look.vim'
   " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
   " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
   " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
-  " Plug 'ncm2/ncm2-jedi'
-  " Plug 'ncm2/ncm2-pyclang'
   Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
@@ -699,6 +696,7 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols = {} " needed
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['js'] = ''
+  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['jsx'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['tsx'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['css'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['html'] = ''
@@ -782,8 +780,6 @@ endfunction
         \     't': 'T',
         \   },
         \ }
-        " \   'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
-        " \   'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
 
   let g:lightline#ale#indicator_ok = "✔"
   let g:lightline#ale#indicator_warnings = ' '
@@ -1162,7 +1158,7 @@ endfunction
     " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
     command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
           \ call fzf#vim#grep(
-          \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --no-ignore --hidden --follow --glob "!{.git,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+          \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --hidden --follow --glob "!{.git,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
@@ -1198,7 +1194,7 @@ endfunction
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
-  let g:lsp_log_verbose = 0
+  let g:lsp_log_verbose = 1
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
@@ -1207,6 +1203,14 @@ endfunction
           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
           \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
           \ })
+  endif
+  if executable('flow-language-server')
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'javascript',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'flow-language-server --stdio']},
+          \ 'whitelist': ['javascript', 'javascript.jsx'],
+          \ })
+    " \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), '.flowconfig'))},
   endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
@@ -1231,7 +1235,6 @@ endfunction
           \ 'whitelist': ['python'],
           \ })
   endif
-  " FIXME: presently this explodes CPU, via beam.smp going bonkers
   if executable($HOME.'/.elixir-ls/language_server.sh')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
@@ -1250,9 +1253,12 @@ endfunction
   let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
+  let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
+  let g:ncm2_look#source = {'priority': 2, 'popup_limit': 5}
   call ncm2#override_source('ncm2_vim_lsp_solargraph', { 'priority': 9, 'mark': "\ue23e"})
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
+  call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
 
   " == elm support
@@ -1266,19 +1272,6 @@ endfunction
   "       \ 'complete_pattern': ':\s*',
   "       \ 'on_complete': ['ncm2#on_complete#omni',
   "       \               'elm#Complete'],
-  "       \ })
-
-  " == elixir support
-  " au User Ncm2Plugin call ncm2#register_source({
-  "       \ 'name' : 'elixir',
-  "       \ 'priority': 9,
-  "       \ 'subscope_enable': 1,
-  "       \ 'scope': ['elixir', 'eelixir'],
-  "       \ 'mark': "\ue62d",
-  "       \ 'word_pattern': '[\w\-]+',
-  "       \ 'complete_pattern': ':\s*',
-  "       \ 'on_complete': ['ncm2#on_complete#omni',
-  "       \               'elixircomplete#auto_complete'],
   "       \ })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
