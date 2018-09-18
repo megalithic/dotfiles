@@ -21,10 +21,12 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
 
 " ## UI/Interface
-  Plug 'megalithic/nova-vim'
+  Plug '~/code/plugins/nova-vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'itchyny/lightline.vim'
   Plug 'maximbaz/lightline-ale'
+  " Plug 'vim-airline/vim-airline'
+  " let g:airline_theme='nova'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
@@ -788,7 +790,7 @@ endfunction
   let g:lightline#ale#indicator_checking = ' '
 
   function! UpdateStatusBar(timer)
-    call lightline#update()
+    " call lightline#update()
   endfunction
 
   function! PrintStatusline(v)
@@ -826,7 +828,7 @@ endfunction
 
   function! LightlineModified()
     return PrintStatusline(!&modifiable ? '-' : &modified ?
-          \ '[ ⦿ ]' : '')
+          \ '[⦿]' : '')
   endfunction
 
   function! LightlineFileName()
@@ -1008,7 +1010,7 @@ endfunction
         \ 'ruby', 'erb=eruby',
         \ 'python',
         \ 'haml', 'html',
-        \ 'bash=sh', 'zsh']
+        \ 'bash=sh', 'zsh', 'elm', 'elixir']
 
 " ## vim-json
   let g:vim_json_syntax_conceal = 0
@@ -1072,8 +1074,8 @@ endfunction
 " ## elm.nvim
   " let g:elm_jump_to_error = 0
   let g:elm_make_output_file = "elm.js"
-  let g:elm_make_show_warnings = 0
-  let g:elm_syntastic_show_warnings = 0
+  let g:elm_make_show_warnings = 1
+  let g:elm_syntastic_show_warnings = 1
   " let g:elm_browser_command = ""
   let g:elm_detailed_complete = 1
   let g:elm_format_autosave = 1
@@ -1252,30 +1254,30 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
 
   " == elm support
-  au User Ncm2Plugin call ncm2#register_source({
-        \ 'name' : 'elm',
-        \ 'priority': 9,
-        \ 'subscope_enable': 1,
-        \ 'scope': ['elm'],
-        \ 'mark': "\ue62c",
-        \ 'word_pattern': '[\w\-]+',
-        \ 'complete_pattern': ':\s*',
-        \ 'on_complete': ['ncm2#on_complete#omni',
-        \               'elm#Complete'],
-        \ })
+  " au User Ncm2Plugin call ncm2#register_source({
+  "       \ 'name' : 'elm',
+  "       \ 'priority': 9,
+  "       \ 'subscope_enable': 1,
+  "       \ 'scope': ['elm'],
+  "       \ 'mark': "\ue62c",
+  "       \ 'word_pattern': '[\w\-]+',
+  "       \ 'complete_pattern': ':\s*',
+  "       \ 'on_complete': ['ncm2#on_complete#omni',
+  "       \               'elm#Complete'],
+  "       \ })
 
   " == elixir support
-  au User Ncm2Plugin call ncm2#register_source({
-        \ 'name' : 'elixir',
-        \ 'priority': 9,
-        \ 'subscope_enable': 1,
-        \ 'scope': ['elixir', 'eelixir'],
-        \ 'mark': "\ue62d",
-        \ 'word_pattern': '[\w\-]+',
-        \ 'complete_pattern': ':\s*',
-        \ 'on_complete': ['ncm2#on_complete#omni',
-        \               'elixircomplete#auto_complete'],
-        \ })
+  " au User Ncm2Plugin call ncm2#register_source({
+  "       \ 'name' : 'elixir',
+  "       \ 'priority': 9,
+  "       \ 'subscope_enable': 1,
+  "       \ 'scope': ['elixir', 'eelixir'],
+  "       \ 'mark': "\ue62d",
+  "       \ 'word_pattern': '[\w\-]+',
+  "       \ 'complete_pattern': ':\s*',
+  "       \ 'on_complete': ['ncm2#on_complete#omni',
+  "       \               'elixircomplete#auto_complete'],
+  "       \ })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
@@ -1284,7 +1286,6 @@ endfunction
   let g:ncm2#matcher = 'substrfuzzy'
   let g:ncm2#sorter = 'abbrfuzzy'
   let g:ncm2#popup_limit = 25
-  " let g:ncm2#match_highlight = 'sans-serif-bold'
 
 " }}}
 " ================ Custom Mappings {{{
