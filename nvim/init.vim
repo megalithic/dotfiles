@@ -427,7 +427,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Manage GIT related scenarios
-  au Filetype gitcommit setl spell textwidth=72
+  au Filetype gitcommit setl nospell textwidth=72
   au BufNewFile,BufRead .git/index setlocal nolist
   au BufReadPost fugitive://* set bufhidden=delete
   au BufReadCmd *.git/index exe BufReadIndex()
