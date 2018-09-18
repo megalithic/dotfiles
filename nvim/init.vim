@@ -695,8 +695,8 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFolderNodes = 1
   let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols = {} " needed
-  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['js'] = ''
-  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['jsx'] = ''
+  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['js'] = "\ue74e"
+  let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['jsx'] = "\ue74e"
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['tsx'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['css'] = ''
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['html'] = ''
@@ -1204,13 +1204,12 @@ endfunction
           \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
           \ })
   endif
-  if executable('flow-language-server')
+  if executable('javascript-typescript-langserver')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'javascript',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'flow-language-server --stdio']},
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'javascript-typescript-stdio']},
           \ 'whitelist': ['javascript', 'javascript.jsx'],
           \ })
-    " \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), '.flowconfig'))},
   endif
   if executable('css-languageserver')
     au User lsp_setup call lsp#register_server({
