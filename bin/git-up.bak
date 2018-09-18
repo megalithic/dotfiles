@@ -26,11 +26,9 @@ git pull $PULL_ARGS
 # sure why git-pull only does this when merging.
 test "$(basename $0)" = "git-reup" && {
     echo "Diff:"
-    git --no-pager diff --color --stat HEAD@{1}.. |
-    sed 's/^/ /'
+    git --no-pager diff --color --stat HEAD@{1}.. | sed 's/^/ /'
 }
 
 # show an abbreviated commit log of stuff that was just merged.
 echo "Log:"
-git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. |
-sed 's/^/  /'
+git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'

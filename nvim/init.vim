@@ -21,7 +21,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
 
 " ## UI/Interface
-  Plug 'megalithic/nova-vim'
+  Plug '~/code/plugins/nova-vim'
+  " Plug 'megalithic/nova-vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'itchyny/lightline.vim'
   Plug 'maximbaz/lightline-ale'
@@ -711,7 +712,7 @@ endfunction
   " ## lightline.vim
   let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
   let g:lightline = {
-        \   'colorscheme': 'nova',
+        \   'colorscheme': 'wombat',
         \   'component': {
         \     'modified': '%#ModifiedColor#%{LightlineModified()}',
         \   },
@@ -787,7 +788,7 @@ endfunction
   let g:lightline#ale#indicator_ok = "✔"
   let g:lightline#ale#indicator_warnings = ' '
   let g:lightline#ale#indicator_errors = ' '
-  let g:lightline#ale#indicator_checking = ' '
+  let g:lightline#ale#indicator_checking = " "
 
   function! UpdateStatusBar(timer)
     " call lightline#update()
