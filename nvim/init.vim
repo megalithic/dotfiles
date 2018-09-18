@@ -61,13 +61,13 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'yuki-ycino/ncm2-dictionary'
   Plug 'filipekiss/ncm2-look.vim'
   " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
-  Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
+  " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
   " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   " Plug 'ncm2/ncm2-jedi'
   " Plug 'ncm2/ncm2-pyclang'
-  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
-  " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
-  " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
+  Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
 
 " ## Project/Code Navigation
@@ -1231,14 +1231,14 @@ endfunction
           \ })
   endif
   " FIXME: presently this explodes CPU, via beam.smp going bonkers
-  " if executable($HOME.'/.elixir-ls/language_server.sh')
-  "   au User lsp_setup call lsp#register_server({
-  "         \ 'name': 'elixir',
-  "         \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.dotfiles/elixir/elixir-ls.symlink/language_server.sh']},
-  "         \ 'whitelist': ['elixir', 'eelixir'],
-  "         \ 'workspace_config': {'dialyzerEnabled': v:false},
-  "         \ })
-  " endif
+  if executable($HOME.'/.elixir-ls/language_server.sh')
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'elixir',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.dotfiles/elixir/elixir-ls.symlink/language_server.sh']},
+          \ 'whitelist': ['elixir', 'eelixir'],
+          \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:false }},
+          \ })
+  endif
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
@@ -1249,6 +1249,7 @@ endfunction
   let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
+  let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
   call ncm2#override_source('ncm2_vim_lsp_solargraph', { 'priority': 9, 'mark': "\ue23e"})
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
