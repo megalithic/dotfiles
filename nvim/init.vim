@@ -39,7 +39,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'lilydjwg/colorizer'
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
   Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
-  Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir', 'eelixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
@@ -75,8 +74,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
   " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
-  Plug 't9md/vim-smalls'
-  Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak
+  " Plug 't9md/vim-smalls' -- NOTE: not too fond of this, too jarring
+  Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
   Plug 'AndrewRadev/splitjoin.vim'
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
@@ -104,8 +103,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'rhysd/devdocs.vim'
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
-  " Plug 'tpope/vim-surround'
-  Plug 'machakann/vim-sandwich'
+  Plug 'tpope/vim-surround'
+  " Plug 'machakann/vim-sandwich'
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
   Plug 'junegunn/gv.vim'
@@ -1277,7 +1276,11 @@ endfunction
   set completeopt=noinsert,menuone,noselect
   set shortmess+=c
   au TextChangedI * call ncm2#auto_trigger()
-  let g:ncm2#matcher = 'substrfuzzy'
+  let g:ncm2#complete_length = 2
+  let g:ncm2#matcher = {
+                  \ 'name': 'combine',
+                  \ 'matchers': ['substrfuzzy', 'abbrfuzzy']
+                  \ }
   let g:ncm2#sorter = 'abbrfuzzy'
   let g:ncm2#popup_limit = 25
 
