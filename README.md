@@ -79,10 +79,6 @@ located at `~/.dotfiles/private/install.sh`.
 - Originally based on the dotfiles of the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
 - Presently a delicate combination of [Wynn Netherland's](https://github.com/pengwynn/dotfiles) and [Phillip Ridlen's](https://github.com/philtr/dotfiles) respective dotfiles
 
-### TODO
-
-- [x] migrate my custom zsh things from old setup
-- [ ] confirm that i can run all my ruby things with just rbenv (no chruby)
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
