@@ -1,0 +1,329 @@
+snippet application "elm application template" b
+module Main exposing (main)
+
+import Browser
+import Browser.Navigation as Nav
+import Dict exposing (Dict)
+import Element exposing (Element)
+import Element.Background as Background
+import Element.Font as Font
+import Element.Region as Region
+import Http
+import RemoteData exposing (WebData)
+import Url
+import Url.Parser as UrlParser exposing ((</>))
+
+
+main : Program () Model Msg
+main =
+    Browser.application
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
+        }
+
+
+
+-- MODEL
+
+
+type Page
+    = Home
+
+
+type Database
+    = Database
+
+
+type alias Model =
+    { navKey : Nav.Key
+    , currentPage : Page
+    , database : WebData Database
+    }
+
+
+init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
+    ( { navKey = key
+      , currentPage = Home
+      , database = RemoteData.NotAsked
+      }
+    , Cmd.none
+    )
+
+
+type FetchData
+    = FetchedDatabase (WebData Database)
+
+
+
+-- UPDATE
+
+
+type Msg
+    = Fetched FetchData
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
+    | ShowPage Page
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    let
+        _ =
+            log "msg" ( msg, model )
+    in
+    case msg of
+        Fetched webdata ->
+            ( fetched webdata model, Cmd.none )
+
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.navKey (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        UrlChanged url ->
+            showPage model (urlToPage url)
+
+        ShowPage page ->
+            showPage model page
+
+
+showPage : Model -> Page -> ( Model, Cmd Msg )
+showPage model page =
+    ( { model | currentPage = page }, Cmd.none )
+
+
+urlToPage : Url.Url -> Page
+urlToPage url =
+    let
+        pageParser : UrlParser.Parser (Page -> a) a
+        pageParser =
+            UrlParser.oneOf
+                [ UrlParser.map Home UrlParser.top
+                ]
+    in
+    UrlParser.parse pageParser url
+        |> Maybe.withDefault Home
+
+
+fetched : FetchData -> Model -> Model
+fetched fetchData model =
+    let
+        logIfFailure : WebData a -> WebData a
+        logIfFailure webData =
+            case webData of
+                RemoteData.Failure e ->
+                    Debug.log "fetched failure" e
+                        |> RemoteData.Failure
+
+                _ ->
+                    webData
+    in
+    case fetchData of
+        FetchedDatabase data ->
+            { model | database = logIfFailure data }
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+
+-- UTILS
+
+
+log =
+    Debug.log
+
+
+ifNotAsked : a -> RemoteData.RemoteData b c -> Maybe a
+ifNotAsked value remote =
+    case remote of
+        RemoteData.NotAsked ->
+            Just value
+
+        RemoteData.Loading ->
+            Nothing
+
+        RemoteData.Failure _ ->
+            Nothing
+
+        RemoteData.Success _ ->
+            Nothing
+
+
+orElse : a -> Maybe a -> a
+orElse =
+    Maybe.withDefault
+
+
+
+-- STYLE
+
+
+white =
+    Element.rgb 1 1 1
+
+
+grey =
+    Element.rgb255 238 238 238
+
+
+blue =
+    Element.rgb255 0x2B 0x4E 0x72
+
+
+linkColor =
+    blue
+
+
+
+-- VIEW
+
+
+type alias Document =
+    { title : String
+    , body : Element Msg
+    }
+
+
+view : Model -> Browser.Document Msg
+view model =
+    let
+        { title, body } =
+            viewContent model
+    in
+    { title = title
+    , body =
+        [ Element.layout [] <|
+            Element.column
+                [ Element.width Element.fill, Element.spacing 20 ]
+                [ viewHeader
+                , body
+                , viewFooter
+                ]
+        ]
+    }
+
+
+viewHeader : Element Msg
+viewHeader =
+    Element.row
+        [ Element.height (Element.px 56)
+        , Element.width Element.fill
+        , Element.centerY
+        , Element.spacing 16
+        , Element.padding 8
+        , Background.color blue
+        , Font.color white
+        ]
+        [ Element.link [] { url = "/home", label = Element.text "Product versions" }
+        ]
+
+
+viewFooter : Element Msg
+viewFooter =
+    Element.row
+        [ Element.height (Element.px 72)
+        , Element.width Element.fill
+        , Element.centerY
+        , Element.spacing 5
+        , Element.padding 10
+        , Background.color grey
+        ]
+        [ Element.link [ Element.centerX, Font.color linkColor ]
+            { url = "http://www.atmire.com/"
+            , label = Element.el [] (Element.text "Atmire software")
+            }
+        , Element.el [ Element.centerX ] (Element.text "copyright © 2018-present")
+        ]
+
+
+viewContent : Model -> Document
+viewContent model =
+    case model.currentPage of
+        Home ->
+            viewHomePage model.database
+
+
+withTitle : String -> Element Msg -> Document
+withTitle title element =
+    { title = title
+    , body = element
+    }
+
+
+viewHomePage : WebData Database -> Document
+viewHomePage database =
+    case database of
+        RemoteData.NotAsked ->
+            Element.el [] (Element.text "initializing")
+                |> withTitle "Home"
+
+        RemoteData.Loading ->
+            Element.el [] (Element.text "fetching remote data")
+                |> withTitle "Home"
+
+        RemoteData.Failure e ->
+            viewError e "community list"
+                |> withTitle "Home"
+
+        RemoteData.Success data ->
+            Element.column
+                []
+                (List.concat
+                    [ [ Element.el [ Region.heading 1 ] (Element.text "Product versions") ]
+                    , viewSearch
+                    ]
+                )
+                |> withTitle "DSpace Home"
+
+
+viewError : Http.Error -> String -> Element Msg
+viewError error subject =
+    case error of
+        Http.BadStatus response ->
+            if response.status.code == 404 then
+                Element.el [] (Element.text <| subject ++ " not found")
+
+            else
+                Element.el [] (Element.text "error")
+
+        _ ->
+            Element.el [] (Element.text "error")
+
+
+viewSearch : List (Element Msg)
+viewSearch =
+    [ Element.link [ Font.color linkColor ] { url = "/search", label = Element.text "search" } ]
+
+
+emptyElement : Element msg
+emptyElement =
+    Element.text ""
+endsnippet
+
+snippet -> "subcase" b
+${1:value} ->
+	${2:code}
+endsnippet
+
+snippet impex "import x as x exposing (x)" b
+import ${1:package} exposing ($2)
+endsnippet
+
+snippet impax "import x as x exposing (x)" b
+import ${1:package} as $2 exposing ($3)
+endsnippet

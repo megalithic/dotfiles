@@ -1,4 +1,5 @@
 ansible-vault
+black
 gntp
 goobook
 pycp

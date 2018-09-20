@@ -245,6 +245,7 @@ alias it="git"
 #   alias git=$hub_path
 # fi
 #
+alias push="git push"
 alias gs="git s"
 alias gcv="git cv"
 alias gcm="git cm"

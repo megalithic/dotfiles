@@ -65,6 +65,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  Plug 'megalithic/ncm2-elm', { 'for': ['elm'], 'do': 'npm i -g elm-oracle' }
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
 
 " ## Project/Code Navigation
@@ -74,7 +75,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
   " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
-  " Plug 't9md/vim-smalls' -- NOTE: not too fond of this, too jarring
   Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
   Plug 'AndrewRadev/splitjoin.vim'
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
@@ -475,6 +475,8 @@ augroup elm
   au FileType elm nn <buffer> K :ElmShowDocs<CR>
   au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
   au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
+
+  au FileType elm setlocal omnifunc=lsp#complete
 augroup END
 
 augroup elixir
@@ -903,12 +905,6 @@ endfunction
 " ## quick-scope
   let g:qs_enable = 0
 
-" ## vim-smalls
-  let g:smalls_auto_jump = 1
-  nmap s <Plug>(smalls)
-  xmap s <Plug>(smalls)
-  omap s <Plug>(smalls)
-
 " ## vim-asterisk
   map *  <Plug>(incsearch-nohl0)<Plug>(asterisk-z*)
   map #  <Plug>(incsearch-nohl0)<Plug>(asterisk-z#)
@@ -965,6 +961,7 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
+        \   'python': ['pyls'],
         \   'elixir': ['mix', 'credo', 'dogma'],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
@@ -976,6 +973,7 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
+        \   'python': ['black'],
         \   'elm': ['elm-format'],
         \ }                                                                       "Fix eslint errors
   let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
@@ -1193,7 +1191,7 @@ endfunction
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
-  let g:lsp_log_verbose = 1
+  let g:lsp_log_verbose = 0
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
@@ -1231,6 +1229,7 @@ endfunction
           \ 'name': 'python',
           \ 'cmd': {server_info->['pyls']},
           \ 'whitelist': ['python'],
+          \ 'workspace_config': {'pyls': {'plugins': {'pydocstyle': {'enabled': v:true}}}},
           \ })
   endif
   if executable($HOME.'/.elixir-ls/language_server.sh')
@@ -1259,19 +1258,6 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
 
-  " == elm support
-  " au User Ncm2Plugin call ncm2#register_source({
-  "       \ 'name' : 'elm',
-  "       \ 'priority': 9,
-  "       \ 'subscope_enable': 1,
-  "       \ 'scope': ['elm'],
-  "       \ 'mark': "\ue62c",
-  "       \ 'word_pattern': '[\w\-]+',
-  "       \ 'complete_pattern': ':\s*',
-  "       \ 'on_complete': ['ncm2#on_complete#omni',
-  "       \               'elm#Complete'],
-  "       \ })
-
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
   set shortmess+=c
@@ -1283,6 +1269,9 @@ endfunction
                   \ }
   let g:ncm2#sorter = 'abbrfuzzy'
   let g:ncm2#popup_limit = 25
+
+  let $NVIM_PYTHON_LOG_FILE=expand('~/.config/nvim/nvim-python.log')
+  let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
 
 " }}}
 " ================ Custom Mappings {{{
