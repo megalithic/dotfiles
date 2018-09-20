@@ -1238,7 +1238,7 @@ endfunction
           \ 'name': 'elixir',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.dotfiles/elixir/elixir-ls.symlink/language_server.sh']},
           \ 'whitelist': ['elixir', 'eelixir'],
-          \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:false }},
+          \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
           \ })
   endif
 
