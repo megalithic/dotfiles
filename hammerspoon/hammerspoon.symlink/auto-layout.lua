@@ -1,16 +1,12 @@
 events = {}
 
--- :: imports/requires
 local config = require 'config'
 local utils = require 'utils'
 local wf = hs.window.filter
 local eventsWatcher = hs.uielement.watcher
-
--- :: globals
 local watchers = {}
 local globalAppWatcher = nil
 local screenCount = #hs.screen.allScreens()
-
 
 target_display = function(display_int)
   -- detect the current number of monitors
