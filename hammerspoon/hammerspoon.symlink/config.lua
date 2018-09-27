@@ -4,13 +4,8 @@ config.hostname = hs.host.localizedName()
 config.homeSSID = 'shaolin'
 config.lastSSID = hs.wifi.currentNetwork()
 
--- :: imports/requires
 local utils = require 'utils'
 
--- :: locals
-local screenCount = #hs.screen.allScreens()
-
--- :: grid creation
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
@@ -20,14 +15,9 @@ hs.grid.MARGINY = 0
 hs.window.animationDuration = 0.0 -- 0 to disable animations
 hs.window.setShadows(false)
 
--- :: screens config
-config.screens = {
-  primary = hs.screen.allScreens()[1],
-  secondary = hs.screen.allScreens()[2] or hs.screen.primaryScreen()
-}
 
--- :: grid config
--------------------------------------------------------------------------------
+config.ptt = {'cmd', 'alt'}
+
 config.grid = {
   topHalf =         '0,0 8x4',
   rightHalf =       '4,0 4x8',
@@ -56,8 +46,6 @@ config.superKeys = {
   hyper = {'cmd', 'alt', 'ctrl', 'shift' },
 }
 
--- :: app config
--------------------------------------------------------------------------------
 config.applications = {
   {
     name = 'kitty',

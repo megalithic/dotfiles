@@ -1,7 +1,7 @@
 -- :: imports/requires
 require 'config'
 require('auto-layout'):init()
-require('push-to-talk'):init({'cmd', 'alt'}) -- activate ptt with the given keybinding
+require('push-to-talk'):init(config.ptt)
 require('laptop-docking-mode'):init()
 
 local utils = require 'utils'
@@ -15,7 +15,6 @@ local switchToApp = require 'keystroke-to-app'
 
 
 -- :: spoons
--------------------------------------------------------------------------------
 -- hs.loadSpoon() -- none yet
 
 
