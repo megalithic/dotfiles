@@ -1,45 +1,29 @@
--- :: imports/requires
+inspect = require('inspect')
+local utils = require('utils')
+local hotkey = require('hs.hotkey')
+
 require('config')
--- require('auto-layout'):init()
-require('push-to-talk'):init(config.ptt)
+require('auto-layout'):init()
+require('push-to-talk'):init(config.ptt) -- having to set this in the module for some reason. :(
 require('laptop-docking-mode'):init()
-
-local utils = require 'utils'
-local wm = require 'wm'
-local hotkey = require 'hs.hotkey'
-local switchToApp = require 'keystroke-to-app'
-
-
--- :: event-init
-wm.events.initEventHandling()
-
 
 -- :: spoons
 -- hs.loadSpoon() -- none yet
 
+-- :: app-launching
+for _, app in pairs(config.applications) do
+  hotkey.bind(app.superKey, app.shortcut, function() utils.toggleApp(app.name) end)
+end
 
 -- :: utilities
 for _, util in pairs(config.utilities) do
   hotkey.bind(util.superKey, util.shortcut, util.callback)
 end
 
-
--- :: app-launching
-for _, app in pairs(config.applications) do
-  switchToApp.register(app.name, app.superKey, app.shortcut, true)
-  -- hotkey.bind(app.superKey, app.shortcut, function() utils.toggleApp(app.name) end)
-end
-
-
--- :: cursor-locator
-hotkey.bind(mashShift, 'return', function() utils.mouseHighlight() end)
-
-
 -- :: media(spotify/volume)
 for _, media in pairs(config.media) do
   hotkey.bind(media.superKey, media.shortcut, function() utils.handleSpotifyEvents(media.action, media.label) end)
 end
-
 
 -- :: window-manipulation
 hotkey.bind(config.superKeys.cmdCtrl, 'h', utils.chain({

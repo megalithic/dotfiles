@@ -1,5 +1,3 @@
-local wm = require 'wm'
-
 config = {}
 
 config.hostname = hs.host.localizedName()
@@ -16,6 +14,7 @@ hs.grid.MARGINY = 0
 -- :: settings
 hs.window.animationDuration = 0.0 -- 0 to disable animations
 hs.window.setShadows(false)
+hs.application.enableSpotlightForNameSearches(true)
 
 
 config.ptt = {'cmd', 'alt'}
@@ -51,6 +50,7 @@ config.superKeys = {
 config.applications = {
   ['kitty'] = {
     name = 'kitty',
+    bundleID = 'net.kovidgoyal.kitty',
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
     preferredDisplay = 1,
@@ -58,6 +58,7 @@ config.applications = {
   },
   ['Google Chrome'] = {
     name = 'Google Chrome',
+    bundleID = 'com.google.Chrome',
     superKey = config.superKeys.cmd,
     shortcut = '`',
     preferredDisplay = 1,
@@ -65,6 +66,7 @@ config.applications = {
   },
   ['Slack'] = {
     name = 'Slack',
+    bundleID = 'com.tinyspeck.slackmacgap',
     superKey = config.superKeys.mashShift,
     shortcut = 's',
     preferredDisplay = 2,
@@ -72,6 +74,7 @@ config.applications = {
   },
   ['Spark'] = {
     name = 'Spark',
+    bundleID = 'com.readdle.smartemail-Mac',
     superKey = config.superKeys.mashShift,
     shortcut = 'm',
     preferredDisplay = 2,
@@ -86,6 +89,7 @@ config.applications = {
   },
   ['zoom.us'] = {
     name = 'zoom.us',
+    bundleID = 'us.zoom.xos',
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 2,
@@ -93,13 +97,15 @@ config.applications = {
   },
   ['Spotify'] = {
     name = 'Spotify',
+    bundleID = 'com.spotify.client',
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 2,
     position = '5,0 5x5'
   },
-  ['iChat'] = {
-    name = 'iChat',
+  ['Messages'] = {
+    name = 'Messages',
+    bundleID = 'com.apple.iChat',
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
     preferredDisplay = 2,
@@ -107,6 +113,7 @@ config.applications = {
   },
   ['yakyak'] = {
     name = 'yakyak',
+    bundleID = 'com.github.yakyak',
     superKey = config.superKeys.ctrlShift,
     shortcut = 'm',
     preferredDisplay = 2,
@@ -114,6 +121,7 @@ config.applications = {
   },
   ['1Password'] = {
     name = '1Password',
+    bundleID = 'com.agilebits.onepassword4',
     superKey = config.superKeys.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
@@ -145,11 +153,21 @@ config.utilities = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium,
     callback = (function()
-      -- require('auto-layout'):teardown()
-      wm.events.tearDownEventHandling()
+      require('auto-layout'):teardown()
       require('laptop-docking-mode'):teardown()
+      require('push-to-talk'):teardown()
       hs.reload()
       hs.notify.show('Hammerspoon', 'Config Reloaded', '')
+    end)
+  },
+  {
+    name = 'Cursor Locator',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'return',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium,
+    callback = (function()
+      utils.mouseHighlight()
     end)
   },
 }
