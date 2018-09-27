@@ -1222,15 +1222,6 @@ endfunction
         \ 'whitelist': ['ruby', 'eruby'],
         \ })
   endif
-  if executable('pyls')
-    " pip install python-language-server
-    au User lsp_setup call lsp#register_server({
-          \ 'name': 'python',
-          \ 'cmd': {server_info->['pyls']},
-          \ 'whitelist': ['python'],
-          \ 'workspace_config': {'pyls': {'plugins': {'pydocstyle': {'enabled': v:true}}}},
-          \ })
-  endif
   if executable($HOME.'/.elixir-ls/language_server.sh')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',

@@ -5,16 +5,54 @@ local config = require 'config'
 local utils = require 'utils'
 local wf = hs.window.filter
 local eventsWatcher = hs.uielement.watcher
-local usbConfig_laptop = require('usb-config-laptop')
 
 -- :: globals
 local watchers = {}
 local globalAppWatcher = nil
-local wifiWatcher = nil
-local usbWatcher = nil
-local caffeinateWatcher = nil
 local screenCount = #hs.screen.allScreens()
-local windowBorder = nil
+
+
+target_display = function(display_int)
+  -- detect the current number of monitors
+  displays = hs.screen.allScreens()
+  if displays[display_int] ~= nil then
+    return displays[display_int]
+  else
+    return hs.screen.primaryScreen()
+  end
+end
+
+
+setLayoutForAll = function()
+  utils.log.df('[auto-layout] - beginning layout for all apps')
+
+  for _, app_config in pairs(config.applications) do
+    -- if we have a preferred display
+    if app_config.preferred_display ~= nil then
+      application = hs.application.find(app_config.name)
+
+      -- if application ~= nil and application:mainWindow() ~= nil then
+      --   application
+      --   :mainWindow()
+      --   :moveToScreen(target_display(app_config.preferred_display), false, true, 0)
+      --   :moveToUnit(hs.layout.maximized)
+      -- end
+
+      if application ~= nil and application:mainWindow() ~= nil then
+        local windows = application:visibleWindows()
+        -- we are always positioning ALL the windows, we need a single window positioner method at some point..
+        -- TODO: add a single window watcher and window handler, don't always handle all the windows.
+        for _, window in pairs(windows) do
+          if utils.canManageWindow(window) then
+            utils.log.df('[auto-layout] - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', application:name(), window:title(), target_display(app_config.preferred_display), app_config.position)
+            hs.grid.set(window, app_config.position, target_display(app_config.preferred_display))
+          end
+        end
+      end
+    end
+  end
+end
+
 
 
 -- event handlers
@@ -57,9 +95,6 @@ function handleWindowEvent(window, event, watcher, info)
   else
     utils.log.wf('[error] window error; unexpected window event (%d) received', event)
   end
-
-  -- utils.log.df('[window] event; applying action for window (%s)', window)
-  -- config.applyAction(window)
 end
 
 function handleScreenEvent()
@@ -72,7 +107,7 @@ function handleScreenEvent()
 
   if #screens ~= screenCount then
     screenCount = #screens
-    config.applyLayout(screenCount)
+    setLayoutForAll()
   end
 end
 
@@ -122,14 +157,9 @@ function watchWindow(window)
     local bundleID = application:bundleID()
     local id = window:id()
 
-    if config.layout[bundleID] then
+    if config.applications[application:name()] then
       utils.log.df('[window] event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
-      config.layout[bundleID](window)
-    end
-
-    if config.action[bundleID] then
-      utils.log.df('[window] event; setting up action for  %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
-      config.action[bundleID](window)
+      config.applications[application:name()](window)
     end
 
     -- Watch for window-closed events.
@@ -147,46 +177,6 @@ function watchWindow(window)
     utils.log.df('[window] event; unable to watch unmanageable %s (window %s, ID %s, %s windows)', bundleID, window:title(), id, utils.windowCount(application))
   end
 end
-
--- WIFI
-function handleWifiEvent ()
-  newSSID = hs.wifi.currentNetwork()
-  local homeSSID = config.homeSSID
-  local lastSSID = config.lastSSID
-
-  utils.log.df('[wifi] event; old SSID (%s), new SSID (%s)', lastSSID or "nil", newSSID or "nil")
-
-  if newSSID == homeSSID and lastSSID ~= homeSSID then
-    -- home_arrived()
-  elseif newSSID ~= homeSSID and lastSSID == homeSSID then
-    -- home_departed()
-  end
-
-  lastSSID = newSSID
-end
-
--- USB
-function handleUsbEvent (data)
-  utils.log.df('[usb] event; raw data %s', hs.inspect(data))
-end
-
--- CAFFEINATE
-function handleCaffeinateEvent (eventType)
-  utils.log.df('[caffeine] event; event type %s', eventType)
-
-  if (eventType == hs.caffeinate.watcher.screensDidSleep) then
-    -- turn off office lamp
-    utils.log.df('[caffeine] event; attempting to turn off office lamp')
-    hs.execute('~/.dotfiles/bin/hs-to-ha script.hammerspoon_office_lamp_off', true)
-  elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
-    -- turn on office lamp
-    utils.log.df('[caffeine] event; attempting to turn on office lamp')
-    hs.execute('~/.dotfiles/bin/hs-to-ha script.hammerspoon_office_lamp_on', true)
-
-    config.applyLayout(2)
-  end
-end
-
 
 -- INIT ALL THE EVENTS
 function events.initEventHandling ()
@@ -208,29 +198,7 @@ function events.initEventHandling ()
     end
   end
 
-  -- Only init these watchers for my laptop (replibook, SMesserBook, etc)
-  if (config.hostname ~= 'replibox') then
-    -- Watch for wifi/ssid changes
-    wifiWatcher = hs.wifi.watcher.new(handleWifiEvent)
-    wifiWatcher:start()
-
-    -- usb watcher for laptop, specifically
-    usbConfig_laptop.init()
-  end
-
-  -- Only init these watchers for my desktop
-  if (config.hostname == 'replibox') then
-    -- usb watcher for desktop, specifically
-    usbWatcher = hs.usb.watcher.new(handleUsbEvent)
-    usbWatcher:start()
-  end
-
-  -- Watch for screen energy mode changes
-  caffeinateWatcher = hs.caffeinate.watcher.new(handleCaffeinateEvent)
-  caffeinateWatcher:start()
-
-  config.applyLayout()
-  -- config.applyAction()
+  setLayoutForAll()
 end
 
 -- TEAR DOWN ALL THE EVENTS
@@ -246,22 +214,6 @@ function events.tearDownEventHandling ()
 
   screenWatcher:stop()
   screenWatcher = nil
-
-  if (config.hostname ~= 'replibox') then
-    wifiWatcher:stop()
-    wifiWatcher = nil
-  end
-
-  if (config.hostname == 'replibox') then
-    usbWatcher:stop()
-    usbWatcher = nil
-
-    caffeinateWatcher:stop()
-    caffeinateWatcher = nil
-  end
-
-  -- potentially a bad thing to do this..
-  -- allWindows:unsubscribeAll()
 end
 
 return events

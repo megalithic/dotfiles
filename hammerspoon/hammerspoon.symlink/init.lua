@@ -1,6 +1,6 @@
 -- :: imports/requires
-require 'config'
-require('auto-layout'):init()
+require('config')
+-- require('auto-layout'):init()
 require('push-to-talk'):init(config.ptt)
 require('laptop-docking-mode'):init()
 
@@ -11,7 +11,7 @@ local switchToApp = require 'keystroke-to-app'
 
 
 -- :: event-init
--- wm.events.initEventHandling()
+wm.events.initEventHandling()
 
 
 -- :: spoons
@@ -42,35 +42,35 @@ end
 
 
 -- :: window-manipulation
-hotkey.bind(cmdCtrl, 'h', utils.chain({
+hotkey.bind(config.superKeys.cmdCtrl, 'h', utils.chain({
   config.grid.leftHalf,
   config.grid.leftOneThird,
   config.grid.leftTwoThirds,
 }))
 
-hotkey.bind(cmdCtrl, 'k', utils.chain({
+hotkey.bind(config.superKeys.cmdCtrl, 'k', utils.chain({
   config.grid.fullScreen,
 }))
 
-hotkey.bind(cmdCtrl, 'l', utils.chain({
+hotkey.bind(config.superKeys.cmdCtrl, 'l', utils.chain({
   config.grid.rightHalf,
   config.grid.rightOneThird,
   config.grid.rightTwoThirds,
 }))
 
-hotkey.bind(cmdCtrl, 'j', utils.chain({
+hotkey.bind(config.superKeys.cmdCtrl, 'j', utils.chain({
   config.grid.centeredLarge,
   config.grid.centeredMedium,
   config.grid.centeredSmall,
 }))
 
-hotkey.bind(ctrlAlt, 'h', function()
+hotkey.bind(config.superKeys.ctrlAlt, 'h', function()
   local win = hs.window.focusedWindow()
   local nextScreen = win:screen():previous()
   win:moveToScreen(nextScreen)
 end)
 
-hotkey.bind(ctrlAlt, 'l', function()
+hotkey.bind(config.superKeys.ctrlAlt, 'l', function()
   local win = hs.window.focusedWindow()
   local nextScreen = win:screen():next()
   win:moveToScreen(nextScreen)

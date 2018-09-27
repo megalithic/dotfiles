@@ -24,7 +24,7 @@ end
 setLayoutForAll = function()
   utils.log.df('[auto-layout] - beginning layout for all apps')
 
-  for _, app_config in pairs(config.applications) do
+  for app_name, app_config in pairs(config.applications) do
     -- if we have a preferred display
     if app_config.preferred_display ~= nil then
       application = hs.application.find(app_config.name)
@@ -56,7 +56,7 @@ setLayoutForApp = function(app) -- optionally, take in a `window` to layout
     utils.log.df('[auto-layout] - beginning layout for single app')
 
     local windows = app:visibleWindows()
-    local app_config = utils.getConfigForApp(app:name())
+    local app_config = config.applications[app:name()]
 
     if app_config ~= nil then
       -- we are always positioning ALL the windows, we need a single window positioner method at some point..
@@ -75,10 +75,12 @@ setLayoutForApp = function(app) -- optionally, take in a `window` to layout
 end
 
 watchScreen = function()
+  utils.log.df('[auto-layout] - screen watcher started')
   autoLayout()
 end
 
 watchApp = function(app)
+  utils.log.df('[auto-layout] - app watcher started for %s', app:name())
   -- watch new windows for app
   local watcher = app:newWatcher(autoLayout)
   watcher:start({hs.uielement.watcher.windowCreated})
@@ -91,6 +93,7 @@ end
 
 
 watchWindow = function(window)
+  utils.log.df('[auto-layout] - window watcher started for %s', window:name())
   local application = window:application()
   local bundleID = application:bundleID()
   if utils.canManageWindow(window) then

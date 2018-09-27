@@ -1,3 +1,5 @@
+local wm = require 'wm'
+
 config = {}
 
 config.hostname = hs.host.localizedName()
@@ -47,70 +49,70 @@ config.superKeys = {
 }
 
 config.applications = {
-  {
+  ['kitty'] = {
     name = 'kitty',
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
     preferredDisplay = 1,
     position = config.grid.fullScreen
   },
-  {
+  ['Google Chrome'] = {
     name = 'Google Chrome',
     superKey = config.superKeys.cmd,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.fullScreen
   },
-  {
+  ['Slack'] = {
     name = 'Slack',
     superKey = config.superKeys.mashShift,
     shortcut = 's',
     preferredDisplay = 2,
     position = config.grid.rightHalf
   },
-  {
+  ['Spark'] = {
     name = 'Spark',
     superKey = config.superKeys.mashShift,
     shortcut = 'm',
     preferredDisplay = 2,
     position = config.grid.leftHalf
   },
-  {
+  ['Finder'] = {
     name = 'Finder',
     superKey = config.superKeys.ctrl,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
-  {
+  ['zoom.us'] = {
     name = 'zoom.us',
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 2,
     position = config.grid.centeredLarge
   },
-  {
+  ['Spotify'] = {
     name = 'Spotify',
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 2,
     position = '5,0 5x5'
   },
-  {
+  ['iChat'] = {
     name = 'iChat',
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
     preferredDisplay = 2,
     position = '5,5 3x3'
   },
-  {
+  ['yakyak'] = {
     name = 'yakyak',
     superKey = config.superKeys.ctrlShift,
     shortcut = 'm',
     preferredDisplay = 2,
     position = '5,5 3x3'
   },
-  {
+  ['1Password'] = {
     name = '1Password',
     superKey = config.superKeys.mashShift,
     shortcut = '1',
@@ -143,7 +145,8 @@ config.utilities = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium,
     callback = (function()
-      require('auto-layout'):teardown()
+      -- require('auto-layout'):teardown()
+      wm.events.tearDownEventHandling()
       require('laptop-docking-mode'):teardown()
       hs.reload()
       hs.notify.show('Hammerspoon', 'Config Reloaded', '')
