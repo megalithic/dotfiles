@@ -1,13 +1,10 @@
--------------------------------------------------------------------------------
---/ configurations /--
--------------------------------------------------------------------------------
-local config = {}
+config = {}
+
 config.hostname = hs.host.localizedName()
 config.homeSSID = 'shaolin'
 config.lastSSID = hs.wifi.currentNetwork()
 
 -- :: imports/requires
-local grid = hs.grid
 local utils = require 'utils'
 
 -- :: locals
@@ -16,8 +13,6 @@ local screenCount = #hs.screen.allScreens()
 -- :: grid creation
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
--- hs.grid.MARGINX = screenCount == 1 and 10 or 0
--- hs.grid.MARGINY = 2
 hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
 
@@ -25,13 +20,13 @@ hs.grid.MARGINY = 0
 hs.window.animationDuration = 0.0 -- 0 to disable animations
 hs.window.setShadows(false)
 
--- :: screens
+-- :: screens config
 config.screens = {
   primary = hs.screen.allScreens()[1],
   secondary = hs.screen.allScreens()[2] or hs.screen.primaryScreen()
 }
 
--- GRID SETUP
+-- :: grid config
 -------------------------------------------------------------------------------
 config.grid = {
   topHalf =         '0,0 8x4',
@@ -48,193 +43,157 @@ config.grid = {
   centeredSmall =   '3,3 2x2',
 }
 
--- ACTION SETUP
--------------------------------------------------------------------------------
-config.action = {
-  ['us.zoom.xos'] = (function(window)
-    utils.log.df('[actions] event; window: %s', window)
-    -- if windowZoom Meeting ID
-  end),
+config.superKeys = {
+  ctrl = {'ctrl'},
+  cmd = {'cmd'},
+  cmdAlt = {'cmd', 'alt'},
+  cmdShift = {'cmd', 'shift'},
+  ctrlShift = {'ctrl', 'shift'},
+  cmdCtrl = {'cmd', 'ctrl'},
+  ctrlAlt = {'ctrl', 'alt'},
+  mashShift = {'cmd', 'ctrl', 'shift'},
+  mash = {'cmd', 'alt', 'ctrl'},
+  hyper = {'cmd', 'alt', 'ctrl', 'shift' },
 }
 
--- LAYOUT SETUP
+-- :: app config
 -------------------------------------------------------------------------------
-config.layout = {
-  _before_ = (function()
-  end),
-
-  _after_ = (function()
-  end),
-
-  ['com.tapbots.TweetbotMac'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.leftTwoThirds, config.secondaryDisplay(count))
-  end),
-
-  ['com.tinyspeck.slackmacgap'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.rightHalf, config.secondaryDisplay(count))
-  end),
-
-  ['com.flexibits.fantastical2.mac'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    if utils.canManageWindow(window) then
-      grid.set(window, config.grid.centeredMedium, config.primaryDisplay(count))
-    end
-  end),
-
-  ['com.readdle.smartemail-Mac'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    if count == 1 then
-      grid.set(window, config.grid.leftHalf, config.primaryDisplay(count))
-    else
-      grid.set(window, config.grid.leftHalf, config.secondaryDisplay(count))
-    end
-  end),
-
-  ['com.spotify.client'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, '5,0 5x5', config.primaryDisplay(count))
-  end),
-
-  ['com.apple.iChat'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, '5,5 3x3', config.primaryDisplay(count))
-  end),
-  ['com.github.yakyak'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, '5,5 3x3', config.primaryDisplay(count))
-  end),
-
-  -- this one gets wonky because of the fact that it spawns a popup then a window.
-  ['us.zoom.xos'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    if count == 1 then
-      grid.set(window, config.grid.centeredLarge, config.primaryDisplay(count))
-    else
-      grid.set(window, config.grid.fullScreen, config.secondaryDisplay(count))
-    end
-  end),
-
-  ['com.googlecode.iterm2'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
-  end),
-
-  ['net.kovidgoyal.kitty'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
-  end),
-
-  ['io.alacritty'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
-  end),
-
-  ['Finder'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.centeredMedium, config.primaryDisplay(count))
-  end),
-
-  ['com.agilebits.onepassword4'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.centeredMedium, config.primaryDisplay(count))
-  end),
-
-  ['org.hammerspoon.Hammerspoon'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.centeredMedium, config.primaryDisplay(count))
-  end),
-
-  ['com.apple.systempreferences'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.centeredSmall, config.primaryDisplay(count))
-  end),
-
-  ['2BUA8C4S2C.com.agilebits.onepassword4-helper'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.centeredSmall, config.secondaryDisplay(count))
-  end),
-
-  ['com.google.Chrome'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
-
-    if window:title() == 'Postman' or window:title() == 'Task Manager - Google Chrome' then
-      grid.set(window, config.grid.centeredMedium, config.primaryDisplay(count))
-    end
-  end),
-
-  ['org.mozilla.firefox'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
-  end),
-
-  ['com.electron.brave'] = (function(window, forceScreenCount)
-    local count = forceScreenCount or screenCount
-    grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
-  end),
+config.applications = {
+  {
+    name = 'kitty',
+    superKey = config.superKeys.ctrl,
+    shortcut = 'space',
+    preferredDisplay = 1,
+    position = config.grid.fullScreen
+  },
+  {
+    name = 'Google Chrome',
+    superKey = config.superKeys.cmd,
+    shortcut = '`',
+    preferredDisplay = 1,
+    position = config.grid.fullScreen
+  },
+  {
+    name = 'Slack',
+    superKey = config.superKeys.mashShift,
+    shortcut = 's',
+    preferredDisplay = 2,
+    position = config.grid.rightHalf
+  },
+  {
+    name = 'Spark',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'm',
+    preferredDisplay = 2,
+    position = config.grid.leftHalf
+  },
+  {
+    name = 'Finder',
+    superKey = config.superKeys.ctrl,
+    shortcut = '`',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium
+  },
+  {
+    name = 'zoom.us',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'z',
+    preferredDisplay = 2,
+    position = config.grid.centeredLarge
+  },
+  {
+    name = 'Spotify',
+    superKey = config.superKeys.cmdShift,
+    shortcut = '8',
+    preferredDisplay = 2,
+    position = '5,0 5x5'
+  },
+  {
+    name = 'iChat',
+    superKey = config.superKeys.cmdShift,
+    shortcut = 'm',
+    preferredDisplay = 2,
+    position = '5,5 3x3'
+  },
+  {
+    name = 'yakyak',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = 'm',
+    preferredDisplay = 2,
+    position = '5,5 3x3'
+  },
+  {
+    name = '1Password',
+    superKey = config.superKeys.mashShift,
+    shortcut = '1',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium
+  },
 }
 
+config.utilities = {
+  {
+    name = 'Hammerspoon Console',
+    superKey = config.superKeys.ctrlAlt,
+    shortcut = 'r',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium,
+    callback = function() hs.toggleConsole() end
+  },
+  {
+    name = 'Logout',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'L',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium,
+    callback = function() hs.caffeinate.startScreensaver() end
+  },
+  {
+    name = 'Hammerspoon Reload',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'r',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium,
+    callback = (function()
+      require('auto-layout'):teardown()
+      require('laptop-docking-mode'):teardown()
+      hs.reload()
+      hs.notify.show('Hammerspoon', 'Config Reloaded', '')
+    end)
+  },
+}
 
--- Helpers
---------------------------------------------------------------------------------
--- NOTE: if you have more than 2 displays, please
--- alter the following display functions as necessary
-function config.primaryDisplay(count)
-  return hs.screen.find(config.screens.primary)
-end
-
-function config.secondaryDisplay(count)
-  return hs.screen.find(config.screens.secondary)
-end
-
--- Checks to see if the current window is fullscreen or not
-function config.isFullScreen(window)
-  local wf = window:frame()
-  local sf = window:screen():fullFrame()
-  return (wf == sf)
-end
-
--- Applies our given window/screen layouts for apps
-function config.applyLayout(screenCountOverride)
-  local count = screenCountOverride or screenCount
-
-  utils.log.df('[layout] event; applying layouts for %s screens', count)
-
-  config.layout._before_()
-
-  for bundleID, callback in pairs(config.layout) do
-    local application = hs.application.get(bundleID)
-    if application then
-      local windows = application:visibleWindows()
-      for _, window in pairs(windows) do
-        if utils.canManageWindow(window) then
-          callback(window, count)
-          utils.log.df('[layout] event; layout applied for app: %s, window: %s, screen count: %s', application:name(), window:title(), count)
-        end
-      end
-    end
-  end
-
-  config.layout._after_()
-end
-
-function config.applyAction(window)
-  utils.log.df('[action] event; applying actions for window %s', window)
-
-  for bundleID, callback in pairs(config.action) do
-    local application = hs.application.get(bundleID)
-    if application then
-      local windows = application:visibleWindows()
-      for _, window in pairs(windows) do
-        if utils.canManageWindow(window) then
-          callback(window)
-          utils.log.df('[action] event; action applied for app: %s, window: %s', application:name(), window:title())
-        end
-      end
-    end
-  end
-end
+config.media = {
+  {
+    action = 'previous',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = '[',
+    label = '⇤ previous'
+  },
+  {
+    action = 'next',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = ']',
+    label = 'next ⇥'
+  },
+  {
+    action = 'playpause',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = '\\',
+    label = 'play/pause'
+  },
+  {
+    action = 'SOUND_DOWN',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = 27,
+    label = 'lowering sound'
+  },
+  {
+    action = 'SOUND_UP',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = 24,
+    label = 'raising sound'
+  },
+}
 
 return config

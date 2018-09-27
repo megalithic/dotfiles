@@ -1,7 +1,3 @@
------------------------------------------------------------------------------------
---/ events /--
------------------------------------------------------------------------------------
-
 local events = {}
 
 -- :: imports/requires
@@ -19,88 +15,6 @@ local usbWatcher = nil
 local caffeinateWatcher = nil
 local screenCount = #hs.screen.allScreens()
 local windowBorder = nil
-
-
--- window filter event handlers
-----------------------------------------------------------------------------
-function drawWindowBorder (win)
-  -- clean up existing borders
-  if windowBorder ~= nil then
-    windowBorder:delete()
-  end
-
-  local ignoredWindows = utils.Set {'iTerm2', 'Electron Helper', 'TotalFinderCrashWatcher', 'CCXProcess', 'Adobe CEF Helper', 'Hammerspoon'}
-
-  -- avoid drawing borders on "odd" windows, including iTerm2, Contexts, etc
-  if win == nil or not utils.canManageWindow(win) or ignoredWindows[win:application():name()] then return end
-
-  local topLeft = win:topLeft()
-  local size = win:size()
-
-  windowBorder = hs.drawing.rectangle(hs.geometry.rect(topLeft['x'], topLeft['y'], size['w'], size['h']))
-
-  windowBorder:setStrokeColor({["red"]=.2,["blue"]=.2,["green"]=.1,["alpha"]=.5})
-  windowBorder:setRoundedRectRadii(6.0, 6.0)
-  windowBorder:setStrokeWidth(2)
-  windowBorder:setStroke(true)
-  windowBorder:setFill(false)
-  windowBorder:setLevel("floating")
-  windowBorder:show()
-end
-
-function handleCreated (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-function handleDestroyed (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-function handleFocused (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s (%s)', eventType, win:title(), appName, hs.application(appName):bundleID())
-  -- drawWindowBorder(win)
-end
-
-function handleMoved (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-function handleUnfocused (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-function handleOnScreen (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-function handleNotOnScreen (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-function handleNotVisible (win, appName, eventType)
-  utils.log.df('[wf] event "%s"; %s for %s', eventType, win:title(), appName)
-  -- drawWindowBorder(win)
-end
-
-
--- window filter subscriptions
-----------------------------------------------------------------------------
--- allWindows = wf.new(nil, 'allWindows')
--- allWindows:subscribe(wf.windowCreated, handleCreated)
--- allWindows:subscribe(wf.windowDestroyed, handleDestroyed)
--- allWindows:subscribe(wf.windowFocused, handleFocused)
--- allWindows:subscribe(wf.windowMoved, handleMoved)
--- allWindows:subscribe(wf.windowUnfocused, handleUnfocused)
--- allWindows:subscribe(wf.windowOnScreen, handleOnScreen)
--- allWindows:subscribe(wf.windowNotOnScreen, handleNotOnScreen)
--- allWindows:subscribe(wf.windowNotVisible, handleNotVisible)
--- allWindows:subscribe(wf.windowsChanged, handleWindowsChanged)
 
 
 -- event handlers
@@ -286,12 +200,9 @@ function events.initEventHandling ()
   globalAppWatcher = hs.application.watcher.new(handleGlobalAppEvent)
   globalAppWatcher:start()
 
-  local ignoredApps = utils.Set {'org.hammerspoon.Hammerspoon', 'com.contextsformac.Contexts'}
-
   -- Watch already-running applications
   local apps = hs.application.runningApplications()
   for _, app in pairs(apps) do
-    -- if not ignoredApps(app:bundleID()) then
     if app:bundleID() ~= 'org.hammerspoon.Hammerspoon' or app:bundleID() ~= 'com.contextsformac.Contexts' then
       watchApp(app)
     end
