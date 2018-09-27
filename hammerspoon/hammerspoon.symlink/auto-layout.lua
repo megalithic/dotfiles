@@ -170,7 +170,6 @@ function watchWindow(window)
 
     if config.applications[application:name()] then
       utils.log.df('[auto-layout] watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
-      -- config.applications[application:name()](window)
       setLayoutForApp(application)
     end
 
@@ -209,8 +208,6 @@ return {
         watchApp(app)
       end
     end
-
-    -- setLayoutForAll()
   end),
   teardown = (function()
     utils.log.df('[auto-layout] teardown - tearing down screen/app/window watchers')
