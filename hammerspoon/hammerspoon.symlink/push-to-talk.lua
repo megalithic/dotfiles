@@ -95,8 +95,9 @@ function changeMicrophoneState(mute)
     end
     -- Hack to really unmute the microphone
     local defaultInputDevice = hs.audiodevice.defaultInputDevice()
-    local defaultVolumne = inputVolumes[defaultInputDevice:uid()]
-    hs.applescript('set volume input volume ' .. defaultVolumne)
+    local defaultVolume = inputVolumes[defaultInputDevice:uid()]
+    defaultVolume = 60
+    hs.applescript('set volume input volume ' .. defaultVolume)
     menubarIcon:setIcon(icons.microphone)
   end
 end
@@ -181,31 +182,35 @@ function saveSettings()
   hs.settings.set('pushToTalk.settings', settings)
 end
 
--- Public interface
-local pushToTalk = {}
-pushToTalk.init = function(modifiers)
-  modifierKeys = modifiers or {"fn"}
+return {
+  init = (function(modifiers)
+    modifierKeys = {'cmd', 'alt'} or {"fn"}
 
-  loadSettings()
-  loadIcons()
+    log.i("[push-to-talk] setting up audio watchers and menubar items")
 
-  initMenubarIcon()
+    loadSettings()
+    loadIcons()
 
-  updateInputVolumes()
-  installSystemAudioWatcher()
-  changeMicrophoneState(settings.pushToTalk)
+    initMenubarIcon()
 
-  modifiersChangedTap:start()
+    updateInputVolumes()
+    installSystemAudioWatcher()
+    changeMicrophoneState(settings.pushToTalk)
 
-  local oldShutdownCallback = hs.shutdownCallback
-  hs.shutdownCallback = function()
-    if oldShutdownCallback ~= nil then
-      oldShutdownCallback()
+    modifiersChangedTap:start()
+
+    local oldShutdownCallback = hs.shutdownCallback
+    hs.shutdownCallback = function()
+      if oldShutdownCallback ~= nil then
+        oldShutdownCallback()
+      end
+
+      saveSettings()
+      changeMicrophoneState(false)
     end
-
-    saveSettings()
-    changeMicrophoneState(false)
-  end
-end
-
-return pushToTalk
+  end),
+  teardown = (function(modifiers)
+    log.i("[push-to-talk] tearing down audio watchers")
+    hs.audiodevice.watcher.stop()
+  end)
+}

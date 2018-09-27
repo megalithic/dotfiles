@@ -1,11 +1,23 @@
------------------------------------------------------------------------------------
---/ utils and helpers /--
------------------------------------------------------------------------------------
-local utils = {}
+utils = {}
 utils.log = hs.logger.new('replicant', 'debug') -- debug or info
 
 local lastSeenChain = nil
 local lastSeenWindow = nil
+
+-- Gets the config.application entry for a specific named app, e.g. 'Chrome'
+--
+utils.getConfigForApp = function(name)
+  local config = require('config')
+  local found
+  for _, hash in pairs(config) do
+    if (hash.name == name) then
+      found = hash
+      return found
+    end
+  end
+
+  return found
+end
 
 -- Chain the specified movement commands.
 -- This is like the "chain" feature in Slate, but with a couple of enhancements:
@@ -45,74 +57,6 @@ utils.chain = function (movements)
   end
 end
 
--- TOGGLE the given app
-utils.toggleApp = function (_app)
-  -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
-  local app = hs.application.find(_app)
-
-  if app ~= nil then
-    utils.log.df('[launcher] event; attempting to toggle %s', app:bundleID())
-  end
-
-  if not app then
-    -- FIXME: this may not be working properly.. creating extraneous PIDs?
-    utils.log.df('[launcher] event; launchOrFocusByBundleID(%s) (not PID-managed app?)', _app)
-    hs.application.launchOrFocusByBundleID(_app)
-  else
-    local mainWin = app:mainWindow()
-    utils.log.df('[launcher] event; main window: %s', mainWin)
-    if mainWin then
-      if mainWin == hs.window.focusedWindow() then
-        utils.log.df('[launcher] event; hiding %s', app:bundleID())
-        mainWin:application():hide()
-      else
-        utils.log.df('[launcher] event; activating/unhiding/focusing %s', app:bundleID())
-        mainWin:application():activate(true)
-        mainWin:application():unhide()
-        mainWin:focus()
-      end
-    else
-      -- assumes there is no "mainWindow" for the application in question, probably iTerm2
-      utils.log.df('[launcher] event; launchOrFocusByBundleID(%s)', app)
-      if (app:focusedWindow() == hs.window.focusedWindow()) then
-        app:hide()
-      else
-        app:unhide()
-        hs.application.launchOrFocusByBundleID(app:bundleID())
-      end
-    end
-  end
-end
-
--- -------------------- Media / Volume Key Events --------------------
-
-utils.handleMediaKeyEvents = function (event, alertText)
-  hs.eventtap.event.newSystemKeyEvent(event, true):post()
-end
-
-utils.handleSpotifyEvents = function (event, alertText)
-  if event == 'playpause' then
-    hs.spotify.playpause()
-  elseif event == 'next' then
-    hs.spotify.next()
-  elseif event == 'previous' then
-    hs.spotify.previous()
-  end
-
-  utils.log.df('[hotkeys] event; %s', event)
-
-  if alertText then
-    hs.alert.closeAll()
-    -- hs.alert.show(alertText, 0.5)
-    hs.timer.doAfter(0.5, function ()
-      if event == 'playpause' and not hs.spotify.isPlaying() then
-        hs.alert.show('Spotify Paused')
-      else
-        hs.alert.show(hs.spotify.getCurrentArtist() .. " - " .. hs.spotify.getCurrentTrack(), 1)
-      end
-    end)
-  end
-end
 
 -- -------------------- Cursor Locator --------------------
 
@@ -146,7 +90,7 @@ utils.mouseHighlight = function ()
   mouseCircle:setFill(true)
   mouseCircle:setStrokeWidth(1)
   mouseCircle:setAlpha(.5)
-  mouseCircle:setFillGradient(red, white, 90)
+  -- mouseCircle:setFillGradient(red, white, 90)
   mouseCircle:show()
 
   -- Set a timer to delete the circle
@@ -209,99 +153,5 @@ utils.canManageWindow = function (window)
   return window:isStandard() and not window:isMinimized() or
     bundleID == 'com.googlecode.iterm2'
 end
-
--- creates a set for easier traversal and searching
--- - takes an array as a table, e.g. Set {'foo', 'bar'}
-utils.Set = function (list)
-  local set = {}
-  for _, l in ipairs(list) do set[l] = true end
-  return set
-end
-
--- acts like a switch/case statement
--- UNTESTED
-utils.switch = function (c)
-  local swtbl = {
-    casevar = c,
-    caseof = function (self, code)
-      local f
-      if (self.casevar) then
-        f = code[self.casevar] or code.default
-      else
-        f = code.missing or code.default
-      end
-      if f then
-        if type(f)=="function" then
-          return f(self.casevar,self)
-        else
-          error("case "..tostring(self.casevar).." not a function")
-        end
-      end
-    end
-  }
-  return swtbl
-end
-
--- global utility functions
-
-function tableKeys(t, sorted)
-  local keys={}
-  for k, v in pairs(t) do
-    table.insert(keys, k)
-  end
-  return keys
-end
-
-keys = hs.stdlib and hs.stdlib.table.keys or tableKeys
-
-function tableSet(t)
-  local hash = {}
-  local res = {}
-  for _, v in ipairs(t) do
-    if not hash[v] then
-      res[#res + 1] = v
-      hash[v] = true
-    end
-  end
-  return res
-end
-
-function tableMerge(t1, t2)
-  for k, v in pairs(t2) do
-    t1[k] = v
-  end
-  return t1
-end
-
-function tableContains(t, key)
-  for i, v in ipairs(t) do
-    if v == key then return i end
-  end
-end
-
-function tableSubrange(t, first, last)
-  local sub = {}
-  for i=first,last do
-    sub[#sub + 1] = t[i]
-  end
-  return sub
-end
-
-function tableCompare(t1, t2)
-  local t1Keys, t2Keys = tableKeys(t1), tableKeys(t2)
-  if #t1Keys ~= #t2Keys then return false end
-  for _, key in ipairs(t1Keys) do
-    if t1[key] ~= t2[key] then return false end
-  end
-  return true
-end
-
-function queue(t, i) return table.insert(t, i) end
-
-function dequeue(t) return table.remove(t, 1) end
-
-function ppairs(t) for k,v in pairs(t) do print(k,v) end end
-
-function hex(num) return string.format("%x", num) end
 
 return utils
