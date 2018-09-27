@@ -27,9 +27,8 @@ hs.window.setShadows(false)
 
 -- :: screens
 config.screens = {
-  laptop = 'Color LCD', -- 'Built-in Retina Display',
-  primary = hs.screen.primaryScreen(),
-  secondary = hs.screen.primaryScreen():toEast() or hs.screen.primaryScreen()
+  primary = hs.screen.allScreens()[1],
+  secondary = hs.screen.allScreens()[2] or hs.screen.primaryScreen()
 }
 
 -- GRID SETUP
@@ -166,7 +165,7 @@ config.layout = {
     end
   end),
 
-  ['Firefox'] = (function(window, forceScreenCount)
+  ['org.mozilla.firefox'] = (function(window, forceScreenCount)
     local count = forceScreenCount or screenCount
     grid.set(window, config.grid.fullScreen, config.primaryDisplay(count))
   end),
@@ -183,25 +182,11 @@ config.layout = {
 -- NOTE: if you have more than 2 displays, please
 -- alter the following display functions as necessary
 function config.primaryDisplay(count)
-  if count > 1 then
-    return hs.screen.find(config.screens.primary)
-  else
-    return hs.screen.find(config.screens.laptop)
-  end
-
-  return hs.screen.find(config.screens.laptop)
+  return hs.screen.find(config.screens.primary)
 end
 
 function config.secondaryDisplay(count)
-  utils.log.df('[layout] event; count: %s', count)
-
-  if count > 1 then
-    return hs.screen.find(config.screens.laptop)
-  else
-    return hs.screen.find(config.screens.primary)
-  end
-
-  return hs.screen.find(config.screens.laptop)
+  return hs.screen.find(config.screens.secondary)
 end
 
 -- Checks to see if the current window is fullscreen or not

@@ -1,6 +1,7 @@
 apollo-codegen
 babel-eslint
 bash-language-server
+convert-snippets
 create-react-app
 elm
 elm-oracle

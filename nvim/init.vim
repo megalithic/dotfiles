@@ -46,10 +46,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## Completion
   Plug 'ncm2/ncm2' | Plug 'roxma/nvim-yarp'
-  Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
-  Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
-  Plug 'ncm2/ncm2-ultisnips' | Plug 'SirVer/ultisnips'
-  Plug 'honza/vim-snippets'
   Plug 'ncm2/ncm2-bufword'
   Plug 'ncm2/ncm2-tmux'
   Plug 'ncm2/ncm2-path'
@@ -59,14 +55,17 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-cssomni'
   " Plug 'yuki-ycino/ncm2-dictionary'
   Plug 'filipekiss/ncm2-look.vim'
-  " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
-  " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
-  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
   Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  Plug 'megalithic/ncm2-elm', { 'for': ['elm'], 'do': 'npm i -g elm-oracle' }
+  " Plug '~/code/plugins/ncm2-elm', { 'for': ['elm'], 'do': 'npm i -g elm-oracle' }
+  Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
+  Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
+  " Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
+  " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
+  " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
+  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -74,8 +73,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
-  " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
-  Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
+  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
   Plug 'AndrewRadev/splitjoin.vim'
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
@@ -89,7 +88,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
-  Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx', 'typescriptreact', 'typescript.tsx'] } " highlights the opening/closing tags for the block you're in
+  " FIXME: currently, MatchTagAlways is breaking graphql queries in TS/TSX files.
+  " Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx'] } " highlights the opening/closing tags for the block you're in
   Plug 'jiangmiao/auto-pairs'
   Plug 'tpope/vim-endwise'
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
@@ -1246,7 +1246,7 @@ endfunction
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
   let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
   let g:ncm2_alchemist#source = {'priority': 9, 'mark': "\ue62d"} " unicode for the elixir logo for nerdfonts
-  let g:ncm2_elm#source = {'priority': 9, 'mark': "\ue62c"} " unicode for the elixir logo for nerdfonts
+  " let g:ncm2_elm#source = {'priority': 9, 'mark': "\ue62c"} " unicode for the elixir logo for nerdfonts
   let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
@@ -1257,6 +1257,18 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
+
+  " " == elm support
+  " au User Ncm2Plugin call ncm2#register_source({
+  "       \ 'name' : 'elm',
+  "       \ 'priority': 9,
+  "       \ 'subscope_enable': 1,
+  "       \ 'scope': ['elm'],
+  "       \ 'mark': "\ue62c",
+  "       \ 'word_pattern': '[\w\-]+',
+  "       \ 'complete_pattern': ':\s*',
+  "       \ 'on_complete': ['ncm2#on_complete#omni', 'elm#Complete'],
+  "       \ })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
@@ -1269,7 +1281,6 @@ endfunction
                   \ }
   let g:ncm2#sorter = 'abbrfuzzy'
   let g:ncm2#popup_limit = 25
-
   let $NVIM_PYTHON_LOG_FILE=expand('~/.config/nvim/nvim-python.log')
   let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
 
@@ -1282,7 +1293,6 @@ inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
 inoremap <c-c> <ESC>
 inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<c-y>\<cr>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
-" inoremap <silent> <expr> <CR> pumvisible() ? "\<C-R>=ExpandSnippetOrCarriageReturn()\<CR>" : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>"
 imap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 smap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 inoremap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
@@ -1377,19 +1387,19 @@ noremap <S-F5> :PlugClean!<CR>
 map <S-F5> :PlugClean!<CR>
 
 " ## vim-sneak
-nmap f <Plug>Sneak_f
-nmap F <Plug>Sneak_F
-xmap f <Plug>Sneak_f
-xmap F <Plug>Sneak_F
-omap f <Plug>Sneak_f
-omap F <Plug>Sneak_F
+" nmap f <Plug>Sneak_f
+" nmap F <Plug>Sneak_F
+" xmap f <Plug>Sneak_f
+" xmap F <Plug>Sneak_F
+" omap f <Plug>Sneak_f
+" omap F <Plug>Sneak_F
 
-nmap t <Plug>Sneak_t
-nmap T <Plug>Sneak_T
-xmap t <Plug>Sneak_t
-xmap T <Plug>Sneak_T
-omap t <Plug>Sneak_t
-omap T <Plug>Sneak_T
+" nmap t <Plug>Sneak_t
+" nmap T <Plug>Sneak_T
+" xmap t <Plug>Sneak_t
+" xmap T <Plug>Sneak_T
+" omap t <Plug>Sneak_t
+" omap T <Plug>Sneak_T
 
 " ## vim-js-file-import
 " nmap <C-i> <Plug>(JsFileImport)

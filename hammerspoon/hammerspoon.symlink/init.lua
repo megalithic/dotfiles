@@ -79,9 +79,9 @@ hotkey.bind(mashShift, 'space', function() utils.toggleApp('com.googlecode.iterm
 
 hotkey.bind('ctrl', 'return', function() utils.toggleApp('com.google.Chrome') end)
 hotkey.bind('cmd', '`', function() utils.toggleApp('com.google.Chrome') end)
--- hotkey.bind('cmd', '`', function() utils.toggleApp('com.mozilla.Firefox') end)
+-- hotkey.bind('cmd', '`', function() utils.toggleApp('org.mozilla.firefox') end)
 -- hotkey.bind(cmdShift, '`', function() utils.toggleApp('com.google.Chrome') end)
-hotkey.bind(cmdShift, '`', function() utils.toggleApp('Firefox') end)
+hotkey.bind(cmdShift, '`', function() utils.toggleApp('org.mozilla.firefox') end)
 hotkey.bind('cmd', 'f4', function() utils.toggleApp('com.readdle.smartemail-Mac') end)
 hotkey.bind(mashShift, 'm', function() utils.toggleApp('com.readdle.smartemail-Mac') end)
 hotkey.bind('cmd', 'f5', function() utils.toggleApp('com.tapbots.TweetbotMac') end)
