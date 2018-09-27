@@ -21,8 +21,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
 
 " ## UI/Interface
-  Plug '~/code/plugins/nova-vim'
-  " Plug 'megalithic/nova-vim'
+  Plug 'trevordmiller/nova-vim'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'itchyny/lightline.vim'
   Plug 'maximbaz/lightline-ale'
