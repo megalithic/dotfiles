@@ -1,5 +1,6 @@
 inspect = require('inspect')
-local utils = require('utils')
+
+local handler = require('key-handler')
 local hotkey = require('hs.hotkey')
 
 require('config')
@@ -12,7 +13,7 @@ require('laptop-docking-mode'):init()
 
 -- :: app-launching
 for _, app in pairs(config.applications) do
-  hotkey.bind(app.superKey, app.shortcut, function() utils.toggleApp(app.name) end)
+  hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.name) end)
 end
 
 -- :: utilities
@@ -22,40 +23,10 @@ end
 
 -- :: media(spotify/volume)
 for _, media in pairs(config.media) do
-  hotkey.bind(media.superKey, media.shortcut, function() utils.handleSpotifyEvents(media.action, media.label) end)
+  hotkey.bind(media.superKey, media.shortcut, function() handler.spotify(media.action, media.label) end)
 end
 
 -- :: window-manipulation
-hotkey.bind(config.superKeys.cmdCtrl, 'h', utils.chain({
-  config.grid.leftHalf,
-  config.grid.leftOneThird,
-  config.grid.leftTwoThirds,
-}))
-
-hotkey.bind(config.superKeys.cmdCtrl, 'k', utils.chain({
-  config.grid.fullScreen,
-}))
-
-hotkey.bind(config.superKeys.cmdCtrl, 'l', utils.chain({
-  config.grid.rightHalf,
-  config.grid.rightOneThird,
-  config.grid.rightTwoThirds,
-}))
-
-hotkey.bind(config.superKeys.cmdCtrl, 'j', utils.chain({
-  config.grid.centeredLarge,
-  config.grid.centeredMedium,
-  config.grid.centeredSmall,
-}))
-
-hotkey.bind(config.superKeys.ctrlAlt, 'h', function()
-  local win = hs.window.focusedWindow()
-  local nextScreen = win:screen():previous()
-  win:moveToScreen(nextScreen)
-end)
-
-hotkey.bind(config.superKeys.ctrlAlt, 'l', function()
-  local win = hs.window.focusedWindow()
-  local nextScreen = win:screen():next()
-  win:moveToScreen(nextScreen)
-end)
+for _, mover in pairs(config.windowMover) do
+  hotkey.bind(mover.superKey, mover.shortcut, mover.chain)
+end

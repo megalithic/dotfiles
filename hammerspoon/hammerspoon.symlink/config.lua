@@ -191,18 +191,59 @@ config.media = {
     shortcut = '\\',
     label = 'play/pause'
   },
+  -- {
+  --   action = 'SOUND_DOWN',
+  --   superKey = config.superKeys.ctrlShift,
+  --   shortcut = 27,
+  --   label = 'lowering sound'
+  -- },
+  -- {
+  --   action = 'SOUND_UP',
+  --   superKey = config.superKeys.ctrlShift,
+  --   shortcut = 24,
+  --   label = 'raising sound'
+  -- },
+}
+
+config.windowMover = {
   {
-    action = 'SOUND_DOWN',
-    superKey = config.superKeys.ctrlShift,
-    shortcut = 27,
-    label = 'lowering sound'
+    name = 'left',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'h',
+    chain = utils.chain({
+      config.grid.leftHalf,
+      config.grid.leftOneThird,
+      config.grid.leftTwoThirds,
+    })
   },
   {
-    action = 'SOUND_UP',
-    superKey = config.superKeys.ctrlShift,
-    shortcut = 24,
-    label = 'raising sound'
+    name = 'right',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'l',
+    chain = utils.chain({
+      config.grid.rightHalf,
+      config.grid.rightOneThird,
+      config.grid.rightTwoThirds,
+    })
   },
+  {
+    name = 'down',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'j',
+    chain = utils.chain({
+      config.grid.centeredLarge,
+      config.grid.centeredMedium,
+      config.grid.centeredSmall,
+    })
+  },
+  {
+    name = 'up',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'k',
+    chain = utils.chain({
+      config.grid.fullScreen,
+    })
+  }
 }
 
 return config
