@@ -113,7 +113,7 @@ brew 'tree'
 brew 'unixodbc'
 brew 'urlview'
 brew 'watchman', args: ['--HEAD']
-brew 'weechat', args: ['--with-ruby', '--with-python', '--with-perl', '--with-lua', '--with-aspell', '--with-javascript', '--with-curl', '--with-guile']
+brew 'weechat', args: ['--with-ruby', '--with-python@2', '--with-perl', '--with-lua', '--with-aspell', '--with-javascript', '--with-curl', '--with-guile', '--HEAD']
 brew 'wget', args: ['enable-iri']
 brew 'wifi-password'
 brew 'yubico-piv-tool'

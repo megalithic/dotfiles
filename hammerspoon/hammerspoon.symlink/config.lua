@@ -64,6 +64,14 @@ config.applications = {
     preferredDisplay = 1,
     position = config.grid.fullScreen
   },
+  ['Firefox'] = {
+    name = 'Firefox',
+    bundleID = 'org.mozilla.firefox',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = '`',
+    preferredDisplay = 1,
+    position = config.grid.fullScreen
+  },
   ['Slack'] = {
     name = 'Slack',
     bundleID = 'com.tinyspeck.slackmacgap',
@@ -108,7 +116,7 @@ config.applications = {
     bundleID = 'com.apple.iChat',
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
-    preferredDisplay = 2,
+    preferredDisplay = 1,
     position = '5,5 3x3'
   },
   ['yakyak'] = {
@@ -116,7 +124,7 @@ config.applications = {
     bundleID = 'com.github.yakyak',
     superKey = config.superKeys.ctrlShift,
     shortcut = 'm',
-    preferredDisplay = 2,
+    preferredDisplay = 1,
     position = '5,5 3x3'
   },
   ['1Password'] = {
@@ -144,14 +152,6 @@ config.applications = {
     bundleID = 'com.flexibits.fantastical2.mac',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
-  },
-  ['Firefox'] = {
-    name = 'Firefox',
-    bundleID = 'org.mozilla.firefox',
-    superKey = config.superKeys.cmdCtrl,
-    shortcut = '`',
-    preferredDisplay = 1,
-    position = config.grid.fullScreen
   },
 }
 

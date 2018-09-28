@@ -74,6 +74,7 @@ path=(
   /usr/local/opt/curl/bin
   /usr/local/lib/python2.7/site-packages
   $HOME/Library/Python/3.6/lib/python/site-packages
+  $HOME/Library/Python/3.7/bin
   /usr/{bin,sbin}
   /{bin,sbin}
   $path
