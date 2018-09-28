@@ -127,6 +127,40 @@ config.applications = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
+  ['1Password Helper'] = {
+    name = '1Password Helper',
+    bundleID = '2BUA8C4S2C.com.agilebits.onepassword4-helper',
+    superKey = config.superKeys.mashShift,
+    shortcut = '1',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium
+  },
+  ['Hammerspoon'] = {
+    name = 'Hammerspoon',
+    bundleID = 'org.hammerspoon.Hammerspoon',
+    preferredDisplay = 2,
+    position = config.grid.centeredMedium
+  },
+  ['System Preferences'] = {
+    name = 'System Preferences',
+    bundleID = 'com.apple.systempreferences',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium
+  },
+  ['Fantastical2'] = {
+    name = 'Fantastical2',
+    bundleID = 'com.flexibits.fantastical2.mac',
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium
+  },
+  ['Firefox'] = {
+    name = 'Firefox',
+    bundleID = 'org.mozilla.firefox',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = '`',
+    preferredDisplay = 1,
+    position = config.grid.fullScreen
+  },
 }
 
 config.utilities = {

@@ -79,11 +79,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
-  Plug 'jsfaint/gen_tags.vim'
+  " Plug 'jsfaint/gen_tags.vim'
 
 " ## Utils
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
-  Plug 'EinfachToll/DidYouMean'
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
@@ -961,6 +960,7 @@ endfunction
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
         \   'python': ['pyls'],
+        \   'ruby': [],
         \   'elixir': ['mix', 'credo', 'dogma'],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
@@ -1169,10 +1169,10 @@ endfunction
   let g:gist_open_url = 1
   let g:gist_default_private = 1
 
-" ## gen_tags
-  let g:gen_tags#use_cache_dir  = 0
-  let g:gen_tags#ctags_auto_gen = 1
-  let g:gen_tags#gtags_auto_gen = 1
+" " ## gen_tags
+"   let g:gen_tags#use_cache_dir  = 0
+"   let g:gen_tags#ctags_auto_gen = 1
+"   let g:gen_tags#gtags_auto_gen = 1
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<c-e>"
@@ -1237,7 +1237,7 @@ endfunction
   let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
   let g:ncm2_alchemist#source = {'priority': 9, 'mark': "\ue62d"} " unicode for the elixir logo for nerdfonts
   " let g:ncm2_elm#source = {'priority': 9, 'mark': "\ue62c"} " unicode for the elixir logo for nerdfonts
-  let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
+  " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
   let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
@@ -1308,7 +1308,7 @@ vnoremap y y`]
 vnoremap p p`]
 
 " tagbar
-nnoremap <f4> :TagbarToggle<CR>
+" nnoremap <f4> :TagbarToggle<CR>
 
 " Filesearch plugin map for searching in whole folder
 nnoremap <Leader>f :call Search()<CR>

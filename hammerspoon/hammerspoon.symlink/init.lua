@@ -13,7 +13,9 @@ require('laptop-docking-mode'):init()
 
 -- :: app-launching
 for _, app in pairs(config.applications) do
-  hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.name) end)
+  if app.superKey ~= nil and app.shortcut ~= nil then
+    hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.name) end)
+  end
 end
 
 -- :: utilities

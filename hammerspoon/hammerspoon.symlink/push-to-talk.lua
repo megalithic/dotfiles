@@ -26,7 +26,7 @@ function updateInputVolumes()
         inputVolume = 75
       end
       inputVolumes[device:uid()] = inputVolume
-      log.i("Setting unmuted volume for " .. device:uid() .. ": " .. inputVolumes[device:uid()])
+      log.i("[push-to-talk] Setting unmuted volume for " .. device:uid() .. ": " .. inputVolumes[device:uid()])
     end
     if not device:watcherIsRunning() then
       device:watcherCallback(onInputDeviceChanged)
@@ -36,7 +36,7 @@ function updateInputVolumes()
   for uid, volume in pairs(inputVolumes) do
     if activeUids[uid] == nil then
       inputVolumes[uid] = nil
-      log.i("Removed unmuted volume for no longer active device " .. uid)
+      log.i("[push-to-talk] Removed unmuted volume for no longer active device " .. uid)
     end
   end
 end
@@ -58,7 +58,7 @@ function onInputDeviceChanged(uid, name, scope, element)
   end
 
   inputVolumes[uid] = newVolume
-  log.i("User changed unmuted volume for " .. uid .. ": " .. newVolume)
+  log.i("[push-to-talk] User changed unmuted volume for " .. uid .. ": " .. newVolume)
 end
 
 function onSystemAudioDeviceChanged(name)
@@ -77,7 +77,7 @@ end
 
 function changeMicrophoneState(mute)
   if mute then
-    log.i('Muting audio')
+    log.i('[push-to-talk] Muting audio')
     for index, device in ipairs(hs.audiodevice.allInputDevices()) do
       device:setInputVolume(0)
     end
@@ -87,9 +87,9 @@ function changeMicrophoneState(mute)
   else
     for index, device in ipairs(hs.audiodevice.allInputDevices()) do
       if inputVolumes[device:uid()] == nil then
-        log.i("Device with unknown inputVolume")
+        log.i("[push-to-talk] Device with unknown inputVolume")
       else
-        log.i('Unmuting audio: ' .. inputVolumes[device:uid()])
+        log.i('[push-to-talk] Unmuting audio: ' .. inputVolumes[device:uid()])
         device:setInputVolume(inputVolumes[device:uid()])
       end
     end
@@ -183,6 +183,7 @@ function saveSettings()
 end
 
 return {
+  -- FIXME: need to be able to pass in the modifierKeys table or something
   init = (function(modifiers)
     modifierKeys = {'cmd', 'alt'} or {"fn"}
 
