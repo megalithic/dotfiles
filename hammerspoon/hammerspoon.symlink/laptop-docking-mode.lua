@@ -46,7 +46,7 @@ selectKarabinerProfile = (function(profile)
     '--select-profile ' ..
     profile
   )
-  log.i('Selecting Karabiner profile: %s', profile)
+  log.i('Selecting Karabiner profile:', profile)
 end)
 
 toggleWifi = (function(state)
@@ -54,7 +54,7 @@ toggleWifi = (function(state)
     'networksetup -setairportpower airport ' ..
     state
   )
-  log.i('Turning wifi %s', state)
+  log.i('Turning wifi', state)
 end)
 
 selectAudioOutput = (function(output)
@@ -62,7 +62,7 @@ selectAudioOutput = (function(output)
     'SwitchAudioSource -t output -s ' ..
     output
   )
-  log.i('Switching to audio output: %s', output)
+  log.i('Switching to audio output:', output)
 end)
 
 selectAudioInput = (function(input)
@@ -70,7 +70,7 @@ selectAudioInput = (function(input)
     'SwitchAudioSource -t input -s ' ..
     input
   )
-  log.i('Switching to audio input: %s', input)
+  log.i('Switching to audio input:', input)
 end)
 
 return {

@@ -100,7 +100,7 @@ config.applications = {
     bundleID = 'com.spotify.client',
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
-    preferredDisplay = 2,
+    preferredDisplay = 1,
     position = '5,0 5x5'
   },
   ['Messages'] = {
@@ -121,15 +121,7 @@ config.applications = {
   },
   ['1Password'] = {
     name = '1Password',
-    bundleID = 'com.agilebits.onepassword4',
-    superKey = config.superKeys.mashShift,
-    shortcut = '1',
-    preferredDisplay = 1,
-    position = config.grid.centeredMedium
-  },
-  ['1Password Helper'] = {
-    name = '1Password Helper',
-    bundleID = '2BUA8C4S2C.com.agilebits.onepassword4-helper',
+    bundleID = 'com.agilebits.onepassword7',
     superKey = config.superKeys.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
