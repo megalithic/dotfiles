@@ -4,9 +4,9 @@ local handler = require('key-handler')
 local hotkey = require('hs.hotkey')
 
 require('config')
-require('auto-layout'):init()
-require('push-to-talk'):init(config.ptt) -- having to set ptt modifierKeys in the module for some reason. :(
-require('laptop-docking-mode'):init()
+require('auto-layout').init()
+require('push-to-talk').init(config.ptt)
+require('laptop-docking-mode').init()
 
 -- :: spoons
 -- hs.loadSpoon() -- none yet

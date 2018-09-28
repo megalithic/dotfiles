@@ -183,11 +183,10 @@ function saveSettings()
 end
 
 return {
-  -- FIXME: need to be able to pass in the modifierKeys table or something
   init = (function(modifiers)
-    modifierKeys = {'cmd', 'alt'} or {"fn"}
+    modifierKeys = modifiers or {"fn"}
 
-    log.i("[push-to-talk] setting up audio watchers and menubar items")
+    log.i("[push-to-talk] setting up audio watchers and menubar items with modifiers", inspect(modifierKeys))
 
     loadSettings()
     loadIcons()
