@@ -4,7 +4,7 @@ local log = require('utils')
 config = {}
 
 config.hostname = hs.host.localizedName()
-config.homeSSID = 'shaolin'
+config.preferredSSID = 'shaolin'
 config.lastSSID = hs.wifi.currentNetwork()
 
 hs.grid.GRIDWIDTH = 8
