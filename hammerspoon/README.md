@@ -8,7 +8,7 @@ of the macOS core libraries and APIs.
 
 ### So, what does my [config](hammerspoon.symlink/config.lua) do?
 
-- **Push-to-Talk**: includes a handy menubar icon for current "talk" status. Bound to holding `alt+cmd` to talk.
+- **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `alt+cmd` to talk.
 
 - **Spotify Controls**: simple keybindings to handle Play/Pause, Next, Previous.
 Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
@@ -32,7 +32,7 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * Manual window placement and sizing (with chaining to different sections of
     the screen as you repeat the keypresses). Bound to `cmd+ctrl+j/k/l/h`.
 
-- **Automatic USB**:
+- **Laptop "Docking/Undocking" Events**:
   * When docking my laptop (plugging in the single TB3 cable, aka using the laptop in
   desktop mode), it automatically switches:
     - switches [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements) profile to `pok3r` (for my Vortex pok3r mechanical keyboard)
