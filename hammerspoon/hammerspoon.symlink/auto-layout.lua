@@ -1,6 +1,5 @@
 local config = require('config')
 local utils = require('utils')
-local wf = hs.window.filter
 local eventsWatcher = hs.uielement.watcher
 local watchers = {}
 local globalAppWatcher = nil
