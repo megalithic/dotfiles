@@ -28,9 +28,10 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * Spotify: `cmd+shift+8`
 
 - **Window Management**:
-  * Automatic window placement, can be configured in [`config.lua`](hammerspoon.symlink/config.lua).
+  * Automatic window placement, as presently configured in [`config.lua`](hammerspoon.symlink/config.lua).
   * Manual window placement and sizing (with chaining to different sections of
-    the screen as you repeat the keypresses). Bound to `cmd+ctrl+j/k/l/h`.
+    the screen as you repeat the keypresses).
+    - Bound to `cmd+ctrl+j/k/l/h`.
 
 - **Laptop "Docking/Undocking" Events**:
   * When docking my laptop (plugging in the single TB3 cable, aka using the laptop in
