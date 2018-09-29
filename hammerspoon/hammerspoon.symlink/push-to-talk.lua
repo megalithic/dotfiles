@@ -1,8 +1,6 @@
 --
 -- Simple Hammerspoon script to create Push-To-Talk functionality
 -- Press and hold fn key to talk
---
-local log = hs.logger.new('PushToTalk','debug')
 local settings = {
   pushToTalk = true
 }
@@ -87,7 +85,7 @@ function changeMicrophoneState(mute)
   else
     for index, device in ipairs(hs.audiodevice.allInputDevices()) do
       if inputVolumes[device:uid()] == nil then
-        log.i("[push-to-talk] Device with unknown inputVolume")
+        log.wf("[push-to-talk] Device with unknown inputVolume")
       else
         log.i('[push-to-talk] Unmuting audio: ' .. inputVolumes[device:uid()])
         device:setInputVolume(inputVolumes[device:uid()])
@@ -104,41 +102,41 @@ end
 
 local keyPressed = false
 local modifiersChangedTap = hs.eventtap.new(
-    {hs.eventtap.event.types.flagsChanged},
-    function(event)
-        local modifiers = event:getFlags()
-        local stateChanged = false
+  {hs.eventtap.event.types.flagsChanged},
+  function(event)
+    local modifiers = event:getFlags()
+    local stateChanged = false
 
-        local modifiersMatch = true
-        for index, key in ipairs(modifierKeys) do
-          if modifiers[key] ~= true then
-            modifiersMatch = false
-          end
-        end
-
-        if modifiersMatch then
-          if keyPressed ~= true then
-            stateChanged = true
-          end
-          keyPressed = true
-        else
-          if keyPressed ~= false then
-            stateChanged = true
-          end
-          keyPressed = false
-        end
-
-        if stateChanged then
-          if keyPressed then
-            muted = not settings.pushToTalk
-            changeMicrophoneState(muted)
-          else
-            muted = settings.pushToTalk
-            changeMicrophoneState(muted)
-          end
-        end
+    local modifiersMatch = true
+    for index, key in ipairs(modifierKeys) do
+      if modifiers[key] ~= true then
+        modifiersMatch = false
+      end
     end
-)
+
+    if modifiersMatch then
+      if keyPressed ~= true then
+        stateChanged = true
+      end
+      keyPressed = true
+    else
+      if keyPressed ~= false then
+        stateChanged = true
+      end
+      keyPressed = false
+    end
+
+    if stateChanged then
+      if keyPressed then
+        muted = not settings.pushToTalk
+        changeMicrophoneState(muted)
+      else
+        muted = settings.pushToTalk
+        changeMicrophoneState(muted)
+      end
+    end
+  end
+  )
 
 function initMenubarIcon()
   menubarIcon = hs.menubar.new()
@@ -146,71 +144,71 @@ function initMenubarIcon()
   menubarIcon:setMenu(function()
     return {
       {title = "Push to talk", checked = settings.pushToTalk, fn = function()
-        if settings.pushToTalk == false then
-          muted = true
-          changeMicrophoneState(true)
-          settings.pushToTalk = true
-        end
-      end},
-      {title = "Push to mute", checked = not settings.pushToTalk, fn = function()
-        if settings.pushToTalk == true then
-          muted = false
-          changeMicrophoneState(false)
-          settings.pushToTalk = false
-        end
-      end},
-      {title = "-"},
-      {title = "Hotkey: " .. table.concat(modifierKeys, " + ")}
-    }
-  end)
-end
-
-function loadIcons()
-  local iconPath = hs.configdir .. "/assets"
-  icons.microphone = hs.image.imageFromPath(iconPath .. "/microphone.pdf"):setSize({w = 16, h = 16})
-  icons.mutedMicrophone = hs.image.imageFromPath(iconPath .."/microphone-slash.pdf"):setSize({w = 16, h = 16})
-end
-
-function loadSettings()
-  local loadedSettings = hs.settings.get('pushToTalk.settings')
-  if loadedSettings ~= nil then
-    settings = loadedSettings
-  end
-end
-
-function saveSettings()
-  hs.settings.set('pushToTalk.settings', settings)
-end
-
-return {
-  init = (function(modifiers)
-    modifierKeys = modifiers or {"fn"}
-
-    log.i("[push-to-talk] setting up audio watchers and menubar items with modifiers", inspect(modifierKeys))
-
-    loadSettings()
-    loadIcons()
-
-    initMenubarIcon()
-
-    updateInputVolumes()
-    installSystemAudioWatcher()
-    changeMicrophoneState(settings.pushToTalk)
-
-    modifiersChangedTap:start()
-
-    local oldShutdownCallback = hs.shutdownCallback
-    hs.shutdownCallback = function()
-      if oldShutdownCallback ~= nil then
-        oldShutdownCallback()
-      end
-
-      saveSettings()
-      changeMicrophoneState(false)
+          if settings.pushToTalk == false then
+            muted = true
+            changeMicrophoneState(true)
+            settings.pushToTalk = true
+          end
+        end},
+        {title = "Push to mute", checked = not settings.pushToTalk, fn = function()
+            if settings.pushToTalk == true then
+              muted = false
+              changeMicrophoneState(false)
+              settings.pushToTalk = false
+            end
+          end},
+          {title = "-"},
+          {title = "Hotkey: " .. table.concat(modifierKeys, " + ")}
+        }
+      end)
     end
-  end),
-  teardown = (function(modifiers)
-    log.i("[push-to-talk] tearing down audio watchers")
-    hs.audiodevice.watcher.stop()
-  end)
-}
+
+    function loadIcons()
+      local iconPath = hs.configdir .. "/assets"
+      icons.microphone = hs.image.imageFromPath(iconPath .. "/microphone.pdf"):setSize({w = 16, h = 16})
+      icons.mutedMicrophone = hs.image.imageFromPath(iconPath .."/microphone-slash.pdf"):setSize({w = 16, h = 16})
+    end
+
+    function loadSettings()
+      local loadedSettings = hs.settings.get('pushToTalk.settings')
+      if loadedSettings ~= nil then
+        settings = loadedSettings
+      end
+    end
+
+    function saveSettings()
+      hs.settings.set('pushToTalk.settings', settings)
+    end
+
+    return {
+      init = (function(modifiers)
+        modifierKeys = modifiers or {"fn"}
+
+        log.i("[push-to-talk] setting up audio watchers and menubar items with modifiers", inspect(modifierKeys))
+
+        loadSettings()
+        loadIcons()
+
+        initMenubarIcon()
+
+        updateInputVolumes()
+        installSystemAudioWatcher()
+        changeMicrophoneState(settings.pushToTalk)
+
+        modifiersChangedTap:start()
+
+        local oldShutdownCallback = hs.shutdownCallback
+        hs.shutdownCallback = function()
+          if oldShutdownCallback ~= nil then
+            oldShutdownCallback()
+          end
+
+          saveSettings()
+          changeMicrophoneState(false)
+        end
+      end),
+      teardown = (function(modifiers)
+        log.i("[push-to-talk] tearing down audio watchers")
+        hs.audiodevice.watcher.stop()
+      end)
+    }
