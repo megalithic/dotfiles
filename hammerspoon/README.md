@@ -36,8 +36,8 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * When docking my laptop (plugging in the single TB3 cable, aka using the laptop in
   desktop mode), it automatically switches:
     - switches [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements) profile to `pok3r` (for my Vortex pok3r mechanical keyboard)
-    - switches audio output to `AudioEngine D1` DAC
-    - switches audio input to `Logitech Webcam C930e` DAC
+    - switches audio output to `AudioEngine D1`
+    - switches audio input to `Logitech Webcam C930e`
     - switches off WiFi
   * It will reverse all of the above to the internal/built-in devices of my MacBook Pro when
   unplugging the single TB3 cable
