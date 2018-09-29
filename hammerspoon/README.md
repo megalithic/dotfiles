@@ -2,7 +2,7 @@
 
 ### What even is this?
 
-The simplest answer, is that Hammerspoon is a Lua-based automation framework for
+The simplest answer is that Hammerspoon is a Lua-based automation framework for
 your macOS-based computer. It has a robust and [well-documented](http://www.hammerspoon.org/docs/) Lua layer on top
 of the macOS core libraries and APIs.
 
