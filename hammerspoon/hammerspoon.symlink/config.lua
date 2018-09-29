@@ -160,19 +160,19 @@ config.utilities = {
     name = 'Hammerspoon Console',
     superKey = config.superKeys.ctrlAlt,
     shortcut = 'r',
-    callback = function() hs.toggleConsole() end
+    fn = function() hs.toggleConsole() end
   },
   {
     name = 'Lock Screen',
     superKey = config.superKeys.mashShift,
     shortcut = 'L',
-    callback = function() hs.caffeinate.lockScreen() end
+    fn = function() hs.caffeinate.lockScreen() end
   },
   {
     name = 'Hammerspoon Reload',
     superKey = config.superKeys.mashShift,
     shortcut = 'r',
-    callback = (function()
+    fn = (function()
       require('auto-layout').teardown()
       require('laptop-docking-mode').teardown()
       require('push-to-talk').teardown()
@@ -184,7 +184,7 @@ config.utilities = {
     name = 'Cursor Locator',
     superKey = config.superKeys.mashShift,
     shortcut = 'return',
-    callback = (function()
+    fn = (function()
       utils.mouseHighlight()
     end)
   },
@@ -192,7 +192,7 @@ config.utilities = {
     name = 'Re-layout All',
     superKey = config.superKeys.mashShift,
     shortcut = 'w',
-    callback = (function()
+    fn = (function()
       require('auto-layout').snapAll()
     end)
   },
@@ -200,7 +200,7 @@ config.utilities = {
     name = 'Re-layout App',
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'w',
-    callback = (function()
+    fn = (function()
       require('auto-layout').snapApp(hs.application.frontmostApplication())
     end)
   },
@@ -239,12 +239,12 @@ config.media = {
   -- },
 }
 
-config.windowMover = {
+config.snap = {
   {
     name = 'left',
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'h',
-    chain = utils.chain({
+    locations = utils.chain({
       config.grid.leftHalf,
       config.grid.leftOneThird,
       config.grid.leftTwoThirds,
@@ -254,7 +254,7 @@ config.windowMover = {
     name = 'right',
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'l',
-    chain = utils.chain({
+    locations = utils.chain({
       config.grid.rightHalf,
       config.grid.rightOneThird,
       config.grid.rightTwoThirds,
@@ -264,7 +264,7 @@ config.windowMover = {
     name = 'down',
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'j',
-    chain = utils.chain({
+    locations = utils.chain({
       config.grid.centeredLarge,
       config.grid.centeredMedium,
       config.grid.centeredSmall,
@@ -274,7 +274,7 @@ config.windowMover = {
     name = 'up',
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'k',
-    chain = utils.chain({
+    locations = utils.chain({
       config.grid.fullScreen,
     })
   }

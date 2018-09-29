@@ -22,15 +22,15 @@ end
 
 -- :: utilities
 for _, util in pairs(config.utilities) do
-  hotkey.bind(util.superKey, util.shortcut, util.callback)
+  hotkey.bind(util.superKey, util.shortcut, util.fn)
 end
 
--- :: media(spotify/volume)
+-- :: media (spotify)
 for _, media in pairs(config.media) do
   hotkey.bind(media.superKey, media.shortcut, function() handler.spotify(media.action, media.label) end)
 end
 
--- :: window-manipulation
-for _, mover in pairs(config.windowMover) do
-  hotkey.bind(mover.superKey, mover.shortcut, mover.chain)
+-- :: window-manipulation (window snapping)
+for _, snap in pairs(config.snap) do
+  hotkey.bind(snap.superKey, snap.shortcut, snap.locations)
 end
