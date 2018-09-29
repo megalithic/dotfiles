@@ -1,6 +1,3 @@
-local log = require 'log'
-local inspect = require('inspect')
-
 local dockedDevice = {
   -- my pok3r keyboard's USB identifiers:
   vendorID = 1241,
@@ -75,7 +72,7 @@ end)
 
 return {
   init = (function()
-    utils.log.df('[laptop-docking-mode] - creating laptop-docking-mode watchers')
+    log.i('[laptop-docking-mode] - creating laptop-docking-mode watchers')
     watcher = hs.usb.watcher.new(handleEvent):start()
 
 --     for _, device in pairs(hs.usb.attachedDevices()) do
@@ -87,7 +84,7 @@ return {
 --     end
   end),
   teardown = (function()
-    utils.log.df('[laptop-docking-mode] - tearing down laptop-docking-mode watchers')
+    log.i('[laptop-docking-mode] - tearing down laptop-docking-mode watchers')
     watcher:stop()
     watcher = nil
   end)

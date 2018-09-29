@@ -13,7 +13,8 @@
 --
 local logLevel = 'info'
 
-local log = hs.logger.new('replicant', logLevel)
+-- local log = hs.logger.new(nil, logLevel)
+local log = hs.logger.new(hs.host.localizedName(), logLevel)
 
 local module = {
   d = log.d,

@@ -25,22 +25,21 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'itchyny/lightline.vim'
   Plug 'maximbaz/lightline-ale'
-  " Plug 'vim-airline/vim-airline'
-  " let g:airline_theme='nova'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
-  " Plug 'cskeeters/vim-smooth-scroll'
 
 " ## Syntax
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'leafgarland/typescript-vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
   Plug 'lilydjwg/colorizer'
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
+
   Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir', 'eelixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
+
   Plug 'sheerun/vim-polyglot'
 
 " ## Completion
@@ -48,7 +47,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-bufword'
   Plug 'ncm2/ncm2-tmux'
   Plug 'ncm2/ncm2-path'
-  " Plug 'ncm2/ncm2-match-highlight' " the fonts used are wonky
   Plug 'ncm2/ncm2-html-subscope'
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-cssomni'

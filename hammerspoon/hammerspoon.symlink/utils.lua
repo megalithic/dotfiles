@@ -1,5 +1,4 @@
 utils = {}
-utils.log = hs.logger.new('replicant', 'debug') -- debug or info
 
 local lastSeenChain = nil
 local lastSeenWindow = nil

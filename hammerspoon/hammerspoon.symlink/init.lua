@@ -1,4 +1,6 @@
 inspect = require('inspect')
+log = require('log')
+log.warning()
 
 local handler = require('key-handler')
 local hotkey = require('hs.hotkey')

@@ -1,10 +1,11 @@
+local utils = require('utils')
+local log = require('utils')
+
 config = {}
 
 config.hostname = hs.host.localizedName()
 config.homeSSID = 'shaolin'
 config.lastSSID = hs.wifi.currentNetwork()
-
-local utils = require 'utils'
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
