@@ -41,19 +41,19 @@ all willy-nilly install a stranger's shell scripts. :)
 
 A few of the tools I roll with:
 
-- [ `brew` ](https://brew.sh/)
-- [ Hammerspoon ](http://www.hammerspoon.org/)
-- [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements)
+- [homebrew](https://brew.sh/)
+- [hammerspoon](http://www.hammerspoon.org/)
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   * see `~/.dotfiles/keyboard`
-- [ `tmux` ](https://github.com/tmux/tmux/wiki)
+- [tmux](https://github.com/tmux/tmux/wiki)
   * additional tmux statusbar binaries available (see `tmux-*` files in
   `~/.dotfiles/bin`).
-- [FuraCode Nerd Font](https://nerdfonts.com/)
+- [furacode nerd font](https://nerdfonts.com/)
   * installed via `brew`
-- [ `kitty` ](https://github.com/kovidgoyal/kitty)
+- [kitty](https://github.com/kovidgoyal/kitty)
   * [nova](https://github.com/trevordmiller/nova-colors)
-- [ `nvim` ](https://neovim.io/)
-- [ `zsh` ](https://www.zsh.org/)
+- [neovim](https://neovim.io/)
+- [zsh](https://www.zsh.org/)
   * [pure](https://github.com/sindresorhus/pure), customized with some extra git things (see `~/.dotfiles/zsh/themes`)
 
 The file hierarchy:
