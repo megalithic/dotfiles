@@ -1,12 +1,6 @@
 local utils = require('utils')
 local log = require('utils')
 
-config = {}
-
-config.hostname = hs.host.localizedName()
-config.preferredSSID = 'shaolin'
-config.lastSSID = hs.wifi.currentNetwork()
-
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
@@ -17,8 +11,11 @@ hs.window.animationDuration = 0.0 -- 0 to disable animations
 hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 
+config = {}
 
-config.ptt = {'cmd', 'alt'}
+config.hostname = hs.host.localizedName()
+config.preferredSSID = 'shaolin'
+config.lastSSID = hs.wifi.currentNetwork()
 
 config.grid = {
   topHalf =         '0,0 8x4',
@@ -47,6 +44,8 @@ config.superKeys = {
   mash = {'cmd', 'alt', 'ctrl'},
   hyper = {'cmd', 'alt', 'ctrl', 'shift' },
 }
+
+config.ptt = {'cmd', 'alt'}
 
 config.applications = {
   ['kitty'] = {

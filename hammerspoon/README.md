@@ -28,19 +28,19 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * Spotify: `cmd+shift+8`
 
 - **Window Management**:
-  * Automatic window placement, can be configured in `config.lua`.
+  * Automatic window placement, can be configured in [`config.lua`](hammerspoon.symlink/config.lua).
   * Manual window placement and sizing (with chaining to different sections of
     the screen as you repeat the keypresses). Bound to `cmd+ctrl+j/k/l/h`.
 
 - **Automatic USB**:
-  * When docking my laptop (plugging in the TB3 cable, aka using the laptop in
+  * When docking my laptop (plugging in the single TB3 cable, aka using the laptop in
   desktop mode), it automatically switches:
-    - the Karabiner-Elements profile to `pok3r` (Vortex Pok3r mechanical keyboard)
-    - turns off WiFi
+    - switches [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements) profile to `pok3r` (for my Vortex pok3r mechanical keyboard)
     - switches audio output to `AudioEngine D1` DAC
     - switches audio input to `Logitech Webcam C930e` DAC
-  * It will reverse to the internal/built-in devices of my MacBook Pro when
-  unplugging.
+    - switches off WiFi
+  * It will reverse all of the above to the internal/built-in devices of my MacBook Pro when
+  unplugging the single TB3 cable
 
 - **[Home Assistant](https://www.home-assistant.io/) Integration**:
   * When logging into the computer, and I'm at home, it will fire off certain
