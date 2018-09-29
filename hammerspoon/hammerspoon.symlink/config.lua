@@ -161,28 +161,22 @@ config.utilities = {
     name = 'Hammerspoon Console',
     superKey = config.superKeys.ctrlAlt,
     shortcut = 'r',
-    preferredDisplay = 1,
-    position = config.grid.centeredMedium,
     callback = function() hs.toggleConsole() end
   },
   {
-    name = 'Logout',
+    name = 'Lock Screen',
     superKey = config.superKeys.mashShift,
     shortcut = 'L',
-    preferredDisplay = 1,
-    position = config.grid.centeredMedium,
-    callback = function() hs.caffeinate.startScreensaver() end
+    callback = function() hs.caffeinate.lockScreen() end
   },
   {
     name = 'Hammerspoon Reload',
     superKey = config.superKeys.mashShift,
     shortcut = 'r',
-    preferredDisplay = 1,
-    position = config.grid.centeredMedium,
     callback = (function()
-      require('auto-layout'):teardown()
-      require('laptop-docking-mode'):teardown()
-      require('push-to-talk'):teardown()
+      require('auto-layout').teardown()
+      require('laptop-docking-mode').teardown()
+      require('push-to-talk').teardown()
       hs.reload()
       hs.notify.show('Hammerspoon', 'Config Reloaded', '')
     end)
@@ -191,10 +185,24 @@ config.utilities = {
     name = 'Cursor Locator',
     superKey = config.superKeys.mashShift,
     shortcut = 'return',
-    preferredDisplay = 1,
-    position = config.grid.centeredMedium,
     callback = (function()
       utils.mouseHighlight()
+    end)
+  },
+  {
+    name = 'Re-layout All',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'w',
+    callback = (function()
+      require('auto-layout').snapAll()
+    end)
+  },
+  {
+    name = 'Re-layout App',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'w',
+    callback = (function()
+      require('auto-layout').snapApp(hs.application.frontmostApplication())
     end)
   },
 }

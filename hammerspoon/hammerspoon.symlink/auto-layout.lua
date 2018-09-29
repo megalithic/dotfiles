@@ -216,5 +216,11 @@ return {
     end
     screenWatcher:stop()
     screenWatcher = nil
+  end),
+  snapAll = (function()
+    setLayoutForAll()
+  end),
+  snap = (function(app)
+    setLayoutForApp(app)
   end)
 }
