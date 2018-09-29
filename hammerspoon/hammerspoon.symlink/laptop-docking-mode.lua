@@ -1,3 +1,5 @@
+-- TODO: extract hard-coded devices and IDs to config.lua table
+
 local dockedDevice = {
   -- my pok3r keyboard's USB identifiers:
   vendorID = 1241,
@@ -24,7 +26,7 @@ undockedAction = function()
   end)
 end
 
-handleEvent = (function(event)
+handleUsbWatcherEvent = (function(event)
   -- Safe assumption that connecting my keyboard means we are "docked", so do
   -- things based on being "docked".
   if event.vendorID == dockedDevice.vendorID and event.productID == dockedDevice.productID then
@@ -33,7 +35,6 @@ handleEvent = (function(event)
     else
       undockedAction()
     end
-    -- hs.reload()
   end
 end)
 
@@ -73,15 +74,7 @@ end)
 return {
   init = (function()
     log.i('[laptop-docking-mode] - creating laptop-docking-mode watchers')
-    watcher = hs.usb.watcher.new(handleEvent):start()
-
---     for _, device in pairs(hs.usb.attachedDevices()) do
---       if device.vendorID == dockedDevice.vendorID and device.productID == dockedDevice.productID then
---         -- return dockedAction()
---       else
---         -- return undockedAction()
---       end
---     end
+    watcher = hs.usb.watcher.new(handleUsbWatcherEvent):start()
   end),
   teardown = (function()
     log.i('[laptop-docking-mode] - tearing down laptop-docking-mode watchers')
