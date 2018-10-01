@@ -1,5 +1,6 @@
 local utils = require('utils')
 local log = require('utils')
+local hotkey = require('hs.hotkey')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -78,7 +79,36 @@ config.applications = {
     superKey = config.superKeys.mashShift,
     shortcut = 's',
     preferredDisplay = 2,
-    position = config.grid.rightHalf
+    position = config.grid.rightHalf,
+    fn = (function()
+      local appKeybinds = {
+        -- next channel or dm
+        hotkey.new({"ctrl"}, "g", function()
+          hs.eventtap.keyStroke({"cmd"}, "k")
+        end),
+        -- next channel or dm
+        hotkey.new({"ctrl"}, "j", function()
+          hs.eventtap.keyStroke({"alt"}, "Down")
+        end),
+        -- previous channel or dm
+        hotkey.new({"ctrl"}, "k", function()
+          hs.eventtap.keyStroke({"alt"}, "Up")
+        end),
+        -- Disables cmd-w entirely, which is so annoying on slack
+        hotkey.new({"cmd"}, "w", function() return end)
+      }
+
+      local appWatcher = hs.application.watcher.new(function(name, eventType, app)
+        if eventType ~= hs.application.watcher.activated then return end
+
+        local fnName = name == "Slack" and "enable" or "disable"
+        for i, keybind in ipairs(appKeybinds) do
+          -- Remember that lua is weird, so this is the same as keybind.enable() in JS, `this` is first param
+          keybind[fnName](keybind)
+        end
+      end)
+      appWatcher:start()
+    end)
   },
   ['Spark'] = {
     name = 'Spark',
@@ -119,8 +149,8 @@ config.applications = {
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
-  ['yakyak'] = {
-    name = 'yakyak',
+  ['YakYak'] = {
+    name = 'YakYak',
     bundleID = 'com.github.yakyak',
     superKey = config.superKeys.ctrlShift,
     shortcut = 'm',

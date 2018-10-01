@@ -1341,10 +1341,10 @@ map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 " open scratch buffer
 nnoremap <C-s> :call ScratchOpen()<CR>
 
-" browse devdocs
-nnoremap <leader>d :DevDocs
+" " browse devdocs
+nnoremap <leader>d <Plug>(devdocs-under-cursor)
 nnoremap <leader>dd :DevDocsAll
-nmap K <Plug>(devdocs-under-cursor)
+" nmap K <Plug>(devdocs-under-cursor)
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)

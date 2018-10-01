@@ -16,6 +16,14 @@ tap 'simeji/jid'
 tap 'wix/brew'
 tap 'homebrew/cask-drivers'
 
+# -- for qmk_pok3r programming
+tap 'osx-cross/avr'
+tap 'PX4/homebrew-px4'
+brew 'avr-gcc@7'
+brew 'dfu-programmer'
+brew 'gcc-arm-none-eabi'
+brew 'avrdude'
+
 brew 'asciicinema'
 brew 'ansifilter'
 brew 'applesimutils'

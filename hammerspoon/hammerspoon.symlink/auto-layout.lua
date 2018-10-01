@@ -163,9 +163,17 @@ function watchWindow(window)
     local bundleID = application:bundleID()
     local id = window:id()
 
+    log.df('[auto-layout] watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)', bundleID, application:name(), window:title(), id, utils.windowCount(application))
+
     if config.applications[application:name()] then
       log.df('[auto-layout] watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
       setLayoutForApp(application)
+
+      -- execute custom function (fn) for given application
+      if config.applications[application:name()].fn ~= nil then
+        log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, application:name(), window:title(), id, utils.windowCount(application))
+        config.applications[application:name()].fn()
+      end
     end
 
     -- Watch for window-closed events.
@@ -219,7 +227,7 @@ return {
   snapAll = (function()
     setLayoutForAll()
   end),
-  snap = (function(app)
+  snapApp = (function(app)
     setLayoutForApp(app)
   end)
 }
