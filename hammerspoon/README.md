@@ -16,6 +16,9 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
 - **Computer Locking**: locks your computer with a set of key commands. Bound to
 `cmd+ctrl+shift+l`.
 
+- **Accidental app quitting protection**: prevents accidental app quitting,
+  makes you hit `cmd+q` twice.
+
 - **Application Toggling**:
   * Finder: `ctrl+backtick`
   * Chrome: `cmd+backtick`

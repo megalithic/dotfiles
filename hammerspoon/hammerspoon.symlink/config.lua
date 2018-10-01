@@ -225,6 +225,7 @@ config.media = {
     shortcut = '\\',
     label = 'play/pause'
   },
+  -- FIXME: these don't seem to ever work in macOS 10.13+
   -- {
   --   action = 'SOUND_DOWN',
   --   superKey = config.superKeys.ctrlShift,
@@ -278,6 +279,25 @@ config.snap = {
       config.grid.fullScreen,
     })
   }
+}
+
+config.docking = {
+  ['device'] = {
+    vendorID = 1241,
+    productID = 321,
+  },
+  ['docked'] = {
+    wifi = 'off', -- wifi status
+    profile = 'pok3r', -- Karabiner-Elements profile name
+    input = '"Logitech Webcam C930e"', -- microphone source
+    output = '"Audioengine D1"', -- speaker source
+  },
+  ['undocked'] = {
+    wifi = 'on',
+    profile = 'internal',
+    input = '"Built-in Microphone"',
+    output = '"Built-in Output"',
+  },
 }
 
 return config
