@@ -32,9 +32,6 @@ handleUsbWatcherEvent = (function(event)
       isDocked = false
       undockedAction()
     end
-
-    -- re-init push-to-talk
-    require('push-to-talk').init(config.ptt)
   end
 end)
 
@@ -92,8 +89,6 @@ return {
       undockedAction()
     end
 
-    -- re-init push-to-talk
-    require('push-to-talk').init(config.ptt)
     return isDocked
   end),
   teardown = (function()
