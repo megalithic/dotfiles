@@ -1,6 +1,3 @@
---
--- Simple Hammerspoon script to create Push-To-Talk functionality
--- Press and hold fn key to talk
 local settings = {
   pushToTalk = true
 }
@@ -60,6 +57,8 @@ function onInputDeviceChanged(uid, name, scope, element)
 end
 
 function onSystemAudioDeviceChanged(name)
+  log.i("[push-to-talk] System audio device change event occurred for", name)
+
   if name ~= "dev#" then
     return
   end
