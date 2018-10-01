@@ -59,5 +59,5 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
 
 #### TODO
 
-- [] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
-- [] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
+- [ ] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
+- [ ] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
