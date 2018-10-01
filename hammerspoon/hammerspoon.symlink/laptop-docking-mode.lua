@@ -96,5 +96,5 @@ return {
     watcher:stop()
     watcher = nil
   end),
-  isDocked = isDocked
+  isDocked = isDeviceConnected()
 }
