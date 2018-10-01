@@ -50,7 +50,7 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * When logging into the computer, and I'm at home, it will fire off certain
   shell scripts to my Home Assistant server to handle device control in my
   office (lights, etc). Home Assistant does this based on other factors, like
-  the weather, time of day, etc.
+  the weather, time of day, etc. This is very much a WIP.
 
 - **Other Things**:
   * I'm sure I missed some of the other things I've added or

@@ -20,6 +20,9 @@ require('laptop-docking-mode').init()
 -- helper to prevent accidental/unintentional app quitting
 require('app-quit-guard')
 
+-- home-assistant helper to automate my office based on computer events
+require('home-assistant')
+
 -- :: spoons
 -- hs.loadSpoon() -- none yet, maybe I'll convert my existing modules to spoons
 
@@ -30,7 +33,7 @@ for _, app in pairs(config.applications) do
   end
 end
 
--- :: utilities (things like config reloading, mouse cursor highlighting, manually forcing re-snapping window/app layout)
+-- :: utilities (things like config reloading, screen locking, manually forcing re-snapping windows/apps layout)
 for _, util in pairs(config.utilities) do
   hotkey.bind(util.superKey, util.shortcut, util.fn)
 end
