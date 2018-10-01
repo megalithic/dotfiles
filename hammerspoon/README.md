@@ -30,6 +30,10 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * YakYak: `ctrl+shift+m`
   * Spotify: `cmd+shift+8`
 
+- **App-specific customization**:
+  * apps can define their own custom `fn` to be executed when they are active,
+    for example, custom keybinding (see Slack in config.lua)
+
 - **Window Management**:
   * Automatic window placement, as presently configured in [`config.lua`](hammerspoon.symlink/config.lua).
   * Manual window placement and sizing (with chaining to different sections of
@@ -59,5 +63,5 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
 
 #### TODO
 
-- [ ] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
+- [x] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
 - [ ] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
