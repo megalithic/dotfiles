@@ -1,3 +1,5 @@
+-- TODO: extract events and device things to config.lua if possible
+--
 handleCaffeinateEvent = function(eventType)
   utils.log.df('[home-assistant] - event triggered: event type (%s)', eventType)
 
