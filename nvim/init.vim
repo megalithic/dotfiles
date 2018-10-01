@@ -822,7 +822,7 @@ endfunction
 
   function! LightlineModified()
     return PrintStatusline(!&modifiable ? '-' : &modified ?
-          \ '[⦿]' : '')
+          \ '<⦿>' : '')
   endfunction
 
   function! LightlineFileName()
