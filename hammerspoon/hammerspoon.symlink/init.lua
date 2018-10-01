@@ -1,5 +1,5 @@
 log = require('log')
-log.verbose()
+log.warning()
 
 -- where all the magic is defined (check here for every piece of configuration)
 require('config')
