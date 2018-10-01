@@ -1,13 +1,14 @@
 #!/usr/bin/env ruby
 # Usage: is-night lat long
+#   - uses ENV variables if no arguments are given.
 #
 # Returns a boolean if the current time is at night
 #
 
 require 'sun'
 
-lat  = ARGV[0] ||= 33.366708
-long = ARGV[1] ||= -86.8089582
+lat  = ARGV[0] ||= ENV["HOME_LAT"].to_i
+long = ARGV[1] ||= ENV["HOME_LONG"].to_i
 
 if lat < -90 || lat > 90
   abort "Invalid latitude given #{lat}"
@@ -17,14 +18,10 @@ if long < -180 || long > 180
   abort "Invalid longitude given #{long}"
 end
 
-is_night = Time.now >= Sun.sunset(Time.now, lat, long)
+time = Time.now
+sunrise = Sun.sunrise(time, lat, long)
+sunset = Sun.sunset(time, lat, long)
 
-# output = `curl -i http://git.io/create -F 'url=#{url}' #{code} 2> /dev/null`
-# if output =~ /^([\w-]+)$/
-#   puts $1
-#   `echo #$1 | pbcopy`
-# else
-#   puts output
-# end
+is_night = time >= sunset && time <= sunrise
 
 puts is_night
