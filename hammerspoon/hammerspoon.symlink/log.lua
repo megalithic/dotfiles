@@ -19,6 +19,7 @@ local log = hs.logger.new(hs.host.localizedName(), logLevel)
 local module = {
   d = log.d,
   df = log.df,
+  ef = log.ef,
   i = log.i,
   w = log.w,
   wf = log.wf,

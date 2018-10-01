@@ -1,4 +1,3 @@
-inspect = require('inspect') -- useful for outputting a table's data `print(inspect(someTable))`
 log = require('log')
 log.warning()
 
@@ -15,13 +14,15 @@ require('auto-layout').init()
 require('push-to-talk').init(config.ptt)
 
 -- laptop docking mode things (change system settings based on being in "docking" mode or not)
-require('laptop-docking-mode').init()
+isDocked = require('laptop-docking-mode').init()
 
 -- helper to prevent accidental/unintentional app quitting
 require('app-quit-guard')
 
--- home-assistant helper to automate my office based on computer events
-require('home-assistant')
+-- home-assistant helper to automate my office based on computer events; only want this to run when i'm in my office
+if (isDocked) then
+  require('home-assistant').init()
+end
 
 -- :: spoons
 -- hs.loadSpoon() -- none yet, maybe I'll convert my existing modules to spoons

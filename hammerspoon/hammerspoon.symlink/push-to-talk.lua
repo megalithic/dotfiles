@@ -184,7 +184,7 @@ function initMenubarIcon()
       init = (function(modifiers)
         modifierKeys = modifiers or {"fn"}
 
-        log.i("[push-to-talk] setting up audio watchers and menubar items with modifiers", inspect(modifierKeys))
+        log.i("[push-to-talk] setting up audio watchers and menubar items with modifiers", hs.inspect(modifierKeys))
 
         loadSettings()
         loadIcons()

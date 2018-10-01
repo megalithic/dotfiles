@@ -1,16 +1,23 @@
 -- TODO: extract events and device things to config.lua if possible
 --
-handleCaffeinateEvent = function(eventType)
-  utils.log.df('[home-assistant] - event triggered: event type (%s)', eventType)
+handleCaffeinateEvent = function(eventType) -- (int)
+  log.df('[home-assistant] - event triggered: event type %s(%s)', hs.caffeinate.watcher[eventType], eventType)
 
-  if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+  if (eventType == hs.caffeinate.watcher.sessionDidResignActive) then
     -- turn off office lamp
-    utils.log.df('[home-assistant] - attempting to turn off office lamp')
-    hs.execute('~/.dotfiles/bin/hs-to-ha script.hammerspoon_office_lamp_off', true)
-  elseif (eventType == hs.caffeinate.watcher.screensDidWake) then
+    log.df('[home-assistant] - attempting to turn off office lamp')
+    hs.execute('~/.dotfiles/bin/hs-to-ha script.hs_office_lamp_off', true)
+  elseif (eventType == hs.caffeinate.watcher.sessionDidBecomeActive) then
     -- turn on office lamp
-    utils.log.df('[home-assistant] - attempting to turn on office lamp')
-    hs.execute('~/.dotfiles/bin/hs-to-ha script.hammerspoon_office_lamp_on', true)
+    local isNight = hs.execute('~/.dotfiles/bin/is-night', true)
+
+    if (isNight) then
+      log.df('[home-assistant] - night time; turning on office lamp, regardless of weather conditions')
+      hs.execute('~/.dotfiles/bin/hs-to-ha script.hs_office_lamp_on', true)
+    else
+      log.df('[home-assistant] - day time; turning on office lamp based on weather conditions')
+      hs.execute('~/.dotfiles/bin/hs-to-ha script.hs_office_lamp_on_conditioned', true)
+    end
   end
 end
 

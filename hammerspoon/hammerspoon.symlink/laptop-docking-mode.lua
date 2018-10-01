@@ -1,3 +1,5 @@
+isDocked = false
+
 dockedAction = function()
   log.i('[laptop-docking-mode] - Target USB device plugged in; laptop presumably docked')
   hs.timer.doAfter(1, function ()
@@ -23,8 +25,11 @@ handleUsbWatcherEvent = (function(event)
   -- things based on being "docked".
   if event.vendorID == config.docking['device'].vendorID and event.productID == config.docking['device'].productID then
     if event.eventType == 'added' then
+      require('home-assistant').init()
+      isDocked = true
       dockedAction()
     else
+      isDocked = false
       undockedAction()
     end
 
@@ -66,14 +71,35 @@ selectAudioInput = (function(input)
   log.i('[laptop-docking-mode] - Switching to audio input:', input)
 end)
 
+isDeviceConnected = (function()
+  for _, device in pairs(hs.usb.attachedDevices()) do
+    if (config.docking.device.vendorID == device.vendorID and config.docking.device.productID == device.productID) then
+      return true
+    end
+  end
+end)
+
 return {
   init = (function()
     log.i('[laptop-docking-mode] - Creating laptop-docking-mode watchers')
     watcher = hs.usb.watcher.new(handleUsbWatcherEvent):start()
+
+    isDocked = isDeviceConnected()
+
+    if (isDocked) then
+      dockedAction()
+    else
+      undockedAction()
+    end
+
+    -- re-init push-to-talk
+    require('push-to-talk').init(config.ptt)
+    return isDocked
   end),
   teardown = (function()
     log.i('[laptop-docking-mode] - Tearing down laptop-docking-mode watchers')
     watcher:stop()
     watcher = nil
-  end)
+  end),
+  isDocked = isDocked
 }
