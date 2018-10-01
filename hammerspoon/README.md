@@ -56,3 +56,8 @@ Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
   * I'm sure I missed some of the other things I've added or
   modified. The above documents the most notable and most used Hammerspoon automations.
   * Be sure to check out the main [config](hammerspoon.symlink/config.lua) to see what all is setup right now.
+
+#### TODO
+
+- [] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
+- [] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher

@@ -1428,6 +1428,7 @@ vmap ( S)
 vmap { S}
 vmap ' S'
 vmap " S"
+vmap ` S`
 
 " ## vim-sandwich
 " ref: https://github.com/machakann/vim-sandwich/wiki/Introduce-vim-surround-keymappings#textobjects
