@@ -282,6 +282,7 @@ config.snap = {
 }
 
 config.docking = {
+  -- find your device IDs with `print(inspect(hs.usb.attachedDevices()))` from the hammerspoon console
   ['device'] = {
     vendorID = 1241,
     productID = 321,
