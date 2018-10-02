@@ -1,13 +1,13 @@
 -- TODO: extract events and device things to config.lua if possible
---
+
 handleCaffeinateEvent = function(eventType) -- (int)
   log.df('[home-assistant] - event triggered: event type %s(%s)', hs.caffeinate.watcher[eventType], eventType)
 
-  if (eventType == hs.caffeinate.watcher.sessionDidResignActive) then
+  if (eventType == hs.caffeinate.watcher.screensDidSleep) then
     -- turn off office lamp
     log.df('[home-assistant] - attempting to turn off office lamp')
     hs.execute('~/.dotfiles/bin/hs-to-ha script.hs_office_lamp_off', true)
-  elseif (eventType == hs.caffeinate.watcher.sessionDidBecomeActive) then
+  elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
     -- turn on office lamp
     local isNight = hs.execute('~/.dotfiles/bin/is-night', true)
 

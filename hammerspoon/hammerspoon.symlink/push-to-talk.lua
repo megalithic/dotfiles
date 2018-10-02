@@ -209,5 +209,7 @@ function initMenubarIcon()
       teardown = (function(modifiers)
         log.i("[push-to-talk] tearing down audio watchers")
         hs.audiodevice.watcher.stop()
-      end)
+      end),
+      mute = (function() changeMicrophoneState(true) end),
+      unmute = (function() changeMicrophoneState(false) end)
     }

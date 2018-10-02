@@ -1,5 +1,4 @@
 local utils = require('utils')
-local log = require('utils')
 local hotkey = require('hs.hotkey')
 
 hs.grid.GRIDWIDTH = 8
@@ -131,7 +130,25 @@ config.applications = {
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 2,
-    position = config.grid.centeredLarge
+    position = config.grid.centeredLarge,
+    fn = (function()
+      -- log.df('[config] app config function - attempting to handle Zoom instance')
+      -- local zoomWindowExists = function()
+      --   local a = hs.application.find("zoom.us")
+      --   return a ~= nil and ((a:findWindow("Zoom Meeting ID") ~= nil or
+      --       a:findWindow("Sharing Frame Window") ~= nil) or
+      --     a:findWindow("^Zoom$") ~= nil)
+      -- end
+
+      -- if zoomWindowExists() then
+      --   log.df('[config] app config function - found a Zoom window/app instance')
+      --   require('push-to-talk').mute()
+      --   hs.execute("~/.dotfiles/bin/slack_status 'zooming'", true)
+      -- else
+      --   log.df('[config] app config function - did not find a Zoom window/app instance')
+      --   hs.execute("~/.dotfiles/bin/slack_status 'none'", true)
+      -- end
+    end)
   },
   ['Spotify'] = {
     name = 'Spotify',
@@ -196,7 +213,7 @@ config.utilities = {
     name = 'Lock Screen',
     superKey = config.superKeys.mashShift,
     shortcut = 'L',
-    fn = function() hs.caffeinate.lockScreen() end
+    fn = function() hs.caffeinate.systemSleep() end
   },
   {
     name = 'Hammerspoon Reload',
