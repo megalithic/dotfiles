@@ -194,8 +194,8 @@ config.applications = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
-  ['Fantastical2'] = {
-    name = 'Fantastical2',
+  ['Fantastical'] = {
+    name = 'Fantastical',
     bundleID = 'com.flexibits.fantastical2.mac',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
@@ -329,7 +329,7 @@ config.snap = {
 }
 
 config.docking = {
-  -- find your device IDs with `print(inspect(hs.usb.attachedDevices()))` from the hammerspoon console
+  -- find your device IDs with `print(hs.inspect(hs.usb.attachedDevices()))` from the hammerspoon console
   ['device'] = {
     vendorID = 1241,
     productID = 321,
