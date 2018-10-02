@@ -93,6 +93,14 @@ config.applications = {
         hotkey.new({"ctrl"}, "k", function()
           hs.eventtap.keyStroke({"alt"}, "Up")
         end),
+        -- next unread channel or dm
+        hotkey.new({"ctrl", "shift"}, "j", function()
+          hs.eventtap.keyStroke({"alt", "shift"}, "Down")
+        end),
+        -- previous unread channel or dm
+        hotkey.new({"ctrl", "shift"}, "k", function()
+          hs.eventtap.keyStroke({"alt", "shift"}, "Up")
+        end),
         -- Disables cmd-w entirely, which is so annoying on slack
         hotkey.new({"cmd"}, "w", function() return end)
       }
