@@ -10,16 +10,6 @@ killport() {
   lsof -t -i tcp:$1 | xargs kill
 }
 
-dnd () {
-  osascript -e "
-    tell application \"System Events\" to tell process \"SystemUIServer\"
-      key down option
-      click menu bar item 1 of menu bar 2
-      key up option
-    end tell
-  "
-}
-
 myip() {
   ifconfig lo0 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "lo0       : " $2}'
   ifconfig en0 | grep 'inet ' | sed -e 's/:/ /' | awk '{print "en0 (IPv4): " $2 " " $3 " " $4 " " $5 " " $6}'

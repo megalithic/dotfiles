@@ -155,24 +155,24 @@ function unwatchApp(pid)
 end
 
 function watchWindow(window)
-  local application = window:application()
-  local bundleID = application:bundleID()
-  local pid = application:pid()
+  local app = window:application()
+  local bundleID = app:bundleID()
+  local pid = app:pid()
   local windows = watchers[pid].windows
   if utils.canManageWindow(window) then
-    local bundleID = application:bundleID()
+    local bundleID = app:bundleID()
     local id = window:id()
 
-    log.df('[auto-layout] watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)', bundleID, application:name(), window:title(), id, utils.windowCount(application))
+    log.df('[auto-layout] watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)', bundleID, app:name(), window:title(), id, utils.windowCount(app))
 
-    if config.applications[application:name()] then
-      log.df('[auto-layout] watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(application))
-      setLayoutForApp(application)
+    if config.applications[app:name()] then
+      log.df('[auto-layout] watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(app))
+      setLayoutForApp(app)
 
-      -- execute custom function (fn) for given application
-      if config.applications[application:name()].fn ~= nil then
-        log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, application:name(), window:title(), id, utils.windowCount(application))
-        config.applications[application:name()].fn()
+      -- execute custom app fn() for given application
+      if config.applications[app:name()].fn ~= nil then
+        log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, app:name(), window:title(), id, utils.windowCount(app))
+        config.applications[app:name()].fn()
       end
     end
 
@@ -188,7 +188,7 @@ function watchWindow(window)
       end
     end
   else
-    log.df('[auto-layout] watchWindow - window event; unable to watch unmanageable %s (window %s, ID %s, %s windows)', bundleID, window:title(), id, utils.windowCount(application))
+    log.df('[auto-layout] watchWindow - window event; unable to watch unmanageable %s (window %s, ID %s, %s windows)', bundleID, window:title(), id, utils.windowCount(app))
   end
 end
 

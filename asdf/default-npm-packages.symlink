@@ -3,6 +3,7 @@ babel-eslint
 bash-language-server
 convert-snippets
 create-react-app
+do-not-disturb-cli
 elm
 elm-oracle
 elm-test

@@ -80,6 +80,8 @@ config.applications = {
     preferredDisplay = 2,
     position = config.grid.rightHalf,
     fn = (function()
+      log.df('[config] app fn() - attempting to handle Slack instance')
+
       local appKeybinds = {
         -- next channel or dm
         hotkey.new({"ctrl"}, "g", function()
@@ -114,6 +116,7 @@ config.applications = {
           keybind[fnName](keybind)
         end
       end)
+
       appWatcher:start()
     end)
   },
@@ -140,22 +143,25 @@ config.applications = {
     preferredDisplay = 2,
     position = config.grid.centeredLarge,
     fn = (function()
-      -- log.df('[config] app config function - attempting to handle Zoom instance')
-      -- local zoomWindowExists = function()
-      --   local a = hs.application.find("zoom.us")
-      --   return a ~= nil and ((a:findWindow("Zoom Meeting ID") ~= nil or
-      --       a:findWindow("Sharing Frame Window") ~= nil) or
-      --     a:findWindow("^Zoom$") ~= nil)
-      -- end
+      log.df('[config] app fn() - attempting to handle Zoom instance')
 
-      -- if zoomWindowExists() then
-      --   log.df('[config] app config function - found a Zoom window/app instance')
-      --   require('push-to-talk').mute()
-      --   hs.execute("~/.dotfiles/bin/slack_status 'zooming'", true)
-      -- else
-      --   log.df('[config] app config function - did not find a Zoom window/app instance')
-      --   hs.execute("~/.dotfiles/bin/slack_status 'none'", true)
-      -- end
+      local appWatcher = hs.application.watcher.new(function(name, eventType, app)
+        if (name == 'zoom.us' or name == nil) then
+          if eventType == hs.application.watcher.launching then
+            log.df("[config] app fn() - executing for %s, DND on", app:name())
+            hs.execute('do-not-disturb on', true)
+          elseif eventType == hs.application.watcher.terminated then
+            log.df("[config] app fn() - executing for %s, DND off", app:name())
+            hs.execute('do-not-disturb off', true)
+          else
+            return
+          end
+        else
+          return
+        end
+      end)
+
+      appWatcher:start()
     end)
   },
   ['Spotify'] = {
@@ -345,7 +351,7 @@ config.docking = {
   ['docked'] = {
     wifi = 'off', -- wifi status
     profile = 'pok3r', -- Karabiner-Elements profile name
-    input = '"Logitech Webcam C930e"', -- microphone source
+    input = '"HD Pro Webcam C920"', -- microphone source
     output = '"Audioengine D1"', -- speaker source
   },
   ['undocked'] = {
