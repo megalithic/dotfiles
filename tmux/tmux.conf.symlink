@@ -133,7 +133,7 @@ set -g status-left "#[fg=green]#S ⧉ #(~/.dotfiles/bin/ip-tmux) #{prefix_highli
 
 # -- statusbar right
 set -g status-right-length 120
-set -g status-right "#(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
+set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
 
 
 # TMUX PLUGIN MANAGER

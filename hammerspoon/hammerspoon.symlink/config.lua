@@ -146,16 +146,20 @@ config.applications = {
       log.df('[config] app fn() - attempting to handle Zoom instance')
 
       local appWatcher = hs.application.watcher.new(function(name, eventType, app)
-        if (name == 'zoom.us' or name == nil) then
-          if eventType == hs.application.watcher.launching then
-            log.df("[config] app fn() - executing for %s, DND on", app:name())
+        log.df('[config] app watching %s(%s) [%s / %s]', name, eventType, app:name(), app:bundleID())
+
+        if (name == 'zoom.us') then
+          if eventType == hs.application.watcher.launching or eventType == hs.application.watcher.launched then
             hs.execute('do-not-disturb on', true)
           elseif eventType == hs.application.watcher.terminated then
-            log.df("[config] app fn() - executing for %s, DND off", app:name())
             hs.execute('do-not-disturb off', true)
+            appWatcher:stop()
+            appWatcher = nil
           else
             return
           end
+
+          log.df("[config] app fn() - executing for %s, DND is %s", app:name(), hs.execute('do-not-disturb status', true))
         else
           return
         end
