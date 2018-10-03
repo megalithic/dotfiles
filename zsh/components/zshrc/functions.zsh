@@ -2,6 +2,12 @@
 # Functions
 #
 
+# HASS / HA / HOMEASSISTANT
+# -----------------------------------------------------------------------------
+lamp() {
+  sh $HOME/.dotfiles/bin/hs-to-ha "script.hs_office_lamp_$1"
+}
+
 geoip() {
   curl ipinfo.io/$1
 }

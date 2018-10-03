@@ -36,6 +36,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
   Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
+  Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir', 'eelixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'

@@ -11,7 +11,7 @@ handleCaffeinateEvent = function(eventType) -- (int)
     -- turn on office lamp
     local isNight = hs.execute('~/.dotfiles/bin/is-night', true)
 
-    if (isNight) then
+    if (isNight == true or isNight == 'true') then
       log.df('[home-assistant] - night time; turning on office lamp, regardless of weather conditions')
       hs.execute('~/.dotfiles/bin/hs-to-ha script.hs_office_lamp_on', true)
     else
