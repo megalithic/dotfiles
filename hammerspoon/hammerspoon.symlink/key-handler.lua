@@ -6,16 +6,12 @@ handler.toggleApp = function (_app)
   log.df('[key-handler] toggleApp - app = %s', app)
 
   if app ~= nil then
-    log.df('[key-handler] toggleApp - attempting to toggle visibility of %s', app:bundleID())
+    log.df('[key-handler] toggleApp - attempting to toggle visibility of %s', hs.inspect(app))
   end
 
   if not app then
-    -- FIXME: this may not be working properly.. creating extraneous PIDs?
     log.wf('[key-handler] toggleApp - launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
-
-    -- NOTE: for some reason when we don't find an app by a specific name we should try and still launch it by name;
-    -- we could try and regex match the string as a bundleID; if it is, we call: hs.application.launchOrFocusByBundleID(_app)
-    hs.application.launchOrFocus(_app)
+    hs.application.launchOrFocusByBundleID(_app)
   else
     local mainWin = app:mainWindow()
     log.df('[key-handler] toggleApp - main window: %s', mainWin)

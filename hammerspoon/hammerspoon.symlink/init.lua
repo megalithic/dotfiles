@@ -30,7 +30,7 @@ end
 -- :: app-launching (basic app launching and toggling)
 for _, app in pairs(config.applications) do
   if app.superKey ~= nil and app.shortcut ~= nil then
-    hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.name) end)
+    hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.bundleID) end)
   end
 end
 
