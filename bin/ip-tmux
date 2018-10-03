@@ -6,7 +6,8 @@ vpn=$(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}')
 en0=$(ifconfig en0 | ag 'inet ' | awk '{print $2}')
 en1=$(ifconfig en1 | ag 'inet ' | awk '{print "en1 " $2}')
 en8=$(ifconfig en8 | ag 'inet ' | awk '{print $2}')
+en8=$(ifconfig en7 | ag 'inet ' | awk '{print $2}')
 
-output="#[fg=brightblue]$external #[fg=colour136]$vpn#[fg=white]■ #[fg=yellow]$en0$en1$en8"
+output="#[fg=brightblue]$external #[fg=colour136]$vpn#[fg=white]■ #[fg=yellow]$en0$en1$en8$en7"
 
 echo "$output"
