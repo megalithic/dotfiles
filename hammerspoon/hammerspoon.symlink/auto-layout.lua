@@ -17,7 +17,7 @@ target_display = function(display_int)
   end
 end
 
--- FIXME: simply must DRY up setLayoutForAll and setLayoutForApp
+-- FIXME: simply must DRY up setLayoutForAll
 setLayoutForAll = function()
   log.i('[auto-layout] setLayoutForAll - beginning layout for all apps')
 
@@ -41,7 +41,7 @@ setLayoutForAll = function()
   end
 end
 
--- FIXME: simply must DRY up setLayoutForAll and setLayoutForApp
+-- FIXME: simply must DRY up setLayoutForApp
 setLayoutForApp = function(app) -- optionally, we should be able to take in a `window` to layout
   if app ~= nil and app:mainWindow() ~= nil then
     log.i('[auto-layout] setLayoutForApp - beginning layout for single app')
@@ -172,7 +172,7 @@ function watchWindow(window)
       -- execute custom app fn() for given application
       if config.applications[app:name()].fn ~= nil then
         log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, app:name(), window:title(), id, utils.windowCount(app))
-        config.applications[app:name()].fn()
+        config.applications[app:name()].fn(window)
       end
     end
 

@@ -1,17 +1,25 @@
 handler = {}
 
+handler.launch = function(appName)
+  log.df('[key-handler] launch - attempting to launch or focus %s', appName)
+  hs.application.launchOrFocus(appName)
+end
+
 handler.toggleApp = function (_app)
   -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
   local app = hs.application.find(_app)
-  log.df('[key-handler] toggleApp - app = %s', app)
 
   if app ~= nil then
     log.df('[key-handler] toggleApp - attempting to toggle visibility of %s', hs.inspect(app))
   end
 
   if not app then
-    log.wf('[key-handler] toggleApp - launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
-    hs.application.launchOrFocusByBundleID(_app)
+    if _app ~= nil then
+      log.wf('[key-handler] toggleApp - launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
+      hs.application.launchOrFocusByBundleID(_app)
+    else
+      log.wf('[key-handler] toggleApp - _app (%s) || app (%s) is nil!!', _app, app)
+    end
   else
     local mainWin = app:mainWindow()
     log.df('[key-handler] toggleApp - main window: %s', mainWin)

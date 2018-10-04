@@ -1,6 +1,8 @@
 local utils = require('utils')
 local hotkey = require('hs.hotkey')
 
+local watchedApp = ''
+
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
@@ -79,7 +81,7 @@ config.applications = {
     shortcut = 's',
     preferredDisplay = 2,
     position = config.grid.rightHalf,
-    fn = (function()
+    fn = (function(window)
       log.df('[config] app fn() - attempting to handle Slack instance')
 
       local appKeybinds = {
@@ -130,6 +132,7 @@ config.applications = {
   },
   ['Finder'] = {
     name = 'Finder',
+    bundleID = 'com.apple.finder',
     superKey = config.superKeys.ctrl,
     shortcut = '`',
     preferredDisplay = 1,
@@ -142,30 +145,35 @@ config.applications = {
     shortcut = 'z',
     preferredDisplay = 2,
     position = config.grid.centeredLarge,
-    fn = (function()
-      log.df('[config] app fn() - attempting to handle Zoom instance')
+    fn = (function(window)
+      -- log.df('[config] app fn() - attempting to handle Zoom instance')
 
-      local appWatcher = hs.application.watcher.new(function(name, eventType, app)
-        log.df('[config] app watching %s(%s) [%s / %s]', name, eventType, app:name(), app:bundleID())
+      -- local appWatcher = hs.application.watcher.new(function(name, eventType, app)
+      --   if (name == 'zoom.us') then
+      --     watchedApp = name
+      --   else
+      --     watchedApp = ''
+      --   end
 
-        if (name == 'zoom.us') then
-          if eventType == hs.application.watcher.launching or eventType == hs.application.watcher.launched then
-            hs.execute('do-not-disturb on', true)
-          elseif eventType == hs.application.watcher.terminated then
-            hs.execute('do-not-disturb off', true)
-            appWatcher:stop()
-            appWatcher = nil
-          else
-            return
-          end
+      --   log.df('[config] app watching %s(%s) [%s / %s] :: watchedApp: %s', name, eventType, app:name(), app:bundleID(), watchedApp or '')
 
-          log.df("[config] app fn() - executing for %s, DND is %s", app:name(), hs.execute('do-not-disturb status', true))
-        else
-          return
-        end
-      end)
+      --   if (name == 'zoom.us' or watchedApp == 'zoom.us') then
+      --     if eventType == 4 then
+      --       hs.execute('do-not-disturb on', true)
+      --     elseif eventType == 6 then
+      --       hs.execute('do-not-disturb off', true)
+      --       watchedApp = ''
+      --     else
+      --       return
+      --     end
 
-      appWatcher:start()
+      --     log.df("[config] app fn() - executing for %s (watchedApp: %s), DND is %s", app:name(), watchedApp or '', hs.execute('do-not-disturb status', true))
+      --   else
+      --     return
+      --   end
+      -- end)
+
+      -- appWatcher:start()
     end)
   },
   ['Spotify'] = {
