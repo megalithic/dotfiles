@@ -35,6 +35,7 @@
 # Pure defaults
 PURE_GIT_UP_ARROW="↑" # ⇡↑
 PURE_GIT_DOWN_ARROW="↓" # ⇡↓
+PURE_PROMPT_SYMBOL="❯"
 
 
 # Determination of pure working directory
@@ -720,7 +721,7 @@ prompt_pure_setup() {
   PROMPT='%(12V.%F{242}%12v%f .)'
 
   # prompt turns red if the previous command didn't exit with 0
-  PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+  PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL}%f '
 
   # Store prompt expansion symbols for in-place expansion via (%). For
   # some reason it does not work without storing them in a variable first.

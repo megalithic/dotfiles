@@ -48,6 +48,7 @@ config.superKeys = {
 }
 
 config.ptt = {'cmd', 'alt'}
+config.defaultBrowser = hs.application.find(hs.urlevent.getDefaultHandler('http'))
 
 config.applications = {
   ['kitty'] = {
@@ -59,10 +60,19 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true,
   },
+  [config.defaultBrowser:name()] = {
+    name = config.defaultBrowser:name(),
+    bundleID = config.defaultBrowser:bundleID(),
+    superKey = config.superKeys.cmd,
+    shortcut = '`',
+    preferredDisplay = 1,
+    position = config.grid.fullScreen,
+    quitGuard = true
+  },
   ['Google Chrome'] = {
     name = 'Google Chrome',
     bundleID = 'com.google.Chrome',
-    superKey = config.superKeys.cmd,
+    superKey = config.superKeys.cmdCtrl,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.fullScreen,
@@ -71,7 +81,7 @@ config.applications = {
   ['Firefox'] = {
     name = 'Firefox',
     bundleID = 'org.mozilla.firefox',
-    superKey = config.superKeys.cmdCtrl,
+    superKey = config.superKeys.cmd,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.fullScreen,
