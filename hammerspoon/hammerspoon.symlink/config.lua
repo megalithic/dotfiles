@@ -60,15 +60,15 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true,
   },
-  [config.defaultBrowser:name()] = {
-    name = config.defaultBrowser:name(),
-    bundleID = config.defaultBrowser:bundleID(),
-    superKey = config.superKeys.cmd,
-    shortcut = '`',
-    preferredDisplay = 1,
-    position = config.grid.fullScreen,
-    quitGuard = true
-  },
+  -- [config.defaultBrowser:name()] = {
+  --   name = config.defaultBrowser:name(),
+  --   bundleID = config.defaultBrowser:bundleID(),
+  --   superKey = config.superKeys.cmd,
+  --   shortcut = '`',
+  --   preferredDisplay = 1,
+  --   position = config.grid.fullScreen,
+  --   quitGuard = true
+  -- },
   ['Google Chrome'] = {
     name = 'Google Chrome',
     bundleID = 'com.google.Chrome',
