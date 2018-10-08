@@ -1,4 +1,13 @@
-autoload -U compinit; compinit
+# autoload -U compinit; compinit
+
+# zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
+autoload -Uz compinit
+if [ $(date +'%j') != $(stat -f '%Sm' -t '%j' ~/.zcompdump) ]; then
+  compinit
+else
+  compinit -C
+fi
+
 zmodload -i zsh/complist
 
 # man zshcontrib

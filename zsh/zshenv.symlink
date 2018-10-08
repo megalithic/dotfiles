@@ -7,16 +7,19 @@
 #
 # Exports
 #
-if [[ -f "$DOTS/zsh/components/zshrc/env.zsh" ]] ; then
-  source "$DOTS/zsh/components/zshrc/env.zsh"
-fi
+# if [[ -f "$DOTS/zsh/components/zshrc/env.zsh" ]] ; then
+#   source "$DOTS/zsh/components/zshrc/env.zsh"
+# fi
 
 #
 # Paths
 #
-typeset -gU cdpath fpath mailpath path
-typeset -gxU MANPATH
-typeset -gxUT INFOPATH infopath
+# typeset -gU cdpath fpath mailpath path
+# typeset -gxU MANPATH
+# typeset -gxUT INFOPATH infopath
+typeset -gU fpath path
+# typeset -gxU MANPATH
+# typeset -gxUT INFOPATH infopath
 
 # Set the the list of directories that cd searches.
 # cdpath=(
@@ -24,23 +27,23 @@ typeset -gxUT INFOPATH infopath
 # )
 
 # Set the list of directories that info searches for manuals.
-infopath=(
-  /usr/local/share/info
-  /usr/share/info
-  $infopath
-)
+# infopath=(
+#   /usr/local/share/info
+#   /usr/share/info
+#   $infopath
+# )
 
 # Set the list of directories that man searches for manuals.
-manpath=(
-  /usr/local/share/man
-  /usr/share/man
-  $manpath
-)
+# manpath=(
+#   /usr/local/share/man
+#   /usr/share/man
+#   $manpath
+# )
 
-for path_file in /etc/manpaths.d/*(.N); do
-  manpath+=($(<$path_file))
-done
-unset path_file
+# for path_file in /etc/manpaths.d/*(.N); do
+#   manpath+=($(<$path_file))
+# done
+# unset path_file
 
 export GOPATH=$HOME/.go
 export GOBIN=$GOPATH/bin
@@ -49,7 +52,7 @@ export CARGOBIN=$CARGOPATH/bin
 export ASDF_BIN=$ASDF_DIR/shims
 
 # Set the list of directories that Zsh searches for programs.
-path=()
+# path=()
 path=(
   ./bin
   ./.bin
@@ -79,7 +82,6 @@ path=(
   /{bin,sbin}
   $path
 )
-
 for path_file in /etc/paths.d/*(.N); do
   path+=($(<$path_file))
 done
@@ -89,7 +91,6 @@ unset path_file
 #
 # Function Paths
 #
-
 fpath=(
   # $HOME/.dotfiles/zsh/themes # loads our themes/prompts; check theme README.md
   # $HOME/.dotfiles/zsh/functions
@@ -111,15 +112,15 @@ fi
 #
 # asdf/ruby/node/misc
 #
-source "$HOME/.dotfiles/zsh/components/zshrc/completion.zsh"
-source "$HOME/.dotfiles/zsh/components/zshrc/colors.zsh"
-source "$HOME/.dotfiles/zsh/components/zshrc/asdf.zsh"
+# source "$HOME/.dotfiles/zsh/components/zshrc/completion.zsh"
+# source "$HOME/.dotfiles/zsh/components/zshrc/colors.zsh"
+# source "$HOME/.dotfiles/zsh/components/zshrc/asdf.zsh"
 
 
 #
 # Privates
 #
-if [[ -f "$HOME/.zprivate" ]] ; then
-  source "$HOME/.zprivate"
-fi
+# if [[ -f "$HOME/.zprivate" ]] ; then
+#   source "$HOME/.zprivate"
+# fi
 
