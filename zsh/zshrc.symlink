@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # Ensures we use emacs keybindings (i don't use vi-mode):
-bindkey -e
+bindkey -v
 
 #
 # Executes commands at the start of an interactive session.
@@ -38,11 +38,11 @@ source "$DOTS/zsh/components/zshrc/keybindings.zsh"
 source "$DOTS/zsh/components/zshrc/fasd.zsh"
 source "$DOTS/zsh/components/zshrc/git.zsh"
 source "$DOTS/zsh/components/zshrc/tmux.zsh"
-source "$DOTS/zsh/components/zshrc/k.zsh"
+# source "$DOTS/zsh/components/zshrc/k.zsh"
 
 # plugin config
 source "$DOTS/zsh/components/zshrc/fzf.zsh"
-source "$DOTS/zsh/components/zshrc/z.zsh"
+# source "$DOTS/zsh/components/zshrc/z.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.zsh"
 source "$DOTS/zsh/components/zshrc/syntax-highlighting.zsh"
 source "$DOTS/zsh/components/zshrc/asdf.zsh"

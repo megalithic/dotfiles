@@ -1,6 +1,8 @@
 log = require('log')
 log.verbose()
 
+hs.ipc.cliInstall()
+
 -- where all the magic is defined (check here for every piece of configuration)
 require('config')
 
@@ -18,6 +20,9 @@ isDocked = require('laptop-docking-mode').init()
 
 -- helper to prevent accidental/unintentional app quitting
 require('app-quit-guard')
+
+-- handles setting DND for apps that specify
+-- require('do-not-disturb').init()
 
 -- home-assistant helper to automate my office based on computer events; only want this to run when i'm in my office
 if (isDocked) then

@@ -145,36 +145,7 @@ config.applications = {
     shortcut = 'z',
     preferredDisplay = 2,
     position = config.grid.centeredLarge,
-    fn = (function(window)
-      -- log.df('[config] app fn() - attempting to handle Zoom instance')
-
-      -- local appWatcher = hs.application.watcher.new(function(name, eventType, app)
-      --   if (name == 'zoom.us') then
-      --     watchedApp = name
-      --   else
-      --     watchedApp = ''
-      --   end
-
-      --   log.df('[config] app watching %s(%s) [%s / %s] :: watchedApp: %s', name, eventType, app:name(), app:bundleID(), watchedApp or '')
-
-      --   if (name == 'zoom.us' or watchedApp == 'zoom.us') then
-      --     if eventType == 4 then
-      --       hs.execute('do-not-disturb on', true)
-      --     elseif eventType == 6 then
-      --       hs.execute('do-not-disturb off', true)
-      --       watchedApp = ''
-      --     else
-      --       return
-      --     end
-
-      --     log.df("[config] app fn() - executing for %s (watchedApp: %s), DND is %s", app:name(), watchedApp or '', hs.execute('do-not-disturb status', true))
-      --   else
-      --     return
-      --   end
-      -- end)
-
-      -- appWatcher:start()
-    end)
+    dnd = true,
   },
   ['Spotify'] = {
     name = 'Spotify',
@@ -200,8 +171,8 @@ config.applications = {
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
-  ['1Password'] = {
-    name = '1Password',
+  ['1Password 7'] = {
+    name = '1Password 7',
     bundleID = 'com.agilebits.onepassword7',
     superKey = config.superKeys.mashShift,
     shortcut = '1',

@@ -8,7 +8,6 @@ windows:
   - name: "services"
     root: "~/code/first"
     layout: tiled
-    focus: true
     panes:
       - commands:
         - cd brainy
@@ -23,9 +22,10 @@ windows:
         - cd brainy
         - ngbrainy
       - commands:
-        - cd brainy
-        - bundle exec sidekiq -e development -c 10
+        - cd conversations
+        # - bundle exec sidekiq -e development -c 10
   - name: "code"
     root: "~/code/first/brainy"
+    focus: true
     panes:
       - ls -gha
