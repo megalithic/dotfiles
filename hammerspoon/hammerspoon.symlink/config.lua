@@ -56,7 +56,8 @@ config.applications = {
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
     preferredDisplay = 1,
-    position = config.grid.fullScreen
+    position = config.grid.fullScreen,
+    quitGuard = true,
   },
   ['Google Chrome'] = {
     name = 'Google Chrome',
@@ -64,7 +65,8 @@ config.applications = {
     superKey = config.superKeys.cmd,
     shortcut = '`',
     preferredDisplay = 1,
-    position = config.grid.fullScreen
+    position = config.grid.fullScreen,
+    quitGuard = true
   },
   ['Firefox'] = {
     name = 'Firefox',
@@ -72,7 +74,8 @@ config.applications = {
     superKey = config.superKeys.cmdCtrl,
     shortcut = '`',
     preferredDisplay = 1,
-    position = config.grid.fullScreen
+    position = config.grid.fullScreen,
+    quitGuard = true,
   },
   ['Slack'] = {
     name = 'Slack',
@@ -81,6 +84,7 @@ config.applications = {
     shortcut = 's',
     preferredDisplay = 2,
     position = config.grid.rightHalf,
+    quitGuard = true,
     fn = (function(window)
       log.df('[config] app fn() - attempting to handle Slack instance')
 
@@ -183,7 +187,8 @@ config.applications = {
     name = 'Hammerspoon',
     bundleID = 'org.hammerspoon.Hammerspoon',
     preferredDisplay = 2,
-    position = config.grid.centeredMedium
+    position = config.grid.centeredMedium,
+    quitGuard = true,
   },
   ['System Preferences'] = {
     name = 'System Preferences',
