@@ -435,31 +435,14 @@ augroup END
 " # vim-lsp
 augroup LspMappings
   au!
-  " ruby/javascript (using nvim-typescript for typescript-specific mappings)
-  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <leader>h :LspHover<CR>
-  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F2> :LspRename<CR>
-  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F7> :LspDocumentDiagnostics<CR>
-  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F8> :LspReferences<CR>
-  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F9> :LspDefinition<CR>
-  au FileType eruby,ruby,javascript,javascript.jsx nnoremap <F10> :LspDocumentSymbol<CR>
-
+  nnoremap <F2> :LspRename<CR>
   nnoremap <leader>ld :LspDefinition<CR>
   nnoremap <leader>lf :LspDocumentFormat<CR>
   nnoremap <leader>lh :LspHover<CR>
   nnoremap <leader>lr :LspReferences<CR>
-augroup END
-augroup TSMappings
-  au!
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :TSRename<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F2> :LspRename<CR>
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F3> :TSImport<CR>
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :TSTypeDef<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F6> :LspDefinition<CR>
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :TSRefs<CR>
-  au FileType typescript,typescriptreact,typescript.tsx nnoremap <F7> :LspReferences<CR>
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F8> :TSDefPreview<CR>
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F9> :TSDoc<CR>
-  " au FileType typescript,typescriptreact,typescript.tsx nnoremap <F10> :TSType<CR>
+  nnoremap <leader>li :LspImplementation<CR>
+  nnoremap <leader>] :LspNextError<CR>
+  nnoremap <leader>[ :LspPreviousError<CR>
 augroup END
 
 augroup elm

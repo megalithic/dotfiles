@@ -56,7 +56,8 @@ handler.mediaKeys = function (event, alertText)
 end
 
 handler.notify = function(title, text, image)
-  hs.notify.new({title=title, informativeText=text}):setIdImage(image):send()
+  hs.notify.new({title=title, subTitle=text}):setIdImage(image):send()
+  -- hs.notify.new({title=title, informativeText=text}):setIdImage(image):send()
 end
 
 handler.spotify = function (event, alertText)
@@ -78,7 +79,8 @@ handler.spotify = function (event, alertText)
       if event == 'playpause' and not hs.spotify.isPlaying() then
         handler.notify('Spotify', 'Paused', image)
       else
-        handler.notify('Spotify', hs.spotify.getCurrentArtist() .. ' - ' .. hs.spotify.getCurrentTrack(), image)
+        -- handler.notify('Spotify', hs.spotify.getCurrentArtist() .. ' - ' .. hs.spotify.getCurrentTrack(), image)
+        handler.notify(hs.spotify.getCurrentArtist(), hs.spotify.getCurrentTrack(), image)
       end
     end)
   end
