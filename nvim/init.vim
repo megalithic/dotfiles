@@ -35,9 +35,9 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'lilydjwg/colorizer'
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
-  Plug 'ElmCast/elm-vim', { 'for': ['elm'] }
+  Plug 'carmonw/elm-vim', { 'for': ['elm'] }
   Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
-  Plug 'elixir-editors/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+  Plug 'elixir-editors/vim-elixir', { 'for': ['elixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
 
@@ -60,9 +60,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
-  " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
-  " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
-  " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -666,7 +663,7 @@ endfunction
 " ================ Plugin Config/Settings {{{
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir', 'eelixir']
+  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir']
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -1065,8 +1062,8 @@ endfunction
   let g:elm_setup_keybindings = 1
 
 " ## elixir.nvim
-  " let g:elixir_autobuild = 1
-  " let g:elixir_showerror = 1
+  let g:elixir_autobuild = 1
+  let g:elixir_showerror = 1
   let g:elixir_maxpreviews = 20
   let g:elixir_docpreview = 1
 
@@ -1179,8 +1176,8 @@ endfunction
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
-  let g:lsp_log_verbose = 0
-  let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
+  " let g:lsp_log_verbose = 0
+  " let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'typescript',
@@ -1205,33 +1202,31 @@ endfunction
   endif
   if executable('solargraph')
     au User lsp_setup call lsp#register_server({
-        \ 'name': 'solargraph',
-        \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
-        \ 'initialization_options': {"diagnostics": "true"},
-        \ 'whitelist': ['ruby', 'eruby'],
-        \ })
+          \ 'name': 'solargraph',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
+          \ 'initialization_options': {"diagnostics": "true"},
+          \ 'whitelist': ['ruby', 'eruby'],
+          \ })
   endif
   if executable('lua-lsp')
     au User lsp_setup call lsp#register_server({
-        \ 'name': 'lua',
-        \ 'cmd': {server_info->[&shell, &shellcmdflag, 'lua-lsp']},
-        \ 'whitelist': ['lua'],
-        \ })
-  endif
-  if executable($HOME.'/.elixir-ls/language_server.sh')
-    au User lsp_setup call lsp#register_server({
-          \ 'name': 'elixir',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, '~/.dotfiles/elixir/elixir-ls.symlink/language_server.sh']},
-          \ 'whitelist': ['elixir', 'eelixir'],
-          \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
+          \ 'name': 'lua',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'lua-lsp']},
+          \ 'whitelist': ['lua'],
           \ })
   endif
+  if filereadable($HOME."/.elixir-ls/language_server.sh")
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'elixir',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, $HOME."/.elixir-ls/language_server.sh"]},
+          \ 'whitelist': ['elixir'],
+          \ })
+  endif
+  " \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
-  let g:ncm2_nvim_typescript#source = {'priority': 9, 'mark': ''}
-  let g:ncm2_alchemist#source = {'priority': 9, 'mark': "\ue62d"} " unicode for the elixir logo for nerdfonts
   " let g:ncm2_elm#source = {'priority': 9, 'mark': "\ue62c"} " unicode for the elixir logo for nerdfonts
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
   " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
@@ -1244,6 +1239,7 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
   call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
+  call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
 
   " " == elm support
   " au User Ncm2Plugin call ncm2#register_source({
@@ -1388,14 +1384,14 @@ map <S-F5> :PlugClean!<CR>
 " nmap <C-u> <Plug>(PromptJsFileImport)
 
 " ## quick-scope
-" nnoremap <expr> <silent> f Quick_scope_selective('f')
-" nnoremap <expr> <silent> F Quick_scope_selective('F')
-" nnoremap <expr> <silent> t Quick_scope_selective('t')
-" nnoremap <expr> <silent> T Quick_scope_selective('T')
-" vnoremap <expr> <silent> f Quick_scope_selective('f')
-" vnoremap <expr> <silent> F Quick_scope_selective('F')
-" vnoremap <expr> <silent> t Quick_scope_selective('t')
-" vnoremap <expr> <silent> T Quick_scope_selective('T')
+nnoremap <expr> <silent> f Quick_scope_selective('f')
+nnoremap <expr> <silent> F Quick_scope_selective('F')
+nnoremap <expr> <silent> t Quick_scope_selective('t')
+nnoremap <expr> <silent> T Quick_scope_selective('T')
+vnoremap <expr> <silent> f Quick_scope_selective('f')
+vnoremap <expr> <silent> F Quick_scope_selective('F')
+vnoremap <expr> <silent> t Quick_scope_selective('t')
+vnoremap <expr> <silent> T Quick_scope_selective('T')
 
 " ## Fugitive
 nnoremap <leader>H :Gbrowse<CR>

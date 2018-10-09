@@ -12,3 +12,4 @@ rm elixir-ls.zip
 
 mix local.hex --force --if-missing
 
+chmod +x $HOME/.elixir-ls/language_server.sh
