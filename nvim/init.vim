@@ -444,8 +444,6 @@ augroup END
 
 augroup elixir
   autocmd!
-  autocmd FileType elixir nnoremap <buffer> <leader>h :call alchemist#exdoc()<CR>
-  autocmd FileType elixir nnoremap <buffer> <leader>d :call alchemist#exdef()<CR>
   autocmd FileType elixir setlocal matchpairs=(:),{:},[:]
 
   " Enable html syntax highlighting in all .eex files
@@ -1198,10 +1196,6 @@ endfunction
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
-  " let g:ncm2_elm#source = {'priority': 9, 'mark': "\ue62c"} " unicode for the elixir logo for nerdfonts
-  " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
-  " let g:ncm2_tags#source = {'priority': 7, 'mark': "\uf9fa"}
-  " let g:ncm2_tag#source = {'priority': 7, 'mark': "\uf9fa"}
   let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_look#source = {'priority': 2, 'popup_limit': 5}
@@ -1211,18 +1205,6 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
   call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
-
-  " " == elm support
-  " au User Ncm2Plugin call ncm2#register_source({
-  "       \ 'name' : 'elm',
-  "       \ 'priority': 9,
-  "       \ 'subscope_enable': 1,
-  "       \ 'scope': ['elm'],
-  "       \ 'mark': "\ue62c",
-  "       \ 'word_pattern': '[\w\-]+',
-  "       \ 'complete_pattern': ':\s*',
-  "       \ 'on_complete': ['ncm2#on_complete#omni', 'elm#Complete'],
-  "       \ })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
