@@ -120,6 +120,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'kana/vim-textobj-indent'                              " for indent level (vai)
   Plug 'kana/vim-textobj-line'                                " for current line (val)
   Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }  " ruby block text object (vir)
+  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir'] }       " elixir block text object (vie)
   Plug 'glts/vim-textobj-comment'                             " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
   Plug 'machakann/vim-textobj-delimited'                      " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
@@ -430,19 +431,6 @@ augroup vimrc
   autocmd! TermOpen * if &buftype == 'terminal'
         \| set nonumber norelativenumber
         \| endif
-augroup END
-
-" # vim-lsp
-augroup LspMappings
-  au!
-  nnoremap <F2> :LspRename<CR>
-  nnoremap <leader>ld :LspDefinition<CR>
-  nnoremap <leader>lf :LspDocumentFormat<CR>
-  nnoremap <leader>lh :LspHover<CR>
-  nnoremap <leader>lr :LspReferences<CR>
-  nnoremap <leader>li :LspImplementation<CR>
-  nnoremap <leader>] :LspNextError<CR>
-  nnoremap <leader>[ :LspPreviousError<CR>
 augroup END
 
 augroup elm
@@ -1253,7 +1241,7 @@ endfunction
 " }}}
 " ================ Custom Mappings {{{
 
-" - ncm2 + ultisnips
+" # ncm2 + ultisnips
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
@@ -1262,6 +1250,23 @@ inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<c
 imap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 smap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 inoremap <silent> <expr> <c-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+
+" # vim-lsp
+nnoremap <F2> :LspRename<CR>
+nnoremap <leader>ld :LspDefinition<CR>
+nnoremap <leader>lf :LspDocumentFormat<CR>
+nnoremap <leader>lh :LspHover<CR>
+nnoremap <leader>lr :LspReferences<CR>
+nnoremap <leader>li :LspImplementation<CR>
+nnoremap <leader>] :LspNextError<CR>
+nnoremap <leader>[ :LspPreviousError<CR>
+" found here: https://github.com/andyl/base_util/blob/master/cfg/_vimrc_base#L127-L132
+" and here: https://github.com/prabirshrestha/vim-lsp/issues/169#issuecomment-419720171
+nmap \gd :LspDefinition<cr>
+nmap \gt :tab split<cr>:LspDefinition<cr>
+nmap \gs :sp<cr>:LspDefinition<cr>
+nmap \gv :vsp<cr>:LspDefinition<cr>
+
 "
 " Down is really the next line
 nnoremap j gj
@@ -1623,17 +1628,23 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
   hi CursorLine guibg=#333333
   hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
-  hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline guifg=#cc6666 guibg=red
+  hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
   hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
   hi IncSearch ctermfg=red ctermbg=0 guibg=#FFFACD guifg=#000000 gui=bold
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-  hi SpellBad   term=underline cterm=underline gui=undercurl ctermfg=red guifg=#cc6666 guibg=NONE
-  hi SpellCap   term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=33 guifg=#cc6666 guibg=NONE
-  hi SpellRare  term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=217 guifg=#cc6666 guibg=NONE
-  hi SpellLocal term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=72 guifg=#cc6666 guibg=NONE
+  " hi SpellBad   term=underline cterm=underline gui=undercurl ctermfg=red guifg=#cc6666 guibg=NONE
+  " hi SpellCap   term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=33 guifg=#cc6666 guibg=NONE
+  " hi SpellRare  term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=217 guifg=#cc6666 guibg=NONE
+  " hi SpellLocal term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=72 guifg=#cc6666 guibg=NONE
+  " Standardize spelling error highlighting across all color schemes.
+  autocmd ColorScheme * highlight clear SpellBad
+  autocmd ColorScheme * highlight clear SpellCap
+  autocmd ColorScheme * highlight SpellBad gui=undercurl
+  autocmd ColorScheme * highlight SpellCap gui=undercurl
+  autocmd ColorScheme * highlight VertSplit guibg=NONE
 
   " Markdown could be more fruit salady
   hi link markdownH1 PreProc
