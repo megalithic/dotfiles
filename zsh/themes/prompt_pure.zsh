@@ -37,6 +37,7 @@ PURE_GIT_UP_ARROW="↑" # ⇡↑
 PURE_GIT_DOWN_ARROW="↓" # ⇡↓
 PURE_PROMPT_SYMBOL="❯"
 PURE_PROMPT_VICMD_SYMBOL="❮"
+PURE_PROMPT_BACKGROUND_SYMBOL="☉"
 
 
 # Determination of pure working directory
@@ -69,7 +70,7 @@ PURE_GIT_BRANCH_COLOR="${PURE_GIT_BRANCH_COLOR="130"}"
 PURE_GIT_STATUS_SHOW="${PURE_GIT_STATUS_SHOW=true}"
 PURE_GIT_STATUS_PREFIX="${PURE_GIT_STATUS_PREFIX=" %F{247}[%f"}"
 PURE_GIT_STATUS_SUFFIX="${PURE_GIT_STATUS_SUFFIX="%F{247}]%f"}"
-PURE_GIT_STATUS_CLEAN="${PURE_GIT_STATUS_CLEAN="%{%B%}%F{green}\uf42e%f%{%b%}"}"
+PURE_GIT_STATUS_CLEAN="${PURE_GIT_STATUS_CLEAN="%{%B%}%F{green}\uf42e %f%{%b%}"}"
 PURE_GIT_STATUS_UNTRACKED="${PURE_GIT_STATUS_UNTRACKED="%F{254}…%f"}"
 PURE_GIT_STATUS_ADDED="${PURE_GIT_STATUS_ADDED="%F{blue}\uf44d%f"}" #+
 PURE_GIT_STATUS_MODIFIED="${PURE_GIT_STATUS_MODIFIED="%F{red}?%f"}" # •?
@@ -290,7 +291,7 @@ prompt_pure_preprompt_render() {
   fi
 
   # Background jobs indicator.
-  [[ $(jobs -l | wc -l) -gt 0 ]] && preprompt_parts+=('☉')
+  [[ $(jobs -l | wc -l) -gt 0 ]] && preprompt_parts+=($PURE_PROMPT_BACKGROUND_SYMBOL)
 
   # Username and machine, if applicable.
   [[ -n $prompt_pure_state[username] ]] && preprompt_parts+=('${prompt_pure_state[username]}')

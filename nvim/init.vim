@@ -766,7 +766,7 @@ endfunction
         \   },
         \ }
 
-  let g:lightline#ale#indicator_ok = "✔"
+  let g:lightline#ale#indicator_ok = "\uf42e "
   let g:lightline#ale#indicator_warnings = ' '
   let g:lightline#ale#indicator_errors = ' '
   let g:lightline#ale#indicator_checking = " "
@@ -810,7 +810,7 @@ endfunction
 
   function! LightlineModified()
     return PrintStatusline(!&modifiable ? '-' : &modified ?
-          \ "<⦿>" : '')
+          \ "\uf459" : '')
   endfunction
 
   function! LightlineFileName()
