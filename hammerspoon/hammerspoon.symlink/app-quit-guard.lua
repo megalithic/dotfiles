@@ -7,6 +7,7 @@ local function doQuit()
 end
 
 function quitModal:entered()
+  log.df("[app-quit-guard] - frontmostApplication: %s", hs.application.frontmostApplication():name())
   -- local app = hs.application.frontmostApplication()
   -- log.df("\r\n[app-quit-guard] - attempting to quit for %s, and quitGuard is %s\r\n", app:name(), config.applications[app:name()].quitGuard)
 

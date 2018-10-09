@@ -18,7 +18,7 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugged')
 
-  Plug 'tweekmonster/startuptime.vim', { 'on': [ 'StartupTime' ] } " Show slow plugins
+  Plug 'tweekmonster/startuptime.vim',  " Show slow plugins
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
@@ -52,15 +52,14 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-cssomni'
   " Plug 'yuki-ycino/ncm2-dictionary'
-  Plug 'filipekiss/ncm2-look.vim'
-  Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
-  Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
-  Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  " Plug 'filipekiss/ncm2-look.vim'
+  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
+  " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   " Plug '~/code/plugins/ncm2-elm', { 'for': ['elm'], 'do': 'npm i -g elm-oracle' }
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
-  " Plug 'xolox/vim-lua-ftplugin', { 'for': ['lua'] } | Plug 'xolox/vim-misc'
   " Plug 'awetzel/elixir.nvim', { 'for': ['elixir', 'eelixir'], 'do': 'yes \| ./install.sh' }
   " Plug 'slashmili/alchemist.vim', { 'for': ['elixir', 'eelixir'] }
   " Plug 'mhartington/nvim-typescript', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'], 'do': './install.sh' }
@@ -97,14 +96,13 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
   Plug 'thinca/vim-ref'
-  Plug 'rhysd/devdocs.vim'
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-surround'
   " Plug 'machakann/vim-sandwich'
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
-  Plug 'junegunn/gv.vim'
+  Plug 'junegunn/gv.vim', { 'on': [ 'GV' ] }
   Plug 'sodapopcan/vim-twiggy'
   " Plug 'christoomey/vim-conflicted'
   Plug 'rhysd/conflict-marker.vim'
@@ -119,21 +117,21 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " -- provide al and il for current line
   " -- provide a_ and i_ for underscores
   " -- provide a- and i-
-  Plug 'kana/vim-textobj-user', { 'on': [ '<Plug>(textobj-user' ] }                 " https://github.com/kana/vim-textobj-user/wiki
-  Plug 'kana/vim-textobj-entire', { 'on': [ '<Plug>(textobj-entire' ] }             " entire buffer text object (vae)
-  Plug 'kana/vim-textobj-function', { 'on': [ '<Plug>(textobj-function' ] }         " function text object (vaf)
-  Plug 'kana/vim-textobj-indent', { 'on': [ '<Plug>(textobj-indent' ] }             " for indent level (vai)
-  Plug 'kana/vim-textobj-line', { 'on': [ '<Plug>(textobj-line' ] }                 " for current line (val)
-  Plug 'nelstrom/vim-textobj-rubyblock', { 'on': [ '<Plug>(textobj-rubyblock' ] }   " ruby block text object (vir)
-  Plug 'glts/vim-textobj-comment', { 'on': [ '<Plug>(textobj-comment' ] }           " comment text object (vac)
+  Plug 'kana/vim-textobj-user'                                " https://github.com/kana/vim-textobj-user/wiki
+  Plug 'kana/vim-textobj-entire'                              " entire buffer text object (vae)
+  Plug 'kana/vim-textobj-function'                            " function text object (vaf)
+  Plug 'kana/vim-textobj-indent'                              " for indent level (vai)
+  Plug 'kana/vim-textobj-line'                                " for current line (val)
+  Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }  " ruby block text object (vir)
+  Plug 'glts/vim-textobj-comment'                             " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
-  Plug 'machakann/vim-textobj-delimited', { 'on': [ '<Plug>(textobj-delimited' ] }  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
-  Plug 'gilligan/textobj-lastpaste', { 'on': [ '<Plug>(textobj-lastpaste' ] }       " - P     for last paste
-  Plug 'mattn/vim-textobj-url', { 'on': [ '<Plug>(textobj-url' ] }                  " - u     for url
-  Plug 'rhysd/vim-textobj-anyblock', { 'on': [ '<Plug>(textobj-anyblock' ] }        " - '', \"\", (), {}, [], <>
-  Plug 'whatyouhide/vim-textobj-xmlattr', { 'on': [ '<Plug>(textobj-xmlattr' ] }    " - x     for xml
-  Plug 'arthurxavierx/vim-caser'                                                    " https://github.com/arthurxavierx/vim-caser#usage
-  Plug 'wellle/targets.vim'                                                         " improved targets line cin) next parens)
+  Plug 'machakann/vim-textobj-delimited'                      " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+  Plug 'gilligan/textobj-lastpaste'                           " - P     for last paste
+  Plug 'mattn/vim-textobj-url'                                " - u     for url
+  Plug 'rhysd/vim-textobj-anyblock'                           " - '', \"\", (), {}, [], <>
+  Plug 'whatyouhide/vim-textobj-xmlattr'                      " - x     for xml
+  Plug 'arthurxavierx/vim-caser'                              " https://github.com/arthurxavierx/vim-caser#usage
+  Plug 'wellle/targets.vim'                                   " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 call plug#end()
@@ -669,14 +667,6 @@ endfunction
 
 " ## polyglot
   let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir', 'eelixir']
-
-" ## devdocs.vim
-  let g:devdocs_filetype_map = {
-      \   'ruby': 'rails',
-      \   'javascript.jsx': 'react',
-      \   'typescript.tsx': 'react',
-      \   'javascript.test': 'jest',
-      \ }
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -1221,6 +1211,13 @@ endfunction
         \ 'whitelist': ['ruby', 'eruby'],
         \ })
   endif
+  if executable('lua-lsp')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'lua',
+        \ 'cmd': {server_info->[&shell, &shellcmdflag, 'lua-lsp']},
+        \ 'whitelist': ['lua'],
+        \ })
+  endif
   if executable($HOME.'/.elixir-ls/language_server.sh')
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
@@ -1246,6 +1243,7 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
+  call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
 
   " " == elm support
   " au User Ncm2Plugin call ncm2#register_source({
@@ -1341,11 +1339,6 @@ map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
 " open scratch buffer
 nnoremap <C-s> :call ScratchOpen()<CR>
-
-" " browse devdocs
-nnoremap <leader>d <Plug>(devdocs-under-cursor)
-nnoremap <leader>dd :DevDocsAll
-" nmap K <Plug>(devdocs-under-cursor)
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)
