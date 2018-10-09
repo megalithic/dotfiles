@@ -48,8 +48,10 @@ A few of the tools I roll with:
 - [tmux](https://github.com/tmux/tmux/wiki)
   * additional tmux statusbar binaries available (see `tmux-*` files in
   `~/.dotfiles/bin`).
-- [furacode nerd font](https://nerdfonts.com/)
-  * installed via `brew`
+- ~~[furacode nerd font](https://nerdfonts.com/)~~
+  * ~~installed via `brew`~~
+- [dankmono nerd font](https://dank.sh)
+  * patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
   * [nova](https://github.com/trevordmiller/nova-colors)
 - [neovim](https://neovim.io/)
