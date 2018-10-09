@@ -79,7 +79,3 @@ setopt transient_rprompt # only show the rprompt on the current prompt
 
 # ===== Scripts and Functions
 setopt multios # perform implicit tees or cats when multiple redirections are attempted
-
-# KEYTIMEOUT=1
-
-# zle -N newtab

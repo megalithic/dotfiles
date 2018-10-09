@@ -55,3 +55,25 @@ bindkey '^[[Z' reverse-menu-complete
 # for autosuggestions phrase accept
 bindkey '^j' vi-forward-blank-word
 
+
+# Add Some Emacs Keybindings
+bindkey '^p' up-history
+bindkey '^n' down-history
+bindkey '^w' backward-kill-word
+bindkey '^f' autosuggest-accept
+bindkey '^u' backward-kill-line
+bindkey '^a' beginning-of-line
+bindkey '^e' end-of-line
+
+# Fix ESC-/ Chord (Perform Search)
+vi-search-fix() {
+  zle vi-cmd-mode
+  zle .vi-history-search-backward
+}
+
+autoload vi-search-fix
+zle -N vi-search-fix
+bindkey -M viins '\e/' vi-search-fix
+
+# Fix Backspace
+bindkey "^?" backward-delete-char

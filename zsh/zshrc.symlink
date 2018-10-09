@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # Ensures we use emacs keybindings (i don't use vi-mode):
-bindkey -e
+bindkey -v
 
 #
 # Executes commands at the start of an interactive session.
