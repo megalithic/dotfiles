@@ -70,7 +70,7 @@ set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
 set -as terminal-overrides ',xterm*:sitm=\E[3m'
 set -g base-index 1                                                 # Start window numbers from 1
 set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
-# set -g mouse on                                                     # mices!
+set -g mouse on                                                     # mices! -- FIXME: this potentially jacks with kitty's mouse copy selection stuff
 set -g focus-events on                                              # enable focus events for wincent/terminus
 setw -g monitor-activity on
 setw -g visual-activity off
@@ -108,21 +108,21 @@ set -g allow-rename off
 # -- active pane decorations (places a green line in the panes' gutter, alters fg colors)
 set -g pane-border-style 'bg=#3C4C55,fg=#1E272C'
 set -g pane-active-border-style 'bg=#3C4C55,fg=red'
-set -g window-style 'fg=black,bg=#3C4C55'
+set -g window-style 'fg=#000000,bg=#3C4C55'
 set -g window-active-style 'fg=white,bg=#3C4C55'
 
 set -g clock-mode-colour cyan
 set -g status-style 'bg=#1E272C,fg=#6A7D89'
 set -g window-status-current-style 'fg=cyan'
-set -g mode-style 'bg=cyan,fg=black'
-set -g message-style 'bg=black,fg=cyan'
+set -g mode-style 'bg=cyan,fg=#000000'
+set -g message-style 'bg=#000000,fg=#ffffff,italics'
 set-window-option -g window-status-activity-attr none
 
 # Bar Layout
 # ---------------------------------------------------------
 # -- statusbar windows
 setw -g window-status-format ' ○ #I:#W '
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue] ● #I:#W} #[fg=colour28]"
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,italics] ● #I:#W} #[fg=colour28]"
 
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
