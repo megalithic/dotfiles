@@ -1,1 +1,0 @@
-/Users/replicant/.fzf/shell/key-bindings.fish
