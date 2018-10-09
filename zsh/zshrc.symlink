@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# Ensures we use emacs keybindings (i don't use vi-mode):
+# Ensures we use vi-mode keybindings
 bindkey -v
 
 #
