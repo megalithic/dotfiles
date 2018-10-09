@@ -8,8 +8,4 @@ en0=$(ifconfig en0 | ag 'inet ' | awk '{print $2}')
 # en8=$(ifconfig en8 | ag 'inet ' | awk '{print $2}')
 en8=$(ifconfig en8 | ag 'inet ' | awk '{print $2}')
 
-# output="#[fg=brightblue]$external #[fg=colour136]$vpn#[fg=white]■ #[fg=yellow]$en0$en7"
-# output="#[fg=brightblue]$external #[fg=colour136]$vpn#[fg=white]■ #[fg=yellow]$en0$en1$en8$en7"
-# echo "$output"
-
-echo "#[fg=brightblue]$external #[fg=colour136]$vpn#[fg=white]■ #[fg=yellow]$en0$en8"
+echo "#[fg=brightblue]礪$external #[fg=colour136]$vpn#[fg=white] #[fg=yellow]$en0$en8"

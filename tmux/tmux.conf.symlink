@@ -121,13 +121,13 @@ set-window-option -g window-status-activity-attr none
 # Bar Layout
 # ---------------------------------------------------------
 # -- statusbar windows
-setw -g window-status-format ' ◦ #I:#W '
+setw -g window-status-format ' ○ #I:#W '
 setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue] ● #I:#W} #[fg=colour28]"
 
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left-length 60
-set -g status-left "#[fg=green]#S ⧉ #(~/.dotfiles/bin/ip-tmux) #{prefix_highlight}"
+set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/ip-tmux) #{prefix_highlight}"
 
 # -- statusbar right
 set -g status-right-length 120

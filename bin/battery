@@ -114,7 +114,8 @@ print_status() {
     # GRAPH="☑"
     # GRAPH="⚇"
     # GRAPH=""
-    BATTERY_STATUS="[$BATTERY_STATUS%]"
+    GRAPH=" "
+    BATTERY_STATUS="$BATTERY_STATUS%"
 
   elif ((ascii)); then
     barlength=${#ascii_bar}
@@ -134,7 +135,7 @@ print_status() {
   fi
 
   if ((output_tmux)); then
-    printf "%s%s %s%s" "$COLOR" "$BATTERY_STATUS" "#[default]" "$GRAPH"
+    printf "%s%s %s%s" "$COLOR""$GRAPH""$BATTERY_STATUS" "#[default]"
   else
     printf "\e[0;%sm%s %s \e[m\n"  "$COLOR" "$BATTERY_STATUS" "$GRAPH"
   fi
