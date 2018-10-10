@@ -275,8 +275,13 @@ prompt_pure_preprompt_render() {
     preprompt_parts+=('%F{cyan}${prompt_pure_git_arrows}%f')
   fi
 
+
+  # Background jobs indicator.
+  [[ $(jobs -l | wc -l) -gt 0 ]] && preprompt_parts+=($PURE_PROMPT_BACKGROUND_SYMBOL)
+
   # Username and machine, if applicable.
   [[ -n $prompt_pure_state[username] ]] && preprompt_parts+=('${prompt_pure_state[username]}')
+
   # Execution time.
   [[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
