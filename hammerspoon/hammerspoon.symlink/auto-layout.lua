@@ -104,7 +104,7 @@ function handleAppEvent(element, event)
       log.wf('[auto-layout] handleAppEvent - app event error; thrown trying to access element (%s) in handleAppEvent', element)
     end
   else
-    log.wf('[auto-layout] handleAppEvent - app event error; unexpected app event (%d) received', event)
+    log.wf('[auto-layout] handleAppEvent - app event error; unexpected app event (%s) received', event)
   end
 end
 
