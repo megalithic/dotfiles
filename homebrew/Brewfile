@@ -76,7 +76,7 @@ brew 'libtool'
 brew 'libyaml'
 brew 'libxslt'
 brew 'lnav'
-brew 'lua'
+# brew 'lua' # installed via asdf
 brew 'luarocks'
 # brew 'm-cli'
 # brew 'mac-cli'
