@@ -116,7 +116,7 @@ set -g status-style 'bg=#1E272C,fg=#6A7D89'
 set -g window-status-current-style 'fg=cyan'
 set -g mode-style 'bg=cyan,fg=#000000'
 set -g message-style 'bg=#000000,fg=#ffffff,italics'
-set-window-option -g window-status-activity-attr none
+setw -g window-status-activity-attr none
 
 # Bar Layout
 # ---------------------------------------------------------
