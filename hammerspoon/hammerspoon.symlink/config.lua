@@ -51,6 +51,12 @@ config.ptt = {'cmd', 'alt'}
 config.defaultBrowser = hs.application.find(hs.urlevent.getDefaultHandler('http'))
 
 config.applications = {
+  ['default'] = {
+    name = '',
+    bundleID = '',
+    preferredDisplay = 2,
+    position = config.grid.centeredMedium,
+  },
   ['kitty'] = {
     name = 'kitty',
     bundleID = 'net.kovidgoyal.kitty',
