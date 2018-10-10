@@ -15,6 +15,7 @@ asdf plugin-add ruby
 asdf plugin-add nodejs
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin-add elm https://github.com/vic/asdf-elm.git
+asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
 
 #
 # required for asdf-nodejs..
