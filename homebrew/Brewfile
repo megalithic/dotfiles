@@ -40,7 +40,7 @@ brew 'docker'
 brew 'docker-compose'
 brew 'docker-machine' #, restart_service: true, link: false
 brew 'docker-completion'
-brew 'elixir'
+# brew 'elixir' # installed via asdf
 brew 'extract_url'
 brew 'fasd'
 brew 'fd'
@@ -153,7 +153,7 @@ cask 'controlplane'
 cask 'cumulus'
 cask 'dropbox'
 # install elgato thunderbolt 3 support app: https://www.elgato.com/dock/support
-cask 'elm-platform'
+# cask 'elm-platform' # installed via asdf
 cask 'encryptMe'
 cask 'expo-xde'
 cask 'firefox'

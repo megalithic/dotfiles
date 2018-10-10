@@ -9,9 +9,15 @@ then
   git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.5.1
 fi
 
+#
+# preferred plugins..
 asdf plugin-add ruby
 asdf plugin-add nodejs
+asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
+asdf plugin-add elm https://github.com/vic/asdf-elm.git
 
+#
+# required for asdf-nodejs..
 # https://github.com/asdf-vm/asdf-nodejs#install
 sh ~/.asdf/plugins/nodejs/bin/import-release-team-keyring
 
@@ -23,4 +29,5 @@ sh $DOTS/asdf/ruby.sh
 
 #
 # node-specific...
+# sh $DOTS/asdf/node.sh
 yarn global add neovim # neovim gets angry when trying to use asdf's shim of neovim-node-host
