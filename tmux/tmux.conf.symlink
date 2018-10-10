@@ -108,7 +108,7 @@ set -g allow-rename off
 # -- active pane decorations (places a green line in the panes' gutter, alters fg colors)
 set -g pane-border-style 'bg=#3C4C55,fg=#1E272C'
 set -g pane-active-border-style 'bg=#3C4C55,fg=red'
-set -g window-style 'fg=#000000,bg=#3C4C55'
+set -g window-style 'fg=#6A7D89,bg=#3C4C55'
 set -g window-active-style 'fg=white,bg=#3C4C55'
 
 set -g clock-mode-colour cyan
@@ -122,7 +122,7 @@ setw -g window-status-activity-attr none
 # ---------------------------------------------------------
 # -- statusbar windows
 setw -g window-status-format ' ○ #I:#W '
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,italics] ● #I:#W} #[fg=colour28]"
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red,italics]  #I:#W,#[fg=blue,italics] ● #I:#W} #[fg=colour28]"
 
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
