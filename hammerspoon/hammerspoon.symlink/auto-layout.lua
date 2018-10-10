@@ -64,13 +64,17 @@ setLayoutForApp = function(app) -- optionally, we should be able to take in a `w
   else
     -- default/general layout for apps not given a specific config
     local app = hs.application.frontmostApplication()
-    local windows = app:visibleWindows()
-    local appConfig = config.applications['default']
 
-    for _, window in pairs(windows) do
-      if utils.canManageWindow(window) then
-        log.df('[auto-layout] setLayoutForApp (default) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', app:name(), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
-        hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
+    -- only if we're not ignoring
+    if (not utils.isIgnoredApp(app:name())) then
+      local windows = app:visibleWindows()
+      local appConfig = config.applications['default']
+
+      for _, window in pairs(windows) do
+        if utils.canManageWindow(window) then
+          log.df('[auto-layout] setLayoutForApp (default) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', app:name(), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
+          hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
+        end
       end
     end
   end

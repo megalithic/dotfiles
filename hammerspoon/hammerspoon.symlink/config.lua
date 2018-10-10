@@ -50,6 +50,7 @@ config.superKeys = {
 config.ptt = {'cmd', 'alt'}
 config.defaultBrowser = hs.application.find(hs.urlevent.getDefaultHandler('http'))
 
+config.ignoredApplications = { 'iStat Menus Status', 'Fantastical' }
 config.applications = {
   ['default'] = {
     name = '',
