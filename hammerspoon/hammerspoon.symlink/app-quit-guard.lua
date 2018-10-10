@@ -2,21 +2,22 @@
 
 local quitModal = hs.hotkey.modal.new('cmd','q')
 
-local function doQuit()
-  hs.application.frontmostApplication():kill()
+local function doQuit(app)
+  local appToQuit = app or hs.application.frontmostApplication()
+  appToQuit:kill()
 end
 
 function quitModal:entered()
-  log.df("[app-quit-guard] - frontmostApplication: %s", hs.application.frontmostApplication():name())
-  -- local app = hs.application.frontmostApplication()
-  -- log.df("\r\n[app-quit-guard] - attempting to quit for %s, and quitGuard is %s\r\n", app:name(), config.applications[app:name()].quitGuard)
+  local app = hs.application.frontmostApplication()
+  log.df("[app-quit-guard] - attempting to quit for %s, and quitGuard is %s", app:name(), config.applications[app:name()].quitGuard)
 
-  -- if config.applications[app:name()].quitGuard then
+  if config.applications[app:name()].quitGuard then
     hs.alert.show("Press Cmd+Q again to quit", 1)
     hs.timer.doAfter(1, function() quitModal:exit() end)
-  -- else
-  --   doQuit()
-  -- end
+  else
+    quitModal:exit()
+    doQuit()
+  end
 end
 
 quitModal:bind('cmd', 'q', doQuit)
