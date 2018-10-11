@@ -42,6 +42,7 @@ brew 'docker-machine' #, restart_service: true, link: false
 brew 'docker-completion'
 # brew 'elixir' # installed via asdf
 brew 'extract_url'
+brew 'exercism'
 brew 'fasd'
 brew 'fd'
 brew 'ffind'
