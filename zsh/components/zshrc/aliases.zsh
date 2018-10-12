@@ -59,6 +59,8 @@ alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 alias dus='du -sckx * | sort -nr'
 alias top='top -o cpu'
 
+alias icat="kitty +kitten icat"
+
 # ZMV
 # -----------------------------------------------------------------------------
 autoload -U zmv
