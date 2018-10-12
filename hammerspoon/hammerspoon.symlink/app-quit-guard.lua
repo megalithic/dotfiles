@@ -9,7 +9,9 @@ end
 
 function quitModal:entered()
   local app = hs.application.frontmostApplication()
-  log.df("[app-quit-guard] - attempting to quit for %s, and quitGuard is %s", app:name(), config.applications[app:name()].quitGuard)
+  if (config.applications[app:name()] ~= nil) then
+    log.df("[app-quit-guard] - attempting to quit for %s, and quitGuard is %s", app:name(), config.applications[app:name()].quitGuard)
+  end
 
   if config.applications[app:name()].quitGuard then
     hs.alert.show("Press Cmd+Q again to quit", 1)

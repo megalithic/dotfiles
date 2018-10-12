@@ -427,8 +427,8 @@ augroup vimrc
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au Filetype gitcommit exe BufEnterCommit()
 
-  autocmd! TermOpen * setlocal nonumber norelativenumber
-  autocmd! TermOpen * if &buftype == 'terminal'
+  au! TermOpen * setlocal nonumber norelativenumber
+  au! TermOpen * if &buftype == 'terminal'
         \| set nonumber norelativenumber
         \| endif
 augroup END
@@ -443,37 +443,37 @@ augroup elm
 augroup END
 
 augroup elixir
-  autocmd!
-  autocmd FileType elixir setlocal matchpairs=(:),{:},[:]
+  au!
+  au FileType elixir setlocal matchpairs=(:),{:},[:]
 
   " Enable html syntax highlighting in all .eex files
   " autocmd BufReadPost *.html.eex set syntax=html
 
-  autocmd FileType elixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
-  autocmd FileType elixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
+  au FileType elixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
 
   " :Eix => open iex with current file compiled
   command! Iex :!iex %<cr>
-  autocmd FileType elixir nnoremap <leader>e :!elixir %<CR>
-  autocmd FileType elixir nnoremap <leader>ee :!iex -r % -S mix<CR>
+  au FileType elixir nnoremap <leader>e :!elixir %<CR>
+  au FileType elixir nnoremap <leader>ee :!iex -r % -S mix<CR>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
 " http://stackoverflow.com/a/7477056/3720597
 augroup QuickFixClose
-    autocmd!
-    autocmd WinEnter * if winnr('$') == 1 &&
-                \getbufvar(winbufnr(winnr()), "&buftype") == "quickfix"
-                \| q
-                \| endif
+  au!
+  au WinEnter * if winnr('$') == 1 &&
+        \getbufvar(winbufnr(winnr()), "&buftype") == "quickfix"
+        \| q
+        \| endif
 augroup END
 
 augroup MakeQuickFixPrettier
-    autocmd!
-    autocmd BufRead * if &buftype == 'quickfix'
-                \| setlocal colorcolumn=
-                \| setlocal nolist
-                \| endif
+  au!
+  au BufRead * if &buftype == 'quickfix'
+        \| setlocal colorcolumn=
+        \| setlocal nolist
+        \| endif
 augroup END
 
 " }}}
@@ -856,7 +856,8 @@ endfunction
   let g:sneak#absolute_dir = 1
 
 " ## quick-scope
-  let g:qs_enable = 0
+  let g:qs_enable = 1
+  let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## vim-asterisk
   map *  <Plug>(incsearch-nohl0)<Plug>(asterisk-z*)
@@ -1354,14 +1355,14 @@ map <S-F5> :PlugClean!<CR>
 " nmap <C-u> <Plug>(PromptJsFileImport)
 
 " ## quick-scope
-nnoremap <expr> <silent> f Quick_scope_selective('f')
-nnoremap <expr> <silent> F Quick_scope_selective('F')
-nnoremap <expr> <silent> t Quick_scope_selective('t')
-nnoremap <expr> <silent> T Quick_scope_selective('T')
-vnoremap <expr> <silent> f Quick_scope_selective('f')
-vnoremap <expr> <silent> F Quick_scope_selective('F')
-vnoremap <expr> <silent> t Quick_scope_selective('t')
-vnoremap <expr> <silent> T Quick_scope_selective('T')
+" nnoremap <expr> <silent> f Quick_scope_selective('f')
+" nnoremap <expr> <silent> F Quick_scope_selective('F')
+" nnoremap <expr> <silent> t Quick_scope_selective('t')
+" nnoremap <expr> <silent> T Quick_scope_selective('T')
+" vnoremap <expr> <silent> f Quick_scope_selective('f')
+" vnoremap <expr> <silent> F Quick_scope_selective('F')
+" vnoremap <expr> <silent> t Quick_scope_selective('t')
+" vnoremap <expr> <silent> T Quick_scope_selective('T')
 
 " ## Fugitive
 nnoremap <leader>H :Gbrowse<CR>
@@ -1601,18 +1602,20 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
 
 " }}}
 " ================ Highlights and Colors {{{
-  hi clear SpellBad
-  hi htmlArg cterm=italic gui=italic
-  hi xmlAttrib cterm=italic gui=italic
-  hi Type cterm=italic gui=italic
-  hi Comment cterm=italic term=italic gui=italic
-  hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
-  hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
-  hi CursorLine guibg=#333333
-  hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
-  hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
-  hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
-  hi IncSearch ctermfg=red ctermbg=0 guibg=#FFFACD guifg=#000000 gui=bold
+augroup highlights
+  au!
+  au ColorScheme * hi clear SpellBad
+  au ColorScheme * hi htmlArg cterm=italic gui=italic
+  au ColorScheme * hi xmlAttrib cterm=italic gui=italic
+  au ColorScheme * hi Type cterm=italic gui=italic
+  au ColorScheme * hi Comment cterm=italic term=italic gui=italic
+  au ColorScheme * hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
+  au ColorScheme * hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
+  au ColorScheme * hi CursorLine guibg=#333333
+  au ColorScheme * hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
+  au ColorScheme * hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
+  au ColorScheme * hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
+  au ColorScheme * hi IncSearch ctermfg=red ctermbg=0 guibg=#FFFACD guifg=#000000 gui=bold
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
@@ -1622,44 +1625,48 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   " hi SpellRare  term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=217 guifg=#cc6666 guibg=NONE
   " hi SpellLocal term=underline cterm=underline gui=undercurl ctermbg=NONE ctermfg=72 guifg=#cc6666 guibg=NONE
   " Standardize spelling error highlighting across all color schemes.
-  autocmd ColorScheme * highlight clear SpellBad
-  autocmd ColorScheme * highlight clear SpellCap
-  autocmd ColorScheme * highlight SpellBad gui=undercurl
-  autocmd ColorScheme * highlight SpellCap gui=undercurl
-  autocmd ColorScheme * highlight VertSplit guibg=NONE
+  au ColorScheme * hi clear SpellBad
+  au ColorScheme * hi clear SpellCap
+  au ColorScheme * hi SpellBad gui=undercurl
+  au ColorScheme * hi SpellCap gui=undercurl
+  au ColorScheme * hi VertSplit guibg=NONE
 
   " Markdown could be more fruit salady
-  hi link markdownH1 PreProc
-  hi link markdownH2 PreProc
-  hi link markdownLink Character
-  hi link markdownBold String
-  hi link markdownItalic Statement
-  hi link markdownCode Delimiter
-  hi link markdownCodeBlock Delimiter
-  hi link markdownListMarker Todo
+  au ColorScheme * hi link markdownH1 PreProc
+  au ColorScheme * hi link markdownH2 PreProc
+  au ColorScheme * hi link markdownLink Character
+  au ColorScheme * hi link markdownBold String
+  au ColorScheme * hi link markdownItalic Statement
+  au ColorScheme * hi link markdownCode Delimiter
+  au ColorScheme * hi link markdownCodeBlock Delimiter
+  au ColorScheme * hi link markdownListMarker Todo
 
-  hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
-  hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
+  au ColorScheme * hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
+  au ColorScheme * hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
 
-  hi link ALEError SpellBad
-  hi link ALEWarning SpellBad
-  hi link Debug SpellBad
-  hi link ErrorMsg SpellBad
-  hi link Exception SpellBad
+  au ColorScheme * hi link ALEError SpellBad
+  au ColorScheme * hi link ALEWarning SpellBad
+  au ColorScheme * hi link Debug SpellBad
+  au ColorScheme * hi link ErrorMsg SpellBad
+  au ColorScheme * hi link Exception SpellBad
 
-  hi link LspErrorText ALEErrorSign
-  hi link LspWarningText ALEWarningSign
-  hi link LspError ALEError
-  hi link LspWarning ALEWarning
+  au ColorScheme * hi link LspErrorText ALEErrorSign
+  au ColorScheme * hi link LspWarningText ALEWarningSign
+  au ColorScheme * hi link LspError ALEError
+  au ColorScheme * hi link LspWarning ALEWarning
 
-  hi ModifiedColor ctermfg=196 ctermbg=NONE guifg=#cc6666 guibg=NONE term=bold cterm=bold gui=bold
+  au ColorScheme * hi ModifiedColor ctermfg=196 ctermbg=NONE guifg=#cc6666 guibg=NONE term=bold cterm=bold gui=bold
   hi illuminatedWord cterm=underline gui=underline
-  hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
+  au ColorScheme * hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
 
-  hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
-  hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
-  hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
-  hi ALEError term=NONE guibg=#cc6666 guifg=#C5D4DD ctermbg=167
+  au ColorScheme * hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
+  au ColorScheme * hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
+  au ColorScheme * hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
+  au ColorScheme * hi ALEError term=NONE guibg=#cc6666 guifg=#C5D4DD ctermbg=167
+
+  au ColorScheme * hi QuickScopePrimary guifg='#afff5f' gui=underline ctermfg=155 cterm=underline
+  au ColorScheme * hi QuickScopeSecondary guifg='#5fffff' gui=underline ctermfg=81 cterm=underline
+augroup END
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
