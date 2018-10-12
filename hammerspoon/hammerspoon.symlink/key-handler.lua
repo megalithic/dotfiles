@@ -55,8 +55,8 @@ handler.mediaKeys = function (event, alertText)
   hs.eventtap.event.newSystemKeyEvent(event, true):post()
 end
 
-handler.notify = function(title, text, image)
-  hs.notify.new({title=title, subTitle=text}):setIdImage(image):send()
+handler.notify = function(notification)
+  hs.notify.new({title=notification.title, subTitle=notification.subTitle, informativeText=notification.informativeText}):setIdImage(notification.image):send()
   -- hs.notify.new({title=title, informativeText=text}):setIdImage(image):send()
 end
 
@@ -77,10 +77,13 @@ handler.spotify = function (event, alertText)
       local image = hs.image.imageFromAppBundle('com.spotify.client')
 
       if event == 'playpause' and not hs.spotify.isPlaying() then
-        handler.notify('Spotify', 'Paused', image)
+        -- handler.notify('Paused', 'Paused', image)
+        -- handler.notify(hs.spotify.getCurrentArtist(), hs.spotify.getCurrentTrack(), image)
+        handler.notify({ title='Paused', subTitle=hs.spotify.getCurrentArtist(), informativeText=hs.spotify.getCurrentTrack(), image=image })
       else
         -- handler.notify('Spotify', hs.spotify.getCurrentArtist() .. ' - ' .. hs.spotify.getCurrentTrack(), image)
-        handler.notify(hs.spotify.getCurrentArtist(), hs.spotify.getCurrentTrack(), image)
+        handler.notify({ title=hs.spotify.getCurrentArtist(), subTitle=hs.spotify.getCurrentTrack(), image=image })
+        -- handler.notify(hs.spotify.getCurrentArtist(), hs.spotify.getCurrentTrack(), image)
       end
     end)
   end
