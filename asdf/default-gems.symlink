@@ -11,7 +11,7 @@ rubocop
 sidekiq
 solargraph
 teamocil
-# terminal-notifier # installed via homebrew
+# terminal-notifier
 weechat
 language_server
 nokogiri
