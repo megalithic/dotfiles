@@ -40,7 +40,7 @@ brew 'docker'
 brew 'docker-compose'
 brew 'docker-machine' #, restart_service: true, link: false
 brew 'docker-completion'
-brew 'doxygen'
+brew 'doxygen', args: ['--with-qt', '--with-graphviz', '--with-llvm']
 # brew 'elixir' # installed via asdf
 brew 'extract_url'
 brew 'exercism'

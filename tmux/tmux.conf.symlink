@@ -86,9 +86,12 @@ set -w -g wrap-search off                                           # Don't wrap
 
 # VI MODE
 # ===========================================================================
-bind Escape copy-mode
 setw -g mode-keys vi                                                # Use vim keybindings
 
+bind Escape copy-mode
+
+bind-key -T copy-mode-vi v send-keys -X begin-selection
+bind-key -T copy-mode-vi y send-keys -X copy-selection
 
 # STATUS BAR
 # ===========================================================================

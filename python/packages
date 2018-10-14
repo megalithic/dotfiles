@@ -3,7 +3,7 @@ black
 gntp
 goobook
 pycp
-pync
+git+https://github.com/SeTeM/pync.git
 websocket-client
 saws
 neovim
