@@ -196,8 +196,8 @@ config.applications = {
   ['YakYak'] = {
     name = 'YakYak',
     bundleID = 'com.github.yakyak',
-    superKey = config.superKeys.ctrlShift,
-    shortcut = 'm',
+    -- superKey = config.superKeys.ctrlShift,
+    -- shortcut = 'm',
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
