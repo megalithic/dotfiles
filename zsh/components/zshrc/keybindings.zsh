@@ -77,3 +77,6 @@ bindkey -M viins '\e/' vi-search-fix
 
 # Fix Backspace
 bindkey "^?" backward-delete-char
+
+# vim-like reverse history search
+bindkey -M vicmd '/' history-incremental-search-backward

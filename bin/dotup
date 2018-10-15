@@ -124,7 +124,6 @@ $DOTS/bin/symlinks
 # Setup private repo and things
 $DOTS/bin/private
 
-
 echo "Changing your shell to brewed zsh..."
 zsh_path=$(which zsh)
 grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
