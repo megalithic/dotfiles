@@ -58,8 +58,8 @@ then
 fi
 
 # git exists?
-if (( $+commands[git] )); then
-  echo ":: git already installed"
+if (which git &>/dev/null); then
+  echo ":: git already installed; skipping."
 else
   echo ":: git not installed; requires xcode to continue.. install xcode? [y]"
   read answer
@@ -92,8 +92,8 @@ else
 fi
 
 # Install Homebrew
-if (( $+commands[brew] )); then
-  echo ":: brew already installed"
+if (which brew &>/dev/null); then
+  echo ":: brew already installed; skipping."
 else
   echo ":: brew not found; installing Homebrew..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
