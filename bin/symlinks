@@ -2,8 +2,8 @@
 
 echo ':: symlinking $DOTS/**/*.symlink files to $HOME/.<file>...'
 
-for found in **/*.symlink; do
-  source="$DOTS/$found"
+for found in $DOTS/**/*.symlink; do
+  source="$found"
   dest="$HOME/.`basename \"${found%.*}\"`"
 
   if [ -f $dest ] || [ -d $dest ]; then
