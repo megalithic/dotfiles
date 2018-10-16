@@ -127,7 +127,6 @@ brew 'wifi-password'
 brew 'yubico-piv-tool'
 brew 'libyubikey'
 brew 'pam_yubico'
-brew 'universal-ctags', args: ['--HEAD']
 brew 'yubikey-personalization'
 brew 'zsh', args: ['--with-unicode9', '--without-etcdir']
 brew 'zsh-completions'
