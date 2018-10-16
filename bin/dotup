@@ -98,12 +98,14 @@ echo ":: brewing all the things..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 
-read -n1 -r -p "You must first sign into the Apple App Store; once done, press space to continue..." key
+echo ":: in order to install MAS apps, you must manually signin to the Apple App Store"
+echo -n "once you've completed AAS sign, hit (Y/y) to continue.. "
+read answer
 
-if [ "$key" = '' ]; then
+if [ "$answer" != "${answer#[Yy]}" ]; then
     brew bundle --file=$DOTS/homebrew/Brewfile
 else
-    echo "You must press space to continue; after signing into the Apple App Store"
+    echo "You must hit (Y/y) to continue; after manually signing into the Apple App Store"
 fi
 
 # echo ":: doing post-brew things..."
