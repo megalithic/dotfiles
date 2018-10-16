@@ -1,8 +1,11 @@
 #!/bin/zsh
 
-echo "## PYTHON..."
+echo ":: setting up python things..."
 
+pip install --upgrade pip
+pip2 install --upgrade pip
 pip3 install --upgrade pip
+
 $DOTS/python/package-installer
 
 # this is for wee_slack.py plugin to work for weechat,
