@@ -91,9 +91,9 @@ export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 brew bundle --file=$DOTS/homebrew/Brewfile
 
-echo ":: doing post-brew things..."
-sudo xcodebuild -license accept
-ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
+# echo ":: doing post-brew things..."
+# sudo xcodebuild -license accept
+# ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
 
 if [[ -a $DOTS/homebrew/Brewfile.local ]]
 then
