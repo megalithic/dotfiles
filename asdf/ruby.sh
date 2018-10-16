@@ -12,7 +12,10 @@ rm  -rf   $HOME/.bundle/config \
 ln -sfv $DOTS/ruby/bundler          $HOME/.bundle/config
 ln -sfv $DOTS/ruby/invoker.ini      $HOME/invoker.ini
 
-if type "yard" > /dev/null; then
+echo ":: running ruby package-installer"
+source $DOTS/ruby/package-installer
+
+if (( $+commands[yard] )); then
   echo "Configuring yard..."
   echo ""
   yard config --gem-install-yri
