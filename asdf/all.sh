@@ -31,5 +31,5 @@ sh $DOTS/asdf/ruby.sh
 
 #
 # node-specific...
-# sh $DOTS/asdf/node.sh
+sh $DOTS/asdf/node.sh
 yarn global add neovim # neovim gets angry when trying to use asdf's shim of neovim-node-host
