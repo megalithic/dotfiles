@@ -97,7 +97,14 @@ fi
 echo ":: brewing all the things..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
-brew bundle --file=$DOTS/homebrew/Brewfile
+
+read -n1 -r -p "You must first sign into the Apple App Store; once done, press space to continue..." key
+
+if [ "$key" = '' ]; then
+    brew bundle --file=$DOTS/homebrew/Brewfile
+else
+    echo "You must press space to continue; after signing into the Apple App Store"
+fi
 
 # echo ":: doing post-brew things..."
 # sudo xcodebuild -license accept
