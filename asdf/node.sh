@@ -3,8 +3,8 @@
 echo "### node-specific tasks..."
 echo ""
 
-echo ":: installing node packages..."
-$DOTS/node/package-installer
+#echo ":: installing node packages..."
+#$DOTS/node/package-installer
 
 if (( $+commands[yarn] )); then
   echo ""
