@@ -9,7 +9,7 @@ read repo
 
 if [[ "$repo" != "" ]]
 then
-  if [[ ! -d "$PRIVATES" ]]; then
+  if [[ -n $PRIVATES ]]; then
     echo ":: cloning $repo to $PRIVATES"
     git clone $repo $PRIVATES
   fi
