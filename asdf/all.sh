@@ -6,7 +6,8 @@ echo ""
 # clone asdf-vm (no need for homebrew version of asdf when doing this)
 if [[ ! -d $HOME/.asdf ]]
 then
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.5.1
+  echo ":: ~/.asdf not found; cloning it now.."
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
 fi
 
 #
