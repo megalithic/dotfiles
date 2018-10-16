@@ -10,6 +10,7 @@ echo ""
 #   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
 # fi
 
+autoload -Uz compinit && compinit
 echo '. $HOME/.asdf/asdf.sh' >> ~/.zshrc
 echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.zshrc
 source ~/.zshrc
