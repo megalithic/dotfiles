@@ -1,9 +1,12 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
-if [[ ! -d $HOME/.elixir-ls ]]
+echo ":: setting up elixir things"
+
+if [[ ! -d "$HOME/.elixir-ls" ]]
 then
-  mkdir $HOME/.elixir-ls
+  rm -rf $HOME/.elixir-ls
 fi
+mkdir $HOME/.elixir-ls
 
 cd $HOME/.elixir-ls
 wget https://github.com/$(wget https://github.com/jakebecker/elixir-ls/releases/latest -O - | egrep '/.*/.*/.*zip' -o)
