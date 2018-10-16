@@ -28,6 +28,7 @@ brew 'ansifilter'
 brew 'autoconf'
 brew 'automake'
 brew 'aspell', args: ['--with-lang-en']
+brew 'asdf'
 brew 'bat'
 brew 'cmake'
 brew 'coreutils'
