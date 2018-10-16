@@ -15,6 +15,11 @@ echo '
 ================================================================================
 '
 
+pause()
+{
+  echo "$*"; read -k1 -s
+}
+
 # Detect OS
 if [[ -z $PLATFORM ]]
 then
@@ -98,15 +103,8 @@ echo ":: brewing all the things..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 
-echo ":: in order to install MAS apps, you must manually signin to the Apple App Store"
-echo -n "once you've completed AAS sign, hit (Y/y) to continue.. "
-read answer
-
-if [ "$answer" != "${answer#[Yy]}" ]; then
-    brew bundle --file=$DOTS/homebrew/Brewfile
-else
-    echo "You must hit (Y/y) to continue; after manually signing into the Apple App Store"
-fi
+pause ":: in order to install MAS apps, you must manually signin to the Apple App Store; press <space> to continue.."
+brew bundle --file=$DOTS/homebrew/Brewfile
 
 # echo ":: doing post-brew things..."
 # sudo xcodebuild -license accept
