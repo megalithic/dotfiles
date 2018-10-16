@@ -49,7 +49,7 @@ then
 fi
 
 # git exists?
-if ! type "git" > /dev/null; then
+if ! (( $+commands[git] )); then
   echo ":: `git` not installed; requires xcode to continue.. install xcode? [y]"
   read answer
 
@@ -81,7 +81,7 @@ else
 fi
 
 # Install Homebrew
-if ! type "brew" > /dev/null; then
+if ! (( $+commands[brew] )); then
   echo ":: brew not found; installing Homebrew..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
@@ -128,6 +128,7 @@ $DOTS/bin/private
 
 echo ":: changing your shell to brewed zsh..."
 zsh_path=$(which zsh)
+echo ":: attempting to set $zsh_path as your zsh path in /etc/shells"
 grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
 chsh -s "$zsh_path" $USER
 zsh
