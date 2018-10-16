@@ -1,8 +1,8 @@
 #!/bin/zsh
 
-echo 'Symlinking *.symlink files to $HOME/.<file>...'
+echo ':: symlinking $DOTS/**/*.symlink files to $HOME/.<file>...'
 
-for found in **/*.symlink; do
+for found in $DOTS/**/*.symlink; do
   source="$DOTS/$found"
   dest="$HOME/.`basename \"${found%.*}\"`"
 
