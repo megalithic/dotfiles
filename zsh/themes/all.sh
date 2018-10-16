@@ -1,4 +1,4 @@
-#!/usr/bin/zsh
+#!/usr/bin/env zsh
 
 echo "Symlinking custom zsh theme to /usr/local/share/zsh/site-functions"
 
