@@ -1,6 +1,6 @@
 #!/bin/zsh
 
 # find generic installers and run them interactively
-echo "Running generic installers..."
+echo ":: ------ running generic installers..."
 
 find $DOTS -name all.sh | while read installer ; do sh -c "${installer}" > /dev/null ; done
