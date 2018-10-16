@@ -16,10 +16,10 @@ echo ":: installing ruby packages..."
 $DOTS/ruby/package-installer
 
 if (( $+commands[yard] )); then
-  echo "Configuring yard..."
+  echo ":: configuring yard..."
   echo ""
   yard config --gem-install-yri
 else
-  echo "!! ERROR: wasn't able to run `yard` command from ln 21"
+  echo ":: ERROR: wasn't able to run `yard` command from ln 21"
 fi
 
