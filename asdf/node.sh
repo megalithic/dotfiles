@@ -3,9 +3,8 @@
 echo "### node-specific tasks..."
 echo ""
 
-echo "Installing node packages..."
+echo ":: installing node packages..."
 $DOTS/node/package-installer
 
-# echo "Setting up `avn` (automatic node version loader)..."
-# [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # source avn
-# avn setup
+yarn global add neovim # neovim gets angry when trying to use asdf's shim of neovim-node-host
+
