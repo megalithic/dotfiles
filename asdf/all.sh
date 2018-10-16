@@ -10,10 +10,13 @@ echo ""
 #   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
 # fi
 
-#
-# preferred plugins..
+echo '. $HOME/.asdf/asdf.sh' >> ~/.zshrc
+echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.zshrc
+source ~/.zshrc
 source $HOME/.asdf/asdf.sh;
 
+#
+# preferred plugins..
 asdf plugin-add ruby https://github.com/asdf-vm/asdf-ruby.git;
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git;
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git;
@@ -24,11 +27,13 @@ asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git;
 # https://github.com/asdf-vm/asdf-nodejs#install
 /usr/bin/env zsh $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring;
 
+#
 # TODO:
 # add python asdf installer.. his notes about multiple python versions and reshim
 # https://github.com/danhper/asdf-python
 # asdf plugin-add python https://github.com/tuvistavie/asdf-python.git
 
+#
 # must initially symlink our tool-versions file for asdf to install the right things..
 ln -sfv $DOTS/asdf/tool-versions.symlink $HOME/.tool-versions
 asdf install
