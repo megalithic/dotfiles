@@ -118,16 +118,16 @@ then
 fi
 
 # Link $DOTS/bin files to $HOME/.bin
-echo ":: symlinking $DOTS/bin files to $HOME/.bin/..."
-mkdir -p $HOME/.bin
-rm -f $HOME/.bin/*
-for found in $DOTS/bin/*; do
-  source="$DOTS/$found"
-  dest="$HOME/.bin/`basename \"${found%.*}\"`"
-
-  ln -sf $source $dest
-  echo ":: symlinked binary $source to $dest"
-done
+#echo ":: symlinking $DOTS/bin files to $HOME/.bin/..."
+#mkdir -p $HOME/.bin
+#rm -f $HOME/.bin/*
+#for found in $DOTS/bin/*; do
+#  source="$DOTS/$found"
+#  dest="$HOME/.bin/`basename \"${found%.*}\"`"
+#
+#  ln -sf $source $dest
+#  echo ":: symlinked binary $source to $dest"
+#done
 
 # Run generic installers
 $DOTS/bin/generic
