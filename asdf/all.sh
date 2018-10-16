@@ -4,11 +4,11 @@ echo "## asdf-vm..."
 echo ""
 
 # clone asdf-vm (no need for homebrew version of asdf when doing this)
-if [[ ! -d $HOME/.asdf ]]
-then
-  echo ":: ~/.asdf not found; cloning it now.."
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-fi
+# if [[ ! -d $HOME/.asdf ]]
+# then
+#   echo ":: ~/.asdf not found; cloning it now.."#
+#   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+# fi
 
 #
 # preferred plugins..
