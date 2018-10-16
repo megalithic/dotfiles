@@ -12,8 +12,8 @@ rm  -rf   $HOME/.bundle/config \
 ln -sfv $DOTS/ruby/bundler          $HOME/.bundle/config
 #ln -sfv $DOTS/ruby/invoker.ini      $HOME/invoker.ini
 
-echo ":: installing ruby packages..."
-$DOTS/ruby/package-installer
+#echo ":: installing ruby packages..."
+#$DOTS/ruby/package-installer
 
 if (( $+commands[yard] )); then
   echo ":: configuring yard..."
