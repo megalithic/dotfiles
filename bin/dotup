@@ -49,7 +49,7 @@ then
 fi
 
 # git exists?
-if ! type "brew" > /dev/null; then
+if ! type "git" > /dev/null; then
   echo ":: `git` not installed; requires xcode to continue.. install xcode? [y]"
   read answer
 
