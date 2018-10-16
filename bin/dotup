@@ -28,6 +28,8 @@ then
   fi
 
   export PLATFORM=$platform
+  
+  echo ":: setting PLATFORM to $platform"
 fi
 
 
@@ -47,9 +49,8 @@ then
 fi
 
 # git exists?
-if [[ "$(which git)" == "" ]]
-then
-  echo "git not installed; requires xcode to continue.. install xcode? [y]"
+if ! type "brew" > /dev/null; then
+  echo ":: `git` not installed; requires xcode to continue.. install xcode? [y]"
   read answer
 
   if [[ $answer == [yY] ]]
@@ -62,7 +63,7 @@ fi
 # ~/.dotfiles dir exists?
 if [[ ! -d $DOTS ]]
 then
-  echo "Cloning dotfiles..."
+  echo ":: cloning dotfiles..."
   mkdir -p $DOTS
   git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
 else
@@ -80,28 +81,28 @@ fi
 
 # Install Homebrew
 if ! type "brew" > /dev/null; then
-  echo "Installing Homebrew..."
+  echo ":: installing Homebrew..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
-echo "Brewing all the things..."
+echo ":: brewing all the things..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 brew bundle --file=$DOTS/homebrew/Brewfile
 
-echo "Doing post-brew things..."
+echo ":: doing post-brew things..."
 sudo xcodebuild -license accept
 ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
 
 if [[ -a $DOTS/homebrew/Brewfile.local ]]
 then
-  echo "Brewing private/local things..."
+  echo ":: brewing private/local things..."
   # brew "private"/"local" Brewfile
   brew bundle --file=$DOTS/homebrew/Brewfile.local
 fi
 
 # Link $DOTS/bin files to $HOME/.bin
-echo "Symlinking $DOTS/bin files to $HOME/.bin/..."
+echo ":: symlinking $DOTS/bin files to $HOME/.bin/..."
 mkdir -p $HOME/.bin
 rm -f $HOME/.bin/*
 for found in $DOTS/bin/*; do
@@ -109,7 +110,7 @@ for found in $DOTS/bin/*; do
   dest="$HOME/.bin/`basename \"${found%.*}\"`"
 
   ln -sf $source $dest
-  echo "Symlinked binary $source to $dest"
+  echo ":: symlinked binary $source to $dest"
 done
 
 # Run generic installers
@@ -124,7 +125,7 @@ $DOTS/bin/symlinks
 # Setup private repo and things
 $DOTS/bin/private
 
-echo "Changing your shell to brewed zsh..."
+echo ":: changing your shell to brewed zsh..."
 zsh_path=$(which zsh)
 grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
 chsh -s "$zsh_path" $USER
