@@ -55,9 +55,9 @@ fi
 # PRIVATES export exists?
 if [[ -z $PRIVATES ]]
 then
-  export PRIVATES=$DOTS/private
+  export PRIVATES="$DOTS/private"
   echo ":: setting PRIVATES to $PRIVATES"
-  export PRIVATE=$DOTS/private
+  export PRIVATE="$DOTS/private"
   echo ":: setting PRIVATE to $PRIVATE"  
 fi
 
