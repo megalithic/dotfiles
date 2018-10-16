@@ -19,5 +19,7 @@ if (( $+commands[yard] )); then
   echo "Configuring yard..."
   echo ""
   yard config --gem-install-yri
+else
+  echo "!! ERROR: wasn't able to run `yard` command from ln 21"
 fi
 
