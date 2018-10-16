@@ -6,5 +6,5 @@
 
 echo "Running installers for $PLATFORM..."
 
-find . -name $PLATFORM.sh | while read installer ; do sh "${installer}" > /dev/null ; done
+find $DOTS -name $PLATFORM.sh | while read installer ; do sh "${installer}" > /dev/null ; done
 
