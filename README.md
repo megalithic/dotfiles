@@ -19,8 +19,7 @@
 If you want to kick the tires, you can simply:
 
 ```sh
-curl -fsSL \
-  https://raw.githubusercontent.com/megalithic/dotfiles/master/bin/dotup | sh
+curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/master/bin/dotup | sh
 ```
 
 The install script will install things and symlink the appropriate files in
