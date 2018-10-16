@@ -8,7 +8,7 @@ echo '
     @megalithic
 
 Setting up dotfiles. If the ~/.dotfiles folder does not exist, it will be
-cloned from https://github.com/megalithic/dotfiles. The zsh config is all.
+cloned from https://github.com/megalithic/dotfiles.
 '
 
 # Detect OS
@@ -55,7 +55,7 @@ if ! type "brew" > /dev/null; then
 
   if [[ $answer == [yY] ]]
   then
-    echo "installing xcode"
+    echo ":: installing xcode"
     xcode-select --install
   fi
 fi
@@ -69,6 +69,7 @@ then
 else
   if [[ -z $SKIP_DOTFILES_UPDATE ]]
   then
+    echo ":: ~/.dotfiles found; updating to latest.."
     cd $DOTS
     git add -u .
     git stash
@@ -81,7 +82,7 @@ fi
 
 # Install Homebrew
 if ! type "brew" > /dev/null; then
-  echo ":: installing Homebrew..."
+  echo ":: brew not found; installing Homebrew..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
