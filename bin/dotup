@@ -9,6 +9,8 @@ echo '
 
 Setting up dotfiles. If the ~/.dotfiles folder does not exist, it will be
 cloned from https://github.com/megalithic/dotfiles.
+
+==========================================================================
 '
 
 # Detect OS
@@ -49,7 +51,7 @@ then
 fi
 
 # git exists?
-if ! (( $+commands[git] )); then
+if (( ! $+commands[git] )); then
   echo ":: `git` not installed; requires xcode to continue.. install xcode? [y]"
   read answer
 
@@ -81,7 +83,7 @@ else
 fi
 
 # Install Homebrew
-if ! (( $+commands[brew] )); then
+if (( ! $+commands[brew] )); then
   echo ":: brew not found; installing Homebrew..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
