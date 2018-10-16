@@ -4,11 +4,11 @@ echo ":: setting up asdf-vm..."
 echo ""
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
-# if [[ ! -d "$HOME/.asdf" ]]
-# then
-#   echo ":: ~/.asdf not found; cloning it now.."#
-#   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-# fi
+if [[ ! -d "$HOME/.asdf" ]]
+then
+  echo ":: ~/.asdf not found; cloning it now.."
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+fi
 
 autoload -Uz compinit && compinit
 echo '. $HOME/.asdf/asdf.sh' >> ~/.zshrc
