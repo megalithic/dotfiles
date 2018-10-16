@@ -40,6 +40,7 @@ asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git;
 # must initially symlink our tool-versions file for asdf to install the right things..
 ln -sfv $DOTS/asdf/tool-versions.symlink $HOME/.tool-versions
 asdf install
+source ~/.zshrc
 
 #
 # ruby-specific...
