@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-echo "## asdf-vm..."
+echo ":: setting up asdf-vm..."
 echo ""
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
