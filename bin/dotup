@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 echo '
 
@@ -54,7 +54,7 @@ fi
 
 # git exists?
 if (( $+commands[git] )); then
-  echo ":: git already installed!"
+  echo ":: git already installed"
 else
   echo ":: git not installed; requires xcode to continue.. install xcode? [y]"
   read answer
@@ -88,7 +88,7 @@ fi
 
 # Install Homebrew
 if (( $+commands[brew] )); then
-  echo ":: brew already installed!"
+  echo ":: brew already installed"
 else
   echo ":: brew not found; installing Homebrew..."
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
