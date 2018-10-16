@@ -41,16 +41,6 @@ then
   echo ":: setting PLATFORM to $platform"
 fi
 
-
-# PRIVATES export exists?
-if [[ -z $PRIVATES ]]
-then
-  export PRIVATES=$DOTS/private
-  echo ":: setting PRIVATES to $PRIVATES"
-  export PRIVATE=$DOTS/private
-  echo ":: setting PRIVATE to $PRIVATE"  
-fi
-
 # DOTDIR export exists?
 if [[ -z $DOTS ]]
 then
@@ -60,6 +50,15 @@ then
   echo ":: setting DOTDIR to $DOTDIR"
   export DIRDOTS="$HOME/.dotfiles"
   echo ":: setting DIRDOTS to $DIRDOTS"
+fi
+
+# PRIVATES export exists?
+if [[ -z $PRIVATES ]]
+then
+  export PRIVATES=$DOTS/private
+  echo ":: setting PRIVATES to $PRIVATES"
+  export PRIVATE=$DOTS/private
+  echo ":: setting PRIVATE to $PRIVATE"  
 fi
 
 # git exists?
