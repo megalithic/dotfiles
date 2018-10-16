@@ -5,6 +5,8 @@
 # find mac installers and run them interactively
 
 echo "Running installers for $PLATFORM..."
+echo ":: ------ running installers specifically for $PLATFORM..."
+
 
 find $DOTS -name $PLATFORM.sh | while read installer ; do sh "${installer}" > /dev/null ; done
 
