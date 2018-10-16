@@ -2,7 +2,7 @@
 
 echo ':: symlinking $DOTS/**/*.symlink files to $HOME/.<file>...'
 
-for found in $DOTS/**/*.symlink; do
+for found in **/*.symlink; do
   source="$DOTS/$found"
   dest="$HOME/.`basename \"${found%.*}\"`"
 
