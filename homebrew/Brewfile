@@ -25,7 +25,6 @@ tap 'homebrew/cask-drivers'
 #brew 'avrdude'
 
 brew 'ansifilter'
-brew 'applesimutils'
 brew 'autoconf'
 brew 'automake'
 brew 'aspell', args: ['--with-lang-en']
@@ -64,7 +63,6 @@ brew 'gnu-sed', args: ['with-default-names']
 brew 'gpg' # required for asdf-nodejs
 brew 'grc'
 brew 'grv'
-brew 'gcc49'
 brew 'hub'
 brew 'highlight'
 brew 'httpie'
