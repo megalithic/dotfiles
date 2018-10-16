@@ -114,13 +114,6 @@ brew bundle --file=$DOTS/homebrew/Brewfile
 # sudo xcodebuild -license accept
 # ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
 
-if [[ -a $DOTS/homebrew/Brewfile.local ]]
-then
-  echo ":: brewing private/local things..."
-  # brew "private"/"local" Brewfile
-  brew bundle --file=$DOTS/homebrew/Brewfile.local
-fi
-
 # Run generic installers
 $DOTS/bin/generic
 
