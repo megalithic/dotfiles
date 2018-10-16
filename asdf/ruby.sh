@@ -15,7 +15,7 @@ ln -sfv $DOTS/ruby/bundler          $HOME/.bundle/config
 #echo ":: installing ruby packages..."
 #$DOTS/ruby/package-installer
 
-if (( which yard &> /dev/null )); then
+if (which yard &>/dev/null); then
   echo ":: configuring yard..."
   echo ""
   yard config --gem-install-yri
