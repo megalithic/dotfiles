@@ -46,15 +46,20 @@ fi
 if [[ -z $PRIVATES ]]
 then
   export PRIVATES=$DOTS/private
+  echo ":: setting PRIVATES to $PRIVATES"
   export PRIVATE=$DOTS/private
+  echo ":: setting PRIVATE to $PRIVATE"  
 fi
 
 # DOTDIR export exists?
 if [[ -z $DOTS ]]
 then
   export DOTS="$HOME/.dotfiles"
+  echo ":: setting DOTS to $DOTS"
   export DOTDIR="$HOME/.dotfiles"
+  echo ":: setting DOTDIR to $DOTDIR"
   export DIRDOTS="$HOME/.dotfiles"
+  echo ":: setting DIRDOTS to $DIRDOTS"
 fi
 
 # git exists?
@@ -99,7 +104,7 @@ else
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
-echo ":: brewing all the things..."
+echo ":: brewing things from our brewfile..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 
@@ -117,18 +122,6 @@ then
   brew bundle --file=$DOTS/homebrew/Brewfile.local
 fi
 
-# Link $DOTS/bin files to $HOME/.bin
-#echo ":: symlinking $DOTS/bin files to $HOME/.bin/..."
-#mkdir -p $HOME/.bin
-#rm -f $HOME/.bin/*
-#for found in $DOTS/bin/*; do
-#  source="$DOTS/$found"
-#  dest="$HOME/.bin/`basename \"${found%.*}\"`"
-#
-#  ln -sf $source $dest
-#  echo ":: symlinked binary $source to $dest"
-#done
-
 # Run generic installers
 $DOTS/bin/generic
 
@@ -141,7 +134,7 @@ $DOTS/bin/symlinks
 # Setup private repo and things
 $DOTS/bin/private
 
-echo ":: changing your shell to brewed zsh..."
+echo ":: changing your shell to the brewed zsh..."
 zsh_path=$(which zsh)
 echo ":: attempting to set $zsh_path as your zsh path in /etc/shells"
 grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
