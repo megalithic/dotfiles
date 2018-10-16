@@ -1,6 +1,6 @@
 #!/bin/zsh
 #
-# Run all dotfiles installers.
+# Run all platform-specific installers.
 
 # find macos installers and run them interactively
 echo ":: ------ running installers for $PLATFORM..."
