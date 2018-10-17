@@ -1,8 +1,0 @@
-#!/bin/zsh
-#
-# Run all platform-specific installers.
-
-# find macos installers and run them interactively
-echo ":: ------ running installers for $PLATFORM..."
-
-find $DOTS -name $PLATFORM.sh | while read installer ; do echo "running installer: $installer" ; sh "${installer}" > /dev/null ; done
