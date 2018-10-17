@@ -1,6 +1,8 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
+echo ""
 echo ':: symlinking $DOTS/**/*.symlink files to $HOME/.<file>...'
+echo ""
 
 for found in $DOTS/**/*.symlink; do
   source="$found"
@@ -8,9 +10,9 @@ for found in $DOTS/**/*.symlink; do
 
   if [ -f $dest ] || [ -d $dest ]; then
     rm -rf $dest
-    echo "Removed existing symlink: $dest"
+    echo "-- removed existing symlink: $dest"
   fi
 
   ln -sf $source $dest
-  echo "Symlinked $source to $dest"
+  echo "++ symlinked $source to $dest"
 done
