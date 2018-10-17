@@ -102,7 +102,7 @@ set -g status-interval 1
 set -g status-justify "centre"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
-setw -g automatic-rename off
+setw -g automatic-rename on
 
 # Colors
 # ---------------------------------------------------------
