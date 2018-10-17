@@ -13,6 +13,8 @@ export ZSH_HOME=$ZSH
 export DOTFILES=$HOME/.dotfiles
 export DOTDIR=$DOTFILES
 export DOTS=$DOTFILES
+export PRIVATES="$DOTS/private"
+export PRIVATE=$PRIVATES
 
 # # TODO: all of our zsh files
 # typeset -U components
