@@ -113,16 +113,16 @@ brew bundle --file="$DOTS/homebrew/Brewfile"
 sudo -v
 
 # Run generic installers
-$DOTS/bin/generic
+$DOTS/bin/_generic
 
 # Run platform-based installers (macos, linux, windows, freebsd)
-$DOTS/bin/platform
+$DOTS/bin/_platform
 
 # Symlink all the things
-$DOTS/bin/symlinks
+$DOTS/bin/_symlinks
 
 # Setup private repo and things
-$DOTS/bin/private
+$DOTS/bin/_private
 
 echo ":: changing your shell to the brewed zsh..."
 zsh_path=$(which zsh)
