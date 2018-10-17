@@ -1,6 +1,8 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
-echo ":: setting up python things..."
+echo ""
+echo ":: setting up python things"
+echo ""
 
 pip install --upgrade pip
 pip2 install --upgrade pip
