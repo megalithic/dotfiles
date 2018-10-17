@@ -109,6 +109,9 @@ brew bundle --file="$DOTS/homebrew/Brewfile"
 # sudo xcodebuild -license accept
 # ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
 
+# capture sudo permissions for the whole run of things, only once
+sudo -v
+
 # Run generic installers
 $DOTS/bin/generic
 
@@ -129,11 +132,11 @@ chsh -s "$zsh_path" $USER
 zsh
 
 # Print Manual Instructions
-echo "\n\nATTENTION! Further Instructions:\n"
+#echo "\n\nATTENTION! Further Instructions:\n"
 
-echo "  * Set ZShell as your login shell"
-echo "    - run \`chsh\`"
-echo "    - enter your password"
-echo "    - type '/bin/zsh' at the prompt"
+#echo "  * Set ZShell as your login shell"
+#echo "    - run \`chsh\`"
+#echo "    - enter your password"
+#echo "    - type '/bin/zsh' at the prompt"
 
 # zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
