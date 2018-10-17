@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+echo ""
+echo ":: setting up kitty related things"
+echo ""
+
 rm -rf "$HOME/.config/kitty"
 mkdir -p "$HOME/.config/kitty"
 
