@@ -5,7 +5,7 @@ echo ":: setting up elixir things"
 echo ""
 
 rm -rf $HOME/.elixir-ls
-mkdir $HOME/.elixir-ls
+mkdir -p $HOME/.elixir-ls
 
 cd $HOME/.elixir-ls
 wget https://github.com/$(wget https://github.com/jakebecker/elixir-ls/releases/latest -O - | egrep '/.*/.*/.*zip' -o)
