@@ -11,14 +11,16 @@ function quitModal:entered()
   local app = hs.application.frontmostApplication()
   if (config.applications[app:name()] ~= nil) then
     log.df("[app-quit-guard] - attempting to quit for %s, and quitGuard is %s", app:name(), config.applications[app:name()].quitGuard)
-  end
 
-  if config.applications[app:name()].quitGuard then
-    hs.alert.show("Press Cmd+Q again to quit", 1)
-    hs.timer.doAfter(1, function() quitModal:exit() end)
+    if config.applications[app:name()].quitGuard then
+      hs.alert.show("Press Cmd+Q again to quit", 1)
+      hs.timer.doAfter(1, function() quitModal:exit() end)
+    else
+      quitModal:exit()
+      doQuit()
+    end
   else
-    quitModal:exit()
-    doQuit()
+    log.df("[app-quit-guard] - unable to determine how to handle this app, %s; it likely isn't configured.", app:name())
   end
 end
 

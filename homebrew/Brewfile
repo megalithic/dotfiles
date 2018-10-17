@@ -28,7 +28,7 @@ brew 'ansifilter'
 brew 'autoconf'
 brew 'automake'
 brew 'aspell', args: ['--with-lang-en']
-brew 'asdf'
+# brew 'asdf'
 brew 'bat'
 brew 'cmake'
 brew 'coreutils'
@@ -149,6 +149,7 @@ cask 'font-firacode-nerd-font-mono'
 cask 'contexts'
 cask 'controlplane'
 cask 'cumulus'
+cask 'docker'
 cask 'dropbox'
 # install elgato thunderbolt 3 support app: https://www.elgato.com/dock/support
 # cask 'elm-platform' # installed via asdf

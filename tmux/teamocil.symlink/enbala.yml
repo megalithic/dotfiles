@@ -1,0 +1,27 @@
+name: "enbala"
+windows:
+  - name: "dots"
+    root: "~/.dotfiles"
+    panes:
+      - commands:
+        - ls
+  - name: "services"
+    root: "~/code/enbala"
+    layout: tiled
+    panes:
+      - commands:
+        - cd vpp
+        - docker-compose up -d
+      - commands:
+        - cd vpp
+        - bin/start
+        focus: true
+  - name: "code"
+    root: "~/code/enbala/vpp"
+    focus: true
+    panes:
+      - ls -gha
+  - name: "chats"
+    root: "~/.dotfiles"
+    panes:
+      - irc
