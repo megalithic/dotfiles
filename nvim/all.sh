@@ -13,7 +13,3 @@ curl -fLo $DOTS/nvim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 nvim +PlugInstall! +qall!
-
-pip3 install -U --upgrade neovim
-npm install -g neovim
-gem install neovim
