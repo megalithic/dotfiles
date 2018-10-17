@@ -57,8 +57,10 @@ fi
 
 
 # prompt!!!
-autoload -U promptinit; promptinit
-prompt pure
+#autoload -U promptinit; promptinit
+#prompt pure
+
+source "$DOTS/zsh/components/zshrc/prompt.zsh"
 
 # we handle fzf things in fzf.zsh
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
