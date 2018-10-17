@@ -1,7 +1,7 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
-echo "## ZSH..."
+echo ""
+echo ":: setting up zsh related things"
+echo ""
 
-ln -sfv $DOTS/zsh ~/.zsh
-
-
+ln -sfv $DOTS/zsh $HOME/.zsh
