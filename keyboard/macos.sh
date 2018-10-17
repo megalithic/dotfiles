@@ -1,6 +1,8 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
-echo "Handling keyboard things..."
+echo ""
+echo ":: setting up keyboard related things"
+echo ""
 
 # Prepare custom settings for Karabiner-Elements
 # https://github.com/tekezo/Karabiner-Elements/issues/597#issuecomment-282760186
@@ -24,4 +26,6 @@ open /Applications/Karabiner-Elements.app
 osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Hammerspoon.app", hidden:true}' > /dev/null
 osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Karabiner-Elements.app", hidden:true}' > /dev/null
 
-echo "Done! Remember to enable Accessibility for Hammerspoon."
+echo ""
+echo ":: done! remember to enable accessibility for hammerspoon."
+echo ""
