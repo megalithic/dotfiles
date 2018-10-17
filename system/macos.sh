@@ -1,4 +1,8 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
+
+echo ""
+echo ":: setting up macOS system related things"
+echo ""
 
 # ------------------
 # great reference:
