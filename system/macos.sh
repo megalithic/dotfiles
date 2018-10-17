@@ -98,6 +98,9 @@ defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeF
 defaults write com.apple.dock tilesize -int 48
 defaults write com.apple.dock autohide -bool true
 
+# autohide menubar
+defaults write NSGlobalDomain _HIHideMenuBar -bool true
+
 # 14 days on ical
 defaults write com.apple.iCal n\ days\ of\ week 14
 
