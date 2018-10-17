@@ -34,4 +34,4 @@ _lineup=$'\e[1A'
 _linedown=$'\e[1B'
 
 PROMPT='%{$fg[blue]%}%2/%{$reset_color%} ${vcs_info_msg_0_}${_newline}❯ '
-RPROMPT='%{${_lineup}%}$(check_last_exit_code)%{${_linedown}%}'
+# RPROMPT='%{${_lineup}%}$(check_last_exit_code)%{${_linedown}%}'
