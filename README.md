@@ -19,7 +19,7 @@
 If you want to kick the tires, you can simply:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/master/bin/dotup | /usr/bin/env zsh
+curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/master/bin/_dotup | /usr/bin/env zsh
 ```
 
 The install script will install things and symlink the appropriate files in
@@ -64,15 +64,15 @@ The file hierarchy:
 - **topic/\*.symlink**: Any files ending in `*.symlink` get symlinked into
   your `$HOME`. This is so you can keep all of those versioned in your dotfiles
   but still keep those autoloaded files in your home directory. These get
-  symlinked when you run `bin/dotup`, or you can explicitly run `bin/symlinks`.
+  symlinked when you run `bin/_dotup`, or you can explicitly run `bin/_symlinks`.
 - **topic/\<platform\>.sh**: Platform-specific installers to handle additional
   things that you may need to happen for that topic. `all | macos | linux | freebsd | windows`
 
 ### Sensitive data
 
 Use `~/.localrc` as your location for sensitive information. Optionally, you
-can let `bin/dotup` handle the cloning of your private repo to
-~/.dotfiles/private, which will execute an install script, assuming it's
+can let `bin/_dotup` handle the cloning of your private repo to
+`~/.dotfiles/private`, which will execute an install script, assuming it's
 located at `~/.dotfiles/private/install.sh`.
 
 ### Attribution
