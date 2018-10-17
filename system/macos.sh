@@ -39,9 +39,6 @@ sudo spctl --master-disable
 # Disable the “Are you sure you want to open this application?” dialog
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
-# See secrets.blacktree.com
-chsh -s /usr/local/bin/zsh $USER
-
 sudo scutil --set ComputerName $COMPUTER_NAME
 sudo scutil --set HostName $COMPUTER_NAME
 sudo scutil --set LocalHostName $COMPUTER_NAME
