@@ -19,7 +19,7 @@ if (which mix &>/dev/null); then
   
   mix local.hex --force --if-missing
 else
-  echo ":: ERROR: wasn't able to run mix command from ln 19"
+  echo ":: ERROR: wasn't able to run mix command from ln 20"
 fi
 
 chmod +x $HOME/.elixir-ls/language_server.sh
