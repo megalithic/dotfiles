@@ -4,10 +4,7 @@ echo ""
 echo ":: setting up elixir things"
 echo ""
 
-if [[ ! -d "$HOME/.elixir-ls" ]]
-then
-  rm -rf $HOME/.elixir-ls
-fi
+rm -rf $HOME/.elixir-ls
 mkdir $HOME/.elixir-ls
 
 cd $HOME/.elixir-ls
