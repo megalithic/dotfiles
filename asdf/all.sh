@@ -1,12 +1,15 @@
 #!/usr/bin/env zsh
 
+echo ""
 echo ":: setting up asdf-vm..."
 echo ""
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
 if [[ ! -d "$HOME/.asdf" ]]
 then
+  echo ""
   echo ":: ~/.asdf not found; cloning it now.."
+  echo ""
   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
 fi
 
@@ -38,6 +41,7 @@ asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git;
 
 #
 # must initially symlink our tool-versions file for asdf to install the right things..
+source ~/.zshrc
 ln -sfv $DOTS/asdf/tool-versions.symlink $HOME/.tool-versions
 asdf install
 source ~/.zshrc
