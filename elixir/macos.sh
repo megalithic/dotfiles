@@ -1,6 +1,8 @@
 #!/usr/bin/env zsh
 
+echo ""
 echo ":: setting up elixir things"
+echo ""
 
 if [[ ! -d "$HOME/.elixir-ls" ]]
 then
@@ -16,6 +18,7 @@ rm elixir-ls.zip
 if (which mix &>/dev/null); then
   echo ""
   echo ":: attempting to install elixir/mix/local.hex things"
+  echo ""
   mix local.hex --force --if-missing
 else
   echo ":: ERROR: wasn't able to run mix command from ln 19"
