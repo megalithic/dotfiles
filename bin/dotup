@@ -15,11 +15,6 @@ echo '
 ==================================================================================
 '
 
-pause()
-{
-  echo "$*"; read -k1 -s
-}
-
 # Detect OS
 if [[ -z $PLATFORM ]]
 then
@@ -107,7 +102,7 @@ echo ":: brewing things from our brewfile..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 
-pause ":: in order to install MAS apps, you must manually signin to the Apple App Store; press <space> to continue.."
+echo ":: in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
 brew bundle --file=$DOTS/homebrew/Brewfile
 
 # echo ":: doing post-brew things..."
