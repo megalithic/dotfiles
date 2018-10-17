@@ -7,4 +7,4 @@ echo ""
 echo ":: ------ running installers for $PLATFORM..."
 echo ""
 
-find $DOTS -name $PLATFORM.sh | while read installer ; do echo "-- running installer: $installer" ; sh "${installer}" > /dev/null ; done
+find $DOTS -iname "$PLATFORM.sh" | while read installer ; do echo "-- running installer: $installer" ; sh "${installer}" ; done
