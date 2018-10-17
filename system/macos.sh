@@ -17,9 +17,6 @@ COMPUTER_NAME="replibook"
 # settings we’re about to change
 osascript -e 'tell application "System Preferences" to quit'
 
-# get password up front
-sudo -v
-
 # handy folders we always use/seem to need
 if [ ! -d "$HOME/code" ]; then
   mkdir -p $HOME/code
