@@ -239,7 +239,6 @@ alias map="xargs -n1"
 
 # GIT
 # -----------------------------------------------------------------------------
-alias it="git"
 alias push="git push"
 alias gs="git s"
 alias gcv="git cv"
