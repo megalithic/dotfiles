@@ -5,4 +5,4 @@ echo ""
 echo ":: ------ running generic installers..."
 echo ""
 
-find $DOTS -name all.sh | while read installer ; do echo "-- running installer: $installer"; sh -c "${installer}" > /dev/null ; done
+find $DOTS -name all.sh | while read installer ; do echo "-- running installer: $installer"; sh -c "${installer}" ; done
