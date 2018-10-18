@@ -32,7 +32,7 @@ then
   fi
 
   export PLATFORM=$platform
-  
+
   echo ":: setting PLATFORM to $platform"
 fi
 
@@ -53,7 +53,7 @@ then
   export PRIVATES="$DOTS/private"
   echo ":: setting PRIVATES to $PRIVATES"
   export PRIVATE="$DOTS/private"
-  echo ":: setting PRIVATE to $PRIVATE"  
+  echo ":: setting PRIVATE to $PRIVATE"
 fi
 
 # git exists?
@@ -122,7 +122,7 @@ $DOTS/bin/_platform
 $DOTS/bin/_symlinks
 
 # Setup private repo and things
-$DOTS/bin/_private
+# $DOTS/bin/_private
 
 echo ":: changing your shell to the brewed zsh..."
 zsh_path=$(which zsh)
