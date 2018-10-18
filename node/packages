@@ -1,4 +1,5 @@
-apollo-codegen
+apollo
+avn
 babel-eslint
 bash-language-server
 convert-snippets
@@ -20,7 +21,6 @@ prettier-eslint-cli
 stylelint
 stylelint-config-standard
 javascript-typescript-langserver
-tsserver
 ts-node
 typescript
 typescript-language-server
