@@ -1,9 +1,10 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
-echo "## NODE..."
+echo ""
+echo ":: setting up node..."
+echo ""
 
-echo "Installing `n` (my preferred node version manager)..."
-
+echo ":: installing `n` (my preferred node version manager)..."
 rm -rf $HOME/.n
 rm -rf $HOME/n
 rm /usr/local/bin/n
@@ -12,9 +13,9 @@ curl -L https://git.io/n-install | bash -s -- -y lts # this installs `n` && node
 export N_PREFIX="$HOME/.n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
 n lts # always make sure we have lts loaded
 
-echo "Installing node packages..."
+echo ":: installing node packages..."
 $DOTS/node/package-installer
 
-echo "Setting up `avn` (automatic node version loader)..."
+echo ":: setting up `avn` (automatic node version loader)..."
 [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # source avn
 avn setup

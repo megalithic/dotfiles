@@ -1,3 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
-cat $DOTS/asdf/default-npm-packages.symlink | xargs npm i -g
+# cat $DOTS/asdf/default-npm-packages.symlink | xargs npm i -g
+cat $DOTS/node/packages | xargs npm i -g

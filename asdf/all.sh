@@ -27,12 +27,6 @@ asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin-add elm https://github.com/vic/asdf-elm.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
-asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git
-#
-# required for asdf-nodejs..
-# https://github.com/asdf-vm/asdf-nodejs#install
-bash $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring
-bash /usr/local/opt/asdf/plugins/nodejs/bin/import-release-team-keyring
 
 #
 # TODO:
@@ -53,4 +47,4 @@ sh $DOTS/asdf/ruby.sh
 
 #
 # node-specific...
-sh $DOTS/asdf/node.sh
+# sh $DOTS/asdf/node.sh

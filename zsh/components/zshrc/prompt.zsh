@@ -26,6 +26,7 @@ function check_last_exit_code() {
   else
     EXIT_CODE_PROMPT+="%{$fg[green]%}%t%{$reset_color%}"
   fi
+
   echo "$EXIT_CODE_PROMPT"
 }
 
@@ -33,5 +34,7 @@ _newline=$'\n'
 _lineup=$'\e[1A'
 _linedown=$'\e[1B'
 
-PROMPT='%{$fg[blue]%}%2/%{$reset_color%} ${vcs_info_msg_0_}${_newline}❯ '
+PROMPT_SYMBOL="❯"
+
+PROMPT='${_newline}%{$fg[blue]%}%2/%{$reset_color%} ${vcs_info_msg_0_}${_newline}${PROMPT_SYMBOL} '
 # RPROMPT='%{${_lineup}%}$(check_last_exit_code)%{${_linedown}%}'

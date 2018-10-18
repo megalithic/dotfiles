@@ -1,6 +1,0 @@
-#
-# Vi Mode
-#
-bindkey -v
-
-
