@@ -5,7 +5,7 @@
 NEWLINE=$'\n'
 PROMPT_SYMBOL="❯"
 PROMPT_VICMD_SYMBOL="❮"
-PROMPT_BACKGROUND_SYMBOL="ﱦ"
+PROMPT_BACKGROUND_SYMBOL="☉"
 
 setopt prompt_subst
 autoload -U colors && colors
@@ -29,7 +29,7 @@ exit_code_prompt_symbol() {
   local exit_code_prompt=''
 
   if [[ $last_exit_code -ne 0 ]]; then
-    exit_code_prompt+="%{$fg_bold[red]%}$PROMPT_SYMBOL%{$reset_color%}"
+    exit_code_prompt+="%{$fg[red]%}$PROMPT_SYMBOL%{$reset_color%}"
   else
     exit_code_prompt+="%{$fg[green]%}$PROMPT_SYMBOL%{$reset_color%}"
   fi
@@ -53,7 +53,7 @@ prompt_path() {
 # returns a fancy indicator when there are running background jobs
 background_process_indicator() {
   local background_indicator=''
-  [[ $(jobs -l | wc -l) -gt 0 ]] && background_indicator="$PROMPT_BACKGROUND_SYMBOL"
+  [[ $(jobs -l | wc -l) -gt 0 ]] && background_indicator="%{$fg[green]%}$PROMPT_BACKGROUND_SYMBOL%{$reset_color%}"
 
   echo "$background_indicator"
 }
