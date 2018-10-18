@@ -779,7 +779,7 @@ endfunction
 
   function! LightlineModified()
     return PrintStatusline(!&modifiable ? '-' : &modified ?
-          \ "\uf459" : '')
+          \ "" : '')
   endfunction
 
   function! LightlineFileName()

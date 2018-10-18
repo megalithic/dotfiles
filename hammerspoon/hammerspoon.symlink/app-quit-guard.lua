@@ -21,6 +21,7 @@ function quitModal:entered()
     end
   else
     log.df("[app-quit-guard] - unable to determine how to handle this app, %s; it likely isn't configured.", app:name())
+    doQuit()
   end
 end
 

@@ -36,9 +36,9 @@ exit_code_prompt_symbol() {
   local symbol="$(prompt_symbol)"
 
   if [[ $last_exit_code -ne 0 ]]; then
-    exit_code_prompt+="%{$fg[red]%}$symbol%{$reset_color%}"
+    exit_code_prompt="%{$fg[red]%}$symbol%{$reset_color%}"
   else
-    exit_code_prompt+="%{$fg[green]%}$symbol%{$reset_color%}"
+    exit_code_prompt="%{$fg[green]%}$symbol%{$reset_color%}"
   fi
 
   echo "$exit_code_prompt"
@@ -69,7 +69,8 @@ background_process_indicator() {
 # NOTE: must do it here so the vicmd tings take effect; what magic?!
 # NOTE part deux: you gotta keep all those zle tings together; DO NOT DELETE!
 function zle-line-init zle-keymap-select {
-  PROMPT='${NEWLINE}'
+  PROMPT=''
+  PROMPT+='${NEWLINE}'
   PROMPT+='$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)'
   PROMPT+='${NEWLINE}'
   PROMPT+='$(exit_code_prompt_symbol) '
@@ -78,6 +79,3 @@ function zle-line-init zle-keymap-select {
 }
 zle -N zle-line-init
 zle -N zle-keymap-select
-
-
-

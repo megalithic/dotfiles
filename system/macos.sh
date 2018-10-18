@@ -102,6 +102,11 @@ defaults write NSGlobalDomain _HIHideMenuBar -bool true
 # dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
 defaults write -g NSRequiresAquaSystemAppearance -bool Yes
 
+# mojave sub-pixel font smoothing
+# ref: https://www.reddit.com/r/MacOS/comments/9ijy88/font_antialiasing_on_mojave/e6mbs49/
+defaults -currentHost write -globalDomain AppleFontSmoothing -int 2
+defaults write -g CGFontRenderingFontSmoothingDisabled -bool NO
+
 # 14 days on ical
 defaults write com.apple.iCal n\ days\ of\ week 14
 
