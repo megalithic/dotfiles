@@ -371,8 +371,8 @@ config.docking = {
   ['undocked'] = {
     wifi = 'on',
     profile = 'internal',
-    input = '"Built-in Microphone"',
-    output = '"Built-in Output"',
+    input = '"MacBook Pro Microphone"',
+    output = '"MacBook Pro Speakers"',
   },
 }
 
