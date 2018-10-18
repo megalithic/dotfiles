@@ -99,7 +99,7 @@ defaults write com.apple.dock autohide -bool true
 # autohide menubar
 defaults write NSGlobalDomain _HIHideMenuBar -bool true
 
-# dark menubar and dock only (if mojave; leave as light theme)
+# dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
 defaults write -g NSRequiresAquaSystemAppearance -bool Yes
 
 # 14 days on ical
