@@ -213,8 +213,8 @@
 	show = diff-so-fancy | less --tabs=1,5 -RFX
   log = diff-so-fancy | less --tab=1,5 -RFX
 
-[interactive]
-	diffFilter = diff-so-fancy | less --tabs=4 -RFX
+# [interactive]
+# 	diffFilter = diff-so-fancy | less --tabs=4 -RFX
 
 [diff]
 	compactionHeuristic = true

@@ -32,7 +32,7 @@ prompt_symbol() {
 # highlights the prompt_symbol on error..
 exit_code_prompt_symbol() {
   local last_exit_code=$?
-  local exit_code_prompt=''
+  local exit_code_prompt="$PROMPT_SYMBOL"
   local symbol="$(prompt_symbol)"
 
   if [[ $last_exit_code -ne 0 ]]; then
