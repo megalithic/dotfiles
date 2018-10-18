@@ -132,11 +132,10 @@ chsh -s "$zsh_path" $USER
 zsh
 
 # Print Manual Instructions
-#echo "\n\nATTENTION! Further Instructions:\n"
+echo "\n\nATTENTION! Further Instructions:\n"
 
-#echo "  * Set ZShell as your login shell"
-#echo "    - run \`chsh\`"
-#echo "    - enter your password"
-#echo "    - type '/bin/zsh' at the prompt"
+echo "  * Because I'm not totally great with scripting all the things.."
+echo "    - you might have to reinstall `weechat` since original deps weren't there"
+echo "    - private repo things are horribly broke for automation; best bet is to try manually cloning, or you might have to download the zip archive"
 
-# zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
+ zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
