@@ -154,7 +154,8 @@ alias et="nvim ~/.dotfiles/tmux/tmux.conf.symlink"
 
 # FOLDERS
 # -----------------------------------------------------------------------------
-alias dot="cd ~/.dotfiles"
+alias dot="cd $DOTS"
+alias priv="cd $PRIVATES"
 alias ot=dot
 alias code="cd ~/code"
 alias dev="cd ~/code"
