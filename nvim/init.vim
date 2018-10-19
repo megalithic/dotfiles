@@ -940,6 +940,7 @@ endfunction
   let g:ale_lint_on_enter = 1
   let g:ale_fix_on_save = 1
   let g:ale_lint_on_save = 1
+  let g:ale_elixir_elixir_ls_release = '~/.elixir-ls/rel'
 
 " ## vim-jsx
   let g:jsx_ext_required = 0
@@ -1027,7 +1028,7 @@ endfunction
   let g:elm_syntastic_show_warnings = 1
   " let g:elm_browser_command = ""
   let g:elm_detailed_complete = 1
-  let g:elm_format_autosave = 1
+  let g:elm_format_autosave = 0
   let g:elm_format_fail_silently = 0
   let g:elm_setup_keybindings = 1
 

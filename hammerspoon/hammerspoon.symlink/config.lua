@@ -116,9 +116,9 @@ config.applications = {
 
       local appKeybinds = {
         -- next channel or dm
-        hotkey.new({"ctrl"}, "g", function()
-          hs.eventtap.keyStroke({"cmd"}, "k")
-        end),
+        -- hotkey.new({"ctrl"}, "g", function()
+        --   hs.eventtap.keyStroke({"cmd"}, "k")
+        -- end),
         -- next channel or dm
         hotkey.new({"ctrl"}, "j", function()
           hs.eventtap.keyStroke({"alt"}, "Down")
@@ -135,8 +135,8 @@ config.applications = {
         hotkey.new({"ctrl", "shift"}, "k", function()
           hs.eventtap.keyStroke({"alt", "shift"}, "Up")
         end),
-        -- Disables cmd-w entirely, which is so annoying on slack
-        hotkey.new({"cmd"}, "w", function() return end)
+        -- -- Disables cmd-w entirely, which is so annoying on slack
+        -- hotkey.new({"cmd"}, "w", function() return end)
       }
 
       local appWatcher = hs.application.watcher.new(function(name, eventType, app)
