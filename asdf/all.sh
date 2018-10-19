@@ -49,3 +49,7 @@ sh $DOTS/asdf/ruby.sh
 #
 # node-specific...
 # sh $DOTS/asdf/node.sh
+
+#
+# elixir-specific...
+sh $DOTS/asdf/elixir.sh
