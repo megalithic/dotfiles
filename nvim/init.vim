@@ -36,7 +36,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
   Plug 'Zaptic/elm-vim', { 'for': ['elm'] }
-  Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
+  " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
@@ -57,8 +57,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   " Plug '~/code/plugins/ncm2-elm', { 'for': ['elm'], 'do': 'npm i -g elm-oracle' }
+  Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
+  Plug 'ncm2/ncm2-tagprefix'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
-  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp', { 'do': 'gem install solargraph' } | Plug 'prabirshrestha/async.vim' " LanguageServer
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
 
 " ## Project/Code Navigation
@@ -67,17 +69,17 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
-  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
-  " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
   Plug 'AndrewRadev/splitjoin.vim'
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
-  " Plug 'jsfaint/gen_tags.vim'
+  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
 
 " ## Utils
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
+  Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
@@ -86,7 +88,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'jiangmiao/auto-pairs'
   Plug 'tpope/vim-endwise'
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
-  " Plug 'ruanyl/coverage.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascript.jsx', 'jsx', 'js'] }
   Plug 'tpope/vim-commentary' " (un)comment code
   Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
   Plug 'sickill/vim-pasta' " context-aware pasting
@@ -436,8 +437,11 @@ augroup END
 augroup elm
   au!
   au FileType elm nn <buffer> K :ElmShowDocs<CR>
-  au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
-  au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
+  " au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
+  " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
+
+  au FileType elm nn <leader>em :vsp <CR> :term ui/bin/start<CR>
+  au FileType elm nn <C-c> :bd!<CR>
 
   au FileType elm setlocal omnifunc=lsp#complete
 augroup END
@@ -456,6 +460,9 @@ augroup elixir
   command! Iex :!iex %<cr>
   au FileType elixir nnoremap <leader>e :!elixir %<CR>
   au FileType elixir nnoremap <leader>ee :!iex -r % -S mix<CR>
+
+  " au FileType elixir nnoremap <c-]> :ALEGoToDefinition<cr>
+  au FileType elixir nnoremap <c->> :ALEGoToDefinition<cr>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
@@ -930,17 +937,18 @@ endfunction
         \   'json': ['prettier'],
         \   'python': ['black'],
         \   'elm': ['elm-format'],
+        \   'elixir': ['mix_format'],
         \ }                                                                       "Fix eslint errors
   let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
   let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
+  let g:ale_elixir_elixir_ls_release = '~/.elixir-ls/rel'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
   let g:ale_fix_on_save = 1
   let g:ale_lint_on_save = 1
-  let g:ale_elixir_elixir_ls_release = '~/.elixir-ls/rel'
 
 " ## vim-jsx
   let g:jsx_ext_required = 0
@@ -1023,7 +1031,7 @@ endfunction
 
 " ## elm.nvim
   " let g:elm_jump_to_error = 0
-  let g:elm_make_output_file = "elm.js"
+  let g:elm_make_output_file = "/dev/null"
   let g:elm_make_show_warnings = 1
   let g:elm_syntastic_show_warnings = 1
   " let g:elm_browser_command = ""
@@ -1130,6 +1138,17 @@ endfunction
 "   let g:gen_tags#use_cache_dir  = 0
 "   let g:gen_tags#ctags_auto_gen = 1
 "   let g:gen_tags#gtags_auto_gen = 1
+
+" ## tagbar
+let g:tagbar_type_elm = {
+      \   'ctagstype':'elm'
+      \ , 'kinds':['h:header', 'i:import', 't:type', 'f:function', 'e:exposing']
+      \ , 'sro':'&&&'
+      \ , 'kind2scope':{ 'h':'header', 'i':'import'}
+      \ , 'sort':0
+      \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
+      \ , 'ctagsargs': ''
+      \ }
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<c-e>"
@@ -1420,7 +1439,8 @@ nnoremap <silent> <C-j> :TmuxNavigateDown<CR>
 nnoremap <silent> <C-k> :TmuxNavigateUp<CR>
 nnoremap <silent> <C-l> :TmuxNavigateRight<CR>
 nnoremap <silent> <C-\> :TmuxNavigatePrevious<CR>
-nnoremap <C-o> :vsp <c-d>
+" nnoremap <C-o> :vsp <c-d> " this was overwrting default behaviors
+nnoremap <silent><leader>o :vnew<cr>:e<space><c-d>
 nnoremap <C-t> :tabe <c-d>
 
 if(has('nvim'))
