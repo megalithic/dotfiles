@@ -1,19 +1,18 @@
-# zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
-# autoload -Uz compinit
-# for dump in ~/.zcompdump(N.mh+24); do
-#   compinit
-# done
-# compinit -C
-
-
-# zsh speedup (part 2): https://blog.callstack.io/supercharge-your-terminal-with-zsh-8b369d689770
+# # zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
 autoload -Uz compinit
-typeset -i updated_at=$(date +'%j' -r ~/.zcompdump 2>/dev/null || stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null)
-if [ $(date +'%j') != $updated_at ]; then
-  compinit -i
-else
-  compinit -C -i
-fi
+for dump in ~/.zcompdump(N.mh+24); do
+  compinit
+done
+compinit -C
+
+# # zsh speedup (part 2): https://blog.callstack.io/supercharge-your-terminal-with-zsh-8b369d689770
+# autoload -Uz compinit
+# typeset -i updated_at=$(date +'%j' -r ~/.zcompdump 2>/dev/null || stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null)
+# if [ $(date +'%j') != $updated_at ]; then
+#   compinit -i
+# else
+#   compinit -C -i
+# fi
 
 # provides a menu list from where we can highlight and select completion results
 zmodload -i zsh/complist
@@ -79,16 +78,8 @@ then
   source $completion
 fi
 
-# Stolen from
-#   https://github.com/sstephenson/rbenv/blob/master/completions/rbenv.zsh
-
-if [[ ! -o interactive ]]; then
-    return
-fi
-
-
 # Completion for teamocil autocompletion definitions: http://www.teamocil.com/#zsh-autocompletion
 compctl -g '~/.teamocil/*(:t:r)' teamocil
 
 # Completion for kitty (https://sw.kovidgoyal.net/kitty/#zsh)
-# kitty + complete setup zsh | source /dev/stdin
+kitty + complete setup zsh | source /dev/stdin

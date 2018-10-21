@@ -230,7 +230,8 @@ alias ip="ipconfig getifaddr"
 alias clr=clear
 alias syncoctoprint="scp pi@octopi.local:/home/pi/.octoprint/config.yaml $HOME/Dropbox/3d/configs/octoprint"
 alias dif="kitty +kitten diff"
-alias zshtime="/usr/bin/time /usr/local/bin/zsh -i -c exit"
+alias zshtime="/usr/bin/time $(which zsh) -i -c echo"
+# alias zshtime="for i in $(seq 1 10); do /usr/bin/time zsh -i -c exit; done"
 alias vimtime="ruby $HOME/.dotfiles/bin/vim-plugins-profile.rb nvim"
 
 # Intuitive map function

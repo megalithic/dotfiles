@@ -1,8 +1,7 @@
 # Initialize colors.
 autoload -U colors; colors
-# autoload -U colors
-# colors
 
+# colors
 # The variables are wrapped in %{%}. This should be the case for every
 # variable that does not contain space.
 for COLOR in RED GREEN YELLOW BLUE MAGENTA CYAN BLACK WHITE; do
@@ -23,13 +22,6 @@ unset LSCOLORS
 # export CLICOLOR=true
 export LSCOLORS="ExGxBxDxCxEgEdxbxgxcxd"
 export CLICOLOR=1
-
-# Shell Colors
-# FIXME: doesn't play nice with my itermcolors anymore..
-# if [[ $HOST != "replibook" && $HOST != "replibook.local" ]]; then
-#   SHELL_COLORS="$HOME/.dotfiles/zsh/base16-ocean.dark.sh"
-#   [[ -s $SHELL_COLORS ]] && source $SHELL_COLORS
-# fi
 
 # -------- do not want here right now; breaking stuff
 # # color stuffs

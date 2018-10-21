@@ -9,7 +9,7 @@ VCS_STAGED_SYMBOL="●"
 VCS_UNSTAGED_SYMBOL="✚"
 
 setopt prompt_subst
-autoload -U colors && colors
+# autoload -U colors && colors # this is happening in colors.zsh
 # autoload -U promptinit; promptinit # might not be needed?
 autoload -Uz vcs_info
 
