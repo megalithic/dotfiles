@@ -16,9 +16,12 @@ autoload -Uz vcs_info
 zstyle ':vcs_info:*' enable git svn
 zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:*' check-for-staged-changes true
-zstyle ':vcs_info:git*' formats "[%{$fg[magenta]%}%b%{$reset_color%}%a%m%u%c]"
 zstyle ':vcs_info:*' stagedstr " %{$fg[green]%}$VCS_STAGED_SYMBOL%{$reset_color%}"
 zstyle ':vcs_info:*' unstagedstr " %{$fg[red]%}$VCS_UNSTAGED_SYMBOL%{$reset_color%}"
+zstyle ':vcs_info:git*' formats "[%{$fg[magenta]%}%b%{$reset_color%}%a%m%u%c]"
+zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
+zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
+zstyle ':vcs_info:*+set-message:*' hooks home-path
 
 precmd() {
   vcs_info
