@@ -53,3 +53,7 @@ sh $DOTS/asdf/ruby.sh
 #
 # elixir-specific...
 sh $DOTS/asdf/elixir.sh
+
+#
+# lua-specific...
+sh $DOTS/asdf/lua.sh

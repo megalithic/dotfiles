@@ -70,7 +70,7 @@ config.applications = {
   ['Google Chrome'] = {
     name = 'Google Chrome',
     bundleID = 'com.google.Chrome',
-    superKey = config.superKeys.cmd,
+    superKey = config.superKeys.cmdCtrl,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.fullScreen,
@@ -78,7 +78,7 @@ config.applications = {
   },
   ['Brave'] = {
     name = 'Brave',
-    bundleID = 'com.electron.brave',
+    bundleID = 'com.brave.Browser.dev',
     superKey = config.superKeys.cmdCtrl,
     shortcut = '`',
     preferredDisplay = 1,
