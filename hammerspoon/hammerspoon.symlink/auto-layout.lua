@@ -32,7 +32,7 @@ setLayoutForAll = function()
         -- TODO: add a single window watcher and window handler, don't always handle all the windows.
         for _, window in pairs(windows) do
           if utils.canManageWindow(window) then
-            log.df('[auto-layout] setLayoutForAll - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', application:name(), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
+            log.df('[auto-layout] setLayoutForAll - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(application:name()), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
             hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
           end
         end
@@ -54,12 +54,12 @@ setLayoutForApp = function(app) -- optionally, we should be able to take in a `w
       -- TODO: add a single window watcher and window handler, don't always handle all the windows.
       for _, window in pairs(windows) do
         if utils.canManageWindow(window) then
-          log.df('[auto-layout] setLayoutForApp - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', app:name(), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
+          log.df('[auto-layout] setLayoutForApp - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(app:name()), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
           hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
         end
       end
     else
-      log.df('[auto-layout] setLayoutForApp - unable to find an app config for %s', app:name())
+      log.df('[auto-layout] setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
     end
   -- else
   --   -- default/general layout for apps not given a specific config
@@ -178,7 +178,7 @@ function watchWindow(window)
     local bundleID = app:bundleID()
     local id = window:id()
 
-    log.df('[auto-layout] watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)', bundleID, app:name(), window:title(), id, utils.windowCount(app))
+    log.df('[auto-layout] watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)', bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
 
     -- layout specifics for given apps
     if config.applications[app:name()] then
@@ -187,7 +187,7 @@ function watchWindow(window)
 
       -- execute custom app fn() for given application
       if config.applications[app:name()].fn ~= nil then
-        log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, app:name(), window:title(), id, utils.windowCount(app))
+        log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
         config.applications[app:name()].fn(window)
       end
     else

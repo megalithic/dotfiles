@@ -49,7 +49,10 @@ export GOPATH=$HOME/.go
 export GOBIN=$GOPATH/bin
 export CARGOPATH=$HOME/.cargo
 export CARGOBIN=$CARGOPATH/bin
+export ASDF_DIR="$HOME/.asdf"
 export ASDF_BIN=$ASDF_DIR/shims
+export ASDF_INSTALLS=$ASDF_DIR/installs
+export ASDF_LUAROCKS=$ASDF_INSTALLS/lua/5.3.4/luarocks/bin
 
 # Set the list of directories that Zsh searches for programs.
 # path=()
@@ -61,6 +64,8 @@ path=(
   $HOME/.bin
   $HOME/.dotfiles/bin
   $ASDF_BIN
+  $ASDF_INSTALLS
+  $ASDF_LUAROCKS
   $GOBIN
   $CARGOBIN
   /usr/local/{bin,sbin}
