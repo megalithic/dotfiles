@@ -10,7 +10,7 @@ VCS_UNSTAGED_SYMBOL="✚"
 
 setopt prompt_subst
 autoload -U colors && colors
-autoload -U promptinit; promptinit
+# autoload -U promptinit; promptinit # might not be needed?
 autoload -Uz vcs_info
 
 zstyle ':vcs_info:*' enable git svn
@@ -32,8 +32,9 @@ prompt_symbol() {
 # highlights the prompt_symbol on error..
 exit_code_prompt_symbol() {
   local last_exit_code=$?
-  local exit_code_prompt="$PROMPT_SYMBOL"
+  local exit_code_prompt=""
   local symbol="$(prompt_symbol)"
+  # symbol="$PROMPT_SYMBOL"
 
   if [[ $last_exit_code -ne 0 ]]; then
     exit_code_prompt="%{$fg[red]%}$symbol%{$reset_color%}"
@@ -79,3 +80,9 @@ function zle-line-init zle-keymap-select {
 }
 zle -N zle-line-init
 zle -N zle-keymap-select
+
+# PROMPT=''
+# PROMPT+='${NEWLINE}'
+# PROMPT+='$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)'
+# PROMPT+='${NEWLINE}'
+# PROMPT+='$(exit_code_prompt_symbol) '

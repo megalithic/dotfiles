@@ -1,5 +1,8 @@
 #!/usr/bin/env zsh
 
+# uncomment to for zsh profiling; note the `zprof` at the end of this file too
+# zmodload zsh/zprof
+
 # Ensures we use vi-mode keybindings
 bindkey -v
 
@@ -16,25 +19,16 @@ export DOTS=$DOTFILES
 export PRIVATES="$DOTS/private"
 export PRIVATE=$PRIVATES
 
-# # TODO: all of our zsh files
-# typeset -U components
-# components=($ZSH/components/zshrc/*.zsh)
-# # load zshrc components
-# for file in ${(M)components}
-# do
-#   source $file
-# done
-
 # NOTE: source order matters!
 #
 # zsh core config
 source "$DOTS/zsh/components/zshrc/env.zsh"
 source "$DOTS/zsh/components/zshrc/aliases.zsh"
-source "$DOTS/zsh/components/zshrc/functions.zsh" # something here is killing tmux
+source "$DOTS/zsh/components/zshrc/functions.zsh"
 source "$DOTS/zsh/components/zshrc/colors.zsh"
-source "$DOTS/zsh/components/zshrc/completion.zsh"
 source "$DOTS/zsh/components/zshrc/opts.zsh"
 source "$DOTS/zsh/components/zshrc/keybindings.zsh"
+source "$DOTS/zsh/components/zshrc/completion.zsh"
 
 # ancillary config
 source "$DOTS/zsh/components/zshrc/fasd.zsh"
@@ -57,8 +51,10 @@ fi
 
 source "$DOTS/zsh/components/zshrc/prompt.zsh"
 
-# we handle fzf things in fzf.zsh
+# all these things below get auto inserted by our various tooling; so we leave them to prevent more auto-inserts
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
 # export N_PREFIX="$HOME/.n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
 # [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
+
+# uncomment to for zsh profiling
+# zprof

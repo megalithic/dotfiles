@@ -1,13 +1,21 @@
-# autoload -U compinit; compinit
-
 # zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
+# autoload -Uz compinit
+# for dump in ~/.zcompdump(N.mh+24); do
+#   compinit
+# done
+# compinit -C
+
+
+# zsh speedup (part 2): https://blog.callstack.io/supercharge-your-terminal-with-zsh-8b369d689770
 autoload -Uz compinit
-if [ $(date +'%j') != $(stat -f '%Sm' -t '%j' ~/.zcompdump) ]; then
-  compinit
+typeset -i updated_at=$(date +'%j' -r ~/.zcompdump 2>/dev/null || stat -f '%Sm' -t '%j' ~/.zcompdump 2>/dev/null)
+if [ $(date +'%j') != $updated_at ]; then
+  compinit -i
 else
-  compinit -C
+  compinit -C -i
 fi
 
+# provides a menu list from where we can highlight and select completion results
 zmodload -i zsh/complist
 
 # man zshcontrib

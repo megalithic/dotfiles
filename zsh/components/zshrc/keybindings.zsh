@@ -44,6 +44,7 @@ bindkey '^[[4~' end-of-line
 
 # delete
 bindkey '^[[3~' delete-char
+bindkey '^[3;5~' delete-char
 
 # page up / page down
 bindkey '^[[5~' history-beginning-search-backward
