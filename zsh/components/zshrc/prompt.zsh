@@ -27,27 +27,6 @@ precmd() {
   vcs_info
 }
 
-# determines which prompt symbol to use (based on vicmd conditions)
-prompt_symbol() {
-  echo "${${KEYMAP/vicmd/$PROMPT_VICMD_SYMBOL}/(main|viins)/$PROMPT_SYMBOL}"
-}
-
-# highlights the prompt_symbol on error..
-exit_code_prompt_symbol() {
-  local last_exit_code=$?
-  local exit_code_prompt=""
-  local symbol="$(prompt_symbol)"
-  # symbol="$PROMPT_SYMBOL"
-
-  if [[ $last_exit_code -ne 0 ]]; then
-    exit_code_prompt="%{$fg[red]%}$symbol%{$reset_color%}"
-  else
-    exit_code_prompt="%{$fg[green]%}$symbol%{$reset_color%}"
-  fi
-
-  echo "$exit_code_prompt"
-}
-
 # returns a more preferred truncated path..
 prompt_path() {
   local prompt_path=''
@@ -69,23 +48,17 @@ background_process_indicator() {
   echo "$background_indicator"
 }
 
-# construct our prompt..
-# NOTE: must do it here so the vicmd tings take effect; what magic?!
-# NOTE part deux: you gotta keep all those zle tings together; DO NOT DELETE!
+# handle vi-mode / prompt_symbol / return code switching..
 function zle-line-init zle-keymap-select {
-  PROMPT=''
-  PROMPT+='${NEWLINE}'
-  PROMPT+='$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)'
-  PROMPT+='${NEWLINE}'
-  PROMPT+='$(exit_code_prompt_symbol) '
+  # We keep the prompt as a single var, so that reset-prompt redraws the whole thing
+  local prompt_char="${${KEYMAP/vicmd/$PROMPT_VICMD_SYMBOL}/(main|viins)/$PROMPT_SYMBOL}"
 
-  zle reset-prompt
+  # Make prompt_char red if the last executed command failed. This needs to be
+  # here because outside the function body, precedence breaks it.
+  return_status="%(?:%{$fg[green]%}$prompt_char:%{$fg[red]%}$prompt_char)"
+  zle && zle .reset-prompt
 }
 zle -N zle-line-init
 zle -N zle-keymap-select
 
-# PROMPT=''
-# PROMPT+='${NEWLINE}'
-# PROMPT+='$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)'
-# PROMPT+='${NEWLINE}'
-# PROMPT+='$(exit_code_prompt_symbol) '
+PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '

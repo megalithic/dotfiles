@@ -67,6 +67,7 @@ path=(
   $ASDF_INSTALLS
   $ASDF_LUAROCKS
   $GOBIN
+  $N_PREFIX/bin
   $CARGOBIN
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin

@@ -440,14 +440,11 @@ augroup elm
   " au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
   " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
 
-  " function! RunCompiler()
-  "   if filereadable("./")
-  "     make
-  "   elseif (&filetype == "tex")
-  "     execute("!pdflatex " + bufname("%"))
-  "   endif
-  " endfunction
-  au FileType elm nn <leader>em :vsp <CR> :term ui/bin/start<CR>
+  if filereadable("./ui/bin/start")
+    au FileType elm nn <leader>em :vsp <CR> :term ui/bin/start<CR>
+  else
+    au FileType elm nn <leader>em :vsp <CR> :term bin/start<CR>
+  endif
   au FileType elm nn <C-c> :bd!<CR>
 
   au FileType elm setlocal omnifunc=lsp#complete
