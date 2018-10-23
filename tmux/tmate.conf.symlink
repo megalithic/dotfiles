@@ -1,0 +1,13 @@
+## tmate
+
+# Reassign prefix to not conflict with tmux
+set -g prefix C-]
+bind-key ] send-prefix
+
+# turn off status bar so tmate is invisible
+set -g status off
+
+# Fix timeout for escape key
+set -s escape-time 0
+
+# vim: set ft=tmux:

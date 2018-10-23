@@ -75,10 +75,8 @@ alias tm=tmux -2 #"tmux attach || tmux new"
 # alias mux="tmux -2 attach-session || tmux -2"
 alias mux="tmux"
 alias takeover="tmux detach -a"
-alias teama="tmux attach-session -t first"
-alias team="cd ~ && teamocil --here first"
-# alias firsta="tmux attach-session -t first"
-# alias first="cd ~; teamocil --here first"
+alias teama="tmux attach-session -t enbala"
+alias team="cd ~ && teamocil --here enbala"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents

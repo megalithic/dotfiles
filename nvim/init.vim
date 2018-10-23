@@ -442,8 +442,12 @@ augroup elm
 
   if filereadable("./ui/bin/start")
     au FileType elm nn <leader>em :vsp <CR> :term ui/bin/start<CR>
+    au FileType elm nn <leader>et :vsp <CR> :term ui/bin/test<CR>
+    au FileType elm nn <leader>ef :vsp <CR> :term ui/bin/format<CR>
   else
     au FileType elm nn <leader>em :vsp <CR> :term bin/start<CR>
+    au FileType elm nn <leader>et :vsp <CR> :term bin/test<CR>
+    au FileType elm nn <leader>ef :vsp <CR> :term bin/format<CR>
   endif
   au FileType elm nn <C-c> :bd!<CR>
 
@@ -908,7 +912,6 @@ endfunction
   " let g:lexima_enable_endwise_rules = 1
 
 " # indentLine
-  let g:indentLine_color_term = 239
   let g:indentLine_color_gui = '#616161'
 
 " ## ALE
@@ -949,6 +952,7 @@ endfunction
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
   let g:ale_elixir_elixir_ls_release = '~/.elixir-ls/rel'
+  let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
   let g:ale_fix_on_save = 1
@@ -1033,16 +1037,16 @@ endfunction
       \ 'constructor': '',
       \}
 
-" ## elm.nvim
-  " let g:elm_jump_to_error = 0
+" ## elm-vim
+  let g:elm_jump_to_error = 0
   let g:elm_make_output_file = "/dev/null"
   let g:elm_make_show_warnings = 1
   let g:elm_syntastic_show_warnings = 1
-  " let g:elm_browser_command = ""
+  let g:elm_browser_command = "open"
   let g:elm_detailed_complete = 1
-  let g:elm_format_autosave = 0
+  let g:elm_format_autosave = 1
   let g:elm_format_fail_silently = 0
-  let g:elm_setup_keybindings = 1
+  let g:elm_setup_keybindings = 0
 
 " ## elixir.nvim
   let g:elixir_autobuild = 1
