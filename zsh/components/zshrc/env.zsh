@@ -96,6 +96,13 @@ export GREP_COLOR='3;33'
 # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
 export ARCHFLAGS='-arch x86_64'
 
+# for libffi and ruby things
+# export LDFLAGS="-L/usr/local/opt/libffi/lib"
+# export CPPFLAGS="-I/usr/local/opt/libffi/include"
+export LDFLAGS="/usr/local/opt/libffi/lib"
+export CPPFLAGS="/usr/local/opt/libffi/include"
+export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+
 # CTAGS Sorting in VIM/Emacs is better behaved with this in place
 export LC_COLLATE=C
 

@@ -28,6 +28,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
+  Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
 
 " ## Syntax
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
@@ -440,23 +441,18 @@ augroup elm
   " au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
   " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
 
+  " Check and see if we are we in the root of vpp or in vpp/ui?
   if filereadable("./ui/bin/start")
-    " setlocal modifiable
-    " setlocal noswapfile
-    " setlocal buftype=nowrite
-    " setlocal bufhidden=delete
-    au FileType elm nn <leader>em :vsp<CR>:term ui/bin/start<CR>
-    " au FileType elm nn <leader>em :vsp<CR>:vertical resize 80<CR>:term ui/bin/start<CR>:setlocal buftype=nowrite modifiable noswapfile bufhidden=delete<CR>:vertical resize 80<CR>
-    au FileType elm nn <leader>et :vsp<CR>:term ui/bin/test<CR>
-    au FileType elm nn <leader>ef :vsp<CR>:term ui/bin/format<CR>
+    au FileType elm nn <leader>em :Dispatch ui/bin/start<CR>
+    au FileType elm nn <leader>et :Dispatch ui/bin/test<CR>
+    au FileType elm nn <leader>ef :Dispatch ui/bin/format<CR>
   else
-    au FileType elm nn <leader>em :vsp<CR>:term bin/start<CR>
-    " au FileType elm nn <leader>em :vsp<CR>:vertical resize 80<CR>:term bin/start<CR>:setlocal buftype=nowrite modifiable noswapfile bufhidden=delete<CR>:vertical resize 80<CR>
-    au FileType elm nn <leader>et :vsp<CR>:term bin/test<CR>
-    au FileType elm nn <leader>ef :vsp<CR>:term bin/format<CR>
+    au FileType elm nn <leader>em :Dispatch bin/start<CR>
+    au FileType elm nn <leader>et :Dispatch bin/test<CR>
+    au FileType elm nn <leader>ef :Dispatch bin/format<CR>
   endif
-  au FileType elm nn <C-c> :bd!<CR>
 
+  au FileType elm nn <C-c> :bd!<CR>
   au FileType elm setlocal omnifunc=lsp#complete
 augroup END
 
