@@ -441,13 +441,19 @@ augroup elm
   " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
 
   if filereadable("./ui/bin/start")
-    au FileType elm nn <leader>em :vsp <CR> :term ui/bin/start<CR>
-    au FileType elm nn <leader>et :vsp <CR> :term ui/bin/test<CR>
-    au FileType elm nn <leader>ef :vsp <CR> :term ui/bin/format<CR>
+    " setlocal modifiable
+    " setlocal noswapfile
+    " setlocal buftype=nowrite
+    " setlocal bufhidden=delete
+    au FileType elm nn <leader>em :vsp<CR>:term ui/bin/start<CR>
+    " au FileType elm nn <leader>em :vsp<CR>:vertical resize 80<CR>:term ui/bin/start<CR>:setlocal buftype=nowrite modifiable noswapfile bufhidden=delete<CR>:vertical resize 80<CR>
+    au FileType elm nn <leader>et :vsp<CR>:term ui/bin/test<CR>
+    au FileType elm nn <leader>ef :vsp<CR>:term ui/bin/format<CR>
   else
-    au FileType elm nn <leader>em :vsp <CR> :term bin/start<CR>
-    au FileType elm nn <leader>et :vsp <CR> :term bin/test<CR>
-    au FileType elm nn <leader>ef :vsp <CR> :term bin/format<CR>
+    au FileType elm nn <leader>em :vsp<CR>:term bin/start<CR>
+    " au FileType elm nn <leader>em :vsp<CR>:vertical resize 80<CR>:term bin/start<CR>:setlocal buftype=nowrite modifiable noswapfile bufhidden=delete<CR>:vertical resize 80<CR>
+    au FileType elm nn <leader>et :vsp<CR>:term bin/test<CR>
+    au FileType elm nn <leader>ef :vsp<CR>:term bin/format<CR>
   endif
   au FileType elm nn <C-c> :bd!<CR>
 
@@ -1213,10 +1219,10 @@ let g:tagbar_type_elm = {
           \ 'whitelist': ['lua'],
           \ })
   endif
-  if filereadable($HOME."/.elixir-ls/language_server.sh")
+  if filereadable($HOME."/.elixir-ls/rel/language_server.sh")
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, $HOME."/.elixir-ls/language_server.sh"]},
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, $HOME."/.elixir-ls/rel/language_server.sh"]},
           \ 'whitelist': ['elixir'],
           \ })
   endif

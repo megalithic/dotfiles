@@ -76,8 +76,8 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true
   },
-  ['Brave'] = {
-    name = 'Brave',
+  ['Brave Browser Dev'] = {
+    name = 'Brave Browser Dev',
     bundleID = 'com.brave.Browser.dev',
     superKey = config.superKeys.cmd,
     shortcut = '`',
