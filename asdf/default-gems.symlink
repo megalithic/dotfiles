@@ -3,7 +3,8 @@ coderay
 curses
 fastri
 foreman
-invoker
+github-auth
+# invoker
 neovim
 pry
 rcodetools

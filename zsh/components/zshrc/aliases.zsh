@@ -61,6 +61,8 @@ alias top='top -o cpu'
 
 alias icat="kitty +kitten icat"
 
+alias ng="ngrok start"
+
 # ZMV
 # -----------------------------------------------------------------------------
 autoload -U zmv
@@ -77,6 +79,7 @@ alias mux="tmux"
 alias takeover="tmux detach -a"
 alias teama="tmux attach-session -t enbala"
 alias team="cd ~ && teamocil --here enbala"
+alias fmate="unset TMUX tmate"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents

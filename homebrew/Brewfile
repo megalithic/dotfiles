@@ -130,6 +130,7 @@ brew 'yubico-piv-tool'
 brew 'libyubikey'
 brew 'pam_yubico'
 brew 'yubikey-personalization'
+brew 'wemux'
 brew 'zsh', args: ['--with-unicode9', '--without-etcdir']
 brew 'zsh-completions'
 brew 'zsh-lovers'

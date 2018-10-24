@@ -1,0 +1,17 @@
+name: "pairing"
+windows:
+  - name: "prepair"
+    root: "~/.dotfiles"
+    layout: even-horizontal
+    panes:
+      - commands:
+        - prepair
+      - commands:
+        - ng pairing
+  - name: "pairing"
+    root: "~/code/"
+    layout: tiled
+    focus: true
+    panes:
+      - commands:
+        - ls
