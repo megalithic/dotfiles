@@ -78,7 +78,7 @@ alias tm=tmux -2 #"tmux attach || tmux new"
 alias mux="tmux"
 alias takeover="tmux detach -a"
 alias teama="tmux attach-session -t enbala"
-alias team="cd ~ && teamocil --here enbala"
+alias team="teamocil --here enbala"
 alias fmate="unset TMUX tmate"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------

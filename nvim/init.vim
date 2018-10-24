@@ -29,6 +29,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
+  Plug 'benmills/vimux'
 
 " ## Syntax
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
@@ -189,7 +190,7 @@ set nostartofline                                                               
 set timeoutlen=1000 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
 set fileencoding=utf-8                                                          "Set utf-8 encoding on write
 set linebreak
-" set textwidth=79 " will auto wrap content when set regardless of nowrap being set
+" set textwidth=80 " will auto wrap content when set regardless of nowrap being set
 set nowrap " `wrap` to turn it on
 set wrapscan
 set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
@@ -212,6 +213,7 @@ set secure                                                                      
 set tagcase=smart                                                               "Use smarcase for tags
 set updatetime=500                                                              "Cursor hold timeout
 set synmaxcol=300                                                               "Use syntax highlighting only for 300 columns
+set showbreak=↪ "↳
 
 
 " -------- dictionary and spelling
@@ -437,22 +439,30 @@ augroup END
 
 augroup elm
   au!
+  au FileType elm let g:VimuxOrientation = "h"
   au FileType elm nn <buffer> K :ElmShowDocs<CR>
+
+  au FileType elm nn <silent> <leader>ei :VimuxInspectRunner<CR>
+  " TODO: want to automatically do this if all normal buffers are closed:
+  au FileType elm nn <silent> <leader>ec :VimuxCloseRunner<CR>
+
   " au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
   " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
 
   " Check and see if we are we in the root of vpp or in vpp/ui?
   if filereadable("./ui/bin/start")
-    au FileType elm nn <leader>em :Dispatch ui/bin/start<CR>
+    " au FileType elm nn <leader>em :Dispatch ui/bin/start<CR>
+    au FileType elm nn <leader>em :call VimuxRunCommand("ui/bin/start")<CR>
     au FileType elm nn <leader>et :Dispatch ui/bin/test<CR>
     au FileType elm nn <leader>ef :Dispatch ui/bin/format<CR>
   else
-    au FileType elm nn <leader>em :Dispatch bin/start<CR>
+    " au FileType elm nn <leader>em :Dispatch bin/start<CR>
+    au FileType elm nn <leader>em :call VimuxRunCommand("bin/start")<CR>
     au FileType elm nn <leader>et :Dispatch bin/test<CR>
     au FileType elm nn <leader>ef :Dispatch bin/format<CR>
   endif
 
-  au FileType elm nn <C-c> :bd!<CR>
+  " au FileType elm nn <C-c> :bd!<CR>
   au FileType elm setlocal omnifunc=lsp#complete
 augroup END
 
@@ -1295,6 +1305,17 @@ inoremap <C-v> <Esc>"+p
 nnoremap <Leader>p "0p
 vnoremap <Leader>p "0p
 nnoremap <Leader>h viw"0p
+
+" register overrides CAREFUL!
+" inoremap d "_d
+vnoremap d "_d
+nnoremap d "_d
+" inoremap x "_x
+vnoremap x "_x
+nnoremap x "_x
+" inoremap c "_c
+vnoremap c "_c
+nnoremap c "_c
 
 " Move to the end of yanked text after yank and paste
 nnoremap p p`]

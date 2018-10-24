@@ -7,18 +7,16 @@ windows:
         - ls
         - irc
   - name: "services"
-    root: "~/code/enbala"
-    layout: tiled
+    root: "~/code/enbala/vpp"
+    layout: even-horizontal
     panes:
-      # - commands:
-      #   - cd vpp
-      #   - docker-compose up -d
       - commands:
-        - cd vpp/ui
-        # - bin/start
-        focus: true
+        - bin/start
+      - commands:
+        - ls
   - name: "code"
     root: "~/code/enbala/vpp/ui"
     focus: true
     panes:
-      - ls -gha
+      - commands:
+        - ls

@@ -72,6 +72,7 @@ path=(
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin
   /usr/local/lib/node_modules
+  /usr/local/opt/libffi/lib
   # $HOME/.yarn/bin
   # $HOME/.config/yarn/global/node_modules/.bin
   /usr/local/opt/gnu-sed/libexec/gnubin
