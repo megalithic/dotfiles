@@ -14,6 +14,7 @@ help(){
   echo "    rm   Remove a github user"
   echo "    ls   List github users"
   echo "    up   Open shared tmux session"
+  echo "    down Terminates shared tmux session"
   echo "    ssh  Start a reverse tunnel for pair sharing"
   echo "         See: https://ngrok.com"
 }
@@ -35,11 +36,17 @@ up(){
     add "$user"
   done
 
+  # NOTE: you might want to use tmux-sessionist to create a new session first
   tmux rename-session pairing
   tmux send-keys "ngrok start pairing" C-m
   tmux split-window -h
   # sleep 10 # some delay so tunnel has time to get up
   tmux send-keys "pair ssh" C-m
+}
+
+down(){
+  die ngrok
+  tmux kill-session -t pairing
 }
 
 ssh(){
@@ -51,6 +58,9 @@ ssh(){
   echo ""
   echo "pairing available at:"
   echo "$ssh_command"
+  echo
+  echo "for the following users:"
+  echo "$(pair ls)"
   echo "$ssh_command" |  pbcopy
 }
 
