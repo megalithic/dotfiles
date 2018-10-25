@@ -1307,15 +1307,12 @@ vnoremap <Leader>p "0p
 nnoremap <Leader>h viw"0p
 
 " register overrides CAREFUL!
-" inoremap d "_d
-vnoremap d "_d
-nnoremap d "_d
-" inoremap x "_x
-vnoremap x "_x
-nnoremap x "_x
-" inoremap c "_c
-vnoremap c "_c
-nnoremap c "_c
+" vnoremap d "_d
+" nnoremap d "_d
+" vnoremap x "_x
+" nnoremap x "_x
+" vnoremap c "_c
+" nnoremap c "_c
 
 " Move to the end of yanked text after yank and paste
 nnoremap p p`]
