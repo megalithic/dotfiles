@@ -300,19 +300,26 @@ config.media = {
     shortcut = '\\',
     label = 'play/pause'
   },
-  -- FIXME: these don't seem to ever work in macOS 10.13+
-  -- {
-  --   action = 'SOUND_DOWN',
-  --   superKey = config.superKeys.ctrlShift,
-  --   shortcut = 27,
-  --   label = 'lowering sound'
-  -- },
-  -- {
-  --   action = 'SOUND_UP',
-  --   superKey = config.superKeys.ctrlShift,
-  --   shortcut = 24,
-  --   label = 'raising sound'
-  -- },
+}
+
+config.volume = {
+  {
+    action = 'down',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = 27,
+    diff = -5,
+  },
+  {
+    action = 'up',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = 24,
+    diff = 5,
+  },
+  {
+    action = 'mute',
+    superKey = config.superKeys.mashShift,
+    shortcut = '\\',
+  },
 }
 
 config.snap = {
@@ -366,7 +373,7 @@ config.docking = {
     wifi = 'off', -- wifi status
     profile = 'pok3r', -- Karabiner-Elements profile name
     input = '"HD Pro Webcam C920"', -- microphone source
-    output = '"Audioengine D1"', -- speaker source
+    output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
   },
   ['undocked'] = {
     wifi = 'on',

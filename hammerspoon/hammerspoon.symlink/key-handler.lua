@@ -50,14 +50,32 @@ handler.toggleApp = function (_app)
   end
 end
 
--- FIXME: not really working
-handler.mediaKeys = function (event, alertText)
-  hs.eventtap.event.newSystemKeyEvent(event, true):post()
+handler.adjustVolume = function(vol)
+  output = hs.audiodevice.defaultOutputDevice()
+
+  if vol.action == "mute" then
+    if output:muted() then
+      output:setMuted(false)
+    else
+      output:setMuted(true)
+    end
+  else
+    playing = hs.spotify.isPlaying()
+    if playing then
+      if vol.action == "up" then
+        hs.spotify.volumeUp()
+      else
+        hs.spotify.volumeDown()
+      end
+    else
+      output:setMuted(false)
+      output:setVolume(output:volume() + vol.diff)
+    end
+  end
 end
 
 handler.notify = function(notification)
   hs.notify.new({title=notification.title, subTitle=notification.subTitle, informativeText=notification.informativeText}):setIdImage(notification.image):send()
-  -- hs.notify.new({title=title, informativeText=text}):setIdImage(image):send()
 end
 
 handler.spotify = function (event, alertText)
@@ -77,13 +95,9 @@ handler.spotify = function (event, alertText)
       local image = hs.image.imageFromAppBundle('com.spotify.client')
 
       if event == 'playpause' and not hs.spotify.isPlaying() then
-        -- handler.notify('Paused', 'Paused', image)
-        -- handler.notify(hs.spotify.getCurrentArtist(), hs.spotify.getCurrentTrack(), image)
         handler.notify({ title='Paused', subTitle=hs.spotify.getCurrentArtist(), informativeText=hs.spotify.getCurrentTrack(), image=image })
       else
-        -- handler.notify('Spotify', hs.spotify.getCurrentArtist() .. ' - ' .. hs.spotify.getCurrentTrack(), image)
         handler.notify({ title=hs.spotify.getCurrentArtist(), subTitle=hs.spotify.getCurrentTrack(), image=image })
-        -- handler.notify(hs.spotify.getCurrentArtist(), hs.spotify.getCurrentTrack(), image)
       end
     end)
   end

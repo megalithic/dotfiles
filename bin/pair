@@ -63,12 +63,13 @@ up(){
   tmux rename-session pairing
   tmux send-keys "ngrok start pairing" C-m
   tmux split-window -h
-  # sleep 10 # some delay so tunnel has time to get up
+  # sleep 10 # some delay so tunnel has time to get up; doesn't do anything helpful
   tmux send-keys "pair ssh" C-m
 }
 
 down(){
   die ngrok
+  sleep 3
   tmux kill-session -t pairing
 }
 

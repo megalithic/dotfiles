@@ -50,6 +50,11 @@ for _, media in pairs(config.media) do
   hotkey.bind(media.superKey, media.shortcut, function() handler.spotify(media.action, media.label) end)
 end
 
+-- :: volume control
+for _, vol in pairs(config.volume) do
+  hotkey.bind(vol.superKey, vol.shortcut, function() handler.adjustVolume(vol) end)
+end
+
 -- :: window-manipulation (manual window snapping)
 for _, snap in pairs(config.snap) do
   hotkey.bind(snap.superKey, snap.shortcut, snap.locations)
