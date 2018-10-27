@@ -388,7 +388,7 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## Markdown
   au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0
-  au FileType markdown,text,html setlocal spell complete+=kspell
+  " au FileType markdown,text,html setlocal spell complete+=kspell
   au FileType markdown set tw=80
 
   " ----------------------------------------------------------------------------
@@ -976,19 +976,19 @@ endfunction
   let g:javascript_plugin_jsdoc = 1                                               "Enable syntax highlighting for js doc blocks
 
 " ## vim-markdown
-  let g:vim_markdown_frontmatter = 1
-  let g:vim_markdown_toc_autofit = 1
-  let g:vim_markdown_new_list_item_indent = 2
-  let g:vim_markdown_conceal = 0
-  let g:vim_markdown_folding_disabled = 1
-  let g:markdown_fenced_languages = [
-        \ 'javascript', 'js=javascript', 'json=javascript',
-        \ 'typescript', 'typescriptreact=typescript',
-        \ 'css', 'scss', 'sass',
-        \ 'ruby', 'erb=eruby',
-        \ 'python',
-        \ 'haml', 'html',
-        \ 'bash=sh', 'zsh', 'elm', 'elixir']
+  " let g:vim_markdown_frontmatter = 1
+  " let g:vim_markdown_toc_autofit = 1
+  " let g:vim_markdown_new_list_item_indent = 2
+  " let g:vim_markdown_conceal = 0
+  " let g:vim_markdown_folding_disabled = 1
+  " let g:markdown_fenced_languages = [
+  "       \ 'javascript', 'js=javascript', 'json=javascript',
+  "       \ 'typescript', 'typescriptreact=typescript',
+  "       \ 'css', 'scss', 'sass',
+  "       \ 'ruby', 'erb=eruby',
+  "       \ 'python',
+  "       \ 'haml', 'html',
+  "       \ 'bash=sh', 'zsh', 'elm', 'elixir']
 
 " ## vim-json
   let g:vim_json_syntax_conceal = 0
@@ -1678,15 +1678,15 @@ map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
   hi SpellCap gui=undercurl
   hi VertSplit guibg=NONE
 
-  " Markdown could be more fruit salady
-  hi link markdownH1 PreProc
-  hi link markdownH2 PreProc
-  hi link markdownLink Character
-  hi link markdownBold String
-  hi link markdownItalic Statement
-  hi link markdownCode Delimiter
-  hi link markdownCodeBlock Delimiter
-  hi link markdownListMarker Todo
+  " " Markdown could be more fruit salady
+  " hi link markdownH1 PreProc
+  " hi link markdownH2 PreProc
+  " hi link markdownLink Character
+  " hi link markdownBold String
+  " hi link markdownItalic Statement
+  " hi link markdownCode Delimiter
+  " hi link markdownCodeBlock Delimiter
+  " hi link markdownListMarker Todo
 
   hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
   hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
