@@ -91,9 +91,15 @@ setw -g mode-keys vi                                                # Use vim ke
 
 bind Escape copy-mode
 
-bind-key -T copy-mode-vi v send-keys -X begin-selection
-bind-key -T copy-mode-vi y send-keys -X copy-selection
+# bind-key -T copy-mode-vi v send-keys -X begin-selection
+# bind-key -T copy-mode-vi y send-keys -X copy-selection
 # bind-key -T copy-mode C-\ send-keys -X copy-pipe-and-cancel "pbcopy"
+
+# select text with 'v' and copy with 'y'
+bind-key -Tcopy-mode-vi 'v' send -X begin-selection
+bind-key -Tcopy-mode-vi 'y' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+bind-key -Tcopy-mode-vi Escape send -X cancel
+bind-key -Tcopy-mode-vi V send -X rectangle-toggle
 
 # STATUS BAR
 # ===========================================================================
