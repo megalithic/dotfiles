@@ -62,8 +62,8 @@ zle -N zle-line-init
 zle -N zle-keymap-select
 
 # Redraw prompt when terminal size changes
-TRAPWINCH() {
-  zle && zle -R
-}
+# TRAPWINCH() {
+#   zle && zle -R
+# }
 
 PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '

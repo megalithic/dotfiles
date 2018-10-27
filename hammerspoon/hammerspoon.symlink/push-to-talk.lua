@@ -18,7 +18,7 @@ function updateInputVolumes()
     if inputVolumes[device:uid()] == nil then
       local inputVolume = device:inputVolume()
       if inputVolume == 0 then
-        inputVolume = 75
+        inputVolume = 40
       end
       inputVolumes[device:uid()] = inputVolume
       log.i("[push-to-talk] Setting unmuted volume for " .. device:uid() .. ": " .. inputVolumes[device:uid()])
@@ -93,7 +93,7 @@ function changeMicrophoneState(mute)
     -- Hack to really unmute the microphone
     local defaultInputDevice = hs.audiodevice.defaultInputDevice()
     local defaultVolume = inputVolumes[defaultInputDevice:uid()]
-    defaultVolume = 60
+    defaultVolume = 40
     hs.applescript('set volume input volume ' .. defaultVolume)
     menubarIcon:setIcon(icons.microphone)
   end

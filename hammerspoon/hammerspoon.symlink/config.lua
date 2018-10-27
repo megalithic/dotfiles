@@ -372,7 +372,7 @@ config.docking = {
   ['docked'] = {
     wifi = 'off', -- wifi status
     profile = 'pok3r', -- Karabiner-Elements profile name
-    input = '"HD Pro Webcam C920"', -- microphone source
+    input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
   },
   ['undocked'] = {
