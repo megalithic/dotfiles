@@ -25,12 +25,13 @@
 
 
 command="$(basename "$0")"
+session="pairing"
 
 # Make sure dependencies are installed
 [ ! "$(command -v gh-auth)" ] && echo "gh-auth not found (gem install github-auth)" && exit 1
 [ ! "$(command -v tmux)" ] && echo "tmux not found" && exit 1
 
-help(){
+help() {
   echo "Usage: "$command" <subcommand> [options]\n"
   echo "Subcommands:"
   echo "    add  Add a github user"
@@ -42,41 +43,39 @@ help(){
   echo "         See: https://ngrok.com"
 }
 
-add(){
-  gh-auth add --users "$@" --command="$(which tmux) attach -t pairing"
+add() {
+  gh-auth add --users "$@" --command="$(which tmux) attach -t $session"
 }
 
-rm(){
+rm() {
   gh-auth remove --users "$@"
 }
 
-ls(){
+ls() {
   gh-auth list
 }
 
-up(){
+up() {
   for user in "$@";do
     add "$user"
   done
 
-  # NOTE: you might want to use tmux-sessionist to create a new session first
-  tmux rename-session pairing
-  tmux send-keys "ngrok start pairing" C-m
-  tmux split-window -h
-  # sleep 10 # some delay so tunnel has time to get up; doesn't do anything helpful
-  tmux send-keys "pair ssh" C-m
+  tmux new -s $session -d
+  tmux switch -t $session
+  tmux send-keys -t $session "ngrok start ${session}" C-m
+  tmux split-window -h -t $session
+  sleep 5 # gives time for ngrok to spin up; so we can retrieve the port
+  tmux send-keys -t $session "pair ssh" C-m
 }
 
-down(){
-  die ngrok
-  sleep 3
-  tmux kill-session -t pairing
+down() {
+  pkill -9 -f ngrok
+  tmux kill-session -t $session
 }
 
-ssh(){
+ssh() {
   host="1.tcp.ngrok.io"
-  # port=$(curl -s http://localhost:4040/api/tunnels|jq -r '.tunnels[0].public_url'| cut -d : -f3)
-  port=24949
+  port=$(curl -s http://localhost:4040/api/tunnels|jq -r '.tunnels[0].public_url'| cut -d : -f3)
   user=pair
   ssh_command="ssh -p $port $user@$host"
   echo ""

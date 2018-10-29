@@ -83,6 +83,7 @@ set -g assume-paste-time 0                                          # Disable as
 set -g repeat-time 0                                                # Allow the arrow key to be used immediately after changing windows
 set -g escape-time 2                                                # nvim trickery
 set -w -g wrap-search off                                           # Don't wrap searches; it's super confusing given tmux's reverse-ordering of position info in copy mode.
+set -g detach-on-destroy off
 
 
 # VI MODE

@@ -1,11 +1,15 @@
 name: "enbala"
 windows:
+  - name: "chats"
+    root: "~/.dotfiles"
+    panes:
+      - commands:
+        - irc
   - name: "dots"
     root: "~/.dotfiles"
     panes:
       - commands:
         - ls
-        - irc
   - name: "services"
     root: "~/code/enbala/vpp"
     layout: even-horizontal
