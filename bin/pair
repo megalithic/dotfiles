@@ -5,9 +5,9 @@
 #
 # This is a tool that, IMO, is better than tmate. Bold statement.
 # Anyway, this tool has assumptions that you:
-#   1.) have tmux setup
-#   2.) have tmux-sessionist installed and can create a new session named 'pairing'
-#   3.) use ngrok and have the proper tunnel setup, with remote-addr support.
+#   1.) have tmux installed and setup
+#   2.) have the github-auth gem installed
+#   3.) have ngrok and have the proper tunnel setup, with remote-addr support.
 #
 # Assuming this is good, then you can add users via their github usernames,
 # you can start up and tear down the ssh pairing session.
@@ -18,8 +18,6 @@
 # `sudo sed -E -i.bak 's/^#?(PasswordAuthentication|ChallengeResponseAuthentication).*$/\1 no/' /etc/ssh/sshd_config`
 
 # That's it! Feel free to update things; because this is very much configured to my usages.
-# I'll eventually automate the getting of things like the ngrok port, etc.
-# Also, I need to fix the `down` method, as it presently kills the tmux instance completely, but you can reattach to the remaining sessions.
 #
 
 
