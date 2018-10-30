@@ -67,7 +67,7 @@ up() {
   tmux switch -t $session
   tmux send-keys -t $session "cd ~; ngrok start ${session}" C-m
   tmux split-window -h -t $session
-  sleep 5 # gives time for ngrok to spin up; so we can retrieve the port
+  sleep 3 # gives time for ngrok to spin up; so we can retrieve the port
   tmux send-keys -t $session "cd ~; pair info" C-m
 }
 
