@@ -3,7 +3,7 @@
 #
 # What in tarnation?
 #
-# This is a tool that, IMO, is better than tmate. Bold statement.
+# This is a CLI pairing tool that, IMO, is better than tmate. Bold statement.
 # Anyway, this tool has assumptions that you:
 #   1.) have tmux installed and setup
 #   2.) have the github-auth gem installed
