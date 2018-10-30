@@ -41,7 +41,7 @@ help() {
   echo "    ls   List github users"
   echo "    up   Open shared tmux session"
   echo "    down Terminates shared tmux session"
-  echo "    ssh  Start a reverse tunnel for pair sharing"
+  echo "    ssh  Start a reverse tunnel for pair sharing using ngrok"
   echo "         See: https://ngrok.com"
 }
 
