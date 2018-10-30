@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+# display pairing ssh info when in pairing mode
+if [[ $(tmux display-message -p '#S') == 'pairing' ]]; then
+  echo "#[fg=brightblue]$(pair ssh)"
+fi

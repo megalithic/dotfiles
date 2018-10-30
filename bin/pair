@@ -36,13 +36,14 @@ session="pairing"
 help() {
   echo "Usage: "$command" <subcommand> [options]\n"
   echo "Subcommands:"
-  echo "    add  Add a github user"
-  echo "    rm   Remove a github user"
-  echo "    ls   List github users"
-  echo "    up   Spin up and open shared tmux session"
-  echo "    down Terminates shared tmux session"
-  echo "    ssh  Start a reverse tunnel for pair sharing using ngrok"
-  echo "         See: https://ngrok.com"
+  echo "    add   Add a github user"
+  echo "    rm    Remove a github user"
+  echo "    ls    List github users"
+  echo "    up    Spin up and open shared tmux session"
+  echo "    down  Terminates shared tmux session"
+  echo "    ssh   Constructs the reverse tunnel using ngrok"
+  echo "          See: https://ngrok.com"
+  echo "    info  Displays handle information about the pairing session"
 }
 
 add() {
@@ -64,10 +65,10 @@ up() {
 
   tmux new -s $session -d
   tmux switch -t $session
-  tmux send-keys -t $session "ngrok start ${session}" C-m
+  tmux send-keys -t $session "cd ~; ngrok start ${session}" C-m
   tmux split-window -h -t $session
   sleep 5 # gives time for ngrok to spin up; so we can retrieve the port
-  tmux send-keys -t $session "pair ssh" C-m
+  tmux send-keys -t $session "cd ~; pair info" C-m
 }
 
 down() {
@@ -80,9 +81,13 @@ ssh() {
   port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
   user=pair
   ssh_command="ssh -p $port $user@$host"
+  echo "$ssh_command"
+}
+
+info() {
   echo ""
   echo "pairing available at:"
-  echo "$ssh_command"
+  echo "$(pair ssh)"
   echo
   echo "the following users are authorized to connect:"
   echo "$(pair ls)"

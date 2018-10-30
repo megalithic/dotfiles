@@ -16,4 +16,7 @@ lan=""
 [[ -n $(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
 [[ -n $(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
 
-echo "#[fg=brightblue]礪$wan #[fg=colour136]$tun#[fg=white] #[fg=yellow]$lan"
+# display wan and lan ip addresses only when we're not pairing
+if [[ $(tmux display-message -p '#S') != 'pairing' ]]; then
+  echo "#[fg=brightblue]礪$wan #[fg=colour136]$tun#[fg=white] #[fg=yellow]$lan"
+fi

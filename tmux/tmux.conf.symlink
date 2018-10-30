@@ -142,7 +142,7 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left-length 60
-set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #{prefix_highlight}"
+set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
 
 # -- statusbar right
 set -g status-right-length 120

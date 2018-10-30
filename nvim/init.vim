@@ -109,7 +109,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
   " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
-  Plug 'metakirby5/codi.vim'
+  Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
+  Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'on': ['MarkdownPreview'] }
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
