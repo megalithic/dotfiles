@@ -77,7 +77,7 @@ down() {
 
 ssh() {
   host="1.tcp.ngrok.io"
-  port=$(curl -s http://localhost:4040/api/tunnels|jq -r '.tunnels[0].public_url'| cut -d : -f3)
+  port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
   user=pair
   ssh_command="ssh -p $port $user@$host"
   echo ""
