@@ -31,7 +31,7 @@ session="pairing"
 
 # Make sure dependencies are installed
 [ ! "$(command -v gh-auth)" ] && echo "gh-auth not found (gem install github-auth)" && exit 1
-[ ! "$(command -v tmux)" ] && echo "tmux not found" && exit 1
+[ ! "$(command -v tmux)" ] && echo "tmux not found, please install for your platform" && exit 1
 
 help() {
   echo "Usage: "$command" <subcommand> [options]\n"
@@ -39,7 +39,7 @@ help() {
   echo "    add  Add a github user"
   echo "    rm   Remove a github user"
   echo "    ls   List github users"
-  echo "    up   Open shared tmux session"
+  echo "    up   Spin up and open shared tmux session"
   echo "    down Terminates shared tmux session"
   echo "    ssh  Start a reverse tunnel for pair sharing using ngrok"
   echo "         See: https://ngrok.com"
