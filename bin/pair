@@ -18,6 +18,10 @@
 # `sudo sed -E -i.bak 's/^#?(PasswordAuthentication|ChallengeResponseAuthentication).*$/\1 no/' /etc/ssh/sshd_config`
 
 # That's it! Feel free to update things; because this is very much configured to my usages.
+
+# Credit where credit is due!
+# - thanks to @jeffweiss for pointing this out; parts of this script originated from
+#   @iamvery, and can be found here: https://github.com/iamvery/dotfiles/blob/9e4a7a746f38ade813846e648eefedaf2c0315ef/bin/ng
 #
 
 
@@ -50,7 +54,7 @@ rm() {
 }
 
 ls() {
-  gh-auth list
+  gh-auth list | sed 's/ /\n/g'
 }
 
 up() {
@@ -80,7 +84,7 @@ ssh() {
   echo "pairing available at:"
   echo "$ssh_command"
   echo
-  echo "for the following users:"
+  echo "the following users are authorized:"
   echo "$(pair ls)"
   echo "$ssh_command" |  pbcopy
 }

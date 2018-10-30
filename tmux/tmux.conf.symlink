@@ -53,7 +53,7 @@ bind-key -T copy-mode-vi C-k select-pane -U
 bind-key -T copy-mode-vi C-l select-pane -R
 
 # weechat things
-unbind C-m
+# unbind C-m
 # bind -r C-m select-window -t :chats
 
 
