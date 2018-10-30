@@ -10,6 +10,7 @@ local icons = {
   microphone = nil,
   mutedMicrophone = nil
 }
+local preferredVolume = 100
 
 function updateInputVolumes()
   local activeUids = {}
@@ -18,7 +19,7 @@ function updateInputVolumes()
     if inputVolumes[device:uid()] == nil then
       local inputVolume = device:inputVolume()
       if inputVolume == 0 then
-        inputVolume = 40
+        inputVolume = preferredVolume
       end
       inputVolumes[device:uid()] = inputVolume
       log.i("[push-to-talk] Setting unmuted volume for " .. device:uid() .. ": " .. inputVolumes[device:uid()])
@@ -77,6 +78,7 @@ function changeMicrophoneState(mute)
     log.i('[push-to-talk] Muting audio')
     for index, device in ipairs(hs.audiodevice.allInputDevices()) do
       device:setInputVolume(0)
+      device:setInputMuted(true)
     end
     -- Hack to really mute the microphone
     hs.applescript('set volume input volume 0')
@@ -87,13 +89,14 @@ function changeMicrophoneState(mute)
         log.wf("[push-to-talk] Device with unknown inputVolume")
       else
         log.i('[push-to-talk] Unmuting audio: ' .. inputVolumes[device:uid()])
+        device:setInputMuted(false)
         device:setInputVolume(inputVolumes[device:uid()])
       end
     end
     -- Hack to really unmute the microphone
     local defaultInputDevice = hs.audiodevice.defaultInputDevice()
     local defaultVolume = inputVolumes[defaultInputDevice:uid()]
-    defaultVolume = 40
+    defaultVolume = preferredVolume
     hs.applescript('set volume input volume ' .. defaultVolume)
     menubarIcon:setIcon(icons.microphone)
   end
