@@ -1,12 +1,19 @@
 #!/usr/bin/env zsh
 
-external=$(dig +short myip.opendns.com @resolver1.opendns.com)
-# external=$(wget -q -O - "http://myexternalip.com/raw")
-vpn0=$(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}')
-vpn3=$(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}')
-en0=$(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-en1=$(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-en7=$(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-en8=$(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+## FIXME:
+# - need to optimize performance here; WAY too many redundant checks
 
-echo "#[fg=brightblue]礪$external #[fg=colour136]$vpn0$vpn3#[fg=white] #[fg=yellow]$en0$en1$en7$en8"
+wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
+# external=$(wget -q -O - "http://myexternalip.com/raw")
+
+tun=""
+[[ -n $(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}') ]] && tun=$(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}')
+[[ -n $(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}') ]] && tun=$(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}')
+
+lan=""
+[[ -n $(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+[[ -n $(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+[[ -n $(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+[[ -n $(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+
+echo "#[fg=brightblue]礪$wan #[fg=colour136]$tun#[fg=white] #[fg=yellow]$lan"
