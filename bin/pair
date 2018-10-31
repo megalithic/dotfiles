@@ -4,10 +4,14 @@
 # What in tarnation?
 #
 # This is a CLI pairing tool that, IMO, is better than tmate. Bold statement.
+#
+# It has so far only been tested on macOS 10.14, but with some minor modifications should work on any platform.
+#
 # Anyway, this tool has assumptions that you:
 #   1.) have tmux installed and setup
 #   2.) have the github-auth gem installed
 #   3.) have ngrok and have the proper tunnel setup, with remote-addr support.
+#   4.) optionally, you can install `do-not-disturb-cli` to have pair automatically set your DND status on macOS
 #
 # Assuming this is good, then you can add users via their github usernames,
 # you can start up and tear down the ssh pairing session.
@@ -63,15 +67,28 @@ up() {
     add "$user"
   done
 
+  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
+
   tmux new -s $session -d
   tmux switch -t $session
   tmux send-keys -t $session "cd ~; ngrok start ${session}" C-m
   tmux split-window -h -t $session
-  sleep 3 # gives time for ngrok to spin up; so we can retrieve the port
-  tmux send-keys -t $session "cd ~; pair info" C-m
+
+  # indicate some sort of progress while we wait to get the ngrok session's port number
+  DONE=0;
+  while [ $DONE -eq 0 ]; do
+    if [ "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "" ]; then
+      # once we have the ngrok session's port number, go ahead and display our pair session info
+      tmux send-keys -t $session "cd ~; pair info" C-m
+      DONE=1
+    fi;
+    # tmux send-keys -t $session "echo '.'" C-m
+    sleep 0.5;
+  done;
 }
 
 down() {
+  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
   pkill -9 -f ngrok
   tmux kill-session -t $session
 }
@@ -86,12 +103,14 @@ ssh() {
 
 info() {
   echo ""
-  echo "pairing available at:"
+  echo '\033[32mPairing available at: \033[0m\n'
   echo "$(pair ssh)"
   echo
-  echo "the following users are authorized to connect:"
+  echo '\033[32mThe following users are authorized to connect: \033[0m'
   echo "$(pair ls)"
-  echo "$ssh_command" |  pbcopy
+
+  # copy our pair address to the clipboard
+  echo "$ssh_command" | pbcopy
 }
 
 subcommand=$1
