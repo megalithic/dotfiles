@@ -141,11 +141,11 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,
 
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
-set -g status-left-length 60
+set -g status-left-length 80
 set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
 
 # -- statusbar right
-set -g status-right-length 120
+set -g status-right-length 80
 set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
 
 
@@ -178,6 +178,7 @@ set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
+# set -g @plugin 'soyuka/tmux-current-pane-hostname'
 # set -g @plugin 'christoomey/vim-tmux-navigator'
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though
