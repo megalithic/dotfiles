@@ -67,10 +67,10 @@ The file hierarchy:
 
 ### Sensitive data
 
-Use `~/.localrc` as your location for sensitive information. Optionally, you
+Use `~/.localrc` as your location for sensitive information. ~~Optionally, you
 can let `bin/_dotup` handle the cloning of your private repo to
 `~/.dotfiles/private`, which will execute an install script, assuming it's
-located at `~/.dotfiles/private/install.sh`.
+located at `~/.dotfiles/private/install.sh`.~~
 
 ### Attribution
 
