@@ -22,6 +22,16 @@ zstyle ':vcs_info:git*' formats "[%{$fg[magenta]%}%b%{$reset_color%}%a%m%u%c]"
 zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
 zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
 zstyle ':vcs_info:*+set-message:*' hooks home-path
+# Add up/down arrows after branch name, if there are changes to pull/to push
+zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
++vi-git-post-backend-updown() {
+  git rev-parse @{upstream} >/dev/null 2>&1 || return
+  local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
+  hook_com[branch]+="%f" # end coloring
+  (( x[2] )) && hook_com[branch]+="↓ -$x[2]"
+  (( x[1] )) && hook_com[branch]+="↑ $x[1]"
+  return 0
+}
 
 precmd() {
   vcs_info
@@ -62,8 +72,13 @@ zle -N zle-line-init
 zle -N zle-keymap-select
 
 # Redraw prompt when terminal size changes
-# TRAPWINCH() {
-#   zle && zle -R
+TRAPWINCH() {
+  zle && zle -R
+}
+
+# # Echoes a username/host string when connected over SSH (empty otherwise)
+# ssh_info() {
+#   [[ "$SSH_CONNECTION" != '' ]] && echo "%(!.%{$fg[red]%}.%{$fg[yellow]%})%n%{$reset_color%}@%{$fg[green]%}%m%{$reset_color%}:" || echo ""
 # }
 
 PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '
