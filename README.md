@@ -50,7 +50,7 @@ A few of the tools I roll with:
 - [dankmono nerd font](https://dank.sh)
   * patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
-  * [nova](https://github.com/trevordmiller/nova-colors)
+- [nova](https://github.com/trevordmiller/nova-colors) - pretty much for everything
 - [neovim](https://neovim.io/)
 - [zsh](https://www.zsh.org/)
 
