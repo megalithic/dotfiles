@@ -32,22 +32,23 @@
 
 command="$(basename "$0")"
 session="pairing"
+ssh_command=""
 
 # Make sure dependencies are installed
-[ ! "$(command -v gh-auth)" ] && echo "gh-auth not found (gem install github-auth)" && exit 1
-[ ! "$(command -v tmux)" ] && echo "tmux not found, please install for your platform" && exit 1
+[ ! "$(command -v gh-auth)" ] && printf -- "gh-auth not found (gem install github-auth)\n" && exit 1
+[ ! "$(command -v tmux)" ] && printf -- "tmux not found, please install for your platform\n" && exit 1
 
 help() {
-  echo "Usage: "$command" <subcommand> [options]\n"
-  echo "Subcommands:"
-  echo "    add   Add a github user"
-  echo "    rm    Remove a github user"
-  echo "    ls    List github users"
-  echo "    up    Spin up and open shared tmux session"
-  echo "    down  Terminates shared tmux session"
-  echo "    ssh   Constructs the reverse tunnel using ngrok"
-  echo "          See: https://ngrok.com"
-  echo "    info  Displays handle information about the pairing session"
+  printf -- "Usage: "$command" <subcommand> [options]\n"
+  printf -- "Subcommands:\n"
+  printf -- "    add   Add a github user\n"
+  printf -- "    rm    Remove a github user\n"
+  printf -- "    ls    List github users\n"
+  printf -- "    up    Spin up and open shared tmux session\n"
+  printf -- "    down  Terminates shared tmux session\n"
+  printf -- "    ssh   Constructs the reverse tunnel using ngrok\n"
+  printf -- "          See: https://ngrok.com\n"
+  printf -- "    info  Displays handle information about the pairing session\n"
 }
 
 add() {
@@ -98,19 +99,19 @@ ssh() {
   port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
   user=pair
   ssh_command="ssh -p $port $user@$host"
-  echo "$ssh_command"
+  printf -- "$ssh_command"
 }
 
 info() {
-  echo ""
-  echo '\033[32mPairing available at: \033[0m\n'
-  echo "$(pair ssh)"
-  echo
-  echo '\033[32mThe following users are authorized to connect: \033[0m'
-  echo "$(pair ls)"
+  printf -- "\n"
+  printf -- '\033[32mPairing available at: \033[0m\n'
+  printf -- "$(pair ssh)\n"
+  printf -- "\n"
+  printf -- '\033[32mThe following users are authorized to connect: \033[0m\n'
+  printf -- "$(pair ls)\n"
 
   # copy our pair address to the clipboard
-  echo "$ssh_command" | pbcopy
+  echo "$(pair ssh)" | pbcopy
 }
 
 subcommand=$1
