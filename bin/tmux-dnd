@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 
-dnd_status=$(do-not-disturb status)
-dnd_label=$([ "$dnd_status" == "on" ] && echo "DND" || echo "")
-echo "$dnd_label"
-
+while true
+do
+  dnd_status=$(do-not-disturb status)
+  dnd_label=$([ "$dnd_status" == "on" ] && echo "DND" || echo "")
+  echo "$dnd_label"
+  sleep 10
+done
