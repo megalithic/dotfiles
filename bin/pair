@@ -11,7 +11,7 @@
 #   1.) have tmux installed and setup
 #   2.) have the github-auth gem installed
 #   3.) have ngrok and have the proper tunnel setup, with remote-addr support.
-#   4.) optionally, you can install `do-not-disturb-cli` to have pair automatically set your DND status on macOS
+#   4.) optionally, you can install `do-not-disturb-cli` (`npm i -g do-not-disturb-cli`) to have pair automatically set your DND status on macOS
 #
 # Assuming this is good, then you can add users via their github usernames,
 # you can start up and tear down the ssh pairing session.
