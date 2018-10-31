@@ -7,6 +7,8 @@ PROMPT_VICMD_SYMBOL="❮"
 PROMPT_BACKGROUND_SYMBOL="☉"
 VCS_STAGED_SYMBOL="●"
 VCS_UNSTAGED_SYMBOL="✚"
+VCS_AHEAD_SYMBOL="↑"
+VCS_BEHIND_SYMBOL="↓"
 
 setopt prompt_subst
 # autoload -U colors && colors # this is happening in colors.zsh
@@ -22,19 +24,20 @@ zstyle ':vcs_info:git*' formats "[%{$fg[magenta]%}%b%{$reset_color%}%a%m%u%c]"
 zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
 zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
 zstyle ':vcs_info:*+set-message:*' hooks home-path
-# Add up/down arrows after branch name, if there are changes to pull/to push
 zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
+
 +vi-git-post-backend-updown() {
   git rev-parse @{upstream} >/dev/null 2>&1 || return
   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
   hook_com[branch]+="%f" # end coloring
-  (( x[2] )) && hook_com[branch]+="↓ -$x[2]"
-  (( x[1] )) && hook_com[branch]+="↑ $x[1]"
+  (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL-$x[2]"
+  (( x[1] )) && hook_com[branch]+=" $VCS_AHEAD_SYMBOL$x[1]"
   return 0
 }
 
 precmd() {
   vcs_info
+  zle && zle .reset-prompt
 }
 
 # returns a more preferred truncated path..
