@@ -112,6 +112,7 @@ info() {
 
   # copy our pair address to the clipboard
   echo "$(pair ssh)" | pbcopy
+  printf -- '\n\033[33m➜ Copied ssh address to clipboard!\033[0m\n'
 }
 
 subcommand=$1
