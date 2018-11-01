@@ -47,6 +47,7 @@ sh $DOTS/asdf/ruby.sh
 
 #
 # node-specific...
+# TODO: it seems as though after installing a node vresion we have to explicitly set it with `asdf global nodejs <version>`
 # sh $DOTS/asdf/node.sh
 
 #

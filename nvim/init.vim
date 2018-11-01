@@ -39,14 +39,14 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
   Plug 'Zaptic/elm-vim', { 'for': ['elm'] }
   " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
-  Plug 'elixir-editors/vim-elixir', { 'for': ['elixir'] }
+  Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
 
   Plug 'sheerun/vim-polyglot'
 
 " ## Completion
-  Plug 'ncm2/ncm2' | Plug 'roxma/nvim-yarp'
+  Plug 'ncm2/ncm2', { 'do': ':UpdateRemotePlugins'  }| Plug 'roxma/nvim-yarp'
   Plug 'ncm2/ncm2-bufword'
   Plug 'ncm2/ncm2-tmux'
   Plug 'ncm2/ncm2-path'
@@ -62,7 +62,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
   Plug 'ncm2/ncm2-tagprefix'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
-  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
+  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
+  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
 
 " ## Project/Code Navigation
@@ -124,7 +125,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'kana/vim-textobj-indent'                              " for indent level (vai)
   Plug 'kana/vim-textobj-line'                                " for current line (val)
   Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }  " ruby block text object (vir)
-  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir'] }       " elixir block text object (vie)
+  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir','eelixir'] }       " elixir block text object (vie)
   Plug 'glts/vim-textobj-comment'                             " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
   Plug 'machakann/vim-textobj-delimited'                      " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
@@ -469,21 +470,21 @@ augroup END
 
 augroup elixir
   au!
-  au FileType elixir setlocal matchpairs=(:),{:},[:]
+  au FileType elixir,eelixir setlocal matchpairs=(:),{:},[:]
 
   " Enable html syntax highlighting in all .eex files
   " autocmd BufReadPost *.html.eex set syntax=html
 
-  au FileType elixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
 
   " :Eix => open iex with current file compiled
   command! Iex :!iex %<cr>
-  au FileType elixir nnoremap <leader>e :!elixir %<CR>
-  au FileType elixir nnoremap <leader>ee :!iex -r % -S mix<CR>
+  au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
+  au FileType elixir,eelixir nnoremap <leader>ee :!iex -r % -S mix<CR>
 
-  " au FileType elixir nnoremap <c-]> :ALEGoToDefinition<cr>
-  au FileType elixir nnoremap <c->> :ALEGoToDefinition<cr>
+  " au FileType elixir,eelixir nnoremap <c-]> :ALEGoToDefinition<cr>
+  au FileType elixir,eelixir nnoremap <c->> :ALEGoToDefinition<cr>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
@@ -929,6 +930,7 @@ endfunction
 
 " ## ALE
   let g:ale_enabled = 1
+  let g:ale_completion_enabled = 1
   let g:ale_lint_delay = 1000
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
@@ -944,7 +946,8 @@ endfunction
         \   'json': ['prettier'],
         \   'python': ['pyls'],
         \   'ruby': [],
-        \   'elixir': ['mix', 'credo', 'dogma'],
+        \   'eelixir': ['elixir-ls', 'mix'],
+        \   'elixir': ['elixir-ls', 'mix'],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -957,6 +960,7 @@ endfunction
         \   'json': ['prettier'],
         \   'python': ['black'],
         \   'elm': ['elm-format'],
+        \   'eelixir': ['mix_format'],
         \   'elixir': ['mix_format'],
         \ }                                                                       "Fix eslint errors
   let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
@@ -964,7 +968,7 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  let g:ale_elixir_elixir_ls_release = '~/.elixir-ls/rel'
+  let g:ale_elixir_elixir_ls_release = $HOME."/.elixir-ls/rel/language_server.sh"
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
@@ -1179,6 +1183,66 @@ let g:tagbar_type_elm = {
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
+" ## LanguageClient-neovim
+  let g:LanguageClient_diagnosticsList = v:null
+  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
+  let g:LanguageClient_loadSettings = 0
+  let g:LanguageClient_loggingLevel = 'INFO'
+  " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
+  " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
+  let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
+  let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
+  let g:LanguageClient_serverCommands = {}
+
+  if executable('pyls')
+    let g:LanguageClient_serverCommands.python = ['pyls']
+  endif
+
+  if executable('typescript-language-server')
+    let g:LanguageClient_serverCommands.typescript = ['typescript-language-server', '--stdio']
+    let g:LanguageClient_serverCommands.typescriptreact = ['typescript-language-server', '--stdio']
+    let g:LanguageClient_serverCommands['typescript.tsx'] = ['typescript-language-server', '--stdio']
+  endif
+
+  if executable('javascript-typescript-langserver')
+    let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
+  endif
+
+  if executable('solargraph')
+    let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
+  endif
+
+  if executable('lua-lsp')
+    let g:LanguageClient_serverCommands.lua = ['lua-lsp']
+  endif
+
+  if filereadable($HOME."/.elixir-ls/rel/language_server.sh")
+    let g:LanguageClient_serverCommands.elixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
+    let g:LanguageClient_serverCommands.eelixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
+  endif
+
+  if executable('css-languageserver')
+    let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
+  endif
+
+  if executable('html-languageserver')
+    let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
+  endif
+
+  if executable('json-languageserver')
+    let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
+  endif
+
+" nnoremap <F5> :call LanguageClient_contextMenu()<CR>
+" " Or map each action separately
+" nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+" nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+" nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
+
 " ## async/vim-lsp
   let g:lsp_auto_enable = 1
   let g:lsp_signs_enabled = 0             " enable diagnostic signs / we use ALE for now
@@ -1230,7 +1294,7 @@ let g:tagbar_type_elm = {
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, $HOME."/.elixir-ls/rel/language_server.sh"]},
-          \ 'whitelist': ['elixir'],
+          \ 'whitelist': ['elixir','eelixir'],
           \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
           \ })
   endif
@@ -1245,7 +1309,9 @@ let g:tagbar_type_elm = {
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
+  call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
   call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
+  call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter

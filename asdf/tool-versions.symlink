@@ -3,3 +3,4 @@ elixir 1.7.3
 elm 0.19.0
 lua 5.3.4
 ruby 2.5.1
+nodejs 8.12.0

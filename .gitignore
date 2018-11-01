@@ -40,3 +40,4 @@ tags
 **/__pycache__
 .elixir_ls
 nvim/nvim-python.log_*
+nvim/*.log
