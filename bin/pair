@@ -7,7 +7,7 @@
 #
 # It has so far only been tested on macOS 10.14, but with some minor modifications should work on any platform.
 #
-# Anyway, this tool has assumptions that you:
+# This tool has assumptions that you:
 #   1.) have tmux installed and setup
 #   2.) have the github-auth gem installed
 #   3.) have ngrok and have the proper tunnel setup, with remote-addr support.
@@ -21,7 +21,7 @@
 # Lastly, you'll want to make sure your macOS sshd config setup accepts public-key authentication:
 # `sudo sed -E -i.bak 's/^#?(PasswordAuthentication|ChallengeResponseAuthentication).*$/\1 no/' /etc/ssh/sshd_config`
 #
-# That's it! Feel free to update things; because this is very much configured to my usages.
+# Be sure to check out this scripts integrations with tmux, too.
 #
 # Credit where credit is due!
 #   - thanks to @jeffweiss for pointing this out; parts of this script originated from
