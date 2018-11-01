@@ -62,8 +62,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
   Plug 'ncm2/ncm2-tagprefix'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
-  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
-  Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
+  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
 
 " ## Project/Code Navigation
@@ -1184,14 +1184,14 @@ let g:tagbar_type_elm = {
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
 " ## LanguageClient-neovim
-  let g:LanguageClient_diagnosticsList = v:null
-  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
+  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
   let g:LanguageClient_loadSettings = 0
   let g:LanguageClient_loggingLevel = 'INFO'
   " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
   " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
   let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
   let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
+  let g:LanguageClient_diagnosticsList = v:null
   let g:LanguageClient_serverCommands = {}
 
   if executable('pyls')
