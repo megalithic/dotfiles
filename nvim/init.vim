@@ -38,6 +38,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
   Plug 'Zaptic/elm-vim', { 'for': ['elm'] }
+  Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
   " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
   Plug 'mhinz/vim-mix-format'
@@ -69,6 +70,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
+  Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -946,8 +948,8 @@ endfunction
         \   'json': ['prettier'],
         \   'python': ['pyls'],
         \   'ruby': [],
-        \   'eelixir': ['elixir-ls', 'mix'],
-        \   'elixir': ['elixir-ls', 'mix'],
+        \   'eelixir': ['credo', 'elixir-ls', 'mix'],
+        \   'elixir': ['credo', 'elixir-ls', 'mix'],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -968,7 +970,7 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  let g:ale_elixir_elixir_ls_release = $HOME."/.elixir-ls/rel/language_server.sh"
+  let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel/language_server.sh"
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
@@ -1184,64 +1186,64 @@ let g:tagbar_type_elm = {
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
 " ## LanguageClient-neovim
-  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
-  let g:LanguageClient_loadSettings = 0
-  let g:LanguageClient_loggingLevel = 'INFO'
-  " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
-  " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
-  let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
-  let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
-  let g:LanguageClient_diagnosticsList = v:null
-  let g:LanguageClient_serverCommands = {}
+  " let g:LanguageClient_autoStart = 0 " Automatically start language servers.
+  " let g:LanguageClient_loadSettings = 0
+  " let g:LanguageClient_loggingLevel = 'INFO'
+  " " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
+  " " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
+  " let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
+  " let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
+  " let g:LanguageClient_diagnosticsList = v:null
+  " let g:LanguageClient_serverCommands = {}
 
-  if executable('pyls')
-    let g:LanguageClient_serverCommands.python = ['pyls']
-  endif
+  " if executable('pyls')
+  "   let g:LanguageClient_serverCommands.python = ['pyls']
+  " endif
 
-  if executable('typescript-language-server')
-    let g:LanguageClient_serverCommands.typescript = ['typescript-language-server', '--stdio']
-    let g:LanguageClient_serverCommands.typescriptreact = ['typescript-language-server', '--stdio']
-    let g:LanguageClient_serverCommands['typescript.tsx'] = ['typescript-language-server', '--stdio']
-  endif
+  " if executable('typescript-language-server')
+  "   let g:LanguageClient_serverCommands.typescript = ['typescript-language-server', '--stdio']
+  "   let g:LanguageClient_serverCommands.typescriptreact = ['typescript-language-server', '--stdio']
+  "   let g:LanguageClient_serverCommands['typescript.tsx'] = ['typescript-language-server', '--stdio']
+  " endif
 
-  if executable('javascript-typescript-langserver')
-    let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
-    let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-  endif
+  " if executable('javascript-typescript-langserver')
+  "   let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
+  "   let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
+  " endif
 
-  if executable('solargraph')
-    let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
-  endif
+  " if executable('solargraph')
+  "   let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
+  " endif
 
-  if executable('lua-lsp')
-    let g:LanguageClient_serverCommands.lua = ['lua-lsp']
-  endif
+  " if executable('lua-lsp')
+  "   let g:LanguageClient_serverCommands.lua = ['lua-lsp']
+  " endif
 
-  if filereadable($HOME."/.elixir-ls/rel/language_server.sh")
-    let g:LanguageClient_serverCommands.elixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
-    let g:LanguageClient_serverCommands.eelixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
-  endif
+  " if filereadable($HOME."/.elixir-ls/rel/language_server.sh")
+  "   let g:LanguageClient_serverCommands.elixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
+  "   let g:LanguageClient_serverCommands.eelixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
+  " endif
 
-  if executable('css-languageserver')
-    let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
-    let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
-    let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
-    let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
-  endif
+  " if executable('css-languageserver')
+  "   let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
+  "   let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
+  "   let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
+  "   let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
+  " endif
 
-  if executable('html-languageserver')
-    let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
-  endif
+  " if executable('html-languageserver')
+  "   let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
+  " endif
 
-  if executable('json-languageserver')
-    let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
-  endif
+  " if executable('json-languageserver')
+  "   let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
+  " endif
 
-" nnoremap <F5> :call LanguageClient_contextMenu()<CR>
-" " Or map each action separately
-" nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-" nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
-" nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
+" " nnoremap <F5> :call LanguageClient_contextMenu()<CR>
+" " " Or map each action separately
+" " nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+" " nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+" " nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
 
 " ## async/vim-lsp
   let g:lsp_auto_enable = 1
@@ -1290,10 +1292,10 @@ let g:tagbar_type_elm = {
           \ 'whitelist': ['lua'],
           \ })
   endif
-  if filereadable($HOME."/.elixir-ls/rel/language_server.sh")
+  if filereadable(expand("~/.elixir-ls/rel/language_server.sh"))
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, $HOME."/.elixir-ls/rel/language_server.sh"]},
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, expand("~/.elixir-ls/rel/language_server.sh")]},
           \ 'whitelist': ['elixir','eelixir'],
           \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
           \ })
