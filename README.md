@@ -36,7 +36,7 @@ I highly recommend you dig into the scripts and configs to see what all
 is going on (because it does a lot that I'm not describing here) before you
 all willy-nilly install a stranger's shell scripts. :)
 
-### Main elements
+### Things
 
 A few of the tools I roll with:
 
@@ -54,6 +54,8 @@ A few of the tools I roll with:
 - [neovim](https://neovim.io/)
 - [zsh](https://www.zsh.org/)
 
+### Stuff
+
 The file hierarchy:
 
 - **bin/**: Anything in `bin/` will get added to your `$PATH` and be made
@@ -65,14 +67,14 @@ The file hierarchy:
 - **topic/\<platform\>.sh**: Platform-specific installers to handle additional
   things that you may need to happen for that topic. `all | macos | linux | freebsd | windows`
 
-### Sensitive data
+### Privates
 
 Use `~/.localrc` as your location for sensitive information. ~~Optionally, you
 can let `bin/_dotup` handle the cloning of your private repo to
 `~/.dotfiles/private`, which will execute an install script, assuming it's
 located at `~/.dotfiles/private/install.sh`.~~
 
-### Attribution
+### Props
 
 - Originally based on the dotfiles of the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
 - Presently a delicate combination of [Wynn Netherland's](https://github.com/pengwynn/dotfiles) and [Phillip Ridlen's](https://github.com/philtr/dotfiles) respective dotfiles
