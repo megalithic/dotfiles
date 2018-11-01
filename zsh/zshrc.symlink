@@ -49,6 +49,7 @@ then
   source ~/.localrc
 fi
 
+# source "$DOTS/zsh/components/zshrc/prompt-async.zsh"
 source "$DOTS/zsh/components/zshrc/prompt.zsh"
 
 # all these things below get auto inserted by our various tooling; so we leave them to prevent more auto-inserts

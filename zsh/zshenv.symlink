@@ -17,7 +17,7 @@
 # typeset -gU cdpath fpath mailpath path
 # typeset -gxU MANPATH
 # typeset -gxUT INFOPATH infopath
-typeset -gU fpath path
+typeset -agU fpath path
 # typeset -gxU MANPATH
 # typeset -gxUT INFOPATH infopath
 

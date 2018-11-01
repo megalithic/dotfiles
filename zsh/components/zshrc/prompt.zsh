@@ -35,9 +35,47 @@ zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
   return 0
 }
 
+fetch_upstream() {
+  command git -c gc.auto=0 fetch 2>/dev/null &
+	wait $! || return $fail_code
+}
+
+ASYNC_PROC=0
 precmd() {
+  function async() {
+    # save to temp file
+    printf "%s" "$(fetch_upstream)" > "${HOME}/.zsh_tmp_prompt"
+
+    # signal parent
+    kill -s USR1 $$
+  }
+
+  # do not clear RPROMPT, let it persist
+
+  # kill child if necessary
+  if [[ "${ASYNC_PROC}" != 0 ]]; then
+    kill -s HUP $ASYNC_PROC >/dev/null 2>&1 || :
+  fi
+
+  # start background computation
+  async &!
+  ASYNC_PROC=$!
+
+  # vcs_info
+  # zle && zle .reset-prompt
+}
+
+TRAPUSR1() {
   vcs_info
-  zle && zle .reset-prompt
+  # read from temp file
+  # RPROMPT="$(cat ${HOME}/.zsh_tmp_prompt)"
+
+  # reset proc number
+  ASYNC_PROC=0
+
+  # redisplay
+  zle && zle reset-prompt
+  # zle && zle .reset-prompt
 }
 
 # returns a more preferred truncated path..
@@ -78,10 +116,5 @@ zle -N zle-keymap-select
 TRAPWINCH() {
   zle && zle -R
 }
-
-# # Echoes a username/host string when connected over SSH (empty otherwise)
-# ssh_info() {
-#   [[ "$SSH_CONNECTION" != '' ]] && echo "%(!.%{$fg[red]%}.%{$fg[yellow]%})%n%{$reset_color%}@%{$fg[green]%}%m%{$reset_color%}:" || echo ""
-# }
 
 PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '
