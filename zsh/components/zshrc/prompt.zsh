@@ -7,8 +7,8 @@ PROMPT_VICMD_SYMBOL="❮"
 PROMPT_BACKGROUND_SYMBOL="☉"
 VCS_STAGED_SYMBOL="✱"
 VCS_UNSTAGED_SYMBOL="✚"
-VCS_AHEAD_SYMBOL="↑"
-VCS_BEHIND_SYMBOL="↓"
+VCS_AHEAD_SYMBOL="↑" # ⇡↑
+VCS_BEHIND_SYMBOL="↓" # ⇡↓
 
 setopt prompt_subst
 # autoload -U colors && colors # this is happening in colors.zsh
