@@ -42,7 +42,8 @@ fetch_upstream() {
 
 ASYNC_PROC=0
 precmd() {
-  function async() {
+  # TODO: need to figure out how to execute this every (n) seconds
+  async() {
     # save to temp file
     printf "%s" "$(fetch_upstream)" > "${HOME}/.zsh_tmp_prompt"
 

@@ -1187,7 +1187,7 @@ let g:tagbar_type_elm = {
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}
   let g:lsp_signs_information = {'text': '!!'}
-  " let g:lsp_log_verbose = 0
+  " let g:lsp_log_verbose = 1
   " let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   if executable('typescript-language-server')
     au User lsp_setup call lsp#register_server({
@@ -1231,9 +1231,9 @@ let g:tagbar_type_elm = {
           \ 'name': 'elixir',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, $HOME."/.elixir-ls/rel/language_server.sh"]},
           \ 'whitelist': ['elixir'],
+          \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
           \ })
   endif
-  " \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded

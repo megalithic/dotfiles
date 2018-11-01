@@ -30,6 +30,6 @@ else
   echo ":: ERROR: unable to run mix command from ln 20; likely elixir/mix isn't available"
 fi
 
-if [[ -f "$HOME/.elixir-ls/language_server.sh" ]]; then
-  chmod +x $HOME/.elixir-ls/language_server.sh
+if [[ -f "$HOME/.elixir-ls/rel/language_server.sh" ]]; then
+  chmod +x $HOME/.elixir-ls/rel/language_server.sh
 fi
