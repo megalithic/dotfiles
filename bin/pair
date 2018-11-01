@@ -37,6 +37,7 @@ ssh_command=""
 # Make sure dependencies are installed
 [ ! "$(command -v gh-auth)" ] && printf -- "gh-auth not found (gem install github-auth)\n" && exit 1
 [ ! "$(command -v tmux)" ] && printf -- "tmux not found, please install for your platform\n" && exit 1
+[ ! "$(command -v ngrok)" ] && printf -- "ngrok not found, please install for your platform\n" && exit 1
 
 help() {
   printf -- "Usage: "$command" <subcommand> [options]\n"
