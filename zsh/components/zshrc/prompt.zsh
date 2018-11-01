@@ -30,11 +30,12 @@ zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
   git rev-parse @{upstream} >/dev/null 2>&1 || return
   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
   hook_com[branch]+="%f" # end coloring
-  (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL-$x[2]"
+  (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL$x[2]"
   (( x[1] )) && hook_com[branch]+=" $VCS_AHEAD_SYMBOL$x[1]"
   return 0
 }
 
+# TODO: need to figure out how to execute this every (n) seconds
 fetch_upstream() {
   command git -c gc.auto=0 fetch 2>/dev/null &
 	wait $! || return $fail_code
