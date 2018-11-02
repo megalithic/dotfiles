@@ -113,7 +113,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
-  Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'on': ['MarkdownPreview'] }
+  Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app & yarn install' }
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
