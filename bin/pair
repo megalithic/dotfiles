@@ -82,7 +82,8 @@ up() {
   while [ $DONE -eq 0 ]; do
     if [ "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "" ]; then
       # once we have the ngrok session's port number, go ahead and display our pair session info
-      tmux send-keys -t $session "cd ~; pair info" C-m
+      # TODO: figure out how to execute this without seeing the commands at the prompt
+      tmux send-keys -t $session "cd ~; pair info;" C-m
       DONE=1
     fi;
     sleep 0.5;
