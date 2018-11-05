@@ -26,6 +26,9 @@ zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
 zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
 zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 
+# zstyle ':vcs_info:git+set-message:*' hooks add-space
+# +vi-add-space() { hook_com[branch]+=${hook_com[branch]:+ } }
+
 +vi-git-post-backend-updown() {
   git rev-parse @{upstream} >/dev/null 2>&1 || return
   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )

@@ -2,5 +2,5 @@
 
 # display pairing ssh info when in pairing mode
 if [[ $(tmux display-message -p '#S') == 'pairing' ]]; then
-  echo "#[fg=colour245]  $(pair ssh)"
+  echo "#[fg=colour245]  $(pair ssh)"
 fi

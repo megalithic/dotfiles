@@ -5,5 +5,5 @@ do
   dnd_status=$(do-not-disturb status)
   dnd_label=$([ "$dnd_status" == "on" ] && echo "DND" || echo "")
   echo "$dnd_label"
-  sleep 10
+  sleep 5
 done
