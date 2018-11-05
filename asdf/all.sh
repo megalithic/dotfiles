@@ -13,10 +13,8 @@ then
   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
 fi
 
-echo '. $HOME/.asdf/asdf.sh' >> ~/.zshrc
-echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.zshrc
 source ~/.zshrc
-source $HOME/.asdf/asdf.sh;
+source $HOME/.asdf/asdf.sh
 
 #
 # preferred plugins..
@@ -27,6 +25,7 @@ asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin-add elm https://github.com/vic/asdf-elm.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
 asdf plugin-add nodejs
+bash $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring
 
 #
 # TODO:
@@ -48,7 +47,7 @@ sh $DOTS/asdf/ruby.sh
 #
 # node-specific...
 # TODO: it seems as though after installing a node vresion we have to explicitly set it with `asdf global nodejs <version>`
-# sh $DOTS/asdf/node.sh
+sh $DOTS/asdf/node.sh
 
 #
 # elixir-specific...

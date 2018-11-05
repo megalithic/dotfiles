@@ -1,8 +1,8 @@
-apollo-codegen
+# apollo-codegen
 babel-eslint
 bash-language-server
 convert-snippets
-create-react-app
+# create-react-app
 do-not-disturb-cli
 elm
 elm-oracle
@@ -11,16 +11,15 @@ eslint
 eslint-config-prettier
 eslint-plugin-react
 eslint-plugin-prettier
-exp
 expo-cli
 flow-language-server
-jest
+# jest
 neovim
-prettier
-prettier-eslint
-prettier-eslint-cli
-stylelint
-stylelint-config-standard
+# prettier
+# prettier-eslint
+# prettier-eslint-cli
+# stylelint
+# stylelint-config-standard
 javascript-typescript-langserver
 taskbook
 tsserver

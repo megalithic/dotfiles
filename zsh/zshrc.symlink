@@ -40,7 +40,6 @@ source "$DOTS/zsh/components/zshrc/fzf.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.zsh"
 source "$DOTS/zsh/components/zshrc/syntax-highlighting.zsh"
 source "$DOTS/zsh/components/zshrc/asdf.zsh"
-source "$DOTS/zsh/components/zshrc/node.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
@@ -50,11 +49,6 @@ then
 fi
 
 source "$DOTS/zsh/components/zshrc/prompt.zsh"
-
-# all these things below get auto inserted by our various tooling; so we leave them to prevent more auto-inserts
-# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-# export N_PREFIX="$HOME/.n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"  # Added by n-install (see http://git.io/n-install-repo).
-# [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
 
 # uncomment to for zsh profiling
 # zprof

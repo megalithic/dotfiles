@@ -116,8 +116,7 @@ alias ec='emacsclient'
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-alias updatenvim="brew update; pip3 install --upgrade neovim; npm install -g neovim; gem install neovim; nvim +PlugUpgrade +qall; nvim +PlugUpdate +qall; nvim +UpdateRemotePlugins +qall; brew outdated"
-alias nvimupdate=updatenvim
+alias nvimupdate="brew update; pip3 install --upgrade neovim; pip2 install --upgrade neovim; npm install -g neovim; gem install neovim; nvim +PlugUpgrade +qall; nvim +PlugUpdate +qall; nvim +UpdateRemotePlugins +qall; brew outdated"
 alias nv="nvim"
 alias im="nvim"
 alias vim="nvim"

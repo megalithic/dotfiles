@@ -16,7 +16,7 @@ setopt prompt_subst
 # autoload -U promptinit; promptinit # might not be needed?
 autoload -Uz vcs_info
 
-zstyle ':vcs_info:*' enable git svn
+zstyle ':vcs_info:*' enable git hg
 zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:*' check-for-staged-changes true
 zstyle ':vcs_info:*' stagedstr "%{$fg[green]%}$VCS_STAGED_SYMBOL%{$reset_color%}"
@@ -24,7 +24,7 @@ zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}$VCS_UNSTAGED_SYMBOL%{$reset_color
 zstyle ':vcs_info:git*' formats "[%{$fg[magenta]%}%b%{$reset_color%}%a%m%u%c]"
 zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
 zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
-zstyle ':vcs_info:*+set-message:*' hooks home-path git-untracked
+# zstyle ':vcs_info:*+set-message:*' hooks home-path git-untracked
 zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
 zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 
@@ -52,43 +52,74 @@ fetch_upstream() {
 }
 
 ASYNC_PROC=0
+ASYNC_DATA="${TMPPREFIX}-prompt_megalithic"
 precmd() {
-  # TODO: need to figure out how to execute this every (n) seconds
-  async() {
+  function async() {
+    fetch_upstream
+    vcs_info
     # save to temp file
-    printf "%s" "$(fetch_upstream)" > "${HOME}/.zsh_tmp_prompt"
-
+    printf "%s" "${vcs_info_msg_0_}" > $ASYNC_DATA
     # signal parent
     kill -s USR1 $$
   }
 
-  # do not clear RPROMPT, let it persist
-
+  # do not clear PROMPT, let it persist
   # kill child if necessary
   if [[ "${ASYNC_PROC}" != 0 ]]; then
     kill -s HUP $ASYNC_PROC >/dev/null 2>&1 || :
   fi
-
   # start background computation
   async &!
   ASYNC_PROC=$!
-
-  # vcs_info
-  # zle && zle .reset-prompt
 }
 
 TRAPUSR1() {
-  vcs_info
   # read from temp file
-  # RPROMPT="$(cat ${HOME}/.zsh_tmp_prompt)"
-
+  PROMPT='${NEWLINE}$(prompt_path) $(cat $ASYNC_DATA) $(background_process_indicator)${NEWLINE}${return_status} '
   # reset proc number
   ASYNC_PROC=0
-
   # redisplay
   zle && zle reset-prompt
-  # zle && zle .reset-prompt
 }
+
+# ASYNC_PROC=0
+# precmd() {
+#   # TODO: need to figure out how to execute this every (n) seconds
+#   async() {
+#     # save to temp file
+#     printf "%s" "$(fetch_upstream)" > "${HOME}/.zsh_tmp_prompt"
+
+#     # signal parent
+#     kill -s USR1 $$
+#   }
+
+#   # do not clear RPROMPT, let it persist
+
+#   # kill child if necessary
+#   if [[ "${ASYNC_PROC}" != 0 ]]; then
+#     kill -s HUP $ASYNC_PROC >/dev/null 2>&1 || :
+#   fi
+
+#   # start background computation
+#   async &!
+#   ASYNC_PROC=$!
+
+#   # vcs_info
+#   # zle && zle .reset-prompt
+# }
+
+# TRAPUSR1() {
+#   vcs_info
+#   # read from temp file
+#   # RPROMPT="$(cat ${HOME}/.zsh_tmp_prompt)"
+
+#   # reset proc number
+#   ASYNC_PROC=0
+
+#   # redisplay
+#   zle && zle reset-prompt
+#   # zle && zle .reset-prompt
+# }
 
 # returns a more preferred truncated path..
 prompt_path() {
@@ -129,4 +160,7 @@ TRAPWINCH() {
   zle && zle -R
 }
 
-PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '
+# source "$DOTS/zsh/components/zshrc/async-git-prompt.plugin.zsh"
+
+# PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '
+PROMPT=''

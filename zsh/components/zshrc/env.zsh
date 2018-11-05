@@ -119,7 +119,9 @@ unset SSL_CERT_FILE
 export CURL_CA_BUNDLE=''
 
 # GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg
-export GNUPGHOME=$(mktemp -d) #; echo $GNUPGHOME
+# export GNUPGHOME=$(mktemp -d) #; echo $GNUPGHOME
+
+# export GNUPGHOME="$HOME/.gnupg"
 
 # https://github.com/asdf-vm/asdf-nodejs#using-a-dedicated-openpgp-keyring
 # export GNUPGHOME="${ASDF_DIR:-$HOME/.asdf}/keyrings/nodejs" && mkdir -p "$GNUPGHOME" && chmod 0700 "$GNUPGHOME"
