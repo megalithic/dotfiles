@@ -22,12 +22,14 @@ zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}$VCS_UNSTAGED_SYMBOL%{$reset_color
 zstyle ':vcs_info:git*' formats "%F{245}[%F{130}%b%{$reset_color%}%a%m%u%c%F{245}]%{$reset_color%}"
 zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
 zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
-# zstyle ':vcs_info:*+set-message:*' hooks home-path git-untracked
 zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
 zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 
-# zstyle ':vcs_info:git+set-message:*' hooks add-space
-# +vi-add-space() { hook_com[branch]+=${hook_com[branch]:+ } }
+# NOTE: suggested by osse on #zsh@freenode (presently not working though):
+# zstyle ':vcs_info:git*+set-message:*' hooks git-conditionally-add-space-to-branch
+# +vi-git-conditionally-add-space-to-branch() { 
+#   hook_com[branch]+="${hook_com[branch]:+}"
+# }
 
 +vi-git-post-backend-updown() {
   git rev-parse @{upstream} >/dev/null 2>&1 || return
