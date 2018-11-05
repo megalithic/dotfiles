@@ -8,10 +8,11 @@
 # It has so far only been tested on macOS 10.14, but with some minor modifications should work on any platform.
 #
 # This tool has assumptions that you:
-#   1.) have tmux installed and setup
-#   2.) have the github-auth gem installed
-#   3.) have ngrok and have the proper tunnel setup, with remote-addr support.
-#   4.) optionally, you can install `do-not-disturb-cli` (`npm i -g do-not-disturb-cli`) to have pair automatically set your DND status on macOS
+#   1.)  have tmux installed and setup
+#   2.)  have the github-auth gem installed
+#   3.)  have ngrok and have the proper tunnel setup, with remote-addr support.
+#   4.)  optionally, you can install `do-not-disturb-cli` (`npm i -g do-not-disturb-cli`) to have pair automatically set your DND status on macOS
+#   4a.) fancy icons will show up if you're using a fully nerd-fonts patched terminal font.
 #
 # Assuming this is good, then you can add users via their github usernames,
 # you can start up and tear down the ssh pairing session.
@@ -84,7 +85,6 @@ up() {
       tmux send-keys -t $session "cd ~; pair info" C-m
       DONE=1
     fi;
-    # tmux send-keys -t $session "echo '.'" C-m
     sleep 0.5;
   done;
 }
@@ -105,10 +105,10 @@ ssh() {
 
 info() {
   printf -- "\n"
-  printf -- '\033[32mPairing available at: \033[0m\n'
+  printf -- '\033[32m  Pairing available at: \033[0m\n'
   printf -- "$(pair ssh)\n"
   printf -- "\n"
-  printf -- '\033[32mThe following users are authorized to connect: \033[0m\n'
+  printf -- '\033[32m  The following users are authorized to connect: \033[0m\n'
   printf -- "$(pair ls)\n"
 
   # copy our pair address to the clipboard
