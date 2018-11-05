@@ -1,30 +1,13 @@
-# apollo-codegen
-babel-eslint
 bash-language-server
 convert-snippets
-# create-react-app
 do-not-disturb-cli
 elm
 elm-oracle
 elm-test
-eslint
-eslint-config-prettier
-eslint-plugin-react
-eslint-plugin-prettier
-expo-cli
 flow-language-server
-# jest
 neovim
-# prettier
-# prettier-eslint
-# prettier-eslint-cli
-# stylelint
-# stylelint-config-standard
 javascript-typescript-langserver
 taskbook
-tsserver
-ts-node
-typescript
 typescript-language-server
 vscode-css-languageserver-bin
 vscode-html-languageserver-bin
