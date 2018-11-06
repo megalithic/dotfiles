@@ -165,5 +165,5 @@ TRAPWINCH() {
 
 # source "$DOTS/zsh/components/zshrc/async-git-prompt.plugin.zsh"
 
-# PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '
-PROMPT=''
+PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_} $(background_process_indicator)${NEWLINE}${return_status} '
+# PROMPT=''

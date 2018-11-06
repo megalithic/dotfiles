@@ -134,7 +134,8 @@ export LC_ALL=en_US.UTF-8
 # export PATH=$PATH:$MYSQL
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
 
-
+# elixir and erlang things for `iex`, etc:
+export ERL_AFLAGS="-kernel shell_history enabled"
 
 # fixing an issue for weechat and wee-slack: https://blog.phusion.nl/2017/10/13/why-ruby-app-servers-break-on-macos-high-sierra-and-what-can-be-done-about-it/
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
