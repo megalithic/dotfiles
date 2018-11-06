@@ -366,8 +366,8 @@ augroup vimrc
 
   " Hide status bar while using fzf commands
   if has('nvim')
-    autocmd! FileType fzf
-    autocmd  FileType fzf set laststatus=0 | autocmd BufLeave,WinLeave <buffer> set laststatus=2
+    au! FileType fzf
+    au  FileType fzf set laststatus=0 | au BufLeave,WinLeave <buffer> set laststatus=2
   endif
 
   " ----------------------------------------------------------------------------
@@ -477,6 +477,7 @@ augroup elixir
   " Enable html syntax highlighting in all .eex files
   " autocmd BufReadPost *.html.eex set syntax=html
 
+  " ways-to-debug:
   au FileType elixir,eelixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
 
@@ -486,7 +487,7 @@ augroup elixir
   au FileType elixir,eelixir nnoremap <leader>ee :!iex -r % -S mix<CR>
 
   " au FileType elixir,eelixir nnoremap <c-]> :ALEGoToDefinition<cr>
-  au FileType elixir,eelixir nnoremap <c->> :ALEGoToDefinition<cr>
+  " au FileType elixir,eelixir nnoremap <c->> :ALEGoToDefinition<cr>
 augroup END
 
 " Automatically close vim if only the quickfix window is open
