@@ -1386,13 +1386,14 @@ nnoremap <Leader>p "0p
 vnoremap <Leader>p "0p
 nnoremap <Leader>h viw"0p
 
-" register overrides CAREFUL!
-" vnoremap d "_d
-" nnoremap d "_d
-" vnoremap x "_x
-" nnoremap x "_x
-" vnoremap c "_c
-" nnoremap c "_c
+" Insert mode mappings (beginning of line, end of line, and word movement)
+map <C-a> <ESC>^
+imap <C-a> <ESC>I
+map <C-e> <ESC>$
+imap <C-e> <ESC>A
+inoremap <M-f> <ESC><Space>Wi
+inoremap <M-b> <Esc>Bi
+inoremap <M-d> <ESC>cW
 
 " Move to the end of yanked text after yank and paste
 nnoremap p p`]
