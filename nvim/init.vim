@@ -29,6 +29,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
+  Plug 'jlebray/neoterm'
   Plug 'benmills/vimux'
 
 " ## Syntax
@@ -114,6 +115,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'w0rp/ale'
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
   Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app & yarn install' }
+  Plug 'svermeulen/vim-easyclip'
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -121,22 +123,22 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " -- provide al and il for current line
   " -- provide a_ and i_ for underscores
   " -- provide a- and i-
-  Plug 'kana/vim-textobj-user'                                " https://github.com/kana/vim-textobj-user/wiki
-  Plug 'kana/vim-textobj-entire'                              " entire buffer text object (vae)
-  Plug 'kana/vim-textobj-function'                            " function text object (vaf)
-  Plug 'kana/vim-textobj-indent'                              " for indent level (vai)
-  Plug 'kana/vim-textobj-line'                                " for current line (val)
-  Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }  " ruby block text object (vir)
-  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir','eelixir'] }       " elixir block text object (vie)
-  Plug 'glts/vim-textobj-comment'                             " comment text object (vac)
+  Plug 'kana/vim-textobj-user'                                      " https://github.com/kana/vim-textobj-user/wiki
+  Plug 'kana/vim-textobj-entire'                                    " entire buffer text object (vae)
+  Plug 'kana/vim-textobj-function'                                  " function text object (vaf)
+  Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
+  Plug 'kana/vim-textobj-line'                                      " for current line (val)
+  Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
+  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir','eelixir'] }   " elixir block text object (vie)
+  Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
-  Plug 'machakann/vim-textobj-delimited'                      " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
-  Plug 'gilligan/textobj-lastpaste'                           " - P     for last paste
-  Plug 'mattn/vim-textobj-url'                                " - u     for url
-  Plug 'rhysd/vim-textobj-anyblock'                           " - '', \"\", (), {}, [], <>
-  Plug 'whatyouhide/vim-textobj-xmlattr'                      " - x     for xml
-  Plug 'arthurxavierx/vim-caser'                              " https://github.com/arthurxavierx/vim-caser#usage
-  Plug 'wellle/targets.vim'                                   " improved targets line cin) next parens)
+  Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+  Plug 'gilligan/textobj-lastpaste'                                 " - P     for last paste
+  Plug 'mattn/vim-textobj-url'                                      " - u     for url
+  Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
+  Plug 'whatyouhide/vim-textobj-xmlattr'                            " - x     for xml
+  Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
+  Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 call plug#end()
@@ -478,16 +480,22 @@ augroup elixir
   " autocmd BufReadPost *.html.eex set syntax=html
 
   " ways-to-debug:
-  au FileType elixir,eelixir nnoremap <leader>d orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>i i\|>IO.inspect<ESC>:w<CR>
+  " au FileType elixir,eelixir nnoremap <leader>er :Dispatch !iex -r % -S mix<CR>
+  au FileType elixir,eelixir nnoremap <leader>er :TREPLSendFile<CR>
+  au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ei i\|>IO.inspect<ESC>:w<CR>
 
   " :Eix => open iex with current file compiled
   command! Iex :!iex %<cr>
-  au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
-  au FileType elixir,eelixir nnoremap <leader>ee :!iex -r % -S mix<CR>
+  " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
 
   " au FileType elixir,eelixir nnoremap <c-]> :ALEGoToDefinition<cr>
   " au FileType elixir,eelixir nnoremap <c->> :ALEGoToDefinition<cr>
+
+  " disable endwise for anonymous functions
+  au BufNewFile,BufRead *.{ex,exs}
+        \ let b:endwise_addition = '\=submatch(0)=="fn" ? "end)" : "end"'
 augroup END
 
 " Automatically close vim if only the quickfix window is open
