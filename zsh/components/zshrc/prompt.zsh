@@ -32,7 +32,7 @@ zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
 zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
 zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 
-# NOTE: suggested by osse on #zsh@freenode (presently not working though):
+# NOTE: suggested by osse on irc.freenode.net#zsh (presently not working though):
 # zstyle ':vcs_info:git*+set-message:*' hooks git-conditionally-add-space-to-branch
 # +vi-git-conditionally-add-space-to-branch() { 
 #   hook_com[branch]+="${hook_com[branch]:+}"
@@ -55,80 +55,9 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
   fi
 }
 
-# TODO: need to figure out how to execute this every (n) seconds
-fetch_upstream() {
-  command git -c gc.auto=0 fetch 2>/dev/null &
-	wait $! || return $fail_code
-}
-
-# ASYNC_PROC=0
-# ASYNC_DATA="${TMPPREFIX}-prompt_megalithic"
-# precmd() {
-#   function async() {
-#     fetch_upstream
-#     vcs_info
-#     # save to temp file
-#     printf "%s" "${vcs_info_msg_0_}" > $ASYNC_DATA
-#     # signal parent
-#     kill -s USR1 $$
-#   }
-
-#   # do not clear PROMPT, let it persist
-#   # kill child if necessary
-#   if [[ "${ASYNC_PROC}" != 0 ]]; then
-#     kill -s HUP $ASYNC_PROC >/dev/null 2>&1 || :
-#   fi
-#   # start background computation
-#   async &!
-#   ASYNC_PROC=$!
-# }
-
-# TRAPUSR1() {
-#   # read from temp file
-#   PROMPT='${NEWLINE}$(prompt_path) $(cat $ASYNC_DATA) $(background_process_indicator)${NEWLINE}${return_status} '
-#   # reset proc number
-#   ASYNC_PROC=0
-#   # redisplay
-#   zle && zle reset-prompt
-# }
-
-ASYNC_PROC=0
 precmd() {
-  # TODO: need to figure out how to execute this every (n) seconds
-  async() {
-    # save to temp file
-    printf "%s" "$(fetch_upstream)" > "${HOME}/.zsh_tmp_prompt"
-
-    # signal parent
-    kill -s USR1 $$
-  }
-
-  # do not clear RPROMPT, let it persist
-
-  # kill child if necessary
-  if [[ "${ASYNC_PROC}" != 0 ]]; then
-    kill -s HUP $ASYNC_PROC >/dev/null 2>&1 || :
-  fi
-
-  # start background computation
-  async &!
-  ASYNC_PROC=$!
-
-  # vcs_info
-  # zle && zle .reset-prompt
-}
-
-TRAPUSR1() {
   vcs_info
-  # read from temp file
-  # RPROMPT="$(cat ${HOME}/.zsh_tmp_prompt)"
-
-  # reset proc number
-  ASYNC_PROC=0
-
-  # redisplay
-  zle && zle reset-prompt
-  # zle && zle .reset-prompt
+  zle && { zle -R; zle reset-prompt }
 }
 
 # returns a more preferred truncated path..
@@ -153,30 +82,28 @@ background_process_indicator() {
 }
 
 # # handle vi-mode / prompt_symbol / return code switching..
-# function zle-line-init zle-keymap-select {
-#   # We keep the prompt as a single var, so that reset-prompt redraws the whole thing
-#   # local prompt_char="${${KEYMAP/vicmd/$PROMPT_VICMD_SYMBOL}/(main|viins)/$PROMPT_SYMBOL}"
+function zle-line-init zle-keymap-select {
+  # We keep the prompt as a single var, so that reset-prompt redraws the whole thing
+  local prompt_char="${${KEYMAP/vicmd/$PROMPT_VICMD_SYMBOL}/(main|viins)/$PROMPT_SYMBOL}"
 
-#   # Make prompt_char red if the last executed command failed. This needs to be
-#   # here because outside the function body, precedence breaks it.
-#   return_status_prompt="%(?:%{$fg[green]%}$PROMPT_SYMBOL:%{$fg[red]%}$PROMPT_SYMBOL)"
-#   zle && zle .reset-prompt
-# }
-# zle -N zle-line-init
-# zle -N zle-keymap-select
+  # Make prompt_char red if the last executed command failed. This needs to be
+  # here because outside the function body, precedence breaks it.
+  return_status_prompt="%(?:%{$fg[green]%}$prompt_char:%{$fg[red]%}$prompt_char)"
+  zle && { zle -R; zle reset-prompt }
+}
+zle -N zle-line-init
+zle -N zle-keymap-select
 
-# Redraw prompt when terminal size changes
+# redraw prompt when terminal size changes
 TRAPWINCH() {
   zle && { zle -R; zle reset-prompt }
 }
 
+# prompt with red when things go wrong, otherwise, normal color when things are good
 prompt_status_symbol() {
-  # return_status_prompt="%(?:%{$fg[green]%}$PROMPT_SYMBOL:%{$fg[red]%}$PROMPT_SYMBOL)"
   echo "%(?:%{$fg[green]%}$PROMPT_SYMBOL:%{$fg[red]%}$PROMPT_SYMBOL)"
 }
 
-# source "$DOTS/zsh/components/zshrc/async-git-prompt.plugin.zsh"
-
-PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)$(prompt_status_symbol) '
-# PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)${return_status_prompt} '
-# PROMPT=''
+# render dat prompt
+# PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)$(prompt_status_symbol) '
+PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)${return_status_prompt} '

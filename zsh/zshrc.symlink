@@ -40,7 +40,7 @@ source "$DOTS/zsh/components/zshrc/ssh.zsh"
 source "$DOTS/zsh/components/zshrc/fzf.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.plugin.zsh"
 source "$DOTS/zsh/components/zshrc/syntax-highlighting.plugin.zsh"
-source "$DOTS/zsh/components/zshrc/zsh-vim-mode.plugin.zsh"
+# source "$DOTS/zsh/components/zshrc/zsh-vim-mode.plugin.zsh"
 source "$DOTS/zsh/components/zshrc/asdf.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
