@@ -80,6 +80,8 @@ alias takeover="tmux detach -a"
 alias teama="tmux attach-session -t enbala"
 alias team="teamocil --here enbala"
 alias fmate="unset TMUX tmate"
+alias trw="tmux rename-window"
+alias trs="tmux rename-session"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents

@@ -115,7 +115,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'w0rp/ale'
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
   Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app & yarn install' }
-  Plug 'svermeulen/vim-easyclip'
+  " Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -153,6 +153,7 @@ let g:mapleader = ","                                                           
 
 set background=dark                                                             "Set background to dark
 
+let g:nova_transparent = 1
 silent! colorscheme nova
 
 set termguicolors
@@ -676,6 +677,10 @@ endfunction
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
+
+" ## vim-easyclip
+  let g:EasyClipAutoFormat = 1
+  let g:EasyClipUseCutDefaults = 0 " Leave default vim cut operations alone
 
 " ## codi
   let g:codi#rightalign=0

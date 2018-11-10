@@ -7,9 +7,16 @@ PROMPT_VICMD_SYMBOL="❮"
 PROMPT_BACKGROUND_SYMBOL="❯" # 
 VCS_STAGED_SYMBOL="✱"
 VCS_UNSTAGED_SYMBOL="✚"
-VCS_UNTRACKED_SYMBOL="…"
-VCS_AHEAD_SYMBOL="↑" # ⇡↑
-VCS_BEHIND_SYMBOL="↓" # ⇡↓
+VCS_UNTRACKED_SYMBOL="?" # …
+VCS_AHEAD_SYMBOL="⇡" # ⇡↑
+VCS_BEHIND_SYMBOL="⇡" # ⇡↓
+
+# :: settings for softmoth/zsh-vim-mode
+unset MODE_CURSOR_DEFAULT
+TMUX_PASSTHROUGH=1
+MODE_CURSOR_VICMD="#E6EEF3 block"
+MODE_CURSOR_VIINS="#A8CE93 blinking bar"
+MODE_CURSOR_SEARCH="#D18EC2 steady underline"
 
 setopt prompt_subst
 autoload -Uz vcs_info
@@ -145,25 +152,31 @@ background_process_indicator() {
   echo "$background_indicator"
 }
 
-# handle vi-mode / prompt_symbol / return code switching..
-function zle-line-init zle-keymap-select {
-  # We keep the prompt as a single var, so that reset-prompt redraws the whole thing
-  local prompt_char="${${KEYMAP/vicmd/$PROMPT_VICMD_SYMBOL}/(main|viins)/$PROMPT_SYMBOL}"
+# # handle vi-mode / prompt_symbol / return code switching..
+# function zle-line-init zle-keymap-select {
+#   # We keep the prompt as a single var, so that reset-prompt redraws the whole thing
+#   # local prompt_char="${${KEYMAP/vicmd/$PROMPT_VICMD_SYMBOL}/(main|viins)/$PROMPT_SYMBOL}"
 
-  # Make prompt_char red if the last executed command failed. This needs to be
-  # here because outside the function body, precedence breaks it.
-  return_status_prompt="%(?:%{$fg[green]%}$prompt_char:%{$fg[red]%}$prompt_char)"
-  zle && zle .reset-prompt
-}
-zle -N zle-line-init
-zle -N zle-keymap-select
+#   # Make prompt_char red if the last executed command failed. This needs to be
+#   # here because outside the function body, precedence breaks it.
+#   return_status_prompt="%(?:%{$fg[green]%}$PROMPT_SYMBOL:%{$fg[red]%}$PROMPT_SYMBOL)"
+#   zle && zle .reset-prompt
+# }
+# zle -N zle-line-init
+# zle -N zle-keymap-select
 
 # Redraw prompt when terminal size changes
 TRAPWINCH() {
-  zle && zle -R
+  zle && { zle -R; zle reset-prompt }
+}
+
+prompt_status_symbol() {
+  # return_status_prompt="%(?:%{$fg[green]%}$PROMPT_SYMBOL:%{$fg[red]%}$PROMPT_SYMBOL)"
+  echo "%(?:%{$fg[green]%}$PROMPT_SYMBOL:%{$fg[red]%}$PROMPT_SYMBOL)"
 }
 
 # source "$DOTS/zsh/components/zshrc/async-git-prompt.plugin.zsh"
 
-PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)${return_status_prompt} '
+PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)$(prompt_status_symbol) '
+# PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)${return_status_prompt} '
 # PROMPT=''

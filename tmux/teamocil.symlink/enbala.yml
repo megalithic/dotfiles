@@ -10,7 +10,7 @@ windows:
     panes:
       - commands:
         - ls
-  - name: "services"
+  - name: "vpp"
     root: "~/code/enbala/vpp"
     layout: even-horizontal
     panes:
@@ -18,8 +18,8 @@ windows:
         - bin/start
       - commands:
         - ls
-  - name: "code"
-    root: "~/code/enbala/vpp/ui"
+  - name: "skycentrics"
+    root: "~/code/enbala/skycentrics_adapter"
     focus: true
     panes:
       - commands:
