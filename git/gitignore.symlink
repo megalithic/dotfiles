@@ -31,3 +31,5 @@ public/components/eezy-editor
 bin/rails
 bin/rake
 bin/rspec
+deps
+_build

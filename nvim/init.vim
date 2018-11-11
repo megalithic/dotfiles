@@ -29,7 +29,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
   Plug 'RRethy/vim-illuminate'
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
-  Plug 'jlebray/neoterm'
+  Plug 'kassio/neoterm'
+  Plug 'mklabs/split-term.vim'
   Plug 'benmills/vimux'
 
 " ## Syntax
@@ -71,6 +72,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
+  " Plug 'tpope/vim-vinegar'
   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
@@ -114,8 +116,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
-  Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app & yarn install' }
-  " Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
+  Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
+  Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -326,6 +328,7 @@ set wildignore+=*sass-cache*
 set wildignore+=*cache*
 set wildignore+=*logs*
 set wildignore+=*node_modules/**
+set wildignore+=*deps/**
 set wildignore+=*DS_Store*
 set wildignore+=*.gem
 set wildignore+=log/**
@@ -680,10 +683,33 @@ endfunction
 
 " ## vim-easyclip
   let g:EasyClipAutoFormat = 1
-  let g:EasyClipUseCutDefaults = 0 " Leave default vim cut operations alone
+  let g:EasyClipUseYankDefaults = 0
+  let g:EasyClipUseCutDefaults = 0
+  let g:EasyClipUsePasteDefaults = 0
+  let g:EasyClipEnableBlackHoleRedirect = 0
+  let g:EasyClipUsePasteToggleDefaults = 0
+  let g:EasyClipEnableBlackHoleRedirectForDeleteOperator = 0
+  let g:EasyClipUseSubstituteDefaults = 1
+  "m[motion] or mm to cut
+  "s[motion] or ss to substitute
+  "d[motion] or dd does not yank
+  "c[motion] or cc does not yank
+  "Ctrl+p and Ctrl+n cycles through next and previous yanks
 
 " ## codi
   let g:codi#rightalign=0
+
+" ## netrw
+  " netrw cheatsheet: https://gist.github.com/t-mart/610795fcf7998559ea80
+  let g:netrw_banner = 0
+  let g:netrw_liststyle = 3
+  let g:netrw_browse_split = 4
+  let g:netrw_altv = 1
+  let g:netrw_winsize = 25
+  " augroup ProjectDrawer
+  "   autocmd!
+  "   autocmd VimEnter * :Vexplore
+  " augroup END
 
 " ## vim-devicons
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
@@ -1160,7 +1186,7 @@ endfunction
     " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
     command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
           \ call fzf#vim#grep(
-          \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --hidden --follow --glob "!{.git,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+          \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --hidden --follow --glob "!{.git,deps,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
           \   <bang>0 ? fzf#vim#with_preview('up:60%')
           \           : fzf#vim#with_preview('right:50%', '?'),
           \   <bang>0)
@@ -1375,7 +1401,10 @@ nmap \gt :tab split<cr>:LspDefinition<cr>
 nmap \gs :sp<cr>:LspDefinition<cr>
 nmap \gv :vsp<cr>:LspDefinition<cr>
 
-"
+" # netrw
+nnoremap - :Vexplore<CR>
+nnoremap <F3> :Vexplore<CR>
+
 " Down is really the next line
 nnoremap j gj
 nnoremap k gk
