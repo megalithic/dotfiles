@@ -490,6 +490,7 @@ augroup elixir
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ei i\|>IO.inspect<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
 
   " :Eix => open iex with current file compiled
   command! Iex :!iex %<cr>
@@ -1296,6 +1297,13 @@ let g:tagbar_type_elixir = {
           \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
           \ })
   endif
+  if executable('pyls')
+    au User lsp_setup call lsp#register_server({
+          \ 'name': 'python',
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'pyls']},
+          \ 'whitelist': ['python', 'pythonx'],
+          \ })
+  endif
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
@@ -1307,10 +1315,11 @@ let g:tagbar_type_elixir = {
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
-  call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
+  call ncm2#override_source('ncm2_vim_lsp_python', { 'priority': 9, 'mark': "\uf820"})
   call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
-  call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
+  call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
+  call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect

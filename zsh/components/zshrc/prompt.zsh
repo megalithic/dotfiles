@@ -39,7 +39,7 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 # }
 
 +vi-git-post-backend-updown() {
-  git -c gc.auto=0 fetch 2>/dev/null
+  # git -c gc.auto=0 fetch 2>/dev/null
   git rev-parse @{upstream} >/dev/null 2>&1 || return
 
   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
