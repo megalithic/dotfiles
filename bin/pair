@@ -34,6 +34,9 @@
 command="$(basename "$0")"
 session="pairing"
 ssh_command=""
+# host=$(dig +short myip.opendns.com @resolver1.opendns.com)
+# port=1337
+user="pair"
 
 # Make sure dependencies are installed
 [ ! "$(command -v gh-auth)" ] && printf -- "gh-auth not found (gem install github-auth)\n" && exit 1
@@ -96,12 +99,32 @@ down() {
   tmux kill-session -t $session
 }
 
+tunnel() {
+  DONE=0;
+  while [ $DONE -eq 0 ]; do
+    if [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" != "" && "$(dig +short myip.opendns.com @resolver1.opendns.com))" != "null" ]]; then
+      tunnel_command="ssh -nvNT -R $port:localhost:22 $user@$host"
+      # "ssh -nvNT -R $port:localhost:22 $user@$host"
+      # ssh -nNT -L "$port:localhost:22" "$user@$host"
+
+      echo $host
+      echo $port
+      echo $user
+      echo $tunnel_command
+
+      $tunnel_command
+      DONE=1
+    fi;
+    sleep 0.5;
+  done;
+}
+
 ssh() {
   host="1.tcp.ngrok.io"
   port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
-  user=pair
+  # tunnel
   ssh_command="ssh -p $port $user@$host"
-  printf -- "$ssh_command"
+  echo $ssh_command
 }
 
 info() {

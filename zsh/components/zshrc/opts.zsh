@@ -40,13 +40,13 @@ setopt COMPLETE_ALIASES
 
 
 # ===== Basics
-setopt NO_BEEP # don't beep on error
+setopt NO_BEEP # does not beep on error
 setopt INTERACTIVE_COMMENTS # Allow comments even in interactive shells (especially for Muness)
 
 # ===== Changing Directories
-setopt AUTO_CD # If you type foo, and it isn't a command, and it is a directory in your cdpath, go there
+setopt AUTO_CD # If you type foo, and it isn not a command, and it is a directory in your cdpath, go there
 setopt CDABLEVARS # if argument to cd is the name of a parameter whose value is a valid directory, it will become the current directory
-setopt PUSHD_IGNORE_DUPS # don't push multiple copies of the same directory onto the directory stack
+setopt PUSHD_IGNORE_DUPS # does not push multiple copies of the same directory onto the directory stack
 
 # ===== Expansion and Globbing
 setopt EXTENDED_GLOB # treat #, ~, and ^ as part of patterns for filename generation
@@ -54,16 +54,17 @@ setopt EXTENDED_GLOB # treat #, ~, and ^ as part of patterns for filename genera
 # ===== History
 setopt APPEND_HISTORY # allow multiple terminal sessions to all append to one zsh command history
 setopt EXTENDED_HISTORY # save timestamp of command and duration
-setopt INC_APPEND_HISTORY # Add comamnds as they are typed, don't wait until shell exit
+setopt extendedglob
+setopt INC_APPEND_HISTORY # Add comamnds as they are typed, does not wait until shell exit
 setopt INC_APPEND_HISTORY SHARE_HISTORY  # adds history incrementally and share it across sessions
 setopt HIST_EXPIRE_DUPS_FIRST # when trimming history, lose oldest duplicates first
 setopt HIST_IGNORE_DUPS # Do not write events to history that are duplicates of previous events
 setopt HIST_IGNORE_ALL_DUPS # If a new command line being added to the history list duplicates an older one, the older command is removed from the list (even if it is not the previous event)
 setopt HIST_SAVE_NO_DUPS # When writing out the history file, older commands that duplicate newer ones are omitted.
 setopt HIST_IGNORE_SPACE # remove command line from history list when first character on the line is a space
-setopt HIST_FIND_NO_DUPS # When searching history don't display results already cycled through twice
+setopt HIST_FIND_NO_DUPS # When searching history does not display results already cycled through twice
 setopt HIST_REDUCE_BLANKS # Remove extra blanks from each command line being added to history
-setopt HIST_VERIFY # don't execute, just expand history
+setopt HIST_VERIFY # does not execute, just expand history
 setopt SHARE_HISTORY # imports new commands and appends typed commands to history
 setopt histignoredups
 

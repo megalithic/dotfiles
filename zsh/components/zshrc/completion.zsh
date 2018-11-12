@@ -1,9 +1,13 @@
-# # zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
+# zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
 autoload -Uz compinit
-for dump in ~/.zcompdump(N.mh+24); do
-  compinit
-done
-compinit -C
+
+# REF: https://gist.github.com/ctechols/ca1035271ad134841284#gistcomment-2609770
+compinit -d ~/.zcompdump_dump
+
+# for dump in ~/.zcompdump(N.mh+24); do
+#   compinit
+# done
+# compinit -C
 
 # # zsh speedup (part 2): https://blog.callstack.io/supercharge-your-terminal-with-zsh-8b369d689770
 # autoload -Uz compinit
