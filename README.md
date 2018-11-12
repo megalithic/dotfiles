@@ -38,7 +38,7 @@ all willy-nilly install a stranger's shell scripts. :)
 
 ### Things
 
-A few of the tools I roll with:
+A few of the _must-have_ tools I roll with:
 
 - [homebrew](https://brew.sh/)
 - [hammerspoon](http://www.hammerspoon.org/)
@@ -50,9 +50,10 @@ A few of the tools I roll with:
 - [dankmono nerd font](https://dank.sh)
   * patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
-- [nova](https://github.com/trevordmiller/nova-colors) - pretty much for everything
+- [nova](https://github.com/trevordmiller/nova-colors)
 - [neovim](https://neovim.io/)
 - [zsh](https://www.zsh.org/)
+- [weechat](https://www.weechat.org/)
 
 ### Stuff
 

@@ -26,8 +26,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'itchyny/lightline.vim'
   Plug 'maximbaz/lightline-ale'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
-  Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
-  " Plug 'RRethy/vim-illuminate'
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
   Plug 'benmills/vimux'
   " Plug 'kassio/neoterm'
@@ -176,7 +174,7 @@ if has('termguicolors')
 endif
 
 let g:ruby_host_prog = $HOME."/.asdf/shims/neovim-ruby-host"
-let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
+" let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
 let g:python_host_prog = '/usr/local/bin/python2.7'
 let g:python3_host_prog = '/usr/local/bin/python3'
 
@@ -220,7 +218,7 @@ set pumheight=30                                                                
 set exrc                                                                        "Allow using local vimrc
 set secure                                                                      "Forbid autocmd in local vimrc
 set tagcase=smart                                                               "Use smarcase for tags
-set updatetime=500                                                              "Cursor hold timeout
+set updatetime=300                                                              "Cursor hold timeout
 set synmaxcol=300                                                               "Use syntax highlighting only for 300 columns
 set showbreak=↪ "↳
 
@@ -342,9 +340,6 @@ set shortmess+=c
 augroup vimrc
   au!
 
-  " identLine coloring things
-  au! User indentLine doautocmd indentLine Syntax
-
   " automatically source vim configs
   " au BufWritePost .vimrc,.vimrc.local,init.vim source %
   " au BufWritePost .vimrc.local source %
@@ -444,6 +439,12 @@ augroup vimrc
   au! TermOpen * if &buftype == 'terminal'
         \| set nonumber norelativenumber
         \| endif
+
+  " set up default omnifunc
+  autocmd FileType *
+        \ if &omnifunc == "" |
+        \    setlocal omnifunc=syntaxcomplete#Complete |
+        \ endif
 augroup END
 
 augroup elm
@@ -966,9 +967,6 @@ endfunction
 " # lexima
   " let g:lexima_enable_endwise_rules = 1
 
-" # indentLine
-  let g:indentLine_color_gui = '#616161'
-
 " ## ALE
   let g:ale_enabled = 1
   let g:ale_completion_enabled = 1
@@ -1009,7 +1007,8 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  " let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel/language_server.sh"
+  let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel/language_server.sh"
+  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
@@ -1215,6 +1214,23 @@ let g:tagbar_type_elm = {
       \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
       \ , 'ctagsargs': ''
       \ }
+let g:tagbar_type_elixir = {
+      \ 'ctagstype' : 'elixir',
+      \ 'kinds' : [
+      \ 'f:functions',
+      \ 'functions:functions',
+      \ 'c:callbacks',
+      \ 'd:delegates',
+      \ 'e:exceptions',
+      \ 'i:implementations',
+      \ 'a:macros',
+      \ 'o:operators',
+      \ 'm:modules',
+      \ 'p:protocols',
+      \ 'r:records',
+      \ 't:tests'
+      \ ]
+      \ }
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<c-e>"
@@ -1223,66 +1239,6 @@ let g:tagbar_type_elm = {
   let g:UltiSnipsJumpBackwardTrigger	= "<s-tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
-
-" ## LanguageClient-neovim
-  " let g:LanguageClient_autoStart = 0 " Automatically start language servers.
-  " let g:LanguageClient_loadSettings = 0
-  " let g:LanguageClient_loggingLevel = 'INFO'
-  " " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
-  " " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
-  " let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
-  " let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
-  " let g:LanguageClient_diagnosticsList = v:null
-  " let g:LanguageClient_serverCommands = {}
-
-  " if executable('pyls')
-  "   let g:LanguageClient_serverCommands.python = ['pyls']
-  " endif
-
-  " if executable('typescript-language-server')
-  "   let g:LanguageClient_serverCommands.typescript = ['typescript-language-server', '--stdio']
-  "   let g:LanguageClient_serverCommands.typescriptreact = ['typescript-language-server', '--stdio']
-  "   let g:LanguageClient_serverCommands['typescript.tsx'] = ['typescript-language-server', '--stdio']
-  " endif
-
-  " if executable('javascript-typescript-langserver')
-  "   let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
-  "   let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
-  " endif
-
-  " if executable('solargraph')
-  "   let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
-  " endif
-
-  " if executable('lua-lsp')
-  "   let g:LanguageClient_serverCommands.lua = ['lua-lsp']
-  " endif
-
-  " if filereadable($HOME."/.elixir-ls/rel/language_server.sh")
-  "   let g:LanguageClient_serverCommands.elixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
-  "   let g:LanguageClient_serverCommands.eelixir = [$HOME."/.elixir-ls/rel/language_server.sh"]
-  " endif
-
-  " if executable('css-languageserver')
-  "   let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
-  "   let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
-  "   let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
-  "   let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
-  " endif
-
-  " if executable('html-languageserver')
-  "   let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
-  " endif
-
-  " if executable('json-languageserver')
-  "   let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
-  " endif
-
-" " nnoremap <F5> :call LanguageClient_contextMenu()<CR>
-" " " Or map each action separately
-" " nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-" " nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
-" " nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
 
 " ## async/vim-lsp
   let g:lsp_auto_enable = 1
@@ -1376,7 +1332,6 @@ let g:tagbar_type_elm = {
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
-inoremap <C-c> <ESC>
 " details about endwise + ncm2 here: https://github.com/roxma/nvim-completion-manager/issues/49#issuecomment-285923119
 imap <C-X><CR>   <CR><Plug>AlwaysEnd
 inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
@@ -1762,6 +1717,10 @@ cnoremap <C-e> <End>
 
 map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
 
+
+" handy escapes; folks that i pair with uese these
+inoremap <C-c> <ESC>
+inoremap jj <ESC>
 
 " }}}
 " ================ Highlights and Colors {{{
