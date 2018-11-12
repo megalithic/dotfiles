@@ -28,6 +28,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
   Plug 'benmills/vimux'
+  Plug 'yuttie/comfortable-motion.vim'
   " Plug 'kassio/neoterm'
   " Plug 'mklabs/split-term.vim'
 
@@ -1726,6 +1727,7 @@ inoremap jj <ESC>
 " }}}
 " ================ Blink {{{
 
+" REF: https://github.com/sedm0784/vimconfig/blob/master/_vimrc#L173
 " Modified version of Damian Conway's Die Blinkënmatchen: highlight matches
 "
 " This is how long you want the blinking to last in milliseconds. If you're
@@ -1881,8 +1883,13 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
   hi ALEError term=NONE guibg=#cc6666 guifg=#C5D4DD ctermbg=167
 
-  hi QuickScopePrimary guifg='#afff5f' gui=underline ctermfg=155 cterm=underline
-  hi QuickScopeSecondary guifg='#5fffff' gui=underline ctermfg=81 cterm=underline
+  hi QuickScopePrimary guifg=#afff5f gui=underline ctermfg=155 cterm=underline
+  hi QuickScopeSecondary guifg=#5fffff gui=underline ctermfg=81 cterm=underline
+
+  hi DiffAdd guifg=#A8CE93
+  hi DiffDelete guifg=#DF8C8C
+  " hi DiffChange guifg=#F2C38F
+  " hi DiffText guifg=#F2C38F
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
