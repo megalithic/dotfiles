@@ -27,11 +27,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'maximbaz/lightline-ale'
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'Yggdroot/indentLine', { 'on': 'IndentLinesEnable' }
-  Plug 'RRethy/vim-illuminate'
+  " Plug 'RRethy/vim-illuminate'
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
-  Plug 'kassio/neoterm'
-  Plug 'mklabs/split-term.vim'
   Plug 'benmills/vimux'
+  " Plug 'kassio/neoterm'
+  " Plug 'mklabs/split-term.vim'
 
 " ## Syntax
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
@@ -109,7 +109,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
   Plug 'junegunn/gv.vim', { 'on': [ 'GV' ] }
-  Plug 'sodapopcan/vim-twiggy'
+  " Plug 'sodapopcan/vim-twiggy'
   " Plug 'christoomey/vim-conflicted'
   Plug 'rhysd/conflict-marker.vim'
   Plug 'tpope/vim-eunuch'
@@ -176,7 +176,7 @@ if has('termguicolors')
 endif
 
 let g:ruby_host_prog = $HOME."/.asdf/shims/neovim-ruby-host"
-" let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host" " presently installed via yarn
+let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
 let g:python_host_prog = '/usr/local/bin/python2.7'
 let g:python3_host_prog = '/usr/local/bin/python3'
 
@@ -346,11 +346,11 @@ augroup vimrc
   au! User indentLine doautocmd indentLine Syntax
 
   " automatically source vim configs
-  au BufWritePost .vimrc,.vimrc.local,init.vim source %
-  au BufWritePost .vimrc.local source %
+  " au BufWritePost .vimrc,.vimrc.local,init.vim source %
+  " au BufWritePost .vimrc.local source %
 
   " save all files on focus lost, ignoring warnings about untitled buffers
-  " autocmd FocusLost * silent! wa
+  autocmd FocusLost * silent! wa
 
   au BufWritePre * call StripTrailingWhitespaces()                     "Auto-remove trailing spaces
   au FocusGained,BufEnter * checktime                                  "Refresh file when vim gets focus
@@ -379,7 +379,6 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
-  " au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx set ts=2 sts=2 sw=2
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
   au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
 
@@ -1010,7 +1009,7 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel/language_server.sh"
+  " let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel/language_server.sh"
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
@@ -1288,7 +1287,7 @@ let g:tagbar_type_elm = {
 " ## async/vim-lsp
   let g:lsp_auto_enable = 1
   let g:lsp_signs_enabled = 0             " enable diagnostic signs / we use ALE for now
-  let g:lsp_diagnostics_echo_cursor = 0   " enable echo under cursor when in normal mode
+  let g:lsp_diagnostics_echo_cursor = 1   " enable echo under cursor when in normal mode
   let g:lsp_signs_error = {'text': '⤫'}
   let g:lsp_signs_warning = {'text': '~'}
   let g:lsp_signs_hint = {'text': '?'}

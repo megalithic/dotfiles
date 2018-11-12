@@ -41,7 +41,7 @@ _gen_fzf_default_opts
 
 # -- using ripgrep/rg
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_CTRL_T_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
 export FZF_TMUX_HEIGHT='20%'
 # thieved from: https://github.com/evantravers/dotfiles/blob/master/zsh/.zshrc#L86
 # FZF_DEFAULT_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
@@ -49,6 +49,6 @@ export FZF_TMUX_HEIGHT='20%'
 
 
 # -- these must be set *after* loading fzf:
-export FZF_COMPLETION_TRIGGER=''
-bindkey '^G' fzf-completion
-bindkey '^I' $fzf_default_completion
+# export FZF_COMPLETION_TRIGGER=''
+# bindkey '^G' fzf-completion
+# bindkey '^I' $fzf_default_completion

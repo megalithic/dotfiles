@@ -38,10 +38,10 @@ source "$DOTS/zsh/components/zshrc/ssh.zsh"
 
 # plugin config
 source "$DOTS/zsh/components/zshrc/fzf.zsh"
+source "$DOTS/zsh/components/zshrc/asdf.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.plugin.zsh"
 source "$DOTS/zsh/components/zshrc/syntax-highlighting.plugin.zsh"
 # source "$DOTS/zsh/components/zshrc/zsh-vim-mode.plugin.zsh"
-source "$DOTS/zsh/components/zshrc/asdf.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
@@ -52,7 +52,8 @@ fi
 
 source "$DOTS/zsh/components/zshrc/prompt.zsh"
 
+# leave this commented out so fzf won't try to keep adding it on updates
+# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 # uncomment to for zsh profiling
 # zprof
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
