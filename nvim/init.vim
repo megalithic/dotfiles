@@ -1329,6 +1329,7 @@ let g:tagbar_type_elixir = {
 " ================ Custom Mappings {{{
 
 " # ncm2 + ultisnips
+" for details around ultisnips and lsp snippets: https://github.com/ncm2/ncm2-ultisnips/issues/6#issuecomment-410186456
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"

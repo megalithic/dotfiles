@@ -17,5 +17,5 @@ I use weechat's `secure` facilities to keep sensitive data encrypted.
 See my [`Brewfile`](https://github.com/megalithic/dotfiles/blob/master/homebrew/Brewfile)
 for the options used for installing `weechat` via homebrew.
 
-This nested `weechat.symlink` folder gets auto-symlinked to `~/.weechat` as part
+The nested `weechat.symlink` folder gets auto-symlinked to `~/.weechat` as part
 of running [`_dotup`](https://github.com/megalithic/dotfiles/blob/master/bin/_dotup).
