@@ -31,6 +31,10 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 # Set standby delay to 24 hours (default is 1 hour)
 # sudo pmset -a standbydelay 86400
 
+# Resolves issue of sleeping draining battery
+# REF: https://discussions.apple.com/thread/8368663?answerId=33336883022#33336883022
+sudo pmset -b tcpkeepalive 0
+
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=" "
 

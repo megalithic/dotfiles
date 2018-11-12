@@ -3,7 +3,7 @@
 # :: le prompte
 NEWLINE=$'\n'
 PROMPT_SYMBOL="❯"
-PROMPT_VICMD_SYMBOL="❮"
+PROMPT_VICMD_SYMBOL="%F{244}❮%{$reset_color%}"
 PROMPT_BACKGROUND_SYMBOL="❯" # 
 VCS_STAGED_SYMBOL="✱"
 VCS_UNSTAGED_SYMBOL="✚"
@@ -39,7 +39,9 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 # }
 
 +vi-git-post-backend-updown() {
+  git -c gc.auto=0 fetch 2>/dev/null
   git rev-parse @{upstream} >/dev/null 2>&1 || return
+
   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
   hook_com[branch]+="%f" # end coloring
   (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL$x[2]"
