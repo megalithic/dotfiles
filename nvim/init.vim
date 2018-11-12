@@ -1888,6 +1888,8 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
 
   hi DiffAdd guifg=#A8CE93
   hi DiffDelete guifg=#DF8C8C
+  hi DiffAdded guifg=#A8CE93
+  hi DiffRemoved guifg=#DF8C8C
   " hi DiffChange guifg=#F2C38F
   " hi DiffText guifg=#F2C38F
 " }}}
