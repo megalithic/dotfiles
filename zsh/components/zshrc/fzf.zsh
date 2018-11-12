@@ -1,7 +1,6 @@
 #!/bin/zsh
 
 if [ -n "$(command -v fzf)" ]; then
-  echo "fzf!!"
   # -- setup fzf
   # consider these handy fzf functions: https://github.com/junegunn/dotfiles/blob/master/bashrc#L267
   [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
