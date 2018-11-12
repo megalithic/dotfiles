@@ -9,7 +9,9 @@ neovim
 javascript-typescript-langserver
 taskbook
 typescript-language-server
+vim-node-rpc
 vscode-css-languageserver-bin
 vscode-html-languageserver-bin
 vscode-json-languageserver-bin
 yarn
+
