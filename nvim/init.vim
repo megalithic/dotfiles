@@ -130,7 +130,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
   Plug 'kana/vim-textobj-line'                                      " for current line (val)
   Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
-  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir','eelixir'] }   " elixir block text object (vie)
+  Plug 'duff/vim-textobj-elixir'                                    " eliXir block text object (vix/vax)
   Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
   Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
