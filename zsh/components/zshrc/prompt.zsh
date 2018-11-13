@@ -65,7 +65,7 @@ precmd() {
 prompt_path() {
   local prompt_path=''
   local pwd="${PWD/#$HOME/~}"
-  if [[ "$pwd" == (#m)[/~] ]]; then
+  if [[ "$pwd" == (#m)[~] ]]; then # also, if you want both `/` and `~`, then [/~]
     prompt_path="~"
   else
     prompt_path="%{$fg[blue]%}${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}%{$reset_color%}"
