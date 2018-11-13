@@ -142,11 +142,13 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left-length 100
-set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-ssh)#(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
+# set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-ssh)#(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
+set -g status-left "#[fg=green]#S #{prefix_highlight}"
 
 # -- statusbar right
 set -g status-right-length 80
-set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
+# set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
+set -g status-right "#(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
 
 
 # TMUX PLUGIN MANAGER
