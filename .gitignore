@@ -41,3 +41,7 @@ tags
 .elixir_ls
 nvim/nvim-python.log_*
 nvim/*.log
+**/logs
+**/*.log
+*.log
+weechat/**/plugins.xml.gz

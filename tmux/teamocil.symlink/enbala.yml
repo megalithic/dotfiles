@@ -2,6 +2,7 @@ name: "enbala"
 windows:
   - name: "chats"
     root: "~/.dotfiles"
+    focus: true
     panes:
       - commands:
         - irc
@@ -15,12 +16,10 @@ windows:
     layout: even-horizontal
     panes:
       - commands:
-        - bin/start
-      - commands:
         - ls
+        # - bin/start
   - name: "skycentrics"
     root: "~/code/enbala/skycentrics_adapter"
-    focus: true
     panes:
       - commands:
         - ls
