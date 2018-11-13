@@ -28,7 +28,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
   Plug 'benmills/vimux'
-  " Plug 'yuttie/comfortable-motion.vim'
   " Plug 'kassio/neoterm'
   " Plug 'mklabs/split-term.vim'
 
@@ -38,6 +37,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'lilydjwg/colorizer'
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
+  " # elixir/elm magics
   Plug 'Zaptic/elm-vim', { 'for': ['elm'] }
   Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
   " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
@@ -60,12 +60,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  " Plug '~/code/plugins/ncm2-elm', { 'for': ['elm'], 'do': 'npm i -g elm-oracle' }
   Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
   Plug 'ncm2/ncm2-tagprefix'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
-  " Plug 'autozimu/LanguageClient-neovim', { 'branch': 'next', 'do': 'bash install.sh' }
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
 
 " ## Project/Code Navigation
@@ -787,8 +785,8 @@ endfunction
 
 " ## ALE
   let g:ale_enabled = 1
-  let g:ale_completion_enabled = 1
-  let g:ale_lint_delay = 1000
+  let g:ale_completion_enabled = 0
+  let g:ale_lint_delay = 500
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
@@ -803,8 +801,8 @@ endfunction
         \   'json': ['prettier'],
         \   'python': ['pyls'],
         \   'ruby': [],
-        \   'eelixir': ['credo', 'elixir-ls', 'mix'],
-        \   'elixir': ['credo', 'elixir-ls', 'mix'],
+        \   'eelixir': ['credo', 'elixir-ls', 'dialyxer', 'mix'],
+        \   'elixir': ['credo', 'elixir-ls', 'dialyxer', 'mix'],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -825,13 +823,15 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel/language_server.sh"
+  let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel"
   let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_enter = 1
   let g:ale_fix_on_save = 1
   let g:ale_lint_on_save = 1
+  let g:ale_virtualtext_cursor = 1
+  let g:ale_virtualtext_prefix = "❯ "
 
 " ## vim-jsx
   let g:jsx_ext_required = 0
@@ -844,14 +844,14 @@ endfunction
   " let g:vim_markdown_new_list_item_indent = 2
   " let g:vim_markdown_conceal = 0
   " let g:vim_markdown_folding_disabled = 1
-  " let g:markdown_fenced_languages = [
-  "       \ 'javascript', 'js=javascript', 'json=javascript',
-  "       \ 'typescript', 'typescriptreact=typescript',
-  "       \ 'css', 'scss', 'sass',
-  "       \ 'ruby', 'erb=eruby',
-  "       \ 'python',
-  "       \ 'haml', 'html',
-  "       \ 'bash=sh', 'zsh', 'elm', 'elixir']
+  let g:markdown_fenced_languages = [
+        \ 'javascript', 'js=javascript', 'json=javascript',
+        \ 'typescript', 'typescriptreact=typescript',
+        \ 'css', 'scss', 'sass',
+        \ 'ruby', 'erb=eruby',
+        \ 'python',
+        \ 'haml', 'html',
+        \ 'bash=sh', 'zsh', 'elm', 'elixir']
 
 " ## vim-json
   let g:vim_json_syntax_conceal = 0
@@ -872,46 +872,6 @@ endfunction
   let g:js_indent_log = 1
   let g:used_javascript_libs = 'underscore,chai,react,flux,mocha,redux,lodash,angularjs,angularui,enzyme,ramda,d3'
 
-" ## nvim-typescript
-  let g:nvim_typescript#completion_mark=''
-  let g:nvim_typescript#default_mappings=0
-  let g:nvim_typescript#type_info_on_hold=0
-  let g:nvim_typescript#max_completion_detail=50
-  let g:nvim_typescript#javascript_support=1
-  let g:nvim_typescript#signature_complete=0
-  let g:nvim_typescript#diagnosticsEnable=0
-  let $NVIM_NODE_LOG_FILE='~/.config/nvim/nvim-node.log'
-  let $NVIM_NODE_LOG_LEVEL='warn'
-  let g:nvim_typescript#kind_symbols = {
-      \ 'keyword': 'keyword',
-      \ 'class': '',
-      \ 'interface': '',
-      \ 'script': 'script',
-      \ 'module': '',
-      \ 'local class': 'local class',
-      \ 'type': '',
-      \ 'enum': '',
-      \ 'enum member': '',
-      \ 'alias': '',
-      \ 'type parameter': 'type param',
-      \ 'primitive type': 'primitive type',
-      \ 'var': '',
-      \ 'local var': '',
-      \ 'property': '',
-      \ 'let': '',
-      \ 'const': '',
-      \ 'label': 'label',
-      \ 'parameter': 'param',
-      \ 'index': 'index',
-      \ 'function': '',
-      \ 'local function': 'local function',
-      \ 'method': '',
-      \ 'getter': '',
-      \ 'setter': '',
-      \ 'call': 'call',
-      \ 'constructor': '',
-      \}
-
 " ## elm-vim
   let g:elm_jump_to_error = 0
   let g:elm_make_output_file = "/dev/null"
@@ -929,12 +889,6 @@ endfunction
   let g:elixir_maxpreviews = 20
   let g:elixir_docpreview = 1
 
-" ## alchemist.vim
-  let g:alchemist_tag_disable       = 1 "Use Universal ctags instead
-  let g:alchemist_iex_term_size     = 10
-  let g:alchemist_tag_map           = '<C-]>'
-  let g:alchemist_tag_stack_map     = '<C-T>'
-
 " ## colorizer
   let g:colorizer_auto_filetype='css,scss'
   let g:colorizer_colornames = 1
@@ -946,9 +900,6 @@ endfunction
 " ## vim-surround
   let g:surround_indent = 0
   " let g:surround_no_insert_mappings = 1
-
-" ## vim-sandwich
-  runtime macros/sandwich/keymap/surround.vim " loads vim-surround keymaps
 
 " ## vim-test
   function! SplitStrategy(cmd)
@@ -973,7 +924,6 @@ endfunction
         \ 'ctrl-v': 'vsplit',
         \ 'enter': 'vsplit'
         \ }
-
   let g:fzf_colors = {
         \ 'fg':      ['fg', 'Normal'],
         \ 'bg':      ['bg', 'Normal'],
@@ -1051,10 +1001,10 @@ let g:tagbar_type_elixir = {
       \ }
 
 " ## ultisnips
-  let g:UltiSnipsExpandTrigger = "<c-e>"
+  let g:UltiSnipsExpandTrigger = "<C-e>"
   let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
   let g:UltiSnipsJumpForwardTrigger	= "<tab>"
-  let g:UltiSnipsJumpBackwardTrigger	= "<s-tab>"
+  let g:UltiSnipsJumpBackwardTrigger	= "<S-tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
@@ -1092,7 +1042,7 @@ let g:tagbar_type_elixir = {
   endif
   if executable('solargraph')
     au User lsp_setup call lsp#register_server({
-          \ 'name': 'solargraph',
+          \ 'name': 'ruby',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
           \ 'initialization_options': {"diagnostics": "true"},
           \ 'whitelist': ['ruby', 'eruby'],
@@ -1127,7 +1077,7 @@ let g:tagbar_type_elixir = {
   let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_look#source = {'priority': 2, 'popup_limit': 5}
-  call ncm2#override_source('ncm2_vim_lsp_solargraph', { 'priority': 9, 'mark': "\ue23e"})
+  call ncm2#override_source('ncm2_vim_lsp_ruby', { 'priority': 9, 'mark': "\ue23e"})
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
   call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
@@ -1902,6 +1852,7 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   hi DiffDelete guifg=#DF8C8C
   hi DiffAdded guifg=#A8CE93
   hi DiffRemoved guifg=#DF8C8C
+  " hi ErrorMsg guifg=#DF8C8C
   " hi DiffChange guifg=#F2C38F
   " hi DiffText guifg=#F2C38F
 " }}}
