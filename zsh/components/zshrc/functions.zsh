@@ -2,24 +2,6 @@
 # Functions
 #
 
-# Whenever a command is not found, prompt the user to install it via homebrew.
-# command_not_found_handler is a built-in Zsh hook, called automatically.
-# ref: https://github.com/henrebotha/dotfiles/blob/master/.zshrc
-command_not_found_handler() {
-  echo "Command $1 not found. Install it with b for brew, g for gem, n for npm."
-  read -sk answer
-  if [[ $answer = "b" || $answer = "B" ]]; then
-    echo "brew install $1"
-    brew install "$1"
-  elif [[ $answer = "g" || $answer = "G" ]]; then
-    echo "gem install $1"
-    gem install "$1"
-  elif [[ $answer = "n" || $answer = "N" ]]; then
-    echo "npm install $1"
-    npm install -g "$1"
-  fi
-}
-
 # HASS / HA / HOMEASSISTANT
 # -----------------------------------------------------------------------------
 lamp() {
