@@ -1124,14 +1124,19 @@ nnoremap <leader>lf :LspDocumentFormat<CR>
 nnoremap <leader>lh :LspHover<CR>
 nnoremap <leader>lr :LspReferences<CR>
 nnoremap <leader>li :LspImplementation<CR>
-nnoremap <leader>] :LspNextError<CR>
-nnoremap <leader>[ :LspPreviousError<CR>
+" nnoremap <leader>] :LspNextError<CR>
+" nnoremap <leader>[ :LspPreviousError<CR>
+
 " found here: https://github.com/andyl/base_util/blob/master/cfg/_vimrc_base#L127-L132
 " and here: https://github.com/prabirshrestha/vim-lsp/issues/169#issuecomment-419720171
 nmap \gd :LspDefinition<cr>
 nmap \gt :tab split<cr>:LspDefinition<cr>
 nmap \gs :sp<cr>:LspDefinition<cr>
 nmap \gv :vsp<cr>:LspDefinition<cr>
+
+" # ALE
+nnoremap <silent> <C-[> <Plug>(ale_previous_wrap)
+nnoremap <silent> <C-]> <Plug>(ale_next_wrap)
 
 " # netrw
 nnoremap - :Vexplore<CR>
