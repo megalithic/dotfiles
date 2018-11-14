@@ -1838,9 +1838,9 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
-  hi ALEError term=NONE guibg=#DF8C8C guifg=#C5D4DD
-  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#222222
-  hi ALEVirtualTextError guibg=#DF8C8C guifg=#C5D4DD
+  hi ALEError term=NONE guibg=#DF8C8C guifg=#333333
+  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333
+  hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333
 
   hi link LspErrorText ALEErrorSign
   hi link LspWarningText ALEWarningSign
