@@ -801,9 +801,9 @@ endfunction
         \   'json': ['prettier'],
         \   'python': ['pyls'],
         \   'ruby': [],
-        \   'eelixir': ['credo', 'elixir-ls', 'dialyxer', 'mix'],
-        \   'elixir': ['credo', 'elixir-ls', 'dialyxer', 'mix'],
         \ }                                                                       "Lint js with eslint
+  " \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
+  " \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -824,14 +824,15 @@ endfunction
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
   let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel"
-  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
+  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:false}}
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
+  let g:ale_lint_on_insert_leave = 1
   let g:ale_lint_on_enter = 1
   let g:ale_fix_on_save = 1
   let g:ale_lint_on_save = 1
   let g:ale_virtualtext_cursor = 1
-  let g:ale_virtualtext_prefix = "❯ "
+  let g:ale_virtualtext_prefix = "❯❯ "
 
 " ## vim-jsx
   let g:jsx_ext_required = 0
@@ -1059,8 +1060,8 @@ let g:tagbar_type_elixir = {
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
           \ 'cmd': {server_info->[&shell, &shellcmdflag, expand("~/.elixir-ls/rel/language_server.sh")]},
-          \ 'whitelist': ['elixir','eelixir'],
           \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
+          \ 'whitelist': ['elixir','eelixir'],
           \ })
   endif
   if executable('pyls')
@@ -1837,6 +1838,10 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
+  hi ALEError term=NONE guibg=#DF8C8C guifg=#C5D4DD
+  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#222222
+  hi ALEVirtualTextError guibg=#DF8C8C guifg=#C5D4DD
+
   hi link LspErrorText ALEErrorSign
   hi link LspWarningText ALEWarningSign
   hi link LspError ALEError
@@ -1848,12 +1853,11 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
 
   hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
-  hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
-  hi ALEError term=NONE guibg=#cc6666 guifg=#C5D4DD ctermbg=167
 
   hi QuickScopePrimary guifg=#afff5f gui=underline ctermfg=155 cterm=underline
   hi QuickScopeSecondary guifg=#5fffff gui=underline ctermfg=81 cterm=underline
 
+  hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
   hi DiffAdd guifg=#A8CE93
   hi DiffDelete guifg=#DF8C8C
   hi DiffAdded guifg=#A8CE93
