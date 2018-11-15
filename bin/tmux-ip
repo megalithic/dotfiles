@@ -1,23 +1,26 @@
 #!/usr/bin/env zsh
 
 # display wan and lan ip addresses only when we're not pairing
-if [[ $(tmux display-message -p '#S') != 'pairing' ]]; then
+# $(tmux display-message -p '#S') != 'pairing' &&
   while true
   do
-    wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
-    # external=$(wget -q -O - "http://myexternalip.com/raw")
+    if [[ $(do-not-disturb status) == "off" ]]; then
+      wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
+      # external=$(wget -q -O - "http://myexternalip.com/raw")
 
-    tun=""
-    [[ -n $(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}') ]] && tun=$(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}')
-    [[ -n $(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}') ]] && tun=$(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}')
+      tun=""
+      [[ -n $(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}') ]] && tun=$(ifconfig utun0 | ag 'inet ' | awk '{print "["$2"] "}')
+      [[ -n $(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}') ]] && tun=$(ifconfig utun3 | ag 'inet ' | awk '{print "["$2"] "}')
 
-    lan=""
-    [[ -n $(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-    [[ -n $(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-    [[ -n $(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-    [[ -n $(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+      lan=""
+      [[ -n $(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en0 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+      [[ -n $(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en1 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+      [[ -n $(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en7 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+      [[ -n $(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}') ]] && lan=$(ifconfig en8 | ag 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
 
-    echo "#[fg=brightblue]礪$wan #[fg=colour136]$tun#[fg=white] #[fg=yellow]$lan"
-    sleep 30
+      echo "#[fg=brightblue]礪$wan #[fg=colour136]$tun#[fg=white] #[fg=yellow]$lan"
+      sleep 30
+    else
+      echo "--"
+    fi
   done
-fi
