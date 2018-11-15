@@ -79,7 +79,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
-  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  Plug 'rhysd/clever-f.vim'
+  " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
 
 " ## Utils
@@ -372,7 +373,7 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## JavaScript
-  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css RainbowParentheses
+  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css,elixir,eelixir,elm RainbowParentheses
   au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
   au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
 
@@ -489,6 +490,7 @@ augroup elixir
   au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ei i\|>IO.inspect<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
+  au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
 
   " :Eix => open iex with current file compiled
   command! Iex :!iex %<cr>
@@ -742,6 +744,10 @@ endfunction
   let g:sneak#use_ic_scs = 1
   let g:sneak#absolute_dir = 1
 
+" ## clever-f
+  let g:clever_f_across_no_line = 1
+  let g:clever_f_timeout_ms = 3000
+
 " ## quick-scope
   let g:qs_enable = 1
   let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
@@ -802,8 +808,6 @@ endfunction
         \   'python': ['pyls'],
         \   'ruby': [],
         \ }                                                                       "Lint js with eslint
-  " \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
-  " \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -925,21 +929,23 @@ endfunction
         \ 'ctrl-v': 'vsplit',
         \ 'enter': 'vsplit'
         \ }
-  let g:fzf_colors = {
-        \ 'fg':      ['fg', 'Normal'],
-        \ 'bg':      ['bg', 'Normal'],
-        \ 'hl':      ['fg', 'SpellBad'],
-        \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-        \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-        \ 'hl+':     ['fg', 'CursorLineNr'],
-        \ 'info':    ['fg', 'PreProc'],
-        \ 'border':  ['fg', 'Ignore'],
-        \ 'prompt':  ['fg', 'Conditional'],
-        \ 'pointer': ['fg', 'Exception'],
-        \ 'marker':  ['fg', 'Keyword'],
-        \ 'spinner': ['fg', 'Label'],
-        \ 'header':  ['fg', 'Comment']
-        \ }
+
+  " " nova-vim
+  " let g:fzf_colors = {
+  "       \ "fg":      ["fg", "Normal"],
+  "       \ "bg":      ["bg", "Normal"],
+  "       \ "hl":      ["fg", "ALEWarning"],
+  "       \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
+  "       \ "bg+":     ["bg", "CursorLine", "CursorColumn"],
+  "       \ "hl+":     ["fg", "IncSearch"],
+  "       \ "info":    ["fg", "IncSearch"],
+  "       \ "border":  ["fg", "Ignore"],
+  "       \ "prompt":  ["fg", "Comment"],
+  "       \ "pointer": ["fg", "IncSearch"],
+  "       \ "marker":  ["fg", "IncSearch"],
+  "       \ "spinner": ["fg", "IncSearch"],
+  "       \ "header":  ["fg", "IncSearch"]
+  "       \}
 
   if executable("rg")
     " ## rg
@@ -1004,8 +1010,8 @@ let g:tagbar_type_elixir = {
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<C-e>"
   let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
-  let g:UltiSnipsJumpForwardTrigger	= "<tab>"
-  let g:UltiSnipsJumpBackwardTrigger	= "<S-tab>"
+  let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
+  let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
@@ -1127,13 +1133,6 @@ nnoremap <leader>li :LspImplementation<CR>
 " nnoremap <leader>] :LspNextError<CR>
 " nnoremap <leader>[ :LspPreviousError<CR>
 
-" found here: https://github.com/andyl/base_util/blob/master/cfg/_vimrc_base#L127-L132
-" and here: https://github.com/prabirshrestha/vim-lsp/issues/169#issuecomment-419720171
-nmap \gd :LspDefinition<cr>
-nmap \gt :tab split<cr>:LspDefinition<cr>
-nmap \gs :sp<cr>:LspDefinition<cr>
-nmap \gv :vsp<cr>:LspDefinition<cr>
-
 " # ALE
 nnoremap <silent> <C-[> <Plug>(ale_previous_wrap)
 nnoremap <silent> <C-]> <Plug>(ale_next_wrap)
@@ -1152,7 +1151,7 @@ nnoremap Y y$
 " Copy to system clipboard
 vnoremap <C-c> "+y
 " Paste from system clipboard with Ctrl + v
-inoremap <C-v> <Esc>"+p
+inoremap <C-v> <ESC>"+p
 nnoremap <Leader>p "0p
 vnoremap <Leader>p "0p
 nnoremap <Leader>h viw"0p
@@ -1191,8 +1190,8 @@ nnoremap <Leader>F :call Search(1)<CR>
 " nnoremap <Leader>m :History<CR>
 
 " Indenting in visual mode
-xnoremap <s-tab> <gv
-xnoremap <tab> >gv
+xnoremap <S-Tab> <gv
+xnoremap <Tab> >gv
 
 " Center highlighted search
 nnoremap n nzz
@@ -1349,7 +1348,7 @@ noremap <silent><leader>W :w !sudo tee %<CR>
 
 " ## Vim process management
 " background VIM
-vnoremap <c-z> <esc>zv`<ztgv
+vnoremap <c-z> <ESC>zv`<ztgv
 
 nnoremap / /\v
 vnoremap / /\v
@@ -1429,10 +1428,10 @@ vnoremap L g_
 " make the tab key match bracket pairs
 silent! unmap [%
 silent! unmap ]%
-map <tab> %
-noremap <tab> %
-nnoremap <tab> %
-vnoremap <tab> %
+map <Tab> %
+noremap <Tab> %
+nnoremap <Tab> %
+vnoremap <Tab> %
 " Better mark jumping (line + col)
 nnoremap ' <nop>
 " Remap VIM 0 to first non-blank character
@@ -1457,8 +1456,8 @@ nnoremap =- V`]=
 nnoremap <CR><CR> o<ESC>
 
 " push newline
-nnoremap <S-CR>   mzO<Esc>j`z
-nnoremap <C-CR>   mzo<Esc>k`z
+nnoremap <S-CR>   mzO<ESC>j`z
+nnoremap <C-CR>   mzo<ESC>k`z
 " spawn newline
 inoremap <S-CR>     <C-O>O
 inoremap <C-CR>     <C-O>o
@@ -1485,7 +1484,7 @@ nnoremap vv ^vg_
 nnoremap J mzJ`z
 " Split line (sister to [J]oin lines above)
 " The normal use of S is covered by cc, so don't worry about shadowing it.
-nnoremap S i<CR><esc>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
+nnoremap S i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 
 " ## splitjoin.vim
 " let g:splitjoin_split_mapping = ''
@@ -1497,9 +1496,9 @@ nnoremap S i<CR><esc>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 
 " Insert mode movements
 " Ctrl-e: Go to end of line
-" inoremap <c-e> <esc>A
+" inoremap <c-e> <ESC>A
 " Ctrl-a: Go to begin of line
-" inoremap <c-a> <esc>I
+" inoremap <c-a> <ESC>I
 
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>

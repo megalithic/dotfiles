@@ -269,6 +269,10 @@ alias resolve="git mergetool --tool=nvimdiff"
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"
 
 
+# elixir
+# -----------------------------------------------------------------------------
+alias imix="iex -S mix"
+
 # RUBY/RAILS
 # -----------------------------------------------------------------------------
 alias be="bundle exec"
