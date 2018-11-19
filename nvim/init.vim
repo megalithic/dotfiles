@@ -44,7 +44,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
   Plug 'mhinz/vim-mix-format'
   Plug 'mattreduce/vim-mix'
-
+  Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
+  Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
   Plug 'sheerun/vim-polyglot'
 
 " ## Completion
@@ -57,18 +58,18 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-cssomni'
   " Plug 'yuki-ycino/ncm2-dictionary'
   " Plug 'filipekiss/ncm2-look.vim'
-  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
-  " Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
-  " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
+  Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
   Plug 'ncm2/ncm2-tagprefix'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
-  Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css completion
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
+  " Plug 'dyng/ctrlsf.vim'
   " Plug 'tpope/vim-vinegar'
   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
@@ -89,9 +90,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
-  " FIXME: currently, MatchTagAlways is breaking graphql queries in TS/TSX files.
-  " Plug 'Valloric/MatchTagAlways', { 'for': ['haml', 'html', 'xml', 'erb', 'eruby', 'javascript.jsx'] } " highlights the opening/closing tags for the block you're in
-  Plug 'jiangmiao/auto-pairs'
+  Plug 'jiangmiao/auto-pairs' " or Plug 'rstacruz/vim-closer'
   Plug 'tpope/vim-endwise'
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
   Plug 'tpope/vim-commentary' " (un)comment code
@@ -99,23 +98,19 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'sickill/vim-pasta' " context-aware pasting
   Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
   Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
-  Plug 'thinca/vim-ref'
+  " Plug 'thinca/vim-ref' " TODO: do i need this?
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
   Plug 'tpope/vim-surround'
-  " Plug 'machakann/vim-sandwich'
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
   Plug 'junegunn/gv.vim', { 'on': [ 'GV' ] }
-  " Plug 'sodapopcan/vim-twiggy'
-  " Plug 'christoomey/vim-conflicted'
   Plug 'rhysd/conflict-marker.vim'
   Plug 'tpope/vim-eunuch'
-  " Plug 'dyng/ctrlsf.vim'
   Plug 'w0rp/ale'
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
-  Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }}
+  Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': { -> mkdp#util#install() }}
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -129,14 +124,13 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
   Plug 'kana/vim-textobj-line'                                      " for current line (val)
   Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
-  Plug 'duff/vim-textobj-elixir'                                    " eliXir block text object (vix/vax)
+  Plug 'duff/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }  " eliXir block text object (vix/vax)
   Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
   Plug 'michaeljsmith/vim-indent-object'
   Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
   Plug 'gilligan/textobj-lastpaste'                                 " - P     for last paste
   Plug 'mattn/vim-textobj-url'                                      " - u     for url
   Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
-  Plug 'whatyouhide/vim-textobj-xmlattr'                            " - x     for xml
   Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
   Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
@@ -488,7 +482,7 @@ augroup elixir
   au FileType elixir,eelixir nnoremap <leader>er :TREPLSendFile<CR>
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ei i\|>IO.inspect<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ei o\|>IO.inspect<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
   au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
 
@@ -930,22 +924,22 @@ endfunction
         \ 'enter': 'vsplit'
         \ }
 
-  " " nova-vim
-  " let g:fzf_colors = {
-  "       \ "fg":      ["fg", "Normal"],
-  "       \ "bg":      ["bg", "Normal"],
-  "       \ "hl":      ["fg", "ALEWarning"],
-  "       \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
-  "       \ "bg+":     ["bg", "CursorLine", "CursorColumn"],
-  "       \ "hl+":     ["fg", "IncSearch"],
-  "       \ "info":    ["fg", "IncSearch"],
-  "       \ "border":  ["fg", "Ignore"],
-  "       \ "prompt":  ["fg", "Comment"],
-  "       \ "pointer": ["fg", "IncSearch"],
-  "       \ "marker":  ["fg", "IncSearch"],
-  "       \ "spinner": ["fg", "IncSearch"],
-  "       \ "header":  ["fg", "IncSearch"]
-  "       \}
+  " nova-vim
+  let g:fzf_colors = {
+        \ "fg":      ["fg", "Normal"],
+        \ "bg":      ["bg", "Normal"],
+        \ "hl":      ["fg", "ALEWarning"],
+        \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
+        \ "bg+":     ["bg", "CursorLine", "CursorColumn"],
+        \ "hl+":     ["fg", "ALEWarning"],
+        \ "info":    ["fg", "Comment"],
+        \ "border":  ["fg", "Ignore"],
+        \ "prompt":  ["fg", "Comment"],
+        \ "pointer": ["fg", "IncSearch"],
+        \ "marker":  ["fg", "IncSearch"],
+        \ "spinner": ["fg", "IncSearch"],
+        \ "header":  ["fg", "IncSearch"]
+        \}
 
   if executable("rg")
     " ## rg
@@ -1176,7 +1170,11 @@ nnoremap p p`]
 vnoremap y y`]
 vnoremap p p`]
 
-" tagbar
+" # clever-f
+nnoremap ; <Plug>(clever-f-repeat-forward)
+nnoremap , <Plug>(clever-f-repeat-back)
+
+" # tagbar
 " nnoremap <f4> :TagbarToggle<CR>
 
 " Filesearch plugin map for searching in whole folder

@@ -106,9 +106,18 @@ ssh_connected() {
   [ $cmd = "ssh" ] || [ $cmd = "sshpass" ]
 }
 
-user=$(get_info "whoami")
-hostname=$(get_info "hostname")
 
-if [[ $hostname != "replibook" ]]; then
-  echo "#[fg=colour245]  $user@${hostname}"
-fi
+# while true
+# do
+  user=$(get_info "whoami")
+  hostname=$(get_info "hostname")
+
+  if [[ $hostname != "replibook" ]]; then
+    echo "#[fg=colour245]  $user@${hostname}"
+  else
+    echo ""
+  fi
+
+#   echo "#[fg=colour245]  $user@${hostname}"
+#   sleep 30
+# done
