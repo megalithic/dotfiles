@@ -21,14 +21,17 @@ help() {
 }
 
 on() {
-  sleep 7
+  sleep 1
   defaults -currentHost write "${HOME}/Library/Preferences/ByHost/com.apple.notificationcenterui" doNotDisturb -boolean true
   defaults -currentHost write "${HOME}/Library/Preferences/ByHost/com.apple.notificationcenterui" doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +000\"`"
+  # launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist 2> /dev/null
   killall NotificationCenter
 }
 
 off() {
   defaults -currentHost write "${HOME}/Library/Preferences/ByHost/com.apple.notificationcenterui" doNotDisturb -boolean false
+  # launchctl load -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist 2> /dev/null
+  # open /System/Library/CoreServices/NotificationCenter.app/
   killall NotificationCenter
 }
 

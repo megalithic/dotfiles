@@ -80,8 +80,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
-  Plug 'rhysd/clever-f.vim'
-  " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+  " Plug 'rhysd/clever-f.vim'
+  Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
 
 " ## Utils
@@ -169,8 +169,8 @@ endif
 
 let g:ruby_host_prog = $HOME."/.asdf/shims/neovim-ruby-host"
 " let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
-let g:python_host_prog = '/usr/local/bin/python2.7'
-let g:python3_host_prog = '/usr/local/bin/python3'
+" let g:python_host_prog = '/usr/local/bin/python2.7'
+" let g:python3_host_prog = '/usr/local/bin/python3'
 
 set title                                                                       "change the terminal's title
 set number                                                                      "Line numbers are good
@@ -738,9 +738,9 @@ endfunction
   let g:sneak#use_ic_scs = 1
   let g:sneak#absolute_dir = 1
 
-" ## clever-f
-  let g:clever_f_across_no_line = 1
-  let g:clever_f_timeout_ms = 3000
+" " ## clever-f
+"   let g:clever_f_across_no_line = 1
+"   let g:clever_f_timeout_ms = 3000
 
 " ## quick-scope
   let g:qs_enable = 1
@@ -1170,9 +1170,9 @@ nnoremap p p`]
 vnoremap y y`]
 vnoremap p p`]
 
-" # clever-f
-nnoremap ; <Plug>(clever-f-repeat-forward)
-nnoremap , <Plug>(clever-f-repeat-back)
+" " # clever-f
+" nnoremap ; <Plug>(clever-f-repeat-forward)
+" nnoremap , <Plug>(clever-f-repeat-back)
 
 " # tagbar
 " nnoremap <f4> :TagbarToggle<CR>
@@ -1403,8 +1403,8 @@ nmap cw ce
 nmap dw de
 
 " ## Convenience rebindings
-noremap  <Leader>; :!
-noremap  <Leader>: :<Up>
+noremap <leader>; :!
+noremap <leader>: :<Up>
 
 " remap q for recording to Q
 nnoremap Q q
@@ -1856,8 +1856,8 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
   hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
 
-  hi QuickScopePrimary guifg=#afff5f gui=underline ctermfg=155 cterm=underline
-  hi QuickScopeSecondary guifg=#5fffff gui=underline ctermfg=81 cterm=underline
+  hi QuickScopePrimary guifg=#DF8C8C gui=underline ctermfg=155 cterm=underline
+  hi QuickScopeSecondary guifg=#F2C38F gui=underline ctermfg=81 cterm=underline
 
   hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
   hi DiffAdd guifg=#A8CE93
