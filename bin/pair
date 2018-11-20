@@ -11,7 +11,7 @@
 #   1.)  have tmux installed and setup
 #   2.)  have the github-auth gem installed
 #   3.)  have ngrok and have the proper tunnel setup, with remote-addr support.
-#   4.)  optionally, you can install `do-not-disturb-cli` (`npm i -g do-not-disturb-cli`) to have pair automatically set your DND status on macOS
+#   4.)  optionally, you have my `dnd` bin to handle auto-setting your do-not-disturb status when pairing
 #   4a.) fancy icons will show up if you're using a fully nerd-fonts patched terminal font.
 #
 # Assuming this is good, then you can add users via their github usernames,
@@ -73,7 +73,7 @@ up() {
     add "$user"
   done
 
-  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
+  [ -x "$(command -v dnd)" ] && dnd on
 
   tmux new -s $session -d
   tmux switch -t $session
@@ -94,7 +94,7 @@ up() {
 }
 
 down() {
-  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
+  [ -x "$(command -v dnd)" ] && dnd off
   pkill -9 -f ngrok
   tmux kill-session -t $session
 }
