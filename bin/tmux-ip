@@ -4,7 +4,7 @@
 # $(tmux display-message -p '#S') != 'pairing' &&
   while true
   do
-    if [[ $(do-not-disturb status) == "off" ]]; then
+    if [[ $(dnd status) == "off" ]]; then
       wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
       # external=$(wget -q -O - "http://myexternalip.com/raw")
 
@@ -21,6 +21,6 @@
       echo "#[fg=brightblue]礪$wan #[fg=colour136]$tun#[fg=white] #[fg=yellow]$lan"
       sleep 30
     else
-      echo "--"
+      echo "-"
     fi
   done

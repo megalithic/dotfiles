@@ -88,6 +88,7 @@ brew 'ncdu'
 brew 'ncurses'
 brew 'neovim', args: ['with-lua', 'with-perl', 'with-ruby']
 brew 'nmap'
+brew 'nnn'
 brew 'noti'
 brew 'openssl'
 brew 'p7zip'

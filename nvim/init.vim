@@ -30,6 +30,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'benmills/vimux'
   " Plug 'kassio/neoterm'
   " Plug 'mklabs/split-term.vim'
+  " Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 
 " ## Syntax
   Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
@@ -39,7 +40,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
   " # elixir/elm magics
   Plug 'Zaptic/elm-vim', { 'for': ['elm'] }
-  Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
+  " Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
   " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
   Plug 'mhinz/vim-mix-format'
@@ -61,37 +62,43 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
-  Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
-  Plug 'ncm2/ncm2-tagprefix'
+  " Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
+  " Plug 'ncm2/ncm2-tagprefix'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
 
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
+  Plug 'justinmk/vim-dirvish' " TODO: needs testing
   " Plug 'dyng/ctrlsf.vim'
-  " Plug 'tpope/vim-vinegar'
-  Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  " Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
   Plug 'AndrewRadev/splitjoin.vim'
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
+  " Plug 'junegunn/vim-easy-align' " TODO: needs testing / https://github.com/junegunn/vim-easy-align#quick-start-guide
+  Plug 'markonm/traces.vim' " TODO: needs testing
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
-  " Plug 'rhysd/clever-f.vim'
+  " Plug 'rhysd/clever-f.vim' " ; and , usage not working
   Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
 
 " ## Utils
+  Plug 'tyru/capture.vim', { 'on': ['Capture'] }
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
+  Plug 'tpope/vim-characterize' " ga on a character to see special things (hex, etc)
+  Plug 'guns/xterm-color-table.vim', { 'on': ['XtermColorTable'] } " #, t, f
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
   Plug 'jiangmiao/auto-pairs' " or Plug 'rstacruz/vim-closer'
-  Plug 'tpope/vim-endwise'
+  Plug 'cohama/lexima.vim'
+  " Plug 'tpope/vim-endwise'
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
   Plug 'tpope/vim-commentary' " (un)comment code
   Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
@@ -101,6 +108,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'thinca/vim-ref' " TODO: do i need this?
   " Plug 'Raimondi/delimitMate'
   Plug 'andymass/vim-matchup'
+  " Plug 'machakann/vim-sandwich' " TODO: needs testing
   Plug 'tpope/vim-surround'
   Plug 'tpope/vim-repeat'
   Plug 'tpope/vim-fugitive' | Plug 'tpope/vim-rhubarb' " required for some fugitive things
@@ -376,8 +384,11 @@ augroup vimrc
   " make sure `complete` works as expected for CSS class names whithout
   " messing with motions (eg. '.foo-bar__baz') and we make sure all
   " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
+  "
+  " FIXME: not sure we want these?
   au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
   au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
+  "
   " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
   au FileType css,css.scss,sass,scss setl iskeyword+=-
   " au FileType scss set iskeyword+=-
@@ -466,13 +477,15 @@ augroup elm
     au FileType elm nn <leader>ef :Dispatch bin/format<CR>
   endif
 
+  au FileType elm setl iskeyword+=_
   " au FileType elm nn <C-c> :bd!<CR>
   au FileType elm setlocal omnifunc=lsp#complete
 augroup END
 
 augroup elixir
   au!
-  au FileType elixir,eelixir setlocal matchpairs=(:),{:},[:]
+  au FileType elixir,eelixir setl matchpairs=(:),{:},[:]
+  au FileType elixir,eelixir setl iskeyword+=_
 
   " Enable html syntax highlighting in all .eex files
   " autocmd BufReadPost *.html.eex set syntax=html
@@ -695,6 +708,9 @@ endfunction
 " ## codi
   let g:codi#rightalign=0
 
+" vim-dirvish
+  let g:dirvish_mode = ':sort ,^.*[\/],'
+
 " ## netrw
   " netrw cheatsheet: https://gist.github.com/t-mart/610795fcf7998559ea80
   let g:netrw_banner = 0
@@ -739,8 +755,8 @@ endfunction
   let g:sneak#absolute_dir = 1
 
 " " ## clever-f
-"   let g:clever_f_across_no_line = 1
-"   let g:clever_f_timeout_ms = 3000
+  " let g:clever_f_across_no_line = 1
+  " let g:clever_f_timeout_ms = 3000
 
 " ## quick-scope
   let g:qs_enable = 1
@@ -781,7 +797,7 @@ endfunction
   let g:endwise_no_mappings = 1
 
 " # lexima
-  " let g:lexima_enable_endwise_rules = 1
+  let g:lexima_enable_endwise_rules = 1
 
 " ## ALE
   let g:ale_enabled = 1
@@ -974,32 +990,32 @@ endfunction
 "   let g:gen_tags#gtags_auto_gen = 1
 
 " ## tagbar
-let g:tagbar_type_elm = {
-      \   'ctagstype':'elm'
-      \ , 'kinds':['h:header', 'i:import', 't:type', 'f:function', 'e:exposing']
-      \ , 'sro':'&&&'
-      \ , 'kind2scope':{ 'h':'header', 'i':'import'}
-      \ , 'sort':0
-      \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
-      \ , 'ctagsargs': ''
-      \ }
-let g:tagbar_type_elixir = {
-      \ 'ctagstype' : 'elixir',
-      \ 'kinds' : [
-      \ 'f:functions',
-      \ 'functions:functions',
-      \ 'c:callbacks',
-      \ 'd:delegates',
-      \ 'e:exceptions',
-      \ 'i:implementations',
-      \ 'a:macros',
-      \ 'o:operators',
-      \ 'm:modules',
-      \ 'p:protocols',
-      \ 'r:records',
-      \ 't:tests'
-      \ ]
-      \ }
+" let g:tagbar_type_elm = {
+"       \   'ctagstype':'elm'
+"       \ , 'kinds':['h:header', 'i:import', 't:type', 'f:function', 'e:exposing']
+"       \ , 'sro':'&&&'
+"       \ , 'kind2scope':{ 'h':'header', 'i':'import'}
+"       \ , 'sort':0
+"       \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
+"       \ , 'ctagsargs': ''
+"       \ }
+" let g:tagbar_type_elixir = {
+"       \ 'ctagstype' : 'elixir',
+"       \ 'kinds' : [
+"       \ 'f:functions',
+"       \ 'functions:functions',
+"       \ 'c:callbacks',
+"       \ 'd:delegates',
+"       \ 'e:exceptions',
+"       \ 'i:implementations',
+"       \ 'a:macros',
+"       \ 'o:operators',
+"       \ 'm:modules',
+"       \ 'p:protocols',
+"       \ 'r:records',
+"       \ 't:tests'
+"       \ ]
+"       \ }
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<C-e>"
@@ -1128,12 +1144,20 @@ nnoremap <leader>li :LspImplementation<CR>
 " nnoremap <leader>[ :LspPreviousError<CR>
 
 " # ALE
-nnoremap <silent> <C-[> <Plug>(ale_previous_wrap)
-nnoremap <silent> <C-]> <Plug>(ale_next_wrap)
+nmap <silent> <C-[> <Plug>(ale_previous_wrap)
+nmap <silent> <C-]> <Plug>(ale_next_wrap)
 
 " # netrw
 nnoremap - :Vexplore<CR>
 nnoremap <F3> :Vexplore<CR>
+
+" # vim-dirvish
+nnoremap <silent> - :vnew<CR>:Dirvish %:p:h<CR>
+" nnoremap <silent> <leader>d :Dirvish %:p:h<CR>
+" nnoremap <silent> <leader>D :Dirvish<CR>
+
+" # vim-characterize
+nmap <silent> <leader>gc <Plug>(characterize)
 
 " Down is really the next line
 nnoremap j gj
@@ -1171,8 +1195,8 @@ vnoremap y y`]
 vnoremap p p`]
 
 " " # clever-f
-" nnoremap ; <Plug>(clever-f-repeat-forward)
-" nnoremap , <Plug>(clever-f-repeat-back)
+" nmap ; <Plug>(clever-f-repeat-forward)
+" nmap , <Plug>(clever-f-repeat-back)
 
 " # tagbar
 " nnoremap <f4> :TagbarToggle<CR>
@@ -1501,12 +1525,18 @@ nnoremap S i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
+" get the syntax group under the cursor
 map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
 
+" Recall command-line history.
+cnoremap            <C-p>           <Up>
+cnoremap            <C-n>           <Down>
 
 " handy escapes; folks that i pair with uese these
 inoremap <C-c> <ESC>
 inoremap jj <ESC>
+inoremap jk <ESC>
+inoremap kj <ESC>
 
 " }}}
 " ================ Lightline/statusbar {{{
