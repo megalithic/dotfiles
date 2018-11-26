@@ -6,19 +6,18 @@
   do
     if [[ $(dnd status) == "off" ]]; then
       wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
-      # external=$(wget -q -O - "http://myexternalip.com/raw")
 
       tun=""
-      [[ -n $(ifconfig utun0 | rg 'inet ') ]] && tun=$(ifconfig utun0 | rg 'inet ' | awk '{print "["$2"] "}')
-      [[ -n $(ifconfig utun1 | rg 'inet ') ]] && tun=$(ifconfig utun1 | rg 'inet ' | awk '{print "["$2"] "}')
-      [[ -n $(ifconfig utun2 | rg 'inet ') ]] && tun=$(ifconfig utun2 | rg 'inet ' | awk '{print "["$2"] "}')
-      [[ -n $(ifconfig utun3 | rg 'inet ') ]] && tun=$(ifconfig utun3 | rg 'inet ' | awk '{print "["$2"] "}')
+      for i in {0..3}
+      do
+        [[ -n $(ifconfig utun$i | rg 'inet ') ]] && tun=$(ifconfig utun$i | rg 'inet ' | awk '{print "["$2"] "}')
+      done
 
       lan=""
-      [[ -n $(ifconfig en0 | rg 'inet ') ]] && lan=$(ifconfig en0 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-      [[ -n $(ifconfig en1 | rg 'inet ') ]] && lan=$(ifconfig en1 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-      [[ -n $(ifconfig en7 | rg 'inet ') ]] && lan=$(ifconfig en7 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-      [[ -n $(ifconfig en8 | rg 'inet ') ]] && lan=$(ifconfig en8 | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+      for i in {0..8}
+      do
+        [[ -n $(ifconfig en$i | rg 'inet ') ]] && lan=$(ifconfig en$i | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+      done
 
       [[ -n $wan ]] && wan="#[fg=brightblue]礪$wan"
       [[ -n $tun ]] && tun="#[fg=colour136]\uf982$tun"
@@ -27,6 +26,6 @@
       echo "$wan$tun $lan"
       sleep 30
     else
-      echo "#[fg=colour246]<redacted>"
+      echo ""
     fi
   done
