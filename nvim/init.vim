@@ -140,6 +140,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'mattn/vim-textobj-url'                                      " - u     for url
   Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
   Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
+  Plug 'chaoren/vim-wordmotion'                                     " https://github.com/chaoren/vim-wordmotion#more-useful-word-motions-for-vim
   Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
@@ -1154,7 +1155,7 @@ nnoremap - :Vexplore<CR>
 nnoremap <F3> :Vexplore<CR>
 
 " # vim-dirvish
-nnoremap <silent> - :vnew<CR>:Dirvish %:p:h<CR>
+nnoremap <silent> - :Dirvish %:p:h<CR>
 " nnoremap <silent> <leader>d :Dirvish %:p:h<CR>
 " nnoremap <silent> <leader>D :Dirvish<CR>
 
