@@ -6,6 +6,7 @@ git+https://github.com/SeTeM/pync.git
 websocket-client
 saws
 neovim
+pynvim
 pygments
 setuptools
 solargraph-utils.py

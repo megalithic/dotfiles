@@ -72,6 +72,9 @@ prompt_path() {
   fi
 
   echo "$prompt_path"
+  # echo "%{$fg[blue]%}$pwd%{$reset_color%}"
+  # echo "%{$fg[blue]%}%-53<...<%~%<<%{$reset_color%}"
+  # echo "%{$fg[blue]%}%3~%{$reset_color%}"
 }
 
 # returns a fancy indicator when there are running background jobs..

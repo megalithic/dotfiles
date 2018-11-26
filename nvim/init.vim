@@ -70,7 +70,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 " ## Project/Code Navigation
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
-  Plug 'justinmk/vim-dirvish' " TODO: needs testing
+  " Plug 'justinmk/vim-dirvish' " TODO: needs testing
   " Plug 'dyng/ctrlsf.vim'
   " Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
@@ -80,7 +80,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/incsearch.vim'                             " Incremental search
   Plug 'haya14busa/incsearch-fuzzy.vim'                       " Fuzzy incremental search
   " Plug 'junegunn/vim-easy-align' " TODO: needs testing / https://github.com/junegunn/vim-easy-align#quick-start-guide
-  Plug 'markonm/traces.vim' " TODO: needs testing
+  " Plug 'markonm/traces.vim' " TODO: needs testing
   Plug 'osyo-manga/vim-anzu'                                  " Show search count
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
   " Plug 'rhysd/clever-f.vim' " ; and , usage not working
@@ -88,11 +88,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'justinmk/vim-sneak' " https://github.com/justinmk/vim-sneak / NOTE: need to see if you can pre-highlight possible letters
 
 " ## Utils
-  Plug 'tyru/capture.vim', { 'on': ['Capture'] }
+  " Plug 'tyru/capture.vim', { 'on': ['Capture'] }
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
   Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
-  Plug 'tpope/vim-characterize' " ga on a character to see special things (hex, etc)
-  Plug 'guns/xterm-color-table.vim', { 'on': ['XtermColorTable'] } " #, t, f
+  " Plug 'tpope/vim-characterize' " ga on a character to see special things (hex, etc)
+  " Plug 'guns/xterm-color-table.vim', { 'on': ['XtermColorTable'] } " #, t, f
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
@@ -373,6 +373,11 @@ augroup vimrc
     au  FileType fzf set laststatus=0 | au BufLeave,WinLeave <buffer> set laststatus=2
   endif
 
+  "
+  " FIXME: not sure we want these?
+  " au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
+  " au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
+
   " ----------------------------------------------------------------------------
   " ## JavaScript
   au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css,elixir,eelixir,elm RainbowParentheses
@@ -385,13 +390,8 @@ augroup vimrc
   " messing with motions (eg. '.foo-bar__baz') and we make sure all
   " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
   "
-  " FIXME: not sure we want these?
-  au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
-  au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
-  "
   " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
   au FileType css,css.scss,sass,scss setl iskeyword+=-
-  " au FileType scss set iskeyword+=-
   au FileType css,css.scss,sass,scss setl formatoptions+=croql
 
   " ----------------------------------------------------------------------------
@@ -816,6 +816,8 @@ endfunction
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
         \   'python': ['pyls'],
+        \   'elixir': ['mix', 'credo', 'elixir-ls'],
+        \   'eelixir': ['mix', 'credo', 'elixir-ls'],
         \   'ruby': [],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
@@ -1534,9 +1536,9 @@ cnoremap            <C-n>           <Down>
 
 " handy escapes; folks that i pair with uese these
 inoremap <C-c> <ESC>
-inoremap jj <ESC>
-inoremap jk <ESC>
-inoremap kj <ESC>
+" inoremap jj <ESC>
+" inoremap jk <ESC>
+" inoremap kj <ESC>
 
 " }}}
 " ================ Lightline/statusbar {{{

@@ -41,6 +41,7 @@ source "$DOTS/zsh/components/zshrc/fzf.zsh"
 # source "$DOTS/zsh/components/zshrc/asdf.zsh"
 source "$DOTS/zsh/components/zshrc/zlua.zsh"
 source "$DOTS/zsh/components/zshrc/autosuggestions.plugin.zsh"
+# source "$DOTS/zsh/components/zshrc/zsh-autosuggestions.zsh" # <- (newer version) breaks prompt things
 # source "$DOTS/zsh/components/zshrc/syntax-highlighting.plugin.zsh"
 source "$DOTS/zsh/components/zshrc/fsh/fast-syntax-highlighting.plugin.zsh"
 # source "$DOTS/zsh/components/zshrc/zsh-vim-mode.plugin.zsh"
