@@ -30,9 +30,9 @@ if [ -n "$(command -v fzf)" ]; then
     --extended
     --bind ctrl-j:ignore,ctrl-k:ignore
     --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
-    --color=spinner:$color0C,hl:$color0D
-    --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
-    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D
+    --color=spinner:$color0C,hl:$color06
+    --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
+    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0E
     "
     # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
     # --no-height

@@ -2,30 +2,30 @@
 
 # display wan and lan ip addresses only when we're not pairing
 # $(tmux display-message -p '#S') != 'pairing' &&
-  while true
-  do
-    if [[ $(dnd status) == "off" ]]; then
-      wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
+while true
+do
+  if [[ $(dnd status) == "off" ]]; then
+    wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
 
-      tun=""
-      for i in {0..3}
-      do
-        [[ -n $(ifconfig utun$i | rg 'inet ') ]] && tun=$(ifconfig utun$i | rg 'inet ' | awk '{print "["$2"] "}')
-      done
+    tun=""
+    for i in {0..3}
+    do
+      [[ -n $(ifconfig utun$i | rg 'inet ') ]] && tun=$(ifconfig utun$i | rg 'inet ' | awk '{print "["$2"]"}')
+    done
 
-      lan=""
-      for i in {0..8}
-      do
-        [[ -n $(ifconfig en$i | rg 'inet ') ]] && lan=$(ifconfig en$i | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
-      done
+    lan=""
+    for i in {0..8}
+    do
+      [[ -n $(ifconfig en$i | rg 'inet ') ]] && lan=$(ifconfig en$i | rg 'inet ' | awk '$2 ~ /^[[:blank:]]*192/ {print $2}')
+    done
 
-      [[ -n $wan ]] && wan="#[fg=brightblue]礪$wan"
-      [[ -n $tun ]] && tun="#[fg=colour136]\uf982$tun"
-      [[ -n $lan ]] && lan="#[fg=white] #[fg=yellow]$lan"
+    [[ -n $wan ]] && wan="#[fg=brightblue]礪$wan"
+    [[ -n $tun ]] && tun="#[fg=colour136]\uf982$tun"
+    [[ -n $lan ]] && lan="#[fg=yellow] $lan"
 
-      echo "$wan$tun $lan"
-      sleep 30
-    else
-      echo ""
-    fi
-  done
+    echo "$wan$tun $lan"
+    sleep 30
+  else
+    echo ""
+  fi
+done

@@ -2,8 +2,8 @@
 
 while true
 do
-  dnd_status=$(do-not-disturb status)
+  dnd_status=$(dnd status)
   dnd_label=$([ "$dnd_status" == "on" ] && echo "DND" || echo "")
   echo "$dnd_label"
-  sleep 5
+  sleep 30
 done

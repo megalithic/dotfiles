@@ -53,6 +53,7 @@ alias pubkey="more ~/.ssh/id_rsa.pub | pbcopy | echo '=> Public key copied to pa
 alias unixts="date +%s"
 # alias exit="exit; tmux select-pane -P bg=default"
 alias xit="exit"
+alias q="exit"
 alias please='sudo $(fc -ln -1)'
 alias count='wc -l'
 alias dirsize="du -sh * | sort -n"

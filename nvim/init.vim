@@ -1,13 +1,15 @@
-" ===========================================================================
+" ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 "
 "   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
 "   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > nvim/init.min.vim
 "   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
 "   Brought to you by: Seth Messer / @megalithic
 "
-" ===========================================================================
+" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+" ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
-" ================ Plugins {{{
+" ░░░░░░░░░░░░░░░ Plugins {{{
 
 if empty(glob('~/.config/nvim/autoload/plug.vim'))
   silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
@@ -28,6 +30,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ryanoasis/vim-devicons' " has to be last according to docs
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
   Plug 'benmills/vimux'
+  Plug 'Yggdroot/indentLine'
   " Plug 'kassio/neoterm'
   " Plug 'mklabs/split-term.vim'
   " Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
@@ -68,6 +71,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
 
 " ## Project/Code Navigation
+  Plug '/usr/local/opt/fzf'
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
   " Plug 'justinmk/vim-dirvish' " TODO: needs testing
@@ -150,7 +154,7 @@ endif
 filetype plugin indent on
 
 "}}}
-" ================ General Config/Setup {{{
+" ░░░░░░░░░░░░░░░ General Config/Settings {{{
 
 let g:mapleader = ","                                                           "Change leader to a comma
 
@@ -284,7 +288,7 @@ iab Dashbarod Dashboard
 iab canavs canvas
 
 " }}}
-" ================ Turn Off Swap Files {{{
+" ░░░░░░░░░░░░░░░ Turn Off Swap Files {{{
 
 set noswapfile
 set nobackup
@@ -292,7 +296,7 @@ set nowb
 set backupcopy=yes "HMR things - https://parceljs.org/hmr.html#safe-write
 
 " }}}
-" ================ Persistent Undo {{{
+" ░░░░░░░░░░░░░░░ Persistent Undo {{{
 
 " Keep undo history across sessions, by storing in file.
 silent !mkdir ~/.config/nvim/undo > /dev/null 2>&1
@@ -300,14 +304,14 @@ set undodir=~/.config/nvim/undo
 set undofile
 
 " }}}
-" ================ Scrolling {{{
+" ░░░░░░░░░░░░░░░ Scrolling {{{
 
 set scrolloff=8                                                                 "Start scrolling when we're 8 lines away from margins
 set sidescrolloff=15
 set sidescroll=5
 
 " }}}
-" ================ Indentation {{{
+" ░░░░░░░░░░░░░░░ Indentation {{{
 
 set shiftwidth=2
 set softtabstop=2
@@ -318,7 +322,7 @@ set nofoldenable
 " set foldmethod=syntax
 
 " }}}
-" ================ Completion {{{
+" ░░░░░░░░░░░░░░░ Completion {{{
 
 set wildmode=list:full
 set wildignore=*.o,*.obj,*~                                                     "stuff to ignore when tab completing
@@ -339,7 +343,12 @@ set wildignore+=*.png,*.jpg,*.gif
 set shortmess+=c
 
 " }}}
-" ================ Autocommands {{{
+" ░░░░░░░░░░░░░░░ Commands {{{
+
+command! -bar -nargs=0 SudoWrite :silent exe 'write !sudo tee % >/dev/null' | silent edit!
+
+" }}}
+" ░░░░░░░░░░░░░░░ Autocommands {{{
 augroup vimrc
   au!
 
@@ -374,10 +383,21 @@ augroup vimrc
     au  FileType fzf set laststatus=0 | au BufLeave,WinLeave <buffer> set laststatus=2
   endif
 
+  " Auto enter insert mode in popup terminal
+  autocmd BufWinEnter,WinEnter popup-term startinsert
+
+  " When terminal buffer ends allow to close it
+  autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
+  autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
+  au! TermOpen * setlocal nonumber norelativenumber
+  au! TermOpen * if &buftype == 'terminal'
+        \| set nonumber norelativenumber
+        \| endif
+
   "
   " FIXME: not sure we want these?
-  " au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
-  " au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
+  au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
+  au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
 
   " ----------------------------------------------------------------------------
   " ## JavaScript
@@ -441,11 +461,6 @@ augroup vimrc
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au Filetype gitcommit exe BufEnterCommit()
 
-  au! TermOpen * setlocal nonumber norelativenumber
-  au! TermOpen * if &buftype == 'terminal'
-        \| set nonumber norelativenumber
-        \| endif
-
   " set up default omnifunc
   autocmd FileType *
         \ if &omnifunc == "" |
@@ -501,13 +516,13 @@ augroup elixir
   au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
 
   " :Eix => open iex with current file compiled
-  command! Iex :!iex %<cr>
+  command! Iex :!iex -S mix %<cr>
   " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
 
   " au FileType elixir,eelixir nnoremap <c-]> :ALEGoToDefinition<cr>
   " au FileType elixir,eelixir nnoremap <c->> :ALEGoToDefinition<cr>
 
-  " disable endwise for anonymous functions
+  " disable endwise for anonymous fn in elixir
   au BufNewFile,BufRead *.{ex,exs}
         \ let b:endwise_addition = '\=submatch(0)=="fn" ? "end)" : "end"'
 augroup END
@@ -531,7 +546,7 @@ augroup MakeQuickFixPrettier
 augroup END
 
 " }}}
-" ================ Functions {{{
+" ░░░░░░░░░░░░░░░ Functions {{{
 
 " Scratch buffer
 function! ScratchOpen()
@@ -547,6 +562,28 @@ function! ScratchOpen()
   else
     execute 'buffer ' . scr_bufnr
   endif
+endfunction
+
+" Open persistant scratch buffer
+function! OpenScratch() abort
+  edit ~/.local/share/nvim/scratch.md
+  setlocal bufhidden=delete autowriteall
+endfunction
+
+" Make current window golden ratio sized
+function! GoldenRatio() abort
+  wincmd =
+  execute 'resize' . (winheight(0) * 5/4)
+  execute 'vertical resize' . (winwidth(0) * 5/4)
+endfunction
+
+" Call another command if one failed
+function! ExeWithFallback(command, fallback) abort
+  try
+    exe a:command
+  catch
+    try | exe a:fallback | catch | endtry
+  endtry
 endfunction
 
 function! StripTrailingWhitespaces()
@@ -682,8 +719,36 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
+function! ToggleTerminal() abort
+  let l:buffer_name = 'popup-term'
+  let l:win_number = bufwinnr(l:buffer_name)
+
+  " check if window already open
+  if l:win_number > 0
+    exe l:win_number . 'wincmd c'
+  else
+    botright split | exe 'resize' . &previewheight
+
+    " check if buffer exists
+    if bufexists(l:buffer_name)
+      exe 'buffer ' . l:buffer_name
+    else
+      terminal
+      exe 'file ' . l:buffer_name
+
+      " Disable line numbers
+      setlocal nonumber norelativenumber
+
+      " Close terminal window when leaving insert mode
+      tnoremap <buffer><silent><C-[> <C-\><C-n>:call ToggleTerminal()<CR>
+    endif
+
+    startinsert
+  endif
+endfunction
+
 " }}}
-" ================ Plugin Config/Settings {{{
+" ░░░░░░░░░░░░░░░ Plugin Config/Settings {{{
 
 " ## polyglot
   let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir']
@@ -710,19 +775,17 @@ endfunction
   let g:codi#rightalign=0
 
 " vim-dirvish
-  let g:dirvish_mode = ':sort ,^.*[\/],'
+  let g:dirvish_mode = ':sort | sort ,^.*[\/],'
 
 " ## netrw
   " netrw cheatsheet: https://gist.github.com/t-mart/610795fcf7998559ea80
+  let g:loaded_netrw = 1
+  let g:loaded_netrwPlugin = 1
   let g:netrw_banner = 0
   let g:netrw_liststyle = 3
   let g:netrw_browse_split = 4
   let g:netrw_altv = 1
   let g:netrw_winsize = 25
-  " augroup ProjectDrawer
-  "   autocmd!
-  "   autocmd VimEnter * :Vexplore
-  " augroup END
 
 " ## vim-devicons
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
@@ -744,6 +807,9 @@ endfunction
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
   let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
+
+" ## indentLine
+  let g:indentLine_enabled = 1
 
 " ## golden-ratio
   let g:golden_ratio_exclude_nonmodifiable = 1
@@ -1122,7 +1188,7 @@ endfunction
   let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
 
 " }}}
-" ================ Custom Mappings {{{
+" ░░░░░░░░░░░░░░░ Custom Mappings {{{
 
 " # ncm2 + ultisnips
 " for details around ultisnips and lsp snippets: https://github.com/ncm2/ncm2-ultisnips/issues/6#issuecomment-410186456
@@ -1226,7 +1292,7 @@ nnoremap N Nzz
 map Q <Nop>
 
 " Jump to definition in vertical split
-nnoremap <Leader>] <C-W>v<C-]>
+nnoremap <leader>] <C-W>v<C-]>
 
 map <leader>ev :vnew! ~/.dotfiles/nvim/init.vim<CR>
 map <leader>ek :vnew! ~/.dotfiles/kitty/kitty.conf<CR>
@@ -1236,6 +1302,9 @@ map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
 " open scratch buffer
 nnoremap <C-s> :call ScratchOpen()<CR>
+nnoremap <leader>bs :call ScratchOpen()<CR>
+
+nnoremap <silent><leader>' :call ToggleTerminal()<CR>
 
 " vim-vertical-move replacement
 " nnoremap <expr> <C-j> <SID>vjump(0)
@@ -1253,9 +1322,9 @@ nmap <leader>c :Commentary<CR>
 vmap <leader>c :Commentary<CR>
 
 " ## FZF
-nnoremap <silent> <leader>m <esc>:FZF<CR>
-nnoremap <leader>a <esc>:Rg<space>
-nnoremap <silent> <leader>A  <esc>:exe('Rg '.expand('<cword>'))<CR>
+nnoremap <silent><leader>m <ESC>:FZF<CR>
+nnoremap <leader>a <ESC>:Rg<space>
+nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
 nnoremap \ :Rg<SPACE>
 
@@ -1529,11 +1598,11 @@ cnoremap <C-a> <Home>
 cnoremap <C-e> <End>
 
 " get the syntax group under the cursor
-map <leader>hi :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
+nmap <F10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
 
 " Recall command-line history.
-cnoremap            <C-p>           <Up>
-cnoremap            <C-n>           <Down>
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
 
 " handy escapes; folks that i pair with uese these
 inoremap <C-c> <ESC>
@@ -1541,8 +1610,20 @@ inoremap <C-c> <ESC>
 " inoremap jk <ESC>
 " inoremap kj <ESC>
 
+" previous/next modification
+" nmap ]c <Plug>GitGutterNextHunk
+" nmap [c <Plug>GitGutterPrevHunk
+
+" previous/next location
+nnoremap <silent> ]l :call ExeWithFallback('lnext', 'lfirst')<CR>
+nnoremap <silent> [l :call ExeWithFallback('lprev', 'lfirst')<CR>
+
+" previous/next quickfix
+nnoremap <silent> ]q :call ExeWithFallback('cnext', 'cfirst')<CR>
+nnoremap <silent> [q :call ExeWithFallback('cprev', 'cfirst')<CR>
+
 " }}}
-" ================ Lightline/statusbar {{{
+" ░░░░░░░░░░░░░░░ Lightline/Statusbar {{{
 
 " ## lightline.vim
 let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
@@ -1729,7 +1810,7 @@ function! LightlineScrollbar()
 endfunction
 
 " }}}
-" ================ Blink {{{
+" ░░░░░░░░░░░░░░░ Blink {{{
 
 " REF: https://github.com/sedm0784/vimconfig/blob/master/_vimrc#L173
 " Modified version of Damian Conway's Die Blinkënmatchen: highlight matches
@@ -1826,7 +1907,7 @@ execute printf("nnoremap <silent> n n:call HLNext(%d, %d)<cr>", s:blink_length, 
 execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, has("timers") ? s:blink_freq : s:blink_length)
 
 " }}}
-" ================ Highlights and Colors {{{
+" ░░░░░░░░░░░░░░░ Highlights and Colors {{{
   hi clear SpellBad
   hi htmlArg cterm=italic gui=italic
   hi xmlAttrib cterm=italic gui=italic

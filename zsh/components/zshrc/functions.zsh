@@ -44,6 +44,17 @@ remac() {
 chk() { grep $1 =(ps auxwww) }
 
 portchk() { lsof -n -i4TCP:$1 }
+alias chkport=portchk
+
+# childprocs() {
+#   htop -p $(ps -ef | awk -v proc=$1 '$3 == proc { cnt++;if (cnt == 1) { printf "%s",$2 } else { printf ",%s",$2 } }')
+# }
+
+# children() {
+#   proc="$1"
+#   echo "getting children for $proc"
+#   chk $1 | awk '/$proc/ { print $2 }' | head -n 1 | xargs pstree -p
+# }
 
 path() {
   echo $PATH | tr ":" "\n" | \
@@ -95,7 +106,7 @@ note () {
 # Codi
 # Usage: codi [filetype] [filename]
 codi() {
-  local syntax="${1:-javascript}"
+  local syntax="${1:-elixir}"
   shift
   nvim -c \
     "startinsert |\

@@ -60,7 +60,7 @@ bind-key -T copy-mode-vi C-l select-pane -R
 # GENERAL SETTINGS
 # ===========================================================================
 # set -sg	update-environment TERM_PROFILE
-set -g history-limit 4000
+set -g history-limit 2000
 set -g set-titles on
 set -g default-shell "$SHELL"
 # fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
@@ -142,7 +142,8 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left-length 100
-set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
+set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #{prefix_highlight}"
+# set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
 # set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-ssh)#(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
 
 # -- statusbar right
