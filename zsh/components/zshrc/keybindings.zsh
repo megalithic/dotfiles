@@ -61,7 +61,7 @@ bindkey '^j' vi-forward-blank-word
 bindkey '^p' up-history
 bindkey '^n' down-history
 bindkey '^w' backward-kill-word
-bindkey '^f' autosuggest-accept
+# bindkey '^f' autosuggest-accept
 bindkey '^u' backward-kill-line
 bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line

@@ -42,7 +42,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
   " # elixir/elm magics
-  Plug 'Zaptic/elm-vim', { 'for': ['elm'] }
+  Plug 'elmcast/elm-vim', { 'for': ['elm'] }
   " Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
   " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
@@ -62,13 +62,16 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-cssomni'
   " Plug 'yuki-ycino/ncm2-dictionary'
   " Plug 'filipekiss/ncm2-look.vim'
-  Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
-  Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
+  " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   " Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
   " Plug 'ncm2/ncm2-tagprefix'
+  " Plug 'Shougo/context_filetype.vim'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
+  Plug 'craigemery/vim-autotag'
+  Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -76,7 +79,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'junegunn/fzf.vim'
   " Plug 'justinmk/vim-dirvish' " TODO: needs testing
   " Plug 'dyng/ctrlsf.vim'
-  " Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -123,6 +125,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
   Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': { -> mkdp#util#install() }}
+  Plug 'brooth/far.vim'
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -228,7 +231,6 @@ set tagcase=smart                                                               
 set updatetime=300                                                              "Cursor hold timeout
 set synmaxcol=300                                                               "Use syntax highlighting only for 300 columns
 set showbreak=↪ "↳
-
 
 " -------- dictionary and spelling
 set dictionary+=/usr/share/dict/words
@@ -360,7 +362,11 @@ augroup vimrc
   autocmd FocusLost * silent! wa
 
   au BufWritePre * call StripTrailingWhitespaces()                     "Auto-remove trailing spaces
-  au FocusGained,BufEnter * checktime                                  "Refresh file when vim gets focus
+  au FocusGained  * checktime "Refresh file when vim gets focus
+  au BufEnter     * checktime
+  au WinEnter     * checktime
+  au CursorHold   * checktime
+  au InsertEnter  * checktime
 
   " Handle window resizing
   au VimResized * execute "normal! \<c-w>="
@@ -396,8 +402,8 @@ augroup vimrc
 
   "
   " FIXME: not sure we want these?
-  au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
-  au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
+  " au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
+  " au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
 
   " ----------------------------------------------------------------------------
   " ## JavaScript
@@ -883,8 +889,8 @@ endfunction
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
         \   'python': ['pyls'],
-        \   'elixir': ['mix', 'credo', 'elixir-ls'],
-        \   'eelixir': ['mix', 'credo', 'elixir-ls'],
+        \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
+        \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
         \   'ruby': [],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
@@ -1058,33 +1064,56 @@ endfunction
 "   let g:gen_tags#ctags_auto_gen = 1
 "   let g:gen_tags#gtags_auto_gen = 1
 
+
+" ## far.vim
+  if has('nvim')
+    let g:far#source = 'rgnvim'
+  else
+    let g:far#source = 'rg'
+  endif
+  let g:far#window_layout = 'current'
+  let g:far#preview_window_layout = 'right'
+  let g:far#file_mask_favorites = ['%', 'elm', 'elixir', 'html', 'json', 'js', 'jsx', 'ts', 'tsx']
+
 " ## tagbar
-" let g:tagbar_type_elm = {
-"       \   'ctagstype':'elm'
-"       \ , 'kinds':['h:header', 'i:import', 't:type', 'f:function', 'e:exposing']
-"       \ , 'sro':'&&&'
-"       \ , 'kind2scope':{ 'h':'header', 'i':'import'}
-"       \ , 'sort':0
-"       \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
-"       \ , 'ctagsargs': ''
-"       \ }
-" let g:tagbar_type_elixir = {
-"       \ 'ctagstype' : 'elixir',
-"       \ 'kinds' : [
-"       \ 'f:functions',
-"       \ 'functions:functions',
-"       \ 'c:callbacks',
-"       \ 'd:delegates',
-"       \ 'e:exceptions',
-"       \ 'i:implementations',
-"       \ 'a:macros',
-"       \ 'o:operators',
-"       \ 'm:modules',
-"       \ 'p:protocols',
-"       \ 'r:records',
-"       \ 't:tests'
-"       \ ]
-"       \ }
+  set tags+=tags,tags.vendors
+  let g:tagbar_type_elm = {
+        \   'ctagstype':'elm'
+        \ , 'kinds' : [
+        \ 'h:header:0:0',
+        \ 'e:exposing:0:0',
+        \ 'f:function:0:0',
+        \ 'm:modules:0:0',
+        \ 'i:imports:1:0',
+        \ 't:types:1:0',
+        \ 'a:type aliases:0:0',
+        \ 'c:type constructors:0:0',
+        \ 'p:ports:0:0',
+        \ 's:functions:0:0',
+        \ ]
+        \ , 'sro':'&&&'
+        \ , 'kind2scope':{ 'h':'header', 'i':'import'}
+        \ , 'sort':0
+        \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
+        \ , 'ctagsargs': ''
+        \ }
+  let g:tagbar_type_elixir = {
+        \ 'ctagstype' : 'elixir',
+        \ 'kinds' : [
+        \ 'f:functions',
+        \ 'functions:functions',
+        \ 'c:callbacks',
+        \ 'd:delegates',
+        \ 'e:exceptions',
+        \ 'i:implementations',
+        \ 'a:macros',
+        \ 'o:operators',
+        \ 'm:modules',
+        \ 'p:protocols',
+        \ 'r:records',
+        \ 't:tests'
+        \ ]
+        \ }
 
 " ## ultisnips
   let g:UltiSnipsExpandTrigger = "<C-e>"
