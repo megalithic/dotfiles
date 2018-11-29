@@ -45,3 +45,4 @@ nvim/*.log
 **/*.log
 *.log
 weechat/**/plugins.xml.gz
+nvim/nvim-*.log*

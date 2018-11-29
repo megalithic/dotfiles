@@ -125,7 +125,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
   Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': { -> mkdp#util#install() }}
-  Plug 'brooth/far.vim'
+  Plug 'brooth/far.vim', {'do': ':UpdateRemotePlugins' }
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -182,11 +182,6 @@ if has('termguicolors')
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   endif
 endif
-
-let g:ruby_host_prog = $HOME."/.asdf/shims/neovim-ruby-host"
-" let g:node_host_prog = $HOME."/.asdf/shims/neovim-node-host"
-" let g:python_host_prog = '/usr/local/bin/python2.7'
-" let g:python3_host_prog = '/usr/local/bin/python3'
 
 set title                                                                       "change the terminal's title
 set number                                                                      "Line numbers are good
@@ -1094,8 +1089,8 @@ endfunction
         \ , 'sro':'&&&'
         \ , 'kind2scope':{ 'h':'header', 'i':'import'}
         \ , 'sort':0
-        \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
         \ , 'ctagsargs': ''
+        \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
         \ }
   let g:tagbar_type_elixir = {
         \ 'ctagstype' : 'elixir',
@@ -1213,8 +1208,9 @@ endfunction
                   \ }
   let g:ncm2#sorter = 'abbrfuzzy'
   let g:ncm2#popup_limit = 25
-  let $NVIM_PYTHON_LOG_FILE=expand('~/.config/nvim/nvim-python.log')
-  let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
+  " -> set in `eze`
+  " let $NVIM_PYTHON_LOG_FILE=expand('~/.config/nvim/nvim-python.log')
+  " let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
 
 " }}}
 " ░░░░░░░░░░░░░░░ Custom Mappings {{{
