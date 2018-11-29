@@ -69,9 +69,14 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'ncm2/ncm2-tagprefix'
   " Plug 'Shougo/context_filetype.vim'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
-  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim' " LanguageServer
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
+	" Plug 'autozimu/LanguageClient-neovim', {
+	" 			\ 'branch': 'next',
+	" 			\ 'do': 'bash install.sh',
+	" 			\ }
   Plug 'craigemery/vim-autotag'
   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -497,6 +502,7 @@ augroup elm
   au FileType elm setl iskeyword+=_
   " au FileType elm nn <C-c> :bd!<CR>
   au FileType elm setlocal omnifunc=lsp#complete
+  " au FileType elm setlocal omnifunc=LanguageClient#complete
 augroup END
 
 augroup elixir
@@ -519,9 +525,6 @@ augroup elixir
   " :Eix => open iex with current file compiled
   command! Iex :!iex -S mix %<cr>
   " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
-
-  " au FileType elixir,eelixir nnoremap <c-]> :ALEGoToDefinition<cr>
-  " au FileType elixir,eelixir nnoremap <c->> :ALEGoToDefinition<cr>
 
   " disable endwise for anonymous fn in elixir
   au BufNewFile,BufRead *.{ex,exs}
@@ -780,13 +783,13 @@ endfunction
 
 " ## netrw
   " netrw cheatsheet: https://gist.github.com/t-mart/610795fcf7998559ea80
-  let g:loaded_netrw = 1
-  let g:loaded_netrwPlugin = 1
-  let g:netrw_banner = 0
-  let g:netrw_liststyle = 3
-  let g:netrw_browse_split = 4
-  let g:netrw_altv = 1
-  let g:netrw_winsize = 25
+  " let g:loaded_netrw = 1
+  " let g:loaded_netrwPlugin = 1
+  " let g:netrw_banner = 0
+  " let g:netrw_liststyle = 3
+  " let g:netrw_browse_split = 4
+  " let g:netrw_altv = 1
+  " let g:netrw_winsize = 25
 
 " ## vim-devicons
   " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
@@ -874,6 +877,7 @@ endfunction
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
+  " let g:ale_linters = {} " disabling in favor of languageclient-neovim or vim-lsp
   let g:ale_linters = {
         \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
         \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
@@ -1181,6 +1185,52 @@ endfunction
           \ })
   endif
 
+" ## LanguageClient-neovim
+  let g:LanguageClient_diagnosticsList = v:null
+  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
+  let g:LanguageClient_loadSettings = 0
+  let g:LanguageClient_loggingLevel = 'DEBUG'
+  " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
+  " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
+  " let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
+  " let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
+  let g:LanguageClient_rootMarkers = {'elixir': ['mix.exs']}
+  let g:LanguageClient_serverCommands = {}
+  if executable('pyls')
+    let g:LanguageClient_serverCommands.python = ['pyls']
+  endif
+  if executable('typescript-language-server')
+    let g:LanguageClient_serverCommands.typescript = ['typescript-language-server', '--stdio']
+    let g:LanguageClient_serverCommands.typescriptreact = ['typescript-language-server', '--stdio']
+    let g:LanguageClient_serverCommands['typescript.tsx'] = ['typescript-language-server', '--stdio']
+  endif
+  if executable('javascript-typescript-langserver')
+    let g:LanguageClient_serverCommands.javascript = ['javascript-typescript-stdio']
+    let g:LanguageClient_serverCommands['javascript.jsx'] = ['javascript-typescript-stdio']
+  endif
+  if executable('solargraph')
+    let g:LanguageClient_serverCommands.ruby = ['solargraph', 'stdio']
+  endif
+  if executable('lua-lsp')
+    let g:LanguageClient_serverCommands.lua = ['lua-lsp']
+  endif
+  if executable('language_server.sh')
+    let g:LanguageClient_serverCommands.elixir = ['language_server.sh']
+    " let g:LanguageClient_serverCommands.eelixir = [expand("~/.elixir-ls/rel/language_server.sh")]
+  endif
+  if executable('css-languageserver')
+    let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.scss = ['css-languageserver', '--stdio']
+    let g:LanguageClient_serverCommands.sass = ['css-languageserver', '--stdio']
+  endif
+  if executable('html-languageserver')
+    let g:LanguageClient_serverCommands.html = ['html-languageserver', '--stdio']
+  endif
+  if executable('json-languageserver')
+    let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
+  endif
+
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
   let g:ncm2_ultisnips#source = {'priority': 10, 'mark': ''}
@@ -1194,8 +1244,8 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_python', { 'priority': 9, 'mark': "\uf820"})
   call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
-  call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
-  call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
+  " call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
+  " call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
 
   au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
@@ -1208,7 +1258,7 @@ endfunction
                   \ }
   let g:ncm2#sorter = 'abbrfuzzy'
   let g:ncm2#popup_limit = 25
-  " -> set in `eze`
+  " -> set in/via `eze`
   " let $NVIM_PYTHON_LOG_FILE=expand('~/.config/nvim/nvim-python.log')
   " let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
 
@@ -1216,42 +1266,50 @@ endfunction
 " ░░░░░░░░░░░░░░░ Custom Mappings {{{
 
 " # ncm2 + ultisnips
-" for details around ultisnips and lsp snippets: https://github.com/ncm2/ncm2-ultisnips/issues/6#issuecomment-410186456
-inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
-" details about endwise + ncm2 here: https://github.com/roxma/nvim-completion-manager/issues/49#issuecomment-285923119
-imap <C-X><CR>   <CR><Plug>AlwaysEnd
-inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
-imap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
-smap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
-inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+  " for details around ultisnips and lsp snippets: https://github.com/ncm2/ncm2-ultisnips/issues/6#issuecomment-410186456
+  inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+  inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+  inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
+  " details about endwise + ncm2 here: https://github.com/roxma/nvim-completion-manager/issues/49#issuecomment-285923119
+  imap <C-X><CR>   <CR><Plug>AlwaysEnd
+  inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
+  imap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+  smap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+  inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
 
 " # vim-lsp
-nnoremap <F2> :LspRename<CR>
-nnoremap <leader>ld :LspDefinition<CR>
-nnoremap <leader>lf :LspDocumentFormat<CR>
-nnoremap <leader>lh :LspHover<CR>
-nnoremap <leader>lr :LspReferences<CR>
-nnoremap <leader>li :LspImplementation<CR>
-" nnoremap <leader>] :LspNextError<CR>
-" nnoremap <leader>[ :LspPreviousError<CR>
+  nnoremap <F2> :LspRename<CR>
+  nnoremap <leader>ld :LspDefinition<CR>
+  nnoremap <leader>lf :LspDocumentFormat<CR>
+  nnoremap <leader>lh :LspHover<CR>
+  nnoremap <leader>lr :LspReferences<CR>
+  nnoremap <leader>li :LspImplementation<CR>
+  " nnoremap <leader>] :LspNextError<CR>
+  " nnoremap <leader>[ :LspPreviousError<CR>
+
+" # LanguageClient-neovim
+  " nnoremap <silent><leader>lh :call LanguageClient#textDocument_hover()<CR>
+  " nnoremap <silent><leader>ld :call LanguageClient#textDocument_definition()<CR>
+  " nnoremap <silent><leader>lt :call LanguageClient#textDocument_typeDefinition()<CR>
+  " nnoremap <silent><leader>li :call LanguageClient#textDocument_implementation()<CR>
+  " nnoremap <silent><leader>lr :call LanguageClient#textDocument_references()<CR>
+  " nnoremap <silent><leader>la :call LanguageClient#textDocument_codeAction()<CR>
+  " nnoremap <silent><leader>ls :call LanguageClient#textDocument_documentSymbol()<CR>
+  " nnoremap <silent><F2>:call LanguageClient#textDocument_rename()<CR>
+  " nnoremap <silent><F8>:call LanguageClient_contextMenu()<CR>
 
 " # ALE
-nmap <silent> <C-[> <Plug>(ale_previous_wrap)
-nmap <silent> <C-]> <Plug>(ale_next_wrap)
+  nmap <silent> <C-[> <Plug>(ale_previous_wrap)
+  nmap <silent> <C-]> <Plug>(ale_next_wrap)
 
 " # netrw
-nnoremap - :Vexplore<CR>
-nnoremap <F3> :Vexplore<CR>
+  " nnoremap - :Vexplore<CR>
+  " nnoremap <F3> :Vexplore<CR>
 
 " # vim-dirvish
-nnoremap <silent> - :Dirvish %:p:h<CR>
-" nnoremap <silent> <leader>d :Dirvish %:p:h<CR>
-" nnoremap <silent> <leader>D :Dirvish<CR>
-
-" # vim-characterize
-nmap <silent> <leader>gc <Plug>(characterize)
+  nnoremap <silent> - :Dirvish %:p:h<CR>
+  " nnoremap <silent> <leader>d :Dirvish %:p:h<CR>
+  " nnoremap <silent> <leader>D :Dirvish<CR>
 
 " Down is really the next line
 nnoremap j gj

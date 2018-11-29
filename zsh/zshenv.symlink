@@ -63,6 +63,7 @@ path=(
   $HOME/bin
   $HOME/.bin
   $HOME/.dotfiles/bin
+  $HOME/.elixir-ls/rel
   $ASDF_BIN
   $ASDF_INSTALLS
   $ASDF_LUAROCKS
