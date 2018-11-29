@@ -103,6 +103,15 @@ config.applications = {
   --   position = config.grid.fullScreen,
   --   quitGuard = true,
   -- },
+  ['Sblack'] = {
+    name = 'Sblack',
+    -- bundleID = 'com.tinyspeck.slackmacgap',
+    -- superKey = config.superKeys.mashShift,
+    -- shortcut = 's',
+    preferredDisplay = 2,
+    position = config.grid.rightHalf,
+    quitGuard = true,
+  },
   ['Slack'] = {
     name = 'Slack',
     bundleID = 'com.tinyspeck.slackmacgap',
