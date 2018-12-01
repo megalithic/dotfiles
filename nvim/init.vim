@@ -691,34 +691,34 @@ function! s:vjump(dir) abort
 endfunction
 
 " improved ultisnips complete
-function! SnipComplete()
-  let line = getline('.')
-  let start = col('.') - 1
-  while start > 0 && line[start - 1] =~# '\k'
-    let start -= 1
-  endwhile
-  let suggestions = []
-  let snips =  UltiSnips#SnippetsInCurrentScope(0)
-  for item in keys(snips)
-    let entry = {'word': item, 'menu': snips[item]}
-    call add(suggestions, entry)
-  endfor
-  if empty(suggestions)
-    echohl Error | echon 'no match' | echohl None
-  elseif len(suggestions) == 1
-    let pos = getcurpos()
-    if start == 0
-      let str = trigger
-    else
-      let str = line[0:start - 1] . trigger
-    endif
-    call setline('.', str)
-    let pos[2] = len(str) + 1
-    call setpos('.', pos)
-    call UltiSnips#ExpandSnippet()
-  else
-    call complete(start + 1, suggestions)
+function! ExpandLspSnippet()
+  call UltiSnips#ExpandSnippetOrJump()
+  if !pumvisible() || empty(v:completed_item)
+    return ''
   endif
+
+  " only expand Lsp if UltiSnips#ExpandSnippetOrJump not effect.
+  let l:value = v:completed_item['word']
+  let l:matched = len(l:value)
+  if l:matched <= 0
+    return ''
+  endif
+
+  " remove inserted chars before expand snippet
+  if col('.') == col('$')
+    let l:matched -= 1
+    exec 'normal! ' . l:matched . 'Xx'
+  else
+    exec 'normal! ' . l:matched . 'X'
+  endif
+
+  if col('.') == col('$') - 1
+    " move to $ if at the end of line.
+    call cursor(line('.'), col('$'))
+  endif
+
+  " expand snippet now.
+  call UltiSnips#Anon(l:value)
   return ''
 endfunction
 
@@ -1295,6 +1295,8 @@ endfunction
   imap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
   smap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
   inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+  " inoremap <C-e> <C-R>=ExpandLspSnippet()<CR>
+
 
 " # vim-lsp
   nnoremap <F2> :LspRename<CR>
