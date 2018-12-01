@@ -160,6 +160,7 @@ function unwatchApp(pid)
     watcher:stop()
   end
   watchers[pid] = nil
+  setLayoutForAll()
 end
 
 function watchWindow(window)

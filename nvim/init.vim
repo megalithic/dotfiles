@@ -1077,6 +1077,11 @@ endfunction
   " let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
   " " let g:gutentags_ctags_tagfile = '.tags'
 
+" ## vim-autotag
+  let g:autotagTagsFile="tags"
+  let g:autotagmaxTagsFileSize=100000000
+  let g:autotagExcludeSuffixes='xml.html.css.scss.sass.md.rst.ini.json.js.log.txt'
+
 " ## far.vim
   if has('nvim')
     let g:far#source = 'rgnvim'
@@ -1089,6 +1094,7 @@ endfunction
 
 " ## tagbar
   set tags+=tags,tags.vendors
+  let g:tagbar_autofocus = 1
   let g:tagbar_type_elm = {
         \   'ctagstype':'elm'
         \ , 'kinds' : [
