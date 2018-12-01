@@ -115,7 +115,7 @@ utils.canManageWindow = function (window)
 
   -- Special handling for iTerm: windows without title bars are
   -- non-standard.
-  return window:isStandard() and not window:isMinimized() or
+  return window:title() ~= "" and window:isStandard() and not window:isMinimized() or
     bundleID == 'com.googlecode.iterm2'
 end
 

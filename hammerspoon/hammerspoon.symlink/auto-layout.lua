@@ -17,66 +17,59 @@ target_display = function(display_int)
   end
 end
 
--- FIXME: simply must DRY up setLayoutForAll
-setLayoutForAll = function()
-  log.i('[auto-layout] setLayoutForAll - beginning layout for all apps')
+getManageableWindows = function(windows)
+  return hs.fnutils.filter(windows, (function(window)
+    return utils.canManageWindow(window)
+  end))
+end
 
-  for _, appConfig in pairs(config.applications) do
-    -- if we have a preferred display
-    if appConfig.preferredDisplay ~= nil then
-      application = hs.application.find(appConfig.name)
+setLayoutForSingleWindow = function(window, appConfig)
+  log.df('[auto-layout] setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
+  hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
+end
 
-      if application ~= nil and application:mainWindow() ~= nil then
-        local windows = application:visibleWindows()
-        -- we are always positioning ALL the windows, we need a single window positioner method at some point..
-        -- TODO: add a single window watcher and window handler, don't always handle all the windows.
-        for _, window in pairs(windows) do
-          if utils.canManageWindow(window) then
-            log.df('[auto-layout] setLayoutForAll - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(application:name()), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
-            hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
-          end
-        end
-      end
+setLayoutForMultiWindows = function(windows, appConfig)
+  for index, window in pairs(windows) do
+    log.df('[auto-layout] setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
+    if (index % 2 == 0) then -- even index/number
+      hs.grid.set(window, config.grid.leftHalf, target_display(appConfig.preferredDisplay))
+    else -- odd index/number
+      hs.grid.set(window, config.grid.rightHalf, target_display(appConfig.preferredDisplay))
     end
   end
 end
 
--- FIXME: simply must DRY up setLayoutForApp
-setLayoutForApp = function(app) -- optionally, we should be able to take in a `window` to layout
+setLayoutForAll = function()
+  log.i('[auto-layout] setLayoutForAll - beginning layout for all apps')
+
+  for _, appConfig in pairs(config.applications) do
+    -- we have an appConfig and a preferredDisplay defined
+    if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
+      local app = hs.application.find(appConfig.name)
+      setLayoutForApp(app, appConfig)
+    end
+  end
+end
+
+setLayoutForApp = function(app, appConfig)
   if app ~= nil and app:mainWindow() ~= nil then
-    log.i('[auto-layout] setLayoutForApp - beginning layout for single app')
+    log.df('[auto-layout] setLayoutForApp - beginning layout for single app: %s', string.upper(app:name()))
 
-    local windows = app:visibleWindows()
-    local appConfig = config.applications[app:name()]
+    local windows = getManageableWindows(app:visibleWindows())
+    local appConfig = appConfig or config.applications[app:name()]
 
-    if appConfig ~= nil then
-      -- we are always positioning ALL the windows, we need a single window positioner method at some point..
-      -- TODO: add a single window watcher and window handler, don't always handle all the windows.
-      for _, window in pairs(windows) do
-        if utils.canManageWindow(window) then
-          log.df('[auto-layout] setLayoutForApp - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(app:name()), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
-          hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
-        end
+    if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
+      if (#windows == 1) then
+        -- getting first (and should be) only window from the table of windows for this app
+        setLayoutForSingleWindow(windows[1], appConfig)
+      elseif (#windows > 1) then
+        setLayoutForMultiWindows(windows, appConfig)
+      else
+        log.df('[auto-layout] setLayoutForApp (no manageable windows found) - grid layout NOT applied for app: %s, #windows: %s, target_display: %s, position: %s', string.upper(app:name()), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
       end
     else
       log.df('[auto-layout] setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
     end
-  -- else
-  --   -- default/general layout for apps not given a specific config
-  --   local app = hs.application.frontmostApplication()
-
-  --   -- only if we're not ignoring
-  --   if (not utils.isIgnoredApp(app:name())) then
-  --     local windows = app:visibleWindows()
-  --     local appConfig = config.applications['default']
-
-  --     for _, window in pairs(windows) do
-  --       if utils.canManageWindow(window) then
-  --         log.df('[auto-layout] setLayoutForApp (default) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', app:name(), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
-  --         hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
-  --       end
-  --     end
-  --   end
   end
 end
 

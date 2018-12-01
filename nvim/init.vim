@@ -59,24 +59,28 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-path'
   Plug 'ncm2/ncm2-html-subscope'
   Plug 'ncm2/ncm2-markdown-subscope'
-  Plug 'ncm2/ncm2-cssomni'
+  Plug 'ncm2/ncm2-cssomni', { 'for': ['css','scss','sass'] }
+  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
   " Plug 'yuki-ycino/ncm2-dictionary'
   " Plug 'filipekiss/ncm2-look.vim'
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   " Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
-  " Plug 'ncm2/ncm2-tagprefix'
-  " Plug 'Shougo/context_filetype.vim'
+  Plug 'ncm2/ncm2-tagprefix'
+  Plug 'Shougo/context_filetype.vim'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
 	" Plug 'autozimu/LanguageClient-neovim', {
 	" 			\ 'branch': 'next',
 	" 			\ 'do': 'bash install.sh',
 	" 			\ }
-  Plug 'craigemery/vim-autotag'
-  Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
-  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
+
+  if executable('ctags')
+    " Plug 'ludovicchabant/vim-gutentags'
+    Plug 'craigemery/vim-autotag'
+    Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  endif
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -152,7 +156,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'mattn/vim-textobj-url'                                      " - u     for url
   Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
   Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
-  Plug 'chaoren/vim-wordmotion'                                     " https://github.com/chaoren/vim-wordmotion#more-useful-word-motions-for-vim
+  " Plug 'chaoren/vim-wordmotion'                                   " FIXME: do i really want this?  " https://github.com/chaoren/vim-wordmotion#more-useful-word-motions-for-vim
   Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
   " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
@@ -814,6 +818,9 @@ endfunction
 
 " ## indentLine
   let g:indentLine_enabled = 1
+  let g:indentLine_color_gui = '#556874'
+  let g:indentLine_char = '│'
+  " let g:indentLine_bgcolor_gui = '#3C4C55'
 
 " ## golden-ratio
   let g:golden_ratio_exclude_nonmodifiable = 1
@@ -1063,6 +1070,12 @@ endfunction
 "   let g:gen_tags#ctags_auto_gen = 1
 "   let g:gen_tags#gtags_auto_gen = 1
 
+
+" ## vim-gutentags
+  " let g:gutentags_project_root = ['.git']
+  " let g:gutentags_cache_dir = expand('~/.cache/tags')
+  " let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
+  " " let g:gutentags_ctags_tagfile = '.tags'
 
 " ## far.vim
   if has('nvim')
@@ -1351,7 +1364,7 @@ vnoremap p p`]
 " nmap , <Plug>(clever-f-repeat-back)
 
 " # tagbar
-" nnoremap <f4> :TagbarToggle<CR>
+nnoremap <F4> :TagbarToggle<CR>
 
 " Filesearch plugin map for searching in whole folder
 nnoremap <Leader>f :call Search()<CR>
