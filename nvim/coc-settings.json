@@ -31,12 +31,23 @@
   "yaml.schemas": {
     "http://json.schemastore.org/composer": "/*"
   },
+  "coc.source.emoji.enable": true,
+  "coc.source.emoji.filetypes": ["markdown", "gitcommit"],
+  // "coc.source.emoji.triggerCharacters": [":"],
   // languageserver
   "languageserver": {
     "sh": {
       "command": "bash-language-server",
       "args": ["start", "--stdio"],
       "filetypes": ["sh"],
+      "cwd": "./",
+      "initializationOptions": {},
+      "settings": {}
+    },
+    "elixir": {
+      "command": "language_server.sh",
+      "args": [],
+      "filetypes": ["elixir", "eelixir"],
       "cwd": "./",
       "initializationOptions": {},
       "settings": {}

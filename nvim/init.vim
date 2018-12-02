@@ -83,7 +83,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   "   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   " endif
 
-  function! PlugCoc(info) abort
+  function! PlugDoCoc(info) abort
     if a:info.status ==? 'installed' || a:info.force
       !yarn install
       call coc#util#install_extension(join([
@@ -112,11 +112,10 @@ silent! if plug#begin('~/.config/nvim/plugged')
       call coc#util#update()
     endif
   endfunction
-  " Plug 'neoclide/coc.nvim', {'do': function('PlugCoc')}
-  " if (!has('nvim'))
-  "   Plug 'neoclide/vim-node-rpc'
-  " endif
-
+  Plug 'neoclide/coc.nvim', {'do': function('PlugDoCoc')}
+  if (!has('nvim'))
+    Plug 'neoclide/vim-node-rpc'
+  endif
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -1180,7 +1179,7 @@ endfunction
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
 " ## async/vim-lsp
-  let g:lsp_auto_enable = 1
+  let g:lsp_auto_enable = 0
   let g:lsp_signs_enabled = 0             " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1   " enable echo under cursor when in normal mode
   let g:lsp_signs_error = {'text': '⤫'}
@@ -1226,13 +1225,15 @@ endfunction
           \ 'whitelist': ['lua'],
           \ })
   endif
-  if filereadable(expand("~/.elixir-ls/rel/language_server.sh"))
+  if executable('language_server.sh')
+  " if filereadable(expand("~/.elixir-ls/rel/language_server.sh"))
     au User lsp_setup call lsp#register_server({
           \ 'name': 'elixir',
-          \ 'cmd': {server_info->[&shell, &shellcmdflag, expand("~/.elixir-ls/rel/language_server.sh")]},
+          \ 'cmd': {server_info->[&shell, &shellcmdflag, 'language_server.sh']},
           \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
           \ 'whitelist': ['elixir','eelixir'],
           \ })
+    " \ 'cmd': {server_info->[&shell, &shellcmdflag, expand("~/.elixir-ls/rel/language_server.sh")]},
   endif
   if executable('pyls')
     au User lsp_setup call lsp#register_server({
@@ -1304,10 +1305,10 @@ endfunction
   " call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
   " call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
 
-  au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
+  au InsertEnter * call ncm2#disable_for_buffer() " or on BufEnter
   set completeopt=noinsert,menuone,noselect
   set shortmess+=c
-  au TextChangedI * call ncm2#auto_trigger()
+  " au TextChangedI * call ncm2#auto_trigger()
   let g:ncm2#complete_length = 2
   let g:ncm2#matcher = {
                   \ 'name': 'combine',
@@ -2124,5 +2125,158 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   " hi DiffChange guifg=#F2C38F
   " hi DiffText guifg=#F2C38F
 " }}}
+" ░░░░░░░░░░░░░░░ coc.nvim {{{
+" if hidden not set, TextEdit might fail.
+set hidden
+" Better display for messages
+set cmdheight=1
+" always show signcolumns
+set signcolumn=yes
+" for showSignatureHelp
+set noshowmode
+set completeopt=noinsert,menuone,noselect
+
+" Or use formatexpr for range format
+set formatexpr=CocActionAsync('formatSelected')
+
+" use <tab> for trigger completion and navigate next complete item
+function! s:check_back_space() abort
+  let l:col = col('.') - 1
+  return !l:col || getline('.')[l:col - 1]  =~# '\s'
+endfunction
+
+" if exists snippets
+function s:isSnipsExpandable()
+    try
+        let l:line = getline('.')
+        let l:start = col('.') - 1
+        while l:start > 0 && l:line[l:start - 1] =~# '\k'
+            let l:start -= 1
+        endwhile
+        let l:trigger = l:line[l:start : col('.')-2]
+        " get user input str
+        if s:input_word ==# ''
+            let s:input_word = l:trigger
+        endif
+        if s:input_word !=# l:trigger
+            return v:false
+        endif
+        " get snippets
+        let l:snippets = UltiSnips#SnippetsInCurrentScope()
+        let l:has_snips = !(
+                    \ col('.') <= 1
+                    \ || !empty(matchstr(getline('.'), '\%' . (col('.') - 1) . 'c\s'))
+                    \ || empty(l:snippets)
+                    \ || get(l:snippets, l:trigger, 'notExists') ==# 'notExists'
+                    \ )
+        " has snippets and snippets is input str
+        return l:has_snips
+    catch /.*/
+        return v:false
+    endtry
+endfunction
+
+" press enter when pumvisible
+function! s:press_enter() abort
+    if s:input_word ==# ''
+        return "\<C-g>u\<CR>\<C-g>u"
+    endif
+    return "\<C-y>"
+endfunction
+
+" tab:
+"   1. trigger snippets
+"   2. select autocomplete
+"   3. trigger autocomplete
+inoremap <silent><expr> <TAB>
+      \ <SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+"inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+" Use <C-x></C-u> to complete custom sources, including emoji, include and words
+imap <silent> <C-x><C-o> <Plug>(coc-complete-custom)
+" Use <cr> for confirm completion.
+inoremap <expr> <CR> pumvisible() ? <SID>press_enter() : "\<C-g>u\<CR>"
+"inoremap <expr> <CR> (pumvisible() ? "\<c-y>" : "\<CR>")
+" Use K for show documentation in preview window
+
+function! s:show_documentation()
+  if &filetype ==# 'vim'
+    execute 'h '.expand('<cword>')
+  else
+    call CocActionAsync('doHover')
+  endif
+endfunction
+
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+" Remap for rename current word
+nmap <leader>rn <Plug>(coc-rename)
+
+" Use `[c` and `]c` for navigate diagnostics
+nmap <silent> [c <Plug>(coc-diagnostic-prev)
+nmap <silent> ]c <Plug>(coc-diagnostic-next)
+
+" Remap keys for gotos
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Remap for format selected region
+vmap <leader>fm <Plug>(coc-format-selected)
+nmap <leader>fm <Plug>(coc-format-selected)
+
+" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
+vmap <leader>a <Plug>(coc-codeaction-selected)
+nmap <leader>a <Plug>(coc-codeaction-selected)
+
+" Use `:Format` for format current buffer
+command! -nargs=0 Format :call CocActionAsync('format')
+
+" Use `:Fold` for fold current buffer
+command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
+
+augroup coc_au
+  autocmd!
+  " Show signature help while editing
+  " autocmd CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+  " Highlight symbol under cursor on CursorHold
+  autocmd CursorHold * silent call CocActionAsync('highlight')
+augroup END
+
+function! s:clear_input() abort
+    let s:input_word = ''
+endfunction
+
+function! s:snippet() abort
+    let l:start_line = line('.')
+    let l:is_position = search('\v%x0')
+    if l:is_position !=# 0
+        silent! s/\v\t/    /g
+        silent! s/\v%x0\n//g
+        silent! s/\v%x0/\r/g
+        let l:end_line = line('.')
+        call cursor(l:start_line, 0)
+        let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
+        if l:pos[0] !=# 0 && l:pos[1] !=# 0
+            call cursor(l:pos[0], l:pos[1])
+            normal! df}
+        endif
+    endif
+endfunction
+
+augroup CocSnippet
+    autocmd!
+    autocmd CompleteDone *.vue call <SID>snippet()
+    autocmd CursorMovedI * call <SID>clear_input()
+    " highlight text color
+    autocmd ColorScheme * highlight! CocHighlightText  guibg=#707e0a ctermbg=023
+augroup END
+"}}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
