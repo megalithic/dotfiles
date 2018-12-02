@@ -77,8 +77,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
 	" 			\ }
 
   if executable('ctags')
-    " Plug 'ludovicchabant/vim-gutentags'
-    Plug 'craigemery/vim-autotag'
+    Plug 'ludovicchabant/vim-gutentags'
+    " Plug 'craigemery/vim-autotag'
     Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   endif
 
@@ -463,13 +463,14 @@ augroup vimrc
 
   " ----------------------------------------------------------------------------
   " ## Manage GIT related scenarios
-  au Filetype gitcommit setl nospell textwidth=72
+  au FileType gitcommit,gitrebase setl nospell textwidth=72
   au BufNewFile,BufRead .git/index setlocal nolist
   au BufReadPost fugitive://* set bufhidden=delete
   au BufReadCmd *.git/index exe BufReadIndex()
   au BufEnter *.git/index silent normal gg0j
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
-  au Filetype gitcommit exe BufEnterCommit()
+  au FileType gitcommit,gitrebase exe BufEnterCommit()
+  au FileType gitcommit,gitrebase let g:gutentags_enabled=0
 
   " set up default omnifunc
   autocmd FileType *
@@ -1072,15 +1073,15 @@ endfunction
 
 
 " ## vim-gutentags
-  " let g:gutentags_project_root = ['.git']
-  " let g:gutentags_cache_dir = expand('~/.cache/tags')
+  let g:gutentags_project_root = ['.git']
+  let g:gutentags_cache_dir = expand('~/.tags_cache')
   " let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
-  " " let g:gutentags_ctags_tagfile = '.tags'
+  let g:gutentags_ctags_tagfile = 'tags'
 
 " ## vim-autotag
-  let g:autotagTagsFile="tags"
-  let g:autotagmaxTagsFileSize=100000000
-  let g:autotagExcludeSuffixes='xml.html.css.scss.sass.md.rst.ini.json.js.log.txt'
+  " let g:autotagTagsFile="tags"
+  " let g:autotagmaxTagsFileSize=100000000
+  " let g:autotagExcludeSuffixes='xml.html.css.scss.sass.md.rst.ini.json.js.log.txt'
 
 " ## far.vim
   if has('nvim')
