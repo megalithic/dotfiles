@@ -44,9 +44,15 @@ if [ -n "$(command -v fzf)" ]; then
   export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
   export FZF_CTRL_T_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
   export FZF_TMUX_HEIGHT='20%'
+
   # thieved from: https://github.com/evantravers/dotfiles/blob/master/zsh/.zshrc#L86
   # FZF_DEFAULT_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
   # FZF_CTRL_T_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
+
+  # -- using fd
+  export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  export FZF_ALT_C_COMMAND="fd --type d . $HOME"
 
 
   # -- these must be set *after* loading fzf:

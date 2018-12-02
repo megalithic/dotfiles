@@ -67,7 +67,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-syntax' | Plug 'Shougo/neco-syntax'
   " Plug 'ncm2/ncm2-neoinclude' | Plug 'Shougo/neoinclude.vim'
   " Plug 'ncm2/ncm2-gtags' | Plug 'jsfaint/gen_tags.vim'
-  Plug 'ncm2/ncm2-tagprefix'
+  " Plug 'ncm2/ncm2-tagprefix'
   Plug 'Shougo/context_filetype.vim'
   Plug 'ncm2/ncm2-ultisnips' | Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
@@ -76,11 +76,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
 	" 			\ 'do': 'bash install.sh',
 	" 			\ }
 
-  if executable('ctags')
-    Plug 'ludovicchabant/vim-gutentags'
-    " Plug 'craigemery/vim-autotag'
-    Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
-  endif
+  " if executable('ctags')
+  "   " Plug 'ludovicchabant/vim-gutentags'
+  "   " Plug 'craigemery/vim-autotag'
+  "   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  " endif
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -470,7 +470,7 @@ augroup vimrc
   au BufEnter *.git/index silent normal gg0j
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
-  au FileType gitcommit,gitrebase let g:gutentags_enabled=0
+  " au FileType gitcommit,gitrebase let g:gutentags_enabled=0
 
   " set up default omnifunc
   autocmd FileType *
@@ -1066,17 +1066,18 @@ endfunction
   let g:gist_open_url = 1
   let g:gist_default_private = 1
 
-" " ## gen_tags
-"   let g:gen_tags#use_cache_dir  = 0
+" ## gen_tags
+"   let g:gen_tags#use_cache_dir  = 1
 "   let g:gen_tags#ctags_auto_gen = 1
 "   let g:gen_tags#gtags_auto_gen = 1
 
 
 " ## vim-gutentags
-  let g:gutentags_project_root = ['.git']
-  let g:gutentags_cache_dir = expand('~/.tags_cache')
-  " let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
-  let g:gutentags_ctags_tagfile = 'tags'
+  " let g:gutentags_project_root = ['.git']
+  " let g:gutentags_cache_dir = expand('~/.tags_cache')
+  " " let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
+  " let g:gutentags_ctags_tagfile = '.tags'
+  " let g:gutentags_trace = 1
 
 " ## vim-autotag
   " let g:autotagTagsFile="tags"
