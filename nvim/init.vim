@@ -50,6 +50,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'mattreduce/vim-mix'
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
+  Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
   Plug 'sheerun/vim-polyglot'
 
 " ## Completion
@@ -81,6 +82,41 @@ silent! if plug#begin('~/.config/nvim/plugged')
   "   " Plug 'craigemery/vim-autotag'
   "   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
   " endif
+
+  function! PlugCoc(info) abort
+    if a:info.status ==? 'installed' || a:info.force
+      !yarn install
+      call coc#util#install_extension(join([
+            \ 'coc-word',
+            \ 'coc-emoji',
+            \ 'coc-ultisnips',
+            \ 'coc-tsserver',
+            \ 'coc-html',
+            \ 'coc-css',
+            \ 'coc-json',
+            \ 'coc-eslint',
+            \ 'coc-tslint',
+            \ 'coc-prettier',
+            \ 'coc-stylelint',
+            \ 'coc-pyls',
+            \ 'coc-java',
+            \ 'coc-rls',
+            \ 'coc-solargraph',
+            \ 'coc-vetur',
+            \ 'coc-wxml',
+            \ 'coc-yaml',
+            \ 'coc-highlight',
+            \ ]))
+    elseif a:info.status ==? 'updated'
+      !yarn install
+      call coc#util#update()
+    endif
+  endfunction
+  " Plug 'neoclide/coc.nvim', {'do': function('PlugCoc')}
+  " if (!has('nvim'))
+  "   Plug 'neoclide/vim-node-rpc'
+  " endif
+
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -896,8 +932,8 @@ endfunction
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
         \   'python': ['pyls'],
-        \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
-        \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxer'],
+        \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
+        \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
         \   'ruby': [],
         \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {

@@ -108,6 +108,7 @@ function handleWindowEvent(window, event, watcher, info)
     log.df('[auto-layout] handleWindowEvent - window event; %s destroyed for %s', info.id, window:application():bundleID())
     watcher:stop()
     watchers[info.pid].windows[info.id] = nil
+    setLayoutForAll()
   else
     log.wf('[auto-layout] handleWindowEvent - window error; unexpected window event (%d) received', event)
   end
