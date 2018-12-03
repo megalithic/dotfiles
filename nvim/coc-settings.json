@@ -24,8 +24,8 @@
   "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
   /* "coc.preferences.diagnostic.highlightOffset": 1000, */
-  "coc.preferences.diagnostic.errorSign": "✖",
-  "coc.preferences.diagnostic.warningSign": "⬥",
+  "coc.preferences.diagnostic.errorSign": "✖-",
+  "coc.preferences.diagnostic.warningSign": "⬥-",
   "coc.preferences.diagnostic.infoSign": ">>",
   "coc.preferences.diagnostic.hintSign": ">>",
   "coc.preferences.codeLens.enable": true,
@@ -55,21 +55,23 @@
   /* "coc.source.emoji.triggerCharacters": [":"], */
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
+  "coc.source.ultisnips.priority": 1,
   "coc.source.around.enable": true,
   "coc.source.around.shortcut": "A",
-  "coc.source.around.priority": 1,
+  "coc.source.around.priority": 2,
   "coc.source.buffer.enable": true,
   "coc.source.buffer.shortcut": "B",
-  "coc.source.buffer.priority": 1,
+  "coc.source.buffer.priority": 3,
   "coc.source.buffer.ignoreGitignore": true,
   "coc.source.file.enable": true,
   "coc.source.file.shortcut": "F",
-  "coc.source.file.priority": 10,
+  "coc.source.file.priority": 4,
   "coc.source.file.triggerCharacters": ["/"],
   "coc.source.file.trimSameExts": [".ts", ".js"],
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
   "coc.source.word.enable": false,
+  /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
 
   // languageserver
   "languageserver": {

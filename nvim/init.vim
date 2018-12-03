@@ -911,20 +911,20 @@ endfunction
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
   let g:ale_linters = {} " disabling in favor of coc.nvim / languageclient-neovim / vim-lsp
-  " let g:ale_linters = {
-  "       \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
-  "       \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-  "       \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-  "       \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-  "       \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-  "       \   'css': ['prettier'],
-  "       \   'scss': ['prettier'],
-  "       \   'json': ['prettier'],
-  "       \   'python': ['pyls'],
-  "       \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
-  "       \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
-  "       \   'ruby': [],
-  "       \ }                                                                       "Lint js with eslint
+  let g:ale_linters = {
+        \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
+        \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
+        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+        \   'css': ['prettier'],
+        \   'scss': ['prettier'],
+        \   'json': ['prettier'],
+        \   'python': ['pyls'],
+        \   'elixir': ['mix', 'dogma', 'credo', 'elixir-ls', 'dialyxir'],
+        \   'eelixir': ['mix', 'dogma', 'credo', 'elixir-ls', 'dialyxir'],
+        \   'ruby': [],
+        \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -945,7 +945,7 @@ endfunction
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
   let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel"
-  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:false}}
+  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_insert_leave = 1
@@ -1221,10 +1221,10 @@ nnoremap <Leader>h viw"0p
 " move to front of line:
 map <C-a> <ESC>^
 imap <C-a> <ESC>I
-
 " move to end of line:
 map <C-e> <ESC>$
-" inoremap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+imap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+inoremap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
 
 " move by word forward and back:
 inoremap <M-f> <ESC><Space>Wi
@@ -1649,7 +1649,7 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
-      \       ['coc', 'gutentags'],
+      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok', 'gutentags'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
       \       ['filetype'],
@@ -1675,11 +1675,13 @@ let g:lightline = {
       \ }
 
 " right section for ALE things:
+" \       ['coc', 'gutentags'],
 " \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
-" let g:lightline#ale#indicator_ok = "\uf42e "
-" let g:lightline#ale#indicator_warnings = ' '
-" let g:lightline#ale#indicator_errors = ' '
-" let g:lightline#ale#indicator_checking = " "
+
+let g:lightline#ale#indicator_ok = "\uf42e "
+let g:lightline#ale#indicator_warnings = ' '
+let g:lightline#ale#indicator_errors = ' '
+let g:lightline#ale#indicator_checking = " "
 
 function! UpdateStatusBar(timer)
   " call lightline#update()
@@ -2055,20 +2057,24 @@ endfunction
 "   1. trigger snippets
 "   2. select autocomplete
 "   3. trigger autocomplete
-inoremap <silent><expr> <TAB>
-      \ <SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
-inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-"inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+" inoremap <silent><expr> <TAB>
+"       \ <SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<TAB>" : coc#refresh()
+" inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : (<SID>check_back_space() ? "\<TAB>" : coc#refresh())
+inoremap <silent><expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
+inoremap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
+
 " Use <C-x></C-u> to complete custom sources, including emoji, include and words
 imap <silent> <C-x><C-o> <Plug>(coc-complete-custom)
-" Use <cr> for confirm completion.
+
+" Use <CR> for confirm completion.
 inoremap <expr> <CR> pumvisible() ? <SID>press_enter() : "\<C-g>u\<CR>"
 "inoremap <expr> <CR> (pumvisible() ? "\<c-y>" : "\<CR>")
-" Use K for show documentation in preview window
 
+" Use K for show documentation in preview window
 function! s:show_documentation()
   if &filetype ==# 'vim'
     execute 'h '.expand('<cword>')
@@ -2142,7 +2148,7 @@ endfunction
 
 augroup CocSnippet
   au!
-  au CompleteDone *.elixir,*.elm call <SID>snippet()
+  au CompleteDone *.exs,*.ex,*.elm call <SID>snippet()
   au CursorMovedI * call <SID>clear_input()
   " highlight text color
   au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
