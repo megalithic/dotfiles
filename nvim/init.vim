@@ -910,21 +910,6 @@ endfunction
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
-  let g:ale_linters = {} " disabling in favor of coc.nvim / languageclient-neovim / vim-lsp
-  let g:ale_linters = {
-        \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'css': ['prettier'],
-        \   'scss': ['prettier'],
-        \   'json': ['prettier'],
-        \   'python': ['pyls'],
-        \   'elixir': ['mix', 'dogma', 'credo', 'elixir-ls', 'dialyxir'],
-        \   'eelixir': ['mix', 'dogma', 'credo', 'elixir-ls', 'dialyxir'],
-        \   'ruby': [],
-        \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -944,14 +929,13 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  let g:ale_elixir_elixir_ls_release = "~/.elixir-ls/rel"
-  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
+  let g:ale_elixir_elixir_ls_release = expand("~/.elixir-ls/rel")
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_insert_leave = 1
   let g:ale_lint_on_enter = 1
-  let g:ale_fix_on_save = 1
   let g:ale_lint_on_save = 1
+  let g:ale_fix_on_save = 1
   let g:ale_virtualtext_cursor = 1
   let g:ale_virtualtext_prefix = "❯❯ "
 
@@ -2155,5 +2139,5 @@ augroup CocSnippet
 augroup END
 "}}}
 
-" xvim:foldenable:foldmethod=marker:ft=vim
-" vim:ft=vim
+" vim:foldenable:foldmethod=marker:ft=vim
+" xvim:ft=vim
