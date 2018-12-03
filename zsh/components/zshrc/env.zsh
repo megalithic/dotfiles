@@ -68,9 +68,10 @@ export TERM_ITALICS="TRUE"
 export NVIMRUNTIME='/usr/local/share/nvim/runtime'
 export NVIM_TUI_ENABLE_TRUE_COLOR=1
 export NVIM_NODE_LOG_FILE="$DOTS/nvim/nvim-node-debug.log"
-# export NVIM_NODE_LOG_LEVEL='debug'
+# export NVIM_NODE_LOG_LEVEL=debug
 export NVIM_PYTHON_LOG_FILE="$DOTS/nvim/nvim-python-debug.log"
-# export NVIM_PYTHON_LOG_LEVEL='debug'
+# export NVIM_PYTHON_LOG_LEVEL=debug
+# export NVIM_COC_LOG_LEVEL=debug
 
 # by default: export WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
 # we take out the slash, period, angle brackets, dash here.

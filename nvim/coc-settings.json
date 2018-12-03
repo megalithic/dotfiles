@@ -74,14 +74,14 @@
       "initializationOptions": {},
       "settings": {}
     },
-    "elixir": {
-      "command": "language_server.sh",
-      "args": [],
-      "filetypes": ["elixir", "eelixir"],
-      "cwd": "./",
-      // "initializationOptions": {"elixirLS": { "dialyzerEnabled": true }},
-      "settings": {}
-    },
+    /* "elixir": { */
+    /*   "command": "language_server.sh", */
+    /*   "args": [], */
+    /*   "filetypes": ["elixir", "eelixir"], */
+    /*   "cwd": "./", */
+    /*   // "initializationOptions": {"elixirLS": { "dialyzerEnabled": true }}, */
+    /*   "settings": {} */
+    /* }, */
     "dart": {
       "command": "dart_language_server",
       "args": [],
