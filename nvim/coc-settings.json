@@ -20,7 +20,7 @@
   "coc.preferences.jumpCommand": "vsplit",
 
   // diagnostics
-  "coc.preferences.diagnostic.enable": true,
+  "coc.preferences.diagnostic.enable": false,
   "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
   /* "coc.preferences.diagnostic.highlightOffset": 1000, */
@@ -84,7 +84,7 @@
       "settings": {}
     },
     "elixir": {
-      "command": "language_server.sh",
+      "command": ".elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir"],
       "cwd": "./",

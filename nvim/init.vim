@@ -930,7 +930,7 @@ endfunction
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
-  let g:ale_elixir_elixir_ls_release = expand("~/.elixir-ls/rel")
+  let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_insert_leave = 1
