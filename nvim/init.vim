@@ -52,7 +52,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
   Plug 'sheerun/vim-polyglot'
-  Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
+  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
   Plug 'Shougo/context_filetype.vim'
   Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
   Plug 'Shougo/neco-syntax'
@@ -72,29 +72,29 @@ silent! if plug#begin('~/.config/nvim/plugged')
       !yarn install
       call coc#util#install_extension(join([
             \ 'coc-css',
-            \ 'coc-dictionary',
             \ 'coc-emoji',
+            \ 'coc-eslint',
             \ 'coc-html',
             \ 'coc-json',
             \ 'coc-pyls',
-            \ 'coc-omni',
             \ 'coc-rls',
             \ 'coc-solargraph',
+            \ 'coc-tsserver',
+            \ 'coc-tslint',
             \ 'coc-ultisnips',
-            \ 'coc-word',
             \ 'coc-yaml',
             \ ]))
 
       " -- disabled coc.nvim extensions:
-      " \ 'coc-tsserver',
-      " \ 'coc-eslint',
-      " \ 'coc-tslint',
+      " \ 'coc-omni',
+      " \ 'coc-dictionary',
       " \ 'coc-java',
       " \ 'coc-vetur',
       " \ 'coc-wxml',
       " \ 'coc-prettier',
       " \ 'coc-stylelint',
       " \ 'coc-highlight',
+      " \ 'coc-word',
     elseif a:info.status ==? 'updated'
       !yarn install
       call coc#util#update()
@@ -1167,6 +1167,10 @@ endfunction
   let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
   let g:UltiSnipsRemoveSelectModeMappings = 0
   let g:UltiSnipsSnippetDirectories=['UltiSnips']
+
+" ## alchemist.vim
+  " let g:alchemist_mappings_disable = 1
+  " let g:alchemist_tag_disable = 1
 
 " }}}
 " ░░░░░░░░░░░░░░░ Custom Mappings {{{

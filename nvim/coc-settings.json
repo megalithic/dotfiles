@@ -1,5 +1,4 @@
 {
-  // coc settting
   // could be 'always' 'trigger' => for specified trigger characters only 'none'
   "coc.preferences.autoTrigger": "always",
   // only used when autoTrigger is always
@@ -12,7 +11,6 @@
   "coc.preferences.snippetIndicator": "",
   "coc.preferences.colorSupport": false,
   "coc.preferences.hoverTarget": "echo",
-  // not make vim select first item on completion start
   "coc.preferences.noselect": false,
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
   // "coc.preferences.watchmanPath": "",
@@ -20,34 +18,41 @@
   "coc.preferences.formatOnType": false,
   // command used for jump to other buffer
   "coc.preferences.jumpCommand": "vsplit",
-  // enable diagnostic
+
+  // diagnostics
   "coc.preferences.diagnostic.enable": true,
-  "coc.preferences.diagnostic.locationlist": true,
+  "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
-  // "coc.preferences.diagnostic.highlightOffset": 1000,
+  /* "coc.preferences.diagnostic.highlightOffset": 1000, */
   "coc.preferences.diagnostic.errorSign": "✖",
   "coc.preferences.diagnostic.warningSign": "⬥",
   "coc.preferences.diagnostic.infoSign": ">>",
   "coc.preferences.diagnostic.hintSign": ">>",
   "coc.preferences.codeLens.enable": true,
   "coc.preferences.codeLens.separator": "❯❯ ",
+
   // prettier
   "prettier.eslintIntegration": true,
   "prettier.tslintIntegration": true,
   "prettier.stylelintIntegration": true,
+
   // eslint
   "eslint.filetypes": ["javascript", "javascript.jsx", "javascriptreact"],
   "eslint.autoFix": true,
   "eslint.autoFixOnSave": true,
+
   // tslint
   "tslint.autoFixOnSave": true,
+
   // yaml
   "yaml.schemas": {
     "http://json.schemastore.org/composer": "/*"
   },
+
+  // sources
   "coc.source.emoji.enable": true,
   "coc.source.emoji.filetypes": ["markdown", "gitcommit"],
-  "coc.source.emoji.triggerCharacters": [":"],
+  /* "coc.source.emoji.triggerCharacters": [":"], */
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
   "coc.source.around.enable": true,
@@ -64,6 +69,8 @@
   "coc.source.file.trimSameExts": [".ts", ".js"],
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
+  "coc.source.word.enable": false,
+
   // languageserver
   "languageserver": {
     "sh": {
@@ -74,14 +81,14 @@
       "initializationOptions": {},
       "settings": {}
     },
-    /* "elixir": { */
-    /*   "command": "language_server.sh", */
-    /*   "args": [], */
-    /*   "filetypes": ["elixir", "eelixir"], */
-    /*   "cwd": "./", */
-    /*   // "initializationOptions": {"elixirLS": { "dialyzerEnabled": true }}, */
-    /*   "settings": {} */
-    /* }, */
+    "elixir": {
+      "command": "language_server.sh",
+      "args": [],
+      "filetypes": ["elixir", "eelixir"],
+      "cwd": "./",
+      // "initializationOptions": {"elixirLS": { "dialyzerEnabled": true }},
+      "settings": {}
+    },
     "dart": {
       "command": "dart_language_server",
       "args": [],
