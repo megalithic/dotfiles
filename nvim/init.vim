@@ -88,31 +88,36 @@ silent! if plug#begin('~/.config/nvim/plugged')
       !yarn install
       call coc#util#install_extension(join([
             \ 'coc-word',
+            \ 'coc-dictionary',
             \ 'coc-emoji',
             \ 'coc-ultisnips',
-            \ 'coc-tsserver',
             \ 'coc-html',
             \ 'coc-css',
             \ 'coc-json',
-            \ 'coc-eslint',
-            \ 'coc-tslint',
-            \ 'coc-prettier',
-            \ 'coc-stylelint',
             \ 'coc-pyls',
-            \ 'coc-java',
             \ 'coc-rls',
             \ 'coc-solargraph',
-            \ 'coc-vetur',
-            \ 'coc-wxml',
             \ 'coc-yaml',
-            \ 'coc-highlight',
             \ ]))
+      " disabled coc.nvim extensions:
+      " \ 'coc-tsserver',
+      " \ 'coc-eslint',
+      " \ 'coc-tslint',
+      " \ 'coc-java',
+      " \ 'coc-vetur',
+      " \ 'coc-wxml',
+      " \ 'coc-prettier',
+      " \ 'coc-stylelint',
+      " \ 'coc-highlight',
     elseif a:info.status ==? 'updated'
       !yarn install
       call coc#util#update()
     endif
   endfunction
-  Plug 'neoclide/coc.nvim', {'do': function('PlugDoCoc')}
+  Plug 'neoclide/coc.nvim', { 'do': function('PlugDoCoc') }
+  Plug 'Shougo/neco-vim', { 'for': ['vim'] }
+  Plug 'neoclide/coc-neco', { 'for': ['vim'] }
+
   if (!has('nvim'))
     Plug 'neoclide/vim-node-rpc'
   endif
@@ -233,7 +238,7 @@ set relativenumber                                                              
 set signcolumn=yes
 set history=500                                                                 "Store lots of :cmdline history
 set showcmd                                                                     "Show incomplete cmds down the bottom
-" set cmdheight=2
+set cmdheight=1
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
 set gdefault                                                                    "Set global flag for search and replace
 set gcr=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
@@ -541,7 +546,7 @@ augroup elm
 
   au FileType elm setl iskeyword+=_
   " au FileType elm nn <C-c> :bd!<CR>
-  au FileType elm setlocal omnifunc=lsp#complete
+  " au FileType elm setlocal omnifunc=lsp#complete
   " au FileType elm setlocal omnifunc=LanguageClient#complete
 augroup END
 
@@ -920,21 +925,21 @@ endfunction
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
-  " let g:ale_linters = {} " disabling in favor of languageclient-neovim or vim-lsp
-  let g:ale_linters = {
-        \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
-        \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
-        \   'css': ['prettier'],
-        \   'scss': ['prettier'],
-        \   'json': ['prettier'],
-        \   'python': ['pyls'],
-        \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
-        \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
-        \   'ruby': [],
-        \ }                                                                       "Lint js with eslint
+  let g:ale_linters = {} " disabling in favor of coc.nvim / languageclient-neovim / vim-lsp
+  " let g:ale_linters = {
+  "       \   'javascript': ['prettier', 'eslint', 'prettier_eslint'],
+  "       \   'javascript.jsx': ['prettier', 'eslint', 'prettier_eslint'],
+  "       \   'typescript': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+  "       \   'typescriptreact': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+  "       \   'typescript.tsx': ['prettier', 'eslint', 'prettier_eslint', 'tsserver', 'tslint', 'typecheck'],
+  "       \   'css': ['prettier'],
+  "       \   'scss': ['prettier'],
+  "       \   'json': ['prettier'],
+  "       \   'python': ['pyls'],
+  "       \   'elixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
+  "       \   'eelixir': ['mix', 'credo', 'elixir-ls', 'dialyxir'],
+  "       \   'ruby': [],
+  "       \ }                                                                       "Lint js with eslint
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -1022,8 +1027,8 @@ endfunction
   let g:elixir_docpreview = 1
 
 " ## colorizer
-  let g:colorizer_auto_filetype='css,scss'
-  let g:colorizer_colornames = 1
+  " let g:colorizer_auto_filetype='css,scss'
+  " let g:colorizer_colornames = 1
 
 " ## rainbow_parentheses.vim
   let g:rainbow#max_level = 10
@@ -1064,7 +1069,7 @@ endfunction
         \ "hl":      ["fg", "ALEWarning"],
         \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
         \ "bg+":     ["bg", "CursorLine", "CursorColumn"],
-        \ "hl+":     ["fg", "ALEWarning"],
+        \ "hl+":     ["fg", "CocWarning"],
         \ "info":    ["fg", "Comment"],
         \ "border":  ["fg", "Ignore"],
         \ "prompt":  ["fg", "Comment"],
@@ -1338,12 +1343,12 @@ endfunction
 
 
 " # vim-lsp
-  nnoremap <F2> :LspRename<CR>
-  nnoremap <leader>ld :LspDefinition<CR>
-  nnoremap <leader>lf :LspDocumentFormat<CR>
-  nnoremap <leader>lh :LspHover<CR>
-  nnoremap <leader>lr :LspReferences<CR>
-  nnoremap <leader>li :LspImplementation<CR>
+  " nnoremap <F2> :LspRename<CR>
+  " nnoremap <leader>ld :LspDefinition<CR>
+  " nnoremap <leader>lf :LspDocumentFormat<CR>
+  " nnoremap <leader>lh :LspHover<CR>
+  " nnoremap <leader>lr :LspReferences<CR>
+  " nnoremap <leader>li :LspImplementation<CR>
   " nnoremap <leader>] :LspNextError<CR>
   " nnoremap <leader>[ :LspPreviousError<CR>
 
@@ -1359,8 +1364,8 @@ endfunction
   " nnoremap <silent><F8>:call LanguageClient_contextMenu()<CR>
 
 " # ALE
-  nmap <silent> <C-[> <Plug>(ale_previous_wrap)
-  nmap <silent> <C-]> <Plug>(ale_next_wrap)
+  " nmap <silent> <C-[> <Plug>(ale_previous_wrap)
+  " nmap <silent> <C-]> <Plug>(ale_next_wrap)
 
 " # netrw
   " nnoremap - :Vexplore<CR>
@@ -1783,6 +1788,8 @@ let g:lightline = {
       \     'branch': 'LightlineBranch',
       \     'lineinfo': 'LightlineLineInfo',
       \     'percent': 'LightlinePercent',
+      \     'gutentags': 'LightlineGutentags',
+      \     'coc': 'LightlineCocStatus',
       \   },
       \   'component_expand': {
       \     'linter_checking': 'lightline#ale#checking',
@@ -1817,7 +1824,7 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
-      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
+      \       ['coc', 'gutentags'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
       \       ['filetype'],
@@ -1842,10 +1849,12 @@ let g:lightline = {
       \   },
       \ }
 
-let g:lightline#ale#indicator_ok = "\uf42e "
-let g:lightline#ale#indicator_warnings = ' '
-let g:lightline#ale#indicator_errors = ' '
-let g:lightline#ale#indicator_checking = " "
+" right section for ALE things:
+" \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
+" let g:lightline#ale#indicator_ok = "\uf42e "
+" let g:lightline#ale#indicator_warnings = ' '
+" let g:lightline#ale#indicator_errors = ' '
+" let g:lightline#ale#indicator_checking = " "
 
 function! UpdateStatusBar(timer)
   " call lightline#update()
@@ -1950,6 +1959,38 @@ function! LightlineScrollbar()
   endif
 
   return noscrollbar#statusline(scrollbar_width, '-', '#')
+endfunction
+
+function! s:get_gutentags_status(mods) abort
+  let l:msg = ''
+  if index(a:mods, 'ctags') > 0
+     let l:msg .= '♨'
+   endif
+   if index(a:mods, 'cscope') > 0
+     let l:msg .= '♺'
+   endif
+   return l:msg
+endfunction
+
+function! LightlineGutentags()
+  if !exists('g:loaded_gutentags')
+    return ''
+  endif
+  return gutentags#statusline_cb(function('<SID>get_gutentags_status'))
+endfunction
+
+function! LightlineCocStatus()
+  let info = get(b:, 'coc_diagnostic_info', {})
+  if empty(info) | return "\uf42e " | endif
+  let msgs = []
+  if get(info, 'error', 0)
+    call add(msgs, ' ' . info['error'])
+  endif
+  if get(info, 'warning', 0)
+    call add(msgs, ' ' . info['warning'])
+  endif
+  " return 'coc: ' . join(msgs, ' ')
+  return join(msgs, ' ')
 endfunction
 
 " }}}
@@ -2088,16 +2129,23 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   " hi link markdownCodeBlock Delimiter
   " hi link markdownListMarker Todo
 
-  hi ALEErrorSign term=NONE cterm=NONE gui=NONE ctermfg=red guifg=#cc6666 guibg=NONE
-  hi ALEWarningSign ctermfg=11 ctermbg=15 guifg=#f0c674 guibg=NONE
-
-  hi link ALEError SpellBad
-  hi link ALEWarning SpellBad
   hi link Debug SpellBad
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
-  hi ALEError term=NONE guibg=#DF8C8C guifg=#333333
+  hi ALEErrorSign gui=NONE guifg=#cc6666 guibg=NONE
+  hi ALEWarningSign guifg=#f0c674 guibg=NONE
+  hi ALEError guibg=#DF8C8C guifg=#333333
+  hi ALEWarning guibg=#F2C38F guifg=#333333
+  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333
+  hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333
+
+  hi CocErrorSign guibg=#DF8C8C guifg=#333333 gui=underline
+  hi CocWarningSign guibg=#F2C38F guifg=#333333 gui=underline
+  hi CocErrorHighlight guibg=#DF8C8C guifg=#333333
+  hi CocWarningHighlight guibg=#F2C38F guifg=#333333
+  " hi CocErrorLine guibg=#DF8C8C guifg=#333333
+  " hi CocWarningLine guibg=#F2C38F guifg=#333333
   hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333
   hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333
 
@@ -2126,15 +2174,9 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   " hi DiffText guifg=#F2C38F
 " }}}
 " ░░░░░░░░░░░░░░░ coc.nvim {{{
-" if hidden not set, TextEdit might fail.
-set hidden
-" Better display for messages
-set cmdheight=1
-" always show signcolumns
-set signcolumn=yes
 " for showSignatureHelp
-set noshowmode
 set completeopt=noinsert,menuone,noselect
+set shortmess+=c
 
 " Or use formatexpr for range format
 set formatexpr=CocActionAsync('formatSelected')
@@ -2147,41 +2189,41 @@ endfunction
 
 " if exists snippets
 function s:isSnipsExpandable()
-    try
-        let l:line = getline('.')
-        let l:start = col('.') - 1
-        while l:start > 0 && l:line[l:start - 1] =~# '\k'
-            let l:start -= 1
-        endwhile
-        let l:trigger = l:line[l:start : col('.')-2]
-        " get user input str
-        if s:input_word ==# ''
-            let s:input_word = l:trigger
-        endif
-        if s:input_word !=# l:trigger
-            return v:false
-        endif
-        " get snippets
-        let l:snippets = UltiSnips#SnippetsInCurrentScope()
-        let l:has_snips = !(
-                    \ col('.') <= 1
-                    \ || !empty(matchstr(getline('.'), '\%' . (col('.') - 1) . 'c\s'))
-                    \ || empty(l:snippets)
-                    \ || get(l:snippets, l:trigger, 'notExists') ==# 'notExists'
-                    \ )
-        " has snippets and snippets is input str
-        return l:has_snips
-    catch /.*/
-        return v:false
-    endtry
+  try
+    let l:line = getline('.')
+    let l:start = col('.') - 1
+    while l:start > 0 && l:line[l:start - 1] =~# '\k'
+      let l:start -= 1
+    endwhile
+    let l:trigger = l:line[l:start : col('.')-2]
+    " get user input str
+    if s:input_word ==# ''
+      let s:input_word = l:trigger
+    endif
+    if s:input_word !=# l:trigger
+      return v:false
+    endif
+    " get snippets
+    let l:snippets = UltiSnips#SnippetsInCurrentScope()
+    let l:has_snips = !(
+          \ col('.') <= 1
+          \ || !empty(matchstr(getline('.'), '\%' . (col('.') - 1) . 'c\s'))
+          \ || empty(l:snippets)
+          \ || get(l:snippets, l:trigger, 'notExists') ==# 'notExists'
+          \ )
+    " has snippets and snippets is input str
+    return l:has_snips
+  catch /.*/
+    return v:false
+  endtry
 endfunction
 
 " press enter when pumvisible
 function! s:press_enter() abort
-    if s:input_word ==# ''
-        return "\<C-g>u\<CR>\<C-g>u"
-    endif
-    return "\<C-y>"
+  if s:input_word ==# ''
+    return "\<C-g>u\<CR>\<C-g>u"
+  endif
+  return "\<C-y>"
 endfunction
 
 " tab:
@@ -2214,24 +2256,27 @@ nnoremap <silent> K :call <SID>show_documentation()<CR>
 
 " Remap for rename current word
 nmap <leader>rn <Plug>(coc-rename)
+nmap <F2> <Plug>(coc-rename)
 
 " Use `[c` and `]c` for navigate diagnostics
 nmap <silent> [c <Plug>(coc-diagnostic-prev)
 nmap <silent> ]c <Plug>(coc-diagnostic-next)
+nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
+nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
 
 " Remap keys for gotos
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+nmap <silent> <leader>ld <Plug>(coc-definition)
+nmap <silent> <leader>lt <Plug>(coc-type-definition)
+nmap <silent> <leader>li <Plug>(coc-implementation)
+nmap <silent> <leader>lr <Plug>(coc-references)
 
 " Remap for format selected region
-vmap <leader>fm <Plug>(coc-format-selected)
-nmap <leader>fm <Plug>(coc-format-selected)
+vmap <leader>lf <Plug>(coc-format-selected)
+nmap <leader>lf <Plug>(coc-format-selected)
 
 " Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-vmap <leader>a <Plug>(coc-codeaction-selected)
-nmap <leader>a <Plug>(coc-codeaction-selected)
+vmap <leader>la <Plug>(coc-codeaction-selected)
+nmap <leader>la <Plug>(coc-codeaction-selected)
 
 " Use `:Format` for format current buffer
 command! -nargs=0 Format :call CocActionAsync('format')
@@ -2240,43 +2285,44 @@ command! -nargs=0 Format :call CocActionAsync('format')
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
 augroup coc_au
-  autocmd!
+  au!
   " Show signature help while editing
-  " autocmd CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+  " au CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
+  au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
   " Highlight symbol under cursor on CursorHold
-  autocmd CursorHold * silent call CocActionAsync('highlight')
+  " au CursorHold * silent call CocActionAsync('highlight')
 augroup END
 
 function! s:clear_input() abort
-    let s:input_word = ''
+  let s:input_word = ''
 endfunction
 
 function! s:snippet() abort
-    let l:start_line = line('.')
-    let l:is_position = search('\v%x0')
-    if l:is_position !=# 0
-        silent! s/\v\t/    /g
-        silent! s/\v%x0\n//g
-        silent! s/\v%x0/\r/g
-        let l:end_line = line('.')
-        call cursor(l:start_line, 0)
-        let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
-        if l:pos[0] !=# 0 && l:pos[1] !=# 0
-            call cursor(l:pos[0], l:pos[1])
-            normal! df}
-        endif
+  let l:start_line = line('.')
+  let l:is_position = search('\v%x0')
+  if l:is_position !=# 0
+    silent! s/\v\t/    /g
+    silent! s/\v%x0\n//g
+    silent! s/\v%x0/\r/g
+    let l:end_line = line('.')
+    call cursor(l:start_line, 0)
+    let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
+    if l:pos[0] !=# 0 && l:pos[1] !=# 0
+      call cursor(l:pos[0], l:pos[1])
+      normal! df}
     endif
+  endif
 endfunction
 
 augroup CocSnippet
-    autocmd!
-    autocmd CompleteDone *.vue call <SID>snippet()
-    autocmd CursorMovedI * call <SID>clear_input()
-    " highlight text color
-    autocmd ColorScheme * highlight! CocHighlightText  guibg=#707e0a ctermbg=023
+  au!
+  au CompleteDone *.vue call <SID>snippet()
+  au CursorMovedI * call <SID>clear_input()
+  " highlight text color
+  au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
 augroup END
 "}}}
 
-" vim:foldenable:foldmethod=marker:ft=vim
+" xvim:foldenable:foldmethod=marker:ft=vim
+" vim:ft=vim

@@ -4,19 +4,32 @@
   "coc.preferences.autoTrigger": "always",
   // only used when autoTrigger is always
   "coc.preferences.triggerAfterInsertEnter": false,
+  "coc.preferences.minTriggerInputLength": 2,
+  "coc.preferences.acceptSuggestionOnCommitCharacter": false,
+  "coc.preferences.triggerSignatureHelp": true,
   "coc.preferences.snippets.enable": true,
-  "coc.preferences.hoverTarget": "echo",
+  "coc.preferences.snippetIndicator": "",
+  "coc.preferences.colorSupport": false,
+  "coc.preferences.hoverTarget": "preview",
   // not make vim select first item on completion start
   "coc.preferences.noselect": true,
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
   // "coc.preferences.watchmanPath": "",
+   // enable formatOnType feature
+  "coc.preferences.formatOnType": false,
+  // command used for jump to other buffer
+  "coc.preferences.jumpCommand": "vsplit",
   // enable diagnostic
   "coc.preferences.diagnostic.enable": true,
+  "coc.preferences.diagnostic.locationlist": true,
   "coc.preferences.diagnostic.signOffset": 1000,
-  "coc.preferences.diagnostic.errorSign": ">>",
-  "coc.preferences.diagnostic.warningSign": "⚠",
+  // "coc.preferences.diagnostic.highlightOffset": 1000,
+  "coc.preferences.diagnostic.errorSign": "✖",
+  "coc.preferences.diagnostic.warningSign": "⬥",
   "coc.preferences.diagnostic.infoSign": ">>",
   "coc.preferences.diagnostic.hintSign": ">>",
+  "coc.preferences.codeLens.enable": true,
+  "coc.preferences.codeLens.separator": "❯❯ ",
   // prettier
   "prettier.eslintIntegration": true,
   "prettier.tslintIntegration": true,
@@ -33,7 +46,23 @@
   },
   "coc.source.emoji.enable": true,
   "coc.source.emoji.filetypes": ["markdown", "gitcommit"],
-  // "coc.source.emoji.triggerCharacters": [":"],
+  "coc.source.emoji.triggerCharacters": [":"],
+  "coc.source.ultisnips.enable": true,
+  "coc.source.ultisnips.shortcut": "",
+  "coc.source.around.enable": true,
+  "coc.source.around.shortcut": "A",
+  "coc.source.around.priority": 1,
+  "coc.source.buffer.enable": true,
+  "coc.source.buffer.shortcut": "B",
+  "coc.source.buffer.priority": 1,
+  "coc.source.buffer.ignoreGitignore": true,
+  "coc.source.file.enable": true,
+  "coc.source.file.shortcut": "F",
+  "coc.source.file.priority": 10,
+  "coc.source.file.triggerCharacters": ["/"],
+  "coc.source.file.trimSameExts": [".ts", ".js"],
+  "coc.source.file.ignoreHidden": true,
+  "coc.source.file.ignorePatterns": [],
   // languageserver
   "languageserver": {
     "sh": {
@@ -49,7 +78,7 @@
       "args": [],
       "filetypes": ["elixir", "eelixir"],
       "cwd": "./",
-      "initializationOptions": {},
+      // "initializationOptions": {"elixirLS": { "dialyzerEnabled": true }},
       "settings": {}
     },
     "dart": {
@@ -64,6 +93,11 @@
       "command": "docker-langserver",
       "filetypes": ["dockerfile"],
       "args": ["--stdio"]
+    },
+    "python": {
+      "command": "pyls",
+      "filetypes": ["python", "pythonx"],
+      "args": []
     },
     "golang": {
       "command": "go-langserver",
