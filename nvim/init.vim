@@ -52,6 +52,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
   Plug 'sheerun/vim-polyglot'
+  Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
 
 " ## Completion
   Plug 'ncm2/ncm2', { 'do': ':UpdateRemotePlugins'  }| Plug 'roxma/nvim-yarp'
@@ -61,7 +62,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'ncm2/ncm2-html-subscope'
   Plug 'ncm2/ncm2-markdown-subscope'
   Plug 'ncm2/ncm2-cssomni', { 'for': ['css','scss','sass'] }
-  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
   " Plug 'yuki-ycino/ncm2-dictionary'
   " Plug 'filipekiss/ncm2-look.vim'
   " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
@@ -2143,7 +2143,7 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   hi CocErrorSign guibg=#DF8C8C guifg=#333333 gui=underline
   hi CocWarningSign guibg=#F2C38F guifg=#333333 gui=underline
   hi CocErrorHighlight guibg=#DF8C8C guifg=#333333
-  hi CocWarningHighlight guibg=#F2C38F guifg=#333333
+  " hi CocWarningHighlight guibg=#F2C38F guifg=#333333
   " hi CocErrorLine guibg=#DF8C8C guifg=#333333
   " hi CocWarningLine guibg=#F2C38F guifg=#333333
   hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333
@@ -2261,8 +2261,8 @@ nmap <F2> <Plug>(coc-rename)
 " Use `[c` and `]c` for navigate diagnostics
 nmap <silent> [c <Plug>(coc-diagnostic-prev)
 nmap <silent> ]c <Plug>(coc-diagnostic-next)
-nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
-nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
+" nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
+" nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
 
 " Remap keys for gotos
 nmap <silent> <leader>ld <Plug>(coc-definition)
