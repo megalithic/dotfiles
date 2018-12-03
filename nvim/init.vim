@@ -2317,7 +2317,7 @@ endfunction
 
 augroup CocSnippet
   au!
-  au CompleteDone *.vue call <SID>snippet()
+  au CompleteDone *.elixir,*.elm call <SID>snippet()
   au CursorMovedI * call <SID>clear_input()
   " highlight text color
   au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
