@@ -51,6 +51,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
+  Plug 'kovisoft/slimv'
   Plug 'sheerun/vim-polyglot'
   " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
   Plug 'Shougo/context_filetype.vim'

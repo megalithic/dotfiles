@@ -115,8 +115,8 @@ alias kitty='/Applications/kitty.app/Contents/MacOS/kitty'
 
 # EMACS/SPACEMACS
 # -----------------------------------------------------------------------------
-alias updateemacs='cd ~/.emacs.d; git co develop; git fetch; git merge origin/develop; cd -'
-alias ec='emacsclient'
+alias em='emacsclient -create-frame --alternate-editor=""'
+alias ec=em
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
