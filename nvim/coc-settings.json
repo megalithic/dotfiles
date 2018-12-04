@@ -1,5 +1,6 @@
 {
   // could be 'always' 'trigger' => for specified trigger characters only 'none'
+  "coc.preferences.extensionUpdateCheck": "daily",
   "coc.preferences.autoTrigger": "always",
   // only used when autoTrigger is always
   "coc.preferences.triggerAfterInsertEnter": false,
@@ -10,7 +11,7 @@
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetIndicator": "",
   "coc.preferences.colorSupport": false,
-  "coc.preferences.hoverTarget": "echo",
+  "coc.preferences.hoverTarget": "preview",
   "coc.preferences.noselect": false,
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
   // "coc.preferences.watchmanPath": "",
@@ -21,6 +22,7 @@
 
   // diagnostics
   "coc.preferences.diagnostic.enable": true,
+  "coc.preferences.diagnostic.displayByAle": true,
   "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
   "coc.preferences.diagnostic.highlightOffset": 1000,

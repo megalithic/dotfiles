@@ -925,8 +925,8 @@ endfunction
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
   let g:ale_linters = {
-        \   'elixir': ['elixir-ls', 'mix'],
-        \   'eelixir': ['elixir-ls', 'mix'],
+        \   'elixir': ['elixir-ls'],
+        \   'eelixir': ['elixir-ls'],
         \ }
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],

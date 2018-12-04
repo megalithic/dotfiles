@@ -32,9 +32,9 @@ setLayoutForMultiWindows = function(windows, appConfig)
   for index, window in pairs(windows) do
     log.df('[auto-layout] setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
     if (index % 2 == 0) then -- even index/number
-      hs.grid.set(window, config.grid.leftHalf, target_display(appConfig.preferredDisplay))
-    else -- odd index/number
       hs.grid.set(window, config.grid.rightHalf, target_display(appConfig.preferredDisplay))
+    else -- odd index/number
+      hs.grid.set(window, config.grid.leftHalf, target_display(appConfig.preferredDisplay))
     end
   end
 end

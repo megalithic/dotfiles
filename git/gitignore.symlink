@@ -33,3 +33,6 @@ bin/rake
 bin/rspec
 deps
 _build
+tags
+.tags
+.elixir_ls
