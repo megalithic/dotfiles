@@ -911,6 +911,10 @@ endfunction
   let g:ale_sign_column_always = 1
   let g:ale_echo_msg_format = '[%linter%] %s'
   let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
+  let g:ale_linters = {
+        \   'elixir': ['elixir-ls', 'mix'],
+        \   'eelixir': ['elixir-ls', 'mix'],
+        \ }
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
         \   'javascript.jsx': ['prettier_eslint'],
@@ -1281,6 +1285,7 @@ vmap <leader>c :Commentary<CR>
 
 " ## FZF
 nnoremap <silent><leader>m <ESC>:FZF<CR>
+nnoremap <silent><C-p> <ESC>:FZF<CR>
 nnoremap <leader>a <ESC>:Rg<space>
 nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
@@ -1634,6 +1639,7 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
+      \       ['coc'],
       \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok', 'gutentags'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
@@ -2141,4 +2147,3 @@ augroup END
 "}}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
-" xvim:ft=vim

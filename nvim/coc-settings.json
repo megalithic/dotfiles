@@ -15,15 +15,15 @@
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
   // "coc.preferences.watchmanPath": "",
    // enable formatOnType feature
-  "coc.preferences.formatOnType": false,
+  "coc.preferences.formatOnType": true,
   // command used for jump to other buffer
   "coc.preferences.jumpCommand": "vsplit",
 
   // diagnostics
-  "coc.preferences.diagnostic.enable": false,
+  "coc.preferences.diagnostic.enable": true,
   "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
-  /* "coc.preferences.diagnostic.highlightOffset": 1000, */
+  "coc.preferences.diagnostic.highlightOffset": 1000,
   "coc.preferences.diagnostic.errorSign": "✖-",
   "coc.preferences.diagnostic.warningSign": "⬥-",
   "coc.preferences.diagnostic.infoSign": ">>",
@@ -88,7 +88,11 @@
       "args": [],
       "filetypes": ["elixir", "eelixir"],
       "cwd": "./",
-      // "initializationOptions": {"elixirLS": { "dialyzerEnabled": true }},
+      "initializationOptions": {
+        "elixirLS": {
+          "dialyzerEnabled": true
+        }
+      },
       "settings": {}
     },
     "dart": {
