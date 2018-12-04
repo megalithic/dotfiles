@@ -41,31 +41,38 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'lilydjwg/colorizer'
   Plug 'tpope/vim-rails', { 'for': ['ruby', 'eruby', 'haml', 'slim'] }
 
-  " # elixir/elm magics
+  " # elm
   Plug 'elmcast/elm-vim', { 'for': ['elm'] }
-  " Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
-  " Plug 'antoine-atmire/vim-elmc', { 'for': ['elm'] }
+  Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
+
+  " # elixir
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
-  Plug 'mhinz/vim-mix-format'
-  Plug 'mattreduce/vim-mix'
+  Plug 'mhinz/vim-mix-format', { 'for': ['elixir','eelixir'] }
+  Plug 'mattreduce/vim-mix', { 'for': ['elixir','eelixir'] }
+  Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
+  Plug 'mmorearty/elixir-ctags', { 'for': ['elixir','eelixir'] }
+  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
+
+  " # erlang
+  Plug 'vim-erlang/vim-erlang-tags'
+  Plug 'vim-erlang/vim-erlang-runtime'
+  Plug 'vim-erlang/vim-erlang-omnicomplete'
+  Plug 'vim-erlang/vim-erlang-compiler'
+
+  " # other
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
   Plug 'kovisoft/slimv'
   Plug 'sheerun/vim-polyglot'
-  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
-  Plug 'Shougo/context_filetype.vim'
-  Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
-  Plug 'Shougo/neco-syntax'
-  Plug 'Shougo/neco-vim', { 'for': ['vim'] }
-  Plug 'Shougo/neoinclude.vim'
 
-  " if executable('ctags')
-  "   " Plug 'jsfaint/gen_tags.vim'
-  "   " Plug 'ludovicchabant/vim-gutentags'
+" ## tags/ctags/etc
+  if executable('ctags')
+    Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+    Plug 'ludovicchabant/vim-gutentags'
+    " Plug 'jsfaint/gen_tags.vim'
   "   " Plug 'craigemery/vim-autotag'
-  "   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
-  " endif
+  endif
 
 " ## Completion
   function! PlugDoCoc(info) abort
@@ -80,6 +87,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
             \ 'coc-pyls',
             \ 'coc-rls',
             \ 'coc-solargraph',
+            \ 'coc-tag',
             \ 'coc-tsserver',
             \ 'coc-tslint',
             \ 'coc-ultisnips',
@@ -107,6 +115,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   if (!has('nvim'))
     Plug 'neoclide/vim-node-rpc'
   endif
+  Plug 'honza/vim-snippets' | Plug 'SirVer/ultisnips'
+  Plug 'Shougo/context_filetype.vim'
+  Plug 'Shougo/neco-syntax'
+  Plug 'Shougo/neco-vim', { 'for': ['vim'] }
+  Plug 'Shougo/neoinclude.vim'
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -159,7 +172,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'w0rp/ale'
   Plug 'metakirby5/codi.vim', { 'on': ['Codi'] }
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
-  Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': { -> mkdp#util#install() }}
+  Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': 'cd app & yarn install' }
   Plug 'brooth/far.vim', {'do': ':UpdateRemotePlugins' }
 
 " ## Movements/Text Objects, et al
