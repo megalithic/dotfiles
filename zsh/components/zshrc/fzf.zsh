@@ -6,6 +6,7 @@ if [ -n "$(command -v fzf)" ]; then
   [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
   _gen_fzf_default_opts() {
+    local colorbg='#3C4C55'
     local color00='#002b36'
     local color01='#073642'
     local color02='#586e75'
@@ -30,11 +31,10 @@ if [ -n "$(command -v fzf)" ]; then
     --extended
     --bind ctrl-j:ignore,ctrl-k:ignore
     --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
-    --color=spinner:$color0C,hl:$color06
+    --color=bg+:$colorbg,bg:$colorbg,spinner:$color0C,hl:$color06
     --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
     --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0E
     "
-    # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
     # --no-height
   }
   _gen_fzf_default_opts
@@ -49,10 +49,10 @@ if [ -n "$(command -v fzf)" ]; then
   # FZF_DEFAULT_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
   # FZF_CTRL_T_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
 
-  # -- using fd
-  export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
-  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-  export FZF_ALT_C_COMMAND="fd --type d . $HOME"
+  # # -- using fd
+  # export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+  # export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+  # export FZF_ALT_C_COMMAND="fd --type d . $HOME"
 
 
   # -- these must be set *after* loading fzf:

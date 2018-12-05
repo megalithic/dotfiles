@@ -1052,19 +1052,19 @@ endfunction
 
   " nova-vim
   let g:fzf_colors = {
-        \ "fg":      ["fg", "Normal"],
+        \ "fg":      ["fg", "#93a1a1"],
         \ "bg":      ["bg", "Normal"],
-        \ "hl":      ["fg", "ALEWarning"],
+        \ "hl":      ["fg", "#eee8d5"],
         \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
         \ "bg+":     ["bg", "CursorLine", "CursorColumn"],
-        \ "hl+":     ["fg", "CocWarning"],
-        \ "info":    ["fg", "Comment"],
+        \ "hl+":     ["fg", "#6c71c4"],
+        \ "info":    ["fg", "#b58900"],
         \ "border":  ["fg", "Ignore"],
-        \ "prompt":  ["fg", "Comment"],
-        \ "pointer": ["fg", "IncSearch"],
-        \ "marker":  ["fg", "IncSearch"],
-        \ "spinner": ["fg", "IncSearch"],
-        \ "header":  ["fg", "IncSearch"]
+        \ "prompt":  ["fg", "#b58900"],
+        \ "pointer": ["fg", "#cb4b16"],
+        \ "marker":  ["fg", "#2aa198"],
+        \ "spinner": ["fg", "#2aa198"],
+        \ "header":  ["fg", "#268bd2"]
         \}
 
   if executable("rg")
