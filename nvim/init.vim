@@ -944,6 +944,7 @@ endfunction
         \ }                                                                       "Fix eslint errors
   let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
   let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
+  let g:ale_sign_info = '‣'
   let g:ale_javascript_eslint_use_local_config = 1
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
@@ -1602,7 +1603,7 @@ fun! s:FullscreenScratch()
   " when the buffer is destroyed, this mapping will be
   " destroyed with it and the next <Leader><Leader>
   " will spawn a new fullscreen scratch window again
-  nmap <silent><buffer> <Leader><Leader> :tabprevious<Cr>
+  nmap <silent><buffer> <Leader>r :tabprevious<Cr>
 
   " everything is setup, filetype is set
   " let Codi do the rest :)
@@ -1610,7 +1611,7 @@ fun! s:FullscreenScratch()
 endfun
 
 " create a mapping to call the fullscreen scratch wrapper
-nmap <silent> <Leader><Leader> :call <SID>FullscreenScratch()<Cr>
+nmap <silent> <Leader>r :call <SID>FullscreenScratch()<Cr>
 
 "}}}
 " ░░░░░░░░░░░░░░░ Custom Mappings {{{
