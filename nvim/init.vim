@@ -1175,6 +1175,444 @@ endfunction
   " let g:alchemist_tag_disable = 1
 
 " }}}
+" ░░░░░░░░░░░░░░░ lightline/statusbar {{{
+
+" ## lightline.vim
+let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
+let g:lightline = {
+      \   'colorscheme': 'wombat',
+      \   'component': {
+      \     'modified': '%#ModifiedColor#%{LightlineModified()}',
+      \   },
+      \   'component_function': {
+      \     'readonly': 'LightlineReadonly',
+      \     'filename': 'LightlineFileName',
+      \     'filetype': 'LightlineFileType',
+      \     'fileformat': 'LightlineFileFormat',
+      \     'branch': 'LightlineBranch',
+      \     'lineinfo': 'LightlineLineInfo',
+      \     'percent': 'LightlinePercent',
+      \     'gutentags': 'LightlineGutentags',
+      \     'coc': 'LightlineCocStatus',
+      \   },
+      \   'component_expand': {
+      \     'linter_checking': 'lightline#ale#checking',
+      \     'linter_warnings': 'lightline#ale#warnings',
+      \     'linter_errors': 'lightline#ale#errors',
+      \     'linter_ok': 'lightline#ale#ok',
+      \   },
+      \   'component_type': {
+      \     'readonly': 'error',
+      \     'modified': 'raw',
+      \     'linter_checking': 'left',
+      \     'linter_warnings': 'warning',
+      \     'linter_errors': 'error',
+      \     'linter_ok': 'left',
+      \   },
+      \   'component_function_visible_condition': {
+      \     'branch': '&buftype!="nofile"',
+      \     'filename': '&buftype!="nofile"',
+      \     'fileformat': '&buftype!="nofile"',
+      \     'fileencoding': '&buftype!="nofile"',
+      \     'filetype': '&buftype!="nofile"',
+      \     'percent': '&buftype!="nofile"',
+      \     'lineinfo': '&buftype!="nofile"',
+      \     'time': '&buftype!="nofile"',
+      \   },
+      \   'active': {
+      \     'left': [
+      \       ['mode'],
+      \       ['branch'],
+      \       ['filename'],
+      \       ['paste', 'readonly', 'modified'],
+      \       ['spell'],
+      \     ],
+      \     'right': [
+      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok', 'gutentags'],
+      \       ['lineinfo', 'percent'],
+      \       ['fileformat'],
+      \       ['filetype'],
+      \     ],
+      \   },
+      \   'inactive': {
+      \     'left': [ ['filename'], ['readonly', 'modified'] ],
+      \     'right': [ ['lineinfo'], ['fileinfo' ] ],
+      \   },
+      \   'mode_map': {
+      \     'n' : 'N',
+      \     'i' : 'I',
+      \     'R' : 'R',
+      \     'v' : 'V',
+      \     'V' : 'V-LINE',
+      \     "\<C-v>": 'V-BLOCK',
+      \     'c' : 'C',
+      \     's' : 'S',
+      \     'S' : 'S-LINE',
+      \     "\<C-s>": 'S-BLOCK',
+      \     't': 'T',
+      \   },
+      \ }
+
+" right section for ALE things:
+" \       ['coc', 'gutentags'],
+" \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
+
+let g:lightline#ale#indicator_ok = "\uf42e "
+let g:lightline#ale#indicator_warnings = ' '
+let g:lightline#ale#indicator_errors = ' '
+let g:lightline#ale#indicator_checking = " "
+
+function! UpdateStatusBar(timer)
+  " call lightline#update()
+endfunction
+
+function! PrintStatusline(v)
+  return &buftype == 'nofile' ? '' : a:v
+endfunction
+
+function! LightlineFileType()
+  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
+endfunction
+
+function! LightlineFileFormat()
+  return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
+endfunction
+
+function! LightlineBranch()
+  if exists('*fugitive#head')
+    let l:branch = fugitive#head()
+    return PrintStatusline(branch !=# '' ? " " . l:branch : '')
+  endif
+  return ''
+endfunction
+
+function! LightlineLineInfo()
+  return PrintStatusline(printf("\ue0a1 %d/%d %d:%d", line('.'), line('$'), col('.'), col('$')))
+endfunction
+
+function! LightlinePercent()
+  return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '%')
+endfunction
+
+function! LightlineReadonly()
+  " return PrintStatusline(&ro ? "\ue0a2" : '')
+  return PrintStatusline(&readonly && &filetype !=# 'help' ? '' : '')
+endfunction
+
+function! LightlineModified()
+  return PrintStatusline(!&modifiable ? '-' : &modified ?
+        \ "" : '')
+endfunction
+
+function! LightlineFileName()
+  " Get the full path of the current file.
+  let filepath =  expand('%:p')
+
+  " If the filename is empty, then display nothing as appropriate.
+  if empty(filepath)
+    return '[No Name]'
+  endif
+
+  " Find the correct expansion depending on whether Vim has autochdir.
+  let mod = (exists('+acd') && &acd) ? ':~' : ':~:.'
+
+  " Apply the above expansion to the expanded file path and split by the separator.
+  let shortened_filepath = fnamemodify(filepath, mod)
+  if len(shortened_filepath) < 45
+      return shortened_filepath
+  endif
+
+  " Ensure that we have the correct slash for the OS.
+  let dirsep = has('win32') && ! &shellslash ? '\\' : '/'
+
+  " Check if the filepath was shortened above.
+  let was_shortened = filepath != shortened_filepath
+
+  " Split the filepath.
+  let filepath_parts = split(shortened_filepath, dirsep)
+
+  " Take the first character from each part of the path (except the tidle and filename).
+  let initial_position = was_shortened ? 0 : 1
+  let excluded_parts = filepath_parts[initial_position:-2]
+  let shortened_paths = map(excluded_parts, 'v:val[0]')
+
+  " Recombine the shortened paths with the tilde and filename.
+  let combined_parts = shortened_paths + [filepath_parts[-1]]
+  let combined_parts = (was_shortened ? [] : [filepath_parts[0]]) + combined_parts
+
+  " Recombine into a single string.
+  let finalpath = join(combined_parts, dirsep)
+  return PrintStatusline(finalpath)
+  " return finalpath
+endfunction
+
+function! LightlineScrollbar()
+  let top_line = str2nr(line('w0'))
+  let bottom_line = str2nr(line('w$'))
+  let lines_count = str2nr(line('$'))
+
+  if bottom_line - top_line + 1 >= lines_count
+    return ''
+  endif
+
+  let window_width = winwidth(0)
+  if window_width < 90
+    let scrollbar_width = 6
+  elseif window_width < 120
+    let scrollbar_width = 9
+  else
+    let scrollbar_width = 12
+  endif
+
+  return noscrollbar#statusline(scrollbar_width, '-', '#')
+endfunction
+
+function! s:get_gutentags_status(mods) abort
+  let l:msg = ''
+  if index(a:mods, 'ctags') > 0
+     let l:msg .= '♨'
+   endif
+   if index(a:mods, 'cscope') > 0
+     let l:msg .= '♺'
+   endif
+   return l:msg
+endfunction
+
+function! LightlineGutentags()
+  if !exists('g:loaded_gutentags')
+    return ''
+  endif
+  return gutentags#statusline_cb(function('<SID>get_gutentags_status'))
+endfunction
+
+function! LightlineCocStatus()
+  let info = get(b:, 'coc_diagnostic_info', {})
+  if empty(info) | return "\uf42e " | endif
+  let msgs = []
+  if get(info, 'error', 0)
+    call add(msgs, ' ' . info['error'])
+  endif
+  if get(info, 'warning', 0)
+    call add(msgs, ' ' . info['warning'])
+  endif
+  " return 'coc: ' . join(msgs, ' ')
+  return join(msgs, ' ')
+endfunction
+
+" }}}
+" ░░░░░░░░░░░░░░░ coc.nvim {{{
+" for showSignatureHelp
+set completeopt=noinsert,menuone,noselect
+set shortmess+=c
+
+" Or use formatexpr for range format
+set formatexpr=CocActionAsync('formatSelected')
+
+" use <tab> for trigger completion and navigate next complete item
+function! s:check_back_space() abort
+  let l:col = col('.') - 1
+  return !l:col || getline('.')[l:col - 1]  =~# '\s'
+endfunction
+
+" if exists snippets
+function s:isSnipsExpandable()
+  try
+    let l:line = getline('.')
+    let l:start = col('.') - 1
+    while l:start > 0 && l:line[l:start - 1] =~# '\k'
+      let l:start -= 1
+    endwhile
+    let l:trigger = l:line[l:start : col('.')-2]
+    " get user input str
+    if s:input_word ==# ''
+      let s:input_word = l:trigger
+    endif
+    if s:input_word !=# l:trigger
+      return v:false
+    endif
+    " get snippets
+    let l:snippets = UltiSnips#SnippetsInCurrentScope()
+    let l:has_snips = !(
+          \ col('.') <= 1
+          \ || !empty(matchstr(getline('.'), '\%' . (col('.') - 1) . 'c\s'))
+          \ || empty(l:snippets)
+          \ || get(l:snippets, l:trigger, 'notExists') ==# 'notExists'
+          \ )
+    " has snippets and snippets is input str
+    return l:has_snips
+  catch /.*/
+    return v:false
+  endtry
+endfunction
+
+" press enter when pumvisible
+function! s:press_enter() abort
+  if s:input_word ==# ''
+    return "\<C-g>u\<CR>\<C-g>u"
+  endif
+  return "\<C-y>"
+endfunction
+
+" tab:
+"   1. trigger snippets
+"   2. select autocomplete
+"   3. trigger autocomplete
+" inoremap <silent><expr> <TAB>
+"       \ <SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<TAB>" : coc#refresh()
+" inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : (<SID>check_back_space() ? "\<TAB>" : coc#refresh())
+inoremap <silent><expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
+inoremap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
+
+" Use <C-x></C-u> to complete custom sources, including emoji, include and words
+imap <silent> <C-x><C-o> <Plug>(coc-complete-custom)
+
+" Use <CR> for confirm completion.
+inoremap <expr> <CR> pumvisible() ? <SID>press_enter() : "\<C-g>u\<CR>"
+"inoremap <expr> <CR> (pumvisible() ? "\<c-y>" : "\<CR>")
+
+" Use K for show documentation in preview window
+function! s:show_documentation()
+  if &filetype ==# 'vim'
+    execute 'h '.expand('<cword>')
+  else
+    call CocActionAsync('doHover')
+  endif
+endfunction
+
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+" Remap for rename current word
+nmap <leader>rn <Plug>(coc-rename)
+nmap <F2> <Plug>(coc-rename)
+
+" Use `[c` and `]c` for navigate diagnostics
+nmap <silent> [c <Plug>(coc-diagnostic-prev)
+nmap <silent> ]c <Plug>(coc-diagnostic-next)
+" nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
+" nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
+
+" Remap keys for gotos
+nmap <silent> <leader>ld <Plug>(coc-definition)
+nmap <silent> <leader>lt <Plug>(coc-type-definition)
+nmap <silent> <leader>li <Plug>(coc-implementation)
+nmap <silent> <leader>lr <Plug>(coc-references)
+
+" Remap for format selected region
+vmap <leader>lf <Plug>(coc-format-selected)
+nmap <leader>lf <Plug>(coc-format-selected)
+
+" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
+vmap <leader>la <Plug>(coc-codeaction-selected)
+nmap <leader>la <Plug>(coc-codeaction-selected)
+
+" Use `:Format` for format current buffer
+command! -nargs=0 Format :call CocActionAsync('format')
+
+" Use `:Fold` for fold current buffer
+command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
+
+augroup coc_au
+  au!
+  " Show signature help while editing
+  " au CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
+  au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+  " Highlight symbol under cursor on CursorHold
+  " au CursorHold * silent call CocActionAsync('highlight')
+augroup END
+
+function! s:clear_input() abort
+  let s:input_word = ''
+endfunction
+
+function! s:snippet() abort
+  let l:start_line = line('.')
+  let l:is_position = search('\v%x0')
+  if l:is_position !=# 0
+    silent! s/\v\t/    /g
+    silent! s/\v%x0\n//g
+    silent! s/\v%x0/\r/g
+    let l:end_line = line('.')
+    call cursor(l:start_line, 0)
+    let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
+    if l:pos[0] !=# 0 && l:pos[1] !=# 0
+      call cursor(l:pos[0], l:pos[1])
+      normal! df}
+    endif
+  endif
+endfunction
+
+augroup CocSnippet
+  au!
+  au CompleteDone *.exs,*.ex,*.elm call <SID>snippet()
+  au CursorMovedI * call <SID>clear_input()
+  " highlight text color
+  au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
+augroup END
+"}}}
+" ░░░░░░░░░░░░░░░ codi {{{
+
+" since it is fullscreen, I'd like a 50/50 split
+let g:codi#width = 50.0
+
+" instead of destroying buffers, hide them and
+" index them by filetype into this dictionary
+let s:codi_filetype_tabs = {}
+
+fun! s:FullscreenScratch()
+  " store filetype and bufnr of current buffer
+  " for later reference
+  let current_buf_ft  = &ft
+  let current_buf_num = bufnr('%')
+
+  " check if a scratch buffer for this filetype already exists
+  let saved_scratch = get(s:codi_filetype_tabs, current_buf_ft, -1)
+
+  " if a tabpage exists for current_buf_ft, go to it instead of
+  " creating a new scratch buffer
+  if saved_scratch != -1
+    if index(map(gettabinfo(), 'v:val.tabnr'), saved_scratch) == -1
+      unlet s:codi_filetype_tabs[current_buf_ft]
+    else
+      exe 'tabn' saved_scratch
+      return
+    endif
+  endif
+
+  " create a new empty tab, set scratch options and give it a name
+  tabe
+  setlocal buftype=nofile noswapfile modifiable buflisted bufhidden=hide
+  let b:ale_enabled = 0
+  exe ':file scratch::' . current_buf_ft
+
+  " set filetype to that of original source file
+  " e.g. ruby / python / w/e Codi supports
+  let &filetype = current_buf_ft
+
+  " store the tabpagenr per filetype so we can return
+  " to it later when re-opening from the same filetype
+  let s:codi_filetype_tabs[&filetype] = tabpagenr()
+
+  " create a buffer local mapping that overrides the
+  " outer one to delete the current scratch buffer instead
+  " when the buffer is destroyed, this mapping will be
+  " destroyed with it and the next <Leader><Leader>
+  " will spawn a new fullscreen scratch window again
+  nmap <silent><buffer> <Leader><Leader> :tabprevious<Cr>
+
+  " everything is setup, filetype is set
+  " let Codi do the rest :)
+  Codi
+endfun
+
+" create a mapping to call the fullscreen scratch wrapper
+nmap <silent> <Leader><Leader> :call <SID>FullscreenScratch()<Cr>
+
+"}}}
 " ░░░░░░░░░░░░░░░ Custom Mappings {{{
 
 " # ncm2 + ultisnips
@@ -1599,232 +2037,6 @@ nnoremap <silent> ]q :call ExeWithFallback('cnext', 'cfirst')<CR>
 nnoremap <silent> [q :call ExeWithFallback('cprev', 'cfirst')<CR>
 
 " }}}
-" ░░░░░░░░░░░░░░░ Lightline/Statusbar {{{
-
-" ## lightline.vim
-let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
-let g:lightline = {
-      \   'colorscheme': 'wombat',
-      \   'component': {
-      \     'modified': '%#ModifiedColor#%{LightlineModified()}',
-      \   },
-      \   'component_function': {
-      \     'readonly': 'LightlineReadonly',
-      \     'filename': 'LightlineFileName',
-      \     'filetype': 'LightlineFileType',
-      \     'fileformat': 'LightlineFileFormat',
-      \     'branch': 'LightlineBranch',
-      \     'lineinfo': 'LightlineLineInfo',
-      \     'percent': 'LightlinePercent',
-      \     'gutentags': 'LightlineGutentags',
-      \     'coc': 'LightlineCocStatus',
-      \   },
-      \   'component_expand': {
-      \     'linter_checking': 'lightline#ale#checking',
-      \     'linter_warnings': 'lightline#ale#warnings',
-      \     'linter_errors': 'lightline#ale#errors',
-      \     'linter_ok': 'lightline#ale#ok',
-      \   },
-      \   'component_type': {
-      \     'readonly': 'error',
-      \     'modified': 'raw',
-      \     'linter_checking': 'left',
-      \     'linter_warnings': 'warning',
-      \     'linter_errors': 'error',
-      \     'linter_ok': 'left',
-      \   },
-      \   'component_function_visible_condition': {
-      \     'branch': '&buftype!="nofile"',
-      \     'filename': '&buftype!="nofile"',
-      \     'fileformat': '&buftype!="nofile"',
-      \     'fileencoding': '&buftype!="nofile"',
-      \     'filetype': '&buftype!="nofile"',
-      \     'percent': '&buftype!="nofile"',
-      \     'lineinfo': '&buftype!="nofile"',
-      \     'time': '&buftype!="nofile"',
-      \   },
-      \   'active': {
-      \     'left': [
-      \       ['mode'],
-      \       ['branch'],
-      \       ['filename'],
-      \       ['paste', 'readonly', 'modified'],
-      \       ['spell'],
-      \     ],
-      \     'right': [
-      \       ['coc'],
-      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok', 'gutentags'],
-      \       ['lineinfo', 'percent'],
-      \       ['fileformat'],
-      \       ['filetype'],
-      \     ],
-      \   },
-      \   'inactive': {
-      \     'left': [ ['filename'], ['readonly', 'modified'] ],
-      \     'right': [ ['lineinfo'], ['fileinfo' ] ],
-      \   },
-      \   'mode_map': {
-      \     'n' : 'N',
-      \     'i' : 'I',
-      \     'R' : 'R',
-      \     'v' : 'V',
-      \     'V' : 'V-LINE',
-      \     "\<C-v>": 'V-BLOCK',
-      \     'c' : 'C',
-      \     's' : 'S',
-      \     'S' : 'S-LINE',
-      \     "\<C-s>": 'S-BLOCK',
-      \     't': 'T',
-      \   },
-      \ }
-
-" right section for ALE things:
-" \       ['coc', 'gutentags'],
-" \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
-
-let g:lightline#ale#indicator_ok = "\uf42e "
-let g:lightline#ale#indicator_warnings = ' '
-let g:lightline#ale#indicator_errors = ' '
-let g:lightline#ale#indicator_checking = " "
-
-function! UpdateStatusBar(timer)
-  " call lightline#update()
-endfunction
-
-function! PrintStatusline(v)
-  return &buftype == 'nofile' ? '' : a:v
-endfunction
-
-function! LightlineFileType()
-  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
-endfunction
-
-function! LightlineFileFormat()
-  return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
-endfunction
-
-function! LightlineBranch()
-  if exists('*fugitive#head')
-    let l:branch = fugitive#head()
-    return PrintStatusline(branch !=# '' ? " " . l:branch : '')
-  endif
-  return ''
-endfunction
-
-function! LightlineLineInfo()
-  return PrintStatusline(printf("\ue0a1 %d/%d %d:%d", line('.'), line('$'), col('.'), col('$')))
-endfunction
-
-function! LightlinePercent()
-  return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '%')
-endfunction
-
-function! LightlineReadonly()
-  " return PrintStatusline(&ro ? "\ue0a2" : '')
-  return PrintStatusline(&readonly && &filetype !=# 'help' ? '' : '')
-endfunction
-
-function! LightlineModified()
-  return PrintStatusline(!&modifiable ? '-' : &modified ?
-        \ "" : '')
-endfunction
-
-function! LightlineFileName()
-  " Get the full path of the current file.
-  let filepath =  expand('%:p')
-
-  " If the filename is empty, then display nothing as appropriate.
-  if empty(filepath)
-    return '[No Name]'
-  endif
-
-  " Find the correct expansion depending on whether Vim has autochdir.
-  let mod = (exists('+acd') && &acd) ? ':~' : ':~:.'
-
-  " Apply the above expansion to the expanded file path and split by the separator.
-  let shortened_filepath = fnamemodify(filepath, mod)
-  if len(shortened_filepath) < 45
-      return shortened_filepath
-  endif
-
-  " Ensure that we have the correct slash for the OS.
-  let dirsep = has('win32') && ! &shellslash ? '\\' : '/'
-
-  " Check if the filepath was shortened above.
-  let was_shortened = filepath != shortened_filepath
-
-  " Split the filepath.
-  let filepath_parts = split(shortened_filepath, dirsep)
-
-  " Take the first character from each part of the path (except the tidle and filename).
-  let initial_position = was_shortened ? 0 : 1
-  let excluded_parts = filepath_parts[initial_position:-2]
-  let shortened_paths = map(excluded_parts, 'v:val[0]')
-
-  " Recombine the shortened paths with the tilde and filename.
-  let combined_parts = shortened_paths + [filepath_parts[-1]]
-  let combined_parts = (was_shortened ? [] : [filepath_parts[0]]) + combined_parts
-
-  " Recombine into a single string.
-  let finalpath = join(combined_parts, dirsep)
-  return PrintStatusline(finalpath)
-  " return finalpath
-endfunction
-
-function! LightlineScrollbar()
-  let top_line = str2nr(line('w0'))
-  let bottom_line = str2nr(line('w$'))
-  let lines_count = str2nr(line('$'))
-
-  if bottom_line - top_line + 1 >= lines_count
-    return ''
-  endif
-
-  let window_width = winwidth(0)
-  if window_width < 90
-    let scrollbar_width = 6
-  elseif window_width < 120
-    let scrollbar_width = 9
-  else
-    let scrollbar_width = 12
-  endif
-
-  return noscrollbar#statusline(scrollbar_width, '-', '#')
-endfunction
-
-function! s:get_gutentags_status(mods) abort
-  let l:msg = ''
-  if index(a:mods, 'ctags') > 0
-     let l:msg .= '♨'
-   endif
-   if index(a:mods, 'cscope') > 0
-     let l:msg .= '♺'
-   endif
-   return l:msg
-endfunction
-
-function! LightlineGutentags()
-  if !exists('g:loaded_gutentags')
-    return ''
-  endif
-  return gutentags#statusline_cb(function('<SID>get_gutentags_status'))
-endfunction
-
-function! LightlineCocStatus()
-  let info = get(b:, 'coc_diagnostic_info', {})
-  if empty(info) | return "\uf42e " | endif
-  let msgs = []
-  if get(info, 'error', 0)
-    call add(msgs, ' ' . info['error'])
-  endif
-  if get(info, 'warning', 0)
-    call add(msgs, ' ' . info['warning'])
-  endif
-  " return 'coc: ' . join(msgs, ' ')
-  return join(msgs, ' ')
-endfunction
-
-" }}}
 " ░░░░░░░░░░░░░░░ Blink {{{
 
 " REF: https://github.com/sedm0784/vimconfig/blob/master/_vimrc#L173
@@ -2004,159 +2216,5 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
   " hi DiffChange guifg=#F2C38F
   " hi DiffText guifg=#F2C38F
 " }}}
-" ░░░░░░░░░░░░░░░ coc.nvim {{{
-" for showSignatureHelp
-set completeopt=noinsert,menuone,noselect
-set shortmess+=c
-
-" Or use formatexpr for range format
-set formatexpr=CocActionAsync('formatSelected')
-
-" use <tab> for trigger completion and navigate next complete item
-function! s:check_back_space() abort
-  let l:col = col('.') - 1
-  return !l:col || getline('.')[l:col - 1]  =~# '\s'
-endfunction
-
-" if exists snippets
-function s:isSnipsExpandable()
-  try
-    let l:line = getline('.')
-    let l:start = col('.') - 1
-    while l:start > 0 && l:line[l:start - 1] =~# '\k'
-      let l:start -= 1
-    endwhile
-    let l:trigger = l:line[l:start : col('.')-2]
-    " get user input str
-    if s:input_word ==# ''
-      let s:input_word = l:trigger
-    endif
-    if s:input_word !=# l:trigger
-      return v:false
-    endif
-    " get snippets
-    let l:snippets = UltiSnips#SnippetsInCurrentScope()
-    let l:has_snips = !(
-          \ col('.') <= 1
-          \ || !empty(matchstr(getline('.'), '\%' . (col('.') - 1) . 'c\s'))
-          \ || empty(l:snippets)
-          \ || get(l:snippets, l:trigger, 'notExists') ==# 'notExists'
-          \ )
-    " has snippets and snippets is input str
-    return l:has_snips
-  catch /.*/
-    return v:false
-  endtry
-endfunction
-
-" press enter when pumvisible
-function! s:press_enter() abort
-  if s:input_word ==# ''
-    return "\<C-g>u\<CR>\<C-g>u"
-  endif
-  return "\<C-y>"
-endfunction
-
-" tab:
-"   1. trigger snippets
-"   2. select autocomplete
-"   3. trigger autocomplete
-" inoremap <silent><expr> <TAB>
-"       \ <SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
-"       \ pumvisible() ? "\<C-n>" :
-"       \ <SID>check_back_space() ? "\<TAB>" : coc#refresh()
-" inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-
-inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : (<SID>check_back_space() ? "\<TAB>" : coc#refresh())
-inoremap <silent><expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
-inoremap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
-
-" Use <C-x></C-u> to complete custom sources, including emoji, include and words
-imap <silent> <C-x><C-o> <Plug>(coc-complete-custom)
-
-" Use <CR> for confirm completion.
-inoremap <expr> <CR> pumvisible() ? <SID>press_enter() : "\<C-g>u\<CR>"
-"inoremap <expr> <CR> (pumvisible() ? "\<c-y>" : "\<CR>")
-
-" Use K for show documentation in preview window
-function! s:show_documentation()
-  if &filetype ==# 'vim'
-    execute 'h '.expand('<cword>')
-  else
-    call CocActionAsync('doHover')
-  endif
-endfunction
-
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-" Remap for rename current word
-nmap <leader>rn <Plug>(coc-rename)
-nmap <F2> <Plug>(coc-rename)
-
-" Use `[c` and `]c` for navigate diagnostics
-nmap <silent> [c <Plug>(coc-diagnostic-prev)
-nmap <silent> ]c <Plug>(coc-diagnostic-next)
-" nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
-" nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
-
-" Remap keys for gotos
-nmap <silent> <leader>ld <Plug>(coc-definition)
-nmap <silent> <leader>lt <Plug>(coc-type-definition)
-nmap <silent> <leader>li <Plug>(coc-implementation)
-nmap <silent> <leader>lr <Plug>(coc-references)
-
-" Remap for format selected region
-vmap <leader>lf <Plug>(coc-format-selected)
-nmap <leader>lf <Plug>(coc-format-selected)
-
-" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-vmap <leader>la <Plug>(coc-codeaction-selected)
-nmap <leader>la <Plug>(coc-codeaction-selected)
-
-" Use `:Format` for format current buffer
-command! -nargs=0 Format :call CocActionAsync('format')
-
-" Use `:Fold` for fold current buffer
-command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
-
-augroup coc_au
-  au!
-  " Show signature help while editing
-  " au CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
-  au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-
-  " Highlight symbol under cursor on CursorHold
-  " au CursorHold * silent call CocActionAsync('highlight')
-augroup END
-
-function! s:clear_input() abort
-  let s:input_word = ''
-endfunction
-
-function! s:snippet() abort
-  let l:start_line = line('.')
-  let l:is_position = search('\v%x0')
-  if l:is_position !=# 0
-    silent! s/\v\t/    /g
-    silent! s/\v%x0\n//g
-    silent! s/\v%x0/\r/g
-    let l:end_line = line('.')
-    call cursor(l:start_line, 0)
-    let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
-    if l:pos[0] !=# 0 && l:pos[1] !=# 0
-      call cursor(l:pos[0], l:pos[1])
-      normal! df}
-    endif
-  endif
-endfunction
-
-augroup CocSnippet
-  au!
-  au CompleteDone *.exs,*.ex,*.elm call <SID>snippet()
-  au CursorMovedI * call <SID>clear_input()
-  " highlight text color
-  au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
-augroup END
-"}}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
