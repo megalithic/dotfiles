@@ -1056,8 +1056,8 @@ endfunction
         \ "bg":      ["bg", "Normal"],
         \ "hl":      ["fg", "#eee8d5"],
         \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
-        \ "bg+":     ["bg", "CursorLine", "CursorColumn"],
-        \ "hl+":     ["fg", "#6c71c4"],
+        \ "bg+":     ["bg", "CursorLine", "CursorColumn", "#073642"],
+        \ "hl+":     ["fg", "#dc322f"],
         \ "info":    ["fg", "#b58900"],
         \ "border":  ["fg", "Ignore"],
         \ "prompt":  ["fg", "#b58900"],
@@ -1466,6 +1466,7 @@ endfunction
 
 inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : (<SID>check_back_space() ? "\<TAB>" : coc#refresh())
 inoremap <silent><expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
+imap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
 inoremap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
 
 " Use <C-x></C-u> to complete custom sources, including emoji, include and words
@@ -1664,8 +1665,8 @@ map <C-a> <ESC>^
 imap <C-a> <ESC>I
 " move to end of line:
 map <C-e> <ESC>$
-imap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
-inoremap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+" imap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+" inoremap <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
 
 " move by word forward and back:
 inoremap <M-f> <ESC><Space>Wi

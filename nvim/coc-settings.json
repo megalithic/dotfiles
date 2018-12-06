@@ -16,7 +16,7 @@
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
   // "coc.preferences.watchmanPath": "",
    // enable formatOnType feature
-  "coc.preferences.formatOnType": true,
+  "coc.preferences.formatOnType": false,
   // command used for jump to other buffer
   "coc.preferences.jumpCommand": "vsplit",
 
@@ -57,21 +57,22 @@
   /* "coc.source.emoji.triggerCharacters": [":"], */
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
-  "coc.source.ultisnips.priority": 1,
+  "coc.source.ultisnips.priority": 10,
+  "coc.source.tag.priority": 9,
   "coc.source.around.enable": true,
   "coc.source.around.shortcut": "A",
-  "coc.source.around.priority": 2,
-  "coc.source.buffer.enable": true,
-  "coc.source.buffer.shortcut": "B",
-  "coc.source.buffer.priority": 3,
-  "coc.source.buffer.ignoreGitignore": true,
+  "coc.source.around.priority": 8,
   "coc.source.file.enable": true,
   "coc.source.file.shortcut": "F",
-  "coc.source.file.priority": 4,
+  "coc.source.file.priority": 7,
   "coc.source.file.triggerCharacters": ["/"],
   "coc.source.file.trimSameExts": [".ts", ".js"],
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
+  "coc.source.buffer.enable": true,
+  "coc.source.buffer.shortcut": "B",
+  "coc.source.buffer.priority": 6,
+  "coc.source.buffer.ignoreGitignore": true,
   "coc.source.word.enable": false,
   /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
 
