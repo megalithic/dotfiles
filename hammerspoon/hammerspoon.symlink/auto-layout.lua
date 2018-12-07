@@ -25,16 +25,26 @@ end
 
 setLayoutForSingleWindow = function(window, appConfig)
   log.df('[auto-layout] setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
-  hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
+
+  if window ~= nil then
+    if not isIgnoredWindow(window, appConfig) then
+      hs.grid.set(window, appConfig.position, target_display(appConfig.preferredDisplay))
+    end
+  end
 end
 
 setLayoutForMultiWindows = function(windows, appConfig)
   for index, window in pairs(windows) do
     log.df('[auto-layout] setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
-    if (index % 2 == 0) then -- even index/number
-      hs.grid.set(window, config.grid.rightHalf, target_display(appConfig.preferredDisplay))
-    else -- odd index/number
-      hs.grid.set(window, config.grid.leftHalf, target_display(appConfig.preferredDisplay))
+
+    if window ~= nil then
+      if not isIgnoredWindow(window, appConfig) then
+        if (index % 2 == 0) then -- even index/number
+          hs.grid.set(window, config.grid.rightHalf, target_display(appConfig.preferredDisplay))
+        else -- odd index/number
+          hs.grid.set(window, config.grid.leftHalf, target_display(appConfig.preferredDisplay))
+        end
+      end
     end
   end
 end
@@ -58,8 +68,6 @@ setLayoutForApp = function(app, appConfig)
     local windows = getManageableWindows(app:visibleWindows())
     local appConfig = appConfig or config.applications[app:name()]
 
-    -- ignoreWindows(windows, appConfig)
-
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       if (#windows == 1) then
         -- getting first (and should be) only window from the table of windows for this app
@@ -75,13 +83,19 @@ setLayoutForApp = function(app, appConfig)
   end
 end
 
--- ignoreWindows = function(windows, appConfig)
---   for _, window in pairs(appConfig.ignoredWindows) do
---     if (hs.fnutils.contains(windows, window)) then
---       log.df('[auto-layout] setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
---     end
---   end
--- end
+isIgnoredWindow = function(window, appConfig)
+  local foundIgnoredWindow = false
+  if appConfig.ignoredWindows ~= nil then
+    log.df('[auto-layout] ignoredWindows - checking for ignored window (window: %s) for app %s', window:title(), string.upper(appConfig.name))
+    if hs.fnutils.contains(appConfig.ignoredWindows, window:title()) then
+      log.df('[auto-layout] ignoredWindows - found ignored window for custom layout, %s in app, %s', window:title(), string.upper(appConfig.name))
+      foundIgnoredWindow = true
+      return true
+    end
+  end
+
+  return foundIgnoredWindow
+end
 
 function handleGlobalAppEvent(name, eventType, app)
   if eventType == hs.application.watcher.launched then
