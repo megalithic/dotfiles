@@ -120,6 +120,7 @@ config.applications = {
     preferredDisplay = 2,
     position = config.grid.rightHalf,
     quitGuard = true,
+    ignoredWindows = {},
     fn = (function(window)
       log.df('[config] app fn() - attempting to handle Slack instance')
 

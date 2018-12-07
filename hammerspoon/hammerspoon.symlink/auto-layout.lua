@@ -58,6 +58,8 @@ setLayoutForApp = function(app, appConfig)
     local windows = getManageableWindows(app:visibleWindows())
     local appConfig = appConfig or config.applications[app:name()]
 
+    -- ignoreWindows(windows, appConfig)
+
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       if (#windows == 1) then
         -- getting first (and should be) only window from the table of windows for this app
@@ -72,6 +74,14 @@ setLayoutForApp = function(app, appConfig)
     end
   end
 end
+
+-- ignoreWindows = function(windows, appConfig)
+--   for _, window in pairs(appConfig.ignoredWindows) do
+--     if (hs.fnutils.contains(windows, window)) then
+--       log.df('[auto-layout] setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
+--     end
+--   end
+-- end
 
 function handleGlobalAppEvent(name, eventType, app)
   if eventType == hs.application.watcher.launched then

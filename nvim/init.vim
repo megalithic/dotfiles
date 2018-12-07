@@ -927,6 +927,7 @@ endfunction
   let g:ale_linters = {
         \   'elixir': ['elixir-ls'],
         \   'eelixir': ['elixir-ls'],
+        \   'lua': ['luacheck'],
         \ }
   let g:ale_fixers = {
         \   'javascript': ['prettier_eslint'],
@@ -937,7 +938,6 @@ endfunction
         \   'css': ['prettier'],
         \   'scss': ['prettier'],
         \   'json': ['prettier'],
-        \   'python': ['black'],
         \   'elm': ['elm-format'],
         \   'eelixir': ['mix_format'],
         \   'elixir': ['mix_format'],
@@ -949,6 +949,7 @@ endfunction
   let g:ale_javascript_prettier_use_local_config = 1
   let g:ale_javascript_prettier_eslint_use_local_config = 1
   let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
+  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:false}}
   let g:ale_elm_format_options = '--yes --elm-version=0.18'
   let g:ale_lint_on_text_changed = 'always'
   let g:ale_lint_on_insert_leave = 1
@@ -1056,7 +1057,7 @@ endfunction
         \ "bg":      ["bg", "Normal"],
         \ "hl":      ["fg", "#eee8d5"],
         \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
-        \ "bg+":     ["bg", "CursorLine", "CursorColumn", "#073642"],
+        \ "bg+":     ["bg", "CursorLine", "CursorColumn", "#1E272C"],
         \ "hl+":     ["fg", "#dc322f"],
         \ "info":    ["fg", "#b58900"],
         \ "border":  ["fg", "Ignore"],

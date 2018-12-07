@@ -7,7 +7,7 @@ if [ -n "$(command -v fzf)" ]; then
 
   _gen_fzf_default_opts() {
     local colorbg='#3C4C55'
-    local color00='#002b36'
+    local color00='#1E272C'
     local color01='#073642'
     local color02='#586e75'
     local color03='#657b83'
@@ -31,7 +31,7 @@ if [ -n "$(command -v fzf)" ]; then
     --extended
     --bind ctrl-j:ignore,ctrl-k:ignore
     --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
-    --color=bg+:$color01,bg:$colorbg,spinner:$color0C,hl:$color06
+    --color=bg+:$color00,bg:$colorbg,spinner:$color0C,hl:$color06
     --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
     --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color08
     "

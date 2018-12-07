@@ -98,7 +98,7 @@ brew 'perl'
 brew 'pgcli'
 brew 'pkg-config'
 brew 'postgresql@9.5'
-brew 'postgis'
+# initdb /usr/local/var/postgres -E utf8
 brew 'python'
 brew 'python3'
 brew 'python@2'

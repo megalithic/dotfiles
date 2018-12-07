@@ -87,13 +87,13 @@
       "settings": {}
     },
     "elixir": {
-      "command": ".elixir_ls/rel/language_server.sh",
+      "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir"],
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
-          "dialyzerEnabled": true
+          "dialyzerEnabled": false
         }
       },
       "settings": {}

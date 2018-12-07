@@ -21,13 +21,16 @@ if (which mix &>/dev/null); then
   echo ":: attempting to install elixir/mix/local.hex things"
   echo ""
 
-  if [[ ! -d .elixir_ls ]]; then
-    # install elixir-ls via git and compile
-    git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
-    cd .elixir_ls && mkdir rel
-    mix deps.get && mix compile
-    mix elixir_ls.release -o rel
+  # install elixir-ls via git and compile
+  if [[ -d "$PWD/.elixir_ls" ]]; then
+    echo "local .elixir_ls already exists; deleting existing folder and re-installing fresh."
+    rm -rf .elixir_ls
   fi
+
+  git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
+  cd .elixir_ls && mkdir rel
+  mix deps.get && mix compile
+  mix elixir_ls.release -o rel
 
   mix local.hex --force --if-missing
 else
