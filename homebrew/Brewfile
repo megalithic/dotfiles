@@ -117,7 +117,7 @@ brew 'stack'
 brew 'switchaudio-osx'
 brew 'terminal-notifier'
 brew 'the_silver_searcher'
-brew 'tig'
+# brew 'tig' # using `nvim +:GV` instead
 brew 'tldr'
 brew 'tmate'
 brew 'tmux', args: ['--with-utf8proc']

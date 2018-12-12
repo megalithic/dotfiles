@@ -246,6 +246,7 @@ alias map="xargs -n1"
 
 # GIT
 # -----------------------------------------------------------------------------
+alias tig="nvim +:GV" # https://github.com/junegunn/gv.vim#mappings
 alias push="git push"
 alias gs="git s"
 alias gcv="git cv"

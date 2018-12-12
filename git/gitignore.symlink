@@ -36,3 +36,4 @@ _build
 tags
 .tags
 .elixir_ls
+credo_extra

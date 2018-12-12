@@ -93,7 +93,7 @@
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
-          "dialyzerEnabled": false
+          "dialyzerEnabled": true
         }
       },
       "settings": {}
