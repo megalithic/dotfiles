@@ -13,7 +13,6 @@
                 "control"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -32,7 +31,6 @@
                 "control"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -51,7 +49,6 @@
                 "control"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -70,7 +67,6 @@
                 "control"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -94,7 +90,6 @@
                 "option"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -113,7 +108,6 @@
                 "option"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -132,7 +126,6 @@
                 "option"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -151,7 +144,6 @@
                 "option"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -175,7 +167,6 @@
                 "fn"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -194,7 +185,6 @@
                 "fn"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -213,7 +203,6 @@
                 "fn"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },
@@ -232,7 +221,6 @@
                 "fn"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },

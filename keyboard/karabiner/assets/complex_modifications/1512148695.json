@@ -75,7 +75,6 @@
                 "shift"
               ],
               "optional": [
-                "caps_lock"
               ]
             }
           },

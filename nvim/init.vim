@@ -43,18 +43,18 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
   " # elm
   Plug 'elmcast/elm-vim', { 'for': ['elm'] }
-  Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
+  " Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
 
   " # elixir
   Plug 'elixir-editors/vim-elixir', { 'for': ['elixir','eelixir'] }
   Plug 'mhinz/vim-mix-format', { 'for': ['elixir','eelixir'] }
   Plug 'mattreduce/vim-mix', { 'for': ['elixir','eelixir'] }
   Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
-  Plug 'mmorearty/elixir-ctags', { 'for': ['elixir','eelixir'] }
+  " Plug 'mmorearty/elixir-ctags', { 'for': ['elixir','eelixir'] }
   " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
 
   " # erlang
-  Plug 'vim-erlang/vim-erlang-tags'
+  " Plug 'vim-erlang/vim-erlang-tags'
   Plug 'vim-erlang/vim-erlang-runtime'
   Plug 'vim-erlang/vim-erlang-omnicomplete'
   Plug 'vim-erlang/vim-erlang-compiler'
@@ -67,12 +67,12 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'sheerun/vim-polyglot'
 
 " ## tags/ctags/etc
-  if executable('ctags')
-    Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
-    Plug 'ludovicchabant/vim-gutentags'
-    " Plug 'jsfaint/gen_tags.vim'
-  "   " Plug 'craigemery/vim-autotag'
-  endif
+  " if executable('ctags')
+  "   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  "   Plug 'ludovicchabant/vim-gutentags'
+  "   " Plug 'jsfaint/gen_tags.vim'
+  " "   " Plug 'craigemery/vim-autotag'
+  " endif
 
 " ## Completion
   function! PlugDoCoc(info) abort

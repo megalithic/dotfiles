@@ -10,7 +10,7 @@
             "key_code": "delete_or_backspace",
             "modifiers": {
               "mandatory": ["shift"],
-              "optional": ["caps_lock", "option"]
+              "optional": [ "option"]
             }
           },
           "to": [
