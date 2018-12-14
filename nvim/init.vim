@@ -67,12 +67,12 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'sheerun/vim-polyglot'
 
 " ## tags/ctags/etc
-  " if executable('ctags')
-  "   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
-  "   Plug 'ludovicchabant/vim-gutentags'
-  "   " Plug 'jsfaint/gen_tags.vim'
-  " "   " Plug 'craigemery/vim-autotag'
-  " endif
+  if executable('ctags')
+    Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+    Plug 'ludovicchabant/vim-gutentags'
+    " Plug 'jsfaint/gen_tags.vim'
+    " Plug 'craigemery/vim-autotag'
+  endif
 
 " ## Completion
   function! PlugDoCoc(info) abort
@@ -509,7 +509,7 @@ augroup vimrc
   au BufEnter *.git/index silent normal gg0j
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
-  " au FileType gitcommit,gitrebase let g:gutentags_enabled=0
+  au FileType gitcommit,gitrebase let g:gutentags_enabled=0
 
   " set up default omnifunc
   autocmd FileType *
@@ -1102,11 +1102,11 @@ endfunction
 
 
 " ## vim-gutentags
-  " let g:gutentags_project_root = ['.git']
-  " let g:gutentags_cache_dir = expand('~/.tags_cache')
-  " " let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
-  " let g:gutentags_ctags_tagfile = '.tags'
-  " let g:gutentags_trace = 1
+  let g:gutentags_project_root = ['.git']
+  let g:gutentags_cache_dir = expand('~/.tags_cache')
+  let g:gutentags_ctags_exclude = ['*.css', '*.html', '*.js', '*.json', '*.xml', '*.ini', '*.rst', '*.md', '*/vendor/*', '*vendor/*/test*', '*vendor/*/Test*', '*vendor/*/fixture*', '*vendor/*/Fixture*', '*var/cache*', '*var/log*']
+  let g:gutentags_ctags_tagfile = 'tags'
+  let g:gutentags_trace = 0
 
 " ## vim-autotag
   " let g:autotagTagsFile="tags"
@@ -1372,18 +1372,17 @@ endfunction
 function! s:get_gutentags_status(mods) abort
   let l:msg = ''
   if index(a:mods, 'ctags') > 0
-     let l:msg .= '♨'
-   endif
-   if index(a:mods, 'cscope') > 0
-     let l:msg .= '♺'
-   endif
-   return l:msg
+    let l:msg .= '♨'
+  endif
+
+  if index(a:mods, 'cscope') > 0
+    let l:msg .= '♺'
+  endif
+
+  return l:msg
 endfunction
 
 function! LightlineGutentags()
-  if !exists('g:loaded_gutentags')
-    return ''
-  endif
   return gutentags#statusline_cb(function('<SID>get_gutentags_status'))
 endfunction
 
