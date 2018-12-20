@@ -1258,7 +1258,7 @@ endfunction
       au User lsp_setup call lsp#register_server({
             \ 'name': 'elixir',
             \ 'cmd': {server_info->[&shell, &shellcmdflag, expand($PWD."/.elixir_ls/rel/language_server.sh")]},
-            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
+            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true, 'projectDir': expand($PWD) }},
             \ 'whitelist': ['elixir','eelixir','exs','ex'],
             \ })
     endif
@@ -1319,13 +1319,18 @@ endfunction
     let g:ale_enabled = 1
     let g:ale_completion_enabled = 0
     let g:ale_lint_delay = 500
-    " let g:ale_sign_column_always = 1
     let g:ale_echo_msg_format = '[%linter%] %s'
+    " disabling linters where language servers are installed/available..
     let g:ale_linters = {
           \   'elixir': [],
-          \   'lua': ['luacheck'],
+          \   'eelixir': [],
+          \   'elm': [],
+          \   'lua': [],
+          \   'javascript': [],
+          \   'typescript': [],
           \ }
     let g:ale_fixers = {
+          \   '*': ['remove_trailing_lines', 'trim_whitespace'],
           \   'javascript': ['prettier_eslint'],
           \   'javascript.jsx': ['prettier_eslint'],
           \   'typescript': ['prettier_eslint'],
@@ -1335,14 +1340,14 @@ endfunction
           \   'scss': ['prettier'],
           \   'json': ['prettier'],
           \   'elm': ['elm-format'],
-          \   'eelixir': ['mix_format'],
           \   'elixir': ['mix_format'],
+          \   'eelixir': ['mix_format'],
           \ }                                                                       "Fix eslint errors
     let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
     let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
     let g:ale_sign_info = '‣'
     let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
-    let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
+    let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
     let g:ale_elm_format_options = '--yes --elm-version=0.18'
     let g:ale_lint_on_text_changed = 'always' " 'normal'
     let g:ale_lint_on_insert_leave = 1
@@ -1353,14 +1358,10 @@ endfunction
     let g:ale_virtualtext_prefix = "❯❯ "
     " let g:ale_set_balloons = 0
     " let g:ale_set_highlights = 0
+    " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
 
 " }}}
 " ░░░░░░░░░░░░░░░ mappings {{{
-
-" completion
-  " inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-  " inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-  " inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
 
 " " ncm2 + ultisnips function parameter expansion
   " " We don't really want UltiSnips to map these two, but there's no option for
@@ -1405,43 +1406,30 @@ endfunction
     imap <C-X><CR>   <CR><Plug>AlwaysEnd
     " REF: details about endwise + ncm2 here: https://github.com/roxma/nvim-completion-manager/issues/49#issuecomment-285923119
     inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
-
     " imap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
     imap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
-
     smap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
-
     " inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
     inoremap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
   endif
 
   if exists("g:lsp_auto_enable")
     " vim-lsp
-    " nnoremap <F2> :LspRename<CR>
-    " nnoremap <leader>ln :LspRename<CR>
-    " nnoremap <leader>ld :LspDefinition<CR>
-    " nnoremap <leader>lf :LspDocumentFormat<CR>
-    " nnoremap <leader>lh :LspHover<CR>
-    " nnoremap <leader>lr :LspReferences<CR>
-    " nnoremap <leader>li :LspImplementation<CR>
-    " nnoremap <leader>] :LspNextError<CR>
-    " nnoremap <leader>[ :LspPreviousError<CR>
-
-    nnoremap <leader>la <plug>(lsp-code-action)<CR>
-    nnoremap <leader>ld <plug>(lsp-definition)<CR>
-    nnoremap <leader>ls <plug>(lsp-document-symbol)<CR>
-    nnoremap <leader>lh <plug>(lsp-hover)<CR>
-    nnoremap <leader>lr <plug>(lsp-references)<CR>
-    nnoremap <F2>       <plug>(lsp-rename)<CR>
-    nnoremap <leader>ln <plug>(lsp-rename)<CR>
-    nnoremap <leader>lw <plug>(lsp-workspace-symbol)<CR>
-    nnoremap <leader>lf <plug>(lsp-document-format)<CR>
-    nnoremap <leader>li <plug>(lsp-implementation)<CR>
-    nnoremap <leader>lt <plug>(lsp-type-definition)<CR>
-    nnoremap <leader>]  <plug>(lsp-next-error)<CR>
-    nnoremap <leader>[  <plug>(lsp-previous-error)<CR>
-    " nnoremap <leader>la <plug>(lsp-document-diagnostics)<CR>
-    " nnoremap <leader>la <plug>(lsp-status)<CR>
+    nnoremap <F2>       :LspRename<CR>
+    nnoremap <leader>ln :LspRename<CR>
+    nnoremap <leader>la :LspCodeAction<CR>
+    nnoremap <leader>lc :LspDocumentDiagnostics<CR>
+    nnoremap <leader>ld :LspDefinition<CR>
+    nnoremap <leader>lt :LspTypeDefinition<CR>
+    nnoremap <leader>lf :LspDocumentFormat<CR>
+    nnoremap <leader>ls :LspDocumentSymbol<CR>
+    nnoremap <leader>lw :LspWorkspaceSymbol<CR>
+    nnoremap <leader>lh :LspHover<CR>
+    nnoremap <leader>lk :LspHover<CR>
+    nnoremap <leader>lr :LspReferences<CR>
+    nnoremap <leader>li :LspImplementation<CR>
+    nnoremap <leader>]  :LspNextError<CR>
+    nnoremap <leader>[  :LspPreviousError<CR>
   else
     " LanguageClient-neovim
     nnoremap <Leader>lm :call LanguageClient_contextMenu()<CR>
@@ -1573,12 +1561,16 @@ endfunction
   " nnoremap <C-o> :vsp <c-d> " this was overwrting default behaviors
   nnoremap <silent><leader>o :vnew<cr>:e<space><c-d>
   nnoremap <C-t> :tabe <c-d>
+
   if(has('nvim'))
+    " window movements > terminal mode
     tnoremap <C-w>h <C-\><C-n><C-w><C-h>
     tnoremap <C-w>j <C-\><C-n><C-w><C-j>
     tnoremap <C-w>k <C-\><C-n><C-w><C-k>
     tnoremap <C-w>l <C-\><C-n><C-w><C-l>
   endif
+
+  " window movements > insert mode
   inoremap <C-w>h <ESC><C-w><C-h>
   inoremap <C-w>j <ESC><C-w><C-j>
   inoremap <C-w>k <ESC><C-w><C-k>

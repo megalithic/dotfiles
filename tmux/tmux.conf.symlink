@@ -180,7 +180,7 @@ set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
-# set -g @plugin 'christoomey/vim-tmux-navigator'
+set -g @plugin 'christoomey/vim-tmux-navigator'
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though
 # set -g @plugin 'jbnicolai/tmux-fpp'
