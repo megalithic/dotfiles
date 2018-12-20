@@ -37,7 +37,6 @@
      auto-completion
      better-defaults
      emacs-lisp
-     c-c++
      git
      github
      haskell
@@ -45,26 +44,20 @@
      elm
      lua
      shell-scripts
-     purescript
-     puppet
-     ansible
      markdown
      notmuch
      (org :variables
           org-enable-bootstrap-support t)
      python
-     clojure
      html
      go
      javascript
      react
-     mu4e
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
      rust
      sql
-     groovy
      major-modes ;; this used to be called 'extra-langs'
      syntax-checking
      version-control
