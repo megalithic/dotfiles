@@ -115,7 +115,7 @@ alias kitty='/Applications/kitty.app/Contents/MacOS/kitty'
 
 # EMACS/SPACEMACS
 # -----------------------------------------------------------------------------
-alias em='emacsclient -create-frame --alternate-editor=""'
+# alias em='emacsclient -create-frame --alternate-editor=""'
 alias ec=em
 
 # (NEO)VIM

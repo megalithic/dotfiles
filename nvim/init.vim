@@ -37,19 +37,16 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
   Plug 'elmcast/elm-vim', { 'for': ['elm'] }
-  " Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
   Plug 'elixir-editors/vim-elixir', { 'for': ['exs', 'ex', 'eex'] }
   " Plug 'mhinz/vim-mix-format', { 'for': ['elixir','eelixir'] }
   " Plug 'mattreduce/vim-mix', { 'for': ['elixir','eelixir'] }
   Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
-  " Plug 'mmorearty/elixir-ctags', { 'for': ['elixir','eelixir'] }
-  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
-  " Plug 'vim-erlang/vim-erlang-tags'
+  Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
   Plug 'vim-erlang/vim-erlang-runtime'
   Plug 'vim-erlang/vim-erlang-omnicomplete'
   Plug 'vim-erlang/vim-erlang-compiler'
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
-  Plug 'kovisoft/slimv'
+  " Plug 'kovisoft/slimv'
   Plug 'sheerun/vim-polyglot'
 
 " ## Snippets
@@ -60,6 +57,9 @@ silent! if plug#begin('~/.config/nvim/plugged')
   if executable('ctags')
     " Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
     " Plug 'ludovicchabant/vim-gutentags'
+    " Plug 'mmorearty/elixir-ctags', { 'for': ['elixir','eelixir'] }
+    " Plug 'kbsymanz/ctags-elm', {'for': ['elm']}
+    " Plug 'vim-erlang/vim-erlang-tags'
   endif
 
 " ## Completion
@@ -70,11 +70,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'shougo/neco-vim'
   Plug 'ncm2/ncm2-vim'
   Plug 'ncm2/ncm2-ultisnips'
-  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
-  Plug 'autozimu/LanguageClient-neovim', {
-        \ 'branch': 'next',
-        \ 'do': 'bash install.sh',
-        \ }
+  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
+  " Plug 'autozimu/LanguageClient-neovim', {
+  "       \ 'branch': 'next',
+  "       \ 'do': 'bash install.sh',
+  "       \ }
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -176,7 +176,6 @@ endif
 set title                                                                       "change the terminal's title
 set number                                                                      "Line numbers are good
 set relativenumber                                                              "Show numbers relative to current line
-set signcolumn=yes
 set history=500                                                                 "Store lots of :cmdline history
 set showcmd                                                                     "Show incomplete cmds down the bottom
 set cmdheight=1
@@ -326,7 +325,7 @@ command! -bar -nargs=0 SudoWrite :silent exe 'write !sudo tee % >/dev/null' | si
 
 " }}}
 " ░░░░░░░░░░░░░░░ autocommands {{{
-augroup vimrc
+augroup general
   au!
   " save all files on focus lost, ignoring warnings about untitled buffers
   autocmd FocusLost * silent! wa
@@ -362,6 +361,9 @@ augroup vimrc
   " Auto enter insert mode in popup terminal
   autocmd BufWinEnter,WinEnter popup-term startinsert
 
+  " Show sign column for only certain filetypes
+  au! FileType cmake,css,go,java,javascript,typescript,ocaml,python,r,rust,scss,sh,sass,zsh,bash,fish,elixir,eelixir,elm set signcolumn=yes
+
   " When terminal buffer ends allow to close it
   autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
   autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
@@ -370,51 +372,9 @@ augroup vimrc
         \| set nonumber norelativenumber
         \| endif
 
-  " ----------------------------------------------------------------------------
-  " ## all
   " FIXME: determine if we need these
   au InsertEnter,BufLeave * setl iskeyword=@,48-57,192-255,\@,\$,%,-,_
   au InsertLeave,BufEnter * setl iskeyword=@,48-57,192-255
-
-  " ----------------------------------------------------------------------------
-  " ## JavaScript
-  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css,elixir,eelixir,elm RainbowParentheses
-  au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
-  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
-
-  " ----------------------------------------------------------------------------
-  " ## CSS/SCSS
-  " make sure `complete` works as expected for CSS class names whithout
-  " messing with motions (eg. '.foo-bar__baz') and we make sure all
-  " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
-  "
-  " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
-  au FileType css,css.scss,sass,scss setl iskeyword+=-
-  au FileType css,css.scss,sass,scss setl formatoptions+=croql
-
-  " ----------------------------------------------------------------------------
-  " ## Markdown
-  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0
-  " au FileType markdown,text,html setlocal spell complete+=kspell
-  au FileType markdown set tw=80
-
-  " ----------------------------------------------------------------------------
-  " ## Ruby
-  au FileType ruby setl iskeyword+=_
-  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
-  au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
-
-  " ----------------------------------------------------------------------------
-  " ## SSH
-  au BufNewFile,BufRead */ssh/config,ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
-
-  " ----------------------------------------------------------------------------
-  " ## Misc filetypes
-  au FileType zsh set ts=2 sts=2 sw=2
-  au FileType sh set ts=2 sts=2 sw=2
-  au FileType bash set ts=2 sts=2 sw=2
-  au FileType fish set ts=2 sts=2 sw=2
-  au FileType tmux set ts=2 sts=2 sw=2
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -428,16 +388,6 @@ augroup vimrc
   " ----------------------------------------------------------------------------
   " ## Automagically update remote homeassistant files upon editing locally
   au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
-
-  " ----------------------------------------------------------------------------
-  " ## Manage GIT related scenarios
-  au FileType gitcommit,gitrebase setl nospell textwidth=72
-  au BufNewFile,BufRead .git/index setlocal nolist
-  au BufReadPost fugitive://* set bufhidden=delete
-  au BufReadCmd *.git/index exe BufReadIndex()
-  au BufEnter *.git/index silent normal gg0j
-  au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
-  au FileType gitcommit,gitrebase exe BufEnterCommit()
 
   " set up default omnifunc
   autocmd FileType *
@@ -475,33 +425,88 @@ augroup elm
   " au FileType elm nn <C-c> :bd!<CR>
 augroup END
 
-" augroup elixir
-"   au!
-"   au FileType elixir,eelixir setl matchpairs=(:),{:},[:]
-"   au FileType elixir,eelixir setl iskeyword+=_
+augroup elixir
+  au!
+  au FileType elixir,eelixir setl matchpairs=(:),{:},[:]
+  au FileType elixir,eelixir setl iskeyword+=_
 
-"   " Enable html syntax highlighting in all .eex files
-"   " autocmd BufReadPost *.html.eex set syntax=html
-"   au BufRead,BufNewFile *.ex,*.exs set filetype=elixir
-" 	au BufRead,BufNewFile *.eex set filetype=eelixir
+  " Enable html syntax highlighting in all .eex files
+  " autocmd BufReadPost *.html.eex set syntax=html
+  au BufRead,BufNewFile *.ex,*.exs set filetype=elixir
+  au BufRead,BufNewFile *.eex set filetype=eelixir
 
-"   " ways-to-debug:
-"   " au FileType elixir,eelixir nnoremap <leader>er :Dispatch !iex -r % -S mix<CR>
-"   au FileType elixir,eelixir nnoremap <leader>er :TREPLSendFile<CR>
-"   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-"   au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
-"   au FileType elixir,eelixir nnoremap <leader>ei o\|>IO.inspect<ESC>:w<CR>
-"   au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
-"   au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
+  " ways-to-debug:
+  " au FileType elixir,eelixir nnoremap <leader>er :Dispatch !iex -r % -S mix<CR>
+  au FileType elixir,eelixir nnoremap <leader>er :TREPLSendFile<CR>
+  au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ei o\|>IO.inspect<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
+  au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
 
-"   " :Eix => open iex with current file compiled
-"   command! Iex :!iex -S mix %<cr>
-"   " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
+  " :Eix => open iex with current file compiled
+  command! Iex :!iex -S mix %<cr>
+  " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
 
-"   " disable endwise for anonymous fn in elixir
-"   au BufNewFile,BufRead *.{ex,exs}
-"         \ let b:endwise_addition = '\=submatch(0)=="fn" ? "end)" : "end"'
-" augroup END
+  " disable endwise for anonymous fn in elixir
+  au BufNewFile,BufRead *.{ex,exs}
+        \ let b:endwise_addition = '\=submatch(0)=="fn" ? "end)" : "end"'
+augroup END
+
+augroup javascript
+  au!
+  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css,elixir,eelixir,elm RainbowParentheses
+  au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
+  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
+augroup END
+
+augroup css
+  au!
+  " make sure `complete` works as expected for CSS class names whithout
+  " messing with motions (eg. '.foo-bar__baz') and we make sure all
+  " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
+  "
+  " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
+  au FileType css,css.scss,sass,scss setl iskeyword+=-
+  au FileType css,css.scss,sass,scss setl formatoptions+=croql
+augroup END
+
+augroup markdown
+  au!
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0
+  " au FileType markdown,text,html setlocal spell complete+=kspell
+  au FileType markdown set tw=80
+augroup END
+
+augroup markdown
+  au!
+  au FileType ruby setl iskeyword+=_
+  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
+  au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
+augroup END
+
+
+augroup misc
+  au!
+  au BufNewFile,BufRead */ssh/config,ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
+  au FileType zsh set ts=2 sts=2 sw=2
+  au FileType sh set ts=2 sts=2 sw=2
+  au FileType bash set ts=2 sts=2 sw=2
+  au FileType fish set ts=2 sts=2 sw=2
+  au FileType tmux set ts=2 sts=2 sw=2
+augroup END
+
+augroup git
+  " ----------------------------------------------------------------------------
+  " ## Manage GIT related scenarios
+  au FileType gitcommit,gitrebase setl nospell textwidth=72
+  au BufNewFile,BufRead .git/index setlocal nolist
+  au BufReadPost fugitive://* set bufhidden=delete
+  au BufReadCmd *.git/index exe BufReadIndex()
+  au BufEnter *.git/index silent normal gg0j
+  au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
+  au FileType gitcommit,gitrebase exe BufEnterCommit()
+augroup END
 
 " Automatically close vim if only the quickfix window is open
 " http://stackoverflow.com/a/7477056/3720597
@@ -1113,19 +1118,21 @@ endfunction
   "   let g:gutentags_ctags_tagfile = 'tags'
 
 " ## ultisnips
-    let g:UltiSnipsExpandTrigger = "<C-e>"
-    let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
-    let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
-    let g:UltiSnipsSnippetDirectories=['UltiSnips']
+  let g:UltiSnipsExpandTrigger = "<C-e>"
+  let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
+  let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
+  let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
+  au InsertEnter * call ncm2#disable_for_buffer() " toggle enable/disable
   let g:ncm2_look#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_buffer#source = {'priority': 5, 'popup_limit': 5}
   let g:ncm2_file#source = {'priority': 7, 'popup_limit': 5}
   let g:ncm2_ultisnips#source = {'priority': 8, 'mark': ''}
+
   call ncm2#override_source('ncm2_vim_lsp_ruby', { 'priority': 9, 'mark': "\ue23e"})
   call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
   call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
@@ -1133,11 +1140,12 @@ endfunction
   call ncm2#override_source('ncm2_vim_lsp_python', { 'priority': 9, 'mark': "\uf820"})
   call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
+
   call ncm2#override_source('ncm2_LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('ncm2_LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
   call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
   call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
-  au InsertEnter * call ncm2#enable_for_buffer() " or on BufEnter
+
   let g:ncm2#complete_length = 2
   let g:ncm2#matcher = {
                   \ 'name': 'combine',
@@ -1151,14 +1159,41 @@ endfunction
 
 " ## languageclient-neovim
   let g:LanguageClient_autoStart = 1 " Automatically start language servers.
+  " let g:LanguageClient_autoStop = 1
   let g:LanguageClient_loadSettings = 0
-  let g:LanguageClient_loggingLevel = 'DEBUG'
-  " let g:LanguageClient_loggingFile = stdpath('data') . '/LanguageClient.log'
-  " let g:LanguageClient_serverStderr = stdpath('data') . '/LanguageServer.log'
+  let g:LanguageClient_loggingLevel = 'error'
   let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
   let g:LanguageClient_serverStderr = expand('~/.config/nvim/language-server.log')
-  let g:LanguageClient_diagnosticsList = v:null
-  " let g:LanguageClient_rootMarkers = {'elixir': ['mix.exs']}
+  let g:LanguageClient_diagnosticsEnable = 0
+  let g:LanguageClient_diagnosticsList = ""
+  let g:LanguageClient_diagnosticsDisplay = {
+        \ 1: {
+        \     "name": "Error",
+        \     "texthl": "ALEError",
+        \     "signText": "x",
+        \     "signTexthl": "ALEErrorSign",
+        \ },
+        \ 2: {
+        \     "name": "Warning",
+        \     "texthl": "ALEWarning",
+        \     "signText": "!",
+        \     "signTexthl": "ALEWarningSign",
+        \ },
+        \ 3: {
+        \     "name": "Information",
+        \     "texthl": "ALEInfo",
+        \     "signText": "i",
+        \     "signTexthl": "ALEInfoSign",
+        \ },
+        \ 4: {
+        \     "name": "Hint",
+        \     "texthl": "ALEInfo",
+        \     "signText": ">",
+        \     "signTexthl": "ALEInfoSign",
+        \ },
+        \ }
+  " let g:LanguageClient_rootMarkers = {'elixir': ['mix.exs'], 'eelixir': ['mix.exs']}
+  " let g:LanguageClient_hasSnippetSupport = 0
   let g:LanguageClient_serverCommands = {}
   if executable('pyls')
     let g:LanguageClient_serverCommands.python = ['pyls']
@@ -1195,80 +1230,78 @@ endfunction
     let g:LanguageClient_serverCommands.json = ['json-languageserver', '--stdio']
   endif
 
-" " ## vim-lsp
-  " let g:lsp_auto_enable = 1
-  " let g:lsp_signs_enabled = 1             " enable diagnostic signs / we use ALE for now
-  " let g:lsp_diagnostics_echo_cursor = 1   " enable echo under cursor when in normal mode
-  " let g:lsp_signs_error = {'text': '⤫'}
-  " let g:lsp_signs_warning = {'text': '~~'}
-  " let g:lsp_signs_hint = {'text': '‣'}
-  " let g:lsp_signs_information = {'text': '‣'}
-  " let g:lsp_log_verbose = 0
-  " let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
-
-  " augroup lsp_setup
-  "   au!
-  "   if executable('typescript-language-server')
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'typescript',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
-  "           \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-  "           \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
-  "           \ })
-  "   endif
-  "   if executable('javascript-typescript-langserver')
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'javascript',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'javascript-typescript-stdio']},
-  "           \ 'whitelist': ['javascript', 'javascript.jsx'],
-  "           \ })
-  "   endif
-  "   if executable('css-languageserver')
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'css',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'css-languageserver --stdio']},
-  "           \ 'whitelist': ['css', 'less', 'sass', 'scss'],
-  "           \ })
-  "   endif
-  "   if executable('solargraph')
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'ruby',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
-  "           \ 'initialization_options': {"diagnostics": "true"},
-  "           \ 'whitelist': ['ruby', 'eruby'],
-  "           \ })
-  "   endif
-  "   if executable('lua-lsp')
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'lua',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'lua-lsp']},
-  "           \ 'whitelist': ['lua'],
-  "           \ })
-  "   endif
-  "   if executable(expand($PWD."/.elixir_ls/rel/language_server.sh"))
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'elixir',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, expand($PWD."/.elixir_ls/rel/language_server.sh")]},
-  "           \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
-  "           \ 'whitelist': ['elixir','eelixir','exs','ex'],
-  "           \ })
-  "   endif
-  "   if executable('pyls')
-  "     au User lsp_setup call lsp#register_server({
-  "           \ 'name': 'python',
-  "           \ 'cmd': {server_info->[&shell, &shellcmdflag, 'pyls']},
-  "           \ 'whitelist': ['python', 'pythonx'],
-  "           \ })
-  "   endif
-  " augroup end
+" ## vim-lsp
+  let g:lsp_auto_enable = 1
+  let g:lsp_signs_enabled = 0               " enable diagnostic signs / we use ALE for now
+  let g:lsp_diagnostics_echo_cursor = 1     " enable echo under cursor when in normal mode
+  let g:lsp_signs_error = {'text': '⤫'}     " ✖
+  let g:lsp_signs_warning = {'text': '~~'}  " ⬥
+  let g:lsp_signs_hint = {'text': '‣'}
+  let g:lsp_signs_information = {'text': '‣'}
+  let g:lsp_log_verbose = 0
+  let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
+  augroup lsp_setup
+    au!
+    if executable('typescript-language-server')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'typescript',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
+            \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
+            \ 'whitelist': ['typescript', 'typescriptreact', 'typescript.tsx'],
+            \ })
+    endif
+    if executable('javascript-typescript-langserver')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'javascript',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'javascript-typescript-stdio']},
+            \ 'whitelist': ['javascript', 'javascript.jsx'],
+            \ })
+    endif
+    if executable('css-languageserver')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'css',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'css-languageserver --stdio']},
+            \ 'whitelist': ['css', 'less', 'sass', 'scss'],
+            \ })
+    endif
+    if executable('solargraph')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'ruby',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'solargraph stdio']},
+            \ 'initialization_options': {"diagnostics": "true"},
+            \ 'whitelist': ['ruby', 'eruby'],
+            \ })
+    endif
+    if executable('lua-lsp')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'lua',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'lua-lsp']},
+            \ 'whitelist': ['lua'],
+            \ })
+    endif
+    if executable(expand($PWD."/.elixir_ls/rel/language_server.sh"))
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'elixir',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, expand($PWD."/.elixir_ls/rel/language_server.sh")]},
+            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
+            \ 'whitelist': ['elixir','eelixir','exs','ex'],
+            \ })
+    endif
+    if executable('pyls')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'python',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'pyls']},
+            \ 'whitelist': ['python', 'pythonx'],
+            \ })
+    endif
+  augroup end
 
   " ## ALE
     let g:ale_enabled = 1
     let g:ale_completion_enabled = 0
     let g:ale_lint_delay = 500
-    let g:ale_sign_column_always = 1
+    " let g:ale_sign_column_always = 1
     let g:ale_echo_msg_format = '[%linter%] %s'
-    let g:ale_linter_aliases = {'tsx': ['ts', 'typescript'], 'typescriptreact': ['ts', 'typescript']}
     let g:ale_linters = {
           \   'elixir': ['elixir-ls'],
           \   'eelixir': ['elixir-ls'],
@@ -1290,19 +1323,18 @@ endfunction
     let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
     let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
     let g:ale_sign_info = '‣'
-    let g:ale_javascript_eslint_use_local_config = 1
-    let g:ale_javascript_prettier_use_local_config = 1
-    let g:ale_javascript_prettier_eslint_use_local_config = 1
     let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
     let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true}}
     let g:ale_elm_format_options = '--yes --elm-version=0.18'
-    let g:ale_lint_on_text_changed = 'always'
+    let g:ale_lint_on_text_changed = 'always' " 'normal'
     let g:ale_lint_on_insert_leave = 1
     let g:ale_lint_on_enter = 1
     let g:ale_lint_on_save = 1
     let g:ale_fix_on_save = 1
     let g:ale_virtualtext_cursor = 1
     let g:ale_virtualtext_prefix = "❯❯ "
+    " let g:ale_set_balloons = 0
+    " let g:ale_set_highlights = 0
 
 " }}}
 " ░░░░░░░░░░░░░░░ mappings {{{
@@ -1362,34 +1394,38 @@ endfunction
   inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
   inoremap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
 
-" vim-lsp
-  " nnoremap <F2> :LspRename<CR>
-  " nnoremap <leader>ld :LspDefinition<CR>
-  " nnoremap <leader>lf :LspDocumentFormat<CR>
-  " nnoremap <leader>lh :LspHover<CR>
-  " nnoremap <leader>lr :LspReferences<CR>
-  " nnoremap <leader>ln :LspRename<CR>
-  " nnoremap <leader>li :LspImplementation<CR>
-  " " nnoremap <leader>] :LspNextError<CR>
-  " " nnoremap <leader>[ :LspPreviousError<CR>
+  if exists("g:lsp_auto_enable")
+    " vim-lsp
+    nnoremap <F2> :LspRename<CR>
+    nnoremap <leader>ln :LspRename<CR>
+    nnoremap <leader>ld :LspDefinition<CR>
+    nnoremap <leader>lf :LspDocumentFormat<CR>
+    nnoremap <leader>lh :LspHover<CR>
+    nnoremap <leader>lr :LspReferences<CR>
+    nnoremap <leader>li :LspImplementation<CR>
+    nnoremap <leader>] :LspNextError<CR>
+    nnoremap <leader>[ :LspPreviousError<CR>
+  else
+    " LanguageClient-neovim
+    nnoremap <Leader>lm :call LanguageClient_contextMenu()<CR>
+    nnoremap <Leader>lk :call LanguageClient#textDocument_hover()<CR>
+    nnoremap <Leader>lh :call LanguageClient#textDocument_hover()<CR>
+    nnoremap <Leader>li :call LanguageClient#textDocument_implementation()<CR>
+    nnoremap <leader>ln :call LanguageClient#textDocument_rename()<CR>
+    nnoremap <F2> :call LanguageClient#textDocument_rename()<CR>
+    nnoremap <leader>lf :call LanguageClient#textDocument_formatting()<CR>
+    nnoremap <Leader>ld :call LanguageClient#textDocument_definition({
+          \ 'gotoCmd': 'split',
+          \})<CR>
+    nnoremap <leader>lt :call LanguageClient#textDocument_typeDefinition({
+          \ 'gotoCmd': 'split',
+          \})<CR>
+    nnoremap <leader>lr :call LanguageClient#textDocument_references()<CR>
+    nnoremap <leader>la :call LanguageClient_workspace_applyEdit()<CR>
+    nnoremap <leader>lc :call LanguageClient#textDocument_completion()<CR>
+    nnoremap <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
+  endif
 
-" LanguageClient-neovim
-  nnoremap <Leader>lm :call LanguageClient_contextMenu()<CR>
-  nnoremap <Leader>lk :call LanguageClient#textDocument_hover()<CR>
-  nnoremap <Leader>lh :call LanguageClient#textDocument_hover()<CR>
-  nnoremap <Leader>li :call LanguageClient#textDocument_implementation()<CR>
-  nnoremap <leader>ln :call LanguageClient#textDocument_rename()<CR>
-  nnoremap <leader>lf :call LanguageClient#textDocument_formatting()<CR>
-  nnoremap <Leader>ld :call LanguageClient#textDocument_definition({
-        \ 'gotoCmd': 'split',
-        \})<CR>
-  nnoremap <leader>lt :call LanguageClient#textDocument_typeDefinition({
-        \ 'gotoCmd': 'split',
-        \})<CR>
-  nnoremap <leader>lr :call LanguageClient#textDocument_references()<CR>
-  nnoremap <leader>la :call LanguageClient_workspace_applyEdit()<CR>
-  nnoremap <leader>lc :call LanguageClient#textDocument_completion()<CR>
-  nnoremap <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
 
 " Down is really the next line
   nnoremap j gj
