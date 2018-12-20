@@ -3,7 +3,7 @@
 echo ""
 echo ":: setting up elixir things"
 echo ""
-echo "CWD: $CWD"
+# echo "CWD: $CWD"
 echo "PWD: $PWD"
 
 # rm -rf $HOME/.elixir-ls
@@ -23,7 +23,9 @@ if (which mix &>/dev/null); then
 
   # install elixir-ls via git and compile
   if [[ -d "$PWD/.elixir_ls" ]]; then
-    echo "local .elixir_ls already exists; deleting existing folder and re-installing fresh."
+    echo ""
+    echo ":: local .elixir_ls already exists; deleting existing folder and re-installing fresh."
+    echo ""
     rm -rf .elixir_ls
   fi
 
@@ -34,7 +36,9 @@ if (which mix &>/dev/null); then
 
   mix local.hex --force --if-missing
 else
+  echo ""
   echo ":: ERROR: unable to run mix command; likely elixir/mix isn't available"
+  echo ""
 fi
 
 # if [[ -f "$HOME/.elixir-ls/rel/language_server.sh" ]]; then

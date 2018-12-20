@@ -114,7 +114,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'w0rp/ale'
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
   Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': 'cd app & yarn install' }
-  Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from LC/LSP/etc
+  Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 
 " ## Movements/Text Objects, et al
   Plug 'kana/vim-operator-user'
@@ -394,6 +394,7 @@ augroup general
         \ if &omnifunc == "" |
         \    setlocal omnifunc=syntaxcomplete#Complete |
         \ endif
+  " autocmd FileType * setlocal omnifunc=lsp#complete
 augroup END
 
 augroup elm
@@ -768,7 +769,7 @@ let g:lightline = {
       \   },
       \ }
 
-let g:lightline#ale#indicator_ok = "\uf42e "
+let g:lightline#ale#indicator_ok = "\uf42e  "
 let g:lightline#ale#indicator_warnings = ' '
 let g:lightline#ale#indicator_errors = ' '
 let g:lightline#ale#indicator_checking = " "
@@ -1125,7 +1126,7 @@ endfunction
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
-  au InsertEnter * call ncm2#disable_for_buffer() " toggle enable/disable
+  au InsertEnter * call ncm2#enable_for_buffer() " toggle enable/disable
   let g:ncm2_look#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
@@ -1158,8 +1159,8 @@ endfunction
   " let $NVIM_PYTHON_LOG_LEVEL="DEBUG"
 
 " ## languageclient-neovim
-  let g:LanguageClient_autoStart = 1 " Automatically start language servers.
-  " let g:LanguageClient_autoStop = 1
+  let g:LanguageClient_autoStart = 0 " Automatically start language servers.
+  let g:LanguageClient_autoStop = 1
   let g:LanguageClient_loadSettings = 0
   let g:LanguageClient_loggingLevel = 'error'
   let g:LanguageClient_loggingFile = expand('~/.config/nvim/language-client.log')
@@ -1192,7 +1193,16 @@ endfunction
         \     "signTexthl": "ALEInfoSign",
         \ },
         \ }
-  " let g:LanguageClient_rootMarkers = {'elixir': ['mix.exs'], 'eelixir': ['mix.exs']}
+  let g:LanguageClient_rootMarkers = {
+        \ 'elm': ['elm.json'],
+        \ 'elixir': ['mix.exs'],
+        \ 'javascript': ['package.json'],
+        \ 'typescript': ['package.json'],
+        \ 'reason': ['bs.config'],
+        \ 'ocaml': ['*.opam'],
+        \ 'haskell': ['stack.yaml'],
+        \ 'rust': ['Cargo.toml'],
+        \ }
   " let g:LanguageClient_hasSnippetSupport = 0
   let g:LanguageClient_serverCommands = {}
   if executable('pyls')
@@ -1232,10 +1242,10 @@ endfunction
 
 " ## vim-lsp
   let g:lsp_auto_enable = 1
-  let g:lsp_signs_enabled = 0               " enable diagnostic signs / we use ALE for now
+  let g:lsp_signs_enabled = 1               " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1     " enable echo under cursor when in normal mode
-  let g:lsp_signs_error = {'text': '⤫'}     " ✖
-  let g:lsp_signs_warning = {'text': '~~'}  " ⬥
+  let g:lsp_signs_error = {'text': '✖'}     " ✖⤫
+  let g:lsp_signs_warning = {'text': '⬥'}  " ⬥~~
   let g:lsp_signs_hint = {'text': '‣'}
   let g:lsp_signs_information = {'text': '‣'}
   let g:lsp_log_verbose = 0
@@ -1303,8 +1313,7 @@ endfunction
     " let g:ale_sign_column_always = 1
     let g:ale_echo_msg_format = '[%linter%] %s'
     let g:ale_linters = {
-          \   'elixir': ['elixir-ls'],
-          \   'eelixir': ['elixir-ls'],
+          \   'elixir': [],
           \   'lua': ['luacheck'],
           \ }
     let g:ale_fixers = {
@@ -1381,30 +1390,49 @@ endfunction
   inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
   inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
   inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
-  " details about endwise + ncm2 here: https://github.com/roxma/nvim-completion-manager/issues/49#issuecomment-285923119
-" ncm2 + ultisnips
-  imap <C-X><CR>   <CR><Plug>AlwaysEnd
-  inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
 
-  imap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
-  imap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+  " ncm2 + ultisnips maps
+  if exists("g:ncm2#auto_popup")
+    imap <C-X><CR>   <CR><Plug>AlwaysEnd
+    " REF: details about endwise + ncm2 here: https://github.com/roxma/nvim-completion-manager/issues/49#issuecomment-285923119
+    inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
 
-  smap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+    " imap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+    imap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
 
-  inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
-  inoremap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+    smap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+
+    " inoremap <silent> <expr> <C-e> ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm')
+    inoremap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_expand)", 'm') : "\<ESC>A"
+  endif
 
   if exists("g:lsp_auto_enable")
     " vim-lsp
-    nnoremap <F2> :LspRename<CR>
-    nnoremap <leader>ln :LspRename<CR>
-    nnoremap <leader>ld :LspDefinition<CR>
-    nnoremap <leader>lf :LspDocumentFormat<CR>
-    nnoremap <leader>lh :LspHover<CR>
-    nnoremap <leader>lr :LspReferences<CR>
-    nnoremap <leader>li :LspImplementation<CR>
-    nnoremap <leader>] :LspNextError<CR>
-    nnoremap <leader>[ :LspPreviousError<CR>
+    " nnoremap <F2> :LspRename<CR>
+    " nnoremap <leader>ln :LspRename<CR>
+    " nnoremap <leader>ld :LspDefinition<CR>
+    " nnoremap <leader>lf :LspDocumentFormat<CR>
+    " nnoremap <leader>lh :LspHover<CR>
+    " nnoremap <leader>lr :LspReferences<CR>
+    " nnoremap <leader>li :LspImplementation<CR>
+    " nnoremap <leader>] :LspNextError<CR>
+    " nnoremap <leader>[ :LspPreviousError<CR>
+
+    nnoremap <leader>la <plug>(lsp-code-action)<CR>
+    nnoremap <leader>ld <plug>(lsp-definition)<CR>
+    nnoremap <leader>ls <plug>(lsp-document-symbol)<CR>
+    nnoremap <leader>lh <plug>(lsp-hover)<CR>
+    nnoremap <leader>lr <plug>(lsp-references)<CR>
+    nnoremap <F2>       <plug>(lsp-rename)<CR>
+    nnoremap <leader>ln <plug>(lsp-rename)<CR>
+    nnoremap <leader>lw <plug>(lsp-workspace-symbol)<CR>
+    nnoremap <leader>lf <plug>(lsp-document-format)<CR>
+    nnoremap <leader>li <plug>(lsp-implementation)<CR>
+    nnoremap <leader>lt <plug>(lsp-type-definition)<CR>
+    nnoremap <leader>]  <plug>(lsp-next-error)<CR>
+    nnoremap <leader>[  <plug>(lsp-previous-error)<CR>
+    " nnoremap <leader>la <plug>(lsp-document-diagnostics)<CR>
+    " nnoremap <leader>la <plug>(lsp-status)<CR>
   else
     " LanguageClient-neovim
     nnoremap <Leader>lm :call LanguageClient_contextMenu()<CR>
@@ -1412,20 +1440,15 @@ endfunction
     nnoremap <Leader>lh :call LanguageClient#textDocument_hover()<CR>
     nnoremap <Leader>li :call LanguageClient#textDocument_implementation()<CR>
     nnoremap <leader>ln :call LanguageClient#textDocument_rename()<CR>
-    nnoremap <F2> :call LanguageClient#textDocument_rename()<CR>
+    nnoremap <F2>       :call LanguageClient#textDocument_rename()<CR>
     nnoremap <leader>lf :call LanguageClient#textDocument_formatting()<CR>
-    nnoremap <Leader>ld :call LanguageClient#textDocument_definition({
-          \ 'gotoCmd': 'split',
-          \})<CR>
-    nnoremap <leader>lt :call LanguageClient#textDocument_typeDefinition({
-          \ 'gotoCmd': 'split',
-          \})<CR>
+    nnoremap <Leader>ld :call LanguageClient#textDocument_definition({'gotoCmd': 'split'})<CR>
+    nnoremap <leader>lt :call LanguageClient#textDocument_typeDefinition({'gotoCmd': 'split'})<CR>
     nnoremap <leader>lr :call LanguageClient#textDocument_references()<CR>
     nnoremap <leader>la :call LanguageClient_workspace_applyEdit()<CR>
     nnoremap <leader>lc :call LanguageClient#textDocument_completion()<CR>
     nnoremap <leader>ls :call LanguageClient_textDocument_documentSymbol()<CR>
   endif
-
 
 " Down is really the next line
   nnoremap j gj
@@ -1436,18 +1459,20 @@ endfunction
 
 " Copy to system clipboard
   vnoremap <C-c> "+y
-" Paste from system clipboard with Ctrl + v
-  inoremap <C-v> <ESC>"+p
-  nnoremap <Leader>p "0p
-  vnoremap <Leader>p "0p
-  nnoremap <Leader>h viw"0p
 
-" Insert mode mappings (beginning of line, end of line, and word movement)
+" " Paste from system clipboard with Ctrl + v
+"   inoremap <C-v> <ESC>"+p
+"   nnoremap <Leader>p "0p
+"   vnoremap <Leader>p "0p
+"   nnoremap <Leader>h viw"0p
+
+" Insert mode maps (beginning of line, end of line, and word movement)
 " move to front of line:
   map <C-a> <ESC>^
   imap <C-a> <ESC>I
 " move to end of line:
   map <C-e> <ESC>$
+  imap <C-e> <ESC>A
 
 " move by word forward and back:
   inoremap <M-f> <ESC><Space>Wi
@@ -1698,12 +1723,6 @@ vnoremap / /\v
 " The normal use of S is covered by cc, so don't worry about shadowing it.
   nnoremap S i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 
-" Insert mode movements
-" Ctrl-e: Go to end of line
-" inoremap <c-e> <ESC>A
-" Ctrl-a: Go to begin of line
-" inoremap <c-a> <ESC>I
-
   cnoremap <C-a> <Home>
   cnoremap <C-e> <End>
 
@@ -1727,7 +1746,10 @@ vnoremap / /\v
 
 " }}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
+
   hi clear SpellBad
+  hi clear SpellCap
+
   hi htmlArg cterm=italic gui=italic
   hi xmlAttrib cterm=italic gui=italic
   hi Type cterm=italic gui=italic
@@ -1743,18 +1765,16 @@ vnoremap / /\v
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-  hi clear SpellBad
-  hi clear SpellCap
-  hi SpellBad gui=undercurl
-  hi SpellCap gui=undercurl
+  hi SpellBad gui=undercurl,underline
+  hi SpellCap gui=undercurl,underline
   hi VertSplit guibg=NONE
 
   hi link Debug SpellBad
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
-  hi ALEErrorSign gui=NONE guifg=#cc6666 guibg=NONE
-  hi ALEWarningSign guifg=#f0c674 guibg=NONE
+  hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
+  hi ALEWarningSign guifg=#F2C38F guibg=NONE guibg=NONE
   hi ALEError guibg=#DF8C8C guifg=#333333
   hi ALEWarning guibg=#F2C38F guifg=#333333
   hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333
@@ -1765,21 +1785,22 @@ vnoremap / /\v
   hi link LspError ALEError
   hi link LspWarning ALEWarning
 
-  hi ModifiedColor ctermfg=196 ctermbg=NONE guifg=#cc6666 guibg=NONE term=bold cterm=bold gui=bold
+  hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
   hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
 
-  hi Visual ctermbg=242 guifg=#3C4C55 guibg=#7FC1CA
-  hi Normal ctermbg=none guibg=NONE guifg=#C5D4DD
+  hi Visual guifg=#3C4C55 guibg=#7FC1CA
+  hi Normal guifg=#C5D4DD guibg=NONE
 
-  hi QuickScopePrimary guifg=#DF8C8C gui=underline ctermfg=155 cterm=underline
-  hi QuickScopeSecondary guifg=#F2C38F gui=underline ctermfg=81 cterm=underline
+  hi QuickScopePrimary guifg=#DF8C8C guibg=#222222 gui=underline
+  hi QuickScopeSecondary guifg=#F2C38F guibg=#222222 gui=underline
 
-  hi gitCommitOverflow term=NONE guibg=#cc6666 guifg=#333333 ctermbg=210
+  hi gitCommitOverflow guibg=#DF8C8C guifg=#333333 gui=underline
   hi DiffAdd guifg=#A8CE93
   hi DiffDelete guifg=#DF8C8C
   hi DiffAdded guifg=#A8CE93
   hi DiffRemoved guifg=#DF8C8C
+
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
