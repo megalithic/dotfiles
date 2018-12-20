@@ -695,7 +695,6 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
 " }}}
 " ░░░░░░░░░░░░░░░ lightline/statusbar {{{
 
-" ## lightline.vim
 let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
 let g:lightline = {
       \   'colorscheme': 'wombat',
@@ -1774,16 +1773,20 @@ vnoremap / /\v
   hi link Exception SpellBad
 
   hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
-  hi ALEWarningSign guifg=#F2C38F guibg=NONE guibg=NONE
-  hi ALEError guibg=#DF8C8C guifg=#333333
-  hi ALEWarning guibg=#F2C38F guifg=#333333
-  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333
-  hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333
+  hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
+  hi ALEError guibg=#DF8C8C guifg=#333333 gui=NONE
+  hi ALEWarning guibg=#F2C38F guifg=#333333 gui=NONE
+  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
+  hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
 
   hi link LspErrorText ALEErrorSign
   hi link LspWarningText ALEWarningSign
+  hi link LspInformationText ALEWarningSign
+  hi link LspHintText ALEWarningSign
   hi link LspError ALEError
   hi link LspWarning ALEWarning
+  hi link LspInformation ALEWarning
+  hi link LspHint ALEWarning
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
@@ -1800,7 +1803,6 @@ vnoremap / /\v
   hi DiffDelete guifg=#DF8C8C
   hi DiffAdded guifg=#A8CE93
   hi DiffRemoved guifg=#DF8C8C
-
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim
