@@ -1226,6 +1226,9 @@ endfunction
     let g:LanguageClient_serverCommands.elixir = [$PWD."/.elixir_ls/rel/language_server.sh"]
     let g:LanguageClient_serverCommands.eelixir = [$PWD."/.elixir_ls/rel/language_server.sh"]
   endif
+  if executable('elm-language-server-exe')
+    let g:LanguageClient_serverCommands.elm = ['elm-language-server-exe']
+  endif
   if executable('css-languageserver')
     let g:LanguageClient_serverCommands.css = ['css-languageserver', '--stdio']
     let g:LanguageClient_serverCommands.less = ['css-languageserver', '--stdio']
@@ -1251,6 +1254,21 @@ endfunction
   let g:lsp_log_file = expand('~/.config/nvim/vim-lsp.log')
   augroup lsp_setup
     au!
+    if executable(expand($PWD."/.elixir_ls/rel/language_server.sh"))
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'elixir',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, expand($PWD."/.elixir_ls/rel/language_server.sh")]},
+            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
+            \ 'whitelist': ['elixir','eelixir','exs','ex'],
+            \ })
+    endif
+    if executable('elm-language-server-exe')
+      au User lsp_setup call lsp#register_server({
+            \ 'name': 'elm',
+            \ 'cmd': {server_info->[&shell, &shellcmdflag, 'elm-language-server-exe']},
+            \ 'whitelist': ['elm'],
+            \ })
+    endif
     if executable('typescript-language-server')
       au User lsp_setup call lsp#register_server({
             \ 'name': 'typescript',
@@ -1286,14 +1304,6 @@ endfunction
             \ 'name': 'lua',
             \ 'cmd': {server_info->[&shell, &shellcmdflag, 'lua-lsp']},
             \ 'whitelist': ['lua'],
-            \ })
-    endif
-    if executable(expand($PWD."/.elixir_ls/rel/language_server.sh"))
-      au User lsp_setup call lsp#register_server({
-            \ 'name': 'elixir',
-            \ 'cmd': {server_info->[&shell, &shellcmdflag, expand($PWD."/.elixir_ls/rel/language_server.sh")]},
-            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true }},
-            \ 'whitelist': ['elixir','eelixir','exs','ex'],
             \ })
     endif
     if executable('pyls')
@@ -1774,8 +1784,10 @@ vnoremap / /\v
 
   hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
   hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
+  hi ALEInfoSign guifg=#F2C38F guibg=NONE gui=NONE
   hi ALEError guibg=#DF8C8C guifg=#333333 gui=NONE
   hi ALEWarning guibg=#F2C38F guifg=#333333 gui=NONE
+  hi ALEInfo guibg=#F2C38F guifg=#333333 gui=NONE
   hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
   hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
 
