@@ -80,6 +80,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug '/usr/local/opt/fzf'
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
+  Plug 'justinmk/vim-dirvish' " TODO: needs testing
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
   Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -769,9 +770,9 @@ let g:lightline = {
       \ }
 
 let g:lightline#ale#indicator_ok = "\uf42e  "
-let g:lightline#ale#indicator_warnings = ' '
-let g:lightline#ale#indicator_errors = ' '
-let g:lightline#ale#indicator_checking = " "
+let g:lightline#ale#indicator_warnings = "  "
+let g:lightline#ale#indicator_errors = "  "
+let g:lightline#ale#indicator_checking = "  "
 
 function! UpdateStatusBar(timer)
   " call lightline#update()
@@ -862,7 +863,8 @@ endfunction
 
 " ## tmux-navigator
   let g:tmux_navigator_no_mappings = 1
-  let g:tmux_navigator_save_on_switch = 1
+  let g:tmux_navigator_save_on_switch = 2
+  let g:tmux_navigator_disable_when_zoomed = 0
 
 " ## polyglot
   let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir']
@@ -1244,7 +1246,7 @@ endfunction
 
 " ## vim-lsp
   let g:lsp_auto_enable = 1
-  let g:lsp_signs_enabled = 1               " enable diagnostic signs / we use ALE for now
+  let g:lsp_signs_enabled = 0               " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1     " enable echo under cursor when in normal mode
   let g:lsp_signs_error = {'text': '✖'}     " ✖⤫
   let g:lsp_signs_warning = {'text': '⬥'}  " ⬥~~
@@ -1321,14 +1323,14 @@ endfunction
     let g:ale_lint_delay = 500
     let g:ale_echo_msg_format = '[%linter%] %s'
     " disabling linters where language servers are installed/available..
-    let g:ale_linters = {
-          \   'elixir': [],
-          \   'eelixir': [],
-          \   'elm': [],
-          \   'lua': [],
-          \   'javascript': [],
-          \   'typescript': [],
-          \ }
+    " let g:ale_linters = {
+    "       \   'elixir': [],
+    "       \   'eelixir': [],
+    "       \   'elm': [],
+    "       \   'lua': [],
+    "       \   'javascript': [],
+    "       \   'typescript': [],
+    "       \ }
     let g:ale_fixers = {
           \   '*': ['remove_trailing_lines', 'trim_whitespace'],
           \   'javascript': ['prettier_eslint'],
@@ -1468,13 +1470,15 @@ endfunction
   map <C-a> <ESC>^
   imap <C-a> <ESC>I
 " move to end of line:
-  map <C-e> <ESC>$
   imap <C-e> <ESC>A
 
 " move by word forward and back:
   inoremap <M-f> <ESC><Space>Wi
   inoremap <M-b> <Esc>Bi
   inoremap <M-d> <ESC>cW
+
+" # vim-dirvish
+  nnoremap <silent> - :Dirvish %:p:h<CR>
 
 " Move to the end of yanked text after yank and paste
   nnoremap p p`]
@@ -1554,27 +1558,35 @@ endfunction
 
 " ## Splits with vim-tmux-navigator
   nnoremap <silent> <C-h> :TmuxNavigateLeft<CR>
-  nnoremap <silent> <C-j> :TmuxNavigateDown<CR>
-  nnoremap <silent> <C-k> :TmuxNavigateUp<CR>
+  nmap <C-j> :TmuxNavigateDown<CR>
+  nnoremap <C-j> :TmuxNavigateDown<CR>
+  nnoremap <C-k> :TmuxNavigateUp<CR>
+  nmap <C-k> :TmuxNavigateUp<CR>
   nnoremap <silent> <C-l> :TmuxNavigateRight<CR>
-  nnoremap <silent> <C-\> :TmuxNavigatePrevious<CR>
+  " nnoremap <silent> <C-\> :TmuxNavigatePrevious<CR>
+
+  " nnoremap <silent> <C-h> <C-w><C-h>
+  " nnoremap <silent> <C-j> <C-w><C-j>
+  " nnoremap <silent> <C-k> <C-w><C-k>
+  " nnoremap <silent> <C-l> <C-w><C-l>
+
   " nnoremap <C-o> :vsp <c-d> " this was overwrting default behaviors
   nnoremap <silent><leader>o :vnew<cr>:e<space><c-d>
   nnoremap <C-t> :tabe <c-d>
 
-  if(has('nvim'))
-    " window movements > terminal mode
-    tnoremap <C-w>h <C-\><C-n><C-w><C-h>
-    tnoremap <C-w>j <C-\><C-n><C-w><C-j>
-    tnoremap <C-w>k <C-\><C-n><C-w><C-k>
-    tnoremap <C-w>l <C-\><C-n><C-w><C-l>
-  endif
+"   if(has('nvim'))
+"     " window movements > terminal mode
+"     tnoremap <C-w>h <C-\><C-n><C-w><C-h>
+"     tnoremap <C-w>j <C-\><C-n><C-w><C-j>
+"     tnoremap <C-w>k <C-\><C-n><C-w><C-k>
+"     tnoremap <C-w>l <C-\><C-n><C-w><C-l>
+"   endif
 
-  " window movements > insert mode
-  inoremap <C-w>h <ESC><C-w><C-h>
-  inoremap <C-w>j <ESC><C-w><C-j>
-  inoremap <C-w>k <ESC><C-w><C-k>
-  inoremap <C-w>l <ESC><C-w><C-l>
+"   " window movements > insert mode
+"   inoremap <C-w>h <ESC><C-w><C-h>
+"   inoremap <C-w>j <ESC><C-w><C-j>
+"   inoremap <C-w>k <ESC><C-w><C-k>
+"   inoremap <C-w>l <ESC><C-w><C-l>
 
 " ## Writing / quitting
   nnoremap <silent> <leader>w :w<CR>
