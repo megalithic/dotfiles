@@ -156,6 +156,7 @@ alias evm="nvim ~/.dotfiles/nvim/init.min.vim"
 alias ea="nvim ~/.dotfiles/alacritty/alacritty.yml.symlink"
 alias ek="nvim ~/.dotfiles/kitty/kitty.conf"
 alias et="nvim ~/.dotfiles/tmux/tmux.conf.symlink"
+alias eh="nvim ~/.dotfiles/private/homeassistant/configuration.yaml"
 
 # FOLDERS
 # -----------------------------------------------------------------------------

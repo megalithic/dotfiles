@@ -37,6 +37,7 @@ if (which mix &>/dev/null); then
     echo "-- cd into $mix_root and cloning repo..."
     echo ""
     cd "$mix_root"
+    mix deps.get
     git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
     cd "$mix_root/.elixir_ls" && mkdir rel
 
