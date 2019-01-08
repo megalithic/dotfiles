@@ -32,6 +32,9 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'benmills/vimux'
   Plug 'Yggdroot/indentLine'
 
+  " enable when TUI is supported
+  " Plug 'tadaa/vimade'
+
 " ## Syntax
   Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
@@ -75,6 +78,43 @@ silent! if plug#begin('~/.config/nvim/plugged')
   "       \ 'branch': 'next',
   "       \ 'do': 'bash install.sh',
   "       \ }
+
+  " coc.nvim
+  " function! PlugDoCoc(info) abort
+  "   if a:info.status ==? 'installed' || a:info.force
+  "     !yarn install
+  "     call coc#util#install_extension(join([
+  "           \ 'coc-css',
+  "           \ 'coc-emoji',
+  "           \ 'coc-eslint',
+  "           \ 'coc-html',
+  "           \ 'coc-json',
+  "           \ 'coc-pyls',
+  "           \ 'coc-rls',
+  "           \ 'coc-solargraph',
+  "           \ 'coc-tag',
+  "           \ 'coc-tsserver',
+  "           \ 'coc-tslint',
+  "           \ 'coc-ultisnips',
+  "           \ 'coc-yaml',
+  "           \ ]))
+
+  "     " -- disabled coc.nvim extensions:
+  "     " \ 'coc-omni',
+  "     " \ 'coc-dictionary',
+  "     " \ 'coc-java',
+  "     " \ 'coc-vetur',
+  "     " \ 'coc-wxml',
+  "     " \ 'coc-prettier',
+  "     " \ 'coc-stylelint',
+  "     " \ 'coc-highlight',
+  "     " \ 'coc-word',
+  "   elseif a:info.status ==? 'updated'
+  "     !yarn install
+  "     call coc#util#update()
+  "   endif
+  " endfunction
+  " Plug 'neoclide/coc.nvim', { 'do': function('PlugDoCoc') }
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -380,10 +420,16 @@ augroup general
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
+
+  " toggle syntax / dim / inactive (comment out when tadaa/vimade supports TUI)
   au WinEnter,BufEnter * silent set number relativenumber syntax=on " call RainbowParentheses
   au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call RainbowParentheses!
+
+  " toggle linenumbering and cursorline
   au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
+
+  " toggle colorcolumn when in insertmode only
   au InsertEnter * silent set colorcolumn=80
   au InsertLeave * silent set colorcolumn=""
 
