@@ -90,6 +90,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'haya14busa/vim-asterisk'                              " Star * improvements
   Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
   Plug 'tpope/vim-projectionist'
+  Plug 'rizzatti/dash.vim'
 
 " ## Utils
   Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
@@ -1248,6 +1249,7 @@ endfunction
   let g:lsp_auto_enable = 1
   let g:lsp_signs_enabled = 0               " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1     " enable echo under cursor when in normal mode
+  let g:lsp_diagnostics_enabled = 0
   let g:lsp_signs_error = {'text': '✖'}     " ✖⤫
   let g:lsp_signs_warning = {'text': '⬥'}  " ⬥~~
   let g:lsp_signs_hint = {'text': '‣'}
@@ -1260,7 +1262,7 @@ endfunction
       au User lsp_setup call lsp#register_server({
             \ 'name': 'elixir',
             \ 'cmd': {server_info->[&shell, &shellcmdflag, expand($PWD."/.elixir_ls/rel/language_server.sh")]},
-            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:false, 'projectDir': expand($PWD) }},
+            \ 'workspace_config': {'elixirLS': { 'dialyzerEnabled': v:true, 'projectDir': expand($PWD) }},
             \ 'whitelist': ['elixir','eelixir','exs','ex'],
             \ })
     endif
@@ -1317,54 +1319,54 @@ endfunction
     endif
   augroup end
 
-  " ## ALE
-    let g:ale_enabled = 1
-    let g:ale_completion_enabled = 0
-    let g:ale_lint_delay = 500
-    let g:ale_echo_msg_format = '[%linter%] %s'
-    " disabling linters where language servers are installed/available..
-    " let g:ale_linters = {
-    "       \   'elixir': [],
-    "       \   'eelixir': [],
-    "       \   'elm': [],
-    "       \   'lua': [],
-    "       \   'javascript': [],
-    "       \   'typescript': [],
-    "       \ }
-    let g:ale_linters = {
-          \   'elixir': ['elixir-ls'],
-          \   'eelixir': ['elixir-ls'],
-          \ }
-    let g:ale_fixers = {
-          \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-          \   'javascript': ['prettier_eslint'],
-          \   'javascript.jsx': ['prettier_eslint'],
-          \   'typescript': ['prettier_eslint'],
-          \   'typescriptreact': ['prettier_eslint'],
-          \   'typescript.tsx': ['prettier_eslint'],
-          \   'css': ['prettier'],
-          \   'scss': ['prettier'],
-          \   'json': ['prettier'],
-          \   'elm': ['elm-format'],
-          \   'elixir': ['mix_format'],
-          \   'eelixir': ['mix_format'],
-          \ }                                                                       "Fix eslint errors
-    let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
-    let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
-    let g:ale_sign_info = '‣'
-    let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
-    let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:false, 'projectDir': expand($PWD)}}
-    let g:ale_elm_format_options = '--yes --elm-version=0.18'
-    let g:ale_lint_on_text_changed = 'always' " 'normal'
-    let g:ale_lint_on_insert_leave = 1
-    let g:ale_lint_on_enter = 1
-    let g:ale_lint_on_save = 1
-    let g:ale_fix_on_save = 1
-    let g:ale_virtualtext_cursor = 1
-    let g:ale_virtualtext_prefix = "❯❯ "
-    " let g:ale_set_balloons = 0
-    " let g:ale_set_highlights = 0
-    " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
+" ## ALE
+  let g:ale_enabled = 1
+  let g:ale_completion_enabled = 0
+  let g:ale_lint_delay = 500
+  let g:ale_echo_msg_format = '[%linter%] %s'
+  " disabling linters where language servers are installed/available..
+  " let g:ale_linters = {
+  "       \   'elixir': [],
+  "       \   'eelixir': [],
+  "       \   'elm': [],
+  "       \   'lua': [],
+  "       \   'javascript': [],
+  "       \   'typescript': [],
+  "       \ }
+  let g:ale_linters = {
+        \   'elixir': ['elixir-ls'],
+        \   'eelixir': ['elixir-ls'],
+        \ }
+  let g:ale_fixers = {
+        \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+        \   'javascript': ['prettier_eslint'],
+        \   'javascript.jsx': ['prettier_eslint'],
+        \   'typescript': ['prettier_eslint'],
+        \   'typescriptreact': ['prettier_eslint'],
+        \   'typescript.tsx': ['prettier_eslint'],
+        \   'css': ['prettier'],
+        \   'scss': ['prettier'],
+        \   'json': ['prettier'],
+        \   'elm': ['elm-format'],
+        \   'elixir': ['mix_format'],
+        \   'eelixir': ['mix_format'],
+        \ }                                                                       "Fix eslint errors
+  let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
+  let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
+  let g:ale_sign_info = '‣'
+  let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
+  let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
+  let g:ale_elm_format_options = '--yes --elm-version=0.18'
+  let g:ale_lint_on_text_changed = 'always' " 'normal'
+  let g:ale_lint_on_insert_leave = 1
+  let g:ale_lint_on_enter = 1
+  let g:ale_lint_on_save = 1
+  let g:ale_fix_on_save = 1
+  let g:ale_virtualtext_cursor = 1
+  let g:ale_virtualtext_prefix = "❯❯ "
+  " let g:ale_set_balloons = 0
+  " let g:ale_set_highlights = 0
+  " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
 
 " }}}
 " ░░░░░░░░░░░░░░░ mappings {{{
@@ -1530,12 +1532,12 @@ endfunction
   noremap <S-F5> :PlugClean!<CR>
   map <S-F5> :PlugClean!<CR>
 
-" ## Fugitive
+" ## fugitive
   nnoremap <leader>H :Gbrowse<CR>
   vnoremap <leader>H :Gbrowse<CR>
   nnoremap <leader>gb :Gblame<CR>
 
-" ## Testing vim-test
+" ## vim-test / testing
   nmap <silent> <leader>t :TestFile<CR>
   nmap <silent> <leader>T :TestNearest<CR>
   nmap <silent> <leader>l :TestLast<CR>
@@ -1543,12 +1545,15 @@ endfunction
   " nmap <silent> <leader>g :TestVisit<CR>
   " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
 
-" ## Gist/Github
+" ## gist/github
 " Send visual selection to gist.github.com as a private, filetyped Gist
 " Requires the gist command line too (brew install gist)
   vnoremap <leader>G :Gist -po<CR>
 
-" ## Surround
+" ## dash.vim
+  nmap <silent> <leader>d <Plug>DashSearch
+
+" ## surround
   vmap [ S]
   vmap ( S)
   vmap { S}

@@ -192,6 +192,7 @@ alias pgstop="launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.postgresql.p
   # Or, if you don't want/need launchctl, you can just run:
   #     pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
 alias pgsetup="sh ~/Dropbox/scripts/postgresql_db_setup.sh"
+alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
 
 # REDIS
 # -----------------------------------------------------------------------------
@@ -202,6 +203,8 @@ alias redcli="redis-cli"
 
 # MISC
 # -----------------------------------------------------------------------------
+alias dash="open dash://" # lang:query
+alias trunc=": > "
 alias server="python -m SimpleHTTPServer"
 # alias srv=server
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --js-flags=--stack_trace_limit=-1 --user-data-dir=/tmp/jsleakcheck"
