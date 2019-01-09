@@ -35,7 +35,7 @@ except:
 
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Ryan Huber <rhuber@gmail.com>"
-SCRIPT_VERSION = "2.1.1"
+SCRIPT_VERSION = "2.2.0"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Extends weechat for typing notification/search/etc on slack.com"
 
@@ -3346,13 +3346,13 @@ def command_register(data, current_buffer, args):
     if args == 'register':
         message = textwrap.dedent("""
             #### Retrieving a Slack token via OAUTH ####
-
             1) Paste this into a browser: https://slack.com/oauth/authorize?client_id=2468770254.51917335286&scope=client
             2) Select the team you wish to access from wee-slack in your browser.
             3) Click "Authorize" in the browser **IMPORTANT: the redirect will fail, this is expected**
+               If you get a message saying you are not authorized to install wee-slack, the team has restricted Slack app installation and you will have to request it from an admin. To do that, go to https://my.slack.com/apps/A1HSZ9V8E-wee-slack and click "Request to Install".
             4) Copy the "code" portion of the URL to your clipboard
             5) Return to weechat and run `/slack register [code]`
-        """)
+        """).strip()
         w.prnt("", message)
         return
 

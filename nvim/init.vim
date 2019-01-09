@@ -138,7 +138,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
   Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
   Plug 'tpope/vim-ragtag', { 'for': ['html', 'xml', 'erb', 'haml', 'javascript.jsx', 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript'] } " a set of mappings for several langs: html, xml, erb, php, more
-  Plug 'jiangmiao/auto-pairs' " or Plug 'rstacruz/vim-closer'
+  " Plug 'jiangmiao/auto-pairs' " or Plug 'rstacruz/vim-closer'
   Plug 'cohama/lexima.vim'
   Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
   Plug 'tpope/vim-commentary' " (un)comment code
