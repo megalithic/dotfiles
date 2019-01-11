@@ -3,6 +3,8 @@ convert-snippets
 elm
 elm-oracle
 elm-test
+elm-analyse
+elm-format
 flow-language-server
 neovim
 javascript-typescript-langserver
@@ -13,4 +15,3 @@ vscode-css-languageserver-bin
 vscode-html-languageserver-bin
 vscode-json-languageserver-bin
 yarn
-
