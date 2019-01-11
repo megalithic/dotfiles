@@ -67,54 +67,54 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## Completion
   " ncm2
-  Plug 'ncm2/ncm2', { 'do': ':UpdateRemotePlugins' } | Plug 'roxma/nvim-yarp'
-  Plug 'ncm2/ncm2-bufword'
-  Plug 'ncm2/ncm2-path'
-  Plug 'shougo/neco-vim'
-  Plug 'ncm2/ncm2-vim'
-  Plug 'ncm2/ncm2-ultisnips'
-  Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
-  " Plug 'autozimu/LanguageClient-neovim', {
-  "       \ 'branch': 'next',
-  "       \ 'do': 'bash install.sh',
-  "       \ }
+  " Plug 'ncm2/ncm2', { 'do': ':UpdateRemotePlugins' } | Plug 'roxma/nvim-yarp'
+  " Plug 'ncm2/ncm2-bufword'
+  " Plug 'ncm2/ncm2-path'
+  " Plug 'shougo/neco-vim'
+  " Plug 'ncm2/ncm2-vim'
+  " Plug 'ncm2/ncm2-ultisnips'
+  " Plug 'ncm2/ncm2-vim-lsp' | Plug 'prabirshrestha/vim-lsp' | Plug 'prabirshrestha/async.vim'
+  " " Plug 'autozimu/LanguageClient-neovim', {
+  " "       \ 'branch': 'next',
+  " "       \ 'do': 'bash install.sh',
+  " "       \ }
 
   " coc.nvim
-  " function! PlugDoCoc(info) abort
-  "   if a:info.status ==? 'installed' || a:info.force
-  "     !yarn install
-  "     call coc#util#install_extension(join([
-  "           \ 'coc-css',
-  "           \ 'coc-emoji',
-  "           \ 'coc-eslint',
-  "           \ 'coc-html',
-  "           \ 'coc-json',
-  "           \ 'coc-pyls',
-  "           \ 'coc-rls',
-  "           \ 'coc-solargraph',
-  "           \ 'coc-tag',
-  "           \ 'coc-tsserver',
-  "           \ 'coc-tslint',
-  "           \ 'coc-ultisnips',
-  "           \ 'coc-yaml',
-  "           \ ]))
+  function! PlugDoCoc(info) abort
+    if a:info.status ==? 'installed' || a:info.force
+      !yarn install
+      call coc#util#install_extension(join([
+            \ 'coc-css',
+            \ 'coc-emoji',
+            \ 'coc-eslint',
+            \ 'coc-html',
+            \ 'coc-json',
+            \ 'coc-pyls',
+            \ 'coc-rls',
+            \ 'coc-solargraph',
+            \ 'coc-tag',
+            \ 'coc-tsserver',
+            \ 'coc-tslint',
+            \ 'coc-ultisnips',
+            \ 'coc-yaml',
+            \ ]))
 
-  "     " -- disabled coc.nvim extensions:
-  "     " \ 'coc-omni',
-  "     " \ 'coc-dictionary',
-  "     " \ 'coc-java',
-  "     " \ 'coc-vetur',
-  "     " \ 'coc-wxml',
-  "     " \ 'coc-prettier',
-  "     " \ 'coc-stylelint',
-  "     " \ 'coc-highlight',
-  "     " \ 'coc-word',
-  "   elseif a:info.status ==? 'updated'
-  "     !yarn install
-  "     call coc#util#update()
-  "   endif
-  " endfunction
-  " Plug 'neoclide/coc.nvim', { 'do': function('PlugDoCoc') }
+      " -- disabled coc.nvim extensions:
+      " \ 'coc-omni',
+      " \ 'coc-dictionary',
+      " \ 'coc-java',
+      " \ 'coc-vetur',
+      " \ 'coc-wxml',
+      " \ 'coc-prettier',
+      " \ 'coc-stylelint',
+      " \ 'coc-highlight',
+      " \ 'coc-word',
+    elseif a:info.status ==? 'updated'
+      !yarn install
+      call coc#util#update()
+    endif
+  endfunction
+  Plug 'neoclide/coc.nvim', { 'do': function('PlugDoCoc') }
 
 " ## Project/Code Navigation
   Plug '/usr/local/opt/fzf'
@@ -624,8 +624,10 @@ function! BufEnterCommit()
   end
 
   " " disable completion for gitcommit messages
-  call ncm2#disable_for_buffer()
-  au InsertEnter * call ncm2#disable_for_buffer()
+  if exists("g:ncm2#auto_popup")
+    call ncm2#disable_for_buffer()
+    au InsertEnter * call ncm2#disable_for_buffer()
+  endif
 
   " Allow automatic formatting of bulleted lists and blockquotes
   " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
@@ -1167,14 +1169,25 @@ endfunction
   "   let g:gutentags_ctags_tagfile = 'tags'
 
 " ## ultisnips
-  let g:UltiSnipsExpandTrigger = "<C-e>"
-  let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
-  let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
-  let g:UltiSnipsSnippetDirectories=['UltiSnips']
+  if exists("g:ncm2#auto_popup")
+    let g:UltiSnipsExpandTrigger = "<C-e>"
+    let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand_or_jump)"
+    let g:UltiSnipsJumpForwardTrigger	= "<C-j>"
+    let g:UltiSnipsJumpBackwardTrigger	= "<C-k>"
+    let g:UltiSnipsRemoveSelectModeMappings = 0
+    let g:UltiSnipsSnippetDirectories=['UltiSnips']
+  else
+    let g:UltiSnipsExpandTrigger = "<C-e>"
+    let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
+    let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
+    let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
+    let g:UltiSnipsRemoveSelectModeMappings = 0
+    let g:UltiSnipsSnippetDirectories=['UltiSnips']
+  endif
 
 " ## ncm2
   " NOTE: source changes must happen before the source is loaded
-  au InsertEnter * call ncm2#enable_for_buffer() " toggle enable/disable
+  " au InsertEnter * call ncm2#enable_for_buffer() " toggle enable/disable
   let g:ncm2_look#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dict#source = {'priority': 2, 'popup_limit': 5}
   let g:ncm2_dictionary#source = {'priority': 2, 'popup_limit': 5}
@@ -1182,18 +1195,20 @@ endfunction
   let g:ncm2_file#source = {'priority': 7, 'popup_limit': 5}
   let g:ncm2_ultisnips#source = {'priority': 8, 'mark': ''}
 
-  call ncm2#override_source('ncm2_vim_lsp_ruby', { 'priority': 9, 'mark': "\ue23e"})
-  call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
-  call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
-  call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
-  call ncm2#override_source('ncm2_vim_lsp_python', { 'priority': 9, 'mark': "\uf820"})
-  call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
-  call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
+  if exists("g:ncm2#auto_popup")
+    call ncm2#override_source('ncm2_vim_lsp_ruby', { 'priority': 9, 'mark': "\ue23e"})
+    call ncm2#override_source('ncm2_vim_lsp_typescript', { 'priority': 9, 'mark': "\ue628"})
+    call ncm2#override_source('ncm2_vim_lsp_javascript', { 'priority': 9, 'mark': "\ue74e"})
+    call ncm2#override_source('ncm2_vim_lsp_elixir', { 'priority': 9, 'mark': "\ue62d"})
+    call ncm2#override_source('ncm2_vim_lsp_python', { 'priority': 9, 'mark': "\uf820"})
+    call ncm2#override_source('ncm2_vim_lsp_lua', { 'priority': 9, 'mark': "\ue620"})
+    call ncm2#override_source('ncm2_vim_lsp_css', { 'priority': 9, 'mark': "\uf81b" })
 
-  call ncm2#override_source('ncm2_LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
-  call ncm2#override_source('ncm2_LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
-  call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
-  call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
+    call ncm2#override_source('ncm2_LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
+    call ncm2#override_source('ncm2_LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
+    call ncm2#override_source('LanguageClient_lua', { 'priority': 9, 'mark': "\ue620"})
+    call ncm2#override_source('LanguageClient_elixir', { 'priority': 9, 'mark': "\ue62d"})
+  endif
 
   let g:ncm2#complete_length = 2
   let g:ncm2#matcher = {
@@ -1451,19 +1466,19 @@ endfunction
   " snoremap <silent> <Tab> <Esc>:call UltiSnips#ExpandSnippetOrJump()<cr>
 
 " completion
-  inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-  inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-  inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
+  " inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+  " inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+  " inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<CR>"
 
-  " ncm2 + ultisnips maps
-  if exists("g:ncm2#auto_popup")
-    imap <C-X><CR>   <CR><Plug>AlwaysEnd
-    imap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
-    inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
-    smap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_try_expand)", 'm') : "\<ESC>A"
-    imap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_try_expand)", 'm') : "\<ESC>A"
-    inoremap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_try_expand)", 'm') : "\<ESC>A"
-  endif
+  " " ncm2 + ultisnips maps
+  " if exists("g:ncm2#auto_popup")
+  "   imap <C-X><CR>   <CR><Plug>AlwaysEnd
+  "   imap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
+  "   inoremap <silent> <expr> <CR> ((pumvisible() && empty(v:completed_item)) ?  "\<C-y>\<CR>" : (!empty(v:completed_item) ? ncm2_ultisnips#expand_or("", 'n') : "\<CR>\<C-R>=EndwiseDiscretionary()\<CR>" ))
+  "   smap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_try_expand)", 'm') : "\<ESC>A"
+  "   imap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_try_expand)", 'm') : "\<ESC>A"
+  "   inoremap <silent> <expr> <C-e> pumvisible() ? ncm2_ultisnips#expand_or("\<Plug>(ultisnips_try_expand)", 'm') : "\<ESC>A"
+  " endif
 
   if exists("g:lsp_auto_enable")
     " vim-lsp
@@ -1811,6 +1826,161 @@ vnoremap / /\v
   nnoremap <silent> [q :call ExeWithFallback('cprev', 'cfirst')<CR>
 
 " }}}
+" ░░░░░░░░░░░░░░░ coc.nvim {{{
+" for showSignatureHelp
+set completeopt=noinsert,menuone,noselect
+set shortmess+=c
+
+" Or use formatexpr for range format
+set formatexpr=CocActionAsync('formatSelected')
+
+" use <tab> for trigger completion and navigate next complete item
+function! s:check_back_space() abort
+  let l:col = col('.') - 1
+  return !l:col || getline('.')[l:col - 1]  =~# '\s'
+endfunction
+
+" if exists snippets
+function s:isSnipsExpandable()
+  try
+    let l:line = getline('.')
+    let l:start = col('.') - 1
+    while l:start > 0 && l:line[l:start - 1] =~# '\k'
+      let l:start -= 1
+    endwhile
+    let l:trigger = l:line[l:start : col('.')-2]
+    " get user input str
+    if s:input_word ==# ''
+      let s:input_word = l:trigger
+    endif
+    if s:input_word !=# l:trigger
+      return v:false
+    endif
+    " get snippets
+    let l:snippets = UltiSnips#SnippetsInCurrentScope()
+    let l:has_snips = !(
+          \ col('.') <= 1
+          \ || !empty(matchstr(getline('.'), '\%' . (col('.') - 1) . 'c\s'))
+          \ || empty(l:snippets)
+          \ || get(l:snippets, l:trigger, 'notExists') ==# 'notExists'
+          \ )
+    " has snippets and snippets is input str
+    return l:has_snips
+  catch /.*/
+    return v:false
+  endtry
+endfunction
+
+" press enter when pumvisible
+function! s:press_enter() abort
+  if s:input_word ==# ''
+    return "\<C-g>u\<CR>\<C-g>u"
+  endif
+  return "\<C-y>"
+endfunction
+
+" tab:
+"   1. trigger snippets
+"   2. select autocomplete
+"   3. trigger autocomplete
+" inoremap <silent><expr> <TAB>
+"       \ <SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<TAB>" : coc#refresh()
+" inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : (<SID>check_back_space() ? "\<TAB>" : coc#refresh())
+inoremap <silent><expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<S-TAB>"
+imap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
+inoremap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
+
+" Use <C-x></C-u> to complete custom sources, including emoji, include and words
+imap <silent> <C-x><C-o> <Plug>(coc-complete-custom)
+
+" Use <CR> for confirm completion.
+inoremap <expr> <CR> pumvisible() ? <SID>press_enter() : "\<C-g>u\<CR>"
+"inoremap <expr> <CR> (pumvisible() ? "\<c-y>" : "\<CR>")
+
+" Use K for show documentation in preview window
+function! s:show_documentation()
+  if &filetype ==# 'vim'
+    execute 'h '.expand('<cword>')
+  else
+    call CocActionAsync('doHover')
+  endif
+endfunction
+
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+" Remap for rename current word
+nmap <leader>rn <Plug>(coc-rename)
+nmap <F2> <Plug>(coc-rename)
+
+" Use `[c` and `]c` for navigate diagnostics
+nmap <silent> [c <Plug>(coc-diagnostic-prev)
+nmap <silent> ]c <Plug>(coc-diagnostic-next)
+" nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
+" nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
+
+" Remap keys for gotos
+nmap <silent> <leader>ld <Plug>(coc-definition)
+nmap <silent> <leader>lt <Plug>(coc-type-definition)
+nmap <silent> <leader>li <Plug>(coc-implementation)
+nmap <silent> <leader>lr <Plug>(coc-references)
+
+" Remap for format selected region
+vmap <leader>lf <Plug>(coc-format-selected)
+nmap <leader>lf <Plug>(coc-format-selected)
+
+" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
+vmap <leader>la <Plug>(coc-codeaction-selected)
+nmap <leader>la <Plug>(coc-codeaction-selected)
+
+" Use `:Format` for format current buffer
+command! -nargs=0 Format :call CocActionAsync('format')
+
+" Use `:Fold` for fold current buffer
+command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
+
+augroup coc_au
+  au!
+  " Show signature help while editing
+  " au CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
+  au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+  " Highlight symbol under cursor on CursorHold
+  " au CursorHold * silent call CocActionAsync('highlight')
+augroup END
+
+function! s:clear_input() abort
+  let s:input_word = ''
+endfunction
+
+function! s:snippet() abort
+  let l:start_line = line('.')
+  let l:is_position = search('\v%x0')
+  if l:is_position !=# 0
+    silent! s/\v\t/    /g
+    silent! s/\v%x0\n//g
+    silent! s/\v%x0/\r/g
+    let l:end_line = line('.')
+    call cursor(l:start_line, 0)
+    let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
+    if l:pos[0] !=# 0 && l:pos[1] !=# 0
+      call cursor(l:pos[0], l:pos[1])
+      normal! df}
+    endif
+  endif
+endfunction
+
+augroup CocSnippet
+  au!
+  au CompleteDone *.exs,*.ex,*.elm call <SID>snippet()
+  au CursorMovedI * call <SID>clear_input()
+  " highlight text color
+  au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
+augroup END
+"}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
 
   hi clear SpellBad

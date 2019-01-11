@@ -11,13 +11,14 @@
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetIndicator": "",
   "coc.preferences.colorSupport": false,
-  "coc.preferences.hoverTarget": "preview",
+  "coc.preferences.hoverTarget": "echo",
   "coc.preferences.noselect": false,
   "coc.preferences.timeout": 5000,
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
   // "coc.preferences.watchmanPath": "",
    // enable formatOnType feature
   "coc.preferences.formatOnType": false,
+  "coc.preferences.formatOnSaveFiletypes": [],
   // command used for jump to other buffer
   "coc.preferences.jumpCommand": "vsplit",
 
@@ -94,7 +95,7 @@
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
-          "dialyzerEnabled": false
+          "dialyzerEnabled": true
         }
       },
       "settings": {}
