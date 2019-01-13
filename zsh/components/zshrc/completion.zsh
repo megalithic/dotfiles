@@ -76,7 +76,6 @@ zstyle ':completion:*' insert-tab pending
 # bash `git-completion` script at $completion below (this is where Homebrew
 # tosses it, at least).
 completion='$(brew --prefix)/share/zsh/site-functions/_git'
-
 if test -f $completion
 then
   source $completion
@@ -87,3 +86,6 @@ compctl -g '~/.teamocil/*(:t:r)' teamocil
 
 # Completion for kitty (https://sw.kovidgoyal.net/kitty/#zsh)
 kitty + complete setup zsh | source /dev/stdin
+
+# Completion for elixir mix tasks
+source "$DOTS/bin/mix-completion.zsh"

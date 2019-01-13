@@ -114,6 +114,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
       call coc#util#update()
     endif
   endfunction
+  Plug 'Shougo/neco-vim'
+  Plug 'neoclide/coc-neco'
   Plug 'neoclide/coc.nvim', { 'do': function('PlugDoCoc') }
 
 " ## Project/Code Navigation

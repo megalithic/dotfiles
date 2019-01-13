@@ -5,6 +5,7 @@ elm-oracle
 elm-test
 elm-analyse
 elm-format
+eslint
 flow-language-server
 neovim
 javascript-typescript-langserver
