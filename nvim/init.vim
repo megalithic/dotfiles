@@ -1399,6 +1399,8 @@ endfunction
   let g:ale_linters = {
         \   'elixir': ['elixir-ls'],
         \   'eelixir': ['elixir-ls'],
+        \   'ex': ['elixir-ls'],
+        \   'exs': ['elixir-ls'],
         \ }
   let g:ale_fixers = {
         \   '*': ['remove_trailing_lines', 'trim_whitespace'],

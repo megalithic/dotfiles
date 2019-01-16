@@ -83,7 +83,7 @@
     "sh": {
       "command": "bash-language-server",
       "args": ["start", "--stdio"],
-      "filetypes": ["sh"],
+      "filetypes": ["sh", "bash", "zsh", "shell"],
       "cwd": "./",
       "initializationOptions": {},
       "settings": {}
@@ -91,7 +91,7 @@
     "elixir": {
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
-      "filetypes": ["elixir", "eelixir"],
+      "filetypes": ["elixir", "eelixir", "ex", "exs"],
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
@@ -100,35 +100,35 @@
       },
       "settings": {}
     },
-    "dart": {
-      "command": "dart_language_server",
-      "args": [],
-      "filetypes": ["dart"],
-      "cwd": "./lib",
-      "initializationOptions": {},
-      "settings": {}
-    },
-    "dockerfile": {
-      "command": "docker-langserver",
-      "filetypes": ["dockerfile"],
-      "args": ["--stdio"]
-    },
+    /* "dart": { */
+    /*   "command": "dart_language_server", */
+    /*   "args": [], */
+    /*   "filetypes": ["dart"], */
+    /*   "cwd": "./lib", */
+    /*   "initializationOptions": {}, */
+    /*   "settings": {} */
+    /* }, */
+    /* "dockerfile": { */
+    /*   "command": "docker-langserver", */
+    /*   "filetypes": ["dockerfile"], */
+    /*   "args": ["--stdio"] */
+    /* }, */
     "python": {
       "command": "pyls",
-      "filetypes": ["python", "pythonx"],
+      "filetypes": ["python", "pythonx", "py"],
       "args": []
     },
-    "go": {
-      "command": "go-langserver",
-      "filetypes": ["go"],
-      // disable output channel to hide server errors
-      "revealOutputChannelOn": "never",
-      "initializationOptions": {
-        "gocodeCompletionEnabled": true,
-        "diagnosticsEnabled": true,
-        "lintTool": "golint"
-      }
-    },
+    /* "go": { */
+    /*   "command": "go-langserver", */
+    /*   "filetypes": ["go"], */
+    /*   // disable output channel to hide server errors */
+    /*   "revealOutputChannelOn": "never", */
+    /*   "initializationOptions": { */
+    /*     "gocodeCompletionEnabled": true, */
+    /*     "diagnosticsEnabled": true, */
+    /*     "lintTool": "golint" */
+    /*   } */
+    /* }, */
     "lua": {
       "command": "lua-lsp",
       "filetypes": ["lua"]
