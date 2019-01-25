@@ -24,9 +24,10 @@ endsnippet
 
 snippet post "New Blog Post"
 ---
-title: ${1}
+title: ${1:`!v expand('%:t:r:s?\.md$??:gs?-? ?')`}
 date: ${2:`date +%Y-%m-%d`}
 intro: ${3}
+image: ${4}
 ---
 
 $0

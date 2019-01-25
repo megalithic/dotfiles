@@ -539,7 +539,7 @@ augroup END
 
 augroup markdown
   au!
-  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 nocindent fo+=acq wrap
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 "nocindent fo+=acq wrap
   au FileType markdown,text,html setlocal spell complete+=kspell
 augroup END
 
@@ -1454,14 +1454,24 @@ endfunction
 
   function! GoyoBefore()
     silent !tmux set status off
+    " silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
     set tw=78
+    set wrap
+    set noshowmode
+    set noshowcmd
+    set scrolloff=999
     Limelight
     color off
   endfunction
 
   function! GoyoAfter()
     silent !tmux set status on
+    " silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
     set tw=0
+    set nowrap
+    set showmode
+    set showcmd
+    set scrolloff=8
     Limelight!
     color nova
   endfunction
@@ -1580,6 +1590,9 @@ endfunction
   inoremap <M-f> <ESC><Space>Wi
   inoremap <M-b> <Esc>Bi
   inoremap <M-d> <ESC>cW
+
+" # goyo
+  map <Leader>G :Goyo<CR>
 
 " # vim-dirvish
   nnoremap <silent> - :Dirvish %:p:h<CR>
@@ -1705,8 +1718,8 @@ endfunction
 " background VIM
   vnoremap <c-z> <ESC>zv`<ztgv
 
-nnoremap / /\v
-vnoremap / /\v
+  nnoremap / /\v
+  vnoremap / /\v
 
 " clear incsearch term
   nnoremap  <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
