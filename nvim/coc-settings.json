@@ -32,6 +32,7 @@
   "coc.preferences.diagnostic.warningSign": "⬥-",
   "coc.preferences.diagnostic.infoSign": "‣",
   "coc.preferences.diagnostic.hintSign": "‣",
+  "coc.preferences.diagnostic.virtualText": true,
   "coc.preferences.codeLens.enable": true,
   "coc.preferences.codeLens.separator": "❯❯ ",
 

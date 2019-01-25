@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -o errexit -o errtrace
+
+post_file="$HOME/code/megalithic.io/priv/posts/$1.md"
+
+echo ""
+echo "Generating new blog post markdown file:"
+echo ":: $post_file"
+echo ":: Opening markdown post with $EDITOR"
+echo ""
+
+touch $post_file
+nvim $post_file

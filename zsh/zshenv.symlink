@@ -85,6 +85,9 @@ path=(
   /usr/local/lib/python2.7/site-packages
   $HOME/Library/Python/3.6/lib/python/site-packages
   $HOME/Library/Python/3.7/bin
+  /usr/local/opt/perl6/bin
+  /usr/local/opt/perl@5.18/bin
+  /usr/local/opt/perl@5.28/bin
   /usr/{bin,sbin}
   /{bin,sbin}
   $path
@@ -128,4 +131,3 @@ fi
 # if [[ -f "$HOME/.zprivate" ]] ; then
 #   source "$HOME/.zprivate"
 # fi
-

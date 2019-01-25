@@ -19,3 +19,8 @@ for the options used for installing `weechat` via homebrew.
 
 The nested `weechat.symlink` folder gets auto-symlinked to `~/.weechat` as part
 of running [`_dotup`](https://github.com/megalithic/dotfiles/blob/master/bin/_dotup).
+
+#### References
+
+- https://demu.red/blog/2016/12/setting-up-sms-in-irc-via-bitlbee-with-purple-hangouts/#installing-bitlbee
+- https://weechat.org/files/doc/stable/weechat_user.en.html#command_weechat_secure

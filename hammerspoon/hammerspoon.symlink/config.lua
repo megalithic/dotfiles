@@ -67,6 +67,12 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true,
   },
+  ['Dash'] = {
+    name = 'Dash',
+    bundleID = 'com.kapeli.dashdoc',
+    preferredDisplay = 1,
+    position = config.grid.centeredLarge,
+  },
   ['Google Chrome'] = {
     name = 'Google Chrome',
     bundleID = 'com.google.Chrome',

@@ -24,6 +24,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
+  Plug 'morhetz/gruvbox'
+  Plug 'pbrisbin/vim-colors-off'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'itchyny/lightline.vim'
   Plug 'maximbaz/lightline-ale'
@@ -31,6 +33,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-dispatch', { 'on': 'Dispatch' }
   Plug 'benmills/vimux'
   Plug 'Yggdroot/indentLine'
+  Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
+  Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 
   " enable when TUI is supported
   " Plug 'tadaa/vimade'
@@ -44,7 +48,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   " Plug 'mhinz/vim-mix-format', { 'for': ['elixir','eelixir'] }
   " Plug 'mattreduce/vim-mix', { 'for': ['elixir','eelixir'] }
   Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
-  Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
+  " Plug 'slashmili/alchemist.vim', {'for': ['elixir', 'eelixir']}
   Plug 'vim-erlang/vim-erlang-runtime'
   Plug 'vim-erlang/vim-erlang-omnicomplete'
   Plug 'vim-erlang/vim-erlang-compiler'
@@ -157,7 +161,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
   Plug 'w0rp/ale'
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
-  Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': 'cd app & yarn install' }
+  " Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': 'cd app & yarn install' }
   Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 
 " ## Movements/Text Objects, et al
@@ -198,6 +202,14 @@ set background=dark                                                             
 
 let g:nova_transparent = 1
 silent! colorscheme nova
+
+" let g:gruvbox_italic=1
+" let g:gruvbox_improved_strings=1
+" let g:gruvbox_improved_warnings=1
+" let g:gruvbox_guisp_fallback='fg'
+" let g:gruvbox_contrast_light='hard'
+" let g:gruvbox_contrast_dark='medium'
+" set background=dark
 " silent! colorscheme gruvbox
 
 set termguicolors
@@ -433,7 +445,10 @@ augroup general
 
   " toggle colorcolumn when in insertmode only
   au InsertEnter * silent set colorcolumn=80
-  au InsertLeave * silent set colorcolumn=""
+  " au InsertLeave * silent set colorcolumn=""
+  au InsertLeave * if &filetype != "markdown"
+                            \ | silent set colorcolumn=""
+                            \ | endif
 
   " ----------------------------------------------------------------------------
   " ## Automagically update remote homeassistant files upon editing locally
@@ -524,12 +539,11 @@ augroup END
 
 augroup markdown
   au!
-  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} set nolazyredraw conceallevel=0
-  " au FileType markdown,text,html setlocal spell complete+=kspell
-  au FileType markdown set tw=80
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 nocindent fo+=acq wrap
+  au FileType markdown,text,html setlocal spell complete+=kspell
 augroup END
 
-augroup markdown
+augroup ruby
   au!
   au FileType ruby setl iskeyword+=_
   au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
@@ -918,7 +932,7 @@ endfunction
   let g:tmux_navigator_disable_when_zoomed = 0
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'markdown', 'elm', 'elixir']
+  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir']
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -1313,6 +1327,7 @@ endfunction
   let g:lsp_signs_enabled = 0               " enable diagnostic signs / we use ALE for now
   let g:lsp_diagnostics_echo_cursor = 1     " enable echo under cursor when in normal mode
   let g:lsp_diagnostics_enabled = 0
+  let g:lsp_use_event_queue = 1
   let g:lsp_signs_error = {'text': '✖'}     " ✖⤫
   let g:lsp_signs_warning = {'text': '⬥'}  " ⬥~~
   let g:lsp_signs_hint = {'text': '‣'}
@@ -1433,6 +1448,26 @@ endfunction
   " let g:ale_set_highlights = 0
   " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
 
+  " junegunn/limelight.vim
+  let g:limelight_conceal_guifg = 'DarkGray'
+  let g:limelight_conceal_guifg = '#777777'
+
+  function! GoyoBefore()
+    silent !tmux set status off
+    set tw=78
+    Limelight
+    color off
+  endfunction
+
+  function! GoyoAfter()
+    silent !tmux set status on
+    set tw=0
+    Limelight!
+    color nova
+  endfunction
+
+  let g:goyo_callbacks = [function('GoyoBefore'), function('GoyoAfter')]
+  " nnoremap <Leader>m :Goyo<CR>
 " }}}
 " ░░░░░░░░░░░░░░░ mappings {{{
 
@@ -2021,6 +2056,14 @@ augroup END
   hi ALEInfo guibg=#F2C38F guifg=#333333 gui=NONE
   hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
   hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
+
+
+  hi CocErrorSign guibg=#DF8C8C guifg=#333333 gui=underline
+  hi CocErrorHighlight guibg=#DF8C8C guifg=#333333
+  hi CocErrorLine guibg=#DF8C8C guifg=#333333
+  hi CocWarningSign guibg=#F2C38F guifg=#333333 gui=underline
+  hi CocWarningHighlight guibg=#F2C38F guifg=#333333
+  hi CocWarningLine guibg=#F2C38F guifg=#333333
 
   hi link LspErrorText ALEErrorSign
   hi link LspWarningText ALEWarningSign
