@@ -43,7 +43,8 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
   Plug 'othree/csscomplete.vim', { 'for': ['css', 'scss', 'sass'] } " css omni-completion
   Plug 'othree/html5.vim', { 'for': ['html', 'eruby', 'svg'] } " html+svg omni-completion
-  Plug 'elmcast/elm-vim', { 'for': ['elm'] }
+  Plug 'zaptic/elm-vim', { 'for': ['elm'] }
+  Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
   Plug 'elixir-editors/vim-elixir', { 'for': ['exs', 'ex', 'eex'] }
   " Plug 'mhinz/vim-mix-format', { 'for': ['elixir','eelixir'] }
   " Plug 'mattreduce/vim-mix', { 'for': ['elixir','eelixir'] }
@@ -126,6 +127,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug '/usr/local/opt/fzf'
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
+  Plug 'mattn/emmet-vim' " https://github.com/mattn/emmet-vim#quick-tutorial // emmet leader: `<c-y>,`
   Plug 'justinmk/vim-dirvish' " TODO: needs testing
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
@@ -539,7 +541,7 @@ augroup END
 
 augroup markdown
   au!
-  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 "nocindent fo+=acq wrap
+  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text,log} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 linebreak nolist "nocindent fo+=acq wrap
   au FileType markdown,text,html setlocal spell complete+=kspell
 augroup END
 

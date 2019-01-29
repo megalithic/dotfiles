@@ -188,7 +188,7 @@ cask 'shiori'
 cask 'slack'
 cask 'spotify'
 # cask 'the-unarchiver'
-cask 'usb-overdrive'
+# cask 'usb-overdrive' # causes issues with QMK keyboards
 # cask 'ubersicht'
 # cask 'virtualbox'
 # cask 'vox'

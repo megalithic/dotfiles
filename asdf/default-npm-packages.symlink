@@ -5,6 +5,7 @@ elm
 elm-oracle
 elm-test
 elm-analyse
+antew/elm-analyse#lsp
 elm-format
 eslint
 flow-language-server
