@@ -63,6 +63,65 @@ bind-key -T copy-mode-vi C-l select-pane -R
 # unbind C-m
 # bind -r C-m select-window -t :chats
 
+## Intelligently navigate tmux panes and Vim splits using the same keys.
+## See https://sunaku.github.io/tmux-select-pane.html for documentation.
+##
+##      +-------------+------------+-----------------------------+
+##      | inside Vim? | is Zoomed? | Action taken by key binding |
+##      +-------------+------------+-----------------------------+
+##      | No          | No         | Focus directional tmux pane |
+##      | No          | Yes        | Nothing: ignore key binding |
+##      | Yes         | No         | Seamlessly focus Vim / tmux |
+##      | Yes         | Yes        | Focus directional Vim split |
+##      +-------------+------------+-----------------------------+
+##
+#vim_navigation_timeout=0.05 # number of seconds we give Vim to navigate
+#navigate='                                                             \
+#  pane_is_zoomed() {                                                   \
+#    test #{window_zoomed_flag} -eq 1;                                  \
+#  };                                                                   \
+#  pane_title_changed() {                                               \
+#    test "#{pane_title}" != "$(tmux display -p "##{pane_title}")";     \
+#  };                                                                   \
+#  pane_contains_vim() {                                                \
+#    title="#{pane_title}";                                             \
+#    case ",#{pane_current_command},${title%% *}," in                   \
+#      (*,vi,*|*view,*|*vim*) true ;;                                   \
+#      (*) false ;;                                                     \
+#    esac;                                                              \
+#  };                                                                   \
+#  pane_contains_neovim_terminal() {                                    \
+#    case "#{pane_title}" in                                            \
+#      (nvim?term://*) true ;;                                          \
+#      (*) false ;;                                                     \
+#    esac;                                                              \
+#  };                                                                   \
+#  navigate() {                                                         \
+#    tmux_navigation_command=$1;                                        \
+#    vim_navigation_command=$2;                                         \
+#    vim_navigation_only_if=${3:-true};                                 \
+#    if pane_contains_vim && eval "$vim_navigation_only_if"; then       \
+#      if pane_contains_neovim_terminal; then                           \
+#        tmux send-keys C-\\ C-n;                                       \
+#      fi;                                                              \
+#      eval "$vim_navigation_command";                                  \
+#      if ! pane_is_zoomed; then                                        \
+#        sleep $vim_navigation_timeout; : wait for Vim to change title; \
+#        if ! pane_title_changed; then                                  \
+#          eval "$tmux_navigation_command";                             \
+#        fi;                                                            \
+#      fi;                                                              \
+#    elif ! pane_is_zoomed; then                                        \
+#      eval "$tmux_navigation_command";                                 \
+#    fi;                                                                \
+#  };                                                                   \
+#navigate '
+#bind-key -n M-h run-shell "$navigate 'tmux select-pane -L' 'tmux send-keys C-w h'"
+#bind-key -n M-j run-shell "$navigate 'tmux select-pane -D' 'tmux send-keys C-w j'"
+#bind-key -n M-k run-shell "$navigate 'tmux select-pane -U' 'tmux send-keys C-w k'"
+#bind-key -n M-l run-shell "$navigate 'tmux select-pane -R' 'tmux send-keys C-w l'"
+#bind-key -n M-; run-shell "$navigate 'tmux select-pane -l || tmux select-pane -t 1' 'tmux send-keys C-w p' 'pane_is_zoomed'"
+
 
 # GENERAL SETTINGS
 # ===========================================================================

@@ -163,7 +163,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'tpope/vim-eunuch'
   Plug 'w0rp/ale'
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
-  " Plug 'iamcco/markdown-preview.nvim', { 'for': ['md, markdown, mdown'], 'do': 'cd app & yarn install' }
+  Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
   Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 
 " ## Movements/Text Objects, et al
@@ -928,6 +928,14 @@ endfunction
 " }}}
 " ░░░░░░░░░░░░░░░ plugins {{{
 
+
+" " ## tmux-select-pane
+"   " Intelligently navigate tmux panes and Vim splits using the same keys.
+"   " See https://sunaku.github.io/tmux-select-pane.html for documentation.
+"   let progname = substitute($VIM, '.*[/\\]', '', '')
+"   set title titlestring=%{progname}\ %f\ +%l\ #%{tabpagenr()}.%{winnr()}
+"   if &term =~ '^screen' && !has('nvim') | exe "set t_ts=\e]2; t_fs=\7" | endif
+
 " ## tmux-navigator
   let g:tmux_navigator_no_mappings = 1
   let g:tmux_navigator_save_on_switch = 2
@@ -1593,6 +1601,9 @@ endfunction
   inoremap <M-b> <Esc>Bi
   inoremap <M-d> <ESC>cW
 
+" # markdown-preview.nvim
+  map <Leader>M :MarkdownPreview<CR>
+
 " # goyo
   map <Leader>G :Goyo<CR>
 
@@ -1687,6 +1698,7 @@ endfunction
   nnoremap <silent> <C-l> :TmuxNavigateRight<CR>
   " nnoremap <silent> <C-\> :TmuxNavigatePrevious<CR>
 
+" ## not in tmux:
   " nnoremap <silent> <C-h> <C-w><C-h>
   " nnoremap <silent> <C-j> <C-w><C-j>
   " nnoremap <silent> <C-k> <C-w><C-k>
