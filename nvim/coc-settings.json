@@ -55,8 +55,8 @@
   },
 
   // sources
-  "coc.source.emoji.enable": true,
-  "coc.source.emoji.filetypes": ["markdown", "gitcommit"],
+  "coc.source.emoji.enable": false,
+  /* "coc.source.emoji.filetypes": ["markdown", "gitcommit"], */
   /* "coc.source.emoji.triggerCharacters": [":"], */
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",

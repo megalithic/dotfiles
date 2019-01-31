@@ -647,6 +647,10 @@ function! BufEnterCommit()
     au InsertEnter * call ncm2#disable_for_buffer()
   endif
 
+  " disable coc.nvim for gitcommit
+  " autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
+  autocmd InsertEnter * execute "silent! CocDisable"
+
   " Allow automatic formatting of bulleted lists and blockquotes
   " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
   setlocal comments+=fb:*
@@ -777,6 +781,7 @@ let g:lightline = {
       \     'branch': 'LightlineBranch',
       \     'lineinfo': 'LightlineLineInfo',
       \     'percent': 'LightlinePercent',
+      \     'cocstatus': 'coc#status',
       \   },
       \   'component_expand': {
       \     'linter_checking': 'lightline#ale#checking',
@@ -811,7 +816,7 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
-      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
+      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok', 'cocstatus'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
       \       ['filetype'],
@@ -1462,9 +1467,9 @@ endfunction
   let g:limelight_conceal_guifg = 'DarkGray'
   let g:limelight_conceal_guifg = '#777777'
 
-  function! GoyoBefore()
+  function! s:goyo_enter()
     silent !tmux set status off
-    " silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
+    silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
     set tw=78
     set wrap
     set noshowmode
@@ -1474,9 +1479,9 @@ endfunction
     color off
   endfunction
 
-  function! GoyoAfter()
+  function! s:goyo_leave()
     silent !tmux set status on
-    " silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
+    silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
     set tw=0
     set nowrap
     set showmode
@@ -1486,8 +1491,34 @@ endfunction
     color nova
   endfunction
 
-  let g:goyo_callbacks = [function('GoyoBefore'), function('GoyoAfter')]
-  " nnoremap <Leader>m :Goyo<CR>
+  autocmd! User GoyoEnter nested call <SID>goyo_enter()
+  autocmd! User GoyoLeave nested call <SID>goyo_leave()
+
+  " function! GoyoBefore()
+  "   silent !tmux set status off
+  "   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
+  "   set tw=78
+  "   set wrap
+  "   set noshowmode
+  "   set noshowcmd
+  "   set scrolloff=999
+  "   Limelight
+  "   color off
+  " endfunction
+
+  " function! GoyoAfter()
+  "   silent !tmux set status on
+  "   silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
+  "   set tw=0
+  "   set nowrap
+  "   set showmode
+  "   set showcmd
+  "   set scrolloff=8
+  "   Limelight!
+  "   color nova
+  " endfunction
+
+  " let g:goyo_callbacks = [function('GoyoBefore'), function('GoyoAfter')]
 " }}}
 " ░░░░░░░░░░░░░░░ mappings {{{
 
