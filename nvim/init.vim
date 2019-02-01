@@ -55,6 +55,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'vim-erlang/vim-erlang-compiler'
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
   " Plug 'kovisoft/slimv'
+  " Plug 'tpope/vim-markdown'
   Plug 'sheerun/vim-polyglot'
 
 " ## Snippets
@@ -127,7 +128,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug '/usr/local/opt/fzf'
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
   Plug 'junegunn/fzf.vim'
-  Plug 'mattn/emmet-vim' " https://github.com/mattn/emmet-vim#quick-tutorial // emmet leader: `<c-y>,`
+  Plug 'mattn/emmet-vim', { 'for': ['html','eelixir','markdown','ruby','erb','eruby'] } " https://github.com/mattn/emmet-vim#quick-tutorial // emmet leader: `<c-y>,`
   Plug 'justinmk/vim-dirvish' " TODO: needs testing
   Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
   Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
@@ -164,6 +165,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'w0rp/ale'
   Plug 'svermeulen/vim-easyclip' " FIXME: figure out how to keep using dd as normal
   Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
+  " Plug 'itspriddle/vim-marked', { 'for': ['markdown','vimwiki'] }
   Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 
 " ## Movements/Text Objects, et al
@@ -542,7 +544,7 @@ augroup END
 augroup markdown
   au!
   au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text,log} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 linebreak nolist "nocindent fo+=acq wrap
-  au FileType markdown,text,html setlocal spell complete+=kspell
+  " au FileType markdown,text,html setlocal spell complete+=kspell
 augroup END
 
 augroup ruby
@@ -947,7 +949,7 @@ endfunction
   let g:tmux_navigator_disable_when_zoomed = 0
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir']
+  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir']
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -1633,7 +1635,10 @@ endfunction
   inoremap <M-d> <ESC>cW
 
 " # markdown-preview.nvim
-  map <Leader>M :MarkdownPreview<CR>
+  nnoremap <Leader>M :MarkdownPreview<CR>
+
+" itspriddle/vim-marked
+  " nnoremap <Leader>M :MarkedOpen<CR>
 
 " # goyo
   map <Leader>G :Goyo<CR>
