@@ -457,6 +457,8 @@ augroup general
   " ----------------------------------------------------------------------------
   " ## Automagically update remote homeassistant files upon editing locally
   au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
+  au BufWritePost ~/.dotfiles/private/domains/nginx/* silent! :MirrorPush nginx
+  au BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
 
   " set up default omnifunc
   autocmd FileType *
@@ -1831,8 +1833,12 @@ endfunction
   noremap <leader>: :<Up>
 
 " remap q for recording to Q
-  nnoremap Q q
-  nnoremap q <Nop>
+  " nnoremap Q q
+  " nnoremap q <Nop>
+
+  " Fancy macros
+  nnoremap Q @q
+  vnoremap Q :norm @q<cr>
 
 " switch between current and last buffer
   nmap <leader>. <c-^>

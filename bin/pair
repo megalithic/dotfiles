@@ -21,6 +21,7 @@
 # `sudo dscl . -append /Users/$USER RecordName Pair pair`
 # Lastly, you'll want to make sure your macOS sshd config setup accepts public-key authentication:
 # `sudo sed -E -i.bak 's/^#?(PasswordAuthentication|ChallengeResponseAuthentication).*$/\1 no/' /etc/ssh/sshd_config`
+# `sudo sed -E -i.bak 's/^#?(PubkeyAuthentication).*$/\1 yes/' /etc/ssh/sshd_config`
 #
 # Be sure to check out this scripts integrations with tmux, too.
 #
@@ -137,7 +138,7 @@ info() {
 
   # copy our pair address to the clipboard
   echo "$(pair ssh)" | pbcopy
-  printf -- '\n\033[33m➜ Copied ssh address to clipboard!\033[0m\n'
+  printf -- '\n\033[33m➜ Copied pairing ssh address to clipboard!\033[0m\n'
 }
 
 subcommand=$1
