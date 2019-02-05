@@ -105,6 +105,7 @@ tunnel() {
   while [ $DONE -eq 0 ]; do
     if [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" != "" && "$(dig +short myip.opendns.com @resolver1.opendns.com))" != "null" ]]; then
       tunnel_command="ssh -nvNT -R $port:localhost:22 $user@$host"
+      # TODO: add fallback when ngrok isn't installed to use a normal ssh tunnel
       # "ssh -nvNT -R $port:localhost:22 $user@$host"
       # ssh -nNT -L "$port:localhost:22" "$user@$host"
 
