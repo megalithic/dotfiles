@@ -397,6 +397,10 @@ augroup general
   au CursorHold   * checktime
   au InsertEnter  * checktime
 
+  " TODO: handle turning toggling the tmux status bar, if we're in $TMUX and Goyo is active
+  au FocusGained  * :echo "focus gained"
+  au FocusLost  * :echo "focus lost"
+
   " Handle window resizing
   au VimResized * execute "normal! \<c-w>="
 

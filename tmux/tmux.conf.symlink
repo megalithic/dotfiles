@@ -188,7 +188,7 @@ set -g status-position top
 set -g allow-rename off
 setw -g automatic-rename on
 
-bind-key -r / set status                   # use Prefix-/ to toggle status bar
+bind-key -r Enter set status                   # use Prefix-Enter to toggle status bar
 
 # Colors
 # ---------------------------------------------------------

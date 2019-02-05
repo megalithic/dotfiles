@@ -17,9 +17,9 @@ windows:
     panes:
       - commands:
         - ls
-        # - bin/start
-  - name: "skycentrics"
-    root: "~/code/enbala/skycentrics_adapter"
+  - name: "services"
+    root: "~/code/enbala/vpp"
     panes:
       - commands:
+        - ls
         - ls
