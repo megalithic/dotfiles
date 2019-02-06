@@ -128,7 +128,7 @@ brew 'tree'
 brew 'unixodbc'
 brew 'urlview'
 brew 'watchman', args: ['--HEAD']
-brew 'weechat', args: ['--with-ruby', '--with-python@2', '--with-perl', '--with-lua', '--with-aspell', '--with-curl', '--HEAD']
+brew 'weechat'
 brew 'wget', args: ['enable-iri']
 brew 'wxmac'
 brew 'wifi-password'
