@@ -4,7 +4,7 @@
 # zmodload zsh/zprof
 
 # Ensures we use vi-mode keybindings
-bindkey -e
+bindkey -v
 
 #
 # Executes commands at the start of an interactive session.

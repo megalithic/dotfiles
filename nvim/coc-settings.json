@@ -1,3 +1,5 @@
+// really good example of rules: https://github.com/sainnhe/dotfiles/blob/master/.config/nvim/coc-settings.json
+//
 {
   // could be 'always' 'trigger' => for specified trigger characters only 'none'
   "coc.preferences.extensionUpdateCheck": "daily",
@@ -8,10 +10,24 @@
   "coc.preferences.acceptSuggestionOnCommitCharacter": false,
   "coc.preferences.preferCompleteThanJumpPlaceholder": true,
   "coc.preferences.triggerSignatureHelp": true,
+  "coc.preferences.numberSelect": false,
+
+  /* // CocList (fzf) */
+  /* "list.insertMappings": { */
+  /*   "<C-t>": "action:tabe", */
+  /*   "<C-n>": "normal:j", */
+  /*   "<C-p>": "normal:k" */
+  /* }, */
+
+  // Snippets
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetIndicator": "",
+  /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
+  /* "snippets.ultisnips.pythonVersion": 3, */
+  /* "coc.preferences.snippetIndicator": "\uf5d4", */
+
   "coc.preferences.colorSupport": false,
-  "coc.preferences.hoverTarget": "echo",
+  "coc.preferences.hoverTarget": "echo", // "preview"
   "coc.preferences.noselect": false,
   "coc.preferences.timeout": 5000,
   // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
@@ -24,7 +40,8 @@
 
   // diagnostics
   "coc.preferences.diagnostic.enable": true,
-  "coc.preferences.diagnostic.displayByAle": false,
+  "coc.preferences.diagnostic.refreshOnInsertMode": false,
+  "coc.preferences.diagnostic.displayByAle": true,
   "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
   "coc.preferences.diagnostic.highlightOffset": 1000,
@@ -34,7 +51,10 @@
   "coc.preferences.diagnostic.hintSign": "‣",
   "coc.preferences.diagnostic.virtualText": true,
   "coc.preferences.codeLens.enable": true,
-  "coc.preferences.codeLens.separator": "❯❯ ",
+  "coc.preferences.codeLens.separator": "❯ ",
+  "coc.preferences.echodocSupport": false,
+  "javascript.suggest.autoImports": true,
+  "typescript.suggest.autoImports": true,
 
   // prettier
   "prettier.eslintIntegration": true,
@@ -61,6 +81,7 @@
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
   "coc.source.ultisnips.priority": 10,
+  "coc.source.tag.enable": true,
   "coc.source.tag.priority": 9,
   "coc.source.around.enable": true,
   "coc.source.around.shortcut": "A",

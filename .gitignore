@@ -11,6 +11,7 @@ npm-debug.log
 **/nvim/autoload
 **/nvim/.init.*
 nvim/plugged
+nvim/plugins
 nvim/autoload
 nvim/.init.*
 nvim/undo/*
