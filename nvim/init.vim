@@ -95,7 +95,6 @@ Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
-Plug 'ryanoasis/vim-devicons' " has to be last according to docs
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -324,6 +323,128 @@ map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<CR>
 map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
 "}}}
+" ░░░░░░░░░░░░░░░ autocommands {{{
+
+augroup general
+  au!
+  " save all files on focus lost, ignoring warnings about untitled buffers
+  autocmd FocusLost * silent! wa
+
+  au FocusGained  * checktime "Refresh file when vim gets focus
+  au BufEnter     * checktime
+  au WinEnter     * checktime
+  au CursorHold   * checktime
+  au InsertEnter  * checktime
+
+  " TODO: handle turning toggling the tmux status bar, if we're in $TMUX and Goyo is active
+  au FocusGained  * :echo "focus gained"
+  au FocusLost  * :echo "focus lost"
+
+  " Handle window resizing
+  au VimResized * execute "normal! \<c-w>="
+
+  " No formatting on o key newlines
+  au BufNewFile,BufEnter * set formatoptions-=o
+
+  " Remember cursor position between vim sessions
+  au BufReadPost *
+        \ if line("'\"") > 0 && line ("'\"") <= line("$") |
+        \   exe "normal! g'\"" |
+        \ endif
+
+  " Hide status bar while using fzf commands
+  if has('nvim')
+    au! FileType fzf
+    au  FileType fzf set laststatus=0 | au BufLeave,WinLeave <buffer> set laststatus=2
+  endif
+
+  " Auto-close preview window when completion is done.
+  au! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
+
+  " Show sign column for only certain filetypes
+  au! FileType cmake,css,go,java,javascript,typescript,ocaml,python,r,rust,scss,sh,sass,zsh,bash,fish,elixir,eelixir,elm set signcolumn=yes
+
+  " When terminal buffer ends allow to close it
+  autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
+  autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
+  au! TermOpen * setlocal nonumber norelativenumber
+  au! TermOpen * if &buftype == 'terminal'
+        \| set nonumber norelativenumber
+        \| endif
+
+  " ----------------------------------------------------------------------------
+  " ## Toggle certain accoutrements when entering and leaving a buffer & window
+
+  " toggle syntax / dim / inactive (comment out when tadaa/vimade supports TUI)
+  au WinEnter,BufEnter * silent set number relativenumber syntax=on " call RainbowParentheses
+  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call RainbowParentheses!
+
+  " toggle linenumbering and cursorline
+  au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
+  au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
+
+  " toggle colorcolumn when in insertmode only
+  au InsertEnter * silent set colorcolumn=80
+  " au InsertLeave * silent set colorcolumn=""
+  au InsertLeave * if &filetype != "markdown"
+                            \ | silent set colorcolumn=""
+                            \ | endif
+augroup END
+
+augroup mirrors
+  au!
+  " ## Automagically update remote files via scp
+  au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
+  au BufWritePost ~/.dotfiles/private/domains/nginx/* silent! :MirrorPush nginx
+  au BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
+augroup END
+
+augroup gitcommit
+  au!
+  function! BufReadIndex()
+    " Use j/k in status
+    setl nohlsearch
+    nnoremap <buffer> <silent> j :call search('^#\t.*','W')<Bar>.<CR>
+    nnoremap <buffer> <silent> k :call search('^#\t.*','Wbe')<Bar>.<CR>
+  endfunction
+
+  function! BufEnterCommit()
+    " Start in insert mode for commit
+    normal gg0
+    if getline('.') == ''
+      start
+    end
+
+    " disable coc.nvim for gitcommit
+    " autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
+    autocmd InsertEnter * execute "silent! CocDisable"
+
+    " Allow automatic formatting of bulleted lists and blockquotes
+    " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
+    setlocal comments+=fb:*
+    setlocal comments+=fb:-
+    setlocal comments+=fb:+
+    setlocal comments+=b:>
+
+    setlocal formatoptions+=c " Auto-wrap comments using textwidth
+    setlocal formatoptions+=q " Allow formatting of comments with `gq`
+
+    " setl spell
+    " setl spelllang=en
+    " setl nolist
+    " setl nonumber
+  endfunction
+
+  au FileType gitcommit,gitrebase setl nospell textwidth=72
+  au BufNewFile,BufRead .git/index setlocal nolist
+  au BufReadPost fugitive://* set bufhidden=delete
+  au BufReadCmd *.git/index exe BufReadIndex()
+  au BufEnter *.git/index silent normal gg0j
+  au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
+  au FileType gitcommit,gitrebase exe BufEnterCommit()
+augroup END
+
+"}}}
 " ░░░░░░░░░░░░░░░ other settings {{{
 
 " Use relative line numbers
@@ -349,7 +470,13 @@ command! -nargs=* Wrap set wrap linebreak nolist spell
 let &showbreak='↪ '
 
 "}}}
-" ░░░░░░░░░░░░░░░ package/plugin settings {{{
+" ░░░░░░░░░░░░░░░ plugin settings {{{
+
+" ## indentLine
+let g:indentLine_enabled = 1
+let g:indentLine_color_gui = '#556874'
+let g:indentLine_char = '│'
+" let g:indentLine_bgcolor_gui = '#3C4C55'
 
 " ## junegunn/fzf
 let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -415,7 +542,7 @@ endif
 
 nnoremap <silent><leader>m <ESC>:FZF<CR>
 nnoremap <silent><C-p> <ESC>:FZF<CR>
-" nnoremap <localleader><space> :Buffers<cr> nnoremap <leader>a <ESC>:Rg<SPACE> nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> 
+" nnoremap <localleader><space> :Buffers<cr> nnoremap <leader>a <ESC>:Rg<SPACE> nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
 nnoremap \ :Rg<SPACE>
 
