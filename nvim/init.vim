@@ -129,30 +129,30 @@ filetype plugin indent on
 "}}}
 " ░░░░░░░░░░░░░░░ options {{{
 
-" Color
+" ---- Color
 set termguicolors
 
 syntax on
 
-" Search
+" ---- Search
 set ignorecase
 set smartcase
 
-" Tab completion
+" ---- Tab completion
 set wildmode=list:longest,full
 set wildignore=*.swp,*.o,*.so,*.exe,*.dll
 
-" Scroll
+" ---- Scroll
 set scrolloff=5                                                                 "Start scrolling when we're 8 lines away from margins
 set sidescrolloff=15
 set sidescroll=5
 
-" Tab settings
+" ---- Tab settings
 set ts=2
 set sw=2
 set expandtab
 
-" Hud
+" ---- Hud
 set ruler
 set number
 set nowrap
@@ -162,40 +162,40 @@ set cursorline                                                                  
 set pumheight=30                                                                "Maximum number of entries in autocomplete popup
 set cmdheight=1
 
-" Show
+" ---- Show
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
 set showcmd                                                                     "Show incomplete cmds down the bottom
 set showmatch                                                                   "Highlight matching bracket
 
-" Buffers
+" ---- Buffers
 set hidden
 
-" Backup directories
+" ---- Backup directories
 set backupdir=~/.config/nvim/backups,.
 set directory=~/.config/nvim/swaps,.
 if exists('&undodir')
   set undodir=~/.config/nvim/undo,.
 endif
 
-" -------- swap and backups
+" ---- Swap and backups
 set noswapfile
 set nobackup
 set nowb
 set backupcopy=yes "HMR things - https://parceljs.org/hmr.html#safe-write
 
-" -------- dictionary and spelling
+" ---- Dictionary and spelling
 set dictionary+=/usr/share/dict/words
 set nospell             " Disable spellchecking by default
 set spelllang=en_us,en_gb
 set spellfile=~/.config/nvim/spell/en.utf-8.add
 
-" -------- undo
+" ---- Undo
 " Keep undo history across sessions, by storing in file.
 silent !mkdir ~/.config/nvim/undo > /dev/null 2>&1
 set undodir=~/.config/nvim/undo
 set undofile
 
-" -------- clipboard
+" ---- clipboard
 if empty($SSH_CONNECTION) && has('clipboard')
   set clipboard=unnamed  " Use clipboard register
 
@@ -208,16 +208,14 @@ if empty($SSH_CONNECTION) && has('clipboard')
   endif
 endif
 
-" if more than 1 files are passed to vim as arg, open them in vertical splits
-if argc() > 1
-  silent vertical all
-endif
+" ---- Timeouts
+set timeoutlen=1000 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
 
-" Split behaviors
+" ---- Split behaviors
 set splitright                                                                  "Set up new vertical splits positions
 set splitbelow                                                                  "Set up new horizontal splits positions
 
-" Cursor
+" ---- Cursor
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
 " set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
 if has('termguicolors')
@@ -327,6 +325,12 @@ map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
 
 augroup general
   au!
+
+  " if more than 1 files are passed to vim as arg, open them in vertical splits
+  if argc() > 1
+    silent vertical all
+  endif
+
   " save all files on focus lost, ignoring warnings about untitled buffers
   autocmd FocusLost * silent! wa
 
