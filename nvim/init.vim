@@ -1101,20 +1101,24 @@ endfunction
 " nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
 
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
+
 nmap <silent> <leader>ld <Plug>(coc-definition)
 nmap <silent> <leader>lt <Plug>(coc-type-definition)
 nmap <silent> <leader>li <Plug>(coc-implementation)
 nmap <silent> <leader>lr <Plug>(coc-references)
 nmap <silent> <leader>ln <Plug>(coc-rename)
-nmap <F2> <Plug>(coc-rename)
 
 " Remap for format selected region
-vmap <leader>lf <Plug>(coc-format-selected)
-nmap <leader>lf <Plug>(coc-format-selected)
+vmap <silent> <leader>lf <Plug>(coc-format-selected)
 
 " Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-vmap <leader>la <Plug>(coc-codeaction-selected)
-nmap <leader>la <Plug>(coc-codeaction-selected)
+vmap <silent> <leader>la <Plug>(coc-codeaction-selected)
+
+" Remap for do codeAction of current line
+nmap <silent> <leader>la <Plug>(coc-codeaction)
+
+" Fix autofix problem of current line
+nmap <silent> <leader>lq <Plug>(coc-fix-current)
 
 " Use `:Format` for format current buffer
 command! -nargs=0 Format :call CocActionAsync('format')
