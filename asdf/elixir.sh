@@ -38,7 +38,11 @@ if (which mix &>/dev/null); then
     echo ""
     cd "$mix_root"
     mix deps.get
+
+    # NOTE: the elixir-lsp maintained fork has more support and more updates
+    # git clone git@github.com:elixir-lsp/elixir-ls.git .elixir_ls
     git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
+
     cd "$mix_root/.elixir_ls" && mkdir rel
 
     echo ""

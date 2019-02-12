@@ -6,10 +6,10 @@
   "coc.preferences.autoTrigger": "always",
   // only used when autoTrigger is always
   "coc.preferences.triggerAfterInsertEnter": false,
-  "coc.preferences.minTriggerInputLength": 2,
+  "coc.preferences.minTriggerInputLength": 3,
   "coc.preferences.acceptSuggestionOnCommitCharacter": false,
   "coc.preferences.preferCompleteThanJumpPlaceholder": true,
-  "coc.preferences.triggerSignatureHelp": true,
+  "coc.preferences.triggerSignatureHelp": false,
   "coc.preferences.numberSelect": false,
 
   /* // CocList (fzf) */
@@ -37,11 +37,12 @@
   "coc.preferences.formatOnSaveFiletypes": [],
   // command used for jump to other buffer
   "coc.preferences.jumpCommand": "vsplit",
+  "coc.preferences.previewAutoClose": true,
 
   // diagnostics
   "coc.preferences.diagnostic.enable": true,
   "coc.preferences.diagnostic.refreshOnInsertMode": false,
-  "coc.preferences.diagnostic.displayByAle": true,
+  "coc.preferences.diagnostic.displayByAle": false,
   "coc.preferences.diagnostic.locationlist": false,
   "coc.preferences.diagnostic.signOffset": 1000,
   "coc.preferences.diagnostic.highlightOffset": 1000,
@@ -50,6 +51,7 @@
   "coc.preferences.diagnostic.infoSign": "‣",
   "coc.preferences.diagnostic.hintSign": "‣",
   "coc.preferences.diagnostic.virtualText": true,
+  "coc.preferences.diagnostic.virtualTextLines": 3,
   "coc.preferences.codeLens.enable": true,
   "coc.preferences.codeLens.separator": "❯ ",
   "coc.preferences.echodocSupport": false,

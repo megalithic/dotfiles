@@ -20,7 +20,7 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugins')
 
-function! PlugDoCoc(info) abort
+function! PostInstallCoc(info) abort
   if a:info.status ==? 'installed' || a:info.force
     !yarn install
     call coc#util#install_extension(join([
@@ -32,7 +32,6 @@ function! PlugDoCoc(info) abort
           \ 'coc-pyls',
           \ 'coc-rls',
           \ 'coc-solargraph',
-          \ 'coc-snippets',
           \ 'coc-tag',
           \ 'coc-tsserver',
           \ 'coc-tslint',
@@ -50,6 +49,7 @@ function! PlugDoCoc(info) abort
     " \ 'coc-stylelint',
     " \ 'coc-highlight',
     " \ 'coc-word',
+    " \ 'coc-snippets',
   elseif a:info.status ==? 'updated'
     !yarn install
     call coc#util#update()
@@ -57,6 +57,7 @@ function! PlugDoCoc(info) abort
 endfunction
 
 Plug 'SirVer/ultisnips'
+Plug 'andymass/vim-matchup'
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
 Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
@@ -68,7 +69,7 @@ Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': 'elixir' }
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
-Plug 'honza/vim-snippets'
+" Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 Plug 'itspriddle/vim-marked', { 'for': 'markdown,vimwiki' }
@@ -79,22 +80,23 @@ Plug 'junegunn/fzf.vim'
 Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
 Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
-Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/vim-plug'
+Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'kopischke/vim-fetch'
-Plug 'machakann/vim-sandwich'
+Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
+" Plug 'machakann/vim-sandwich'
 Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
-Plug 'mattn/gist-vim'
 Plug 'mattn/webapi-vim'
+Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-Plug 'morhetz/gruvbox'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
-Plug 'neoclide/coc.nvim', { 'do': function('PlugDoCoc') }
+Plug 'neoclide/coc.nvim', { 'tag': '*', 'do': function('PostInstallCoc') }
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
+Plug 'rizzatti/dash.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -109,16 +111,40 @@ Plug 'tpope/vim-rails', {'for': 'ruby,erb,yaml,ru,haml'}
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-speeddating'
+Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'w0rp/ale'
-Plug 'wellle/targets.vim'
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
+
+" ## Movements/Text Objects, et al
+Plug 'kana/vim-operator-user'
+" -- provide ai and ii for indent blocks
+" -- provide al and il for current line
+" -- provide a_ and i_ for underscores
+" -- provide a- and i-
+Plug 'kana/vim-textobj-user'                                      " https://github.com/kana/vim-textobj-user/wiki
+Plug 'kana/vim-textobj-entire'                                    " entire buffer text object (vae)
+Plug 'kana/vim-textobj-function'                                  " function text object (vaf)
+Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
+Plug 'kana/vim-textobj-line'                                      " for current line (val)
+Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
+Plug 'duff/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }  " eliXir block text object (vix/vax)
+Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
+Plug 'michaeljsmith/vim-indent-object'
+Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+Plug 'gilligan/textobj-lastpaste'                                 " - P     for last paste
+Plug 'mattn/vim-textobj-url'                                      " - u     for url
+Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
+Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
+Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
+Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
+" ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
 call plug#end()
@@ -161,6 +187,7 @@ set fillchars=vert:\│
 set cursorline                                                                  "Highlight current line
 set pumheight=30                                                                "Maximum number of entries in autocomplete popup
 set cmdheight=1
+set signcolumn=yes
 
 " ---- Show
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
@@ -237,6 +264,11 @@ set gcr=a:blinkon500-blinkwait500-blinkoff500                                   
 let mapleader=','
 let maplocalleader=','
 
+" Fancy macros
+nnoremap q <Nop>
+nnoremap Q @q
+vnoremap Q :norm @q<cr>
+
 " No arrow keys
 map <Left>  :echo "ಠ_ಠ"<cr>
 map <Right> :echo "ಠ_ಠ"<cr>
@@ -298,10 +330,30 @@ vnoremap <leader>s :!sort<CR>
 noremap <leader>; :!
 noremap <leader>: :<Up>
 
+" Remap VIM 0 to first non-blank character
+map 0 ^
+
 " Easier to type, however, i hurt my muscle memory when on remote vim  for now
 noremap H ^
 noremap L $
 vnoremap L g_
+
+" ## Selections
+" reselect pasted content:
+nnoremap gV `[v`]
+" select all text in the file
+nnoremap <leader>v ggVG
+" Easier linewise reselection of what you just pasted.
+nnoremap <leader>V V`]
+" gi already moves to 'last place you exited insert mode', so we'll map gI to
+" something similar: move to last change
+nnoremap gI `.
+
+" ## Indentions
+" Indent/dedent/autoindent what you just pasted.
+nnoremap <lt>> V`]<
+nnoremap ><lt> V`]>
+nnoremap =- V`]=
 
 " make the tab key match bracket pairs
 silent! unmap [%
@@ -319,6 +371,16 @@ map <leader>ek :vnew! ~/.dotfiles/kitty/kitty.conf<CR>
 map <leader>eg :vnew! ~/.gitconfig<CR>
 map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<CR>
 map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
+
+" ## Join and Split Lines
+" Keep the cursor in place while joining lines
+nnoremap J mzJ`z
+" Split line (sister to [J]oin lines above)
+" The normal use of S is covered by cc, so don't worry about shadowing it.
+nnoremap S i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
+
+" Easily escape terminel
+" tnoremap <leader><esc> <C-\><C-n><esc><cr>
 
 "}}}
 " ░░░░░░░░░░░░░░░ autocommands {{{
@@ -460,14 +522,10 @@ set pastetoggle=<leader>z
 " Fancy tag lookup
 set tags=./tags;/,tags;/
 
-" Fancy macros
-nnoremap Q @q
-vnoremap Q :norm @q<cr>
-
 " Visible whitespace
 set listchars=tab:»·,trail:·
 set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
-set nolist " `list` to enable
+set nolist
 
 " Soft-wrap for prose
 command! -nargs=* Wrap set wrap linebreak nolist spell
@@ -490,37 +548,6 @@ let g:fzf_action = {
       \ 'enter': 'vsplit'
       \ }
 let g:fzf_layout = { 'down': '~15%' }
-" evantravers
-let g:fzf_colors =
-      \ { 'fg':      ['fg', 'Normal'],
-      \ 'bg':      ['bg', 'Normal'],
-      \ 'hl':      ['fg', 'Comment'],
-      \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-      \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-      \ 'hl+':     ['fg', 'Statement'],
-      \ 'info':    ['fg', 'PreProc'],
-      \ 'border':  ['fg', 'Ignore'],
-      \ 'prompt':  ['fg', 'Conditional'],
-      \ 'pointer': ['fg', 'Exception'],
-      \ 'marker':  ['fg', 'Keyword'],
-      \ 'spinner': ['fg', 'Label'],
-      \ 'header':  ['fg', 'Comment'] }
-" nova
-let g:fzf_colors = {
-      \ "fg":      ["fg", "#93a1a1"],
-      \ "bg":      ["bg", "Normal"],
-      \ "hl":      ["fg", "#eee8d5"],
-      \ "fg+":     ["fg", "CursorLine", "CursorColumn", "Normal"],
-      \ "bg+":     ["bg", "CursorLine", "CursorColumn", "#1E272C"],
-      \ "hl+":     ["fg", "#dc322f"],
-      \ "info":    ["fg", "#b58900"],
-      \ "border":  ["fg", "Ignore"],
-      \ "prompt":  ["fg", "#b58900"],
-      \ "pointer": ["fg", "#cb4b16"],
-      \ "marker":  ["fg", "#2aa198"],
-      \ "spinner": ["fg", "#2aa198"],
-      \ "header":  ["fg", "#268bd2"]
-      \}
 if executable("rg")
   " ## rg
   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
@@ -545,43 +572,44 @@ if executable("rg")
 endif
 
 nnoremap <silent><leader>m <ESC>:FZF<CR>
-nnoremap <silent><C-p> <ESC>:FZF<CR>
 " nnoremap <localleader><space> :Buffers<cr> nnoremap <leader>a <ESC>:Rg<SPACE> nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
 nnoremap \ :Rg<SPACE>
 
 " ## junegunn/limelight.vim
-let g:limelight_conceal_ctermfg = 'gray'
-let g:limelight_conceal_ctermfg = 240
+let g:limelight_conceal_guifg = 'DarkGray'
+let g:limelight_conceal_guifg = '#777777'
 
-function! GoyoBefore()
+" ## junegunn/goyo.vim
+function! s:goyo_enter()
   silent !tmux set status off
-  set tw=78 Limelight color off
+  silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
+  set tw=78
+  set wrap
+  set noshowmode
+  set noshowcmd
+  set scrolloff=999
+  Limelight
+  color off
 endfunction
-
-function! GoyoAfter()
+function! s:goyo_leave()
   silent !tmux set status on
+  silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
   set tw=0
+  set nowrap
+  set showmode
+  set showcmd
+  set scrolloff=8
   Limelight!
-  color nova "gruvbox
+  color nova
 endfunction
-
-let g:goyo_callbacks = [function('GoyoBefore'), function('GoyoAfter')]
-nnoremap <Leader>G :Goyo<CR>
+autocmd! User GoyoEnter nested call <SID>goyo_enter()
+autocmd! User GoyoLeave nested call <SID>goyo_leave()
+nnoremap <silent><Leader>G :Goyo<CR>
 
 " ## junegunn/vim-easy-align
 vmap <Enter> <Plug>(EasyAlign)
 nmap <Leader>a <Plug>(EasyAlign)
-
-" morhetz/gruvbox
-" let g:gruvbox_italic=1
-" let g:gruvbox_improved_strings=1
-" let g:gruvbox_improved_warnings=1
-" let g:gruvbox_guisp_fallback='fg'
-" let g:gruvbox_contrast_light='hard'
-" let g:gruvbox_contrast_dark='soft'
-" set background=dark
-" colorscheme gruvbox
 
 " ## trevordmiller/nova-vim
 set background=dark
@@ -609,6 +637,16 @@ let g:elixir_docpreview = 1
 let g:rainbow#max_level = 10
 let g:rainbow#pairs = [['(', ')'], ['[', ']'], ['{', '}']]
 
+" ## tpope/vim-surround
+let g:surround_indent = 0
+vmap [ S]
+vmap ( S)
+vmap { S}
+vmap ' S'
+vmap " S"
+vmap ` S`
+
+
 " ## tpope/vim-markdown
 let g:markdown_fenced_languages = [
       \ 'javascript', 'js=javascript', 'json=javascript',
@@ -618,11 +656,6 @@ let g:markdown_fenced_languages = [
       \ 'python',
       \ 'haml', 'html',
       \ 'bash=sh', 'zsh', 'elm', 'elixir']
-
-" ## itchyny/lightline.vim
-let g:lightline = {
-      \ 'colorscheme': 'nova',
-      \ }
 
 " ## w0rp/ale
 let g:ale_javascript_eslint_use_global = 1
@@ -712,14 +745,6 @@ vnoremap <leader>G :Gist -po<CR>
 " ## dash.vim
 nmap <silent> <leader>d <Plug>DashSearch
 
-" ## surround
-vmap [ S]
-vmap ( S)
-vmap { S}
-vmap ' S'
-vmap " S"
-vmap ` S`
-
 " ## vim-commentary
 nmap <leader>c :Commentary<CR>
 vmap <leader>c :Commentary<CR>
@@ -753,6 +778,15 @@ let g:test#strategy = 'terminal_split'
 let test#ruby#rspec#options = '-f d'
 " let test#ruby#bundle_exec = 1
 let test#ruby#use_binstubs = 1
+
+" ## mattn/emmet-vim
+" Remap for expand with Tab
+let g:user_emmet_leader_key = '<C-e>'
+" let g:user_emmet_expandabbr_key = '<A-x><A-e>'
+
+" ## ultisnips
+" Not conflict with Coc
+" let g:UltiSnipsExpandTrigger = "<C-e>"
 
 "}}}
 " ░░░░░░░░░░░░░░░ blink {{{
@@ -1020,6 +1054,113 @@ function! LightlineFileName()
 endfunction
 
 " }}}
+" ░░░░░░░░░░░░░░░ coc.nvim {{{
+" for showSignatureHelp
+set completeopt=noinsert,menuone,noselect
+set shortmess+=c
+
+" Or use formatexpr for range format
+set formatexpr=CocActionAsync('formatSelected')
+
+" Use tab for trigger completion with characters ahead and navigate.
+" Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+inoremap <silent><expr> <TAB>
+            \ pumvisible() ? "\<C-n>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Use <c-space> for trigger completion.
+inoremap <silent><expr> <C-e> coc#refresh()
+
+" Use <cr> for confirm completion.
+" Coc only does snippet and additional edit on confirm.
+inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+
+" Use <C-x><C-o> to complete 'word', 'emoji' and 'include' sources
+imap <silent> <C-x><C-o> <Plug>(coc-complete-custom)
+
+" Use K for show documentation in preview window
+function! s:show_documentation()
+  if &filetype ==# 'vim'
+    execute 'h '.expand('<cword>')
+  else
+    call CocActionAsync('doHover')
+  endif
+endfunction
+
+" Use `[c` and `]c` for navigate diagnostics
+" nmap <silent> [c <Plug>(coc-diagnostic-prev)
+" nmap <silent> ]c <Plug>(coc-diagnostic-next)
+" nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
+" nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
+
+nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
+nmap <silent> <leader>ld <Plug>(coc-definition)
+nmap <silent> <leader>lt <Plug>(coc-type-definition)
+nmap <silent> <leader>li <Plug>(coc-implementation)
+nmap <silent> <leader>lr <Plug>(coc-references)
+nmap <silent> <leader>ln <Plug>(coc-rename)
+nmap <F2> <Plug>(coc-rename)
+
+" Remap for format selected region
+vmap <leader>lf <Plug>(coc-format-selected)
+nmap <leader>lf <Plug>(coc-format-selected)
+
+" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
+vmap <leader>la <Plug>(coc-codeaction-selected)
+nmap <leader>la <Plug>(coc-codeaction-selected)
+
+" Use `:Format` for format current buffer
+command! -nargs=0 Format :call CocActionAsync('format')
+
+" Use `:Fold` for fold current buffer
+command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
+
+" augroup coc_au
+"   au!
+"   " Show signature help while editing
+"   " au CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
+"   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+"   " Highlight symbol under cursor on CursorHold
+"   " au CursorHold * silent call CocActionAsync('highlight')
+" augroup END
+
+" function! s:clear_input() abort
+"   let s:input_word = ''
+" endfunction
+
+" function! s:snippet() abort
+"   let l:start_line = line('.')
+"   let l:is_position = search('\v%x0')
+"   if l:is_position !=# 0
+"     silent! s/\v\t/    /g
+"     silent! s/\v%x0\n//g
+"     silent! s/\v%x0/\r/g
+"     let l:end_line = line('.')
+"     call cursor(l:start_line, 0)
+"     let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
+"     if l:pos[0] !=# 0 && l:pos[1] !=# 0
+"       call cursor(l:pos[0], l:pos[1])
+"       normal! df}
+"     endif
+"   endif
+" endfunction
+
+" augroup CocSnippet
+"   au!
+"   au CompleteDone *.exs,*.ex,*.elm call <SID>snippet()
+"   au CursorMovedI * call <SID>clear_input()
+"   " highlight text color
+"   au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
+" augroup END
+"}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
 
   hi clear SpellBad
@@ -1035,7 +1176,9 @@ endfunction
   " hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   " hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
   " hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
-  " hi IncSearch ctermfg=red ctermbg=0 guibg=#FFFACD guifg=#000000 gui=bold
+
+  " FIXME: IncSearch negatively affects my FZF colors
+  " hi IncSearch guifg=#FFFACD
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'

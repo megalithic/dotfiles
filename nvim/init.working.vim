@@ -24,7 +24,6 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 " ## UI/Interface
   Plug 'trevordmiller/nova-vim'
-  Plug 'morhetz/gruvbox'
   Plug 'pbrisbin/vim-colors-off'
   Plug 'megalithic/golden-ratio' " vertical split layout manager
   Plug 'itchyny/lightline.vim'
@@ -56,11 +55,11 @@ silent! if plug#begin('~/.config/nvim/plugged')
   Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
   " Plug 'kovisoft/slimv'
   " Plug 'tpope/vim-markdown'
-  Plug 'sheerun/vim-polyglot'
+  " Plug 'sheerun/vim-polyglot'
 
 " ## Snippets
   Plug 'SirVer/ultisnips'
-  Plug 'honza/vim-snippets'
+  " Plug 'honza/vim-snippets'
 
 " ## Tags
   if executable('ctags')
@@ -193,15 +192,6 @@ set background=dark                                                             
 
 let g:nova_transparent = 1
 silent! colorscheme nova
-
-" let g:gruvbox_italic=1
-" let g:gruvbox_improved_strings=1
-" let g:gruvbox_improved_warnings=1
-" let g:gruvbox_guisp_fallback='fg'
-" let g:gruvbox_contrast_light='hard'
-" let g:gruvbox_contrast_dark='medium'
-" set background=dark
-" silent! colorscheme gruvbox
 
 set termguicolors
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -450,113 +440,106 @@ augroup general
   au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
   au BufWritePost ~/.dotfiles/private/domains/nginx/* silent! :MirrorPush nginx
   au BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
-
-  " set up default omnifunc
-  autocmd FileType *
-        \ if &omnifunc == "" |
-        \    setlocal omnifunc=syntaxcomplete#Complete |
-        \ endif
-  " autocmd FileType * setlocal omnifunc=lsp#complete
 augroup END
 
-augroup elm
-  au!
-  au FileType elm let g:VimuxOrientation = "h"
-  au FileType elm nn <buffer> K :ElmShowDocs<CR>
+"augroup elm
+"  au!
+"  au FileType elm let g:VimuxOrientation = "h"
+"  au FileType elm nn <buffer> K :ElmShowDocs<CR>
 
-  au FileType elm nn <silent> <leader>ei :VimuxInspectRunner<CR>
-  " TODO: want to automatically do this if all normal buffers are closed:
-  au FileType elm nn <silent> <leader>ec :VimuxCloseRunner<CR>
+"  au FileType elm nn <silent> <leader>ei :VimuxInspectRunner<CR>
+"  " TODO: want to automatically do this if all normal buffers are closed:
+"  au FileType elm nn <silent> <leader>ec :VimuxCloseRunner<CR>
 
-  " au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
-  " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
+"  " au FileType elm nn <buffer> <localleader>m :ElmMakeMain<CR>
+"  " au FileType elm nn <buffer> <localleader>r :ElmRepl<CR>
 
-  " Check and see if we are we in the root of vpp or in vpp/ui?
-  if filereadable("./ui/bin/start")
-    " au FileType elm nn <leader>em :Dispatch ui/bin/start<CR>
-    au FileType elm nn <leader>em :call VimuxRunCommand("ui/bin/start")<CR>
-    au FileType elm nn <leader>et :Dispatch ui/bin/test<CR>
-    au FileType elm nn <leader>ef :Dispatch ui/bin/format<CR>
-  else
-    " au FileType elm nn <leader>em :Dispatch bin/start<CR>
-    au FileType elm nn <leader>em :call VimuxRunCommand("bin/start")<CR>
-    au FileType elm nn <leader>et :Dispatch bin/test<CR>
-    au FileType elm nn <leader>ef :Dispatch bin/format<CR>
-  endif
+"  " Check and see if we are we in the root of vpp or in vpp/ui?
+"  if filereadable("./ui/bin/start")
+"    " au FileType elm nn <leader>em :Dispatch ui/bin/start<CR>
+"    au FileType elm nn <leader>em :call VimuxRunCommand("ui/bin/start")<CR>
+"    au FileType elm nn <leader>et :Dispatch ui/bin/test<CR>
+"    au FileType elm nn <leader>ef :Dispatch ui/bin/format<CR>
+"  else
+"    " au FileType elm nn <leader>em :Dispatch bin/start<CR>
+"    au FileType elm nn <leader>em :call VimuxRunCommand("bin/start")<CR>
+"    au FileType elm nn <leader>et :Dispatch bin/test<CR>
+"    au FileType elm nn <leader>ef :Dispatch bin/format<CR>
+"  endif
 
-  au FileType elm setl iskeyword+=_
-  " au FileType elm nn <C-c> :bd!<CR>
-augroup END
+"  au FileType elm setl iskeyword+=_
+"  " au FileType elm nn <C-c> :bd!<CR>
+"augroup END
 
-augroup elixir
-  au!
-  au FileType elixir,eelixir setl matchpairs=(:),{:},[:]
-  au FileType elixir,eelixir setl iskeyword+=_
+"augroup elixir
+"  au!
+"  au FileType elixir,eelixir setl matchpairs=(:),{:},[:]
+"  au FileType elixir,eelixir setl iskeyword+=_
 
-  " Enable html syntax highlighting in all .eex files
-  " autocmd BufReadPost *.html.eex set syntax=html
-  au BufRead,BufNewFile *.ex,*.exs set filetype=elixir
-  au BufRead,BufNewFile *.eex set filetype=eelixir
+"  " Enable html syntax highlighting in all .eex files
+"  " autocmd BufReadPost *.html.eex set syntax=html
+"  au BufRead,BufNewFile *.ex,*.exs set filetype=elixir
+"  au BufRead,BufNewFile *.eex set filetype=eelixir
 
-  " ways-to-debug:
-  " au FileType elixir,eelixir nnoremap <leader>er :Dispatch !iex -r % -S mix<CR>
-  au FileType elixir,eelixir nnoremap <leader>er :TREPLSendFile<CR>
-  au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ei o\|>IO.inspect<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
-  au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
+"  " ways-to-debug:
+"  " au FileType elixir,eelixir nnoremap <leader>er :Dispatch !iex -r % -S mix<CR>
+"  au FileType elixir,eelixir nnoremap <leader>er :TREPLSendFile<CR>
+"  au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+"  au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
+"  au FileType elixir,eelixir nnoremap <leader>ei o\|>IO.inspect<ESC>:w<CR>
+"  au FileType elixir,eelixir nnoremap <leader>ew :call VimuxRunCommand("mix test.watch")<CR>
+"  au FileType elixir,eelixir nnoremap <leader>ex :call VimuxRunCommand("iex -S mix")<CR>
 
-  " :Eix => open iex with current file compiled
-  command! Iex :!iex -S mix %<cr>
-  " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
+"  " :Eix => open iex with current file compiled
+"  command! Iex :!iex -S mix %<cr>
+"  " au FileType elixir,eelixir nnoremap <leader>e :!elixir %<CR>
 
-  " disable endwise for anonymous fn in elixir
-  au BufNewFile,BufRead *.{ex,exs}
-        \ let b:endwise_addition = '\=submatch(0)=="fn" ? "end)" : "end"'
-augroup END
+"  " disable endwise for anonymous fn in elixir
+"  au BufNewFile,BufRead *.{ex,exs}
+"        \ let b:endwise_addition = '\=submatch(0)=="fn" ? "end)" : "end"'
+"augroup END
 
-augroup javascript
-  au!
-  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css,elixir,eelixir,elm RainbowParentheses
-  au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
-  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
-augroup END
+"augroup javascript
+"  au!
+"  au FileType typescript,typescriptreact,typescript.tsx,javascript,javascript.jsx,sass,scss,scss.css,elixir,eelixir,elm RainbowParentheses
+"  au BufNewFile,BufRead .{babel,eslint,prettier,stylelint,jshint,jscs,postcss}*rc,\.tern-*,*.json,.tern-project set ft=json
+"  au BufNewFile,BufRead *.tsx,*.ts setl commentstring=//\ %s " doing this because for some reason it keeps defaulting the commentstring to `/* %s */`
+"augroup END
 
-augroup css
-  au!
-  " make sure `complete` works as expected for CSS class names whithout
-  " messing with motions (eg. '.foo-bar__baz') and we make sure all
-  " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
-  "
-  " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
-  au FileType css,css.scss,sass,scss setl iskeyword+=-
-  au FileType css,css.scss,sass,scss setl formatoptions+=croql
-augroup END
+"augroup css
+"  au!
+"  " make sure `complete` works as expected for CSS class names whithout
+"  " messing with motions (eg. '.foo-bar__baz') and we make sure all
+"  " delimiters (_,-,$,%,.) are treated as word separators outside insert mode
+"  "
+"  " https://github.com/rstacruz/vimfiles/blob/master/plugin/plugins/css3-syntax.vim
+"  au FileType css,css.scss,sass,scss setl iskeyword+=-
+"  au FileType css,css.scss,sass,scss setl formatoptions+=croql
+"augroup END
 
-augroup markdown
-  au!
-  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text,log} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 linebreak nolist "nocindent fo+=acq wrap
-  " au FileType markdown,text,html setlocal spell complete+=kspell
-augroup END
+"augroup markdown
+"  au!
+"  au BufEnter,BufNewFile,BufRead,BufReadPost *.{md,mdwn,mkd,mkdn,mark*,txt,text,log} setl ft=markdown nolazyredraw conceallevel=0 tw=80 colorcolumn=80 linebreak nolist "nocindent fo+=acq wrap
+"  " au FileType markdown,text,html setlocal spell complete+=kspell
+"augroup END
 
-augroup ruby
-  au!
-  au FileType ruby setl iskeyword+=_
-  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
-  au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
-augroup END
+"augroup ruby
+"  au!
+"  au FileType ruby setl iskeyword+=_
+"  au BufRead,BufNewFile {Gemfile,Rakefile,Vagrantfile,Thorfile,Procfile,Guardfile,config.ru,*.rake,*.jbuilder} set ft=ruby
+"  au BufRead,BufNewFile .env.local,.env.development,.env.test setf sh   " Use Shell for .env files
+"augroup END
 
 
-augroup misc
-  au!
-  au BufNewFile,BufRead */ssh/config,ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
-  au FileType zsh set ts=2 sts=2 sw=2
-  au FileType sh set ts=2 sts=2 sw=2
-  au FileType bash set ts=2 sts=2 sw=2
-  au FileType fish set ts=2 sts=2 sw=2
-  au FileType tmux set ts=2 sts=2 sw=2
-augroup END
+"augroup misc
+"  au!
+"  au BufNewFile,BufRead */ssh/config,ssh_config,*/.dotfiles/private/ssh/config setf sshconfig
+"  au FileType zsh set ts=2 sts=2 sw=2
+"  au FileType sh set ts=2 sts=2 sw=2
+"  au FileType bash set ts=2 sts=2 sw=2
+"  au FileType fish set ts=2 sts=2 sw=2
+"  au FileType tmux set ts=2 sts=2 sw=2
+"augroup END
 
 augroup git
   " ----------------------------------------------------------------------------
@@ -936,7 +919,7 @@ endfunction
   let g:tmux_navigator_disable_when_zoomed = 0
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
+  " let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
 " ## vim-matchup
   let g:matchup_matchparen_status_offscreen = 0 " prevents statusline from disappearing
@@ -1553,6 +1536,9 @@ endfunction
   nnoremap <leader>v ggVG
 " Easier linewise reselection of what you just pasted.
   nnoremap <leader>V V`]
+" gi already moves to 'last place you exited insert mode', so we'll map gI to
+" something similar: move to last change
+  nnoremap gI `.
 
 " ## Indentions
 " Indent/dedent/autoindent what you just pasted.
@@ -1570,10 +1556,6 @@ endfunction
 " spawn newline
   inoremap <S-CR>     <C-O>O
   inoremap <C-CR>     <C-O>o
-"
-" gi already moves to 'last place you exited insert mode', so we'll map gI to
-" something similar: move to last change
-  nnoremap gI `.
 
 " Make D behave
   nnoremap D d$
