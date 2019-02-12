@@ -427,9 +427,6 @@ augroup general
   " Auto-close preview window when completion is done.
   au! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
-  " Show sign column for only certain filetypes
-  au! FileType cmake,css,go,java,javascript,typescript,ocaml,python,r,rust,scss,sh,sass,zsh,bash,fish,elixir,eelixir,elm set signcolumn=yes
-
   " When terminal buffer ends allow to close it
   autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
   autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
@@ -442,12 +439,15 @@ augroup general
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
 
   " toggle syntax / dim / inactive (comment out when tadaa/vimade supports TUI)
-  au WinEnter,BufEnter * silent set number relativenumber syntax=on " call RainbowParentheses
-  au WinLeave,BufLeave * silent set nonumber norelativenumber syntax=off " call RainbowParentheses!
+  " au WinEnter,BufEnter * silent set number relativenumber " call RainbowParentheses
+  " au WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
-  au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
-  au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
+  " au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
+  " au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
+
+  au VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber syntax=on
+  au WinLeave * silent setl nonumber norelativenumber syntax=off
 
   " toggle colorcolumn when in insertmode only
   au InsertEnter * silent set colorcolumn=80
