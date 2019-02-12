@@ -145,6 +145,7 @@ alias eza="nvim ~/.dotfiles/zsh/**/aliases.zsh"
 alias ezf="nvim ~/.dotfiles/zsh/**/functions.zsh"
 alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"
 alias ezh="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/config.lua"
+alias eg="nvim ~/.dotfiles/git/gitconfig.symlink"
 alias ezc=ezo
 alias eze="nvim ~/.dotfiles/zsh/**/env.zsh"
 alias ezpr="nvim ~/.dotfiles/zsh/themes/prompt_pure.zsh"
