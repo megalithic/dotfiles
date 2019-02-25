@@ -72,7 +72,6 @@ Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 " Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
-Plug 'itspriddle/vim-marked', { 'for': 'markdown,vimwiki' }
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
@@ -84,21 +83,24 @@ Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'kopischke/vim-fetch'
 Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
-" Plug 'machakann/vim-sandwich'
+" Plug 'markonm/traces.vim'
 Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
-Plug 'neoclide/coc.nvim', { 'tag': '*', 'do': function('PostInstallCoc') }
+Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
+" Plug 'neoclide/coc.nvim', {'branch': 'floating', 'do': { -> coc#util#build()} }
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
+Plug 'sheerun/vim-polyglot'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
+Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
@@ -163,6 +165,9 @@ syntax on
 " ---- Search
 set ignorecase
 set smartcase
+if has('nvim')
+  set icm=nosplit
+endif
 
 " ---- Tab completion
 set wildmode=list:longest,full
@@ -428,12 +433,14 @@ augroup general
   au! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
   " When terminal buffer ends allow to close it
-  autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
-  autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
-  au! TermOpen * setlocal nonumber norelativenumber
-  au! TermOpen * if &buftype == 'terminal'
-        \| set nonumber norelativenumber
-        \| endif
+  if has('nvim')
+    autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
+    autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
+    au! TermOpen * setlocal nonumber norelativenumber
+    au! TermOpen * if &buftype == 'terminal'
+          \| set nonumber norelativenumber
+          \| endif
+  endif
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -446,8 +453,8 @@ augroup general
   " au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   " au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
 
-  au VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber syntax=on
-  au WinLeave * silent setl nonumber norelativenumber syntax=off
+  au FocusGained,BufEnter,VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber
+  au FocusLost,BufLeave,WinLeave * silent setl nonumber norelativenumber
 
   " toggle colorcolumn when in insertmode only
   au InsertEnter * silent set colorcolumn=80
@@ -533,6 +540,9 @@ let &showbreak='↪ '
 
 "}}}
 " ░░░░░░░░░░░░░░░ plugin settings {{{
+
+" ## polyglot
+  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
 " ## indentLine
 let g:indentLine_enabled = 1
@@ -646,11 +656,13 @@ vmap ' S'
 vmap " S"
 vmap ` S`
 
+" ## tadaa/vimade
+let g:vimade = {}
+let g:vimade.fadelevel = 0.7
 
 " ## tpope/vim-markdown
 let g:markdown_fenced_languages = [
       \ 'javascript', 'js=javascript', 'json=javascript',
-      \ 'typescript', 'typescriptreact=typescript',
       \ 'css', 'scss', 'sass',
       \ 'ruby', 'erb=eruby',
       \ 'python',
@@ -670,7 +682,6 @@ let g:ale_echo_msg_format = '[%linter%] %s'
 "       \   'elm': [],
 "       \   'lua': [],
 "       \   'javascript': [],
-"       \   'typescript': [],
 "       \ }
 let g:ale_linters = {
       \   'elixir': ['elixir-ls'],
@@ -682,9 +693,6 @@ let g:ale_fixers = {
       \   '*': ['remove_trailing_lines', 'trim_whitespace'],
       \   'javascript': ['prettier_eslint'],
       \   'javascript.jsx': ['prettier_eslint'],
-      \   'typescript': ['prettier_eslint'],
-      \   'typescriptreact': ['prettier_eslint'],
-      \   'typescript.tsx': ['prettier_eslint'],
       \   'css': ['prettier'],
       \   'scss': ['prettier'],
       \   'json': ['prettier'],
@@ -709,12 +717,8 @@ let g:ale_virtualtext_prefix = "❯❯ "
 " let g:ale_set_highlights = 0
 " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
 
-" ## itspriddle/vim-marked
-nnoremap <Leader>M :MarkedOpen<CR>
-
-" ## Things 3
-command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"
-nnoremap <Leader>T :Things<cr>
+" # markdown-preview.nvim
+nnoremap <Leader>M :MarkdownPreview<CR>
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
@@ -725,7 +729,7 @@ map <S-F5> :PlugClean!<CR>
 " ## fugitive
 nnoremap <leader>H :Gbrowse<CR>
 vnoremap <leader>H :Gbrowse<CR>
-nnoremap <leader>gb :Gblame<CR>
+nnoremap <leader>B :Gblame<CR>
 
 " ## vim-test / testing
 nmap <silent> <leader>t :TestFile<CR>

@@ -135,14 +135,15 @@ config.applications = {
         -- hotkey.new({"ctrl"}, "g", function()
         --   hs.eventtap.keyStroke({"cmd"}, "k")
         -- end),
-        -- next channel or dm
-        hotkey.new({"ctrl"}, "j", function()
-          hs.eventtap.keyStroke({"alt"}, "Down")
-        end),
-        -- previous channel or dm
-        hotkey.new({"ctrl"}, "k", function()
-          hs.eventtap.keyStroke({"alt"}, "Up")
-        end),
+
+        -- -- next channel or dm
+        -- hotkey.new({"ctrl"}, "j", function()
+        --   hs.eventtap.keyStroke({"alt"}, "Down")
+        -- end),
+        -- -- previous channel or dm
+        -- hotkey.new({"ctrl"}, "k", function()
+        --   hs.eventtap.keyStroke({"alt"}, "Up")
+        -- end),
         -- next unread channel or dm
         hotkey.new({"ctrl", "shift"}, "j", function()
           hs.eventtap.keyStroke({"alt", "shift"}, "Down")

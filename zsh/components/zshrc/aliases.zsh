@@ -365,3 +365,8 @@ alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resource
 
 # SED reminder:
 alias sedhelp="echo \"sed -i -e 's/old-thing/new-thing/g' relative/path/to/*.js\""
+
+# weather
+alias weather='curl -s wttr.in | sed -n "1,7p"'
+alias wthr="weather 35244"
+alias moon='curl -4 http://wttr.in/Moon'
