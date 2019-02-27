@@ -81,6 +81,7 @@ Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
+Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
 Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " Plug 'markonm/traces.vim'
@@ -97,7 +98,6 @@ Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
-Plug 'sheerun/vim-polyglot'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'TaDaa/vimade'
@@ -123,6 +123,8 @@ Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
+Plug 'sheerun/vim-polyglot'
+Plug 'ryanoasis/vim-devicons' " has to be last according to docs
 
 " ## Movements/Text Objects, et al
 Plug 'kana/vim-operator-user'
@@ -626,6 +628,28 @@ set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
 
+" ## vim-devicons
+" let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
+let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
+let g:WebDevIconsOS = 'Darwin'
+let g:WebDevIconsUnicodeDecorateFolderNodes = 1
+let g:WebDevIconsUnicodeDecorateFileNodesDefaultSymbol = ''
+let g:WebDevIconsUnicodeDecorateFolderNodes = 1
+let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols = {} " needed
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['js'] = "\ue74e"
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['jsx'] = "\ue74e"
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['tsx'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['css'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['html'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['json'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['md'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
+
+
 " ## elm-vim
 let g:elm_jump_to_error = 0
 let g:elm_make_output_file = "/dev/null"
@@ -791,6 +815,11 @@ let g:user_emmet_leader_key = '<C-e>'
 " ## ultisnips
 " Not conflict with Coc
 " let g:UltiSnipsExpandTrigger = "<C-e>"
+" let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
+let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
+let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
+let g:UltiSnipsRemoveSelectModeMappings = 0
+let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
 "}}}
 " ░░░░░░░░░░░░░░░ blink {{{
@@ -980,13 +1009,13 @@ function! PrintStatusline(v)
 endfunction
 
 function! LightlineFileType()
-  "return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
-return &filetype
+  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
+  " return &filetype
 endfunction
 
 function! LightlineFileFormat()
- " return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
-return &fileformat
+ return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
+  " return &fileformat
 endfunction
 
 function! LightlineBranch()
@@ -1081,6 +1110,10 @@ endfunction
 
 " Use <c-space> for trigger completion.
 inoremap <silent><expr> <C-e> coc#refresh()
+
+" Use <Tab> and <S-Tab> for navigate completion list:
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
 " Use <cr> for confirm completion.
 " Coc only does snippet and additional edit on confirm.
