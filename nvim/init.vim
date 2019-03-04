@@ -92,7 +92,6 @@ Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
-" Plug 'neoclide/coc.nvim', {'branch': 'floating', 'do': { -> coc#util#build()} }
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
@@ -455,8 +454,8 @@ augroup general
   " au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   " au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
 
-  au FocusGained,BufEnter,VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber
-  au FocusLost,BufLeave,WinLeave * silent setl nonumber norelativenumber
+  au BufEnter,VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber
+  au BufLeave,WinLeave * silent setl nonumber norelativenumber
 
   " toggle colorcolumn when in insertmode only
   au InsertEnter * silent set colorcolumn=80
@@ -814,7 +813,7 @@ let g:user_emmet_leader_key = '<C-e>'
 
 " ## ultisnips
 " Not conflict with Coc
-" let g:UltiSnipsExpandTrigger = "<C-e>"
+let g:UltiSnipsExpandTrigger = "<C-e>"
 " let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
 let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
 let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
@@ -1263,6 +1262,10 @@ command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
   hi DiffDelete guifg=#DF8C8C
   hi DiffAdded guifg=#A8CE93
   hi DiffRemoved guifg=#DF8C8C
+
+  hi Floating guibg=#000044
+  " set winhl=Normal:Floating
+  " set nonumber
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim

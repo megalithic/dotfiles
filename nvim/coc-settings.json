@@ -3,58 +3,44 @@
 {
   // could be 'always' 'trigger' => for specified trigger characters only 'none'
   "coc.preferences.extensionUpdateCheck": "daily",
-  "coc.preferences.autoTrigger": "always",
-  // only used when autoTrigger is always
-  "coc.preferences.triggerAfterInsertEnter": false,
-  "coc.preferences.minTriggerInputLength": 3,
-  "coc.preferences.acceptSuggestionOnCommitCharacter": false,
-  "coc.preferences.preferCompleteThanJumpPlaceholder": true,
   "coc.preferences.triggerSignatureHelp": false,
-  "coc.preferences.numberSelect": false,
-
-  /* // CocList (fzf) */
-  /* "list.insertMappings": { */
-  /*   "<C-t>": "action:tabe", */
-  /*   "<C-n>": "normal:j", */
-  /*   "<C-p>": "normal:k" */
-  /* }, */
-
-  // Snippets
   "coc.preferences.snippets.enable": true,
-  "coc.preferences.snippetIndicator": "",
-  /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
-  /* "snippets.ultisnips.pythonVersion": 3, */
-  /* "coc.preferences.snippetIndicator": "\uf5d4", */
-
   "coc.preferences.colorSupport": false,
   "coc.preferences.hoverTarget": "echo", // "preview"
-  "coc.preferences.noselect": false,
-  "coc.preferences.timeout": 5000,
-  // executable path for https://facebook.github.io/watchman/, detected from $PATH by default
-  // "coc.preferences.watchmanPath": "",
-   // enable formatOnType feature
   "coc.preferences.formatOnType": false,
   "coc.preferences.formatOnSaveFiletypes": [],
-  // command used for jump to other buffer
   "coc.preferences.jumpCommand": "vsplit",
   "coc.preferences.previewAutoClose": true,
 
-  // diagnostics
-  "coc.preferences.diagnostic.enable": true,
-  "coc.preferences.diagnostic.refreshOnInsertMode": false,
-  "coc.preferences.diagnostic.displayByAle": false,
-  "coc.preferences.diagnostic.locationlist": false,
-  "coc.preferences.diagnostic.signOffset": 1000,
-  "coc.preferences.diagnostic.highlightOffset": 1000,
-  "coc.preferences.diagnostic.errorSign": "✖-",
-  "coc.preferences.diagnostic.warningSign": "⬥-",
-  "coc.preferences.diagnostic.infoSign": "‣",
-  "coc.preferences.diagnostic.hintSign": "‣",
-  "coc.preferences.diagnostic.virtualText": true,
-  "coc.preferences.diagnostic.virtualTextLines": 3,
-  "coc.preferences.codeLens.enable": true,
-  "coc.preferences.codeLens.separator": "❯ ",
-  "coc.preferences.echodocSupport": false,
+  "suggest.autoTrigger": "always",
+  "suggest.triggerAfterInsertEnter": false,
+  "suggest.minTriggerInputLength": 3,
+  "suggest.acceptSuggestionOnCommitCharacter": false,
+  "suggest.preferCompleteThanJumpPlaceholder": true,
+  "suggest.numberSelect": false,
+  "suggest.enablePreview":true,
+  "suggest.snippetIndicator": "",
+  /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
+  /* "snippets.ultisnips.pythonVersion": 3, */
+  /* "coc.preferences.snippetIndicator": "\uf5d4", */
+  "suggest.noselect": false,
+  "suggest.timeout": 5000,
+
+  "diagnostic.enable": true,
+  "diagnostic.refreshOnInsertMode": false,
+  "diagnostic.displayByAle": false,
+  "diagnostic.locationlist": false,
+  "diagnostic.signOffset": 1000,
+  "diagnostic.highlightOffset": 1000,
+  "diagnostic.errorSign": "✖-",
+  "diagnostic.warningSign": "⬥-",
+  "diagnostic.infoSign": "‣",
+  "diagnostic.hintSign": "‣",
+  "diagnostic.virtualText": true,
+  "diagnostic.virtualTextLines": 3,
+  "codeLens.enable": true,
+  "codeLens.separator": "❯ ",
+  "suggest.echodocSupport": false,
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
 

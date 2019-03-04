@@ -256,6 +256,7 @@ alias tig="nvim +:GV" # https://github.com/junegunn/gv.vim#mappings
 alias gin="gitin"
 alias push="git push"
 alias gs="git s"
+alias gst="git status"
 alias gcv="git cv"
 alias gcm="git cm"
 alias gpreq="~/.dotfiles/bin/git-pr"

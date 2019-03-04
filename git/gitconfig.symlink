@@ -122,10 +122,10 @@
 
 
   # gitin aliases
-  st = !gitin status
+  ; st = !gitin status
   log = !gitin log
   lg = !gitin log
-  branch = !gitin branch
+  ; branch = !gitin branch
   br = !gitin branch
 
 [mergetool]

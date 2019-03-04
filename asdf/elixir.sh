@@ -40,14 +40,15 @@ if (which mix &>/dev/null); then
     mix deps.get
 
     # NOTE: the elixir-lsp maintained fork has more support and more updates
-    # git clone git@github.com:elixir-lsp/elixir-ls.git .elixir_ls
-    git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
+    git clone git@github.com:elixir-lsp/elixir-ls.git .elixir_ls
+    # git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
 
     cd "$mix_root/.elixir_ls" && mkdir rel
 
     echo ""
     echo "-- compiling elixir-ls..."
     echo ""
+    rm .tool-versions
     mix deps.get && mix compile
     mix elixir_ls.release -o rel
 
