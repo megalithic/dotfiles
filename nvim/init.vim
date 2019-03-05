@@ -33,10 +33,12 @@ function! PostInstallCoc(info) abort
           \ 'coc-rls',
           \ 'coc-solargraph',
           \ 'coc-tag',
+          \ 'coc-tailwindcss',
           \ 'coc-tsserver',
           \ 'coc-tslint',
           \ 'coc-ultisnips',
           \ 'coc-yaml',
+          \ 'coc-yank',
           \ ]))
 
     " -- disabled coc.nvim extensions:
@@ -70,6 +72,8 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': 'elixir' }
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 " Plug 'honza/vim-snippets'
+" Plug 'iamcco/sran.nvim', { 'do': { -> sran#util#install() } }
+" Plug 'iamcco/git-p.nvim'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
@@ -194,14 +198,19 @@ set cursorline                                                                  
 set pumheight=30                                                                "Maximum number of entries in autocomplete popup
 set cmdheight=1
 set signcolumn=yes
+" set cpoptions+=$              " dollar sign while changing
+set synmaxcol=250             " set max syntax highlighting column to sane level
+set visualbell t_vb=          " no visual bell
+set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/vim-256color-bce.html
 
 " ---- Show
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
-set showcmd                                                                     "Show incomplete cmds down the bottom
+set noshowcmd                                                                   "Hide incomplete cmds down the bottom
 set showmatch                                                                   "Highlight matching bracket
 
 " ---- Buffers
 set hidden
+set autoread                  " auto read external file changes
 
 " ---- Backup directories
 set backupdir=~/.config/nvim/backups,.
@@ -463,6 +472,12 @@ augroup general
   au InsertLeave * if &filetype != "markdown"
                             \ | silent set colorcolumn=""
                             \ | endif
+
+  " Open QuickFix horizontally with line wrap
+  au FileType qf wincmd J | setlocal wrap
+
+  " Preview window with line wrap
+  au WinEnter * if &previewwindow | setlocal wrap | endif
 augroup END
 
 augroup mirrors
@@ -516,6 +531,13 @@ augroup gitcommit
   au BufEnter *.git/index silent normal gg0j
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
+augroup END
+
+augroup ale
+  au!
+  au User ALEJobStarted call lightline#update()
+  au User ALELintPost   call lightline#update()
+  au User ALEFixPost    call lightline#update()
 augroup END
 
 "}}}
@@ -583,6 +605,8 @@ if executable("rg")
 endif
 
 nnoremap <silent><leader>m <ESC>:FZF<CR>
+nnoremap <leader>a <ESC>:Rg<SPACE>
+nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " nnoremap <localleader><space> :Buffers<cr> nnoremap <leader>a <ESC>:Rg<SPACE> nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
 nnoremap \ :Rg<SPACE>
@@ -617,10 +641,6 @@ endfunction
 autocmd! User GoyoEnter nested call <SID>goyo_enter()
 autocmd! User GoyoLeave nested call <SID>goyo_leave()
 nnoremap <silent><Leader>G :Goyo<CR>
-
-" ## junegunn/vim-easy-align
-vmap <Enter> <Plug>(EasyAlign)
-nmap <Leader>a <Plug>(EasyAlign)
 
 " ## trevordmiller/nova-vim
 set background=dark
@@ -742,6 +762,52 @@ let g:ale_virtualtext_prefix = "❯❯ "
 
 " # markdown-preview.nvim
 nnoremap <Leader>M :MarkdownPreview<CR>
+
+" # sran.nvim/git-p.nvim
+let g:gitp_blame_virtual_text = 1
+" use custom highlight for blame virtual text
+" change GitPBlameLineHi to your highlight group
+highlight link GitPBlameLine GitPBlameLineHi
+" format blame virtual text
+" hash: commit hash
+" account: commit account name
+" date: YYYY-MM-DD
+" time: HH:mm:ss
+" ago: xxx ago
+" zone: +xxxx
+" commit: commit message
+" lineNum: line number
+let g:gitp_blame_format = '    %{account} * %{ago}'
+" show blame on statusline git-p.nvim will udpate b:gitp_blame variable
+" and trigger GitPDiffAndBlameUpdate event when blame update
+" so you can use this info to display on statusline
+" b:gitp_blame = {
+"    hash: string
+"    account: string
+"    date: string
+"    time: string
+"    ago: string
+"    zone: string
+"    lineNum: string
+"    lineString: string
+"    commit: string
+"    rawString: string
+" }
+" use custom highlight for diff sign
+" change the GitPAddHi GitPModifyHi GitPDeleteHi to your highlight group
+highlight link GitPAdd                GitPAddHi
+highlight link GitPModify             GitPModifyHi
+highlight link GitPDeleteTop          GitPDeleteHi
+highlight link GitPDeleteBottom       GitPDeleteHi
+highlight link GitPDeleteTopAndBottom GitPDeleteHi
+" use custom diff sign
+let g:gitp_add_sign = '■'
+let g:gitp_modify_sign = '▣'
+let g:gitp_delete_top_sign = '▤'
+let g:gitp_delete_bottom_sign = '▤'
+let g:gitp_delete_top_and_bottom_sign = '▤'
+" let your sign column background same as line number column
+" highlight! link SignColumn LineNr
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
@@ -941,6 +1007,16 @@ let g:lightline = {
       \     'linter_warnings': 'lightline#ale#warnings',
       \     'linter_errors': 'lightline#ale#errors',
       \     'linter_ok': 'lightline#ale#ok',
+      \     'coc_error'        : 'LightlineCocErrors',
+      \     'coc_warning'      : 'LightlineCocWarnings',
+      \     'coc_info'         : 'LightlineCocInfos',
+      \     'coc_hint'         : 'LightlineCocHints',
+      \     'coc_fix'          : 'LightlineCocFixes',
+      \     'ale_error'        : 'LightlineAleErrors',
+      \     'ale_warning'      : 'LightlineAleWarnings',
+      \     'ale_info'         : 'LightlineAleInfos',
+      \     'ale_style_error'  : 'LightlineAleStyleErrors',
+      \     'ale_style_warning': 'LightlineAleStyleWarnings',
       \   },
       \   'component_type': {
       \     'readonly': 'error',
@@ -949,6 +1025,16 @@ let g:lightline = {
       \     'linter_warnings': 'warning',
       \     'linter_errors': 'error',
       \     'linter_ok': 'left',
+      \     'coc_error'        : 'error',
+      \     'coc_warning'      : 'warning',
+      \     'coc_info'         : 'tabsel',
+      \     'coc_hint'         : 'middle',
+      \     'coc_fix'          : 'middle',
+      \     'ale_error'        : 'error',
+      \     'ale_warning'      : 'warning',
+      \     'ale_info'         : 'tabsel',
+      \     'ale_style_error'  : 'error',
+      \     'ale_style_warning': 'warning',
       \   },
       \   'component_function_visible_condition': {
       \     'branch': '&buftype!="nofile"',
@@ -969,7 +1055,9 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
-      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok', 'cocstatus'],
+      \       ['coc_error', 'coc_warning', 'coc_info', 'coc_hint', 'coc_fix',
+      \      'ale_error', 'ale_warning', 'ale_info', 'ale_style_error', 'ale_style_warning'],
+      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
       \       ['filetype'],
@@ -1013,7 +1101,7 @@ function! LightlineFileType()
 endfunction
 
 function! LightlineFileFormat()
- return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
+  return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
   " return &fileformat
 endfunction
 
@@ -1058,7 +1146,7 @@ function! LightlineFileName()
   " Apply the above expansion to the expanded file path and split by the separator.
   let shortened_filepath = fnamemodify(filepath, mod)
   if len(shortened_filepath) < 45
-      return shortened_filepath
+    return shortened_filepath
   endif
 
   " Ensure that we have the correct slash for the OS.
@@ -1085,10 +1173,75 @@ function! LightlineFileName()
   " return finalpath
 endfunction
 
+function! LightlineCocErrors() abort
+  return s:lightline_coc_diagnostic('error', 'error')
+endfunction
+function! LightlineCocWarnings() abort
+  return s:lightline_coc_diagnostic('warning', 'warning')
+endfunction
+function! LightlineCocInfos() abort
+  return s:lightline_coc_diagnostic('information', 'info')
+endfunction
+function! LightlineCocHints() abort
+  return s:lightline_coc_diagnostic('hints', 'hint')
+endfunction
+function! LightlineCocFixes() abort
+  let b:coc_line_fixes = get(get(b:, 'coc_quickfixes', {}), line('.'), 0)
+  return b:coc_line_fixes > 0 ? printf('%d ', b:coc_line_fixes) : ''
+endfunction
+function! LightlineAleErrors() abort
+  return s:lightline_ale_diagnostic('error')
+endfunction
+function! LightlineAleWarnings() abort
+  return s:lightline_ale_diagnostic('warning')
+endfunction
+function! LightlineAleInfos() abort
+  return s:lightline_ale_diagnostic('info')
+endfunction
+function! LightlineAleStyleErrors() abort
+  return s:lightline_ale_diagnostic('style_error')
+endfunction
+function! LightlineAleStyleWarnings() abort
+  return s:lightline_ale_diagnostic('style_warning')
+endfunction
+function! s:lightline_coc_diagnostic(kind, sign) abort
+  if !get(g:, 'coc_enabled', 0)
+    return ''
+  endif
+  let c = get(b:, 'coc_diagnostic_info', 0)
+  if empty(c) || get(c, a:kind, 0) == 0
+    return ''
+  endif
+  try
+    let s = g:coc_user_config['diagnostic'][a:sign . 'Sign']
+  catch
+    let s = '!'
+  endtry
+  return printf('%d %s', c[a:kind], s)
+endfunction
+function! s:lightline_ale_diagnostic(kind) abort
+  if !get(g:, 'ale_enabled', 0)
+    return ''
+  endif
+  if !get(b:, 'ale_linted', 0)
+    return ''
+  endif
+  if ale#engine#IsCheckingBuffer(bufnr(''))
+    return ''
+  endif
+  let c = ale#statusline#Count(bufnr(''))
+  if empty(c) || get(c, a:kind, 0) == 0
+    return ''
+  endif
+  return printf('%d %s', c[a:kind], get(g:, 'ale_sign_' . a:kind, '!'))
+endfunction
+
 " }}}
 " ░░░░░░░░░░░░░░░ coc.nvim {{{
+let g:coc_force_debug = 1
+
 " for showSignatureHelp
-set completeopt=noinsert,menuone,noselect
+set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478
 set shortmess+=c
 
 " Or use formatexpr for range format
@@ -1097,14 +1250,14 @@ set formatexpr=CocActionAsync('formatSelected')
 " Use tab for trigger completion with characters ahead and navigate.
 " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
 inoremap <silent><expr> <TAB>
-            \ pumvisible() ? "\<C-n>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 function! s:check_back_space() abort
-    let col = col('.') - 1
-    return !col || getline('.')[col - 1]  =~# '\s'
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
 " Use <c-space> for trigger completion.
@@ -1113,6 +1266,9 @@ inoremap <silent><expr> <C-e> coc#refresh()
 " Use <Tab> and <S-Tab> for navigate completion list:
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+let g:coc_snippet_next = '<TAB>'
+let g:coc_snippet_prev = '<S-TAB>'
 
 " Use <cr> for confirm completion.
 " Coc only does snippet and additional edit on confirm.
@@ -1161,6 +1317,57 @@ command! -nargs=0 Format :call CocActionAsync('format')
 
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
+
+augroup coc
+  au!
+
+  au! User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+  function! CocUpdateQuickFixes(error, actions) abort
+    let coc_quickfixes = {}
+    try
+      for action in a:actions
+        if action.kind ==? 'quickfix'
+          for change in action.edit.documentChanges
+            for edit in change.edits
+              let start_line = edit.range.start.line + 1
+              let end_line = edit.range.end.line + 1
+              let coc_quickfixes[start_line] = get(coc_quickfixes, start_line, 0) + 1
+              if start_line != end_line
+                let coc_quickfixes[end_line] = get(coc_quickfixes, end_line, 0) + 1
+              endif
+            endfor
+          endfor
+        endif
+      endfor
+    catch
+    endtry
+    if coc_quickfixes != get(b:, 'coc_quickfixes', {})
+      let b:coc_quickfixes = coc_quickfixes
+      call lightline#update()
+    endif
+  endfunction
+
+  au User CocDiagnosticChange
+        \   call lightline#update()
+        \|  call CocActionAsync('quickfixes', function('CocUpdateQuickFixes'))
+
+  function! s:coc_fix_on_cursor_moved() abort
+    let current_line = line('.')
+    if current_line != get(b:, 'last_line', 0)
+      let b:last_line = current_line
+      if has_key(get(b:, 'coc_quickfixes', {}), current_line)
+        call lightline#update()
+      else
+        if get(b:, 'coc_line_fixes', 0) > 0
+          call lightline#update()
+        endif
+      endif
+    endif
+  endfunction
+
+  au CursorMoved * call s:coc_fix_on_cursor_moved()
+augroup END
 
 " augroup coc_au
 "   au!
@@ -1246,6 +1453,7 @@ command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
   hi CocWarningSign guibg=#F2C38F guifg=#333333 gui=underline
   hi CocWarningHighlight guibg=#F2C38F guifg=#333333
   hi CocWarningLine guibg=#F2C38F guifg=#333333
+  hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline

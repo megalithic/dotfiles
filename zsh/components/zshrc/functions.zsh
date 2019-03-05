@@ -131,3 +131,6 @@ iron() {
     call IronStartRepl('$syntax', 0, 1)"
 }
 
+function ssh_ec2() {
+  ssh $(aws ec2 describe-instances --filters "Name=tag:Name,Values=$1" | jq -r '.Reservations[].Instances[] | .PublicDnsName');
+}

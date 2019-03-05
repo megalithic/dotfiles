@@ -86,6 +86,9 @@
   "coc.source.buffer.priority": 6,
   "coc.source.buffer.ignoreGitignore": true,
   "coc.source.word.enable": false,
+  "tailwind.enable": true,
+  "tailwind.shortcut": "TWCSS",
+  "tailwind.priority": 99,
   /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
 
   // languageserver

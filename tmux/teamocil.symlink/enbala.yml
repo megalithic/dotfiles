@@ -22,4 +22,3 @@ windows:
     panes:
       - commands:
         - ls
-        - ls
