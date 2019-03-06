@@ -89,6 +89,13 @@ Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
 Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " Plug 'markonm/traces.vim'
+" if executable('ctags')
+"   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+"   Plug 'ludovicchabant/vim-gutentags'
+"   Plug 'skywind3000/gutentags_plus'
+"   " Plug 'jsfaint/gen_tags.vim'
+"   " Plug 'craigemery/vim-autotag'
+" endif
 Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
@@ -418,8 +425,8 @@ augroup general
   au InsertEnter  * checktime
 
   " TODO: handle turning toggling the tmux status bar, if we're in $TMUX and Goyo is active
-  au FocusGained  * :echo "focus gained"
-  au FocusLost  * :echo "focus lost"
+  " au FocusGained  * :echo "focus gained"
+  " au FocusLost  * :echo "focus lost"
 
   " Handle window resizing
   au VimResized * execute "normal! \<c-w>="
@@ -668,6 +675,64 @@ let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
 
+" " ## vim-gutentags
+" let g:gutentags_modules = ['ctags', 'gtags_cscope']
+" let g:gutentags_project_root = ['.root']
+" let g:gutentags_ctags_tagfile = '.tags'
+" let g:gutentags_cache_dir = expand('~/.cache/tags')
+" let g:gutentags_ctags_extra_args = []
+" let g:gutentags_ctags_extra_args = ['--fields=+niazS', '--extra=+q']
+" let g:gutentags_ctags_extra_args += ['--c++-kinds=+px']
+" let g:gutentags_ctags_extra_args += ['--c-kinds=+px']
+
+" let g:gutentags_trace = 1
+" let g:gutentags_modules = ['ctags', 'gtags_cscope']
+" let g:gutentags_cache_dir = expand('~/.cache/tags')
+" let g:gutentags_ctags_tagfile = '.tags'
+" let g:gutentags_plus_switch = 1
+" let g:gutentags_auto_add_gtags_cscope = 0
+" let g:gutentags_define_advanced_commands = 1
+
+" ## tagbar
+set tags+=tags,tags.vendors,.tags
+let g:tagbar_autofocus = 1
+let g:tagbar_type_elm = {
+      \   'ctagstype':'elm'
+      \ , 'kinds' : [
+      \ 'h:header:0:0',
+      \ 'e:exposing:0:0',
+      \ 'f:function:0:0',
+      \ 'm:modules:0:0',
+      \ 'i:imports:1:0',
+      \ 't:types:1:0',
+      \ 'a:type aliases:0:0',
+      \ 'c:type constructors:0:0',
+      \ 'p:ports:0:0',
+      \ 's:functions:0:0',
+      \ ]
+      \ , 'sro':'&&&'
+      \ , 'kind2scope':{ 'h':'header', 'i':'import'}
+      \ , 'sort':0
+      \ , 'ctagsargs': ''
+      \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
+      \ }
+let g:tagbar_type_elixir = {
+      \ 'ctagstype' : 'elixir',
+      \ 'kinds' : [
+      \ 'f:functions',
+      \ 'functions:functions',
+      \ 'c:callbacks',
+      \ 'd:delegates',
+      \ 'e:exceptions',
+      \ 'i:implementations',
+      \ 'a:macros',
+      \ 'o:operators',
+      \ 'm:modules',
+      \ 'p:protocols',
+      \ 'r:records',
+      \ 't:tests'
+      \ ]
+      \ }
 
 " ## elm-vim
 let g:elm_jump_to_error = 0
@@ -1003,10 +1068,6 @@ let g:lightline = {
       \     'cocstatus': 'coc#status',
       \   },
       \   'component_expand': {
-      \     'linter_checking': 'lightline#ale#checking',
-      \     'linter_warnings': 'lightline#ale#warnings',
-      \     'linter_errors': 'lightline#ale#errors',
-      \     'linter_ok': 'lightline#ale#ok',
       \     'coc_error'        : 'LightlineCocErrors',
       \     'coc_warning'      : 'LightlineCocWarnings',
       \     'coc_info'         : 'LightlineCocInfos',
@@ -1021,10 +1082,6 @@ let g:lightline = {
       \   'component_type': {
       \     'readonly': 'error',
       \     'modified': 'raw',
-      \     'linter_checking': 'left',
-      \     'linter_warnings': 'warning',
-      \     'linter_errors': 'error',
-      \     'linter_ok': 'left',
       \     'coc_error'        : 'error',
       \     'coc_warning'      : 'warning',
       \     'coc_info'         : 'tabsel',
@@ -1055,8 +1112,8 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
-      \       ['coc_error', 'coc_warning', 'coc_info', 'coc_hint', 'coc_fix',
-      \      'ale_error', 'ale_warning', 'ale_info', 'ale_style_error', 'ale_style_warning'],
+      \       ['coc_error', 'coc_warning', 'coc_info', 'coc_hint', 'coc_fix'],
+      \       ['ale_error', 'ale_warning', 'ale_info', 'ale_style_error', 'ale_style_warning'],
       \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
@@ -1227,7 +1284,7 @@ function! s:lightline_ale_diagnostic(kind) abort
     return ''
   endif
   if ale#engine#IsCheckingBuffer(bufnr(''))
-    return ''
+    return '  '
   endif
   let c = ale#statusline#Count(bufnr(''))
   if empty(c) || get(c, a:kind, 0) == 0
