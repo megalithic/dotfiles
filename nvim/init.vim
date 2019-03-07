@@ -260,6 +260,7 @@ endif
 
 " ---- Timeouts
 set timeoutlen=1000 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
+set updatetime=300
 
 " ---- Split behaviors
 set splitright                                                                  "Set up new vertical splits positions

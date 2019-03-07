@@ -37,11 +37,11 @@
   "diagnostic.virtualText": true,
   "diagnostic.virtualTextLineSeparator": "//",
   "diagnostic.virtualTextLines": 3,
-  "diagnostic.virtualTextPrefix": "❯",
+  "diagnostic.virtualTextPrefix": "‣❯",
   "diagnostic.warningSign": "⬥",
 
   "codeLens.enable": true,
-  "codeLens.separator": "❯",
+  "codeLens.separator": "‣❯",
 
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
