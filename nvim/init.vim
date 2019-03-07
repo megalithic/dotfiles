@@ -1118,8 +1118,7 @@ let g:lightline = {
       \       ['spell'],
       \     ],
       \     'right': [
-      \       ['coc_error', 'coc_warning', 'coc_info', 'coc_hint', 'coc_fix'],
-      \       ['ale_error', 'ale_warning', 'ale_info', 'ale_style_error', 'ale_style_warning'],
+      \       ['cocstatus'],
       \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
       \       ['lineinfo', 'percent'],
       \       ['fileformat'],
@@ -1149,6 +1148,8 @@ let g:lightline#ale#indicator_ok = "\uf42e  "
 let g:lightline#ale#indicator_warnings = "  "
 let g:lightline#ale#indicator_errors = "  "
 let g:lightline#ale#indicator_checking = "  "
+let g:coc_status_warning_sign = "  "
+let g:coc_status_error_sign = "  "
 
 function! UpdateStatusBar(timer)
   call lightline#update()
@@ -1236,53 +1237,89 @@ function! LightlineFileName()
   " return finalpath
 endfunction
 
+function! LightlineCocDiagnostics() abort
+  if !get(g:, 'coc_enabled', 0) | return '' endif
+
+  " let info = get(b:, 'coc_diagnostic_info', {})
+  let info = get(b:, 'coc_diagnostic_info', 0)
+
+  " if empty(info) || get(info, a:kind, 0) == 0
+  "   return "\uf42e"
+  " endif
+
+  if empty(info) | return '' | endif
+
+  let msgs = []
+
+  if get(info, 'error', 0)
+    call add(msgs, " " . info['error'])
+  endif
+
+  if get(info, 'warning', 0)
+    call add(msgs, " " . info['warning'])
+  endif
+
+  return PrintStatusline(join(msgs, ' '). ' ' . get(g:, 'coc_status', ''))
+endfunction
+
 function! LightlineCocErrors() abort
   return s:lightline_coc_diagnostic('error', 'error')
 endfunction
+
 function! LightlineCocWarnings() abort
   return s:lightline_coc_diagnostic('warning', 'warning')
 endfunction
+
 function! LightlineCocInfos() abort
   return s:lightline_coc_diagnostic('information', 'info')
 endfunction
+
 function! LightlineCocHints() abort
   return s:lightline_coc_diagnostic('hints', 'hint')
 endfunction
+
 function! LightlineCocFixes() abort
   let b:coc_line_fixes = get(get(b:, 'coc_quickfixes', {}), line('.'), 0)
   return b:coc_line_fixes > 0 ? printf('%d ', b:coc_line_fixes) : ''
 endfunction
+
 function! LightlineAleErrors() abort
   return s:lightline_ale_diagnostic('error')
 endfunction
+
 function! LightlineAleWarnings() abort
   return s:lightline_ale_diagnostic('warning')
 endfunction
+
 function! LightlineAleInfos() abort
   return s:lightline_ale_diagnostic('info')
 endfunction
+
 function! LightlineAleStyleErrors() abort
   return s:lightline_ale_diagnostic('style_error')
 endfunction
+
 function! LightlineAleStyleWarnings() abort
   return s:lightline_ale_diagnostic('style_warning')
 endfunction
+
 function! s:lightline_coc_diagnostic(kind, sign) abort
   if !get(g:, 'coc_enabled', 0)
     return ''
   endif
   let c = get(b:, 'coc_diagnostic_info', 0)
-  " echo "coc_diagnostic_info: ".c." / ".kind." / ".sign
   if empty(c) || get(c, a:kind, 0) == 0
     return ''
   endif
   try
     let s = g:coc_user_config['diagnostic'][a:sign . 'Sign']
   catch
-    let s = ' '
+    " let s = ' '
+    let s = ''
   endtry
   return printf('%d %s', c[a:kind], s)
 endfunction
+
 function! s:lightline_ale_diagnostic(kind) abort
   if !get(g:, 'ale_enabled', 0)
     return ''
@@ -1517,9 +1554,11 @@ augroup END
   hi CocWarningSign guifg=#333333 guifg=#F2C38F
   hi CocWarningHighlight gui=underline guifg=#F2C38F
   " hi CocWarningLine gui=underline
-  " hi CocCodeLens guifg=#999999
-  hi link CocPumFloating Pmenu
-  hi link CocPumFloatingDetail Pmenu
+  hi CocHintSign guifg=#333333 guifg=#999999
+  hi CocCodeLens ctermfg=gray guifg=#999999
+
+  " hi link CocPumFloating Pmenu
+  " hi link CocPumFloatingDetail Pmenu
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
