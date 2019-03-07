@@ -29,6 +29,7 @@ function! PostInstallCoc(info) abort
           \ 'coc-eslint',
           \ 'coc-html',
           \ 'coc-json',
+          \ 'coc-lists',
           \ 'coc-pyls',
           \ 'coc-rls',
           \ 'coc-solargraph',
@@ -428,6 +429,9 @@ augroup general
   " au FocusGained  * :echo "focus gained"
   " au FocusLost  * :echo "focus lost"
 
+  " Refresh lightline when certain things happen
+  au TextChanged,InsertLeave,BufWritePost * call lightline#update()
+
   " Handle window resizing
   au VimResized * execute "normal! \<c-w>="
 
@@ -784,19 +788,20 @@ let g:ale_completion_enabled = 0
 let g:ale_lint_delay = 1000
 let g:ale_echo_msg_format = '[%linter%] %s'
 " disabling linters where language servers are installed/available..
-" let g:ale_linters = {
-"       \   'elixir': [],
-"       \   'eelixir': [],
-"       \   'elm': [],
-"       \   'lua': [],
-"       \   'javascript': [],
-"       \ }
 let g:ale_linters = {
-      \   'elixir': ['elixir-ls'],
-      \   'eelixir': ['elixir-ls'],
-      \   'ex': ['elixir-ls'],
-      \   'exs': ['elixir-ls'],
+      \   'elixir': [],
+      \   'eelixir': [],
+      \   'elm': [],
+      \   'lua': [],
+      \   'javascript': [],
+      \   'typescript': [],
       \ }
+" let g:ale_linters = {
+"       \   'elixir': ['elixir-ls'],
+"       \   'eelixir': ['elixir-ls'],
+"       \   'ex': ['elixir-ls'],
+"       \   'exs': ['elixir-ls'],
+"       \ }
 let g:ale_fixers = {
       \   '*': ['remove_trailing_lines', 'trim_whitespace'],
       \   'javascript': ['prettier_eslint'],
@@ -1145,7 +1150,7 @@ let g:lightline#ale#indicator_errors = "  "
 let g:lightline#ale#indicator_checking = "  "
 
 function! UpdateStatusBar(timer)
-  " call lightline#update()
+  call lightline#update()
 endfunction
 
 function! PrintStatusline(v)
@@ -1266,13 +1271,14 @@ function! s:lightline_coc_diagnostic(kind, sign) abort
     return ''
   endif
   let c = get(b:, 'coc_diagnostic_info', 0)
+  " echo "coc_diagnostic_info: ".c." / ".kind." / ".sign
   if empty(c) || get(c, a:kind, 0) == 0
     return ''
   endif
   try
     let s = g:coc_user_config['diagnostic'][a:sign . 'Sign']
   catch
-    let s = '!'
+    let s = ' '
   endtry
   return printf('%d %s', c[a:kind], s)
 endfunction
@@ -1290,7 +1296,7 @@ function! s:lightline_ale_diagnostic(kind) abort
   if empty(c) || get(c, a:kind, 0) == 0
     return ''
   endif
-  return printf('%d %s', c[a:kind], get(g:, 'ale_sign_' . a:kind, '!'))
+  return printf('%d %s', c[a:kind], get(g:, 'ale_sign_' . a:kind, '!!'))
 endfunction
 
 " }}}
@@ -1495,22 +1501,24 @@ augroup END
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
-  hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
-  hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
-  hi ALEInfoSign guifg=#F2C38F guibg=NONE gui=NONE
-  hi ALEError guibg=#DF8C8C guifg=#333333 gui=NONE
-  hi ALEWarning guibg=#F2C38F guifg=#333333 gui=NONE
-  hi ALEInfo guibg=#F2C38F guifg=#333333 gui=NONE
-  hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
-  hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
+  " hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
+  " hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
+  " hi ALEInfoSign guifg=#F2C38F guibg=NONE gui=NONE
+  " hi ALEError guibg=#DF8C8C guifg=#333333 gui=NONE
+  " hi ALEWarning guibg=#F2C38F guifg=#333333 gui=NONE
+  " hi ALEInfo guibg=#F2C38F guifg=#333333 gui=NONE
+  " hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
+  " hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
 
-  hi CocErrorSign guibg=#DF8C8C guifg=#333333 gui=underline
-  hi CocErrorHighlight guibg=#DF8C8C guifg=#333333
-  hi CocErrorLine guibg=#DF8C8C guifg=#333333
-  hi CocWarningSign guibg=#F2C38F guifg=#333333 gui=underline
-  hi CocWarningHighlight guibg=#F2C38F guifg=#333333
-  hi CocWarningLine guibg=#F2C38F guifg=#333333
-  hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
+  hi CocErrorSign guifg=#333333 guifg=#DF8C8C
+  hi CocErrorHighlight gui=underline guifg=#DF8C8C
+  " hi CocErrorLine gui=underline
+  hi CocWarningSign guifg=#333333 guifg=#F2C38F
+  hi CocWarningHighlight gui=underline guifg=#F2C38F
+  " hi CocWarningLine gui=underline
+  " hi CocCodeLens guifg=#999999
+  hi link CocPumFloating Pmenu
+  hi link CocPumFloatingDetail Pmenu
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
@@ -1528,9 +1536,9 @@ augroup END
   hi DiffAdded guifg=#A8CE93
   hi DiffRemoved guifg=#DF8C8C
 
+  hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
   hi Floating guibg=#000044
-  " set winhl=Normal:Floating
-  " set nonumber
+
 " }}}
 
 " vim:foldenable:foldmethod=marker:ft=vim

@@ -1,46 +1,48 @@
 // really good example of rules: https://github.com/sainnhe/dotfiles/blob/master/.config/nvim/coc-settings.json
 //
 {
-  // could be 'always' 'trigger' => for specified trigger characters only 'none'
-  "coc.preferences.extensionUpdateCheck": "daily",
-  "coc.preferences.triggerSignatureHelp": false,
-  "coc.preferences.snippets.enable": true,
   "coc.preferences.colorSupport": false,
-  "coc.preferences.hoverTarget": "echo", // "preview"
-  "coc.preferences.formatOnType": false,
+  "coc.preferences.extensionUpdateCheck": "daily",
   "coc.preferences.formatOnSaveFiletypes": [],
+  "coc.preferences.formatOnType": false,
+  "coc.preferences.hoverTarget": "echo", // "preview"
   "coc.preferences.jumpCommand": "vsplit",
   "coc.preferences.previewAutoClose": true,
-
-  "suggest.autoTrigger": "always",
-  "suggest.triggerAfterInsertEnter": false,
-  "suggest.minTriggerInputLength": 3,
-  "suggest.acceptSuggestionOnCommitCharacter": false,
-  "suggest.preferCompleteThanJumpPlaceholder": true,
-  "suggest.numberSelect": false,
-  "suggest.enablePreview":true,
-  "suggest.snippetIndicator": "",
-  /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
-  /* "snippets.ultisnips.pythonVersion": 3, */
+  "coc.preferences.snippets.enable": true,
   /* "coc.preferences.snippetIndicator": "\uf5d4", */
-  "suggest.noselect": false,
-  "suggest.timeout": 5000,
+  "coc.preferences.triggerSignatureHelp": false,
 
-  "diagnostic.enable": true,
-  "diagnostic.refreshOnInsertMode": false,
-  "diagnostic.displayByAle": false,
-  "diagnostic.locationlist": false,
-  "diagnostic.signOffset": 1000,
-  "diagnostic.highlightOffset": 1000,
-  "diagnostic.errorSign": "✖-",
-  "diagnostic.warningSign": "⬥-",
-  "diagnostic.infoSign": "‣",
-  "diagnostic.hintSign": "‣",
-  "diagnostic.virtualText": true,
-  "diagnostic.virtualTextLines": 3,
-  "codeLens.enable": true,
-  "codeLens.separator": "❯ ",
+  "suggest.acceptSuggestionOnCommitCharacter": false,
+  "suggest.autoTrigger": "always",
   "suggest.echodocSupport": false,
+  "suggest.enablePreview":true,
+  "suggest.minTriggerInputLength": 3,
+  "suggest.noselect": false,
+  "suggest.numberSelect": false,
+  "suggest.preferCompleteThanJumpPlaceholder": true,
+  "suggest.snippetIndicator": "S",
+  "suggest.timeout": 5000,
+  "suggest.triggerAfterInsertEnter": false,
+
+  "diagnostic.displayByAle": false,
+  "diagnostic.enable": true,
+  "diagnostic.enableMessage": "always",
+  "diagnostic.errorSign": "✖",
+  "diagnostic.highlightOffset": 1000,
+  "diagnostic.hintSign": "~",
+  "diagnostic.infoSign": "‣",
+  "diagnostic.locationlist": false,
+  "diagnostic.refreshOnInsertMode": true,
+  "diagnostic.signOffset": 1000,
+  "diagnostic.virtualText": true,
+  "diagnostic.virtualTextLineSeparator": "//",
+  "diagnostic.virtualTextLines": 3,
+  "diagnostic.virtualTextPrefix": "❯",
+  "diagnostic.warningSign": "⬥",
+
+  "codeLens.enable": true,
+  "codeLens.separator": "❯",
+
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
 
@@ -63,17 +65,16 @@
   },
 
   // sources
-  "coc.source.emoji.enable": false,
-  /* "coc.source.emoji.filetypes": ["markdown", "gitcommit"], */
-  /* "coc.source.emoji.triggerCharacters": [":"], */
-  "coc.source.ultisnips.enable": true,
-  "coc.source.ultisnips.shortcut": "",
-  "coc.source.ultisnips.priority": 10,
-  "coc.source.tag.enable": true,
-  "coc.source.tag.priority": 9,
   "coc.source.around.enable": true,
   "coc.source.around.shortcut": "A",
   "coc.source.around.priority": 8,
+  "coc.source.buffer.enable": true,
+  "coc.source.buffer.shortcut": "B",
+  "coc.source.buffer.priority": 6,
+  "coc.source.buffer.ignoreGitignore": true,
+  "coc.source.emoji.enable": false,
+  /* "coc.source.emoji.filetypes": ["markdown", "gitcommit"], */
+  /* "coc.source.emoji.triggerCharacters": [":"], */
   "coc.source.file.enable": true,
   "coc.source.file.shortcut": "F",
   "coc.source.file.priority": 7,
@@ -81,15 +82,18 @@
   "coc.source.file.trimSameExts": [".ts", ".js"],
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
-  "coc.source.buffer.enable": true,
-  "coc.source.buffer.shortcut": "B",
-  "coc.source.buffer.priority": 6,
-  "coc.source.buffer.ignoreGitignore": true,
+  /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
+  "coc.source.tag.enable": false,
+  "coc.source.tag.priority": 9,
+  "coc.source.ultisnips.enable": true,
+  "coc.source.ultisnips.shortcut": "",
+  "coc.source.ultisnips.priority": 10,
   "coc.source.word.enable": false,
+  /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
+  /* "snippets.ultisnips.pythonVersion": 3, */
   "tailwind.enable": true,
   "tailwind.shortcut": "TWCSS",
   "tailwind.priority": 99,
-  /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
 
   // languageserver
   "languageserver": {
@@ -104,44 +108,20 @@
     "elixir": {
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
-      "filetypes": ["elixir", "eelixir", "ex", "exs"],
+      "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
-          "dialyzerEnabled": true
+          "dialyzerEnabled": false
         }
       },
       "settings": {}
     },
-    /* "dart": { */
-    /*   "command": "dart_language_server", */
-    /*   "args": [], */
-    /*   "filetypes": ["dart"], */
-    /*   "cwd": "./lib", */
-    /*   "initializationOptions": {}, */
-    /*   "settings": {} */
-    /* }, */
-    /* "dockerfile": { */
-    /*   "command": "docker-langserver", */
-    /*   "filetypes": ["dockerfile"], */
-    /*   "args": ["--stdio"] */
-    /* }, */
     "python": {
       "command": "pyls",
       "filetypes": ["python", "pythonx", "py"],
       "args": []
     },
-    /* "go": { */
-    /*   "command": "go-langserver", */
-    /*   "filetypes": ["go"], */
-    /*   // disable output channel to hide server errors */
-    /*   "revealOutputChannelOn": "never", */
-    /*   "initializationOptions": { */
-    /*     "gocodeCompletionEnabled": true, */
-    /*     "diagnosticsEnabled": true, */
-    /*     "lintTool": "golint" */
-    /*   } */
-    /* }, */
     "lua": {
       "command": "lua-lsp",
       "filetypes": ["lua"]
