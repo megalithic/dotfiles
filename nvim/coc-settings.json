@@ -110,6 +110,8 @@
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
+      "trace.server": "verbose",
+      "rootPatterns": ["mix.exs"],
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
