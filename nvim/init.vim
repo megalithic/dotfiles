@@ -1059,7 +1059,7 @@ execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, 
 
 let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
 let g:lightline = {
-      \   'colorscheme': 'wombat',
+      \   'colorscheme': 'nova',
       \   'component': {
       \     'modified': '%#ModifiedColor#%{LightlineModified()}',
       \   },
@@ -1120,9 +1120,7 @@ let g:lightline = {
       \     'right': [
       \       ['cocstatus'],
       \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
-      \       ['lineinfo', 'percent'],
-      \       ['fileformat'],
-      \       ['filetype'],
+      \       ['filetype', 'fileformat', 'lineinfo', 'percent'],
       \     ],
       \   },
       \   'inactive': {
@@ -1148,6 +1146,7 @@ let g:lightline#ale#indicator_ok = "\uf42e  "
 let g:lightline#ale#indicator_warnings = "  "
 let g:lightline#ale#indicator_errors = "  "
 let g:lightline#ale#indicator_checking = "  "
+
 let g:coc_status_warning_sign = "  "
 let g:coc_status_error_sign = "  "
 
