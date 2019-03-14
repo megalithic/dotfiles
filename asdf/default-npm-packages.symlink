@@ -1,6 +1,7 @@
 bash-language-server
 convert-snippets
 create-elm-app
+do-not-disturb-cli
 elm
 elm-oracle
 elm-test

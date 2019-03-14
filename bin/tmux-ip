@@ -4,7 +4,7 @@
 # $(tmux display-message -p '#S') != 'pairing' &&
 while true
 do
-  if [[ $(dnd status) == "off" ]]; then
+  if [[ $(do-not-disturb status) == "off" ]]; then
     wan=$(dig +short myip.opendns.com @resolver1.opendns.com)
 
     tun=""

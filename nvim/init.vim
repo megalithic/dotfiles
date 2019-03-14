@@ -202,7 +202,7 @@ set number
 set nowrap
 set fillchars=vert:\│
 " set colorcolumn=80
-set cursorline                                                                  "Highlight current line
+set nocursorline                                                                  "Highlight current line
 set pumheight=30                                                                "Maximum number of entries in autocomplete popup
 set cmdheight=1
 set signcolumn=yes
@@ -518,7 +518,7 @@ augroup gitcommit
 
     " disable coc.nvim for gitcommit
     " autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
-    autocmd InsertEnter * execute "silent! CocDisable"
+    " autocmd InsertEnter * execute "silent! CocDisable"
 
     " Allow automatic formatting of bulleted lists and blockquotes
     " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
@@ -536,7 +536,7 @@ augroup gitcommit
     " setl nonumber
   endfunction
 
-  au FileType gitcommit,gitrebase setl nospell textwidth=72
+  au FileType gitcommit,gitrebase setl spell textwidth=72
   au BufNewFile,BufRead .git/index setlocal nolist
   au BufReadPost fugitive://* set bufhidden=delete
   au BufReadCmd *.git/index exe BufReadIndex()
@@ -1114,8 +1114,8 @@ let g:lightline = {
       \       ['mode'],
       \       ['branch'],
       \       ['filename'],
-      \       ['paste', 'readonly', 'modified'],
       \       ['spell'],
+      \       ['paste', 'readonly', 'modified'],
       \     ],
       \     'right': [
       \       ['cocstatus'],
@@ -1512,13 +1512,18 @@ augroup END
 
   hi clear SpellBad
   hi clear SpellCap
+  " hi clear Floating
+  " hi clear NormalFloat
+  " hi clear CocFloating
+  " hi clear CocPumFloating
+  " hi clear CocPumFloatingDetail
 
   hi htmlArg cterm=italic gui=italic
   hi xmlAttrib cterm=italic gui=italic
   hi Type cterm=italic gui=italic
   hi Comment cterm=italic term=italic gui=italic
   " hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
-  " hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=bold
+  hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=italic
   " hi CursorLine guibg=#333333
   " hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   " hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
@@ -1530,8 +1535,8 @@ augroup END
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-  hi SpellBad gui=undercurl,underline
-  hi SpellCap gui=undercurl,underline
+  hi SpellBad gui=undercurl,underline guifg=#DF8C8C
+  hi SpellCap gui=undercurl,underline guifg=#DF8C8C
   hi VertSplit guibg=NONE
 
   hi link Debug SpellBad
@@ -1547,17 +1552,30 @@ augroup END
   " hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
   " hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
 
-  hi CocErrorSign guifg=#333333 guifg=#DF8C8C
-  hi CocErrorHighlight gui=underline guifg=#DF8C8C
-  " hi CocErrorLine gui=underline
-  hi CocWarningSign guifg=#333333 guifg=#F2C38F
-  hi CocWarningHighlight gui=underline guifg=#F2C38F
-  " hi CocWarningLine gui=underline
-  hi CocHintSign guifg=#333333 guifg=#999999
   hi CocCodeLens ctermfg=gray guifg=#999999
 
-  " hi link CocPumFloating Pmenu
-  " hi link CocPumFloatingDetail Pmenu
+  hi CocHintSign guifg=#333333 guifg=#999999
+  hi CocHintHighlight gui=underline guifg=#999999
+  " hi CocHintFloat guibg=#000044
+
+  " hi CocInfoFloat guibg=#000044
+
+  hi CocWarningSign guifg=#333333 guifg=#F2C38F
+  hi CocWarningHighlight gui=underline guifg=#F2C38F
+  " hi CocWarningFloat guibg=#000044
+  " hi CocWarningLine gui=underline
+
+  hi CocErrorSign guifg=#333333 guifg=#DF8C8C
+  hi CocErrorHighlight gui=underline guifg=#DF8C8C
+  " hi CocErrorFloat guibg=#000044
+  " hi CocErrorLine gui=underline
+
+  " hi CocFloating guibg=#000044
+  " hi CocPumFloating guibg=#000044
+  " hi CocPumFloatingDetail guibg=#000044
+
+  " hi Floating guibg=#000044
+  " hi NormalFloat guibg=#000044
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
@@ -1576,7 +1594,6 @@ augroup END
   hi DiffRemoved guifg=#DF8C8C
 
   hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
-  hi Floating guibg=#000044
 
 " }}}
 
