@@ -25,21 +25,26 @@ function! PostInstallCoc(info) abort
     !yarn install
     call coc#util#install_extension(join([
           \ 'coc-css',
+          \ 'coc-emmet',
           \ 'coc-emoji',
           \ 'coc-eslint',
           \ 'coc-html',
           \ 'coc-json',
           \ 'coc-lists',
+          \ 'coc-prettier',
           \ 'coc-pyls',
           \ 'coc-rls',
           \ 'coc-solargraph',
           \ 'coc-tag',
           \ 'coc-tailwindcss',
           \ 'coc-tsserver',
-          \ 'coc-tslint',
+          \ 'coc-tslint-plugin',
           \ 'coc-ultisnips',
+          \ 'coc-word',
           \ 'coc-yaml',
           \ 'coc-yank',
+          \ 'https://github.com/xabikos/vscode-react',
+          \ 'https://github.com/xabikos/vscode-javascript'
           \ ]))
 
     " -- disabled coc.nvim extensions:
@@ -48,10 +53,8 @@ function! PostInstallCoc(info) abort
     " \ 'coc-java',
     " \ 'coc-vetur',
     " \ 'coc-wxml',
-    " \ 'coc-prettier',
     " \ 'coc-stylelint',
     " \ 'coc-highlight',
-    " \ 'coc-word',
     " \ 'coc-snippets',
   elseif a:info.status ==? 'updated'
     !yarn install
@@ -99,7 +102,7 @@ Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " endif
 Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
 Plug 'mattn/webapi-vim'
-Plug 'maximbaz/lightline-ale'
+" Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
@@ -130,7 +133,7 @@ Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
-Plug 'w0rp/ale'
+" Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
@@ -1552,22 +1555,22 @@ augroup END
   " hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
   " hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
 
-  hi CocCodeLens ctermfg=gray guifg=#999999
+  " hi CocCodeLens ctermfg=gray guifg=#999999
 
-  hi CocHintSign guifg=#333333 guifg=#999999
+  hi CocHintSign guifg=#999999
   hi CocHintHighlight gui=underline guifg=#999999
-  " hi CocHintFloat guibg=#000044
+  hi CocHintFloat guifg=#999999
 
-  " hi CocInfoFloat guibg=#000044
+  hi CocInfoFloat guifg=#000044
 
-  hi CocWarningSign guifg=#333333 guifg=#F2C38F
+  hi CocWarningSign guifg=#F2C38F
   hi CocWarningHighlight gui=underline guifg=#F2C38F
-  " hi CocWarningFloat guibg=#000044
+  hi CocWarningFloat guifg=#F2C38F
   " hi CocWarningLine gui=underline
 
-  hi CocErrorSign guifg=#333333 guifg=#DF8C8C
+  hi CocErrorSign guifg=#DF8C8C
   hi CocErrorHighlight gui=underline guifg=#DF8C8C
-  " hi CocErrorFloat guibg=#000044
+  hi CocErrorFloat guifg=#DF8C8C
   " hi CocErrorLine gui=underline
 
   " hi CocFloating guibg=#000044

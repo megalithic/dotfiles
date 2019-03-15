@@ -9,13 +9,17 @@
   "coc.preferences.jumpCommand": "vsplit",
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
+  "coc.preferences.snippetStatusText": "🌈",
   /* "coc.preferences.snippetIndicator": "\uf5d4", */
   "coc.preferences.triggerSignatureHelp": true,
 
   "suggest.acceptSuggestionOnCommitCharacter": false,
   "suggest.autoTrigger": "always",
-  "suggest.echodocSupport": true,
+  "suggest.detailField": "abbr",
+  "suggest.detailMaxLength": 30,
+  "suggest.echodocSupport": false,
   "suggest.enablePreview":true,
+  "suggest.maxCompleteItemCount": 20,
   "suggest.minTriggerInputLength": 3,
   "suggest.noselect": false,
   "suggest.numberSelect": false,
@@ -28,14 +32,14 @@
   "diagnostic.enable": true,
   "diagnostic.enableMessage": "always",
   "diagnostic.errorSign": "✖",
-  "diagnostic.highlightOffset": 1000,
+  "diagnostic.highlightOffset": 100,
   "diagnostic.hintSign": "~",
   "diagnostic.infoSign": "‣",
   "diagnostic.locationlist": false,
   "diagnostic.messageTarget": "float",
   "diagnostic.refreshAfterSave": false,
   "diagnostic.refreshOnInsertMode": true,
-  "diagnostic.signOffset": 1000,
+  "diagnostic.signOffset": 100,
   "diagnostic.virtualText": false,
   "diagnostic.virtualTextLineSeparator": "//",
   "diagnostic.virtualTextLines": 3,
@@ -47,6 +51,9 @@
 
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
+
+  // emmet
+  /* "emmet.showAbbreviationSuggestions": false, */
 
   // prettier
   "prettier.eslintIntegration": true,
@@ -90,7 +97,8 @@
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
   "coc.source.ultisnips.priority": 10,
-  "coc.source.word.enable": false,
+  "coc.source.word.enable": true,
+  "coc.source.word.filetypes": ["markdown", "gitcommit", "gina-commit"],
   /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
   /* "snippets.ultisnips.pythonVersion": 3, */
   "tailwind.enable": true,
