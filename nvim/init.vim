@@ -102,7 +102,7 @@ Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " endif
 Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
 Plug 'mattn/webapi-vim'
-" Plug 'maximbaz/lightline-ale'
+Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
@@ -133,7 +133,7 @@ Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
-" Plug 'w0rp/ale'
+Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
@@ -188,6 +188,7 @@ endif
 " ---- Tab completion
 set wildmode=list:longest,full
 set wildignore=*.swp,*.o,*.so,*.exe,*.dll
+set wildoptions=pum
 
 " ---- Scroll
 set scrolloff=5                                                                 "Start scrolling when we're 8 lines away from margins
@@ -630,7 +631,7 @@ if executable("rg")
   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
   command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
         \ call fzf#vim#grep(
-        \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --hidden --follow --glob "!{.git,deps,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+        \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --hidden --follow --glob "!{.git,deps,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
         \   <bang>0 ? fzf#vim#with_preview('up:60%')
         \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)
@@ -822,12 +823,6 @@ let g:ale_linters = {
       \   'javascript': [],
       \   'typescript': [],
       \ }
-" let g:ale_linters = {
-"       \   'elixir': ['elixir-ls'],
-"       \   'eelixir': ['elixir-ls'],
-"       \   'ex': ['elixir-ls'],
-"       \   'exs': ['elixir-ls'],
-"       \ }
 let g:ale_fixers = {
       \   '*': ['remove_trailing_lines', 'trim_whitespace'],
       \   'javascript': ['prettier_eslint'],
@@ -845,6 +840,7 @@ let g:ale_sign_info = '‣'
 let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
 let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
 let g:ale_elm_format_options = '--yes --elm-version=0.18'
+let g:ale_elm_analyse_use_global = 0
 let g:ale_lint_on_text_changed = 'always' " 'normal'
 let g:ale_lint_on_insert_leave = 1
 let g:ale_lint_on_enter = 1
@@ -1099,6 +1095,10 @@ let g:lightline = {
       \     'cocstatus': 'coc#status',
       \   },
       \   'component_expand': {
+      \     'linter_checking': 'lightline#ale#checking',
+      \     'linter_warnings': 'lightline#ale#warnings',
+      \     'linter_errors': 'lightline#ale#errors',
+      \     'linter_ok': 'lightline#ale#ok',
       \     'coc_error'        : 'LightlineCocErrors',
       \     'coc_warning'      : 'LightlineCocWarnings',
       \     'coc_info'         : 'LightlineCocInfos',
@@ -1113,6 +1113,10 @@ let g:lightline = {
       \   'component_type': {
       \     'readonly': 'error',
       \     'modified': 'raw',
+      \     'linter_checking': 'left',
+      \     'linter_warnings': 'warning',
+      \     'linter_errors': 'error',
+      \     'linter_ok': 'left',
       \     'coc_error'        : 'error',
       \     'coc_warning'      : 'warning',
       \     'coc_info'         : 'tabsel',
@@ -1443,6 +1447,24 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
+" " Using CocList
+" " Show all diagnostics
+" nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
+" " Manage extensions
+" nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
+" " Show commands
+" nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
+" " Find symbol of current document
+" nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
+" " Search workspace symbols
+" nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
+" " Do default action for next item.
+" nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+" " Do default action for previous item.
+" nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+" " Resume latest coc list
+" nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
+
 augroup coc
   au!
 
@@ -1579,25 +1601,25 @@ augroup END
 
   " hi CocCodeLens ctermfg=gray guifg=#999999
 
-  hi CocHintSign guifg=#999999
-  hi CocHintHighlight gui=underline guifg=#999999
-  hi CocHintFloat guifg=#999999
+  hi CocHintSign guifg=#666666
+  hi CocHintHighlight gui=underline guifg=#666666
+  hi CocHintFloat guifg=#666666 guibg=#FFFACD
 
-  hi CocInfoFloat guifg=#000044
+  hi CocInfoFloat guifg=#666666 guibg=#FFFACD
 
   hi CocWarningSign guifg=#F2C38F
   hi CocWarningHighlight gui=underline guifg=#F2C38F
-  hi CocWarningFloat guifg=#F2C38F
+  hi CocWarningFloat guifg=#666666 guibg=#FFFACD
   " hi CocWarningLine gui=underline
 
   hi CocErrorSign guifg=#DF8C8C
   hi CocErrorHighlight gui=underline guifg=#DF8C8C
-  hi CocErrorFloat guifg=#DF8C8C
+  hi CocErrorFloat guifg=#666666 guibg=#FFFACD
   " hi CocErrorLine gui=underline
 
-  " hi CocFloating guibg=#000044
-  " hi CocPumFloating guibg=#000044
-  " hi CocPumFloatingDetail guibg=#000044
+  hi CocFloating guifg=#666666 guibg=#FFFACD
+  hi CocPumFloating guifg=#222222 guibg=#C5D4DD
+  hi CocPumFloatingDetail guifg=#222222 guibg=#C5D4DD
 
   " hi Floating guibg=#000044
   " hi NormalFloat guibg=#000044
