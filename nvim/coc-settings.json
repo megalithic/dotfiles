@@ -1,7 +1,7 @@
 // really good example of rules: https://github.com/sainnhe/dotfiles/blob/master/.config/nvim/coc-settings.json
 //
 {
-  "coc.preferences.colorSupport": false,
+  "coc.preferences.colorSupport": true,
   "coc.preferences.extensionUpdateCheck": "daily",
   "coc.preferences.formatOnSaveFiletypes": [],
   "coc.preferences.formatOnType": false,
@@ -10,8 +10,14 @@
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetStatusText": "🌈",
+  "coc.preferences.enableFloatHighlight": true,
   /* "coc.preferences.snippetIndicator": "\uf5d4", */
-  "coc.preferences.triggerSignatureHelp": true,
+
+  "signature.enable": true,
+  "signature.target": "float",
+  "signature.preferShownAbove": true,
+  "signature.hideOnTextChange": true,
+  "signature.maxWindowHeight": 8,
 
   "suggest.acceptSuggestionOnCommitCharacter": false,
   "suggest.autoTrigger": "always",
@@ -19,6 +25,7 @@
   "suggest.detailMaxLength": 30,
   "suggest.echodocSupport": false,
   "suggest.enablePreview":true,
+  "suggest.localityBonus": true,
   "suggest.maxCompleteItemCount": 20,
   "suggest.minTriggerInputLength": 3,
   "suggest.noselect": false,
@@ -31,6 +38,7 @@
   "diagnostic.displayByAle": false,
   "diagnostic.enable": true,
   "diagnostic.enableMessage": "always",
+  "diagnostic.enableSign": true,
   "diagnostic.errorSign": "✖",
   "diagnostic.highlightOffset": 100,
   "diagnostic.hintSign": "~",
@@ -48,6 +56,10 @@
 
   "codeLens.enable": true,
   "codeLens.separator": "‣❯",
+
+  "highlight.disableLanguages": [],
+  "highlight.document.enable": true,
+  "highlight.colors.enable": true,
 
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
@@ -92,8 +104,8 @@
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
   /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
-  "coc.source.tag.enable": false,
-  "coc.source.tag.priority": 9,
+  "coc.source.tag.enable": true,
+  "coc.source.tag.priority": 7,
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
   "coc.source.ultisnips.priority": 10,

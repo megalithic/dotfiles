@@ -28,6 +28,7 @@ function! PostInstallCoc(info) abort
           \ 'coc-emmet',
           \ 'coc-emoji',
           \ 'coc-eslint',
+          \ 'coc-highlight',
           \ 'coc-html',
           \ 'coc-json',
           \ 'coc-lists',
@@ -54,7 +55,6 @@ function! PostInstallCoc(info) abort
     " \ 'coc-vetur',
     " \ 'coc-wxml',
     " \ 'coc-stylelint',
-    " \ 'coc-highlight',
     " \ 'coc-snippets',
   elseif a:info.status ==? 'updated'
     !yarn install
@@ -66,10 +66,15 @@ Plug 'SirVer/ultisnips'
 Plug 'andymass/vim-matchup'
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
+Plug 'chemzqm/vim-jsx-improve', { 'for': ['javascript', 'javascriptreact', 'javascript.jsx'] }
 Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
 Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
 Plug 'cohama/lexima.vim'
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
+if executable('ctags')
+  Plug 'craigemery/vim-autotag', { 'for': ['elm','elixir','eelixir'] }
+  Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+endif
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
@@ -93,23 +98,18 @@ Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
 Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " Plug 'markonm/traces.vim'
-" if executable('ctags')
-"   Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
-"   Plug 'ludovicchabant/vim-gutentags'
-"   Plug 'skywind3000/gutentags_plus'
-"   " Plug 'jsfaint/gen_tags.vim'
-"   " Plug 'craigemery/vim-autotag'
-" endif
 Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'morhetz/gruvbox'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
+Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
 Plug 'Shougo/neco-vim'
@@ -330,7 +330,7 @@ nnoremap <silent><leader>W :w !sudo tee %<CR>
 nnoremap <leader>q :q<CR>
 
 " open a (new)file in a new vsplit
-nnoremap <silent><leader>o :vnew<cr>:e<space><c-d>
+nnoremap <silent><leader>o :vnew<CR>:e<space><C-d>
 
 " Background (n)vim
 vnoremap <C-z> <ESC>zv`<ztgv
@@ -409,6 +409,10 @@ nnoremap S i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 
 " Easily escape terminel
 " tnoremap <leader><esc> <C-\><C-n><esc><cr>
+
+" Copy command
+vnoremap <C-x> :!pbcopy<CR>
+vnoremap <C-c> :w !pbcopy<CR><CR>
 
 "}}}
 " ░░░░░░░░░░░░░░░ autocommands {{{
@@ -578,6 +582,12 @@ augroup ale
   au User ALEFixPost    call lightline#update()
 augroup END
 
+augroup coc
+  au!
+  au CursorHold * silent call CocActionAsync('highlight')
+  au CursorHoldI * silent call CocActionAsync('highlight')
+augroup END
+
 "}}}
 " ░░░░░░░░░░░░░░░ other settings {{{
 
@@ -685,6 +695,16 @@ set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
 
+" morhetz/gruvbox
+" let g:gruvbox_italic=1
+" let g:gruvbox_improved_strings=1
+" let g:gruvbox_improved_warnings=1
+" let g:gruvbox_guisp_fallback='fg'
+" let g:gruvbox_contrast_light='hard'
+" let g:gruvbox_contrast_dark='medium'
+" set background=dark
+" colorscheme gruvbox
+
 " ## vim-devicons
 " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
 let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
@@ -706,25 +726,8 @@ let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
 
-" " ## vim-gutentags
-" let g:gutentags_modules = ['ctags', 'gtags_cscope']
-" let g:gutentags_project_root = ['.root']
-" let g:gutentags_ctags_tagfile = '.tags'
-" let g:gutentags_cache_dir = expand('~/.cache/tags')
-" let g:gutentags_ctags_extra_args = []
-" let g:gutentags_ctags_extra_args = ['--fields=+niazS', '--extra=+q']
-" let g:gutentags_ctags_extra_args += ['--c++-kinds=+px']
-" let g:gutentags_ctags_extra_args += ['--c-kinds=+px']
-
-" let g:gutentags_trace = 1
-" let g:gutentags_modules = ['ctags', 'gtags_cscope']
-" let g:gutentags_cache_dir = expand('~/.cache/tags')
-" let g:gutentags_ctags_tagfile = '.tags'
-" let g:gutentags_plus_switch = 1
-" let g:gutentags_auto_add_gtags_cscope = 0
-" let g:gutentags_define_advanced_commands = 1
-
-" ## tagbar
+" ## majutsushi/tagbar
+nmap <silent> <F4> :TagbarToggle<CR>
 set tags+=tags,tags.vendors,.tags
 let g:tagbar_autofocus = 1
 let g:tagbar_type_elm = {
@@ -764,6 +767,17 @@ let g:tagbar_type_elixir = {
       \ 't:tests'
       \ ]
       \ }
+let g:tagbar_type_markdown = {
+      \ 'ctagstype' : 'markdown',
+      \ 'kinds' : [
+      \ 'h:Heading_L1',
+      \ 'i:Heading_L2',
+      \ 'k:Heading_L3'
+      \ ]
+      \ }
+
+" ## craigemery/vim-autotag
+let g:autotagTagsFile=".tags"
 
 " ## elm-vim
 let g:elm_jump_to_error = 0
@@ -816,8 +830,8 @@ let g:ale_lint_delay = 1000
 let g:ale_echo_msg_format = '[%linter%] %s'
 " disabling linters where language servers are installed/available..
 let g:ale_linters = {
-      \   'elixir': [],
-      \   'eelixir': [],
+      \   'elixir': ['credo'],
+      \   'eelixir': ['credo'],
       \   'elm': [],
       \   'lua': [],
       \   'javascript': [],
@@ -1415,6 +1429,9 @@ function! s:show_documentation()
   endif
 endfunction
 
+" FIXME: this interferes with clearing search highlights
+" nmap <silent> <ESC> <Plug>(coc-float-hide)
+
 " Use `[c` and `]c` for navigate diagnostics
 " nmap <silent> [c <Plug>(coc-diagnostic-prev)
 " nmap <silent> ]c <Plug>(coc-diagnostic-next)
@@ -1422,12 +1439,13 @@ endfunction
 " nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
 
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
-
+vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 nmap <silent> <leader>ld <Plug>(coc-definition)
 nmap <silent> <leader>lt <Plug>(coc-type-definition)
 nmap <silent> <leader>li <Plug>(coc-implementation)
 nmap <silent> <leader>lr <Plug>(coc-references)
 nmap <silent> <leader>ln <Plug>(coc-rename)
+vmap <silent> <leader>ln <Plug>(coc-rename)
 
 " Remap for format selected region
 vmap <silent> <leader>lf <Plug>(coc-format-selected)
@@ -1468,7 +1486,8 @@ command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 augroup coc
   au!
 
-  au! User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+  " au! User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+  " au CursorHold * silent call CocActionAsync('highlight')
 
   function! CocUpdateQuickFixes(error, actions) abort
     let coc_quickfixes = {}
@@ -1590,36 +1609,34 @@ augroup END
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
-  " hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
-  " hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
-  " hi ALEInfoSign guifg=#F2C38F guibg=NONE gui=NONE
-  " hi ALEError guibg=#DF8C8C guifg=#333333 gui=NONE
-  " hi ALEWarning guibg=#F2C38F guifg=#333333 gui=NONE
-  " hi ALEInfo guibg=#F2C38F guifg=#333333 gui=NONE
-  " hi ALEVirtualTextWarning guibg=#F2C38F guifg=#333333 gui=NONE
-  " hi ALEVirtualTextError guibg=#DF8C8C guifg=#333333 gui=NONE
+  hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
+  hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
+  hi ALEInfoSign guifg=#F2C38F guibg=NONE gui=NONE
+  hi ALEError guifg=#DF8C8C gui=underline
+  hi ALEWarning guifg=#F2C38F gui=underline
+  hi ALEInfo guifg=#666666 gui=underline
 
   " hi CocCodeLens ctermfg=gray guifg=#999999
 
   hi CocHintSign guifg=#666666
   hi CocHintHighlight gui=underline guifg=#666666
-  hi CocHintFloat guifg=#666666 guibg=#FFFACD
+  " hi CocHintFloat guifg=#666666 guibg=#FFFACD
 
-  hi CocInfoFloat guifg=#666666 guibg=#FFFACD
+  " hi CocInfoFloat guifg=#666666 guibg=#FFFACD
 
   hi CocWarningSign guifg=#F2C38F
   hi CocWarningHighlight gui=underline guifg=#F2C38F
-  hi CocWarningFloat guifg=#666666 guibg=#FFFACD
+  " hi CocWarningFloat guifg=#666666 guibg=#FFFACD
   " hi CocWarningLine gui=underline
 
   hi CocErrorSign guifg=#DF8C8C
   hi CocErrorHighlight gui=underline guifg=#DF8C8C
-  hi CocErrorFloat guifg=#666666 guibg=#FFFACD
+  " hi CocErrorFloat guifg=#666666 guibg=#FFFACD
   " hi CocErrorLine gui=underline
 
-  hi CocFloating guifg=#666666 guibg=#FFFACD
-  hi CocPumFloating guifg=#222222 guibg=#C5D4DD
-  hi CocPumFloatingDetail guifg=#222222 guibg=#C5D4DD
+  " hi CocFloating guifg=#666666 guibg=#FFFACD
+  " hi CocPumFloating guifg=#222222 guibg=#C5D4DD
+  " hi CocPumFloatingDetail guifg=#222222 guibg=#C5D4DD
 
   " hi Floating guibg=#000044
   " hi NormalFloat guibg=#000044
