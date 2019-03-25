@@ -86,19 +86,21 @@ Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
+" Plug 'jesseleite/vim-noh'
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
 Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
+" Plug 'junegunn/vim-slash'
 Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
 Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " Plug 'markonm/traces.vim'
-Plug 'mattn/emmet-vim', { 'for': 'html,erb,eruby,markdown' }
+Plug 'mattn/emmet-vim', { 'for': ['html','erb','eruby','markdown'] }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
@@ -786,7 +788,7 @@ let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
 let g:elm_browser_command = "open"
 let g:elm_detailed_complete = 1
-let g:elm_format_autosave = 1
+let g:elm_format_autosave = 0 " conflicts with ale's elm-format
 let g:elm_format_fail_silently = 0
 let g:elm_setup_keybindings = 0
 
@@ -811,7 +813,7 @@ vmap ` S`
 
 " ## tadaa/vimade
 let g:vimade = {}
-let g:vimade.fadelevel = 0.7
+let g:vimade.fadelevel = 0.6
 
 " ## tpope/vim-markdown
 let g:markdown_fenced_languages = [
@@ -853,6 +855,7 @@ let g:ale_sign_warning = '⬥'                                                  
 let g:ale_sign_info = '‣'
 let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
 let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
+let g:ale_elm_format_use_global = 0
 let g:ale_elm_format_options = '--yes --elm-version=0.18'
 let g:ale_elm_analyse_use_global = 0
 let g:ale_lint_on_text_changed = 'always' " 'normal'
@@ -868,52 +871,6 @@ let g:ale_virtualtext_prefix = "❯❯ "
 
 " # markdown-preview.nvim
 nnoremap <Leader>M :MarkdownPreview<CR>
-
-" # sran.nvim/git-p.nvim
-let g:gitp_blame_virtual_text = 1
-" use custom highlight for blame virtual text
-" change GitPBlameLineHi to your highlight group
-highlight link GitPBlameLine GitPBlameLineHi
-" format blame virtual text
-" hash: commit hash
-" account: commit account name
-" date: YYYY-MM-DD
-" time: HH:mm:ss
-" ago: xxx ago
-" zone: +xxxx
-" commit: commit message
-" lineNum: line number
-let g:gitp_blame_format = '    %{account} * %{ago}'
-" show blame on statusline git-p.nvim will udpate b:gitp_blame variable
-" and trigger GitPDiffAndBlameUpdate event when blame update
-" so you can use this info to display on statusline
-" b:gitp_blame = {
-"    hash: string
-"    account: string
-"    date: string
-"    time: string
-"    ago: string
-"    zone: string
-"    lineNum: string
-"    lineString: string
-"    commit: string
-"    rawString: string
-" }
-" use custom highlight for diff sign
-" change the GitPAddHi GitPModifyHi GitPDeleteHi to your highlight group
-highlight link GitPAdd                GitPAddHi
-highlight link GitPModify             GitPModifyHi
-highlight link GitPDeleteTop          GitPDeleteHi
-highlight link GitPDeleteBottom       GitPDeleteHi
-highlight link GitPDeleteTopAndBottom GitPDeleteHi
-" use custom diff sign
-let g:gitp_add_sign = '■'
-let g:gitp_modify_sign = '▣'
-let g:gitp_delete_top_sign = '▤'
-let g:gitp_delete_bottom_sign = '▤'
-let g:gitp_delete_top_and_bottom_sign = '▤'
-" let your sign column background same as line number column
-" highlight! link SignColumn LineNr
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
