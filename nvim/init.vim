@@ -73,7 +73,7 @@ Plug 'cohama/lexima.vim'
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 if executable('ctags')
   Plug 'craigemery/vim-autotag', { 'for': ['elm','elixir','eelixir'] }
-  Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  " Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
 endif
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
@@ -98,7 +98,9 @@ Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
-Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
+Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
+Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
+" Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 " Plug 'markonm/traces.vim'
 Plug 'mattn/emmet-vim', { 'for': ['html','erb','eruby','markdown'] }
 Plug 'mattn/webapi-vim'
@@ -113,6 +115,7 @@ Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
+Plug 'RRethy/vim-hexokinase'
 Plug 'rizzatti/dash.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
@@ -265,7 +268,7 @@ if empty($SSH_CONNECTION) && has('clipboard')
 endif
 
 " ---- Timeouts
-set timeoutlen=1000 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
+set timeoutlen=500 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
 set updatetime=300
 
 " ---- Split behaviors
@@ -293,6 +296,9 @@ set gcr=a:blinkon500-blinkwait500-blinkoff500                                   
 
 let mapleader=','
 let maplocalleader=','
+
+nnoremap <silent> <leader>      :<c-u>WhichKey '<Space>'<CR>
+nnoremap <silent> <localleader> :<c-u>WhichKey  ','<CR>
 
 " Fancy macros
 nnoremap q <Nop>
@@ -623,6 +629,9 @@ let g:indentLine_color_gui = '#556874'
 let g:indentLine_char = '│'
 " let g:indentLine_bgcolor_gui = '#3C4C55'
 
+" ## liuchengxu/vim-which-key
+let g:which_key_use_floating_win = 1
+
 " ## junegunn/fzf
 let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
 let g:fzf_action = {
@@ -707,6 +716,12 @@ silent! colorscheme nova
 " set background=dark
 " colorscheme gruvbox
 
+" ## RRethy/hexokinase
+let g:Hexokinase_highlighters = ['virtual']
+let g:Hexokinase_virtualText = '■'
+" let g:Hexokinase_virtualText = '██'
+let g:Hexokinase_ftAutoload = ['css', 'scss', 'sass', 'less']
+
 " ## vim-devicons
 " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
 let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ''
@@ -728,55 +743,94 @@ let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
 
-" ## majutsushi/tagbar
-nmap <silent> <F4> :TagbarToggle<CR>
-set tags+=tags,tags.vendors,.tags
-let g:tagbar_autofocus = 1
-let g:tagbar_type_elm = {
-      \   'ctagstype':'elm'
-      \ , 'kinds' : [
-      \ 'h:header:0:0',
-      \ 'e:exposing:0:0',
-      \ 'f:function:0:0',
-      \ 'm:modules:0:0',
-      \ 'i:imports:1:0',
-      \ 't:types:1:0',
-      \ 'a:type aliases:0:0',
-      \ 'c:type constructors:0:0',
-      \ 'p:ports:0:0',
-      \ 's:functions:0:0',
-      \ ]
-      \ , 'sro':'&&&'
-      \ , 'kind2scope':{ 'h':'header', 'i':'import'}
-      \ , 'sort':0
-      \ , 'ctagsargs': ''
-      \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
+" ## liuchengxu/vista.vim
+nmap <silent> <F4> :Vista!!<CR>
+let g:vista_echo_cursor_strategy = 'floating_win'
+" Position to open the vista sidebar. On the right by default.
+" Change to 'vertical topleft' to open on the left.
+let g:vista_sidebar_position = 'vertical botright'
+" Width of vista sidebar.
+let g:vista_sidebar_width = 30
+" Set this flag to 0 to disable echoing when the cursor moves.
+let g:vista_echo_cursor = 1
+" Time delay for showing detailed symbol info at current cursor.
+let g:vista_cursor_delay = 400
+" Close the vista window automatically close when you jump to a symbol.
+let g:vista_close_on_jump = 0
+" Move to the vista window when it is opened.
+let g:vista_stay_on_open = 1
+" Blinking cursor 2 times with 100ms interval after jumping to the tag.
+let g:vista_blink = [2, 100]
+" How each level is indented and what to prepend.
+" This could make the display more compact or more spacious.
+" e.g., more compact: ["▸ ", ""]
+let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+" Executive used when opening vista sidebar without specifying it.
+" See all the avaliable executives via `:echo g:vista#executives`.
+let g:vista_default_executive = 'ctags'
+" Declare the command including the executable and options used to generate ctags output
+" for some certain filetypes.The file path will be appened to your custom command.
+" For example:
+let g:vista_ctags_cmd = {
+      \ 'haskell': 'hasktags -o - -c',
       \ }
-let g:tagbar_type_elixir = {
-      \ 'ctagstype' : 'elixir',
-      \ 'kinds' : [
-      \ 'f:functions',
-      \ 'functions:functions',
-      \ 'c:callbacks',
-      \ 'd:delegates',
-      \ 'e:exceptions',
-      \ 'i:implementations',
-      \ 'a:macros',
-      \ 'o:operators',
-      \ 'm:modules',
-      \ 'p:protocols',
-      \ 'r:records',
-      \ 't:tests'
-      \ ]
-      \ }
-let g:tagbar_type_markdown = {
-      \ 'ctagstype' : 'markdown',
-      \ 'kinds' : [
-      \ 'h:Heading_L1',
-      \ 'i:Heading_L2',
-      \ 'k:Heading_L3'
-      \ ]
-      \ }
+" To enable fzf's preview window set g:vista_fzf_preview.
+" The elements of g:vista_fzf_preview will be passed as arguments to fzf#vim#with_preview()
+" For example:
+let g:vista_fzf_preview = ['right:50%']
+" Fall back to other executives if the specified one gives empty data.
+" By default it's all the provided executives excluding the tried one.
+let g:vista_finder_alternative_executives = ['coc']
+
+" " ## majutsushi/tagbar
+" nmap <silent> <F4> :TagbarToggle<CR>
+" set tags+=tags,tags.vendors,.tags
+" let g:tagbar_autofocus = 1
+" let g:tagbar_type_elm = {
+"       \   'ctagstype':'elm'
+"       \ , 'kinds' : [
+"       \ 'h:header:0:0',
+"       \ 'e:exposing:0:0',
+"       \ 'f:function:0:0',
+"       \ 'm:modules:0:0',
+"       \ 'i:imports:1:0',
+"       \ 't:types:1:0',
+"       \ 'a:type aliases:0:0',
+"       \ 'c:type constructors:0:0',
+"       \ 'p:ports:0:0',
+"       \ 's:functions:0:0',
+"       \ ]
+"       \ , 'sro':'&&&'
+"       \ , 'kind2scope':{ 'h':'header', 'i':'import'}
+"       \ , 'sort':0
+"       \ , 'ctagsargs': ''
+"       \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
+"       \ }
+" let g:tagbar_type_elixir = {
+"       \ 'ctagstype' : 'elixir',
+"       \ 'kinds' : [
+"       \ 'f:functions',
+"       \ 'functions:functions',
+"       \ 'c:callbacks',
+"       \ 'd:delegates',
+"       \ 'e:exceptions',
+"       \ 'i:implementations',
+"       \ 'a:macros',
+"       \ 'o:operators',
+"       \ 'm:modules',
+"       \ 'p:protocols',
+"       \ 'r:records',
+"       \ 't:tests'
+"       \ ]
+"       \ }
+" let g:tagbar_type_markdown = {
+"       \ 'ctagstype' : 'markdown',
+"       \ 'kinds' : [
+"       \ 'h:Heading_L1',
+"       \ 'i:Heading_L2',
+"       \ 'k:Heading_L3'
+"       \ ]
+"       \ }
 
 " ## craigemery/vim-autotag
 let g:autotagTagsFile=".tags"
