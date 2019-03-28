@@ -133,7 +133,7 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-speeddating'
 Plug 'tpope/vim-surround'
-Plug 'tpope/vim-unimpaired'
+Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
 Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
