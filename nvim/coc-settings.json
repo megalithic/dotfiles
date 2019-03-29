@@ -121,8 +121,7 @@
   "coc.source.buffer.priority": 6,
   "coc.source.buffer.ignoreGitignore": true,
   "coc.source.emoji.enable": false,
-  /* "coc.source.emoji.filetypes": ["markdown", "gitcommit"], */
-  /* "coc.source.emoji.triggerCharacters": [":"], */
+  "coc.source.emoji.filetypes": ["markdown", "gitcommit"],
   "coc.source.file.enable": true,
   "coc.source.file.shortcut": "F",
   "coc.source.file.priority": 7,
@@ -130,14 +129,13 @@
   "coc.source.file.trimSameExts": [".ts", ".js"],
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
-  /* "coc.source.omni.filetypes": ["elixir", "eelixir", "elm"], */
   "coc.source.tag.enable": true,
   "coc.source.tag.priority": 7,
   "coc.source.ultisnips.enable": true,
   "coc.source.ultisnips.shortcut": "",
   "coc.source.ultisnips.priority": 10,
   "coc.source.word.enable": true,
-  "coc.source.word.filetypes": ["markdown", "gitcommit", "gina-commit"],
+  "coc.source.word.filetypes": ["markdown", "gitcommit"],
   /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
   /* "snippets.ultisnips.pythonVersion": 3, */
   "tailwind.enable": true,

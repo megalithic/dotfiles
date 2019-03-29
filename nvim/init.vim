@@ -629,6 +629,11 @@ let g:indentLine_color_gui = '#556874'
 let g:indentLine_char = '│'
 " let g:indentLine_bgcolor_gui = '#3C4C55'
 
+
+" ## andymass/vim-matchup
+let g:matchup_matchparen_deferred = 1
+let g:matchup_matchparen_hi_surround_always = 1
+
 " ## liuchengxu/vim-which-key
 let g:which_key_use_floating_win = 1
 
