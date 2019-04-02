@@ -19,9 +19,9 @@
 --regex-Elm=/^port +([[:lower:]][[:alnum:]_]+)[[:blank:]]*:[^:]/\1/p,port,ports/
 --regex-Elm=/^type +([[:upper:]][[:alnum:]_]+)/\1/t,type,types/
 --regex-Elm=/^type[[:blank:]]+alias[[:blank:]]+([[:upper:]][[:alnum:]_]+)/\1/a,type-alias,type-aliases/
---regex-Elm=/^module[[:blank:]](\.?([[:upper:]][[:alnum:]_]+))+[[:blank:]]/\2/m,module,modules/
---regex-Elm=/^[[:blank:]]+\|[[:blank:]]([[:upper:]][[:alnum:]]+)+[[:blank:]]/\1/t,type-cons/
---regex-Elm=/^type\X*[[:blank:]]+=[[:blank:]]([[:upper:]][[:alnum:]]+)+[[:blank:]]/\1/t,type-cons/
+--regex-Elm=/^[[:blank:]]+=[[:blank:]]([[:upper:]][[:alnum:]]+)+/\1/t,type-cons/
+--regex-Elm=/^[[:blank:]]+\|[[:blank:]]([[:upper:]][[:alnum:]]+)+/\1/t,type-cons/
+--regex-Elm=/^(port )?[:blank:]*module[[:blank:]](\.?([[:upper:]][[:alnum:]_]+))+/\3/m,module,modules/
 
 --langdef=markdown
 --langmap=markdown:.md.markdown.mdown.mkd.mkdn

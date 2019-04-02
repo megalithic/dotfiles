@@ -1,3 +1,4 @@
+require 'airpods'
 local utils = require('utils')
 local hotkey = require('hs.hotkey')
 
@@ -296,6 +297,19 @@ config.utilities = {
       require('auto-layout').snapApp(hs.application.frontmostApplication())
     end)
   },
+  {
+    name = 'Toggle Airpods',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'a',
+    fn = (function()
+      local ok, output = airPods('replipods')
+      if ok then
+        hs.alert.show(output)
+      else
+        hs.alert.show("Couldn't connect to AirPods!")
+      end
+    end)
+  }
 }
 
 config.media = {

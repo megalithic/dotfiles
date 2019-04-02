@@ -11,14 +11,14 @@ windows:
     panes:
       - commands:
         - ls
-  - name: "vpp"
+  - name: "services"
     root: "~/code/enbala/vpp"
-    layout: even-horizontal
     panes:
       - commands:
         - ls
-  - name: "services"
+  - name: "code"
     root: "~/code/enbala/vpp"
+    layout: even-horizontal
     panes:
       - commands:
         - ls

@@ -1,5 +1,3 @@
-// really good example of rules: https://github.com/sainnhe/dotfiles/blob/master/.config/nvim/coc-settings.json
-//
 {
   "coc.preferences.colorSupport": true,
   "coc.preferences.extensionUpdateCheck": "daily",
@@ -19,7 +17,7 @@
   "signature.hideOnTextChange": true,
   "signature.maxWindowHeight": 8,
 
-  "suggest.acceptSuggestionOnCommitCharacter": false,
+  "suggest.acceptSuggestionOnCommitCharacter": true,
   "suggest.autoTrigger": "always",
   "suggest.detailField": "abbr",
   "suggest.detailMaxLength": 30,
@@ -170,7 +168,8 @@
       "cwd": "./",
       "initializationOptions": {
         "elixirLS": {
-          "dialyzerEnabled": false
+          "dialyzerEnabled": false,
+          "dialyzerWarningOpts": []
         }
       },
       "settings": {}

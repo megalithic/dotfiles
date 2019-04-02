@@ -447,7 +447,8 @@ augroup general
   " au FocusLost  * :echo "focus lost"
 
   " Refresh lightline when certain things happen
-  au TextChanged,InsertLeave,BufWritePost * call lightline#update()
+  " au TextChanged,InsertLeave,BufWritePost * call lightline#update()
+  au BufWritePost * call lightline#update()
 
   " Handle window resizing
   au VimResized * execute "normal! \<c-w>="
@@ -496,7 +497,6 @@ augroup general
 
   " toggle colorcolumn when in insertmode only
   au InsertEnter * silent set colorcolumn=80
-  " au InsertLeave * silent set colorcolumn=""
   au InsertLeave * if &filetype != "markdown"
                             \ | silent set colorcolumn=""
                             \ | endif
@@ -585,7 +585,7 @@ augroup END
 
 augroup ale
   au!
-  au User ALEJobStarted call lightline#update()
+  " au User ALEJobStarted call lightline#update()
   au User ALELintPost   call lightline#update()
   au User ALEFixPost    call lightline#update()
 augroup END
@@ -639,12 +639,38 @@ let g:which_key_use_floating_win = 1
 
 " ## junegunn/fzf
 let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
+" let $FZF_DEFAULT_OPTS='--layout=reverse'
 let g:fzf_action = {
       \ 'ctrl-s': 'split',
       \ 'ctrl-v': 'vsplit',
       \ 'enter': 'vsplit'
       \ }
+
+"let g:fzf_layout = { 'window': 'call FloatingFZF()' }
+"function! FloatingFZF()
+"  let buf = nvim_create_buf(v:false, v:true)
+"  call setbufvar(buf, 'number', 'no')
+
+"  let height = float2nr(&lines/2)
+"  let width = float2nr(&columns - (&columns * 2 / 10))
+"  "let width = &columns
+"  let row = float2nr(&lines / 3)
+"  let col = float2nr((&columns - width) / 3)
+
+"  let opts = {
+"        \ 'relative': 'editor',
+"        \ 'row': row,
+"        \ 'col': col,
+"        \ 'width': width,
+"        \ 'height':height,
+"        \ }
+"  let win =  nvim_open_win(buf, v:true, opts)
+"  call setwinvar(win, '&number', 0)
+"  call setwinvar(win, '&relativenumber', 0)
+"endfunction
+
 let g:fzf_layout = { 'down': '~15%' }
+
 if executable("rg")
   " ## rg
   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
@@ -668,7 +694,7 @@ if executable("rg")
         \   <bang>0)
 endif
 
-nnoremap <silent><leader>m <ESC>:FZF<CR>
+nnoremap <silent><leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
 nnoremap <leader>a <ESC>:Rg<SPACE>
 nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " nnoremap <localleader><space> :Buffers<cr> nnoremap <leader>a <ESC>:Rg<SPACE> nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
@@ -1210,7 +1236,7 @@ let g:coc_status_warning_sign = "  "
 let g:coc_status_error_sign = "  "
 
 function! UpdateStatusBar(timer)
-  call lightline#update()
+  " call lightline#update()
 endfunction
 
 function! PrintStatusline(v)
