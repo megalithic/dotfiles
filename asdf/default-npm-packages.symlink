@@ -3,6 +3,7 @@ convert-snippets
 create-elm-app
 do-not-disturb-cli
 elm
+elm-lsp
 elm-oracle
 elm-test
 elm-analyse

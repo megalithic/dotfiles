@@ -101,7 +101,6 @@ Plug 'kopischke/vim-fetch'
 Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
-" Plug 'markonm/traces.vim'
 Plug 'mattn/emmet-vim', { 'for': ['html','erb','eruby','markdown'] }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
@@ -187,7 +186,7 @@ syntax on
 set ignorecase
 set smartcase
 if has('nvim')
-  set icm=nosplit
+  set inccommand=nosplit
 endif
 
 " ---- Tab completion
@@ -1423,7 +1422,7 @@ endfunction
 
 " }}}
 " ░░░░░░░░░░░░░░░ coc.nvim {{{
-let g:coc_force_debug = 1
+let g:coc_force_debug = 0
 
 " for showSignatureHelp
 set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478

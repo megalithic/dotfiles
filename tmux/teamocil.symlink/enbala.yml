@@ -12,13 +12,23 @@ windows:
       - commands:
         - ls
   - name: "services"
-    root: "~/code/enbala/vpp"
+    root: "~/code/enbala"
+    layout: tiled
     panes:
       - commands:
-        - ls
+        - cd ~/code/enbala/vpp/vpp
+        - bin/start
+      - commands:
+        - cd ~/code/enbala/vpp/sims
+        - bin/start
+      - commands:
+        - cd ~/code/enbala/vpp/ui
+        - bin/start
+      - commands:
+        - cd ~/code/enbala/tesla_adapter
+        - bin/start
   - name: "code"
     root: "~/code/enbala/vpp"
-    layout: even-horizontal
     panes:
       - commands:
         - ls

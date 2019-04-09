@@ -40,3 +40,4 @@ credo_extra
 elm-stuff
 rel
 **/stderr_log
+**/output.txt

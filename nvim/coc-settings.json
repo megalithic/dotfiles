@@ -9,7 +9,6 @@
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetStatusText": "🌈",
   "coc.preferences.enableFloatHighlight": true,
-  /* "coc.preferences.snippetIndicator": "\uf5d4", */
 
   "signature.enable": true,
   "signature.target": "float",
@@ -134,8 +133,6 @@
   "coc.source.ultisnips.priority": 10,
   "coc.source.word.enable": true,
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
-  /* "snippets.ultisnips.directories": ["UltiSnips", "snips"], */
-  /* "snippets.ultisnips.pythonVersion": 3, */
   "tailwind.enable": true,
   "tailwind.shortcut": "TWCSS",
   "tailwind.priority": 99,
@@ -150,15 +147,14 @@
       "initializationOptions": {},
       "settings": {}
     },
-    "elm": {
-      "command": "elm-language-server-exe",
-      "args": [],
-      "filetypes": ["elm"],
-      "rootPatterns": [],
-      "cwd": "./",
-      "initializationOptions": { },
-      "settings": {}
-    },
+    /* "elm": { */
+    /*   "command": "elm-language-server-exe", */
+    /*   "args": [], */
+    /*   "filetypes": ["elm"], */
+    /*   "rootPatterns": ["elm.json"], */
+    /*   "initializationOptions": { }, */
+    /*   "settings": {} */
+    /* }, */
     "elixir": {
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
