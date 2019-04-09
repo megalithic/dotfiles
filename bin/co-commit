@@ -1,0 +1,149 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+
+class User
+  def self.load(hash)
+    new(hash["name"], hash["email"])
+  end
+
+  def initialize(name, email)
+    @name = name
+    @email = email
+  end
+
+  def to_s
+    "#{@name} <#{@email}>"
+  end
+
+  def dump
+    {"name" => @name, "email" => @email}
+  end
+end
+
+class CoCommiterCache
+  def initialize
+    @filename = File.expand_path(".co-committers.yml", __dir__)
+    @users = load_users()
+  end
+
+  def add_user(abbrev, name, email)
+    sync do
+      @users[abbrev] = User.new(name, email)
+    end
+  end
+
+  def remove_user(abbrev)
+    sync do
+      @users.delete(abbrev)
+    end
+  end
+
+  def print_list
+    @users.each do |(abbrev, user)|
+      puts "#{abbrev} - #{user}"
+    end
+  end
+
+  def get(abbrevs)
+    @users.
+      values_at(*abbrevs).
+      reject(&:nil?)
+  end
+
+  private
+
+  def load_users
+    ensure_file()
+    load_file()
+  end
+
+  def ensure_file
+    File.open(@filename, "a") {}
+  end
+
+  def load_file
+    (YAML.load_file(@filename) or {}).
+      transform_values(&User.method(:load))
+  end
+
+  def sync
+    yield
+
+    File.open @filename, "w" do |file|
+      YAML.dump(@users.transform_values(&:dump), file)
+    end
+  end
+end
+
+class Commit
+  @@template = File.expand_path(".co-commit.template.txt", __dir__)
+
+  def initialize(cache, abbrevs)
+    @cache = cache
+    @abbrevs = abbrevs
+  end
+
+  def call
+    save_template(get_co_authors())
+    run_git_commit()
+  end
+
+  private
+
+  def get_co_authors
+    @cache.
+      get(@abbrevs).
+      map { |user| "Co-authored-by: #{user}"}.
+      join("\n")
+  end
+
+  def save_template(co_authors)
+    File.write(@@template, "\n\n#{co_authors}")
+  end
+
+  def run_git_commit
+    system "git commit -t #{@@template}"
+  end
+end
+
+class Commands
+  def self.select(cache, command_name, args)
+    handler =
+      case command_name
+      when "add"
+        -> {
+          abbrev, name, email = args
+          cache.add_user(abbrev, name, email)
+        }
+      when "remove"
+        -> {
+          abbrev = args[0]
+          cache.remove_user(abbrev)
+        }
+      when "list"
+        -> { cache.print_list() }
+      end
+
+    handler
+  end
+end
+
+module Program
+  class << self
+    def run(args)
+      determine_handler(CoCommiterCache.new, args).call()
+    end
+
+    private
+
+    def determine_handler(cache, args)
+      command_name, *remaining_args = args
+
+      Commands.select(cache, command_name, remaining_args) or
+        Commit.new(cache, args)
+    end
+  end
+end
+
+Program.run(ARGV)

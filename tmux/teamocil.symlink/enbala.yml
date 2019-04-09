@@ -27,8 +27,18 @@ windows:
       - commands:
         - cd ~/code/enbala/tesla_adapter
         - bin/start
-  - name: "code"
+  - name: "postgres"
     root: "~/code/enbala/vpp"
+    panes:
+      - commands:
+        - pgcli data_persist_dev
+  - name: "vpp"
+    root: "~/code/enbala/vpp"
+    panes:
+      - commands:
+        - ls
+  - name: "tesla_adapter"
+    root: "~/code/enbala/tesla_adapter"
     panes:
       - commands:
         - ls

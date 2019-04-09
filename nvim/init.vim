@@ -35,12 +35,12 @@ function! PostInstallCoc(info) abort
           \ 'coc-prettier',
           \ 'coc-pyls',
           \ 'coc-rls',
+          \ 'coc-snippets',
           \ 'coc-solargraph',
           \ 'coc-tag',
           \ 'coc-tailwindcss',
           \ 'coc-tsserver',
           \ 'coc-tslint-plugin',
-          \ 'coc-ultisnips',
           \ 'coc-word',
           \ 'coc-yaml',
           \ 'coc-yank',
@@ -55,6 +55,7 @@ function! PostInstallCoc(info) abort
     " \ 'coc-vetur',
     " \ 'coc-wxml',
     " \ 'coc-stylelint',
+    " \ 'coc-ultisnips',
     " \ 'coc-snippets',
   elseif a:info.status ==? 'updated'
     !yarn install
@@ -62,7 +63,7 @@ function! PostInstallCoc(info) abort
   endif
 endfunction
 
-Plug 'SirVer/ultisnips'
+" Plug 'SirVer/ultisnips'
 Plug 'andymass/vim-matchup'
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
@@ -227,6 +228,7 @@ set showmatch                                                                   
 " ---- Buffers
 set hidden
 set autoread                  " auto read external file changes
+set switchbuf=useopen,split,usetab
 
 " ---- Backup directories
 set backupdir=~/.config/nvim/backups,.
@@ -1431,18 +1433,34 @@ set shortmess+=c
 " Or use formatexpr for range format
 set formatexpr=CocActionAsync('formatSelected')
 
-" Use tab for trigger completion with characters ahead and navigate.
-" Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+" FOR ULTISNIPS + COC.NVIM
+" " Use tab for trigger completion with characters ahead and navigate.
+" " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+" inoremap <silent><expr> <TAB>
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<TAB>" :
+"       \ coc#refresh()
+" inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+" function! s:check_back_space() abort
+"   let col = col('.') - 1
+"   return !col || getline('.')[col - 1]  =~# '\s'
+" endfunction
+
+" FOR COC-SNIPPETS + COC.NVIM
 inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
+      \ pumvisible() ? coc#_select_confirm() :
+      \ coc#expandableOrJumpable() ? coc#rpc#request('doKeymap', ['snippets-expand-jump','']) :
       \ <SID>check_back_space() ? "\<TAB>" :
       \ coc#refresh()
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 function! s:check_back_space() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
+
+let g:coc_snippet_next = '<TAB>'
+let g:coc_snippet_prev = '<S-TAB>'
 
 " Use <c-space> for trigger completion.
 inoremap <silent><expr> <C-e> coc#refresh()
@@ -1450,9 +1468,6 @@ inoremap <silent><expr> <C-e> coc#refresh()
 " Use <Tab> and <S-Tab> for navigate completion list:
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-
-let g:coc_snippet_next = '<TAB>'
-let g:coc_snippet_prev = '<S-TAB>'
 
 " Use <cr> for confirm completion.
 " Coc only does snippet and additional edit on confirm.
