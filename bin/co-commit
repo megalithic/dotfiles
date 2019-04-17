@@ -1,8 +1,12 @@
 #!/usr/bin/env ruby
 
-require 'yaml'
+require "yaml"
 
-class User
+class Object
+  alias then yield_self
+end
+
+class Author
   def self.load(hash)
     new(hash["name"], hash["email"])
   end
@@ -24,38 +28,42 @@ end
 class CoCommiterCache
   def initialize
     @filename = File.expand_path(".co-committers.yml", __dir__)
-    @users = load_users()
+    @authors = load_authors
   end
 
-  def add_user(abbrev, name, email)
+  def known_author?(abbrev)
+    @authors.member?(abbrev)
+  end
+
+  def add_author(abbrev, name, email)
     sync do
-      @users[abbrev] = User.new(name, email)
+      @authors[abbrev] = Author.new(name, email)
     end
   end
 
-  def remove_user(abbrev)
+  def remove_author(abbrev)
     sync do
-      @users.delete(abbrev)
+      @authors.delete(abbrev)
     end
   end
 
   def print_list
-    @users.each do |(abbrev, user)|
-      puts "#{abbrev} - #{user}"
+    @authors.each do |(abbrev, author)|
+      puts "#{abbrev} - #{author}"
     end
   end
 
   def get(abbrevs)
-    @users.
-      values_at(*abbrevs).
-      reject(&:nil?)
+    @authors
+      .values_at(*abbrevs)
+      .reject(&:nil?)
   end
 
   private
 
-  def load_users
-    ensure_file()
-    load_file()
+  def load_authors
+    ensure_file
+    load_file
   end
 
   def ensure_file
@@ -63,15 +71,15 @@ class CoCommiterCache
   end
 
   def load_file
-    (YAML.load_file(@filename) or {}).
-      transform_values(&User.method(:load))
+    (YAML.load_file(@filename) || {})
+      .transform_values(&Author.method(:load))
   end
 
   def sync
     yield
 
     File.open @filename, "w" do |file|
-      YAML.dump(@users.transform_values(&:dump), file)
+      YAML.dump(@authors.transform_values(&:dump), file)
     end
   end
 end
@@ -79,50 +87,98 @@ end
 class Commit
   @@template = File.expand_path(".co-commit.template.txt", __dir__)
 
-  def initialize(cache, abbrevs)
+  def initialize(cache, args)
     @cache = cache
-    @abbrevs = abbrevs
+    @abbrevs, @flags = parse_args(args)
   end
 
   def call
-    save_template(get_co_authors())
-    run_git_commit()
+    if have_message_flag?
+      git_commit_with_message
+    else
+      git_commit_with_template
+    end
   end
 
   private
 
-  def get_co_authors
-    @cache.
-      get(@abbrevs).
-      map { |user| "Co-authored-by: #{user}"}.
-      join("\n")
+  def parse_args(args)
+    args
+      .partition { |arg| @cache.known_author?(arg) }
+      .then(&map_second { |flags|
+        flags.each_with_index.reduce({}) { |memo, (flag, index)|
+          next_flag = flags[index + 1]
+
+          if flag.start_with?("-") && !next_flag.nil? && !next_flag.start_with?("-")
+            memo.merge(flag => next_flag)
+          elsif flag.start_with?("-")
+            memo.merge(flag => true)
+          else
+            memo
+          end
+        }
+      })
   end
 
-  def save_template(co_authors)
+  def map_second(&block)
+    ->((first, second)) { [first, block.call(second)] }
+  end
+
+  def co_authors
+    @cache
+      .get(@abbrevs)
+      .map { |author| "Co-authored-by: #{author}"}
+      .join("\n")
+  end
+
+  def git_commit_with_template
     File.write(@@template, "\n\n#{co_authors}")
+    system "git commit -t #{@@template}"
   end
 
-  def run_git_commit
-    system "git commit -t #{@@template}"
+  def git_commit_with_message
+    message = <<~MESSAGE.rstrip
+      #{@flags["-m"]}
+
+      #{co_authors}
+    MESSAGE
+
+    flags_string =
+      @flags
+        .lazy
+        .reject { |key, _| key == "-m" }
+        .flat_map { |key, value| value == true ? [key] : [key, value] }
+        .to_a
+        .join(" ")
+
+    system %(git commit -m "#{message}" #{flags_string})
+  end
+
+  def have_message_flag?
+    @flags.member?("-m")
   end
 end
 
 class Commands
-  def self.select(cache, command_name, args)
+  def self.select(cache, args)
+    command_name, *remaining_args = args
+
     handler =
       case command_name
       when "add"
         -> {
-          abbrev, name, email = args
-          cache.add_user(abbrev, name, email)
+          abbrev, name, email = remaining_args
+          cache.add_author(abbrev, name, email)
         }
       when "remove"
         -> {
-          abbrev = args[0]
-          cache.remove_user(abbrev)
+          abbrev = remaining_args[0]
+          cache.remove_author(abbrev)
         }
       when "list"
-        -> { cache.print_list() }
+        -> { cache.print_list }
+      else
+        Commit.new(cache, args)
       end
 
     handler
@@ -132,16 +188,7 @@ end
 module Program
   class << self
     def run(args)
-      determine_handler(CoCommiterCache.new, args).call()
-    end
-
-    private
-
-    def determine_handler(cache, args)
-      command_name, *remaining_args = args
-
-      Commands.select(cache, command_name, remaining_args) or
-        Commit.new(cache, args)
+      Commands.select(CoCommiterCache.new, args).call
     end
   end
 end

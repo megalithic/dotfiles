@@ -1,7 +1,7 @@
 {
   "coc.preferences.colorSupport": true,
   "coc.preferences.extensionUpdateCheck": "daily",
-  "coc.preferences.formatOnSaveFiletypes": [],
+  "coc.preferences.formatOnSaveFiletypes": ["javascript", "typescript", "typescriptreact", "json", "javascriptreact"],
   "coc.preferences.formatOnType": false,
   "coc.preferences.hoverTarget": "float",
   "coc.preferences.jumpCommand": "vsplit",
@@ -97,7 +97,7 @@
   "prettier.stylelintIntegration": true,
 
   // eslint
-  "eslint.filetypes": ["javascript", "javascript.jsx", "javascriptreact"],
+  "eslint.filetypes": ["javascript", "typescript", "typescriptreact", "javascriptreact"],
   "eslint.autoFix": true,
   "eslint.autoFixOnSave": true,
 
@@ -108,6 +108,8 @@
   "yaml.schemas": {
     "http://json.schemastore.org/composer": "/*"
   },
+
+  "snippets.autoTrigger": true,
 
   // sources
   "coc.source.around.enable": true,
@@ -128,9 +130,6 @@
   "coc.source.file.ignorePatterns": [],
   "coc.source.tag.enable": true,
   "coc.source.tag.priority": 7,
-  "coc.source.ultisnips.enable": true,
-  "coc.source.ultisnips.shortcut": "",
-  "coc.source.ultisnips.priority": 10,
   "coc.source.word.enable": true,
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
   "tailwind.enable": true,

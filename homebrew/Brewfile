@@ -14,7 +14,7 @@ tap 'simeji/jid'
 tap 'wix/brew'
 tap 'homebrew/cask-drivers'
 tap 'jeroenknoops/tap'
-
+tap 'browsh-org/homebrew-browsh'
 
 # -- for qmk_pok3r programming
 #tap 'osx-cross/avr'
@@ -30,6 +30,7 @@ brew 'automake'
 brew 'aspell', args: ['--with-lang-en']
 # brew 'asdf'
 brew 'bat'
+brew 'browsh'
 brew 'cmake'
 brew 'coreutils'
 brew 'curl'

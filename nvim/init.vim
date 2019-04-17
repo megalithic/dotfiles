@@ -110,6 +110,8 @@ Plug 'morhetz/gruvbox'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
+" Plug 'neoclide/coc.nvim', { 'do': { -> coc#util#install()} }
+" Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off'
@@ -209,7 +211,7 @@ set expandtab
 set ruler
 set number
 set nowrap
-set fillchars=vert:\│
+set fillchars=vert:\│,fold:·
 " set colorcolumn=80
 set nocursorline                                                                  "Highlight current line
 set pumheight=30                                                                "Maximum number of entries in autocomplete popup
@@ -275,6 +277,10 @@ set updatetime=300
 " ---- Split behaviors
 set splitright                                                                  "Set up new vertical splits positions
 set splitbelow                                                                  "Set up new horizontal splits positions
+
+" ---- Diff opts
+set diffopt-=internal
+set diffopt+=indent-heuristic,algorithm:patience
 
 " ---- Cursor
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -622,7 +628,7 @@ let &showbreak='↪ '
 " ░░░░░░░░░░░░░░░ plugin settings {{{
 
 " ## polyglot
-  let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
+let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
 " ## indentLine
 let g:indentLine_enabled = 1
@@ -637,6 +643,19 @@ let g:matchup_matchparen_hi_surround_always = 1
 
 " ## liuchengxu/vim-which-key
 let g:which_key_use_floating_win = 1
+
+" ## netrw
+" absolute width of netrw window
+let g:netrw_winsize = -28
+" do not display info on the top of window
+let g:netrw_banner = 1
+" tree-view
+let g:netrw_liststyle = 3
+" sort is affecting only: directories on the top, files below
+let g:netrw_sort_sequence = '[\/]$,*'
+" use the previous window to open file
+let g:netrw_browse_split = 4
+let g:netrw_altv = 1
 
 " ## junegunn/fzf
 let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -972,7 +991,7 @@ nnoremap <leader>B :Gblame<CR>
 " ## vim-test / testing
 nmap <silent> <leader>t :TestFile<CR>
 nmap <silent> <leader>T :TestNearest<CR>
-nmap <silent> <leader>l :TestLast<CR>
+nmap <silent> <leader>L :TestLast<CR>
 " nmap <silent> <leader>a :TestSuite<CR>
 " nmap <silent> <leader>g :TestVisit<CR>
 " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
@@ -1245,13 +1264,13 @@ function! PrintStatusline(v)
 endfunction
 
 function! LightlineFileType()
-  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
-  " return &filetype
+  " return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
+  return &filetype
 endfunction
 
 function! LightlineFileFormat()
-  return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
-  " return &fileformat
+  " return winwidth(0) > 70 ? (WebDevIconsGetFileFormatSymbol() . ' ' . &fileformat) : ''
+  return &fileformat
 endfunction
 
 function! LightlineBranch()
@@ -1433,7 +1452,8 @@ set shortmess+=c
 " Or use formatexpr for range format
 set formatexpr=CocActionAsync('formatSelected')
 
-" FOR ULTISNIPS + COC.NVIM
+" FOR COC-ULTISNIPS + COC.NVIM
+" ----------------------------
 " " Use tab for trigger completion with characters ahead and navigate.
 " " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
 " inoremap <silent><expr> <TAB>
@@ -1448,6 +1468,7 @@ set formatexpr=CocActionAsync('formatSelected')
 " endfunction
 
 " FOR COC-SNIPPETS + COC.NVIM
+" ---------------------------
 inoremap <silent><expr> <TAB>
       \ pumvisible() ? coc#_select_confirm() :
       \ coc#expandableOrJumpable() ? coc#rpc#request('doKeymap', ['snippets-expand-jump','']) :
