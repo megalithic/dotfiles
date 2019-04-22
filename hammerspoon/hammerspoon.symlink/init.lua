@@ -26,7 +26,7 @@ require('app-quit-guard')
 
 -- home-assistant helper to automate my office based on computer events; only want this to run when i'm in my office
 if (isDocked) then
-  require('home-assistant').init()
+  -- require('home-assistant').init()
 end
 
 -- :: spoons

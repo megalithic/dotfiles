@@ -74,7 +74,7 @@ Plug 'cohama/lexima.vim'
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 if executable('ctags')
   Plug 'craigemery/vim-autotag', { 'for': ['elm','elixir','eelixir'] }
-  " Plug 'majutsushi/tagbar', { 'on': 'TagbarToggle' }
+  Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
 endif
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
@@ -82,12 +82,9 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': 'elixir' }
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 " Plug 'honza/vim-snippets'
-" Plug 'iamcco/sran.nvim', { 'do': { -> sran#util#install() } }
-" Plug 'iamcco/git-p.nvim'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
-" Plug 'jesseleite/vim-noh'
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
 Plug 'junegunn/fzf.vim'
@@ -100,7 +97,6 @@ Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
 Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
-Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 Plug 'mattn/emmet-vim', { 'for': ['html','erb','eruby','markdown'] }
 Plug 'mattn/webapi-vim'
@@ -624,6 +620,17 @@ set nolist
 command! -nargs=* Wrap set wrap linebreak nolist spell
 let &showbreak='↪ '
 
+" Alias the Eunuch commands (except for Move and Wall)
+cabbrev remove <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Remove" : "remove"<cr>
+cabbrev unlink <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Unlink" : "unlink"<cr>
+cabbrev rename <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Rename" : "rename"<cr>
+cabbrev chmod <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Chmod" : "chmod"<cr>
+cabbrev mkdir <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Mkdir" : "mkdir"<cr>
+cabbrev find <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Find" : "find"<cr>
+cabbrev locate <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Locate" : "locate"<cr>
+cabbrev sudowrite <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudowrite" : "sudowrite"<cr>
+cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "sudoedit"<cr>
+
 "}}}
 " ░░░░░░░░░░░░░░░ plugin settings {{{
 
@@ -1031,10 +1038,10 @@ let g:qs_enable = 1
 let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## vim-test
-function! SplitStrategy(cmd)
-  vert new | call termopen(a:cmd) | startinsert
+function! TerminalSplit(cmd)
+  vert new | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
-let g:test#custom_strategies = {'terminal_split': function('SplitStrategy')}
+let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
 let test#ruby#rspec#options = '-f d'
 " let test#ruby#bundle_exec = 1
