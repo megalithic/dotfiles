@@ -27,11 +27,11 @@ windows:
       - commands:
         - cd ~/code/enbala/tesla_adapter
         - bin/start
-  - name: "postgres"
-    root: "~/code/enbala/vpp"
-    panes:
-      - commands:
-        - pgcli data_persist_dev
+  # - name: "postgres"
+  #   root: "~/code/enbala/vpp"
+  #   panes:
+  #     - commands:
+  #       - pgcli data_persist_dev
   - name: "vpp"
     root: "~/code/enbala/vpp"
     panes:

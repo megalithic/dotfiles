@@ -5,7 +5,7 @@ NEWLINE=$'\n'
 PROMPT_SYMBOL="❯"
 PROMPT_VICMD_SYMBOL="%F{244}❮%{$reset_color%}"
 PROMPT_BACKGROUND_SYMBOL="❯" # 
-VCS_STAGED_SYMBOL="✚"
+VCS_STAGED_SYMBOL=""
 VCS_UNSTAGED_SYMBOL="✱"
 VCS_UNTRACKED_SYMBOL="?" # …
 VCS_AHEAD_SYMBOL="↑"
@@ -29,7 +29,7 @@ zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}$VCS_UNSTAGED_SYMBOL%{$reset_color
 zstyle ':vcs_info:git*' formats "%F{245}[%F{130}%b%{$reset_color%}%F{245}] %a%m%u%c%{$reset_color%}"
 zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
 zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
-zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
+# zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
 zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 
 # NOTE: suggested by osse on irc.freenode.net#zsh (presently not working though):
@@ -38,15 +38,15 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
 #   hook_com[branch]+="${hook_com[branch]:+}"
 # }
 
-+vi-git-post-backend-updown() {
-  git rev-parse @{upstream} >/dev/null 2>&1 || return
+# +vi-git-post-backend-updown() {
+#   git rev-parse @{upstream} >/dev/null 2>&1 || return
 
-  local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
-  hook_com[branch]+="%f" # end coloring
-  (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL$x[2]"
-  (( x[1] )) && hook_com[branch]+=" $VCS_AHEAD_SYMBOL$x[1]"
-  return 0
-}
+#   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
+#   hook_com[branch]+="%f" # end coloring
+#   (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL$x[2]"
+#   (( x[1] )) && hook_com[branch]+=" $VCS_AHEAD_SYMBOL$x[1]"
+#   return 0
+# }
 
 +vi-git-untracked() {
   if [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \

@@ -96,13 +96,12 @@ Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim'
 Plug 'kopischke/vim-fetch'
-Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
+" Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 Plug 'mattn/emmet-vim', { 'for': ['html','erb','eruby','markdown'] }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-Plug 'morhetz/gruvbox'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
@@ -115,6 +114,7 @@ Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'RRethy/vim-hexokinase'
 Plug 'rizzatti/dash.vim'
+" Plug 'Shougo/denite.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'TaDaa/vimade'
@@ -134,7 +134,7 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
 Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
-Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+" Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
@@ -221,7 +221,7 @@ set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/v
 " ---- Show
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
 set noshowcmd                                                                   "Hide incomplete cmds down the bottom
-set showmatch                                                                   "Highlight matching bracket
+set showmatch                                                                 "Highlight matching bracket
 
 " ---- Buffers
 set hidden
@@ -300,8 +300,8 @@ set gcr=a:blinkon500-blinkwait500-blinkoff500                                   
 let mapleader=','
 let maplocalleader=','
 
-nnoremap <silent> <leader>      :<c-u>WhichKey '<Space>'<CR>
-nnoremap <silent> <localleader> :<c-u>WhichKey  ','<CR>
+" nnoremap <silent> <leader>      :<c-u>WhichKey '<Space>'<CR>
+" nnoremap <silent> <localleader> :<c-u>WhichKey  ','<CR>
 
 " Fancy macros
 nnoremap q <Nop>
@@ -647,6 +647,7 @@ let g:indentLine_char = '│'
 " ## andymass/vim-matchup
 let g:matchup_matchparen_deferred = 1
 let g:matchup_matchparen_hi_surround_always = 1
+let g:matchup_matchparen_status_offscreen = 0
 
 " ## liuchengxu/vim-which-key
 let g:which_key_use_floating_win = 1
@@ -1034,8 +1035,8 @@ let g:golden_ratio_wrap_ignored = 0
 let g:golden_ratio_ignore_horizontal_splits = 1
 
 " ## quick-scope
-let g:qs_enable = 1
-let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+" let g:qs_enable = 1
+" let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## vim-test
 function! TerminalSplit(cmd)
@@ -1121,7 +1122,7 @@ if has("timers")
     endif
   endfunction
 
-  augroup die_blinkmatchen
+  augroup blink_matched
     autocmd!
     autocmd CursorMoved * call BlinkStop(0)
     autocmd InsertEnter * call BlinkStop(0)
@@ -1449,6 +1450,83 @@ function! s:lightline_ale_diagnostic(kind) abort
 endfunction
 
 " }}}
+" ░░░░░░░░░░░░░░░ denite {{{
+
+try
+" Use ripgrep for searching current directory for files
+" By default, ripgrep will respect rules in .gitignore
+"   --files: Print each file that would be searched (but don't search)
+"   --glob:  Include or exclues files for searching that match the given glob
+"            (aka ignore .git files)
+"
+call denite#custom#var('file/rec', 'command', ['rg', '--files', '--glob', '!.git'])
+
+" Use ripgrep in place of "grep"
+call denite#custom#var('grep', 'command', ['rg'])
+
+" Custom options for ripgrep
+"   --vimgrep:  Show results with every match on it's own line
+"   --hidden:   Search hidden directories and files
+"   --heading:  Show the file name above clusters of matches from each file
+"   --S:        Search case insensitively if the pattern is all lowercase
+call denite#custom#var('grep', 'default_opts', ['--hidden', '--vimgrep', '--heading', '-S'])
+
+" Recommended defaults for ripgrep via Denite docs
+call denite#custom#var('grep', 'recursive_opts', [])
+call denite#custom#var('grep', 'pattern_opt', ['--regexp'])
+call denite#custom#var('grep', 'separator', ['--'])
+call denite#custom#var('grep', 'final_opts', [])
+
+" Remove date from buffer list
+call denite#custom#var('buffer', 'date_format', '')
+
+" Custom options for Denite
+"   auto_resize             - Auto resize the Denite window height automatically.
+"   prompt                  - Customize denite prompt
+"   direction               - Specify Denite window direction as directly below current pane
+"   winminheight            - Specify min height for Denite window
+"   highlight_mode_insert   - Specify h1-CursorLine in insert mode
+"   prompt_highlight        - Specify color of prompt
+"   highlight_matched_char  - Matched characters highlight
+"   highlight_matched_range - matched range highlight
+let s:denite_options = {'default' : {
+\ 'auto_resize': 1,
+\ 'prompt': 'λ:',
+\ 'direction': 'rightbelow',
+\ 'winminheight': '10',
+\ 'highlight_mode_insert': 'Visual',
+\ 'highlight_mode_normal': 'Visual',
+\ 'prompt_highlight': 'Function',
+\ 'highlight_matched_char': 'Function',
+\ 'highlight_matched_range': 'Normal'
+\ }}
+
+" Loop through denite options and enable them
+function! s:profile(opts) abort
+  for l:fname in keys(a:opts)
+    for l:dopt in keys(a:opts[l:fname])
+      call denite#custom#option(l:fname, l:dopt, a:opts[l:fname][l:dopt])
+    endfor
+  endfor
+endfunction
+
+call s:profile(s:denite_options)
+
+"   ;         - Browser currently open buffers
+"   <leader>t - Browse list of files in current directory
+"   <leader>g - Search current directory for occurences of given term and
+"   close window if no results
+"   <leader>j - Search current directory for occurences of word under cursor
+" nmap ; :Denite buffer -split=floating -winrow=1<CR>
+" nmap <leader>t :Denite file/rec -split=floating -winrow=1<CR>
+nmap <C-p> :Denite file/rec<CR>
+" nnoremap <leader>g :<C-u>Denite grep:. -no-empty -mode=normal<CR>
+" nnoremap <leader>j :<C-u>DeniteCursorWord grep:. -mode=normal<CR>
+catch
+  " echo 'Denite not installed. It should work after running :PlugInstall'
+endtry
+
+" }}}
 " ░░░░░░░░░░░░░░░ coc.nvim {{{
 let g:coc_force_debug = 0
 
@@ -1727,13 +1805,14 @@ augroup END
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
-  hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
+  " hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
+  hi MatchWord cterm=underline gui=underline
 
   hi Visual guifg=#3C4C55 guibg=#7FC1CA
   hi Normal guifg=#C5D4DD guibg=NONE
 
-  hi QuickScopePrimary guifg=#DF8C8C guibg=#222222 gui=underline
-  hi QuickScopeSecondary guifg=#F2C38F guibg=#222222 gui=underline
+  " hi QuickScopePrimary guifg=#DF8C8C guibg=#222222 gui=underline
+  " hi QuickScopeSecondary guifg=#F2C38F guibg=#222222 gui=underline
 
   hi gitCommitOverflow guibg=#DF8C8C guifg=#333333 gui=underline
   hi DiffAdd guifg=#A8CE93

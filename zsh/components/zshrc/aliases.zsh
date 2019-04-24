@@ -369,5 +369,5 @@ alias sedhelp="echo \"sed -i -e 's/old-thing/new-thing/g' relative/path/to/*.js\
 
 # weather
 alias weather='curl -s wttr.in | sed -n "1,7p"'
-alias wthr="weather 35244"
+alias wthr='curl -s wttr.in/hoover,al | sed -n "1,7p"'
 alias moon='curl -4 http://wttr.in/Moon'
