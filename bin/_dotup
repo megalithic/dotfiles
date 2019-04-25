@@ -15,6 +15,10 @@ echo '
 ==================================================================================
 '
 
+# neat things for echo'ing colors
+  # https://github.com/ctaylo21/jarvis/blob/master/install.sh#L3
+  # $(tput setaf 2)JARVIS: Greetings. Preparing to power up and begin diagnostics.$(tput sgr 0)
+
 # Detect OS
 if [[ -z $PLATFORM ]]
 then

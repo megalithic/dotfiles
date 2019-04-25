@@ -64,14 +64,14 @@
   "diagnostic.enableMessage": "always",
   "diagnostic.enableSign": true,
   "diagnostic.errorSign": "✖",
-  "diagnostic.highlightOffset": 100,
+  "diagnostic.highlightOffset": 9999999,
   "diagnostic.hintSign": "~",
   "diagnostic.infoSign": "‣",
   "diagnostic.locationlist": false,
   "diagnostic.messageTarget": "float",
   "diagnostic.refreshAfterSave": false,
   "diagnostic.refreshOnInsertMode": true,
-  "diagnostic.signOffset": 100,
+  "diagnostic.signOffset": 9999999,
   "diagnostic.virtualText": false,
   "diagnostic.virtualTextLineSeparator": "//",
   "diagnostic.virtualTextLines": 3,
@@ -135,6 +135,17 @@
   "tailwind.enable": true,
   "tailwind.shortcut": "TWCSS",
   "tailwind.priority": 99,
+
+  // diagnostic-languageserver
+  "diagnostic-languageserver.filetypes": {
+    "vim": "vint",
+    "email": "languagetool",
+    "markdown": [ "write-good", "markdownlint" ],
+    "sh": "shellcheck"
+  },
+  "diagnostic-languageserver.formatFiletypes": {
+    "dart": "dartfmt"
+  },
 
   // languageserver
   "languageserver": {

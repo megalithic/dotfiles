@@ -25,6 +25,7 @@ function! PostInstallCoc(info) abort
     !yarn install
     call coc#util#install_extension(join([
           \ 'coc-css',
+          \ 'coc-diagnostic',
           \ 'coc-emmet',
           \ 'coc-emoji',
           \ 'coc-eslint',
@@ -45,7 +46,9 @@ function! PostInstallCoc(info) abort
           \ 'coc-yaml',
           \ 'coc-yank',
           \ 'https://github.com/xabikos/vscode-react',
-          \ 'https://github.com/xabikos/vscode-javascript'
+          \ 'https://github.com/xabikos/vscode-javascript',
+          \ 'https://github.com/JakeBecker/vscode-elixir-ls',
+          \ 'https://github.com/Krzysztof-Cieslak/vscode-elm'
           \ ]))
 
     " -- disabled coc.nvim extensions:
@@ -63,7 +66,6 @@ function! PostInstallCoc(info) abort
   endif
 endfunction
 
-" Plug 'SirVer/ultisnips'
 Plug 'andymass/vim-matchup'
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
@@ -93,12 +95,12 @@ Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 " Plug 'junegunn/vim-slash'
 Plug 'junegunn/vim-plug'
+Plug 'justinmk/vim-sneak'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
-Plug 'KKPMW/distilled-vim'
-Plug 'kopischke/vim-fetch'
+Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
+Plug 'wsdjeg/vim-fetch'
 " Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
-Plug 'mattn/emmet-vim', { 'for': ['html','erb','eruby','markdown'] }
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
 Plug 'megalithic/golden-ratio' " vertical split layout manager
@@ -109,12 +111,10 @@ Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
 " Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
-Plug 'pbrisbin/vim-colors-off'
+Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'RRethy/vim-hexokinase'
-Plug 'rizzatti/dash.vim'
-" Plug 'Shougo/denite.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'TaDaa/vimade'
@@ -129,7 +129,6 @@ Plug 'tpope/vim-ragtag'
 Plug 'tpope/vim-rails', {'for': 'ruby,erb,yaml,ru,haml'}
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-rhubarb'
-Plug 'tpope/vim-speeddating'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
 Plug 'tpope/vim-vinegar'
@@ -164,7 +163,7 @@ Plug 'mattn/vim-textobj-url'                                      " - u     for 
 Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
 Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
 Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
-Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
+" Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
 " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
@@ -635,7 +634,7 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 " ░░░░░░░░░░░░░░░ plugin settings {{{
 
 " ## polyglot
-let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'graphql', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
+let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
 " ## indentLine
 let g:indentLine_enabled = 1
@@ -645,8 +644,8 @@ let g:indentLine_char = '│'
 
 
 " ## andymass/vim-matchup
-let g:matchup_matchparen_deferred = 1
-let g:matchup_matchparen_hi_surround_always = 1
+" let g:matchup_matchparen_deferred = 1
+" let g:matchup_matchparen_hi_surround_always = 1
 let g:matchup_matchparen_status_offscreen = 0
 
 " ## liuchengxu/vim-which-key
@@ -841,56 +840,6 @@ let g:vista_fzf_preview = ['right:50%']
 " By default it's all the provided executives excluding the tried one.
 let g:vista_finder_alternative_executives = ['coc']
 
-" " ## majutsushi/tagbar
-" nmap <silent> <F4> :TagbarToggle<CR>
-" set tags+=tags,tags.vendors,.tags
-" let g:tagbar_autofocus = 1
-" let g:tagbar_type_elm = {
-"       \   'ctagstype':'elm'
-"       \ , 'kinds' : [
-"       \ 'h:header:0:0',
-"       \ 'e:exposing:0:0',
-"       \ 'f:function:0:0',
-"       \ 'm:modules:0:0',
-"       \ 'i:imports:1:0',
-"       \ 't:types:1:0',
-"       \ 'a:type aliases:0:0',
-"       \ 'c:type constructors:0:0',
-"       \ 'p:ports:0:0',
-"       \ 's:functions:0:0',
-"       \ ]
-"       \ , 'sro':'&&&'
-"       \ , 'kind2scope':{ 'h':'header', 'i':'import'}
-"       \ , 'sort':0
-"       \ , 'ctagsargs': ''
-"       \ , 'ctagsbin':'~/.config/nvim/pythonx/elmtags.py'
-"       \ }
-" let g:tagbar_type_elixir = {
-"       \ 'ctagstype' : 'elixir',
-"       \ 'kinds' : [
-"       \ 'f:functions',
-"       \ 'functions:functions',
-"       \ 'c:callbacks',
-"       \ 'd:delegates',
-"       \ 'e:exceptions',
-"       \ 'i:implementations',
-"       \ 'a:macros',
-"       \ 'o:operators',
-"       \ 'm:modules',
-"       \ 'p:protocols',
-"       \ 'r:records',
-"       \ 't:tests'
-"       \ ]
-"       \ }
-" let g:tagbar_type_markdown = {
-"       \ 'ctagstype' : 'markdown',
-"       \ 'kinds' : [
-"       \ 'h:Heading_L1',
-"       \ 'i:Heading_L2',
-"       \ 'k:Heading_L3'
-"       \ ]
-"       \ }
-
 " ## craigemery/vim-autotag
 let g:autotagTagsFile=".tags"
 
@@ -1033,6 +982,10 @@ let g:indentLine_char = '│'
 let g:golden_ratio_exclude_nonmodifiable = 1
 let g:golden_ratio_wrap_ignored = 0
 let g:golden_ratio_ignore_horizontal_splits = 1
+
+" ## justinmk/vim-sneak
+let g:sneak#label = 1
+let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## quick-scope
 " let g:qs_enable = 1
@@ -1350,7 +1303,9 @@ function! LightlineFileName()
 endfunction
 
 function! LightlineCocDiagnostics() abort
-  if !get(g:, 'coc_enabled', 0) | return '' endif
+  if !get(g:, 'coc_enabled', 0)
+    return ''
+  endif
 
   " let info = get(b:, 'coc_diagnostic_info', {})
   let info = get(b:, 'coc_diagnostic_info', 0)
@@ -1364,11 +1319,11 @@ function! LightlineCocDiagnostics() abort
   let msgs = []
 
   if get(info, 'error', 0)
-    call add(msgs, " " . info['error'])
+    call add(msgs, ' ' . info['error'])
   endif
 
   if get(info, 'warning', 0)
-    call add(msgs, " " . info['warning'])
+    call add(msgs, ' ' . info['warning'])
   endif
 
   return PrintStatusline(join(msgs, ' '). ' ' . get(g:, 'coc_status', ''))
@@ -1450,83 +1405,6 @@ function! s:lightline_ale_diagnostic(kind) abort
 endfunction
 
 " }}}
-" ░░░░░░░░░░░░░░░ denite {{{
-
-try
-" Use ripgrep for searching current directory for files
-" By default, ripgrep will respect rules in .gitignore
-"   --files: Print each file that would be searched (but don't search)
-"   --glob:  Include or exclues files for searching that match the given glob
-"            (aka ignore .git files)
-"
-call denite#custom#var('file/rec', 'command', ['rg', '--files', '--glob', '!.git'])
-
-" Use ripgrep in place of "grep"
-call denite#custom#var('grep', 'command', ['rg'])
-
-" Custom options for ripgrep
-"   --vimgrep:  Show results with every match on it's own line
-"   --hidden:   Search hidden directories and files
-"   --heading:  Show the file name above clusters of matches from each file
-"   --S:        Search case insensitively if the pattern is all lowercase
-call denite#custom#var('grep', 'default_opts', ['--hidden', '--vimgrep', '--heading', '-S'])
-
-" Recommended defaults for ripgrep via Denite docs
-call denite#custom#var('grep', 'recursive_opts', [])
-call denite#custom#var('grep', 'pattern_opt', ['--regexp'])
-call denite#custom#var('grep', 'separator', ['--'])
-call denite#custom#var('grep', 'final_opts', [])
-
-" Remove date from buffer list
-call denite#custom#var('buffer', 'date_format', '')
-
-" Custom options for Denite
-"   auto_resize             - Auto resize the Denite window height automatically.
-"   prompt                  - Customize denite prompt
-"   direction               - Specify Denite window direction as directly below current pane
-"   winminheight            - Specify min height for Denite window
-"   highlight_mode_insert   - Specify h1-CursorLine in insert mode
-"   prompt_highlight        - Specify color of prompt
-"   highlight_matched_char  - Matched characters highlight
-"   highlight_matched_range - matched range highlight
-let s:denite_options = {'default' : {
-\ 'auto_resize': 1,
-\ 'prompt': 'λ:',
-\ 'direction': 'rightbelow',
-\ 'winminheight': '10',
-\ 'highlight_mode_insert': 'Visual',
-\ 'highlight_mode_normal': 'Visual',
-\ 'prompt_highlight': 'Function',
-\ 'highlight_matched_char': 'Function',
-\ 'highlight_matched_range': 'Normal'
-\ }}
-
-" Loop through denite options and enable them
-function! s:profile(opts) abort
-  for l:fname in keys(a:opts)
-    for l:dopt in keys(a:opts[l:fname])
-      call denite#custom#option(l:fname, l:dopt, a:opts[l:fname][l:dopt])
-    endfor
-  endfor
-endfunction
-
-call s:profile(s:denite_options)
-
-"   ;         - Browser currently open buffers
-"   <leader>t - Browse list of files in current directory
-"   <leader>g - Search current directory for occurences of given term and
-"   close window if no results
-"   <leader>j - Search current directory for occurences of word under cursor
-" nmap ; :Denite buffer -split=floating -winrow=1<CR>
-" nmap <leader>t :Denite file/rec -split=floating -winrow=1<CR>
-nmap <C-p> :Denite file/rec<CR>
-" nnoremap <leader>g :<C-u>Denite grep:. -no-empty -mode=normal<CR>
-" nnoremap <leader>j :<C-u>DeniteCursorWord grep:. -mode=normal<CR>
-catch
-  " echo 'Denite not installed. It should work after running :PlugInstall'
-endtry
-
-" }}}
 " ░░░░░░░░░░░░░░░ coc.nvim {{{
 let g:coc_force_debug = 0
 
@@ -1568,7 +1446,7 @@ endfunction
 let g:coc_snippet_next = '<TAB>'
 let g:coc_snippet_prev = '<S-TAB>'
 
-" Use <c-space> for trigger completion.
+" Use <C-e> for trigger completion.
 inoremap <silent><expr> <C-e> coc#refresh()
 
 " Use <Tab> and <S-Tab> for navigate completion list:
@@ -1602,6 +1480,7 @@ endfunction
 
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
+nmap <silent> <leader>lk :call <SID>show_documentation()<CR>
 nmap <silent> <leader>ld <Plug>(coc-definition)
 nmap <silent> <leader>lt <Plug>(coc-type-definition)
 nmap <silent> <leader>li <Plug>(coc-implementation)
@@ -1629,7 +1508,12 @@ command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
 " " Using CocList
 " " Show all diagnostics
-" nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
+nnoremap <silent> <space>d  :<C-u>CocList diagnostics<cr>
+" Do default action for next item.
+nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+
 " " Manage extensions
 " nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
 " " Show commands
@@ -1751,7 +1635,9 @@ augroup END
   hi Type cterm=italic gui=italic
   hi Comment cterm=italic term=italic gui=italic
   " hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
+
   hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=italic
+
   " hi CursorLine guibg=#333333
   " hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
   " hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
@@ -1763,8 +1649,8 @@ augroup END
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-  hi SpellBad gui=undercurl,underline guifg=#DF8C8C
-  hi SpellCap gui=undercurl,underline guifg=#DF8C8C
+  hi SpellBad gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
+  hi SpellCap gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
   hi VertSplit guibg=NONE
 
   hi link Debug SpellBad
@@ -1806,7 +1692,8 @@ augroup END
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
   " hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
-  hi MatchWord cterm=underline gui=underline
+  hi MatchWord cterm=underline gui=underline,italic
+  hi MatchParen cterm=underline gui=underline,italic
 
   hi Visual guifg=#3C4C55 guibg=#7FC1CA
   hi Normal guifg=#C5D4DD guibg=NONE

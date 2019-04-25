@@ -50,3 +50,4 @@ nvim/*.log
 weechat/**/plugins.xml.gz
 nvim/nvim-*.log*
 keyboard/karabiner/automatic_backups/*
+NetrwTreeListing*
