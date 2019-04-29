@@ -137,15 +137,27 @@
   "tailwind.priority": 99,
 
   // diagnostic-languageserver
-  "diagnostic-languageserver.filetypes": {
-    "vim": "vint",
-    "email": "languagetool",
-    "markdown": [ "write-good", "markdownlint" ],
-    "sh": "shellcheck"
-  },
-  "diagnostic-languageserver.formatFiletypes": {
-    "dart": "dartfmt"
-  },
+  /* "diagnostic-languageserver.filetypes": { */
+  /*   "vim": "vint", */
+  /*   "markdown": [ "write-good", "markdownlint" ], */
+  /*   "sh": "shellcheck", */
+  /*   "elixir": "credo", */
+  /*   "eelixir": "credo" */
+  /* }, */
+  /* "diagnostic-languageserver.linters": { */
+  /*   "elixir": "credo", */
+  /*   "eelixir": "credo" */
+  /* }, */
+  /* "diagnostic-languageserver.formatFiletypes": { */
+  /*   "elm": "elm-format", */
+  /*   "elixir": "mix format", */
+  /*   "eelixir": "mix format" */
+  /* }, */
+  /* "diagnostic-languageserver.formatters": { */
+  /*   "elm": "elm-format", */
+  /*   "elixir": "mix format", */
+  /*   "eelixir": "mix format" */
+  /* }, */
 
   // languageserver
   "languageserver": {
@@ -158,11 +170,14 @@
       "settings": {}
     },
     /* "elm": { */
-    /*   "command": "elm-language-server-exe", */
-    /*   "args": [], */
+    /*   "command": "elm-lsp", */
+    /*   "args": ["--stdio"], */
     /*   "filetypes": ["elm"], */
+    /*   "cwd": ".", */
     /*   "rootPatterns": ["elm.json"], */
-    /*   "initializationOptions": { }, */
+    /*   "initializationOptions": { */
+    /*     "runtime": "node" */
+    /*   }, */
     /*   "settings": {} */
     /* }, */
     "elixir": {
@@ -189,7 +204,7 @@
       "command": "lua-lsp",
       "filetypes": ["lua"]
     }
-  },
+  }
 }
 
 // vim:ft=jsonc

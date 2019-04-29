@@ -1,6 +1,7 @@
 bash-language-server
 convert-snippets
 create-elm-app
+diagnostic-languageserver
 do-not-disturb-cli
 elm
 elm-lsp
@@ -11,6 +12,7 @@ antew/elm-analyse#lsp
 elm-format
 eslint
 flow-language-server
+markdownlint
 neovim
 javascript-typescript-langserver
 taskbook

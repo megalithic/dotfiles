@@ -14,7 +14,7 @@
 if empty(glob('~/.config/nvim/autoload/plug.vim'))
   silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  au VimEnter * PlugInstall --sync | source $MYVIMRC
+  au! User VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
@@ -38,6 +38,7 @@ function! PostInstallCoc(info) abort
           \ 'coc-rls',
           \ 'coc-snippets',
           \ 'coc-solargraph',
+          \ 'coc-svg',
           \ 'coc-tag',
           \ 'coc-tailwindcss',
           \ 'coc-tsserver',
@@ -47,8 +48,6 @@ function! PostInstallCoc(info) abort
           \ 'coc-yank',
           \ 'https://github.com/xabikos/vscode-react',
           \ 'https://github.com/xabikos/vscode-javascript',
-          \ 'https://github.com/JakeBecker/vscode-elixir-ls',
-          \ 'https://github.com/Krzysztof-Cieslak/vscode-elm'
           \ ]))
 
     " -- disabled coc.nvim extensions:
@@ -83,7 +82,8 @@ Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': 'elixir' }
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
-" Plug 'honza/vim-snippets'
+Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript','typescriptreact','typescript.tsx'] }
+Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
@@ -103,6 +103,7 @@ Plug 'wsdjeg/vim-fetch'
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
+Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
@@ -198,8 +199,8 @@ set sidescrolloff=15
 set sidescroll=5
 
 " ---- Tab settings
-set ts=2
-set sw=2
+set tabstop=2
+set shiftwidth=2
 set expandtab
 
 " ---- Hud
@@ -237,7 +238,7 @@ endif
 " ---- Swap and backups
 set noswapfile
 set nobackup
-set nowb
+set nowritebackup
 set backupcopy=yes "HMR things - https://parceljs.org/hmr.html#safe-write
 
 " ---- Dictionary and spelling
@@ -291,7 +292,7 @@ if has('termguicolors')
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   endif
 endif
-set gcr=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
+set guicursor=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
 
 "}}}
 " ░░░░░░░░░░░░░░░ mappings/remaps {{{
@@ -423,6 +424,9 @@ nnoremap S i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w
 " Copy command
 vnoremap <C-x> :!pbcopy<CR>
 vnoremap <C-c> :w !pbcopy<CR><CR>
+
+" mbbill/undotree
+nnoremap <F7> :UndotreeToggle<CR>
 
 "}}}
 " ░░░░░░░░░░░░░░░ autocommands {{{
@@ -698,7 +702,7 @@ let g:fzf_action = {
 
 let g:fzf_layout = { 'down': '~15%' }
 
-if executable("rg")
+if executable('rg')
   " ## rg
   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
   function! s:CompleteRg(arg_lead, line, pos)
@@ -736,7 +740,7 @@ let g:limelight_conceal_guifg = '#777777'
 function! s:goyo_enter()
   silent !tmux set status off
   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
-  set tw=78
+  set textwidth=78
   set wrap
   set noshowmode
   set noshowcmd
@@ -747,7 +751,7 @@ endfunction
 function! s:goyo_leave()
   silent !tmux set status on
   silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
-  set tw=0
+  set textwidth=0
   set nowrap
   set showmode
   set showcmd
@@ -822,7 +826,7 @@ let g:vista_blink = [2, 100]
 " How each level is indented and what to prepend.
 " This could make the display more compact or more spacious.
 " e.g., more compact: ["▸ ", ""]
-let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+let g:vista_icon_indent = ['╰─▸ ', '├─▸ ']
 " Executive used when opening vista sidebar without specifying it.
 " See all the avaliable executives via `:echo g:vista#executives`.
 let g:vista_default_executive = 'ctags'
@@ -841,14 +845,14 @@ let g:vista_fzf_preview = ['right:50%']
 let g:vista_finder_alternative_executives = ['coc']
 
 " ## craigemery/vim-autotag
-let g:autotagTagsFile=".tags"
+let g:autotagTagsFile='.tags'
 
 " ## elm-vim
 let g:elm_jump_to_error = 0
-let g:elm_make_output_file = "/dev/null"
+let g:elm_make_output_file = '/dev/null'
 let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
-let g:elm_browser_command = "open"
+let g:elm_browser_command = 'open'
 let g:elm_detailed_complete = 1
 let g:elm_format_autosave = 0 " conflicts with ale's elm-format
 let g:elm_format_fail_silently = 0
@@ -887,7 +891,6 @@ let g:markdown_fenced_languages = [
       \ 'bash=sh', 'zsh', 'elm', 'elixir']
 
 " ## w0rp/ale
-let g:ale_javascript_eslint_use_global = 1
 let g:ale_enabled = 1
 let g:ale_completion_enabled = 0
 let g:ale_lint_delay = 1000
@@ -915,18 +918,19 @@ let g:ale_fixers = {
 let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
 let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
 let g:ale_sign_info = '‣'
-let g:ale_elixir_elixir_ls_release = expand($PWD."/.elixir_ls/rel")
+let g:ale_elixir_elixir_ls_release = expand($PWD.'/.elixir_ls/rel')
 let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
 let g:ale_elm_format_use_global = 0
 let g:ale_elm_format_options = '--yes --elm-version=0.18'
 let g:ale_elm_analyse_use_global = 0
+let g:ale_javascript_eslint_use_global = 1
 let g:ale_lint_on_text_changed = 'always' " 'normal'
 let g:ale_lint_on_insert_leave = 1
 let g:ale_lint_on_enter = 1
 let g:ale_lint_on_save = 1
 let g:ale_fix_on_save = 1
 let g:ale_virtualtext_cursor = 1
-let g:ale_virtualtext_prefix = "❯❯ "
+let g:ale_virtualtext_prefix = '❯❯ '
 " let g:ale_set_balloons = 0
 " let g:ale_set_highlights = 0
 " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
@@ -1008,10 +1012,10 @@ let g:user_emmet_leader_key = '<C-e>'
 
 " ## ultisnips
 " Not conflict with Coc
-let g:UltiSnipsExpandTrigger = "<C-e>"
-" let g:UltiSnipsExpandTrigger = "<Plug>(ultisnips_expand)"
-let g:UltiSnipsJumpForwardTrigger	= "<Tab>"
-let g:UltiSnipsJumpBackwardTrigger	= "<S-Tab>"
+let g:UltiSnipsExpandTrigger = '<C-e>'
+" let g:UltiSnipsExpandTrigger = '<Plug>(ultisnips_expand)'
+let g:UltiSnipsJumpForwardTrigger	= '<Tab>'
+let g:UltiSnipsJumpBackwardTrigger	= '<S-Tab>'
 let g:UltiSnipsRemoveSelectModeMappings = 0
 let g:UltiSnipsSnippetDirectories=['UltiSnips']
 
@@ -1024,9 +1028,9 @@ let g:UltiSnipsSnippetDirectories=['UltiSnips']
 " This is how long you want the blinking to last in milliseconds. If you're
 " using an earlier Vim without the `+timers` feature, you need a much shorter
 " blink time because Vim blocks while it waits for the blink to complete.
-let s:blink_length = has("timers") ? 500 : 100
+let s:blink_length = has('timers') ? 500 : 100
 
-if has("timers")
+if has('timers')
   " This is the length of each blink in milliseconds. If you just want an
   " interruptible non-blinking highlight, set this to match s:blink_length
   " by uncommenting the line below
@@ -1084,7 +1088,7 @@ endif
 
 function! HLNext(blink_length, blink_freq)
   let target_pat = '\c\%#'.@/
-  if has("timers")
+  if has('timers')
     " Reset any existing blinks
     call BlinkStop(0)
     " Start blinking. It is necessary to call this now so that the match is
@@ -1109,8 +1113,8 @@ function! HLNext(blink_length, blink_freq)
 endfunction
 
 " Set up maps for n and N that blink the match
-execute printf("nnoremap <silent> n n:call HLNext(%d, %d)<cr>", s:blink_length, has("timers") ? s:blink_freq : s:blink_length)
-execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, has("timers") ? s:blink_freq : s:blink_length)
+execute printf('nnoremap <silent> n n:call HLNext(%d, %d)<cr>', s:blink_length, has('timers') ? s:blink_freq : s:blink_length)
+execute printf('nnoremap <silent> N N:call HLNext(%d, %d)<cr>', s:blink_length, has('timers') ? s:blink_freq : s:blink_length)
 
 " }}}
 " ░░░░░░░░░░░░░░░ lightline/statusbar {{{
@@ -1209,12 +1213,12 @@ let g:lightline = {
       \ }
 
 let g:lightline#ale#indicator_ok = "\uf42e  "
-let g:lightline#ale#indicator_warnings = "  "
-let g:lightline#ale#indicator_errors = "  "
-let g:lightline#ale#indicator_checking = "  "
+let g:lightline#ale#indicator_warnings = '  '
+let g:lightline#ale#indicator_errors = '  '
+let g:lightline#ale#indicator_checking = '  '
 
-let g:coc_status_warning_sign = "  "
-let g:coc_status_error_sign = "  "
+let g:coc_status_warning_sign = '  '
+let g:coc_status_error_sign = '  '
 
 function! UpdateStatusBar(timer)
   " call lightline#update()
@@ -1237,7 +1241,7 @@ endfunction
 function! LightlineBranch()
   if exists('*fugitive#head')
     let l:branch = fugitive#head()
-    return PrintStatusline(branch !=# '' ? " " . l:branch : '')
+    return PrintStatusline(branch !=# '' ? ' ' . l:branch : '')
   endif
   return ''
 endfunction
@@ -1257,7 +1261,7 @@ endfunction
 
 function! LightlineModified()
   return PrintStatusline(!&modifiable ? '-' : &modified ?
-        \ "" : '')
+        \ '' : '')
 endfunction
 
 function! LightlineFileName()
@@ -1636,7 +1640,7 @@ augroup END
   hi Comment cterm=italic term=italic gui=italic
   " hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
 
-  hi CursorLineNr ctermbg=black ctermfg=223 cterm=NONE guibg=#333333 guifg=#db9c5e gui=italic
+  hi CursorLineNr guibg=#333333 guifg=#ffffff guifg=#db9c5e gui=italic
 
   " hi CursorLine guibg=#333333
   " hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
