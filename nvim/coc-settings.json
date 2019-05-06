@@ -169,17 +169,17 @@
       "initializationOptions": {},
       "settings": {}
     },
-    /* "elm": { */
-    /*   "command": "elm-lsp", */
-    /*   "args": ["--stdio"], */
-    /*   "filetypes": ["elm"], */
-    /*   "cwd": ".", */
-    /*   "rootPatterns": ["elm.json"], */
-    /*   "initializationOptions": { */
-    /*     "runtime": "node" */
-    /*   }, */
-    /*   "settings": {} */
-    /* }, */
+    "elm": {
+      "command": "elm-lsp",
+      "args": ["--stdio"],
+      "filetypes": ["elm"],
+      "cwd": ".",
+      "rootPatterns": ["elm.json"],
+      "initializationOptions": {
+        "runtime": "node"
+      },
+      "settings": {}
+    },
     "elixir": {
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],

@@ -26,8 +26,6 @@ function! PostInstallCoc(info) abort
     call coc#util#install_extension(join([
           \ 'coc-css',
           \ 'coc-diagnostic',
-          \ 'coc-emmet',
-          \ 'coc-emoji',
           \ 'coc-eslint',
           \ 'coc-highlight',
           \ 'coc-html',
@@ -46,11 +44,11 @@ function! PostInstallCoc(info) abort
           \ 'coc-word',
           \ 'coc-yaml',
           \ 'coc-yank',
-          \ 'https://github.com/xabikos/vscode-react',
-          \ 'https://github.com/xabikos/vscode-javascript',
           \ ]))
 
     " -- disabled coc.nvim extensions:
+    " \ 'coc-emmet',
+    " \ 'coc-emoji',
     " \ 'coc-omni',
     " \ 'coc-dictionary',
     " \ 'coc-java',
@@ -59,6 +57,8 @@ function! PostInstallCoc(info) abort
     " \ 'coc-stylelint',
     " \ 'coc-ultisnips',
     " \ 'coc-snippets',
+    " \ 'https://github.com/xabikos/vscode-react',
+    " \ 'https://github.com/xabikos/vscode-javascript',
   elseif a:info.status ==? 'updated'
     !yarn install
     call coc#util#update()
@@ -116,6 +116,7 @@ Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'RRethy/vim-hexokinase'
+Plug 'rhysd/git-messenger.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'TaDaa/vimade'
@@ -126,6 +127,7 @@ Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-git'
 Plug 'tpope/vim-markdown'
+Plug 'tpope/vim-projectionist'
 Plug 'tpope/vim-ragtag'
 Plug 'tpope/vim-rails', {'for': 'ruby,erb,yaml,ru,haml'}
 Plug 'tpope/vim-repeat'
@@ -164,7 +166,7 @@ Plug 'mattn/vim-textobj-url'                                      " - u     for 
 Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
 Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
 Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
-" Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
+Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
 " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
@@ -646,6 +648,9 @@ let g:indentLine_color_gui = '#556874'
 let g:indentLine_char = '│'
 " let g:indentLine_bgcolor_gui = '#3C4C55'
 
+" rhysd/git-messenger
+let g:git_messenger_no_default_mappings = 1
+nmap <leader>gm <Plug>(git-messenger)
 
 " ## andymass/vim-matchup
 " let g:matchup_matchparen_deferred = 1
@@ -847,6 +852,21 @@ let g:vista_finder_alternative_executives = ['coc']
 " ## craigemery/vim-autotag
 let g:autotagTagsFile='.tags'
 
+" ## vim-projectionist
+let g:projectionist_heuristics = {
+      \  'mix.exs': {
+      \    'lib/*.ex': {
+      \      'type': 'src',
+      \      'alternate': 'test/{}_test.exs',
+      \    },
+      \    'test/*_test.exs': {
+      \      'type': 'test',
+      \      'alternate': 'lib/{}.ex',
+      \    }
+      \  }
+      \}
+
+
 " ## elm-vim
 let g:elm_jump_to_error = 0
 let g:elm_make_output_file = '/dev/null'
@@ -921,7 +941,7 @@ let g:ale_sign_info = '‣'
 let g:ale_elixir_elixir_ls_release = expand($PWD.'/.elixir_ls/rel')
 let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
 let g:ale_elm_format_use_global = 0
-let g:ale_elm_format_options = '--yes --elm-version=0.18'
+let g:ale_elm_format_options = '--yes --elm-version=0.19'
 let g:ale_elm_analyse_use_global = 0
 let g:ale_javascript_eslint_use_global = 1
 let g:ale_lint_on_text_changed = 'always' " 'normal'
@@ -1484,6 +1504,7 @@ endfunction
 
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
+nnoremap <silent> K :call <SID>show_documentation()<CR>
 nmap <silent> <leader>lk :call <SID>show_documentation()<CR>
 nmap <silent> <leader>ld <Plug>(coc-definition)
 nmap <silent> <leader>lt <Plug>(coc-type-definition)
@@ -1512,11 +1533,11 @@ command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
 " " Using CocList
 " " Show all diagnostics
-nnoremap <silent> <space>d  :<C-u>CocList diagnostics<cr>
-" Do default action for next item.
-nnoremap <silent> <space>j  :<C-u>CocNext<CR>
-" Do default action for previous item.
-nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+" nnoremap <silent> <space>d  :<C-u>CocList diagnostics<cr>
+" " Do default action for next item.
+" nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+" " Do default action for previous item.
+" nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 
 " " Manage extensions
 " nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
@@ -1712,6 +1733,18 @@ augroup END
   hi DiffRemoved guifg=#DF8C8C
 
   hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
+
+  " Header such as 'Commit:', 'Author:'
+  hi link gitmessengerHeader Identifier
+  " Commit hash at 'Commit:' header
+  hi link gitmessengerHash Comment
+  " History number at 'History:' header
+  hi link gitmessengerHistory Constant
+  " Normal color. This color is the most important
+  hi link gitmessengerPopupNormal CursorLine
+  " Color of 'end of buffer'. To hide '~' in popup window, I recommend to use the same background
+  " color as gitmessengerPopupNormal.
+  hi gitmessengerEndOfBuffer term=None guifg=None guibg=None ctermfg=None ctermbg=None
 
 " }}}
 
