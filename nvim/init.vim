@@ -1,3 +1,4 @@
+scriptencoding utf-8
 " ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
 " ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 "
@@ -27,6 +28,7 @@ function! PostInstallCoc(info) abort
           \ 'coc-css',
           \ 'coc-diagnostic',
           \ 'coc-eslint',
+          \ 'coc-git',
           \ 'coc-highlight',
           \ 'coc-html',
           \ 'coc-json',
@@ -966,15 +968,17 @@ map <S-F5> :PlugClean!<CR>
 
 " ## fugitive
 nnoremap <leader>H :Gbrowse<CR>
+nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>H :Gbrowse<CR>
-nnoremap <leader>B :Gblame<CR>
+vnoremap <leader>gh :Gbrowse<CR>
+nnoremap <leader>gb :Gblame<CR>
 
 " ## vim-test / testing
-nmap <silent> <leader>t :TestFile<CR>
-nmap <silent> <leader>T :TestNearest<CR>
-nmap <silent> <leader>L :TestLast<CR>
-" nmap <silent> <leader>a :TestSuite<CR>
-" nmap <silent> <leader>g :TestVisit<CR>
+nmap <silent> <leader>tf :TestFile<CR>
+nmap <silent> <leader>tt :TestNearest<CR>
+nmap <silent> <leader>tl :TestLast<CR>
+nmap <silent> <leader>ta :TestSuite<CR>
+nmap <silent> <leader>tv :TestVisit<CR>
 " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
 
 " ## gist/github
@@ -985,7 +989,7 @@ let g:gist_default_private = 1
 vnoremap <leader>G :Gist -po<CR>
 
 " ## dash.vim
-nmap <silent> <leader>d <Plug>DashSearch
+nmap <silent> <leader>D <Plug>DashSearch
 
 " ## vim-commentary
 nmap <leader>c :Commentary<CR>
@@ -1531,9 +1535,8 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
-" " Using CocList
 " " Show all diagnostics
-" nnoremap <silent> <space>d  :<C-u>CocList diagnostics<cr>
+nnoremap <silent> <leader>le  :<C-u>CocList diagnostics<cr>
 " " Do default action for next item.
 " nnoremap <silent> <space>j  :<C-u>CocNext<CR>
 " " Do default action for previous item.

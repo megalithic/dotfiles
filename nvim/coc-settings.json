@@ -136,6 +136,16 @@
   "tailwind.shortcut": "TWCSS",
   "tailwind.priority": 99,
 
+  // git
+  "git.enableGutters": false,
+  "git.signOffset": 99,
+  "git.branchCharacter": "⎇",
+  "git.addedSign.text": "▏",
+  "git.changedSign.text": "▏",
+  "git.removedSign.text": "▏",
+  "git.topRemovedSign.text": "‾",
+  "git.changeRemovedSign.text": "≃",
+
   // diagnostic-languageserver
   /* "diagnostic-languageserver.filetypes": { */
   /*   "vim": "vint", */
