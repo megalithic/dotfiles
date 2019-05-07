@@ -24,6 +24,7 @@
   "suggest.enablePreview":true,
   "suggest.localityBonus": true,
   "suggest.maxCompleteItemCount": 20,
+  "suggest.maxPreviewWidth": 80,
   "suggest.minTriggerInputLength": 2,
   "suggest.noselect": false,
   "suggest.numberSelect": false,
@@ -137,7 +138,7 @@
   "tailwind.priority": 99,
 
   // git
-  "git.enableGutters": false,
+  "git.enableGutters": true,
   "git.signOffset": 99,
   "git.branchCharacter": "⎇",
   "git.addedSign.text": "▏",

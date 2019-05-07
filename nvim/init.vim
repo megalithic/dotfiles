@@ -1535,8 +1535,14 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
-" " Show all diagnostics
-nnoremap <silent> <leader>le  :<C-u>CocList diagnostics<cr>
+" Show all diagnostics
+nnoremap <silent> <leader>le :<C-u>CocList diagnostics<cr>
+" Show git status
+nnoremap <silent> <leader>lg :<C-u>CocList --normal --auto-preview gstatus<CR>
+nmap [g <Plug>(coc-git-prevchunk)
+nmap ]g <Plug>(coc-git-nextchunk)
+nmap gs <Plug>(coc-git-chunkinfo)
+
 " " Do default action for next item.
 " nnoremap <silent> <space>j  :<C-u>CocNext<CR>
 " " Do default action for previous item.
