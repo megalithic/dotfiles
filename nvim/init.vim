@@ -27,6 +27,7 @@ function! PostInstallCoc(info) abort
     call coc#util#install_extension(join([
           \ 'coc-css',
           \ 'coc-diagnostic',
+          \ 'coc-dictionary',
           \ 'coc-eslint',
           \ 'coc-git',
           \ 'coc-highlight',
@@ -34,11 +35,12 @@ function! PostInstallCoc(info) abort
           \ 'coc-json',
           \ 'coc-lists',
           \ 'coc-prettier',
-          \ 'coc-pyls',
+          \ 'coc-python',
           \ 'coc-rls',
           \ 'coc-snippets',
           \ 'coc-solargraph',
           \ 'coc-svg',
+          \ 'coc-syntax',
           \ 'coc-tag',
           \ 'coc-tailwindcss',
           \ 'coc-tsserver',
@@ -52,7 +54,6 @@ function! PostInstallCoc(info) abort
     " \ 'coc-emmet',
     " \ 'coc-emoji',
     " \ 'coc-omni',
-    " \ 'coc-dictionary',
     " \ 'coc-java',
     " \ 'coc-vetur',
     " \ 'coc-wxml',
@@ -111,7 +112,26 @@ Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
 " Plug 'neoclide/coc.nvim', { 'do': { -> coc#util#install()} }
+" Plug 'neoclide/coc-css', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'iamcco/coc-diagnostic', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-eslint', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-git', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-highlight', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-html', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-json', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-lists', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-prettier', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-pyls', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-rls', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-snippets', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-svg', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-tailwindcss', {'do': 'yarn install --frozen-lockfile'}
 " Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-tslint-plugin', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-sources', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-yaml', {'do': 'yarn install --frozen-lockfile'}
+" Plug 'neoclide/coc-yank', {'do': 'yarn install --frozen-lockfile'}
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
@@ -1445,8 +1465,8 @@ set formatexpr=CocActionAsync('formatSelected')
 
 " FOR COC-ULTISNIPS + COC.NVIM
 " ----------------------------
-" " Use tab for trigger completion with characters ahead and navigate.
-" " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+" Use tab for trigger completion with characters ahead and navigate.
+" Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
 " inoremap <silent><expr> <TAB>
 "       \ pumvisible() ? "\<C-n>" :
 "       \ <SID>check_back_space() ? "\<TAB>" :
@@ -1536,12 +1556,23 @@ command! -nargs=0 Format :call CocActionAsync('format')
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
 " Show all diagnostics
-nnoremap <silent> <leader>le :<C-u>CocList diagnostics<cr>
+nnoremap <silent> <leader>le :<C-u>CocList diagnostics<CR>
 " Show git status
 nnoremap <silent> <leader>lg :<C-u>CocList --normal --auto-preview gstatus<CR>
 nmap [g <Plug>(coc-git-prevchunk)
 nmap ]g <Plug>(coc-git-nextchunk)
 nmap gs <Plug>(coc-git-chunkinfo)
+" Show yank list
+nnoremap <silent> <leader>ly :<C-u>CocList -A --normal yank<CR>
+
+command! -nargs=+ -complete=custom,s:GrepArgs Rgg exe 'CocList grep '.<q-args>
+function! s:GrepArgs(...)
+  let list = ['-S', '-smartcase', '-i', '-ignorecase', '-w', '-word',
+        \ '-e', '-regex', '-u', '-skip-vcs-ignores', '-t', '-extension']
+  return join(list, "\n")
+endfunction
+
+nnoremap <silent> <leader>lw :exe 'CocList -I --normal --input='.expand('<cword>').' words'<CR>
 
 " " Do default action for next item.
 " nnoremap <silent> <space>j  :<C-u>CocNext<CR>
