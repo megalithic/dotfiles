@@ -1731,28 +1731,18 @@ augroup END
 
   " hi CocCodeLens ctermfg=gray guifg=#999999
 
+  hi CocGitAddedSign guifg=#A8CE93
+  hi CocGitRemovedSign guifg=#DF8C8C
+  hi CocGitChangedSign guifg=#F2C38F
+
   hi CocHintSign guifg=#666666
   hi CocHintHighlight gui=underline guifg=#666666
-  " hi CocHintFloat guifg=#666666 guibg=#FFFACD
-
-  " hi CocInfoFloat guifg=#666666 guibg=#FFFACD
 
   hi CocWarningSign guifg=#F2C38F
   hi CocWarningHighlight gui=underline guifg=#F2C38F
-  " hi CocWarningFloat guifg=#666666 guibg=#FFFACD
-  " hi CocWarningLine gui=underline
 
   hi CocErrorSign guifg=#DF8C8C
   hi CocErrorHighlight gui=underline guifg=#DF8C8C
-  " hi CocErrorFloat guifg=#666666 guibg=#FFFACD
-  " hi CocErrorLine gui=underline
-
-  " hi CocFloating guifg=#666666 guibg=#FFFACD
-  " hi CocPumFloating guifg=#222222 guibg=#C5D4DD
-  " hi CocPumFloatingDetail guifg=#222222 guibg=#C5D4DD
-
-  " hi Floating guibg=#000044
-  " hi NormalFloat guibg=#000044
 
   hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
   hi illuminatedWord cterm=underline gui=underline
