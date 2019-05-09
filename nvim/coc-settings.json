@@ -76,11 +76,11 @@
   "diagnostic.virtualText": false,
   "diagnostic.virtualTextLineSeparator": "//",
   "diagnostic.virtualTextLines": 3,
-  "diagnostic.virtualTextPrefix": "‣❯ ",
+  "diagnostic.virtualTextPrefix": "\uf63d",
   "diagnostic.warningSign": "⬥",
 
   "codeLens.enable": true,
-  "codeLens.separator": "‣❯",
+  "codeLens.separator": "\ufbc0",
 
   "highlight.disableLanguages": [],
   "highlight.document.enable": true,

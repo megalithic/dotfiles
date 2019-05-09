@@ -21,53 +21,6 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugins')
 
-function! PostInstallCoc(info) abort
-  if a:info.status ==? 'installed' || a:info.force
-    !yarn install
-    call coc#util#install_extension(join([
-          \ 'coc-css',
-          \ 'coc-diagnostic',
-          \ 'coc-dictionary',
-          \ 'coc-eslint',
-          \ 'coc-git',
-          \ 'coc-highlight',
-          \ 'coc-html',
-          \ 'coc-json',
-          \ 'coc-lists',
-          \ 'coc-prettier',
-          \ 'coc-python',
-          \ 'coc-rls',
-          \ 'coc-snippets',
-          \ 'coc-solargraph',
-          \ 'coc-svg',
-          \ 'coc-syntax',
-          \ 'coc-tag',
-          \ 'coc-tailwindcss',
-          \ 'coc-tsserver',
-          \ 'coc-tslint-plugin',
-          \ 'coc-word',
-          \ 'coc-yaml',
-          \ 'coc-yank',
-          \ ]))
-
-    " -- disabled coc.nvim extensions:
-    " \ 'coc-emmet',
-    " \ 'coc-emoji',
-    " \ 'coc-omni',
-    " \ 'coc-java',
-    " \ 'coc-vetur',
-    " \ 'coc-wxml',
-    " \ 'coc-stylelint',
-    " \ 'coc-ultisnips',
-    " \ 'coc-snippets',
-    " \ 'https://github.com/xabikos/vscode-react',
-    " \ 'https://github.com/xabikos/vscode-javascript',
-  elseif a:info.status ==? 'updated'
-    !yarn install
-    call coc#util#update()
-  endif
-endfunction
-
 Plug 'andymass/vim-matchup'
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
@@ -102,7 +55,7 @@ Plug 'justinmk/vim-sneak'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
 Plug 'wsdjeg/vim-fetch'
-" Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
+Plug 'liuchengxu/vim-which-key'
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
@@ -110,28 +63,62 @@ Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
-Plug 'neoclide/coc.nvim', { 'do': function('PostInstallCoc') }
-" Plug 'neoclide/coc.nvim', { 'do': { -> coc#util#install()} }
-" Plug 'neoclide/coc-css', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'iamcco/coc-diagnostic', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-eslint', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-git', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-highlight', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-html', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-json', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-lists', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-prettier', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-pyls', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-rls', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-snippets', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-solargraph', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-svg', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-tailwindcss', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-tsserver', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-tslint-plugin', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-sources', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-yaml', {'do': 'yarn install --frozen-lockfile'}
-" Plug 'neoclide/coc-yank', {'do': 'yarn install --frozen-lockfile'}
+if executable('yarn') && executable('node')
+  function! PostInstallCoc(info)
+    echo 'PostInstallCoc Status: ' . a:info.status
+    if a:info.status ==# 'installed' || a:info.force
+      let extensions = [
+            \ 'coc-css',
+            \ 'coc-diagnostic',
+            \ 'coc-dictionary',
+            \ 'coc-eslint',
+            \ 'coc-git',
+            \ 'coc-highlight',
+            \ 'coc-html',
+            \ 'coc-json',
+            \ 'coc-lists',
+            \ 'coc-prettier',
+            \ 'coc-python',
+            \ 'coc-rls',
+            \ 'coc-snippets',
+            \ 'coc-solargraph',
+            \ 'coc-svg',
+            \ 'coc-syntax',
+            \ 'coc-tag',
+            \ 'coc-tailwindcss',
+            \ 'coc-tsserver',
+            \ 'coc-tslint-plugin',
+            \ 'coc-word',
+            \ 'coc-yaml',
+            \ 'coc-yank',
+            \ ]
+
+      " -- disabled coc.nvim extensions:
+      "
+      " \ 'coc-emmet',
+      " \ 'coc-emoji',
+      " \ 'coc-highlight',
+      " \ 'coc-omni',
+      " \ 'coc-java',
+      " \ 'coc-vetur',
+      " \ 'coc-wxml',
+      " \ 'coc-stylelint',
+      " \ 'coc-ultisnips',
+      " \ 'coc-snippets',
+      " \ 'https://github.com/xabikos/vscode-react',
+      " \ 'https://github.com/xabikos/vscode-javascript',
+      " \ 'https://github.com/arubertoson/vscode-snippets',
+
+      call coc#util#install()
+      for l:ext in extensions
+        if !(finddir(l:ext, coc#util#extension_root()))
+          call coc#util#install_extension(['-sync', l:ext])
+        endif
+      endfor
+    endif
+  endfunction
+  Plug 'neoclide/coc.nvim', {'do': function('PostInstallCoc')}
+endif
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
@@ -234,7 +221,9 @@ set nowrap
 set fillchars=vert:\│,fold:·
 " set colorcolumn=80
 set nocursorline                                                                  "Highlight current line
-set pumheight=30                                                                "Maximum number of entries in autocomplete popup
+if exists('+pumheight')
+  set pumheight=30
+endif
 set cmdheight=1
 set signcolumn=yes
 " set cpoptions+=$              " dollar sign while changing
@@ -323,9 +312,6 @@ set guicursor=a:blinkon500-blinkwait500-blinkoff500                             
 
 let mapleader=','
 let maplocalleader=','
-
-" nnoremap <silent> <leader>      :<c-u>WhichKey '<Space>'<CR>
-" nnoremap <silent> <localleader> :<c-u>WhichKey  ','<CR>
 
 " Fancy macros
 nnoremap q <Nop>
@@ -580,7 +566,7 @@ augroup gitcommit
   function! BufEnterCommit()
     " Start in insert mode for commit
     normal gg0
-    if getline('.') == ''
+    if getline('.') ==? ''
       start
     end
 
@@ -624,6 +610,16 @@ augroup coc
   au!
   au CursorHold * silent call CocActionAsync('highlight')
   au CursorHoldI * silent call CocActionAsync('highlight')
+augroup END
+
+augroup elixir
+  au!
+  au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect<ESC>:w<CR>
+
+  " :Iex => open iex with current file compiled
+  command! Iex :!iex -S mix %<cr>
 augroup END
 
 "}}}
@@ -681,6 +677,106 @@ let g:matchup_matchparen_status_offscreen = 0
 
 " ## liuchengxu/vim-which-key
 let g:which_key_use_floating_win = 1
+let g:which_key_map =  {}
+let g:which_key_map.g = {
+      \ 'name' : '+git/vsc' ,
+      \ 'b' : ['Gblame'                 , 'blame']             ,
+      \ 'c' : ['BCommits'               , 'commits-for-current-buffer'] ,
+      \ 'C' : ['Gcommit'                , 'commit']            ,
+      \ 'd' : ['Gdiff'                  , 'diff']              ,
+      \ 'e' : ['Gedit'                  , 'edit']              ,
+      \ 'l' : ['Glog'                   , 'log']               ,
+      \ 'r' : ['Gread'                  , 'read']              ,
+      \ 's' : ['Gstatus'                , 'status']            ,
+      \ 'w' : ['Gwrite'                 , 'write']             ,
+      \ 'm' : ['GitMessenger'           , 'msg']               ,
+      \ 'p' : ['Git push'               , 'push']
+      \ }
+let g:which_key_map.l = {
+      \ 'name' : '+lsp/code',
+      \ 'a' : 'code-action',
+      \ 'r' : 'references',
+      \ 'R' : 'rename',
+      \ 'c' : 'context-menu',
+      \ 'b' : 'toggle-tagbar',
+      \ 'o' : 'open-link',
+      \ 'h' : 'hover',
+      \ 'F' : 'formatting',
+      \ 'f' : 'range-formatting',
+      \ 'l' : 'highlight',
+      \ 'L' : 'unmark-highlight',
+      \ 's' : 'document-symbol',
+      \ 'i' : 'toggle-indent-lines',
+      \ 'S' : 'workspace-symbol',
+      \ 'g' : {
+      \   'name': '+goto',
+      \   'd' : 'definition',
+      \   't' : 'type-definition',
+      \   'i' : 'implementation',
+      \   },
+      \ 'D' : 'diagnostics',
+      \ 'E' : 'extensions',
+      \ 'C' : 'commands',
+      \ }
+let g:which_key_map.t = {
+      \ 'name' : '+test',
+      \ }
+let g:which_key_map.b = {
+      \ 'name' : '+buffer' ,
+      \ 'd' : 'delete-buffer',
+      \ 'f' : 'first-buffer',
+      \ 'l' : 'last-buffer',
+      \ 'n' : 'next-buffer',
+      \ '#' : 'last-used-buffer',
+      \ 'p' : 'previous-buffer',
+      \ 'x' : 'purge-other-buffers',
+      \ 'b' : 'buffers',
+      \ }
+
+" let g:which_key_map.l.f = ['ALEFix', 'fix']
+" let g:which_key_map.l.g = ['ALEGoToDefinition', 'go-to-definition']
+" let g:which_key_map.l.r = ['ALEFindReferences', 'find-references']
+" let g:which_key_map.l.h = ['ALEHover', 'hover-information']
+" let g:which_key_map.l.t = ['ALEToggle', 'toggle']
+" let g:which_key_map.l.T = ['ALEToggleBuffer', 'toggle-buffer']
+" let g:which_key_map.l.l = ['ALELint', 'lint']
+
+" let g:which_key_map.l = {
+"       \ 'name' : '+lsp'                                            ,
+"       \ 'f' : ['LanguageClient#textDocument_formatting()'     , 'formatting']       ,
+"       \ 'h' : ['LanguageClient#textDocument_hover()'          , 'hover']            ,
+"       \ 'r' : ['LanguageClient#textDocument_references()'     , 'references']       ,
+"       \ 'R' : ['LanguageClient#textDocument_rename()'         , 'rename']           ,
+"       \ 's' : ['LanguageClient#textDocument_documentSymbol()' , 'document-symbol']  ,
+"       \ 'S' : ['LanguageClient#workspace_symbol()'            , 'workspace-symbol'] ,
+"       \ 'g' : {
+"         \ 'name': '+goto',
+"         \ 'd' : ['LanguageClient#textDocument_definition()'     , 'definition']       ,
+"         \ 't' : ['LanguageClient#textDocument_typeDefinition()' , 'type-definition']  ,
+"         \ 'i' : ['LanguageClient#textDocument_implementation()'  , 'implementation']  ,
+"         \ },
+"       \ }
+" let g:which_key_map.l = {
+"       \ 'name' : '+lsp'                                            ,
+"       \ 'f' : ['LanguageClient#textDocument_formatting()'     , 'formatting']       ,
+"       \ 'h' : ['LanguageClient#textDocument_hover()'          , 'hover']            ,
+"       \ 'r' : ['LanguageClient#textDocument_references()'     , 'references']       ,
+"       \ 'R' : ['LanguageClient#textDocument_rename()'         , 'rename']           ,
+"       \ 's' : ['LanguageClient#textDocument_documentSymbol()' , 'document-symbol']  ,
+"       \ 'S' : ['LanguageClient#workspace_symbol()'            , 'workspace-symbol'] ,
+"       \ 'g' : {
+"         \ 'name': '+goto',
+"         \ 'd' : ['LanguageClient#textDocument_definition()'     , 'definition']       ,
+"         \ 't' : ['LanguageClient#textDocument_typeDefinition()' , 'type-definition']  ,
+"         \ 'i' : ['LanguageClient#textDocument_implementation()'  , 'implementation']  ,
+"         \ },
+"       \ }
+nnoremap <silent> <leader> :<c-u>WhichKey ','<CR>
+vnoremap <silent> <leader> :<c-u>WhichKeyVisual ','<CR>
+call which_key#register(',', 'g:which_key_map')
+
+" nnoremap <silent> <leader>      :<c-u>WhichKey ','<CR>
+" nnoremap <silent> <localleader> :<c-u>WhichKey ','<CR>
 
 " ## netrw
 " absolute width of netrw window
@@ -972,7 +1068,7 @@ let g:ale_lint_on_enter = 1
 let g:ale_lint_on_save = 1
 let g:ale_fix_on_save = 1
 let g:ale_virtualtext_cursor = 1
-let g:ale_virtualtext_prefix = '❯❯ '
+let g:ale_virtualtext_prefix = "\uf63d "
 " let g:ale_set_balloons = 0
 " let g:ale_set_highlights = 0
 " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
@@ -992,14 +1088,6 @@ nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>H :Gbrowse<CR>
 vnoremap <leader>gh :Gbrowse<CR>
 nnoremap <leader>gb :Gblame<CR>
-
-" ## vim-test / testing
-nmap <silent> <leader>tf :TestFile<CR>
-nmap <silent> <leader>tt :TestNearest<CR>
-nmap <silent> <leader>tl :TestLast<CR>
-nmap <silent> <leader>ta :TestSuite<CR>
-nmap <silent> <leader>tv :TestVisit<CR>
-" ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
 
 " ## gist/github
 let g:gist_open_url = 1
@@ -1039,29 +1127,22 @@ let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 " let g:qs_enable = 1
 " let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
-" ## vim-test
+" ## janko/vim-test (testing)
 function! TerminalSplit(cmd)
-  vert new | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
+  vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
+
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
-let test#ruby#rspec#options = '-f d'
-" let test#ruby#bundle_exec = 1
-let test#ruby#use_binstubs = 1
-
-" ## mattn/emmet-vim
-" Remap for expand with Tab
-let g:user_emmet_leader_key = '<C-e>'
-" let g:user_emmet_expandabbr_key = '<A-x><A-e>'
-
-" ## ultisnips
-" Not conflict with Coc
-let g:UltiSnipsExpandTrigger = '<C-e>'
-" let g:UltiSnipsExpandTrigger = '<Plug>(ultisnips_expand)'
-let g:UltiSnipsJumpForwardTrigger	= '<Tab>'
-let g:UltiSnipsJumpBackwardTrigger	= '<S-Tab>'
-let g:UltiSnipsRemoveSelectModeMappings = 0
-let g:UltiSnipsSnippetDirectories=['UltiSnips']
+nmap <silent> <leader>tf :TestFile<CR>
+nmap <silent> <leader>tt :TestNearest<CR>
+nmap <silent> <leader>tn :TestNearest<CR>
+nmap <silent> <leader>tl :TestLast<CR>
+nmap <silent> <leader>ta :TestSuite<CR>
+nmap <silent> <leader>tv :TestVisit<CR>
+nmap <silent> <leader>tp :A<CR>
+nmap <silent> <leader>tpv :AV<CR>
+" ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
 
 "}}}
 " ░░░░░░░░░░░░░░░ blink {{{
@@ -1269,7 +1350,7 @@ function! UpdateStatusBar(timer)
 endfunction
 
 function! PrintStatusline(v)
-  return &buftype == 'nofile' ? '' : a:v
+  return &buftype ==? 'nofile' ? '' : a:v
 endfunction
 
 function! LightlineFileType()
@@ -1318,7 +1399,7 @@ function! LightlineFileName()
   endif
 
   " Find the correct expansion depending on whether Vim has autochdir.
-  let mod = (exists('+acd') && &acd) ? ':~' : ':~:.'
+  let mod = (exists('+autochdir') && &autochdir) ? ':~' : ':~:.'
 
   " Apply the above expansion to the expanded file path and split by the separator.
   let shortened_filepath = fnamemodify(filepath, mod)
