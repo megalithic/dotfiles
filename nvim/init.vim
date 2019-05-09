@@ -615,8 +615,9 @@ augroup END
 augroup elixir
   au!
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ep orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <leader>ep oIO.puts "" <ESC>hi
+  au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect(label: "")<ESC>hi
+  au FileType elixir,eelixir nnoremap <leader>eil o\|> IO.inspect()<ESC>i
 
   " :Iex => open iex with current file compiled
   command! Iex :!iex -S mix %<cr>
@@ -679,7 +680,7 @@ let g:matchup_matchparen_status_offscreen = 0
 let g:which_key_use_floating_win = 1
 let g:which_key_map =  {}
 let g:which_key_map.g = {
-      \ 'name' : '+git/vsc' ,
+      \ 'name' : '+git/vcs' ,
       \ 'b' : ['Gblame'                 , 'blame']             ,
       \ 'c' : ['BCommits'               , 'commits-for-current-buffer'] ,
       \ 'C' : ['Gcommit'                , 'commit']            ,
@@ -693,16 +694,18 @@ let g:which_key_map.g = {
       \ 'p' : ['Git push'               , 'push']
       \ }
 let g:which_key_map.l = {
-      \ 'name' : '+lsp/code',
+      \ 'name' : '+lsp/coc',
       \ 'a' : 'code-action',
+      \ 'A' : 'code-action-selected',
       \ 'r' : 'references',
       \ 'R' : 'rename',
+      \ 'n' : 'rename',
       \ 'c' : 'context-menu',
       \ 'b' : 'toggle-tagbar',
       \ 'o' : 'open-link',
       \ 'h' : 'hover',
-      \ 'F' : 'formatting',
-      \ 'f' : 'range-formatting',
+      \ 'f' : 'format',
+      \ 'F' : 'format-selected',
       \ 'l' : 'highlight',
       \ 'L' : 'unmark-highlight',
       \ 's' : 'document-symbol',
@@ -716,10 +719,21 @@ let g:which_key_map.l = {
       \   },
       \ 'D' : 'diagnostics',
       \ 'E' : 'extensions',
+      \ 'G' : 'git-status',
       \ 'C' : 'commands',
+      \ 'Y' : 'yank-list',
       \ }
+
 let g:which_key_map.t = {
       \ 'name' : '+test',
+      \ 'a' : 'test-all-suite',
+      \ 'f' : 'test-file',
+      \ 'n' : 'test-nearest',
+      \ 't' : 'test-nearest',
+      \ 'l' : 'test-last',
+      \ 'v' : 'test-visited',
+      \ 'p' : 'alternate-file',
+      \ 'pv' : 'alternate-file-vertical',
       \ }
 let g:which_key_map.b = {
       \ 'name' : '+buffer' ,
@@ -732,51 +746,16 @@ let g:which_key_map.b = {
       \ 'x' : 'purge-other-buffers',
       \ 'b' : 'buffers',
       \ }
-
-" let g:which_key_map.l.f = ['ALEFix', 'fix']
-" let g:which_key_map.l.g = ['ALEGoToDefinition', 'go-to-definition']
-" let g:which_key_map.l.r = ['ALEFindReferences', 'find-references']
-" let g:which_key_map.l.h = ['ALEHover', 'hover-information']
-" let g:which_key_map.l.t = ['ALEToggle', 'toggle']
-" let g:which_key_map.l.T = ['ALEToggleBuffer', 'toggle-buffer']
-" let g:which_key_map.l.l = ['ALELint', 'lint']
-
-" let g:which_key_map.l = {
-"       \ 'name' : '+lsp'                                            ,
-"       \ 'f' : ['LanguageClient#textDocument_formatting()'     , 'formatting']       ,
-"       \ 'h' : ['LanguageClient#textDocument_hover()'          , 'hover']            ,
-"       \ 'r' : ['LanguageClient#textDocument_references()'     , 'references']       ,
-"       \ 'R' : ['LanguageClient#textDocument_rename()'         , 'rename']           ,
-"       \ 's' : ['LanguageClient#textDocument_documentSymbol()' , 'document-symbol']  ,
-"       \ 'S' : ['LanguageClient#workspace_symbol()'            , 'workspace-symbol'] ,
-"       \ 'g' : {
-"         \ 'name': '+goto',
-"         \ 'd' : ['LanguageClient#textDocument_definition()'     , 'definition']       ,
-"         \ 't' : ['LanguageClient#textDocument_typeDefinition()' , 'type-definition']  ,
-"         \ 'i' : ['LanguageClient#textDocument_implementation()'  , 'implementation']  ,
-"         \ },
-"       \ }
-" let g:which_key_map.l = {
-"       \ 'name' : '+lsp'                                            ,
-"       \ 'f' : ['LanguageClient#textDocument_formatting()'     , 'formatting']       ,
-"       \ 'h' : ['LanguageClient#textDocument_hover()'          , 'hover']            ,
-"       \ 'r' : ['LanguageClient#textDocument_references()'     , 'references']       ,
-"       \ 'R' : ['LanguageClient#textDocument_rename()'         , 'rename']           ,
-"       \ 's' : ['LanguageClient#textDocument_documentSymbol()' , 'document-symbol']  ,
-"       \ 'S' : ['LanguageClient#workspace_symbol()'            , 'workspace-symbol'] ,
-"       \ 'g' : {
-"         \ 'name': '+goto',
-"         \ 'd' : ['LanguageClient#textDocument_definition()'     , 'definition']       ,
-"         \ 't' : ['LanguageClient#textDocument_typeDefinition()' , 'type-definition']  ,
-"         \ 'i' : ['LanguageClient#textDocument_implementation()'  , 'implementation']  ,
-"         \ },
-"       \ }
+let g:which_key_map.e = {
+      \ 'name' : '+elixir' ,
+      \ 'i' : 'io.inspect',
+      \ 'il' : 'io.inspect-with-label',
+      \ 'p' : 'io.puts',
+      \ 'd' : 'debug-pry',
+      \ }
 nnoremap <silent> <leader> :<c-u>WhichKey ','<CR>
 vnoremap <silent> <leader> :<c-u>WhichKeyVisual ','<CR>
 call which_key#register(',', 'g:which_key_map')
-
-" nnoremap <silent> <leader>      :<c-u>WhichKey ','<CR>
-" nnoremap <silent> <localleader> :<c-u>WhichKey ','<CR>
 
 " ## netrw
 " absolute width of netrw window
@@ -1607,25 +1586,30 @@ endfunction
 " nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
 " nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
 
+nnoremap <silent> K :call <SID>show_documentation()<CR>
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-nmap <silent> <leader>lk :call <SID>show_documentation()<CR>
-nmap <silent> <leader>ld <Plug>(coc-definition)
-nmap <silent> <leader>lt <Plug>(coc-type-definition)
-nmap <silent> <leader>li <Plug>(coc-implementation)
+
+nmap <silent> <leader>lgd <Plug>(coc-definition)
+nmap <silent> <leader>lgt <Plug>(coc-type-definition)
+nmap <silent> <leader>lgi <Plug>(coc-implementation)
+
 nmap <silent> <leader>lr <Plug>(coc-references)
 nmap <silent> <leader>ln <Plug>(coc-rename)
+nmap <silent> <leader>lR <Plug>(coc-rename)
 vmap <silent> <leader>ln <Plug>(coc-rename)
 
 " Remap for format selected region
-vmap <silent> <leader>lf <Plug>(coc-format-selected)
+vmap <silent> <leader>lF <Plug>(coc-format-selected)
+nmap <silent> <leader>lf <Plug>(coc-format)
 
 " Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
 vmap <silent> <leader>la <Plug>(coc-codeaction-selected)
 
 " Remap for do codeAction of current line
 nmap <silent> <leader>la <Plug>(coc-codeaction)
+
+nmap <silent> <leader>lo <Plug>(coc-openlink)
 
 " Fix autofix problem of current line
 nmap <silent> <leader>lq <Plug>(coc-fix-current)
@@ -1636,134 +1620,75 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
-" Show all diagnostics
-nnoremap <silent> <leader>le :<C-u>CocList diagnostics<CR>
-" Show git status
-nnoremap <silent> <leader>lg :<C-u>CocList --normal --auto-preview gstatus<CR>
+nnoremap <silent> <leader>lS  :<C-u>CocList -I symbols<cr> " Workspace symbols
+nnoremap <silent> <leader>ls  :<C-u>CocList outline<cr> " Document symbols
+
+nnoremap <silent> <leader>lD :<C-u>CocList diagnostics<CR>
+nnoremap <silent> <leader>lG :<C-u>CocList --normal --auto-preview gstatus<CR>
+nnoremap <silent> <leader>lC :<C-u>CocList commands<cr>
+nnoremap <silent> <leader>lO :<C-u>CocList outline<cr>
+nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
+
 nmap [g <Plug>(coc-git-prevchunk)
 nmap ]g <Plug>(coc-git-nextchunk)
 nmap gs <Plug>(coc-git-chunkinfo)
-" Show yank list
-nnoremap <silent> <leader>ly :<C-u>CocList -A --normal yank<CR>
 
-command! -nargs=+ -complete=custom,s:GrepArgs Rgg exe 'CocList grep '.<q-args>
-function! s:GrepArgs(...)
-  let list = ['-S', '-smartcase', '-i', '-ignorecase', '-w', '-word',
-        \ '-e', '-regex', '-u', '-skip-vcs-ignores', '-t', '-extension']
-  return join(list, "\n")
-endfunction
-
-nnoremap <silent> <leader>lw :exe 'CocList -I --normal --input='.expand('<cword>').' words'<CR>
 
 " " Do default action for next item.
 " nnoremap <silent> <space>j  :<C-u>CocNext<CR>
 " " Do default action for previous item.
 " nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 
-" " Manage extensions
-" nnoremap <silent> <space>e  :<C-u>CocList extensions<cr>
-" " Show commands
-" nnoremap <silent> <space>c  :<C-u>CocList commands<cr>
-" " Find symbol of current document
-" nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
-" " Search workspace symbols
-" nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
-" " Do default action for next item.
-" nnoremap <silent> <space>j  :<C-u>CocNext<CR>
-" " Do default action for previous item.
-" nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
-" " Resume latest coc list
-" nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
-
-augroup coc
-  au!
-
-  " au! User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-  " au CursorHold * silent call CocActionAsync('highlight')
-
-  function! CocUpdateQuickFixes(error, actions) abort
-    let coc_quickfixes = {}
-    try
-      for action in a:actions
-        if action.kind ==? 'quickfix'
-          for change in action.edit.documentChanges
-            for edit in change.edits
-              let start_line = edit.range.start.line + 1
-              let end_line = edit.range.end.line + 1
-              let coc_quickfixes[start_line] = get(coc_quickfixes, start_line, 0) + 1
-              if start_line != end_line
-                let coc_quickfixes[end_line] = get(coc_quickfixes, end_line, 0) + 1
-              endif
-            endfor
-          endfor
-        endif
-      endfor
-    catch
-    endtry
-    if coc_quickfixes != get(b:, 'coc_quickfixes', {})
-      let b:coc_quickfixes = coc_quickfixes
-      call lightline#update()
-    endif
-  endfunction
-
-  au User CocDiagnosticChange
-        \   call lightline#update()
-        \|  call CocActionAsync('quickfixes', function('CocUpdateQuickFixes'))
-
-  function! s:coc_fix_on_cursor_moved() abort
-    let current_line = line('.')
-    if current_line != get(b:, 'last_line', 0)
-      let b:last_line = current_line
-      if has_key(get(b:, 'coc_quickfixes', {}), current_line)
-        call lightline#update()
-      else
-        if get(b:, 'coc_line_fixes', 0) > 0
-          call lightline#update()
-        endif
-      endif
-    endif
-  endfunction
-
-  au CursorMoved * call s:coc_fix_on_cursor_moved()
-augroup END
-
-" augroup coc_au
+" augroup coc
 "   au!
-"   " Show signature help while editing
-"   " au CursorHoldI * silent! call CocActionAsync('showSignatureHelp')
-"   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 
-"   " Highlight symbol under cursor on CursorHold
+"   " au! User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 "   " au CursorHold * silent call CocActionAsync('highlight')
-" augroup END
 
-" function! s:clear_input() abort
-"   let s:input_word = ''
-" endfunction
-
-" function! s:snippet() abort
-"   let l:start_line = line('.')
-"   let l:is_position = search('\v%x0')
-"   if l:is_position !=# 0
-"     silent! s/\v\t/    /g
-"     silent! s/\v%x0\n//g
-"     silent! s/\v%x0/\r/g
-"     let l:end_line = line('.')
-"     call cursor(l:start_line, 0)
-"     let l:pos = searchpos('\v\$\{\d+\}', 'n', l:end_line)
-"     if l:pos[0] !=# 0 && l:pos[1] !=# 0
-"       call cursor(l:pos[0], l:pos[1])
-"       normal! df}
+"   function! CocUpdateQuickFixes(error, actions) abort
+"     let coc_quickfixes = {}
+"     try
+"       for action in a:actions
+"         if action.kind ==? 'quickfix'
+"           for change in action.edit.documentChanges
+"             for edit in change.edits
+"               let start_line = edit.range.start.line + 1
+"               let end_line = edit.range.end.line + 1
+"               let coc_quickfixes[start_line] = get(coc_quickfixes, start_line, 0) + 1
+"               if start_line != end_line
+"                 let coc_quickfixes[end_line] = get(coc_quickfixes, end_line, 0) + 1
+"               endif
+"             endfor
+"           endfor
+"         endif
+"       endfor
+"     catch
+"     endtry
+"     if coc_quickfixes != get(b:, 'coc_quickfixes', {})
+"       let b:coc_quickfixes = coc_quickfixes
+"       call lightline#update()
 "     endif
-"   endif
-" endfunction
+"   endfunction
 
-" augroup CocSnippet
-"   au!
-"   au CompleteDone *.exs,*.ex,*.elm call <SID>snippet()
-"   au CursorMovedI * call <SID>clear_input()
-"   " highlight text color
-"   au ColorScheme * highlight! CocHighlightText  guibg=#707e0a
+"   au User CocDiagnosticChange
+"         \   call lightline#update()
+"         \|  call CocActionAsync('quickfixes', function('CocUpdateQuickFixes'))
+
+"   function! s:coc_fix_on_cursor_moved() abort
+"     let current_line = line('.')
+"     if current_line != get(b:, 'last_line', 0)
+"       let b:last_line = current_line
+"       if has_key(get(b:, 'coc_quickfixes', {}), current_line)
+"         call lightline#update()
+"       else
+"         if get(b:, 'coc_line_fixes', 0) > 0
+"           call lightline#update()
+"         endif
+"       endif
+"     endif
+"   endfunction
+
+"   au CursorMoved * call s:coc_fix_on_cursor_moved()
 " augroup END
 "}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
