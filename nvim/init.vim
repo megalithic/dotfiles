@@ -58,7 +58,6 @@ Plug 'wsdjeg/vim-fetch'
 Plug 'liuchengxu/vim-which-key'
 " Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 Plug 'mattn/webapi-vim'
-Plug 'maximbaz/lightline-ale'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'mhinz/vim-mix-format'
@@ -150,7 +149,6 @@ Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/maste
 Plug 'trevordmiller/nova-vim'
 " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
-" Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
@@ -1052,30 +1050,6 @@ let g:markdown_fenced_languages = [
       \ 'haml', 'html',
       \ 'bash=sh', 'zsh', 'elm', 'elixir']
 
-" ## w0rp/ale
-" let g:ale_enabled = 1
-" let g:ale_completion_enabled = 0
-" let g:ale_lint_delay = 1000
-" let g:ale_echo_msg_format = '[%linter%] %s'
-" " disabling linters where language servers are installed/available..
-" let g:ale_linters = {
-"       \   'elixir': ['credo'],
-"       \   'eelixir': ['credo'],
-"       \ }
-" let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
-" let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
-" let g:ale_sign_info = '‣'
-" let g:ale_lint_on_text_changed = 'always' " 'normal'
-" let g:ale_lint_on_insert_leave = 1
-" let g:ale_lint_on_enter = 1
-" let g:ale_lint_on_save = 1
-" let g:ale_fix_on_save = 1
-" let g:ale_virtualtext_cursor = 1
-" let g:ale_virtualtext_prefix = "\uf63d "
-" " let g:ale_set_balloons = 0
-" " let g:ale_set_highlights = 0
-" " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
-
 " # markdown-preview.nvim
 nnoremap <Leader>M :MarkdownPreview<CR>
 
@@ -1264,20 +1238,11 @@ let g:lightline = {
       \     'cocstatus': 'coc#status',
       \   },
       \   'component_expand': {
-      \     'linter_checking': 'lightline#ale#checking',
-      \     'linter_warnings': 'lightline#ale#warnings',
-      \     'linter_errors': 'lightline#ale#errors',
-      \     'linter_ok': 'lightline#ale#ok',
       \     'coc_error'        : 'LightlineCocErrors',
       \     'coc_warning'      : 'LightlineCocWarnings',
       \     'coc_info'         : 'LightlineCocInfos',
       \     'coc_hint'         : 'LightlineCocHints',
       \     'coc_fix'          : 'LightlineCocFixes',
-      \     'ale_error'        : 'LightlineAleErrors',
-      \     'ale_warning'      : 'LightlineAleWarnings',
-      \     'ale_info'         : 'LightlineAleInfos',
-      \     'ale_style_error'  : 'LightlineAleStyleErrors',
-      \     'ale_style_warning': 'LightlineAleStyleWarnings',
       \   },
       \   'component_type': {
       \     'readonly': 'error',
@@ -1291,11 +1256,6 @@ let g:lightline = {
       \     'coc_info'         : 'tabsel',
       \     'coc_hint'         : 'middle',
       \     'coc_fix'          : 'middle',
-      \     'ale_error'        : 'error',
-      \     'ale_warning'      : 'warning',
-      \     'ale_info'         : 'tabsel',
-      \     'ale_style_error'  : 'error',
-      \     'ale_style_warning': 'warning',
       \   },
       \   'component_function_visible_condition': {
       \     'branch': '&buftype!="nofile"',
@@ -1482,26 +1442,6 @@ function! LightlineCocFixes() abort
   return b:coc_line_fixes > 0 ? printf('%d ', b:coc_line_fixes) : ''
 endfunction
 
-function! LightlineAleErrors() abort
-  return s:lightline_ale_diagnostic('error')
-endfunction
-
-function! LightlineAleWarnings() abort
-  return s:lightline_ale_diagnostic('warning')
-endfunction
-
-function! LightlineAleInfos() abort
-  return s:lightline_ale_diagnostic('info')
-endfunction
-
-function! LightlineAleStyleErrors() abort
-  return s:lightline_ale_diagnostic('style_error')
-endfunction
-
-function! LightlineAleStyleWarnings() abort
-  return s:lightline_ale_diagnostic('style_warning')
-endfunction
-
 function! s:lightline_coc_diagnostic(kind, sign) abort
   if !get(g:, 'coc_enabled', 0)
     return ''
@@ -1517,23 +1457,6 @@ function! s:lightline_coc_diagnostic(kind, sign) abort
     let s = ''
   endtry
   return printf('%d %s', c[a:kind], s)
-endfunction
-
-function! s:lightline_ale_diagnostic(kind) abort
-  if !get(g:, 'ale_enabled', 0)
-    return ''
-  endif
-  if !get(b:, 'ale_linted', 0)
-    return ''
-  endif
-  if ale#engine#IsCheckingBuffer(bufnr(''))
-    return '  '
-  endif
-  let c = ale#statusline#Count(bufnr(''))
-  if empty(c) || get(c, a:kind, 0) == 0
-    return ''
-  endif
-  return printf('%d %s', c[a:kind], get(g:, 'ale_sign_' . a:kind, '!!'))
 endfunction
 
 " }}}
@@ -1672,12 +1595,6 @@ nmap gs <Plug>(coc-git-chunkinfo)
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
 
-  hi ALEErrorSign guifg=#DF8C8C guibg=NONE gui=NONE
-  hi ALEWarningSign guifg=#F2C38F guibg=NONE gui=NONE
-  hi ALEInfoSign guifg=#F2C38F guibg=NONE gui=NONE
-  hi ALEError guifg=#DF8C8C gui=underline
-  hi ALEWarning guifg=#F2C38F gui=underline
-  hi ALEInfo guifg=#666666 gui=underline
 
   hi CocCodeLens ctermfg=gray guifg=#707070 " #556873
 
