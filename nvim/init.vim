@@ -484,7 +484,7 @@ augroup general
   au BufNewFile,BufEnter * set formatoptions-=o
 
   " Trim trailing whitespace and ending empty lines
-  au BufWritePre * exe "normal! m`:%s/\s\+$//e<CR>``"
+  au BufWritePost * exe "normal! m`:%s/\s\+$//e<CR>``"
 
   " Remember cursor position between vim sessions
   au BufReadPost *
@@ -647,9 +647,6 @@ augroup END
 "}}}
 " ░░░░░░░░░░░░░░░ other settings {{{
 
-" Use relative line numbers
-set relativenumber
-
 " Toggle paste mode
 set pastetoggle=<leader>z
 
@@ -661,7 +658,7 @@ set listchars=tab:»·,trail:·
 set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
 set nolist
 
-" Soft-wrap for prose
+" Soft-wrap for prose (TODO: confirm we need this; comes from evan)
 command! -nargs=* Wrap set wrap linebreak nolist spell
 let &showbreak='↪ '
 
@@ -878,27 +875,80 @@ let g:limelight_conceal_guifg = '#777777'
 
 " ## junegunn/goyo.vim
 " ref: https://github.com/ydhamija96/config/blob/master/.vimrc#L137
+" function! s:goyo_enter()
+"   silent !tmux set status off
+"   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
+"   set textwidth=78
+"   set wrap
+"   set noshowmode
+"   set noshowcmd
+"   set scrolloff=999
+"   Limelight
+"   color off
+" endfunction
+" function! s:goyo_leave()
+"   silent !tmux set status on
+"   silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
+"   set textwidth=0
+"   set nowrap
+"   set showmode
+"   set showcmd
+"   set scrolloff=8
+"   Limelight!
+"   color nova
+" endfunction
 function! s:goyo_enter()
   silent !tmux set status off
   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
-  set textwidth=78
-  set wrap
-  set noshowmode
-  set noshowcmd
-  set scrolloff=999
-  Limelight
+  setlocal spell
+  setlocal noshowmode
+  setlocal nocursorline
+  setlocal noshowcmd
+  setlocal nolist
+  setlocal signcolumn=no
+  setlocal showbreak=
+  " Fix Airline showing up bug
+  setlocal eventignore=FocusGained
+  call css_color#disable()
+  let b:coc_suggest_disable = 1
+  IndentLinesDisable
   color off
+  Limelight
+  " Set up ability to :q from within WritingMode
+  let b:quitting = 0
+  let b:quitting_bang = 0
+  autocmd QuitPre <buffer> let b:quitting = 1
+  cabbrev <buffer> q! let b:quitting_bang = 1 <bar> q!
 endfunction
+
 function! s:goyo_leave()
   silent !tmux set status on
   silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
-  set textwidth=0
-  set nowrap
-  set showmode
-  set showcmd
-  set scrolloff=8
-  Limelight!
+  set spell<
+  set showmode<
+  set showcmd<
+  set list<
+  set cursorline<
+  set signcolumn<
+  set eventignore<
+  set showbreak=>>>\ 
+  call css_color#enable()
+  let b:coc_suggest_disable = 0
+  IndentLinesEnable
   color nova
+  Limelight!
+  AirlineRefresh " Airline starts up weird sometimes...
+  AirlineToggle
+  AirlineToggle
+  AirlineRefresh
+  " Quit Vim if this is the only remaining buffer
+  if b:quitting && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+    if b:quitting_bang
+      qa!
+    else
+      qa
+    endif
+  endif
 endfunction
 autocmd! User GoyoEnter nested call <SID>goyo_enter()
 autocmd! User GoyoLeave nested call <SID>goyo_leave()

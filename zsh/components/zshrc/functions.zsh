@@ -67,12 +67,6 @@ path() {
       print }"
 }
 
-tmateip () {
-  output=$(tmate show-message | grep -m 1 "Remote session:")
-  echo ${output#*session: } # display it
-  echo ${output#*session: } | pbcopy # and copy it to clipboard
-}
-
 mcd() { mkdir -p $1 && cd $1 }
 alias cdm=mcd
 

@@ -72,7 +72,7 @@
   "diagnostic.enableSign": true,
   "diagnostic.errorSign": "✖",
   "diagnostic.highlightOffset": 9999999,
-  "diagnostic.hintSign": "~",
+  "diagnostic.hintSign": "‣",
   "diagnostic.infoSign": "‣",
   "diagnostic.locationlist": false,
   "diagnostic.messageTarget": "float",
@@ -82,7 +82,7 @@
   "diagnostic.virtualText": false,
   "diagnostic.virtualTextLineSeparator": "//",
   "diagnostic.virtualTextLines": 3,
-  "diagnostic.virtualTextPrefix": "\uf63d",
+  "diagnostic.virtualTextPrefix": "\uf63d ",
   "diagnostic.warningSign": "⬥",
 
   "codeLens.enable": true,
@@ -94,9 +94,6 @@
 
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
-
-  // emmet
-  /* "emmet.showAbbreviationSuggestions": false, */
 
   // prettier
   "prettier.eslintIntegration": true,
@@ -170,9 +167,9 @@
   "diagnostic-languageserver.trace.server": "off",
   "diagnostic-languageserver.filetypes": {
     "vim": "vint",
-    "email": "languagetool",
-    "markdown": [ "write-good", "markdownlint" ],
-    "sh": "shellcheck",
+    /* "email": "languagetool", */
+    /* "markdown": [ "write-good", "markdownlint" ], */
+    /* "sh": "shellcheck", */
     "elixir": ["mix_credo", "mix_credo_compile"],
     "eelixir": ["mix_credo", "mix_credo_compile"],
     "php": "phpcs"

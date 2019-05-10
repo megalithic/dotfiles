@@ -10,7 +10,6 @@
 # This tool has assumptions that you:
 #   1.)  have tmux installed and setup
 #   2.)  have the github-auth gem installed
-#   3.)  have ngrok and have the proper tunnel setup, with remote-addr support.
 #   4.)  optionally, you have `do-not-distrub-cli` installed via npm global
 #   4a.) fancy icons will show up if you're using a fully nerd-fonts patched terminal font.
 #
@@ -36,14 +35,16 @@
 command="$(basename "$0")"
 session="pairing"
 ssh_command=""
-# host=$(dig +short myip.opendns.com @resolver1.opendns.com)
-# port=1337
+tunnel_command=""
+host_ip=$(dig +short myip.opendns.com @resolver1.opendns.com)
+host="megalithic.dyndns.org"
+port=1337
 user="pair"
+
 
 # Make sure dependencies are installed
 [ ! "$(command -v gh-auth)" ] && printf -- "gh-auth not found (gem install github-auth)\n" && exit 1
 [ ! "$(command -v tmux)" ] && printf -- "tmux not found, please install for your platform\n" && exit 1
-[ ! "$(command -v ngrok)" ] && printf -- "ngrok not found, please install for your platform\n" && exit 1
 
 help() {
   printf -- "Usage: "$command" <subcommand> [options]\n"
@@ -53,8 +54,7 @@ help() {
   printf -- "    ls    List github users\n"
   printf -- "    up    Spin up and open shared tmux session\n"
   printf -- "    down  Terminates shared tmux session\n"
-  printf -- "    ssh   Constructs the reverse tunnel using ngrok\n"
-  printf -- "          See: https://ngrok.com\n"
+  printf -- "    ssh   Constructs the reverse tunnel using basic ssh reverse proxying\n"
   printf -- "    info  Displays handle information about the pairing session\n"
 }
 
@@ -77,17 +77,11 @@ up() {
 
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
 
-  tmux new -s $session -d
-  tmux switch -t $session
-  tmux send-keys -t $session "cd ~; ngrok start ${session}" C-m
-  tmux split-window -h -t $session
+  tunnel_and_connect
 
-  # indicate some sort of progress while we wait to get the ngrok session's port number
   DONE=0;
   while [ $DONE -eq 0 ]; do
-    if [[ "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "" && "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "null" ]]; then
-      # once we have the ngrok session's port number, go ahead and display our pair session info
-      # TODO: figure out how to execute this without seeing the commands at the prompt
+    if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
       tmux send-keys -t $session "cd ~; pair info" C-m
       DONE=1
     fi;
@@ -97,36 +91,33 @@ up() {
 
 down() {
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
-  pkill -9 -f ngrok
+  pkill -9 -f 1337:localhost
   tmux kill-session -t $session
 }
 
-tunnel() {
+tunnel_and_connect() {
   DONE=0;
+  sleep 1.0;
   while [ $DONE -eq 0 ]; do
-    if [[ "$(dig +short myip.opendns.com @resolver1.opendns.com)" != "" && "$(dig +short myip.opendns.com @resolver1.opendns.com))" != "null" ]]; then
-      tunnel_command="ssh -nvNT -R $port:localhost:22 $user@$host"
-      # TODO: add fallback when ngrok isn't installed to use a normal ssh tunnel
-      # "ssh -nvNT -R $port:localhost:22 $user@$host"
-      # ssh -nNT -L "$port:localhost:22" "$user@$host"
-
-      echo $host
-      echo $port
-      echo $user
-      echo $tunnel_command
-
-      $tunnel_command
+    if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
+      tmux new -s $session -d
+      tmux switch -t $session
+      tmux send-keys -t $session "cd ~; $(tunnel)" C-m
+      tmux split-window -h -t $session
       DONE=1
     fi;
     sleep 0.5;
   done;
+
+}
+
+tunnel() {
+  tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host"
+  echo $tunnel_command
 }
 
 ssh() {
-  host="1.tcp.ngrok.io"
-  port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
-  # tunnel
-  ssh_command="ssh -p $port $user@$host"
+  ssh_command="ssh $user@$host"
   echo $ssh_command
 }
 
