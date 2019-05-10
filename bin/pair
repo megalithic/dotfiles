@@ -92,6 +92,7 @@ up() {
 down() {
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
   pkill -9 -f 1337:localhost
+  pkill -9 -f pair
   tmux kill-session -t $session
 }
 
