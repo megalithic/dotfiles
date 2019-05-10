@@ -36,7 +36,7 @@ endif
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
-Plug 'elixir-lang/vim-elixir', { 'for': 'elixir' }
+Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript','typescriptreact','typescript.tsx'] }
 Plug 'honza/vim-snippets'
@@ -61,6 +61,7 @@ Plug 'mattn/webapi-vim'
 Plug 'maximbaz/lightline-ale'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'mhinz/vim-mix-format'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -115,6 +116,8 @@ if executable('yarn') && executable('node')
           call coc#util#install_extension(['-sync', l:ext])
         endif
       endfor
+    elseif a:info.status ==# 'updated'
+			call coc#util#update_extensions(1)
     endif
   endfunction
   Plug 'neoclide/coc.nvim', {'do': function('PostInstallCoc')}
@@ -143,11 +146,11 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
-Plug 'tpope/vim-vinegar'
+" Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
 " Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
-Plug 'w0rp/ale'
+" Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
@@ -342,9 +345,6 @@ nnoremap <silent><C-l> :TmuxNavigateRight<CR>
 " Turn off search highlight
 nnoremap <localleader>/ :nohlsearch<CR>
 
-" Trim trailing whitespace
-nnoremap <localleader>tw m`:%s/\s\+$//e<CR>``
-
 " ## Writing / quitting
 nnoremap <silent><leader>w :w<CR>
 nnoremap <silent><leader>W :w !sudo tee %<CR>
@@ -438,6 +438,19 @@ vnoremap <C-c> :w !pbcopy<CR><CR>
 " mbbill/undotree
 nnoremap <F7> :UndotreeToggle<CR>
 
+" These create newlines like o and O but stay in normal mode
+nmap zj o<Esc>
+nmap zk O<Esc>
+
+" ## buffers
+nnoremap <leader>bd :bdelete<cr>
+nnoremap <leader>bf :bfirst<cr>
+nnoremap <leader>bl :blast<cr>
+nnoremap <leader>bn :bnext<cr>
+nnoremap <leader>bp :bprevious<cr>
+nnoremap <leader>b# :b#<cr>
+nnoremap <leader>bx :%bd\|e#<cr>
+
 "}}}
 " ░░░░░░░░░░░░░░░ autocommands {{{
 
@@ -471,6 +484,9 @@ augroup general
 
   " No formatting on o key newlines
   au BufNewFile,BufEnter * set formatoptions-=o
+
+  " Trim trailing whitespace and ending empty lines
+  au BufWritePre * exe "normal! m`:%s/\s\+$//e<CR>``"
 
   " Remember cursor position between vim sessions
   au BufReadPost *
@@ -599,13 +615,6 @@ augroup gitcommit
   au FileType gitcommit,gitrebase exe BufEnterCommit()
 augroup END
 
-augroup ale
-  au!
-  " au User ALEJobStarted call lightline#update()
-  au User ALELintPost   call lightline#update()
-  au User ALEFixPost    call lightline#update()
-augroup END
-
 augroup coc
   au!
   au CursorHold * silent call CocActionAsync('highlight')
@@ -616,11 +625,25 @@ augroup elixir
   au!
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ep oIO.puts "" <ESC>hi
-  au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect(label: "")<ESC>hi
-  au FileType elixir,eelixir nnoremap <leader>eil o\|> IO.inspect()<ESC>i
+  au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect()<ESC>i
+  au FileType elixir,eelixir nnoremap <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+
+  " auto-format on save for our elixir things
+
+  " if executable('mix')
+  "   autocmd BufWritePost *.ex,*.exs silent :!mix format %
+  " endif
 
   " :Iex => open iex with current file compiled
   command! Iex :!iex -S mix %<cr>
+
+  au FileType elixir,eelixir let g:which_key_map.e = {
+        \ 'name' : '+elixir' ,
+        \ 'i' : 'io.inspect',
+        \ 'il' : 'io.inspect-with-label',
+        \ 'd' : 'debug-pry',
+        \ 'p' : 'io.puts',
+        \ }
 augroup END
 
 "}}}
@@ -677,6 +700,7 @@ nmap <leader>gm <Plug>(git-messenger)
 let g:matchup_matchparen_status_offscreen = 0
 
 " ## liuchengxu/vim-which-key
+" ref: https://github.com/sinecodes/dotfiles/blob/master/.vim/settings/rich/whichkey.vim
 let g:which_key_use_floating_win = 1
 let g:which_key_map =  {}
 let g:which_key_map.g = {
@@ -747,28 +771,44 @@ let g:which_key_map.b = {
       \ 'b' : 'buffers',
       \ }
 let g:which_key_map.e = {
-      \ 'name' : '+elixir' ,
-      \ 'i' : 'io.inspect',
-      \ 'il' : 'io.inspect-with-label',
-      \ 'p' : 'io.puts',
-      \ 'd' : 'debug-pry',
+      \ 'name' : '+file-edits' ,
+      \ 'k' : 'kitty.conf',
+      \ 't' : 'tmux.conf',
+      \ 'v' : 'init.vim',
+      \ 'z' : 'zshrc',
+      \ 'g' : 'gitconfig',
       \ }
 nnoremap <silent> <leader> :<c-u>WhichKey ','<CR>
 vnoremap <silent> <leader> :<c-u>WhichKeyVisual ','<CR>
 call which_key#register(',', 'g:which_key_map')
 
 " ## netrw
-" absolute width of netrw window
-let g:netrw_winsize = -28
-" do not display info on the top of window
-let g:netrw_banner = 1
-" tree-view
-let g:netrw_liststyle = 3
-" sort is affecting only: directories on the top, files below
-let g:netrw_sort_sequence = '[\/]$,*'
-" use the previous window to open file
-let g:netrw_browse_split = 4
+let g:netrw_winsize = -28 " absolute width of netrw window
+let g:netrw_banner = 1 " do not display info on the top of window
+let g:netrw_liststyle = 3 " tree-view
+let g:netrw_sort_sequence = '[\/]$,*' " sort is affecting only: directories on the top, files below
+let g:netrw_browse_split = 4 " use the previous window to open file
 let g:netrw_altv = 1
+function! ToggleVExplorer()
+  if exists('t:expl_buf_num')
+    let expl_win_num = bufwinnr(t:expl_buf_num)
+    if expl_win_num != -1
+      let cur_win_nr = winnr()
+      exec expl_win_num . 'wincmd w'
+      close
+      exec cur_win_nr . 'wincmd w'
+      unlet t:expl_buf_num
+    else
+      unlet t:expl_buf_num
+    endif
+  else
+    exec '1wincmd w'
+    Vexplore
+    set number
+    let t:expl_buf_num = bufnr('%')
+  endif
+endfunction
+nnoremap <silent> <F2> :call ToggleVExplorer()<CR>
 
 " ## junegunn/fzf
 let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -839,6 +879,7 @@ let g:limelight_conceal_guifg = 'DarkGray'
 let g:limelight_conceal_guifg = '#777777'
 
 " ## junegunn/goyo.vim
+" ref: https://github.com/ydhamija96/config/blob/master/.vimrc#L137
 function! s:goyo_enter()
   silent !tmux set status off
   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
@@ -971,15 +1012,19 @@ let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
 let g:elm_browser_command = 'open'
 let g:elm_detailed_complete = 1
-let g:elm_format_autosave = 0 " conflicts with ale's elm-format
+let g:elm_format_autosave = 1
 let g:elm_format_fail_silently = 0
 let g:elm_setup_keybindings = 0
 
-" ## elixir.nvim
+" ## vim-elixir
 let g:elixir_autobuild = 1
 let g:elixir_showerror = 1
 let g:elixir_maxpreviews = 20
 let g:elixir_docpreview = 1
+
+" ## mhinz/vim-mix-format
+let g:mix_format_on_save = 1
+let g:mix_format_silent_errors = 1
 
 " ## rainbow_parentheses.vim
 let g:rainbow#max_level = 10
@@ -1008,49 +1053,28 @@ let g:markdown_fenced_languages = [
       \ 'bash=sh', 'zsh', 'elm', 'elixir']
 
 " ## w0rp/ale
-let g:ale_enabled = 1
-let g:ale_completion_enabled = 0
-let g:ale_lint_delay = 1000
-let g:ale_echo_msg_format = '[%linter%] %s'
-" disabling linters where language servers are installed/available..
-let g:ale_linters = {
-      \   'elixir': ['credo'],
-      \   'eelixir': ['credo'],
-      \   'elm': [],
-      \   'lua': [],
-      \   'javascript': [],
-      \   'typescript': [],
-      \ }
-let g:ale_fixers = {
-      \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-      \   'javascript': ['prettier_eslint'],
-      \   'javascript.jsx': ['prettier_eslint'],
-      \   'css': ['prettier'],
-      \   'scss': ['prettier'],
-      \   'json': ['prettier'],
-      \   'elm': ['elm-format'],
-      \   'elixir': ['mix_format'],
-      \   'eelixir': ['mix_format'],
-      \ }                                                                       "Fix eslint errors
-let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
-let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
-let g:ale_sign_info = '‣'
-let g:ale_elixir_elixir_ls_release = expand($PWD.'/.elixir_ls/rel')
-let b:ale_elixir_elixir_ls_config = {'elixirLS': {'dialyzerEnabled': v:true, 'projectDir': expand($PWD)}}
-let g:ale_elm_format_use_global = 0
-let g:ale_elm_format_options = '--yes --elm-version=0.19'
-let g:ale_elm_analyse_use_global = 0
-let g:ale_javascript_eslint_use_global = 1
-let g:ale_lint_on_text_changed = 'always' " 'normal'
-let g:ale_lint_on_insert_leave = 1
-let g:ale_lint_on_enter = 1
-let g:ale_lint_on_save = 1
-let g:ale_fix_on_save = 1
-let g:ale_virtualtext_cursor = 1
-let g:ale_virtualtext_prefix = "\uf63d "
-" let g:ale_set_balloons = 0
-" let g:ale_set_highlights = 0
-" let g:ale_sign_column_always = 1 " handled in autocommands per filetype
+" let g:ale_enabled = 1
+" let g:ale_completion_enabled = 0
+" let g:ale_lint_delay = 1000
+" let g:ale_echo_msg_format = '[%linter%] %s'
+" " disabling linters where language servers are installed/available..
+" let g:ale_linters = {
+"       \   'elixir': ['credo'],
+"       \   'eelixir': ['credo'],
+"       \ }
+" let g:ale_sign_error = '✖'                                                      "Lint error sign ⤫ ✖⨉
+" let g:ale_sign_warning = '⬥'                                                    "Lint warning sign ⬥⚠
+" let g:ale_sign_info = '‣'
+" let g:ale_lint_on_text_changed = 'always' " 'normal'
+" let g:ale_lint_on_insert_leave = 1
+" let g:ale_lint_on_enter = 1
+" let g:ale_lint_on_save = 1
+" let g:ale_fix_on_save = 1
+" let g:ale_virtualtext_cursor = 1
+" let g:ale_virtualtext_prefix = "\uf63d "
+" " let g:ale_set_balloons = 0
+" " let g:ale_set_highlights = 0
+" " let g:ale_sign_column_always = 1 " handled in autocommands per filetype
 
 " # markdown-preview.nvim
 nnoremap <Leader>M :MarkdownPreview<CR>
@@ -1063,8 +1087,8 @@ map <S-F5> :PlugClean!<CR>
 
 " ## fugitive
 nnoremap <leader>H :Gbrowse<CR>
-nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>H :Gbrowse<CR>
+nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>gh :Gbrowse<CR>
 nnoremap <leader>gb :Gblame<CR>
 
@@ -1523,21 +1547,6 @@ set shortmess+=c
 " Or use formatexpr for range format
 set formatexpr=CocActionAsync('formatSelected')
 
-" FOR COC-ULTISNIPS + COC.NVIM
-" ----------------------------
-" Use tab for trigger completion with characters ahead and navigate.
-" Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
-" inoremap <silent><expr> <TAB>
-"       \ pumvisible() ? "\<C-n>" :
-"       \ <SID>check_back_space() ? "\<TAB>" :
-"       \ coc#refresh()
-" inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-
-" function! s:check_back_space() abort
-"   let col = col('.') - 1
-"   return !col || getline('.')[col - 1]  =~# '\s'
-" endfunction
-
 " FOR COC-SNIPPETS + COC.NVIM
 " ---------------------------
 inoremap <silent><expr> <TAB>
@@ -1557,11 +1566,11 @@ let g:coc_snippet_prev = '<S-TAB>'
 " Use <C-e> for trigger completion.
 inoremap <silent><expr> <C-e> coc#refresh()
 
-" Use <Tab> and <S-Tab> for navigate completion list:
+" Use <TAB> and <S-TAB> for navigate completion list:
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
-" Use <cr> for confirm completion.
+" Use <CR> for confirm completion.
 " Coc only does snippet and additional edit on confirm.
 inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
 
@@ -1577,14 +1586,10 @@ function! s:show_documentation()
   endif
 endfunction
 
-" FIXME: this interferes with clearing search highlights
-" nmap <silent> <ESC> <Plug>(coc-float-hide)
-
-" Use `[c` and `]c` for navigate diagnostics
-" nmap <silent> [c <Plug>(coc-diagnostic-prev)
-" nmap <silent> ]c <Plug>(coc-diagnostic-next)
-" nmap <silent> <C-[> <Plug>(coc-diagnostic-prev)
-" nmap <silent> <C-]> <Plug>(coc-diagnostic-next)
+nmap <silent> [c <Plug>(coc-diagnostic-prev)
+nmap <silent> ]c <Plug>(coc-diagnostic-next)
+" nmap <silent> [l <Plug>(coc-diagnostic-prev)
+" nmap <silent> ]l <Plug>(coc-diagnostic-next)
 
 nnoremap <silent> K :call <SID>show_documentation()<CR>
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
@@ -1595,28 +1600,25 @@ nmap <silent> <leader>lgt <Plug>(coc-type-definition)
 nmap <silent> <leader>lgi <Plug>(coc-implementation)
 
 nmap <silent> <leader>lr <Plug>(coc-references)
+
 nmap <silent> <leader>ln <Plug>(coc-rename)
 nmap <silent> <leader>lR <Plug>(coc-rename)
 vmap <silent> <leader>ln <Plug>(coc-rename)
 
-" Remap for format selected region
-vmap <silent> <leader>lF <Plug>(coc-format-selected)
 nmap <silent> <leader>lf <Plug>(coc-format)
+vmap <silent> <leader>lF <Plug>(coc-format-selected)
+nmap <silent> <leader>lF <Plug>(coc-format-selected)
 
-" Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
-vmap <silent> <leader>la <Plug>(coc-codeaction-selected)
-
-" Remap for do codeAction of current line
 nmap <silent> <leader>la <Plug>(coc-codeaction)
+nmap <silent> <leader>lA <Plug>(coc-codeaction-selected)
+vmap <silent> <leader>lA <Plug>(coc-codeaction-selected)
 
 nmap <silent> <leader>lo <Plug>(coc-openlink)
 
 " Fix autofix problem of current line
 nmap <silent> <leader>lq <Plug>(coc-fix-current)
-
 " Use `:Format` for format current buffer
 command! -nargs=0 Format :call CocActionAsync('format')
-
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
@@ -1632,64 +1634,6 @@ nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
 nmap [g <Plug>(coc-git-prevchunk)
 nmap ]g <Plug>(coc-git-nextchunk)
 nmap gs <Plug>(coc-git-chunkinfo)
-
-
-" " Do default action for next item.
-" nnoremap <silent> <space>j  :<C-u>CocNext<CR>
-" " Do default action for previous item.
-" nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
-
-" augroup coc
-"   au!
-
-"   " au! User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-"   " au CursorHold * silent call CocActionAsync('highlight')
-
-"   function! CocUpdateQuickFixes(error, actions) abort
-"     let coc_quickfixes = {}
-"     try
-"       for action in a:actions
-"         if action.kind ==? 'quickfix'
-"           for change in action.edit.documentChanges
-"             for edit in change.edits
-"               let start_line = edit.range.start.line + 1
-"               let end_line = edit.range.end.line + 1
-"               let coc_quickfixes[start_line] = get(coc_quickfixes, start_line, 0) + 1
-"               if start_line != end_line
-"                 let coc_quickfixes[end_line] = get(coc_quickfixes, end_line, 0) + 1
-"               endif
-"             endfor
-"           endfor
-"         endif
-"       endfor
-"     catch
-"     endtry
-"     if coc_quickfixes != get(b:, 'coc_quickfixes', {})
-"       let b:coc_quickfixes = coc_quickfixes
-"       call lightline#update()
-"     endif
-"   endfunction
-
-"   au User CocDiagnosticChange
-"         \   call lightline#update()
-"         \|  call CocActionAsync('quickfixes', function('CocUpdateQuickFixes'))
-
-"   function! s:coc_fix_on_cursor_moved() abort
-"     let current_line = line('.')
-"     if current_line != get(b:, 'last_line', 0)
-"       let b:last_line = current_line
-"       if has_key(get(b:, 'coc_quickfixes', {}), current_line)
-"         call lightline#update()
-"       else
-"         if get(b:, 'coc_line_fixes', 0) > 0
-"           call lightline#update()
-"         endif
-"       endif
-"     endif
-"   endfunction
-
-"   au CursorMoved * call s:coc_fix_on_cursor_moved()
-" augroup END
 "}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
 
@@ -1735,7 +1679,7 @@ nmap gs <Plug>(coc-git-chunkinfo)
   hi ALEWarning guifg=#F2C38F gui=underline
   hi ALEInfo guifg=#666666 gui=underline
 
-  " hi CocCodeLens ctermfg=gray guifg=#999999
+  hi CocCodeLens ctermfg=gray guifg=#707070 " #556873
 
   hi CocGitAddedSign guifg=#A8CE93
   hi CocGitRemovedSign guifg=#DF8C8C

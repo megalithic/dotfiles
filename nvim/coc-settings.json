@@ -1,7 +1,13 @@
 {
   "coc.preferences.colorSupport": true,
   "coc.preferences.extensionUpdateCheck": "daily",
-  "coc.preferences.formatOnSaveFiletypes": ["javascript", "typescript", "typescriptreact", "json", "javascriptreact"],
+  "coc.preferences.formatOnSaveFiletypes": [
+    "javascript",
+    "typescript",
+    "typescriptreact",
+    "json",
+    "javascriptreact"
+  ],
   "coc.preferences.formatOnType": false,
   "coc.preferences.hoverTarget": "float",
   "coc.preferences.jumpCommand": "vsplit",
@@ -21,7 +27,7 @@
   "suggest.detailField": "abbr",
   "suggest.detailMaxLength": 30,
   "suggest.echodocSupport": false,
-  "suggest.enablePreview":true,
+  "suggest.enablePreview": true,
   "suggest.localityBonus": true,
   "suggest.maxCompleteItemCount": 20,
   "suggest.maxPreviewWidth": 60,
@@ -98,7 +104,12 @@
   "prettier.stylelintIntegration": true,
 
   // eslint
-  "eslint.filetypes": ["javascript", "typescript", "typescriptreact", "javascriptreact"],
+  "eslint.filetypes": [
+    "javascript",
+    "typescript",
+    "typescriptreact",
+    "javascriptreact"
+  ],
   "eslint.autoFix": true,
   "eslint.autoFixOnSave": true,
 
@@ -122,8 +133,6 @@
   "coc.source.buffer.ignoreGitignore": true,
   "coc.source.dictionary.enable": true,
   "coc.source.dictionary.filetypes": ["markdown", "gitcommit"],
-  "coc.source.emoji.enable": false,
-  "coc.source.emoji.filetypes": ["markdown", "gitcommit"],
   "coc.source.file.enable": true,
   "coc.source.file.shortcut": "F",
   "coc.source.file.priority": 7,
@@ -152,31 +161,56 @@
   "git.changedSign.hlGroup": "CocGitChangedSign",
   "git.removedSign.text": "▏",
   "git.removedSign.hlGroup": "CocGitRemovedSign",
-  "git.topRemovedSign.text": "‾",
+  "git.topRemovedSign.text": "▤",
   "git.changeRemovedSign.text": "≃",
 
   // diagnostic-languageserver
-  /* "diagnostic-languageserver.filetypes": { */
-  /*   "vim": "vint", */
-  /*   "markdown": [ "write-good", "markdownlint" ], */
-  /*   "sh": "shellcheck", */
-  /*   "elixir": "credo", */
-  /*   "eelixir": "credo" */
-  /* }, */
-  /* "diagnostic-languageserver.linters": { */
-  /*   "elixir": "credo", */
-  /*   "eelixir": "credo" */
-  /* }, */
-  /* "diagnostic-languageserver.formatFiletypes": { */
-  /*   "elm": "elm-format", */
-  /*   "elixir": "mix format", */
-  /*   "eelixir": "mix format" */
-  /* }, */
-  /* "diagnostic-languageserver.formatters": { */
-  /*   "elm": "elm-format", */
-  /*   "elixir": "mix format", */
-  /*   "eelixir": "mix format" */
-  /* }, */
+  "diagnostic-languageserver.enable": true,
+  "diagnostic-languageserver.debug": false,
+  "diagnostic-languageserver.trace.server": "off",
+  "diagnostic-languageserver.filetypes": {
+    "elixir": "mix_credo",
+    "eelixir": "mix_credo"
+  },
+  "diagnostic-languageserver.linters": {
+    "mix_credo": {
+      "command": "mix",
+      "args": ["credo", "suggest", "--format=flycheck"],
+      "debounce": 100,
+      "filetypes": ["elixir", "eelixir"],
+      "rootPatterns": ["mix.exs"],
+      "offsetLine": 0,
+      "offsetColumn": 0,
+      "sourceName": "mix_credo",
+      "formatLines": 1,
+      "formatPattern": [
+        "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)$",
+        {
+          "line": 1,
+          "column": 3,
+          "message": 5,
+          "security": 4
+        }
+      ],
+      "securities": {
+        "W": "warning",
+        "D": "info",
+        "R": "info",
+        "F": "info"
+      }
+    }
+  },
+  "diagnostic-languageserver.formatFiletypes": {
+    "elixir": "mix_format",
+    "eelixir": "mix_format"
+  },
+  "diagnostic-languageserver.formatters": {
+    "mix_format": {
+      "command": "mix",
+      "args": ["format", "-"],
+      "rootPatterns": ["mix.exs"]
+    }
+  },
 
   // languageserver
   "languageserver": {
@@ -213,11 +247,6 @@
         }
       },
       "settings": {}
-    },
-    "python": {
-      "command": "pyls",
-      "filetypes": ["python", "pythonx", "py"],
-      "args": []
     },
     "lua": {
       "command": "lua-lsp",
