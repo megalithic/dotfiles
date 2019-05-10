@@ -169,47 +169,18 @@
   "diagnostic-languageserver.debug": false,
   "diagnostic-languageserver.trace.server": "off",
   "diagnostic-languageserver.filetypes": {
-    "elixir": "mix_credo",
-    "eelixir": "mix_credo"
-  },
-  "diagnostic-languageserver.linters": {
-    "mix_credo": {
-      "command": "mix",
-      "args": ["credo", "suggest", "--format=flycheck"],
-      "debounce": 100,
-      "filetypes": ["elixir", "eelixir"],
-      "rootPatterns": ["mix.exs"],
-      "offsetLine": 0,
-      "offsetColumn": 0,
-      "sourceName": "mix_credo",
-      "formatLines": 1,
-      "formatPattern": [
-        "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)$",
-        {
-          "line": 1,
-          "column": 3,
-          "message": 5,
-          "security": 4
-        }
-      ],
-      "securities": {
-        "W": "warning",
-        "D": "info",
-        "R": "info",
-        "F": "info"
-      }
-    }
+    "vim": "vint",
+    "email": "languagetool",
+    "markdown": [ "write-good", "markdownlint" ],
+    "sh": "shellcheck",
+    "elixir": ["mix_credo", "mix_credo_compile"],
+    "eelixir": ["mix_credo", "mix_credo_compile"],
+    "php": "phpcs"
   },
   "diagnostic-languageserver.formatFiletypes": {
+    "dart": "dartfmt",
     "elixir": "mix_format",
     "eelixir": "mix_format"
-  },
-  "diagnostic-languageserver.formatters": {
-    "mix_format": {
-      "command": "mix",
-      "args": ["format", "-"],
-      "rootPatterns": ["mix.exs"]
-    }
   },
 
   // languageserver
