@@ -630,11 +630,10 @@ augroup gitcommit
   au BufEnter *.git/index silent normal gg0j
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
-augroup END
 
-augroup coc
-  au!
-  au CursorHold * silent call CocActionAsync('highlight')
+  " co-authored-by abbreviations
+  autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabjj Co-authored-by: Joe Jobes <jmrjobes@gmail.com>
+  autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
 augroup END
 
 augroup elixir

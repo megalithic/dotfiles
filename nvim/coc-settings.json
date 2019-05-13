@@ -118,7 +118,10 @@
     "http://json.schemastore.org/composer": "/*"
   },
 
-  "snippets.autoTrigger": true,
+  "snippets.autoTrigger": false,
+  "snippets.ultisnips.enable": true,
+  "snippets.ultisnips.usePythonx": true,
+  "snippets.ultisnips.directories": ["~/.dotfiles/nvim/UltiSnips"],
 
   // sources
   "coc.source.around.enable": true,
