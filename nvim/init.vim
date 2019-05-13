@@ -631,9 +631,10 @@ augroup gitcommit
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
 
-  " co-authored-by abbreviations
+  " co-authored-by iabbreviations
   autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabjj Co-authored-by: Joe Jobes <jmrjobes@gmail.com>
   autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
+  autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabjw Co-authored-by: Jeff Weiss <jweiss@enbala.com>
 augroup END
 
 augroup elixir
