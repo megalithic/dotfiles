@@ -383,8 +383,8 @@ nnoremap <leader>? ?<CR>
 vnoremap <leader>s :!sort<CR>
 
 " Command mode conveniences
-noremap <leader>; :!
-noremap <leader>: :<Up>
+noremap <leader>: :!
+noremap <leader>; :<Up>
 
 " Remap VIM 0 to first non-blank character
 map 0 ^
@@ -713,20 +713,36 @@ let g:matchup_matchparen_status_offscreen = 0
 " ref: https://github.com/sinecodes/dotfiles/blob/master/.vim/settings/rich/whichkey.vim
 let g:which_key_use_floating_win = 1
 let g:which_key_hspace = 15
-let g:which_key_map =  {}
+let g:which_key_map = {
+      \   'a': 'search-project-for',
+      \   'A': 'search-project-for-cursor-word',
+      \   'c': 'comment-line',
+      \   'G': 'goyo-enter',
+      \   'm': 'fzf-find-files',
+      \   'M': 'markdown-preview',
+      \   'o': 'new-file',
+      \   'q': 'quit-buffer',
+      \   's': 'substitute-for-cursor-word',
+      \   'w': 'save-buffer',
+      \   'W': 'sudo-save-buffer',
+      \   '/': 'find-forward-cursor-word',
+      \   '?': 'find-back-cursor-word',
+      \   ';': 'last-command',
+      \   ':': 'shell-command',
+      \ }
 let g:which_key_map.g = {
       \ 'name' : '+git/vcs' ,
-      \ 'b' : ['Gblame'                 , 'blame']             ,
-      \ 'c' : ['BCommits'               , 'commits-for-current-buffer'] ,
-      \ 'C' : ['Gcommit'                , 'commit']            ,
-      \ 'd' : ['Gdiff'                  , 'diff']              ,
-      \ 'e' : ['Gedit'                  , 'edit']              ,
-      \ 'l' : ['Glog'                   , 'log']               ,
-      \ 'r' : ['Gread'                  , 'read']              ,
-      \ 's' : ['Gstatus'                , 'status']            ,
-      \ 'w' : ['Gwrite'                 , 'write']             ,
-      \ 'm' : ['GitMessenger'           , 'msg']               ,
-      \ 'p' : ['Git push'               , 'push']
+      \ 'b' : ['Gblame'       , 'blame'],
+      \ 'c' : ['BCommits'     , 'commits-for-current-buffer'],
+      \ 'C' : ['Gcommit'      , 'commit'],
+      \ 'd' : ['Gdiff'        , 'diff'],
+      \ 'e' : ['Gedit'        , 'edit'],
+      \ 'l' : ['Glog'         , 'log'],
+      \ 'r' : ['Gread'        , 'read'],
+      \ 's' : ['Gstatus'      , 'status'],
+      \ 'w' : ['Gwrite'       , 'write'],
+      \ 'm' : ['GitMessenger' , 'messenger'],
+      \ 'p' : ['Git push'     , 'push']
       \ }
 let g:which_key_map.l = {
       \ 'name' : '+lsp/coc',
