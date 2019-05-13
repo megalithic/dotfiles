@@ -42,6 +42,11 @@ Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript','typescriptreact','t
 Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
+
+" Plug 'vim-airline/vim-airline'
+" Plug 'vim-airline/vim-airline-themes'
+" let g:airline_theme='nova'
+
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
@@ -51,7 +56,7 @@ Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 " Plug 'junegunn/vim-slash'
 Plug 'junegunn/vim-plug'
-Plug 'justinmk/vim-sneak'
+" Plug 'justinmk/vim-sneak'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
 Plug 'wsdjeg/vim-fetch'
@@ -60,7 +65,7 @@ Plug 'liuchengxu/vim-which-key'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-Plug 'mhinz/vim-mix-format'
+" Plug 'mhinz/vim-mix-format'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -127,6 +132,7 @@ Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'RRethy/vim-hexokinase'
+" Plug 'rhysd/clever-f.vim'
 Plug 'rhysd/git-messenger.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
@@ -145,9 +151,8 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
-" Plug 'tpope/vim-vinegar'
 Plug 'trevordmiller/nova-vim'
-" Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
+Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'Yggdroot/indentLine'
 Plug 'zaptic/elm-vim', { 'for': ['elm'] }
@@ -231,6 +236,7 @@ set signcolumn=yes
 set synmaxcol=250             " set max syntax highlighting column to sane level
 set visualbell t_vb=          " no visual bell
 set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/vim-256color-bce.html
+set laststatus=2
 
 " ---- Show
 set noshowmode                                                                  "Hide showmode because of the powerline plugin
@@ -483,8 +489,14 @@ augroup general
   " No formatting on o key newlines
   au BufNewFile,BufEnter * set formatoptions-=o
 
-  " Trim trailing whitespace and ending empty lines
-  au BufWritePost * exe "normal! m`:%s/\s\+$//e<CR>``"
+  " Trim trailing whitespace
+  function! <SID>TrimWhitespace()
+    let l = line(".")
+    let c = col(".")
+    keeppatterns %s/\v\s+$//e
+    call cursor(l, c)
+  endfunction
+  au FileType * au BufWritePre <buffer> :call <SID>TrimWhitespace()
 
   " Remember cursor position between vim sessions
   au BufReadPost *
@@ -536,6 +548,10 @@ augroup general
 
   " Preview window with line wrap
   au WinEnter * if &previewwindow | setlocal wrap | endif
+
+  autocmd! FileType which_key
+  autocmd  FileType which_key set laststatus=0 noshowmode noruler
+        \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
 augroup END
 
 augroup mirrors
@@ -616,21 +632,14 @@ augroup END
 augroup coc
   au!
   au CursorHold * silent call CocActionAsync('highlight')
-  au CursorHoldI * silent call CocActionAsync('highlight')
 augroup END
 
 augroup elixir
   au!
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ep oIO.puts "" <ESC>hi
+  au FileType elixir,eelixir nnoremap <leader>ep o\|><ESC>i
   au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect()<ESC>i
   au FileType elixir,eelixir nnoremap <leader>eil o\|> IO.inspect(label: "")<ESC>hi
-
-  " auto-format on save for our elixir things
-
-  " if executable('mix')
-  "   autocmd BufWritePost *.ex,*.exs silent :!mix format %
-  " endif
 
   " :Iex => open iex with current file compiled
   command! Iex :!iex -S mix %<cr>
@@ -639,16 +648,19 @@ augroup elixir
         \ 'name' : '+elixir' ,
         \ 'i' : 'io.inspect',
         \ 'il' : 'io.inspect-with-label',
-        \ 'd' : 'debug-pry',
-        \ 'p' : 'io.puts',
+        \ 'd' : 'debug/iex.pry',
+        \ 'p' : '|> pipeline',
         \ }
+augroup END
+
+augroup ft_formatting
+  au!
+  au BufWrite *.json :call CocAction('format')
+  au BufWrite *.ex,*.exs :call CocAction('format')
 augroup END
 
 "}}}
 " ░░░░░░░░░░░░░░░ other settings {{{
-
-" Toggle paste mode
-set pastetoggle=<leader>z
 
 " Fancy tag lookup
 set tags=./tags;/,tags;/
@@ -697,6 +709,7 @@ let g:matchup_matchparen_status_offscreen = 0
 " ## liuchengxu/vim-which-key
 " ref: https://github.com/sinecodes/dotfiles/blob/master/.vim/settings/rich/whichkey.vim
 let g:which_key_use_floating_win = 1
+let g:which_key_hspace = 15
 let g:which_key_map =  {}
 let g:which_key_map.g = {
       \ 'name' : '+git/vcs' ,
@@ -736,10 +749,11 @@ let g:which_key_map.l = {
       \   't' : 'type-definition',
       \   'i' : 'implementation',
       \   },
-      \ 'D' : 'diagnostics',
-      \ 'E' : 'extensions',
-      \ 'G' : 'git-status',
-      \ 'C' : 'commands',
+      \ 'D' : 'diagnostics-list',
+      \ 'E' : 'extensions-list',
+      \ 'G' : 'git-status-list',
+      \ 'O' : 'outline-list',
+      \ 'C' : 'commands-list',
       \ 'Y' : 'yank-list',
       \ }
 
@@ -813,30 +827,6 @@ let g:fzf_action = {
       \ 'ctrl-v': 'vsplit',
       \ 'enter': 'vsplit'
       \ }
-
-"let g:fzf_layout = { 'window': 'call FloatingFZF()' }
-"function! FloatingFZF()
-"  let buf = nvim_create_buf(v:false, v:true)
-"  call setbufvar(buf, 'number', 'no')
-
-"  let height = float2nr(&lines/2)
-"  let width = float2nr(&columns - (&columns * 2 / 10))
-"  "let width = &columns
-"  let row = float2nr(&lines / 3)
-"  let col = float2nr((&columns - width) / 3)
-
-"  let opts = {
-"        \ 'relative': 'editor',
-"        \ 'row': row,
-"        \ 'col': col,
-"        \ 'width': width,
-"        \ 'height':height,
-"        \ }
-"  let win =  nvim_open_win(buf, v:true, opts)
-"  call setwinvar(win, '&number', 0)
-"  call setwinvar(win, '&relativenumber', 0)
-"endfunction
-
 let g:fzf_layout = { 'down': '~15%' }
 
 if executable('rg')
@@ -865,7 +855,6 @@ endif
 nnoremap <silent><leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
 nnoremap <leader>a <ESC>:Rg<SPACE>
 nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
-" nnoremap <localleader><space> :Buffers<cr> nnoremap <leader>a <ESC>:Rg<SPACE> nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR> vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 " Backslash as shortcut to ag
 nnoremap \ :Rg<SPACE>
 
@@ -931,7 +920,7 @@ function! s:goyo_leave()
   set cursorline<
   set signcolumn<
   set eventignore<
-  set showbreak=>>>\ 
+  set showbreak=>>>\
   call css_color#enable()
   let b:coc_suggest_disable = 0
   IndentLinesEnable
@@ -1070,9 +1059,9 @@ let g:elixir_showerror = 1
 let g:elixir_maxpreviews = 20
 let g:elixir_docpreview = 1
 
-" ## mhinz/vim-mix-format
-let g:mix_format_on_save = 1
-let g:mix_format_silent_errors = 1
+" " ## mhinz/vim-mix-format
+" let g:mix_format_on_save = 1
+" let g:mix_format_silent_errors = 1
 
 " ## rainbow_parentheses.vim
 let g:rainbow#max_level = 10
@@ -1110,8 +1099,6 @@ noremap <S-F5> :PlugClean!<CR>
 map <S-F5> :PlugClean!<CR>
 
 " ## fugitive
-nnoremap <leader>H :Gbrowse<CR>
-vnoremap <leader>H :Gbrowse<CR>
 nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>gh :Gbrowse<CR>
 nnoremap <leader>gb :Gblame<CR>
@@ -1147,22 +1134,28 @@ let g:golden_ratio_wrap_ignored = 0
 let g:golden_ratio_ignore_horizontal_splits = 1
 
 " ## justinmk/vim-sneak
-let g:sneak#label = 1
-let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+" let g:sneak#label = 1
+" let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+
+" ## rhysd/clever-f
+" let g:clever_f_mark_char_color='#ff0000'
+" map ; <Plug>(clever-f-repeat-forward)
+" map , <Plug>(clever-f-repeat-back)
 
 " ## quick-scope
-" let g:qs_enable = 1
-" let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+let g:qs_enable = 1
+let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## janko/vim-test (testing)
 function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
 
+" ref: https://github.com/hourliert/dotfiles/blob/7049f2cb46f840ce242d44825f1f1963fe34a054/vimrc#L340
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
 nmap <silent> <leader>tf :TestFile<CR>
-nmap <silent> <leader>tt :TestNearest<CR>
+nmap <silent> <leader>tt :TestVisit<CR>
 nmap <silent> <leader>tn :TestNearest<CR>
 nmap <silent> <leader>tl :TestLast<CR>
 nmap <silent> <leader>ta :TestSuite<CR>
@@ -1590,6 +1583,7 @@ nmap <silent> <leader>lo <Plug>(coc-openlink)
 
 " Fix autofix problem of current line
 nmap <silent> <leader>lq <Plug>(coc-fix-current)
+
 " Use `:Format` for format current buffer
 command! -nargs=0 Format :call CocActionAsync('format')
 " Use `:Fold` for fold current buffer
@@ -1602,6 +1596,7 @@ nnoremap <silent> <leader>lD :<C-u>CocList diagnostics<CR>
 nnoremap <silent> <leader>lG :<C-u>CocList --normal --auto-preview gstatus<CR>
 nnoremap <silent> <leader>lC :<C-u>CocList commands<cr>
 nnoremap <silent> <leader>lO :<C-u>CocList outline<cr>
+nnoremap <silent> <leader>lE :<C-u>CocList extensions<cr>
 nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
 
 nmap [g <Plug>(coc-git-prevchunk)
@@ -1670,8 +1665,8 @@ nmap gs <Plug>(coc-git-chunkinfo)
   hi Visual guifg=#3C4C55 guibg=#7FC1CA
   hi Normal guifg=#C5D4DD guibg=NONE
 
-  " hi QuickScopePrimary guifg=#DF8C8C guibg=#222222 gui=underline
-  " hi QuickScopeSecondary guifg=#F2C38F guibg=#222222 gui=underline
+  hi QuickScopePrimary guifg='#afff5f' guibg=#222222 gui=underline
+  hi QuickScopeSecondary guifg='#5fffff' guibg=#222222 gui=underline
 
   hi gitCommitOverflow guibg=#DF8C8C guifg=#333333 gui=underline
   hi DiffAdd guifg=#A8CE93

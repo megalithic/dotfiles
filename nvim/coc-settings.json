@@ -71,14 +71,14 @@
   "diagnostic.enableMessage": "always",
   "diagnostic.enableSign": true,
   "diagnostic.errorSign": "✖",
-  "diagnostic.highlightOffset": 9999999,
+  "diagnostic.highlightOffset": 9999998,
   "diagnostic.hintSign": "‣",
   "diagnostic.infoSign": "‣",
   "diagnostic.locationlist": false,
   "diagnostic.messageTarget": "float",
   "diagnostic.refreshAfterSave": false,
   "diagnostic.refreshOnInsertMode": true,
-  "diagnostic.signOffset": 9999999,
+  "diagnostic.signOffset": 9999998,
   "diagnostic.virtualText": false,
   "diagnostic.virtualTextLineSeparator": "//",
   "diagnostic.virtualTextLines": 3,
@@ -149,7 +149,7 @@
   "tailwind.priority": 99,
 
   // git
-  "git.enableGutters": true,
+  "git.enableGutters": false,
   "git.signOffset": 99,
   "git.branchCharacter": "⎇",
   "git.addedSign.text": "▏",
@@ -167,15 +167,11 @@
   "diagnostic-languageserver.trace.server": "off",
   "diagnostic-languageserver.filetypes": {
     "vim": "vint",
-    /* "email": "languagetool", */
-    /* "markdown": [ "write-good", "markdownlint" ], */
-    /* "sh": "shellcheck", */
-    "elixir": ["mix_credo", "mix_credo_compile"],
-    "eelixir": ["mix_credo", "mix_credo_compile"],
+    "elixir": ["mix_credo"],
+    "eelixir": ["mix_credo"],
     "php": "phpcs"
   },
   "diagnostic-languageserver.formatFiletypes": {
-    "dart": "dartfmt",
     "elixir": "mix_format",
     "eelixir": "mix_format"
   },
@@ -219,6 +215,89 @@
     "lua": {
       "command": "lua-lsp",
       "filetypes": ["lua"]
+    },
+    "dls": {
+      "enable": false,
+      "command": "diagnostic-languageserver",
+      "args": ["--stdio"],
+      "filetypes": ["elixir", "eelixir"],
+      "initializationOptions": {
+        "linters": {
+          "mix_credo": {
+            "command": "mix",
+            "debounce": 100,
+            "rootPatterns": ["mix.exs"],
+            "args": [
+              "credo",
+              "suggest",
+              "--format",
+              "flycheck",
+              "--read-from-stdin"
+            ],
+            "offsetLine": 0,
+            "offsetColumn": 0,
+            "sourceName": "mix_credo",
+            "formatLines": 1,
+            "formatPattern": [
+              "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)$",
+              {
+                "line": 1,
+                "column": 3,
+                "message": 5,
+                "security": 4
+              }
+            ],
+            "securities": {
+              "F": "warning",
+              "C": "warning",
+              "D": "info",
+              "R": "info"
+            }
+          },
+          "mix_credo_compile": {
+            "command": "mix",
+            "debounce": 100,
+            "rootPatterns": ["mix.exs"],
+            "args": [
+              "credo",
+              "suggest",
+              "--format",
+              "flycheck",
+              "--read-from-stdin"
+            ],
+            "offsetLine": -1,
+            "offsetColumn": 0,
+            "sourceName": "mix_credo",
+            "formatLines": 1,
+            "formatPattern": [
+              "^([^ ]+)\\s+\\(([^)]+)\\)\\s+([^ ]+?):([0-9]+):\\s+(.*)$",
+              {
+                "line": -1,
+                "column": -1,
+                "message": ["[", 2, "]: ", 3, ": ", 5],
+                "security": 1
+              }
+            ],
+            "securities": {
+              "**": "error"
+            }
+          }
+        },
+        "filetypes": {
+          "elixir": ["mix_credo", "mix_credo_compile"],
+          "eelixir": ["mix_credo", "mix_credo_compile"]
+        },
+        "formatters": {
+          "mix_format": {
+            "command": "mix",
+            "args": ["format", "-"]
+          }
+        },
+        "formatFiletypes": {
+          "elixir": "mix_format",
+          "eelixir": "mix_format"
+        }
+      }
     }
   }
 }
