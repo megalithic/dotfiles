@@ -131,11 +131,13 @@ Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
+Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
 " Plug 'rhysd/clever-f.vim'
 Plug 'rhysd/git-messenger.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
+Plug 'svermeulen/vim-yoink'
 Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
@@ -746,6 +748,7 @@ let g:which_key_map.l = {
       \ 'g' : {
       \   'name': '+goto',
       \   'd' : 'definition',
+      \   'D' : 'dash-search',
       \   't' : 'type-definition',
       \   'i' : 'implementation',
       \   },
@@ -1111,7 +1114,7 @@ let g:gist_default_private = 1
 vnoremap <leader>G :Gist -po<CR>
 
 " ## dash.vim
-nmap <silent> <leader>D <Plug>DashSearch
+nmap <silent> <leader>lgD <Plug>DashSearch
 
 " ## vim-commentary
 nmap <leader>c :Commentary<CR>
@@ -1145,6 +1148,15 @@ let g:golden_ratio_ignore_horizontal_splits = 1
 " ## quick-scope
 let g:qs_enable = 1
 let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+
+" ## svermeulen/vim-yoink
+let g:yoinkIncludeDeleteOperations = 1
+let g:yoinkSyncSystemClipboardOnFocus = 0
+let g:yoinkAutoFormatPaste = 1
+nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
+nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
+nmap p <plug>(YoinkPaste_p)
+nmap P <plug>(YoinkPaste_P)
 
 " ## janko/vim-test (testing)
 function! TerminalSplit(cmd)

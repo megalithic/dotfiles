@@ -37,7 +37,6 @@ session="pairing"
 ssh_command=""
 tunnel_command=""
 host_ip=$(dig +short myip.opendns.com @resolver1.opendns.com)
-host="megalithic.dyndns.org"
 port=1337
 user="pair"
 
@@ -113,12 +112,12 @@ tunnel_and_connect() {
 }
 
 tunnel() {
-  tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host"
+  tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host_ip"
   echo $tunnel_command
 }
 
 ssh() {
-  ssh_command="ssh $user@$host"
+  ssh_command="ssh $user@$host_ip"
   echo $ssh_command
 }
 
