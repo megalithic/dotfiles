@@ -93,6 +93,7 @@ if executable('yarn') && executable('node')
             \ 'coc-tailwindcss',
             \ 'coc-tsserver',
             \ 'coc-tslint-plugin',
+            \ 'coc-vimlsp',
             \ 'coc-word',
             \ 'coc-yaml',
             \ 'coc-yank',
