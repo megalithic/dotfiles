@@ -56,7 +56,6 @@ Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 " Plug 'junegunn/vim-slash'
 Plug 'junegunn/vim-plug'
-" Plug 'justinmk/vim-sneak'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
 Plug 'wsdjeg/vim-fetch'
@@ -134,7 +133,6 @@ Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
-" Plug 'rhysd/clever-f.vim'
 Plug 'rhysd/git-messenger.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
@@ -518,13 +516,24 @@ augroup general
 
   " When terminal buffer ends allow to close it
   if has('nvim')
-    autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
-    autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
+    au TermClose * noremap <buffer><silent><CR> :bd!<CR>
+    au TermClose * noremap <buffer><silent><ESC> :bd!<CR>
     au! TermOpen * setlocal nonumber norelativenumber
     au! TermOpen * if &buftype == 'terminal'
           \| set nonumber norelativenumber
           \| endif
   endif
+
+  " coc.nvim - highlight all occurences of word under cursor
+  au CursorHold * silent call CocActionAsync('highlight')
+
+  " Name tmux window/tab based on current opened buffer
+  " au BufReadPost,FileReadPost,BufNewFile,BufEnter *
+  " au BufReadPre,FileReadPre,BufNewFile,BufEnter *
+  "       \ let tw = system("tmux display-message -p '\\#W'")
+  "       \| echo "current tmux window: " . tw
+  "       \| call system("tmux rename-window 'nvim | " . expand("%:t") . "'")
+  " au VimLeave * call system("tmux rename-window '" . tw . "'")
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -694,12 +703,6 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 " ## polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
-" ## indentLine
-let g:indentLine_enabled = 1
-let g:indentLine_color_gui = '#556874'
-let g:indentLine_char = '│'
-" let g:indentLine_bgcolor_gui = '#3C4C55'
-
 " rhysd/git-messenger
 let g:git_messenger_no_default_mappings = 1
 nmap <leader>gm <Plug>(git-messenger)
@@ -748,7 +751,6 @@ let g:which_key_map.l = {
       \ 'name' : '+lsp/coc',
       \ 'a' : 'code-action',
       \ 'A' : 'code-action-selected',
-      \ 'r' : 'references',
       \ 'R' : 'rename',
       \ 'n' : 'rename',
       \ 'c' : 'context-menu',
@@ -759,6 +761,7 @@ let g:which_key_map.l = {
       \ 'F' : 'format-selected',
       \ 'l' : 'highlight',
       \ 'L' : 'unmark-highlight',
+      \ 'r' : 'references',
       \ 's' : 'document-symbol',
       \ 'i' : 'toggle-indent-lines',
       \ 'S' : 'workspace-symbol',
@@ -766,8 +769,8 @@ let g:which_key_map.l = {
       \   'name': '+goto',
       \   'd' : 'definition',
       \   'D' : 'dash-search',
-      \   't' : 'type-definition',
       \   'i' : 'implementation',
+      \   't' : 'type-definition',
       \   },
       \ 'D' : 'diagnostics-list',
       \ 'E' : 'extensions-list',
@@ -1152,15 +1155,6 @@ let g:indentLine_char = '│'
 let g:golden_ratio_exclude_nonmodifiable = 1
 let g:golden_ratio_wrap_ignored = 0
 let g:golden_ratio_ignore_horizontal_splits = 1
-
-" ## justinmk/vim-sneak
-" let g:sneak#label = 1
-" let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
-
-" ## rhysd/clever-f
-" let g:clever_f_mark_char_color='#ff0000'
-" map ; <Plug>(clever-f-repeat-forward)
-" map , <Plug>(clever-f-repeat-back)
 
 " ## quick-scope
 let g:qs_enable = 1
@@ -1618,9 +1612,10 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Use `:Fold` for fold current buffer
 command! -nargs=? Fold :call CocActionAsync('fold', <f-args>)
 
-nnoremap <silent> <leader>lS  :<C-u>CocList -I symbols<cr> " Workspace symbols
-nnoremap <silent> <leader>ls  :<C-u>CocList outline<cr> " Document symbols
-
+ " Workspace symbols
+nnoremap <silent> <leader>lS  :<C-u>CocList -I symbols<cr>
+" Document symbols
+nnoremap <silent> <leader>ls :<C-u>CocList outline<cr>
 nnoremap <silent> <leader>lD :<C-u>CocList diagnostics<CR>
 nnoremap <silent> <leader>lG :<C-u>CocList --normal --auto-preview gstatus<CR>
 nnoremap <silent> <leader>lC :<C-u>CocList commands<cr>
