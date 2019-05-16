@@ -48,13 +48,14 @@ user="pair"
 help() {
   printf -- "Usage: "$command" <subcommand> [options]\n"
   printf -- "Subcommands:\n"
-  printf -- "    add   Add a github user\n"
-  printf -- "    rm    Remove a github user\n"
-  printf -- "    ls    List github users\n"
-  printf -- "    up    Spin up and open shared tmux session\n"
-  printf -- "    down  Terminates shared tmux session\n"
-  printf -- "    ssh   Constructs the reverse tunnel using basic ssh reverse proxying\n"
-  printf -- "    info  Displays handle information about the pairing session\n"
+  printf -- "    add    Add a github user\n"
+  printf -- "    rm     Remove a github user\n"
+  printf -- "    ls     List github users\n"
+  printf -- "    up     Spin up and open shared tmux session\n"
+  printf -- "    down   Terminates shared tmux session\n"
+  printf -- "    ssh    Constructs and returns the ssh command\n"
+  printf -- "    tunnel Constructs and returns the tunnel command\n"
+  printf -- "    info   Displays handle information about the pairing session\n"
 }
 
 add() {
@@ -92,6 +93,7 @@ down() {
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
   pkill -9 -f 1337:localhost
   pkill -9 -f pair
+  # pkill -9 -f tmate
   tmux kill-session -t $session
 }
 
@@ -102,17 +104,17 @@ tunnel_and_connect() {
     if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
       tmux new -s $session -d
       tmux switch -t $session
-      tmux send-keys -t $session "cd ~; $(tunnel)" C-m
+      tmux send-keys -t $session "cd ~; $(tunnel);" C-m
       tmux split-window -h -t $session
       DONE=1
     fi;
     sleep 0.5;
   done;
-
 }
 
 tunnel() {
   tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host_ip"
+  # tunnel_command="unset $TMUX; tmate"
   echo $tunnel_command
 }
 

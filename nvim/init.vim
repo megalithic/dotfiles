@@ -473,7 +473,7 @@ augroup general
   au FocusGained  * checktime "Refresh file when vim gets focus
   au BufEnter     * checktime
   au WinEnter     * checktime
-  au CursorHold   * checktime
+  " au CursorHold   * checktime " throws errors?
   au InsertEnter  * checktime
 
   " TODO: handle turning toggling the tmux status bar, if we're in $TMUX and Goyo is active
@@ -525,7 +525,8 @@ augroup general
   endif
 
   " coc.nvim - highlight all occurences of word under cursor
-  au CursorHold * silent call CocActionAsync('highlight')
+  " disable for now: annoying while on tmate and other things
+  " au CursorHold * silent call CocActionAsync('highlight')
 
   " Name tmux window/tab based on current opened buffer
   " au BufReadPost,FileReadPost,BufNewFile,BufEnter *
@@ -640,18 +641,23 @@ augroup gitcommit
   au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
 
-  " co-authored-by iabbreviations
-  autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabjj Co-authored-by: Joe Jobes <jmrjobes@gmail.com>
-  autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
-  autocmd FileType gitcommit,gitrebase :iabbrev <buffer> cabjw Co-authored-by: Jeff Weiss <jweiss@enbala.com>
+  " co-authored-by iabbreviations only used during gitcommit messages
+  au FileType gitcommit,gitrebase :iabbrev <buffer> cabjj Co-authored-by: Joe Jobes <jmrjobes@gmail.com>
+  au FileType gitcommit,gitrebase :iabbrev <buffer> cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
+  au FileType gitcommit,gitrebase :iabbrev <buffer> cabjw Co-authored-by: Jeff Weiss <jweiss@enbala.com>
 augroup END
 
 augroup elixir
   au!
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ep o\|><ESC>i
+  au FileType elixir,eelixir nnoremap <leader>ep o\|> <ESC>a
   au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect()<ESC>i
   au FileType elixir,eelixir nnoremap <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+
+  au FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
+  au FileType elixir,eelixir iabbrev ep    \|>
+  au FileType elixir,eelixir iabbrev ei    IO.inspect
+  au FileType elixir,eelixir iabbrev eputs IO.puts
 
   " :Iex => open iex with current file compiled
   command! Iex :!iex -S mix %<cr>
@@ -669,6 +675,7 @@ augroup ft_formatting
   au!
   au BufWrite *.json :call CocAction('format')
   au BufWrite *.ex,*.exs :call CocAction('format')
+  au BufWrite *.elm :call CocAction('format')
 augroup END
 
 "}}}
@@ -873,6 +880,19 @@ if executable('rg')
         \   <bang>0 ? fzf#vim#with_preview('up:60%')
         \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)
+
+  " ref: https://github.com/taylorbrooks/dotfiles/blob/master/.vimrc#L121
+  " let g:rg_command = '
+  "       \ rg --line-number --no-heading --fixed-strings --ignore-case --no-ignore --color "always"
+  "       \ --colors "line:fg:yellow"
+  "       \ --colors "line:style:bold"
+  "       \ --colors "path:fg:red"
+  "       \ --colors "path:style:bold"
+  "       \ --colors "match:fg:white"
+  "       \ --colors "match:bg:black"
+  "       \ -g "*.{js,md,jade,html,config,rb,conf}"
+  "       \ -g "!{.git,node_modules,vendor}/*" '
+  " command! -bang -nargs=* F call fzf#vim#grep(g:rg_command .shellescape(<q-args>), 0, <bang>0)
 endif
 
 nnoremap <silent><leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
@@ -1072,7 +1092,7 @@ let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
 let g:elm_browser_command = 'open'
 let g:elm_detailed_complete = 1
-let g:elm_format_autosave = 1
+let g:elm_format_autosave = 0 " disabling in favor of coc-diagnostic/elm_format
 let g:elm_format_fail_silently = 0
 let g:elm_setup_keybindings = 0
 
@@ -1082,7 +1102,7 @@ let g:elixir_showerror = 1
 let g:elixir_maxpreviews = 20
 let g:elixir_docpreview = 1
 
-" " ## mhinz/vim-mix-format
+" " ## mhinz/vim-mix-format " disabling in favor of coc-diagnostic/mix_format
 " let g:mix_format_on_save = 1
 " let g:mix_format_silent_errors = 1
 
@@ -1528,6 +1548,7 @@ endfunction
 " }}}
 " ░░░░░░░░░░░░░░░ coc.nvim {{{
 let g:coc_force_debug = 0
+let g:coc_node_path = $HOME . '/.asdf/installs/nodejs/10.15.3/bin/node'
 
 " for showSignatureHelp
 set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478

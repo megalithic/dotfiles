@@ -13,7 +13,7 @@
   "coc.preferences.jumpCommand": "vsplit",
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
-  "coc.preferences.snippetStatusText": "🌈",
+  "coc.preferences.snippetStatusText": "\ue795", // "🌈",
   "coc.preferences.enableFloatHighlight": true,
 
   "signature.enable": true,
@@ -74,7 +74,7 @@
   "diagnostic.highlightOffset": 9999998,
   "diagnostic.hintSign": "‣",
   "diagnostic.infoSign": "‣",
-  "diagnostic.locationlist": false,
+  "diagnostic.locationlist": true,
   "diagnostic.messageTarget": "float",
   "diagnostic.refreshAfterSave": false,
   "diagnostic.refreshOnInsertMode": true,
@@ -88,12 +88,16 @@
   "codeLens.enable": true,
   "codeLens.separator": "\ufbc0",
 
-  "highlight.disableLanguages": [],
+  "highlight.disableLanguages": ["vim-plug"],
   "highlight.document.enable": true,
   "highlight.colors.enable": true,
 
   "javascript.suggest.autoImports": true,
+  "javascript.preferences.quoteStyle": "single",
+  "javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": true,
+
   "typescript.suggest.autoImports": true,
+  "typescript.preferences.quoteStyle": "single",
 
   // prettier
   "prettier.eslintIntegration": true,
@@ -101,14 +105,17 @@
   "prettier.stylelintIntegration": true,
 
   // eslint
+  "eslint.autoFix": true,
   "eslint.filetypes": [
     "javascript",
     "typescript",
     "typescriptreact",
     "javascriptreact"
   ],
-  "eslint.autoFix": true,
   "eslint.autoFixOnSave": true,
+  "eslint.enable": true,
+  "eslint.run": "onType",
+  "eslint.packageManager": "npm",
 
   // tslint
   "tslint.autoFixOnSave": true,
@@ -168,15 +175,42 @@
   "diagnostic-languageserver.enable": true,
   "diagnostic-languageserver.debug": false,
   "diagnostic-languageserver.trace.server": "off",
+  "diagnostic-languageserver.linters": {
+    "vint": {
+      "command": "vint",
+      "debounce": 100,
+      "args": ["--enable-neovim", "-"],
+      "offsetLine": 0,
+      "offsetColumn": 0,
+      "sourceName": "vint",
+      "formatLines": 1,
+      "formatPattern": [
+        "[^:]+:(\\d+):(\\d+):\\s*(.*$)",
+        {
+          "line": 1,
+          "column": 2,
+          "message": 3
+        }
+      ]
+    }
+  },
   "diagnostic-languageserver.filetypes": {
     "vim": "vint",
     "elixir": ["mix_credo"],
     "eelixir": ["mix_credo"],
     "php": "phpcs"
   },
+  "diagnostic-languageserver.formatters": {
+    "elm_format": {
+      /* npx elm-format --yes --elm-version=0.18 */
+      "command": "npx",
+      "args": ["elm-format", "--yes", "--elm-version=0.18", "--stdin"]
+    }
+  },
   "diagnostic-languageserver.formatFiletypes": {
     "elixir": "mix_format",
-    "eelixir": "mix_format"
+    "eelixir": "mix_format",
+    "elm": "elm_format"
   },
 
   // languageserver
@@ -189,17 +223,17 @@
       "initializationOptions": {},
       "settings": {}
     },
-    "elm": {
-      "command": "elm-lsp",
-      "args": ["--stdio"],
-      "filetypes": ["elm"],
-      "cwd": ".",
-      "rootPatterns": ["elm.json"],
-      "initializationOptions": {
-        "runtime": "node"
-      },
-      "settings": {}
-    },
+    /* "elm": { */
+    /*   "command": "elm-lsp", */
+    /*   "args": ["--stdio"], */
+    /*   "filetypes": ["elm"], */
+    /*   "cwd": ".", */
+    /*   "rootPatterns": ["elm.json"], */
+    /*   "initializationOptions": { */
+    /*     "runtime": "node" */
+    /*   }, */
+    /*   "settings": {} */
+    /* }, */
     "elixir": {
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
@@ -218,89 +252,6 @@
     "lua": {
       "command": "lua-lsp",
       "filetypes": ["lua"]
-    },
-    "dls": {
-      "enable": false,
-      "command": "diagnostic-languageserver",
-      "args": ["--stdio"],
-      "filetypes": ["elixir", "eelixir"],
-      "initializationOptions": {
-        "linters": {
-          "mix_credo": {
-            "command": "mix",
-            "debounce": 100,
-            "rootPatterns": ["mix.exs"],
-            "args": [
-              "credo",
-              "suggest",
-              "--format",
-              "flycheck",
-              "--read-from-stdin"
-            ],
-            "offsetLine": 0,
-            "offsetColumn": 0,
-            "sourceName": "mix_credo",
-            "formatLines": 1,
-            "formatPattern": [
-              "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)$",
-              {
-                "line": 1,
-                "column": 3,
-                "message": 5,
-                "security": 4
-              }
-            ],
-            "securities": {
-              "F": "warning",
-              "C": "warning",
-              "D": "info",
-              "R": "info"
-            }
-          },
-          "mix_credo_compile": {
-            "command": "mix",
-            "debounce": 100,
-            "rootPatterns": ["mix.exs"],
-            "args": [
-              "credo",
-              "suggest",
-              "--format",
-              "flycheck",
-              "--read-from-stdin"
-            ],
-            "offsetLine": -1,
-            "offsetColumn": 0,
-            "sourceName": "mix_credo",
-            "formatLines": 1,
-            "formatPattern": [
-              "^([^ ]+)\\s+\\(([^)]+)\\)\\s+([^ ]+?):([0-9]+):\\s+(.*)$",
-              {
-                "line": -1,
-                "column": -1,
-                "message": ["[", 2, "]: ", 3, ": ", 5],
-                "security": 1
-              }
-            ],
-            "securities": {
-              "**": "error"
-            }
-          }
-        },
-        "filetypes": {
-          "elixir": ["mix_credo", "mix_credo_compile"],
-          "eelixir": ["mix_credo", "mix_credo_compile"]
-        },
-        "formatters": {
-          "mix_format": {
-            "command": "mix",
-            "args": ["format", "-"]
-          }
-        },
-        "formatFiletypes": {
-          "elixir": "mix_format",
-          "eelixir": "mix_format"
-        }
-      }
     }
   }
 }
