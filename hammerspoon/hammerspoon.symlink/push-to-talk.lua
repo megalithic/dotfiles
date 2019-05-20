@@ -97,6 +97,7 @@ function changeMicrophoneState(mute)
     local defaultInputDevice = hs.audiodevice.defaultInputDevice()
     local defaultVolume = inputVolumes[defaultInputDevice:uid()]
     defaultVolume = preferredVolume
+    -- FIXME: osascript call fails here (maybe when switching docking mode?)
     hs.applescript('set volume input volume ' .. defaultVolume)
     menubarIcon:setIcon(icons.microphone)
   end

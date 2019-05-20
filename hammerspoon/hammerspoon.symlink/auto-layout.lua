@@ -55,6 +55,7 @@ setLayoutForAll = function()
   for _, appConfig in pairs(config.applications) do
     -- we have an appConfig and a preferredDisplay defined
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
+      -- FIXME: bug showing up here: `attempt to index a nil value in hs.application.find`
       local app = hs.application.find(appConfig.name)
       setLayoutForApp(app, appConfig)
     end

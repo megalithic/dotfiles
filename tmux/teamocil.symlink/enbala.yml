@@ -25,20 +25,20 @@ windows:
         - cd ~/code/enbala/vpp/ui
         - bin/start
       - commands:
-        - cd ~/code/enbala/tesla_adapter
-        - bin/start
-  # - name: "postgres"
-  #   root: "~/code/enbala/vpp"
-  #   panes:
-  #     - commands:
-  #       - pgcli data_persist_dev
+        - cd ~/code/enbala/vpp/
+        - ls
+  - name: "postgres"
+    root: "~/code/enbala/vpp"
+    panes:
+      - commands:
+        - pgcli data_persist_dev
   - name: "vpp"
     root: "~/code/enbala/vpp"
     panes:
       - commands:
         - ls
-  - name: "tesla_adapter"
-    root: "~/code/enbala/tesla_adapter"
+  - name: "vpp"
+    root: "~/code/enbala/vpp"
     panes:
       - commands:
         - ls

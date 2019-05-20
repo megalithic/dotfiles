@@ -64,7 +64,7 @@ Plug 'liuchengxu/vim-which-key'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-" Plug 'mhinz/vim-mix-format'
+Plug 'mhinz/vim-mix-format'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -156,7 +156,7 @@ Plug 'trevordmiller/nova-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'Yggdroot/indentLine'
-Plug 'zaptic/elm-vim', { 'for': ['elm'] }
+Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
@@ -674,8 +674,8 @@ augroup END
 augroup ft_formatting
   au!
   au BufWrite *.json :call CocAction('format')
-  au BufWrite *.ex,*.exs :call CocAction('format')
-  au BufWrite *.elm :call CocAction('format')
+  " au BufWrite *.ex,*.exs :call CocAction('format') -- using ft specific plugins for this (vim-mix-format)
+  " au BufWritePre *.elm :call CocAction('format') -- using ft specific plugins for this (elm-vim)
 augroup END
 
 "}}}
@@ -1092,8 +1092,9 @@ let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
 let g:elm_browser_command = 'open'
 let g:elm_detailed_complete = 1
-let g:elm_format_autosave = 0 " disabling in favor of coc-diagnostic/elm_format
+let g:elm_format_autosave = 1
 let g:elm_format_fail_silently = 0
+let g:elm_format_options = "--elm-version=0.18"
 let g:elm_setup_keybindings = 0
 
 " ## vim-elixir
@@ -1102,9 +1103,9 @@ let g:elixir_showerror = 1
 let g:elixir_maxpreviews = 20
 let g:elixir_docpreview = 1
 
-" " ## mhinz/vim-mix-format " disabling in favor of coc-diagnostic/mix_format
-" let g:mix_format_on_save = 1
-" let g:mix_format_silent_errors = 1
+" " ## mhinz/vim-mix-format "
+let g:mix_format_on_save = 1
+let g:mix_format_silent_errors = 0
 
 " ## rainbow_parentheses.vim
 let g:rainbow#max_level = 10

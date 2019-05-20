@@ -214,7 +214,7 @@ set -g window-status-activity-style none # deprecated?
 # ---------------------------------------------------------
 # -- statusbar windows
 setw -g window-status-format ' ○ #I:#W '
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,italics] ● #I:#W} #[fg=colour28]"
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics] ● #I:#W} #[fg=colour28]"
 
 # -- statusbar left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
