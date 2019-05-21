@@ -64,7 +64,7 @@ Plug 'liuchengxu/vim-which-key'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-Plug 'mhinz/vim-mix-format'
+Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir'] }
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -1086,7 +1086,7 @@ let g:projectionist_heuristics = {
 
 
 " ## elm-vim
-let g:elm_jump_to_error = 0
+let g:elm_jump_to_error = 1
 let g:elm_make_output_file = '/dev/null'
 let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
@@ -1105,7 +1105,7 @@ let g:elixir_docpreview = 1
 
 " " ## mhinz/vim-mix-format "
 let g:mix_format_on_save = 1
-let g:mix_format_silent_errors = 0
+let g:mix_format_silent_errors = 1
 
 " ## rainbow_parentheses.vim
 let g:rainbow#max_level = 10

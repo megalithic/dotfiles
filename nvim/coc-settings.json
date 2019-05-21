@@ -13,7 +13,7 @@
   "coc.preferences.jumpCommand": "vsplit",
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
-  "coc.preferences.snippetStatusText": "\ue795", // "🌈",
+  "coc.preferences.snippetStatusText": "\ue795  ", // "🌈",
   "coc.preferences.enableFloatHighlight": true,
 
   "signature.enable": true,
@@ -238,7 +238,7 @@
       "command": "./.elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
-      "trace.server": "verbose",
+      "trace.server": "off",
       "rootPatterns": ["mix.exs"],
       "cwd": "./",
       "initializationOptions": {
