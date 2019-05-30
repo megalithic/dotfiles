@@ -17,25 +17,15 @@ windows:
     panes:
       - commands:
         - cd ~/code/enbala/vpp/vpp
-        - bin/start
+        - bin/interactive
       - commands:
         - cd ~/code/enbala/vpp/sims
-        - bin/start
+        - iex --name sims@127.0.0.1 -S mix run
       - commands:
         - cd ~/code/enbala/vpp/ui
         - bin/start
       - commands:
         - cd ~/code/enbala/vpp/
-        - ls
-  - name: "postgres"
-    root: "~/code/enbala/vpp"
-    panes:
-      - commands:
-        - pgcli data_persist_dev
-  - name: "vpp"
-    root: "~/code/enbala/vpp"
-    panes:
-      - commands:
         - ls
   - name: "vpp"
     root: "~/code/enbala/vpp"

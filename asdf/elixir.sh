@@ -36,8 +36,14 @@ if (which mix &>/dev/null); then
     echo ""
     echo "-- cd into $mix_root and cloning repo..."
     echo ""
+
+    # install_elixir_ls
     cd "$mix_root"
     mix deps.get
+
+    echo ""
+    echo "-- compiling elixir-ls..."
+    echo ""
 
     # NOTE: the elixir-lsp maintained fork has more support and more updates
     git clone git@github.com:elixir-lsp/elixir-ls.git .elixir_ls
@@ -51,6 +57,7 @@ if (which mix &>/dev/null); then
     rm .tool-versions
     mix deps.get && mix compile
     mix elixir_ls.release -o rel
+    chmod +x ./rel/language_server.sh
 
     echo ""
     echo "-- cd back to $project_root..."
@@ -67,10 +74,39 @@ if (which mix &>/dev/null); then
       ! -path "**/credo_extra/*"
   }
 
-  # -- target mix.exs root directories for setting up elixir-ls
-  for mix_file in $(get_mix_files); do
-    (install_elixir_ls_for_mix_file $mix_file)
-  done
+  install_elixir_ls() {
+    cd "$mix_root"
+    mix deps.get
+
+    echo ""
+    echo "-- compiling elixir-ls..."
+    echo ""
+
+    # NOTE: the elixir-lsp maintained fork has more support and more updates
+    git clone git@github.com:elixir-lsp/elixir-ls.git .elixir_ls
+    # git clone git@github.com:JakeBecker/elixir-ls.git .elixir_ls
+
+    cd "$mix_root/.elixir_ls" && mkdir rel
+
+    echo ""
+    echo "-- compiling elixir-ls..."
+    echo ""
+    # rm .tool-versions
+    mix deps.get && mix compile
+    mix elixir_ls.release -o rel
+  }
+
+  if [[ "$#" -eq 1 ]]; then
+    if [[ "$1" -eq "-f" || "$1" -eq "--force" ]]; then
+      mix_root="$HOME"
+      install_elixir_ls
+    fi
+  else
+    # -- target mix.exs root directories for setting up elixir-ls
+    for mix_file in $(get_mix_files); do
+      (install_elixir_ls_for_mix_file $mix_file)
+    done
+  fi
 else
   echo ""
   echo ":: ERROR: unable to run mix command; likely elixir/mix isn't installed or in your PATH"

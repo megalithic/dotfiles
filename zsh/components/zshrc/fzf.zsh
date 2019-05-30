@@ -9,20 +9,22 @@ if [ -n "$(command -v fzf)" ]; then
     local colorbg='#3C4C55'
     local color00='#1E272C'
     local color01='#073642'
-    local color02='#586e75'
-    local color03='#657b83'
+    local color02='#586E75'
+    local color03='#657B83'
     local color04='#839496'
-    local color05='#93a1a1'
-    local color06='#eee8d5'
-    local color07='#fdf6e3'
-    local color08='#dc322f'
-    local color09='#cb4b16'
-    local color0A='#b58900'
+    local color05='#93A1A1'
+    local color06='#EEE8D5'
+    local color07='#FDF6E3'
+    local color08='#DC322F'
+    local color09='#CB4B16'
+    local color10='#F2C38F'
+    local color11='#70562A'
+    local color0A='#B58900'
     local color0B='#859900'
-    local color0C='#2aa198'
-    local color0D='#268bd2'
-    local color0E='#6c71c4'
-    local color0F='#d33682'
+    local color0C='#2AA198'
+    local color0D='#268BD2'
+    local color0E='#6C71C4'
+    local color0F='#D33682'
 
     export FZF_DEFAULT_OPTS="
     --inline-info
@@ -33,7 +35,7 @@ if [ -n "$(command -v fzf)" ]; then
     --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
     --color=bg+:$color00,bg:$colorbg,spinner:$color0C,hl:$color06
     --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
-    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color08
+    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color11
     "
     # --no-height
   }

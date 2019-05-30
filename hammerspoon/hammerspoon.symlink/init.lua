@@ -1,11 +1,10 @@
-log = require('log')
+local log = require('log')
 log.verbose()
 
 hs.ipc.cliInstall()
 
 -- where all the magic is defined (check here for every piece of configuration)
-require('config')
-
+local config = require('config')
 local handler = require('key-handler')
 local hotkey = require('hs.hotkey')
 
@@ -15,19 +14,17 @@ require('auto-layout').init()
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
 require('push-to-talk').init(config.ptt)
 
--- laptop docking mode things (change system settings based on being in "docking" mode or not)
-isDocked = require('laptop-docking-mode').init()
-
 -- helper to prevent accidental/unintentional app quitting
 require('app-quit-guard')
 
 -- handles setting DND for apps that specify
 -- require('do-not-disturb').init()
 
+-- laptop docking mode things (change system settings based on being in "docking" mode or not)
 -- home-assistant helper to automate my office based on computer events; only want this to run when i'm in my office
-if (isDocked) then
-  -- require('home-assistant').init()
-end
+-- if (require('laptop-docking-mode').init()) then
+--   require('home-assistant').init()
+-- end
 
 -- :: spoons
 -- hs.loadSpoon() -- none yet, maybe I'll convert my existing modules to spoons

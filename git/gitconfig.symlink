@@ -120,13 +120,16 @@
 
   up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 
-
   # gitin aliases
   ; st = !gitin status
   log = !gitin log
   lg = !gitin log
   ; branch = !gitin branch
   br = !gitin branch
+
+  # <3 @jeffweiss
+  oops = !git commit --amend -CHEAD
+  fpush = !git push origin +HEAD
 
 [mergetool]
   prompt = true

@@ -1,3 +1,4 @@
+local log = require('log')
 local settings = {
   pushToTalk = true
 }
@@ -12,32 +13,7 @@ local icons = {
 }
 local preferredVolume = 100
 
-function updateInputVolumes()
-  local activeUids = {}
-  for index, device in ipairs(hs.audiodevice.allInputDevices()) do
-    activeUids[device:uid()] = true
-    if inputVolumes[device:uid()] == nil then
-      local inputVolume = device:inputVolume()
-      if inputVolume == 0 then
-        inputVolume = preferredVolume
-      end
-      inputVolumes[device:uid()] = inputVolume
-      log.i("[push-to-talk] Setting unmuted volume for " .. device:uid() .. ": " .. inputVolumes[device:uid()])
-    end
-    if not device:watcherIsRunning() then
-      device:watcherCallback(onInputDeviceChanged)
-      device:watcherStart()
-    end
-  end
-  for uid, volume in pairs(inputVolumes) do
-    if activeUids[uid] == nil then
-      inputVolumes[uid] = nil
-      log.i("[push-to-talk] Removed unmuted volume for no longer active device " .. uid)
-    end
-  end
-end
-
-function onInputDeviceChanged(uid, name, scope, element)
+local onInputDeviceChanged = function(uid, name, scope, element)
   if name ~= "vmvc" then
     return
   end
@@ -57,26 +33,35 @@ function onInputDeviceChanged(uid, name, scope, element)
   log.i("[push-to-talk] User changed unmuted volume for " .. uid .. ": " .. newVolume)
 end
 
-function onSystemAudioDeviceChanged(name)
-  log.i("[push-to-talk] System audio device change event occurred for", name)
-
-  if name ~= "dev#" then
-    return
+local updateInputVolumes = function()
+  local activeUids = {}
+  for _, device in ipairs(hs.audiodevice.allInputDevices()) do
+    activeUids[device:uid()] = true
+    if inputVolumes[device:uid()] == nil then
+      local inputVolume = device:inputVolume()
+      if inputVolume == 0 then
+        inputVolume = preferredVolume
+      end
+      inputVolumes[device:uid()] = inputVolume
+      log.i("[push-to-talk] Setting unmuted volume for " .. device:uid() .. ": " .. inputVolumes[device:uid()])
+    end
+    if not device:watcherIsRunning() then
+      device:watcherCallback(onInputDeviceChanged)
+      device:watcherStart()
+    end
   end
-
-  updateInputVolumes()
-  changeMicrophoneState(muted)
+  for uid, _ in pairs(inputVolumes) do
+    if activeUids[uid] == nil then
+      inputVolumes[uid] = nil
+      log.i("[push-to-talk] Removed unmuted volume for no longer active device " .. uid)
+    end
+  end
 end
 
-function installSystemAudioWatcher()
-  hs.audiodevice.watcher.setCallback(onSystemAudioDeviceChanged)
-  hs.audiodevice.watcher.start()
-end
-
-function changeMicrophoneState(mute)
+local changeMicrophoneState = function(mute)
   if mute then
     log.i('[push-to-talk] Muting audio')
-    for index, device in ipairs(hs.audiodevice.allInputDevices()) do
+    for _, device in ipairs(hs.audiodevice.allInputDevices()) do
       device:setInputVolume(0)
       device:setInputMuted(true)
     end
@@ -84,7 +69,7 @@ function changeMicrophoneState(mute)
     hs.applescript('set volume input volume 0')
     menubarIcon:setIcon(icons.mutedMicrophone)
   else
-    for index, device in ipairs(hs.audiodevice.allInputDevices()) do
+    for _, device in ipairs(hs.audiodevice.allInputDevices()) do
       if inputVolumes[device:uid()] == nil then
         log.wf("[push-to-talk] Device with unknown inputVolume")
       else
@@ -96,11 +81,27 @@ function changeMicrophoneState(mute)
     -- Hack to really unmute the microphone
     local defaultInputDevice = hs.audiodevice.defaultInputDevice()
     local defaultVolume = inputVolumes[defaultInputDevice:uid()]
-    defaultVolume = preferredVolume
+    -- defaultVolume = preferredVolume
     -- FIXME: osascript call fails here (maybe when switching docking mode?)
     hs.applescript('set volume input volume ' .. defaultVolume)
     menubarIcon:setIcon(icons.microphone)
   end
+end
+
+local onSystemAudioDeviceChanged = function(name)
+  log.i("[push-to-talk] System audio device change event occurred for", name)
+
+  if name ~= "dev#" then
+    return
+  end
+
+  updateInputVolumes()
+  changeMicrophoneState(muted)
+end
+
+local installSystemAudioWatcher = function()
+  hs.audiodevice.watcher.setCallback(onSystemAudioDeviceChanged)
+  hs.audiodevice.watcher.start()
 end
 
 local keyPressed = false
@@ -141,7 +142,7 @@ local modifiersChangedTap = hs.eventtap.new(
   end
   )
 
-function initMenubarIcon()
+local initMenubarIcon = function()
   menubarIcon = hs.menubar.new()
   menubarIcon:setIcon(icons.microphone)
   menubarIcon:setMenu(function()
@@ -166,20 +167,20 @@ function initMenubarIcon()
       end)
     end
 
-    function loadIcons()
+    local loadIcons = function()
       local iconPath = hs.configdir .. "/assets"
       icons.microphone = hs.image.imageFromPath(iconPath .. "/microphone.pdf"):setSize({w = 16, h = 16})
       icons.mutedMicrophone = hs.image.imageFromPath(iconPath .."/microphone-slash.pdf"):setSize({w = 16, h = 16})
     end
 
-    function loadSettings()
+    local loadSettings = function()
       local loadedSettings = hs.settings.get('pushToTalk.settings')
       if loadedSettings ~= nil then
         settings = loadedSettings
       end
     end
 
-    function saveSettings()
+    local saveSettings = function()
       hs.settings.set('pushToTalk.settings', settings)
     end
 
@@ -210,7 +211,7 @@ function initMenubarIcon()
           changeMicrophoneState(false)
         end
       end),
-      teardown = (function(modifiers)
+      teardown = (function(_)
         log.i("[push-to-talk] tearing down audio watchers")
         hs.audiodevice.watcher.stop()
       end),

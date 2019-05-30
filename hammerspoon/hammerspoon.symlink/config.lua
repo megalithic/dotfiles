@@ -1,8 +1,7 @@
-require 'airpods'
+local airpods = require('airpods')
 local utils = require('utils')
 local hotkey = require('hs.hotkey')
-
-local watchedApp = ''
+local log = require('log')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -14,7 +13,7 @@ hs.window.animationDuration = 0.0 -- 0 to disable animations
 hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 
-config = {}
+local config = {}
 
 config.hostname = hs.host.localizedName()
 config.preferredSSID = 'shaolin'
@@ -128,7 +127,7 @@ config.applications = {
     position = config.grid.rightHalf,
     quitGuard = true,
     ignoredWindows = {'Slack Call Minipanel'},
-    fn = (function(window)
+    fn = (function(_)
       log.df('[config] app fn() - attempting to handle Slack instance')
 
       local appKeybinds = {
@@ -157,11 +156,11 @@ config.applications = {
         -- hotkey.new({"cmd"}, "w", function() return end)
       }
 
-      local appWatcher = hs.application.watcher.new(function(name, eventType, app)
+      local appWatcher = hs.application.watcher.new(function(name, eventType, _)
         if eventType ~= hs.application.watcher.activated then return end
 
         local fnName = name == "Slack" and "enable" or "disable"
-        for i, keybind in ipairs(appKeybinds) do
+        for _, keybind in ipairs(appKeybinds) do
           -- Remember that lua is weird, so this is the same as keybind.enable() in JS, `this` is first param
           keybind[fnName](keybind)
         end
@@ -302,7 +301,7 @@ config.utilities = {
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'a',
     fn = (function()
-      local ok, output = airPods('replipods')
+      local ok, output = airpods('replipods')
       if ok then
         hs.alert.show(output)
       else
@@ -413,5 +412,10 @@ config.docking = {
     output = '"MacBook Pro Speakers"',
   },
 }
+
+log.d('Found the following attached USB devices:\r\n')
+log.d('---------------------------------------------')
+log.d(print(hs.inspect(hs.usb.attachedDevices())))
+log.d('---------------------------------------------')
 
 return config

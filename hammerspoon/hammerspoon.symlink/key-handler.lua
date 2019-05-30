@@ -1,4 +1,5 @@
-handler = {}
+local log = require('log')
+local handler = {}
 
 handler.launch = function(appName)
   log.df('[key-handler] launch - attempting to launch or focus %s', appName)
@@ -51,7 +52,7 @@ handler.toggleApp = function (_app)
 end
 
 handler.adjustVolume = function(vol)
-  output = hs.audiodevice.defaultOutputDevice()
+  local output = hs.audiodevice.defaultOutputDevice()
 
   if vol.action == "mute" then
     if output:muted() then
@@ -60,7 +61,7 @@ handler.adjustVolume = function(vol)
       output:setMuted(true)
     end
   else
-    playing = hs.spotify.isPlaying()
+    local playing = hs.spotify.isPlaying()
     if playing then
       if vol.action == "up" then
         hs.spotify.volumeUp()
@@ -75,7 +76,8 @@ handler.adjustVolume = function(vol)
 end
 
 handler.notify = function(notification)
-  hs.notify.new({title=notification.title, subTitle=notification.subTitle, informativeText=notification.informativeText}):setIdImage(notification.image):send()
+  hs.notify.new({title=notification.title, subTitle=notification.subTitle,
+    informativeText=notification.informativeText}):setIdImage(notification.image):send()
 end
 
 handler.spotify = function (event, alertText)
@@ -95,7 +97,8 @@ handler.spotify = function (event, alertText)
       local image = hs.image.imageFromAppBundle('com.spotify.client')
 
       if event == 'playpause' and not hs.spotify.isPlaying() then
-        handler.notify({ title='Paused', subTitle=hs.spotify.getCurrentArtist(), informativeText=hs.spotify.getCurrentTrack(), image=image })
+        handler.notify({ title='Paused', subTitle=hs.spotify.getCurrentArtist(),
+          informativeText=hs.spotify.getCurrentTrack(), image=image })
       else
         handler.notify({ title=hs.spotify.getCurrentArtist(), subTitle=hs.spotify.getCurrentTrack(), image=image })
       end

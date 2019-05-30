@@ -31,7 +31,7 @@ Plug 'cohama/lexima.vim'
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 if executable('ctags')
   Plug 'craigemery/vim-autotag', { 'for': ['elm','elixir','eelixir'] }
-  Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
+  " Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
 endif
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
@@ -43,10 +43,6 @@ Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 
-" Plug 'vim-airline/vim-airline'
-" Plug 'vim-airline/vim-airline-themes'
-" let g:airline_theme='nova'
-
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
@@ -54,17 +50,14 @@ Plug 'junegunn/fzf.vim'
 Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
 Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
-" Plug 'junegunn/vim-slash'
 Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
 Plug 'wsdjeg/vim-fetch'
 Plug 'liuchengxu/vim-which-key'
-" Plug 'lilydjwg/colorizer' " or 'chrisbra/Colorizer'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir'] }
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -97,23 +90,6 @@ if executable('yarn') && executable('node')
             \ 'coc-yaml',
             \ 'coc-yank',
             \ ]
-
-      " -- disabled coc.nvim extensions:
-      "
-      " \ 'coc-emmet',
-      " \ 'coc-emoji',
-      " \ 'coc-highlight',
-      " \ 'coc-omni',
-      " \ 'coc-java',
-      " \ 'coc-vetur',
-      " \ 'coc-wxml',
-      " \ 'coc-stylelint',
-      " \ 'coc-ultisnips',
-      " \ 'coc-snippets',
-      " \ 'https://github.com/xabikos/vscode-react',
-      " \ 'https://github.com/xabikos/vscode-javascript',
-      " \ 'https://github.com/arubertoson/vscode-snippets',
-
       call coc#util#install()
       for l:ext in extensions
         if !(finddir(l:ext, coc#util#extension_root()))
@@ -125,6 +101,30 @@ if executable('yarn') && executable('node')
     endif
   endfunction
   Plug 'neoclide/coc.nvim', {'do': function('PostInstallCoc')}
+
+  let g:elixirls = {
+        \ 'path': printf('%s/%s', stdpath('config'), 'plugins/elixir-ls'),
+        \ }
+  let g:elixirls.lsp = printf(
+        \ '%s/%s',
+        \ g:elixirls.path,
+        \ 'rel/language_server.sh')
+  function! g:elixirls.compile(...)
+    let l:commands = join([
+          \ 'echo "mixing all the things."',
+          \ 'which mix',
+          \ 'mix --version',
+          \ 'mix local.hex --force',
+          \ 'mix local.rebar --force',
+          \ 'mix deps.get',
+          \ 'mix compile',
+          \ 'mix elixir_ls.release'
+          \ ], '&&')
+    echom '>>> Compiling elixirls'
+    silent call system(l:commands)
+    echom '>>> elixirls compiled'
+  endfunction
+  " Plug 'elixir-lsp/elixir-ls', { 'do': { -> g:elixirls.compile() } }
 endif
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
@@ -153,6 +153,7 @@ Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
 Plug 'trevordmiller/nova-vim'
+Plug 'arcticicestudio/nord-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'Yggdroot/indentLine'
@@ -468,7 +469,7 @@ augroup general
   endif
 
   " save all files on focus lost, ignoring warnings about untitled buffers
-  autocmd FocusLost * silent! wa
+  " autocmd FocusLost * silent! wa
 
   au FocusGained  * checktime "Refresh file when vim gets focus
   au BufEnter     * checktime
@@ -671,10 +672,13 @@ augroup elixir
         \ }
 augroup END
 
-augroup ft_formatting
+augroup ft_formatting " formatters
   au!
-  au BufWrite *.json :call CocAction('format')
-  " au BufWrite *.ex,*.exs :call CocAction('format') -- using ft specific plugins for this (vim-mix-format)
+" Setup formatexpr specified filetype(s).
+  " autocmd FileType typescript,json,elixir,elm setl formatexpr=CocAction('formatSelected')
+
+  " au BufWritePre *.ex,*.exs silent :!mix format %
+  au BufWritePre *.json :call CocAction('format')
   " au BufWritePre *.elm :call CocAction('format') -- using ft specific plugins for this (elm-vim)
 augroup END
 
@@ -1096,16 +1100,6 @@ let g:elm_format_autosave = 1
 let g:elm_format_fail_silently = 0
 let g:elm_format_options = "--elm-version=0.18"
 let g:elm_setup_keybindings = 0
-
-" ## vim-elixir
-let g:elixir_autobuild = 1
-let g:elixir_showerror = 1
-let g:elixir_maxpreviews = 20
-let g:elixir_docpreview = 1
-
-" " ## mhinz/vim-mix-format "
-let g:mix_format_on_save = 1
-let g:mix_format_silent_errors = 1
 
 " ## rainbow_parentheses.vim
 let g:rainbow#max_level = 10
@@ -1555,9 +1549,6 @@ let g:coc_node_path = $HOME . '/.asdf/installs/nodejs/10.15.3/bin/node'
 set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478
 set shortmess+=c
 
-" Or use formatexpr for range format
-set formatexpr=CocActionAsync('formatSelected')
-
 " FOR COC-SNIPPETS + COC.NVIM
 " ---------------------------
 inoremap <silent><expr> <TAB>
@@ -1648,6 +1639,21 @@ nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
 nmap [g <Plug>(coc-git-prevchunk)
 nmap ]g <Plug>(coc-git-nextchunk)
 nmap gs <Plug>(coc-git-chunkinfo)
+
+" call coc#config('languageserver', {
+"       \ 'elixir': {
+"       \   'command': g:elixirls.lsp,
+"       \   'trace.server': 'verbose',
+"       \   'filetypes': ['elixir', 'eelixir'],
+"       \   'initializationOptions': {
+"       \    'elixirLS': {
+"       \      'dialyzerEnabled': v:false,
+"       \      'dialyzerWarningOpts': []
+"       \    }
+"       \   }
+"       \ }
+"       \})
+
 "}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
 
