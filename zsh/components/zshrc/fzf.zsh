@@ -19,6 +19,7 @@ if [ -n "$(command -v fzf)" ]; then
     local color09='#CB4B16'
     local color10='#F2C38F'
     local color11='#70562A'
+    local color12='#59818B'
     local color0A='#B58900'
     local color0B='#859900'
     local color0C='#2AA198'
@@ -35,7 +36,7 @@ if [ -n "$(command -v fzf)" ]; then
     --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
     --color=bg+:$color00,bg:$colorbg,spinner:$color0C,hl:$color06
     --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
-    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color11
+    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color12
     "
     # --no-height
   }

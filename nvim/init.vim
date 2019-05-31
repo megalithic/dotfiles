@@ -58,6 +58,7 @@ Plug 'liuchengxu/vim-which-key'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir'] }
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -130,6 +131,7 @@ Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
+Plug 'plasticboy/vim-markdown' , { 'for': ['markdown'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
@@ -144,7 +146,7 @@ Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-git'
-Plug 'tpope/vim-markdown'
+" Plug 'tpope/vim-markdown'
 Plug 'tpope/vim-projectionist'
 Plug 'tpope/vim-ragtag'
 Plug 'tpope/vim-rails', {'for': 'ruby,erb,yaml,ru,haml'}
@@ -221,6 +223,7 @@ set sidescroll=5
 set tabstop=2
 set shiftwidth=2
 set expandtab
+set backspace=eol,indent,start
 
 " ---- Hud
 set ruler
@@ -665,6 +668,7 @@ augroup elixir
 
   au FileType elixir,eelixir let g:which_key_map.e = {
         \ 'name' : '+elixir' ,
+        \ 'f' : 'mix-format',
         \ 'i' : 'io.inspect',
         \ 'il' : 'io.inspect-with-label',
         \ 'd' : 'debug/iex.pry',
@@ -1084,10 +1088,21 @@ let g:projectionist_heuristics = {
       \    'test/*_test.exs': {
       \      'type': 'test',
       \      'alternate': 'lib/{}.ex',
+      \    },
+      \    "mix.exs": {
+      \      "type": "mix"
+      \    },
+      \    "config/config.exs": {
+      \      "type": "config"
       \    }
       \  }
       \}
 
+" ## mhinz/vim-mix-format
+" let g:mix_format_on_save = 1
+let g:mix_format_options = '--check-equivalent'
+let g:mix_format_silent_errors = 1
+nnoremap <leader>ef :MixFormat<cr>
 
 " ## elm-vim
 let g:elm_jump_to_error = 1
@@ -1119,6 +1134,7 @@ let g:vimade = {}
 let g:vimade.fadelevel = 0.6
 
 " ## tpope/vim-markdown
+" ## plasticboy/vim-markdown
 let g:markdown_fenced_languages = [
       \ 'javascript', 'js=javascript', 'json=javascript',
       \ 'css', 'scss', 'sass',
@@ -1126,6 +1142,9 @@ let g:markdown_fenced_languages = [
       \ 'python',
       \ 'haml', 'html',
       \ 'bash=sh', 'zsh', 'elm', 'elixir']
+let g:vim_markdown_folding_disabled = 1
+let g:vim_markdown_conceal = 0
+let g:vim_markdown_conceal_code_blocks = 0
 
 " # markdown-preview.nvim
 nnoremap <Leader>M :MarkdownPreview<CR>
@@ -1188,10 +1207,21 @@ nmap P <plug>(YoinkPaste_P)
 function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
-
+function! ElixirUmbrellaTransform(cmd) abort
+  if match(a:cmd, 'vpp/') != -1
+    return substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
+  else
+    return a:cmd
+  end
+endfunction
 " ref: https://github.com/hourliert/dotfiles/blob/7049f2cb46f840ce242d44825f1f1963fe34a054/vimrc#L340
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
+let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
+let g:test#transformation = 'elixir_umbrella'
+let g:test#filename_modifier = ':.'
+let g:test#preserve_screen = 0
+let g:test#elixir#exunit#executable = 'mix test'
 nmap <silent> <leader>tf :TestFile<CR>
 nmap <silent> <leader>tt :TestVisit<CR>
 nmap <silent> <leader>tn :TestNearest<CR>
