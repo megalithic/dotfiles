@@ -36,7 +36,7 @@ if [ -n "$(command -v fzf)" ]; then
     --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
     --color=bg+:$color00,bg:$colorbg,spinner:$color0C,hl:$color06
     --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
-    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color12
+    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0C
     "
     # --no-height
   }

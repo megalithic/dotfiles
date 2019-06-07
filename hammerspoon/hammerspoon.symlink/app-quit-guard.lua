@@ -1,5 +1,6 @@
 -- Press Cmd+Q twice to actually quit
-
+local log = require('log')
+local config = require('config')
 local quitModal = hs.hotkey.modal.new('cmd','q')
 
 local function doQuit(app)
@@ -10,7 +11,9 @@ end
 function quitModal:entered()
   local app = hs.application.frontmostApplication()
   if (config.applications[app:name()] ~= nil) then
-    log.df("[app-quit-guard] - attempting to quit for %s, and quitGuard is %s", app:name(), config.applications[app:name()].quitGuard)
+    log.df("[app-quit-guard] - attempting to quit for %s, and quitGuard is %s",
+      app:name(),
+      config.applications[app:name()].quitGuard)
 
     if config.applications[app:name()].quitGuard then
       hs.alert.show("Press Cmd+Q again to quit", 1)

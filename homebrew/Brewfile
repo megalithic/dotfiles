@@ -16,13 +16,16 @@ tap 'homebrew/cask-drivers'
 tap 'jeroenknoops/tap'
 tap 'browsh-org/homebrew-browsh'
 
-# -- for qmk_pok3r programming
-#tap 'osx-cross/avr'
-#tap 'PX4/homebrew-px4'
-#brew 'avr-gcc@7'
-#brew 'dfu-programmer'
-#brew 'gcc-arm-none-eabi'
-#brew 'avrdude'
+# -- for qmk_toolbox
+tap 'osx-cross/avr'
+tap 'PX4/homebrew-px4'
+tap 'homebrew/cask-drivers'
+brew 'avr-gcc'
+brew 'dfu-programmer'
+brew 'gcc-arm-none-eabi'
+brew 'avrdude'
+cask 'qmk-toolbox'
+
 
 brew 'ansifilter'
 brew 'autoconf'

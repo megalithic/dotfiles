@@ -649,6 +649,7 @@ augroup gitcommit
   au FileType gitcommit,gitrebase :iabbrev <buffer> cabjj Co-authored-by: Joe Jobes <jmrjobes@gmail.com>
   au FileType gitcommit,gitrebase :iabbrev <buffer> cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
   au FileType gitcommit,gitrebase :iabbrev <buffer> cabjw Co-authored-by: Jeff Weiss <jweiss@enbala.com>
+  au FileType gitcommit,gitrebase :iabbrev <buffer> caban Co-authored-by: Alan Nguyen <anguyen@enbala.com>
 augroup END
 
 augroup elixir
@@ -1037,7 +1038,7 @@ let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
 
 " ## liuchengxu/vista.vim
-nmap <silent> <F4> :Vista!!<CR>
+" nmap <silent> <F4> :Vista!!<CR>
 let g:vista_echo_cursor_strategy = 'floating_win'
 " Position to open the vista sidebar. On the right by default.
 " Change to 'vertical topleft' to open on the left.
@@ -1772,4 +1773,4 @@ nmap gs <Plug>(coc-git-chunkinfo)
 
 " }}}
 
-" vim:foldenable:foldmethod=marker:ft=vim
+" vim:ft=vim

@@ -1,4 +1,5 @@
 local config = require('config')
+local log = require('log')
 local isDocked = false
 local watcher = nil
 

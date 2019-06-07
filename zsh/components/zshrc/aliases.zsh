@@ -64,8 +64,6 @@ alias top='top -o cpu'
 
 alias icat="kitty +kitten icat"
 
-alias ng="ngrok start"
-
 # ZMV
 # -----------------------------------------------------------------------------
 autoload -U zmv
