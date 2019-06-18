@@ -356,6 +356,7 @@ config.snap = {
   {
     name = 'left',
     superKey = config.superKeys.cmdCtrl,
+    hyperKey = config.superKeys.hyper,
     shortcut = 'h',
     locations = utils.chain({
       config.grid.leftHalf,
@@ -366,6 +367,7 @@ config.snap = {
   {
     name = 'right',
     superKey = config.superKeys.cmdCtrl,
+    hyperKey = config.superKeys.hyper,
     shortcut = 'l',
     locations = utils.chain({
       config.grid.rightHalf,
@@ -376,6 +378,7 @@ config.snap = {
   {
     name = 'down',
     superKey = config.superKeys.cmdCtrl,
+    hyperKey = config.superKeys.hyper,
     shortcut = 'j',
     locations = utils.chain({
       config.grid.centeredLarge,
@@ -386,6 +389,7 @@ config.snap = {
   {
     name = 'up',
     superKey = config.superKeys.cmdCtrl,
+    hyperKey = config.superKeys.hyper,
     shortcut = 'k',
     locations = utils.chain({
       config.grid.fullScreen,
@@ -396,12 +400,14 @@ config.snap = {
 config.docking = {
   -- find your device IDs with `print(hs.inspect(hs.usb.attachedDevices()))` from the hammerspoon console
   ['device'] = {
-    vendorID = 1241,
-    productID = 321,
+    productID = 8800,
+    productName = "DZ60",
+    vendorID = 65261,
+    vendorName = "KBDFans"
   },
   ['docked'] = {
     wifi = 'off', -- wifi status
-    profile = 'pok3r', -- Karabiner-Elements profile name
+    profile = 'dz60', -- Karabiner-Elements profile name
     input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
   },

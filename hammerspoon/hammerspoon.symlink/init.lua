@@ -58,4 +58,7 @@ end
 -- :: window-manipulation (manual window snapping)
 for _, snap in pairs(config.snap) do
   hotkey.bind(snap.superKey, snap.shortcut, snap.locations)
+  if (snap.hyperKey ~= nil) then
+    hotkey.bind(snap.hyperKey, snap.shortcut, snap.locations)
+  end
 end
