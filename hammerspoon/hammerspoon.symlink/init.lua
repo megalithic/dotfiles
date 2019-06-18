@@ -17,6 +17,9 @@ require('push-to-talk').init(config.ptt)
 -- helper to prevent accidental/unintentional app quitting
 require('app-quit-guard')
 
+-- handles initiating laptop docking mode behaviors
+require('laptop-docking-mode').init()
+
 -- handles setting DND for apps that specify
 -- require('do-not-disturb').init()
 

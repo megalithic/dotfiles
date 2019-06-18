@@ -95,9 +95,11 @@ return {
     return isDocked
   end),
   teardown = (function()
-    log.i('[laptop-docking-mode] - Tearing down laptop-docking-mode watchers')
-    watcher:stop()
-    watcher = nil
+    if (watcher ~= nil) then
+      log.i('[laptop-docking-mode] - Tearing down laptop-docking-mode watchers')
+      watcher:stop()
+      watcher = nil
+    end
   end),
   isDocked = isDeviceConnected()
 }

@@ -1,4 +1,3 @@
-
 ```
 
      ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
@@ -8,11 +7,9 @@
 
 ```
 
-
 <p align="center">
   <img src="screenshot.png" alt="screenshot" />
 </p>
-
 
 ### Installation
 
@@ -43,17 +40,18 @@ A few of the _must-have_ tools I roll with:
 - [homebrew](https://brew.sh/)
 - [hammerspoon](http://www.hammerspoon.org/)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
-  * see `~/.dotfiles/keyboard`
+  - see `~/.dotfiles/keyboard`
 - [tmux](https://github.com/tmux/tmux/wiki)
-  * additional tmux statusbar binaries available (see `tmux-*` files in
-  `~/.dotfiles/bin`).
+  - additional tmux statusbar binaries available (see `tmux-*` files in
+    `~/.dotfiles/bin`).
 - [dankmono nerd font](https://dank.sh)
-  * patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
+  - patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
 - [nova](https://github.com/trevordmiller/nova-colors)
 - [neovim](https://neovim.io/)
 - [zsh](https://www.zsh.org/)
 - [weechat](https://www.weechat.org/)
+- [QMK config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/dz60/keymaps/megalithic)
 
 ### Stuff
 
@@ -79,7 +77,6 @@ located at `~/.dotfiles/private/install.sh`.~~
 
 - Originally based on the dotfiles of the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
 - Presently a delicate combination of [Wynn Netherland's](https://github.com/pengwynn/dotfiles) and [Phillip Ridlen's](https://github.com/philtr/dotfiles) respective dotfiles
-
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>

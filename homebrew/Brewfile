@@ -2,21 +2,25 @@
 
 cask_args appdir: '/Applications'
 
+
+# -- taps --
+
 tap 'caskroom/cask'
 tap 'caskroom/fonts'
-tap 'caskroom/versions'
+# tap 'caskroom/versions'
 tap 'homebrew/bundle'
 tap 'homebrew/services'
+tap 'homebrew/cask-versions'
 # tap 'kopischke/ctags'
 tap 'neovim/neovim'
 tap 'caius/jo'
 tap 'simeji/jid'
-tap 'wix/brew'
-tap 'homebrew/cask-drivers'
 tap 'jeroenknoops/tap'
 tap 'browsh-org/homebrew-browsh'
 
-# -- for qmk_toolbox
+
+# -- for qmk_toolbox --
+
 tap 'osx-cross/avr'
 tap 'PX4/homebrew-px4'
 tap 'homebrew/cask-drivers'
@@ -26,6 +30,8 @@ brew 'gcc-arm-none-eabi'
 brew 'avrdude'
 cask 'qmk-toolbox'
 
+
+# -- cli --
 
 brew 'ansifilter'
 brew 'autoconf'
@@ -147,12 +153,16 @@ brew 'zsh-lovers'
 brew 'zsh-autosuggestions'
 brew 'zsh-syntax-highlighting'
 
+
+# -- gui --
+
 cask '1password'
 cask '1password-cli'
 cask 'alfred'
 # cask 'android-platform-tools'
 # cask 'bettertouchtool'
 cask 'bartender'
+cask 'boostnote'
 cask 'brave-dev'
 cask 'cloudapp'
 cask 'dash'
@@ -204,6 +214,9 @@ cask 'veonim'
 cask 'visual-studio-code'
 # cask 'yubico-authenticator'
 cask 'yakyak'
+
+
+# -- app store (mas) --
 
 mas 'Fantastical2', id: 975937182
 mas 'Spark', id: 1176895641

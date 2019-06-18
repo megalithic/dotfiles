@@ -2,11 +2,17 @@
   "coc.preferences.colorSupport": true,
   "coc.preferences.extensionUpdateCheck": "daily",
   "coc.preferences.formatOnSaveFiletypes": [
+    "css",
+    /* "elm", */
+    /* "elixir", */
     "javascript",
-    "typescript",
-    "typescriptreact",
     "json",
-    "javascriptreact"
+    "javascriptreact",
+    "markdown",
+    "sass",
+    "scss",
+    "typescript",
+    "typescriptreact"
   ],
   "coc.preferences.formatOnType": false,
   "coc.preferences.hoverTarget": "float",
@@ -231,7 +237,8 @@
       "initializationOptions": {
         "runtime": "node",
         "elmPath": "elm",
-        "elmFormatPath": "elm-format"
+        "elmFormatPath": "elm-format",
+        "elmTestPath": "elm-test"
       }
     },
     "elixir": {

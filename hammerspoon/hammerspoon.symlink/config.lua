@@ -413,9 +413,9 @@ config.docking = {
   },
 }
 
-log.d('Found the following attached USB devices:\r\n')
-log.d('---------------------------------------------')
-log.d(print(hs.inspect(hs.usb.attachedDevices())))
-log.d('---------------------------------------------')
+-- log.d('Found the following attached USB devices:\r\n')
+-- log.d('---------------------------------------------')
+-- log.d(print(hs.inspect(hs.usb.attachedDevices())))
+-- log.d('---------------------------------------------')
 
 return config

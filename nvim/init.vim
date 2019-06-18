@@ -50,6 +50,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
 Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
+Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
@@ -136,10 +137,11 @@ Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentatio
 Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
 Plug 'rhysd/git-messenger.vim'
+Plug 'sbdchd/neoformat'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'svermeulen/vim-yoink'
-Plug 'TaDaa/vimade'
+" Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
@@ -652,7 +654,12 @@ augroup gitcommit
   au FileType gitcommit,gitrebase :iabbrev <buffer> caban Co-authored-by: Alan Nguyen <anguyen@enbala.com>
 augroup END
 
-augroup elixir
+augroup qmk
+  au!
+  au BufReadPost c set tabstop=2 set shiftwidth=2
+augroup END
+
+augroup ft_elixir
   au!
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
   au FileType elixir,eelixir nnoremap <leader>ep o\|> <ESC>a
@@ -677,14 +684,18 @@ augroup elixir
         \ }
 augroup END
 
+augroup ft_clang
+  autocmd FileType c setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+  autocmd FileType cpp setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+  autocmd FileType cs setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+  autocmd FileType c setlocal commentstring=/*\ %s\ */
+  autocmd FileType c,cpp,cs setlocal commentstring=//\ %s
+augroup END
+
 augroup ft_formatting " formatters
   au!
-" Setup formatexpr specified filetype(s).
-  " autocmd FileType typescript,json,elixir,elm setl formatexpr=CocAction('formatSelected')
-
-  " au BufWritePre *.ex,*.exs silent :!mix format %
-  au BufWritePre *.json :call CocAction('format')
-  " au BufWritePre *.elm :call CocAction('format') -- using ft specific plugins for this (elm-vim)
+  " Primarily using Neoformat for formatting (excluding: *.elm)
+  " au BufWritePre *.ex,*.exs,*.json,*.scss,*.css,*.js,*.jsx,*.ts,*.tsx,*.hs,*.md,*.zsh,*.sh try | undojoin | Neoformat | catch /^Vim\%((\a\+)\)\=:E790/ | finally | silent Neoformat | endtry
 augroup END
 
 "}}}
@@ -719,9 +730,15 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 " ## polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
-" rhysd/git-messenger
+" ## rhysd/git-messenger
 let g:git_messenger_no_default_mappings = 1
 nmap <leader>gm <Plug>(git-messenger)
+
+" ## junegunn/vim-easy-align
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
 
 " ## andymass/vim-matchup
 " let g:matchup_matchparen_deferred = 1
@@ -1099,11 +1116,8 @@ let g:projectionist_heuristics = {
       \  }
       \}
 
-" ## mhinz/vim-mix-format
-" let g:mix_format_on_save = 1
-let g:mix_format_options = '--check-equivalent'
-let g:mix_format_silent_errors = 1
-nnoremap <leader>ef :MixFormat<cr>
+" ## sbdchd/neoformat
+nnoremap <leader>lf :Neoformat<cr>
 
 " ## elm-vim
 let g:elm_jump_to_error = 1
@@ -1638,9 +1652,10 @@ nmap <silent> <leader>ln <Plug>(coc-rename)
 nmap <silent> <leader>lR <Plug>(coc-rename)
 vmap <silent> <leader>ln <Plug>(coc-rename)
 
-nmap <silent> <leader>lf <Plug>(coc-format)
-vmap <silent> <leader>lF <Plug>(coc-format-selected)
-nmap <silent> <leader>lF <Plug>(coc-format-selected)
+" NOTE: presently using Neoformat
+" nmap <silent> <leader>lf <Plug>(coc-format)
+" vmap <silent> <leader>lF <Plug>(coc-format-selected)
+" nmap <silent> <leader>lF <Plug>(coc-format-selected)
 
 nmap <silent> <leader>la <Plug>(coc-codeaction)
 nmap <silent> <leader>lA <Plug>(coc-codeaction-selected)
