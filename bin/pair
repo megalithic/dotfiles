@@ -55,13 +55,6 @@ up(){
 
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
 
-  # tmux new-session -d -s pairing "ng connect"
-  # tmux split-window
-  # sleep 1 # some delay so tunnel has time to get up
-  # tmux send-keys "pair ssh" C-m
-  # tmux attach
-
-  # tmux new -s $session -d "ng connect"
   tmux new-session -d -s $session "ng connect"
   tmux switch -t $session
   tmux split-window -h -t $session
@@ -73,7 +66,12 @@ up(){
       # once we have the ngrok session's port number, go ahead and display our pair session info
       # TODO: figure out how to execute this without seeing the commands at the prompt
       sleep 1 # some delay so tunnel has time to get up
-      # tmux send-keys -t $session "cd ~; pair ssh" C-m
+
+      # let's make sure we don't have existing services running
+      pkill -9 -f erlang
+      pkill -9 -f beam.smp
+      pkill -9 -f start.js
+
       tmux send-keys -t $session "cd ~; pair info" C-m
       DONE=1
     fi;
@@ -84,6 +82,10 @@ up(){
 down() {
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
   pkill -9 -f ngrok
+  pkill -9 -f erlang
+  pkill -9 -f beam.smp
+  pkill -9 -f start.js
+
   tmux kill-session -t $session
 }
 

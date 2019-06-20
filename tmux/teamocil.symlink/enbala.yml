@@ -25,7 +25,7 @@ windows:
         - bin/interactive
       - commands:
         - cd ~/code/enbala/vpp/sims
-        - iex --name sims@127.0.0.1 -S mix run
+        - bin/interactive
       - commands:
         - cd ~/code/enbala/vpp/ui
         - bin/start
