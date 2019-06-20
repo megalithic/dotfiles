@@ -1030,16 +1030,6 @@ set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
 
-" " morhetz/gruvbox
-" let g:gruvbox_italic=1
-" let g:gruvbox_improved_strings=1
-" let g:gruvbox_improved_warnings=1
-" let g:gruvbox_guisp_fallback='fg'
-" let g:gruvbox_contrast_light='hard'
-" let g:gruvbox_contrast_dark='medium'
-" set background=dark
-" colorscheme gruvbox
-
 " ## RRethy/hexokinase
 let g:Hexokinase_highlighters = ['virtual']
 let g:Hexokinase_virtualText = '■'
