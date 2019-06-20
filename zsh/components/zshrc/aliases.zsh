@@ -223,7 +223,6 @@ alias sz=sourcez
 alias szz=sourcez
 alias zz=z
 alias cls="clr && ls"
-alias ip="ifconfig"
 alias get="curl -OL"
 alias get="http --download"
 # alias g="grep -r -i --color='auto'"
@@ -236,7 +235,6 @@ alias irc="weechat-curses"
 # alias irc="rm ~/.weechat/weechat_crash*.log; sh ~/.dotfiles/zsh/base16-ocean.dark.sh; weechat-curses"
 # alias irc="rm ~/.weechat/weechat_crash*.log; weechat-curses"
 alias rc=irc
-alias ip="ipconfig getifaddr"
 alias clr=clear
 alias syncoctoprint="scp pi@octopi.local:/home/pi/.octoprint/config.yaml $HOME/Dropbox/3d/configs/octoprint"
 alias dif="kitty +kitten diff"
@@ -315,10 +313,6 @@ alias uuid="ruby -r securerandom -e 'puts SecureRandom.uuid'"
 alias dircolors="gdircolors"
 
 # IP addresses
-alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
-alias localip_wifi="ipconfig getifaddr en0"
-alias localip_display="ipconfig getifaddr en2"
-alias ips="ifconfig -a | grep -o 'inet6\? \(\([0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+\)\|[a-fA-F0-9:]\+\)' | sed -e 's/inet6* //'"
 alias findlan="sudo nmap -sP -n 192.168.1.0/24"
 
 # Fix LSD pegging the CPU
