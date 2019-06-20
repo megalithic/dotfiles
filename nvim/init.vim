@@ -29,10 +29,6 @@ Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with 
 Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
 Plug 'cohama/lexima.vim'
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
-if executable('ctags')
-  Plug 'craigemery/vim-autotag', { 'for': ['elm','elixir','eelixir'] }
-  " Plug 'liuchengxu/vista.vim', { 'on': ['Vista', 'Vista!!'] }
-endif
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
@@ -83,7 +79,6 @@ if executable('yarn') && executable('node')
             \ 'coc-solargraph',
             \ 'coc-svg',
             \ 'coc-syntax',
-            \ 'coc-tag',
             \ 'coc-tailwindcss',
             \ 'coc-tsserver',
             \ 'coc-tslint-plugin',
@@ -800,7 +795,6 @@ let g:which_key_map.l = {
       \ 'R' : 'rename',
       \ 'n' : 'rename',
       \ 'c' : 'context-menu',
-      \ 'b' : 'toggle-tagbar',
       \ 'o' : 'open-link',
       \ 'h' : 'hover',
       \ 'f' : 'format',
@@ -1056,9 +1050,6 @@ let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['sql'] = ''
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
-
-" ## craigemery/vim-autotag
-let g:autotagTagsFile='.tags'
 
 " ## vim-projectionist
 let g:projectionist_heuristics = {
