@@ -38,7 +38,7 @@
   "suggest.maxCompleteItemCount": 20,
   "suggest.maxPreviewWidth": 60,
   "suggest.minTriggerInputLength": 2,
-  "suggest.noselect": false,
+  "suggest.noselect": true,
   "suggest.numberSelect": false,
   "suggest.preferCompleteThanJumpPlaceholder": true,
   "suggest.snippetIndicator": " [S]",
