@@ -1,87 +1,79 @@
 #!/bin/sh
+# http://iamvery.com/2013/11/16/tmux-pairing-anywhere-on-your-box.html
+# https://github.com/jeffweiss/dotfiles/blob/master/bin/pair
 
-#
-# What in tarnation?
-#
-# This is a CLI pairing tool that, IMO, is better than tmate. Bold statement.
-#
-# It has so far only been tested on macOS 10.14, but with some minor modifications should work on any platform.
-#
-# This tool has assumptions that you:
-#   1.)  have tmux installed and setup
-#   2.)  have the github-auth gem installed
-#   4.)  optionally, you have `do-not-distrub-cli` installed via npm global
-#   4a.) fancy icons will show up if you're using a fully nerd-fonts patched terminal font.
-#
-# Assuming this is good, then you can add users via their github usernames,
-# you can start up and tear down the ssh pairing session.
-#
-# You'll want to ensure you have some system things setup for the `pair` user:
-# `sudo dscl . -append /Users/$USER RecordName Pair pair`
-# Lastly, you'll want to make sure your macOS sshd config setup accepts public-key authentication:
-# `sudo sed -E -i.bak 's/^#?(PasswordAuthentication|ChallengeResponseAuthentication).*$/\1 no/' /etc/ssh/sshd_config`
-# `sudo sed -E -i.bak 's/^#?(PubkeyAuthentication).*$/\1 yes/' /etc/ssh/sshd_config`
-# `chmod 0600 ~/.ssh/authorized_keys`
-#
-# Be sure to check out this scripts integrations with tmux, too.
-#
-# Credit where credit is due!
-#   - thanks to @jeffweiss for pointing this out; parts of this script originated from
-#     @iamvery, and can be found here: https://github.com/iamvery/dotfiles/blob/pair-as-my-user/bin/ng
-#
-
-
-
-command="$(basename "$0")"
+command=$(basename $0)
 session="pairing"
 ssh_command=""
-tunnel_command=""
-host_ip=$(dig +short myip.opendns.com @resolver1.opendns.com)
-port=1337
 user="pair"
 
-
 # Make sure dependencies are installed
-[ ! "$(command -v gh-auth)" ] && printf -- "gh-auth not found (gem install github-auth)\n" && exit 1
-[ ! "$(command -v tmux)" ] && printf -- "tmux not found, please install for your platform\n" && exit 1
+if [ ! $(command -v gh-auth) ]; then
+  gem install github-auth
+fi
+if [ ! $(command -v do-not-disturb) ]; then
+  npm -g install do-not-disturb-cli
+fi
+if [ ! $(command -v tmux) ]; then
+  echo "This script depends on tmux. Try: brew install tmux"
+  exit 1
+fi
+if [ ! $(command -v ng) ]; then
+  echo "This script depends on https://github.com/megalithic/dotfiles/blob/master/bin/ng"
+  exit 1
+fi
 
-help() {
-  printf -- "Usage: "$command" <subcommand> [options]\n"
-  printf -- "Subcommands:\n"
-  printf -- "    add    Add a github user\n"
-  printf -- "    rm     Remove a github user\n"
-  printf -- "    ls     List github users\n"
-  printf -- "    up     Spin up and open shared tmux session\n"
-  printf -- "    down   Terminates shared tmux session\n"
-  printf -- "    ssh    Constructs and returns the ssh command\n"
-  printf -- "    tunnel Constructs and returns the tunnel command\n"
-  printf -- "    info   Displays handle information about the pairing session\n"
+help(){
+  echo "Usage: $command <subcommand> [options]\n"
+  echo "Subcommands:"
+  echo "    add  Add a github user"
+  echo "    rm   Remove a github user"
+  echo "    ls   List github users"
+  echo "    up   Open shared tmux session"
+  echo "    info   Displays handle information about the pairing session"
+  echo "    ssh  Start a reverse tunnel for pair sharing"
+  echo "         See: https://ngrok.com"
 }
 
-add() {
-  gh-auth add --users "$@" --command="$(which tmux) attach -t $session"
+add(){
+  gh-auth add --users $@ --command="$(which tmux) attach -t $session"
 }
 
-rm() {
-  gh-auth remove --users "$@"
+rm(){
+  gh-auth remove --users $@
 }
 
 ls() {
   gh-auth list | sed 's/ /\n/g'
 }
 
-up() {
-  for user in "$@";do
-    add "$user"
-  done
+up(){
+  # Add any users, if specified
+  if [[ ! -z $@ ]]; then
+    add $@
+  fi
 
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
 
-  tunnel_and_connect
+  # tmux new-session -d -s pairing "ng connect"
+  # tmux split-window
+  # sleep 1 # some delay so tunnel has time to get up
+  # tmux send-keys "pair ssh" C-m
+  # tmux attach
 
+  # tmux new -s $session -d "ng connect"
+  tmux new-session -d -s $session "ng connect"
+  tmux switch -t $session
+  tmux split-window -h -t $session
+
+  # indicate some sort of progress while we wait to get the ngrok session's port number
   DONE=0;
   while [ $DONE -eq 0 ]; do
-    if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
+    if [[ "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "" && "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "null" ]]; then
+      # once we have the ngrok session's port number, go ahead and display our pair session info
+      # TODO: figure out how to execute this without seeing the commands at the prompt
+      sleep 1 # some delay so tunnel has time to get up
+      # tmux send-keys -t $session "cd ~; pair ssh" C-m
       tmux send-keys -t $session "cd ~; pair info" C-m
       DONE=1
     fi;
@@ -91,35 +83,30 @@ up() {
 
 down() {
   [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
-  pkill -9 -f 1337:localhost
-  pkill -9 -f pair
-  # pkill -9 -f tmate
+  pkill -9 -f ngrok
   tmux kill-session -t $session
 }
 
-tunnel_and_connect() {
-  DONE=0;
-  sleep 1.0;
-  while [ $DONE -eq 0 ]; do
-    if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
-      tmux new -s $session -d
-      tmux switch -t $session
-      tmux send-keys -t $session "cd ~; $(tunnel);" C-m
-      tmux split-window -h -t $session
-      DONE=1
-    fi;
-    sleep 0.5;
-  done;
-}
+ssh(){
+  clipboard_helper="reattach-to-user-namespace"
+  ssh_command=$(ng ssh)
+  echo "ng ssh: "
+  echo $ssh_command
 
-tunnel() {
-  tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host_ip"
-  # tunnel_command="unset $TMUX; tmate"
-  echo $tunnel_command
+  # if [ $(command -v $clipboard_helper) ]; then
+  #   echo $ssh_command | $clipboard_helper pbcopy
+  # else
+  #   echo "You must have $clipboard_helper installed to copy ssh command automatically. Try: brew install $clipboard_command"
+  # fi
+
+  echo $ssh_command | pbcopy
 }
 
 ssh() {
-  ssh_command="ssh $user@$host_ip"
+  host="1.tcp.ngrok.io"
+  port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
+  # tunnel
+  ssh_command="ssh -p $port $user@$host"
   echo $ssh_command
 }
 

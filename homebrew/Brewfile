@@ -117,7 +117,7 @@ brew 'python3'
 brew 'python@2'
 # brew 'rabbitmq' # requires erlang/rebar/rebar3
 brew 'readline'
-# brew 'reattach-to-user-namespace', args: ['wrap-pbcopy-and-pbpaste']
+brew 'reattach-to-user-namespace', args: ['wrap-pbcopy-and-pbpaste']
 brew 'ren'
 brew 'redis'
 brew 'ripgrep'
