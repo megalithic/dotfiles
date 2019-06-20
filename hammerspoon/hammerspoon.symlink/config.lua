@@ -110,6 +110,12 @@ config.applications = {
     position = config.grid.centeredMedium,
     quitGuard = false,
   },
+  ['Marked 2'] = {
+    name = 'Marked 2',
+    bundleID = 'com.brettterpstra.marked2',
+    preferredDisplay = 2,
+    position = config.grid.leftHalf,
+  },
   ['Slack'] = {
     name = 'Slack',
     bundleID = 'com.tinyspeck.slackmacgap',

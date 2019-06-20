@@ -15,7 +15,7 @@ windows:
     root: "~/.dotfiles"
     panes:
       - commands:
-        - nvim +VimwikiIndex
+        - nvim +WikiIndex
   - name: "services"
     root: "~/code/enbala"
     layout: tiled
