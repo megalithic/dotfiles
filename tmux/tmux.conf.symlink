@@ -121,9 +121,9 @@ set -g status-interval 1
 set -g status-justify "left"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
-setw -g automatic-rename on
 set -g set-titles-string ""
 set -g set-titles on
+setw -g automatic-rename on
 
 
 # Colors ----------------------------------------------------------------------
@@ -131,17 +131,17 @@ set -g set-titles on
 # -- active pane decorations
 set -g pane-border-style 'bg=#3C4C55,fg=#3C4C55'
 set -g pane-active-border-style 'bg=#3C4C55,fg=#6A7D89'
-setw -g pane-border-status top
 set -g pane-border-format ""
+setw -g pane-border-status top
 
 # dim inactive window text
 set -g window-style 'fg=#666666,bg=#3C4C55'
 set -g window-active-style 'fg=white,bg=#3C4C55'
 
 set -g clock-mode-colour white
-set -g status-style 'bg=default,fg=colour7'
 set -g mode-style 'bg=#ffffff,fg=#000000'
 set -g message-style 'bg=#3C4C55,fg=#ffffff,italics'
+set -g status-style 'bg=default,fg=#aaaaaa'
 
 
 # Statusbar layout ------------------------------------------------------------
