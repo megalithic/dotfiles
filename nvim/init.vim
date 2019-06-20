@@ -127,7 +127,7 @@ Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
 Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
-Plug 'plasticboy/vim-markdown' , { 'for': ['markdown'] }
+Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
@@ -160,7 +160,7 @@ Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
-Plug 'vimwiki/vimwiki'
+" Plug 'vimwiki/vimwiki', {'branch': 'dev'}
 
 " ## Movements/Text Objects, et al
 Plug 'kana/vim-operator-user'

@@ -175,3 +175,216 @@ fgr() {
      vim $file +$line
   fi
 }
+
+# fstash - easier way to deal with stashes
+# type fstash to get a list of your stashes
+# enter shows you the contents of the stash
+# ctrl-d shows a diff of the stash against your current HEAD
+# ctrl-b checks the stash out as a branch, for easier merging
+fzstash() {
+  local out q k sha
+  while out=$(
+    git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
+    fzf --ansi --no-sort --query="$q" --print-query \
+        --expect=ctrl-d,ctrl-b);
+  do
+    mapfile -t out <<< "$out"
+    q="${out[0]}"
+    k="${out[1]}"
+    sha="${out[-1]}"
+    sha="${sha%% *}"
+    [[ -z "$sha" ]] && continue
+    if [[ "$k" == 'ctrl-d' ]]; then
+      git diff $sha
+    elif [[ "$k" == 'ctrl-b' ]]; then
+      git stash branch "stash-$sha" $sha
+      break;
+    else
+      git stash show -p $sha
+    fi
+  done
+}
+
+# Note taking function and command completion
+_n() {
+  local lis cur
+  lis=$(fd . "${NOTE_DIR}" -e md | \
+    sed -e "s|${NOTE_DIR}/||" | \
+    sed -e 's/\.md$//')
+  cur=${COMP_WORDS[COMP_CWORD]}
+  COMPREPLY=( $(compgen -W "$lis" -- "$cur") )
+}
+note() {
+  : "${NOTE_DIR:?'NOTE_DIR ENV Var not set'}"
+  if [ $# -eq 0 ]; then
+    local file
+    file=$(ls -td $(fd . "${NOTE_DIR}" -e md) | \
+      sed -e "s|${NOTE_DIR}/||" | \
+      sed -e 's/\.md$//' | \
+      fzf \
+        --multi \
+        --select-1 \
+        --exit-0 \
+        --preview="bat --color=always ${NOTE_DIR}/{}.md" \
+        --preview-window=right:60%:wrap)
+    [[ -n $file ]] && \
+      ${EDITOR:-vim} "${NOTE_DIR}/${file}.md"
+  else
+    case "$1" in
+      "-d")
+        rm "${NOTE_DIR}"/"$2".md
+        ;;
+      "-w")
+        ${EDITOR:-vim} "${WORK_NOTE_DIR}"/"$2".md
+        ;;
+      "-wa")
+        local file="$(date +%Y-%m-%d)"
+        if [ -e "${WORK_NOTE_DIR}/$file.md" ]; then
+          echo "\n## $(date +%H:%M:%S)" >> "${WORK_NOTE_DIR}/${file}.md"
+        # else
+        #   echo "## $(date +%H:%M:%S)" >> "${WORK_NOTE_DIR}/${file}.md"
+        fi
+        if [ ! -z "$2" ]; then
+          echo "$2" >> "${WORK_NOTE_DIR}/${file}.md"
+        else
+          ${EDITOR:-vim} "${WORK_NOTE_DIR}/${file}.md"
+        fi
+        ;;
+      "-cd")
+        cd ${NOTE_DIR}
+        ;;
+      "-a")
+        local file="$(date +%Y-%m-%d)"
+        if [ -e "${NOTE_DIR}/$file.md" ]; then
+          echo "\n## $(date +%H:%M:%S)" >> "${NOTE_DIR}/${file}.md"
+        # else
+        #   echo "## $(date +%H:%M:%S)" >> "${NOTE_DIR}/${file}.md"
+        fi
+        if [ ! -z "$2" ]; then
+          echo "$2" >> "${NOTE_DIR}/${file}.md"
+        else
+          ${EDITOR:-vim} "${NOTE_DIR}/${file}.md"
+        fi
+        ;;
+      "-j")
+        local file="journal-$(date +%Y).md"
+        echo "\n## $(date +%c)" >> "${NOTE_DIR}/${file}"
+        ${EDITOR:-vim} "${NOTE_DIR}/${file}"
+        ;;
+      "-p")
+        local file
+        file=$(ls -td $(fd . "${NOTE_DIR}/pocket" -e md -e txt) | \
+          sed -e "s|${NOTE_DIR}/pocket||" | \
+          fzf \
+            --multi \
+            --select-1 \
+            --exit-0 \
+            --preview="cat ${NOTE_DIR}/pocket{}" \
+            --preview-window=right:60%:wrap)
+        [[ -n $file ]] && \
+          ${EDITOR:-vim} "${NOTE_DIR}/${file}"
+        ;;
+      "-s")
+        local file
+        if [ -z "$2" ]; then
+          echo "no search string supplied"
+        else
+          file=$(ls -td $(ag --nobreak --nonumbers --noheading --markdown -l "$2" ${NOTE_DIR}) | \
+            sed -e "s|${NOTE_DIR}/||" | \
+            sed -e 's/\.md$//' | \
+            fzf \
+              -i \
+              --exact \
+              --multi \
+              --select-1 \
+              --exit-0 \
+              --preview="cat ${NOTE_DIR}/{}.md" \
+              --preview-window=right:60%:wrap | \
+              awk -F: '{print $1}')
+        fi
+        [[ -n $file ]] && \
+          ${EDITOR:-vim} "${NOTE_DIR}"/"${file}".md
+        ;;
+      *)
+        ${EDITOR:-vim} "${NOTE_DIR}"/"$1".md
+        ;;
+    esac
+  fi
+}
+# complete -F _n note
+
+# Override Z for use with fzf
+unalias z 2> /dev/null
+z() {
+  if [[ -z "$*" ]]; then
+    cd "$(_z -l 2>&1 | fzf +s --tac | sed 's/^[0-9,.]* *//')"
+  else
+    _z "$@"
+  fi
+}
+
+# Todo List & Completion
+_todo() {
+  local iter use cur
+  cur=${COMP_WORDS[COMP_CWORD]}
+  use=$( awk '{gsub(/ /,"\\ ")}8' "$TODOFILE" )
+  use="${use//\\ /___}"
+  for iter in $use; do
+    if [[ $iter =~ ^$cur ]]; then
+      COMPREPLY+=( "${iter//___/ }" )
+    fi
+  done
+}
+todo() {
+  : "${TODO:?'TODO ENV Var not set. Please set to path of default todo file.'}"
+  TODOFILE=$TODO
+  TODOARCHIVEFILE=${TODO%.*}.archive.md
+
+  if [ $# -eq 0 ]; then
+    if [ -f "$TODOFILE" ] ; then
+      awk '{ print NR, "-", $0 }' "$TODOFILE"
+    fi
+  else
+    case "$1" in
+      -h|--help)
+        echo "todo - Command Line Todo List Manager"
+        echo " "
+        echo "Creates a text-based todo list and provides basic operations to add and remove elements from the list. If using TMUX, the todo list is session based, using the name of your active session."
+        echo " "
+        echo "usage: todo                                 # display todo list"
+        echo "usage: todo (--help or -h)                  # show this help"
+        echo "usage: todo (--add or -a) [activity name]   # add a new activity to list"
+        echo "usage: todo (--archive)                     # show completed tasks in archive list"
+        echo "usage: todo (--done or -d) [name or #]      # complete and archive activity"
+        ;;
+      -a|--add)
+        echo "${*:2}" >> "$TODOFILE"
+        ;;
+      -d|--done)
+        re='^[0-9]+$'
+        if ! [[ "$2" =~ $re ]] ; then
+          match=$(sed -n "/$2/p" "$TODOFILE" 2> /dev/null)
+          sed -i "" -e "/$2/d" "$TODOFILE" 2> /dev/null
+        else
+          match=$(sed -n "$2p" "$TODOFILE" 2> /dev/null)
+          sed -i "" -e "$2d" "$TODOFILE" 2> /dev/null
+        fi
+        if [ ! -z "$match" ]; then
+          echo "$(date +"%Y-%m-%d %H:%M:%S") - $match" >> "$TODOARCHIVEFILE"
+        fi
+        ;;
+    esac
+  fi
+
+}
+
+# find todo notes in current project
+function todos {
+  LOCAL_DIR=$(git rev-parse --show-toplevel 2> /dev/null)
+  LOCAL_DIR=${LOCAL_DIR:-.}
+  if [ $# -eq 0 ]; then
+    ag '(\bTODO\b|\bFIX(ME)?\b|\bREFACTOR\b)' ${LOCAL_DIR}
+  else
+    ag ${*:1} '(\bTODO\b|\bFIX(ME)?\b|\bREFACTOR\b)' ${LOCAL_DIR}
+  fi
+}

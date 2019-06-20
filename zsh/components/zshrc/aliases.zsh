@@ -58,9 +58,9 @@ alias ,q="exit"
 alias please='sudo $(fc -ln -1)'
 alias count='wc -l'
 alias dirsize="du -sh * | sort -n"
-alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 alias dus='du -sckx * | sort -nr'
 alias top='top -o cpu'
+alias tree="tree -L"
 
 alias icat="kitty +kitten icat"
 
