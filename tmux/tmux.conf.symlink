@@ -1,6 +1,3 @@
-# KEY BINDINGS
-# ===========================================================================
-
 # Bindings:
 # - to see current bindings:
 #   tmux list-keys
@@ -15,7 +12,9 @@ bind C-d detach			# prefix, d
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
 bind-key r refresh-client
 
-# Splitting panes
+
+# Splitting panes ------------------------------------------------------------
+
 bind '|'  split-window -h -c "#{pane_current_path}" \;
 bind '\'  split-window -h -c "#{pane_current_path}" \;
 bind '_'  split-window -v -c "#{pane_current_path}" \;
@@ -25,8 +24,7 @@ bind -r C-t new-window -c "#{pane_current_path}"
 bind -r C-x kill-pane
 bind -r C-q kill-window
 
-
-# Resizing ----------------------------------------------------------------------------------------
+# Resizing -------------------------------------------------------------------
 
 bind -r H resize-pane -L 5      # grow the current pane leftwards with <C-t>H
 bind -r J resize-pane -D 5      # grow the current pane downwards with <C-t>J
@@ -38,13 +36,13 @@ bind -r L resize-pane -R 5      # grow the current pane rightwards with <C-t>L
                                 # pane is the desired size.
 
 
-# Reorder Windows ---------------------------------------------------------------------------------
+# Reorder windows ------------------------------------------------------------
 
 bind -r C-H swap-window -t -1 # move window one position to the left
 bind -r C-L swap-window -t +1 # move window one position to the right
 
 
-# Vim-style pane selection ========================================================================
+# Vim-style pane selection ---------------------------------------------------
 
 # Smart pane switching with awareness of vim splits (from https://github.com/christoomey/vim-tmux-navigator)
 is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(weechat|irc|emacs|view|n?vim?x?)(diff)?$"'
@@ -53,83 +51,21 @@ bind -n C-j if-shell "$is_vim" "send-keys C-j" "select-pane -D"
 bind -n C-k if-shell "$is_vim" "send-keys C-k" "select-pane -U"
 bind -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
 
-# is_vim="echo '#{pane_current_command}' | grep -iqE '(^|\/)g?(weechat|irc|emacs|view|n?vim?x?)(diff)?$'"
-# is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(weechat|irc|view|emacs|n?vim?x?)(diff)?$'"
-# bind-key -n C-h if-shell "$is_vim" "send-keys C-h" "select-pane -L"
-# bind-key -n C-j if-shell "$is_vim" "send-keys C-j" "select-pane -D"
-# bind-key -n C-k if-shell "$is_vim" "send-keys C-k" "select-pane -U"
-# bind-key -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
-
 bind-key -T copy-mode-vi C-h select-pane -L
 bind-key -T copy-mode-vi C-j select-pane -D
 bind-key -T copy-mode-vi C-k select-pane -U
 bind-key -T copy-mode-vi C-l select-pane -R
 
+
+## .. OR:
 ## Intelligently navigate tmux panes and Vim splits using the same keys.
 ## See https://sunaku.github.io/tmux-select-pane.html for documentation.
-##
-##      +-------------+------------+-----------------------------+
-##      | inside Vim? | is Zoomed? | Action taken by key binding |
-##      +-------------+------------+-----------------------------+
-##      | No          | No         | Focus directional tmux pane |
-##      | No          | Yes        | Nothing: ignore key binding |
-##      | Yes         | No         | Seamlessly focus Vim / tmux |
-##      | Yes         | Yes        | Focus directional Vim split |
-##      +-------------+------------+-----------------------------+
-##
-#vim_navigation_timeout=0.05 # number of seconds we give Vim to navigate
-#navigate='                                                             \
-#  pane_is_zoomed() {                                                   \
-#    test #{window_zoomed_flag} -eq 1;                                  \
-#  };                                                                   \
-#  pane_title_changed() {                                               \
-#    test "#{pane_title}" != "$(tmux display -p "##{pane_title}")";     \
-#  };                                                                   \
-#  pane_contains_vim() {                                                \
-#    title="#{pane_title}";                                             \
-#    case ",#{pane_current_command},${title%% *}," in                   \
-#      (*,vi,*|*view,*|*vim*) true ;;                                   \
-#      (*) false ;;                                                     \
-#    esac;                                                              \
-#  };                                                                   \
-#  pane_contains_neovim_terminal() {                                    \
-#    case "#{pane_title}" in                                            \
-#      (nvim?term://*) true ;;                                          \
-#      (*) false ;;                                                     \
-#    esac;                                                              \
-#  };                                                                   \
-#  navigate() {                                                         \
-#    tmux_navigation_command=$1;                                        \
-#    vim_navigation_command=$2;                                         \
-#    vim_navigation_only_if=${3:-true};                                 \
-#    if pane_contains_vim && eval "$vim_navigation_only_if"; then       \
-#      if pane_contains_neovim_terminal; then                           \
-#        tmux send-keys C-\\ C-n;                                       \
-#      fi;                                                              \
-#      eval "$vim_navigation_command";                                  \
-#      if ! pane_is_zoomed; then                                        \
-#        sleep $vim_navigation_timeout; : wait for Vim to change title; \
-#        if ! pane_title_changed; then                                  \
-#          eval "$tmux_navigation_command";                             \
-#        fi;                                                            \
-#      fi;                                                              \
-#    elif ! pane_is_zoomed; then                                        \
-#      eval "$tmux_navigation_command";                                 \
-#    fi;                                                                \
-#  };                                                                   \
-#navigate '
-#bind-key -n M-h run-shell "$navigate 'tmux select-pane -L' 'tmux send-keys C-w h'"
-#bind-key -n M-j run-shell "$navigate 'tmux select-pane -D' 'tmux send-keys C-w j'"
-#bind-key -n M-k run-shell "$navigate 'tmux select-pane -U' 'tmux send-keys C-w k'"
-#bind-key -n M-l run-shell "$navigate 'tmux select-pane -R' 'tmux send-keys C-w l'"
-#bind-key -n M-; run-shell "$navigate 'tmux select-pane -l || tmux select-pane -t 1' 'tmux send-keys C-w p' 'pane_is_zoomed'"
 
 
-# GENERAL SETTINGS
-# ===========================================================================
+# General setting ------------------------------------------------------------
+
 # set -sg	update-environment TERM_PROFILE
 set -g history-limit 2000
-set -g set-titles on
 set -g default-shell "$SHELL"
 # fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
 # https://github.com/nathanaelkane/dotfiles/commit/9607d826b9d408595de2e3fe7de0abec1e94fa87
@@ -156,7 +92,7 @@ set -w -g wrap-search off             # Don't wrap searches; it's super confusin
 set -g detach-on-destroy off
 
 
-# Vim-style copy & paste ==========================================================================
+# Vim-style copy & paste ------------------------------------------------------
 
 setw -g mode-keys vi                                                # Use vim keybindings
 
@@ -177,61 +113,55 @@ bind-key -T copy-mode-vi V send -X rectangle-toggle
 unbind   -T copy-mode-vi 'Enter'
 bind-key -T copy-mode-vi 'Enter' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
 
-# STATUS BAR
-# ===========================================================================
-# Settings
-# ---------------------------------------------------------
+
+# Status bar ------------------------------------------------------------------
+
 set -g status on
 set -g status-interval 1
 set -g status-justify "left"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
 setw -g automatic-rename on
+set -g set-titles-string '-'
+set -g set-titles on
 
-# Colors
-# ---------------------------------------------------------
+
+# Colors ----------------------------------------------------------------------
+
 # -- active pane decorations (places a green line in the panes' gutter, alters fg colors)
-set -g pane-border-style 'bg=#3C4C55,fg=#1E272C'
-set -g pane-active-border-style 'bg=#3C4C55,fg=red'
+set -g pane-border-style 'bg=#3C4C55,fg=#3C4C55'
+set -g pane-active-border-style 'bg=default,fg=#6A7D89'
+setw -g pane-border-status top
+# set -g pane-border-format "#P: #{pane_current_command}"
+set -g pane-border-format ""
 
 # dim inactive window text
 set -g window-style 'fg=#6A7D89,bg=#3C4C55'
 set -g window-active-style 'fg=white,bg=#3C4C55'
 
 set -g clock-mode-colour cyan
-set -g status-style 'bg=#1E272C,fg=#6A7D89'
+set -g status-style 'bg=default,fg=colour7'
+# set -g status-style 'bg=#1E272C,fg=#6A7D89'
 set -g window-status-current-style 'fg=cyan'
 set -g mode-style 'bg=cyan,fg=#000000'
-set -g message-style 'bg=#000000,fg=#ffffff,italics'
-set -g window-status-activity-style none # deprecated?
+set -g message-style 'bg=#3C4C55,fg=#ffffff,italics'
+# set -g window-status-activity-style none # deprecated?
+# setw -g window-status-separator '  '
 
-# Bar Layout
-# ---------------------------------------------------------
-# -- statusbar left
+
+# Statusbar layout ------------------------------------------------------------
+
+# -- left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left " #[fg=green]⧉ #S #{prefix_highlight} ⋮ "
 
-# -- statusbar center (windows)
-setw -g window-status-format ' ○ #I:#W '
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics] ● #I:#W} #[fg=colour28]"
+# -- center (windows)
+setw -g window-status-format " ○ #I:#W"
+setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics]● #I:#W}"
 
-# -- statusbar right
-set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage} "
+# -- right
+set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage} "
 
-
-# TMUX PLUGIN MANAGER
-# ===========================================================================
-
-# Settings
-# ---------------------------------------------------------
-# See Bruno's setup for plugin settings:
-# https://github.com/bruno-/dotfiles/blob/master/home/.tmux.conf
-# set -g @continuum-restore 'off'
-# set -g @continuum-save-interval '60'
-
-# set -g @resurrect-save 'S'
-# set -g @resurrect-restore 'E'
-# set -g @fingers-skip-health-check '1'
 
 # Installation
 # ---------------------------------------------------------
@@ -239,6 +169,10 @@ set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
 
 # plugin settings
+set -g @cpu_low_fg_color "#[fg=#00ff00]"
+set -g @cpu_medium_fg_color "#[fg=#ffff00]"
+set -g @cpu_high_fg_color "#[fg=#ff0000]"
+
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-cpu'

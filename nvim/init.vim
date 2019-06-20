@@ -38,9 +38,8 @@ Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
-Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript','typescriptreact','typescript.tsx'] }
+Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 Plug 'honza/vim-snippets'
-Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
 Plug 'itspriddle/vim-marked', { 'for': ['markdown', 'vimwiki'] }
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
@@ -142,7 +141,7 @@ Plug 'sbdchd/neoformat'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'svermeulen/vim-yoink'
-" Plug 'TaDaa/vimade'
+Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
@@ -1068,45 +1067,6 @@ let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ex'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['exs'] = "\ue62d"
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['elm'] = "\ue62c"
 
-" ## liuchengxu/vista.vim
-" nmap <silent> <F4> :Vista!!<CR>
-let g:vista_echo_cursor_strategy = 'floating_win'
-" Position to open the vista sidebar. On the right by default.
-" Change to 'vertical topleft' to open on the left.
-let g:vista_sidebar_position = 'vertical botright'
-" Width of vista sidebar.
-let g:vista_sidebar_width = 30
-" Set this flag to 0 to disable echoing when the cursor moves.
-let g:vista_echo_cursor = 1
-" Time delay for showing detailed symbol info at current cursor.
-let g:vista_cursor_delay = 400
-" Close the vista window automatically close when you jump to a symbol.
-let g:vista_close_on_jump = 0
-" Move to the vista window when it is opened.
-let g:vista_stay_on_open = 1
-" Blinking cursor 2 times with 100ms interval after jumping to the tag.
-let g:vista_blink = [2, 100]
-" How each level is indented and what to prepend.
-" This could make the display more compact or more spacious.
-" e.g., more compact: ["▸ ", ""]
-let g:vista_icon_indent = ['╰─▸ ', '├─▸ ']
-" Executive used when opening vista sidebar without specifying it.
-" See all the avaliable executives via `:echo g:vista#executives`.
-let g:vista_default_executive = 'ctags'
-" Declare the command including the executable and options used to generate ctags output
-" for some certain filetypes.The file path will be appened to your custom command.
-" For example:
-let g:vista_ctags_cmd = {
-      \ 'haskell': 'hasktags -o - -c',
-      \ }
-" To enable fzf's preview window set g:vista_fzf_preview.
-" The elements of g:vista_fzf_preview will be passed as arguments to fzf#vim#with_preview()
-" For example:
-let g:vista_fzf_preview = ['right:50%']
-" Fall back to other executives if the specified one gives empty data.
-" By default it's all the provided executives excluding the tried one.
-let g:vista_finder_alternative_executives = ['coc']
-
 " ## craigemery/vim-autotag
 let g:autotagTagsFile='.tags'
 
@@ -1175,8 +1135,8 @@ let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
 let g:vim_markdown_conceal_code_blocks = 0
 
-" # markdown-preview.nvim
-nnoremap <Leader>M :MarkdownPreview<CR>
+" # itspriddle/vim-marked
+nnoremap <Leader>M :MarkedOpen<CR>
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
