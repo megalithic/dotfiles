@@ -42,7 +42,7 @@ Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript','typescriptreact','t
 Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', { 'for': ['md', 'markdown', 'mdown'], 'do': 'cd app & yarn install' } " https://github.com/iamcco/markdown-preview.nvim#install--usage
 Plug 'itchyny/lightline.vim'
-
+Plug 'itspriddle/vim-marked', { 'for': ['markdown', 'vimwiki'] }
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
@@ -60,6 +60,7 @@ Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir'] }
+" Plug 'morhetz/gruvbox'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -165,6 +166,7 @@ Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
+Plug 'vimwiki/vimwiki'
 
 " ## Movements/Text Objects, et al
 Plug 'kana/vim-operator-user'
@@ -654,11 +656,6 @@ augroup gitcommit
   au FileType gitcommit,gitrebase :iabbrev <buffer> caban Co-authored-by: Alan Nguyen <anguyen@enbala.com>
 augroup END
 
-augroup qmk
-  au!
-  au BufReadPost c set tabstop=2 set shiftwidth=2
-augroup END
-
 augroup ft_elixir
   au!
   au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
@@ -680,6 +677,17 @@ augroup ft_elixir
         \ 'i' : 'io.inspect',
         \ 'il' : 'io.inspect-with-label',
         \ 'd' : 'debug/iex.pry',
+        \ 'p' : '|> pipeline',
+        \ }
+augroup END
+
+augroup ft_elm
+  au!
+  au FileType elm nnoremap <leader>ep o\|> <ESC>a
+  au FileType elm iabbrev ep    \|>
+
+  au FileType elm let g:which_key_map.e = {
+        \ 'name' : '+elm' ,
         \ 'p' : '|> pipeline',
         \ }
 augroup END
@@ -727,8 +735,14 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 "}}}
 " ░░░░░░░░░░░░░░░ plugin settings {{{
 
-" ## polyglot
+" ## sheerun/polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
+
+" ## vimwiki/vimwiki
+let g:vimwiki_list = [{'path': '~/wiki/', 'syntax': 'markdown', 'ext': '.md'}]
+let g:vimwiki_global_ext = 0
+" map <M-Space> <Plug>VimwikiToggleListItem
+" nnoremap <localleader>wp :Files ~/wiki/<cr>
 
 " ## rhysd/git-messenger
 let g:git_messenger_no_default_mappings = 1
@@ -1017,7 +1031,7 @@ set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
 
-" morhetz/gruvbox
+" " morhetz/gruvbox
 " let g:gruvbox_italic=1
 " let g:gruvbox_improved_strings=1
 " let g:gruvbox_improved_warnings=1

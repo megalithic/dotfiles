@@ -183,18 +183,13 @@ bind-key -T copy-mode-vi 'Enter' send -X copy-pipe-and-cancel "reattach-to-user-
 # ---------------------------------------------------------
 set -g status on
 set -g status-interval 1
-set -g status-justify "centre"                                      # don't change this spelling
+set -g status-justify "left"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
 setw -g automatic-rename on
 
-bind-key -r Enter set status                   # use Prefix-Enter to toggle status bar
-
 # Colors
 # ---------------------------------------------------------
-
-# TODO: https://github.com/nicknisi/dotfiles/blob/master/tmux/base16.sh
-
 # -- active pane decorations (places a green line in the panes' gutter, alters fg colors)
 set -g pane-border-style 'bg=#3C4C55,fg=#1E272C'
 set -g pane-active-border-style 'bg=#3C4C55,fg=red'
@@ -212,20 +207,16 @@ set -g window-status-activity-style none # deprecated?
 
 # Bar Layout
 # ---------------------------------------------------------
-# -- statusbar windows
+# -- statusbar left
+# http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
+set -g status-left " #[fg=green]⧉ #S #{prefix_highlight} ⋮ "
+
+# -- statusbar center (windows)
 setw -g window-status-format ' ○ #I:#W '
 setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics] ● #I:#W} #[fg=colour28]"
 
-# -- statusbar left
-# http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
-set -g status-left-length 100
-set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #{prefix_highlight}"
-# set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
-# set -g status-left "#[fg=green]#S #(~/.dotfiles/bin/tmux-ip) #(~/.dotfiles/bin/tmux-ssh)#(~/.dotfiles/bin/tmux-pairing) #{prefix_highlight}"
-
 # -- statusbar right
-set -g status-right-length 80
-set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage}"
+set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p)#[fg=blue] %a, %b %d #[fg=green]%l:%M %p #[fg=colour255] #[bg=colour236] #{cpu_percentage} "
 
 
 # TMUX PLUGIN MANAGER

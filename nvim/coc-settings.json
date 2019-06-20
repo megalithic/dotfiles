@@ -19,7 +19,7 @@
   "coc.preferences.jumpCommand": "vsplit",
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
-  "coc.preferences.snippetStatusText": "\ue795  ", // "🌈",
+  "coc.preferences.snippetStatusText": "SNIP",
   "coc.preferences.enableFloatHighlight": true,
 
   "signature.enable": true,
