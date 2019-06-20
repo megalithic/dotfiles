@@ -240,6 +240,8 @@ config.applications = {
   ['Fantastical'] = {
     name = 'Fantastical',
     bundleID = 'com.flexibits.fantastical2.mac',
+    superKey = config.superKeys.cmdShift,
+    shortcut = 'f',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
