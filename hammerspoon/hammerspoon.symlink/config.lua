@@ -91,32 +91,24 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true
   },
-  -- ['Firefox'] = {
-  --   name = 'Firefox',
-  --   bundleID = 'org.mozilla.firefox',
-  --   superKey = config.superKeys.cmdCtrl,
-  --   shortcut = '`',
-  --   preferredDisplay = 1,
-  --   position = config.grid.fullScreen,
-  --   quitGuard = true,
-  -- },
-  -- ['Safari Technology Preview'] = {
-  --   name = 'Safari Technology Preview',
-  --   bundleID = 'com.apple.SafariTechnologyPreview',
-  --   superKey = config.superKeys.mashShift,
-  --   shortcut = '`',
-  --   preferredDisplay = 1,
-  --   position = config.grid.fullScreen,
-  --   quitGuard = true,
-  -- },
-  ['Sblack'] = {
-    name = 'Sblack',
+  ['Drafts'] = {
+    name = 'Drafts',
     -- bundleID = 'com.tinyspeck.slackmacgap',
     -- superKey = config.superKeys.mashShift,
     -- shortcut = 's',
-    preferredDisplay = 2,
-    position = config.grid.rightHalf,
-    quitGuard = true,
+    windows = {
+      ['Capture'] = {
+        position = '5,0 5x5',
+        preferredDisplay = 1
+      },
+      ['Drafts'] = {
+        position = config.grid.centeredLarge,
+        preferredDisplay = 1
+      },
+    },
+    preferredDisplay = 1,
+    position = config.grid.centeredMedium,
+    quitGuard = false,
   },
   ['Slack'] = {
     name = 'Slack',

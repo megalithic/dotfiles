@@ -161,6 +161,7 @@ Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a speci
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
 " Plug 'vimwiki/vimwiki', {'branch': 'dev'}
+Plug 'lervag/wiki.vim'
 
 " ## Movements/Text Objects, et al
 Plug 'kana/vim-operator-user'
@@ -732,8 +733,35 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 " ## sheerun/polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
+" ## lervag/wiki.vim
+let g:wiki_root = '~/Dropbox/wiki'
+" let g:wiki_toc_title = 'Innhald'
+" let g:wiki_viewer = {'pdf': 'zathura'}
+" let g:wiki_export = {'from_format': 'gfm'}
+let g:wiki_filetypes = ['md']
+" let g:wiki_month_names = [
+"       \ 'jan',
+"       \ 'feb',
+"       \ 'mar',
+"       \ 'apr',
+"       \ 'may',
+"       \ 'june',
+"       \ 'july',
+"       \ 'aug',
+"       \ 'sept',
+"       \ 'oct',
+"       \ 'nov',
+"       \ 'dec'
+"       \]
+" let g:wiki_template_title_week = '# Samandrag veke %(week), %(year)'
+" let g:wiki_template_title_month = '# Samandrag frå %(month-name) %(year)'
+let g:wiki_toc_depth = 2
+" let g:wiki_file_open = 'personal#wiki#file_open'
+nmap <leader>nw :vnew<CR><Plug>(wiki-index)
+nmap <leader>nj :vnew<CR><Plug>(wiki-journal)
+
 " ## vimwiki/vimwiki
-let g:vimwiki_list = [{'path': '~/wiki/', 'syntax': 'markdown', 'ext': '.md'}]
+let g:vimwiki_list = [{'path': '~/Dropbox/wiki/', 'syntax': 'markdown', 'ext': '.md'}]
 let g:vimwiki_global_ext = 0
 " map <M-Space> <Plug>VimwikiToggleListItem
 " nnoremap <localleader>wp :Files ~/wiki/<cr>
@@ -757,6 +785,7 @@ let g:matchup_matchparen_status_offscreen = 0
 " ref: https://github.com/sinecodes/dotfiles/blob/master/.vim/settings/rich/whichkey.vim
 let g:which_key_use_floating_win = 1
 let g:which_key_hspace = 15
+let g:which_key_timeout = 150
 let g:which_key_map = {
       \   'a': 'search-project-for',
       \   'A': 'search-project-for-cursor-word',
@@ -773,6 +802,11 @@ let g:which_key_map = {
       \   '?': 'find-back-cursor-word',
       \   ';': 'last-command',
       \   ':': 'shell-command',
+      \ }
+let g:which_key_map.n = {
+      \ 'name' : '+notes-wiki-journal',
+      \ 'j' : 'journal',
+      \ 'w' : 'wiki',
       \ }
 let g:which_key_map.g = {
       \ 'name' : '+git/vcs' ,
@@ -1115,6 +1149,15 @@ let g:markdown_fenced_languages = [
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
 let g:vim_markdown_conceal_code_blocks = 0
+let g:vim_markdown_folding_style_pythonic = 0
+let g:vim_markdown_override_foldtext = 0
+let g:vim_markdown_follow_anchor = 1
+let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_new_list_item_indent = 2
+let g:vim_markdown_no_extensions_in_markdown = 1
+let g:vim_markdown_math=1
+let g:vim_markdown_strikethrough=1
+set conceallevel=2
 
 " # itspriddle/vim-marked
 nnoremap <Leader>M :MarkedOpen<CR>
