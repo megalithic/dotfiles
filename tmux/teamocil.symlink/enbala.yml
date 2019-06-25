@@ -11,7 +11,7 @@ windows:
     panes:
       - commands:
         - ls
-  - name: "wiki"
+  - name: "notes"
     root: "~/.dotfiles"
     panes:
       - commands:

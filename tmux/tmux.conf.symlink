@@ -129,7 +129,7 @@ setw -g automatic-rename on
 # Colors ----------------------------------------------------------------------
 
 # -- active pane decorations
-set -g pane-border-style 'bg=#3C4C55,fg=#444444'
+set -g pane-border-style 'bg=#3C4C55,fg=#555555'
 set -g pane-active-border-style 'bg=#3C4C55,fg=#6A7D89'
 set -g pane-border-format ""
 setw -g pane-border-status top
@@ -149,33 +149,37 @@ set -g status-style 'bg=default,fg=#aaaaaa'
 # -- left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 set -g status-left " #[fg=green]⧉ #S #{prefix_highlight} ⋮ "
-set -g status-left-length 80
+set -g status-left-length 100
 
 # -- center (windows)
 setw -g window-status-format " ○ #I:#W"
-setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics]● #I:#W}"
+setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics,bold]● #I:#W}"
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#(~/.dotfiles/bin/tmux-dnd) #(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage}"
-set -g status-right-length 80
+set -g status-right "#(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage}"
+set -g status-right-length 200
 
 
 # Installation
 # ---------------------------------------------------------
 # tmux plugin manager: github.com/tmux-plugins/tpm
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
+# set -g @dnd_on_icon "(DND)"
+# set -g @dnd_off_icon ""
 
 # plugin settings
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-cpu'
-set -g @plugin 'tmux-plugins/tmux-copycat'
-set -g @plugin 'tmux-plugins/tmux-yank'
+# set -g @plugin 'tmux-plugins/tmux-copycat'
+# set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
+# set -g @plugin 'megalithic/tmux-dnd-status'
+# set -g @plugin 'megalithic/tmux-online-status'
 # set -g @plugin 'christoomey/vim-tmux-navigator' # necessary if not defining own mappings above
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though

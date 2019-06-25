@@ -356,7 +356,7 @@ config.snap = {
   {
     name = 'left',
     superKey = config.superKeys.cmdCtrl,
-    hyperKey = config.superKeys.hyper,
+    -- hyperKey = config.superKeys.hyper,
     shortcut = 'h',
     locations = utils.chain({
       config.grid.leftHalf,
@@ -367,7 +367,7 @@ config.snap = {
   {
     name = 'right',
     superKey = config.superKeys.cmdCtrl,
-    hyperKey = config.superKeys.hyper,
+    -- hyperKey = config.superKeys.hyper,
     shortcut = 'l',
     locations = utils.chain({
       config.grid.rightHalf,
@@ -378,7 +378,7 @@ config.snap = {
   {
     name = 'down',
     superKey = config.superKeys.cmdCtrl,
-    hyperKey = config.superKeys.hyper,
+    -- hyperKey = config.superKeys.hyper,
     shortcut = 'j',
     locations = utils.chain({
       config.grid.centeredLarge,
@@ -389,7 +389,7 @@ config.snap = {
   {
     name = 'up',
     superKey = config.superKeys.cmdCtrl,
-    hyperKey = config.superKeys.hyper,
+    -- hyperKey = config.superKeys.hyper,
     shortcut = 'k',
     locations = utils.chain({
       config.grid.fullScreen,

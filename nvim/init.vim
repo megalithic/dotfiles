@@ -335,6 +335,9 @@ map <Right> :echo "ಠ_ಠ"<cr>
 map <Up>    :echo "ಠ_ಠ"<cr>
 map <Down>  :echo "ಠ_ಠ"<cr>
 
+" esc mechanisms
+imap jk <ESC>
+
 " Jump key
 nnoremap ` '
 nnoremap ' `
@@ -1400,9 +1403,9 @@ let g:lightline = {
       \       ['paste', 'readonly', 'modified'],
       \     ],
       \     'right': [
+      \       ['lineinfo', 'percent'],
+      \       ['filetype', 'fileformat'],
       \       ['cocstatus'],
-      \       ['linter_checking', 'linter_warnings', 'linter_errors', 'linter_ok'],
-      \       ['filetype', 'fileformat', 'lineinfo', 'percent'],
       \     ],
       \   },
       \   'inactive': {
