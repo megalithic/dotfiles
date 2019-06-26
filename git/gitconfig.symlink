@@ -129,6 +129,7 @@
 
   # <3 @jeffweiss
   oops = !git commit --amend -CHEAD
+  fixup = !git commit --amend -CHEAD
   fpush = !git push origin +HEAD
 
 [mergetool]
@@ -237,6 +238,8 @@
 	newNormal = green bold
 	newHighlight = green bold 22
 
+[commit]
+  template = ~/.gitmessage
 
 # -------------------------------------------------------
 # Nova Colorscheme Stuffs

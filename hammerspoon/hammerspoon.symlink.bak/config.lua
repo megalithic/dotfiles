@@ -266,9 +266,9 @@ config.utilities = {
     superKey = config.superKeys.mashShift,
     shortcut = 'r',
     fn = (function()
-      require('layout').teardown()
-      require('dock').teardown()
-      require('ptt').teardown()
+      require('auto-layout').teardown()
+      require('laptop-docking-mode').teardown()
+      require('push-to-talk').teardown()
       hs.reload()
       hs.notify.show('Hammerspoon', 'Config Reloaded', '')
     end)
@@ -286,7 +286,7 @@ config.utilities = {
     superKey = config.superKeys.mashShift,
     shortcut = 'w',
     fn = (function()
-      require('layout').snapAll()
+      require('auto-layout').snapAll()
     end)
   },
   {
@@ -294,7 +294,7 @@ config.utilities = {
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'w',
     fn = (function()
-      require('layout').snapApp(hs.application.frontmostApplication())
+      require('auto-layout').snapApp(hs.application.frontmostApplication())
     end)
   },
   {

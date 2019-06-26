@@ -5,24 +5,27 @@ hs.ipc.cliInstall()
 
 -- where all the magic is defined (check here for every piece of configuration)
 local config = require('config')
-local handler = require('keyhandler')
+local handler = require('key-handler')
 local hotkey = require('hs.hotkey')
 
 -- window/app auto-layout for my dual-monitor (or single laptop) setup
-require('layout').init()
+require('auto-layout').init()
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
-require('ptt').init(config.ptt)
+require('push-to-talk').init(config.ptt)
 
 -- helper to prevent accidental/unintentional app quitting
-require('quit')
+require('app-quit-guard')
 
 -- handles initiating laptop docking mode behaviors
-require('dock').init()
+require('laptop-docking-mode').init()
+
+-- handles setting DND for apps that specify
+-- require('do-not-disturb').init()
 
 -- laptop docking mode things (change system settings based on being in "docking" mode or not)
 -- home-assistant helper to automate my office based on computer events; only want this to run when i'm in my office
--- if (require('dock').init()) then
+-- if (require('laptop-docking-mode').init()) then
 --   require('home-assistant').init()
 -- end
 

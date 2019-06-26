@@ -85,7 +85,9 @@ fi
 compctl -g '~/.teamocil/*(:t:r)' teamocil
 
 # Completion for kitty (https://sw.kovidgoyal.net/kitty/#zsh)
-kitty + complete setup zsh | source /dev/stdin
+if command -v kitty >/dev/null; then
+  kitty + complete setup zsh | source /dev/stdin
+fi
 
 # Completion for elixir mix tasks
 source "$DOTS/bin/mix-completion.zsh"

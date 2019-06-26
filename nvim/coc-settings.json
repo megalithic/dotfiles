@@ -21,6 +21,7 @@
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetStatusText": "SNIP",
   "coc.preferences.enableFloatHighlight": true,
+  "coc.preferences.currentFunctionSymbolAutoUpdate": true,
 
   "signature.enable": true,
   "signature.target": "float",

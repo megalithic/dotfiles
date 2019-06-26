@@ -1,0 +1,3 @@
+std = {
+  globals = {"hs"}, -- these globals can be set and accessed.
+}

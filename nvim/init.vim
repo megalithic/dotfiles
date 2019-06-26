@@ -29,6 +29,7 @@ Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with 
 Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
 Plug 'cohama/lexima.vim'
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
+Plug 'darfink/vim-plist'
 Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
 Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
@@ -633,13 +634,13 @@ augroup gitcommit
     setlocal formatoptions+=c " Auto-wrap comments using textwidth
     setlocal formatoptions+=q " Allow formatting of comments with `gq`
 
+    setlocal textwidth=72
     " setl spell
     " setl spelllang=en
     " setl nolist
     " setl nonumber
   endfunction
 
-  au FileType gitcommit,gitrebase setl spell textwidth=72
   au BufNewFile,BufRead .git/index setlocal nolist
   au BufReadPost fugitive://* set bufhidden=delete
   au BufReadCmd *.git/index exe BufReadIndex()
@@ -1098,6 +1099,7 @@ let g:projectionist_heuristics = {
       \    'test/*_test.exs': {
       \      'type': 'test',
       \      'alternate': 'lib/{}.ex',
+      \      'test': "mix test spec/{}_spec.exs`=v:lnum ? ':'.v:lnum : ''`"
       \    },
       \    "mix.exs": {
       \      "type": "mix"
@@ -1225,6 +1227,8 @@ function! TerminalSplit(cmd)
 endfunction
 function! ElixirUmbrellaTransform(cmd) abort
   if match(a:cmd, 'vpp/') != -1
+
+    " mix test test/{}_test.exs`=v:lnum ? ':'.v:lnum : ''`
     return substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
   else
     return a:cmd
