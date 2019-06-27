@@ -120,6 +120,9 @@
 
   up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 
+  rb = rebase
+  rb = rebase -i
+
   # gitin aliases
   ; st = !gitin status
   log = !gitin log
