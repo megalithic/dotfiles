@@ -9,7 +9,7 @@ local handler = require('keyhandler')
 local hotkey = require('hs.hotkey')
 
 -- window/app auto-layout for my dual-monitor (or single laptop) setup
-require('layout').init()
+require('auto-layout').init()
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
 require('ptt').init(config.ptt)

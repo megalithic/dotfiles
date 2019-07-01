@@ -2,7 +2,7 @@ local config = require('config')
 local hyper = require("hyper")
 local num_of_screens = 0
 
-target_display = function(display_int)
+targetDisplay = function(display_int)
   -- detect the current number of monitors
   displays = hs.screen.allScreens()
   if displays[display_int] ~= nil then
@@ -21,7 +21,7 @@ autoLayout = function()
       if application ~= nil and application:mainWindow() ~= nil then
         application
         :mainWindow()
-        :moveToScreen(target_display(app_config.preferred_display), false, true, 0)
+        :moveToScreen(targetDisplay(app_config.preferred_display), false, true, 0)
         :moveToUnit(hs.layout.maximized)
       end
     end

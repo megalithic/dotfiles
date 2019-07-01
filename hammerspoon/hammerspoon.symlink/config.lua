@@ -61,6 +61,8 @@ config.applications = {
   },
   ['kitty'] = {
     name = 'kitty',
+    hint = 'net.kovidgoyal.kitty',
+    hyperShortcut = 'k',
     bundleID = 'net.kovidgoyal.kitty',
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
@@ -70,21 +72,23 @@ config.applications = {
   },
   ['Dash'] = {
     name = 'Dash',
+    hint = 'com.kapeli.dashdoc',
     bundleID = 'com.kapeli.dashdoc',
     preferredDisplay = 1,
     position = config.grid.centeredLarge,
   },
   ['Google Chrome'] = {
     name = 'Google Chrome',
+    hint = 'com.google.Chrome',
     bundleID = 'com.google.Chrome',
-    superKey = config.superKeys.cmdCtrl,
-    shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.fullScreen,
     quitGuard = true
   },
   ['Brave Browser Dev'] = {
     name = 'Brave Browser Dev',
+    hint = 'com.brave.Browser.dev',
+    hyperShortcut = '`',
     bundleID = 'com.brave.Browser.dev',
     superKey = config.superKeys.cmd,
     shortcut = '`',
@@ -94,6 +98,9 @@ config.applications = {
   },
   ['Drafts'] = {
     name = 'Drafts',
+    hint = 'com.agiletortoise.Drafts-OSX',
+    hyperShortcut ='d',
+    local_bindings = {'x', '\''},
     -- bundleID = 'com.tinyspeck.slackmacgap',
     -- superKey = config.superKeys.mashShift,
     -- shortcut = 's',
@@ -113,12 +120,15 @@ config.applications = {
   },
   ['Marked 2'] = {
     name = 'Marked 2',
+    hint = 'com.brettterpstra.marked2',
     bundleID = 'com.brettterpstra.marked2',
     preferredDisplay = 2,
     position = config.grid.leftHalf,
   },
   ['Slack'] = {
     name = 'Slack',
+    hint = 'com.tinyspeck.slackmacgap',
+    hyperShortcut = 's',
     bundleID = 'com.tinyspeck.slackmacgap',
     superKey = config.superKeys.mashShift,
     shortcut = 's',
@@ -170,6 +180,7 @@ config.applications = {
   },
   ['Spark'] = {
     name = 'Spark',
+    hint = 'com.readdle.smartemail-Mac',
     bundleID = 'com.readdle.smartemail-Mac',
     superKey = config.superKeys.mashShift,
     shortcut = 'm',
@@ -178,6 +189,7 @@ config.applications = {
   },
   ['Finder'] = {
     name = 'Finder',
+    hint = 'com.apple.finder',
     bundleID = 'com.apple.finder',
     superKey = config.superKeys.ctrl,
     shortcut = '`',
@@ -186,6 +198,7 @@ config.applications = {
   },
   ['zoom.us'] = {
     name = 'zoom.us',
+    hint = 'us.zoom.xos',
     bundleID = 'us.zoom.xos',
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
@@ -195,6 +208,7 @@ config.applications = {
   },
   ['Spotify'] = {
     name = 'Spotify',
+    hint = 'com.spotify.client',
     bundleID = 'com.spotify.client',
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
@@ -203,22 +217,16 @@ config.applications = {
   },
   ['Messages'] = {
     name = 'Messages',
+    hint = 'com.apple.iChat',
     bundleID = 'com.apple.iChat',
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
-  ['YakYak'] = {
-    name = 'YakYak',
-    bundleID = 'com.github.yakyak',
-    -- superKey = config.superKeys.ctrlShift,
-    -- shortcut = 'm',
-    preferredDisplay = 1,
-    position = '5,5 3x3'
-  },
   ['1Password 7'] = {
     name = '1Password 7',
+    hint = 'com.agilebits.onepassword7',
     bundleID = 'com.agilebits.onepassword7',
     superKey = config.superKeys.mashShift,
     shortcut = '1',
@@ -227,19 +235,24 @@ config.applications = {
   },
   ['Hammerspoon'] = {
     name = 'Hammerspoon',
+    hint = 'org.hammerspoon.Hammerspoon',
     bundleID = 'org.hammerspoon.Hammerspoon',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'h',
     preferredDisplay = 2,
     position = config.grid.centeredMedium,
     quitGuard = true,
   },
   ['System Preferences'] = {
     name = 'System Preferences',
+    hint = 'com.apple.systempreferences',
     bundleID = 'com.apple.systempreferences',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
   ['Fantastical'] = {
     name = 'Fantastical',
+    hint = 'com.flexibits.fantastical2.mac',
     bundleID = 'com.flexibits.fantastical2.mac',
     superKey = config.superKeys.cmdShift,
     shortcut = 'f',
@@ -266,7 +279,7 @@ config.utilities = {
     superKey = config.superKeys.mashShift,
     shortcut = 'r',
     fn = (function()
-      require('layout').teardown()
+      require('auto-layout').teardown()
       require('dock').teardown()
       require('ptt').teardown()
       hs.reload()
@@ -286,7 +299,7 @@ config.utilities = {
     superKey = config.superKeys.mashShift,
     shortcut = 'w',
     fn = (function()
-      require('layout').snapAll()
+      require('auto-layout').snapAll()
     end)
   },
   {
@@ -294,7 +307,7 @@ config.utilities = {
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'w',
     fn = (function()
-      require('layout').snapApp(hs.application.frontmostApplication())
+      require('auto-layout').snapApp(hs.application.frontmostApplication())
     end)
   },
   {

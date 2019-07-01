@@ -130,7 +130,8 @@ setw -g automatic-rename on
 
 # -- active pane decorations
 set -g pane-border-style 'bg=#3C4C55,fg=#555555'
-set -g pane-active-border-style 'bg=#3C4C55,fg=#6A7D89'
+set -g pane-active-border-style 'bg=#3C4C55,fg=blue'
+# set -g pane-active-border-style 'bg=#3C4C55,fg=#6A7D89'
 set -g pane-border-format ""
 setw -g pane-border-status top
 
