@@ -15,7 +15,7 @@ do
 done
 
 [[ -n $wan ]] && wan="$(tput setaf 2)(wan) 礪$wan"
-[[ -n $tun ]] && tun="$(tput setaf 4)(tun) \uf982$tun"
+[[ -n $tun ]] && tun="$(tput setaf 4)(vpn) \uf982$tun"
 [[ -n $lan ]] && lan="$(tput setaf 3)(lan)  $lan"
 
 [[ -n $wan ]] && echo "$wan\r"

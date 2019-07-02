@@ -158,7 +158,7 @@ setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#(tmux-dnd) #(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage}"
+set -g status-right "#{dnd_status} #(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage}"
 set -g status-right-length 200
 
 
@@ -166,8 +166,8 @@ set -g status-right-length 200
 # ---------------------------------------------------------
 # tmux plugin manager: github.com/tmux-plugins/tpm
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
-# set -g @dnd_on_icon "(DND)"
-# set -g @dnd_off_icon ""
+set -g @dnd_on_icon "DND ⋮"
+set -g @dnd_off_icon ""
 
 # plugin settings
 set -g @plugin 'tmux-plugins/tpm'
@@ -179,6 +179,7 @@ set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
+set -g @plugin 'megalithic/tmux-dnd-status'
 # set -g @plugin 'christoomey/vim-tmux-navigator' # necessary if not defining own mappings above
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though
