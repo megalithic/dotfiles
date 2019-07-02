@@ -65,7 +65,7 @@ bind-key -T copy-mode-vi C-l select-pane -R
 # General setting ------------------------------------------------------------
 
 # set -sg	update-environment TERM_PROFILE
-set -g history-limit 2000
+set -g history-limit 10000
 set -g default-shell "$SHELL"
 # fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
 # https://github.com/nathanaelkane/dotfiles/commit/9607d826b9d408595de2e3fe7de0abec1e94fa87
@@ -117,7 +117,7 @@ bind-key -T copy-mode-vi 'Enter' send -X copy-pipe-and-cancel "reattach-to-user-
 # Status bar ------------------------------------------------------------------
 
 set -g status on
-set -g status-interval 1
+set -g status-interval 10
 set -g status-justify "left"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
@@ -158,7 +158,7 @@ setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage}"
+set -g status-right "#(tmux-dnd) #(~/.dotfiles/bin/battery -t -p) ⋮ #[fg=blue] %a, %b %d  ⋮ #[fg=green]%l:%M %p #[fg=colour255] ⋮  #{cpu_percentage}"
 set -g status-right-length 200
 
 
@@ -179,8 +179,6 @@ set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
-# set -g @plugin 'megalithic/tmux-dnd-status'
-# set -g @plugin 'megalithic/tmux-online-status'
 # set -g @plugin 'christoomey/vim-tmux-navigator' # necessary if not defining own mappings above
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though

@@ -2,8 +2,11 @@
 
 while true
 do
-  dnd_status=$(do-not-disturb status)
-  dnd_label=$([ "$dnd_status" == "on" ] && echo "DND" || echo "")
-  echo "($dnd_label)"
-  sleep 30
+  dnd_status=$(defaults -currentHost read ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb)
+  dnd_label=$([[ "$dnd_status" -eq 1 ]] && echo "DND ⋮" || echo "")
+  tmux_status_interval=$(tmux show-option -gqv "status-interval")
+  echo "$dnd_label"
+  sleep $tmux_status_interval
 done
+
+# add to your tmux.conf status bar as `#(tmux-dnd)` assuming you have this script in your $PATH
