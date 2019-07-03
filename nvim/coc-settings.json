@@ -258,10 +258,10 @@
       },
       "settings": {}
     },
-    "lua": {
-      "command": "lua-lsp",
-      "filetypes": ["lua"]
-    }
+    /* "lua": { */
+    /*   "command": "lua-lsp", */
+    /*   "filetypes": ["lua"] */
+    /* } */
   }
 }
 

@@ -18,7 +18,7 @@ function airPods(deviceName)
               return "Connecting AirPods..."
             else
               click menu item "Disconnect" of menu 1
-              return "Disconecting AirPods..."
+              return "Disconnecting AirPods..."
             end if
           end tell
         end tell

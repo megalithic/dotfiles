@@ -27,10 +27,10 @@ local isIgnoredWindow = function(window, appConfig)
   local foundIgnoredWindow = false
   if appConfig.ignoredWindows ~= nil then
     log.df('[auto-layout] ignoredWindows - checking for ignored window (window: %s) for app %s', window:title(),
-      string.upper(appConfig.name))
+      string.upper(appConfig.hint))
     if hs.fnutils.contains(appConfig.ignoredWindows, window:title()) then
       log.df('[auto-layout] ignoredWindows - found ignored window for custom layout, %s in app, %s', window:title(),
-        string.upper(appConfig.name))
+        string.upper(appConfig.hint))
       foundIgnoredWindow = true
       return true
     end
@@ -40,7 +40,7 @@ local isIgnoredWindow = function(window, appConfig)
 end
 
 local setLayoutForSingleWindow = function(window, appConfig)
-  log.df('[auto-layout] setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
+  log.df('[auto-layout] setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
 
   if window ~= nil then
     if not isIgnoredWindow(window, appConfig) then
@@ -51,7 +51,7 @@ end
 
 local setLayoutForMultiWindows = function(windows, appConfig)
   for index, window in pairs(windows) do
-    log.df('[auto-layout] setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.name), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
+    log.df('[auto-layout] setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
 
     if window ~= nil then
       if not isIgnoredWindow(window, appConfig) then
@@ -94,7 +94,7 @@ local setLayoutForAll = function()
     -- we have an appConfig and a preferredDisplay defined
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       -- FIXME: bug showing up here: `attempt to index a nil value in hs.application.find`
-      local app = hs.application.find(appConfig.name)
+      local app = hs.application.find(appConfig.hint)
       setLayoutForApp(app, appConfig)
     end
   end

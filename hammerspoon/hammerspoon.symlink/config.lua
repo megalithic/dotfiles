@@ -187,6 +187,15 @@ config.applications = {
     preferredDisplay = 2,
     position = config.grid.leftHalf
   },
+  ['Airmail'] = {
+    name = 'Airmail',
+    hint = 'it.bloop.airmail2',
+    bundleID = 'it.bloop.airmail2',
+    -- superKey = config.superKeys.mashShift,
+    -- shortcut = 'm',
+    preferredDisplay = 2,
+    position = config.grid.leftHalf
+  },
   ['Finder'] = {
     name = 'Finder',
     hint = 'com.apple.finder',
@@ -202,7 +211,7 @@ config.applications = {
     bundleID = 'us.zoom.xos',
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
-    preferredDisplay = 2,
+    preferredDisplay = 1,
     position = config.grid.centeredLarge,
     dnd = true,
   },
