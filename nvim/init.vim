@@ -164,8 +164,8 @@ Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
-" Plug 'vimwiki/vimwiki', {'branch': 'dev'}
-Plug 'lervag/wiki.vim'
+Plug 'vimwiki/vimwiki'
+" Plug 'lervag/wiki.vim'
 
 " ## Movements/Text Objects, et al
 Plug 'kana/vim-operator-user'
@@ -334,10 +334,10 @@ nnoremap Q @q
 vnoremap Q :norm @q<cr>
 
 " No arrow keys
-map <Left>  :echo "ಠ_ಠ"<cr>
-map <Right> :echo "ಠ_ಠ"<cr>
-map <Up>    :echo "ಠ_ಠ"<cr>
-map <Down>  :echo "ಠ_ಠ"<cr>
+" map <Left>  :echo "ಠ_ಠ"<cr>
+" map <Right> :echo "ಠ_ಠ"<cr>
+" map <Up>    :echo "ಠ_ಠ"<cr>
+" map <Down>  :echo "ಠ_ಠ"<cr>
 
 " esc mechanisms
 imap jk <ESC>
@@ -740,38 +740,28 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 " ## sheerun/polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
-" ## lervag/wiki.vim
-let g:wiki_root = '~/Dropbox/wiki'
-" let g:wiki_toc_title = 'Innhald'
-" let g:wiki_viewer = {'pdf': 'zathura'}
-" let g:wiki_export = {'from_format': 'gfm'}
-let g:wiki_filetypes = ['md']
-" let g:wiki_month_names = [
-"       \ 'jan',
-"       \ 'feb',
-"       \ 'mar',
-"       \ 'apr',
-"       \ 'may',
-"       \ 'june',
-"       \ 'july',
-"       \ 'aug',
-"       \ 'sept',
-"       \ 'oct',
-"       \ 'nov',
-"       \ 'dec'
-"       \]
-" let g:wiki_template_title_week = '# Samandrag veke %(week), %(year)'
-" let g:wiki_template_title_month = '# Samandrag frå %(month-name) %(year)'
-let g:wiki_toc_depth = 2
-" let g:wiki_file_open = 'personal#wiki#file_open'
-nmap <leader>nw :vnew<CR><Plug>(wiki-index)
-nmap <leader>nj :vnew<CR><Plug>(wiki-journal)
 
-" ## vimwiki/vimwiki
-let g:vimwiki_list = [{'path': '~/Dropbox/wiki/', 'syntax': 'markdown', 'ext': '.md'}]
+" vimwiki/vimwiki
+let g:vimwiki_list = [{'path': '~/Dropbox/wiki/',
+                     \ 'auto_toc': 1,
+                     \ 'auto_tags': 1,
+                     \ 'auto_generate_links': 1,
+                     \ 'auto_generate_tags': 1,
+                     \ 'syntax': 'markdown',
+                     \ 'list_margin': 0,
+                     \ 'ext': '.md'}]
 let g:vimwiki_global_ext = 0
-" map <M-Space> <Plug>VimwikiToggleListItem
-" nnoremap <localleader>wp :Files ~/wiki/<cr>
+command! -bang -nargs=* VimwikiSearch call fzf#vim#grep
+      \ ('rg --column  '.shellescape(<q-args>). ' ~/Dropbox/wiki/' , 1, <bang>0)
+nnoremap <localleader>nw<Space> :VimwikiSearch<cr>
+command! -nargs=1 VimwikiNewNote write ~/Dropbox/wiki/notes/<args>
+nnoremap <localleader>nw<CR> :VimwikiNewNote
+map <M-Space> <Plug>VimwikiToggleListItem
+nmap <A-n> <Plug>VimwikiNextLink
+nmap <A-p> <Plug>VimwikiPrevLink
+nmap <leader>nwi :vnew<CR><Plug>VimwikiIndex
+nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
+
 
 " ## rhysd/git-messenger
 let g:git_messenger_no_default_mappings = 1
@@ -812,8 +802,10 @@ let g:which_key_map = {
       \ }
 let g:which_key_map.n = {
       \ 'name' : '+notes-wiki-journal',
-      \ 'j' : 'journal',
-      \ 'w' : 'wiki',
+      \ 'di' : 'diary',
+      \ 'wi' : 'wiki',
+      \ 'w<CR>' : 'new-wiki-note',
+      \ 'w<Space>' : 'wiki-search',
       \ }
 let g:which_key_map.g = {
       \ 'name' : '+git/vcs' ,
@@ -1102,7 +1094,6 @@ let g:projectionist_heuristics = {
       \    'test/*_test.exs': {
       \      'type': 'test',
       \      'alternate': 'lib/{}.ex',
-      \      'test': "mix test spec/{}_spec.exs`=v:lnum ? ':'.v:lnum : ''`"
       \    },
       \    "mix.exs": {
       \      "type": "mix"
@@ -1112,6 +1103,7 @@ let g:projectionist_heuristics = {
       \    }
       \  }
       \}
+" \      'test': "mix test test/{}_test.exs`=v:lnum ? ':'.v:lnum : ''`"
 
 " ## sbdchd/neoformat
 nnoremap <leader>lf :Neoformat<cr>
@@ -1228,23 +1220,53 @@ nmap P <plug>(YoinkPaste_P)
 function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
-function! ElixirUmbrellaTransform(cmd) abort
-  if match(a:cmd, 'vpp/') != -1
 
+function! ElixirUmbrellaTransform(cmd) abort
+  " echo "a:cmd is: " . a:cmd
+  if match(a:cmd, 'vpp/') != -1
+    " echo "in vpp/"
     " mix test test/{}_test.exs`=v:lnum ? ':'.v:lnum : ''`
     return substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
+  " elseif match(a:cmd, 'sims/') != -1
+  "   " echo "in sims/"
+  "   return substitute(a:cmd, 'mix test sims/\([^/]*/\)\(.*\)', '(cd sims/\1 \&\& mix test \2)', '')
   else
     return a:cmd
   end
 endfunction
-" ref: https://github.com/hourliert/dotfiles/blob/7049f2cb46f840ce242d44825f1f1963fe34a054/vimrc#L340
-let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
-let g:test#strategy = 'terminal_split'
 let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
 let g:test#transformation = 'elixir_umbrella'
+
+" function! UmbrellaElixirTestTransform(cmd) abort
+"   echo "a:cmd is: " . a:cmd
+
+"   let testCommand = join(split(a:cmd)[0:-2])
+"   let umbrellaTestFilePath = split(a:cmd)[-1]
+"   let pathFragments = split(umbrellaTestFilePath, "/")
+"   let appName = pathFragments[1]
+"   let localTestPath = join(pathFragments[2:], "/")
+
+"   echo "UmbrellaElixirTestTransform: " . testCommand
+
+"   if a:cmd =~ 'sims/'
+"     echo "in a:cmd =~ 'sims/'"
+"     return a:cmd
+"   endif
+
+"   if a:cmd !~ 'apps/'
+"     echo "in a:cmd !~ 'apps/'"
+"     return a:cmd
+"   endif
+
+"   return join(["mix cmd --app ", appName, testCommand, localTestPath])
+" endfunction
+" let g:test#custom_transformations = {'elixir': function('UmbrellaElixirTestTransform')}
+" let g:test#transformation = 'elixir'
+let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
+let g:test#strategy = 'terminal_split'
 let g:test#filename_modifier = ':.'
 let g:test#preserve_screen = 0
-let g:test#elixir#exunit#executable = 'mix test'
+" let g:test#elixir#exunit#executable = 'MIX_ENV=test mix test'
 nmap <silent> <leader>tf :TestFile<CR>
 nmap <silent> <leader>tt :TestVisit<CR>
 nmap <silent> <leader>tn :TestNearest<CR>
@@ -1254,6 +1276,10 @@ nmap <silent> <leader>tv :TestVisit<CR>
 nmap <silent> <leader>tp :A<CR>
 nmap <silent> <leader>tpv :AV<CR>
 " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
+
+
+" ## mhinz/vim-mix-format
+let g:mix_format_on_save = 1
 
 "}}}
 " ░░░░░░░░░░░░░░░ blink {{{

@@ -12,6 +12,12 @@ bind C-d detach			# prefix, d
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
 bind-key r refresh-client
 
+# backward search
+bind-key -T copy-mode-vi "?" \
+  command-prompt -ip "search up" "send -X search-backward-incremental '%%%'"
+bind-key -T copy-mode-vi "/" \
+  command-prompt -ip "search down" "send -X search-forward-incremental '%%%'"
+
 
 # Splitting panes ------------------------------------------------------------
 
