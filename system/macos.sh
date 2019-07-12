@@ -51,6 +51,9 @@ sudo defaults write \
   /Library/Preferences/SystemConfiguration/com.apple.smb.server \
   NetBIOSName -string $COMPUTER_NAME
 
+# Create symlink for iCloud Drive to ~
+ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud
+
 # Save screenshots to the desktop
 if [ ! -d "$HOME/Desktop/screenshots" ]; then
   mkdir ~/Desktop/screenshots
