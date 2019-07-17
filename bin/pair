@@ -11,9 +11,6 @@ user="pair"
 if [ ! $(command -v gh-auth) ]; then
   gem install github-auth
 fi
-if [ ! $(command -v do-not-disturb) ]; then
-  npm -g install do-not-disturb-cli
-fi
 if [ ! $(command -v tmux) ]; then
   echo "This script depends on tmux. Try: brew install tmux"
   exit 1
@@ -53,7 +50,7 @@ up(){
     add $@
   fi
 
-  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
+  [ -x "$(command -v dnd)" ] && dnd on
 
   tmux new-session -d -s $session "ng connect"
   tmux switch -t $session
@@ -80,7 +77,7 @@ up(){
 }
 
 down() {
-  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
+  [ -x "$(command -v dnd)" ] && dnd off
   pkill -9 -f ngrok
   pkill -9 -f erlang
   pkill -9 -f beam.smp

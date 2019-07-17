@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+#
+# What in tarnation?
+#
+# CLI tool to control macOS/notification center do-not-disturb (DND) mode
+#
+
+
+command="$(basename "$0")"
+
+help() {
+  printf -- "Usage: "$command" <subcommand> [options]\n"
+  printf -- "Subcommands:\n"
+  printf -- "    on       Turn ON do-not-disturb (DND) mode\n"
+  printf -- "    off      Turn OFF do-not-disturb (DND) mode\n"
+  printf -- "    toggle   Toggle do-not-distrub (DND) mode ON and OFF\n"
+  printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
+}
+
+on() {
+  sleep 1
+  defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true
+  defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +0000\"`"
+  killall NotificationCenter
+}
+
+off() {
+  defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean false
+  killall NotificationCenter
+}
+
+toggle() {
+  if $(dnd_enabled); then
+    off
+  else
+    on
+  fi
+}
+
+dnd_enabled() {
+  dnd_enabled=$(defaults -currentHost read ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb)
+  $([[ "$dnd_enabled" -eq 1 ]] && true || false)
+}
+
+status() {
+  if $(dnd_enabled); then
+    echo "DND: ON"
+  else
+    echo "DND: OFF"
+  fi
+}
+
+subcommand=$1
+case $subcommand in
+  '')
+    toggle ;;
+  '-h' | '--help')
+    help ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

@@ -10,7 +10,7 @@
 # This tool has assumptions that you:
 #   1.)  have tmux installed and setup
 #   2.)  have the github-auth gem installed
-#   4.)  optionally, you have `do-not-distrub-cli` installed via npm global
+#   4.)  optionally, you have my dnd (https://github.com/megalithic/dotfiles/blob/master/bin/dnd) script in your path
 #   4a.) fancy icons will show up if you're using a fully nerd-fonts patched terminal font.
 #
 # Assuming this is good, then you can add users via their github usernames,
@@ -75,7 +75,7 @@ up() {
     add "$user"
   done
 
-  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb on
+  [ -x "$(command -v dnd)" ] && dnd on
 
   tunnel_and_connect
 
@@ -90,7 +90,7 @@ up() {
 }
 
 down() {
-  [ -x "$(command -v do-not-disturb)" ] && do-not-disturb off
+  [ -x "$(command -v dnd)" ] && dnd off
   pkill -9 -f 1337:localhost
   pkill -9 -f pair
   # pkill -9 -f tmate

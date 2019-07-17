@@ -11,11 +11,11 @@ windows:
     panes:
       - commands:
         - ls
-  - name: "notes"
-    root: "~/.dotfiles"
-    panes:
-      - commands:
-        - nvim +WikiIndex
+  # - name: "notes"
+  #   root: "~/.dotfiles"
+  #   panes:
+  #     - commands:
+  #       - nvim +WikiIndex
   - name: "services"
     root: "~/code/enbala"
     layout: tiled

@@ -3,7 +3,6 @@ bash-language-server
 convert-snippets
 create-elm-app
 diagnostic-languageserver
-do-not-disturb-cli
 elm
 elm-lsp
 elm-oracle
