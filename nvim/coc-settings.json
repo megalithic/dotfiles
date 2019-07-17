@@ -160,11 +160,6 @@
   "coc.source.word.enable": true,
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
 
-  // tailwind css
-  "tailwind.enable": true,
-  "tailwind.shortcut": "TWCSS",
-  "tailwind.priority": 99,
-
   // git
   "git.enableGutters": false,
   "git.signOffset": 99,
@@ -202,23 +197,13 @@
     }
   },
   "diagnostic-languageserver.filetypes": {
-    "vim": "vint",
+    "vim": "", // "vint"
     "elixir": ["mix_credo"],
     "eelixir": ["mix_credo"],
     "php": "phpcs"
   },
-  "diagnostic-languageserver.formatters": {
-    "elm_format": {
-      /* npx elm-format --yes --elm-version=0.18 */
-      "command": "npx",
-      "args": ["elm-format", "--yes", "--elm-version=0.18", "--stdin"]
-    }
-  },
-  "diagnostic-languageserver.formatFiletypes": {
-    "elixir": "mix_format",
-    "eelixir": "mix_format",
-    "elm": "elm_format"
-  },
+  "diagnostic-languageserver.formatters": {},
+  "diagnostic-languageserver.formatFiletypes": {},
 
   // languageserver
   "languageserver": {

@@ -55,8 +55,6 @@ Plug 'liuchengxu/vim-which-key'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
-Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir'] }
-" Plug 'morhetz/gruvbox'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -102,41 +100,16 @@ if executable('yarn') && executable('node')
     endif
   endfunction
   Plug 'neoclide/coc.nvim', {'do': function('PostInstallCoc')}
-
-  let g:elixirls = {
-        \ 'path': printf('%s/%s', stdpath('config'), 'plugins/elixir-ls'),
-        \ }
-  let g:elixirls.lsp = printf(
-        \ '%s/%s',
-        \ g:elixirls.path,
-        \ 'rel/language_server.sh')
-  function! g:elixirls.compile(...)
-    let l:commands = join([
-          \ 'echo "mixing all the things."',
-          \ 'which mix',
-          \ 'mix --version',
-          \ 'mix local.hex --force',
-          \ 'mix local.rebar --force',
-          \ 'mix deps.get',
-          \ 'mix compile',
-          \ 'mix elixir_ls.release'
-          \ ], '&&')
-    echom '>>> Compiling elixirls'
-    silent call system(l:commands)
-    echom '>>> elixirls compiled'
-  endfunction
-  " Plug 'elixir-lsp/elixir-ls', { 'do': { -> g:elixirls.compile() } }
 endif
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
-Plug 'pbrisbin/vim-colors-off' " colorscheme used for goyo
+Plug 'pbrisbin/vim-colors-off' " minimal/off colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
 Plug 'rhysd/git-messenger.vim'
-Plug 'sbdchd/neoformat'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'svermeulen/vim-yoink'
@@ -159,6 +132,7 @@ Plug 'trevordmiller/nova-vim'
 Plug 'arcticicestudio/nord-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
+Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
@@ -218,7 +192,7 @@ set wildignore=*.swp,*.o,*.so,*.exe,*.dll
 set wildoptions=pum
 
 " ---- Scroll
-set scrolloff=5                                                                 "Start scrolling when we're 8 lines away from margins
+set scrolloff=5               " Start scrolling when we're 8 lines away from margins
 set sidescrolloff=15
 set sidescroll=5
 
@@ -234,22 +208,22 @@ set number
 set nowrap
 set fillchars=vert:\│,fold:·
 " set colorcolumn=80
-set nocursorline                                                                  "Highlight current line
+set nocursorline              " Highlight current line
 if exists('+pumheight')
   set pumheight=30
 endif
 set cmdheight=1
-set signcolumn=yes
-" set cpoptions+=$              " dollar sign while changing
+set signcolumn=yes            " always showsigncolumn
+" set cpoptions+=$            " dollar sign while changing
 set synmaxcol=250             " set max syntax highlighting column to sane level
 set visualbell t_vb=          " no visual bell
 set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/vim-256color-bce.html
 set laststatus=2
 
 " ---- Show
-set noshowmode                                                                  "Hide showmode because of the powerline plugin
-set noshowcmd                                                                   "Hide incomplete cmds down the bottom
-set showmatch                                                                 "Highlight matching bracket
+set noshowmode                " Hide showmode because of the powerline plugin
+set noshowcmd                 " Hide incomplete cmds down the bottom
+set showmatch                 " Highlight matching bracket
 
 " ---- Buffers
 set hidden
@@ -295,12 +269,12 @@ if empty($SSH_CONNECTION) && has('clipboard')
 endif
 
 " ---- Timeouts
-set timeoutlen=500 ttimeoutlen=0                                               "Reduce Command timeout for faster escape and O
+set timeoutlen=500 ttimeoutlen=0    " Reduce Command timeout for faster escape and O
 set updatetime=300
 
 " ---- Split behaviors
-set splitright                                                                  "Set up new vertical splits positions
-set splitbelow                                                                  "Set up new horizontal splits positions
+set splitright                      " Set up new vertical splits positions
+set splitbelow                      " Set up new horizontal splits positions
 
 " ---- Diff opts
 set diffopt-=internal
@@ -320,7 +294,7 @@ if has('termguicolors')
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   endif
 endif
-set guicursor=a:blinkon500-blinkwait500-blinkoff500                                   "Set cursor blinking rate
+set guicursor=a:blinkon500-blinkwait500-blinkoff500      " Set cursor blinking rate
 
 "}}}
 " ░░░░░░░░░░░░░░░ mappings/remaps {{{
@@ -332,12 +306,6 @@ let maplocalleader=','
 nnoremap q <Nop>
 nnoremap Q @q
 vnoremap Q :norm @q<cr>
-
-" No arrow keys
-" map <Left>  :echo "ಠ_ಠ"<cr>
-" map <Right> :echo "ಠ_ಠ"<cr>
-" map <Up>    :echo "ಠ_ಠ"<cr>
-" map <Down>  :echo "ಠ_ಠ"<cr>
 
 " esc mechanisms
 imap jk <ESC>
@@ -500,14 +468,14 @@ augroup general
   " No formatting on o key newlines
   au BufNewFile,BufEnter * set formatoptions-=o
 
-  " Trim trailing whitespace
-  function! <SID>TrimWhitespace()
-    let l = line(".")
-    let c = col(".")
-    keeppatterns %s/\v\s+$//e
-    call cursor(l, c)
-  endfunction
-  au FileType * au BufWritePre <buffer> :call <SID>TrimWhitespace()
+  " " Trim trailing whitespace (presently uses w0rp/ale for this)
+  " function! <SID>TrimWhitespace()
+  "   let l = line(".")
+  "   let c = col(".")
+  "   keeppatterns %s/\v\s+$//e
+  "   call cursor(l, c)
+  " endfunction
+  " au FileType * au BufWritePre <buffer> :call <SID>TrimWhitespace()
 
   " Remember cursor position between vim sessions
   au BufReadPost *
@@ -675,7 +643,6 @@ augroup ft_elixir
 
   au FileType elixir,eelixir let g:which_key_map.e = {
         \ 'name' : '+elixir' ,
-        \ 'f' : 'mix-format',
         \ 'i' : 'io.inspect',
         \ 'il' : 'io.inspect-with-label',
         \ 'd' : 'debug/iex.pry',
@@ -700,12 +667,6 @@ augroup ft_clang
   autocmd FileType cs setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
   autocmd FileType c setlocal commentstring=/*\ %s\ */
   autocmd FileType c,cpp,cs setlocal commentstring=//\ %s
-augroup END
-
-augroup ft_formatting " formatters
-  au!
-  " Primarily using Neoformat for formatting (excluding: *.elm)
-  " au BufWritePre *.ex,*.exs,*.json,*.scss,*.css,*.js,*.jsx,*.ts,*.tsx,*.hs,*.md,*.zsh,*.sh try | undojoin | Neoformat | catch /^Vim\%((\a\+)\)\=:E790/ | finally | silent Neoformat | endtry
 augroup END
 
 "}}}
@@ -1052,16 +1013,45 @@ autocmd! User GoyoEnter nested call <SID>goyo_enter()
 autocmd! User GoyoLeave nested call <SID>goyo_leave()
 nnoremap <silent><Leader>G :Goyo<CR>
 
+
+" ## w0rp/ale
+let g:ale_enabled = 1
+let g:ale_completion_enabled = 0
+let g:ale_lint_delay = 1000
+let g:ale_echo_msg_format = '[%linter%] %s'
+let g:ale_linters = {}
+let g:ale_fixers = {
+      \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+      \   'javascript': ['prettier_eslint'],
+      \   'javascript.jsx': ['prettier_eslint'],
+      \   'css': ['prettier'],
+      \   'scss': ['prettier'],
+      \   'json': ['prettier'],
+      \   'elm': [],
+      \   'elixir': ['mix_format'],
+      \   'eelixir': ['mix_format'],
+      \ }
+let g:ale_elm_format_options = '--yes --elm-version=0.18'
+let g:ale_javascript_eslint_use_global = 1
+let g:ale_lint_on_text_changed = 'never'
+let g:ale_lint_on_insert_leave = 0
+let g:ale_lint_on_enter = 0
+let g:ale_lint_on_save = 0
+let g:ale_fix_on_save = 1
+
+
 " ## trevordmiller/nova-vim
 set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
+
 
 " ## RRethy/hexokinase
 let g:Hexokinase_highlighters = ['virtual']
 let g:Hexokinase_virtualText = '■'
 " let g:Hexokinase_virtualText = '██'
 let g:Hexokinase_ftAutoload = ['css', 'scss', 'sass', 'less']
+
 
 " ## vim-devicons
 " let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['vim'] = ''
@@ -1105,9 +1095,6 @@ let g:projectionist_heuristics = {
       \}
 " \      'test': "mix test test/{}_test.exs`=v:lnum ? ':'.v:lnum : ''`"
 
-" ## sbdchd/neoformat
-nnoremap <leader>lf :Neoformat<cr>
-
 " ## elm-vim
 let g:elm_jump_to_error = 1
 let g:elm_make_output_file = '/dev/null'
@@ -1115,7 +1102,7 @@ let g:elm_make_show_warnings = 1
 let g:elm_syntastic_show_warnings = 1
 let g:elm_browser_command = 'open'
 let g:elm_detailed_complete = 1
-let g:elm_format_autosave = 1
+let g:elm_format_autosave = 1 " (presently disabled in w0rp/ale)
 let g:elm_format_fail_silently = 0
 let g:elm_format_options = "--elm-version=0.18"
 let g:elm_setup_keybindings = 0
@@ -1277,9 +1264,6 @@ nmap <silent> <leader>tp :A<CR>
 nmap <silent> <leader>tpv :AV<CR>
 " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
 
-
-" ## mhinz/vim-mix-format
-let g:mix_format_on_save = 1
 
 "}}}
 " ░░░░░░░░░░░░░░░ blink {{{
@@ -1693,11 +1677,6 @@ nmap <silent> <leader>ln <Plug>(coc-rename)
 nmap <silent> <leader>lR <Plug>(coc-rename)
 vmap <silent> <leader>ln <Plug>(coc-rename)
 
-" NOTE: presently using Neoformat
-" nmap <silent> <leader>lf <Plug>(coc-format)
-" vmap <silent> <leader>lF <Plug>(coc-format-selected)
-" nmap <silent> <leader>lF <Plug>(coc-format-selected)
-
 nmap <silent> <leader>la <Plug>(coc-codeaction)
 nmap <silent> <leader>lA <Plug>(coc-codeaction-selected)
 vmap <silent> <leader>lA <Plug>(coc-codeaction-selected)
@@ -1774,6 +1753,8 @@ nmap gs <Plug>(coc-git-chunkinfo)
   hi SpellBad gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
   hi SpellCap gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
   hi VertSplit guibg=NONE
+
+  hi SignColumn guibg=NONE
 
   hi link Debug SpellBad
   hi link ErrorMsg SpellBad

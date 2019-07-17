@@ -125,6 +125,7 @@ alias im="nvim"
 alias vim="nvim"
 alias v=vim
 alias vi="/usr/local/bin/vim"
+alias minvim="nvim -u NONE"
 
 # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
 # alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
