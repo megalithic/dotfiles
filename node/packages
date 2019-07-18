@@ -3,6 +3,7 @@ convert-snippets
 elm
 elm-oracle
 elm-test
+@elm-tooling/elm-language-server
 flow-language-server
 neovim
 javascript-typescript-langserver

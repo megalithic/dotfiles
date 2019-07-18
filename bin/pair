@@ -23,13 +23,14 @@ fi
 help(){
   echo "Usage: $command <subcommand> [options]\n"
   echo "Subcommands:"
-  echo "    add  Add a github user"
-  echo "    rm   Remove a github user"
-  echo "    ls   List github users"
-  echo "    up   Open shared tmux session"
-  echo "    info   Displays handle information about the pairing session"
-  echo "    ssh  Start a reverse tunnel for pair sharing"
-  echo "         See: https://ngrok.com"
+  echo "    add   Add a github user"
+  echo "    rm    Remove a github user"
+  echo "    ls    List authorized github users"
+  echo "    up    Start shared tmux pairing session"
+  echo "    down  Stop shared tmux pairing session"
+  echo "    info  Display handy information about the pairing session"
+  echo "    ssh   Display the constructed ssh command"
+  echo "          See: https://ngrok.com"
 }
 
 add(){
@@ -84,21 +85,6 @@ down() {
   pkill -9 -f start.js
 
   tmux kill-session -t $session
-}
-
-ssh(){
-  clipboard_helper="reattach-to-user-namespace"
-  ssh_command=$(ng ssh)
-  echo "ng ssh: "
-  echo $ssh_command
-
-  # if [ $(command -v $clipboard_helper) ]; then
-  #   echo $ssh_command | $clipboard_helper pbcopy
-  # else
-  #   echo "You must have $clipboard_helper installed to copy ssh command automatically. Try: brew install $clipboard_command"
-  # fi
-
-  echo $ssh_command | pbcopy
 }
 
 ssh() {

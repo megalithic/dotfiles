@@ -8,6 +8,7 @@ elm-lsp
 elm-oracle
 elm-test
 elm-analyse
+@elm-tooling/elm-language-server
 antew/elm-analyse#lsp
 elm-format
 eslint

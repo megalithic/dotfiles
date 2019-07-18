@@ -216,10 +216,10 @@
       "settings": {}
     },
     "elm": {
-      "command": "elm-ls",
+      "command": "elm-language-server",
       "args": ["--stdio"],
       "filetypes": ["elm"],
-      "rootPatterns": ["elm.json"],
+      "rootPatterns": ["elm-package.json"],
       "initializationOptions": {
         "runtime": "node",
         "elmPath": "elm",

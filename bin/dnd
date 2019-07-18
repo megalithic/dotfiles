@@ -45,9 +45,9 @@ dnd_enabled() {
 
 status() {
   if $(dnd_enabled); then
-    echo "DND: ON"
+    echo "DND: on"
   else
-    echo "DND: OFF"
+    echo "DND: off"
   fi
 }
 
