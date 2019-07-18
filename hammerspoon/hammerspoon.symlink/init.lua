@@ -33,7 +33,11 @@ require('dock').init()
 for _, app in pairs(config.applications) do
   if app.superKey ~= nil and app.shortcut ~= nil then
     -- hotkey.bind(app.superKey, app.shortcut, function() handler.launch(app.name) end)
-    hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.bundleID) end)
+    hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.hint) end)
+  end
+
+  if (app.hyperKey ~= nil) then
+    hotkey.bind(app.hyperKey, app.shortcut, app.locations)
   end
 end
 
@@ -55,6 +59,7 @@ end
 -- :: window-manipulation (manual window snapping)
 for _, snap in pairs(config.snap) do
   hotkey.bind(snap.superKey, snap.shortcut, snap.locations)
+
   if (snap.hyperKey ~= nil) then
     hotkey.bind(snap.hyperKey, snap.shortcut, snap.locations)
   end
