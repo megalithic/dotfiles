@@ -329,6 +329,7 @@ nnoremap <silent><C-l> :TmuxNavigateRight<CR>
 nnoremap <localleader>/ :nohlsearch<CR>
 
 " ## Writing / quitting
+silent! unmap <leader>w
 nnoremap <silent><leader>w :w<CR>
 nnoremap <silent><leader>W :w !sudo tee %<CR>
 nnoremap <leader>q :q<CR>
@@ -925,6 +926,7 @@ if executable('rg')
   " command! -bang -nargs=* F call fzf#vim#grep(g:rg_command .shellescape(<q-args>), 0, <bang>0)
 endif
 
+silent! unmap <leader>m
 nnoremap <silent><leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
 nnoremap <leader>a <ESC>:Rg<SPACE>
 nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
@@ -1212,14 +1214,8 @@ function! TerminalSplit(cmd)
 endfunction
 
 function! ElixirUmbrellaTransform(cmd) abort
-  " echo "a:cmd is: " . a:cmd
   if match(a:cmd, 'vpp/') != -1
-    " echo "in vpp/"
-    " mix test test/{}_test.exs`=v:lnum ? ':'.v:lnum : ''`
     return substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
-  " elseif match(a:cmd, 'sims/') != -1
-  "   " echo "in sims/"
-  "   return substitute(a:cmd, 'mix test sims/\([^/]*/\)\(.*\)', '(cd sims/\1 \&\& mix test \2)', '')
   else
     return a:cmd
   end
@@ -1256,6 +1252,7 @@ let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
 let g:test#filename_modifier = ':.'
 let g:test#preserve_screen = 0
+let g:test#elixir#exunit#executable = 'mix test'
 " let g:test#elixir#exunit#executable = 'MIX_ENV=test mix test'
 nmap <silent> <leader>tf :TestFile<CR>
 nmap <silent> <leader>tt :TestVisit<CR>

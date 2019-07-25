@@ -1,7 +1,10 @@
+require("meta")
+
 local log = require('log')
 log.verbose()
 
 hs.ipc.cliInstall()
+hs.console.darkMode(true)
 
 -- where all the magic is defined (check here for every piece of configuration)
 local config = require('config')

@@ -219,7 +219,7 @@
       "command": "elm-language-server",
       "args": ["--stdio"],
       "filetypes": ["elm"],
-      "rootPatterns": ["elm-package.json"],
+      "rootPatterns": ["elm.json"],
       "initializationOptions": {
         "runtime": "node",
         "elmPath": "elm",
