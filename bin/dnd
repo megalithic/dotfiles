@@ -14,7 +14,7 @@ help() {
   printf -- "Subcommands:\n"
   printf -- "    on       Turn ON do-not-disturb (DND) mode\n"
   printf -- "    off      Turn OFF do-not-disturb (DND) mode\n"
-  printf -- "    toggle   Toggle do-not-distrub (DND) mode ON and OFF\n"
+  printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
   printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
 }
 

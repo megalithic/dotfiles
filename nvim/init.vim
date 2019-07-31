@@ -713,8 +713,12 @@ let g:vimwiki_list = [{'path': '~/Dropbox/wiki/',
                      \ 'list_margin': 0,
                      \ 'ext': '.md'}]
 let g:vimwiki_global_ext = 0
-command! -bang -nargs=* VimwikiSearch call fzf#vim#grep
-      \ ('rg --column  '.shellescape(<q-args>). ' ~/Dropbox/wiki/' , 1, <bang>0)
+command! -bang -nargs=* VimwikiSearch
+      \ call fzf#vim#grep(
+      \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' ~/Dropbox/wiki/', 1,
+      \  <bang>0 ? fzf#vim#with_preview('up:60%')
+      \          : fzf#vim#with_preview('right:50%:hidden', '?'),
+      \  <bang>0)
 nnoremap <localleader>nw<Space> :VimwikiSearch<cr>
 command! -nargs=1 VimwikiNewNote write ~/Dropbox/wiki/notes/<args>
 nnoremap <localleader>nw<CR> :VimwikiNewNote
