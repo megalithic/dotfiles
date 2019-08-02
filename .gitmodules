@@ -1,11 +1,11 @@
-[submodule "zsh/components/zshrc/powerlevel10k"]
-	path = zsh/components/zshrc/powerlevel10k
-	url = https://github.com/romkatv/powerlevel10k.git
-	branch = master
 [submodule "zsh/components/zshrc/gitstatus"]
   path = zsh/components/zshrc/gitstatus
   url = https://github.com/romkatv/gitstatus.git
   branch = master
+; [submodule "zsh/components/zshrc/powerlevel10k"]
+; 	path = zsh/components/zshrc/powerlevel10k
+; 	url = https://github.com/romkatv/powerlevel10k.git
+; 	branch = master
 ; [submodule "dotfiles/zsh-prompt-benchmark"]
 ; 	path = dotfiles/zsh-prompt-benchmark
 ; 	url = https://github.com/romkatv/zsh-prompt-benchmark.git

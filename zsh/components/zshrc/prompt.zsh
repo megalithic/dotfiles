@@ -45,8 +45,8 @@ function gitstatus_prompt_update() {
   [[ $VCS_STATUS_HAS_STAGED      == 1 ]] && p+="${modified}$VCS_STAGED_SYMBOL"
   [[ $VCS_STATUS_HAS_UNSTAGED    == 1 ]] && p+="${modified}$VCS_UNSTAGED_SYMBOL"
   [[ $VCS_STATUS_HAS_UNTRACKED   == 1 ]] && p+="${untracked}$VCS_UNTRACKED_SYMBOL"
-  [[ $VCS_STATUS_COMMITS_AHEAD  -gt 0 ]] && p+="${clean} ⇡${VCS_STATUS_COMMITS_AHEAD}"
-  [[ $VCS_STATUS_COMMITS_BEHIND -gt 0 ]] && p+="${clean} ⇣${VCS_STATUS_COMMITS_BEHIND}"
+  [[ $VCS_STATUS_COMMITS_AHEAD  -gt 0 ]] && p+="${clean} $VCS_AHEAD_SYMBOL${VCS_STATUS_COMMITS_AHEAD}"
+  [[ $VCS_STATUS_COMMITS_BEHIND -gt 0 ]] && p+="${clean} $VCS_BEHIND_SYMBOL${VCS_STATUS_COMMITS_BEHIND}"
   [[ $VCS_STATUS_STASHES        -gt 0 ]] && p+="${clean} $VCS_STASHES_SYMBOL${VCS_STATUS_STASHES}"
 
   GITSTATUS_PROMPT="${reset}${p}${reset}"
