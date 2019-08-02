@@ -6,8 +6,9 @@ PROMPT_SYMBOL="❯"
 PROMPT_VICMD_SYMBOL="%F{244}❮%{$reset_color%}"
 PROMPT_BACKGROUND_SYMBOL="❯"
 VCS_STAGED_SYMBOL=$'\uf067'
-VCS_UNSTAGED_SYMBOL=$'\uf192'
+VCS_UNSTAGED_SYMBOL=$'\ufbc2'
 VCS_UNTRACKED_SYMBOL="?" # …
+VCS_STASHES_SYMBOL=$'\uf530'
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 
@@ -38,7 +39,7 @@ function gitstatus_prompt_update() {
   else
     p+=$clean
   fi
-  p+=${${VCS_STATUS_LOCAL_BRANCH:-@${VCS_STATUS_COMMIT}}//\%/%%}            # escape %
+  p+="${clean}[${p}${${VCS_STATUS_LOCAL_BRANCH:-@${VCS_STATUS_COMMIT}}//\%/%%}${clean}] "            # escape %
 
   [[ -n $VCS_STATUS_TAG               ]] && p+="#${VCS_STATUS_TAG//\%/%%}"  # escape %
   [[ $VCS_STATUS_HAS_STAGED      == 1 ]] && p+="${modified}$VCS_STAGED_SYMBOL"
@@ -46,7 +47,7 @@ function gitstatus_prompt_update() {
   [[ $VCS_STATUS_HAS_UNTRACKED   == 1 ]] && p+="${untracked}$VCS_UNTRACKED_SYMBOL"
   [[ $VCS_STATUS_COMMITS_AHEAD  -gt 0 ]] && p+="${clean} ⇡${VCS_STATUS_COMMITS_AHEAD}"
   [[ $VCS_STATUS_COMMITS_BEHIND -gt 0 ]] && p+="${clean} ⇣${VCS_STATUS_COMMITS_BEHIND}"
-  [[ $VCS_STATUS_STASHES        -gt 0 ]] && p+="${clean} *${VCS_STATUS_STASHES}"
+  [[ $VCS_STATUS_STASHES        -gt 0 ]] && p+="${clean} $VCS_STASHES_SYMBOL${VCS_STATUS_STASHES}"
 
   GITSTATUS_PROMPT="${reset}${p}${reset}"
 }
