@@ -49,6 +49,8 @@ then
   source ~/.localrc
 fi
 
+# source "$DOTS/zsh/components/zshrc/powerlevel10k/powerlevel10k.zsh-theme"
+# source "$DOTS/zsh/components/zshrc/powerlevel10k/config/p10k-pure.zsh"
 source "$DOTS/zsh/components/zshrc/prompt.zsh"
 
 # leave this commented out so fzf won't try to keep adding it on updates

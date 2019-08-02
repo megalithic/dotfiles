@@ -36,6 +36,8 @@ toggle() {
   else
     on
   fi
+
+  status
 }
 
 dnd_enabled() {

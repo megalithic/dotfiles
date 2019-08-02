@@ -161,7 +161,7 @@
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
 
   // git
-  "git.enableGutters": false,
+  "git.enableGutters": true,
   "git.signOffset": 99,
   "git.branchCharacter": "⎇",
   "git.addedSign.text": "▏",

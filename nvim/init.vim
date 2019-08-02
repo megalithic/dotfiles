@@ -190,6 +190,7 @@ endif
 set wildmode=list:longest,full
 set wildignore=*.swp,*.o,*.so,*.exe,*.dll
 set wildoptions=pum
+set winblend=10
 
 " ---- Scroll
 set scrolloff=5               " Start scrolling when we're 8 lines away from margins
@@ -544,6 +545,10 @@ augroup general
   autocmd! FileType which_key
   autocmd  FileType which_key set laststatus=0 noshowmode noruler
         \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+
+  " reload vim configuration (aka vimrc)
+  command! ReloadVimConfigs so $MYVIMRC
+    \| echo 'configs reloaded!'
 augroup END
 
 augroup mirrors
@@ -731,7 +736,7 @@ nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
 
 " ## rhysd/git-messenger
 let g:git_messenger_no_default_mappings = 1
-let g:git_messenger_include_diff = "current"
+let g:git_messenger_include_diff = "none"
 let g:git_messenger_max_popup_width = "200"
 let g:git_messenger_max_popup_height = "100"
 nmap <leader>gm <Plug>(git-messenger)

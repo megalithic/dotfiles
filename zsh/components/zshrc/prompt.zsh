@@ -1,63 +1,68 @@
 #!/usr/bin/env zsh
 
-# :: le prompte
+# :: le prompt symbols n such
 NEWLINE=$'\n'
 PROMPT_SYMBOL="❯"
 PROMPT_VICMD_SYMBOL="%F{244}❮%{$reset_color%}"
-PROMPT_BACKGROUND_SYMBOL="❯" # 
-VCS_STAGED_SYMBOL=""
-VCS_UNSTAGED_SYMBOL="✱"
+PROMPT_BACKGROUND_SYMBOL="❯"
+VCS_STAGED_SYMBOL=$'\uf067'
+VCS_UNSTAGED_SYMBOL=$'\uf192'
 VCS_UNTRACKED_SYMBOL="?" # …
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 
-# :: settings for softmoth/zsh-vim-mode
-unset MODE_CURSOR_DEFAULT
-TMUX_PASSTHROUGH=1
-MODE_CURSOR_VICMD="#E6EEF3 block"
-MODE_CURSOR_VIINS="#A8CE93 blinking bar"
-MODE_CURSOR_SEARCH="#D18EC2 steady underline"
+# :: load gitstatus
+# DERIVED FROM: https://github.com/romkatv/gitstatus/blob/master/gitstatus.prompt.zsh
+# Sets GITSTATUS_PROMPT to reflect the state of the current git repository (empty if not
+# in a git repository).
+source "$DOTS/zsh/components/zshrc/gitstatus/gitstatus.plugin.zsh"
+function gitstatus_prompt_update() {
+  emulate -L zsh
+  typeset -g GITSTATUS_PROMPT=""
 
-setopt prompt_subst
-autoload -Uz vcs_info
+  # Call gitstatus_query synchronously. Note that gitstatus_query can also be called
+  # asynchronously; see documentation in gitstatus.plugin.zsh.
+  gitstatus_query MY                  || return 1  # error
+  [[ $VCS_STATUS_RESULT == ok-sync ]] || return 0  # not a git repo
 
-zstyle ':vcs_info:*' enable git hg
-zstyle ':vcs_info:*' check-for-changes true
-zstyle ':vcs_info:*' check-for-staged-changes true
-zstyle ':vcs_info:*' stagedstr "%{$fg[green]%}$VCS_STAGED_SYMBOL%{$reset_color%}"
-zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}$VCS_UNSTAGED_SYMBOL%{$reset_color%}"
-zstyle ':vcs_info:git*' formats "%F{245}[%F{130}%b%{$reset_color%}%F{245}] %a%m%u%c%{$reset_color%}"
-zstyle ':vcs_info:git' actionformats '%{%F{cyan}%}%45<…<%R%<</%{%f%}%{%F{red}%}(%a|%m)%{%f%}%{%F{cyan}%}%S%{%f%}%c%u'
-zstyle ':vcs_info:git:*' patch-format '%10>…>%p%<< (%n applied)'
-# zstyle ':vcs_info:git+post-backend:*' hooks git-post-backend-updown
-zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
+  local     reset='%f'       # no foreground
+  local     clean='%F{243}'  # gray foreground
+  local untracked='%F{252}'  # white foreground
+  local  modified='%F{130}'  # brown foreground
 
-# NOTE: suggested by osse on irc.freenode.net#zsh (presently not working though):
-# zstyle ':vcs_info:git*+set-message:*' hooks git-conditionally-add-space-to-branch
-# +vi-git-conditionally-add-space-to-branch() { 
-#   hook_com[branch]+="${hook_com[branch]:+}"
-# }
-
-# +vi-git-post-backend-updown() {
-#   git rev-parse @{upstream} >/dev/null 2>&1 || return
-
-#   local -a x; x=( $(git rev-list --left-right --count HEAD...@{upstream} ) )
-#   hook_com[branch]+="%f" # end coloring
-#   (( x[2] )) && hook_com[branch]+=" $VCS_BEHIND_SYMBOL$x[2]"
-#   (( x[1] )) && hook_com[branch]+=" $VCS_AHEAD_SYMBOL$x[1]"
-#   return 0
-# }
-
-+vi-git-untracked() {
-  if [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == 'true' ]] && \
-     git status --porcelain | grep -m 1 '^??' &>/dev/null
-  then
-    hook_com[misc]="$VCS_UNTRACKED_SYMBOL"
+  local p
+  if (( VCS_STATUS_HAS_STAGED || VCS_STATUS_HAS_UNSTAGED )); then
+    p+=$modified
+  elif (( VCS_STATUS_HAS_UNTRACKED )); then
+    p+=$untracked
+  else
+    p+=$clean
   fi
+  p+=${${VCS_STATUS_LOCAL_BRANCH:-@${VCS_STATUS_COMMIT}}//\%/%%}            # escape %
+
+  [[ -n $VCS_STATUS_TAG               ]] && p+="#${VCS_STATUS_TAG//\%/%%}"  # escape %
+  [[ $VCS_STATUS_HAS_STAGED      == 1 ]] && p+="${modified}$VCS_STAGED_SYMBOL"
+  [[ $VCS_STATUS_HAS_UNSTAGED    == 1 ]] && p+="${modified}$VCS_UNSTAGED_SYMBOL"
+  [[ $VCS_STATUS_HAS_UNTRACKED   == 1 ]] && p+="${untracked}$VCS_UNTRACKED_SYMBOL"
+  [[ $VCS_STATUS_COMMITS_AHEAD  -gt 0 ]] && p+="${clean} ⇡${VCS_STATUS_COMMITS_AHEAD}"
+  [[ $VCS_STATUS_COMMITS_BEHIND -gt 0 ]] && p+="${clean} ⇣${VCS_STATUS_COMMITS_BEHIND}"
+  [[ $VCS_STATUS_STASHES        -gt 0 ]] && p+="${clean} *${VCS_STATUS_STASHES}"
+
+  GITSTATUS_PROMPT="${reset}${p}${reset}"
 }
 
+# Start gitstatusd instance with name "MY". The same name is passed to
+# gitstatus_query in gitstatus_prompt_update.
+gitstatus_stop MY && gitstatus_start MY
+
+# On every prompt, fetch git status and set GITSTATUS_PROMPT.
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd gitstatus_prompt_update
+
+# Enable/disable the correct prompt expansions.
+setopt nopromptbang prompt{percent,subst}
+
 precmd() {
-  vcs_info
   zle && { zle -R; zle reset-prompt }
 }
 
@@ -72,9 +77,6 @@ prompt_path() {
   fi
 
   echo "$prompt_path"
-  # echo "%{$fg[blue]%}$pwd%{$reset_color%}"
-  # echo "%{$fg[blue]%}%-53<...<%~%<<%{$reset_color%}"
-  # echo "%{$fg[blue]%}%3~%{$reset_color%}"
 }
 
 # returns a fancy indicator when there are running background jobs..
@@ -109,5 +111,4 @@ prompt_status_symbol() {
 }
 
 # render dat prompt
-# PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)$(prompt_status_symbol) '
-PROMPT='${NEWLINE}$(prompt_path) ${vcs_info_msg_0_}${NEWLINE}$(background_process_indicator)${return_status_prompt} '
+PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT${NEWLINE}$(background_process_indicator)${return_status_prompt} '
