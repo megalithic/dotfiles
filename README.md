@@ -40,18 +40,20 @@ A few of the _must-have_ tools I roll with:
 - [homebrew](https://brew.sh/)
 - [hammerspoon](http://www.hammerspoon.org/)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
-  - see `~/.dotfiles/keyboard`
+  - see `~/.dotfiles/keyboard` for macOS specific config things
+  - see my [QMK dz60 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/dz60/keymaps/megalithic) for my custom keyboard setup
 - [tmux](https://github.com/tmux/tmux/wiki)
   - additional tmux statusbar binaries available (see `tmux-*` files in
     `~/.dotfiles/bin`).
-- [dankmono nerd font](https://dank.sh)
+  - see also my [DND tmux plugin](https://github.com/megalithic/tmux-dnd-status)
+- [dank mono nerd font](https://dank.sh)
   - patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
 - [nova](https://github.com/trevordmiller/nova-colors)
 - [neovim](https://neovim.io/)
 - [zsh](https://www.zsh.org/)
+  - custom prompt (mimicking [pure](https://github.com/sindresorhus/pure)), using [gitstatus](https://github.com/romkatv/gitstatus) for fast git-specific vcs status.
 - [weechat](https://www.weechat.org/)
-- [QMK config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/dz60/keymaps/megalithic)
 
 ### Stuff
 
