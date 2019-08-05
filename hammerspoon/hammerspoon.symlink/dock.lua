@@ -69,7 +69,7 @@ local handleUsbWatcherEvent = (function(event)
   -- things based on being "docked".
   if event.vendorID == config.docking['device'].vendorID and event.productID == config.docking['device'].productID then
     if event.eventType == 'added' then
-      require('home-assistant').init()
+      -- require('home-assistant').init()
       isDocked = true
       dockedAction()
     else

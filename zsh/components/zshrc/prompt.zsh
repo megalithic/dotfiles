@@ -27,17 +27,21 @@ function gitstatus_prompt_update() {
   [[ $VCS_STATUS_RESULT == ok-sync ]] || return 0  # not a git repo
 
   local     reset='%f'       # no foreground
-  local     clean='%F{243}'  # gray foreground
+  local     clean='%F{245}'  # gray foreground
   local untracked='%F{252}'  # white foreground
-  local  modified='%F{130}'  # brown foreground
+  local  modified='%F{red}'  # red foreground
+
+  local     clean_label='%F{245}'  # gray foreground
+  local untracked_label='%F{252}'  # white foreground
+  local  modified_label='%F{red}'  # brown (130) foreground
 
   local p
   if (( VCS_STATUS_HAS_STAGED || VCS_STATUS_HAS_UNSTAGED )); then
-    p+=$modified
+    p+=$modified_label
   elif (( VCS_STATUS_HAS_UNTRACKED )); then
-    p+=$untracked
+    p+=$untracked_label
   else
-    p+=$clean
+    p+=$clean_label
   fi
   p+="${clean}[${p}${${VCS_STATUS_LOCAL_BRANCH:-@${VCS_STATUS_COMMIT}}//\%/%%}${clean}] "            # escape %
 
@@ -45,9 +49,9 @@ function gitstatus_prompt_update() {
   [[ $VCS_STATUS_HAS_STAGED      == 1 ]] && p+="${modified}$VCS_STAGED_SYMBOL"
   [[ $VCS_STATUS_HAS_UNSTAGED    == 1 ]] && p+="${modified}$VCS_UNSTAGED_SYMBOL"
   [[ $VCS_STATUS_HAS_UNTRACKED   == 1 ]] && p+="${untracked}$VCS_UNTRACKED_SYMBOL"
-  [[ $VCS_STATUS_COMMITS_AHEAD  -gt 0 ]] && p+="${reset} $VCS_AHEAD_SYMBOL${VCS_STATUS_COMMITS_AHEAD}"
-  [[ $VCS_STATUS_COMMITS_BEHIND -gt 0 ]] && p+="${reset} $VCS_BEHIND_SYMBOL${VCS_STATUS_COMMITS_BEHIND}"
-  [[ $VCS_STATUS_STASHES        -gt 0 ]] && p+="${reset} $VCS_STASHES_SYMBOL${VCS_STATUS_STASHES}"
+  [[ $VCS_STATUS_COMMITS_AHEAD  -gt 0 ]] && p+="${reset}$VCS_AHEAD_SYMBOL${VCS_STATUS_COMMITS_AHEAD}"
+  [[ $VCS_STATUS_COMMITS_BEHIND -gt 0 ]] && p+="${reset}$VCS_BEHIND_SYMBOL${VCS_STATUS_COMMITS_BEHIND}"
+  [[ $VCS_STATUS_STASHES        -gt 0 ]] && p+="${reset}$VCS_STASHES_SYMBOL${VCS_STATUS_STASHES}"
 
   GITSTATUS_PROMPT="${reset}${p}${reset}"
 }
