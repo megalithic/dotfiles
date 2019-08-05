@@ -21,9 +21,11 @@ function gitstatus_prompt_update() {
   emulate -L zsh
   typeset -g GITSTATUS_PROMPT=""
 
+  # echo "vcs_status_result is: $VCS_STATUS_RESULT \r"
+
   # Call gitstatus_query synchronously. Note that gitstatus_query can also be called
   # asynchronously; see documentation in gitstatus.plugin.zsh.
-  gitstatus_query MY                  || return 1  # error
+  gitstatus_query MEGALITHIC                  || return 1  # error
   [[ $VCS_STATUS_RESULT == ok-sync ]] || return 0  # not a git repo
 
   local     reset='%f'       # no foreground
@@ -56,9 +58,9 @@ function gitstatus_prompt_update() {
   GITSTATUS_PROMPT="${reset}${p}${reset}"
 }
 
-# Start gitstatusd instance with name "MY". The same name is passed to
+# Start gitstatusd instance with name "MEGALITHIC". The same name is passed to
 # gitstatus_query in gitstatus_prompt_update.
-gitstatus_stop MY && gitstatus_start MY
+gitstatus_stop MEGALITHIC && gitstatus_start MEGALITHIC
 
 # On every prompt, fetch git status and set GITSTATUS_PROMPT.
 autoload -Uz add-zsh-hook
