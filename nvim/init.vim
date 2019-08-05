@@ -34,6 +34,7 @@ Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you ty
 Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+Plug 'gruvbox-community/gruvbox'
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 Plug 'honza/vim-snippets'
@@ -344,6 +345,11 @@ vnoremap <C-z> <ESC>zv`<ztgv
 " Default to case insensitive search
 nnoremap / /\v
 vnoremap / /\v
+
+" Don't overwrite blackhole register with selection
+" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
+xnoremap p "_c<c-r>"<esc>
+xmap P p
 
 " clear incsearch term
 nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
@@ -1052,6 +1058,16 @@ let g:ale_lint_on_insert_leave = 0
 let g:ale_lint_on_enter = 0
 let g:ale_lint_on_save = 0
 let g:ale_fix_on_save = 1
+
+
+" gruvbox-community/gruvbox
+let g:gruvbox_improved_strings=1
+let g:gruvbox_improved_warnings=1
+let g:gruvbox_italicize_strings=0
+let g:gruvbox_guisp_fallback='fg'
+let g:gruvbox_contrast_light='medium'
+let g:gruvbox_contrast_dark='medium'
+" silent! colorscheme gruvbox
 
 
 " ## trevordmiller/nova-vim
