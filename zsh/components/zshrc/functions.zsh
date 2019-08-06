@@ -21,9 +21,8 @@ geoip() {
   curl ipinfo.io/$1
 }
 
-killport() {
-  lsof -t -i tcp:$1 | xargs kill
-}
+killport() { lsof -t -i tcp:$1 | xargs kill }
+killport() { lsof -i tcp:$1 | awk 'NR!=1 {print $2}' | xargs kill }
 
 remac() {
   sudo /System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport -z
@@ -32,11 +31,18 @@ remac() {
   echo $(ifconfig en0 | grep ether)
 }
 
-
 chk() { grep $1 =(ps auxwww) }
 
 portchk() { lsof -n -i4TCP:$1 }
 alias chkport=portchk
+
+changeMac() {
+  local mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//')
+  sudo ifconfig en0 ether $mac
+  sudo ifconfig en0 down
+  sudo ifconfig en0 up
+  echo "Your new physical address is $mac"
+}
 
 # childprocs() {
 #   htop -p $(ps -ef | awk -v proc=$1 '$3 == proc { cnt++;if (cnt == 1) { printf "%s",$2 } else { printf ",%s",$2 } }')

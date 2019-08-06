@@ -17,6 +17,7 @@ tap 'caius/jo'
 tap 'simeji/jid'
 tap 'jeroenknoops/tap'
 tap 'browsh-org/homebrew-browsh'
+tap 'qmk/qmk'
 
 
 # -- for qmk_toolbox --
@@ -117,6 +118,7 @@ brew 'python'
 brew 'python3'
 brew 'python@2'
 # brew 'rabbitmq' # requires erlang/rebar/rebar3
+brew 'qmk'
 brew 'readline'
 brew 'reattach-to-user-namespace', args: ['wrap-pbcopy-and-pbpaste']
 brew 'ren'

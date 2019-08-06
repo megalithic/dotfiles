@@ -160,7 +160,9 @@ set -g status-left-length 100
 
 # -- center (windows)
 setw -g window-status-format " ○ #I:#W"
-setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,italics,bold]● #I:#W}"
+setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red]  #I:#W,#[fg=blue,bg=#3C4C55,bold]● #I:#W}"
+# set -g window-status-format "#I:#W#{?window_zoomed_flag,:Z,}"
+# set -g window-status-current-format "#I:#W#[nounderscore,nobold]#{?window_zoomed_flag,:Z,}"
 set -g window-status-activity-style none
 
 # -- right

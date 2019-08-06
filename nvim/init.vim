@@ -38,8 +38,9 @@ Plug 'gruvbox-community/gruvbox'
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 Plug 'honza/vim-snippets'
+Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
 Plug 'itchyny/lightline.vim'
-Plug 'itspriddle/vim-marked', { 'for': ['markdown', 'vimwiki'] }
+" Plug 'itspriddle/vim-marked', { 'for': ['markdown', 'vimwiki'] }
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
@@ -183,15 +184,10 @@ syntax on
 " ---- Search
 set ignorecase
 set smartcase
-if has('nvim')
-  set inccommand=nosplit
-endif
 
 " ---- Tab completion
 set wildmode=list:longest,full
 set wildignore=*.swp,*.o,*.so,*.exe,*.dll
-set wildoptions=pum
-set winblend=10
 
 " ---- Scroll
 set scrolloff=5               " Start scrolling when we're 8 lines away from margins
@@ -211,16 +207,23 @@ set nowrap
 set fillchars=vert:\│,fold:·
 " set colorcolumn=80
 set nocursorline              " Highlight current line
-if exists('+pumheight')
-  set pumheight=30
-endif
 set cmdheight=1
-set signcolumn=yes            " always showsigncolumn
 " set cpoptions+=$            " dollar sign while changing
 set synmaxcol=250             " set max syntax highlighting column to sane level
 set visualbell t_vb=          " no visual bell
 set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/vim-256color-bce.html
 set laststatus=2
+
+if has('nvim') &&  matchstr(execute('silent version'), 'NVIM v\zs[^\n-]*') >= '0.4.0'
+  set inccommand=nosplit
+  set wildoptions+=pum
+  set signcolumn=yes:2          " always showsigncolumn
+  set pumblend=10
+  set winblend=10
+  if exists('+pumheight')
+    set pumheight=30
+  endif
+endif
 
 " ---- Show
 set noshowmode                " Hide showmode because of the powerline plugin
@@ -743,8 +746,8 @@ nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
 " ## rhysd/git-messenger
 let g:git_messenger_no_default_mappings = 1
 let g:git_messenger_include_diff = "none"
-let g:git_messenger_max_popup_width = "200"
-let g:git_messenger_max_popup_height = "100"
+let g:git_messenger_max_popup_width = "50"
+let g:git_messenger_max_popup_height = "25"
 nmap <leader>gm <Plug>(git-messenger)
 
 " ## junegunn/vim-easy-align
@@ -1177,7 +1180,8 @@ let g:vim_markdown_strikethrough=1
 set conceallevel=2
 
 " # itspriddle/vim-marked
-nnoremap <Leader>M :MarkedOpen<CR>
+" nnoremap <Leader>M :MarkedOpen<CR>
+nnoremap <Leader>M :MarkdownPreview<CR>
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
@@ -1683,12 +1687,36 @@ function! s:show_documentation()
   endif
 endfunction
 
+" ToggleCoc: disable coc.nvim for large file
+function! ToggleCoc() abort
+  let g:trigger_size = get(g:, 'trigger_size', 0.5 * 1048576)
+  let size = getfsize(expand('<afile>'))
+  if (size > g:trigger_size) || (size == -2)
+    echohl WarningMsg
+    echomsg 'Coc.nvim was disabled for this large file'
+    echohl None
+    exec 'CocDisable'
+  else
+    exec 'CocEnable'
+  endif
+endfunction
+
+" ShowDoc: show document
+function! ShowDoc() abort
+  if (index(['vim','help'], &filetype) >= 0)
+      execute 'h '.expand('<cword>')
+    else
+      call CocAction('jumpDefinition')
+    endif
+endfunction
+
 nmap <silent> [c <Plug>(coc-diagnostic-prev)
 nmap <silent> ]c <Plug>(coc-diagnostic-next)
 " nmap <silent> [l <Plug>(coc-diagnostic-prev)
 " nmap <silent> ]l <Plug>(coc-diagnostic-next)
 
-nnoremap <silent> K :call <SID>show_documentation()<CR>
+" nnoremap <silent> K :call <SID>show_documentation()<CR>
+nnoremap <silent> K :<C-u>call ShowDoc()<CR>
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 
@@ -1745,29 +1773,22 @@ nmap gs <Plug>(coc-git-chunkinfo)
 "       \ }
 "       \})
 
+augroup Coc
+  autocmd!
+  autocmd BufReadPre * call ToggleCoc()
+augroup end
+
 "}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{
 
   hi clear SpellBad
   hi clear SpellCap
-  " hi clear Floating
-  " hi clear NormalFloat
-  " hi clear CocFloating
-  " hi clear CocPumFloating
-  " hi clear CocPumFloatingDetail
 
   hi htmlArg cterm=italic gui=italic
   hi xmlAttrib cterm=italic gui=italic
   hi Type cterm=italic gui=italic
   hi Comment cterm=italic term=italic gui=italic
-  " hi LineNr guibg=#3C4C55 guifg=#937f6e gui=NONE
-
   hi CursorLineNr guibg=#333333 guifg=#ffffff guifg=#db9c5e gui=italic
-
-  " hi CursorLine guibg=#333333
-  " hi qfLineNr ctermbg=black ctermfg=95 cterm=NONE guibg=black guifg=#875f5f gui=NONE
-  " hi QuickFixLine term=bold,underline cterm=bold,underline gui=bold,underline
-  " hi Search term=underline cterm=underline ctermfg=232 ctermbg=230 guibg=#db9c5e guifg=#343d46 gui=underline
 
   " FIXME: IncSearch negatively affects my FZF colors
   " hi IncSearch guifg=#FFFACD
