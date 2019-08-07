@@ -38,6 +38,7 @@ all willy-nilly install a stranger's shell scripts. :)
 A few of the _must-have_ tools I roll with:
 
 - [homebrew](https://brew.sh/)
+  - see `~/.dotfiles/homebrew/Brewfile` for all that installs
 - [hammerspoon](http://www.hammerspoon.org/)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   - see `~/.dotfiles/keyboard` for macOS specific config things

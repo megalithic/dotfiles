@@ -35,6 +35,7 @@
   "suggest.detailMaxLength": 30,
   "suggest.echodocSupport": false,
   "suggest.enablePreview": true,
+  "suggest.enablePreselect": false,
   "suggest.localityBonus": true,
   "suggest.maxCompleteItemCount": 20,
   "suggest.maxPreviewWidth": 60,
@@ -207,6 +208,30 @@
 
   // languageserver
   "languageserver": {
+    "ccls": {
+      "command": "ccls",
+      "filetypes": [
+        "c",
+        "cpp",
+        "cuda",
+        "objc",
+        "objcpp"
+      ],
+      "rootPatterns": [
+        "compile_commands.json",
+        ".ccls",
+        ".ccls-cache",
+        ".vim/",
+        ".git/",
+        ".hg/"
+      ],
+      "initializationOptions": {
+        "cacheDirectory": ".ccls-cache"
+      },
+      "settings": {
+        "codeLens.enable": false
+      }
+    },
     "sh": {
       "command": "bash-language-server",
       "args": ["start", "--stdio"],

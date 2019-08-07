@@ -31,7 +31,7 @@ windows:
         - bin/start
       - commands:
         - cd ~/code/enbala/vpp/
-        - pgcli data_persist_dev
+        # - pgcli data_persist_dev
   - name: "vpp"
     root: "~/code/enbala/vpp"
     panes:

@@ -57,6 +57,7 @@ Plug 'liuchengxu/vim-which-key'
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'mhinz/vim-startify'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
@@ -70,6 +71,8 @@ if executable('yarn') && executable('node')
             \ 'coc-eslint',
             \ 'coc-elixir',
             \ 'coc-git',
+            \ 'coc-gitignore',
+            \ 'coc-gocode',
             \ 'coc-highlight',
             \ 'coc-html',
             \ 'coc-json',
@@ -87,6 +90,7 @@ if executable('yarn') && executable('node')
             \ 'coc-tsserver',
             \ 'coc-tslint-plugin',
             \ 'coc-vimlsp',
+            \ 'coc-vimtex',
             \ 'coc-word',
             \ 'coc-yaml',
             \ 'coc-yank',
@@ -114,7 +118,7 @@ Plug 'RRethy/vim-hexokinase'
 Plug 'rhysd/git-messenger.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
-Plug 'svermeulen/vim-yoink'
+" Plug 'svermeulen/vim-yoink'
 Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
@@ -131,7 +135,6 @@ Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
 Plug 'trevordmiller/nova-vim'
-Plug 'arcticicestudio/nord-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'w0rp/ale'
@@ -140,6 +143,8 @@ Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
+Plug 'Vigemus/impromptu.nvim'
+Plug 'Vigemus/iron.nvim'
 Plug 'vimwiki/vimwiki'
 " Plug 'lervag/wiki.vim'
 
@@ -166,7 +171,6 @@ Plug 'arthurxavierx/vim-caser'                                    " https://gith
 Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
 Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
 " ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
-
 
 call plug#end()
 endif
@@ -713,6 +717,51 @@ cabbrev sudoedit <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "Sudoedit" : "s
 "}}}
 " ░░░░░░░░░░░░░░░ plugin settings {{{
 
+let g:startify_padding_left = 5
+let g:startify_relative_path = 1
+let g:startify_fortune_use_unicode = 1
+let g:startify_change_to_vcs_root = 1
+let g:startify_update_oldfiles = 1
+let g:startify_use_env = 1
+let g:startify_enable_special = 0
+let g:startify_files_number = 10
+let g:startify_session_persistence = 1
+let g:startify_session_delete_buffers = 1
+let g:startify_ascii = [' ', ' ϟ ' . (has('nvim') ? 'nvim' : 'vim') . '.', ' ']
+let g:startify_custom_header = 'map(startify#fortune#boxed() + g:startify_ascii, "repeat(\" \", 5).v:val")'
+let g:startify_custom_header_quotes = startify#fortune#predefined_quotes() + [
+      \ ['Simplicity is a great virtue but it requires hard work to achieve it', 'and education to appreciate it. And to make matters worse: complexity sells better.', '', '― Edsger W. Dijkstra'],
+      \ ['A common fallacy is to assume authors of incomprehensible code will be able to express themselves clearly in comments.'],
+      \ ['Your time is limited, so don’t waste it living someone else’s life. Don’t be trapped by dogma — which is living with the results of other people’s thinking. Don’t let the noise of others’ opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.', '', '— Steve Jobs, June 12, 2005'],
+      \ ['My take: Animations are something you earn the right to include when the rest of the experience is fast and intuitive.', '', '— @jordwalke'],
+      \ ['If a feature is sometimes dangerous, and there is a better option, then always use the better option.', '', '- Douglas Crockford'],
+      \ ['The best way to make your dreams come true is to wake up.', '', '― Paul Valéry'],
+      \ ['Fast is slow, but continuously, without interruptions', '', '– Japanese proverb'],
+      \ ['A language that doesn’t affect the way you think about programming is not worth knowing.', '- Alan Perlis'],
+      \ ['Bad programmers worry about the code. Good programmers worry about data structures and their relationships', '' , '― Linus Torvalds']
+      \ ]
+
+let g:startify_list_order = [
+      \ ['   Files:'], 'dir',
+      \ ['   Sessions:'], 'sessions',
+      \ ['   MRU'], 'files',
+      \ ['   Bookmarks:'], 'bookmarks',
+      \ ]
+
+let g:startify_skiplist = [
+      \ 'COMMIT_EDITMSG',
+      \ '^/tmp',
+      \ escape(fnamemodify(resolve($VIMRUNTIME), ':p'), '\') .'doc',
+      \ 'plugged/.*/doc',
+      \ 'pack/.*/doc',
+      \ '.*/vimwiki/.*'
+      \ ]
+
+augroup MyStartify
+  autocmd!
+  autocmd User Startified setlocal cursorline
+augroup END
+
 " ## sheerun/polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
 
@@ -906,6 +955,26 @@ let g:fzf_action = {
       \ 'ctrl-v': 'vsplit',
       \ 'enter': 'vsplit'
       \ }
+function! FzfFloatingWin()
+  let buf = nvim_create_buf(v:false, v:true)
+  call setbufvar(buf, '&signcolumn', 'no')
+
+  let width = float2nr(&columns / 2)
+  let height = float2nr(&lines / 3)
+  let y = float2nr(&lines / 3)
+  let x = float2nr((&columns - width) / 2)
+
+  let opts = {
+        \ 'relative': 'editor',
+        \ 'row': y,
+        \ 'col': x,
+        \ 'width': width,
+        \ 'height': height
+        \ }
+
+  call nvim_open_win(buf, v:true, opts)
+endfunction
+" let g:fzf_layout = { 'window': 'call FzfFloatingWin()' }
 let g:fzf_layout = { 'down': '~15%' }
 
 if executable('rg')
@@ -1179,9 +1248,88 @@ let g:vim_markdown_math=1
 let g:vim_markdown_strikethrough=1
 set conceallevel=2
 
+
 " # itspriddle/vim-marked
+" # iamcco/vim-markdown-preview
 " nnoremap <Leader>M :MarkedOpen<CR>
 nnoremap <Leader>M :MarkdownPreview<CR>
+
+
+" # vigemus/iron.nvim
+" au FileType python map <leader>d :call luaeval('require("iron").core.send(_A[1],_A[2])', [&ft, getline(line("'{"), line("'}"))])<CR>
+" au FileType python imap <leader>d <Esc>:call luaeval('require("iron").core.send(_A[1],_A[2])', [&ft, getline(line("'{"), line("'}"))])<CR>
+" let g:iron_repl_open_cmd = 'vsplit'
+" let g:iron_repl_open_cmd = 'topright horizontal 100 split'
+" nmap <leader>i <Plug>(iron-send-motion)
+" vmap <leader>i <Plug>(iron-send-motion)
+" nmap <leader>is :IronRepl<CR>
+" nmap <leader>ir <Plug>(iron-repeat-cmd)
+""send motion
+"nmap ym <Plug>(iron-send-motion)
+""send line (and put cursor at beginning of next line)
+"nmap yx ^<Plug>(iron-send-motion)$j^
+""send selection (and put cursor at beginning of next line)
+"xmap <Enter> <Plug>(iron-send-motion)<Esc>j^
+nmap <Leader>r. <Plug>(iron-repeat-cmd)<CR>
+nmap <Leader>rr <Plug>(iron-send-line)<CR>
+nmap <Leader>rm <Plug>(iron-send-motion)<CR>
+vmap <Leader>rr <Plug>(iron-visual-send)<CR>
+nmap <Leader>rq <Plug>(iron-exit)<CR>
+nmap <Leader>rl <Plug>(iron-clear)<CR>
+nmap <Leader>rc <Plug>(iron-clear)<CR>
+function s:configure_iron()
+  lua << EOF
+    local iron = require('iron')
+
+    iron.core.add_repl_definitions {
+      fennel = {
+        repl = {
+          command = {"fennel", "--repl"}
+        }
+      },
+
+      hy = {
+        docker = {
+          command = {"./.entry.bash", "shell", "hy"}
+        }
+      },
+
+      python = {
+        ipython = {
+          command = {"./.entry.bash", "shell", "ipython"}
+        }
+      }
+
+    }
+
+    iron.core.set_config {
+      -- repl_open_cmd = "rightbelow 10 split",
+      repl_open_cmd = "rightbelow vsplit",
+      preferred = {
+        hy = "docker",
+        fennel = "repl",
+        python = "ipython",
+        elixir = "iex -S mix",
+        elm = "elm-repl",
+      }
+   }
+EOF
+endfunction
+if v:vim_did_enter
+  call s:configure_iron()
+else
+  au VimEnter * call s:configure_iron()
+endif
+let g:which_key_map.r = {
+      \ 'name' : '+repl',
+      \ '.' : 'repeat-command',
+      \ 'r(n)' : 'send-line (normal)',
+      \ 'r(v)' : 'send-line (visual)',
+      \ 'm' : 'send-motion',
+      \ 'q' : 'exit',
+      \ 'l' : 'clear',
+      \ 'c' : 'clear',
+      \ }
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
@@ -1229,13 +1377,13 @@ let g:qs_enable = 1
 let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## svermeulen/vim-yoink
-let g:yoinkIncludeDeleteOperations = 1
-let g:yoinkSyncSystemClipboardOnFocus = 0
-let g:yoinkAutoFormatPaste = 1
-nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
-nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
-nmap p <plug>(YoinkPaste_p)
-nmap P <plug>(YoinkPaste_P)
+" let g:yoinkIncludeDeleteOperations = 1
+" let g:yoinkSyncSystemClipboardOnFocus = 0
+" let g:yoinkAutoFormatPaste = 1
+" nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
+" nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
+" nmap p <plug>(YoinkPaste_p)
+" nmap P <plug>(YoinkPaste_P)
 
 " ## janko/vim-test (testing)
 function! TerminalSplit(cmd)
@@ -1774,9 +1922,12 @@ nmap gs <Plug>(coc-git-chunkinfo)
 "       \})
 
 augroup Coc
-  autocmd!
-  autocmd BufReadPre * call ToggleCoc()
-augroup end
+  au!
+  au BufReadPre * call ToggleCoc()
+  " au CursorHold * silent call CocActionAsync('highlight')
+  au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+  au User CocDiagnosticChange call lightline#update_once()
+augroup END
 
 "}}}
 " ░░░░░░░░░░░░░░░ highlights/colors {{{

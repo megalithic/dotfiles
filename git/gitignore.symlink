@@ -41,3 +41,4 @@ elm-stuff
 rel
 **/stderr_log
 **/output.txt
+**/repl*.elm

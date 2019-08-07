@@ -245,8 +245,8 @@ config.applications = {
   ['Fantastical'] = {
     name = 'Fantastical',
     hint = 'com.flexibits.fantastical2.mac',
-    superKey = config.superKeys.cmdShift,
-    shortcut = 'f',
+    -- superKey = config.superKeys.cmdShift,
+    -- shortcut = 'f',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
