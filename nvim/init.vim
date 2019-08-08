@@ -34,6 +34,7 @@ Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you ty
 Plug 'editorconfig/editorconfig-vim'
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' }
 Plug 'gruvbox-community/gruvbox'
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
@@ -118,7 +119,7 @@ Plug 'RRethy/vim-hexokinase'
 Plug 'rhysd/git-messenger.vim'
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
-" Plug 'svermeulen/vim-yoink'
+Plug 'svermeulen/vim-yoink'
 Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
@@ -143,8 +144,6 @@ Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
-Plug 'Vigemus/impromptu.nvim'
-Plug 'Vigemus/iron.nvim'
 Plug 'vimwiki/vimwiki'
 " Plug 'lervag/wiki.vim'
 
@@ -745,11 +744,16 @@ let g:startify_custom_header_quotes = startify#fortune#predefined_quotes() + [
       \ ]
 
 let g:startify_list_order = [
-      \ ['   Files:'], 'dir',
-      \ ['   Sessions:'], 'sessions',
-      \ ['   MRU'], 'files',
-      \ ['   Bookmarks:'], 'bookmarks',
-      \ ]
+      \ ['   Bookmarks'], 'bookmarks',
+      \ ['   Sessions'], 'sessions',
+      \ ['   Files'], 'files',
+      \ ['   Directory'], 'dir',
+      \ ['   Commands'], 'commands']
+      " \ ['   Files:'], 'dir',
+      " \ ['   Sessions:'], 'sessions',
+      " \ ['   MRU'], 'files',
+      " \ ['   Bookmarks:'], 'bookmarks',
+      " \ ]
 
 let g:startify_skiplist = [
       \ 'COMMIT_EDITMSG',
@@ -759,6 +763,23 @@ let g:startify_skiplist = [
       \ 'pack/.*/doc',
       \ '.*/vimwiki/.*'
       \ ]
+
+if has('nvim')
+  let g:startify_ascii = [
+        \ '           _     ',
+        \ '  __ _  __(_)_ _ ',
+        \ ' /  \ |/ / /  / \',
+        \ '/_/_/___/_/_/_/_/',
+        \ '']
+else
+  let g:startify_ascii = [
+        \ '       _     ',
+        \ ' _  __(_)_ _ ',
+        \ '| |/ / /  / \',
+        \ '|___/_/_/_/_/',
+        \ '']
+endif
+let g:startify_custom_header = map(g:startify_ascii, "\"   \".v:val")
 
 augroup MyStartify
   autocmd!
@@ -1258,92 +1279,18 @@ set conceallevel=2
 nnoremap <Leader>M :MarkdownPreview<CR>
 
 
-" # vigemus/iron.nvim
-" au FileType python map <leader>d :call luaeval('require("iron").core.send(_A[1],_A[2])', [&ft, getline(line("'{"), line("'}"))])<CR>
-" au FileType python imap <leader>d <Esc>:call luaeval('require("iron").core.send(_A[1],_A[2])', [&ft, getline(line("'{"), line("'}"))])<CR>
-" let g:iron_repl_open_cmd = 'vsplit'
-" let g:iron_repl_open_cmd = 'topright horizontal 100 split'
-" nmap <leader>i <Plug>(iron-send-motion)
-" vmap <leader>i <Plug>(iron-send-motion)
-" nmap <leader>is :IronRepl<CR>
-" nmap <leader>ir <Plug>(iron-repeat-cmd)
-""send motion
-"nmap ym <Plug>(iron-send-motion)
-""send line (and put cursor at beginning of next line)
-"nmap yx ^<Plug>(iron-send-motion)$j^
-""send selection (and put cursor at beginning of next line)
-"xmap <Enter> <Plug>(iron-send-motion)<Esc>j^
-nmap <Leader>r. <Plug>(iron-repeat-cmd)<CR>
-nmap <Leader>rr <Plug>(iron-send-line)<CR>
-nmap <Leader>rm <Plug>(iron-send-motion)<CR>
-vmap <Leader>rr <Plug>(iron-visual-send)<CR>
-nmap <Leader>rq <Plug>(iron-exit)<CR>
-nmap <Leader>rl <Plug>(iron-clear)<CR>
-nmap <Leader>rc <Plug>(iron-clear)<CR>
-function s:configure_iron()
-  lua << EOF
-    local iron = require('iron')
-
-    iron.core.add_repl_definitions {
-      fennel = {
-        repl = {
-          command = {"fennel", "--repl"}
-        }
-      },
-
-      hy = {
-        docker = {
-          command = {"./.entry.bash", "shell", "hy"}
-        }
-      },
-
-      python = {
-        ipython = {
-          command = {"./.entry.bash", "shell", "ipython"}
-        }
-      }
-
-    }
-
-    iron.core.set_config {
-      -- repl_open_cmd = "rightbelow 10 split",
-      repl_open_cmd = "rightbelow vsplit",
-      preferred = {
-        hy = "docker",
-        fennel = "repl",
-        python = "ipython",
-        elixir = "iex -S mix",
-        elm = "elm-repl",
-      }
-   }
-EOF
-endfunction
-if v:vim_did_enter
-  call s:configure_iron()
-else
-  au VimEnter * call s:configure_iron()
-endif
-let g:which_key_map.r = {
-      \ 'name' : '+repl',
-      \ '.' : 'repeat-command',
-      \ 'r(n)' : 'send-line (normal)',
-      \ 'r(v)' : 'send-line (visual)',
-      \ 'm' : 'send-motion',
-      \ 'q' : 'exit',
-      \ 'l' : 'clear',
-      \ 'c' : 'clear',
-      \ }
-
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>
 map <F5> :PlugUpdate<CR>
 noremap <S-F5> :PlugClean!<CR>
 map <S-F5> :PlugClean!<CR>
 
+
 " ## fugitive
 nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>gh :Gbrowse<CR>
 nnoremap <leader>gb :Gblame<CR>
+
 
 " ## gist/github
 let g:gist_open_url = 1
@@ -1380,13 +1327,13 @@ let g:qs_enable = 1
 let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
 " ## svermeulen/vim-yoink
-" let g:yoinkIncludeDeleteOperations = 1
-" let g:yoinkSyncSystemClipboardOnFocus = 0
-" let g:yoinkAutoFormatPaste = 1
-" nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
-" nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
-" nmap p <plug>(YoinkPaste_p)
-" nmap P <plug>(YoinkPaste_P)
+let g:yoinkIncludeDeleteOperations = 1
+let g:yoinkSyncSystemClipboardOnFocus = 0
+let g:yoinkAutoFormatPaste = 1
+nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
+nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
+nmap p <plug>(YoinkPaste_p)
+nmap P <plug>(YoinkPaste_P)
 
 " ## janko/vim-test (testing)
 function! TerminalSplit(cmd)
