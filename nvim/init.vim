@@ -743,17 +743,17 @@ let g:startify_custom_header_quotes = startify#fortune#predefined_quotes() + [
       \ ['Bad programmers worry about the code. Good programmers worry about data structures and their relationships', '' , '― Linus Torvalds']
       \ ]
 
+let g:startify_bookmarks = [
+    \{'d': '~/.dotfiles'},
+    \]
+
 let g:startify_list_order = [
       \ ['   Bookmarks'], 'bookmarks',
       \ ['   Sessions'], 'sessions',
       \ ['   Files'], 'files',
       \ ['   Directory'], 'dir',
-      \ ['   Commands'], 'commands']
-      " \ ['   Files:'], 'dir',
-      " \ ['   Sessions:'], 'sessions',
-      " \ ['   MRU'], 'files',
-      " \ ['   Bookmarks:'], 'bookmarks',
-      " \ ]
+      \ ['   Commands'], 'commands',
+      \ ]
 
 let g:startify_skiplist = [
       \ 'COMMIT_EDITMSG',
@@ -764,22 +764,28 @@ let g:startify_skiplist = [
       \ '.*/vimwiki/.*'
       \ ]
 
-if has('nvim')
-  let g:startify_ascii = [
-        \ '           _     ',
-        \ '  __ _  __(_)_ _ ',
-        \ ' /  \ |/ / /  / \',
-        \ '/_/_/___/_/_/_/_/',
-        \ '']
-else
-  let g:startify_ascii = [
-        \ '       _     ',
-        \ ' _  __(_)_ _ ',
-        \ '| |/ / /  / \',
-        \ '|___/_/_/_/_/',
-        \ '']
-endif
-let g:startify_custom_header = map(g:startify_ascii, "\"   \".v:val")
+let g:startify_ascii = [
+\ "                      .            .      ",
+\ "                    .,;'           :,.    ",
+\ "                  .,;;;,,.         ccc;.  ",
+\ "                .;c::::,,,'        ccccc: ",
+\ "                .::cc::,,,,,.      cccccc.",
+\ "                .cccccc;;;;;;'     llllll.",
+\ "                .cccccc.,;;;;;;.   llllll.",
+\ "                .cccccc  ';;;;;;'  oooooo.",
+\ "                'lllllc   .;;;;;;;.oooooo'",
+\ "                'lllllc     ,::::::looooo'",
+\ "                'llllll      .:::::lloddd'",
+\ "                .looool       .;::coooodo.",
+\ "                  .cool         'ccoooc.  ",
+\ "                    .co          .:o:.    ",
+\ "                      .           .'      ",
+\ "",
+\"                          neovim",
+\"            hyperextensible Vim-based text editor",
+\]
+" let g:startify_custom_header = map(g:startify_ascii, "\"   \".v:val")
+let g:startify_custom_header = 'map(startify#fortune#boxed() + g:startify_ascii, "repeat(\" \", 5).v:val")'
 
 augroup MyStartify
   autocmd!
@@ -943,12 +949,13 @@ nnoremap <silent> <leader> :<c-u>WhichKey ','<CR>
 vnoremap <silent> <leader> :<c-u>WhichKeyVisual ','<CR>
 call which_key#register(',', 'g:which_key_map')
 
+
 " ## netrw
 let g:netrw_winsize = -28 " absolute width of netrw window
 let g:netrw_banner = 1 " do not display info on the top of window
 let g:netrw_liststyle = 3 " tree-view
 let g:netrw_sort_sequence = '[\/]$,*' " sort is affecting only: directories on the top, files below
-let g:netrw_browse_split = 4 " use the previous window to open file
+let g:netrw_browse_split = 0 " use the previous window to open file
 let g:netrw_altv = 1
 function! ToggleVExplorer()
   if exists('t:expl_buf_num')
@@ -1315,7 +1322,8 @@ let g:tmux_navigator_disable_when_zoomed = 0
 let g:indentLine_enabled = 1
 let g:indentLine_color_gui = '#556874'
 let g:indentLine_char = '│'
-" let g:indentLine_bgcolor_gui = '#3C4C55'
+let g:indentLine_bufTypeExclude = ['help', 'terminal', 'nerdtree', 'tagbar', 'startify']
+let g:indentLine_bufNameExclude = ['_.*', 'NERD_tree.*', 'startify']
 
 " ## golden-ratio
 let g:golden_ratio_exclude_nonmodifiable = 1
