@@ -209,6 +209,8 @@ set ruler
 set number
 set nowrap
 set fillchars=vert:\│,fold:·
+" set fillchars=vert:┃ " for vsplits
+" set fillchars+=fold:· " for folds
 " set colorcolumn=80
 set nocursorline              " Highlight current line
 set cmdheight=1
@@ -288,6 +290,7 @@ set splitbelow                      " Set up new horizontal splits positions
 " ---- Diff opts
 set diffopt-=internal
 set diffopt+=indent-heuristic,algorithm:patience
+set diffopt+=filler,internal,algorithm:histogram,indent-heuristic
 
 " ---- Cursor
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -1949,7 +1952,7 @@ augroup END
 
   hi SpellBad gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
   hi SpellCap gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
-  hi VertSplit guibg=NONE
+  hi VertSplit guifg=#707070 guibg=NONE
 
   hi SignColumn guibg=NONE
 
