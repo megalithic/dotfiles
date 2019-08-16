@@ -982,21 +982,22 @@ if executable('rg')
 
   " Add support for ripgrep
   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
+  let $BAT_THEME = 'base16' " REF: https://github.com/junegunn/fzf.vim/issues/732#issuecomment-437276088
   command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
         \ call fzf#vim#grep(
         \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --hidden --follow --glob "!{.git,deps,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
-        \   <bang>0 ? fzf#vim#with_preview('up:60%')
+        \   <bang>0 ? fzf#vim#with_preview('up:40%')
         \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)
   command! -bang -nargs=? -complete=dir Files
         \ call fzf#vim#files(<q-args>,
-        \   <bang>0 ? fzf#vim#with_preview('up:60%')
+        \   <bang>0 ? fzf#vim#with_preview('up:40%')
         \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)
   command! -bang -nargs=* WikiSearch
         \ call fzf#vim#grep(
         \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
-        \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:60%')
+        \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:40%')
         \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
         \  <bang>0)
 
@@ -1006,8 +1007,50 @@ if executable('rg')
   nnoremap \ :Rg<SPACE>
 endif
 
+function! FZFWithDevIcons()
+  let l:fzf_files_options = ' -m --bind ctrl-d:preview-page-down,ctrl-u:preview-page-up --preview "bat --theme="base16" --color always --style numbers {2..}"'
+
+  function! s:files()
+    let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
+    return s:prepend_icon(l:files)
+  endfunction
+
+  function! s:prepend_icon(candidates)
+    let result = []
+    for candidate in a:candidates
+      let filename = fnamemodify(candidate, ':p:t')
+      let icon = WebDevIconsGetFileTypeSymbol(filename, isdirectory(filename))
+      call add(result, printf("%s %s", icon, candidate))
+    endfor
+
+    return result
+  endfunction
+
+  function! s:edit_file(items)
+    let items = a:items
+    let i = 1
+    let ln = len(items)
+    while i < ln
+      let item = items[i]
+      let parts = split(item, ' ')
+      let file_path = get(parts, 1, '')
+      let items[i] = file_path
+      let i += 1
+    endwhile
+    call s:Sink(items)
+  endfunction
+
+  let opts = fzf#wrap({})
+  let opts.source = <sid>files()
+  let s:Sink = opts['sink*']
+  let opts['sink*'] = function('s:edit_file')
+  let opts.options .= l:fzf_files_options
+  call fzf#run(opts)
+
+endfunction
+
 function! FzfDevIcons()
-  let l:fzf_files_options = '--preview "bat --theme="base16" --style=numbers,changes --color always {2..-1} | head -'.&lines.'"'
+  let l:fzf_files_options = '--preview "bat --theme="base16" --style=numbers,changes --preview-window=right:60%:wrap --color always {2..-1} | head -'.&lines.'"'
 
   function! s:files()
     let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
@@ -1040,7 +1083,7 @@ endfunction
 
 silent! unmap <leader>m
 nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
-nnoremap <silent> <leader>m :call FzfDevIcons()<CR>
+nnoremap <silent> <leader>m :call FZFWithDevIcons()<CR>
 
 " ## junegunn/limelight.vim
 let g:limelight_conceal_guifg = 'DarkGray'

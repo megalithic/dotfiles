@@ -39,9 +39,10 @@ if [ -n "$(command -v fzf)" ]; then
     --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0C
     --cycle
     --no-multi
-    --preview 'bat {}'
     --preview-window=right:60%:wrap
+    --preview 'bat --theme="base16" --style=numbers,changes --color always {}'
     "
+    # --preview 'bat {}'
     # --border
     # --height 40%
     # --layout=reverse
