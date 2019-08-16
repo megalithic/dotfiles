@@ -106,8 +106,15 @@ defaults write com.apple.dock autohide -bool true
 # autohide menubar
 defaults write NSGlobalDomain _HIHideMenuBar -bool true
 
-# dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
+# PARTIAL DARK MODE: dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
+# REF: https://medium.com/@n1kk/how-to-tweak-macos-mojave-dark-mode-per-app-a5fab0574691
+# REF: https://www.techjunkie.com/only-dark-menu-bar-dock-mojave/
 defaults write -g NSRequiresAquaSystemAppearance -bool Yes
+
+# FULL DARK MODE -- broken
+# defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
+
+
 
 # mojave sub-pixel font smoothing
 # ref: https://www.reddit.com/r/MacOS/comments/9ijy88/font_antialiasing_on_mojave/e6mbs49/

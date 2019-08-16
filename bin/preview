@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+fn="$1"
+if [ -z "$fn" ]; then
+echo >&2 "Please pass a path to preview"
+exit 1
+elif [ -d "$fn" ]; then
+fls "$fn"
+elif [ -f "$fn" ]; then
+case "$(file --brief "$fn")" in
+*archive*|'PE32 executable'*)
+# shellcheck disable=SC1004,SC2086,SC2154
+7z l "$fn" | awk \
+     -v 'color_red'=$color_fg_red \
+     -v 'color_yellow'=$color_fg_yellow \
+     -v 'color_green'=$color_fg_green \
+     -v 'color_cyan'=$color_fg_cyan \
+     -v 'color_magenta'=$color_fg_magenta \
+     -v "color_reset=$color_reset" \
+     -f "$HOME/.local/bin/preview.awk"
+     ;;
+     *)
+     pygmentize -g -O "full,style=$BASE16_THEME" "$fn"
+     ;;
+     esac
+     else
+     stat "$fn"
+     fi

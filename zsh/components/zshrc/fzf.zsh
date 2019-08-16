@@ -27,6 +27,9 @@ if [ -n "$(command -v fzf)" ]; then
     local color0E='#6C71C4'
     local color0F='#D33682'
 
+    export FZF_PREVIEW_FILE_CMD="head -n 10"
+    export FZF_PREVIEW_DIR_CMD="ls"
+
     export FZF_DEFAULT_OPTS="
     --inline-info
     --select-1
@@ -37,8 +40,12 @@ if [ -n "$(command -v fzf)" ]; then
     --color=bg+:$color00,bg:$colorbg,spinner:$color0C,hl:$color06
     --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
     --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0C
+    --border
+    --cycle
+    --no-multi
     "
-    # --no-height
+    # --height 40%
+    # --layout=reverse
   }
   _gen_fzf_default_opts
 
@@ -46,11 +53,11 @@ if [ -n "$(command -v fzf)" ]; then
   # -- using ripgrep/rg
   export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
   export FZF_CTRL_T_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
+  export FZF_ALT_C_COMMAND="fd --type d --exclude 'Library'"
   export FZF_TMUX_HEIGHT='20%'
 
-  # thieved from: https://github.com/evantravers/dotfiles/blob/master/zsh/.zshrc#L86
-  # FZF_DEFAULT_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
-  # FZF_CTRL_T_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor}'"
+  # export FZF_DEFAULT_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor,build,_build}'"
+  # export FZF_CTRL_T_COMMAND="rg --no-ignore --hidden --files --follow -g '!{.git,node_modules,vendor,build,_build}'"
 
   # # -- using fd
   # export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'

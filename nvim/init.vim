@@ -62,51 +62,41 @@ Plug 'mhinz/vim-startify'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
-  function! PostInstallCoc(info)
-    echo 'PostInstallCoc Status: ' . a:info.status
-    if a:info.status ==# 'installed' || a:info.force
-      let extensions = [
-            \ 'coc-css',
-            \ 'coc-diagnostic',
-            \ 'coc-dictionary',
-            \ 'coc-eslint',
-            \ 'coc-elixir',
-            \ 'coc-git',
-            \ 'coc-gitignore',
-            \ 'coc-gocode',
-            \ 'coc-highlight',
-            \ 'coc-html',
-            \ 'coc-json',
-            \ 'coc-lists',
-            \ 'coc-lua',
-            \ 'coc-marketplace',
-            \ 'coc-prettier',
-            \ 'coc-python',
-            \ 'coc-rls',
-            \ 'coc-snippets',
-            \ 'coc-solargraph',
-            \ 'coc-svg',
-            \ 'coc-syntax',
-            \ 'coc-tailwindcss',
-            \ 'coc-tsserver',
-            \ 'coc-tslint-plugin',
-            \ 'coc-vimlsp',
-            \ 'coc-vimtex',
-            \ 'coc-word',
-            \ 'coc-yaml',
-            \ 'coc-yank',
-            \ ]
-      call coc#util#install()
-      for l:ext in extensions
-        if !(finddir(l:ext, coc#util#extension_root()))
-          call coc#util#install_extension(['-sync', l:ext])
-        endif
-      endfor
-    elseif a:info.status ==# 'updated'
-			call coc#util#update_extensions(1)
-    endif
-  endfunction
-  Plug 'neoclide/coc.nvim', {'do': function('PostInstallCoc')}
+  let g:coc_global_extensions = [
+        \ 'coc-calc',
+        \ 'coc-css',
+        \ 'coc-diagnostic',
+        \ 'coc-dictionary',
+        \ 'coc-eslint',
+        \ 'coc-elixir',
+        \ 'coc-git',
+        \ 'coc-github',
+        \ 'coc-gitignore',
+        \ 'coc-gocode',
+        \ 'coc-highlight',
+        \ 'coc-html',
+        \ 'coc-json',
+        \ 'coc-lists',
+        \ 'coc-lua',
+        \ 'coc-marketplace',
+        \ 'coc-prettier',
+        \ 'coc-python',
+        \ 'coc-rls',
+        \ 'coc-sh',
+        \ 'coc-snippets',
+        \ 'coc-solargraph',
+        \ 'coc-svg',
+        \ 'coc-syntax',
+        \ 'coc-tailwindcss',
+        \ 'coc-tslint-plugin',
+        \ 'coc-tsserver',
+        \ 'coc-vimlsp',
+        \ 'coc-vimtex',
+        \ 'coc-word',
+        \ 'coc-yaml',
+        \ 'coc-yank',
+        \ ]
+  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 endif
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
@@ -117,6 +107,7 @@ Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentatio
 Plug 'rizzatti/dash.vim'
 Plug 'RRethy/vim-hexokinase'
 Plug 'rhysd/git-messenger.vim'
+Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh \| UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
 Plug 'svermeulen/vim-yoink'
@@ -178,9 +169,6 @@ filetype plugin indent on
 
 "}}}
 " ░░░░░░░░░░░░░░░ options {{{
-
-" ---- Color
-set termguicolors
 
 syntax on
 
@@ -291,21 +279,23 @@ set diffopt-=internal
 set diffopt+=indent-heuristic,algorithm:patience
 set diffopt+=filler,internal,algorithm:histogram,indent-heuristic
 
-" ---- Cursor
-set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
-" set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
+" ---- GUI/Cursor
 if has('termguicolors')
   " Don't need this in xterm-256color, but do need it inside tmux.
   " (See `:h xterm-true-color`.)
   if &term =~# 'tmux-256color'
+    set termguicolors
+
     let &t_8f="\e[38;2;%ld;%ld;%ldm"
     let &t_8b="\e[48;2;%ld;%ld;%ldm"
-    " deus
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+
+    set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
+    " set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
+    set guicursor+=a:blinkon500-blinkwait500-blinkoff500      " Set cursor blinking rate
   endif
 endif
-set guicursor=a:blinkon500-blinkwait500-blinkoff500      " Set cursor blinking rate
 
 "}}}
 " ░░░░░░░░░░░░░░░ mappings/remaps {{{
@@ -806,11 +796,11 @@ let g:vimwiki_list = [{'path': '~/Dropbox/wiki/',
                      \ 'list_margin': 0,
                      \ 'ext': '.md'}]
 let g:vimwiki_global_ext = 0
-command! -bang -nargs=* VimwikiSearch
+command! -bang -nargs=* WikiSearch
       \ call fzf#vim#grep(
-      \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' ~/Dropbox/wiki/', 1,
-      \  <bang>0 ? fzf#vim#with_preview('up:60%')
-      \          : fzf#vim#with_preview('right:50%:hidden', '?'),
+      \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
+      \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:60%')
+      \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
       \  <bang>0)
 nnoremap <localleader>nw<Space> :VimwikiSearch<cr>
 command! -nargs=1 VimwikiNewNote write ~/Dropbox/wiki/notes/<args>
@@ -823,10 +813,10 @@ nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
 
 
 " ## rhysd/git-messenger
-let g:git_messenger_no_default_mappings = 1
-let g:git_messenger_include_diff = "none"
-let g:git_messenger_max_popup_width = "50"
-let g:git_messenger_max_popup_height = "25"
+" let g:git_messenger_no_default_mappings = 1
+" let g:git_messenger_include_diff = "none"
+" let g:git_messenger_max_popup_width = "50"
+" let g:git_messenger_max_popup_height = "25"
 nmap <leader>gm <Plug>(git-messenger)
 
 " ## junegunn/vim-easy-align
@@ -885,6 +875,7 @@ let g:which_key_map.g = {
       \ }
 let g:which_key_map.l = {
       \ 'name' : '+lsp/coc',
+      \ 'd' : 'debugger',
       \ 'a' : 'code-action',
       \ 'A' : 'code-action-selected',
       \ 'R' : 'rename',
@@ -1174,7 +1165,10 @@ let g:gruvbox_contrast_dark='medium'
 
 
 " ## trevordmiller/nova-vim
-set background=dark
+" set background=light
+if system('darkMode') =~ "Dark"
+  set background=dark
+endif
 let g:nova_transparent = 1
 silent! colorscheme nova
 
@@ -1297,6 +1291,34 @@ map <S-F5> :PlugClean!<CR>
 nnoremap <leader>gh :Gbrowse<CR>
 vnoremap <leader>gh :Gbrowse<CR>
 nnoremap <leader>gb :Gblame<CR>
+
+
+"  ## Plug 'sakhnik/nvim-gdb'
+function! RunDebugger()
+  if (index(['rust'], &filetype) >= 0)
+	  ":GdbStart rust-gdb -q -ex start -f `find target/debug/ -type f -executable`
+	  :GdbStart rust-gdb -q -ex start -f target/debug/rust_playground
+  elseif (index(['sh'], &filetype) >= 0)
+	  :GdbStartBashDB bashdb %
+  endif
+endfunction
+noremap <leader>ld :<C-u>call RunDebugger()<cr>
+
+" Plug 'Shougo/vimproc.vim', {'do' : 'make'}
+" Plug 'idanarye/vim-vebugger'
+" nnoremap <F5>   :VBGcontinue<CR>
+" autocmd FileType c,cpp  nnoremap <F6>   :VBGstartGDB %:r<CR>
+" autocmd FileType python nnoremap <F6>   :VBGstartPDB3 %<CR>
+" nnoremap <F7>   :VBGstepIn<CR>
+" nnoremap <F8>   :VBGstepOver<CR>
+" nnoremap <C-F8> :VBGtoggleBreakpointThisLine<CR>
+" nnoremap <F10>  :VBGstepOut<CR>
+
+" let g:vebugger_leader = '\'
+" if !exists('g:vdebug_options')
+"     let g:vdebug_options = {}
+" endif
+" let g:vdebug_options.break_on_open = 0
 
 
 " ## gist/github
@@ -1865,24 +1887,11 @@ nmap [g <Plug>(coc-git-prevchunk)
 nmap ]g <Plug>(coc-git-nextchunk)
 nmap gs <Plug>(coc-git-chunkinfo)
 
-" call coc#config('languageserver', {
-"       \ 'elixir': {
-"       \   'command': g:elixirls.lsp,
-"       \   'trace.server': 'verbose',
-"       \   'filetypes': ['elixir', 'eelixir'],
-"       \   'initializationOptions': {
-"       \    'elixirLS': {
-"       \      'dialyzerEnabled': v:false,
-"       \      'dialyzerWarningOpts': []
-"       \    }
-"       \   }
-"       \ }
-"       \})
-
 augroup Coc
   au!
   au BufReadPre * call ToggleCoc()
   " au CursorHold * silent call CocActionAsync('highlight')
+  au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
   au User CocDiagnosticChange call lightline#update_once()
 augroup END
@@ -1907,14 +1916,14 @@ augroup END
 
   hi SpellBad gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
   hi SpellCap gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
-  hi VertSplit guifg=#707070 guibg=NONE
+
+  hi VertSplit guifg=#666666 guibg=NONE
 
   hi SignColumn guibg=NONE
 
   hi link Debug SpellBad
   hi link ErrorMsg SpellBad
   hi link Exception SpellBad
-
 
   hi CocCodeLens ctermfg=gray guifg=#707070 " #556873
 

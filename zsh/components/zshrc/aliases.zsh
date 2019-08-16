@@ -46,6 +46,8 @@ alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias help='tldr'
 alias dotup='_dotup'
 
+
+alias s='ssh $(grep -iE "^host[[:space:]]+[^*]" ~/.ssh/config | fzf | awk "{print \$2}")'
 alias webcam="sudo killall VDCAssistant"
 alias dsnuke="find . -name '*.DS_Store' -type f -ls -delete"
 alias pkey="pbcopy < ~/.ssh/id_rsa.pub"
@@ -126,6 +128,7 @@ alias vim="nvim"
 alias v=vim
 alias vi="/usr/local/bin/vim"
 alias minvim="nvim -u NONE"
+alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
 # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
 # alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
@@ -278,7 +281,8 @@ alias resolve="git mergetool --tool=nvimdiff"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"
-
+alias gc='git co `git b | fzf | sed -e "s/\* //g" | awk "{print \$1}"`'
+alias gb='git b | fzf | xargs git branch -d'
 
 # elixir
 # -----------------------------------------------------------------------------

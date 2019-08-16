@@ -34,6 +34,7 @@ source "$DOTS/zsh/components/zshrc/completion.zsh"
 source "$DOTS/zsh/components/zshrc/git.zsh"
 source "$DOTS/zsh/components/zshrc/tmux.zsh"
 source "$DOTS/zsh/components/zshrc/ssh.zsh"
+source "$DOTS/zsh/components/zshrc/kitty.zsh"
 
 # plugin config
 source "$DOTS/zsh/components/zshrc/fzf.zsh"

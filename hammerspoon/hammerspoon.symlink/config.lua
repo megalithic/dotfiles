@@ -176,7 +176,15 @@ config.applications = {
     superKey = config.superKeys.mashShift,
     shortcut = 'm',
     preferredDisplay = 2,
-    position = config.grid.leftHalf
+    position = config.grid.fullScreen
+  },
+  ['Mail'] = {
+    name = 'Mail',
+    hint = 'com.apple.mail',
+    -- superKey = config.superKeys.mashShift,
+    -- shortcut = 'm',
+    preferredDisplay = 2,
+    position = config.grid.fullScreen
   },
   ['Airmail'] = {
     name = 'Airmail',

@@ -3,4 +3,5 @@ elixir 1.8.0-otp-21
 elm 0.19.0
 lua 5.3.4
 ruby 2.5.1
+# nodejs 8.9.1
 nodejs 10.15.3

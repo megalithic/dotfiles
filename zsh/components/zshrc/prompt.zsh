@@ -1,5 +1,8 @@
 #!/usr/bin/env zsh
 
+# REFS:
+# - fantastic prompt and zsh plugin stuff: https://github.com/tardypad/dotfiles/blob/master/configs/zsh/config.d/plugins.zsh
+
 # :: le prompt symbols n such
 NEWLINE=$'\n'
 PROMPT_SYMBOL="❯"
