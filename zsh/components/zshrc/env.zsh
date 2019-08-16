@@ -65,6 +65,8 @@ export TERMINFO=$HOME/.terminfo
 export _Z_DATA="$HOME/.z-history"
 export TERM_ITALICS="TRUE"
 
+export BAT_CONFIG_PATH="~/.batrc"
+
 #
 # NVIM
 #

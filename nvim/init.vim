@@ -796,12 +796,6 @@ let g:vimwiki_list = [{'path': '~/Dropbox/wiki/',
                      \ 'list_margin': 0,
                      \ 'ext': '.md'}]
 let g:vimwiki_global_ext = 0
-command! -bang -nargs=* WikiSearch
-      \ call fzf#vim#grep(
-      \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
-      \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:60%')
-      \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
-      \  <bang>0)
 nnoremap <localleader>nw<Space> :VimwikiSearch<cr>
 command! -nargs=1 VimwikiNewNote write ~/Dropbox/wiki/notes/<args>
 nnoremap <localleader>nw<CR> :VimwikiNewNote
@@ -970,38 +964,17 @@ endfunction
 nnoremap <silent> <F2> :call ToggleVExplorer()<CR>
 
 " ## junegunn/fzf
-let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
-" let $FZF_DEFAULT_OPTS='--layout=reverse'
 let g:fzf_action = {
       \ 'ctrl-s': 'split',
       \ 'ctrl-v': 'vsplit',
       \ 'enter': 'vsplit'
       \ }
-function! FzfFloatingWin()
-  let buf = nvim_create_buf(v:false, v:true)
-  call setbufvar(buf, '&signcolumn', 'no')
-
-  let width = float2nr(&columns / 2)
-  let height = float2nr(&lines / 3)
-  let y = float2nr(&lines / 3)
-  let x = float2nr((&columns - width) / 2)
-
-  let opts = {
-        \ 'relative': 'editor',
-        \ 'row': y,
-        \ 'col': x,
-        \ 'width': width,
-        \ 'height': height
-        \ }
-
-  call nvim_open_win(buf, v:true, opts)
-endfunction
-" let g:fzf_layout = { 'window': 'call FzfFloatingWin()' }
 let g:fzf_layout = { 'down': '~15%' }
 
+" ## rg
 if executable('rg')
-  " ## rg
   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
+
   function! s:CompleteRg(arg_lead, line, pos)
     let l:args = join(split(a:line)[1:])
     return systemlist('get_completions rg ' . l:args)
@@ -1020,56 +993,59 @@ if executable('rg')
         \   <bang>0 ? fzf#vim#with_preview('up:60%')
         \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)
+  command! -bang -nargs=* WikiSearch
+        \ call fzf#vim#grep(
+        \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
+        \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:60%')
+        \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
+        \  <bang>0)
 
-  " ref: https://github.com/taylorbrooks/dotfiles/blob/master/.vimrc#L121
-  " let g:rg_command = '
-  "       \ rg --line-number --no-heading --fixed-strings --ignore-case --no-ignore --color "always"
-  "       \ --colors "line:fg:yellow"
-  "       \ --colors "line:style:bold"
-  "       \ --colors "path:fg:red"
-  "       \ --colors "path:style:bold"
-  "       \ --colors "match:fg:white"
-  "       \ --colors "match:bg:black"
-  "       \ -g "*.{js,md,jade,html,config,rb,conf}"
-  "       \ -g "!{.git,node_modules,vendor}/*" '
-  " command! -bang -nargs=* F call fzf#vim#grep(g:rg_command .shellescape(<q-args>), 0, <bang>0)
+  nnoremap <leader>a <ESC>:Rg<SPACE>
+  nnoremap <silent> <leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+  " Backslash as shortcut to ag
+  nnoremap \ :Rg<SPACE>
 endif
 
+function! FzfDevIcons()
+  let l:fzf_files_options = '--preview "bat --theme="base16" --style=numbers,changes --color always {2..-1} | head -'.&lines.'"'
+
+  function! s:files()
+    let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
+    return s:prepend_icon(l:files)
+  endfunction
+
+  function! s:prepend_icon(candidates)
+    let l:result = []
+    for l:candidate in a:candidates
+      let l:filename = fnamemodify(l:candidate, ':p:t')
+      let l:icon = WebDevIconsGetFileTypeSymbol(l:filename, isdirectory(l:filename))
+      call add(l:result, printf('%s %s', l:icon, l:candidate))
+    endfor
+
+    return l:result
+  endfunction
+
+  function! s:edit_file(item)
+    let l:pos = stridx(a:item, ' ')
+    let l:file_path = a:item[pos+1:-1]
+    execute 'silent vsp' l:file_path
+  endfunction
+
+  call fzf#run({
+        \ 'source': <sid>files(),
+        \ 'sink':   function('s:edit_file'),
+        \ 'options': '-m ' . l:fzf_files_options,
+        \ 'down':    '40%' })
+endfunction
+
 silent! unmap <leader>m
-nnoremap <silent><leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
-nnoremap <leader>a <ESC>:Rg<SPACE>
-nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
-" Backslash as shortcut to ag
-nnoremap \ :Rg<SPACE>
+nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
+nnoremap <silent> <leader>m :call FzfDevIcons()<CR>
 
 " ## junegunn/limelight.vim
 let g:limelight_conceal_guifg = 'DarkGray'
 let g:limelight_conceal_guifg = '#777777'
 
-" ## junegunn/goyo.vim
-" ref: https://github.com/ydhamija96/config/blob/master/.vimrc#L137
-" function! s:goyo_enter()
-"   silent !tmux set status off
-"   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
-"   set textwidth=78
-"   set wrap
-"   set noshowmode
-"   set noshowcmd
-"   set scrolloff=999
-"   Limelight
-"   color off
-" endfunction
-" function! s:goyo_leave()
-"   silent !tmux set status on
-"   silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
-"   set textwidth=0
-"   set nowrap
-"   set showmode
-"   set showcmd
-"   set scrolloff=8
-"   Limelight!
-"   color nova
-" endfunction
 function! s:goyo_enter()
   silent !tmux set status off
   silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
