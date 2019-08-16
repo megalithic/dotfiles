@@ -290,10 +290,6 @@ if has('termguicolors')
     let &t_8b="\e[48;2;%ld;%ld;%ldm"
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-
-    set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175
-    " set guicursor=n-v-c:block-Cursor/lCursor-blinkon0,i-ci:ver25-Cursor/lCursor,r-cr:hor20-Cursor/lCursor
-    set guicursor+=a:blinkon500-blinkwait500-blinkoff500      " Set cursor blinking rate
   endif
 endif
 
