@@ -208,7 +208,7 @@ set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/v
 set laststatus=2
 
 if has('nvim') &&  matchstr(execute('silent version'), 'NVIM v\zs[^\n-]*') >= '0.4.0'
-  set inccommand=nosplit
+  set inccommand=nosplit " interactive find replace preview
   set wildoptions+=pum
   set signcolumn=yes:2          " always showsigncolumn
   set pumblend=10
@@ -291,6 +291,20 @@ if has('termguicolors')
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   endif
+endif
+
+if has('nvim')
+  let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
+  let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
+  let $EDITOR      = 'nvr -l'
+  let $ECTO_EDITOR = 'nvr -l'
+
+  " share data between nvim instances (registers etc)
+  augroup SHADA
+    autocmd!
+    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
+          \ if exists(':rshada') | rshada | wshada | endif
+  augroup END
 endif
 
 "}}}
@@ -635,10 +649,15 @@ augroup END
 
 augroup ft_elixir
   au!
-  au FileType elixir,eelixir nnoremap <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <leader>ep o\|> <ESC>a
-  au FileType elixir,eelixir nnoremap <leader>ei o\|> IO.inspect()<ESC>i
-  au FileType elixir,eelixir nnoremap <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
+  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
+  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+
+  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ex :IEx -S mix<CR>
+if has('nvim')
+  tnoremap <silent> <leader>x <C-\><C-n>:IEx -S mix<CR>
+endif
 
   au FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
   au FileType elixir,eelixir iabbrev ep    \|>
