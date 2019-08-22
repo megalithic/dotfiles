@@ -12,8 +12,8 @@ local handleCaffeinateEvent = function(eventType) -- (int)
   elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
     -- turn on office lamp
     -- local isNight = hs.execute("hubitat status 32 '.attributes[] | select(.name == \"cloud\").currentValue'", true)
-    local isNight = hs.execute("hubitat status 32 '.attributes[] | select(.name == \"is_day\").currentValue'", true) == 0
-    local isCloudy = hs.execute("hubitat status 32 '.attributes[] | select(.name == \"cloud\").currentValue'", true) >= 75
+    local isNight = hs.execute("hubitat status 32 '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'", true)
+    local isCloudy = hs.execute("hubitat status 32 '.attributes[] | select(.name == \"cloud\").currentValue | tonumber >=75'", true)
 
     if (isNight == true or isNight == 'true') then
       log.df('night time; turning on office lamp, regardless of weather conditions')

@@ -9,20 +9,23 @@
 # - `jq` (auto-installs for you if it's not found)
 # - `spinner` from my dotfiles' `bin` folder
 # - ENV vars setup for hubitat private things:
-#   - HUBITAT_LAN
-#   - HUBITAT_APP_ID_MAKER
-#   - HUBITAT_TOKEN
+#   - $HUBITAT_LAN
+#   - $HUBITAT_APP_ID_MAKER
+#   - $HUBITAT_TOKEN
 #
 
 #
 # REFS:
 # - https://thisdavej.com/consuming-web-api-json-data-using-curl-and-jq/#return-one-attribute-from-each-json-object-in-an-array
+# - https://stedolan.github.io/jq/manual/
 #
 
 #
-# Handy status parsing strings with jq:
-# - cloud cover: `'.attributes[] | select(.name == "cloud").currentValue'`
-# - is daytime: `'.attributes[] | select(.name == \"is_day\").currentValue'`
+# Example parsing strings for status with jq:
+# - is_cloudy: `'.attributes[] | select(.name == "cloud").currentValue | tonumber >= 75'`
+# - is_daytime: `'.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 1'`
+# - is_nighttime: `'.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'`
+# - switch_state: `'.attributes | unique[] | select(.name == \"switch\").currentValue'`
 #
 
 if [ ! $(command -v jq) ]; then
@@ -35,10 +38,18 @@ command=""
 
 help() {
   printf -- "Usage: "$base_command" <subcommand> <device_id> [<query>]\n"
+  printf -- "\n"
   printf -- "Subcommands:\n"
-  printf -- "    on       Turn ON specific device\n"
-  printf -- "    off      Turn OFF specific device\n"
-  printf -- "    status   Get the current status of specific device with query\n"
+  printf -- "    on               Turn ON specific device\n"
+  printf -- "    off              Turn OFF specific device\n"
+  printf -- "    status           Get the current status of specific device with query\n"
+  printf -- "    devices          Get a list of connected devices and their device_id\n"
+  printf -- "\n"
+  printf -- "Example parsing strings for status with jq:\n"
+  printf -- "    is_cloudy        '.attributes[] | select(.name == \"cloud\").currentValue | tonumber >= 75'\n"
+  printf -- "    is_day           '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 1'\n"
+  printf -- "    is_night         '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'\n"
+  printf -- "    switch_state     '.attributes | unique[] | select(.name == \"switch\").currentValue'\n"
 }
 
 hubitat_local_url() {
