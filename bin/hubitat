@@ -7,6 +7,7 @@
 # Requires:
 # - Maker API app to be installed in your Hubitat setup
 # - `jq` (auto-installs for you if it's not found)
+# - `spinner` from my dotfiles' `bin` folder
 # - ENV vars setup for hubitat private things:
 #   - HUBITAT_LAN
 #   - HUBITAT_APP_ID_MAKER
@@ -48,23 +49,39 @@ hubitat_local_url() {
   fi
 }
 
+require_device_id() {
+  require_device_id() {
+    if [[ -n $device_id ]]; then
+      return 0
+    else
+      echo "ERROR: command $subcommand requires a device_id"
+      return 1
+    fi
+  }
+}
+
 execute_command() {
-  if [[ -n $device_id ]]; then
-    curl -s "$(hubitat_local_url)" | jq "$query"
-  else
-    echo "ERROR: command $subcommand requires a device_id"
-    return 1
-  fi
+  spinner curl -s "$(hubitat_local_url)" | jq -r -c "$query"
+}
+
+devices() {
+  command="all"
+  query='.[] | "[\(.id)]  \(.label)"'
+  execute_command
 }
 
 on() {
+  require_device_id
+
   command="on"
-  execute_command
+  2>/dev/null 1>&2 execute_command
 }
 
 off() {
+  require_device_id
+
   command="off"
-  execute_command
+  2>/dev/null 1>&2 execute_command
 }
 
 set() {
@@ -73,6 +90,8 @@ set() {
 }
 
 status() {
+  require_device_id
+
   command=""
   if [[ -n $query ]]; then
     execute_command
