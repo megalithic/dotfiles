@@ -21,13 +21,12 @@ require('ptt').init(config.ptt)
 require('quit')
 
 -- handles initiating laptop docking mode behaviors
-require('dock').init()
+-- require('dock').init()
 
--- laptop docking mode things (change system settings based on being in "docking" mode or not)
--- home-assistant helper to automate my office based on computer events; only want this to run when i'm in my office
--- if (require('dock').init()) then
---   require('home-assistant').init()
--- end
+-- handles hubitat home-automation things based upon the computer doing things
+if (require('dock').init()) then
+  require('hubitat').init()
+end
 
 -- :: spoons
 -- Initialize and configure installer spoon

@@ -4,31 +4,43 @@
 # What in tarnation?
 #
 # CLI tool to control Hubitat (my devices and stuff)
-# Requires the Maker API app to be installed in your Hubitat setup
+# Requires:
+# - Maker API app to be installed in your Hubitat setup
+# - `jq` (auto-installs for you if it's not found)
 #
 
+#
+# Handy status parsing strings with jq:
+# - cloud cover: `'.attributes[] | select(.name == "cloud").currentValue'`
+# - is daytime: `hubitat status 32 '.attributes[] | select(.name == \"is_day\").currentValue'`
+#
+
+if [ ! $(command -v jq) ]; then
+  brew install jq
+fi
 
 base_command="$(basename "$0")"
 
-# device_id="$1"
-# hubitat_cloud_url="http://cloud.hubitat.com/api/$HUBITAT_ID/apps/$HUBITAT_APP_ID_MAKER/ifttt/{EVENT-NAME}?access_token=$HUBITAT_TOKEN"
 command=""
 
 help() {
-  printf -- "Usage: "$base_command" <subcommand> <device_id>\n"
+  printf -- "Usage: "$base_command" <subcommand> <device_id> [<query>]\n"
   printf -- "Subcommands:\n"
   printf -- "    on       Turn ON specific device\n"
   printf -- "    off      Turn OFF specific device\n"
-  # printf -- "    toggle   Toggle specific device ON and OFF\n"
-  # printf -- "    status   Get the current status of specific device\n"
+  printf -- "    status   Get the current status of specific device with query\n"
 }
 
 hubitat_local_url() {
-  echo "http://$HUBITAT_LAN/apps/api/$HUBITAT_APP_ID_MAKER/devices/$device_id/$command?access_token=$HUBITAT_TOKEN"
+  if [[ -n $command ]]; then
+    echo "http://$HUBITAT_LAN/apps/api/$HUBITAT_APP_ID_MAKER/devices/$device_id/$command?access_token=$HUBITAT_TOKEN"
+  else
+    echo "http://$HUBITAT_LAN/apps/api/$HUBITAT_APP_ID_MAKER/devices/$device_id?access_token=$HUBITAT_TOKEN"
+  fi
 }
 
 execute_command() {
-  curl -s "$(hubitat_local_url)"
+  curl -s "$(hubitat_local_url)" | jq "$query"
 }
 
 on() {
@@ -41,35 +53,30 @@ off() {
   execute_command
 }
 
-# toggle() {
-#   if $(current_status); then
-#     off
-#   else
-#     on
-#   fi
-
-#   status
-# }
-
-current_status() {
-  command=""
-  execute_command
+set() {
+  echo "Not Implemented"
+  return 127
 }
 
-# status() {
-#   if $(current_status); then
-#     echo "Status: on"
-#   else
-#     echo "Status: off"
-#   fi
-# }
+status() {
+  command=""
+  if [[ -n $query ]]; then
+    execute_command
+  else
+    echo "ERROR: requires a query"
+    return 1
+
+    # query='.'
+    # execute_command
+  fi
+}
 
 subcommand=$1
 device_id=$2
+query=$3
 
 case $subcommand in
   '')
-    # toggle ;;
     help ;;
   '-h' | '--help')
     help ;;
