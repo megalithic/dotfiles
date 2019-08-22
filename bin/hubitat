@@ -21,7 +21,7 @@
 #
 # Handy status parsing strings with jq:
 # - cloud cover: `'.attributes[] | select(.name == "cloud").currentValue'`
-# - is daytime: `hubitat status 32 '.attributes[] | select(.name == \"is_day\").currentValue'`
+# - is daytime: `'.attributes[] | select(.name == \"is_day\").currentValue'`
 #
 
 if [ ! $(command -v jq) ]; then
