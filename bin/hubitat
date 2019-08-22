@@ -49,7 +49,12 @@ hubitat_local_url() {
 }
 
 execute_command() {
-  curl -s "$(hubitat_local_url)" | jq "$query"
+  if [[ -n $device_id ]]; then
+    curl -s "$(hubitat_local_url)" | jq "$query"
+  else
+    echo "ERROR: command $subcommand requires a device_id"
+    return 1
+  fi
 }
 
 on() {
@@ -72,7 +77,7 @@ status() {
   if [[ -n $query ]]; then
     execute_command
   else
-    echo "ERROR: $subcommand requires a query option"
+    echo "ERROR: command $subcommand requires a query"
     return 1
 
     # query='.'
