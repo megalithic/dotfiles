@@ -16,8 +16,11 @@
 
 #
 # REFS:
-# - https://thisdavej.com/consuming-web-api-json-data-using-curl-and-jq/#return-one-attribute-from-each-json-object-in-an-array
-# - https://stedolan.github.io/jq/manual/
+# - jq: https://thisdavej.com/consuming-web-api-json-data-using-curl-and-jq/#return-one-attribute-from-each-json-object-in-an-array
+# - jq: https://stedolan.github.io/jq/manual/
+# - hubitat: https://docs.hubitat.com/index.php?title=Join_and_Reset_Instructions
+# - hubitat: https://docs.hubitat.com/index.php?title=List_of_Compatible_Devices
+# - hubitat: https://docs.hubitat.com/index.php?title=Hubitat%E2%84%A2_Maker_API
 #
 
 #
