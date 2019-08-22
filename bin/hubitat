@@ -72,7 +72,7 @@ status() {
   if [[ -n $query ]]; then
     execute_command
   else
-    echo "ERROR: requires a query"
+    echo "ERROR: $subcommand requires a query option"
     return 1
 
     # query='.'
