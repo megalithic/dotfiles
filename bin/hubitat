@@ -7,6 +7,15 @@
 # Requires:
 # - Maker API app to be installed in your Hubitat setup
 # - `jq` (auto-installs for you if it's not found)
+# - ENV vars setup for hubitat private things:
+#   - HUBITAT_LAN
+#   - HUBITAT_APP_ID_MAKER
+#   - HUBITAT_TOKEN
+#
+
+#
+# REFS:
+# - https://thisdavej.com/consuming-web-api-json-data-using-curl-and-jq/#return-one-attribute-from-each-json-object-in-an-array
 #
 
 #
