@@ -48,6 +48,7 @@ alias help='tldr'
 alias dotup='_dotup'
 
 
+alias utc="date -u"
 alias s='ssh $(grep -iE "^host[[:space:]]+[^*]" ~/.ssh/config | fzf | awk "{print \$2}")'
 alias webcam="sudo killall VDCAssistant"
 alias dsnuke="find . -name '*.DS_Store' -type f -ls -delete"
