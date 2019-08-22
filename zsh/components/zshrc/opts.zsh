@@ -17,6 +17,8 @@ umask 022
 HISTFILE=~/.zsh_history
 HISTSIZE=1000
 SAVEHIST=1000
+COMPLETION_WAITING_DOTS="true"
+HIST_STAMPS="mm/dd/yyyy"
 
 # for eager loading all files for ternjs
 #  - https://github.com/carlitux/deoplete-ternjs

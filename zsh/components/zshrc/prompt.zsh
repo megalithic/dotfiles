@@ -50,7 +50,7 @@ function gitstatus_prompt_update() {
   fi
   p+="${clean}[${p}${${VCS_STATUS_LOCAL_BRANCH:-@${VCS_STATUS_COMMIT}}//\%/%%}${clean}] "            # escape %
 
-  [[ -n $VCS_STATUS_TAG               ]] && p+="#${VCS_STATUS_TAG//\%/%%}"  # escape %
+  [[ -n $VCS_STATUS_TAG               ]] && p+="#${VCS_STATUS_TAG//\%/%%} "  # escape %
   [[ $VCS_STATUS_HAS_STAGED      == 1 ]] && p+="${modified}$VCS_STAGED_SYMBOL"
   [[ $VCS_STATUS_HAS_UNSTAGED    == 1 ]] && p+="${modified}$VCS_UNSTAGED_SYMBOL"
   [[ $VCS_STATUS_HAS_UNTRACKED   == 1 ]] && p+="${untracked}$VCS_UNTRACKED_SYMBOL"

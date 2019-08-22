@@ -62,6 +62,8 @@ export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 export TERMINFO=$HOME/.terminfo
 # export TERMINFO=/usr/share/terminfo
 # export PYTHONPATH="$BREW_PATH/bin/python3.5"
+export LIBARCHIVE=/usr/local/opt/libarchive/lib/libarchive.dylib
+export LIBCRYPTO=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib
 export _Z_DATA="$HOME/.z-history"
 export TERM_ITALICS="TRUE"
 

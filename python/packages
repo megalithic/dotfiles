@@ -7,6 +7,7 @@ websocket-client
 saws
 neovim
 neovim-remote
+opendrop
 pynvim
 pygments
 setuptools

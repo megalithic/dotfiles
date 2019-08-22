@@ -81,7 +81,6 @@ path=(
   /usr/local/opt/mysql@5.6/bin
   /usr/local/opt/postgresql@9.5/bin
   /Applications/Postgres.app/Contents/Versions/9.5/bin
-  /usr/local/opt/curl/bin
   /usr/local/lib/python2.7/site-packages
   $HOME/Library/Python/3.6/lib/python/site-packages
   $HOME/Library/Python/3.7/bin
@@ -92,6 +91,7 @@ path=(
   /usr/local/opt/perl@5.28/bin
   /usr/{bin,sbin}
   /{bin,sbin}
+  /usr/local/opt/curl/bin
   $path
 )
 for path_file in /etc/paths.d/*(.N); do

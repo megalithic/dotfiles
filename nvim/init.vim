@@ -1,4 +1,8 @@
-scriptencoding utf-8
+scriptencoding utf-16      " allow emojis in vimrc
+set nocompatible           " vim, not vi
+syntax on                  " syntax highlighting
+filetype plugin indent on  " try to recognize filetypes and load rel' plugins
+
 " ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
 " ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 "
@@ -37,6 +41,7 @@ Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' }
 Plug 'gruvbox-community/gruvbox'
 Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
+Plug 'hauleth/pivotaltracker.vim', { 'for': ['gitcommit'] }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 Plug 'honza/vim-snippets'
 Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
@@ -46,15 +51,13 @@ Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSui
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
 Plug 'junegunn/fzf.vim'
-Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
-Plug 'junegunn/limelight.vim', { 'on': 'Limelight' }
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/vim-plug'
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
-Plug 'KKPMW/distilled-vim' " colorscheme used for goyo
 Plug 'wsdjeg/vim-fetch'
 Plug 'liuchengxu/vim-which-key'
+Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
@@ -100,7 +103,6 @@ if executable('yarn') && executable('node')
 endif
 Plug 'othree/csscomplete.vim', { 'for': 'css' }
 Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
-Plug 'pbrisbin/vim-colors-off' " minimal/off colorscheme used for goyo
 Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
@@ -135,7 +137,7 @@ Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
-Plug 'vimwiki/vimwiki'
+Plug 'vimwiki/vimwiki' " (more vimwiki things: https://github.com/skbolton/titan/blob/master/states/nvim/nvim/plugin/wiki.vim)
 " Plug 'lervag/wiki.vim'
 
 " ## Movements/Text Objects, et al
@@ -165,12 +167,8 @@ Plug 'wellle/targets.vim'                                         " improved tar
 call plug#end()
 endif
 
-filetype plugin indent on
-
 "}}}
 " ░░░░░░░░░░░░░░░ options {{{
-
-syntax on
 
 " ---- Search
 set ignorecase
@@ -462,6 +460,8 @@ augroup general
     silent vertical all
   endif
 
+  autocmd BufRead * nohls
+
   " save all files on focus lost, ignoring warnings about untitled buffers
   " autocmd FocusLost * silent! wa
 
@@ -470,10 +470,6 @@ augroup general
   au WinEnter     * checktime
   " au CursorHold   * checktime " throws errors?
   au InsertEnter  * checktime
-
-  " TODO: handle turning toggling the tmux status bar, if we're in $TMUX and Goyo is active
-  " au FocusGained  * :echo "focus gained"
-  " au FocusLost  * :echo "focus lost"
 
   " Refresh lightline when certain things happen
   " au TextChanged,InsertLeave,BufWritePost * call lightline#update()
@@ -598,6 +594,12 @@ augroup END
 
 augroup gitcommit
   au!
+
+  " pivotalTracker.vim
+  let g:pivotaltracker_name = "smesser"
+  autocmd FileType gitcommit setlocal completefunc=pivotaltracker#stories
+  autocmd FileType gitcommit setlocal omnifunc=pivotaltracker#stories
+
   function! BufReadIndex()
     " Use j/k in status
     setl nohlsearch
@@ -637,7 +639,7 @@ augroup gitcommit
   au BufReadPost fugitive://* set bufhidden=delete
   au BufReadCmd *.git/index exe BufReadIndex()
   au BufEnter *.git/index silent normal gg0j
-  au BufEnter *.git/COMMIT_EDITMSG exe BufEnterCommit()
+  au BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
 
   " co-authored-by iabbreviations only used during gitcommit messages
@@ -848,7 +850,6 @@ let g:which_key_map = {
       \   'a': 'search-project-for',
       \   'A': 'search-project-for-cursor-word',
       \   'c': 'comment-line',
-      \   'G': 'goyo-enter',
       \   'm': 'fzf-find-files',
       \   'M': 'markdown-preview',
       \   'o': 'new-file',
@@ -1064,7 +1065,7 @@ function! FZFWithDevIcons()
 
 endfunction
 
-function! FzfDevIcons()
+function! FZFDevIcons()
   let l:fzf_files_options = '--preview "bat --theme="base16" --style=numbers,changes --preview-window=right:60%:wrap --color always {2..-1} | head -'.&lines.'"'
 
   function! s:files()
@@ -1098,68 +1099,58 @@ endfunction
 
 silent! unmap <leader>m
 nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
-nnoremap <silent> <leader>m :call FZFWithDevIcons()<CR>
+" nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
+" nnoremap <silent> <leader>m :call FZFWithDevIcons()<CR>
+" nnoremap <silent> <leader>m :call FZFDevIcons()<CR>
 
-" ## junegunn/limelight.vim
-let g:limelight_conceal_guifg = 'DarkGray'
-let g:limelight_conceal_guifg = '#777777'
-
-function! s:goyo_enter()
-  silent !tmux set status off
-  silent !tmux list-panes -F '\#F' | grep -q Z || tmux resize-pane -Z
-  setlocal spell
-  setlocal noshowmode
-  setlocal nocursorline
-  setlocal noshowcmd
-  setlocal nolist
-  setlocal signcolumn=no
-  setlocal showbreak=
-  " Fix Airline showing up bug
-  setlocal eventignore=FocusGained
-  call css_color#disable()
-  let b:coc_suggest_disable = 1
-  IndentLinesDisable
-  color off
-  Limelight
-  " Set up ability to :q from within WritingMode
-  let b:quitting = 0
-  let b:quitting_bang = 0
-  autocmd QuitPre <buffer> let b:quitting = 1
-  cabbrev <buffer> q! let b:quitting_bang = 1 <bar> q!
+function! s:change_branch(e)
+  let l:_ = system('git checkout ' . a:e)
+  :e!
+  echom 'Changed branch to' . a:e
 endfunction
 
-function! s:goyo_leave()
-  silent !tmux set status on
-  silent !tmux list-panes -F '\#F' | grep -q Z && tmux resize-pane -Z
-  set spell<
-  set showmode<
-  set showcmd<
-  set list<
-  set cursorline<
-  set signcolumn<
-  set eventignore<
-  set showbreak=>>>\
-  call css_color#enable()
-  let b:coc_suggest_disable = 0
-  IndentLinesEnable
-  color nova
-  Limelight!
-  AirlineRefresh " Airline starts up weird sometimes...
-  AirlineToggle
-  AirlineToggle
-  AirlineRefresh
-  " Quit Vim if this is the only remaining buffer
-  if b:quitting && len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
-    if b:quitting_bang
-      qa!
-    else
-      qa
-    endif
-  endif
+function! s:change_remote_branch(e)
+  let l:_ = system('git checkout --track ' . a:e)
+  :e!
+  echom 'Changed to remote branch' . a:e
 endfunction
-autocmd! User GoyoEnter nested call <SID>goyo_enter()
-autocmd! User GoyoLeave nested call <SID>goyo_leave()
-nnoremap <silent><Leader>G :Goyo<CR>
+
+function! s:parse_pivotal_story(entry)
+  let l:stories = pivotaltracker#stories('', '')
+  let l:filtered = filter(l:stories, {_idx, val -> val.menu == a:entry[-1]})
+  return l:filtered[0].word
+endfunction
+
+inoremap <expr> <c-x># fzf#complete(
+      \ {
+      \ 'source': map(pivotaltracker#stories('', ''), {_key, val -> val.menu}),
+      \ 'reducer': function('<sid>parse_pivotal_story'),
+      \ 'options': '-m',
+      \ 'down': '20%'
+      \ })
+
+inoremap <expr> <c-x>t fzf#complete(
+      \ {
+      \ 'source': map(pivotaltracker#stories('', ''), {_key, val -> val.menu}),
+      \ 'options': '-m',
+      \ 'down': '20%'
+      \ })
+
+command! Gbranch call fzf#run(
+      \ {
+      \ 'source': 'git branch',
+      \ 'sink': function('<sid>change_branch'),
+      \ 'options': '-m',
+      \ 'down': '20%'
+      \ })
+
+command! Grbranch call fzf#run(
+      \ {
+      \ 'source': 'git branch -r',
+      \ 'sink': function('<sid>change_remote_branch'),
+      \ 'options': '-m',
+      \ 'down': '20%'
+      \ })
 
 
 " ## w0rp/ale

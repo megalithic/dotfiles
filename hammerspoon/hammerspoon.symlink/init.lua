@@ -30,7 +30,19 @@ require('dock').init()
 -- end
 
 -- :: spoons
--- hs.loadSpoon() -- none yet, maybe I'll convert my existing modules to spoons
+-- Initialize and configure installer spoon
+-- hs.loadSpoon("SpoonInstall")
+-- spoon.SpoonInstall.use_syncinstall = true
+-- local Install=spoon.SpoonInstall
+
+-- -- Install:andUse("ReloadConfiguration")
+-- -- spoon.ReloadConfiguration:start()
+
+-- -- show logo to indicate restart
+-- Install:andUse('FadeLogo')
+-- spoon.FadeLogo.image_size = hs.geometry.size(80, 80)
+-- spoon.FadeLogo.run_time = 0.5
+-- spoon.FadeLogo:start()
 
 -- :: app-launching (basic app launching and toggling)
 for _, app in pairs(config.applications) do
