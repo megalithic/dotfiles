@@ -50,14 +50,12 @@ hubitat_local_url() {
 }
 
 require_device_id() {
-  require_device_id() {
-    if [[ -n $device_id ]]; then
-      return 0
-    else
-      echo "ERROR: command $subcommand requires a device_id"
-      return 1
-    fi
-  }
+  if [[ -n $device_id ]]; then
+    return 0
+  else
+    echo "ERROR: command $subcommand requires a device_id"
+    return 1
+  fi
 }
 
 execute_command() {
