@@ -1,11 +1,11 @@
 -- TODO: extract events and device things to config.lua if possible
 local log = hs.logger.new('[hubitat]', 'debug')
 local caffeinateWatcher = nil
-local office_device_id = 163
+local office_device_id = 171
 local weather_device_id = 32
 
 local lampToggle = function(command)
-  hs.execute("hubitat " .. command .. " " .. lamp_device_id, true)
+  hs.execute("hubitat " .. command .. " " .. office_device_id, true)
 end
 
 local isCloudy = function()
