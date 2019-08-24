@@ -2,7 +2,7 @@
 -- Simple Hammerspoon script to create Push-To-Talk functionality
 -- Press and hold fn key to talk
 --
-local log = hs.logger.new('[ push-to-talk ]', 'debug')
+local log = hs.logger.new('[ptt]', 'debug')
 local settings = {
   pushToTalk = true
 }

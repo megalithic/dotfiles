@@ -1,6 +1,7 @@
 local config = require('config')
 local hyper = require("hyper")
 local num_of_screens = 0
+local log = hs.logger.new('[layout]', 'debug')
 
 targetDisplay = function(display_int)
   -- detect the current number of monitors

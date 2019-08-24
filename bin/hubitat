@@ -26,9 +26,9 @@
 #
 # Example parsing strings for status with jq:
 # - is_cloudy: `'.attributes[] | select(.name == "cloud").currentValue | tonumber >= 75'`
-# - is_daytime: `'.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 1'`
-# - is_nighttime: `'.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'`
-# - switch_state: `'.attributes | unique[] | select(.name == \"switch\").currentValue'`
+# - is_daytime: `'.attributes[] | select(.name == "is_day").currentValue | tonumber == 1'`
+# - is_nighttime: `'.attributes[] | select(.name == "is_day").currentValue | tonumber == 0'`
+# - switch_state: `'.attributes | unique[] | select(.name == "switch").currentValue'`
 #
 
 if [ ! $(command -v jq) ]; then

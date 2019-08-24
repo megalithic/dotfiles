@@ -1,6 +1,6 @@
 local config = require('config')
 local utils = require('utils')
-local log = require('log')
+local log = hs.logger.new('[auto-layout]', 'debug')
 local eventsWatcher = hs.uielement.watcher
 local watchers = {}
 local globalAppWatcher = nil
@@ -26,10 +26,10 @@ end
 local isIgnoredWindow = function(window, appConfig)
   local foundIgnoredWindow = false
   if appConfig.ignoredWindows ~= nil then
-    log.df('[auto-layout] ignoredWindows - checking for ignored window (window: %s) for app %s', window:title(),
+    log.df(' ignoredWindows - checking for ignored window (window: %s) for app %s', window:title(),
       string.upper(appConfig.hint))
     if hs.fnutils.contains(appConfig.ignoredWindows, window:title()) then
-      log.df('[auto-layout] ignoredWindows - found ignored window for custom layout, %s in app, %s', window:title(),
+      log.df(' ignoredWindows - found ignored window for custom layout, %s in app, %s', window:title(),
         string.upper(appConfig.hint))
       foundIgnoredWindow = true
       return true
@@ -40,7 +40,7 @@ local isIgnoredWindow = function(window, appConfig)
 end
 
 local setLayoutForSingleWindow = function(window, appConfig)
-  log.df('[auto-layout] setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
+  log.df(' setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
 
   if window ~= nil then
     if not isIgnoredWindow(window, appConfig) then
@@ -51,7 +51,7 @@ end
 
 local setLayoutForMultiWindows = function(windows, appConfig)
   for index, window in pairs(windows) do
-    log.df('[auto-layout] setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
+    log.df(' setLayoutForApp (multiple windows) - grid layout applied for app: %s, window: %s, # of windows: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
 
     if window ~= nil then
       if not isIgnoredWindow(window, appConfig) then
@@ -67,7 +67,7 @@ end
 
 local setLayoutForApp = function(app, appConfig)
   if app ~= nil and app:mainWindow() ~= nil then
-    log.df('[auto-layout] setLayoutForApp - beginning layout for single app: %s', string.upper(app:name()))
+    log.df(' setLayoutForApp - beginning layout for single app: %s', string.upper(app:name()))
 
     local windows = getManageableWindows(app:visibleWindows())
     appConfig = appConfig or config.applications[app:name()]
@@ -79,16 +79,16 @@ local setLayoutForApp = function(app, appConfig)
       elseif (#windows > 1) then
         setLayoutForMultiWindows(windows, appConfig)
       else
-        log.df('[auto-layout] setLayoutForApp (no manageable windows found) - grid layout NOT applied for app: %s, #windows: %s, target_display: %s, position: %s', string.upper(app:name()), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
+        log.df(' setLayoutForApp (no manageable windows found) - grid layout NOT applied for app: %s, #windows: %s, target_display: %s, position: %s', string.upper(app:name()), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
       end
     else
-      log.df('[auto-layout] setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
+      log.df(' setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
     end
   end
 end
 
 local setLayoutForAll = function()
-  log.i('[auto-layout] setLayoutForAll - beginning layout for all apps')
+  log.i(' setLayoutForAll - beginning layout for all apps')
 
   for _, appConfig in pairs(config.applications) do
     -- we have an appConfig and a preferredDisplay defined
@@ -101,17 +101,17 @@ local setLayoutForAll = function()
 end
 
 local handleWindowEvent = function(window, event, watcher, info)
-  log.df('[auto-layout] handleWindowEvent - window event; new window event (%s) for %s (%s)', event,
+  log.df(' handleWindowEvent - window event; new window event (%s) for %s (%s)', event,
     window:application():bundleID(), info.id)
 
   if event == eventsWatcher.elementDestroyed then
-    log.df('[auto-layout] handleWindowEvent - window event; %s destroyed for %s', info.id,
+    log.df(' handleWindowEvent - window event; %s destroyed for %s', info.id,
       window:application():bundleID())
     watcher:stop()
     watchers[info.pid].windows[info.id] = nil
     setLayoutForApp(window:application())
   else
-    log.wf('[auto-layout] handleWindowEvent - window error; unexpected window event (%d) received', event)
+    log.wf(' handleWindowEvent - window error; unexpected window event (%d) received', event)
   end
 end
 
@@ -124,17 +124,17 @@ local watchWindow = function(window)
   if utils.canManageWindow(window) then
     local id = window:id()
 
-    log.df('[auto-layout] watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)',
+    log.df(' watchWindow - window event; attempting to watch %s (app %s, window %s, ID %s, %s windows)',
       bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
 
     -- layout specifics for given apps
     if config.applications[app:name()] then
-      log.df('[auto-layout] watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(app))
+      log.df(' watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(app))
       setLayoutForApp(app)
 
       -- execute custom app fn() for given application
       if config.applications[app:name()].fn ~= nil then
-        log.df('[auto-layout] watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
+        log.df(' watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
         config.applications[app:name()].fn(window)
       end
     else
@@ -154,7 +154,7 @@ local watchWindow = function(window)
       end
     end
   else
-    log.df('[auto-layout] watchWindow - window event; unable to watch unmanageable %s (window %s, ID %s, %s windows)',
+    log.df(' watchWindow - window event; unable to watch unmanageable %s (window %s, ID %s, %s windows)',
       bundleID, window:title(), id, utils.windowCount(app))
   end
 end
@@ -162,16 +162,16 @@ end
 local handleAppEvent = function(element, event)
   if event == eventsWatcher.windowCreated then
     if pcall(function()
-      log.df('[auto-layout] handleAppEvent - app event; window %s created for %s', element:id(),
+      log.df(' handleAppEvent - app event; window %s created for %s', element:id(),
         element:application():bundleID())
     end) then
       watchWindow(element)
     else
-      log.wf('[auto-layout] handleAppEvent - app event error; thrown trying to access element (%s) in handleAppEvent',
+      log.wf(' handleAppEvent - app event error; thrown trying to access element (%s) in handleAppEvent',
         element)
     end
   else
-    log.wf('[auto-layout] handleAppEvent - app event error; unexpected app event (%s) received', event)
+    log.wf(' handleAppEvent - app event error; unexpected app event (%s) received', event)
   end
 end
 
@@ -179,7 +179,7 @@ local watchApp = function(app)
   local pid = app:pid()
   if watchers[pid] or app:bundleID() == 'org.hammerspoon.Hammerspoon' or
     app:bundleID() == 'com.contextsformac.Contexts' then
-    log.wf('[auto-layout] watchApp - app warning; attempted watch for already-watched app PID %d', pid)
+    log.wf(' watchApp - app warning; attempted watch for already-watched app PID %d', pid)
     return
   end
 
@@ -200,7 +200,7 @@ end
 local unwatchApp = function(pid)
   local appWatcher = watchers[pid]
   if not appWatcher then
-    log.wf('[auto-layout] unwatchApp - app warning; attempted unwatch for unknown app PID %d', pid)
+    log.wf(' unwatchApp - app warning; attempted unwatch for unknown app PID %d', pid)
     return
   end
 
@@ -214,14 +214,14 @@ end
 
 local handleGlobalAppEvent = function(name, eventType, app)
   if eventType == hs.application.watcher.launched then
-    log.df('[auto-layout] handleGlobalAppEvent - global app event; launched %s', app:bundleID())
+    log.df(' handleGlobalAppEvent - global app event; launched %s', app:bundleID())
     if app:bundleID() ~= 'org.hammerspoon.Hammerspoon' or app:bundleID() ~= 'com.contextsformac.Contexts' then
       watchApp(app)
     end
   elseif eventType == hs.application.watcher.terminated then
     -- Only the PID is set for terminated apps, so can't log bundleID.
     local pid = app:pid()
-    log.df('[auto-layout] handleGlobalAppEvent - global app event; terminated PID %d', pid)
+    log.df(' handleGlobalAppEvent - global app event; terminated PID %d', pid)
     unwatchApp(pid)
   end
 end
@@ -232,7 +232,7 @@ local handleScreenEvent = function()
   -- events.
   local screens = hs.screen.allScreens()
 
-  log.df('[auto-layout] handleScreenEvent - screen event; new screens (%s), previous screens (%s)',
+  log.df(' handleScreenEvent - screen event; new screens (%s), previous screens (%s)',
     #screens, screenCount)
 
   if #screens ~= screenCount then
@@ -243,7 +243,7 @@ end
 
 return {
   init = (function()
-    log.i('[auto-layout] init - creating screen/app/window watchers')
+    log.i(' init - creating screen/app/window watchers')
 
     -- Watch for screen changes
     screenWatcher = hs.screen.watcher.new(handleScreenEvent)
@@ -262,7 +262,7 @@ return {
     end
   end),
   teardown = (function()
-    log.i('[auto-layout] teardown - tearing down screen/app/window watchers')
+    log.i(' teardown - tearing down screen/app/window watchers')
 
     globalAppWatcher:stop()
     globalAppWatcher = nil
