@@ -46,9 +46,11 @@ end)
 
 local dockedAction = function()
   log.i('Target USB device plugged in; laptop presumably docked')
-  hs.timer.doAfter(2, function ()
+  hs.timer.doAfter(1, function ()
     selectKarabinerProfile(config.docking['docked'].profile)
     toggleWifi(config.docking['docked'].wifi)
+  end)
+  hs.timer.doAfter(4, function ()
     selectAudioOutput(config.docking['docked'].output)
     selectAudioInput(config.docking['docked'].input)
   end)
@@ -56,9 +58,11 @@ end
 
 local undockedAction = function()
   log.i('Target USB device unplugged; laptop presumably undocked')
-  hs.timer.doAfter(2, function ()
+  hs.timer.doAfter(1, function ()
     selectKarabinerProfile(config.docking['undocked'].profile)
     toggleWifi(config.docking['undocked'].wifi)
+  end)
+  hs.timer.doAfter(4, function ()
     selectAudioOutput(config.docking['undocked'].output)
     selectAudioInput(config.docking['undocked'].input)
   end)
@@ -69,7 +73,6 @@ local handleUsbWatcherEvent = (function(event)
   -- things based on being "docked".
   if event.vendorID == config.docking['device'].vendorID and event.productID == config.docking['device'].productID then
     if event.eventType == 'added' then
-      -- require('home-assistant').init()
       isDocked = true
       dockedAction()
     else

@@ -9,7 +9,7 @@ local lampToggle = function(command)
 end
 
 local isCloudy = function()
-  return hs.task.new(
+  local isCloudy = hs.task.new(
     "/Users/replicant/.dotfiles/bin/hubitat",
     function(...)
       print("exit", hs.inspect(table.pack(...)))
@@ -18,13 +18,24 @@ local isCloudy = function()
       print("stream", hs.inspect(table.pack(...)))
       return true
     end,
-    {"status", weather_device_id, '.attributes[] | select(.name == "cloud").currentValue | tonumber >= 75'}
+    {"status", "".. weather_device_id .. "", '.attributes[] | select(.name == "cloud").currentValue | tonumber >= 75'}
   ):start()
+  log.df("isCloudy? %s", isCloudy)
   -- return hs.execute("hubitat status " .. weather_device_id .. " '.attributes[] | select(.name == \"cloud\").currentValue | tonumber >= 75'")
 end
 
 local isNight = function()
-  return hs.task.new("/Users/replicant/.dotfiles/bin/hubitat", nil, {"status", weather_device_id, '.attributes[] | select(.name == "is_day").currentValue | tonumber == 0'}):start()
+  local isNight = hs.task.new(
+    "/Users/replicant/.dotfiles/bin/hubitat",
+    function(...)
+      print("exit", hs.inspect(table.pack(...)))
+    end, function(...)
+      print("stream", hs.inspect(table.pack(...)))
+      return true
+    end,
+    {"status", "".. weather_device_id .. "", '.attributes[] | select(.name == "is_day").currentValue | tonumber == 0'}
+    ):start()
+  log.df("isNight? %s", isNight)
   -- return hs.execute("hubitat status " .. weather_device_id .. " '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'")
 end
 
@@ -37,12 +48,6 @@ local handleCaffeinateEvent = function(eventType) -- (int)
   elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
     log.df('Attempting to turn ON office lamp')
     lampToggle("on")
-
-    -- log.df("isNight?")
-    -- log.df(isNight())
-
-    log.df("isCloudy?")
-    log.df(isCloudy())
 
     -- if (isNight()) then
     --   log.df('night time; turning on office lamp, regardless of weather conditions')
@@ -69,5 +74,5 @@ return {
     log.i('Tearing down hubitat watcher')
     caffeinateWatcher:stop()
     caffeinateWatcher = nil
-  end)
+  end),
 }

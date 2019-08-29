@@ -66,6 +66,7 @@ Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
   let g:coc_global_extensions = [
+        \ 'coc-bookmark',
         \ 'coc-calc',
         \ 'coc-css',
         \ 'coc-diagnostic',
@@ -133,7 +134,8 @@ Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizo
 Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
-Plug 'megalithic/elm-vim', { 'for': ['elm'] }
+" Plug 'megalithic/elm-vim', { 'for': ['elm'] }
+Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
@@ -1911,6 +1913,11 @@ nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
 nmap [g <Plug>(coc-git-prevchunk)
 nmap ]g <Plug>(coc-git-nextchunk)
 nmap gs <Plug>(coc-git-chunkinfo)
+
+" nmap <silent> ,b <Plug>(coc-bookmark-toggle)
+" nmap <silent> ,a <Plug>(coc-bookmark-annotate)
+" nmap <silent> gh <Plug>(coc-bookmark-prev)
+" nmap <silent> gl <Plug>(coc-bookmark-next)
 
 augroup Coc
   au!
