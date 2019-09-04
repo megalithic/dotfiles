@@ -118,8 +118,10 @@ defaults write -g NSRequiresAquaSystemAppearance -bool Yes
 
 # mojave sub-pixel font smoothing
 # ref: https://www.reddit.com/r/MacOS/comments/9ijy88/font_antialiasing_on_mojave/e6mbs49/
+# ref: https://forums.macrumors.com/threads/the-subpixel-aa-debacle-and-font-rendering.2184484/
 defaults -currentHost write -globalDomain AppleFontSmoothing -int 2
-defaults write -g CGFontRenderingFontSmoothingDisabled -bool NO
+defaults write -g CGFontRenderingFontSmoothingDisabled -bool false
+# ^-- or, `NO`, instead of `false`
 
 # 14 days on ical
 defaults write com.apple.iCal n\ days\ of\ week 14

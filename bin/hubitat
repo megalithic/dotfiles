@@ -97,7 +97,7 @@ off() {
 }
 
 set() {
-  echo "Not Implemented"
+  echo "Not implemented yet"
   return 127
 }
 
@@ -110,9 +110,6 @@ status() {
   else
     echo "ERROR: command $subcommand requires a query"
     return 1
-
-    # query='.'
-    # execute_command
   fi
 }
 

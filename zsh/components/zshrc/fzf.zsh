@@ -41,6 +41,7 @@ if [ -n "$(command -v fzf)" ]; then
     --no-multi
     --preview-window=right:60%:wrap
     --preview 'bat --theme="base16" --style=numbers,changes --color always {}'
+    --layout=reverse
     "
     # --preview 'bat {}'
     # --border

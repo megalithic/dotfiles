@@ -4,7 +4,7 @@ local utils = require('utils')
 local hotkey = require('hs.hotkey')
 local log = require('log')
 
-hs.grid.GRIDWIDTH = 12
+hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
@@ -21,18 +21,18 @@ config.preferredSSID = 'shaolin'
 config.lastSSID = hs.wifi.currentNetwork()
 
 config.grid = {
-  topHalf =         '0,0 12x4',
-  rightHalf =       '6,0 6x8',
-  bottomHalf =      '0,4 12x4',
-  leftHalf =        '0,0 6x8',
-  rightOneThird =   '6,0 3x8',
-  rightTwoThirds =  '2,0 5x8',
+  topHalf =         '0,0 8x4',
+  rightHalf =       '4,0 4x8',
+  bottomHalf =      '0,4 8x4',
+  leftHalf =        '0,0 4x8',
+  rightOneThird =   '5,0 3x8',
+  rightTwoThirds =  '3,0 5x8',
   leftOneThird =    '0,0 3x8',
   leftTwoThirds =   '0,0 5x8',
-  fullScreen =      '0,0 12x8',
-  centeredLarge =   '2,1 8x6',
-  centeredMedium =  '4,2 6x4',
-  centeredSmall =   '6,3 4x2',
+  fullScreen =      '0,0 8x8',
+  centeredLarge =   '1,1 6x6',
+  centeredMedium =  '2,2 4x4',
+  centeredSmall =   '3,3 2x2',
 }
 
 config.superKeys = {
@@ -65,7 +65,7 @@ config.applications = {
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
     preferredDisplay = 1,
-    position = config.grid.leftHalf,
+    position = config.grid.fullScreen,
     quitGuard = true,
   },
   ['Dash'] = {
@@ -81,7 +81,7 @@ config.applications = {
     superKey = config.superKeys.cmd,
     shortcut = '`',
     preferredDisplay = 1,
-    position = config.grid.rightHalf,
+    position = config.grid.fullScreen,
     quitGuard = true
   },
   ['Google Chrome'] = {
@@ -208,7 +208,7 @@ config.applications = {
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
-    position = config.grid.centeredLarge,
+    position = config.grid.rightHalf,
     dnd = true,
   },
   ['Spotify'] = {
@@ -217,7 +217,7 @@ config.applications = {
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 1,
-    position = '6,0 6x5'
+    position = '5,0 5x5'
   },
   ['Messages'] = {
     name = 'Messages',
@@ -225,7 +225,7 @@ config.applications = {
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
     preferredDisplay = 1,
-    position = '6,5 3x3'
+    position = '5,5 3x3'
   },
   ['1Password 7'] = {
     name = '1Password 7',
@@ -250,14 +250,14 @@ config.applications = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
-  ['Fantastical'] = {
-    name = 'Fantastical',
-    hint = 'com.flexibits.fantastical2.mac',
-    -- superKey = config.superKeys.cmdShift,
-    -- shortcut = 'f',
-    preferredDisplay = 1,
-    position = config.grid.centeredMedium
-  },
+  -- ['Fantastical'] = {
+  --   name = 'Fantastical',
+  --   hint = 'com.flexibits.fantastical2.mac',
+  --   -- superKey = config.superKeys.cmdShift,
+  --   -- shortcut = 'f',
+  --   preferredDisplay = 1,
+  --   position = config.grid.centeredMedium
+  -- },
 }
 
 config.utilities = {
@@ -406,8 +406,6 @@ config.snap = {
     shortcut = 'k',
     locations = utils.chain({
       config.grid.fullScreen,
-      config.grid.topHalf,
-      config.grid.bottomHalf,
     })
   }
 }
@@ -415,10 +413,10 @@ config.snap = {
 config.docking = {
   -- find your device IDs with `print(hs.inspect(hs.usb.attachedDevices()))` from the hammerspoon console
   ['device'] = {
-    productID = 39481,
-    productName = "USB Controls",
-    vendorID = 1086,
-    vendorName = "LG Electronics Inc."
+    productID = 8800,
+    productName = "DZ60",
+    vendorID = 65261,
+    vendorName = "KBDFans"
   },
   ['docked'] = {
     wifi = 'off', -- wifi status
