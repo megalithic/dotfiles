@@ -828,8 +828,6 @@ nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
 " ## rhysd/git-messenger
 " let g:git_messenger_no_default_mappings = 1
 " let g:git_messenger_include_diff = "none"
-" let g:git_messenger_max_popup_width = "50"
-" let g:git_messenger_max_popup_height = "25"
 nmap <leader>gm <Plug>(git-messenger)
 
 " ## junegunn/vim-easy-align

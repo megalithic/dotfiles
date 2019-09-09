@@ -1,7 +1,6 @@
 require("meta")
 
-local log = require('log')
-log.verbose()
+local log = hs.logger.new('[init]', 'verbose')
 
 hs.ipc.cliInstall()
 hs.console.darkMode(true)
@@ -24,9 +23,8 @@ require('quit')
 -- require('dock').init()
 
 -- handles hubitat home-automation things based upon the computer doing things
-if (require('dock').init()) then
-  require('hubitat').init()
-end
+local isDocked = require('dock').init()
+require('caffeinate').init(isDocked)
 
 -- :: spoons
 -- Initialize and configure installer spoon

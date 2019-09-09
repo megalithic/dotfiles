@@ -109,7 +109,7 @@ config.applications = {
       },
     },
     preferredDisplay = 1,
-    position = config.grid.centeredMedium,
+    position = config.grid.rightHalf,
     quitGuard = false,
   },
   ['Marked 2'] = {
