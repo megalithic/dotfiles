@@ -23,6 +23,8 @@ fi
 help(){
   echo "Usage: $command <subcommand> [options]\n"
   echo "Subcommands:"
+  echo "    on    Sets pairing slack status and DND on"
+  echo "    off   Removes pairing slack status and DND off"
   echo "    add   Add a github user"
   echo "    rm    Remove a github user"
   echo "    ls    List authorized github users"
@@ -51,7 +53,7 @@ up(){
     add $@
   fi
 
-  [ -x "$(command -v dnd)" ] && dnd on
+  pair_status_on
 
   tmux new-session -d -s $session "ng connect"
   tmux switch -t $session
@@ -78,7 +80,7 @@ up(){
 }
 
 down() {
-  [ -x "$(command -v dnd)" ] && dnd off
+  pair_status_off
   pkill -9 -f ngrok
   pkill -9 -f erlang
   pkill -9 -f beam.smp
@@ -108,10 +110,36 @@ info() {
   printf -- '\n\033[33m➜ Copied pairing ssh address to clipboard!\033[0m\n'
 }
 
+pair_status_on () {
+  [ -x "$(command -v dnd)" ] && dnd on
+  [ -x "$(command -v slack)" ] && slack pair
+}
+
+pair_status_off () {
+  [ -x "$(command -v dnd)" ] && dnd off
+  [ -x "$(command -v slack)" ] && slack back
+}
+
+toggle_pair_status() {
+  if [[ -x "$(command -v dnd)" ]]; then
+    if $(dnd dnd_enabled); then
+      pair_status_off
+    else
+      pair_status_on
+    fi
+  fi
+}
+
 subcommand=$1
 case $subcommand in
-  '' | '-h' | '--help')
+  '')
+    toggle_pair_status ;;
+  '-h' | '--help')
     help ;;
+  on)
+    pair_status_on ;;
+  off)
+    pair_status_off ;;
   *)
     shift
     ${subcommand} $@

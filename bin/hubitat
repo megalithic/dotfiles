@@ -118,9 +118,7 @@ device_id=$2
 query=$3
 
 case $subcommand in
-  '')
-    help ;;
-  '-h' | '--help')
+  '' | '-h' | '--help')
     help ;;
   *)
     shift

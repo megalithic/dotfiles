@@ -15,16 +15,13 @@
 base_command="$(basename "$0")"
 
 help() {
-  printf -- "Usage: "$base_command" <subcommand> <option>\n"
-  printf -- "\n"
-  printf -- "Channels:\n"
-  printf -- "    enbala\n"
-  printf -- "    cit\n"
-  printf -- "    magiccitytech\n"
+  printf -- "Usage: "$base_command" <subcommand> <options>\n"
   printf -- "\n"
   printf -- "Subcommands:\n"
-  printf -- "    away               Set presence away, and profile accordingly\n"
-  printf -- "    back               Set presence auto, and profile accordingly\n"
+  printf -- "    away               Set presence to away, and profile for being gone\n"
+  printf -- "    lunch              Set presence to away, and profile for lunch\n"
+  printf -- "    pair               Set presence to away, and profile for pairing\n"
+  printf -- "    back               Set presence to auto, and profile accordingly\n"
   printf -- "\n"
 }
 
@@ -34,36 +31,24 @@ function post_to_api () {
   # $3=endpoint
 
   # hide curl output if we want, and send it to our spinner
-  # 2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | grep '"ok":true' | spinner
+  # curl -s --data "" "https://slack.com/api/$3?token=$1&$2" | \
+  #   grep -q '"ok":true,' && \
+  #       echo "${green}Status updated ok${reset}" || \
+  #       echo "${red}There was a problem updating the status${reset}" | \
+  #   spinner
   2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | spinner
 }
 
-function post_slack_status () {
+function post_profile () {
   # $1=token
   # $2=options
-  # $3=endpoint
   post_to_api $1 $2 "users.profile.set"
 }
 
 function post_presence () {
   # $1=token
   # $2=options
-  # $3=endpoint
   post_to_api $1 $2 "users.setPresence"
-}
-
-function away () {
-  profile="profile=%7B%22status_text%22:%22..gone..%22,%22status_emoji%22:%22%22%7D"
-  presence="presence=away"
-  post_all_presence $presence
-  post_all_slack_status $profile
-}
-
-function back () {
-  profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-  presence="presence=auto"
-  post_all_presence $presence
-  post_all_slack_status $profile
 }
 
 function post_all_presence () {
@@ -72,41 +57,46 @@ function post_all_presence () {
   post_presence $MAGICCITYTECH_TOKEN $1
 }
 
-function post_all_slack_status () {
-  post_slack_status $ENBALA_TOKEN $1
-  post_slack_status $CIT_TOKEN $1
-  post_slack_status $MAGICCITYTECH_TOKEN $1
+function post_all_profile () {
+  post_profile $ENBALA_TOKEN $1
+  post_profile $CIT_TOKEN $1
+  post_profile $MAGICCITYTECH_TOKEN $1
+}
+
+function away () {
+  presence="presence=away"
+  post_all_presence $presence
+  profile="profile=%7B%22status_text%22:%22..adios..%22,%22status_emoji%22:%22:wave:%22%7D"
+  post_all_profile $profile
+}
+
+function lunch () {
+  presence="presence=away"
+  post_all_presence $presence
+  profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
+  post_all_profile $profile
+}
+
+function pair () {
+  presence="presence=away"
+  post_all_presence $presence
+  profile="profile=%7B%22status_text%22:%22..pairing..%22,%22status_emoji%22:%22:pear:%22%7D"
+  post_all_profile $profile
+}
+
+function back () {
+  presence="presence=auto"
+  post_all_presence $presence
+  profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+  post_all_profile $profile
 }
 
 subcommand=$1
 options=$2
 
 case $subcommand in
-  '')
+  '' | '-h' | '--help')
     help ;;
-  '-h' | '--help')
-    help ;;
-  enbala)
-    slack_token=$ENBALA_TOKEN
-    profile="profile=%7B%22status_text%22:%22Working%22,%22status_emoji%22:%22:briefcase:%22%7D"
-    presence="presence=$options"
-    post_presence $slack_token $presence
-    # post_slack_status $slack_token $profile
-    ;;
-  cit)
-    slack_token=$CIT_TOKEN
-    profile="profile=%7B%22status_text%22:%22Working%22,%22status_emoji%22:%22:briefcase:%22%7D"
-    presence="presence=$options"
-    post_presence $slack_token $presence
-    # post_slack_status $slack_token $profile
-    ;;
-  magiccitytech)
-    slack_token=$MAGICCITYTECH_TOKEN
-    profile="profile=%7B%22status_text%22:%22Working%22,%22status_emoji%22:%22:briefcase:%22%7D"
-    presence="presence=$options"
-    post_presence $slack_token $presence
-    # post_slack_status $slack_token $profile
-    ;;
   *)
     shift
     ${subcommand} $@
