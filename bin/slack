@@ -4,39 +4,38 @@
 # What in tarnation?
 #
 # CLI tool to control slack status and presence
-
+#
 # Requires:
 # - ENV vars setup for your slack API tokens (KEEP THEM SAFE! DO NOT commit your tokens to github)
 #   * you can find them here: https://api.slack.com/custom-integrations/legacy-tokens
+# - `spinner` from my dotfiles' `bin` folder
 #
 
 
 base_command="$(basename "$0")"
 
 help() {
-  printf -- "Usage: "$base_command" <channel> <option>\n"
+  printf -- "Usage: "$base_command" <subcommand> <option>\n"
   printf -- "\n"
   printf -- "Channels:\n"
   printf -- "    enbala\n"
   printf -- "    cit\n"
   printf -- "    magiccitytech\n"
   printf -- "\n"
-  # printf -- "Subcommands:\n"
-  # printf -- "    enbala               Turn ON specific device\n"
-  # printf -- "    cit                  Turn OFF specific device\n"
-  # printf -- "    magiccitytech        Get the current status of specific device with query\n"
-  # printf -- "\n"
+  printf -- "Subcommands:\n"
+  printf -- "    away               Set presence away, and profile accordingly\n"
+  printf -- "    back               Set presence auto, and profile accordingly\n"
+  printf -- "\n"
 }
-
-cit_token="$CIT_TOKEN"
-enbala_token="$ENBALA_TOKEN"
-magiccitytech_token="$MAGICCITYTECH_TOKEN"
 
 function post_to_api () {
   # $1=token
   # $2=options
   # $3=endpoint
-  curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | grep '"ok":true'
+
+  # hide curl output if we want, and send it to our spinner
+  # 2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | grep '"ok":true' | spinner
+  2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | spinner
 }
 
 function post_slack_status () {
@@ -53,45 +52,63 @@ function post_presence () {
   post_to_api $1 $2 "users.setPresence"
 }
 
-channel=$1
+function away () {
+  profile="profile=%7B%22status_text%22:%22..gone..%22,%22status_emoji%22:%22%22%7D"
+  presence="presence=away"
+  post_all_presence $presence
+  post_all_slack_status $profile
+}
+
+function back () {
+  profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+  presence="presence=auto"
+  post_all_presence $presence
+  post_all_slack_status $profile
+}
+
+function post_all_presence () {
+  post_presence $ENBALA_TOKEN $1
+  post_presence $CIT_TOKEN $1
+  post_presence $MAGICCITYTECH_TOKEN $1
+}
+
+function post_all_slack_status () {
+  post_slack_status $ENBALA_TOKEN $1
+  post_slack_status $CIT_TOKEN $1
+  post_slack_status $MAGICCITYTECH_TOKEN $1
+}
+
+subcommand=$1
 options=$2
 
-case $channel in
+case $subcommand in
   '')
     help ;;
   '-h' | '--help')
     help ;;
   enbala)
-    slack_token=$enbala_token
-    profile="profile=%7B%22status_text%22:%22Fitzroy%22,%22status_emoji%22:%22:briefcase:%22%7D"
+    slack_token=$ENBALA_TOKEN
+    profile="profile=%7B%22status_text%22:%22Working%22,%22status_emoji%22:%22:briefcase:%22%7D"
     presence="presence=$options"
     post_presence $slack_token $presence
     # post_slack_status $slack_token $profile
     ;;
   cit)
-    slack_token=$cit_token
-    profile="profile=%7B%22status_text%22%3A%22MIRI%22,%22status_emoji%22%3A%22%3Amiri%3A%22%7D"
+    slack_token=$CIT_TOKEN
+    profile="profile=%7B%22status_text%22:%22Working%22,%22status_emoji%22:%22:briefcase:%22%7D"
     presence="presence=$options"
     post_presence $slack_token $presence
     # post_slack_status $slack_token $profile
     ;;
   magiccitytech)
-    slack_token=$magiccitytech_token
-    profile="profile=%7B%22status_text%22%3A%22MIRI%22,%22status_emoji%22%3A%22%3Amiri%3A%22%7D"
+    slack_token=$MAGICCITYTECH_TOKEN
+    profile="profile=%7B%22status_text%22:%22Working%22,%22status_emoji%22:%22:briefcase:%22%7D"
     presence="presence=$options"
     post_presence $slack_token $presence
     # post_slack_status $slack_token $profile
     ;;
   *)
-    profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-    presence="presence=$options"
-    post_presence $slack_token $presence
-    # post_slack_status $enbala_token $profile
-    # post_slack_status $cit_token $profile
-    # post_slack_status $magiccitytech_token $profile
+    shift
+    ${subcommand} $@
     ;;
-#   *)
-#     shift
-#     ${subcommand} $@
-#     ;;
 esac
