@@ -23,6 +23,7 @@ help() {
   printf -- "    away               Set presence to away, and profile for being gone\n"
   printf -- "    lunch              Set presence to away, and profile for lunch\n"
   printf -- "    pair               Set DND to on, and profile for pairing\n"
+  printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
   printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
   printf -- "    back               Set presence to auto, and profile accordingly\n"
   printf -- "\n"
@@ -69,26 +70,26 @@ function end_dnd() {
 
 function set_all_presence() {
   set_presence $ENBALA_TOKEN $1
-  set_presence $CIT_TOKEN $1
-  set_presence $MAGICCITYTECH_TOKEN $1
+  # set_presence $CIT_TOKEN $1
+  # set_presence $MAGICCITYTECH_TOKEN $1
 }
 
 function set_all_profile() {
   set_profile $ENBALA_TOKEN $1
-  set_profile $CIT_TOKEN $1
-  set_profile $MAGICCITYTECH_TOKEN $1
+  # set_profile $CIT_TOKEN $1
+  # set_profile $MAGICCITYTECH_TOKEN $1
 }
 
 function set_all_dnd() {
   set_dnd $ENBALA_TOKEN $1
-  set_dnd $CIT_TOKEN $1
-  set_dnd $MAGICCITYTECH_TOKEN $1
+  # set_dnd $CIT_TOKEN $1
+  # set_dnd $MAGICCITYTECH_TOKEN $1
 }
 
 function end_all_dnd() {
   end_dnd $ENBALA_TOKEN $1
-  end_dnd $CIT_TOKEN $1
-  end_dnd $MAGICCITYTECH_TOKEN $1
+  # end_dnd $CIT_TOKEN $1
+  # end_dnd $MAGICCITYTECH_TOKEN $1
 }
 
 function away() {
@@ -112,16 +113,23 @@ function pair() {
   set_all_dnd $dnd
 }
 
+function zoom() {
+  profile="profile=%7B%22status_text%22:%22..meeting..%22,%22status_emoji%22:%22:calendar:%22%7D"
+  set_all_profile $profile
+  dnd="num_minutes=120"
+  set_all_dnd $dnd
+}
+
 function dnd() {
-  profile="profile=%7B%22status_text%22:%22..working..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
+  profile="profile=%7B%22status_text%22:%22..focused..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
   set_all_profile $profile
   dnd="num_minutes=120"
   set_all_dnd $dnd
 }
 
 function back() {
-  # presence="presence=auto"
-  # set_all_presence $presence
+  presence="presence=auto"
+  set_all_presence $presence
   profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
   set_all_profile $profile
   dnd=0
@@ -134,6 +142,8 @@ options=$2
 case $subcommand in
   '' | '-h' | '--help')
     help ;;
+  here)
+    back ;;
   *)
     shift
     ${subcommand} $@
