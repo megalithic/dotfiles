@@ -1,6 +1,6 @@
 local log = hs.logger.new('[caffeinate]', 'debug')
 local hubitat = require('hubitat')
-local caffeinateWatcher = hs.caffeinate.watcher
+local watcher = nil
 local isDocked = false
 
 local handleCaffeinateEvent = function(eventType) -- (int)
@@ -37,10 +37,10 @@ return {
   init = (function(is_docked)
     isDocked = is_docked
     log.df('Creating caffeinate watcher (isDocked? %s)', isDocked)
-    caffeinateWatcher.new(handleCaffeinateEvent):start()
+    watcher = hs.caffeinate.watcher.new(handleCaffeinateEvent):start()
   end),
   teardown = (function()
     log.i('Tearing down caffeinate watcher')
-    caffeinateWatcher:stop()
+    watcher:stop()
   end),
 }

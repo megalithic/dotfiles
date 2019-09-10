@@ -1,7 +1,7 @@
 local config = require('config')
 local log = hs.logger.new('[docking]', 'debug')
 local isDocked = false
-local usbWatcher = hs.usb.watcher
+local watcher = nil
 
 local selectKarabinerProfile = (function(profile)
   hs.execute(
@@ -85,7 +85,7 @@ end)
 return {
   init = (function()
     log.i('Creating laptop-docking-mode watchers')
-    usbWatcher.new(handleUsbWatcherEvent):start()
+    watcher = hs.usb.watcher.new(handleUsbWatcherEvent):start()
 
     isDocked = isDeviceConnected()
 
@@ -100,7 +100,7 @@ return {
   end),
   teardown = (function()
     log.i('Tearing down laptop-docking-mode watchers')
-    usbWatcher:stop()
+    watcher:stop()
   end),
   isDocked = isDeviceConnected()
 }
