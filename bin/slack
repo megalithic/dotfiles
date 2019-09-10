@@ -10,6 +10,8 @@
 #   * you can find them here: https://api.slack.com/custom-integrations/legacy-tokens
 # - `spinner` from my dotfiles' `bin` folder
 #
+# Attribution: https://github.com/matthewfallshaw/utilities/blob/master/shell/slack-status
+#
 
 
 base_command="$(basename "$0")"
