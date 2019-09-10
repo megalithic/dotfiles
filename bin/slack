@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+#
+# What in tarnation?
+#
+# CLI tool to control slack status and presence
+
+# Requires:
+# - ENV vars setup for your slack API tokens (KEEP THEM SAFE! DO NOT commit your tokens to github)
+#   * you can find them here: https://api.slack.com/custom-integrations/legacy-tokens
+#
+
+
+base_command="$(basename "$0")"
+
+help() {
+  printf -- "Usage: "$base_command" <channel> <option>\n"
+  printf -- "\n"
+  printf -- "Channels:\n"
+  printf -- "    enbala\n"
+  printf -- "    cit\n"
+  printf -- "    magiccitytech\n"
+  printf -- "\n"
+  # printf -- "Subcommands:\n"
+  # printf -- "    enbala               Turn ON specific device\n"
+  # printf -- "    cit                  Turn OFF specific device\n"
+  # printf -- "    magiccitytech        Get the current status of specific device with query\n"
+  # printf -- "\n"
+}
+
+cit_token="$CIT_TOKEN"
+enbala_token="$ENBALA_TOKEN"
+magiccitytech_token="$MAGICCITYTECH_TOKEN"
+
+function post_to_api () {
+  # $1=token
+  # $2=options
+  # $3=endpoint
+  curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | grep '"ok":true'
+}
+
+function post_slack_status () {
+  # $1=token
+  # $2=options
+  # $3=endpoint
+  post_to_api $1 $2 "users.profile.set"
+}
+
+function post_presence () {
+  # $1=token
+  # $2=options
+  # $3=endpoint
+  post_to_api $1 $2 "users.setPresence"
+}
+
+channel=$1
+options=$2
+
+case $channel in
+  '')
+    help ;;
+  '-h' | '--help')
+    help ;;
+  enbala)
+    slack_token=$enbala_token
+    profile="profile=%7B%22status_text%22:%22Fitzroy%22,%22status_emoji%22:%22:briefcase:%22%7D"
+    presence="presence=$options"
+    post_presence $slack_token $presence
+    # post_slack_status $slack_token $profile
+    ;;
+  cit)
+    slack_token=$cit_token
+    profile="profile=%7B%22status_text%22%3A%22MIRI%22,%22status_emoji%22%3A%22%3Amiri%3A%22%7D"
+    presence="presence=$options"
+    post_presence $slack_token $presence
+    # post_slack_status $slack_token $profile
+    ;;
+  magiccitytech)
+    slack_token=$magiccitytech_token
+    profile="profile=%7B%22status_text%22%3A%22MIRI%22,%22status_emoji%22%3A%22%3Amiri%3A%22%7D"
+    presence="presence=$options"
+    post_presence $slack_token $presence
+    # post_slack_status $slack_token $profile
+    ;;
+  *)
+    profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+    presence="presence=$options"
+    post_presence $slack_token $presence
+    # post_slack_status $enbala_token $profile
+    # post_slack_status $cit_token $profile
+    # post_slack_status $magiccitytech_token $profile
+    ;;
+#   *)
+#     shift
+#     ${subcommand} $@
+#     ;;
+esac

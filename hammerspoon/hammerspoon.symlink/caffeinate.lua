@@ -6,7 +6,7 @@ local isDocked = false
 local handleCaffeinateEvent = function(eventType) -- (int)
   log.df('Event triggered: event type %s(%s) | isDocked? %s', hs.caffeinate.watcher[eventType], eventType, isDocked)
 
-  if (not isDocked) then
+  if (isDocked) then
     if (eventType == hs.caffeinate.watcher.screensDidSleep) then
       log.df('Attempting to turn OFF office lamp')
       hubitat.lampToggle("off")
