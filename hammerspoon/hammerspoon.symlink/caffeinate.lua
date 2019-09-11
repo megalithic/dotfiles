@@ -30,6 +30,12 @@ local handleCaffeinateEvent = function(eventType) -- (int)
       --   end
       -- end
     end
+  else
+    if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+      hs.execute('slack away')
+    elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
+      hs.execute('slack back')
+    end
   end
 end
 

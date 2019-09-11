@@ -95,7 +95,7 @@ function end_all_dnd() {
 function away() {
   presence="presence=away"
   set_all_presence $presence
-  profile="profile=%7B%22status_text%22:%22..adios..%22,%22status_emoji%22:%22:wave:%22%7D"
+  profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
   set_all_profile $profile
 }
 
@@ -114,14 +114,14 @@ function pair() {
 }
 
 function zoom() {
-  profile="profile=%7B%22status_text%22:%22..meeting..%22,%22status_emoji%22:%22:calendar:%22%7D"
+  profile="profile=%7B%22status_text%22:%22..on%20a%20call..%22,%22status_emoji%22:%22:calendar:%22%7D"
   set_all_profile $profile
   dnd="num_minutes=120"
   set_all_dnd $dnd
 }
 
 function dnd() {
-  profile="profile=%7B%22status_text%22:%22..focused..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
+  profile="profile=%7B%22status_text%22:%22..focused%20work%20time..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
   set_all_profile $profile
   dnd="num_minutes=120"
   set_all_dnd $dnd
@@ -144,6 +144,8 @@ case $subcommand in
     help ;;
   here)
     back ;;
+  meeting | meet)
+    zoom ;;
   *)
     shift
     ${subcommand} $@
