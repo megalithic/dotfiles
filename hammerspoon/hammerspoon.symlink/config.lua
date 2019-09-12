@@ -1,8 +1,9 @@
-require('airpods')
+local log = hs.logger.new('[config]', 'debug')
 
 local utils = require('utils')
 local hotkey = require('hs.hotkey')
-local log = hs.logger.new('[config]', 'debug')
+local airpods = require('airpods')
+local mouse = require('mouse')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -231,12 +232,13 @@ config.utilities = {
     shortcut = 'r',
     fn = function() hs.toggleConsole() end
   },
-  {
-    name = 'Lock Screen',
-    superKey = config.superKeys.mashShift,
-    shortcut = 'L',
-    fn = function() hs.caffeinate.systemSleep() end
-  },
+  -- NOTE: handle this with alfred and `sleep`/`lock` commands
+  -- {
+  --   name = 'Lock Screen',
+  --   superKey = config.superKeys.mashShift,
+  --   shortcut = 'L',
+  --   fn = function() hs.caffeinate.systemSleep() end
+  -- },
   {
     name = 'Hammerspoon Reload',
     superKey = config.superKeys.mashShift,
@@ -255,7 +257,7 @@ config.utilities = {
     superKey = config.superKeys.mashShift,
     shortcut = 'return',
     fn = (function()
-      utils.mouseHighlight()
+      mouse.highlight()
     end)
   },
   {
@@ -279,7 +281,7 @@ config.utilities = {
     superKey = config.superKeys.cmdCtrl,
     shortcut = 'a',
     fn = (function()
-      local ok, output = airPods('replipods')
+      local ok, output = airpods.toggle('replipods')
       if ok then
         hs.alert.show(output)
       else

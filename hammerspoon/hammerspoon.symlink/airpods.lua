@@ -1,5 +1,7 @@
 -- Found on: https://gist.githubusercontent.com/daGrevis/79b27b9c156ba828ad52976a118b29e0/raw/0e77383f4eb9301527caac3f0b71350e9499210b/init.lua
-function airPods(deviceName)
+local M = {}
+
+M.toggle = function(deviceName)
   local s = [[
     activate application "SystemUIServer"
     tell application "System Events"
@@ -28,3 +30,5 @@ function airPods(deviceName)
 
   return hs.osascript.applescript(s)
 end
+
+return M
