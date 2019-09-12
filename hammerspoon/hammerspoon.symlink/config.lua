@@ -53,6 +53,14 @@ config.ptt = {'cmd', 'alt'}
 
 config.ignoredApps = { 'iStat Menus Status', 'Fantastical', 'Contexts' }
 
+-- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
+config.distractionUrls = {
+  'https://www.youtube.com',
+  'https://www.twitter.com',
+  'https://www.instagram.com',
+  'https://www.facebook.com',
+}
+
 config.apps = {
   ['_'] = {
     preferredDisplay = 2,
@@ -100,6 +108,7 @@ config.apps = {
     hyperShortcut = 's',
     superKey = config.superKeys.mashShift,
     shortcut = 's',
+    distraction = true,
     preferredDisplay = 2,
     position = config.grid.rightHalf,
     quitGuard = true,
@@ -142,6 +151,7 @@ config.apps = {
       }
 
       -- FIXME: find a better way than spinning up this app watcher.
+      -- REF for more info/digging: https://github.com/agzam/spacehammer/blob/4666c81111c4cd402736cf7b1e5da249dbcfa9b5/slack.lua#L10
       local appHandlerWatcher = hs.application.watcher.new(function(name, eventType, _)
         if eventType ~= hs.application.watcher.activated then return end
 
@@ -157,21 +167,10 @@ config.apps = {
   },
   ['com.readdle.smartemail-Mac'] = {
     superKey = config.superKeys.mashShift,
+    distraction = true,
     shortcut = 'm',
     preferredDisplay = 2,
     position = config.grid.rightHalf
-  },
-  ['com.apple.mail'] = {
-    -- superKey = config.superKeys.mashShift,
-    -- shortcut = 'm',
-    preferredDisplay = 2,
-    position = config.grid.rightHalf
-  },
-  ['it.bloop.airmail2'] = {
-    -- superKey = config.superKeys.mashShift,
-    -- shortcut = 'm',
-    preferredDisplay = 2,
-    position = config.grid.leftHalf
   },
   ['com.apple.finder'] = {
     superKey = config.superKeys.ctrl,
@@ -195,6 +194,7 @@ config.apps = {
   ['com.apple.iChat'] = {
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
+    distraction = true,
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
@@ -239,6 +239,12 @@ config.utilities = {
   --   shortcut = 'L',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
+  -- {
+  --   name = 'Pomodoro',
+  --   superKey = config.superKeys.mashShift,
+  --   shortcut = 'P',
+  --   fn = function() hs.caffeinate.systemSleep() end
+  -- },
   {
     name = 'Hammerspoon Reload',
     superKey = config.superKeys.mashShift,
@@ -260,22 +266,22 @@ config.utilities = {
       mouse.highlight()
     end)
   },
-  {
-    name = 'Re-layout All',
-    superKey = config.superKeys.mashShift,
-    shortcut = 'w',
-    fn = (function()
-      require('auto-layout').snapAll()
-    end)
-  },
-  {
-    name = 'Re-layout App',
-    superKey = config.superKeys.cmdCtrl,
-    shortcut = 'w',
-    fn = (function()
-      require('auto-layout').snapApp(hs.application.frontmostApplication())
-    end)
-  },
+  -- {
+  --   name = 'Re-layout All',
+  --   superKey = config.superKeys.mashShift,
+  --   shortcut = 'w',
+  --   fn = (function()
+  --     require('layout').snapAll()
+  --   end)
+  -- },
+  -- {
+  --   name = 'Re-layout App',
+  --   superKey = config.superKeys.cmdCtrl,
+  --   shortcut = 'w',
+  --   fn = (function()
+  --     require('layout').snapApp(hs.application.frontmostApplication())
+  --   end)
+  -- },
   {
     name = 'Toggle Airpods',
     superKey = config.superKeys.cmdCtrl,

@@ -17,7 +17,7 @@ local launch = function(app)
   hs.application.launchOrFocusByBundleID(app.hint)
 end
 
-for _, app in pairs(config.applications) do
+for _, app in pairs(config.apps) do
   -- Apps that I want to jump to
   if app.hyper_shortcut then
     hyper:bind({}, app.hyper_shortcut, function() launch(app); end)

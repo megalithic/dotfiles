@@ -1,5 +1,3 @@
-require("meta")
-
 local log = hs.logger.new('[init]', 'verbose')
 
 log.i(":: initializing hammerspoon..")
@@ -15,20 +13,20 @@ local hotkey = require('hs.hotkey')
 -- handles initiating laptop docking mode behaviors
 local isDocked = require('dock').init()
 
--- window/app auto-layout for my dual-monitor (or single laptop) setup
--- require('auto-layout').init()
-
 -- window/app auto-layout
 require('layout').init(isDocked)
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
-require('ptt').init(config.ptt)
+-- require('ptt').init(config.ptt)
 
 -- helper to prevent accidental/unintentional app quitting
 require('quit')
 
 -- handles screen/wake things
 require('caffeinate').init(isDocked)
+
+-- handles pomodoro
+-- require('pomodoro').init()
 
 -- :: app-launching (basic app launching and toggling)
 for bundleID, app in pairs(config.apps) do
@@ -42,7 +40,7 @@ for bundleID, app in pairs(config.apps) do
   end
 end
 
--- :: utilities (things like config reloading, screen locking, manually forcing re-snapping windows/apps layout)
+-- :: utilities (things like config reloading, screen locking, manually forcing re-snapping windows/apps layout, pomodoro)
 for _, util in pairs(config.utilities) do
   hotkey.bind(util.superKey, util.shortcut, util.fn)
 end
@@ -67,6 +65,7 @@ for _, snap in pairs(config.snap) do
 end
 
 -- Reload configuration on changes
+-- REF: https://github.com/adamgibbins/hammerspoon-config/blob/master/init.lua
 local pathWatcher = hs.pathwatcher.new(hs.configdir, function(files)
   for _,file in pairs(files) do
     if file:sub(-4) == '.lua' then
