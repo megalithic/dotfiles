@@ -2,7 +2,7 @@ require('airpods')
 
 local utils = require('utils')
 local hotkey = require('hs.hotkey')
-local log = require('log')
+local log = hs.logger.new('[config]', 'debug')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -50,17 +50,14 @@ config.superKeys = {
 
 config.ptt = {'cmd', 'alt'}
 
-config.ignoredApplications = { 'iStat Menus Status', 'Fantastical' }
+config.ignoredApps = { 'iStat Menus Status', 'Fantastical', 'Contexts' }
 
-config.applications = {
-  ['default'] = {
-    name = '',
+config.apps = {
+  ['_'] = {
     preferredDisplay = 2,
     position = config.grid.centeredMedium,
   },
-  ['kitty'] = {
-    name = 'kitty',
-    hint = 'net.kovidgoyal.kitty',
+  ['net.kovidgoyal.kitty'] = {
     hyperShortcut = 'k',
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
@@ -68,15 +65,11 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true,
   },
-  ['Dash'] = {
-    name = 'Dash',
-    hint = 'com.kapeli.dashdoc',
+  ['com.kapeli.dashdoc'] = {
     preferredDisplay = 1,
     position = config.grid.centeredLarge,
   },
-  ['Brave Browser Dev'] = {
-    name = 'Brave Browser Dev',
-    hint = 'com.brave.Browser.dev',
+  ['com.brave.Browser.dev'] = {
     hyperShortcut = '`',
     superKey = config.superKeys.cmd,
     shortcut = '`',
@@ -84,16 +77,12 @@ config.applications = {
     position = config.grid.fullScreen,
     quitGuard = true
   },
-  ['Google Chrome'] = {
-    name = 'Google Chrome',
-    hint = 'com.google.Chrome',
+  ['com.google.Chrome'] = {
     preferredDisplay = 1,
     position = config.grid.rightHalf,
     quitGuard = true
   },
-  ['Drafts'] = {
-    name = 'Drafts',
-    hint = 'com.agiletortoise.Drafts-OSX',
+  ['com.agiletortoise.Drafts-OSX'] = {
     hyperShortcut ='d',
     local_bindings = {'x', '\''},
     superKey = config.superKeys.mashShift,
@@ -112,15 +101,11 @@ config.applications = {
     position = config.grid.rightHalf,
     quitGuard = false,
   },
-  ['Marked 2'] = {
-    name = 'Marked 2',
-    hint = 'com.brettterpstra.marked2',
+  ['com.brettterpstra.marked2'] = {
     preferredDisplay = 2,
     position = config.grid.leftHalf,
   },
-  ['Slack'] = {
-    name = 'Slack',
-    hint = 'com.tinyspeck.slackmacgap',
+  ['com.tinyspeck.slackmacgap'] = {
     hyperShortcut = 's',
     superKey = config.superKeys.mashShift,
     shortcut = 's',
@@ -128,23 +113,22 @@ config.applications = {
     position = config.grid.rightHalf,
     quitGuard = true,
     ignoredWindows = {'Slack Call Minipanel'},
-    fn = (function(_)
-      log.df('[config] app fn() - attempting to handle Slack instance')
+    handler = (function(_)
+      log.df('executing app handler for com.tinyspeck.slackmacgap instance..')
 
       local appKeybinds = {
+        -- quick search/jump
+        hotkey.new({"ctrl"}, "g", function()
+          hs.eventtap.keyStroke({"cmd"}, "k")
+        end),
         -- next channel or dm
-        -- hotkey.new({"ctrl"}, "g", function()
-        --   hs.eventtap.keyStroke({"cmd"}, "k")
-        -- end),
-
-        -- -- next channel or dm
-        -- hotkey.new({"ctrl"}, "j", function()
-        --   hs.eventtap.keyStroke({"alt"}, "Down")
-        -- end),
-        -- -- previous channel or dm
-        -- hotkey.new({"ctrl"}, "k", function()
-        --   hs.eventtap.keyStroke({"alt"}, "Up")
-        -- end),
+        hotkey.new({"ctrl"}, "j", function()
+          hs.eventtap.keyStroke({"alt"}, "Down")
+        end),
+        -- previous channel or dm
+        hotkey.new({"ctrl"}, "k", function()
+          hs.eventtap.keyStroke({"alt"}, "Up")
+        end),
         -- next unread channel or dm
         hotkey.new({"ctrl", "shift"}, "j", function()
           hs.eventtap.keyStroke({"alt", "shift"}, "Down")
@@ -153,8 +137,10 @@ config.applications = {
         hotkey.new({"ctrl", "shift"}, "k", function()
           hs.eventtap.keyStroke({"alt", "shift"}, "Up")
         end),
-        -- -- Disables cmd-w entirely, which is so annoying on slack
-        -- hotkey.new({"cmd"}, "w", function() return end)
+        -- Disables cmd-w entirely, which is so annoying on slack
+        hotkey.new({"cmd"}, "w", function()
+          hs.eventtap.keyStroke({""}, "Esc")
+        end)
       }
 
       local appWatcher = hs.application.watcher.new(function(name, eventType, _)
@@ -170,83 +156,63 @@ config.applications = {
       appWatcher:start()
     end)
   },
-  ['Spark'] = {
-    name = 'Spark',
-    hint = 'com.readdle.smartemail-Mac',
+  ['com.readdle.smartemail-Mac'] = {
     superKey = config.superKeys.mashShift,
     shortcut = 'm',
     preferredDisplay = 2,
     position = config.grid.rightHalf
   },
-  ['Mail'] = {
-    name = 'Mail',
-    hint = 'com.apple.mail',
+  ['com.apple.mail'] = {
     -- superKey = config.superKeys.mashShift,
     -- shortcut = 'm',
     preferredDisplay = 2,
     position = config.grid.rightHalf
   },
-  ['Airmail'] = {
-    name = 'Airmail',
-    hint = 'it.bloop.airmail2',
+  ['it.bloop.airmail2'] = {
     -- superKey = config.superKeys.mashShift,
     -- shortcut = 'm',
     preferredDisplay = 2,
     position = config.grid.leftHalf
   },
-  ['Finder'] = {
-    name = 'Finder',
-    hint = 'com.apple.finder',
+  ['com.apple.finder'] = {
     superKey = config.superKeys.ctrl,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
-  ['zoom.us'] = {
-    name = 'zoom.us',
-    hint = 'us.zoom.xos',
+  ['us.zoom.xos'] = {
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
     position = config.grid.rightHalf,
-    dnd = true,
+    dnd = { enabled = true,  mode = "zoom" },
   },
-  ['Spotify'] = {
-    name = 'Spotify',
-    hint = 'com.spotify.client',
+  ['com.spotify.client'] = {
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 1,
     position = '5,0 5x5'
   },
-  ['Messages'] = {
-    name = 'Messages',
-    hint = 'com.apple.iChat',
+  ['com.apple.iChat'] = {
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
-  ['1Password 7'] = {
-    name = '1Password 7',
-    hint = 'com.agilebits.onepassword7',
+  ['com.agilebits.onepassword7'] = {
     superKey = config.superKeys.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
-  ['Hammerspoon'] = {
-    name = 'Hammerspoon',
-    hint = 'org.hammerspoon.Hammerspoon',
+  ['org.hammerspoon.Hammerspoon'] = {
     superKey = config.superKeys.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
     position = config.grid.centeredMedium,
     quitGuard = true,
   },
-  ['System Preferences'] = {
-    name = 'System Preferences',
-    hint = 'com.apple.systempreferences',
+  ['com.apple.systempreferences'] = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
@@ -278,7 +244,8 @@ config.utilities = {
     superKey = config.superKeys.mashShift,
     shortcut = 'r',
     fn = (function()
-      require('auto-layout').teardown()
+      -- require('auto-layout').teardown()
+      require('layout').teardown()
       require('dock').teardown()
       require('ptt').teardown()
       hs.reload()

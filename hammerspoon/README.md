@@ -8,7 +8,7 @@ of the macOS core libraries and APIs.
 
 ### So, what does my [config](hammerspoon.symlink/config.lua) do?
 
-- **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `alt+cmd` to talk.
+- **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `opt+cmd` to talk.
 
 - **Spotify Controls**: simple keybindings to handle Play/Pause, Next, Previous.
   Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
@@ -32,8 +32,10 @@ of the macOS core libraries and APIs.
 
 * **App-specific customization**:
 
-  - apps can define their own custom `fn` to be executed when they are active,
+  - apps can define their own custom `handler` function to be executed when they are active,
     for example, custom keybinding (see Slack in config.lua)
+  - apps can auto set dnd and slack status modes
+  - apps can enable/disable quit guard
 
 - **Window Management**:
 
@@ -48,7 +50,7 @@ of the macOS core libraries and APIs.
     desktop mode), it automatically switches:
     - switches [Karabiner-Elements](https://github.com/tekezo/Karabiner-Elements) profile to `dz60` (for my custom QMK-based 60% mechanical keyboard)
     - switches audio output to `Caldigit Thunderbolt 3 Audio`
-    - switches audio input to `Logitech Webcam C930e`
+    - switches audio input to `Samson GoMic`
     - switches off WiFi
   - It will reverse all of the above to the internal/built-in devices of my MacBook Pro when
     unplugging the single TB3 cable
@@ -66,5 +68,5 @@ of the macOS core libraries and APIs.
 #### TODO
 
 - [x] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
-- [ ] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
+- [x] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
 - [ ] thieve @evantravers pomodoro module (https://github.com/evantravers/hammerspoon/blob/master/pomodoro.lua)

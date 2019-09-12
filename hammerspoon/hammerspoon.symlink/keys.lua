@@ -1,37 +1,33 @@
-local log = hs.logger.new('[auto-layout]', 'debug')
+local log = hs.logger.new('[keys]', 'debug')
 local handler = {}
 
-handler.launch = function(appName)
-  log.df(' launch - attempting to launch or focus %s', appName)
-  hs.application.launchOrFocus(appName)
-end
-
-handler.toggleApp = function (_app)
+handler.toggle = function (_app)
   -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
   local app = hs.application.find(_app)
+  local appBundleID = app and (app:bundleID() or _app)
 
   if app ~= nil then
-    log.df(' toggleApp - attempting to toggle visibility of %s', hs.inspect(app))
+    log.df('attempting to toggle visibility of %s..', appBundleID)
   end
 
   if not app then
     if _app ~= nil then
-      log.wf(' toggleApp - launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
+      log.wf('launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
       hs.application.launchOrFocusByBundleID(_app)
     else
-      log.wf(' toggleApp - _app (%s) || app (%s) is nil!!', _app, app)
+      log.wf('_app (%s) || app (%s) is nil!!', _app, appBundleID)
     end
   else
     local mainWin = app:mainWindow()
-    log.df(' toggleApp - main window: %s', mainWin)
+    -- log.df('main window: %s', mainWin)
 
     if mainWin then
       if mainWin == hs.window.focusedWindow() then
-        log.df(' toggleApp - hiding %s', app:bundleID())
+        log.df('hiding %s..', appBundleID)
 
         mainWin:application():hide()
       else
-        log.df(' toggleApp - showing %s', app:bundleID())
+        log.df('showing %s..', appBundleID)
 
         mainWin:application():activate(true)
         mainWin:application():unhide()
@@ -39,13 +35,13 @@ handler.toggleApp = function (_app)
       end
     else
       -- assumes there is no "mainWindow" for the application in question, probably iTerm2
-      log.df(' toggleApp - launchOrFocusByBundleID(%s)', app)
+      log.df('launchOrFocusByBundleID(%s)', appBundleID)
 
       if (app:focusedWindow() == hs.window.focusedWindow()) then
         app:hide()
       else
         app:unhide()
-        hs.application.launchOrFocusByBundleID(app:bundleID())
+        hs.application.launchOrFocusByBundleID(appBundleID)
       end
     end
   end
@@ -89,7 +85,7 @@ handler.spotify = function (event, alertText)
     hs.spotify.previous()
   end
 
-  log.df(' spotify - %s (%s)', event, alertText)
+  log.df('spotify - %s (%s)', event, alertText)
 
   if alertText then
     hs.alert.closeAll()

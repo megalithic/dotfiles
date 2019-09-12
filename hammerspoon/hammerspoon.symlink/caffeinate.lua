@@ -41,7 +41,7 @@ end
 
 return {
   init = (function(is_docked)
-    isDocked = is_docked
+    isDocked = is_docked or false
     log.df('Creating caffeinate watcher (isDocked? %s)', isDocked)
     watcher = hs.caffeinate.watcher.new(handleCaffeinateEvent):start()
   end),

@@ -9,7 +9,7 @@ local selectKarabinerProfile = (function(profile)
     '--select-profile ' ..
     profile
   )
-  log.i('Switching to Karabiner-Elements profile:', profile)
+  log.i('Switching to keyboard profile:', profile)
 end)
 
 local toggleWifi = (function(state)
@@ -17,7 +17,7 @@ local toggleWifi = (function(state)
     'networksetup -setairportpower airport ' ..
     state
   )
-  log.i('Switching wifi', state)
+  log.i('Switching WiFi state:', state)
 end)
 
 local selectAudioOutput = (function(output)
@@ -45,7 +45,7 @@ local isDeviceConnected = (function()
 end)
 
 local dockedAction = function()
-  log.i('Target USB device plugged in; laptop presumably docked')
+  log.i('Target USB device plugged in; laptop presumably docked..')
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(config.docking['docked'].profile)
     toggleWifi(config.docking['docked'].wifi)
@@ -57,7 +57,7 @@ local dockedAction = function()
 end
 
 local undockedAction = function()
-  log.i('Target USB device unplugged; laptop presumably undocked')
+  log.i('Target USB device unplugged; laptop presumably undocked..')
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(config.docking['undocked'].profile)
     toggleWifi(config.docking['undocked'].wifi)
@@ -84,7 +84,7 @@ end)
 
 return {
   init = (function()
-    log.i('Creating laptop-docking-mode watchers')
+    log.i('Creating USB watchers..')
     watcher = hs.usb.watcher.new(handleUsbWatcherEvent):start()
 
     isDocked = isDeviceConnected()
@@ -99,7 +99,7 @@ return {
     return isDocked
   end),
   teardown = (function()
-    log.i('Tearing down laptop-docking-mode watchers')
+    log.i('Tearing down USB watchers..')
     watcher:stop()
   end),
   isDocked = isDeviceConnected()

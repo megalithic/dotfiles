@@ -2,16 +2,24 @@ require("meta")
 
 local log = hs.logger.new('[init]', 'verbose')
 
+log.i(":: initializing hammerspoon..")
+
 hs.ipc.cliInstall()
 hs.console.darkMode(true)
 
 -- where all the magic is defined (check here for every piece of configuration)
 local config = require('config')
-local handler = require('keyhandler')
+local keys = require('keys')
 local hotkey = require('hs.hotkey')
 
+-- handles initiating laptop docking mode behaviors
+local isDocked = require('dock').init()
+
 -- window/app auto-layout for my dual-monitor (or single laptop) setup
-require('auto-layout').init()
+-- require('auto-layout').init()
+
+-- window/app auto-layout
+require('layout').init(isDocked)
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
 require('ptt').init(config.ptt)
@@ -19,33 +27,14 @@ require('ptt').init(config.ptt)
 -- helper to prevent accidental/unintentional app quitting
 require('quit')
 
--- handles initiating laptop docking mode behaviors
--- require('dock').init()
-
--- handles hubitat home-automation things based upon the computer doing things
-local isDocked = require('dock').init()
+-- handles screen/wake things
 require('caffeinate').init(isDocked)
 
--- :: spoons
--- Initialize and configure installer spoon
--- hs.loadSpoon("SpoonInstall")
--- spoon.SpoonInstall.use_syncinstall = true
--- local Install=spoon.SpoonInstall
-
--- -- Install:andUse("ReloadConfiguration")
--- -- spoon.ReloadConfiguration:start()
-
--- -- show logo to indicate restart
--- Install:andUse('FadeLogo')
--- spoon.FadeLogo.image_size = hs.geometry.size(80, 80)
--- spoon.FadeLogo.run_time = 0.5
--- spoon.FadeLogo:start()
-
 -- :: app-launching (basic app launching and toggling)
-for _, app in pairs(config.applications) do
+for bundleID, app in pairs(config.apps) do
   if app.superKey ~= nil and app.shortcut ~= nil then
-    -- hotkey.bind(app.superKey, app.shortcut, function() handler.launch(app.name) end)
-    hotkey.bind(app.superKey, app.shortcut, function() handler.toggleApp(app.hint) end)
+    -- hotkey.bind(app.superKey, app.shortcut, function() keys.launch(app.name) end)
+    hotkey.bind(app.superKey, app.shortcut, function() keys.toggle(bundleID) end)
   end
 
   if (app.hyperKey ~= nil) then
@@ -60,12 +49,12 @@ end
 
 -- :: media (spotify)
 for _, media in pairs(config.media) do
-  hotkey.bind(media.superKey, media.shortcut, function() handler.spotify(media.action, media.label) end)
+  hotkey.bind(media.superKey, media.shortcut, function() keys.spotify(media.action, media.label) end)
 end
 
 -- :: volume control
 for _, vol in pairs(config.volume) do
-  hotkey.bind(vol.superKey, vol.shortcut, function() handler.adjustVolume(vol) end)
+  hotkey.bind(vol.superKey, vol.shortcut, function() keys.adjustVolume(vol) end)
 end
 
 -- :: window-manipulation (manual window snapping)
@@ -76,3 +65,18 @@ for _, snap in pairs(config.snap) do
     hotkey.bind(snap.hyperKey, snap.shortcut, snap.locations)
   end
 end
+
+-- Reload configuration on changes
+local pathWatcher = hs.pathwatcher.new(hs.configdir, function(files)
+  for _,file in pairs(files) do
+    if file:sub(-4) == '.lua' then
+      -- require('auto-layout').teardown()
+      require('layout').teardown()
+      require('dock').teardown()
+      require('ptt').teardown()
+      hs.reload()
+      hs.notify.show('Hammerspoon', 'Config Reloaded', '')
+    end
+  end
+end)
+pathWatcher:start()
