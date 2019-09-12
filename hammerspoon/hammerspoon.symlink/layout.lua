@@ -120,6 +120,7 @@ return {
     isDocked = is_docked or false
     log.df('init window layouts (docked: %s)', isDocked)
 
+    -- FIXME: determine if we want to spin up a window.filter for each app?
     wf = hs.window.filter.new()
     hs.window.filter.allowedWindowRoles = {
       AXStandardWindow=true,

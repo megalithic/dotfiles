@@ -87,16 +87,6 @@ config.apps = {
     local_bindings = {'x', '\''},
     superKey = config.superKeys.mashShift,
     shortcut = 'n',
-    windows = {
-      ['Capture'] = {
-        position = '5,0 5x5',
-        preferredDisplay = 1
-      },
-      ['Drafts'] = {
-        position = config.grid.centeredLarge,
-        preferredDisplay = 1
-      },
-    },
     preferredDisplay = 1,
     position = config.grid.rightHalf,
     quitGuard = false,
@@ -113,8 +103,15 @@ config.apps = {
     position = config.grid.rightHalf,
     quitGuard = true,
     ignoredWindows = {'Slack Call Minipanel'},
-    handler = (function(_)
-      log.df('executing app handler for com.tinyspeck.slackmacgap instance..')
+    handler = (function(win)
+      if win == nil then return end
+      if appHandlerWatcher ~= nil then
+        appHandlerWatcher:stop()
+        appHandlerWatcher = nil
+      end
+
+      local appBundleID = win:application():bundleID()
+      log.df('executing app handler for %s instance..', appBundleID)
 
       local appKeybinds = {
         -- quick search/jump
@@ -143,7 +140,8 @@ config.apps = {
         end)
       }
 
-      local appWatcher = hs.application.watcher.new(function(name, eventType, _)
+      -- FIXME: find a better way than spinning up this app watcher.
+      local appHandlerWatcher = hs.application.watcher.new(function(name, eventType, _)
         if eventType ~= hs.application.watcher.activated then return end
 
         local fnName = name == "Slack" and "enable" or "disable"
@@ -153,7 +151,7 @@ config.apps = {
         end
       end)
 
-      appWatcher:start()
+      appHandlerWatcher:start()
     end)
   },
   ['com.readdle.smartemail-Mac'] = {
