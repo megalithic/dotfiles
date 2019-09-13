@@ -21,7 +21,7 @@ counter =
     IO.ANSI.reset()
 
 # IO.ANSI.light_black_background() <>
-info = IO.ANSI.bright() <> "\uf6ef #{queue_length.()}" <> IO.ANSI.reset()
+info = IO.ANSI.light_black() <> "\uf6ef #{queue_length.()}" <> IO.ANSI.reset()
 
 last = IO.ANSI.normal() <> "\uf460" <> IO.ANSI.reset()
 # last = IO.ANSI.normal() <> "\uf054" <> IO.ANSI.reset()
@@ -34,8 +34,13 @@ alive =
     "\ue315" <>
     IO.ANSI.reset()
 
-default_prompt = prefix <> counter <> "│" <> info <> "" <> last
-alive_prompt = prefix <> counter <> "" <> info <> "" <> alive <> last
+default_prompt = prefix <> counter <> IO.ANSI.black() <> "│" <> IO.ANSI.reset() <> info <> last
+
+alive_prompt =
+  prefix <>
+    counter <>
+    IO.ANSI.black() <>
+    "│" <> IO.ANSI.reset() <> info <> IO.ANSI.black() <> "│" <> IO.ANSI.reset() <> alive <> last
 
 history_size = 100
 
