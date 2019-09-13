@@ -72,7 +72,6 @@ if executable('yarn') && executable('node')
         \ 'coc-diagnostic',
         \ 'coc-dictionary',
         \ 'coc-eslint',
-        \ 'coc-elixir',
         \ 'coc-git',
         \ 'coc-github',
         \ 'coc-gitignore',
@@ -98,8 +97,9 @@ if executable('yarn') && executable('node')
         \ 'coc-vimtex',
         \ 'coc-word',
         \ 'coc-yaml',
-        \ 'coc-yank',
         \ ]
+  " \ 'coc-yank',
+  " \ 'coc-elixir',
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 endif
 Plug 'othree/csscomplete.vim', { 'for': 'css' }

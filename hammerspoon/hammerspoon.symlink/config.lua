@@ -84,7 +84,13 @@ config.apps = {
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.fullScreen,
-    quitGuard = true
+    quitGuard = true,
+    handler = function(win)
+      if win == nil then return end
+      local appBundleID = win:application():bundleID()
+      local visibleWindows = win:application():visibleWindows()
+      log.df('executing app handler for %s instance, for %s windows..', appBundleID, #visibleWindows)
+    end
   },
   ['com.google.Chrome'] = {
     preferredDisplay = 1,
@@ -115,13 +121,15 @@ config.apps = {
     ignoredWindows = {'Slack Call Minipanel'},
     handler = (function(win)
       if win == nil then return end
-      if appHandlerWatcher ~= nil then
-        appHandlerWatcher:stop()
-        appHandlerWatcher = nil
+
+      if appWatcher ~= nil then
+        appWatcher:stop()
+        appWatcher = nil
       end
 
       local appBundleID = win:application():bundleID()
-      log.df('executing app handler for %s instance..', appBundleID)
+      local visibleWindows = win:application():visibleWindows()
+      log.df('executing app handler for %s instance, for %s windows..', appBundleID, #visibleWindows)
 
       local appKeybinds = {
         -- quick search/jump
@@ -152,7 +160,7 @@ config.apps = {
 
       -- FIXME: find a better way than spinning up this app watcher.
       -- REF for more info/digging: https://github.com/agzam/spacehammer/blob/4666c81111c4cd402736cf7b1e5da249dbcfa9b5/slack.lua#L10
-      local appHandlerWatcher = hs.application.watcher.new(function(name, eventType, _)
+      local appWatcher = hs.application.watcher.new(function(name, eventType, _)
         if eventType ~= hs.application.watcher.activated then return end
 
         local fnName = name == "Slack" and "enable" or "disable"
@@ -162,7 +170,7 @@ config.apps = {
         end
       end)
 
-      appHandlerWatcher:start()
+      appWatcher:start()
     end)
   },
   ['com.readdle.smartemail-Mac'] = {
@@ -245,19 +253,19 @@ config.utilities = {
   --   shortcut = 'P',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
-  {
-    name = 'Hammerspoon Reload',
-    superKey = config.superKeys.mashShift,
-    shortcut = 'r',
-    fn = (function()
-      -- require('auto-layout').teardown()
-      require('layout').teardown()
-      require('dock').teardown()
-      require('ptt').teardown()
-      hs.reload()
-      hs.notify.show('Hammerspoon', 'Config Reloaded', '')
-    end)
-  },
+  -- {
+  --   name = 'Hammerspoon Reload',
+  --   superKey = config.superKeys.mashShift,
+  --   shortcut = 'r',
+  --   fn = (function()
+  --     -- require('auto-layout').teardown()
+  --     require('layout').teardown()
+  --     require('dock').teardown()
+  --     require('ptt').teardown()
+  --     hs.reload()
+  --     hs.notify.show('Hammerspoon', 'Config Reloaded', '')
+  --   end)
+  -- },
   {
     name = 'Cursor Locator',
     superKey = config.superKeys.mashShift,
