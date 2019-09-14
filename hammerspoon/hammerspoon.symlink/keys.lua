@@ -1,6 +1,8 @@
 local log = hs.logger.new('[keys]', 'debug')
 local handler = {}
 
+-- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
+-- +--- possibly more robust app toggler
 handler.toggle = function (_app)
   -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
   local app = hs.application.find(_app)

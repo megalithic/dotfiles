@@ -122,10 +122,10 @@ config.apps = {
     handler = (function(win)
       if win == nil then return end
 
-      if appWatcher ~= nil then
-        appWatcher:stop()
-        appWatcher = nil
-      end
+      -- if appWatcher ~= nil then
+      --   appWatcher:stop()
+      --   appWatcher = nil
+      -- end
 
       local appBundleID = win:application():bundleID()
       local visibleWindows = win:application():visibleWindows()
@@ -133,17 +133,17 @@ config.apps = {
 
       local appKeybinds = {
         -- quick search/jump
-        hotkey.new({"ctrl"}, "g", function()
-          hs.eventtap.keyStroke({"cmd"}, "k")
-        end),
+        -- hotkey.new({"ctrl"}, "g", function()
+        --   hs.eventtap.keyStroke({"cmd"}, "k")
+        -- end),
         -- next channel or dm
-        hotkey.new({"ctrl"}, "j", function()
-          hs.eventtap.keyStroke({"alt"}, "Down")
-        end),
+        -- hotkey.new({"ctrl"}, "j", function()
+        --   hs.eventtap.keyStroke({"alt"}, "Down")
+        -- end),
         -- previous channel or dm
-        hotkey.new({"ctrl"}, "k", function()
-          hs.eventtap.keyStroke({"alt"}, "Up")
-        end),
+        -- hotkey.new({"ctrl"}, "k", function()
+        --   hs.eventtap.keyStroke({"alt"}, "Up")
+        -- end),
         -- next unread channel or dm
         hotkey.new({"ctrl", "shift"}, "j", function()
           hs.eventtap.keyStroke({"alt", "shift"}, "Down")
@@ -153,24 +153,38 @@ config.apps = {
           hs.eventtap.keyStroke({"alt", "shift"}, "Up")
         end),
         -- Disables cmd-w entirely, which is so annoying on slack
-        hotkey.new({"cmd"}, "w", function()
-          hs.eventtap.keyStroke({""}, "Esc")
-        end)
+        -- hotkey.new({"cmd"}, "w", function()
+        --   hs.eventtap.keyStroke({""}, "Esc")
+        -- end)
       }
 
       -- FIXME: find a better way than spinning up this app watcher.
       -- REF for more info/digging: https://github.com/agzam/spacehammer/blob/4666c81111c4cd402736cf7b1e5da249dbcfa9b5/slack.lua#L10
-      local appWatcher = hs.application.watcher.new(function(name, eventType, _)
-        if eventType ~= hs.application.watcher.activated then return end
+      -- local appWatcher = hs.application.watcher.new(function(name, eventType, _)
+      --   if eventType ~= hs.application.watcher.activated then return end
 
-        local fnName = name == "Slack" and "enable" or "disable"
-        for _, keybind in ipairs(appKeybinds) do
-          -- Remember that lua is weird, so this is the same as keybind.enable() in JS, `this` is first param
-          keybind[fnName](keybind)
-        end
-      end)
+      --   local fnName = name == "Slack" and "enable" or "disable"
+      --   for _, keybind in ipairs(appKeybinds) do
+      --     -- Remember that lua is weird, so this is the same as keybind.enable() in JS, `this` is first param
+      --     keybind[fnName](keybind)
+      --   end
+      -- end)
 
-      appWatcher:start()
+      -- appWatcher:start()
+
+      -- local appWatcherHandler = function(appName, eventType, appObject)
+      --   log.df("appName: %s | eventType: %s | appObject: %s", appName, eventType, hs.inspect( appObject ))
+
+      --   if (eventType == hs.application.watcher.activated) then
+      --     log.df("activated")
+      --   elseif (eventType == hs.application.watcher.deactivated) then
+      --       log.df("deactivated")
+      --     localAppWatcher:stop()
+      --   end
+      -- end
+
+      -- localAppWatcher = hs.application.watcher.new(appWatcherHandler)
+      -- localAppWatcher:start()
     end)
   },
   ['com.readdle.smartemail-Mac'] = {

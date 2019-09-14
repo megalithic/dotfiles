@@ -1,3 +1,6 @@
+-- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L78
+-- +-- simplified ptt implementation?
+
 local log = hs.logger.new('[ptt]', 'debug')
 
 local settings = {
