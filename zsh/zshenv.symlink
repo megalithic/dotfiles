@@ -11,6 +11,12 @@
 #   source "$DOTS/zsh/components/zshrc/env.zsh"
 # fi
 
+export EDITOR='nvim'
+export VISUAL='nvim'
+export SUDO_EDITOR='nvim'
+export ALTERNATE_EDITOR='vim'
+export PAGER='less'
+
 #
 # Paths
 #
@@ -68,6 +74,7 @@ path=(
   $ASDF_LUAROCKS
   $GOBIN
   $N_PREFIX/bin
+  $CARGOPATH
   $CARGOBIN
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin

@@ -17,7 +17,7 @@ local isDocked = require('dock').init()
 require('layout').init(isDocked)
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
--- require('ptt').init(config.ptt)
+require('ptt').init(config.ptt)
 
 -- helper to prevent accidental/unintentional app quitting
 require('quit')

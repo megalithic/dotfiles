@@ -24,6 +24,7 @@ asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin-add elm https://github.com/vic/asdf-elm.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
+asdf plugin-add rust https://github.com/code-lever/asdf-rust.git
 asdf plugin-add nodejs
 bash $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring
 
@@ -56,3 +57,7 @@ sh $DOTS/asdf/elixir.sh
 #
 # lua-specific...
 sh $DOTS/asdf/lua.sh
+
+#
+# rust-specific...
+sh $DOTS/asdf/rust.sh

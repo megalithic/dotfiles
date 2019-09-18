@@ -5,3 +5,4 @@ lua 5.3.4
 ruby 2.5.1
 # nodejs 8.9.1
 nodejs 10.15.3
+rust 1.37.0

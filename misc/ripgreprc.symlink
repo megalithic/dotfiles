@@ -1,0 +1,32 @@
+# REF: https://github.com/dkarter/dotfiles/blob/master/config/ripgrep/config
+
+# Don't let ripgrep vomit really long lines to my terminal, and show a preview.
+--max-columns=150
+--max-columns-preview
+
+# Using glob patterns to include/exclude files or folders
+--glob
+!git/*
+
+# Set the colors.
+--colors=line:none
+--colors=line:style:bold
+
+# Because who cares about case!?
+--smart-case
+
+# Add my 'web' type.
+--type-add
+frontend:*.{html,css,js,jsx}*
+
+# Add types for rails
+--type-add
+rabl:*.rabl
+--type-add
+erb:*.erb
+--type-add
+railsmigrations:*/migrate/*
+--type-add
+rails:include:ruby,rabl,erb
+
+" vim:ft=conf
