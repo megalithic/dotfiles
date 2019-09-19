@@ -14,7 +14,8 @@ local hotkey = require('hs.hotkey')
 local isDocked = require('dock').init()
 
 -- window/app auto-layout
-require('layout').init(isDocked)
+-- require('layout').init(isDocked)
+require('auto-layout').init(isDocked)
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
 require('ptt').init(config.ptt)

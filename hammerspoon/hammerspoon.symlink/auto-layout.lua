@@ -6,6 +6,7 @@ local watchers = {}
 local globalAppWatcher = nil
 local screenCount = #hs.screen.allScreens()
 local screenWatcher = nil
+local isDocked = false
 
 local target_display = function(display_int)
   -- detect the current number of monitors
@@ -70,7 +71,7 @@ local setLayoutForApp = function(app, appConfig)
     log.df(' setLayoutForApp - beginning layout for single app: %s', string.upper(app:name()))
 
     local windows = getManageableWindows(app:visibleWindows())
-    appConfig = appConfig or config.applications[app:name()]
+    appConfig = appConfig or config.apps[app:name()]
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       if (#windows == 1) then
@@ -90,7 +91,7 @@ end
 local setLayoutForAll = function()
   log.i(' setLayoutForAll - beginning layout for all apps')
 
-  for _, appConfig in pairs(config.applications) do
+  for _, appConfig in pairs(config.apps) do
     -- we have an appConfig and a preferredDisplay defined
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       -- FIXME: bug showing up here: `attempt to index a nil value in hs.application.find`
@@ -128,14 +129,14 @@ local watchWindow = function(window)
       bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
 
     -- layout specifics for given apps
-    if config.applications[app:name()] then
+    if config.apps[app:name()] then
       log.df(' watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(app))
       setLayoutForApp(app)
 
       -- execute custom app fn() for given application
-      if config.applications[app:name()].fn ~= nil then
+      if config.apps[app:name()].fn ~= nil then
         log.df(' watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
-        config.applications[app:name()].fn(window)
+        config.apps[app:name()].fn(window)
       end
     else
       -- otherwise just always do a default thing for unhandled apps
@@ -242,8 +243,9 @@ local handleScreenEvent = function()
 end
 
 return {
-  init = (function()
-    log.i(' init - creating screen/app/window watchers')
+  init = (function(is_docked)
+    isDocked = is_docked or false
+    log.df('init window auto-layouts (docked: %s)', isDocked)
 
     -- Watch for screen changes
     screenWatcher = hs.screen.watcher.new(handleScreenEvent)
@@ -262,7 +264,7 @@ return {
     end
   end),
   teardown = (function()
-    log.i(' teardown - tearing down screen/app/window watchers')
+    log.df('teardown window auto-layouts')
 
     globalAppWatcher:stop()
     globalAppWatcher = nil
