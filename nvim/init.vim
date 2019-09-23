@@ -1,3 +1,5 @@
+if !1 | finish | endif     " FIXME: danger, will robinson!
+
 scriptencoding utf-16      " allow emojis in vimrc
 set nocompatible           " vim, not vi
 syntax on                  " syntax highlighting
@@ -26,6 +28,7 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 silent! if plug#begin('~/.config/nvim/plugins')
 
 Plug 'andymass/vim-matchup'
+Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
 Plug 'chemzqm/vim-jsx-improve', { 'for': ['javascript', 'javascriptreact', 'javascript.jsx'] }
@@ -44,6 +47,7 @@ Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
 Plug 'hauleth/pivotaltracker.vim', { 'for': ['gitcommit'] }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
 Plug 'honza/vim-snippets'
+Plug 'hotwatermorning/auto-git-diff'
 Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
 Plug 'itchyny/lightline.vim'
 " Plug 'itspriddle/vim-marked', { 'for': ['markdown', 'vimwiki'] }
@@ -61,6 +65,7 @@ Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'metakirby5/codi.vim'
 Plug 'mhinz/vim-startify'
 Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
 Plug 'neoclide/coc-neco'
@@ -108,8 +113,10 @@ Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
-Plug 'RRethy/vim-hexokinase'
+" Plug 'RRethy/vim-hexokinase' " FIXME
+Plug 'rhysd/conflict-marker.vim'
 Plug 'rhysd/git-messenger.vim'
+Plug 'rhysd/reply.vim'
 Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh \| UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
@@ -135,7 +142,6 @@ Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 " Plug 'megalithic/elm-vim', { 'for': ['elm'] }
-Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
@@ -451,6 +457,10 @@ nnoremap <leader>bp :bprevious<cr>
 nnoremap <leader>b# :b#<cr>
 nnoremap <leader>bx :%bd\|e#<cr>
 
+
+" open vertical term for REPL tings
+noremap <leader>r :only<CR> :vert terminal<CR>
+
 "}}}
 " ░░░░░░░░░░░░░░░ autocommands {{{
 
@@ -643,12 +653,6 @@ augroup gitcommit
   au BufEnter *.git/index silent normal gg0j
   au BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
   au FileType gitcommit,gitrebase exe BufEnterCommit()
-
-  " co-authored-by iabbreviations only used during gitcommit messages
-  au FileType gitcommit,gitrebase :iabbrev <buffer> cabjj Co-authored-by: Joe Jobes <jmrjobes@gmail.com>
-  au FileType gitcommit,gitrebase :iabbrev <buffer> cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
-  au FileType gitcommit,gitrebase :iabbrev <buffer> cabjw Co-authored-by: Jeff Weiss <jweiss@enbala.com>
-  au FileType gitcommit,gitrebase :iabbrev <buffer> caban Co-authored-by: Alan Nguyen <anguyen@enbala.com>
 augroup END
 
 augroup ft_elixir
@@ -657,19 +661,20 @@ augroup ft_elixir
   au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
   au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
   au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+  au FileType elixir,eelixir inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
+  au FileType elixir,eelixir inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
+  au FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 
-  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ex :IEx -S mix<CR>
-if has('nvim')
-  tnoremap <silent> <leader>x <C-\><C-n>:IEx -S mix<CR>
-endif
+  if has('nvim')
+    " au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ex :T iex<CR>
+    " au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :T iex<CR>
+    au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :Repl<CR>
+  endif
 
   au FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
   au FileType elixir,eelixir iabbrev ep    \|>
   au FileType elixir,eelixir iabbrev ei    IO.inspect
   au FileType elixir,eelixir iabbrev eputs IO.puts
-
-  " :Iex => open iex with current file compiled
-  command! Iex :!iex -S mix %<cr>
 
   au FileType elixir,eelixir let g:which_key_map.e = {
         \ 'name' : '+elixir' ,
@@ -677,17 +682,26 @@ endif
         \ 'il' : 'io.inspect-with-label',
         \ 'd' : 'debug/iex.pry',
         \ 'p' : '|> pipeline',
+        \ 'x' : 'IEx',
+        \ 'r' : 'repl',
         \ }
 augroup END
 
 augroup ft_elm
   au!
   au FileType elm nnoremap <leader>ep o\|> <ESC>a
+
+  if has('nvim')
+    " au FileType elm nnoremap <silent> <buffer> <leader>er :T elm repl<CR>
+    au FileType elm nnoremap <silent> <buffer> <leader>er :Repl<CR>
+  endif
+
   au FileType elm iabbrev ep    \|>
 
   au FileType elm let g:which_key_map.e = {
         \ 'name' : '+elm' ,
         \ 'p' : '|> pipeline',
+        \ 'r' : 'repl',
         \ }
 augroup END
 
@@ -825,10 +839,21 @@ nmap <leader>nwi :vnew<CR><Plug>VimwikiIndex
 nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
 
 
+" ## rhysd/reply.vim
+let g:reply_repls = {
+      \   'elm_repl': [
+      \     {-> reply#repl#base('elm repl', {
+      \       'prompt_start' : '^> ',
+      \       'prompt_continue' : '^| ',
+      \     })}
+      \   ],
+      \ }
+
 " ## rhysd/git-messenger
 " let g:git_messenger_no_default_mappings = 1
 " let g:git_messenger_include_diff = "none"
 nmap <leader>gm <Plug>(git-messenger)
+
 
 " ## junegunn/vim-easy-align
 " Start interactive EasyAlign in visual mode (e.g. vipga)
@@ -836,10 +861,12 @@ xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
 
+
 " ## andymass/vim-matchup
 " let g:matchup_matchparen_deferred = 1
 " let g:matchup_matchparen_hi_surround_always = 1
 let g:matchup_matchparen_status_offscreen = 0
+
 
 " ## liuchengxu/vim-which-key
 " ref: https://github.com/sinecodes/dotfiles/blob/master/.vim/settings/rich/whichkey.vim
@@ -995,6 +1022,8 @@ if executable('rg')
     let l:args = join(split(a:line)[1:])
     return systemlist('get_completions rg ' . l:args)
   endfunction
+
+  " TODO: investigate using `fd` instead? https://github.com/dkarter/dotfiles/blob/master/vimrc#L334
 
   " Add support for ripgrep
   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
@@ -1398,6 +1427,8 @@ endfunction
 function! ElixirUmbrellaTransform(cmd) abort
   if match(a:cmd, 'vpp/') != -1
     return substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
+  elseif match(a:cmd, 'sims/') != -1
+    return substitute(a:cmd, 'mix test sims/\([^/]*/\)\(.*\)', '(cd sims/\1 \&\& mix test \2)', '')
   else
     return a:cmd
   end
@@ -1405,33 +1436,9 @@ endfunction
 let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
 let g:test#transformation = 'elixir_umbrella'
 
-" function! UmbrellaElixirTestTransform(cmd) abort
-"   echo "a:cmd is: " . a:cmd
-
-"   let testCommand = join(split(a:cmd)[0:-2])
-"   let umbrellaTestFilePath = split(a:cmd)[-1]
-"   let pathFragments = split(umbrellaTestFilePath, "/")
-"   let appName = pathFragments[1]
-"   let localTestPath = join(pathFragments[2:], "/")
-
-"   echo "UmbrellaElixirTestTransform: " . testCommand
-
-"   if a:cmd =~ 'sims/'
-"     echo "in a:cmd =~ 'sims/'"
-"     return a:cmd
-"   endif
-
-"   if a:cmd !~ 'apps/'
-"     echo "in a:cmd !~ 'apps/'"
-"     return a:cmd
-"   endif
-
-"   return join(["mix cmd --app ", appName, testCommand, localTestPath])
-" endfunction
-" let g:test#custom_transformations = {'elixir': function('UmbrellaElixirTestTransform')}
-" let g:test#transformation = 'elixir'
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
+
 let g:test#filename_modifier = ':.'
 let g:test#preserve_screen = 0
 let g:test#elixir#exunit#executable = 'mix test'
@@ -1793,6 +1800,7 @@ let g:coc_node_path = $HOME . '/.asdf/installs/nodejs/10.15.3/bin/node'
 " for showSignatureHelp
 set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478
 set shortmess+=c
+set keywordprg=:call\ CocAction('doHover')
 
 " FOR COC-SNIPPETS + COC.NVIM
 " ---------------------------

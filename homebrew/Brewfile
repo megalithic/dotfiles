@@ -93,6 +93,7 @@ brew 'libyaml'
 brew 'libxslt'
 brew 'lnav'
 # brew 'lua' # installed via asdf
+brew 'lsd'
 brew 'luarocks'
 brew 'libarchive'
 # brew 'm-cli'

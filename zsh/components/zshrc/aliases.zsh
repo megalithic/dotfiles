@@ -68,6 +68,8 @@ alias tree="tree -L"
 
 alias icat="kitty +kitten icat"
 
+alias back="slack back; dnd off"
+
 # ZMV
 # -----------------------------------------------------------------------------
 autoload -U zmv
@@ -150,6 +152,7 @@ alias eza="nvim ~/.dotfiles/zsh/**/aliases.zsh"
 alias ezf="nvim ~/.dotfiles/zsh/**/functions.zsh"
 alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"
 alias ehs="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/config.lua"
+alias eh="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/init.lua"
 alias eg="nvim ~/.dotfiles/git/gitconfig.symlink"
 alias ezc=ezo
 alias eze="nvim ~/.dotfiles/zsh/**/env.zsh"
@@ -161,7 +164,6 @@ alias ev="nvim ~/.dotfiles/nvim/init.vim"
 alias evm="nvim ~/.dotfiles/nvim/init.min.vim"
 alias ek="nvim ~/.dotfiles/kitty/kitty.conf"
 alias et="nvim ~/.dotfiles/tmux/tmux.conf.symlink"
-alias eh="nvim ~/.dotfiles/private/homeassistant/configuration.yaml"
 
 # FOLDERS
 # -----------------------------------------------------------------------------

@@ -40,6 +40,27 @@ local isIgnoredWindow = function(window, appConfig)
   return foundIgnoredWindow
 end
 
+
+local dndHandler = function(windows, dnd, event)
+  if dnd == nil then return end
+  log.df('found dnd handler for %s..', win:application():bundleID())
+
+  local enabled = dnd.enabled
+  local mode = dnd.mode
+
+  if (enabled) then
+    if (event == "created") then
+      log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
+      hs.execute("slack " .. mode, true)
+      hs.execute("dnd on", true)
+    elseif (event == "destroyed") then
+      -- log.df('dnd handler: toggling OFF slack status and dnd mode')
+      -- hs.execute("slack back", true)
+      -- hs.execute("dnd off", true)
+    end
+  end
+end
+
 local setLayoutForSingleWindow = function(window, appConfig)
   log.df(' setLayoutForApp (single window) - grid layout applied for app: %s, window: %s, target_display: %s, position: %s', string.upper(appConfig.hint), window:title(), target_display(appConfig.preferredDisplay), appConfig.position)
 
@@ -82,6 +103,8 @@ local setLayoutForApp = function(app, appConfig)
       else
         log.df(' setLayoutForApp (no manageable windows found) - grid layout NOT applied for app: %s, #windows: %s, target_display: %s, position: %s', string.upper(app:name()), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
       end
+
+      -- dndHandler(windoows, appConfig.dnd)
     else
       log.df(' setLayoutForApp - unable to find an app config for %s', string.upper(app:name()))
     end
@@ -133,10 +156,10 @@ local watchWindow = function(window)
       log.df(' watchWindow - window event; watching %s (window %s, ID %s, %s windows) and applying layout for window/app', bundleID, window:title(), id, utils.windowCount(app))
       setLayoutForApp(app)
 
-      -- execute custom app fn() for given application
-      if config.apps[app:name()].fn ~= nil then
+      -- execute custom app handler() for given application
+      if config.apps[app:name()].handler ~= nil then
         log.df(' watchWindow - window event; found custom function for %s (app %s, window %s, ID %s, %s windows)', bundleID, string.upper(app:name()), window:title(), id, utils.windowCount(app))
-        config.apps[app:name()].fn(window)
+        config.apps[app:name()].handler(window)
       end
     else
       -- otherwise just always do a default thing for unhandled apps

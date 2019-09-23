@@ -242,7 +242,7 @@
     },
     "elm": {
       "command": "elm-language-server",
-      /* "args": ["--stdio"], */
+      "args": ["--stdio"],
       "filetypes": ["elm"],
       "rootPatterns": ["elm.json"],
       "initializationOptions": {
