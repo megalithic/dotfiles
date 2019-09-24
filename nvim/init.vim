@@ -27,6 +27,7 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugins')
 
+Plug 'airblade/vim-rooter'
 Plug 'andymass/vim-matchup'
 Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
@@ -120,7 +121,7 @@ Plug 'rhysd/reply.vim'
 Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh \| UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
 Plug 'sickill/vim-pasta' " context-aware pasting
-Plug 'svermeulen/vim-yoink'
+" Plug 'svermeulen/vim-yoink' " FIXME
 Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
@@ -765,11 +766,9 @@ let g:startify_custom_header_quotes = startify#fortune#predefined_quotes() + [
       \ ['A language that doesn’t affect the way you think about programming is not worth knowing.', '- Alan Perlis'],
       \ ['Bad programmers worry about the code. Good programmers worry about data structures and their relationships', '' , '― Linus Torvalds']
       \ ]
-
 let g:startify_bookmarks = [
-    \{'d': '~/.dotfiles'},
-    \]
-
+      \{'d': '~/.dotfiles'},
+      \]
 let g:startify_list_order = [
       \ ['   Bookmarks'], 'bookmarks',
       \ ['   Sessions'], 'sessions',
@@ -777,7 +776,6 @@ let g:startify_list_order = [
       \ ['   Directory'], 'dir',
       \ ['   Commands'], 'commands',
       \ ]
-
 let g:startify_skiplist = [
       \ 'COMMIT_EDITMSG',
       \ '^/tmp',
@@ -786,34 +784,50 @@ let g:startify_skiplist = [
       \ 'pack/.*/doc',
       \ '.*/vimwiki/.*'
       \ ]
-
 let g:startify_ascii = [
-\ "                      .            .      ",
-\ "                    .,;'           :,.    ",
-\ "                  .,;;;,,.         ccc;.  ",
-\ "                .;c::::,,,'        ccccc: ",
-\ "                .::cc::,,,,,.      cccccc.",
-\ "                .cccccc;;;;;;'     llllll.",
-\ "                .cccccc.,;;;;;;.   llllll.",
-\ "                .cccccc  ';;;;;;'  oooooo.",
-\ "                'lllllc   .;;;;;;;.oooooo'",
-\ "                'lllllc     ,::::::looooo'",
-\ "                'llllll      .:::::lloddd'",
-\ "                .looool       .;::coooodo.",
-\ "                  .cool         'ccoooc.  ",
-\ "                    .co          .:o:.    ",
-\ "                      .           .'      ",
-\ "",
-\"                          neovim",
-\"            hyperextensible Vim-based text editor",
-\]
+      \ "                      .            .      ",
+      \ "                    .,;'           :,.    ",
+      \ "                  .,;;;,,.         ccc;.  ",
+      \ "                .;c::::,,,'        ccccc: ",
+      \ "                .::cc::,,,,,.      cccccc.",
+      \ "                .cccccc;;;;;;'     llllll.",
+      \ "                .cccccc.,;;;;;;.   llllll.",
+      \ "                .cccccc  ';;;;;;'  oooooo.",
+      \ "                'lllllc   .;;;;;;;.oooooo'",
+      \ "                'lllllc     ,::::::looooo'",
+      \ "                'llllll      .:::::lloddd'",
+      \ "                .looool       .;::coooodo.",
+      \ "                  .cool         'ccoooc.  ",
+      \ "                    .co          .:o:.    ",
+      \ "                      .           .'      ",
+      \ "",
+      \"                          neovim",
+      \"            hyperextensible Vim-based text editor",
+      \]
 " let g:startify_custom_header = map(g:startify_ascii, "\"   \".v:val")
 let g:startify_custom_header = 'map(startify#fortune#boxed() + g:startify_ascii, "repeat(\" \", 5).v:val")'
-
 augroup MyStartify
   autocmd!
   autocmd User Startified setlocal cursorline
 augroup END
+
+
+" ## airblade/vim-rooter
+let g:rooter_change_directory_for_non_project_files = 'current'
+let g:rooter_use_lcd = 1
+let g:rooter_silent_chdir = 1
+let g:rooter_patterns = [
+      \ 'elm-package.json',
+      \ 'elm.json',
+      \ 'ng-package.json',
+      \ 'package.json',
+      \ 'Gemfile',
+      \ 'mix.exs',
+      \ '.git',
+      \ '.git/',
+      \ ]
+" }}}
+
 
 " ## sheerun/polyglot
 let g:polyglot_disabled = ['typescript', 'typescriptreact', 'typescript.tsx', 'javascriptreact', 'graphql', 'tsx', 'jsx', 'sass', 'scss', 'css', 'elm', 'elixir', 'eelixir', 'ex', 'exs']
@@ -1410,14 +1424,14 @@ let g:golden_ratio_ignore_horizontal_splits = 1
 let g:qs_enable = 1
 let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
-" ## svermeulen/vim-yoink
-let g:yoinkIncludeDeleteOperations = 1
-let g:yoinkSyncSystemClipboardOnFocus = 0
-let g:yoinkAutoFormatPaste = 1
-nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
-nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
-nmap p <plug>(YoinkPaste_p)
-nmap P <plug>(YoinkPaste_P)
+" " ## svermeulen/vim-yoink
+" let g:yoinkIncludeDeleteOperations = 1
+" let g:yoinkSyncSystemClipboardOnFocus = 0
+" let g:yoinkAutoFormatPaste = 1
+" nmap <special> <c-n> <plug>(YoinkPostPasteSwapForward)
+" nmap <special> <c-p> <plug>(YoinkPostPasteSwapBack)
+" nmap p <plug>(YoinkPaste_p)
+" nmap P <plug>(YoinkPaste_P)
 
 " ## janko/vim-test (testing)
 function! TerminalSplit(cmd)
