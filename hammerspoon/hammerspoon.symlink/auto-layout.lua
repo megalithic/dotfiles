@@ -1,6 +1,6 @@
 local config = require('config')
 local utils = require('utils')
-local log = hs.logger.new('[layout]', 'debug')
+local log = hs.logger.new('layout|', 'debug')
 local eventsWatcher = hs.uielement.watcher
 local watchedApps = {}
 local appWatcher = nil

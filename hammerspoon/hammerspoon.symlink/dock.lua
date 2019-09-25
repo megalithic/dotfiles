@@ -1,7 +1,8 @@
 local config = require('config')
-local log = hs.logger.new('[docking]', 'debug')
+local log = hs.logger.new('docking|', 'debug')
 local isDocked = false
 local watcher = nil
+local deviceConfig =  config.docking.device
 
 local selectKarabinerProfile = (function(profile)
   hs.execute(
@@ -38,40 +39,48 @@ end)
 
 local isDeviceConnected = (function()
   for _, device in pairs(hs.usb.attachedDevices()) do
-    if (config.docking.device.vendorID == device.vendorID and config.docking.device.productID == device.productID) then
+    if (deviceConfig.vendorID == device.vendorID and deviceConfig.productID == device.productID) then
       return true
     end
   end
 end)
 
 local dockedAction = function()
+  local dockedConfig =  config.docking.docked
   log.i('Target USB device plugged in; laptop presumably docked..')
   hs.timer.doAfter(1, function ()
-    selectKarabinerProfile(config.docking['docked'].profile)
-    toggleWifi(config.docking['docked'].wifi)
+    selectKarabinerProfile(dockedConfig.profile)
+    toggleWifi(dockedConfig.wifi)
+    log.i('Setting kitty font-size to:', dockedConfig.fontSize)
+    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size --all ' .. dockedConfig.fontSize)
+    -- hs.execute('kitty @ set-font-size ' .. dockedConfig.fontSize)
   end)
   hs.timer.doAfter(4, function ()
-    selectAudioOutput(config.docking['docked'].output)
-    selectAudioInput(config.docking['docked'].input)
+    selectAudioOutput(dockedConfig.output)
+    selectAudioInput(dockedConfig.input)
   end)
 end
 
 local undockedAction = function()
+  local undockedConfig =  config.docking.undocked
   log.i('Target USB device unplugged; laptop presumably undocked..')
   hs.timer.doAfter(1, function ()
-    selectKarabinerProfile(config.docking['undocked'].profile)
-    toggleWifi(config.docking['undocked'].wifi)
+    selectKarabinerProfile(undockedConfig.profile)
+    toggleWifi(undockedConfig.wifi)
+    log.i('Setting kitty font-size to:', undockedConfig.fontSize)
+    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size --all ' .. undockedConfig.fontSize)
+    -- hs.execute('kitty @ set-font-size ' .. undockedConfig.fontSize)
   end)
   hs.timer.doAfter(4, function ()
-    selectAudioOutput(config.docking['undocked'].output)
-    selectAudioInput(config.docking['undocked'].input)
+    selectAudioOutput(undockedConfig.output)
+    selectAudioInput(undockedConfig.input)
   end)
 end
 
 local handleUsbWatcherEvent = (function(event)
   -- Safe assumption that connecting my keyboard means we are "docked", so do
   -- things based on being "docked".
-  if event.vendorID == config.docking['device'].vendorID and event.productID == config.docking['device'].productID then
+  if event.vendorID == deviceConfig.vendorID and event.productID == deviceConfig.productID then
     if event.eventType == 'added' then
       isDocked = true
       dockedAction()

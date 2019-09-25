@@ -9,3 +9,4 @@ mkdir -p "$HOME/.config/kitty"
 
 ln -sfv $DOTS/kitty/kitty.conf $HOME/.config/kitty/kitty.conf
 ln -sfv $DOTS/kitty/themes $HOME/.config/kitty
+ln -sfv $DOTS/kitty/macos-launch-services-cmdline ~/.config/kitty/macos-launch-services-cmdline

@@ -1,4 +1,4 @@
-local log = hs.logger.new('[config]', 'debug')
+local log = hs.logger.new('config|', 'debug')
 
 local utils = require('utils')
 local hotkey = require('hs.hotkey')
@@ -215,7 +215,7 @@ config.apps = {
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
-    position = config.grid.rightHalf,
+    position = config.grid.centeredLarge,
     dnd = { enabled = true,  mode = "zoom" },
   },
   ['com.spotify.client'] = {
@@ -283,19 +283,19 @@ config.utilities = {
   --   shortcut = 'P',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
-  -- {
-  --   name = 'Hammerspoon Reload',
-  --   superKey = config.superKeys.mashShift,
-  --   shortcut = 'r',
-  --   fn = (function()
-  --     -- require('auto-layout').teardown()
-  --     require('layout').teardown()
-  --     require('dock').teardown()
-  --     require('ptt').teardown()
-  --     hs.reload()
-  --     hs.notify.show('Hammerspoon', 'Config Reloaded', '')
-  --   end)
-  -- },
+  {
+    name = 'Hammerspoon Reload',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'r',
+    fn = (function()
+      -- require('auto-layout').teardown()
+      -- require('layout').teardown()
+      -- require('dock').teardown()
+      -- require('ptt').teardown()
+      hs.reload()
+      hs.notify.show('Hammerspoon', 'Config Reloaded', '')
+    end)
+  },
   {
     name = 'Cursor Locator',
     superKey = config.superKeys.mashShift,
@@ -434,12 +434,14 @@ config.docking = {
     profile = 'dz60', -- Karabiner-Elements profile name
     input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
+    fontSize = 18.0,
   },
   ['undocked'] = {
     wifi = 'on',
     profile = 'internal',
     input = '"MacBook Pro Microphone"',
     output = '"MacBook Pro Speakers"',
+    fontSize = 15.0,
   },
 }
 
