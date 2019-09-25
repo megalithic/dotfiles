@@ -5,13 +5,18 @@ local officeDeviceId = 171
 local weatherDeviceId = 32
 
 local executeCommand = function(command, id)
-  -- hs.execute("hubitat " .. command .. " " .. id, true)
-  hs.task.new(
-    os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
-    nil,
-    nil,
-    {command, id}
-    ):start()
+  hs.execute("hubitat " .. command .. " " .. id, true)
+  -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() end), (function() end), {command, id})
+  -- hs.task.new(
+  --   os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
+  --   function(...)
+  --     print("exit", hs.inspect(table.pack(...)))
+  --   end,
+  --   function(...)
+  --     print("stream", hs.inspect(table.pack(...)))
+  --   end,
+  --   {command, id}
+  --   ):start()
 end
 
 local lampToggle = function(command)

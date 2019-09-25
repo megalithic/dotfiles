@@ -27,7 +27,7 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugins')
 
-Plug 'airblade/vim-rooter'
+" Plug 'airblade/vim-rooter'
 Plug 'andymass/vim-matchup'
 Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
@@ -146,7 +146,7 @@ Plug 'Yggdroot/indentLine'
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'sheerun/vim-polyglot'
 Plug 'ryanoasis/vim-devicons' " has to be last according to docs
-Plug 'vimwiki/vimwiki' " (more vimwiki things: https://github.com/skbolton/titan/blob/master/states/nvim/nvim/plugin/wiki.vim)
+" Plug 'vimwiki/vimwiki' " (more vimwiki things: https://github.com/skbolton/titan/blob/master/states/nvim/nvim/plugin/wiki.vim)
 " Plug 'lervag/wiki.vim'
 
 " ## Movements/Text Objects, et al
@@ -215,6 +215,7 @@ set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/v
 set laststatus=2
 set ttyfast           " should make scrolling faster
 set lazyredraw        " should make scrolling faster
+set mouse=a
 
 if has('nvim') &&  matchstr(execute('silent version'), 'NVIM v\zs[^\n-]*') >= '0.4.0'
   set inccommand=nosplit " interactive find replace preview
@@ -669,9 +670,21 @@ augroup ft_elixir
   au FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 
   if has('nvim')
+    function! s:iex_for_project() abort
+      let l:root = finddir('.git/..', expand('%:p:h').';')
+
+      if !empty(glob(l:root .. "/mix.exs"))
+        echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
+        :Repl iex -S mix
+      else
+        echohl Comment | echom printf('iex (%s)', l:root) | echohl None
+        :Repl iex
+      endif
+    endfunction
+
     " au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ex :T iex<CR>
     " au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :T iex<CR>
-    au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :Repl<CR>
+    au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
   endif
 
   au FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
@@ -695,8 +708,19 @@ augroup ft_elm
   au FileType elm nnoremap <leader>ep o\|> <ESC>a
 
   if has('nvim')
-    " au FileType elm nnoremap <silent> <buffer> <leader>er :T elm repl<CR>
-    au FileType elm nnoremap <silent> <buffer> <leader>er :Repl<CR>
+    function! s:elm_repl_for_project() abort
+      let l:root = finddir('.git/..', expand('%:p:h').';')
+
+      if !empty(glob(l:root .. "/elm.json"))
+        echohl Comment | echom printf('elm repl (%s)', l:root) | echohl None
+        :Repl elm repl
+      else
+        echohl Comment | echom printf('elm_repl (%s)', l:root) | echohl None
+        :Repl elm_repl
+      endif
+    endfunction
+
+    au FileType elm nnoremap <silent> <buffer> <leader>er :call <SID>elm_repl_for_project()<CR>
   endif
 
   au FileType elm iabbrev ep    \|>
@@ -828,7 +852,6 @@ let g:rooter_patterns = [
       \ '.git',
       \ '.git/',
       \ ]
-" }}}
 
 
 " ## sheerun/polyglot
@@ -845,25 +868,15 @@ let g:vimwiki_list = [{'path': '~/Dropbox/wiki/',
                      \ 'list_margin': 0,
                      \ 'ext': '.md'}]
 let g:vimwiki_global_ext = 0
-nnoremap <localleader>nw<Space> :VimwikiSearch<cr>
-command! -nargs=1 VimwikiNewNote write ~/Dropbox/wiki/notes/<args>
-nnoremap <localleader>nw<CR> :VimwikiNewNote
-map <M-Space> <Plug>VimwikiToggleListItem
-nmap <A-n> <Plug>VimwikiNextLink
-nmap <A-p> <Plug>VimwikiPrevLink
-nmap <leader>nwi :vnew<CR><Plug>VimwikiIndex
-nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
+" nnoremap <localleader>nw<Space> :VimwikiSearch<cr>
+" command! -nargs=1 VimwikiNewNote write ~/Dropbox/wiki/notes/<args>
+" nnoremap <localleader>nw<CR> :VimwikiNewNote
+" map <M-Space> <Plug>VimwikiToggleListItem
+" nmap <A-n> <Plug>VimwikiNextLink
+" nmap <A-p> <Plug>VimwikiPrevLink
+" nmap <leader>nwi :vnew<CR><Plug>VimwikiIndex
+" nmap <leader>ndi :vnew<CR><Plug>VimwikiDiaryIndex
 
-
-" ## rhysd/reply.vim
-let g:reply_repls = {
-      \   'elm_repl': [
-      \     {-> reply#repl#base('elm repl', {
-      \       'prompt_start' : '^> ',
-      \       'prompt_continue' : '^| ',
-      \     })}
-      \   ],
-      \ }
 
 " ## rhysd/git-messenger
 " let g:git_messenger_no_default_mappings = 1
@@ -1091,7 +1104,6 @@ endif
 
 silent! unmap <leader>m
 " nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
-
 nnoremap <silent> <leader>a :call FZFOpen(':FzfRg!')<CR>
 nnoremap <silent> <leader>m :call FZFOpen(':Files')<CR>
 

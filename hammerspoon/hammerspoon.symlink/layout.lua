@@ -1,5 +1,5 @@
 local config = require('config')
-local log = hs.logger.new('wf-layout|', 'debug')
+local log = hs.logger.new('[wflayout]', 'debug')
 
 local appWatcher = nil
 local screenWatcher = nil
@@ -29,10 +29,10 @@ local dndHandler = function(win, dnd, event)
   if (enabled) then
     if (event == "created") then
       log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
-      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode})
-      -- hs.execute("slack " .. mode, true)
-      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"})
-      -- hs.execute("dnd on", true)
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode})
+      hs.execute("slack " .. mode, true)
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"})
+      hs.execute("dnd on", true)
     elseif (event == "destroyed") then
       -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
       -- log.df('dnd handler: toggling OFF slack status and dnd mode')

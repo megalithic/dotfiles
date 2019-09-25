@@ -1,5 +1,5 @@
 local config = require('config')
-local log = hs.logger.new('docking|', 'debug')
+local log = hs.logger.new('[docking]', 'debug')
 local isDocked = false
 local watcher = nil
 local deviceConfig =  config.docking.device

@@ -37,16 +37,14 @@ crash.crashLogToNSLog = true
 crash.crashLog("Disabled require logging to make log file sane")
 
 logger.historySize(1000)
-logger.truncateID = "head"
-logger.truncateIDWithEllipsis = true
-
-window.animationDuration = 0
+-- logger.truncateID = "head"
+-- logger.truncateIDWithEllipsis = true
 
 hs.hints.showTitleThresh = 9
 hs.allowAppleScript(true)
 
 function openConsole()
-    hs.toggleConsole()
+  hs.toggleConsole()
 end
 
 hs.urlevent.bind("openConsole", openConsole)

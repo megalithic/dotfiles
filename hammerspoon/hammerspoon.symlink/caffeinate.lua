@@ -1,4 +1,4 @@
-local log = hs.logger.new('caffeinate|', 'debug')
+local log = hs.logger.new('[caffeine]', 'debug')
 local hubitat = require('hubitat')
 local watcher = nil
 local isDocked = false
