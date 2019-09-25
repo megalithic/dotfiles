@@ -63,10 +63,12 @@ config.distractionUrls = {
 
 config.apps = {
   ['_'] = {
+    hint = '',
     preferredDisplay = 2,
     position = config.grid.centeredMedium,
   },
   ['net.kovidgoyal.kitty'] = {
+    hint = 'net.kovidgoyal.kitty',
     hyperShortcut = 'k',
     superKey = config.superKeys.ctrl,
     shortcut = 'space',
@@ -75,10 +77,12 @@ config.apps = {
     quitGuard = true,
   },
   ['com.kapeli.dashdoc'] = {
+    hint = 'com.kapeli.dashdoc',
     preferredDisplay = 1,
     position = config.grid.centeredLarge,
   },
   ['com.brave.Browser.dev'] = {
+    hint = 'com.brave.Browser.dev',
     hyperShortcut = '`',
     superKey = config.superKeys.cmd,
     shortcut = '`',
@@ -93,11 +97,13 @@ config.apps = {
     end
   },
   ['com.google.Chrome'] = {
+    hint = 'com.google.Chrome',
     preferredDisplay = 1,
     position = config.grid.rightHalf,
     quitGuard = true
   },
   ['com.agiletortoise.Drafts-OSX'] = {
+    hint = 'com.agiletortoise.Drafts-OSX',
     hyperShortcut ='d',
     local_bindings = {'x', '\''},
     superKey = config.superKeys.mashShift,
@@ -107,10 +113,12 @@ config.apps = {
     quitGuard = false,
   },
   ['com.brettterpstra.marked2'] = {
+    hint = 'com.brettterpstra.marked2',
     preferredDisplay = 2,
     position = config.grid.leftHalf,
   },
   ['com.tinyspeck.slackmacgap'] = {
+    hint = 'com.tinyspeck.slackmacgap',
     hyperShortcut = 's',
     superKey = config.superKeys.mashShift,
     shortcut = 's',
@@ -188,6 +196,7 @@ config.apps = {
     end)
   },
   ['com.readdle.smartemail-Mac'] = {
+    hint = 'com.readdle.smartemail-Mac',
     superKey = config.superKeys.mashShift,
     distraction = true,
     shortcut = 'm',
@@ -195,12 +204,14 @@ config.apps = {
     position = config.grid.rightHalf
   },
   ['com.apple.finder'] = {
+    hint = 'com.apple.finder',
     superKey = config.superKeys.ctrl,
     shortcut = '`',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
   ['us.zoom.xos'] = {
+    hint = 'us.zoom.xos',
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
@@ -208,12 +219,14 @@ config.apps = {
     dnd = { enabled = true,  mode = "zoom" },
   },
   ['com.spotify.client'] = {
+    hint = 'com.spotify.client',
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 1,
     position = '5,0 5x5'
   },
   ['com.apple.iChat'] = {
+    hint = 'com.apple.iChat',
     superKey = config.superKeys.cmdShift,
     shortcut = 'm',
     distraction = true,
@@ -221,12 +234,14 @@ config.apps = {
     position = '5,5 3x3'
   },
   ['com.agilebits.onepassword7'] = {
+    hint = 'com.agilebits.onepassword7',
     superKey = config.superKeys.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
   ['org.hammerspoon.Hammerspoon'] = {
+    hint = 'org.hammerspoon.Hammerspoon',
     superKey = config.superKeys.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
@@ -234,6 +249,7 @@ config.apps = {
     quitGuard = true,
   },
   ['com.apple.systempreferences'] = {
+    hint = 'com.apple.systempreferences',
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },

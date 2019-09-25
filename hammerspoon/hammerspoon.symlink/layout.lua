@@ -1,6 +1,9 @@
 local config = require('config')
-local log = hs.logger.new('[layout]', 'debug')
+local log = hs.logger.new('[wf-layout]', 'debug')
 
+local appWatcher = nil
+local screenWatcher = nil
+local windowFilter = nil
 local dwf = nil
 local isDocked = false
 
@@ -26,11 +29,16 @@ local dndHandler = function(win, dnd, event)
   if (enabled) then
     if (event == "created") then
       log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
-      hs.execute("slack " .. mode, true)
-      hs.execute("dnd on", true)
+      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", nil, nil, {mode})
+      -- hs.execute("slack " .. mode, true)
+      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", nil, nil, {"on"})
+      -- hs.execute("dnd on", true)
     elseif (event == "destroyed") then
+      -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
       -- log.df('dnd handler: toggling OFF slack status and dnd mode')
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", nil, nil, {"back"})
       -- hs.execute("slack back", true)
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", nil, nil, {"off"})
       -- hs.execute("dnd off", true)
     end
   end
@@ -143,20 +151,85 @@ local handleWindowMoved = function(win, appName)
   -- handleWindowLayout(win, appName, "moved")
 end
 
-
 local handleWindowFullscreened = function(win, appName)
   log.df('window fullscreened: %s for %s', win:title(), appName)
 
   win:setFullscreen(false)
 end
 
+-- @param event: int
+local handleScreenEvent = function(event)
+  log.df('screen event (%s) occurred', event)
+end
+
+-- @param name: string
+-- @param event: int
+-- @param app: table
+local handleAppEvent = function(name, event, app)
+  log.df('app (%s) event (%s) occurred: %s', name, event, hs.inspect(app))
+end
+
+-- function activateLayout(forceScreenCount)
+--   -- before hook
+--   layoutConfig._before_()
+
+--   -- apply layouts
+--   for bundleID, callback in pairs(layoutConfig) do
+--     local application = hs.application.get(bundleID)
+--     if application then
+--       local windows = application:visibleWindows()
+--       for _, window in pairs(windows) do
+--         if canManageWindow(window) then
+--           callback(window, forceScreenCount)
+--         end
+--       end
+--     end
+--   end
+
+--   -- after hook
+--   layoutConfig._after_()
+-- end
+
+-- local handleWindowEvent = function(window)
+--   if canManageWindow(window) then
+--     local application = window:application()
+--     local bundleID = application:bundleID()
+--     if layoutConfig[bundleID] then
+--       layoutConfig[bundleID](window)
+--     end
+--   end
+-- end
+
+
+-- local handleScreenEvent = function()
+--   -- Make sure that something noteworthy (display count) actually
+--   -- changed. We no longer check geometry because we were seeing spurious
+--   -- events.
+--   local screens = hs.screen.allScreens()
+--   if not (#screens == screenCount) then
+--     screenCount = #screens
+--     activateLayout(screenCount)
+--   end
+-- end
+
 return {
   init = (function(is_docked)
     isDocked = is_docked or false
     log.df('init window layouts (docked: %s)', isDocked)
 
+    -- Watch for screen changes
+    screenWatcher = hs.screen.watcher.new(handleScreenEvent)
+    screenWatcher:start()
+
+    -- Watch for application-level events
+    appWatcher = hs.application.watcher.new(handleAppEvent)
+    appWatcher:start()
+
+    -- windowFilter = hs.window.filter.new()
+    -- windowFilter:subscribe(hs.window.filter.windowCreated, handleWindowEvent)
+
     -- FIXME: determine if we want to spin up a window.filter for each app?
-    dfw = hs.window.filter.new()
+    dwf = hs.window.filter.new()
     hs.window.filter.allowedWindowRoles = {
       AXStandardWindow=true,
       AXDialog=true,
@@ -168,16 +241,19 @@ return {
       hs.window.filter.ignoreAlways[name] = true
     end
 
-    dfw:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-    dfw:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
-    dfw:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
-    dfw:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
-    dfw:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
+    dwf:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
+    dwf:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    dwf:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+    dwf:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
+    dwf:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
   end),
 
   teardown = (function()
     log.df('teardown window layouts')
 
-    dfw = nil
+    dwf = nil
+    screenWatcher:stop()
+    screenWatcher = nil
+    appWatcher = nil
   end)
 }

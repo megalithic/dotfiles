@@ -5,7 +5,13 @@ local officeDeviceId = 171
 local weatherDeviceId = 32
 
 local executeCommand = function(command, id)
-  hs.execute("hubitat " .. command .. " " .. id, true)
+  -- hs.execute("hubitat " .. command .. " " .. id, true)
+  hs.task.new(
+    os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
+    nil,
+    nil,
+    {command, id}
+    ):start()
 end
 
 local lampToggle = function(command)
@@ -14,7 +20,7 @@ end
 
 local isCloudy = function()
   local isCloudy = hs.task.new(
-    "/Users/replicant/.dotfiles/bin/hubitat",
+    os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
     function(...)
       print("exit", hs.inspect(table.pack(...)))
     end,
@@ -30,7 +36,7 @@ end
 
 local isNight = function()
   local isNight = hs.task.new(
-    "/Users/replicant/.dotfiles/bin/hubitat",
+    os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
     function(...)
       print("exit", hs.inspect(table.pack(...)))
     end, function(...)

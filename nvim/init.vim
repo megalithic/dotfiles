@@ -1044,7 +1044,7 @@ if executable('rg')
   let $BAT_THEME = 'base16' " REF: https://github.com/junegunn/fzf.vim/issues/732#issuecomment-437276088
   command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
         \ call fzf#vim#grep(
-        \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --hidden --follow --glob "!{.git,deps,node_modules,*.png,*.jpg}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+        \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules,*.png,*.jpg}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
         \   <bang>0 ? fzf#vim#with_preview('up:40%')
         \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)

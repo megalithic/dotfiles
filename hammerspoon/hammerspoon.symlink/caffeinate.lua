@@ -6,15 +6,17 @@ local isDocked = false
 local handleCaffeinateEvent = function(eventType) -- (int)
   log.df('Event triggered: event type %s(%s) | isDocked? %s', hs.caffeinate.watcher[eventType], eventType, isDocked)
 
-  if (isDocked) then
-    if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+  if (eventType == hs.caffeinate.watcher.screensDidSleep) then
+    if (isDocked) then
       log.df('Attempting to turn OFF office lamp')
       hubitat.lampToggle("off")
-      -- hs.execute('slack away')
-    elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
+    end
+
+    hs.execute('slack away')
+  elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
+    if (isDocked) then
       log.df('Attempting to turn ON office lamp')
       hubitat.lampToggle("on")
-      -- hs.execute('slack back')
 
       -- if (isNight()) then
       --   log.df('night time; turning on office lamp, regardless of weather conditions')
@@ -30,12 +32,8 @@ local handleCaffeinateEvent = function(eventType) -- (int)
       --   end
       -- end
     end
-  else
-    if (eventType == hs.caffeinate.watcher.screensDidSleep) then
-      hs.execute('slack away')
-    elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
-      hs.execute('slack back')
-    end
+
+    hs.execute('slack back')
   end
 end
 
