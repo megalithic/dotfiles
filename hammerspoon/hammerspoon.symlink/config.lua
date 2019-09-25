@@ -89,12 +89,12 @@ config.apps = {
     preferredDisplay = 1,
     position = config.grid.fullScreen,
     quitGuard = true,
-    handler = function(win)
-      if win == nil then return end
-      local appBundleID = win:application():bundleID()
-      local visibleWindows = win:application():visibleWindows()
-      log.df('executing app handler for %s instance, for %s windows..', appBundleID, #visibleWindows)
-    end
+    -- handler = function(win)
+    --   if win == nil then return end
+    --   local appBundleID = win:application():bundleID()
+    --   local visibleWindows = win:application():visibleWindows()
+    --   log.df('executing app handler for %s instance, for %s windows..', appBundleID, #visibleWindows)
+    -- end
   },
   ['com.google.Chrome'] = {
     hint = 'com.google.Chrome',

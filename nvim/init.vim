@@ -213,6 +213,8 @@ set synmaxcol=250             " set max syntax highlighting column to sane level
 set visualbell t_vb=          " no visual bell
 set t_ut=                     " fix 256 colors in tmux http://sunaku.github.io/vim-256color-bce.html
 set laststatus=2
+set ttyfast           " should make scrolling faster
+set lazyredraw        " should make scrolling faster
 
 if has('nvim') &&  matchstr(execute('silent version'), 'NVIM v\zs[^\n-]*') >= '0.4.0'
   set inccommand=nosplit " interactive find replace preview
@@ -965,8 +967,8 @@ let g:which_key_map.t = {
       \ 't' : 'test-nearest',
       \ 'l' : 'test-last',
       \ 'v' : 'test-visited',
-      \ 'p' : 'alternate-file',
-      \ 'pv' : 'alternate-file-vertical',
+      \ 'P' : 'alternate-file',
+      \ 'p' : 'alternate-file-vertical',
       \ }
 let g:which_key_map.b = {
       \ 'name' : '+buffer' ,
@@ -1041,18 +1043,39 @@ if executable('rg')
 
   " Add support for ripgrep
   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
+  " REF: https://github.com/dkarter/dotfiles/blob/master/vimrc#L329-L460
   let $BAT_THEME = 'base16' " REF: https://github.com/junegunn/fzf.vim/issues/732#issuecomment-437276088
-  command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
+  " let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
+  " command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
+  "       \ call fzf#vim#grep(
+  "       \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*,**/*.png,**/*.jpg" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+  "       \   <bang>0 ? fzf#vim#with_preview('up:40%')
+  "       \           : fzf#vim#with_preview('right:50%', '?'),
+  "       \   <bang>0)
+  " command! -bang -nargs=? -complete=dir Files
+  "       \ call fzf#vim#files(<q-args>,
+  "       \   <bang>0 ? fzf#vim#with_preview('up:40%')
+  "       \           : fzf#vim#with_preview('right:50%', '?'),
+  "       \   <bang>0)
+
+  let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --color=always --exclude .git --ignore-file ~/.gitignore'
+  let $FZF_DEFAULT_OPTS='--ansi'
+  let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
+
+  function! FZFOpen(command_str)
+    if (expand('%') =~# 'NERD_tree' && winnr('$') > 1)
+      exe "normal! \<c-w>\<c-w>"
+    endif
+    exe 'normal! ' . a:command_str . "\<cr>"
+  endfunction
+
+  command! -bang -nargs=* FzfRg
         \ call fzf#vim#grep(
-        \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules,*.png,*.jpg}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
-        \   <bang>0 ? fzf#vim#with_preview('up:40%')
-        \           : fzf#vim#with_preview('right:50%', '?'),
+        \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
+        \   <bang>0 ? fzf#vim#with_preview('up:60%')
+        \           : fzf#vim#with_preview('right:50%:hidden', '?'),
         \   <bang>0)
-  command! -bang -nargs=? -complete=dir Files
-        \ call fzf#vim#files(<q-args>,
-        \   <bang>0 ? fzf#vim#with_preview('up:40%')
-        \           : fzf#vim#with_preview('right:50%', '?'),
-        \   <bang>0)
+
   command! -bang -nargs=* WikiSearch
         \ call fzf#vim#grep(
         \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
@@ -1060,140 +1083,17 @@ if executable('rg')
         \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
         \  <bang>0)
 
-  nnoremap <leader>a <ESC>:Rg<SPACE>
+  " nnoremap <leader>a <ESC>:Rg<SPACE>
   nnoremap <silent> <leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
   " Backslash as shortcut to ag
-  nnoremap \ :Rg<SPACE>
+  " nnoremap \ :Rg<SPACE>
 endif
 
-function! FZFWithDevIcons()
-  let l:fzf_files_options = ' -m --bind ctrl-d:preview-page-down,ctrl-u:preview-page-up --preview "bat --theme="base16" --color always --style numbers {2..}"'
-
-  function! s:files()
-    let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
-    return s:prepend_icon(l:files)
-  endfunction
-
-  function! s:prepend_icon(candidates)
-    let result = []
-    for candidate in a:candidates
-      let filename = fnamemodify(candidate, ':p:t')
-      let icon = WebDevIconsGetFileTypeSymbol(filename, isdirectory(filename))
-      call add(result, printf("%s %s", icon, candidate))
-    endfor
-
-    return result
-  endfunction
-
-  function! s:edit_file(items)
-    let items = a:items
-    let i = 1
-    let ln = len(items)
-    while i < ln
-      let item = items[i]
-      let parts = split(item, ' ')
-      let file_path = get(parts, 1, '')
-      let items[i] = file_path
-      let i += 1
-    endwhile
-    call s:Sink(items)
-  endfunction
-
-  let opts = fzf#wrap({})
-  let opts.source = <sid>files()
-  let s:Sink = opts['sink*']
-  let opts['sink*'] = function('s:edit_file')
-  let opts.options .= l:fzf_files_options
-  call fzf#run(opts)
-
-endfunction
-
-function! FZFDevIcons()
-  let l:fzf_files_options = '--preview "bat --theme="base16" --style=numbers,changes --preview-window=right:60%:wrap --color always {2..-1} | head -'.&lines.'"'
-
-  function! s:files()
-    let l:files = split(system($FZF_DEFAULT_COMMAND), '\n')
-    return s:prepend_icon(l:files)
-  endfunction
-
-  function! s:prepend_icon(candidates)
-    let l:result = []
-    for l:candidate in a:candidates
-      let l:filename = fnamemodify(l:candidate, ':p:t')
-      let l:icon = WebDevIconsGetFileTypeSymbol(l:filename, isdirectory(l:filename))
-      call add(l:result, printf('%s %s', l:icon, l:candidate))
-    endfor
-
-    return l:result
-  endfunction
-
-  function! s:edit_file(item)
-    let l:pos = stridx(a:item, ' ')
-    let l:file_path = a:item[pos+1:-1]
-    execute 'silent vsp' l:file_path
-  endfunction
-
-  call fzf#run({
-        \ 'source': <sid>files(),
-        \ 'sink':   function('s:edit_file'),
-        \ 'options': '-m ' . l:fzf_files_options,
-        \ 'down':    '40%' })
-endfunction
-
 silent! unmap <leader>m
-nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
 " nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
-" nnoremap <silent> <leader>m :call FZFWithDevIcons()<CR>
-" nnoremap <silent> <leader>m :call FZFDevIcons()<CR>
 
-function! s:change_branch(e)
-  let l:_ = system('git checkout ' . a:e)
-  :e!
-  echom 'Changed branch to' . a:e
-endfunction
-
-function! s:change_remote_branch(e)
-  let l:_ = system('git checkout --track ' . a:e)
-  :e!
-  echom 'Changed to remote branch' . a:e
-endfunction
-
-function! s:parse_pivotal_story(entry)
-  let l:stories = pivotaltracker#stories('', '')
-  let l:filtered = filter(l:stories, {_idx, val -> val.menu == a:entry[-1]})
-  return l:filtered[0].word
-endfunction
-
-inoremap <expr> <c-x># fzf#complete(
-      \ {
-      \ 'source': map(pivotaltracker#stories('', ''), {_key, val -> val.menu}),
-      \ 'reducer': function('<sid>parse_pivotal_story'),
-      \ 'options': '-m',
-      \ 'down': '20%'
-      \ })
-
-inoremap <expr> <c-x>t fzf#complete(
-      \ {
-      \ 'source': map(pivotaltracker#stories('', ''), {_key, val -> val.menu}),
-      \ 'options': '-m',
-      \ 'down': '20%'
-      \ })
-
-command! Gbranch call fzf#run(
-      \ {
-      \ 'source': 'git branch',
-      \ 'sink': function('<sid>change_branch'),
-      \ 'options': '-m',
-      \ 'down': '20%'
-      \ })
-
-command! Grbranch call fzf#run(
-      \ {
-      \ 'source': 'git branch -r',
-      \ 'sink': function('<sid>change_remote_branch'),
-      \ 'options': '-m',
-      \ 'down': '20%'
-      \ })
+nnoremap <silent> <leader>a :call FZFOpen(':FzfRg!')<CR>
+nnoremap <silent> <leader>m :call FZFOpen(':Files')<CR>
 
 
 " ## w0rp/ale
@@ -1463,8 +1363,8 @@ nmap <silent> <leader>tn :TestNearest<CR>
 nmap <silent> <leader>tl :TestLast<CR>
 nmap <silent> <leader>ta :TestSuite<CR>
 nmap <silent> <leader>tv :TestVisit<CR>
-nmap <silent> <leader>tp :A<CR>
-nmap <silent> <leader>tpv :AV<CR>
+nmap <silent> <leader>tP :A<CR>
+nmap <silent> <leader>tp :AV<CR>
 " ref: https://github.com/Dkendal/dot-files/blob/master/nvim/.config/nvim/init.vim
 
 
