@@ -16,61 +16,23 @@ local windowLayouts = config.apps or {
 }
 
 local canLayoutWindow = function(win)
-  return win:isStandard() and not win:isFullScreen() and not win:isMinimized()
+  local bundleID = win:application():bundleID()
+
+  return win:title() ~= "" and win:isStandard() and not win:isMinimized() and not win:isFullScreen() or
+    bundleID == 'com.googlecode.iterm2' or bundleID == 'net.kovidgoyal.kitty'
 end
 
-local dndHandler = function(win, dnd, event)
-  if dnd == nil then return end
-  log.df('found dnd handler for %s..', win:application():bundleID())
-
-  local enabled = dnd.enabled
-  local mode = dnd.mode
-
-  if (enabled) then
-    if (event == "created") then
-      log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode})
-      hs.execute("slack " .. mode, true)
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"})
-      hs.execute("dnd on", true)
-    elseif (event == "destroyed") then
-      -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
-      -- log.df('dnd handler: toggling OFF slack status and dnd mode')
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end) , (function() end), {"back"})
-      -- hs.execute("slack back", true)
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"off"})
-      -- hs.execute("dnd off", true)
-    end
-  end
-end
-
-local appHandler = function(win, handler)
-  if handler == nil then return end
-  log.df('found app handler for %s..', win:application():bundleID())
-
-  handler(win)
-end
-
--- local validWindows = function(windows)
--- end
-
-local snapRelatedWindows = function(appBundleID, windows, screen)
-  for index, win in pairs(windows) do
-    log.df('window snapping multiple windows (%s) for %s', #windows, appBundleID)
-
-    if win ~= nil and win:title() ~= "" then
-      if (index % 2 == 0) then -- even index/number
-        hs.grid.set(win, config.grid.rightHalf, screen)
-      else -- odd index/number
-        hs.grid.set(win, config.grid.leftHalf, screen)
-      end
-    end
-  end
+local getManageableWindows = function(windows)
+  if windows == nil then return end
+  return hs.fnutils.filter(windows, (function(win)
+    if win == nil then return end
+    return canLayoutWindow(win)
+  end))
 end
 
 local snap = function(win, position, screen)
   if win == nil then return end
-  log.df('window snap (%s): %s', position, win:title())
+  log.df('window snap (%s): %s', hs.inspect(position), win:title())
 
   -- local wf = hs.window.filter
   -- local appBundleID = win:application():bundleID()
@@ -90,6 +52,83 @@ local snap = function(win, position, screen)
   -- end
 
   hs.grid.set(win, position or hs.grid.get(win), screen)
+end
+
+local snapRelatedWindows = function(appBundleID, windows, screen)
+  for index, win in pairs(windows) do
+    log.df('window snapping multiple windows (%s) for %s', #windows, appBundleID)
+
+    if win ~= nil and win:title() ~= "" then
+      if (index % 2 == 0) then -- even index/number
+        snap(win, config.grid.rightHalf, screen)
+      else -- odd index/number
+        snap(win, config.grid.leftHalf, screen)
+      end
+    end
+  end
+end
+
+local dndHandler = function(win, dnd, event)
+  if dnd == nil then return end
+  log.df('found dnd handler for %s..', win:application():bundleID())
+
+  local enabled = dnd.enabled
+  local mode = dnd.mode
+
+  if (enabled) then
+    if (event == "created") then
+      log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
+      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode}):start()
+      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"}):start()
+    elseif (event == "destroyed") then
+      -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
+      -- log.df('dnd handler: toggling OFF slack status and dnd mode')
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end) , (function() end), {"back"}):start()
+      -- hs.execute("slack back", true)
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"off"}):start()
+      -- hs.execute("dnd off", true)
+    end
+  end
+end
+
+local appHandler = function(win, handler)
+  if handler == nil then return end
+  log.df('found app handler for %s..', win:application():bundleID())
+
+  handler(win)
+end
+
+local setLayoutForApp = function(app, appConfig)
+  if app ~= nil and app:mainWindow() ~= nil then
+    log.df('starting layout of single app: %s', string.upper(app:name()))
+
+    local windows = getManageableWindows(app:visibleWindows())
+    appConfig = appConfig or config.apps[app:bundleID()]
+
+    if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
+      if (#windows == 1) then
+        -- getting first (and should be) only window from the table of windows for this app
+        snap(windows[1], appConfig.position, appConfig.preferredDisplay)
+      elseif (#windows > 1) then
+        snapRelatedWindows(windows, appConfig)
+      else
+        log.df('grid layout NOT applied for app (no windows found for app): %s, #windows: %s, target_display: %s, position: %s', string.upper(app:name()), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
+      end
+    else
+      log.df('unable to find an app config for %s', string.upper(app:name()))
+    end
+  end
+end
+
+
+local setLayoutForAll = function()
+  log.i('starting layout of all apps')
+
+  for app, appConfig in pairs(config.apps) do
+    if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
+      setLayoutForApp(app, appConfig)
+    end
+  end
 end
 
 local logWindowInfo = function(win, appName, event)
@@ -140,7 +179,7 @@ local handleWindowFocused = function(win, appName)
   log.df('window focused: %s', win:title())
   -- logWindowInfo(win, appName, "focused")
 
-  handleWindowLayout(win, appName, "focused")
+  -- handleWindowLayout(win, appName, "focused")
   hs.timer.doAfter(0.05, highlightFocused)
 end
 
@@ -215,7 +254,7 @@ end
 return {
   init = (function(is_docked)
     isDocked = is_docked or false
-    log.df('init window layouts (docked: %s)', isDocked)
+    log.df('init window layouts (docked: %s)..', isDocked)
 
     -- Watch for screen changes
     screenWatcher = hs.screen.watcher.new(handleScreenEvent)
@@ -248,8 +287,16 @@ return {
     dwf:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
   end),
 
+  setLayoutForAll = (function()
+    setLayoutForAll()
+  end),
+
+  setLayoutForApp = (function(app)
+    setLayoutForApp(app)
+  end),
+
   teardown = (function()
-    log.df('teardown window layouts')
+    log.df('teardown window layouts..')
 
     dwf = nil
     screenWatcher:stop()

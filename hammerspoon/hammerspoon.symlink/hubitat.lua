@@ -5,8 +5,8 @@ local officeDeviceId = 171
 local weatherDeviceId = 32
 
 local executeCommand = function(command, id)
-  hs.execute("hubitat " .. command .. " " .. id, true)
-  -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() end), (function() end), {command, id})
+  -- hs.execute("hubitat " .. command .. " " .. id, true)
+  hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() end), (function() end), {command, id}):start()
   -- hs.task.new(
   --   os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
   --   function(...)

@@ -304,22 +304,25 @@ config.utilities = {
       mouse.highlight()
     end)
   },
-  -- {
-  --   name = 'Re-layout All',
-  --   superKey = config.superKeys.mashShift,
-  --   shortcut = 'w',
-  --   fn = (function()
-  --     require('layout').snapAll()
-  --   end)
-  -- },
-  -- {
-  --   name = 'Re-layout App',
-  --   superKey = config.superKeys.cmdCtrl,
-  --   shortcut = 'w',
-  --   fn = (function()
-  --     require('layout').snapApp(hs.application.frontmostApplication())
-  --   end)
-  -- },
+  {
+    name = 'Re-layout All',
+    superKey = config.superKeys.mashShift,
+    shortcut = 'w',
+    fn = (function()
+      hs.alert.show("Relayout of all apps")
+      require('layout').setLayoutForAll()
+    end)
+  },
+  {
+    name = 'Re-layout App',
+    superKey = config.superKeys.ctrlShift,
+    shortcut = 'w',
+    fn = (function()
+      local app = hs.application.frontmostApplication()
+      hs.alert.show("Relayout of single app (" .. app:name() .. ")")
+      require('layout').setLayoutForApp(app)
+    end)
+  },
   {
     name = 'Toggle Airpods',
     superKey = config.superKeys.cmdCtrl,
