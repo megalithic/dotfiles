@@ -56,9 +56,9 @@ end
 
 local snapRelatedWindows = function(appBundleID, windows, screen)
   for index, win in pairs(windows) do
-    log.df('window snapping multiple windows (%s) for %s', #windows, appBundleID)
+    log.df('window snapping multiple windows (%s) at win (%s) for %s; index: %s', #windows, hs.inspect(win), appBundleID, index)
 
-    if win ~= nil and win:title() ~= "" then
+    if win ~= nil then
       if (index % 2 == 0) then -- even index/number
         snap(win, config.grid.rightHalf, screen)
       else -- odd index/number
@@ -99,7 +99,8 @@ local appHandler = function(win, handler)
 end
 
 local setLayoutForApp = function(app, appConfig)
-  if type(app) ~= "table" then
+  if type(app) == "string" then
+    log.df('app to layout (%s) is a string, getting app object..', hs.inspect(app))
     app = hs.application.get(app)
   end
 
@@ -114,7 +115,7 @@ local setLayoutForApp = function(app, appConfig)
         -- getting first (and should be) only window from the table of windows for this app
         snap(windows[1], appConfig.position, appConfig.preferredDisplay)
       elseif (#windows > 1) then
-        snapRelatedWindows(windows, appConfig)
+        snapRelatedWindows(appConfig.hint, windows, appConfig.preferredDisplay)
       else
         log.df('grid layout NOT applied for app (no windows found for app): %s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
       end

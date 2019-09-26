@@ -65,18 +65,18 @@ for _, snap in pairs(config.snap) do
   end
 end
 
--- Reload configuration on changes
--- REF: https://github.com/adamgibbins/hammerspoon-config/blob/master/init.lua
-local pathWatcher = hs.pathwatcher.new(hs.configdir, function(files)
-  for _,file in pairs(files) do
-    if file:sub(-4) == '.lua' then
-      -- require('auto-layout').teardown()
-      require('layout').teardown()
-      require('dock').teardown()
-      require('ptt').teardown()
-      hs.reload()
-      hs.notify.show('Hammerspoon', 'Config Reloaded', '')
-    end
-  end
-end)
-pathWatcher:start()
+-- -- Reload configuration on changes
+-- -- REF: https://github.com/adamgibbins/hammerspoon-config/blob/master/init.lua
+-- local pathWatcher = hs.pathwatcher.new(hs.configdir, function(files)
+--   for _,file in pairs(files) do
+--     if file:sub(-4) == '.lua' then
+--       -- require('auto-layout').teardown()
+--       require('layout').teardown()
+--       require('dock').teardown()
+--       require('ptt').teardown()
+--       hs.reload()
+--       hs.notify.show('Hammerspoon', 'Config Reloaded', '')
+--     end
+--   end
+-- end)
+-- pathWatcher:start()
