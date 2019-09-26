@@ -174,9 +174,12 @@ local handleWindowCreated = function(win, appName)
 end
 
 local handleWindowDestroyed = function(win, appName)
-  log.df('window destroyed: %s', hs.inspect(win))
+  log.df('window destroyed (%s) for %s', hs.inspect(win), appName)
   -- logWindowInfo(win, appName, "destroyed")
 
+  if win ~= nil then
+    setLayoutForApp(win:application())
+  end
   -- handleWindowLayout(win, appName, "destroyed")
 end
 
