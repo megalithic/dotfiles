@@ -54,9 +54,26 @@ local isNight = function()
   -- return hs.execute("hubitat status " .. weatherDeviceId .. " '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'")
 end
 
+local handleEnvironmentBasedOfficeAutomations = function()
+  if (isNight()) then
+    log.df('night time; turning on office lamp, regardless of weather conditions')
+    lampToggle("on")
+  else
+    log.df('day time; turning on office lamp based on weather conditions')
+    if (isCloudy()) then
+      log.df('is presently cloudy, turning on')
+      lampToggle("on")
+    else
+      log.df('is not cloudy, turning off')
+      lampToggle("off")
+    end
+  end
+end
+
 return {
-  lampToggle = lampToggle,
-  isNight = isNight,
+  exec = executeCommand,
+  handleEnvironmentBasedOfficeAutomations = handleEnvironmentBasedOfficeAutomations,
   isCloudy = isCloudy,
-  exec = executeCommand
+  isNight = isNight,
+  lampToggle = lampToggle,
 }

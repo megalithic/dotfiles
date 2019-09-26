@@ -12,28 +12,16 @@ local handleCaffeinateEvent = function(eventType) -- (int)
       hubitat.lampToggle("off")
     end
 
-    hs.execute('slack away')
+    -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {"away"}):start()
   elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
     if (isDocked) then
       log.df('Attempting to turn ON office lamp')
       hubitat.lampToggle("on")
-
-      -- if (isNight()) then
-      --   log.df('night time; turning on office lamp, regardless of weather conditions')
-      --   lampToggle("on")
-      -- else
-      --   log.df('day time; turning on office lamp based on weather conditions')
-      --   if (isCloudy()) then
-      --     log.df('is presently cloudy, turning on')
-      --     lampToggle("on")
-      --   else
-      --     log.df('is not cloudy, turning off')
-      --     lampToggle("off")
-      --   end
-      -- end
     end
 
-    hs.execute('slack back')
+    -- hubitat.handleEnvironmentBasedOfficeAutomations()
+
+    -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {"back"}):start()
   end
 end
 

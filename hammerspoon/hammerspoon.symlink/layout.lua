@@ -99,8 +99,12 @@ local appHandler = function(win, handler)
 end
 
 local setLayoutForApp = function(app, appConfig)
+  if type(app) ~= "table" then
+    app = hs.application.get(app)
+  end
+
   if app ~= nil and app:mainWindow() ~= nil then
-    log.df('starting layout of single app: %s', string.upper(app:name()))
+    log.df('starting layout of single app: %s / %s', string.upper(app:name()), app:bundleID())
 
     local windows = getManageableWindows(app:visibleWindows())
     appConfig = appConfig or config.apps[app:bundleID()]
@@ -112,7 +116,7 @@ local setLayoutForApp = function(app, appConfig)
       elseif (#windows > 1) then
         snapRelatedWindows(windows, appConfig)
       else
-        log.df('grid layout NOT applied for app (no windows found for app): %s, #windows: %s, target_display: %s, position: %s', string.upper(app:name()), #windows, target_display(appConfig.preferredDisplay), appConfig.position)
+        log.df('grid layout NOT applied for app (no windows found for app): %s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
       end
     else
       log.df('unable to find an app config for %s', string.upper(app:name()))
