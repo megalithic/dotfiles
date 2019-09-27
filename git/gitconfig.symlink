@@ -56,6 +56,7 @@
 
   mf = merge --ff-only
   m = merge --no-ff
+  ff = merge --no-ff
   # open rebase/merge conflicted files
 	fix = !sh -c "'vim `git diff --name-only --diff-filter=U`'"
 	# add unmerged files (when conflicts are resolved)
@@ -130,10 +131,12 @@
   ; branch = !gitin branch
   br = !gitin branch
 
-  # <3 @jeffweiss
+  # <3 @jeffweiss / @gifwise
   oops = !git commit --amend -CHEAD
   fixup = !git commit --amend -CHEAD
   fpush = !git push origin +HEAD
+
+  cf = clean -f
 
 [mergetool]
   prompt = true

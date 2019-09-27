@@ -7,6 +7,9 @@
 # Using glob patterns to include/exclude files or folders
 --glob
 !git/*
+!**/.git/*
+!.git/*
+!**/gitstatus/bin/*
 
 # Set the colors.
 --colors=line:none

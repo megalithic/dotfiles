@@ -43,3 +43,5 @@ rel
 **/output.txt
 **/repl*.elm
 .ccls-cache
+.git
+**/.git

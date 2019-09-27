@@ -18,9 +18,31 @@ local icons = {
 
 local preferredVolume = 100
 
+-- @param 4 : element
+function onInputDeviceChanged(uid, name, scope, _)
+  if name ~= "vmvc" then
+    return
+  end
+
+  if scope ~= "inpt" then
+    return
+  end
+
+  local device = hs.audiodevice.findDeviceByUID(uid)
+  local newVolume = device:inputVolume()
+
+  if newVolume == 0 or newVolume == inputVolumes[uid] then
+    return
+  end
+
+  inputVolumes[uid] = newVolume
+  log.i("User changed unmuted volume for " .. uid .. ": " .. newVolume)
+end
+
+
 function updateInputVolumes()
   local activeUids = {}
-  for index, device in ipairs(hs.audiodevice.allInputDevices()) do
+  for _, device in ipairs(hs.audiodevice.allInputDevices()) do
     activeUids[device:uid()] = true
     if inputVolumes[device:uid()] == nil then
       local inputVolume = device:inputVolume()
@@ -43,26 +65,6 @@ function updateInputVolumes()
   end
 end
 
-function onInputDeviceChanged(uid, name, scope, element)
-  if name ~= "vmvc" then
-    return
-  end
-
-  if scope ~= "inpt" then
-    return
-  end
-
-  local device = hs.audiodevice.findDeviceByUID(uid)
-  local newVolume = device:inputVolume()
-
-  if newVolume == 0 or newVolume == inputVolumes[uid] then
-    return
-  end
-
-  inputVolumes[uid] = newVolume
-  log.i("User changed unmuted volume for " .. uid .. ": " .. newVolume)
-end
-
 function onSystemAudioDeviceChanged(name)
   if name ~= "dev#" then
     return
@@ -80,7 +82,7 @@ end
 function changeMicrophoneState(mute)
   if mute then
     log.i('Muting audio')
-    for index, device in ipairs(hs.audiodevice.allInputDevices()) do
+    for _, device in ipairs(hs.audiodevice.allInputDevices()) do
       device:setInputVolume(0)
     end
     -- Hack to really mute the microphone

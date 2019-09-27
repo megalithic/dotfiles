@@ -1070,7 +1070,7 @@ if executable('rg')
   "       \           : fzf#vim#with_preview('right:50%', '?'),
   "       \   <bang>0)
 
-  let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --color=always --exclude .git --ignore-file ~/.gitignore'
+  let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --color=always --exclude ".git" --ignore-file ~/.gitignore'
   let $FZF_DEFAULT_OPTS='--ansi'
   let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
 
