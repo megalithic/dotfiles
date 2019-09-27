@@ -88,6 +88,7 @@ if executable('yarn') && executable('node')
         \ 'coc-lists',
         \ 'coc-lua',
         \ 'coc-marketplace',
+        \ 'coc-pairs',
         \ 'coc-prettier',
         \ 'coc-python',
         \ 'coc-rls',
