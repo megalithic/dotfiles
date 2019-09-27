@@ -104,6 +104,8 @@ handler.spotify = function (event, alertText)
   end
 end
 
+-- Total hat-tip to YusukeKokubo for this!
+-- REF: https://github.com/YusukeKokubo/dotfiles/blob/master/hammerspoon/init.lua
 local function keyStroke(mod, key)
   return function() hs.eventtap.keyStroke(mod, key) end
 end

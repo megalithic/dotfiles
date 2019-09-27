@@ -61,6 +61,19 @@ config.distractionUrls = {
   'https://www.facebook.com',
 }
 
+local appHandler = function(win)
+  if win == nil then return end
+
+  local appBundleID = win:application():bundleID()
+  local appName = win:application():name()
+  local visibleWindows = win:application():visibleWindows()
+  if appName == nil then return end
+
+  log.df('executing app handler for %s (%s) instance, for %s windows..', appName, appBundleID, #visibleWindows)
+
+  return appName
+end
+
 config.apps = {
   ['_'] = {
     hint = '',
@@ -89,12 +102,11 @@ config.apps = {
     preferredDisplay = 1,
     position = config.grid.fullScreen,
     quitGuard = true,
-    -- handler = function(win)
-    --   if win == nil then return end
-    --   local appBundleID = win:application():bundleID()
-    --   local visibleWindows = win:application():visibleWindows()
-    --   log.df('executing app handler for %s instance, for %s windows..', appBundleID, #visibleWindows)
-    -- end
+    handler = (function(win)
+      local appName = appHandler(win)
+
+      keys.remap(appName, {'cmd', 'ctrl'}, 'f', {}, 'esc')
+    end)
   },
   ['com.google.Chrome'] = {
     hint = 'com.google.Chrome',
@@ -128,22 +140,14 @@ config.apps = {
     quitGuard = true,
     ignoredWindows = {'Slack Call Minipanel'},
     handler = (function(win)
-      if win == nil then return end
+      local appName = appHandler(win)
 
-      local appBundleID = win:application():bundleID()
-      local appName = win:application():name()
-      local visibleWindows = win:application():visibleWindows()
-      if appName == nil then return end
-
-      log.df('executing app handler for %s (%s) instance, for %s windows..', appName, appBundleID, #visibleWindows)
-
-      -- REF: great example of how to remap for slack: https://github.com/YusukeKokubo/dotfiles/blob/master/hammerspoon/init.lua
       keys.remap(appName, {'ctrl'},          'k', {'alt'},          'up')
       keys.remap(appName, {'ctrl'},          'j', {'alt'},          'down')
       keys.remap(appName, {'ctrl'},          'g', {'cmd'},          'k')
       keys.remap(appName, {'ctrl', 'shift'}, 'k', {'alt', 'shift'}, 'down')
       keys.remap(appName, {'ctrl', 'shift'}, 'j', {'alt', 'shift'}, 'up')
-      keys.remap(appName, {'cmd'},           'w', {}, 'Esc')
+      keys.remap(appName, {'cmd'},           'w', {},               'esc')
     end)
   },
   ['com.readdle.smartemail-Mac'] = {
