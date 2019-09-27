@@ -9,6 +9,7 @@ local handleCaffeinateEvent = function(eventType) -- (int)
   if (eventType == hs.caffeinate.watcher.screensDidSleep) then
     if (isDocked) then
       log.df('Attempting to turn OFF office lamp')
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"off", "171"}):start()
       hubitat.lampToggle("off")
     end
 
@@ -16,6 +17,7 @@ local handleCaffeinateEvent = function(eventType) -- (int)
   elseif (eventType == hs.caffeinate.watcher.screensDidUnlock) then
     if (isDocked) then
       log.df('Attempting to turn ON office lamp')
+      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"on", "171"}):start()
       hubitat.lampToggle("on")
     end
 

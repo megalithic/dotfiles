@@ -4,23 +4,16 @@ local log = hs.logger.new('[hubitat]', 'debug')
 local officeDeviceId = 171
 local weatherDeviceId = 32
 
-local executeCommand = function(command, id)
-  -- hs.execute("hubitat " .. command .. " " .. id, true)
-  hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() end), (function() end), {command, id}):start()
-  -- hs.task.new(
-  --   os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
-  --   function(...)
-  --     print("exit", hs.inspect(table.pack(...)))
-  --   end,
-  --   function(...)
-  --     print("stream", hs.inspect(table.pack(...)))
-  --   end,
-  --   {command, id}
-  --   ):start()
+local M = {}
+
+M.executeCommand = function(command, id)
+  hs.execute("hubitat " .. command .. " " .. id, true)
+  log.df("executing hubitat command (%s) for device (%s)", command, id)
+  -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", {"'" .. command .. "'", "'" .. id .. "'"}):start()
 end
 
-local lampToggle = function(command)
-  executeCommand(command, officeDeviceId)
+M.lampToggle = function(command)
+  M.executeCommand(command, officeDeviceId)
 end
 
 local isCloudy = function()
@@ -39,7 +32,7 @@ local isCloudy = function()
   -- return hs.execute("hubitat status " .. weatherDeviceId .. " '.attributes[] | select(.name == \"cloud\").currentValue | tonumber >= 75'")
 end
 
-local isNight = function()
+M.isNight = function()
   local isNight = hs.task.new(
     os.getenv("HOME") ..  "/.dotfiles/bin/hubitat",
     function(...)
@@ -54,26 +47,20 @@ local isNight = function()
   -- return hs.execute("hubitat status " .. weatherDeviceId .. " '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'")
 end
 
-local handleEnvironmentBasedOfficeAutomations = function()
-  if (isNight()) then
+M.handleEnvironmentBasedOfficeAutomations = function()
+  if (M.isNight()) then
     log.df('night time; turning on office lamp, regardless of weather conditions')
-    lampToggle("on")
+    M.lampToggle("on")
   else
     log.df('day time; turning on office lamp based on weather conditions')
     if (isCloudy()) then
       log.df('is presently cloudy, turning on')
-      lampToggle("on")
+      M.lampToggle("on")
     else
       log.df('is not cloudy, turning off')
-      lampToggle("off")
+      M.lampToggle("off")
     end
   end
 end
 
-return {
-  exec = executeCommand,
-  handleEnvironmentBasedOfficeAutomations = handleEnvironmentBasedOfficeAutomations,
-  isCloudy = isCloudy,
-  isNight = isNight,
-  lampToggle = lampToggle,
-}
+return M

@@ -104,4 +104,20 @@ handler.spotify = function (event, alertText)
   end
 end
 
+local function keyStroke(mod, key)
+  return function() hs.eventtap.keyStroke(mod, key) end
+end
+
+handler.remap = function(appName, mod1, key1, mod2, key2)
+  if (not appName) then
+    return hs.hotkey.bind(mod1, key1, keyStroke(mod2, key2))
+  end
+
+  local hotkey = hs.hotkey.new(mod1, key1, keyStroke(mod2, key2))
+  return hs.window.filter.new(appName)
+    :subscribe(hs.window.filter.windowFocused,   function() hotkey:enable()  end)
+    :subscribe(hs.window.filter.windowUnfocused, function() hotkey:disable() end)
+end
+
+
 return handler

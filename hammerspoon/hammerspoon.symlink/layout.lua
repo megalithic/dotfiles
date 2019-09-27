@@ -188,7 +188,7 @@ local handleWindowFocused = function(win, appName)
   -- logWindowInfo(win, appName, "focused")
 
   -- handleWindowLayout(win, appName, "focused")
-  hs.timer.doAfter(0.05, highlightFocused)
+  -- hs.timer.doAfter(0.05, highlightFocused)
 end
 
 local handleWindowMoved = function(win, appName)

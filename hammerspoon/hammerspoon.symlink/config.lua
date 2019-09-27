@@ -1,9 +1,9 @@
 local log = hs.logger.new('config|', 'debug')
 
 local utils = require('utils')
-local hotkey = require('hs.hotkey')
 local airpods = require('airpods')
 local mouse = require('mouse')
+local keys = require('keys')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -130,69 +130,20 @@ config.apps = {
     handler = (function(win)
       if win == nil then return end
 
-      -- if appWatcher ~= nil then
-      --   appWatcher:stop()
-      --   appWatcher = nil
-      -- end
-
       local appBundleID = win:application():bundleID()
+      local appName = win:application():name()
       local visibleWindows = win:application():visibleWindows()
-      log.df('executing app handler for %s instance, for %s windows..', appBundleID, #visibleWindows)
+      if appName == nil then return end
 
-      local appKeybinds = {
-        -- quick search/jump
-        -- hotkey.new({"ctrl"}, "g", function()
-        --   hs.eventtap.keyStroke({"cmd"}, "k")
-        -- end),
-        -- next channel or dm
-        -- hotkey.new({"ctrl"}, "j", function()
-        --   hs.eventtap.keyStroke({"alt"}, "Down")
-        -- end),
-        -- previous channel or dm
-        -- hotkey.new({"ctrl"}, "k", function()
-        --   hs.eventtap.keyStroke({"alt"}, "Up")
-        -- end),
-        -- next unread channel or dm
-        hotkey.new({"ctrl", "shift"}, "j", function()
-          hs.eventtap.keyStroke({"alt", "shift"}, "Down")
-        end),
-        -- previous unread channel or dm
-        hotkey.new({"ctrl", "shift"}, "k", function()
-          hs.eventtap.keyStroke({"alt", "shift"}, "Up")
-        end),
-        -- Disables cmd-w entirely, which is so annoying on slack
-        -- hotkey.new({"cmd"}, "w", function()
-        --   hs.eventtap.keyStroke({""}, "Esc")
-        -- end)
-      }
+      log.df('executing app handler for %s (%s) instance, for %s windows..', appName, appBundleID, #visibleWindows)
 
-      -- FIXME: find a better way than spinning up this app watcher.
-      -- REF for more info/digging: https://github.com/agzam/spacehammer/blob/4666c81111c4cd402736cf7b1e5da249dbcfa9b5/slack.lua#L10
-      -- local appWatcher = hs.application.watcher.new(function(name, eventType, _)
-      --   if eventType ~= hs.application.watcher.activated then return end
-
-      --   local fnName = name == "Slack" and "enable" or "disable"
-      --   for _, keybind in ipairs(appKeybinds) do
-      --     -- Remember that lua is weird, so this is the same as keybind.enable() in JS, `this` is first param
-      --     keybind[fnName](keybind)
-      --   end
-      -- end)
-
-      -- appWatcher:start()
-
-      -- local appWatcherHandler = function(appName, eventType, appObject)
-      --   log.df("appName: %s | eventType: %s | appObject: %s", appName, eventType, hs.inspect( appObject ))
-
-      --   if (eventType == hs.application.watcher.activated) then
-      --     log.df("activated")
-      --   elseif (eventType == hs.application.watcher.deactivated) then
-      --       log.df("deactivated")
-      --     localAppWatcher:stop()
-      --   end
-      -- end
-
-      -- localAppWatcher = hs.application.watcher.new(appWatcherHandler)
-      -- localAppWatcher:start()
+      -- REF: great example of how to remap for slack: https://github.com/YusukeKokubo/dotfiles/blob/master/hammerspoon/init.lua
+      keys.remap(appName, {'ctrl'},          'k', {'alt'},          'up')
+      keys.remap(appName, {'ctrl'},          'j', {'alt'},          'down')
+      keys.remap(appName, {'ctrl'},          'g', {'cmd'},          'k')
+      keys.remap(appName, {'ctrl', 'shift'}, 'k', {'alt', 'shift'}, 'down')
+      keys.remap(appName, {'ctrl', 'shift'}, 'j', {'alt', 'shift'}, 'up')
+      keys.remap(appName, {'cmd'},           'w', {}, 'Esc')
     end)
   },
   ['com.readdle.smartemail-Mac'] = {
