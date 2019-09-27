@@ -683,8 +683,6 @@ augroup ft_elixir
       endif
     endfunction
 
-    " au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ex :T iex<CR>
-    " au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :T iex<CR>
     au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
   endif
 
