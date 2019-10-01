@@ -45,3 +45,4 @@ rel
 .ccls-cache
 .git
 **/.git
+*.dot

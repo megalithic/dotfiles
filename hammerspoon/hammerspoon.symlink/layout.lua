@@ -188,7 +188,7 @@ end
 
 local handleWindowFocused = function(win, appName)
   log.df('window focused: %s', win:title())
-  logWindowInfo(win, appName, "focused")
+  -- logWindowInfo(win, appName, "focused")
 
   handleWindowLayout(win, appName, "focused")
   -- hs.timer.doAfter(0.05, highlightFocused)

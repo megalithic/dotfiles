@@ -1081,10 +1081,12 @@ if executable('rg')
     exe 'normal! ' . a:command_str . "\<cr>"
   endfunction
 
+  " \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
+  " \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*,*.jpg,*.png,*.tif,*.gif" '.shellescape(<q-args>).'| tr -d "\017"', 1,
   command! -bang -nargs=* FzfRg
         \ call fzf#vim#grep(
-        \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
-        \   <bang>0 ? fzf#vim#with_preview('up:60%')
+        \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case '.shellescape(<q-args>), 1,
+        \   <bang>0 ? fzf#vim#with_preview('up:50%')
         \           : fzf#vim#with_preview('right:50%:hidden', '?'),
         \   <bang>0)
 
