@@ -1,5 +1,5 @@
 local config = require('config')
-local log = hs.logger.new('[wflayout]', 'debug')
+local log = hs.logger.new('[layout]', 'debug')
 
 local appWatcher = nil
 local screenWatcher = nil
@@ -146,8 +146,8 @@ end
 
 local highlightFocused = function()
   local rect = hs.drawing.rectangle(hs.window.focusedWindow():frame())
-  rect:setStrokeColor({["red"]=1,  ["blue"]=0, ["green"]=0, ["alpha"]=1})
-  rect:setStrokeWidth(1)
+  rect:setStrokeColor({["red"]=1,  ["blue"]=0, ["green"]=0, ["alpha"]=0.75})
+  rect:setStrokeWidth(2)
   rect:setFill(false)
   rect:show()
   hs.timer.doAfter(0.3, function() rect:delete() end)
@@ -161,9 +161,12 @@ local handleWindowLayout = function(win, appName, event)
 
   log.df('found app config for %s..', appBundleId or "<no app found>")
 
-  snap(win, appConfig.position, appConfig.preferredDisplay)
   dndHandler(win, appConfig.dnd, event)
   appHandler(win, appConfig.handler)
+
+  if event ~= "focused" then
+    snap(win, appConfig.position, appConfig.preferredDisplay)
+  end
 end
 
 local handleWindowCreated = function(win, appName)
@@ -185,9 +188,9 @@ end
 
 local handleWindowFocused = function(win, appName)
   log.df('window focused: %s', win:title())
-  -- logWindowInfo(win, appName, "focused")
+  logWindowInfo(win, appName, "focused")
 
-  -- handleWindowLayout(win, appName, "focused")
+  handleWindowLayout(win, appName, "focused")
   -- hs.timer.doAfter(0.05, highlightFocused)
 end
 
@@ -290,6 +293,7 @@ return {
 
     dwf:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
     dwf:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    dwf:subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
     dwf:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     dwf:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
     dwf:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)

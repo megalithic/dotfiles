@@ -14,7 +14,7 @@ handler.toggle = function (_app)
 
   if not app then
     if _app ~= nil then
-      log.wf('launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
+      log.df('launchOrFocusByBundleID(%s) (non PID-managed app?)', _app)
       hs.application.launchOrFocusByBundleID(_app)
     else
       log.wf('_app (%s) || app (%s) is nil!!', _app, appBundleID)
@@ -111,6 +111,8 @@ local function keyStroke(mod, key)
 end
 
 handler.remap = function(appName, mod1, key1, mod2, key2)
+  log.df('remapping keys for %s (%s, %s -> %s, %s)', appName, hs.inspect(mod1), key1, hs.inspect(mod2), key2)
+
   if (not appName) then
     return hs.hotkey.bind(mod1, key1, keyStroke(mod2, key2))
   end

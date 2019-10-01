@@ -9,7 +9,7 @@
 !git/*
 !**/.git/*
 !.git/*
-!**/gitstatus/bin/*
+!**/gitstatus/*
 
 # Set the colors.
 --colors=line:none

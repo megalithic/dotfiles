@@ -105,7 +105,7 @@ config.apps = {
     handler = (function(win)
       local appName = appHandler(win)
 
-      keys.remap(appName, {'cmd', 'ctrl'}, 'f', {}, 'esc')
+      -- keys.remap(appName, {'cmd', 'ctrl'}, 'f', {}, 'Esc')
     end)
   },
   ['com.google.Chrome'] = {
@@ -142,12 +142,12 @@ config.apps = {
     handler = (function(win)
       local appName = appHandler(win)
 
-      keys.remap(appName, {'ctrl'},          'k', {'alt'},          'up')
-      keys.remap(appName, {'ctrl'},          'j', {'alt'},          'down')
-      keys.remap(appName, {'ctrl'},          'g', {'cmd'},          'k')
-      keys.remap(appName, {'ctrl', 'shift'}, 'k', {'alt', 'shift'}, 'down')
-      keys.remap(appName, {'ctrl', 'shift'}, 'j', {'alt', 'shift'}, 'up')
-      keys.remap(appName, {'cmd'},           'w', {},               'esc')
+      -- keys.remap(appName, {'ctrl'},          'k', {'alt'},          'up')
+      -- keys.remap(appName, {'ctrl'},          'j', {'alt'},          'down')
+      -- keys.remap(appName, {'ctrl'},          'g', {'cmd'},          'k')
+      -- keys.remap(appName, {'ctrl', 'shift'}, 'k', {'alt', 'shift'}, 'down')
+      -- keys.remap(appName, {'ctrl', 'shift'}, 'j', {'alt', 'shift'}, 'up')
+      -- keys.remap(appName, {'cmd'},           'w', {},               'esc')
     end)
   },
   ['com.readdle.smartemail-Mac'] = {

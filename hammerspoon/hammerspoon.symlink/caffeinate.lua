@@ -10,7 +10,7 @@ local handleCaffeinateEvent = function(eventType) -- (int)
     if (isDocked) then
       log.df('Attempting to turn OFF office lamp')
       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"off", "171"}):start()
-      hubitat.lampToggle("off")
+      -- hubitat.lampToggle("off")
     end
 
     -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {"away"}):start()
@@ -18,7 +18,7 @@ local handleCaffeinateEvent = function(eventType) -- (int)
     if (isDocked) then
       log.df('Attempting to turn ON office lamp')
       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"on", "171"}):start()
-      hubitat.lampToggle("on")
+      -- hubitat.lampToggle("on")
     end
 
     -- hubitat.handleEnvironmentBasedOfficeAutomations()

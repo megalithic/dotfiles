@@ -17,7 +17,7 @@ function quitModal:entered()
   local appBundleID = app:bundleID()
   local appConfig = config.apps[appBundleID]
 
-  if (appConfig ~= nil or appConfig.quitGuard == nil) then
+  if (appConfig ~= nil or appConfig.quitGuard ~= nil) then
     log.df("quitting app, %s, with quitGuard (%s)..", appBundleID, appConfig.quitGuard)
 
     if appConfig.quitGuard then
