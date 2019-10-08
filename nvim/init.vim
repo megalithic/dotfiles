@@ -27,48 +27,69 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 silent! if plug#begin('~/.config/nvim/plugins')
 
+Plug 'trevordmiller/nova-vim'
+Plug 'gruvbox-community/gruvbox'
+
 " Plug 'airblade/vim-rooter'
 Plug 'andymass/vim-matchup'
+Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
+Plug 'cohama/lexima.vim'
+
+Plug 'sheerun/vim-polyglot'
 Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
-Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
-Plug 'chemzqm/vim-jsx-improve', { 'for': ['javascript', 'javascriptreact', 'javascript.jsx'] }
-Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
-Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
-Plug 'cohama/lexima.vim'
-Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
-Plug 'darfink/vim-plist'
-Plug 'docunext/closetag.vim' " will auto-close the opening tag as soon as you type </
-Plug 'editorconfig/editorconfig-vim'
-Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
+
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' }
-Plug 'gruvbox-community/gruvbox'
-Plug 'hail2u/vim-css3-syntax', { 'for': 'css' }
-Plug 'hauleth/pivotaltracker.vim', { 'for': ['gitcommit'] }
+Plug 'avdgaag/vim-phoenix', { 'for': ['elixir','eelixir'] }
+Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
+
+Plug 'chemzqm/vim-jsx-improve', { 'for': ['javascript', 'javascriptreact', 'javascript.jsx'] }
+Plug 'pangloss/vim-javascript', { 'for': ['javascript'] }
+Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
 Plug 'HerringtonDarkholme/yats.vim', { 'for': ['typescript', 'typescriptreact', 'typescript.tsx'] }
+
+Plug 'hail2u/vim-css3-syntax', { 'for': ['css'] }
+Plug 'othree/csscomplete.vim', { 'for': ['css'] }
+
+Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
+Plug 'iamcco/markdown-preview.nvim', {'for':['markdown'], 'do':  ':call mkdp#util#install()', 'frozen': 1}
+
+Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
+
+Plug 'darfink/vim-plist'
+
+Plug 'vim-ruby/vim-ruby', { 'for': ['ruby'] }
+Plug 'tpope/vim-rails', {'for': ['ruby','erb','yaml','ru','haml']}
+
+Plug 'christoomey/vim-tmux-navigator' " needed for tmux/hotkey integration with vim
+Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
+Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
+Plug 'editorconfig/editorconfig-vim'
+Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
+" Plug 'hauleth/pivotaltracker.vim', { 'for': ['gitcommit'] }
 Plug 'honza/vim-snippets'
-Plug 'hotwatermorning/auto-git-diff'
-Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
 Plug 'itchyny/lightline.vim'
 " Plug 'itspriddle/vim-marked', { 'for': ['markdown', 'vimwiki'] }
 Plug 'janko-m/vim-test', {'on': ['TestFile', 'TestLast', 'TestNearest', 'TestSuite', 'TestVisit'] } " tester for js and ruby
+
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
+
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install --all' }
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/vim-plug'
-Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'wsdjeg/vim-fetch'
 Plug 'liuchengxu/vim-which-key'
-Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
+Plug 'TaDaa/vimade'
+Plug 'ryanoasis/vim-devicons' " has to be last according to docs
 Plug 'mattn/webapi-vim'
 Plug 'mbbill/undotree', { 'on': 'UndotreeToggle' }
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'metakirby5/codi.vim'
 Plug 'mhinz/vim-startify'
-Plug 'neoclide/jsonc.vim', { 'for': ['json','jsonc'] }
+
 Plug 'neoclide/coc-neco'
 if executable('yarn') && executable('node')
   let g:coc_global_extensions = [
@@ -109,21 +130,19 @@ if executable('yarn') && executable('node')
   " \ 'coc-yank',
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 endif
-Plug 'othree/csscomplete.vim', { 'for': 'css' }
-Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
-Plug 'peitalin/vim-jsx-typescript', { 'for': ['javascript', 'typescript'] }
-Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentation from lc/lsp/etc
 Plug 'rizzatti/dash.vim'
 " Plug 'RRethy/vim-hexokinase' " FIXME
+Plug 'hotwatermorning/auto-git-diff'
+Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 Plug 'rhysd/conflict-marker.vim'
 Plug 'rhysd/git-messenger.vim'
+
 Plug 'rhysd/reply.vim'
 Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh \| UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
-Plug 'sickill/vim-pasta' " context-aware pasting
+" Plug 'sickill/vim-pasta' " context-aware pasting
 " Plug 'svermeulen/vim-yoink' " FIXME
-Plug 'TaDaa/vimade'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-commentary'
@@ -133,20 +152,14 @@ Plug 'tpope/vim-git'
 " Plug 'tpope/vim-markdown'
 Plug 'tpope/vim-projectionist'
 Plug 'tpope/vim-ragtag'
-Plug 'tpope/vim-rails', {'for': 'ruby,erb,yaml,ru,haml'}
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired' " https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
-Plug 'trevordmiller/nova-vim'
 Plug 'unblevable/quick-scope' " highlights f/t type of motions, for quick horizontal movements
-Plug 'vim-ruby/vim-ruby', { 'for': 'ruby' }
 Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
-" Plug 'megalithic/elm-vim', { 'for': ['elm'] }
 Plug 'zenbro/mirror.vim' " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
-Plug 'sheerun/vim-polyglot'
-Plug 'ryanoasis/vim-devicons' " has to be last according to docs
 " Plug 'vimwiki/vimwiki' " (more vimwiki things: https://github.com/skbolton/titan/blob/master/states/nvim/nvim/plugin/wiki.vim)
 " Plug 'lervag/wiki.vim'
 
@@ -880,7 +893,7 @@ let g:vimwiki_global_ext = 0
 " ## rhysd/git-messenger
 " let g:git_messenger_no_default_mappings = 1
 " let g:git_messenger_include_diff = "none"
-nmap <leader>gm <Plug>(git-messenger)
+" nmap <leader>gm <Plug>(git-messenger)
 
 
 " ## junegunn/vim-easy-align

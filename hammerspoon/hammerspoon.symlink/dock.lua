@@ -37,6 +37,12 @@ local selectAudioInput = (function(input)
   log.i('Switching to audio input:', input)
 end)
 
+local setKittyConfig = (function(c)
+    log.i('Setting kitty font-size to:', c.fontSize)
+    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size --all ' .. c.fontSize, true)
+    -- hs.execute('kitty @ set-font-size ' .. c.fontSize)
+end)
+
 local isDeviceConnected = (function()
   for _, device in pairs(hs.usb.attachedDevices()) do
     if (deviceConfig.vendorID == device.vendorID and deviceConfig.productID == device.productID) then
@@ -51,13 +57,11 @@ local dockedAction = function()
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(dockedConfig.profile)
     toggleWifi(dockedConfig.wifi)
-    log.i('Setting kitty font-size to:', dockedConfig.fontSize)
-    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size --all ' .. dockedConfig.fontSize)
-    -- hs.execute('kitty @ set-font-size ' .. dockedConfig.fontSize)
   end)
   hs.timer.doAfter(4, function ()
     selectAudioOutput(dockedConfig.output)
     selectAudioInput(dockedConfig.input)
+    setKittyConfig(dockedConfig)
   end)
 end
 
@@ -67,13 +71,11 @@ local undockedAction = function()
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(undockedConfig.profile)
     toggleWifi(undockedConfig.wifi)
-    log.i('Setting kitty font-size to:', undockedConfig.fontSize)
-    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size --all ' .. undockedConfig.fontSize)
-    -- hs.execute('kitty @ set-font-size ' .. undockedConfig.fontSize)
   end)
   hs.timer.doAfter(4, function ()
     selectAudioOutput(undockedConfig.output)
     selectAudioInput(undockedConfig.input)
+    setKittyConfig(undockedConfig)
   end)
 end
 

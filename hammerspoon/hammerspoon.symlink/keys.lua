@@ -61,12 +61,14 @@ handler.adjustVolume = function(vol)
   else
     local playing = hs.spotify.isPlaying()
     if playing then
+      log.df('Adjusting Spotify volume: %s', vol.action)
       if vol.action == "up" then
         hs.spotify.volumeUp()
       else
         hs.spotify.volumeDown()
       end
     else
+      log.df('Adjusting system volume: %s %s', vol.diff, vol.action)
       output:setMuted(false)
       output:setVolume(output:volume() + vol.diff)
     end
