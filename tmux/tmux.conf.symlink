@@ -167,7 +167,7 @@ set -g status-style 'bg=default,fg=#aaaaaa'
 
 # -- left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
-set -g status-left " #[fg=green]⧉ #S #[fg=colour255] ⋮ "
+set -g status-left " #[fg=green]\ufb18 #S #[fg=colour255] ⋮ " #⧉
 set -g status-left-length 100
 
 # -- windows

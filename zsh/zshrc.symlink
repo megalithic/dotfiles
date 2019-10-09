@@ -15,7 +15,9 @@
 # zmodload zsh/zprof
 
 # Ensures we use vi-mode keybindings
-bindkey -v
+# bindkey -v
+# Ensures we use emacs/readline keybindings
+bindkey -e
 
 #
 # Executes commands at the start of an interactive session.

@@ -31,7 +31,7 @@ alive =
   IO.ANSI.bright() <>
     IO.ANSI.yellow() <>
     IO.ANSI.blink_rapid() <>
-    "\ue315" <>
+    "\ue315 " <>
     IO.ANSI.reset()
 
 default_prompt = prefix <> counter <> IO.ANSI.black() <> "│" <> IO.ANSI.reset() <> info <> last
@@ -47,6 +47,12 @@ history_size = 100
 eval_result = [:green, :bright]
 eval_error = [[:red, :bright, "\ue3bf ERROR - "]]
 eval_info = [:blue, :bright]
+
+# custom functions that i call a lot
+logger_debug = Logger.configure(level: :debug)
+logger_error = Logger.configure(level: :error)
+logger_warn = Logger.configure(level: :warn)
+logger_info = Logger.configure(level: :info)
 
 # Configuring IEx
 IEx.configure(
