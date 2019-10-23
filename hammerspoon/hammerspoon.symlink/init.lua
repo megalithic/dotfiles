@@ -12,6 +12,7 @@ local hotkey = require('hs.hotkey')
 
 -- handles initiating laptop docking mode behaviors
 local isDocked = require('dock').init()
+log.i(":: -- currently docked? ", isDocked)
 
 -- window/app auto-layout
 require('layout').init(isDocked)

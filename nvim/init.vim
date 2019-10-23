@@ -117,7 +117,7 @@ Plug 'powerman/vim-plugin-AnsiEsc' " supports ansi escape codes for documentatio
 Plug 'rizzatti/dash.vim'
 " Plug 'RRethy/vim-hexokinase' " FIXME
 Plug 'rhysd/conflict-marker.vim'
-Plug 'rhysd/git-messenger.vim'
+" Plug 'rhysd/git-messenger.vim'
 Plug 'rhysd/reply.vim'
 Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh \| UpdateRemotePlugins' }
 Plug 'Shougo/neco-vim'
@@ -483,11 +483,15 @@ augroup general
   " save all files on focus lost, ignoring warnings about untitled buffers
   " autocmd FocusLost * silent! wa
 
-  au FocusGained  * checktime "Refresh file when vim gets focus
-  au BufEnter     * checktime
-  au WinEnter     * checktime
-  " au CursorHold   * checktime " throws errors?
-  au InsertEnter  * checktime
+  " Trigger `autoread` when files changes on disk
+  " https://unix.stackexchange.com/questions/149209/refresh-changed-content-of-file-opened-in-vim/383044#383044
+  " https://vi.stackexchange.com/questions/13692/prevent-focusgained-autocmd-running-in-command-line-editing-mode
+  set autoread
+  autocmd FocusGained,BufEnter,CursorHold,CursorHoldI * if mode() != 'c' | checktime | endif
+  " Notification after file change
+  " https://vi.stackexchange.com/questions/13091/autocmd-event-for-autoread
+  autocmd FileChangedShellPost *
+    \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
 
   " Refresh lightline when certain things happen
   " au TextChanged,InsertLeave,BufWritePost * call lightline#update()
@@ -1036,6 +1040,141 @@ endfunction
 nnoremap <silent> <F2> :call ToggleVExplorer()<CR>
 
 " ## junegunn/fzf
+" let g:fzf_action = {
+"       \ 'ctrl-s': 'split',
+"       \ 'ctrl-v': 'vsplit',
+"       \ 'enter': 'vsplit'
+"       \ }
+" let g:fzf_layout = { 'down': '~15%' }
+
+" " ## rg
+" if executable('rg')
+"   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
+
+"   function! s:CompleteRg(arg_lead, line, pos)
+"     let l:args = join(split(a:line)[1:])
+"     return systemlist('get_completions rg ' . l:args)
+"   endfunction
+
+"   " TODO: investigate using `fd` instead? https://github.com/dkarter/dotfiles/blob/master/vimrc#L334
+
+"   " Add support for ripgrep
+"   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
+"   " REF: https://github.com/dkarter/dotfiles/blob/master/vimrc#L329-L460
+"   let $BAT_THEME = 'base16' " REF: https://github.com/junegunn/fzf.vim/issues/732#issuecomment-437276088
+"   " let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
+"   " command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
+"   "       \ call fzf#vim#grep(
+"   "       \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*,**/*.png,**/*.jpg" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+"   "       \   <bang>0 ? fzf#vim#with_preview('up:40%')
+"   "       \           : fzf#vim#with_preview('right:50%', '?'),
+"   "       \   <bang>0)
+"   " command! -bang -nargs=? -complete=dir Files
+"   "       \ call fzf#vim#files(<q-args>,
+"   "       \   <bang>0 ? fzf#vim#with_preview('up:40%')
+"   "       \           : fzf#vim#with_preview('right:50%', '?'),
+"   "       \   <bang>0)
+
+"   let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --color=always --exclude ".git" --ignore-file ~/.gitignore'
+"   let $FZF_DEFAULT_OPTS='--ansi'
+"   let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
+
+"   function! FZFOpen(command_str)
+"     if (expand('%') =~# 'NERD_tree' && winnr('$') > 1)
+"       exe "normal! \<c-w>\<c-w>"
+"     endif
+"     exe 'normal! ' . a:command_str . "\<cr>"
+"   endfunction
+
+"   " \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
+"   " \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*,*.jpg,*.png,*.tif,*.gif" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+"   command! -bang -nargs=* FzfRg
+"         \ call fzf#vim#grep(
+"         \   'rg --column --line-number --no-heading --color=always --fixed-strings '.shellescape(<q-args>), 1,
+"         \   <bang>0 ? fzf#vim#with_preview('up:50%')
+"         \           : fzf#vim#with_preview('right:50%:hidden', '?'),
+"         \   <bang>0)
+
+"   command! -bang -nargs=* WikiSearch
+"         \ call fzf#vim#grep(
+"         \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
+"         \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:40%')
+"         \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
+"         \  <bang>0)
+
+"   " nnoremap <leader>a <ESC>:Rg<SPACE>
+"   nnoremap <silent> <leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+"   " Backslash as shortcut to ag
+"   " nnoremap \ :Rg<SPACE>
+" endif
+
+" silent! unmap <leader>m
+" " nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
+" nnoremap <silent> <leader>a :call FZFOpen(':FzfRg!')<CR>
+" nnoremap <silent> <leader>m :call FZFOpen(':Files')<CR>
+
+
+" ## junegunn/fzf
+" let g:fzf_action = {
+"       \ 'ctrl-s': 'split',
+"       \ 'ctrl-v': 'vsplit',
+"       \ 'enter': 'vsplit'
+"       \ }
+" let g:fzf_layout = { 'down': '~15%' }
+
+" " ## rg
+" if executable('rg')
+"   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
+
+"   function! s:CompleteRg(arg_lead, line, pos)
+"     let l:args = join(split(a:line)[1:])
+"     return systemlist('get_completions rg ' . l:args)
+"   endfunction
+
+"   function! FZFOpen(command_str)
+"     if (expand('%') =~# 'NERD_tree' && winnr('$') > 1)
+"       exe "normal! \<c-w>\<c-w>"
+"     endif
+"     exe 'normal! ' . a:command_str . "\<cr>"
+"   endfunction
+
+"   " TODO: investigate using `fd` instead? https://github.com/dkarter/dotfiles/blob/master/vimrc#L334
+
+"   " Add support for ripgrep
+"   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
+"   let $BAT_THEME = 'base16' " REF: https://github.com/junegunn/fzf.vim/issues/732#issuecomment-437276088
+"   let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --color=always --exclude ".git" --ignore-file ~/.gitignore'
+"   let $FZF_DEFAULT_OPTS='--ansi'
+"   let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
+
+"   command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
+"         \ call fzf#vim#grep(
+"         \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+"         \   <bang>0 ? fzf#vim#with_preview('up:40%')
+"         \           : fzf#vim#with_preview('right:50%', '?'),
+"         \   <bang>0)
+"   command! -bang -nargs=? -complete=dir Files
+"         \ call fzf#vim#files(<q-args>,
+"         \   <bang>0 ? fzf#vim#with_preview('up:40%')
+"         \           : fzf#vim#with_preview('right:50%', '?'),
+"         \   <bang>0)
+"   command! -bang -nargs=* WikiSearch
+"         \ call fzf#vim#grep(
+"         \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
+"         \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:40%')
+"         \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
+"         \  <bang>0)
+
+"   nnoremap <leader>a <ESC>:Rg<SPACE>
+"   " nnoremap <silent> <leader>a :call FZFOpen(':Rg!')<CR>
+"   nnoremap <silent> <leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+"   " Backslash as shortcut to ag
+"   nnoremap \ :Rg<SPACE>
+"   nnoremap <silent> <leader>m :call FZFOpen(':Files')<CR>
+" endif
+
+" ## junegunn/fzf
+let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
 let g:fzf_action = {
       \ 'ctrl-s': 'split',
       \ 'ctrl-v': 'vsplit',
@@ -1043,71 +1182,35 @@ let g:fzf_action = {
       \ }
 let g:fzf_layout = { 'down': '~15%' }
 
-" ## rg
-if executable('rg')
+if executable("rg")
+  " ## rg
   set grepprg=rg\ --vimgrep                                                       "Use ripgrep for grepping
-
   function! s:CompleteRg(arg_lead, line, pos)
     let l:args = join(split(a:line)[1:])
     return systemlist('get_completions rg ' . l:args)
   endfunction
 
-  " TODO: investigate using `fd` instead? https://github.com/dkarter/dotfiles/blob/master/vimrc#L334
-
   " Add support for ripgrep
   " https://github.com/dsifford/.dotfiles/blob/master/vim/.vimrc#L130
-  " REF: https://github.com/dkarter/dotfiles/blob/master/vimrc#L329-L460
-  let $BAT_THEME = 'base16' " REF: https://github.com/junegunn/fzf.vim/issues/732#issuecomment-437276088
-  " let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
-  " command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
-  "       \ call fzf#vim#grep(
-  "       \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*,**/*.png,**/*.jpg" '.shellescape(<q-args>).'| tr -d "\017"', 1,
-  "       \   <bang>0 ? fzf#vim#with_preview('up:40%')
-  "       \           : fzf#vim#with_preview('right:50%', '?'),
-  "       \   <bang>0)
-  " command! -bang -nargs=? -complete=dir Files
-  "       \ call fzf#vim#files(<q-args>,
-  "       \   <bang>0 ? fzf#vim#with_preview('up:40%')
-  "       \           : fzf#vim#with_preview('right:50%', '?'),
-  "       \   <bang>0)
-
-  let $FZF_DEFAULT_COMMAND = 'fd --type f --hidden --follow --color=always --exclude ".git" --ignore-file ~/.gitignore'
-  let $FZF_DEFAULT_OPTS='--ansi'
-  let g:fzf_files_options = '--preview "(bat --color \"always\" --line-range 0:100 {} || head -'.&lines.' {})"'
-
-  function! FZFOpen(command_str)
-    if (expand('%') =~# 'NERD_tree' && winnr('$') > 1)
-      exe "normal! \<c-w>\<c-w>"
-    endif
-    exe 'normal! ' . a:command_str . "\<cr>"
-  endfunction
-
-  " \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
-  " \   'rg --column --line-number --no-heading --color=always --fixed-strings --smart-case --no-multi --hidden --follow --glob "!{.git,deps,node_modules}/*,*.jpg,*.png,*.tif,*.gif" '.shellescape(<q-args>).'| tr -d "\017"', 1,
-  command! -bang -nargs=* FzfRg
+  command! -bang -complete=customlist,s:CompleteRg -nargs=* Rg
         \ call fzf#vim#grep(
-        \   'rg --column --line-number --no-heading --color=always --fixed-strings '.shellescape(<q-args>), 1,
-        \   <bang>0 ? fzf#vim#with_preview('up:50%')
-        \           : fzf#vim#with_preview('right:50%:hidden', '?'),
+        \   'rg --column --line-number --no-heading --color=always --fixed-strings --ignore-case --hidden --follow --glob "!{.git,deps,node_modules}/*" '.shellescape(<q-args>).'| tr -d "\017"', 1,
+        \   <bang>0 ? fzf#vim#with_preview('up:60%')
+        \           : fzf#vim#with_preview('right:50%', '?'),
         \   <bang>0)
-
-  command! -bang -nargs=* WikiSearch
-        \ call fzf#vim#grep(
-        \  'rg --column --line-number --no-heading --color "always" '.shellescape(<q-args>).' '.$HOME.'/wiki/', 1,
-        \  <bang>0 ? fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'up:40%')
-        \          : fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}, 'right:50%:hidden', '?'),
-        \  <bang>0)
-
-  " nnoremap <leader>a <ESC>:Rg<SPACE>
-  nnoremap <silent> <leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
-  " Backslash as shortcut to ag
-  " nnoremap \ :Rg<SPACE>
+  command! -bang -nargs=? -complete=dir Files
+        \ call fzf#vim#files(<q-args>,
+        \   <bang>0 ? fzf#vim#with_preview('up:60%')
+        \           : fzf#vim#with_preview('right:50%', '?'),
+        \   <bang>0)
 endif
 
-silent! unmap <leader>m
-" nnoremap <silent> <leader>m <ESC>:FZF --tiebreak=begin,length,index<CR>
-nnoremap <silent> <leader>a :call FZFOpen(':FzfRg!')<CR>
-nnoremap <silent> <leader>m :call FZFOpen(':Files')<CR>
+nnoremap <silent><leader>m <ESC>:FZF<CR>
+nnoremap <silent><C-p> <ESC>:FZF<CR>
+nnoremap <leader>a <ESC>:Rg<SPACE>
+nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+" nnoremap <localleader><space> :Buffers<cr>
 
 
 " ## w0rp/ale
@@ -1354,10 +1457,13 @@ endfunction
 
 function! ElixirUmbrellaTransform(cmd) abort
   if match(a:cmd, 'vpp/') != -1
+    echo "match(a:cmd, 'vpp/') != -1 -> " .. substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
     return substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
   elseif match(a:cmd, 'sims/') != -1
+    echo "match(a:cmd, 'sims/') != -1 -> " .. a:cmd .. " -> " .. substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test \2)', '')
     return substitute(a:cmd, 'mix test sims/\([^/]*/\)\(.*\)', '(cd sims/\1 \&\& mix test \2)', '')
   else
+    echo "else -> " .. a:cmd
     return a:cmd
   end
 endfunction

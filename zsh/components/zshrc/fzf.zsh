@@ -54,7 +54,8 @@ if [ -n "$(command -v fzf)" ]; then
   # -- using ripgrep/rg
   # export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
   export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
-  export FZF_CTRL_T_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
+  export FZF_CTRL_T_COMMAND='rg --files --hidden --line-number --follow -g "!{.git,node_modules,vendor,build,_build}" 2> /dev/null'
+  # export FZF_CTRL_T_COMMAND='rg --files --hidden --follow --line-number --glob "!{.git,deps,_build,node_modules}/*" 2> /dev/null'
   export FZF_ALT_C_COMMAND="fd --type d --exclude 'Library'"
   export FZF_TMUX_HEIGHT='20%'
 

@@ -1,10 +1,16 @@
 local log = hs.logger.new('[caffeine]', 'debug')
-local hubitat = require('hubitat')
+-- local hubitat = require('hubitat')
 local watcher = nil
 local isDocked = false
 
+local isCurrentlyDocked = function()
+  return require('dock').isDocked()
+end
+
 local handleCaffeinateEvent = function(eventType) -- (int)
-  log.df('Event triggered: event type %s(%s) | isDocked? %s', hs.caffeinate.watcher[eventType], eventType, isDocked)
+  isDocked = isCurrentlyDocked()
+
+  log.df('Event triggered: event type %s(%s) | isDocked? %s', hs.inspect(hs.caffeinate.watcher[eventType]), eventType, isDocked)
 
   if (eventType == hs.caffeinate.watcher.screensDidSleep) then
     if (isDocked) then
@@ -29,7 +35,7 @@ end
 
 return {
   init = (function(is_docked)
-    isDocked = is_docked or false
+    isDocked = is_docked or isCurrentlyDocked() or false
     log.df('Creating caffeinate watcher (isDocked? %s)', isDocked)
     watcher = hs.caffeinate.watcher.new(handleCaffeinateEvent):start()
   end),

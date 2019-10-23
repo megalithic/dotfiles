@@ -1,6 +1,7 @@
 local config = require('config')
+local utils = require('utils')
 local log = hs.logger.new('[docking]', 'debug')
-local isDocked = false
+local is_docked = false
 local watcher = nil
 local deviceConfig =  config.docking.device
 
@@ -44,11 +45,24 @@ local setKittyConfig = (function(c)
 end)
 
 local isDeviceConnected = (function()
-  for _, device in pairs(hs.usb.attachedDevices()) do
-    if (deviceConfig.vendorID == device.vendorID and deviceConfig.productID == device.productID) then
-      return true
+  log.i('Checking if devices are connected..')
+
+  local found_device = false
+
+  if utils.tableLength(hs.usb.attachedDevices()) == 0 then
+    log.i('nope!')
+    found_device = false
+  else
+    for _, device in pairs(hs.usb.attachedDevices()) do
+      if (deviceConfig.vendorID == device.vendorID and deviceConfig.productID == device.productID) then
+        found_device = true
+      end
     end
   end
+
+  log.i('Did we find anything?', hs.inspect(found_device))
+
+  return found_device
 end)
 
 local dockedAction = function()
@@ -62,6 +76,7 @@ local dockedAction = function()
     selectAudioOutput(dockedConfig.output)
     selectAudioInput(dockedConfig.input)
     setKittyConfig(dockedConfig)
+    require('layout').setLayoutForAll()
   end)
 end
 
@@ -76,6 +91,7 @@ local undockedAction = function()
     selectAudioOutput(undockedConfig.output)
     selectAudioInput(undockedConfig.input)
     setKittyConfig(undockedConfig)
+    require('layout').setLayoutForAll()
   end)
 end
 
@@ -84,10 +100,10 @@ local handleUsbWatcherEvent = (function(event)
   -- things based on being "docked".
   if event.vendorID == deviceConfig.vendorID and event.productID == deviceConfig.productID then
     if event.eventType == 'added' then
-      isDocked = true
+      is_docked = true
       dockedAction()
     else
-      isDocked = false
+      is_docked = false
       undockedAction()
     end
   end
@@ -98,20 +114,24 @@ return {
     log.i('Creating USB watchers..')
     watcher = hs.usb.watcher.new(handleUsbWatcherEvent):start()
 
-    isDocked = isDeviceConnected()
+    is_docked = isDeviceConnected()
 
-    if (isDocked) then
+    if (is_docked) then
       dockedAction()
     else
       undockedAction()
     end
 
-    log.i('Docked status:', isDocked)
-    return isDocked
+    return is_docked
   end),
   teardown = (function()
     log.i('Tearing down USB watchers..')
     watcher:stop()
   end),
-  isDocked = isDeviceConnected()
+  isDocked = function()
+    return isDeviceConnected()
+  end,
+  isCurrentlyDocked = function()
+    return isDeviceConnected()
+  end
 }

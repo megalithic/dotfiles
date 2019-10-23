@@ -209,7 +209,7 @@ end
 
 -- @param event: int
 local handleScreenEvent = function(event)
-  log.df('screen event (%s) occurred', event)
+  log.df('!!!!!!!!!!!!!!!!!!!! screen event (%s) occurred', hs.inspect(event))
 end
 
 -- @param name: string
