@@ -156,8 +156,6 @@
   "coc.source.file.ignoreHidden": true,
   "coc.source.file.ignorePatterns": [],
   "coc.source.syntax.enable": false,
-  "coc.source.tag.enable": true,
-  "coc.source.tag.priority": 7,
   "coc.source.word.enable": true,
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
 
@@ -167,7 +165,7 @@
   "git.branchCharacter": "⎇",
   "git.addedSign.text": "▏",
   "git.addedSign.hlGroup": "CocGitAddedSign",
-  "git.changedSign.text": "▏",
+  "git.changedSign.text": "▎",
   "git.changedSign.hlGroup": "CocGitChangedSign",
   "git.removedSign.text": "▏",
   "git.removedSign.hlGroup": "CocGitRemovedSign",

@@ -52,4 +52,5 @@ nvim/nvim-*.log*
 keyboard/karabiner/automatic_backups/*
 *netrw*
 NetrwTreeListing*
+Session.vim
 .netrwhist
