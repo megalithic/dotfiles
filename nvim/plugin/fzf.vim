@@ -22,6 +22,7 @@ nnoremap <silent> <leader>m      :Files<CR>
 " nnoremap <silent> <Space>?       :Helptags<CR>
 " Project-wide search for the supplied term.
 noremap <Space>/ :Rg<Space>
+noremap <leader>a :Rg<Space>
 " Mapping selections for various modes.
 nmap <Space>! <Plug>(fzf-maps-n)
 omap <Space>! <Plug>(fzf-maps-o)

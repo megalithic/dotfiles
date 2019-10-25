@@ -103,10 +103,6 @@ augroup general
   " Preview window with line wrap
   au WinEnter * if &previewwindow | setlocal wrap | endif
 
-  autocmd! FileType which_key
-  autocmd  FileType which_key set laststatus=0 noshowmode noruler
-        \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
-
   " reload vim configuration (aka vimrc)
   command! ReloadVimConfigs so $MYVIMRC
     \| echo 'configs reloaded!'
@@ -223,16 +219,6 @@ augroup ft_elixir
   au FileType elixir,eelixir iabbrev ep    \|>
   au FileType elixir,eelixir iabbrev ei    IO.inspect
   au FileType elixir,eelixir iabbrev eputs IO.puts
-
-  au FileType elixir,eelixir let g:which_key_map.e = {
-        \ 'name' : '+elixir' ,
-        \ 'i' : 'io.inspect',
-        \ 'il' : 'io.inspect-with-label',
-        \ 'd' : 'debug/iex.pry',
-        \ 'p' : '|> pipeline',
-        \ 'x' : 'IEx',
-        \ 'r' : 'repl',
-        \ }
 augroup END
 
 augroup ft_elm
@@ -256,12 +242,6 @@ augroup ft_elm
   endif
 
   au FileType elm iabbrev ep    \|>
-
-  au FileType elm let g:which_key_map.e = {
-        \ 'name' : '+elm' ,
-        \ 'p' : '|> pipeline',
-        \ 'r' : 'repl',
-        \ }
 augroup END
 
 augroup ft_clang
