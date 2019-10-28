@@ -1,5 +1,5 @@
 augroup general
-  au!
+  autocmd!
 
   " if more than 1 files are passed to vim as arg, open them in vertical splits
   if argc() > 1
@@ -8,7 +8,17 @@ augroup general
 
   autocmd BufRead * nohls
 
-  " save all files on focus lost, ignoring warnings about untitled buffers
+  " Automatically equalize window splits.
+  autocmd VimResized * wincmd =
+
+  " Syntax highlight a minimum of 2,000 lines. This greatly helps scroll
+  " performance.
+  autocmd Syntax * syntax sync minlines=2000
+
+  " Restore default Enter/Return behaviour for the command line window.
+  autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
+
+  " Save all files on focus lost, ignoring warnings about untitled buffers
   " autocmd FocusLost * silent! wa
 
   " Trigger `autoread` when files changes on disk
@@ -23,13 +33,13 @@ augroup general
 
   " Refresh lightline when certain things happen
   " au TextChanged,InsertLeave,BufWritePost * call lightline#update()
-  au BufWritePost * call lightline#update()
+  autocmd BufWritePost * call lightline#update()
 
   " Handle window resizing
-  au VimResized * execute "normal! \<c-w>="
+  autocmd VimResized * execute "normal! \<c-w>="
 
   " No formatting on o key newlines
-  au BufNewFile,BufEnter * set formatoptions-=o
+  autocmd BufNewFile,BufEnter * set formatoptions-=o
 
   " " Trim trailing whitespace (presently uses w0rp/ale for this)
   " function! <SID>TrimWhitespace()
@@ -38,70 +48,77 @@ augroup general
   "   keeppatterns %s/\v\s+$//e
   "   call cursor(l, c)
   " endfunction
-  " au FileType * au BufWritePre <buffer> :call <SID>TrimWhitespace()
+  " autocmd FileType * autocmd BufWritePre <buffer> :call <SID>TrimWhitespace()
 
   " Remember cursor position between vim sessions
-  au BufReadPost *
+  autocmd BufReadPost *
         \ if line("'\"") > 0 && line ("'\"") <= line("$") |
         \   exe "normal! g'\"" |
         \ endif
 
   " Hide status bar while using fzf commands
   if has('nvim')
-    au! FileType fzf
-    au  FileType fzf set laststatus=0 | au BufLeave,WinLeave <buffer> set laststatus=2
+    autocmd! FileType fzf
+    autocmd  FileType fzf set laststatus=0 | autocmd BufLeave,WinLeave <buffer> set laststatus=2
   endif
 
   " Auto-close preview window when completion is done.
-  au! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
+  autocmd! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
   " When terminal buffer ends allow to close it
   if has('nvim')
-    au TermClose * noremap <buffer><silent><CR> :bd!<CR>
-    au TermClose * noremap <buffer><silent><ESC> :bd!<CR>
-    au! TermOpen * setlocal nonumber norelativenumber
-    au! TermOpen * if &buftype == 'terminal'
+    autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
+    autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
+    autocmd! TermOpen * setlocal nonumber norelativenumber
+    autocmd! TermOpen * if &buftype == 'terminal'
           \| set nonumber norelativenumber
           \| endif
   endif
 
   " coc.nvim - highlight all occurences of word under cursor
   " disable for now: annoying while on tmate and other things
-  " au CursorHold * silent call CocActionAsync('highlight')
+  " autocmd CursorHold * silent call CocActionAsync('highlight')
 
   " Name tmux window/tab based on current opened buffer
-  " au BufReadPost,FileReadPost,BufNewFile,BufEnter *
-  " au BufReadPre,FileReadPre,BufNewFile,BufEnter *
+  " autocmd BufReadPost,FileReadPost,BufNewFile,BufEnter *
+  " autocmd BufReadPre,FileReadPre,BufNewFile,BufEnter *
   "       \ let tw = system("tmux display-message -p '\\#W'")
   "       \| echo "current tmux window: " . tw
   "       \| call system("tmux rename-window 'nvim | " . expand("%:t") . "'")
-  " au VimLeave * call system("tmux rename-window '" . tw . "'")
+  " autocmd VimLeave * call system("tmux rename-window '" . tw . "'")
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
 
   " toggle syntax / dim / inactive (comment out when tadaa/vimade supports TUI)
-  " au WinEnter,BufEnter * silent set number relativenumber " call RainbowParentheses
-  " au WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
+  " autocmd WinEnter,BufEnter * silent set number relativenumber " call RainbowParentheses
+  " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
-  " au BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
-  " au BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
+  " autocmd BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
+  " autocmd BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
 
-  au BufEnter,VimEnter,WinEnter,BufWinEnter * silent setl number "relativenumber
-  au BufLeave,WinLeave * silent setl nonumber norelativenumber
+  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber
+  autocmd BufLeave,WinLeave * silent setl nonumber norelativenumber
 
   " toggle colorcolumn when in insertmode only
-  au InsertEnter * silent set colorcolumn=80
-  au InsertLeave * if &filetype != "markdown"
+  autocmd InsertEnter * silent set colorcolumn=80
+  autocmd InsertLeave * if &filetype != "markdown"
                             \ | silent set colorcolumn=""
                             \ | endif
 
   " Open QuickFix horizontally with line wrap
-  au FileType qf wincmd J | setlocal wrap
+  autocmd FileType qf wincmd J | setlocal wrap
 
   " Preview window with line wrap
-  au WinEnter * if &previewwindow | setlocal wrap | endif
+  autocmd WinEnter * if &previewwindow | setlocal wrap | endif
+
+  " Neovim terminal tweaks.
+  if has("nvim")
+    autocmd TermOpen *        setlocal conceallevel=0 colorcolumn=0
+    autocmd TermOpen *        startinsert
+    autocmd BufEnter term://* startinsert
+  endif
 
   " reload vim configuration (aka vimrc)
   command! ReloadVimConfigs so $MYVIMRC
@@ -109,11 +126,11 @@ augroup general
 augroup END
 
 augroup mirrors
-  au!
+  autocmd!
   " ## Automagically update remote files via scp
-  au BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
-  au BufWritePost ~/.dotfiles/private/domains/nginx/* silent! :MirrorPush nginx
-  au BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
+  autocmd BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
+  autocmd BufWritePost ~/.dotfiles/private/domains/nginx/* silent! :MirrorPush nginx
+  autocmd BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
 augroup END
 
 function s:fzf_buf_in() abort
@@ -139,7 +156,7 @@ augroup fzf
 augroup END
 
 augroup gitcommit
-  au!
+  autocmd!
 
   " pivotalTracker.vim
   let g:pivotaltracker_name = "smesser"
@@ -181,23 +198,23 @@ augroup gitcommit
     " setl nonumber
   endfunction
 
-  au BufNewFile,BufRead .git/index setlocal nolist
-  au BufReadPost fugitive://* set bufhidden=delete
-  au BufReadCmd *.git/index exe BufReadIndex()
-  au BufEnter *.git/index silent normal gg0j
-  au BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
-  au FileType gitcommit,gitrebase exe BufEnterCommit()
+  autocmd BufNewFile,BufRead .git/index setlocal nolist
+  autocmd BufReadPost fugitive://* set bufhidden=delete
+  autocmd BufReadCmd *.git/index exe BufReadIndex()
+  autocmd BufEnter *.git/index silent normal gg0j
+  autocmd BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
+  autocmd FileType gitcommit,gitrebase exe BufEnterCommit()
 augroup END
 
 augroup ft_elixir
-  au!
-  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-  au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
-  au FileType elixir,eelixir inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-  au FileType elixir,eelixir inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-  au FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+  autocmd!
+  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
+  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
+  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+  autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
+  autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
+  autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 
   if has('nvim')
     function! s:iex_for_project() abort
@@ -212,18 +229,18 @@ augroup ft_elixir
       endif
     endfunction
 
-    au FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
+    autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
   endif
 
-  au FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
-  au FileType elixir,eelixir iabbrev ep    \|>
-  au FileType elixir,eelixir iabbrev ei    IO.inspect
-  au FileType elixir,eelixir iabbrev eputs IO.puts
+  autocmd FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
+  autocmd FileType elixir,eelixir iabbrev ep    \|>
+  autocmd FileType elixir,eelixir iabbrev ei    IO.inspect
+  autocmd FileType elixir,eelixir iabbrev eputs IO.puts
 augroup END
 
 augroup ft_elm
-  au!
-  au FileType elm nnoremap <leader>ep o\|> <ESC>a
+  autocmd!
+  autocmd FileType elm nnoremap <leader>ep o\|> <ESC>a
 
   if has('nvim')
     function! s:elm_repl_for_project() abort
@@ -238,10 +255,10 @@ augroup ft_elm
       endif
     endfunction
 
-    au FileType elm nnoremap <silent> <buffer> <leader>er :call <SID>elm_repl_for_project()<CR>
+    autocmd FileType elm nnoremap <silent> <buffer> <leader>er :call <SID>elm_repl_for_project()<CR>
   endif
 
-  au FileType elm iabbrev ep    \|>
+  autocmd FileType elm iabbrev ep    \|>
 augroup END
 
 augroup ft_clang

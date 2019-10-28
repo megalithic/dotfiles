@@ -105,6 +105,7 @@ map <leader>ek :vnew! ~/.dotfiles/kitty/kitty.conf<CR>
 map <leader>eg :vnew! ~/.gitconfig<CR>
 map <leader>et :vnew! ~/.dotfiles/tmux/tmux.conf.symlink<CR>
 map <leader>ez :vnew! ~/.dotfiles/zsh/zshrc.symlink<CR>
+map <leader>eh :vnew! ~/.dotfiles/hammerspoon/hammerspoon.symlink/config.lua<CR>
 
 " ## Join and Split Lines
 " Keep the cursor in place while joining lines
@@ -136,6 +137,11 @@ nnoremap <leader>bp :bprevious<cr>
 nnoremap <leader>b# :b#<cr>
 nnoremap <leader>bx :%bd\|e#<cr>
 
-
 " open vertical term for REPL tings
 noremap <leader>r :only<CR> :vert terminal<CR>
+
+" ## vim-plug
+noremap <F5> :PlugUpdate<CR>
+map <F5> :PlugUpdate<CR>
+noremap <S-F5> :PlugClean!<CR>
+map <S-F5> :PlugClean!<CR>

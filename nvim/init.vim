@@ -74,11 +74,10 @@ set noshowmatch       " No jumping jumping cursors when matching pairs
 set noshowmode        " No to showing mode in bottom-left corner
 set noswapfile        " No backup files
 " set nowrapscan        " Don't wrap searches around
-set number            " Show line numbers
+" set number            " Show line numbers
 set nrformats=        " No to oct/hex support when doing CTRL-a/x
 set path=**
-set pumheight=20      " Height of complete list
-set relativenumber    " Show relative numbers
+" set relativenumber    " Show relative numbers
 set ruler
 set scrolloff=5       " Start scrolling when we're 5 lines away from margins
 set shiftwidth=2
@@ -124,8 +123,8 @@ if has("nvim")
   set list
   set listchars=tab:\ \ ,trail:-
   set pumblend=10
-  set pumheight=30
-  set signcolumn=yes:2          " always showsigncolumn
+  set pumheight=20      " Height of complete list
+  set signcolumn=yes:2  " always showsigncolumn
   set switchbuf=useopen,split,usetab,vsplit
   set wildoptions+=pum
   set winblend=10
@@ -183,7 +182,6 @@ endif
 set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 " Initialize vim-plug.
-" call plug#begin('~/.config/nvim/plugged')
 silent! if plug#begin('~/.config/nvim/plugins')
 
 "-----------------------------
@@ -211,6 +209,7 @@ Plug 'tommcdo/vim-lion'
 " ~/.dotfiles/nvim/plugin/lion.vim - options
 Plug 'chaoren/vim-wordmotion'
 " ~/.dotfiles/nvim/after/plugin/wordmotion.vim - overrides
+Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
@@ -225,12 +224,12 @@ Plug 'mbbill/undotree'
 " ~/.dotfiles/nvim/plugin/undotree.vim - options, mappings
 Plug 'tpope/vim-abolish'
 " ~/.dotfiles/nvim/after/plugin/abolish.vim - abbreviations
-Plug 'tpope/vim-obsession'
-" ~/.dotfiles/nvim/plugin/obsession.vim - mappings
 Plug 'tpope/vim-unimpaired'
 " ~/.dotfiles/nvim/after/plugin/unimpaired.vim - overrides
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
+Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
+Plug 'sickill/vim-pasta' " context-aware pasting
 
 "-----------------------------
 " File management plugins
@@ -247,6 +246,8 @@ Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'mhinz/vim-grepper'
 " ~/.dotfiles/nvim/plugin/grepper.vim - options, mappings
 " ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides
+Plug 'junegunn/vim-slash'
+" ~/.dotfiles/nvim/plugin/slash.vim - options, mappings
 
 "-----------------------------
 " Completion plugins
@@ -270,6 +271,10 @@ Plug 'mhinz/vim-signify'
 " ~/.dotfiles/nvim/plugin/signify.vim - options, mappings
 Plug 'rhysd/git-messenger.vim'
 " ~/.dotfiles/nvim/plugin/git-messenger.vim - options, mappings
+Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
+" ~/.dotfiles/nvim/plugin/gist.vim - options, mappings
+Plug 'wsdjeg/vim-fetch'
+Plug 'mattn/webapi-vim'
 
 "-----------------------------
 " Development plugins
@@ -296,7 +301,7 @@ Plug 'tpope/vim-ragtag'
 Plug 'sgur/vim-editorconfig'
 
 "-----------------------------
-" Filetype/syntax plugins
+" Filetype/Syntax/Lang plugins
 "-----------------------------
 Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
@@ -312,6 +317,8 @@ Plug 'sheerun/vim-polyglot'
 "-----------------------------
 Plug 'christoomey/vim-tmux-navigator'
 " ~/.dotfiles/nvim/plugin/tmux-navigator.vim - options, mappings
+Plug 'tmux-plugins/vim-tmux-focus-events'
+Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
 
 "-----------------------------
 " Neovim specific plugins
@@ -343,6 +350,11 @@ runtime macros/matchit.vim
 " COLOR SCHEME
 "===========================================================
 
-colorscheme nova
+if system('darkMode') =~ "Dark"
+  set background=dark
+endif
+let g:nova_transparent = 1
+silent! colorscheme nova
+
 
 " vim:ft=vim
