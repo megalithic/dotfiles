@@ -38,7 +38,7 @@ let g:coc_force_debug = 0
 let g:coc_node_path = $HOME . '/.asdf/installs/nodejs/10.15.3/bin/node'
 
 " for showSignatureHelp
-set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478
+" set completeopt=noinsert,menuone "https://github.com/neoclide/coc.nvim/issues/478
 set shortmess+=c
 set keywordprg=:call\ CocAction('doHover')
 
@@ -124,6 +124,7 @@ nmap <silent> <leader>lgt <Plug>(coc-type-definition)
 nmap <silent> <leader>lgi <Plug>(coc-implementation)
 
 nmap <silent> <leader>lr <Plug>(coc-references)
+nmap <silent> <leader>lgr <Plug>(coc-references)
 
 nmap <silent> <leader>ln <Plug>(coc-rename)
 nmap <silent> <leader>lR <Plug>(coc-rename)

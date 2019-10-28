@@ -8,14 +8,11 @@ npm-debug.log
 **/noter.rb
 **/.cask
 **/nvim/plugged
-**/nvim/autoload
 **/nvim/.init.*
 nvim/plugged
 nvim/plugins
-nvim/autoload
 nvim/.init.*
 nvim/undo/*
-nvim/autoload/*
 nvim/.init.vim-rplugin*
 nvim/deoplete.log
 nvim/autoload/plug.vim
@@ -24,11 +21,10 @@ nvim/bundle
 nvim/backups
 nvim/init.vim.*
 config/config.symlink/configstore
-~/.config/nvim/autoload
 ~/.config/nvim/plugged
 ~/.config/nvim/.init.*
 **/plugged
-**/autoload
+weechat/**/autoload
 **/.init.vim*
 /Brewfile
 **/elm-stuff

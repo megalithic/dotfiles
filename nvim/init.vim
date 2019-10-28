@@ -44,14 +44,11 @@ if empty($SSH_CONNECTION) && has('clipboard')
     set clipboard+=unnamedplus
   endif
 endif
-set colorcolumn=81,82 " Highlight 81 and 82 columns
+" set colorcolumn=81,82 " Highlight 81 and 82 columns
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 set completeopt=menu,menuone,noinsert,noselect
 set dictionary=/usr/share/dict/words
-if has('nvim-0.3.2') || has("patch-8.1.0360")
-  set diffopt=filler,internal,algorithm:histogram,indent-heuristic
-endif
 set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
 set foldmethod=indent " Simple and fast
@@ -63,6 +60,7 @@ set infercase         " Smart casing when completing
 set ignorecase        " Search in case-insensitively
 set incsearch         " Go to search results immediately
 set laststatus=2      " We want a statusline
+set lazyredraw        " should make scrolling faster
 set matchpairs=(:),{:},[:]
 set mouse=a           " Mouse support in the terminal
 set mousehide         " Hide mouse when typing text
@@ -75,7 +73,7 @@ set noshowcmd         " No to showing command in bottom-right corner
 set noshowmatch       " No jumping jumping cursors when matching pairs
 set noshowmode        " No to showing mode in bottom-left corner
 set noswapfile        " No backup files
-set nowrapscan        " Don't wrap searches around
+" set nowrapscan        " Don't wrap searches around
 set number            " Show line numbers
 set nrformats=        " No to oct/hex support when doing CTRL-a/x
 set path=**
@@ -121,10 +119,16 @@ set wrap              " Wrap long lines
 
 " Options specific to Neovim or Vim.
 if has("nvim")
+  set diffopt=filler,internal,algorithm:histogram,indent-heuristic
   set inccommand=nosplit
   set list
   set listchars=tab:\ \ ,trail:-
-  set signcolumn=yes:2
+  set pumblend=10
+  set pumheight=30
+  set signcolumn=yes:2          " always showsigncolumn
+  set switchbuf=useopen,split,usetab,vsplit
+  set wildoptions+=pum
+  set winblend=10
 
   let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
@@ -270,14 +274,6 @@ Plug 'rhysd/git-messenger.vim'
 "-----------------------------
 " Development plugins
 "-----------------------------
-Plug 'sheerun/vim-polyglot'
-" ~/.dotfiles/nvim/plugin/polyglot.vim - options
-Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
-Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
-Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
-Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
-Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' }
-Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
 Plug 'tpope/vim-rails'
 " ~/.dotfiles/nvim/plugin/rails.vim - mappings
 Plug 'tpope/vim-projectionist'
@@ -298,6 +294,18 @@ Plug 'tpope/vim-ragtag'
 " Plug 'tpope/vim-sleuth'
 " ~/.dotfiles/nvim/after/plugin/sleuth.vim - overrides
 Plug 'sgur/vim-editorconfig'
+
+"-----------------------------
+" Filetype/syntax plugins
+"-----------------------------
+Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
+Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
+Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
+Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' }
+Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
+Plug 'sheerun/vim-polyglot'
+" ~/.dotfiles/nvim/plugin/polyglot.vim - options
 
 "-----------------------------
 " tmux support

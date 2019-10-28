@@ -10,6 +10,8 @@ let g:fzf_commits_log_options = '--graph --color=always
       \ --format="%C(yellow)%h%C(red)%d%C(reset)
       \ - %C(bold green)(%ar)%C(reset) %s %C(blue){%an}%C(reset)"'
 
+let $FZF_DEFAULT_COMMAND='fd --type file --hidden --follow --exclude .git'
+
 nnoremap <silent> <leader>m      :Files<CR>
 " nnoremap <silent> <Space><Space> :Files<CR>
 " nnoremap <silent> <Space>.       :Files <C-r>=expand("%:h")<CR>/<CR>
