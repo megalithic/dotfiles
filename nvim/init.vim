@@ -198,6 +198,7 @@ Plug 'gcmt/taboo.vim'
 Plug 'TaDaa/vimade'
 " ~/.dotfiles/nvim/plugin/vimade.vim - options
 Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 
 "-----------------------------
 " General behavior plugins
@@ -209,21 +210,17 @@ Plug 'tommcdo/vim-lion'
 " ~/.dotfiles/nvim/plugin/lion.vim - options
 Plug 'chaoren/vim-wordmotion'
 " ~/.dotfiles/nvim/after/plugin/wordmotion.vim - overrides
+Plug 'cohama/lexima.vim'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
-Plug 'tpope/vim-endwise'
-Plug 'tmsvg/pear-tree'
-" ~/.dotfiles/nvim/plugin/pear-tree.vim - options, mappings
 Plug '907th/vim-auto-save'
 " ~/.dotfiles/nvim/plugin/auto-save.vim - options
 Plug 'rhysd/clever-f.vim'
 " ~/.dotfiles/nvim/plugin/clever-f.vim - options
-Plug 'mbbill/undotree'
+" Plug 'mbbill/undotree'
 " ~/.dotfiles/nvim/plugin/undotree.vim - options, mappings
-Plug 'tpope/vim-abolish'
-" ~/.dotfiles/nvim/after/plugin/abolish.vim - abbreviations
 Plug 'tpope/vim-unimpaired'
 " ~/.dotfiles/nvim/after/plugin/unimpaired.vim - overrides
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
@@ -275,6 +272,7 @@ Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 " ~/.dotfiles/nvim/plugin/gist.vim - options, mappings
 Plug 'wsdjeg/vim-fetch'
 Plug 'mattn/webapi-vim'
+Plug 'rhysd/conflict-marker.vim'
 
 "-----------------------------
 " Development plugins
