@@ -1,7 +1,13 @@
+" custom test display strategy:
 function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
 
+let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
+let g:test#strategy = 'terminal_split'
+
+
+" custom transform for different filetypes/test-runners
 function! ElixirUmbrellaTransform(cmd) abort
   if match(a:cmd, 'vpp/') != -1
     echo "match(a:cmd, 'vpp/') != -1 -> " .. substitute(a:cmd, 'mix test vpp/apps/\([^/]*/\)\(.*\)', '(cd vpp/apps/\1 \&\& mix test \2)', '')
@@ -14,16 +20,17 @@ function! ElixirUmbrellaTransform(cmd) abort
     return a:cmd
   end
 endfunction
-let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
-let g:test#transformation = 'elixir_umbrella'
 
-let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
-let g:test#strategy = 'terminal_split'
+let g:test#custom_transformations = {
+      \ 'elixir': function('ElixirUmbrellaTransform'),
+      \ }
+" TODO: should it be this? function('<SID>ElixirUmbrellaTransform')
 
 let g:test#filename_modifier = ':.'
 let g:test#preserve_screen = 0
 let g:test#elixir#exunit#executable = 'mix test'
-" let g:test#elixir#exunit#executable = 'MIX_ENV=test mix test'
+" let g:test#javascript#cypress#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$'
+
 nmap <silent> <leader>tf :TestFile<CR>
 nmap <silent> <leader>tt :TestVisit<CR>
 nmap <silent> <leader>tn :TestNearest<CR>

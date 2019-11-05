@@ -121,7 +121,11 @@ if has("nvim")
   set diffopt=filler,internal,algorithm:histogram,indent-heuristic
   set inccommand=nosplit
   set list
-  set listchars=tab:\ \ ,trail:-
+  " set listchars=tab:\ \ ,trail:-
+  " set listchars=tab:»·,trail:·
+  " set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
+  " set listchars=tab:»\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
+  set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   set pumblend=10
   set pumheight=20      " Height of complete list
   set signcolumn=yes:2  " always showsigncolumn
@@ -204,11 +208,9 @@ Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), 
 " General behavior plugins
 "-----------------------------
 Plug 'nelstrom/vim-visual-star-search'
-Plug 'michaeljsmith/vim-indent-object'
-Plug 'wellle/targets.vim'
 Plug 'tommcdo/vim-lion'
 " ~/.dotfiles/nvim/plugin/lion.vim - options
-Plug 'chaoren/vim-wordmotion'
+" Plug 'chaoren/vim-wordmotion'
 " ~/.dotfiles/nvim/after/plugin/wordmotion.vim - overrides
 Plug 'cohama/lexima.vim'
 Plug 'tpope/vim-rhubarb'
@@ -219,7 +221,7 @@ Plug '907th/vim-auto-save'
 " ~/.dotfiles/nvim/plugin/auto-save.vim - options
 Plug 'rhysd/clever-f.vim'
 " ~/.dotfiles/nvim/plugin/clever-f.vim - options
-" Plug 'mbbill/undotree'
+Plug 'mbbill/undotree'
 " ~/.dotfiles/nvim/plugin/undotree.vim - options, mappings
 Plug 'tpope/vim-unimpaired'
 " ~/.dotfiles/nvim/after/plugin/unimpaired.vim - overrides
@@ -227,6 +229,32 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
+
+"-----------------------------
+" Movements/Text Objects, et al
+"-----------------------------
+Plug 'kana/vim-operator-user'
+" -- provide ai and ii for indent blocks
+" -- provide al and il for current line
+" -- provide a_ and i_ for underscores
+" -- provide a- and i-
+Plug 'kana/vim-textobj-user'                                      " https://github.com/kana/vim-textobj-user/wiki
+Plug 'kana/vim-textobj-entire'                                    " entire buffer text object (vae)
+Plug 'kana/vim-textobj-function'                                  " function text object (vaf)
+Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
+Plug 'kana/vim-textobj-line'                                      " for current line (val)
+Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
+Plug 'duff/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }  " eliXir block text object (vix/vax)
+Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
+Plug 'michaeljsmith/vim-indent-object'
+Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+Plug 'gilligan/textobj-lastpaste'                                 " - P     for last paste
+Plug 'mattn/vim-textobj-url'                                      " - u     for url
+Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
+Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
+Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
+Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
+" ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 "-----------------------------
 " File management plugins
@@ -245,6 +273,8 @@ Plug 'mhinz/vim-grepper'
 " ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides
 Plug 'junegunn/vim-slash'
 " ~/.dotfiles/nvim/plugin/slash.vim - options, mappings
+Plug 'mattn/vim-findroot'
+" ~/.dotfiles/nvim/plugin/findroot.vim - options, mappings
 
 "-----------------------------
 " Completion plugins
@@ -283,13 +313,15 @@ Plug 'tpope/vim-projectionist'
 " ~/.dotfiles/nvim/plugin/projectionist.vim - mappings
 Plug 'dense-analysis/ale'
 " ~/.dotfiles/nvim/plugin/ale.vim - options, mappings
-Plug 'janko-m/vim-test'
+Plug 'megalithic/vim-test', { 'branch': 'feature/master/add-cypress-javascript-runner' }
+" Plug '~/.dotfiles/nvim/plugins/vim-test'
 " ~/.dotfiles/nvim/plugin/test.vim - options, mappings
 Plug 'tpope/vim-ragtag'
 " ~/.dotfiles/nvim/plugin/ragtag.vim - mappings
 " Plug 'SirVer/ultisnips', { 'on': [] }
 " ~/.dotfiles/nvim/plugin/ultisnips.vim - options, mapping & on-demand loading
 " ~/.dotfiles/nvim/UltiSnips - custom snippets
+Plug 'rhysd/reply.vim'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if
@@ -305,8 +337,11 @@ Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
-Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' }
+Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
+" Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' } " currently only works with ale
 Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
+Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
+Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
 Plug 'sheerun/vim-polyglot'
 " ~/.dotfiles/nvim/plugin/polyglot.vim - options
 

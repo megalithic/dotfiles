@@ -206,37 +206,37 @@ augroup gitcommit
   autocmd FileType gitcommit,gitrebase exe BufEnterCommit()
 augroup END
 
-augroup ft_elixir
-  autocmd!
-  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-  autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
-  autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-  autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-  autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+" augroup ft_elixir
+"   autocmd!
+"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
+"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
+"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+"   autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
+"   autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
+"   autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 
-  if has('nvim')
-    function! s:iex_for_project() abort
-      let l:root = finddir('.git/..', expand('%:p:h').';')
+"   if has('nvim')
+"     function! s:iex_for_project() abort
+"       let l:root = finddir('.git/..', expand('%:p:h').';')
 
-      if !empty(glob(l:root .. "/mix.exs"))
-        echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
-        :Repl iex -S mix
-      else
-        echohl Comment | echom printf('iex (%s)', l:root) | echohl None
-        :Repl iex
-      endif
-    endfunction
+"       if !empty(glob(l:root .. "/mix.exs"))
+"         echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
+"         :Repl iex -S mix
+"       else
+"         echohl Comment | echom printf('iex (%s)', l:root) | echohl None
+"         :Repl iex
+"       endif
+"     endfunction
 
-    autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
-  endif
+"     autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
+"   endif
 
-  autocmd FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
-  autocmd FileType elixir,eelixir iabbrev ep    \|>
-  autocmd FileType elixir,eelixir iabbrev ei    IO.inspect
-  autocmd FileType elixir,eelixir iabbrev eputs IO.puts
-augroup END
+"   autocmd FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
+"   autocmd FileType elixir,eelixir iabbrev ep    \|>
+"   autocmd FileType elixir,eelixir iabbrev ei    IO.inspect
+"   autocmd FileType elixir,eelixir iabbrev eputs IO.puts
+" augroup END
 
 augroup ft_elm
   autocmd!

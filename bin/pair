@@ -68,6 +68,7 @@ up(){
       sleep 1 # some delay so tunnel has time to get up
 
       # let's make sure we don't have existing services running
+ # &> /dev/null
       pkill -9 -f erlang
       pkill -9 -f beam.smp
       pkill -9 -f start.js

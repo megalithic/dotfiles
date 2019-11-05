@@ -111,6 +111,7 @@
   "prettier.eslintIntegration": true,
   "prettier.tslintIntegration": true,
   "prettier.stylelintIntegration": true,
+  "prettier.disableSuccessMessage": true,
 
   // eslint
   "eslint.autoFix": true,
@@ -240,32 +241,30 @@
     },
     "elm": {
       "command": "elm-language-server",
-      "args": ["--stdio"],
       "filetypes": ["elm"],
       "rootPatterns": ["elm.json"],
       "initializationOptions": {
-        "runtime": "node",
-        "elmPath": "elm",
-        "elmFormatPath": "elm-format",
-        "elmTestPath": "elm-test",
+        /* "runtime": "node", */
+        /* "elmPath": "elm", */
+        /* "elmFormatPath": "elm-format", */
+        /* "elmTestPath": "elm-test", */
         "elmAnalyseTrigger": "change"
       }
     },
     "elixir": {
-      /* "command": "./.elixir_ls/rel/language_server.sh", */
       "command": "~/.elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
-      "trace.server": "verbose",
       "rootPatterns": ["mix.exs"],
       /* "cwd": "./", */
-      "initializationOptions": {
-        "elixirLS": {
-          "dialyzerEnabled": false,
-          "dialyzerWarningOpts": []
-        }
-      },
-      "settings": {}
+      /* "initializationOptions": { */
+      /*   "dialyzerEnabled": false, */
+      /*   "elixirLS": { */
+      /*     "dialyzerEnabled": false, */
+      /*     "dialyzerWarningOpts": [] */
+      /*   } */
+      /* }, */
+      /* "settings": {} */
     },
     /* "lua": { */
     /*   "command": "lua-lsp", */

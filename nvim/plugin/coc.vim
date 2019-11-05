@@ -56,11 +56,6 @@ endfunction
 let g:coc_snippet_next = '<TAB>'
 let g:coc_snippet_prev = '<S-TAB>'
 
-" Use <C-e> for trigger completion.
-" inoremap <silent><expr> <C-e> coc#refresh()
-" imap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
-" inoremap <expr> <C-e> pumvisible() ? (<SID>isSnipsExpandable() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" : "") : "\<ESC>A"
-
 " Instead of coc.nvim specific things, let's just do readline things here in
 " insert mode
 inoremap <silent> <C-e> <ESC>A

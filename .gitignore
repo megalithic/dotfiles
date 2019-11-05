@@ -16,6 +16,7 @@ nvim/undo/*
 nvim/.init.vim-rplugin*
 nvim/deoplete.log
 nvim/autoload/plug.vim
+nvim/autoload/plug.vim.old
 nvim/.netrwhist
 nvim/bundle
 nvim/backups

@@ -22,8 +22,12 @@ nnoremap <silent> <leader>m      :Files<CR>
 " nnoremap <silent> <Space>g       :GFiles?<CR>
 " nnoremap <silent> <Space>s       :call LoadUltiSnipsAndFuzzySearch()<CR>
 " nnoremap <silent> <Space>?       :Helptags<CR>
+
 " Project-wide search for the supplied term.
 noremap <leader>a :Rg<Space>
+nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+
 " Mapping selections for various modes.
 nmap <Space>! <Plug>(fzf-maps-n)
 omap <Space>! <Plug>(fzf-maps-o)

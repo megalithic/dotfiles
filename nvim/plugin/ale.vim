@@ -21,6 +21,19 @@ let g:ale_linters = {
       \  'eelixir': ['mix_format'],
       \}
 
+let g:ale_fixers = {
+      \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+      \   'javascript': ['prettier_eslint'],
+      \   'javascript.jsx': ['prettier_eslint'],
+      \   'css': ['prettier'],
+      \   'scss': ['prettier'],
+      \   'json': ['prettier'],
+      \   'elm': [],
+      \   'elixir': ['mix_format'],
+      \   'eelixir': ['mix_format'],
+      \ }
+let g:ale_linters = {}
+
 let g:ale_enabled                  = 1
 let g:ale_completion_enabled       = 0
 let g:ale_fix_on_save              = 1

@@ -3,6 +3,8 @@ let g:polyglot_disabled = [
       \ 'typescriptreact',
       \ 'typescript.tsx',
       \ 'javascriptreact',
+      \ 'markdown',
+      \ 'md',
       \ 'graphql',
       \ 'tsx',
       \ 'jsx',

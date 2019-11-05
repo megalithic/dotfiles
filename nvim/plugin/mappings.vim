@@ -145,3 +145,14 @@ noremap <F5> :PlugUpdate<CR>
 map <F5> :PlugUpdate<CR>
 noremap <S-F5> :PlugClean!<CR>
 map <S-F5> :PlugClean!<CR>
+
+" Zoom
+function! s:zoom()
+  if winnr('$') > 1
+    tab split
+  elseif len(filter(map(range(tabpagenr('$')), 'tabpagebuflist(v:val + 1)'),
+                  \ 'index(v:val, '.bufnr('').') >= 0')) > 1
+    tabclose
+  endif
+endfunction
+nnoremap <silent> <leader>z :call <sid>zoom()<cr>
