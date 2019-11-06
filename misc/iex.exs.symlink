@@ -48,11 +48,17 @@ eval_result = [:green, :bright]
 eval_error = [[:red, :bright, "\ue3bf ERROR - "]]
 eval_info = [:blue, :bright]
 
-# custom functions that i call a lot
-logger_debug = Logger.configure(level: :debug)
-logger_error = Logger.configure(level: :error)
-logger_warn = Logger.configure(level: :warn)
-logger_info = Logger.configure(level: :info)
+defmodule IExHelpers do
+  def whats_this?(term) when is_nil(term), do: "Type: Nil"
+  def whats_this?(term) when is_binary(term), do: "Type: Binary"
+  def whats_this?(term) when is_boolean(term), do: "Type: Boolean"
+  def whats_this?(term) when is_atom(term), do: "Type: Atom"
+  def whats_this?(_term), do: "Type: Unknown"
+  def logger_debug(), do: Logger.configure(level: :debug)
+  def logger_error(), do: Logger.configure(level: :error)
+  def logger_warn(), do: Logger.configure(level: :warn)
+  def logger_info(), do: Logger.configure(level: :info)
+end
 
 # Configuring IEx
 IEx.configure(

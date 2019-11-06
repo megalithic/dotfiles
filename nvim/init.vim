@@ -318,8 +318,7 @@ Plug 'tpope/vim-projectionist'
 " ~/.dotfiles/nvim/plugin/projectionist.vim - mappings
 Plug 'dense-analysis/ale'
 " ~/.dotfiles/nvim/plugin/ale.vim - options, mappings
-Plug 'megalithic/vim-test', { 'branch': 'feature/master/add-cypress-javascript-runner' }
-" Plug '~/.dotfiles/nvim/plugins/vim-test'
+Plug 'janko/vim-test'
 " ~/.dotfiles/nvim/plugin/test.vim - options, mappings
 Plug 'tpope/vim-ragtag'
 " ~/.dotfiles/nvim/plugin/ragtag.vim - mappings

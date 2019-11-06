@@ -28,5 +28,3 @@ if has('nvim')
 
   nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
 endif
-
-let g:test#transformation = 'elixir'
