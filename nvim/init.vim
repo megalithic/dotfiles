@@ -122,10 +122,11 @@ if has("nvim")
   set inccommand=nosplit
   set list
   " set listchars=tab:\ \ ,trail:-
+  set listchars=tab:\ \ ,trail:·
   " set listchars=tab:»·,trail:·
   " set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set listchars=tab:»\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
-  set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
+  " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   set pumblend=10
   set pumheight=20      " Height of complete list
   set signcolumn=yes:2  " always showsigncolumn
@@ -213,6 +214,10 @@ Plug 'tommcdo/vim-lion'
 " Plug 'chaoren/vim-wordmotion'
 " ~/.dotfiles/nvim/after/plugin/wordmotion.vim - overrides
 Plug 'cohama/lexima.vim'
+Plug 'tpope/vim-eunuch'
+" ~/.dotfiles/nvim/plugin/eunuch.vim - options
+Plug 'tpope/vim-abolish'
+" https://github.com/tpope/vim-abolish/blob/master/doc/abolish.txt#L146-L162
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-surround'
@@ -340,6 +345,7 @@ Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
 Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
 " Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' } " currently only works with ale
 Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
+Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'typescript', 'typescript.tsx'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
 Plug 'sheerun/vim-polyglot'

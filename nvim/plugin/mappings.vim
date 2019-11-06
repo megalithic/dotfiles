@@ -146,7 +146,7 @@ map <F5> :PlugUpdate<CR>
 noremap <S-F5> :PlugClean!<CR>
 map <S-F5> :PlugClean!<CR>
 
-" Zoom
+" Zoom buffer to a tab
 function! s:zoom()
   if winnr('$') > 1
     tab split

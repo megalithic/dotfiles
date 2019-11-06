@@ -175,6 +175,7 @@ sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo Hos
 
 # Disable Resume system-wide
 defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -bool false
+defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -int 0
 
 # Automatically quit printer app once the print jobs complete
 defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
@@ -186,3 +187,6 @@ killall Dock
 
 # unhide Library folder!
 chflags nohidden ~/Library/
+
+# TODO:
+# - programmatically set keyboard shortcuts for apps: https://github.com/kassio/dotfiles/blob/master/install/macos/keyboard#L22

@@ -70,7 +70,9 @@ else
   if [[ $answer == [yY] ]]
   then
     echo ":: installing xcode"
-    xcode-select --install
+    xcode-select --install && \
+      sudo xcodebuild -license accept && \
+      softwareupdate -ia
   fi
 fi
 
@@ -94,6 +96,9 @@ else
   fi
 fi
 
+# Get permissions (super powers) up front and only once
+sudo -v
+
 # Install Homebrew
 if (which brew &>/dev/null); then
   echo ":: brew already installed; skipping."
@@ -112,9 +117,6 @@ brew bundle --file="$DOTS/homebrew/Brewfile"
 # echo ":: doing post-brew things..."
 # sudo xcodebuild -license accept
 # ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
-
-# capture sudo permissions for the whole run of things, only once
-sudo -v
 
 # Run generic installers
 $DOTS/bin/_generic

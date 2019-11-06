@@ -171,7 +171,7 @@ config.apps = {
     shortcut = 'z',
     preferredDisplay = 1,
     position = config.grid.centeredLarge,
-    dnd = { enabled = true,  mode = "zoom" },
+    dnd = { enabled = false,  mode = "zoom" },
   },
   ['com.spotify.client'] = {
     hint = 'com.spotify.client',
