@@ -180,7 +180,7 @@ local handleWindowDestroyed = function(win, appName)
   log.df('window destroyed (%s) for %s', hs.inspect(win), appName)
   -- logWindowInfo(win, appName, "destroyed")
 
-  if win ~= nil then
+  if win ~= nil and appName ~= "zoom.us" then
     setLayoutForApp(win:application())
   end
   -- handleWindowLayout(win, appName, "destroyed")

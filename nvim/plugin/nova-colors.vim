@@ -42,7 +42,6 @@ hi CocErrorHighlight gui=underline guifg=#DF8C8C
 
 hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
 hi illuminatedWord cterm=underline gui=underline
-" hi MatchParen cterm=bold gui=bold,italic guibg=#937f6e guifg=#222222
 hi MatchWord cterm=underline gui=underline,italic
 hi MatchParen cterm=underline gui=underline,italic
 
@@ -63,7 +62,7 @@ hi SignifySignDelete ctermfg=red    guifg=#DF8C8C cterm=NONE gui=NONE
 hi SignifySignChange ctermfg=yellow guifg=#ffff00 cterm=NONE gui=NONE
 hi link SignifySignAdd             diffAdded
 hi link SignifySignDelete          diffRemoved
-hi SignifySignChange ctermfg=222 guifg=#ecc48d cterm=NONE gui=NONE 
+hi SignifySignChange ctermfg=222 guifg=#ecc48d cterm=NONE gui=NONE
 hi link SignifySignChangeDelete    SignifySignChange
 hi link SignifySignDeleteFirstLine SignifySignDelete
 
@@ -81,3 +80,5 @@ hi link gitmessengerPopupNormal CursorLine
 " color as gitmessengerPopupNormal.
 hi gitmessengerEndOfBuffer term=None guifg=None guibg=None ctermfg=None ctermbg=None
 
+hi! link LspDiagnosticsError ErrorMsg
+hi! link LspDiagnosticsWarning WarningMsg

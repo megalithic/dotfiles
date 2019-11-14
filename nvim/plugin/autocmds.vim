@@ -38,6 +38,9 @@ augroup general
   " Handle window resizing
   autocmd VimResized * execute "normal! \<c-w>="
 
+  " Help in vertical split (https://stackoverflow.com/a/21843502/213904)
+  autocmd FileType help wincmd L
+
   " No formatting on o key newlines
   autocmd BufNewFile,BufEnter * set formatoptions-=o
 

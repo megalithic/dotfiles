@@ -47,7 +47,8 @@ endif
 " set colorcolumn=81,82 " Highlight 81 and 82 columns
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
-set completeopt=menu,menuone,noinsert,noselect
+" set completeopt=menu,menuone,noinsert,noselect
+set completeopt=menu,menuone,preview,noselect,noinsert
 set dictionary=/usr/share/dict/words
 set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
@@ -134,6 +135,14 @@ if has("nvim")
   set wildoptions+=pum
   set winblend=10
 
+  set guicursor=
+        \n:block-Cursor,
+        \a:block-blinkon0,
+        \i:ver25-blinkwait200-blinkoff150-blinkon200-CursorInsert,
+        \r:blinkwait200-blinkoff150-blinkon200-CursorReplace,
+        \v:CursorVisual,
+        \c:ver25-blinkon300-CursorInsert
+
   let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $EDITOR      = 'nvr -l'
@@ -204,6 +213,7 @@ Plug 'TaDaa/vimade'
 " ~/.dotfiles/nvim/plugin/vimade.vim - options
 Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
+Plug 'norcalli/nvim-colorizer.lua'
 
 "-----------------------------
 " General behavior plugins
@@ -278,8 +288,11 @@ Plug 'mhinz/vim-grepper'
 " ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides
 Plug 'junegunn/vim-slash'
 " ~/.dotfiles/nvim/plugin/slash.vim - options, mappings
-Plug 'mattn/vim-findroot'
+" Plug 'mattn/vim-findroot'
 " ~/.dotfiles/nvim/plugin/findroot.vim - options, mappings
+" Plug 'airblade/vim-rooter'
+" ~/.dotfiles/nvim/plugin/rooter.vim - options, mappings
+Plug 'tpope/vim-dispatch'
 
 "-----------------------------
 " Completion plugins
@@ -291,6 +304,7 @@ if executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 " ~/.dotfiles/nvim/plugin/coc.vim - options
 endif
+Plug 'neovim/nvim-lsp'
 
 "-----------------------------
 " Git plugins
@@ -357,6 +371,9 @@ Plug 'christoomey/vim-tmux-navigator'
 " ~/.dotfiles/nvim/plugin/tmux-navigator.vim - options, mappings
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
+
+" FIXME: this useful, maybe along with codi or iron?
+" Plug 'hauleth/vim-backscratch'
 
 "-----------------------------
 " Neovim specific plugins

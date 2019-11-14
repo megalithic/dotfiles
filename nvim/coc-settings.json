@@ -96,8 +96,8 @@
   "codeLens.separator": "\ufbc0",
 
   "highlight.disableLanguages": ["vim-plug"],
-  "highlight.document.enable": true,
-  "highlight.colors.enable": true,
+  "highlight.document.enable": false,
+  "highlight.colors.enable": false,
 
   "javascript.suggest.autoImports": true,
   "javascript.preferences.quoteStyle": "single",
@@ -158,19 +158,6 @@
   "coc.source.syntax.enable": false,
   "coc.source.word.enable": true,
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
-
-  // git
-  "git.enableGutters": true,
-  "git.signOffset": 99,
-  "git.branchCharacter": "⎇",
-  "git.addedSign.text": "▏",
-  "git.addedSign.hlGroup": "CocGitAddedSign",
-  "git.changedSign.text": "▎",
-  "git.changedSign.hlGroup": "CocGitChangedSign",
-  "git.removedSign.text": "▏",
-  "git.removedSign.hlGroup": "CocGitRemovedSign",
-  "git.topRemovedSign.text": "▤",
-  "git.changeRemovedSign.text": "≃",
 
   // diagnostic-languageserver
   "diagnostic-languageserver.enable": true,
