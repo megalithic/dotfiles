@@ -12,3 +12,4 @@ let g:findroot_patterns = [
       \  '*.csproj',
       \  '*.sln',
       \]
+let g:findroot_mask = '*.exs,*.spec.js'

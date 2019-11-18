@@ -143,6 +143,14 @@ if has("nvim")
         \v:CursorVisual,
         \c:ver25-blinkon300-CursorInsert
 
+  " Set cursor shape based on mode (:h termcap-cursor-shape)
+  " Vertical bar in insert mode
+  let &t_SI = "\e[6 q"
+  " Underline in replace mode
+  let &t_SR = "\e[4 q"
+  " Block in normal mode
+  let &t_EI = "\e[2 q"
+
   let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $EDITOR      = 'nvr -l'
@@ -279,16 +287,16 @@ Plug 'junegunn/fzf.vim'
 " ~/.dotfiles/nvim/plugin/fzf.vim - options, mappings
 Plug 'pbogut/fzf-mru.vim'
 " ~/.dotfiles/nvim/plugin/fzf-mru.vim - options, mappings
-Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
+" Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
-Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
+" Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree-git-plugin.vim - options
 Plug 'mhinz/vim-grepper'
 " ~/.dotfiles/nvim/plugin/grepper.vim - options, mappings
 " ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides
 Plug 'junegunn/vim-slash'
 " ~/.dotfiles/nvim/plugin/slash.vim - options, mappings
-" Plug 'mattn/vim-findroot'
+Plug 'mattn/vim-findroot'
 " ~/.dotfiles/nvim/plugin/findroot.vim - options, mappings
 " Plug 'airblade/vim-rooter'
 " ~/.dotfiles/nvim/plugin/rooter.vim - options, mappings
@@ -304,7 +312,9 @@ if executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 " ~/.dotfiles/nvim/plugin/coc.vim - options
 endif
-Plug 'neovim/nvim-lsp'
+if has('nvim')
+  Plug 'neovim/nvim-lsp'
+endif
 
 "-----------------------------
 " Git plugins

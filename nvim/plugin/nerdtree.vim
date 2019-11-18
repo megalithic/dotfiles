@@ -3,8 +3,8 @@ let g:NERDTreeDirArrowCollapsible = "◢"
 let NERDTreeHijackNetrw           = 0
 let NERDTreeStatusline            = " NERDTree "
 
-noremap <silent> <Leader>n :NERDTreeToggle<CR> <C-w>=
-noremap <silent> <Leader>f :NERDTreeFind<CR>   <C-w>=
+" noremap <silent> <Leader>n :NERDTreeToggle<CR> <C-w>=
+" noremap <silent> <Leader>f :NERDTreeFind<CR>   <C-w>=
 
 " Upon entering the NERDTree window do a root directoy refresh to automatically
 " pick up any file or directory changes.

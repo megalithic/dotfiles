@@ -5,7 +5,7 @@ endfunction
 
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
-let test#strategy = 'dispatch'
+" let test#strategy = 'dispatch'
 " FIXME: do we want to have custom strategies per test scenario? File, Nearest,
 " Suite? Maybe using https://github.com/hauleth/asyncdo.vim?
 " let test#strategy = {

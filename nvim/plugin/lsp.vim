@@ -1,81 +1,101 @@
 if !has('nvim')
+  lua require("lsp_setup").setup()
+
+  function! LSP_maps()
+    nnoremap <buffer> <silent> <leader>gd :call lsp#text_document_declaration()<CR>
+    nnoremap <buffer> <silent> gd :call lsp#text_document_definition()<CR>
+    nnoremap <buffer> <silent> K  :call lsp#text_document_hover()<CR>
+    nnoremap <buffer> <silent> <leader>d :lua require("vim.lsp.util").show_line_diagnostics()<CR>
+
+    nnoremap <silent> <space>dc :call lsp#text_document_declaration()<CR>
+    nnoremap <silent> <space>df :call lsp#text_document_definition()<CR>
+    nnoremap <silent> <space>h  :call lsp#text_document_hover()<CR>
+    nnoremap <silent> <space>i  :call lsp#text_document_implementation()<CR>
+    nnoremap <silent> <space>s  :call lsp#text_document_signature_help()<CR>
+    nnoremap <silent> <space>td :call lsp#text_document_type_definition()<CR>
+    nnoremap <silent> <space>ds :lua vim.lsp.util.show_line_diagnostics()<CR>
+  endfunction
+
+  autocmd FileType cpp,haskell,python,rust,go,tex,elm call LSP_maps()
+  autocmd Filetype cpp,haskell,python,rust,go,tex,elm setlocal omnifunc=v:lua.vim.lsp.omnifunc
+
   call lsp#set_log_level("error")
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'elixir',
-          \ 'filetype': ['elixir', 'eelixir'],
-          \ 'cmd': [$HOME.'/.elixir_ls/rel/language_server.sh'],
-          \ 'rootPatterns': ['mix.exs'],
-          \ 'initializationOptions': {
-          \   'dialyzerEnabled': v:false,
-          \ },
-          \ })
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'elixir',
+  "         \ 'filetype': ['elixir', 'eelixir'],
+  "         \ 'cmd': [$HOME.'/.elixir_ls/rel/language_server.sh'],
+  "         \ 'rootPatterns': ['mix.exs'],
+  "         \ 'initializationOptions': {
+  "         \   'dialyzerEnabled': v:false,
+  "         \ },
+  "         \ })
+  " catch /unique/
+  " endtry
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'elm',
-          \ 'filetype': ['elm'],
-          \ 'cmd': ['elm-language-server'],
-          \ 'rootPatterns': ['elm.json'],
-          \ 'initializationOptions': {
-          \   'elmAnalyseTrigger': 'change',
-          \ },
-          \ })
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'elm',
+  "         \ 'filetype': ['elm'],
+  "         \ 'cmd': ['elm-language-server'],
+  "         \ 'rootPatterns': ['elm.json'],
+  "         \ 'initializationOptions': {
+  "         \   'elmAnalyseTrigger': 'change',
+  "         \ },
+  "         \ })
+  " catch /unique/
+  " endtry
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'rls',
-          \ 'filetype': ['rust'],
-          \ 'cmd': ['rls'],
-          \ 'capabilities': {
-          \   'clippy_preference': 'on',
-          \   'all_targets': v:false,
-          \   'build_on_save': v:true,
-          \   'wait_to_build': 0
-          \ }})
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'rls',
+  "         \ 'filetype': ['rust'],
+  "         \ 'cmd': ['rls'],
+  "         \ 'capabilities': {
+  "         \   'clippy_preference': 'on',
+  "         \   'all_targets': v:false,
+  "         \   'build_on_save': v:true,
+  "         \   'wait_to_build': 0
+  "         \ }})
+  " catch /unique/
+  " endtry
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'lua',
-          \ 'filetype': ['lua'],
-          \ 'cmd': ['lua-lsp'],
-          \ })
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'lua',
+  "         \ 'filetype': ['lua'],
+  "         \ 'cmd': ['lua-lsp'],
+  "         \ })
+  " catch /unique/
+  " endtry
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'shell',
-          \ 'filetype': ['sh', 'bash', 'zsh', 'shell'],
-          \ 'cmd': ['bash-language-server', 'start', '--stdio'],
-          \ })
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'shell',
+  "         \ 'filetype': ['sh', 'bash', 'zsh', 'shell'],
+  "         \ 'cmd': ['bash-language-server', 'start', '--stdio'],
+  "         \ })
+  " catch /unique/
+  " endtry
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'clangd',
-          \ 'filetype': 'cpp',
-          \ 'cmd': 'clangd'
-          \ })
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'clangd',
+  "         \ 'filetype': 'cpp',
+  "         \ 'cmd': 'clangd'
+  "         \ })
+  " catch /unique/
+  " endtry
 
-  try
-    call lsp#add_filetype_config({
-          \ 'name': 'pyls',
-          \ 'filetype': 'python',
-          \ 'cmd': 'pyls'
-          \ })
-  catch /unique/
-  endtry
+  " try
+  "   call lsp#add_filetype_config({
+  "         \ 'name': 'pyls',
+  "         \ 'filetype': 'python',
+  "         \ 'cmd': 'pyls'
+  "         \ })
+  " catch /unique/
+  " endtry
 
   " call lsp#add_filetype_config({
   "   \ 'name': 'js',
@@ -117,11 +137,4 @@ if !has('nvim')
   " nnoremap <silent> <leader>ls  :call lsp#text_document_signature_help()<CR>
   " nnoremap <silent> <leader>ltd :call lsp#text_document_type_definition()<CR>
 
-  nnoremap <silent> <space>dc :call lsp#text_document_declaration()<CR>
-  nnoremap <silent> <space>df :call lsp#text_document_definition()<CR>
-  nnoremap <silent> <space>h  :call lsp#text_document_hover()<CR>
-  nnoremap <silent> <space>i  :call lsp#text_document_implementation()<CR>
-  nnoremap <silent> <space>s  :call lsp#text_document_signature_help()<CR>
-  nnoremap <silent> <space>td :call lsp#text_document_type_definition()<CR>
-  nnoremap <silent> <space>ds :lua vim.lsp.util.show_line_diagnostics()<CR>
 endif
