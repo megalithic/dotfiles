@@ -73,6 +73,7 @@
     "default": "\uf29c"
   },
 
+  "diagnostic.checkCurrentLine": true,
   "diagnostic.displayByAle": false,
   "diagnostic.enable": true,
   "diagnostic.enableMessage": "always",
@@ -244,18 +245,18 @@
       "rootPatterns": ["mix.exs"],
       /* "cwd": "./", */
       /* "initializationOptions": { */
-      /*   "dialyzerEnabled": false, */
-      /*   "elixirLS": { */
-      /*     "dialyzerEnabled": false, */
-      /*     "dialyzerWarningOpts": [] */
-      /*   } */
-      /* }, */
-      /* "settings": {} */
+        /*   "dialyzerEnabled": false, */
+        /*   "elixirLS": { */
+          /*     "dialyzerEnabled": false, */
+          /*     "dialyzerWarningOpts": [] */
+          /*   } */
+          /* }, */
+          /* "settings": {} */
     },
     /* "lua": { */
-    /*   "command": "lua-lsp", */
-    /*   "filetypes": ["lua"] */
-    /* } */
+      /*   "command": "lua-lsp", */
+      /*   "filetypes": ["lua"] */
+      /* } */
   }
 }
 

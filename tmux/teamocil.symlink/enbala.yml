@@ -18,7 +18,7 @@ windows:
   #       - nvim +WikiIndex
   - name: "services"
     root: "~/code/enbala"
-    layout: tiled
+    layout: even-vertical
     panes:
       - commands:
         - cd ~/code/enbala/vpp/vpp
