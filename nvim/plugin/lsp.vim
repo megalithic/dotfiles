@@ -19,96 +19,42 @@ if !has('nvim')
   autocmd FileType cpp,haskell,python,rust,go,tex,elm call LSP_maps()
   autocmd Filetype cpp,haskell,python,rust,go,tex,elm setlocal omnifunc=v:lua.vim.lsp.omnifunc
 
+  if exists('+omnifunc')
+    autocmd FileType * if &omnifunc == '' | setlocal omnifunc=syntaxcomplete#Complete | endif
+  endif
+
   call lsp#set_log_level("error")
 
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'elixir',
-  "         \ 'filetype': ['elixir', 'eelixir'],
-  "         \ 'cmd': [$HOME.'/.elixir_ls/rel/language_server.sh'],
-  "         \ 'rootPatterns': ['mix.exs'],
-  "         \ 'initializationOptions': {
-  "         \   'dialyzerEnabled': v:false,
-  "         \ },
-  "         \ })
-  " catch /unique/
-  " endtry
+  try
+    call lsp#add_filetype_config({
+          \ 'name': 'elixir',
+          \ 'filetype': ['elixir', 'eelixir'],
+          \ 'cmd': [$HOME.'/.elixir_ls/rel/language_server.sh'],
+          \ 'rootPatterns': ['mix.exs'],
+          \ 'initializationOptions': {
+          \   'dialyzerEnabled': v:false,
+          \ },
+          \ })
+  catch /unique/
+  endtry
 
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'elm',
-  "         \ 'filetype': ['elm'],
-  "         \ 'cmd': ['elm-language-server'],
-  "         \ 'rootPatterns': ['elm.json'],
-  "         \ 'initializationOptions': {
-  "         \   'elmAnalyseTrigger': 'change',
-  "         \ },
-  "         \ })
-  " catch /unique/
-  " endtry
+  try
+    call lsp#add_filetype_config({
+          \ 'name': 'lua',
+          \ 'filetype': ['lua'],
+          \ 'cmd': ['lua-lsp'],
+          \ })
+  catch /unique/
+  endtry
 
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'rls',
-  "         \ 'filetype': ['rust'],
-  "         \ 'cmd': ['rls'],
-  "         \ 'capabilities': {
-  "         \   'clippy_preference': 'on',
-  "         \   'all_targets': v:false,
-  "         \   'build_on_save': v:true,
-  "         \   'wait_to_build': 0
-  "         \ }})
-  " catch /unique/
-  " endtry
-
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'lua',
-  "         \ 'filetype': ['lua'],
-  "         \ 'cmd': ['lua-lsp'],
-  "         \ })
-  " catch /unique/
-  " endtry
-
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'shell',
-  "         \ 'filetype': ['sh', 'bash', 'zsh', 'shell'],
-  "         \ 'cmd': ['bash-language-server', 'start', '--stdio'],
-  "         \ })
-  " catch /unique/
-  " endtry
-
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'clangd',
-  "         \ 'filetype': 'cpp',
-  "         \ 'cmd': 'clangd'
-  "         \ })
-  " catch /unique/
-  " endtry
-
-  " try
-  "   call lsp#add_filetype_config({
-  "         \ 'name': 'pyls',
-  "         \ 'filetype': 'python',
-  "         \ 'cmd': 'pyls'
-  "         \ })
-  " catch /unique/
-  " endtry
-
-  " call lsp#add_filetype_config({
-  "   \ 'name': 'js',
-  "   \ 'filetype': ['javascript'],
-  "   \ 'cmd': [$JAVASCRIPT_LANGUAGE_SERVER_DIRECTORY.'/lib/language-server-stdio.js'],
-  "   \ })
-
-  " call lsp#add_filetype_config({
-  "   \ 'name': 'lua2',
-  "   \ 'filetype': 'lua',
-  "   \ 'cmd': './run.sh',
-  "   \ 'cmd_cwd': '/home/ashkan/works/3rd/lua-language-server/',
-  "   \ })
+  try
+    call lsp#add_filetype_config({
+          \ 'name': 'shell',
+          \ 'filetype': ['sh', 'bash', 'zsh', 'shell'],
+          \ 'cmd': ['bash-language-server', 'start', '--stdio'],
+          \ })
+  catch /unique/
+  endtry
 
   function! TextDocumentCompletion() abort
     lua vim.lsp.buf_request(nil, 'textDocument/completion', vim.lsp.protocol.make_text_document_position_params())

@@ -63,7 +63,8 @@ set incsearch         " Go to search results immediately
 set laststatus=2      " We want a statusline
 set lazyredraw        " should make scrolling faster
 set matchpairs=(:),{:},[:]
-set mouse=a           " Mouse support in the terminal
+set mouse=nva         " Mouse support in different modes
+set mousemodel=popup  " Set the behaviour of mouse
 set mousehide         " Hide mouse when typing text
 set nobackup          " No backup files
 set nocompatible      " No Vi support
@@ -115,6 +116,11 @@ set viminfo=          " No backups
 set wildcharm=<Tab>   " Defines the trigger for 'wildmenu' in mappings
 set wildmenu          " Nice command completions
 set wildmode=full
+set wildignore+=*.o,*.obj,*.bin,*.dll,*.exe
+set wildignore+=*/.git/*,*/.svn/*,*/__pycache__/*,*/build/**
+set wildignore+=*.pyc
+set wildignore+=*.DS_Store
+set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
 set wrap              " Wrap long lines
 
 " Options specific to Neovim or Vim.
@@ -286,12 +292,14 @@ Plug 'wellle/targets.vim'                                         " improved tar
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --no-bash' }
 Plug 'junegunn/fzf.vim'
 " ~/.dotfiles/nvim/plugin/fzf.vim - options, mappings
-Plug 'pbogut/fzf-mru.vim'
+" Plug 'pbogut/fzf-mru.vim'
 " ~/.dotfiles/nvim/plugin/fzf-mru.vim - options, mappings
+
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
 " Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree-git-plugin.vim - options
+
 Plug 'mhinz/vim-grepper'
 " ~/.dotfiles/nvim/plugin/grepper.vim - options, mappings
 " ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides

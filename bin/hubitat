@@ -24,7 +24,7 @@
 #
 
 #
-# Example parsing strings for status with jq:
+# Example parsing strings for status (dark sky weather driver) with jq:
 # - is_cloudy: `'.attributes[] | select(.name == "cloud").currentValue | tonumber >= 75'`
 # - is_daytime: `'.attributes[] | select(.name == "is_day").currentValue | tonumber == 1'`
 # - is_nighttime: `'.attributes[] | select(.name == "is_day").currentValue | tonumber == 0'`
@@ -48,8 +48,8 @@ help() {
   printf -- "    status           Get the current status of specific device with query\n"
   printf -- "    devices          Get a list of connected devices and their device_id\n"
   printf -- "\n"
-  printf -- "Example parsing strings for status with jq:\n"
-  printf -- "    is_cloudy        '.attributes[] | select(.name == \"cloud\").currentValue | tonumber >= 75'\n"
+  printf -- "Example parsing strings for status (dark sky weather driver) with jq:\n"
+  printf -- "    is_cloudy        '.currently.cloudCover >= 0.5'\n"
   printf -- "    is_day           '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 1'\n"
   printf -- "    is_night         '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'\n"
   printf -- "    switch_state     '.attributes | unique[] | select(.name == \"switch\").currentValue'\n"
@@ -73,6 +73,7 @@ require_device_id() {
 }
 
 execute_command() {
+  echo $(hubitat_local_url)
   spinner curl -s "$(hubitat_local_url)" | jq -r -c "$query"
 }
 
