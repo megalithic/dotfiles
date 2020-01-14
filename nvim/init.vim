@@ -294,6 +294,7 @@ Plug 'junegunn/fzf.vim'
 " ~/.dotfiles/nvim/plugin/fzf.vim - options, mappings
 " Plug 'pbogut/fzf-mru.vim'
 " ~/.dotfiles/nvim/plugin/fzf-mru.vim - options, mappings
+Plug 'liuchengxu/vim-clap', { 'do': function('clap#helper#build_all') }
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
@@ -380,6 +381,7 @@ Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
 Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'typescript', 'typescript.tsx'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
+Plug 'florentc/vim-tla'
 Plug 'sheerun/vim-polyglot'
 " ~/.dotfiles/nvim/plugin/polyglot.vim - options
 

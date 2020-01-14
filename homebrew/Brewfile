@@ -39,6 +39,7 @@ brew 'autoconf'
 brew 'automake'
 brew 'aspell', args: ['--with-lang-en']
 # brew 'asdf'
+brew 'bandwhich'
 brew 'bat'
 brew 'browsh'
 brew 'ccls'
