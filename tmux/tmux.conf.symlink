@@ -176,7 +176,7 @@ setw -g window-status-current-format " #{?window_zoomed_flag,#[fg=red] ,#[fg=
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#{prefix_highlight} #{dnd_status} #(~/.dotfiles/bin/battery -t -p)#[fg=colour255] ⋮ #[fg=blue] %a, %b %d  #[fg=colour255] ⋮  #[fg=green]%H:%M (#(TZ='UTC' date +%%H:%%M)) #[fg=colour255] ⋮  #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status} #(~/.dotfiles/bin/battery -t -p)#[fg=colour255] ⋮ #[fg=blue] %a, %b %d  #[fg=colour255] ⋮  #[fg=green]%H:%M (#(TZ='UTC' date +%%H:%%M:%%S)) #[fg=colour255] ⋮  #{cpu_percentage}"
 set -g status-right-length 200
 
 
