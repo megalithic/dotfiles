@@ -5,17 +5,15 @@
 
 -- setup and vars
 
-local log = hs.logger.new('[pomodoro]', 'debug')
 local hyper = require("hyper")
 local hsApp = require("hs.application")
-local hotkey = require('hs.hotkey')
 
 local pomoMode = hs.hotkey.modal.new()
 
 local numberOfPoms = 1
 local pomLength = 30
 
-local timer = nil
+local timer = hs.timer.new(1, function() update() end)
 local closedDistractions = {}
 local string = ""
 
@@ -84,10 +82,10 @@ function startPomodoro(makeCalendarEvent)
         hs.http.encodeForQuery("Focus Session starting now for "),
         numberOfPoms * pomLength))
   end
-  for _, app in pairs(config.apps) do
-    pid = hsApp.find(app.hint)
+  for _, app in pairs(config.applications) do
+    pid = hsApp.find(app.bundleID)
     if pid and app.distraction then
-      table.insert(closedDistractions, app.hint) -- keep track of it
+      table.insert(closedDistractions, app.bundleID) -- keep track of it
       pid:kill()
     end
   end
@@ -122,6 +120,18 @@ function resetDuration()
   pomoMode:entered()
 end
 
+-- Keyboard bindings
+
+hyper:bind({}, 'p', nil, function() pomoMode:enter() end)
+
+pomoMode:bind('', 'escape', function() pomoMode:exit() end)
+pomoMode:bind('', 'return', startOrStopPomodoro)
+pomoMode:bind('shift', 'return', function() startOrStopPomodoro(true) end)
+pomoMode:bind('', 'space', pausePomodoro)
+pomoMode:bind('', 'up', increaseDuration)
+pomoMode:bind('', 'down', decreaseDuration)
+pomoMode:bind('', 'r', resetDuration)
+
 -- Timer
 
 update = function()
@@ -139,31 +149,3 @@ end
 function setupTimer()
   timeLeft = hs.timer.minutes(numberOfPoms * pomLength)
 end
-
-local M = {}
-M.init = function(modifiers)
-  log.i("Initializing pomodoro..")
-  timer = hs.timer.new(1, function() update() end)
-
-  -- Keyboard bindings
-
-  hyper:bind({}, 'p', nil, function() pomoMode:enter() end)
-
-  pomoMode:bind('', 'escape', function() pomoMode:exit() end)
-  pomoMode:bind('', 'return', startOrStopPomodoro)
-  pomoMode:bind('shift', 'return', function() startOrStopPomodoro(true) end)
-  pomoMode:bind('', 'space', pausePomodoro)
-  pomoMode:bind('', 'up', increaseDuration)
-  pomoMode:bind('', 'down', decreaseDuration)
-  pomoMode:bind('', 'r', resetDuration)
-end
-
-M.teardown = function(_)
-  log.i("Tearing down pomodoro")
-  timer:stop()
-  timer = nil
-end
-
-M.pomoMode = pomoMode
-
-return M

@@ -162,8 +162,14 @@ brew 'zsh-autosuggestions'
 brew 'zsh-syntax-highlighting'
 
 
-# -- gui --
+# -- fonts --
+cask 'font-firacode-nerd-font'
+cask 'font-firacode-nerd-font-mono'
+cask 'font-hasklig-nerd-font'
+cask 'font-hasklig-nerd-font-mono'
+cask 'font-jetbrains-mono'
 
+# -- gui --
 cask '1password'
 cask '1password-cli'
 cask 'alfred'
@@ -173,10 +179,6 @@ cask 'bartender'
 cask 'brave-dev'
 # cask 'cloudapp'
 cask 'dash'
-cask 'font-firacode-nerd-font'
-cask 'font-firacode-nerd-font-mono'
-cask 'font-hasklig-nerd-font'
-cask 'font-hasklig-nerd-font-mono'
 cask 'caldigit-thunderbolt-charging'
 cask 'caldigit-usb-c-dock-driver '
 cask 'calibre'

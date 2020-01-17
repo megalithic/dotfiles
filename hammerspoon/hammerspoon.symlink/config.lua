@@ -290,6 +290,19 @@ config.utilities = {
         hs.alert.show("Couldn't connect to AirPods!")
       end
     end)
+  },
+  {
+    name = 'Pomodoro',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'p',
+    fn = (function()
+      -- local ok, output = airpods.toggle('replipods')
+      -- if ok then
+      --   hs.alert.show(output)
+      -- else
+      --   hs.alert.show("Couldn't connect to AirPods!")
+      -- end
+    end)
   }
 }
 
@@ -392,14 +405,14 @@ config.docking = {
     profile = 'dz60', -- Karabiner-Elements profile name
     input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
-    fontSize = 18.0,
+    fontSize = 16.0,
   },
   ['undocked'] = {
     wifi = 'on',
     profile = 'internal',
     input = '"MacBook Pro Microphone"',
     output = '"MacBook Pro Speakers"',
-    fontSize = 15.0,
+    fontSize = 14.0,
   },
 }
 

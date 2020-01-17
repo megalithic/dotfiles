@@ -87,7 +87,8 @@ set -g history-limit 10000
 set -g default-shell "$SHELL"
 # fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
 # https://github.com/nathanaelkane/dotfiles/commit/9607d826b9d408595de2e3fe7de0abec1e94fa87
-set -g default-terminal "tmux-256color"
+set -g default-terminal "xterm-kitt y"
+# set -g default-terminal "tmux-256color"
 set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
 set -ga terminal-overrides ',xterm-256color:Tc'
 set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
@@ -139,7 +140,7 @@ set -g status-interval 10
 set -g status-justify "left"                                      # don't change this spelling
 set -g status-position top
 set -g allow-rename off
-set -g set-titles-string ""
+set -g set-titles-string "" # "#S / #W"
 set -g set-titles on
 setw -g automatic-rename on
 
