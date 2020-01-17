@@ -87,13 +87,14 @@ set -g history-limit 10000
 set -g default-shell "$SHELL"
 # fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
 # https://github.com/nathanaelkane/dotfiles/commit/9607d826b9d408595de2e3fe7de0abec1e94fa87
-set -g default-terminal "xterm-kitty"
-# set -g default-terminal "tmux-256color"
+# set -g default-terminal "xterm-kitty"
+set -g default-terminal "tmux-256color"
 set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
 set -ga terminal-overrides ',xterm-256color:Tc'
 set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
 set -as terminal-overrides ',xterm*:sitm=\E[3m'
 set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm' # Allow undercurls for terminals that support them.
+set -as terminal-overrides ',*:smulx=\E[4\:%p1%dm' # Allow undercurls for terminals that support them (newest).
 set -g base-index 1                                                 # Start window numbers from 1
 # set -g mouse on                                                     # mices! -- FIXME: this potentially jacks with kitty's mouse copy selection stuff
 set -g focus-events on                # enable focus events for wincent/terminus
