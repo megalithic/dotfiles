@@ -405,7 +405,7 @@ config.docking = {
     profile = 'dz60', -- Karabiner-Elements profile name
     input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
-    fontSize = 16.0,
+    fontSize = 17.0,
   },
   ['undocked'] = {
     wifi = 'on',

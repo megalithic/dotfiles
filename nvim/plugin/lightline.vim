@@ -235,4 +235,3 @@ function! s:lightline_coc_diagnostic(kind, sign) abort
   endtry
   return printf('%d %s', c[a:kind], s)
 endfunction
-
