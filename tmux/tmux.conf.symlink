@@ -178,7 +178,7 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=b
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#{prefix_highlight} #{dnd_status} #(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮ #[fg=blue] %a, %b %d #[fg=colour255]⋮  #[fg=green]%H:%M (#(TZ='UTC' date +%%H:%%M:%%S)) #[fg=colour255]⋮  #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮ #[fg=blue] %a, %b %d #[fg=colour255]⋮  #[fg=green]%H:%M (#(TZ='UTC' date +%%H:%%M:%%S)) #[fg=colour255]⋮  #{cpu_percentage}"
 set -g status-right-length 200
 
 
@@ -186,7 +186,7 @@ set -g status-right-length 200
 # ---------------------------------------------------------
 # tmux plugin manager: github.com/tmux-plugins/tpm
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
-set -g @dnd_on_icon "\uf59f DND #[fg=colour255] ⋮"
+set -g @dnd_on_icon "\uf59f DND#[fg=colour255]⋮  "
 set -g @dnd_off_icon ""
 set -g @prefix_highlight_fg '#3C4C55'
 set -g @prefix_highlight_bg 'blue'

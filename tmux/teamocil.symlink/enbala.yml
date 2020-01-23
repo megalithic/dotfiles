@@ -30,7 +30,7 @@ windows:
         - cd ~/code/enbala/vpp/ui
         - bin/start
       - commands:
-        - cd ~/code/enbala/vpp/
+        - cd ~/code/enbala/vpp/vpp/apps/data_persist
         # - pgcli data_persist_dev
   - name: "vpp"
     root: "~/code/enbala/vpp"
