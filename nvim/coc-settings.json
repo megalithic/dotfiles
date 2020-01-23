@@ -242,7 +242,7 @@
       "command": "~/.elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
-      "rootPatterns": ["mix.exs"],
+      "rootPatterns": ["mix.lock"],
       /* "cwd": "./", */
       /* "initializationOptions": { */
         /*   "dialyzerEnabled": false, */

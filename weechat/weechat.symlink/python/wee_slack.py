@@ -1,6 +1,6 @@
 # Copyright (c) 2014-2016 Ryan Huber <rhuber@gmail.com>
 # Copyright (c) 2015-2018 Tollef Fog Heen <tfheen@err.no>
-# Copyright (c) 2015-2019 Trygve Aaberge <trygveaa@gmail.com>
+# Copyright (c) 2015-2020 Trygve Aaberge <trygveaa@gmail.com>
 # Released under the MIT license.
 
 from __future__ import print_function, unicode_literals
@@ -56,7 +56,7 @@ except ImportError:
 
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Ryan Huber <rhuber@gmail.com>"
-SCRIPT_VERSION = "2.3.0"
+SCRIPT_VERSION = "2.4.0"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Extends weechat for typing notification/search/etc on slack.com"
 
@@ -92,6 +92,13 @@ SLACK_API_TRANSLATOR = {
         "leave": "conversations.leave",
         "mark": "groups.mark",
         "info": "groups.info"
+    },
+    "private": {
+        "history": "conversations.history",
+        "join": "conversations.join",
+        "leave": "conversations.leave",
+        "mark": "conversations.mark",
+        "info": "conversations.info",
     },
     "shared": {
         "history": "conversations.history",
@@ -952,7 +959,7 @@ def channel_completion_cb(data, completion_item, current_buffer, completion):
     Adds all channels on all teams to completion list
     """
     current_channel = EVENTROUTER.weechat_controller.buffers.get(current_buffer)
-    should_include_channel = lambda channel: channel.active and channel.type in ['channel', 'group', 'shared']
+    should_include_channel = lambda channel: channel.active and channel.type in ['channel', 'group', 'private', 'shared']
 
     other_teams = [team for team in EVENTROUTER.teams.values() if not current_channel or team != current_channel.team]
     for team in other_teams:
@@ -1035,7 +1042,7 @@ def thread_completion_cb(data, completion_item, current_buffer, completion):
 
     threads = current_channel.hashed_messages.items()
     for thread_id, message in sorted(threads, key=lambda item: item[1].ts):
-        if message.submessages:
+        if message.number_of_replies():
             w.hook_completion_list_add(completion, "$" + thread_id, 0, w.WEECHAT_LIST_POS_BEGINNING)
     return w.WEECHAT_RC_OK
 
@@ -1627,7 +1634,7 @@ class SlackChannel(SlackChannelCommon):
     def formatted_name(self, style="default", typing=False, **kwargs):
         if typing and config.channel_name_typing_indicator:
             prepend = ">"
-        elif self.type == "group":
+        elif self.type == "group" or self.type == "private":
             prepend = config.group_name_prefix
         elif self.type == "shared":
             prepend = config.shared_name_prefix
@@ -1916,7 +1923,7 @@ class SlackChannel(SlackChannelCommon):
     def update_nicklist(self, user=None):
         if not self.channel_buffer:
             return
-        if self.type not in ["channel", "group", "mpim", "shared"]:
+        if self.type not in ["channel", "group", "mpim", "private", "shared"]:
             return
         w.buffer_set(self.channel_buffer, "nicklist", "1")
         # create nicklists for the current channel if they don't exist
@@ -2083,6 +2090,19 @@ class SlackGroupChannel(SlackChannel):
     #    return prepend + self.slack_name
 
 
+class SlackPrivateChannel(SlackGroupChannel):
+    """
+    A private channel is a private discussion group. At the time of writing, it
+    differs from group channels in that group channels are channels initially
+    created as private, while private channels are public channels which are
+    later converted to private.
+    """
+
+    def __init__(self, eventrouter, **kwargs):
+        super(SlackPrivateChannel, self).__init__(eventrouter, **kwargs)
+        self.type = "private"
+
+
 class SlackMPDMChannel(SlackChannel):
     """
     An MPDM channel is a special instance of a 'group' channel.
@@ -2227,6 +2247,12 @@ class SlackThreadChannel(SlackChannelCommon):
         for message in self.parent_message.submessages:
             text = self.render(message)
             self.buffer_prnt(message.sender, text, message.ts, tag_nick=message.sender_plain)
+        if len(self.parent_message.submessages) < self.parent_message.number_of_replies():
+            s = SlackRequest(self.team.token, "conversations.replies",
+                    {"channel": self.identifier, "ts": self.parent_message.ts},
+                    team_hash=self.team.team_hash,
+                    channel_identifier=self.identifier)
+            self.eventrouter.receive(s)
 
     def main_message_keys_reversed(self):
         return (message.ts for message in reversed(self.parent_message.submessages))
@@ -2427,11 +2453,12 @@ class SlackMessage(object):
 
         text += create_reaction_string(self.message_json.get("reactions", ""))
 
-        if len(self.submessages) > 0:
+        if self.number_of_replies():
+            self.channel.hash_message(self.ts)
             text += " {}[ Thread: {} Replies: {} ]".format(
                     w.color(config.color_thread_suffix),
-                    self.hash or self.ts,
-                    len(self.submessages))
+                    self.hash,
+                    self.number_of_replies())
 
         self.message_json["_rendered_text"] = text
         return text
@@ -2489,6 +2516,9 @@ class SlackMessage(object):
     def has_mention(self):
         return w.string_has_highlight(unfurl_refs(self.message_json.get('text')),
                 ",".join(self.channel.highlights()))
+
+    def number_of_replies(self):
+        return max(len(self.submessages), len(self.message_json.get("replies", [])))
 
     def notify_thread(self, action=None, sender_id=None):
         if config.auto_open_threads:
@@ -2634,6 +2664,8 @@ def handle_rtmstart(login_data, eventrouter):
         for item in login_data["channels"]:
             if item["is_shared"]:
                 channels[item["id"]] = SlackSharedChannel(eventrouter, **item)
+            elif item["is_private"]:
+                channels[item["id"]] = SlackPrivateChannel(eventrouter, **item)
             else:
                 channels[item["id"]] = SlackChannel(eventrouter, **item)
 
@@ -2755,6 +2787,14 @@ def handle_history(message_json, eventrouter, **kwargs):
     kwargs['channel'].got_history = True
     for message in reversed(message_json["messages"]):
         process_message(message, eventrouter, history_message=True, **kwargs)
+
+
+def handle_conversationsreplies(message_json, eventrouter, **kwargs):
+    request_metadata = message_json['wee_slack_request_metadata']
+    kwargs['team'] = eventrouter.teams[request_metadata.team_hash]
+    kwargs['channel'] = kwargs['team'].channels[request_metadata.channel_identifier]
+    for message in message_json['messages']:
+        process_message(message, eventrouter, **kwargs)
 
 
 def handle_conversationsmembers(members_json, eventrouter, **kwargs):
@@ -2900,7 +2940,7 @@ def process_message(message_json, eventrouter, store=True, history_message=False
     if SlackTS(message_json["ts"]) in channel.messages:
         return
 
-    if "thread_ts" in message_json and "reply_count" not in message_json:
+    if "thread_ts" in message_json and "reply_count" not in message_json and "subtype" not in message_json:
         message_json["subtype"] = "thread_message"
 
     subtype = message_json.get("subtype")
@@ -2910,6 +2950,9 @@ def process_message(message_json, eventrouter, store=True, history_message=False
         subtype_functions[subtype](message_json, eventrouter, channel, team, history_message)
     else:
         message = SlackMessage(message_json, team, channel)
+        if store:
+            channel.store_message(message, team)
+
         text = channel.render(message)
         dbg("Rendered message: %s" % text)
         dbg("Sender: %s (%s)" % (message.sender, message.sender_plain))
@@ -2921,9 +2964,6 @@ def process_message(message_json, eventrouter, store=True, history_message=False
 
         channel.buffer_prnt(prefix, text, message.ts, tag_nick=message.sender_plain, history_message=history_message, **kwargs)
         channel.unread_count_display += 1
-
-        if store:
-            channel.store_message(message, team)
         dbg("NORMAL REPLY {}".format(message_json))
 
     if not history_message:
@@ -2969,6 +3009,10 @@ def download_files(message_json, **kwargs):
             break
 
 
+def subprocess_thread_broadcast(message_json, eventrouter, channel, team, history_message):
+    subprocess_thread_message(message_json, eventrouter, channel, team, history_message)
+
+
 def subprocess_thread_message(message_json, eventrouter, channel, team, history_message):
     # print ("THREADED: " + str(message_json))
     parent_ts = message_json.get('thread_ts')
@@ -2987,14 +3031,15 @@ def subprocess_thread_message(message_json, eventrouter, channel, team, history_
             elif message.ts > channel.last_read and message.has_mention():
                 parent_message.notify_thread(action="mention", sender_id=message_json["user"])
 
-            if config.thread_messages_in_channel:
+            if config.thread_messages_in_channel or message_json["subtype"] == "thread_broadcast":
+                thread_tag = "thread_broadcast" if message_json["subtype"] == "thread_broadcast" else "thread_message"
                 channel.buffer_prnt(
                     message.sender,
                     channel.render(message),
                     message.ts,
                     tag_nick=message.sender_plain,
                     history_message=history_message,
-                    extra_tags=["thread_message"],
+                    extra_tags=[thread_tag],
                 )
 
 #    channel = channels.find(message_json["channel"])
@@ -3819,6 +3864,19 @@ def print_users_info(team, header, users):
 
 @slack_buffer_required
 @utf8_decode
+def command_teams(data, current_buffer, args):
+    """
+    /slack teams
+    List the connected Slack teams.
+    """
+    team = EVENTROUTER.weechat_controller.buffers[current_buffer].team
+    teams = EVENTROUTER.teams.values()
+    extra_info_function = lambda team: "token: {}...".format(team.token[:15])
+    return print_team_items_info(team, "Slack teams", teams, extra_info_function)
+
+
+@slack_buffer_required
+@utf8_decode
 def command_channels(data, current_buffer, args):
     """
     /slack channels
@@ -3981,7 +4039,7 @@ def command_thread(data, current_buffer, args):
             return w.WEECHAT_RC_OK_EAT
     else:
         for message in reversed(channel.messages.values()):
-            if type(message) == SlackMessage and len(message.submessages) > 0:
+            if type(message) == SlackMessage and message.number_of_replies():
                 msg = message
                 break
         else:
