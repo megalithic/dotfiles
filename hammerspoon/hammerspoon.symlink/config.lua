@@ -156,7 +156,9 @@ config.apps = {
     distraction = true,
     shortcut = 'm',
     preferredDisplay = 2,
-    position = config.grid.rightHalf
+    -- position = config.grid.rightHalf
+    -- position = config.grid.rightTwoThirds
+    position = config.grid.fullScreen,
   },
   ['com.apple.finder'] = {
     hint = 'com.apple.finder',
@@ -177,8 +179,9 @@ config.apps = {
     hint = 'com.spotify.client',
     superKey = config.superKeys.cmdShift,
     shortcut = '8',
-    preferredDisplay = 1,
-    position = '5,0 5x5'
+    preferredDisplay = 2,
+    -- position = '5,0 5x5'
+    position = config.grid.rightHalf
   },
   ['com.apple.iChat'] = {
     hint = 'com.apple.iChat',

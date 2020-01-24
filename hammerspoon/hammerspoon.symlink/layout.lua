@@ -7,6 +7,40 @@ local windowFilter = nil
 local dwf = nil
 local isDocked = false
 
+local display = function(screen)
+  local allDisplays = hs.screen.allScreens()
+
+  if allDisplays[screen] ~= nil then
+    return allDisplays[screen]
+  else
+    return hs.screen.primaryScreen()
+  end
+end
+
+local snap = function(win, position, screen)
+  if win == nil then return end
+  log.df('window snap (%s) on screen %s: %s', hs.inspect(position), screen, win:title())
+
+  -- local wf = hs.window.filter
+  -- local appBundleID = win:application():bundleID()
+  -- local appName = win:application():name()
+  -- local allWindows = win:application():visibleWindows()
+  -- local relatedWindowsFilter = wf.new{[appName]={allowTitles=1}}
+  -- local relatedWindowsFilter = wf.new{appName}:setAppFilter(appName, {allowTitles=1})
+
+  -- print('allWindows: - ', hs.inspect(relatedWindowsFilter))
+  -- print('allWindows: - ', hs.inspect(allWindows[1]))
+  -- print('allWindows:isStandard(): - ', hs.inspect(allWindows[1]:isStandard()))
+
+  -- if (#allWindows > 1) then
+  --   snapRelatedWindows(appBundleID, allWindows, screen)
+  -- else
+  --   hs.grid.set(win, position or hs.grid.get(win), screen)
+  -- end
+
+  hs.grid.set(win, position or hs.grid.get(win), display(screen))
+end
+
 local windowLayouts = config.apps or {
   -- FIXME: superfulous default?
   ['_'] = {
@@ -28,30 +62,6 @@ local getManageableWindows = function(windows)
     if win == nil then return end
     return canLayoutWindow(win)
   end))
-end
-
-local snap = function(win, position, screen)
-  if win == nil then return end
-  log.df('window snap (%s): %s', hs.inspect(position), win:title())
-
-  -- local wf = hs.window.filter
-  -- local appBundleID = win:application():bundleID()
-  -- local appName = win:application():name()
-  -- local allWindows = win:application():visibleWindows()
-  -- local relatedWindowsFilter = wf.new{[appName]={allowTitles=1}}
-  -- local relatedWindowsFilter = wf.new{appName}:setAppFilter(appName, {allowTitles=1})
-
-  -- print('allWindows: - ', hs.inspect(relatedWindowsFilter))
-  -- print('allWindows: - ', hs.inspect(allWindows[1]))
-  -- print('allWindows:isStandard(): - ', hs.inspect(allWindows[1]:isStandard()))
-
-  -- if (#allWindows > 1) then
-  --   snapRelatedWindows(appBundleID, allWindows, screen)
-  -- else
-  --   hs.grid.set(win, position or hs.grid.get(win), screen)
-  -- end
-
-  hs.grid.set(win, position or hs.grid.get(win), screen)
 end
 
 local snapRelatedWindows = function(appBundleID, windows, screen)
