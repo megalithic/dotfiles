@@ -136,7 +136,7 @@ config.apps = {
     shortcut = 's',
     distraction = true,
     preferredDisplay = 2,
-    position = config.grid.rightHalf,
+    position = config.grid.fullScreen,
     quitGuard = true,
     ignoredWindows = {'Slack Call Minipanel'},
     handler = (function(win)
@@ -172,7 +172,7 @@ config.apps = {
     superKey = config.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
-    position = config.grid.centeredLarge,
+    position = config.grid.fullScreen,
     dnd = { enabled = false,  mode = "zoom" },
   },
   ['com.spotify.client'] = {
@@ -211,14 +211,14 @@ config.apps = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
-  -- ['Fantastical'] = {
-  --   name = 'Fantastical',
-  --   hint = 'com.flexibits.fantastical2.mac',
-  --   -- superKey = config.superKeys.cmdShift,
-  --   -- shortcut = 'f',
-  --   preferredDisplay = 1,
-  --   position = config.grid.centeredMedium
-  -- },
+  ['Fantastical'] = {
+    name = 'Fantastical',
+    hint = 'com.flexibits.fantastical2.mac',
+    -- superKey = config.superKeys.cmdShift,
+    -- shortcut = 'f',
+    preferredDisplay = 1,
+    -- position = config.grid.centeredMedium
+  },
 }
 
 config.utilities = {
@@ -408,7 +408,7 @@ config.docking = {
     profile = 'dz60', -- Karabiner-Elements profile name
     input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
-    fontSize = 17.0,
+    fontSize = 16.0,
   },
   ['undocked'] = {
     wifi = 'on',

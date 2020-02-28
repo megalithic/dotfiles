@@ -217,6 +217,7 @@ silent! if plug#begin('~/.config/nvim/plugins')
 "-----------------------------
 Plug 'trevordmiller/nova-vim'
 " ~/.dotfiles/nvim/plugin/nova-colors.vim - options
+" Plug 'camspiers/animate.vim'
 Plug 'itchyny/lightline.vim'
 " ~/.dotfiles/nvim/plugin/lightline.vim - options
 Plug 'Yggdroot/indentLine'
@@ -225,7 +226,10 @@ Plug 'gcmt/taboo.vim'
 " ~/.dotfiles/nvim/plugin/taboo.vim - options
 Plug 'TaDaa/vimade'
 " ~/.dotfiles/nvim/plugin/vimade.vim - options
-Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'dm1try/golden_size'
+" Plug 'megalithic/golden-ratio' " vertical split layout manager
+" Plug 'zhaocai/GoldenView.Vim'
+" Plug 'camspiers/lens.vim'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
 
@@ -294,7 +298,7 @@ Plug 'junegunn/fzf.vim'
 " ~/.dotfiles/nvim/plugin/fzf.vim - options, mappings
 " Plug 'pbogut/fzf-mru.vim'
 " ~/.dotfiles/nvim/plugin/fzf-mru.vim - options, mappings
-Plug 'liuchengxu/vim-clap', { 'do': function('clap#helper#build_all') }
+" Plug 'liuchengxu/vim-clap', { 'do': function('clap#helper#build_all') }
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
@@ -306,7 +310,7 @@ Plug 'mhinz/vim-grepper'
 " ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides
 Plug 'junegunn/vim-slash'
 " ~/.dotfiles/nvim/plugin/slash.vim - options, mappings
-Plug 'mattn/vim-findroot'
+Plug 'mattn/vim-findroot', {'for': ['javascript']}
 " ~/.dotfiles/nvim/plugin/findroot.vim - options, mappings
 " Plug 'airblade/vim-rooter'
 " ~/.dotfiles/nvim/plugin/rooter.vim - options, mappings
@@ -321,6 +325,8 @@ Plug 'tpope/vim-dispatch'
 if executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 " ~/.dotfiles/nvim/plugin/coc.vim - options
+  Plug 'liuchengxu/vista.vim'
+" ~/.dotfiles/nvim/plugin/vista.vim - options
 endif
 if has('nvim')
   Plug 'neovim/nvim-lsp'
@@ -371,7 +377,8 @@ Plug 'sgur/vim-editorconfig'
 "-----------------------------
 " Filetype/Syntax/Lang plugins
 "-----------------------------
-Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
+" Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
+Plug 'Zaptic/elm-vim', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }

@@ -1,3 +1,5 @@
+echo "elixir."
+
 nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
 nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
 nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
@@ -27,4 +29,21 @@ if has('nvim')
   endfunction
 
   nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
+
+
+  " https://github.com/janko/vim-test/issues/136 -- modified for my work needs
+  function! ElixirUmbrellaTransform(cmd) abort
+    if match(a:cmd, 'vpp/') != -1
+      return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color ', '')
+    elseif match(a:cmd, 'sims/') != -1
+      return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
+    else
+      return a:cmd
+    end
+  endfunction
+
+  let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
+  let g:test#transformation = 'elixir_umbrella'
+
+  let g:test#elixir#exunit#executable = 'mix test'
 endif

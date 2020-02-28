@@ -44,12 +44,12 @@ sudo spctl --master-disable
 # Disable the “Are you sure you want to open this application?” dialog
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
-sudo scutil --set ComputerName $COMPUTER_NAME
-sudo scutil --set HostName $COMPUTER_NAME
-sudo scutil --set LocalHostName $COMPUTER_NAME
-sudo defaults write \
-  /Library/Preferences/SystemConfiguration/com.apple.smb.server \
-  NetBIOSName -string $COMPUTER_NAME
+# sudo scutil --set ComputerName $COMPUTER_NAME
+# sudo scutil --set HostName $COMPUTER_NAME
+# sudo scutil --set LocalHostName $COMPUTER_NAME
+# sudo defaults write \
+#   /Library/Preferences/SystemConfiguration/com.apple.smb.server \
+#   NetBIOSName -string $COMPUTER_NAME
 
 # Create symlink for iCloud Drive to ~
 ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud

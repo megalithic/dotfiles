@@ -22,6 +22,16 @@ local toggleWifi = (function(state)
   log.i('Switching WiFi state:', state)
 end)
 
+local enableFastKeypress = (function(state)
+  hs.execute('defaults write NSGlobalDomain KeyRepeat -int 1')
+  -- https://superuser.com/questions/40061/what-is-the-mac-os-x-terminal-command-to-log-out-the-current-user
+end)
+
+local disableFastKeypress = (function(state)
+  hs.execute('defaults write NSGlobalDomain KeyRepeat -int 0')
+  -- https://superuser.com/questions/40061/what-is-the-mac-os-x-terminal-command-to-log-out-the-current-user
+end)
+
 local selectAudioOutput = (function(output)
   hs.execute(
     'SwitchAudioSource -t output -s ' ..

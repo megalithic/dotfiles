@@ -173,8 +173,8 @@ set -g status-left "#[fg=green]\ue711  #S #[fg=colour255] ⋮ " #\uf121 \ufb18
 set -g status-left-length 100
 
 # -- windows
-setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W"
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3C4C55,bold]● }#I:#W"
+setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3C4C55,bold]● }#I:#W "
 set -g window-status-activity-style none
 
 # -- right
@@ -188,21 +188,22 @@ set -g status-right-length 200
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
 set -g @dnd_on_icon "\uf59f DND#[fg=colour255]⋮  "
 set -g @dnd_off_icon ""
-set -g @prefix_highlight_fg '#3C4C55'
-set -g @prefix_highlight_bg 'blue'
+set -g @prefix_highlight_bg             '#3C4C55'
+set -g @prefix_highlight_fg             'red'
 set -g @prefix_highlight_show_copy_mode 'on'
 set -g @prefix_highlight_copy_mode_attr 'fg=#3C4C55,bg=yellow,bold'
-set -g @prefix_highlight_prefix_prompt 'Wait⚋'
-set -g @prefix_highlight_copy_prompt 'Copy⚋'
-set -g @prefix_highlight_empty_prompt '      '          # default is '' (empty char)
-set -g @prefix_highlight_empty_attr 'fg=default,bg=#3C4C55' # default is 'fg=default,bg=default'
+set -g @prefix_highlight_prefix_prompt  'Wait⚋'
+set -g @prefix_highlight_copy_prompt    'Copy⚋'
+set -g @prefix_highlight_sync_prompt    'Sync⚋'
+set -g @prefix_highlight_empty_prompt   '      '          # default is '' (empty char)
+set -g @prefix_highlight_empty_attr     'fg=default,bg=#3C4C55' # default is 'fg=default,bg=default'
 
 # plugin settings
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-cpu'
-# set -g @plugin 'tmux-plugins/tmux-copycat'
-# set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-copycat'
+set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'

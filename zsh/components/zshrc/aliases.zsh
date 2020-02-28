@@ -39,6 +39,8 @@ then
   alias ll="gls -l"
   alias la="gls -A"
 fi
+alias ls="exa -gahF --group-directories-first"
+alias l="exa -lahF --icons --group-directories-first --git"
 alias s="ls"
 alias last='ls *(.om[1])'
 alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'
@@ -361,6 +363,7 @@ alias haconfig=hassconfig
 alias elmserve='elm-reactor -p 8080'
 alias rn='react-native'
 
+alias secureinput='ioreg -l -w 0 | grep SecureInput'
 alias geo='curl -s "http://www.geoiptool.com/en/?IP=${IP}" | textutil -stdin -format html -stdout -convert txt | sed -n "/Host Name/,/Postal code/p"'
 # alias geoip="curl ipinfo.io/"
 alias sleepdisplay='pmset displaysleepnow'

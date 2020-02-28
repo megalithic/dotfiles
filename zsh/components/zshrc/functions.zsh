@@ -210,3 +210,15 @@ fzstash() {
     fi
   done
 }
+
+# # paging ripgrep: https://github.com/BurntSushi/ripgrep/issues/86#issuecomment-425744884
+# export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+# function rg(){
+#   # If outputting (fd 1 = stdout) directly to a terminal, page automatically:
+#   if [ -t 1 ]; then
+#     command rg --pretty "$@" \
+#       | less --no-init --quit-if-one-screen --RAW-CONTROL-CHARS
+#         else
+#           command rg "$@"
+#       fi
+#     }
