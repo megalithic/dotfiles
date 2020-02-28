@@ -1,5 +1,3 @@
-echo "elixir."
-
 nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
 nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
 nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
@@ -14,20 +12,23 @@ iabbrev ei    IO.inspect
 iabbrev eputs IO.puts
 
 if has('nvim')
+  " sets up an IEx session with or without mix support based upon existence
   function! s:iex_for_project() abort
-    echo "HERE WE GO with an iex for the project"
+    let l:root = findfile('mix.exs', expand('%:p:h').';')
+    echo "Attempting to find root for IEx execution: " .. l:root
 
-    let l:root = finddir('.git/..', expand('%:p:h').';')
-
-    if !empty(glob(l:root .. "/mix.exs"))
+    if !empty(glob(l:root))
+      echo "-> mix " .. glob(l:root)
       echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
       :Repl iex -S mix
     else
+      echo "-> no mix " .. glob(l:root)
       echohl Comment | echom printf('iex (%s)', l:root) | echohl None
       :Repl iex
     endif
   endfunction
 
+  " NOTE: presently failing silently. :(
   nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
 
 

@@ -1,8 +1,6 @@
 " ## test file `.only` add/remove
 " TODO: https://github.com/tandrewnichols/dotstar/blob/master/.vim/settings/only.vim
 
-echo "javascript."
-
 " function! TestNearest()
 "   mo/it(<CR><S-N>ea.only<Esc>`o:delmarks o<CR>
 "   TestFile
@@ -33,18 +31,18 @@ nnoremap <silent> <leader>tro mo:%s/\.only//g<CR>`o:delmarks o<CR>
 
 " https://github.com/janko/vim-test/issues/136 -- modified for my work needs
 function! JavaScriptTransform(cmd) abort
-  " echo "JS cmd -> " .. a:cmd
+  echo "JS cmd -> " .. a:cmd
 
-  " if match(a:cmd, 'integration_tests/') != -1
-  "   echo "match integration_tests/ -> " .. substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color ', '')
-  "   return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color ', '')
-  " else
-  "   return a:cmd
-  " end
+  if match(a:cmd, 'integration_tests/') != -1
+    echo "match integration_tests/ -> " .. substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color ', '')
+    return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color ', '')
+  else
+    return a:cmd
+  end
 
   return a:cmd
 endfunction
 
-" NOTE: these transforms not needed when using mattn/find-root
+" NOTE: disabled for now; these transforms not needed when using mattn/find-root
 " let g:test#custom_transformations = {'javascript': function('JavaScriptTransform')}
 " let g:test#transformation = 'javascript'
