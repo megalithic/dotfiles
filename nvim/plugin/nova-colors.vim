@@ -26,6 +26,7 @@ hi link ErrorMsg SpellBad
 hi link Exception SpellBad
 
 hi CocCodeLens ctermfg=gray guifg=#707070 " #556873
+hi Blamer guifg=#707070
 
 hi CocGitAddedSign guifg=#A8CE93
 hi CocGitRemovedSign guifg=#DF8C8C

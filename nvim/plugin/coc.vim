@@ -161,5 +161,5 @@ augroup Coc
   " au CursorHold * silent call CocActionAsync('highlight')
   au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-  au User CocDiagnosticChange call lightline#update_once()
+  " au User CocDiagnosticChange call lightline#update_once()
 augroup END

@@ -325,11 +325,15 @@ Plug 'tpope/vim-dispatch'
 if executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 " ~/.dotfiles/nvim/plugin/coc.vim - options
-  Plug 'liuchengxu/vista.vim'
+  " Plug 'liuchengxu/vista.vim'
 " ~/.dotfiles/nvim/plugin/vista.vim - options
 endif
+
 if has('nvim')
   Plug 'neovim/nvim-lsp'
+  " Plug 'prabirshrestha/asyncomplete.vim'
+  " Plug 'yami-beta/asyncomplete-omni.vim'
+  " Plug 'haorenW1025/diagnostic-nvim'
 endif
 
 "-----------------------------
@@ -343,6 +347,8 @@ Plug 'mhinz/vim-signify'
 " ~/.dotfiles/nvim/plugin/signify.vim - options, mappings
 Plug 'rhysd/git-messenger.vim'
 " ~/.dotfiles/nvim/plugin/git-messenger.vim - options, mappings
+" Plug 'APZelos/blamer.nvim'
+" ~/.dotfiles/nvim/plugin/blamer.vim - options, mappings
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
 " ~/.dotfiles/nvim/plugin/gist.vim - options, mappings
 Plug 'wsdjeg/vim-fetch'

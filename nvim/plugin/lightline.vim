@@ -1,4 +1,4 @@
-let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
+" let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
 let g:lightline = {
       \   'colorscheme': 'nova',
       \   'component': {

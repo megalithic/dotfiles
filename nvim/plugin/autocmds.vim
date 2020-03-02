@@ -33,7 +33,7 @@ augroup general
 
   " Refresh lightline when certain things happen
   " au TextChanged,InsertLeave,BufWritePost * call lightline#update()
-  autocmd BufWritePost * call lightline#update()
+  " autocmd BufWritePost * call lightline#update()
 
   " Handle window resizing
   autocmd VimResized * execute "normal! \<c-w>="
@@ -77,6 +77,9 @@ augroup general
           \| set nonumber norelativenumber
           \| endif
   endif
+
+  autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')
+  autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')
 
   " coc.nvim - highlight all occurences of word under cursor
   " disable for now: annoying while on tmate and other things
