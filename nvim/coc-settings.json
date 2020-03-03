@@ -15,7 +15,7 @@
   ],
   "coc.preferences.formatOnType": false,
   "coc.preferences.hoverTarget": "float",
-  "coc.preferences.jumpCommand": "vsplit",
+  "coc.preferences.jumpCommand": "vsplit drop",
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetStatusText": "SNIP",

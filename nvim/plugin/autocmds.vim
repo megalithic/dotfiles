@@ -55,9 +55,9 @@ augroup general
 
   " Remember cursor position between vim sessions
   autocmd BufReadPost *
-        \ if line("'\"") > 0 && line ("'\"") <= line("$") |
-        \   exe "normal! g'\"" |
-        \ endif
+        \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
+        \ |   exe "normal! g`\""
+        \ | endif
 
   " Hide status bar while using fzf commands
   if has('nvim')

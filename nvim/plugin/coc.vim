@@ -158,7 +158,6 @@ nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
 augroup Coc
   au!
   au BufReadPre * call ToggleCoc()
-  " au CursorHold * silent call CocActionAsync('highlight')
   au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
   " au User CocDiagnosticChange call lightline#update_once()

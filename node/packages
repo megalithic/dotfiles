@@ -14,3 +14,4 @@ vscode-css-languageserver-bin
 vscode-html-languageserver-bin
 vscode-json-languageserver-bin
 yarn
+vim-language-server

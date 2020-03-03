@@ -83,3 +83,6 @@ hi gitmessengerEndOfBuffer term=None guifg=None guibg=None ctermfg=None ctermbg=
 
 hi! link LspDiagnosticsError ErrorMsg
 hi! link LspDiagnosticsWarning WarningMsg
+
+" hi Pmenu guifg=lightgrey guibg=#4e4e4e ctermbg=239 ctermfg=lightgrey
+" hi Directory ctermfg=red

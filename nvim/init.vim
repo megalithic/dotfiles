@@ -215,17 +215,13 @@ silent! if plug#begin('~/.config/nvim/plugins')
 "-----------------------------
 " Styling related plugings
 "-----------------------------
-Plug 'trevordmiller/nova-vim'
+Plug 'trevordmiller/nova-vim' "nova-colors.vim
 " ~/.dotfiles/nvim/plugin/nova-colors.vim - options
 " Plug 'camspiers/animate.vim'
-Plug 'itchyny/lightline.vim'
-" ~/.dotfiles/nvim/plugin/lightline.vim - options
-Plug 'Yggdroot/indentLine'
-" ~/.dotfiles/nvim/plugin/indentLine.vim - options
-Plug 'gcmt/taboo.vim'
-" ~/.dotfiles/nvim/plugin/taboo.vim - options
-Plug 'TaDaa/vimade'
-" ~/.dotfiles/nvim/plugin/vimade.vim - options
+Plug 'itchyny/lightline.vim' "lightline.vim
+Plug 'Yggdroot/indentLine' "indentLine.vim
+Plug 'gcmt/taboo.vim' "taboo.vim
+Plug 'TaDaa/vimade' "vimade.vim
 Plug 'dm1try/golden_size'
 " Plug 'megalithic/golden-ratio' " vertical split layout manager
 " Plug 'zhaocai/GoldenView.Vim'
@@ -237,32 +233,25 @@ Plug 'norcalli/nvim-colorizer.lua'
 " General behavior plugins
 "-----------------------------
 Plug 'nelstrom/vim-visual-star-search'
-Plug 'tommcdo/vim-lion'
-" ~/.dotfiles/nvim/plugin/lion.vim - options
-" Plug 'chaoren/vim-wordmotion'
-" ~/.dotfiles/nvim/after/plugin/wordmotion.vim - overrides
+Plug 'tommcdo/vim-lion' "lion.vim
+" Plug 'chaoren/vim-wordmotion' "wordmotion.vim
 Plug 'cohama/lexima.vim'
-Plug 'tpope/vim-eunuch'
-" ~/.dotfiles/nvim/plugin/eunuch.vim - options
+Plug 'tpope/vim-eunuch' "eunuch.vim
 Plug 'tpope/vim-abolish'
 " https://github.com/tpope/vim-abolish/blob/master/doc/abolish.txt#L146-L162
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
-Plug '907th/vim-auto-save'
-" ~/.dotfiles/nvim/plugin/auto-save.vim - options
-Plug 'rhysd/clever-f.vim'
-" ~/.dotfiles/nvim/plugin/clever-f.vim - options
-Plug 'mbbill/undotree'
-" ~/.dotfiles/nvim/plugin/undotree.vim - options, mappings
-Plug 'tpope/vim-unimpaired'
-" ~/.dotfiles/nvim/after/plugin/unimpaired.vim - overrides
+Plug '907th/vim-auto-save' "auto-save.vim
+Plug 'rhysd/clever-f.vim' "clever-f.vim
+Plug 'mbbill/undotree' "undotree.vim
+Plug 'tpope/vim-unimpaired' "unimpaired.vim
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
-Plug 'psliwka/vim-smoothie'
+Plug 'psliwka/vim-smoothie' " smooth page up and down movements
 
 "-----------------------------
 " Movements/Text Objects, et al
@@ -294,39 +283,24 @@ Plug 'wellle/targets.vim'                                         " improved tar
 " File management plugins
 "-----------------------------
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --no-bash' }
-Plug 'junegunn/fzf.vim'
-" ~/.dotfiles/nvim/plugin/fzf.vim - options, mappings
-" Plug 'pbogut/fzf-mru.vim'
-" ~/.dotfiles/nvim/plugin/fzf-mru.vim - options, mappings
-" Plug 'liuchengxu/vim-clap', { 'do': function('clap#helper#build_all') }
+Plug 'junegunn/fzf.vim' " fzf.vim
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
 " Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree-git-plugin.vim - options
 
-Plug 'mhinz/vim-grepper'
-" ~/.dotfiles/nvim/plugin/grepper.vim - options, mappings
-" ~/.dotfiles/nvim/after/plugin/grepper.vim - overrides
-Plug 'junegunn/vim-slash'
-" ~/.dotfiles/nvim/plugin/slash.vim - options, mappings
-Plug 'mattn/vim-findroot', {'for': ['javascript']}
-" ~/.dotfiles/nvim/plugin/findroot.vim - options, mappings
-" Plug 'airblade/vim-rooter'
-" ~/.dotfiles/nvim/plugin/rooter.vim - options, mappings
+Plug 'mhinz/vim-grepper' " grepper.vim
+Plug 'junegunn/vim-slash' " slash.vim
+Plug 'mattn/vim-findroot', {'for': ['javascript']} " findroot.vim
 Plug 'tpope/vim-dispatch'
 
 "-----------------------------
 " Completion plugins
 "-----------------------------
-" Plug 'ajh17/VimCompletesMe'
-" Plug 'natebosch/vim-lsc'
-" ~/.dotfiles/nvim/plugin/lsc.vim - options
 if executable('yarn') && executable('node')
-  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
-" ~/.dotfiles/nvim/plugin/coc.vim - options
-  " Plug 'liuchengxu/vista.vim'
-" ~/.dotfiles/nvim/plugin/vista.vim - options
+  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
+  Plug 'liuchengxu/vista.vim' " vista.vim
 endif
 
 if has('nvim')
@@ -339,18 +313,12 @@ endif
 "-----------------------------
 " Git plugins
 "-----------------------------
-Plug 'tpope/vim-fugitive'
-" ~/.dotfiles/nvim/plugin/fugitive.vim - mappings
-" Plug 'airblade/vim-gitgutter'
-" ~/.dotfiles/nvim/plugin/gitgutter.vim - options, mappings
-Plug 'mhinz/vim-signify'
-" ~/.dotfiles/nvim/plugin/signify.vim - options, mappings
-Plug 'rhysd/git-messenger.vim'
-" ~/.dotfiles/nvim/plugin/git-messenger.vim - options, mappings
-" Plug 'APZelos/blamer.nvim'
-" ~/.dotfiles/nvim/plugin/blamer.vim - options, mappings
-Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' }
-" ~/.dotfiles/nvim/plugin/gist.vim - options, mappings
+Plug 'tpope/vim-fugitive' " fugitive.vim
+" Plug 'airblade/vim-gitgutter' " gitgutter.vim
+Plug 'mhinz/vim-signify' " signify.vim
+Plug 'rhysd/git-messenger.vim' " git-messenger.vim
+" Plug 'APZelos/blamer.nvim' " blamer.vim
+Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
 Plug 'wsdjeg/vim-fetch'
 Plug 'mattn/webapi-vim'
 Plug 'rhysd/conflict-marker.vim'
@@ -358,20 +326,13 @@ Plug 'rhysd/conflict-marker.vim'
 "-----------------------------
 " Development plugins
 "-----------------------------
-Plug 'tpope/vim-rails'
-" ~/.dotfiles/nvim/plugin/rails.vim - mappings
-Plug 'tpope/vim-projectionist'
-" ~/.dotfiles/nvim/plugin/projectionist.vim - mappings
-Plug 'dense-analysis/ale'
-" ~/.dotfiles/nvim/plugin/ale.vim - options, mappings
-Plug 'janko/vim-test'
-" ~/.dotfiles/nvim/plugin/test.vim - options, mappings
-Plug 'tpope/vim-ragtag'
-" ~/.dotfiles/nvim/plugin/ragtag.vim - mappings
-" Plug 'SirVer/ultisnips', { 'on': [] }
-" ~/.dotfiles/nvim/plugin/ultisnips.vim - options, mapping & on-demand loading
-" ~/.dotfiles/nvim/UltiSnips - custom snippets
+Plug 'tpope/vim-rails' " rails.vim
+Plug 'tpope/vim-projectionist' " projectionist.vim
+Plug 'dense-analysis/ale' " ale.vim
+Plug 'janko/vim-test' " test.vim
+Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'rhysd/reply.vim'
+Plug 'axvr/zepl.vim'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if
@@ -395,8 +356,7 @@ Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'type
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
 Plug 'florentc/vim-tla'
-Plug 'sheerun/vim-polyglot'
-" ~/.dotfiles/nvim/plugin/polyglot.vim - options
+Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 "-----------------------------
 " tmux support

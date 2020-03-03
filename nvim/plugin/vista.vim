@@ -27,5 +27,5 @@ let g:vista_echo_cursor_strategy = 'floating_win'
 let g:vista_update_on_text_changed = 1
 
 " mappings
-nnoremap <leader>vv :Vista!<CR>
-nnoremap <leader>vf :Vista finder<CR>
+" nnoremap <leader>vv :Vista!<CR>
+nnoremap <leader>gf :Vista finder<CR>
