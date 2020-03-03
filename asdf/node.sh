@@ -15,4 +15,3 @@ if (which yarn &>/dev/null); then
 else
   echo ":: ERROR: wasn't able to run yarn command from ln 12"
 fi
-

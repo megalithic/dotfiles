@@ -228,6 +228,8 @@ Plug 'dm1try/golden_size'
 " Plug 'camspiers/lens.vim'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
+Plug 'RRethy/vim-illuminate'
+Plug 'jaxbot/semantic-highlight.vim'
 
 "-----------------------------
 " General behavior plugins
@@ -304,10 +306,18 @@ if executable('yarn') && executable('node')
 endif
 
 if has('nvim')
-  Plug 'neovim/nvim-lsp'
+  " Plug 'neovim/nvim-lsp'
+  " Plug 'haorenW1025/diagnostic-nvim'
+
+  " Plug 'Anexen/ncm2', {'branch': 'fix/built-in-lsp'}
+  " Plug 'roxma/nvim-yarp'
+  " Plug 'ncm2/ncm2-path'
+  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  " Plug 'ncm2/ncm2-tagprefix'
+  " Plug 'ncm2/float-preview.nvim'
+
   " Plug 'prabirshrestha/asyncomplete.vim'
   " Plug 'yami-beta/asyncomplete-omni.vim'
-  " Plug 'haorenW1025/diagnostic-nvim'
 endif
 
 "-----------------------------
