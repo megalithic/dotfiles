@@ -50,7 +50,7 @@ end)
 
 local setKittyConfig = (function(c)
     log.i('Setting kitty font-size to:', c.fontSize)
-    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size --all ' .. c.fontSize, true)
+    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size ' .. c.fontSize, true)
     -- hs.execute('kitty @ set-font-size ' .. c.fontSize)
 end)
 

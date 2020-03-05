@@ -259,7 +259,7 @@ alias map="xargs -n1"
 # GIT
 # -----------------------------------------------------------------------------
 alias tig="nvim +:GV" # https://github.com/junegunn/gv.vim#mappings
-alias lg="git lg"
+alias lg="lazygit"
 alias gin="gitin"
 alias gcb="git rev-parse --abbrev-ref HEAD | tr -d '\n'"
 alias gcp="gcb | pbcopy"

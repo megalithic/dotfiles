@@ -415,7 +415,7 @@ config.docking = {
     profile = 'internal',
     input = '"MacBook Pro Microphone"',
     output = '"MacBook Pro Speakers"',
-    fontSize = 14.0,
+    fontSize = 13.0,
   },
 }
 

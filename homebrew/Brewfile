@@ -204,6 +204,7 @@ cask 'kitty'
 cask 'licecap'
 cask 'marked'
 cask 'ngrok'
+cask 'nordvpn'
 # cask 'mysimbl'
 # cask 'near-lock'
 # cask 'postgres'
@@ -230,4 +231,3 @@ mas 'Xcode', id: 497799835
 mas 'Bear', id: 1091189122
 mas 'Airmail 3', id: 918858936
 mas 'Drafts', id: 1435957248
-mas 'NordVPN IKE - Unlimited VPN', id: 1116599239
