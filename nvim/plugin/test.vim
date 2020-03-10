@@ -6,9 +6,6 @@ endfunction
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
 
-let test#elixir#exunit#executable = "MIX_ENV=test mix test"
-
-
 " custom transformations exist in a per-filetype fashion..
 " - see nvim/ftplugin/elixir.vim
 " - etc..

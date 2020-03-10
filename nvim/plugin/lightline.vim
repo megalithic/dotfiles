@@ -94,8 +94,8 @@ function! PrintStatusline(v)
 endfunction
 
 function! LightlineFileType()
-  " return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
-  return &filetype
+  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() . ' '. &filetype : 'no ft') : ''
+  " return &filetype
 endfunction
 
 function! LightlineFileFormat()

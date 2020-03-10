@@ -233,6 +233,7 @@ Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), 
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'RRethy/vim-illuminate'
 Plug 'jaxbot/semantic-highlight.vim'
+Plug 'ryanoasis/vim-devicons'
 
 "-----------------------------
 " General behavior plugins

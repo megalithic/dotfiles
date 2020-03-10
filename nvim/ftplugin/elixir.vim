@@ -6,6 +6,8 @@ inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
 inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
 inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 
+" NOTE: use ctrl-] to complete without adding the space, otherwise just use
+" space to complete the `iabbrev` expansions.
 iabbrev epry  require IEx; IEx.pry
 iabbrev ep    \|>
 iabbrev ei    IO.inspect
@@ -46,5 +48,5 @@ if has('nvim')
   let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
   let g:test#transformation = 'elixir_umbrella'
 
-  let g:test#elixir#exunit#executable = 'mix test'
+  let test#elixir#exunit#executable = "MIX_ENV=test mix test"
 endif

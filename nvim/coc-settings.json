@@ -7,6 +7,7 @@
     /* "elixir", */
     "javascript",
     "json",
+    "jsonc",
     "javascriptreact",
     "sass",
     "scss",
@@ -197,13 +198,7 @@
   "languageserver": {
     "ccls": {
       "command": "ccls",
-      "filetypes": [
-        "c",
-        "cpp",
-        "cuda",
-        "objc",
-        "objcpp"
-      ],
+      "filetypes": ["c", "cpp", "cuda", "objc", "objcpp"],
       "rootPatterns": [
         "compile_commands.json",
         ".ccls",
@@ -242,9 +237,8 @@
     "elixir": {
       "command": "~/.elixir_ls/rel/language_server.sh",
       "args": [],
-      "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
+      "filetypes": ["elixir", "eelixir"],
       "rootPatterns": ["mix.lock", "mix.exs"],
-      "disableWorkspaceFolders": true,
       "cwd": "./",
       "trace.server": "verbose",
       "initializationOptions": {
@@ -256,7 +250,7 @@
         }
       },
       "settings": {}
-    },
+    }
   }
 }
 
