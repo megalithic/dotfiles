@@ -243,10 +243,12 @@
       "command": "~/.elixir_ls/rel/language_server.sh",
       "args": [],
       "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
-      "rootPatterns": ["mix.lock"],
+      "rootPatterns": ["mix.lock", "mix.exs"],
+      "disableWorkspaceFolders": true,
       "cwd": "./",
       "trace.server": "verbose",
       "initializationOptions": {
+        /* "cacheDirectory": "/tmp/elixir_ls", */
         "dialyzerEnabled": true,
         "elixirLS": {
           "dialyzerEnabled": true,
