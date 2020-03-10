@@ -82,9 +82,10 @@
   "diagnostic.highlightOffset": 9999998,
   "diagnostic.hintSign": "‣",
   "diagnostic.infoSign": "‣",
+  "diagnostic.joinMessageLines": true,
   "diagnostic.locationlist": true,
   "diagnostic.messageTarget": "float",
-  "diagnostic.refreshAfterSave": false,
+  "diagnostic.refreshAfterSave": true,
   "diagnostic.refreshOnInsertMode": true,
   "diagnostic.signOffset": 9999998,
   "diagnostic.virtualText": false,
@@ -243,20 +244,17 @@
       "args": [],
       "filetypes": ["elixir", "eelixir", "ex", "exs", "eex"],
       "rootPatterns": ["mix.lock"],
-      /* "cwd": "./", */
-      /* "initializationOptions": { */
-        /*   "dialyzerEnabled": false, */
-        /*   "elixirLS": { */
-          /*     "dialyzerEnabled": false, */
-          /*     "dialyzerWarningOpts": [] */
-          /*   } */
-          /* }, */
-          /* "settings": {} */
+      "cwd": "./",
+      "trace.server": "verbose",
+      "initializationOptions": {
+        "dialyzerEnabled": true,
+        "elixirLS": {
+          "dialyzerEnabled": true,
+          "dialyzerWarningOpts": []
+        }
+      },
+      "settings": {}
     },
-    /* "lua": { */
-      /*   "command": "lua-lsp", */
-      /*   "filetypes": ["lua"] */
-      /* } */
   }
 }
 

@@ -398,10 +398,10 @@ config.snap = {
 config.docking = {
   -- find your device IDs with `print(hs.inspect(hs.usb.attachedDevices()))` from the hammerspoon console
   ['device'] = {
-    productID = 8800,
-    productName = "DZ60",
-    vendorID = 65261,
-    vendorName = "KBDFans"
+    productID = 25907,
+    productName = "CalDigit Thunderbolt 3 Audio",
+    vendorID = 8584,
+    vendorName = "CalDigit, Inc."
   },
   ['docked'] = {
     wifi = 'off', -- wifi status
@@ -415,7 +415,7 @@ config.docking = {
     profile = 'internal',
     input = '"MacBook Pro Microphone"',
     output = '"MacBook Pro Speakers"',
-    fontSize = 13.0,
+    fontSize = 14.0,
   },
 }
 

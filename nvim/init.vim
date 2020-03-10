@@ -162,6 +162,9 @@ if has("nvim")
   let $EDITOR      = 'nvr -l'
   let $ECTO_EDITOR = 'nvr -l'
 
+  let g:python_host_prog = '/usr/local/bin/python'
+  let g:python3_host_prog = '/usr/local/bin/python3'
+
   " share data between nvim instances (registers etc)
   augroup SHADA
     autocmd!
@@ -303,6 +306,21 @@ Plug 'tpope/vim-dispatch'
 if executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
   Plug 'liuchengxu/vista.vim' " vista.vim
+endif
+
+if has('nvim')
+  " Plug 'neovim/nvim-lsp'
+  " Plug 'haorenW1025/diagnostic-nvim'
+
+  " Plug 'Anexen/ncm2', {'branch': 'fix/built-in-lsp'}
+  " Plug 'roxma/nvim-yarp'
+  " Plug 'ncm2/ncm2-path'
+  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
+  " Plug 'ncm2/ncm2-tagprefix'
+  " Plug 'ncm2/float-preview.nvim'
+
+  " Plug 'prabirshrestha/asyncomplete.vim'
+  " Plug 'yami-beta/asyncomplete-omni.vim'
 endif
 
 "-----------------------------

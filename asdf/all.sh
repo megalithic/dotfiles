@@ -52,7 +52,7 @@ sh $DOTS/asdf/node.sh
 
 #
 # elixir-specific...
-sh $DOTS/asdf/elixir.sh
+sh $DOTS/asdf/elixir.sh --force
 
 #
 # lua-specific...

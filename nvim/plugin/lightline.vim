@@ -54,7 +54,7 @@ let g:lightline = {
       \     ],
       \     'right': [
       \       ['lineinfo', 'percent'],
-      \       ['cocstatus'],
+      \       ['coc_error', 'coc_warning', 'coc_hint', 'coc_info'],
       \       ['filetype', 'fileformat'],
       \     ],
       \   },
@@ -86,7 +86,7 @@ let g:coc_status_warning_sign = '  '
 let g:coc_status_error_sign = '  '
 
 function! UpdateStatusBar(timer)
-  " call lightline#update()
+  call lightline#update()
 endfunction
 
 function! PrintStatusline(v)
@@ -171,31 +171,19 @@ function! LightlineFileName()
   " return finalpath
 endfunction
 
-function! LightlineCocDiagnostics() abort
-  if !get(g:, 'coc_enabled', 0)
+function! s:lightline_coc_diagnostic(kind, sign) abort
+  let info = get(b:, 'coc_diagnostic_info', 0)
+  if empty(info) || get(info, a:kind, 0) == 0
     return ''
   endif
-
-  " let info = get(b:, 'coc_diagnostic_info', {})
-  let info = get(b:, 'coc_diagnostic_info', 0)
-
-  " if empty(info) || get(info, a:kind, 0) == 0
-  "   return "\uf42e"
-  " endif
-
-  if empty(info) | return '' | endif
-
-  let msgs = []
-
-  if get(info, 'error', 0)
-    call add(msgs, ' ' . info['error'])
-  endif
-
-  if get(info, 'warning', 0)
-    call add(msgs, ' ' . info['warning'])
-  endif
-
-  return PrintStatusline(join(msgs, ' '). ' ' . get(g:, 'coc_status', ''))
+  try
+    let s = g:coc_user_config['diagnostic'][join([a:sign, 'Sign'], '')]
+  catch
+    " let s = join([a:sign, 'Sign'], '')
+    let s = ''
+  endtry
+  " echo "diagnostic sign for ".a:sign.'Sign: '.s
+  return printf('%s%d', s, info[a:kind])
 endfunction
 
 function! LightlineCocErrors() abort
@@ -214,24 +202,4 @@ function! LightlineCocHints() abort
   return s:lightline_coc_diagnostic('hints', 'hint')
 endfunction
 
-function! LightlineCocFixes() abort
-  let b:coc_line_fixes = get(get(b:, 'coc_quickfixes', {}), line('.'), 0)
-  return b:coc_line_fixes > 0 ? printf('%d ', b:coc_line_fixes) : ''
-endfunction
-
-function! s:lightline_coc_diagnostic(kind, sign) abort
-  if !get(g:, 'coc_enabled', 0)
-    return ''
-  endif
-  let c = get(b:, 'coc_diagnostic_info', 0)
-  if empty(c) || get(c, a:kind, 0) == 0
-    return ''
-  endif
-  try
-    let s = g:coc_user_config['diagnostic'][a:sign . 'Sign']
-  catch
-    " let s = ' '
-    let s = ''
-  endtry
-  return printf('%d %s', c[a:kind], s)
-endfunction
+autocmd User CocDiagnosticChange call lightline#update()
