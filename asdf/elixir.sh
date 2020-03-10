@@ -76,6 +76,7 @@ if (which mix &>/dev/null); then
 
     echo ""
     echo ":: finished installing elixir-ls for $mix_file..."
+    echo "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
     echo ""
   }
 
@@ -91,6 +92,7 @@ if (which mix &>/dev/null); then
 
     echo ""
     echo ":: finished installing elixir-ls for $HOME..."
+    echo "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
     echo ""
   }
 
