@@ -11,6 +11,7 @@ inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 iabbrev epry  require IEx; IEx.pry
 iabbrev ep    \|>
 iabbrev ei    IO.inspect
+" iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
 iabbrev eputs IO.puts
 
 if has('nvim')
@@ -48,5 +49,10 @@ if has('nvim')
   let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
   let g:test#transformation = 'elixir_umbrella'
 
-  let test#elixir#exunit#executable = "MIX_ENV=test mix test"
+  " REF: https://nts.strzibny.name/elixir-interactive-shell-iex/#inspecting-failing-tests
+  " let test#elixir#exunit#executable = "mix test --trace"
+
+  let test#elixir#exunit#executable = "mix test"
+
+  " let test#elixir#exunit#executable = "MIX_ENV=test mix test"
 endif

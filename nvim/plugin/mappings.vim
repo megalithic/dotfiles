@@ -157,3 +157,21 @@ function! s:zoom()
   endif
 endfunction
 nnoremap <silent> <leader>z :call <sid>zoom()<cr>
+
+" Break undo sequences into chunks (after punctuation); see: `:h i_CTRL-G_u`
+"
+" From:
+"
+"   https://twitter.com/vimgifs/status/913390282242232320
+"
+" Via:
+"
+"   https://github.com/wincent/wincent/commit/0d0b647b97a794b99a648d4c18ad0f6c0dfeedce
+"   https://github.com/ahmedelgabri/dotfiles/blob/f2b74f6cd4d/files/.vim/plugin/mappings.vim#L27-L33
+"
+inoremap <buffer> ! !<C-g>u
+inoremap <buffer> , ,<C-g>u
+inoremap <buffer> . .<C-g>u
+inoremap <buffer> : :<C-g>u
+inoremap <buffer> ; ;<C-g>u
+inoremap <buffer> ? ?<C-g>u

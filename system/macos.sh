@@ -104,7 +104,7 @@ defaults write com.apple.dock tilesize -int 48
 defaults write com.apple.dock autohide -bool true
 
 # autohide menubar
-defaults write NSGlobalDomain _HIHideMenuBar -bool true
+# defaults write NSGlobalDomain _HIHideMenuBar -bool true
 
 # PARTIAL DARK MODE: dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
 # REF: https://medium.com/@n1kk/how-to-tweak-macos-mojave-dark-mode-per-app-a5fab0574691
@@ -179,6 +179,9 @@ defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -int 0
 
 # Automatically quit printer app once the print jobs complete
 defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
+
+# Enable debug menu for Disk Utility app
+defaults write com.apple.DiskUtility DUDebugMenuEnabled 1
 
 # remove all default icons on the dock (for when first setting up)
 defaults delete com.apple.dock persistent-apps

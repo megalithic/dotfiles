@@ -4,7 +4,6 @@ local log = hs.logger.new('[layout]', 'debug')
 local appWatcher = nil
 local screenWatcher = nil
 local windowFilter = nil
-local dwf = nil
 local isDocked = false
 
 local display = function(screen)
@@ -169,7 +168,7 @@ local handleWindowLayout = function(win, appName, event)
   local appBundleId = win:application():bundleID()
   local appConfig = windowLayouts[appBundleId] or windowLayouts['_']
 
-  log.df('found app config for %s..', appBundleId or "<no app found>")
+  log.df('found app config for %s: %s..', appBundleId or "<no app found>", hs.inspect(appConfig))
 
   dndHandler(win, appConfig.dnd, event)
   appHandler(win, appConfig.handler)
@@ -285,11 +284,8 @@ return {
     appWatcher = hs.application.watcher.new(handleAppEvent)
     appWatcher:start()
 
-    -- windowFilter = hs.window.filter.new()
-    -- windowFilter:subscribe(hs.window.filter.windowCreated, handleWindowEvent)
-
     -- FIXME: determine if we want to spin up a window.filter for each app?
-    dwf = hs.window.filter.new()
+    windowFilter = hs.window.filter.new()
     hs.window.filter.allowedWindowRoles = {
       AXStandardWindow=true,
       AXDialog=true,
@@ -301,12 +297,12 @@ return {
       hs.window.filter.ignoreAlways[name] = true
     end
 
-    dwf:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-    dwf:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
-    dwf:subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
-    dwf:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
-    dwf:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
-    dwf:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
+    windowFilter:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
+    windowFilter:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    windowFilter:subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
+    windowFilter:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+    windowFilter:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
+    windowFilter:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
   end),
 
   setLayoutForAll = (function()
@@ -320,7 +316,7 @@ return {
   teardown = (function()
     log.df('teardown window layouts..')
 
-    dwf = nil
+    windowFilter = nil
     screenWatcher:stop()
     screenWatcher = nil
     appWatcher = nil

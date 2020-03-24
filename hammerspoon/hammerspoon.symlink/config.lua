@@ -191,6 +191,14 @@ config.apps = {
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
+  ['WhatsApp'] = {
+    hint = 'WhatsApp',
+    superKey = config.superKeys.cmdShift,
+    shortcut = 'w',
+    distraction = true,
+    preferredDisplay = 1,
+    position = '5,5 3x3'
+  },
   ['com.agilebits.onepassword7'] = {
     hint = 'com.agilebits.onepassword7',
     superKey = config.superKeys.mashShift,
@@ -217,7 +225,15 @@ config.apps = {
     -- superKey = config.superKeys.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
-    -- position = config.grid.centeredMedium
+    position = config.grid.centeredLarge
+  },
+  ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
+    name = 'Fantastical Helper',
+    hint = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
+    -- superKey = config.superKeys.cmdShift,
+    -- shortcut = 'f',
+    preferredDisplay = 1,
+    -- position = config.grid.centeredLarge
   },
 }
 
@@ -392,7 +408,27 @@ config.snap = {
     locations = utils.chain({
       config.grid.fullScreen,
     })
-  }
+  },
+  {
+    name = 'full',
+    superKey = config.superKeys.cmdCtrl,
+    -- hyperKey = config.superKeys.hyper,
+    shortcut = 'return',
+    locations = utils.chain({
+      config.grid.fullScreen,
+    })
+  },
+  -- {
+  --   name = 'full',
+  --   superKey = config.superKeys.cmdCtrl,
+  --   -- hyperKey = config.superKeys.hyper,
+  --   shortcut = 'return',
+  --   locations = (function()
+  --   -- toggle the focused window to full screen (workspace)
+  --   local win = hs.window.focusedWindow()
+  --     win:setFullScreen(not win:isFullScreen())
+  --   end)
+  -- },
 }
 
 config.docking = {

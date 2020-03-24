@@ -1,233 +1,234 @@
 #!/bin/sh
 
-cask_args appdir: '/Applications'
+cask_args appdir: "/Applications"
 
 
 # -- taps --
 
-tap 'caskroom/cask'
-tap 'caskroom/fonts'
-# tap 'caskroom/versions' # enbala uses this one for java11 things :(
-tap 'homebrew/bundle'
-tap 'homebrew/services'
-tap 'homebrew/cask-versions'
-# tap 'kopischke/ctags'
-tap 'neovim/neovim'
-tap 'caius/jo'
-tap 'simeji/jid'
-tap 'jeroenknoops/tap'
-tap 'browsh-org/homebrew-browsh'
-tap 'qmk/qmk'
+tap "caskroom/cask"
+tap "caskroom/fonts"
+# tap "caskroom/versions" # enbala uses this one for java11 things :(
+tap "homebrew/bundle"
+tap "homebrew/services"
+tap "homebrew/cask-versions"
+# tap "kopischke/ctags"
+tap "neovim/neovim"
+tap "caius/jo"
+tap "simeji/jid"
+tap "jeroenknoops/tap"
+tap "browsh-org/homebrew-browsh"
+tap "qmk/qmk"
 
 
 # -- for qmk_toolbox --
 
-tap 'osx-cross/avr'
-tap 'PX4/homebrew-px4'
-tap 'homebrew/cask-drivers'
-brew 'avr-gcc'
-brew 'dfu-programmer'
-brew 'gcc-arm-none-eabi'
-brew 'avrdude'
-cask 'qmk-toolbox'
+tap "osx-cross/avr"
+tap "PX4/homebrew-px4"
+tap "homebrew/cask-drivers"
+brew "avr-gcc"
+brew "dfu-programmer"
+brew "gcc-arm-none-eabi"
+brew "avrdude"
+cask "qmk-toolbox"
 
 
 # -- cli --
 
-brew 'ansifilter'
-brew 'autoconf'
-brew 'automake'
-brew 'aspell', args: ['--with-lang-en']
-# brew 'asdf'
-brew 'bandwhich'
-brew 'bat'
-brew 'browsh'
-brew 'ccls'
-brew 'cmake'
-brew 'coreutils'
-brew 'curl'
-brew 'universal-ctags/universal-ctags/universal-ctags', args: ['--HEAD']
-brew 'dbus'
-brew 'diff-so-fancy'
-brew 'docker'
-brew 'docker-compose'
-brew 'docker-machine' #, restart_service: true, link: false
-brew 'docker-completion'
-brew 'doxygen', args: ['--with-qt', '--with-graphviz', '--with-llvm']
-# brew 'elixir' # installed via asdf
-brew 'extract_url'
-brew 'exercism'
-brew 'fasd'
-brew 'fd'
-brew 'ffind'
-brew 'figlet'
-brew 'findutils'
-brew 'fontforge'
-brew 'fzf'
-brew 'fzy'
-brew 'gawk'
-brew 'gettext'
-brew 'gist'
-brew 'git'
-brew 'gitin'
-brew 'git-extras'
-brew 'git-flow'
-brew 'global', args: ['with-ctags', 'with-pygments']
-brew 'gnutls'
-brew 'gnupg'
-brew 'gnu-sed', args: ['with-default-names']
-brew 'gpg' # required for asdf-nodejs
-brew 'grc'
-brew 'grv'
-brew 'hub'
-brew 'highlight'
-brew 'httpie'
-brew 'htop'
-brew 'imagemagick'
-brew 'jid'
-brew 'jo'
-brew 'jq'
-brew 'lazygit'
-brew 'libgcrypt'
-brew 'libtool'
-brew 'libyaml'
-brew 'libxslt'
-brew 'lnav'
-# brew 'lua' # installed via asdf
-brew 'lsd'
-brew 'luarocks'
-brew 'libarchive'
-# brew 'm-cli'
-# brew 'mac-cli'
-brew 'mas'
-brew 'moreutils'
-brew 'mysql'
-brew 'mycli'
-# brew 'mysql@5.6'
-brew 'ncdu'
-brew 'ncurses'
-brew 'neovim', args: ['with-lua', 'with-perl', 'with-ruby']
-brew 'nmap'
-brew 'nnn'
-brew 'noti'
-brew 'openssl'
-brew 'openssl@1.1'
-brew 'p7zip'
-brew 'perl'
-brew 'pgcli'
-brew 'pick'
-brew 'pkg-config'
-brew 'postgresql@9.5'
+brew "ansifilter"
+brew "autoconf"
+brew "automake"
+brew "aspell", args: ["--with-lang-en"]
+# brew "asdf"
+brew "bandwhich"
+brew "bat"
+brew "browsh"
+brew "ccls"
+brew "cmake"
+brew "coreutils"
+brew "curl"
+brew "universal-ctags/universal-ctags/universal-ctags", args: ["--HEAD"]
+brew "dbus"
+brew "diff-so-fancy"
+brew "docker"
+brew "docker-compose"
+brew "docker-machine" #, restart_service: true, link: false
+brew "docker-completion"
+brew "doxygen", args: ["--with-qt", "--with-graphviz", "--with-llvm"]
+# brew "elixir" # installed via asdf
+brew "extract_url"
+brew "exercism"
+brew "fasd"
+brew "fd"
+brew "ffind"
+brew "figlet"
+brew "findutils"
+brew "fontforge"
+brew "fzf"
+brew "fzy"
+brew "gawk"
+brew "gettext"
+brew "gist"
+brew "git"
+brew "gitin"
+brew "git-extras"
+brew "git-flow"
+brew "global", args: ["with-ctags", "with-pygments"]
+brew "gnutls"
+brew "gnupg"
+brew "gnu-sed", args: ["with-default-names"]
+brew "gpg" # required for asdf-nodejs
+brew "grc"
+brew "grv"
+brew "hub"
+brew "highlight"
+brew "httpie"
+brew "htop"
+brew "imagemagick"
+brew "jid"
+brew "jo"
+brew "jq"
+brew "lazygit"
+brew "libgcrypt"
+brew "libtool"
+brew "libyaml"
+brew "libxslt"
+brew "lnav"
+# brew "lua" # installed via asdf
+brew "lsd"
+brew "luarocks"
+brew "libarchive"
+# brew "m-cli"
+# brew "mac-cli"
+brew "mas"
+brew "moreutils"
+brew "mysql"
+brew "mycli"
+# brew "mysql@5.6"
+brew "ncdu"
+brew "ncurses"
+brew "neovim", args: ["with-lua", "with-perl", "with-ruby"]
+brew "nmap"
+brew "nnn"
+brew "noti"
+brew "openssl"
+brew "openssl@1.1"
+brew "p7zip"
+brew "perl"
+brew "pgcli"
+brew "pick"
+brew "pkg-config"
+brew "postgresql@9.5"
 # initdb /usr/local/var/postgres -E utf8
-brew 'python'
-brew 'python3'
-brew 'python@2'
-# brew 'rabbitmq' # requires erlang/rebar/rebar3
-brew 'qmk'
-brew 'readline'
-brew 'reattach-to-user-namespace', args: ['wrap-pbcopy-and-pbpaste']
-brew 'ren'
-brew 'redis'
-brew 'ripgrep'
-brew 'ruby-install'
-brew 'ruby-build'
-brew 'rust'
-brew 'rustup-init'
-brew 'ssh-copy-id'
-brew 'stack'
-brew 'switchaudio-osx'
-brew 'terminal-notifier'
-brew 'the_silver_searcher'
-# brew 'tig' # using `nvim +:GV` instead
-brew 'tldr'
-brew 'tmate'
-brew 'tmux', args: ['--with-utf8proc']
-brew 'tree'
-brew 'unixodbc'
-brew 'urlview'
-brew 'watchman', args: ['--HEAD']
-brew 'weechat'
-brew 'wget', args: ['enable-iri']
-brew 'wxmac'
-brew 'wifi-password'
-brew 'yubico-piv-tool'
-brew 'libyubikey'
-brew 'pam_yubico'
-brew 'yubikey-personalization'
-brew 'wemux'
-brew 'zsh', args: ['--with-unicode9', '--without-etcdir']
-brew 'zsh-completions'
-brew 'zsh-lovers'
-brew 'zsh-autosuggestions'
-brew 'zsh-syntax-highlighting'
+brew "python"
+brew "python3"
+brew "python@2"
+# brew "rabbitmq" # requires erlang/rebar/rebar3
+brew "qmk"
+brew "readline"
+brew "reattach-to-user-namespace", args: ["wrap-pbcopy-and-pbpaste"]
+brew "ren"
+brew "redis"
+brew "ripgrep"
+brew "rlue/utils/timer"
+brew "ruby-install"
+brew "ruby-build"
+brew "rust"
+brew "rustup-init"
+brew "ssh-copy-id"
+brew "stack"
+brew "switchaudio-osx"
+brew "terminal-notifier"
+brew "the_silver_searcher"
+# brew "tig" # using `nvim +:GV` instead
+brew "tldr"
+brew "tmate"
+brew "tmux", args: ["--with-utf8proc"]
+brew "tree"
+brew "unixodbc"
+brew "urlview"
+brew "watchman", args: ["--HEAD"]
+brew "weechat"
+brew "wget", args: ["enable-iri"]
+brew "wxmac"
+brew "wifi-password"
+brew "yubico-piv-tool"
+brew "libyubikey"
+brew "pam_yubico"
+brew "yubikey-personalization"
+brew "wemux"
+brew "zsh", args: ["--with-unicode9", "--without-etcdir"]
+brew "zsh-completions"
+brew "zsh-lovers"
+brew "zsh-autosuggestions"
+brew "zsh-syntax-highlighting"
 
 
 # -- fonts --
-cask 'font-firacode-nerd-font'
-cask 'font-firacode-nerd-font-mono'
-cask 'font-hasklig-nerd-font'
-cask 'font-hasklig-nerd-font-mono'
-cask 'font-jetbrains-mono'
+cask "font-firacode-nerd-font"
+cask "font-firacode-nerd-font-mono"
+cask "font-hasklig-nerd-font"
+cask "font-hasklig-nerd-font-mono"
+cask "font-jetbrains-mono"
 
 # -- gui --
-cask '1password'
-cask '1password-cli'
-cask 'alfred'
-# cask 'android-platform-tools'
-cask 'bettertouchtool'
-cask 'bartender'
-cask 'brave-dev'
-# cask 'cloudapp'
-cask 'dash'
-cask 'caldigit-thunderbolt-charging'
-cask 'caldigit-usb-c-dock-driver '
-cask 'calibre'
-cask 'contexts'
-cask 'controlplane'
-cask 'docker'
-cask 'dropbox'
-cask 'dropshare' # recommended by @thewatts on CiT
-cask 'discord'
-cask 'encryptMe'
-cask 'firefox-developer-edition'
-cask 'google-chrome-beta'
-cask 'graphiql'
-cask 'hazel'
-cask 'hammerspoon'
-cask 'intel-power-gadget'
-cask 'istat-menus'
-cask 'iterm2-nightly'
-# cask 'java'
-# cask 'caskroom/versions/java8'
-cask 'karabiner-elements'
-cask 'kitty'
-cask 'licecap'
-cask 'marked'
-cask 'ngrok'
-cask 'nordvpn'
-# cask 'mysimbl'
-# cask 'near-lock'
-# cask 'postgres'
-cask 'postman'
-cask 'quitter'
-cask 'slack'
-cask 'spotify'
-cask 'unshaky'
-cask 'vagrant'
-# cask 'the-unarchiver'
-# cask 'usb-overdrive' # causes issues with QMK keyboards
-# cask 'ubersicht'
-# cask 'virtualbox'
-# cask 'yubiswitch'
-# cask 'yubico-authenticator'
+cask "1password"
+cask "1password-cli"
+cask "alfred"
+# cask "android-platform-tools"
+cask "bettertouchtool"
+cask "bartender"
+cask "brave-dev"
+# cask "cloudapp"
+cask "dash"
+cask "caldigit-thunderbolt-charging"
+cask "caldigit-usb-c-dock-driver "
+cask "calibre"
+cask "contexts"
+cask "controlplane"
+cask "docker"
+cask "dropbox"
+cask "dropshare" # recommended by @thewatts on CiT
+cask "discord"
+cask "encryptMe"
+cask "firefox-developer-edition"
+cask "google-chrome-beta"
+cask "graphiql"
+cask "hazel"
+cask "hammerspoon"
+cask "intel-power-gadget"
+cask "istat-menus"
+cask "iterm2-nightly"
+# cask "java"
+# cask "caskroom/versions/java8"
+cask "karabiner-elements"
+cask "kitty"
+cask "licecap"
+cask "marked"
+cask "ngrok"
+cask "nordvpn"
+# cask "mysimbl"
+# cask "near-lock"
+# cask "postgres"
+cask "postman"
+cask "quitter"
+cask "slack"
+cask "spotify"
+cask "unshaky"
+cask "vagrant"
+# cask "the-unarchiver"
+# cask "usb-overdrive" # causes issues with QMK keyboards
+# cask "ubersicht"
+# cask "virtualbox"
+# cask "yubiswitch"
+# cask "yubico-authenticator"
 
 
 # -- app store (mas) --
 
-mas 'Fantastical2', id: 975937182
-mas 'Spark', id: 1176895641
-mas 'Tweetbot', id: 557168941
-mas 'Xcode', id: 497799835
-mas 'Bear', id: 1091189122
-mas 'Airmail 3', id: 918858936
-mas 'Drafts', id: 1435957248
+mas "Fantastical2", id: 975937182
+mas "Spark", id: 1176895641
+mas "Tweetbot", id: 557168941
+mas "Xcode", id: 497799835
+mas "Bear", id: 1091189122
+mas "Airmail 3", id: 918858936
+mas "Drafts", id: 1435957248

@@ -17,7 +17,10 @@ function quitModal:entered()
   local appBundleID = app:bundleID()
   local appConfig = config.apps[appBundleID]
 
-  if (appConfig ~= nil or appConfig.quitGuard ~= nil) then
+  if (appConfig == nil or appConfig.quitGuard == nil) then
+    log.df("unable to quit the app, %s, with quitGuard; likely not configured..", appBundleID)
+    doQuit()
+  else
     log.df("quitting app, %s, with quitGuard (%s)..", appBundleID, appConfig.quitGuard)
 
     if appConfig.quitGuard then
@@ -27,9 +30,6 @@ function quitModal:entered()
       quitModal:exit()
       doQuit()
     end
-  else
-    log.df("unable to quit the app, %s, with quitGuard; likely not configured..", appBundleID)
-    doQuit()
   end
 end
 

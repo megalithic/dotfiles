@@ -43,6 +43,8 @@
   cob = checkout -b
   com = checkout master
 
+  con = config --local -l
+
   cl = clone
 
   # stash

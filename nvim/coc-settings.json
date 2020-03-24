@@ -1,5 +1,7 @@
 {
   "coc.preferences.colorSupport": true,
+  "coc.preferences.currentFunctionSymbolAutoUpdate": true,
+  "coc.preferences.enableFloatHighlight": true,
   "coc.preferences.extensionUpdateCheck": "daily",
   "coc.preferences.formatOnSaveFiletypes": [
     "css",
@@ -9,6 +11,7 @@
     "json",
     "jsonc",
     "javascriptreact",
+    "lua",
     "sass",
     "scss",
     "typescript",
@@ -16,18 +19,16 @@
   ],
   "coc.preferences.formatOnType": false,
   "coc.preferences.hoverTarget": "float",
-  "coc.preferences.jumpCommand": "vsplit drop",
+  "coc.preferences.jumpCommand": "drop",
   "coc.preferences.previewAutoClose": true,
   "coc.preferences.snippets.enable": true,
   "coc.preferences.snippetStatusText": "SNIP",
-  "coc.preferences.enableFloatHighlight": true,
-  "coc.preferences.currentFunctionSymbolAutoUpdate": true,
 
   "signature.enable": true,
   "signature.target": "float",
   "signature.preferShownAbove": true,
   "signature.hideOnTextChange": true,
-  "signature.maxWindowHeight": 8,
+  "signature.maxWindowHeight": 40,
 
   "suggest.acceptSuggestionOnCommitCharacter": true,
   "suggest.autoTrigger": "always",
@@ -35,7 +36,7 @@
   "suggest.detailMaxLength": 30,
   "suggest.echodocSupport": false,
   "suggest.enablePreview": true,
-  "suggest.enablePreselect": false,
+  "suggest.enablePreselect": true,
   "suggest.localityBonus": true,
   "suggest.maxCompleteItemCount": 20,
   "suggest.maxPreviewWidth": 60,
@@ -74,7 +75,7 @@
     "default": "\uf29c"
   },
 
-  "diagnostic.checkCurrentLine": true,
+  "diagnostic.checkCurrentLine": false,
   "diagnostic.displayByAle": false,
   "diagnostic.enable": true,
   "diagnostic.enableMessage": "always",
@@ -85,6 +86,7 @@
   "diagnostic.infoSign": "‣",
   "diagnostic.joinMessageLines": true,
   "diagnostic.locationlist": true,
+  "diagnostic.maxWindowHeight": 40,
   "diagnostic.messageTarget": "float",
   "diagnostic.refreshAfterSave": true,
   "diagnostic.refreshOnInsertMode": true,
@@ -109,11 +111,14 @@
   "typescript.suggest.autoImports": true,
   "typescript.preferences.quoteStyle": "single",
 
+  "html.format.enable": true,
+
   // prettier
   "prettier.eslintIntegration": true,
   "prettier.tslintIntegration": true,
   "prettier.stylelintIntegration": true,
   "prettier.disableSuccessMessage": true,
+  "prettier.requireConfig": true,
 
   // eslint
   "eslint.autoFix": true,
@@ -161,6 +166,8 @@
   "coc.source.syntax.enable": false,
   "coc.source.word.enable": true,
   "coc.source.word.filetypes": ["markdown", "gitcommit"],
+
+  "tsserver.formatOnType": true,
 
   // diagnostic-languageserver
   "diagnostic-languageserver.enable": true,
@@ -227,10 +234,6 @@
       "filetypes": ["elm"],
       "rootPatterns": ["elm.json"],
       "initializationOptions": {
-        /* "runtime": "node", */
-        /* "elmPath": "elm", */
-        /* "elmFormatPath": "elm-format", */
-        /* "elmTestPath": "elm-test", */
         "elmAnalyseTrigger": "change"
       }
     },

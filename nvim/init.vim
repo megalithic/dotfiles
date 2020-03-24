@@ -68,6 +68,7 @@ set mousemodel=popup  " Set the behaviour of mouse
 set mousehide         " Hide mouse when typing text
 set nobackup          " No backup files
 set nocompatible      " No Vi support
+set noemoji           " don't assume all emoji are double width (@wincent)
 set noexrc            " Disable reading of working directory vimrc files
 set nohlsearch        " Don't highlight search results by default
 set nojoinspaces      " No to double-spaces when joining lines
@@ -162,8 +163,8 @@ if has("nvim")
   let $EDITOR      = 'nvr -l'
   let $ECTO_EDITOR = 'nvr -l'
 
-  let g:python_host_prog = '/usr/local/bin/python'
-  let g:python3_host_prog = '/usr/local/bin/python3'
+  " let g:python_host_prog = '/usr/local/bin/python'
+  " let g:python3_host_prog = '/usr/local/bin/python3'
 
   " share data between nvim instances (registers etc)
   augroup SHADA
@@ -236,7 +237,7 @@ Plug 'jaxbot/semantic-highlight.vim'
 Plug 'ryanoasis/vim-devicons'
 
 "-----------------------------
-" General behavior plugins
+" General behaviour plugins
 "-----------------------------
 Plug 'nelstrom/vim-visual-star-search'
 Plug 'tommcdo/vim-lion' "lion.vim
@@ -251,13 +252,13 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
 Plug '907th/vim-auto-save' "auto-save.vim
 Plug 'rhysd/clever-f.vim' "clever-f.vim
-Plug 'mbbill/undotree' "undotree.vim
+" Plug 'mbbill/undotree' "undotree.vim
 Plug 'tpope/vim-unimpaired' "unimpaired.vim
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
-Plug 'psliwka/vim-smoothie' " smooth page up and down movements
+" Plug 'psliwka/vim-smoothie' " smooth page up and down movements
 
 "-----------------------------
 " Movements/Text Objects, et al
@@ -312,6 +313,7 @@ endif
 if has('nvim')
   " Plug 'neovim/nvim-lsp'
   " Plug 'haorenW1025/diagnostic-nvim'
+  " Plug 'haorenW1025/completion-nvim'
 
   " Plug 'Anexen/ncm2', {'branch': 'fix/built-in-lsp'}
   " Plug 'roxma/nvim-yarp'
@@ -416,6 +418,7 @@ runtime macros/matchit.vim
 if system('darkMode') =~ "Dark"
   set background=dark
 endif
+
 let g:nova_transparent = 1
 silent! colorscheme nova
 

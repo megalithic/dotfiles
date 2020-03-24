@@ -104,6 +104,18 @@ function! ShowDoc() abort
     endif
 endfunction
 
+
+function! ShowDocIfNoDiagnostic(timer_id)
+  if (coc#util#has_float() == 0)
+    silent call CocActionAsync('doHover')
+  endif
+endfunction
+
+function! s:show_hover_doc()
+  call timer_start(500, 'ShowDocIfNoDiagnostic')
+endfunction
+
+
 nmap <silent> [c <Plug>(coc-diagnostic-prev)
 nmap <silent> ]c <Plug>(coc-diagnostic-next)
 nmap <silent> [d <Plug>(coc-diagnostic-prev)
@@ -160,7 +172,11 @@ nnoremap <silent> <leader>lY :<C-u>CocList -A --normal yank<CR>
 augroup Coc
   au!
   au BufReadPre * call ToggleCoc()
-  au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
+  " au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
+
+  au CursorHoldI * :call <SID>show_hover_doc()
+  au CursorHold * :call <SID>show_hover_doc()
+
   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
   " au User CocDiagnosticChange call lightline#update_once()
 augroup END

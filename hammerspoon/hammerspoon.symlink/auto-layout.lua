@@ -1,3 +1,5 @@
+-- DEPRECATED; HISTORICAL ONLY
+
 local config = require('config')
 local utils = require('utils')
 local log = hs.logger.new('[alayout]', 'debug')

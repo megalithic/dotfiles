@@ -4,6 +4,7 @@ log.i(":: initializing hammerspoon..")
 
 hs.ipc.cliInstall()
 hs.console.darkMode(true)
+hs.application.enableSpotlightForNameSearches(true)
 
 -- where all the magic is defined (check here for every piece of configuration)
 local config = require('config')
