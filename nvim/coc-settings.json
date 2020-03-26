@@ -140,6 +140,8 @@
   "yaml.schemas": {
     "http://json.schemastore.org/composer": "/*"
   },
+  "yaml.validate": true,
+  "yaml.format.enable": true,
 
   "snippets.autoTrigger": false,
   "snippets.ultisnips.enable": true,

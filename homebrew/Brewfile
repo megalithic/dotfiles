@@ -22,14 +22,19 @@ tap "qmk/qmk"
 
 # -- for qmk_toolbox --
 
+# brew tap osx-cross/avr; brew tap PX4/homebrew-px4; brew install avr-gcc@8; brew link --force avr-gcc@8; brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk; brew cask install qmk-toolbox;
 tap "osx-cross/avr"
 tap "PX4/homebrew-px4"
 tap "homebrew/cask-drivers"
-brew "avr-gcc"
+brew "avr-gcc@8"
+# brew link --force avr-gcc@8
 brew "dfu-programmer"
+brew "dfu-util"
 brew "gcc-arm-none-eabi"
 brew "avrdude"
 cask "qmk-toolbox"
+brew "qmk"
+
 
 
 # -- cli --
@@ -123,7 +128,6 @@ brew "python"
 brew "python3"
 brew "python@2"
 # brew "rabbitmq" # requires erlang/rebar/rebar3
-brew "qmk"
 brew "readline"
 brew "reattach-to-user-namespace", args: ["wrap-pbcopy-and-pbpaste"]
 brew "ren"
@@ -169,6 +173,8 @@ cask "font-firacode-nerd-font-mono"
 cask "font-hasklig-nerd-font"
 cask "font-hasklig-nerd-font-mono"
 cask "font-jetbrains-mono"
+cask "font-jetbrainsmono-nerd-font"
+cask "font-jetbrainsmono-nerd-font-mono"
 
 # -- gui --
 cask "1password"

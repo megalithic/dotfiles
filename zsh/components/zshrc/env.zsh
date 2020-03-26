@@ -70,6 +70,8 @@ export TERM_ITALICS="TRUE"
 export BAT_THEME="base16"
 export BAT_CONFIG_PATH="~/.batrc"
 
+export QMK_HOME='~/code/qmk_firmware'
+
 #
 # NVIM
 #

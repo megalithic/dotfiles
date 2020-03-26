@@ -10,6 +10,7 @@ neovim-remote
 opendrop
 pynvim
 pygments
+qmk
 setuptools
 solargraph-utils.py
 glances

@@ -156,6 +156,7 @@ alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"
 alias ehs="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/config.lua"
 alias eh="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/init.lua"
 alias eg="nvim ~/.dotfiles/git/gitconfig.symlink"
+alias essh="nvim ~/.ssh/config"
 alias ezc=ezo
 alias eze="nvim ~/.dotfiles/zsh/**/env.zsh"
 alias ezpr="nvim ~/.dotfiles/zsh/themes/prompt_pure.zsh"
@@ -378,3 +379,7 @@ alias sedhelp="echo \"sed -i -e 's/old-thing/new-thing/g' relative/path/to/*.js\
 alias weather='curl -s wttr.in | sed -n "1,7p"'
 alias wthr='curl -s wttr.in/hoover,al | sed -n "1,7p"'
 alias moon='curl -4 http://wttr.in/Moon'
+
+# covid-19
+alias covid='curl https://covid19tracker.xyz/usa'
+alias nerd="echo -ne \\u"

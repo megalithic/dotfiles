@@ -127,6 +127,9 @@ endfunction
 function! LightlineModified()
   return PrintStatusline(!&modifiable ? '-' : &modified ?
         \ '' : '')
+        " \ "\uf085" : '')
+        " \ "\uf085" : '')
+        " ''
 endfunction
 
 function! LightlineFileName()
