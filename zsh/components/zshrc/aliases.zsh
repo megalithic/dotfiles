@@ -381,5 +381,5 @@ alias wthr='curl -s wttr.in/hoover,al | sed -n "1,7p"'
 alias moon='curl -4 http://wttr.in/Moon'
 
 # covid-19
-alias covid='curl https://covid19tracker.xyz/usa'
+alias covid='curl https://covid19tracker.xyz/'
 alias nerd="echo -ne \\u"

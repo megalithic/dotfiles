@@ -26,8 +26,9 @@ tap "qmk/qmk"
 tap "osx-cross/avr"
 tap "PX4/homebrew-px4"
 tap "homebrew/cask-drivers"
+# NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
 brew "avr-gcc@8"
-# brew link --force avr-gcc@8
+link "avr-gcc@8"
 brew "dfu-programmer"
 brew "dfu-util"
 brew "gcc-arm-none-eabi"

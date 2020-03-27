@@ -124,7 +124,7 @@ nmap <silent> ]d <Plug>(coc-diagnostic-next)
 " nmap <silent> ]l <Plug>(coc-diagnostic-next)
 
 " nnoremap <silent> K :call <SID>show_documentation()<CR>
-nnoremap <silent> K :<C-u>call ShowDoc()<CR>
+nnoremap <silent> K :<C-u>call ShowDocIfNoDiagnostic()<CR>
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 
@@ -174,8 +174,8 @@ augroup Coc
   au BufReadPre * call ToggleCoc()
   " au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
 
-  au CursorHoldI * :call <SID>show_hover_doc()
-  au CursorHold * :call <SID>show_hover_doc()
+  " au CursorHoldI * :call <SID>show_hover_doc()
+  " au CursorHold * :call <SID>show_hover_doc()
 
   au User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
   " au User CocDiagnosticChange call lightline#update_once()

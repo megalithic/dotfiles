@@ -38,7 +38,7 @@ all willy-nilly install a stranger's shell scripts. :)
 A few of the _must-have_ tools I roll with:
 
 - [homebrew](https://brew.sh/)
-  - see `~/.dotfiles/homebrew/Brewfile` for all that installs
+  - see `~/.dotfiles/homebrew/Brewfile` for all that gets installed
 - [hammerspoon](http://www.hammerspoon.org/)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   - see `~/.dotfiles/keyboard` for macOS specific config things
@@ -47,7 +47,7 @@ A few of the _must-have_ tools I roll with:
   - additional tmux statusbar binaries available (see `tmux-*` files in
     `~/.dotfiles/bin`).
   - see also my [DND tmux plugin](https://github.com/megalithic/tmux-dnd-status)
-- [dank mono nerd font](https://dank.sh)
+- [jetbrains mono](https://www.jetbrains.com/lp/mono/)
   - patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
 - [nova](https://github.com/trevordmiller/nova-colors)
