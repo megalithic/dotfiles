@@ -357,6 +357,9 @@ Plug 'axvr/zepl.vim'
 " ~/.dotfiles/nvim/after/plugin/sleuth.vim - overrides
 Plug 'sgur/vim-editorconfig'
 
+" allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
+Plug 'zenbro/mirror.vim'
+
 "-----------------------------
 " Filetype/Syntax/Lang plugins
 "-----------------------------

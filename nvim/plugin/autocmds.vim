@@ -134,7 +134,7 @@ augroup END
 augroup mirrors
   autocmd!
   " ## Automagically update remote files via scp
-  autocmd BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush ha
+  autocmd BufWritePost ~/.dotfiles/private/homeassistant/* silent! :MirrorPush hass
   autocmd BufWritePost ~/.dotfiles/private/domains/nginx/* silent! :MirrorPush nginx
   autocmd BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
 augroup END

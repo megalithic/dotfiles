@@ -34,13 +34,30 @@ if has('nvim')
   " NOTE: presently failing silently. :(
   nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
 
+  nmap <silent> <leader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile<CR>
+  nmap <silent> <leader>tt :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
+  nmap <silent> <leader>tn :let g:elixir_test_nearest=1<CR>\|:TestNearest<CR>
+  nmap <silent> <leader>tl :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
+  nmap <silent> <leader>tv :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
+  " not quite working with elixir in vim-test
+  nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite --only-failures<CR>
+
 
   " https://github.com/janko/vim-test/issues/136 -- modified for my work needs
   function! ElixirUmbrellaTransform(cmd) abort
     if match(a:cmd, 'vpp/') != -1
-      return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color ', '')
+      if g:elixir_test_nearest == 1
+        return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '') .. ":" .. line(".")
+      else
+        return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '')
+      end
+
     elseif match(a:cmd, 'sims/') != -1
-      return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
+      if g:elixir_test_nearest == 1
+        return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '') .. ":" .. line(".")
+      else
+        return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
+      end
     else
       return a:cmd
     end
@@ -51,8 +68,11 @@ if has('nvim')
 
   " REF: https://nts.strzibny.name/elixir-interactive-shell-iex/#inspecting-failing-tests
   " let test#elixir#exunit#executable = "mix test --trace"
+  " let test#elixir#exunit#executable = "MIX_ENV=test mix test"
 
   let test#elixir#exunit#executable = "mix test"
-
-  " let test#elixir#exunit#executable = "MIX_ENV=test mix test"
+  let test#elixir#exunit#options = '--stale'
+  let test#elixir#exunit#options = {
+        \ 'suite':   '--stale',
+        \}
 endif

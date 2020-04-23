@@ -123,8 +123,8 @@ nmap <silent> ]d <Plug>(coc-diagnostic-next)
 " nmap <silent> [l <Plug>(coc-diagnostic-prev)
 " nmap <silent> ]l <Plug>(coc-diagnostic-next)
 
-" nnoremap <silent> K :call <SID>show_documentation()<CR>
-nnoremap <silent> K :<C-u>call ShowDocIfNoDiagnostic()<CR>
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+" nnoremap <silent> K :<C-u>call ShowDocIfNoDiagnostic()<CR>
 nnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 vnoremap <silent> <leader>lh :call <SID>show_documentation()<CR>
 

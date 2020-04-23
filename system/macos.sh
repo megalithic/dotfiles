@@ -5,9 +5,11 @@ echo ":: setting up macOS system related things"
 echo ""
 
 # ------------------
-# great reference:
+# great references:
+# ------------------
 # https://github.com/herrbischoff/awesome-osx-command-line
 # https://mths.be/macos
+# https://juanitofatas.com/mac (catalina specific things)
 # ------------------
 
 # COMPUTER_NAME := 'replibook'
@@ -78,7 +80,9 @@ defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downlo
 defaults write com.apple.dock mru-spaces -bool false
 
 # Increase sound quality for Bluetooth headphones/headsets
-defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
+# defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
+sudo defaults write bluetoothaudiod "Enable AptX codec" -bool true
+sudo defaults write bluetoothaudiod "Enable AAC codec" -bool true
 
 # Trackpad: enable tap to click for this user and for the login screen (1 enabled, 0 disabled)
 # defaults write com.apple.AppleMultitouchTrackpad Clicking -int 0
@@ -98,6 +102,10 @@ defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
 # Enable move with 3 fingers
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+
+
+# Open App from 3rd-party developer
+defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool NO
 
 # dock size & autohidden dock
 defaults write com.apple.dock tilesize -int 48
@@ -182,6 +190,10 @@ defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 
 # Enable debug menu for Disk Utility app
 defaults write com.apple.DiskUtility DUDebugMenuEnabled 1
+
+# show all hidden files and folders (or is it `true`?)
+defaults write com.apple.Finder AppleShowAllFiles YES
+killall Finder
 
 # remove all default icons on the dock (for when first setting up)
 defaults delete com.apple.dock persistent-apps

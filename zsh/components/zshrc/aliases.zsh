@@ -357,9 +357,13 @@ alias showdesk="defaults write com.apple.finder CreateDesktop true; killall Find
 alias remote="osascript -e 'tell application \"yubiswitch\" to KeyOn' && ssh remote.github.com -t gh-screen && osascript -e 'tell application \"yubiswitch\" to KeyOff' "
 
 # edit home-assistant (hass) config
-alias hassconfig="cd ~/.dotfiles/private/homeassistant; vim configuration.yaml"
-alias homeconfig=hassconfig
+alias hassconfig="pushd ~/.dotfiles/private/homeassistant; vim configuration.yaml; popd"
 alias haconfig=hassconfig
+# alias rsync="/usr/local/bin/rsync"
+alias hasssync="/usr/local/bin/rsync -a root@homeassistant.local:/config ~/.dotfiles/private/homeassistant"
+alias hasync=hasssync
+alias synchass=hasssync
+alias syncha=hasssync
 
 alias elmserve='elm-reactor -p 8080'
 alias rn='react-native'

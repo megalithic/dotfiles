@@ -27,7 +27,8 @@ nnoremap <localleader>/ :nohlsearch<CR>
 " ## Writing / quitting
 silent! unmap <leader>w
 nnoremap <silent><leader>w :w<CR>
-nnoremap <silent><leader>W :w !sudo tee %<CR>
+nnoremap <silent><leader>W :w !sudo tee > /dev/null %<CR>
+cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
 
 " open a (new)file in a new vsplit

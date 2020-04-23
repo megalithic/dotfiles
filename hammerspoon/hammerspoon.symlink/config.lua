@@ -206,6 +206,13 @@ config.apps = {
     preferredDisplay = 1,
     position = config.grid.centeredMedium
   },
+  ['com.teamviewer.TeamViewer'] = {
+    hint = 'com.teamviewer.TeamViewer',
+    -- superKey = config.superKeys.mashShift,
+    -- shortcut = 'v',
+    preferredDisplay = 1,
+    position = config.grid.centeredLarge
+  },
   ['org.hammerspoon.Hammerspoon'] = {
     hint = 'org.hammerspoon.Hammerspoon',
     superKey = config.superKeys.mashShift,
@@ -235,6 +242,18 @@ config.apps = {
     preferredDisplay = 1,
     -- position = config.grid.centeredLarge
   },
+  ['com.microsoft.autoupdate2'] = {
+    name = 'Microsoft AutoUpdate',
+    hint = 'com.microsoft.autoupdate2',
+    -- superKey = config.superKeys.cmdShift,
+    -- shortcut = 'f',
+    preferredDisplay = 1,
+    -- position = config.grid.centeredLarge
+    handler = (function(win)
+      -- AUTOHIDE
+      win:application():hide()
+    end)
+  }
 }
 
 config.utilities = {

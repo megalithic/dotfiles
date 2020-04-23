@@ -5,7 +5,7 @@
   "coc.preferences.extensionUpdateCheck": "daily",
   "coc.preferences.formatOnSaveFiletypes": [
     "css",
-    /* "elm", */
+    "elm",
     /* "elixir", */
     "javascript",
     "json",
@@ -256,7 +256,10 @@
       },
       "settings": {}
     }
-  }
+  },
+
+  "homeassistant.hostUrl": "https://megalithic.duckdns.org",
+  "homeassistant.longLivedAccessToken":"fb9b433ebc7242df8c2642a64abb802b"
 }
 
 // vim:ft=jsonc
