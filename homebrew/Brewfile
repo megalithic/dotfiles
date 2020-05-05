@@ -196,7 +196,6 @@ cask "docker"
 cask "dropbox"
 cask "dropshare" # recommended by @thewatts on CiT
 cask "discord"
-cask "encryptMe"
 cask "firefox-developer-edition"
 cask "google-chrome-beta"
 cask "graphiql"
@@ -204,7 +203,6 @@ cask "hazel"
 cask "hammerspoon"
 cask "intel-power-gadget"
 cask "istat-menus"
-cask "iterm2-nightly"
 # cask "java"
 # cask "caskroom/versions/java8"
 cask "karabiner-elements"
@@ -219,6 +217,7 @@ cask "nordvpn"
 cask "postman"
 cask "quitter"
 cask "slack"
+cask "sococo"
 cask "spotify"
 cask "teamviewer"
 cask "unshaky"
@@ -233,10 +232,9 @@ cask "virtualbox"
 
 # -- app store (mas) --
 
-mas "Fantastical2", id: 975937182
+mas "Fantastical", id: 975937182
 mas "Spark", id: 1176895641
 mas "Tweetbot", id: 557168941
 mas "Xcode", id: 497799835
-mas "Bear", id: 1091189122
-mas "Airmail 3", id: 918858936
 mas "Drafts", id: 1435957248
+mas "Things", id: 904280696

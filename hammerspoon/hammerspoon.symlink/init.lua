@@ -10,6 +10,7 @@ hs.application.enableSpotlightForNameSearches(true)
 local config = require('config')
 local keys = require('keys')
 local hotkey = require('hs.hotkey')
+local tabjump = require('tabjump')
 
 -- handles initiating laptop docking mode behaviors
 local isDocked = require('dock').init()
@@ -34,9 +35,16 @@ require('caffeinate').init(isDocked)
 -- :: app-launching (basic app launching and toggling)
 for bundleID, app in pairs(config.apps) do
   if app.superKey ~= nil and app.shortcut ~= nil then
-    -- hotkey.bind(app.superKey, app.shortcut, function() keys.launch(app.name) end)
-    hotkey.bind(app.superKey, app.shortcut, function() keys.toggle(bundleID) end)
+
+    if (app.tabjump ~= nil) then
+      hotkey.bind(app.superKey, app.shortcut, function() tabjump(app.tabjump) end)
+    else
+      -- hotkey.bind(app.superKey, app.shortcut, function() keys.launch(app.name) end)
+      hotkey.bind(app.superKey, app.shortcut, function() keys.toggle(bundleID) end)
+    end
+
   end
+
 
   if (app.hyperKey ~= nil) then
     hotkey.bind(app.hyperKey, app.shortcut, app.locations)

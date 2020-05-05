@@ -37,6 +37,7 @@ if has('nvim')
   nmap <silent> <leader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile<CR>
   nmap <silent> <leader>tt :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
   nmap <silent> <leader>tn :let g:elixir_test_nearest=1<CR>\|:TestNearest<CR>
+  " nnoremap <silent> <leader>tn :let g:exlixir_test_nearest=v:true | TestNearest
   nmap <silent> <leader>tl :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
   nmap <silent> <leader>tv :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
   " not quite working with elixir in vim-test

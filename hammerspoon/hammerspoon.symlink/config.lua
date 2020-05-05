@@ -174,6 +174,7 @@ config.apps = {
     preferredDisplay = 1,
     position = config.grid.fullScreen,
     dnd = { enabled = false,  mode = "zoom" },
+    tabjump = 'zoom.us'
   },
   ['com.spotify.client'] = {
     hint = 'com.spotify.client',
