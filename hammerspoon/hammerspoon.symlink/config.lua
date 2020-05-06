@@ -192,6 +192,14 @@ config.apps = {
     preferredDisplay = 1,
     position = '5,5 3x3'
   },
+  ['hangouts'] = {
+    hint = 'hangouts',
+    superKey = config.superKeys.cmdCtrl,
+    shortcut = 'm',
+    distraction = true,
+    preferredDisplay = 1,
+    tabjump = 'hangouts.google.com'
+  },
   ['WhatsApp'] = {
     hint = 'WhatsApp',
     superKey = config.superKeys.cmdShift,

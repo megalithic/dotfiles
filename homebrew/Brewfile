@@ -152,7 +152,7 @@ brew "tree"
 brew "unixodbc"
 brew "urlview"
 brew "watchman", args: ["--HEAD"]
-brew "weechat"
+brew "weechat", args: ["--HEAD"]
 brew "wget", args: ["enable-iri"]
 brew "wxmac"
 brew "wifi-password"

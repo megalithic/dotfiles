@@ -2,7 +2,6 @@ ansible-vault
 gntp
 goobook
 pycp
-git+https://github.com/SeTeM/pync.git
 websocket-client
 saws
 neovim
@@ -16,5 +15,6 @@ solargraph-utils.py
 glances
 psutil
 python-language-server
+pync
 'python-language-server[all]'
 typing
