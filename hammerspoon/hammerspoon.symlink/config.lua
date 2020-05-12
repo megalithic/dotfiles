@@ -1,4 +1,5 @@
 local log = hs.logger.new('config', 'warning')
+local module = { network = {} }
 
 local utils = require('utils')
 local mouse = require('mouse')
@@ -8,7 +9,6 @@ hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
 
-module = { network = {} }
 
 module.hostname = hs.host.localizedName()
 module.network.home = 'shaolin'

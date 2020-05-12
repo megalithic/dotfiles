@@ -1,4 +1,4 @@
-local log = hs.logger.new('init', 'debug')
+local log = hs.logger.new('init', 'verbose')
 
 -- global stuff
 -- require('config').init()
@@ -66,7 +66,6 @@ hs.shutdownCallback = function()
     if module then module.stop() end
   end)
 end
-
 
 
 -- :: utilities (things like config reloading, screen locking, manually forcing re-snapping windows/apps layout, pomodoro)
