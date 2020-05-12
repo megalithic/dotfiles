@@ -24,6 +24,17 @@ module.init = function()
     end)
   end
 
+  dumpUsbDevices = function()
+    hs.fnutils.each(hs.usb.attachedDevices(), function(usb)
+      print(hs.inspect({
+        productID           = usb:productID(),
+        productName         = usb:productName(),
+        vendorID            = usb:vendorID(),
+        vendorName          = usb:vendorName()
+      }))
+    end)
+  end
+
   dumpCurrentInputAudioDevice = function()
     d = hs.audiodevice.defaultInputDevice()
     print(hs.inspect({

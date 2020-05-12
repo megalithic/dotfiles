@@ -24,6 +24,7 @@
 ----
 --
 
+local log = hs.logger.new('ptt', 'debug')
 
 local obj = {}
 obj.__index = obj
@@ -79,6 +80,8 @@ local function showState()
   device:setMuted(muted)
   device:setInputVolume(inputVolume)
   hs.applescript('set volume input volume ' ..inputVolume)
+
+  log.df('Device settings: %s', hs.inspect(dumpCurrentInputAudioDevice()))
 end
 
 function obj.setState(s)

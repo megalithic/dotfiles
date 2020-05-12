@@ -1,8 +1,7 @@
-local log = hs.logger.new('[init]', 'verbose')
-
-log.i(":: initializing hammerspoon..")
+local log = hs.logger.new('init', 'debug')
 
 -- global stuff
+-- require('config').init()
 require('console').init()
 -- require('overrides').init()
 
@@ -12,33 +11,72 @@ hs.ipc.cliInstall()
 -- lower logging level for hotkeys
 require('hs.hotkey').setLogLevel("warning")
 
+-- no animations
+hs.window.animationDuration = 0.0
+
+-- hints
+hs.hints.fontName           = 'Helvetica-Bold'
+hs.hints.fontSize           = 22
+hs.hints.hintChars          = { 'A', 'S', 'D', 'F', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'Z', 'X', 'C' }
+hs.hints.iconAlpha          = 1.0
+hs.hints.showTitleThresh    = 0
+
 hs.application.enableSpotlightForNameSearches(true)
+hs.window.setShadows(false)
 
--- where all the magic is defined (check here for every piece of configuration)
-local config = require('config')
-local keys = require('keys')
-local hotkey = require('hs.hotkey')
-local tabjump = require('tabjump')
+-- requires
+hotkey = require('hs.hotkey')
+config                      = require('config')
+keys                        = require('keys')
+tabjump                     = require('tabjump')
+isDocked                    = require('dock').init()
+ require('layout').init(isDocked)
+ require('ptt'):init(config.ptt)
+ require('quit')
+ require('caffeinate').init(isDocked)
 
--- handles initiating laptop docking mode behaviors
-local isDocked = require('dock').init()
-log.i(":: -- currently docked? ", isDocked)
+-- keys                        = require('keys')
+-- tabjump                     = require('tabjump')
+-- isDocked                    = require('dock').init()
+-- wm                          = require('wm').init(isDocked)
+-- ptt                         = require('ptt'):init(config.ptt)
+-- quit                        = require('quit')
+-- caffeinate                  = require('caffeinate').init(isDocked)
+-- pomodoro                    = require('pomodoro').init()
 
--- window/app auto-layout
-require('layout').init(isDocked)
--- require('auto-layout').init(isDocked)
+-- bindings                    = require('bindings')
+-- controlplane                = require('utils.controlplane')
+-- watchables                  = require('utils.watchables')
+-- watchers                    = require('utils.watchers')
+-- wm                          = require('utils.wm')
 
--- push-to-talk (e.g., mute my input until i hold down the requisite keys)
-require('ptt'):init(config.ptt)
+-- -- controlplane
+-- controlplane.enabled        = { 'dock' }
 
--- helper to prevent accidental/unintentional app quitting
-require('quit')
+-- -- watchers
+-- watchers.enabled            = { 'urlevent' }
+-- watchers.urlPreference      = config.apps.browsers
 
--- handles screen/wake things
-require('caffeinate').init(isDocked)
+-- -- bindings
+-- -- bindings.enabled            = { 'ask-before-quit', 'block-hide', 'ctrl-esc', 'f-keys', 'focus', 'global', 'tiling', 'term-ctrl-i', 'viscosity' }
+-- bindings.enabled            = { 'quit', 'tabjump', 'ptt' }
+-- bindings.askBeforeQuitApps  = config.apps.browsers
 
--- handles pomodoro
--- require('pomodoro').init()
+-- start/stop modules
+-- local modules               = { bindings, controlplane, watchables, watchers, wm }
+
+-- hs.fnutils.each(modules, function(module)
+--   if module then module.start() end
+-- end)
+
+-- -- stop modules on shutdown
+-- hs.shutdownCallback = function()
+--   hs.fnutils.each(modules, function(module)
+--     if module then module.stop() end
+--   end)
+-- end
+
+
 
 -- :: app-launching (basic app launching and toggling)
 for bundleID, app in pairs(config.apps) do
@@ -88,19 +126,3 @@ for _, snap in pairs(config.snap) do
     hotkey.bind(snap.hyperKey, snap.shortcut, snap.locations)
   end
 end
-
--- -- Reload configuration on changes
--- -- REF: https://github.com/adamgibbins/hammerspoon-config/blob/master/init.lua
--- local pathWatcher = hs.pathwatcher.new(hs.configdir, function(files)
---   for _,file in pairs(files) do
---     if file:sub(-4) == '.lua' then
---       -- require('auto-layout').teardown()
---       require('layout').teardown()
---       require('dock').teardown()
---       require('ptt').teardown()
---       hs.reload()
---       hs.notify.show('Hammerspoon', 'Config Reloaded', '')
---     end
---   end
--- end)
--- pathWatcher:start()
