@@ -59,7 +59,12 @@ module.init = function()
 
   dumpScreens = function()
     hs.fnutils.each(hs.screen.allScreens(), function(s)
-      print(s:id(), s:position(), s:frame(), s:name())
+      print(hs.inspect({
+        name = s:name(),
+        id = s:id(),
+        position = s:position(),
+        frame = s:frame()
+      }))
     end)
   end
 
@@ -83,7 +88,14 @@ module.init = function()
     alpha = 1
   }
 
-  hs.console.consoleCommandColor(blackColor)
+  local whiteColor = {
+    red   = 255 / 255,
+    green = 255 / 255,
+    blue  = 255 / 255,
+    alpha = 1
+  }
+
+  hs.console.consoleCommandColor(whiteColor)
   hs.console.consoleResultColor(grayColor)
   hs.console.consolePrintColor(grayColor)
   hs.console.darkMode(true)

@@ -1,5 +1,4 @@
-local config = require('config')
-local log = hs.logger.new('[layout]', 'warning')
+local log = hs.logger.new('layout', 'warning')
 
 local appWatcher = nil
 local screenWatcher = nil
@@ -285,15 +284,17 @@ return {
     appWatcher:start()
 
     -- FIXME: determine if we want to spin up a window.filter for each app?
-    windowFilter = hs.window.filter.new()
+    windowFilter = hs.window.filter.new(false)
     hs.window.filter.allowedWindowRoles = {
+      AXWindow=true,
       AXStandardWindow=true,
-      AXDialog=true,
-      AXSystemDialog=true,
+      AXDialog=false,
+      AXSystemDialog=false,
       -- AXUnknown=true
     }
 
     for _, name in ipairs(config.ignoredApps) do
+      print("names to ignore for config.ignoredApps: " .. hs.inspect(name))
       hs.window.filter.ignoreAlways[name] = true
     end
 

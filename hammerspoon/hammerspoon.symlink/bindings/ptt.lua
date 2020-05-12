@@ -24,23 +24,23 @@
 ----
 --
 
-local log = hs.logger.new('ptt', 'debug')
+local log = hs.logger.new('ptt', 'warning')
 
-local obj = {}
-obj.__index = obj
+local module = {}
+module.__index = module
 
 -- Metadata
-obj.name = "PushToTalk"
-obj.version = "0.1"
-obj.author = "Roman Khomenko <roman.dowakin@gmail.com>"
-obj.homepage = "https://github.com/Hammerspoon/Spoons"
-obj.license = "MIT - https://opensource.org/licenses/MIT"
+module.name = "PushToTalk"
+module.version = "0.2"
+module.author = "Roman Khomenko <roman.dowakin@gmail.com>"
+module.coauthor = "Seth Messer <seth.messer@gmail.com>"
+module.license = "MIT - https://opensource.org/licenses/MIT"
 
-obj.defaultState = 'push-to-talk'
+module.defaultState = 'push-to-talk'
 
-obj.state = obj.defaultState
-obj.defaultInputVolume = 50
-obj.pushed = false
+module.state = module.defaultState
+module.defaultInputVolume = 50
+module.pushed = false
 
 local function showState()
   local device = hs.audiodevice.defaultInputDevice()
@@ -53,27 +53,27 @@ local function showState()
   device:setInputVolume(inputVolume)
   hs.applescript('set volume input volume ' .. inputVolume)
 
-  if obj.state == 'unmute' then
-    obj.menubar:setIcon(iconPath .."record.pdf")
-  elseif obj.state == 'mute' then
-    obj.menubar:setIcon(iconPath .."unrecord.pdf")
+  if module.state == 'unmute' then
+    module.menubar:setIcon(iconPath .."record.pdf")
+  elseif module.state == 'mute' then
+    module.menubar:setIcon(iconPath .."unrecord.pdf")
     muted = true
     inputVolume = 0
-  elseif obj.state == 'push-to-talk' then
-    if obj.pushed then
-      obj.menubar:setIcon(speakIcon)
+  elseif module.state == 'push-to-talk' then
+    if module.pushed then
+      module.menubar:setIcon(speakIcon)
     else
-      obj.menubar:setIcon(mutedIcon)
+      module.menubar:setIcon(mutedIcon)
       muted = true
       inputVolume = 0
     end
-  elseif obj.state == 'release-to-talk' then
-    if obj.pushed then
-      obj.menubar:setIcon(mutedIcon)
+  elseif module.state == 'release-to-talk' then
+    if module.pushed then
+      module.menubar:setIcon(mutedIcon)
       muted = true
       inputVolume = 0
     else
-      obj.menubar:setIcon(speakIcon)
+      module.menubar:setIcon(speakIcon)
     end
   end
 
@@ -81,26 +81,26 @@ local function showState()
   device:setInputVolume(inputVolume)
   hs.applescript('set volume input volume ' ..inputVolume)
 
-  log.df('Device settings: %s', hs.inspect(dumpCurrentInputAudioDevice()))
+  -- log.df('Device settings: %s', hs.inspect(dumpCurrentInputAudioDevice()))
 end
 
-function obj.setState(s)
-  obj.state = s
+function module.setState(s)
+  module.state = s
 
   showState()
 end
 
-obj.menutable = {
-  { title = "UnMuted", fn = function() obj.setState('unmute') end },
-  { title = "Muted", fn = function() obj.setState('mute') end },
-  { title = "Push-to-talk (fn)", fn = function() obj.setState('push-to-talk') end, checked = true },
-  { title = "Release-to-talk (fn)", fn = function() obj.setState('release-to-talk') end },
+module.menutable = {
+  { title = "UnMuted", fn = function() module.setState('unmute') end },
+  { title = "Muted", fn = function() module.setState('mute') end },
+  { title = "Push-to-talk (fn)", fn = function() module.setState('push-to-talk') end, checked = true },
+  { title = "Release-to-talk (fn)", fn = function() module.setState('release-to-talk') end },
 }
 
 local function eventKeysMatchModifiers(modifiers)
   local modifiersMatch = true
 
-  for index, key in ipairs(obj.modifierKeys) do
+  for index, key in ipairs(module.modifierKeys) do
     if modifiers[key] ~= true then
       modifiersMatch = false
     end
@@ -114,9 +114,9 @@ local function eventTapWatcher(event)
   modifiersMatch = eventKeysMatchModifiers(event:getFlags())
 
   if modifiersMatch then
-    obj.pushed = true
+    module.pushed = true
   else
-    obj.pushed = false
+    module.pushed = false
   end
 
   showState()
@@ -125,30 +125,29 @@ end
 --- PushToTalk:init()
 --- Method
 --- Initial setup. It's empty currently
-function obj:init(modifierKeys)
-  obj.modifierKeys = modifierKeys or 'fn'
-  obj:start()
+function module:init()
 end
 
---- PushToTalk:init()
+--- PushToTalk:start()
 --- Method
 --- Starts menu and key watcher
-function obj:start()
-  self:stop()
-  obj.eventTapWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, eventTapWatcher)
-  obj.eventTapWatcher:start()
+function module:start()
+  module:stop()
+  module.modifierKeys = config.ptt or {'fn'}
+  module.eventTapWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, eventTapWatcher)
+  module.eventTapWatcher:start()
 
-  obj.menubar = hs.menubar.new()
-  obj.menubar:setMenu(obj.menutable)
-  obj.setState(obj.state)
+  module.menubar = hs.menubar.new()
+  module.menubar:setMenu(module.menutable)
+  module.setState(module.state)
 end
 
 --- PushToTalk:stop()
 --- Method
 --- Stops PushToTalk
-function obj:stop()
-  if obj.eventTapWatcher then obj.eventTapWatcher:stop() end
-  if obj.menubar then obj.menubar:delete() end
+function module:stop()
+  if module.eventTapWatcher then module.eventTapWatcher:stop() end
+  if module.menubar then module.menubar:delete() end
 end
 
 --- PushToTalk:toggleStates()
@@ -157,14 +156,14 @@ end
 ---
 --- Parameters:
 ---  * states - A array of states to toggle. For example: `{'push-to-talk', 'release-to-talk'}`
-function obj:toggleStates(states)
+function module:toggleStates(states)
   new_state = states[1]
   for i, v in pairs(states) do
-    if v == obj.state then
+    if v == module.state then
       new_state = states[(i % #states) + 1]
     end
   end
-  obj.setState(new_state)
+  module.setState(new_state)
 end
 
-return obj
+return module

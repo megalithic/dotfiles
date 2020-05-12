@@ -4,6 +4,7 @@ local log = hs.logger.new('init', 'debug')
 -- require('config').init()
 require('console').init()
 -- require('overrides').init()
+config = require('config')
 
 -- ensure IPC is there
 hs.ipc.cliInstall()
@@ -26,55 +27,49 @@ hs.window.setShadows(false)
 
 -- requires
 hotkey = require('hs.hotkey')
-config                      = require('config')
 keys                        = require('keys')
 tabjump                     = require('tabjump')
 isDocked                    = require('dock').init()
  require('layout').init(isDocked)
- require('ptt'):init(config.ptt)
- require('quit')
- require('caffeinate').init(isDocked)
 
 -- keys                        = require('keys')
 -- tabjump                     = require('tabjump')
 -- isDocked                    = require('dock').init()
 -- wm                          = require('wm').init(isDocked)
--- ptt                         = require('ptt'):init(config.ptt)
--- quit                        = require('quit')
--- caffeinate                  = require('caffeinate').init(isDocked)
 -- pomodoro                    = require('pomodoro').init()
 
--- bindings                    = require('bindings')
--- controlplane                = require('utils.controlplane')
--- watchables                  = require('utils.watchables')
--- watchers                    = require('utils.watchers')
+bindings                    = require('bindings')
+controlplane                = require('utils.controlplane')
+watchables                  = require('utils.watchables')
+watchers                    = require('utils.watchers')
 -- wm                          = require('utils.wm')
 
--- -- controlplane
--- controlplane.enabled        = { 'dock' }
+-- controlplane
+controlplane.enabled        = { 'office' }
 
--- -- watchers
--- watchers.enabled            = { 'urlevent' }
--- watchers.urlPreference      = config.apps.browsers
+-- watchers
+watchers.enabled            = { 'urlevent' }
+watchers.urlPreference      = { 'Brave', 'Brave Dev' }
 
--- -- bindings
--- -- bindings.enabled            = { 'ask-before-quit', 'block-hide', 'ctrl-esc', 'f-keys', 'focus', 'global', 'tiling', 'term-ctrl-i', 'viscosity' }
--- bindings.enabled            = { 'quit', 'tabjump', 'ptt' }
+-- bindings
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump' }
+-- bindings.enabled            = { 'quit', 'tabjump', 'ptt', 'slack', 'airpods' }
 -- bindings.askBeforeQuitApps  = config.apps.browsers
 
 -- start/stop modules
+local modules               = { bindings, controlplane, watchables, watchers }
 -- local modules               = { bindings, controlplane, watchables, watchers, wm }
 
--- hs.fnutils.each(modules, function(module)
---   if module then module.start() end
--- end)
+hs.fnutils.each(modules, function(module)
+  if module then module.start() end
+end)
 
--- -- stop modules on shutdown
--- hs.shutdownCallback = function()
---   hs.fnutils.each(modules, function(module)
---     if module then module.stop() end
---   end)
--- end
+-- stop modules on shutdown
+hs.shutdownCallback = function()
+  hs.fnutils.each(modules, function(module)
+    if module then module.stop() end
+  end)
+end
 
 
 
@@ -96,7 +91,6 @@ for bundleID, app in pairs(config.apps) do
     end
 
   end
-
 
   if (app.hyperKey ~= nil) then
     hotkey.bind(app.hyperKey, app.shortcut, app.locations)

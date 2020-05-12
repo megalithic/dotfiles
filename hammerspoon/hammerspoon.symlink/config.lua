@@ -1,4 +1,4 @@
-local log = hs.logger.new('config', 'debug')
+local log = hs.logger.new('config', 'warning')
 
 local utils = require('utils')
 local airpods = require('airpods')
@@ -10,11 +10,11 @@ hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
 
-local module = {}
+module = { network = {} }
 
 module.hostname = hs.host.localizedName()
-module.preferredSSID = 'shaolin'
-module.lastSSID = hs.wifi.currentNetwork()
+module.network.home = 'shaolin'
+module.network.currentConnected = hs.wifi.currentNetwork()
 
 module.grid = {
   topHalf =         '0,0 8x4',
@@ -46,7 +46,7 @@ module.superKeys = {
 
 module.ptt = {'cmd', 'alt'}
 
-module.ignoredApps = { 'iStat Menus Status', 'Fantastical', 'Contexts' }
+module.ignoredApps = { 'iStat Menus Status', 'Fantastical', 'Contexts'  }
 
 -- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
 module.distractionUrls = {
@@ -98,11 +98,6 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     quitGuard = true,
-    handler = (function(win)
-      local appName = appHandler(win)
-
-      -- keys.remap(appName, {'cmd', 'ctrl'}, 'f', {}, 'Esc')
-    end)
   },
   ['com.google.Chrome'] = {
     hint = 'com.google.Chrome',
@@ -135,16 +130,6 @@ module.apps = {
     position = module.grid.fullScreen,
     quitGuard = true,
     ignoredWindows = {'Slack Call Minipanel'},
-    handler = (function(win)
-      local appName = appHandler(win)
-
-      -- keys.remap(appName, {'ctrl'},          'k', {'alt'},          'up')
-      -- keys.remap(appName, {'ctrl'},          'j', {'alt'},          'down')
-      -- keys.remap(appName, {'ctrl'},          'g', {'cmd'},          'k')
-      -- keys.remap(appName, {'ctrl', 'shift'}, 'k', {'alt', 'shift'}, 'down')
-      -- keys.remap(appName, {'ctrl', 'shift'}, 'j', {'alt', 'shift'}, 'up')
-      -- keys.remap(appName, {'cmd'},           'w', {},               'esc')
-    end)
   },
   ['com.readdle.smartemail-Mac'] = {
     hint = 'com.readdle.smartemail-Mac',
@@ -170,7 +155,8 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     dnd = { enabled = false,  mode = "zoom" },
-    tabjump = 'zoom.us'
+    ignoredWindows = {'Zoom'},
+    -- tabjump = 'zoom.us'
   },
   ['com.spotify.client'] = {
     hint = 'com.spotify.client',

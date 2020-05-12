@@ -1,7 +1,7 @@
 local module = {}
 
 local activateFrontmost = require('ext.application').activateFrontmost
-local bluetooth         = require('hs._asm.undocumented.bluetooth')
+-- local bluetooth         = require('hs._asm.undocumented.bluetooth')
 local capitalize        = require('ext.utils').capitalize
 local template          = require('ext.template')
 

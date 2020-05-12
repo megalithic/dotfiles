@@ -1,11 +1,11 @@
 -- Press Cmd+Q twice to actually quit
-local log = hs.logger.new('[quit]', 'debug')
-local config = require('config')
+local log = hs.logger.new('quit', 'debug')
+local module = {}
 
 local quitModal = hs.hotkey.modal.new('cmd','q')
 local quitAlertText = "Press Cmd+Q again to quit"
 
-local function doQuit(app)
+local quit = function(app)
   local appToQuit = app or hs.application.frontmostApplication()
   appToQuit:kill()
 end
@@ -18,20 +18,27 @@ function quitModal:entered()
   local appConfig = config.apps[appBundleID]
 
   if (appConfig == nil or appConfig.quitGuard == nil) then
-    log.df("unable to quit the app, %s, with quitGuard; likely not configured..", appBundleID)
-    doQuit()
+    log.df("QuitGuard not configured for %s..", appBundleID)
+    quit()
   else
-    log.df("quitting app, %s, with quitGuard (%s)..", appBundleID, appConfig.quitGuard)
+    log.df("Quitting app, %s, with QuitGuard..", appBundleID)
 
     if appConfig.quitGuard then
       hs.alert.show(quitAlertText, 1)
       hs.timer.doAfter(1, function() quitModal:exit() end)
     else
       quitModal:exit()
-      doQuit()
+      quit()
     end
   end
 end
 
-quitModal:bind('cmd', 'q', doQuit)
-quitModal:bind('', 'escape', function() quitModal:exit() end)
+module.start = function()
+  quitModal:bind('cmd', 'q', quit)
+  quitModal:bind('', 'escape', function() quitModal:exit() end)
+end
+
+module.stop = function()
+end
+
+return module
