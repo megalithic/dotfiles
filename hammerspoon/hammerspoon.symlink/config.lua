@@ -1,9 +1,7 @@
 local log = hs.logger.new('config', 'warning')
 
 local utils = require('utils')
-local airpods = require('airpods')
 local mouse = require('mouse')
-local keys = require('keys')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -308,29 +306,10 @@ module.utilities = {
     end)
   },
   {
-    name = 'Toggle Airpods',
-    superKey = module.superKeys.cmdCtrl,
-    shortcut = 'a',
-    fn = (function()
-      local ok, output = airpods.toggle('replipods')
-      if ok then
-        hs.alert.show(output)
-      else
-        hs.alert.show("Couldn't connect to AirPods!")
-      end
-    end)
-  },
-  {
     name = 'Pomodoro',
     superKey = module.superKeys.cmdCtrl,
     shortcut = 'p',
     fn = (function()
-      -- local ok, output = airpods.toggle('replipods')
-      -- if ok then
-      --   hs.alert.show(output)
-      -- else
-      --   hs.alert.show("Couldn't connect to AirPods!")
-      -- end
     end)
   }
 }

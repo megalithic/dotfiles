@@ -1,41 +1,11 @@
---- === PushToTalk ===
----
---- Implements push-to-talk and push-to-mute functionality with `fn` key.
---- I implemented this after reading Gitlab remote handbook https://about.gitlab.com/handbook/communication/ about Shush utility.
----
---- My workflow:
----
---- When Zoom starts, PushToTalk automatically changes mic state from `default`
---- to `push-to-talk`, so I need to press `fn` key to unmute myself and speak.
---- If I need to actively chat in group meeting or it's one-on-one meeting,
---- I'm switching to `push-to-mute` state, so mic will be unmute by default and `fn` key mutes it.
----
---- PushToTalk has menubar with colorful icons so you can easily see current mic state.
----
---- Sample config: `spoon.SpoonInstall:andUse("PushToTalk", {start = true, config = { app_switcher = { ['zoom.us'] = 'push-to-talk' }}})`
---- and separate keybinding to toggle states with lambda function `function() spoon.PushToTalk.toggleStates({'push-to-talk', 'release-to-talk'}) end`
----
---- Check out my config: https://github.com/skrypka/hammerspoon_config/blob/master/init.lua
+-- Derived from the PushToTalk Spoon and then heavily modified for my use cases
 
-
---
-----
------- HEAVILY MODIFIED BY @megalithic
-----
---
-
-local log = hs.logger.new('ptt', 'warning')
+local log = hs.logger.new('bindings.ptt', 'warning')
 
 local module = {}
 module.__index = module
 
 -- Metadata
-module.name = "PushToTalk"
-module.version = "0.2"
-module.author = "Roman Khomenko <roman.dowakin@gmail.com>"
-module.coauthor = "Seth Messer <seth.messer@gmail.com>"
-module.license = "MIT - https://opensource.org/licenses/MIT"
-
 module.defaultState = 'push-to-talk'
 
 module.state = module.defaultState
@@ -67,7 +37,7 @@ local function showState()
       muted = true
       inputVolume = 0
     end
-  elseif module.state == 'release-to-talk' then
+  elseif module.state == 'push-to-mute' then
     if module.pushed then
       module.menubar:setIcon(mutedIcon)
       muted = true
@@ -94,7 +64,7 @@ module.menutable = {
   { title = "UnMuted", fn = function() module.setState('unmute') end },
   { title = "Muted", fn = function() module.setState('mute') end },
   { title = "Push-to-talk (fn)", fn = function() module.setState('push-to-talk') end, checked = true },
-  { title = "Release-to-talk (fn)", fn = function() module.setState('release-to-talk') end },
+  { title = "Push-to-mute (fn)", fn = function() module.setState('push-to-mute') end },
 }
 
 local function eventKeysMatchModifiers(modifiers)
@@ -155,7 +125,7 @@ end
 --- Cycle states in order
 ---
 --- Parameters:
----  * states - A array of states to toggle. For example: `{'push-to-talk', 'release-to-talk'}`
+---  * states - A array of states to toggle. For example: `{'push-to-talk', 'push-to-mute'}`
 function module:toggleStates(states)
   new_state = states[1]
   for i, v in pairs(states) do

@@ -1,8 +1,8 @@
--- Press Cmd+Q twice to actually quit
-local log = hs.logger.new('quit', 'debug')
+local log = hs.logger.new('bindings.quitguard', 'debug')
 local module = {}
 
 local quitModal = hs.hotkey.modal.new('cmd','q')
+-- Press Cmd+Q twice to actually quit
 local quitAlertText = "Press Cmd+Q again to quit"
 
 local quit = function(app)
@@ -39,6 +39,7 @@ module.start = function()
 end
 
 module.stop = function()
+  -- nil
 end
 
 return module
