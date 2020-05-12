@@ -171,6 +171,8 @@
 
   "tsserver.formatOnType": true,
 
+  "python.jediEnabled": false,
+
   // diagnostic-languageserver
   "diagnostic-languageserver.enable": true,
   "diagnostic-languageserver.debug": false,

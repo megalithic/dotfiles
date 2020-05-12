@@ -126,8 +126,9 @@ brew "pkg-config"
 brew "postgresql@9.5"
 # initdb /usr/local/var/postgres -E utf8
 brew "python"
-brew "python3"
-brew "python@2"
+# FIXME: brew "python@2"
+# FIXME: brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
+
 # brew "rabbitmq" # requires erlang/rebar/rebar3
 brew "readline"
 brew "reattach-to-user-namespace", args: ["wrap-pbcopy-and-pbpaste"]
@@ -238,3 +239,4 @@ mas "Tweetbot", id: 557168941
 mas "Xcode", id: 497799835
 mas "Drafts", id: 1435957248
 mas "Things", id: 904280696
+mas "Simple Recorder-Voice Recorder", id: 989175722

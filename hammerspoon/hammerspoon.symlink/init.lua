@@ -2,8 +2,16 @@ local log = hs.logger.new('[init]', 'verbose')
 
 log.i(":: initializing hammerspoon..")
 
+-- global stuff
+require('console').init()
+-- require('overrides').init()
+
+-- ensure IPC is there
 hs.ipc.cliInstall()
-hs.console.darkMode(true)
+
+-- lower logging level for hotkeys
+require('hs.hotkey').setLogLevel("warning")
+
 hs.application.enableSpotlightForNameSearches(true)
 
 -- where all the magic is defined (check here for every piece of configuration)
@@ -21,7 +29,7 @@ require('layout').init(isDocked)
 -- require('auto-layout').init(isDocked)
 
 -- push-to-talk (e.g., mute my input until i hold down the requisite keys)
-require('ptt').init(config.ptt)
+require('ptt'):init(config.ptt)
 
 -- helper to prevent accidental/unintentional app quitting
 require('quit')
@@ -37,7 +45,13 @@ for bundleID, app in pairs(config.apps) do
   if app.superKey ~= nil and app.shortcut ~= nil then
 
     if (app.tabjump ~= nil) then
-      hotkey.bind(app.superKey, app.shortcut, function() tabjump(app.tabjump) end)
+      hotkey.bind(app.superKey, app.shortcut, function()
+        if hs.application.find(bundleID) then
+          hs.application.launchOrFocusByBundleID(bundleID)
+        else
+          tabjump(app.tabjump)
+        end
+      end)
     else
       -- hotkey.bind(app.superKey, app.shortcut, function() keys.launch(app.name) end)
       hotkey.bind(app.superKey, app.shortcut, function() keys.toggle(bundleID) end)

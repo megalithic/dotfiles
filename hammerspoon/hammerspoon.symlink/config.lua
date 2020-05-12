@@ -59,6 +59,7 @@ config.distractionUrls = {
   'https://www.twitter.com',
   'https://www.instagram.com',
   'https://www.facebook.com',
+  'https://www.reddit.com',
 }
 
 local appHandler = function(win)

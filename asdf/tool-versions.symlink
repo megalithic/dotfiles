@@ -1,7 +1,7 @@
 erlang 22.2.8
 elixir 1.8.2-otp-22
 elm 0.19.1
-lua 5.3.4
+lua 5.3.5
 ruby 2.7.1
 # nodejs 8.9.1
 nodejs 10.15.3

@@ -1,0 +1,173 @@
+[
+  {
+    "Constant" : [
+
+    ],
+    "submodules" : [
+
+    ],
+    "Function" : [
+      {
+        "doc" : "Returns true or false, indicating whether bluetooth is available on this machine.\n\nParameters:\n * None\n\nReturns:\n * true if bluetooth is available on this machine, false if it is not; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)",
+        "def" : "hs._asm.undocumented.bluetooth.available() -> bool",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "stripped_doc" : [
+          "Returns true or false, indicating whether bluetooth is available on this machine.",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.undocumented.bluetooth.available() -> bool",
+        "type" : "Function",
+        "returns" : [
+          " * true if bluetooth is available on this machine, false if it is not; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)"
+        ],
+        "desc" : "Returns true or false, indicating whether bluetooth is available on this machine.",
+        "name" : "available"
+      },
+      {
+        "doc" : "Get or set bluetooth power state.\n\nParameters:\n * state - an optional boolean value indicating whether bluetooth power should be turned on (true) or off (false)\n\nReturns:\n * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)",
+        "def" : "hs._asm.undocumented.bluetooth.power([state]) -> bool",
+        "parameters" : [
+          " * state - an optional boolean value indicating whether bluetooth power should be turned on (true) or off (false)",
+          ""
+        ],
+        "stripped_doc" : [
+          "Get or set bluetooth power state.",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.undocumented.bluetooth.power([state]) -> bool",
+        "type" : "Function",
+        "returns" : [
+          " * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)"
+        ],
+        "desc" : "Get or set bluetooth power state.",
+        "name" : "power"
+      },
+      {
+        "doc" : "Get or set bluetooth discoverable state.\n\nParameters:\n * state - an optional boolean value indicating whether bluetooth the machine should be discoverable (true) or not (false)\n\nReturns:\n * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)\n\nNotes:\n * use of this method to change discoverability has been observed to cause connected devices to disconnect in rare cases; use at your own risk.",
+        "def" : "hs._asm.undocumented.bluetooth.discoverable([state]) -> bool",
+        "parameters" : [
+          " * state - an optional boolean value indicating whether bluetooth the machine should be discoverable (true) or not (false)",
+          ""
+        ],
+        "stripped_doc" : [
+          "Get or set bluetooth discoverable state.",
+          ""
+        ],
+        "notes" : [
+          " * use of this method to change discoverability has been observed to cause connected devices to disconnect in rare cases; use at your own risk."
+        ],
+        "signature" : "hs._asm.undocumented.bluetooth.discoverable([state]) -> bool",
+        "type" : "Function",
+        "returns" : [
+          " * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)",
+          ""
+        ],
+        "desc" : "Get or set bluetooth discoverable state.",
+        "name" : "discoverable"
+      }
+    ],
+    "Variable" : [
+
+    ],
+    "stripped_doc" : [
+
+    ],
+    "desc" : "This submodule provides access to Bluetooth availability and its power state, and the ability to change it.",
+    "Deprecated" : [
+
+    ],
+    "type" : "Module",
+    "Constructor" : [
+
+    ],
+    "doc" : "This submodule provides access to Bluetooth availability and its power state, and the ability to change it.\n\nThis module utilizes undocumented or unpublished functions to manipulate options and features within OS X.  These are from \"private\" api's for Mac OS X and are not guaranteed to work with any particular version of OS X or at all.  This code was based primarily on code samples and segments found at https:\/\/github.com\/toy\/blueutil.\n\nI make no promises that these will work for you or work at all with any, past, current, or future versions of OS X.  I can confirm only that they didn't crash my machine during testing under 10.10. You have been warned.",
+    "Method" : [
+
+    ],
+    "Command" : [
+
+    ],
+    "items" : [
+      {
+        "doc" : "Returns true or false, indicating whether bluetooth is available on this machine.\n\nParameters:\n * None\n\nReturns:\n * true if bluetooth is available on this machine, false if it is not; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)",
+        "def" : "hs._asm.undocumented.bluetooth.available() -> bool",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "stripped_doc" : [
+          "Returns true or false, indicating whether bluetooth is available on this machine.",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.undocumented.bluetooth.available() -> bool",
+        "type" : "Function",
+        "returns" : [
+          " * true if bluetooth is available on this machine, false if it is not; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)"
+        ],
+        "desc" : "Returns true or false, indicating whether bluetooth is available on this machine.",
+        "name" : "available"
+      },
+      {
+        "doc" : "Get or set bluetooth discoverable state.\n\nParameters:\n * state - an optional boolean value indicating whether bluetooth the machine should be discoverable (true) or not (false)\n\nReturns:\n * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)\n\nNotes:\n * use of this method to change discoverability has been observed to cause connected devices to disconnect in rare cases; use at your own risk.",
+        "def" : "hs._asm.undocumented.bluetooth.discoverable([state]) -> bool",
+        "parameters" : [
+          " * state - an optional boolean value indicating whether bluetooth the machine should be discoverable (true) or not (false)",
+          ""
+        ],
+        "stripped_doc" : [
+          "Get or set bluetooth discoverable state.",
+          ""
+        ],
+        "notes" : [
+          " * use of this method to change discoverability has been observed to cause connected devices to disconnect in rare cases; use at your own risk."
+        ],
+        "signature" : "hs._asm.undocumented.bluetooth.discoverable([state]) -> bool",
+        "type" : "Function",
+        "returns" : [
+          " * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)",
+          ""
+        ],
+        "desc" : "Get or set bluetooth discoverable state.",
+        "name" : "discoverable"
+      },
+      {
+        "doc" : "Get or set bluetooth power state.\n\nParameters:\n * state - an optional boolean value indicating whether bluetooth power should be turned on (true) or off (false)\n\nReturns:\n * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)",
+        "def" : "hs._asm.undocumented.bluetooth.power([state]) -> bool",
+        "parameters" : [
+          " * state - an optional boolean value indicating whether bluetooth power should be turned on (true) or off (false)",
+          ""
+        ],
+        "stripped_doc" : [
+          "Get or set bluetooth power state.",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "hs._asm.undocumented.bluetooth.power([state]) -> bool",
+        "type" : "Function",
+        "returns" : [
+          " * the (possibly changed) current value; returns nil if bluetooth framework unavailable (this has been observed in some virtual machines)"
+        ],
+        "desc" : "Get or set bluetooth power state.",
+        "name" : "power"
+      }
+    ],
+    "Field" : [
+
+    ],
+    "name" : "hs._asm.undocumented.bluetooth"
+  }
+]

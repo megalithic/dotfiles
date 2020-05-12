@@ -1,5 +1,5 @@
 local config = require('config')
-local log = hs.logger.new('[layout]', 'debug')
+local log = hs.logger.new('[layout]', 'warning')
 
 local appWatcher = nil
 local screenWatcher = nil
