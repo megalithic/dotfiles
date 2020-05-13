@@ -2,7 +2,6 @@ local log = hs.logger.new('config', 'warning')
 local module = { network = {} }
 
 local utils = require('utils')
-local mouse = require('mouse')
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -301,14 +300,6 @@ module.utilities = {
       -- require('ptt').teardown()
       hs.reload()
       hs.notify.show('Hammerspoon', 'module Reloaded', '')
-    end)
-  },
-  {
-    name = 'Cursor Locator',
-    superKey = module.superKeys.mashShift,
-    shortcut = 'return',
-    fn = (function()
-      mouse.highlight()
     end)
   },
   {
