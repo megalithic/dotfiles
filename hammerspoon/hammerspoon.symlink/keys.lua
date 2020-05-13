@@ -9,7 +9,7 @@ handler.toggle = function (_app)
   local appBundleID = app and (app:bundleID() or _app)
 
   if app ~= nil then
-    log.df('attempting to toggle visibility of %s..', appBundleID)
+    log.df('Attempting to toggle visibility of %s..', appBundleID)
   end
 
   if not app then
@@ -25,11 +25,11 @@ handler.toggle = function (_app)
 
     if mainWin then
       if mainWin == hs.window.focusedWindow() then
-        log.df('hiding %s..', appBundleID)
+        log.df('Hiding %s..', appBundleID)
 
         mainWin:application():hide()
       else
-        log.df('showing %s..', appBundleID)
+        log.df('Showing %s..', appBundleID)
 
         mainWin:application():activate(true)
         mainWin:application():unhide()

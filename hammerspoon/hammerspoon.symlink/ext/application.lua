@@ -1,7 +1,8 @@
 local forceFocus      = require('ext.window').forceFocus
 local highlightWindow = require('ext.drawing').highlightWindow
 local template        = require('ext.template')
-local log             = hs.logger.new('application', 'debug')
+
+local log             = hs.logger.new('ext.application', 'debug')
 
 local cache  = { launchTimer = nil }
 local module = { cache = cache }
@@ -10,6 +11,50 @@ local module = { cache = cache }
 module.activateFrontmost = function()
   local frontmostWindow = hs.window.frontmostWindow()
   if frontmostWindow then frontmostWindow:raise():focus() end
+end
+
+
+-- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
+-- +--- possibly more robust app toggler
+module.toggle = function (appIdentifier)
+  -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
+  local app = hs.application.find(appIdentifier)
+  local appBundleID = app and (app:bundleID() or appIdentifier)
+
+  if not app then
+    if appIdentifier ~= nil then
+      log.df('calling launchOrFocusByBundleID(%s) -- non PID-managed app?', appIdentifier)
+      hs.application.launchOrFocusByBundleID(appIdentifier)
+    else
+      log.wf('appIdentifier (%s) or app (%s) is nil!', appIdentifier, appBundleID)
+    end
+  else
+    local mainWin = app:mainWindow()
+
+    if mainWin then
+      if mainWin == hs.window.focusedWindow() then
+        log.df('Hiding %s..', appBundleID)
+
+        mainWin:application():hide()
+      else
+        log.df('Showing %s..', appBundleID)
+
+        mainWin:application():activate(true)
+        mainWin:application():unhide()
+        mainWin:focus()
+      end
+    else
+      -- assumes there is no "mainWindow" for the application in question, probably iTerm2
+      log.df('launchOrFocusByBundleID(%s)', appBundleID)
+
+      if (app:focusedWindow() == hs.window.focusedWindow()) then
+        app:hide()
+      else
+        app:unhide()
+        hs.application.launchOrFocusByBundleID(appBundleID)
+      end
+    end
+  end
 end
 
 -- force application launch or focus

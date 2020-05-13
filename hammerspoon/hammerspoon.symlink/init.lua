@@ -1,3 +1,6 @@
+-- logging config
+require('hs.logger').idLength(20)
+
 local log = hs.logger.new('init', 'verbose')
 
 -- global stuff
@@ -46,7 +49,7 @@ watchers                    = require('utils.watchers')
 controlplane.enabled        = { 'office' }
 
 -- watchers
-watchers.enabled            = { 'urlevent' }
+watchers.enabled            = {}
 watchers.urlPreference      = { 'Brave', 'Brave Dev' }
 
 -- bindings

@@ -51,3 +51,4 @@ keyboard/karabiner/automatic_backups/*
 NetrwTreeListing*
 Session.vim
 .netrwhist
+**/*.profraw

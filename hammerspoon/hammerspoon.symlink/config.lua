@@ -55,6 +55,12 @@ module.distractionUrls = {
   'https://www.reddit.com',
 }
 
+module.window = {
+  highlightBorder = false,
+  highlightMouse  = true,
+  historyLimit    = 0
+}
+
 local appHandler = function(win)
   if win == nil then return end
 
@@ -71,11 +77,13 @@ end
 module.apps = {
   ['_'] = {
     hint = '',
+    name = '',
     preferredDisplay = 2,
     position = module.grid.centeredMedium,
   },
   ['net.kovidgoyal.kitty'] = {
     hint = 'net.kovidgoyal.kitty',
+    name = 'kitty',
     hyperShortcut = 'k',
     superKey = module.superKeys.ctrl,
     shortcut = 'space',
@@ -85,11 +93,13 @@ module.apps = {
   },
   ['com.kapeli.dashdoc'] = {
     hint = 'com.kapeli.dashdoc',
+    name = 'Dash',
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
   },
   ['com.brave.Browser.dev'] = {
     hint = 'com.brave.Browser.dev',
+    name = 'Brave Browser Dev',
     hyperShortcut = '`',
     superKey = module.superKeys.cmd,
     shortcut = '`',
@@ -99,12 +109,14 @@ module.apps = {
   },
   ['com.google.Chrome'] = {
     hint = 'com.google.Chrome',
+    name = 'Google Chrome',
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = true
   },
   ['com.agiletortoise.Drafts-OSX'] = {
     hint = 'com.agiletortoise.Drafts-OSX',
+    name = 'Drafts',
     hyperShortcut ='d',
     local_bindings = {'x', '\''},
     superKey = module.superKeys.mashShift,
@@ -115,11 +127,13 @@ module.apps = {
   },
   ['com.brettterpstra.marked2'] = {
     hint = 'com.brettterpstra.marked2',
+    name = 'Marked',
     preferredDisplay = 2,
     position = module.grid.leftHalf,
   },
   ['com.tinyspeck.slackmacgap'] = {
     hint = 'com.tinyspeck.slackmacgap',
+    name = 'Slack',
     hyperShortcut = 's',
     superKey = module.superKeys.mashShift,
     shortcut = 's',
@@ -131,6 +145,7 @@ module.apps = {
   },
   ['com.readdle.smartemail-Mac'] = {
     hint = 'com.readdle.smartemail-Mac',
+    name = 'Spark',
     superKey = module.superKeys.mashShift,
     distraction = true,
     shortcut = 'm',
@@ -141,6 +156,7 @@ module.apps = {
   },
   ['com.apple.finder'] = {
     hint = 'com.apple.finder',
+    name = 'Finder',
     superKey = module.superKeys.ctrl,
     shortcut = '`',
     preferredDisplay = 1,
@@ -148,6 +164,7 @@ module.apps = {
   },
   ['us.zoom.xos'] = {
     hint = 'us.zoom.xos',
+    name = 'Zoom',
     superKey = module.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
@@ -158,6 +175,7 @@ module.apps = {
   },
   ['com.spotify.client'] = {
     hint = 'com.spotify.client',
+    name = 'Spotify',
     superKey = module.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 2,
@@ -166,6 +184,7 @@ module.apps = {
   },
   ['com.apple.iChat'] = {
     hint = 'com.apple.iChat',
+    name = 'Messages',
     superKey = module.superKeys.cmdShift,
     shortcut = 'm',
     distraction = true,
@@ -174,6 +193,7 @@ module.apps = {
   },
   ['hangouts'] = {
     hint = 'hangouts',
+    name = 'Brave Browser Dev',
     superKey = module.superKeys.cmdCtrl,
     shortcut = 'm',
     distraction = true,
@@ -182,6 +202,7 @@ module.apps = {
   },
   ['WhatsApp'] = {
     hint = 'WhatsApp',
+    name = 'WhatsApp',
     superKey = module.superKeys.cmdShift,
     shortcut = 'w',
     distraction = true,
@@ -190,6 +211,7 @@ module.apps = {
   },
   ['com.agilebits.onepassword7'] = {
     hint = 'com.agilebits.onepassword7',
+    name = '1Password',
     superKey = module.superKeys.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
@@ -197,6 +219,7 @@ module.apps = {
   },
   ['com.teamviewer.TeamViewer'] = {
     hint = 'com.teamviewer.TeamViewer',
+    name = 'TeamViewer',
     -- superKey = module.superKeys.mashShift,
     -- shortcut = 'v',
     preferredDisplay = 1,
@@ -204,6 +227,7 @@ module.apps = {
   },
   ['org.hammerspoon.Hammerspoon'] = {
     hint = 'org.hammerspoon.Hammerspoon',
+    name = 'Hammerspoon',
     superKey = module.superKeys.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
@@ -212,28 +236,29 @@ module.apps = {
   },
   ['com.apple.systempreferences'] = {
     hint = 'com.apple.systempreferences',
+    name = 'System Preferences',
     preferredDisplay = 1,
     position = module.grid.centeredMedium
   },
   ['Fantastical'] = {
-    name = 'Fantastical',
     hint = 'com.flexibits.fantastical2.mac',
+    name = 'Fantastical',
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
     position = module.grid.centeredLarge
   },
   ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
-    name = 'Fantastical Helper',
     hint = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
+    name = 'Fantastical Helper',
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
     -- position = module.grid.centeredLarge
   },
   ['com.microsoft.autoupdate2'] = {
-    name = 'Microsoft AutoUpdate',
     hint = 'com.microsoft.autoupdate2',
+    name = 'Microsoft AutoUpdate',
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
