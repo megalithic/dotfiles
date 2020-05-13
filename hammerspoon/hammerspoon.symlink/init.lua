@@ -49,8 +49,8 @@ watchers                    = require('utils.watchers')
 controlplane.enabled        = { 'office' }
 
 -- watchers
-watchers.enabled            = {}
-watchers.urlPreference      = { 'Brave', 'Brave Dev' }
+watchers.enabled            = { 'urlevent' }
+watchers.urlPreference      = { 'Brave', 'Brave Browser Dev' }
 
 -- bindings
 bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'airpods'  }

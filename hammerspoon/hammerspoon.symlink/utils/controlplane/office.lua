@@ -39,14 +39,16 @@ local sleepWatcher = function(_, _, _, _, event)
   -- hs.network.ping.ping("amplifi", 1, 0.01, 1.0, "any", homeNetworkPingResult)
 
 
-  if isTurningOff and isDocked then
-    log.df('Attempting to turn OFF the office lights..')
-    --       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"off", "171"}):start()
-    --       -- hubitat.lampToggle("off")
-  elseif isTurningOn and isDocked then
-    log.df('Attempting to turn ON the office lights..')
-    --       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"on", "171"}):start()
-    --       -- hubitat.lampToggle("on")
+  if isDocked then
+    if isTurningOff then
+      log.df('Attempting to turn OFF the office lights..')
+      --       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"off", "171"}):start()
+      --       -- hubitat.lampToggle("off")
+    else
+      log.df('Attempting to turn ON the office lights..')
+      --       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/hubitat", (function() return end), (function() return true end), {"on", "171"}):start()
+      --       -- hubitat.lampToggle("on")
+    end
   end
 
   -- if isTurningOff and isAtHome and not hs.itunes.isPlaying() then
