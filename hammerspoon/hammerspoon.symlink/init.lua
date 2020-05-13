@@ -53,7 +53,8 @@ watchers.enabled            = {}
 watchers.urlPreference      = { 'Brave', 'Brave Dev' }
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'airpods', 'slack' }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'airpods'  }
+bindings.disabled            = { 'slack' } -- FIXME: can't get binding enable/disable right
 
 -- start/stop modules
 local modules               = { bindings, controlplane, watchables, watchers }

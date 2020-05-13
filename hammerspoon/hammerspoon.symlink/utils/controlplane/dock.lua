@@ -1,6 +1,6 @@
 local config = require('config')
 local utils = require('utils')
-local log = hs.logger.new('[docking]', 'debug')
+local log = hs.logger.new('controlplane.dock', 'debug')
 local is_docked = false
 local watcher = nil
 local deviceConfig =  config.docking.device

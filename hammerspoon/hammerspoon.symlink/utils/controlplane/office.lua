@@ -1,10 +1,10 @@
-local log               = hs.logger.new('office', 'debug')
+local log = hs.logger.new('controlplane.office', 'debug')
 
-local cache             = {}
-local module            = {
-                            cache = cache,
-                            isConnectedToHome = false
-                          }
+local cache = {}
+local module = {
+  cache = cache,
+  isConnectedToHome = false
+}
 
 local homeNetworkPingResult = function(object, message, seqnum, error)
   if message == "didFinish" then
