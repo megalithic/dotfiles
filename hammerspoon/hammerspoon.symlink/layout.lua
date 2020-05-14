@@ -288,9 +288,8 @@ return {
     hs.window.filter.allowedWindowRoles = {
       AXWindow=true,
       AXStandardWindow=true,
-      AXDialog=false,
-      AXSystemDialog=false,
-      -- AXUnknown=true
+      AXDialog=true,
+      AXSystemDialog=true,
     }
 
     for _, name in ipairs(config.ignoredApps) do

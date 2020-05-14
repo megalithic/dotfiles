@@ -1,7 +1,7 @@
 -- logging config
 require('hs.logger').idLength(20)
 
-local log = hs.logger.new('init', 'verbose')
+local log = hs.logger.new('init', 'warning')
 
 -- global stuff
 -- require('config').init()
@@ -53,7 +53,7 @@ watchers.enabled            = { 'urlevent' }
 watchers.urlPreference      = { 'Brave', 'Brave Browser Dev' }
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'airpods'  }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods' }
 bindings.disabled            = { 'slack' } -- FIXME: can't get binding enable/disable right
 
 -- start/stop modules
@@ -85,13 +85,4 @@ end
 -- :: volume control
 for _, vol in pairs(config.volume) do
   hs.hotkey.bind(vol.superKey, vol.shortcut, function() keys.adjustVolume(vol) end)
-end
-
--- :: window-manipulation (manual window snapping)
-for _, snap in pairs(config.snap) do
-  hs.hotkey.bind(snap.superKey, snap.shortcut, snap.locations)
-
-  if (snap.hyperKey ~= nil) then
-    hs.hotkey.bind(snap.hyperKey, snap.shortcut, snap.locations)
-  end
 end

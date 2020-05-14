@@ -22,8 +22,8 @@ end
 local updateScreen = function()
   status.connectedScreens        = #hs.screen.allScreens()
   status.connectedScreenIds      = hs.fnutils.map(hs.screen.allScreens(), function(screen) return screen:id() end)
-  status.is4kConnected           = hs.screen.findByName('DELL P2415Q') ~= nil
-  status.isLaptopScreenConnected = hs.screen.findByName('Color LCD') ~= nil
+  status.is4kConnected           = hs.screen.findByName(config.displays.external) ~= nil
+  status.isLaptopScreenConnected = hs.screen.findByName(config.displays.laptop) ~= nil
 
   log.d('updated screens:', hs.inspect(status.connectedScreenIds))
 end
@@ -42,6 +42,7 @@ local updateWiFi = function()
 end
 
 local updateSleep = function(event)
+  -- TODO: figure out how to get more info about this `event` integer
   status.sleepEvent = event
 
   log.d('updated sleep:', status.sleepEvent)
@@ -53,7 +54,7 @@ local updateUSB = function()
   end) ~= nil
   status.isDocked = status.isDZ60Attached
 
-  log.d('updated docked(dz60):', status.isDocked)
+  log.d('updated docked (dz60):', status.isDocked)
 end
 
 module.start = function()
@@ -66,8 +67,8 @@ module.start = function()
     screen  = hs.screen.watcher.new(updateScreen):start(),
     sleep   = hs.caffeinate.watcher.new(updateSleep):start(),
     usb     = hs.usb.watcher.new(updateUSB):start(),
-    -- network = cache.configuration:monitorKeys({ VPN_CONFIG_KEY, NETWORK_SHARING }):setCallback(updateNetwork):start(),
     wifi    = hs.wifi.watcher.new(updateWiFi):start(),
+    -- network = cache.configuration:monitorKeys({ VPN_CONFIG_KEY, NETWORK_SHARING }):setCallback(updateNetwork):start(),
   }
 
   -- setup on start
@@ -75,8 +76,8 @@ module.start = function()
   updateScreen()
   updateSleep()
   updateUSB()
-  -- updateNetwork()
   updateWiFi()
+  -- updateNetwork()
 end
 
 module.stop = function()

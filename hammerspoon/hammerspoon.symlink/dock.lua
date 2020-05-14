@@ -1,6 +1,5 @@
-local config = require('config')
-local utils = require('utils')
 local log = hs.logger.new('[dock]', 'debug')
+local tableLength = require('ext.window').tableLength
 local is_docked = false
 local watcher = nil
 local deviceConfig =  config.docking.device
@@ -59,7 +58,7 @@ local isDeviceConnected = (function()
 
   local found_device = false
 
-  if utils.tableLength(hs.usb.attachedDevices()) == 0 then
+  if tableLength(hs.usb.attachedDevices()) == 0 then
     log.i('nope!')
     found_device = false
   else

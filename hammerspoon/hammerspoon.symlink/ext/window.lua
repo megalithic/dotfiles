@@ -166,4 +166,145 @@ module.persistPosition = function(win, option)
   }
 end
 
+
+--
+-- ============================================================================
+-- LEGACY FUNCTIONS FROM MY ORIGINAL HS CONFIG --------------------------------
+-- ============================================================================
+--
+-- TODO: salvage `chain` and other functions and delete the rest once we get
+-- `hhtwm` in place
+--
+
+
+local lastSeenChain = nil
+local lastSeenWindow = nil
+
+-- Gets the config.application entry for a specific named app, e.g. 'Chrome'
+--
+module.getConfigForApp = function(name)
+  local config = require('config')
+  local found
+  for _, hash in pairs(config) do
+    if (hash.name == name) then
+      found = hash
+      return found
+    end
+  end
+
+  return found
+end
+
+-- Chain the specified movement commands.
+-- This is like the "chain" feature in Slate, but with a couple of enhancements:
+--
+--  - Chains always start on the screen the window is currently on.
+--  - A chain will be reset after 2 seconds of inactivity, or on switching from
+--    one chain to another, or on switching from one app to another, or from one
+--    window to another.
+--
+module.chain = function (movements)
+  local chainResetInterval = 2 -- seconds
+  local cycleLength = #movements
+  local sequenceNumber = 1
+
+  return function()
+    local win = hs.window.frontmostWindow()
+    local id = win:id()
+    local now = hs.timer.secondsSinceEpoch()
+    local screen = win:screen()
+
+    if
+      lastSeenChain ~= movements or
+      lastSeenAt < now - chainResetInterval or
+      lastSeenWindow ~= id
+    then
+      sequenceNumber = 1
+      lastSeenChain = movements
+    elseif (sequenceNumber == 1) then
+      -- At end of chain, restart chain on next screen.
+      screen = screen:next()
+    end
+    lastSeenAt = now
+    lastSeenWindow = id
+
+    hs.grid.set(win, movements[sequenceNumber], screen)
+    sequenceNumber = sequenceNumber % cycleLength + 1
+  end
+end
+
+module.tableLength = function(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
+
+module.windowsForApp = function (app)
+  return app:allWindows()
+end
+
+module.validWindowsForApp = function (app)
+  return app:allWindows()
+end
+
+module.validWindowsForWindow = function (window)
+  return module.canManageWindow(window)
+end
+
+-- Returns the number of standard, non-minimized windows in the application.
+--
+-- (For Chrome, which has two windows per visible window on screen, but only one
+-- window per minimized window).
+module.windowCount = function (app)
+  local count = 0
+  if app then
+    for _, window in pairs(module.windowsForApp(app)) do
+      if module.canManageWindow(window) and app:bundleID() ~= 'com.googlecode.iterm2' then
+        count = count + 1
+      end
+    end
+  end
+  return count
+end
+
+-- hides an application
+--
+module.hide = function (bundleID)
+  local app = hs.application.get(bundleID)
+  if app then
+    app:hide()
+  end
+end
+
+-- activates/shows an application
+--
+module.activate = function (bundleID)
+  local app = hs.application.get(bundleID)
+  if app then
+    app:activate()
+  end
+end
+
+-- determines if a window is manageable (takes into account iterm2)
+--
+module.canManageWindow = function (window)
+  local bundleID = window:application():bundleID()
+
+  -- Special handling for iTerm: windows without title bars are
+  -- non-standard.
+  return window:title() ~= "" and window:isStandard() and not window:isMinimized() or
+    bundleID == 'com.googlecode.iterm2'
+end
+
+module.hasValue = function(T, v)
+  for _, item in pairs(T) do
+    return item == v
+  end
+end
+
+module.isIgnoredApp = function(name)
+  log.df("[ext.window] - isIgnoreApp(%s)? %s", name, module.hasValue(config.ignoredApplications, name))
+  return module.hasValue(config.ignoredApplications, name)
+end
+
 return module

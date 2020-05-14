@@ -1,7 +1,50 @@
 local log = hs.logger.new('config', 'warning')
-local module = { network = {} }
 
-local utils = require('utils')
+local displays = {
+    laptop = 'Color LCD',
+    external = 'Dell P2415Q'
+  }
+
+
+local module = {
+  network = {
+    home = 'shaolin',
+    currentConnected = hs.wifi.currentNetwork()
+  },
+
+  -- apps = {
+  --   terms    = { 'kitty' },
+  --   browsers = { 'Brave Browser Dev', 'Google Chrome', 'Safari' }
+  -- },
+
+  displays = displays,
+
+  wm = {
+    defaultDisplayLayouts = {
+      [displays.laptop]    = 'monocle',
+      [displays.external]  = 'main-center'
+    },
+
+    displayLayouts = {
+      [displays.laptop]    = { 'monocle', 'main-right', 'side-by-side'     },
+      [displays.external]  = { 'main-center', 'main-right', 'side-by-side' }
+    }
+  },
+
+  window = {
+    highlightBorder = false,
+    highlightMouse  = true,
+    historyLimit    = 0
+  },
+
+  office = {
+    -- studioSpeakers = { aid = 10, iid = 11, name = "Studio Speakers" },
+    -- studioLights   = { aid = 9,  iid = 11, name = "Studio Lights"   },
+    -- tvLights       = { aid = 6,  iid = 11, name = "TV Lights"       }
+  }
+}
+
+local chain = require('ext.window').chain
 
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -10,8 +53,6 @@ hs.grid.MARGINY = 0
 
 
 module.hostname = hs.host.localizedName()
-module.network.home = 'shaolin'
-module.network.currentConnected = hs.wifi.currentNetwork()
 
 module.grid = {
   topHalf =         '0,0 8x4',
@@ -52,12 +93,6 @@ module.distractionUrls = {
   'https://www.instagram.com',
   'https://www.facebook.com',
   'https://www.reddit.com',
-}
-
-module.window = {
-  highlightBorder = false,
-  highlightMouse  = true,
-  historyLimit    = 0
 }
 
 local appHandler = function(win)
@@ -377,7 +412,7 @@ module.snap = {
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'h',
-    locations = utils.chain({
+    locations = chain({
       module.grid.leftHalf,
       module.grid.leftOneThird,
       module.grid.leftTwoThirds,
@@ -388,7 +423,7 @@ module.snap = {
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'l',
-    locations = utils.chain({
+    locations = chain({
       module.grid.rightHalf,
       module.grid.rightOneThird,
       module.grid.rightTwoThirds,
@@ -399,7 +434,7 @@ module.snap = {
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'j',
-    locations = utils.chain({
+    locations = chain({
       module.grid.centeredLarge,
       module.grid.centeredMedium,
       module.grid.centeredSmall,
@@ -410,7 +445,7 @@ module.snap = {
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'k',
-    locations = utils.chain({
+    locations = chain({
       module.grid.fullScreen,
     })
   },
@@ -419,7 +454,7 @@ module.snap = {
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'return',
-    locations = utils.chain({
+    locations = chain({
       module.grid.fullScreen,
     })
   },
