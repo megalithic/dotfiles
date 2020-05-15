@@ -53,7 +53,7 @@ watchers.enabled            = { 'urlevent' }
 watchers.urlPreference      = { 'Brave', 'Brave Browser Dev' }
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods' }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods', 'media' }
 bindings.disabled            = { 'slack' } -- FIXME: can't get binding enable/disable right
 
 -- start/stop modules
@@ -77,12 +77,12 @@ for _, util in pairs(config.utilities) do
   hs.hotkey.bind(util.superKey, util.shortcut, util.fn)
 end
 
--- :: media (spotify)
-for _, media in pairs(config.media) do
-  hs.hotkey.bind(media.superKey, media.shortcut, function() keys.spotify(media.action, media.label) end)
-end
+-- -- :: media (spotify)
+-- for _, media in pairs(config.media) do
+--   hs.hotkey.bind(media.superKey, media.shortcut, function() keys.spotify(media.action, media.label) end)
+-- end
 
--- :: volume control
-for _, vol in pairs(config.volume) do
-  hs.hotkey.bind(vol.superKey, vol.shortcut, function() keys.adjustVolume(vol) end)
-end
+-- -- :: volume control
+-- for _, vol in pairs(config.volume) do
+--   hs.hotkey.bind(vol.superKey, vol.shortcut, function() keys.adjustVolume(vol) end)
+-- end

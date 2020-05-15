@@ -1,11 +1,9 @@
 -- Derived from the PushToTalk Spoon and then heavily modified for my use cases
 
-local log = hs.logger.new('bindings.ptt', 'warning')
+local log = hs.logger.new('bindings.ptt', 'debug')
 
 local module = {}
-module.__index = module
 
--- Metadata
 module.defaultState = 'push-to-talk'
 
 module.state = module.defaultState
@@ -17,41 +15,40 @@ local function showState()
   local iconPath = hs.configdir .. "/assets/"
   local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({ w = 16, h = 16 })
   local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({ w = 16, h = 16 })
+
+  -- starting point:
   local muted = false
-  local inputVolume = 50
+  local inputVolume = module.defaultInputVolume
 
-  device:setInputVolume(inputVolume)
-  hs.applescript('set volume input volume ' .. inputVolume)
-
-  if module.state == 'unmute' then
-    module.menubar:setIcon(iconPath .."record.pdf")
-  elseif module.state == 'mute' then
-    module.menubar:setIcon(iconPath .."unrecord.pdf")
-    muted = true
-    inputVolume = 0
-  elseif module.state == 'push-to-talk' then
+  if module.state == 'push-to-talk' then
     if module.pushed then
       module.menubar:setIcon(speakIcon)
+
+      muted = false
+      inputVolume = module.defaultInputVolume
     else
       module.menubar:setIcon(mutedIcon)
+
       muted = true
       inputVolume = 0
     end
   elseif module.state == 'push-to-mute' then
     if module.pushed then
       module.menubar:setIcon(mutedIcon)
+
       muted = true
       inputVolume = 0
     else
       module.menubar:setIcon(speakIcon)
+
+      muted = false
+      inputVolume = module.defaultInputVolume
     end
   end
 
   device:setMuted(muted)
   device:setInputVolume(inputVolume)
   hs.applescript('set volume input volume ' ..inputVolume)
-
-  -- log.df('Device settings: %s', hs.inspect(dumpCurrentInputAudioDevice()))
 end
 
 function module.setState(s)
@@ -61,9 +58,7 @@ function module.setState(s)
 end
 
 module.menutable = {
-  { title = "UnMuted", fn = function() module.setState('unmute') end },
-  { title = "Muted", fn = function() module.setState('mute') end },
-  { title = "Push-to-talk (fn)", fn = function() module.setState('push-to-talk') end, checked = true },
+  { title = "Push-to-talk (fn)", fn = function() module.setState('push-to-talk') end },
   { title = "Push-to-mute (fn)", fn = function() module.setState('push-to-mute') end },
 }
 
@@ -90,17 +85,15 @@ local function eventTapWatcher(event)
   end
 
   showState()
+
+  if module.pushed then
+    log.df('Input device: { muted: %s, volume: %s, state: %s, pushed: %s }', device:inputMuted(), device:inputVolume(), module.state, module.pushed)
+  end
 end
 
---- PushToTalk:init()
---- Method
---- Initial setup. It's empty currently
 function module:init()
 end
 
---- PushToTalk:start()
---- Method
---- Starts menu and key watcher
 function module:start()
   module:stop()
   module.modifierKeys = config.ptt or {'fn'}
@@ -112,20 +105,11 @@ function module:start()
   module.setState(module.state)
 end
 
---- PushToTalk:stop()
---- Method
---- Stops PushToTalk
 function module:stop()
   if module.eventTapWatcher then module.eventTapWatcher:stop() end
   if module.menubar then module.menubar:delete() end
 end
 
---- PushToTalk:toggleStates()
---- Method
---- Cycle states in order
----
---- Parameters:
----  * states - A array of states to toggle. For example: `{'push-to-talk', 'push-to-mute'}`
 function module:toggleStates(states)
   new_state = states[1]
   for i, v in pairs(states) do
