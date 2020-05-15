@@ -61,7 +61,6 @@ export BREW_PATH="$(brew --prefix)"
 export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 export TERMINFO=$HOME/.terminfo
 # export TERMINFO=/usr/share/terminfo
-# export PYTHONPATH="$BREW_PATH/bin/python3.5"
 export LIBARCHIVE=/usr/local/opt/libarchive/lib/libarchive.dylib
 export LIBCRYPTO=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib
 export _Z_DATA="$HOME/.z-history"
@@ -152,3 +151,11 @@ export ERL_AFLAGS="-kernel shell_history enabled"
 
 # fixing an issue for weechat and wee-slack: https://blog.phusion.nl/2017/10/13/why-ruby-app-servers-break-on-macos-high-sierra-and-what-can-be-done-about-it/
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
+
+# # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/Users/replicant/.asdf/installs/python/3.8.2/python3.8/config-3.8-darwin/libpython3.8.a
+# # export LD_PRELOAD="/Users/replicant/.asdf/installs/python/3.8.2/python3.8/config-3.8-darwin/libpython3.8.a""
+# export DYLD_LIBRARY_PATH="/Users/replicant/.asdf/shims"
+# # export PYTHONPATH="/Users/replicant/.asdf/shims"
+# export LDFLAGS="-L/Users/replicant/.asdf/installs/python/3.8.2/lib"
+# export PKG_CONFIG_PATH="/Users/replicant/.asdf/installs/python/3.8.2/lib/pkgconfig"
+# export PYTHONPATH="$DYLD_LIBRARY_PATH:$LDFLAGS:$PKG_CONFIG_PATH:$PYTHONPATH"

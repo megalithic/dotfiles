@@ -111,7 +111,8 @@ alias b="brew"
 # -----------------------------------------------------------------------------
 # alias py="python"
 # alias python=/usr/local/bin/python3
-# alias pip=/usr/local/bin/pip3
+# alias python=python3.8
+# alias pip3=/usr/local/Cellar/python@3.8/3.8.2/bin/pip3
 
 # ALACRITTY
 # -----------------------------------------------------------------------------

@@ -125,9 +125,11 @@ brew "pick"
 brew "pkg-config"
 brew "postgresql@9.5"
 # initdb /usr/local/var/postgres -E utf8
-brew "python"
-# FIXME: brew "python@2"
-# FIXME: brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
+
+# install via asdf-python
+# brew "python"
+# brew "python@3.8"
+# brew "https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb"
 
 # brew "rabbitmq" # requires erlang/rebar/rebar3
 brew "readline"

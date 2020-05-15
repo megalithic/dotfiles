@@ -42,9 +42,9 @@ except NameError:  # Python 3
     basestring = unicode = str
 
 try:
-    from urllib.parse import urlencode
+    from urllib.parse import quote, urlencode
 except ImportError:
-    from urllib import urlencode
+    from urllib import quote, urlencode
 
 try:
     from json import JSONDecodeError
@@ -59,7 +59,7 @@ except ImportError:
 
 SCRIPT_NAME = "slack"
 SCRIPT_AUTHOR = "Ryan Huber <rhuber@gmail.com>"
-SCRIPT_VERSION = "2.5.0"
+SCRIPT_VERSION = "2.6.0"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Extends weechat for typing notification/search/etc on slack.com"
 REPO_URL = "https://github.com/wee-slack/wee-slack"
@@ -593,8 +593,8 @@ class EventRouter(object):
                 retry_text = ('retrying' if request_metadata.should_try() else
                         'will not retry after too many failed attempts')
                 w.prnt('', ('Failed connecting to slack team with token {}, {}. ' +
-                        'If this persists, try increasing slack_timeout. Error: {}')
-                        .format(token_for_print(request_metadata.token), retry_text, err))
+                        'If this persists, try increasing slack_timeout. Error (code {}): {}')
+                        .format(token_for_print(request_metadata.token), retry_text, return_code, err))
                 dbg('rtm.start failed with return_code {}. stack:\n{}'
                         .format(return_code, ''.join(traceback.format_stack())), level=5)
                 self.receive(request_metadata)
@@ -2507,12 +2507,19 @@ class SlackMessage(object):
         if not force and self.message_json.get("_rendered_text"):
             return self.message_json["_rendered_text"]
 
-        if "fallback" in self.message_json:
-            text = self.message_json["fallback"]
-        elif self.message_json.get("text"):
-            text = self.message_json["text"]
+        blocks = self.message_json.get("blocks", [])
+        blocks_rendered = unfurl_blocks(blocks)
+        has_rich_text = any(block["type"] == "rich_text" for block in blocks)
+        if has_rich_text:
+            text = self.message_json.get("text", "")
+            if blocks_rendered:
+                if text:
+                    text += "\n"
+                text += blocks_rendered
+        elif blocks_rendered:
+            text = blocks_rendered
         else:
-            text = ""
+            text = self.message_json.get("text", "")
 
         if self.message_json.get('mrkdwn', True):
             text = render_formatting(text)
@@ -2521,9 +2528,6 @@ class SlackMessage(object):
                 self.message_json.get('inviter')):
             inviter_id = self.message_json.get('inviter')
             text += " by invitation from <@{}>".format(inviter_id)
-
-        if "blocks" in self.message_json:
-            text += unfurl_blocks(self.message_json)
 
         text = unfurl_refs(text)
 
@@ -2607,7 +2611,7 @@ class SlackMessage(object):
                 ",".join(self.channel.highlights()))
 
     def number_of_replies(self):
-        return max(len(self.submessages), len(self.message_json.get("replies", [])))
+        return max(len(self.submessages), self.message_json.get("reply_count", 0))
 
     def notify_thread(self, action=None, sender_id=None):
         if config.auto_open_threads:
@@ -2947,12 +2951,18 @@ def handle_subscriptionsthreadmark(json, eventrouter, team, channel, metadata):
 
 def handle_subscriptionsthreadadd(json, eventrouter, team, channel, metadata):
     if not json["ok"]:
-        print_error("Couldn't add thread subscription: {}".format(json['error']))
+        if json['error'] == 'not_allowed_token_type':
+            print_error("Can only subscribe to a thread when using a session token, see the readme: https://github.com/wee-slack/wee-slack#4-add-your-slack-api-tokens")
+        else:
+            print_error("Couldn't add thread subscription: {}".format(json['error']))
 
 
 def handle_subscriptionsthreadremove(json, eventrouter, team, channel, metadata):
     if not json["ok"]:
-        print_error("Couldn't remove thread subscription: {}".format(json['error']))
+        if json['error'] == 'not_allowed_token_type':
+            print_error("Can only unsubscribe from a thread when using a session token, see the readme: https://github.com/wee-slack/wee-slack#4-add-your-slack-api-tokens")
+        else:
+            print_error("Couldn't remove thread subscription: {}".format(json['error']))
 
 
 ###### New/converted process_ and subprocess_ methods
@@ -3019,7 +3029,7 @@ def process_pong(message_json, eventrouter, team, channel, metadata):
 
 
 def process_message(message_json, eventrouter, team, channel, metadata, history_message=False):
-    if SlackTS(message_json["ts"]) in channel.messages:
+    if "ts" in message_json and SlackTS(message_json["ts"]) in channel.messages:
         return
 
     if "thread_ts" in message_json and "reply_count" not in message_json and "subtype" not in message_json:
@@ -3374,9 +3384,9 @@ def linkify_text(message, team, only_users=False):
     return re.sub(linkify_regex, linkify_word, message_escaped, flags=re.UNICODE)
 
 
-def unfurl_blocks(message_json):
-    block_text = [""]
-    for block in message_json["blocks"]:
+def unfurl_blocks(blocks):
+    block_text = []
+    for block in blocks:
         try:
             if block["type"] == "section":
                 fields = block.get("fields", [])
@@ -3559,10 +3569,15 @@ def unwrap_attachments(message_json, text_before):
 def unwrap_files(message_json, text_before):
     files_texts = []
     for f in message_json.get('files', []):
-        if f.get('mode', '') != 'tombstone':
+        if f.get('mode', '') == 'tombstone':
+            text = colorize_string(config.color_deleted, '(This file was deleted.)')
+        elif f.get('mode', '') == 'hidden_by_limit':
+            text = colorize_string(config.color_deleted, '(This file is hidden because the workspace has passed its storage limit.)')
+        elif f.get('url_private', None) is not None and f.get('title', None) is not None:
             text = '{} ({})'.format(f['url_private'], f['title'])
         else:
-            text = colorize_string(config.color_deleted, '(This file was deleted.)')
+            dbg('File {} has unrecognized mode {}'.format(f['id'], f['mode']), 5)
+            text = colorize_string(config.color_deleted, '(This file cannot be handled.)')
         files_texts.append(text)
 
     if text_before:
@@ -3924,37 +3939,60 @@ def me_command_cb(data, current_buffer, args):
 @utf8_decode
 def command_register(data, current_buffer, args):
     """
-    /slack register [code/token]
+    /slack register [-nothirdparty] [code/token]
     Register a Slack team in wee-slack. Call this without any arguments and
     follow the instructions to register a new team. If you already have a token
     for a team, you can call this with that token to add it.
+
+    By default GitHub Pages will see a temporary code used to create your token
+    (but not the token itself). If you're worried about this, you can use the
+    -nothirdparty option, though the process will be a bit less user friendly.
     """
     CLIENT_ID = "2468770254.51917335286"
     CLIENT_SECRET = "dcb7fe380a000cba0cca3169a5fe8d70"  # Not really a secret.
-    REDIRECT_URI = "https%3A%2F%2Fwee-slack.github.io%2Fwee-slack%2Foauth%23"
-    if not args:
+    REDIRECT_URI_GITHUB = "https://wee-slack.github.io/wee-slack/oauth"
+    REDIRECT_URI_NOTHIRDPARTY = "http://not.a.realhost/"
+
+    args = args.strip()
+    if " " in args:
+        nothirdparty_arg, _, code = args.partition(" ")
+        nothirdparty = nothirdparty_arg == "-nothirdparty"
+    else:
+        nothirdparty = args == "-nothirdparty"
+        code = "" if nothirdparty else args
+    redirect_uri = quote(REDIRECT_URI_NOTHIRDPARTY if nothirdparty else REDIRECT_URI_GITHUB, safe='')
+
+    if not code:
+        if nothirdparty:
+            nothirdparty_note = ""
+            last_step = "You will see a message that the site can't be reached, this is expected. The URL for the page will have a code in it of the form `?code=<code>`. Copy the code after the equals sign, return to weechat and run `/slack register -nothirdparty <code>`."
+        else:
+            nothirdparty_note = "\nNote that by default GitHub Pages will see a temporary code used to create your token (but not the token itself). If you're worried about this, you can use the -nothirdparty option, though the process will be a bit less user friendly."
+            last_step = "The web page will show a command in the form `/slack register <code>`. Run this command in weechat."
         message = textwrap.dedent("""
-            ### Connecting to a Slack team with OAuth ###
+            ### Connecting to a Slack team with OAuth ###{}
             1) Paste this link into a browser: https://slack.com/oauth/authorize?client_id={}&scope=client&redirect_uri={}
             2) Select the team you wish to access from wee-slack in your browser. If you want to add multiple teams, you will have to repeat this whole process for each team.
             3) Click "Authorize" in the browser.
                If you get a message saying you are not authorized to install wee-slack, the team has restricted Slack app installation and you will have to request it from an admin. To do that, go to https://my.slack.com/apps/A1HSZ9V8E-wee-slack and click "Request to Install".
-            4) The web page will show a command in the form `/slack register <code>`. Run this command in weechat.
-        """).strip().format(CLIENT_ID, REDIRECT_URI)
-        w.prnt("", message)
+            4) {}
+        """).strip().format(nothirdparty_note, CLIENT_ID, redirect_uri, last_step)
+        w.prnt("", "\n" + message)
         return w.WEECHAT_RC_OK_EAT
-    elif args.startswith('xox'):
-        add_token(args)
+    elif code.startswith('xox'):
+        add_token(code)
         return w.WEECHAT_RC_OK_EAT
 
     uri = (
         "https://slack.com/api/oauth.access?"
         "client_id={}&client_secret={}&redirect_uri={}&code={}"
-    ).format(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, args)
+    ).format(CLIENT_ID, CLIENT_SECRET, redirect_uri, code)
     params = {'useragent': 'wee_slack {}'.format(SCRIPT_VERSION)}
     w.hook_process_hashtable('url:', params, config.slack_timeout, "", "")
     w.hook_process_hashtable("url:{}".format(uri), params, config.slack_timeout, "register_callback", "")
     return w.WEECHAT_RC_OK_EAT
+
+command_register.completion = '-nothirdparty %-'
 
 
 @utf8_decode
@@ -4119,7 +4157,7 @@ def command_talk(data, current_buffer, args):
         return w.WEECHAT_RC_ERROR
     return join_query_command_cb(data, current_buffer, '/query ' + args)
 
-command_talk.completion = '%(nicks) %-'
+command_talk.completion = '%(nicks)'
 
 
 @slack_buffer_or_ignore
@@ -4252,8 +4290,10 @@ def subscribe_helper(current_buffer, args, usage, api):
 def command_subscribe(data, current_buffer, args):
     """
     /slack subscribe <thread>
-    Subscribe to a thread, so that you are alerted to new messages.  When in a
+    Subscribe to a thread, so that you are alerted to new messages. When in a
     thread buffer, you can omit the thread id.
+
+    This command only works when using a session token, see the readme: https://github.com/wee-slack/wee-slack#4-add-your-slack-api-tokens
     """
     return subscribe_helper(current_buffer, args, 'Usage: /slack subscribe <thread>', "subscriptions.thread.add")
 
@@ -4266,8 +4306,10 @@ def command_unsubscribe(data, current_buffer, args):
     """
     /slack unsubscribe <thread>
     Unsubscribe from a thread that has been previously subscribed to, so that
-    you are not alerted to new messages.  When in a thread buffer, you can omit
+    you are not alerted to new messages. When in a thread buffer, you can omit
     the thread id.
+
+    This command only works when using a session token, see the readme: https://github.com/wee-slack/wee-slack#4-add-your-slack-api-tokens
     """
     return subscribe_helper(current_buffer, args, 'Usage: /slack unsubscribe <thread>', "subscriptions.thread.remove")
 
@@ -4326,7 +4368,7 @@ def command_reply(data, current_buffer, args):
     channel.send_message(text, request_dict_ext={'thread_ts': parent_id, 'reply_broadcast': broadcast})
     return w.WEECHAT_RC_OK_EAT
 
-command_reply.completion = '%(threads)|-alsochannel %(threads) %-'
+command_reply.completion = '%(threads)|-alsochannel %(threads)'
 
 
 @slack_buffer_required

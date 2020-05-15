@@ -25,6 +25,7 @@ asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin-add elm https://github.com/asdf-community/asdf-elm.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
 asdf plugin-add rust https://github.com/code-lever/asdf-rust.git
+asdf plugin-add python https://github.com/danhper/asdf-python.git
 asdf plugin-add nodejs
 bash $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring
 
