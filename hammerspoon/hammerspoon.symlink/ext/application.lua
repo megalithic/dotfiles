@@ -1,8 +1,8 @@
+local log             = hs.logger.new('ext.application', 'warning')
+
 local forceFocus      = require('ext.window').forceFocus
 local highlightWindow = require('ext.drawing').highlightWindow
 local template        = require('ext.template')
-
-local log             = hs.logger.new('ext.application', 'debug')
 
 local cache  = { launchTimer = nil }
 local module = { cache = cache }
