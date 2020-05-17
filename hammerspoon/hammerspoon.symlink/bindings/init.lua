@@ -1,11 +1,6 @@
 local cache  = {}
 local module = { cache = cache }
 
--- modifiers in use:
--- * cltr+alt: move focus between windows
--- * ctrl+shift: do things to windows
--- * ultra: custom/global bindings
-
 module.start = function()
   hs.fnutils.each(bindings.enabled, function(binding)
     cache[binding] = require('bindings.' .. binding)

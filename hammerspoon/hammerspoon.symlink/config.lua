@@ -265,7 +265,7 @@ module.apps = {
     superKey = module.superKeys.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
-    position = module.grid.centeredMedium,
+    position = module.grid.fullScreen,
     quitGuard = true,
   },
   ['com.apple.systempreferences'] = {
@@ -329,31 +329,8 @@ module.utilities = {
     superKey = module.superKeys.mashShift,
     shortcut = 'r',
     fn = (function()
-      -- require('auto-layout').teardown()
-      -- require('layout').teardown()
-      -- require('dock').teardown()
-      -- require('ptt').teardown()
       hs.reload()
       hs.notify.show('Hammerspoon', 'module Reloaded', '')
-    end)
-  },
-  {
-    name = 'Re-layout All',
-    superKey = module.superKeys.mashShift,
-    shortcut = 'w',
-    fn = (function()
-      hs.alert.show("Relayout of all apps")
-      require('layout').setLayoutForAll()
-    end)
-  },
-  {
-    name = 'Re-layout App',
-    superKey = module.superKeys.ctrlShift,
-    shortcut = 'w',
-    fn = (function()
-      local app = hs.application.frontmostApplication()
-      hs.alert.show("Relayout of single app (" .. app:name() .. ")")
-      require('layout').setLayoutForApp(app)
     end)
   },
   {
@@ -361,6 +338,19 @@ module.utilities = {
     superKey = module.superKeys.cmdCtrl,
     shortcut = 'p',
     fn = (function()
+    end)
+  },
+  {
+    name = 'ScreenCapture',
+    superKey = module.superKeys.ctrlShift,
+    shortcut = 's',
+    fn = (function()
+      current_date = os.date('%Y%m%d-%H%M%S')
+      filename = "capture_" .. current_date .. ".png"
+      capture_target = "~/Dropbox/captures/"..filename
+      print("SCREENCAPTURE: "..hs.inspect(capture_target))
+
+      -- hs.execute("screencapture -i ~/Dropbox/captures/shot_`date '+%Y-%m-%d_%H-%M-%S'`.png");
     end)
   }
 }

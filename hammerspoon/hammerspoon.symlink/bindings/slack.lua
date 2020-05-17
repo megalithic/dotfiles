@@ -2,11 +2,12 @@
 local log = hs.logger.new('bindings.slack', 'debug')
 
 local cache  = { bindings = {} }
-local module = { cache = cache, targetAppName = 'Slack' }
+local module = { cache = cache, targetAppName = {'Slack'} }
 
 local rebindKeys = function(appName, options)
   print('bindings.slack - rebindKeys - appName: ' .. hs.inspect(appName))
   print('bindings.slack - rebindKeys - options: ' .. hs.inspect(options))
+
   local enabled = options.enabled or false
 
   if not enabled and cache.bindings[appName] then
@@ -30,20 +31,19 @@ local rebindKeys = function(appName, options)
       hs.eventtap.keyStroke({ 'alt', 'shift' }, 'up')
     end)
     cache.bindings[appName] = hs.hotkey.bind({ 'cmd' }, 'w', function()
-      hs.eventtap.keyStroke({}, 'esc')
+      hs.eventtap.keyStroke({}, 'escape')
     end)
     cache.bindings[appName] = hs.hotkey.bind({ 'cmd' }, 'r', function()
-      hs.eventtap.keyStroke({}, 'esc')
+      hs.eventtap.keyStroke({}, 'escape')
     end)
-    -- FIXME: this still affects kitty :P
-    -- cache.bindings[appName] = hs.hotkey.bind({ 'ctrl' }, 'g', function()
-    --   hs.eventtap.keyStroke({ 'cmd' }, 'k')
-    -- end)
+    cache.bindings[appName] = hs.hotkey.bind({ 'ctrl' }, 'g', function()
+      hs.eventtap.keyStroke({ 'cmd' }, 'k')
+    end)
   end
 end
 
 module.start = function()
-  cache.filter = hs.window.filter.new({ module.targetAppName })
+  cache.filter = hs.window.filter.new(module.targetAppName)
   -- cache.filter = hs.window.filter.new(false):setAppFilter('Slack')
 
   cache.filter:subscribe({
@@ -55,9 +55,9 @@ module.start = function()
     print('bindings.slack - event: ' .. hs.inspect(event))
 
     if event == "windowFocused" then
-      rebindKeys(appName, { enabled = (event == "windowFocused") })
+      rebindKeys(appName, { enabled = (event == "windowFocused"), disabled = not (event == "windowFocused") })
     elseif event == "windowUnfocused" then
-      rebindKeys(appName, { disabled = (event == "windowUnfocused") })
+      rebindKeys(appName, { disabled = (event == "windowUnfocused"), enabled = not (event == "windowUnfocused") })
     end
   end)
 end

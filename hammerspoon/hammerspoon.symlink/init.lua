@@ -40,11 +40,10 @@ controlplane.enabled        = { 'office' }
 
 -- watchers
 watchers.enabled            = { 'urlevent' }
-watchers.urlPreference      = { 'Brave', 'Brave Browser Dev' }
+watchers.urlPreference      = { 'Brave Browser Dev', 'Google Chrome', 'Firefox', 'Safari' }
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods', 'media' }
-bindings.disabled            = { 'slack' } -- FIXME: can't get binding enable/disable right
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods', 'media', 'misc', 'slack' }
 
 -- start/stop modules
 local modules               = { bindings, controlplane, watchables, watchers, wm }
@@ -58,10 +57,4 @@ hs.shutdownCallback = function()
   hs.fnutils.each(modules, function(module)
     if module then module.stop() end
   end)
-end
-
-
--- :: utilities (things like config reloading, screen locking, manually forcing re-snapping windows/apps layout, pomodoro)
-for _, util in pairs(config.utilities) do
-  hs.hotkey.bind(util.superKey, util.shortcut, util.fn)
 end

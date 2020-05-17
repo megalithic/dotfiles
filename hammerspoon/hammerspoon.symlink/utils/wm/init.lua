@@ -276,6 +276,7 @@ local getFiltersFromAppConfig = function()
 
   for app, app_config in pairs(config.apps) do
     if app_config ~= nil and app ~= "_" then
+      print("APP TO FILTER: " .. hs.inspect(app_config.name))
       table.insert(filters, app_config.name)
     end
   end
