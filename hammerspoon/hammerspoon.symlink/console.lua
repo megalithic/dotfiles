@@ -6,6 +6,16 @@ local module = {}
 module.init = function()
   -- some global functions for console
   inspect = hs.inspect
+  i = hs.inspect
+  r  = hs.reload
+  c = hs.console.clearConsole
+  a = hs.alert
+  p = print
+  u = hs.checkForUpdates
+  help = hs.help
+  docs = hs.hsdocs
+  settings = hs.openPreferences
+
   -- reload  = reloadHS
 
   dumpWindows = function()
@@ -73,32 +83,56 @@ module.init = function()
     return os.date("%F %T" .. ((tostring(date):match("(%.%d+)$")) or ""), math.floor(date))
   end
 
+  local darkMode = true
+  local fontStyle = { name = "jetbrains mono regular", size = 14 }
+
   -- console styling
+
+  local darkGrayColor = {
+    red   = 26 / 255,
+    green = 28 / 255,
+    blue  = 39 / 255,
+    alpha = 1.0,
+  }
+  local whiteColor = {
+    white = 1.0,
+    alpha = 1.0,
+  }
+  local lightGrayColor = {
+    white = 1.0,
+    alpha = 0.9,
+  }
+  local purpleColor = {
+    red   = 171 / 255,
+    green = 126 / 255,
+    blue  = 251 / 255,
+    alpha = 1.0,
+  }
   local grayColor = {
     red   = 24 * 4 / 255,
     green = 24 * 4 / 255,
     blue  = 24 * 4 / 255,
-    alpha = 1
+    alpha = 1.0,
   }
-
   local blackColor = {
-    red   = 24 / 255,
-    green = 24 / 255,
-    blue  = 24 / 255,
-    alpha = 1
+    white = 0.0,
+    alpha = 1.0,
   }
 
-  local whiteColor = {
-    red   = 255 / 255,
-    green = 255 / 255,
-    blue  = 255 / 255,
-    alpha = 1
-  }
+  hs.console.darkMode(darkMode)
+  hs.console.consoleFont(fontStyle)
+  hs.console.alpha(0.985)
 
-  hs.console.consoleCommandColor(whiteColor)
-  hs.console.consoleResultColor(grayColor)
-  hs.console.consolePrintColor(grayColor)
-  hs.console.darkMode(true)
+  if darkMode then
+    hs.console.outputBackgroundColor(darkGrayColor)
+    hs.console.consoleCommandColor(whiteColor)
+    hs.console.consoleResultColor(purpleColor)
+    hs.console.consolePrintColor(grayColor)
+  else
+    hs.console.consoleCommandColor(blackColor)
+    hs.console.consoleResultColor(grayColor)
+    hs.console.consolePrintColor(grayColor)
+  end
 
   -- no toolbar
   -- hs.console.toolbar(nil)

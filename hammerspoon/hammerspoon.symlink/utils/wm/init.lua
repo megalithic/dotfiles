@@ -1,10 +1,10 @@
-local config = require('config')
-local log = hs.logger.new('[layout]', 'warning')
+local log = hs.logger.new('utils.wm', 'warning')
+
+local module = {}
 
 local appWatcher = nil
 local screenWatcher = nil
 local windowFilter = nil
-local isDocked = false
 
 local display = function(screen)
   local allDisplays = hs.screen.allScreens()
@@ -168,7 +168,7 @@ local handleWindowLayout = function(win, appName, event)
   local appBundleId = win:application():bundleID()
   local appConfig = windowLayouts[appBundleId] or windowLayouts['_']
 
-  log.df('found app config for %s: %s..', appBundleId or "<no app found>", hs.inspect(appConfig))
+  log.df('found app config for %s..', appBundleId or "<no app found>")
 
   dndHandler(win, appConfig.dnd, event)
   appHandler(win, appConfig.handler)
@@ -271,54 +271,67 @@ end
 --   end
 -- end
 
-return {
-  init = (function(is_docked)
-    isDocked = is_docked or false
-    log.df('init window layouts (docked: %s)..', isDocked)
+local getFiltersFromAppConfig = function()
+  local filters = {}
 
-    -- Watch for screen changes
-    screenWatcher = hs.screen.watcher.new(handleScreenEvent)
-    screenWatcher:start()
-
-    -- Watch for application-level events
-    appWatcher = hs.application.watcher.new(handleAppEvent)
-    appWatcher:start()
-
-    -- FIXME: determine if we want to spin up a window.filter for each app?
-    windowFilter = hs.window.filter.new()
-    hs.window.filter.allowedWindowRoles = {
-      AXStandardWindow=true,
-      AXDialog=true,
-      AXSystemDialog=true,
-      -- AXUnknown=true
-    }
-
-    for _, name in ipairs(config.ignoredApps) do
-      hs.window.filter.ignoreAlways[name] = true
+  for app, app_config in pairs(config.apps) do
+    if app_config ~= nil and app ~= "_" then
+      table.insert(filters, app_config.name)
     end
+  end
 
-    windowFilter:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-    windowFilter:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
-    windowFilter:subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
-    windowFilter:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
-    windowFilter:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
-    windowFilter:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
-  end),
+  return filters
+end
 
-  setLayoutForAll = (function()
-    setLayoutForAll()
-  end),
+module.start = (function()
+  log.df("Starting utils.wm..")
 
-  setLayoutForApp = (function(app)
-    setLayoutForApp(app)
-  end),
+  -- Watch for screen changes
+  screenWatcher = hs.screen.watcher.new(handleScreenEvent)
+  screenWatcher:start()
 
-  teardown = (function()
-    log.df('teardown window layouts..')
+  -- Watch for application-level events
+  appWatcher = hs.application.watcher.new(handleAppEvent)
+  appWatcher:start()
 
-    windowFilter = nil
-    screenWatcher:stop()
-    screenWatcher = nil
-    appWatcher = nil
-  end)
-}
+  local app_filters = getFiltersFromAppConfig()
+
+  windowFilter = hs.window.filter.new(app_filters)
+
+  hs.window.filter.allowedWindowRoles = {
+    AXStandardWindow=true,
+    AXDialog=true,
+    AXSystemDialog=true,
+    -- AXUnknown=true
+  }
+
+  for _, name in ipairs(config.ignoredApps) do
+    hs.window.filter.ignoreAlways[name] = true
+  end
+
+  windowFilter:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
+  windowFilter:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+  windowFilter:subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
+  windowFilter:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+  windowFilter:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
+  windowFilter:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
+end)
+
+module.setLayoutForAll = (function()
+  setLayoutForAll()
+end)
+
+module.setLayoutForApp = (function(app)
+  setLayoutForApp(app)
+end)
+
+module.stop = (function()
+  log.df("Stopping utils.wm..")
+
+  windowFilter = nil
+  screenWatcher:stop()
+  screenWatcher = nil
+  appWatcher = nil
+end)
+
+return module

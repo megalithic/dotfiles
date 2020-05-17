@@ -29,21 +29,11 @@ hs.application.enableSpotlightForNameSearches(true)
 hs.window.setShadows(false)
 
 -- requires
-keys                        = require('keys')
-isDocked                    = require('dock').init()
- require('layout').init(isDocked)
-
--- keys                        = require('keys')
--- tabjump                     = require('tabjump')
--- isDocked                    = require('dock').init()
--- wm                          = require('wm').init(isDocked)
--- pomodoro                    = require('pomodoro').init()
-
 bindings                    = require('bindings')
 controlplane                = require('utils.controlplane')
 watchables                  = require('utils.watchables')
 watchers                    = require('utils.watchers')
--- wm                          = require('utils.wm')
+wm                          = require('utils.wm')
 
 -- controlplane
 controlplane.enabled        = { 'office' }
@@ -57,8 +47,7 @@ bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', '
 bindings.disabled            = { 'slack' } -- FIXME: can't get binding enable/disable right
 
 -- start/stop modules
-local modules               = { bindings, controlplane, watchables, watchers }
--- local modules               = { bindings, controlplane, watchables, watchers, wm }
+local modules               = { bindings, controlplane, watchables, watchers, wm }
 
 hs.fnutils.each(modules, function(module)
   if module then module.start() end
@@ -76,13 +65,3 @@ end
 for _, util in pairs(config.utilities) do
   hs.hotkey.bind(util.superKey, util.shortcut, util.fn)
 end
-
--- -- :: media (spotify)
--- for _, media in pairs(config.media) do
---   hs.hotkey.bind(media.superKey, media.shortcut, function() keys.spotify(media.action, media.label) end)
--- end
-
--- -- :: volume control
--- for _, vol in pairs(config.volume) do
---   hs.hotkey.bind(vol.superKey, vol.shortcut, function() keys.adjustVolume(vol) end)
--- end
