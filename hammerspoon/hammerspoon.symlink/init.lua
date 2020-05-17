@@ -4,9 +4,10 @@ require('hs.logger').idLength(20)
 local log = hs.logger.new('init', 'warning')
 
 -- global stuff
--- require('config').init()
 require('console').init()
 -- require('overrides').init()
+
+-- load config for all modules
 config = require('config')
 
 -- ensure IPC is there
@@ -15,18 +16,9 @@ hs.ipc.cliInstall()
 -- lower logging level for hotkeys
 require('hs.hotkey').setLogLevel("warning")
 
--- no animations
 hs.window.animationDuration = 0.0
-
--- hints
-hs.hints.fontName           = 'Helvetica-Bold'
-hs.hints.fontSize           = 22
-hs.hints.hintChars          = { 'A', 'S', 'D', 'F', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'Z', 'X', 'C' }
-hs.hints.iconAlpha          = 1.0
-hs.hints.showTitleThresh    = 0
-
-hs.application.enableSpotlightForNameSearches(true)
 hs.window.setShadows(false)
+hs.application.enableSpotlightForNameSearches(true)
 
 -- requires
 bindings                    = require('bindings')
