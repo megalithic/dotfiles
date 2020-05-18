@@ -329,7 +329,7 @@ module.utilities = {
     shortcut = 'r',
     fn = (function()
       hs.reload()
-      hs.notify.show('Hammerspoon', 'module Reloaded', '')
+      hs.notify.show('Hammerspoon', 'Modules Reloaded', '')
     end)
   },
   {

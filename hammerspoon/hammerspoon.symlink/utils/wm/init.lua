@@ -1,10 +1,7 @@
-local log = hs.logger.new('[utils.wm]', 'warning')
+local log = hs.logger.new('[utils.wm]', 'debug')
 
-local module = {}
-
-local appWatcher = nil
-local screenWatcher = nil
-local windowFilter = nil
+local cache  = {}
+local module = { cache = cache }
 
 local display = function(screen)
   local allDisplays = hs.screen.allScreens()
@@ -18,7 +15,7 @@ end
 
 local snap = function(win, position, screen)
   if win == nil then return end
-  log.df('window snap (%s) on screen %s: %s', hs.inspect(position), screen, win:title())
+  log.df('window snap (%s) on screen %s: %s (%s)', hs.inspect(position), screen, win:title(), hs.inspect(win:application():name()))
 
   -- local wf = hs.window.filter
   -- local appBundleID = win:application():bundleID()
@@ -40,13 +37,7 @@ local snap = function(win, position, screen)
   hs.grid.set(win, position or hs.grid.get(win), display(screen))
 end
 
-local windowLayouts = config.apps or {
-  -- FIXME: superfulous default?
-  ['_'] = {
-    position = config.grid.centeredMedium,
-    handler = function(win) snap(win) end
-  }
-}
+local windowLayouts = config.apps
 
 local canLayoutWindow = function(win)
   local bundleID = win:application():bundleID()
@@ -109,12 +100,12 @@ end
 
 local setLayoutForApp = function(app, appConfig)
   if type(app) == "string" then
-    log.df('app to layout (%s) is a string, getting app object..', hs.inspect(app))
+    -- log.df('app to layout (%s) is a string, getting app object..', hs.inspect(app))
     app = hs.application.get(app)
   end
 
   if app ~= nil and app:mainWindow() ~= nil then
-    log.df('starting layout of single app: %s / %s', string.upper(app:name()), app:bundleID())
+    log.df('beginning layout of app: %s / %s', string.upper(app:name()), app:bundleID())
 
     local windows = getManageableWindows(app:visibleWindows())
     appConfig = appConfig or config.apps[app:bundleID()]
@@ -126,7 +117,7 @@ local setLayoutForApp = function(app, appConfig)
       elseif (#windows > 1) then
         snapRelatedWindows(appConfig.hint, windows, appConfig.preferredDisplay)
       else
-        log.df('grid layout NOT applied for app (no windows found for app): %s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
+        log.df('grid layout NOT applied for app (no windows found for app): \r\n%s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
       end
     else
       log.df('unable to find an app config for %s', string.upper(app:name()))
@@ -145,14 +136,6 @@ local setLayoutForAll = function()
   end
 end
 
-local logWindowInfo = function(win, appName, event)
-  log.df('--------------------------------------------------')
-  log.df(':: %s (%s) - role: %s - subrole: %s - appName: %s', event, win:title(), win:role(), win:subrole(), appName)
-  log.df('Window: - %s', hs.inspect(win))
-  log.df('IsStandard: - %s', win:isStandard())
-  log.df('Application: - %s', win:application())
-end
-
 local highlightFocused = function()
   local rect = hs.drawing.rectangle(hs.window.focusedWindow():frame())
   rect:setStrokeColor({["red"]=1,  ["blue"]=0, ["green"]=0, ["alpha"]=0.75})
@@ -168,7 +151,7 @@ local handleWindowLayout = function(win, appName, event)
   local appBundleId = win:application():bundleID()
   local appConfig = windowLayouts[appBundleId] or windowLayouts['_']
 
-  log.df('found app config for %s..', appBundleId or "<no app found>")
+  -- log.df('found app config for %s..', appBundleId or "<no app found>")
 
   dndHandler(win, appConfig.dnd, event)
   appHandler(win, appConfig.handler)
@@ -179,53 +162,54 @@ local handleWindowLayout = function(win, appName, event)
 end
 
 local handleWindowCreated = function(win, appName)
-  log.df('window created: %s', win:title())
-  -- logWindowInfo(win, appName, "created")
+  log.df('window created: %s (%s)', win:title(), hs.inspect(appName))
 
   handleWindowLayout(win, appName, "created")
 end
 
 local handleWindowDestroyed = function(win, appName)
-  log.df('window destroyed (%s) for %s', hs.inspect(win), appName)
-  -- logWindowInfo(win, appName, "destroyed")
+  log.df('window destroyed %s (%s)', win:title(), hs.inspect(appName))
 
   if win ~= nil and appName ~= "zoom.us" then
     setLayoutForApp(win:application())
   end
+
   -- handleWindowLayout(win, appName, "destroyed")
 end
 
 local handleWindowFocused = function(win, appName)
-  log.df('window focused: %s', win:title())
-  -- logWindowInfo(win, appName, "focused")
+  log.df('window focused: %s (%s)', win:title(), hs.inspect(appName))
 
   handleWindowLayout(win, appName, "focused")
+
   -- hs.timer.doAfter(0.05, highlightFocused)
 end
 
 local handleWindowMoved = function(win, appName)
   if win == nil then return end
+
   log.df('window moved: %s', win or appName)
 
   -- handleWindowLayout(win, appName, "moved")
 end
 
 local handleWindowFullscreened = function(win, appName)
-  log.df('window fullscreened: %s for %s', win:title(), appName)
+  log.df('window fullscreened: %s (%s)', win:title(), hs.inspect(appName))
 
   win:setFullscreen(false)
 end
 
 -- @param event: int
 local handleScreenEvent = function(event)
-  log.df('!!!!!!!!!!!!!!!!!!!! screen event (%s) occurred', hs.inspect(event))
+  log.df('\r\n== screen event occurred: %s', hs.inspect(event))
 end
 
 -- @param name: string
 -- @param event: int
 -- @param app: table
 local handleAppEvent = function(name, event, app)
-  log.df('app (%s) event (%s) occurred: %s', name, event, hs.inspect(app))
+  -- log.df('\r\n==================== app event occurred: %s, %s, %s', hs.inspect(name), hs.inspect(event), hs.inspect(app))
+  log.df('\r\n==================== app event occurred: %s, %s', hs.inspect(name), hs.inspect(event))
 end
 
 local getFiltersFromAppConfig = function()
@@ -237,24 +221,16 @@ local getFiltersFromAppConfig = function()
     end
   end
 
-  log.df("Preparing to filter the following apps: %s", hs.inspect(filters))
+  log.df("Preparing to filter the following apps: \r\n%s", hs.inspect(filters))
   return filters
 end
 
 module.start = (function()
-  log.df("Starting utils.wm..")
-
-  -- Watch for screen changes
-  screenWatcher = hs.screen.watcher.new(handleScreenEvent)
-  screenWatcher:start()
-
-  -- Watch for application-level events
-  appWatcher = hs.application.watcher.new(handleAppEvent)
-  appWatcher:start()
+  log.df("Starting [utils.wm]..")
 
   local app_filters = getFiltersFromAppConfig()
 
-  windowFilter = hs.window.filter.new(app_filters)
+  cache.filter = hs.window.filter.new(app_filters)
     :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
     :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
     -- :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
@@ -262,18 +238,6 @@ module.start = (function()
     -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
     :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
-
-  hs.window.filter.allowedWindowRoles = {
-    AXStandardWindow=true,
-    AXDialog=true,
-    AXSystemDialog=true,
-    -- AXUnknown=true
-  }
-
-  for _, name in ipairs(config.ignoredApps) do
-    hs.window.filter.ignoreAlways[name] = true
-  end
-
 end)
 
 module.setLayoutForAll = (function()
@@ -285,12 +249,9 @@ module.setLayoutForApp = (function(app)
 end)
 
 module.stop = (function()
-  log.df("Stopping utils.wm..")
+  log.df("Stopping [utils.wm]..")
 
-  windowFilter = nil
-  screenWatcher:stop()
-  screenWatcher = nil
-  appWatcher = nil
+  cache.filter:unsubscribeAll()
 end)
 
 return module

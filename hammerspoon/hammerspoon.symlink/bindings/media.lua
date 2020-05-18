@@ -1,4 +1,4 @@
-local log = hs.logger.new('[bindings.media]', 'debug')
+local log = hs.logger.new('[bindings.media]', 'warning')
 
 local module = {}
 
@@ -28,11 +28,16 @@ local adjustVolume = function(vol)
   end
 end
 
-local notify = function(notification)
-  print('Media notify: ' .. hs.inspect(notification))
+local notify = function(n)
+  log.df('Spotify notification: %s', hs.inspect(n))
 
-  hs.notify.new({title=notification.title, subTitle=notification.subTitle,
-    informativeText=notification.informativeText}):setIdImage(notification.image):send()
+  hs.notify.new({
+      title=n.artist .. "(" .. n.state .. ")",
+      subTitle=n.track,
+      informativeText=n.album,
+    })
+  :setIdImage(n.image)
+  :send()
 end
 
 local spotify = function (event, alertText)
@@ -50,10 +55,21 @@ local spotify = function (event, alertText)
       local image = hs.image.imageFromAppBundle('com.spotify.client')
 
       if event == 'playpause' and not hs.spotify.isPlaying() then
-        notify({ title='Paused', subTitle=hs.spotify.getCurrentArtist(),
-          informativeText=hs.spotify.getCurrentTrack(), image=image })
+        notify({
+            state='Paused',
+            artist=hs.spotify.getCurrentArtist(),
+            track=hs.spotify.getCurrentTrack(),
+            album=hs.spotify.getCurrentAlbum(),
+            image=image
+          })
       else
-        notify({ title=hs.spotify.getCurrentArtist(), subTitle=hs.spotify.getCurrentTrack(), image=image })
+        notify({
+            state='Playing',
+            artist=hs.spotify.getCurrentArtist(),
+            track=hs.spotify.getCurrentTrack(),
+            album=hs.spotify.getCurrentAlbum(),
+            image=image
+          })
       end
     end)
   end

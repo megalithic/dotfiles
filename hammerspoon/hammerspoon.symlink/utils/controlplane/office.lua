@@ -1,4 +1,4 @@
-local log = hs.logger.new('[controlplane.office]', 'debug')
+local log = hs.logger.new('[controlplane.office]', 'warning')
 
 local cache = {}
 local module = {
@@ -57,7 +57,7 @@ local sleepWatcher = function(_, _, _, _, event)
 end
 
 module.start = function()
-  log.i('Starting office control, isDocked?', isDocked)
+  log.i('Starting office control')
   cache.watcherSleep = hs.watchable.watch('status.sleepEvent', sleepWatcher)
 end
 

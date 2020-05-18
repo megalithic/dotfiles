@@ -52,6 +52,7 @@ local rebindKeys = function(appName, options)
 end
 
 module.start = function()
+  log.df("Starting [bindings.slack]..")
   cache.filter = hs.window.filter.new({module.targetAppName})
 
   cache.filter:subscribe({
@@ -64,6 +65,8 @@ module.start = function()
   end
 
   module.stop = function()
+    log.df("Stopping [bindings.slack]..")
+
     cache.filter:unsubscribeAll()
   end
 

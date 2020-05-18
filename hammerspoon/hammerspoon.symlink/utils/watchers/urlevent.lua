@@ -1,3 +1,5 @@
+local log = hs.logger.new('[utils.watchers.urlevent]', 'warning')
+
 local template = require('ext.template')
 local module   = {}
 
