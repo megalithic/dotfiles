@@ -1,5 +1,12 @@
 local log = hs.logger.new('[config]', 'warning')
 
+-- grid config
+hs.grid.GRIDWIDTH = 8
+hs.grid.GRIDHEIGHT = 8
+hs.grid.MARGINX = 0
+hs.grid.MARGINY = 0
+
+-- available and preferred displays
 local displays = {
   laptop = 'Color LCD',
   external = 'Dell P2415Q'
@@ -8,6 +15,7 @@ local displays = {
 local module = {
   network = {
     home = 'shaolin',
+    hostname = hs.host.localizedName(),
     currentConnected = hs.wifi.currentNetwork()
   },
 
@@ -17,18 +25,6 @@ local module = {
   -- },
 
   displays = displays,
-
-  wm = {
-    defaultDisplayLayouts = {
-      [displays.laptop]    = 'monocle',
-      [displays.external]  = 'main-center'
-    },
-
-    displayLayouts = {
-      [displays.laptop]    = { 'monocle', 'main-right', 'side-by-side'     },
-      [displays.external]  = { 'main-center', 'main-right', 'side-by-side' }
-    }
-  },
 
   window = {
     highlightBorder = false,
@@ -40,48 +36,40 @@ local module = {
     -- studioSpeakers = { aid = 10, iid = 11, name = "Studio Speakers" },
     -- studioLights   = { aid = 9,  iid = 11, name = "Studio Lights"   },
     -- tvLights       = { aid = 6,  iid = 11, name = "TV Lights"       }
-  }
+  },
+
+  grid =  {
+    topHalf =         '0,0 8x4',
+    rightHalf =       '4,0 4x8',
+    bottomHalf =      '0,4 8x4',
+    leftHalf =        '0,0 4x8',
+    rightOneThird =   '5,0 3x8',
+    rightTwoThirds =  '3,0 5x8',
+    leftOneThird =    '0,0 3x8',
+    leftTwoThirds =   '0,0 5x8',
+    fullScreen =      '0,0 8x8',
+    centeredLarge =   '1,1 6x6',
+    centeredMedium =  '2,2 4x4',
+    centeredSmall =   '3,3 2x2',
+  },
+
+  superKeys = {
+    ctrl = {'ctrl'},
+    cmd = {'cmd'},
+    cmdAlt = {'cmd', 'alt'},
+    cmdShift = {'cmd', 'shift'},
+    ctrlShift = {'ctrl', 'shift'},
+    cmdCtrl = {'cmd', 'ctrl'},
+    ctrlAlt = {'ctrl', 'alt'},
+    mashShift = {'cmd', 'ctrl', 'shift'},
+    mash = {'cmd', 'alt', 'ctrl'},
+    hyper = {'cmd', 'alt', 'ctrl', 'shift' },
+  },
+
+  ptt = {'cmd', 'alt'},
 }
 
-local chain = require('ext.window').chain
 
-hs.grid.GRIDWIDTH = 8
-hs.grid.GRIDHEIGHT = 8
-hs.grid.MARGINX = 0
-hs.grid.MARGINY = 0
-
-
-module.hostname = hs.host.localizedName()
-
-module.grid = {
-  topHalf =         '0,0 8x4',
-  rightHalf =       '4,0 4x8',
-  bottomHalf =      '0,4 8x4',
-  leftHalf =        '0,0 4x8',
-  rightOneThird =   '5,0 3x8',
-  rightTwoThirds =  '3,0 5x8',
-  leftOneThird =    '0,0 3x8',
-  leftTwoThirds =   '0,0 5x8',
-  fullScreen =      '0,0 8x8',
-  centeredLarge =   '1,1 6x6',
-  centeredMedium =  '2,2 4x4',
-  centeredSmall =   '3,3 2x2',
-}
-
-module.superKeys = {
-  ctrl = {'ctrl'},
-  cmd = {'cmd'},
-  cmdAlt = {'cmd', 'alt'},
-  cmdShift = {'cmd', 'shift'},
-  ctrlShift = {'ctrl', 'shift'},
-  cmdCtrl = {'cmd', 'ctrl'},
-  ctrlAlt = {'ctrl', 'alt'},
-  mashShift = {'cmd', 'ctrl', 'shift'},
-  mash = {'cmd', 'alt', 'ctrl'},
-  hyper = {'cmd', 'alt', 'ctrl', 'shift' },
-}
-
-module.ptt = {'cmd', 'alt'}
 
 module.ignoredApps = { 'iStat Menus Status', 'Fantastical', 'Contexts'  }
 
@@ -93,19 +81,6 @@ module.distractionUrls = {
   'https://www.facebook.com',
   'https://www.reddit.com',
 }
-
-local appHandler = function(win)
-  if win == nil then return end
-
-  local appBundleID = win:application():bundleID()
-  local appName = win:application():name()
-  local visibleWindows = win:application():visibleWindows()
-  if appName == nil then return end
-
-  log.df('executing app handler for %s (%s) instance, for %s windows..', appName, appBundleID, #visibleWindows)
-
-  return appName
-end
 
 module.apps = {
   ['_'] = {
@@ -401,56 +376,56 @@ module.snap = {
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'h',
-    locations = chain({
+    locations = {
       module.grid.leftHalf,
       module.grid.leftOneThird,
       module.grid.leftTwoThirds,
-    })
+    }
   },
   {
     name = 'right',
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'l',
-    locations = chain({
+    locations = {
       module.grid.rightHalf,
       module.grid.rightOneThird,
       module.grid.rightTwoThirds,
-    })
+    }
   },
   {
     name = 'down',
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'j',
-    locations = chain({
+    locations = {
       module.grid.centeredLarge,
       module.grid.centeredMedium,
       module.grid.centeredSmall,
-    })
+    }
   },
   {
     name = 'up',
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'k',
-    locations = chain({
+    locations = {
       module.grid.fullScreen,
-    })
+    }
   },
   {
     name = 'full',
     superKey = module.superKeys.cmdCtrl,
     -- hyperKey = module.superKeys.hyper,
     shortcut = 'return',
-    locations = chain({
+    locations = {
       module.grid.fullScreen,
-    })
+    }
   },
 }
 
 module.docking = {
-  -- find your device IDs with `print(hs.inspect(hs.usb.attachedDevices()))` from the hammerspoon console
+  -- find your device IDs with `dumpUsbDevices()` (see console.lua) from the hammerspoon console
   ['device'] = {
     productID = 25907,
     productName = "CalDigit Thunderbolt 3 Audio",
@@ -472,10 +447,5 @@ module.docking = {
     fontSize = 14.0,
   },
 }
-
--- log.d('Found the following attached USB devices:\r\n')
--- log.d('---------------------------------------------')
--- log.d(print(hs.inspect(hs.usb.attachedDevices())))
--- log.d('---------------------------------------------')
 
 return module

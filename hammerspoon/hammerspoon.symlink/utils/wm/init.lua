@@ -17,23 +17,6 @@ local snap = function(win, position, screen)
   if win == nil then return end
   log.df('window snap (%s) on screen %s: %s (%s)', hs.inspect(position), screen, win:title(), hs.inspect(win:application():name()))
 
-  -- local wf = hs.window.filter
-  -- local appBundleID = win:application():bundleID()
-  -- local appName = win:application():name()
-  -- local allWindows = win:application():visibleWindows()
-  -- local relatedWindowsFilter = wf.new{[appName]={allowTitles=1}}
-  -- local relatedWindowsFilter = wf.new{appName}:setAppFilter(appName, {allowTitles=1})
-
-  -- print('allWindows: - ', hs.inspect(relatedWindowsFilter))
-  -- print('allWindows: - ', hs.inspect(allWindows[1]))
-  -- print('allWindows:isStandard(): - ', hs.inspect(allWindows[1]:isStandard()))
-
-  -- if (#allWindows > 1) then
-  --   snapRelatedWindows(appBundleID, allWindows, screen)
-  -- else
-  --   hs.grid.set(win, position or hs.grid.get(win), screen)
-  -- end
-
   hs.grid.set(win, position or hs.grid.get(win), display(screen))
 end
 
