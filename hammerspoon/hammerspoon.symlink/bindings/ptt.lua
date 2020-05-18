@@ -1,6 +1,6 @@
 -- Derived from the PushToTalk Spoon and then heavily modified for my use cases
 
-local log = hs.logger.new('bindings.ptt', 'debug')
+local log = hs.logger.new('[bindings.ptt]', 'debug')
 
 local module = {}
 

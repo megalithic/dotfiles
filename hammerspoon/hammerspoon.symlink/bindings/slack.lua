@@ -1,6 +1,6 @@
 -- remaps certain keybindings in slack (desired -> original):
 
-local log = hs.logger.new('bindings.slack', 'debug')
+local log = hs.logger.new('[bindings.slack]', 'debug')
 
 local cache  = { bindings = {} }
 local module = { cache = cache, targetAppName = 'Slack' }

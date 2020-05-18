@@ -1,4 +1,4 @@
-local log = hs.logger.new('bindings.snap', 'debug')
+local log = hs.logger.new('[bindings.snap]', 'debug')
 
 local module = {}
 

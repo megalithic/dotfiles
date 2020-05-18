@@ -1,4 +1,4 @@
-local log = hs.logger.new('controlplane.dock', 'debug')
+local log = hs.logger.new('[controlplane.dock]', 'debug')
 
 -- local module = {}
 

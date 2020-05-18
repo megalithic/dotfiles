@@ -1,6 +1,6 @@
 -- TODO: extract events and device things to config.lua if possible
 
-local log = hs.logger.new('[hubitat]', 'debug')
+local log = hs.logger.new('[controlplane.hubitat]', 'debug')
 local officeDeviceId = 171
 local weatherDeviceId = 32
 

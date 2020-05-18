@@ -1,4 +1,4 @@
-local log = hs.logger.new('controlplane.office', 'debug')
+local log = hs.logger.new('[controlplane.office]', 'debug')
 
 local cache = {}
 local module = {

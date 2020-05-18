@@ -1,10 +1,9 @@
-local log = hs.logger.new('config', 'warning')
+local log = hs.logger.new('[config]', 'warning')
 
 local displays = {
-    laptop = 'Color LCD',
-    external = 'Dell P2415Q'
-  }
-
+  laptop = 'Color LCD',
+  external = 'Dell P2415Q'
+}
 
 local module = {
   network = {

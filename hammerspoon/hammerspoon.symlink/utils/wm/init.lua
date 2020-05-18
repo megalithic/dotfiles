@@ -1,4 +1,4 @@
-local log = hs.logger.new('utils.wm', 'warning')
+local log = hs.logger.new('[utils.wm]', 'warning')
 
 local module = {}
 
@@ -228,49 +228,6 @@ local handleAppEvent = function(name, event, app)
   log.df('app (%s) event (%s) occurred: %s', name, event, hs.inspect(app))
 end
 
--- function activateLayout(forceScreenCount)
---   -- before hook
---   layoutConfig._before_()
-
---   -- apply layouts
---   for bundleID, callback in pairs(layoutConfig) do
---     local application = hs.application.get(bundleID)
---     if application then
---       local windows = application:visibleWindows()
---       for _, window in pairs(windows) do
---         if canManageWindow(window) then
---           callback(window, forceScreenCount)
---         end
---       end
---     end
---   end
-
---   -- after hook
---   layoutConfig._after_()
--- end
-
--- local handleWindowEvent = function(window)
---   if canManageWindow(window) then
---     local application = window:application()
---     local bundleID = application:bundleID()
---     if layoutConfig[bundleID] then
---       layoutConfig[bundleID](window)
---     end
---   end
--- end
-
-
--- local handleScreenEvent = function()
---   -- Make sure that something noteworthy (display count) actually
---   -- changed. We no longer check geometry because we were seeing spurious
---   -- events.
---   local screens = hs.screen.allScreens()
---   if not (#screens == screenCount) then
---     screenCount = #screens
---     activateLayout(screenCount)
---   end
--- end
-
 local getFiltersFromAppConfig = function()
   local filters = {}
 
@@ -298,6 +255,13 @@ module.start = (function()
   local app_filters = getFiltersFromAppConfig()
 
   windowFilter = hs.window.filter.new(app_filters)
+    :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
+    :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    -- :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
+    -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+    :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
+    :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
 
   hs.window.filter.allowedWindowRoles = {
     AXStandardWindow=true,
@@ -310,12 +274,6 @@ module.start = (function()
     hs.window.filter.ignoreAlways[name] = true
   end
 
-  windowFilter:subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-  windowFilter:subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
-  windowFilter:subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
-  windowFilter:subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
-  windowFilter:subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
-  windowFilter:subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
 end)
 
 module.setLayoutForAll = (function()

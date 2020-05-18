@@ -1,4 +1,4 @@
-local log = hs.logger.new('bindings.quitguard', 'debug')
+local log = hs.logger.new('[bindings.quitguard]', 'debug')
 local module = {}
 
 local quitModal = hs.hotkey.modal.new('cmd','q')

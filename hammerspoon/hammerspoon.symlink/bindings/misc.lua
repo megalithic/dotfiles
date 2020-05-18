@@ -1,4 +1,4 @@
-local log = hs.logger.new('bindings.misc', 'debug')
+local log = hs.logger.new('[bindings.misc]', 'debug')
 
 local module = {}
 

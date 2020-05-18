@@ -1,6 +1,8 @@
 -- local axuiWindowElement = require('hs._asm.axuielement').windowElement
 -- local reloadHS          = require('ext.system').reloadHS
 
+local log             = hs.logger.new('[console]', 'warning')
+
 local module = {}
 
 module.init = function()

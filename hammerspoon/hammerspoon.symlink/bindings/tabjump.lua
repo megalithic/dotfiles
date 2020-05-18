@@ -1,4 +1,4 @@
-local log = hs.logger.new('bindings.tabjump', 'debug')
+local log = hs.logger.new('[bindings.tabjump]', 'debug')
 local module = {}
 
 -- TODO: extend to support defined browsers, not just Brave

@@ -1,7 +1,7 @@
 -- logging config
 require('hs.logger').idLength(20)
 
-local log = hs.logger.new('init', 'warning')
+local log = hs.logger.new('[init]', 'warning')
 
 -- global stuff
 require('console').init()
@@ -19,6 +19,7 @@ require('hs.hotkey').setLogLevel("warning")
 hs.window.animationDuration = 0.0
 hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
+hs.alert.defaultStyle.textSize = 32
 
 -- requires
 bindings                    = require('bindings')
