@@ -6,9 +6,9 @@ The simplest answer is that Hammerspoon is a Lua-based automation framework for
 your macOS-based computer. It has a robust and [well-documented](http://www.hammerspoon.org/docs/) Lua layer on top
 of the macOS core libraries and APIs.
 
-### So, what does my [config](hammerspoon.symlink/config.lua) do?
+### So, what does my [config](hammerspoon.symlink/config.lua) do (it's the primary setup for everything)?
 
-- **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `opt+cmd` to talk.
+y **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `opt+cmd` to talk.
 
 - **Spotify Controls**: simple keybindings to handle Play/Pause, Next, Previous.
   Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
@@ -19,7 +19,7 @@ of the macOS core libraries and APIs.
 - **Accidental app quitting protection**: prevents accidental app quitting,
   makes you hit `cmd+q` twice.
 
-- **Application Toggling**:
+- **Application Toggling** (for example):
 
   - Finder: `ctrl+backtick`
   - Brave: `cmd+backtick`
@@ -35,7 +35,9 @@ of the macOS core libraries and APIs.
   - apps can define their own custom `handler` function to be executed when they are active,
     for example, custom keybinding (see Slack in config.lua)
   - apps can auto set dnd and slack status modes
-  - apps can enable/disable quit guard
+  - apps can enable/disable QuitGuard™
+  - apps can auto-hide after n-minute interval
+  - apps can auto-quit after n-minute interval
 
 - **Window Management**:
 

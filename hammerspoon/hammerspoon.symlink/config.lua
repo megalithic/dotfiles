@@ -1,5 +1,8 @@
 local log = hs.logger.new('[config]', 'warning')
 
+-- TODO:
+-- - investigate using hs.settings: https://github.com/rsefer/hammerspoon-config/blob/master/lib/settings.lua
+
 -- grid config
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8

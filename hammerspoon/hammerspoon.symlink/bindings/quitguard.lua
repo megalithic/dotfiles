@@ -18,16 +18,17 @@ function quitModal:entered()
   local appConfig = config.apps[appBundleID]
 
   if (appConfig == nil or appConfig.quitGuard == nil) then
-    log.df("QuitGuard not configured for %s (%s)..", app:name(), appBundleID)
+    log.wf("QuitGuard not configured for %s (%s)..", app:name(), appBundleID)
     quit()
   else
-    log.df("Quitting app, %s (%s), with QuitGuard..", app:name(), appBundleID)
+    log.df("Starting to quit app, %s (%s), with QuitGuard..", app:name(), appBundleID)
 
     if appConfig.quitGuard then
       hs.alert.show(quitAlertText, 1)
       hs.timer.doAfter(1, function() quitModal:exit() end)
     else
       quitModal:exit()
+      log.df("Quitting app, %s (%s), with QuitGuard..", app:name(), appBundleID)
       quit()
     end
   end

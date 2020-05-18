@@ -3,6 +3,16 @@ local log = hs.logger.new('[utils.wm]', 'warning')
 local cache  = {}
 local module = { cache = cache }
 
+local canLayoutWindow = require('ext.window').canLayoutWindow
+local getManageableWindows = require('ext.window').getManageableWindows
+
+local appHandler = require('ext.window-handlers').appHandler
+local dndHandler = require('ext.window-handlers').dndHandler
+local hideAfterHandler = require('ext.window-handlers').hideAfterHandler
+local quitAfterHandler = require('ext.window-handlers').quitAfterHandler
+
+local windowLayouts = config.apps
+
 local display = function(screen)
   local allDisplays = hs.screen.allScreens()
 
@@ -13,28 +23,21 @@ local display = function(screen)
   end
 end
 
+
+local doWindowHandlers = function(win, appConfig, event)
+  log.df("doWindowHandlers: {win: %s, event: %s}", win:title(), event)
+
+  quitAfterHandler(win, appConfig.quitAfter, event)
+  hideAfterHandler(win, appConfig.hideAfter, event)
+  appHandler(win, appConfig.handler, event)
+  -- dndHandler(win, appConfig.dnd, event)
+end
+
 local snap = function(win, position, screen)
   if win == nil then return end
   log.df('window snap (%s) on screen %s: %s (%s)', hs.inspect(position), screen, win:title(), hs.inspect(win:application():name()))
 
   hs.grid.set(win, position or hs.grid.get(win), display(screen))
-end
-
-local windowLayouts = config.apps
-
-local canLayoutWindow = function(win)
-  local bundleID = win:application():bundleID()
-
-  return win:title() ~= "" and win:isStandard() and not win:isMinimized() and not win:isFullScreen() or
-    bundleID == 'com.googlecode.iterm2' or bundleID == 'net.kovidgoyal.kitty'
-end
-
-local getManageableWindows = function(windows)
-  if windows == nil then return end
-  return hs.fnutils.filter(windows, (function(win)
-    if win == nil then return end
-    return canLayoutWindow(win)
-  end))
 end
 
 local snapRelatedWindows = function(appBundleID, windows, screen)
@@ -48,62 +51,6 @@ local snapRelatedWindows = function(appBundleID, windows, screen)
         snap(win, config.grid.leftHalf, screen)
       end
     end
-  end
-end
-
-local dndHandler = function(win, dndConfig, event)
-  if dndConfig == nil then return end
-  log.df('found dnd handler for %s..', win:application():bundleID())
-
-  local enabled = dndConfig.enabled
-  local mode = dndConfig.mode
-
-  if (enabled) then
-    if (event == "created") then
-      log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
-      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode}):start()
-      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"}):start()
-    elseif (event == "destroyed") then
-      -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
-      -- log.df('dnd handler: toggling OFF slack status and dnd mode')
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end) , (function() end), {"back"}):start()
-      -- hs.execute("slack back", true)
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"off"}):start()
-      -- hs.execute("dnd off", true)
-    end
-  end
-end
-
-local appHandler = function(win, handler, _event)
-  if handler == nil then return end
-  log.df('found app handler for %s..', win:application():bundleID())
-
-  handler(win)
-end
-
-local quitAfterHandler = function(win, interval, event)
-  if interval ~= nil then
-    log.df('quitAfterHandler interval %sm on %s, for event %s', interval, win, event)
-    local app = win:application()
-
-    if (app:isRunning()) then
-      hs.timer.doAfter((interval*60), function() app:kill() end)
-    end
-  else
-    return
-  end
-end
-
-local hideAfterHandler = function(win, interval, event)
-  if interval ~= nil then
-    log.df('hideAfterHandler interval %sm on %s, for event %s', interval, win, event)
-    local app = win:application()
-
-    if app:isRunning() and not app:isHidden() then
-      hs.timer.doAfter((interval*60), function() app:hide() end)
-    end
-  else
-    return
   end
 end
 
@@ -126,14 +73,13 @@ local setLayoutForApp = function(app, appConfig)
       elseif (#windows > 1) then
         snapRelatedWindows(appConfig.hint, windows, appConfig.preferredDisplay)
       else
-        log.df('grid layout NOT applied for app (no windows found for app): \r\n%s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
+        log.wf('grid layout NOT applied for app (no windows found for app): \r\n%s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
       end
     else
-      log.df('unable to find an app config for %s', string.upper(app:name()))
+      log.wf('unable to find an app config for %s', string.upper(app:name()))
     end
   end
 end
-
 
 local setLayoutForAll = function()
   log.i('starting layout of all apps')
@@ -162,74 +108,58 @@ local windowLogger = function(event, win, appName)
   log.df('window %s: %s (%s)', event, appName, win:title())
 end
 
-local handleWindowLayout = function(win, appName, event)
-  if not canLayoutWindow(win) and event ~= "destroyed" then return end
-
+local getAppConfigForWin = function(win)
   local appBundleId = win:application():bundleID()
   local appConfig = windowLayouts[appBundleId] or windowLayouts['_']
 
-  -- log.df('found app config for %s..', appBundleId or "<no app found>")
+  return appConfig
+end
 
-  dndHandler(win, appConfig.dnd, event)
-  appHandler(win, appConfig.handler, event)
+local handleWindowLayout = function(win, appName, event)
+  if not canLayoutWindow(win) and event ~= "windowDestroyed" then return end
 
-  -- TODO: better handle existing timers so we're not stacking timers (possibly
-  -- handle with cached table of timers?)
-  if event == "unfocused" then
-    quitAfterHandler(win, appConfig.quitAfter, event)
-    hideAfterHandler(win, appConfig.hideAfter, event)
-  end
+  appConfig = getAppConfigForWin(win)
 
-  if event ~= "focused" then
+  doWindowHandlers(win, appConfig, event)
+
+  if event ~= "windowFocused" then
     snap(win, appConfig.position, appConfig.preferredDisplay)
   end
 end
 
-local handleWindowCreated = function(win, appName)
-  local event = "created"
+local handleWindowCreated = function(win, appName, event)
   windowLogger(event, win, appName)
 
   handleWindowLayout(win, appName, event)
 end
 
-local handleWindowDestroyed = function(win, appName)
-  local event = "destroyed"
+local handleWindowDestroyed = function(win, appName, event)
   windowLogger(event, win, appName)
 
   if win ~= nil and appName ~= "zoom.us" then
     setLayoutForApp(win:application())
   end
-
-  -- handleWindowLayout(win, appName, event)
 end
 
-local handleWindowFocused = function(win, appName)
-  local event = "focused"
+local handleWindowFocused = function(win, appName, event)
   windowLogger(event, win, appName)
 
   handleWindowLayout(win, appName, event)
-  -- highlight()
 end
 
-local handleWindowUnfocused = function(win, appName)
-  local event = "unfocused"
+local handleWindowUnfocused = function(win, appName, event)
   windowLogger(event, win, appName)
 
-  -- handleWindowLayout(win, appName, event)
-  -- highlight()
+  doWindowHandlers(win, getAppConfigForWin(win), event)
 end
 
-local handleWindowMoved = function(win, appName)
+local handleWindowMoved = function(win, appName, _event)
   if win == nil then return end
 
-  local event = "moved"
   windowLogger(event, win, appName)
-
-  -- handleWindowLayout(win, appName, event)
 end
 
-local handleWindowFullscreened = function(win, appName)
-  local event = "fullscreened"
+local handleWindowFullscreened = function(win, appName, _event)
   windowLogger(event, win, appName)
 
   win:setFullscreen(false)
@@ -264,6 +194,7 @@ module.start = (function()
     :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
     :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
     -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
     :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)

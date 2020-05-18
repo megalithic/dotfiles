@@ -1,4 +1,4 @@
-local log = hs.logger.new('[ext.window]', 'debug')
+local log = hs.logger.new('[ext.window]', 'warning')
 
 local focusScreen     = require('ext.screen').focusScreen
 local highlightWindow = require('ext.drawing').highlightWindow
@@ -174,10 +174,9 @@ end
 -- LEGACY FUNCTIONS FROM MY ORIGINAL HS CONFIG --------------------------------
 -- ============================================================================
 --
--- TODO: salvage `chain` and other functions and delete the rest once we get
--- `hhtwm` in place
+-- TODO: salvage `chain` and other functions and delete the rest once we
+-- determine what's actually needed.
 --
-
 
 local lastSeenChain = nil
 local lastSeenWindow = nil
@@ -196,6 +195,24 @@ module.getConfigForApp = function(name)
 
   return found
 end
+
+
+
+module.canLayoutWindow = function(win)
+  local bundleID = win:application():bundleID()
+
+  return win:title() ~= "" and win:isStandard() and not win:isMinimized() and not win:isFullScreen() or
+    bundleID == 'com.googlecode.iterm2' or bundleID == 'net.kovidgoyal.kitty'
+end
+
+module.getManageableWindows = function(windows)
+  if windows == nil then return end
+  return hs.fnutils.filter(windows, (function(win)
+    if win == nil then return end
+    return canLayoutWindow(win)
+  end))
+end
+
 
 -- Chain the specified movement commands.
 -- This is like the "chain" feature in Slate, but with a couple of enhancements:
