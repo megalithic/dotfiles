@@ -1,21 +1,29 @@
 -- remaps certain keybindings in slack (desired -> original):
-local log = hs.logger.new('bindings.slack', 'warning')
+
+local log = hs.logger.new('bindings.slack', 'debug')
 
 local cache  = { bindings = {} }
-local module = { cache = cache, targetAppName = {'Slack'} }
+local module = { cache = cache, targetAppName = 'Slack' }
 
 local rebindKeys = function(appName, options)
-  log.df('Rebinding keys for %s (%s)', hs.inspect(appName), hs.inspect(options))
-
   local enabled = options.enabled or false
+  log.df("Rebinding for appName: %s, targetAppName: %s; enabled? %s; cached bindings? %s", appName, module.targetAppName, hs.inspect(enabled), hs.inspect(cache.bindings[appName]))
 
   if not enabled and cache.bindings[appName] then
     cache.bindings[appName]:disable()
+    log.df('Should be disabling for %s and bindings %s', appName, hs.inspect(cache.bindings[appName]))
+
     return
   end
 
-  if cache.bindings[appName] then
+  if enabled and cache.bindings[appName] then
     cache.bindings[appName]:enable()
+
+    -- log.df('Binding exists, and forced ENABLED; so enabling for %s and bindings %s', appName, hs.inspect(cache.bindings[appName]))
+  -- elseif not enabled and cache.bindings[appName] then
+    -- cache.bindings[appName]:disable()
+
+    -- log.df('Binding exists, and forced DISABLED; so disabling for %s and bindings %s', appName, hs.inspect(cache.bindings[appName]))
   else
     cache.bindings[appName] = hs.hotkey.bind({ 'ctrl' }, 'j', function()
       hs.eventtap.keyStroke({ 'alt' }, 'down')
@@ -30,6 +38,8 @@ local rebindKeys = function(appName, options)
       hs.eventtap.keyStroke({ 'alt', 'shift' }, 'up')
     end)
     cache.bindings[appName] = hs.hotkey.bind({ 'cmd' }, 'w', function()
+      log.df('Executing binding for cmd+w for %s and bindings %s', appName, hs.inspect(cache.bindings[appName]))
+
       hs.eventtap.keyStroke({}, 'escape')
     end)
     cache.bindings[appName] = hs.hotkey.bind({ 'cmd' }, 'r', function()
@@ -42,23 +52,19 @@ local rebindKeys = function(appName, options)
 end
 
 module.start = function()
-  cache.filter = hs.window.filter.new(module.targetAppName)
-  -- cache.filter = hs.window.filter.new(false):setAppFilter('Slack')
+  cache.filter = hs.window.filter.new({module.targetAppName})
 
   cache.filter:subscribe({
-    hs.window.filter.windowFocused,
-    hs.window.filter.windowUnfocused
-  }, function(_, appName, event)
-    if event == "windowFocused" then
-      rebindKeys(appName, { enabled = (event == "windowFocused"), disabled = not (event == "windowFocused") })
-    elseif event == "windowUnfocused" then
-      rebindKeys(appName, { disabled = (event == "windowUnfocused"), enabled = not (event == "windowUnfocused") })
-    end
-  end)
-end
+      hs.window.filter.windowFocused,
+      hs.window.filter.windowUnfocused
+    }, function(_, appName, event)
 
-module.stop = function()
-  cache.filter:unsubscribeAll()
-end
+      rebindKeys(module.targetAppName, { enabled = (event == "windowFocused") })
+    end)
+  end
 
-return module
+  module.stop = function()
+    cache.filter:unsubscribeAll()
+  end
+
+  return module

@@ -35,7 +35,7 @@ watchers.enabled            = { 'urlevent' }
 watchers.urlPreference      = { 'Brave Browser Dev', 'Google Chrome', 'Firefox', 'Safari' }
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods', 'media', 'misc', 'slack' }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'apps', 'snap', 'airpods', 'media', 'misc' }
 
 -- start/stop modules
 local modules               = { bindings, controlplane, watchables, watchers, wm }
