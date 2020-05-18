@@ -1,4 +1,4 @@
-local log = hs.logger.new('[utils.wm]', 'debug')
+local log = hs.logger.new('[utils.wm]', 'warning')
 
 local cache  = {}
 local module = { cache = cache }
@@ -51,12 +51,12 @@ local snapRelatedWindows = function(appBundleID, windows, screen)
   end
 end
 
-local dndHandler = function(win, dnd, event)
-  if dnd == nil then return end
+local dndHandler = function(win, dndConfig, event)
+  if dndConfig == nil then return end
   log.df('found dnd handler for %s..', win:application():bundleID())
 
-  local enabled = dnd.enabled
-  local mode = dnd.mode
+  local enabled = dndConfig.enabled
+  local mode = dndConfig.mode
 
   if (enabled) then
     if (event == "created") then
@@ -74,11 +74,37 @@ local dndHandler = function(win, dnd, event)
   end
 end
 
-local appHandler = function(win, handler)
+local appHandler = function(win, handler, _event)
   if handler == nil then return end
   log.df('found app handler for %s..', win:application():bundleID())
 
   handler(win)
+end
+
+local quitAfterHandler = function(win, interval, event)
+  if interval ~= nil then
+    log.df('quitAfterHandler interval %sm on %s, for event %s', interval, win, event)
+    local app = win:application()
+
+    if (app:isRunning()) then
+      hs.timer.doAfter((interval*60), function() app:kill() end)
+    end
+  else
+    return
+  end
+end
+
+local hideAfterHandler = function(win, interval, event)
+  if interval ~= nil then
+    log.df('hideAfterHandler interval %sm on %s, for event %s', interval, win, event)
+    local app = win:application()
+
+    if app:isRunning() and not app:isHidden() then
+      hs.timer.doAfter((interval*60), function() app:hide() end)
+    end
+  else
+    return
+  end
 end
 
 local setLayoutForApp = function(app, appConfig)
@@ -145,7 +171,14 @@ local handleWindowLayout = function(win, appName, event)
   -- log.df('found app config for %s..', appBundleId or "<no app found>")
 
   dndHandler(win, appConfig.dnd, event)
-  appHandler(win, appConfig.handler)
+  appHandler(win, appConfig.handler, event)
+
+  -- TODO: better handle existing timers so we're not stacking timers (possibly
+  -- handle with cached table of timers?)
+  if event == "unfocused" then
+    quitAfterHandler(win, appConfig.quitAfter, event)
+    hideAfterHandler(win, appConfig.hideAfter, event)
+  end
 
   if event ~= "focused" then
     snap(win, appConfig.position, appConfig.preferredDisplay)
@@ -219,6 +252,12 @@ module.start = (function()
   log.df("Starting [utils.wm]..")
 
   local app_filters = getFiltersFromAppConfig()
+
+  -- window event order:
+  --  - created
+  --  - (snap)
+  --  - unfocused
+  --  - focused
 
   cache.filter = hs.window.filter.new(app_filters)
     :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)

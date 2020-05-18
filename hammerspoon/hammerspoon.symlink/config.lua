@@ -149,6 +149,7 @@ module.apps = {
     preferredDisplay = 2,
     position = module.grid.fullScreen,
     quitGuard = true,
+    hideAfter = 5,
     ignoredWindows = {'Slack Call Minipanel'},
   },
   ['com.readdle.smartemail-Mac'] = {
@@ -158,6 +159,7 @@ module.apps = {
     distraction = true,
     shortcut = 'm',
     preferredDisplay = 2,
+    hideAfter = 5,
     -- position = module.grid.rightHalf
     -- position = module.grid.rightTwoThirds
     position = module.grid.fullScreen,
@@ -172,7 +174,7 @@ module.apps = {
   },
   ['us.zoom.xos'] = {
     hint = 'us.zoom.xos',
-    name = 'Zoom',
+    name = 'zoom.us',
     superKey = module.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
@@ -187,6 +189,7 @@ module.apps = {
     superKey = module.superKeys.cmdShift,
     shortcut = '8',
     preferredDisplay = 2,
+    hideAfter = 1,
     -- position = '5,0 5x5'
     position = module.grid.rightHalf
   },
@@ -197,6 +200,7 @@ module.apps = {
     shortcut = 'm',
     distraction = true,
     preferredDisplay = 1,
+    hideAfter = 1,
     position = '5,5 3x3'
   },
   ['hangouts'] = {
@@ -215,6 +219,7 @@ module.apps = {
     shortcut = 'w',
     distraction = true,
     preferredDisplay = 1,
+    hideAfter = 1,
     position = '5,5 3x3'
   },
   ['com.agilebits.onepassword7'] = {

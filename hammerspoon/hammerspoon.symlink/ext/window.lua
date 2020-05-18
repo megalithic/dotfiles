@@ -1,3 +1,5 @@
+local log = hs.logger.new('[ext.window]', 'debug')
+
 local focusScreen     = require('ext.screen').focusScreen
 local highlightWindow = require('ext.drawing').highlightWindow
 

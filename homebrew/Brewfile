@@ -218,6 +218,7 @@ cask "nordvpn"
 # cask "near-lock"
 # cask "postgres"
 cask "postman"
+# handled by hammerspoon now :point_down:
 cask "quitter"
 cask "slack"
 cask "sococo"
