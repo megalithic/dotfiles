@@ -145,6 +145,14 @@ local highlightFocused = function()
   hs.timer.doAfter(0.3, function() rect:delete() end)
 end
 
+local highlight = function()
+  hs.timer.doAfter(0.05, highlightFocused)
+end
+
+local windowLogger = function(event, win, appName)
+  log.df('window %s: %s (%s)', event, appName, win:title())
+end
+
 local handleWindowLayout = function(win, appName, event)
   if not canLayoutWindow(win) and event ~= "destroyed" then return end
 
@@ -162,54 +170,53 @@ local handleWindowLayout = function(win, appName, event)
 end
 
 local handleWindowCreated = function(win, appName)
-  log.df('window created: %s (%s)', win:title(), hs.inspect(appName))
+  local event = "created"
+  windowLogger(event, win, appName)
 
-  handleWindowLayout(win, appName, "created")
+  handleWindowLayout(win, appName, event)
 end
 
 local handleWindowDestroyed = function(win, appName)
-  log.df('window destroyed %s (%s)', win:title(), hs.inspect(appName))
+  local event = "destroyed"
+  windowLogger(event, win, appName)
 
   if win ~= nil and appName ~= "zoom.us" then
     setLayoutForApp(win:application())
   end
 
-  -- handleWindowLayout(win, appName, "destroyed")
+  -- handleWindowLayout(win, appName, event)
 end
 
 local handleWindowFocused = function(win, appName)
-  log.df('window focused: %s (%s)', win:title(), hs.inspect(appName))
+  local event = "focused"
+  windowLogger(event, win, appName)
 
-  handleWindowLayout(win, appName, "focused")
+  handleWindowLayout(win, appName, event)
+  -- highlight()
+end
 
-  -- hs.timer.doAfter(0.05, highlightFocused)
+local handleWindowUnfocused = function(win, appName)
+  local event = "unfocused"
+  windowLogger(event, win, appName)
+
+  -- handleWindowLayout(win, appName, event)
+  -- highlight()
 end
 
 local handleWindowMoved = function(win, appName)
   if win == nil then return end
 
-  log.df('window moved: %s', win or appName)
+  local event = "moved"
+  windowLogger(event, win, appName)
 
-  -- handleWindowLayout(win, appName, "moved")
+  -- handleWindowLayout(win, appName, event)
 end
 
 local handleWindowFullscreened = function(win, appName)
-  log.df('window fullscreened: %s (%s)', win:title(), hs.inspect(appName))
+  local event = "fullscreened"
+  windowLogger(event, win, appName)
 
   win:setFullscreen(false)
-end
-
--- @param event: int
-local handleScreenEvent = function(event)
-  log.df('\r\n== screen event occurred: %s', hs.inspect(event))
-end
-
--- @param name: string
--- @param event: int
--- @param app: table
-local handleAppEvent = function(name, event, app)
-  -- log.df('\r\n==================== app event occurred: %s, %s, %s', hs.inspect(name), hs.inspect(event), hs.inspect(app))
-  log.df('\r\n==================== app event occurred: %s, %s', hs.inspect(name), hs.inspect(event))
 end
 
 local getFiltersFromAppConfig = function()
@@ -233,7 +240,7 @@ module.start = (function()
   cache.filter = hs.window.filter.new(app_filters)
     :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
     :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
-    -- :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
     -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
