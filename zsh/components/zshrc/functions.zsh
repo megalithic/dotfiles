@@ -11,8 +11,109 @@ enable_symantec() {
   for f in /Library/LaunchAgents/com.symantec.*.plist.disabled; do sudo mv -- "$f" "${f%.plist.disabled}.plist"; done
 }
 
-# HASS / HA / HOMEASSISTANT
-# -----------------------------------------------------------------------------
+
+function gss() {
+  git status &> /dev/null
+  inside_git_repo=$?
+  if [[ $inside_git_repo -eq 0 ]]; then
+
+    git diff --quiet
+    has_unstaged_changes=$?
+
+    git diff --quiet --cached
+    has_staged_changes=$?
+
+    if [[ $has_unstaged_changes -eq 1 ]]; then
+      echo "Showing diff of unstaged changes..."
+      git difftool -d
+    elif [[ $has_staged_changes -eq 1 ]]; then
+      echo "Showing diff of staged changes..."
+      git difftool -d --staged
+    else
+      echo "Showing last commit..."
+      git difftool -d HEAD~1 HEAD
+    fi
+
+  else
+    echo "Error: \"$0\" can only be used inside a Git repository."
+  fi
+}
+
+#
+# git
+#
+function gss() { # smart show diffs
+  git status &> /dev/null
+  inside_git_repo=$?
+  if [[ $inside_git_repo -eq 0 ]]; then
+
+    git diff --quiet
+    has_unstaged_changes=$?
+
+    git diff --quiet --cached
+    has_staged_changes=$?
+
+    if [[ $has_unstaged_changes -eq 1 ]]; then
+      echo "Showing diff of unstaged changes..."
+      git difftool -d
+    elif [[ $has_staged_changes -eq 1 ]]; then
+      echo "Showing diff of staged changes..."
+      git difftool -d --staged
+    else
+      echo "Showing last commit..."
+      git difftool -d HEAD~1 HEAD
+    fi
+
+  else
+    echo "Error: \"$0\" can only be used inside a Git repository."
+  fi
+}
+
+# Test whether a given command exists
+# Adapted from http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script/3931779#3931779
+# NOTE: This function is duplicated in .zshrc so that it doesn't have to depend on this file,
+# but this shouldn't cause any issues
+function command_exists() {
+  hash "$1" &> /dev/null
+}
+
+# Shows how long processes have been up.
+# No arguments shows all processes, one argument greps for a particular process.
+# Found at <http://hints.macworld.com/article.php?story=20121127064752309>
+function psup() {
+  ps acxo etime,command | grep -- "$1"
+}
+
+# Pushes local SSH public key to another box
+# Adapted from code found at <https://github.com/rtomayko/dotfiles/blob/rtomayko/.bashrc>
+function push_ssh_cert() {
+  if [[ $# -eq 0 || $# -gt 3 ]]; then
+    echo "Usage: push_ssh_cert host [port] [username]"
+    return
+  fi
+  local _host=$1
+  local _port=22
+  local _user=$USER
+  if [[ $# -ge 2 ]]; then
+    _port=$2
+  fi
+  if [[ $# -eq 3 ]]; then
+    _user=$3
+  fi
+  test -f ~/.ssh/id_*sa.pub || ssh-keygen -t rsa
+  echo "Pushing public key to $_user@$_host:$_port..."
+  ssh -p $_port $_user@$_host 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys' < ~/.ssh/id_*sa.pub
+}
+
+# Find and replace a string in all files recursively, starting from the current directory.
+# Adapted from code found at <http://forums.devshed.com/unix-help-35/unix-find-and-replace-text-within-all-files-within-a-146179.html>
+function replacein() {
+  find . -type f | xargs perl -pi -e "s/$1/$2/g"
+}
+
+#
+# home-assistant
+#
 lamp() {
   sh $HOME/.dotfiles/bin/hs-to-ha "script.hs_office_lamp_$1"
 }
