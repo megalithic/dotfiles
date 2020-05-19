@@ -11,8 +11,6 @@ local dndHandler = require('ext.window-handlers').dndHandler
 local hideAfterHandler = require('ext.window-handlers').hideAfterHandler
 local quitAfterHandler = require('ext.window-handlers').quitAfterHandler
 
-local windowLayouts = config.apps
-
 local display = function(screen)
   local allDisplays = hs.screen.allScreens()
 
@@ -23,18 +21,25 @@ local display = function(screen)
   end
 end
 
+local windowLogger = function(event, win, appName)
+  log.df('window %s: %s (%s)', event, appName, win:title())
+end
 
 local doWindowHandlers = function(win, appConfig, event)
   log.df("doWindowHandlers: {win: %s, event: %s}", win:title(), event)
 
+  -- NOTE: events are dealt with in each handler, instead of from here.
   quitAfterHandler(win, appConfig.quitAfter, event)
   hideAfterHandler(win, appConfig.hideAfter, event)
   appHandler(win, appConfig.handler, event)
-  -- dndHandler(win, appConfig.dnd, event)
+  dndHandler(win, appConfig.dnd, event)
 end
 
 local snap = function(win, position, screen)
-  if win == nil then return end
+  -- handle ignoredWindows from our current appConfig; don't snap anything
+  local appConfig = config.getAppConfigForWin(win)
+  if win== nil or (appConfig.ignoredWindows ~= nil and hs.fnutils.contains(appConfig.ignoredWindows, win:title())) then return end
+
   log.df('window snap (%s) on screen %s: %s (%s)', hs.inspect(position), screen, win:title(), hs.inspect(win:application():name()))
 
   hs.grid.set(win, position or hs.grid.get(win), display(screen))
@@ -68,12 +73,13 @@ local setLayoutForApp = function(app, appConfig)
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       if (#windows == 1) then
-        -- getting first (and should be) only window from the table of windows for this app
+        -- snap the first (and possibly) only window
         snap(windows[1], appConfig.position, appConfig.preferredDisplay)
       elseif (#windows > 1) then
+        -- otherwise we'll try and snap multiple windows for the same app, tiled
         snapRelatedWindows(appConfig.hint, windows, appConfig.preferredDisplay)
       else
-        log.wf('grid layout NOT applied for app (no windows found for app): \r\n%s, #windows: %s, position: %s', string.upper(app:name()), #windows, appConfig.position)
+        log.wf('grid layout NOT applied for app (no windows found for app): %s, #win: %s, pos: %s', string.upper(app:name()), #windows, appConfig.position)
       end
     else
       log.wf('unable to find an app config for %s', string.upper(app:name()))
@@ -91,34 +97,10 @@ local setLayoutForAll = function()
   end
 end
 
-local highlightFocused = function()
-  local rect = hs.drawing.rectangle(hs.window.focusedWindow():frame())
-  rect:setStrokeColor({["red"]=1,  ["blue"]=0, ["green"]=0, ["alpha"]=0.75})
-  rect:setStrokeWidth(2)
-  rect:setFill(false)
-  rect:show()
-  hs.timer.doAfter(0.3, function() rect:delete() end)
-end
-
-local highlight = function()
-  hs.timer.doAfter(0.05, highlightFocused)
-end
-
-local windowLogger = function(event, win, appName)
-  log.df('window %s: %s (%s)', event, appName, win:title())
-end
-
-local getAppConfigForWin = function(win)
-  local appBundleId = win:application():bundleID()
-  local appConfig = windowLayouts[appBundleId] or windowLayouts['_']
-
-  return appConfig
-end
-
 local handleWindowLayout = function(win, appName, event)
-  if not canLayoutWindow(win) and event ~= "windowDestroyed" then return end
+  if not canLayoutWindow(win) or event ~= "windowDestroyed" then return end
 
-  appConfig = getAppConfigForWin(win)
+  appConfig = config.getAppConfigForWin(win)
 
   doWindowHandlers(win, appConfig, event)
 
@@ -150,16 +132,16 @@ end
 local handleWindowUnfocused = function(win, appName, event)
   windowLogger(event, win, appName)
 
-  doWindowHandlers(win, getAppConfigForWin(win), event)
+  doWindowHandlers(win, config.getAppConfigForWin(win), event)
 end
 
-local handleWindowMoved = function(win, appName, _event)
+local handleWindowMoved = function(win, appName, event)
   if win == nil then return end
 
   windowLogger(event, win, appName)
 end
 
-local handleWindowFullscreened = function(win, appName, _event)
+local handleWindowFullscreened = function(win, appName, event)
   windowLogger(event, win, appName)
 
   win:setFullscreen(false)
@@ -195,7 +177,7 @@ module.start = (function()
     :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
     :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
-    -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+    :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
     :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
 end)

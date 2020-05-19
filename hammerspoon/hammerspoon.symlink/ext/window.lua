@@ -208,7 +208,10 @@ end
 module.getManageableWindows = function(windows)
   if windows == nil then return end
   return hs.fnutils.filter(windows, (function(win)
-    if win == nil then return end
+    -- handle ignoredWindows from our current appConfig; don't snap anything
+    local appConfig = config.getAppConfigForWin(win)
+    if win== nil or (appConfig.ignoredWindows ~= nil and hs.fnutils.contains(appConfig.ignoredWindows, win:title())) then return end
+
     return module.canLayoutWindow(win)
   end))
 end

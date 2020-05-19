@@ -70,19 +70,15 @@ local module = {
   },
 
   ptt = {'cmd', 'alt'},
-}
 
-
-
-module.ignoredApps = { 'iStat Menus Status', 'Fantastical', 'Contexts'  }
-
--- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
-module.distractionUrls = {
-  'https://www.youtube.com',
-  'https://www.twitter.com',
-  'https://www.instagram.com',
-  'https://www.facebook.com',
-  'https://www.reddit.com',
+  -- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
+  distractionUrls = {
+    'https://www.youtube.com',
+    'https://www.twitter.com',
+    'https://www.instagram.com',
+    'https://www.facebook.com',
+    'https://www.reddit.com',
+  },
 }
 
 module.apps = {
@@ -285,6 +281,16 @@ module.apps = {
     end)
   }
 }
+
+
+-- Helper to get the app config for a given window object
+module.getAppConfigForWin = function(win)
+  local appBundleId = win:application():bundleID()
+  local appConfig = module.apps[appBundleId] or module.apps['_']
+
+  return appConfig
+end
+
 
 module.utilities = {
   {

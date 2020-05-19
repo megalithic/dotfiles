@@ -7,25 +7,28 @@ local module = { cache = cache }
 
 module.dndHandler = function(win, dndConfig, event)
   if dndConfig == nil then return end
-  log.df('found dnd handler for %s..', win:application():bundleID())
 
-  local enabled = dndConfig.enabled
-  local mode = dndConfig.mode
-
-  if (enabled) then
-    if (event == "windowCreated") then
-      log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
-      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode}):start()
-      hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"}):start()
-    elseif (event == "windowDestroyed") then
-      -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
-      -- log.df('dnd handler: toggling OFF slack status and dnd mode')
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end) , (function() end), {"back"}):start()
-      -- hs.execute("slack back", true)
-      -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"off"}):start()
-      -- hs.execute("dnd off", true)
-    end
+  if event == "windowCreated" then
+    log.df('dndHandler for %s found..', win:application():name())
   end
+
+--   local enabled = dndConfig.enabled
+--   local mode = dndConfig.mode
+
+--   if (enabled) then
+--     if (event == "windowCreated") then
+--       log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
+--       hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode}):start()
+--       hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"}):start()
+--     elseif (event == "windowDestroyed") then
+--       -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
+--       -- log.df('dnd handler: toggling OFF slack status and dnd mode')
+--       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end) , (function() end), {"back"}):start()
+--       -- hs.execute("slack back", true)
+--       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"off"}):start()
+--       -- hs.execute("dnd off", true)
+--     end
+--   end
 end
 
 module.appHandler = function(win, handler, event)
