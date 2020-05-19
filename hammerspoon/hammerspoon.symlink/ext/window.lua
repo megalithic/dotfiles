@@ -209,7 +209,7 @@ module.getManageableWindows = function(windows)
   if windows == nil then return end
   return hs.fnutils.filter(windows, (function(win)
     if win == nil then return end
-    return canLayoutWindow(win)
+    return module.canLayoutWindow(win)
   end))
 end
 

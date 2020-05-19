@@ -41,9 +41,8 @@ local updateWiFi = function()
   log.d('updated wifi:', status.currentNetwork)
 end
 
-local updateSleep = function(event)
-  -- TODO: figure out how to get more info about this `event` integer
-  status.sleepEvent = event
+local updateSleep = function(event) -- int
+  status.sleepEvent = hs.caffeinate.watcher[event]
 
   log.d('updated sleep:', status.sleepEvent)
 end
