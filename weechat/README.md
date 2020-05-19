@@ -28,3 +28,8 @@ All sensitive data is kept encrypted using weechat's `/secure` API.
 - https://megalithic.io/thoughts/weechat-setup-with-irc-bitlbee-slack
 - https://demu.red/blog/2016/12/setting-up-sms-in-irc-via-bitlbee-with-purple-hangouts/#installing-bitlbee
 - https://weechat.org/files/doc/stable/weechat_user.en.html#command_weechat_secure
+- https://www.weechat.org/files/doc/stable/weechat_user.en.html#secured_data
+
+#### TODO
+
+- [ ] implement [SASL support for weechat](https://freenode.net/kb/answer/weechat)
