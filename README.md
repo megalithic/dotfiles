@@ -39,7 +39,7 @@ A few of the _must-have_ tools I roll with:
 
 - [homebrew](https://brew.sh/)
   - see `~/.dotfiles/homebrew/Brewfile` for all that gets installed
-- [hammerspoon](http://www.hammerspoon.org/)
+- [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   - see `~/.dotfiles/keyboard` for macOS specific config things
   - see my [QMK dz60 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/dz60/keymaps/megalithic) for my custom keyboard setup

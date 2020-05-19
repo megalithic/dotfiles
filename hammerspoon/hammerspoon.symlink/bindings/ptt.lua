@@ -1,6 +1,6 @@
 -- Derived from the PushToTalk Spoon and then heavily modified for my use cases
 
-local log = hs.logger.new('[bindings.ptt]', 'debug')
+local log = hs.logger.new('[bindings.ptt]', 'warning')
 
 local module = {}
 
@@ -53,6 +53,7 @@ end
 
 function module.setState(s)
   module.state = s
+  log.df('Setting PTT state to: %s', s)
 
   showState()
 end
@@ -87,7 +88,7 @@ local function eventTapWatcher(event)
   showState()
 
   if module.pushed then
-    log.df('Input device: { muted: %s, volume: %s, state: %s, pushed: %s }', device:inputMuted(), device:inputVolume(), module.state, module.pushed)
+    log.df('Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }', device:inputMuted(), device:inputVolume(), module.state, module.pushed)
   end
 end
 
@@ -117,7 +118,9 @@ function module:toggleStates(states)
       new_state = states[(i % #states) + 1]
     end
   end
+
   module.setState(new_state)
+  log.df('Toggling PTT states to: %s', new_state)
 end
 
 return module

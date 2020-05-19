@@ -330,7 +330,6 @@ endif
 " Git plugins
 "-----------------------------
 Plug 'tpope/vim-fugitive' " fugitive.vim
-" Plug 'airblade/vim-gitgutter' " gitgutter.vim
 Plug 'mhinz/vim-signify' " signify.vim
 Plug 'rhysd/git-messenger.vim' " git-messenger.vim
 " Plug 'APZelos/blamer.nvim' " blamer.vim
