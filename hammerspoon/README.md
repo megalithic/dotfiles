@@ -1,4 +1,4 @@
-## [ Hammerspoon ](https://www.hammerspoon.org)
+## [ Hammerspoon ](https://www.hammerspoon.org)⚭
 
 ### What even is this?
 
