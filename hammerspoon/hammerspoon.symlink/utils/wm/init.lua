@@ -10,6 +10,7 @@ local appHandler = require('ext.window-handlers').appHandler
 local dndHandler = require('ext.window-handlers').dndHandler
 local hideAfterHandler = require('ext.window-handlers').hideAfterHandler
 local quitAfterHandler = require('ext.window-handlers').quitAfterHandler
+local doQuitWin = require('ext.window-handlers').doQuitWin
 
 local display = function(screen)
   local allDisplays = hs.screen.allScreens()
@@ -22,13 +23,13 @@ local display = function(screen)
 end
 
 local windowLogger = function(event, win, appName)
-  log.df('window %s: %s (%s)', event, appName, win:title())
+  log.df('%s: %s (%s)', event, appName, win:title())
 end
 
 local doWindowHandlers = function(win, appConfig, event)
   log.df("doWindowHandlers: {win: %s, event: %s}", win:title(), event)
 
-  -- NOTE: events are dealt with in each handler, instead of from here.
+  -- NOTE: window events are dealt with in each handler, instead of from here.
   quitAfterHandler(win, appConfig.quitAfter, event)
   hideAfterHandler(win, appConfig.hideAfter, event)
   appHandler(win, appConfig.handler, event)
@@ -59,36 +60,82 @@ local snapRelatedWindows = function(appBundleID, windows, screen)
   end
 end
 
+local layoutManagedWindows = function(appConfig, managedWindows)
+  log.df('attempting to layout managed windows for app: %s (%s), #win: %s', appConfig.name, appConfig.id, #managedWindows)
+
+  if #managedWindows == 0 then
+    log.wf('UNABLE to apply a layout for the configured app (no managed windows found for app): %s, #win: %s, pos: %s', appConfig.name, #managedWindows, appConfig.position)
+
+    return
+  end
+
+  if (#managedWindows == 1) then
+    -- snap the first (and possibly only) window
+    snap(managedWindows[1], appConfig.position, appConfig.preferredDisplay)
+  elseif (#managedWindows > 1) then
+    -- or, we'll try and snap multiple windows for the same app, tiled (hard-coded to this)
+    snapRelatedWindows(appConfig.hint, managedWindows, appConfig.preferredDisplay)
+  end
+end
+
+local handleWindowRules = function(appConfig, allWindows)
+  if config.rulesExistForAppConfig(appConfig) then
+    log.df('attempting to layout all windows for app (and rules): %s (%s), #win: %s, rules: %s', appConfig.name, appConfig.id, #allWindows, hs.inspect(appConfig.rules))
+
+    if #allWindows == 0 then
+      log.wf('UNABLE to apply window-specific rules to any of the windows for app: %s, rules: %s', appConfig.name, hs.inspect(appConfig.rules))
+
+      return
+    elseif #allWindows > 1 then
+      -- apply window rules
+      hs.fnutils.each(allWindows, function(win)
+        -- handle hide rules
+        if config.ruleExistsForWin(win, 'hide') then
+          log.df('trying to rule-based hide window %s', hs.inspect(win))
+
+          return
+        -- handle quit rules
+        elseif config.ruleExistsForWin(win, 'quit') then
+          log.df('trying to rule-based quit window %s', hs.inspect(win))
+
+          doQuitWin(win)
+        -- handle ignore rules
+        elseif config.ruleExistsForWin(win, 'ignore') then
+          log.df('trying to rule-based ignore window %s', hs.inspect(win))
+
+          return
+        end
+      end)
+    end
+  end
+end
+
 local setLayoutForApp = function(app, appConfig)
   if type(app) == "string" then
-    -- log.df('app to layout (%s) is a string, getting app object..', hs.inspect(app))
     app = hs.application.get(app)
   end
 
   if app ~= nil and app:mainWindow() ~= nil then
-    log.df('beginning layout of app: %s / %s', string.upper(app:name()), app:bundleID())
+    log.df('beginning layout of app: %s (%s)', app:name(), app:bundleID())
 
-    local windows = getManageableWindows(app:visibleWindows())
-    appConfig = appConfig or config.apps[app:bundleID()]
+    -- handle all windows that have no window-based rules from our app config
+    local allWindows = app:allWindows()
+    local visibleWindows = app:visibleWindows()
+    local managedWindows = getManageableWindows(visibleWindows)
+    local appConfig = appConfig or config.apps[app:bundleID()]
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
-      if (#windows == 1) then
-        -- snap the first (and possibly) only window
-        snap(windows[1], appConfig.position, appConfig.preferredDisplay)
-      elseif (#windows > 1) then
-        -- otherwise we'll try and snap multiple windows for the same app, tiled
-        snapRelatedWindows(appConfig.hint, windows, appConfig.preferredDisplay)
-      else
-        log.wf('grid layout NOT applied for app (no windows found for app): %s, #win: %s, pos: %s', string.upper(app:name()), #windows, appConfig.position)
-      end
+      hs.timer.doAfter(2, function() handleWindowRules(appConfig, allWindows) end)
+      -- layoutManagedWindows(appConfig, managedWindows)
+      hs.timer.doAfter(1, function() layoutManagedWindows(appConfig, managedWindows) end)
     else
-      log.wf('unable to find an app config for %s', string.upper(app:name()))
+      log.wf('unable to find an app config for %s', app:name())
     end
   end
 end
 
 local setLayoutForAll = function()
-  log.i('starting layout of all apps')
+  log.i('starting layout of all apps..')
 
   for app, appConfig in pairs(config.apps) do
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
@@ -98,15 +145,17 @@ local setLayoutForAll = function()
 end
 
 local handleWindowLayout = function(win, appName, event)
-  if not canLayoutWindow(win) or event ~= "windowDestroyed" then return end
+  -- FIXME: do we need this?
+  -- if not canLayoutWindow(win) and event ~= "windowDestroyed" then return end
 
   appConfig = config.getAppConfigForWin(win)
 
   doWindowHandlers(win, appConfig, event)
 
-  if event ~= "windowFocused" then
-    snap(win, appConfig.position, appConfig.preferredDisplay)
-  end
+  setLayoutForApp(win:application())
+  -- if event ~= "windowFocused" then
+  --   snap(win, appConfig.position, appConfig.preferredDisplay)
+  -- end
 end
 
 local handleWindowCreated = function(win, appName, event)
@@ -176,17 +225,23 @@ module.start = (function()
     :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
     :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowUnhidden, handleWindowFocused, true)
     :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowMinimized, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
     :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
 end)
 
 module.setLayoutForAll = (function()
+  log.df('setLayoutForAll')
+
   setLayoutForAll()
 end)
 
 module.setLayoutForApp = (function(app)
+  log.df('setLayoutForApp: %s', hs.inspect(app))
+
   setLayoutForApp(app)
 end)
 

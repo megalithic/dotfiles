@@ -83,13 +83,13 @@ local module = {
 
 module.apps = {
   ['_'] = {
-    hint = '',
+    id = '',
     name = '',
     preferredDisplay = 2,
     position = module.grid.centeredMedium,
   },
   ['net.kovidgoyal.kitty'] = {
-    hint = 'net.kovidgoyal.kitty',
+    id = 'net.kovidgoyal.kitty',
     name = 'kitty',
     hyperShortcut = 'k',
     superKey = module.superKeys.ctrl,
@@ -99,13 +99,13 @@ module.apps = {
     quitGuard = true,
   },
   ['com.kapeli.dashdoc'] = {
-    hint = 'com.kapeli.dashdoc',
+    id = 'com.kapeli.dashdoc',
     name = 'Dash',
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
   },
   ['com.brave.Browser.dev'] = {
-    hint = 'com.brave.Browser.dev',
+    id = 'com.brave.Browser.dev',
     name = 'Brave Browser Dev',
     hyperShortcut = '`',
     superKey = module.superKeys.cmd,
@@ -115,14 +115,14 @@ module.apps = {
     quitGuard = true,
   },
   ['com.google.Chrome'] = {
-    hint = 'com.google.Chrome',
+    id = 'com.google.Chrome',
     name = 'Google Chrome',
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = true
   },
   ['com.agiletortoise.Drafts-OSX'] = {
-    hint = 'com.agiletortoise.Drafts-OSX',
+    id = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
     hyperShortcut ='d',
     local_bindings = {'x', '\''},
@@ -133,13 +133,13 @@ module.apps = {
     quitGuard = false,
   },
   ['com.brettterpstra.marked2'] = {
-    hint = 'com.brettterpstra.marked2',
+    id = 'com.brettterpstra.marked2',
     name = 'Marked',
     preferredDisplay = 2,
     position = module.grid.leftHalf,
   },
   ['com.tinyspeck.slackmacgap'] = {
-    hint = 'com.tinyspeck.slackmacgap',
+    id = 'com.tinyspeck.slackmacgap',
     name = 'Slack',
     hyperShortcut = 's',
     superKey = module.superKeys.mashShift,
@@ -149,22 +149,22 @@ module.apps = {
     position = module.grid.fullScreen,
     quitGuard = true,
     hideAfter = 5,
-    ignoredWindows = {'Slack Call Minipanel'},
+    rules = {
+      {title = 'Slack Call Minipanel', rule = 'ignore'},
+    },
   },
   ['com.readdle.smartemail-Mac'] = {
-    hint = 'com.readdle.smartemail-Mac',
+    id = 'com.readdle.smartemail-Mac',
     name = 'Spark',
     superKey = module.superKeys.mashShift,
     distraction = true,
     shortcut = 'm',
     preferredDisplay = 2,
     hideAfter = 5,
-    -- position = module.grid.rightHalf
-    -- position = module.grid.rightTwoThirds
     position = module.grid.fullScreen,
   },
   ['com.apple.finder'] = {
-    hint = 'com.apple.finder',
+    id = 'com.apple.finder',
     name = 'Finder',
     superKey = module.superKeys.ctrl,
     shortcut = '`',
@@ -172,18 +172,19 @@ module.apps = {
     position = module.grid.centeredMedium
   },
   ['us.zoom.xos'] = {
-    hint = 'us.zoom.xos',
+    id = 'us.zoom.xos',
     name = 'zoom.us',
     superKey = module.superKeys.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     dnd = { enabled = false,  mode = "zoom" },
-    ignoredWindows = {'Zoom'},
-    -- tabjump = 'zoom.us'
+    rules = {
+      {title = 'Zoom', rule = 'quit'},
+    },
   },
   ['com.spotify.client'] = {
-    hint = 'com.spotify.client',
+    id = 'com.spotify.client',
     name = 'Spotify',
     superKey = module.superKeys.cmdShift,
     shortcut = '8',
@@ -193,7 +194,7 @@ module.apps = {
     position = module.grid.rightHalf
   },
   ['com.apple.iChat'] = {
-    hint = 'com.apple.iChat',
+    id = 'com.apple.iChat',
     name = 'Messages',
     superKey = module.superKeys.cmdShift,
     shortcut = 'm',
@@ -203,7 +204,7 @@ module.apps = {
     position = '5,5 3x3'
   },
   ['hangouts'] = {
-    hint = 'hangouts',
+    id = 'hangouts',
     name = 'Brave Browser Dev',
     superKey = module.superKeys.cmdCtrl,
     shortcut = 'm',
@@ -212,7 +213,7 @@ module.apps = {
     tabjump = 'hangouts.google.com'
   },
   ['WhatsApp'] = {
-    hint = 'WhatsApp',
+    id = 'WhatsApp',
     name = 'WhatsApp',
     superKey = module.superKeys.cmdShift,
     shortcut = 'w',
@@ -222,7 +223,7 @@ module.apps = {
     position = '5,5 3x3'
   },
   ['com.agilebits.onepassword7'] = {
-    hint = 'com.agilebits.onepassword7',
+    id = 'com.agilebits.onepassword7',
     name = '1Password',
     superKey = module.superKeys.mashShift,
     shortcut = '1',
@@ -230,7 +231,7 @@ module.apps = {
     position = module.grid.centeredMedium
   },
   ['com.teamviewer.TeamViewer'] = {
-    hint = 'com.teamviewer.TeamViewer',
+    id = 'com.teamviewer.TeamViewer',
     name = 'TeamViewer',
     -- superKey = module.superKeys.mashShift,
     -- shortcut = 'v',
@@ -238,7 +239,7 @@ module.apps = {
     position = module.grid.centeredLarge
   },
   ['org.hammerspoon.Hammerspoon'] = {
-    hint = 'org.hammerspoon.Hammerspoon',
+    id = 'org.hammerspoon.Hammerspoon',
     name = 'Hammerspoon',
     superKey = module.superKeys.mashShift,
     shortcut = 'h',
@@ -247,13 +248,13 @@ module.apps = {
     quitGuard = true,
   },
   ['com.apple.systempreferences'] = {
-    hint = 'com.apple.systempreferences',
+    id = 'com.apple.systempreferences',
     name = 'System Preferences',
     preferredDisplay = 1,
     position = module.grid.centeredMedium
   },
-  ['Fantastical'] = {
-    hint = 'com.flexibits.fantastical2.mac',
+  ['com.flexibits.fantastical2.mac'] = {
+    id = 'com.flexibits.fantastical2.mac',
     name = 'Fantastical',
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
@@ -261,7 +262,7 @@ module.apps = {
     position = module.grid.centeredLarge
   },
   ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
-    hint = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
+    id = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
     name = 'Fantastical Helper',
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
@@ -269,26 +270,71 @@ module.apps = {
     -- position = module.grid.centeredLarge
   },
   ['com.microsoft.autoupdate2'] = {
-    hint = 'com.microsoft.autoupdate2',
+    id = 'com.microsoft.autoupdate2',
     name = 'Microsoft AutoUpdate',
-    -- superKey = module.superKeys.cmdShift,
-    -- shortcut = 'f',
     preferredDisplay = 1,
-    -- position = module.grid.centeredLarge
-    handler = (function(win)
-      -- AUTOHIDE
-      win:application():hide()
-    end)
+    quitAfter = 0,
+    -- handler = (function(win)
+    --   -- AUTOHIDE
+    --   win:application():hide()
+    -- end)
   }
 }
 
 
--- Helper to get the app config for a given window object
+-- Helpers to get various app config settings
 module.getAppConfigForWin = function(win)
   local appBundleId = win:application():bundleID()
   local appConfig = module.apps[appBundleId] or module.apps['_']
 
   return appConfig
+end
+
+module.getAppConfigForApp = function(appName)
+  local found
+  for _, hash in pairs(module.apps) do
+    if (hash.name == appName) then
+      found = hash
+
+      return found
+    end
+  end
+
+  return found
+end
+
+module.rulesExistForAppConfig = function(appConfig)
+  return appConfig.rules ~= nil and #appConfig.rules > 0
+end
+
+module.rulesExistForWin = function(win)
+  local appConfig = module.getAppConfigForWin(win)
+  local rulesExist = appConfig.rules ~= nil and #appConfig.rules > 0
+
+  return rulesExist
+end
+
+module.ruleExistsForWin = function(win, rule)
+  local appConfig = module.getAppConfigForWin(win)
+  local targetRule = {title = win:title(), rule = rule}
+  local rulesExist = module.rulesExistForWin(win)
+  local ruleExists = false
+
+  if rulesExist then
+    foundRule = hs.fnutils.find(appConfig.rules, function(datum)
+      return hs.inspect(datum) == hs.inspect(targetRule)
+    end)
+
+    ruleExists = rulesExist and foundRule ~= nil
+  end
+
+  if ruleExists then
+    log.df("Found rule (%s) found for %s", rule, win:title())
+  else
+    log.df("No rule (%s) found for %s", rule, win:title())
+  end
+
+  return ruleExists
 end
 
 

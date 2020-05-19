@@ -26,6 +26,7 @@ module.init = function()
         id               = win:id(),
         title            = win:title(),
         app              = win:application():name(),
+        bundleID         = win:application():bundleID(),
         role             = win:role(),
         subrole          = win:subrole(),
         frame            = win:frame(),

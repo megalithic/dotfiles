@@ -181,23 +181,6 @@ end
 local lastSeenChain = nil
 local lastSeenWindow = nil
 
--- Gets the config.application entry for a specific named app, e.g. 'Chrome'
---
-module.getConfigForApp = function(name)
-  local config = require('config')
-  local found
-  for _, hash in pairs(config) do
-    if (hash.name == name) then
-      found = hash
-      return found
-    end
-  end
-
-  return found
-end
-
-
-
 module.canLayoutWindow = function(win)
   local bundleID = win:application():bundleID()
 
@@ -208,9 +191,7 @@ end
 module.getManageableWindows = function(windows)
   if windows == nil then return end
   return hs.fnutils.filter(windows, (function(win)
-    -- handle ignoredWindows from our current appConfig; don't snap anything
-    local appConfig = config.getAppConfigForWin(win)
-    if win== nil or (appConfig.ignoredWindows ~= nil and hs.fnutils.contains(appConfig.ignoredWindows, win:title())) then return end
+    if win== nil or config.rulesExistForWin(win) then return end
 
     return module.canLayoutWindow(win)
   end))
@@ -322,11 +303,6 @@ module.hasValue = function(T, v)
   for _, item in pairs(T) do
     return item == v
   end
-end
-
-module.isIgnoredApp = function(name)
-  log.df("[ext.window] - isIgnoreApp(%s)? %s", name, module.hasValue(config.ignoredApplications, name))
-  return module.hasValue(config.ignoredApplications, name)
 end
 
 return module
