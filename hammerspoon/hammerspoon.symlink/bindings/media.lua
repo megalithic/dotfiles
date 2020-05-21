@@ -1,6 +1,7 @@
 local log = hs.logger.new('[bindings.media]', 'warning')
 
 local module = {}
+local alert = require('ext.alert')
 
 local adjustVolume = function(vol)
   local output = hs.audiodevice.defaultOutputDevice()
@@ -16,9 +17,14 @@ local adjustVolume = function(vol)
     if playing then
       log.df('Adjusting Spotify volume: %s', vol.action)
       if vol.action == "up" then
+        if not hs.spotify.isRunning() then return end
         hs.spotify.volumeUp()
+        alert.showOnly({ text = '↑ '..hs.spotify.getVolume()..'% ♬' })
+
       else
+        if not hs.spotify.isRunning() then return end
         hs.spotify.volumeDown()
+        alert.showOnly({ text = '↓ '..hs.spotify.getVolume()..'% ♬' })
       end
     else
       log.df('Adjusting system volume: %s %s', vol.diff, vol.action)
@@ -32,7 +38,7 @@ local notify = function(n)
   log.df('Spotify notification: %s', hs.inspect(n))
 
   hs.notify.new({
-      title=n.artist .. "(" .. n.state .. ")",
+      title=n.artist .. " (" .. n.state .. ")",
       subTitle=n.track,
       informativeText=n.album,
     })
