@@ -1,6 +1,8 @@
 local log = hs.logger.new('[bindings.quitguard]', 'debug')
 local module = {}
 
+local alert = require('ext/alert')
+
 local quitModal = hs.hotkey.modal.new('cmd','q')
 -- Press Cmd+Q twice to actually quit
 local quitAlertText = "Press Cmd+Q again to quit"
@@ -25,7 +27,7 @@ function quitModal:entered()
 
     if appConfig.quitGuard then
       -- TODO: show this alert on the primary screen (presently shows on laptop)
-      hs.alert.show(quitAlertText, 1)
+      alert.show({text=quitAlertText, duration=1})
       hs.timer.doAfter(1, function() quitModal:exit() end)
     else
       quitModal:exit()
