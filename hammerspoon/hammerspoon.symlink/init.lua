@@ -7,9 +7,6 @@ local log = hs.logger.new('[init]', 'warning')
 require('console').init()
 -- require('overrides').init()
 
--- load config for all modules
-config = require('config')
-
 -- ensure IPC is there
 hs.ipc.cliInstall()
 
@@ -45,6 +42,7 @@ hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
 -- requires
+config                      = require('config')
 bindings                    = require('bindings')
 controlplane                = require('utils.controlplane')
 watchables                  = require('utils.watchables')
@@ -52,7 +50,7 @@ watchers                    = require('utils.watchers')
 wm                          = require('utils.wm')
 
 -- controlplane
-controlplane.enabled        = { 'office' }
+controlplane.enabled        = { 'office' } -- dock?
 
 -- watchers
 watchers.enabled            = { 'urlevent' }

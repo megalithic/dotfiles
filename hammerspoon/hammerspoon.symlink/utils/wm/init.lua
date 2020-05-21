@@ -120,6 +120,7 @@ local setLayoutForApp = function(app, appConfig)
     app = hs.application.get(app)
   end
 
+  -- FIXME: determine what mainWindow() targets; bug?
   if app ~= nil and app:mainWindow() ~= nil then
     log.df('beginning layout of app: %s (%s)', app:name(), app:bundleID())
 
@@ -130,8 +131,8 @@ local setLayoutForApp = function(app, appConfig)
     local appConfig = appConfig or config.apps[app:bundleID()]
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
+      -- TODO: fix these timers
       hs.timer.doAfter(1, function() handleWindowRules(appConfig, allWindows) end)
-      -- layoutManagedWindows(appConfig, managedWindows)
       hs.timer.doAfter(2, function() layoutManagedWindows(appConfig, managedWindows) end)
     else
       log.wf('unable to find an app config for %s', app:name())
@@ -248,6 +249,7 @@ module.setLayoutForAll = (function()
   setLayoutForAll()
 end)
 
+-- FIXME: doesn't seem to be working properly; have to do `All` instead
 module.setLayoutForApp = (function(app)
   log.df('setLayoutForApp: %s', hs.inspect(app))
 

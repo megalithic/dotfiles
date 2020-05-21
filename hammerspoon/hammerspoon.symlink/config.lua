@@ -56,8 +56,8 @@ local module = {
     centeredSmall =   '3,3 2x2',
   },
 
-  superKeys = {
-    ctrl = {'ctrl'},
+  -- TODO: superKeys -> modifierKeys
+  superKeys = { ctrl = {'ctrl'},
     cmd = {'cmd'},
     cmdAlt = {'cmd', 'alt'},
     cmdShift = {'cmd', 'shift'},
@@ -178,7 +178,7 @@ module.apps = {
     shortcut = 'z',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
-    dnd = { enabled = false,  mode = "zoom" },
+    dnd = { enabled = false, mode = "zoom" },
     rules = {
       {title = 'Zoom', rule = 'quit'},
       {title = 'Zoom Meeting', rule = 'snap'},
@@ -191,7 +191,6 @@ module.apps = {
     shortcut = '8',
     preferredDisplay = 2,
     hideAfter = 1,
-    -- position = '5,0 5x5'
     position = module.grid.rightHalf
   },
   ['com.apple.iChat'] = {
@@ -375,8 +374,7 @@ module.utilities = {
     name = 'Pomodoro',
     superKey = module.superKeys.cmdCtrl,
     shortcut = 'p',
-    fn = (function()
-    end)
+    fn = (function() end)
   },
   {
     name = 'ScreenCapture',
