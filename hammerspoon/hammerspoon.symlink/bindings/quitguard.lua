@@ -24,6 +24,7 @@ function quitModal:entered()
     log.df("Starting to quit app, %s (%s), with QuitGuard..", app:name(), appBundleID)
 
     if appConfig.quitGuard then
+      -- TODO: show this alert on the primary screen (presently shows on laptop)
       hs.alert.show(quitAlertText, 1)
       hs.timer.doAfter(1, function() quitModal:exit() end)
     else

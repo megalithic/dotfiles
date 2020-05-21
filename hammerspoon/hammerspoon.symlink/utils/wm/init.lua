@@ -89,18 +89,23 @@ local handleWindowRules = function(appConfig, allWindows)
     elseif #allWindows > 1 then
       -- apply window rules
       hs.fnutils.each(allWindows, function(win)
+        if config.ruleExistsForWin(win, 'snap') then
+          -- handle hide rules
+          log.df('trying to rule-based snap window %s', hs.inspect(win))
+
+          snap(win, appConfig.position, appConfig.preferredDisplay)
+        elseif config.ruleExistsForWin(win, 'hide') then
         -- handle hide rules
-        if config.ruleExistsForWin(win, 'hide') then
           log.df('trying to rule-based hide window %s', hs.inspect(win))
 
           return
-        -- handle quit rules
         elseif config.ruleExistsForWin(win, 'quit') then
+          -- handle quit rules
           log.df('trying to rule-based quit window %s', hs.inspect(win))
 
           doQuitWin(win)
-        -- handle ignore rules
         elseif config.ruleExistsForWin(win, 'ignore') then
+          -- handle ignore rules
           log.df('trying to rule-based ignore window %s', hs.inspect(win))
 
           return
@@ -125,9 +130,9 @@ local setLayoutForApp = function(app, appConfig)
     local appConfig = appConfig or config.apps[app:bundleID()]
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
-      hs.timer.doAfter(2, function() handleWindowRules(appConfig, allWindows) end)
+      hs.timer.doAfter(1, function() handleWindowRules(appConfig, allWindows) end)
       -- layoutManagedWindows(appConfig, managedWindows)
-      hs.timer.doAfter(1, function() layoutManagedWindows(appConfig, managedWindows) end)
+      hs.timer.doAfter(2, function() layoutManagedWindows(appConfig, managedWindows) end)
     else
       log.wf('unable to find an app config for %s', app:name())
     end
@@ -152,7 +157,10 @@ local handleWindowLayout = function(win, appName, event)
 
   doWindowHandlers(win, appConfig, event)
 
-  setLayoutForApp(win:application())
+  -- if event ~= "windowFocused" then
+    setLayoutForApp(win:application())
+  -- end
+
   -- if event ~= "windowFocused" then
   --   snap(win, appConfig.position, appConfig.preferredDisplay)
   -- end
@@ -167,9 +175,10 @@ end
 local handleWindowDestroyed = function(win, appName, event)
   windowLogger(event, win, appName)
 
-  if win ~= nil and appName ~= "zoom.us" then
-    setLayoutForApp(win:application())
-  end
+  -- if win ~= nil and appName ~= "zoom.us" then
+  --   setLayoutForApp(win:application())
+  -- end
+  handleWindowLayout(win, appName, event)
 end
 
 local handleWindowFocused = function(win, appName, event)
@@ -222,7 +231,7 @@ module.start = (function()
 
   cache.filter = hs.window.filter.new(app_filters)
     :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-    :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    -- :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
     :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
     :subscribe(hs.window.filter.windowUnhidden, handleWindowFocused, true)

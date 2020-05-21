@@ -181,6 +181,7 @@ module.apps = {
     dnd = { enabled = false,  mode = "zoom" },
     rules = {
       {title = 'Zoom', rule = 'quit'},
+      {title = 'Zoom Meeting', rule = 'snap'},
     },
   },
   ['com.spotify.client'] = {
@@ -259,14 +260,17 @@ module.apps = {
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
-    position = module.grid.centeredLarge
+    position = module.grid.centeredLarge,
+    quitGuard = true,
   },
+  -- FIXME: should this move to the `rules` table for the main app?
   ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
     id = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
     name = 'Fantastical Helper',
     -- superKey = module.superKeys.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
+    quitGuard = true,
     -- position = module.grid.centeredLarge
   },
   ['com.microsoft.autoupdate2'] = {
