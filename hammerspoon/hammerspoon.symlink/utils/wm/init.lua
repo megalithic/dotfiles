@@ -132,8 +132,8 @@ local setLayoutForApp = function(app, appConfig)
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       -- TODO: fix these timers
-      hs.timer.doAfter(1, function() handleWindowRules(appConfig, allWindows) end)
-      hs.timer.doAfter(2, function() layoutManagedWindows(appConfig, managedWindows) end)
+      hs.timer.doAfter(0.5, function() handleWindowRules(appConfig, allWindows) end)
+      hs.timer.doAfter(1, function() layoutManagedWindows(appConfig, managedWindows) end)
     else
       log.wf('unable to find an app config for %s', app:name())
     end

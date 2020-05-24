@@ -7,10 +7,10 @@ module.start = function()
   -- :: window-manipulation (manual window snapping)
   for _, snap in pairs(config.snap) do
 
-    hs.hotkey.bind(snap.superKey, snap.shortcut, function() chain(snap.locations)() end)
+    hs.hotkey.bind(snap.modifier, snap.shortcut, function() chain(snap.locations)() end)
 
     if (snap.hyperKey ~= nil) then
-      hs.hotkey.bind(snap.hyperKey, snap.shortcut, function() chain(snap.locations)() end)
+      hs.hotkey.bind(snap.modifier, snap.shortcut, function() chain(snap.locations)() end)
     end
   end
 end

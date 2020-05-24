@@ -66,6 +66,7 @@ REPO_URL = "https://github.com/wee-slack/wee-slack"
 
 BACKLOG_SIZE = 200
 SCROLLBACK_SIZE = 500
+TYPING_DURATION = 6
 
 RECORD_DIR = "/tmp/weeslack-debug"
 
@@ -718,7 +719,6 @@ class WeechatController(object):
         self.eventrouter = eventrouter
         self.buffers = {}
         self.previous_buffer = None
-        self.buffer_list_stale = False
 
     def iter_buffers(self):
         for b in self.buffers:
@@ -757,12 +757,6 @@ class WeechatController(object):
 
     def set_previous_buffer(self, data):
         self.previous_buffer = data
-
-    def check_refresh_buffer_list(self):
-        return self.buffer_list_stale and self.last_buffer_list_update + 1 < time.time()
-
-    def set_refresh_buffer_list(self, setting):
-        self.buffer_list_stale = setting
 
 ###### New Local Processors
 
@@ -903,23 +897,15 @@ def buffer_switch_callback(signal, sig_type, data):
 @utf8_decode
 def buffer_list_update_callback(data, somecount):
     """
-    incomplete
     A simple timer-based callback that will update the buffer list
     if needed. We only do this max 1x per second, as otherwise it
     uses a lot of cpu for minimal changes. We use buffer short names
     to indicate typing via "#channel" <-> ">channel" and
     user presence via " name" <-> "+name".
     """
-    eventrouter = eval(data)
 
-    for b in eventrouter.weechat_controller.iter_buffers():
-        b[1].refresh()
-#    buffer_list_update = True
-#    if eventrouter.weechat_controller.check_refresh_buffer_list():
-#        # gray_check = False
-#        # if len(servers) > 1:
-#        #    gray_check = True
-#        eventrouter.weechat_controller.set_refresh_buffer_list(False)
+    for buf in EVENTROUTER.weechat_controller.buffers.values():
+        buf.refresh()
     return w.WEECHAT_RC_OK
 
 
@@ -982,7 +968,7 @@ def typing_bar_item_cb(data, item, current_window, current_buffer, extra_info):
         for channel in team.channels.values():
             if channel.type == "im":
                 if channel.is_someone_typing():
-                    typers.append("D/" + channel.slack_name)
+                    typers.append("D/" + channel.name)
                 pass
 
     typing = ", ".join(typers)
@@ -1378,7 +1364,7 @@ class SlackTeam(object):
         for channel in self.channels.values():
             channel.set_highlights()
 
-    def formatted_name(self, **kwargs):
+    def formatted_name(self):
         return self.domain
 
     def buffer_prnt(self, data, message=False):
@@ -1390,7 +1376,7 @@ class SlackTeam(object):
 
     def find_channel_by_members(self, members, channel_type=None):
         for channel in self.channels.values():
-            if channel.get_members() == members and (
+            if channel.members == members and (
                     channel_type is None or channel.type == channel_type):
                 return channel
 
@@ -1408,9 +1394,6 @@ class SlackTeam(object):
         return str(sha1_hex("{}{}".format(team_id, subdomain)))
 
     def refresh(self):
-        self.rename()
-
-    def rename(self):
         pass
 
     def is_user_present(self, user_id):
@@ -1490,6 +1473,7 @@ class SlackTeam(object):
         for c in self.channels:
             c = self.channels[c]
             if user.id in c.members:
+                c.buffer_name_needs_update = True
                 c.update_nicklist(user.id)
 
     def subscribe_users_presence(self):
@@ -1655,33 +1639,31 @@ class SlackChannel(SlackChannelCommon):
     Represents an individual slack channel.
     """
 
-    def __init__(self, eventrouter, **kwargs):
-        # We require these two things for a valid object,
-        # the rest we can just learn from slack
+    def __init__(self, eventrouter, channel_type="channel", **kwargs):
         self.active = False
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.eventrouter = eventrouter
-        self.slack_name = kwargs["name"]
+        self.team = kwargs.get('team')
+        self.identifier = kwargs["id"]
+        self.type = channel_type
+        self.set_name(kwargs["name"])
         self.slack_purpose = kwargs.get("purpose", {"value": ""})
         self.topic = kwargs.get("topic", {"value": ""})
-        self.identifier = kwargs["id"]
         self.last_read = SlackTS(kwargs.get("last_read", SlackTS()))
         self.channel_buffer = None
-        self.team = kwargs.get('team')
         self.got_history = False
         self.messages = OrderedDict()
         self.hashed_messages = {}
         self.thread_channels = {}
         self.new_messages = False
         self.typing = {}
-        self.type = 'channel'
-        self.set_name(self.slack_name)
         # short name relates to the localvar we change for typing indication
-        self.current_short_name = self.name
         self.set_members(kwargs.get('members', []))
         self.unread_count_display = 0
         self.last_line_from = None
+        self.buffer_name_needs_update = False
+        self.last_refresh_typing = False
 
     def __eq__(self, compare_str):
         if compare_str == self.slack_name or compare_str == self.formatted_name() or compare_str == self.formatted_name(style="long_default"):
@@ -1697,26 +1679,31 @@ class SlackChannel(SlackChannelCommon):
         return self.identifier in self.team.muted_channels
 
     def set_name(self, slack_name):
-        self.name = "#" + slack_name
+        self.slack_name = slack_name
+        self.name = self.formatted_name()
+        self.buffer_name_needs_update = True
 
     def refresh(self):
-        return self.rename()
+        typing = self.is_someone_typing()
+        if self.buffer_name_needs_update or typing != self.last_refresh_typing:
+            self.last_refresh_typing = typing
+            self.buffer_name_needs_update = False
+            self.rename(typing)
 
-    def rename(self):
+    def rename(self, typing=None):
         if self.channel_buffer:
-            new_name = self.formatted_name(typing=self.is_someone_typing(), style="sidebar")
-            if self.current_short_name != new_name:
-                self.current_short_name = new_name
-                w.buffer_set(self.channel_buffer, "short_name", new_name)
-                return True
-        return False
+            if typing is None:
+                typing = self.is_someone_typing()
+            present = self.team.is_user_present(self.user) if self.type == "im" else None
+
+            name = self.formatted_name("long_default", typing, present)
+            short_name = self.formatted_name("sidebar", typing, present)
+            w.buffer_set(self.channel_buffer, "name", name)
+            w.buffer_set(self.channel_buffer, "short_name", short_name)
 
     def set_members(self, members):
         self.members = set(members)
         self.update_nicklist()
-
-    def get_members(self):
-        return self.members
 
     def set_unread_count_display(self, count):
         self.unread_count_display = count
@@ -1729,8 +1716,8 @@ class SlackChannel(SlackChannelCommon):
             else:
                 w.buffer_set(self.channel_buffer, "hotlist", "1")
 
-    def formatted_name(self, style="default", typing=False, **kwargs):
-        if typing and config.channel_name_typing_indicator:
+    def formatted_name(self, style="default", typing=False, present=None):
+        if style == "sidebar" and typing and config.channel_name_typing_indicator:
             prepend = ">"
         elif self.type == "group" or self.type == "private":
             prepend = config.group_name_prefix
@@ -1738,15 +1725,14 @@ class SlackChannel(SlackChannelCommon):
             prepend = config.shared_name_prefix
         else:
             prepend = "#"
-        sidebar_color = config.color_buflist_muted_channels if self.muted else ""
-        select = {
-            "default": prepend + self.slack_name,
-            "sidebar": colorize_string(sidebar_color, prepend + self.slack_name),
-            "base": self.slack_name,
-            "long_default": "{}.{}{}".format(self.team.preferred_name, prepend, self.slack_name),
-            "long_base": "{}.{}".format(self.team.preferred_name, self.slack_name),
-        }
-        return select[style]
+
+        if style == "sidebar":
+            sidebar_color = config.color_buflist_muted_channels if self.muted else ""
+            return colorize_string(sidebar_color, prepend + self.slack_name)
+        elif style == "long_default":
+            return "{}.{}{}".format(self.team.preferred_name, prepend, self.slack_name)
+        else:
+            return prepend + self.slack_name
 
     def render_topic(self, fallback_to_purpose=False):
         topic = self.topic['value']
@@ -1838,10 +1824,9 @@ class SlackChannel(SlackChannelCommon):
                 w.buffer_set(self.channel_buffer, "localvar_set_type", 'channel')
             w.buffer_set(self.channel_buffer, "localvar_set_channel", self.formatted_name())
             w.buffer_set(self.channel_buffer, "localvar_set_nick", self.team.nick)
-            w.buffer_set(self.channel_buffer, "short_name", self.formatted_name(style="sidebar", enable_color=True))
+            w.buffer_set(self.channel_buffer, "short_name", self.formatted_name(style="sidebar"))
             self.set_highlights()
             self.set_topic()
-            self.eventrouter.weechat_controller.set_refresh_buffer_list(True)
             if self.channel_buffer:
                 w.buffer_set(self.channel_buffer, "localvar_set_server", self.team.preferred_name)
         self.update_nicklist()
@@ -1959,14 +1944,8 @@ class SlackChannel(SlackChannelCommon):
     # Typing related
     def set_typing(self, user):
         if self.channel_buffer and self.is_visible():
-            self.typing[user] = time.time()
-            self.eventrouter.weechat_controller.set_refresh_buffer_list(True)
-
-    def unset_typing(self, user):
-        if self.channel_buffer and self.is_visible():
-            u = self.typing.get(user)
-            if u:
-                self.eventrouter.weechat_controller.set_refresh_buffer_list(True)
+            self.typing[user.name] = time.time()
+            self.buffer_name_needs_update = True
 
     def is_someone_typing(self):
         """
@@ -1974,21 +1953,22 @@ class SlackChannel(SlackChannelCommon):
         returns if any of them is actively typing. If none are,
         nulls the dict and returns false.
         """
-        for user, timestamp in self.typing.items():
-            if timestamp + 4 > time.time():
+        typing_expire_time = time.time() - TYPING_DURATION
+        for timestamp in self.typing.values():
+            if timestamp > typing_expire_time:
                 return True
-        if len(self.typing) > 0:
+        if self.typing:
             self.typing = {}
-            self.eventrouter.weechat_controller.set_refresh_buffer_list(True)
         return False
 
     def get_typing_list(self):
         """
         Returns the names of everyone in the channel who is currently typing.
         """
+        typing_expire_time = time.time() - TYPING_DURATION
         typing = []
         for user, timestamp in self.typing.items():
-            if timestamp + 4 > time.time():
+            if timestamp > typing_expire_time:
                 typing.append(user)
             else:
                 del self.typing[user]
@@ -2081,24 +2061,17 @@ class SlackDMChannel(SlackChannel):
     def __init__(self, eventrouter, users, **kwargs):
         dmuser = kwargs["user"]
         kwargs["name"] = users[dmuser].name if dmuser in users else dmuser
-        super(SlackDMChannel, self).__init__(eventrouter, **kwargs)
-        self.type = 'im'
+        super(SlackDMChannel, self).__init__(eventrouter, "im", **kwargs)
         self.update_color()
-        self.set_name(self.slack_name)
+        self.members = {self.user}
         if dmuser in users:
             self.set_topic(create_user_status_string(users[dmuser].profile))
 
     def set_related_server(self, team):
         super(SlackDMChannel, self).set_related_server(team)
         if self.user not in self.team.users:
-            s = SlackRequest(self.team, 'users.info', {'user': self.slack_name}, channel=self)
+            s = SlackRequest(self.team, 'users.info', {'user': self.user}, channel=self)
             self.eventrouter.receive(s)
-
-    def set_name(self, slack_name):
-        self.name = slack_name
-
-    def get_members(self):
-        return {self.user}
 
     def create_buffer(self):
         if not self.channel_buffer:
@@ -2111,21 +2084,26 @@ class SlackDMChannel(SlackChannel):
         else:
             self.color_name = ""
 
-    def formatted_name(self, style="default", typing=False, present=True, enable_color=False, **kwargs):
-        prepend = ""
-        if config.show_buflist_presence:
-            prepend = "+" if present else " "
-        select = {
-            "default": self.slack_name,
-            "sidebar": prepend + self.slack_name,
-            "base": self.slack_name,
-            "long_default": "{}.{}".format(self.team.preferred_name, self.slack_name),
-            "long_base": "{}.{}".format(self.team.preferred_name, self.slack_name),
-        }
-        if config.colorize_private_chats and enable_color:
-            return colorize_string(self.color_name, select[style])
+    def formatted_name(self, style="default", typing=False, present=True):
+        if style == "sidebar":
+            if typing and config.channel_name_typing_indicator:
+                prepend = ">"
+            elif present and config.show_buflist_presence:
+                prepend = "+"
+            elif config.channel_name_typing_indicator or config.show_buflist_presence:
+                prepend = " "
+            else:
+                prepend = ""
+            name = prepend + self.slack_name
+
+            if config.colorize_private_chats:
+                return colorize_string(self.color_name, name)
+            else:
+                return name
+        elif style == "long_default":
+            return "{}.{}".format(self.team.preferred_name, self.slack_name)
         else:
-            return select[style]
+            return self.slack_name
 
     def open(self, update_remote=True):
         self.create_buffer()
@@ -2140,31 +2118,14 @@ class SlackDMChannel(SlackChannel):
                 s = SlackRequest(self.team, join_method, {"users": self.user, "return_im": True}, channel=self)
                 self.eventrouter.receive(s)
 
-    def rename(self):
-        if self.channel_buffer:
-            new_name = self.formatted_name(style="sidebar", present=self.team.is_user_present(self.user), enable_color=config.colorize_private_chats)
-            if self.current_short_name != new_name:
-                self.current_short_name = new_name
-                w.buffer_set(self.channel_buffer, "short_name", new_name)
-                return True
-        return False
-
-    def refresh(self):
-        return self.rename()
-
 
 class SlackGroupChannel(SlackChannel):
     """
     A group channel is a private discussion group.
     """
 
-    def __init__(self, eventrouter, **kwargs):
-        super(SlackGroupChannel, self).__init__(eventrouter, **kwargs)
-        self.type = "group"
-        self.set_name(self.slack_name)
-
-    def set_name(self, slack_name):
-        self.name = config.group_name_prefix + slack_name
+    def __init__(self, eventrouter, channel_type="group", **kwargs):
+        super(SlackGroupChannel, self).__init__(eventrouter, channel_type, **kwargs)
 
 
 class SlackPrivateChannel(SlackGroupChannel):
@@ -2176,8 +2137,7 @@ class SlackPrivateChannel(SlackGroupChannel):
     """
 
     def __init__(self, eventrouter, **kwargs):
-        super(SlackPrivateChannel, self).__init__(eventrouter, **kwargs)
-        self.type = "private"
+        super(SlackPrivateChannel, self).__init__(eventrouter, "private", **kwargs)
 
     def set_related_server(self, team):
         super(SlackPrivateChannel, self).set_related_server(team)
@@ -2199,8 +2159,7 @@ class SlackMPDMChannel(SlackChannel):
                 for user_id in kwargs["members"]
                 if user_id != myidentifier
         ))
-        super(SlackMPDMChannel, self).__init__(eventrouter, **kwargs)
-        self.type = "mpim"
+        super(SlackMPDMChannel, self).__init__(eventrouter, "mpim", **kwargs)
 
     def open(self, update_remote=True):
         self.create_buffer()
@@ -2216,31 +2175,22 @@ class SlackMPDMChannel(SlackChannel):
                 s = SlackRequest(self.team, join_method, {'users': ','.join(self.members)}, channel=self)
                 self.eventrouter.receive(s)
 
-    def set_name(self, slack_name):
-        self.name = slack_name
-
-    def formatted_name(self, style="default", typing=False, **kwargs):
-        if typing and config.channel_name_typing_indicator:
-            prepend = ">"
+    def formatted_name(self, style="default", typing=False, present=None):
+        if style == "sidebar":
+            if typing and config.channel_name_typing_indicator:
+                prepend = ">"
+            else:
+                prepend = "@"
+            return prepend + self.slack_name
+        elif style == "long_default":
+            return "{}.{}".format(self.team.preferred_name, self.slack_name)
         else:
-            prepend = "@"
-        select = {
-            "default": self.name,
-            "sidebar": prepend + self.name,
-            "base": self.name,
-            "long_default": "{}.{}".format(self.team.preferred_name, self.name),
-            "long_base": "{}.{}".format(self.team.preferred_name, self.name),
-        }
-        return select[style]
-
-    def rename(self):
-        pass
+            return self.slack_name
 
 
 class SlackSharedChannel(SlackChannel):
     def __init__(self, eventrouter, **kwargs):
-        super(SlackSharedChannel, self).__init__(eventrouter, **kwargs)
-        self.type = 'shared'
+        super(SlackSharedChannel, self).__init__(eventrouter, "shared", **kwargs)
 
     def set_related_server(self, team):
         super(SlackSharedChannel, self).set_related_server(team)
@@ -2255,9 +2205,6 @@ class SlackSharedChannel(SlackChannel):
             s = SlackRequest(self.team, 'users.info', {'user': user}, channel=self)
             self.eventrouter.receive(s)
         super(SlackSharedChannel, self).get_history(slow_queue)
-
-    def set_name(self, slack_name):
-        self.name = config.shared_name_prefix + slack_name
 
 
 class SlackThreadChannel(SlackChannelCommon):
@@ -2274,10 +2221,14 @@ class SlackThreadChannel(SlackChannelCommon):
         self.type = "thread"
         self.got_history = False
         self.label = None
-        self.members = self.parent_message.channel.members
         self.team = self.parent_message.team
         self.last_line_from = None
         self.new_messages = False
+        self.buffer_name_needs_update = False
+
+    @property
+    def members(self):
+        return self.parent_message.channel.members
 
     @property
     def last_read(self):
@@ -2299,7 +2250,7 @@ class SlackThreadChannel(SlackChannelCommon):
     def muted(self):
         return self.parent_message.channel.muted
 
-    def formatted_name(self, style="default", **kwargs):
+    def formatted_name(self, style="default"):
         hash_or_ts = self.parent_message.hash or self.parent_message.ts
         styles = {
             "default": " +{}".format(hash_or_ts),
@@ -2307,9 +2258,6 @@ class SlackThreadChannel(SlackChannelCommon):
             "sidebar": " +{}".format(hash_or_ts),
         }
         return styles[style]
-
-    def refresh(self):
-        self.rename()
 
     def mark_read(self, ts=None, update_remote=True, force=False, post_data={}):
         args = {"thread_ts": self.parent_message.ts}
@@ -2372,9 +2320,15 @@ class SlackThreadChannel(SlackChannelCommon):
         self.active = True
         self.get_history()
 
+    def refresh(self):
+        if self.buffer_name_needs_update:
+            self.buffer_name_needs_update = False
+            self.rename()
+
     def rename(self):
         if self.channel_buffer and not self.label:
-            w.buffer_set(self.channel_buffer, "short_name", self.formatted_name(style="sidebar", enable_color=True))
+            w.buffer_set(self.channel_buffer, "name", self.formatted_name(style="long_default"))
+            w.buffer_set(self.channel_buffer, "short_name", self.formatted_name(style="sidebar"))
 
     def set_highlights(self, highlight_string=None):
         if self.channel_buffer:
@@ -2393,14 +2347,13 @@ class SlackThreadChannel(SlackChannelCommon):
             w.buffer_set(self.channel_buffer, "localvar_set_nick", self.team.nick)
             w.buffer_set(self.channel_buffer, "localvar_set_channel", self.formatted_name())
             w.buffer_set(self.channel_buffer, "localvar_set_server", self.team.preferred_name)
-            w.buffer_set(self.channel_buffer, "short_name", self.formatted_name(style="sidebar", enable_color=True))
+            w.buffer_set(self.channel_buffer, "short_name", self.formatted_name(style="sidebar"))
             self.set_highlights()
             time_format = w.config_string(w.config_get("weechat.look.buffer_time_format"))
             parent_time = time.localtime(SlackTS(self.parent_message.ts).major)
-            topic = '{} {} | {}'.format(time.strftime(time_format, parent_time), self.parent_message.sender, self.render(self.parent_message)	)
+            topic = '{} {} | {}'.format(time.strftime(time_format, parent_time),
+                    self.parent_message.sender, self.render(self.parent_message))
             w.buffer_set(self.channel_buffer, "title", topic)
-
-            # self.eventrouter.weechat_controller.set_refresh_buffer_list(True)
 
     def destroy_buffer(self, update_remote):
         self.channel_buffer = None
@@ -2885,7 +2838,7 @@ def handle_usersinfo(user_json, eventrouter, team, channel, metadata):
     if channel.type == 'shared':
         channel.update_nicklist(user_info['id'])
     elif channel.type == 'im':
-        channel.slack_name = user.name
+        channel.set_name(user.name)
         channel.set_topic(create_user_status_string(user.profile))
 
 
@@ -3015,7 +2968,7 @@ def process_user_change(message_json, eventrouter, team, channel, metadata):
 
 def process_user_typing(message_json, eventrouter, team, channel, metadata):
     if channel:
-        channel.set_typing(metadata["user"].name)
+        channel.set_typing(metadata["user"])
         w.bar_item_update("slack_typing_notice")
 
 
@@ -3227,11 +3180,11 @@ def process_channel_created(message_json, eventrouter, team, channel, metadata):
     item['is_member'] = False
     channel = SlackChannel(eventrouter, team=team, **item)
     team.channels[item["id"]] = channel
-    team.buffer_prnt('Channel created: {}'.format(channel.slack_name))
+    team.buffer_prnt('Channel created: {}'.format(channel.name))
 
 
 def process_channel_rename(message_json, eventrouter, team, channel, metadata):
-    channel.slack_name = message_json['channel']['name']
+    channel.set_name(message_json['channel']['name'])
 
 
 def process_im_created(message_json, eventrouter, team, channel, metadata):
@@ -4816,7 +4769,7 @@ def setup_hooks():
 
     w.hook_timer(5000, 0, 0, "ws_ping_cb", "")
     w.hook_timer(1000, 0, 0, "typing_update_cb", "")
-    w.hook_timer(1000, 0, 0, "buffer_list_update_callback", "EVENTROUTER")
+    w.hook_timer(1000, 0, 0, "buffer_list_update_callback", "")
     w.hook_timer(3000, 0, 0, "reconnect_callback", "EVENTROUTER")
     w.hook_timer(1000 * 60 * 5, 0, 0, "slack_never_away_cb", "")
 

@@ -33,7 +33,7 @@ local toggle = function(deviceName)
 end
 
 module.start = function()
-  hs.hotkey.bind(config.superKeys.cmdCtrl, 'a', function()
+  hs.hotkey.bind(config.modifiers.cmdCtrl, 'a', function()
     local ok, output = toggle('replipods')
 
     if ok then

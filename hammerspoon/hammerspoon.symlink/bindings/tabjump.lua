@@ -29,10 +29,10 @@ end
 module.start = function()
   -- bind tabjumps
   for bundleID, app in pairs(config.apps) do
-    if app.superKey ~= nil and app.shortcut ~= nil then
+    if app.modifier ~= nil and app.shortcut ~= nil then
 
       if (app.tabjump ~= nil) then
-        hs.hotkey.bind(app.superKey, app.shortcut, function()
+        hs.hotkey.bind(app.modifier, app.shortcut, function()
           module.go(app.tabjump)
         end)
       end

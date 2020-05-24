@@ -84,12 +84,12 @@ end
 module.start = function()
   -- :: media (spotify)
   for _, media in pairs(config.media) do
-    hs.hotkey.bind(media.superKey, media.shortcut, function() spotify(media.action, media.label) end)
+    hs.hotkey.bind(media.modifier, media.shortcut, function() spotify(media.action, media.label) end)
   end
 
   -- :: volume control
   for _, vol in pairs(config.volume) do
-    hs.hotkey.bind(vol.superKey, vol.shortcut, function() adjustVolume(vol) end)
+    hs.hotkey.bind(vol.modifier, vol.shortcut, function() adjustVolume(vol) end)
   end
 end
 

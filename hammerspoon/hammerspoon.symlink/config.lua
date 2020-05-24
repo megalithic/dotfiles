@@ -56,8 +56,8 @@ local module = {
     centeredSmall =   '3,3 2x2',
   },
 
-  -- TODO: superKeys -> modifierKeys
-  superKeys = { ctrl = {'ctrl'},
+  modifiers = {
+    ctrl = {'ctrl'},
     cmd = {'cmd'},
     cmdAlt = {'cmd', 'alt'},
     cmdShift = {'cmd', 'shift'},
@@ -92,7 +92,7 @@ module.apps = {
     id = 'net.kovidgoyal.kitty',
     name = 'kitty',
     hyperShortcut = 'k',
-    superKey = module.superKeys.ctrl,
+    modifier = module.modifiers.ctrl,
     shortcut = 'space',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
@@ -108,7 +108,7 @@ module.apps = {
     id = 'com.brave.Browser.dev',
     name = 'Brave Browser Dev',
     hyperShortcut = '`',
-    superKey = module.superKeys.cmd,
+    modifier = module.modifiers.cmd,
     shortcut = '`',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
@@ -126,7 +126,7 @@ module.apps = {
     name = 'Drafts',
     hyperShortcut ='d',
     local_bindings = {'x', '\''},
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = 'n',
     preferredDisplay = 1,
     position = module.grid.rightHalf,
@@ -142,7 +142,7 @@ module.apps = {
     id = 'com.tinyspeck.slackmacgap',
     name = 'Slack',
     hyperShortcut = 's',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = 's',
     distraction = true,
     preferredDisplay = 2,
@@ -156,7 +156,7 @@ module.apps = {
   ['com.readdle.smartemail-Mac'] = {
     id = 'com.readdle.smartemail-Mac',
     name = 'Spark',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     distraction = true,
     shortcut = 'm',
     preferredDisplay = 2,
@@ -166,7 +166,7 @@ module.apps = {
   ['com.apple.finder'] = {
     id = 'com.apple.finder',
     name = 'Finder',
-    superKey = module.superKeys.ctrl,
+    modifier = module.modifiers.ctrl,
     shortcut = '`',
     preferredDisplay = 1,
     position = module.grid.centeredMedium
@@ -174,7 +174,7 @@ module.apps = {
   ['us.zoom.xos'] = {
     id = 'us.zoom.xos',
     name = 'zoom.us',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = 'z',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
@@ -187,7 +187,7 @@ module.apps = {
   ['com.spotify.client'] = {
     id = 'com.spotify.client',
     name = 'Spotify',
-    superKey = module.superKeys.cmdShift,
+    modifier = module.modifiers.cmdShift,
     shortcut = '8',
     preferredDisplay = 2,
     hideAfter = 1,
@@ -196,7 +196,7 @@ module.apps = {
   ['com.apple.iChat'] = {
     id = 'com.apple.iChat',
     name = 'Messages',
-    superKey = module.superKeys.cmdShift,
+    modifier = module.modifiers.cmdShift,
     shortcut = 'm',
     distraction = true,
     preferredDisplay = 1,
@@ -206,7 +206,7 @@ module.apps = {
   ['hangouts'] = {
     id = 'hangouts',
     name = 'Brave Browser Dev',
-    superKey = module.superKeys.cmdCtrl,
+    modifier = module.modifiers.cmdCtrl,
     shortcut = 'm',
     distraction = true,
     preferredDisplay = 1,
@@ -215,7 +215,7 @@ module.apps = {
   ['WhatsApp'] = {
     id = 'WhatsApp',
     name = 'WhatsApp',
-    superKey = module.superKeys.cmdShift,
+    modifier = module.modifiers.cmdShift,
     shortcut = 'w',
     distraction = true,
     preferredDisplay = 1,
@@ -225,7 +225,7 @@ module.apps = {
   ['com.agilebits.onepassword7'] = {
     id = 'com.agilebits.onepassword7',
     name = '1Password',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
     position = module.grid.centeredMedium
@@ -233,7 +233,7 @@ module.apps = {
   ['com.teamviewer.TeamViewer'] = {
     id = 'com.teamviewer.TeamViewer',
     name = 'TeamViewer',
-    -- superKey = module.superKeys.mashShift,
+    -- modifier = module.modifiers.mashShift,
     -- shortcut = 'v',
     preferredDisplay = 1,
     position = module.grid.centeredLarge
@@ -241,7 +241,7 @@ module.apps = {
   ['org.hammerspoon.Hammerspoon'] = {
     id = 'org.hammerspoon.Hammerspoon',
     name = 'Hammerspoon',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
     position = module.grid.fullScreen,
@@ -256,17 +256,20 @@ module.apps = {
   ['com.flexibits.fantastical2.mac'] = {
     id = 'com.flexibits.fantastical2.mac',
     name = 'Fantastical',
-    -- superKey = module.superKeys.cmdShift,
+    -- modifier = module.modifiers.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
     quitGuard = true,
+    rules = {
+      { title="Fantastical Helper", rule="ignore" }
+    }
   },
   -- FIXME: should this move to the `rules` table for the main app?
   ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
     id = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
     name = 'Fantastical Helper',
-    -- superKey = module.superKeys.cmdShift,
+    -- modifier = module.modifiers.cmdShift,
     -- shortcut = 'f',
     preferredDisplay = 1,
     quitGuard = true,
@@ -344,26 +347,26 @@ end
 module.utilities = {
   {
     name = 'Hammerspoon Console',
-    superKey = module.superKeys.ctrlAlt,
+    modifier = module.modifiers.ctrlAlt,
     shortcut = 'r',
     fn = function() hs.toggleConsole() end
   },
   -- NOTE: handle this with alfred and `sleep`/`lock` commands
   -- {
   --   name = 'Lock Screen',
-  --   superKey = module.superKeys.mashShift,
+  --   modifier = module.modifiers.mashShift,
   --   shortcut = 'L',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
   -- {
   --   name = 'Pomodoro',
-  --   superKey = module.superKeys.mashShift,
+  --   modifier = module.modifiers.mashShift,
   --   shortcut = 'P',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
   {
     name = 'Hammerspoon Reload',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = 'r',
     fn = (function()
       hs.reload()
@@ -372,13 +375,13 @@ module.utilities = {
   },
   {
     name = 'Pomodoro',
-    superKey = module.superKeys.cmdCtrl,
+    modifier = module.modifiers.cmdCtrl,
     shortcut = 'p',
     fn = (function() end)
   },
   {
     name = 'ScreenCapture',
-    superKey = module.superKeys.ctrlShift,
+    modifier = module.modifiers.ctrlShift,
     shortcut = 's',
     fn = (function()
       current_date = os.date('%Y%m%d-%H%M%S')
@@ -394,19 +397,19 @@ module.utilities = {
 module.media = {
   {
     action = 'previous',
-    superKey = module.superKeys.ctrlShift,
+    modifier = module.modifiers.ctrlShift,
     shortcut = '[',
     label = '⇤ previous'
   },
   {
     action = 'next',
-    superKey = module.superKeys.ctrlShift,
+    modifier = module.modifiers.ctrlShift,
     shortcut = ']',
     label = 'next ⇥'
   },
   {
     action = 'playpause',
-    superKey = module.superKeys.ctrlShift,
+    modifier = module.modifiers.ctrlShift,
     shortcut = '\\',
     label = 'play/pause'
   },
@@ -415,19 +418,19 @@ module.media = {
 module.volume = {
   {
     action = 'down',
-    superKey = module.superKeys.ctrlShift,
+    modifier = module.modifiers.ctrlShift,
     shortcut = 27,
     diff = -5,
   },
   {
     action = 'up',
-    superKey = module.superKeys.ctrlShift,
+    modifier = module.modifiers.ctrlShift,
     shortcut = 24,
     diff = 5,
   },
   {
     action = 'mute',
-    superKey = module.superKeys.mashShift,
+    modifier = module.modifiers.mashShift,
     shortcut = '\\',
   },
 }
@@ -435,8 +438,8 @@ module.volume = {
 module.snap = {
   {
     name = 'left',
-    superKey = module.superKeys.cmdCtrl,
-    -- hyperKey = module.superKeys.hyper,
+    modifier = module.modifiers.cmdCtrl,
+    -- hyperKey = module.modifiers.hyper,
     shortcut = 'h',
     locations = {
       module.grid.leftHalf,
@@ -446,8 +449,8 @@ module.snap = {
   },
   {
     name = 'right',
-    superKey = module.superKeys.cmdCtrl,
-    -- hyperKey = module.superKeys.hyper,
+    modifier = module.modifiers.cmdCtrl,
+    -- hyperKey = module.modifiers.hyper,
     shortcut = 'l',
     locations = {
       module.grid.rightHalf,
@@ -457,8 +460,8 @@ module.snap = {
   },
   {
     name = 'down',
-    superKey = module.superKeys.cmdCtrl,
-    -- hyperKey = module.superKeys.hyper,
+    modifier = module.modifiers.cmdCtrl,
+    -- hyperKey = module.modifiers.hyper,
     shortcut = 'j',
     locations = {
       module.grid.centeredLarge,
@@ -468,8 +471,8 @@ module.snap = {
   },
   {
     name = 'up',
-    superKey = module.superKeys.cmdCtrl,
-    -- hyperKey = module.superKeys.hyper,
+    modifier = module.modifiers.cmdCtrl,
+    -- hyperKey = module.modifiers.hyper,
     shortcut = 'k',
     locations = {
       module.grid.fullScreen,
@@ -477,8 +480,8 @@ module.snap = {
   },
   {
     name = 'full',
-    superKey = module.superKeys.cmdCtrl,
-    -- hyperKey = module.superKeys.hyper,
+    modifier = module.modifiers.cmdCtrl,
+    -- hyperKey = module.modifiers.hyper,
     shortcut = 'return',
     locations = {
       module.grid.fullScreen,
