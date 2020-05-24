@@ -51,6 +51,7 @@ local updateUSB = function()
   status.isDZ60Attached = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
     return device.productName == 'DZ60'
   end) ~= nil
+  status.docked = status.isDZ60Attached
   status.isDocked = status.isDZ60Attached
 
   log.d('updated docked (dz60):', status.isDocked)

@@ -20,8 +20,10 @@ module.init = function()
 
   -- reload  = reloadHS
 
-  dumpWindows = function()
-    hs.fnutils.each(hs.window.allWindows(), function(win)
+  dumpWindows = function(app)
+    windows = app == nil and hs.window.allWindows() or app:allWindows()
+
+    hs.fnutils.each(windows, function(win)
       print(hs.inspect({
         id               = win:id(),
         title            = win:title(),
@@ -30,6 +32,7 @@ module.init = function()
         role             = win:role(),
         subrole          = win:subrole(),
         frame            = win:frame(),
+        isFullScreen     = win:isFullScreen(),
         -- buttonZoom       = axuiWindowElement(win):attributeValue('AXZoomButton'),
         -- buttonFullScreen = axuiWindowElement(win):attributeValue('AXFullScreenButton'),
         -- isResizable      = axuiWindowElement(win):isAttributeSettable('AXSize')

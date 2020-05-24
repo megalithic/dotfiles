@@ -256,8 +256,8 @@ module.apps = {
   ['com.flexibits.fantastical2.mac'] = {
     id = 'com.flexibits.fantastical2.mac',
     name = 'Fantastical',
-    -- modifier = module.modifiers.cmdShift,
-    -- shortcut = 'f',
+    modifier = module.modifiers.mashShift,
+    shortcut = 'f',
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
     quitGuard = true,
@@ -265,16 +265,16 @@ module.apps = {
       { title="Fantastical Helper", rule="ignore" }
     }
   },
-  -- FIXME: should this move to the `rules` table for the main app?
-  ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
-    id = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
-    name = 'Fantastical Helper',
-    -- modifier = module.modifiers.cmdShift,
-    -- shortcut = 'f',
-    preferredDisplay = 1,
-    quitGuard = true,
-    -- position = module.grid.centeredLarge
-  },
+  -- -- FIXME: should this move to the `rules` table for the main app?
+  -- ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
+  --   id = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
+  --   name = 'Fantastical Helper',
+  --   -- modifier = module.modifiers.cmdShift,
+  --   -- shortcut = 'f',
+  --   preferredDisplay = 1,
+  --   quitGuard = true,
+  --   -- position = module.grid.centeredLarge
+  -- },
   ['com.microsoft.autoupdate2'] = {
     id = 'com.microsoft.autoupdate2',
     name = 'Microsoft AutoUpdate',

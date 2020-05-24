@@ -1,4 +1,4 @@
-local log = hs.logger.new('[utils.wm]', 'warning')
+local log = hs.logger.new('[utils.wm]', 'warning') -- debug == 4, warning == 2
 
 local cache  = {}
 local module = { cache = cache }
@@ -65,6 +65,10 @@ local layoutManagedWindows = function(appConfig, managedWindows)
 
   if #managedWindows == 0 then
     log.wf('UNABLE to apply a layout for the configured app (no managed windows found for app): %s, #win: %s, pos: %s', appConfig.name, #managedWindows, appConfig.position)
+    -- get more verbose output when we're in debug (4) mode:
+    if log:getLogLevel() == 4 then
+      dumpWindows(hs.application.get(appConfig.id))
+    end
 
     return
   end
@@ -151,20 +155,11 @@ local setLayoutForAll = function()
 end
 
 local handleWindowLayout = function(win, appName, event)
-  -- FIXME: do we need this?
-  -- if not canLayoutWindow(win) and event ~= "windowDestroyed" then return end
-
   appConfig = config.getAppConfigForWin(win)
 
   doWindowHandlers(win, appConfig, event)
 
-  -- if event ~= "windowFocused" then
-    setLayoutForApp(win:application())
-  -- end
-
-  -- if event ~= "windowFocused" then
-  --   snap(win, appConfig.position, appConfig.preferredDisplay)
-  -- end
+  setLayoutForApp(win:application())
 end
 
 local handleWindowCreated = function(win, appName, event)
@@ -176,9 +171,6 @@ end
 local handleWindowDestroyed = function(win, appName, event)
   windowLogger(event, win, appName)
 
-  -- if win ~= nil and appName ~= "zoom.us" then
-  --   setLayoutForApp(win:application())
-  -- end
   handleWindowLayout(win, appName, event)
 end
 
@@ -190,6 +182,13 @@ end
 
 local handleWindowUnfocused = function(win, appName, event)
   windowLogger(event, win, appName)
+
+  if event == "windowNotOnScreen" then
+    if win:isFullScreen() then
+      win:setFullScreen(false)
+      win:maximize()
+    end
+  end
 
   doWindowHandlers(win, config.getAppConfigForWin(win), event)
 end
@@ -203,7 +202,8 @@ end
 local handleWindowFullscreened = function(win, appName, event)
   windowLogger(event, win, appName)
 
-  win:setFullscreen(false)
+  win:setFullScreen(false)
+  win:maximize()
 end
 
 local getFiltersFromAppConfig = function()
@@ -232,15 +232,18 @@ module.start = (function()
 
   cache.filter = hs.window.filter.new(app_filters)
     :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-    -- :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
-    :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
-    :subscribe(hs.window.filter.windowUnhidden, handleWindowFocused, true)
-    :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowMinimized, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
     :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
+    -- :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowMinimized, handleWindowUnfocused, true)
+    -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+    :subscribe(hs.window.filter.windowNotOnScreen, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowNotVisible, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowOnScreen, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
+    :subscribe(hs.window.filter.windowUnhidden, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
 end)
 
 module.setLayoutForAll = (function()

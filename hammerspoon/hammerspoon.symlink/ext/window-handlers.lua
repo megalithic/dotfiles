@@ -69,7 +69,7 @@ module.quitAfterHandler = function(win, interval, event)
         cache.timers[appName]:stop()
       end
 
-      if event == "windowUnfocused" or event == "windowHidden" then
+      if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
         log.df('quitAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() doAppQuit(win) end)
@@ -92,8 +92,9 @@ module.hideAfterHandler = function(win, interval, event)
         cache.timers[appName]:stop()
       end
 
-      -- FIXME: unfortunately, "toggling" an app doesn't trigger any of these events
-      if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" then
+      log.df('hideAfterHandler: %s', event)
+
+      if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
         log.df('hideAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() app:hide() end)
