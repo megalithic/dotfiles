@@ -7,6 +7,7 @@
 
 local hyper = require("hyper")
 local hsApp = require("hs.application")
+local alert = require("ext.alert")
 
 local pomoMode = hs.hotkey.modal.new()
 
@@ -20,15 +21,12 @@ local string = ""
 local startSound = hs.sound.getByName("Blow")
 local stopSound = hs.sound.getByName("Submarine")
 
-local alert = require("hs.alert")
-      alert.defaultStyle.textStyle =
-      { paragraphStyle = { alignment = "center" } }
 -- UI
 
 function showPrompt(str)
   alert.closeAll()
   hs.fnutils.imap(hs.screen.allScreens(), function(screen)
-    return alert.show(str, alert.defaultStyle, screen, true)
+    return alert.show({text=str})
   end)
   hs.timer.doAfter(10, function() pomoMode:exit() end)
 end

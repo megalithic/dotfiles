@@ -1,7 +1,7 @@
 local log = hs.logger.new('[bindings.quitguard]', 'debug')
 local module = {}
 
-local alert = require('ext/alert')
+local alert = require('ext.alert')
 
 local quitModal = hs.hotkey.modal.new('cmd','q')
 -- Press Cmd+Q twice to actually quit

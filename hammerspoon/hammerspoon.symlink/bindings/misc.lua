@@ -4,6 +4,7 @@ local module = {}
 
 local setLayoutForAll = require('utils.wm').setLayoutForAll
 local setLayoutForApp = require('utils.wm').setLayoutForApp
+local alert = require('ext.alert')
 
 module.start = function()
   -- misc things
@@ -14,13 +15,13 @@ module.start = function()
 
   -- additional things that cause cyclical reference issues from config.lua
   hs.hotkey.bind(config.modifiers.mashShift, 'w', function()
-    hs.alert.show("Relayout of all apps")
+    alert.show({text="Relayout of all apps"})
     setLayoutForAll()
   end)
 
   hs.hotkey.bind(config.modifiers.ctrlShift, 'w', function()
     local app = hs.application.frontmostApplication()
-    hs.alert.show("Relayout of single app (" .. app:name() .. ")")
+    alert.show({text="Relayout of single app (" .. app:name() .. ")"})
     setLayoutForApp(app)
   end)
 end

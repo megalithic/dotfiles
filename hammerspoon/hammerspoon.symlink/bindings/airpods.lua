@@ -2,6 +2,8 @@
 local log = hs.logger.new('[bindings.airpods]', 'debug')
 local module = {}
 
+local alert = require('ext.alert')
+
 local toggle = function(deviceName)
   local s = [[
     activate application "SystemUIServer"
@@ -37,9 +39,9 @@ module.start = function()
     local ok, output = toggle('replipods')
 
     if ok then
-      hs.alert.show(output)
+      alert.show({text=output})
     else
-      hs.alert.show("Couldn't connect to AirPods!")
+      alert.show({text= "Couldn't connect to AirPods!"})
     end
   end)
 end

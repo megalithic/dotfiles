@@ -1,7 +1,28 @@
--- TODO: move hs.alert config from init.lua to this module
-
-local log = hs.logger.new('[ext.alert]', 'debug')
+local log = hs.logger.new('[ext.alert]', 'warning')
 local module = {}
+
+
+-- default alert configuration
+hs.alert.defaultStyle['textSize'] = 24
+hs.alert.defaultStyle['radius'] = 20
+hs.alert.defaultStyle['strokeColor'] = {
+  white = 1,
+  alpha = 0
+}
+hs.alert.defaultStyle['fillColor'] = {
+  red   = 9/255,
+  green = 8/255,
+  blue  = 32/255,
+  alpha = 0.9
+}
+hs.alert.defaultStyle['textColor'] = {
+  red   = 209/255,
+  green = 236/255,
+  blue  = 240/255,
+  alpha = 1
+}
+hs.alert.defaultStyle['textFont'] = 'Helvetica Light'
+
 
 module.defaultDuration = 2
 module.defaultScreen = hs.screen.primaryScreen()
