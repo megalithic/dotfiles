@@ -1,34 +1,41 @@
 local log = hs.logger.new('[ext.window-handlers]', 'warning')
-
 local cache = { timers = {} }
-
 local module = { cache = cache }
 
+-- use this callback for debugging dnd tasks
+local function dndCommandCb(exit_code, std_out, std_err)
+  log.wf("DND command callback: { exit_code = %s, std_out = %s, std_err = %s }", exit_code, std_out, std_err)
+
+  return
+end
+
+local function dnd_command_updater(cmd, cb, args)
+  if cmd ~= nil then
+    task = hs.task.new(cmd, cb, args)
+    task:start()
+  end
+end
 
 module.dndHandler = function(win, dndConfig, event)
   if dndConfig == nil then return end
 
-  if event == "windowCreated" then
-    log.df('dndHandler for %s found..', win:application():name())
+  log.df('dndHandler for %s found: %s..', win:application():name(), hs.inspect(dndConfig))
+
+  local mode = dndConfig.mode
+
+  if (dndConfig.enabled) then
+    if (event == "windowCreated") then
+      log.df('DND handler: toggling ON dnd and slack status mode to %s', mode)
+
+      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/slack", nil, {mode})
+      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", nil, {"on"})
+    elseif (event == "windowDestroyed") then
+      log.df('DND handler: toggling OFF dnd and slack mode to back')
+
+      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/slack", nil, {"back"})
+      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", nil, {"off"})
+    end
   end
-
---   local enabled = dndConfig.enabled
---   local mode = dndConfig.mode
-
---   if (enabled) then
---     if (event == "windowCreated") then
---       log.df('dnd handler: toggling ON slack status (%s) and dnd mode', mode)
---       hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end), (function() end), {mode}):start()
---       hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"on"}):start()
---     elseif (event == "windowDestroyed") then
---       -- FIXME: this only works for app watchers it seems; nothing to do with dead windows :(
---       -- log.df('dnd handler: toggling OFF slack status and dnd mode')
---       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/slack", (function() end) , (function() end), {"back"}):start()
---       -- hs.execute("slack back", true)
---       -- hs.task.new(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", (function() end), (function() end), {"off"}):start()
---       -- hs.execute("dnd off", true)
---     end
---   end
 end
 
 module.appHandler = function(win, handler, event)

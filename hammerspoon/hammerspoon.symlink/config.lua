@@ -178,7 +178,7 @@ module.apps = {
     shortcut = 'z',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
-    dnd = { enabled = false, mode = "zoom" },
+    dnd = { enabled = true, mode = "zoom" },
     rules = {
       {title = 'Zoom', rule = 'quit'},
       {title = 'Zoom Meeting', rule = 'snap'},

@@ -37,9 +37,9 @@ function request() {
   # non-zero length string AND a value not equal to 0
   # TODO: need better way to handle options/args that don't exist
   if [[ -n $2 && $2 != 0 ]]; then
-    2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | spinner
+    2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | $HOME/.dotfiles/bin/spinner
   else
-    2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1" | spinner
+    2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1" | $HOME/.dotfiles/bin/spinner
   fi
 }
 

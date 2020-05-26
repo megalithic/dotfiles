@@ -162,19 +162,7 @@ local handleWindowLayout = function(win, appName, event)
   setLayoutForApp(win:application())
 end
 
-local handleWindowCreated = function(win, appName, event)
-  windowLogger(event, win, appName)
-
-  handleWindowLayout(win, appName, event)
-end
-
-local handleWindowDestroyed = function(win, appName, event)
-  windowLogger(event, win, appName)
-
-  handleWindowLayout(win, appName, event)
-end
-
-local handleWindowFocused = function(win, appName, event)
+local windowHandler = function(win, appName, event)
   windowLogger(event, win, appName)
 
   handleWindowLayout(win, appName, event)
@@ -189,8 +177,6 @@ local handleWindowUnfocused = function(win, appName, event)
       win:maximize()
     end
   end
-
-  doWindowHandlers(win, config.getAppConfigForWin(win), event)
 end
 
 local handleWindowMoved = function(win, appName, event)
@@ -231,19 +217,19 @@ module.start = (function()
   --  - focused
 
   cache.filter = hs.window.filter.new(app_filters)
-    :subscribe(hs.window.filter.windowCreated, handleWindowCreated, true)
-    :subscribe(hs.window.filter.windowDestroyed, handleWindowDestroyed, true)
+    :subscribe(hs.window.filter.windowCreated, windowHandler, true)
+    :subscribe(hs.window.filter.windowDestroyed, windowHandler, true)
     :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
-    -- :subscribe(hs.window.filter.windowFocused, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowFocused, windowHandler, true)
     :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowMinimized, handleWindowUnfocused, true)
-    -- :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
+    :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
     :subscribe(hs.window.filter.windowNotOnScreen, handleWindowUnfocused, true)
     :subscribe(hs.window.filter.windowNotVisible, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowOnScreen, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowOnScreen, windowHandler, true)
     :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowUnhidden, handleWindowFocused, true)
-    :subscribe(hs.window.filter.windowVisible, handleWindowFocused, true)
+    :subscribe(hs.window.filter.windowUnhidden, windowHandler, true)
+    :subscribe(hs.window.filter.windowVisible, windowHandler, true)
 end)
 
 module.setLayoutForAll = (function()
@@ -252,7 +238,6 @@ module.setLayoutForAll = (function()
   setLayoutForAll()
 end)
 
--- FIXME: doesn't seem to be working properly; have to do `All` instead
 module.setLayoutForApp = (function(app)
   log.df('setLayoutForApp: %s', hs.inspect(app))
 

@@ -114,7 +114,12 @@ set -g detach-on-destroy off
 
 # Vim-style copy & paste ------------------------------------------------------
 
-setw -g mode-keys vi                                                # Use vim keybindings
+# use vi keys in search mode
+setw -g mode-keys vi
+
+# emacs key bindings in tmux command prompt (prefix + :) are better than
+# vi keys, even for vim users
+set -g status-keys emacs
 
 # put us in copy-mode, where i typically then hit ctrl-b again to scroll up
 bind Escape copy-mode

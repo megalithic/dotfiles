@@ -5,12 +5,15 @@ cask_args appdir: "/Applications"
 
 # -- taps --
 
-tap "caskroom/cask"
-tap "caskroom/fonts"
+# tap "caskroom/cask"
+# tap "caskroom/fonts"
 # tap "caskroom/versions" # enbala uses this one for java11 things :(
+
 tap "homebrew/bundle"
 tap "homebrew/services"
 tap "homebrew/cask-versions"
+tap "homebrew/cask"
+tap "homebrew/cask-fonts"
 # tap "kopischke/ctags"
 tap "neovim/neovim"
 tap "caius/jo"
@@ -174,11 +177,10 @@ brew "zsh-syntax-highlighting"
 # -- fonts --
 cask "font-firacode-nerd-font"
 cask "font-firacode-nerd-font-mono"
-cask "font-hasklig-nerd-font"
-cask "font-hasklig-nerd-font-mono"
 cask "font-jetbrains-mono"
 cask "font-jetbrainsmono-nerd-font"
 cask "font-jetbrainsmono-nerd-font-mono"
+cask "font-ia-writer-quattro"
 
 # -- gui --
 cask "1password"
@@ -243,4 +245,4 @@ mas "Tweetbot", id: 557168941
 mas "Xcode", id: 497799835
 mas "Drafts", id: 1435957248
 mas "Things", id: 904280696
-mas "Simple Recorder-Voice Recorder", id: 989175722
+# mas "Simple Recorder-Voice Recorder", id: 989175722

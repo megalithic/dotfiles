@@ -21,7 +21,7 @@ local toggleWifi = (function(state)
     state
   )
 
-  log.i('Switching WiFi state', state)
+  log.i('Switching wifi state to', state)
 end)
 
 local selectAudioOutput = (function(output)
