@@ -157,11 +157,11 @@ end
 local handleWindowLayout = function(win, appName, event)
   appConfig = config.getAppConfigForWin(win)
 
+  -- setLayoutForApp(win:application())
   doWindowHandlers(win, appConfig, event)
-
-  setLayoutForApp(win:application())
 end
 
+-- generic window handler for all events
 local windowHandler = function(win, appName, event)
   windowLogger(event, win, appName)
 
