@@ -3,8 +3,8 @@ local cache = { timers = {} }
 local module = { cache = cache }
 
 -- use this callback for debugging dnd tasks
-local function dndCommandCb(exit_code, std_out, std_err)
-  log.wf("DND command callback: { exit_code = %s, std_out = %s, std_err = %s }", exit_code, std_out, std_err)
+local function dndHandlerCb(exit_code, std_out, std_err, cmd)
+  log.df("DND handler callback: { cmd = %s, exit_code = %s, std_out = %s, std_err = %s }", hs.inspect(cmd), hs.inspect(exit_code), hs.inspect(std_out), hs.inspect(std_err))
 
   return
 end
@@ -19,21 +19,32 @@ end
 module.dndHandler = function(win, dndConfig, event)
   if dndConfig == nil then return end
 
-  log.df('dndHandler for %s found: %s..', win:application():name(), hs.inspect(dndConfig))
+  log.df('DND handler for %s found: %s..', win:application():name(), hs.inspect(dndConfig))
 
   local mode = dndConfig.mode
 
   if (dndConfig.enabled) then
+    local slackCmd = os.getenv("HOME") ..  "/.dotfiles/bin/slack"
+    local dndCmd = os.getenv("HOME") ..  "/.dotfiles/bin/dnd"
+
     if (event == "windowCreated") then
       log.df('DND handler: toggling ON dnd and slack status mode to %s', mode)
 
-      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/slack", nil, {mode})
-      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", nil, {"on"})
+      dnd_command_updater(slackCmd,
+        function(exit_code, std_out, std_err)
+          dndHandlerCb(exit_code, std_out, std_err, slackCmd)
+        end,
+        {mode})
+      dnd_command_updater(dndCmd, nil, {"on"})
     elseif (event == "windowDestroyed") then
       log.df('DND handler: toggling OFF dnd and slack mode to back')
 
-      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/slack", nil, {"back"})
-      dnd_command_updater(os.getenv("HOME") ..  "/.dotfiles/bin/dnd", nil, {"off"})
+      dnd_command_updater(slackCmd,
+        function(exit_code, std_out, std_err)
+          dndHandlerCb(exit_code, std_out, std_err, slackCmd)
+        end,
+        {mode})
+      dnd_command_updater(dndCmd, nil, {"off"})
     end
   end
 end
