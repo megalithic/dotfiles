@@ -291,6 +291,8 @@ Plug 'wellle/targets.vim'                                         " improved tar
 "-----------------------------
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --no-bash' }
 Plug 'junegunn/fzf.vim' " fzf.vim
+Plug 'liuchengxu/vim-clap', { 'do': ':Clap install-binary!' }
+Plug 'vn-ki/coc-clap'
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events

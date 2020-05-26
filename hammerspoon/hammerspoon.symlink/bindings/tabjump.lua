@@ -2,6 +2,7 @@ local log = hs.logger.new('[bindings.tabjump]', 'debug')
 local module = {}
 
 -- TODO: extend to support defined browsers, not just Brave
+-- REF: see @evantravers' impl of a brave module: https://github.com/evantravers/hammerspoon/blob/refactor/brave.lua
 
 module.go = function(url)
   local app = 'Brave'

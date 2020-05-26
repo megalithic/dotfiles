@@ -1,4 +1,4 @@
-local log = hs.logger.new('[ext.window-handlers]', 'warning')
+local log = hs.logger.new('[utils.wm.window-handlers]', 'debug')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -19,7 +19,7 @@ end
 module.dndHandler = function(win, dndConfig, event)
   if dndConfig == nil then return end
 
-  log.df('DND handler for %s found: %s..', win:application():name(), hs.inspect(dndConfig))
+  -- log.df('DND handler for %s found: %s..', win:application():name(), hs.inspect(dndConfig))
 
   local mode = dndConfig.mode
 
@@ -30,21 +30,18 @@ module.dndHandler = function(win, dndConfig, event)
     if (event == "windowCreated") then
       log.df('DND handler: toggling ON dnd and slack status mode to %s', mode)
 
-      dnd_command_updater(slackCmd,
-        function(exit_code, std_out, std_err)
-          dndHandlerCb(exit_code, std_out, std_err, slackCmd)
-        end,
-        {mode})
+      -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
       dnd_command_updater(dndCmd, nil, {"on"})
     elseif (event == "windowDestroyed") then
-      log.df('DND handler: toggling OFF dnd and slack mode to back')
+      hs.timer.waitUntil(function()
+        return not win:application():isRunning()
+      end,
+      function()
+        log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
 
-      dnd_command_updater(slackCmd,
-        function(exit_code, std_out, std_err)
-          dndHandlerCb(exit_code, std_out, std_err, slackCmd)
-        end,
-        {mode})
-      dnd_command_updater(dndCmd, nil, {"off"})
+        -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
+        dnd_command_updater(dndCmd, nil, {"off"})
+      end)
     end
   end
 end

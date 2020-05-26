@@ -82,12 +82,6 @@ local module = {
 }
 
 module.apps = {
-  ['_'] = {
-    id = '',
-    name = '',
-    preferredDisplay = 2,
-    position = module.grid.centeredMedium,
-  },
   ['net.kovidgoyal.kitty'] = {
     id = 'net.kovidgoyal.kitty',
     name = 'kitty',
@@ -244,7 +238,7 @@ module.apps = {
     modifier = module.modifiers.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
-    position = module.grid.fullScreen,
+    position = module.grid.rightHalf,
     quitGuard = true,
   },
   ['com.apple.systempreferences'] = {

@@ -6,11 +6,11 @@ local module = { cache = cache }
 local canLayoutWindow = require('ext.window').canLayoutWindow
 local getManageableWindows = require('ext.window').getManageableWindows
 
-local appHandler = require('ext.window-handlers').appHandler
-local dndHandler = require('ext.window-handlers').dndHandler
-local hideAfterHandler = require('ext.window-handlers').hideAfterHandler
-local quitAfterHandler = require('ext.window-handlers').quitAfterHandler
-local doQuitWin = require('ext.window-handlers').doQuitWin
+local appHandler = require('utils.wm.window-handlers').appHandler
+local dndHandler = require('utils.wm.window-handlers').dndHandler
+local hideAfterHandler = require('utils.wm.window-handlers').hideAfterHandler
+local quitAfterHandler = require('utils.wm.window-handlers').quitAfterHandler
+local doQuitWin = require('utils.wm.window-handlers').doQuitWin
 
 local display = function(screen)
   local allDisplays = hs.screen.allScreens()
@@ -64,7 +64,7 @@ local layoutManagedWindows = function(appConfig, managedWindows)
   log.df('attempting to layout managed windows for app: %s (%s), #win: %s', appConfig.name, appConfig.id, #managedWindows)
 
   if #managedWindows == 0 then
-    log.wf('UNABLE to apply a layout for the configured app (no managed windows found for app): %s, #win: %s, pos: %s', appConfig.name, #managedWindows, appConfig.position)
+    log.df('UNABLE to apply a layout for the configured app (no managed windows found for app): %s, #win: %s, pos: %s', appConfig.name, #managedWindows, appConfig.position)
     -- get more verbose output when we're in debug (4) mode:
     if log:getLogLevel() == 4 then
       dumpWindows(hs.application.get(appConfig.id))
@@ -87,7 +87,7 @@ local handleWindowRules = function(appConfig, allWindows)
     log.df('attempting to layout all windows for app (and rules): %s (%s), #win: %s, rules: %s', appConfig.name, appConfig.id, #allWindows, hs.inspect(appConfig.rules))
 
     if #allWindows == 0 then
-      log.wf('UNABLE to apply window-specific rules to any of the windows for app: %s, rules: %s', appConfig.name, hs.inspect(appConfig.rules))
+      log.df('UNABLE to apply window-specific rules to any of the windows for app: %s, rules: %s', appConfig.name, hs.inspect(appConfig.rules))
 
       return
     elseif #allWindows > 1 then
@@ -105,7 +105,7 @@ local handleWindowRules = function(appConfig, allWindows)
           return
         elseif config.ruleExistsForWin(win, 'quit') then
           -- handle quit rules
-          log.df('trying to rule-based quit window %s', hs.inspect(win))
+          log.wf('trying to rule-based quit window %s', hs.inspect(win))
 
           doQuitWin(win)
         elseif config.ruleExistsForWin(win, 'ignore') then
@@ -136,10 +136,10 @@ local setLayoutForApp = function(app, appConfig)
 
     if appConfig ~= nil and appConfig.preferredDisplay ~= nil then
       -- TODO: fix these timers
-      hs.timer.doAfter(0.5, function() handleWindowRules(appConfig, allWindows) end)
+      hs.timer.doAfter(1, function() handleWindowRules(appConfig, allWindows) end)
       hs.timer.doAfter(1, function() layoutManagedWindows(appConfig, managedWindows) end)
     else
-      log.wf('unable to find an app config for %s', app:name())
+      log.wf('UNABLE to find an app config for %s', app:name())
     end
   end
 end
@@ -157,39 +157,8 @@ end
 local handleWindowLayout = function(win, appName, event)
   appConfig = config.getAppConfigForWin(win)
 
-  -- setLayoutForApp(win:application())
+  setLayoutForApp(win:application())
   doWindowHandlers(win, appConfig, event)
-end
-
--- generic window handler for all events
-local windowHandler = function(win, appName, event)
-  windowLogger(event, win, appName)
-
-  handleWindowLayout(win, appName, event)
-end
-
-local handleWindowUnfocused = function(win, appName, event)
-  windowLogger(event, win, appName)
-
-  if event == "windowNotOnScreen" then
-    if win:isFullScreen() then
-      win:setFullScreen(false)
-      win:maximize()
-    end
-  end
-end
-
-local handleWindowMoved = function(win, appName, event)
-  if win == nil then return end
-
-  windowLogger(event, win, appName)
-end
-
-local handleWindowFullscreened = function(win, appName, event)
-  windowLogger(event, win, appName)
-
-  win:setFullScreen(false)
-  win:maximize()
 end
 
 local getFiltersFromAppConfig = function()
@@ -210,26 +179,37 @@ module.start = (function()
 
   local app_filters = getFiltersFromAppConfig()
 
+  -- FIXME: i have too many events subscribed; please figure out what's REALLY
+  -- needed for my various use cases/handlers..
+  --
   -- window event order:
   --  - created
   --  - (snap)
   --  - unfocused
   --  - focused
+  --
 
   cache.filter = hs.window.filter.new(app_filters)
-    :subscribe(hs.window.filter.windowCreated, windowHandler, true)
-    :subscribe(hs.window.filter.windowDestroyed, windowHandler, true)
-    :subscribe(hs.window.filter.windowFullscreened, handleWindowFullscreened, true)
-    :subscribe(hs.window.filter.windowFocused, windowHandler, true)
-    :subscribe(hs.window.filter.windowHidden, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowMinimized, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowMoved, handleWindowMoved, true)
-    :subscribe(hs.window.filter.windowNotOnScreen, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowNotVisible, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowOnScreen, windowHandler, true)
-    :subscribe(hs.window.filter.windowUnfocused, handleWindowUnfocused, true)
-    :subscribe(hs.window.filter.windowUnhidden, windowHandler, true)
-    :subscribe(hs.window.filter.windowVisible, windowHandler, true)
+    :subscribe(hs.window.filter.windowCreated, function(win, appName, event)
+      windowLogger(event, win, appName)
+      handleWindowLayout(win, appName, event)
+      end, true)
+    :subscribe(hs.window.filter.windowDestroyed, function(win, appName, event)
+      windowLogger(event, win, appName)
+      handleWindowLayout(win, appName, event)
+      end, true)
+    :subscribe(hs.window.filter.windowFocused, function(win, appName, event)
+      windowLogger(event, win, appName)
+      end, true)
+    :subscribe(hs.window.filter.windowHidden, function(win, appName, event)
+      windowLogger(event, win, appName)
+      end, true)
+    :subscribe(hs.window.filter.windowMinimized, function(win, appName, event)
+      windowLogger(event, win, appName)
+      end, true)
+    :subscribe(hs.window.filter.windowNotOnScreen, function(win, appName, event)
+      windowLogger(event, win, appName)
+      end, true)
 end)
 
 module.setLayoutForAll = (function()
