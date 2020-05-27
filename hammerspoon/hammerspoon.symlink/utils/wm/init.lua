@@ -1,4 +1,4 @@
-local log = hs.logger.new('[utils.wm]', 'warning') -- debug == 4, warning == 2
+local log = hs.logger.new('[wm]', 'warning') -- debug == 4, warning == 2
 
 local cache  = {}
 local module = { cache = cache }
@@ -155,10 +155,8 @@ local setLayoutForAll = function()
 end
 
 local handleWindowLayout = function(win, appName, event)
-  appConfig = config.getAppConfigForWin(win)
-
   setLayoutForApp(win:application())
-  doWindowHandlers(win, appConfig, event)
+  doWindowHandlers(win, config.getAppConfigForWin(win), event)
 end
 
 local getFiltersFromAppConfig = function()
@@ -177,8 +175,6 @@ end
 module.start = (function()
   log.df("Starting [utils.wm]..")
 
-  local app_filters = getFiltersFromAppConfig()
-
   -- FIXME: i have too many events subscribed; please figure out what's REALLY
   -- needed for my various use cases/handlers..
   --
@@ -189,7 +185,7 @@ module.start = (function()
   --  - focused
   --
 
-  cache.filter = hs.window.filter.new(app_filters)
+  cache.filter = hs.window.filter.new(getFiltersFromAppConfig())
     :subscribe(hs.window.filter.windowCreated, function(win, appName, event)
       windowLogger(event, win, appName)
       handleWindowLayout(win, appName, event)
@@ -200,6 +196,10 @@ module.start = (function()
       end, true)
     :subscribe(hs.window.filter.windowFocused, function(win, appName, event)
       windowLogger(event, win, appName)
+      end, true)
+    :subscribe(hs.window.filter.windowUnfocused, function(win, appName, event)
+      windowLogger(event, win, appName)
+      doWindowHandlers(win, config.getAppConfigForWin(win), event)
       end, true)
     :subscribe(hs.window.filter.windowHidden, function(win, appName, event)
       windowLogger(event, win, appName)

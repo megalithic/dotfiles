@@ -1,5 +1,5 @@
 -- logging configuration
-require('hs.logger').idLength(25)
+require('hs.logger').idLength(20)
 
 local log = hs.logger.new('[init]', 'warning')
 

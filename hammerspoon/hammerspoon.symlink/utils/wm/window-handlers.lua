@@ -1,4 +1,4 @@
-local log = hs.logger.new('[utils.wm.window-handlers]', 'debug')
+local log = hs.logger.new('[window-handlers]', 'warning')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -41,7 +41,8 @@ module.dndHandler = function(win, dndConfig, event)
 
         -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
         dnd_command_updater(dndCmd, nil, {"off"})
-      end)
+      end,
+      0.2)
     end
   end
 end

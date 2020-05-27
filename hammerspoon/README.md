@@ -72,3 +72,12 @@ y **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" statu
 - [x] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
 - [x] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
 - [ ] thieve @evantravers pomodoro module (https://github.com/evantravers/hammerspoon/blob/master/pomodoro.lua)
+
+
+#### References
+
+- [Learn Lua!](https://learnxinyminutes.com/docs/lua/)
+- [Originator of my module layout](https://github.com/szymonkaliski/dotfiles/tree/master/Dotfiles/hammerspoon)
+- [Example user of same module layout](https://github.com/AhmedAbdulrahman/dotfiles/blob/master/hammerspoon/init.lua)
+- [Clipboard things](https://github.com/victorandree/dotfiles/blob/master/hammerspoon/.hammerspoon/common.lua)
+- [More pomodoro](https://github.com/jacks808/hammerspoon-config/blob/master/pomodoor/pomodoor.lua)

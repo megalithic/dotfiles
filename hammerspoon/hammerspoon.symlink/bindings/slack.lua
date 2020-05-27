@@ -1,4 +1,6 @@
 -- remaps certain keybindings in slack (desired -> original):
+--
+-- REF: https://github.com/bkudria/dotfiles/blob/develop/.hammerspoon/init.lua#L45-L51
 
 local log = hs.logger.new('[bindings.slack]', 'debug')
 

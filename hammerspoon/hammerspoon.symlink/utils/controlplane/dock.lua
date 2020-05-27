@@ -1,4 +1,4 @@
-local log = hs.logger.new('[controlplane.dock]', 'debug')
+local log = hs.logger.new('[dock]', 'debug')
 
 local cache = {}
 local module = { cache = cache }
@@ -46,7 +46,8 @@ local setKittyConfig = (function(c)
     -- hs.execute('kitty @ set-font-size ' .. c.fontSize)
 end)
 
--- FIXME: do is till need this for keyboard switching?
+
+-- FIXME: do i still need this for keyboard switching? remove if not
 -- local enableFastKeypress = (function(state)
 --   hs.execute('defaults write NSGlobalDomain KeyRepeat -int 1')
 --   -- https://superuser.com/questions/40061/what-is-the-mac-os-x-terminal-command-to-log-out-the-current-user
@@ -57,6 +58,8 @@ end)
 --   -- https://superuser.com/questions/40061/what-is-the-mac-os-x-terminal-command-to-log-out-the-current-user
 -- end)
 
+
+-- TODO: wait until the devices in question are available; then switch: https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-usb-audio.lua
 local dockedAction = function()
   local dockedConfig =  config.docking.docked
   log.i('Executing docked actions..')

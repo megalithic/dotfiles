@@ -125,6 +125,9 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = false,
+    rules = {
+      {title = 'Workspaces', rule = 'ignore'},
+    },
   },
   ['com.brettterpstra.marked2'] = {
     id = 'com.brettterpstra.marked2',

@@ -1,5 +1,5 @@
 local status = hs.watchable.new('status')
-local log    = hs.logger.new('[utils.watchables]', 'debug')
+local log    = hs.logger.new('[watchables]', 'debug')
 
 local cache  = { status = status }
 local module = { cache = cache }
