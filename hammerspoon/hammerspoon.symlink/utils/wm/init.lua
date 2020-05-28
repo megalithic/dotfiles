@@ -198,7 +198,11 @@ module.start = (function()
       handleWindowLayout(win, appName, event)
       end, true)
     :subscribe(hs.window.filter.windowFocused, function(win, appName, event)
+      local appConfig = config.getAppConfigForWin(win)
       windowLogger(event, win, appName)
+      if appConfig ~= nil then
+        doWindowHandlers(win, appConfig, event)
+      end
       end, true)
     :subscribe(hs.window.filter.windowUnfocused, function(win, appName, event)
       local appConfig = config.getAppConfigForWin(win)

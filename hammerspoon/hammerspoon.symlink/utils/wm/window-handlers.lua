@@ -80,7 +80,7 @@ module.quitAfterHandler = function(win, interval, event)
 
     if (app:isRunning()) then
       if cache.timers[appName] ~= nil then
-        log.df('quitAfterHandler - stopping existing timer for %s (%s)', hs.inspect(cache.timers[appName]), event)
+        log.df('quitAfterHandler - stopping existing timer on %s (%s), for event %s {timer = %s}', win:title(), appName, event, cache.timers[appName])
 
         cache.timers[appName]:stop()
       end
@@ -103,7 +103,7 @@ module.hideAfterHandler = function(win, interval, event)
 
     if app:isRunning() and not app:isHidden() then
       if cache.timers[appName] ~= nil then
-        log.df('hideAfterHandler - stopping existing timer for %s (%s)', hs.inspect(cache.timers[appName]), event)
+        log.df('hideAfterHandler - stopping existing timer on %s (%s), for event %s {timer = %s}', win:title(), appName, event, cache.timers[appName])
 
         cache.timers[appName]:stop()
       end
