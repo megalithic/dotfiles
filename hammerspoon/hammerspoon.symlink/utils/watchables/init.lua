@@ -1,8 +1,8 @@
-local status = hs.watchable.new('status')
 local log    = hs.logger.new('[watchables]', 'debug')
 
 local cache  = { status = status }
 local module = { cache = cache }
+local status = hs.watchable.new('status')
 
 -- local VPN_CONFIG_KEY  = "State:/Network/Global/Proxies"
 -- local NETWORK_SHARING = "com.apple.NetworkSharing"
@@ -51,10 +51,16 @@ local updateUSB = function()
   status.isDZ60Attached = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
     return device.productName == 'DZ60'
   end) ~= nil
-  status.docked = status.isDZ60Attached
-  status.isDocked = status.isDZ60Attached
 
-  log.d('updated docked (dz60):', status.isDocked)
+  status.docked = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
+    return device.productName == config.docking.device.productName
+  end) ~= nil
+
+  status.isDocked = status.docked
+  -- status.isDocked = status.isDZ60Attached and status.docked
+  -- log.df('updated docked: %s', status.docked)
+  log.df('updated isDocked: %s', status.isDocked)
+  log.df('updated isDZ60Attached: %s', status.isDZ60Attached)
 end
 
 module.start = function()

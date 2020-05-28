@@ -1,4 +1,4 @@
-local log = hs.logger.new('[urlevent]', 'warning')
+local log = hs.logger.new('[urlevent]', 'debug')
 
 local template = require('ext.template')
 local module   = {}
@@ -9,6 +9,8 @@ module.start = function()
   hs.urlevent.setDefaultHandler('http')
 
   hs.urlevent.httpCallback = function(_, _, _, fullURL)
+    log.df("URL for HTTP callback: %s", fullURL)
+
     local modifiers          = hs.eventtap.checkKeyboardModifiers()
     local shouldFocusBrowser = not modifiers['cmd']
 

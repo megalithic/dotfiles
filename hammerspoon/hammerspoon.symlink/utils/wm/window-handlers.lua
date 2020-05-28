@@ -1,4 +1,4 @@
-local log = hs.logger.new('[window-handlers]', 'debug')
+local log = hs.logger.new('[window-handlers]', 'warning')
 local cache = { timers = {} }
 local module = { cache = cache }
 

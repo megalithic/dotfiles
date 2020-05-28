@@ -85,23 +85,17 @@ module.apps = {
   ['net.kovidgoyal.kitty'] = {
     id = 'net.kovidgoyal.kitty',
     name = 'kitty',
-    hyperShortcut = 'k',
+    hyper_key = 'k',
     modifier = module.modifiers.ctrl,
     shortcut = 'space',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     quitGuard = true,
   },
-  ['com.kapeli.dashdoc'] = {
-    id = 'com.kapeli.dashdoc',
-    name = 'Dash',
-    preferredDisplay = 1,
-    position = module.grid.centeredLarge,
-  },
   ['com.brave.Browser.dev'] = {
     id = 'com.brave.Browser.dev',
     name = 'Brave Browser Dev',
-    hyperShortcut = '`',
+    hyper_key = 'j',
     modifier = module.modifiers.cmd,
     shortcut = '`',
     preferredDisplay = 1,
@@ -118,8 +112,8 @@ module.apps = {
   ['com.agiletortoise.Drafts-OSX'] = {
     id = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
-    hyperShortcut ='d',
-    local_bindings = {'x', '\''},
+    hyper_key ='d',
+    local_bindings = {'x', ';'},
     modifier = module.modifiers.mashShift,
     shortcut = 'n',
     preferredDisplay = 1,
@@ -128,6 +122,12 @@ module.apps = {
     rules = {
       {title = 'Workspaces', rule = 'ignore'},
     },
+  },
+  ['com.kapeli.dashdoc'] = {
+    id = 'com.kapeli.dashdoc',
+    name = 'Dash',
+    preferredDisplay = 1,
+    position = module.grid.centeredLarge,
   },
   ['com.brettterpstra.marked2'] = {
     id = 'com.brettterpstra.marked2',
@@ -225,6 +225,7 @@ module.apps = {
     modifier = module.modifiers.mashShift,
     shortcut = '1',
     preferredDisplay = 1,
+    hideAfter = 1,
     position = module.grid.centeredMedium
   },
   ['com.teamviewer.TeamViewer'] = {
@@ -259,6 +260,7 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
     quitGuard = true,
+    hideAfter = 1,
     rules = {
       { title="Fantastical Helper", rule="ignore" }
     }
@@ -289,7 +291,7 @@ module.apps = {
 -- Helpers to get various app config settings
 module.getAppConfigForWin = function(win)
   local appBundleId = win:application():bundleID()
-  local appConfig = module.apps[appBundleId] or module.apps['_']
+  local appConfig = module.apps[appBundleId]
 
   return appConfig
 end
