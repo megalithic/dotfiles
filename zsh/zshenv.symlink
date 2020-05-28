@@ -23,14 +23,15 @@ export PAGER='less'
 # typeset -gU cdpath fpath mailpath path
 # typeset -gxU MANPATH
 # typeset -gxUT INFOPATH infopath
-typeset -agU fpath path
 # typeset -gxU MANPATH
 # typeset -gxUT INFOPATH infopath
+typeset -agU cdpath fpath path
 
 # Set the the list of directories that cd searches.
-# cdpath=(
-#   $cdpath
-# )
+cdpath=(
+  $HOME/code
+  $cdpath
+)
 
 # Set the list of directories that info searches for manuals.
 # infopath=(
@@ -61,7 +62,6 @@ export ASDF_INSTALLS=$ASDF_DIR/installs
 export ASDF_LUAROCKS=$ASDF_INSTALLS/lua/5.3.4/luarocks/bin
 
 # Set the list of directories that Zsh searches for programs.
-# path=()
 path=(
   ./bin
   ./.bin

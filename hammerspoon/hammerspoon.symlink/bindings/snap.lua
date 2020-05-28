@@ -1,4 +1,4 @@
-local log = hs.logger.new('[bindings.snap]', 'debug')
+local log = hs.logger.new('[bindings.snap]', 'warning')
 local chain = require('ext.window').chain
 
 local module = {}
@@ -6,12 +6,7 @@ local module = {}
 module.start = function()
   -- :: window-manipulation (manual window snapping)
   for _, snap in pairs(config.snap) do
-
-    hs.hotkey.bind(snap.modifier, snap.shortcut, function() chain(snap.locations)() end)
-
-    if (snap.hyperKey ~= nil) then
-      hs.hotkey.bind(snap.modifier, snap.shortcut, function() chain(snap.locations)() end)
-    end
+    hs.hotkey.bind(snap.modifier, snap.shortcut, chain(snap.locations))
   end
 end
 

@@ -54,10 +54,14 @@ augroup general
   " autocmd FileType * autocmd BufWritePre <buffer> :call <SID>TrimWhitespace()
 
   " Remember cursor position between vim sessions
+  " autocmd BufReadPost *
+  "       \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
+  "       \ |   exe "normal! g`\""
+  "       \ | endif
   autocmd BufReadPost *
-        \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
-        \ |   exe "normal! g`\""
-        \ | endif
+        \ if &filetype !~ 'commit\c' && line("'\"") > 0 && line("'\"") <= line("$") |
+        \   exe "normal g'\"" |
+        \ endif
 
   " Hide status bar while using fzf commands
   if has('nvim')
@@ -80,6 +84,11 @@ augroup general
 
   autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')
   autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')
+
+  if exists('##TextYankPost')
+    autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
+  endif
+
 
   " coc.nvim - highlight all occurences of word under cursor
   " disable for now: annoying while on tmate and other things

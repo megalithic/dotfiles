@@ -1,4 +1,4 @@
-local log = hs.logger.new('[window-handlers]', 'warning')
+local log = hs.logger.new('[window-handlers]', 'debug')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -51,9 +51,9 @@ module.appHandler = function(win, handler, event)
   if handler == nil then return end
   local app = win:application()
 
-  log.df('found app handler for %s (%s)..', app:name(), app:bundleID())
-
   if event == "windowCreated" then
+    log.df('found app handler for %s (%s)..', app:name(), app:bundleID())
+
     handler(win)
   end
 end

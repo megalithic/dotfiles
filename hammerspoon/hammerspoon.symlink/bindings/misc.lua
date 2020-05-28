@@ -2,9 +2,10 @@ local log = hs.logger.new('[bindings.misc]', 'debug')
 
 local module = {}
 
+local alert           = require('ext.alert')
 local setLayoutForAll = require('utils.wm').setLayoutForAll
 local setLayoutForApp = require('utils.wm').setLayoutForApp
-local alert = require('ext.alert')
+local template        = require('ext.template')
 
 module.start = function()
   -- misc things
@@ -16,13 +17,45 @@ module.start = function()
   -- additional things that cause cyclical reference issues from config.lua
   hs.hotkey.bind(config.modifiers.mashShift, 'w', function()
     alert.show({text="Relayout of all apps"})
+
     setLayoutForAll()
   end)
 
   hs.hotkey.bind(config.modifiers.ctrlShift, 'w', function()
     local app = hs.application.frontmostApplication()
     alert.show({text="Relayout of single app (" .. app:name() .. ")"})
+
     setLayoutForApp(app)
+  end)
+
+  -- Snip current highlight text in browser
+  hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()
+    local appName = "Brave Browser Dev"
+
+    hs.osascript.applescript(template([[
+      -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
+
+      if (count of theSelectionFromBrave()) is greater than 0 then
+        set str to "tags: #link\n\n" & theTitleFromBrave() & "\n\n> " & theSelectionFromBrave() & "\n\n[" & theTitleFromBrave() & "](" & theCurrentUrlInBrave() & ")"
+        tell application "Drafts"
+          make new draft with properties {content:str, tags: {"link"}}
+        end tell
+      end if
+
+      on theCurrentUrlInBrave()
+        tell application "{APP_NAME}" to get the URL of the active tab in the first window
+      end theCurrentUrlInBrave
+
+      on theSelectionFromBrave()
+        tell application "{APP_NAME}" to execute front window's active tab javascript "getSelection().toString();"
+      end theSelectionFromBrave
+
+      on theTitleFromBrave()
+        tell application "{APP_NAME}" to get the title of the active tab in the first window
+      end theTitleFromBrave
+    ]], { APP_NAME = appName }))
+
+    hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
   end)
 end
 

@@ -110,6 +110,7 @@ export ARCHFLAGS='-arch x86_64'
 # for libffi and ruby things
 export LDFLAGS="-L/usr/local/opt/libffi/lib"
 export LDFLAGS="-L/usr/local/opt/perl@5.18/lib"
+export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
 export CPPFLAGS="-I/usr/local/opt/libffi/include"
 export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
 

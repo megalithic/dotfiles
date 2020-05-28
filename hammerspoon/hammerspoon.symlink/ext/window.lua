@@ -178,9 +178,6 @@ end
 -- determine what's actually needed.
 --
 
-local lastSeenChain = nil
-local lastSeenWindow = nil
-
 module.canLayoutWindow = function(win)
   local bundleID = win:application():bundleID()
 
@@ -210,6 +207,9 @@ module.chain = function (movements)
   local chainResetInterval = 2 -- seconds
   local cycleLength = #movements
   local sequenceNumber = 1
+
+  local lastSeenChain = nil
+  local lastSeenWindow = nil
 
   return function()
     local win = hs.window.frontmostWindow()

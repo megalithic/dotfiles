@@ -27,6 +27,7 @@ local windowLogger = function(event, win, appName)
 end
 
 local doWindowHandlers = function(win, appConfig, event)
+  if appConfig == nil then return end
   log.df("doWindowHandlers: {win: %s, event: %s}", win:title(), event)
 
   -- NOTE: window events are dealt with in each handler, instead of from here.
@@ -156,7 +157,9 @@ end
 
 local handleWindowLayout = function(win, appName, event)
   setLayoutForApp(win:application())
-  doWindowHandlers(win, config.getAppConfigForWin(win), event)
+
+  local appConfig = config.getAppConfigForWin(win)
+  doWindowHandlers(win, appConfig, event)
 end
 
 local getFiltersFromAppConfig = function()
@@ -198,8 +201,11 @@ module.start = (function()
       windowLogger(event, win, appName)
       end, true)
     :subscribe(hs.window.filter.windowUnfocused, function(win, appName, event)
+      local appConfig = config.getAppConfigForWin(win)
       windowLogger(event, win, appName)
-      doWindowHandlers(win, config.getAppConfigForWin(win), event)
+      if appConfig ~= nil then
+        doWindowHandlers(win, appConfig, event)
+      end
       end, true)
     :subscribe(hs.window.filter.windowHidden, function(win, appName, event)
       windowLogger(event, win, appName)

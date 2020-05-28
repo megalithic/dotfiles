@@ -241,6 +241,7 @@ module.apps = {
     modifier = module.modifiers.mashShift,
     shortcut = 'h',
     preferredDisplay = 2,
+    hideAfter = 1,
     position = module.grid.rightHalf,
     quitGuard = true,
   },

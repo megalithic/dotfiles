@@ -15,11 +15,6 @@ module.start = function()
         toggle(bundleID)
       end)
     end
-
-    -- TODO: future hyper key things?
-    -- if (app.hyperKey ~= nil) then
-    --   hotkey.bind(app.hyperKey, app.shortcut, app.locations)
-    -- end
   end
 end
 

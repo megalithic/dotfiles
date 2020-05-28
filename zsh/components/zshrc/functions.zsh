@@ -11,6 +11,16 @@ enable_symantec() {
   for f in /Library/LaunchAgents/com.symantec.*.plist.disabled; do sudo mv -- "$f" "${f%.plist.disabled}.plist"; done
 }
 
+# function g() {
+#   if [[ $# > 0 ]]; then
+#     git "$@"
+#   else
+#     git status --short --branch
+#   fi
+# }
+# # get tab completion with my function
+# __git_complete g _git
+
 
 function gss() {
   git status &> /dev/null
