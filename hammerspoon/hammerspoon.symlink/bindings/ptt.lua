@@ -97,7 +97,7 @@ end
 
 function module:start()
   module:stop()
-  module.modifierKeys = config.ptt or {'fn'}
+  module.modifierKeys = config.modifiers.cmdAlt or {'fn'}
   module.eventTapWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, eventTapWatcher)
   module.eventTapWatcher:start()
 

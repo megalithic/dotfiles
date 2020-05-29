@@ -1,4 +1,5 @@
 -- Modal class with smart autoexit timeout
+local log = hs.logger.new('[ext.modal]', 'warning') -- debug == 4, warning == 2
 
 local IMAGE_PATH = os.getenv('HOME') .. '/.hammerspoon/assets/modal.png'
 
@@ -16,19 +17,23 @@ function Modal:new(opts)
       obj.exitTimer = hs.timer.doAfter(obj.exitTimeout, function() obj.modal:exit() end)
     end
 
-    hs.notify.new({
-      title        = opts.name,
-      subTitle     = 'Entered',
-      contentImage = IMAGE_PATH
-    }):send()
+    if log:getLogLevel() == 4 then
+      hs.notify.new({
+          title        = opts.name,
+          subTitle     = 'Entered',
+          contentImage = IMAGE_PATH
+        }):send()
+    end
   end
 
   function obj.modal:exited()
-    hs.notify.new({
-      title        = opts.name,
-      subTitle     = 'Exited',
-      contentImage = IMAGE_PATH
-    }):send()
+    if log:getLogLevel() == 4 then
+        hs.notify.new({
+          title        = opts.name,
+          subTitle     = 'Exited',
+          contentImage = IMAGE_PATH
+        }):send()
+    end
   end
 
   obj.modal:bind({}, 'escape', function() obj.modal:exit() end)

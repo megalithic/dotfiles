@@ -57,19 +57,18 @@ local module = {
   },
 
   modifiers = {
-    ctrl = {'ctrl'},
-    cmd = {'cmd'},
-    cmdAlt = {'cmd', 'alt'},
-    cmdShift = {'cmd', 'shift'},
-    ctrlShift = {'ctrl', 'shift'},
-    cmdCtrl = {'cmd', 'ctrl'},
-    ctrlAlt = {'ctrl', 'alt'},
-    mashShift = {'cmd', 'ctrl', 'shift'},
-    mash = {'cmd', 'alt', 'ctrl'},
-    hyper = {'cmd', 'alt', 'ctrl', 'shift' },
+    ctrl =            {'ctrl'},
+    cmd =             {'cmd'},
+    cmdAlt =          {'cmd', 'alt'},
+    cmdShift =        {'cmd', 'shift'},
+    ctrlShift =       {'ctrl', 'shift'},
+    cmdCtrl =         {'cmd', 'ctrl'},
+    ctrlAlt =         {'ctrl', 'alt'},
+    mashShift =       {'cmd', 'ctrl', 'shift'},
+    mash =            {'cmd', 'alt', 'ctrl'},
+    ultra =           {'cmd', 'alt', 'ctrl', 'shift' },
+    hyper =           'F19',
   },
-
-  ptt = {'cmd', 'alt'},
 
   -- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
   distractionUrls = {
