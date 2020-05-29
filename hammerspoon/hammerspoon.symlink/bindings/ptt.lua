@@ -1,8 +1,10 @@
 -- Derived from the PushToTalk Spoon and then heavily modified for my use cases
 
-local log = hs.logger.new('[bindings.ptt]', 'warning')
+local log = hs.logger.new('[bindings.ptt]', 'debug')
 
 local module = {}
+
+local template = require('ext.template')
 
 module.defaultState = 'push-to-talk'
 
@@ -10,7 +12,27 @@ module.state = module.defaultState
 module.defaultInputVolume = 50
 module.pushed = false
 
-local function showState()
+module.states = function ()
+  log.df("current module.state from module.states(): %s", module.state)
+
+  return {
+    {title = 'Push-to-talk', state = 'push-to-talk', checked = (module.state == 'push-to-talk')},
+    {title = 'Push-to-mute', state = 'push-to-mute', checked = (module.state == 'push-to-mute')},
+  }
+end
+
+-- function to return table values to `+` separated string
+local to_psv = function(tbl)
+  local s = ""
+
+  for _, p in ipairs(tbl) do
+    s = s .. "+" .. p
+  end
+
+  return string.sub(s, 2)      -- remove first comma
+end
+
+local showState = function()
   local device = hs.audiodevice.defaultInputDevice()
   local iconPath = hs.configdir .. "/assets/"
   local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({ w = 16, h = 16 })
@@ -51,19 +73,34 @@ local function showState()
   hs.applescript('set volume input volume ' ..inputVolume)
 end
 
-function module.setState(s)
+local buildMenu = function()
+  local menutable = hs.fnutils.map(module.states(), function(item)
+    local title = ""
+    if item.checked then
+      title = template("{TITLE} ({PTT})", {TITLE = tostring(item.title), PTT = to_psv(config.ptt)})
+    else
+      title = item.title
+    end
+
+    return { title = title, fn = function() setState(item.state) end, checked = item.checked }
+  end)
+
+  return menutable
+end
+
+local setState = function(s)
   module.state = s
   log.df('Setting PTT state to: %s', s)
+
+  module.menubar:delete()
+  module.menubar = hs.menubar.new()
+  module.menubar:setMenu(buildMenu())
+  showState()
 
   showState()
 end
 
-module.menutable = {
-  { title = "Push-to-talk (fn)", fn = function() module.setState('push-to-talk') end },
-  { title = "Push-to-mute (fn)", fn = function() module.setState('push-to-mute') end },
-}
-
-local function eventKeysMatchModifiers(modifiers)
+local eventKeysMatchModifiers = function(modifiers)
   local modifiersMatch = true
 
   for index, key in ipairs(module.modifierKeys) do
@@ -75,7 +112,7 @@ local function eventKeysMatchModifiers(modifiers)
   return modifiersMatch
 end
 
-local function eventTapWatcher(event)
+local eventTapWatcher = function(event)
   device = hs.audiodevice.defaultInputDevice()
   modifiersMatch = eventKeysMatchModifiers(event:getFlags())
 
@@ -92,35 +129,35 @@ local function eventTapWatcher(event)
   end
 end
 
-function module:init()
+module.toggleStates = function()
+  local current_state = module.state
+  local toggle_to = hs.fnutils.find(module.states(), function(item)
+    if not item.checked then
+      return item
+    end
+  end)
+
+  setState(toggle_to.state)
+
+  log.df('Toggling PTT state to %s from %s', toggle_to.state, current_state)
+  return toggle_to.state
 end
 
-function module:start()
-  module:stop()
-  module.modifierKeys = config.modifiers.cmdAlt or {'fn'}
+module.start = function()
+  module.stop()
+
+  module.modifierKeys = config.ptt
   module.eventTapWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, eventTapWatcher)
   module.eventTapWatcher:start()
 
   module.menubar = hs.menubar.new()
-  module.menubar:setMenu(module.menutable)
-  module.setState(module.state)
+  module.menubar:setMenu(buildMenu())
+  setState(module.state)
 end
 
-function module:stop()
+module.stop = function()
   if module.eventTapWatcher then module.eventTapWatcher:stop() end
   if module.menubar then module.menubar:delete() end
-end
-
-function module:toggleStates(states)
-  new_state = states[1]
-  for i, v in pairs(states) do
-    if v == module.state then
-      new_state = states[(i % #states) + 1]
-    end
-  end
-
-  module.setState(new_state)
-  log.df('Toggling PTT states to: %s', new_state)
 end
 
 return module

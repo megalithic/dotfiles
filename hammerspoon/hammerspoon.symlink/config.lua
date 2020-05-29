@@ -22,10 +22,10 @@ local module = {
     currentConnected = hs.wifi.currentNetwork()
   },
 
-  -- apps = {
-  --   terms    = { 'kitty' },
-  --   browsers = { 'Brave Browser Dev', 'Google Chrome', 'Safari' }
-  -- },
+  preferred = {
+    terms    = { 'kitty' },
+    browsers = { 'Brave Browser Dev', 'Firefox', 'Google Chrome', 'Safari' }
+  },
 
   displays = displays,
 
@@ -70,6 +70,7 @@ local module = {
     hyper =           'F19',
   },
 
+
   -- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
   distractionUrls = {
     'https://www.youtube.com',
@@ -79,6 +80,8 @@ local module = {
     'https://www.reddit.com',
   },
 }
+
+module.ptt = module.modifiers.cmdAlt
 
 module.apps = {
   ['net.kovidgoyal.kitty'] = {

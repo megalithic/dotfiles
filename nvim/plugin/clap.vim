@@ -5,4 +5,9 @@ if has('nvim')
   let g:clap_layout = { 'relative': 'editor' }
 
   nnoremap <silent> <leader>m      :Clap files<CR>
+  nnoremap <silent> <leader>a      :Clap grep<CR>
+
+  " nnoremap <silent> <leader>a :Clap grep<Space>
+  " nnoremap <silent> <leader>A  <ESC>:exe('Clap grep '.expand('<cword>'))<CR>
+  " vnoremap <silent> <leader>A  <ESC>:exe('Clap grep '.expand('<cword>'))<CR>
 endif
