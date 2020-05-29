@@ -70,7 +70,6 @@ local module = {
     hyper =           'F19',
   },
 
-
   -- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
   distractionUrls = {
     'https://www.youtube.com',
@@ -141,8 +140,8 @@ module.apps = {
     id = 'com.tinyspeck.slackmacgap',
     name = 'Slack',
     hyper_key ='s',
-    modifier = module.modifiers.mashShift,
-    shortcut = 's',
+    -- modifier = module.modifiers.mashShift,
+    -- shortcut = 's',
     distraction = true,
     preferredDisplay = 2,
     position = module.grid.fullScreen,

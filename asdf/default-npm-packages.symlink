@@ -12,6 +12,7 @@ elm-analyse
 antew/elm-analyse#lsp
 elm-format
 eslint
+eslint-plugin-cypress
 flow-language-server
 markdownlint
 neovim

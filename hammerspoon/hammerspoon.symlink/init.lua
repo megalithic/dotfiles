@@ -32,10 +32,10 @@ controlplane.enabled        = { 'dock', 'office' }
 
 -- watchers
 watchers.enabled            = { 'urlevent' }
-watchers.urlPreference      = { 'Brave Browser Dev', 'Google Chrome', 'Firefox', 'Safari' }
+watchers.urlPreference      = config.preferred.browsers
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'media', 'misc' }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'media', 'misc', 'slack' }
 
 -- start/stop modules
 local modules               = { bindings, controlplane, watchables, watchers, wm }

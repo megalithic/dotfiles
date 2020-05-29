@@ -1,4 +1,4 @@
-local log = hs.logger.new('[bindings.hyper]', 'debug')
+local log = hs.logger.new('[bindings.hyper]', 'warning')
 
 local module = {}
 local toggle = require('ext.application').toggle
