@@ -74,7 +74,7 @@
 " nnoremap <silent><leader>A  <ESC>:exe('FzfRg '.expand('<cword>'))<CR>
 " vnoremap <silent><leader>A  <ESC>:exe('FzfRg '.expand('<cword>'))<CR>
 
-if !has('nvim')
+if has('nvim')
   let g:fzf_layout = { 'down': '~15%' }
 
   let g:fzf_action = {
@@ -88,7 +88,7 @@ if !has('nvim')
   endif
   let $FZF_DEFAULT_COMMAND='fd --type file --hidden --follow --exclude .git'
 
-  nnoremap <silent> <leader>m      :Files<CR>
+  " nnoremap <silent> <leader>m      :Files<CR>
   " nnoremap <silent> <Space><Space> :Files<CR>
   " nnoremap <silent> <Space>.       :Files <C-r>=expand("%:h")<CR>/<CR>
   " nnoremap <silent> <Space>,       :Buffers<CR>
