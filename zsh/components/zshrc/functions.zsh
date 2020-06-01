@@ -2,6 +2,22 @@
 # Functions
 #
 
+ncal() {
+  # awk -F: '{if ($2 == "") print $1 ": no password!"}' </etc/passwd
+  # icalBuddy -n -f -ea -nc -npn -eep "*" -b "" -includeCals "Calendar" -li 1 eventsToday
+  current_time=$(date +%H:%M)
+  todays_events=$(icalBuddy -n -npn -nc -b "" -iep "title,datetime" -ps "|=|" -po "datetime,title" \  -tf "=%H:%M" -df "" -eed eventsToday+1)
+  next_event=$(echo $todays_events | head -n 1)
+  event_time=$(echo $next_event | awk -F "=" '{print substr($2,0,5)}')
+
+  if [[ "$current_time" < "$event_time" ]]; then
+    event_title=$(echo $next_event | awk -F "=" '{print $3}')
+    echo "Next up: $event_title"
+  else
+    echo ""
+  fi
+}
+
 disable_symantec() {
   for f in /Library/LaunchDaemons/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done
   for f in /Library/LaunchAgents/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done

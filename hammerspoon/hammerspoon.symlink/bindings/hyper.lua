@@ -2,6 +2,7 @@ local log = hs.logger.new('[bindings.hyper]', 'warning')
 
 local module = {}
 local toggle = require('ext.application').toggle
+local smartLaunchOrFocus = require('ext.application').smartLaunchOrFocus
 
 local hyper = hs.hotkey.modal.new({}, nil)
 
@@ -30,7 +31,7 @@ module.start = function()
     -- Apps that I want to jump to
     if app.hyper_key then
       log.df("hyper_key found for %s (%s)", app.name, app.hyper_key)
-      hyper:bind({}, app.hyper_key, function() toggle(app.id); end)
+      hyper:bind({}, app.hyper_key, function() smartLaunchOrFocus(app.bundleID); end)
     end
 
     -- I use hyper to power some shortcuts in different apps If the app is closed
@@ -41,13 +42,13 @@ module.start = function()
         log.df("hyper local_bindings found for %s (%s)", app.name, hs.inspect(app.local_bindings))
 
         hyper:bind({}, key, nil, function()
-          if hs.application.find(app.id) then
-            log.df("hyper local_bindings tap %s (%s)", app.name, app.id)
+          if hs.application.find(app.bundleID) then
+            log.df("hyper local_bindings tap %s (%s)", app.name, app.bundleID)
             hyperLocalBindingsTap(key)
           else
-            toggle(app.id)
+            smartLaunchOrFocus(app.bundleID)
             hs.timer.waitWhile(
-              function() return hs.application.find(app.id) == nil end,
+              function() return hs.application.find(app.bundleID) == nil end,
               function()
                 hyperLocalBindingsTap(key)
               end)

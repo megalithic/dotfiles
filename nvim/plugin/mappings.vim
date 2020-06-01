@@ -159,6 +159,10 @@ function! s:zoom()
 endfunction
 nnoremap <silent> <leader>z :call <sid>zoom()<cr>
 
+" Things 3
+command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"
+nnoremap <Leader>T :Things<cr>
+
 " Break undo sequences into chunks (after punctuation); see: `:h i_CTRL-G_u`
 "
 " From:

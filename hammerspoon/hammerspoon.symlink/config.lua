@@ -84,7 +84,7 @@ module.ptt = module.modifiers.cmdAlt
 
 module.apps = {
   ['net.kovidgoyal.kitty'] = {
-    id = 'net.kovidgoyal.kitty',
+    bundleID = 'net.kovidgoyal.kitty',
     name = 'kitty',
     hyper_key = 'k',
     -- modifier = module.modifiers.ctrl,
@@ -94,7 +94,7 @@ module.apps = {
     quitGuard = true,
   },
   ['com.brave.Browser.dev'] = {
-    id = 'com.brave.Browser.dev',
+    bundleID = 'com.brave.Browser.dev',
     name = 'Brave Browser Dev',
     hyper_key = 'j',
     -- modifier = module.modifiers.cmd,
@@ -104,47 +104,56 @@ module.apps = {
     quitGuard = true,
   },
   ['com.google.Chrome'] = {
-    id = 'com.google.Chrome',
+    bundleID = 'com.google.Chrome',
     name = 'Google Chrome',
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = true
   },
   ['com.agiletortoise.Drafts-OSX'] = {
-    id = 'com.agiletortoise.Drafts-OSX',
+    bundleID = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
-    hyper_key ='n',
-    local_bindings = {'x', ';'},
-    modifier = module.modifiers.mashShift,
-    shortcut = 'n',
+    hyper_key ='d',
+    local_bindings = {';'},
+    -- modifier = module.modifiers.mashShift,
+    -- shortcut = 'n',
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = false,
     rules = {
       {title = 'Workspaces', rule = 'ignore'},
+      {title = 'Capture', rule = 'ignore'}
     },
   },
+  ['com.culturedcode.ThingsMac'] = {
+    bundleID = 'com.culturedcode.ThingsMac',
+    hyper_key = 't',
+    preferred_display = 1,
+    hideAfter = 1,
+    position = module.grid.centeredMedium,
+    local_bindings = {',', '.'}
+  },
   ['com.kapeli.dashdoc'] = {
-    id = 'com.kapeli.dashdoc',
+    bundleID = 'com.kapeli.dashdoc',
     name = 'Dash',
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
   },
   ['com.brettterpstra.marked2'] = {
-    id = 'com.brettterpstra.marked2',
+    bundleID = 'com.brettterpstra.marked2',
     name = 'Marked',
     preferredDisplay = 2,
     position = module.grid.leftHalf,
   },
   ['com.tinyspeck.slackmacgap'] = {
-    id = 'com.tinyspeck.slackmacgap',
+    bundleID = 'com.tinyspeck.slackmacgap',
     name = 'Slack',
     hyper_key ='s',
     -- modifier = module.modifiers.mashShift,
     -- shortcut = 's',
     distraction = true,
     preferredDisplay = 2,
-    position = module.grid.fullScreen,
+    position = module.grid.leftHalf,
     quitGuard = true,
     hideAfter = 5,
     rules = {
@@ -152,26 +161,33 @@ module.apps = {
     },
   },
   ['com.readdle.smartemail-Mac'] = {
-    id = 'com.readdle.smartemail-Mac',
+    bundleID = 'com.readdle.smartemail-Mac',
     name = 'Spark',
-    modifier = module.modifiers.mashShift,
+    hyper_key ='e',
+    -- modifier = module.modifiers.mashShift,
+    -- shortcut = 'm',
     distraction = true,
-    shortcut = 'm',
     preferredDisplay = 2,
     hideAfter = 5,
-    position = module.grid.fullScreen,
+    position = module.grid.rightHalf,
+    rules = {
+      {title = 'General', rule = 'ignore'},
+    },
   },
   ['com.apple.finder'] = {
-    id = 'com.apple.finder',
+    bundleID = 'com.apple.finder',
     name = 'Finder',
     hyper_key ='f',
     -- modifier = module.modifiers.ctrl,
     -- shortcut = '`',
     preferredDisplay = 1,
-    position = module.grid.centeredMedium
+    position = module.grid.centeredMedium,
+    rules = {
+      {title = 'Finder Preferences', rule = 'ignore'},
+    },
   },
   ['us.zoom.xos'] = {
-    id = 'us.zoom.xos',
+    bundleID = 'us.zoom.xos',
     name = 'zoom.us',
     -- modifier = module.modifiers.mashShift,
     -- shortcut = 'z',
@@ -185,7 +201,7 @@ module.apps = {
     },
   },
   ['com.spotify.client'] = {
-    id = 'com.spotify.client',
+    bundleID = 'com.spotify.client',
     name = 'Spotify',
     -- modifier = module.modifiers.cmdShift,
     -- shortcut = '8',
@@ -195,7 +211,7 @@ module.apps = {
     position = module.grid.rightHalf
   },
   ['com.apple.iChat'] = {
-    id = 'com.apple.iChat',
+    bundleID = 'com.apple.iChat',
     name = 'Messages',
     -- modifier = module.modifiers.cmdShift,
     -- shortcut = 'm',
@@ -206,7 +222,7 @@ module.apps = {
     position = '5,5 3x3'
   },
   ['hangouts'] = {
-    id = 'hangouts',
+    bundleID = 'hangouts',
     name = 'Brave Browser Dev',
     modifier = module.modifiers.cmdCtrl,
     shortcut = 'm',
@@ -215,17 +231,18 @@ module.apps = {
     tabjump = 'hangouts.google.com'
   },
   ['WhatsApp'] = {
-    id = 'WhatsApp',
+    bundleID = 'WhatsApp',
     name = 'WhatsApp',
-    modifier = module.modifiers.cmdShift,
-    shortcut = 'w',
+    -- modifier = module.modifiers.cmdShift,
+    -- shortcut = 'w',
+    hyper_key ='w',
     distraction = true,
     preferredDisplay = 1,
     hideAfter = 1,
     position = '5,5 3x3'
   },
   ['com.agilebits.onepassword7'] = {
-    id = 'com.agilebits.onepassword7',
+    bundleID = 'com.agilebits.onepassword7',
     name = '1Password',
     modifier = module.modifiers.mashShift,
     shortcut = '1',
@@ -234,7 +251,7 @@ module.apps = {
     position = module.grid.centeredMedium
   },
   ['com.teamviewer.TeamViewer'] = {
-    id = 'com.teamviewer.TeamViewer',
+    bundleID = 'com.teamviewer.TeamViewer',
     name = 'TeamViewer',
     -- modifier = module.modifiers.mashShift,
     -- shortcut = 'v',
@@ -242,7 +259,7 @@ module.apps = {
     position = module.grid.centeredLarge
   },
   ['org.hammerspoon.Hammerspoon'] = {
-    id = 'org.hammerspoon.Hammerspoon',
+    bundleID = 'org.hammerspoon.Hammerspoon',
     name = 'Hammerspoon',
     modifier = module.modifiers.mashShift,
     shortcut = 'h',
@@ -252,18 +269,18 @@ module.apps = {
     quitGuard = true,
   },
   ['com.apple.systempreferences'] = {
-    id = 'com.apple.systempreferences',
+    bundleID = 'com.apple.systempreferences',
     name = 'System Preferences',
     preferredDisplay = 1,
     position = module.grid.centeredMedium
   },
   ['com.flexibits.fantastical2.mac'] = {
-    id = 'com.flexibits.fantastical2.mac',
+    bundleID = 'com.flexibits.fantastical2.mac',
     name = 'Fantastical',
     -- modifier = module.modifiers.mashShift,
     -- shortcut = 'f',
     hyper_key ='y',
-    local_bindings = {']'},
+    local_bindings = {'n'},
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
     quitGuard = true,
@@ -272,25 +289,22 @@ module.apps = {
       { title="Fantastical Helper", rule="ignore" }
     }
   },
-  -- -- FIXME: should this move to the `rules` table for the main app?
-  -- ['85C27NK92C.com.flexibits.fantastical2.mac.helper'] = {
-  --   id = '85C27NK92C.com.flexibits.fantastical2.mac.helper',
-  --   name = 'Fantastical Helper',
-  --   -- modifier = module.modifiers.cmdShift,
-  --   -- shortcut = 'f',
-  --   preferredDisplay = 1,
-  --   quitGuard = true,
-  --   -- position = module.grid.centeredLarge
-  -- },
+  ['org.pqrs.Karabiner-Elements.Preferences'] = {
+    bundleID = 'org.pqrs.Karabiner-Elements.Preferences',
+    name = 'Karabiner-Elements',
+    preferredDisplay = 1,
+    position = module.grid.centeredSmall,
+    quitGuard = true,
+    hideAfter = 0.5,
+    rules = {
+      { title="Karabiner-Elements Preferences", rule="quit" }
+    }
+  },
   ['com.microsoft.autoupdate2'] = {
-    id = 'com.microsoft.autoupdate2',
+    bundleID = 'com.microsoft.autoupdate2',
     name = 'Microsoft AutoUpdate',
     preferredDisplay = 1,
     quitAfter = 0,
-    -- handler = (function(win)
-    --   -- AUTOHIDE
-    --   win:application():hide()
-    -- end)
   }
 }
 
@@ -401,6 +415,7 @@ module.utilities = {
   }
 }
 
+-- TODO: want to control these with hyper_key too..
 module.media = {
   {
     action = 'previous',

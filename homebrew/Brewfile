@@ -92,6 +92,7 @@ brew "hub"
 brew "highlight"
 brew "httpie"
 brew "htop"
+brew "ical-buddy"
 brew "imagemagick"
 brew "jid"
 brew "jo"
@@ -174,7 +175,9 @@ brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
 
 
-# -- fonts --
+# -- cli --
+
+# - fonts
 cask "font-firacode-nerd-font"
 cask "font-firacode-nerd-font-mono"
 cask "font-jetbrains-mono"
@@ -182,10 +185,11 @@ cask "font-jetbrainsmono-nerd-font"
 cask "font-jetbrainsmono-nerd-font-mono"
 cask "font-ia-writer-quattro"
 
-# -- gui --
+# - gui
 cask "1password"
 cask "1password-cli"
 cask "alfred"
+cask "altserver"
 # cask "android-platform-tools"
 cask "bettertouchtool"
 cask "bartender"
@@ -206,6 +210,7 @@ cask "google-chrome-beta"
 cask "graphiql"
 cask "hazel"
 cask "hammerspoon"
+cask "hiddenbar"
 cask "intel-power-gadget"
 cask "istat-menus"
 # cask "java"

@@ -62,13 +62,13 @@ local snapRelatedWindows = function(appBundleID, windows, screen)
 end
 
 local layoutManagedWindows = function(appConfig, managedWindows)
-  log.df('attempting to layout managed windows for app: %s (%s), #win: %s', appConfig.name, appConfig.id, #managedWindows)
+  log.df('attempting to layout managed windows for app: %s (%s), #win: %s', appConfig.name, appConfig.bundleID, #managedWindows)
 
   if #managedWindows == 0 then
     log.df('UNABLE to apply a layout for the configured app (no managed windows found for app): %s, #win: %s, pos: %s', appConfig.name, #managedWindows, appConfig.position)
     -- get more verbose output when we're in debug (4) mode:
     if log:getLogLevel() == 4 then
-      dumpWindows(hs.application.get(appConfig.id))
+      dumpWindows(hs.application.get(appConfig.bundleID))
     end
 
     return
@@ -85,7 +85,7 @@ end
 
 local handleWindowRules = function(appConfig, allWindows)
   if config.rulesExistForAppConfig(appConfig) then
-    log.df('attempting to layout all windows for app (and rules): %s (%s), #win: %s, rules: %s', appConfig.name, appConfig.id, #allWindows, hs.inspect(appConfig.rules))
+    log.df('attempting to layout all windows for app (and rules): %s (%s), #win: %s, rules: %s', appConfig.name, appConfig.bundleID, #allWindows, hs.inspect(appConfig.rules))
 
     if #allWindows == 0 then
       log.df('UNABLE to apply window-specific rules to any of the windows for app: %s, rules: %s', appConfig.name, hs.inspect(appConfig.rules))

@@ -1,6 +1,6 @@
 -- remaps certain keybindings in slack (desired -> original):
 
-local log = hs.logger.new('[bindings.slack]', 'warning')
+local log = hs.logger.new('[bindings.slack]', 'debug')
 
 local cache  = {}
 local module = { cache = cache, targetAppName = 'Slack' }
@@ -12,7 +12,8 @@ module.start = function()
   cache.filter = hs.window.filter.new({module.targetAppName})
 
   cache.filter
-  :subscribe(hs.window.filter.windowFocused, function(win, appName, event)
+  :subscribe({hs.window.filter.windowCreated, hs.window.filter.windowFocused}, function(win, appName, event)
+    log.df("slack binding event: %s", event)
     if appName == module.targetAppName then
       cache.slack:enter()
 
@@ -39,7 +40,8 @@ module.start = function()
       end)
     end
   end)
-  :subscribe(hs.window.filter.windowUnfocused , function(_, appName, event)
+  :subscribe({hs.window.filter.windowDestroyed, hs.window.filter.windowUnfocused}, function(_, appName, event)
+    log.df("slack binding event: %s", event)
     cache.slack:exit()
   end)
 end

@@ -159,6 +159,7 @@ alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"
 alias ehs="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/config.lua"
 alias eh="nvim ~/.dotfiles/hammerspoon/hammerspoon.symlink/init.lua"
 alias eg="nvim ~/.dotfiles/git/gitconfig.symlink"
+alias eb="nvim ~/.dotfiles/homebrew/Brewfile"
 alias essh="nvim ~/.ssh/config"
 alias ezc=ezo
 alias eze="nvim ~/.dotfiles/zsh/**/env.zsh"
