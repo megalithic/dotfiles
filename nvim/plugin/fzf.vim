@@ -57,7 +57,7 @@
 "   \   <bang>0)
 
 
-" nnoremap <silent> <leader>m      :Files<CR>
+nnoremap <silent> <leader>m      :Files<CR>
 " " nnoremap <silent> <Space><Space> :Files<CR>
 " " nnoremap <silent> <Space>.       :Files <C-r>=expand("%:h")<CR>/<CR>
 " " nnoremap <silent> <Space>,       :Buffers<CR>

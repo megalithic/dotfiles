@@ -31,7 +31,7 @@ module.start = function()
     -- Apps that I want to jump to
     if app.hyper_key then
       log.df("hyper_key found for %s (%s)", app.name, app.hyper_key)
-      hyper:bind({}, app.hyper_key, function() smartLaunchOrFocus(app.bundleID); end)
+      hyper:bind({}, app.hyper_key, function() smartLaunchOrFocus(app.name); end)
     end
 
     -- I use hyper to power some shortcuts in different apps If the app is closed
@@ -46,7 +46,7 @@ module.start = function()
             log.df("hyper local_bindings tap %s (%s)", app.name, app.bundleID)
             hyperLocalBindingsTap(key)
           else
-            smartLaunchOrFocus(app.bundleID)
+            smartLaunchOrFocus(app.name)
             hs.timer.waitWhile(
               function() return hs.application.find(app.bundleID) == nil end,
               function()

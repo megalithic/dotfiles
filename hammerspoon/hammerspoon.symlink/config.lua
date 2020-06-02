@@ -127,6 +127,7 @@ module.apps = {
   },
   ['com.culturedcode.ThingsMac'] = {
     bundleID = 'com.culturedcode.ThingsMac',
+    name = 'Things',
     hyper_key = 't',
     preferred_display = 1,
     hideAfter = 1,

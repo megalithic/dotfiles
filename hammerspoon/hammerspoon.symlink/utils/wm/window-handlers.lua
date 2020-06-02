@@ -1,4 +1,4 @@
-local log = hs.logger.new('[window-handlers]', 'warning')
+local log = hs.logger.new('[window-handlers]', 'debug')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -34,6 +34,8 @@ module.dndHandler = function(win, dndConfig, event)
       dnd_command_updater(dndCmd, nil, {"on"})
     elseif (event == "windowDestroyed") then
       hs.timer.waitUntil(function()
+        log.df('Checking if the app (%s) is actually still running (%s) still..', win:application():name(), win:application():isRunning())
+
         return not win:application():isRunning()
       end,
       function()

@@ -183,7 +183,7 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=b
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/calevent)#(~/.dotfiles/bin/battery -t -p)#[fg=colour256]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
 
@@ -193,6 +193,8 @@ set -g status-right-length 200
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
 set -g @dnd_on_icon "\uf59f DND#[fg=colour255] ⋮ "
 set -g @dnd_off_icon ""
+# set -g @cal_event_icon "#[fg=red]\uf5ef"
+# set -g @no_cal_event_icon ""
 set -g @prefix_highlight_bg             '#3C4C55'
 set -g @prefix_highlight_fg             'red'
 set -g @prefix_highlight_show_copy_mode 'on'
@@ -214,6 +216,7 @@ set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
 set -g @plugin 'megalithic/tmux-dnd-status'
+# set -g @plugin 'megalithic/tmux-next-cal-event'
 # set -g @plugin 'christoomey/vim-tmux-navigator' # necessary if not defining own mappings above
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though
