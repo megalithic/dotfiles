@@ -32,10 +32,22 @@ module.dndHandler = function(win, dndConfig, event)
 
       -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
       dnd_command_updater(dndCmd, nil, {"on"})
+
+      -- FIXME: for some reason i still have to verify it's not running and kill
+      -- it; it for some reason shows up as being running and will turn DND to on
+      -- if i close zoom in some weird way, for instance.
+      hs.timer.waitUntil(function()
+        return not win:application():isRunning()
+      end,
+      function()
+        log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
+
+        -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
+        dnd_command_updater(dndCmd, nil, {"off"})
+      end,
+      0.2)
     elseif (event == "windowDestroyed") then
       hs.timer.waitUntil(function()
-        log.df('Checking if the app (%s) is actually still running (%s) still..', win:application():name(), win:application():isRunning())
-
         return not win:application():isRunning()
       end,
       function()
@@ -59,7 +71,6 @@ module.appHandler = function(win, handler, event)
     handler(win)
   end
 end
-
 
 module.doQuitApp = function(win)
   if win == nil then return end
@@ -87,6 +98,8 @@ module.quitAfterHandler = function(win, interval, event)
         cache.timers[appName]:stop()
       end
 
+      log.df('quitAfterHandler event (%s) for app: %s', event, appName)
+
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
         log.df('quitAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)
 
@@ -110,7 +123,7 @@ module.hideAfterHandler = function(win, interval, event)
         cache.timers[appName]:stop()
       end
 
-      log.df('hideAfterHandler: %s', event)
+      log.df('hideAfterHandler event (%s) for app: %s', event, appName)
 
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
         log.df('hideAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)

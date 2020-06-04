@@ -414,6 +414,8 @@ runtime macros/matchit.vim
 " ~/.dotfiles/nvim/after/ftplugin      - file type overrides
 "===========================================================
 
+iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
+
 
 "===========================================================
 " COLOR SCHEME

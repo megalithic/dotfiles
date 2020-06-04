@@ -4,26 +4,32 @@
 
 current_time=$(date +%H:%M)
 
-event=$(/usr/local/bin/icalBuddy -n -li 1 -npn -nc -b "" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
+event=$(/usr/local/bin/icalBuddy -n -li 1 -npn -nc -b "" -ic "Calendar,Personal Calendar" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
 event_time=$(echo $event | awk -F "=" '{print substr($2,0,5)}')
 event_title=$(echo $event | awk -F "=" '{print $3}')
+# time_diff=$(($current_time - $event_time))
+output=""
 
 if [[ -z $event ]]
 then
-  echo ""
+  output=""
 else
   if [[ -z $TMUX ]]
   then
-    echo "$event_title @ $event_time"
+    output="$event_title @ $event_time"
   else
-    echo "#[fg=red] $event_title @ $event_time #[fg=colour255]⋮ "
+    output="#[fg=red] $event_title @ $event_time #[fg=colour255]⋮ "
   fi
 fi
 
+echo $output
+
+# echo "current time: $current_time"
+# echo "event time: $event_time"
+# echo "time diff: $time_diff"
+
 # if [[ "$current_time" < "$event_time" ]]; then
-#   echo " $event_title @ $event_time"
-#   # echo "#[fg=red] $event_title @ $event_time #[fg=colour255]⋮ "
-#   # echo "#[fg=red] $event_title @ $event_time #[fg=colour255]⋮ "
+#   echo $output
 # else
 #   echo ""
 # fi

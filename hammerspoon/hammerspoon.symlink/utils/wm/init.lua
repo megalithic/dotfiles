@@ -96,12 +96,12 @@ local handleWindowRules = function(appConfig, allWindows)
       hs.fnutils.each(allWindows, function(win)
         if config.ruleExistsForWin(win, 'snap') then
           -- handle hide rules
-          log.df('trying to rule-based snap window %s', hs.inspect(win))
+          log.wf('trying to rule-based snap window %s', hs.inspect(win))
 
           snap(win, appConfig.position, appConfig.preferredDisplay)
         elseif config.ruleExistsForWin(win, 'hide') then
         -- handle hide rules
-          log.df('trying to rule-based hide window %s', hs.inspect(win))
+          log.wf('trying to rule-based hide window %s', hs.inspect(win))
 
           return
         elseif config.ruleExistsForWin(win, 'quit') then
@@ -111,7 +111,7 @@ local handleWindowRules = function(appConfig, allWindows)
           doQuitWin(win)
         elseif config.ruleExistsForWin(win, 'ignore') then
           -- handle ignore rules
-          log.df('trying to rule-based ignore window %s', hs.inspect(win))
+          log.wf('trying to rule-based ignore window %s', hs.inspect(win))
 
           return
         end

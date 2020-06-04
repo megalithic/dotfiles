@@ -1,4 +1,4 @@
-local log             = hs.logger.new('[ext.application]', 'warning')
+local log             = hs.logger.new('[ext.application]', 'debug')
 
 local forceFocus      = require('ext.window').forceFocus
 local highlightWindow = require('ext.drawing').highlightWindow
@@ -16,7 +16,7 @@ end
 
 -- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
 -- +--- possibly more robust app toggler
-module.toggle = function (appIdentifier)
+module.toggle = function (appIdentifier, shouldHide)
   -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
   local app = hs.application.find(appIdentifier)
   local appBundleID = app and (app:bundleID() or appIdentifier)
@@ -32,10 +32,12 @@ module.toggle = function (appIdentifier)
     local mainWin = app:mainWindow()
 
     if mainWin then
-      if mainWin == hs.window.focusedWindow() then
-        log.df('Hiding %s..', appBundleID)
+      if (mainWin == hs.window.focusedWindow()) then
+        if shouldHide then
+          log.df('Hiding %s..', appBundleID)
 
-        mainWin:application():hide()
+          mainWin:application():hide()
+        end
       else
         log.df('Showing %s..', appBundleID)
 
@@ -48,8 +50,12 @@ module.toggle = function (appIdentifier)
       log.df('launchOrFocusByBundleID(%s)', appBundleID)
 
       if (app:focusedWindow() == hs.window.focusedWindow()) then
-        app:hide()
+        if shouldHide then
+          log.df('Hiding %s..', appBundleID)
+          app:hide()
+        end
       else
+        log.df('Showing %s..', appBundleID)
         app:unhide()
         hs.application.launchOrFocusByBundleID(appBundleID)
       end

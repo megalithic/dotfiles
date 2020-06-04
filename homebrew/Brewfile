@@ -21,6 +21,7 @@ tap "simeji/jid"
 tap "jeroenknoops/tap"
 tap "browsh-org/homebrew-browsh"
 tap "qmk/qmk"
+tap "heroku/brew"
 
 
 # -- for qmk_toolbox --
@@ -88,6 +89,7 @@ brew "gnu-sed", args: ["with-default-names"]
 brew "gpg" # required for asdf-nodejs
 brew "grc"
 brew "grv"
+brew "heroku"
 brew "hub"
 brew "highlight"
 brew "httpie"

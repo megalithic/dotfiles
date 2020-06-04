@@ -120,6 +120,7 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = false,
+    hideAfter = 1,
     rules = {
       {title = 'Workspaces', rule = 'ignore'},
       {title = 'Capture', rule = 'ignore'}
@@ -174,6 +175,14 @@ module.apps = {
     rules = {
       {title = 'General', rule = 'ignore'},
     },
+  },
+  ['com.apple.mail'] = {
+    bundleID = 'com.apple.mail',
+    name = 'Mail',
+    distraction = true,
+    preferredDisplay = 2,
+    hideAfter = 0.1,
+    position = module.grid.centerSmall,
   },
   ['com.apple.finder'] = {
     bundleID = 'com.apple.finder',
@@ -281,7 +290,7 @@ module.apps = {
     -- modifier = module.modifiers.mashShift,
     -- shortcut = 'f',
     hyper_key ='y',
-    local_bindings = {'n'},
+    local_bindings = {']'},
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
     quitGuard = true,
