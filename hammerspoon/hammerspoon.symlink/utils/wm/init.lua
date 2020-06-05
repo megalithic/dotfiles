@@ -26,17 +26,6 @@ local windowLogger = function(event, win, appName)
   log.df('%s: %s (%s)', event, appName, win:title())
 end
 
-local doWindowHandlers = function(win, appConfig, event)
-  if appConfig == nil then return end
-  log.df("doWindowHandlers: {win: %s, event: %s}", win:title(), event)
-
-  -- NOTE: window events are dealt with in each handler, instead of from here.
-  quitAfterHandler(win, appConfig.quitAfter, event)
-  hideAfterHandler(win, appConfig.hideAfter, event)
-  appHandler(win, appConfig.handler, event)
-  dndHandler(win, appConfig.dnd, event)
-end
-
 local snap = function(win, position, screen)
   -- handle ignoredWindows from our current appConfig; don't snap anything
   local appConfig = config.getAppConfigForWin(win)
@@ -96,28 +85,40 @@ local handleWindowRules = function(appConfig, allWindows)
       hs.fnutils.each(allWindows, function(win)
         if config.ruleExistsForWin(win, 'snap') then
           -- handle hide rules
-          log.wf('trying to rule-based snap window %s', hs.inspect(win))
+          log.df('trying to rule-based snap window %s', hs.inspect(win))
 
-          snap(win, appConfig.position, appConfig.preferredDisplay)
+          local rule = config.ruleForWin(win, 'snap')
+          snap(win, rule.position or appConfig.position, appConfig.preferredDisplay)
         elseif config.ruleExistsForWin(win, 'hide') then
         -- handle hide rules
-          log.wf('trying to rule-based hide window %s', hs.inspect(win))
+          log.df('trying to rule-based hide window %s', hs.inspect(win))
 
           return
         elseif config.ruleExistsForWin(win, 'quit') then
           -- handle quit rules
-          log.wf('trying to rule-based quit window %s', hs.inspect(win))
+          log.df('trying to rule-based quit window %s', hs.inspect(win))
 
           doQuitWin(win)
         elseif config.ruleExistsForWin(win, 'ignore') then
           -- handle ignore rules
-          log.wf('trying to rule-based ignore window %s', hs.inspect(win))
+          log.df('trying to rule-based ignore window %s', hs.inspect(win))
 
           return
         end
       end)
     end
   end
+end
+
+local doWindowHandlers = function(win, appConfig, event)
+  if appConfig == nil then return end
+  log.df("doWindowHandlers: {win: %s, event: %s}", win:title(), event)
+
+  -- NOTE: window events are dealt with in each handler, instead of from here.
+  quitAfterHandler(win, appConfig.quitAfter, event)
+  hideAfterHandler(win, appConfig.hideAfter, event)
+  appHandler(win, appConfig.handler, event)
+  dndHandler(win, appConfig.dnd, event)
 end
 
 local setLayoutForApp = function(app, appConfig)
@@ -190,8 +191,13 @@ module.start = (function()
 
   cache.filter = hs.window.filter.new(getFiltersFromAppConfig())
     :subscribe(hs.window.filter.windowCreated, function(win, appName, event)
+      local appConfig = config.getAppConfigForWin(win)
+
       windowLogger(event, win, appName)
       handleWindowLayout(win, appName, event)
+      if appConfig ~= nil then
+        handleWindowRules(appConfig, win:application():allWindows())
+      end
       end, true)
     :subscribe(hs.window.filter.windowDestroyed, function(win, appName, event)
       windowLogger(event, win, appName)

@@ -117,7 +117,7 @@ module.apps = {
     hideAfter = 1,
     rules = {
       {title = 'Workspaces', rule = 'ignore'},
-      {title = 'Capture', rule = 'ignore'}
+      {title = 'Capture', rule = 'snap', position = '5,5 3x3'},
     },
   },
   ['com.culturedcode.ThingsMac'] = {
@@ -327,27 +327,32 @@ module.rulesExistForWin = function(win)
   return rulesExist
 end
 
+module.ruleForWin = function(win, rule)
+  local appConfig = module.getAppConfigForWin(win)
+  local foundRule = hs.fnutils.find(appConfig.rules, function(datum)
+    return datum.title == win:title() and datum.rule == rule
+  end)
+
+  return foundRule
+end
+
 module.ruleExistsForWin = function(win, rule)
   local appConfig = module.getAppConfigForWin(win)
-  local targetRule = {title = win:title(), rule = rule}
   local rulesExist = module.rulesExistForWin(win)
-  local ruleExists = false
+  local exists = false
 
   if rulesExist then
-    foundRule = hs.fnutils.find(appConfig.rules, function(datum)
-      return hs.inspect(datum) == hs.inspect(targetRule)
-    end)
-
-    ruleExists = rulesExist and foundRule ~= nil
+    local foundRule = module.ruleForWin(win, rule)
+    exists = rulesExist and foundRule ~= nil
   end
 
-  if ruleExists then
+  if exists then
     log.df("Found rule (%s) found for %s", rule, win:title())
-  else
-    log.df("No rule (%s) found for %s", rule, win:title())
+  -- else
+  --   log.df("No rule (%s) found for %s", rule, win:title())
   end
 
-  return ruleExists
+  return exists
 end
 
 
@@ -363,12 +368,6 @@ module.utilities = {
   --   name = 'Lock Screen',
   --   modifier = module.modifiers.mashShift,
   --   shortcut = 'L',
-  --   fn = function() hs.caffeinate.systemSleep() end
-  -- },
-  -- {
-  --   name = 'Pomodoro',
-  --   modifier = module.modifiers.mashShift,
-  --   shortcut = 'P',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
   {
