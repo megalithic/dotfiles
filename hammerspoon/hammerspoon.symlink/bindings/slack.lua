@@ -6,7 +6,7 @@ local cache  = {}
 local module = { cache = cache, targetAppName = 'Slack' }
 
 module.start = function()
-  log.df("Starting [bindings.slack]..")
+  log.df("starting..")
 
   cache.slack  = hs.hotkey.modal.new({}, nil)
   cache.filter = hs.window.filter.new({module.targetAppName})
@@ -47,7 +47,7 @@ module.start = function()
 end
 
 module.stop = function()
-  log.df("Stopping [bindings.slack]..")
+  log.df("stopping..")
 
   cache.slack:exit()
 end

@@ -21,10 +21,14 @@ local hyperLocalBindingsTap = function(key)
   return hs.eventtap.keyStroke(config.modifiers.ultra, key)
 end
 
+local hyperArrowBindingsTap = function(key)
+  return hs.eventtap.keyStroke({}, key)
+end
+
 -- Bind the Hyper key to the hammerspoon modal
 
 module.start = function()
-  log.df("[bindings.hyper] starting..")
+  log.df("starting..")
   hs.hotkey.bind({}, config.modifiers.hyper, pressed, released)
 
   -- Use the hyper key with the application config to use the `hyper_key`
@@ -53,15 +57,23 @@ module.start = function()
               function()
                 hyperLocalBindingsTap(key)
               end)
-          end
-        end)
+            end
+          end)
+        end
       end
     end
+
+    -- Bind arrow keys to standard vim bindings
+
+    hyper:bind({'shift'}, 'h', function() hyperArrowBindingsTap('left') end)
+    hyper:bind({'shift'}, 'j', function() hyperArrowBindingsTap('down') end)
+    hyper:bind({'shift'}, 'k', function() hyperArrowBindingsTap('up') end)
+    hyper:bind({'shift'}, 'l', function() hyperArrowBindingsTap('right') end)
   end
-end
 
-module.stop = function()
-  -- nil
-end
+  module.stop = function()
+    log.df("stopping..")
+    -- nil
+  end
 
-return module
+  return module
