@@ -5,7 +5,7 @@ local module = {}
 -- REF: see @evantravers' impl of a brave module: https://github.com/evantravers/hammerspoon/blob/refactor/brave.lua
 
 module.go = function(url)
-  local app = 'Brave'
+  local app = config.preferred.browsers[0]
 
   hs.osascript.javascript([[
   (function() {

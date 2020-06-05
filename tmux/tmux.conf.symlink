@@ -183,7 +183,7 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=b
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/calevent)#(~/.dotfiles/bin/battery -t -p)#[fg=colour256]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/calevent)#(~/.dotfiles/bin/battery -t -p)#[fg=colour256]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M:%S (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
 

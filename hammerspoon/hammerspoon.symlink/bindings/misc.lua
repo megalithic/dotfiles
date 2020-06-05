@@ -38,7 +38,7 @@ module.start = function()
 
   -- Snip current highlight text in browser
   hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()
-    local appName = "Brave Browser Dev"
+    local appName = config.preferred.browsers[0]
 
     hs.osascript.applescript(template([[
       -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
