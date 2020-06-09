@@ -44,6 +44,7 @@ brew "qmk"
 
 # -- cli --
 
+brew "abduco"
 brew "ansifilter"
 brew "autoconf"
 brew "automake"

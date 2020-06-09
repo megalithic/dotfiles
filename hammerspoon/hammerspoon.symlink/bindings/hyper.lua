@@ -65,10 +65,10 @@ module.start = function()
 
     -- Bind arrow keys to standard vim bindings
 
-    hyper:bind({'shift'}, 'h', function() hyperArrowBindingsTap('left') end)
-    hyper:bind({'shift'}, 'j', function() hyperArrowBindingsTap('down') end)
-    hyper:bind({'shift'}, 'k', function() hyperArrowBindingsTap('up') end)
-    hyper:bind({'shift'}, 'l', function() hyperArrowBindingsTap('right') end)
+    hyper:bind({'shift'}, 'h', nil, function() hyperArrowBindingsTap('left') end, function() hyperArrowBindingsTap('left') end)
+    hyper:bind({'shift'}, 'j', nil, function() hyperArrowBindingsTap('down') end, function() hyperArrowBindingsTap('down') end)
+    hyper:bind({'shift'}, 'k', nil, function() hyperArrowBindingsTap('up') end, function() hyperArrowBindingsTap('up') end)
+    hyper:bind({'shift'}, 'l', nil, function() hyperArrowBindingsTap('right') end, function() hyperArrowBindingsTap('right') end)
   end
 
   module.stop = function()

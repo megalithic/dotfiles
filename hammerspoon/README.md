@@ -8,7 +8,7 @@ of the macOS core libraries and APIs.
 
 ### So, what does my [config](hammerspoon.symlink/config.lua) do (it's the primary setup for everything)?
 
-y **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `opt+cmd` to talk.
+- **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `opt+cmd` to talk.
 
 - **Spotify Controls**: simple keybindings to handle Play/Pause, Next, Previous.
   Bound to `ctrl+shift+[`, `ctrl+shift+]`, `ctrl+shift+\`.
@@ -19,21 +19,21 @@ y **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" statu
 - **Accidental app quitting protection**: prevents accidental app quitting,
   makes you hit `cmd+q` twice.
 
-- **Application Toggling** (for example):
+- **Application Launching via "hyper" key (`F19`)** (for example):
 
-  - Finder: `ctrl+backtick`
-  - Brave: `cmd+backtick`
-  - Kitty: `ctrl+space`
-  - Slack: `cmd+ctrl+shift+s`
-  - Spark: `cmd+ctrl+shift+m`
-  - Zoom: `cmd+ctrl+shift+z`
-  - Messages: `cmd+shift+m`
-  - Spotify: `cmd+shift+8`
+  - Finder: `hyper+f`
+  - Brave: `hyper+j`
+  - Kitty: `hyper+k`
+  - Slack: `hyper+s`
+  - Spark: `hyper+e`
+  - Zoom: `hyper+z`
+  - Messages: `hyper+m`
+  - Spotify: `hyper+8`
 
 * **App-specific customization**:
 
   - apps can define their own custom `handler` function to be executed when they are active,
-    for example, custom keybinding (see Slack in config.lua)
+    for example, custom keybinding
   - apps can auto set dnd and slack status modes
   - apps can enable/disable QuitGuard™
   - apps can auto-hide after n-minute interval
@@ -69,8 +69,6 @@ y **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" statu
 
 #### TODO
 
-- [x] re-map Slack.app keybindings (https://github.com/STRML/init/blob/master/hammerspoon/init.lua#L306)
-- [x] setup auto-away/status updates for Slack using the `hs.caffeinate` watcher
 - [ ] thieve @evantravers pomodoro module (https://github.com/evantravers/hammerspoon/blob/master/pomodoro.lua)
 
 

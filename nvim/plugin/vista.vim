@@ -28,4 +28,4 @@ let g:vista_update_on_text_changed = 1
 
 " mappings
 " nnoremap <leader>vv :Vista!<CR>
-nnoremap <leader>gf :Vista finder<CR>
+" nnoremap <leader>gf :Vista finder<CR>

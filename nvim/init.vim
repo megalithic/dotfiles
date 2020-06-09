@@ -163,8 +163,8 @@ if has("nvim")
   let $EDITOR      = 'nvr -l'
   let $ECTO_EDITOR = 'nvr -l'
 
-  " let g:python_host_prog = '/usr/local/bin/python'
-  " let g:python3_host_prog = '/usr/local/bin/python3'
+  let g:python_host_prog = '~/.asdf/shims/python'
+  let g:python3_host_prog = '~/.asdf/shims/python3'
 
   " share data between nvim instances (registers etc)
   augroup SHADA
@@ -214,7 +214,9 @@ endif
 set runtimepath+=~/.config/nvim/autoload/plug.vim/
 
 " Initialize vim-plug.
-silent! if plug#begin('~/.config/nvim/plugins')
+silent! if plug#begin('~/.config/nvim/plugged')
+
+Plug 'tweekmonster/startuptime.vim'
 
 "-----------------------------
 " Styling related plugings
@@ -252,6 +254,7 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
 Plug '907th/vim-auto-save' "auto-save.vim
 Plug 'rhysd/clever-f.vim' "clever-f.vim
+" Plug 'justinmk/vim-sneak'
 " Plug 'mbbill/undotree' "undotree.vim
 Plug 'tpope/vim-unimpaired' "unimpaired.vim
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
@@ -309,23 +312,20 @@ Plug 'tpope/vim-dispatch'
 "-----------------------------
 if executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
-  Plug 'liuchengxu/vista.vim' " vista.vim
+  " Plug 'liuchengxu/vista.vim' " vista.vim
+  " Plug 'elixir-lsp/elixir-ls', { 'do': { -> g:ElixirLS.compile() } }
 endif
 
 if has('nvim')
   " Plug 'neovim/nvim-lsp'
-  " Plug 'haorenW1025/diagnostic-nvim'
-  " Plug 'haorenW1025/completion-nvim'
-
-  " Plug 'Anexen/ncm2', {'branch': 'fix/built-in-lsp'}
-  " Plug 'roxma/nvim-yarp'
-  " Plug 'ncm2/ncm2-path'
-  " Plug 'ncm2/ncm2-vim' | Plug 'Shougo/neco-vim'
-  " Plug 'ncm2/ncm2-tagprefix'
-  " Plug 'ncm2/float-preview.nvim'
-
-  " Plug 'prabirshrestha/asyncomplete.vim'
-  " Plug 'yami-beta/asyncomplete-omni.vim'
+  Plug 'haorenW1025/diagnostic-nvim'
+  Plug 'haorenW1025/completion-nvim'
+  Plug 'wbthomason/lsp-status.nvim'
+  Plug 'steelsojka/completion-buffers'
+  Plug 'hrsh7th/vim-vsnip'
+  Plug 'hrsh7th/vim-vsnip-integ'
+  Plug 'nvim-treesitter/nvim-treesitter'
+  Plug 'vigoux/completion-treesitter'
 endif
 
 "-----------------------------
@@ -370,7 +370,6 @@ Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
 Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
-" Plug 'GrzegorzKozub/vim-elixirls', { 'do': ':ElixirLsCompileSync' } " currently only works with ale
 Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
 Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'typescript', 'typescript.tsx'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
@@ -389,11 +388,10 @@ Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
 " FIXME: this useful, maybe along with codi or iron?
 " Plug 'hauleth/vim-backscratch'
 
-"-----------------------------
-" Neovim specific plugins
-"-----------------------------
+" Plug 'glacambre/firenvim', { 'do': { _ -> firenvim#install(0) } }
+
 if has("nvim")
-  Plug 'bfredl/nvim-miniyank'
+  " Plug 'bfredl/nvim-miniyank'
   " ~/.dotfiles/nvim/plugin/miniyank.vim - mappings
 endif
 
@@ -414,6 +412,11 @@ runtime macros/matchit.vim
 " ~/.dotfiles/nvim/after/ftplugin      - file type overrides
 "===========================================================
 
+
+"===========================================================
+" IABBREV
+"===========================================================
+
 iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 
 
@@ -427,6 +430,5 @@ endif
 
 let g:nova_transparent = 1
 silent! colorscheme nova
-
 
 " vim:ft=vim

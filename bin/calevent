@@ -2,12 +2,24 @@
 
 # REFS: https://github.com/mattpetters/dotfiles/commit/92b4fa766daa1b00858de29ff1f6e33ac6ec296d
 
-current_time=$(date +%H:%M)
 
-event=$(/usr/local/bin/icalBuddy -n -li 1 -npn -nc -b "" -ic "Calendar,Personal Calendar" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
+event=$(/usr/local/bin/icalBuddy -n -li 2 -npn -nc -b "" -ic "Calendar,Personal Calendar" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
+echo "$event"
 event_time=$(echo $event | awk -F "=" '{print substr($2,0,5)}')
+# current_time=$(date +%R)
+# current_time_in_ms=$(date +%s)
+# event_time_in_ms=$(date -j -f '%R' "$event_time" +'%s')
+# echo "current_time: $current_time"
+# echo "current_time_in_ms: $current_time_in_ms"
+# echo "event_time_in_ms: $event_time_in_ms"
+
 event_title=$(echo $event | awk -F "=" '{print $3}')
-# time_diff=$(($current_time - $event_time))
+
+# sec_old=$(date -d "1970-01-01 $old_hour:$old_min:00" +%s)
+# sec_new=$(date -d "1970-01-01 $hour:$min:00" +%s)
+
+# echo "the difference is $(( (sec_new - sec_old) / 60)) minutes"
+
 output=""
 
 if [[ -z $event ]]

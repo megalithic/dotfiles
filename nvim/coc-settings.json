@@ -84,7 +84,6 @@
   "diagnostic.highlightOffset": 9999998,
   "diagnostic.hintSign": "‣",
   "diagnostic.infoSign": "‣",
-  "diagnostic.joinMessageLines": true,
   "diagnostic.locationlist": true,
   "diagnostic.maxWindowHeight": 40,
   "diagnostic.messageTarget": "float",
@@ -198,8 +197,8 @@
   },
   "diagnostic-languageserver.filetypes": {
     "vim": "", // "vint"
-    "elixir": ["mix_credo"],
-    "eelixir": ["mix_credo"],
+    "elixir": ["mix_credo", "mix_credo_compile"],
+    "eelixir": ["mix_credo", "mix_credo_compile"],
     "php": "phpcs"
   },
   "diagnostic-languageserver.formatters": {},
@@ -241,23 +240,23 @@
         "elmAnalyseTrigger": "change"
       }
     },
-    "elixir": {
-      "command": "~/.elixir_ls/rel/language_server.sh",
-      "args": [],
-      "filetypes": ["elixir", "eelixir"],
-      "rootPatterns": ["mix.lock", "mix.exs"],
-      "cwd": "./",
-      "trace.server": "verbose",
-      "initializationOptions": {
-        /* "cacheDirectory": "/tmp/elixir_ls", */
-        "dialyzerEnabled": true,
-        "elixirLS": {
-          "dialyzerEnabled": true,
-          "dialyzerWarningOpts": []
-        }
-      },
-      "settings": {}
-    }
+    /* "elixir": { */
+    /*   "command": "~/.elixir_ls/rel/language_server.sh", */
+    /*   "args": [], */
+    /*   "filetypes": ["elixir", "eelixir"], */
+    /*   "rootPatterns": ["mix.lock", "mix.exs"], */
+    /*   "cwd": "./", */
+    /*   "trace.server": "verbose", */
+    /*   "initializationOptions": { */
+    /*     /1* "cacheDirectory": "/tmp/elixir_ls", *1/ */
+    /*     "dialyzerEnabled": true, */
+    /*     "elixirLS": { */
+    /*       "dialyzerEnabled": true, */
+    /*       "dialyzerWarningOpts": [] */
+    /*     } */
+    /*   }, */
+    /*   "settings": {} */
+    /* } */
   },
 
   "homeassistant.hostUrl": "https://megalithic.duckdns.org",
