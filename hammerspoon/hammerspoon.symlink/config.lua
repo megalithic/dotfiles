@@ -106,6 +106,11 @@ module.apps = {
     position = module.grid.rightHalf,
     quitGuard = true
   },
+  ['com.runningwithcrayons.Alfred'] = {
+    name = 'Alfred',
+    bundleID = 'com.runningwithcrayons.Alfred',
+    local_bindings = {'c', 'space', 'o'},
+  },
   ['com.agiletortoise.Drafts-OSX'] = {
     bundleID = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
