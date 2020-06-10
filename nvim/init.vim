@@ -324,8 +324,10 @@ if has('nvim')
   Plug 'steelsojka/completion-buffers'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
-  Plug 'nvim-treesitter/nvim-treesitter'
-  Plug 'vigoux/completion-treesitter'
+
+  " SLOW (treesitter things):
+  " Plug 'nvim-treesitter/nvim-treesitter'
+  " Plug 'vigoux/completion-treesitter'
 endif
 
 "-----------------------------

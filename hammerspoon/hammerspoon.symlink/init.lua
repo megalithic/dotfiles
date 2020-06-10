@@ -28,14 +28,14 @@ watchers                    = require('utils.watchers')
 wm                          = require('utils.wm')
 
 -- controlplane
-controlplane.enabled        = { 'dock', 'office' }
+controlplane.enabled        = { 'dock', 'office', 'vpn' }
 
 -- watchers
 watchers.enabled            = { 'urlevent' }
 watchers.urlPreference      = config.preferred.browsers
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'media', 'misc', 'slack' }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc', 'slack' }
 
 -- start/stop modules
 local modules               = { bindings, controlplane, watchables, watchers, wm }

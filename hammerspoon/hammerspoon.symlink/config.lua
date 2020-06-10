@@ -24,7 +24,8 @@ local module = {
 
   preferred = {
     terms    = { 'kitty' },
-    browsers = { 'Brave Browser', 'Brave Browser Dev', 'Firefox', 'Google Chrome', 'Safari' }
+    browsers = { 'Brave Browser', 'Brave Browser Dev', 'Firefox', 'Google Chrome', 'Safari' },
+    vpn = { 'ExpressVPN' }
   },
 
   displays = displays,

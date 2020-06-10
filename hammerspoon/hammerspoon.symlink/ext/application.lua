@@ -1,4 +1,4 @@
-local log             = hs.logger.new('[ext.application]', 'debug')
+local log             = hs.logger.new('[ext.application]', 'warning')
 
 local forceFocus      = require('ext.window').forceFocus
 local highlightWindow = require('ext.drawing').highlightWindow
