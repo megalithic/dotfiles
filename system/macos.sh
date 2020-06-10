@@ -152,7 +152,7 @@ defaults write com.apple.iCal n\ days\ of\ week 14
 # (e.g. enable Tab in modal dialogs)
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
-# defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool true
+defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
 # "Set a blazingly fast keyboard repeat rate"
 defaults write NSGlobalDomain KeyRepeat -float 1.0

@@ -360,6 +360,7 @@ Plug 'sgur/vim-editorconfig'
 
 " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'zenbro/mirror.vim'
+Plug 'ChristianChiarulli/codi.vim'
 
 "-----------------------------
 " Filetype/Syntax/Lang plugins

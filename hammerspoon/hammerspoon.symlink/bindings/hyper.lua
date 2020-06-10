@@ -92,13 +92,13 @@ module.start = function()
   end
 
   -- :: media (spotify/volume)
-  for _, media in pairs(config.media) do
-    hyper:bind(media.hyper_mod, media.hyper_key, function() media.spotify(media.action, media.label) end)
+  for _, m in pairs(config.media) do
+    hyper:bind(m.hyper_mod, m.hyper_key, function() media.spotify(m.action, m.label) end)
   end
 
   -- :: volume control
-  for _, vol in pairs(config.volume) do
-    hyper:bind(vol.hyper_mod, vol.hyper_key, function() media.adjustVolume(vol) end)
+  for _, v in pairs(config.volume) do
+    hyper:bind(v.hyper_mod, v.hyper_key, function() media.adjustVolume(v) end)
   end
 end
 

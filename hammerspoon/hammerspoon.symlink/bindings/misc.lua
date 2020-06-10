@@ -41,12 +41,13 @@ module.start = function()
 
   -- Snip current highlight text in browser
   hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()
-    local appName = config.preferred.browsers[0]
+    local appName = config.preferred.browsers[1]
+    print("appName!" .. appName)
 
     hs.osascript.applescript(template([[
       -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
 
-      if (count of theSelectionFromBrave()) is greater than 0 then
+      if (count of theSelectronFromBrave()) is greater than 0 then
         set str to "tags: #link\n\n" & theTitleFromBrave() & "\n\n> " & theSelectionFromBrave() & "\n\n[" & theTitleFromBrave() & "](" & theCurrentUrlInBrave() & ")"
         tell application "Drafts"
           make new draft with properties {content:str, tags: {"link"}}
