@@ -3,7 +3,7 @@ local log = hs.logger.new('[bindings.media]', 'warning')
 local module = {}
 local alert = require('ext.alert')
 
-local adjustVolume = function(vol)
+module.adjustVolume = function(vol)
   local output = hs.audiodevice.defaultOutputDevice()
 
   if vol.action == "mute" then
@@ -34,7 +34,7 @@ local adjustVolume = function(vol)
   end
 end
 
-local notify = function(n)
+module.notify = function(n)
   log.df('Spotify notification: %s', hs.inspect(n))
 
   hs.notify.new({
@@ -46,7 +46,7 @@ local notify = function(n)
   :send()
 end
 
-local spotify = function (event, alertText)
+module.spotify = function (event, alertText)
   if event == 'playpause' then
     hs.spotify.playpause()
   elseif event == 'next' then
@@ -61,7 +61,7 @@ local spotify = function (event, alertText)
       local image = hs.image.imageFromAppBundle('com.spotify.client')
 
       if event == 'playpause' and not hs.spotify.isPlaying() then
-        notify({
+        module.notify({
             state='Paused',
             artist=hs.spotify.getCurrentArtist(),
             track=hs.spotify.getCurrentTrack(),
@@ -69,7 +69,7 @@ local spotify = function (event, alertText)
             image=image
           })
       else
-        notify({
+        module.notify({
             state='Playing',
             artist=hs.spotify.getCurrentArtist(),
             track=hs.spotify.getCurrentTrack(),
@@ -84,12 +84,12 @@ end
 module.start = function()
   -- :: media (spotify)
   for _, media in pairs(config.media) do
-    hs.hotkey.bind(media.modifier, media.shortcut, function() spotify(media.action, media.label) end)
+    hs.hotkey.bind(media.modifier, media.shortcut, function() module.spotify(media.action, media.label) end)
   end
 
   -- :: volume control
   for _, vol in pairs(config.volume) do
-    hs.hotkey.bind(vol.modifier, vol.shortcut, function() adjustVolume(vol) end)
+    hs.hotkey.bind(vol.modifier, vol.shortcut, function() module.adjustVolume(vol) end)
   end
 end
 

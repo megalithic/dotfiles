@@ -86,18 +86,18 @@
   endfunction
 
   " ToggleCoc: disable coc.nvim for large file
-  " function! ToggleCoc() abort
-  "   let g:trigger_size = get(g:, 'trigger_size', 0.5 * 1048576)
-  "   let size = getfsize(expand('<afile>'))
-  "   if (size > g:trigger_size) || (size == -2)
-  "     echohl WarningMsg
-  "     echomsg 'Coc.nvim was disabled for this large file'
-  "     echohl None
-  "     exec 'CocDisable'
-  "   else
-  "     exec 'CocEnable'
-  "   endif
-  " endfunction
+  function! ToggleCoc() abort
+    let g:trigger_size = get(g:, 'trigger_size', 0.5 * 1048576)
+    let size = getfsize(expand('<afile>'))
+    if (size > g:trigger_size) || (size == -2)
+      echohl WarningMsg
+      echomsg 'Coc.nvim was disabled for this large file'
+      echohl None
+      exec 'CocDisable'
+    else
+      exec 'CocEnable'
+    endif
+  endfunction
 
   " ShowDoc: show document
   function! ShowDoc() abort
@@ -175,7 +175,7 @@
 
   augroup Coc
     au!
-    " au BufReadPre * call ToggleCoc()
+    au BufReadPre * call ToggleCoc()
     " au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
 
     " au CursorHoldI * :call <SID>show_hover_doc()

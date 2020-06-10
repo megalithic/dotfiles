@@ -11,7 +11,10 @@ local ptt             = require('bindings.ptt')
 module.start = function()
   -- misc things
   for _, util in pairs(config.utilities) do
-    hs.hotkey.bind(util.modifier, util.shortcut, util.fn)
+
+    if util.modifier and util.shortcut ~= nil and util.fn ~= nil then
+      hs.hotkey.bind(util.modifier, util.shortcut, util.fn)
+    end
   end
 
 

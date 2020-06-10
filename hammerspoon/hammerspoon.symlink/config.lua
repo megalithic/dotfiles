@@ -234,8 +234,7 @@ module.apps = {
   ['com.agilebits.onepassword7'] = {
     bundleID = 'com.agilebits.onepassword7',
     name = '1Password',
-    modifier = module.modifiers.mashShift,
-    shortcut = '1',
+    hyper_key = '1',
     preferredDisplay = 1,
     hideAfter = 1,
     position = module.grid.centeredMedium
@@ -249,8 +248,7 @@ module.apps = {
   ['org.hammerspoon.Hammerspoon'] = {
     bundleID = 'org.hammerspoon.Hammerspoon',
     name = 'Hammerspoon',
-    modifier = module.modifiers.mashShift,
-    shortcut = 'h',
+    hyper_key = 'r',
     preferredDisplay = 2,
     hideAfter = 1,
     position = module.grid.rightHalf,
@@ -357,12 +355,6 @@ end
 
 
 module.utilities = {
-  {
-    name = 'Hammerspoon Console',
-    modifier = module.modifiers.ctrlAlt,
-    shortcut = 'r',
-    fn = function() hs.toggleConsole() end
-  },
   -- NOTE: handle this with alfred and `sleep`/`lock` commands
   -- {
   --   name = 'Lock Screen',
@@ -372,8 +364,8 @@ module.utilities = {
   -- },
   {
     name = 'Hammerspoon Reload',
-    modifier = module.modifiers.mashShift,
-    shortcut = 'r',
+    hyper_key = 'r',
+    hyper_mod = {'shift'},
     fn = (function()
       hs.reload()
       hs.notify.show('Hammerspoon', 'Modules Reloaded', '')
@@ -404,18 +396,24 @@ module.utilities = {
 module.media = {
   {
     action = 'previous',
+    hyper_key = '[',
+    hyper_mod = {'shift'},
     modifier = module.modifiers.ctrlShift,
     shortcut = '[',
     label = '⇤ previous'
   },
   {
     action = 'next',
+    hyper_key = ']',
+    hyper_mod = {'shift'},
     modifier = module.modifiers.ctrlShift,
     shortcut = ']',
     label = 'next ⇥'
   },
   {
     action = 'playpause',
+    hyper_key = '\\',
+    hyper_mod = {'shift'},
     modifier = module.modifiers.ctrlShift,
     shortcut = '\\',
     label = 'play/pause'
@@ -427,18 +425,17 @@ module.volume = {
     action = 'down',
     modifier = module.modifiers.ctrlShift,
     shortcut = 27,
+    hyper_key = 27,
+    hyper_mod = {'shift'},
     diff = -5,
   },
   {
     action = 'up',
     modifier = module.modifiers.ctrlShift,
     shortcut = 24,
+    hyper_key = 24,
+    hyper_mod = {'shift'},
     diff = 5,
-  },
-  {
-    action = 'mute',
-    modifier = module.modifiers.mashShift,
-    shortcut = '\\',
   },
 }
 

@@ -310,7 +310,7 @@ Plug 'tpope/vim-dispatch'
 "-----------------------------
 " Completion plugins
 "-----------------------------
-if executable('yarn') && executable('node')
+if has('nvim') && executable('yarn') && executable('node')
   Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
   " Plug 'liuchengxu/vista.vim' " vista.vim
   " Plug 'elixir-lsp/elixir-ls', { 'do': { -> g:ElixirLS.compile() } }
@@ -385,16 +385,6 @@ Plug 'christoomey/vim-tmux-navigator'
 Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
 
-" FIXME: this useful, maybe along with codi or iron?
-" Plug 'hauleth/vim-backscratch'
-
-" Plug 'glacambre/firenvim', { 'do': { _ -> firenvim#install(0) } }
-
-if has("nvim")
-  " Plug 'bfredl/nvim-miniyank'
-  " ~/.dotfiles/nvim/plugin/miniyank.vim - mappings
-endif
-
 " Finalize vim-plug.
 call plug#end()
 endif
@@ -424,10 +414,7 @@ iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 " COLOR SCHEME
 "===========================================================
 
-if system('darkMode') =~ "Dark"
-  set background=dark
-endif
-
+set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
 

@@ -173,11 +173,6 @@ augroup END
 augroup gitcommit
   autocmd!
 
-  " pivotalTracker.vim
-  let g:pivotaltracker_name = "smesser"
-  autocmd FileType gitcommit setlocal completefunc=pivotaltracker#stories
-  autocmd FileType gitcommit setlocal omnifunc=pivotaltracker#stories
-
   function! BufReadIndex()
     " Use j/k in status
     setl nohlsearch
@@ -193,7 +188,7 @@ augroup gitcommit
     end
 
     " disable coc.nvim for gitcommit
-    " autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
+    autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
     " autocmd InsertEnter * execute "silent! CocDisable"
 
     " Allow automatic formatting of bulleted lists and blockquotes
@@ -219,61 +214,6 @@ augroup gitcommit
   autocmd BufEnter *.git/index silent normal gg0j
   autocmd BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
   autocmd FileType gitcommit,gitrebase exe BufEnterCommit()
-augroup END
-
-" augroup ft_elixir
-"   autocmd!
-"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
-"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-"   autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
-"   autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-"   autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-"   autocmd FileType elixir,eelixir inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
-
-"   if has('nvim')
-"     function! s:iex_for_project() abort
-"       let l:root = finddir('.git/..', expand('%:p:h').';')
-
-"       if !empty(glob(l:root .. "/mix.exs"))
-"         echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
-"         :Repl iex -S mix
-"       else
-"         echohl Comment | echom printf('iex (%s)', l:root) | echohl None
-"         :Repl iex
-"       endif
-"     endfunction
-
-"     autocmd FileType elixir,eelixir nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
-"   endif
-
-"   autocmd FileType elixir,eelixir iabbrev epry  require IEx; IEx.pry
-"   autocmd FileType elixir,eelixir iabbrev ep    \|>
-"   autocmd FileType elixir,eelixir iabbrev ei    IO.inspect
-"   autocmd FileType elixir,eelixir iabbrev eputs IO.puts
-" augroup END
-
-augroup ft_elm
-  autocmd!
-  autocmd FileType elm nnoremap <leader>ep o\|> <ESC>a
-
-  if has('nvim')
-    function! s:elm_repl_for_project() abort
-      let l:root = finddir('.git/..', expand('%:p:h').';')
-
-      if !empty(glob(l:root .. "/elm.json"))
-        echohl Comment | echom printf('elm repl (%s)', l:root) | echohl None
-        :Repl elm repl
-      else
-        echohl Comment | echom printf('elm_repl (%s)', l:root) | echohl None
-        :Repl elm_repl
-      endif
-    endfunction
-
-    autocmd FileType elm nnoremap <silent> <buffer> <leader>er :call <SID>elm_repl_for_project()<CR>
-  endif
-
-  autocmd FileType elm iabbrev ep    \|>
 augroup END
 
 augroup ft_clang

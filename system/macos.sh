@@ -125,8 +125,8 @@ defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool NO
 defaults write com.apple.dock tilesize -int 48
 defaults write com.apple.dock autohide -bool true
 
-# autohide menubar
-# defaults write NSGlobalDomain _HIHideMenuBar -bool true
+# autohide menubar (true autohide, false -- don't autohide)
+defaults write NSGlobalDomain _HIHideMenuBar -bool false
 
 # PARTIAL DARK MODE: dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
 # REF: https://medium.com/@n1kk/how-to-tweak-macos-mojave-dark-mode-per-app-a5fab0574691
@@ -152,15 +152,12 @@ defaults write com.apple.iCal n\ days\ of\ week 14
 # (e.g. enable Tab in modal dialogs)
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
-# Set a blazingly fast keyboard repeat rate
-# ref: https://ksearch.wordpress.com/2017/06/20/increase-the-key-repeat-rate-in-os-x-sierra/
-# --
-# Reset to defaults (https://coderwall.com/p/jzuuzg/osx-set-fast-keyboard-repeat-rate):
-# defaults delete NSGlobalDomain KeyRepeat
-# defaults delete NSGlobalDomain InitialKeyRepeat
-# --
-defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool true
-defaults write NSGlobalDomain KeyRepeat -int 1
+# defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool true
+
+# "Set a blazingly fast keyboard repeat rate"
+defaults write NSGlobalDomain KeyRepeat -float 1.0
+
+# "Set a shorter Delay until key repeat"
 defaults write NSGlobalDomain InitialKeyRepeat -int 12
 
 # Disable automatic capitalization as it’s annoying when typing code
