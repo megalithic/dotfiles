@@ -237,6 +237,7 @@ Plug 'norcalli/nvim-colorizer.lua'
 Plug 'RRethy/vim-illuminate'
 Plug 'jaxbot/semantic-highlight.vim'
 Plug 'ryanoasis/vim-devicons'
+Plug 'danilamihailov/beacon.nvim'
 
 "-----------------------------
 " General behaviour plugins
@@ -318,12 +319,11 @@ endif
 
 if has('nvim')
   " Plug 'neovim/nvim-lsp'
-  Plug 'haorenW1025/diagnostic-nvim'
-  Plug 'haorenW1025/completion-nvim'
-  Plug 'wbthomason/lsp-status.nvim'
-  Plug 'steelsojka/completion-buffers'
-  Plug 'hrsh7th/vim-vsnip'
-  Plug 'hrsh7th/vim-vsnip-integ'
+  " Plug 'haorenW1025/diagnostic-nvim'
+  " Plug 'haorenW1025/completion-nvim'
+  " Plug 'wbthomason/lsp-status.nvim'
+  " Plug 'hrsh7th/vim-vsnip'
+  " Plug 'hrsh7th/vim-vsnip-integ'
 
   " SLOW (treesitter things):
   " Plug 'nvim-treesitter/nvim-treesitter'

@@ -42,29 +42,28 @@ module.start = function()
   -- Snip current highlight text in browser
   hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()
     local appName = config.preferred.browsers[1]
-    print("appName!" .. appName)
 
     hs.osascript.applescript(template([[
       -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
 
-      if (count of theSelectronFromBrave()) is greater than 0 then
-        set str to "tags: #link\n\n" & theTitleFromBrave() & "\n\n> " & theSelectionFromBrave() & "\n\n[" & theTitleFromBrave() & "](" & theCurrentUrlInBrave() & ")"
+      if (count of currentSelection()) is greater than 0 then
+        set str to "tags: #link\n\n" & currentTitle() & "\n\n> " & currentSelection() & "\n\n[" & currentTitle() & "](" & currentUrl() & ")"
         tell application "Drafts"
           make new draft with properties {content:str, tags: {"link"}}
         end tell
       end if
 
-      on theCurrentUrlInBrave()
+      on currentUrl()
         tell application "{APP_NAME}" to get the URL of the active tab in the first window
-      end theCurrentUrlInBrave
+      end currentUrl
 
-      on theSelectionFromBrave()
+      on currentSelection()
         tell application "{APP_NAME}" to execute front window's active tab javascript "getSelection().toString();"
-      end theSelectionFromBrave
+      end currentSelection
 
-      on theTitleFromBrave()
+      on currentTitle()
         tell application "{APP_NAME}" to get the title of the active tab in the first window
-      end theTitleFromBrave
+      end currentTitle
     ]], { APP_NAME = appName }))
 
     hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")

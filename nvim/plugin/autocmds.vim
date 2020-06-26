@@ -188,7 +188,7 @@ augroup gitcommit
     end
 
     " disable coc.nvim for gitcommit
-    autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
+    " autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
     " autocmd InsertEnter * execute "silent! CocDisable"
 
     " Allow automatic formatting of bulleted lists and blockquotes

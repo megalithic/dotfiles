@@ -175,7 +175,7 @@
 
   augroup Coc
     au!
-    au BufReadPre * call ToggleCoc()
+    " au BufReadPre * call ToggleCoc()
     " au CursorHoldI * silent call CocActionAsync('showSignatureHelp')
 
     " au CursorHoldI * :call <SID>show_hover_doc()
