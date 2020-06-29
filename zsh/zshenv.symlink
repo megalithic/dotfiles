@@ -100,6 +100,7 @@ path=(
   /usr/{bin,sbin}
   /{bin,sbin}
   /usr/local/opt/curl/bin
+  $HOME/.elixir_ls/rel/language_server.sh
   $path
 )
 for path_file in /etc/paths.d/*(.N); do

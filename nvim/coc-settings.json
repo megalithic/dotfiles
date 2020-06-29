@@ -240,23 +240,23 @@
         "elmAnalyseTrigger": "change"
       }
     },
-    /* "elixir": { */
-    /*   "command": "~/.elixir_ls/rel/language_server.sh", */
-    /*   "args": [], */
-    /*   "filetypes": ["elixir", "eelixir"], */
-    /*   "rootPatterns": ["mix.lock", "mix.exs"], */
-    /*   "cwd": "./", */
-    /*   "trace.server": "verbose", */
-    /*   "initializationOptions": { */
-    /*     /1* "cacheDirectory": "/tmp/elixir_ls", *1/ */
-    /*     "dialyzerEnabled": true, */
-    /*     "elixirLS": { */
-    /*       "dialyzerEnabled": true, */
-    /*       "dialyzerWarningOpts": [] */
-    /*     } */
-    /*   }, */
-    /*   "settings": {} */
-    /* } */
+    "elixir": {
+      "command": "~/.elixir_ls/rel/language_server.sh",
+      "args": [],
+      "filetypes": ["elixir", "eelixir"],
+      "rootPatterns": ["mix.lock", "mix.exs"],
+      "cwd": "./",
+      "trace.server": "verbose",
+      "initializationOptions": {
+        /* "cacheDirectory": "/tmp/elixir_ls", */
+        "dialyzerEnabled": true,
+        "elixirLS": {
+          "dialyzerEnabled": true,
+          "dialyzerWarningOpts": []
+        }
+      },
+      "settings": {}
+    }
   },
 
   "homeassistant.hostUrl": "https://megalithic.duckdns.org",

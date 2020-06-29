@@ -2,7 +2,6 @@ babel-eslint
 bash-language-server
 convert-snippets
 create-elm-app
-diagnostic-languageserver
 elm
 elm-lsp
 elm-oracle

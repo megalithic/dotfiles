@@ -14,7 +14,6 @@ if !1 | finish | endif     " FIXME: danger, will robinson!
 scriptencoding utf-16      " allow emojis in vimrc
 filetype plugin indent on  " try to recognize filetypes and load related plugins
 
-
 "===========================================================
 " SETTINGS
 "===========================================================
@@ -28,7 +27,6 @@ syntax on
 set autoindent        " Indented text
 set autoread          " Pick up external changes to files
 set autowrite         " Write files when navigating with :next/:previous
-set background=dark
 set backspace=indent,eol,start
 set belloff=all       " Bells are annoying
 set breakindent       " Wrap long lines *with* indentation
@@ -237,7 +235,6 @@ Plug 'norcalli/nvim-colorizer.lua'
 Plug 'RRethy/vim-illuminate'
 Plug 'jaxbot/semantic-highlight.vim'
 Plug 'ryanoasis/vim-devicons'
-Plug 'danilamihailov/beacon.nvim'
 
 "-----------------------------
 " General behaviour plugins
@@ -312,18 +309,18 @@ Plug 'tpope/vim-dispatch'
 " Completion plugins
 "-----------------------------
 if has('nvim') && executable('yarn') && executable('node')
-  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
+  " Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
   " Plug 'liuchengxu/vista.vim' " vista.vim
   " Plug 'elixir-lsp/elixir-ls', { 'do': { -> g:ElixirLS.compile() } }
 endif
 
 if has('nvim')
-  " Plug 'neovim/nvim-lsp'
-  " Plug 'haorenW1025/diagnostic-nvim'
-  " Plug 'haorenW1025/completion-nvim'
+  Plug 'neovim/nvim-lsp'
+  Plug 'haorenW1025/diagnostic-nvim'
+  Plug 'haorenW1025/completion-nvim'
   " Plug 'wbthomason/lsp-status.nvim'
-  " Plug 'hrsh7th/vim-vsnip'
-  " Plug 'hrsh7th/vim-vsnip-integ'
+  Plug 'hrsh7th/vim-vsnip'
+  Plug 'hrsh7th/vim-vsnip-integ'
 
   " SLOW (treesitter things):
   " Plug 'nvim-treesitter/nvim-treesitter'

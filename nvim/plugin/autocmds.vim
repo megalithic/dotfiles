@@ -1,3 +1,8 @@
+augroup vimrc
+  autocmd!
+  autocmd BufWritePost init.vim nested source $MYVIMRC
+augroup end
+
 augroup general
   autocmd!
 
