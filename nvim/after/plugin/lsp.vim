@@ -34,23 +34,6 @@ let g:completion_max_items = 30
 let g:completion_confirm_key = "\<c-y>"
 inoremap <silent><expr> <cr> <sid>handle_cr()
 
-let g:completion_customize_lsp_label = {
-      \ 'Function': ' [function]',
-      \ 'Method': ' [method]',
-      \ 'Reference': ' [reference]',
-      \ 'Enum': ' [enum]',
-      \ 'Field': 'ﰠ [field]',
-      \ 'Keyword': ' [key]',
-      \ 'Variable': ' [var]',
-      \ 'Folder': ' [folder]',
-      \ 'Snippet': ' [snip]',
-      \ 'Operator': ' [operator]',
-      \ 'Module': ' [module]',
-      \ 'Text': 'ﮜ [text]',
-      \ 'Class': ' [class]',
-      \ 'Interface': ' [interface]'
-      \}
-
 " let g:completion_customize_lsp_label = {
 "       \ 'Function': '',
 "       \ 'Method': '',
@@ -67,34 +50,6 @@ let g:completion_customize_lsp_label = {
 "       \ 'Class': '',
 "       \ 'Interface': ''
 "       \}
-
-" let g:completion_customize_lsp_label = {
-"       \ 'Function': "\uf794",
-"       \ 'Method': "\uf6a6",
-"       \ 'Variable': "\uf71b",
-"       \ 'Constant': "\uf8ff",
-"       \ 'Struct': "\ufb44",
-"       \ 'Class': "\uf0e8",
-"       \ 'Interface': "\ufa52",
-"       \ 'Text': "\ue612",
-"       \ 'Enum': "\uf435",
-"       \ 'EnumMember': "\uf02b",
-"       \ 'Module': "\uf668",
-"       \ 'Color': "\ue22b",
-"       \ 'Property': "\ufab6",
-"       \ 'Field': "\uf93d",
-"       \ 'Unit': "\uf475",
-"       \ 'File': "\uf471",
-"       \ 'Value': "\uf8a3",
-"       \ 'Event': "\ufacd",
-"       \ 'Folder': "\uf115",
-"       \ 'Keyword': "\uf893",
-"       \ 'Snippet': "\uf64d",
-"       \ 'Operator': "\uf915",
-"       \ 'Reference': "\uf87a",
-"       \ 'TypeParameter': "\uf278",
-"       \ 'Default': "\uf29c"
-"       \ }
 
 let g:completion_customize_lsp_label = {
       \ 'Function': "\uf794",
@@ -123,35 +78,15 @@ let g:completion_customize_lsp_label = {
       \ 'TypeParameter': "\uf278",
       \ 'Default': "\uf29c"
       \}
-" let g:completion_chain_complete_list = {
-"   \ 'elixirls': [
-"   \    {'complete_items': ['lsp']},
-"   \    {'mode': 'keyn'},
-"   \    {'mode': 'tags'},
-"   \    {'mode': '<c-p>'},
-"   \    {'mode': '<c-n>'},
-"   \],
-"   \ 'elmls': [
-"   \    {'complete_items': ['lsp']},
-"   \    {'mode': 'keyn'},
-"   \    {'mode': 'tags'},
-"   \    {'mode': '<c-p>'},
-"   \    {'mode': '<c-n>'},
-"   \],
-"   \ 'default': [
-"   \    {'mode': 'keyn'},
-"   \    {'mode': '<c-p>'},
-"   \    {'mode': '<c-n>'},
-"   \],
-"   \}
+
 let g:completion_chain_complete_list = {
       \ 'default' : {
       \   'default': [
       \       {'complete_items': ['lsp', 'snippet']},
-      \       {'complete_items': ['path'], 'triggered_only': ['/']},
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
       \       {'complete_items': ['buffers']}],
       \   'string' : [
-      \       {'complete_items': ['path'], 'triggered_only': ['/']}]
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
       \   },
       \ 'elixirls': [
       \    {'complete_items': ['lsp', 'snippet']},
@@ -170,11 +105,11 @@ let g:completion_chain_complete_list = {
       \ 'vim' : {
       \   'default': [
       \       {'complete_items': ['lsp', 'snippet']},
-      \       {'complete_items': ['path'], 'triggered_only': ['/']},
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
       \       {'mode': '<c-p>'},
       \       {'mode': '<c-n>'}],
       \   'string' : [
-      \       {'complete_items': ['path'], 'triggered_only': ['/']}]
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
       \   },
       \ 'cpp' : {
       \   'default': [

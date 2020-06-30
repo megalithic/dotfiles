@@ -3,10 +3,22 @@ let g:lightline = {
       \   'colorscheme': 'nova',
       \   'component': {
       \     'modified': '%#ModifiedColor#%{LightlineModified()}',
-      \     'lsp_errors': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")}',
-      \     'lsp_warnings': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")}',
-      \     'lsp_infos': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")}',
-      \     'lsp_hints': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")}',
+      \   },
+      \   'component_expand': {
+      \     'linter_errors': 'GetErrors',
+      \     'linter_warnings': 'GetWarnings',
+      \     'linter_infos': 'GetInformations',
+      \     'linter_hints': 'GetHints',
+      \   },
+      \   'component_type': {
+      \     'readonly': 'error',
+      \     'modified': 'raw',
+      \     'linter_checking': 'left',
+      \     'linter_ok': 'left',
+      \     'linter_errors': 'error',
+      \     'linter_warnings': 'warning',
+      \     'linter_infos': 'right',
+      \     'linter_hints': 'right',
       \   },
       \   'component_function': {
       \     'readonly': 'LightlineReadonly',
@@ -16,18 +28,6 @@ let g:lightline = {
       \     'branch': 'LightlineBranch',
       \     'lineinfo': 'LightlineLineInfo',
       \     'percent': 'LightlinePercent',
-      \   },
-      \   'component_type': {
-      \     'readonly': 'error',
-      \     'modified': 'raw',
-      \     'linter_checking': 'left',
-      \     'linter_warnings': 'warning',
-      \     'linter_errors': 'error',
-      \     'linter_ok': 'left',
-      \     'lsp_errors': 'error',
-      \     'lsp_warnings': 'warning',
-      \     'lsp_infos': 'tabsel',
-      \     'lsp_hints': 'middle',
       \   },
       \   'component_function_visible_condition': {
       \     'branch': '&buftype!="nofile"',
@@ -49,7 +49,7 @@ let g:lightline = {
       \     ],
       \     'right': [
       \       ['lineinfo', 'percent'],
-      \       ['lsp_errors', 'lsp_warnings', 'lsp_hints', 'lsp_infos'],
+      \       ['linter_errors', 'linter_warnings', 'linter_infos', 'linter_hints'],
       \       ['filetype', 'fileformat'],
       \     ],
       \   },
@@ -72,6 +72,11 @@ let g:lightline = {
       \   },
       \ }
 
+let g:indicator_errors = "\uf05e "
+let g:indicator_warnings = "\uf071 "
+let g:indicator_infos = "\uf7fc "
+let g:indicator_hints = "\ufbe7 "
+
 let g:lightline#ale#indicator_ok = "\uf42e  "
 let g:lightline#ale#indicator_warnings = '  '
 let g:lightline#ale#indicator_errors = '  '
@@ -84,6 +89,13 @@ let g:lsp_warning_sign = '  '
 let g:lsp_error_sign = '  '
 let g:lsp_hint_sign = '‣ '
 let g:lsp_info_sign = '‣ '
+
+au User LspDiagnosticsChanged call lightline#update()
+" au User ClapOnExit call lightline#update()
+au BufEnter call lightline#update()
+au BufLeave call lightline#update()
+au BufDelete call lightline#update()
+au BufWritePost,TextChanged,TextChangedI * call lightline#update()
 
 function! UpdateStatusBar(timer)
   call lightline#update()
@@ -174,34 +186,22 @@ function! LightlineFileName()
   " return finalpath
 endfunction
 
-function! LightlineLspErrors() abort
-  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
-    return g:lsp_error_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")
-  else
-    return ''
-  endif
+function! GetErrors()
+	let l:all_errors = luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")
+	return l:all_errors == 0 ? '' : printf(g:indicator_errors . '%d', all_errors)
 endfunction
 
-function! LightlineLspWarnings() abort
-  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
-    return g:lsp_warning_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")
-  else
-    return ''
-  endif
+function! GetWarnings()
+	let l:all_warns = luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")
+	return l:all_warns == 0 ? '' : printf(g:indicator_warnings . '%d', all_warns)
 endfunction
 
-function! LightlineLspInfos() abort
-  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
-    return g:lsp_info_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")
-  else
-    return ''
-  endif
+function! GetInformations()
+	let l:all_infos = luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")
+	return l:all_infos == 0 ? '' : printf(g:indicator_infos . '%d', all_infos)
 endfunction
 
-function! LightlineLspHints() abort
-  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
-    return g:lsp_hint_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
-  else
-    return ''
-  endif
+function! GetHints()
+	let l:all_hints = luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
+	return l:all_hints == 0 ? '' : printf(g:indicator_hints . '%d', all_hints)
 endfunction

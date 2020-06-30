@@ -28,10 +28,10 @@ hi WarningMsg guifg=#F2C38F
 hi HintMsg guifg=#666666
 hi InformationMsg guifg=#666666
 
-hi link LspDiagnosticsError ErrorMsg
-hi link LspDiagnosticsWarning WarningMsg
-hi link LspDiagnosticsInformation InformationMsg
-hi link LspDiagnosticsHint HintMsg
+hi! link LspDiagnosticsError ErrorMsg
+hi! link LspDiagnosticsWarning WarningMsg
+hi! link LspDiagnosticsInformation InformationMsg
+hi! link LspDiagnosticsHint HintMsg
 
 hi link Debug ErrorMsg
 hi link Exception ErrorMsg
