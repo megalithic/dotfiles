@@ -221,11 +221,13 @@ Plug 'tweekmonster/startuptime.vim'
 "-----------------------------
 Plug 'trevordmiller/nova-vim' "nova-colors.vim
 " ~/.dotfiles/nvim/plugin/nova-colors.vim - options
+" Plug 'hardcoreplayers/oceanic-material'
 " Plug 'camspiers/animate.vim'
 Plug 'itchyny/lightline.vim' "lightline.vim
+" Plug 'hardcoreplayers/spaceline.vim'
 Plug 'Yggdroot/indentLine' "indentLine.vim
 Plug 'gcmt/taboo.vim' "taboo.vim
-Plug 'TaDaa/vimade' "vimade.vim
+" Plug 'TaDaa/vimade' "vimade.vim
 Plug 'dm1try/golden_size'
 " Plug 'megalithic/golden-ratio' " vertical split layout manager
 " Plug 'zhaocai/GoldenView.Vim'
@@ -316,9 +318,9 @@ endif
 
 if has('nvim')
   Plug 'neovim/nvim-lsp'
-  Plug 'haorenW1025/diagnostic-nvim'
-  Plug 'haorenW1025/completion-nvim'
-  " Plug 'wbthomason/lsp-status.nvim'
+  Plug 'nvim-lua/diagnostic-nvim'
+  Plug 'nvim-lua/completion-nvim'
+  Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
 

@@ -1,8 +1,12 @@
-" let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
+let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
 let g:lightline = {
       \   'colorscheme': 'nova',
       \   'component': {
       \     'modified': '%#ModifiedColor#%{LightlineModified()}',
+      \     'lsp_errors': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")}',
+      \     'lsp_warnings': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")}',
+      \     'lsp_infos': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")}',
+      \     'lsp_hints': '%{luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")}',
       \   },
       \   'component_function': {
       \     'readonly': 'LightlineReadonly',
@@ -12,14 +16,6 @@ let g:lightline = {
       \     'branch': 'LightlineBranch',
       \     'lineinfo': 'LightlineLineInfo',
       \     'percent': 'LightlinePercent',
-      \     'cocstatus': 'coc#status',
-      \   },
-      \   'component_expand': {
-      \     'coc_error'        : 'LightlineCocErrors',
-      \     'coc_warning'      : 'LightlineCocWarnings',
-      \     'coc_info'         : 'LightlineCocInfos',
-      \     'coc_hint'         : 'LightlineCocHints',
-      \     'coc_fix'          : 'LightlineCocFixes',
       \   },
       \   'component_type': {
       \     'readonly': 'error',
@@ -28,11 +24,10 @@ let g:lightline = {
       \     'linter_warnings': 'warning',
       \     'linter_errors': 'error',
       \     'linter_ok': 'left',
-      \     'coc_error'        : 'error',
-      \     'coc_warning'      : 'warning',
-      \     'coc_info'         : 'tabsel',
-      \     'coc_hint'         : 'middle',
-      \     'coc_fix'          : 'middle',
+      \     'lsp_errors': 'error',
+      \     'lsp_warnings': 'warning',
+      \     'lsp_infos': 'tabsel',
+      \     'lsp_hints': 'middle',
       \   },
       \   'component_function_visible_condition': {
       \     'branch': '&buftype!="nofile"',
@@ -54,7 +49,7 @@ let g:lightline = {
       \     ],
       \     'right': [
       \       ['lineinfo', 'percent'],
-      \       ['coc_error', 'coc_warning', 'coc_hint', 'coc_info'],
+      \       ['lsp_errors', 'lsp_warnings', 'lsp_hints', 'lsp_infos'],
       \       ['filetype', 'fileformat'],
       \     ],
       \   },
@@ -84,6 +79,11 @@ let g:lightline#ale#indicator_checking = '  '
 
 let g:coc_status_warning_sign = '  '
 let g:coc_status_error_sign = '  '
+
+let g:lsp_warning_sign = '  '
+let g:lsp_error_sign = '  '
+let g:lsp_hint_sign = '‣ '
+let g:lsp_info_sign = '‣ '
 
 function! UpdateStatusBar(timer)
   call lightline#update()
@@ -174,35 +174,34 @@ function! LightlineFileName()
   " return finalpath
 endfunction
 
-function! s:lightline_coc_diagnostic(kind, sign) abort
-  let info = get(b:, 'coc_diagnostic_info', 0)
-  if empty(info) || get(info, a:kind, 0) == 0
+function! LightlineLspErrors() abort
+  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
+    return g:lsp_error_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")
+  else
     return ''
   endif
-  try
-    let s = g:coc_user_config['diagnostic'][join([a:sign, 'Sign'], '')]
-  catch
-    " let s = join([a:sign, 'Sign'], '')
-    let s = ''
-  endtry
-  " echo "diagnostic sign for ".a:sign.'Sign: '.s
-  return printf('%s%d', s, info[a:kind])
 endfunction
 
-function! LightlineCocErrors() abort
-  return s:lightline_coc_diagnostic('error', 'error')
+function! LightlineLspWarnings() abort
+  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
+    return g:lsp_warning_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")
+  else
+    return ''
+  endif
 endfunction
 
-function! LightlineCocWarnings() abort
-  return s:lightline_coc_diagnostic('warning', 'warning')
+function! LightlineLspInfos() abort
+  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
+    return g:lsp_info_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")
+  else
+    return ''
+  endif
 endfunction
 
-function! LightlineCocInfos() abort
-  return s:lightline_coc_diagnostic('information', 'info')
+function! LightlineLspHints() abort
+  if luaeval('#vim.lsp.buf_get_clients(0) ~= 0')
+    return g:lsp_hint_sign. luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
+  else
+    return ''
+  endif
 endfunction
-
-function! LightlineCocHints() abort
-  return s:lightline_coc_diagnostic('hints', 'hint')
-endfunction
-
-autocmd User CocDiagnosticChange call lightline#update()
