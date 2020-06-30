@@ -295,7 +295,6 @@ Plug 'wellle/targets.vim'                                         " improved tar
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --no-bash' }
 Plug 'junegunn/fzf.vim' " fzf.vim
 " Plug 'liuchengxu/vim-clap', { 'do': ':Clap install-binary!' }
-" Plug 'vn-ki/coc-clap'
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
@@ -308,14 +307,8 @@ Plug 'mattn/vim-findroot', {'for': ['javascript']} " findroot.vim
 Plug 'tpope/vim-dispatch'
 
 "-----------------------------
-" Completion plugins
+" LSP/Completion plugins
 "-----------------------------
-if has('nvim') && executable('yarn') && executable('node')
-  " Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'} " coc.vim
-  " Plug 'liuchengxu/vista.vim' " vista.vim
-  " Plug 'elixir-lsp/elixir-ls', { 'do': { -> g:ElixirLS.compile() } }
-endif
-
 if has('nvim')
   Plug 'neovim/nvim-lsp'
   Plug 'nvim-lua/diagnostic-nvim'
@@ -323,11 +316,8 @@ if has('nvim')
   Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
-
-  " SLOW (treesitter things):
-  " Plug 'nvim-treesitter/nvim-treesitter'
-  " Plug 'vigoux/completion-treesitter'
 endif
+
 
 "-----------------------------
 " Git plugins

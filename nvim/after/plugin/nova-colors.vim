@@ -15,31 +15,28 @@ match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
 hi SpellBad gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
 hi SpellCap gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
+hi SpellRare gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
+hi SpellLocal gui=undercurl,underline guifg=#DF8C8C guibg=#3C4C55
 
 hi VertSplit guifg=#666666 guibg=NONE
 
 hi SignColumn guibg=NONE
 " https://neovim.io/doc/user/sign.html#:sign
 
-hi link Debug SpellBad
-hi link ErrorMsg SpellBad
-hi link Exception SpellBad
+hi ErrorMsg guifg=#DF8C8C
+hi WarningMsg guifg=#F2C38F
+hi HintMsg guifg=#666666
+hi InformationMsg guifg=#666666
 
-hi CocCodeLens ctermfg=gray guifg=#707070 " #556873
+hi link LspDiagnosticsError ErrorMsg
+hi link LspDiagnosticsWarning WarningMsg
+hi link LspDiagnosticsInformation InformationMsg
+hi link LspDiagnosticsHint HintMsg
+
+hi link Debug ErrorMsg
+hi link Exception ErrorMsg
+
 hi Blamer guifg=#707070
-
-hi CocGitAddedSign guifg=#A8CE93
-hi CocGitRemovedSign guifg=#DF8C8C
-hi CocGitChangedSign guifg=#F2C38F
-
-hi CocHintSign guifg=#666666
-hi CocHintHighlight gui=underline guifg=#666666
-
-hi CocWarningSign guifg=#F2C38F
-hi CocWarningHighlight gui=underline guifg=#F2C38F
-
-hi CocErrorSign guifg=#DF8C8C
-hi CocErrorHighlight gui=underline guifg=#DF8C8C
 
 hi ModifiedColor guifg=#DF8C8C guibg=NONE gui=bold
 hi illuminatedWord cterm=underline gui=underline
@@ -80,9 +77,6 @@ hi link gitmessengerPopupNormal CursorLine
 " Color of 'end of buffer'. To hide '~' in popup window, I recommend to use the same background
 " color as gitmessengerPopupNormal.
 hi gitmessengerEndOfBuffer term=None guifg=None guibg=None ctermfg=None ctermbg=None
-
-hi! link LspDiagnosticsError ErrorMsg
-hi! link LspDiagnosticsWarning WarningMsg
 
 " hi Pmenu guifg=lightgrey guibg=#4e4e4e ctermbg=239 ctermfg=lightgrey
 " hi Directory guifg=#DF8C8C

@@ -1,21 +1,21 @@
 local nvim_lsp = require('nvim_lsp')
 
-local function preview_location_callback(_, method, result)
-  if result == nil or vim.tbl_isempty(result) then
-    vim.lsp.log.info(method, 'No location found')
-    return nil
-  end
-  if vim.tbl_islist(result) then
-    vim.lsp.util.preview_location(result[1])
-  else
-    vim.lsp.util.preview_location(result)
-  end
-end
+-- local function preview_location_callback(_, method, result)
+--   if result == nil or vim.tbl_isempty(result) then
+--     vim.lsp.log.info(method, 'No location found')
+--     return nil
+--   end
+--   if vim.tbl_islist(result) then
+--     vim.lsp.util.preview_location(result[1])
+--   else
+--     vim.lsp.util.preview_location(result)
+--   end
+-- end
 
-function peek_definition()
-  local params = vim.lsp.util.make_position_params()
-  return vim.lsp.buf_request(0, 'textDocument/definition', params, preview_location_callback)
-end
+-- function peek_definition()
+--   local params = vim.lsp.util.make_position_params()
+--   return vim.lsp.buf_request(0, 'textDocument/definition', params, preview_location_callback)
+-- end
 
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
@@ -62,9 +62,12 @@ end
 
 -- CUSTOM config for all LSPs
 nvim_lsp.elixirls.setup({
-    cmd = {".cache/nvim/nvim_lsp/elixirls/elixir-ls/release/language_server.sh"},
-    settings = {},
-    log_level = 0,
+    cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/elixirls/elixir-ls/release/language_server.sh"},
+    on_attach = on_attach,
+  })
+
+nvim_lsp.elmls.setup({
+    cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
     on_attach = on_attach,
   })
 
@@ -79,11 +82,6 @@ nvim_lsp.pyls.setup({
   on_attach=on_attach
 })
 
-nvim_lsp.vimls.setup({
-  on_attach = on_attach,
-})
-
-
 local sumneko_settings = {
   runtime={
     version="LuaJIT",
@@ -91,7 +89,7 @@ local sumneko_settings = {
   diagnostics={
     enable=true,
     globals={
-      "vim", "Color", "c", "Group", "g", "s", "describe", "it", "before_each", "after_each"
+      "vim", "Color", "c", "Group", "g", "s", "describe", "it", "before_each", "after_each", "hs"
     },
   },
 }
