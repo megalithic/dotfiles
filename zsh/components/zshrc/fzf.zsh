@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 if [ -n "$(command -v fzf)" ]; then
   # -- setup fzf

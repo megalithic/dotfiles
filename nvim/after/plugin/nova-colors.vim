@@ -25,8 +25,8 @@ hi SignColumn guibg=NONE
 
 hi ErrorMsg guifg=#DF8C8C
 hi WarningMsg guifg=#F2C38F
-hi InformationMsg guifg=#666666
-hi HintMsg guifg=#707070
+hi InformationMsg guifg=#aaaaaa
+hi HintMsg guifg=#ffffff
 
 hi! link LspDiagnosticsError ErrorMsg
 hi! link LspDiagnosticsWarning WarningMsg
