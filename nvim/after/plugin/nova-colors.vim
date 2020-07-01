@@ -64,7 +64,7 @@ hi SignifySignChange ctermfg=222 guifg=#ecc48d cterm=NONE gui=NONE
 hi! link SignifySignChangeDelete    SignifySignChange
 hi! link SignifySignDeleteFirstLine SignifySignDelete
 
-hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
+hi HighlightedyankRegion gui=bold ctermbg=0 guibg=#13354A
 
 " Header such as 'Commit:', 'Author:'
 hi! link gitmessengerHeader Identifier

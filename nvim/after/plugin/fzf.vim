@@ -1,16 +1,22 @@
 if has('nvim')
-  let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
+  " let g:fzf_layout = { 'down': '~15%', 'window': { 'width': 0.6, 'height': 0.5, 'highlight': 'Todo', 'border': 'rounded' } }
   let g:fzf_layout = { 'down': '~15%' }
+  " let g:fzf_colors = {}
   let g:fzf_action = {
         \ 'ctrl-s': 'split',
         \ 'ctrl-v': 'vsplit',
         \ 'enter': 'vsplit'
         \ }
 
-  if has('nvim') || has('gui_running')
-    let $FZF_DEFAULT_OPTS .= ' --inline-info'
-  endif
-  let $FZF_DEFAULT_COMMAND='fd --type file --hidden --follow --exclude .git'
+  function! RipgrepFzf(query, fullscreen)
+    let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
+    let initial_command = printf(command_fmt, shellescape(a:query))
+    let reload_command = printf(command_fmt, '{q}')
+    let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+    call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+  endfunction
+
+  command! -nargs=* -bang Rg call RipgrepFzf(<q-args>, <bang>0)
 
   " Project-wide search for the supplied term.
   nnoremap <silent> <leader>m      :Files<CR>
