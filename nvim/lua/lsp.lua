@@ -1,5 +1,4 @@
 local nvim_lsp = require('nvim_lsp')
-local util = require('nvim_lsp/util')
 local lsp_status = require('lsp-status')
 
 lsp_status.register_progress()
@@ -83,7 +82,6 @@ nvim_lsp.bashls.setup({
     filetypes = {"sh", "zsh", "bash", "fish"},
     root_dir = function()
       local cwd = vim.fn.getcwd()
-      -- cwd = util.path.dirname
       return cwd
     end,
     on_attach = on_attach,

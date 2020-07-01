@@ -318,7 +318,6 @@ endif
 Plug 'tpope/vim-fugitive' " fugitive.vim
 Plug 'mhinz/vim-signify' " signify.vim
 Plug 'rhysd/git-messenger.vim' " git-messenger.vim
-" Plug 'APZelos/blamer.nvim' " blamer.vim
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
 Plug 'wsdjeg/vim-fetch'
 Plug 'mattn/webapi-vim'

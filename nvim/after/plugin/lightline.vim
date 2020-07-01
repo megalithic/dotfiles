@@ -93,6 +93,10 @@ let g:lsp_error_sign = '  '
 let g:lsp_hint_sign = '‣ '
 let g:lsp_info_sign = '‣ '
 
+let g:scroll_bar_chars = [
+  \  '▁', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'
+  \  ]
+
 au User LspDiagnosticsChanged call lightline#update()
 " au User ClapOnExit call lightline#update()
 au BufEnter call lightline#update()
@@ -131,7 +135,7 @@ function! LightlineLineInfo()
 endfunction
 
 function! LightlinePercent()
-  return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '%')
+  return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '% ' . Scrollbar())
 endfunction
 
 function! LightlineReadonly()
@@ -189,28 +193,46 @@ function! LightlineFileName()
   " return finalpath
 endfunction
 
-function! GetErrors()
+function! Scrollbar() abort
+  " Zero index line number so 1/3 = 0, 2/3 = 0.5, and 3/3 = 1
+  let l:current_line = line('.') - 1
+  let l:total_lines = line('$') - 1
+
+  if l:current_line == 0
+    let l:index = 0
+  elseif l:current_line == l:total_lines
+    let l:index = -1
+  else
+    let l:line_no_fraction = floor(l:current_line) / floor(l:total_lines)
+    let l:index = float2nr(l:line_no_fraction * len(g:scroll_bar_chars))
+  endif
+
+  return g:scroll_bar_chars[l:index]
+endfunction
+
+function! GetErrors() abort
 	let l:all_errors = luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")
 	return l:all_errors == 0 ? '' : printf(g:indicator_errors . '%d', all_errors)
 endfunction
 
-function! GetWarnings()
+function! GetWarnings() abort
 	let l:all_warns = luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")
 	return l:all_warns == 0 ? '' : printf(g:indicator_warnings . '%d', all_warns)
 endfunction
 
-function! GetInformations()
+function! GetInformations() abort
 	let l:all_infos = luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")
 	return l:all_infos == 0 ? '' : printf(g:indicator_infos . '%d', all_infos)
 endfunction
 
-function! GetHints()
+function! GetHints() abort
 	let l:all_hints = luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
 	return l:all_hints == 0 ? '' : printf(g:indicator_hints . '%d', all_hints)
 endfunction
 
 function! LspStatus() abort
   if luaeval('#vim.lsp.buf_get_clients() > 0')
+    return ''
     return luaeval("require('lsp-status').status()")
   endif
 
