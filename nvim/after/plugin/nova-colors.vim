@@ -25,16 +25,16 @@ hi SignColumn guibg=NONE
 
 hi ErrorMsg guifg=#DF8C8C
 hi WarningMsg guifg=#F2C38F
-hi HintMsg guifg=#666666
 hi InformationMsg guifg=#666666
+hi HintMsg guifg=#707070
 
 hi! link LspDiagnosticsError ErrorMsg
 hi! link LspDiagnosticsWarning WarningMsg
 hi! link LspDiagnosticsInformation InformationMsg
 hi! link LspDiagnosticsHint HintMsg
 
-hi link Debug ErrorMsg
-hi link Exception ErrorMsg
+hi! link Debug ErrorMsg
+hi! link Exception ErrorMsg
 
 hi Blamer guifg=#707070
 
@@ -58,22 +58,22 @@ hi DiffRemoved guifg=#DF8C8C
 hi SignifySignAdd    ctermfg=green  guifg=#A8CE93 term=NONE gui=NONE
 hi SignifySignDelete ctermfg=red    guifg=#DF8C8C cterm=NONE gui=NONE
 hi SignifySignChange ctermfg=yellow guifg=#ffff00 cterm=NONE gui=NONE
-hi link SignifySignAdd             diffAdded
-hi link SignifySignDelete          diffRemoved
+hi! link SignifySignAdd             diffAdded
+hi! link SignifySignDelete          diffRemoved
 hi SignifySignChange ctermfg=222 guifg=#ecc48d cterm=NONE gui=NONE
-hi link SignifySignChangeDelete    SignifySignChange
-hi link SignifySignDeleteFirstLine SignifySignDelete
+hi! link SignifySignChangeDelete    SignifySignChange
+hi! link SignifySignDeleteFirstLine SignifySignDelete
 
 hi HighlightedyankRegion term=bold ctermbg=0 guibg=#13354A
 
 " Header such as 'Commit:', 'Author:'
-hi link gitmessengerHeader Identifier
+hi! link gitmessengerHeader Identifier
 " Commit hash at 'Commit:' header
-hi link gitmessengerHash Comment
+hi! link gitmessengerHash Comment
 " History number at 'History:' header
-hi link gitmessengerHistory Constant
+hi! link gitmessengerHistory Constant
 " Normal color. This color is the most important
-hi link gitmessengerPopupNormal CursorLine
+hi! link gitmessengerPopupNormal CursorLine
 " Color of 'end of buffer'. To hide '~' in popup window, I recommend to use the same background
 " color as gitmessengerPopupNormal.
 hi gitmessengerEndOfBuffer term=None guifg=None guibg=None ctermfg=None ctermbg=None

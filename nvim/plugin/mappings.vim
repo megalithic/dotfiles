@@ -163,6 +163,14 @@ nnoremap <silent> <leader>z :call <sid>zoom()<cr>
 command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"
 nnoremap <Leader>T :Things<cr>
 
+" Bubble single lines
+	nnoremap <C-Up> :m .-2<CR>
+	nnoremap <C-Down> :m  .+1<CR>
+
+" Bubble multiple lines
+	vnoremap <silent> <C-Up>  @='"zxk"zP`[V`]'<CR>
+	vnoremap <silent> <C-Down>  @='"zx"zp`[V`]'<CR>
+
 " Break undo sequences into chunks (after punctuation); see: `:h i_CTRL-G_u`
 "
 " From:

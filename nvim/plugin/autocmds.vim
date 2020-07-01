@@ -63,10 +63,10 @@ augroup general
   "       \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
   "       \ |   exe "normal! g`\""
   "       \ | endif
-  autocmd BufReadPost *
-        \ if &filetype !~ 'commit\c' && line("'\"") > 0 && line("'\"") <= line("$") |
-        \   exe "normal g'\"" |
-        \ endif
+  " autocmd BufReadPost *
+  "       \ if &filetype !~ 'commit\c' && line("'\"") > 0 && line("'\"") <= line("$") |
+  "       \   exe "normal g'\"" |
+  "       \ endif
 
   " Hide status bar while using fzf commands
   if has('nvim')

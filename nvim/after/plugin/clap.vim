@@ -5,6 +5,7 @@ if has('nvim')
   let g:clap_theme = 'nord'
   let g:clap_open_action = { 'ctrl-t': 'tab split', 'ctrl-x': 'split', 'ctrl-v': 'vsplit', 'enter': 'vsplit', 'cr': 'vsplit' }
   let g:clap_layout = { 'relative': 'editor' }
+  " let g:clap_insert_mode_only = v:true
 
   function! s:clap_mappings()
     " inoremap <silent> <buffer> <Esc>   <C-R>=clap#navigation#linewise('down')<CR><C-R>=clap#navigation#linewise('up')<CR><Esc>
@@ -12,8 +13,8 @@ if has('nvim')
     " inoremap <silent> <buffer> <Tab>   <C-R>=clap#navigation#linewise('down')<CR>
     " inoremap <silent> <buffer> <S-Tab> <C-R>=clap#navigation#linewise('up')<CR>
 
-    " nnoremap <silent> <buffer> <C-f> :<c-u>call clap#navigation#scroll('down')<CR>
-    " nnoremap <silent> <buffer> <C-b> :<c-u>call clap#navigation#scroll('up')<CR>
+    nnoremap <silent> <buffer> <C-n> :<c-u>call clap#navigation#scroll('down')<CR>
+    nnoremap <silent> <buffer> <C-p> :<c-u>call clap#navigation#scroll('up')<CR>
     " nnoremap <silent> <buffer> <nowait>' :call clap#handler#tab_action()<CR>
 
     " nnoremap <silent> <buffer> sg  :<c-u>call clap#handler#try_open('ctrl-v')<CR>

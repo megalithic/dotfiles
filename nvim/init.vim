@@ -148,6 +148,9 @@ if has("nvim")
         \v:CursorVisual,
         \c:ver25-blinkon300-CursorInsert
 
+
+
+
   " Set cursor shape based on mode (:h termcap-cursor-shape)
   " Vertical bar in insert mode
   let &t_SI = "\e[6 q"
@@ -220,18 +223,11 @@ Plug 'tweekmonster/startuptime.vim'
 " Styling related plugings
 "-----------------------------
 Plug 'trevordmiller/nova-vim' "nova-colors.vim
-" ~/.dotfiles/nvim/plugin/nova-colors.vim - options
-" Plug 'hardcoreplayers/oceanic-material'
-" Plug 'camspiers/animate.vim'
 Plug 'itchyny/lightline.vim' "lightline.vim
-" Plug 'hardcoreplayers/spaceline.vim'
 Plug 'Yggdroot/indentLine' "indentLine.vim
 Plug 'gcmt/taboo.vim' "taboo.vim
-" Plug 'TaDaa/vimade' "vimade.vim
 Plug 'dm1try/golden_size'
 " Plug 'megalithic/golden-ratio' " vertical split layout manager
-" Plug 'zhaocai/GoldenView.Vim'
-" Plug 'camspiers/lens.vim'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'RRethy/vim-illuminate'
@@ -261,7 +257,7 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
-" Plug 'psliwka/vim-smoothie' " smooth page up and down movements
+Plug 'farmergreg/vim-lastplace'
 
 "-----------------------------
 " Movements/Text Objects, et al
@@ -292,9 +288,9 @@ Plug 'wellle/targets.vim'                                         " improved tar
 "-----------------------------
 " File management plugins
 "-----------------------------
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --no-bash' }
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
-Plug 'liuchengxu/vim-clap', { 'do': ':Clap install-binary!' }
+Plug 'liuchengxu/vim-clap', { 'do': ':Clap install-binary!' } " clap.vim
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
@@ -310,7 +306,7 @@ Plug 'tpope/vim-dispatch'
 " LSP/Completion plugins
 "-----------------------------
 if has('nvim')
-  Plug 'neovim/nvim-lsp'
+  Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
   Plug 'nvim-lua/diagnostic-nvim'
   Plug 'nvim-lua/completion-nvim'
   Plug 'nvim-lua/lsp-status.nvim'
