@@ -21,7 +21,7 @@ local on_attach = function(_, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
   -- require'lsp_status'.on_attach(client)
-  -- require'diagnostic'.on_attach(client)
+  -- require'diagnostic'.on_attach()
   require'completion'.on_attach({
       sorter = 'alphabet',
       matcher = {'exact', 'substring', 'fuzzy'}
