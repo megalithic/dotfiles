@@ -9,6 +9,7 @@ let g:lightline = {
       \     'linter_warnings': 'GetWarnings',
       \     'linter_infos': 'GetInformations',
       \     'linter_hints': 'GetHints',
+      \     'lsp_status': 'LspStatus',
       \   },
       \   'component_type': {
       \     'readonly': 'error',
@@ -19,6 +20,7 @@ let g:lightline = {
       \     'linter_warnings': 'warning',
       \     'linter_infos': 'right',
       \     'linter_hints': 'right',
+      \     'lsp_status': 'raw',
       \   },
       \   'component_function': {
       \     'readonly': 'LightlineReadonly',
@@ -50,6 +52,7 @@ let g:lightline = {
       \     'right': [
       \       ['lineinfo', 'percent'],
       \       ['linter_errors', 'linter_warnings', 'linter_infos', 'linter_hints'],
+      \       ['lsp_status'],
       \       ['filetype', 'fileformat'],
       \     ],
       \   },
@@ -204,4 +207,12 @@ endfunction
 function! GetHints()
 	let l:all_hints = luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
 	return l:all_hints == 0 ? '' : printf(g:indicator_hints . '%d', all_hints)
+endfunction
+
+function! LspStatus() abort
+  if luaeval('#vim.lsp.buf_get_clients() > 0')
+    return luaeval("require('lsp-status').status()")
+  endif
+
+  return ''
 endfunction

@@ -287,7 +287,6 @@ Plug 'wellle/targets.vim'                                         " improved tar
 "-----------------------------
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
-Plug 'liuchengxu/vim-clap', { 'do': ':Clap install-binary!' } " clap.vim
 
 " Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 " ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
@@ -324,6 +323,7 @@ Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
 Plug 'wsdjeg/vim-fetch'
 Plug 'mattn/webapi-vim'
 Plug 'rhysd/conflict-marker.vim'
+Plug 'itchyny/vim-gitbranch'
 
 "-----------------------------
 " Development plugins

@@ -1,5 +1,8 @@
 local nvim_lsp = require('nvim_lsp')
-local util = require 'nvim_lsp/util'
+local util = require('nvim_lsp/util')
+local lsp_status = require('lsp-status')
+
+lsp_status.register_progress()
 
 local function preview_location_callback(_, method, result)
   if result == nil or vim.tbl_isempty(result) then
@@ -18,11 +21,11 @@ function peek_definition()
   return vim.lsp.buf_request(0, 'textDocument/definition', params, preview_location_callback)
 end
 
-local on_attach = function(_, bufnr)
+local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
-  -- require'lsp_status'.on_attach(client)
   -- require'diagnostic'.on_attach()
+  lsp_status.on_attach(client)
   require'completion'.on_attach({
       sorter = 'alphabet',
       matcher = {'exact', 'substring', 'fuzzy'}
@@ -56,43 +59,48 @@ end
 local servers = {'cssls', 'html', 'jsonls', 'tsserver', 'vimls'}
 -- local servers = {'cssls', 'bashls', 'diagnosticls', 'dockerls', 'elixirls', 'elmls', 'html', 'intelephense', 'tsserver', 'jsonls', 'pyls', 'rls', 'rust_analyzer', 'sourcekit', 'vimls'}
 for _, lsp in ipairs(servers) do
-  nvim_lsp[lsp].setup {
-    on_attach = on_attach,
-  }
+  nvim_lsp[lsp].setup({
+      on_attach = on_attach,
+      capabilities = lsp_status.capabilities
+    })
 end
 
 -- CUSTOM config for all LSPs
 nvim_lsp.elixirls.setup({
     cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/elixirls/elixir-ls/release/language_server.sh"},
     on_attach = on_attach,
+    capabilities = lsp_status.capabilities,
   })
 
 nvim_lsp.elmls.setup({
     cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
     on_attach = on_attach,
+    capabilities = lsp_status.capabilities,
   })
 
 nvim_lsp.bashls.setup({
     cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
     filetypes = {"sh", "zsh", "bash", "fish"},
-    root_dir = function(_)
+    root_dir = function()
       local cwd = vim.fn.getcwd()
-      cwd = util.path.dirname
+      -- cwd = util.path.dirname
       return cwd
     end,
     on_attach = on_attach,
+    capabilities = lsp_status.capabilities,
   })
 
 nvim_lsp.pyls.setup({
-  enable=true,
-  plugins={
-    pyls_mypy={
-      enabled=true,
-      live_mode=false
-    }
-  },
-  on_attach=on_attach
-})
+    enable=true,
+    plugins={
+      pyls_mypy={
+        enabled=true,
+        live_mode=false
+      }
+    },
+    on_attach = on_attach,
+    capabilities = lsp_status.capabilities,
+  })
 
 -- nvim_lsp.diagnosticls.setup({
 --     cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/diagnosticls/node_modules/.bin/diagnostic-languageserver", "--stdio"},
@@ -113,16 +121,15 @@ local sumneko_settings = {
 sumneko_settings.Lua = vim.deepcopy(sumneko_settings)
 
 nvim_lsp.sumneko_lua.setup({
-  -- Lua LSP configuration
-  settings=sumneko_settings,
-
-  -- Runtime configurations
-  filetypes = {"lua"},
-  cmd = {
-    "/Users/replicant/.cache/nvim/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
-    "-E",
-    "/Users/replicant/.cache/nvim/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
-  },
-
-  on_attach=on_attach
-})
+    -- Lua LSP configuration
+    settings=sumneko_settings,
+    -- Runtime configurations
+    filetypes = {"lua"},
+    cmd = {
+      "/Users/replicant/.cache/nvim/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
+      "-E",
+      "/Users/replicant/.cache/nvim/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
+    },
+    on_attach = on_attach,
+    capabilities = lsp_status.capabilities,
+  })

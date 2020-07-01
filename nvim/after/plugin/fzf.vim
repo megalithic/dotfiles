@@ -1,4 +1,6 @@
 if has('nvim')
+  let $FZF_DEFAULT_COMMAND='fd --type file --hidden --follow --exclude .git'
+
   " let g:fzf_layout = { 'down': '~15%', 'window': { 'width': 0.6, 'height': 0.5, 'highlight': 'Todo', 'border': 'rounded' } }
   let g:fzf_layout = { 'down': '~15%' }
   " let g:fzf_colors = {}
@@ -40,4 +42,8 @@ if has('nvim') && !exists('g:fzf_layout')
   autocmd! FileType fzf
   autocmd  FileType fzf set laststatus=0 noshowmode noruler
         \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+endif
+
+if has('nvim') || has('gui_running')
+  let $FZF_DEFAULT_OPTS .= ' --inline-info'
 endif

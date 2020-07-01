@@ -128,14 +128,13 @@ let g:completion_chain_complete_list = {
       \}
 
 " -- diagnostic-nvim
-let g:diagnostic_level = 'Warning'
 let g:diagnostic_enable_virtual_text = 1
 let g:diagnostic_virtual_text_prefix = "\uf63d" " ' '
-let g:diagnostic_show_sign = 1
-let g:diagnostic_auto_popup_while_jump = 1
-let g:diagnostic_insert_delay = 1
-let g:diagnostic_enable_underline = 1
-let g:space_before_virtual_text = 5
+" let g:diagnostic_show_sign = 1
+" let g:diagnostic_auto_popup_while_jump = 1
+" let g:diagnostic_insert_delay = 1
+" let g:diagnostic_enable_underline = 1
+" " let g:space_before_virtual_text = 5
 
 " FIXME:
 " https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61
@@ -145,8 +144,12 @@ call sign_define("LspDiagnosticsInformationSign", {"text" : "‣", "texthl" : "L
 call sign_define("LspDiagnosticsHintSign", {"text" : "‣", "texthl" : "LspDiagnosticsWarning"})
 
 augroup lsp
-  autocmd!
-  " autocmd CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
+  au! * <buffer>
+  au User LspDiagnosticsChanged redrawstatus!
+  au User LspMessageUpdate redrawstatus!
+  au User LspStatusUpdate redrawstatus!
+
+  " au CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
 augroup END
 
 lua require 'lsp'
