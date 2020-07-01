@@ -147,7 +147,7 @@ call sign_define("LspDiagnosticsHintSign", {"text" : "‣", "texthl" : "LspDiagn
 
 augroup lsp
   autocmd!
-  autocmd CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
+  " autocmd CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
 augroup END
 
 lua require 'lsp'

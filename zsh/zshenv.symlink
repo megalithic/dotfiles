@@ -52,6 +52,7 @@ cdpath=(
 # done
 # unset path_file
 
+export ZSH=$HOME/.dotfiles/zsh
 export GOPATH=$HOME/.go
 export GOBIN=$GOPATH/bin
 export CARGOPATH=$HOME/.cargo
@@ -59,7 +60,7 @@ export CARGOBIN=$CARGOPATH/bin
 export ASDF_DIR="$HOME/.asdf"
 export ASDF_BIN=$ASDF_DIR/shims
 export ASDF_INSTALLS=$ASDF_DIR/installs
-export ASDF_LUAROCKS=$ASDF_INSTALLS/lua/5.3.4/luarocks/bin
+export ASDF_LUAROCKS=$ASDF_INSTALLS/lua/5.3.5/luarocks/bin
 
 # Set the list of directories that Zsh searches for programs.
 path=(
@@ -100,7 +101,6 @@ path=(
   /usr/{bin,sbin}
   /{bin,sbin}
   /usr/local/opt/curl/bin
-  $HOME/.elixir_ls/rel/language_server.sh
   $path
 )
 for path_file in /etc/paths.d/*(.N); do
@@ -112,7 +112,10 @@ unset path_file
 #
 # Function Paths
 #
+# fpath=( $fpath)
 fpath+=(
+  $ZSH/completions/src
+  $ZSH/functions
   $fpath
 )
 
