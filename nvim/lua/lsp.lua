@@ -5,7 +5,7 @@ lsp_status.register_progress()
 
 local function preview_location_callback(_, method, result)
   if result == nil or vim.tbl_isempty(result) then
-    vim.lsp.log.info(method, 'No location found')
+    -- vim.lsp.log.info(method, 'No location found')
     return nil
   end
   if vim.tbl_islist(result) then

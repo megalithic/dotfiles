@@ -135,7 +135,7 @@ function! LightlineLineInfo()
 endfunction
 
 function! LightlinePercent()
-  return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '% ' . Scrollbar())
+  return PrintStatusline("\uf0c9 " . line('.') * 100 / line('$') . '%')
 endfunction
 
 function! LightlineReadonly()

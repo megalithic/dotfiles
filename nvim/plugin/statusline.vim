@@ -1,216 +1,77 @@
-scriptencoding utf-8
+scriptencoding utf-16
 " set noshowmode
 " set laststatus=2
 
-" Statusline functions
-function! statusline#icon() abort
-  return luaeval("require('utils').icons.lookup_filetype(_A)", &filetype)
-endfunction
+let g:light_red     = [ '#DF8C8C', 'NONE' ]
+let g:dark_red      = [ '#F2C38F', 'NONE' ]
+let g:green         = [ '#A8CE93', 'NONE' ]
+let g:blue          = [ '#83AFE5', 'NONE' ]
+let g:cyan          = [ '#7FC1CA', 'NONE' ]
+let g:magenta       = [ '#9A93E1', 'NONE' ]
+let g:light_yellow  = [ '#DADA93', 'NONE' ]
+let g:dark_yellow   = [ '#DADA93', 'NONE' ]
 
-function! statusline#filetype() abort
-  return &filetype !=# '' ? &filetype : 'no filetype'
-endfunction
+let g:black         = [ '#3C4C55', 'NONE' ]
+let g:white         = [ '#C5D4DD', 'NONE' ]
+let g:comment_grey  = [ '#C5D4DD', 'NONE' ]
+let g:gutter_grey   = [ '#899BA6', 'NONE' ]
+" middle
+let g:cursor_grey   = [ '#3C4C55', 'NONE' ]
+" second
+let g:visual_grey   = [ '#6A7D89', 'NONE' ]
+let g:menu_grey     = g:visual_grey
+let g:special_grey  = [ '#1E272C', 'NONE' ]
+let g:vertsplit     = [ '#181a1f', 'NONE' ]
 
-let g:indicator_checking = "\uf110"
-let g:indicator_warnings = "\uf071"
-let g:indicator_errors = "\uf05e"
-let g:indicator_ok = "\uf00c"
-let g:indicator_info = '🛈'
-let g:indicator_hint = '❗'
-let g:modified_symbol = ''
-let g:vcs_symbol = ''
-
-let g:spinner_frames = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
-
-let s:ale_frame_idx = 0
-
-function! statusline#ale_warnings() abort
-  let l:counts = ale#statusline#Count(bufnr(''))
-  let l:all_errors = l:counts.error + l:counts.style_error
-  let l:all_non_errors = l:counts.total - l:all_errors
-  return l:all_non_errors == 0 ? '' : printf(g:indicator_warnings . ' %d', all_non_errors)
-endfunction
-
-function! statusline#ale_errors() abort
-  let l:counts = ale#statusline#Count(bufnr(''))
-  let l:all_errors = l:counts.error + l:counts.style_error
-  return l:all_errors == 0 ? '' : printf(g:indicator_errors . ' %d', all_errors)
-endfunction
-
-function! statusline#ale_ok() abort
-  let l:counts = ale#statusline#Count(bufnr(''))
-  return l:counts.total == 0 ? g:indicator_ok : ''
-endfunction
-
-function! statusline#ale_checking() abort
-  let result = ''
-  if ale#engine#IsCheckingBuffer(bufnr(''))
-    let result = g:spinner_frames[s:ale_frame_idx % len(g:spinner_frames)]
-    let s:ale_frame_idx = s:ale_frame_idx + 1
-  else
-    let s:ale_frame_idx = 0
-  endif
-  return result
-endfunction
-
-function! statusline#ale_enabled() abort
-  return (get(g:, 'ale_enabled', 0) == 1 && getbufvar(bufnr(''), 'ale_linted', 0) > 0) || getbufvar(bufnr(''), 'ale_linted', 0) > 0
-endfunction
-
-function! statusline#ale() abort
-  if !statusline#ale_enabled()
-    return ''
-  endif
-
-  let l:icon = ' 🍺 '
-  let l:checking = statusline#ale_checking()
-
-  if l:checking !=# ''
-    return l:icon . l:checking . ' '
-  endif
-
-  let l:ok = statusline#ale_ok()
-  if l:ok !=# ''
-    return l:icon . l:ok . ' '
-  endif
-
-  let l:warnings = statusline#ale_warnings()
-  let l:errors = statusline#ale_errors()
-  return l:icon . l:warnings . (l:warnings ==# '' ? '' : (l:errors ==# '' ? '' : ' ')) . l:errors . ' '
-endfunction
-
-function! statusline#gutentags_enabled() abort
-  return exists('g:gutentags_enabled') && g:gutentags_enabled == 1 && gutentags#statusline() !=# ''
-endfunction
-
-function! statusline#gutentags()
-  if !statusline#gutentags_enabled()
-    return ''
-  endif
-
-  return gutentags#statusline('[', '] ')
-endfunction
-
-function! s:trim(str)
-  if exists('*trim')
-    return trim(a:str)
-  endif
-  return substitute(a:str, '\s\+$', '', '')
-endfunction
-
-function! statusline#vc_status() abort
-  " let l:mark = ''
-  let l:mark = g:vcs_symbol
-  let l:branch = gitbranch#name()
-  let l:changes = sy#repo#get_stats()
-  let l:status = l:changes[0] > 0 ? '+' . l:changes[0] : ''
-  let l:prefix = l:changes[0] > 0 ? ' ' : ''
-  let l:status = l:changes[1] > 0 ? l:status . l:prefix . '~' . l:changes[1] : l:status
-  let l:prefix = l:changes[1] > 0 ? ' ' : ''
-  let l:status = l:changes[2] > 0 ? l:status . l:prefix . '-' . l:changes[2] : l:status
-  let l:status = l:status ==# '' ? '' : l:status . ' '
-  return l:branch !=# '' ? l:status . l:mark . ' ' . l:branch . ' ' : ''
-endfunction
-
-function! statusline#have_lsp() abort
-  return luaeval('#vim.lsp.buf_get_clients() > 0')
-endfunction
-
-function! statusline#lsp() abort
-  return luaeval("require('lsp-status').status()")
-endfunction
-
-function! statusline#lint_lsp()
-  let l:segment = ''
-  let l:have_ale = v:false
-  if statusline#ale_enabled()
-    let l:have_ale = v:true
-    let l:segment = statusline#ale()
-  endif
-
-  if statusline#have_lsp()
-    let l:segment = l:segment . statusline#lsp()
-  endif
-
-  return l:segment
-endfunction
-
-function! statusline#get_mode(mode) abort
-  let l:currentmode={
-        \'n' : 'Normal',
-        \'no' : 'N·Operator Pending',
-        \'v' : 'Visual',
-        \'V' : 'V·Line',
-        \'^V' : 'V·Block',
-        \'s' : 'Select',
-        \'S': 'S·Line',
-        \'^S' : 'S·Block',
-        \'i' : 'Insert',
-        \'R' : 'Replace',
-        \'Rv' : 'V·Replace',
-        \'c' : 'Command',
-        \'cv' : 'Vim Ex',
-        \'ce' : 'Ex',
-        \'r' : 'Prompt',
-        \'rm' : 'More',
-        \'r?' : 'Confirm',
-        \'!' : 'Shell',
-        \'t' : 'Terminal'
-        \}
-  return toupper(get(l:currentmode, a:mode, 'V-Block'))
-endfunction
-
-function! statusline#filename() abort
-  let base_name = fnamemodify(bufname('%'), ':~:.')
-  let space = min([60, float2nr(floor(0.6 * winwidth(0)))])
-  if len(base_name) <= space
-    return base_name
-  endif
-
-  return pathshorten(base_name)
-endfunction
+let g:tab_color     = g:blue
+let g:normal_color  = g:blue
+let g:insert_color  = g:green
+let g:replace_color = g:light_red
+let g:visual_color  = g:light_yellow
+let g:active_bg     = g:visual_grey
+let g:inactive_bg   = g:special_grey
 
 
 function! UpdateModeColors(mode) abort
   " Normal mode
   if a:mode ==# 'n'
-    " hi StatuslineAccent guibg=#d75f5f gui=bold guifg=#e9e9e9
-    exe 'hi StatuslineAccent guibg=#d75f5f gui=bold guifg=#e9e9e9'
+    exe 'hi StatuslineAccent gui=bold guifg=' . g:black . ' guibg=' . g:normal_color
     " Insert mode
   elseif a:mode ==# 'i'
-    exe 'hi StatuslineAccent guifg=#e9e9e9 gui=bold guibg=#dab997'
+    exe 'hi StatuslineAccent gui=bold guifg=' . g:black . ' guibg=' . g:insert_color
     " Replace mode
   elseif a:mode ==# 'R'
-    exe 'hi StatuslineAccent guifg=#e9e9e9 gui=bold guibg=#afaf00'
+    exe 'hi StatuslineAccent gui=bold guifg=' . g:black . ' guibg=' . g:replace_color
     " Command mode
   elseif a:mode ==# 'c'
-    exe 'hi StatuslineAccent guifg=#e9e9e9 gui=bold guibg=#83adad'
+    " FIXME: this is the original color, convert to nova colors
+    exe 'hi StatuslineAccent gui=bold guifg=#e9e9e9 guibg=#83adad'
     " Terminal mode
   elseif a:mode ==# 't'
-    exe 'hi StatuslineAccent guifg=#e9e9e9 gui=bold guibg=#6f6f6f'
+    " FIXME: this is the original color, convert to nova colors
+    exe 'hi StatuslineAccent gui=bold guifg=#e9e9e9 guibg=#6f6f6f'
     " Visual mode
   else
-    exe 'hi StatuslineAccent guifg=#e9e9e9 gui=bold guibg=#f485dd'
+    exe 'hi StatuslineAccent gui=bold guifg=' . g:black . ' guibg=' . g:visual_color
   endif
 
   if &modified
-    " hi StatuslineFilename guifg=#d75f5f gui=bold guibg=#3a3a3a
-    exe 'hi StatuslineFilename guifg=#d75f5f gui=bold guibg=#3a3a3a'
+    exe 'hi StatuslineFilename gui=bold guifg=' . g:light_red . ' guibg=' . g:black
   else
-    exe 'hi StatuslineFilename guifg=#e9e9e9 gui=bold guibg=#3a3a3a'
+    exe 'hi StatuslineFilename gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
   endif
+
   " Return empty string so as not to display anything in the statusline
   return ''
 endfunction
 
 function! SetModifiedSymbol(modified) abort
   if a:modified == 1
-    " hi StatuslineModified guibg=#3a3a3a gui=bold guifg=#d75f5f
-    exe 'hi StatuslineModified guibg=#3a3a3a gui=bold guifg=#d75f5f'
+    exe 'hi StatuslineModified gui=bold guifg=' . g:light_red . ' guibg=' . g:black
 
     return g:modified_symbol
   else
-    exe 'hi StatuslineModified guibg=#3a3a3a gui=bold guifg=#afaf00'
+    exe 'hi StatuslineModified gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
     return ''
   endif
 endfunction

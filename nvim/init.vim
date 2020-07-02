@@ -201,6 +201,8 @@ let mapleader = ","
 
 "===========================================================
 " PLUGINS
+"
+" ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim - custom plugin config
 "===========================================================
 
 " Automatically install vim-plug and run PlugInstall if vim-plug is not found.

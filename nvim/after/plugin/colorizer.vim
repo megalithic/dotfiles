@@ -1,1 +1,1 @@
-lua require'colorizer'.setup()
+" lua require'colorizer'.setup()
