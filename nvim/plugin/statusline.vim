@@ -2,27 +2,6 @@ scriptencoding utf-16
 " set noshowmode
 " set laststatus=2
 
-let g:light_red     = [ '#DF8C8C', 'NONE' ]
-let g:dark_red      = [ '#F2C38F', 'NONE' ]
-let g:green         = [ '#A8CE93', 'NONE' ]
-let g:blue          = [ '#83AFE5', 'NONE' ]
-let g:cyan          = [ '#7FC1CA', 'NONE' ]
-let g:magenta       = [ '#9A93E1', 'NONE' ]
-let g:light_yellow  = [ '#DADA93', 'NONE' ]
-let g:dark_yellow   = [ '#DADA93', 'NONE' ]
-
-let g:black         = [ '#3C4C55', 'NONE' ]
-let g:white         = [ '#C5D4DD', 'NONE' ]
-let g:comment_grey  = [ '#C5D4DD', 'NONE' ]
-let g:gutter_grey   = [ '#899BA6', 'NONE' ]
-" middle
-let g:cursor_grey   = [ '#3C4C55', 'NONE' ]
-" second
-let g:visual_grey   = [ '#6A7D89', 'NONE' ]
-let g:menu_grey     = g:visual_grey
-let g:special_grey  = [ '#1E272C', 'NONE' ]
-let g:vertsplit     = [ '#181a1f', 'NONE' ]
-
 let g:tab_color     = g:blue
 let g:normal_color  = g:blue
 let g:insert_color  = g:green

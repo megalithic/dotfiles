@@ -3,7 +3,7 @@ function! s:nova_engage() abort
   hi clear SpellBad
   hi clear SpellCap
 
-  " -- nova color constants
+  " -- nova color constants --
 
   let g:normal_text = "#c5d4dd"
   let g:bg = "#3c4c55"
@@ -22,7 +22,32 @@ function! s:nova_engage() abort
   let g:separator = "#666666"
   let g:incsearch = "#fffacd"
 
-  " -- set color highlights
+
+  " -- statusline constants --
+
+  let g:light_red     = g:error
+  let g:dark_red      = "#d75f5f"
+  let g:green         = g:ok
+  let g:blue          = g:default
+  let g:cyan          = g:selection
+  let g:magenta       = "#9a93e1"
+  let g:light_yellow  = "#dada93"
+  let g:dark_yellow   = "#dada93"
+
+  let g:black         = g:bg
+  let g:white         = "#c5d4dd"
+  let g:comment_grey  = "#c5d4dd"
+  let g:gutter_grey   = "#899ba6"
+  " middle
+  let g:cursor_grey   = g:bg
+  " second
+  let g:visual_grey   = "#6A7D89"
+  let g:menu_grey     = g:visual_grey
+  let g:special_grey  = "#1E272C"
+  let g:vertsplit     = "#181a1f"
+
+
+  " -- set custom colorscheme highlights --
 
   exe 'hi CursorLineNr guibg=#333333 gui=italic guifg=' . g:cursorlinenr
   exe 'hi VertSplit guibg=NONE gui=NONE guifg=' . g:separator
@@ -107,10 +132,11 @@ function! s:nova_engage() abort
   " hi elixirPrivateDefine guifg=#ecc48d
   " hi elixirPrivateFunctionDeclaration guifg=#ecc48d
 
-  " -- statusline
 
-  " hi StatusLine          guifg=#d485ad     guibg=NONE     gui=NONE
-  " hi StatusLineNC        guifg=#d75f5f     guibg=NONE     gui=bold
+  " -- statusline highlights --
+
+  " exe 'hi Statusline gui=bold guifg=' . g:magenta . ' guibg=NONE'
+  " exe 'hi Statusline gui=bold guifg=' . g:dark_red . ' guibg=NONE'
   hi! link StatuslineSeparator VertSplit
   " hi StatuslineFiletype guifg=#d9d9d9 gui=none guibg=#3a3a3a
   exe 'hi StatuslineFiletype gui=bold guifg=' . g:light_red . ' guibg=' . g:black
@@ -136,8 +162,9 @@ function! s:nova_engage() abort
   exe 'hi StatuslineFiletype gui=bold guifg=' . g:light_red . ' guibg=' . g:black
 
 
+  " -- load colorizer --
+  " FIXME: does this belong here?
 
-  " -- load colorizer
   lua require'colorizer'.setup()
 endfunction
 
