@@ -35,8 +35,8 @@ function! s:nova_engage() abort
   let g:dark_yellow   = "#dada93"
 
   let g:black         = g:bg
-  let g:white         = "#c5d4dd"
-  let g:comment_grey  = "#c5d4dd"
+  let g:white         = g:normal_text
+  let g:comment_grey  = g:normal_text
   let g:gutter_grey   = "#899ba6"
   " middle
   let g:cursor_grey   = g:bg
@@ -45,6 +45,14 @@ function! s:nova_engage() abort
   let g:menu_grey     = g:visual_grey
   let g:special_grey  = "#1E272C"
   let g:vertsplit     = "#181a1f"
+
+  let g:tab_color     = g:blue
+  let g:normal_color  = g:blue
+  let g:insert_color  = g:green
+  let g:replace_color = g:light_red
+  let g:visual_color  = g:light_yellow
+  let g:active_bg     = g:visual_grey
+  let g:inactive_bg   = g:special_grey
 
 
   " -- set custom colorscheme highlights --
@@ -136,30 +144,38 @@ function! s:nova_engage() abort
   " -- statusline highlights --
 
   " exe 'hi Statusline gui=bold guifg=' . g:magenta . ' guibg=NONE'
-  " exe 'hi Statusline gui=bold guifg=' . g:dark_red . ' guibg=NONE'
+  " exe 'hi StatuslineNC gui=bold guifg=' . g:dark_red . ' guibg=NONE'
   hi! link StatuslineSeparator VertSplit
-  " hi StatuslineFiletype guifg=#d9d9d9 gui=none guibg=#3a3a3a
-  exe 'hi StatuslineFiletype gui=bold guifg=' . g:light_red . ' guibg=' . g:black
+  exe 'hi Statusline gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineAccent gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineBoolean gui=bold guifg=' . g:warning . ' guibg=' . g:black
+  exe 'hi StatuslineModified gui=bold guifg=' . g:light_red . ' guibg=' . g:black
+  exe 'hi StatuslineFilename gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineFilenameModified gui=bold guifg=' . g:light_red . ' guibg=' . g:black
   " hi StatuslinePercentage guibg=#3a3a3a gui=none guifg=#dab997
   exe 'hi StatuslinePercentage gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineNormal guibg=#3a3a3a gui=none guifg=#e9e9e9
-  exe 'hi StatuslineNormal gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineVC guibg=#3a3a3a gui=none guifg=#a9a9a9
-  exe 'hi StatuslineVC gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineLintWarn guibg=#3a3a3a gui=none guifg=#ffcf00
-  exe 'hi StatuslineLintWarn gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineLintChecking guibg=#3a3a3a gui=none guifg=#458588
-  exe 'hi StatuslineLintChecking gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineLintError guibg=#3a3a3a gui=none guifg=#d75f5f
-  exe 'hi StatuslineLintError gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineLintOk guibg=#3a3a3a gui=none guifg=#b8bb26
-  exe 'hi StatuslineLintOk gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineLint guibg=#e9e9e9 guifg=#3a3a3a
-  exe 'hi StatuslineLint gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineLineCol guibg=#3a3a3a gui=none guifg=#878787
-  exe 'hi StatuslineCol gui=bold guifg=' . g:light_red . ' guibg=' . g:black
-  " hi StatuslineFiletype guibg=#3a3a3a gui=none guifg=#e9e9e9
-  exe 'hi StatuslineFiletype gui=bold guifg=' . g:light_red . ' guibg=' . g:black
+  exe 'hi StatuslineNormal gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineVCS gui=NONE guifg=' . g:normal_text . ' guibg=' . g:visual_grey
+
+  exe 'hi StatuslineLspError gui=bold guifg=' . g:black . ' guibg=' . g:error
+  hi! link StatuslineError StatuslineLspError
+  exe 'hi StatuslineLspWarn gui=bold guifg=' . g:black . ' guibg=' . g:warning
+  hi! link StatuslineWarning StatuslineLspWarn
+  exe 'hi StatuslineLspHint gui=bold guifg=' . g:black . ' guibg=' . g:hint
+  exe 'hi StatuslineLspInformation gui=bold guifg=' . g:black . ' guibg=' . g:information
+  exe 'hi StatuslineLsp gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
+
+  " exe 'hi StatuslineLintWarn gui=bold guifg=' . g:warning . ' guibg=' . g:black
+  " exe 'hi StatuslineLintError gui=bold guifg=' . g:error . ' guibg=' . g:black
+  " exe 'hi StatuslineLintHint gui=bold guifg=' . g:error . ' guibg=' . g:black
+  " exe 'hi StatuslineLintInformation gui=bold guifg=' . g:error . ' guibg=' . g:black
+  " exe 'hi StatuslineLintChecking gui=bold guifg=' . g:light_yellow . ' guibg=' . g:black
+  " exe 'hi StatuslineLintOk gui=bold guifg=' . g:ok . ' guibg=' . g:black
+  " exe 'hi StatuslineLint gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
+  " exe 'hi StatuslineLineCol gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
+  exe 'hi StatuslineLineInfo gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
+  exe 'hi StatuslineFiletype gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
 
 
   " -- load colorizer --

@@ -1,4 +1,3 @@
-let status_timer = timer_start(1000, 'UpdateStatusBar', { 'repeat': -1 })
 let g:lightline = {
       \   'colorscheme': 'nova',
       \   'component': {
@@ -97,15 +96,8 @@ let g:scroll_bar_chars = [
   \  '▁', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'
   \  ]
 
-au User LspDiagnosticsChanged call lightline#update()
-" au User ClapOnExit call lightline#update()
-au BufEnter call lightline#update()
-au BufLeave call lightline#update()
-au BufDelete call lightline#update()
-au BufWritePost,TextChanged,TextChangedI * call lightline#update()
-
-function! UpdateStatusBar(timer)
-  call lightline#update()
+function! UpdateStatusBar()
+  " call lightline#update()
 endfunction
 
 function! PrintStatusline(v)
@@ -238,3 +230,19 @@ function! LspStatus() abort
 
   return ''
 endfunction
+
+augroup lightline
+  au!
+  " au User LspDiagnosticsChanged call lightline#update()
+  " " au User ClapOnExit call lightline#update()
+  " au BufEnter call lightline#update()
+  " au BufLeave call lightline#update()
+  " au BufDelete call lightline#update()
+  " au BufWritePost,TextChanged,TextChangedI * call lightline#update()
+
+  " au User LspDiagnosticsChanged call UpdateStatusBar()
+  " au BufEnter * call UpdateStatusBar()
+  " au BufLeave * call UpdateStatusBar()
+  " au BufDelete * call UpdateStatusBar()
+  " au BufWritePost,TextChanged,TextChangedI * call UpdateStatusBar()
+augroup END

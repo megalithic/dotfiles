@@ -222,7 +222,7 @@ Plug 'tweekmonster/startuptime.vim'
 " Styling related plugings
 "-----------------------------
 Plug 'trevordmiller/nova-vim' "nova-colors.vim
-Plug 'itchyny/lightline.vim' "lightline.vim
+" Plug 'itchyny/lightline.vim' "lightline.vim
 Plug 'Yggdroot/indentLine' "indentLine.vim
 Plug 'gcmt/taboo.vim' "taboo.vim
 Plug 'dm1try/golden_size'

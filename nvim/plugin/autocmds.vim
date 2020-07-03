@@ -9,6 +9,9 @@ augroup general
   " if more than 1 files are passed to vim as arg, open them in vertical splits
   if argc() > 1
     silent vertical all
+    " execute "normal! \<c-w>="
+    " call lightline#update()
+    " silent :ColorizerAttachToBuffer
   endif
 
   autocmd BufRead * nohls
@@ -29,7 +32,6 @@ augroup general
   " Trigger `autoread` when files changes on disk
   " https://unix.stackexchange.com/questions/149209/refresh-changed-content-of-file-opened-in-vim/383044#383044
   " https://vi.stackexchange.com/questions/13692/prevent-focusgained-autocmd-running-in-command-line-editing-mode
-  set autoread
   autocmd FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif
   " Notification after file change
   " https://vi.stackexchange.com/questions/13091/autocmd-event-for-autoread

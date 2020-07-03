@@ -1,15 +1,8 @@
 scriptencoding utf-16
-" set noshowmode
-" set laststatus=2
 
-let g:tab_color     = g:blue
-let g:normal_color  = g:blue
-let g:insert_color  = g:green
-let g:replace_color = g:light_red
-let g:visual_color  = g:light_yellow
-let g:active_bg     = g:visual_grey
-let g:inactive_bg   = g:special_grey
-
+" function! PrintStatusline(part) abort
+"   return &buftype ==? 'nofile' ? '' : a:part
+" endfunction
 
 function! UpdateModeColors(mode) abort
   " Normal mode
@@ -37,7 +30,7 @@ function! UpdateModeColors(mode) abort
   if &modified
     exe 'hi StatuslineFilename gui=bold guifg=' . g:light_red . ' guibg=' . g:black
   else
-    exe 'hi StatuslineFilename gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
+    exe 'hi StatuslineFilename gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
   endif
 
   " Return empty string so as not to display anything in the statusline
@@ -56,44 +49,127 @@ function! SetModifiedSymbol(modified) abort
 endfunction
 
 
-" function! generate_statusline() abort
+" -- generate the statusline --
 
-" endfunction
+function! s:LspStatus(bufnum) abort
+  let l:sl = ''
+  let l:ale_diagnostics = ale#statusline#Count(a:bufnum)
+  let l:errors = luaeval('vim.lsp.util.buf_diagnostics_count("Error")')
 
-" -- generate the statusline
+  " Add ALE errors
+  let l:errors = l:errors + l:ale_diagnostics.error
+  let l:errors = l:errors + l:ale_diagnostics.style_error
+  if l:errors
+    let l:sl .= ' %#StatuslineError %< '
+    let l:sl .= ' %#StatuslineError#' .. g:indicator_errors .. l:errors
+    let l:sl .= ' %#StatuslineError %< '
+  endif
+  let l:warnings = luaeval('vim.lsp.util.buf_diagnostics_count("Warning")')
+  " Add ALE warnings
+  let l:warnings = l:warnings + l:ale_diagnostics.warning
+  let l:warnings = l:warnings + l:ale_diagnostics.style_warning
+  if l:warnings
+    let l:sl .= ' %#StatuslineWarning# %< '
+    let l:sl .= ' %#StatuslineWarning#' .. g:indicator_warnings .. l:warnings
+    let l:sl .= ' %#StatuslineWarning# %< '
+  endif
+  return l:sl
+endfunction
 
-set statusline=%{UpdateModeColors(mode())}
+" This function just outputs the content colored by the supplied colorgroup
+" number, e.g. num = 2 -> User2 it only colors the input if the window is the
+" currently focused one
+function! s:Color(active, num, content)
+  if a:active
+    return '%#' . a:num . '#' . a:content . '%*'
+  else
+    return a:content
+  endif
+endfunction
 
-" Left side items
-set statusline+=%#StatuslineAccent#\ %{statusline#get_mode(mode())}\ %<
+function! Statusline(winnum) abort
+  let active = a:winnum == winnr()
+  let bufnum = winbufnr(a:winnum)
 
-" Filetype icon
-set statusline+=%#StatuslineFiletype#\ %{statusline#icon()}
+  let type = getbufvar(bufnum, '&buftype')
+  let name = bufname(bufnum)
+  let modified = getbufvar(bufnum, '&modified')
 
-" Modified status
-set statusline+=%#StatuslineModified#%{SetModifiedSymbol(&modified)}
+  let sl = ''
 
-" Filename
-set statusline+=%#StatuslineFilename#\ %{statusline#filename()}\ %<
+  " Mode
+  if active
+    let sl .= <SID>Color(active, 'StatuslineAccent', ' %<')
+    let sl .= '%{UpdateModeColors(mode())}'
+    let sl .= <SID>Color(active, 'StatuslineAccent', '%{statusline#get_mode(mode())}')
+    let sl .= <SID>Color(active, 'StatuslineAccent', ' %<')
+  endif
 
-" Paste and RO
-set statusline+=%#StatuslineFilename#%{&paste?'PASTE\ ':''}
-set statusline+=%{&paste&&&readonly?'\ ':''}%r%{&readonly?'\ ':''}
+  " VCS
+  if active
+    let sl .= <SID>Color(active, 'StatuslineVCS', ' %<')
+    let sl .= <SID>Color(active, 'StatuslineVCS', '%{statusline#vc_status()}')
+    let sl .= <SID>Color(active, 'StatuslineVCS', ' %<')
+  endif
 
-" Line and Column
-set statusline+=%#StatuslineLineCol#(Ln\ %l/%L,\ %#StatuslineLineCol#Col\ %c)\ %<
+  " File name
+  let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
+  let sl .= <SID>Color(active, modified ? 'StatuslineFilenameModified' : 'StatuslineFilename', '%{expand("%:p:h:t")}/%{expand("%:p:t")}')
+  let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
 
-" Right side items
-set statusline+=%=
+  " File modified
+  let sl .= <SID>Color(active, 'StatuslineModified', modified ? ' ' . g:modified_symbol : '')
 
-" VCS
-set statusline+=%#StatuslineVC#%{statusline#vc_status()}\
+  " Read only
+  let readonly = getbufvar(bufnum, '&readonly')
+  let sl .= <SID>Color(active, 'StatuslineBoolean', readonly ? ' ' . g:readonly_symbol : '')
 
-" Linters/LSP
-set statusline+=%(%#StatuslineLint#%{statusline#lint_lsp()}%)%#StatuslineFiletype#
-"
-" " ALE status
-" set statusline+=%{statusline#ale_enabled()?'':'\ '}%(%#StatuslineLint#%{statusline#ale()}%)
-"
-" " LSP
-" set statusline+=%{statusline#have_lsp()?'':'\ '}%(%#StatuslineLint#%{statusline#lsp()}%)%#StatuslineFiletype#
+  " Paste
+  if active && &paste
+    let sl .= <SID>Color(active, 'StatuslineBoolean', ' P')
+  endif
+
+  " Right side
+  let sl .= <SID>Color(active, 'Statusline', '%=')
+  " let sl .= '%='
+
+  " Filetype & icon
+  if active
+    let sl .= <SID>Color(active, 'StatuslineFiletype', ' %<')
+    let sl .= <SID>Color(active, 'StatuslineFiletypeIcon', '%{statusline#icon()} ')
+    let sl .= <SID>Color(active, 'StatuslineFiletype', '%{statusline#filetype()}')
+    let sl .= <SID>Color(active, 'StatuslineFiletype', ' %<')
+  endif
+
+  " LSP & ALE status
+  if active
+    " let sl .= <SID>Color(active, 'Statusline', <SID>LspStatus(bufnum))
+    "" set statusline+=%(%#StatuslineLint#%{statusline#lint_lsp()}%)%#StatuslineFiletype#
+    let sl .= <SID>Color(active, 'StatuslineLspError', '%{statusline#lsp_errors()}')
+    let sl .= <SID>Color(active, 'StatuslineLspWarning', '%{statusline#lsp_warnings()}')
+    " set statusline+=%(%#StatuslineLspError#%{statusline#lsp_errors()}%)
+    " set statusline+=%(%#StatuslineLspWarning#%{statusline#lsp_warnings()}%)
+    " set statusline+=%(%#StatuslineLspInformation%{statusline#lsp_informations()}%)
+    " set statusline+=%(%#StatuslineLspHint%{statusline#lsp_hints()}%)
+  endif
+
+  " Line, Column and Percent
+  if active
+    let sl .= <SID>Color(active, 'StatuslineAccent', ' %<')
+    let sl .= <SID>Color(active, 'StatuslineAccent', '%{statusline#lineinfo()}')
+    let sl .= <SID>Color(active, 'StatuslineAccent', ' %<')
+  endif
+
+  return sl
+endfunction
+
+function! s:RefreshStatusline()
+  for nr in range(1, winnr('$'))
+    call setwinvar(nr, '&statusline', '%!Statusline(' . nr . ')')
+  endfor
+endfunction
+
+augroup statusline
+  autocmd!
+  autocmd VimEnter,WinEnter,BufWinEnter * call <SID>RefreshStatusline()
+augroup END
