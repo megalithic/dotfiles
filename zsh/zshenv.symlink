@@ -1,6 +1,29 @@
 #!/bin/zsh
 
 #
+# Utils
+#
+
+is_linux() { [ "$(uname)" = "Linux" ]; }
+is_mac() { [ "$(uname)" = "Darwin" ]; }
+
+#
+# Applications
+#
+
+if is_mac; then
+    export BROWSER='open'
+else
+    # export BROWSER='firefox-developer-edition'
+fi
+
+if is_linux; then
+    export TERMINAL="kitty --single-instance --listen-on unix:/tmp/mykitty -o allow_remote_control=yes"
+else
+    export TERMINAL="kitty"
+fi
+
+#
 # Defines environment variables.
 #
 
@@ -16,6 +39,47 @@ export VISUAL='nvim'
 export SUDO_EDITOR='nvim'
 export ALTERNATE_EDITOR='vim'
 export PAGER='less'
+
+#
+# Language
+#
+
+if [[ -z "$LANG" ]]; then
+  export LANG='en_US.UTF-8'
+fi
+export LC_ALL='en_US.UTF-8'
+
+# duplicated in .zshrc
+export DOTFILES="$HOME/.dotfiles"
+export DOTDIR=$DOTFILES
+export DOTS=$DOTFILES
+export PRIVATES="$DOTS/private"
+export PRIVATE=$PRIVATES
+# export ZDOTDIR="$DOTS/zsh"
+# export ZSH=$ZDOTDIR
+# export ZSH_HOME=$ZDOTDIR
+# export ZSHHOME=$ZDOTDIR
+
+export GOPATH="$HOME/.go"
+export GOBIN="$GOPATH/bin"
+export CARGOPATH="$HOME/.cargo"
+export CARGOBIN="$CARGOPATH/bin"
+export ASDF_DIR="$HOME/.asdf"
+# export ASDF_BIN="$ASDF_DIR/shims"
+export ASDF_SHIMS="$ASDF_DIR/shims"
+export ASDF_INSTALLS="$ASDF_DIR/installs"
+export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
+
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+
+if [ ! -w ${XDG_RUNTIME_DIR:="/run/user/$UID"} ]; then
+  XDG_RUNTIME_DIR=/tmp
+fi
+export XDG_RUNTIME_DIR
+
+export ZINIT_HOME=$XDG_CONFIG_HOME/zinit
 
 #
 # Paths
@@ -52,17 +116,6 @@ cdpath=(
 # done
 # unset path_file
 
-export ZSH="$HOME/.dotfiles/zsh"
-export GOPATH="$HOME/.go"
-export GOBIN="$GOPATH/bin"
-export CARGOPATH="$HOME/.cargo"
-export CARGOBIN="$CARGOPATH/bin"
-export ASDF_DIR="$HOME/.asdf"
-# export ASDF_BIN="$ASDF_DIR/shims"
-export ASDF_SHIMS="$ASDF_DIR/shims"
-export ASDF_INSTALLS="$ASDF_DIR/installs"
-export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
-
 # Set the list of directories that Zsh searches for programs.
 path=(
   ./bin
@@ -70,7 +123,7 @@ path=(
   ./vendor/bundle/bin
   $HOME/bin
   $HOME/.bin
-  $HOME/.dotfiles/bin
+  $DOTS/bin
   $ASDF_DIR
   $ASDF_BIN
   $ASDF_SHIMS
@@ -104,6 +157,8 @@ path=(
   /usr/{bin,sbin}
   /{bin,sbin}
   /usr/local/opt/curl/bin
+  # $HOME/.yarn/bin
+  # $HOME/.config/yarn/global/node_modules/.bin
   $path
 )
 for path_file in /etc/paths.d/*(.N); do
@@ -117,8 +172,8 @@ unset path_file
 #
 # fpath=( $fpath)
 fpath+=(
-  $ZSH/completions/src
-  $ZSH/functions
+  $ZDOTDIR/completions/src
+  $ZDOTDIR/functions
   $fpath
 )
 
@@ -137,9 +192,9 @@ fi
 #
 # asdf/ruby/node/misc
 #
-# source "$HOME/.dotfiles/zsh/components/zshrc/completion.zsh"
-# source "$HOME/.dotfiles/zsh/components/zshrc/colors.zsh"
-# source "$HOME/.dotfiles/zsh/components/zshrc/asdf.zsh"
+# source "$DOTS/zsh/components/zshrc/completion.zsh"
+# source "$DOTS/zsh/components/zshrc/colors.zsh"
+# source "$DOTS/zsh/components/zshrc/asdf.zsh"
 
 
 #
