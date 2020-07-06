@@ -81,6 +81,7 @@ brew "gettext"
 brew "gist"
 brew "git"
 brew "gitin"
+brew "git-delta"
 brew "git-extras"
 brew "git-flow"
 brew "global", args: ["with-ctags", "with-pygments"]

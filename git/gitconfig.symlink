@@ -177,7 +177,8 @@
   new = green italic
 
 [core]
-  pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
+  ; pager = `brew --prefix git`/share/git-core/contrib/diff-highlight/diff-highlight | less
+  pager = delta --dark --diff-so-fancy --theme='Nord'
   whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
 	editor = env VIM_MINIMAL=1 nvim +startinsert
   excludesfile = ~/.gitignore
@@ -212,6 +213,14 @@
   markEmptyLines = true
   stripLeadingSymbols = true
 
+[delta]
+  ; plus-color = "#012800"
+  ; minus-color = "#340001"
+  theme = 'Nord'
+
+[interactive]
+  diffFilter = delta --color-only --theme='Nord'
+
 [ghq]
   root = ~/code
 
@@ -229,11 +238,11 @@
   pr   = https://{host}/{path}/pull/{short_ref}
   file = "https://{host}/{path}/{file.directory? and :tree or :blob}/{short_rev}/{file}{lines && \"#L%s\" % lines.join(\"-\")}"
 
-[pager]
-  #diff = diff-so-fancy | less --tabs=4 -RFX
-  diff = diff-so-fancy | less --tabs=1,5 -RFX --pattern '^(Date|added|deleted|modified): '
-	show = diff-so-fancy | less --tabs=1,5 -RFX
-  log = diff-so-fancy | less --tab=1,5 -RFX
+; [pager]
+;   #diff = diff-so-fancy | less --tabs=4 -RFX
+;   diff = diff-so-fancy | less --tabs=1,5 -RFX --pattern '^(Date|added|deleted|modified): '
+; 	show = diff-so-fancy | less --tabs=1,5 -RFX
+;   log = diff-so-fancy | less --tab=1,5 -RFX
 
 # [interactive]
 # 	diffFilter = diff-so-fancy | less --tabs=4 -RFX
