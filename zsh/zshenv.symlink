@@ -30,8 +30,8 @@ fi
 #
 # Exports
 #
-# if [[ -f "$DOTS/zsh/components/zshrc/env.zsh" ]] ; then
-#   source "$DOTS/zsh/components/zshrc/env.zsh"
+# if [[ -f "$DOTS/zsh/components/env.zsh" ]] ; then
+#   source "$DOTS/zsh/components/env.zsh"
 # fi
 
 export EDITOR='nvim'
@@ -192,9 +192,9 @@ fi
 #
 # asdf/ruby/node/misc
 #
-# source "$DOTS/zsh/components/zshrc/completion.zsh"
-# source "$DOTS/zsh/components/zshrc/colors.zsh"
-# source "$DOTS/zsh/components/zshrc/asdf.zsh"
+# source "$DOTS/zsh/components/completion.zsh"
+# source "$DOTS/zsh/components/colors.zsh"
+# source "$DOTS/zsh/components/asdf.zsh"
 
 
 #

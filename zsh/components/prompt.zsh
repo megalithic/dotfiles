@@ -19,7 +19,7 @@ VCS_BEHIND_SYMBOL="↓"
 # DERIVED FROM: https://github.com/romkatv/gitstatus/blob/master/gitstatus.prompt.zsh
 # Sets GITSTATUS_PROMPT to reflect the state of the current git repository (empty if not
 # in a git repository).
-source "$DOTS/zsh/components/zshrc/gitstatus/gitstatus.plugin.zsh"
+source "$DOTS/zsh/plugins/gitstatus/gitstatus.plugin.zsh"
 function gitstatus_prompt_update() {
   emulate -L zsh
   typeset -g GITSTATUS_PROMPT=""

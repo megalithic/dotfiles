@@ -98,6 +98,45 @@ if has('nvim')
     endif
   endfunction
 
-  autocmd BufNewFile,BufRead */live/*.ex,*.html.leex command! -buffer R call <SID>RelatedFileForPhoenixLiveView()
-  autocmd BufNewFile,BufRead */live/*.ex,*.html.leex nnoremap <silent> <buffer> <leader>eR :call <SID>RelatedFileForPhoenixLiveView()<CR>
+  augroup ft_elixir
+    au!
+    au BufNewFile,BufRead */live/*.ex,*.html.leex command! -buffer R call <SID>RelatedFileForPhoenixLiveView()
+    au BufNewFile,BufRead */live/*.ex,*.html.leex nnoremap <silent> <buffer> <leader>eR :call <SID>RelatedFileForPhoenixLiveView()<CR>
+    au FileType elixir map <buffer> <leader>r :RunElixir<CR>
+  augroup END
+
+
+  " :Lab to open an Elixir buffer with some boilerplate to experiment with stuff.
+  " By Henrik Nyh <http://henrik.nyh.se> under the MIT license.
+  function! s:Lab()
+    tabe
+    set filetype=elixir
+
+    " Make it a scratch (temporary) buffer.
+    "setlocal buftype=nofile bufhidden=wipe noswapfile
+
+    " Close on q.
+    "map <buffer> q ZZ
+
+    " Some boilerplate please.
+    " Lab + Run so you can e.g. implement a macro in Lab and require it in Run.
+    let @x = "defmodule Lab do\nend\n\ndefmodule Run do\n  def run do\n  end\nend\n\nRun.run"
+    -1put x
+
+    " Delete blank line at end.
+    $d
+
+    " Jump to first line.
+    1
+  endfunction
+  command! Lab call <SID>Lab()
+
+  " <leader>,r to run the current buffer as Elixir (even if it's not written to a file).
+  " Only enabled when the filetype is 'elixir'.
+  "
+  " By Henrik Nyh 2015-06-24 under the MIT license.
+  command! RunElixir call <SID>RunElixir()
+  function! s:RunElixir()
+    exe "! elixir -e " . shellescape(join(getline(1, "$"), "\n"), 1)
+  endfunction
 endif

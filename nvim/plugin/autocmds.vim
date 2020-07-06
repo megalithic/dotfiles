@@ -1,10 +1,8 @@
-" augroup vimrc
-"   autocmd!
-"   autocmd BufWritePost init.vim nested source $MYVIMRC
-" augroup end
 
 augroup general
   autocmd!
+
+  autocmd BufWritePost init.vim nested source $MYVIMRC
 
   " if more than 1 files are passed to vim as arg, open them in vertical splits
   if argc() > 1
@@ -16,8 +14,18 @@ augroup general
 
   autocmd BufRead * nohls
 
-  " Automatically equalize window splits.
-  autocmd VimResized * wincmd =
+  " " Automatically equalize window splits.
+  " autocmd VimResized * wincmd =
+  " autocmd WinEnter * let current_win = winnr() |
+  "       \ let NT_win = bufwinnr('NERD_tree_*') |
+  "       \ if NT_win ==# current_win |
+  "       \	execute 'noautocmd setlocal winwidth='.g:NERDTreeWinSize |
+  "       \ elseif NT_win !=# -1 |
+  "       \	execute 'noautocmd '.NT_win.'wincmd w' |
+  "       \	noautocmd wincmd p |
+  "       \	resize |
+  "       \	vertical resize |
+  "       \ endif
 
   " Syntax highlight a minimum of 2,000 lines. This greatly helps scroll
   " performance.
@@ -59,6 +67,8 @@ augroup general
   "   call cursor(l, c)
   " endfunction
   " autocmd FileType * autocmd BufWritePre <buffer> :call <SID>TrimWhitespace()
+
+  autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
   " Remember cursor position between vim sessions
   " autocmd BufReadPost *
@@ -209,10 +219,10 @@ augroup gitcommit
     setlocal formatoptions+=q " Allow formatting of comments with `gq`
 
     setlocal textwidth=72
-    " setl spell
-    " setl spelllang=en
-    " setl nolist
-    " setl nonumber
+    setl spell
+    setl spelllang=en
+    setl nolist
+    setl nonumber
   endfunction
 
   autocmd BufNewFile,BufRead .git/index setlocal nolist

@@ -1,3 +1,6 @@
+-- Lua setup of many things..
+
+
 -- nvim-colorizer
 -- ===
 -- See https://github.com/norcalli/nvim-colorizer.lua
@@ -9,6 +12,7 @@ require 'colorizer'.setup {
   stylus = { rgb_fn = true; };
   vim = { names = false; };
   tmux = { names = false; };
+  'eelixir';
   'javascript';
   'javascriptreact';
   'typescript';

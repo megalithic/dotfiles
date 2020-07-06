@@ -176,12 +176,6 @@ function! s:nova_engage() abort
   exe 'hi StatuslineLineInfo gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
   exe 'hi StatuslineFiletype gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
   exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
-
-
-  " -- load colorizer --
-  " FIXME: does this belong here?
-
-  lua require'colorizer'.setup()
 endfunction
 
 augroup nova_colors

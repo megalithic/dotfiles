@@ -255,7 +255,6 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
-Plug 'farmergreg/vim-lastplace'
 
 "-----------------------------
 " Movements/Text Objects, et al
@@ -403,5 +402,12 @@ iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
+
+"
+"===========================================================
+" LUA configs
+"===========================================================
+
+luafile $HOME/.config/nvim/lua/init.lua
 
 " vim:ft=vim

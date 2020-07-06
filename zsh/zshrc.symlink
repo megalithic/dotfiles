@@ -54,26 +54,26 @@ export ZSHHOME=$ZDOTDIR
 # NOTE: source order matters!
 #
 # zsh core config
-source "$DOTS/zsh/components/zshrc/env.zsh"
-source "$DOTS/zsh/components/zshrc/aliases.zsh"
-source "$DOTS/zsh/components/zshrc/functions.zsh"
-source "$DOTS/zsh/components/zshrc/colors.zsh"
-source "$DOTS/zsh/components/zshrc/opts.zsh"
-source "$DOTS/zsh/components/zshrc/keybindings.zsh"
-source "$DOTS/zsh/components/zshrc/completion.zsh"
+source "$DOTS/zsh/components/env.zsh"
+source "$DOTS/zsh/components/aliases.zsh"
+source "$DOTS/zsh/components/functions.zsh"
+source "$DOTS/zsh/components/colors.zsh"
+source "$DOTS/zsh/components/opts.zsh"
+source "$DOTS/zsh/components/keybindings.zsh"
+source "$DOTS/zsh/components/completion.zsh"
 
 # ancillary config
-source "$DOTS/zsh/components/zshrc/git.zsh"
-source "$DOTS/zsh/components/zshrc/tmux.zsh"
-source "$DOTS/zsh/components/zshrc/ssh.zsh"
-source "$DOTS/zsh/components/zshrc/kitty.zsh"
+source "$DOTS/zsh/components/git.zsh"
+source "$DOTS/zsh/components/tmux.zsh"
+source "$DOTS/zsh/components/ssh.zsh"
+source "$DOTS/zsh/components/kitty.zsh"
 
 # plugin config
-source "$DOTS/zsh/components/zshrc/fzf.zsh"
-source "$DOTS/zsh/components/zshrc/zlua.zsh"
-source "$DOTS/zsh/components/zshrc/asdf.zsh"
-# source "$DOTS/zsh/components/zshrc/autosuggestions.plugin.zsh" # <- breaks my prompt's path display
-source "$DOTS/zsh/components/zshrc/syntax-highlighting.plugin.zsh"
+source "$DOTS/zsh/components/fzf.zsh"
+source "$DOTS/zsh/components/zlua.zsh"
+source "$DOTS/zsh/components/asdf.zsh"
+# source "$DOTS/zsh/plugins/autosuggestions.plugin.zsh" # <- breaks my prompt's path display
+source "$DOTS/zsh/plugins/syntax-highlighting.plugin.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
@@ -82,7 +82,7 @@ then
   source ~/.localrc
 fi
 
-source "$DOTS/zsh/components/zshrc/prompt.zsh"
+source "$DOTS/zsh/components/prompt.zsh"
 
 # leave this commented out so fzf won't try to keep adding it on updates
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
