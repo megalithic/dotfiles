@@ -15,7 +15,7 @@
 # https://unix.stackexchange.com/questions/71253/what-should-shouldnt-go-in-zshenv-zshrc-zlogin-zprofile-zlogout
 
 # uncomment to for zsh profiling; note the `zprof` at the end of this file too
-zmodload zsh/zprof
+# zmodload zsh/zprof
 
 ### Added by Zinit's installer
 # if [[ ! -f $HOME/.zinit/bin/zinit.zsh ]]; then
@@ -88,4 +88,4 @@ source "$DOTS/zsh/components/zshrc/prompt.zsh"
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # uncomment to for zsh profiling
-zprof
+# zprof
