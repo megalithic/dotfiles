@@ -88,6 +88,3 @@ compctl -g '~/.teamocil/*(:t:r)' teamocil
 if command -v kitty >/dev/null; then
   kitty + complete setup zsh | source /dev/stdin
 fi
-
-# Completion for elixir mix tasks
-source "$DOTS/bin/mix-completion.zsh"

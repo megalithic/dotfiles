@@ -21,8 +21,9 @@ eval "${@:-sleep 1}" &
 exec 3>&1 >&2
 
 PID=$!
-SPINNER_PARTS="/-\|"
-SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏" # https://github.com/sindresorhus/cli-spinners/blob/master/spinners.json
+# SPINNER_PARTS="/-\|"
+# SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏" # https://github.com/sindresorhus/cli-spinners/blob/master/spinners.json
+SPINNER_PARTS="⣾⣽⣻⢿⡿⣟⣯⣷"
 ACC=1
 
 printf " "

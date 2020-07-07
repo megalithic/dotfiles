@@ -79,22 +79,7 @@ source "$DOTS/zsh/components/kitty.zsh"
 source "$DOTS/zsh/components/fzf.zsh"
 source "$DOTS/zsh/components/zlua.zsh"
 source "$DOTS/zsh/components/asdf.zsh"
-
-zinit light-mode for \
-	zdharma/history-search-multi-word \
-	zsh-users/zsh-history-substring-search \
-	zinit-zsh/z-a-submods \
-
-zinit wait'0a' lucid for \
-	atinit"zicompinit; zicdreplay" \
-    	zdharma/fast-syntax-highlighting \
-	atload"_zsh_autosuggest_start" \
-    	zsh-users/zsh-autosuggestions \
-	blockf \
-		svn submods'zsh-users/zsh-completions -> external' \
-			PZT::modules/completion \
-	nocd depth=1 atinit='ZSH_BASH_COMPLETIONS_FALLBACK_LAZYLOAD_DISABLE=true' \
-    	3v1n0/zsh-bash-completions-fallback \
+source "$DOTS/zsh/components/zinit.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
