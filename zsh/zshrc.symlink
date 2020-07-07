@@ -15,20 +15,27 @@
 # https://unix.stackexchange.com/questions/71253/what-should-shouldnt-go-in-zshenv-zshrc-zlogin-zprofile-zlogout
 
 # uncomment to for zsh profiling; note the `zprof` at the end of this file too
-# zmodload zsh/zprof
+[[ $ZPROFILE ]] && zmodload zsh/zprof
 
-### Added by Zinit's installer
-# if [[ ! -f $HOME/.zinit/bin/zinit.zsh ]]; then
-#   print -P '%F{33}▓▒░ %F{220}Installing DHARMA Initiative Plugin Manager (zdharma/zinit)…%f'
-#   command mkdir -p $HOME/.zinit
-#   command git clone https://github.com/zdharma/zinit $HOME/.zinit/bin && \
-#     print -P '%F{33}▓▒░ %F{34}Installation successful.%f' || \
-#     print -P '%F{160}▓▒░ The clone has failed.%f'
-# fi
-# source "$HOME/.zinit/bin/zinit.zsh"
-# autoload -Uz _zinit
-# (( ${+_comps} )) && _comps[zinit]=_zinit
-### End of Zinit installer's chunk
+# Added by Zinit's installer
+ if [[ ! -f $HOME/.zinit/bin/zinit.zsh ]]; then
+   print -P '%F{33}▓▒░ %F{220}Installing DHARMA Initiative Plugin Manager (zdharma/zinit)…%f'
+   command mkdir -p $HOME/.zinit
+   command git clone https://github.com/zdharma/zinit $HOME/.zinit/bin && \
+     print -P '%F{33}▓▒░ %F{34}Installation successful.%f' || \
+     print -P '%F{160}▓▒░ The clone has failed.%f'
+ fi
+ source "$HOME/.zinit/bin/zinit.zsh"
+ autoload -Uz _zinit
+ (( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Load a few important annexes, without Turbo
+# (this is currently required for annexes)
+zinit light-mode for \
+    zinit-zsh/z-a-as-monitor \
+    zinit-zsh/z-a-patch-dl \
+    zinit-zsh/z-a-bin-gem-node
+# End of Zinit installer's chunk
 
 # Ensures we use vi-mode keybindings
 # bindkey -v
@@ -72,8 +79,22 @@ source "$DOTS/zsh/components/kitty.zsh"
 source "$DOTS/zsh/components/fzf.zsh"
 source "$DOTS/zsh/components/zlua.zsh"
 source "$DOTS/zsh/components/asdf.zsh"
-# source "$DOTS/zsh/plugins/autosuggestions.plugin.zsh" # <- breaks my prompt's path display
-source "$DOTS/zsh/plugins/syntax-highlighting.plugin.zsh"
+
+zinit light-mode for \
+	zdharma/history-search-multi-word \
+	zsh-users/zsh-history-substring-search \
+	zinit-zsh/z-a-submods \
+
+zinit wait'0a' lucid for \
+	atinit"zicompinit; zicdreplay" \
+    	zdharma/fast-syntax-highlighting \
+	atload"_zsh_autosuggest_start" \
+    	zsh-users/zsh-autosuggestions \
+	blockf \
+		svn submods'zsh-users/zsh-completions -> external' \
+			PZT::modules/completion \
+	nocd depth=1 atinit='ZSH_BASH_COMPLETIONS_FALLBACK_LAZYLOAD_DISABLE=true' \
+    	3v1n0/zsh-bash-completions-fallback \
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
@@ -88,4 +109,4 @@ source "$DOTS/zsh/components/prompt.zsh"
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # uncomment to for zsh profiling
-# zprof
+[[ $ZPROFILE ]] && zprof

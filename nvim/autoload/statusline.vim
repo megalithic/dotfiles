@@ -1,7 +1,3 @@
-scriptencoding utf-16
-" set noshowmode
-" set laststatus=2
-
 let g:indicator_checking = "\uf110"
 let g:indicator_errors = "\uf05e "
 let g:indicator_warnings = "\uf071 "

@@ -254,6 +254,9 @@ alias syncoctoprint="scp pi@octopi.local:/home/pi/.octoprint/config.yaml $HOME/D
 alias dif="kitty +kitten diff"
 alias zshtime="/usr/bin/time $(which zsh) -i -c echo"
 # alias zshtime="for i in $(seq 1 10); do /usr/bin/time zsh -i -c exit; done"
+alias timezsh="time $(which zsh) -i -c exit"
+alias zshprofile="time ZPROFILE=1 $(which zsh) -i -c exit"
+alias zshclear="rm -f ~/.zcompdump ~/.zsh-dotfiles-compiled.zsh"
 alias vimtime="ruby $HOME/.dotfiles/bin/vim-plugins-profile.rb nvim"
 
 # Intuitive map function

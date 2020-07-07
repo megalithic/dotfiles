@@ -1,9 +1,5 @@
 scriptencoding utf-16
 
-" function! PrintStatusline(part) abort
-"   return &buftype ==? 'nofile' ? '' : a:part
-" endfunction
-
 function! UpdateModeColors(mode) abort
   " Normal mode
   if a:mode ==# 'n'
@@ -114,7 +110,8 @@ function! Statusline(winnum) abort
 
   " File name
   let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
-  let sl .= <SID>Color(active, modified ? 'StatuslineFilenameModified' : 'StatuslineFilename', '%{expand("%:p:h:t")}/%{expand("%:p:t")}')
+  let sl .= <SID>Color(active, modified ? 'StatuslineFilenameModified' : 'StatuslineFilename', '%{statusline#filename()}')
+  " let sl .= <SID>Color(active, modified ? 'StatuslineFilenameModified' : 'StatuslineFilename', '%{expand("%:p:h:t")}/%{expand("%:p:t")}')
   let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
 
   " File modified
