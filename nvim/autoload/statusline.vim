@@ -18,7 +18,7 @@ let s:ale_frame_idx = 0
 function! statusline#icon() abort
   " return luaeval("require('utils').icons.lookup_filetype(_A)", &filetype)
 
-  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() : 'no ft') : ''
+  return winwidth(0) > 70 ? (strlen(&filetype) ? WebDevIconsGetFileTypeSymbol() : '') : ''
 endfunction
 
 function! statusline#filetype() abort

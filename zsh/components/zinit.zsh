@@ -30,10 +30,10 @@ zinit ice as"completion"
 zinit snippet OMZ::plugins/mix-fast/mix-fast.plugin.zsh
 
 # Replace zsh's default completion selection menu with fzf!
-zinit light Aloxaf/fzf-tab
+# zinit light Aloxaf/fzf-tab
 
 # reminders for aliases if whole command is typed
-# zinit light djui/alias-tips
+zinit light djui/alias-tips
 
 # zsh-abbr manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 zinit ice wait lucid
