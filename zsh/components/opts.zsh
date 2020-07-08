@@ -72,7 +72,8 @@ setopt histignoredups
 
 # ===== Completion
 setopt always_to_end # When completing from the middle of a word, move the cursor to the end of the word
-# setopt auto_menu # show completion menu on successive tab press. needs unsetop menu_complete to work
+setopt auto_list # list completions
+setopt auto_menu # show completion menu on successive tab press. needs unsetop menu_complete to work; TABx2 to start a tab complete menu
 setopt auto_name_dirs # any parameter that is set to the absolute name of a directory immediately becomes a name for that directory
 setopt complete_in_word # Allow completion from within a word/phrase
 

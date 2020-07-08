@@ -8,7 +8,7 @@ zinit light-mode for \
 zinit wait'0a' lucid for \
   atinit"zicompinit; zicdreplay" \
       zdharma/fast-syntax-highlighting \
-  atload"_zsh_autosuggest_start" \
+  atload"_zsh_autosuggest_start" atinit='ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"; ZSH_AUTOSUGGEST_USE_ASYNC=1' \
       zsh-users/zsh-autosuggestions \
   blockf \
     svn submods'zsh-users/zsh-completions -> external' \
@@ -33,4 +33,13 @@ zinit snippet OMZ::plugins/mix-fast/mix-fast.plugin.zsh
 zinit light Aloxaf/fzf-tab
 
 # reminders for aliases if whole command is typed
-zinit light djui/alias-tips
+# zinit light djui/alias-tips
+
+# zsh-abbr manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
+zinit ice wait lucid
+zinit light olets/zsh-abbr # or `load` instead of `light` to enable zinit reporting
+
+# my custom prompt with gitstatus plugin
+zinit ice wait lucid
+zinit light romkatv/gitstatus
+zinit snippet ~/.dotfiles/zsh/components/prompt.zsh

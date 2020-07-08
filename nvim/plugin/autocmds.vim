@@ -14,22 +14,9 @@ augroup general
 
   autocmd BufRead * nohls
 
-  " " Automatically equalize window splits.
-  " autocmd VimResized * wincmd =
-  " autocmd WinEnter * let current_win = winnr() |
-  "       \ let NT_win = bufwinnr('NERD_tree_*') |
-  "       \ if NT_win ==# current_win |
-  "       \	execute 'noautocmd setlocal winwidth='.g:NERDTreeWinSize |
-  "       \ elseif NT_win !=# -1 |
-  "       \	execute 'noautocmd '.NT_win.'wincmd w' |
-  "       \	noautocmd wincmd p |
-  "       \	resize |
-  "       \	vertical resize |
-  "       \ endif
-
   " Syntax highlight a minimum of 2,000 lines. This greatly helps scroll
   " performance.
-  autocmd Syntax * syntax sync minlines=2000
+  autocmd Syntax * syntax sync minlines=1000
 
   " Restore default Enter/Return behaviour for the command line window.
   autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>
@@ -68,56 +55,35 @@ augroup general
   " endfunction
   " autocmd FileType * autocmd BufWritePre <buffer> :call <SID>TrimWhitespace()
 
+  " Remember cursor position between vim sessions (FIXME: doesn't really work
+  " with neovim, it seems)
   autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
-
-  " Remember cursor position between vim sessions
-  " autocmd BufReadPost *
-  "       \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
-  "       \ |   exe "normal! g`\""
-  "       \ | endif
-  " autocmd BufReadPost *
-  "       \ if &filetype !~ 'commit\c' && line("'\"") > 0 && line("'\"") <= line("$") |
-  "       \   exe "normal g'\"" |
-  "       \ endif
 
   " Hide status bar while using fzf commands
   if has('nvim')
-    autocmd! FileType fzf
-    autocmd  FileType fzf set laststatus=0 | autocmd BufLeave,WinLeave <buffer> set laststatus=2
-  endif
-
-  " Auto-close preview window when completion is done.
-  autocmd! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
-
-  " When terminal buffer ends allow to close it
-  if has('nvim')
+    " When terminal buffer ends allow to close it
     autocmd TermClose * noremap <buffer><silent><CR> :bd!<CR>
     autocmd TermClose * noremap <buffer><silent><ESC> :bd!<CR>
     autocmd! TermOpen * setlocal nonumber norelativenumber
     autocmd! TermOpen * if &buftype == 'terminal'
           \| set nonumber norelativenumber
           \| endif
+
+    autocmd TermOpen *        setlocal conceallevel=0 colorcolumn=0
+    autocmd TermOpen *        startinsert
+    autocmd BufEnter term://* startinsert
   endif
+
+  " Auto-close preview window when completion is done.
+  autocmd! InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
   autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')
   autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')
 
+  " flash/highlight, in a fancy way, when text is yanked
   if exists('##TextYankPost')
     autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
   endif
-
-
-  " coc.nvim - highlight all occurences of word under cursor
-  " disable for now: annoying while on tmate and other things
-  " autocmd CursorHold * silent call CocActionAsync('highlight')
-
-  " Name tmux window/tab based on current opened buffer
-  " autocmd BufReadPost,FileReadPost,BufNewFile,BufEnter *
-  " autocmd BufReadPre,FileReadPre,BufNewFile,BufEnter *
-  "       \ let tw = system("tmux display-message -p '\\#W'")
-  "       \| echo "current tmux window: " . tw
-  "       \| call system("tmux rename-window 'nvim | " . expand("%:t") . "'")
-  " autocmd VimLeave * call system("tmux rename-window '" . tw . "'")
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
@@ -144,13 +110,6 @@ augroup general
 
   " Preview window with line wrap
   autocmd WinEnter * if &previewwindow | setlocal wrap | endif
-
-  " Neovim terminal tweaks.
-  if has("nvim")
-    autocmd TermOpen *        setlocal conceallevel=0 colorcolumn=0
-    autocmd TermOpen *        startinsert
-    autocmd BufEnter term://* startinsert
-  endif
 
   " reload vim configuration (aka vimrc)
   command! ReloadVimConfigs so $MYVIMRC
@@ -203,10 +162,6 @@ augroup gitcommit
     if getline('.') ==? ''
       start
     end
-
-    " disable coc.nvim for gitcommit
-    " autocmd BufNew,BufEnter *.json,*.vim,*.lua execute "silent! CocEnable"
-    " autocmd InsertEnter * execute "silent! CocDisable"
 
     " Allow automatic formatting of bulleted lists and blockquotes
     " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim

@@ -150,9 +150,9 @@ alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
 # CONFIG EDITS
 # -----------------------------------------------------------------------------
-alias ez="nvim ~/.zshrc"
-alias ezz="nvim ~/.zshenv"
-alias ezl="nvim ~/.localrc"
+alias ez="nvim ~/.dotfiles/zsh/zshrc.symlink"
+alias ezz="nvim ~/.dotfiles/zsh/zshenv.symlink"
+alias ezl="nvim ~/.dotfiles/private/localrc.symlink"
 alias eza="nvim ~/.dotfiles/zsh/**/aliases.zsh"
 alias ezf="nvim ~/.dotfiles/zsh/**/functions.zsh"
 alias ezo="nvim ~/.dotfiles/zsh/**/opts.zsh"

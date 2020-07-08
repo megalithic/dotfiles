@@ -259,6 +259,7 @@ Plug 'sickill/vim-pasta' " context-aware pasting
 "-----------------------------
 " Movements/Text Objects, et al
 "-----------------------------
+Plug 'tpope/vim-rsi'
 Plug 'kana/vim-operator-user'
 " -- provide ai and ii for indent blocks
 " -- provide al and il for current line
@@ -308,7 +309,7 @@ if has('nvim')
   Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
-  Plug 'steelsojka/completion-buffers'
+  " Plug 'steelsojka/completion-buffers'
 endif
 
 

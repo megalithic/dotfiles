@@ -23,7 +23,7 @@ end
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
-  -- require'diagnostic'.on_attach()
+  require'diagnostic'.on_attach()
   lsp_status.on_attach(client)
   require'completion'.on_attach({
       sorter = 'alphabet',
