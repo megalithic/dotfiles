@@ -13,7 +13,7 @@ function! UpdateModeColors(mode) abort
     " Command mode
   elseif a:mode ==# 'c'
     " FIXME: this is the original color, convert to nova colors
-    exe 'hi StatuslineAccent gui=bold guifg=#e9e9e9 guibg=#83adad'
+    exe 'hi StatuslineAccent gui=bold guifg=' . g:black . ' guibg=#83adad'
     " Terminal mode
   elseif a:mode ==# 't'
     " FIXME: this is the original color, convert to nova colors

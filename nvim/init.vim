@@ -409,6 +409,6 @@ silent! colorscheme nova
 " LUA configs
 "===========================================================
 
-luafile $HOME/.config/nvim/lua/init.lua
+lua require('init')
 
 " vim:ft=vim

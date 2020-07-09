@@ -55,7 +55,7 @@ local on_attach = function(client, bufnr)
 end
 
 -- DEFAULT config for all LSPs
-local servers = {'cssls', 'html', 'jsonls', 'tsserver', 'vimls'}
+local servers = {'cssls', 'elmls', 'elixirls', 'html', 'jsonls', 'tsserver', 'vimls'}
 -- local servers = {'cssls', 'bashls', 'diagnosticls', 'dockerls', 'elixirls', 'elmls', 'html', 'intelephense', 'tsserver', 'jsonls', 'pyls', 'rls', 'rust_analyzer', 'sourcekit', 'vimls'}
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup({
@@ -63,19 +63,6 @@ for _, lsp in ipairs(servers) do
       capabilities = lsp_status.capabilities
     })
 end
-
--- CUSTOM config for all LSPs
-nvim_lsp.elixirls.setup({
-    cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/elixirls/elixir-ls/release/language_server.sh"},
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-  })
-
-nvim_lsp.elmls.setup({
-    cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-  })
 
 nvim_lsp.bashls.setup({
     cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},

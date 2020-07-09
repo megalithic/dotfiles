@@ -16,10 +16,6 @@ imap <silent><expr> <TAB>
       \ completion#trigger_completion()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
-function! s:handle_cr() abort
-  return pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
-endfunction
-
 " -- completion-nvim
 let g:completion_enable_auto_hover = 1
 let g:completion_enable_auto_popup = 1
@@ -31,8 +27,6 @@ let g:completion_enable_snippet = 'vim-vsnip'
 let g:completion_auto_change_source = 1
 let g:completion_trigger_keyword_length = 2
 let g:completion_max_items = 30
-let g:completion_confirm_key = "\<c-y>"
-inoremap <silent><expr> <cr> <sid>handle_cr()
 
 " let g:completion_customize_lsp_label = {
 "       \ 'Function': '',

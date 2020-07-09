@@ -29,8 +29,11 @@ zinit snippet OMZ::plugins/mix/_mix
 zinit ice as"completion"
 zinit snippet OMZ::plugins/mix-fast/mix-fast.plugin.zsh
 
+zinit ice as"completion"
+zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
+
 # Replace zsh's default completion selection menu with fzf!
-# zinit light Aloxaf/fzf-tab
+zinit light Aloxaf/fzf-tab
 
 # reminders for aliases if whole command is typed
 zinit light djui/alias-tips

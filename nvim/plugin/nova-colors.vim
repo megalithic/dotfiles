@@ -7,6 +7,7 @@ function! s:nova_engage() abort
 
   let g:normal_text = "#c5d4dd"
   let g:bg = "#3c4c55"
+  let g:special_bg = "#333333"
   let g:default = "#83afe5"
   let g:selection = "#7fc1ca"
   let g:ok = "#a8ce93"
@@ -57,7 +58,7 @@ function! s:nova_engage() abort
 
   " -- set custom colorscheme highlights --
 
-  exe 'hi CursorLineNr guibg=#333333 gui=italic guifg=' . g:cursorlinenr
+  exe 'hi CursorLineNr guibg=' . g:special_bg . ' gui=italic guifg=' . g:cursorlinenr
   exe 'hi VertSplit guibg=NONE gui=NONE guifg=' . g:separator
 
   exe 'hi ErrorMsg guifg=' . g:error
@@ -80,7 +81,7 @@ function! s:nova_engage() abort
 
   exe 'hi ModifiedColor guibg=NONE gui=bold guifg=' . g:error
 
-  exe 'hi gitCommitOverflow guifg=#333333 gui=underline guibg=' . g:error
+  exe 'hi gitCommitOverflow guifg=' . g:special_bg . ' gui=underline guibg=' . g:error
 
   exe 'hi DiffAdd gui=NONE guifg=' . g:added . ' guibg=' . g:bg
   exe 'hi DiffDelete gui=NONE guifg=' . g:removed . ' guibg=' . g:bg
@@ -116,8 +117,9 @@ function! s:nova_engage() abort
   hi MatchWord cterm=underline gui=underline,italic
   hi MatchParen cterm=underline gui=underline,italic
 
-  hi QuickScopePrimary guifg='#afff5f' guibg=#222222 gui=underline
-  hi QuickScopeSecondary guifg='#5fffff' guibg=#222222 gui=underline
+  exe 'hi QuickScopePrimary gui=underline guifg=#afff5f guibg=' . g:special_bg
+  exe 'hi QuickScopeSecondary gui=underline guifg=#5fffff guibg=' . g:special_bg
+  exe 'hi CleverFDefaultLabel gui=underline guifg=' . g:cursorlinenr . ' guibg=' . g:special_bg
 
   hi HighlightedyankRegion gui=bold ctermbg=0 guibg=#13354A
 
