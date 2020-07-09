@@ -20,6 +20,8 @@ VCS_BEHIND_SYMBOL="↓"
 # Sets GITSTATUS_PROMPT to reflect the state of the current git repository (empty if not
 # in a git repository).
 source "$DOTS/zsh/plugins/gitstatus/gitstatus.plugin.zsh"
+# source "$HOME/.zinit/plugins/romkatv---gitstatus/gitstatus.plugin.zsh"
+
 function gitstatus_prompt_update() {
   emulate -L zsh
   typeset -g GITSTATUS_PROMPT=""

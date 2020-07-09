@@ -180,7 +180,7 @@ function! statusline#get_mode(mode) abort
         \'rm' : 'More',
         \'r?' : 'Confirm',
         \'!' : 'Shell',
-        \'t' : 'T'
+        \'t' : "\uf120"
         \}
 
   return toupper(get(l:currentmode, a:mode, '·'))

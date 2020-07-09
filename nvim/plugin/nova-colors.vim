@@ -1,5 +1,6 @@
 function! s:nova_engage() abort
   " -- clears
+
   hi clear SpellBad
   hi clear SpellCap
 
@@ -109,7 +110,6 @@ function! s:nova_engage() abort
 
   " highlight conflicts
   match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
-
 
   hi SignColumn guibg=NONE
 
