@@ -15,9 +15,6 @@ VCS_STASHES_SYMBOL=$'\uf530'
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 
-# :: load gitstatus (from zinit install)
-source "$HOME/.zinit/plugins/romkatv---gitstatus/gitstatus.plugin.zsh"
-
 function gitstatus_prompt_update() {
   emulate -L zsh
   typeset -g GITSTATUS_PROMPT=""

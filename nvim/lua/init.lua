@@ -17,6 +17,8 @@ require 'colorizer'.setup {
   'javascriptreact';
   'typescript';
   'typescriptreact';
+  'zsh';
+  'sh';
   html = {
     mode = 'foreground';
   }

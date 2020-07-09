@@ -40,10 +40,9 @@ zinit light djui/alias-tips
 
 # zsh-abbr manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 zinit ice wait lucid
-zinit light olets/zsh-abbr # or `load` instead of `light` to enable zinit reporting
+zinit light olets/zsh-abbr
 
 # my custom prompt with gitstatus plugin
-zinit ice wait lucid
+zinit ice as"program" src"gitstatus.plugin.zsh"
 zinit light romkatv/gitstatus
-# zinit light-mode src"gitstatus.plugin.zsh" romkatv/gitstatus
 zinit snippet ~/.dotfiles/zsh/components/prompt.zsh
