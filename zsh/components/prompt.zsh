@@ -15,12 +15,8 @@ VCS_STASHES_SYMBOL=$'\uf530'
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 
-# :: load gitstatus
-# DERIVED FROM: https://github.com/romkatv/gitstatus/blob/master/gitstatus.prompt.zsh
-# Sets GITSTATUS_PROMPT to reflect the state of the current git repository (empty if not
-# in a git repository).
-source "$DOTS/zsh/plugins/gitstatus/gitstatus.plugin.zsh"
-# source "$HOME/.zinit/plugins/romkatv---gitstatus/gitstatus.plugin.zsh"
+# :: load gitstatus (from zinit install)
+source "$HOME/.zinit/plugins/romkatv---gitstatus/gitstatus.plugin.zsh"
 
 function gitstatus_prompt_update() {
   emulate -L zsh

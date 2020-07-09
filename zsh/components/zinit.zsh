@@ -45,4 +45,5 @@ zinit light olets/zsh-abbr # or `load` instead of `light` to enable zinit report
 # my custom prompt with gitstatus plugin
 zinit ice wait lucid
 zinit light romkatv/gitstatus
+# zinit light-mode src"gitstatus.plugin.zsh" romkatv/gitstatus
 zinit snippet ~/.dotfiles/zsh/components/prompt.zsh
