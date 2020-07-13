@@ -3,21 +3,73 @@ local lsp_status = require('lsp-status')
 
 lsp_status.register_progress()
 
-local function preview_location_callback(_, method, result)
+-- local function preview_location_callback(_, method, result)
+--   if result == nil or vim.tbl_isempty(result) then
+--     vim.lsp.log.info(method, 'No location found')
+--     return nil
+--   end
+--   if vim.tbl_islist(result) then
+--     vim.lsp.util.preview_location(result[1])
+--   else
+--     vim.lsp.util.preview_location(result)
+--   end
+-- end
+
+-- function peek_definition()
+--   local params = vim.lsp.util.make_position_params()
+--   return vim.lsp.buf_request(0, 'textDocument/definition', params, preview_location_callback)
+-- end
+
+function preview_location(location, context)
+  -- location may be LocationLink or Location (more useful for the former)
+  context = context or 5
+  local uri = location.targetUri or location.uri
+  if uri == nil then
+    return
+  end
+  local bufnr = vim.uri_to_bufnr(uri)
+  if not vim.api.nvim_buf_is_loaded(bufnr) then
+    vim.fn.bufload(bufnr)
+  end
+  local range = location.targetRange or location.range
+  local contents =
+  vim.api.nvim_buf_get_lines(bufnr, range.start.line - context, range["end"].line + 1 + context, false)
+  local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+  return vim.lsp.util.open_floating_preview(contents, filetype)
+end
+
+function switch_header_source()
+  vim.lsp.buf_request(
+    0,
+    "textDocument/switchSourceHeader",
+    vim.lsp.util.make_text_document_params(),
+    function(err, _, result, _, _)
+      if err then
+        print(err)
+      else
+        vim.cmd("e " .. vim.uri_to_fname(result))
+      end
+    end
+    )
+end
+
+function preview_location_callback(_, method, result, context)
+  context = context or 5
   if result == nil or vim.tbl_isempty(result) then
-    vim.lsp.log.info(method, 'No location found')
+    vim.lsp.log.info(method, "No location found")
     return nil
   end
   if vim.tbl_islist(result) then
-    vim.lsp.util.preview_location(result[1])
+    preview_location(result[1])
   else
-    vim.lsp.util.preview_location(result)
+    preview_location(result)
   end
 end
 
-function peek_definition()
+function peek_definition(context)
+  context = context or 5
   local params = vim.lsp.util.make_position_params()
-  return vim.lsp.buf_request(0, 'textDocument/definition', params, preview_location_callback)
+  return vim.lsp.buf_request(0, "textDocument/definition", params, preview_location_callback, context)
 end
 
 local on_attach = function(client, bufnr)

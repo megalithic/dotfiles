@@ -20,7 +20,7 @@ inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 let g:completion_enable_auto_hover = 1
 let g:completion_enable_auto_popup = 1
 let g:completion_auto_change_source = 1
-" let g:completion_enable_snippet = 'UltiSnips'
+let g:completion_enable_fuzzy_match = 1
 let g:completion_enable_snippet = 'vim-vsnip'
 " let g:completion_enable_auto_paren = 0
 " let g:completion_timer_cycle = 80

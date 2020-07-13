@@ -96,8 +96,8 @@ augroup general
   " autocmd BufEnter,FocusGained,InsertLeave * silent set relativenumber cursorline
   " autocmd BufLeave,FocusLost,InsertEnter   * silent set norelativenumber nocursorline
 
-  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setl number relativenumber
-  autocmd BufLeave,WinLeave * silent setl nonumber norelativenumber
+  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber
+  autocmd BufLeave,WinLeave * silent setlocal nonumber norelativenumber
 
   " toggle colorcolumn when in insertmode only
   autocmd InsertEnter * silent set colorcolumn=80
@@ -151,7 +151,7 @@ augroup gitcommit
 
   function! BufReadIndex()
     " Use j/k in status
-    setl nohlsearch
+    setlocal nohlsearch
     nnoremap <buffer> <silent> j :call search('^#\t.*','W')<Bar>.<CR>
     nnoremap <buffer> <silent> k :call search('^#\t.*','Wbe')<Bar>.<CR>
   endfunction
@@ -174,10 +174,13 @@ augroup gitcommit
     setlocal formatoptions+=q " Allow formatting of comments with `gq`
 
     setlocal textwidth=72
-    setl spell
-    setl spelllang=en
-    setl nolist
-    setl nonumber
+    setlocal spell
+    setlocal spelllang=en_us
+    setlocal complete+=kspell
+    setlocal nolist
+    setlocal nonumber
+    setlocal wrap
+    setlocal linebreak
   endfunction
 
   autocmd BufNewFile,BufRead .git/index setlocal nolist
@@ -186,12 +189,24 @@ augroup gitcommit
   autocmd BufEnter *.git/index silent normal gg0j
   autocmd BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
   autocmd FileType gitcommit,gitrebase exe BufEnterCommit()
+
+  au BufReadPost,BufNewFile *.md,*.txt,COMMIT_EDITMSG set wrap linebreak nolist spell spelllang=en_us complete+=kspell
+  au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
 augroup END
 
 augroup ft_clang
+  autocmd!
+
   autocmd FileType c setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
   autocmd FileType cpp setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
   autocmd FileType cs setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
   autocmd FileType c setlocal commentstring=/*\ %s\ */
   autocmd FileType c,cpp,cs setlocal commentstring=//\ %s
+augroup END
+
+augroup writing
+  autocmd!
+
+  au BufReadPost,BufNewFile *.md,*.txt set wrap linebreak nolist spell spelllang=en_us complete+=kspell
+  au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
 augroup END

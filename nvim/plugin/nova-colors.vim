@@ -142,6 +142,9 @@ function! s:nova_engage() abort
   " hi elixirPrivateDefine guifg=#ecc48d
   " hi elixirPrivateFunctionDeclaration guifg=#ecc48d
 
+  " a list of groups can be found at `:help lua_tree_highlight`
+  " hi LuaTreeFolderIcon guibg=blue
+
 
   " -- statusline highlights --
 

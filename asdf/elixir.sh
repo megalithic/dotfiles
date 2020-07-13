@@ -1,5 +1,8 @@
 #!/usr/bin/env zsh
 
+# REF: handy ways of asdf/elixir/erlang setup:
+# https://github.com/skbolton/titan/blob/master/elixir/init.sls
+
 # super verbose debugging of the running script:
 # set -x
 

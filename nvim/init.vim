@@ -122,6 +122,10 @@ set wildignore+=*.DS_Store
 set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
 set wrap              " Wrap long lines
 
+ " disable netrw
+let g:loaded_netrw = 1
+let g:loaded_netrwPlugin = 1
+
 " Options specific to Neovim or Vim.
 if has("nvim")
   set diffopt=filler,internal,algorithm:histogram,indent-heuristic
@@ -289,15 +293,12 @@ Plug 'wellle/targets.vim'                                         " improved tar
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
 
-" Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-" ~/.dotfiles/nvim/plugin/nerdtree.vim - options, mappings, function, events
-" Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-" ~/.dotfiles/nvim/plugin/nerdtree-git-plugin.vim - options
-
 Plug 'mhinz/vim-grepper' " grepper.vim
 Plug 'junegunn/vim-slash' " slash.vim
 Plug 'mattn/vim-findroot', {'for': ['javascript']} " findroot.vim
 Plug 'tpope/vim-dispatch'
+Plug 'kyazdani42/nvim-web-devicons' " for file icons
+Plug 'kyazdani42/nvim-tree.lua'
 
 "-----------------------------
 " LSP/Completion plugins
@@ -311,7 +312,6 @@ if has('nvim')
   Plug 'hrsh7th/vim-vsnip-integ'
   " Plug 'steelsojka/completion-buffers'
 endif
-
 
 "-----------------------------
 " Git plugins
@@ -335,6 +335,7 @@ Plug 'janko/vim-test' " test.vim
 Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'rhysd/reply.vim'
 Plug 'axvr/zepl.vim'
+Plug 'rizzatti/dash.vim'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if

@@ -80,7 +80,7 @@ source "$DOTS/zsh/components/kitty.zsh"
 source "$DOTS/zsh/components/fzf.zsh"
 source "$DOTS/zsh/components/zlua.zsh"
 source "$DOTS/zsh/components/asdf.zsh"
-source "$DOTS/zsh/components/zinit.zsh"
+source "$DOTS/zsh/components/zinit.zsh" # <- zinit.zsh is always last!11!1!
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.

@@ -50,6 +50,23 @@ if [ -n "$(command -v fzf)" ]; then
     # --border
     # --height 40%
     # --layout=reverse
+
+    FZF_TAB_COMMAND=(
+      fzf
+      --ansi   # Enable ANSI color support, necessary for showing groups
+      --expect='$continuous_trigger' # For continuous completion
+      --color=bg:$colorbg,bg+:$colorbg,spinner:$color0C,hl:$color06,gutter:$color02
+      --color=fg:$color05,header:$color0D,info:$color0A,pointer:$color09
+      --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0C
+      --color=border:$color12
+      '--color=hl:$(( $#headers == 0 ? 108 : 255 ))'
+      --nth=2,3 --delimiter='\x00'  # Don't search prefix
+      --layout=reverse --height='${FZF_TMUX_HEIGHT:=75%}'
+      --tiebreak=begin -m --bind=tab:down,btab:up,change:top,ctrl-space:toggle --cycle
+      '--query=$query'   # $query will be expanded to query string at runtime.
+      '--header-lines=$#headers' # $#headers will be expanded to lines of headers at runtime
+    )
+    zstyle ':fzf-tab:*' command $FZF_TAB_COMMAND
   }
   _gen_fzf_default_opts
 
@@ -59,4 +76,7 @@ if [ -n "$(command -v fzf)" ]; then
   export FZF_CTRL_T_COMMAND='rg --files --hidden --line-number --follow -g "!{.git,node_modules,vendor,build,_build}" 2> /dev/null'
   export FZF_ALT_C_COMMAND="fd --type d --exclude 'Library'"
   export FZF_TMUX_HEIGHT='20%'
+
+  # export FZF_CTRL_R_OPTS=""
+  export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:wrap --bind"
 fi
