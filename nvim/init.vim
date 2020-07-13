@@ -232,8 +232,7 @@ Plug 'dm1try/golden_size'
 " Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
-Plug 'RRethy/vim-illuminate'
-Plug 'jaxbot/semantic-highlight.vim'
+" Plug 'RRethy/vim-illuminate' " highlight current word under cursor
 Plug 'ryanoasis/vim-devicons'
 
 "-----------------------------

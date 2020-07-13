@@ -150,9 +150,12 @@ path=(
   $HOME/Library/Python/3.7/bin
   /usr/local/lib/python3.7/bin
   /usr/local/lib/python3.7/site-packages
+  /usr/local/opt/perl/bin
   /usr/local/opt/perl6/bin
   /usr/local/opt/perl@5.18/bin
   /usr/local/opt/perl@5.28/bin
+  /usr/local/opt/perl@5.32/bin
+  /usr/local/opt/perl@5.32
   /usr/local/opt/python@3.8/bin:$PATH
   /usr/{bin,sbin}
   /{bin,sbin}

@@ -155,6 +155,8 @@ export ERL_AFLAGS="-kernel shell_history enabled"
 # fixing an issue for weechat and wee-slack: https://blog.phusion.nl/2017/10/13/why-ruby-app-servers-break-on-macos-high-sierra-and-what-can-be-done-about-it/
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
 
+# PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib
+
 # # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/Users/replicant/.asdf/installs/python/3.8.2/python3.8/config-3.8-darwin/libpython3.8.a
 # # export LD_PRELOAD="/Users/replicant/.asdf/installs/python/3.8.2/python3.8/config-3.8-darwin/libpython3.8.a""
 # export DYLD_LIBRARY_PATH="/Users/replicant/.asdf/shims"

@@ -1,4 +1,3 @@
-
 augroup general
   autocmd!
 
@@ -33,10 +32,6 @@ augroup general
   autocmd FileChangedShellPost *
     \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
 
-  " Refresh lightline when certain things happen
-  " au TextChanged,InsertLeave,BufWritePost * call lightline#update()
-  " autocmd BufWritePost * call lightline#update()
-
   " Handle window resizing
   autocmd VimResized * execute "normal! \<c-w>="
 
@@ -55,8 +50,8 @@ augroup general
   " endfunction
   " autocmd FileType * autocmd BufWritePre <buffer> :call <SID>TrimWhitespace()
 
-  " Remember cursor position between vim sessions (FIXME: doesn't really work
-  " with neovim, it seems)
+  " Remember cursor position between vim sessions
+  " - FIXME: doesn't really work with neovim, it seems
   autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
   " Hide status bar while using fzf commands
@@ -72,6 +67,11 @@ augroup general
     autocmd TermOpen *        setlocal conceallevel=0 colorcolumn=0
     autocmd TermOpen *        startinsert
     autocmd BufEnter term://* startinsert
+
+    " flash/highlight, in a fancy way, when text is yanked
+    if exists('##TextYankPost')
+      autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
+    endif
   endif
 
   " Auto-close preview window when completion is done.
@@ -79,11 +79,6 @@ augroup general
 
   autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')
   autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')
-
-  " flash/highlight, in a fancy way, when text is yanked
-  if exists('##TextYankPost')
-    autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
-  endif
 
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
