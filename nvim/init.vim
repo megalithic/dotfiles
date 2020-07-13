@@ -122,7 +122,7 @@ set wildignore+=*.DS_Store
 set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
 set wrap              " Wrap long lines
 
- " disable netrw
+" disable netrw
 let g:loaded_netrw = 1
 let g:loaded_netrwPlugin = 1
 
@@ -253,7 +253,6 @@ Plug 'tpope/vim-commentary'
 Plug '907th/vim-auto-save' "auto-save.vim
 Plug 'rhysd/clever-f.vim' "clever-f.vim
 " Plug 'justinmk/vim-sneak'
-" Plug 'mbbill/undotree' "undotree.vim
 Plug 'tpope/vim-unimpaired' "unimpaired.vim
 Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
