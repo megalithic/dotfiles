@@ -23,6 +23,10 @@ tap "browsh-org/homebrew-browsh"
 tap "qmk/qmk"
 tap "heroku/brew"
 
+# NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
+tap "microsoft/git"
+
+
 
 # -- for qmk_toolbox --
 
@@ -212,6 +216,7 @@ cask "dropshare" # recommended by @thewatts on CiT
 cask "discord"
 cask "expressvpn"
 cask "firefox-developer-edition"
+cask "git-credential-manager-core"
 cask "google-chrome-beta"
 cask "graphiql"
 cask "hazel"

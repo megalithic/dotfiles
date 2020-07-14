@@ -6,9 +6,7 @@ augroup general
   " if more than 1 files are passed to vim as arg, open them in vertical splits
   if argc() > 1
     silent vertical all
-    " execute "normal! \<c-w>="
-    " call lightline#update()
-    " silent :ColorizerAttachToBuffer
+    " silent :ArgForVerticalEdit
   endif
 
   autocmd BufRead * nohls

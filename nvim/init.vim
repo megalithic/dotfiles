@@ -232,7 +232,6 @@ Plug 'dm1try/golden_size'
 " Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
-" Plug 'RRethy/vim-illuminate' " highlight current word under cursor
 Plug 'ryanoasis/vim-devicons'
 
 "-----------------------------
@@ -260,6 +259,7 @@ Plug 'sickill/vim-pasta' " context-aware pasting
 
 "-----------------------------
 " Movements/Text Objects, et al
+" REF: https://github.com/kana/vim-textobj-user/wiki
 "-----------------------------
 Plug 'tpope/vim-rsi'
 Plug 'kana/vim-operator-user'
@@ -283,7 +283,7 @@ Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", 
 Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
 Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
 Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
-" ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
+"     ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 "-----------------------------
 " File management plugins
