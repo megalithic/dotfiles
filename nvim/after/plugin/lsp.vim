@@ -134,8 +134,8 @@ let g:diagnostic_enable_underline = 1
 " https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61
 call sign_define("LspDiagnosticsErrorSign", {"text" : "✖", "texthl" : "LspDiagnosticsError"})
 call sign_define("LspDiagnosticsWarningSign", {"text" : "⬥", "texthl" : "LspDiagnosticsWarning"})
-call sign_define("LspDiagnosticsInformationSign", {"text" : "‣", "texthl" : "LspDiagnosticsInformation"})
-call sign_define("LspDiagnosticsHintSign", {"text" : "‣", "texthl" : "LspDiagnosticsWarning"})
+call sign_define("LspDiagnosticsInformationSign", {"text" : "\uf0da", "texthl" : "LspDiagnosticsInformation"}) " I‣
+call sign_define("LspDiagnosticsHintSign", {"text" : "\uf105", "texthl" : "LspDiagnosticsWarning"}) " H‣
 
 augroup lsp
   " au! * <buffer>
@@ -144,7 +144,7 @@ augroup lsp
   au User LspMessageUpdate redrawstatus!
   au User LspStatusUpdate redrawstatus!
 
-  au CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
+  " au CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
 augroup END
 
 lua require 'lsp'

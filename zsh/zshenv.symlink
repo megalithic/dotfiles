@@ -156,7 +156,8 @@ path=(
   /usr/local/opt/perl@5.28/bin
   /usr/local/opt/perl@5.32/bin
   /usr/local/opt/perl@5.32
-  /usr/local/opt/python@3.8/bin:$PATH
+  /usr/local/opt/openssl@1.1/bin
+  /usr/local/opt/python@3.8/bin
   /usr/{bin,sbin}
   /{bin,sbin}
   /usr/local/opt/curl/bin

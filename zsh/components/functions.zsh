@@ -21,34 +21,6 @@ enable_symantec() {
 # # get tab completion with my function
 # __git_complete g _git
 
-
-function gss() {
-  git status &> /dev/null
-  inside_git_repo=$?
-  if [[ $inside_git_repo -eq 0 ]]; then
-
-    git diff --quiet
-    has_unstaged_changes=$?
-
-    git diff --quiet --cached
-    has_staged_changes=$?
-
-    if [[ $has_unstaged_changes -eq 1 ]]; then
-      echo "Showing diff of unstaged changes..."
-      git difftool -d
-    elif [[ $has_staged_changes -eq 1 ]]; then
-      echo "Showing diff of staged changes..."
-      git difftool -d --staged
-    else
-      echo "Showing last commit..."
-      git difftool -d HEAD~1 HEAD
-    fi
-
-  else
-    echo "Error: \"$0\" can only be used inside a Git repository."
-  fi
-}
-
 #
 # git
 #

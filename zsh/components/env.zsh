@@ -164,3 +164,11 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
 # export LDFLAGS="-L/Users/replicant/.asdf/installs/python/3.8.2/lib"
 # export PKG_CONFIG_PATH="/Users/replicant/.asdf/installs/python/3.8.2/lib/pkgconfig"
 # export PYTHONPATH="$DYLD_LIBRARY_PATH:$LDFLAGS:$PKG_CONFIG_PATH:$PYTHONPATH"
+
+# export LDFLAGS="-L/usr/local/opt/openssl/lib"
+# export CPPFLAGS="-I/usr/local/opt/openssl/include"
+# export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"
+
+export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
+export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
+export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"

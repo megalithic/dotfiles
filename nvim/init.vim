@@ -334,6 +334,8 @@ Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'rhysd/reply.vim'
 Plug 'axvr/zepl.vim'
 Plug 'rizzatti/dash.vim'
+Plug 'skywind3000/vim-quickui'
+Plug 'xfyuan/vim-mac-dictionary'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if

@@ -1,5 +1,10 @@
 # -- zinit configuration
 
+zstyle ":history-search-multi-word" page-size "10"                      # Number of entries to show (default is $LINES/3)
+zstyle ":history-search-multi-word" highlight-color "fg=yellow,bold"    # Color in which to highlight matched, searched text (default bg=17 on 256-color terminals)
+zstyle ":plugin:history-search-multi-word" synhl "yes"                  # Whether to perform syntax highlighting (default true)
+zstyle ":plugin:history-search-multi-word" active "bg=#073642"          # Effect on active history entry. Try: standout, bold, bg=blue (default underline)
+
 zinit light-mode for \
   zdharma/history-search-multi-word \
   zsh-users/zsh-history-substring-search \
