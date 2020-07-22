@@ -10,6 +10,9 @@ imap jk <ESC>
 nnoremap ` '
 nnoremap ' `
 
+" flip between two last edited files
+nnoremap <leader><leader> <C-^>
+
 " Change pane
 nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j

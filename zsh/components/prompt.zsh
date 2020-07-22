@@ -14,6 +14,7 @@ VCS_UNTRACKED_SYMBOL="?" # …
 VCS_STASHES_SYMBOL=$'\uf530'
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
+# •
 
 function gitstatus_prompt_update() {
   emulate -L zsh

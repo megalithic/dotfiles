@@ -62,10 +62,10 @@ function! s:nova_engage() abort
   exe 'hi CursorLineNr guibg=' . g:special_bg . ' gui=italic guifg=' . g:cursorlinenr
   exe 'hi VertSplit guibg=NONE gui=NONE guifg=' . g:separator
 
-  exe 'hi ErrorMsg guifg=' . g:error
-  exe 'hi WarningMsg guifg=' . g:warning
-  exe 'hi HintMsg gui=italic guifg=' . g:hint
+  exe 'hi ErrorMsg gui=italic guifg=' . g:error
+  exe 'hi WarningMsg gui=italic guifg=' . g:warning
   exe 'hi InformationMsg gui=italic guifg=' . g:information
+  exe 'hi HintMsg gui=italic guifg=' . g:hint
 
   hi! link LspDiagnosticsError ErrorMsg
   hi! link LspDiagnosticsWarning WarningMsg

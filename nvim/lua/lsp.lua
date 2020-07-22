@@ -3,7 +3,7 @@ if not has_lsp then
   return
 end
 
--- local has_diagnostic, diagnostic = pcall(require, 'diagnostic')
+local has_diagnostic, diagnostic = pcall(require, 'diagnostic')
 local has_completion, completion = pcall(require, 'completion')
 
 -- local nvim_lsp = require('nvim_lsp')
@@ -94,7 +94,7 @@ local on_attach = function(client, bufnr)
   -- end
 
   -- if has_diagnostic then
-  --   diagnostic.on_attach()
+    -- diagnostic.on_attach()
   -- end
 
   if has_completion then

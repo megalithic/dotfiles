@@ -85,7 +85,6 @@ set shiftwidth=2
 set shortmess+=c      " Don't show insert mode completion messages
 set sidescrolloff=15
 set sidescroll=5
-set signcolumn=auto   " Only render sign column when needed
 set showbreak=↳       " Use this to wrap long lines
 set smartcase         " Case-smart searching
 set smarttab
@@ -335,7 +334,6 @@ Plug 'rhysd/reply.vim'
 Plug 'axvr/zepl.vim'
 Plug 'rizzatti/dash.vim'
 Plug 'skywind3000/vim-quickui'
-Plug 'xfyuan/vim-mac-dictionary'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if
