@@ -1,5 +1,3 @@
-scriptencoding utf-16
-
 function! UpdateModeColors(mode) abort
   " Normal mode
   if a:mode ==# 'n'
@@ -115,7 +113,7 @@ function! Statusline(winnum) abort
   let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
 
   " File modified
-  let sl .= <SID>Color(active, 'StatuslineModified', modified ? ' ' . g:modified_symbol : '')
+  let sl .= <SID>Color(active, 'StatuslineModified', modified ? g:modified_symbol : '')
 
   " Read only
   let readonly = getbufvar(bufnum, '&readonly')
@@ -141,13 +139,10 @@ function! Statusline(winnum) abort
   " LSP & ALE status
   if active
     " let sl .= <SID>Color(active, 'Statusline', <SID>LspStatus(bufnum))
-    "" set statusline+=%(%#StatuslineLint#%{statusline#lint_lsp()}%)%#StatuslineFiletype#
-    let sl .= <SID>Color(active, 'StatuslineLspError', '%{statusline#lsp_errors()}')
-    let sl .= <SID>Color(active, 'StatuslineLspWarning', '%{statusline#lsp_warnings()}')
-    " set statusline+=%(%#StatuslineLspError#%{statusline#lsp_errors()}%)
-    " set statusline+=%(%#StatuslineLspWarning#%{statusline#lsp_warnings()}%)
-    " set statusline+=%(%#StatuslineLspInformation%{statusline#lsp_informations()}%)
-    " set statusline+=%(%#StatuslineLspHint%{statusline#lsp_hints()}%)
+    let sl .= <SID>Color(active, 'StatuslineError', '%{statusline#lsp_errors()}')
+    let sl .= <SID>Color(active, 'StatuslineWarning', '%{statusline#lsp_warnings()}')
+    let sl .= <SID>Color(active, 'StatuslineHint', '%{statusline#lsp_hints()}')
+    let sl .= <SID>Color(active, 'StatuslineInformation', '%{statusline#lsp_informations()}')
   endif
 
   " Line, Column and Percent

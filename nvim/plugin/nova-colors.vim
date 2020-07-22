@@ -143,7 +143,7 @@ function! s:nova_engage() abort
   " hi elixirPrivateFunctionDeclaration guifg=#ecc48d
 
   " a list of groups can be found at `:help lua_tree_highlight`
-  " hi LuaTreeFolderIcon guibg=blue
+  hi LuaTreeFolderIcon gui=underline
 
 
   " -- statusline highlights --
@@ -167,17 +167,11 @@ function! s:nova_engage() abort
   exe 'hi StatuslineLspWarn gui=bold guifg=' . g:black . ' guibg=' . g:warning
   hi! link StatuslineWarning StatuslineLspWarn
   exe 'hi StatuslineLspHint gui=bold guifg=' . g:black . ' guibg=' . g:hint
+  hi! link StatuslineHint StatuslineLspHint
   exe 'hi StatuslineLspInformation gui=bold guifg=' . g:black . ' guibg=' . g:information
+  hi! link StatuslineInformation StatuslineLspInformation
   exe 'hi StatuslineLsp gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
 
-  " exe 'hi StatuslineLintWarn gui=bold guifg=' . g:warning . ' guibg=' . g:black
-  " exe 'hi StatuslineLintError gui=bold guifg=' . g:error . ' guibg=' . g:black
-  " exe 'hi StatuslineLintHint gui=bold guifg=' . g:error . ' guibg=' . g:black
-  " exe 'hi StatuslineLintInformation gui=bold guifg=' . g:error . ' guibg=' . g:black
-  " exe 'hi StatuslineLintChecking gui=bold guifg=' . g:light_yellow . ' guibg=' . g:black
-  " exe 'hi StatuslineLintOk gui=bold guifg=' . g:ok . ' guibg=' . g:black
-  " exe 'hi StatuslineLint gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
-  " exe 'hi StatuslineLineCol gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
   exe 'hi StatuslineLineInfo gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
   exe 'hi StatuslineFiletype gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
   exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
