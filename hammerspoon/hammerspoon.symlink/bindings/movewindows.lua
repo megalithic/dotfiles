@@ -1,4 +1,5 @@
 -- Window shortcuts originally from @tmiller, now _heavily_ modified.
+local log = hs.logger.new('[bindings.movewindows]', 'debug')
 
 local movewindows = hs.hotkey.modal.new()
 
@@ -31,12 +32,14 @@ movewindows.grid = {
   { key='t', unit=hs.layout.right30 },
 
   { key='space', unit=hs.layout.maximized },
-  { key='enter', unit=hs.layout.maximized },
+  { key='return', unit=hs.layout.maximized },
 }
 
 movewindows.start = function()
-  -- local hyper = require("bindings.hyper")
+  local hyper = require("bindings.hyper")
   hs.window.animationDuration = 0
+
+  log.df("HYPER: %s", hyper)
 
   hyper:bind({'shift'}, 'm', nil, function() movewindows:enter() end)
 
@@ -112,6 +115,10 @@ movewindows.start = function()
     hs.window.focusedWindow():centerOnScreen()
     movewindows:exit()
   end)
+end
+
+movewindows.stop = function()
+  log.df("stopping..")
 end
 
 return movewindows

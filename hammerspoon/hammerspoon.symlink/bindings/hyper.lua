@@ -1,8 +1,11 @@
+-- TODO: can now use this module in other modules, so extract out these bindings
+-- again
+
 local log = hs.logger.new('[bindings.hyper]', 'warning')
 
 local module = {}
-local forceLaunchOrFocus = require('ext.application').forceLaunchOrFocus
-local smartLaunchOrFocus = require('ext.application').smartLaunchOrFocus
+-- local forceLaunchOrFocus = require('ext.application').forceLaunchOrFocus
+-- local smartLaunchOrFocus = require('ext.application').smartLaunchOrFocus
 local toggle = require('ext.application').toggle
 local media = require('bindings.media')
 
@@ -104,6 +107,31 @@ end
 
 module.stop = function()
   log.df("stopping..")
+end
+
+function module:bind(mod, key, pressedFn, releasedFn)
+  -- can ommit mod, but breaks if no mod and no pressedFn
+  if not pressedFn and not releasedFn then
+    releasedFn = pressedFn
+    pressedFn  = key
+    key        = mod
+    mod        = {}
+  end
+
+  hyper:bind(
+    mod,
+    key,
+    function()
+      if pressedFn then
+        pressedFn()
+      end
+    end,
+    function()
+      if releasedFn then
+        releasedFn()
+      end
+    end
+    )
 end
 
 return module
