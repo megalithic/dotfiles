@@ -8,8 +8,8 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
-smap <expr> <Tab> vsnip#available(1)  ? '<Plug>(vsnip-jump-next)'      : '<Tab>'
-imap <silent><expr> <TAB>
+smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
+inoremap <silent><expr> <TAB>
       \ pumvisible() ? "\<C-n>" :
       \ vsnip#available(1)  ? '<Plug>(vsnip-jump-next)' :
       \ <SID>check_back_space() ? "\<TAB>" :
@@ -17,8 +17,9 @@ imap <silent><expr> <TAB>
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 " -- completion-nvim
-let g:completion_enable_auto_hover = 1
+let g:completion_enable_auto_hover = 0
 let g:completion_enable_auto_popup = 1
+let g:completion_enable_auto_signature = 0
 let g:completion_auto_change_source = 1
 let g:completion_enable_fuzzy_match = 1
 let g:completion_enable_snippet = 'vim-vsnip'
@@ -26,7 +27,9 @@ let g:completion_enable_snippet = 'vim-vsnip'
 " let g:completion_timer_cycle = 80
 let g:completion_auto_change_source = 1
 let g:completion_trigger_keyword_length = 2
-let g:completion_max_items = 30
+let g:completion_max_items = 20
+let g:completion_sorting = "none" " none, length, alphabet
+let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
 
 " let g:completion_customize_lsp_label = {
 "       \ 'Function': '',
@@ -123,19 +126,19 @@ let g:completion_chain_complete_list = {
 
 " -- diagnostic-nvim
 let g:diagnostic_enable_virtual_text = 1
-let g:diagnostic_virtual_text_prefix = "\uf63d" " ' '
+let g:diagnostic_virtual_text_prefix = "\uf63d" "
 let g:diagnostic_show_sign = 1
 let g:diagnostic_auto_popup_while_jump = 1
 let g:diagnostic_insert_delay = 1
-let g:diagnostic_enable_underline = 1
+let g:diagnostic_enable_underline = 0
 " let g:space_before_virtual_text = 5
 
 " FIXME:
 " https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61
-call sign_define("LspDiagnosticsErrorSign", {"text" : "✖", "texthl" : "LspDiagnosticsError"})
-call sign_define("LspDiagnosticsWarningSign", {"text" : "⬥", "texthl" : "LspDiagnosticsWarning"})
-call sign_define("LspDiagnosticsInformationSign", {"text" : "\uf0da", "texthl" : "LspDiagnosticsInformation"}) " I‣
-call sign_define("LspDiagnosticsHintSign", {"text" : "\uf105", "texthl" : "LspDiagnosticsWarning"}) " H‣
+call sign_define("LspDiagnosticsErrorSign", {"text" : "✖", "texthl" : "LspDiagnosticsErrorSign"})                   "✖
+call sign_define("LspDiagnosticsWarningSign", {"text" : "⬥", "texthl" : "LspDiagnosticsWarningSign"})               "⬥
+call sign_define("LspDiagnosticsInformationSign", {"text" : "\uf0da", "texthl" : "LspDiagnosticsInformationSign"})  "
+call sign_define("LspDiagnosticsHintSign", {"text" : "\uf105", "texthl" : "LspDiagnosticsWarningSign"})             "
 
 augroup lsp
   " au! * <buffer>
@@ -143,8 +146,6 @@ augroup lsp
   au User LspDiagnosticsChanged redrawstatus!
   au User LspMessageUpdate redrawstatus!
   au User LspStatusUpdate redrawstatus!
-
-  " au CursorHold <buffer> lua vim.lsp.util.show_line_diagnostics()
 augroup END
 
 lua require 'lsp'

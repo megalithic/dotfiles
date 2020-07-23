@@ -5,14 +5,9 @@ end
 
 local has_diagnostic, diagnostic = pcall(require, 'diagnostic')
 local has_completion, completion = pcall(require, 'completion')
-
--- local nvim_lsp = require('nvim_lsp')
 local lsp_status = require('lsp-status')
--- local has_lsp_status, lsp_status = require('lsp-status')
 
--- if has_lsp_status then
-  lsp_status.register_progress()
--- end
+lsp_status.register_progress()
 
 -- local function preview_location_callback(_, method, result)
 --   if result == nil or vim.tbl_isempty(result) then
@@ -89,19 +84,18 @@ local on_attach = function(client, bufnr)
   -- TODO/REF: https://github.com/delianides/dotfiles/blob/1b3ee23e9e254b8a654e85c743ff761b1dfc9d5e/tag-vim/vim/lua/lsp.lua#L39
   -- local resolved_capabilities = client.resolved_capabilities
 
-  -- if has_lsp_status then
-    lsp_status.on_attach(client)
-  -- end
+  lsp_status.on_attach(client)
 
-  -- if has_diagnostic then
-    -- diagnostic.on_attach()
-  -- end
+  if has_diagnostic then
+    diagnostic.on_attach()
+  end
 
   if has_completion then
-    completion.on_attach({
-        sorter = 'alphabet',
-        matcher = {'exact', 'substring', 'fuzzy'}
-      })
+    completion.on_attach()
+   -- completion.on_attach({
+    --     sorter = 'alphabet',
+    --     matcher = {'exact', 'substring', 'fuzzy'}
+    --   })
   end
 
   local opts = { noremap=true, silent=true }
@@ -109,7 +103,7 @@ local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lK',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>K',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgD', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>', opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>ld', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>ls', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgt', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)

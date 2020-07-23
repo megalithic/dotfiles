@@ -174,7 +174,7 @@ set -g status-style 'bg=default,fg=#aaaaaa'
 
 # -- left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
-set -g status-left "#[fg=green]\ue711 #S #[fg=colour255]⋮ " #\uf121 \ufb18 \ufc66 \ufbc2 #⧉
+set -g status-left "#[fg=#ecc48d]\uf737 #S #[fg=colour255]⋮ " #
 set -g status-left-length 100
 
 # -- windows
@@ -183,7 +183,7 @@ setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=b
 set -g window-status-activity-style none
 
 # -- right
-set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour256]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
 

@@ -1,4 +1,25 @@
 function! s:nova_engage() abort
+
+  " -- icons/indicators
+
+  let g:indicator_checking = "\uf110"   "
+  let g:indicator_errors = "\uf05e"     "
+  let g:indicator_warnings = "\uf071"   "
+  let g:indicator_infos = "\uf7fc"      "
+  let g:indicator_hints = "\ufbe7"      "ﯧ
+  let g:indicator_ok = "\uf00c"         "
+  let g:modified_symbol = "\uf490"      "
+  let g:vcs_symbol = "\uf418"           "
+  let g:readonly_symbol = "\uf023"      "
+  let g:ln_sep = "\ue0a1"               "
+  let g:col_sep = "\ue0a3"              "
+  let g:perc_sep = "\uf0c9"             "
+  let g:right_sep = "\ue0b4"            " nf-ple-*
+  let g:left_sep = "\ue0b6"             "
+  let g:term_mode = "\ue7a2"            "
+
+  let g:spinner_frames = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
+
   " -- clears
 
   hi clear SpellBad
@@ -23,6 +44,7 @@ function! s:nova_engage() abort
   let g:changed = "#ecc48d"
   let g:separator = "#666666"
   let g:incsearch = "#fffacd"
+  let g:dark_grey = "#667796"
 
 
   " -- statusline constants --
@@ -62,15 +84,23 @@ function! s:nova_engage() abort
   exe 'hi CursorLineNr guibg=' . g:special_bg . ' gui=italic guifg=' . g:cursorlinenr
   exe 'hi VertSplit guibg=NONE gui=NONE guifg=' . g:separator
 
+  " highlight conflicts
+  match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
+
   exe 'hi ErrorMsg gui=italic guifg=' . g:error
   exe 'hi WarningMsg gui=italic guifg=' . g:warning
   exe 'hi InformationMsg gui=italic guifg=' . g:information
   exe 'hi HintMsg gui=italic guifg=' . g:hint
 
-  hi! link LspDiagnosticsError ErrorMsg
-  hi! link LspDiagnosticsWarning WarningMsg
-  hi! link LspDiagnosticsInformation InformationMsg
-  hi! link LspDiagnosticsHint HintMsg
+  exe 'hi LspDiagnosticsError gui=undercurl,italic guifg=' . g:error
+  exe 'hi LspDiagnosticsWarning gui=undercurl,italic guifg=' . g:warning
+  exe 'hi LspDiagnosticsInformation gui=undercurl,italic guifg=' . g:information
+  exe 'hi LspDiagnosticsHint gui=undercurl,italic guifg=' . g:hint
+
+  exe 'hi LspDiagnosticsErrorSign guifg=' . g:error
+  exe 'hi LspDiagnosticsWarningSign guifg=' . g:warning
+  exe 'hi LspDiagnosticsInformationSign guifg=' . g:information
+  exe 'hi LspDiagnosticsHintSign guifg=' . g:hint
 
   hi! link Debug ErrorMsg
   hi! link Exception ErrorMsg
@@ -107,9 +137,6 @@ function! s:nova_engage() abort
   hi xmlAttrib cterm=italic gui=italic
   hi Type cterm=italic gui=italic
   hi Comment cterm=italic term=italic gui=italic
-
-  " highlight conflicts
-  match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
   hi SignColumn guibg=NONE
 
@@ -152,6 +179,7 @@ function! s:nova_engage() abort
   " exe 'hi StatuslineNC gui=bold guifg=' . g:dark_red . ' guibg=NONE'
   hi! link StatuslineSeparator VertSplit
   exe 'hi Statusline gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineMode gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
   exe 'hi StatuslineAccent gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
   exe 'hi StatuslineBoolean gui=bold guifg=' . g:warning . ' guibg=' . g:black
   exe 'hi StatuslineModified gui=bold guifg=' . g:light_red . ' guibg=' . g:black
@@ -160,21 +188,19 @@ function! s:nova_engage() abort
   " hi StatuslinePercentage guibg=#3a3a3a gui=none guifg=#dab997
   exe 'hi StatuslinePercentage gui=bold guifg=' . g:light_red . ' guibg=' . g:black
   exe 'hi StatuslineNormal gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
-  exe 'hi StatuslineVCS gui=NONE guifg=' . g:normal_text . ' guibg=' . g:visual_grey
+  exe 'hi StatuslineVCS gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
+  " exe 'hi StatuslineVCS gui=NONE guifg=' . g:normal_text . ' guibg=' . g:visual_grey
 
-  exe 'hi StatuslineLspError gui=bold guifg=' . g:black . ' guibg=' . g:error
-  hi! link StatuslineError StatuslineLspError
-  exe 'hi StatuslineLspWarn gui=bold guifg=' . g:black . ' guibg=' . g:warning
-  hi! link StatuslineWarning StatuslineLspWarn
-  exe 'hi StatuslineLspHint gui=bold guifg=' . g:black . ' guibg=' . g:hint
-  hi! link StatuslineHint StatuslineLspHint
-  exe 'hi StatuslineLspInformation gui=bold guifg=' . g:black . ' guibg=' . g:information
-  hi! link StatuslineInformation StatuslineLspInformation
+  exe 'hi StatuslineError gui=bold guifg=' . g:error . ' guibg=' . g:black
+  exe 'hi StatuslineWarning gui=bold guifg=' . g:warning . ' guibg=' . g:black
+  exe 'hi StatuslineHint gui=bold guifg=' . g:hint . ' guibg=' . g:black
+  exe 'hi StatuslineInformation gui=bold guifg=' . g:information . ' guibg=' . g:black
+
   exe 'hi StatuslineLsp gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
 
   exe 'hi StatuslineLineInfo gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
-  exe 'hi StatuslineFiletype gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
-  exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:normal_color . ' guibg=' . g:black
+  exe 'hi StatuslineFiletype gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
+  exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
 endfunction
 
 augroup nova_colors

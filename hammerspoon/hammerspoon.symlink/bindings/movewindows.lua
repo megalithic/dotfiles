@@ -1,4 +1,5 @@
--- Window shortcuts originally from @tmiller, now _heavily_ modified.
+-- Window shortcuts originally first from @tmiller, then @evantravers, now moi
+
 local log = hs.logger.new('[bindings.movewindows]', 'debug')
 
 local movewindows = hs.hotkey.modal.new()
@@ -119,6 +120,7 @@ end
 
 movewindows.stop = function()
   log.df("stopping..")
+  movewindows:exit()
 end
 
 return movewindows

@@ -18,9 +18,10 @@ require 'colorizer'.setup {
   'typescriptreact';
   'zsh';
   'sh';
+  'conf';
   html = {
     mode = 'foreground';
-  }
+  };
 }
 
 

@@ -121,9 +121,16 @@ set wildignore+=*.DS_Store
 set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
 set wrap              " Wrap long lines
 
+" ## netrw
 " disable netrw
 let g:loaded_netrw = 1
 let g:loaded_netrwPlugin = 1
+let g:netrw_winsize = -28 " absolute width of netrw window
+let g:netrw_banner = 1 " do not display info on the top of window
+let g:netrw_liststyle = 3 " tree-view
+let g:netrw_sort_sequence = '[\/]$,*' " sort is affecting only: directories on the top, files below
+let g:netrw_browse_split = 0 " use the previous window to open file
+let g:netrw_altv = 1
 
 " Options specific to Neovim or Vim.
 if has("nvim")
@@ -138,7 +145,8 @@ if has("nvim")
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   set pumblend=10
   set pumheight=20      " Height of complete list
-  set signcolumn=yes:2  " always showsigncolumn
+  set signcolumn=yes  " always showsigncolumn
+  " set signcolumn=yes:2  " always showsigncolumn
   set switchbuf=useopen,split,usetab,vsplit
   set wildoptions+=pum
   set winblend=10
@@ -272,7 +280,8 @@ Plug 'kana/vim-textobj-function'                                  " function tex
 Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
 Plug 'kana/vim-textobj-line'                                      " for current line (val)
 Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
-Plug 'duff/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }  " eliXir block text object (vix/vax)
+" Plug 'duff/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }  " eliXir block text object (vix/vax)
+Plug 'amiralies/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
 Plug 'michaeljsmith/vim-indent-object'
 Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
