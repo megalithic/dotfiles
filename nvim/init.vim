@@ -59,6 +59,8 @@ set infercase         " Smart casing when completing
 set ignorecase        " Search in case-insensitively
 set incsearch         " Go to search results immediately
 set laststatus=2      " We want a statusline
+set linespace=0       " Line height of things like, the statusline
+set cmdheight=1
 set lazyredraw        " should make scrolling faster
 set matchpairs=(:),{:},[:]
 set mouse=nva         " Mouse support in different modes
@@ -145,8 +147,7 @@ if has("nvim")
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   set pumblend=10
   set pumheight=20      " Height of complete list
-  set signcolumn=yes  " always showsigncolumn
-  " set signcolumn=yes:2  " always showsigncolumn
+  set signcolumn=yes:1  " always showsigncolumn
   set switchbuf=useopen,split,usetab,vsplit
   set wildoptions+=pum
   set winblend=10
@@ -264,9 +265,9 @@ Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
 
+
 "-----------------------------
 " Movements/Text Objects, et al
-" REF: https://github.com/kana/vim-textobj-user/wiki
 "-----------------------------
 Plug 'tpope/vim-rsi'
 Plug 'kana/vim-operator-user'
@@ -274,24 +275,22 @@ Plug 'kana/vim-operator-user'
 " -- provide al and il for current line
 " -- provide a_ and i_ for underscores
 " -- provide a- and i-
-Plug 'kana/vim-textobj-user'                                      " https://github.com/kana/vim-textobj-user/wiki
-Plug 'kana/vim-textobj-entire'                                    " entire buffer text object (vae)
-Plug 'kana/vim-textobj-function'                                  " function text object (vaf)
-Plug 'kana/vim-textobj-indent'                                    " for indent level (vai)
-Plug 'kana/vim-textobj-line'                                      " for current line (val)
-Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }        " ruby block text object (vir)
-" Plug 'duff/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }  " eliXir block text object (vix/vax)
-Plug 'amiralies/vim-textobj-elixir', { 'for': ['elixir', 'eelixir'] }
-Plug 'glts/vim-textobj-comment'                                   " comment text object (vac)
+Plug 'kana/vim-textobj-user'                                            " https://github.com/kana/vim-textobj-user/wiki
+Plug 'kana/vim-textobj-function'                                        " function text object (af/if)
+Plug 'kana/vim-textobj-indent'                                          " for indent level (ai/ii)
+Plug 'kana/vim-textobj-line'                                            " for current line (al/il)
+Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }              " ruby block text object (ar/ir)
+Plug 'andyl/vim-textobj-elixir'                                         " elixir block text object (ae/ie)
+Plug 'glts/vim-textobj-comment'                                         " comment text object (ac/ic)
 Plug 'michaeljsmith/vim-indent-object'
-Plug 'machakann/vim-textobj-delimited'                            " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
-Plug 'gilligan/textobj-lastpaste'                                 " - P     for last paste
-Plug 'mattn/vim-textobj-url'                                      " - u     for url
-Plug 'rhysd/vim-textobj-anyblock'                                 " - '', \"\", (), {}, [], <>
-Plug 'arthurxavierx/vim-caser'                                    " https://github.com/arthurxavierx/vim-caser#usage
-Plug 'Julian/vim-textobj-variable-segment'                        " https://github.com/Julian/vim-textobj-variable-segment#vim-textobj-variable-segment
-Plug 'wellle/targets.vim'                                         " improved targets line cin) next parens)
-"     ^--- https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
+Plug 'machakann/vim-textobj-delimited'                                  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+Plug 'gilligan/textobj-lastpaste'                                       " - P     for last paste
+Plug 'mattn/vim-textobj-url'                                            " - u     for url
+Plug 'rhysd/vim-textobj-anyblock'                                       " - '', \"\", (), {}, [], <>
+Plug 'arthurxavierx/vim-caser'                                          " https://github.com/arthurxavierx/vim-caser#usage
+Plug 'Julian/vim-textobj-variable-segment'                              " variable parts (av/iv)
+Plug 'wellle/targets.vim'                                               " improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
+
 
 "-----------------------------
 " File management plugins
@@ -316,7 +315,7 @@ if has('nvim')
   Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
-  " Plug 'steelsojka/completion-buffers'
+  Plug 'steelsojka/completion-buffers'
 endif
 
 "-----------------------------

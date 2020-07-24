@@ -163,6 +163,14 @@ setw -g pane-border-status top
 # dim inactive window text
 set -g window-style 'fg=#666666,bg=#3C4C55'
 set -g window-active-style 'fg=white,bg=#3C4C55'
+# setw -g window-status-activity-style 'bg=red'
+
+# setw -g window-status-style
+# setw -g window-status-activity-style
+# setw -g window-status-bell-style
+# setw -g window-status-content-style
+# setw -g window-status-current-style
+# setw -g window-status-last-style
 
 set -g clock-mode-colour white
 set -g mode-style 'bg=#ffffff,fg=#000000'
@@ -174,13 +182,14 @@ set -g status-style 'bg=default,fg=#aaaaaa'
 
 # -- left
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
-set -g status-left "#[fg=#ecc48d]\uf737 #S #[fg=colour255]⋮ " #
+set -g status-left "#[fg=#fffacd]\uf490 #S #[fg=colour255]⋮ " #
 set -g status-left-length 100
 
 # -- windows
 setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3C4C55,bold]❂ }#I:#W " # ❂●
-set -g window-status-activity-style none
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3C4C55,bold]● }#I:#W "
+setw -g window-status-activity-style none
+setw -g window-status-bell-style 'fg=#888888,bg=#2f3c44,dim'
 
 # -- right
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"

@@ -8,12 +8,12 @@ function! s:nova_engage() abort
   let g:indicator_infos = "\uf7fc"      "
   let g:indicator_hints = "\ufbe7"      "ﯧ
   let g:indicator_ok = "\uf00c"         "
-  let g:modified_symbol = "\uf490"      "
+  let g:modified_symbol = "\uf085"      "
   let g:vcs_symbol = "\uf418"           "
   let g:readonly_symbol = "\uf023"      "
   let g:ln_sep = "\ue0a1"               "
-  let g:col_sep = "\ue0a3"              "
-  let g:perc_sep = "\uf0c9"             "
+  let g:col_sep = "\uf6da"              "
+  let g:perc_sep = "\uf44e"             "
   let g:right_sep = "\ue0b4"            " nf-ple-*
   let g:left_sep = "\ue0b6"             "
   let g:term_mode = "\ue7a2"            "
@@ -166,12 +166,11 @@ function! s:nova_engage() abort
   " hi Directory guifg=#DF8C8C
 
   " " Make `defp` stand out from `def` in Elixir.
-  " hi elixirPrivateDefine guifg=#ecc48d
-  " hi elixirPrivateFunctionDeclaration guifg=#ecc48d
+  " hi elixirPrivateDefine gui=bold
+  " hi elixirPrivateFunctionDeclaration gui=bold
 
   " a list of groups can be found at `:help lua_tree_highlight`
   hi LuaTreeFolderIcon gui=underline
-
 
   " -- statusline highlights --
 
@@ -188,8 +187,8 @@ function! s:nova_engage() abort
   " hi StatuslinePercentage guibg=#3a3a3a gui=none guifg=#dab997
   exe 'hi StatuslinePercentage gui=bold guifg=' . g:light_red . ' guibg=' . g:black
   exe 'hi StatuslineNormal gui=bold guifg=' . g:normal_color . ' guibg=' . g:black
-  exe 'hi StatuslineVCS gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
-  " exe 'hi StatuslineVCS gui=NONE guifg=' . g:normal_text . ' guibg=' . g:visual_grey
+  " exe 'hi StatuslineVCS gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
+  exe 'hi StatuslineVCS gui=NONE guifg=' . g:black . ' guibg=' . g:visual_grey
 
   exe 'hi StatuslineError gui=bold guifg=' . g:error . ' guibg=' . g:black
   exe 'hi StatuslineWarning gui=bold guifg=' . g:warning . ' guibg=' . g:black

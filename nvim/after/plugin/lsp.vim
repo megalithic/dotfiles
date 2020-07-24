@@ -17,13 +17,13 @@ inoremap <silent><expr> <TAB>
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 " -- completion-nvim
-let g:completion_enable_auto_hover = 0
+let g:completion_enable_auto_hover = 1
 let g:completion_enable_auto_popup = 1
-let g:completion_enable_auto_signature = 0
+let g:completion_enable_auto_signature = 1
 let g:completion_auto_change_source = 1
 let g:completion_enable_fuzzy_match = 1
 let g:completion_enable_snippet = 'vim-vsnip'
-" let g:completion_enable_auto_paren = 0
+let g:completion_enable_auto_paren = 0
 " let g:completion_timer_cycle = 80
 let g:completion_auto_change_source = 1
 let g:completion_trigger_keyword_length = 2
@@ -135,8 +135,8 @@ let g:diagnostic_enable_underline = 0
 
 " FIXME:
 " https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61
-call sign_define("LspDiagnosticsErrorSign", {"text" : "✖", "texthl" : "LspDiagnosticsErrorSign"})                   "✖
-call sign_define("LspDiagnosticsWarningSign", {"text" : "⬥", "texthl" : "LspDiagnosticsWarningSign"})               "⬥
+call sign_define("LspDiagnosticsErrorSign", {"text" : "\uf655", "texthl" : "LspDiagnosticsErrorSign"})              "
+call sign_define("LspDiagnosticsWarningSign", {"text" : "\ufa36", "texthl" : "LspDiagnosticsWarningSign"})          "喝
 call sign_define("LspDiagnosticsInformationSign", {"text" : "\uf0da", "texthl" : "LspDiagnosticsInformationSign"})  "
 call sign_define("LspDiagnosticsHintSign", {"text" : "\uf105", "texthl" : "LspDiagnosticsWarningSign"})             "
 

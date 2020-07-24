@@ -86,7 +86,7 @@ augroup general
   " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
-  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber signcolumn=yes:2
+  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber signcolumn=yes:1
   autocmd BufLeave,WinLeave * silent setlocal nonumber norelativenumber signcolumn=no
 
   " toggle colorcolumn when in insertmode only

@@ -33,8 +33,8 @@ function! UpdateModeColors(mode) abort
     exe 'hi StatuslineAccent gui=bold guifg=#6f6f6f guibg=' . g:black
     " Visual mode
   else
-    exe 'hi StatuslineMode gui=bold guifg=' . g:visual_color . ' guibg=' . g:black
-    exe 'hi StatuslineAccent gui=bold guifg=' . g:black . ' guibg=' . g:visual_color
+    exe 'hi StatuslineMode gui=bold guifg=' . g:black . ' guibg=' . g:visual_color
+    exe 'hi StatuslineAccent gui=bold guifg=' . g:visual_color . ' guibg=' . g:black
   endif
 
   " Return empty string so as not to display anything in the statusline
@@ -122,9 +122,9 @@ function! Statusline(winnum) abort
   " VCS
   if active
     let sl .= <SID>Color(active, 'StatuslineVCS', ' %<')
-    let sl .= <SID>Color(active, 'StatuslineVCS', ' %<')
+    let sl .= <SID>Color(active, 'StatuslineVCS', '%<')
     let sl .= <SID>Color(active, 'StatuslineVCS', '%{statusline#vc_status()}')
-    let sl .= <SID>Color(active, 'StatuslineVCS', ' %<')
+    let sl .= <SID>Color(active, 'StatuslineVCS', '%<')
   endif
 
   " File name
