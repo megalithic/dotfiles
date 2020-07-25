@@ -21,7 +21,7 @@ hs.alert.defaultStyle['textColor'] = {
   blue  = 240/255,
   alpha = 1
 }
-hs.alert.defaultStyle['textFont'] = 'Helvetica Light'
+hs.alert.defaultStyle['textFont'] = 'JetBrainsMono Nerd Font'
 
 
 module.defaultDuration = 2

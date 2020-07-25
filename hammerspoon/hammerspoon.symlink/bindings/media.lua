@@ -44,6 +44,8 @@ module.notify = function(n)
     })
   :setIdImage(n.image)
   :send()
+
+  alert.showOnly({ text = '♬ '..n.state.. n.icon })
 end
 
 module.spotify = function (event, alertText)
@@ -62,7 +64,8 @@ module.spotify = function (event, alertText)
 
       if event == 'playpause' and not hs.spotify.isPlaying() then
         module.notify({
-            state='Paused',
+            icon="",
+            state="Paused",
             artist=hs.spotify.getCurrentArtist(),
             track=hs.spotify.getCurrentTrack(),
             album=hs.spotify.getCurrentAlbum(),
@@ -70,7 +73,8 @@ module.spotify = function (event, alertText)
           })
       else
         module.notify({
-            state='Playing',
+            icon="契",
+            state="Playing",
             artist=hs.spotify.getCurrentArtist(),
             track=hs.spotify.getCurrentTrack(),
             album=hs.spotify.getCurrentAlbum(),

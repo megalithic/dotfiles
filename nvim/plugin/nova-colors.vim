@@ -3,11 +3,15 @@ function! s:nova_engage() abort
   " -- icons/indicators
 
   let g:indicator_checking = "\uf110"   "
+  let g:indicator_ok = "\uf00c"         "
   let g:indicator_errors = "\uf05e"     "
   let g:indicator_warnings = "\uf071"   "
   let g:indicator_infos = "\uf7fc"      "
-  let g:indicator_hints = "\ufbe7"      "ﯧ
-  let g:indicator_ok = "\uf00c"         "
+  let g:indicator_hints = "\uf835"      "
+  let g:sign_error = "\uf655"           "
+  let g:sign_warning = "\ufa36"         "喝
+  let g:sign_info = g:indicator_infos   "\uf0da
+  let g:sign_hint = g:indicator_hints   "\uf105
   let g:modified_symbol = "\uf085"      "
   let g:vcs_symbol = "\uf418"           "
   let g:readonly_symbol = "\uf023"      "
@@ -16,7 +20,7 @@ function! s:nova_engage() abort
   let g:perc_sep = "\uf44e"             "
   let g:right_sep = "\ue0b4"            " nf-ple-*
   let g:left_sep = "\ue0b6"             "
-  let g:term_mode = "\ue7a2"            "
+  let g:term_mode = "\ufcb5"            "\ue7a2 ﲵ
 
   let g:spinner_frames = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
 
@@ -91,6 +95,26 @@ function! s:nova_engage() abort
   exe 'hi WarningMsg gui=italic guifg=' . g:warning
   exe 'hi InformationMsg gui=italic guifg=' . g:information
   exe 'hi HintMsg gui=italic guifg=' . g:hint
+
+  " {
+  " 'LspDiagnosticsError',
+  " 'LspDiagnosticsErrorFloating',
+  " 'LspDiagnosticsErrorSign',
+  " 'LspDiagnosticsHint',
+  " 'LspDiagnosticsHintFloating',
+  " 'LspDiagnosticsHintSign',
+  " 'LspDiagnosticsInformation',
+  " 'LspDiagnosticsInformationFloating',
+  " 'LspDiagnosticsInformationSign',
+  " 'LspDiagnosticsUnderline',
+  " 'LspDiagnosticsUnderlineError',
+  " 'LspDiagnosticsUnderlineHint',
+  " 'LspDiagnosticsUnderlineInformation',
+  " 'LspDiagnosticsUnderlineWarning',
+  " 'LspDiagnosticsWarning',
+  " 'LspDiagnosticsWarningFloating',
+  " 'LspDiagnosticsWarningSign',
+  " }
 
   exe 'hi LspDiagnosticsError gui=undercurl,italic guifg=' . g:error
   exe 'hi LspDiagnosticsWarning gui=undercurl,italic guifg=' . g:warning

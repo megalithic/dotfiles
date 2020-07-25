@@ -13,9 +13,13 @@ function movewindows:entered()
 end
 
 function movewindows:exited()
-  hs.fnutils.ieach(alertUuids, function(uuid)
-    hs.alert.closeSpecific(uuid)
-  end)
+  if alertUuids then
+    hs.fnutils.ieach(alertUuids, function(uuid)
+      if uuid then
+        hs.alert.closeSpecific(uuid)
+      end
+    end)
+  end
 end
 
 movewindows.grid = {
