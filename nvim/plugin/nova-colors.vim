@@ -33,6 +33,7 @@ function! s:nova_engage() abort
 
   let g:normal_text = "#c5d4dd"
   let g:bg = "#3c4c55"
+  let g:dark_bg = "#2f3c44"
   let g:special_bg = "#333333"
   let g:default = "#83afe5"
   let g:selection = "#7fc1ca"

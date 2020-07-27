@@ -154,15 +154,15 @@ setw -g automatic-rename on
 # Colors ----------------------------------------------------------------------
 
 # -- active pane decorations
-set -g pane-border-style 'bg=#3C4C55,fg=#555555'
-set -g pane-active-border-style 'bg=#3C4C55,fg=blue'
-# set -g pane-active-border-style 'bg=#3C4C55,fg=#6A7D89'
+set -g pane-border-style 'bg=#3c4c55,fg=#555555'
+set -g pane-active-border-style 'bg=#3c4c55,fg=blue'
+# set -g pane-active-border-style 'bg=#3c4c55,fg=#6A7D89'
 set -g pane-border-format ""
 setw -g pane-border-status top
 
 # dim inactive window text
-set -g window-style 'fg=#666666,bg=#3C4C55'
-set -g window-active-style 'fg=white,bg=#3C4C55'
+set -g window-style 'fg=#666666,bg=#3c4c55'
+set -g window-active-style 'fg=white,bg=#3c4c55'
 # setw -g window-status-activity-style 'bg=red'
 
 # setw -g window-status-style
@@ -174,7 +174,7 @@ set -g window-active-style 'fg=white,bg=#3C4C55'
 
 set -g clock-mode-colour white
 set -g mode-style 'bg=#ffffff,fg=#000000'
-set -g message-style 'bg=#3C4C55,fg=#ffffff,italics'
+set -g message-style 'bg=#3c4c55,fg=#ffffff,italics'
 set -g status-style 'bg=default,fg=#aaaaaa'
 
 
@@ -187,9 +187,9 @@ set -g status-left-length 100
 
 # -- windows
 setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3C4C55,bold]● }#I:#W "
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3c4c55,bold]● }#I:#W "
 setw -g window-status-activity-style none
-setw -g window-status-bell-style 'fg=#888888,bg=#2f3c44,dim'
+setw -g window-status-bell-style 'fg=#3c4c55,bg=#2f3c44,dim'
 
 # -- right
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
@@ -202,15 +202,15 @@ set -g status-right-length 200
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '$HOME/.tmux/plugins/'
 set -g @dnd_on_icon "\uf59f DND#[fg=colour255] ⋮ "
 set -g @dnd_off_icon ""
-set -g @prefix_highlight_bg             '#3C4C55'
+set -g @prefix_highlight_bg             '#3c4c55'
 set -g @prefix_highlight_fg             'red'
 set -g @prefix_highlight_show_copy_mode 'on'
-set -g @prefix_highlight_copy_mode_attr 'fg=#3C4C55,bg=yellow,bold'
+set -g @prefix_highlight_copy_mode_attr 'fg=#3c4c55,bg=yellow,bold'
 set -g @prefix_highlight_prefix_prompt  'Wait⚋'
 set -g @prefix_highlight_copy_prompt    'Copy⚋'
 set -g @prefix_highlight_sync_prompt    'Sync⚋'
 set -g @prefix_highlight_empty_prompt   '      '          # default is '' (empty char)
-set -g @prefix_highlight_empty_attr     'fg=default,bg=#3C4C55' # default is 'fg=default,bg=default'
+set -g @prefix_highlight_empty_attr     'fg=default,bg=#3c4c55' # default is 'fg=default,bg=default'
 
 # plugin settings
 set -g @plugin 'tmux-plugins/tpm'
