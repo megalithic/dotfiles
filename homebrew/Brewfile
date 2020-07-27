@@ -105,7 +105,8 @@ brew "imagemagick"
 brew "jid"
 brew "jo"
 brew "jq"
-brew "lazygit"
+brew 'lazydocker'
+brew 'lazygit'
 brew "libgcrypt"
 brew "libtool"
 brew "libyaml"

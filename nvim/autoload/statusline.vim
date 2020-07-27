@@ -68,8 +68,9 @@ function! statusline#lineinfo() abort
 endfunction
 
 function! statusline#filename() abort
-  " Get the full path of the current file.
-  let filepath =  expand('%:p')
+  " Get the full path of the current file if big enough, other wise, just file
+  " name and extension.
+  let filepath = winwidth(0) > 70 ? expand('%:p') : expand('%:t')
 
   " If the filename is empty, then display nothing as appropriate.
   if empty(filepath)

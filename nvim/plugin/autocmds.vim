@@ -31,7 +31,8 @@ augroup general
     \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
 
   " Handle window resizing
-  autocmd VimResized * execute "normal! \<c-w>="
+  " TODO: do we still want this, what with dm1try/golden_size being used?
+  " autocmd VimResized * execute "normal! \<c-w>="
 
   " Help in vertical split (https://stackoverflow.com/a/21843502/213904)
   autocmd FileType help wincmd L

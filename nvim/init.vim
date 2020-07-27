@@ -236,7 +236,8 @@ Plug 'tweekmonster/startuptime.vim'
 Plug 'trevordmiller/nova-vim' "nova-colors.vim
 Plug 'Yggdroot/indentLine' "indentLine.vim
 Plug 'gcmt/taboo.vim' "taboo.vim
-Plug 'dm1try/golden_size'
+" Plug 'dm1try/golden_size'
+Plug 'roman/golden-ratio'
 " Plug 'megalithic/golden-ratio' " vertical split layout manager
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
@@ -281,6 +282,7 @@ Plug 'kana/vim-textobj-indent'                                          " for in
 Plug 'kana/vim-textobj-line'                                            " for current line (al/il)
 Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }              " ruby block text object (ar/ir)
 Plug 'andyl/vim-textobj-elixir'                                         " elixir block text object (ae/ie)
+      " let g:vim_textobj_elixir_mapping = 'E'
 Plug 'glts/vim-textobj-comment'                                         " comment text object (ac/ic)
 Plug 'michaeljsmith/vim-indent-object'
 Plug 'machakann/vim-textobj-delimited'                                  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
@@ -289,6 +291,8 @@ Plug 'mattn/vim-textobj-url'                                            " - u   
 Plug 'rhysd/vim-textobj-anyblock'                                       " - '', \"\", (), {}, [], <>
 Plug 'arthurxavierx/vim-caser'                                          " https://github.com/arthurxavierx/vim-caser#usage
 Plug 'Julian/vim-textobj-variable-segment'                              " variable parts (av/iv)
+Plug 'sgur/vim-textobj-parameter'                                       " function parameters (a,/i,)
+      let g:vim_textobj_parameter_mapping = ','
 Plug 'wellle/targets.vim'                                               " improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
@@ -342,6 +346,7 @@ Plug 'rhysd/reply.vim'
 Plug 'axvr/zepl.vim'
 Plug 'rizzatti/dash.vim'
 Plug 'skywind3000/vim-quickui'
+Plug 'Lenovsky/nuake'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if
