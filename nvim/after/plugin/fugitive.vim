@@ -4,4 +4,4 @@
 
 nnoremap <silent> <leader>gh :Gbrowse!<CR>
 vnoremap <silent> <leader>gh :Gbrowse!<CR>
-nnoremap <silent> <leader>gb :Gblame<CR>
+" nnoremap <silent> <leader>gb :Gblame<CR>

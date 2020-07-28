@@ -45,7 +45,7 @@ module.notify = function(n)
   :setIdImage(n.image)
   :send()
 
-  alert.showOnly({ text = '♬ '..n.state.. n.icon })
+  alert.showOnly({ text = '♬ ' .. n.state .. ' ' .. n.icon })
 end
 
 module.spotify = function (event, alertText)

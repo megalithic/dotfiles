@@ -1,3 +1,5 @@
+" Usages of Nuake and other elixir things
+" REF: https://github.com/alexcastano/dotfiles/blob/master/vim/.vim/vimrc#L402-L418
 augroup ft_elixir
   au!
 
@@ -20,16 +22,25 @@ augroup ft_elixir
   " sets up an IEx session with or without mix support based upon existence
   function! s:iex_for_project() abort
     let l:root = findfile('mix.exs', expand('%:p:h').';')
-    echo "Attempting to find root for IEx execution: " .. l:root
+    " echo "Attempting to find root for IEx execution: " .. glob(l:root)
 
     if !empty(glob(l:root))
-      echo "-> mix " .. glob(l:root)
-      echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
+      " echo "-> mix " .. glob(l:root)
+      " echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
       :Repl iex -S mix
+
+      " nnoremap <silent> <leader>tl :call nuake#SendCommand([""])<cr>
+      " :call nuake#SendCommand(["" . "iex -S mix"])
+
+      " call nuake#SendCommand([""])
+      " Ndo iex -S mix
     else
-      echo "-> no mix " .. glob(l:root)
-      echohl Comment | echom printf('iex (%s)', l:root) | echohl None
+      " echo "-> no mix " .. glob(l:root)
+      " echohl Comment | echom printf('iex (%s)', l:root) | echohl None
       :Repl iex
+
+      " call nuake#SendCommand([""])
+      " Ndo iex
     endif
   endfunction
 

@@ -54,51 +54,6 @@ function! SetModifiedSymbol(modified) abort
   endif
 endfunction
 
-function! StatuslineLsp() abort
-  let lsp = ''
-
-  let l:errors = luaeval('vim.lsp.util.buf_diagnostics_count("Error")')
-  let l:warnings = luaeval('vim.lsp.util.buf_diagnostics_count("Warning")')
-  let l:infos = luaeval('vim.lsp.util.buf_diagnostics_count("Information")')
-  let l:hints = luaeval('vim.lsp.util.buf_diagnostics_count("Hint")')
-
-  if l:errors
-    " let lsp .= ' %#StatuslineError %< '
-    " let lsp .= ' %#StatuslineError#' .. g:indicator_errors .. l:errors
-    " let lsp .= ' %#StatuslineError %< '
-
-    let lsp .= <SID>Color(active, 'Statusline', ' %<')
-    let lsp .= <SID>Color(active, 'StatuslineError', ' ' . l:errors . ' ')
-    " ' ' . g:readonly_symbol : ''
-  endif
-
-  if l:warnings
-    " let lsp .= ' %#StatuslineWarning# %< '
-    " let lsp .= ' %#StatuslineWarning#' .. g:indicator_warnings .. l:warnings
-    " let lsp .= ' %#StatuslineWarning# %< '
-
-    let lsp .= <SID>Color(active, 'StatuslineWarning', ' ' . l:warnings . ' ')
-  endif
-
-  if l:infos
-    " let lsp .= ' %#StatuslineInformation# %< '
-    " let lsp .= ' %#StatuslineInformation#' .. g:indicator_infos .. l:warnings
-    " let lsp .= ' %#StatuslineInformation# %< '
-
-    let lsp .= <SID>Color(active, 'StatuslineInformation', ' ' . l:infos . ' ')
-  endif
-
-  if l:hints
-    " let lsp .= ' %#StatuslineHint# %< '
-    " let lsp .= ' %#StatuslineHint#' .. g:indicator_hints .. l:warnings
-    " let lsp .= ' %#StatuslineHint# %< '
-
-    let lsp .= <SID>Color(active, 'StatuslineHint', ' ' . l:hints . ' ')
-  endif
-
-  return ''
-endfunction
-
 function! Statusline(winnum) abort
   let active = a:winnum == winnr()
   let bufnum = winbufnr(a:winnum)
@@ -130,7 +85,6 @@ function! Statusline(winnum) abort
   " File name
   let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
   let sl .= <SID>Color(active, modified ? 'StatuslineFilenameModified' : 'StatuslineFilename', '%{statusline#filename()}')
-  " let sl .= <SID>Color(active, modified ? 'StatuslineFilenameModified' : 'StatuslineFilename', '%{expand("%:p:h:t")}/%{expand("%:p:t")}')
   let sl .= <SID>Color(active, 'StatuslineFilename', ' %<')
 
   " File modified
@@ -147,7 +101,6 @@ function! Statusline(winnum) abort
 
   " Right side
   let sl .= <SID>Color(active, 'Statusline', '%=')
-  " let sl .= '%='
 
   " Filetype & icon
   if active
@@ -159,18 +112,11 @@ function! Statusline(winnum) abort
 
   " LSP status
   if active
-    " let sl .= <SID>Color(active, 'Statusline', <SID>LspStatus(bufnum))
-    " let sl .= <SID>Color(active, 'Statusline', ' %<')
     let sl .= <SID>Color(active, 'StatuslineError', '%{statusline#lsp_errors()}')
     let sl .= <SID>Color(active, 'StatuslineWarning', '%{statusline#lsp_warnings()}')
     let sl .= <SID>Color(active, 'StatuslineHint', '%{statusline#lsp_hints()}')
     let sl .= <SID>Color(active, 'StatuslineInformation', '%{statusline#lsp_informations()}')
-    " let sl .= <SID>Color(active, 'Statusline', ' %<')
   endif
-
-  " if active
-  "   let sl .= <SID>Color(active, 'Statusline', '%{StatuslineLsp()}')
-  " endif
 
   " Line, Column and Percent
   if active
@@ -192,4 +138,7 @@ endfunction
 augroup statusline
   autocmd!
   autocmd VimEnter,WinEnter,BufWinEnter * call <SID>RefreshStatusline()
+  " autocmd User LspDiagnosticsChanged call <SID>RefreshStatusline()
+  " autocmd User LspMessageUpdate call <SID>RefreshStatusline()
+  " autocmd User LspStatusUpdate call <SID>RefreshStatusline() "redrawstatus!
 augroup END

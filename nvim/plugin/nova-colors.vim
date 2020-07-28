@@ -29,6 +29,7 @@ function! s:nova_engage() abort
   hi clear SpellBad
   hi clear SpellCap
 
+
   " -- nova color constants --
 
   let g:normal_text = "#c5d4dd"

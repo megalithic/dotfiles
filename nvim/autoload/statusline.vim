@@ -6,13 +6,6 @@ function! statusline#filetype() abort
   return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
 endfunction
 
-function! s:trim(str)
-  if exists('*trim')
-    return trim(a:str)
-  endif
-  return substitute(a:str, '\s\+$', '', '')
-endfunction
-
 function! statusline#vc_status() abort
   let l:mark = g:vcs_symbol
   let l:branch = gitbranch#name()
@@ -26,14 +19,6 @@ function! statusline#vc_status() abort
   return l:branch !=# '' ? l:mark . ' ' . l:branch . ' ' . l:status : ''
   " return l:branch !=# '' ? l:status . l:mark . ' ' . l:branch . ' ' : ''
   " return l:branch !=# '' ? l:mark . ' ' . l:branch : ''
-endfunction
-
-function! statusline#have_lsp() abort
-  return luaeval('#vim.lsp.buf_get_clients() > 0')
-endfunction
-
-function! statusline#lsp() abort
-  return luaeval("require('lsp-status').status()")
 endfunction
 
 function! statusline#get_mode(mode) abort
@@ -129,37 +114,3 @@ function! statusline#lsp_hints() abort
   let l:all_hints = luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
   return l:all_hints == 0 ? '' : printf(" " . g:indicator_hints . " %d ", all_hints)
 endfunction
-
-" function! statusline#lsp() abort
-"   let l:sl = ''
-"   let l:errors = luaeval('vim.lsp.util.buf_diagnostics_count("Error")')
-"   let l:warnings = luaeval('vim.lsp.util.buf_diagnostics_count("Warning")')
-"   let l:infos = luaeval('vim.lsp.util.buf_diagnostics_count("Information")')
-"   let l:hints = luaeval('vim.lsp.util.buf_diagnostics_count("Hint")')
-
-"   if l:errors
-"     let l:sl .= ' %#StatuslineError %< '
-"     let l:sl .= ' %#StatuslineError#' .. g:indicator_errors .. l:errors
-"     let l:sl .= ' %#StatuslineError %< '
-"   endif
-
-"   if l:warnings
-"     let l:sl .= ' %#StatuslineWarning# %< '
-"     let l:sl .= ' %#StatuslineWarning#' .. g:indicator_warnings .. l:warnings
-"     let l:sl .= ' %#StatuslineWarning# %< '
-"   endif
-
-"   if l:infos
-"     let l:sl .= ' %#StatuslineInformation# %< '
-"     let l:sl .= ' %#StatuslineInformation#' .. g:indicator_infos .. l:infos
-"     let l:sl .= ' %#StatuslineInformation# %< '
-"   endif
-
-"   if l:hints
-"     let l:sl .= ' %#StatuslineHint# %< '
-"     let l:sl .= ' %#StatuslineHint#' .. g:indicator_hints .. l:hints
-"     let l:sl .= ' %#StatuslineHint# %< '
-"   endif
-
-"   return printf("%s", l:sl)
-" endfunction

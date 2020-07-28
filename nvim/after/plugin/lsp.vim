@@ -1,20 +1,25 @@
 set completeopt=menuone,noinsert,noselect
 
-inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-
 function! s:check_back_space() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
-smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'
-inoremap <silent><expr> <TAB>
+
+" let g:vsnip_snippet_dir = "~/dotfiles/snippets"
+
+imap <expr> <Tab>
       \ pumvisible() ? "\<C-n>" :
-      \ vsnip#available(1)  ? '<Plug>(vsnip-jump-next)' :
-      \ <SID>check_back_space() ? "\<TAB>" :
+      \ vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' :
+      \ <SID>check_back_space() ? "\<Tab>" :
       \ completion#trigger_completion()
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<Tab>'
+
+imap <expr> <S-Tab>
+      \ pumvisible() ? "\<C-p>" :
+      \ vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' :
+      \ "\<C-h>"
+smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 
 " -- completion-nvim
 let g:completion_enable_auto_hover = 1
@@ -141,7 +146,6 @@ call sign_define("LspDiagnosticsInformationSign", {"text" : g:sign_info, "texthl
 call sign_define("LspDiagnosticsHintSign", {"text" : g:sign_hint, "texthl" : "LspDiagnosticsWarningSign"})
 
 augroup lsp
-  " au! * <buffer>
   au!
   au User LspDiagnosticsChanged redrawstatus!
   au User LspMessageUpdate redrawstatus!

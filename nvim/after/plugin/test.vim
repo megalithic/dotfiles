@@ -6,6 +6,9 @@ endfunction
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
 
+" let g:test#custom_strategies = {'nuake': {cmd -> nuake#SendCommand(["" . cmd])}}
+" let g:test#strategy = 'nuake'
+
 " custom transformations exist in a per-filetype fashion..
 " - see nvim/ftplugin/elixir.vim
 " - etc..

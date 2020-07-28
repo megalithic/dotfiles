@@ -189,7 +189,7 @@ set -g status-left-length 100
 setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
 setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#3c4c55,bold]● }#I:#W "
 setw -g window-status-activity-style none
-setw -g window-status-bell-style 'fg=#3c4c55,bg=#2f3c44,dim'
+setw -g window-status-bell-style 'fg=#3c4c55,bg=#6a7d8a,dim'
 
 # -- right
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"

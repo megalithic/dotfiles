@@ -22,6 +22,19 @@ filetype plugin indent on  " try to recognize filetypes and load related plugins
 "
 syntax on
 
+" Disable built-in plugins
+let g:loaded_2html_plugin      = 1
+let g:loaded_gzip              = 1
+let g:loaded_matchparen        = 1
+let g:loaded_netrwPlugin       = 1
+let g:loaded_rrhelper          = 1
+let g:loaded_spellfile_plugin  = 1
+let g:loaded_tarPlugin         = 1
+let g:loaded_zipPlugin         = 1
+let g:loaded_matchit           = 1
+let g:loaded_tutor_mode_plugin = 1
+
+
 " General vim settings.
 "
 set autoindent        " Indented text
@@ -123,16 +136,6 @@ set wildignore+=*.DS_Store
 set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
 set wrap              " Wrap long lines
 
-" ## netrw
-" disable netrw
-let g:loaded_netrw = 1
-let g:loaded_netrwPlugin = 1
-let g:netrw_winsize = -28 " absolute width of netrw window
-let g:netrw_banner = 1 " do not display info on the top of window
-let g:netrw_liststyle = 3 " tree-view
-let g:netrw_sort_sequence = '[\/]$,*' " sort is affecting only: directories on the top, files below
-let g:netrw_browse_split = 0 " use the previous window to open file
-let g:netrw_altv = 1
 
 " Options specific to Neovim or Vim.
 if has("nvim")
@@ -236,9 +239,8 @@ Plug 'tweekmonster/startuptime.vim'
 Plug 'trevordmiller/nova-vim' "nova-colors.vim
 Plug 'Yggdroot/indentLine' "indentLine.vim
 Plug 'gcmt/taboo.vim' "taboo.vim
-" Plug 'dm1try/golden_size'
-Plug 'roman/golden-ratio'
-" Plug 'megalithic/golden-ratio' " vertical split layout manager
+Plug 'dm1try/golden_size'
+" Plug 'roman/golden-ratio'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'ryanoasis/vim-devicons'
@@ -342,11 +344,9 @@ Plug 'tpope/vim-projectionist' " projectionist.vim
 Plug 'dense-analysis/ale' " ale.vim
 Plug 'janko/vim-test' " test.vim
 Plug 'tpope/vim-ragtag' " ragtag.vim
-Plug 'rhysd/reply.vim'
 Plug 'axvr/zepl.vim'
 Plug 'rizzatti/dash.vim'
 Plug 'skywind3000/vim-quickui'
-Plug 'Lenovsky/nuake'
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if
@@ -371,7 +371,7 @@ Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
 Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
 Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'typescript', 'typescript.tsx'] }
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
-Plug 'iamcco/markdown-preview.nvim', {'for':'markdown', 'do':  ':call mkdp#util#install()', 'frozen': 1}
+Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
 Plug 'sheerun/vim-polyglot' "polyglot.vim
 
