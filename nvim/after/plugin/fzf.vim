@@ -34,6 +34,49 @@ if has('nvim')
   " Terminal buffer options for fzf
   autocmd! FileType fzf
   autocmd  FileType fzf set noshowmode noruler nonu
+
+  " https://github.com/pwntester/dotfiles/blob/master/config/nvim/plugins.vim#L273-L286
+  let g:nvim_lsp_code_action_menu = 'FZFCodeActionMenu'
+  function! FZFCodeActionMenu(actions, callback) abort
+    call fzf#run(fzf#wrap({
+          \ 'source': map(deepcopy(a:actions), {idx, item -> string(idx).'::'.item.title}),
+          \ 'sink': function('ApplyAction', [a:callback]),
+          \ 'options': '+m --with-nth 2.. -d "::"',
+          \ }))
+  endfunction
+  function! ApplyAction(callback, chosen) abort
+    let l:idx = split(a:chosen, '::')[0] + 1
+    execute 'call '.a:callback.'('.l:idx.')'
+  endfunction
+
+
+  function! GetColorFromHighlight(hl, element) abort
+    return synIDattr(synIDtrans(hlID(a:hl)), a:element.'#')
+  endfunction
+
+  let cobalt1_color = GetColorFromHighlight('Normal', 'bg')
+  let cobalt2_color = GetColorFromHighlight('EndOfBuffer', 'fg')
+  let blue_color = GetColorFromHighlight('Comment', 'fg')
+  let yellow_color = GetColorFromHighlight('Function', 'fg')
+  let green_color = GetColorFromHighlight('Title', 'fg')
+  let grey_color = GetColorFromHighlight('PMenu', 'fg')
+  let orange_color = GetColorFromHighlight('Identifier', 'fg')
+
+  " let g:fzf_layout = { 'window': 'lua require("window").floating_window(false, 0.6, 0.6)' }
+  " let $FZF_DEFAULT_OPTS='--no-inline-info --layout=reverse --margin=1,2 --color=dark '.
+  "       \ '--color=fg:'.grey_color.',bg:'.cobalt1_color.',hl:'.blue_color.' '.
+  "       \ '--color=fg+:'.yellow_color.',bg+:'.cobalt1_color.',hl+:'.yellow_color.' '.
+  "       \ '--color=marker:'.green_color.',spinner:'.orange_color.',header:'.blue_color.' '.
+  "       \ '--color=info:'.cobalt1_color.',prompt:'.blue_color.',pointer:'.blue_color
+
+  " nnoremap <leader>m :call fzf#vim#files('.', {'options': '--prompt ""'})<Return>
+  " nnoremap <leader>f :call fzf#vim#files('.', {'options': '--prompt ""'})<Return>
+  " nnoremap <leader>h :FZFFreshMru --prompt ""<Return>
+  " nnoremap <leader>c :BCommits<Return>
+  " nnoremap <leader>s :Snippets<Return>
+  " nnoremap <leader>o :Buffers<Return>
+  " nnoremap <leader>/ :call fzf#vim#search_history()<Return>
+  " nnoremap <leader>: :call fzf#vim#command_history()<Return>
 endif
 
 if has('nvim') && !exists('g:fzf_layout')

@@ -233,6 +233,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 
 Plug 'tweekmonster/startuptime.vim'
 
+
 "-----------------------------
 " Styling related plugings
 "-----------------------------
@@ -244,6 +245,7 @@ Plug 'dm1try/golden_size'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'ryanoasis/vim-devicons'
+
 
 "-----------------------------
 " General behaviour plugins
@@ -311,6 +313,7 @@ Plug 'tpope/vim-dispatch'
 Plug 'kyazdani42/nvim-web-devicons' " for file icons
 Plug 'kyazdani42/nvim-tree.lua'
 
+
 "-----------------------------
 " LSP/Completion plugins
 "-----------------------------
@@ -324,6 +327,7 @@ if has('nvim')
   Plug 'steelsojka/completion-buffers'
 endif
 
+
 "-----------------------------
 " Git plugins
 "-----------------------------
@@ -335,6 +339,7 @@ Plug 'wsdjeg/vim-fetch'
 Plug 'mattn/webapi-vim'
 Plug 'rhysd/conflict-marker.vim'
 Plug 'itchyny/vim-gitbranch'
+
 
 "-----------------------------
 " Development plugins
@@ -359,6 +364,7 @@ Plug 'sgur/vim-editorconfig'
 Plug 'zenbro/mirror.vim'
 Plug 'ChristianChiarulli/codi.vim'
 
+
 "-----------------------------
 " Filetype/Syntax/Lang plugins
 "-----------------------------
@@ -374,6 +380,7 @@ Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
 Plug 'sheerun/vim-polyglot' "polyglot.vim
+
 
 "-----------------------------
 " tmux support

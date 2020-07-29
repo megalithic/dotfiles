@@ -45,7 +45,9 @@ whitelist
 URLs
 &lt;
 CGI
-nvim
 hs
 weechat
+nvim
+lua
 lsp
+fzf

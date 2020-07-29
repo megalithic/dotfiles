@@ -78,7 +78,8 @@ let g:completion_customize_lsp_label = {
       \ 'Operator': "\uf915",
       \ 'Reference': "\uf87a",
       \ 'TypeParameter': "\uf278",
-      \ 'Default': "\uf29c"
+      \ 'Default': "\uf29c",
+      \ 'Buffers': "B",
       \}
 
 let g:completion_chain_complete_list = {
@@ -91,14 +92,14 @@ let g:completion_chain_complete_list = {
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
       \   },
       \ 'elixirls': [
-      \    {'complete_items': ['lsp', 'snippet']},
+      \    {'complete_items': ['lsp', 'snippet', 'buffers']},
       \    {'mode': 'keyn'},
       \    {'mode': 'tags'},
       \    {'mode': '<c-p>'},
       \    {'mode': '<c-n>'},
       \],
       \ 'elmls': [
-      \    {'complete_items': ['lsp', 'snippet']},
+      \    {'complete_items': ['lsp', 'snippet', 'buffers']},
       \    {'mode': 'keyn'},
       \    {'mode': 'tags'},
       \    {'mode': '<c-p>'},
@@ -106,21 +107,12 @@ let g:completion_chain_complete_list = {
       \],
       \ 'vim' : {
       \   'default': [
-      \       {'complete_items': ['lsp', 'snippet']},
+      \       {'complete_items': ['lsp', 'snippet', 'buffers']},
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
       \       {'mode': '<c-p>'},
       \       {'mode': '<c-n>'}],
       \   'string' : [
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
-      \   },
-      \ 'cpp' : {
-      \   'default': [
-      \       {'complete_items': ['lsp', 'snippet']},
-      \       {'mode': '<c-p>'},
-      \       {'mode': '<c-n>'}],
-      \   'comment': [],
-      \   'string' : [
-      \       {'complete_items': ['path']}]
       \   },
       \ 'markdown' : {
       \   'default': [

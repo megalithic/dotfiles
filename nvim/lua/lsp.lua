@@ -113,7 +113,14 @@ local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lf', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'vim' then
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  -- else
+    -- vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk',  'execute 'h '.expand('<cword>')', opts)
+
+  end
+
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>ld', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lp', '<cmd>lua peek_definition()<CR>', opts)
 

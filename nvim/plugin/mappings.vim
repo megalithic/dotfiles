@@ -191,3 +191,18 @@ inoremap <buffer> . .<C-g>u
 inoremap <buffer> : :<C-g>u
 inoremap <buffer> ; ;<C-g>u
 inoremap <buffer> ? ?<C-g>u
+
+" https://github.com/pwntester/dotfiles/blob/master/config/nvim/plugins.vim#L297
+nnoremap <Leader>gg :echo luaeval("require('window').floating_window(false, 0.9, 0.9)") <bar> call termopen("lazygit")<Return>
+function! Log(text) abort
+  if 1
+    silent execute '!echo '.a:text.' >> /tmp/log'
+  endif
+endfunction
+
+" debug syntax
+nmap <silent> gs :echo 'hi<'.synIDattr(synID(line('.'), col('.'), 1), 'name')
+	\.'> trans<'.synIDattr(synID(line('.'), col('.'), 0), 'name').'> lo<'
+	\.synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name').'>'<Return>
+
+" }}}
