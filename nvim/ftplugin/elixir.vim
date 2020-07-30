@@ -1,5 +1,6 @@
 " Usages of Nuake and other elixir things
 " REF: https://github.com/alexcastano/dotfiles/blob/master/vim/.vim/vimrc#L402-L418
+
 augroup ft_elixir
   au!
 

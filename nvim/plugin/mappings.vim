@@ -192,8 +192,9 @@ inoremap <buffer> : :<C-g>u
 inoremap <buffer> ; ;<C-g>u
 inoremap <buffer> ? ?<C-g>u
 
+nnoremap <Leader>ft :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :term<CR>
 " https://github.com/pwntester/dotfiles/blob/master/config/nvim/plugins.vim#L297
-nnoremap <Leader>gg :echo luaeval("require('window').floating_window(false, 0.9, 0.9)") <bar> call termopen("lazygit")<Return>
+nnoremap <Leader>gg :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :call termopen("lazygit")<CR>
 function! Log(text) abort
   if 1
     silent execute '!echo '.a:text.' >> /tmp/log'
@@ -203,7 +204,7 @@ endfunction
 " debug syntax
 nmap <silent> gs :echo 'hi<'.synIDattr(synID(line('.'), col('.'), 1), 'name')
 	\.'> trans<'.synIDattr(synID(line('.'), col('.'), 0), 'name').'> lo<'
-	\.synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name').'>'<Return>
+	\.synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name').'>'<CR>
 
 " Map execute this line
 function! s:executor() abort
@@ -213,7 +214,7 @@ function! s:executor() abort
     exe getline(">")
   endif
 endfunction
-" nnoremap <leader>x :call <SID>executor()<CR>
+nnoremap <leader>x :call <SID>executor()<CR>
 
 " Execute this file
 function! s:save_and_exec() abort
@@ -227,7 +228,7 @@ function! s:save_and_exec() abort
 
   return
 endfunction
-" nnoremap <leader><leader>x :call <SID>save_and_exec()<CR>
+nnoremap <leader><leader>x :call <SID>save_and_exec()<CR>
 
 " For moving quickly up and down,
 " Goes to the first line above/below that isn't whitespace

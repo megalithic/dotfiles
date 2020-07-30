@@ -67,10 +67,10 @@ augroup general
     autocmd TermOpen *        startinsert
     autocmd BufEnter term://* startinsert
 
+    autocmd TermClose * ++once :bd!
+
     " flash/highlight, in a fancy way, when text is yanked
-    if exists('##TextYankPost')
-      autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
-    endif
+    autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
   endif
 
   " Auto-close preview window when completion is done.
@@ -95,6 +95,8 @@ augroup general
   autocmd InsertLeave * if &filetype != "markdown"
                             \ | silent set colorcolumn=""
                             \ | endif
+
+  autocmd FileType markdown nested setlocal spell complete+=kspell
 
   " Open QuickFix horizontally with line wrap
   autocmd FileType qf wincmd J | setlocal wrap

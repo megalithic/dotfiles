@@ -5,7 +5,7 @@ local api = vim.api
 
 local M = {}
 
-function M.floating_window(border, width_per, heigth_per)
+function M.floating_window(border, width_per, height_per)
   validate {
     width_per = { width_per, 'n', true };
     height_per = { height_per, 'n', true };
@@ -47,6 +47,7 @@ function M.floating_window(border, width_per, heigth_per)
     for i=0,win_height-1 do
       api.nvim_buf_add_highlight(border_buf, 0, 'PopupWindowBorder', i, 0, -1)
     end
+
     border_win = api.nvim_open_win(border_buf, false, border_opts)
     api.nvim_win_set_option(border_win, "winhighlight", "Normal:Normal")
     api.nvim_win_set_option(border_win, 'wrap', false)

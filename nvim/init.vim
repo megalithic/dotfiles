@@ -61,6 +61,7 @@ set complete=.,w,b    " Sources for term and line completions
 " set completeopt=menu,menuone,noinsert,noselect
 set completeopt=menu,menuone,preview,noselect,noinsert
 set dictionary=/usr/share/dict/words
+set dictionary+=~/.config/nvim/spell/eng.utf-8.add
 set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
 set foldmethod=indent " Simple and fast
@@ -91,7 +92,7 @@ set noshowmode        " No to showing mode in bottom-left corner
 set noswapfile        " No backup files
 " set nowrapscan        " Don't wrap searches around
 " set number            " Show line numbers
-set nrformats=        " No to oct/hex support when doing CTRL-a/x
+set nrformats=alpha,hex,octal        " No to oct/hex support when doing CTRL-a/x
 set path=**
 " set relativenumber    " Show relative numbers
 set ruler
