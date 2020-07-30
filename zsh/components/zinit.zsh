@@ -1,25 +1,25 @@
 # -- zinit configuration
 
-zstyle ":history-search-multi-word" page-size "10"                      # Number of entries to show (default is $LINES/3)
-zstyle ":history-search-multi-word" highlight-color "fg=yellow,bold"    # Color in which to highlight matched, searched text (default bg=17 on 256-color terminals)
-zstyle ":plugin:history-search-multi-word" synhl "yes"                  # Whether to perform syntax highlighting (default true)
-zstyle ":plugin:history-search-multi-word" active "bg=#073642"          # Effect on active history entry. Try: standout, bold, bg=blue (default underline)
+# zstyle ":history-search-multi-word" page-size "10"                      # Number of entries to show (default is $LINES/3)
+# zstyle ":history-search-multi-word" highlight-color "fg=yellow,bold"    # Color in which to highlight matched, searched text (default bg=17 on 256-color terminals)
+# zstyle ":plugin:history-search-multi-word" synhl "yes"                  # Whether to perform syntax highlighting (default true)
+# zstyle ":plugin:history-search-multi-word" active "bg=#073642"          # Effect on active history entry. Try: standout, bold, bg=blue (default underline)
 
-zinit light-mode for \
-  zdharma/history-search-multi-word \
-  zsh-users/zsh-history-substring-search \
-  zinit-zsh/z-a-submods \
+# zinit light-mode for \
+#   zdharma/history-search-multi-word \
+#   zsh-users/zsh-history-substring-search \
+#   zinit-zsh/z-a-submods \
 
 zinit wait'0a' lucid for \
   atinit"zicompinit; zicdreplay" \
       zdharma/fast-syntax-highlighting \
   atload"_zsh_autosuggest_start" atinit='ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"; ZSH_AUTOSUGGEST_USE_ASYNC=1' \
-      zsh-users/zsh-autosuggestions \
-  blockf \
-    svn submods'zsh-users/zsh-completions -> external' \
-      PZT::modules/completion \
-  nocd depth=1 atinit='ZSH_BASH_COMPLETIONS_FALLBACK_LAZYLOAD_DISABLE=true' \
-      3v1n0/zsh-bash-completions-fallback \
+      zsh-users/zsh-autosuggestions #\
+  # blockf \
+  #   svn submods'zsh-users/zsh-completions -> external' \
+  #     PZT::modules/completion \
+  # nocd depth=1 atinit='ZSH_BASH_COMPLETIONS_FALLBACK_LAZYLOAD_DISABLE=true' \
+  #     3v1n0/zsh-bash-completions-fallback \
 
 # Load OMZ Git library
 zinit snippet OMZ::lib/git.zsh

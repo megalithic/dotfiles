@@ -237,9 +237,10 @@ Plug 'tweekmonster/startuptime.vim'
 "-----------------------------
 " Styling related plugings
 "-----------------------------
-Plug 'trevordmiller/nova-vim' "nova-colors.vim
-Plug 'Yggdroot/indentLine' "indentLine.vim
-Plug 'gcmt/taboo.vim' "taboo.vim
+Plug 'trevordmiller/nova-vim' " nova-colors.vim
+Plug 'pbrisbin/vim-colors-off' " for goyo
+Plug 'Yggdroot/indentLine' " indentLine.vim
+Plug 'gcmt/taboo.vim' " taboo.vim
 Plug 'dm1try/golden_size'
 " Plug 'roman/golden-ratio'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
@@ -363,6 +364,8 @@ Plug 'sgur/vim-editorconfig'
 " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'zenbro/mirror.vim'
 Plug 'ChristianChiarulli/codi.vim'
+Plug 'junegunn/goyo.vim'
+Plug 'junegunn/limelight.vim'
 
 
 "-----------------------------
@@ -379,6 +382,7 @@ Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'type
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
+Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
 Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 

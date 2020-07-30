@@ -1,3 +1,7 @@
+-- DEBUGGING LUA and LSP THINGS:
+-- :lua require('vim.lsp.log').set_level("debug")
+-- :lua print(vim.lsp.get_log_path())
+
 local has_lsp, nvim_lsp = pcall(require, 'nvim_lsp')
 if not has_lsp then
   return
@@ -102,7 +106,6 @@ local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>ls', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgt', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgs', '<cmd>lua vim.lsp.buf.document_symbol()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgS', '<cmd>lua vim.lsp.buf.workspace_symbol()<CR>', opts)
@@ -115,7 +118,8 @@ local on_attach = function(client, bufnr)
 
   if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'vim' then
     vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lh',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
   -- else
     -- vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk',  'execute 'h '.expand('<cword>')', opts)
 
@@ -126,11 +130,25 @@ local on_attach = function(client, bufnr)
 
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '[d', ':PrevDiagnosticCycle<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', ']d', ':NextDiagnosticCycle<CR>', opts)
+
+  -- vim.api.nvim_command [[autocmd CursorHold  <buffer> lua vim.lsp.buf.hover() ]]
+  -- vim.api.nvim_command [[autocmd CursorHoldI <buffer> lua vim.lsp.buf.hover() ]]
+
+  -- disable LSP highlighted for TS enabled buffers (completion-treesitter)
+  -- local ft = vim.api.nvim_buf_get_option(bufnr, 'filetype')
+  -- if ft ~= 'ql' and ft ~= 'lua' then
+  --   vim.api.nvim_command [[autocmd CursorHold  <buffer> lua vim.lsp.buf.document_highlight()]]
+  --   vim.api.nvim_command [[autocmd CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()]]
+  --   vim.api.nvim_command [[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
+  -- end
+
+  -- vim.api.nvim_command [[autocmd CursorHold  <buffer> lua vim.lsp.util.show_line_diagnostics()]]
+  -- vim.api.nvim_command [[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
 end
 
 -- DEFAULT config for all LSPs
-local servers = {'cssls', 'elmls', 'elixirls', 'html', 'tsserver', 'vimls'}
 -- local servers = {'cssls', 'bashls', 'diagnosticls', 'dockerls', 'elixirls', 'elmls', 'html', 'intelephense', 'tsserver', 'jsonls', 'pyls', 'rls', 'rust_analyzer', 'sourcekit', 'vimls'}
+local servers = {'cssls', 'elmls', 'elixirls', 'html', 'tsserver', 'vimls'}
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup({
       on_attach = on_attach,
@@ -138,8 +156,18 @@ for _, lsp in ipairs(servers) do
     })
 end
 
+nvim_lsp.elixirls.setup{
+  settings = {
+    elixirLS = {
+      dialyzerEnabled = false,
+    },
+  },
+  on_attach = on_attach,
+  capabilities = lsp_status.capabilities,
+}
+
 nvim_lsp.bashls.setup({
-    cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
+    cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
     filetypes = {"sh", "zsh", "bash", "fish"},
     root_dir = function()
       local cwd = vim.fn.getcwd()
@@ -162,7 +190,7 @@ nvim_lsp.pyls.setup({
   })
 
 -- nvim_lsp.diagnosticls.setup({
---     cmd = {"/Users/replicant/.cache/nvim/nvim_lsp/diagnosticls/node_modules/.bin/diagnostic-languageserver", "--stdio"},
+--     cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/diagnosticls/node_modules/.bin/diagnostic-languageserver", "--stdio"},
 --     on_attach = on_attach,
 --   })
 
@@ -185,9 +213,9 @@ nvim_lsp.sumneko_lua.setup({
     -- Runtime configurations
     filetypes = {"lua"},
     cmd = {
-      "/Users/replicant/.cache/nvim/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
+      vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
       "-E",
-      "/Users/replicant/.cache/nvim/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
+      vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
     },
     on_attach = on_attach,
     capabilities = lsp_status.capabilities,

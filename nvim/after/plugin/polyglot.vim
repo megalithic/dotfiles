@@ -6,6 +6,7 @@ let g:polyglot_disabled = [
       \ 'markdown',
       \ 'md',
       \ 'graphql',
+      \ 'lua',
       \ 'tsx',
       \ 'jsx',
       \ 'sass',

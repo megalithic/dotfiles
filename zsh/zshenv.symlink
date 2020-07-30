@@ -133,6 +133,7 @@ path=(
   $N_PREFIX/bin
   $CARGOPATH
   $CARGOBIN
+  "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin
   /usr/local/lib/node_modules
@@ -165,6 +166,7 @@ path=(
   # $HOME/.config/yarn/global/node_modules/.bin
   $path
 )
+
 for path_file in /etc/paths.d/*(.N); do
   path+=($(<$path_file))
 done

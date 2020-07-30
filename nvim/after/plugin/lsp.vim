@@ -36,23 +36,6 @@ let g:completion_max_items = 20
 let g:completion_sorting = "none" " none, length, alphabet
 let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
 
-" let g:completion_customize_lsp_label = {
-"       \ 'Function': '',
-"       \ 'Method': '',
-"       \ 'Reference': '',
-"       \ 'Enum': '',
-"       \ 'Field': 'ﰠ',
-"       \ 'Keyword': '',
-"       \ 'Variable': '',
-"       \ 'Folder': '',
-"       \ 'Snippet': '',
-"       \ 'Operator': '',
-"       \ 'Module': '',
-"       \ 'Text': 'ﮜ',
-"       \ 'Class': '',
-"       \ 'Interface': ''
-"       \}
-
 let g:completion_customize_lsp_label = {
       \ 'Function': "\uf794",
       \ 'Method': "\uf6a6",
@@ -79,7 +62,21 @@ let g:completion_customize_lsp_label = {
       \ 'Reference': "\uf87a",
       \ 'TypeParameter': "\uf278",
       \ 'Default': "\uf29c",
-      \ 'Buffers': "B",
+      \ 'Buffers': "\ufb18",
+      \ 'Function': "\uf794",
+      \ 'Method': ' ',
+      \ 'Reference': ' ',
+      \ 'Enum': ' ',
+      \ 'Field': 'ﰠ ',
+      \ 'Keyword': ' ',
+      \ 'Variable': ' ',
+      \ 'Folder': ' ',
+      \ 'Snippet': ' ',
+      \ 'Operator': ' ',
+      \ 'Module': ' ',
+      \ 'Text': 'ﮜ',
+      \ 'Class': ' ',
+      \ 'Interface': ' '
       \}
 
 let g:completion_chain_complete_list = {
