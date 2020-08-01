@@ -139,4 +139,9 @@ augroup ft_elixir
   au BufNewFile,BufRead */live/*.ex,*.html.leex command! -buffer R call <SID>RelatedFileForPhoenixLiveView()
   au BufNewFile,BufRead */live/*.ex,*.html.leex nnoremap <silent> <buffer> <leader>eR :call <SID>RelatedFileForPhoenixLiveView()<CR>
   au FileType elixir map <buffer> <leader>r :RunElixir<CR>
+
+
+
+  " TODO: get neoformat working correctly for file formatting without undo tree?
+  " autocmd BufWritePre * undojoin | Neoformat
 augroup END

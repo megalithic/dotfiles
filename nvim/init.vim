@@ -255,7 +255,6 @@ Plug 'nelstrom/vim-visual-star-search'
 Plug 'tommcdo/vim-lion' "lion.vim
 " Plug 'chaoren/vim-wordmotion' "wordmotion.vim
 Plug 'cohama/lexima.vim'
-Plug 'tpope/vim-endwise'
 Plug 'tpope/vim-eunuch' "eunuch.vim
 Plug 'tpope/vim-abolish'
 " https://github.com/tpope/vim-abolish/blob/master/doc/abolish.txt#L146-L162

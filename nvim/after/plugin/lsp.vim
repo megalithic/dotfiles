@@ -1,12 +1,12 @@
 set completeopt=menuone,noinsert,noselect
 
+
+" -- mappings
+
 function! s:check_back_space() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
-
-
-" let g:vsnip_snippet_dir = "~/dotfiles/snippets"
 
 imap <expr> <Tab>
       \ pumvisible() ? "\<C-n>" :
@@ -21,7 +21,21 @@ imap <expr> <S-Tab>
       \ "\<C-h>"
 smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 
+let g:completion_confirm_key = ""
+imap <expr> <CR>
+      \ pumvisible() ?
+      \ complete_info()["selected"] != "-1" ? "\<Plug>(completion_confirm_completion)" : "\<C-E>\<CR>" :
+      \ "\<C-R>=lexima#expand('<CR>', 'i')\<CR>"
+
+
+" -- vsnip
+
+" FIXME: convert my templates over from ultisnips to vsnip
+" let g:vsnip_snippet_dir = ""
+
+
 " -- completion-nvim
+
 let g:completion_enable_auto_hover = 1
 let g:completion_enable_auto_popup = 1
 let g:completion_enable_auto_signature = 1
@@ -147,7 +161,9 @@ let g:completion_chain_complete_list = {
       \   },
       \}
 
+
 " -- diagnostic-nvim
+
 let g:diagnostic_enable_virtual_text = 1
 let g:diagnostic_virtual_text_prefix = "\uf63d" "
 let g:diagnostic_show_sign = 1
