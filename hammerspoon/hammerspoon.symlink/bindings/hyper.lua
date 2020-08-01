@@ -7,6 +7,7 @@ local module = {}
 -- local forceLaunchOrFocus = require('ext.application').forceLaunchOrFocus
 -- local smartLaunchOrFocus = require('ext.application').smartLaunchOrFocus
 local toggle = require('ext.application').toggle
+local focusOnly = require('ext.application').focusOnly
 local media = require('bindings.media')
 
 local hyper = hs.hotkey.modal.new({}, nil)
@@ -32,7 +33,17 @@ end
 local appLaunchOrFocus = function(app)
   if app.hyper_key then
     log.df("hyper_key found for %s (%s)", app.name, app.hyper_key)
-    hyper:bind({}, app.hyper_key, function() toggle(app.bundleID, false); end)
+    hyper:bind({}, app.hyper_key, function()
+      if app.launchMode ~= nil then
+        if app.launchMode == 'focus' then
+          focusOnly(app.bundleID)
+        else
+          toggle(app.bundleID, false)
+        end
+      else
+        toggle(app.bundleID, false)
+      end
+    end)
   end
 end
 

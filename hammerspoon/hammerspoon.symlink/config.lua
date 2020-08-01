@@ -196,7 +196,8 @@ module.apps = {
     hyper_key ='z',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
-    dnd = { enabled = true, mode = "zoom" },
+    launchMode = 'focus',
+    -- dnd = { enabled = true, mode = "zoom" },
     rules = {
       {title = 'Zoom', rule = 'quit'},
       {title = 'Zoom Meeting', rule = 'snap'},

@@ -192,9 +192,9 @@ inoremap <buffer> : :<C-g>u
 inoremap <buffer> ; ;<C-g>u
 inoremap <buffer> ? ?<C-g>u
 
-nnoremap <Leader>ft :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :term<CR>
+nnoremap <leader>ft :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :term<CR>
 " https://github.com/pwntester/dotfiles/blob/master/config/nvim/plugins.vim#L297
-nnoremap <Leader>gg :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :call termopen("lazygit")<CR>
+nnoremap <leader>gg :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :call termopen("lazygit")<CR>
 function! Log(text) abort
   if 1
     silent execute '!echo '.a:text.' >> /tmp/log'
@@ -214,7 +214,7 @@ function! s:executor() abort
     exe getline(">")
   endif
 endfunction
-nnoremap <leader>x :call <SID>executor()<CR>
+" nnoremap <leader>x :call <SID>executor()<CR>
 
 " Execute this file
 function! s:save_and_exec() abort
@@ -226,12 +226,11 @@ function! s:save_and_exec() abort
     :luafile %
   endif
 
-  return
+  " return
 endfunction
-nnoremap <leader><leader>x :call <SID>save_and_exec()<CR>
+nmap <leader>x :call <SID>save_and_exec()<CR>
 
 " For moving quickly up and down,
 " Goes to the first line above/below that isn't whitespace
 " Thanks to: http://vi.stackexchange.com/a/213
 nnoremap gj :let _=&lazyredraw<CR>:set lazyredraw<CR>/\%<C-R>=virtcol(".")<CR>v\S<CR>:nohl<CR>:let &lazyredraw=_<CR>
-nnoremap gk :let _=&lazyredraw<CR>:set lazyredraw<CR>?\%<C-R>=virtcol(".")<CR>v\S<CR>:nohl<CR>:let &lazyredraw=_<CR>

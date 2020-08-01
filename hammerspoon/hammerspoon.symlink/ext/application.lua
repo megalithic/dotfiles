@@ -13,6 +13,18 @@ module.activateFrontmost = function()
   if frontmostWindow then frontmostWindow:raise():focus() end
 end
 
+module.focusOnly = function(appIdentifier)
+  local app = hs.application.find(appIdentifier)
+  local appBundleID = app and (app:bundleID() or appIdentifier)
+
+  if app~= nil and appIdentifier ~= nil then
+    log.df('focusing (%s)', appIdentifier)
+    app:activate()
+  else
+    log.wf('appIdentifier (%s) is nil -- likely not running', appIdentifier, appBundleID)
+  end
+end
+
 
 -- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
 -- +--- possibly more robust app toggler

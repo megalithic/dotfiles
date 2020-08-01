@@ -23,29 +23,17 @@ augroup ft_elixir
   " sets up an IEx session with or without mix support based upon existence
   function! s:iex_for_project() abort
     let l:root = findfile('mix.exs', expand('%:p:h').';')
-    " echo "Attempting to find root for IEx execution: " .. glob(l:root)
-
     if !empty(glob(l:root))
       " echo "-> mix " .. glob(l:root)
       " echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
-      :Repl iex -S mix
-
-      " nnoremap <silent> <leader>tl :call nuake#SendCommand([""])<cr>
-      " :call nuake#SendCommand(["" . "iex -S mix"])
-
-      " call nuake#SendCommand([""])
-      " Ndo iex -S mix
+      :25 Repl iex -S mix
     else
       " echo "-> no mix " .. glob(l:root)
       " echohl Comment | echom printf('iex (%s)', l:root) | echohl None
-      :Repl iex
-
-      " call nuake#SendCommand([""])
-      " Ndo iex
+      :25 Repl iex
     endif
   endfunction
 
-  " NOTE: presently failing silently. :(
   nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
 
   nmap <silent> <leader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile<CR>

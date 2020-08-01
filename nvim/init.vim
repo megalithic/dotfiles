@@ -248,7 +248,6 @@ Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), 
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'ryanoasis/vim-devicons'
 
-
 "-----------------------------
 " General behaviour plugins
 "-----------------------------
@@ -256,6 +255,7 @@ Plug 'nelstrom/vim-visual-star-search'
 Plug 'tommcdo/vim-lion' "lion.vim
 " Plug 'chaoren/vim-wordmotion' "wordmotion.vim
 Plug 'cohama/lexima.vim'
+Plug 'tpope/vim-endwise'
 Plug 'tpope/vim-eunuch' "eunuch.vim
 Plug 'tpope/vim-abolish'
 " https://github.com/tpope/vim-abolish/blob/master/doc/abolish.txt#L146-L162
@@ -319,7 +319,7 @@ Plug 'kyazdani42/nvim-tree.lua'
 "-----------------------------
 " LSP/Completion plugins
 "-----------------------------
-if has('nvim')
+if has("nvim-0.5.0")
   Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
   Plug 'nvim-lua/diagnostic-nvim'
   Plug 'nvim-lua/completion-nvim'
