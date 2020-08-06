@@ -61,7 +61,7 @@ set complete=.,w,b    " Sources for term and line completions
 " set completeopt=menu,menuone,noinsert,noselect
 set completeopt=menu,menuone,preview,noselect,noinsert
 set dictionary=/usr/share/dict/words
-set dictionary+=~/.config/nvim/spell/eng.utf-8.add
+set dictionary+=~/.config/nvim/spell/en.utf-8.add
 set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
 set foldmethod=indent " Simple and fast
@@ -353,6 +353,7 @@ Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'axvr/zepl.vim'
 Plug 'rizzatti/dash.vim'
 Plug 'skywind3000/vim-quickui'
+Plug 'mattn/emmet-vim', { 'for': ['css', 'elm', 'haml', 'html', 'jade', 'less', 'sass', 'scss', 'slim', 'elixir', 'eelixir', 'markdown', 'liquid'] }
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if

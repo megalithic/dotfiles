@@ -117,6 +117,7 @@ cdpath=(
 # unset path_file
 
 # Set the list of directories that Zsh searches for programs.
+# "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
 path=(
   ./bin
   ./.bin
@@ -133,7 +134,6 @@ path=(
   $N_PREFIX/bin
   $CARGOPATH
   $CARGOBIN
-  "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
   /usr/local/{bin,sbin}
   /usr/local/share/npm/bin
   /usr/local/lib/node_modules

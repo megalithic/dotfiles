@@ -125,7 +125,7 @@ local on_attach = function(client, bufnr)
 
   end
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>ld', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>', opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lD', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lp', '<cmd>lua peek_definition()<CR>', opts)
 
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '[d', ':PrevDiagnosticCycle<CR>', opts)

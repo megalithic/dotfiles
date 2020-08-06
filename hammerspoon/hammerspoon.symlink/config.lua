@@ -107,6 +107,14 @@ module.apps = {
     position = module.grid.rightHalf,
     quitGuard = true
   },
+  ['com.insomnia.app'] = {
+    bundleID = 'com.insomnia.app',
+    name = 'Insomnia',
+    hyper_key ='i',
+    preferredDisplay = 1,
+    position = module.grid.centeredMedium,
+    quitGuard = false
+  },
   ['com.runningwithcrayons.Alfred'] = {
     name = 'Alfred',
     bundleID = 'com.runningwithcrayons.Alfred',

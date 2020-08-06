@@ -40,6 +40,8 @@ module.init = function()
     end)
   end
 
+  listWindows = dumpWindows
+
   dumpUsbDevices = function()
     hs.fnutils.each(hs.usb.attachedDevices(), function(usb)
       print(hs.inspect({

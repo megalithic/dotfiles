@@ -63,6 +63,7 @@ function! GoyoBefore()
   set noshowcmd
   set scrolloff=999
   Limelight
+  " PencilSoft
   color off
 endfunction
 
@@ -73,6 +74,7 @@ function! GoyoAfter()
   set showcmd
   set scrolloff=8
   Limelight!
+  " PencilOff
   if has('gui_running')
     set showtabline=0
   elseif exists('$TMUX')

@@ -1,3 +1,6 @@
+-- REF: some interesting and useful things:
+-- https://github.com/dbmrq/dotfiles/blob/master/home/.hammerspoon/winman.lua
+
 local log = hs.logger.new('[bindings.snap]', 'warning')
 local chain = require('ext.window').chain
 

@@ -1,0 +1,153 @@
+{
+  "eex_render_block": {
+    "prefix": "et",
+    "body": ["<%= $1 %>"],
+    "description": "<%= %> render block"
+  },
+  "eex_exec_block": {
+    "prefix": ["ee", "e-"],
+    "body": ["<% $1 %>"],
+    "description": "<% %> exec block"
+  },
+  "eex_comment_block": {
+    "prefix": "ec",
+    "body": ["<%# $1 %>"],
+    "description": "<%# %> comment block"
+  },
+  "eex_end_tag": {
+    "prefix": "end",
+    "body": ["<% end %>$1"],
+    "description": "<% end %> end tag"
+  },
+  "for": {
+    "prefix": "for",
+    "body": [
+      "<%= for ${1:item} <- @$1s do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "eex for"
+  },
+  "eex_if": {
+    "prefix": "if",
+    "body": [
+      "<%= if $1 do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "eex if"
+  },
+  "eex_if_else": {
+    "prefix": "ife",
+    "body": [
+      "<%= if $1 do %>",
+      "  $2",
+      "<% else %>",
+      "  $3",
+      "<% end %>"
+    ],
+    "description": "eex if else"
+  },
+  "eex_else": {
+    "prefix": "else",
+    "body": [
+      "<% else %>"
+    ],
+    "description": "eex else"
+  },
+  "eex_cond": {
+    "prefix": "cond",
+    "body": [
+      "<%= cond do %>",
+      "  <% $1 -> %>",
+      "    $2",
+      "  <% true -> %>",
+      "    $3",
+      "<% end %>"
+    ],
+    "description": "eex cond"
+  },
+  "eex_unless": {
+    "prefix": "unless",
+    "body": [
+      "<%= unless $1 do %>",
+      "  $2",
+      "<% end %>"
+    ],
+    "description": "eex unless"
+  },
+  "eex_form_for": {
+    "prefix": "ff",
+    "body": [
+      "<%= form_for @${1:changeset}, ${2:url}, ${3:[]}, fn f -> %>",
+      "  $4",
+      "<% end %>"
+    ],
+    "description": "eex form_for"
+  },
+  "eex_error_tag": {
+    "prefix": "et",
+    "body": [
+      "<%= error_tag ${1:f}, :${2:field} %>"
+    ],
+    "description": "eex form error tag"
+  },
+  "eex_text_input": {
+    "prefix": "ti",
+    "body": [
+      "<%= text_input ${1:f}, :${2:field} %>"
+    ],
+    "description": "eex form text input"
+  },
+  "eex_label": {
+    "prefix": "la",
+    "body": [
+      "<%= label ${1:f}, :${2:field}, \"${3:Text}\" %>"
+    ],
+    "description": "eex form label"
+  },
+  "eex_submit": {
+    "prefix": "subm",
+    "body": [
+      "<%= submit ${1:Text} %>"
+    ],
+    "description": "eex form submit"
+  },
+  "eex_submit_c": {
+    "prefix": "submc",
+    "body": [
+      "<%= submit ${1:Text}, class: \"${3:btn btn-primary}\" %>"
+    ],
+    "description": "eex form submit with class"
+  },
+  "eex_password_input": {
+    "prefix": "pi",
+    "body": [
+      "<%= password_input ${1:f}, :${2:field} %>"
+    ],
+    "description": "eex form password input"
+  },
+  "eex_link": {
+    "prefix": "lt",
+    "body": [
+      "<%= link \"${1:text}\", to: ${2:url} %>"
+    ],
+    "description": "eex link"
+  },
+  "eex_link_block": {
+    "prefix": "ltb",
+    "body": [
+      "<%= link to: ${1:url} do %>",
+      "\t${2:text}",
+      "<% end %>"
+    ],
+    "description": "eex link block"
+  },
+  "eex_render": {
+    "prefix": "render",
+    "body": [
+      "<%= render \"${1:partial}.html\", ${2:local_var: @local} %>"
+    ],
+    "description": "eex render"
+  }
+}

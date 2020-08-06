@@ -343,7 +343,7 @@ alias resetlsd=fixlsd
 alias rmds="find . -name '*.DS_Store' -type f -delete"
 
 # Enhanced WHOIS lookups
-alias whois="whois -h whois-servers.net"
+# alias whois="whois -h whois-servers.net"
 
 # Flush Directory Service cache; http://osxdaily.com/2014/11/20/flush-dns-cache-mac-os-x/
 alias dnsflush="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"

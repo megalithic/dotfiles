@@ -21,17 +21,20 @@ imap <expr> <S-Tab>
       \ "\<C-h>"
 smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 
-let g:completion_confirm_key = ""
-imap <expr> <CR>
-      \ pumvisible() ?
-      \ complete_info()["selected"] != "-1" ? "\<Plug>(completion_confirm_completion)" : "\<C-E>\<CR>" :
-      \ "\<C-R>=lexima#expand('<CR>', 'i')\<CR>"
+" let g:completion_confirm_key = ""
+" imap <expr> <CR>
+"       \ pumvisible() ?
+"       \ complete_info()["selected"] != "-1" ? "\<Plug>(completion_confirm_completion)" : "\<C-E>\<CR>" :
+"       \ "\<C-R>=lexima#expand('<CR>', 'i')\<CR>"
 
+" let g:completion_confirm_key = ""
+" imap <expr> <CR>
+"       \ pumvisible() ? complete_info()["selected"] != "-1" ?
+"       \ "\<Plug>(completion_confirm_completion)" : "\<C-E>\<CR>" : "\<CR>"
 
 " -- vsnip
 
-" FIXME: convert my templates over from ultisnips to vsnip
-" let g:vsnip_snippet_dir = ""
+let g:vsnip_snippet_dir = "~/.dotfiles/nvim/vsnips"
 
 
 " -- completion-nvim
