@@ -53,6 +53,6 @@ let g:ale_sign_priority            = 50
 " mappings to navigate the location list
 nmap <silent> [W :lfirst<CR>zz
 nmap <silent> ]W :llast<CR>zz
-nmap <Space>f    <Plug>(ale_fix)
-nmap <Space>l    <Plug>(ale_enable_buffer)
-nmap <Space><BS> <Plug>(ale_disable_buffer)
+" nmap <Space>f    <Plug>(ale_fix)
+" nmap <Space>l    <Plug>(ale_enable_buffer)
+" nmap <Space><BS> <Plug>(ale_disable_buffer)

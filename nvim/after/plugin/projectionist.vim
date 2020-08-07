@@ -20,6 +20,26 @@ let g:projectionist_heuristics = {
       \        "end"
       \      ]
       \    },
+      \    "lib/**/live/*_live.ex": {
+      \      "type": "live",
+      \      "alternate": "test/{dirname}/views/{basename}_live_test.exs",
+      \      "template": [
+      \        "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live do",
+      \        "  use {dirname|camelcase|capitalize}, :live_view",
+      \        "end"
+      \      ]
+      \    },
+      \    "test/**/live/*_live_test.exs": {
+      \      "alternate": "lib/{dirname}/live/{basename}_live.ex",
+      \      "type": "test",
+      \      "template": [
+      \        "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}LiveTest do",
+      \        "  use ExUnit.Case, async: true",
+      \        "",
+      \        "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live",
+      \        "end"
+      \      ]
+      \    },
       \    "lib/**/controllers/*_controller.ex": {
       \      "type": "controller",
       \      "alternate": "test/{dirname}/controllers/{basename}_controller_test.exs",
@@ -68,7 +88,7 @@ let g:projectionist_heuristics = {
       \    },
       \    "lib/*.ex": {
       \      "alternate": "test/{}_test.exs",
-      \      "type": "source",
+      \      "type": "src",
       \      "template": ["defmodule {camelcase|capitalize|dot} do", "end"]
       \    },
       \    "test/*_test.exs": {
@@ -82,11 +102,7 @@ let g:projectionist_heuristics = {
       \        "end"
       \      ]
       \    },
-      \    "mix.exs": {
-      \      "type": "mix"
-      \    },
-      \    "config/config.exs": {
-      \      "type": "config"
-      \    }
+      \    "mix.exs": { "type": "mix" },
+      \    "config/*.exs": { "type": "config" }
       \  }
       \}

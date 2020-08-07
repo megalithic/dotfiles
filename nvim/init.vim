@@ -353,7 +353,7 @@ Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'axvr/zepl.vim'
 Plug 'rizzatti/dash.vim'
 Plug 'skywind3000/vim-quickui'
-Plug 'mattn/emmet-vim', { 'for': ['css', 'elm', 'haml', 'html', 'jade', 'less', 'sass', 'scss', 'slim', 'elixir', 'eelixir', 'markdown', 'liquid'] }
+" Plug 'mattn/emmet-vim', { 'for': ['css', 'elm', 'haml', 'html', 'jade', 'less', 'sass', 'scss', 'slim', 'elixir', 'eelixir', 'markdown', 'liquid'] }
 
 " Sleuth and EditorConfig will adjust style and indent either heuristically
 " (former) or explicitly (later). Note, EditorConfig will take precedence if
