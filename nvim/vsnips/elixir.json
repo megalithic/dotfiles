@@ -1,0 +1,70 @@
+{
+  "lv_module": {
+    "prefix": "lv",
+    "body": [
+      "defmodule LiveViewStudioWeb.${1}Live do",
+      "  use LiveViewStudioWeb, :live_view",
+      "end"
+    ],
+    "description": "LiveView module"
+  },
+  "lv_mount": {
+    "prefix": "mount",
+    "body": [
+      "def mount(_params, _session, socket) do",
+      "  socket = assign(socket, ${1:key}: ${2:value})",
+      "  {:ok, socket}",
+      "end"
+    ],
+    "description": "LiveView mount function"
+  },
+  "lv_rend": {
+    "prefix": "rend",
+    "body": [
+      "def render(assigns) do",
+      "  ~L\"\"\"",
+      "  ${0}",
+      "  \"\"\"",
+      "end"
+    ],
+    "description": "LiveView render function"
+  },
+  "lv_handle_event": {
+    "prefix": "he",
+    "body": [
+      "def handle_event(${1:event}, _, socket) do",
+      "  socket = assign(socket, ${2:key}: ${3:value})",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_event function"
+  },
+  "lv_handle_info": {
+    "prefix": "hi",
+    "body": [
+      "def handle_info(${1:message}, socket) do",
+      "  socket = assign(socket, ${2:key}: ${3:value})",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_info function"
+  },
+  "lv_handle_params": {
+    "prefix": "hp",
+    "body": [
+      "def handle_params(params, _url, socket) do",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_params function"
+  },
+  "lv_template": {
+    "prefix": "lt",
+    "body": [
+      "~L\"\"\"",
+      "${0}",
+      "\"\"\""
+    ],
+    "description": "LiveView inline template"
+  }
+}
