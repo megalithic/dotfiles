@@ -1,7 +1,7 @@
 -- TODO: can now use this module in other modules, so extract out these bindings
 -- again
 
-local log = hs.logger.new('[bindings.hyper]', 'warning')
+local log = hs.logger.new('[bindings.hyper]', 'debug')
 
 local module = {}
 -- local forceLaunchOrFocus = require('ext.application').forceLaunchOrFocus

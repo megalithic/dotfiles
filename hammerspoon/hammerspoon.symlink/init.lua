@@ -28,7 +28,7 @@ watchers                    = require('utils.watchers')
 wm                          = require('utils.wm')
 
 -- controlplane
-controlplane.enabled        = { 'dock', 'office', 'vpn' }
+controlplane.enabled        = { 'dock', 'office' }
 
 -- watchers
 watchers.enabled            = { 'urlevent' }

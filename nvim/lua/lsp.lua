@@ -1,94 +1,25 @@
 -- DEBUGGING LUA and LSP THINGS:
 -- :lua require('vim.lsp.log').set_level("debug")
 -- :lua print(vim.lsp.get_log_path())
+-- :lua print(vim.inspect(vim.tbl_keys(vim.lsp.callbacks)))
 
 local has_lsp, nvim_lsp = pcall(require, 'nvim_lsp')
-if not has_lsp then
-  return
-end
+if not has_lsp then return end
 
 local has_diagnostic, diagnostic = pcall(require, 'diagnostic')
 local has_completion, completion = pcall(require, 'completion')
-local lsp_status = require('lsp-status')
-
-lsp_status.register_progress()
-
--- local function preview_location_callback(_, method, result)
---   if result == nil or vim.tbl_isempty(result) then
---     vim.lsp.log.info(method, 'No location found')
---     return nil
---   end
---   if vim.tbl_islist(result) then
---     vim.lsp.util.preview_location(result[1])
---   else
---     vim.lsp.util.preview_location(result)
---   end
--- end
-
--- function peek_definition()
---   local params = vim.lsp.util.make_position_params()
---   return vim.lsp.buf_request(0, 'textDocument/definition', params, preview_location_callback)
--- end
-
-function preview_location(location, context)
-  -- location may be LocationLink or Location (more useful for the former)
-  context = context or 5
-  local uri = location.targetUri or location.uri
-  if uri == nil then
-    return
-  end
-  local bufnr = vim.uri_to_bufnr(uri)
-  if not vim.api.nvim_buf_is_loaded(bufnr) then
-    vim.fn.bufload(bufnr)
-  end
-  local range = location.targetRange or location.range
-  local contents =
-  vim.api.nvim_buf_get_lines(bufnr, range.start.line - context, range["end"].line + 1 + context, false)
-  local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
-  return vim.lsp.util.open_floating_preview(contents, filetype)
-end
-
-function switch_header_source()
-  vim.lsp.buf_request(
-    0,
-    "textDocument/switchSourceHeader",
-    vim.lsp.util.make_text_document_params(),
-    function(err, _, result, _, _)
-      if err then
-        print(err)
-      else
-        vim.cmd("e " .. vim.uri_to_fname(result))
-      end
-    end
-    )
-end
-
-function preview_location_callback(_, method, result, context)
-  context = context or 5
-  if result == nil or vim.tbl_isempty(result) then
-    vim.lsp.log.info(method, "No location found")
-    return nil
-  end
-  if vim.tbl_islist(result) then
-    preview_location(result[1])
-  else
-    preview_location(result)
-  end
-end
-
-function peek_definition(context)
-  context = context or 5
-  local params = vim.lsp.util.make_position_params()
-  return vim.lsp.buf_request(0, "textDocument/definition", params, preview_location_callback, context)
-end
 
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
   -- TODO/REF: https://github.com/delianides/dotfiles/blob/1b3ee23e9e254b8a654e85c743ff761b1dfc9d5e/tag-vim/vim/lua/lsp.lua#L39
   -- local resolved_capabilities = client.resolved_capabilities
-
-  lsp_status.on_attach(client)
+  -- if resolved_capabilities.document_highlight then
+  --   vim.api.nvim_command[[autocmd CursorHold  <buffer> lua vim.lsp.buf.document_highlight()]]
+  --   vim.api.nvim_command[[autocmd CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()]]
+  --   vim.api.nvim_command[[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
+  -- end
+  -- print(vim.inspect(vim.tbl_keys(resolved_capabilities)))
 
   if has_diagnostic then
     diagnostic.on_attach()
@@ -96,40 +27,33 @@ local on_attach = function(client, bufnr)
 
   if has_completion then
     completion.on_attach()
-   -- completion.on_attach({
-    --     sorter = 'alphabet',
-    --     matcher = {'exact', 'substring', 'fuzzy'}
-    --   })
   end
 
-  local opts = { noremap=true, silent=true }
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgt', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgs', '<cmd>lua vim.lsp.buf.document_symbol()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lgS', '<cmd>lua vim.lsp.buf.workspace_symbol()<CR>', opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>de', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+  -- This came from https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/lsp_config.lua
+  local mapper = function(mode, key, result)
+    vim.fn.nvim_buf_set_keymap(0, mode, key, result, {noremap=true, silent=true})
+  end
+  mapper('n', '<Leader>lgd', '<cmd>lua vim.lsp.buf.definition()<CR>')
+  mapper('n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>')
+  mapper('n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>')
+  mapper('n', '<Leader>lgt', '<cmd>lua vim.lsp.buf.type_definition()<CR>')
+  mapper('n', '<Leader>lgs', '<cmd>lua vim.lsp.buf.document_symbol()<CR>')
+  mapper('n', '<Leader>lgS', '<cmd>lua vim.lsp.buf.workspace_symbol()<CR>')
+  -- mapper('n', '<Leader>de', '<cmd>lua vim.lsp.buf.declaration()<CR>')
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>ln', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+  mapper('n', '<Leader>ln', '<cmd>lua vim.lsp.buf.rename()<CR>')
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lf', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+  mapper('n', '<Leader>lf', '<cmd>lua vim.lsp.buf.formatting()<CR>')
+  mapper('n', '<Leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>')
 
   if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'vim' then
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lh',  '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
-    vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
-  -- else
-    -- vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lk',  'execute 'h '.expand('<cword>')', opts)
-
+    mapper('n', '<Leader>lh',  '<cmd>lua vim.lsp.buf.hover()<CR>')
+    mapper('n', '<Leader>lk', '<cmd>lua vim.lsp.buf.signature_help()<CR>')
   end
+  mapper('n', '<Leader>lD', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>')
 
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lD', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<Leader>lp', '<cmd>lua peek_definition()<CR>', opts)
-
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '[d', ':PrevDiagnosticCycle<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', ']d', ':NextDiagnosticCycle<CR>', opts)
+  mapper('n', '[d', ':PrevDiagnosticCycle<CR>')
+  mapper('n', ']d', ':NextDiagnosticCycle<CR>')
 
   -- vim.api.nvim_command [[autocmd CursorHold  <buffer> lua vim.lsp.buf.hover() ]]
   -- vim.api.nvim_command [[autocmd CursorHoldI <buffer> lua vim.lsp.buf.hover() ]]
@@ -146,53 +70,258 @@ local on_attach = function(client, bufnr)
   -- vim.api.nvim_command [[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
 end
 
--- DEFAULT config for all LSPs
--- local servers = {'cssls', 'bashls', 'diagnosticls', 'dockerls', 'elixirls', 'elmls', 'html', 'intelephense', 'tsserver', 'jsonls', 'pyls', 'rls', 'rust_analyzer', 'sourcekit', 'vimls'}
-local servers = {'cssls', 'elmls', 'elixirls', 'html', 'tsserver', 'vimls'}
-for _, lsp in ipairs(servers) do
-  nvim_lsp[lsp].setup({
-      on_attach = on_attach,
-      capabilities = lsp_status.capabilities
-    })
-end
 
-nvim_lsp.elixirls.setup{
+-- local server_config = {'bashls', 'cssls', 'elmls', 'elixirls', 'html', 'jsonls', 'pyls', 'sumneko_lua', 'tsserver', 'vimls', 'yamlls'}
+-- for _, lsp in ipairs(servers) do
+--   nvim_lsp[lsp].setup({
+--     on_attach = on_attach,
+--     callbacks = require('callbacks'),
+--     callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
+--     capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}}; }, require('vim.lsp.protocol').make_client_capabilities()),
+--     config
+--   })
+-- end
+
+nvim_lsp.tsserver.setup({
+  cmd = {"typescript-language-server", "--stdio"},
+  filetypes = {
+    "javascript",
+    "javascriptreact",
+    "javascript.jsx",
+    "typescript",
+    "typescriptreact",
+    "typescript.tsx"
+  },
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
+
+nvim_lsp.clangd.setup({
+  cmd = {"clangd", "--background-index"},
+  on_attach = on_attach,
+
+  -- Required for lsp-status
+  init_options = {
+    clangdFileStatus = true
+  },
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+  -- callbacks = nvim_status.extensions.clangd.setup(),
+  -- capabilities = nvim_status.capabilities,
+})
+
+nvim_lsp.rust_analyzer.setup({
+  cmd = {"rust-analyzer"},
+  filetypes = {"rust"},
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
+
+-- nvim_lsp.diagnosticls.setup{
+--   filetypes = {"sh", "bash", "zsh", "elixir", "eelixir"},
+--   init_options = {
+--     linters = {
+--       mix_credo= {
+--         command= "mix",
+--         debounce= 100,
+--         rootPatterns= {"mix.exs", ".git"},
+--         args= {"credo", "suggest", "--format", "flycheck", "--read-from-stdin"},
+--         offsetLine= 0,
+--         offsetColumn= 0,
+--         sourceName= "mix_credo",
+--         formatLines= 1,
+--         formatPattern= {
+--           "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)(\\r|\\n)*$",
+--           {
+--             line= 1,
+--             column= 3,
+--             message= 5,
+--             security= 4
+--           }
+--         },
+--         securities= {
+--           F= "warning",
+--           C= "warning",
+--           D= "info",
+--           R= "info"
+--         },
+--       },
+--       mix_credo_compile= {
+--         command= "mix",
+--         debounce= 100,
+--         rootPatterns= {"mix.exs", ".git"},
+--         args= {"credo", "suggest", "--format", "flycheck", "--read-from-stdin"},
+--         offsetLine= -1,
+--         offsetColumn= 0,
+--         sourceName= "mix_credo",
+--         formatLines= 1,
+--         formatPattern= {
+--           "^([^ ]+)\\s+\\(([^)]+)\\)\\s+([^ ]+?):([0-9]+):\\s+(.*)(\\r|\\n)*$",
+--           {
+--             line= -1,
+--             column= -1,
+--             message= {"[", 2, "]: ", 3, ": ", 5},
+--             security= 1
+--           }
+--         },
+--         securities= {
+--           -- '**': "error"
+--           F= "error",
+--           C= "error",
+--           D= "error",
+--           R= "error"
+--         },
+--       },
+--       shellcheck = {
+--         command = "shellcheck",
+--         debounce = 100,
+--         args = { "--format=gcc", "--shell=sh", "-" },
+--         offsetLine = 0,
+--         offsetColumn = 0,
+--         sourceName = "shellcheck",
+--         formatLines = 1,
+--         formatPattern = {
+--           "^[^:]+:(\\d+):(\\d+):\\s+([^:]+):\\s+(.*)$",
+--           {
+--             line = 1,
+--             column = 2,
+--             message = 4,
+--             security = 3
+--           }
+--         },
+--         securities = {
+--           refactor = "info",
+--           convention = "info",
+--           error = "error",
+--           warning = "warning",
+--           note = "info"
+--         },
+--       },
+--       pylint = {
+--         command = "pylint",
+--         args = {
+--           "--output-format=text",
+--           "--score=no",
+--           "--msg-template='{line}:{column}:{category}:{msg} ({msg_id}:{symbol})'",
+--           "%file"
+--         },
+--         offsetLine = 1,
+--         offsetColumn = 1,
+--         sourceName = "pylint",
+--         formatLines = 1,
+--         formatPattern = {
+--           "^[^:]+:(\\d+):(\\d+):\\s+([^:]+):\\s+(.*)$",
+--           {
+--             line = 1,
+--             column = 2,
+--             message = 4,
+--             security = 3
+--           }
+--         },
+--         rootPatterns = {
+--           ".git", "setup.py"
+--         },
+--         securities = {
+--           informational = "hint",
+--           refactor = "info",
+--           convention = "info",
+--           warning = "warning",
+--           error = "error",
+--           fatal = "error"
+--         }
+--       }
+--     },
+--     filetypes = {
+--       sh = "shellcheck",
+--       elixir =  {"mix_credo", "mix_credo_compile"},
+--       eelixir =  {"mix_credo", "mix_credo_compile"},
+--     },
+--     formatters = {
+--       jq = {
+--         command = "jq",
+--         args = {"--indent", "4", "."}
+--       },
+--       shfmt = {
+--         command = "shfmt",
+--         args = {"-i", "4", "-sr", "-ci"}
+--       }
+--     },
+--     formatFiletypes = {
+--       json = "jq",
+--       sh = "shfmt"
+--     }
+--   },
+  -- on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+-- }
+
+nvim_lsp.elixirls.setup({
   settings = {
     elixirLS = {
       dialyzerEnabled = false,
     },
   },
+  filetypes = {"elixir", "eelixir"},
+  root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir(),
   on_attach = on_attach,
-  capabilities = lsp_status.capabilities,
-}
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
+
+nvim_lsp.elmls.setup({
+  filetypes = {"elm"},
+  root_dir = nvim_lsp.util.root_pattern("elm.lock", ".git", "elm.json") or vim.loop.os_homedir(),
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
+
+nvim_lsp.cssls.setup({
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
+
+nvim_lsp.html.setup({
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
+
+nvim_lsp.vimls.setup({
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
 
 nvim_lsp.bashls.setup({
-    cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
-    filetypes = {"sh", "zsh", "bash", "fish"},
-    root_dir = function()
-      local cwd = vim.fn.getcwd()
-      return cwd
-    end,
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-  })
+  cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
+  filetypes = {"sh", "zsh", "bash", "fish"},
+  root_dir = function()
+    local cwd = vim.fn.getcwd()
+    return cwd
+  end,
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
 
 nvim_lsp.pyls.setup({
-    enable=true,
-    plugins={
-      pyls_mypy={
-        enabled=true,
-        live_mode=false
-      }
-    },
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-  })
-
--- nvim_lsp.diagnosticls.setup({
---     cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/diagnosticls/node_modules/.bin/diagnostic-languageserver", "--stdio"},
---     on_attach = on_attach,
---   })
+  enable=true,
+  plugins={
+    pyls_mypy={
+      enabled=true,
+      live_mode=false
+    }
+  },
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
 
 local sumneko_settings = {
   runtime={
@@ -208,85 +337,94 @@ local sumneko_settings = {
 sumneko_settings.Lua = vim.deepcopy(sumneko_settings)
 
 nvim_lsp.sumneko_lua.setup({
-    -- Lua LSP configuration
-    settings=sumneko_settings,
-    -- Runtime configurations
-    filetypes = {"lua"},
-    cmd = {
-      vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
-      "-E",
-      vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
-    },
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-  })
+  -- Lua LSP configuration
+  settings=sumneko_settings,
+  -- Runtime configurations
+  filetypes = {"lua"},
+  cmd = {
+    vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
+    "-E",
+    vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
+  },
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
 
 
 nvim_lsp.yamlls.setup({
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-    settings = {
-      yaml = {
-        schemas = {
-          ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
-          ['http://json.schemastore.org/github-action'] = '.github/action.{yml,yaml}',
-          ['http://json.schemastore.org/ansible-stable-2.9'] = 'roles/tasks/*.{yml,yaml}',
-          ['http://json.schemastore.org/prettierrc'] = '.prettierrc.{yml,yaml}',
-          ['http://json.schemastore.org/stylelintrc'] = '.stylelintrc.{yml,yaml}',
-          ['http://json.schemastore.org/circleciconfig'] = '.circleci/**/*.{yml,yaml}'
-        }
-      }
-    },
-  })
+  settings = {
+    yaml = {
+      schemas = {
+        ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
+        ['http://json.schemastore.org/github-action'] = '.github/action.{yml,yaml}',
+        ['http://json.schemastore.org/ansible-stable-2.9'] = 'roles/tasks/*.{yml,yaml}',
+        ['http://json.schemastore.org/prettierrc'] = '.prettierrc.{yml,yaml}',
+        ['http://json.schemastore.org/stylelintrc'] = '.stylelintrc.{yml,yaml}',
+        ['http://json.schemastore.org/circleciconfig'] = '.circleci/**/*.{yml,yaml}'
+      },
+      format = {
+        enable = true
+      },
+      validate = true,
+      hover = true,
+      completion = true
+    }
+  },
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})
 
 nvim_lsp.jsonls.setup({
-    on_attach = on_attach,
-    capabilities = lsp_status.capabilities,
-    settings = {
-      json = {
-        format = { enable = true },
-        schemas = {
-          {
-            description = 'TypeScript compiler configuration file',
-            fileMatch = {'tsconfig.json', 'tsconfig.*.json'},
-            url = 'http://json.schemastore.org/tsconfig'
-          },
-          {
-            description = 'Lerna config',
-            fileMatch = {'lerna.json'},
-            url = 'http://json.schemastore.org/lerna'
-          },
-          {
-            description = 'Babel configuration',
-            fileMatch = {'.babelrc.json', '.babelrc', 'babel.config.json'},
-            url = 'http://json.schemastore.org/lerna'
-          },
-          {
-            description = 'ESLint config',
-            fileMatch = {'.eslintrc.json', '.eslintrc'},
-            url = 'http://json.schemastore.org/eslintrc'
-          },
-          {
-            description = 'Bucklescript config',
-            fileMatch = {'bsconfig.json'},
-            url = 'https://bucklescript.github.io/bucklescript/docson/build-schema.json'
-          },
-          {
-            description = 'Prettier config',
-            fileMatch = {'.prettierrc', '.prettierrc.json', 'prettier.config.json'},
-            url = 'http://json.schemastore.org/prettierrc'
-          },
-          {
-            description = 'Vercel Now config',
-            fileMatch = {'now.json', 'vercel.json'},
-            url = 'http://json.schemastore.org/now'
-          },
-          {
-            description = 'Stylelint config',
-            fileMatch = {'.stylelintrc', '.stylelintrc.json', 'stylelint.config.json'},
-            url = 'http://json.schemastore.org/stylelintrc'
-          },
-        }
-      },
+  settings = {
+    json = {
+      format = { enable = true },
+      schemas = {
+        {
+          description = 'TypeScript compiler configuration file',
+          fileMatch = {'tsconfig.json', 'tsconfig.*.json'},
+          url = 'http://json.schemastore.org/tsconfig'
+        },
+        {
+          description = 'Lerna config',
+          fileMatch = {'lerna.json'},
+          url = 'http://json.schemastore.org/lerna'
+        },
+        {
+          description = 'Babel configuration',
+          fileMatch = {'.babelrc.json', '.babelrc', 'babel.config.json'},
+          url = 'http://json.schemastore.org/lerna'
+        },
+        {
+          description = 'ESLint config',
+          fileMatch = {'.eslintrc.json', '.eslintrc'},
+          url = 'http://json.schemastore.org/eslintrc'
+        },
+        {
+          description = 'Bucklescript config',
+          fileMatch = {'bsconfig.json'},
+          url = 'https://bucklescript.github.io/bucklescript/docson/build-schema.json'
+        },
+        {
+          description = 'Prettier config',
+          fileMatch = {'.prettierrc', '.prettierrc.json', 'prettier.config.json'},
+          url = 'http://json.schemastore.org/prettierrc'
+        },
+        {
+          description = 'Vercel Now config',
+          fileMatch = {'now.json', 'vercel.json'},
+          url = 'http://json.schemastore.org/now'
+        },
+        {
+          description = 'Stylelint config',
+          fileMatch = {'.stylelintrc', '.stylelintrc.json', 'stylelint.config.json'},
+          url = 'http://json.schemastore.org/stylelintrc'
+        },
+      }
     },
-  })
+  },
+  on_attach = on_attach,
+  -- callbacks = require('callbacks'),
+  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+})

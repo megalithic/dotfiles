@@ -9,6 +9,8 @@ augroup general
     " silent :ArgForVerticalEdit
   endif
 
+  autocmd StdinReadPost * set buftype=nofile
+
   autocmd BufRead * nohls
 
   " Syntax highlight a minimum of 2,000 lines. This greatly helps scroll
@@ -51,7 +53,12 @@ augroup general
 
   " Remember cursor position between vim sessions
   " - FIXME: doesn't really work with neovim, it seems
-  autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+  " autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+  " Return to last edit position (You want this!) *N*
+  autocmd BufReadPost *
+        \ if line("'\"") > 0 && line("'\"") <= line("$") |
+        \   exe "normal! g`\"" |
+        \ endif
 
   " Hide status bar while using fzf commands
   if has('nvim')
@@ -67,10 +74,7 @@ augroup general
     autocmd TermOpen *        startinsert
     autocmd BufEnter term://* startinsert
 
-    autocmd TermClose * ++once :bd!
-
-    " flash/highlight, in a fancy way, when text is yanked
-    autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank('Substitute', 250)
+    " autocmd TermClose * ++once :bd!
   endif
 
   " Auto-close preview window when completion is done.
@@ -87,8 +91,8 @@ augroup general
   " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
-  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber signcolumn=yes:1
-  autocmd BufLeave,WinLeave * silent setlocal nonumber norelativenumber signcolumn=no
+  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber " signcolumn=yes:1
+  autocmd BufLeave,WinLeave * silent setlocal nonumber norelativenumber " signcolumn=no
 
   " toggle colorcolumn when in insertmode only
   autocmd InsertEnter * silent set colorcolumn=80
@@ -107,6 +111,21 @@ augroup general
   " reload vim configuration (aka vimrc)
   command! ReloadVimConfigs so $MYVIMRC
     \| echo 'configs reloaded!'
+augroup END
+
+" augroup modechange_settings
+"   autocmd!
+"   " Clear search context when entering insert mode, which implicitly stops the
+"   " highlighting of whatever was searched for with hlsearch on. It should also
+"   " not be persisted between sessions.
+"   autocmd InsertEnter * let @/ = ''
+"   autocmd BufReadPre,FileReadPre * let @/ = ''
+"   autocmd InsertLeave * setlocal nopaste
+" augroup END
+
+augroup highlight_yank
+  autocmd!
+  autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank({timeout=100, higroup="Search"})
 augroup END
 
 augroup mirrors

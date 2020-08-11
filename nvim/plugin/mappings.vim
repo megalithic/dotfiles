@@ -87,6 +87,8 @@ nnoremap <leader>V V`]
 " gi already moves to 'last place you exited insert mode', so we'll map gI to
 " something similar: move to last change
 nnoremap gI `.
+" reselect visually selected content:
+xnoremap > >gv
 
 " ## Indentions
 " Indent/dedent/autoindent what you just pasted.

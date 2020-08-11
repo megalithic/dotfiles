@@ -47,7 +47,7 @@ let g:lua_tree_icons = {
     \   }
     \ }
 
-nnoremap <C-t> :LuaTreeToggle<CR>
+" nnoremap <C-t> :LuaTreeToggle<CR>
 " nnoremap <leader>r :LuaTreeRefresh<CR>
 " nnoremap <leader>n :LuaTreeFindFile<CR>
 " LuaTreeOpen and LuaTreeClose are also available if you need them

@@ -66,14 +66,14 @@ local dockedAction = function()
 
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(dockedConfig.profile)
-    toggleWifi(dockedConfig.wifi)
+    -- toggleWifi(dockedConfig.wifi)
+  end)
 
-    hs.timer.doAfter(2, function ()
-      selectAudioOutput(dockedConfig.output)
-      selectAudioInput(dockedConfig.input)
-      setKittyConfig(dockedConfig)
-      setLayoutForAll()
-    end)
+  hs.timer.doAfter(3, function ()
+    selectAudioOutput(dockedConfig.output)
+    selectAudioInput(dockedConfig.input)
+    setKittyConfig(dockedConfig)
+    setLayoutForAll()
   end)
 end
 
@@ -84,14 +84,14 @@ local undockedAction = function()
 
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(undockedConfig.profile)
-    toggleWifi(undockedConfig.wifi)
+    -- toggleWifi(undockedConfig.wifi)
+  end)
 
-    hs.timer.doAfter(2, function ()
-      selectAudioOutput(undockedConfig.output)
-      selectAudioInput(undockedConfig.input)
-      setKittyConfig(undockedConfig)
-      setLayoutForAll()
-    end)
+  hs.timer.doAfter(3, function ()
+    selectAudioOutput(undockedConfig.output)
+    selectAudioInput(undockedConfig.input)
+    setKittyConfig(undockedConfig)
+    setLayoutForAll()
   end)
 end
 

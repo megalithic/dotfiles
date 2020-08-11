@@ -21,6 +21,18 @@ imap <expr> <S-Tab>
       \ "\<C-h>"
 smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
 
+let g:endwise_no_mappings = 1
+let g:completion_confirm_key = ""
+imap <expr> <CR>  pumvisible() ?
+			\ complete_info()["selected"] != "-1" ?
+				\ "\<Plug>(completion_confirm_completion)" :
+				\ get(b:, 'closer') ?
+					\ "\<c-e>\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
+					\ : "\<c-e>\<CR>\<Plug>DiscretionaryEnd"
+			\ : get(b:, 'closer') ?
+				\ "\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
+				\ : "\<CR>\<Plug>DiscretionaryEnd"
+
 " let g:completion_confirm_key = ""
 " imap <expr> <CR>
 "       \ pumvisible() ?
@@ -51,7 +63,7 @@ let g:completion_auto_change_source = 1
 let g:completion_trigger_keyword_length = 2
 let g:completion_max_items = 20
 let g:completion_sorting = "none" " none, length, alphabet
-let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
+let g:completion_matching_strategy_list = ['fuzzy', 'exact', 'substring']
 
 " let g:completion_customize_lsp_label = {
 "       \ 'Function': "\uf794",
@@ -118,6 +130,7 @@ let g:completion_customize_lsp_label = {
       \ 'Variable': ' ',
       \ 'Folder': ' ',
       \ 'Snippet': ' ',
+      \ 'vim-vsnip': ' ',
       \ 'Operator': ' ',
       \ 'Module': ' ',
       \ 'Text': 'ﮜ',
@@ -128,29 +141,36 @@ let g:completion_customize_lsp_label = {
 let g:completion_chain_complete_list = {
       \ 'default' : {
       \   'default': [
-      \       {'complete_items': ['lsp', 'snippet']},
-      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
-      \       {'complete_items': ['buffers']}],
+      \       {'complete_items': ['lsp', 'vim-vsnip', 'buffers']},
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}],
       \   'string' : [
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
       \   },
-      \ 'elixirls': [
-      \    {'complete_items': ['lsp', 'snippet', 'buffers']},
-      \    {'mode': 'keyn'},
-      \    {'mode': 'tags'},
-      \    {'mode': '<c-p>'},
-      \    {'mode': '<c-n>'},
-      \],
-      \ 'elmls': [
-      \    {'complete_items': ['lsp', 'snippet', 'buffers']},
-      \    {'mode': 'keyn'},
-      \    {'mode': 'tags'},
-      \    {'mode': '<c-p>'},
-      \    {'mode': '<c-n>'},
-      \],
+      \ 'elixir' : {
+      \   'default': [
+      \       {'complete_items': ['lsp', 'vim-vsnip', 'buffers']},
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
+      \       {'mode': 'keyn'},
+      \       {'mode': 'tags'},
+      \       {'mode': '<c-p>'},
+      \       {'mode': '<c-n>'}],
+      \   'string' : [
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
+      \   },
+      \ 'elm' : {
+      \   'default': [
+      \       {'complete_items': ['lsp', 'vim-vsnip', 'buffers']},
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
+      \       {'mode': 'keyn'},
+      \       {'mode': 'tags'},
+      \       {'mode': '<c-p>'},
+      \       {'mode': '<c-n>'}],
+      \   'string' : [
+      \       {'complete_items': ['path'], 'triggered_only': ['./', '/']}]
+      \   },
       \ 'vim' : {
       \   'default': [
-      \       {'complete_items': ['lsp', 'snippet', 'buffers']},
+      \       {'complete_items': ['lsp', 'vim-vsnip', 'buffers']},
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
       \       {'mode': '<c-p>'},
       \       {'mode': '<c-n>'}],
@@ -164,11 +184,39 @@ let g:completion_chain_complete_list = {
       \   },
       \}
 
+" let g:completion_items_priority = {
+"       \ 'Field': 5,
+"       \ 'Function': 7,
+"       \ 'Variables': 7,
+"       \ 'Method': 10,
+"       \ 'Interfaces': 5,
+"       \ 'Constant': 5,
+"       \ 'Class': 5,
+"       \ 'Keyword': 4,
+"       \ 'UltiSnips' : 1,
+"       \ 'vim-vsnip' : 0,
+"       \ 'Buffers' : 1,
+"       \ 'TabNine' : 0,
+"       \ 'File' : 0,
+"       \}
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'vert h '.expand('<cword>')
+	elseif (index(['c','sh'], &filetype) >=0)
+		execute 'vert Man '.expand('<cword>')
+	else
+		lua vim.lsp.buf.hover()
+  endif
+endfunction
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
 
 " -- diagnostic-nvim
 
 let g:diagnostic_enable_virtual_text = 1
 let g:diagnostic_virtual_text_prefix = "\uf63d" "
+let g:diagnostic_trimmed_virtual_text = '300'
 let g:diagnostic_show_sign = 1
 let g:diagnostic_auto_popup_while_jump = 1
 let g:diagnostic_insert_delay = 1
@@ -177,10 +225,10 @@ let g:diagnostic_enable_underline = 0
 
 " FIXME:
 " https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61
-call sign_define("LspDiagnosticsErrorSign", {"text" : g:sign_error, "texthl" : "LspDiagnosticsErrorSign"})
-call sign_define("LspDiagnosticsWarningSign", {"text" : g:sign_warning, "texthl" : "LspDiagnosticsWarningSign"})
-call sign_define("LspDiagnosticsInformationSign", {"text" : g:sign_info, "texthl" : "LspDiagnosticsInformationSign"})
-call sign_define("LspDiagnosticsHintSign", {"text" : g:sign_hint, "texthl" : "LspDiagnosticsWarningSign"})
+call sign_define("LspDiagnosticsErrorSign", {"text" : g:sign_error, "texthl" : "LspDiagnosticsErrorSign", "linehl": "", "numhl": ""})
+call sign_define("LspDiagnosticsWarningSign", {"text" : g:sign_warning, "texthl" : "LspDiagnosticsWarningSign", "linehl": "", "numhl": ""})
+call sign_define("LspDiagnosticsInformationSign", {"text" : g:sign_info, "texthl" : "LspDiagnosticsInformationSign", "linehl": "", "numhl": ""})
+call sign_define("LspDiagnosticsHintSign", {"text" : g:sign_hint, "texthl" : "LspDiagnosticsWarningSign", "linehl": "", "numhl": ""})
 
 augroup lsp
   au!

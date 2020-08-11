@@ -141,9 +141,10 @@ augroup ft_elixir
 
   au BufNewFile,BufRead */live/*.ex,*.html.leex command! -buffer R call <SID>RelatedFileForPhoenixLiveView()
   au BufNewFile,BufRead */live/*.ex,*.html.leex nnoremap <silent> <buffer> <leader>eR :call <SID>RelatedFileForPhoenixLiveView()<CR>
-  au FileType elixir map <buffer> <leader>r :RunElixir<CR>
+  " au FileType elixir,eelixir map <buffer> <leader>r :RunElixir<CR>
 
-  au Filetype elixir setlocal formatprg=mix\ format\ -
+  au Filetype elixir,eelixir setlocal formatprg=mix\ format\ -
+  au BufWritePre *.ex,*.exs lua vim.lsp.buf.formatting_sync(nil, 1000)
 
   " TODO: get neoformat working correctly for file formatting without undo tree?
   " au BufWritePre * undojoin | Neoformat

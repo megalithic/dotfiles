@@ -14,15 +14,27 @@ if !1 | finish | endif     " FIXME: danger, will robinson!
 scriptencoding utf-16      " allow emojis in vimrc
 filetype plugin indent on  " try to recognize filetypes and load related plugins
 
-"===========================================================
-" SETTINGS
-"===========================================================
+
+" ┌───────────────────────────────────────────────────────────────────────────────────┐
+" │ additional setup and configs..                                                    │
+" │───────────────────────────────────────────────────────────────────────────────────│
+" │ ~/.dotfiles/nvim/plugin/autocmds.vim                - customizations              │
+" │ ~/.dotfiles/nvim/ftplugin                           - ft options, mappings        │
+" │ ~/.dotfiles/nvim/after/ftplugin                     - file type overrides         │
+" │ ~/.dotfiles/nvim/autoload                           - custom functions            │
+" │ ~/.dotfiles/nvim/plugin/terminal-settings.vim       - Vim terminal tweaks         │
+" │ ~/.dotfiles/nvim/plugin/mappings.vim                - custom mappings             │
+" │ ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim   - custom plugin config        │
+" └───────────────────────────────────────────────────────────────────────────────────┘
+
+
+
 
 " Enable syntax highlighting.
-"
 syntax on
 
-" Disable built-in plugins
+
+" --[ disable built-ins ]-------------------------------------------------------------------------
 let g:loaded_2html_plugin      = 1
 let g:loaded_gzip              = 1
 let g:loaded_matchparen        = 1
@@ -35,7 +47,8 @@ let g:loaded_matchit           = 1
 let g:loaded_tutor_mode_plugin = 1
 
 
-" General vim settings.
+" --[ general settings ]-------------------------------------------------------------------------
+" REF: great descriptions of settings: https://github.com/neg-serg/dotfiles/blob/master/nvim/.config/nvim/plugin/01-settings.vim
 "
 set autoindent        " Indented text
 set autoread          " Pick up external changes to files
@@ -77,6 +90,11 @@ set linespace=0       " Line height of things like, the statusline
 set cmdheight=1
 set lazyredraw        " should make scrolling faster
 set matchpairs=(:),{:},[:]
+set matchpairs+=<:>             " Match, to be used with %
+try
+  set matchpairs+=《:》,〈:〉,［:］,（:）,「:」,『:』,‘:’,“:”
+catch /^Vim\%((\a\+)\)\=:E474
+endtry
 set mouse=nva         " Mouse support in different modes
 set mousemodel=popup  " Set the behaviour of mouse
 set mousehide         " Hide mouse when typing text
@@ -149,12 +167,13 @@ if has("nvim")
   " set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set listchars=tab:»\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
-  set pumblend=10
+  " set pumblend=10
   set pumheight=20      " Height of complete list
   set signcolumn=yes:1  " always showsigncolumn
-  set switchbuf=useopen,split,usetab,vsplit
+  set switchbuf=useopen,vsplit,split,usetab
   set wildoptions+=pum
-  set winblend=10
+  " set winblend=10
+  set jumpoptions=stack
 
   set guicursor=
         \n:block-Cursor,
@@ -193,33 +212,8 @@ else
 endif
 
 
-"===========================================================
-" FUNCTIONS
-"
-" ~/.dotfiles/nvim/autoload - custom functions
-"===========================================================
-
-
-"===========================================================
-" TERMINAL CONFIGURATION
-"
-" ~/.dotfiles/nvim/plugin/terminal-settings.vim - Vim terminal tweaks
-"===========================================================
-
-
-"===========================================================
-" MAPPINGS
-"
-" ~/.dotfiles/nvim/plugin/mappings.vim - custom mappings
-"===========================================================
 let mapleader = ","
 
-
-"===========================================================
-" PLUGINS
-"
-" ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim - custom plugin config
-"===========================================================
 
 " Automatically install vim-plug and run PlugInstall if vim-plug is not found.
 if empty(glob('~/.config/nvim/autoload/plug.vim'))
@@ -235,26 +229,25 @@ silent! if plug#begin('~/.config/nvim/plugged')
 Plug 'tweekmonster/startuptime.vim'
 
 
-"-----------------------------
-" Styling related plugings
-"-----------------------------
+" --[ styling/ui ]-------------------------------------------------------------------------
 Plug 'trevordmiller/nova-vim' " nova-colors.vim
 Plug 'pbrisbin/vim-colors-off' " for goyo
 Plug 'Yggdroot/indentLine' " indentLine.vim
-Plug 'gcmt/taboo.vim' " taboo.vim
 Plug 'dm1try/golden_size'
 " Plug 'roman/golden-ratio'
 Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
 Plug 'norcalli/nvim-colorizer.lua'
 Plug 'ryanoasis/vim-devicons'
 
-"-----------------------------
-" General behaviour plugins
-"-----------------------------
+
+" --[ general behaviours ]-------------------------------------------------------------------------
 Plug 'nelstrom/vim-visual-star-search'
 Plug 'tommcdo/vim-lion' "lion.vim
 " Plug 'chaoren/vim-wordmotion' "wordmotion.vim
-Plug 'cohama/lexima.vim'
+" Plug 'cohama/lexima.vim'
+Plug 'Raimondi/delimitMate'
+      let delimitMate_expand_cr = 0
+Plug 'tpope/vim-endwise' | Plug 'rstacruz/vim-closer'
 Plug 'tpope/vim-eunuch' "eunuch.vim
 Plug 'tpope/vim-abolish'
 " https://github.com/tpope/vim-abolish/blob/master/doc/abolish.txt#L146-L162
@@ -270,11 +263,15 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
+Plug 'inkarkat/vim-ReplaceWithRegister'
+      nmap s  <Plug>ReplaceWithRegisterOperator
+      nmap ss <Plug>ReplaceWithRegisterLine
+      xmap s  <Plug>ReplaceWithRegisterVisual
+      nnoremap s <Nop>
 
 
-"-----------------------------
-" Movements/Text Objects, et al
-"-----------------------------
+
+" --[ movements/text objects, et al ]-------------------------------------------------------------------------
 Plug 'tpope/vim-rsi'
 Plug 'kana/vim-operator-user'
 " -- provide ai and ii for indent blocks
@@ -301,9 +298,7 @@ Plug 'sgur/vim-textobj-parameter'                                       " functi
 Plug 'wellle/targets.vim'                                               " improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
-"-----------------------------
-" File management plugins
-"-----------------------------
+" --[ File/buffer management ]-------------------------------------------------------------------------
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
 
@@ -311,40 +306,34 @@ Plug 'mhinz/vim-grepper' " grepper.vim
 Plug 'junegunn/vim-slash' " slash.vim
 Plug 'mattn/vim-findroot', {'for': ['javascript']} " findroot.vim
 Plug 'tpope/vim-dispatch'
-Plug 'kyazdani42/nvim-web-devicons' " for file icons
-Plug 'kyazdani42/nvim-tree.lua'
+" Plug 'kyazdani42/nvim-web-devicons' " for file icons
+" Plug 'kyazdani42/nvim-tree.lua'
 
 
-"-----------------------------
-" LSP/Completion plugins
-"-----------------------------
+" --[ LSP/Completion/Snippets ]-------------------------------------------------------------------------
 if has("nvim-0.5.0")
   Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
   Plug 'nvim-lua/diagnostic-nvim'
   Plug 'nvim-lua/completion-nvim'
-  Plug 'nvim-lua/lsp-status.nvim'
+  " Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
   Plug 'steelsojka/completion-buffers'
 endif
 
 
-"-----------------------------
-" Git plugins
-"-----------------------------
+" --[ VCS ]-------------------------------------------------------------------------
 Plug 'tpope/vim-fugitive' " fugitive.vim
 Plug 'mhinz/vim-signify' " signify.vim
 Plug 'rhysd/git-messenger.vim' " git-messenger.vim
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
-Plug 'wsdjeg/vim-fetch'
+Plug 'wsdjeg/vim-fetch' " vim path/to/file.ext:12:3
 Plug 'mattn/webapi-vim'
 Plug 'rhysd/conflict-marker.vim'
 Plug 'itchyny/vim-gitbranch'
 
 
-"-----------------------------
-" Development plugins
-"-----------------------------
+" --[ Devlopment ]-------------------------------------------------------------------------
 Plug 'tpope/vim-rails' " rails.vim
 Plug 'tpope/vim-projectionist' " projectionist.vim
 Plug 'dense-analysis/ale' " ale.vim
@@ -364,14 +353,12 @@ Plug 'sgur/vim-editorconfig'
 
 " allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
 Plug 'zenbro/mirror.vim'
-Plug 'ChristianChiarulli/codi.vim'
+Plug 'metakirby5/codi.vim'
 Plug 'junegunn/goyo.vim'
 Plug 'junegunn/limelight.vim'
 
 
-"-----------------------------
-" Filetype/Syntax/Lang plugins
-"-----------------------------
+" --[ Lang/Syntax ]-------------------------------------------------------------------------
 " Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'Zaptic/elm-vim', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
@@ -387,9 +374,7 @@ Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
 Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 
-"-----------------------------
-" tmux support
-"-----------------------------
+" --[ tmux support ]-------------------------------------------------------------------------
 Plug 'christoomey/vim-tmux-navigator'
 " ~/.dotfiles/nvim/plugin/tmux-navigator.vim - options, mappings
 Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -404,35 +389,17 @@ endif
 runtime macros/matchit.vim
 
 
-"===========================================================
-" AUTOCMDS
-"
-" ~/.dotfiles/nvim/plugin/autocmds.vim - customizations
-" ~/.dotfiles/nvim/ftplugin            - file type options, mappings
-" ~/.dotfiles/nvim/after/ftplugin      - file type overrides
-"===========================================================
-
-
-"===========================================================
-" IABBREV
-"===========================================================
-
+" --[ abbreviations ]-------------------------------------------------------------------------
 iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 
 
-"===========================================================
-" COLOR SCHEME
-"===========================================================
-
+" --[ colorscheme ]-------------------------------------------------------------------------
 set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
 
-"
-"===========================================================
-" LUA configs
-"===========================================================
 
+" --[ lua ]-------------------------------------------------------------------------
 lua require('init')
 
 " vim:ft=vim
