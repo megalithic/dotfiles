@@ -55,10 +55,14 @@ augroup general
   " - FIXME: doesn't really work with neovim, it seems
   " autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
   " Return to last edit position (You want this!) *N*
+  " autocmd BufReadPost *
+  "       \ if line("'\"") > 0 && line("'\"") <= line("$") |
+  "       \   exe "normal! g`\"" |
+  "       \ endif
   autocmd BufReadPost *
-        \ if line("'\"") > 0 && line("'\"") <= line("$") |
-        \   exe "normal! g`\"" |
-        \ endif
+    \ if &filetype !~ 'commit\c' && line("'\"") > 0 && line("'\"") <= line("$") |
+    \   exe "normal g'\"" |
+    \ endif
 
   " Hide status bar while using fzf commands
   if has('nvim')
@@ -112,6 +116,11 @@ augroup general
   command! ReloadVimConfigs so $MYVIMRC
     \| echo 'configs reloaded!'
 augroup END
+
+" augroup lua_autocmds
+"   au!
+"   lua vim.api.nvim_command [[au CursorHold * lua require'git'.blameVirtText()]]
+" augroup END
 
 " augroup modechange_settings
 "   autocmd!

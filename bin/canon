@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+
+session="canonize"
+
+tmux new-session -d -s $session
+tmux switch -t $session
+# tmux split-window -h -t $session
+teamocil --here $session

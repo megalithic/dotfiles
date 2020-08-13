@@ -29,9 +29,9 @@ let g:ale_fixers = {
       \   'scss': ['prettier'],
       \   'json': ['prettier'],
       \   'elm': [],
-      \   'elixir': ['mix_format'],
-      \   'eelixir': ['mix_format'],
       \ }
+" \   'elixir': ['mix_format'],
+" \   'eelixir': ['mix_format'],
 let g:ale_linters = {}
 
 let g:ale_enabled                  = 1

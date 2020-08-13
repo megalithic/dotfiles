@@ -155,7 +155,6 @@ set wildignore+=*.DS_Store
 set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
 set wrap              " Wrap long lines
 
-
 " Options specific to Neovim or Vim.
 if has("nvim")
   set diffopt=filler,internal,algorithm:histogram,indent-heuristic
@@ -206,6 +205,7 @@ if has("nvim")
           \ if exists(':rshada') | rshada | wshada | endif
   augroup END
 else
+  set emoji                 " treat emojis 😄 as full width characters
   set cryptmethod=blowfish2
   set listchars=eol:$,tab:>-,trail:-
   set ttymouse=xterm2
@@ -231,6 +231,7 @@ Plug 'tweekmonster/startuptime.vim'
 
 " --[ styling/ui ]-------------------------------------------------------------------------
 Plug 'trevordmiller/nova-vim' " nova-colors.vim
+Plug 'hardcoreplayers/oceanic-material'
 Plug 'pbrisbin/vim-colors-off' " for goyo
 Plug 'Yggdroot/indentLine' " indentLine.vim
 Plug 'dm1try/golden_size'
@@ -337,6 +338,7 @@ Plug 'itchyny/vim-gitbranch'
 Plug 'tpope/vim-rails' " rails.vim
 Plug 'tpope/vim-projectionist' " projectionist.vim
 Plug 'dense-analysis/ale' " ale.vim
+Plug 'andrejlevkovitch/vim-lua-format', { 'for': ['lua'] }
 Plug 'janko/vim-test' " test.vim
 Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'axvr/zepl.vim'
@@ -364,6 +366,10 @@ Plug 'Zaptic/elm-vim', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
 Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
+" Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir']} " (see https://github.com/dense-analysis/ale/pull/3106)
+      " let g:mix_format_on_save = 1
+      " let g:mix_format_silent_errors = 0
+
 Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
 Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
 Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'typescript', 'typescript.tsx'] }
@@ -395,8 +401,19 @@ iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 
 " --[ colorscheme ]-------------------------------------------------------------------------
 set background=dark
+
 let g:nova_transparent = 1
 silent! colorscheme nova
+
+" let g:oceanic_material_transparent_background = 0
+" let g:oceanic_material_allow_bold	= 1
+" let g:oceanic_material_allow_italic	= 1
+" let g:oceanic_material_allow_underline = 1
+" let g:oceanic_material_allow_undercurl = 1
+" let g:oceanic_material_allow_reverse = 1
+" " let g:oceanic_material_background = "#1b2b34"
+" " #1b2b34  " #282c34
+" silent! colorscheme oceanic_material
 
 
 " --[ lua ]-------------------------------------------------------------------------

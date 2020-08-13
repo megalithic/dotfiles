@@ -112,9 +112,26 @@ export ARCHFLAGS='-arch x86_64'
 # for libffi and ruby things
 export LDFLAGS="-L/usr/local/opt/libffi/lib"
 export LDFLAGS="-L/usr/local/opt/perl@5.18/lib"
-export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
+# export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
 export CPPFLAGS="-I/usr/local/opt/libffi/include"
 export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+
+# OPEN SSL
+# =====================================================
+# REF: https://github.com/dkarter/dotfiles/commit/9d4ebad752b4de8b2bdfbe204a34b89c1986f33b
+export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
+
+# For compilers to find openssl@1.1 you may need to set:
+export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
+export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openssl@1.1/include"
+
+# For pkg-config to find openssl@1.1 you may need to set:
+export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
+
+# Compile erlang with OpenSSL from Homebrew via asdf
+export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
+export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
+
 
 # CTAGS Sorting in VIM/Emacs is better behaved with this in place
 export LC_COLLATE=C

@@ -1,0 +1,16 @@
+name: "canonize"
+windows:
+  - name: "services"
+    root: "~/code/canonize"
+    layout: even-horizontal
+    panes:
+      - commands:
+        - bin/interactive
+      - commands:
+        - pgcli canonize_dev
+  - name: "code"
+    root: "~/code/canonize"
+    focus: true
+    panes:
+      - commands:
+        - ls

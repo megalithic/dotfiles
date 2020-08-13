@@ -188,6 +188,9 @@ function! s:nova_engage() abort
   " color as gitmessengerPopupNormal.
   hi gitmessengerEndOfBuffer term=None guifg=None guibg=None ctermfg=None ctermbg=None
 
+  " highlight for our lua-based GitLens feature for virt-text based blame
+  exe 'hi GitLens gui=italic guifg=' . g:dark_bg . ' guibg=' . g:black
+
   " hi Pmenu guifg=lightgrey guibg=#4e4e4e ctermbg=239 ctermfg=lightgrey
   " hi Directory guifg=#DF8C8C
 

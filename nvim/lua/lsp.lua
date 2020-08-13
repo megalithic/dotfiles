@@ -9,6 +9,9 @@ if not has_lsp then return end
 local has_diagnostic, diagnostic = pcall(require, 'diagnostic')
 local has_completion, completion = pcall(require, 'completion')
 
+-- REF: setup treesitter thigns:
+-- https://github.com/cossonleo/nvim_config/blob/master/lua/cossonleo/devplug.lua#L12
+
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
@@ -20,6 +23,13 @@ local on_attach = function(client, bufnr)
   --   vim.api.nvim_command[[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
   -- end
   -- print(vim.inspect(vim.tbl_keys(resolved_capabilities)))
+
+  local server_capabilities = client.server_capabilities
+  local resolved_capabilities = client.server_capabilities
+
+  -- print(vim.inspect(client.name))
+  -- print(vim.inspect(vim.tbl_keys(resolved_capabilities)))
+  -- print(vim.inspect(vim.tbl_keys(server_capabilities)))
 
   if has_diagnostic then
     diagnostic.on_attach()
@@ -33,6 +43,16 @@ local on_attach = function(client, bufnr)
   local mapper = function(mode, key, result)
     vim.fn.nvim_buf_set_keymap(0, mode, key, result, {noremap=true, silent=true})
   end
+
+  if server_capabilities.documentFormattingProvider then
+    -- use vim-go built-in formatting which uses goimports
+    -- if client.name ~= "gopls" then
+    vim.api.nvim_command([[au BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 1000)]])
+    mapper('n', '<Leader>lf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 1000)<CR>')
+    mapper('n', '<Leader>lF', '<cmd>lua vim.lsp.buf.formatting(nil, 1000)<CR>')
+    -- end
+  end
+
   mapper('n', '<Leader>lgd', '<cmd>lua vim.lsp.buf.definition()<CR>')
   mapper('n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>')
   mapper('n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>')
@@ -40,10 +60,7 @@ local on_attach = function(client, bufnr)
   mapper('n', '<Leader>lgs', '<cmd>lua vim.lsp.buf.document_symbol()<CR>')
   mapper('n', '<Leader>lgS', '<cmd>lua vim.lsp.buf.workspace_symbol()<CR>')
   -- mapper('n', '<Leader>de', '<cmd>lua vim.lsp.buf.declaration()<CR>')
-
   mapper('n', '<Leader>ln', '<cmd>lua vim.lsp.buf.rename()<CR>')
-
-  mapper('n', '<Leader>lf', '<cmd>lua vim.lsp.buf.formatting()<CR>')
   mapper('n', '<Leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>')
 
   if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'vim' then
@@ -70,7 +87,9 @@ local on_attach = function(client, bufnr)
   -- vim.api.nvim_command [[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
 end
 
-
+-- REF: https://github.com/ahmedelgabri/dotfiles/blob/master/roles/vim/files/.vim/lua/lsp.lua#L47
+--      https://github.com/delianides/dotfiles/blob/master/tag-vim/vim/lua/lsp.lua#L144
+--      https://github.com/aktau/dotfiles/blob/master/.vim/lua/lsp.lua#L162
 -- local server_config = {'bashls', 'cssls', 'elmls', 'elixirls', 'html', 'jsonls', 'pyls', 'sumneko_lua', 'tsserver', 'vimls', 'yamlls'}
 -- for _, lsp in ipairs(servers) do
 --   nvim_lsp[lsp].setup({
@@ -93,7 +112,7 @@ nvim_lsp.tsserver.setup({
     "typescript.tsx"
   },
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -105,7 +124,7 @@ nvim_lsp.clangd.setup({
   init_options = {
     clangdFileStatus = true
   },
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
   -- callbacks = nvim_status.extensions.clangd.setup(),
   -- capabilities = nvim_status.capabilities,
@@ -115,10 +134,12 @@ nvim_lsp.rust_analyzer.setup({
   cmd = {"rust-analyzer"},
   filetypes = {"rust"},
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
+-- REF:
+-- https://github.com/mjlbach/nix-dotfiles/blob/master/nixpkgs/configs/neovim/init.vim#L413
 -- nvim_lsp.diagnosticls.setup{
 --   filetypes = {"sh", "bash", "zsh", "elixir", "eelixir"},
 --   init_options = {
@@ -253,9 +274,9 @@ nvim_lsp.rust_analyzer.setup({
 --       sh = "shfmt"
 --     }
 --   },
-  -- on_attach = on_attach,
-  -- callbacks = require('callbacks'),
-  -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+-- on_attach = on_attach,
+callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
+-- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 -- }
 
 nvim_lsp.elixirls.setup({
@@ -268,7 +289,6 @@ nvim_lsp.elixirls.setup({
   root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir(),
   on_attach = on_attach,
   callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
-  -- callbacks = require('callbacks'),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -276,25 +296,25 @@ nvim_lsp.elmls.setup({
   filetypes = {"elm"},
   root_dir = nvim_lsp.util.root_pattern("elm.lock", ".git", "elm.json") or vim.loop.os_homedir(),
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
 nvim_lsp.cssls.setup({
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
 nvim_lsp.html.setup({
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
 nvim_lsp.vimls.setup({
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -306,7 +326,7 @@ nvim_lsp.bashls.setup({
     return cwd
   end,
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -319,7 +339,7 @@ nvim_lsp.pyls.setup({
     }
   },
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -347,7 +367,7 @@ nvim_lsp.sumneko_lua.setup({
     vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
   },
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -372,7 +392,7 @@ nvim_lsp.yamlls.setup({
     }
   },
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
 
@@ -381,6 +401,11 @@ nvim_lsp.jsonls.setup({
     json = {
       format = { enable = true },
       schemas = {
+        {
+          description = 'Lua sumneko setting schema validation',
+          fileMatch = {'*.lua'},
+          url = "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json"
+        },
         {
           description = 'TypeScript compiler configuration file',
           fileMatch = {'tsconfig.json', 'tsconfig.*.json'},
@@ -425,6 +450,6 @@ nvim_lsp.jsonls.setup({
     },
   },
   on_attach = on_attach,
-  -- callbacks = require('callbacks'),
+  callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
   -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
 })
