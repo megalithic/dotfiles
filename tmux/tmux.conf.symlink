@@ -212,6 +212,15 @@ set -g @prefix_highlight_sync_prompt    'Sync⚋'
 set -g @prefix_highlight_empty_prompt   '      '          # default is '' (empty char)
 set -g @prefix_highlight_empty_attr     'fg=default,bg=#3c4c55' # default is 'fg=default,bg=default'
 
+## Restore Vim sessions
+set -g @resurrect-strategy-vim 'session'
+## Restore Neovim sessions
+set -g @resurrect-strategy-nvim 'session'
+## Restore Panes
+set -g @resurrect-capture-pane-contents 'on'
+## Restore last saved environment (automatically)
+set -g @continuum-restore 'on'
+
 # plugin settings
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
@@ -221,6 +230,8 @@ set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-open'
 set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
 set -g @plugin 'tmux-plugins/tmux-sessionist'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
 set -g @plugin 'megalithic/tmux-dnd-status'
 # set -g @plugin 'christoomey/vim-tmux-navigator' # necessary if not defining own mappings above

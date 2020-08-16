@@ -12,7 +12,7 @@ hs.grid.MARGINY = 0
 -- available and preferred displays
 local displays = {
   laptop = 'Color LCD',
-  external = 'Dell P2415Q'
+  external = 'LG UltraFine'
 }
 
 local module = {
@@ -112,7 +112,7 @@ module.apps = {
     name = 'Insomnia',
     hyper_key ='i',
     preferredDisplay = 1,
-    position = module.grid.centeredMedium,
+    position = module.grid.rightHalf,
     quitGuard = false
   },
   ['com.runningwithcrayons.Alfred'] = {
@@ -521,7 +521,7 @@ module.docking = {
     profile = 'dz60', -- Karabiner-Elements profile name
     input = '"Samson GoMic"', -- microphone source
     output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
-    fontSize = 16.0,
+    fontSize = 14.0,
   },
   ['undocked'] = {
     wifi = 'on',

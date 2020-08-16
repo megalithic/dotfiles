@@ -2,7 +2,13 @@
 
 session="canonize"
 
-tmux new-session -d -s $session
+tmux new -s $session -d
 tmux switch -t $session
+tmux send-keys -t $session "cd ~;" C-m
 # tmux split-window -h -t $session
-teamocil --here $session
+tmux send-keys -t $session "cd ~; teamocil --here $session" C-m
+
+# tmux new-session -d -s $session
+# tmux switch -t $session
+# # tmux split-window -h -t $session
+# teamocil --here $session

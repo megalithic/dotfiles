@@ -66,7 +66,7 @@ local dockedAction = function()
 
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(dockedConfig.profile)
-    -- toggleWifi(dockedConfig.wifi)
+    toggleWifi(dockedConfig.wifi)
   end)
 
   hs.timer.doAfter(3, function ()
@@ -84,7 +84,7 @@ local undockedAction = function()
 
   hs.timer.doAfter(1, function ()
     selectKarabinerProfile(undockedConfig.profile)
-    -- toggleWifi(undockedConfig.wifi)
+    toggleWifi(undockedConfig.wifi)
   end)
 
   hs.timer.doAfter(3, function ()

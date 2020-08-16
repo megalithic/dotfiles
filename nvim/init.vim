@@ -28,8 +28,6 @@ filetype plugin indent on  " try to recognize filetypes and load related plugins
 " └───────────────────────────────────────────────────────────────────────────────────┘
 
 
-
-
 " Enable syntax highlighting.
 syntax on
 
@@ -264,11 +262,11 @@ Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
 Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
 Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
 Plug 'sickill/vim-pasta' " context-aware pasting
-Plug 'inkarkat/vim-ReplaceWithRegister'
-      nmap s  <Plug>ReplaceWithRegisterOperator
-      nmap ss <Plug>ReplaceWithRegisterLine
-      xmap s  <Plug>ReplaceWithRegisterVisual
-      nnoremap s <Nop>
+" Plug 'inkarkat/vim-ReplaceWithRegister'
+"       nmap s  <Plug>ReplaceWithRegisterOperator
+"       nmap ss <Plug>ReplaceWithRegisterLine
+"       xmap s  <Plug>ReplaceWithRegisterVisual
+"       nnoremap s <Nop>
 
 
 
@@ -326,7 +324,6 @@ endif
 " --[ VCS ]-------------------------------------------------------------------------
 Plug 'tpope/vim-fugitive' " fugitive.vim
 Plug 'mhinz/vim-signify' " signify.vim
-Plug 'rhysd/git-messenger.vim' " git-messenger.vim
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
 Plug 'wsdjeg/vim-fetch' " vim path/to/file.ext:12:3
 Plug 'mattn/webapi-vim'

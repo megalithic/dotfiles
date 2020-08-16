@@ -95,8 +95,8 @@ augroup general
   " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
-  autocmd BufEnter,FocusGained,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber signcolumn=yes:1
-  autocmd BufLeave,FocusLost,WinLeave * silent setlocal nonumber norelativenumber signcolumn=no
+  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber "signcolumn=yes:1
+  autocmd BufLeave,WinLeave * silent setlocal nonumber norelativenumber "signcolumn=no
 
   " toggle colorcolumn when in insertmode only
   autocmd InsertEnter * silent set colorcolumn=80
@@ -117,10 +117,12 @@ augroup general
     \| echo 'configs reloaded!'
 augroup END
 
-" augroup lua_autocmds
-"   au!
-"   lua vim.api.nvim_command [[au CursorHold * lua require'git'.blameVirtText()]]
-" augroup END
+augroup lua_autocmds
+  au!
+
+  nnoremap <buffer> <silent> <Leader>gb :lua require'git'.blameVirtText()<CR>
+  lua vim.api.nvim_command [[au CursorMoved * lua require'git'.clearBlameVirtText()]]
+augroup END
 
 " augroup modechange_settings
 "   autocmd!
@@ -134,7 +136,9 @@ augroup END
 
 augroup highlight_yank
   autocmd!
-  autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank({timeout=100, higroup="Search"})
+  " autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank({ timeout = 100, higroup="Search" on_macro = true })
+
+  autocmd TextYankPost * lua vim.highlight.on_yank { higroup = "Search", timeout = 150, on_macro = true }
 augroup END
 
 augroup mirrors

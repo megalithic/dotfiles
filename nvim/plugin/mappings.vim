@@ -47,8 +47,8 @@ vnoremap / /\v
 
 " Don't overwrite blackhole register with selection
 " https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
-xnoremap p "_c<c-r>"<esc>
-xmap P p
+" xnoremap p "_c<c-r>"<esc>
+" xmap P p
 
 " clear incsearch term
 nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
@@ -197,40 +197,11 @@ inoremap <buffer> ? ?<C-g>u
 nnoremap <leader>ft :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :term<CR>
 " https://github.com/pwntester/dotfiles/blob/master/config/nvim/plugins.vim#L297
 nnoremap <leader>gg :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :call termopen("lazygit")<CR>
-function! Log(text) abort
-  if 1
-    silent execute '!echo '.a:text.' >> /tmp/log'
-  endif
-endfunction
 
 " debug syntax
 nmap <silent> gs :echo 'hi<'.synIDattr(synID(line('.'), col('.'), 1), 'name')
 	\.'> trans<'.synIDattr(synID(line('.'), col('.'), 0), 'name').'> lo<'
 	\.synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name').'>'<CR>
-
-" Map execute this line
-function! s:executor() abort
-  if &ft == 'lua'
-    call execute(printf(":lua %s", getline(".")))
-  elseif &ft == 'vim'
-    exe getline(">")
-  endif
-endfunction
-" nnoremap <leader>x :call <SID>executor()<CR>
-
-" Execute this file
-function! s:save_and_exec() abort
-  if &filetype == 'vim'
-    :silent! write
-    :source %
-  elseif &filetype == 'lua'
-    :silent! write
-    :luafile %
-  endif
-
-  " return
-endfunction
-nmap <leader>x :call <SID>save_and_exec()<CR>
 
 " For moving quickly up and down,
 " Goes to the first line above/below that isn't whitespace

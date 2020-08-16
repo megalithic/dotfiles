@@ -20,32 +20,17 @@ augroup ft_elixir
   " iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
   iabbrev eputs IO.puts
 
-  " sets up an IEx session with or without mix support based upon existence
-  function! s:iex_for_project() abort
-    let l:root = findfile('mix.exs', expand('%:p:h').';')
-    if !empty(glob(l:root))
-      " echo "-> mix " .. glob(l:root)
-      " echohl Comment | echom printf('iex -S mix (%s)', l:root) | echohl None
-      :25 Repl iex -S mix
-    else
-      " echo "-> no mix " .. glob(l:root)
-      " echohl Comment | echom printf('iex (%s)', l:root) | echohl None
-      :25 Repl iex
-    endif
-  endfunction
-
-  nnoremap <silent> <buffer> <leader>er :call <SID>iex_for_project()<CR>
-
   nmap <silent> <leader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile<CR>
   nmap <silent> <leader>tt :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
   nmap <silent> <leader>tn :let g:elixir_test_nearest=1<CR>\|:TestNearest<CR>
-  " nnoremap <silent> <leader>tn :let g:exlixir_test_nearest=v:true | TestNearest
   nmap <silent> <leader>tl :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
   nmap <silent> <leader>tv :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
+
   " not quite working with elixir in vim-test
   nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite --only-failures<CR>
 
-  " https://github.com/janko/vim-test/issues/136 -- modified for my work needs
+  " https://github.com/janko/vim-test/issues/136
+  " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
     if match(a:cmd, 'vpp/') != -1
       if g:elixir_test_nearest == 1
@@ -80,79 +65,4 @@ augroup ft_elixir
   let test#elixir#exunit#options = {
         \ 'suite':   '--stale',
         \}
-
-  " Lets you use the :R command to jump between e.g. foo_live.ex and foo_live.html.leex in Phoenix LiveView.
-  " Inspired by corresponding functionality in vim-rails.
-  " REF: https://github.com/henrik/dotfiles/blob/master/vim/plugin/related_file_for_phoenix_live_view.vim
-
-  function! s:RelatedFileForPhoenixLiveView()
-    let l:path = expand("%")
-    if l:path =~ "/live/.*\\.ex$"
-      let l:rel = substitute(l:path, "\\.ex$", ".html.leex", "")
-    elseif l:path =~ "\\.html\\.leex$"
-      let l:rel = substitute(l:path, "\\.html\\.leex$", ".ex", "")
-    else
-      return
-    end
-
-    if filereadable(l:rel)
-      execute "edit" l:rel
-    else
-      echoerr "No such related file: " l:rel
-    endif
-  endfunction
-
-  augroup related_file_for_phoenix_live_view
-    au!
-
-    au BufNewFile,BufRead */live/*.ex,*.html.leex command! -buffer R call <SID>RelatedFileForPhoenixLiveView()
-    au BufNewFile,BufRead */live/*.ex,*.html.leex command! -buffer R call <SID>RelatedFileForPhoenixLiveView()
-    au BufNewFile,BufRead */live/*.ex,*.html.leex nnoremap <silent> <buffer> <leader>eR :call <SID>RelatedFileForPhoenixLiveView()<CR>
-  augroup END
-
-  " :Lab to open an Elixir buffer with some boilerplate to experiment with stuff.
-  " By Henrik Nyh <http://henrik.nyh.se> under the MIT license.
-  command! Lab call <SID>Lab()
-  function! s:Lab()
-    tabe
-    set filetype=elixir
-
-    " Make it a scratch (temporary) buffer.
-    setlocal buftype=nofile bufhidden=wipe noswapfile
-
-    " Close on q.
-    "map <buffer> q ZZ
-
-    " Some boilerplate please.
-    " Lab + Run so you can e.g. implement a macro in Lab and require it in Run.
-    call append(0, ["defmodule Lab do", "end", "", "defmodule Run do", "  def run do", "  end", "end", "", "Run.run"])
-
-    " Delete blank line at end.
-    $d
-
-    " Jump to first line.
-    1
-  endfunction
-
-  " <leader>,r to run the current buffer as Elixir (even if it's not written to a file).
-  " Only enabled when the filetype is 'elixir'.
-  "
-  " By Henrik Nyh 2015-06-24 under the MIT license.
-  augroup run_elixir
-    autocmd!
-    " autocmd FileType elixir map <buffer> <leader>r :RunElixir<CR>
-  augroup END
-
-  command! RunElixir call <SID>RunElixir()
-
-  function! s:RunElixir()
-    exe "! elixir -e " . shellescape(join(getline(1, "$"), "\n"), 1)
-  endfunction
-
-
-  " -- autocmd for elixir
-
-  " au FileType elixir,eelixir map <buffer> <leader>r :RunElixir<CR>
-
-  au Filetype elixir,eelixir setlocal formatprg=mix\ format\ -
 augroup END
