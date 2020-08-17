@@ -123,16 +123,16 @@ module.apps = {
   ['com.agiletortoise.Drafts-OSX'] = {
     bundleID = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
-    hyper_key ='d',
+    -- hyper_key ='d',
     local_bindings = {';'},
     preferredDisplay = 1,
     position = module.grid.rightHalf,
     quitGuard = false,
     hideAfter = 1,
-    rules = {
-      {title = 'Workspaces', rule = 'ignore'},
-      {title = 'Capture', rule = 'snap', position = '5,5 3x3'},
-    },
+    -- rules = {
+    --   {title = 'Workspaces', rule = 'ignore'},
+    --   {title = 'Capture', rule = 'snap', position = '5,5 3x3'},
+    -- },
   },
   ['com.culturedcode.ThingsMac'] = {
     bundleID = 'com.culturedcode.ThingsMac',
@@ -146,6 +146,7 @@ module.apps = {
   ['com.kapeli.dashdoc'] = {
     bundleID = 'com.kapeli.dashdoc',
     name = 'Dash',
+    hyper_key = 'd',
     preferredDisplay = 1,
     position = module.grid.centeredLarge,
   },
