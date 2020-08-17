@@ -145,7 +145,7 @@ nnoremap <leader>b# :b#<cr>
 nnoremap <leader>bx :%bd\|e#<cr>
 
 " open vertical term for REPL tings
-noremap <leader>r :only<CR> :vert terminal<CR>
+" noremap <leader>r :only<CR> :vert terminal<CR>
 
 " ## vim-plug
 noremap <F5> :PlugUpdate<CR>

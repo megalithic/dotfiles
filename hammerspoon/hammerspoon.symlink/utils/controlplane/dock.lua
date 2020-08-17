@@ -15,6 +15,7 @@ local selectKarabinerProfile = (function(profile)
   log.i('Switching to keyboard profile', profile)
 end)
 
+-- TODO: toggle wifi when on ethernet; https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-thunderbolt-ethernet.lua
 local toggleWifi = (function(state)
   hs.execute(
     'networksetup -setairportpower airport ' ..
@@ -24,20 +25,67 @@ local toggleWifi = (function(state)
   log.i('Switching wifi state to', state)
 end)
 
-local selectAudioOutput = (function(output)
-  hs.execute(
-    'SwitchAudioSource -t output -s ' ..
-    output
-  )
-  log.i('Switching to audio output', output)
+local selectAudioOutput = (function(outputDevice)
+  -- hs.execute(
+  --   'SwitchAudioSource -t output -s ' ..
+  --   outputDevice
+  -- )
+  -- log.i('Switching to audio output', outputDevice)
+
+
+  -- TODO: wait until the devices in question are available; then switch: https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-usb-audio.lua
+  hs.timer.waitUntil(
+    function()
+      -- Wait until the USB audio output is ready
+      local output = hs.audiodevice.findOutputByName(outputDevice)
+
+      return output ~= nil
+    end,
+    function ()
+      -- Switch to the USB audio output
+      local success = hs.audiodevice.findOutputByName(outputDevice):setDefaultOutputDevice()
+
+      if success then
+        log.i('Switching to audio output', outputDevice)
+        hs.notify.new({title='Hammerspoon', informativeText='Switching to USB audio output'}):send()
+      else
+        log.w('Could not switch the audio output device..')
+      end
+    end,
+    -- Run check every 200ms
+    0.2
+    )
 end)
 
-local selectAudioInput = (function(input)
-  hs.execute(
-    'SwitchAudioSource -t input -s ' ..
-    input
-  )
-  log.i('Switching to audio input', input)
+local selectAudioInput = (function(inputDevice)
+  -- hs.execute(
+  --   'SwitchAudioSource -t input -s ' ..
+  --   inputDevice
+  -- )
+  -- log.i('Switching to audio input', inputDevice)
+
+  -- TODO: wait until the devices in question are available; then switch: https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-usb-audio.lua
+  hs.timer.waitUntil(
+    function()
+      -- Wait until the USB audio input is ready
+      local input = hs.audiodevice.findInputByName(inputDevice)
+
+      return input ~= nil
+    end,
+    function ()
+      -- Switch to the USB audio input
+      local success = hs.audiodevice.findInputByName(inputDevice):setDefaultOutputDevice()
+
+      if success then
+        log.i('Switching to audio output', inputDevice)
+        hs.notify.new({title='Hammerspoon', informativeText='Switching to USB audio input'}):send()
+      else
+        log.w('Could not switch the audio input device..')
+      end
+    end,
+    -- Run check every 200ms
+    0.2
+    )
 end)
 
 local setKittyConfig = (function(c)
@@ -46,20 +94,6 @@ local setKittyConfig = (function(c)
     -- hs.execute('kitty @ set-font-size ' .. c.fontSize)
 end)
 
-
--- FIXME: do i still need this for keyboard switching? remove if not
--- local enableFastKeypress = (function(state)
---   hs.execute('defaults write NSGlobalDomain KeyRepeat -int 1')
---   -- https://superuser.com/questions/40061/what-is-the-mac-os-x-terminal-command-to-log-out-the-current-user
--- end)
-
--- local disableFastKeypress = (function(state)
---   hs.execute('defaults write NSGlobalDomain KeyRepeat -int 0')
---   -- https://superuser.com/questions/40061/what-is-the-mac-os-x-terminal-command-to-log-out-the-current-user
--- end)
-
-
--- TODO: wait until the devices in question are available; then switch: https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-usb-audio.lua
 local dockedAction = function()
   local dockedConfig =  config.docking.docked
   log.i('Executing docked actions..')
@@ -69,12 +103,12 @@ local dockedAction = function()
     toggleWifi(dockedConfig.wifi)
   end)
 
-  hs.timer.doAfter(3, function ()
-    selectAudioOutput(dockedConfig.output)
-    selectAudioInput(dockedConfig.input)
-    setKittyConfig(dockedConfig)
-    setLayoutForAll()
-  end)
+  selectAudioOutput(dockedConfig.output)
+  selectAudioInput(dockedConfig.input)
+  setKittyConfig(dockedConfig)
+  setLayoutForAll()
+  -- hs.timer.doAfter(3, function ()
+  -- end)
 end
 
 local undockedAction = function()
@@ -87,12 +121,12 @@ local undockedAction = function()
     toggleWifi(undockedConfig.wifi)
   end)
 
-  hs.timer.doAfter(3, function ()
-    selectAudioOutput(undockedConfig.output)
-    selectAudioInput(undockedConfig.input)
-    setKittyConfig(undockedConfig)
-    setLayoutForAll()
-  end)
+  selectAudioOutput(undockedConfig.output)
+  selectAudioInput(undockedConfig.input)
+  setKittyConfig(undockedConfig)
+  setLayoutForAll()
+  -- hs.timer.doAfter(3, function ()
+  -- end)
 end
 
 local dockedWatcher = function(_, _, _, _, isDocked)

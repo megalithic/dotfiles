@@ -104,8 +104,6 @@ augroup general
                             \ | silent set colorcolumn=""
                             \ | endif
 
-  autocmd FileType markdown nested setlocal spell complete+=kspell
-
   " Open QuickFix horizontally with line wrap
   autocmd FileType qf wincmd J | setlocal wrap
 
@@ -216,7 +214,8 @@ augroup gitcommit
   autocmd FileType gitcommit,gitrebase exe BufEnterCommit()
 
   au BufReadPost,BufNewFile *.md,*.txt,COMMIT_EDITMSG set wrap linebreak nolist spell spelllang=en_us complete+=kspell
-  au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
+  au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us complete+=kspell
+
 augroup END
 
 augroup ft_clang

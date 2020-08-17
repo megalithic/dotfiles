@@ -38,7 +38,6 @@ let g:loaded_gzip              = 1
 let g:loaded_matchparen        = 1
 let g:loaded_netrwPlugin       = 1
 let g:loaded_rrhelper          = 1
-let g:loaded_spellfile_plugin  = 1
 let g:loaded_tarPlugin         = 1
 let g:loaded_zipPlugin         = 1
 let g:loaded_matchit           = 1
@@ -72,7 +71,8 @@ set complete=.,w,b    " Sources for term and line completions
 " set completeopt=menu,menuone,noinsert,noselect
 set completeopt=menu,menuone,preview,noselect,noinsert
 set dictionary=/usr/share/dict/words
-set dictionary+=~/.config/nvim/spell/en.utf-8.add
+set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
+set spelllang=en
 set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
 set foldmethod=indent " Simple and fast
@@ -141,7 +141,7 @@ if !isdirectory(s:undoDir)
 endif
 let &undodir=s:undoDir
 set undofile          " Maintain undo history
-set updatetime=100     " Make GitGutter plugin more responsive
+set updatetime=100    " Make GitGutter plugin more responsive
 set viminfo=          " No backups
 set wildcharm=<Tab>   " Defines the trigger for 'wildmenu' in mappings
 set wildmenu          " Nice command completions

@@ -151,7 +151,6 @@ let g:completion_chain_complete_list = {
       \       {'complete_items': ['lsp', 'vim-vsnip', 'buffers']},
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
       \       {'mode': 'keyn'},
-      \       {'mode': 'tags'},
       \       {'mode': '<c-p>'},
       \       {'mode': '<c-n>'}],
       \   'string' : [
@@ -162,7 +161,6 @@ let g:completion_chain_complete_list = {
       \       {'complete_items': ['lsp', 'vim-vsnip', 'buffers']},
       \       {'complete_items': ['path'], 'triggered_only': ['./', '/']},
       \       {'mode': 'keyn'},
-      \       {'mode': 'tags'},
       \       {'mode': '<c-p>'},
       \       {'mode': '<c-n>'}],
       \   'string' : [

@@ -19,17 +19,16 @@ module.start = function()
 
 
   -- additional things that cause cyclical reference issues from config.lua
+  hs.hotkey.bind(config.modifiers.cmdAlt, 'p', function()
+    toggled_to_state = ptt.toggleStates()
+
+    alert.show({text="Toggling PTT mode to " .. toggled_to_state})
+  end)
+
   hs.hotkey.bind(config.modifiers.mashShift, 'w', function()
     alert.show({text="Relayout of all apps"})
 
     setLayoutForAll()
-  end)
-
-  -- additional things that cause cyclical reference issues from config.lua
-  hs.hotkey.bind(config.modifiers.cmdAlt, 'p', function()
-    toggled_to_state = ptt.toggleStates()
-
-    alert.show({text="Toggling PTT mode to ".. toggled_to_state})
   end)
 
   hs.hotkey.bind(config.modifiers.ctrlShift, 'w', function()
@@ -39,7 +38,7 @@ module.start = function()
     setLayoutForApp(app)
   end)
 
-  -- Snip current highlight text in browser
+  -- Snip current highlight text in browser and send to Drafts
   hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()
     local appName = config.preferred.browsers[1]
 
