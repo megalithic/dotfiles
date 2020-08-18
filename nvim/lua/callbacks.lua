@@ -42,6 +42,7 @@ M['textDocument/references'] = function(_, _, result)
   if not result then
     return
   end
+
   local items = lsp.util.locations_to_items(result)
   require('fzf').send(items, 'References')
 end

@@ -172,7 +172,7 @@ module.apps = {
   ['com.readdle.smartemail-Mac'] = {
     bundleID = 'com.readdle.smartemail-Mac',
     name = 'Spark',
-    hyper_key ='e',
+    -- hyper_key ='e',
     distraction = true,
     preferredDisplay = 2,
     hideAfter = 5,
@@ -180,6 +180,15 @@ module.apps = {
     rules = {
       {title = 'General', rule = 'ignore'},
     },
+  },
+  ['io.canarymail.mac'] = {
+    bundleID = 'io.canarymail.mac',
+    name = 'Canary Mail',
+    hyper_key ='e',
+    distraction = true,
+    preferredDisplay = 2,
+    hideAfter = 5,
+    position = module.grid.rightHalf,
   },
   ['com.apple.mail'] = {
     bundleID = 'com.apple.mail',
@@ -206,7 +215,7 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     launchMode = 'focus',
-    -- dnd = { enabled = true, mode = "zoom" },
+    dnd = { enabled = true, mode = "zoom" },
     rules = {
       {title = 'Zoom', rule = 'quit'},
       {title = 'Zoom Meeting', rule = 'snap'},

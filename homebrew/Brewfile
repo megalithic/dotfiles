@@ -216,13 +216,10 @@ cask "dropbox"
 cask "dropshare" # recommended by @thewatts on CiT
 cask "discord"
 cask "expressvpn"
-cask "firefox-developer-edition"
 cask "git-credential-manager-core"
-cask "google-chrome-beta"
-cask "graphiql"
 cask "hazel"
 cask "hammerspoon"
-cask "hiddenbar"
+# cask "hiddenbar"
 cask "intel-power-gadget"
 cask "insomnia"
 cask "istat-menus"
@@ -238,11 +235,10 @@ cask "ngrok"
 # cask "mysimbl"
 # cask "near-lock"
 # cask "postgres"
-cask "postman"
+# cask "postman"
 # handled by hammerspoon now :point_down:
-cask "quitter"
+# cask "quitter"
 cask "slack"
-cask "sococo"
 cask "spotify"
 cask "teamviewer"
 cask "thingsmacsandboxhelper"
@@ -264,4 +260,4 @@ mas "Tweetbot", id: 557168941
 mas "Xcode", id: 497799835
 mas "Drafts", id: 1435957248
 mas "Things", id: 904280696
-# mas "Simple Recorder-Voice Recorder", id: 989175722
+mas "Canary Mail", id: 1236045954
