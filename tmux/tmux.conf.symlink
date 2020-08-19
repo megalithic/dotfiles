@@ -20,6 +20,10 @@ set -g prefix C-a
 bind C-a send-prefix
 bind-key C-a send-prefix
 
+# .. or perhaps we might bind tmux-leader/prefix to `<c-space>`
+# unbind-key C-b
+# set-option -g prefix C-space
+
 bind C-d detach			# prefix, d
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
 bind-key r refresh-client

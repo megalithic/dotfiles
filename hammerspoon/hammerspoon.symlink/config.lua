@@ -189,6 +189,9 @@ module.apps = {
     preferredDisplay = 2,
     hideAfter = 5,
     position = module.grid.rightHalf,
+    -- rules = {
+    --   {title = 'Preferences', rule = 'ignore'},
+    -- },
   },
   ['com.apple.mail'] = {
     bundleID = 'com.apple.mail',

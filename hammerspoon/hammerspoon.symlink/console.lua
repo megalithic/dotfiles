@@ -98,7 +98,7 @@ module.init = function()
   end
 
   local darkMode = true
-  local fontStyle = { name = "JetBrainsMono Nerd Font", size = 18 }
+  local fontStyle = { name = "JetBrainsMono Nerd Font", size = 15 }
 
   -- console styling
 

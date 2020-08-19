@@ -1,8 +1,8 @@
 -- Window shortcuts originally first from @tmiller, then @evantravers, now moi
 
 local log = hs.logger.new('[bindings.movewindows]', 'debug')
-
 local movewindows = hs.hotkey.modal.new()
+local snap = require('bindings.snap')
 
 function movewindows:entered()
   alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
@@ -77,43 +77,7 @@ movewindows.start = function()
     :selectMenuItem("Tile Window to Right of Screen")
   end)
   :bind('', 'v', function()
-    local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
-      if win ~= hs.window.focusedWindow() then
-        return {
-          text = win:title(),
-          subText = win:application():title(),
-          image = hs.image.imageFromAppBundle(win:application():bundleID()),
-          id = win:id()
-        }
-      end
-    end)
-
-    local chooser = hs.chooser.new(function(choice)
-      if choice ~= nil then
-        local layout = {}
-        local focused = hs.window.focusedWindow()
-        local toRead  = hs.window.find(choice.id)
-        if hs.eventtap.checkKeyboardModifiers()['alt'] then
-          hs.layout.apply({
-              {nil, focused, focused:screen(), hs.layout.left70, 0, 0},
-              {nil, toRead, focused:screen(), hs.layout.right30, 0, 0}
-            })
-        else
-          hs.layout.apply({
-              {nil, focused, focused:screen(), hs.layout.left50, 0, 0},
-              {nil, toRead, focused:screen(), hs.layout.right50, 0, 0}
-            })
-        end
-        toRead:raise()
-      end
-    end)
-
-    chooser
-    :placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30.")
-    :searchSubText(true)
-    :choices(windows)
-    :show()
-
+    snap.windowSplitter()
     movewindows:exit()
   end)
   :bind('', 'tab', function ()
