@@ -1,11 +1,7 @@
 local log = hs.logger.new('[contexts.zoom]', 'debug')
 
 -- TODO:
--- 1. DND toggling
--- 2. Window layout and closing
--- 3. Spotify pause
 -- 4. Check output/input and set correctly
--- 5. Set PTT is on (e.g., mute by default)
 
 local cache  = {}
 local module = { cache = cache, }
@@ -21,7 +17,7 @@ local rules = {
 
 -- apply(string, hs.window)
 module.apply = function(event, win)
-  log.df("applying [contexts.zoom] for %s..", event)
+  log.df("applying [contexts.zoom] for %s (%s)..", event, win:title())
 
   local app = win:application()
   if app == nil then return end
@@ -41,10 +37,9 @@ module.apply = function(event, win)
     -- mute (PTT) by default
     ptt.setState("push-to-talk")
   elseif hs.fnutils.contains({"windowDestroyed"}, event) then
-    if not hs.application.find(app:name()) then
-      log.df("no longer running! [%s]", hs.application.find(app:name()))
+    wh.onAppQuit(win, function()
       ptt.setState("push-to-talk")
-    end
+    end)
   end
 
   ----------------------------------------------------------------------

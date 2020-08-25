@@ -1,4 +1,4 @@
-local log = hs.logger.new('[window-handlers]', 'info')
+local log = hs.logger.new('[window-handlers]', 'debug')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -23,28 +23,15 @@ module.dndHandler = function(win, dndConfig, event)
 
       dnd_command_updater(dndCmd, nil, {"on"})
 
-      -- FIXME: for some reason i still have to verify it's not running and kill
-      -- it; it for some reason shows up as being running and will turn DND to on
-      -- if i close zoom in some weird way, for instance.
-      hs.timer.waitUntil(function()
-        return not win:application():isRunning()
-      end,
-      function()
+      module.onAppQuit(win, function()
         log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
-
         dnd_command_updater(dndCmd, nil, {"off"})
-      end,
-      0.2)
+      end)
     elseif (event == "windowDestroyed") then
-      hs.timer.waitUntil(function()
-        return not win:application():isRunning()
-      end,
-      function()
+      module.onAppQuit(win, function()
         log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
-
         dnd_command_updater(dndCmd, nil, {"off"})
-      end,
-      0.2)
+      end)
     end
   end
 end
@@ -139,6 +126,19 @@ end
 --   hs.layout.apply(layout)
 -- end
 
+
+module.onAppQuit = function(win, callback, providedInterval)
+  local interval = providedInterval or 0.2
+  local app = win:application()
+
+  if app == nil then return end
+
+  hs.timer.waitUntil(function()
+    return not app:isRunning() and not hs.application.find(app:name())
+  end,
+  callback,
+  interval)
+end
 
 -- targetDisplay(int) :: hs.screen
 -- detect the current number of monitors and return target screen

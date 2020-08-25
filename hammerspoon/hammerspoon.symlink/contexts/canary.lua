@@ -1,4 +1,7 @@
-local log = hs.logger.new('[contexts.hammerspoon]', 'debug')
+local log = hs.logger.new('[contexts.canary]', 'debug')
+
+-- TODO:
+-- 4. Check output/input and set correctly
 
 local cache  = {}
 local module = { cache = cache, }
@@ -6,18 +9,22 @@ local module = { cache = cache, }
 local wh = require('utils.wm.window-handlers')
 
 local rules = {
-  {title = 'Hammerspoon Console', action = 'snap', position = config.grid.rightHalf}
+  {title = 'Preferences', action = 'ignore'},
 }
 
 -- apply(string, hs.window)
 module.apply = function(event, win)
-  log.df("applying [contexts.hammerspoon] for %s (%s)..", event, win:title())
+  log.df("applying [contexts.canary] for %s (%s)..", event, win:title())
 
-  local app = win:application()
-  if app == nil then return end
+  ----------------------------------------------------------------------
+  -- handle hide-after interval
+  wh.hideAfterHandler(win, 5, event)
 
   ----------------------------------------------------------------------
   -- handle window rules
+  local app = win:application()
+  if app == nil then return end
+
   local appConfig = config.apps[app:bundleID()]
   if appConfig == nil then return end
 

@@ -14,7 +14,7 @@ local ptt = require('bindings.ptt')
 
 -- apply(string, hs.window)
 module.apply = function(event, win)
-  log.df("applying [contexts.loom] for %s..", event)
+  log.df("applying [contexts.loom] for %s (%s)..", event, win:title())
 
   local app = win:application()
   if app == nil then return end
@@ -32,13 +32,9 @@ module.apply = function(event, win)
   if hs.fnutils.contains({"windowDestroyed"}, event) then
     ----------------------------------------------------------------------
     -- mute (PTT) by default
-    -- REF: https://github.com/Hammerspoon/hammerspoon/issues/529#issuecomment-136679247
-    if not hs.application.find(app:name()) then
-      log.df("no longer running! [%s]", hs.application.find(app:name()))
+    wh.onAppQuit(win, function()
       ptt.setState("push-to-talk")
-    else
-      log.df("still running! [%s]", hs.application.find(app:name()))
-    end
+    end)
   else
     -- unmute (PTM) by default
     ptt.setState("push-to-mute")

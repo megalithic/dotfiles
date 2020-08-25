@@ -163,13 +163,10 @@ module.apps = {
     bundleID = 'io.canarymail.mac',
     name = 'Canary Mail',
     hyper_key ='e',
+    context = 'canary',
     distraction = true,
     preferredDisplay = 2,
-    hideAfter = 5,
     position = module.grid.rightHalf,
-    -- rules = {
-    --   {title = 'Preferences', rule = 'ignore'},
-    -- },
   },
   ['com.apple.finder'] = {
     bundleID = 'com.apple.finder',

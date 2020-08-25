@@ -42,7 +42,7 @@ end
 
 -- apply(string, hs.window)
 module.apply = function(event, win)
-  log.df("applying [contexts.slack] for %s..", event)
+  log.df("applying [contexts.slack] for %s (%s)..", event, win:title())
 
   ----------------------------------------------------------------------
   -- set-up hotkey modal
