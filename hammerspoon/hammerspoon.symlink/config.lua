@@ -158,7 +158,6 @@ module.apps = {
     preferredDisplay = 2,
     position = module.grid.leftHalf,
     quitGuard = true,
-    hideAfter = 5,
     rules = {
       {title = 'Slack Call Minipanel', rule = 'ignore'},
     },
@@ -193,11 +192,12 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     launchMode = 'focus',
-    dnd = { enabled = true, mode = "zoom" },
-    rules = {
-      {title = 'Zoom', rule = 'quit'},
-      {title = 'Zoom Meeting', rule = 'snap'},
-    },
+  },
+  ['com.loom.desktop'] = {
+    bundleID = 'com.loom.desktop',
+    name = 'Loom',
+    context = 'loom',
+    dnd = { enabled = true, mode = "loom" },
   },
   ['com.spotify.client'] = {
     bundleID = 'com.spotify.client',

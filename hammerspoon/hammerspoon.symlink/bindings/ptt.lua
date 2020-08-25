@@ -82,22 +82,10 @@ local buildMenu = function()
       title = item.title
     end
 
-    return { title = title, fn = function() setState(item.state) end, checked = item.checked }
+    return { title = title, fn = function() module.setState(item.state) end, checked = item.checked }
   end)
 
   return menutable
-end
-
-local setState = function(s)
-  module.state = s
-  log.df('Setting PTT state to: %s', s)
-
-  module.menubar:delete()
-  module.menubar = hs.menubar.new()
-  module.menubar:setMenu(buildMenu())
-  showState()
-
-  showState()
 end
 
 local eventKeysMatchModifiers = function(modifiers)
@@ -129,6 +117,19 @@ local eventTapWatcher = function(event)
   end
 end
 
+module.setState = function(s)
+  module.state = s
+  log.df('Setting PTT state to: %s', s)
+
+  if module.menubar ~= nil then
+    module.menubar:delete()
+    module.menubar = hs.menubar.new()
+    module.menubar:setMenu(buildMenu())
+
+    showState()
+  end
+end
+
 module.toggleStates = function()
   local current_state = module.state
   local toggle_to = hs.fnutils.find(module.states(), function(item)
@@ -137,7 +138,7 @@ module.toggleStates = function()
     end
   end)
 
-  setState(toggle_to.state)
+  module.setState(toggle_to.state)
 
   log.df('Toggling PTT state to %s from %s', toggle_to.state, current_state)
   return toggle_to.state
@@ -152,7 +153,7 @@ module.start = function()
 
   module.menubar = hs.menubar.new()
   module.menubar:setMenu(buildMenu())
-  setState(module.state)
+  module.setState(module.state)
 end
 
 module.stop = function()

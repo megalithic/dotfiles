@@ -2,24 +2,15 @@ local log = hs.logger.new('[window-handlers]', 'info')
 local cache = { timers = {} }
 local module = { cache = cache }
 
--- use this callback for debugging dnd tasks
-local function dndHandlerCb(exit_code, std_out, std_err, cmd)
-  log.df("DND handler callback: { cmd = %s, exit_code = %s, std_out = %s, std_err = %s }", hs.inspect(cmd), hs.inspect(exit_code), hs.inspect(std_out), hs.inspect(std_err))
-
-  return
-end
-
 local function dnd_command_updater(cmd, cb, args)
   if cmd ~= nil then
-    task = hs.task.new(cmd, cb, args)
+    local task = hs.task.new(cmd, cb, args)
     task:start()
   end
 end
 
 module.dndHandler = function(win, dndConfig, event)
   if dndConfig == nil then return end
-
-  -- log.df('DND handler for %s found: %s..', win:application():name(), hs.inspect(dndConfig))
 
   local mode = dndConfig.mode
 
@@ -30,7 +21,6 @@ module.dndHandler = function(win, dndConfig, event)
     if (event == "windowCreated") then
       log.df('DND handler: toggling ON dnd and slack status mode to %s', mode)
 
-      -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
       dnd_command_updater(dndCmd, nil, {"on"})
 
       -- FIXME: for some reason i still have to verify it's not running and kill
@@ -42,7 +32,6 @@ module.dndHandler = function(win, dndConfig, event)
       function()
         log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
 
-        -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
         dnd_command_updater(dndCmd, nil, {"off"})
       end,
       0.2)
@@ -53,7 +42,6 @@ module.dndHandler = function(win, dndConfig, event)
       function()
         log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
 
-        -- dnd_command_updater(slackCmd, function(exit_code, std_out, std_err) dndHandlerCb(exit_code, std_out, std_err, slackCmd) end, {mode})
         dnd_command_updater(dndCmd, nil, {"off"})
       end,
       0.2)
@@ -72,16 +60,15 @@ module.appHandler = function(win, handler, event)
   end
 end
 
-module.doQuitApp = function(win)
+module.killApp = function(win)
   if win == nil then return end
   local app = win:application()
 
   app:kill()
 end
 
-module.doQuitWin = function(win)
+module.killWindow = function(win)
   if win == nil then return end
-  log.df('doQuitWin - %s', hs.inspect(win))
 
   win:close()
 end
@@ -103,7 +90,7 @@ module.quitAfterHandler = function(win, interval, event)
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
         log.df('quitAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)
 
-        cache.timers[appName] = hs.timer.doAfter((interval*60), function() doAppQuit(win) end)
+        cache.timers[appName] = hs.timer.doAfter((interval*60), function() module.killApp(win) end)
       end
     end
   else
@@ -133,6 +120,68 @@ module.hideAfterHandler = function(win, interval, event)
     end
   else
     return
+  end
+end
+
+-- module.buildLayout = function()
+--   local layout = {}
+--   table.insert(
+--     layout,
+--     {
+--       appConfig.bundleID,
+--       window,
+--       module.targetDisplay(appConfig.preferredDisplay),
+--       appConfig.position, -- hs.layout.maximized,
+--       nil,
+--       nil
+--     }
+--   )
+--   hs.layout.apply(layout)
+-- end
+
+
+-- targetDisplay(int) :: hs.screen
+-- detect the current number of monitors and return target screen
+module.targetDisplay = function(displayInt)
+  local displays = hs.screen.allScreens()
+  if displays[displayInt] ~= nil then
+    return displays[displayInt]
+  else
+    return hs.screen.primaryScreen()
+  end
+end
+
+-- validWindows(hs.application) :: {hs.window}
+module.validWindows = function(app)
+  local windows = hs.fnutils.filter(app:allWindows(), (function(win)
+    return win ~= nil and win:title() ~= "" and win:isStandard() and not win:isMinimized() and not win:isFullScreen()
+  end))
+
+  return windows
+end
+
+-- snap(hs.window, string, int) :: nil
+-- does the actual hs.grid activities for positioning a given window
+module.snap = function(win, position, preferredDisplay)
+  if win == nil then return end
+
+  hs.grid.set(win, position or hs.grid.get(win), module.targetDisplay(preferredDisplay))
+end
+
+-- snapRelated(hs.application, table) :: nil
+-- handles positioning of related windows for an app
+module.snapRelated = function(app, appConfig)
+  if appConfig == nil then return end
+  local windows = module.validWindows(app)
+
+  for index, win in pairs(windows) do
+    if win == nil then return end
+
+    if (index % 2 == 0) then -- even index/number
+      module.snap(win, config.grid.rightHalf, appConfig.preferredDisplay)
+    else -- odd index/number
+      module.snap(win, config.grid.leftHalf, appConfig.preferredDisplay)
+    end
   end
 end
 

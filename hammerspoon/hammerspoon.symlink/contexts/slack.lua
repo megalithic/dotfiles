@@ -48,7 +48,7 @@ module.apply = function(event, win)
   if hs.fnutils.contains({"windowFocused"}, event) then
     log.i("enabling bindings..")
     enter()
-  else
+  else -- FIXME: too naive on the events with disable with
     log.i("disabling bindings..")
     exit()
   end
