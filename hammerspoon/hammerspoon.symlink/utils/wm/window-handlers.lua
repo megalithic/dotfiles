@@ -56,13 +56,13 @@ module.quitAfterHandler = function(win, interval, event)
 
     if (app:isRunning()) then
       if cache.timers[appName] ~= nil then
-        log.i("quitAfterHandler: stopping timer on ".. win:title())
+        log.i("stopping quit timer on ".. win:title())
 
         cache.timers[appName]:stop()
       end
 
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
-        log.i("quitAfterHandler: starting timer on ".. win:title())
+        log.i("starting quit timer on ".. win:title())
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() module.killApp(win) end)
       end
@@ -79,13 +79,13 @@ module.hideAfterHandler = function(win, interval, event)
 
     if app:isRunning() and not app:isHidden() then
       if cache.timers[appName] ~= nil then
-        log.i("hideAfterHandler: stopping timer on ".. win:title())
+        log.i("stopping hide timer on ".. win:title())
 
         cache.timers[appName]:stop()
       end
 
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
-        log.i("hideAfterHandler: starting timer on ".. win:title())
+        log.i("starting hide timer on ".. win:title())
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() app:hide() end)
       end

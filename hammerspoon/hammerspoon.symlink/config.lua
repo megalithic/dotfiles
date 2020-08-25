@@ -205,9 +205,9 @@ module.apps = {
     bundleID = 'com.apple.iChat',
     name = 'Messages',
     hyper_key ='m',
+    context = 'messages',
     distraction = true,
     preferredDisplay = 1,
-    hideAfter = 1,
     position = '5,5 3x3'
   },
   ['hangouts'] = {
@@ -223,9 +223,9 @@ module.apps = {
     bundleID = 'WhatsApp',
     name = 'WhatsApp',
     hyper_key ='w',
+    context = 'whatsapp',
     distraction = true,
     preferredDisplay = 1,
-    hideAfter = 1,
     position = '5,5 3x3'
   },
   ['com.agilebits.onepassword7'] = {
