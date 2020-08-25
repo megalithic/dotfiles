@@ -48,19 +48,12 @@ local updateSleep = function(event) -- int
 end
 
 local updateUSB = function()
-  status.isDZ60Attached = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
-    return device.productName == 'DZ60'
-  end) ~= nil
-
   status.docked = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
     return device.productName == config.docking.device.productName
   end) ~= nil
 
   status.isDocked = status.docked
-  -- status.isDocked = status.isDZ60Attached and status.docked
-  -- log.df('updated docked: %s', status.docked)
   log.df('updated isDocked: %s', status.isDocked)
-  log.df('updated isDZ60Attached: %s', status.isDZ60Attached)
 end
 
 module.start = function()

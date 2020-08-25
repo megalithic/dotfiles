@@ -3,8 +3,6 @@ local log = hs.logger.new('[dock]', 'debug')
 local cache = {}
 local module = { cache = cache }
 
-local setLayoutForAll = require('utils.wm').setLayoutForAll
-
 local selectKarabinerProfile = (function(profile)
   hs.execute(
     '/Library/Application\\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli ' ..
@@ -106,9 +104,6 @@ local dockedAction = function()
   selectAudioOutput(dockedConfig.output)
   selectAudioInput(dockedConfig.input)
   setKittyConfig(dockedConfig)
-  setLayoutForAll()
-  -- hs.timer.doAfter(3, function ()
-  -- end)
 end
 
 local undockedAction = function()
@@ -124,9 +119,6 @@ local undockedAction = function()
   selectAudioOutput(undockedConfig.output)
   selectAudioInput(undockedConfig.input)
   setKittyConfig(undockedConfig)
-  setLayoutForAll()
-  -- hs.timer.doAfter(3, function ()
-  -- end)
 end
 
 local dockedWatcher = function(_, _, _, _, isDocked)

@@ -25,20 +25,20 @@ bindings                    = require('bindings')
 controlplane                = require('utils.controlplane')
 watchables                  = require('utils.watchables')
 watchers                    = require('utils.watchers')
-wm                          = require('utils.wm')
+wm                          = require('utils.wm.autolayout')
 
 -- controlplane
 controlplane.enabled        = { 'dock', 'office', 'vpn' }
 
 -- watchers
-watchers.enabled            = { 'urlevent' }
+watchers.enabled            = {} -- urlevent
 watchers.urlPreference      = config.preferred.browsers
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc', 'slack', 'movewindows'}
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc'}
 
 -- start/stop modules
-local modules               = { bindings, controlplane, watchables, watchers, wm }
+local modules               = { wm, bindings, controlplane, watchables, watchers }
 
 hs.fnutils.each(modules, function(module)
   if module then module.start() end

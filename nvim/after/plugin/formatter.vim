@@ -19,4 +19,5 @@ let s:formatprg_for_filetype = {
 
 for [ft, fp] in items(s:formatprg_for_filetype)
   execute "autocmd FileType ".ft." let &l:formatprg=\"".fp."\" | setlocal formatexpr="
+  " use `gq` from a visual selection, to run the assigned formatter
 endfor

@@ -224,7 +224,7 @@ set runtimepath+=~/.config/nvim/autoload/plug.vim/
 " Initialize vim-plug.
 silent! if plug#begin('~/.config/nvim/plugged')
 
-Plug 'tweekmonster/startuptime.vim'
+Plug 'dstein64/vim-startuptime'
 
 
 " --[ styling/ui ]-------------------------------------------------------------------------

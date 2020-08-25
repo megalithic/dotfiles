@@ -1,17 +1,10 @@
-let g:ale_fixers = {
-      \  'css':        ['prettier'],
-      \  'javascript': ['prettier-standard'],
-      \  'json':       ['prettier'],
-      \  'ruby':       ['standardrb'],
-      \  'scss':       ['prettier'],
-      \  'yml':        ['prettier'],
-      \}
 let g:ale_linters = {
       \  '*': ['remove_trailing_lines', 'trim_whitespace'],
       \  'css':        ['csslint', 'prettier'],
       \  'javascript': ['standard', 'prettier_eslint'],
       \  'javascript.jsx': ['prettier_eslint'],
       \  'json':       ['jsonlint', 'prettier'],
+      \  'html':       ['beautify', 'prettier'],
       \  'markdown':   ['mdl'],
       \  'ruby':       ['standardrb'],
       \  'scss':       ['sasslint', 'prettier'],
@@ -20,19 +13,22 @@ let g:ale_linters = {
       \  'elixir': ['mix_format'],
       \  'eelixir': ['mix_format'],
       \}
+let g:ale_linters = {}
 
 let g:ale_fixers = {
-      \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-      \   'javascript': ['prettier_eslint'],
-      \   'javascript.jsx': ['prettier_eslint'],
-      \   'css': ['prettier'],
-      \   'scss': ['prettier'],
-      \   'json': ['prettier'],
-      \   'elm': [],
+      \  '*': ['remove_trailing_lines', 'trim_whitespace'],
+      \  'javascript': ['prettier_eslint', 'prettier-standard'],
+      \  'javascript.jsx': ['prettier_eslint', 'prettier-standard'],
+      \  'css':  ['prettier'],
+      \  'json': ['prettier'],
+      \  'ruby': ['standardrb'],
+      \  'scss': ['prettier'],
+      \  'yml':  ['prettier'],
+      \  'html': ['prettier', 'tidy'],
       \ }
 " \   'elixir': ['mix_format'],
 " \   'eelixir': ['mix_format'],
-let g:ale_linters = {}
+" \  'elm': [],
 
 let g:ale_enabled                  = 1
 let g:ale_completion_enabled       = 0

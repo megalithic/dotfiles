@@ -44,8 +44,6 @@ movewindows.start = function()
   local hyper = require("bindings.hyper")
   hs.window.animationDuration = 0
 
-  log.df("HYPER: %s", hyper)
-
   hyper:bind({'shift'}, 'm', nil, function() movewindows:enter() end)
 
   hs.fnutils.each(movewindows.grid, function(entry)

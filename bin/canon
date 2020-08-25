@@ -4,11 +4,9 @@ session="canonize"
 
 tmux new -s $session -d
 tmux switch -t $session
-tmux send-keys -t $session "cd ~;" C-m
-# tmux split-window -h -t $session
-tmux send-keys -t $session "cd ~; teamocil --here $session" C-m
 
-# tmux new-session -d -s $session
-# tmux switch -t $session
-# # tmux split-window -h -t $session
-# teamocil --here $session
+tmux link-window -s enbala:chats -t 1
+tmux link-window -s enbala:dots -t 2
+
+tmux send-keys -t $session "cd ~;" C-m
+tmux send-keys -t $session "cd ~; teamocil --here $session" C-m

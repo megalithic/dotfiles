@@ -4,7 +4,7 @@
 augroup ft_elixir
   au!
 
-  nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry<ESC>:w<CR>
+  nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>
   nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
   nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
   nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi

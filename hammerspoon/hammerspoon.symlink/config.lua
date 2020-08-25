@@ -67,7 +67,7 @@ local module = {
     ctrlAlt =         {'ctrl', 'alt'},
     mashShift =       {'cmd', 'ctrl', 'shift'},
     mash =            {'cmd', 'alt', 'ctrl'},
-    ultra =           {'cmd', 'alt', 'ctrl', 'shift' },
+    ultra =           {'cmd', 'alt', 'ctrl', 'shift'},
     hyper =           'F19',
   },
 
@@ -99,13 +99,6 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     quitGuard = true,
-  },
-  ['com.google.Chrome'] = {
-    bundleID = 'com.google.Chrome',
-    name = 'Google Chrome',
-    preferredDisplay = 1,
-    position = module.grid.rightHalf,
-    quitGuard = true
   },
   ['com.insomnia.app'] = {
     bundleID = 'com.insomnia.app',
@@ -160,6 +153,7 @@ module.apps = {
     bundleID = 'com.tinyspeck.slackmacgap',
     name = 'Slack',
     hyper_key ='s',
+    context = 'slack',
     distraction = true,
     preferredDisplay = 2,
     position = module.grid.leftHalf,
@@ -167,18 +161,6 @@ module.apps = {
     hideAfter = 5,
     rules = {
       {title = 'Slack Call Minipanel', rule = 'ignore'},
-    },
-  },
-  ['com.readdle.smartemail-Mac'] = {
-    bundleID = 'com.readdle.smartemail-Mac',
-    name = 'Spark',
-    -- hyper_key ='e',
-    distraction = true,
-    preferredDisplay = 2,
-    hideAfter = 5,
-    position = module.grid.rightHalf,
-    rules = {
-      {title = 'General', rule = 'ignore'},
     },
   },
   ['io.canarymail.mac'] = {
@@ -193,14 +175,6 @@ module.apps = {
     --   {title = 'Preferences', rule = 'ignore'},
     -- },
   },
-  ['com.apple.mail'] = {
-    bundleID = 'com.apple.mail',
-    name = 'Mail',
-    distraction = true,
-    preferredDisplay = 2,
-    hideAfter = 0.1,
-    position = module.grid.centerSmall,
-  },
   ['com.apple.finder'] = {
     bundleID = 'com.apple.finder',
     name = 'Finder',
@@ -214,6 +188,7 @@ module.apps = {
   ['us.zoom.xos'] = {
     bundleID = 'us.zoom.xos',
     name = 'zoom.us',
+    context = 'zoom',
     hyper_key ='z',
     preferredDisplay = 1,
     position = module.grid.fullScreen,
@@ -243,7 +218,7 @@ module.apps = {
   },
   ['hangouts'] = {
     bundleID = 'hangouts',
-    name = 'Brave Browser',
+    name = 'Hangouts',
     modifier = module.modifiers.cmdCtrl,
     shortcut = 'm',
     distraction = true,

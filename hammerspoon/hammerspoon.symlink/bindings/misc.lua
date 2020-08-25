@@ -3,8 +3,8 @@ local log = hs.logger.new('[bindings.misc]', 'debug')
 local module = {}
 
 local alert           = require('ext.alert')
-local setLayoutForAll = require('utils.wm').setLayoutForAll
-local setLayoutForApp = require('utils.wm').setLayoutForApp
+-- local setLayoutForAll = require('utils.wm').setLayoutForAll
+-- local setLayoutForApp = require('utils.wm').setLayoutForApp
 local template        = require('ext.template')
 local ptt             = require('bindings.ptt')
 
@@ -25,18 +25,18 @@ module.start = function()
     alert.show({text="Toggling PTT mode to " .. toggled_to_state})
   end)
 
-  hs.hotkey.bind(config.modifiers.mashShift, 'w', function()
-    alert.show({text="Relayout of all apps"})
+  -- hs.hotkey.bind(config.modifiers.mashShift, 'w', function()
+  --   alert.show({text="Relayout of all apps"})
 
-    setLayoutForAll()
-  end)
+  --   setLayoutForAll()
+  -- end)
 
-  hs.hotkey.bind(config.modifiers.ctrlShift, 'w', function()
-    local app = hs.application.frontmostApplication()
-    alert.show({text="Relayout of single app (" .. app:name() .. ")"})
+  -- hs.hotkey.bind(config.modifiers.ctrlShift, 'w', function()
+  --   local app = hs.application.frontmostApplication()
+  --   alert.show({text="Relayout of single app (" .. app:name() .. ")"})
 
-    setLayoutForApp(app)
-  end)
+  --   setLayoutForApp(app)
+  -- end)
 
   -- Snip current highlight text in browser and send to Drafts
   hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()

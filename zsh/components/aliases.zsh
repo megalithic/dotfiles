@@ -398,3 +398,5 @@ alias covid='curl "https://corona-stats.online/usa?minimal=true"'
 
 alias nerd="echo -ne \\u"
 alias nf="echo -ne \\u"
+
+alias tidy="/usr/local/bin/tidy"
