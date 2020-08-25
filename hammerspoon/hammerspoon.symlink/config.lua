@@ -249,9 +249,9 @@ module.apps = {
     bundleID = 'org.hammerspoon.Hammerspoon',
     name = 'Hammerspoon',
     hyper_key = 'r',
+    context = 'hammerspoon',
     preferredDisplay = 2,
     hideAfter = 1,
-    position = module.grid.rightHalf,
     quitGuard = true,
   },
   ['com.apple.systempreferences'] = {
