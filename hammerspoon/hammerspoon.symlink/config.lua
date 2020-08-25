@@ -158,9 +158,6 @@ module.apps = {
     preferredDisplay = 2,
     position = module.grid.leftHalf,
     quitGuard = true,
-    rules = {
-      {title = 'Slack Call Minipanel', rule = 'ignore'},
-    },
   },
   ['io.canarymail.mac'] = {
     bundleID = 'io.canarymail.mac',

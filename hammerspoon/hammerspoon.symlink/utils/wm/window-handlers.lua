@@ -185,4 +185,25 @@ module.snapRelated = function(app, appConfig)
   end
 end
 
+-- applyRules(table, hs.window, table) :: nil
+-- handles positioning of related windows for an app
+module.applyRules = function(rules, win, appConfig)
+  for _, rule in pairs(rules) do
+    if win:title() == rule.title then
+      if rule.action == "snap" then
+        module.snap(win, rule.position or appConfig.position, appConfig.preferredDisplay)
+      elseif rule.action == "quit" then
+        module.killWindow(win)
+      elseif rule.action == "hide" then
+        -- FIXME: do we just do another window kill here, instead?
+        -- module.killWindow(win)
+        -- or --
+        -- win:application():hide()
+      elseif rule.action == "ignore" then
+        return
+      end
+    end
+  end
+end
+
 return module

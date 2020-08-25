@@ -14,12 +14,10 @@ local wh = require('utils.wm.window-handlers')
 local spotify = require('bindings.media').spotify
 local ptt = require('bindings.ptt')
 
-module.rules = function()
-  return {
-    {title = 'Zoom', action = 'quit'},
-    {title = 'Zoom Meeting', action = 'snap'},
-  }
-end
+local rules = {
+  {title = 'Zoom', action = 'quit'},
+  {title = 'Zoom Meeting', action = 'snap'},
+}
 
 -- apply(string, hs.window)
 module.apply = function(event, win)
@@ -27,9 +25,6 @@ module.apply = function(event, win)
 
   local app = win:application()
   if app == nil then return end
-
-  local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil then return end
 
   if hs.fnutils.contains({"windowCreated"}, event) then
     ----------------------------------------------------------------------
@@ -54,16 +49,11 @@ module.apply = function(event, win)
 
   ----------------------------------------------------------------------
   -- handle window rules
+  local appConfig = config.apps[app:bundleID()]
+  if appConfig == nil then return end
+
   if not hs.fnutils.contains({"windowDestroyed"}, event) then
-    for _, rule in pairs(module.rules()) do
-      if win:title() == rule.title then
-        if rule.action == "snap" then
-          wh.snap(win, rule.position or appConfig.position, appConfig.preferredDisplay)
-        elseif rule.action == "quit" then
-          wh.killWindow(win)
-        end
-      end
-    end
+    wh.applyRules(rules, win, appConfig)
   end
 end
 

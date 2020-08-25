@@ -4,6 +4,10 @@ local cache  = {}
 local module = { cache = cache, }
 local wh = require('utils.wm.window-handlers')
 
+local rules = {
+    {title = 'Slack Call Minipanel', rule = 'ignore'},
+}
+
 local enter = function()
   cache.bindings:enter()
   log.i("entering slack hotkey modal..")
@@ -40,6 +44,8 @@ end
 module.apply = function(event, win)
   log.df("applying [contexts.slack] for %s..", event)
 
+  ----------------------------------------------------------------------
+  -- set-up hotkey modal
   if cache.bindings == nil then
     cache.bindings = hs.hotkey.modal.new({}, nil, "slack bindings inbound..")
     log.df("creating hotkey modal -> %s", cache.bindings)
@@ -53,8 +59,21 @@ module.apply = function(event, win)
     exit()
   end
 
+  ----------------------------------------------------------------------
   -- handle hide-after interval
   wh.hideAfterHandler(win, 5, event)
+
+  ----------------------------------------------------------------------
+  -- handle window rules
+  local app = win:application()
+  if app == nil then return end
+
+  local appConfig = config.apps[app:bundleID()]
+  if appConfig == nil then return end
+
+  if not hs.fnutils.contains({"windowDestroyed"}, event) then
+    wh.applyRules(rules, win, appConfig)
+  end
 end
 
 return module
