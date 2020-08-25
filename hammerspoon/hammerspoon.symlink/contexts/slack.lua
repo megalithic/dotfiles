@@ -2,6 +2,7 @@ local log = hs.logger.new('[contexts.slack]', 'debug')
 
 local cache  = {}
 local module = { cache = cache, }
+local wh = require('utils.wm.window-handlers')
 
 local enter = function()
   cache.bindings:enter()
@@ -35,21 +36,25 @@ local exit = function()
   log.i("exiting slack hotkey modal..")
 end
 
-module.apply = function(event) -- event
+-- apply(string, hs.window)
+module.apply = function(event, win)
   log.df("applying [contexts.slack] for %s..", event)
 
   if cache.bindings == nil then
     cache.bindings = hs.hotkey.modal.new({}, nil, "slack bindings inbound..")
-    log.df("creating slack hotkey model -> %s", cache.bindings)
+    log.df("creating hotkey modal -> %s", cache.bindings)
   end
 
-  if event == "windowFocused" then
+  if hs.fnutils.contains({"windowFocused"}, event) then
     log.i("enabling bindings..")
     enter()
   else
     log.i("disabling bindings..")
     exit()
   end
+
+  -- handle hide-after interval
+  wh.hideAfterHandler(win, 5, event)
 end
 
 return module

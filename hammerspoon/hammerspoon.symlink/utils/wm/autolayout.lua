@@ -1,4 +1,4 @@
-local log = hs.logger.new('[wm.autolayout]', 'debug')
+local log = hs.logger.new('[wm.autolayout]', 'info')
 
 local cache = {
   screenWatcher = {},
@@ -83,7 +83,9 @@ module.applyLayout = function(win, appName, event)
     module.snapRelated(windows, appConfig)
   end
 
-  -- module.applyContext(win, appName, event)
+  if hs.fnutils.contains({"windowCreated", "windowDestroyed"}, event) then
+    module.applyContext(win, appName, event)
+  end
 end
 
 -- applyContext(hs.window, string, string) :: nil
@@ -97,7 +99,7 @@ module.applyContext = function(win, appName, event)
   local context = require('contexts.' .. appConfig.context)
 
   if context == nil then return end
-  context.apply(event)
+  context.apply(event, win)
 end
 
 -- prepare() :: nil

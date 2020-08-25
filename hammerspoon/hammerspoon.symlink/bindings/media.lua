@@ -51,6 +51,10 @@ end
 module.spotify = function (event, alertText)
   if event == 'playpause' then
     hs.spotify.playpause()
+  elseif event == 'pause' then
+    hs.spotify.pause()
+  elseif event == 'play' then
+    hs.spotify.play()
   elseif event == 'next' then
     hs.spotify.next()
   elseif event == 'previous' then
@@ -62,7 +66,7 @@ module.spotify = function (event, alertText)
     hs.timer.doAfter(0.5, function ()
       local image = hs.image.imageFromAppBundle('com.spotify.client')
 
-      if event == 'playpause' and not hs.spotify.isPlaying() then
+      if (event == 'playpause' and not hs.spotify.isPlaying()) or event == "pause" then
         module.notify({
             icon="",
             state="Paused",
