@@ -1,14 +1,12 @@
 local log = hs.logger.new('[contexts.canary]', 'debug')
 
--- TODO:
--- 4. Check output/input and set correctly
-
 local cache  = {}
 local module = { cache = cache, }
 
 local wh = require('utils.wm.window-handlers')
 
 local rules = {
+  {title = 'Main Window', action = 'snap'},
   {title = 'Preferences', action = 'ignore'},
 }
 

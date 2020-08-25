@@ -1,11 +1,5 @@
 local log = hs.logger.new('[contexts.loom]', 'debug')
 
--- TODO:
--- 1. DND toggling
--- 3. Spotify pause
--- 4. Check output/input and set correctly
--- 5. Set PTM is on (e.g., unmuted by default)
-
 local cache  = {}
 local module = { cache = cache, }
 local wh = require('utils.wm.window-handlers')

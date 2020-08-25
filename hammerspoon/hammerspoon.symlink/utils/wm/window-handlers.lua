@@ -1,4 +1,4 @@
-local log = hs.logger.new('[window-handlers]', 'debug')
+local log = hs.logger.new('[window-handlers]', 'info')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -19,31 +19,20 @@ module.dndHandler = function(win, dndConfig, event)
     local dndCmd = os.getenv("HOME") ..  "/.dotfiles/bin/dnd"
 
     if (event == "windowCreated") then
-      log.df('DND handler: toggling ON dnd and slack status mode to %s', mode)
+      log.i("DND Handler: on/".. mode)
 
       dnd_command_updater(dndCmd, nil, {"on"})
 
       module.onAppQuit(win, function()
-        log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
+        log.i("DND Handler: off/back")
         dnd_command_updater(dndCmd, nil, {"off"})
       end)
     elseif (event == "windowDestroyed") then
       module.onAppQuit(win, function()
-        log.df('DND handler: toggling OFF dnd and slack mode to back; isRunning? %s', win:application():isRunning())
+        log.i("DND Handler: off/back")
         dnd_command_updater(dndCmd, nil, {"off"})
       end)
     end
-  end
-end
-
-module.appHandler = function(win, handler, event)
-  if handler == nil then return end
-  local app = win:application()
-
-  if event == "windowCreated" then
-    log.df('found app handler for %s (%s)..', app:name(), app:bundleID())
-
-    handler(win)
   end
 end
 
@@ -67,15 +56,13 @@ module.quitAfterHandler = function(win, interval, event)
 
     if (app:isRunning()) then
       if cache.timers[appName] ~= nil then
-        log.df('quitAfterHandler - stopping existing timer on %s (%s), for event %s {timer = %s}', win:title(), appName, event, cache.timers[appName])
+        log.i("quitAfterHandler: stopping timer on ".. win:title())
 
         cache.timers[appName]:stop()
       end
 
-      log.df('quitAfterHandler event (%s) for app: %s', event, appName)
-
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
-        log.df('quitAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)
+        log.i("quitAfterHandler: starting timer on ".. win:title())
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() module.killApp(win) end)
       end
@@ -92,15 +79,13 @@ module.hideAfterHandler = function(win, interval, event)
 
     if app:isRunning() and not app:isHidden() then
       if cache.timers[appName] ~= nil then
-        log.df('hideAfterHandler - stopping existing timer on %s (%s), for event %s {timer = %s}', win:title(), appName, event, cache.timers[appName])
+        log.i("hideAfterHandler: stopping timer on ".. win:title())
 
         cache.timers[appName]:stop()
       end
 
-      log.df('hideAfterHandler event (%s) for app: %s', event, appName)
-
       if event == "windowUnfocused" or event == "windowHidden" or event == "windowMinimized" or event == "windowNotVisible" or event == "windowNotOnScreen" then
-        log.df('hideAfterHandler - starting timer (%sm) on %s (%s), for event %s', interval, win:title(), appName, event)
+        log.i("hideAfterHandler: starting timer on ".. win:title())
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() app:hide() end)
       end
@@ -152,7 +137,7 @@ module.targetDisplay = function(displayInt)
 end
 
 -- validWindows(hs.application) :: {hs.window}
-module.validWindows = function(app)
+module.validWindows = function(app, ignoredWindows)
   local windows = hs.fnutils.filter(app:allWindows(), (function(win)
     return win ~= nil and win:title() ~= "" and win:isStandard() and not win:isMinimized() and not win:isFullScreen()
   end))
@@ -200,6 +185,7 @@ module.applyRules = function(rules, win, appConfig)
         -- or --
         -- win:application():hide()
       elseif rule.action == "ignore" then
+        log.i("applyRules::ignoring window, " .. win:title())
         return
       end
     end
