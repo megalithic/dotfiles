@@ -1,39 +1,35 @@
-local cache  = {}
-local module = { cache = cache, }
+local module = {}
+
 local wh = require('utils.wm.window-handlers')
 
-local enter = function(log)
-  cache.bindings:enter()
-
-  log.df("entering slack hotkey modal..")
-
-  cache.bindings:bind({ 'ctrl' }, 'j', function()
+local enter = function(modal)
+  modal:bind({ 'ctrl' }, 'j', function()
     hs.eventtap.keyStroke({ 'alt' }, 'down')
   end)
-  cache.bindings:bind({ 'ctrl' }, 'k', function()
+  modal:bind({ 'ctrl' }, 'k', function()
     hs.eventtap.keyStroke({ 'alt' }, 'up')
   end)
-  cache.bindings:bind({ 'ctrl', 'shift' }, 'j', function()
+  modal:bind({ 'ctrl', 'shift' }, 'j', function()
     hs.eventtap.keyStroke({ 'alt', 'shift' }, 'down')
   end)
-  cache.bindings:bind({ 'ctrl', 'shift' }, 'k', function()
+  modal:bind({ 'ctrl', 'shift' }, 'k', function()
     hs.eventtap.keyStroke({ 'alt', 'shift' }, 'up')
   end)
-  cache.bindings:bind({ 'cmd' }, 'w', function()
+  modal:bind({ 'cmd' }, 'w', function()
     hs.eventtap.keyStroke({}, 'escape')
   end)
-  cache.bindings:bind({ 'cmd' }, 'r', function()
+  modal:bind({ 'cmd' }, 'r', function()
     hs.eventtap.keyStroke({}, 'escape')
   end)
-  cache.bindings:bind({ 'ctrl' }, 'g', function()
+  modal:bind({ 'ctrl' }, 'g', function()
     hs.eventtap.keyStroke({ 'cmd' }, 'k')
   end)
+
+  modal:enter()
 end
 
-local exit = function(log)
-  cache.bindings:exit()
-
-  log.df("exiting slack hotkey modal..")
+local exit = function(modal)
+  modal:exit()
 end
 
 -- apply(string, hs.window, hs.logger) :: nil
@@ -41,18 +37,16 @@ module.apply = function(event, win, log)
   local app = win:application()
   if app == nil then return end
 
+  local modal = hs.hotkey.modal.new({}, nil)
+
   ----------------------------------------------------------------------
   -- set-up hotkey modal
-  if cache.bindings == nil then
-    cache.bindings = hs.hotkey.modal.new({}, nil)
-  end
-
   if hs.fnutils.contains({"windowFocused"}, event) then
-    enter(log)
-    log.df("enabled bindings -> %s", #cache.bindings)
+    enter(modal)
+    log.df("%s::enabled modal bindings -> %s", app:bundleID(), #modal.keys)
   elseif hs.fnutils.contains({"windowUnfocused"}, event) then
-    exit(log)
-    log.df("disabled bindings -> %s", #cache.bindings)
+    exit(modal)
+    log.df("%s::disabled modal bindings -> %s", app:bundleID(), #modal.keys)
   end
 
   ----------------------------------------------------------------------

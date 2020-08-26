@@ -123,8 +123,8 @@ module.apps = {
     quitGuard = false,
     hideAfter = 1,
     rules = {
-      {title = 'Workspaces', rule = 'ignore'},
-      {title = 'Capture', rule = 'snap', position = '5,5 3x3'},
+      {title = 'Workspaces', action = 'ignore'},
+      {title = 'Capture', action = 'snap', position = '5,5 3x3'},
     },
   },
   ['com.culturedcode.ThingsMac'] = {
@@ -159,7 +159,7 @@ module.apps = {
     position = module.grid.leftHalf,
     quitGuard = true,
     rules = {
-      {title = 'Slack Call Minipanel', rule = 'ignore'},
+      {title = 'Slack Call Minipanel', action = 'ignore'},
     }
   },
   ['io.canarymail.mac'] = {
@@ -182,7 +182,7 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.centeredMedium,
     rules = {
-      {title = 'Finder Preferences', rule = 'ignore'},
+      {title = 'Finder Preferences', action = 'ignore'},
     },
   },
   ['us.zoom.xos'] = {
@@ -202,7 +202,6 @@ module.apps = {
     bundleID = 'com.loom.desktop',
     name = 'Loom',
     context = 'loom',
-    dnd = { enabled = true, mode = "loom" },
   },
   ['com.spotify.client'] = {
     bundleID = 'com.spotify.client',
@@ -259,11 +258,12 @@ module.apps = {
     hyper_key = 'r',
     context = 'hammerspoon',
     preferredDisplay = 2,
+    position = module.grid.rightHalf,
     hideAfter = 1,
     quitGuard = true,
-    rules = {
-      {title = 'Hammerspoon Console', action = 'snap', position = module.grid.rightHalf}
-    }
+    -- rules = {
+    --   {title = 'Hammerspoon Console', action = 'snap', position = module.grid.rightHalf}
+    -- }
   },
   ['com.apple.systempreferences'] = {
     bundleID = 'com.apple.systempreferences',

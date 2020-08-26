@@ -155,7 +155,7 @@ case $subcommand in
     help ;;
   here)
     back ;;
-  meeting | meet)
+  meeting | meet | loom)
     zoom ;;
   *)
     shift

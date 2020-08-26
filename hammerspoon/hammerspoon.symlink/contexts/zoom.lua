@@ -17,7 +17,7 @@ module.apply = function(event, win, log)
     wh.dndHandler(win, { enabled = true, mode = "zoom" }, event)
 
     ----------------------------------------------------------------------
-    -- naively handle spotify pause (always pause it, no matter the event)
+    -- pause spotify
     log.df("pausing spotify for %s..", event)
     spotify('pause')
 

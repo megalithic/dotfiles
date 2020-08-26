@@ -1,49 +1,55 @@
 local log = hs.logger.new('[bindings.quitguard]', 'debug')
-local module = {}
+
+local modal = hs.hotkey.modal.new('cmd', 'q')
+local cache = { modal = modal }
+local module = { cache = cache }
 
 local alert = require('ext.alert')
 
-local quitModal = hs.hotkey.modal.new('cmd','q')
 -- Press Cmd+Q twice to actually quit
-local quitAlertText = "Press Cmd+Q again to quit"
+local quitAlertText = "Press <cmd+q> again to quit"
 
-local quit = function(app)
-  local appToQuit = app or hs.application.frontmostApplication()
-  appToQuit:kill()
+local enter = function()
+  local app = hs.application.frontmostApplication()
+  app:kill()
 end
 
-function quitModal:entered()
+local exit = function()
+  cache.modal:exit()
+end
+
+function cache.modal:entered()
   local app = hs.application.frontmostApplication()
   if app == nil then return end
 
-  local appBundleID = app:bundleID()
-  local appConfig = config.apps[appBundleID]
+  local appConfig = config.apps[app:bundleID()]
 
   if (appConfig == nil or appConfig.quitGuard == nil) then
-    log.wf("QuitGuard not configured for %s (%s), quitting app..", app:name(), appBundleID)
-    quit()
+    log.wf("quitguard::%s -> not configured; quitting..", app:bundleID())
+    enter()
   else
-    log.df("Starting to quit app, %s (%s), with QuitGuard..", app:name(), appBundleID)
+    log.df("quitguard::%s -> configured; waiting..", app:bundleID())
 
     if appConfig.quitGuard then
-      -- TODO: show this alert on the primary screen (presently shows on laptop)
-      alert.show({text=quitAlertText, duration=1})
-      hs.timer.doAfter(1, function() quitModal:exit() end)
+      alert.show({text = quitAlertText, duration = 1})
+      hs.timer.doAfter(1, function() cache.modal:exit() end)
     else
-      quitModal:exit()
-      log.df("Quitting app, %s (%s), with QuitGuard..", app:name(), appBundleID)
-      quit()
+      cache.modal:exit()
+      log.df("quitguard::%s -> acknowledged; quitting..", app:bundleID())
+
+      enter()
     end
   end
 end
 
 module.start = function()
-  quitModal:bind('cmd', 'q', quit)
-  quitModal:bind('', 'escape', function() quitModal:exit() end)
+  cache.modal:bind('cmd', 'q', enter)
+  cache.modal:bind('', 'escape', exit)
 end
 
 module.stop = function()
-  -- nil
+  cache.modal:exit()
+  cache.modal = nil
 end
 
 return module
