@@ -29,14 +29,13 @@ module.applyLayout = function(win, app, appConfig, windows, event)
   log.df("applyLayout::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows)
 
   if #windows == 1 then
-    log.f("snap::%s -> %s(%s) [%s]", event, app:bundleID(), #windows, appConfig.position)
-
-    wh.snap(win, appConfig.position, appConfig.preferredDisplay)
-
-    log.f("snapped::%s -> %s(%s) [%s]", event, app:bundleID(), #windows, appConfig.position)
+    if hs.fnutils.contains(windows, win) then
+      wh.snap(win, appConfig.position, appConfig.preferredDisplay)
+      log.f("snapped::%s -> %s(%s) [%s]", event, app:bundleID(), #windows, win:title())
+    end
   elseif #windows > 1 then
     wh.snapRelated(app, appConfig, windows)
-    log.f("snapRelated::%s -> %s(%s)", event, app:bundleID(), #windows)
+    log.f("snappedRelated::%s -> %s(%s)", event, app:bundleID(), #windows)
   end
 end
 
@@ -46,12 +45,11 @@ end
 module.applyContext = function(win, app, appConfig, windows, event)
   if appConfig.context == nil then return end
 
-  log.df("applyContext::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows)
-
-  local context = require('contexts.' .. appConfig.context)
+  local context = require('contexts')
   if context == nil then return end
 
-  context.apply(event, win)
+  log.df("applyContext::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows)
+  context.load(event, win, appConfig.context, "info")
 end
 
 

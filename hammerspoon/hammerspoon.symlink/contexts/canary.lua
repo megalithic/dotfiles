@@ -1,16 +1,12 @@
-local log = hs.logger.new('[contexts.canary]', 'info')
-
 local cache  = {}
 local module = { cache = cache, }
 
 local wh = require('utils.wm.window-handlers')
 
--- apply(string, hs.window) :: nil
-module.apply = function(event, win)
+-- apply(string, hs.window, hs.logger) :: nil
+module.apply = function(event, win, _)
   local app = win:application()
   if app == nil then return end
-
-  log.f("applying [contexts.canary] for %s (%s)..", event, win:title())
 
   ----------------------------------------------------------------------
   -- handle hide-after interval

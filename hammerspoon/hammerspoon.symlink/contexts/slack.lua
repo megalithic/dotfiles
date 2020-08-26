@@ -1,12 +1,11 @@
-local log = hs.logger.new('[contexts.slack]', 'info')
-
 local cache  = {}
 local module = { cache = cache, }
 local wh = require('utils.wm.window-handlers')
 
-local enter = function()
+local enter = function(log)
   cache.bindings:enter()
-  log.i("entering slack hotkey modal..")
+
+  log.df("entering slack hotkey modal..")
 
   cache.bindings:bind({ 'ctrl' }, 'j', function()
     hs.eventtap.keyStroke({ 'alt' }, 'down')
@@ -31,17 +30,16 @@ local enter = function()
   end)
 end
 
-local exit = function()
+local exit = function(log)
   cache.bindings:exit()
-  log.i("exiting slack hotkey modal..")
+
+  log.df("exiting slack hotkey modal..")
 end
 
--- apply(string, hs.window) :: nil
-module.apply = function(event, win)
+-- apply(string, hs.window, hs.logger) :: nil
+module.apply = function(event, win, log)
   local app = win:application()
   if app == nil then return end
-
-  log.f("applying [contexts.slack] for %s (%s)..", event, win:title())
 
   ----------------------------------------------------------------------
   -- set-up hotkey modal
@@ -50,11 +48,11 @@ module.apply = function(event, win)
   end
 
   if hs.fnutils.contains({"windowFocused"}, event) then
-    enter()
-    log.i("enabled bindings -> %s", #cache.bindings)
+    enter(log)
+    log.df("enabled bindings -> %s", #cache.bindings)
   elseif hs.fnutils.contains({"windowUnfocused"}, event) then
-    exit()
-    log.i("disabled bindings -> %s", #cache.bindings)
+    exit(log)
+    log.df("disabled bindings -> %s", #cache.bindings)
   end
 
   ----------------------------------------------------------------------
