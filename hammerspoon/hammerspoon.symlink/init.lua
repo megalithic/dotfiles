@@ -25,7 +25,7 @@ bindings                    = require('bindings')
 controlplane                = require('utils.controlplane')
 watchables                  = require('utils.watchables')
 watchers                    = require('utils.watchers')
-wm                          = require('utils.wm.autolayout')
+wm                          = require('utils.wm')
 
 -- controlplane
 controlplane.enabled        = { 'dock', 'office', 'vpn' }
@@ -35,7 +35,7 @@ watchers.enabled            = {} -- urlevent
 watchers.urlPreference      = config.preferred.browsers
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc'}
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc' }
 
 -- start/stop modules
 local modules               = { wm, bindings, controlplane, watchables, watchers }

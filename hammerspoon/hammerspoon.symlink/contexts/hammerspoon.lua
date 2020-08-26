@@ -1,28 +1,28 @@
-local log = hs.logger.new('[contexts.hammerspoon]', 'debug')
+local log = hs.logger.new('[contexts.hammerspoon]', 'info')
 
 local cache  = {}
 local module = { cache = cache, }
 
 local wh = require('utils.wm.window-handlers')
 
-local rules = {
-  {title = 'Hammerspoon Console', action = 'snap', position = config.grid.rightHalf}
-}
-
--- apply(string, hs.window)
+-- apply(string, hs.window) :: nil
 module.apply = function(event, win)
-  log.df("applying [contexts.hammerspoon] for %s (%s)..", event, win:title())
-
   local app = win:application()
   if app == nil then return end
+
+  log.f("applying [contexts.hammerspoon] for %s (%s)..", event, win:title())
+
+  ----------------------------------------------------------------------
+  -- handle hide-after interval
+  wh.hideAfterHandler(win, 1, event)
 
   ----------------------------------------------------------------------
   -- handle window rules
   local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil then return end
+  if appConfig == nil or appConfig.rules == nil then return end
 
-  if not hs.fnutils.contains({"windowDestroyed"}, event) then
-    wh.applyRules(rules, win, appConfig)
+  if hs.fnutils.contains({"windowCreated"}, event) then
+    wh.applyRules(appConfig.rules, win, appConfig)
   end
 end
 

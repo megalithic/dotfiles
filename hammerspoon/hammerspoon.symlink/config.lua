@@ -122,10 +122,10 @@ module.apps = {
     position = module.grid.rightHalf,
     quitGuard = false,
     hideAfter = 1,
-    -- rules = {
-    --   {title = 'Workspaces', rule = 'ignore'},
-    --   {title = 'Capture', rule = 'snap', position = '5,5 3x3'},
-    -- },
+    rules = {
+      {title = 'Workspaces', rule = 'ignore'},
+      {title = 'Capture', rule = 'snap', position = '5,5 3x3'},
+    },
   },
   ['com.culturedcode.ThingsMac'] = {
     bundleID = 'com.culturedcode.ThingsMac',
@@ -158,6 +158,9 @@ module.apps = {
     preferredDisplay = 2,
     position = module.grid.leftHalf,
     quitGuard = true,
+    rules = {
+      {title = 'Slack Call Minipanel', rule = 'ignore'},
+    }
   },
   ['io.canarymail.mac'] = {
     bundleID = 'io.canarymail.mac',
@@ -167,6 +170,10 @@ module.apps = {
     distraction = true,
     preferredDisplay = 2,
     position = module.grid.rightHalf,
+    rules = {
+      {title = 'Main Window', action = 'snap'},
+      {title = 'Preferences', action = 'ignore'},
+    }
   },
   ['com.apple.finder'] = {
     bundleID = 'com.apple.finder',
@@ -186,6 +193,10 @@ module.apps = {
     preferredDisplay = 1,
     position = module.grid.fullScreen,
     launchMode = 'focus',
+    rules = {
+      {title = 'Zoom', action = 'quit'},
+      {title = 'Zoom Meeting', action = 'snap'},
+    },
   },
   ['com.loom.desktop'] = {
     bundleID = 'com.loom.desktop',
@@ -250,6 +261,9 @@ module.apps = {
     preferredDisplay = 2,
     hideAfter = 1,
     quitGuard = true,
+    rules = {
+      {title = 'Hammerspoon Console', action = 'snap', position = module.grid.rightHalf}
+    }
   },
   ['com.apple.systempreferences'] = {
     bundleID = 'com.apple.systempreferences',
@@ -288,68 +302,6 @@ module.apps = {
     quitAfter = 0,
   }
 }
-
-
--- Helpers to get various app config settings
-module.getAppConfigForWin = function(win)
-  local appBundleId = win:application():bundleID()
-  local appConfig = module.apps[appBundleId]
-
-  return appConfig
-end
-
-module.getAppConfigForApp = function(appName)
-  local found
-  for _, hash in pairs(module.apps) do
-    if (hash.name == appName) then
-      found = hash
-
-      return found
-    end
-  end
-
-  return found
-end
-
-module.rulesExistForAppConfig = function(appConfig)
-  return appConfig.rules ~= nil and #appConfig.rules > 0
-end
-
-module.rulesExistForWin = function(win)
-  local appConfig = module.getAppConfigForWin(win)
-  local rulesExist = appConfig ~= nil and appConfig.rules ~= nil and #appConfig.rules > 0
-
-  return rulesExist
-end
-
-module.ruleForWin = function(win, rule)
-  local appConfig = module.getAppConfigForWin(win)
-  local foundRule = hs.fnutils.find(appConfig.rules, function(datum)
-    return datum.title == win:title() and datum.rule == rule
-  end)
-
-  return foundRule
-end
-
-module.ruleExistsForWin = function(win, rule)
-  local appConfig = module.getAppConfigForWin(win)
-  local rulesExist = module.rulesExistForWin(win)
-  local exists = false
-
-  if rulesExist then
-    local foundRule = module.ruleForWin(win, rule)
-    exists = rulesExist and foundRule ~= nil
-  end
-
-  if exists then
-    log.df("Found rule (%s) found for %s", rule, win:title())
-  -- else
-  --   log.df("No rule (%s) found for %s", rule, win:title())
-  end
-
-  return exists
-end
-
 
 module.utilities = {
   -- NOTE: handle this with alfred and `sleep`/`lock` commands

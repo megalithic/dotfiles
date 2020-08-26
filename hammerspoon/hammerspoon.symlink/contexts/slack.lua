@@ -1,12 +1,8 @@
-local log = hs.logger.new('[contexts.slack]', 'debug')
+local log = hs.logger.new('[contexts.slack]', 'info')
 
 local cache  = {}
 local module = { cache = cache, }
 local wh = require('utils.wm.window-handlers')
-
-local rules = {
-    {title = 'Slack Call Minipanel', rule = 'ignore'},
-}
 
 local enter = function()
   cache.bindings:enter()
@@ -40,23 +36,25 @@ local exit = function()
   log.i("exiting slack hotkey modal..")
 end
 
--- apply(string, hs.window)
+-- apply(string, hs.window) :: nil
 module.apply = function(event, win)
-  log.df("applying [contexts.slack] for %s (%s)..", event, win:title())
+  local app = win:application()
+  if app == nil then return end
+
+  log.f("applying [contexts.slack] for %s (%s)..", event, win:title())
 
   ----------------------------------------------------------------------
   -- set-up hotkey modal
   if cache.bindings == nil then
-    cache.bindings = hs.hotkey.modal.new({}, nil, "slack bindings inbound..")
-    log.df("creating hotkey modal -> %s", cache.bindings)
+    cache.bindings = hs.hotkey.modal.new({}, nil)
   end
 
   if hs.fnutils.contains({"windowFocused"}, event) then
-    log.i("enabling bindings..")
     enter()
-  else -- FIXME: too naive on the events with disable with
-    log.i("disabling bindings..")
+    log.i("enabled bindings -> %s", #cache.bindings)
+  elseif hs.fnutils.contains({"windowUnfocused"}, event) then
     exit()
+    log.i("disabled bindings -> %s", #cache.bindings)
   end
 
   ----------------------------------------------------------------------
@@ -65,14 +63,11 @@ module.apply = function(event, win)
 
   ----------------------------------------------------------------------
   -- handle window rules
-  local app = win:application()
-  if app == nil then return end
-
   local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil then return end
+  if appConfig == nil or appConfig.rules == nil then return end
 
-  if not hs.fnutils.contains({"windowDestroyed"}, event) then
-    wh.applyRules(rules, win, appConfig)
+  if hs.fnutils.contains({"windowCreated"}, event) then
+    wh.applyRules(appConfig.rules, win, appConfig)
   end
 end
 

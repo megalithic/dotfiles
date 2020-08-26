@@ -1,18 +1,16 @@
-local log = hs.logger.new('[contexts.canary]', 'debug')
+local log = hs.logger.new('[contexts.canary]', 'info')
 
 local cache  = {}
 local module = { cache = cache, }
 
 local wh = require('utils.wm.window-handlers')
 
-local rules = {
-  {title = 'Main Window', action = 'snap'},
-  {title = 'Preferences', action = 'ignore'},
-}
-
--- apply(string, hs.window)
+-- apply(string, hs.window) :: nil
 module.apply = function(event, win)
-  log.df("applying [contexts.canary] for %s (%s)..", event, win:title())
+  local app = win:application()
+  if app == nil then return end
+
+  log.f("applying [contexts.canary] for %s (%s)..", event, win:title())
 
   ----------------------------------------------------------------------
   -- handle hide-after interval
@@ -20,14 +18,11 @@ module.apply = function(event, win)
 
   ----------------------------------------------------------------------
   -- handle window rules
-  local app = win:application()
-  if app == nil then return end
-
   local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil then return end
+  if appConfig == nil or appConfig.rules == nil then return end
 
-  if not hs.fnutils.contains({"windowDestroyed"}, event) then
-    wh.applyRules(rules, win, appConfig)
+  if hs.fnutils.contains({"windowCreated"}, event) then
+    wh.applyRules(appConfig.rules, win, appConfig)
   end
 end
 

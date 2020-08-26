@@ -1,9 +1,13 @@
--- Lua setup of many plugin things..
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ┌───────────────────────────────────────────────────────────────────────────────────┐
+-- │                                                                                   │
+-- │ Setup for Lua-based plugins                                                       │
+-- │                                                                                   │
+-- └───────────────────────────────────────────────────────────────────────────────────┘
 
--- nvim-colorizer
--- ==============
--- See https://github.com/norcalli/nvim-colorizer.lua
+
+-- [ nvim-colorizer ]-----------------------------------------------------------------
+--   See https://github.com/norcalli/nvim-colorizer.lua
+
 require 'colorizer'.setup {
   css = { rgb_fn = true; };
   scss = { rgb_fn = true; };
@@ -25,9 +29,8 @@ require 'colorizer'.setup {
 }
 
 
--- golden_size
--- ==============
--- See https://github.com/dm1try/golden_size#tips-and-tricks
+-- [ golden_size ]-------------------------------------------------------------------
+--   See https://github.com/dm1try/golden_size#tips-and-tricks
 
 local function ignore_by_buftype(types)
   local buftype = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), 'buftype')
