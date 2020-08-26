@@ -5,7 +5,6 @@ local log = hs.logger.new('[init]', 'warning')
 
 -- global stuff
 require('console').init()
--- require('overrides').init()
 
 -- ensure IPC is there
 hs.ipc.cliInstall()
@@ -31,7 +30,7 @@ wm                          = require('utils.wm')
 controlplane.enabled        = { 'dock', 'office', 'vpn' }
 
 -- watchers
-watchers.enabled            = {} -- urlevent
+watchers.enabled            = { 'urlevent' } -- urlevent
 watchers.urlPreference      = config.preferred.browsers
 
 -- bindings

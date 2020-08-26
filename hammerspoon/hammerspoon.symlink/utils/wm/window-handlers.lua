@@ -164,11 +164,11 @@ module.managedWindows = function(app, validWindows, ignoredWindowTitles)
 end
 
 -- snap(hs.window, string, int) :: nil
--- does the actual hs.grid activities for positioning a given window
+-- does the actual hs.grid `set` for positioning a given window in our grid
 module.snap = function(win, position, preferredDisplay)
   if win == nil then return end
 
-  log.f("snap -> %s", win:title())
+  log.df("snap -> %s", win:title())
   hs.grid.set(win, position or hs.grid.get(win), module.targetDisplay(preferredDisplay))
 end
 
@@ -176,6 +176,12 @@ end
 -- handles positioning of related windows for an app
 module.snapRelated = function(_, appConfig, windows)
   if appConfig == nil then return end
+
+  if #windows == 1 then
+    module.snap(windows[1], appConfig.position, appConfig.preferredDisplay)
+
+    return
+  end
 
   for index, win in pairs(windows) do
     if win == nil then return end
@@ -207,8 +213,8 @@ module.applyRules = function(rules, win, appConfig)
 
         return
       end
-    else
-      log.wf("applyRules -> no matching window titles [%s]", win:title())
+    -- else
+    --   log.wf("applyRules::%s -> no matching window titles [%s]", appConfig.bundleID, win:title())
     end
   end
 end

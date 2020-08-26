@@ -28,15 +28,7 @@ module.numScreens = 0
 module.applyLayout = function(win, app, appConfig, windows, event)
   log.df("applyLayout::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows)
 
-  if #windows == 1 then
-    if hs.fnutils.contains(windows, win) then
-      wh.snap(win, appConfig.position, appConfig.preferredDisplay)
-      log.f("snapped::%s -> %s(%s) [%s]", event, app:bundleID(), #windows, win:title())
-    end
-  elseif #windows > 1 then
-    wh.snapRelated(app, appConfig, windows)
-    log.f("snappedRelated::%s -> %s(%s)", event, app:bundleID(), #windows)
-  end
+  wh.snapRelated(app, appConfig, windows)
 end
 
 
