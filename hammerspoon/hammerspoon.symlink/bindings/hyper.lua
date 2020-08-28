@@ -1,7 +1,7 @@
 -- TODO: can now use this module in other modules, so extract out these bindings
 -- again
 
-local log = hs.logger.new('[bindings.hyper]', 'debug')
+local log = hs.logger.new('[bindings.hyper]', 'info')
 
 local module = {}
 -- local forceLaunchOrFocus = require('ext.application').forceLaunchOrFocus
@@ -85,7 +85,7 @@ local miscKeyBindings = function(misc)
 end
 
 module.start = function()
-  log.df("starting..")
+  log.f("starting..")
   hs.hotkey.bind({}, config.modifiers.hyper, pressed, released)
 
   for _, app in pairs(config.apps) do
@@ -97,7 +97,7 @@ module.start = function()
   end
 
   -- :: vim movements
-  -- TODO: figure out why `NSGlobalDomain KeyRepeat -int 1` doesn't affect the repeatfn interval..
+  -- FIXME: figure out why `NSGlobalDomain KeyRepeat -int 1` doesn't affect the repeatfn interval (real slow)
   vimNavigationKeyBindings()
 
   -- :: misc (utilities)
@@ -117,11 +117,11 @@ module.start = function()
 end
 
 module.stop = function()
-  log.df("stopping..")
+  log.f("stopping..")
 end
 
 function module:bind(mod, key, pressedFn, releasedFn)
-  -- can ommit mod, but breaks if no mod and no pressedFn
+  -- can omit mod; but it breaks if no mod and no pressedFn
   if not pressedFn and not releasedFn then
     releasedFn = pressedFn
     pressedFn  = key

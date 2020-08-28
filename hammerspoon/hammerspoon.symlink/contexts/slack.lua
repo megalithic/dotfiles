@@ -1,35 +1,45 @@
-local module = {}
+local cache  = {}
 
+-- FIXME: figure out why/where/how/when to instantiate our modal for correct
+-- enabling/disabling of bindings for our various window events. Presently, it
+-- works, but we're instantiating THREE TIMES!!1!1!
+cache.modal = hs.hotkey.modal.new({}, nil)
+
+local module = { cache = cache }
 local wh = require('utils.wm.window-handlers')
 
-local enter = function(modal)
-  modal:bind({ 'ctrl' }, 'j', function()
+local enter = function(log)
+  log.df("entering slack hotkey modal..")
+
+  cache.modal:bind({ 'ctrl' }, 'j', function()
     hs.eventtap.keyStroke({ 'alt' }, 'down')
   end)
-  modal:bind({ 'ctrl' }, 'k', function()
+  cache.modal:bind({ 'ctrl' }, 'k', function()
     hs.eventtap.keyStroke({ 'alt' }, 'up')
   end)
-  modal:bind({ 'ctrl', 'shift' }, 'j', function()
+  cache.modal:bind({ 'ctrl', 'shift' }, 'j', function()
     hs.eventtap.keyStroke({ 'alt', 'shift' }, 'down')
   end)
-  modal:bind({ 'ctrl', 'shift' }, 'k', function()
+  cache.modal:bind({ 'ctrl', 'shift' }, 'k', function()
     hs.eventtap.keyStroke({ 'alt', 'shift' }, 'up')
   end)
-  modal:bind({ 'cmd' }, 'w', function()
+  cache.modal:bind({ 'cmd' }, 'w', function()
     hs.eventtap.keyStroke({}, 'escape')
   end)
-  modal:bind({ 'cmd' }, 'r', function()
+  cache.modal:bind({ 'cmd' }, 'r', function()
     hs.eventtap.keyStroke({}, 'escape')
   end)
-  modal:bind({ 'ctrl' }, 'g', function()
+  cache.modal:bind({ 'ctrl' }, 'g', function()
     hs.eventtap.keyStroke({ 'cmd' }, 'k')
   end)
 
-  modal:enter()
+  cache.modal:enter()
 end
 
-local exit = function(modal)
-  modal:exit()
+local exit = function(log)
+  log.df("exiting slack hotkey modal..")
+
+  cache.modal:exit()
 end
 
 -- apply(string, hs.window, hs.logger) :: nil
@@ -37,16 +47,20 @@ module.apply = function(event, win, log)
   local app = win:application()
   if app == nil then return end
 
-  local modal = hs.hotkey.modal.new({}, nil)
-
   ----------------------------------------------------------------------
   -- set-up hotkey modal
   if hs.fnutils.contains({"windowFocused"}, event) then
-    enter(modal)
-    log.df("%s::enabled modal bindings -> %s", app:bundleID(), #modal.keys)
+    if win:application():isFrontmost() then
+      cache.modal = hs.hotkey.modal.new({}, nil)
+      enter(log)
+      log.df("enabled bindings -> %s", #cache.modal.keys)
+    end
   elseif hs.fnutils.contains({"windowUnfocused"}, event) then
-    exit(modal)
-    log.df("%s::disabled modal bindings -> %s", app:bundleID(), #modal.keys)
+    if not win:application():isFrontmost() then
+      exit(log)
+      log.df("disabled bindings -> %s", #cache.modal.keys)
+      cache.modal = hs.hotkey.modal.new({}, nil)
+    end
   end
 
   ----------------------------------------------------------------------
