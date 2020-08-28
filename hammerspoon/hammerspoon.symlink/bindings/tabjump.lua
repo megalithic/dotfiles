@@ -1,40 +1,15 @@
 local log = hs.logger.new('[bindings.tabjump]', 'debug')
 local module = {}
 
--- TODO: extend to support defined browsers, not just Brave
--- REF: see @evantravers' impl of a brave module: https://github.com/evantravers/hammerspoon/blob/refactor/brave.lua
-
-module.go = function(url)
-  local app = config.preferred.browsers[1]
-
-  hs.osascript.javascript([[
-  (function() {
-    var brave = Application(']] .. app .. [[');
-    brave.activate();
-
-    for (win of brave.windows()) {
-      var tabIndex =
-        win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
-
-      if (tabIndex != -1) {
-        win.activeTabIndex = (tabIndex + 1);
-        win.index = 1;
-      }
-    }
-  })();
-  ]])
-
-  log.df('Opened %s in %s', app, url)
-end
+local browser = require('bindings.browser')
 
 module.start = function()
-  -- bind tabjumps
-  for bundleID, app in pairs(config.apps) do
-    if app.modifier ~= nil and app.shortcut ~= nil then
+  for _, appConfig in pairs(config.apps) do
+    if appConfig.modifier ~= nil and appConfig.shortcut ~= nil then
 
-      if (app.tabjump ~= nil) then
-        hs.hotkey.bind(app.modifier, app.shortcut, function()
-          module.go(app.tabjump)
+      if (appConfig.tabjump ~= nil) then
+        hs.hotkey.bind(appConfig.modifier, appConfig.shortcut, function()
+          browser.jump(appConfig.tabjump)
         end)
       end
 

@@ -19,6 +19,7 @@ local module = {
 }
 
 local wh = require("utils.wm.window-handlers")
+local fn = require('hs.fnutils')
 
 module.numScreens = 0
 
@@ -70,7 +71,7 @@ module.autoLayout = function(win, appName, event)
     log.wf("autoLayout::%s (ignoring) -> no valid windows found [%s]", event, app:bundleID())
     return
   else
-    if hs.fnutils.contains({"windowCreated", "windowDestroyed"}, event) then
+    if hs.contains({"windowCreated", "windowDestroyed"}, event) then
       module.applyLayout(win, app, appConfig, windows, event)
     end
 

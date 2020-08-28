@@ -95,7 +95,7 @@ local sumneko_settings = {
   diagnostics={
     enable=true,
     globals={
-      "vim", "Color", "c", "Group", "g", "s", "describe", "it", "before_each", "after_each", "hs", "config"
+      "vim", "Color", "c", "Group", "g", "s", "describe", "it", "before_each", "after_each", "hs", "config", "watchers"
     },
   },
 }

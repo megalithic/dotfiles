@@ -1,6 +1,8 @@
 local log = hs.logger.new('[urlevent]', 'debug')
 
 local template = require('ext.template')
+local fn   = require('hs.fnutils')
+
 local module   = {}
 
 -- watch for http and https events and open in currently running browser instead of default one
@@ -16,7 +18,7 @@ module.start = function()
     local modifiers          = hs.eventtap.checkKeyboardModifiers()
     local shouldFocusBrowser = not modifiers['cmd']
 
-    local runningBrowserName = hs.fnutils.find(watchers.urlPreference, function(browserName)
+    local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
       return hs.application.get(browserName) ~= nil
     end)
 

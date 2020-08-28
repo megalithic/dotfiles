@@ -1,0 +1,92 @@
+local log = hs.logger.new('[bindings.browser]', 'warning')
+
+local cache  = {}
+local module = { cache = cache }
+
+-- Some utility functions for controlling current defined web browser.
+-- Probably would work super similarly on Brave, Chrome and Safari, or any webkit
+-- browser.
+--
+-- NOTE: May require you enable View -> Developer -> Allow Javascript from
+-- Apple Events in your browser's menu (e.g. in Brave's menu).
+--
+--  Hat-tip to @evantravers: https://github.com/evantravers/hammerspoon/blob/master/brave.lua
+
+
+local fn   = require('hs.fnutils')
+local template = require('ext.template')
+
+module.jump = function(url)
+  hs.osascript.javascript(template([[
+  (function() {
+    var browser = Application('{APP_NAME}');
+    browser.activate();
+    for (win of browser.windows()) {
+      var tabIndex =
+        win.tabs().findIndex(tab => tab.url().match(/{URL}/));
+      if (tabIndex != -1) {
+        win.activeTabIndex = (tabIndex + 1);
+        win.index = 1;
+      }
+    }
+  })();
+  ]], {
+    APP_NAME = cache.targetAppName,
+    URL = url
+  }))
+end
+
+module.urlsTaggedWith = function(tag)
+  return fn.filter(config.domains, function(domain)
+    return domain.tags and fn.contains(domain.tags, tag)
+  end)
+end
+
+module.launch = function(list)
+  fn.map(list, function(tag)
+    fn.map(module.urlsTaggedWith(tag), function(site)
+      hs.urlevent.openURL("http://" .. site.url)
+    end)
+  end)
+end
+
+module.kill = function(list)
+  fn.map(list, function(tag)
+    fn.map(module.urlsTaggedWith(tag), function(site) module.killTabsByDomain(site.url) end)
+  end)
+end
+
+module.killTabsByDomain = function(domain)
+  hs.osascript.javascript(template([[
+  (function() {
+    var browser = Application('{APP_NAME}');
+    for (win of browser.windows()) {
+      for (tab of win.tabs()) {
+        if (tab.url().match(/{DOMAIN}/)) {
+          tab.close()
+        }
+      }
+    }
+  })();
+  ]], {
+    APP_NAME = cache.targetAppName,
+    DOMAIN = string.gsub(domain, '/', '\\/')
+  }))
+end
+
+module.start = function()
+  log.df("starting..")
+
+  local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
+    return hs.application.get(browserName) ~= nil
+  end)
+
+  cache.targetAppName = runningBrowserName
+end
+
+module.stop = function()
+  log.df("stopping..")
+end
+
+
+return module

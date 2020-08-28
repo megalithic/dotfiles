@@ -4,6 +4,7 @@ local module = { cache = cache, }
 local wh = require('utils.wm.window-handlers')
 local spotify = require('bindings.media').spotify
 local ptt = require('bindings.ptt')
+local browser = require('bindings.browser')
 
 -- apply(string, hs.window, hs.logger) :: nil
 module.apply = function(event, win, log)
@@ -24,6 +25,10 @@ module.apply = function(event, win, log)
     ----------------------------------------------------------------------
     -- mute (PTT) by default
     ptt.setState("push-to-talk")
+
+    ----------------------------------------------------------------------
+    -- close web browser "zoom launching" tabs
+    browser.killTabsByDomain("enbala.zoom.us")
   elseif hs.fnutils.contains({"windowDestroyed"}, event) then
     ----------------------------------------------------------------------
     -- mute (PTT) by default
