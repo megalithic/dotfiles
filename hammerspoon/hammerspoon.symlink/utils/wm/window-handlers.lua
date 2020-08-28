@@ -140,13 +140,16 @@ module.ignoredWindowTitles = function(appConfig)
 end
 
 -- validWindows(hs.application) :: {hs.window}
+-- optional: hs.application
 -- evaluates and returns valid/usable windows for an app
 module.validWindows = function(app)
-  local windows = hs.fnutils.filter(app:allWindows(), (function(win)
+  local windowProvider = (app and app:allWindows()) or hs.window.filter.default:getWindows()
+
+  local windows = hs.fnutils.filter(windowProvider, (function(win)
     return win ~= nil and win:title() ~= "" and win:isStandard() and win:isVisible() and not win:isFullScreen()
   end))
 
-  log.df("validWindows::%s[%s]", app:bundleID(), #windows)
+  log.df("validWindows::%s[%s]", (app and app:bundleID()) or "no-app", #windows)
 
   return windows
 end

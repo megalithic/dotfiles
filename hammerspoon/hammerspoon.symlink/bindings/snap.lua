@@ -3,11 +3,12 @@
 
 local log = hs.logger.new('[bindings.snap]', 'warning')
 local chain = require('ext.window').chain
+local wh = require('utils.wm.window-handlers')
 
 local module = {}
 
 module.windowSplitter = function()
-  local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
+  local windows = hs.fnutils.map(wh.validWindows(), function(win)
     if win ~= hs.window.focusedWindow() then
       return {
         text = win:title(),

@@ -1,4 +1,4 @@
-local log = hs.logger.new('[bindings.browser]', 'warning')
+local log = hs.logger.new('[bindings.browser]', 'debug')
 
 local cache  = {}
 local module = { cache = cache }
@@ -12,28 +12,27 @@ local module = { cache = cache }
 --
 --  Hat-tip to @evantravers: https://github.com/evantravers/hammerspoon/blob/master/brave.lua
 
-
 local fn   = require('hs.fnutils')
-local template = require('ext.template')
+
+local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
+  return hs.application.get(browserName) ~= nil
+end)
 
 module.jump = function(url)
-  hs.osascript.javascript(template([[
+  hs.osascript.javascript([[
   (function() {
-    var browser = Application('{APP_NAME}');
+    var browser = Application(']] .. runningBrowserName .. [[');
     browser.activate();
     for (win of browser.windows()) {
       var tabIndex =
-        win.tabs().findIndex(tab => tab.url().match(/{URL}/));
+        win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
       if (tabIndex != -1) {
         win.activeTabIndex = (tabIndex + 1);
         win.index = 1;
       }
     }
   })();
-  ]], {
-    APP_NAME = cache.targetAppName,
-    URL = url
-  }))
+  ]])
 end
 
 module.urlsTaggedWith = function(tag)
@@ -57,31 +56,22 @@ module.kill = function(list)
 end
 
 module.killTabsByDomain = function(domain)
-  hs.osascript.javascript(template([[
+  hs.osascript.javascript([[
   (function() {
-    var browser = Application('{APP_NAME}');
+    var browser = Application(']] .. runningBrowserName .. [[');
     for (win of browser.windows()) {
       for (tab of win.tabs()) {
-        if (tab.url().match(/{DOMAIN}/)) {
+        if (tab.url().match(/]] .. domain .. [[/)) {
           tab.close()
         }
       }
     }
   })();
-  ]], {
-    APP_NAME = cache.targetAppName,
-    DOMAIN = string.gsub(domain, '/', '\\/')
-  }))
+  ]])
 end
 
 module.start = function()
   log.df("starting..")
-
-  local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
-    return hs.application.get(browserName) ~= nil
-  end)
-
-  cache.targetAppName = runningBrowserName
 end
 
 module.stop = function()

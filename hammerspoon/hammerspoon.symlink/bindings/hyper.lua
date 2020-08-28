@@ -85,7 +85,7 @@ local miscKeyBindings = function(misc)
 end
 
 module.start = function()
-  log.f("starting..")
+  log.df("starting..")
   hs.hotkey.bind({}, config.modifiers.hyper, pressed, released)
 
   for _, app in pairs(config.apps) do
@@ -117,7 +117,7 @@ module.start = function()
 end
 
 module.stop = function()
-  log.f("stopping..")
+  log.df("stopping..")
 end
 
 function module:bind(mod, key, pressedFn, releasedFn)

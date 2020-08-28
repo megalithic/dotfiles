@@ -34,7 +34,7 @@ watchers.enabled            = { 'urlevent' } -- urlevent
 watchers.urlPreference      = config.preferred.browsers
 
 -- bindings
-bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc' }
+bindings.enabled            = { 'ptt', 'quitguard', 'tabjump', 'hyper', 'apps', 'snap', 'airpods', 'misc', 'browser' }
 
 -- start/stop modules
 local modules               = { wm, bindings, controlplane, watchables, watchers }
