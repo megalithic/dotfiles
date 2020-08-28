@@ -1,39 +1,41 @@
 local cache  = {}
 local module = { cache = cache, }
 
+local fn = require('hs.fnutils')
 local wh = require('utils.wm.window-handlers')
 local spotify = require('bindings.media').spotify
 local ptt = require('bindings.ptt')
+local initApplyComplete = false
 
 -- apply(string, hs.window, hs.logger) :: nil
 module.apply = function(event, win, log)
-  local app = win:application()
-  if app == nil then return end
+  if not initApplyComplete then
+    if fn.contains({"windowCreated"}, event) then
+      ----------------------------------------------------------------------
+      -- handle DND toggling
+      log.df("toggling on DND for %s..", event)
+      wh.dndHandler(win, { enabled = true, mode = "loom" }, event)
 
-  local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil or appConfig.rules == nil then return end
+      ----------------------------------------------------------------------
+      -- naively handle spotify pause (always pause it, no matter the event)
+      log.df("pausing spotify for %s..", event)
+      spotify('pause')
 
-  if hs.fnutils.contains({"windowCreated"}, event) then
-    ----------------------------------------------------------------------
-    -- handle DND toggling
-    log.df("toggling DND for %s..", event)
-    wh.dndHandler(win, { enabled = true, mode = "loom" }, event)
+      -- unmute (PTM) by default
+      log.df("toggling on PTM for %s..", event)
+      ptt.setState("push-to-mute")
+    end
 
-    ----------------------------------------------------------------------
-    -- naively handle spotify pause (always pause it, no matter the event)
-    log.df("pausing spotify for %s..", event)
-    spotify('pause')
-
-    -- unmute (PTM) by default
-    ptt.setState("push-to-mute")
-  elseif hs.fnutils.contains({"windowDestroyed"}, event) then
-    ----------------------------------------------------------------------
-    -- mute (PTT) by default
-    -- FIXME: not working here, but it does for Zoom.. :shrug:
-    wh.onAppQuit(win, function()
-      ptt.setState("push-to-talk")
-    end)
+    initApplyComplete = true
   end
+
+  ----------------------------------------------------------------------
+  -- mute (PTT) by default
+  wh.onAppQuit(win, function()
+    log.df("toggling on PTT for %s..", event)
+    ptt.setState("push-to-talk")
+    initApplyComplete = false
+  end)
 end
 
 return module

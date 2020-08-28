@@ -45,7 +45,6 @@ end
 -- apply(string, hs.window, hs.logger) :: nil
 module.apply = function(event, win, log)
   local app = win:application()
-  if app == nil then return end
 
   ----------------------------------------------------------------------
   -- set-up hotkey modal
@@ -63,12 +62,18 @@ module.apply = function(event, win, log)
     end
   end
 
+  wh.onAppQuit(win, function()
+    exit(log)
+  end)
+
   ----------------------------------------------------------------------
   -- handle hide-after interval
   wh.hideAfterHandler(win, 5, event)
 
   ----------------------------------------------------------------------
   -- handle window rules
+  if app == nil then return end
+
   local appConfig = config.apps[app:bundleID()]
   if appConfig == nil or appConfig.rules == nil then return end
 
