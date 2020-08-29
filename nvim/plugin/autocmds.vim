@@ -95,8 +95,8 @@ augroup general
   " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
-  autocmd BufEnter,VimEnter,WinEnter,BufWinEnter * silent setlocal number relativenumber "signcolumn=yes:1
-  autocmd BufLeave,WinLeave * silent setlocal nonumber norelativenumber "signcolumn=no
+  autocmd BufEnter * silent setlocal number relativenumber signcolumn=yes:2
+  autocmd BufLeave * silent setlocal nonumber norelativenumber signcolumn=no
 
   " toggle colorcolumn when in insertmode only
   autocmd InsertEnter * silent set colorcolumn=80
@@ -118,7 +118,7 @@ augroup END
 augroup lua_autocmds
   au!
 
-  nnoremap <buffer> <silent> <Leader>gb :lua require'git'.blameVirtText()<CR>
+  nnoremap <buffer> <Leader>gb :lua require'git'.blameVirtText()<CR>
   lua vim.api.nvim_command [[au CursorMoved * lua require'git'.clearBlameVirtText()]]
 augroup END
 

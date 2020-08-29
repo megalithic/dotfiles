@@ -166,7 +166,7 @@ if has("nvim")
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set pumblend=10
   set pumheight=20      " Height of complete list
-  set signcolumn=yes:1  " always showsigncolumn
+  set signcolumn=yes:2  " always showsigncolumn
   set switchbuf=useopen,vsplit,split,usetab
   set wildoptions+=pum
   " set winblend=10
@@ -229,7 +229,7 @@ Plug 'dstein64/vim-startuptime'
 
 " --[ styling/ui ]-------------------------------------------------------------------------
 Plug 'trevordmiller/nova-vim' " nova-colors.vim
-Plug 'hardcoreplayers/oceanic-material'
+Plug 'gruvbox-community/gruvbox'
 Plug 'pbrisbin/vim-colors-off' " for goyo
 Plug 'Yggdroot/indentLine' " indentLine.vim
 Plug 'dm1try/golden_size'
@@ -399,18 +399,17 @@ iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 " --[ colorscheme ]-------------------------------------------------------------------------
 set background=dark
 
+" let g:gruvbox_italic=1
+" let g:gruvbox_improved_strings=1
+" let g:gruvbox_improved_warnings=1
+" let g:gruvbox_guisp_fallback='fg'
+" let g:gruvbox_contrast_light='hard'
+" let g:gruvbox_contrast_dark='medium'
+" silent! colorscheme gruvbox
+
 let g:nova_transparent = 1
 silent! colorscheme nova
 
-" let g:oceanic_material_transparent_background = 0
-" let g:oceanic_material_allow_bold	= 1
-" let g:oceanic_material_allow_italic	= 1
-" let g:oceanic_material_allow_underline = 1
-" let g:oceanic_material_allow_undercurl = 1
-" let g:oceanic_material_allow_reverse = 1
-" " let g:oceanic_material_background = "#1b2b34"
-" " #1b2b34  " #282c34
-" silent! colorscheme oceanic_material
 
 
 " --[ lua ]-------------------------------------------------------------------------
