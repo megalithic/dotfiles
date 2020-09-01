@@ -95,6 +95,22 @@ augroup general
   " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
 
   " toggle linenumbering and cursorline
+  function s:enter_events_handler()
+    let conf = nvim_win_get_config(0)
+    if conf.relative == ''
+      silent setlocal number relativenumber signcolumn=yes:2
+    endif
+  endfunction
+
+  function s:leave_events_handler()
+    let conf = nvim_win_get_config(0)
+    if conf.relative == ''
+      silent setlocal nonumber norelativenumber signcolumn=no
+    endif
+  endfunction
+
+  " autocmd BufLeave,BufWinLeave,VimLeave,WinLeave * call s:leave_events_handler()
+  " autocmd BufEnter,BufWinEnter,VimEnter,WinEnter * call s:enter_events_handler()
   autocmd BufEnter * silent setlocal number relativenumber signcolumn=yes:2
   autocmd BufLeave * silent setlocal nonumber norelativenumber signcolumn=no
 

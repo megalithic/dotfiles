@@ -270,6 +270,8 @@ alias map="xargs -n1"
 alias tig="nvim +:GV" # https://github.com/junegunn/gv.vim#mappings
 alias lg="lazygit"
 alias gin="gitin"
+alias gc='git co `git b | fzf | sed -e "s/\* //g" | awk "{print \$1}"`'
+alias gb='git b | fzf | xargs git branch -d'
 alias gcb="git rev-parse --abbrev-ref HEAD | tr -d '\n'"
 alias gcp="gcb | pbcopy"
 alias push="git push"
@@ -296,8 +298,6 @@ alias resolve="git mergetool --tool=nvimdiff"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"
-alias gc='git co `git b | fzf | sed -e "s/\* //g" | awk "{print \$1}"`'
-alias gb='git b | fzf | xargs git branch -d'
 
 # elixir
 # -----------------------------------------------------------------------------

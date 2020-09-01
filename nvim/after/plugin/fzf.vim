@@ -1,7 +1,7 @@
 if has('nvim')
   " let g:fzf_layout = { 'down': '~15%', 'window': { 'width': 0.6, 'height': 0.5, 'highlight': 'Todo', 'border': 'rounded' } }
   let g:fzf_layout = { 'down': '~15%' }
-  let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
+  let g:fzf_layout = { 'window': { 'width': 0.6, 'height': 0.5 } }
   " let g:fzf_colors = {}
   let g:fzf_action = {
         \ 'ctrl-s': 'split',

@@ -59,6 +59,7 @@ local module = {
 
   modifiers = {
     ctrl =            {'ctrl'},
+    shift =           {'shift'},
     cmd =             {'cmd'},
     cmdAlt =          {'cmd', 'alt'},
     cmdShift =        {'cmd', 'shift'},
@@ -116,7 +117,8 @@ module.apps = {
   ['com.agiletortoise.Drafts-OSX'] = {
     bundleID = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
-    -- hyper_key ='d',
+    hyper_key ='d',
+    modifier = module.modifiers.shift,
     local_bindings = {';'},
     preferredDisplay = 1,
     position = module.grid.rightHalf,

@@ -33,7 +33,7 @@ zinit ice as"completion"
 zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 
 # reminders for aliases if whole command is typed
-zinit light djui/alias-tips
+# zinit light djui/alias-tips
 
 # zsh-abbr manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 zinit ice wait lucid

@@ -101,10 +101,8 @@ module.onAppQuit = function(win, callback, providedInterval)
   local interval = providedInterval or 0.2
   local app = win:application()
 
-  if app == nil then return end
-
   hs.timer.waitUntil(function()
-    return not app:isRunning() and not hs.application.find(app:name())
+    return app == nil or (not app:isRunning() and not hs.application.find(app:name()) and #app:allWindows() == 0)
   end,
   callback,
   interval)

@@ -53,6 +53,7 @@ local on_attach = function(client, bufnr)
 
   mapper('n', '<Leader>lgd', '<cmd>lua vim.lsp.buf.definition()<CR>')
   mapper('n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>')
+  -- mapper('n', '<Leader>lr', '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
   mapper('n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>')
   mapper('n', '<Leader>lgt', '<cmd>lua vim.lsp.buf.type_definition()<CR>')
   mapper('n', '<Leader>lgs', '<cmd>lua vim.lsp.buf.document_symbol()<CR>')
@@ -60,6 +61,7 @@ local on_attach = function(client, bufnr)
   mapper('n', '<Leader>dE', '<cmd>lua vim.lsp.buf.declaration()<CR>')
   mapper('n', '<Leader>ln', '<cmd>lua vim.lsp.buf.rename()<CR>')
   mapper('n', '<Leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>')
+
 
   if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'vim' then
     mapper('n', '<Leader>lh',  '<cmd>lua vim.lsp.buf.hover()<CR>')

@@ -33,7 +33,9 @@ end
 local appLaunchOrFocus = function(app)
   if app.hyper_key then
     log.df("hyper_key found for %s (%s)", app.name, app.hyper_key)
-    hyper:bind({}, app.hyper_key, function()
+    local mod = app.modifier or {}
+
+    hyper:bind(mod, app.hyper_key, function()
       if app.launchMode ~= nil then
         if app.launchMode == 'focus' then
           focusOnly(app.bundleID)

@@ -301,6 +301,11 @@ Plug 'wellle/targets.vim'                                               " improv
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
 
+Plug 'nvim-lua/popup.nvim'
+Plug 'nvim-lua/plenary.nvim'
+Plug '~/code/telescope.nvim'
+" Plug 'megalithic/telescope.nvim'
+
 Plug 'mhinz/vim-grepper' " grepper.vim
 Plug 'junegunn/vim-slash' " slash.vim
 Plug 'mattn/vim-findroot', {'for': ['javascript']} " findroot.vim
@@ -329,6 +334,7 @@ Plug 'wsdjeg/vim-fetch' " vim path/to/file.ext:12:3
 Plug 'mattn/webapi-vim'
 Plug 'rhysd/conflict-marker.vim'
 Plug 'itchyny/vim-gitbranch'
+Plug 'APZelos/blamer.nvim'
 
 
 " --[ Devlopment ]-------------------------------------------------------------------------
