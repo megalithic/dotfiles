@@ -1,30 +1,30 @@
 local log = hs.logger.new('[urlevent]', 'debug')
 
 local template = require('ext.template')
-local fn   = require('hs.fnutils')
+local fn = require('hs.fnutils')
 
-local module   = {}
+local M = {}
 
 -- watch for http and https events and open in currently running browser instead of default one
 -- click with 'cmd' to open in background, otherwise opens with focus
 --  `watchers` globally defined in root init.lua
-module.start = function()
+M.start = function()
   hs.urlevent.setDefaultHandler('http')
 
   -- REF: handling different urls:
   --  https://github.com/trws/dotfiles/blob/master/hammerspoon/init.lua#L66-L85
-  hs.urlevent.httpCallback = function(scheme, host, params, fullURL)
+  hs.urlevent.httpCallback = function(scheme, host, _, fullURL)
     local modifiers          = hs.eventtap.checkKeyboardModifiers()
-    local shouldFocusBrowser = not modifiers['cmd']
+    local should_focus_calling_app = modifiers['cmd']
 
-    local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
-      return hs.application.get(browserName) ~= nil
+    local running_browser_name = fn.find(watchers.urlPreference, function(browser_name)
+      return hs.application.get(browser_name) ~= nil
     end)
 
-    local currentApp  = hs.application:frontmostApplication()
-    local currentBrowser = hs.application.get(runningBrowserName)
+    local current_app  = hs.application:frontmostApplication()
+    local current_browser = hs.application.get(running_browser_name)
 
-    log.f("urlevent::%s -> %s [%s, %s, %s]", currentBrowser:name(), fullURL, scheme, host, hs.inspect(params), currentApp:bundleID())
+    log.f("%s -> %s [%s, %s, focus: %s, %s]", current_browser:name(), fullURL, scheme, host, should_focus_calling_app, current_app:bundleID())
 
     hs.applescript.applescript(template([[
       tell application "{APP_NAME}"
@@ -32,18 +32,23 @@ module.start = function()
         open location "{URL}"
       end tell
     ]], {
-      APP_NAME = runningBrowserName,
+      APP_NAME = running_browser_name,
       URL      = fullURL,
-      ACTIVATE = shouldFocusBrowser and 'activate' or '' -- 'activate' brings to front if cmd is clicked
+      ACTIVATE = not should_focus_calling_app and 'activate' or '' -- 'activate' brings to front if cmd is clicked
     }))
 
-    -- hs.urlevent.openURLWithBundle(fullURL, currentBrowser:bundleID())
+    -- focus back the current app
+    if should_focus_calling_app and current_app:isFrontmost() then
+      current_app:activate()
+    end
+
+    -- hs.urlevent.openURLWithBundle(fullURL, current_browser:bundleID())
 
     -- focus back the current app (or browser)
-    -- local activationApp = currentBrowser
+    -- local activationApp = current_browser
 
-    -- if not shouldFocusBrowser and not currentApp:isFrontmost() then
-    -- if not shouldFocusBrowser then
+    -- if not should_focus_calling_app and not currentApp:isFrontmost() then
+    -- if not should_focus_calling_app then
     --   activationApp = currentApp
     -- end
 
@@ -53,8 +58,8 @@ module.start = function()
   end
 end
 
-module.stop = function()
+M.stop = function()
   hs.urlevent.httpCallback = nil
 end
 
-return module
+return M

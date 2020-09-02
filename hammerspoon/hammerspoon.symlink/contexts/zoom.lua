@@ -1,19 +1,19 @@
 local cache  = {}
-local module = { cache = cache, }
+local M = { cache = cache, }
 
 local fn = require('hs.fnutils')
 local wh = require('utils.wm.window-handlers')
 local spotify = require('bindings.media').spotify
 local ptt = require('bindings.ptt')
 local browser = require('bindings.browser')
-local initApplyComplete = false
+local init_apply_complete = false
 
 -- apply(string, hs.window, hs.logger) :: nil
-module.apply = function(event, win, log)
+M.apply = function(event, win, log)
   local app = win:application()
 
   -- prevents excessive actions on multiple window creations
-  if not initApplyComplete then
+  if not init_apply_complete then
     if fn.contains({"windowCreated"}, event) then
       ----------------------------------------------------------------------
       -- handle DND toggling
@@ -34,26 +34,26 @@ module.apply = function(event, win, log)
       browser.killTabsByDomain("enbala.zoom.us")
     end
 
-    initApplyComplete = true
+    init_apply_complete = true
   end
 
   ----------------------------------------------------------------------
-  -- mute (PTT) by default
+  -- things to do on app exit
   wh.onAppQuit(win, function()
     ptt.setState("push-to-talk")
-    initApplyComplete = false
+    init_apply_complete = false
   end)
 
   ----------------------------------------------------------------------
   -- handle window rules
   if app == nil then return end
 
-  local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil or appConfig.rules == nil then return end
+  local app_config = config.apps[app:bundleID()]
+  if app_config == nil or app_config.rules == nil then return end
 
   if fn.contains({"windowCreated"}, event) then
-    wh.applyRules(appConfig.rules, win, appConfig)
+    wh.applyRules(app_config.rules, win, app_config)
   end
 end
 
-return module
+return M

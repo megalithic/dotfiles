@@ -455,15 +455,15 @@ module.docking = {
   ['docked'] = {
     wifi = 'off', -- wifi status
     profile = 'dz60', -- Karabiner-Elements profile name
-    input = 'Samson\\ GoMic', -- microphone source
-    output = 'CalDigit\\ Thunderbolt\\ 3\\ Audio', -- speaker source
+    input = 'Samson GoMic', -- microphone source
+    output = 'CalDigit Thunderbolt 3 Audio', -- speaker source
     fontSize = 14.0,
   },
   ['undocked'] = {
     wifi = 'on',
     profile = 'internal',
-    input = 'MacBook\\ Pro\\ Microphone',
-    output = 'MacBook\\ Pro\\ Speakers',
+    input = 'MacBook Pro Microphone',
+    output = 'MacBook Pro Speakers',
     fontSize = 14.0,
   },
 }

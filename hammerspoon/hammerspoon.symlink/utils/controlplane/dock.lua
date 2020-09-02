@@ -3,17 +3,6 @@ local log = hs.logger.new('[dock]', 'info')
 local cache = {}
 local M = { cache = cache }
 
-local set_karabiner_profile = function(state)
-  hs.execute(
-    '/Library/Application\\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli ' ..
-    '--select-profile ' ..
-    state,
-    true
-  )
-
-  log.f('toggling karabiner-elements profile -> %s', state)
-end
-
 -- TODO: toggle wifi when on ethernet; https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-thunderbolt-ethernet.lua
 local toggle_wifi = function(state)
   hs.execute(
@@ -22,47 +11,66 @@ local toggle_wifi = function(state)
     true
   )
 
-  log.f('toggling wifi -> %s', state)
+  log.df('toggling wifi -> %s', state)
 end
 
-local set_audio_output = function(state)
-  local output, status, type, rc = hs.execute(
-    'SwitchAudioSource -t output -s "' .. hs.inspect(state) .. '"', true)
+local set_karabiner_profile = function(state)
+  hs.execute(
+    '/Library/Application\\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli ' ..
+    '--select-profile ' ..
+    state,
+    true
+  )
 
-  if status then
-    log.f('toggling audio output::success -> %s', hs.inspect(state))
-  else
-    log.f('toggling audio output::failed -> %s [%s, %s, %s]', hs.inspect(state), output, status, type, rc)
-  end
-end
-
-local set_audio_input = function(state)
-  local output, status, type, rc = hs.execute(
-    'SwitchAudioSource -t input -s "' .. hs.inspect(state) .. '"', true)
-
-  if status then
-    log.f('toggling audio input::success -> %s', hs.inspect(state))
-  else
-    log.f('toggling audio input::failed -> %s [%s, %s, %s]', hs.inspect(state), output, status, type, rc)
-  end
+  log.df('toggling karabiner-elements profile -> %s', state)
 end
 
 local set_kitty_config = function(state)
   hs.execute('kitty @ --to unix:/tmp/kitty set-font-size ' .. state, true)
 
-  log.f('toggling kitty font-size -> %s', state)
+  log.df('toggling kitty font-size -> %s', state)
 end
 
-local toggle = function(dockingConfig)
-  toggle_wifi(dockingConfig.wifi)
-  set_karabiner_profile(dockingConfig.profile)
-  set_kitty_config(dockingConfig.fontSize)
-  set_audio_output(dockingConfig.output)
-  set_audio_input(dockingConfig.input)
+local set_audio_output = function(state)
+  local task = hs.task.new("/usr/local/bin/SwitchAudioSource",
+  function () end, -- Fake callback
+  function (task, stdOut, stdErr)
+    local continue = task ~= string.format('output audio device set to "%s"', state)
+
+    log.df('toggling audio input::streaming -> %s [%s, %s, %s, continuing? %s] -> %s', state, task, stdOut, stdErr, continue, string.format('output audio device set to "%s"', state))
+
+    return continue
+  end,
+  {"-t", "output", "-s", state}
+  )
+  task:start()
 end
 
-local dockedWatcher = function(_, _, _, _, isDocked)
-  if isDocked then
+local set_audio_input = function(state)
+  local task = hs.task.new("/usr/local/bin/SwitchAudioSource",
+  function () end, -- Fake callback
+  function (task, stdOut, stdErr)
+    local continue = task ~= string.format('input audio device set to "%s"', state)
+
+    log.df('toggling audio input::streaming -> %s [%s, %s, %s, continuing? %s] -> %s', state, task, stdOut, stdErr, continue, string.format('input audio device set to "%s"', state))
+
+    return continue
+  end,
+  {"-t", "input", "-s", state}
+  )
+  task:start()
+end
+
+local toggle = function(docking_config)
+  toggle_wifi(docking_config.wifi)
+  set_karabiner_profile(docking_config.profile)
+  set_kitty_config(docking_config.fontSize)
+  set_audio_output(docking_config.output)
+  set_audio_input(docking_config.input)
+end
+
+local docked_watcher = function(_, _, _, _, is_docked)
+  if is_docked then
     log.f('toggling::docked..')
     toggle(config.docking.docked)
   else
@@ -72,7 +80,7 @@ local dockedWatcher = function(_, _, _, _, isDocked)
 end
 
 M.start = function()
-  cache.watcher = hs.watchable.watch('status.isDocked', dockedWatcher)
+  cache.watcher = hs.watchable.watch('status.isDocked', docked_watcher)
 end
 
 M.stop = function()
