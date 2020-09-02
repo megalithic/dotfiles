@@ -134,8 +134,8 @@ augroup END
 augroup lua_autocmds
   au!
 
-  nnoremap <buffer> <Leader>gb :lua require'git'.blameVirtText()<CR>
-  lua vim.api.nvim_command [[au CursorMoved * lua require'git'.clearBlameVirtText()]]
+  " nnoremap <buffer> <Leader>gb :lua require'git'.blameVirtText()<CR>
+  " lua vim.api.nvim_command [[au CursorMoved * lua require'git'.clearBlameVirtText()]]
 augroup END
 
 " augroup modechange_settings

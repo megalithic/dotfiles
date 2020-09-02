@@ -448,22 +448,22 @@ module.docking = {
   -- find your device IDs with `dumpUsbDevices()` (see console.lua) from the hammerspoon console
   ['device'] = {
     productID = 25907,
-    productName = "CalDigit Thunderbolt 3 Audio",
+    productName = 'CalDigit Thunderbolt 3 Audio',
     vendorID = 8584,
-    vendorName = "CalDigit, Inc."
+    vendorName = 'CalDigit, Inc.'
   },
   ['docked'] = {
     wifi = 'off', -- wifi status
     profile = 'dz60', -- Karabiner-Elements profile name
-    input = '"Samson GoMic"', -- microphone source
-    output = '"CalDigit Thunderbolt 3 Audio"', -- speaker source
+    input = 'Samson\\ GoMic', -- microphone source
+    output = 'CalDigit\\ Thunderbolt\\ 3\\ Audio', -- speaker source
     fontSize = 14.0,
   },
   ['undocked'] = {
     wifi = 'on',
     profile = 'internal',
-    input = '"MacBook Pro Microphone"',
-    output = '"MacBook Pro Speakers"',
+    input = 'MacBook\\ Pro\\ Microphone',
+    output = 'MacBook\\ Pro\\ Speakers',
     fontSize = 14.0,
   },
 }

@@ -1,8 +1,9 @@
 local log    = hs.logger.new('[watchables]', 'debug')
 
+local status = hs.watchable.new('status')
+
 local cache  = { status = status }
 local module = { cache = cache }
-local status = hs.watchable.new('status')
 
 -- local VPN_CONFIG_KEY  = "State:/Network/Global/Proxies"
 -- local NETWORK_SHARING = "com.apple.NetworkSharing"

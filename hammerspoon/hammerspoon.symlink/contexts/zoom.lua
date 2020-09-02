@@ -40,8 +40,6 @@ module.apply = function(event, win, log)
   ----------------------------------------------------------------------
   -- mute (PTT) by default
   wh.onAppQuit(win, function()
-    log.f("onAppQuit::%s (%s windows) -> should have just quit zoom..", win:application():bundleID(), #win:application():allWindows())
-
     ptt.setState("push-to-talk")
     initApplyComplete = false
   end)

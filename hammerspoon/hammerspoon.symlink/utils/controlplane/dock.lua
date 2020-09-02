@@ -1,140 +1,82 @@
-local log = hs.logger.new('[dock]', 'debug')
+local log = hs.logger.new('[dock]', 'info')
 
 local cache = {}
-local module = { cache = cache }
+local M = { cache = cache }
 
-local selectKarabinerProfile = (function(profile)
+local set_karabiner_profile = function(state)
   hs.execute(
     '/Library/Application\\ Support/org.pqrs/Karabiner-Elements/bin/karabiner_cli ' ..
     '--select-profile ' ..
-    profile
+    state,
+    true
   )
 
-  log.i('Switching to keyboard profile', profile)
-end)
-
--- TODO: toggle wifi when on ethernet; https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-thunderbolt-ethernet.lua
-local toggleWifi = (function(state)
-  hs.execute(
-    'networksetup -setairportpower airport ' ..
-    state
-  )
-
-  log.i('Switching wifi state to', state)
-end)
-
-local selectAudioOutput = (function(outputDevice)
-  -- hs.execute(
-  --   'SwitchAudioSource -t output -s ' ..
-  --   outputDevice
-  -- )
-  -- log.i('Switching to audio output', outputDevice)
-
-
-  -- TODO: wait until the devices in question are available; then switch: https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-usb-audio.lua
-  hs.timer.waitUntil(
-    function()
-      -- Wait until the USB audio output is ready
-      local output = hs.audiodevice.findOutputByName(outputDevice)
-
-      return output ~= nil
-    end,
-    function ()
-      -- Switch to the USB audio output
-      local success = hs.audiodevice.findOutputByName(outputDevice):setDefaultOutputDevice()
-
-      if success then
-        log.i('Switching to audio output', outputDevice)
-        hs.notify.new({title='Hammerspoon', informativeText='Switching to USB audio output'}):send()
-      else
-        log.w('Could not switch the audio output device..')
-      end
-    end,
-    -- Run check every 200ms
-    0.2
-    )
-end)
-
-local selectAudioInput = (function(inputDevice)
-  -- hs.execute(
-  --   'SwitchAudioSource -t input -s ' ..
-  --   inputDevice
-  -- )
-  -- log.i('Switching to audio input', inputDevice)
-
-  -- TODO: wait until the devices in question are available; then switch: https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-usb-audio.lua
-  hs.timer.waitUntil(
-    function()
-      -- Wait until the USB audio input is ready
-      local input = hs.audiodevice.findInputByName(inputDevice)
-
-      return input ~= nil
-    end,
-    function ()
-      -- Switch to the USB audio input
-      local success = hs.audiodevice.findInputByName(inputDevice):setDefaultOutputDevice()
-
-      if success then
-        log.i('Switching to audio output', inputDevice)
-        hs.notify.new({title='Hammerspoon', informativeText='Switching to USB audio input'}):send()
-      else
-        log.w('Could not switch the audio input device..')
-      end
-    end,
-    -- Run check every 200ms
-    0.2
-    )
-end)
-
-local setKittyConfig = (function(c)
-    log.i('Setting kitty font-size to', c.fontSize)
-    hs.execute('kitty @ --to unix:/tmp/kitty set-font-size ' .. c.fontSize, true)
-    -- hs.execute('kitty @ set-font-size ' .. c.fontSize)
-end)
-
-local dockedAction = function()
-  local dockedConfig =  config.docking.docked
-  log.i('Executing docked actions..')
-
-  hs.timer.doAfter(1, function ()
-    selectKarabinerProfile(dockedConfig.profile)
-    toggleWifi(dockedConfig.wifi)
-  end)
-
-  selectAudioOutput(dockedConfig.output)
-  selectAudioInput(dockedConfig.input)
-  setKittyConfig(dockedConfig)
+  log.f('toggling karabiner-elements profile -> %s', state)
 end
 
-local undockedAction = function()
-  local undockedConfig =  config.docking.undocked
+-- TODO: toggle wifi when on ethernet; https://github.com/mje-nz/dotfiles/blob/master/osx-only/hammerspoon.symlink/autoconnect-thunderbolt-ethernet.lua
+local toggle_wifi = function(state)
+  hs.execute(
+    'networksetup -setairportpower airport ' ..
+    state,
+    true
+  )
 
-  log.i('Executing undocked actions..')
+  log.f('toggling wifi -> %s', state)
+end
 
-  hs.timer.doAfter(1, function ()
-    selectKarabinerProfile(undockedConfig.profile)
-    toggleWifi(undockedConfig.wifi)
-  end)
+local set_audio_output = function(state)
+  local output, status, type, rc = hs.execute(
+    'SwitchAudioSource -t output -s "' .. hs.inspect(state) .. '"', true)
 
-  selectAudioOutput(undockedConfig.output)
-  selectAudioInput(undockedConfig.input)
-  setKittyConfig(undockedConfig)
+  if status then
+    log.f('toggling audio output::success -> %s', hs.inspect(state))
+  else
+    log.f('toggling audio output::failed -> %s [%s, %s, %s]', hs.inspect(state), output, status, type, rc)
+  end
+end
+
+local set_audio_input = function(state)
+  local output, status, type, rc = hs.execute(
+    'SwitchAudioSource -t input -s "' .. hs.inspect(state) .. '"', true)
+
+  if status then
+    log.f('toggling audio input::success -> %s', hs.inspect(state))
+  else
+    log.f('toggling audio input::failed -> %s [%s, %s, %s]', hs.inspect(state), output, status, type, rc)
+  end
+end
+
+local set_kitty_config = function(state)
+  hs.execute('kitty @ --to unix:/tmp/kitty set-font-size ' .. state, true)
+
+  log.f('toggling kitty font-size -> %s', state)
+end
+
+local toggle = function(dockingConfig)
+  toggle_wifi(dockingConfig.wifi)
+  set_karabiner_profile(dockingConfig.profile)
+  set_kitty_config(dockingConfig.fontSize)
+  set_audio_output(dockingConfig.output)
+  set_audio_input(dockingConfig.input)
 end
 
 local dockedWatcher = function(_, _, _, _, isDocked)
   if isDocked then
-    dockedAction()
+    log.f('toggling::docked..')
+    toggle(config.docking.docked)
   else
-    undockedAction()
+    log.f('toggling::undocked..')
+    toggle(config.docking.undocked)
   end
 end
 
-module.start = function()
+M.start = function()
   cache.watcher = hs.watchable.watch('status.isDocked', dockedWatcher)
 end
 
-module.stop = function()
+M.stop = function()
   cache.watcher:release()
 end
 
-return module
+return M
