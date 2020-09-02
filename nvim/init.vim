@@ -303,8 +303,8 @@ Plug 'junegunn/fzf.vim' " fzf.vim
 
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
-Plug '~/code/telescope.nvim'
-" Plug 'megalithic/telescope.nvim'
+" Plug '~/code/telescope.nvim'
+Plug 'nvim-lua/telescope.nvim'
 
 Plug 'mhinz/vim-grepper' " grepper.vim
 Plug 'junegunn/vim-slash' " slash.vim
@@ -334,7 +334,8 @@ Plug 'wsdjeg/vim-fetch' " vim path/to/file.ext:12:3
 Plug 'mattn/webapi-vim'
 Plug 'rhysd/conflict-marker.vim'
 Plug 'itchyny/vim-gitbranch'
-Plug 'APZelos/blamer.nvim'
+" Plug 'APZelos/blamer.nvim'
+Plug 'rhysd/git-messenger.vim'
 
 
 " --[ Devlopment ]-------------------------------------------------------------------------

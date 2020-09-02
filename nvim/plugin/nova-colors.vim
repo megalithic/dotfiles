@@ -190,6 +190,8 @@ function! s:nova_engage() abort
 
   " highlight for our lua-based GitLens feature for virt-text based blame
   exe 'hi GitLens gui=italic guifg=' . g:vertsplit . ' guibg=' . g:black
+  " highlight for Blamer.nvim
+  exe 'hi Blamer gui=italic guifg=' . g:vertsplit . ' guibg=' . g:black
 
   " hi Pmenu guifg=lightgrey guibg=#4e4e4e ctermbg=239 ctermfg=lightgrey
   " hi Directory guifg=#DF8C8C

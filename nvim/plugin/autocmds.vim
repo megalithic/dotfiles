@@ -134,6 +134,7 @@ augroup END
 augroup lua_autocmds
   au!
 
+  " -- presently using blamer.nvim instead of:
   " nnoremap <buffer> <Leader>gb :lua require'git'.blameVirtText()<CR>
   " lua vim.api.nvim_command [[au CursorMoved * lua require'git'.clearBlameVirtText()]]
 augroup END
