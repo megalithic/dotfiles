@@ -24,16 +24,16 @@ local fn = require('hs.fnutils')
 module.numScreens = 0
 
 
--- applyLayout(hs.window, hs.application, table, {hs.window}, string) :: nil
+-- applyLayout(hs.window, hs.application, table, {hs.window, hs.window, hs.window}, string) :: nil
 -- evaluates and applies global config for layout related to the given app
 module.applyLayout = function(win, app, appConfig, windows, event)
   log.df("applyLayout::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows)
 
-  wh.snapRelated(app, appConfig, windows)
+  wh.snapRelated(app, appConfig, windows.valid)
 end
 
 
--- applyContext(hs.window, hs.application, table, {hs.window}, string) :: nil
+-- applyContext(hs.window, hs.application, table, {hs.window, hs.window, hs.window}, string) :: nil
 -- evaluates and applies global config for contexts related to the given app
 module.applyContext = function(win, app, appConfig, windows, event)
   if appConfig.context == nil then return end
@@ -41,7 +41,7 @@ module.applyContext = function(win, app, appConfig, windows, event)
   local context = require('contexts')
   if context == nil then return end
 
-  log.df("applyContext::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows)
+  log.df("applyContext::%s -> [%s, %s(%s)]", event, win, app:bundleID(), #windows.valid)
   context.load(event, win, appConfig.context, "info")
 end
 
@@ -65,10 +65,17 @@ module.autoLayout = function(win, appName, event)
 
   -- only managed windows that we want to layout from an "app" level perspective
   -- e.g., no windows that might be getting contextual rules applied
-  local windows = wh.managedWindows(app, validWindows, ignoredWindowTitles)
+  local managed = wh.managedWindows(app, validWindows, ignoredWindowTitles)
 
-  if #validWindows == 0 then
-    log.wf("autoLayout::%s (ignoring) -> no valid windows found [%s]", event, app:bundleID())
+  -- a table of our various windows we might want to use/manipulate
+  local windows = {
+    all = app:allWindows(),
+    valid = validWindows,
+    managed = managed
+  }
+
+  if #windows.all == 0 then
+    log.wf("autoLayout::%s (ignoring) -> no valid windows found [%s (all: %s)]", event, app:bundleID(), #windows.all)
     return
   else
     if fn.contains({"windowCreated", "windowDestroyed"}, event) then

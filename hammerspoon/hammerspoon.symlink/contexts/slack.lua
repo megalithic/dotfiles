@@ -51,12 +51,12 @@ module.apply = function(event, win, log)
   if hs.fnutils.contains({"windowFocused"}, event) then
     if win:application():isFrontmost() then
       cache.modal = hs.hotkey.modal.new({}, nil)
-      enter(log)
+      -- enter(log)
       log.df("enabled bindings -> %s", #cache.modal.keys)
     end
   elseif hs.fnutils.contains({"windowUnfocused"}, event) then
     if not win:application():isFrontmost() then
-      exit(log)
+      -- exit(log)
       log.df("disabled bindings -> %s", #cache.modal.keys)
       cache.modal = hs.hotkey.modal.new({}, nil)
     end

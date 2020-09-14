@@ -35,9 +35,9 @@ zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_
 # reminders for aliases if whole command is typed
 # zinit light djui/alias-tips
 
-# zsh-abbr manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
-zinit ice wait lucid
-zinit light olets/zsh-abbr
+# # zsh-abbr manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
+# zinit ice wait lucid
+# zinit light olets/zsh-abbr
 
 
 # REF OMZ and more: https://github.com/ztoiax/home/blob/master/.zshrc

@@ -20,6 +20,8 @@ end
 
 function cache.modal:entered()
   local app = hs.application.frontmostApplication()
+  if app then log.f("quitguard::%s -> attempting..", app:bundleID()) end
+
   if app == nil then return end
 
   local appConfig = config.apps[app:bundleID()]

@@ -31,7 +31,7 @@ M.apply = function(event, win, log)
 
       ----------------------------------------------------------------------
       -- close web browser "zoom launching" tabs
-      browser.killTabsByDomain("enbala.zoom.us")
+      browser.killTabsByDomain("zoom.us")
     end
 
     init_apply_complete = true
