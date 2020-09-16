@@ -63,7 +63,7 @@ let g:completion_auto_change_source = 1
 let g:completion_trigger_keyword_length = 2
 let g:completion_max_items = 20
 let g:completion_sorting = "none" " none, length, alphabet
-let g:completion_matching_strategy_list = ['fuzzy', 'exact', 'substring']
+let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
 
 " let g:completion_customize_lsp_label = {
 "       \ 'Function': "\uf794",

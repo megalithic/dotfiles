@@ -5,7 +5,6 @@ let s:formatprg_for_filetype = {
       \ "cpp"        : "uncrustify --l CPP base kr mb stroustrup",
       \ "cmake"      : "cmake-format --command-case lower -",
       \ "css"        : "css-beautify -s 2 --space-around-combinator",
-      \ "elixir"     : "mix format -",
       \ "go"         : "gofmt",
       \ "html"       : "tidy -q -w -i --show-warnings 0 --show-errors 0 --tidy-mark no",
       \ "java"       : "uncrustify --l JAVA base kr mb java",
@@ -16,6 +15,7 @@ let s:formatprg_for_filetype = {
       \ "xhtml"      : "tidy -asxhtml -q -m -w -i --show-warnings 0 --show-errors 0 --tidy-mark no --doctype loose",
       \ "xml"        : "tidy -xml -q -m -w -i --show-warnings 0 --show-errors 0 --tidy-mark no",
       \}
+" \ "elixir"     : "mix format -",
 
 for [ft, fp] in items(s:formatprg_for_filetype)
   execute "autocmd FileType ".ft." let &l:formatprg=\"".fp."\" | setlocal formatexpr="

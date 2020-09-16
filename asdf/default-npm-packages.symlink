@@ -16,6 +16,7 @@ flow-language-server
 markdownlint
 neovim
 javascript-typescript-langserver
+lua-fmt
 taskbook
 typescript
 typescript-language-server

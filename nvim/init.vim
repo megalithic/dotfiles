@@ -65,7 +65,7 @@ if empty($SSH_CONNECTION) && has('clipboard')
     set clipboard+=unnamedplus
   endif
 endif
-" set colorcolumn=81,82 " Highlight 81 and 82 columns
+set colorcolumn=81 " Highlight 81 and 82 columns
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 " set completeopt=menu,menuone,noinsert,noselect
@@ -316,13 +316,15 @@ Plug 'tpope/vim-dispatch'
 
 " --[ LSP/Completion/Snippets ]-------------------------------------------------------------------------
 if has("nvim-0.5.0")
-  Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
+  Plug 'neovim/nvim-lspconfig' " lsp.vim / lsp.lua
+  " Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
   Plug 'nvim-lua/diagnostic-nvim'
   Plug 'nvim-lua/completion-nvim'
   " Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
   Plug 'steelsojka/completion-buffers'
+  Plug 'mhartington/formatter.nvim'
 endif
 
 
@@ -381,6 +383,27 @@ Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
 Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
+
+let g:polyglot_disabled = [
+      \ 'typescript',
+      \ 'typescriptreact',
+      \ 'typescript.tsx',
+      \ 'javascriptreact',
+      \ 'markdown',
+      \ 'md',
+      \ 'graphql',
+      \ 'lua',
+      \ 'tsx',
+      \ 'jsx',
+      \ 'sass',
+      \ 'scss',
+      \ 'css',
+      \ 'elm',
+      \ 'elixir',
+      \ 'eelixir',
+      \ 'ex',
+      \ 'exs'
+      \ ]
 Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 

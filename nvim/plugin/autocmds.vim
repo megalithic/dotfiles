@@ -115,10 +115,10 @@ augroup general
   autocmd BufLeave * silent setlocal nonumber norelativenumber signcolumn=no
 
   " toggle colorcolumn when in insertmode only
-  autocmd InsertEnter * silent set colorcolumn=80
-  autocmd InsertLeave * if &filetype != "markdown"
-                            \ | silent set colorcolumn=""
-                            \ | endif
+  " autocmd InsertEnter * silent set colorcolumn=80
+  " autocmd InsertLeave * if &filetype != "markdown"
+  "                           \ | silent set colorcolumn=""
+  "                           \ | endif
 
   " Open QuickFix horizontally with line wrap
   autocmd FileType qf wincmd J | setlocal wrap
