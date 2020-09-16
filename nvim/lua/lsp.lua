@@ -3,17 +3,19 @@
 -- :lua print(vim.lsp.get_log_path())
 -- :lua print(vim.inspect(vim.tbl_keys(vim.lsp.callbacks)))
 
-local has_lsp, nvim_lsp = pcall(require, 'nvim_lsp')
-if not has_lsp then return end
+local has_lsp, nvim_lsp = pcall(require, "nvim_lsp")
+if not has_lsp then
+  return
+end
 
-local has_diagnostic, diagnostic = pcall(require, 'diagnostic')
-local has_completion, completion = pcall(require, 'completion')
+local has_diagnostic, diagnostic = pcall(require, "diagnostic")
+local has_completion, completion = pcall(require, "completion")
 
 -- REF: setup treesitter thigns:
 -- https://github.com/cossonleo/nvim_config/blob/master/lua/cossonleo/devplug.lua#L12
 
 local on_attach = function(client, bufnr)
-  vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
   -- TODO/REF: https://github.com/delianides/dotfiles/blob/1b3ee23e9e254b8a654e85c743ff761b1dfc9d5e/tag-vim/vim/lua/lsp.lua#L39
   -- local resolved_capabilities = client.resolved_capabilities
@@ -39,7 +41,7 @@ local on_attach = function(client, bufnr)
 
   -- This came from https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/lsp_config.lua
   local mapper = function(mode, key, result)
-    vim.fn.nvim_buf_set_keymap(0, mode, key, result, {noremap=true, silent=true})
+    vim.fn.nvim_buf_set_keymap(0, mode, key, result, {noremap = true, silent = true})
   end
 
   if server_capabilities.documentFormattingProvider then
@@ -47,30 +49,29 @@ local on_attach = function(client, bufnr)
     --    if client.name ~= "gopls" then end
 
     vim.api.nvim_command([[au BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 1000)]])
-    mapper('n', '<Leader>lf', '<cmd>lua vim.lsp.buf.formatting_sync(nil, 1000)<CR>')
-    mapper('n', '<Leader>lF', '<cmd>lua vim.lsp.buf.formatting(nil, 1000)<CR>')
+    mapper("n", "<Leader>lf", "<cmd>lua vim.lsp.buf.formatting_sync(nil, 1000)<CR>")
+    mapper("n", "<Leader>lF", "<cmd>lua vim.lsp.buf.formatting(nil, 1000)<CR>")
   end
 
-  mapper('n', '<Leader>lgd', '<cmd>lua vim.lsp.buf.definition()<CR>')
-  mapper('n', '<Leader>lr', '<cmd>lua vim.lsp.buf.references()<CR>')
+  mapper("n", "<Leader>lgd", "<cmd>lua vim.lsp.buf.definition()<CR>")
+  mapper("n", "<Leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>")
   -- mapper('n', '<Leader>lr', '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
-  mapper('n', '<Leader>lgi', '<cmd>lua vim.lsp.buf.implementation()<CR>')
-  mapper('n', '<Leader>lgt', '<cmd>lua vim.lsp.buf.type_definition()<CR>')
-  mapper('n', '<Leader>lgs', '<cmd>lua vim.lsp.buf.document_symbol()<CR>')
-  mapper('n', '<Leader>lgS', '<cmd>lua vim.lsp.buf.workspace_symbol()<CR>')
-  mapper('n', '<Leader>dE', '<cmd>lua vim.lsp.buf.declaration()<CR>')
-  mapper('n', '<Leader>ln', '<cmd>lua vim.lsp.buf.rename()<CR>')
-  mapper('n', '<Leader>la', '<cmd>lua vim.lsp.buf.code_action()<CR>')
+  mapper("n", "<Leader>lgi", "<cmd>lua vim.lsp.buf.implementation()<CR>")
+  mapper("n", "<Leader>lgt", "<cmd>lua vim.lsp.buf.type_definition()<CR>")
+  mapper("n", "<Leader>lgs", "<cmd>lua vim.lsp.buf.document_symbol()<CR>")
+  mapper("n", "<Leader>lgS", "<cmd>lua vim.lsp.buf.workspace_symbol()<CR>")
+  mapper("n", "<Leader>dE", "<cmd>lua vim.lsp.buf.declaration()<CR>")
+  mapper("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
+  mapper("n", "<Leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>")
 
-
-  if vim.api.nvim_buf_get_option(0, 'filetype') ~= 'vim' then
-    mapper('n', '<Leader>lh',  '<cmd>lua vim.lsp.buf.hover()<CR>')
-    mapper('n', '<Leader>lk', '<cmd>lua vim.lsp.buf.signature_help()<CR>')
+  if vim.api.nvim_buf_get_option(0, "filetype") ~= "vim" then
+    mapper("n", "<Leader>lh", "<cmd>lua vim.lsp.buf.hover()<CR>")
+    mapper("n", "<Leader>lk", "<cmd>lua vim.lsp.buf.signature_help()<CR>")
   end
-  mapper('n', '<Leader>lD', '<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>')
+  mapper("n", "<Leader>lD", "<cmd>lua vim.lsp.util.show_line_diagnostics()<CR>")
 
-  mapper('n', '[d', ':PrevDiagnosticCycle<CR>')
-  mapper('n', ']d', ':NextDiagnosticCycle<CR>')
+  mapper("n", "[d", ":PrevDiagnosticCycle<CR>")
+  mapper("n", "]d", ":NextDiagnosticCycle<CR>")
 
   -- vim.api.nvim_command [[autocmd CursorHold  <buffer> lua vim.lsp.buf.hover() ]]
   -- vim.api.nvim_command [[autocmd CursorHoldI <buffer> lua vim.lsp.buf.hover() ]]
@@ -91,162 +92,173 @@ end
 --      https://github.com/delianides/dotfiles/blob/master/tag-vim/vim/lua/lsp.lua#L144
 --      https://github.com/aktau/dotfiles/blob/master/.vim/lua/lsp.lua#L162
 local sumneko_settings = {
-  runtime={
-    version="LuaJIT",
+  runtime = {
+    version = "LuaJIT"
   },
-  diagnostics={
-    enable=true,
-    globals={
-      "vim", "Color", "c", "Group", "g", "s", "describe", "it", "before_each", "after_each", "hs", "config", "watchers"
-    },
-  },
+  diagnostics = {
+    enable = true,
+    globals = {
+      "vim",
+      "Color",
+      "c",
+      "Group",
+      "g",
+      "s",
+      "describe",
+      "it",
+      "before_each",
+      "after_each",
+      "hs",
+      "config",
+      "watchers"
+    }
+  }
 }
 sumneko_settings.Lua = vim.deepcopy(sumneko_settings)
 
 local servers = {
   {
-    name = 'bashls',
-    cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
+    name = "bashls",
+    cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
     filetypes = {"sh", "zsh", "bash", "fish"},
     root_dir = function()
       local cwd = vim.fn.getcwd()
       return cwd
-    end,
+    end
   },
   {
-    name = 'clangd',
+    name = "clangd",
     disabled = true,
     config = {
       cmd = {"clangd", "--background-index"},
-
       -- Required for lsp-status
       init_options = {
         clangdFileStatus = true
-      },
+      }
     }
   },
-  { name = 'cssls' },
+  {name = "cssls"},
   {
-    name = 'diagnosticls',
+    name = "diagnosticls",
     disabled = true,
     config = {
       filetypes = {"elixir", "eelixir"},
       init_options = {
         filetypes = {
-          elixir =  {"mix_credo", "mix_credo_compile"},
-          eelixir =  {"mix_credo", "mix_credo_compile"},
-        },
+          elixir = {"mix_credo", "mix_credo_compile"},
+          eelixir = {"mix_credo", "mix_credo_compile"}
+        }
       }
     }
   },
-  { name = 'efm', disabled = true },
+  {name = "efm", disabled = true},
   {
-    name = 'elmls',
+    name = "elmls",
     config = {
-      cmd = {vim.fn.stdpath('cache') .. "/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
+      cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
       filetypes = {"elm"},
-      root_dir = nvim_lsp.util.root_pattern("elm.json", ".git") or vim.loop.os_homedir(),
+      root_dir = nvim_lsp.util.root_pattern("elm.json", ".git") or vim.loop.os_homedir()
     }
   },
   {
-    name = 'elixirls',
+    name = "elixirls",
     config = {
       settings = {
         elixirLS = {
-          dialyzerEnabled = false,
-        },
+          dialyzerEnabled = false
+        }
       },
       filetypes = {"elixir", "eelixir"},
-      root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir(),
+      root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
     }
   },
-  { name = 'html' },
+  {name = "html"},
   {
-    name = 'jsonls',
+    name = "jsonls",
     config = {
       settings = {
         json = {
-          format = { enable = true },
+          format = {enable = true},
           schemas = {
             {
-              description = 'Lua sumneko setting schema validation',
-              fileMatch = {'*.lua'},
+              description = "Lua sumneko setting schema validation",
+              fileMatch = {"*.lua"},
               url = "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json"
             },
             {
-              description = 'TypeScript compiler configuration file',
-              fileMatch = {'tsconfig.json', 'tsconfig.*.json'},
-              url = 'http://json.schemastore.org/tsconfig'
+              description = "TypeScript compiler configuration file",
+              fileMatch = {"tsconfig.json", "tsconfig.*.json"},
+              url = "http://json.schemastore.org/tsconfig"
             },
             {
-              description = 'Lerna config',
-              fileMatch = {'lerna.json'},
-              url = 'http://json.schemastore.org/lerna'
+              description = "Lerna config",
+              fileMatch = {"lerna.json"},
+              url = "http://json.schemastore.org/lerna"
             },
             {
-              description = 'Babel configuration',
-              fileMatch = {'.babelrc.json', '.babelrc', 'babel.config.json'},
-              url = 'http://json.schemastore.org/lerna'
+              description = "Babel configuration",
+              fileMatch = {".babelrc.json", ".babelrc", "babel.config.json"},
+              url = "http://json.schemastore.org/lerna"
             },
             {
-              description = 'ESLint config',
-              fileMatch = {'.eslintrc.json', '.eslintrc'},
-              url = 'http://json.schemastore.org/eslintrc'
+              description = "ESLint config",
+              fileMatch = {".eslintrc.json", ".eslintrc"},
+              url = "http://json.schemastore.org/eslintrc"
             },
             {
-              description = 'Bucklescript config',
-              fileMatch = {'bsconfig.json'},
-              url = 'https://bucklescript.github.io/bucklescript/docson/build-schema.json'
+              description = "Bucklescript config",
+              fileMatch = {"bsconfig.json"},
+              url = "https://bucklescript.github.io/bucklescript/docson/build-schema.json"
             },
             {
-              description = 'Prettier config',
-              fileMatch = {'.prettierrc', '.prettierrc.json', 'prettier.config.json'},
-              url = 'http://json.schemastore.org/prettierrc'
+              description = "Prettier config",
+              fileMatch = {".prettierrc", ".prettierrc.json", "prettier.config.json"},
+              url = "http://json.schemastore.org/prettierrc"
             },
             {
-              description = 'Vercel Now config',
-              fileMatch = {'now.json', 'vercel.json'},
-              url = 'http://json.schemastore.org/now'
+              description = "Vercel Now config",
+              fileMatch = {"now.json", "vercel.json"},
+              url = "http://json.schemastore.org/now"
             },
             {
-              description = 'Stylelint config',
-              fileMatch = {'.stylelintrc', '.stylelintrc.json', 'stylelint.config.json'},
-              url = 'http://json.schemastore.org/stylelintrc'
-            },
+              description = "Stylelint config",
+              fileMatch = {".stylelintrc", ".stylelintrc.json", "stylelint.config.json"},
+              url = "http://json.schemastore.org/stylelintrc"
+            }
           }
-        },
-      },
-    }
-  },
-  {
-    name = 'pyls',
-    config = {
-      enable=true,
-      plugins={
-        pyls_mypy={
-          enabled=true,
-          live_mode=false
         }
-      },
+      }
     }
   },
-  { name = 'rust_analyzer' },
   {
-    name = 'sumneko_lua',
+    name = "pyls",
+    config = {
+      enable = true,
+      plugins = {
+        pyls_mypy = {
+          enabled = true,
+          live_mode = false
+        }
+      }
+    }
+  },
+  {name = "rust_analyzer"},
+  {
+    name = "sumneko_lua",
     config = {
       -- Lua LSP configuration
-      settings=sumneko_settings,
+      settings = sumneko_settings,
       -- Runtime configurations
       filetypes = {"lua"},
       cmd = {
-        vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
+        vim.fn.stdpath("cache") .. "/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
         "-E",
-        vim.fn.stdpath('cache') .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
-      },
+        vim.fn.stdpath("cache") .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
+      }
     }
   },
   {
-    name = 'tsserver',
+    name = "tsserver",
     config = {
       filetypes = {
         "javascript",
@@ -257,22 +269,22 @@ local servers = {
         "typescript.tsx"
       },
       on_attach = on_attach,
-      callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
+      callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
     }
   },
-  { name = 'vimls' },
+  {name = "vimls"},
   {
-    name = 'yamlls',
+    name = "yamlls",
     config = {
       settings = {
         yaml = {
           schemas = {
-            ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
-            ['http://json.schemastore.org/github-action'] = '.github/action.{yml,yaml}',
-            ['http://json.schemastore.org/ansible-stable-2.9'] = 'roles/tasks/*.{yml,yaml}',
-            ['http://json.schemastore.org/prettierrc'] = '.prettierrc.{yml,yaml}',
-            ['http://json.schemastore.org/stylelintrc'] = '.stylelintrc.{yml,yaml}',
-            ['http://json.schemastore.org/circleciconfig'] = '.circleci/**/*.{yml,yaml}'
+            ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*.{yml,yaml}",
+            ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
+            ["http://json.schemastore.org/ansible-stable-2.9"] = "roles/tasks/*.{yml,yaml}",
+            ["http://json.schemastore.org/prettierrc"] = ".prettierrc.{yml,yaml}",
+            ["http://json.schemastore.org/stylelintrc"] = ".stylelintrc.{yml,yaml}",
+            ["http://json.schemastore.org/circleciconfig"] = ".circleci/**/*.{yml,yaml}"
           },
           format = {
             enable = true
@@ -281,9 +293,9 @@ local servers = {
           hover = true,
           completion = true
         }
-      },
+      }
     }
-  },
+  }
 }
 
 -- for lsp, config in pairs(servers) do
@@ -298,15 +310,15 @@ local servers = {
 
 for _, lsp in ipairs(servers) do
   if lsp.config then
-    lsp.config.on_attach = on_attach
-    lsp.config.callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks)
     -- lsp.config.capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
     -- lsp.config.callbacks = nvim_status.extensions.clangd.setup()
     -- lsp.config.capabilities = nvim_status.capabilities
+    lsp.config.on_attach = on_attach
+    lsp.config.callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
   else
     lsp.config = {
       on_attach = on_attach,
-      callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
+      callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
       -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} }),
       -- callbacks = nvim_status.extensions.clangd.setup(),
       -- capabilities = nvim_status.capabilities,

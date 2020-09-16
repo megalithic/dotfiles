@@ -1,13 +1,13 @@
-" ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+" ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 "
 "   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
 "   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > nvim/init.vim
 "   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
 "   Brought to you by: Seth Messer / @megalithic
 "
-" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-" ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+" ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
 if !1 | finish | endif     " FIXME: danger, will robinson!
 
@@ -15,24 +15,24 @@ scriptencoding utf-16      " allow emojis in vimrc
 filetype plugin indent on  " try to recognize filetypes and load related plugins
 
 
-" ┌───────────────────────────────────────────────────────────────────────────────────┐
-" │ additional setup and configs..                                                    │
-" │───────────────────────────────────────────────────────────────────────────────────│
-" │ ~/.dotfiles/nvim/plugin/autocmds.vim                - customizations              │
-" │ ~/.dotfiles/nvim/ftplugin                           - ft options, mappings        │
-" │ ~/.dotfiles/nvim/after/ftplugin                     - file type overrides         │
-" │ ~/.dotfiles/nvim/autoload                           - custom functions            │
-" │ ~/.dotfiles/nvim/plugin/terminal-settings.vim       - Vim terminal tweaks         │
-" │ ~/.dotfiles/nvim/plugin/mappings.vim                - custom mappings             │
-" │ ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim   - custom plugin config        │
-" └───────────────────────────────────────────────────────────────────────────────────┘
+" ┌────────────────────────────────────────────────────────────────────────────┐
+" │ additional setup and configs..                                             │
+" │────────────────────────────────────────────────────────────────────────────│
+" │ ~/.dotfiles/nvim/plugin/autocmds.vim                - customizations       │
+" │ ~/.dotfiles/nvim/ftplugin                           - ft options, mappings │
+" │ ~/.dotfiles/nvim/after/ftplugin                     - file type overrides  │
+" │ ~/.dotfiles/nvim/autoload                           - custom functions     │
+" │ ~/.dotfiles/nvim/plugin/terminal-settings.vim       - Vim terminal tweaks  │
+" │ ~/.dotfiles/nvim/plugin/mappings.vim                - custom mappings      │
+" │ ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim   - custom plugin config │
+" └────────────────────────────────────────────────────────────────────────────┘
 
 
 " Enable syntax highlighting.
 syntax on
 
 
-" --[ disable built-ins ]-------------------------------------------------------------------------
+" --[ disable built-ins ]-------------------------------------------------------
 let g:loaded_2html_plugin      = 1
 let g:loaded_gzip              = 1
 let g:loaded_matchparen        = 1
@@ -44,7 +44,7 @@ let g:loaded_matchit           = 1
 let g:loaded_tutor_mode_plugin = 1
 
 
-" --[ general settings ]-------------------------------------------------------------------------
+" --[ general settings ]--------------------------------------------------------
 " REF: great descriptions of settings: https://github.com/neg-serg/dotfiles/blob/master/nvim/.config/nvim/plugin/01-settings.vim
 "
 set autoindent        " Indented text
@@ -227,7 +227,7 @@ silent! if plug#begin('~/.config/nvim/plugged')
 Plug 'dstein64/vim-startuptime'
 
 
-" --[ styling/ui ]-------------------------------------------------------------------------
+" --[ styling/ui ]--------------------------------------------------------------
 Plug 'trevordmiller/nova-vim' " nova-colors.vim
 Plug 'gruvbox-community/gruvbox'
 Plug 'pbrisbin/vim-colors-off' " for goyo
@@ -239,7 +239,7 @@ Plug 'norcalli/nvim-colorizer.lua'
 Plug 'ryanoasis/vim-devicons'
 
 
-" --[ general behaviours ]-------------------------------------------------------------------------
+" --[ general behaviours ]------------------------------------------------------
 Plug 'nelstrom/vim-visual-star-search'
 Plug 'tommcdo/vim-lion' "lion.vim
 " Plug 'chaoren/vim-wordmotion' "wordmotion.vim
@@ -270,7 +270,7 @@ Plug 'sickill/vim-pasta' " context-aware pasting
 
 
 
-" --[ movements/text objects, et al ]-------------------------------------------------------------------------
+" --[ movements/text objects, et al ]-------------------------------------------
 Plug 'tpope/vim-rsi'
 Plug 'kana/vim-operator-user'
 " -- provide ai and ii for indent blocks
@@ -297,13 +297,12 @@ Plug 'sgur/vim-textobj-parameter'                                       " functi
 Plug 'wellle/targets.vim'                                               " improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
 
 
-" --[ File/buffer management ]-------------------------------------------------------------------------
+" --[ File/buffer management ]--------------------------------------------------
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
 
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
-" Plug '~/code/telescope.nvim'
 Plug 'nvim-lua/telescope.nvim'
 
 Plug 'mhinz/vim-grepper' " grepper.vim
@@ -314,7 +313,7 @@ Plug 'tpope/vim-dispatch'
 " Plug 'kyazdani42/nvim-tree.lua'
 
 
-" --[ LSP/Completion/Snippets ]-------------------------------------------------------------------------
+" --[ LSP/Completion/Snippets ]-------------------------------------------------
 if has("nvim-0.5.0")
   Plug 'neovim/nvim-lspconfig' " lsp.vim / lsp.lua
   " Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
@@ -328,7 +327,7 @@ if has("nvim-0.5.0")
 endif
 
 
-" --[ VCS ]-------------------------------------------------------------------------
+" --[ VCS ]---------------------------------------------------------------------
 Plug 'tpope/vim-fugitive' " fugitive.vim
 Plug 'mhinz/vim-signify' " signify.vim
 Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
@@ -340,7 +339,7 @@ Plug 'itchyny/vim-gitbranch'
 Plug 'rhysd/git-messenger.vim'
 
 
-" --[ Devlopment ]-------------------------------------------------------------------------
+" --[ Devlopment ]--------------------------------------------------------------
 Plug 'tpope/vim-rails' " rails.vim
 Plug 'tpope/vim-projectionist' " projectionist.vim
 Plug 'dense-analysis/ale' " ale.vim
@@ -366,7 +365,7 @@ Plug 'junegunn/goyo.vim'
 Plug 'junegunn/limelight.vim'
 
 
-" --[ Lang/Syntax ]-------------------------------------------------------------------------
+" --[ Lang/Syntax ]-------------------------------------------------------------
 " Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
 Plug 'Zaptic/elm-vim', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
@@ -407,7 +406,7 @@ let g:polyglot_disabled = [
 Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 
-" --[ tmux support ]-------------------------------------------------------------------------
+" --[ tmux support ]------------------------------------------------------------
 Plug 'christoomey/vim-tmux-navigator'
 " ~/.dotfiles/nvim/plugin/tmux-navigator.vim - options, mappings
 Plug 'tmux-plugins/vim-tmux-focus-events'
@@ -422,11 +421,11 @@ endif
 runtime macros/matchit.vim
 
 
-" --[ abbreviations ]-------------------------------------------------------------------------
+" --[ abbreviations ]-----------------------------------------------------------
 iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 
 
-" --[ colorscheme ]-------------------------------------------------------------------------
+" --[ colorscheme ]-------------------------------------------------------------
 set background=dark
 
 " let g:gruvbox_italic=1
@@ -442,7 +441,7 @@ silent! colorscheme nova
 
 
 
-" --[ lua ]-------------------------------------------------------------------------
+" --[ lua ]---------------------------------------------------------------------
 lua require('init')
 
 " vim:ft=vim

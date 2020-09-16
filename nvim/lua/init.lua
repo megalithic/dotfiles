@@ -47,6 +47,7 @@ require("format").setup(
     }
   }
 )
+vim.fn.nvim_buf_set_keymap(0, 'n', '<leader>F', ':Format<CR>', {noremap=true, silent=true})
 
 -- [ nvim-colorizer.lua ]-------------------------------------------------------
 --   See https://github.com/norcalli/nvim-colorizer.lua
