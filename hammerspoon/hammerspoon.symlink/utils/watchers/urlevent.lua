@@ -1,4 +1,4 @@
-local log = hs.logger.new('[urlevent]', 'debug')
+local log = hs.logger.new('[urlevent]', 'warning')
 
 local template = require('ext.template')
 local fn = require('hs.fnutils')
@@ -13,48 +13,33 @@ M.start = function()
 
   -- REF: handling different urls:
   --  https://github.com/trws/dotfiles/blob/master/hammerspoon/init.lua#L66-L85
-  hs.urlevent.httpCallback = function(scheme, host, _, fullURL)
+  hs.urlevent.httpCallback = function(scheme, host, _, full_url)
     local modifiers          = hs.eventtap.checkKeyboardModifiers()
-    local should_focus_calling_app = modifiers['cmd']
+    local should_refocus = modifiers['cmd']
 
     local running_browser_name = fn.find(watchers.urlPreference, function(browser_name)
       return hs.application.get(browser_name) ~= nil
     end)
 
-    local current_app  = hs.application:frontmostApplication()
+    local current_app  = hs.application.frontmostApplication()
     local current_browser = hs.application.get(running_browser_name)
 
-    log.f("%s -> %s [%s, %s, focus: %s, %s]", current_browser:name(), fullURL, scheme, host, should_focus_calling_app, current_app:bundleID())
+    log.f("%s -> %s [%s, %s, focus? %s, %s (frontmost? %s)]", current_browser:name(), full_url, scheme, host, should_refocus, current_app:bundleID(), current_app:isFrontmost())
 
     hs.applescript.applescript(template([[
       tell application "{APP_NAME}"
-        {ACTIVATE}
         open location "{URL}"
       end tell
     ]], {
       APP_NAME = running_browser_name,
-      URL      = fullURL,
-      ACTIVATE = not should_focus_calling_app and 'activate' or '' -- 'activate' brings to front if cmd is clicked
+      URL      = full_url
     }))
 
     -- focus back the current app
-    if should_focus_calling_app and current_app:isFrontmost() then
+    if should_refocus then
       current_app:activate()
+      log.df("urlevent::activated -> %s", current_app:bundleID())
     end
-
-    -- hs.urlevent.openURLWithBundle(fullURL, current_browser:bundleID())
-
-    -- focus back the current app (or browser)
-    -- local activationApp = current_browser
-
-    -- if not should_focus_calling_app and not currentApp:isFrontmost() then
-    -- if not should_focus_calling_app then
-    --   activationApp = currentApp
-    -- end
-
-    -- activationApp:activate()
-
-    -- log.df("urlevent::activate -> %s", activationApp:bundleID())
   end
 end
 
