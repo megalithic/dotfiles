@@ -55,7 +55,7 @@ local on_attach = function(client, bufnr)
 
   mapper("n", "<Leader>lgd", "<cmd>lua vim.lsp.buf.definition()<CR>")
   mapper("n", "<Leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>")
-  -- mapper('n', '<Leader>lr', '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
+  mapper('n', '<Leader>lgr', '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
   mapper("n", "<Leader>lgi", "<cmd>lua vim.lsp.buf.implementation()<CR>")
   mapper("n", "<Leader>lgt", "<cmd>lua vim.lsp.buf.type_definition()<CR>")
   mapper("n", "<Leader>lgs", "<cmd>lua vim.lsp.buf.document_symbol()<CR>")
@@ -119,12 +119,11 @@ sumneko_settings.Lua = vim.deepcopy(sumneko_settings)
 local servers = {
   {
     name = "bashls",
-    cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/bashls/node_modules/.bin/bash-language-server", "start"},
-    filetypes = {"sh", "zsh", "bash", "fish"},
-    root_dir = function()
-      local cwd = vim.fn.getcwd()
-      return cwd
-    end
+    -- filetypes = {"sh", "zsh", "bash", "fish"},
+    -- root_dir = function()
+    --   local cwd = vim.fn.getcwd()
+    --   return cwd
+    -- end
   },
   {
     name = "clangd",
@@ -137,7 +136,9 @@ local servers = {
       }
     }
   },
-  {name = "cssls"},
+  {
+    name = "cssls",
+  },
   {
     name = "diagnosticls",
     disabled = true,
@@ -151,7 +152,7 @@ local servers = {
       }
     }
   },
-  {name = "efm", disabled = true},
+  { name = "efm", disabled = true },
   {
     name = "elmls",
     config = {
@@ -172,7 +173,7 @@ local servers = {
       root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
     }
   },
-  {name = "html"},
+  { name = "html" },
   {
     name = "jsonls",
     config = {
@@ -242,7 +243,7 @@ local servers = {
       }
     }
   },
-  {name = "rust_analyzer"},
+  { name = "rust_analyzer" },
   {
     name = "sumneko_lua",
     config = {
@@ -272,7 +273,7 @@ local servers = {
       callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
     }
   },
-  {name = "vimls"},
+  { name = "vimls" },
   {
     name = "yamlls",
     config = {

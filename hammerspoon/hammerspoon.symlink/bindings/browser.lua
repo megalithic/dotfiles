@@ -56,18 +56,20 @@ module.kill = function(list)
 end
 
 module.killTabsByDomain = function(domain)
-  hs.osascript.javascript([[
-  (function() {
-    var browser = Application(']] .. runningBrowserName .. [[');
-    for (win of browser.windows()) {
-      for (tab of win.tabs()) {
-        if (tab.url().match(/]] .. domain .. [[/)) {
-          tab.close()
+  if runningBrowserName ~= nil and domain ~= nil then
+    hs.osascript.javascript([[
+    (function() {
+      var browser = Application(']] .. runningBrowserName .. [[');
+      for (win of browser.windows()) {
+        for (tab of win.tabs()) {
+          if (tab.url().match(/]] .. domain .. [[/)) {
+            tab.close()
+          }
         }
       }
-    }
-  })();
-  ]])
+    })();
+    ]])
+  end
 end
 
 module.start = function()

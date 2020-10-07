@@ -9,7 +9,7 @@ local M = {}
 -- click with 'cmd' to open in background, otherwise opens with focus
 --  `watchers` globally defined in root init.lua
 M.start = function()
-  hs.urlevent.setDefaultHandler('http')
+  -- hs.urlevent.setDefaultHandler('http')
 
   -- REF: handling different urls:
   --  https://github.com/trws/dotfiles/blob/master/hammerspoon/init.lua#L66-L85

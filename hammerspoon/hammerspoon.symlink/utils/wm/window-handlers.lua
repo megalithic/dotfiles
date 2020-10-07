@@ -1,4 +1,4 @@
-local log = hs.logger.new('[window-handlers]', 'info')
+local log = hs.logger.new('[window-handlers]', 'warning')
 local cache = { timers = {} }
 local module = { cache = cache }
 
@@ -102,7 +102,8 @@ module.onAppQuit = function(win, callback, providedInterval)
   local app = win:application()
 
   hs.timer.waitUntil(function()
-    return app == nil or (not app:isRunning() and not hs.application.find(app:name()) and #app:allWindows() == 0)
+    return app == nil or #app:allWindows() == 0
+    -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
   end,
   callback,
   interval)

@@ -21,9 +21,13 @@ if has('nvim')
 
   " Project-wide search for the supplied term.
   nnoremap <silent><leader>m  :Files<CR>
+  " nnoremap <silent><leader>m  <cmd>lua require'telescope.builtin'.find_files{}<CR>
   nnoremap <leader>a          :Rg<Space>
   nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
   vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
+
+  " nnoremap <leader>a          <cmd>lua require'telescope.builtin'.grep_string{}
+  " nnoremap <silent><leader>A  <cmd>lua require'telescope.builtin'.live_grep{}
 
   " Mapping selections for various modes.
   nmap <Space>! <Plug>(fzf-maps-n)

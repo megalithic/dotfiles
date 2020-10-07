@@ -119,7 +119,7 @@ end
 
 module.setState = function(s)
   module.state = s
-  log.df('Setting PTT state to: %s', s)
+  log.df('Setting PTT state to %s', s)
 
   if module.menubar ~= nil then
     module.menubar:delete()
@@ -140,7 +140,7 @@ module.toggleStates = function()
 
   module.setState(toggle_to.state)
 
-  log.df('Toggling PTT state to %s from %s', toggle_to.state, current_state)
+  log.df('Toggling PTT state to %s', toggle_to.state, current_state)
   return toggle_to.state
 end
 

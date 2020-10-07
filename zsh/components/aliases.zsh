@@ -217,7 +217,7 @@ alias redcli="redis-cli"
 
 # MISC
 # -----------------------------------------------------------------------------
-alias rm="/usr/bin/local/trash"
+alias rm="/usr/local/bin/trash"
 alias dash="open dash://" # lang:query
 alias trunc=": > "
 alias server="python -m SimpleHTTPServer"
