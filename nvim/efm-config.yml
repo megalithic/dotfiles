@@ -1,0 +1,24 @@
+# https://github.com/tkmpypy/dotfiles/blob/master/.config/efm-langserver/config.yaml
+
+languages:
+  markdown:
+    lint-command: 'markdownlint -s'
+    lint-stdin: true
+    lint-formats:
+      - '%f:%l %m'
+
+  vim:
+    lint-command: 'vint -'
+    lint-stdin: true
+
+  ruby:
+    lint-command: 'rubocop --stdin'
+    lint-stdin: true
+    format-command: 'rubocop --safe-auto-correct --stdin - 2>/dev/null | sed "1,/^====================$/d"'
+
+  json:
+    format-command: 'jq .'
+
+  elixir:
+    lint-command: 'mix credo suggest --read-from-stdin'
+    lint-stdin: true

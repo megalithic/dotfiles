@@ -21,17 +21,18 @@ curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/master/bin/_dot
 
 The install script will install things and symlink the appropriate files in
 `~/.dotfiles` to your home directory (`~`). Everything is configured and tweaked
-within `~/.dotfiles`, though. All files and folders ending in `.symlink` get,
-you guessed it, symlinked. For example: `~/.dotfiles/zsh/zshrc.symlink` gets
+within `~/.dotfiles`, though. All files and folders ending in `.symlink` get --
+you guessed it -- symlinked. For example: `~/.dotfiles/zsh/zshrc.symlink` gets
 symlinked to `~/.zshrc`.
 
 This also sets up things like homebrew if you're on a mac, and even allows for a
-private repo setup. **Please note**, this repo supports multiple platforms, but
-has really only been extensively used and tested on macos.
+private repo setup. **Please note**, this dotfiles repo supports multiple
+platforms, but has really only been extensively used and tested on MacOS.
 
 I highly recommend you dig into the scripts and configs to see what all
 is going on (because it does a lot that I'm not describing here) before you
-all willy-nilly install a stranger's shell scripts. :)
+install a stranger's shell scripts all willy-nilly, throwing caution to the
+wind. 🤣
 
 ### Things
 
@@ -78,8 +79,14 @@ located at `~/.dotfiles/private/install.sh`.~~
 
 ### Props
 
-- Originally based on the dotfiles of the esteemed [Wynn Netherland](https://github.com/pengwynn/dotfiles)
-- Presently a delicate combination of [Wynn Netherland's](https://github.com/pengwynn/dotfiles) and [Phillip Ridlen's](https://github.com/philtr/dotfiles) respective dotfiles
+- So many esteemed individuals in the community have, in some way, left their
+  mark on my own dotfilery:
+
+  * [Zach Holman](https://github.com/holman/dotfiles)
+  * [Wynn Netherland](https://github.com/pengwynn/dotfiles)
+  * [Evan Travers](https://github.com/evantravers/dotfiles)
+  * [Dorian Karter](https://github.com/dkarter/dotfiles)
+  * [Phil Ridlen](https://github.com/philtr/dotfiles)
 
 ### Refs
 

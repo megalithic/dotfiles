@@ -152,7 +152,13 @@ local servers = {
       }
     }
   },
-  { name = "efm", disabled = true },
+  {
+    name = "efm",
+    disabled = true,
+    config = {
+      cmd = {"/Users/replicant/.go/bin/efm-langserver", "-c", vim.fn.stdpath("config") .. "efm-config.yml"},
+    }
+  },
   {
     name = "elmls",
     config = {

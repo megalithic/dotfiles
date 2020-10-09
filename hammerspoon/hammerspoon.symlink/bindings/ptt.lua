@@ -91,7 +91,7 @@ end
 local eventKeysMatchModifiers = function(modifiers)
   local modifiersMatch = true
 
-  for index, key in ipairs(module.modifierKeys) do
+  for _, key in ipairs(module.modifierKeys) do
     if modifiers[key] ~= true then
       modifiersMatch = false
     end
@@ -101,8 +101,8 @@ local eventKeysMatchModifiers = function(modifiers)
 end
 
 local eventTapWatcher = function(event)
-  device = hs.audiodevice.defaultInputDevice()
-  modifiersMatch = eventKeysMatchModifiers(event:getFlags())
+  local device = hs.audiodevice.defaultInputDevice()
+  local modifiersMatch = eventKeysMatchModifiers(event:getFlags())
 
   if modifiersMatch then
     module.pushed = true

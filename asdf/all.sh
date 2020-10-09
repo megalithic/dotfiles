@@ -18,11 +18,11 @@ source $HOME/.asdf/asdf.sh
 
 #
 # preferred plugins..
-#asdf plugin-add golang https://github.com/kennyp/asdf-golang.git
 asdf plugin-add ruby https://github.com/asdf-vm/asdf-ruby.git
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf plugin-add elm https://github.com/asdf-community/asdf-elm.git
+asdf plugin-add golang https://github.com/kennyp/asdf-golang.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
 asdf plugin-add rust https://github.com/code-lever/asdf-rust.git
 asdf plugin-add python https://github.com/danhper/asdf-python.git
