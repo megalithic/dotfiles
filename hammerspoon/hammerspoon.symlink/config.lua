@@ -1,8 +1,5 @@
 local log = hs.logger.new('[config]', 'warning')
 
--- TODO:
--- - investigate using hs.settings: https://github.com/rsefer/hammerspoon-config/blob/master/lib/settings.lua
-
 -- grid config
 hs.grid.GRIDWIDTH = 8
 hs.grid.GRIDHEIGHT = 8
@@ -164,10 +161,20 @@ module.apps = {
       {title = 'Slack Call Minipanel', action = 'ignore'},
     }
   },
+  ['com.readdle.smartemail-Mac'] = {
+    bundleID = 'com.readdle.smartemail-Mac',
+    name = 'Spark',
+    hyper_key ='e',
+    context = 'spark',
+    distraction = true,
+    preferredDisplay = 2,
+    position = module.grid.rightHalf,
+  },
+
   ['io.canarymail.mac'] = {
     bundleID = 'io.canarymail.mac',
     name = 'Canary Mail',
-    hyper_key ='e',
+    -- hyper_key ='e',
     context = 'canary',
     distraction = true,
     preferredDisplay = 2,

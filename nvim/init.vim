@@ -383,27 +383,27 @@ Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': 
 Plug 'florentc/vim-tla'
 Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
 
-let g:polyglot_disabled = [
-      \ 'typescript',
-      \ 'typescriptreact',
-      \ 'typescript.tsx',
-      \ 'javascriptreact',
-      \ 'markdown',
-      \ 'md',
-      \ 'graphql',
-      \ 'lua',
-      \ 'tsx',
-      \ 'jsx',
-      \ 'sass',
-      \ 'scss',
-      \ 'css',
-      \ 'elm',
-      \ 'elixir',
-      \ 'eelixir',
-      \ 'ex',
-      \ 'exs'
-      \ ]
-Plug 'sheerun/vim-polyglot' "polyglot.vim
+" let g:polyglot_disabled = [
+"       \ 'typescript',
+"       \ 'typescriptreact',
+"       \ 'typescript.tsx',
+"       \ 'javascriptreact',
+"       \ 'markdown',
+"       \ 'md',
+"       \ 'graphql',
+"       \ 'lua',
+"       \ 'tsx',
+"       \ 'jsx',
+"       \ 'sass',
+"       \ 'scss',
+"       \ 'css',
+"       \ 'elm',
+"       \ 'elixir',
+"       \ 'eelixir',
+"       \ 'ex',
+"       \ 'exs'
+"       \ ]
+" Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 
 " --[ tmux support ]------------------------------------------------------------
@@ -423,6 +423,8 @@ runtime macros/matchit.vim
 
 " --[ abbreviations ]-----------------------------------------------------------
 iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
+iabbrev cabpi Co-authored-by: Patrick Isaac <pisaac@enbala.com>
+" iabbrev cabtw Co-authored-by: Tony Winn <pisaac@enbala.com>
 
 
 " --[ colorscheme ]-------------------------------------------------------------

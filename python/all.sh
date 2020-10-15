@@ -24,6 +24,7 @@ $DOTS/python/package-installer
 echo ":: installing weechat/wee-slack specific workaround.."
 
 sudo -H /usr/local/opt/python@3.8/bin/pip3 install websocket_client
+sudo -H /usr/local/opt/python@3.9/bin/pip3 install websocket_client
 
 # sudo /usr/local/opt/python@2/bin/pip2 install websocket_client
 # sudo /usr/local/bin/pip install websocket_client
@@ -33,3 +34,11 @@ sudo -H /usr/local/opt/python@3.8/bin/pip3 install websocket_client
 # sudo /usr/local/bin/pip3 install websocket_client
 # sudo /usr/local/bin/pip3 install websocket
 # sudo $(brew --prefix)/opt/python@3.8/bin/pip3 install websocket_client
+
+# -----------------------------------------------------------------------------
+# NOTES:
+# =============================================================================
+#
+# Python issues arise constantly.. with weechat, with ssh and git.
+# For now, this system relies on homebrew installs of python@3.8 (ssh/git)
+# and python@3.9 (weechat)

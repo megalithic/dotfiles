@@ -23,6 +23,19 @@ of running [`_dotup`](https://github.com/megalithic/dotfiles/blob/master/bin/_do
 
 All sensitive data is kept encrypted using weechat's `/secure` API.
 
+#### Debugging
+
+- `/debug libs` -> shows you which core libraries/dependencies are being used by
+  weechat; e.g., python, etc
+
+If you end up having weird issues with python scripts not loading fully; likely
+weechat switched to wanting a different version of python, e.g., weechat 2.9 -> 2.9.1
+switched to using python 3.9.0 from python 3.8.6 and this caused issues. For me,
+uninstalling both python and weechat, then reinstalling python, then my pip3 packages
+then weechat. Still not perfect solution. I was using asdf to manage python versions
+but it looks like weechat wants system installed things and homebrew's black
+magic seems to handle linking things right to where weechat works with it.
+
 #### References
 
 - https://megalithic.io/thoughts/weechat-setup-with-irc-bitlbee-slack
