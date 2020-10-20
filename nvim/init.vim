@@ -141,7 +141,7 @@ if !isdirectory(s:undoDir)
 endif
 let &undodir=s:undoDir
 set undofile          " Maintain undo history
-set updatetime=100    " Make GitGutter plugin more responsive
+set updatetime=100    " Make async plugin more responsive
 set viminfo=          " No backups
 set wildcharm=<Tab>   " Defines the trigger for 'wildmenu' in mappings
 set wildmenu          " Nice command completions
@@ -367,6 +367,8 @@ Plug 'junegunn/limelight.vim'
 
 " --[ Lang/Syntax ]-------------------------------------------------------------
 " Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
+Plug 'gleam-lang/gleam.vim'
+Plug 'vim-erlang/vim-erlang-runtime', { 'for': ['erlang'] }
 Plug 'Zaptic/elm-vim', {'for': ['elm']}
 Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
 Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
@@ -382,28 +384,31 @@ Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
 Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
+Plug 'yyq123/vim-syntax-logfile'
 
-" let g:polyglot_disabled = [
-"       \ 'typescript',
-"       \ 'typescriptreact',
-"       \ 'typescript.tsx',
-"       \ 'javascriptreact',
-"       \ 'markdown',
-"       \ 'md',
-"       \ 'graphql',
-"       \ 'lua',
-"       \ 'tsx',
-"       \ 'jsx',
-"       \ 'sass',
-"       \ 'scss',
-"       \ 'css',
-"       \ 'elm',
-"       \ 'elixir',
-"       \ 'eelixir',
-"       \ 'ex',
-"       \ 'exs'
-"       \ ]
-" Plug 'sheerun/vim-polyglot' "polyglot.vim
+Plug 'jparise/vim-graphql'
+
+let g:polyglot_disabled = [
+      \ 'typescript',
+      \ 'typescriptreact',
+      \ 'typescript.tsx',
+      \ 'javascriptreact',
+      \ 'markdown',
+      \ 'md',
+      \ 'graphql',
+      \ 'lua',
+      \ 'tsx',
+      \ 'jsx',
+      \ 'sass',
+      \ 'scss',
+      \ 'css',
+      \ 'elm',
+      \ 'elixir',
+      \ 'eelixir',
+      \ 'ex',
+      \ 'exs'
+      \ ]
+Plug 'sheerun/vim-polyglot' "polyglot.vim
 
 
 " --[ tmux support ]------------------------------------------------------------
@@ -424,7 +429,13 @@ runtime macros/matchit.vim
 " --[ abbreviations ]-----------------------------------------------------------
 iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
 iabbrev cabpi Co-authored-by: Patrick Isaac <pisaac@enbala.com>
-" iabbrev cabtw Co-authored-by: Tony Winn <pisaac@enbala.com>
+iabbrev cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
+
+
+" --[ commands ]----------------------------------------------------------------
+command! CopyFullName let @+=expand('%')
+command! CopyPath let @+=expand('%:h')
+command! CopyFileName let @+=expand('%:t')
 
 
 " --[ colorscheme ]-------------------------------------------------------------

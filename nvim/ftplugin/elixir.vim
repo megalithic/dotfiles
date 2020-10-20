@@ -33,6 +33,15 @@ augroup ft_elixir
   " https://github.com/janko/vim-test/issues/136
   " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
+    echom "a:cmd -> " . a:cmd
+
+    " if a:cmd =~ ':\d+'
+    "   echo "is_nearest mode"
+    " else
+    "   echo "not is_nearest mode"
+    " endif
+
+
     if match(a:cmd, 'vpp/') != -1
       if g:elixir_test_nearest == 1
         return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '') .. ":" .. line(".")
@@ -47,11 +56,15 @@ augroup ft_elixir
         return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
       end
     else
-      if g:elixir_test_nearest == 1
-        return a:cmd .. ":" .. line(".")
-      else
-        return a:cmd
-      end
+      " if g:elixir_test_nearest == 1
+        " return a:cmd .. ":" .. line(".")
+      " else
+        " return a:cmd
+        let s:cmd = substitute(a:cmd, 'mix test', 'mix test --color', '')
+        echom "s:cmd -> " . s:cmd
+
+        return s:cmd
+      " end
     end
   endfunction
   let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}

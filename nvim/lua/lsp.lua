@@ -172,7 +172,7 @@ local servers = {
     config = {
       settings = {
         elixirLS = {
-          dialyzerEnabled = false
+          dialyzerEnabled = true
         }
       },
       filetypes = {"elixir", "eelixir"},
@@ -276,7 +276,7 @@ local servers = {
         "typescript.tsx"
       },
       on_attach = on_attach,
-      callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
+      callbacks = vim.tbl_deep_extend("keep", {}, require("lsp_callbacks"), vim.lsp.callbacks)
     }
   },
   { name = "vimls" },
@@ -321,11 +321,11 @@ for _, lsp in ipairs(servers) do
     -- lsp.config.callbacks = nvim_status.extensions.clangd.setup()
     -- lsp.config.capabilities = nvim_status.capabilities
     lsp.config.on_attach = on_attach
-    lsp.config.callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
+    lsp.config.callbacks = vim.tbl_deep_extend("keep", {}, require("lsp_callbacks"), vim.lsp.callbacks)
   else
     lsp.config = {
       on_attach = on_attach,
-      callbacks = vim.tbl_deep_extend("keep", {}, require("callbacks"), vim.lsp.callbacks)
+      callbacks = vim.tbl_deep_extend("keep", {}, require("lsp_callbacks"), vim.lsp.callbacks)
       -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} }),
       -- callbacks = nvim_status.extensions.clangd.setup(),
       -- capabilities = nvim_status.capabilities,

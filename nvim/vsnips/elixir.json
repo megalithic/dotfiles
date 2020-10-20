@@ -66,5 +66,70 @@
       "\"\"\""
     ],
     "description": "LiveView inline template"
+  },
+  "genserver_boilerplate": {
+    "prefix": "gen_base",
+    "body": [
+      "defmodule $1 do",
+      "@moduledoc \"\"\"",
+      "  The `$1` server implementation",
+      "\"\"\"",
+      "",
+      "  use GenServer",
+      "",
+      "  require Logger",
+      "",
+      "##############################################################################",
+      "",
+      "  @doc \"Starts the `$1` server up\"",
+      "  def start_link(opts \\ []) do",
+      "    GenServer.start_link(__MODULE__, opts, name: __MODULE__)",
+      "  end",
+      "",
+      "  def init(args), do: {:ok, args}",
+      "",
+      "##############################################################################",
+      "",
+      "  @spec state() :: any()",
+      "  def state(), do: handle_call(__MODULE__, :state)",
+      "",
+      "  @spec state!(new_state) :: any()",
+      "  def state!(), do: handle_cast(__MODULE__, {:state!, new_state})",
+      "",
+      "##############################################################################",
+      "",
+      "  @doc false",
+      "  def handle_call(:state, _from, state), do: {:reply, state, state}",
+      "",
+      "  @doc false",
+      "  def handle_cast({:state!, new_state}, state), do: {:noreply, new_state}",
+      "",
+      "  @doc false",
+      "  def handle_info({:DOWN, _ref, :process, _pid, :normal}, state), do: {:noreply, state}",
+      "end"
+    ],
+    "description": "GenServer template with a state"
+  },
+  "genserver_handle_call": {
+    "prefix": "gen_call",
+    "body": [
+      "@impl GenServer",
+      "def handle_call(${1::event}, ${2:_from}, ${3:state}) do",
+      "  ${4:}",
+      "  {:reply, state, state}",
+      "end"
+    ],
+    "description": "GenServer handle_call"
+  },
+  "genserver_handle_cast": {
+    "prefix": "gen_cast",
+    "body": [
+      "@impl GenServer",
+      "def handle_cast({${1::event}, ${2:some_data}}, ${3:state}) do",
+      "  ${4:}",
+      "  {:noreply, state}",
+      "end"
+    ],
+    "description": "GenServer handle_cast"
   }
 }
