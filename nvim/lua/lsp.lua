@@ -3,6 +3,8 @@
 -- :lua print(vim.lsp.get_log_path())
 -- :lua print(vim.inspect(vim.tbl_keys(vim.lsp.callbacks)))
 
+-- lsp logs: `tail -n150 -f ~/.local/share/nvim/lsp.log`
+
 local has_lsp, nvim_lsp = pcall(require, "nvim_lsp")
 if not has_lsp then
   return
@@ -140,23 +142,92 @@ local servers = {
     name = "cssls",
   },
   {
+
+    -- local nvim_lsp = require'nvim_lsp' local configs = require'nvim_lsp/configs' -- Check if it's already defined for when I reload this file.
+    -- configs.dls = { default_config = { cmd = {'diagnostic-languageserver', "--stdio", "--log-level", "2"}; filetypes = { "sh", "email" }; root_dir = util.root_pattern("package.json"); settings = { -- options from dls }; }; } nvim_lsp.dls.setup{}
+
     name = "diagnosticls",
-    disabled = true,
+    disabled = false,
     config = {
-      filetypes = {"elixir", "eelixir"},
+      filetypes = { "javascript", "javascript.jsx", "elixir", "eelixir" },
       init_options = {
         filetypes = {
+          javascript = "eslint",
+          ["javascript.jsx"] = "eslint",
+          javascriptreact = "eslint",
+          typescriptreact = "eslint",
           elixir = {"mix_credo", "mix_credo_compile"},
-          eelixir = {"mix_credo", "mix_credo_compile"}
+          eelixir = {"mix_credo", "mix_credo_compile"},
+        },
+        linters = {
+          mix_credo = {
+            command= "mix",
+            debounce= 100,
+            rootPatterns= {"mix.exs"},
+            args= {
+              "credo",
+              "suggest",
+              "--format",
+              "flycheck",
+              "--read-from-stdin"
+            },
+            offsetLine= 0,
+            offsetColumn= 0,
+            sourceName= "mix_credo",
+            formatLines= 1,
+            formatPattern= {
+              "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)$",
+              {
+              ["line"]= 1,
+              ["column"]= 3,
+              ["message"]= 5,
+              ["security"]= 4
+              }
+            },
+            securities= {
+              ["F"]= "warning",
+              ["C"]= "warning",
+              ["D"]= "info",
+              ["R"]= "info"
+            }
+          },
+          eslint = {
+            sourceName = "eslint",
+            command = "./node_modules/.bin/eslint",
+            rootPatterns = { ".git" },
+            debounce = 100,
+            args = {
+              "--stdin",
+              "--stdin-filename",
+              "%filepath",
+              "--format",
+              "json",
+            },
+            parseJson = {
+              errorsRoot = "[0].messages",
+              line = "line",
+              column = "column",
+              endLine = "endLine",
+              endColumn = "endColumn",
+              message = "${message} [${ruleId}]",
+              security = "severity",
+            };
+            securities = {
+              [2] = "error",
+              [1] = "warning"
+            }
+          }
         }
-      }
-    }
+      },
+    },
   },
   {
     name = "efm",
     disabled = true,
     config = {
-      cmd = {"/Users/replicant/.go/bin/efm-langserver", "-c", vim.fn.stdpath("config") .. "efm-config.yml"},
+      cmd = {vim.loop.os_homedir() .. "/.go/bin/efm-langserver", "-c", vim.fn.stdpath("config") .. "/efm-config.yml" },
+      -- filetypes = {"elixir", "eelixir", "md", "json"},
+      -- root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
     }
   },
   {
@@ -170,11 +241,11 @@ local servers = {
   {
     name = "elixirls",
     config = {
-      settings = {
-        elixirLS = {
-          dialyzerEnabled = true
-        }
-      },
+      -- settings = {
+      --   elixirLS = {
+      --     dialyzerEnabled = true
+      --   }
+      -- },
       filetypes = {"elixir", "eelixir"},
       root_dir = nvim_lsp.util.root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
     }
@@ -341,140 +412,140 @@ end
 -- REF:
 -- https://github.com/mjlbach/nix-dotfiles/blob/master/nixpkgs/configs/neovim/init.vim#L413
 -- nvim_lsp.diagnosticls.setup{
---   filetypes = {"sh", "bash", "zsh", "elixir", "eelixir"},
---   init_options = {
---     linters = {
---       mix_credo= {
---         command= "mix",
---         debounce= 100,
---         rootPatterns= {"mix.exs", ".git"},
---         args= {"credo", "suggest", "--format", "flycheck", "--read-from-stdin"},
---         offsetLine= 0,
---         offsetColumn= 0,
---         sourceName= "mix_credo",
---         formatLines= 1,
---         formatPattern= {
---           "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)(\\r|\\n)*$",
---           {
---             line= 1,
---             column= 3,
---             message= 5,
---             security= 4
---           }
---         },
---         securities= {
---           F= "warning",
---           C= "warning",
---           D= "info",
---           R= "info"
---         },
---       },
---       mix_credo_compile= {
---         command= "mix",
---         debounce= 100,
---         rootPatterns= {"mix.exs", ".git"},
---         args= {"credo", "suggest", "--format", "flycheck", "--read-from-stdin"},
---         offsetLine= -1,
---         offsetColumn= 0,
---         sourceName= "mix_credo",
---         formatLines= 1,
---         formatPattern= {
---           "^([^ ]+)\\s+\\(([^)]+)\\)\\s+([^ ]+?):([0-9]+):\\s+(.*)(\\r|\\n)*$",
---           {
---             line= -1,
---             column= -1,
---             message= {"[", 2, "]: ", 3, ": ", 5},
---             security= 1
---           }
---         },
---         securities= {
---           -- '**': "error"
---           F= "error",
---           C= "error",
---           D= "error",
---           R= "error"
---         },
---       },
---       shellcheck = {
---         command = "shellcheck",
---         debounce = 100,
---         args = { "--format=gcc", "--shell=sh", "-" },
---         offsetLine = 0,
---         offsetColumn = 0,
---         sourceName = "shellcheck",
---         formatLines = 1,
---         formatPattern = {
---           "^[^:]+:(\\d+):(\\d+):\\s+([^:]+):\\s+(.*)$",
---           {
---             line = 1,
---             column = 2,
---             message = 4,
---             security = 3
---           }
---         },
---         securities = {
---           refactor = "info",
---           convention = "info",
---           error = "error",
---           warning = "warning",
---           note = "info"
---         },
---       },
---       pylint = {
---         command = "pylint",
---         args = {
---           "--output-format=text",
---           "--score=no",
---           "--msg-template='{line}:{column}:{category}:{msg} ({msg_id}:{symbol})'",
---           "%file"
---         },
---         offsetLine = 1,
---         offsetColumn = 1,
---         sourceName = "pylint",
---         formatLines = 1,
---         formatPattern = {
---           "^[^:]+:(\\d+):(\\d+):\\s+([^:]+):\\s+(.*)$",
---           {
---             line = 1,
---             column = 2,
---             message = 4,
---             security = 3
---           }
---         },
---         rootPatterns = {
---           ".git", "setup.py"
---         },
---         securities = {
---           informational = "hint",
---           refactor = "info",
---           convention = "info",
---           warning = "warning",
---           error = "error",
---           fatal = "error"
---         }
---       }
---     },
---     filetypes = {
---       sh = "shellcheck",
---       elixir =  {"mix_credo", "mix_credo_compile"},
---       eelixir =  {"mix_credo", "mix_credo_compile"},
---     },
---     formatters = {
---       jq = {
---         command = "jq",
---         args = {"--indent", "4", "."}
---       },
---       shfmt = {
---         command = "shfmt",
---         args = {"-i", "4", "-sr", "-ci"}
---       }
---     },
---     formatFiletypes = {
---       json = "jq",
---       sh = "shfmt"
---     }
---   },
--- on_attach = on_attach,
--- callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
--- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
--- }
+  --   filetypes = {"sh", "bash", "zsh", "elixir", "eelixir"},
+  --   init_options = {
+    --     linters = {
+      --       mix_credo= {
+        --         command= "mix",
+        --         debounce= 100,
+        --         rootPatterns= {"mix.exs", ".git"},
+        --         args= {"credo", "suggest", "--format", "flycheck", "--read-from-stdin"},
+        --         offsetLine= 0,
+        --         offsetColumn= 0,
+        --         sourceName= "mix_credo",
+        --         formatLines= 1,
+        --         formatPattern= {
+        --           "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)(\\r|\\n)*$",
+        --           {
+        --             line= 1,
+        --             column= 3,
+        --             message= 5,
+        --             security= 4
+        --           }
+        --         },
+        --         securities= {
+        --           F= "warning",
+        --           C= "warning",
+        --           D= "info",
+        --           R= "info"
+        --         },
+        --       },
+        --       mix_credo_compile= {
+        --         command= "mix",
+        --         debounce= 100,
+        --         rootPatterns= {"mix.exs", ".git"},
+        --         args= {"credo", "suggest", "--format", "flycheck", "--read-from-stdin"},
+        --         offsetLine= -1,
+        --         offsetColumn= 0,
+        --         sourceName= "mix_credo",
+        --         formatLines= 1,
+        --         formatPattern= {
+        --           "^([^ ]+)\\s+\\(([^)]+)\\)\\s+([^ ]+?):([0-9]+):\\s+(.*)(\\r|\\n)*$",
+        --           {
+        --             line= -1,
+        --             column= -1,
+        --             message= {"[", 2, "]: ", 3, ": ", 5},
+        --             security= 1
+        --           }
+        --         },
+        --         securities= {
+        --           -- '**': "error"
+        --           F= "error",
+        --           C= "error",
+        --           D= "error",
+        --           R= "error"
+        --         },
+        --       },
+        --       shellcheck = {
+        --         command = "shellcheck",
+        --         debounce = 100,
+        --         args = { "--format=gcc", "--shell=sh", "-" },
+        --         offsetLine = 0,
+        --         offsetColumn = 0,
+        --         sourceName = "shellcheck",
+        --         formatLines = 1,
+        --         formatPattern = {
+        --           "^[^:]+:(\\d+):(\\d+):\\s+([^:]+):\\s+(.*)$",
+        --           {
+        --             line = 1,
+        --             column = 2,
+        --             message = 4,
+        --             security = 3
+        --           }
+        --         },
+        --         securities = {
+        --           refactor = "info",
+        --           convention = "info",
+        --           error = "error",
+        --           warning = "warning",
+        --           note = "info"
+        --         },
+        --       },
+        --       pylint = {
+        --         command = "pylint",
+        --         args = {
+        --           "--output-format=text",
+        --           "--score=no",
+        --           "--msg-template='{line}:{column}:{category}:{msg} ({msg_id}:{symbol})'",
+        --           "%file"
+        --         },
+        --         offsetLine = 1,
+        --         offsetColumn = 1,
+        --         sourceName = "pylint",
+        --         formatLines = 1,
+        --         formatPattern = {
+        --           "^[^:]+:(\\d+):(\\d+):\\s+([^:]+):\\s+(.*)$",
+        --           {
+        --             line = 1,
+        --             column = 2,
+        --             message = 4,
+        --             security = 3
+        --           }
+        --         },
+        --         rootPatterns = {
+        --           ".git", "setup.py"
+        --         },
+        --         securities = {
+        --           informational = "hint",
+        --           refactor = "info",
+        --           convention = "info",
+        --           warning = "warning",
+        --           error = "error",
+        --           fatal = "error"
+        --         }
+        --       }
+        --     },
+        --     filetypes = {
+        --       sh = "shellcheck",
+        --       elixir =  {"mix_credo", "mix_credo_compile"},
+        --       eelixir =  {"mix_credo", "mix_credo_compile"},
+        --     },
+        --     formatters = {
+        --       jq = {
+        --         command = "jq",
+        --         args = {"--indent", "4", "."}
+        --       },
+        --       shfmt = {
+        --         command = "shfmt",
+        --         args = {"-i", "4", "-sr", "-ci"}
+        --       }
+        --     },
+        --     formatFiletypes = {
+        --       json = "jq",
+        --       sh = "shfmt"
+        --     }
+        --   },
+        -- on_attach = on_attach,
+        -- callbacks = vim.tbl_deep_extend('keep', {}, require('callbacks'), vim.lsp.callbacks),
+        -- capabilities = vim.tbl_deep_extend('keep', {}, { textDocument = {completion = {completionItem = {snippetSupport = false}}} })
+        -- }

@@ -22,3 +22,7 @@ languages:
   elixir:
     lint-command: 'mix credo suggest --read-from-stdin'
     lint-stdin: true
+
+  eelixir:
+    lint-command: 'mix credo suggest --read-from-stdin'
+    lint-stdin: true

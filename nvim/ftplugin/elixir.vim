@@ -33,7 +33,7 @@ augroup ft_elixir
   " https://github.com/janko/vim-test/issues/136
   " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
-    echom "a:cmd -> " . a:cmd
+    " echom "a:cmd -> " . a:cmd
 
     " if a:cmd =~ ':\d+'
     "   echo "is_nearest mode"
@@ -61,7 +61,7 @@ augroup ft_elixir
       " else
         " return a:cmd
         let s:cmd = substitute(a:cmd, 'mix test', 'mix test --color', '')
-        echom "s:cmd -> " . s:cmd
+        " echom "s:cmd -> " . s:cmd
 
         return s:cmd
       " end
