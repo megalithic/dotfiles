@@ -6,7 +6,6 @@ augroup general
   " if more than 1 files are passed to vim as arg, open them in vertical splits
   if argc() > 1
     silent vertical all
-    " silent :ArgForVerticalEdit
   endif
 
   autocmd StdinReadPost * set buftype=nofile
@@ -27,6 +26,7 @@ augroup general
   " https://unix.stackexchange.com/questions/149209/refresh-changed-content-of-file-opened-in-vim/383044#383044
   " https://vi.stackexchange.com/questions/13692/prevent-focusgained-autocmd-running-in-command-line-editing-mode
   autocmd FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif
+
   " Notification after file change
   " https://vi.stackexchange.com/questions/13091/autocmd-event-for-autoread
   autocmd FileChangedShellPost *
@@ -34,7 +34,7 @@ augroup general
 
   " Handle window resizing
   " TODO: do we still want this, what with dm1try/golden_size being used?
-  " autocmd VimResized * execute "normal! \<c-w>="
+  autocmd VimResized * execute "normal! \<c-w>=" | lua require'golden_size'.on_win_enter()
 
   " Help in vertical split (https://stackoverflow.com/a/21843502/213904)
   autocmd FileType help wincmd L
@@ -53,12 +53,6 @@ augroup general
 
   " Remember cursor position between vim sessions
   " - FIXME: doesn't really work with neovim, it seems
-  " autocmd BufReadPost * if expand('%:p') !~# '\m/\.git/' && line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
-  " Return to last edit position (You want this!) *N*
-  " autocmd BufReadPost *
-  "       \ if line("'\"") > 0 && line("'\"") <= line("$") |
-  "       \   exe "normal! g`\"" |
-  "       \ endif
   autocmd BufReadPost *
     \ if &filetype !~ 'commit\c' && line("'\"") > 0 && line("'\"") <= line("$") |
     \   exe "normal g'\"" |
@@ -90,29 +84,11 @@ augroup general
   " ----------------------------------------------------------------------------
   " ## Toggle certain accoutrements when entering and leaving a buffer & window
 
-  " toggle syntax / dim / inactive (comment out when tadaa/vimade supports TUI)
-  " autocmd WinEnter,BufEnter * silent set number relativenumber " call RainbowParentheses
-  " autocmd WinLeave,BufLeave * silent set nonumber norelativenumber " call RainbowParentheses!
-
   " toggle linenumbering and cursorline
-  function s:enter_events_handler()
-    let conf = nvim_win_get_config(0)
-    if conf.relative == ''
-      silent setlocal number relativenumber signcolumn=yes:2
-    endif
-  endfunction
-
-  function s:leave_events_handler()
-    let conf = nvim_win_get_config(0)
-    if conf.relative == ''
-      silent setlocal nonumber norelativenumber signcolumn=no
-    endif
-  endfunction
-
-  " autocmd BufLeave,BufWinLeave,VimLeave,WinLeave * call s:leave_events_handler()
-  " autocmd BufEnter,BufWinEnter,VimEnter,WinEnter * call s:enter_events_handler()
-  autocmd BufEnter * silent setlocal number relativenumber signcolumn=yes:2
-  autocmd BufLeave * silent setlocal nonumber norelativenumber signcolumn=no
+" signcolumn=yes:2
+" signcolumn=no
+  autocmd BufEnter,FocusGained,WinEnter * silent setlocal number relativenumber colorcolumn=81
+  autocmd BufLeave,FocusLost,WinLeave * silent setlocal  norelativenumber colorcolumn=0
 
   " toggle colorcolumn when in insertmode only
   " autocmd InsertEnter * silent set colorcolumn=80
@@ -126,17 +102,11 @@ augroup general
   " Preview window with line wrap
   autocmd WinEnter * if &previewwindow | setlocal wrap | endif
 
+  autocmd BufWritePost */spell/*.add silent! :mkspell! %
+
   " reload vim configuration (aka vimrc)
   command! ReloadVimConfigs so $MYVIMRC
     \| echo 'configs reloaded!'
-augroup END
-
-augroup lua_autocmds
-  au!
-
-  " -- presently using blamer.nvim instead of:
-  " nnoremap <buffer> <Leader>gb :lua require'git'.blameVirtText()<CR>
-  " lua vim.api.nvim_command [[au CursorMoved * lua require'git'.clearBlameVirtText()]]
 augroup END
 
 " augroup modechange_settings
@@ -151,9 +121,7 @@ augroup END
 
 augroup highlight_yank
   autocmd!
-  " autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank({ timeout = 100, higroup="Search" on_macro = true })
-
-  autocmd TextYankPost * lua vim.highlight.on_yank { higroup = "Search", timeout = 150, on_macro = true }
+  autocmd TextYankPost * silent! lua return (not vim.v.event.visual) and require'vim.highlight'.on_yank { higroup = "IncSearch", timeout = 150, on_macro = true }
 augroup END
 
 augroup mirrors
@@ -164,22 +132,22 @@ augroup mirrors
   autocmd BufWritePost ~/.dotfiles/private/domains/fathom/* silent! :MirrorPush fathom
 augroup END
 
-function s:fzf_buf_in() abort
-  echo
-  set laststatus=0
-  set noruler
-  set nonumber
-  set norelativenumber
-  set signcolumn=no
-endfunction
-
-function s:fzf_buf_out() abort
-  set laststatus=2
-  set ruler
-endfunction
 
 augroup fzf
   autocmd!
+  function s:fzf_buf_in() abort
+    echo
+    set laststatus=0
+    set noruler
+    set nonumber
+    set norelativenumber
+    set signcolumn=no
+  endfunction
+
+  function s:fzf_buf_out() abort
+    set laststatus=2
+    set ruler
+  endfunction
   autocmd FileType fzf call s:fzf_buf_in()
   autocmd BufEnter \v[0-9]+;#FZF$ call s:fzf_buf_in()
   autocmd BufLeave \v[0-9]+;#FZF$ call s:fzf_buf_out()
@@ -188,7 +156,6 @@ augroup END
 
 augroup gitcommit
   autocmd!
-
   function! BufReadIndex()
     " Use j/k in status
     setlocal nohlsearch
@@ -237,7 +204,6 @@ augroup END
 
 augroup ft_clang
   autocmd!
-
   autocmd FileType c setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
   autocmd FileType cpp setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
   autocmd FileType cs setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
@@ -247,7 +213,6 @@ augroup END
 
 augroup writing
   autocmd!
-
   au BufReadPost,BufNewFile *.md,*.txt set wrap linebreak nolist spell spelllang=en_us complete+=kspell
   au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
 augroup END

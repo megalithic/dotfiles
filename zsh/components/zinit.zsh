@@ -56,10 +56,6 @@ zinit light-mode for \
 # zinit ice mv=":zsh -> _cht" as="completion"
 # zinit snippet https://cheat.sh/:zsh
 
-# https://github.com/chriswalz/bit?utm_source=hackernewsletter&utm_medium=email&utm_term=show_hn#using-zinit
-zinit ice lucit wait"0" as"program" from"gh-r" pick"bit"
-zinit light "chriswalz/bit"
-
 zinit ice as="completion" for \
     OMZP::docker/_docker \
     OMZP::fd/_fd \

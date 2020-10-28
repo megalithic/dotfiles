@@ -4,7 +4,26 @@
 -- │                                                                           │
 -- └───────────────────────────────────────────────────────────────────────────┘
 
--- [ formatter.nvim ]-----------------------------------------------------------
+-- [ load lsp_config ] ---------------------------------------------------------
+local lsp_config_loaded, lsp_config = pcall(function() require('lsp_config') end) -- ok, _return_value
+if not lsp_config_loaded then
+  print('[ERROR] -> ' .. lsp_config)
+end
+
+
+-- [ nvim-treesitter ] ---------------------------------------------------------
+--   See https://github.com/nvim-treesitter/nvim-treesitter
+
+require'nvim-treesitter.configs'.setup({
+  ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+  highlight = {
+    enable = true,              -- false will disable the whole extension
+    disable = { 'c', 'rust', 'lua', 'typescript.tsx', 'typescript', 'tsx' },  -- list of language that will be disabled
+  },
+})
+
+
+-- [ formatter.nvim ] ----------------------------------------------------------
 --   See https://github.com/mhartington/formatter.nvim
 
 require("format").setup(
@@ -49,30 +68,41 @@ require("format").setup(
 )
 vim.fn.nvim_buf_set_keymap(0, 'n', '<leader>F', ':Format<CR>', {noremap=true, silent=true})
 
--- [ nvim-colorizer.lua ]-------------------------------------------------------
+
+-- [ nvim-colorizer.lua ] ------------------------------------------------------
 --   See https://github.com/norcalli/nvim-colorizer.lua
 
-require "colorizer".setup {
-  css = {rgb_fn = true},
-  scss = {rgb_fn = true},
-  sass = {rgb_fn = true},
-  stylus = {rgb_fn = true},
-  vim = {names = false},
-  tmux = {names = false},
-  "eelixir",
-  "javascript",
-  "javascriptreact",
-  "typescript",
-  "typescriptreact",
-  "zsh",
-  "sh",
-  "conf",
-  html = {
-    mode = "foreground"
-  }
-}
+local has_colorizer, colorizer = pcall(require, "colorizer")
+if not has_colorizer then
+  return
+end
 
--- [ golden_size ]--------------------------------------------------------------
+-- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
+colorizer.setup ({
+    -- '*',
+    -- '!vim',
+  -- }, {
+    css = {rgb_fn = true},
+    scss = {rgb_fn = true},
+    sass = {rgb_fn = true},
+    stylus = {rgb_fn = true},
+    vim = {names = false},
+    tmux = {names = false},
+    "eelixir",
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "zsh",
+    "sh",
+    "conf",
+    html = {
+      mode = "foreground"
+    }
+  })
+
+
+-- [ golden_size ] -------------------------------------------------------------
 --   See https://github.com/dm1try/golden_size#tips-and-tricks
 
 local function ignore_by_buftype(types)

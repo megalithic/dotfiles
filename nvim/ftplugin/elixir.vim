@@ -1,7 +1,5 @@
 " Usages of Nuake and other elixir things
 " REF: https://github.com/alexcastano/dotfiles/blob/master/vim/.vim/vimrc#L402-L418
-
-
 augroup ft_elixir
   au!
 
@@ -57,13 +55,13 @@ augroup ft_elixir
       end
     else
       " if g:elixir_test_nearest == 1
-        " return a:cmd .. ":" .. line(".")
+      " return a:cmd .. ":" .. line(".")
       " else
-        " return a:cmd
-        let s:cmd = substitute(a:cmd, 'mix test', 'mix test --color', '')
-        " echom "s:cmd -> " . s:cmd
+      " return a:cmd
+      let s:cmd = substitute(a:cmd, 'mix test', 'mix test --color', '')
+      " echom "s:cmd -> " . s:cmd
 
-        return s:cmd
+      return s:cmd
       " end
     end
   endfunction

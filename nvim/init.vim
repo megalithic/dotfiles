@@ -9,6 +9,7 @@
 " ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 " ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
+
 if !1 | finish | endif     " FIXME: danger, will robinson!
 
 scriptencoding utf-16      " allow emojis in vimrc
@@ -68,8 +69,6 @@ endif
 set colorcolumn=81 " Highlight 81 and 82 columns
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
-" set completeopt=menu,menuone,noinsert,noselect
-set completeopt=menu,menuone,preview,noselect,noinsert
 set dictionary=/usr/share/dict/words
 set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
 set spelllang=en
@@ -114,7 +113,6 @@ set path=**
 set ruler
 set scrolloff=5       " Start scrolling when we're 5 lines away from margins
 set shiftwidth=2
-set shortmess+=c      " Don't show insert mode completion messages
 set sidescrolloff=15
 set sidescroll=5
 set showbreak=↳       " Use this to wrap long lines
@@ -229,7 +227,6 @@ Plug 'dstein64/vim-startuptime'
 
 " --[ styling/ui ]--------------------------------------------------------------
 Plug 'trevordmiller/nova-vim' " nova-colors.vim
-Plug 'gruvbox-community/gruvbox'
 Plug 'pbrisbin/vim-colors-off' " for goyo
 Plug 'Yggdroot/indentLine' " indentLine.vim
 Plug 'dm1try/golden_size'
@@ -253,6 +250,7 @@ Plug 'tpope/vim-abolish'
 Plug 'tpope/vim-rhubarb'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-surround'
+" Plug 'machakann/vim-sandwich'
 Plug 'tpope/vim-commentary'
 Plug '907th/vim-auto-save' "auto-save.vim
 Plug 'rhysd/clever-f.vim' "clever-f.vim
@@ -319,11 +317,14 @@ if has("nvim-0.5.0")
   " Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
   Plug 'nvim-lua/diagnostic-nvim'
   Plug 'nvim-lua/completion-nvim'
-  " Plug 'nvim-lua/lsp-status.nvim'
+  Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
   Plug 'steelsojka/completion-buffers'
   Plug 'mhartington/formatter.nvim'
+  Plug 'lukas-reineke/format.nvim'
+  Plug 'nvim-treesitter/nvim-treesitter'
+  Plug 'nvim-treesitter/completion-treesitter'
 endif
 
 
@@ -340,10 +341,8 @@ Plug 'rhysd/git-messenger.vim'
 
 
 " --[ Devlopment ]--------------------------------------------------------------
-Plug 'tpope/vim-rails' " rails.vim
 Plug 'tpope/vim-projectionist' " projectionist.vim
 Plug 'dense-analysis/ale' " ale.vim
-Plug 'andrejlevkovitch/vim-lua-format', { 'for': ['lua'] }
 Plug 'janko/vim-test' " test.vim
 Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'axvr/zepl.vim'
@@ -367,6 +366,8 @@ Plug 'junegunn/limelight.vim'
 
 " --[ Lang/Syntax ]-------------------------------------------------------------
 " Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
+
+Plug 'tpope/vim-rails' " rails.vim
 Plug 'gleam-lang/gleam.vim'
 Plug 'vim-erlang/vim-erlang-runtime', { 'for': ['erlang'] }
 Plug 'Zaptic/elm-vim', {'for': ['elm']}
@@ -384,10 +385,12 @@ Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
 Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
+Plug 'andrejlevkovitch/vim-lua-format', { 'for': ['lua'] }
 Plug 'yyq123/vim-syntax-logfile'
 
 Plug 'jparise/vim-graphql'
 
+" https://github.com/sheerun/vim-polyglot#troubleshooting
 let g:polyglot_disabled = [
       \ 'typescript',
       \ 'typescriptreact',
@@ -441,20 +444,13 @@ command! CopyFileName let @+=expand('%:t')
 " --[ colorscheme ]-------------------------------------------------------------
 set background=dark
 
-" let g:gruvbox_italic=1
-" let g:gruvbox_improved_strings=1
-" let g:gruvbox_improved_warnings=1
-" let g:gruvbox_guisp_fallback='fg'
-" let g:gruvbox_contrast_light='hard'
-" let g:gruvbox_contrast_dark='medium'
-" silent! colorscheme gruvbox
-
 let g:nova_transparent = 1
 silent! colorscheme nova
 
 
 
 " --[ lua ]---------------------------------------------------------------------
-lua require('init')
+" echo 'loading init.vim'
+" lua require('init')
 
 " vim:ft=vim

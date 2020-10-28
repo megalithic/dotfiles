@@ -24,7 +24,6 @@ if has('nvim')
   " nnoremap <silent><leader>m  <cmd>lua require'telescope.builtin'.find_files{}<CR>
   nnoremap <leader>a          :Rg<Space>
   nnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
-  vnoremap <silent><leader>A  <ESC>:exe('Rg '.expand('<cword>'))<CR>
 
   " nnoremap <leader>a          <cmd>lua require'telescope.builtin'.grep_string{}
   " nnoremap <silent><leader>A  <cmd>lua require'telescope.builtin'.live_grep{}
@@ -66,6 +65,27 @@ if has('nvim')
   let green_color = GetColorFromHighlight('Title', 'fg')
   let grey_color = GetColorFromHighlight('PMenu', 'fg')
   let orange_color = GetColorFromHighlight('Identifier', 'fg')
+
+  " nnoremap <silent> <leader>R :call <SID>RgCurrentWord()<CR>
+  " function! s:RgCurrentWord()
+  "   let @/ = ''
+  "   let wordUnderCursor = expand("<cword>")
+  "   execute 'Rg '. wordUnderCursor
+  " endfunction
+
+  vnoremap <silent> <leader>A :call <SID>RgCurrentSelected()<CR>
+  function! s:RgCurrentSelected()
+    let [line_start, column_start] = getpos("'<")[1:2]
+    let [line_end, column_end] = getpos("'>")[1:2]
+    let lines = getline(line_start, line_end)
+    if len(lines) == 0
+      return ''
+    endif
+    let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+    let lines[0] = lines[0][column_start - 1:]
+    let currentSelected = join(lines, "\n")
+    execute 'Rg '. currentSelected
+  endfunction
 
   " let g:fzf_layout = { 'window': 'lua require("window").floating_window(false, 0.6, 0.6)' }
   " let $FZF_DEFAULT_OPTS='--no-inline-info --layout=reverse --margin=1,2 --color=dark '.

@@ -19,18 +19,8 @@ local has_completion, completion = pcall(require, "completion")
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
-  -- TODO/REF: https://github.com/delianides/dotfiles/blob/1b3ee23e9e254b8a654e85c743ff761b1dfc9d5e/tag-vim/vim/lua/lsp.lua#L39
-  -- local resolved_capabilities = client.resolved_capabilities
-  -- if resolved_capabilities.document_highlight then
-  --   vim.api.nvim_command[[autocmd CursorHold  <buffer> lua vim.lsp.buf.document_highlight()]]
-  --   vim.api.nvim_command[[autocmd CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()]]
-  --   vim.api.nvim_command[[autocmd CursorMoved <buffer> lua vim.lsp.util.buf_clear_references()]]
-  -- end
-
   local server_capabilities = client.server_capabilities
-  local resolved_capabilities = client.server_capabilities
   -- print(vim.inspect(client.name))
-  -- print(vim.inspect(vim.tbl_keys(resolved_capabilities)))
   -- print(vim.inspect(vim.tbl_keys(server_capabilities)))
 
   if has_diagnostic then

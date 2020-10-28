@@ -231,6 +231,51 @@ function! s:nova_engage() abort
   exe 'hi StatuslineLineInfo gui=NONE guifg=' . g:black . ' guibg=' . g:normal_color
   exe 'hi StatuslineFiletype gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
   exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
+
+  " hi! link TermCursor Cursor
+  " hi! link healthError Red
+  " hi! link healthSuccess Green
+  " hi! link healthWarning Yellow
+  " hi! link LspDiagnosticsError Grey
+  " hi! link LspDiagnosticsWarning Grey
+  " hi! link LspDiagnosticsInformation Grey
+  " hi! link LspDiagnosticsHint Grey
+  " hi! link LspReferenceText CurrentWord
+  " hi! link LspReferenceRead CurrentWord
+  " hi! link LspReferenceWrite CurrentWord
+
+  " nvim-treesitter/nvim-treesitter
+  hi! link TSPunctDelimiter Grey
+  hi! link TSPunctBracket Fg
+  hi! link TSPunctSpecial Fg
+  hi! link TSConstant PurpleItalic
+  hi! link TSConstBuiltin PurpleItalic
+  hi! link TSConstMacro Purple
+  hi! link TSString Yellow
+  hi! link TSStringRegex Green
+  hi! link TSStringEscape Green
+  hi! link TSCharacter Yellow
+  hi! link TSNumber Purple
+  hi! link TSBoolean Purple
+  hi! link TSFloat Purple
+  hi! link TSFunction Green
+  hi! link TSFuncBuiltin Green
+  hi! link TSFuncMacro Green
+  hi! link TSParameter Fg
+  hi! link TSMethod Green
+  hi! link TSField Green
+  hi! link TSProperty Green
+  hi! link TSConstructor Fg
+  hi! link TSConditional Red
+  hi! link TSRepeat Red
+  hi! link TSLabel Orange
+  hi! link TSOperator Orange
+  hi! link TSKeyword Red
+  hi! link TSException Red
+  hi! link TSType Aqua
+  hi! link TSTypeBuiltin BlueItalic
+  hi! link TSStructure Orange
+  hi! link TSInclude PurpleItalic
 endfunction
 
 augroup nova_colors
