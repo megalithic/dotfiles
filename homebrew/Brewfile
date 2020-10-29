@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env zsh
 
 cask_args appdir: "/Applications"
 
@@ -165,7 +165,7 @@ brew "the_silver_searcher"
 brew "tidy-html5"
 brew "tldr"
 brew "tmate"
-brew "tmux", args: ["--with-utf8proc"]
+brew "tmux", args: ["--HEAD", "--with-utf8proc"]
 brew "tree"
 brew "unixodbc"
 brew "urlview"

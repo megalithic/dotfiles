@@ -28,6 +28,9 @@ filetype plugin indent on  " try to recognize filetypes and load related plugins
 " │ ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim   - custom plugin config │
 " └────────────────────────────────────────────────────────────────────────────┘
 
+" debugging
+" REF: https://codeinthehole.com/tips/debugging-vim-by-example/
+
 
 " Enable syntax highlighting.
 syntax on
@@ -342,7 +345,9 @@ Plug 'rhysd/git-messenger.vim'
 
 " --[ Devlopment ]--------------------------------------------------------------
 Plug 'tpope/vim-projectionist' " projectionist.vim
-Plug 'dense-analysis/ale' " ale.vim
+" Plug 'dense-analysis/ale' " ale.vim
+" Plug 'ndhoule/diagnostic-nvim', {'branch': 'feat/ale-lint-source-support'}
+  " call minpac#add('ndhoule/diagnostic-nvim', {'rev': 'feat/ale-lint-source-support'})
 Plug 'janko/vim-test' " test.vim
 Plug 'tpope/vim-ragtag' " ragtag.vim
 Plug 'axvr/zepl.vim'

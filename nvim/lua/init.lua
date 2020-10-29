@@ -5,69 +5,94 @@
 -- └───────────────────────────────────────────────────────────────────────────┘
 
 -- [ load lsp_config ] ---------------------------------------------------------
-local lsp_config_loaded, lsp_config = pcall(function() require('lsp_config') end) -- ok, _return_value
+local lsp_config_loaded, lsp_config =
+  pcall(
+  function()
+    require("lsp_config")
+  end
+) -- ok, _return_value
 if not lsp_config_loaded then
-  print('[ERROR] -> ' .. lsp_config)
+  print("[ERROR] -> " .. lsp_config)
 end
-
 
 -- [ nvim-treesitter ] ---------------------------------------------------------
 --   See https://github.com/nvim-treesitter/nvim-treesitter
 
-require'nvim-treesitter.configs'.setup({
-  ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  highlight = {
-    enable = true,              -- false will disable the whole extension
-    disable = { 'c', 'rust', 'lua', 'typescript.tsx', 'typescript', 'tsx' },  -- list of language that will be disabled
-  },
-})
-
+-- require "nvim-treesitter.configs".setup(
+--   {
+--     ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+--     highlight = {
+--       enable = true, -- false will disable the whole extension
+--       disable = {"c", "rust", "lua", "typescript.tsx", "typescript", "tsx"} -- list of language that will be disabled
+--     }
+--   }
+-- )
 
 -- [ formatter.nvim ] ----------------------------------------------------------
 --   See https://github.com/mhartington/formatter.nvim
 
 require("format").setup(
   {
-    typescript = {
-      prettier = function()
-        return {
-          exe = "prettier",
-          args = {"--stdin-filepath", vim.api.nvim_buf_get_name(0), "--single-quote"},
-          stdin = true
-        }
-      end
+    vim = {
+      {
+        cmd = {"luafmt -w replace"},
+        start_pattern = "^lua << EOF$",
+        end_pattern = "^EOF$"
+      }
     },
     javascript = {
-      prettier = function()
-        return {
-          exe = "prettier",
-          args = {"--stdin-filepath", vim.api.nvim_buf_get_name(0), "--single-quote"},
-          stdin = true
-        }
-      end
+      {
+        cmd = {"prettier -w", "./node_modules/.bin/eslint --fix"}
+      }
     },
-    lua = {
-      luafmt = function()
-        return {
-          exe = "luafmt",
-          args = {"--indent-count", 2, "--stdin"},
-          stdin = true
-        }
-      end
+    python = {
+      {
+        cmd = {"black"}
+      }
+    },
+    typescript = {
+      {
+        cmd = {"prettier -w", "./node_modules/.bin/eslint --fix"}
+      }
     },
     elixir = {
-      mix_format = function()
-        return {
-          exe = "mix format",
-          args = {"-", vim.api.nvim_buf_get_name(0)},
-          stdin = true
-        }
-      end
+      {
+        cmd = {"mix format -"}
+      }
+    },
+    markdown = {
+      {
+        cmd = {"black"},
+        start_pattern = "^```python$",
+        end_pattern = "^```$",
+        target = "current"
+      },
+      {
+        cmd = {"qmlformat -i"},
+        start_pattern = "^```qml$",
+        end_pattern = "^```$",
+        target = "current"
+      },
+      {
+        cmd = {"clang-format -i"},
+        start_pattern = "^```cpp$",
+        end_pattern = "^```$",
+        target = "current"
+      }
+    },
+    cpp = {
+      {
+        cmd = {"clang-format -i"}
+      }
+    },
+    qml = {
+      {
+        cmd = {"qmlformat -i"}
+      }
     }
   }
 )
-vim.fn.nvim_buf_set_keymap(0, 'n', '<leader>F', ':Format<CR>', {noremap=true, silent=true})
-
+vim.fn.nvim_buf_set_keymap(0, "n", "<leader>F", "<cmd>Format<CR>", {noremap = true, silent = true})
 
 -- [ nvim-colorizer.lua ] ------------------------------------------------------
 --   See https://github.com/norcalli/nvim-colorizer.lua
@@ -78,10 +103,11 @@ if not has_colorizer then
 end
 
 -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
-colorizer.setup ({
+colorizer.setup(
+  {
     -- '*',
     -- '!vim',
-  -- }, {
+    -- }, {
     css = {rgb_fn = true},
     scss = {rgb_fn = true},
     sass = {rgb_fn = true},
@@ -99,8 +125,8 @@ colorizer.setup ({
     html = {
       mode = "foreground"
     }
-  })
-
+  }
+)
 
 -- [ golden_size ] -------------------------------------------------------------
 --   See https://github.com/dm1try/golden_size#tips-and-tricks

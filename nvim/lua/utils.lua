@@ -23,6 +23,24 @@ function M.augroup(group, fn)
   vim.api.nvim_command("augroup END")
 end
 
+function M.get_icon(icon_name)
+  local ICONS = {
+    paste = '⍴',
+    spell = '✎',
+    -- branch = os.getenv('PURE_GIT_BRANCH') ~= '' and vim.fn.trim(os.getenv('PURE_GIT_BRANCH')) or ' ',
+    branch = ' ',
+    error = '×',
+    info = '●',
+    warn = '!',
+    hint = '›',
+    lock = '',
+    success =' ',
+    -- success = ' '
+  }
+
+  return ICONS[icon_name] or ''
+end
+
 function M.get_color(synID, what, mode)
   return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(synID)), what, mode)
 end
@@ -41,6 +59,8 @@ function M.inspect(k, v, l)
   else
     print(level .. " " .. k .. "..")
   end
+
+  return v
 end
 
 function M.pclients()
@@ -65,6 +85,14 @@ end
 P = function(v)
   print(vim.inspect(v))
   return v
+end
+
+PC = function()
+  P(M.pclients())
+end
+
+PBC = function()
+  P(M.pbclients())
 end
 
 return M

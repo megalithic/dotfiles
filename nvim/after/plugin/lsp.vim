@@ -67,65 +67,64 @@ let g:completion_max_items = 20
 let g:completion_sorting = "none" " none, length, alphabet
 let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
 
-" let g:completion_customize_lsp_label = {
-"       \ 'Constant': "\uf8ff",
-"       \ 'Struct': "\ufb44",
-"       \ 'EnumMember': "\uf02b",
-"       \ 'Color': "\ue22b",
-"       \ 'Property': "\ufab6",
-"       \ 'Unit': "\uf475",
-"       \ 'File': "\uf471",
-"       \ 'Value': "\uf8a3",
-"       \ 'Event': "\ufacd",
-"       \ 'TypeParameter': "\uf278",
-"       \ 'Default': "\uf29c",
-"       \ 'Buffers': "\ufb18",
-"       \ 'Function': "\uf794",
-"       \ 'Method': ' ',
-"       \ 'Reference': ' ',
-"       \ 'Enum': ' ',
-"       \ 'Field': 'ﰠ ',
-"       \ 'Keyword': ' ',
-"       \ 'Variable': ' ',
-"       \ 'Folder': ' ',
-"       \ 'Snippet': ' ',
-"       \ 'vim-vsnip': ' ',
-"       \ 'Operator': ' ',
-"       \ 'Module': ' ',
-"       \ 'Text': 'ﮜ',
-"       \ 'Class': ' ',
-"       \ 'Interface': ' '
-"       \}
+let g:completion_customize_lsp_label = {
+      \ 'Constant': "\uf8ff",
+      \ 'Struct': "\ufb44",
+      \ 'EnumMember': "\uf02b",
+      \ 'Color': "\ue22b",
+      \ 'Property': "\ufab6",
+      \ 'Unit': "\uf475",
+      \ 'File': "\uf471",
+      \ 'Value': "\uf8a3",
+      \ 'Event': "\ufacd",
+      \ 'TypeParameter': "\uf278",
+      \ 'Default': "\uf29c",
+      \ 'Buffers': "\ufb18 [B]",
+      \ 'Function': "\uf794",
+      \ 'Method': ' ',
+      \ 'Reference': ' ',
+      \ 'Enum': ' ',
+      \ 'Field': 'ﰠ ',
+      \ 'Keyword': ' ',
+      \ 'Variable': ' ',
+      \ 'Folder': ' ',
+      \ 'Snippet': '  [S]',
+      \ 'vim-vsnip': '  [VS]',
+      \ 'Operator': ' ',
+      \ 'Module': ' ',
+      \ 'Text': 'ﮜ',
+      \ 'Class': ' ',
+      \ 'Interface': ' '
+      \}
 
 let g:completion_chain_complete_list = {
-                  \ 'default' : {
-                  \    'default': [
-                  \        {'complete_items': ['lsp', 'snippet', 'buffers']},
-                  \        {'complete_items': ['buffers']},
-                  \        {'complete_items': ['ts']},
-                  \        {'mode': 'keyn'},
-                  \        {'mode': '<c-p>'},
-                  \        {'mode': '<c-n>'},
-                  \        {'mode': 'dict'},
-                  \        {'mode': 'spel'},
-                  \    ],
-                  \    'string' : [
-                  \        {'complete_items': ['path'], 'triggered_only': ['/']},
-                  \        {'complete_items': ['buffers']}
-                  \    ],
-                  \  },
-                  \}
+      \ 'default' : {
+      \    'default': [
+      \        {'complete_items': ['lsp', 'snippet', 'buffers']},
+      \        {'complete_items': ['buffers']},
+      \        {'mode': 'keyn'},
+      \        {'mode': '<c-p>'},
+      \        {'mode': '<c-n>'},
+      \        {'mode': 'dict'},
+      \        {'mode': 'spel'},
+      \    ],
+      \    'string' : [
+      \        {'complete_items': ['path'], 'triggered_only': ['/']},
+      \        {'complete_items': ['buffers']}
+      \    ],
+      \  },
+      \}
 
 " -- [ diagnostics ] -----------------------------------------------------------
 
 let g:diagnostic_auto_popup_while_jump = 1
-let g:diagnostic_enable_virtual_text = 1
+let g:diagnostic_enable_virtual_text = 0
 let g:diagnostic_enable_underline = 0
 let g:diagnostic_virtual_text_prefix = "\uf63d" "
 let g:diagnostic_trimmed_virtual_text = '300'
 let g:diagnostic_show_sign = 1
 let g:diagnostic_insert_delay = 1
-let g:space_before_virtual_text = 2
+" let g:diagnostic_enable_ale = 1
 
 " FIXME:
 " https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61

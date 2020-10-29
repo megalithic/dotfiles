@@ -4,7 +4,7 @@
 -- require('vim.lsp.log').set_level("trace")
 -- require('vim.lsp.log').set_level("debug")
 
-local utils = require('lsp_utils')
+local utils = require('utils')
 utils.inspect("loading lsp_config.lua")
 
 -- To execute in :cmd ->
@@ -37,14 +37,14 @@ local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
   if has_diagnostic then
-    diagnostic.on_attach(client)
+    diagnostic.on_attach(client, bufnr)
   end
 
   if has_completion then
-    completion.on_attach(client)
+    completion.on_attach(client, bufnr)
   end
 
-  status.on_attach(client)
+  status.on_attach(client, bufnr)
 
 
   -- [ mappings ] --------------------------------------------------------------

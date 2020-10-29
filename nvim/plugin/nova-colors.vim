@@ -232,6 +232,12 @@ function! s:nova_engage() abort
   exe 'hi StatuslineFiletype gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
   exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
 
+  hi! User5 ctermfg=red guifg=red
+  hi! User7 ctermfg=cyan guifg=cyan
+  execute(printf('hi! User4 gui=NONE cterm=NONE guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('NonText', 'fg', 'gui'), utils#get_color('NonText','fg', 'cterm')))
+  execute(printf('hi! StatusLine gui=NONE cterm=NONE guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('Identifier', 'fg', 'gui'), utils#get_color('Identifier', 'fg', 'cterm')))
+  execute(printf('hi! StatusLineNC gui=italic cterm=italic guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('NonText', 'fg', 'gui'), utils#get_color('NonText', 'fg', 'cterm')))
+
   " hi! link TermCursor Cursor
   " hi! link healthError Red
   " hi! link healthSuccess Green

@@ -194,9 +194,6 @@ inoremap <buffer> : :<C-g>u
 inoremap <buffer> ; ;<C-g>u
 inoremap <buffer> ? ?<C-g>u
 
-nnoremap <leader>ft :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :term<CR>
-" https://github.com/pwntester/dotfiles/blob/master/config/nvim/plugins.vim#L297
-nnoremap <leader>gg :echo luaeval("require('window').floating_window(false, 0.8, 0.6)") <bar> :call termopen("lazygit")<CR>
 
 " debug syntax
 nmap <silent> gs :echo 'hi<'.synIDattr(synID(line('.'), col('.'), 1), 'name')
@@ -207,3 +204,43 @@ nmap <silent> gs :echo 'hi<'.synIDattr(synID(line('.'), col('.'), 1), 'name')
 " Goes to the first line above/below that isn't whitespace
 " Thanks to: http://vi.stackexchange.com/a/213
 nnoremap <silent> gj :let _=&lazyredraw<CR>:set lazyredraw<CR>/\%<C-R>=virtcol(".")<CR>v\S<CR>:nohl<CR>:let &lazyredraw=_<CR>
+
+
+" Yank to clipboard
+nnoremap <silent> y+ <cmd>set opfunc=utils#clipboard_yank<cr>g@
+vnoremap <silent> y+ <cmd><C-U>call utils#clipboard_yank(visualmode(), 1)<cr>
+
+" Preview
+function! s:show_loc_item_in_preview()
+    let l:loclist = getloclist(winnr())
+    let l:list = []
+
+    if len(l:loclist) == 0
+        let l:qflist = getqflist()
+        let l:list = l:qflist
+    else
+        let l:list = l:loclist
+    endif
+
+    let l:current_line = line('.')
+    let l:type_mapping = {
+                \ "E": "Error",
+                \ "W": "Warning",
+                \ "I": "Info",
+                \ }
+
+    let l:lines = []
+    for item in l:list
+        if get(item, "lnum", "") == l:current_line
+            let l:type = get(item, "type", "I")
+            let l:type = get(l:type_mapping, l:type, "")
+            let l:text = get(item, "text", "")
+            call add(l:lines, l:type . ": " . l:text)
+        endif
+    endfor
+
+    if len(l:lines) > 0
+        call preview#show("Neomake", l:lines)
+    endif
+endfunction
+nnoremap <silent> <leader>li :call <SID>show_loc_item_in_preview()<CR>
