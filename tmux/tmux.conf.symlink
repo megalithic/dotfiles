@@ -10,27 +10,72 @@
 #
 
 
+# -- [ prefix ] ----------------------------------------------------------------
+# Prefix like it's gnu-screen
+unbind C-a
+# unbind C-b
+
+set -g prefix2 C-a
+bind C-a send-prefix
+bind-key C-a send-prefix
+
+
+# -- [ general settings ] ------------------------------------------------------
+set -g history-limit 10000
+set -g default-shell "$SHELL"
+
+# FIXME: still need this?
+# set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
+
+# Enable true color support, the terminal info is from the outside of tmux
+# https://sunaku.github.io/tmux-24bit-color.html#usage
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ",xterm-256color:Tc"
+# Neovim cursor changing support https://github.com/neovim/neovim/wiki/FAQ#cursor-shape-doesnt-change-in-tmux
+set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
+# Italics support 
+set -as terminal-overrides ',xterm*:sitm=\E[3m'
+# Strikethrough support https://github.com/tmux/tmux/issues/612#issuecomment-288408841
+set -as terminal-overrides ',xterm*:smxx=\E[9m'
+set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm' # Allow undercurls for terminals that support them.
+set -as terminal-overrides ',*:smulx=\E[4\:%p1%dm' # Allow undercurls for terminals that support them (newest).
+
+set -q -g status-utf8 on                  # expect UTF-8 (tmux < 2.2)
+setw -q -g utf8 on
+
+# set window and pane index to 1 (0 by default)
+set -g base-index 1
+setw -g pane-base-index 1
+
+
+# = mouse behavior --
+# set -g mouse on # FIXME: this potentially jacks with kitty's mouse copy selection stuff
+# bind-key -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
+# bind-key -n WheelDownPane select-pane -t= \; send-keys -M
+
+setw -g xterm-keys on
+setw -g aggressive-resize on          # allows multiple sessions to connect to the same server. only shows the resize border when both sessions are on the same windowe
+set -g assume-paste-time 0            # Disable assume-paste-time, so that iTerm2's "Send Hex Codes" feature works with tmux 2.1. (https://github.com/edruder/maximum-awesome/commit/9e3d07f450ac60ec142c82e8b2ffb2777bf99fb4)
+set -g repeat-time 0                  # Allow the arrow key to be used immediately after changing windows
+
+# Neovim https://github.com/neovim/neovim/wiki/FAQ#esc-in-tmux-or-gnu-screen-is-delayed
+set -sg escape-time 0
+set -g focus-events on
+
+set -w -g wrap-search off             # Don't wrap searches; it's super confusing given tmux's reverse-ordering of position info in copy mode.
+set -g detach-on-destroy off
+
+# loud or quiet?
+setw -g monitor-activity on
+setw -g visual-activity off
+# set -g visual-bell off
+# set -g bell-action none
+
+
 # -- [ key bindings ] ----------------------------------------------------------
 
 # = to see current bindings: --
 #   `tmux list-keys`
-
-# Prefix like it's gnu-screen
-unbind C-a
-unbind C-b
-
-set -g prefix2 C-a
-bind C-a send-prefix
-
-set -g prefix C-a
-bind C-a send-prefix
-
-bind-key C-a send-prefix
-
-# .. or perhaps we might bind tmux-leader/prefix to `<c-space>`
-# unbind-key C-b
-# set-option -g prefix C-space
-
 bind C-d detach			# prefix, d
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
 bind-key r refresh-client
@@ -67,7 +112,7 @@ bind -r K resize-pane -U 5      # grow the current pane upwards with <C-t>K
 bind -r L resize-pane -R 5      # grow the current pane rightwards with <C-t>L
 
                                 # Any of the above can be repeated easily by holding down Ctrl,
-                                # hitting 'b' and then pressing H, J, K, or L repeatedly until the
+                                # hitting 'a' and then pressing H, J, K, or L repeatedly until the
                                 # pane is the desired size.
 
 
@@ -84,6 +129,7 @@ bind-key -n C-S-Right swap-window -t +1
 
 # = vim-style pane selection --
 
+
 # Smart pane switching with awareness of vim splits (from https://github.com/christoomey/vim-tmux-navigator)
 is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(weechat|irc|chats|emacs|view|n?vim?x?)(diff)?$"'
 bind -n C-h if-shell "$is_vim" "send-keys C-h" "select-pane -L"
@@ -98,26 +144,30 @@ bind-key -T copy-mode-vi C-l select-pane -R
 
 # https://github.com/christoomey/vim-tmux-navigator
 # https://blog.bugsnag.com/tmux-and-vim/
-is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
-is_fzf="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?fzf$'"
-bind-key -n C-h if-shell "$is_vim" "send-keys C-h"  "select-pane -L"
-bind-key -n C-j if-shell "($is_vim || $is_fzf)" "send-keys C-j" "select-pane -D"
-bind-key -n C-k if-shell "($is_vim || $is_fzf)" "send-keys C-k" "select-pane -U"
-bind-key -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
-bind-key -T copy-mode-vi C-h select-pane -L
-bind-key -T copy-mode-vi C-j select-pane -D
-bind-key -T copy-mode-vi C-k select-pane -U
-bind-key -T copy-mode-vi C-l select-pane -R
-bind -r C-h run "tmux select-pane -L"
-bind -r C-j run "tmux select-pane -D"
-bind -r C-k run "tmux select-pane -U"
-bind -r C-l run "tmux select-pane -R"
+# is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+# is_fzf="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?fzf$'"
+# bind-key -n C-h if-shell "$is_vim" "send-keys C-h"  "select-pane -L"
+# bind-key -n C-j if-shell "($is_vim || $is_fzf)" "send-keys C-j" "select-pane -D"
+# bind-key -n C-k if-shell "($is_vim || $is_fzf)" "send-keys C-k" "select-pane -U"
+# bind-key -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
+# bind-key -T copy-mode-vi C-h select-pane -L
+# bind-key -T copy-mode-vi C-j select-pane -D
+# bind-key -T copy-mode-vi C-k select-pane -U
+# bind-key -T copy-mode-vi C-l select-pane -R
+# bind -r C-h run "tmux select-pane -L"
+# bind -r C-j run "tmux select-pane -D"
+# bind -r C-k run "tmux select-pane -U"
+# bind -r C-l run "tmux select-pane -R"
 
 # Make the current window the first window
 bind-key T swap-window -t 1
 
 # find session
-bind C-f command-prompt -p find-session 'switch-client -t %%'
+  bind C-f command-prompt -p find-session 'switch-client -t %%'
+# fuzzy find session
+  bind s split-window -v "tmux list-sessions | sed -E 's/:.*$//' | grep -v \"^$(tmux display-message -p '#S')\$\" | fzf --reverse | xargs tmux switch-client -t"
+# break into new session
+  bind-key C-b send-keys 'tat && exit' 'C-m'
 
 # put us in copy-mode, where i typically then hit ctrl-b again to scroll up
 bind Escape copy-mode
@@ -133,107 +183,45 @@ setw -g other-pane-width 80
 # vi keys, even for vim users
 set -g status-keys emacs
 
-# select text with 'v' and copy with 'y'
-bind-key -T copy-mode-vi 'v' send -X begin-selection
-bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
-bind-key -T copy-mode-vi Escape send -X cancel
-bind-key -T copy-mode-vi V send -X rectangle-toggle
-unbind   -T copy-mode-vi 'Enter'
-bind-key -T copy-mode-vi 'Enter' send -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
-
-# https://github.com/zanshin/dotfiles/blob/master/tmux/tmux.conf
 # Copy & Paste -- 
+# select text with 'v' and copy with 'y'
+# https://github.com/zanshin/dotfiles/blob/master/tmux/tmux.conf
 bind-key -T copy-mode-vi v send-keys -X begin-selection
 bind-key -T copy-mode-vi V send-keys -X select-line
-bind-key -T copy-mode-vi r send-keys -X rectangle-toggle
+bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
 bind-key -T copy-mode-vi Escape send-keys -X cancel
-bind-key -T copy-mode-vi y if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
-bind-key -T copy-mode-vi MouseDragEnd1Pane if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
+unbind   -T copy-mode-vi 'Enter'
+bind-key -T copy-mode-vi 'Enter' send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+# bind-key -T copy-mode-vi y if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
+# bind-key -T copy-mode-vi MouseDragEnd1Pane if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
 
 # Save entire tmux history to a file - file will be on machine where tmux is
 # running
-bind-key * command-prompt -p 'save history to filename:' -I '~/tmux.history' 'capture-pane -S -32768 ; save-buffer %1 ; delete-buffer'
+bind-key * command-prompt -p 'save window pane to filename:' -I '~/tmux.history' 'capture-pane -S -32768 ; save-buffer %1 ; delete-buffer'
 
 # = buffers --
 
-bind b list-buffers  # list paste buffers
-bind p paste-buffer  # paste from the top paste buffer
-bind P choose-buffer -Z # choose which buffer to paste from
+# bind b list-buffers  # list paste buffers
+# bind p paste-buffer  # paste from the top paste buffer
+# bind P choose-buffer -Z # choose which buffer to paste from
 
 # = popups --
 # This will override time command
 # quickly show a popup with a terminal on top of everything
 bind t display-popup -KER "zsh -l" -d "#{pane_current_path}" -w "75%" -h "75%"
 
-# -- [ general settings ] ------------------------------------------------------
-
-# set -sg	update-environment TERM_PROFILE
-set -g history-limit 10000
-set -g default-shell "$SHELL"
-# fix for NVIM_TUI_ENABLE_CURSOR_SHAPE in tmux
-# https://github.com/nathanaelkane/dotfiles/commit/9607d826b9d408595de2e3fe7de0abec1e94fa87
-# set -g default-terminal "xterm-kitty"
-set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
-
-# Enable true color support, the terminal info is from the outside of tmux
-# https://sunaku.github.io/tmux-24bit-color.html#usage
-set -g default-terminal "tmux-256color"
-set -ga terminal-overrides ",xterm-256color:Tc"
-set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
-set -as terminal-overrides ',xterm*:sitm=\E[3m'
-# Strikethrough support https://github.com/tmux/tmux/issues/612#issuecomment-288408841
-set -as terminal-overrides ',xterm*:smxx=\E[9m'
-set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm' # Allow undercurls for terminals that support them.
-set -as terminal-overrides ',*:smulx=\E[4\:%p1%dm' # Allow undercurls for terminals that support them (newest).
-
-set -q -g status-utf8 on                  # expect UTF-8 (tmux < 2.2)
-setw -q -g utf8 on
-
-# set window and pane index to 1 (0 by default)
-set -g base-index 1
-setw -g pane-base-index 1
-
-
-# mouse behavior --
-set -g mouse on -- FIXME: this potentially jacks with kitty's mouse copy selection stuff
-bind-key -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
-bind-key -n WheelDownPane select-pane -t= \; send-keys -M
-
-setw -g xterm-keys on
-setw -g aggressive-resize on          # allows multiple sessions to connect to the same server. only
-                                      # shows the resize border when both sessions are
-                                      # on the same windowe
-set -g assume-paste-time 0            # Disable assume-paste-time, so that iTerm2's "Send Hex Codes" feature works with tmux 2.1. (https://github.com/edruder/maximum-awesome/commit/9e3d07f450ac60ec142c82e8b2ffb2777bf99fb4)
-set -g repeat-time 0                  # Allow the arrow key to be used immediately after changing windows
-
-# Neovim https://github.com/neovim/neovim/wiki/FAQ#esc-in-tmux-or-gnu-screen-is-delayed
-set -sg escape-time 0
-set -g focus-events on                # enable focus events for wincent/terminus
-
-set -w -g wrap-search off             # Don't wrap searches; it's super confusing given tmux's reverse-ordering of position info in copy mode.
-set -g detach-on-destroy off
-
-# loud or quiet?
-setw -g monitor-activity on
-setw -g visual-activity off
-# set -g visual-bell off
-# set -g bell-action none
-
-
-
 
 # -- [ status bar ] ------------------------------------------------------------
 
 set -g status on
-
 set -g status-interval 5
 set -g status-justify left
 set -g status-position top
-
 set -g set-titles on                        # set terminal title
 set -g allow-rename off
 set -g set-titles-string "" # "#S / #W"
-set -g set-titles-string '#h ❐ #S ● #I #W'
+set -g set-titles-string "#S | #I [ #W ]"
 set -g display-time 1500 # tmux messages are displayed for 1.5 seconds
 set -g display-panes-time 800 # slightly longer pane indicators display time
 setw -g automatic-rename on
@@ -242,17 +230,15 @@ set -g renumber-windows on # re-number windows when one is closed
 
 # = colors -- 
 
-# -- active pane decorations
-set -g pane-border-style 'bg=#3c4c55,fg=#555555'
-set -g pane-active-border-style 'bg=#3c4c55,fg=blue'
-# set -g pane-active-border-style 'bg=#3c4c55,fg=#6A7D89'
-setw -g pane-border-status top
-setw -g pane-border-format ""
 
-set -g pane-border-style bg=default,fg=colour235
-set -g pane-active-border-style bg=default,fg=colour235
+# -- active pane decorations
 setw -g pane-border-status top
-setw -g pane-border-format '─'
+setw -g pane-border-lines "single" # single, double, heavy, simple, number
+# setw -g pane-border-format ""
+# setw -g pane-border-format '─'
+setw -g pane-border-style 'bg=#3c4c55,fg=#555555'
+setw -g pane-active-border-style 'bg=#3c4c55,fg=blue'
+# set -g pane-active-border-style 'bg=#3c4c55,fg=#6A7D89'
 
 # dim inactive window text
 set -g window-style 'fg=#666666,bg=#3c4c55'
@@ -270,11 +256,12 @@ set -g clock-mode-colour white
 set -g mode-style 'bg=#ffffff,fg=#000000'
 
 # colorize messages in the command line
-set -g message-style 'bg=#3c4c55,fg=#ffffff,italics'
 set -g status-style 'bg=default,fg=#aaaaaa'
-
-set -g message-style bg=default,fg=brightred #base02
+set -g message-style 'bg=#3c4c55,fg=brightred,italics'
 set -g message-command-style bg=black,fg=blue
+
+# set -g message-style bg=default,fg=brightred #base02
+# set -g message-command-style bg=black,fg=blue
 
 
 # = layout -- 
@@ -302,7 +289,7 @@ setw -g window-status-current-style bg=default,fg=colour004
 # status_datetime = "#{prefix_highlight}"
 # status_utc = "#{prefix_highlight}"
 # status_cpu "#{prefix_highlight}"
-set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M) #[fg=green]/ #[fg=colour244]PL #[fg=colour248]#(TZ='CET' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='UTC' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
 
