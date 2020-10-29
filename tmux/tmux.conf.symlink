@@ -1,13 +1,13 @@
-# ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-# ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+# ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+# ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #
 #   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
 #   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > tmux/tmux.conf.symlink
 #   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
 #   Brought to you by: Seth Messer / @megalithic
 #
-# ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-#
+# ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+# ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
 
 # -- [ prefix ] ----------------------------------------------------------------
@@ -17,19 +17,18 @@ unbind C-a
 
 set -g prefix2 C-a
 bind C-a send-prefix
-bind-key C-a send-prefix
+bind C-a send-prefix
 
 
 # -- [ general settings ] ------------------------------------------------------
 set -g history-limit 10000
 set -g default-shell "$SHELL"
-
 # FIXME: still need this?
 # set -g default-command "reattach-to-user-namespace -l $SHELL"       # Fix LSOpenURLsWithRole() error on OS X. Requires reattach-to-user-namespace to be installed.
 
-# Enable true color support, the terminal info is from the outside of tmux
-# https://sunaku.github.io/tmux-24bit-color.html#usage
 set -g default-terminal "tmux-256color"
+# set -g default-terminal "kitty-256color"
+# True colour support, the terminal info is from the outside of tmux https://sunaku.github.io/tmux-24bit-color.html#usage
 set -ga terminal-overrides ",xterm-256color:Tc"
 # Neovim cursor changing support https://github.com/neovim/neovim/wiki/FAQ#cursor-shape-doesnt-change-in-tmux
 set -ga terminal-overrides ',*:Ss=\E[%p1%d q:Se=\E[2 q'
@@ -50,8 +49,8 @@ setw -g pane-base-index 1
 
 # = mouse behavior --
 # set -g mouse on # FIXME: this potentially jacks with kitty's mouse copy selection stuff
-# bind-key -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
-# bind-key -n WheelDownPane select-pane -t= \; send-keys -M
+# bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
+# bind -n WheelDownPane select-pane -t= \; send-keys -M
 
 setw -g xterm-keys on
 setw -g aggressive-resize on          # allows multiple sessions to connect to the same server. only shows the resize border when both sessions are on the same windowe
@@ -73,39 +72,34 @@ setw -g visual-activity off
 
 
 # -- [ key bindings ] ----------------------------------------------------------
-
-# = to see current bindings: --
-#   `tmux list-keys`
-bind C-d detach			# prefix, d
+# = to see current bindings: `tmux list-keys`
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
-bind-key r refresh-client
+bind r refresh-client
 
 # backward search
-bind-key -T copy-mode-vi "?" \
+bind -T copy-mode-vi "?" \
   command-prompt -ip "search up:" "send -X search-backward-incremental '%%%'"
-bind-key -T copy-mode-vi "/" \
+bind -T copy-mode-vi "/" \
   command-prompt -ip "search down:" "send -X search-forward-incremental '%%%'"
 
-
 # = splitting panes --
-
 bind '|'  split-window -h -c "#{pane_current_path}" \;
-bind '\' split-window -h -c "#{pane_current_path}" \;
+bind '\'  split-window -h -c "#{pane_current_path}" \;
 bind '_'  split-window -v -c "#{pane_current_path}" \;
 bind '-'  split-window -v -c "#{pane_current_path}" \;
-bind -r C-t new-window -c "#{pane_current_path}"
 
-unbind-key c
-bind-key c new-window -ac '#{pane_current_path}'
+unbind c
+bind c new-window -ac '#{pane_current_path}'
+# bind -r C-t new-window -c "#{pane_current_path}"
+bind T command-prompt -p "(rename pane)" 'select-pane -T "%%"'
 
+bind -r C-q confirm-before 'kill-session'
 bind -r C-x kill-pane
 bind -r C-q kill-window
+bind C-d detach			# prefix, d
 
-# Quick kill-session
-bind-key C-q confirm-before 'kill-session'
 
 # = resizing --
-
 bind -r H resize-pane -L 5      # grow the current pane leftwards with <C-t>H
 bind -r J resize-pane -D 5      # grow the current pane downwards with <C-t>J
 bind -r K resize-pane -U 5      # grow the current pane upwards with <C-t>K
@@ -117,57 +111,60 @@ bind -r L resize-pane -R 5      # grow the current pane rightwards with <C-t>L
 
 
 # = reorder windows --
-
 bind -r C-H swap-window -t -1 # move window one position to the left
 bind -r C-L swap-window -t +1 # move window one position to the right
-
 # Pressing Ctrl+Shift+Left (will move the current window to the left. Similarly
 # right. No need to use the modifier (C-b).
-bind-key -n C-S-Left swap-window -t -1
-bind-key -n C-S-Right swap-window -t +1
+bind -n C-S-Left swap-window -t -1
+bind -n C-S-Right swap-window -t +1
 
 
 # = vim-style pane selection --
-
-
 # Smart pane switching with awareness of vim splits (from https://github.com/christoomey/vim-tmux-navigator)
-is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(weechat|irc|chats|emacs|view|n?vim?x?)(diff)?$"'
-bind -n C-h if-shell "$is_vim" "send-keys C-h" "select-pane -L"
-bind -n C-j if-shell "$is_vim" "send-keys C-j" "select-pane -D"
-bind -n C-k if-shell "$is_vim" "send-keys C-k" "select-pane -U"
-bind -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
-
-bind-key -T copy-mode-vi C-h select-pane -L
-bind-key -T copy-mode-vi C-j select-pane -D
-bind-key -T copy-mode-vi C-k select-pane -U
-bind-key -T copy-mode-vi C-l select-pane -R
+# is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(n?vim?x?)(diff)?$"'
+is_any='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(weechat|irc|chats|emacs|view|n?vim?x?)(diff)?$"'
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
+is_fzf="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?fzf$'"
+is_irc="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(weechat|irc|chats)?$'"
+bind -n C-h if-shell "($is_vim || $is_irc)" "send-keys C-h" "select-pane -L"
+bind -n C-j if-shell "($is_any || $is_vim || $is_fzf || $is_irc)" "send-keys C-j" "select-pane -D"
+bind -n C-k if-shell "($is_any || $is_vim || $is_fzf || $is_irc)" "send-keys C-k" "select-pane -U"
+bind -n C-l if-shell "($is_vim || $is_irc)" "send-keys C-l" "select-pane -R"
+bind -T copy-mode-vi C-h select-pane -L
+bind -T copy-mode-vi C-j select-pane -D
+bind -T copy-mode-vi C-k select-pane -U
+bind -T copy-mode-vi C-l select-pane -R
+bind -r C-h run "tmux select-pane -L"
+bind -r C-j run "tmux select-pane -D"
+bind -r C-k run "tmux select-pane -U"
+bind -r C-l run "tmux select-pane -R"
 
 # https://github.com/christoomey/vim-tmux-navigator
 # https://blog.bugsnag.com/tmux-and-vim/
 # is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?)(diff)?$'"
 # is_fzf="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?fzf$'"
-# bind-key -n C-h if-shell "$is_vim" "send-keys C-h"  "select-pane -L"
-# bind-key -n C-j if-shell "($is_vim || $is_fzf)" "send-keys C-j" "select-pane -D"
-# bind-key -n C-k if-shell "($is_vim || $is_fzf)" "send-keys C-k" "select-pane -U"
-# bind-key -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
-# bind-key -T copy-mode-vi C-h select-pane -L
-# bind-key -T copy-mode-vi C-j select-pane -D
-# bind-key -T copy-mode-vi C-k select-pane -U
-# bind-key -T copy-mode-vi C-l select-pane -R
+# bind -n C-h if-shell "$is_vim" "send-keys C-h"  "select-pane -L"
+# bind -n C-j if-shell "($is_vim || $is_fzf)" "send-keys C-j" "select-pane -D"
+# bind -n C-k if-shell "($is_vim || $is_fzf)" "send-keys C-k" "select-pane -U"
+# bind -n C-l if-shell "$is_vim" "send-keys C-l" "select-pane -R"
+# bind -T copy-mode-vi C-h select-pane -L
+# bind -T copy-mode-vi C-j select-pane -D
+# bind -T copy-mode-vi C-k select-pane -U
+# bind -T copy-mode-vi C-l select-pane -R
 # bind -r C-h run "tmux select-pane -L"
 # bind -r C-j run "tmux select-pane -D"
 # bind -r C-k run "tmux select-pane -U"
 # bind -r C-l run "tmux select-pane -R"
 
 # Make the current window the first window
-bind-key T swap-window -t 1
+bind T swap-window -t 1
 
 # find session
   bind C-f command-prompt -p find-session 'switch-client -t %%'
 # fuzzy find session
   bind s split-window -v "tmux list-sessions | sed -E 's/:.*$//' | grep -v \"^$(tmux display-message -p '#S')\$\" | fzf --reverse | xargs tmux switch-client -t"
 # break into new session
-  bind-key C-b send-keys 'tat && exit' 'C-m'
+  bind C-b send-keys 'tat && exit' 'C-m'
 
 # put us in copy-mode, where i typically then hit ctrl-b again to scroll up
 bind Escape copy-mode
@@ -186,19 +183,19 @@ set -g status-keys emacs
 # Copy & Paste -- 
 # select text with 'v' and copy with 'y'
 # https://github.com/zanshin/dotfiles/blob/master/tmux/tmux.conf
-bind-key -T copy-mode-vi v send-keys -X begin-selection
-bind-key -T copy-mode-vi V send-keys -X select-line
-bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
-bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
-bind-key -T copy-mode-vi Escape send-keys -X cancel
+bind -T copy-mode-vi v send-keys -X begin-selection
+bind -T copy-mode-vi V send-keys -X select-line
+bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
+bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+bind -T copy-mode-vi Escape send-keys -X cancel
 unbind   -T copy-mode-vi 'Enter'
-bind-key -T copy-mode-vi 'Enter' send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
-# bind-key -T copy-mode-vi y if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
-# bind-key -T copy-mode-vi MouseDragEnd1Pane if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
+bind -T copy-mode-vi 'Enter' send-keys -X copy-pipe-and-cancel "reattach-to-user-namespace pbcopy"
+# bind -T copy-mode-vi y if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
+# bind -T copy-mode-vi MouseDragEnd1Pane if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
 
 # Save entire tmux history to a file - file will be on machine where tmux is
 # running
-bind-key * command-prompt -p 'save window pane to filename:' -I '~/tmux.history' 'capture-pane -S -32768 ; save-buffer %1 ; delete-buffer'
+bind * command-prompt -p 'save window pane to filename:' -I '~/tmux.history' 'capture-pane -S -32768 ; save-buffer %1 ; delete-buffer'
 
 # = buffers --
 
@@ -209,7 +206,7 @@ bind-key * command-prompt -p 'save window pane to filename:' -I '~/tmux.history'
 # = popups --
 # This will override time command
 # quickly show a popup with a terminal on top of everything
-bind t display-popup -KER "zsh -l" -d "#{pane_current_path}" -w "75%" -h "75%"
+bind -r C-t display-popup -KER "zsh -l" -d "#{pane_current_path}" -w "50%" -h "50%"
 
 
 # -- [ status bar ] ------------------------------------------------------------
