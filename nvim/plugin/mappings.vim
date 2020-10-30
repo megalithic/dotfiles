@@ -207,40 +207,40 @@ nnoremap <silent> gj :let _=&lazyredraw<CR>:set lazyredraw<CR>/\%<C-R>=virtcol("
 
 
 " Yank to clipboard
-nnoremap <silent> y+ <cmd>set opfunc=utils#clipboard_yank<cr>g@
-vnoremap <silent> y+ <cmd><C-U>call utils#clipboard_yank(visualmode(), 1)<cr>
+" nnoremap <silent> y+ <cmd>set opfunc=utils#clipboard_yank<cr>g@
+" vnoremap <silent> y+ <cmd><C-U>call utils#clipboard_yank(visualmode(), 1)<cr>
 
-" Preview
-function! s:show_loc_item_in_preview()
-    let l:loclist = getloclist(winnr())
-    let l:list = []
+" " Preview
+" function! s:show_loc_item_in_preview()
+"     let l:loclist = getloclist(winnr())
+"     let l:list = []
 
-    if len(l:loclist) == 0
-        let l:qflist = getqflist()
-        let l:list = l:qflist
-    else
-        let l:list = l:loclist
-    endif
+"     if len(l:loclist) == 0
+"         let l:qflist = getqflist()
+"         let l:list = l:qflist
+"     else
+"         let l:list = l:loclist
+"     endif
 
-    let l:current_line = line('.')
-    let l:type_mapping = {
-                \ "E": "Error",
-                \ "W": "Warning",
-                \ "I": "Info",
-                \ }
+"     let l:current_line = line('.')
+"     let l:type_mapping = {
+"                 \ "E": "Error",
+"                 \ "W": "Warning",
+"                 \ "I": "Info",
+"                 \ }
 
-    let l:lines = []
-    for item in l:list
-        if get(item, "lnum", "") == l:current_line
-            let l:type = get(item, "type", "I")
-            let l:type = get(l:type_mapping, l:type, "")
-            let l:text = get(item, "text", "")
-            call add(l:lines, l:type . ": " . l:text)
-        endif
-    endfor
+"     let l:lines = []
+"     for item in l:list
+"         if get(item, "lnum", "") == l:current_line
+"             let l:type = get(item, "type", "I")
+"             let l:type = get(l:type_mapping, l:type, "")
+"             let l:text = get(item, "text", "")
+"             call add(l:lines, l:type . ": " . l:text)
+"         endif
+"     endfor
 
-    if len(l:lines) > 0
-        call preview#show("Neomake", l:lines)
-    endif
-endfunction
-nnoremap <silent> <leader>li :call <SID>show_loc_item_in_preview()<CR>
+"     if len(l:lines) > 0
+"         call preview#show("Neomake", l:lines)
+"     endif
+" endfunction
+" nnoremap <silent> <leader>li :call <SID>show_loc_item_in_preview()<CR>

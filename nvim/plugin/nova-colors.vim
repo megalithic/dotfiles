@@ -21,6 +21,7 @@ function! s:nova_engage() abort
   let g:right_sep = "\ue0b4"            " nf-ple-*
   let g:left_sep = "\ue0b6"             "
   let g:term_mode = "\ufcb5"            "\ue7a2 ﲵ
+  let g:virtual_text_symbol = "\uf63d"  "
 
   let g:spinner_frames = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
 
@@ -118,6 +119,11 @@ function! s:nova_engage() abort
   " 'LspDiagnosticsWarningSign',
   " }
 
+  exe 'hi LspDiagnosticsUnderlineError gui=undercurl,italic guifg=' . g:error
+  exe 'hi LspDiagnosticsUnderlineWarning gui=undercurl,italic guifg=' . g:warning
+  exe 'hi LspDiagnosticsUnderlineInformation gui=undercurl,italic guifg=' . g:information
+  exe 'hi LspDiagnosticsUnderlineHint gui=undercurl,italic guifg=' . g:hint
+
   exe 'hi LspDiagnosticsError gui=undercurl,italic guifg=' . g:error
   exe 'hi LspDiagnosticsWarning gui=undercurl,italic guifg=' . g:warning
   exe 'hi LspDiagnosticsInformation gui=undercurl,italic guifg=' . g:information
@@ -128,6 +134,10 @@ function! s:nova_engage() abort
   exe 'hi LspDiagnosticsInformationSign guifg=' . g:information
   exe 'hi LspDiagnosticsHintSign guifg=' . g:hint
 
+  hi! link ErrorLine LspDiagnosticsError
+  hi! link WarningLine LspDiagnosticsWarning
+  hi! link HintLine LspDiagnosticsHint
+  hi! link InfoLine LspDiagnosticsInformation
   hi! link Debug ErrorMsg
   hi! link Exception ErrorMsg
 
@@ -232,11 +242,11 @@ function! s:nova_engage() abort
   exe 'hi StatuslineFiletype gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
   exe 'hi StatuslineFiletypeIcon gui=NONE guifg=' . g:gutter_grey . ' guibg=' . g:black
 
-  hi! User5 ctermfg=red guifg=red
-  hi! User7 ctermfg=cyan guifg=cyan
-  execute(printf('hi! User4 gui=NONE cterm=NONE guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('NonText', 'fg', 'gui'), utils#get_color('NonText','fg', 'cterm')))
-  execute(printf('hi! StatusLine gui=NONE cterm=NONE guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('Identifier', 'fg', 'gui'), utils#get_color('Identifier', 'fg', 'cterm')))
-  execute(printf('hi! StatusLineNC gui=italic cterm=italic guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('NonText', 'fg', 'gui'), utils#get_color('NonText', 'fg', 'cterm')))
+  " hi! User5 ctermfg=red guifg=red
+  " hi! User7 ctermfg=cyan guifg=cyan
+  " execute(printf('hi! User4 gui=NONE cterm=NONE guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('NonText', 'fg', 'gui'), utils#get_color('NonText','fg', 'cterm')))
+  " execute(printf('hi! StatusLine gui=NONE cterm=NONE guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('Identifier', 'fg', 'gui'), utils#get_color('Identifier', 'fg', 'cterm')))
+  " execute(printf('hi! StatusLineNC gui=italic cterm=italic guibg=NONE ctermbg=NONE guifg=%s ctermfg=%s', utils#get_color('NonText', 'fg', 'gui'), utils#get_color('NonText', 'fg', 'cterm')))
 
   " hi! link TermCursor Cursor
   " hi! link healthError Red

@@ -53,6 +53,8 @@ let g:vsnip_snippet_dir = "~/.dotfiles/nvim/vsnips"
 set completeopt=menuone,noinsert,noselect " Don't auto select first one
 set shortmess+=c                          " Don't show insert mode completion messages
 
+" https://github.com/fsouza/vimfiles/blob/main/lua/lc/opts.lua#L32
+
 let g:completion_enable_auto_popup = 1
 let g:completion_enable_auto_hover = 1
 let g:completion_enable_auto_signature = 1
@@ -60,7 +62,7 @@ let g:completion_auto_change_source = 1
 let g:completion_enable_fuzzy_match = 1
 let g:completion_enable_snippet = 'vim-vsnip'
 let g:completion_enable_auto_paren = 0
-" let g:completion_timer_cycle = 80
+let g:completion_timer_cycle = 80
 let g:completion_trigger_on_delete = 0
 let g:completion_trigger_keyword_length = 2
 let g:completion_max_items = 20

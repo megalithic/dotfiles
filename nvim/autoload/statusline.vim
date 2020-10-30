@@ -95,17 +95,6 @@ function! statusline#filename() abort
   return finalpath
 endfunction
 
-function! statusline#lsp_status() abort
-  " let status = luaeval("require(\"lsp-status\").server_progress")
-
-  " return l:status == '' || l:status == v:null ? '' : printf(status)
-  if luaeval('#vim.lsp.buf_get_clients() > 0')
-    return luaeval("require('lsp-status').status()")
-  endif
-
-  return ''
-endfunction
-
 function! statusline#lsp_errors() abort
   let l:all_errors = luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")
   return l:all_errors == 0 ? '' : printf(" " . g:indicator_errors . " %d ", all_errors)

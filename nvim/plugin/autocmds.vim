@@ -216,3 +216,8 @@ augroup writing
   au BufReadPost,BufNewFile *.md,*.txt set wrap linebreak nolist spell spelllang=en_us complete+=kspell
   au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
 augroup END
+
+augroup Format
+    autocmd!
+    autocmd BufWritePost * FormatWrite
+augroup END

@@ -4,11 +4,11 @@
 -- │                                                                           │
 -- └───────────────────────────────────────────────────────────────────────────┘
 
--- [ load lsp_config ] ---------------------------------------------------------
+-- [ load lsp config ] ---------------------------------------------------------
 local lsp_config_loaded, lsp_config =
   pcall(
   function()
-    require("lsp_config")
+    require("lc.config")
   end
 ) -- ok, _return_value
 if not lsp_config_loaded then
@@ -28,16 +28,38 @@ end
 --   }
 -- )
 
--- [ formatter.nvim ] ----------------------------------------------------------
---   See https://github.com/mhartington/formatter.nvim
+-- [ format.nvim ] ----------------------------------------------------------
+--   https://github.com/lukas-reineke/format.nvim
 
 require("format").setup(
   {
+    ["*"] = {
+      {cmd = {"sed -i 's/[ \t]*$//'"}} -- remove trailing whitespace
+    },
     vim = {
       {
         cmd = {"luafmt -w replace"},
         start_pattern = "^lua << EOF$",
         end_pattern = "^EOF$"
+      }
+    },
+    lua = {
+      {
+        cmd = {
+          function(file)
+            return string.format(
+              "luafmt -l %s -w replace --indent-count 2 %s",
+              vim.bo.textwidth,
+              file
+            )
+          end
+        }
+      }
+    },
+    go = {
+      {
+        cmd = {"gofmt -w", "goimports -w"},
+        tempfile_postfix = ".tmp"
       }
     },
     javascript = {
@@ -55,12 +77,13 @@ require("format").setup(
         cmd = {"prettier -w", "./node_modules/.bin/eslint --fix"}
       }
     },
-    elixir = {
-      {
-        cmd = {"mix format -"}
-      }
-    },
+    -- elixir = {
+    --   {
+    --     cmd = {"mix format -"}
+    --   }
+    -- },
     markdown = {
+      {cmd = {"prettier -w"}},
       {
         cmd = {"black"},
         start_pattern = "^```python$",
@@ -89,10 +112,21 @@ require("format").setup(
       {
         cmd = {"qmlformat -i"}
       }
+    },
+    json = {
+      {
+        cmd = {"js-beautify -s 2"}
+      }
     }
   }
 )
-vim.fn.nvim_buf_set_keymap(0, "n", "<leader>F", "<cmd>Format<CR>", {noremap = true, silent = true})
+vim.fn.nvim_buf_set_keymap(
+  0,
+  "n",
+  "<leader>F",
+  "<cmd>Format<CR>",
+  {noremap = true, silent = true}
+)
 
 -- [ nvim-colorizer.lua ] ------------------------------------------------------
 --   See https://github.com/norcalli/nvim-colorizer.lua
@@ -132,7 +166,8 @@ colorizer.setup(
 --   See https://github.com/dm1try/golden_size#tips-and-tricks
 
 local function ignore_by_buftype(types)
-  local buftype = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
+  local buftype =
+    vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
   for _, type in pairs(types) do
     if type == buftype then
       return 1

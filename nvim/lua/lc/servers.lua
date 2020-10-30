@@ -268,7 +268,7 @@ function M.activate(on_attach_fn)
     if not server_disabled then
       lsp[server].setup(vim.tbl_deep_extend('force', {
         on_attach = on_attach_fn,
-        callbacks = vim.tbl_deep_extend("keep", {}, require("lsp_callbacks"), vim.lsp.callbacks),
+        callbacks = vim.tbl_deep_extend("keep", {}, require("lc.callbacks"), vim.lsp.callbacks),
       }, config))
     end
   end

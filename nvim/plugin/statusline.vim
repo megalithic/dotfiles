@@ -112,7 +112,6 @@ function! Statusline(winnum) abort
 
   " LSP status
   if active
-    let sl .= <SID>Color(active, 'Statusline', '%{statusline#lsp_status()}')
     let sl .= <SID>Color(active, 'StatuslineError', '%{statusline#lsp_errors()}')
     let sl .= <SID>Color(active, 'StatuslineWarning', '%{statusline#lsp_warnings()}')
     let sl .= <SID>Color(active, 'StatuslineHint', '%{statusline#lsp_hints()}')

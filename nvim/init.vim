@@ -317,17 +317,15 @@ Plug 'tpope/vim-dispatch'
 " --[ LSP/Completion/Snippets ]-------------------------------------------------
 if has("nvim-0.5.0")
   Plug 'neovim/nvim-lspconfig' " lsp.vim / lsp.lua
-  " Plug 'neovim/nvim-lsp' " lsp.vim / lsp.lua
-  Plug 'nvim-lua/diagnostic-nvim'
   Plug 'nvim-lua/completion-nvim'
   Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
   Plug 'steelsojka/completion-buffers'
-  Plug 'mhartington/formatter.nvim'
   Plug 'lukas-reineke/format.nvim'
-  Plug 'nvim-treesitter/nvim-treesitter'
-  Plug 'nvim-treesitter/completion-treesitter'
+  " Plug 'mhartington/formatter.nvim'
+  " Plug 'nvim-treesitter/nvim-treesitter'
+  " Plug 'nvim-treesitter/completion-treesitter'
 endif
 
 

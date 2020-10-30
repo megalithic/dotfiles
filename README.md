@@ -53,6 +53,7 @@ A few of the _must-have_ tools I roll with:
 - [kitty](https://github.com/kovidgoyal/kitty)
 - [nova](https://github.com/trevordmiller/nova-colors)
 - [neovim](https://neovim.io/)
+  - using lua with neovim? https://github.com/nanotee/nvim-lua-guide
 - [zsh](https://www.zsh.org/)
   - custom prompt (mimicking [pure](https://github.com/sindresorhus/pure)), using [gitstatus](https://github.com/romkatv/gitstatus) for fast git-specific vcs status.
 - [weechat](https://www.weechat.org/)

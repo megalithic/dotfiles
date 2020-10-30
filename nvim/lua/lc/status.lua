@@ -37,9 +37,9 @@ end
 status.on_attach = function(client)
   lsp_status.on_attach(client)
 
-  vim.cmd [[augroup nova_lsp_status]]
-  vim.cmd [[  autocmd CursorHold,BufEnter <buffer> lua require('lsp-status').update_current_function()]]
-  vim.cmd [[augroup END]]
+ --  vim.cmd [[augroup nova_lsp_status]]
+ --  vim.cmd [[  autocmd CursorHold,BufEnter <buffer> lua require('lsp-status').update_current_function()]]
+ --  vim.cmd [[augroup END]]
 end
 
 status.server_progress = function(_, buffer)

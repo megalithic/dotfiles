@@ -73,6 +73,9 @@ setw -g visual-activity off
 
 # -- [ key bindings ] ----------------------------------------------------------
 # = to see current bindings: `tmux list-keys`
+
+setw -g mode-keys vi
+
 bind -r C-R source-file ~/.tmux.conf \; display-message "Configuration reloaded."
 bind r refresh-client
 
@@ -120,6 +123,7 @@ bind -n C-S-Right swap-window -t +1
 
 
 # = vim-style pane selection --
+
 # Smart pane switching with awareness of vim splits (from https://github.com/christoomey/vim-tmux-navigator)
 # is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(n?vim?x?)(diff)?$"'
 is_any='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(weechat|irc|chats|emacs|view|n?vim?x?)(diff)?$"'
@@ -170,9 +174,7 @@ bind T swap-window -t 1
 bind Escape copy-mode
 bind -r C-b copy-mode -u
 
-# = vim-style copy & paste --
 # use vim keybindings in search/copy mode
-setw -g mode-keys vi
 setw -g other-pane-height 25
 setw -g other-pane-width 80
 
@@ -180,7 +182,8 @@ setw -g other-pane-width 80
 # vi keys, even for vim users
 set -g status-keys emacs
 
-# Copy & Paste -- 
+# = copy mode --
+
 # select text with 'v' and copy with 'y'
 # https://github.com/zanshin/dotfiles/blob/master/tmux/tmux.conf
 bind -T copy-mode-vi v send-keys -X begin-selection
@@ -193,6 +196,31 @@ bind -T copy-mode-vi 'Enter' send-keys -X copy-pipe-and-cancel "reattach-to-user
 # bind -T copy-mode-vi y if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
 # bind -T copy-mode-vi MouseDragEnd1Pane if-shell "test ! -z $KITTY_WINDOW_ID" "send-keys -X copy-pipe-and-cancel 'kitty +kitten clipboard'" "send-keys -X copy-pipe-and-cancel  'pbcopy'"
 
+bind Enter copy-mode # enter copy mode
+
+run -b 'tmux bind -t vi-copy v begin-selection 2> /dev/null || true'
+run -b 'tmux bind -T copy-mode-vi v send -X begin-selection 2> /dev/null || true'
+run -b 'tmux bind -t vi-copy C-v rectangle-toggle 2> /dev/null || true'
+run -b 'tmux bind -T copy-mode-vi C-v send -X rectangle-toggle 2> /dev/null || true'
+run -b 'tmux bind -t vi-copy y copy-selection 2> /dev/null || true'
+run -b 'tmux bind -T copy-mode-vi y send -X copy-selection-and-cancel 2> /dev/null || true'
+run -b 'tmux bind -t vi-copy Escape cancel 2> /dev/null || true'
+run -b 'tmux bind -T copy-mode-vi Escape send -X cancel 2> /dev/null || true'
+run -b 'tmux bind -t vi-copy H start-of-line 2> /dev/null || true'
+run -b 'tmux bind -T copy-mode-vi H send -X start-of-line 2> /dev/null || true'
+run -b 'tmux bind -t vi-copy L end-of-line 2> /dev/null || true'
+run -b 'tmux bind -T copy-mode-vi L send -X end-of-line 2> /dev/null || true'
+
+# copy to macOS clipboard
+if -b 'command -v pbcopy > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | pbcopy"'
+if -b 'command -v reattach-to-user-namespace > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | reattach-to-user-namespace pbcopy"'
+# copy to X11 clipboard
+if -b 'command -v xsel > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | xsel -i -b"'
+if -b '! command -v xsel > /dev/null 2>&1 && command -v xclip > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | xclip -i -selection clipboard >/dev/null 2>&1"'
+# copy to Windows clipboard
+if -b 'command -v clip.exe > /dev/null 2>&1' 'bind y run -b "tmux save-buffer - | clip.exe"'
+if -b '[ -c /dev/clipboard ]' 'bind y run -b "tmux save-buffer - > /dev/clipboard"'
+
 # Save entire tmux history to a file - file will be on machine where tmux is
 # running
 bind * command-prompt -p 'save window pane to filename:' -I '~/tmux.history' 'capture-pane -S -32768 ; save-buffer %1 ; delete-buffer'
@@ -204,9 +232,13 @@ bind * command-prompt -p 'save window pane to filename:' -I '~/tmux.history' 'ca
 # bind P choose-buffer -Z # choose which buffer to paste from
 
 # = popups --
+
 # This will override time command
 # quickly show a popup with a terminal on top of everything
 bind -r C-t display-popup -KER "zsh -l" -d "#{pane_current_path}" -w "50%" -h "50%"
+bind C-j popup -KE -w "50%" -h "50%" -y "0" -R "tmux list-sessions | sed -E 's/:.*$//' | grep -v \"^$(tmux display-message -p '#S')\$\" | fzf --reverse | xargs tmux switch-client -t"
+# bind C-y popup -KE -w "50%" -h "50%" -y "0" -R "ls ~/Development | fzf --reverse | xargs tmuxinator start code"
+bind C-m popup -KE -R "zsh"
 
 
 # -- [ status bar ] ------------------------------------------------------------
@@ -231,7 +263,7 @@ set -g renumber-windows on # re-number windows when one is closed
 # -- active pane decorations
 setw -g pane-border-status top
 setw -g pane-border-lines "single" # single, double, heavy, simple, number
-# setw -g pane-border-format ""
+setw -g pane-border-format ""
 # setw -g pane-border-format '─'
 setw -g pane-border-style 'bg=#3c4c55,fg=#555555'
 setw -g pane-active-border-style 'bg=#3c4c55,fg=blue'
@@ -327,7 +359,9 @@ set -g @plugin 'tmux-plugins/tmux-sessionist'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'NHDaly/tmux-better-mouse-mode'
 set -g @plugin 'megalithic/tmux-dnd-status'
-set -g @plugin 'sainnhe/tmux-fzf'
+# set -g @plugin 'sainnhe/tmux-fzf'# Tmux + FZF utils (prefix-T)
+# set -g @plugin 'dkarter/tmux-ff-pane'# Fuzzy find panes (prefix-P)
+# # set -g @tmux-fzf-launch-key 'T'
 # set -g @plugin 'christoomey/vim-tmux-navigator' # necessary if not defining own mappings above
 # set -g @plugin 'yardnsm/tmux-1password'
 # set -g @plugin 'tmux-plugins/tmux-urlview' # opens the bottom pane of all links; can't get it to actually open links in browser though
