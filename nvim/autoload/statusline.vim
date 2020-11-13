@@ -95,22 +95,53 @@ function! statusline#filename() abort
   return finalpath
 endfunction
 
+" function! statusline#lsp_status() abort
+"   let sl = ''
+
+"   if luaeval('not vim.tbl_isempty(vim.lsp.buf_get_clients(0))')
+"     let sl.='%#MyStatuslineLSP#' .. g:statusline_error
+"     let sl.='%#MyStatuslineLSPErrors#%{luaeval("vim.lsp.diagnostic.get_count([[Error]])")}'
+"     let sl.='%#MyStatuslineLSP# ' .. g:statusline_warning
+"     let sl.='%#MyStatuslineLSPWarnings#%{luaeval("vim.lsp.diagnostic.get_count([[Warning]])")}'
+"     let sl.='%#MyStatuslineLSP# ' .. g:statusline_information
+"     let sl.='%#MyStatuslineLSPErrors#%{luaeval("vim.lsp.diagnostic.get_count([[Information]])")}'
+"     let sl.='%#MyStatuslineLSP# ' .. g:statusline_hint
+"     let sl.='%#MyStatuslineLSPWarnings#%{luaeval("vim.lsp.diagnostic.get_count([[Hint]])")}'
+"   else
+"     let sl.='%#MyStatuslineLSPErrors#off'
+"   endif
+
+"   return sl
+" endfunction
+
+function! statusline#lsp_status() abort
+if luaeval('#vim.lsp.buf_get_clients() > 0')
+  return luaeval("require('lsp-status').status()")
+endif
+
+return ''
+endfunction
+
 function! statusline#lsp_errors() abort
-  let l:all_errors = luaeval("vim.lsp.util.buf_diagnostics_count(\"Error\")")
-  return l:all_errors == 0 ? '' : printf(" " . g:indicator_errors . " %d ", all_errors)
+  let l:all_errors = luaeval("vim.lsp.diagnostic.get_count([[Error]])")
+  " echom l:all_errors
+  return l:all_errors == 0 ? '' : printf(" " . g:indicator_error . " %d ", all_errors)
 endfunction
 
 function! statusline#lsp_warnings() abort
-  let l:all_warns = luaeval("vim.lsp.util.buf_diagnostics_count(\"Warning\")")
-  return l:all_warns == 0 ? '' : printf(" " . g:indicator_warnings . " %d ", all_warns)
+  let l:all_warnings = luaeval("vim.lsp.diagnostic.get_count([[Warning]])")
+  " echom l:all_warnings
+  return l:all_warnings == 0 ? '' : printf(" " . g:indicator_warning . " %d ", all_warnings)
 endfunction
 
 function! statusline#lsp_informations() abort
-  let l:all_infos = luaeval("vim.lsp.util.buf_diagnostics_count(\"Information\")")
-  return l:all_infos == 0 ? '' : printf(" " . g:indicator_infos . " %d ", all_infos)
+  let l:all_informations = luaeval("vim.lsp.diagnostic.get_count([[Information]])")
+  " echom l:all_informations
+  return l:all_informations == 0 ? '' : printf(" " . g:indicator_information . " %d ", all_informations)
 endfunction
 
 function! statusline#lsp_hints() abort
-  let l:all_hints = luaeval("vim.lsp.util.buf_diagnostics_count(\"Hint\")")
-  return l:all_hints == 0 ? '' : printf(" " . g:indicator_hints . " %d ", all_hints)
+  let l:all_hints = luaeval("vim.lsp.diagnostic.get_count([[Hint]])")
+  " echom l:all_hints
+  return l:all_hints == 0 ? '' : printf(" " . g:indicator_hint . " %d ", all_hints)
 endfunction

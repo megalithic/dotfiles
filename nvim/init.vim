@@ -72,6 +72,7 @@ endif
 set colorcolumn=81 " Highlight 81 and 82 columns
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
+set completeopt=menuone,noinsert,noselect " Don't auto select first one
 set dictionary=/usr/share/dict/words
 set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
 set spelllang=en
@@ -114,8 +115,9 @@ set nrformats=alpha,hex,octal        " No to oct/hex support when doing CTRL-a/x
 set path=**
 " set relativenumber    " Show relative numbers
 set ruler
-set scrolloff=5       " Start scrolling when we're 5 lines away from margins
+" set scrolloff=5       " Start scrolling when we're 5 lines away from margins
 set shiftwidth=2
+set shortmess+=c                          " Don't show insert mode completion messages
 set sidescrolloff=15
 set sidescroll=5
 set showbreak=↳       " Use this to wrap long lines
@@ -230,6 +232,7 @@ Plug 'dstein64/vim-startuptime'
 
 " --[ styling/ui ]--------------------------------------------------------------
 Plug 'trevordmiller/nova-vim' " nova-colors.vim
+Plug 'sainnhe/gruvbox-material' " gruvbox-material.vim 
 Plug 'pbrisbin/vim-colors-off' " for goyo
 Plug 'Yggdroot/indentLine' " indentLine.vim
 Plug 'dm1try/golden_size'
@@ -279,7 +282,7 @@ Plug 'kana/vim-operator-user'
 " -- provide a_ and i_ for underscores
 " -- provide a- and i-
 Plug 'kana/vim-textobj-user'                                            " https://github.com/kana/vim-textobj-user/wiki
-Plug 'kana/vim-textobj-function'                                        " function text object (af/if)
+" Plug 'kana/vim-textobj-function'                                        " function text object (af/if)
 Plug 'kana/vim-textobj-indent'                                          " for indent level (ai/ii)
 Plug 'kana/vim-textobj-line'                                            " for current line (al/il)
 Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }              " ruby block text object (ar/ir)
@@ -442,13 +445,31 @@ iabbrev cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
 command! CopyFullName let @+=expand('%')
 command! CopyPath let @+=expand('%:h')
 command! CopyFileName let @+=expand('%:t')
+" map ;gg           G$g<C-G>''
+" command! Stats :!wc -m %<CR>
+" https://superuser.com/questions/149854/how-can-i-get-gvim-to-display-the-character-count-of-the-current-file#:~:text=Press%20g%20CTRL%2DG%20in,the%20cursor%20and%20the%20file.&text=which%20gives%20you%20the%20number,and%20yank%20the%20current%20buffer).
 
 
 " --[ colorscheme ]-------------------------------------------------------------
-set background=dark
 
+" - nova
+set background=dark
 let g:nova_transparent = 1
 silent! colorscheme nova
+
+" - gruvbox-material
+" https://github.com/sainnhe/gruvbox-material/blob/master/doc/gruvbox-material.txt
+" set background=dark
+" let g:gruvbox_material_transparent_background = 1
+" let g:gruvbox_material_background = 'soft'
+" let g:gruvbox_material_visual = 'grey background'
+" let g:gruvbox_material_enable_italic = 1
+" let g:gruvbox_material_enable_bold = 1
+" let g:gruvbox_material_enable_undercurl = 1
+" let g:gruvbox_material_enable_underline = 1
+" let g:gruvbox_material_enable_reverse= 1
+" let g:gruvbox_material_statusline_style = 'original'
+" silent! colorscheme gruvbox-material
 
 
 

@@ -1,6 +1,7 @@
 -- ┌───────────────────────────────────────────────────────────────────────────┐
 -- │                                                                           │
 -- │ Setup for Lua-based plugins                                               │
+-- │ --> REF: https://github.com/nanotee/nvim-lua-guide                        │
 -- │                                                                           │
 -- └───────────────────────────────────────────────────────────────────────────┘
 
@@ -120,13 +121,13 @@ require("format").setup(
     }
   }
 )
-vim.fn.nvim_buf_set_keymap(
-  0,
-  "n",
-  "<leader>F",
-  "<cmd>Format<CR>",
-  {noremap = true, silent = true}
-)
+-- vim.fn.nvim_buf_set_keymap(
+--   0,
+--   "n",
+--   "<leader>F",
+--   "<cmd>Format<CR>",
+--   {noremap = true, silent = true}
+-- )
 
 -- [ nvim-colorizer.lua ] ------------------------------------------------------
 --   See https://github.com/norcalli/nvim-colorizer.lua

@@ -169,7 +169,7 @@ brew "tmux", args: ["--HEAD", "--with-utf8proc"]
 brew "tree"
 brew "unixodbc"
 brew "urlview"
-brew "watchman", args: ["--HEAD"]
+# brew "watchman", args: ["--HEAD"]
 brew "weechat", args: ["--HEAD"]
 brew "wget", args: ["enable-iri"]
 brew "wxmac"
@@ -200,7 +200,6 @@ cask "font-ia-writer-quattro"
 cask "1password"
 cask "1password-cli"
 cask "alfred"
-cask "altserver"
 # cask "android-platform-tools"
 cask "balenaetcher"
 cask "bettertouchtool"
@@ -247,7 +246,7 @@ cask "teamviewer"
 cask "thingsmacsandboxhelper"
 cask "unshaky"
 cask "vagrant"
-# cask "the-unarchiver"
+cask "the-unarchiver"
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "ubersicht"
 cask "virtualbox"
@@ -263,4 +262,4 @@ mas "Tweetbot", id: 557168941
 mas "Xcode", id: 497799835
 mas "Drafts", id: 1435957248
 mas "Things", id: 904280696
-mas "Canary Mail", id: 1236045954
+# mas "Canary Mail", id: 1236045954

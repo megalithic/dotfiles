@@ -71,6 +71,9 @@ alias tree="tree -L"
 alias icat="kitty +kitten icat"
 
 alias back="slack back; dnd off"
+alias gone="slack gone; dnd on"
+alias away="slack away; dnd off"
+alias lunch="slack lunch; dnd off"
 
 # ZMV
 # -----------------------------------------------------------------------------

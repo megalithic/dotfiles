@@ -12,7 +12,7 @@ local displays = {
   external = 'LG UltraFine'
 }
 
-local module = {
+local M = {
   network = {
     home = 'shaolin',
     hostname = hs.host.localizedName(),
@@ -41,17 +41,37 @@ local module = {
 
   grid =  {
     topHalf =         '0,0 8x4',
-    rightHalf =       '4,0 4x8',
     bottomHalf =      '0,4 8x4',
-    leftHalf =        '0,0 4x8',
+    rightHalf =       '4,0 4x8',
     rightOneThird =   '5,0 3x8',
     rightTwoThirds =  '3,0 5x8',
+    leftHalf =        '0,0 4x8',
     leftOneThird =    '0,0 3x8',
     leftTwoThirds =   '0,0 5x8',
     fullScreen =      '0,0 8x8',
     centeredLarge =   '1,1 6x6',
     centeredMedium =  '2,2 4x4',
     centeredSmall =   '3,3 2x2',
+  },
+
+  layout =  {
+    topHalf =         {  0,  0,  1, .5},
+    bottomHalf =      {  0, .5,  1, .5},
+    rightHalf =       hs.layout.right50,
+    rightOneThird =   hs.layout.right30,
+    rightTwoThirds =  hs.layout.right70,
+    bottomRight  =    { .5, .5, .5, .5},
+    bottomRight30 =   { .7, .5, .3, .5},
+    bottomRight40 =   { .6, .5, .4, .5},
+    bottomRight60 =   { .4, .5, .6, .5},
+    bottomRight70 =   { .3, .5, .7, .5},
+    leftHalf =        hs.layout.left50,
+    leftOneThird =    hs.layout.left30,
+    leftTwoThirds =   hs.layout.left70,
+    fullScreen =      hs.layout.maximized,
+    centeredLarge =   { x = 0.10, y = 0.10, w = 0.80, h = 0.80}, -- {1,1,6,6},
+    centeredMedium =  { x = 0.25, y = 0.25, w = 0.50, h = 0.50}, -- {2,2,4,4},
+    centeredSmall =   { x = 0.40, y = 0.35, w = 0.35, h = 0.35}, -- {3,3,2,2},
   },
 
   modifiers = {
@@ -79,32 +99,41 @@ local module = {
   },
 }
 
-module.ptt = module.modifiers.cmdAlt
+M.ptt = M.modifiers.cmdAlt
 
-module.apps = {
+M.apps = {
   ['net.kovidgoyal.kitty'] = {
     bundleID = 'net.kovidgoyal.kitty',
     name = 'kitty',
     hyper_key = 'k',
     preferredDisplay = 1,
-    position = module.grid.fullScreen,
+    position = M.grid.fullScreen,
     quitGuard = true,
+    rules = {
+      {nil, 1, M.layout.fullScreen}
+    }
   },
   ['com.brave.Browser'] = {
     bundleID = 'com.brave.Browser',
     name = 'Brave Browser',
     hyper_key = 'j',
     preferredDisplay = 1,
-    position = module.grid.fullScreen,
+    position = M.grid.fullScreen,
     quitGuard = true,
+    rules = {
+      {nil, 1, M.layout.fullScreen}
+    }
   },
   ['com.insomnia.app'] = {
     bundleID = 'com.insomnia.app',
     name = 'Insomnia',
     hyper_key ='i',
     preferredDisplay = 1,
-    position = module.grid.rightHalf,
-    quitGuard = false
+    position = M.grid.rightHalf,
+    quitGuard = false,
+    rules = {
+      {nil, 2, M.layout.rightHalf}
+    }
   },
   ['com.runningwithcrayons.Alfred'] = {
     name = 'Alfred',
@@ -115,15 +144,17 @@ module.apps = {
     bundleID = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
     hyper_key ='d',
-    modifier = module.modifiers.shift,
+    modifier = M.modifiers.shift,
     local_bindings = {';'},
     preferredDisplay = 1,
-    position = module.grid.rightHalf,
+    position = M.grid.rightHalf,
     quitGuard = false,
     hideAfter = 1,
     rules = {
-      {title = 'Workspaces', action = 'ignore'},
-      {title = 'Capture', action = 'snap', position = '5,5 3x3'},
+      {nil, 1, M.layout.rightHalf},
+      {'Capture', 1, M.layout.bottomRight30},
+      -- {title = 'Workspaces', action = 'ignore'},
+      -- {title = 'Capture', action = 'snap', position = '5,5 3x3'},
     },
   },
   ['com.culturedcode.ThingsMac'] = {
@@ -132,21 +163,31 @@ module.apps = {
     hyper_key = 't',
     preferred_display = 1,
     hideAfter = 1,
-    position = module.grid.centeredMedium,
-    local_bindings = {',', '.'}
+    position = M.grid.centeredMedium,
+    local_bindings = {',', '.'},
+    rules = {
+      {nil, 1, M.layout.centeredMedium},
+    },
   },
   ['com.kapeli.dashdoc'] = {
     bundleID = 'com.kapeli.dashdoc',
     name = 'Dash',
     hyper_key = 'd',
     preferredDisplay = 1,
-    position = module.grid.centeredLarge,
+    position = M.grid.centeredLarge,
+    rules = {
+      {nil, 2, M.layout.centeredLarge},
+    },
+
   },
   ['com.brettterpstra.marked2'] = {
     bundleID = 'com.brettterpstra.marked2',
     name = 'Marked',
     preferredDisplay = 2,
-    position = module.grid.leftHalf,
+    position = M.grid.leftHalf,
+    rules = {
+      {nil, 2, M.layout.leftHalf},
+    },
   },
   ['com.tinyspeck.slackmacgap'] = {
     bundleID = 'com.tinyspeck.slackmacgap',
@@ -155,10 +196,11 @@ module.apps = {
     context = 'slack',
     distraction = true,
     preferredDisplay = 2,
-    position = module.grid.leftHalf,
+    position = M.grid.leftHalf,
     quitGuard = true,
     rules = {
-      {title = 'Slack Call Minipanel', action = 'ignore'},
+      {nil, 2, M.layout.leftHalf},
+      -- {title = 'Slack Call Minipanel', action = 'ignore'},
     }
   },
   ['com.readdle.smartemail-Mac'] = {
@@ -168,7 +210,10 @@ module.apps = {
     context = 'spark',
     distraction = true,
     preferredDisplay = 2,
-    position = module.grid.rightHalf,
+    position = M.grid.rightHalf,
+    rules = {
+      {nil, 2, M.layout.rightHalf},
+    },
   },
 
   ['io.canarymail.mac'] = {
@@ -178,10 +223,11 @@ module.apps = {
     context = 'canary',
     distraction = true,
     preferredDisplay = 2,
-    position = module.grid.rightHalf,
+    position = M.grid.rightHalf,
     rules = {
-      {title = 'Main Window', action = 'snap'},
-      {title = 'Preferences', action = 'ignore'},
+      {nil, 2, M.layout.rightHalf}
+      -- {title = 'Main Window', action = 'snap'},
+      -- {title = 'Preferences', action = 'ignore'},
     }
   },
   ['com.apple.finder'] = {
@@ -189,9 +235,9 @@ module.apps = {
     name = 'Finder',
     hyper_key ='f',
     preferredDisplay = 1,
-    position = module.grid.centeredMedium,
+    position = M.grid.centeredMedium,
     rules = {
-      {title = 'Finder Preferences', action = 'ignore'},
+      -- {title = 'Finder Preferences', action = 'ignore'},
     },
   },
   ['us.zoom.xos'] = {
@@ -200,25 +246,32 @@ module.apps = {
     context = 'zoom',
     hyper_key ='z',
     preferredDisplay = 1,
-    position = module.grid.fullScreen,
+    position = M.grid.fullScreen,
     launchMode = 'focus',
     rules = {
-      {title = 'Zoom', action = 'quit'},
-      {title = 'Zoom Meeting', action = 'snap'},
+      -- {title = 'Zoom', action = 'quit'},
+      -- {title = 'Zoom Meeting', action = 'snap'},
+      {"Zoom Meeting", 2, M.layout.fullScreen}
     },
   },
   ['com.loom.desktop'] = {
     bundleID = 'com.loom.desktop',
     name = 'Loom',
     context = 'loom',
+    -- rules = {
+    --   {nil, 2, M.grid.leftHalf},
+    -- },
   },
   ['com.spotify.client'] = {
     bundleID = 'com.spotify.client',
     name = 'Spotify',
-    hyper_key ='8',
+    hyper_key ='\\',
     preferredDisplay = 2,
     hideAfter = 1,
-    position = module.grid.rightHalf
+    position = M.grid.rightHalf,
+    rules = {
+      {nil, 2, M.layout.rightHalf},
+    },
   },
   ['com.apple.iChat'] = {
     bundleID = 'com.apple.iChat',
@@ -227,16 +280,22 @@ module.apps = {
     context = 'messages',
     distraction = true,
     preferredDisplay = 1,
-    position = '5,5 3x3'
+    position = '5,5 3x3',
+    rules = {
+      {nil, 1, M.layout.bottomRight30},
+    },
   },
   ['hangouts'] = {
     bundleID = 'hangouts',
     name = 'Hangouts',
-    modifier = module.modifiers.cmdCtrl,
+    modifier = M.modifiers.cmdCtrl,
     shortcut = 'm',
     distraction = true,
     preferredDisplay = 1,
-    tabjump = 'hangouts.google.com'
+    tabjump = 'hangouts.google.com',
+    -- rules = {
+    --   {nil, 1, M.layout.leftHalf},
+    -- },
   },
   ['WhatsApp'] = {
     bundleID = 'WhatsApp',
@@ -245,7 +304,10 @@ module.apps = {
     context = 'whatsapp',
     distraction = true,
     preferredDisplay = 1,
-    position = '5,5 3x3'
+    position = '5,5 3x3',
+    rules = {
+      {nil, 1, M.layout.bottomRight30},
+    },
   },
   ['org.whispersystems.signal-desktop'] = {
     bundleID = 'org.whispersystems.signal-desktop',
@@ -254,7 +316,10 @@ module.apps = {
     context = 'signal',
     distraction = true,
     preferredDisplay = 1,
-    position = '5,5 3x3'
+    position = '5,5 3x3',
+    rules = {
+      {nil, 1, M.layout.bottomRight30},
+    },
   },
   ['com.agilebits.onepassword7'] = {
     bundleID = 'com.agilebits.onepassword7',
@@ -262,13 +327,19 @@ module.apps = {
     hyper_key = '1',
     preferredDisplay = 1,
     hideAfter = 1,
-    position = module.grid.centeredMedium
+    position = M.grid.centeredMedium,
+    rules = {
+      {nil, 1, M.layout.centeredSmall},
+    },
   },
   ['com.teamviewer.TeamViewer'] = {
     bundleID = 'com.teamviewer.TeamViewer',
     name = 'TeamViewer',
     preferredDisplay = 1,
-    position = module.grid.centeredLarge
+    position = M.grid.centeredLarge,
+    rules = {
+      {nil, 1, M.layout.centeredLarge},
+    },
   },
   ['org.hammerspoon.Hammerspoon'] = {
     bundleID = 'org.hammerspoon.Hammerspoon',
@@ -276,18 +347,22 @@ module.apps = {
     hyper_key = 'r',
     context = 'hammerspoon',
     preferredDisplay = 2,
-    position = module.grid.rightHalf,
+    position = M.grid.rightHalf,
     hideAfter = 1,
     quitGuard = true,
-    -- rules = {
-    --   {title = 'Hammerspoon Console', action = 'snap', position = module.grid.rightHalf}
-    -- }
+    rules = {
+      {'Hammerspoon Console', 2, M.layout.rightHalf},
+      -- {title = 'Hammerspoon Console', action = 'snap', position = M.grid.rightHalf}
+    }
   },
   ['com.apple.systempreferences'] = {
     bundleID = 'com.apple.systempreferences',
     name = 'System Preferences',
     preferredDisplay = 1,
-    position = module.grid.centeredMedium
+    position = M.grid.centeredMedium,
+    rules = {
+      {nil, 1, M.layout.leftHalf},
+    },
   },
   ['com.flexibits.fantastical2.mac'] = {
     bundleID = 'com.flexibits.fantastical2.mac',
@@ -295,18 +370,19 @@ module.apps = {
     hyper_key ='y',
     local_bindings = {']'},
     preferredDisplay = 1,
-    position = module.grid.centeredLarge,
+    position = M.grid.centeredLarge,
     quitGuard = true,
     hideAfter = 1,
     rules = {
-      { title="Fantastical Helper", rule="ignore" }
+      {nil, 2, M.layout.centeredLarge},
+      -- { title="Fantastical Helper", rule="ignore" }
     }
   },
   ['org.pqrs.Karabiner-Elements.Preferences'] = {
     bundleID = 'org.pqrs.Karabiner-Elements.Preferences',
     name = 'Karabiner-Elements',
     preferredDisplay = 1,
-    position = module.grid.centeredSmall,
+    position = M.grid.centeredSmall,
     quitGuard = true,
     hideAfter = 0.5,
     rules = {
@@ -321,11 +397,11 @@ module.apps = {
   }
 }
 
-module.utilities = {
+M.utilities = {
   -- NOTE: handle this with alfred and `sleep`/`lock` commands
   -- {
   --   name = 'Lock Screen',
-  --   modifier = module.modifiers.mashShift,
+  --   modifier = M.modifiers.mashShift,
   --   shortcut = 'L',
   --   fn = function() hs.caffeinate.systemSleep() end
   -- },
@@ -335,18 +411,18 @@ module.utilities = {
     hyper_mod = {'shift'},
     fn = (function()
       hs.reload()
-      hs.notify.show('Hammerspoon', 'Modules Reloaded', '')
+      hs.notify.show('Hammerspoon', 'Hammerspoon Config Reloaded', '')
     end)
   },
   {
     name = 'Pomodoro',
-    modifier = module.modifiers.cmdCtrl,
+    modifier = M.modifiers.cmdCtrl,
     shortcut = 'p',
     fn = (function() end)
   },
   {
     name = 'ScreenCapture',
-    modifier = module.modifiers.ctrlShift,
+    modifier = M.modifiers.ctrlShift,
     shortcut = 's',
     fn = (function()
       current_date = os.date('%Y%m%d-%H%M%S')
@@ -360,12 +436,12 @@ module.utilities = {
 }
 
 -- TODO: want to control these with hyper_key too..
-module.media = {
+M.media = {
   {
     action = 'previous',
     hyper_key = '[',
     hyper_mod = {'shift'},
-    modifier = module.modifiers.ctrlShift,
+    modifier = M.modifiers.ctrlShift,
     shortcut = '[',
     label = '⇤ previous'
   },
@@ -373,7 +449,7 @@ module.media = {
     action = 'next',
     hyper_key = ']',
     hyper_mod = {'shift'},
-    modifier = module.modifiers.ctrlShift,
+    modifier = M.modifiers.ctrlShift,
     shortcut = ']',
     label = 'next ⇥'
   },
@@ -381,16 +457,16 @@ module.media = {
     action = 'playpause',
     hyper_key = '\\',
     hyper_mod = {'shift'},
-    modifier = module.modifiers.ctrlShift,
+    modifier = M.modifiers.ctrlShift,
     shortcut = '\\',
     label = 'play/pause'
   },
 }
 
-module.volume = {
+M.volume = {
   {
     action = 'down',
-    modifier = module.modifiers.ctrlShift,
+    modifier = M.modifiers.ctrlShift,
     shortcut = 27,
     hyper_key = 27,
     hyper_mod = {'shift'},
@@ -398,7 +474,7 @@ module.volume = {
   },
   {
     action = 'up',
-    modifier = module.modifiers.ctrlShift,
+    modifier = M.modifiers.ctrlShift,
     shortcut = 24,
     hyper_key = 24,
     hyper_mod = {'shift'},
@@ -406,61 +482,61 @@ module.volume = {
   },
 }
 
-module.snap = {
+M.snap = {
   {
     name = 'left',
-    modifier = module.modifiers.cmdCtrl,
-    -- hyperKey = module.modifiers.hyper,
+    modifier = M.modifiers.cmdCtrl,
+    -- hyperKey = M.modifiers.hyper,
     shortcut = 'h',
     locations = {
-      module.grid.leftHalf,
-      module.grid.leftOneThird,
-      module.grid.leftTwoThirds,
+      M.grid.leftHalf,
+      M.grid.leftOneThird,
+      M.grid.leftTwoThirds,
     }
   },
   {
     name = 'right',
-    modifier = module.modifiers.cmdCtrl,
-    -- hyperKey = module.modifiers.hyper,
+    modifier = M.modifiers.cmdCtrl,
+    -- hyperKey = M.modifiers.hyper,
     shortcut = 'l',
     locations = {
-      module.grid.rightHalf,
-      module.grid.rightOneThird,
-      module.grid.rightTwoThirds,
+      M.grid.rightHalf,
+      M.grid.rightOneThird,
+      M.grid.rightTwoThirds,
     }
   },
   {
     name = 'down',
-    modifier = module.modifiers.cmdCtrl,
-    -- hyperKey = module.modifiers.hyper,
+    modifier = M.modifiers.cmdCtrl,
+    -- hyperKey = M.modifiers.hyper,
     shortcut = 'j',
     locations = {
-      module.grid.centeredLarge,
-      module.grid.centeredMedium,
-      module.grid.centeredSmall,
+      M.grid.centeredLarge,
+      M.grid.centeredMedium,
+      M.grid.centeredSmall,
     }
   },
   {
     name = 'up',
-    modifier = module.modifiers.cmdCtrl,
-    -- hyperKey = module.modifiers.hyper,
+    modifier = M.modifiers.cmdCtrl,
+    -- hyperKey = M.modifiers.hyper,
     shortcut = 'k',
     locations = {
-      module.grid.fullScreen,
+      M.grid.ullScreen,
     }
   },
   {
     name = 'full',
-    modifier = module.modifiers.cmdCtrl,
-    -- hyperKey = module.modifiers.hyper,
+    modifier = M.modifiers.cmdCtrl,
+    -- hyperKey = M.modifiers.hyper,
     shortcut = 'return',
     locations = {
-      module.grid.fullScreen,
+      M.grid.fullScreen,
     }
   },
 }
 
-module.docking = {
+M.docking = {
   -- find your device IDs with `dumpUsbDevices()` (see console.lua) from the hammerspoon console
   ['device'] = {
     productID = 25907,
@@ -484,4 +560,4 @@ module.docking = {
   },
 }
 
-return module
+return M

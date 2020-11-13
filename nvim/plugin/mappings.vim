@@ -143,6 +143,8 @@ nnoremap <leader>bn :bnext<cr>
 nnoremap <leader>bp :bprevious<cr>
 nnoremap <leader>b# :b#<cr>
 nnoremap <leader>bx :%bd\|e#<cr>
+" Easy buffer navigation.
+nnoremap gb :ls<CR>:b<Space>
 
 " open vertical term for REPL tings
 " noremap <leader>r :only<CR> :vert terminal<CR>
@@ -204,7 +206,6 @@ nmap <silent> gs :echo 'hi<'.synIDattr(synID(line('.'), col('.'), 1), 'name')
 " Goes to the first line above/below that isn't whitespace
 " Thanks to: http://vi.stackexchange.com/a/213
 nnoremap <silent> gj :let _=&lazyredraw<CR>:set lazyredraw<CR>/\%<C-R>=virtcol(".")<CR>v\S<CR>:nohl<CR>:let &lazyredraw=_<CR>
-
 
 " Yank to clipboard
 " nnoremap <silent> y+ <cmd>set opfunc=utils#clipboard_yank<cr>g@

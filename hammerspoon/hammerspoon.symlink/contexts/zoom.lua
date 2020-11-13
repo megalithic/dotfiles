@@ -31,7 +31,7 @@ M.apply = function(event, win, log)
 
       ----------------------------------------------------------------------
       -- close web browser "zoom launching" tabs
-      browser.killTabsByDomain("zoom.us")
+      browser.killTabsByDomain("*.zoom.us")
     end
 
     init_apply_complete = true
@@ -52,6 +52,7 @@ M.apply = function(event, win, log)
   if app_config == nil or app_config.rules == nil then return end
 
   if fn.contains({"windowCreated"}, event) then
+    -- wh.snapRelated()
     wh.applyRules(app_config.rules, win, app_config)
   end
 end

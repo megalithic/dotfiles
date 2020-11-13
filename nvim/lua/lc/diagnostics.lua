@@ -8,7 +8,7 @@ local vfn = vim.fn
 function M.show_line_diagnostics()
   local indent = "  "
   local lines = {"Diagnostics:", ""}
-  local line_diagnostics = lsp.util.get_line_diagnostics()
+  local line_diagnostics = lsp.diagnostic.get_line_diagnostics()
   if vim.tbl_isempty(line_diagnostics) then
     return
   end

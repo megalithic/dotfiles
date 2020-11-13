@@ -13,11 +13,16 @@
 # -- [ prefix ] ----------------------------------------------------------------
 # Prefix like it's gnu-screen
 unbind C-a
-# unbind C-b
+unbind C-b
 
-set -g prefix2 C-a
-bind C-a send-prefix
-bind C-a send-prefix
+# set -g prefix2 C-a
+# bind C-a send-prefix
+# bind C-a send-prefix
+
+set -g prefix C-a	
+bind C-a send-prefix	
+
+# bind C-a send-prefix
 
 
 # -- [ general settings ] ------------------------------------------------------
@@ -235,10 +240,10 @@ bind * command-prompt -p 'save window pane to filename:' -I '~/tmux.history' 'ca
 
 # This will override time command
 # quickly show a popup with a terminal on top of everything
-bind -r C-t display-popup -KER "zsh -l" -d "#{pane_current_path}" -w "50%" -h "50%"
-bind C-j popup -KE -w "50%" -h "50%" -y "0" -R "tmux list-sessions | sed -E 's/:.*$//' | grep -v \"^$(tmux display-message -p '#S')\$\" | fzf --reverse | xargs tmux switch-client -t"
+# bind -r C-t display-popup -KER "zsh -l" -d "#{pane_current_path}" -w "50%" -h "50%"
+# bind C-j popup -KE -w "50%" -h "50%" -y "0" -R "tmux list-sessions | sed -E 's/:.*$//' | grep -v \"^$(tmux display-message -p '#S')\$\" | fzf --reverse | xargs tmux switch-client -t"
 # bind C-y popup -KE -w "50%" -h "50%" -y "0" -R "ls ~/Development | fzf --reverse | xargs tmuxinator start code"
-bind C-m popup -KE -R "zsh"
+# bind C-m popup -KE -R "zsh"
 
 
 # -- [ status bar ] ------------------------------------------------------------
@@ -261,7 +266,7 @@ set -g renumber-windows on # re-number windows when one is closed
 
 
 # -- active pane decorations
-setw -g pane-border-status top
+setw -g pane-border-status top # currently renders incorrectly in HEAD, top/off
 setw -g pane-border-lines "single" # single, double, heavy, simple, number
 setw -g pane-border-format ""
 # setw -g pane-border-format '─'

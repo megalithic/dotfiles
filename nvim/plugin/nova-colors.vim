@@ -1,17 +1,14 @@
 function! s:nova_engage() abort
 
-  " -- icons/indicators
+  " -- icons
 
-  let g:indicator_checking = "\uf110"   "
-  let g:indicator_ok = "\uf00c"         "
-  let g:indicator_errors = "\uf05e"     "
-  let g:indicator_warnings = "\uf071"   "
-  let g:indicator_infos = "\uf7fc"      "
-  let g:indicator_hints = "\uf835"      "
-  let g:sign_error = "\uf655"           "
-  let g:sign_warning = "\ufa36"         "喝
-  let g:sign_info = g:indicator_infos   "\uf0da
-  let g:sign_hint = g:indicator_hints   "\uf105
+  " = statusline
+  let g:statusline_checking = "\uf110"   "
+  let g:statusline_ok = "\uf00c"         "
+  let g:statusline_error = "\uf05e"     "
+  let g:statusline_warning = "\uf071"   "
+  let g:statusline_information = "\uf7fc"      "
+  let g:statusline_hint = "\uf835"      "
   let g:modified_symbol = "\uf085"      "
   let g:vcs_symbol = "\uf418"           "
   let g:readonly_symbol = "\uf023"      "
@@ -20,8 +17,17 @@ function! s:nova_engage() abort
   let g:perc_sep = "\uf44e"             "
   let g:right_sep = "\ue0b4"            " nf-ple-*
   let g:left_sep = "\ue0b6"             "
-  let g:term_mode = "\ufcb5"            "\ue7a2 ﲵ
+  let g:term_mode = "\ufcb5"            "\ue7a2  ﲵ
+
+  " = sign column
+  let g:sign_error = "\uf655"           "
+  let g:sign_warning = "\ufa36"         "喝
+  let g:sign_information = g:statusline_information   "\uf0da
+  let g:sign_hint = g:statusline_hint   "\uf105
+
+  " = diagnostics virtual_text
   let g:virtual_text_symbol = "\uf63d"  "
+  " let g:virtual_text_symbol = "⏣"       "\uf63d ⏣
 
   let g:spinner_frames = ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷']
 
@@ -119,20 +125,32 @@ function! s:nova_engage() abort
   " 'LspDiagnosticsWarningSign',
   " }
 
+  " nvim-lsp/diagnostics
+  exe 'hi LspDiagnosticsVirtualTextError gui=undercurl,italic guifg=' . g:error
+  exe 'hi LspDiagnosticsVirtualTextWarning gui=undercurl,italic guifg=' . g:warning
+  exe 'hi LspDiagnosticsVirtualTextInformation gui=undercurl,italic guifg=' . g:information
+  exe 'hi LspDiagnosticsVirtualTextHint gui=undercurl,italic guifg=' . g:hint
+
   exe 'hi LspDiagnosticsUnderlineError gui=undercurl,italic guifg=' . g:error
   exe 'hi LspDiagnosticsUnderlineWarning gui=undercurl,italic guifg=' . g:warning
   exe 'hi LspDiagnosticsUnderlineInformation gui=undercurl,italic guifg=' . g:information
   exe 'hi LspDiagnosticsUnderlineHint gui=undercurl,italic guifg=' . g:hint
 
-  exe 'hi LspDiagnosticsError gui=undercurl,italic guifg=' . g:error
-  exe 'hi LspDiagnosticsWarning gui=undercurl,italic guifg=' . g:warning
-  exe 'hi LspDiagnosticsInformation gui=undercurl,italic guifg=' . g:information
-  exe 'hi LspDiagnosticsHint gui=undercurl,italic guifg=' . g:hint
 
-  exe 'hi LspDiagnosticsErrorSign guifg=' . g:error
-  exe 'hi LspDiagnosticsWarningSign guifg=' . g:warning
-  exe 'hi LspDiagnosticsInformationSign guifg=' . g:information
-  exe 'hi LspDiagnosticsHintSign guifg=' . g:hint
+  exe 'hi LspDiagnosticsDefaultError gui=undercurl,italic guifg=' . g:error
+  exe 'hi LspDiagnosticsDefaultWarning gui=undercurl,italic guifg=' . g:warning
+  exe 'hi LspDiagnosticsDefaultInformation gui=undercurl,italic guifg=' . g:information
+  exe 'hi LspDiagnosticsDefaultHint gui=undercurl,italic guifg=' . g:hint
+
+  exe 'hi LspDiagnosticsFloatingError gui=italic guifg=' . g:error
+  exe 'hi LspDiagnosticsFloatingWarning gui=italic guifg=' . g:warning
+  exe 'hi LspDiagnosticsFloatingInformation gui=italic guifg=' . g:information
+  exe 'hi LspDiagnosticsFloatingHint gui=italic guifg=' . g:hint
+
+  exe 'hi LspDiagnosticsSignError guifg=' . g:error
+  exe 'hi LspDiagnosticsSignWarning guifg=' . g:warning
+  exe 'hi LspDiagnosticsSignInformation guifg=' . g:information
+  exe 'hi LspDiagnosticsSignHint guifg=' . g:hint
 
   hi! link ErrorLine LspDiagnosticsError
   hi! link WarningLine LspDiagnosticsWarning

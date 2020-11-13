@@ -43,101 +43,75 @@ imap <expr> <CR>  pumvisible() ?
 nnoremap <silent> K :call <SID>show_documentation()<CR>
 
 
-" -- [ snippets ] --------------------------------------------------------------
-
-let g:vsnip_snippet_dir = "~/.dotfiles/nvim/vsnips"
-
-
 " -- [ completion ] ------------------------------------------------------------
-
-set completeopt=menuone,noinsert,noselect " Don't auto select first one
-set shortmess+=c                          " Don't show insert mode completion messages
 
 " https://github.com/fsouza/vimfiles/blob/main/lua/lc/opts.lua#L32
 
-let g:completion_enable_auto_popup = 1
-let g:completion_enable_auto_hover = 1
-let g:completion_enable_auto_signature = 1
-let g:completion_auto_change_source = 1
-let g:completion_enable_fuzzy_match = 1
-let g:completion_enable_snippet = 'vim-vsnip'
-let g:completion_enable_auto_paren = 0
-let g:completion_timer_cycle = 80
-let g:completion_trigger_on_delete = 0
-let g:completion_trigger_keyword_length = 2
-let g:completion_max_items = 20
-let g:completion_sorting = "none" " none, length, alphabet
-let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
+" let g:completion_enable_auto_popup = 1
+" let g:completion_enable_auto_hover = 1
+" let g:completion_enable_auto_signature = 1
+" let g:completion_auto_change_source = 1
+" let g:completion_enable_fuzzy_match = 1
+" let g:completion_enable_snippet = 'vim-vsnip'
+" let g:completion_enable_auto_paren = 0
+" let g:completion_timer_cycle = 80
+" let g:completion_trigger_on_delete = 0
+" let g:completion_trigger_keyword_length = 2
+" let g:completion_max_items = 20
+" let g:completion_sorting = "none" " none, length, alphabet
+" let g:completion_matching_strategy_list = ['exact', 'substring', 'fuzzy']
 
-let g:completion_customize_lsp_label = {
-      \ 'Constant': "\uf8ff",
-      \ 'Struct': "\ufb44",
-      \ 'EnumMember': "\uf02b",
-      \ 'Color': "\ue22b",
-      \ 'Property': "\ufab6",
-      \ 'Unit': "\uf475",
-      \ 'File': "\uf471",
-      \ 'Value': "\uf8a3",
-      \ 'Event': "\ufacd",
-      \ 'TypeParameter': "\uf278",
-      \ 'Default': "\uf29c",
-      \ 'Buffers': "\ufb18 [B]",
-      \ 'Function': "\uf794",
-      \ 'Method': ' ',
-      \ 'Reference': ' ',
-      \ 'Enum': ' ',
-      \ 'Field': 'ﰠ ',
-      \ 'Keyword': ' ',
-      \ 'Variable': ' ',
-      \ 'Folder': ' ',
-      \ 'Snippet': '  [S]',
-      \ 'vim-vsnip': '  [VS]',
-      \ 'Operator': ' ',
-      \ 'Module': ' ',
-      \ 'Text': 'ﮜ',
-      \ 'Class': ' ',
-      \ 'Interface': ' '
-      \}
+" let g:completion_customize_lsp_label = {
+"       \ 'Constant': "\uf8ff",
+"       \ 'Struct': "\ufb44",
+"       \ 'EnumMember': "\uf02b",
+"       \ 'Color': "\ue22b",
+"       \ 'Property': "\ufab6",
+"       \ 'Unit': "\uf475",
+"       \ 'File': "\uf471",
+"       \ 'Value': "\uf8a3",
+"       \ 'Event': "\ufacd",
+"       \ 'TypeParameter': "\uf278",
+"       \ 'Default': "\uf29c",
+"       \ 'Buffers': "\ufb18 [B]",
+"       \ 'Function': "\uf794",
+"       \ 'Method': ' ',
+"       \ 'Reference': ' ',
+"       \ 'Enum': ' ',
+"       \ 'Field': 'ﰠ ',
+"       \ 'Keyword': ' ',
+"       \ 'Variable': ' ',
+"       \ 'Folder': ' ',
+"       \ 'Snippet': '  [S]',
+"       \ 'vim-vsnip': '  [VS]',
+"       \ 'Operator': ' ',
+"       \ 'Module': ' ',
+"       \ 'Text': 'ﮜ',
+"       \ 'Class': ' ',
+"       \ 'Interface': ' '
+"       \}
 
-let g:completion_chain_complete_list = {
-      \ 'default' : {
-      \    'default': [
-      \        {'complete_items': ['lsp', 'snippet', 'buffers']},
-      \        {'complete_items': ['buffers']},
-      \        {'mode': 'keyn'},
-      \        {'mode': '<c-p>'},
-      \        {'mode': '<c-n>'},
-      \        {'mode': 'dict'},
-      \        {'mode': 'spel'},
-      \    ],
-      \    'string' : [
-      \        {'complete_items': ['path'], 'triggered_only': ['/']},
-      \        {'complete_items': ['buffers']}
-      \    ],
-      \  },
-      \}
+" let g:completion_chain_complete_list = {
+"       \ 'default' : {
+"       \    'default': [
+"       \        {'complete_items': ['lsp', 'snippet', 'buffers']},
+"       \        {'complete_items': ['buffers']},
+"       \        {'mode': 'keyn'},
+"       \        {'mode': '<c-p>'},
+"       \        {'mode': '<c-n>'},
+"       \        {'mode': 'dict'},
+"       \        {'mode': 'spel'},
+"       \    ],
+"       \    'string' : [
+"       \        {'complete_items': ['path'], 'triggered_only': ['/']},
+"       \        {'complete_items': ['buffers']}
+"       \    ],
+"       \  },
+"       \}
 
-" -- [ diagnostics ] -----------------------------------------------------------
-
-let g:diagnostic_auto_popup_while_jump = 1
-let g:diagnostic_enable_virtual_text = 0
-let g:diagnostic_enable_underline = 0
-let g:diagnostic_virtual_text_prefix = "\uf63d" "
-let g:diagnostic_trimmed_virtual_text = '300'
-let g:diagnostic_show_sign = 1
-let g:diagnostic_insert_delay = 1
-" let g:diagnostic_enable_ale = 1
-
-" FIXME:
-" https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/plugin/lsp.vim#L58-L61
-call sign_define("LspDiagnosticsErrorSign", {"text" : g:sign_error, "texthl" : "LspDiagnosticsErrorSign", "linehl": "", "numhl": ""})
-call sign_define("LspDiagnosticsWarningSign", {"text" : g:sign_warning, "texthl" : "LspDiagnosticsWarningSign", "linehl": "", "numhl": ""})
-call sign_define("LspDiagnosticsInformationSign", {"text" : g:sign_info, "texthl" : "LspDiagnosticsInformationSign", "linehl": "", "numhl": ""})
-call sign_define("LspDiagnosticsHintSign", {"text" : g:sign_hint, "texthl" : "LspDiagnosticsWarningSign", "linehl": "", "numhl": ""})
-
-augroup lsp
-  au!
-  au User LspDiagnosticsChanged redrawstatus!
-  au User LspMessageUpdate redrawstatus!
-  au User LspStatusUpdate redrawstatus!
-augroup END
+" augroup lsp
+"   au!
+"   au User LspDiagnosticsChanged redrawstatus!
+"   au User LspMessageUpdate redrawstatus!
+"   au User LspStatusUpdate redrawstatus!
+" augroup END

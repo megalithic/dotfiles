@@ -1,6 +1,9 @@
 local log = hs.logger.new('[window-handlers]', 'warning')
+
 local cache = { timers = {} }
-local module = { cache = cache }
+local M = { cache = cache }
+
+local fn = require('hs.fnutils')
 
 local function dnd_command_updater(cmd, cb, args)
   if cmd ~= nil then
@@ -9,20 +12,20 @@ local function dnd_command_updater(cmd, cb, args)
   end
 end
 
-module.killApp = function(win)
+M.killApp = function(win)
   if win == nil then return end
   local app = win:application()
 
   app:kill()
 end
 
-module.killWindow = function(win)
+M.killWindow = function(win)
   if win == nil then return end
 
   win:close()
 end
 
-module.dndHandler = function(win, dndConfig, event)
+M.dndHandler = function(win, dndConfig, event)
   if dndConfig == nil then return end
 
   local mode = dndConfig.mode
@@ -36,12 +39,12 @@ module.dndHandler = function(win, dndConfig, event)
 
       dnd_command_updater(dndCmd, nil, {"on"})
 
-      module.onAppQuit(win, function()
+      M.onAppQuit(win, function()
         log.df("DND Handler: off/back")
         dnd_command_updater(dndCmd, nil, {"off"})
       end)
     elseif (event == "windowDestroyed") then
-      module.onAppQuit(win, function()
+      M.onAppQuit(win, function()
         log.df("DND Handler: off/back")
         dnd_command_updater(dndCmd, nil, {"off"})
       end)
@@ -49,7 +52,7 @@ module.dndHandler = function(win, dndConfig, event)
   end
 end
 
-module.quitAfterHandler = function(win, interval, event)
+M.quitAfterHandler = function(win, interval, event)
   if interval ~= nil then
     local app = win:application()
     local appName = app:name()
@@ -61,10 +64,10 @@ module.quitAfterHandler = function(win, interval, event)
         cache.timers[appName]:stop()
       end
 
-      if hs.fnutils.contains({"windowUnfocused", "windowHidden", "windowMinimized", "windowNotVisible", "windowNotOnScreen"}, event) then
+      if fn.contains({"windowUnfocused", "windowHidden", "windowMinimized", "windowNotVisible", "windowNotOnScreen"}, event) then
         log.df("starting quit timer on ".. win:title())
 
-        cache.timers[appName] = hs.timer.doAfter((interval*60), function() module.killApp(win) end)
+        cache.timers[appName] = hs.timer.doAfter((interval*60), function() M.killApp(win) end)
       end
     end
   else
@@ -72,7 +75,7 @@ module.quitAfterHandler = function(win, interval, event)
   end
 end
 
-module.hideAfterHandler = function(win, interval, event)
+M.hideAfterHandler = function(win, interval, event)
   if interval ~= nil then
     local app = win:application()
     local appName = app:name()
@@ -84,7 +87,7 @@ module.hideAfterHandler = function(win, interval, event)
         cache.timers[appName]:stop()
       end
 
-      if hs.fnutils.contains({"windowUnfocused", "windowHidden", "windowMinimized", "windowNotVisible", "windowNotOnScreen"}, event) then
+      if fn.contains({"windowUnfocused", "windowHidden", "windowMinimized", "windowNotVisible", "windowNotOnScreen"}, event) then
         log.df("starting hide timer on ".. win:title())
 
         cache.timers[appName] = hs.timer.doAfter((interval*60), function() app:hide() end)
@@ -97,7 +100,7 @@ end
 
 -- onAppQuit(hs.window, function) :: nil
 -- evaluates and returns valid/usable windows for an app
-module.onAppQuit = function(win, callback, providedInterval)
+M.onAppQuit = function(win, callback, providedInterval)
   local interval = providedInterval or 0.2
   local app = win:application()
 
@@ -109,12 +112,23 @@ module.onAppQuit = function(win, callback, providedInterval)
   interval)
 end
 
+M.layoutFromGrid = function(gridCell, screenNum)
+  local geometry = hs.grid.getCell(gridCell, M.targetDisplay(screenNum))
+  local rect = hs.geometry(geometry)
+
+  -- print("gridCell -> " .. gridCell)
+  -- print("geometry -> " .. hs.inspect(geometry))
+  -- print("rect -> " .. hs.inspect(rect))
+
+  return rect
+end
+
 -- targetDisplay(int) :: hs.screen
 -- detect the current number of monitors and return target screen
-module.targetDisplay = function(displayInt)
+M.targetDisplay = function(num)
   local displays = hs.screen.allScreens()
-  if displays[displayInt] ~= nil then
-    return displays[displayInt]
+  if displays[num] ~= nil then
+    return displays[num]
   else
     return hs.screen.primaryScreen()
   end
@@ -122,18 +136,18 @@ end
 
 -- ignoredWindowTitles(table) :: {string}
 -- gathers the window titles from the given app config's rules
-module.ignoredWindowTitles = function(appConfig)
-  if appConfig == nil or appConfig.rules == nil then return {} end
+M.ignoredWindowTitles = function(app_config)
+  if app_config == nil or app_config.rules == nil then return {} end
 
   local ignoredWindowTitles = {}
 
-  for _, rule in pairs(appConfig.rules) do
+  for _, rule in pairs(app_config.rules) do
     if rule ~= nil then
       table.insert(ignoredWindowTitles, rule.title)
     end
   end
 
-  log.df("ignoredWindowTitles::%s[%s]", appConfig.bundleID, #ignoredWindowTitles)
+  log.df("ignoredWindowTitles::%s[%s]", app_config.bundleID, #ignoredWindowTitles)
 
   return ignoredWindowTitles
 end
@@ -141,10 +155,10 @@ end
 -- validWindows(hs.application) :: {hs.window}
 -- optional: hs.application
 -- evaluates and returns valid/usable windows for an app
-module.validWindows = function(app)
+M.validWindows = function(app)
   local windowProvider = (app and app:allWindows()) or hs.window.filter.default:getWindows()
 
-  local windows = hs.fnutils.filter(windowProvider, (function(win)
+  local windows = fn.filter(windowProvider, (function(win)
     return win ~= nil and win:title() ~= "" and win:isStandard() and win:isVisible() and not win:isFullScreen()
   end))
 
@@ -155,9 +169,9 @@ end
 
 -- managedWindows(hs.application, {hs.window}, {string}) :: {hs.window}
 -- evaluates and returns valid/usable/managed windows for an app
-module.managedWindows = function(app, validWindows, ignoredWindowTitles)
-  local windows = hs.fnutils.filter(validWindows, (function(win)
-    return not hs.fnutils.contains(ignoredWindowTitles, win:title())
+M.managedWindows = function(app, validWindows, ignoredWindowTitles)
+  local windows = fn.filter(validWindows, (function(win)
+    return not fn.contains(ignoredWindowTitles, win:title())
   end))
 
   log.df("managedWindows::%s[%s]", app:bundleID(), #windows)
@@ -167,20 +181,20 @@ end
 
 -- snap(hs.window, string, int) :: nil
 -- does the actual hs.grid `set` for positioning a given window in our grid
-module.snap = function(win, position, preferredDisplay)
+M.snap = function(win, position, preferredDisplay)
   if win == nil then return end
 
   log.df("snap -> %s", win:title())
-  hs.grid.set(win, position or hs.grid.get(win), module.targetDisplay(preferredDisplay))
+  hs.grid.set(win, position or hs.grid.get(win), M.targetDisplay(preferredDisplay))
 end
 
 -- snapRelated(hs.application, table, {hs.window}) :: nil
 -- handles positioning of related windows for an app
-module.snapRelated = function(_, appConfig, windows)
-  if appConfig == nil then return end
+M.snapRelated = function(_, app_config, windows)
+  if app_config == nil then return end
 
   if #windows == 1 then
-    module.snap(windows[1], appConfig.position, appConfig.preferredDisplay)
+    M.snap(windows[1], app_config.position, app_config.preferredDisplay)
 
     return
   end
@@ -189,36 +203,40 @@ module.snapRelated = function(_, appConfig, windows)
     if win == nil then return end
 
     if (index % 2 == 0) then -- even index/number
-      module.snap(win, config.grid.rightHalf, appConfig.preferredDisplay)
+      M.snap(win, config.grid.rightHalf, app_config.preferredDisplay)
     else -- odd index/number
-      module.snap(win, config.grid.leftHalf, appConfig.preferredDisplay)
+      M.snap(win, config.grid.leftHalf, app_config.preferredDisplay)
     end
   end
 end
 
 -- applyRules(table, hs.window, table) :: nil
 -- handles positioning of related windows for an app
-module.applyRules = function(rules, win, appConfig)
-  for _, rule in pairs(rules) do
-    if win:title() == rule.title then
-      if rule.action == "snap" then
-        module.snap(win, rule.position or appConfig.position, appConfig.preferredDisplay)
-      elseif rule.action == "quit" then
-        module.killWindow(win)
-      elseif rule.action == "hide" then
-        -- FIXME: do we just do another window kill here, instead?
-        -- module.killWindow(win)
-        -- or --
-        -- win:application():hide()
-      elseif rule.action == "ignore" then
-        log.wf("applyRules -> ignoring window [%s]", win:title())
+M.applyRules = function(rules, win, app_config)
+  -- exit from this function for now.. need to figure out how to use hs.layout
+  -- to do multi-window layout rules.
+  -- return
 
-        return
-      end
-    -- else
-    --   log.wf("applyRules::%s -> no matching window titles [%s]", appConfig.bundleID, win:title())
-    end
-  end
+  -- for _, rule in pairs(rules) do
+  --   if win:title() == rule.title then
+  --     if rule.action == "snap" then
+  --       M.snap(win, rule.position or app_config.position, app_config.preferredDisplay)
+  --     elseif rule.action == "quit" then
+  --       M.killWindow(win)
+  --     elseif rule.action == "hide" then
+  --       -- FIXME: do we just do another window kill here, instead?
+  --       -- M.killWindow(win)
+  --       -- or --
+  --       -- win:application():hide()
+  --     elseif rule.action == "ignore" then
+  --       log.wf("applyRules -> ignoring window [%s]", win:title())
+
+  --       return
+  --     end
+  --   -- else
+  --   --   log.wf("applyRules::%s -> no matching window titles [%s]", app_config.bundleID, win:title())
+  --   end
+  -- end
 end
 
-return module
+return M

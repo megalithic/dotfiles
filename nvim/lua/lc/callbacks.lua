@@ -86,8 +86,15 @@ M["textDocument/documentHighlight"] = function(_, _, result, _)
   lsp.util.buf_highlight_references(bufnr, result)
 end
 
-M["textDocument/publishDiagnostics"] = function(err, method, result, client_id)
-  require("lc.buf_diagnostic").publishDiagnostics(err, method, result, client_id)
-end
-
+M["textDocument/publishDiagnostics"] = lsp.with(
+  lsp.diagnostic.on_publish_diagnostics, {
+    underline = true,
+    virtual_text = false,
+    -- virtual_text = {
+    --   spacing = 4,
+    --   prefix = vim.api.nvim_get_var("virtual_text_symbol"),
+    -- },
+    signs = true,
+    update_in_insert = false,
+  })
 return M

@@ -1,5 +1,7 @@
 # -- zinit configuration
 
+zinit light Aloxaf/fzf-tab
+
 # REF: https://github.com/davidkna/dotfiles/blob/master/dot_zshrc
 zinit wait lucid for \
   atinit"zpcompinit; zpcdreplay" \
@@ -15,6 +17,7 @@ zinit wait lucid for \
  # atclone="dircolors -b LS_COLORS > c.zsh" atpull='%atclone' pick='c.zsh' \
  #    trapd00r/LS_COLORS
  # REF: ^ https://github.com/MiracleKaze/dotfiles/blob/master/dotfiles/zshrc
+
 
 # Load OMZ Git library
 zinit snippet OMZ::lib/git.zsh
@@ -59,6 +62,7 @@ zinit light-mode for \
 zinit ice as="completion" for \
     OMZP::docker/_docker \
     OMZP::fd/_fd \
+    OMZP::mix/_mix \
     OMZP::cargo/_cargo \
     OMZP::rust/_rust \
     esc/conda-zsh-completion

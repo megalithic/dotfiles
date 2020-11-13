@@ -217,7 +217,14 @@ augroup writing
   au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
 augroup END
 
-augroup Format
-    autocmd!
-    autocmd BufWritePost * FormatWrite
-augroup END
+" format.nvim --
+" augroup Format
+"     autocmd!
+"     autocmd BufWritePost * if &filetype ~= "elixir"
+"           \ | silent :FormatWrite
+"           \ | endif
+
+"     " autocmd InsertLeave * if &filetype != "markdown"
+"     "                           \ | silent set colorcolumn=""
+"     "                           \ | endif
+" augroup END

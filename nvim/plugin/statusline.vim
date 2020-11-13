@@ -112,10 +112,24 @@ function! Statusline(winnum) abort
 
   " LSP status
   if active
+    " let sl .= <SID>Color(active, 'StatuslineLsp', '%{statusline#lsp_status()}')
     let sl .= <SID>Color(active, 'StatuslineError', '%{statusline#lsp_errors()}')
     let sl .= <SID>Color(active, 'StatuslineWarning', '%{statusline#lsp_warnings()}')
     let sl .= <SID>Color(active, 'StatuslineHint', '%{statusline#lsp_hints()}')
     let sl .= <SID>Color(active, 'StatuslineInformation', '%{statusline#lsp_informations()}')
+
+    " if luaeval('not vim.tbl_isempty(vim.lsp.buf_get_clients(0))')
+    "   let sl.='%#MyStatuslineLSP#' .. g:statusline_error
+    "   let sl.='%#MyStatuslineLSPErrors#%{luaeval("vim.lsp.diagnostic.get_count([[Error]])")}'
+    "   let sl.='%#MyStatuslineLSP# ' .. g:statusline_warning
+    "   let sl.='%#MyStatuslineLSPWarnings#%{luaeval("vim.lsp.diagnostic.get_count([[Warning]])")}'
+    "   let sl.='%#MyStatuslineLSP# ' .. g:statusline_information
+    "   let sl.='%#MyStatuslineLSPErrors#%{luaeval("vim.lsp.diagnostic.get_count([[Information]])")}'
+    "   let sl.='%#MyStatuslineLSP# ' .. g:statusline_hint
+    "   let sl.='%#MyStatuslineLSPWarnings#%{luaeval("vim.lsp.diagnostic.get_count([[Hint]])")}'
+    " else
+    "   let sl.='%#MyStatuslineLSPErrors#off'
+    " endif
   endif
 
   " Line, Column and Percent
@@ -136,11 +150,14 @@ function! s:RefreshStatusline()
 endfunction
 
 augroup statusline
-  autocmd!
-  autocmd VimEnter,WinEnter,BufWinEnter * call <SID>RefreshStatusline()
-  " autocmd User LspDiagnosticsChanged call <SID>RefreshStatusline()
-  " autocmd User LspMessageUpdate call <SID>RefreshStatusline()
-  " autocmd User LspStatusUpdate call <SID>RefreshStatusline() "redrawstatus!
+  au!
+  au VimEnter,WinEnter,BufWinEnter * call <SID>RefreshStatusline()
+  " au User LspDiagnosticsChanged redrawstatus!
+  " au User LspMessageUpdate redrawstatus!
+  " au User LspStatusUpdate redrawstatus!
+  au User LspDiagnosticsChanged call <SID>RefreshStatusline()
+  au User LspMessageUpdate call <SID>RefreshStatusline()
+  au User LspStatusUpdate call <SID>RefreshStatusline() "redrawstatus!
 augroup END
 
 " scriptencoding utf-8
