@@ -152,12 +152,12 @@ endfunction
 augroup statusline
   au!
   au VimEnter,WinEnter,BufWinEnter * call <SID>RefreshStatusline()
-  " au User LspDiagnosticsChanged redrawstatus!
-  " au User LspMessageUpdate redrawstatus!
-  " au User LspStatusUpdate redrawstatus!
-  au User LspDiagnosticsChanged call <SID>RefreshStatusline()
-  au User LspMessageUpdate call <SID>RefreshStatusline()
-  au User LspStatusUpdate call <SID>RefreshStatusline() "redrawstatus!
+  au User LspDiagnosticsChanged redrawstatus!
+  au User LspMessageUpdate redrawstatus!
+  au User LspStatusUpdate redrawstatus!
+  au User LspDiagnosticsChanged call <SID>RefreshStatusline() | redrawstatus!
+  au User LspMessageUpdate call <SID>RefreshStatusline() | redrawstatus!
+  au User LspStatusUpdate call <SID>RefreshStatusline() | redrawstatus!
 augroup END
 
 " scriptencoding utf-8

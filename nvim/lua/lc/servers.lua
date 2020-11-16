@@ -215,6 +215,7 @@ local servers = {
             "hs",
             "spoon",
             "config",
+            "use",
             "watchers"
           }
         }

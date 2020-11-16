@@ -282,7 +282,7 @@ Plug 'kana/vim-operator-user'
 " -- provide a_ and i_ for underscores
 " -- provide a- and i-
 Plug 'kana/vim-textobj-user'                                            " https://github.com/kana/vim-textobj-user/wiki
-" Plug 'kana/vim-textobj-function'                                        " function text object (af/if)
+Plug 'kana/vim-textobj-function'                                        " function text object (af/if)
 Plug 'kana/vim-textobj-indent'                                          " for indent level (ai/ii)
 Plug 'kana/vim-textobj-line'                                            " for current line (al/il)
 Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }              " ruby block text object (ar/ir)
@@ -321,14 +321,18 @@ Plug 'tpope/vim-dispatch'
 if has("nvim-0.5.0")
   Plug 'neovim/nvim-lspconfig' " lsp.vim / lsp.lua
   Plug 'nvim-lua/completion-nvim'
-  Plug 'nvim-lua/lsp-status.nvim'
+  " Plug 'nvim-lua/lsp-status.nvim'
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
   Plug 'steelsojka/completion-buffers'
   Plug 'lukas-reineke/format.nvim'
   " Plug 'mhartington/formatter.nvim'
   " Plug 'nvim-treesitter/nvim-treesitter'
-  " Plug 'nvim-treesitter/completion-treesitter'
+  " Plug 'nvim-treesitter/nvim-treesitter-refactor'
+  " Plug 'nvim-treesitter/nvim-treesitter-textobjects'
+  " Plug 'nvim-treesitter/playground'
+  " Plug 'romgrk/nvim-treesitter-context'
+  " Plug 'p00f/nvim-ts-rainbow'
 endif
 
 
@@ -391,6 +395,7 @@ Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
 Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
+Plug 'tjdevries/nlua.nvim', { 'for': ['lua'] }
 Plug 'andrejlevkovitch/vim-lua-format', { 'for': ['lua'] }
 Plug 'yyq123/vim-syntax-logfile'
 

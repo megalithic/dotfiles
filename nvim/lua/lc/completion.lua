@@ -12,7 +12,7 @@ local chain_complete_list = {
     {complete_items = {'lsp', 'snippet'}},
     {complete_items = {'path'}, triggered_only = {'./', '/'}},
     {complete_items = {'buffers'}},
-    {complete_items = {'ts'}},
+    -- {complete_items = {'ts'}},
   },
   string = {
     {complete_items = {'path'}, triggered_only = {'./', '/'}},

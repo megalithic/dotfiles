@@ -1,198 +1,135 @@
 -- ┌───────────────────────────────────────────────────────────────────────────┐
 -- │                                                                           │
--- │ Setup for Lua-based plugins                                               │
+-- │ Setup for lua-based config                                                │
 -- │ --> REF: https://github.com/nanotee/nvim-lua-guide                        │
 -- │                                                                           │
 -- └───────────────────────────────────────────────────────────────────────────┘
 
--- [ load lsp config ] ---------------------------------------------------------
-local lsp_config_loaded, lsp_config =
-  pcall(
-  function()
-    require("lc.config")
-  end
-) -- ok, _return_value
-if not lsp_config_loaded then
-  print("[ERROR] -> " .. lsp_config)
-end
+-- Global vim options
+vim.o.laststatus         = 2
+vim.o.updatetime         = 100
+vim.o.scrolloff          = 3
+vim.o.sidescrolloff      = 5
+vim.o.textwidth          = 78
+vim.o.linespace          = 0
+vim.o.exrc               = true
+vim.o.secure             = true
+vim.o.showcmd            = true
+vim.o.showmatch          = true
+vim.o.ruler              = true
+vim.o.autoindent         = true
+vim.o.errorbells         = false
+vim.o.modeline           = true
+vim.o.joinspaces         = false
+vim.o.showmode           = false
+vim.o.splitbelow         = true
+vim.o.splitright         = true
+vim.o.foldenable         = false
+vim.o.undofile           = true
+vim.o.hidden             = true
+vim.o.autochdir          = false
+vim.o.hlsearch           = true
+vim.o.startofline        = false
+vim.o.ignorecase         = true
+vim.o.smartcase          = true
+vim.o.magic              = true
+vim.o.autoread           = true
+vim.o.termguicolors      = true
+vim.o.fileformat         = 'unix'
+vim.o.inccommand         = 'split'
+vim.o.switchbuf          = 'useopen'
+vim.o.encoding           = 'utf-8'
 
--- [ nvim-treesitter ] ---------------------------------------------------------
---   See https://github.com/nvim-treesitter/nvim-treesitter
+-- Disable providers
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_python_provider  = 0
+vim.g.loaded_ruby_provider    = 0
+vim.g.loaded_perl_provider    = 0
+vim.g.loaded_node_provider    = 0
 
--- require "nvim-treesitter.configs".setup(
---   {
---     ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
---     highlight = {
---       enable = true, -- false will disable the whole extension
---       disable = {"c", "rust", "lua", "typescript.tsx", "typescript", "tsx"} -- list of language that will be disabled
---     }
---   }
--- )
+-- Disable built-in plugins
+vim.g.loaded_netrw            = 1
+vim.g.loaded_netrwPlugin      = 1
+vim.g.loaded_matchparen       = 1
+vim.g.loaded_matchit          = 1
+vim.g.loaded_2html_plugin     = 1
+vim.g.loaded_getscriptPlugin  = 1
+vim.g.loaded_gzip             = 1
+vim.g.loaded_logipat          = 1
+vim.g.loaded_rrhelper         = 1
+vim.g.loaded_spellfile_plugin = 1
+vim.g.loaded_tarPlugin        = 1
+vim.g.loaded_vimballPlugin    = 1
+vim.g.loaded_zipPlugin        = 1
 
--- [ format.nvim ] ----------------------------------------------------------
---   https://github.com/lukas-reineke/format.nvim
+-- Map leader
+vim.g.mapleader = ","
+-- vim.g.maplocalleader = ","
 
-require("format").setup(
-  {
-    ["*"] = {
-      {cmd = {"sed -i 's/[ \t]*$//'"}} -- remove trailing whitespace
-    },
-    vim = {
-      {
-        cmd = {"luafmt -w replace"},
-        start_pattern = "^lua << EOF$",
-        end_pattern = "^EOF$"
-      }
-    },
-    lua = {
-      {
-        cmd = {
-          function(file)
-            return string.format(
-              "luafmt -l %s -w replace --indent-count 2 %s",
-              vim.bo.textwidth,
-              file
-            )
-          end
-        }
-      }
-    },
-    go = {
-      {
-        cmd = {"gofmt -w", "goimports -w"},
-        tempfile_postfix = ".tmp"
-      }
-    },
-    javascript = {
-      {
-        cmd = {"prettier -w", "./node_modules/.bin/eslint --fix"}
-      }
-    },
-    python = {
-      {
-        cmd = {"black"}
-      }
-    },
-    typescript = {
-      {
-        cmd = {"prettier -w", "./node_modules/.bin/eslint --fix"}
-      }
-    },
-    -- elixir = {
-    --   {
-    --     cmd = {"mix format -"}
-    --   }
-    -- },
-    markdown = {
-      {cmd = {"prettier -w"}},
-      {
-        cmd = {"black"},
-        start_pattern = "^```python$",
-        end_pattern = "^```$",
-        target = "current"
-      },
-      {
-        cmd = {"qmlformat -i"},
-        start_pattern = "^```qml$",
-        end_pattern = "^```$",
-        target = "current"
-      },
-      {
-        cmd = {"clang-format -i"},
-        start_pattern = "^```cpp$",
-        end_pattern = "^```$",
-        target = "current"
-      }
-    },
-    cpp = {
-      {
-        cmd = {"clang-format -i"}
-      }
-    },
-    qml = {
-      {
-        cmd = {"qmlformat -i"}
-      }
-    },
-    json = {
-      {
-        cmd = {"js-beautify -s 2"}
-      }
-    }
-  }
-)
--- vim.fn.nvim_buf_set_keymap(
---   0,
---   "n",
---   "<leader>F",
---   "<cmd>Format<CR>",
---   {noremap = true, silent = true}
--- )
+-- Needs to be set before loading quickr-cscope
+vim.g.quickr_cscope_keymaps   = 0
+-- Needs to be set before vimtex gets loaded, else it complains
+vim.g.tex_flavor = 'latex'
+vim.g.vimtex_view_general_viewer = 'qpdfview'
+vim.g.vimtex_view_general_options = '--unique \\@pdf\\#src:@tex:@line:@col'
+vim.g.vimtex_view_general_options_latexmk = '--unique'
+-- Needs to be before togglelist gets loadded
+vim.g.toggle_list_no_mappings = 1
+-- Enable rainbow brackets everywhere
+vim.g.rainbow_active = 1
 
--- [ nvim-colorizer.lua ] ------------------------------------------------------
---   See https://github.com/norcalli/nvim-colorizer.lua
+-- Settings using nvim.api
+-- Needs to be set before vim-sneak is loaded
+-- vim.api.nvim_command('let g:sneak#label = 1')
+-- vim.api.nvim_command('let g:sneak#s_next = 1')
+-- vim.api.nvim_command('let g:sneak#use_ic_scs = 0')
+-- We do this to prevent the loading of the system fzf.vim plugin. This is
+-- present at least on Arch/Manjaro
+vim.api.nvim_command('set rtp-=/usr/share/vim/vimfiles')
+vim.api.nvim_command('set shada="NONE"')
+vim.api.nvim_command('set mouse-=a')
+vim.api.nvim_command('set formatoptions+=o')
+vim.api.nvim_command('set formatoptions+=j')
+vim.api.nvim_command('set completeopt=menuone,noinsert,noselect')
+vim.api.nvim_command('set shortmess+=c')
+vim.api.nvim_command('set wildmenu')
+vim.api.nvim_command('set wildmode=longest:full,full')
+vim.api.nvim_command('set wildoptions=pum')
+vim.api.nvim_command('set pumblend=30')
+vim.api.nvim_command('set signcolumn=yes:2')
+vim.api.nvim_command('set sessionoptions-=blank')
+vim.api.nvim_command('set backspace=indent,eol,start')
+vim.api.nvim_command('set diffopt=filler,internal,algorithm:histogram,indent-heuristic')
+-- Load out custom colorscheme
+vim.api.nvim_command('set background=dark')
+vim.api.nvim_set_var('nova-transparent', 1)
+vim.api.nvim_command('colorscheme nova')
+-- Do not create any backups or swap file
+vim.api.nvim_command('set nobackup')
+vim.api.nvim_command('set nowritebackup')
+vim.api.nvim_command('set noswapfile')
+-- Blinking box cursor in (n) / blinking pipe in (i)
+-- vim.api.nvim_command("set guicursor=")
+-- vim.api.nvim_command('/\n:block-Cursor,')
+-- vim.api.nvim_command('/\a:block-blinkon0,')
+-- vim.api.nvim_command('/\i:ver25-blinkwait200-blinkoff150-blinkon200-CursorInsert,')
+-- vim.api.nvim_command('/\r:blinkwait200-blinkoff150-blinkon200-CursorReplace,')
+-- vim.api.nvim_command('/\v:CursorVisual,')
+-- vim.api.nvim_command('/\c:ver25-blinkon300-CursorInsert')
 
-local has_colorizer, colorizer = pcall(require, "colorizer")
-if not has_colorizer then
-  return
-end
+require 'plugins'
+require 'autocmd'
+require 'keymappings'
 
--- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
-colorizer.setup(
-  {
-    -- '*',
-    -- '!vim',
-    -- }, {
-    css = {rgb_fn = true},
-    scss = {rgb_fn = true},
-    sass = {rgb_fn = true},
-    stylus = {rgb_fn = true},
-    vim = {names = false},
-    tmux = {names = false},
-    "eelixir",
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-    "zsh",
-    "sh",
-    "conf",
-    html = {
-      mode = "foreground"
-    }
-  }
-)
 
--- [ golden_size ] -------------------------------------------------------------
---   See https://github.com/dm1try/golden_size#tips-and-tricks
+-- -- [ load lsp config ] ---------------------------------------------------------
+-- local lsp_config_loaded, lsp_config =
+--   pcall(
+--   function()
+--     require("lc.config")
+--   end
+-- ) -- ok, _return_value
+-- if not lsp_config_loaded then
+--   print("[ERROR] -> " .. lsp_config)
+-- end
 
-local function ignore_by_buftype(types)
-  local buftype =
-    vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
-  for _, type in pairs(types) do
-    if type == buftype then
-      return 1
-    end
-  end
-end
-
-local golden_size = require("golden_size")
--- set the callbacks, preserve the defaults
-golden_size.set_ignore_callbacks(
-  {
-    {
-      ignore_by_buftype,
-      {
-        "Undotree",
-        "quickfix",
-        "nerdtree",
-        "current",
-        "Vista",
-        "LuaTree",
-        "nofile"
-      }
-    },
-    {golden_size.ignore_float_windows}, -- default one, ignore float windows
-    {golden_size.ignore_by_window_flag} -- default one, ignore windows with w:ignore_gold_size=1
-  }
-)
