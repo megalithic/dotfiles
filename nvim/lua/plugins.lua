@@ -1,84 +1,312 @@
--- Add the in built Cfilter plugin. Replaces QFGrep.
-vim.cmd 'packadd cfilter'
-vim.cmd 'packadd packer.nvim'
+local packer_exists = pcall(vim.cmd, [[packadd packer.nvim]])
 
-local init = function ()
-  use {'wbthomason/packer.nvim', opt = true}
+if not packer_exists then
+  if vim.fn.input("Download Packer? (y for yes) ") ~= "y" then
+    return
+  end
 
-  -- Search
-  use {
-    'junegunn/fzf',
-    run = './install --bin'
-  }
-  use {
-    'junegunn/fzf.vim',
-    config = "require('p.fzf')"
-  }
+  local directory =
+    string.format("%s/pack/packer/opt/", vim.fn.stdpath("config"))
 
-  -- Text Object plugins
-  use {
-    'wellle/targets.vim',
-    'tpope/vim-surround',
-    'coderifous/textobj-word-column.vim',
-    'tommcdo/vim-exchange',
-    'chaoren/vim-wordmotion'
-  }
+  vim.fn.mkdir(directory, "p")
 
-  -- Tim pope essentials
-  use {
-    'tpope/vim-commentary',
-    'tpope/vim-repeat',
-    'tpope/vim-sleuth'
-  }
+  local out =
+    vim.fn.system(
+    string.format(
+      "git clone %s %s",
+      "https://github.com/wbthomason/packer.nvim",
+      directory .. "/packer.nvim"
+    )
+  )
 
-  -- Show indentation levels
-  use 'Yggdroot/indentLine'
+  print(out)
+  print("Downloading packer.nvim...")
 
-  -- For autocompletion
-  use {
-    'nvim-lua/completion-nvim',
-    config = "require('p.completion')"
-  }
-  use 'steelsojka/completion-buffers'
-
-  -- For tmux
-  use 'tmux-plugins/vim-tmux-focus-events'
-
-  -- Git support
-  use 'nvim-lua/plenary.nvim'
-  use {
-    'lewis6991/gitsigns.nvim',
-    config =  "require('p.gitsigns')",
-    branch = 'main'
-  }
-  use {
-    'rhysd/git-messenger.vim',
-    cmd = 'GitMessenger'
-  }
-  use 'rhysd/conflict-marker.vim'
-  use 'salcode/vim-interactive-rebase-reverse'
-  -- Boost vim command line mode
-  use 'vim-utils/vim-husk'
-  -- Rainbow Parentheses
-  use 'luochen1990/rainbow'
-
-  use {
-    'nvim-treesitter/nvim-treesitter',
-    config = "require('treesitter')",
-  }
-
-  -- LSP
-  use {
-    'neovim/nvim-lspconfig',
-    config = "require('lc.config')",
-  }
-
-  use {
-    'glepnir/galaxyline.nvim',
-    branch = 'main',
-    config = "require('p.statusline')",
-    requires = { 'kyazdani42/nvim-web-devicons' }
-  }
+  return
 end
 
-return require('packer').startup(init)
+local plugins = {
+  {"https://github.com/wbthomason/packer.nvim", opt = true},
+  {"https://github.com/antoinemadec/FixCursorHold.nvim"},
+  {"https://github.com/andymass/vim-matchup"},
+  {"https://github.com/tpope/vim-sensible", opt = true},
+  {"https://github.com/jiangmiao/auto-pairs"},
+  {
+    "https://github.com/junegunn/fzf.vim",
+    -- I have the bin globally, so don't build, and just grab plugin directory
+    requires = {{"https://github.com/junegunn/fzf"}}
+  },
+  {
+    "https://github.com/lambdalisue/fern-git.vim",
+    requires = {{"https://github.com/lambdalisue/fern.vim"}}
+  },
+  {"https://github.com/duggiefresh/vim-easydir"},
+  {"https://github.com/junegunn/vim-peekaboo"},
+  {
+    "https://github.com/mbbill/undotree",
+    opt = true,
+    cmd = "UndotreeToggle"
+  },
+  {"https://github.com/eugen0329/vim-esearch"},
+  -- {"https://github.com/mhinz/vim-sayonara", opt = true, cmd = "Sayonara"},
+  -- {"https://github.com/mhinz/vim-startify"},
+  {"https://github.com/nelstrom/vim-visual-star-search"},
+  {"https://github.com/tpope/tpope-vim-abolish"},
+  {"https://github.com/tpope/vim-eunuch"},
+  -- {'https://github.com/tpope/vim-projectionist'},
+  {"https://github.com/tpope/vim-surround"},
+  {"https://github.com/tpope/vim-eunuch"},
+  {"https://github.com/tpope/vim-repeat"},
+  -- {"https://github.com/machakann/vim-sandwich"},
+  -- {"https://github.com/tomtom/tcomment_vim"},
+  {"https://github.com/tpope/vim-commentary"},
+  {"https://github.com/wellle/targets.vim"},
+  -- {"https://github.com/wincent/loupe"},
+  -- {"https://github.com/wincent/terminus"},
+  {"https://github.com/tommcdo/vim-lion"},
+  -- {"https://github.com/liuchengxu/vista.vim"},
+  {"https://github.com/christoomey/vim-tmux-navigator", opt = true},
+  {"https://github.com/rhysd/devdocs.vim"},
+  -- {"https://github.com/fcpg/vim-waikiki"},
+
+  -- LSP/Autocompletion {{{
+  {
+    "https://github.com/neovim/nvim-lspconfig",
+    cond = "vim.fn.has('nvim-0.5.0')",
+    config = function()
+      require "p.lsp"
+    end,
+    requires = {
+      {
+        "https://github.com/tjdevries/lsp_extensions.nvim",
+        config = function()
+          require "p.statusline".activate()
+        end
+      },
+      {"https://github.com/tjdevries/nlua.nvim"}
+    }
+  },
+  {
+    "https://github.com/nvim-lua/completion-nvim",
+    requires = {
+      {
+        "https://github.com/steelsojka/completion-buffers",
+        cond = "vim.fn.has('nvim-0.5.0')"
+      },
+      {"https://github.com/hrsh7th/vim-vsnip"},
+      {"https://github.com/hrsh7th/vim-vsnip-integ"}
+    }
+  },
+  {
+    "https://github.com/nvim-treesitter/nvim-treesitter",
+    cond = "vim.fn.has('nvim-0.5.0')",
+    config = function()
+      require "_.treesitter"
+    end,
+    requires = {
+      "https://github.com/nvim-treesitter/playground",
+      cmd = "TSPlaygroundToggle"
+    }
+  },
+  -- }}}
+
+  -- Syntax {{{
+  {
+    "https://github.com/norcalli/nvim-colorizer.lua",
+    config = function()
+      -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
+      require "colorizer".setup(
+        {
+          "*",
+          "!vim"
+        },
+        {
+          css = true
+        }
+      )
+    end
+  },
+  {
+    "https://github.com/plasticboy/vim-markdown",
+    requires = {{"https://github.com/godlygeek/tabular"}}
+  },
+  {"https://github.com/jez/vim-github-hub"},
+  {
+    "https://github.com/fatih/vim-go",
+    run = ":GoUpdateBinaries",
+    opt = true,
+    ft = {"go"}
+  },
+  -- Clojure
+  {
+    "https://github.com/junegunn/rainbow_parentheses.vim",
+    ft = lisps,
+    cmd = "RainbowParentheses",
+    -- event = "InsertEnter *",
+    config = "vim.cmd[[RainbowParentheses]]"
+  },
+  {"https://github.com/guns/vim-sexp", ft = lisps},
+  {"https://github.com/Olical/conjure", tag = "v4.8.0", ft = lisps},
+  {"https://github.com/sheerun/vim-polyglot"},
+  -- }}}
+
+  -- Linters & Code quality {{{
+  {"https://github.com/dense-analysis/ale"},
+  {
+    "https://github.com/lukas-reineke/format.nvim",
+    config = function()
+      require "format".setup {
+        lua = {
+          {
+            cmd = {
+              function(file)
+                return string.format(
+                  "luafmt -i 2 -l %s -w replace %s",
+                  vim.bo.textwidth,
+                  file
+                )
+              end
+            }
+          }
+        }
+      }
+    end
+  },
+  -- }}}
+
+  -- Git {{{
+  {"https://github.com/lambdalisue/vim-gista"},
+  {
+    "https://github.com/tpope/vim-fugitive",
+    requires = {
+      {"https://github.com/tpope/vim-rhubarb"}
+    }
+  },
+  {
+    "https://github.com/rhysd/git-messenger.vim",
+    opt = true,
+    cmd = "GitMessenger",
+    keys = "<Plug>(git-messenger)"
+  },
+  -- }}}
+
+  -- Writing {{{
+  {"https://github.com/junegunn/goyo.vim", opt = true, cmd = "Goyo"},
+  {
+    "https://github.com/junegunn/limelight.vim",
+    opt = true,
+    cmd = "Limelight"
+  },
+  -- }}}
+
+  -- Themes, UI & eye cnady {{{
+  {"https://github.com/andreypopp/vim-colors-plain", opt = true},
+  {"https://github.com/liuchengxu/space-vim-theme", opt = true},
+  {"https://github.com/rakr/vim-two-firewatch", opt = true},
+  {"https://github.com/logico-dev/typewriter", opt = true},
+  {"https://github.com/arzg/vim-substrata", opt = true},
+  {"https://github.com/haishanh/night-owl.vim", opt = true},
+  {"https://github.com/lifepillar/vim-gruvbox8", opt = true},
+  {"https://github.com/bluz71/vim-moonfly-colors", opt = true}
+}
+
+packer.init(
+  {
+    package_root = string.format("%s/pack", vim.fn.stdpath("config")),
+    display = {
+      open_cmd = "100vnew [packer]"
+    }
+  }
+)
+
+return packer.startup(
+  function(use)
+    for _, config in ipairs(plugins) do
+      use(config)
+    end
+  end
+)
+
+-- vim.cmd 'packadd cfilter'
+-- vim.cmd 'packadd packer.nvim'
+
+-- local init = function ()
+--   use {'wbthomason/packer.nvim', opt = true}
+
+--   -- Search
+--   use {
+--     'junegunn/fzf',
+--     run = './install --bin'
+--   }
+--   use {
+--     'junegunn/fzf.vim',
+--     config = "require('p.fzf')"
+--   }
+
+--   -- Text Object plugins
+--   use {
+--     'wellle/targets.vim',
+--     'tpope/vim-surround',
+--     'coderifous/textobj-word-column.vim',
+--     'tommcdo/vim-exchange',
+--     'chaoren/vim-wordmotion'
+--   }
+
+--   -- Tim pope essentials
+--   use {
+--     'tpope/vim-commentary',
+--     'tpope/vim-repeat',
+--     'tpope/vim-sleuth'
+--   }
+
+--   -- Show indentation levels
+--   use 'Yggdroot/indentLine'
+
+--   -- For autocompletion
+--   use {
+--     'nvim-lua/completion-nvim',
+--     config = "require('p.completion')"
+--   }
+--   use 'steelsojka/completion-buffers'
+
+--   -- For tmux
+--   use 'tmux-plugins/vim-tmux-focus-events'
+
+--   -- Git support
+--   use 'nvim-lua/plenary.nvim'
+--   use {
+--     'lewis6991/gitsigns.nvim',
+--     config =  "require('p.gitsigns')",
+--     branch = 'main'
+--   }
+--   use {
+--     'rhysd/git-messenger.vim',
+--     cmd = 'GitMessenger'
+--   }
+--   use 'rhysd/conflict-marker.vim'
+--   use 'salcode/vim-interactive-rebase-reverse'
+--   -- Boost vim command line mode
+--   use 'vim-utils/vim-husk'
+--   -- Rainbow Parentheses
+--   use 'luochen1990/rainbow'
+
+--   use {
+--     'nvim-treesitter/nvim-treesitter',
+--     config = "require('treesitter')",
+--   }
+
+--   -- LSP
+--   use {
+--     'neovim/nvim-lspconfig',
+--     config = "require('lc.config')",
+--   }
+
+--   use {
+--     'glepnir/galaxyline.nvim',
+--     branch = 'main',
+--     config = "require('p.statusline')",
+--     requires = { 'kyazdani42/nvim-web-devicons' }
+--   }
+-- end
+
+-- return require('packer').startup(init)
