@@ -325,7 +325,7 @@ if has("nvim-0.5.0")
   Plug 'hrsh7th/vim-vsnip'
   Plug 'hrsh7th/vim-vsnip-integ'
   Plug 'steelsojka/completion-buffers'
-  Plug 'lukas-reineke/format.nvim'
+  " Plug 'lukas-reineke/format.nvim'
   " Plug 'mhartington/formatter.nvim'
   " Plug 'nvim-treesitter/nvim-treesitter'
   " Plug 'nvim-treesitter/completion-treesitter'
@@ -471,10 +471,13 @@ silent! colorscheme nova
 " let g:gruvbox_material_statusline_style = 'original'
 " silent! colorscheme gruvbox-material
 
-
-
-" --[ lua ]---------------------------------------------------------------------
-" echo 'loading init.vim'
-" lua require('init')
+" After this file is sourced, plug-in code will be evaluated.
+" See ~/.vim/after for files evaluated after that.
+" See `:scriptnames` for a list of all scripts, in evaluation order.
+" Launch Vim with `vim --startuptime vim.log` for profiling info.
+"
+" To see all leader mappings, including those from plug-ins:
+"
+"   vim -c 'set t_te=' -c 'set t_ti=' -c 'map <space>' -c q | sort
 
 " vim:ft=vim

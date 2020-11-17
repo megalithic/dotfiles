@@ -2,8 +2,9 @@ local M = {}
 
 local api = vim.api
 local lsp = vim.lsp
+local fn = vim.fn
 
-local function fzf_symbol_callback(_, _, result, _, bufnr)
+local function fzf_symbol_handler(_, _, result, _, bufnr)
   if not result or vim.tbl_isempty(result) then
     return
   end
@@ -12,11 +13,11 @@ local function fzf_symbol_callback(_, _, result, _, bufnr)
   require("lc.fzf").send(items, "Symbols")
 end
 
-M["textDocument/documentSymbol"] = fzf_symbol_callback
+M["textDocument/documentSymbol"] = fzf_symbol_handler
 
-M["workspace/symbol"] = fzf_symbol_callback
+M["workspace/symbol"] = fzf_symbol_handler
 
-local function fzf_location_callback(_, _, result)
+local function fzf_location_handler(_, _, result)
   if result == nil or vim.tbl_isempty(result) then
     return nil
   end
@@ -33,10 +34,10 @@ local function fzf_location_callback(_, _, result)
   end
 end
 
-M["textDocument/declaration"] = fzf_location_callback
-M["textDocument/definition"] = fzf_location_callback
-M["textDocument/typeDefinition"] = fzf_location_callback
-M["textDocument/implementation"] = fzf_location_callback
+M["textDocument/declaration"] = fzf_location_handler
+M["textDocument/definition"] = fzf_location_handler
+M["textDocument/typeDefinition"] = fzf_location_handler
+M["textDocument/implementation"] = fzf_location_handler
 
 M["textDocument/references"] = function(_, _, result)
   if not result then
@@ -86,15 +87,33 @@ M["textDocument/documentHighlight"] = function(_, _, result, _)
   lsp.util.buf_highlight_references(bufnr, result)
 end
 
-M["textDocument/publishDiagnostics"] = lsp.with(
-  lsp.diagnostic.on_publish_diagnostics, {
-    underline = true,
-    virtual_text = false,
-    -- virtual_text = {
-    --   spacing = 4,
-    --   prefix = vim.api.nvim_get_var("virtual_text_symbol"),
-    -- },
-    signs = true,
-    update_in_insert = false,
-  })
+M["textDocument/formatting"] = function(err, _, result, _, bufnr)
+    if err ~= nil or result == nil then
+        return
+    end
+    if not api.nvim_buf_get_option(bufnr, "modified") then
+        local view = fn.winsaveview()
+        lsp.util.apply_text_edits(result, bufnr)
+        fn.winrestview(view)
+        api.nvim_command("noautocmd :update")
+        -- api.nvim_command("GitGutter")
+    end
+end
+
+M["textDocument/publishDiagnostics"] = function(...)
+  lsp.with(
+    lsp.diagnostic.on_publish_diagnostics, {
+      underline = true,
+      virtual_text = false,
+      -- virtual_text = {
+      --   spacing = 4,
+      --   prefix = vim.api.nvim_get_var("virtual_text_symbol"),
+      -- },
+      signs = true,
+      update_in_insert = false,
+    }
+  )(...)
+  lsp.diagnostic.set_loclist({open_loclist = false})
+end
+
 return M

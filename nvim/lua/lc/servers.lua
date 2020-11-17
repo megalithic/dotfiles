@@ -12,11 +12,14 @@ local function root_pattern(...)
 
   return function(startpath)
     for _, pattern in ipairs(patterns) do
-      return lsp.util.search_ancestors(startpath, function(path)
-        if lsp.util.path.exists(vim.fn.glob(lsp.util.path.join(path, pattern))) then
-          return path
+      return lsp.util.search_ancestors(
+        startpath,
+        function(path)
+          if lsp.util.path.exists(vim.fn.glob(lsp.util.path.join(path, pattern))) then
+            return path
+          end
         end
-      end)
+      )
     end
   end
 end
@@ -27,84 +30,12 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
-  diagnosticls = {
-    disabled = true,
-    filetypes = { "javascript", "javascript.jsx", "elixir", "eelixir" },
-    init_options = {
-      filetypes = {
-        javascript = "eslint",
-        ["javascript.jsx"] = "eslint",
-        javascriptreact = "eslint",
-        typescriptreact = "eslint",
-        elixir = {"mix_credo", "mix_credo_compile"},
-        eelixir = {"mix_credo", "mix_credo_compile"},
-      },
-      linters = {
-        mix_credo = {
-          command= "mix",
-          debounce= 100,
-          rootPatterns= {"mix.exs"},
-          args= {
-            "credo",
-            "suggest",
-            "--format",
-            "flycheck",
-            "--read-from-stdin"
-          },
-          offsetLine= 0,
-          offsetColumn= 0,
-          sourceName= "mix_credo",
-          formatLines= 1,
-          formatPattern= {
-            "^[^ ]+?:([0-9]+)(:([0-9]+))?:\\s+([^ ]+):\\s+(.*)$",
-            {
-              ["line"]= 1,
-              ["column"]= 3,
-              ["message"]= 5,
-              ["security"]= 4
-            }
-          },
-          securities= {
-            ["F"]= "warning",
-            ["C"]= "warning",
-            ["D"]= "info",
-            ["R"]= "info"
-          }
-        },
-        eslint = {
-          sourceName = "eslint",
-          command = "./node_modules/.bin/eslint",
-          rootPatterns = { ".git" },
-          debounce = 100,
-          args = {
-            "--stdin",
-            "--stdin-filename",
-            "%filepath",
-            "--format",
-            "json",
-          },
-          parseJson = {
-            errorsRoot = "[0].messages",
-            line = "line",
-            column = "column",
-            endLine = "endLine",
-            endColumn = "endColumn",
-            message = "${message} [${ruleId}]",
-            security = "severity",
-          };
-          securities = {
-            [2] = "error",
-            [1] = "warning"
-          }
-        }
-      }
-    },
-  },
+  efm = {},
   -- efm = {
-  --   disabled = true,
-  --   cmd = {vim.loop.os_homedir() .. "/.go/bin/efm-langserver", "-c", vim.fn.stdpath("config") .. "/efm-config.yml" },
-  --   -- filetypes = {"elixir", "eelixir", "md", "json"},
-  --   -- root_dir = root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
+  --     disabled = false,
+  --     cmd = {vim.loop.os_homedir() .. "/.go/bin/efm-langserver", "-c", vim.fn.stdpath("config") .. "/efm-config.yaml"}
+  --     -- filetypes = {"elixir", "eelixir", "md", "json"},
+  --     -- root_dir = root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
   -- },
   elmls = {
     cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
@@ -188,10 +119,10 @@ local servers = {
   sumneko_lua = {
     settings = {
       Lua = {
-        completion = { keywordSnippet = 'Disable' },
+        completion = {keywordSnippet = "Disable"},
         runtime = {
-          version = 'LuaJIT',
-          path = vim.split(package.path, ';')
+          version = "LuaJIT",
+          path = vim.split(package.path, ";")
         },
         workspace = {
           library = {
@@ -236,7 +167,7 @@ local servers = {
       "typescript.tsx"
     },
     -- See https://github.com/neovim/nvim-lsp/issues/237
-    root_dir = root_pattern("tsconfig.json",  "package.json", ".git"),
+    root_dir = root_pattern("tsconfig.json", "package.json", ".git")
   },
   vimls = {},
   yamlls = {
@@ -258,7 +189,7 @@ local servers = {
         completion = true
       }
     }
-  },
+  }
 }
 
 function M.activate(on_attach_fn)
@@ -266,12 +197,20 @@ function M.activate(on_attach_fn)
     local server_disabled = (config.disabled ~= nil and config.disabled) or false
 
     if not server_disabled then
-      lsp[server].setup(vim.tbl_deep_extend('force', {
-        on_attach = on_attach_fn,
-        callbacks = vim.tbl_deep_extend("keep", {}, require("lc.callbacks"), vim.lsp.callbacks),
-      }, config))
+      lsp[server].setup(
+        vim.tbl_deep_extend(
+          "force",
+          {
+            on_attach = on_attach_fn,
+            callbacks = vim.tbl_deep_extend("keep", {}, require("lc.handlers"), vim.lsp.handlers)
+          },
+          config
+        )
+      )
     end
   end
+
+  -- require('lc.handlers')
 end
 
 return M

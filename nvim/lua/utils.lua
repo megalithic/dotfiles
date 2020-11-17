@@ -147,8 +147,8 @@ function M.pbclients()
   M.inspect("buf_clients", vim.inspect(vim.lsp.buf_get_clients()))
 end
 
-function M.pcallbacks()
-  M.inspect("callbacks", vim.inspect(vim.lsp.callbacks))
+function M.phandlers()
+  M.inspect("handlers", vim.inspect(vim.lsp.handlers))
 end
 
 function M.plogpath()

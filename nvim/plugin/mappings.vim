@@ -56,6 +56,15 @@ nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<C
 " Start substitute on current word under the cursor
 nnoremap <leader>s :%s///gc<Left><Left><Left>
 
+
+" search ->
+" https://github.com/lukas-reineke/dotfiles/blob/master/vim/mappings/leader.vim#L58-L68
+nnoremap <Leader>rr :%s/\v()
+nnoremap <Leader>R :let v=winsaveview()<CR>:%s/\<<C-R><C-W>\>//g
+            \ <Bar>:call winrestview(v)<C-Left><C-Left><Left><Left><Left>a<BS>
+xnoremap <Leader>rr :s/\v%V()
+
+
 " Start search on current word under the cursor
 nnoremap <leader>/ /<CR>
 
@@ -63,7 +72,7 @@ nnoremap <leader>/ /<CR>
 nnoremap <leader>? ?<CR>
 
 " Faster sort
-vnoremap <leader>s :!sort<CR>
+vnoremap <leader>S :!sort<CR>
 
 " Command mode conveniences
 noremap <leader>: :!

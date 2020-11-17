@@ -216,15 +216,3 @@ augroup writing
   au BufReadPost,BufNewFile *.md,*.txt set wrap linebreak nolist spell spelllang=en_us complete+=kspell
   au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us
 augroup END
-
-" format.nvim --
-" augroup Format
-"     autocmd!
-"     autocmd BufWritePost * if &filetype ~= "elixir"
-"           \ | silent :FormatWrite
-"           \ | endif
-
-"     " autocmd InsertLeave * if &filetype != "markdown"
-"     "                           \ | silent set colorcolumn=""
-"     "                           \ | endif
-" augroup END
