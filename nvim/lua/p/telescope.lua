@@ -1,24 +1,75 @@
 local telescope = require "telescope"
 local themes = require "telescope.themes"
+local actions = require "telescope.actions"
+local sorters = require "telescope.sorters"
 
--- Telescope defaults
 local telescope_config = {
-  selection_strategy = "reset",
-  shorten_path = true,
-  layout_strategy = "flex",
-  prompt_position = "top",
-  sorting_strategy = "ascending",
-  winblend = 3,
-  prompt_prefix = "※",
-  width = 0.8,
-  height = 0.7,
-  results_width = 80
+  prompt_prefix = " >",
+  winblend = 0,
+  preview_cutoff = 120,
+  scroll_strategy = "cycle",
+  layout_strategy = "horizontal",
+  layout_defaults = {
+    horizontal = {
+      width_padding = 0.1,
+      height_padding = 0.1,
+      preview_width = 0.6
+    },
+    vertical = {
+      width_padding = 0.05,
+      height_padding = 1,
+      preview_height = 0.5
+    }
+  },
+  sorting_strategy = "descending",
+  prompt_position = "bottom",
+  color_devicons = true,
+  mappings = {
+    i = {
+      ["<c-x>"] = false,
+      ["<c-s>"] = actions.goto_file_selection_split
+    }
+  },
+  borderchars = {
+    {"─", "│", "─", "│", "╭", "╮", "╯", "╰"},
+    preview = {"─", "│", "─", "│", "╭", "╮", "╯", "╰"}
+  },
+  file_sorter = sorters.get_fzy_sorter
 }
 
-telescope.setup({ defaults = telescope_config })
-
-function FindFiles()
-  require('plenary.reload').reload_module('telescope')
-  local theme = themes.get_dropdown{ winblend = 10, results_height = 10 }
-  require"telescope.builtin".find_files(theme)
-end
+telescope.setup({defaults = telescope_config})
+-- telescope.setup {
+--   defaults = {
+--     prompt_prefix = " >",
+--     winblend = 0,
+--     preview_cutoff = 120,
+--     scroll_strategy = "cycle",
+--     layout_strategy = "horizontal",
+--     layout_defaults = {
+--       horizontal = {
+--         width_padding = 0.1,
+--         height_padding = 0.1,
+--         preview_width = 0.6
+--       },
+--       vertical = {
+--         width_padding = 0.05,
+--         height_padding = 1,
+--         preview_height = 0.5
+--       }
+--     },
+--     sorting_strategy = "descending",
+--     prompt_position = "bottom",
+--     color_devicons = true,
+--     mappings = {
+--       i = {
+--         ["<c-x>"] = false,
+--         ["<c-s>"] = actions.goto_file_selection_split
+--       }
+--     },
+--     borderchars = {
+--       {"─", "│", "─", "│", "╭", "╮", "╯", "╰"},
+--       preview = {"─", "│", "─", "│", "╭", "╮", "╯", "╰"}
+--     },
+--     file_sorter = sorters.get_fzy_sorter
+--   }
+-- }

@@ -9,7 +9,7 @@
 
 require("settings")
 -- require("autocmds")
--- require("keymaps")
+require("keymaps")
 require("p.colorizer")
 require("p.golden_size")
 require("p.telescope")

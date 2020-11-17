@@ -293,9 +293,11 @@ Plug 'wellle/targets.vim'                                               " improv
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' " fzf.vim
 
-Plug 'nvim-lua/popup.nvim'
-Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-lua/telescope.nvim'
+if has("nvim-0.5.0")
+  Plug 'nvim-lua/popup.nvim'
+  Plug 'nvim-lua/plenary.nvim'
+  Plug 'nvim-lua/telescope.nvim'
+endif
 
 Plug 'mhinz/vim-grepper' " grepper.vim
 Plug 'junegunn/vim-slash' " slash.vim
