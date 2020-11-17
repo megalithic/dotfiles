@@ -14,7 +14,6 @@ tap "homebrew/services"
 tap "homebrew/cask-versions"
 tap "homebrew/cask"
 tap "homebrew/cask-fonts"
-# tap "kopischke/ctags"
 tap "neovim/neovim"
 tap "caius/jo"
 tap "simeji/jid"
@@ -61,7 +60,6 @@ brew "ccls"
 brew "cmake"
 brew "coreutils"
 brew "curl"
-brew "universal-ctags/universal-ctags/universal-ctags", args: ["--HEAD"]
 brew "dbus"
 brew "diff-so-fancy"
 brew "docker"
@@ -70,6 +68,7 @@ brew "docker-machine" #, restart_service: true, link: false
 brew "docker-completion"
 brew "doxygen", args: ["--with-qt", "--with-graphviz", "--with-llvm"]
 # brew "elixir" # installed via asdf
+brew "exa"
 brew "extract_url"
 brew "exercism"
 brew "fasd"
@@ -111,9 +110,11 @@ brew "libgcrypt"
 brew "libtool"
 brew "libyaml"
 brew "libxslt"
+brew "llvm"
 brew "lnav"
 # brew "lua" # installed via asdf
 brew "lsd"
+brew "luajit"
 brew "luarocks"
 brew "libarchive"
 # brew "m-cli"
@@ -138,14 +139,8 @@ brew "pick"
 brew "pkg-config"
 brew "postgresql@9.5"
 # initdb /usr/local/var/postgres -E utf8
-
-# install via asdf-python
-# brew "python"
 brew "python@3.8"
 brew "python@3.9"
-# brew "https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb"
-
-# brew "rabbitmq" # requires erlang/rebar/rebar3
 brew "readline"
 brew "reattach-to-user-namespace", args: ["wrap-pbcopy-and-pbpaste"]
 brew "ren"
@@ -160,13 +155,11 @@ brew "ssh-copy-id"
 brew "stack"
 brew "switchaudio-osx"
 brew "terminal-notifier"
-brew "the_silver_searcher"
-# brew "tig" # using `nvim +:GV` instead
 brew "tidy-html5"
 brew "tldr"
-brew "tmate"
 brew "tmux", args: ["--HEAD", "--with-utf8proc"]
 brew "tree"
+brew "treesitter"
 brew "unixodbc"
 brew "urlview"
 # brew "watchman", args: ["--HEAD"]
@@ -189,8 +182,6 @@ brew "zsh-syntax-highlighting"
 # -- cli --
 
 # - fonts
-cask "font-firacode-nerd-font"
-cask "font-firacode-nerd-font-mono"
 cask "font-jetbrains-mono"
 cask "font-jetbrainsmono-nerd-font"
 cask "font-jetbrainsmono-nerd-font-mono"
