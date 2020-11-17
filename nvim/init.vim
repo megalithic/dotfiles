@@ -36,18 +36,6 @@ filetype plugin indent on  " try to recognize filetypes and load related plugins
 syntax on
 
 
-" --[ disable built-ins ]-------------------------------------------------------
-let g:loaded_2html_plugin      = 1
-let g:loaded_gzip              = 1
-let g:loaded_matchparen        = 1
-let g:loaded_netrwPlugin       = 1
-let g:loaded_rrhelper          = 1
-let g:loaded_tarPlugin         = 1
-let g:loaded_zipPlugin         = 1
-let g:loaded_matchit           = 1
-let g:loaded_tutor_mode_plugin = 1
-
-
 " --[ general settings ]--------------------------------------------------------
 " REF: great descriptions of settings: https://github.com/neg-serg/dotfiles/blob/master/nvim/.config/nvim/plugin/01-settings.vim
 "

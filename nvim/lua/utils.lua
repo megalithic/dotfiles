@@ -2,6 +2,63 @@
 
 local M = {}
 local loop = vim.loop
+local fn = vim.fn
+local api = vim.api
+local cmd = vim.cmd
+
+function table.merge(dest, src)
+  for k, v in pairs(src) do
+    dest[k] = v
+  end
+  return dest
+end
+
+-- Key mapping
+function M.map(mode, key, result, opts)
+  opts =
+    table.merge(
+    {
+      noremap = true,
+      silent = true,
+      expr = false
+    },
+    opts or {}
+  )
+
+  fn.nvim_set_keymap(mode, key, result, opts)
+end
+
+-- Stolen from https://github.com/kyazdani42/nvim-palenight.lua/blob/master/lua/palenight.lua#L10
+-- Usage:
+-- highlight(Cursor, { fg = bg_dark, bg = yellow })
+function M.highlight(group, styles)
+  local gui = styles.gui and "gui=" .. styles.gui or "gui=NONE"
+  local sp = styles.sp and "guisp=" .. styles.sp or "guisp=NONE"
+  local fg = styles.fg and "guifg=" .. styles.fg or "guifg=NONE"
+  local bg = styles.bg and "guibg=" .. styles.bg or "guibg=NONE"
+  cmd("highlight " .. group .. " " .. gui .. " " .. sp .. " " .. fg .. " " .. bg)
+end
+
+-- Usage:
+-- highlight({
+--      CursorLine   = { bg = bg },
+--      Cursor       = { fg = bg_dark, bg = yellow }
+-- })
+function M.highlights(hi_table)
+  for group, styles in pairs(hi_table) do
+    M.highlight(group, styles)
+  end
+end
+
+function M.hiLink(src, dest)
+  cmd("highlight link " .. src .. " " .. dest)
+end
+
+function M.hiLinks(hi_table)
+  for src, dest in pairs(hi_table) do
+    M.hiLink(src, dest)
+  end
+end
 
 function M.debounce(interval_ms, fn)
   local timer = loop.new_timer()
@@ -32,25 +89,25 @@ function M.bmap(mode, key, result, opts)
     map_opts = {noremap = true, silent = true}
   end
 
-  vim.api.nvim_buf_set_keymap(0, mode, key, result, map_opts)
+  api.nvim_buf_set_keymap(0, mode, key, result, map_opts)
 end
 
 function M.gmap(mode, key, result, opts)
-  vim.api.nvim_set_keymap(mode, key, result, opts)
+  api.nvim_set_keymap(mode, key, result, opts)
 end
 
 function M.augroup(group, fn)
-  vim.api.nvim_command("augroup " .. group)
-  vim.api.nvim_command("autocmd!")
+  api.nvim_command("augroup " .. group)
+  api.nvim_command("autocmd!")
   fn()
-  vim.api.nvim_command("augroup END")
+  api.nvim_command("augroup END")
 end
 
 function M.get_icon(icon_name)
   local ICONS = {
     paste = "⍴",
     spell = "✎",
-    -- branch = os.getenv('PURE_GIT_BRANCH') ~= '' and vim.fn.trim(os.getenv('PURE_GIT_BRANCH')) or ' ',
+    -- branch = os.getenv('PURE_GIT_BRANCH') ~= '' and fn.trim(os.getenv('PURE_GIT_BRANCH')) or ' ',
     branch = " ",
     error = "×",
     info = "●",
@@ -65,7 +122,7 @@ function M.get_icon(icon_name)
 end
 
 function M.get_color(synID, what, mode)
-  return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(synID)), what, mode)
+  return fn.synIDattr(fn.synIDtrans(fn.hlID(synID)), what, mode)
 end
 
 function M.locations_to_items(locations)
@@ -81,7 +138,7 @@ function M.locations_to_items(locations)
       end
     }
   )
-  local fname = vim.api.nvim_buf_get_name(0)
+  local fname = api.nvim_buf_get_name(0)
   for _, d in ipairs(locations) do
     local range = d.range or d.targetSelectionRange
     table.insert(grouped[fname], {start = range.start})
@@ -92,11 +149,11 @@ function M.locations_to_items(locations)
   local rows = grouped[fname]
 
   table.sort(rows, vim.position_sort)
-  local bufnr = vim.fn.bufnr()
+  local bufnr = fn.bufnr()
   for _, temp in ipairs(rows) do
     local pos = temp.start
     local row = pos.line
-    local line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
+    local line = api.nvim_buf_get_lines(0, row, row + 1, false)[1]
     if line then
       local col
       if pos.character > #line then
