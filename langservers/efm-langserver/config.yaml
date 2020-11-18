@@ -25,14 +25,11 @@ tools:
     lint-stdin: true
 
   mix_credo: &mix_credo
-    lint-command: "mix help credo && mix credo suggest --format=flycheck --read-from-stdin ${INPUT}"
+    lint-command: "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}"
     lint-stdin: true
     lint-ignore-exit-code: true
     lint-formats:
       - '%f:%l:%c: %m'
-      # - '%f:%l:%c: %tR: %m'
-      # - '%f:%l:%c: %tW: %m'
-      # - '%f:%l:%c: %tE: %m'
     root-markers:
       - mix.lock
       - mix.exs
