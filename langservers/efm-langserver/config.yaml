@@ -1,11 +1,16 @@
 # https://github.com/tkmpypy/dotfiles/blob/master/.config/efm-langserver/config.yaml
 # https://github.com/lukas-reineke/dotfiles/blob/master/efm-langserver/config.yaml
+# https://github.com/johejo/dotfiles/blob/master/efm-langserver/config.yaml
 
 version: 2
 log-file: "~/.local/share/nvim/efm.log"
 log-level: 1
-root-markers:
-  - .git/
+# root-markers:
+#   - .git/
+#   - mix.lock
+#   - mix.exs
+#   - package.json
+#   - elm.json
 
 tools:
   vim-vint: &vim-vint
@@ -18,6 +23,19 @@ tools:
     lint-command: './node_modules/.bin/eslint -f unix --stdin'
     lint-ignore-exit-code: true
     lint-stdin: true
+
+  mix_credo: &mix_credo
+    lint-command: "mix help credo && mix credo suggest --format=flycheck --read-from-stdin ${INPUT}"
+    lint-stdin: true
+    lint-ignore-exit-code: true
+    lint-formats:
+      - '%f:%l:%c: %m'
+      # - '%f:%l:%c: %tR: %m'
+      # - '%f:%l:%c: %tW: %m'
+      # - '%f:%l:%c: %tE: %m'
+    root-markers:
+      - mix.lock
+      - mix.exs
 
   prettier: &prettier
     format-command: './node_modules/.bin/prettier'
@@ -110,7 +128,10 @@ languages:
     - <<: *luafmt
   sh:
     - <<: *shellcheck
-
+  elixir:
+    - <<: *mix_credo
+  eelixir:
+    - <<: *mix_credo
 
 # languages:
 #   markdown:

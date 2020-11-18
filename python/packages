@@ -19,3 +19,4 @@ python-language-server
 pync
 'python-language-server[all]'
 typing
+vint

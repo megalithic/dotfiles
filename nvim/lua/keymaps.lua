@@ -1,4 +1,4 @@
--- [ keymaps.. ] --------------------------------------------------------------
+-- [ keymaps.. ] ---------------------------------------------------------------
 
 local utils = require "utils"
 
@@ -9,4 +9,9 @@ local utils = require "utils"
 -- local cmd = vim.cmd
 -- local exec = vim.api.nvim_exec
 
-utils.bmap("n", "<Leader>ff", '<cmd>lua require("telescope.builtin").find_files()<CR>')
+-- ( telescope.nvim ) ----------------------------------------------------------
+
+-- utils.bmap("n", "<Leader>m", '<cmd>lua require("telescope.builtin").fd()<CR>')
+-- utils.bmap("n", "<Leader>f", '<cmd>lua require("telescope.builtin").git_files()<CR>')
+-- utils.bmap("n", "<Leader>a", '<cmd>lua require("telescope.builtin").live_grep()<CR>')
+utils.bmap("c", "<c-r><c-r>", "<Plug>(TelescopeFuzzyCommandSearch)", {noremap = false, nowait = true})

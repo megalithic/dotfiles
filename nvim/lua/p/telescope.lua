@@ -1,3 +1,5 @@
+-- https://github.com/nvim-telescope/telescope.nvim/blob/master/README.md#customization
+
 local telescope = require "telescope"
 local themes = require "telescope.themes"
 local actions = require "telescope.actions"
@@ -33,8 +35,8 @@ local telescope_config = {
   borderchars = {
     {"─", "│", "─", "│", "╭", "╮", "╯", "╰"},
     preview = {"─", "│", "─", "│", "╭", "╮", "╯", "╰"}
-  },
-  file_sorter = sorters.get_fzy_sorter
+  }
+  -- file_sorter = sorters.get_fzy_sorter
 }
 
 telescope.setup({defaults = telescope_config})

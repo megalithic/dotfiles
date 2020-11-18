@@ -31,12 +31,6 @@ local servers = {
     root_dir = root_pattern("package.json", ".git")
   },
   efm = {},
-  -- efm = {
-  --     disabled = false,
-  --     cmd = {vim.loop.os_homedir() .. "/.go/bin/efm-langserver", "-c", vim.fn.stdpath("config") .. "/efm-config.yaml"}
-  --     -- filetypes = {"elixir", "eelixir", "md", "json"},
-  --     -- root_dir = root_pattern("mix.lock", ".git", "mix.exs") or vim.loop.os_homedir()
-  -- },
   elmls = {
     cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
     filetypes = {"elm"},
@@ -209,8 +203,6 @@ function M.activate(on_attach_fn)
       )
     end
   end
-
-  -- require('lc.handlers')
 end
 
 return M
