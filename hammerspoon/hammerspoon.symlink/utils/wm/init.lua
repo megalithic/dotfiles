@@ -12,7 +12,7 @@
 local log = hs.logger.new('[wm]', 'debug')
 
 local cache = {
-  screenWatcher = {},
+  watcher = {},
   windowFilter = {}
 }
 
@@ -206,13 +206,8 @@ end
 M.start = function()
   log.i("starting..")
 
-  cache.screenWatcher = hs.screen.watcher.new(function()
-    if M.numScreens ~= #hs.screen.allScreens() then
-      M.numScreens = #hs.screen.allScreens()
-
-      M.prepare()
-    end
-  end):start()
+  -- watch for docking status changes
+  cache.watcher = hs.watchable.watch('status.isDocked', M.prepare)
 
   -- initial invocation
   M.prepare()
@@ -220,9 +215,6 @@ end
 
 M.stop = function()
   log.i("stopping..")
-
-  cache.screenWatcher:stop()
-  cache.screenWatcher = nil
 
   cache.windowFilter:unsubscribeAll()
   cache.windowFilter = nil
