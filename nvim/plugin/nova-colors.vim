@@ -136,7 +136,6 @@ function! s:nova_engage() abort
   exe 'hi LspDiagnosticsUnderlineInformation gui=undercurl,italic guifg=' . g:information
   exe 'hi LspDiagnosticsUnderlineHint gui=undercurl,italic guifg=' . g:hint
 
-
   exe 'hi LspDiagnosticsDefaultError gui=undercurl,italic guifg=' . g:error
   exe 'hi LspDiagnosticsDefaultWarning gui=undercurl,italic guifg=' . g:warning
   exe 'hi LspDiagnosticsDefaultInformation gui=undercurl,italic guifg=' . g:information

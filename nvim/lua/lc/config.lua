@@ -15,7 +15,7 @@ utils.inspect("loading lsp_config.lua")
 
 -- [ requires ] ----------------------------------------------------------------
 
-local has_lsp, _ = pcall(require, "nvim_lsp")
+local has_lsp, _ = pcall(require, "lspconfig")
 if not has_lsp then
   print("[WARN] nvim_lsp not found/installed/loaded..")
 
@@ -25,20 +25,31 @@ end
 -- local has_extensions = pcall(require, 'lsp_extensions') -- theirs
 -- local has_completion, completion = pcall(require, "completion") -- theirs
 
-local function get_all_diagnostics()
-  local result = {}
-  local levels = {
-    errors = "Error",
-    warnings = "Warning",
-    info = "Information",
-    hints = "Hint"
-  }
+function lsp_rename()
+  local current_word = vim.fn.expand("<cword>")
+  local plenary_window = require("plenary.window.float").percentage_range_window(0.5, 0.2)
+  vim.api.nvim_buf_set_option(plenary_window.bufnr, "buftype", "prompt")
+  vim.fn.prompt_setprompt(plenary_window.bufnr, string.format('Rename "%s" to > ', current_word))
+  vim.fn.prompt_setcallback(
+    plenary_window.bufnr,
+    function(text)
+      vim.api.nvim_win_close(plenary_window.win_id, true)
 
-  for k, level in pairs(levels) do
-    result[k] = vim.lsp.diagnostic.get_count(level)
-  end
+      if text ~= "" then
+        vim.schedule(
+          function()
+            vim.api.nvim_buf_delete(plenary_window.bufnr, {force = true})
 
-  return result
+            vim.lsp.buf.rename(text)
+          end
+        )
+      else
+        print("Nothing to rename!")
+      end
+    end
+  )
+
+  vim.cmd [[startinsert]]
 end
 
 -- [ custom on_attach ] --------------------------------------------------------
@@ -46,10 +57,6 @@ local on_attach = function(client, bufnr)
   utils.inspect("client.resolved_capabilities", client.resolved_capabilities)
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-
-  if not vim.tbl_isempty(vim.lsp.buf_get_clients(0)) then
-    utils.inspect("get_all_diagnostics", get_all_diagnostics())
-  end
 
   if client.resolved_capabilities.completion then
     local completion_loaded, completion = pcall(require, "lc.completion")
@@ -62,7 +69,7 @@ local on_attach = function(client, bufnr)
 
   if client.resolved_capabilities.document_formatting then
     utils.augroup(
-      "lc.format",
+      "mega.lc.format",
       function()
         vim.api.nvim_command [[autocmd! * <buffer>]]
         vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
@@ -85,7 +92,7 @@ local on_attach = function(client, bufnr)
   end
 
   if client.resolved_capabilities.rename then
-    utils.bmap("n", "<Leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
+    utils.bmap("n", "<Leader>rn", "<cmd>lsp_rename()<CR>")
     utils.bmap("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
   end
 
@@ -102,7 +109,7 @@ local on_attach = function(client, bufnr)
   utils.bmap("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
 
   utils.augroup(
-    "lc.diagnostics",
+    "mega.lc.diagnostics",
     function()
       vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
     end

@@ -1,4 +1,4 @@
-local has_lsp, _ = pcall(require, "nvim_lsp")
+local has_lsp, _ = pcall(require, "lspconfig")
 if not has_lsp then
   print("[WARN] nvim_lsp not found/installed/loaded..")
 
@@ -87,7 +87,7 @@ function M.activate()
         completion_trigger_keyword_length = 2,
         max_items = 10,
         sorting = "none", -- 'alphabet'
-        matching_strategy_list = {"exact", "substring", "fuzzy", "all"}
+        matching_strategy_list = {"exact", "substring", "fuzzy"}
       }
     )
   end

@@ -1,4 +1,4 @@
-local has_lsp, lsp = pcall(require, "nvim_lsp")
+local has_lsp, lsp = pcall(require, "lspconfig")
 if not has_lsp then
   print("[WARN] nvim_lsp not found/installed/loaded..")
 
@@ -32,7 +32,7 @@ local servers = {
   },
   efm = {},
   elmls = {
-    cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
+    cmd = {vim.fn.stdpath("cache") .. "/lspconfig/elmls/node_modules/.bin/elm-language-server"},
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")
   },
@@ -111,6 +111,7 @@ local servers = {
   },
   rust_analyzer = {},
   sumneko_lua = {
+    disabled = false,
     settings = {
       Lua = {
         completion = {keywordSnippet = "Disable"},
@@ -140,7 +141,10 @@ local servers = {
             "hs",
             "spoon",
             "config",
-            "watchers"
+            "watchers",
+            "R",
+            "RELOAD",
+            "P"
           }
         }
       }
@@ -196,13 +200,40 @@ function M.activate(on_attach_fn)
           "force",
           {
             on_attach = on_attach_fn,
-            callbacks = vim.tbl_deep_extend("keep", {}, require("lc.handlers"), vim.lsp.handlers)
+            handlers = vim.tbl_deep_extend("keep", {}, require("lc.handlers"), vim.lsp.handlers)
           },
           config
         )
       )
     end
   end
+
+  -- custom lua LSP, used in place of sumneko_lua
+  -- require("nlua.lsp.nvim").setup(
+  --   lsp,
+  --   {
+  --     on_attach = on_attach_fn,
+  --     globals = {
+  --       "vim",
+  --       "Color",
+  --       "c",
+  --       "Group",
+  --       "g",
+  --       "s",
+  --       "describe",
+  --       "it",
+  --       "before_each",
+  --       "after_each",
+  --       "hs",
+  --       "spoon",
+  --       "config",
+  --       "watchers",
+  --       "R",
+  --       "RELOAD",
+  --       "P"
+  --     }
+  --   }
+  -- )
 end
 
 return M

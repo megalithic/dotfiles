@@ -15,3 +15,5 @@ local utils = require "utils"
 -- utils.bmap("n", "<Leader>f", '<cmd>lua require("telescope.builtin").git_files()<CR>')
 -- utils.bmap("n", "<Leader>a", '<cmd>lua require("telescope.builtin").live_grep()<CR>')
 utils.bmap("c", "<c-r><c-r>", "<Plug>(TelescopeFuzzyCommandSearch)", {noremap = false, nowait = true})
+utils.bmap("c", "<c-n>", "<Up>", {noremap = false, nowait = true})
+utils.bmap("c", "<c-p>", "<Down>", {noremap = false, nowait = true})

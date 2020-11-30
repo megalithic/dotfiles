@@ -1,9 +1,9 @@
 -- https://github.com/nvim-telescope/telescope.nvim/blob/master/README.md#customization
 
 local telescope = require "telescope"
-local themes = require "telescope.themes"
+-- local themes = require "telescope.themes"
 local actions = require "telescope.actions"
-local sorters = require "telescope.sorters"
+-- local sorters = require "telescope.sorters"
 
 local telescope_config = {
   prompt_prefix = " >",

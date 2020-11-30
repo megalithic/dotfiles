@@ -87,14 +87,8 @@ augroup general
   " toggle linenumbering and cursorline
 " signcolumn=yes:2
 " signcolumn=no
-  autocmd BufEnter,FocusGained,WinEnter * silent setlocal number relativenumber colorcolumn=81
-  autocmd BufLeave,FocusLost,WinLeave * silent setlocal  norelativenumber colorcolumn=0
-
-  " toggle colorcolumn when in insertmode only
-  " autocmd InsertEnter * silent set colorcolumn=80
-  " autocmd InsertLeave * if &filetype != "markdown"
-  "                           \ | silent set colorcolumn=""
-  "                           \ | endif
+  autocmd BufEnter,FocusGained,WinEnter * silent setlocal number relativenumber
+  autocmd BufLeave,FocusLost,WinLeave * silent setlocal   norelativenumber
 
   " Open QuickFix horizontally with line wrap
   autocmd FileType qf wincmd J | setlocal wrap
@@ -135,6 +129,7 @@ augroup END
 
 augroup fzf
   autocmd!
+
   function s:fzf_buf_in() abort
     echo
     set laststatus=0
@@ -148,6 +143,7 @@ augroup fzf
     set laststatus=2
     set ruler
   endfunction
+
   autocmd FileType fzf call s:fzf_buf_in()
   autocmd BufEnter \v[0-9]+;#FZF$ call s:fzf_buf_in()
   autocmd BufLeave \v[0-9]+;#FZF$ call s:fzf_buf_out()

@@ -10,7 +10,7 @@
 " ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
 
-if !1 | finish | endif     " FIXME: danger, will robinson!
+if !1 | finish | endif     " danger, will robinson!
 
 scriptencoding utf-16      " allow emojis in vimrc
 filetype plugin indent on  " try to recognize filetypes and load related plugins
@@ -36,6 +36,18 @@ filetype plugin indent on  " try to recognize filetypes and load related plugins
 syntax on
 
 
+" --[ disable built-ins ]-------------------------------------------------------
+" let g:loaded_2html_plugin      = 1
+" let g:loaded_gzip              = 1
+" let g:loaded_matchparen        = 1
+" let g:loaded_netrwPlugin       = 1
+" let g:loaded_rrhelper          = 1
+" let g:loaded_tarPlugin         = 1
+" let g:loaded_zipPlugin         = 1
+" let g:loaded_matchit           = 1
+" let g:loaded_tutor_mode_plugin = 1
+
+
 " --[ general settings ]--------------------------------------------------------
 " REF: great descriptions of settings: https://github.com/neg-serg/dotfiles/blob/master/nvim/.config/nvim/plugin/01-settings.vim
 "
@@ -57,7 +69,7 @@ if empty($SSH_CONNECTION) && has('clipboard')
     set clipboard+=unnamedplus
   endif
 endif
-set colorcolumn=81 " Highlight 81 and 82 columns
+" set colorcolumn=81  " Highlight 81 and 82 columns -- set via lua/autocmds.lua
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 set completeopt=menuone,noinsert,noselect " Don't auto select first one
@@ -68,7 +80,17 @@ set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
 set foldmethod=indent " Simple and fast
 set foldtext=""
-set formatoptions=cqj " Default format options
+" set formatoptions=cqj " Default format options
+set formatoptions-=a    " Auto formatting is BAD.
+set formatoptions-=t    " Don't auto format my code. I got linters for that.
+set formatoptions+=c    " In general, I like it when comments respect textwidth
+set formatoptions+=q    " Allow formatting comments w/ gq
+set formatoptions-=o    " O and o, don't continue comments
+set formatoptions+=r    " But do continue when pressing enter.
+set formatoptions+=n    " Indent past the formatlistpat, not underneath it.
+set formatoptions+=j    " Auto-remove comments if possible.
+set formatoptions-=2    " I'm not in gradeschool anymore
+set nojoinspaces        " Two spaces and grade school, we're done
 set gdefault          " Always do global substitutes
 set history=200       " Keep 200 changes of undo history
 set infercase         " Smart casing when completing
@@ -90,6 +112,7 @@ set mousehide         " Hide mouse when typing text
 set nobackup          " No backup files
 set nocompatible      " No Vi support
 set noemoji           " don't assume all emoji are double width (@wincent)
+set noequalalways     " I don't like my windows changing all the time
 set noexrc            " Disable reading of working directory vimrc files
 set nohlsearch        " Don't highlight search results by default
 set nojoinspaces      " No to double-spaces when joining lines
@@ -103,7 +126,7 @@ set nrformats=alpha,hex,octal        " No to oct/hex support when doing CTRL-a/x
 set path=**
 " set relativenumber    " Show relative numbers
 set ruler
-" set scrolloff=5       " Start scrolling when we're 5 lines away from margins
+set scrolloff=10       " Start scrolling when we're 5 lines away from margins
 set shiftwidth=2
 set shortmess+=c                          " Don't show insert mode completion messages
 set sidescrolloff=15
@@ -157,8 +180,12 @@ if has("nvim")
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set pumblend=10
   set pumheight=20      " Height of complete list
+  set pumblend=17
   set signcolumn=yes:2  " always showsigncolumn
   set switchbuf=useopen,vsplit,split,usetab
+  set wildmode-=list
+  set wildmode+=longest
+  set wildmode+=full
   set wildoptions+=pum
   " set winblend=10
   set jumpoptions=stack
@@ -380,6 +407,7 @@ Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'type
 Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 Plug 'florentc/vim-tla'
+Plug 'tjdevries/nlua.nvim'
 Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
 Plug 'andrejlevkovitch/vim-lua-format', { 'for': ['lua'] }
 Plug 'yyq123/vim-syntax-logfile'
@@ -423,21 +451,6 @@ endif
 
 " Load up the match it plugin which provides smart % XML/HTML matching.
 runtime macros/matchit.vim
-
-
-" --[ abbreviations ]-----------------------------------------------------------
-iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
-iabbrev cabpi Co-authored-by: Patrick Isaac <pisaac@enbala.com>
-iabbrev cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
-
-
-" --[ commands ]----------------------------------------------------------------
-command! CopyFullName let @+=expand('%')
-command! CopyPath let @+=expand('%:h')
-command! CopyFileName let @+=expand('%:t')
-" map ;gg           G$g<C-G>''
-" command! Stats :!wc -m %<CR>
-" https://superuser.com/questions/149854/how-can-i-get-gvim-to-display-the-character-count-of-the-current-file#:~:text=Press%20g%20CTRL%2DG%20in,the%20cursor%20and%20the%20file.&text=which%20gives%20you%20the%20number,and%20yank%20the%20current%20buffer).
 
 
 " --[ colorscheme ]-------------------------------------------------------------
