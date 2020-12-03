@@ -1,6 +1,6 @@
-local has_lsp, lsp = pcall(require, "nvim_lsp")
+local has_lsp, lspconfig = pcall(require, "lspconfig")
 if not has_lsp then
-  print("[WARN] nvim_lsp not found/installed/loaded..")
+  print("[WARN] lspconfig not found/installed/loaded..")
 
   return
 end
@@ -12,10 +12,10 @@ local function root_pattern(...)
 
   return function(startpath)
     for _, pattern in ipairs(patterns) do
-      return lsp.util.search_ancestors(
+      return lspconfig.util.search_ancestors(
         startpath,
         function(path)
-          if lsp.util.path.exists(vim.fn.glob(lsp.util.path.join(path, pattern))) then
+          if lspconfig.util.path.exists(vim.fn.glob(lspconfig.util.path.join(path, pattern))) then
             return path
           end
         end
@@ -32,7 +32,7 @@ local servers = {
   },
   efm = {},
   elmls = {
-    cmd = {vim.fn.stdpath("cache") .. "/nvim_lsp/elmls/node_modules/.bin/elm-language-server"},
+    cmd = {vim.fn.stdpath("cache") .. "/lspconfig/elmls/node_modules/.bin/elm-language-server"},
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")
   },
@@ -146,9 +146,9 @@ local servers = {
       }
     },
     cmd = {
-      vim.fn.stdpath("cache") .. "/nvim_lsp/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
+      vim.fn.stdpath("cache") .. "/lspconfig/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
       "-E",
-      vim.fn.stdpath("cache") .. "/nvim_lsp/sumneko_lua/lua-language-server/main.lua"
+      vim.fn.stdpath("cache") .. "/lspconfig/sumneko_lua/lua-language-server/main.lua"
     }
   },
   tsserver = {
@@ -191,12 +191,12 @@ function M.activate(on_attach_fn)
     local server_disabled = (config.disabled ~= nil and config.disabled) or false
 
     if not server_disabled then
-      lsp[server].setup(
+      lspconfig[server].setup(
         vim.tbl_deep_extend(
           "force",
           {
             on_attach = on_attach_fn,
-            callbacks = vim.tbl_deep_extend("keep", {}, require("lc.handlers"), vim.lsp.handlers)
+            handlers = vim.tbl_deep_extend("keep", {}, require("lc.handlers"), vim.lsp.handlers)
           },
           config
         )

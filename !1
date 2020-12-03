@@ -1,0 +1,473 @@
+" ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+"
+"   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
+"   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: DOTFILES > nvim/init.vim
+"   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+"   Brought to you by: Seth Messer / @megalithic
+"
+" ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+" ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+
+if !1 | finish | endif     " FIXME: danger, will robinson!
+
+scriptencoding utf-16      " allow emojis in vimrc
+filetype plugin indent on  " try to recognize filetypes and load related plugins
+
+
+" ┌────────────────────────────────────────────────────────────────────────────┐
+" │ additional setup and configs..                                             │
+" │────────────────────────────────────────────────────────────────────────────│
+" │ ~/.dotfiles/nvim/plugin/autocmds.vim                - customizations       │
+" │ ~/.dotfiles/nvim/ftplugin                           - ft options, mappings │
+" │ ~/.dotfiles/nvim/after/ftplugin                     - file type overrides  │
+" │ ~/.dotfiles/nvim/autoload                           - custom functions     │
+" │ ~/.dotfiles/nvim/plugin/terminal-settings.vim       - Vim terminal tweaks  │
+" │ ~/.dotfiles/nvim/plugin/mappings.vim                - custom mappings      │
+" │ ~/.dotfiles/nvim/after/plugin/<plugin_config>.vim   - custom plugin config │
+" └────────────────────────────────────────────────────────────────────────────┘
+
+" debugging
+" REF: https://codeinthehole.com/tips/debugging-vim-by-example/
+
+
+" Enable syntax highlighting.
+syntax on
+
+
+" --[ general settings ]--------------------------------------------------------
+" REF: great descriptions of settings: https://github.com/neg-serg/dotfiles/blob/master/nvim/.config/nvim/plugin/01-settings.vim
+"
+set autoindent        " Indented text
+set autoread          " Pick up external changes to files
+set autowrite         " Write files when navigating with :next/:previous
+set backspace=indent,eol,start
+set belloff=all       " Bells are annoying
+set breakindent       " Wrap long lines *with* indentation
+set breakindentopt=shift:2
+if empty($SSH_CONNECTION) && has('clipboard')
+  set clipboard=unnamed  " Use clipboard register
+
+  " Share X windows clipboard. NOT ON NEOVIM -- neovim automatically uses
+  " system clipboard when xclip/xsel/pbcopy are available.
+  if has('nvim') && !has('mac')
+    set clipboard=unnamedplus
+  elseif has('unnamedplus')
+    set clipboard+=unnamedplus
+  endif
+endif
+set colorcolumn=81 " Highlight 81 and 82 columns
+set conceallevel=2
+set complete=.,w,b    " Sources for term and line completions
+set completeopt=menuone,noinsert,noselect " Don't auto select first one
+set dictionary=/usr/share/dict/words
+set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
+set spelllang=en
+set expandtab         " Use spaces instead of tabs
+set foldlevelstart=20
+set foldmethod=indent " Simple and fast
+set foldtext=""
+set formatoptions=cqj " Default format options
+set gdefault          " Always do global substitutes
+set history=200       " Keep 200 changes of undo history
+set infercase         " Smart casing when completing
+set ignorecase        " Search in case-insensitively
+set incsearch         " Go to search results immediately
+set laststatus=2      " We want a statusline
+set linespace=0       " Line height of things like, the statusline
+set cmdheight=1
+set lazyredraw        " should make scrolling faster
+set matchpairs=(:),{:},[:]
+set matchpairs+=<:>             " Match, to be used with %
+try
+  set matchpairs+=《:》,〈:〉,［:］,（:）,「:」,『:』,‘:’,“:”
+catch /^Vim\%((\a\+)\)\=:E474
+endtry
+set mouse=nva         " Mouse support in different modes
+set mousemodel=popup  " Set the behaviour of mouse
+set mousehide         " Hide mouse when typing text
+set nobackup          " No backup files
+set nocompatible      " No Vi support
+set noemoji           " don't assume all emoji are double width (@wincent)
+set noexrc            " Disable reading of working directory vimrc files
+set nohlsearch        " Don't highlight search results by default
+set nojoinspaces      " No to double-spaces when joining lines
+set noshowcmd         " No to showing command in bottom-right corner
+set noshowmatch       " No jumping jumping cursors when matching pairs
+set noshowmode        " No to showing mode in bottom-left corner
+set noswapfile        " No backup files
+" set nowrapscan        " Don't wrap searches around
+" set number            " Show line numbers
+set nrformats=alpha,hex,octal        " No to oct/hex support when doing CTRL-a/x
+set path=**
+" set relativenumber    " Show relative numbers
+set ruler
+" set scrolloff=5       " Start scrolling when we're 5 lines away from margins
+set shiftwidth=2
+set shortmess+=c                          " Don't show insert mode completion messages
+set sidescrolloff=15
+set sidescroll=5
+set showbreak=↳       " Use this to wrap long lines
+set smartcase         " Case-smart searching
+set smarttab
+set splitbelow        " Split below current window
+set splitright        " Split window to the right
+set synmaxcol=500     " Syntax highlight first 500 chars, for performance
+set t_Co=256          " 256 color support
+set tabstop=2
+if has("termguicolors")
+  set termguicolors " Enable 24-bit color support if available
+endif
+set textwidth=80
+set timeoutlen=1500   " Give some time for multi-key mappings
+" Don't set ttimeoutlen to zero otherwise it will break terminal cursor block
+" to I-beam and back functionality set by the t_SI and t_EI variables.
+set ttimeoutlen=10
+set ttyfast
+" Set the persistent undo directory on temporary private fast storage.
+let s:undoDir="/tmp/.undodir_" . $USER
+if !isdirectory(s:undoDir)
+  call mkdir(s:undoDir, "", 0700)
+endif
+let &undodir=s:undoDir
+set undofile          " Maintain undo history
+set updatetime=100    " Make async plugin more responsive
+set viminfo=          " No backups
+set wildcharm=<Tab>   " Defines the trigger for 'wildmenu' in mappings
+set wildmenu          " Nice command completions
+set wildmode=full
+set wildignore+=*.o,*.obj,*.bin,*.dll,*.exe
+set wildignore+=*/.git/*,*/.svn/*,*/__pycache__/*,*/build/**
+set wildignore+=*.pyc
+set wildignore+=*.DS_Store
+set wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
+set wrap              " Wrap long lines
+
+" Options specific to Neovim or Vim.
+if has("nvim")
+  set diffopt=filler,internal,algorithm:histogram,indent-heuristic
+  set inccommand=nosplit
+  set list
+  " set listchars=tab:\ \ ,trail:-
+  set listchars=tab:\ \ ,trail:·
+  " set listchars=tab:»·,trail:·
+  " set listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
+  " set listchars=tab:»\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
+  " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
+  " set pumblend=10
+  set pumheight=20      " Height of complete list
+  set signcolumn=yes:2  " always showsigncolumn
+  set switchbuf=useopen,vsplit,split,usetab
+  set wildoptions+=pum
+  " set winblend=10
+  set jumpoptions=stack
+
+  set guicursor=
+        \n:block-Cursor,
+        \a:block-blinkon0,
+        \i:ver25-blinkwait200-blinkoff150-blinkon200-CursorInsert,
+        \r:blinkwait200-blinkoff150-blinkon200-CursorReplace,
+        \v:CursorVisual,
+        \c:ver25-blinkon300-CursorInsert
+
+  " Set cursor shape based on mode (:h termcap-cursor-shape)
+  " Vertical bar in insert mode
+  let &t_SI = "\e[6 q"
+  " Underline in replace mode
+  let &t_SR = "\e[4 q"
+  " Block in normal mode
+  let &t_EI = "\e[2 q"
+
+  let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
+  let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
+  let $EDITOR      = 'nvr -l'
+  let $ECTO_EDITOR = 'nvr -l'
+
+  let g:python_host_prog = '~/.asdf/shims/python'
+  let g:python3_host_prog = '~/.asdf/shims/python3'
+
+  " share data between nvim instances (registers etc)
+  augroup SHADA
+    autocmd!
+    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
+          \ if exists(':rshada') | rshada | wshada | endif
+  augroup END
+else
+  set emoji                 " treat emojis 😄 as full width characters
+  set cryptmethod=blowfish2
+  set listchars=eol:$,tab:>-,trail:-
+  set ttymouse=xterm2
+endif
+
+
+let mapleader = ","
+
+
+" Automatically install vim-plug and run PlugInstall if vim-plug is not found.
+if empty(glob('~/.config/nvim/autoload/plug.vim'))
+  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
+        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+set runtimepath+=~/.config/nvim/autoload/plug.vim/
+
+" Initialize vim-plug.
+silent! if plug#begin('~/.config/nvim/plugged')
+
+Plug 'dstein64/vim-startuptime'
+
+
+" --[ styling/ui ]--------------------------------------------------------------
+Plug 'trevordmiller/nova-vim' " nova-colors.vim
+Plug 'sainnhe/gruvbox-material' " gruvbox-material.vim 
+Plug 'pbrisbin/vim-colors-off' " for goyo
+Plug 'Yggdroot/indentLine' " indentLine.vim
+Plug 'dm1try/golden_size'
+" Plug 'roman/golden-ratio'
+Plug 'junegunn/rainbow_parentheses.vim' " nicely colors nested pairs of [], (), {}
+Plug 'norcalli/nvim-colorizer.lua'
+Plug 'ryanoasis/vim-devicons'
+
+
+" --[ general behaviours ]------------------------------------------------------
+Plug 'nelstrom/vim-visual-star-search'
+Plug 'tommcdo/vim-lion' "lion.vim
+" Plug 'chaoren/vim-wordmotion' "wordmotion.vim
+" Plug 'cohama/lexima.vim'
+Plug 'Raimondi/delimitMate'
+      let delimitMate_expand_cr = 0
+Plug 'tpope/vim-endwise' | Plug 'rstacruz/vim-closer'
+Plug 'tpope/vim-eunuch' "eunuch.vim
+Plug 'tpope/vim-abolish'
+" https://github.com/tpope/vim-abolish/blob/master/doc/abolish.txt#L146-L162
+Plug 'tpope/vim-rhubarb'
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-surround'
+" Plug 'machakann/vim-sandwich'
+Plug 'tpope/vim-commentary'
+Plug '907th/vim-auto-save' "auto-save.vim
+Plug 'rhysd/clever-f.vim' "clever-f.vim
+" Plug 'justinmk/vim-sneak'
+Plug 'tpope/vim-unimpaired' "unimpaired.vim
+Plug 'EinfachToll/DidYouMean' " Vim plugin which asks for the right file to open
+Plug 'jordwalke/VimAutoMakeDirectory' " auto-makes the dir for you if it doesn't exist in the path
+Plug 'ConradIrwin/vim-bracketed-paste' " correctly paste in insert mode
+Plug 'sickill/vim-pasta' " context-aware pasting
+" Plug 'inkarkat/vim-ReplaceWithRegister'
+"       nmap s  <Plug>ReplaceWithRegisterOperator
+"       nmap ss <Plug>ReplaceWithRegisterLine
+"       xmap s  <Plug>ReplaceWithRegisterVisual
+"       nnoremap s <Nop>
+
+
+
+" --[ movements/text objects, et al ]-------------------------------------------
+Plug 'tpope/vim-rsi'
+Plug 'kana/vim-operator-user'
+" -- provide ai and ii for indent blocks
+" -- provide al and il for current line
+" -- provide a_ and i_ for underscores
+" -- provide a- and i-
+Plug 'kana/vim-textobj-user'                                            " https://github.com/kana/vim-textobj-user/wiki
+" Plug 'kana/vim-textobj-function'                                        " function text object (af/if)
+Plug 'kana/vim-textobj-indent'                                          " for indent level (ai/ii)
+Plug 'kana/vim-textobj-line'                                            " for current line (al/il)
+Plug 'nelstrom/vim-textobj-rubyblock', { 'for': ['ruby'] }              " ruby block text object (ar/ir)
+Plug 'andyl/vim-textobj-elixir'                                         " elixir block text object (ae/ie)
+      " let g:vim_textobj_elixir_mapping = 'E'
+Plug 'glts/vim-textobj-comment'                                         " comment text object (ac/ic)
+Plug 'michaeljsmith/vim-indent-object'
+Plug 'machakann/vim-textobj-delimited'                                  " - d/D   for underscore section (e.g. `did` on foo_b|ar_baz -> foo__baz)
+Plug 'gilligan/textobj-lastpaste'                                       " - P     for last paste
+Plug 'mattn/vim-textobj-url'                                            " - u     for url
+Plug 'rhysd/vim-textobj-anyblock'                                       " - '', \"\", (), {}, [], <>
+Plug 'arthurxavierx/vim-caser'                                          " https://github.com/arthurxavierx/vim-caser#usage
+Plug 'Julian/vim-textobj-variable-segment'                              " variable parts (av/iv)
+Plug 'sgur/vim-textobj-parameter'                                       " function parameters (a,/i,)
+      let g:vim_textobj_parameter_mapping = ','
+Plug 'wellle/targets.vim'                                               " improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
+
+
+" --[ File/buffer management ]--------------------------------------------------
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim' " fzf.vim
+
+if has("nvim-0.5.0")
+  Plug 'nvim-lua/popup.nvim'
+  Plug 'nvim-lua/plenary.nvim'
+  Plug 'nvim-lua/telescope.nvim'
+endif
+
+Plug 'mhinz/vim-grepper' " grepper.vim
+Plug 'junegunn/vim-slash' " slash.vim
+Plug 'mattn/vim-findroot', {'for': ['javascript']} " findroot.vim
+Plug 'tpope/vim-dispatch'
+" Plug 'kyazdani42/nvim-web-devicons' " for file icons
+" Plug 'kyazdani42/nvim-tree.lua'
+
+
+" --[ LSP/Completion/Snippets ]-------------------------------------------------
+if has("nvim-0.5.0")
+  Plug 'neovim/nvim-lspconfig' " lsp.vim / lsp.lua
+  Plug 'nvim-lua/completion-nvim'
+  Plug 'nvim-lua/lsp-status.nvim'
+  Plug 'hrsh7th/vim-vsnip'
+  Plug 'hrsh7th/vim-vsnip-integ'
+  Plug 'steelsojka/completion-buffers'
+  " Plug 'lukas-reineke/format.nvim'
+  " Plug 'mhartington/formatter.nvim'
+  " Plug 'nvim-treesitter/nvim-treesitter'
+  " Plug 'nvim-treesitter/completion-treesitter'
+endif
+
+
+" --[ VCS ]---------------------------------------------------------------------
+Plug 'tpope/vim-fugitive' " fugitive.vim
+Plug 'mhinz/vim-signify' " signify.vim
+Plug 'keith/gist.vim', { 'do': 'chmod -HR 0600 ~/.netrc' } " gist.vim
+Plug 'wsdjeg/vim-fetch' " vim path/to/file.ext:12:3
+Plug 'mattn/webapi-vim'
+Plug 'rhysd/conflict-marker.vim'
+Plug 'itchyny/vim-gitbranch'
+" Plug 'APZelos/blamer.nvim'
+Plug 'rhysd/git-messenger.vim'
+
+
+" --[ Devlopment ]--------------------------------------------------------------
+Plug 'tpope/vim-projectionist' " projectionist.vim
+" Plug 'dense-analysis/ale' " ale.vim
+" Plug 'ndhoule/diagnostic-nvim', {'branch': 'feat/ale-lint-source-support'}
+  " call minpac#add('ndhoule/diagnostic-nvim', {'rev': 'feat/ale-lint-source-support'})
+Plug 'janko/vim-test' " test.vim
+Plug 'tpope/vim-ragtag' " ragtag.vim
+Plug 'axvr/zepl.vim'
+Plug 'rizzatti/dash.vim'
+Plug 'skywind3000/vim-quickui'
+" Plug 'mattn/emmet-vim', { 'for': ['css', 'elm', 'haml', 'html', 'jade', 'less', 'sass', 'scss', 'slim', 'elixir', 'eelixir', 'markdown', 'liquid'] }
+
+" Sleuth and EditorConfig will adjust style and indent either heuristically
+" (former) or explicitly (later). Note, EditorConfig will take precedence if
+" a .editorconfig file is found.
+" Plug 'tpope/vim-sleuth'
+" ~/.dotfiles/nvim/after/plugin/sleuth.vim - overrides
+Plug 'sgur/vim-editorconfig'
+
+" allows mirror'ed editing of files locally, to a specified ssh location via ~/.mirrors
+Plug 'zenbro/mirror.vim'
+Plug 'metakirby5/codi.vim'
+Plug 'junegunn/goyo.vim'
+Plug 'junegunn/limelight.vim'
+
+
+" --[ Lang/Syntax ]-------------------------------------------------------------
+" Plug 'andys8/vim-elm-syntax', {'for': ['elm']}
+
+Plug 'tpope/vim-rails' " rails.vim
+Plug 'gleam-lang/gleam.vim'
+Plug 'vim-erlang/vim-erlang-runtime', { 'for': ['erlang'] }
+Plug 'Zaptic/elm-vim', {'for': ['elm']}
+Plug 'antew/vim-elm-analyse', { 'for': ['elm'] }
+Plug 'elixir-lang/vim-elixir', { 'for': ['elixir', 'eelixir'] }
+Plug 'avdgaag/vim-phoenix', { 'for': ['elixir', 'eelixir'] }
+" Plug 'mhinz/vim-mix-format', { 'for': ['elixir', 'eelixir']} " (see https://github.com/dense-analysis/ale/pull/3106)
+      " let g:mix_format_on_save = 1
+      " let g:mix_format_silent_errors = 0
+
+Plug 'lucidstack/hex.vim', { 'for': ['elixir', 'eelixir']}
+Plug 'neoclide/jsonc.vim', { 'for': ['json', 'jsonc'] }
+Plug 'gerrard00/vim-mocha-only', { 'for': ['javascript', 'javscriptreact', 'typescript', 'typescript.tsx'] }
+Plug 'plasticboy/vim-markdown' , { 'for': ['markdown', 'vimwiki'] }
+Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
+Plug 'florentc/vim-tla'
+Plug 'euclidianace/betterlua.vim', { 'for': ['lua'] }
+Plug 'andrejlevkovitch/vim-lua-format', { 'for': ['lua'] }
+Plug 'yyq123/vim-syntax-logfile'
+
+Plug 'jparise/vim-graphql'
+
+" https://github.com/sheerun/vim-polyglot#troubleshooting
+let g:polyglot_disabled = [
+      \ 'typescript',
+      \ 'typescriptreact',
+      \ 'typescript.tsx',
+      \ 'javascriptreact',
+      \ 'markdown',
+      \ 'md',
+      \ 'graphql',
+      \ 'lua',
+      \ 'tsx',
+      \ 'jsx',
+      \ 'sass',
+      \ 'scss',
+      \ 'css',
+      \ 'elm',
+      \ 'elixir',
+      \ 'eelixir',
+      \ 'ex',
+      \ 'exs'
+      \ ]
+Plug 'sheerun/vim-polyglot' "polyglot.vim
+
+
+" --[ tmux support ]------------------------------------------------------------
+Plug 'christoomey/vim-tmux-navigator'
+" ~/.dotfiles/nvim/plugin/tmux-navigator.vim - options, mappings
+Plug 'tmux-plugins/vim-tmux-focus-events'
+Plug 'christoomey/vim-tmux-runner' " needed for tmux/hotkey integration with vim
+
+" Finalize vim-plug.
+call plug#end()
+endif
+
+
+" Load up the match it plugin which provides smart % XML/HTML matching.
+runtime macros/matchit.vim
+
+
+" --[ abbreviations ]-----------------------------------------------------------
+iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
+iabbrev cabpi Co-authored-by: Patrick Isaac <pisaac@enbala.com>
+iabbrev cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>
+
+
+" --[ commands ]----------------------------------------------------------------
+command! CopyFullName let @+=expand('%')
+command! CopyPath let @+=expand('%:h')
+command! CopyFileName let @+=expand('%:t')
+" map ;gg           G$g<C-G>''
+" command! Stats :!wc -m %<CR>
+" https://superuser.com/questions/149854/how-can-i-get-gvim-to-display-the-character-count-of-the-current-file#:~:text=Press%20g%20CTRL%2DG%20in,the%20cursor%20and%20the%20file.&text=which%20gives%20you%20the%20number,and%20yank%20the%20current%20buffer).
+
+
+" --[ colorscheme ]-------------------------------------------------------------
+
+" - nova
+set background=dark
+let g:nova_transparent = 1
+silent! colorscheme nova
+
+" - gruvbox-material
+" https://github.com/sainnhe/gruvbox-material/blob/master/doc/gruvbox-material.txt
+" set background=dark
+" let g:gruvbox_material_transparent_background = 1
+" let g:gruvbox_material_background = 'soft'
+" let g:gruvbox_material_visual = 'grey background'
+" let g:gruvbox_material_enable_italic = 1
+" let g:gruvbox_material_enable_bold = 1
+" let g:gruvbox_material_enable_undercurl = 1
+" let g:gruvbox_material_enable_underline = 1
+" let g:gruvbox_material_enable_reverse= 1
+" let g:gruvbox_material_statusline_style = 'original'
+" silent! colorscheme gruvbox-material
+
+" After this file is sourced, plug-in code will be evaluated.
+" See ~/.vim/after for files evaluated after that.
+" See `:scriptnames` for a list of all scripts, in evaluation order.
+" Launch Vim with `vim --startuptime vim.log` for profiling info.
+"
+" To see all leader mappings, including those from plug-ins:
+"
+"   vim -c 'set t_te=' -c 'set t_ti=' -c 'map <space>' -c q | sort
+
+" vim:ft=vim

@@ -15,9 +15,9 @@ utils.inspect("loading lsp_config.lua")
 
 -- [ requires ] ----------------------------------------------------------------
 
-local has_lsp, _ = pcall(require, "nvim_lsp")
+local has_lsp, _ = pcall(require, "lspconfig")
 if not has_lsp then
-  print("[WARN] nvim_lsp not found/installed/loaded..")
+  print("[WARN] lspconfig not found/installed/loaded..")
 
   return
 end
