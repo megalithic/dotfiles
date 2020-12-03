@@ -176,8 +176,69 @@ endfunction
 nnoremap <silent> <leader>z :call <sid>zoom()<cr>
 
 " Things 3
-command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"
-nnoremap <Leader>T :Things<cr>
+function! s:get_visual_selection()
+  " Why is this not a built-in Vim script function?!
+  let [line_start, column_start] = getpos("'<")[1:2]
+  let [line_end, column_end] = getpos("'>")[1:2]
+  let lines = getline(line_start, line_end)
+  if len(lines) == 0
+    return ''
+  endif
+  let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+  let lines[0] = lines[0][column_start - 1:]
+  return join(lines, "\n")
+endfunction
+
+
+function! GetVisualSelection(mode)
+    " call with visualmode() as the argument
+    let [line_start, column_start] = getpos("'<")[1:2]
+    let [line_end, column_end]     = getpos("'>")[1:2]
+    let lines = getline(line_start, line_end)
+    if a:mode ==# 'v'
+        " Must trim the end before the start, the beginning will shift left.
+        let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+        let lines[0] = lines[0][column_start - 1:]
+    elseif  a:mode ==# 'V'
+        " Line mode no need to trim start or end
+    elseif  a:mode == "\<c-v>"
+        " Block mode, trim every line
+        let new_lines = []
+        let i = 0
+        for line in lines
+            let lines[i] = line[column_start - 1: column_end - (&selection == 'inclusive' ? 1 : 2)]
+            let i = i + 1
+        endfor
+    else
+        return ''
+    endif
+    for line in lines
+        echom line
+    endfor
+    return join(lines, "\n")
+endfunction
+
+function! AddToThings()
+  " let selection = GetVisualSelection(visualmode())
+  " " echom "selection->" . selection
+  " " echom "expand(selection)->" . expand(selection)
+
+  " echom lua
+
+  lua os.execute("open things:///add?show-quick-entry=true&title=%:t&notes=" .. vim.api.nvim_eval(call GetVisualSelection))
+
+  " !open "things:///add?show-quick-entry=true&title=%:t&notes=% -> " . expand(selection) . ""
+endfunction
+
+" xnoremap <leader>T :<C-U> call AddToThings()<CR>
+" xnoremap <leader>T :<C-U> call GetVisualSelection(visualmode())<CR>
+
+" command! -nargs=* -bang Things call AddToThings(<q-args>)
+command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<CR>"
+nnoremap <Leader>T :Things<CR>
+" vnoremap <Leader>T <silent> <ESC>:exe('Things '.expand('<cword>'))<CR>
+" vnoremap <Leader>T :Things<CR>
+" vnoremap <Leader>T :!open things:///add?show-quick-entry=true&title=%:t&notes=%<cr>
 
 " Bubble single lines
 nnoremap <C-Up> :m .-2<CR>

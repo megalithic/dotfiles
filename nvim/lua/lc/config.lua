@@ -25,32 +25,32 @@ end
 -- local has_extensions = pcall(require, 'lsp_extensions') -- theirs
 -- local has_completion, completion = pcall(require, "completion") -- theirs
 
-function lsp_rename()
-  local current_word = vim.fn.expand("<cword>")
-  local plenary_window = require("plenary.window.float").percentage_range_window(0.5, 0.2)
-  vim.api.nvim_buf_set_option(plenary_window.bufnr, "buftype", "prompt")
-  vim.fn.prompt_setprompt(plenary_window.bufnr, string.format('Rename "%s" to > ', current_word))
-  vim.fn.prompt_setcallback(
-    plenary_window.bufnr,
-    function(text)
-      vim.api.nvim_win_close(plenary_window.win_id, true)
+-- local lsp_rename = function()
+--   local current_word = vim.fn.expand("<cword>")
+--   local plenary_window = require("plenary.window.float").percentage_range_window(0.5, 0.2)
+--   vim.api.nvim_buf_set_option(plenary_window.bufnr, "buftype", "prompt")
+--   vim.fn.prompt_setprompt(plenary_window.bufnr, string.format('Rename "%s" to > ', current_word))
+--   vim.fn.prompt_setcallback(
+--     plenary_window.bufnr,
+--     function(text)
+--       vim.api.nvim_win_close(plenary_window.win_id, true)
 
-      if text ~= "" then
-        vim.schedule(
-          function()
-            vim.api.nvim_buf_delete(plenary_window.bufnr, {force = true})
+--       if text ~= "" then
+--         vim.schedule(
+--           function()
+--             vim.api.nvim_buf_delete(plenary_window.bufnr, {force = true})
 
-            vim.lsp.buf.rename(text)
-          end
-        )
-      else
-        print("Nothing to rename!")
-      end
-    end
-  )
+--             vim.lsp.buf.rename(text)
+--           end
+--         )
+--       else
+--         print("Nothing to rename!")
+--       end
+--     end
+--   )
 
-  vim.cmd [[startinsert]]
-end
+--   vim.cmd [[startinsert]]
+-- end
 
 -- [ custom on_attach ] --------------------------------------------------------
 local on_attach = function(client, bufnr)
@@ -92,7 +92,7 @@ local on_attach = function(client, bufnr)
   end
 
   if client.resolved_capabilities.rename then
-    utils.bmap("n", "<Leader>rn", "<cmd>lsp_rename()<CR>")
+    -- utils.bmap("n", "<Leader>rn", "<cmd>lsp_rename()<CR>")
     utils.bmap("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
   end
 

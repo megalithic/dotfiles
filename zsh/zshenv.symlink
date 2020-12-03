@@ -139,8 +139,8 @@ path=(
     /usr/local/share/npm/bin
     /usr/local/lib/node_modules
     /usr/local/opt/libffi/lib
-    # $HOME/.yarn/bin
-    # $HOME/.config/yarn/global/node_modules/.bin
+    $HOME/.yarn/bin
+    $HOME/.config/yarn/global/node_modules/.bin
     /Users/replicant/.local/bin
     /usr/local/opt/gnu-sed/libexec/gnubin
     /usr/local/opt/imagemagick@6/bin
@@ -167,8 +167,6 @@ path=(
     /usr/{bin,sbin}
     /{bin,sbin}
     /usr/local/opt/curl/bin
-    # $HOME/.yarn/bin
-    # $HOME/.config/yarn/global/node_modules/.bin
     ${ZDOTDIR:-${DOTFILES}/zsh}/bin(N-/)
     ${HOME}/.local/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)

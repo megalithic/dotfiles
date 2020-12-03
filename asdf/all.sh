@@ -14,6 +14,7 @@ then
 fi
 
 source ~/.zshrc
+source ~/.zshenv
 source $HOME/.asdf/asdf.sh
 
 #
