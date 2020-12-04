@@ -1,6 +1,6 @@
-print "p.fzf loaded.."
-
 local utils = require "utils"
+
+
 
 --vim.g.fzf_layout = { 'down': '~15%' }
 --vim.g.fzf_layout = { 'window': { 'width': 0.6, 'height': 0.5 } }

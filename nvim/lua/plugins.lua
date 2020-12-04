@@ -24,7 +24,7 @@ paq 'norcalli/nvim-colorizer.lua'
 paq 'dm1try/golden_size'
 
 paq 'junegunn/vim-easy-align'
-paq 'junegunn/fzf'
+paq 'junegunn/fzf' -- must run -> `:call fzf#install()`
 paq 'junegunn/fzf.vim'
 
 paq 'Raimondi/delimitMate'

@@ -14,7 +14,7 @@ if fn.empty(fn.glob(install_path)) > 0 then
     execute('!git clone https://github.com/savq/paq-nvim.git '..install_path)
     execute 'packadd paq-nvim'
 else
-    print "paq-nvim is installed.."
+    -- print "paq-nvim is installed.."
 end
 
 -- _G["wr"] = require("wr.global")
