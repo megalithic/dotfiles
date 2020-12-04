@@ -1,0 +1,124 @@
+""" MAPPINGS
+
+let mapleader = ','
+" noremap ; :
+
+" Help
+noremap <C-]> K
+
+" Copy to system clipboard
+noremap Y "+y
+
+" Better buffer navigation
+noremap J }
+noremap K {
+noremap H ^
+noremap L $
+
+" Better window navigation
+noremap <C-h> <C-w>h
+noremap <C-j> <C-w>j
+noremap <C-k> <C-w>k
+noremap <C-l> <C-w>l
+
+" Better save and quit
+silent! unmap <leader>w
+nnoremap <silent><leader>w :w<CR>
+nnoremap <silent><leader>W :w !sudo tee > /dev/null %<CR>
+cmap w!! w !sudo tee > /dev/null %
+nnoremap <leader>q :q<CR>
+
+" open a (new)file in a new vsplit
+nnoremap <silent><leader>o :vnew<CR>:e<space><C-d>
+nnoremap <leader>o :vnew<CR>:e<space>
+
+" Background (n)vim
+vnoremap <C-z> <ESC>zv`<ztgv
+
+" Default to case insensitive search
+nnoremap / /\v
+vnoremap / /\v
+
+" Don't overwrite blackhole register with selection
+" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
+" xnoremap p "_c<c-r>"<esc>
+" xmap P p
+
+" clear incsearch term
+nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
+
+""" OPTIONS
+
+""" General
+set mouse=a
+set number
+set relativenumber
+set wildignorecase
+set noshowmode
+set confirm            "Ask to save stuff
+set hidden             "Hides buffers instead of closing them
+set fileencoding=utf-8 "Encoding written to file
+
+""" LSP-related
+set completeopt=menuone,noinsert,noselect
+set shortmess+=c
+set signcolumn=number
+set updatetime=300
+
+""" Split windows
+set splitbelow
+set splitright
+
+""" Position
+set nocursorcolumn
+set nocursorline
+set colorcolumn=81
+
+""" Search
+set ignorecase
+set smartcase
+
+""" Whitespace
+set list
+
+" -> theirs:
+set listchars=tab:\|-,trail:*,extends:>,precedes:<,nbsp:_,eol:~
+set listchars+=space:· "not ASCII
+
+" -> mine:
+set listchars=tab:\ \ ,trail:·
+
+""" Indentation
+set expandtab     "<tab> inserts spaces
+set smartindent
+set shiftwidth=4
+set softtabstop=4
+set tabstop=4
+
+""" Folds
+set foldlevel=2
+set foldmethod=indent
+
+""" Scrolling
+set nowrap
+set scrolloff=20    "Keeps cursor centred
+set sidescrolloff=20
+
+""" Vim 8
+if !has('nvim')
+  syntax enable
+  set ruler
+  "colorscheme desert
+  set showcmd
+  set autoread
+  set wildmenu
+  set hlsearch
+  set incsearch
+  set autoindent
+  set laststatus=2
+endif
+
+" Netrw
+let g:netrw_banner = 0     " no banner
+let g:netrw_liststyle = 3  " tree style listing
+let g:netrw_dirhistmax = 0 " no netrw history

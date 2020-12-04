@@ -7,11 +7,11 @@
 
 -- [ loaders.. ] ---------------------------------------------------------
 
-require("settings")
+--require("settings")
 -- require("autocmds")
-require("keymaps")
-require("p.colorizer")
-require("p.golden_size")
-require("p.telescope")
+--require("keymaps")
+--require("p.colorizer")
+--require("p.golden_size")
+--require("p.telescope")
 -- require("p.treesitter")
-require("lc.config")
+--require("lc.config")

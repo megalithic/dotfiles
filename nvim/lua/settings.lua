@@ -2,16 +2,40 @@
 
 local utils = require "utils"
 
-local g = vim.g
-local go = vim.o
-local bo = vim.bo
-local wo = vim.wo
-local cmd = vim.cmd
-local exec = vim.api.nvim_exec
+
+local cmd, g, go, wo, bo, exec = vim.cmd, vim.g, vim.o, vim.wo, vim.bo, vim.api.nvim_exec
+
+cmd "runtime vimrc"
+
+-- Activate 24 bit colors
+go.termguicolors = true
+
+go.laststatus    = 2
+go.termguicolors = false
+go.cursorline    = false
+go.clipboard     = "unnamedplus"
+go.foldlevel     = 99
+go.fileencodings = "utf-8,gbk,ucs-bom,cp936,gb18030,big5,latin1"
+go.modeline      = true
+go.modelines     = 3
+go.smartcase     = true
+go.ignorecase    = true
+go.mouse         = "a"
+-- o.cmdheight     = 2
+go.autowrite     = true
+go.colorcolumn   = '+0'
+go.previewheight = 8
+go.splitbelow    = true
+go.hidden        = true
+go.updatetime    = 300
+go.completeopt   = "menuone,noinsert,noselect"
+go.shortmess     = "filnxtToOFc"
+go.cedit         = "<C-R>"  -- open command line window
+go.statusline    = "%t %h%w%m%r %=%(%l,%c%V %= %P%)"
 
 -- cmd("scriptencoding utf-16")
-cmd("syntax on")
-cmd("filetype plugin indent on")
+-- cmd("syntax on")
+-- cmd("filetype plugin indent on")
 
 -- go.compatible = false
 -- go.encoding = 'UTF-8'

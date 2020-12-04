@@ -82,6 +82,7 @@ function M.debounce(interval_ms, fn)
   }
 end
 
+
 function M.bmap(mode, key, result, opts)
   local map_opts = opts
 
@@ -93,7 +94,11 @@ function M.bmap(mode, key, result, opts)
 end
 
 function M.gmap(mode, key, result, opts)
-  api.nvim_set_keymap(mode, key, result, opts)
+  if opts == nil then
+    map_opts = {noremap = true, silent = true}
+  end
+
+  api.nvim_set_keymap(mode, key, result, map_opts)
 end
 
 function M.augroup(group, fn)

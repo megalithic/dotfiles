@@ -1,0 +1,7 @@
+2020-03-03 21:05:58,401 [INFO @ ncm2_core.py:load_plugin:101] 64534 - send vimscript plugin /Users/replicant/.config/nvim/plugins/ncm2-path/ncm2-plugin/ncm2_path.vim
+2020-03-03 21:05:58,402 [INFO @ ncm2_core.py:load_plugin:101] 64534 - send vimscript plugin /Users/replicant/.config/nvim/plugins/ncm2-vim/ncm2-plugin/ncm2_vim.vim
+2020-03-03 21:05:58,402 [INFO @ ncm2_core.py:load_plugin:101] 64534 - send vimscript plugin /Users/replicant/.config/nvim/plugins/ncm2-tagprefix/ncm2-plugin/ncm2_tagprefix.vim
+2020-03-03 21:05:58,403 [INFO @ ncm2_core.py:load_plugin:108] 64534 - send python plugin /Users/replicant/.config/nvim/plugins/float-preview.nvim/ncm2-plugin/float_preview.py
+2020-03-03 21:05:58,409 [INFO @ ncm2_core.py:load_python:119] 64534 - load_python /Users/replicant/.config/nvim/plugins/float-preview.nvim/ncm2-plugin/float_preview.py
+2020-03-03 21:06:12,040 [INFO @ ncm2_core.py:matches_update_popup:706] 64534 - popup names: [], startccol: 3, matches cnt: 0
+2020-03-03 21:06:19,420 [INFO @ ncm2_core.py:matches_update_popup:706] 64534 - popup names: [], startccol: 3, matches cnt: 0
