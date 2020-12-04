@@ -10,10 +10,46 @@ noremap <C-]> K
 noremap Y "+y
 
 " Better buffer navigation
-noremap J }
-noremap K {
+"noremap J }
+"noremap K {
 noremap H ^
 noremap L $
+vnoremap L g_
+
+" Start search on current word under the cursor
+nnoremap <leader>/ /<CR>
+
+" Start reverse search on current word under the cursor
+nnoremap <leader>? ?<CR>
+
+" Faster sort
+vnoremap <leader>S :!sort<CR>
+
+" Command mode conveniences
+noremap <leader>: :!
+noremap <leader>; :<Up>
+
+" Remap VIM 0 to first non-blank character
+map 0 ^
+
+" ## Selections
+" reselect pasted content:
+nnoremap gV `[v`]
+" select all text in the file
+nnoremap <leader>v ggVG
+" Easier linewise reselection of what you just pasted.
+nnoremap <leader>V V`]
+" gi already moves to 'last place you exited insert mode', so we'll map gI to
+" something similar: move to last change
+nnoremap gI `.
+" reselect visually selected content:
+xnoremap > >gv
+
+" ## Indentions
+" Indent/dedent/autoindent what you just pasted.
+nnoremap <lt>> V`]<
+nnoremap ><lt> V`]>
+nnoremap =- V`]=
 
 " Better window navigation
 noremap <C-h> <C-w>h

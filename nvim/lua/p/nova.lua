@@ -1,4 +1,4 @@
-return function()
-   vim.o.background = 'dark'
-   vim.cmd [[ colorscheme nova ]]
-end
+print "p.nova loaded.."
+
+vim.o.background = 'dark'
+vim.cmd [[ colorscheme nova ]]

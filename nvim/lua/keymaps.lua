@@ -9,6 +9,13 @@ local utils = require "utils"
 -- local cmd = vim.cmd
 -- local exec = vim.api.nvim_exec
 
+-- Join / Split Lines
+-- Keep the cursor in place while joining lines
+utils.gmap("n", "J", 'mzJ`z')
+-- Split line (sister to [J]oin lines above)
+-- The normal use of S is covered by cc, so don't worry about shadowing it.
+utils.gmap("n", "S", 'i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w')
+
 -- ( telescope.nvim ) ----------------------------------------------------------
 
 -- utils.bmap("n", "<Leader>m", '<cmd>lua require("telescope.builtin").fd()<CR>')
