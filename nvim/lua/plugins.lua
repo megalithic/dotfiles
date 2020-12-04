@@ -8,14 +8,24 @@ local paq = Paq.paq
 paq{'savq/paq-nvim', opt=true}
 
 paq 'neovim/nvim-lspconfig'
+
 paq 'nvim-lua/completion-nvim'
+paq 'nvim-lua/popup.nvim'
+paq 'nvim-lua/plenary.nvim'
+-- paq 'nvim-lua/telescope.nvim'
+paq 'nvim-lua/lsp-status.nvim'
 paq 'nvim-lua/lsp_extensions.nvim'
-paq 'nvim-treesitter/nvim-treesitter'
+
+-- paq 'nvim-treesitter/nvim-treesitter'
+-- paq 'nvim-treesitter/nvim-treesitter-textobjects'
+-- paq 'nvim-treesitter/completion-treesitter'
+-- paq 'nvim-treesitter/nvim-treesitter-refactor'
+-- paq 'nvim-treesitter/playground'
 
 --paq 'lervag/vimtex'
 --paq 'lervag/wiki.vim'
 --paq 'vim-pandoc/vim-pandoc'
-paq 'vim-pandoc/vim-pandoc-syntax'
+-- paq 'vim-pandoc/vim-pandoc-syntax'
 
 paq 'trevordmiller/nova-vim'
 --paq 'itchyny/lightline.vim'
@@ -23,9 +33,15 @@ paq 'norcalli/nvim-colorizer.lua'
 
 paq 'dm1try/golden_size'
 
-paq 'junegunn/vim-easy-align'
+-- paq 'junegunn/vim-easy-align'
 paq 'junegunn/fzf' -- must run -> `:call fzf#install()`
 paq 'junegunn/fzf.vim'
+
+--vim.g.fzf_action = { 'ctrl-s' = 'split', 'ctrl-v' = 'vsplit', 'enter' = 'vsplit' }
+vim.g.fzf_layout = { window = { width= 0.6, height= 0.5 } }
+vim.g.fzf_preview_window = {'right:50%:hidden', 'alt-p'}
+
+--utils.gmap("n", "<Leader>m", '<cmd>Files<CR>')
 
 paq 'Raimondi/delimitMate'
 --      let delimitMate_expand_cr = 0
@@ -50,9 +66,9 @@ paq 'sickill/vim-pasta' --" context-aware pasting
 
 paq 'sheerun/vim-polyglot'
 
-Paq.install()
-Paq.update()
-Paq.clean()
+-- Paq.install()
+-- Paq.update()
+-- Paq.clean()
 
 -- vim.fn['fzf#install']()
 
