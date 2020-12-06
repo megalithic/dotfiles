@@ -5,17 +5,17 @@ local utils = require "utils"
 
 -- ( telescope.nvim ) ..........................................................
 
-utils.gmap('n', '<Leader>m', '<cmd>lua require("telescope.builtin").fd()<CR>')
-utils.gmap('n', '<Leader>f', '<cmd>lua require("telescope.builtin").git_files()<CR>')
-utils.gmap('n', "<Leader>a", '<cmd>lua require("telescope.builtin").live_grep()<CR>')
-utils.gmap('c', '<c-r><c-r>', '<Plug>(TelescopeFuzzyCommandSearch)', {noremap = false, nowait = true})
+-- utils.gmap('n', '<Leader>m', '<cmd>lua require("telescope.builtin").fd()<CR>')
+-- utils.gmap('n', '<Leader>f', '<cmd>lua require("telescope.builtin").git_files()<CR>')
+-- utils.gmap('n', "<Leader>a", '<cmd>lua require("telescope.builtin").live_grep()<CR>')
+-- utils.gmap('c', '<c-r><c-r>', '<Plug>(TelescopeFuzzyCommandSearch)', {noremap = false, nowait = true})
 
 
 -- ( vim-commentary ) ..........................................................
 
-utils.gmap('n', '<Leader>c', '<cmd>Commentary<CR>')
-utils.gmap('v', '<Leader>c', '<cmd>Commentary<CR>')
---utils.gmap('x', '<Leader>c', '<cmd>Commentary<CR>')
+-- utils.gmap('n', '<Leader>c', '<cmd>Commentary<CR>')
+-- utils.gmap('v', '<Leader>c', '<cmd>Commentary<CR>')
+-- utils.gmap('x', '<Leader>c', '<cmd>Commentary<CR>')
 
 
 -- ( general ) .................................................................
