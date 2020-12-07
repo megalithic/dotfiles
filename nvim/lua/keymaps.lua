@@ -11,21 +11,12 @@ local utils = require "utils"
 -- utils.gmap('c', '<c-r><c-r>', '<Plug>(TelescopeFuzzyCommandSearch)', {noremap = false, nowait = true})
 
 
--- ( vim-commentary ) ..........................................................
-
--- utils.gmap('n', '<Leader>c', '<cmd>Commentary<CR>')
--- utils.gmap('v', '<Leader>c', '<cmd>Commentary<CR>')
--- utils.gmap('x', '<Leader>c', '<cmd>Commentary<CR>')
-
-
 -- ( general ) .................................................................
 
 -- Join / Split Lines
--- Keep the cursor in place while joining lines
-utils.gmap("n", "J", 'mzJ`z')
--- Split line (sister to [J]oin lines above)
--- The normal use of S is covered by cc, so don't worry about shadowing it.
-utils.gmap("n", "S", 'i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w')
+mega.map("n", "J", 'mzJ`z') -- Join lines
+mega.map("n", "S", 'i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w') -- Split line
+
 
 -- Spelling
 -- map("x", "b1z=e") -- Correct previous word
@@ -41,19 +32,21 @@ utils.gmap("n", "S", 'i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w')
 --    w.spell = langs[i] ~= "" -- if empty then nospell
 --  end
 --end
---
----- Poor man's Zen mode
----- utils.lmap("z", ":lua toggle_zen()<cr>")
---function toggle_zen()
---  w.list = not w.list --(hidden chars)
---  w.number = not w.number
---  w.relativenumber = not w.relativenumber
---  w.cursorline = not w.cursorline
---  w.cursorcolumn = not w.cursorcolumn
---  w.colorcolumn = w.colorcolumn == "0" and "80" or "0"
---  o.laststatus = o.laststatus == 2 and 0 or 2
---  o.ruler = not o.ruler
---end
+
+
+-- Zoom the current split into it's own tab (toggleable)
+function toggle_zen()
+  w.list = not w.list --(hidden chars)
+  w.number = not w.number
+  w.relativenumber = not w.relativenumber
+  w.cursorline = not w.cursorline
+  w.cursorcolumn = not w.cursorcolumn
+  w.colorcolumn = w.colorcolumn == "0" and "80" or "0"
+  o.laststatus = o.laststatus == 2 and 0 or 2
+  o.ruler = not o.ruler
+end
+mega.map("n", "<leader>z", ":lua toggle_zen()<cr>")
+
 
 -- Other mappings
 -- utils.lmap("l", "<cmd>luafile %<cr>") -- source lua file

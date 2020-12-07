@@ -4,7 +4,11 @@
 -- require('vim.lsp.log').set_level("trace")
 -- require('vim.lsp.log').set_level("debug")
 
+print("hi?")
+
 local utils = require("utils")
+local nova = require("mega.nova")
+
 utils.inspect("loading lsp_config.lua")
 
 -- To execute in :cmd ->
@@ -111,10 +115,18 @@ end
 
 -- [ nvim-lsp/diagnostics ] -------------------------------------------------------
 
-local sign_error = vim.api.nvim_get_var("sign_error")
-local sign_warning = vim.api.nvim_get_var("sign_warning")
-local sign_information = vim.api.nvim_get_var("sign_information")
-local sign_hint = vim.api.nvim_get_var("sign_hint")
+-- local sign_error = nova.icons.sign_error
+-- local sign_warning = nova.icons.sign_warning
+-- local sign_information = nova.icons.sign_information
+-- local sign_hint = nova.icons.sign_hint
+
+print("colors -> " .. vim.inspect(nova.colors))
+print("icons -> " .. vim.inspect(nova.icons))
+
+local sign_error = ""
+local sign_warning = ""
+local sign_information = ""
+local sign_hint = ""
 
 vim.fn.sign_define("LspDiagnosticsSignError", {text = sign_error, numhl = "LspDiagnosticsDefaultError"})
 vim.fn.sign_define("LspDiagnosticsSignWarning", {text = sign_warning, numhl = "LspDiagnosticsDefaultWarning"})

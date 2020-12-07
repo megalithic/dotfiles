@@ -3,161 +3,145 @@
 vim.cmd('filetype plugin indent on')
 vim.cmd('syntax on')
 
--- vim.cmd("runtime vimrc")
+vim.cmd("runtime vimrc")
 
 vim.g.mapleader = ","
 vim.g.maplocalleader = ","
 
 -- presently working ->
--- vim.o.autowrite     = true
--- vim.o.cedit         = "<C-R>"  -- open command line window
--- vim.o.clipboard     = "unnamedplus"
--- vim.o.cmdheight     = 1
--- vim.o.colorcolumn   = '+0'
--- vim.o.completeopt   = "menuone,noinsert,noselect"
--- vim.o.cursorline    = false
--- vim.o.fileencodings = "utf-8,gbk,ucs-bom,cp936,gb18030,big5,latin1"
--- vim.o.foldlevel     = 99
--- vim.o.hidden        = true
--- vim.o.ignorecase    = true
--- vim.o.laststatus    = 2
--- vim.o.modeline      = true
--- vim.o.modelines     = 3
--- vim.o.mouse         = "a"
--- vim.o.previewheight = 8
--- vim.o.shortmess     = "filnxtToOFc"
--- vim.o.smartcase     = true
--- vim.o.splitbelow    = true
--- vim.o.statusline    = "%t %h%w%m%r %=%(%l,%c%V %= %P%)"
--- vim.o.termguicolors = false
--- vim.o.termguicolors = true
--- vim.o.updatetime    = 300
+vim.o.autowrite     = true
+vim.o.cedit         = "<C-R>"  -- open command line window
+vim.o.clipboard     = "unnamedplus"
+vim.o.cmdheight     = 1
+vim.o.colorcolumn   = '+0'
+vim.o.completeopt   = "menuone,noinsert,noselect"
+vim.o.cursorline    = false
+vim.o.fileencodings = "utf-8,gbk,ucs-bom,cp936,gb18030,big5,latin1"
+vim.o.foldlevel     = 99
+vim.o.hidden        = true
+vim.o.ignorecase    = true
+vim.o.laststatus    = 2
+vim.o.modeline      = true
+vim.o.modelines     = 3
+vim.o.mouse         = "a"
+vim.o.previewheight = 8
+vim.o.shortmess     = "filnxtToOFc"
+vim.o.smartcase     = true
+vim.o.splitbelow    = true
+vim.o.statusline    = "%t %h%w%m%r %=%(%l,%c%V %= %P%)"
+vim.o.termguicolors = false
+vim.o.termguicolors = true
+vim.o.updatetime    = 300
 
 
 -- presently untested ->
-vim.o.autoindent=true        -- Indented text
-vim.o.autoread=true          -- Pick up external changes to files
-vim.o.autowrite=true         -- Write files when navigating with :next/:previous
-vim.o.backspace="indent,eol,start"
-vim.o.belloff="all"       -- Bells are annoying
-vim.o.breakindent=true       -- Wrap long lines *with* indentation
-vim.o.breakindentopt="shift:2"
--- if empty($SSH_CONNECTION) && has('clipboard')
---   vim.o.clipboard=unnamed  -- Use clipboard register
+-- vim.o.autoindent=true        -- Indented text
+-- vim.o.autoread=true          -- Pick up external changes to files
+-- vim.o.autowrite=true         -- Write files when navigating with :next/:previous
+-- vim.o.backspace="indent,eol,start"
+-- vim.o.belloff="all"       -- Bells are annoying
+-- vim.o.breakindent=true       -- Wrap long lines *with* indentation
+-- vim.o.breakindentopt="shift:2"
+-- vim.o.clipboard="unnamedplus"
+-- vim.o.colorcolumn=81 -- Highlight 81 and 82 columns
+-- vim.o.conceallevel=2
+-- vim.o.complete=".,w,b"    -- Sources for term and line completions
+-- vim.o.completeopt="menuone,noinsert,noselect" -- Don't auto select first one
+-- vim.o.dictionary="/usr/share/dict/words"
+-- vim.o.spellfile="$HOME/.dotfiles/nvim/spell/en.utf-8.add"
+-- vim.o.spelllang="en"
+-- vim.o.expandtab = true        -- Use spaces instead of tabs
+-- vim.o.foldlevelstart=20
+-- vim.o.foldmethod="indent" -- Simple and fast
+-- vim.o.foldtext=""
+-- vim.o.formatoptions="cqj" -- Default format options
+-- vim.o.gdefault=true          -- Always do global substitutes
+-- vim.o.history=200       -- Keep 200 changes of undo history
+-- vim.o.infercase=true         -- Smart casing when completing
+-- vim.o.ignorecase=true        -- Search in case-insensitively
+-- vim.o.incsearch=true         -- Go to search results immediately
+-- vim.o.laststatus=2      -- We want a statusline
+-- vim.o.linespace=0       -- Line height of things like, the statusline
+-- vim.o.cmdheight=1
+-- vim.o.lazyredraw=true        -- should make scrolling faster
+-- vim.o.matchpairs="(:),{:},[:],<:>"
+-- vim.o.mouse="nva"         -- Mouse support in different modes
+-- vim.o.mousemodel="popup"  -- Set the behaviour of mouse
+-- vim.o.mousehide=true         -- Hide mouse when typing text
+-- vim.o.nobackup=true          -- No backup files
+-- vim.o.nocompatible=true      -- No Vi support
+-- vim.o.noemoji=true           -- don't assume all emoji are double width (@wincent)
+-- vim.o.noexrc=true            -- Disable reading of working directory vimrc files
+-- vim.o.nohlsearch=true        -- Don't highlight search results by default
+-- vim.o.nojoinspaces=true      -- No to double-spaces when joining lines
+-- vim.o.noshowcmd=true         -- No to showing command in bottom-right corner
+-- vim.o.noshowmatch=true       -- No jumping jumping cursors when matching pairs
+-- vim.o.noshowmode=true        -- No to showing mode in bottom-left corner
+-- vim.o.noswapfile=true        -- No backup files
+-- -- vim.o.nowrapscan        -- Don't wrap searches around
+-- -- vim.o.number            -- Show line numbers
+-- vim.o.nrformats="alpha,hex,octal"        -- No to oct/hex support when doing CTRL-a/x
+-- -- vim.o.path=**
+-- -- vim.o.relativenumber    -- Show relative numbers
+-- vim.o.ruler=true
+-- -- vim.o.scrolloff=5       -- Start scrolling when we're 5 lines away from margins
+-- vim.o.shiftwidth=2
+-- -- vim.o.shortmess+=c                          -- Don't show insert mode completion messages
+-- vim.o.sidescrolloff=15
+-- vim.o.sidescroll=5
+-- vim.o.showbreak="↳"      -- Use this to wrap long lines
+-- vim.o.smartcase  =true       -- Case-smart searching
+-- vim.o.smarttab=true
+-- vim.o.splitbelow=true        -- Split below current window
+-- vim.o.splitright =true       -- Split window to the right
+-- vim.o.synmaxcol=500     -- Syntax highlight first 500 chars, for performance
+-- vim.o.t_Co=256          -- 256 color support
+-- vim.o.tabstop=2
+-- -- if has("termguicolors")
+-- --   vim.o.termguicolors -- Enable 24-bit color support if available
+-- -- endif
+-- vim.o.textwidth=80
+-- vim.o.timeoutlen=1500   -- Give some time for multi-key mappings
+-- -- Don't set ttimeoutlen to zero otherwise it will break terminal cursor block
+-- -- to I-beam and back functionality set by the t_SI and t_EI variables.
+-- vim.o.ttimeoutlen=10
+-- vim.o.ttyfast=true
+-- -- Set the persistent undo directory on temporary private fast storage.
+-- -- let s:undoDir="/tmp/.undodir_" . $USER
+-- -- if !isdirectory(s:undoDir)
+-- --   call mkdir(s:undoDir, "", 0700)
+-- -- endif
+-- -- let &undodir=s:undoDir
+-- vim.o.undofile=true          -- Maintain undo history
+-- vim.o.updatetime=100    -- Make async plugin more responsive
+-- vim.o.viminfo=false          -- No backups
+-- vim.o.wildcharm="<Tab>"   -- Defines the trigger for 'wildmenu' in mappings
+-- vim.o.wildmenu =true         -- Nice command completions
+-- vim.o.wildmode="full"
+-- -- vim.o.wildignore+=*.o,*.obj,*.bin,*.dll,*.exe
+-- -- vim.o.wildignore+=*/.git/*,*/.svn/*,*/__pycache__/*,*/build/**
+-- -- vim.o.wildignore+=*.pyc
+-- -- vim.o.wildignore+=*.DS_Store
+-- -- vim.o.wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
+-- vim.o.wrap =true             -- Wrap long lines
 
---   -- Share X windows clipboard. NOT ON NEOVIM -- neovim automatically uses
---   -- system clipboard when xclip/xsel/pbcopy are available.
---   if has('nvim') && !has('mac')
---     vim.o.clipboard=unnamedplus
---   elseif has('unnamedplus')
---     vim.o.clipboard+=unnamedplus
---   endif
--- endif
-vim.o.clipboard="unnamedplus"
-vim.o.colorcolumn=81 -- Highlight 81 and 82 columns
-vim.o.conceallevel=2
-vim.o.complete=".,w,b"    -- Sources for term and line completions
-vim.o.completeopt="menuone,noinsert,noselect" -- Don't auto select first one
-vim.o.dictionary="/usr/share/dict/words"
-vim.o.spellfile="$HOME/.dotfiles/nvim/spell/en.utf-8.add"
-vim.o.spelllang="en"
-vim.o.expandtab = true        -- Use spaces instead of tabs
-vim.o.foldlevelstart=20
-vim.o.foldmethod="indent" -- Simple and fast
-vim.o.foldtext=""
-vim.o.formatoptions="cqj" -- Default format options
-vim.o.gdefault=true          -- Always do global substitutes
-vim.o.history=200       -- Keep 200 changes of undo history
-vim.o.infercase=true         -- Smart casing when completing
-vim.o.ignorecase=true        -- Search in case-insensitively
-vim.o.incsearch=true         -- Go to search results immediately
-vim.o.laststatus=2      -- We want a statusline
-vim.o.linespace=0       -- Line height of things like, the statusline
-vim.o.cmdheight=1
-vim.o.lazyredraw=true        -- should make scrolling faster
-vim.o.matchpairs="(:),{:},[:],<:>"
--- vim.o.matchpairs+=<:>             -- Match, to be used with %
--- try
---   vim.o.matchpairs+=《:》,〈:〉,［:］,（:）,「:」,『:』,‘:’,“:”
--- catch /^Vim\%((\a\+)\)\=:E474
--- endtry
-vim.o.mouse="nva"         -- Mouse support in different modes
-vim.o.mousemodel="popup"  -- Set the behaviour of mouse
-vim.o.mousehide=true         -- Hide mouse when typing text
-vim.o.nobackup=true          -- No backup files
-vim.o.nocompatible=true      -- No Vi support
-vim.o.noemoji=true           -- don't assume all emoji are double width (@wincent)
-vim.o.noexrc=true            -- Disable reading of working directory vimrc files
-vim.o.nohlsearch=true        -- Don't highlight search results by default
-vim.o.nojoinspaces=true      -- No to double-spaces when joining lines
-vim.o.noshowcmd=true         -- No to showing command in bottom-right corner
-vim.o.noshowmatch=true       -- No jumping jumping cursors when matching pairs
-vim.o.noshowmode=true        -- No to showing mode in bottom-left corner
-vim.o.noswapfile=true        -- No backup files
--- vim.o.nowrapscan        -- Don't wrap searches around
--- vim.o.number            -- Show line numbers
-vim.o.nrformats="alpha,hex,octal"        -- No to oct/hex support when doing CTRL-a/x
--- vim.o.path=**
--- vim.o.relativenumber    -- Show relative numbers
-vim.o.ruler=true
--- vim.o.scrolloff=5       -- Start scrolling when we're 5 lines away from margins
-vim.o.shiftwidth=2
--- vim.o.shortmess+=c                          -- Don't show insert mode completion messages
-vim.o.sidescrolloff=15
-vim.o.sidescroll=5
-vim.o.showbreak="↳"      -- Use this to wrap long lines
-vim.o.smartcase  =true       -- Case-smart searching
-vim.o.smarttab=true
-vim.o.splitbelow=true        -- Split below current window
-vim.o.splitright =true       -- Split window to the right
-vim.o.synmaxcol=500     -- Syntax highlight first 500 chars, for performance
-vim.o.t_Co=256          -- 256 color support
-vim.o.tabstop=2
--- if has("termguicolors")
---   vim.o.termguicolors -- Enable 24-bit color support if available
--- endif
-vim.o.textwidth=80
-vim.o.timeoutlen=1500   -- Give some time for multi-key mappings
--- Don't set ttimeoutlen to zero otherwise it will break terminal cursor block
--- to I-beam and back functionality set by the t_SI and t_EI variables.
-vim.o.ttimeoutlen=10
-vim.o.ttyfast=true
--- Set the persistent undo directory on temporary private fast storage.
--- let s:undoDir="/tmp/.undodir_" . $USER
--- if !isdirectory(s:undoDir)
---   call mkdir(s:undoDir, "", 0700)
--- endif
--- let &undodir=s:undoDir
-vim.o.undofile=true          -- Maintain undo history
-vim.o.updatetime=100    -- Make async plugin more responsive
-vim.o.viminfo=false          -- No backups
-vim.o.wildcharm="<Tab>"   -- Defines the trigger for 'wildmenu' in mappings
-vim.o.wildmenu =true         -- Nice command completions
-vim.o.wildmode="full"
--- vim.o.wildignore+=*.o,*.obj,*.bin,*.dll,*.exe
--- vim.o.wildignore+=*/.git/*,*/.svn/*,*/__pycache__/*,*/build/**
--- vim.o.wildignore+=*.pyc
--- vim.o.wildignore+=*.DS_Store
--- vim.o.wildignore+=*.aux,*.bbl,*.blg,*.brf,*.fls,*.fdb_latexmk,*.synctex.gz
-vim.o.wrap =true             -- Wrap long lines
-
-  vim.o.diffopt="filler,internal,algorithm:histogram,indent-heuristic"
-  vim.o.inccommand="nosplit"
-  vim.o.list=true
-  -- vim.o.listchars=tab:\ \ ,trail:-
-  vim.o.listchars="tab:\ \ ,trail:·"
-  -- vim.o.listchars=tab:»·,trail:·
-  -- vim.o.listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
-  -- vim.o.listchars=tab:»\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
-  -- vim.o.listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
-  -- vim.o.pumblend=10
-  vim.o.pumheight=20      -- Height of complete list
-  vim.o.signcolumn="yes:2"  -- always showsigncolumn
-  vim.o.switchbuf="useopen,vsplit,split,usetab"
-  -- vim.o.wildoptions+=pum
-  vim.o.wildoptions="pum"
-  -- vim.o.winblend=10
-  vim.o.jumpoptions="stack"
+-- vim.o.diffopt="filler,internal,algorithm:histogram,indent-heuristic"
+-- vim.o.inccommand="nosplit"
+-- vim.o.list=true
+-- -- vim.o.listchars=tab:\ \ ,trail:-
+-- vim.o.listchars="tab:\ \ ,trail:·"
+-- -- vim.o.listchars=tab:»·,trail:·
+-- -- vim.o.listchars=tab:▸\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
+-- -- vim.o.listchars=tab:»\ ,eol:¬,extends:›,precedes:‹,trail:·,nbsp:⚋
+-- -- vim.o.listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
+-- -- vim.o.pumblend=10
+-- vim.o.pumheight=20      -- Height of complete list
+-- vim.o.signcolumn="yes:2"  -- always showsigncolumn
+-- vim.o.switchbuf="useopen,vsplit,split,usetab"
+-- -- vim.o.wildoptions+=pum
+-- vim.o.wildoptions="pum"
+-- -- vim.o.winblend=10
+-- vim.o.jumpoptions="stack"
 
   -- vim.o.guicursor=
   --       \n:block-Cursor,
