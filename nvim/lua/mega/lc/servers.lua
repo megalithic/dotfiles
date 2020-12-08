@@ -196,7 +196,7 @@ function M.activate(on_attach_fn)
           "force",
           {
             on_attach = on_attach_fn,
-            handlers = vim.tbl_deep_extend("keep", {}, require("lc.handlers"), vim.lsp.handlers)
+            handlers = vim.tbl_deep_extend("keep", {}, require("mega.lc.handlers"), vim.lsp.handlers)
           },
           config
         )

@@ -87,7 +87,7 @@ function M.activate()
         completion_trigger_keyword_length = 2,
         max_items = 10,
         sorting = "none", -- 'alphabet'
-        matching_strategy_list = {"exact", "substring", "fuzzy", "all"}
+        matching_strategy_list = {"exact", "substring", "fuzzy"}
       }
     )
   end

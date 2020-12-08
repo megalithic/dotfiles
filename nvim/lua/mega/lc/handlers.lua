@@ -10,7 +10,7 @@ local function fzf_symbol_handler(_, _, result, _, bufnr)
   end
 
   local items = lsp.util.symbols_to_items(result, bufnr)
-  require("lc.fzf").send(items, "Symbols")
+  require("mega.lc.fzf").send(items, "Symbols")
 end
 
 M["textDocument/documentSymbol"] = fzf_symbol_handler
@@ -27,7 +27,7 @@ local function fzf_location_handler(_, _, result)
 
     if #result > 1 then
       local items = lsp.util.locations_to_items(result)
-      require("lc.fzf").send(items, "Locations")
+      require("mega.lc.fzf").send(items, "Locations")
     end
   else
     lsp.util.jump_to_location(result)
@@ -45,7 +45,7 @@ M["textDocument/references"] = function(_, _, result)
   end
 
   local items = lsp.util.locations_to_items(result)
-  require("lc.fzf").send(items, "References")
+  require("mega.lc.fzf").send(items, "References")
 end
 
 M["textDocument/hover"] = function(_, method, result)
