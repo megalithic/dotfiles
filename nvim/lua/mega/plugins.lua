@@ -1,24 +1,26 @@
 return {
   activate = function()
+    mega.inspect("activating plugins.lua..")
+
     local packer_exists = pcall(vim.cmd, [[packadd packer.nvim]])
-    local packer_install_path = string.format("%s/site/pack/packer/opt/packer.nvim", vim.fn.stdpath("data"))
+    local packer_repo_url = "https://github.com/wbthomason/packer.nvim"
+    local packer_install_path = string.format("%s/site/pack/packer/opt/", vim.fn.stdpath("data"))
 
     -- Again, thieved from TJ Devries..
     if not packer_exists then
-      if vim.fn.input("Download Packer? (y for yes)") ~= "y" then
+      if vim.fn.input("Download Packer? (y for yes) -> ") ~= "y" then
         return
       end
 
-      --vim.fn.mkdir(directory, 'p')
+      vim.fn.mkdir(packer_install_path, "p")
 
-      local out =
-        vim.fn.system(
-        string.format("git clone %s %s", "https://github.com/wbthomason/packer.nvim", packer_install_path)
-      )
+      print("-> downloading packer.nvim...")
+      vim.fn.system(string.format("git clone %s %s/%s", packer_repo_url, packer_install_path, "packer.nvim"))
 
-      print(out)
-      print("Downloading packer.nvim...")
+      vim.cmd([[packadd packer.nvim]])
+      vim.cmd("PackerSync")
 
+      print("-> packer.nvim installed.")
       return
     end
 
@@ -29,7 +31,7 @@ return {
 
     -- vim.api.nvim_command('packadd packer.nvim')
     -- vim.cmd([[packadd packer.nvim]])
-    vim.cmd([[autocmd BufWritePost plugins.lua PackerCompile]])
+    vim.api.nvim_exec([[autocmd BufWritePost plugins.lua PackerCompile]], true)
 
     return require("packer").startup(
       {
@@ -37,34 +39,25 @@ return {
           -- (packer) --
           use {
             "wbthomason/packer.nvim",
-            opt = true,
-            config = function()
-              print("pre-PackerCompile...")
-              mega.autocmd("BufWritePost plugins.lua PackerCompile")
-              print("post-PackerCompile...")
-            end
+            opt = true
           }
 
           -- (lsp, completion, snippets, diagnostics, et al) --
+          use "nvim-lua/popup.nvim"
+          use "nvim-lua/plenary.nvim"
           use {
             "neovim/nvim-lspconfig",
             as = "lspconfig",
             config = function()
-              local lc_loaded, lc = pcall(require, "mega.lc")
-              if lc_loaded then
-                lc.activate()
-              else
-                utils.inspect("", lc, 4)
-              end
-            end
+              mega.load("lc", "mega.lc", "activate")
+            end,
+            requires = {
+              "nvim-lua/completion-nvim",
+              "steelsojka/completion-buffers",
+              "hrsh7th/vim-vsnip",
+              "hrsh7th/vim-vsnip-integ"
+            }
           }
-          use {"nvim-lua/completion-nvim"}
-          use {"steelsojka/completion-buffers", after = "completion-nvim"}
-          use {"hrsh7th/vim-vsnip"}
-          use {"hrsh7th/vim-vsnip-integ", after = "vim-vsnip"}
-          use "nvim-lua/popup.nvim"
-          use "nvim-lua/plenary.nvim"
-          -- -- use 'nvim-lua/telescope.nvim'
           use "nvim-lua/lsp-status.nvim"
           use "nvim-lua/lsp_extensions.nvim"
 
@@ -72,9 +65,7 @@ return {
           use {
             "trevordmiller/nova-vim",
             config = function()
-              vim.o.background = "dark"
-              vim.g.nova_transparent = 1
-              vim.cmd([[ colorscheme nova ]])
+              mega.load("nova", "mega.colors.nova", "activate")
             end
           }
           use {
@@ -105,6 +96,7 @@ return {
                   "zsh",
                   "sh",
                   "conf",
+                  "lua",
                   html = {
                     mode = "foreground"
                   }
@@ -156,6 +148,11 @@ return {
               vim.fn["fzf#install"]()
             end,
             config = function()
+              -- vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
+              -- vim.g.fzf_action = {enter = "vsplit"}
+              -- vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
+              
+              vim.g.fzf_command_prefix = "Fzf"
               vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
               vim.g.fzf_action = {enter = "vsplit"}
               vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
@@ -180,6 +177,14 @@ return {
               mega.map("n", ",", "<Plug>(clever-f-repeat-back)<CR>")
             end
           }
+          use {
+            "justinmk/vim-sneak",
+            config = function()
+              vim.g["sneak#label"] = 1
+              mega.map("n", "f", "<Plug>Sneak_s")
+              mega.map("n", "F", "<Plug>Sneak_S")
+            end
+          }
           use "wellle/visual-split.vim"
 
           -- (text objects) --
@@ -190,7 +195,7 @@ return {
           -- -- provide a_ and i_ for underscores
           -- -- provide a- and i-
           use {"kana/vim-textobj-user"} -- https://github.com/kana/vim-textobj-user/wiki
-          -- use{'kana/vim-textobj-function'}                                        -- function text object (af/if)
+          use {"kana/vim-textobj-function"} -- function text object (af/if)
           use {"kana/vim-textobj-indent"} -- for indent level (ai/ii)
           use {"kana/vim-textobj-line"} -- for current line (al/il)
           use {"nelstrom/vim-textobj-rubyblock"} -- ruby block text object (ar/ir)
@@ -225,7 +230,20 @@ return {
               vim.g.git_messenger_max_popup_width = 100
               vim.g.git_messenger_max_popup_height = 100
 
-              mega.map("n", "<Leader>gb", "<Plug>(git-messenger)<CR>")
+              mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+            end
+          }
+          use {
+            "mhinz/vim-signify",
+            config = function()
+              vim.g.signify_line_highlight = 0
+              vim.g.signify_sign_show_text = 1
+              vim.g.signify_sign_show_count = 0
+              vim.g.signify_sign_add = "▎"
+              vim.g.signify_sign_delete = "_"
+              vim.g.signify_sign_delete_first_line = "‾"
+              vim.g.signify_sign_change = "▏"
+              vim.g.signify_sign_changedelete = vim.g.signify_sign_change
             end
           }
 
@@ -241,6 +259,44 @@ return {
           use "metakirby5/codi.vim"
           use "junegunn/goyo.vim"
           use "junegunn/limelight.vim"
+
+          -- (the rest..) --
+          use {
+            "Raimondi/delimitMate",
+            config = function()
+              vim.g.delimitMate_expand_cr = 0
+            end
+          }
+          use "tpope/vim-endwise"
+          use {"rstacruz/vim-closer", after = "vim-endwise"}
+          use "tpope/vim-eunuch"
+          use "tpope/vim-abolish"
+          use "tpope/vim-rhubarb"
+          use "tpope/vim-repeat"
+          use "tpope/vim-surround"
+          use {
+            "tpope/vim-commentary",
+            config = function()
+              mega.map("n", "<Leader>c", "<cmd>Commentary<CR>")
+              mega.map("v", "<Leader>c", "<cmd>Commentary<CR>")
+            end
+          }
+          use "tpope/vim-unimpaired"
+          use "EinfachToll/DidYouMean"
+          use "jordwalke/VimAutoMakeDirectory"
+          use "ConradIrwin/vim-bracketed-paste"
+          use "sickill/vim-pasta"
+          -- use {'AndrewRadev/splitjoin.vim', config = function()
+          --     -- vim.g.splitjoin_split_mapping = ''
+          --     -- vim.g.splitjoin_join_mapping = ''
+
+          --     -- mega.map("n", "sj", "<cmd>SplitjoinSplit<CR>")
+          --     -- mega.map("n", "sk", "<cmd>SplitjoinJoin<CR>")
+          -- end}
+          -- :Messages <- view messages in quickfix list
+          -- :Verbose  <- view verbose output in preview window.
+          -- :Time     <- measure how long it takes to run some stuff.
+          use "tpope/vim-scriptease"
 
           -- (langs, syntax, et al) --
           use "tpope/vim-rails" -- rails.vim
@@ -265,65 +321,7 @@ return {
           use "andrejlevkovitch/vim-lua-format"
           use "yyq123/vim-syntax-logfile"
           use "jparise/vim-graphql"
-          vim.g.polyglot_disabled = {
-            "typescript",
-            "typescriptreact",
-            "typescript.tsx",
-            "javascriptreact",
-            "markdown",
-            "md",
-            "graphql",
-            "lua",
-            "tsx",
-            "jsx",
-            "sass",
-            "scss",
-            "css",
-            "elm",
-            "elixir",
-            "eelixir",
-            "ex",
-            "exs"
-          }
           use "sheerun/vim-polyglot"
-
-          -- (the rest..) --
-          use {
-            "Raimondi/delimitMate",
-            config = function()
-              vim.g.delimitMate_expand_cr = 0
-            end
-          }
-          use "tpope/vim-endwise"
-          use {"rstacruz/vim-closer", after = "vim-endwise"}
-          use "tpope/vim-eunuch"
-          use "tpope/vim-abolish"
-          use "tpope/vim-rhubarb"
-          use "tpope/vim-repeat"
-          use "tpope/vim-surround"
-          use {
-            "tpope/vim-commentary",
-            config = function()
-              mega.map("n", "<Leader>c", "<Plug>CommentaryLine<CR>")
-              mega.map("v", "<Leader>c", "<Plug>Commentary<CR>")
-            end
-          }
-          use "tpope/vim-unimpaired"
-          use "EinfachToll/DidYouMean"
-          use "jordwalke/VimAutoMakeDirectory"
-          use "ConradIrwin/vim-bracketed-paste"
-          use "sickill/vim-pasta"
-          -- use {'AndrewRadev/splitjoin.vim', config = function()
-          --     -- vim.g.splitjoin_split_mapping = ''
-          --     -- vim.g.splitjoin_join_mapping = ''
-
-          --     -- mega.map("n", "sj", "<cmd>SplitjoinSplit<CR>")
-          --     -- mega.map("n", "sk", "<cmd>SplitjoinJoin<CR>")
-          -- end}
-          -- :Messages <- view messages in quickfix list
-          -- :Verbose  <- view verbose output in preview window.
-          -- :Time     <- measure how long it takes to run some stuff.
-          use "tpope/vim-scriptease"
         end
       }
     )

@@ -202,7 +202,7 @@ function! s:nova_engage() abort
   exe 'hi QuickScopeSecondary gui=underline guifg=#5fffff guibg=' . g:special_bg
   exe 'hi CleverFDefaultLabel gui=underline guifg=' . g:cursorlinenr . ' guibg=' . g:special_bg
 
-  hi HighlightedyankRegion gui=bold ctermbg=0 guibg=#13354A
+  hi HighlightedYankRegion gui=bold ctermbg=0 guibg=#13354A
 
   " Header such as 'Commit:', 'Author:'
   hi! link gitmessengerHeader Identifier

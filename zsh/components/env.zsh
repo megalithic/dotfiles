@@ -28,6 +28,9 @@ export SUDO_EDITOR='nvim'
 export ALTERNATE_EDITOR='vim'
 export PAGER='less'
 
+export MANPAGER='nvim +Man!'
+export MANWIDTH=999
+
 # export ALTERNATE_EDITOR=""
 # export EDITOR="emacsclient -t"                  # $EDITOR opens in terminal
 # export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode

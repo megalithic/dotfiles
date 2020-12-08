@@ -198,6 +198,8 @@ vnoremap <silent> <C-Down>  @='"zx"zp`[V`]'<CR>
 "   https://github.com/wincent/wincent/commit/0d0b647b97a794b99a648d4c18ad0f6c0dfeedce
 "   https://github.com/ahmedelgabri/dotfiles/blob/f2b74f6cd4d/files/.vim/plugin/mappings.vim#L27-L33
 "
+" For: Markdown?
+"
 inoremap <buffer> ! !<C-g>u
 inoremap <buffer> , ,<C-g>u
 inoremap <buffer> . .<C-g>u

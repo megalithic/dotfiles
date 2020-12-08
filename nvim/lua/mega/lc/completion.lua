@@ -12,7 +12,9 @@ local chain_complete_list = {
     {complete_items = {"lsp", "snippet"}},
     {complete_items = {"path"}, triggered_only = {"./", "/"}},
     {complete_items = {"buffers"}},
-    {complete_items = {"ts"}}
+    {complete_items = {"ts"}},
+    {mode = "<c-p>"},
+    {mode = "<c-n>"}
   },
   string = {
     {complete_items = {"path"}, triggered_only = {"./", "/"}},
@@ -21,50 +23,117 @@ local chain_complete_list = {
   comment = {}
 }
 
-local bytemarkers = {{0x7FF, 192}, {0xFFFF, 224}, {0x1FFFFF, 240}}
-local function utf8(decimal)
-  if decimal < 128 then
-    return string.char(decimal)
+local customize_lsp_label = {
+  Method = mega.utf8(0xf794) .. " [method]",
+  Function = mega.utf8(0xf794) .. " [fun]",
+  Variable = mega.utf8(0xf6a6) .. " [var]",
+  Field = mega.utf8(0xf6a6) .. " [field]",
+  Class = mega.utf8(0xfb44) .. " [class]",
+  Struct = mega.utf8(0xfb44) .. " [struct]",
+  Interface = mega.utf8(0xf836) .. " [interface]",
+  Module = mega.utf8(0xf668) .. " [mod]",
+  Property = mega.utf8(0xf0ad) .. " [prop]",
+  Value = mega.utf8(0xf77a) .. " [val]",
+  Enum = mega.utf8(0xf77a) .. " [enum]",
+  Operator = mega.utf8(0xf055) .. " [operator]",
+  Reference = mega.utf8(0xf838) .. " [ref]",
+  Keyword = mega.utf8(0xf80a) .. " [keyword]",
+  Color = mega.utf8(0xe22b) .. " [color]",
+  Unit = mega.utf8(0xe3ce) .. " [unit]",
+  ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
+  ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs]",
+  Snippet = mega.utf8(0xf68e) .. " [s]",
+  Text = mega.utf8(0xf52b) .. " [text]",
+  Buffers = mega.utf8(0xf64d) .. " [buff]",
+  TypeParameter = mega.utf8(0xf635) .. " [type]"
+}
+
+local function check_back_space()
+  local col = vim.fn.col(".") - 1
+  if col == 0 or vim.fn.getline("."):sub(col, col):match("%s") then
+    return true
+  else
+    return false
   end
-  local charbytes = {}
-  for bytes, vals in ipairs(bytemarkers) do
-    if decimal <= vals[1] then
-      for b = bytes + 1, 2, -1 do
-        local mod = decimal % 64
-        decimal = (decimal - mod) / 64
-        charbytes[b] = string.char(128 + mod)
-      end
-      charbytes[1] = string.char(vals[2] + decimal)
-      break
-    end
-  end
-  return table.concat(charbytes)
 end
 
-local customize_lsp_label = {
-  Method = utf8(0xf794) .. " [method]",
-  Function = utf8(0xf794) .. " [fun]",
-  Variable = utf8(0xf6a6) .. " [var]",
-  Field = utf8(0xf6a6) .. " [field]",
-  Class = utf8(0xfb44) .. " [class]",
-  Struct = utf8(0xfb44) .. " [struct]",
-  Interface = utf8(0xf836) .. " [interface]",
-  Module = utf8(0xf668) .. " [mod]",
-  Property = utf8(0xf0ad) .. " [prop]",
-  Value = utf8(0xf77a) .. " [val]",
-  Enum = utf8(0xf77a) .. " [enum]",
-  Operator = utf8(0xf055) .. " [operator]",
-  Reference = utf8(0xf838) .. " [ref]",
-  Keyword = utf8(0xf80a) .. " [keyword]",
-  Color = utf8(0xe22b) .. " [color]",
-  Unit = utf8(0xe3ce) .. " [unit]",
-  ["snippets.nvim"] = utf8(0xf68e) .. " [ns]",
-  ["vim-vsnip"] = utf8(0xf68e) .. " [vs]",
-  Snippet = utf8(0xf68e) .. " [s]",
-  Text = utf8(0xf52b) .. " [text]",
-  Buffers = utf8(0xf64d) .. " [buff]",
-  TypeParameter = utf8(0xf635) .. " [type]"
-}
+local function imap_cr()
+  if vim.fn.pumvisible() ~= 0 then
+    if vim.fn["complete_info"]()["selected"] ~= -1 then
+      vim.fn["completion#wrap_completion"]()
+    else
+      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<c-e><CR>", true, false, true), "n", true)
+    end
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<CR>", true, false, true), "n", true)
+  end
+  return ""
+end
+
+local function imap_tab()
+  if vim.fn.pumvisible() ~= 0 then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<c-n>", true, false, true), "n", true)
+  elseif vim.fn["vsnip#available"](1) ~= 0 then
+    -- "<Plug>(vsnip-expand-or-jump)"
+    return false
+  elseif M.check_back_space() then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Tab>", true, false, true), "n", true)
+  else
+    vim.fn["completion#trigger_completion"]()
+  end
+  return true
+end
+
+-- local function show_documentation()
+-- end
+
+local function init_mappings()
+  -- https://github.com/whyreal/dotfiles/blob/master/vim/lua/wr/plugins.lua#L92-L102
+  -- https://github.com/whyreal/dotfiles/blob/master/vim/lua/wr/global.lua#L11-L45
+  vim.api.nvim_exec(
+    [[
+
+  function! s:show_documentation()
+    if (index(['vim','help'], &filetype) >= 0)
+      execute 'vert h '.expand('<cword>')
+    elseif (index(['c','sh'], &filetype) >=0)
+      execute 'vert Man '.expand('<cword>')
+    else
+      lua vim.lsp.buf.hover()
+    endif
+  endfunction
+
+  imap <expr> <Tab>
+        \ pumvisible() ? "\<C-n>" :
+        \ vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' :
+        \ <SID>check_back_space() ? "\<Tab>" :
+        \ completion#trigger_completion()
+  smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<Tab>'
+
+  imap <expr> <S-Tab>
+        \ pumvisible() ? "\<C-p>" :
+        \ vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' :
+        \ "\<C-h>"
+  smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
+
+  let g:endwise_no_mappings = 1
+  let g:completion_confirm_key = ""
+  imap <expr> <CR>  pumvisible() ?
+              \ complete_info()["selected"] != "-1" ?
+                  \ "\<Plug>(completion_confirm_completion)" :
+                  \ get(b:, 'closer') ?
+                      \ "\<c-e>\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
+                      \ : "\<c-e>\<CR>\<Plug>DiscretionaryEnd"
+              \ : get(b:, 'closer') ?
+                  \ "\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
+                  \ : "\<CR>\<Plug>DiscretionaryEnd"
+
+  nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+  ]],
+    true
+  )
+end
 
 function M.activate()
   -- [ snippets ] --------------------------------------------------------------
@@ -90,6 +159,7 @@ function M.activate()
         matching_strategy_list = {"exact", "substring", "fuzzy"}
       }
     )
+  -- init_mappings()
   end
 end
 

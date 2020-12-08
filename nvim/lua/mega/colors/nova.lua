@@ -5,8 +5,7 @@
 --statusline_warning = "\uf071",    --"
 --statusline_information = "\uf7fc",--"
 --statusline_hint = "\uf835",       --"
---modified_symbol = "\uf085",       --"
---vcs_symbol = "\uf418",            --"
+--modified_symbol = "\uf085",       --" vcs_symbol = "\uf418",            --"
 --readonly_symbol = "\uf023",       --"
 --ln_sep = "\ue0a1",                --"
 --col_sep = "\uf6da",               --"
@@ -15,7 +14,7 @@
 --left_sep = "\ue0b6",              --"
 --term_mode = "\ufcb5",             --"\ue7a2  ﲵ
 
--- sign_error = "\uf655",
+--sign_error = "\uf655",
 --sign_warning = "\ufa36",          --"喝
 --sign_information = "\uf7fc",   --"\uf0da
 --sign_hint = "\uf835",    --"\uf105
@@ -25,11 +24,14 @@
 --spinner_frames = {'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'},
 -- }
 
+local cu = require('mega.colors.utils')
+
 local icons = {
-  sign_error = "",
+  sign_error = mega.utf8(0xf655), --"",
   sign_warning = "喝", --"\ufa36 喝
   sign_information = "", --\uf7fc \uf0da 
-  sign_hint = "" --"\uf835" \uf105
+  sign_hint = "", --"\uf835" \uf105
+  virtual_text = mega.utf8(0xf63d),
 }
 
 local base = {
@@ -73,6 +75,7 @@ local status = {
   changed = "#ecc48d",
   separator = "#666666",
   incsearch = "#fffacd",
+  highlighted_yank = "#13354A",
   comment_gray = base.white,
   gutter_gray = "#899ba6",
   cursor_gray = base.black,
@@ -91,5 +94,31 @@ local status = {
 
 return {
   icons = icons,
-  colors = mega.table_merge(base, status)
+  colors = mega.table_merge(base, status),
+  activate = function()
+    -- (set nova colorscheme) --
+    vim.o.background = "dark"
+    vim.g.nova_transparent = 1
+    vim.api.nvim_exec([[ colorscheme nova ]], true)
+
+    -- (highlights) --
+    vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']],true)
+
+    cu.hi("HighlightedyankRegion", status.highlighted_yank, "NONE", "bold")
+    cu.hi("HighlightedYankRegion", status.highlighted_yank, "NONE", "bold")
+    cu.hi("IncSearch",             status.incsearch, "NONE", "bold")
+    cu.hi("SignColumn",            nil, "NONE", nil)
+    cu.hi("CursorLineNr",          status.cursorlinenr, status.special_bg, "italic")
+    cu.hi("VertSplit",             status.separator, "NONE", "NONE")
+    cu.hi("Visual",                status.bg, status.selection, "NONE")
+    cu.hi("Normal",                status.normal_text, "NONE", "NONE")
+    cu.hi("htmlArg",               nil, nil, "italic")
+    cu.hi("xmlAttrib",             nil, nil, "italic")
+    cu.hi("Type",                  nil, nil, "italic")
+    cu.hi("Comment",               nil, nil, "italic")
+    cu.hi("MatchWord",             nil, nil, "underline,undercurl,italic")
+    cu.hi("MatchParen",            nil, nil, "underline,undercurl,italic")
+    cu.hi("CleverFDefaultLabel",   status.cursorlinenr, status.special_bg, nil)
+    cu.hi("CleverFDefaultLabel",   status.cursorlinenr, status.special_bg, nil)
+  end
 }

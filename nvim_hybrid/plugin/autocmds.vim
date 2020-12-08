@@ -87,7 +87,7 @@ augroup general
   " toggle linenumbering and cursorline
 " signcolumn=yes:2
 " signcolumn=no
-  autocmd BufEnter,FocusGained,WinEnter * silent setlocal number relativenumber colorcolumn=81
+  autocmd BufEnter,FocusGained,WinEnter * silent setlocal number relativenumber colorcolumn=81,120
   autocmd BufLeave,FocusLost,WinLeave * silent setlocal  norelativenumber colorcolumn=0
 
   " toggle colorcolumn when in insertmode only

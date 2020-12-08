@@ -1,22 +1,10 @@
 return {
   activate = function()
-    -- [ debugging ] ---------------------------------------------------------------
-
-    -- Can set this lower if needed (used in tandem with mega.inspect) ->
-    -- require('vim.lsp.log').set_level("trace")
-    -- require('vim.lsp.log').set_level("debug")
-
-    local nova = require("mega.colors.nova")
-
-    mega.inspect("loading lsp_config.lua")
-
-    -- To execute in :cmd ->
-    -- :lua <the_command>
-
-    -- LSP log location ->
-    -- `tail -n150 -f $HOME/.local/share/nvim/lsp.log`
+    mega.inspect("activating lsp_config.lua..")
 
     -- [ requires ] ----------------------------------------------------------------
+
+    local nova = require("mega.colors.nova")
 
     local has_lsp, _ = pcall(require, "lspconfig")
     if not has_lsp then

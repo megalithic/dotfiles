@@ -1,6 +1,16 @@
 local M = {}
 
-M.map_opts = {noremap = false, silent = true, expr = false}
+M.map_opts = {noremap = true, silent = true, expr = false}
+
+function M.load(key, req, loader_fn)
+  local loaded, key = pcall(require, req)
+
+  if loaded then
+    key[loader_fn]()
+  else
+    mega.inspect("", key, 4)
+  end
+end
 
 function M.table_merge(dest, src)
   for k, v in pairs(src) do
@@ -10,67 +20,73 @@ function M.table_merge(dest, src)
 end
 
 function M.cmd_map(cmd)
-    return string.format('<cmd>%s<cr>', cmd)
+  return string.format("<cmd>%s<cr>", cmd)
 end
 
 function M.vcmd_map(cmd)
-    return string.format([[<cmd>'<,'>%s<cr>]], cmd)
+  return string.format([[<cmd>'<,'>%s<cr>]], cmd)
 end
 
-function M.autocmd(cmd) 
-    vim.cmd("autocmd " .. cmd) 
+function M.autocmd(cmd)
+  vim.cmd("autocmd " .. cmd)
 end
 
 function M.map(mode, lhs, rhs, opts)
-    opts = vim.tbl_extend('force', M.map_opts, opts or {})
-    vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
+  opts = vim.tbl_extend("force", M.map_opts, opts or {})
+  vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
 function M.create_mappings(mappings, bufnr)
-    local fn = vim.api.nvim_set_keymap
-    if bufnr then
-        fn = function(...)
-            vim.api.nvim_buf_set_keymap(bufnr, ...)
-        end
+  local fn = vim.api.nvim_set_keymap
+  if bufnr then
+    fn = function(...)
+      vim.api.nvim_buf_set_keymap(bufnr, ...)
     end
+  end
 
-    for mode, rules in pairs(mappings) do
-        for _, m in ipairs(rules) do
-            fn(mode, m.lhs, m.rhs, m.opts or {})
-        end
+  for mode, rules in pairs(mappings) do
+    for _, m in ipairs(rules) do
+      fn(mode, m.lhs, m.rhs, m.opts or {})
     end
+  end
 end
 
 function new_command(s)
-    vim.cmd('command! ' .. s)
+  vim.cmd("command! " .. s)
 end
 
 function M.exec_cmds(cmd_list)
-    vim.cmd(table.concat(cmd_list, '\n'))
+  vim.cmd(table.concat(cmd_list, "\n"))
 end
 
 function augroup(name, commands)
-    vim.cmd('augroup ' .. name)
-    vim.cmd('autocmd!')
-    for _, c in ipairs(commands) do
-        vim.cmd(string.format('autocmd %s %s %s %s', table.concat(c.events, ','),
-                table.concat(c.targets, ','), table.concat(c.modifiers or {}, ' '),
-            c.command))
-    end
-    vim.cmd('augroup END')
+  vim.cmd("augroup " .. name)
+  vim.cmd("autocmd!")
+  for _, c in ipairs(commands) do
+    vim.cmd(
+      string.format(
+        "autocmd %s %s %s %s",
+        table.concat(c.events, ","),
+        table.concat(c.targets, ","),
+        table.concat(c.modifiers or {}, " "),
+        c.command
+      )
+    )
+  end
+  vim.cmd("augroup END")
 end
 
 --- Split given string with given separator
 --- and returns the result as a table.
 function M.split(inputstr, separator)
-        if separator == nil then
-                separator = "%s"
-        end
-        local t={}
-        for str in string.gmatch(inputstr, "([^"..separator.."]+)") do
-                table.insert(t, str)
-        end
-        return t
+  if separator == nil then
+    separator = "%s"
+  end
+  local t = {}
+  for str in string.gmatch(inputstr, "([^" .. separator .. "]+)") do
+    table.insert(t, str)
+  end
+  return t
 end
 
 -- Key mapping
@@ -142,6 +158,25 @@ function M.debounce(interval_ms, fn)
   }
 end
 
+local bytemarkers = {{0x7FF, 192}, {0xFFFF, 224}, {0x1FFFFF, 240}}
+function M.utf8(decimal)
+  if decimal < 128 then
+    return string.char(decimal)
+  end
+  local charbytes = {}
+  for bytes, vals in ipairs(bytemarkers) do
+    if decimal <= vals[1] then
+      for b = bytes + 1, 2, -1 do
+        local mod = decimal % 64
+        decimal = (decimal - mod) / 64
+        charbytes[b] = string.char(128 + mod)
+      end
+      charbytes[1] = string.char(vals[2] + decimal)
+      break
+    end
+  end
+  return table.concat(charbytes)
+end
 
 function M.bmap(mode, key, result, opts)
   local map_opts = opts
@@ -291,6 +326,5 @@ end
 PBC = function()
   P(M.pbclients())
 end
-
 
 return M
