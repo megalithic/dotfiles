@@ -27,10 +27,10 @@ local function set_global_vars()
   vim.g.netrw_home = data_dir
   vim.g.netrw_banner = 0
   vim.g.netrw_liststyle = 3
-  vim.g.fzf_command_prefix = "Fzf"
-  vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
-  vim.g.fzf_action = {enter = "vsplit"}
-  vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
+  -- vim.g.fzf_command_prefix = "Fzf"
+  -- vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
+  -- vim.g.fzf_action = {enter = "vsplit"}
+  -- vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
   vim.g.polyglot_disabled = {
     "typescript",
     "typescriptreact",

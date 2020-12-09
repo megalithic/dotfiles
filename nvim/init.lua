@@ -45,6 +45,8 @@ do
       mega.load("keymaps", "mega.keymaps", "activate")
       mega.load("autocmds", "mega.autocmds", "activate")
       -- mega.load("statusline", "mega.statusline", "activate")
+      mega.load("ft", "mega.ft", "setup")
+      mega.load("ft", "mega.ft", "trigger_ft")
     end
   )
 end

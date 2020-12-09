@@ -58,7 +58,7 @@ local function convenience_mappings()
   -- Better save and quit
   vim.cmd("silent! unmap <leader>w")
   mega.map("n", "<leader>w", ":w<CR>")
-  mega.map("n", "<leader>w", "<cmd>update<cr>", {})
+  -- mega.map("n", "<leader>w", "<cmd>update<cr>", {})
   mega.map("n", "<leader>W", ":w !sudo tee > /dev/null %<CR>")
   mega.map("n", "<leader>q", ":q<CR>")
 
