@@ -97,10 +97,12 @@ else
 
     if [[ $answer == [yY] ]]
     then
-        echo "-> installing xcode"
-        xcode-select --install && \
-            sudo xcodebuild -license accept && \
-            softwareupdate -ia
+        if (which xcode-select &>/dev/null); then
+            echo "-> xcode-select already installed; skipping."
+        else
+            echo "-> installing xcode-selct"
+            xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
+        fi
     fi
 fi
 
