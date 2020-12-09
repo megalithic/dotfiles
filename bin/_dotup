@@ -191,7 +191,7 @@ function run_stow {
 
 function set_zsh {
     log "-> changing your shell to the brewed version of zsh..."
-    zsh_path=/user/local/bin/zsh
+    zsh_path=/usr/local/bin/zsh
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     chsh -s "$zsh_path" $USER
