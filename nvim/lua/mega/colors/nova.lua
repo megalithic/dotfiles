@@ -24,14 +24,14 @@
 --spinner_frames = {'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'},
 -- }
 
-local cu = require('mega.colors.utils')
+local cu = require("mega.colors.utils")
 
 local icons = {
   sign_error = mega.utf8(0xf655), --"",
   sign_warning = "喝", --"\ufa36 喝
   sign_information = "", --\uf7fc \uf0da 
   sign_hint = "", --"\uf835" \uf105
-  virtual_text = mega.utf8(0xf63d),
+  virtual_text = mega.utf8(0xf63d)
 }
 
 local base = {
@@ -102,23 +102,43 @@ return {
     vim.api.nvim_exec([[ colorscheme nova ]], true)
 
     -- (highlights) --
-    vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']],true)
+    vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
 
     cu.hi("HighlightedyankRegion", status.highlighted_yank, "NONE", "bold")
     cu.hi("HighlightedYankRegion", status.highlighted_yank, "NONE", "bold")
-    cu.hi("IncSearch",             status.incsearch, "NONE", "bold")
-    cu.hi("SignColumn",            nil, "NONE", nil)
-    cu.hi("CursorLineNr",          status.cursorlinenr, status.special_bg, "italic")
-    cu.hi("VertSplit",             status.separator, "NONE", "NONE")
-    cu.hi("Visual",                status.bg, status.selection, "NONE")
-    cu.hi("Normal",                status.normal_text, "NONE", "NONE")
-    cu.hi("htmlArg",               nil, nil, "italic")
-    cu.hi("xmlAttrib",             nil, nil, "italic")
-    cu.hi("Type",                  nil, nil, "italic")
-    cu.hi("Comment",               nil, nil, "italic")
-    cu.hi("MatchWord",             nil, nil, "underline,undercurl,italic")
-    cu.hi("MatchParen",            nil, nil, "underline,undercurl,italic")
-    cu.hi("CleverFDefaultLabel",   status.cursorlinenr, status.special_bg, nil)
-    cu.hi("CleverFDefaultLabel",   status.cursorlinenr, status.special_bg, nil)
+    cu.hi("IncSearch", status.incsearch, "NONE", "bold")
+    cu.hi("SignColumn", nil, "NONE", nil)
+    cu.hi("CursorLineNr", status.cursorlinenr, status.special_bg, "italic")
+    cu.hi("VertSplit", status.separator, "NONE", "NONE")
+    cu.hi("Visual", status.bg, status.selection, "NONE")
+    cu.hi("Normal", status.normal_text, "NONE", "NONE")
+    cu.hi("htmlArg", nil, nil, "italic")
+    cu.hi("xmlAttrib", nil, nil, "italic")
+    cu.hi("Type", nil, nil, "italic")
+    cu.hi("Comment", nil, nil, "italic")
+    cu.hi("MatchWord", nil, nil, "underline,undercurl,italic")
+    cu.hi("MatchParen", nil, nil, "underline,undercurl,italic")
+    cu.hi("CleverFDefaultLabel", status.cursorlinenr, status.special_bg, nil)
+    cu.hi("CleverFDefaultLabel", status.cursorlinenr, status.special_bg, nil)
+
+    cu.hi("ErrorMsg", status.error_status, nil, "underline,undercurl,italic")
+    cu.hi("WarningMsg", status.warning_status, nil, "italic")
+    cu.hi("InformationMsg", status.information_status, nil, "italic")
+    cu.hi("HintMsg", status.hint_status, nil, "italic")
+
+    cu.hi("Debug", status.error_status, nil, "underline,undercurl,italic")
+    cu.hi("Exception", status.error_status, nil, "underline,undercurl,italic")
+
+    cu.hi("SpellBad", status.error_status, status.bg, "underline,undercurl,italic")
+    cu.hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
+    cu.hi("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
+    cu.hi("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
+
+    cu.hi("ModifiedColor", status.error_status, "NONE", "bold")
+    cu.hi("gitCommitOverflow", status.special_bg, status.error_status, "underline,undercurl")
+
+    cu.hi("DiffAdd", status.added, status.bg, "NONE")
+    cu.hi("DiffDelete", status.removed, status.bg, "NONE")
+    cu.hi("DiffChange", status.changed, status.bg, "NONE")
   end
 }

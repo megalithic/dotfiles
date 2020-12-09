@@ -152,6 +152,7 @@ brew update
 echo "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
 brew bundle --file="$DOTS/homebrew/Brewfile"
 
+# FIXME: is this still needed?
 # echo ":: doing post-brew things..."
 # sudo xcodebuild -license accept
 # ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
