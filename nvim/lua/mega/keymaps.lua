@@ -118,7 +118,9 @@ local function override_mappings()
   mega.map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
   -- clear highlights
-  mega.map("n", "<silent><ESC>", ":syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>")
+  -- mega.map("n", "<silent><ESC>", ":syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>")
+  vim.api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
+]], true)
 
   -- keep line in middle of buffer when searching
   mega.map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
