@@ -24,7 +24,7 @@ return {
       return
     end
 
-    vim.api.nvim_exec([[autocmd BufWritePost plugins.lua PackerCompile]], true)
+    -- vim.api.nvim_exec([[autocmd BufWritePost plugins.lua PackerCompile]], true)
 
     return require("packer").startup(
       {
@@ -64,13 +64,13 @@ return {
           use {
             "norcalli/nvim-colorizer.lua",
             config = function()
-              local has_colorizer, colorizer = pcall(require, "colorizer")
-              if not has_colorizer then
+              local has_installed, p = pcall(require, "colorizer")
+              if not has_installed then
                 return
               end
 
               -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
-              colorizer.setup(
+              p.setup(
                 {
                   -- '*',
                   -- '!vim',
@@ -227,16 +227,44 @@ return {
             end
           }
           use {
-            "mhinz/vim-signify",
+            "lewis6991/gitsigns.nvim",
+            requires = {
+              "nvim-lua/plenary.nvim"
+            },
             config = function()
-              vim.g.signify_line_highlight = 0
-              vim.g.signify_sign_show_text = 1
-              vim.g.signify_sign_show_count = 0
-              vim.g.signify_sign_add = "▎"
-              vim.g.signify_sign_delete = "_"
-              vim.g.signify_sign_delete_first_line = "‾"
-              vim.g.signify_sign_change = "▏"
-              vim.g.signify_sign_changedelete = vim.g.signify_sign_change
+              local has_installed, p = pcall(require, "gitsigns")
+              if not has_installed then
+                return
+              end
+
+              p.setup(
+                {
+                  signs = {
+                    add = {hl = "DiffAdd", text = "│"},
+                    change = {hl = "DiffChange", text = "│"},
+                    delete = {hl = "DiffDelete", text = "_"},
+                    topdelete = {hl = "DiffDelete", text = "‾"},
+                    changedelete = {hl = "DiffChange", text = "~"}
+                  },
+                  keymaps = {
+                    -- Default keymap options
+                    noremap = true,
+                    buffer = true,
+                    ["n ]g"] = {expr = true, '&diff ? \']g\' : \'<cmd>lua require"gitsigns".next_hunk()<CR>\''},
+                    ["n [g"] = {expr = true, '&diff ? \'[g\' : \'<cmd>lua require"gitsigns".prev_hunk()<CR>\''},
+                    ["n <leader>hs"] = '<cmd>lua require"gitsigns".stage_hunk()<CR>',
+                    ["n <leader>hu"] = '<cmd>lua require"gitsigns".undo_stage_hunk()<CR>',
+                    ["n <leader>hr"] = '<cmd>lua require"gitsigns".reset_hunk()<CR>',
+                    ["n <leader>hp"] = '<cmd>lua require"gitsigns".preview_hunk()<CR>',
+                    ["n <leader>hb"] = '<cmd>lua require"gitsigns".blame_line()<CR>'
+                  },
+                  watch_index = {
+                    interval = 1000
+                  },
+                  sign_priority = 6,
+                  status_formatter = nil -- Use default
+                }
+              )
             end
           }
 
@@ -267,13 +295,7 @@ return {
           use "tpope/vim-rhubarb"
           use "tpope/vim-repeat"
           use "tpope/vim-surround"
-          use {
-            "tpope/vim-commentary",
-            config = function()
-              mega.map("n", "<Leader>c", "<Plug>CommentaryLine")
-              mega.map("v", "<Leader>c", "<Plug>Commentary")
-            end
-          }
+          use "tpope/vim-commentary"
           use "tpope/vim-unimpaired"
           use "EinfachToll/DidYouMean"
           use "jordwalke/VimAutoMakeDirectory"
