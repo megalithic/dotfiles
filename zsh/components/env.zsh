@@ -75,6 +75,8 @@ export BAT_CONFIG_PATH="~/.batrc"
 export QMK_HOME='~/code/qmk_firmware'
 
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=23"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55" 
+export ZSH_AUTOSUGGEST_USE_ASYNC=1
 
 #
 # NVIM
