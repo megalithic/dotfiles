@@ -6,7 +6,7 @@
 osascript -e 'tell application "System Preferences" to quit'
 
 BACKUP_FILE="${HOME}/Desktop/defaults-backup.$(date '+%Y%m%d_%H%M%S').plist"
-log "Backing up current macOS X defaults to: ${BACKUP_FILE}"
+echo "Backing up current macOS X defaults to: ${BACKUP_FILE}"
 defaults read > "$BACKUP_FILE"
 
 echo
@@ -476,10 +476,10 @@ apps_to_restart=(
 
 for app in "${apps_to_restart[@]}"; do
   if [[ "$(app_is_running "${app}")" == "true" ]]; then
-    log "\"${app}\" needs to be restarted."
+    echo "\"${app}\" needs to be restarted."
 
     # if ( ask "${app}" ); then
-      log "Quitting ${app}"
+      echo "Quitting ${app}"
       killall "${app}" &> /dev/null
     # else
     #   log "Leaving ${app} open"
@@ -489,7 +489,7 @@ for app in "${apps_to_restart[@]}"; do
   fi
 done
 
-log "Done. Note that some of these changes require a logout/restart to take effect."
+echo "Done. Note that some of these changes require a full logout/restart to take effect."
 
 # TODO:
 # - programmatically set keyboard shortcuts for apps: https://github.com/kassio/dotfiles/blob/master/install/macos/keyboard#L22

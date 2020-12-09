@@ -16,6 +16,8 @@ VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 # •
 
+source "$DOTS/zsh/plugins/gitstatus/gitstatus.plugin.zsh"
+
 function gitstatus_prompt_update() {
   emulate -L zsh
   typeset -g GITSTATUS_PROMPT=""
@@ -24,7 +26,7 @@ function gitstatus_prompt_update() {
 
   # Call gitstatus_query synchronously. Note that gitstatus_query can also be called
   # asynchronously; see documentation in gitstatus.plugin.zsh.
-  # gitstatus_query MEGALITHIC                  || return 1  # error
+  gitstatus_query MEGALITHIC          || return 1  # error
   [[ $VCS_STATUS_RESULT == ok-sync ]] || return 0  # not a git repo
 
   local     reset='%f'       # no foreground
@@ -63,6 +65,7 @@ function gitstatus_prompt_update() {
 # if (which gitstatus_stop &>/dev/null) && (which gitstatus_start &>/dev/null); then
 #     gitstatus_stop MEGALITHIC && gitstatus_start MEGALITHIC
 # fi
+gitstatus_stop MEGALITHIC && gitstatus_start MEGALITHIC
 
 # On every prompt, fetch git status and set GITSTATUS_PROMPT.
 autoload -Uz add-zsh-hook

@@ -82,8 +82,11 @@ source "$DOTS/zsh/components/fzf.zsh"
 source "$DOTS/zsh/components/zlua.zsh"
 source "$DOTS/zsh/components/asdf.zsh"
 
+# -- prompt!
+source "$DOTS/zsh/components/prompt.zsh"
+
 # -- zinit config
-source "$DOTS/zsh/components/zinit.zsh"
+# source "$DOTS/zsh/components/zinit.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
