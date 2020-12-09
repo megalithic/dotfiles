@@ -443,21 +443,21 @@ function app_is_running {
   osascript -so -e "application \"$1\" is running"
 }
 
-function ask {
-  local app compcontext question reply
+# function ask {
+#   local app compcontext question reply
 
-  app="$1"
-  compcontext='yn:yes or no:(y n)'
-  question="%BShould ${app} be quit right now?%b"
+#   app="$1"
+#   compcontext='yn:yes or no:(y n)'
+#   question="%BShould ${app} be quit right now?%b"
 
-  while true ; do
-    vared -e -p "${question} (y/n or <ctrl-c>) " reply
-    case "$reply" in
-      (Y* | y*) return 0 ;;
-      (N* | n*) return 1 ;;
-    esac
-  done
-}
+#   while true ; do
+#     vared -e -p "${question} (y/n or <ctrl-c>) " reply
+#     case "$reply" in
+#       (Y* | y*) return 0 ;;
+#       (N* | n*) return 1 ;;
+#     esac
+#   done
+# }
 
 apps_to_restart=(
   "Activity Monitor"
@@ -478,12 +478,12 @@ for app in "${apps_to_restart[@]}"; do
   if [[ "$(app_is_running "${app}")" == "true" ]]; then
     log "\"${app}\" needs to be restarted."
 
-    if ( ask "${app}" ); then
+    # if ( ask "${app}" ); then
       log "Quitting ${app}"
       killall "${app}" &> /dev/null
-    else
-      log "Leaving ${app} open"
-    fi
+    # else
+    #   log "Leaving ${app} open"
+    # fi
 
     echo
   fi

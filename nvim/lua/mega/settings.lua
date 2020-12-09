@@ -61,7 +61,7 @@ local function set_global_options()
   vim.o.laststatus = 2
   vim.o.ruler = true
   vim.o.rulerformat = [[%-14.(%l,%c   %o%)]]
-  vim.o.statusline = "%t %h%w%m%r %=%(%l,%c%V %= %P%)"
+  -- vim.o.statusline = "%t %h%w%m%r %=%(%l,%c%V %= %P%)"
   -- vim.o.statusline="%<%f\ %h%m%r%=%-14.(%l,%c\ \ \ %o%)"
   -- vim.o.rulerformat="%-14.(%l,%c\ \ \ %o%)"
   vim.o.guicursor =

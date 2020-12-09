@@ -24,13 +24,6 @@ return {
       return
     end
 
-    -- if vim.fn.empty(vim.fn.glob(packer_install_path)) > 0 then
-    --     print("packer.nvim is NOT installed -> installing...")
-    --     vim.api.nvim_command('!git clone https://github.com/wbthomason/packer.nvim ' .. packer_install_path)
-    -- end
-
-    -- vim.api.nvim_command('packadd packer.nvim')
-    -- vim.cmd([[packadd packer.nvim]])
     vim.api.nvim_exec([[autocmd BufWritePost plugins.lua PackerCompile]], true)
 
     return require("packer").startup(
@@ -173,8 +166,8 @@ return {
               vim.g.clever_f_show_prompt = 1
 
               -- keep the original functionality to jump between found chars
-              mega.map("n", ";", "<Plug>(clever-f-repeat-forward)<CR>")
-              mega.map("n", ",", "<Plug>(clever-f-repeat-back)<CR>")
+              mega.map("n", ";", "<Plug>(clever-f-repeat-forward)")
+              mega.map("n", ",", "<Plug>(clever-f-repeat-back)")
             end
           }
           -- use {
@@ -277,8 +270,8 @@ return {
           use {
             "tpope/vim-commentary",
             config = function()
-              mega.map("n", "<Leader>c", "<cmd>Commentary<CR>")
-              mega.map("v", "<Leader>c", "<cmd>Commentary<CR>")
+              mega.map("n", "<Leader>c", "<Plug>CommentaryLine")
+              mega.map("v", "<Leader>c", "<Plug>Commentary")
             end
           }
           use "tpope/vim-unimpaired"
