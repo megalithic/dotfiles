@@ -170,6 +170,7 @@ return {
               vim.g.clever_f_across_no_line = 1
               vim.g.clever_f_fix_key_direction = 1
               vim.g.clever_f_timeout_ms = 2000
+              vim.g.clever_f_show_prompt = 1
 
               -- keep the original functionality to jump between found chars
               mega.map("n", ";", "<Plug>(clever-f-repeat-forward)<CR>")
