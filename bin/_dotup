@@ -1,6 +1,44 @@
 #!/usr/bin/env zsh
 
-echo '
+# -- REFs
+# neat things for echo'ing colors
+# https://github.com/ctaylo21/jarvis/blob/master/install.sh#L3
+# $(tput setaf 2)JARVIS: Greetings. Preparing to power up and begin diagnostics.$(tput sgr 0)
+
+
+set -e
+
+
+trap 'clean_exit $? $LINENO' EXIT
+
+function log {
+    printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
+}
+
+function log_ok {
+    # $(tput setaf 2)printf '[%s] %s\n' "$(date '+%x %X')" "$*"$(tput sgr 0)
+    printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
+}
+
+function log_warn {
+    # $(tput setaf 2)printf '[%s] %s\n' "$(date '+%x %X')" "$*"$(tput sgr 0)
+    printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "$*" $(tput sgr 0)
+}
+
+function log_error {
+    # $(tput setaf 2)printf '[%s] %s\n' "$(date '+%x %X')" "$*"$(tput sgr 0)
+    printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "$*" $(tput sgr 0)
+}
+
+function clean_exit {
+    set +x
+    if [[ "$1" != "0" ]]; then
+        log_error "Fatal error code \"${1}\" occurred on line \"${2}\""
+    fi
+}
+
+
+log '
 
 ==================================================================================
 
@@ -15,31 +53,8 @@ cloned from https://github.com/megalithic/dotfiles.
 ==================================================================================
 '
 
-# -- REFs
-# neat things for echo'ing colors
-# https://github.com/ctaylo21/jarvis/blob/master/install.sh#L3
-# $(tput setaf 2)JARVIS: Greetings. Preparing to power up and begin diagnostics.$(tput sgr 0)
 
-
-set -e
-
-
-trap 'clean_exit $? $LINENO' EXIT
-
-
-function log {
-    printf '[%s] %s\n' "$(date '+%x %X')" "$*"
-}
-
-function clean_exit {
-    set +x
-    if [[ "$1" != "0" ]]; then
-        log "Fatal error code \"${1}\" occurred on line \"${2}\""
-    fi
-}
-
-
-log "Some setup methods require the administrator password. Please grant sudo access:"
+log_warn "-> Some setup methods require the administrator password. Please grant sudo access:"
 sudo -v
 
 
@@ -48,108 +63,148 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
 # Detect OS
-if [[ -z $PLATFORM ]]
-then
-    # unamestr=`uname`
-    platform="unknown"
+function detect_os {
+    if [[ -z $PLATFORM ]]
+    then
+        log "-> setting PLATFORM env"
+        # unamestr=`uname`
+        platform="unknown"
 
-    if [[ "$(uname)" == "Darwin" ]]; then
-        platform="macos"
-    elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
-        platform="linux"
-    elif [[ "$(expr substr $(uname -s) 1 5)" == 'FreeBSD' ]]; then
-        platform='freebsd'
-    elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]]; then
-        platform="windows"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            platform="macos"
+        elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+            platform="linux"
+        elif [[ "$(expr substr $(uname -s) 1 5)" == 'FreeBSD' ]]; then
+            platform='freebsd'
+        elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]]; then
+            platform="windows"
+        fi
+
+        export PLATFORM=$platform
+
+        log_ok "-> set PLATFORM to $platform"
     fi
-
-    export PLATFORM=$platform
-
-    echo "-> setting PLATFORM to $platform"
-fi
-
-# DOTDIR export exists?
-if [[ -z $DOTS ]]
-then
-    export DOTS="$HOME/.dotfiles"
-    echo "-> setting DOTS to $DOTS"
-    export DOTDIR="$HOME/.dotfiles"
-    echo "-> setting DOTDIR to $DOTDIR"
-    export DIRDOTS="$HOME/.dotfiles"
-    echo "-> setting DIRDOTS to $DIRDOTS"
-fi
-
-# PRIVATES export exists?
-if [[ -z $PRIVATES ]]
-then
-    export PRIVATES="$DOTS/private"
-    echo "-> setting PRIVATES to $PRIVATES"
-    export PRIVATE="$DOTS/private"
-    echo "-> setting PRIVATE to $PRIVATE"
-fi
-
-# git exists?
-if (which git &>/dev/null); then
-    echo "-> git already installed; skipping."
-else
-    echo "-> git not installed; requires xcode-select to continue, installing xcode-select"
-
-    if (which xcode-select &>/dev/null); then
-        echo "-> xcode-select already installed; skipping."
-    else
-        echo "-> installing xcode-selct"
-        xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
-    fi
-fi
-
-function do_clone {
-    echo "-> cloning dotfiles..."
-    mkdir -p $DOTS
-    git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
 }
 
-if [[ ! -d $DOTS ]]
-then
-    do_clone
-else
-    if [[ -z $SKIP_DOTFILES_UPDATE ]]
+function export_dirs {
+    # DOTDIR export exists?
+    if [[ -z $DOTS ]]
     then
-        if ls -A $DOTS | grep -q '^'; then
-            echo "-> ~/.dotfiles found; updating to latest.."
-            cd $DOTS
-            # git add -u .
-            # git stash
-            # git pull --recurse-submodules --rebase origin main
-            # git fetch origin; git merge origin/main
-            # TODO: need to figure out how to do this only when i've got perms
-            # git push origin main
-            # git stash pop
-            cd $HOME
+        log "-> setting DOTS env"
+        export DOTS="$HOME/.dotfiles"
+        log_ok "-> set DOTS to $DOTS"
+        export DOTDIR="$HOME/.dotfiles"
+        log_ok "-> set DOTDIR to $DOTDIR"
+        export DIRDOTS="$HOME/.dotfiles"
+        log_ok "-> set DIRDOTS to $DIRDOTS"
+    fi
+
+    # PRIVATES export exists?
+    if [[ -z $PRIVATES ]]
+    then
+        log "-> setting PRIVATES env"
+        export PRIVATES="$DOTS/private"
+        log_ok "-> set PRIVATES to $PRIVATES"
+        export PRIVATE="$DOTS/private"
+        log_ok "-> set PRIVATE to $PRIVATE"
+    fi
+}
+
+function setup_xcode_and_git {
+    log "-> installing xcode and git"
+    # git exists?
+    if (which git &>/dev/null); then
+        log "-> git already installed; skipping."
+    else
+        log_warn "-> git not installed; requires xcode-select to continue, installing xcode-select"
+
+        if (which xcode-select &>/dev/null); then
+            log "-> xcode-select already installed; skipping."
         else
-            echo "-> ~/.dotfiles exists, but is empty; retrying clone.."
-            rm -rf $DOTS
-            do_clone
+            log "-> installing xcode-select..."
+            xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
+            log_ok "-> DONE"
         fi
     fi
-fi
+}
+
+function _do_clone {
+    log "-> cloning dotfiles..."
+    mkdir -p $DOTS
+    git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
+    log_ok "-> DONE"
+}
+
+function clone_dotfiles_repo {
+    if [[ ! -d $DOTS ]]
+    then
+        _do_clone
+    else
+        if [[ -z $SKIP_DOTFILES_UPDATE ]]
+        then
+            if ls -A $DOTS | grep -q '^'; then
+                log "-> ~/.dotfiles found; updating to latest.."
+                cd $DOTS
+                # git add -u .
+                # git stash
+                # git pull --recurse-submodules --rebase origin main
+                # git fetch origin; git merge origin/main
+                # TODO: need to figure out how to do this only when i've got perms
+                # git push origin main
+                # git stash pop
+                cd $HOME
+            else
+                log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
+                rm -rf $DOTS
+                _do_clone
+            fi
+        fi
+    fi
+}
 
 # Install Homebrew
-if (which brew &>/dev/null); then
-    echo "-> brew already installed; skipping."
-else
-    echo "-> brew not found; installing Homebrew..."
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+function install_homebrew {
+    if (which brew &>/dev/null); then
+        log "-> brew already installed; skipping."
+    else
+        log_warn "-> brew not found; installing Homebrew..."
+        /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+        log_ok "-> DONE"
+    fi
+}
+
+function bundle_brews {
+    log "-> brewing things from our brewfile..."
+    export HOMEBREW_CASK_OPTS="--appdir=/Applications"
+
+    sleep 1
+    open -a "App Store"
+
+    log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
+    brew bundle --file="$DOTS/homebrew/Brewfile" || { log 'brew bundling failed'; exit 1; }
+    log_ok "-> DONE"
+}
+
+function set_zsh {
+    log "-> changing your shell to the brewed version of zsh..."
+    zsh_path=$(which zsh)
+    log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
+    grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
+    chsh -s "$zsh_path" $USER
+    zsh
+    log_ok "-> DONE"
+}
+
+detect_os
+export_dirs
+if [[ $platform == "macos" ]]; then
+    setup_xcode_and_git
 fi
-
-echo "-> brewing things from our brewfile..."
-export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-brew update
-
-sleep 1
-open -a "App Store"
-
-echo "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
-brew bundle --file="$DOTS/homebrew/Brewfile"
+clone_dotfiles_repo
+if [[ $platform == "macos" ]]; then
+    install_homebrew
+    bundle_brews
+fi
 
 # FIXME: is this still needed?
 # echo ":: doing post-brew things..."
@@ -168,15 +223,10 @@ $DOTS/bin/_symlinks
 # Setup private repo and things
 # $DOTS/bin/_private
 
-echo "-> changing your shell to the brewed version of zsh..."
-zsh_path=$(which zsh)
-echo "-> attempting to set $zsh_path as your zsh path in /etc/shells"
-grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
-chsh -s "$zsh_path" $USER
-zsh
+set_zsh
 
 # Print Manual Instructions
-echo "\n\nATTENTION! Further Instructions:\n"
+log_warn "\n\nATTENTION! Further Instructions:\n"
 
 echo "  * Because I'm not totally great with scripting all the things.."
 echo "    - you might have to reinstall `weechat` since original deps weren't there"
