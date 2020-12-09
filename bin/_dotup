@@ -149,9 +149,9 @@ echo "-> brewing things from our brewfile..."
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew update
 
-echo "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
 open -a "App Store"
 
+echo "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
 brew bundle --file="$DOTS/homebrew/Brewfile"
 
 # FIXME: is this still needed?
