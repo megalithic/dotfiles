@@ -4,10 +4,6 @@ cask_args appdir: "/Applications"
 
 # -- taps --
 
-# tap "caskroom/cask"
-# tap "caskroom/fonts"
-# tap "caskroom/versions" # enbala uses this one for java11 things :(
-
 tap "homebrew/bundle"
 tap "homebrew/services"
 tap "homebrew/cask-versions"
@@ -20,10 +16,8 @@ tap "jeroenknoops/tap"
 tap "browsh-org/homebrew-browsh"
 tap "qmk/qmk"
 tap "heroku/brew"
-
 # NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
 tap "microsoft/git"
-
 
 
 # -- for qmk_toolbox --
@@ -42,15 +36,13 @@ cask "qmk-toolbox"
 brew "qmk"
 
 
-
 # -- cli --
 
 brew "abduco"
 brew "ansifilter"
 brew "autoconf"
 brew "automake"
-brew "aspell" #, args: ["with-lang-en"]
-# brew "asdf"
+brew "aspell"
 brew "bandwhich"
 brew "bat"
 brew "browsh"
@@ -63,9 +55,6 @@ brew "diff-so-fancy"
 brew "docker"
 brew "docker-compose"
 brew "docker-machine" #, restart_service: true, link: false
-# brew "docker-completion"
-# brew "doxygen", args: ["with-qt", "with-graphviz", "with-llvm"]
-# brew "elixir" # installed via asdf
 brew "exa"
 brew "extract_url"
 brew "exercism"
@@ -84,7 +73,7 @@ brew "gist"
 brew "git"
 brew "gnutls"
 brew "gnupg"
-brew "gnu-sed" #, args: ["with-default-names"]
+brew "gnu-sed"
 brew "gpg" # required for asdf-nodejs
 brew "grc"
 brew "grv"
@@ -93,7 +82,6 @@ brew "hub"
 brew "highlight"
 brew "httpie"
 brew "htop"
-brew "ical-buddy"
 brew "jid"
 brew "jo"
 brew "jq"
@@ -105,18 +93,12 @@ brew "libyaml"
 brew "libxslt"
 brew "llvm"
 brew "lnav"
-# brew "lua" # installed via asdf
 brew "lsd"
 brew "luajit"
 brew "luarocks"
 brew "libarchive"
-# brew "m-cli"
-# brew "mac-cli"
 brew "mas"
 brew "moreutils"
-brew "mysql"
-brew "mycli"
-# brew "mysql@5.6"
 brew "ncurses"
 brew "neovim", args: ["HEAD"]
 brew "nmap"
@@ -134,11 +116,10 @@ brew "python@3.7", link: false
 brew "python@3.8", link: false
 brew "python@3.9", link: true
 brew "readline"
-brew "reattach-to-user-namespace" #, args: ["wrap-pbcopy-and-pbpaste"]
+brew "reattach-to-user-namespace"
 brew "ren"
 brew "redis"
 brew "ripgrep"
-# brew "rlue/utils/timer" -- broke?
 brew "ruby-install"
 brew "ruby-build"
 brew "rust"
@@ -153,23 +134,15 @@ brew "tldr"
 brew "tmux"
 brew "tree"
 brew "tree-sitter"
-brew "unixodbc"
 brew "urlview"
-# brew "watchman", args: ["HEAD"]
 brew "weechat", args: ["HEAD"]
 brew "wget"
-brew "wxmac"
 brew "wifi-password"
 brew "yubico-piv-tool"
 brew "libyubikey"
 brew "pam_yubico"
 brew "yubikey-personalization"
-brew "wemux"
 brew "zsh"
-brew "zsh-completions"
-brew "zsh-lovers"
-brew "zsh-autosuggestions"
-brew "zsh-syntax-highlighting"
 
 
 # -- cli --
@@ -183,54 +156,37 @@ cask "font-ia-writer-quattro"
 cask "1password"
 cask "1password-cli"
 cask "alfred"
-# cask "android-platform-tools"
 cask "balenaetcher"
 cask "bettertouchtool"
 cask "bartender"
 cask "brave-browser"
-# cask "cloudapp"
 cask "dash"
 cask "caldigit-thunderbolt-charging"
 cask "caldigit-docking-utility"
-# cask "calibre"
 cask "contexts"
 cask "controlplane"
 cask "docker"
 cask "dropbox"
-# cask "dropshare" # recommended by @thewatts on CiT
 cask "discord"
 cask "expressvpn"
 cask "git-credential-manager-core"
 cask "hazel"
 cask "hammerspoon"
-# cask "hiddenbar"
 cask "intel-power-gadget"
 cask "insomnia"
 cask "istat-menus"
-# cask "java"
-# cask "caskroom/versions/java8"
 cask "karabiner-elements"
 cask "kitty"
-# cask "licecap"
 cask "loom"
 cask "marked"
 cask "ngrok"
 cask "oracle-jdk"
-# cask "mysimbl"
-# cask "near-lock"
-# cask "postgres"
-# cask "postman"
-# handled by hammerspoon now :point_down:
 cask "slack"
 cask "spotify"
-# cask "teamviewer"
 cask "thingsmacsandboxhelper"
-# cask "toggl"
-# cask "unshaky"
 cask "vagrant"
 cask "the-unarchiver"
 # cask "usb-overdrive" # causes issues with QMK keyboards
-# cask "ubersicht"
 cask "virtualbox"
 cask "yubico-authenticator"
 cask "yubico-yubikey-manager"

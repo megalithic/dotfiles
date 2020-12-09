@@ -198,14 +198,15 @@ function set_zsh {
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     chsh -s "$zsh_path" $USER
     log_ok "-> DONE"
-    /usr/local/bin/zsh
 }
 
 function set_fish {
     # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
     log "-> changing your shell to fish..."
-    echo /usr/local/bin/fish | sudo tee -a /etc/shells
-    chsh -s /usr/local/bin/fish
+    fish_path=/usr/local/bin/fish
+    log "-> attempting to set $fish_path as your fish path in /etc/shells"
+    echo "$fish_path" | sudo tee -a /etc/shells
+    chsh -s "$fish_path" $USER
     log_ok "-> DONE"
 }
 

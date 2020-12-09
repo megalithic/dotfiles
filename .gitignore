@@ -21,9 +21,6 @@ nvim/.netrwhist
 nvim/bundle
 nvim/backups
 nvim/init.vim.*
-config/config.symlink/configstore
-~/.config/nvim/plugged
-~/.config/nvim/.init.*
 **/plugged
 weechat/**/autoload
 **/.init.vim*
