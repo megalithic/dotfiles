@@ -92,17 +92,13 @@ fi
 if (which git &>/dev/null); then
     echo "-> git already installed; skipping."
 else
-    echo "-> git not installed; requires xcode to continue.. install xcode? [y]"
-    read answer
+    echo "-> git not installed; requires xcode-select to continue, installing xcode-select"
 
-    if [[ $answer == [yY] ]]
-    then
-        if (which xcode-select &>/dev/null); then
-            echo "-> xcode-select already installed; skipping."
-        else
-            echo "-> installing xcode-selct"
-            xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
-        fi
+    if (which xcode-select &>/dev/null); then
+        echo "-> xcode-select already installed; skipping."
+    else
+        echo "-> installing xcode-selct"
+        xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
     fi
 fi
 
@@ -112,8 +108,6 @@ function do_clone {
     git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
 }
 
-
-# ~/.dotfiles dir exists?
 if [[ ! -d $DOTS ]]
 then
     do_clone
