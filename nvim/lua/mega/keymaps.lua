@@ -125,8 +125,8 @@ local function override_mappings()
   mega.map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
 
   -- Default to case insensitive search
-  mega.map("n", "/", "/\v")
-  mega.map("v", "/", "/\v")
+  -- mega.map("n", "/", "/\v")
+  --mega.map("v", "/", "/\v")
 end
 
 local function custom_mappings()

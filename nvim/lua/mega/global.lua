@@ -1,6 +1,6 @@
 local M = {}
 
-M.map_opts = {noremap = true, silent = true, expr = false}
+M.map_opts = {noremap = true, silent = false, expr = false}
 
 function M.load(key, req, loader_fn)
   local loaded, key = pcall(require, req)

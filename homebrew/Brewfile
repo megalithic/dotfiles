@@ -2,7 +2,6 @@
 
 cask_args appdir: "/Applications"
 
-
 # -- taps --
 
 # tap "caskroom/cask"
@@ -34,8 +33,7 @@ tap "osx-cross/avr"
 tap "PX4/homebrew-px4"
 tap "homebrew/cask-drivers"
 # NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
-brew "avr-gcc@8"
-link "avr-gcc@8"
+brew "avr-gcc@8", link: true
 brew "dfu-programmer"
 brew "dfu-util"
 brew "gcc-arm-none-eabi"
@@ -51,7 +49,7 @@ brew "abduco"
 brew "ansifilter"
 brew "autoconf"
 brew "automake"
-brew "aspell", args: ["--with-lang-en"]
+brew "aspell", args: ["with-lang-en"]
 # brew "asdf"
 brew "bandwhich"
 brew "bat"
@@ -66,7 +64,7 @@ brew "docker"
 brew "docker-compose"
 brew "docker-machine" #, restart_service: true, link: false
 brew "docker-completion"
-brew "doxygen", args: ["--with-qt", "--with-graphviz", "--with-llvm"]
+brew "doxygen", args: ["with-qt", "with-graphviz", "with-llvm"]
 # brew "elixir" # installed via asdf
 brew "exa"
 brew "extract_url"
@@ -157,13 +155,13 @@ brew "switchaudio-osx"
 brew "terminal-notifier"
 brew "tidy-html5"
 brew "tldr"
-brew "tmux", args: ["--HEAD", "--with-utf8proc"]
+brew "tmux", args: ["HEAD", "with-utf8proc"]
 brew "tree"
 brew "treesitter"
 brew "unixodbc"
 brew "urlview"
-# brew "watchman", args: ["--HEAD"]
-brew "weechat", args: ["--HEAD"]
+# brew "watchman", args: ["HEAD"]
+brew "weechat", args: ["HEAD"]
 brew "wget", args: ["enable-iri"]
 brew "wxmac"
 brew "wifi-password"
@@ -172,7 +170,7 @@ brew "libyubikey"
 brew "pam_yubico"
 brew "yubikey-personalization"
 brew "wemux"
-brew "zsh", args: ["--with-unicode9", "--without-etcdir"]
+brew "zsh", args: ["with-unicode9", "without-etcdir"]
 brew "zsh-completions"
 brew "zsh-lovers"
 brew "zsh-autosuggestions"
