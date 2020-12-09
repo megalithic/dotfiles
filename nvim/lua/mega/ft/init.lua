@@ -29,4 +29,8 @@ function M.setup()
   )
 end
 
+-- TODO:
+-- we could do some of this inline for some simple things, rather than littering with tons of ft files on disk:
+-- https://github.com/ellisonleao/dotfiles/blob/main/nvim/.config/nvim/lua/editor.lua#L189-L205
+
 return M
