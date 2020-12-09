@@ -49,7 +49,7 @@ brew "abduco"
 brew "ansifilter"
 brew "autoconf"
 brew "automake"
-brew "aspell", args: ["with-lang-en"]
+brew "aspell" #, args: ["with-lang-en"]
 # brew "asdf"
 brew "bandwhich"
 brew "bat"
@@ -84,7 +84,7 @@ brew "git"
 brew "git-extras"
 brew "gnutls"
 brew "gnupg"
-brew "gnu-sed", args: ["with-default-names"]
+brew "gnu-sed" #, args: ["with-default-names"]
 brew "gpg" # required for asdf-nodejs
 brew "grc"
 brew "grv"
@@ -118,7 +118,7 @@ brew "mysql"
 brew "mycli"
 # brew "mysql@5.6"
 brew "ncurses"
-brew "neovim", args: ["with-lua", "with-perl", "with-ruby"]
+brew "neovim", args: ["HEAD"]
 brew "nmap"
 brew "noti"
 brew "openssl"
@@ -130,15 +130,15 @@ brew "pick"
 brew "pkg-config"
 brew "postgresql"
 # initdb /usr/local/var/postgres -E utf8
-brew "python@2.7"
-brew "python@3.8"
-brew "python@3.9"
+brew "python@3.7", link: false
+brew "python@3.8", link: false
+brew "python@3.9", link: true
 brew "readline"
-brew "reattach-to-user-namespace", args: ["wrap-pbcopy-and-pbpaste"]
+brew "reattach-to-user-namespace" #, args: ["wrap-pbcopy-and-pbpaste"]
 brew "ren"
 brew "redis"
 brew "ripgrep"
-brew "rlue/utils/timer"
+# brew "rlue/utils/timer" -- broke?
 brew "ruby-install"
 brew "ruby-build"
 brew "rust"
@@ -149,9 +149,9 @@ brew "switchaudio-osx"
 brew "terminal-notifier"
 brew "tidy-html5"
 brew "tldr"
-brew "tmux", args: ["HEAD", "with-utf8proc"]
+brew "tmux", args: ["HEAD"]
 brew "tree"
-brew "treesitter"
+brew "tree-sitter"
 brew "unixodbc"
 brew "urlview"
 # brew "watchman", args: ["HEAD"]
