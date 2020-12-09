@@ -151,7 +151,6 @@ return {
               -- vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
               -- vim.g.fzf_action = {enter = "vsplit"}
               -- vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
-              
               vim.g.fzf_command_prefix = "Fzf"
               vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
               vim.g.fzf_action = {enter = "vsplit"}
@@ -177,14 +176,14 @@ return {
               mega.map("n", ",", "<Plug>(clever-f-repeat-back)<CR>")
             end
           }
-          use {
-            "justinmk/vim-sneak",
-            config = function()
-              vim.g["sneak#label"] = 1
-              mega.map("n", "f", "<Plug>Sneak_s")
-              mega.map("n", "F", "<Plug>Sneak_S")
-            end
-          }
+          -- use {
+          --   "justinmk/vim-sneak",
+          --   config = function()
+          --     vim.g["sneak#label"] = 1
+          --     mega.map("n", "f", "<Plug>Sneak_s")
+          --     mega.map("n", "F", "<Plug>Sneak_S")
+          --   end
+          -- }
           use "wellle/visual-split.vim"
 
           -- (text objects) --

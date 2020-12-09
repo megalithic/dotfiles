@@ -95,6 +95,9 @@ local function convenience_mappings()
   mega.map("n", "<Tab>", "%", {noremap = true})
   mega.map("v", "<Tab>", "%", {noremap = true})
   mega.map("x", "<Tab>", "%", {noremap = true})
+
+  -- Background (n)vim
+  mega.map("v", "<C-z>", "<ESC>zv`<ztgv")
 end
 
 local function override_mappings()
@@ -120,6 +123,10 @@ local function override_mappings()
   -- keep line in middle of buffer when searching
   mega.map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
   mega.map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
+
+  -- Default to case insensitive search
+  mega.map("n", "/", "/\v")
+  mega.map("v", "/", "/\v")
 end
 
 local function custom_mappings()
