@@ -6,8 +6,13 @@ return {
     local packer_repo_url = "https://github.com/wbthomason/packer.nvim"
     local packer_install_path = string.format("%s/site/pack/packer/opt/", vim.fn.stdpath("data"))
 
+    -- if vim.fn.empty(vim.fn.glob(packer_install_path)) > 0 then
+    --     print("packer.nvim is NOT installed -> installing...")
+    --     vim.api.nvim_command('!git clone https://github.com/wbthomason/packer.nvim ' .. packer_install_path)
+    -- end
+
     -- Again, thieved from TJ Devries..
-    if not packer_exists then
+    if not packer_exists or vim.fn.empty(vim.fn.glob(packer_install_path)) > 0 then
       if vim.fn.input("Download Packer? (y for yes) -> ") ~= "y" then
         return
       end
