@@ -83,6 +83,7 @@ source "$DOTS/zsh/components/zlua.zsh"
 source "$DOTS/zsh/components/asdf.zsh"
 
 # -- prompt!
+source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source "$DOTS/zsh/components/prompt.zsh"
 
 # -- zinit config

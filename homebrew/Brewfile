@@ -143,6 +143,9 @@ brew "libyubikey"
 brew "pam_yubico"
 brew "yubikey-personalization"
 brew "zsh"
+brew "zsh-completions"
+brew "zsh-lovers"
+brew "zsh-autosuggestions"
 
 
 # -- cli --
