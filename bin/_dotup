@@ -186,7 +186,9 @@ function bundle_brews {
 }
 
 function run_stow {
+    log "-> stowing things..."
     stow fish
+    log_ok "-> DONE"
 }
 
 function set_zsh {
@@ -196,6 +198,7 @@ function set_zsh {
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     chsh -s "$zsh_path" $USER
     log_ok "-> DONE"
+    /usr/local/bin/zsh
 }
 
 function set_fish {
@@ -204,6 +207,14 @@ function set_fish {
     echo /usr/local/bin/fish | sudo tee -a /etc/shells
     chsh -s /usr/local/bin/fish
     log_ok "-> DONE"
+}
+
+function post_info {
+    # Print Manual Instructions
+    log_warn "ATTENTION! Further Instructions:"
+    echo "  * Because I'm not totally great with scripting all the things.."
+    echo "    - you might have to reinstall `weechat` since original deps weren't there"
+    echo "    - private repo things are horribly broke for automation; best bet is to try manually cloning, or you might have to download the zip archive"
 }
 
 detect_os
@@ -236,12 +247,5 @@ $DOTS/bin/_symlinks
 
 set_zsh
 # set_fish
-
-# Print Manual Instructions
-log_warn "\n\nATTENTION! Further Instructions:\n"
-
-echo "  * Because I'm not totally great with scripting all the things.."
-echo "    - you might have to reinstall `weechat` since original deps weren't there"
-echo "    - private repo things are horribly broke for automation; best bet is to try manually cloning, or you might have to download the zip archive"
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

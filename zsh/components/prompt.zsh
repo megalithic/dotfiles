@@ -59,7 +59,10 @@ function gitstatus_prompt_update() {
 
 # Start gitstatusd instance with name "MEGALITHIC". The same name is passed to
 # gitstatus_query in gitstatus_prompt_update.
-gitstatus_stop MEGALITHIC && gitstatus_start MEGALITHIC
+
+if (which gitstatus_stop &>/dev/null) && (which gitstatus_start &>/dev/null); then
+    gitstatus_stop MEGALITHIC && gitstatus_start MEGALITHIC
+fi
 
 # On every prompt, fetch git status and set GITSTATUS_PROMPT.
 autoload -Uz add-zsh-hook
