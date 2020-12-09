@@ -140,5 +140,20 @@ return {
     cu.hi("DiffAdd", status.added, status.bg, "NONE")
     cu.hi("DiffDelete", status.removed, status.bg, "NONE")
     cu.hi("DiffChange", status.changed, status.bg, "NONE")
+
+    local lsp_highlights = {
+      ["Error"] = "error_status",
+      ["Warning"] = "warning_status",
+      ["Information"] = "information_status",
+      ["Hint"] = "hint_status"
+    }
+
+    for group, id in pairs(lsp_highlights) do
+      cu.hi("LspDiagnosticsVirtualText" .. group, status[id], nil, "undercurl,italic")
+      cu.hi("LspDiagnosticsUnderline" .. group, status[id], nil, "undercurl,italic")
+      cu.hi("LspDiagnosticsDefault" .. group, status[id], nil, "undercurl,italic")
+      cu.hi("LspDiagnosticsFloating" .. group, status[id], nil, "italic")
+      cu.hi("LspDiagnosticsSign" .. group, status[id], nil, nil)
+    end
   end
 }

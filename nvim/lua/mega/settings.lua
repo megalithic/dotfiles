@@ -84,6 +84,7 @@ local function set_global_options()
   vim.o.swapfile = false
   vim.o.inccommand = "split"
   vim.o.jumpoptions = "stack"
+  vim.wo.signcolumn = "yes:2" -- always showsigncolumn
 
   -- from tj_opts -> thanks TJ Devries!
   -- opt.autowrite = true

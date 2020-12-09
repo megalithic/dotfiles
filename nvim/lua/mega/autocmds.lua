@@ -86,6 +86,7 @@ augroup gitcommit
     setlocal nonumber
     setlocal wrap
     setlocal linebreak
+    setlocal colorcolumn 72
   endfunction
 
   autocmd BufNewFile,BufRead .git/index setlocal nolist
