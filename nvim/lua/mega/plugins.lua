@@ -23,7 +23,6 @@ return {
       vim.fn.system(string.format("git clone %s %s/%s", packer_repo_url, packer_install_path, "packer.nvim"))
 
       vim.cmd([[packadd packer.nvim]])
-      vim.cmd("PackerSync")
 
       print("-> packer.nvim installed.")
       return
