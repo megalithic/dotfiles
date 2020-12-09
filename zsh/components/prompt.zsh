@@ -16,7 +16,7 @@ VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 # •
 
-source "$DOTS/zsh/plugins/gitstatus/gitstatus.plugin.zsh"
+source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
 
 function gitstatus_prompt_update() {
   emulate -L zsh
