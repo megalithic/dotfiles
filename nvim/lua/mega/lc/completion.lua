@@ -92,12 +92,12 @@ local function init_mappings()
   -- https://github.com/whyreal/dotfiles/blob/master/vim/lua/wr/global.lua#L11-L45
   vim.api.nvim_exec(
     [[
-function! check_back_space() abort
+function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
-  function! show_documentation()
+  function! ShowDocumentation()
     if (index(['vim','help'], &filetype) >= 0)
       execute 'vert h '.expand('<cword>')
     elseif (index(['c','sh'], &filetype) >=0)
@@ -110,7 +110,7 @@ endfunction
   imap <expr> <Tab>
         \ pumvisible() ? "\<C-n>" :
         \ vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' :
-        \ check_back_space() ? "\<Tab>" :
+        \ CheckBackspace() ? "\<Tab>" :
         \ completion#trigger_completion()
   smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<Tab>'
 
@@ -132,7 +132,7 @@ endfunction
                   \ "\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
                   \ : "\<CR>\<Plug>DiscretionaryEnd"
 
-  nnoremap <silent> K :call show_documentation()<CR>
+  nnoremap <silent> K :call ShowDocumentation()<CR>
 
   ]],
     true
@@ -163,7 +163,7 @@ function M.activate()
         matching_strategy_list = {"exact", "substring", "fuzzy"}
       }
     )
-    init_mappings()
+  -- init_mappings()
   end
 end
 

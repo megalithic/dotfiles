@@ -181,17 +181,28 @@ function bundle_brews {
     open -a "App Store"
 
     log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
-    brew bundle --file="$DOTS/homebrew/Brewfile" || { log 'brew bundling failed'; exit 1; }
+    brew bundle --file="$DOTS/homebrew/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
     log_ok "-> DONE"
+}
+
+function run_stow {
+    stow fish
 }
 
 function set_zsh {
     log "-> changing your shell to the brewed version of zsh..."
-    zsh_path=$(which zsh)
+    zsh_path=/user/local/bin/zsh
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     chsh -s "$zsh_path" $USER
-    zsh
+    log_ok "-> DONE"
+}
+
+function set_fish {
+    # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
+    log "-> changing your shell to fish..."
+    echo /usr/local/bin/fish | sudo tee -a /etc/shells
+    chsh -s /usr/local/bin/fish
     log_ok "-> DONE"
 }
 
@@ -224,6 +235,7 @@ $DOTS/bin/_symlinks
 # $DOTS/bin/_private
 
 set_zsh
+# set_fish
 
 # Print Manual Instructions
 log_warn "\n\nATTENTION! Further Instructions:\n"
