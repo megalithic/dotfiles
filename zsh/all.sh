@@ -7,3 +7,5 @@ echo ""
 echo "-> setting zsh dir symlinks"
 ln -sfv $DOTS/zsh $HOME/.zsh
 ln -sfv $DOTS/zsh $HOME/.config/
+
+source $HOME/.zshrc
