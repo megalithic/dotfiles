@@ -297,6 +297,9 @@ return {
           -- :Verbose  <- view verbose output in preview window.
           -- :Time     <- measure how long it takes to run some stuff.
           use "tpope/vim-scriptease"
+          use "christoomey/vim-tmux-navigator"
+          use "tmux-plugins/vim-tmux-focus-events"
+          use "christoomey/vim-tmux-runner"
 
           -- (langs, syntax, et al) --
           use "tpope/vim-rails" -- rails.vim
