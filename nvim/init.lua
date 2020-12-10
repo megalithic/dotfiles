@@ -37,6 +37,8 @@ do
   vim.g.mapleader = ","
   vim.g.maplocalleader = ","
 
+  vim.cmd([[runtime vimrc]])
+
   -- [ loaders ] ---------------------------------------------------------------
   vim.schedule(
     function()
