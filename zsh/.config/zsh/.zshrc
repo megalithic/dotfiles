@@ -14,7 +14,8 @@
 fpath=($fpath $ZDOTDIR) # Same directory for user defined config and functions
 autoload -Uz compinit; compinit    # `New' completion system
 autoload -U promptinit; promptinit # Enable prompt themes
-prompt megalithic # my own prompt
+
+prompt megalithic
 
 # Ensures we use emacs/readline keybindings
 bindkey -e

@@ -3,12 +3,12 @@
 #
 
 export HOMEDIR=$HOME
-export ZDOTDIR=$HOME
+export ZDOTDIR=$HOME/.config/zsh
 export DOTS=$HOME/.dotfiles
+export PRIVATES=$HOME/.dotfiles/private
 export DOTDIR=$DOTS
 export DOTSDIR=$DOTS
 export DOTFILES=$DOTS
-export ZSH_HOME=$DOTS/zsh
 
 #
 # Browser
