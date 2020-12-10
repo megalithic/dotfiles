@@ -233,11 +233,14 @@ function setup_zsh {
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
+    # source $HOME/.config/zsh/.zshenv
+    # source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
+    
+    /usr/local/bin/zsh -c "source $HOME/.config/zsh/.zshenv"
+    /usr/local/bin/zsh -c "source /usr/local/opt/gitstatus/gitstatus.plugin.zsh"
+    /usr/local/bin/zsh -c "compaudit | xargs chmod g-w"
+
     chsh -s "$zsh_path" $USER
-    source $HOME/.config/zsh/.zshenv
-    source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
-    # source $HOME/.config/zsh/.zshrc
-    compaudit | xargs chmod g-w
     log_ok "-> DONE"
 }
 
