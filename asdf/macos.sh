@@ -13,7 +13,6 @@ then
   git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
 fi
 
-source $HOME/.config/zsh/.zshrc
 source $HOME/.asdf/asdf.sh
 
 #
@@ -37,10 +36,7 @@ bash $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring
 
 #
 # must initially symlink our tool-versions file for asdf to install the right things..
-source $HOME/.config/zsh/.zshrc
-ln -sfv $DOTS/asdf/tool-versions.symlink $HOME/.tool-versions
 asdf install
-source $HOME/.config/zsh/.zshrc
 
 #
 # ruby-specific...

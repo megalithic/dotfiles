@@ -176,6 +176,10 @@ function bundle_brews {
     log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
     brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
     log_ok "-> DONE"
+
+    log "-> post-brewing operations.."
+    $(brew --prefix)/opt/fzf/install
+    log_ok "-> DONE"
 }
 
 function stow_away {
@@ -198,7 +202,7 @@ function stow_away {
 }
 
 function setup_os {
-    log "-> running OS-specific things..."
+    log "-> running platform-specific ($platform) things..."
     sh "$DOTS/os/$platform.sh"
     log_ok "-> DONE"
 }
@@ -228,20 +232,23 @@ function setup_terminfo {
 }
 
 function setup_zsh {
-    log "-> changing your shell to the brewed version of zsh..."
     zsh_path=/usr/local/bin/zsh
+
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
     # source $HOME/.config/zsh/.zshenv
     # source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
     
-    /usr/local/bin/zsh -c "source $HOME/.config/zsh/.zshenv"
-    /usr/local/bin/zsh -c "source /usr/local/opt/gitstatus/gitstatus.plugin.zsh"
-    /usr/local/bin/zsh -c "compaudit | xargs chmod g-w"
+    # log "-> sourcing some things and fixing compaudit"
+    source $HOME/.config/zsh/.zshenv
 
-    chsh -s "$zsh_path" $USER
-    log_ok "-> DONE"
+    if [[ -z /usr/local/opt/gitstatus ]]; then source /gitstatus.plugin.zsh; fi
+    # source $HOME/.config/zsh/.zshrc
+    # compaudit | xargs chmod g-w
+
+    # log "-> changing your shell to homebrew version: $zsh_path"
+    chsh -s "$zsh_path" $USER && log_ok "-> DONE"
 }
 
 function setup_fish {
