@@ -181,6 +181,7 @@ function bundle_brews {
 function stow_away {
     log "-> stowing things..."
     cd $DOTS
+    stow terminfo && log_ok "stowed terminfo"
     stow asdf && log_ok "stowed asdf"
     stow kitty && log_ok "stowed kitty"
     stow fish && log_ok "stowed fish"

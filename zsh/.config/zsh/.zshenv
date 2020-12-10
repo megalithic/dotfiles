@@ -216,10 +216,10 @@ fi
 #
 # asdf/ruby/node/misc
 #
-source "$ZDOTDIR/zsh/components/asdf.zsh"
+source "$ZDOTDIR/components/asdf.zsh"
 
-# source "$DOTS/zsh/components/completion.zsh"
-# source "$DOTS/zsh/components/colors.zsh"
+# source "$DOTS/components/completion.zsh"
+# source "$DOTS/components/colors.zsh"
 
 
 #

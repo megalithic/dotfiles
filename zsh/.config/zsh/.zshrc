@@ -24,27 +24,27 @@ echo $ZDOTDIR
 # NOTE: source order matters!
 #
 # -- zsh core config
-source "$ZDOTDIR/zsh/components/env.zsh"
-source "$ZDOTDIR/zsh/components/aliases.zsh"
-source "$ZDOTDIR/zsh/components/functions.zsh"
-source "$ZDOTDIR/zsh/components/colors.zsh"
-source "$ZDOTDIR/zsh/components/opts.zsh"
-source "$ZDOTDIR/zsh/components/keybindings.zsh"
-source "$ZDOTDIR/zsh/components/completion.zsh"
+source "$ZDOTDIR/components/env.zsh"
+source "$ZDOTDIR/components/aliases.zsh"
+source "$ZDOTDIR/components/functions.zsh"
+source "$ZDOTDIR/components/colors.zsh"
+source "$ZDOTDIR/components/opts.zsh"
+source "$ZDOTDIR/components/keybindings.zsh"
+source "$ZDOTDIR/components/completion.zsh"
 
 # -- ancillary config
-source "$ZDOTDIR/zsh/components/git.zsh"
-source "$ZDOTDIR/zsh/components/tmux.zsh"
-source "$ZDOTDIR/zsh/components/ssh.zsh"
-source "$ZDOTDIR/zsh/components/kitty.zsh"
+source "$ZDOTDIR/components/git.zsh"
+source "$ZDOTDIR/components/tmux.zsh"
+source "$ZDOTDIR/components/ssh.zsh"
+source "$ZDOTDIR/components/kitty.zsh"
 
 # -- plugin config
-source "$ZDOTDIR/zsh/components/fzf.zsh"
-source "$ZDOTDIR/zsh/components/zlua.zsh"
-source "$ZDOTDIR/zsh/components/asdf.zsh"
+source "$ZDOTDIR/components/fzf.zsh"
+source "$ZDOTDIR/components/zlua.zsh"
+source "$ZDOTDIR/components/asdf.zsh"
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-# source "$ZDOTDIR/zsh/components/prompt.zsh"
+# source "$ZDOTDIR/components/prompt.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
