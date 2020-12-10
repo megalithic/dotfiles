@@ -180,32 +180,47 @@ function bundle_brews {
 
 function stow_away {
     log "-> stowing things..."
+    stow asdf
+    stow kitty
     stow fish
     stow zsh
     stow git
     stow tmux
+    stow langservers
     stow nvim
+    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon
+    stow misc
     log_ok "-> DONE"
 }
 
 function setup_os {
-    find "$DOTS/os" -iname "$PLATFORM.sh" | while read installer ; do echo "-- running platform installer: $installer" ; sh "${installer}" ; done
+    log "-> running OS-specific things..."
+    sh "$DOTS/os/$platform.sh"
+    log_ok "-> DONE"
 }
 
 function setup_asdf {
+    log "-> setting up asdf..."
     sh "$DOTS/asdf/$platform.sh"
+    log_ok "-> DONE"
 }
 
-function setup_hammerspoon {
-    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua"
+function setup_python {
+    log "-> setting up python..."
+    sh "$DOTS/python/$platform.sh"
+    log_ok "-> DONE"
 }
 
 function setup_keyboard {
+    log "-> setting up keyboard..."
     sh "$DOTS/keyboard/$platform.sh"
+    log_ok "-> DONE"
 }
 
 function setup_terminfo {
+    log "-> setting up terminfo..."
     sh "$DOTS/terminfo/$platform.sh"
+    log_ok "-> DONE"
 }
 
 function set_zsh {
@@ -227,45 +242,23 @@ function set_fish {
     log_ok "-> DONE"
 }
 
-function post_info {
-    # Print Manual Instructions
-    log_warn "ATTENTION! Further Instructions:"
-    echo "  * Because I'm not totally great with scripting all the things.."
-    echo "    - you might have to reinstall `weechat` since original deps weren't there"
-    echo "    - private repo things are horribly broke for automation; best bet is to try manually cloning, or you might have to download the zip archive"
+function engage {
+    detect_os
+    export_dirs
+    [ $platform == "macos" ] && setup_xcode_and_git
+    clone_dotfiles_repo
+    [ $platform == "macos" ] && install_homebrew
+    [ $platform == "macos" ] && bundle_brews
+    stow_away
+    setup_os
+    setup_asdf
+    setup_terminfo
+    setup_keyboard
+    set_zsh
+    # set_fish
 }
 
-detect_os
-export_dirs
-
-[ $platform == "macos" ] && setup_xcode_and_git
-
-clone_dotfiles_repo
-
-[ $platform == "macos" ] && install_homebrew
-[ $platform == "macos" ] && bundle_brews
-
-stow_away
-setup_os
-setup_asdf
-setup_terminfo
-setup_keyboard
-setup_hammerspoon
-
-
-# Run generic installers
-# $DOTS/bin/_generic
-
-# Run platform-based installers (macos, linux, windows, freebsd)
-# $DOTS/bin/_platform
-
-# Symlink all the things
-# $DOTS/bin/_symlinks
-
-# Setup private repo and things
-# $DOTS/bin/_private
-
-set_zsh
-# set_fish
+# -- do the thing!
+engage
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

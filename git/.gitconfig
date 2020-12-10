@@ -181,7 +181,7 @@
   pager = delta --dark --diff-so-fancy --theme='Nord'
   whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
 	editor = env VIM_MINIMAL=1 nvim +startinsert
-  excludesfile = ~/.gitignore
+  excludesfile = ~/.gitignore_global
 
 [apply]
   whitespace = fix
