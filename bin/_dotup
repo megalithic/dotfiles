@@ -226,16 +226,21 @@ function setup_terminfo {
     log_ok "-> DONE"
 }
 
-function set_zsh {
+function setup_zsh {
     log "-> changing your shell to the brewed version of zsh..."
     zsh_path=/usr/local/bin/zsh
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
+    ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
+    # ln -sfv $HOME/.config/zsh/.zshrc $HOME/.zshrc
+    # sudo chown -R $USER:root $HOME/.config/zsh
+    # sudo chmod -R 755 $HOME/.config/zsh
+    compaudit | xargs chmod g-w
     chsh -s "$zsh_path" $USER
     log_ok "-> DONE"
 }
 
-function set_fish {
+function setup_fish {
     # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
     log "-> changing your shell to fish..."
     fish_path=/usr/local/bin/fish
@@ -259,7 +264,7 @@ setup_os
 setup_asdf
 setup_terminfo
 setup_keyboard
-set_zsh
+setup_zsh
 
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

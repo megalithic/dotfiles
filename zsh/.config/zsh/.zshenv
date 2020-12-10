@@ -29,13 +29,6 @@ fi
 # Defines environment variables.
 #
 
-#
-# Exports
-#
-# if [[ -f "$DOTS/zsh/components/env.zsh" ]] ; then
-#   source "$DOTS/zsh/components/env.zsh"
-# fi
-
 export EDITOR='nvim'
 export VISUAL='nvim'
 export SUDO_EDITOR='nvim'
@@ -200,7 +193,10 @@ unset path_file
 #
 # fpath=( $fpath)
 fpath+=(
-  $ZDOTDIR/completions/src
+  $ZDOTDIR
+  $ZDOTDIR/components
+  $ZDOTDIR/completions
+  $ZDOTDIR/plugins
   $ZDOTDIR/functions
   $fpath
 )
@@ -220,7 +216,7 @@ fi
 #
 # asdf/ruby/node/misc
 #
-source "$DOTS/zsh/components/asdf.zsh"
+source "$ZDOTDIR/zsh/components/asdf.zsh"
 
 # source "$DOTS/zsh/components/completion.zsh"
 # source "$DOTS/zsh/components/colors.zsh"
