@@ -1,44 +1,5 @@
 -- ( general ) .................................................................
 
--- local function global_mappings()
---   local rl_bindings = {
---     {lhs = "<c-a>", rhs = "<home>", opts = {noremap = true}},
---     {lhs = "<c-e>", rhs = "<end>", opts = {noremap = true}},
---     {lhs = "<c-f>", rhs = "<right>", opts = {noremap = true}},
---     {lhs = "<c-b>", rhs = "<left>", opts = {noremap = true}},
---     {lhs = "<c-p>", rhs = "<up>", opts = {noremap = true}},
---     {lhs = "<c-n>", rhs = "<down>", opts = {noremap = true}},
---     {lhs = "<c-d>", rhs = "<del>", opts = {noremap = true}}
---   }
-
---   local maps = {
---     n = {
---       {lhs = "<leader>o", rhs = mega.cmd_map("only")},
---       {lhs = "<leader>O", rhs = mega.cmd_map("only") .. mega.cmd_map("tabonly")},
-
---         lhs = "j",
---         rhs = [[(v:count > 8 ? "m'" . v:count : '') . 'j']],
---         opts = {expr = true, noremap = true}
---       },
---       {
---         lhs = "k",
---         rhs = [[(v:count > 8 ? "m'" . v:count : '') . 'k']],
---         opts = {expr = true, noremap = true}
---       }
---     },
---     i = {{lhs = "<c-d>", rhs = "<del>", opts = {noremap = true}}},
---     c = rl_bindings,
---     o = rl_bindings
---   }
-
---   local win_mov_keys = {"h", "j", "k", "l"}
---   for _, key in ipairs(win_mov_keys) do
---     table.insert(maps.n, {lhs = "<leader>" .. key, rhs = mega.cmd_map("wincmd " .. key)})
---   end
-
---   mega.create_mappings(maps)
--- end
-
 local function convenience_mappings()
   -- Start search on current word under the cursor
   mega.map("n", "<Leader>/", "/<CR>")
@@ -125,9 +86,23 @@ local function override_mappings()
   mega.map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
   mega.map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
 
+  -- readline bindings
+  local rl_bindings = {
+    {lhs = "<c-a>", rhs = "<home>", opts = {noremap = true}},
+    {lhs = "<c-e>", rhs = "<end>", opts = {noremap = true}},
+    {lhs = "<c-f>", rhs = "<right>", opts = {noremap = true}},
+    {lhs = "<c-b>", rhs = "<left>", opts = {noremap = true}},
+    {lhs = "<c-p>", rhs = "<up>", opts = {noremap = true}},
+    {lhs = "<c-n>", rhs = "<down>", opts = {noremap = true}},
+    {lhs = "<c-d>", rhs = "<del>", opts = {noremap = true}}
+  }
+  for _, binding in ipairs(rl_bindings) do
+    mega.map("c", binding.lhs, binding.rhs, binding.opts)
+  end
+
   -- Default to case insensitive search
   -- mega.map("n", "/", "/\v")
-  --mega.map("v", "/", "/\v")
+  -- mega.map("v", "/", "/\v")
 end
 
 local function custom_mappings()
