@@ -50,4 +50,4 @@ Session.vim
 .netrwhist
 **/*.profraw
 **/packer_compiled.vim
-homebrew/Brewfile.lock.json
+Brewfile.lock.json

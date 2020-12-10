@@ -45,3 +45,4 @@ rel
 .git
 **/.git
 *.dot
+Brewfile.lock.json

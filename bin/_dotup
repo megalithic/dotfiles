@@ -180,16 +180,16 @@ function bundle_brews {
 
 function stow_away {
     log "-> stowing things..."
-    stow asdf
-    stow kitty
-    stow fish
-    stow zsh
-    stow git
-    stow tmux
-    stow langservers
-    stow nvim
-    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon
-    stow misc
+    stow $DOTS/asdf
+    stow $DOTS/kitty
+    stow $DOTS/fish
+    stow $DOTS/zsh
+    stow $DOTS/git
+    stow $DOTS/tmux
+    stow $DOTS/langservers
+    stow $DOTS/nvim
+    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow $DOTS/hammerspoon
+    stow $DOTS/misc
     log_ok "-> DONE"
 }
 
@@ -242,23 +242,21 @@ function set_fish {
     log_ok "-> DONE"
 }
 
-function engage {
-    detect_os
-    export_dirs
-    [ $platform == "macos" ] && setup_xcode_and_git
-    clone_dotfiles_repo
-    [ $platform == "macos" ] && install_homebrew
-    [ $platform == "macos" ] && bundle_brews
-    stow_away
-    setup_os
-    setup_asdf
-    setup_terminfo
-    setup_keyboard
-    set_zsh
-    # set_fish
-}
 
-# -- do the thing!
-engage
+# -- engage!
+
+detect_os
+export_dirs
+if [[ $platform == "macos" ]]; then setup_xcode_and_git; fi
+clone_dotfiles_repo
+if [[ $platform == "macos" ]]; then install_homebrew; fi
+if [[ $platform == "macos" ]]; then bundle_brews; fi
+stow_away
+setup_os
+setup_asdf
+setup_terminfo
+setup_keyboard
+set_zsh
+
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
