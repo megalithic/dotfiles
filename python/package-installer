@@ -1,6 +1,0 @@
-#!/bin/zsh
-
-cat $DOTS/python/packages | xargs pip install --upgrade --user
-cat $DOTS/python/packages | xargs pip2 install --upgrade --user
-cat $DOTS/python/packages | xargs pip3 install --upgrade --user
-# cat $DOTS/python/packages | xargs /usr/local/opt/python@3.8/bin/pip3 install --upgrade --user

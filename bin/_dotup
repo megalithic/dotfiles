@@ -1,13 +1,6 @@
 #!/usr/bin/env zsh
 
-# -- REFs
-# neat things for echo'ing colors
-# https://github.com/ctaylo21/jarvis/blob/master/install.sh#L3
-# $(tput setaf 2)JARVIS: Greetings. Preparing to power up and begin diagnostics.$(tput sgr 0)
-
-
 set -e
-
 
 trap 'clean_exit $? $LINENO' EXIT
 
@@ -54,7 +47,7 @@ cloned from https://github.com/megalithic/dotfiles.
 '
 
 
-log_warn "-> Some setup methods require the administrator password. Please grant sudo access:"
+log_warn "-> Some steps require sudo; please grant access:"
 sudo -v
 
 
@@ -181,14 +174,38 @@ function bundle_brews {
     open -a "App Store"
 
     log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
-    brew bundle --file="$DOTS/homebrew/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
+    brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
     log_ok "-> DONE"
 }
 
-function run_stow {
+function stow_away {
     log "-> stowing things..."
     stow fish
+    stow zsh
+    stow git
+    stow tmux
+    stow nvim
     log_ok "-> DONE"
+}
+
+function setup_os {
+    find "$DOTS/os" -iname "$PLATFORM.sh" | while read installer ; do echo "-- running platform installer: $installer" ; sh "${installer}" ; done
+}
+
+function setup_asdf {
+    sh "$DOTS/asdf/$platform.sh"
+}
+
+function setup_hammerspoon {
+    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua"
+}
+
+function setup_keyboard {
+    sh "$DOTS/keyboard/$platform.sh"
+}
+
+function setup_terminfo {
+    sh "$DOTS/terminfo/$platform.sh"
 }
 
 function set_zsh {
@@ -220,28 +237,30 @@ function post_info {
 
 detect_os
 export_dirs
-if [[ $platform == "macos" ]]; then
-    setup_xcode_and_git
-fi
-clone_dotfiles_repo
-if [[ $platform == "macos" ]]; then
-    install_homebrew
-    bundle_brews
-fi
 
-# FIXME: is this still needed?
-# echo ":: doing post-brew things..."
-# sudo xcodebuild -license accept
-# ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
+[ $platform == "macos" ] && setup_xcode_and_git
+
+clone_dotfiles_repo
+
+[ $platform == "macos" ] && install_homebrew
+[ $platform == "macos" ] && bundle_brews
+
+stow_away
+setup_os
+setup_asdf
+setup_terminfo
+setup_keyboard
+setup_hammerspoon
+
 
 # Run generic installers
-$DOTS/bin/_generic
+# $DOTS/bin/_generic
 
 # Run platform-based installers (macos, linux, windows, freebsd)
-$DOTS/bin/_platform
+# $DOTS/bin/_platform
 
 # Symlink all the things
-$DOTS/bin/_symlinks
+# $DOTS/bin/_symlinks
 
 # Setup private repo and things
 # $DOTS/bin/_private
