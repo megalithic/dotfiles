@@ -1,4 +1,4 @@
-""" MAPPINGS
+" -- [ mappings ] --------------------------------------------------------------
 
 " let mapleader = ','
 " noremap ; :
@@ -83,7 +83,7 @@ vnoremap / /\v
 " clear incsearch term
 nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
 
-""" OPTIONS
+" -- [ options ] ---------------------------------------------------------------
 
 """" General
 "set mouse=a
@@ -321,3 +321,37 @@ endif
 let g:netrw_banner = 0     " no banner
 let g:netrw_liststyle = 3  " tree style listing
 let g:netrw_dirhistmax = 0 " no netrw history
+
+" FZF
+" -- vim.g.fzf_command_prefix = "Fzf"
+" -- vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
+" -- vim.g.fzf_action = {enter = "vsplit"}
+" -- vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
+
+" Polyglot
+let g:polyglot_disabled = [
+      \ "typescript",
+      \ "typescriptreact",
+      \ "typescript.tsx",
+      \ "javascriptreact",
+      \ "markdown",
+      \ "md",
+      \ "graphql",
+      \ "lua",
+      \ "tsx",
+      \ "jsx",
+      \ "sass",
+      \ "scss",
+      \ "css",
+      \ "elm",
+      \ "elixir",
+      \ "eelixir",
+      \ "ex",
+      \ "exs"
+      \ ]
+
+" -- [ abbreviations ] ---------------------------------------------------------
+
+iabbrev cabbb Co-authored-by: Bijan Boustani <bijanbwb@gmail.com>
+iabbrev cabpi Co-authored-by: Patrick Isaac <pisaac@enbala.com>
+iabbrev cabtw Co-authored-by: Tony Winn <hi@tonywinn.me>

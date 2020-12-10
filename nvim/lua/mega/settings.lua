@@ -205,7 +205,7 @@ return {
   activate = function()
     -- disable_builtins()
     -- set_global_options()
-    set_global_vars()
-    set_iabbrevs()
+    -- set_global_vars()
+    -- set_iabbrevs()
   end
 }
