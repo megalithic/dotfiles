@@ -19,8 +19,6 @@ prompt megalithic # my own prompt
 # Ensures we use emacs/readline keybindings
 bindkey -e
 
-echo $ZDOTDIR
-
 # NOTE: source order matters!
 #
 # -- zsh core config
