@@ -42,7 +42,7 @@ do
   -- [ loaders ] ---------------------------------------------------------------
   vim.schedule(
     function()
-      mega.load("settings", "mega.settings", "activate")
+      -- mega.load("settings", "mega.settings", "activate")
       mega.load("plugins", "mega.plugins", "activate")
       mega.load("keymaps", "mega.keymaps", "activate")
       mega.load("autocmds", "mega.autocmds", "activate")
