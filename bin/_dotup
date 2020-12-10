@@ -180,16 +180,19 @@ function bundle_brews {
 
 function stow_away {
     log "-> stowing things..."
-    stow $DOTS/asdf
-    stow $DOTS/kitty
-    stow $DOTS/fish
-    stow $DOTS/zsh
-    stow $DOTS/git
-    stow $DOTS/tmux
-    stow $DOTS/langservers
-    stow $DOTS/nvim
-    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow $DOTS/hammerspoon
-    stow $DOTS/misc
+    cd $DOTS
+    stow asdf && log_ok "stowed asdf"
+    stow kitty && log_ok "stowed kitty"
+    stow fish && log_ok "stowed fish"
+    stow zsh && log_ok "stowed zsh"
+    stow git && log_ok "stowed git"
+    stow tmux && log_ok "stowed tmux"
+    stow langservers && log_ok "stowed langservers"
+    stow nvim && log_ok "stowed nvim"
+    stow keyboard && log_ok "stowed keyboard"
+    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
+    stow misc && log_ok "stowed misc"
+    cd -
     log_ok "-> DONE"
 }
 
