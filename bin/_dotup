@@ -233,11 +233,11 @@ function setup_zsh {
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
-    # ln -sfv $HOME/.config/zsh/.zshrc $HOME/.zshrc
-    # sudo chown -R $USER:root $HOME/.config/zsh
-    # sudo chmod -R 755 $HOME/.config/zsh
-    compaudit | xargs chmod g-w
     chsh -s "$zsh_path" $USER
+    source $HOME/.config/zsh/.zshenv
+    source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
+    # source $HOME/.config/zsh/.zshrc
+    compaudit | xargs chmod g-w
     log_ok "-> DONE"
 }
 
@@ -261,11 +261,11 @@ clone_dotfiles_repo
 if [[ $platform == "macos" ]]; then install_homebrew; fi
 if [[ $platform == "macos" ]]; then bundle_brews; fi
 stow_away
+setup_zsh
 setup_os
 setup_asdf
 setup_terminfo
 setup_keyboard
-setup_zsh
 
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
