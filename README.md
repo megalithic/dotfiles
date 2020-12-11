@@ -21,13 +21,11 @@ curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/main/bin/_dotup
 
 The install script will install things and symlink the appropriate files in
 `~/.dotfiles` to your home directory (`~`). Everything is configured and tweaked
-within `~/.dotfiles`, though. All files and folders ending in `.symlink` get --
-you guessed it -- symlinked. For example: `~/.dotfiles/zsh/zshrc.symlink` gets
-symlinked to `~/.zshrc`.
+within `~/.dotfiles`, though. The majority of files and folders get `stow`ed in
+to your `$HOME`, or to `$XDG_CONFIG_HOME`.
 
-This also sets up things like homebrew if you're on a mac, and even allows for a
-private repo setup. **Please note**, this dotfiles repo supports multiple
-platforms, but has really only been extensively used and tested on MacOS.
+I have tried to be platform agnostic, but the majority of things that run here
+are for macos.
 
 I highly recommend you dig into the scripts and configs to see what all
 is going on (because it does a lot that I'm not describing here) before you
@@ -55,7 +53,7 @@ A few of the _must-have_ tools I roll with:
 - [neovim](https://neovim.io/)
   - using lua with neovim? https://github.com/nanotee/nvim-lua-guide
 - [zsh](https://www.zsh.org/)
-  - custom prompt (mimicking [pure](https://github.com/sindresorhus/pure)), using [gitstatus](https://github.com/romkatv/gitstatus) for fast git-specific vcs status.
+  - custom prompt (in the spirit of [pure](https://github.com/sindresorhus/pure)), using [gitstatus](https://github.com/romkatv/gitstatus) for fast git-specific vcs status.
 - [weechat](https://www.weechat.org/)
 
 ### Stuff
@@ -64,12 +62,8 @@ The file hierarchy:
 
 - **bin/**: Anything in `bin/` will get added to your `$PATH` and be made
   available everywhere.
-- **topic/\*.symlink**: Any files ending in `*.symlink` get symlinked into
-  your `$HOME`. This is so you can keep all of those versioned in your dotfiles
-  but still keep those autoloaded files in your home directory. These get
-  symlinked when you run `bin/_dotup`, or you can explicitly run `bin/_symlinks`.
-- **topic/\<platform\>.sh**: Platform-specific installers to handle additional
-  things that you may need to happen for that topic. `all | macos | linux | freebsd | windows`
+- Everything else is handled by custom installers based upon the current
+  platform; otherwise, `stow` handles the rest (clean and easy symlinking).
 
 ### Privates
 
@@ -80,10 +74,12 @@ located at `~/.dotfiles/private/install.sh`.~~
 
 _NOTE:_ You'll want to be sure to setup an SSH key for github access to this repo and likely to your private repo too: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
 
+Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/caching-your-github-credentials-in-git
+
 ### Props
 
 - So many esteemed individuals in the community have, in some way, left their
-  mark on my own dotfilery:
+  mark on my own dotfilery (they're all legends in my book):
 
   * [Zach Holman](https://github.com/holman/dotfiles)
   * [Wynn Netherland](https://github.com/pengwynn/dotfiles)
@@ -93,7 +89,7 @@ _NOTE:_ You'll want to be sure to setup an SSH key for github access to this rep
 
 ### Refs
 
-- A wealth of handy scripts/bins: https://github.com/salman-abedin/alfred
+- A wealth of handy scripts/bins for future use: https://github.com/salman-abedin/alfred
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>

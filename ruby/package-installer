@@ -1,5 +1,0 @@
-#!/bin/zsh
-
-cat $DOTS/asdf/default-gems.symlink | xargs gem install
-
-

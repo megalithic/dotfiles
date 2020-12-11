@@ -1,13 +1,6 @@
 #!/usr/bin/env zsh
 
-# -- REFs
-# neat things for echo'ing colors
-# https://github.com/ctaylo21/jarvis/blob/master/install.sh#L3
-# $(tput setaf 2)JARVIS: Greetings. Preparing to power up and begin diagnostics.$(tput sgr 0)
-
-
 set -e
-
 
 trap 'clean_exit $? $LINENO' EXIT
 
@@ -54,7 +47,7 @@ cloned from https://github.com/megalithic/dotfiles.
 '
 
 
-log_warn "-> Some setup methods require the administrator password. Please grant sudo access:"
+log_warn "-> some steps require sudo; please grant access:"
 sudo -v
 
 
@@ -63,7 +56,7 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
 # Detect OS
-function detect_os {
+function detect_platform {
     if [[ -z $PLATFORM ]]
     then
         log "-> setting PLATFORM env"
@@ -177,76 +170,107 @@ function bundle_brews {
     log "-> brewing things from our brewfile..."
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
-    sleep 1
-    open -a "App Store"
+    # if we're not signed in, let's open the App Store
+    if [[ ! -z $(mas account | grep "Not signed in") && ! $(which mas &>/dev/null) ]]
+    then
+        sleep 1
+        open -a "App Store"
+        log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
+    fi
 
-    log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
-    brew bundle --file="$DOTS/homebrew/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
+    brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
+    log_ok "-> DONE"
+
+    log "-> post-brewing operations.."
+    $(brew --prefix)/opt/fzf/install
     log_ok "-> DONE"
 }
 
-function run_stow {
+function stow_away {
     log "-> stowing things..."
-    stow fish
+    cd $DOTS
+    stow terminfo && log_ok "stowed terminfo"
+    stow asdf && log_ok "stowed asdf"
+    stow kitty && log_ok "stowed kitty"
+    stow fish && log_ok "stowed fish"
+    stow zsh && log_ok "stowed zsh"
+    stow git && log_ok "stowed git"
+    stow tmux && log_ok "stowed tmux"
+    stow langservers && log_ok "stowed langservers"
+    stow nvim && log_ok "stowed nvim"
+    stow keyboard && log_ok "stowed keyboard"
+    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
+    stow misc && log_ok "stowed misc"
+    cd -
     log_ok "-> DONE"
 }
 
-function set_zsh {
-    log "-> changing your shell to the brewed version of zsh..."
+function setup_platform {
+    log "-> running platform-specific ($platform) things..."
+    sh "$DOTS/platform/$platform.sh"
+    log_ok "-> DONE"
+}
+
+function setup_asdf {
+    log "-> setting up asdf..."
+    sh "$DOTS/asdf/$platform.sh"
+    log_ok "-> DONE"
+}
+
+function setup_python {
+    log "-> setting up python..."
+    sh "$DOTS/python/$platform.sh"
+    log_ok "-> DONE"
+}
+
+function setup_keyboard {
+    log "-> setting up keyboard..."
+    sh "$DOTS/keyboard/$platform.sh"
+    log_ok "-> DONE"
+}
+
+function setup_terminfo {
+    log "-> setting up terminfo..."
+    sh "$DOTS/terminfo/$platform.sh"
+    log_ok "-> DONE"
+}
+
+function setup_zsh {
     zsh_path=/usr/local/bin/zsh
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
-    chsh -s "$zsh_path" $USER
-    log_ok "-> DONE"
+    ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
+    source $HOME/.config/zsh/.zshenv
+    # compaudit | xargs chmod g-w
+    log "-> changing your shell to homebrew version: $zsh_path"
+    chsh -s "$zsh_path" $USER && log_ok "-> DONE"
 }
 
-function set_fish {
+function setup_fish {
     # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
-    log "-> changing your shell to fish..."
     fish_path=/usr/local/bin/fish
+    log "-> changing your shell to fish..."
     log "-> attempting to set $fish_path as your fish path in /etc/shells"
     echo "$fish_path" | sudo tee -a /etc/shells
-    chsh -s "$fish_path" $USER
-    log_ok "-> DONE"
+    chsh -s "$fish_path" $USER && log_ok "-> DONE"
 }
 
-function post_info {
-    # Print Manual Instructions
-    log_warn "ATTENTION! Further Instructions:"
-    echo "  * Because I'm not totally great with scripting all the things.."
-    echo "    - you might have to reinstall `weechat` since original deps weren't there"
-    echo "    - private repo things are horribly broke for automation; best bet is to try manually cloning, or you might have to download the zip archive"
-}
 
-detect_os
+# -- engage!
+
+detect_platform
 export_dirs
-if [[ $platform == "macos" ]]; then
-    setup_xcode_and_git
-fi
+if [[ $platform == "macos" ]]; then setup_xcode_and_git; fi
 clone_dotfiles_repo
-if [[ $platform == "macos" ]]; then
-    install_homebrew
-    bundle_brews
-fi
+if [[ $platform == "macos" ]]; then install_homebrew; fi
+if [[ $platform == "macos" ]]; then bundle_brews; fi
+stow_away
+setup_zsh
+setup_platform
+setup_asdf
+setup_terminfo
+setup_keyboard
+setup_python
 
-# FIXME: is this still needed?
-# echo ":: doing post-brew things..."
-# sudo xcodebuild -license accept
-# ln -sfv /usr/local/bin/gcc-4.9 /usr/local/bin/gcc
-
-# Run generic installers
-$DOTS/bin/_generic
-
-# Run platform-based installers (macos, linux, windows, freebsd)
-$DOTS/bin/_platform
-
-# Symlink all the things
-$DOTS/bin/_symlinks
-
-# Setup private repo and things
-# $DOTS/bin/_private
-
-set_zsh
-# set_fish
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

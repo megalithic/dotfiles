@@ -24,7 +24,6 @@ nvim/init.vim.*
 **/plugged
 weechat/**/autoload
 **/.init.vim*
-/Brewfile
 **/elm-stuff
 **/elm-package.json
 asyncomplete.log
@@ -50,4 +49,5 @@ Session.vim
 .netrwhist
 **/*.profraw
 **/packer_compiled.vim
-homebrew/Brewfile.lock.json
+Brewfile.lock.json
+**/.zcompdump
