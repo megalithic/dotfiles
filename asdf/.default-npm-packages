@@ -8,6 +8,7 @@ eslint-plugin-cypress
 markdownlint
 neovim
 lua-fmt
+trash-cli
 typescript
 vim-node-rpc
 yarn
