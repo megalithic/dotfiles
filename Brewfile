@@ -77,8 +77,7 @@ brew "grv"
 brew "heroku"
 brew "hub"
 brew "highlight"
-brew "jid"
-brew "jo"
+brew "htop"
 brew "jq"
 brew 'lazydocker'
 brew 'lazygit'
@@ -99,6 +98,7 @@ brew "p7zip"
 brew "perl"
 brew "pgcli"
 brew "pkg-config"
+brew "pinentry-mac"
 brew "postgresql"
 # initdb /usr/local/var/postgres -E utf8
 brew "python@3.7", link: false
@@ -132,9 +132,10 @@ brew "libyubikey"
 brew "pam_yubico"
 brew "yubikey-personalization"
 brew "zsh"
+brew "zsh-autosuggestions"
 brew "zsh-completions"
 brew "zsh-lovers"
-brew "zsh-autosuggestions"
+brew "zsh-syntax-highlighting"
 
 
 # -- cli --

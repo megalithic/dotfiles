@@ -24,6 +24,7 @@ echo ""
 # https://mths.be/macos
 # https://juanitofatas.com/mac (catalina specific things)
 # https://github.com/blackrobot/dotfiles/blob/master/setup/setup-macos.sh
+# https://www.cultofmac.com/646404/secret-mac-settings/
 # ------------------
 
 # COMPUTER_NAME := 'replibook'
@@ -53,6 +54,9 @@ sudo pmset -b tcpkeepalive 0
 
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=" "
+
+defaults write NSGlobalDomain com.apple.sound.beep.flash -int 0
+defaults write NSGlobalDomain com.apple.sound.uiaudio.enabled -int 0
 
 # Allow apps downloaded from "Anywhere"
 sudo spctl --master-disable
@@ -103,19 +107,30 @@ sudo defaults write bluetoothaudiod "Enable AAC codec" -bool true
 # defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 0
 # defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 0
 
+# Enable tap to click
+# Trackpad: enable tap to click for this user and for the login screen
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
 defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+defaults write NSGlobalDomain com.apple.trackpad.forceClick -int 1
+defaults write NSGlobalDomain com.apple.trackpad.scaling -int 3
 
-# PRE-SIERRA:
-# defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
-# defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-# defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+# Trackpad: map bottom right corner to right-click
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadCornerSecondaryClick -int 2
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightClick -int 1
+defaults -currentHost write NSGlobalDomain com.apple.trackpad.trackpadCornerClickBehavior -int 1
+defaults -currentHost write NSGlobalDomain com.apple.trackpad.enableSecondaryClick -int 1
 
 # Disable "Natural" scroll
 defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
-# Enable move with 3 fingers
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+
+# Enable 3-finger drag. (Moving with 3 fingers in any window "chrome" moves the window.)
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -int 1
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -int 1
+
+# Trackpad: use three finger tap to Look up & data detectors
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 2
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -int 2
 
 
 # Open App from 3rd-party developer
@@ -489,7 +504,63 @@ for app in "${apps_to_restart[@]}"; do
   fi
 done
 
+apps_to_launch=(
+"1Password 7"
+"Alfred 4"
+"Bartender 3"
+"BetterTouchTool"
+"Brave Browser"
+"Contexts"
+"Docker"
+"Dropbox"
+"ExpressVPN"
+"Fantastical"
+"Hammerspoon"
+"iStat Menus"
+"Karabiner-Elements"
+"kitty"
+)
+for app in "${apps_to_launch[@]}"; do
+  if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
+    echo "Launching \"${app}\"."
+
+    open /Applications/${app}.app
+
+    # Enable apps at startup
+    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Hammerspoon.app", hidden:true}' > /dev/null
+
+    echo
+  fi
+done
+
+apps_to_startup=(
+"1Password 7"
+"Alfred 4"
+"Bartender 3"
+"BetterTouchTool"
+"Contexts"
+"Docker"
+"Dropbox"
+"Fantastical"
+"Hammerspoon"
+"Hazel"
+"iStat Menus"
+"Karabiner-Elements"
+)
+for app in "${apps_to_startup[@]}"; do
+    echo "Setting to \"${app}\" to launch at startup."
+
+    # Enable apps at startup
+    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
+
+    echo
+done
+
+# Set brave as default browser!
+defaults write "com.brave.Browser" ExternalProtocolDialogShowAlwaysOpenCheckbox -bool true
+
+
 echo "Done. Note that some of these changes require a full logout/restart to take effect."
 
 # TODO:
-# - programmatically set keyboard shortcuts for apps: https://github.com/kassio/dotfiles/blob/master/install/macos/keyboard#L22
+# - programmatically set keyboard shortcuts for apps: https://github.com/kassio/dotfiles/blob/master/lib/macos/shortcuts

@@ -56,7 +56,7 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
 # Detect OS
-function detect_os {
+function detect_platform {
     if [[ -z $PLATFORM ]]
     then
         log "-> setting PLATFORM env"
@@ -201,9 +201,9 @@ function stow_away {
     log_ok "-> DONE"
 }
 
-function setup_os {
+function setup_platform {
     log "-> running platform-specific ($platform) things..."
-    sh "$DOTS/os/$platform.sh"
+    sh "$DOTS/platform/$platform.sh"
     log_ok "-> DONE"
 }
 
@@ -233,38 +233,28 @@ function setup_terminfo {
 
 function setup_zsh {
     zsh_path=/usr/local/bin/zsh
-
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
-    # source $HOME/.config/zsh/.zshenv
-    # source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
-    
-    # log "-> sourcing some things and fixing compaudit"
     source $HOME/.config/zsh/.zshenv
-
-    if [[ -z /usr/local/opt/gitstatus ]]; then source /gitstatus.plugin.zsh; fi
-    # source $HOME/.config/zsh/.zshrc
     # compaudit | xargs chmod g-w
-
-    # log "-> changing your shell to homebrew version: $zsh_path"
+    log "-> changing your shell to homebrew version: $zsh_path"
     chsh -s "$zsh_path" $USER && log_ok "-> DONE"
 }
 
 function setup_fish {
     # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
-    log "-> changing your shell to fish..."
     fish_path=/usr/local/bin/fish
+    log "-> changing your shell to fish..."
     log "-> attempting to set $fish_path as your fish path in /etc/shells"
     echo "$fish_path" | sudo tee -a /etc/shells
-    chsh -s "$fish_path" $USER
-    log_ok "-> DONE"
+    chsh -s "$fish_path" $USER && log_ok "-> DONE"
 }
 
 
 # -- engage!
 
-detect_os
+detect_platform
 export_dirs
 if [[ $platform == "macos" ]]; then setup_xcode_and_git; fi
 clone_dotfiles_repo
@@ -272,10 +262,11 @@ if [[ $platform == "macos" ]]; then install_homebrew; fi
 if [[ $platform == "macos" ]]; then bundle_brews; fi
 stow_away
 setup_zsh
-setup_os
+setup_platform
 setup_asdf
 setup_terminfo
 setup_keyboard
+setup_python
 
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

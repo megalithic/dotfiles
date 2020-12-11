@@ -14,14 +14,6 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 # defaults write NSGlobalDomain KeyRepeat -int 1
 # defaults write NSGlobalDomain InitialKeyRepeat -int 10
 
-# Open Apps
-open /Applications/Hammerspoon.app
-open /Applications/Karabiner-Elements.app
-
-# Enable apps at startup
-osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Hammerspoon.app", hidden:true}' > /dev/null
-osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Karabiner-Elements.app", hidden:true}' > /dev/null
-
 echo ""
 echo ":: done! remember to enable accessibility for hammerspoon."
 echo ""
