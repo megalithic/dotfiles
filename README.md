@@ -37,7 +37,7 @@ wind. 🤣
 A few of the _must-have_ tools I roll with:
 
 - [homebrew](https://brew.sh/)
-  - see `~/.dotfiles/homebrew/Brewfile` for all that gets installed
+  - see `~/.dotfiles/Brewfile` for all that gets installed
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   - see `~/.dotfiles/keyboard` for macOS specific config things
