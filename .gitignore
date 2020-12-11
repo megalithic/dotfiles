@@ -24,7 +24,6 @@ nvim/init.vim.*
 **/plugged
 weechat/**/autoload
 **/.init.vim*
-/Brewfile
 **/elm-stuff
 **/elm-package.json
 asyncomplete.log
