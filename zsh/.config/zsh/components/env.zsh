@@ -10,6 +10,8 @@ export DOTDIR=$DOTS
 export DOTSDIR=$DOTS
 export DOTFILES=$DOTS
 
+export WEECHAT_HOME=$XDG_CONFIG_HOME/weechat
+
 #
 # Browser
 #
