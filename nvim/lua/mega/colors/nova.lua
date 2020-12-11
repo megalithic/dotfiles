@@ -37,6 +37,8 @@ local icons = {
 local base = {
   black = "#3c4c55",
   white = "#c5d4dd",
+  fg = "#c5d4dd",
+  red = "#df8c8c",
   light_red = "#df8c8c",
   dark_red = "#d75f5f",
   green = "#a8ce93",
@@ -45,6 +47,7 @@ local base = {
   magenta = "#9a93e1",
   light_yellow = "#dada93",
   dark_yellow = "#f2c38f",
+  orange = "#f2c38f",
   brown = "#db9c5e",
   lightest_gray = "#afafaf",
   lighter_gray = "#dddddd",
@@ -54,7 +57,8 @@ local base = {
   darker_gray = "#333333",
   darkest_gray = "#2f3c44",
   visual_gray = "#6A7D89",
-  special_gray = "#1E272C"
+  special_gray = "#1E272C",
+  section_bg = "#333333",
 }
 
 local status = {

@@ -137,6 +137,16 @@ return {
           }
           use "ryanoasis/vim-devicons"
           use "junegunn/rainbow_parentheses.vim"
+          use {
+            "glepnir/galaxyline.nvim",
+            branch = "main",
+            -- your statusline
+            config = function()
+              require "mega.statusline"
+            end,
+            -- some optional icons
+            requires = {"kyazdani42/nvim-web-devicons", opt = true}
+          }
 
           -- (file navigatgion) --
           use {
@@ -162,26 +172,25 @@ return {
             end
           }
           use {
-            "rhysd/clever-f.vim",
+            "ojroques/nvim-lspfuzzy",
+            requires = {
+              {"junegunn/fzf"},
+              {"junegunn/fzf.vim"} -- to enable preview (optional)
+            },
             config = function()
-              vim.g.clever_f_across_no_line = 1
-              vim.g.clever_f_fix_key_direction = 1
-              vim.g.clever_f_timeout_ms = 2000
-              vim.g.clever_f_show_prompt = 1
-
-              -- keep the original functionality to jump between found chars
-              mega.map("n", ";", "<Plug>(clever-f-repeat-forward)")
-              mega.map("n", ",", "<Plug>(clever-f-repeat-back)")
+              require("lspfuzzy").setup {}
             end
           }
-          -- use {
-          --   "justinmk/vim-sneak",
-          --   config = function()
-          --     vim.g["sneak#label"] = 1
-          --     mega.map("n", "f", "<Plug>Sneak_s")
-          --     mega.map("n", "F", "<Plug>Sneak_S")
-          --   end
-          -- }
+          use {
+            "justinmk/vim-sneak",
+            config = function()
+              vim.g["sneak#label"] = 1
+              vim.g["sneak#s_next"] = 1
+              vim.g["sneak#prompt"] = ""
+              mega.map("n", "f", "<Plug>Sneak_s")
+              mega.map("n", "F", "<Plug>Sneak_S")
+            end
+          }
           use "wellle/visual-split.vim"
 
           -- (text objects) --
