@@ -63,7 +63,7 @@ brew "ffind"
 brew "findutils"
 brew "fish"
 brew "fontforge"
-brew "fzf"
+brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"
 brew "gawk"
 brew "gist"
