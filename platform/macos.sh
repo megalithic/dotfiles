@@ -510,18 +510,13 @@ apps_to_launch=(
 "kitty"
 "Witch"
 )
-for app in "${apps_to_launch[@]}"; do
-  if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
-    echo "Launching \"${app}\"."
-
-    open /Applications/${app}.app
-
-    # Enable apps at startup
-    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Hammerspoon.app", hidden:true}' > /dev/null
-
-    echo
-  fi
-done
+# for app in "${apps_to_launch[@]}"; do
+#   if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
+#     echo "Launching \"${app}\"."
+#     open /Applications/${app}.app
+#     echo
+#   fi
+# done
 
 apps_to_startup=(
 "1Password 7"
