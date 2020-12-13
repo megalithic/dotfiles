@@ -207,7 +207,9 @@ fi
 #
 # asdf/ruby/node/misc
 #
-source "$ZDOTDIR/components/asdf.zsh"
+if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
+    source "$ZDOTDIR/components/asdf.zsh"
+fi
 
 # source "$DOTS/components/completion.zsh"
 # source "$DOTS/components/colors.zsh"
