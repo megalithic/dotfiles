@@ -52,10 +52,21 @@ nnoremap ><lt> V`]>
 nnoremap =- V`]=
 
 " Better window navigation
-noremap <C-h> <C-w>h
-noremap <C-j> <C-w>j
-noremap <C-k> <C-w>k
-noremap <C-l> <C-w>l
+
+if exists('$TMUX')
+  echo "we're in tmux"
+  nnoremap <c-h> :TmuxNavigateLeft<cr>
+  nnoremap <c-j> :TmuxNavigateDown<cr>
+  nnoremap <c-k> :TmuxNavigateUp<cr>
+  nnoremap <c-l> :TmuxNavigateRight<cr>
+  nnoremap <c-\> :TmuxNavigatePrevious<cr>
+else
+  echo "nope, no tmux"
+  noremap <C-h> <C-w>h
+  noremap <C-j> <C-w>j
+  noremap <C-k> <C-w>k
+  noremap <C-l> <C-w>l
+endif
 
 " Better save and quit
 silent! unmap <leader>w

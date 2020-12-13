@@ -12,7 +12,7 @@ pip2 install wheel setuptools
 pip3 install wheel setuptools
 /usr/local/opt/python@3.8/bin/pip3 install wheel setuptools
 
-$DOTS/python/package-installer
+sh $DOTS/python/package-installer.sh
 
 # this is for wee_slack.py plugin to work for weechat,
 # https://github.com/wee-slack/wee-slack#1-install-dependencies:

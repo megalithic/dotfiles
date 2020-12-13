@@ -180,7 +180,8 @@ alias code="cd ~/code"
 alias repos="cd ~/code"
 alias logs="cd ~/code/logs/"
 alias docs="cd ~/Documents"
-alias box="cd ~/Dropbox/"
+alias box="cd $HOME/Dropbox/"
+alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
 alias dropbox="box"
 alias scripts="cd ~/Dropbox/scripts/"
 # alias android="cd ~/Dropbox/Android/adb/"
@@ -205,13 +206,6 @@ alias pgstop="launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.postgresql.p
   #     pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
 alias pgsetup="sh ~/Dropbox/scripts/postgresql_db_setup.sh"
 alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
-
-# REDIS
-# -----------------------------------------------------------------------------
-alias startred="redis-server /usr/local/etc/redis.conf"
-alias redisstart="startred"
-alias redstart="startred"
-alias redcli="redis-cli"
 
 # MISC
 # -----------------------------------------------------------------------------
@@ -241,7 +235,6 @@ alias g="rg -F"
 alias nvm='n'
 # alias irc="LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 weechat-curses"
 # alias irc="PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib; eval \"$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)\"; weechat-curses"
-alias weechat-curses="weechat-curses -d $XDG_CONFIG_HOME/weechat"
 alias weechat="weechat-curses"
 alias irc="weechat"
 # alias irc="rm ~/.weechat/weechat_crash*.log; sh ~/.dotfiles/zsh/base16-ocean.dark.sh; weechat-curses"

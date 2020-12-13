@@ -69,9 +69,9 @@ local M = {
     leftOneThird =    hs.layout.left30,
     leftTwoThirds =   hs.layout.left70,
     fullScreen =      hs.layout.maximized,
-    centeredLarge =   { x = 0.10, y = 0.10, w = 0.80, h = 0.80}, -- {1,1,6,6},
-    centeredMedium =  { x = 0.25, y = 0.25, w = 0.50, h = 0.50}, -- {2,2,4,4},
-    centeredSmall =   { x = 0.40, y = 0.35, w = 0.35, h = 0.35}, -- {3,3,2,2},
+    centeredLarge =   { x = 0.10, y = 0.10, w = 0.80, h = 0.80},
+    centeredMedium =  { x = 0.25, y = 0.25, w = 0.50, h = 0.50},
+    centeredSmall =   { x = 0.35, y = 0.35, w = 0.30, h = 0.30},
   },
 
   modifiers = {
@@ -144,17 +144,12 @@ M.apps = {
     bundleID = 'com.agiletortoise.Drafts-OSX',
     name = 'Drafts',
     hyper_key ='d',
-    modifier = M.modifiers.shift,
     local_bindings = {';'},
     preferredDisplay = 1,
-    position = M.grid.rightHalf,
     quitGuard = false,
     hideAfter = 1,
     rules = {
       {nil, 1, M.layout.rightHalf},
-      {'Capture', 1, M.layout.bottomRight30},
-      -- {title = 'Workspaces', action = 'ignore'},
-      -- {title = 'Capture', action = 'snap', position = '5,5 3x3'},
     },
   },
   ['com.culturedcode.ThingsMac'] = {
@@ -173,8 +168,8 @@ M.apps = {
     bundleID = 'com.kapeli.dashdoc',
     name = 'Dash',
     hyper_key = 'd',
+    modifier = M.modifiers.shift,
     preferredDisplay = 1,
-    position = M.grid.centeredLarge,
     rules = {
       {nil, 2, M.layout.centeredLarge},
     },
@@ -235,9 +230,8 @@ M.apps = {
     name = 'Finder',
     hyper_key ='f',
     preferredDisplay = 1,
-    position = M.grid.centeredMedium,
     rules = {
-      -- {title = 'Finder Preferences', action = 'ignore'},
+      {"Finder", 1, M.layout.centeredMedium}
     },
   },
   ['us.zoom.xos'] = {
@@ -273,8 +267,8 @@ M.apps = {
       {nil, 2, M.layout.rightHalf},
     },
   },
-  ['com.apple.iChat'] = {
-    bundleID = 'com.apple.iChat',
+  ['com.apple.MobileSMS'] = {
+    bundleID = 'com.apple.MobileSMS',
     name = 'Messages',
     hyper_key ='m',
     context = 'messages',
@@ -327,16 +321,14 @@ M.apps = {
     hyper_key = '1',
     preferredDisplay = 1,
     hideAfter = 1,
-    position = M.grid.centeredMedium,
     rules = {
-      {nil, 1, M.layout.centeredSmall},
+      {nil, 1, M.layout.centeredMedium},
     },
   },
   ['com.teamviewer.TeamViewer'] = {
     bundleID = 'com.teamviewer.TeamViewer',
     name = 'TeamViewer',
     preferredDisplay = 1,
-    position = M.grid.centeredLarge,
     rules = {
       {nil, 1, M.layout.centeredLarge},
     },
@@ -359,9 +351,8 @@ M.apps = {
     bundleID = 'com.apple.systempreferences',
     name = 'System Preferences',
     preferredDisplay = 1,
-    position = M.grid.centeredMedium,
     rules = {
-      {nil, 1, M.layout.leftHalf},
+      {nil, 1, M.layout.centeredMedium},
     },
   },
   ['com.flexibits.fantastical2.mac'] = {
@@ -370,23 +361,20 @@ M.apps = {
     hyper_key ='y',
     local_bindings = {']'},
     preferredDisplay = 1,
-    position = M.grid.centeredLarge,
     quitGuard = true,
     hideAfter = 1,
     rules = {
       {nil, 2, M.layout.centeredLarge},
-      -- { title="Fantastical Helper", rule="ignore" }
     }
   },
   ['org.pqrs.Karabiner-Elements.Preferences'] = {
     bundleID = 'org.pqrs.Karabiner-Elements.Preferences',
     name = 'Karabiner-Elements',
     preferredDisplay = 1,
-    position = M.grid.centeredSmall,
     quitGuard = true,
     hideAfter = 0.5,
     rules = {
-      { title="Karabiner-Elements Preferences", rule="quit" }
+      {nil, 2, M.layout.centeredSmall},
     }
   },
   ['com.microsoft.autoupdate2'] = {
@@ -489,9 +477,9 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'h',
     locations = {
-      M.grid.leftHalf,
-      M.grid.leftOneThird,
-      M.grid.leftTwoThirds,
+      M.layout.leftHalf,
+      M.layout.leftOneThird,
+      M.layout.leftTwoThirds,
     }
   },
   {
@@ -500,9 +488,9 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'l',
     locations = {
-      M.grid.rightHalf,
-      M.grid.rightOneThird,
-      M.grid.rightTwoThirds,
+      M.layout.rightHalf,
+      M.layout.rightOneThird,
+      M.layout.rightTwoThirds,
     }
   },
   {
@@ -511,9 +499,9 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'j',
     locations = {
-      M.grid.centeredLarge,
-      M.grid.centeredMedium,
-      M.grid.centeredSmall,
+      M.layout.centeredLarge,
+      M.layout.centeredMedium,
+      M.layout.centeredSmall,
     }
   },
   {
@@ -522,7 +510,7 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'k',
     locations = {
-      M.grid.ullScreen,
+      M.layout.ullScreen,
     }
   },
   {
@@ -531,7 +519,7 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'return',
     locations = {
-      M.grid.fullScreen,
+      M.layout.fullScreen,
     }
   },
 }

@@ -9,17 +9,14 @@ function log {
 }
 
 function log_ok {
-    # $(tput setaf 2)printf '[%s] %s\n' "$(date '+%x %X')" "$*"$(tput sgr 0)
     printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
 function log_warn {
-    # $(tput setaf 2)printf '[%s] %s\n' "$(date '+%x %X')" "$*"$(tput sgr 0)
     printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
 function log_error {
-    # $(tput setaf 2)printf '[%s] %s\n' "$(date '+%x %X')" "$*"$(tput sgr 0)
     printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 

@@ -28,7 +28,7 @@ echo ""
 # ------------------
 
 # COMPUTER_NAME := 'replibook'
-COMPUTER_NAME="replibook"
+# COMPUTER_NAME="replibook"
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change
@@ -74,12 +74,12 @@ defaults write com.apple.LaunchServices LSQuarantine -bool false
 # Create symlink for iCloud Drive to ~
 ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud
 
-# Save screenshots to the desktop
-if [ ! -d "$HOME/Desktop/screenshots" ]; then
-  mkdir ~/Desktop/screenshots
-fi
+# # Save screenshots to the desktop
+# if [ ! -d "$HOME/Desktop/screenshots" ]; then
+#   mkdir ~/Desktop/screenshots
+# fi
 
-defaults write com.apple.screencapture location -string "${HOME}/Desktop/screenshots"
+# defaults write com.apple.screencapture location -string "${HOME}/Desktop/screenshots"
 
 # Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
 defaults write com.apple.screencapture type -string "png"
@@ -142,16 +142,6 @@ defaults write com.apple.dock autohide -bool true
 
 # autohide menubar (true autohide, false -- don't autohide)
 defaults write NSGlobalDomain _HIHideMenuBar -bool false
-
-# PARTIAL DARK MODE: dark menubar and dock only (if mojave; intially set as light; apply this; then set as dark theme)
-# REF: https://medium.com/@n1kk/how-to-tweak-macos-mojave-dark-mode-per-app-a5fab0574691
-# REF: https://www.techjunkie.com/only-dark-menu-bar-dock-mojave/
-defaults write -g NSRequiresAquaSystemAppearance -bool Yes
-
-# FULL DARK MODE -- broken
-# defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
-
-
 
 # mojave sub-pixel font smoothing
 # ref: https://www.reddit.com/r/MacOS/comments/9ijy88/font_antialiasing_on_mojave/e6mbs49/

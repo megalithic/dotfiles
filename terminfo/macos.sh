@@ -4,8 +4,12 @@ echo ""
 echo ":: setting up terminfo related things"
 echo ""
 
-tic -o $HOME/.terminfo $HOME/.terminfo/tmux.terminfo
-tic -o $HOME/.terminfo $HOME/.terminfo/tmux-256color.terminfo
+if [[ ! -z $PRIVATES ]]
+then
+  tic -o $HOME/.terminfo $HOME/.terminfo/tmux.terminfo
+  tic -o $HOME/.terminfo $HOME/.terminfo/tmux-256color.terminfo
+fi
+
 tic -o $HOME/.terminfo $HOME/.terminfo/xterm-256color.terminfo
 
 echo ':: veriying italics and standouts work..'
