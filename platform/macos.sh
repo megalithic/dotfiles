@@ -499,15 +499,16 @@ apps_to_launch=(
 "Bartender 3"
 "BetterTouchTool"
 "Brave Browser"
-"Contexts"
+# "Contexts"
 "Docker"
-"Dropbox"
+# "Dropbox"
 "ExpressVPN"
 "Fantastical"
 "Hammerspoon"
 "iStat Menus"
 "Karabiner-Elements"
 "kitty"
+"Witch"
 )
 for app in "${apps_to_launch[@]}"; do
   if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
@@ -527,14 +528,15 @@ apps_to_startup=(
 "Alfred 4"
 "Bartender 3"
 "BetterTouchTool"
-"Contexts"
+# "Contexts"
 "Docker"
-"Dropbox"
+# "Dropbox"
 "Fantastical"
 "Hammerspoon"
 "Hazel"
 "iStat Menus"
 "Karabiner-Elements"
+"Witch"
 )
 for app in "${apps_to_startup[@]}"; do
     echo "Setting to \"${app}\" to launch at startup."
