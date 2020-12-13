@@ -528,7 +528,7 @@ apps_to_startup=(
 # "Dropbox"
 "Fantastical"
 "Hammerspoon"
-"Hazel"
+# "Hazel"
 "iStat Menus"
 "Karabiner-Elements"
 "Witch"

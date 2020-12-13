@@ -114,7 +114,7 @@ function setup_xcode_and_git {
         sleep 1
         log "-> installing xcode cli tools..."; read -k1 -s
         xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
-        log_ok "-> DONE"
+        log_ok "-> DONE install xcode cli tools"
     fi
 }
 
@@ -122,7 +122,7 @@ function _do_clone {
     log "-> cloning dotfiles..."
     mkdir -p $DOTS
     git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
-    log_ok "-> DONE"
+    log_ok "-> DONE cloning dotfiles"
 }
 
 function clone_dotfiles_repo {
@@ -158,7 +158,7 @@ function install_homebrew {
     else
         log_warn "-> brew not found; installing Homebrew..."
         /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-        log_ok "-> DONE"
+        log_ok "-> DONE installing homebrew"
     fi
 }
 
@@ -177,7 +177,7 @@ function bundle_brews {
     fi
 
     brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
-    log_ok "-> DONE"
+    log_ok "-> DONE bundling brews"
 
     # log "-> post-brewing operations.."
     # $(brew --prefix)/opt/fzf/install            # <- fzf
@@ -201,37 +201,37 @@ function stow_away {
     defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
     stow misc && log_ok "stowed misc"
     cd -
-    log_ok "-> DONE"
+    log_ok "-> DONE stowing things"
 }
 
 function setup_platform {
     log "-> running platform-specific ($platform) things..."
     sh "$DOTS/platform/$platform.sh"
-    log_ok "-> DONE"
+    log_ok "-> DONE setting up platform"
 }
 
 function setup_asdf {
     log "-> setting up asdf..."
     sh "$DOTS/asdf/$platform.sh"
-    log_ok "-> DONE"
+    log_ok "-> DONE setting up asdf"
 }
 
 function setup_python {
     log "-> setting up python..."
     sh "$DOTS/python/$platform.sh"
-    log_ok "-> DONE"
+    log_ok "-> DONE setting up python"
 }
 
 function setup_keyboard {
     log "-> setting up keyboard..."
     sh "$DOTS/keyboard/$platform.sh"
-    log_ok "-> DONE"
+    log_ok "-> DONE setting up keyboard"
 }
 
 function setup_terminfo {
     log "-> setting up terminfo..."
     sh "$DOTS/terminfo/$platform.sh"
-    log_ok "-> DONE"
+    log_ok "-> DONE setting up terminfo"
 }
 
 function setup_zsh {
@@ -242,7 +242,7 @@ function setup_zsh {
     source $HOME/.config/zsh/.zshenv
     # compaudit | xargs chmod g-w
     log "-> changing your shell to homebrew version: $zsh_path"
-    chsh -s "$zsh_path" $USER && log_ok "-> DONE"
+    chsh -s "$zsh_path" $USER && log_ok "-> DONE setting up zsh"
 }
 
 function setup_fish {
@@ -251,7 +251,7 @@ function setup_fish {
     log "-> changing your shell to fish..."
     log "-> attempting to set $fish_path as your fish path in /etc/shells"
     echo "$fish_path" | sudo tee -a /etc/shells
-    chsh -s "$fish_path" $USER && log_ok "-> DONE"
+    chsh -s "$fish_path" $USER && log_ok "-> DONE setting up fish"
 }
 
 
@@ -285,7 +285,7 @@ setup_python
 
 
 kill "$caffeinatepid"
-log_ok "-> DONE with $platform setup!"
+log_ok "-> DONE with $platform setup! Would be a good idea to restart your mac."
 exit 0
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
