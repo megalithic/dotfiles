@@ -101,8 +101,9 @@ function export_dirs {
 }
 
 function setup_xcode_and_git {
-    if (command -v xcode-select &> /dev/null); then
-        log "-> installing xcode cli tools..."
+    if [[(command -v xcode-select &> /dev/null) && ! $(xcode-select --install | grep installed)]] then
+        sleep 1
+        log "-> installing xcode cli tools..."; read -k1 -s
         xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
         log_ok "-> DONE"
     fi
@@ -158,7 +159,7 @@ function bundle_brews {
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
     # if we're not signed in, let's open the App Store
-    if [[ $(command -v mas &> /dev/null)  && ! -z $(mas account | grep "Not signed in") ]]
+    if [[ $(mas account | grep "Not signed in") ]]
     then
         sleep 1
         open -a "App Store"
@@ -169,7 +170,8 @@ function bundle_brews {
     log_ok "-> DONE"
 
     log "-> post-brewing operations.."
-    $(brew --prefix)/opt/fzf/install
+    $(brew --prefix)/opt/fzf/install            # <- fzf
+    initdb /usr/local/var/postgres -E utf8      # <- postgresql
     log_ok "-> DONE"
 }
 
