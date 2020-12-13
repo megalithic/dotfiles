@@ -164,6 +164,8 @@ function install_homebrew {
 
 function bundle_brews {
     log "-> brewing things from our brewfile..."
+    sudo xcodebuild --license accept
+
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
     # if we're not signed in, let's open the App Store
@@ -174,7 +176,6 @@ function bundle_brews {
         log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
     fi
 
-    sudo xcodebuild --license accept
     brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
     log_ok "-> DONE"
 
