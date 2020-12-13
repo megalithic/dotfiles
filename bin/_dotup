@@ -136,8 +136,9 @@ function clone_dotfiles_repo {
                 log "-> ~/.dotfiles found; updating to latest.."
                 cd $DOTS
                 git stash
-                get fetch origin 
+                git fetch origin 
                 git merge origin/main
+                log_ok "-> finished fetching and merging latest"
                 # git add -u .
                 # git stash
                 # git pull --recurse-submodules --rebase origin main
