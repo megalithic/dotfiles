@@ -136,9 +136,10 @@ function clone_dotfiles_repo {
                 log "-> ~/.dotfiles found; updating to latest.."
                 cd $DOTS
                 git stash
-                git fetch origin 
+                git fetch
                 git merge origin/main
-                git stash pop
+                git pull origin main
+                # git stash pop
                 log_ok "-> finished fetching and merging latest"
                 cd $HOME
             else
