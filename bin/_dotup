@@ -53,10 +53,10 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
 function keep_awake {
-    log "Caffinating Mac OS"
+    log "-> caffinating macos.."
     caffeinate -d -i -m -u &
     caffeinatepid=$!
-    log_ok "Caffinated under process id: $caffeinatepid"
+    log_ok "-> caffinated under process id: $caffeinatepid"
 }
 
 # Detect OS
@@ -135,6 +135,9 @@ function clone_dotfiles_repo {
             if ls -A $DOTS | grep -q '^'; then
                 log "-> ~/.dotfiles found; updating to latest.."
                 cd $DOTS
+                git stash
+                get fetch origin 
+                git merge origin/main
                 # git add -u .
                 # git stash
                 # git pull --recurse-submodules --rebase origin main
