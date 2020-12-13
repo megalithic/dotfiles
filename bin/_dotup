@@ -101,20 +101,10 @@ function export_dirs {
 }
 
 function setup_xcode_and_git {
-    log "-> installing xcode and git"
-    # git exists?
-    if (which git &>/dev/null); then
-        log "-> git already installed; skipping."
-    else
-        log_warn "-> git not installed; requires xcode-select to continue, installing xcode-select"
-
-        if (which xcode-select &>/dev/null); then
-            log "-> xcode-select already installed; skipping."
-        else
-            log "-> installing xcode-select..."
-            xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
-            log_ok "-> DONE"
-        fi
+    if (command -v xcode-select &> /dev/null); then
+        log "-> installing xcode cli tools..."
+        xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
+        log_ok "-> DONE"
     fi
 }
 
@@ -154,7 +144,7 @@ function clone_dotfiles_repo {
 
 # Install Homebrew
 function install_homebrew {
-    if (which brew &>/dev/null); then
+    if (command -v brew &> /dev/null); then
         log "-> brew already installed; skipping."
     else
         log_warn "-> brew not found; installing Homebrew..."
@@ -168,7 +158,7 @@ function bundle_brews {
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
     # if we're not signed in, let's open the App Store
-    if [[ ! -z $(mas account | grep "Not signed in") && ! $(which mas &>/dev/null) ]]
+    if [[ $(command -v mas &> /dev/null)  && ! -z $(mas account | grep "Not signed in") ]]
     then
         sleep 1
         open -a "App Store"
