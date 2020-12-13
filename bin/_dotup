@@ -101,7 +101,8 @@ function export_dirs {
 }
 
 function setup_xcode_and_git {
-    if [[$(command -v xcode-select &> /dev/null) && ! $(xcode-select --install | grep installed)]] then
+    if [[$(command -v xcode-select &> /dev/null) && ! $(xcode-select --install | grep installed)]]
+    then
         sleep 1
         log "-> installing xcode cli tools..."; read -k1 -s
         xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
