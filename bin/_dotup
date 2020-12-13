@@ -138,14 +138,8 @@ function clone_dotfiles_repo {
                 git stash
                 git fetch origin 
                 git merge origin/main
+                git stash pop
                 log_ok "-> finished fetching and merging latest"
-                # git add -u .
-                # git stash
-                # git pull --recurse-submodules --rebase origin main
-                # git fetch origin; git merge origin/main
-                # TODO: need to figure out how to do this only when i've got perms
-                # git push origin main
-                # git stash pop
                 cd $HOME
             else
                 log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
