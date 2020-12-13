@@ -52,6 +52,13 @@ sudo -v
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
+function keep_awake {
+    log "Caffinating Mac OS"
+    caffeinate -d -i -m -u &
+    caffeinatepid=$!
+    log_ok "Caffinated under process id: $caffeinatepid"
+}
+
 # Detect OS
 function detect_platform {
     if [[ -z $PLATFORM ]]
@@ -101,7 +108,8 @@ function export_dirs {
 }
 
 function setup_xcode_and_git {
-    if [[$(command -v xcode-select &> /dev/null) && ! $(xcode-select --install | grep installed)]]
+    check=$( pkgutil --pkgs | grep com.apple.pkg.CLTools_Executables | wc -l | awk '{ print $1 }' )
+    if [[ "$check" != 1 ]]
     then
         sleep 1
         log "-> installing xcode cli tools..."; read -k1 -s
@@ -249,11 +257,23 @@ function setup_fish {
 # -- engage!
 
 detect_platform
+if [[ "$platform" == "macos" ]]
+then
+    keep_awake
+fi
+
 export_dirs
-if [[ $platform == "macos" ]]; then setup_xcode_and_git; fi
+if [[ "$platform" == "macos" ]]
+then 
+    setup_xcode_and_git
+fi
 clone_dotfiles_repo
-if [[ $platform == "macos" ]]; then install_homebrew; fi
-if [[ $platform == "macos" ]]; then bundle_brews; fi
+if [[ "$platform" == "macos" ]] 
+then 
+    install_homebrew
+    bundle_brews
+fi
+
 stow_away
 setup_zsh
 setup_platform
@@ -262,5 +282,9 @@ setup_terminfo
 setup_keyboard
 setup_python
 
+
+kill "$caffeinatepid"
+log_ok "-> DONE with $platform setup!"
+exit 0
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
