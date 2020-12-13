@@ -195,5 +195,5 @@ mas "Spark", id: 1176895641
 # mas "Tweetbot", id: 557168941
 mas "Drafts", id: 1435957248
 mas "Things", id: 904280696
-mas "Xcode", id: 497799835
+# mas "Xcode", id: 497799835
 # mas "Canary Mail", id: 1236045954
