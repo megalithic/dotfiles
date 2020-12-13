@@ -182,10 +182,10 @@ function bundle_brews {
     brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
     log_ok "-> DONE"
 
-    log "-> post-brewing operations.."
-    $(brew --prefix)/opt/fzf/install            # <- fzf
-    initdb /usr/local/var/postgres -E utf8      # <- postgresql
-    log_ok "-> DONE"
+    # log "-> post-brewing operations.."
+    # $(brew --prefix)/opt/fzf/install            # <- fzf
+    # initdb /usr/local/var/postgres -E utf8      # <- postgresql
+    # log_ok "-> DONE"
 }
 
 function stow_away {
