@@ -476,7 +476,6 @@ apps_to_restart=(
   "Photos"
   "Safari"
   "SystemUIServer"
-  "Terminal"
 )
 
 for app in "${apps_to_restart[@]}"; do
