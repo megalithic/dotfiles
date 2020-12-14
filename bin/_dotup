@@ -194,6 +194,7 @@ function stow_away {
     stow keyboard && log_ok "stowed keyboard"
     defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
     stow misc && log_ok "stowed misc"
+    stow weechat && log_ok "stowed weechat"
     cd -
     log_ok "-> DONE stowing things"
 }

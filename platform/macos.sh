@@ -444,6 +444,32 @@ echo
 # Kill affected applications
 ##
 
+dock_apps_to_remove=(
+ "Launchpad"
+ "Mail"
+ "Contacts"
+ "Notes"
+ "Reminders"
+ "Maps"
+ "Photos"
+ "FaceTime"
+ "iTunes"
+ "iBooks"
+ "App Store"
+ "System Preferences"
+ "Calendar"
+ "Safari"
+)
+for app in "${dock_apps_to_remove[@]}"; do
+    echo "Removing \"${app}\" from the dock."
+
+    # remove apps from dock
+    # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
+    dockutil --remove "${app}"
+
+    echo
+done
+
 function app_is_running {
   osascript -so -e "application \"$1\" is running"
 }

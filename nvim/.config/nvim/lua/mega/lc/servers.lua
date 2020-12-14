@@ -25,7 +25,7 @@ local function root_pattern(...)
 end
 
 local servers = {
-  bashls = {},
+  -- bashls = {},
   cssls = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
