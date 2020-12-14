@@ -151,7 +151,6 @@ function clone_dotfiles_repo {
     fi
 }
 
-# Install Homebrew
 function install_homebrew {
     if (command -v brew &> /dev/null); then
         log "-> brew already installed; skipping."
@@ -197,6 +196,40 @@ function stow_away {
     stow misc && log_ok "stowed misc"
     cd -
     log_ok "-> DONE stowing things"
+}
+
+
+function _do_setup_ssh_key {
+    key_id = "$USER@$HOST"
+    key_file = "$HOME/.ssh/$USER_$HOST"
+    key_type = "ed25519"
+    key_path = $HOME/.ssh/$key_file
+
+    log_ok "-> generating an ssh public/private key with params:"
+    echo "- key_id = $key_id"
+    echo "- key_file = $key_file"
+    echo "- key_type = $key_type"
+    echo
+
+    ssh-keygen -t key_type -C $key_id -N "" -f $key_file
+    eval "$(ssh-agent -s)"
+    ssh-add -K $key_path
+    pbcopy < $key_path
+    log_ok "-> DONE creating ssh key at $key_path; copied to clipboard."
+}
+
+function setup_ssh_key {
+    # REF: 
+    #  1.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+    #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
+
+    log_warn -n "-> you'll need to setup an ssh public/private key to do more github things later; continue? [yN]"
+    read continue_reply
+    case $continue_reply in
+        [Yy]) _do_setup_ssh_key ;;
+        [Nn]) log_warn "-> skipping; be sure to set up an ssh at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent" ;;
+        *) log_warn "-> skipping; be sure to set up an ssh at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent" ;;
+    esac
 }
 
 function setup_platform {
@@ -282,6 +315,7 @@ then
 fi
 
 stow_away
+setup_ssh_key
 setup_zsh
 setup_platform
 setup_asdf
