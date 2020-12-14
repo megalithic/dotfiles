@@ -186,6 +186,7 @@ cask "witch"
 cask "yubico-authenticator"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
+cask "zoom"
 
 
 # -- app store (mas) --
