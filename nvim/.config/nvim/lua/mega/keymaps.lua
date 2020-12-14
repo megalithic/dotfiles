@@ -1,51 +1,6 @@
 -- ( general ) .................................................................
 
 local function convenience_mappings()
-  -- Start search on current word under the cursor
-  mega.map("n", "<Leader>/", "/<CR>")
-  -- Start reverse search on current word under the cursor
-  mega.map("n", "<Leader>?", "?<CR>")
-
-  -- Convenient command mode operations
-  mega.map("n", "<Leader>:", ":!")
-  mega.map("n", "<Leader>;", ":<Up>")
-
-  -- Window movements
-  mega.map("n", "<C-h>", "<C-w>h")
-  mega.map("n", "<C-j>", "<C-w>j")
-  mega.map("n", "<C-k>", "<C-w>k")
-  mega.map("n", "<C-l>", "<C-w>l")
-
-  -- Better save and quit
-  vim.cmd("silent! unmap <leader>w")
-  mega.map("n", "<leader>w", ":w<CR>")
-  mega.map("n", "<leader>W", ":w !sudo tee > /dev/null %<CR>")
-  mega.map("n", "<leader>q", ":q<CR>")
-
-  vim.cmd("cmap w!! w !sudo tee > /dev/null %")
-  --
-  -- flip between two last edited files
-  mega.map("n", "<Leader><Leader>", "<C-^>")
-
-  -- Command mode conveniences
-  mega.map("n", "<Leader>:", ":!")
-  mega.map("n", "<Leader>;", ":<Up>")
-
-  -- Selections
-  mega.map("n", "gV", "`[v`]`") -- reselect pasted content
-  mega.map("n", "<leader>v", "ggVG") -- select all text in the file
-  mega.map("n", "<leader>V", "V`]") -- Easier linewise reselection of what you just pasted.
-  -- gi already moves to 'last place you exited insert mode', so we'll map gI to
-  --  something similar: move to last change
-  mega.map("n", "gI", "`.")
-  mega.map("x", ">", ">gv") -- reselect visually selected content:
-
-  -- Indentions
-  --  Indent/dedent/autoindent what you just pasted.
-  mega.map("n", "<lt>>", "V`]<")
-  mega.map("n", "><lt>", "V`]>")
-  mega.map("n", "=-", "V`]=")
-
   -- make the tab key match bracket pairs
   vim.api.nvim_exec("silent! unmap [%", true)
   vim.api.nvim_exec("silent! unmap ]%", true)
@@ -55,9 +10,6 @@ local function convenience_mappings()
   mega.map("n", "<Tab>", "%", {noremap = true})
   mega.map("v", "<Tab>", "%", {noremap = true})
   mega.map("x", "<Tab>", "%", {noremap = true})
-
-  -- Background (n)vim
-  mega.map("v", "<C-z>", "<ESC>zv`<ztgv")
 end
 
 local function override_mappings()

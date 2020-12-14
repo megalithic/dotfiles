@@ -7,10 +7,10 @@
   helper = osxkeychain
 
 [hub]
-  protocol = ssh
+  protocol = https
 
 [github.com]
-  protocol = ssh
+  protocol = https
 # - gh config set -h github.com git_protocol ssh
   # protocol = https
 

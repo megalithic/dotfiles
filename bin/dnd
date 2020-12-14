@@ -18,19 +18,19 @@ help() {
   printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
 }
 
-nc_pref="com.apple.notificationcentereui"
+nc_pref="$HOME/Library/Preferences/ByHost/com.apple.notificationcenterui"
 # nc_pref=$(fd notificationcenterui $HOME/Library/Preferences/ByHost)
 
 on() {
   sleep 1
   defaults -currentHost write "$nc_pref" doNotDisturb -boolean true
   defaults -currentHost write "$nc_pref" doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +0000\"`"
-  killall UserNotificationCenter
+  killall NotificationCenter
 }
 
 off() {
   defaults -currentHost write "$nc_pref" doNotDisturb -boolean false
-  killall UserNotificationCenter
+  killall NotificationCenter
 }
 
 toggle() {
