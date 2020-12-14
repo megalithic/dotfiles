@@ -4,7 +4,7 @@ echo ""
 echo ":: setting up terminfo related things"
 echo ""
 
-if [[ ! -z $PRIVATES ]]
+if [[ ! -z $TMUX ]]
 then
   tic -o $HOME/.terminfo $HOME/.terminfo/tmux.terminfo
   tic -o $HOME/.terminfo $HOME/.terminfo/tmux-256color.terminfo
