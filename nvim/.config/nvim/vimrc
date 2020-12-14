@@ -1,6 +1,8 @@
 " -- [ mappings ] --------------------------------------------------------------
 
-" let mapleader = ','
+let mapleader = ','
+let maplocalleader = ","
+
 " noremap ; :
 
 " -- ( overrides ) --
@@ -96,6 +98,53 @@ nnoremap <Leader><Leader> <C-^>
 
 " clear incsearch term
 nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
+
+if has('nvim')
+  function! CheckBackspace() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~ '\s'
+  endfunction
+
+  function! ShowDocumentation()
+    if (index(['vim','help'], &filetype) >= 0)
+      execute 'vert h '.expand('<cword>')
+    elseif (index(['c','sh'], &filetype) >=0)
+      execute 'vert Man '.expand('<cword>')
+    else
+      lua vim.lsp.buf.hover()
+    endif
+  endfunction
+
+  imap <expr> <Tab>
+        \ pumvisible() ? "\<C-n>" :
+        \ vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' :
+        \ CheckBackspace() ? "\<Tab>" :
+        \ completion#trigger_completion()
+  smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<Tab>'
+
+  imap <expr> <S-Tab>
+        \ pumvisible() ? "\<C-p>" :
+        \ vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' :
+        \ "\<C-h>"
+  smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
+
+  let g:endwise_no_mappings = 1
+  let g:completion_confirm_key = ""
+  imap <expr> <CR>  pumvisible() ?
+        \ complete_info()["selected"] != "-1" ?
+        \ "\<Plug>(completion_confirm_completion)" :
+        \ get(b:, 'closer') ?
+        \ "\<c-e>\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
+        \ : "\<c-e>\<CR>\<Plug>DiscretionaryEnd"
+        \ : get(b:, 'closer') ?
+        \ "\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
+        \ : "\<CR>\<Plug>DiscretionaryEnd"
+
+  nnoremap <silent> K :call ShowDocumentation()<CR>
+endif
+
+
+
 
 " -- [ options ] ---------------------------------------------------------------
 
@@ -319,11 +368,11 @@ if has("nvim")
   let g:python3_host_prog = '~/.asdf/shims/python3'
 
   " share data between nvim instances (registers etc)
-"  augroup SHADA
-"    autocmd!
-"    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
-"          \ if exists(':rshada') | rshada | wshada | endif
-"  augroup END
+  "  augroup SHADA
+  "    autocmd!
+  "    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
+  "          \ if exists(':rshada') | rshada | wshada | endif
+  "  augroup END
 else
   set emoji                 " treat emojis 😄 as full width characters
   set cryptmethod=blowfish2

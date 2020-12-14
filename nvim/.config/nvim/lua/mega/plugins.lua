@@ -53,13 +53,22 @@ activate = function()
         use "nvim-lua/lsp-status.nvim"
         use "nvim-lua/lsp_extensions.nvim"
 
-        -- (ui) --
+        -- (ui/interface) --
         use {
           "trevordmiller/nova-vim",
           config = function()
             mega.load("nova", "mega.colors.nova", "activate")
           end
         }
+        use {'Yggdroot/indentLine', config = function()
+          vim.g.indentLine_enabled = 1
+          vim.g.indentLine_color_gui = 'red'
+          vim.g.indentLine_char = '│'
+          vim.g.indentLine_bufTypeExclude = {'help', 'terminal', 'nerdtree', 'tagbar', 'startify', 'fzf'}
+          vim.g.indentLine_bufNameExclude = {'_.*', 'NERD_tree.*', 'startify', 'fzf'}
+          vim.g.indentLine_faster     = 1
+          vim.g.indentLine_setConceal = 0
+        end}
         use {
           "norcalli/nvim-colorizer.lua",
           config = function()

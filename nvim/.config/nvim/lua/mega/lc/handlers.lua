@@ -113,7 +113,7 @@ M["textDocument/publishDiagnostics"] = function(...)
       update_in_insert = false,
     }
   )(...)
-  lsp.diagnostic.set_loclist({open_loclist = false})
+  pcall(vim.lsp.diagnostic.set_loclist, {open_loclist = false})
 end
 
 return M

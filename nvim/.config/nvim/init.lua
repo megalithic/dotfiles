@@ -33,9 +33,9 @@ _G["mega"] = require("mega.global")
 do
   -- [ leader ] ---------------------------------------------------------------
   -- mega.map('n', '<Space>', '', {})
-  mega.map("n", ",", "", {})
-  vim.g.mapleader = ","
-  vim.g.maplocalleader = ","
+  -- mega.map("n", ",", "", {})
+  -- vim.g.mapleader = ","
+  -- vim.g.maplocalleader = ","
 
   vim.cmd([[runtime vimrc]])
 
