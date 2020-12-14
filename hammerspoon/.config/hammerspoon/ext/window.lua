@@ -232,7 +232,8 @@ module.chain = function (movements)
     lastSeenAt = now
     lastSeenWindow = id
 
-    hs.layout.apply(win:application():bundleID(), win:title(), screen, movements[sequenceNumber])
+    -- hs.layout.apply(win:application():bundleID(), win:title(), screen, movements[sequenceNumber])
+    hs.grid.set(win, movements[sequenceNumber], screen)
     sequenceNumber = sequenceNumber % cycleLength + 1
   end
 end

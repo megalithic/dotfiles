@@ -267,8 +267,8 @@ M.apps = {
       {nil, 2, M.layout.rightHalf},
     },
   },
-  ['com.apple.MobileSMS'] = {
-    bundleID = 'com.apple.MobileSMS',
+  ['com.apple.iChat'] = {
+    bundleID = 'com.apple.iChat',
     name = 'Messages',
     hyper_key ='m',
     context = 'messages',
@@ -477,9 +477,9 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'h',
     locations = {
-      M.layout.leftHalf,
-      M.layout.leftOneThird,
-      M.layout.leftTwoThirds,
+      M.grid.leftHalf,
+      M.grid.leftOneThird,
+      M.grid.leftTwoThirds,
     }
   },
   {
@@ -488,9 +488,9 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'l',
     locations = {
-      M.layout.rightHalf,
-      M.layout.rightOneThird,
-      M.layout.rightTwoThirds,
+      M.grid.rightHalf,
+      M.grid.rightOneThird,
+      M.grid.rightTwoThirds,
     }
   },
   {
@@ -499,9 +499,9 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'j',
     locations = {
-      M.layout.centeredLarge,
-      M.layout.centeredMedium,
-      M.layout.centeredSmall,
+      M.grid.centeredLarge,
+      M.grid.centeredMedium,
+      M.grid.centeredSmall,
     }
   },
   {
@@ -510,7 +510,7 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'k',
     locations = {
-      M.layout.ullScreen,
+      M.grid.fullScreen,
     }
   },
   {
@@ -519,7 +519,7 @@ M.snap = {
     -- hyperKey = M.modifiers.hyper,
     shortcut = 'return',
     locations = {
-      M.layout.fullScreen,
+      M.grid.fullScreen,
     }
   },
 }

@@ -7,7 +7,12 @@
   helper = osxkeychain
 
 [hub]
-  protocol = https
+  protocol = ssh
+
+[github.com]
+  protocol = ssh
+# - gh config set -h github.com git_protocol ssh
+  # protocol = https
 
 [git]
   user = megalithic

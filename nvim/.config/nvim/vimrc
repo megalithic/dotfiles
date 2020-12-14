@@ -226,10 +226,10 @@ set noshowmatch       " No jumping jumping cursors when matching pairs
 set noshowmode        " No to showing mode in bottom-left corner
 set noswapfile        " No backup files
 " set nowrapscan        " Don't wrap searches around
-" set number            " Show line numbers
+set number            " Show line numbers
 set nrformats=alpha,hex,octal        " No to oct/hex support when doing CTRL-a/x
 set path=**
-" set relativenumber    " Show relative numbers
+set relativenumber    " Show relative numbers
 set ruler
 " set scrolloff=5       " Start scrolling when we're 5 lines away from margins
 set shiftwidth=2
@@ -316,11 +316,11 @@ if has("nvim")
   let g:python3_host_prog = '~/.asdf/shims/python3'
 
   " share data between nvim instances (registers etc)
-  augroup SHADA
-    autocmd!
-    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
-          \ if exists(':rshada') | rshada | wshada | endif
-  augroup END
+"  augroup SHADA
+"    autocmd!
+"    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
+"          \ if exists(':rshada') | rshada | wshada | endif
+"  augroup END
 else
   set emoji                 " treat emojis 😄 as full width characters
   set cryptmethod=blowfish2
