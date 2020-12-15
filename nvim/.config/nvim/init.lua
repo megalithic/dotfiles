@@ -43,7 +43,6 @@ do
   mega.load("packages", "mega.packages", "activate")
   mega.load("nova", "mega.colors.nova", "activate")
   mega.load("settings", "mega.settings", "activate")
-
   mega.load("lc", "mega.lc", "activate")
   mega.load("keymaps", "mega.keymaps", "activate")
   mega.load("autocmds", "mega.autocmds", "activate")
