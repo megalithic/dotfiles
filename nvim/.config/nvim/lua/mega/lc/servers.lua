@@ -30,7 +30,17 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
-  efm = {},
+  efm = {
+    init_options = {documentFormatting = true},
+    settings = {
+      rootMarkers = {".git/"},
+      languages = {
+        lua = {
+          {formatCommand = "lua-format -i", formatStdin = true}
+        }
+      }
+    }
+  },
   elmls = {
     cmd = {vim.fn.stdpath("cache") .. "/lspconfig/elmls/node_modules/.bin/elm-language-server"},
     filetypes = {"elm"},

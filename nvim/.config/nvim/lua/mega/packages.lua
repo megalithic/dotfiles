@@ -2,11 +2,13 @@ return {
   activate = function()
     mega.inspect("activating packages.lua..")
 
+    local exists = pcall(vim.cmd, [[packadd paq-nvim]])
     local repo_url = "https://github.com/savq/paq-nvim"
     local install_path = string.format("%s/site/pack/paq/opt/", vim.fn.stdpath("data"))
+-- ~/.local/share/nvim/site/pack/paq/opt/paq-nvim/
 
     -- clone paq-nvim if we haven't already..
-    if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+    if not exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
       if vim.fn.input("-> download paq-nvim? [yn] -> ") ~= "y" then
         return
       end

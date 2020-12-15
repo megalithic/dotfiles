@@ -4,7 +4,7 @@ return {
 
     -- ( indentLine ) --
     vim.g.indentLine_enabled = 1
-    vim.g.indentLine_color_gui = 'red'
+    vim.g.indentLine_color_gui = '#556874'
     vim.g.indentLine_char = '│'
     vim.g.indentLine_bufTypeExclude = {'help', 'terminal', 'nerdtree', 'tagbar', 'startify', 'fzf'}
     vim.g.indentLine_bufNameExclude = {'_.*', 'NERD_tree.*', 'startify', 'fzf'}
@@ -77,6 +77,7 @@ return {
     vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
     vim.g.fzf_action = {enter = "vsplit"}
     vim.g.fzf_preview_window = {"right:50%", "alt-p"}
+
     mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
     mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
     

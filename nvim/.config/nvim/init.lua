@@ -40,17 +40,14 @@ do
   vim.cmd([[runtime vimrc]])
 
   -- [ loaders ] ---------------------------------------------------------------
-  vim.schedule(
-    function()
-      mega.load("packages", "mega.packages", "activate")
-      mega.load("settings", "mega.settings", "activate")
-      mega.load("nova", "mega.colors.nova", "activate")
-      mega.load("lc", "mega.lc", "activate")
-      mega.load("keymaps", "mega.keymaps", "activate")
-      mega.load("autocmds", "mega.autocmds", "activate")
-      mega.load("ft", "mega.ft", "setup")
-      mega.load("ft", "mega.ft", "trigger_ft")
-      mega.load("statusline", "mega.statusline", "activate")
-    end
-  )
+  mega.load("packages", "mega.packages", "activate")
+  mega.load("nova", "mega.colors.nova", "activate")
+  mega.load("settings", "mega.settings", "activate")
+
+  mega.load("lc", "mega.lc", "activate")
+  mega.load("keymaps", "mega.keymaps", "activate")
+  mega.load("autocmds", "mega.autocmds", "activate")
+  mega.load("ft", "mega.ft", "setup")
+  mega.load("ft", "mega.ft", "trigger_ft")
+  mega.load("statusline", "mega.statusline", "activate")
 end
