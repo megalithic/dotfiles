@@ -49,4 +49,8 @@ do
   mega.load("ft", "mega.ft", "setup")
   mega.load("ft", "mega.ft", "trigger_ft")
   mega.load("statusline", "mega.statusline", "activate")
+
+  vim.schedule(function()
+    print("after loading things ->" .. vim.inspect(vim.g.fzf_command_prefix))
+  end)
 end

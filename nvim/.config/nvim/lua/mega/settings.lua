@@ -80,9 +80,6 @@ return {
       vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
       vim.g.fzf_action = {enter = "vsplit"}
       vim.g.fzf_preview_window = {"right:50%", "alt-p"}
-
-      mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
-      mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
     end
 
     local function set_lsp_fuzzy()
@@ -93,8 +90,6 @@ return {
       vim.g["sneak#label"] = 1
       vim.g["sneak#s_next"] = 1
       vim.g["sneak#prompt"] = ""
-      mega.map("n", "f", "<Plug>Sneak_s")
-      mega.map("n", "F", "<Plug>Sneak_S")
     end
 
     local function set_textobj_parameter()
@@ -104,9 +99,8 @@ return {
     local function set_git_messenger()
       vim.g.git_messenger_no_default_mappings = true
       vim.g.git_messenger_max_popup_width = 100
-      vim.g.git_messenger_max_popup_height = 100
+      vim.g.git_messenger_max_popup_height = 100 
 
-      mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
     end
 
     local function set_gitsigns()

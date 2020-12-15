@@ -94,6 +94,15 @@ local function custom_mappings()
   -- mega.map("n", "<leader>z", ":lua toggle_zen()<cr>")
 end
 
+local function plugin_mappings()
+  mega.map("n", "<Leader>m", "<cmd>Files<CR>")
+  mega.map("n", "<Leader>a", "<cmd>Rg<CR>")
+  mega.map("n", "f", "<Plug>Sneak_s")
+  mega.map("n", "F", "<Plug>Sneak_S")
+
+  mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+end
+
 -- Other mappings
 -- utils.lmap("l", "<cmd>luafile %<cr>") -- source lua file
 -- utils.lmap("t", "<cmd> sp<cr>|<cmd>te   <cr>i") -- open terminal
@@ -105,5 +114,6 @@ return {
     override_mappings()
     convenience_mappings()
     custom_mappings()
+    plugin_mappings()
   end
 }
