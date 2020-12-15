@@ -22,7 +22,7 @@ nvim/bundle
 nvim/backups
 nvim/init.vim.*
 **/plugged
-weechat/**/autoload
+weechat/**/sec.conf
 **/.init.vim*
 **/elm-stuff
 **/elm-package.json
