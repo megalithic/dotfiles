@@ -7,11 +7,14 @@ local module = {}
 
 function media:entered()
   local image = hs.image.imageFromAppBundle("com.spotify.client")
+  local isPlaying = hs.spotify.isPlaying()
+  local icon = isPlaying and "契" or ""
+  local state = isPlaying and "playing" or "paused"
   alertUuids = {
     module.notify(
       {
-        icon = "♬",
-        state = hs.spotify.getPlaybackState(),
+        icon = icon,
+        state = state,
         artist = hs.spotify.getCurrentArtist(),
         track = hs.spotify.getCurrentTrack(),
         album = hs.spotify.getCurrentAlbum(),
