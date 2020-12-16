@@ -4,7 +4,7 @@ return {
 
     local exists = pcall(vim.cmd, [[packadd paq-nvim]])
     local repo_url = "https://github.com/savq/paq-nvim"
-    local install_path = string.format("%s/site/pack/paq/opt/", vim.fn.stdpath("data"))
+    local install_path = string.format("%s/site/pack/paqs/opt/", vim.fn.stdpath("data"))
     -- ~/.local/share/nvim/site/pack/paq/opt/paq-nvim/
 
     -- clone paq-nvim if we haven't already..
@@ -129,6 +129,7 @@ return {
     paq "christoomey/vim-tmux-navigator"
     paq "tmux-plugins/vim-tmux-focus-events"
     paq "christoomey/vim-tmux-runner"
+    paq "wellle/visual-split.vim"
 
     -- Paq.update()
     vim.cmd([[packloadall!]])

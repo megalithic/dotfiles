@@ -22,7 +22,7 @@ _G["mega"] = require("mega.global")
 
 -- Can set this lower if needed (used in tandem with mega.inspect) ->
 -- require('vim.lsp.log').set_level("trace")
-require("vim.lsp.log").set_level("debug")
+-- require("vim.lsp.log").set_level("debug")
 
 -- To execute in :cmd ->
 --  :lua <the_command>

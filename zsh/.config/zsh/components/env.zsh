@@ -25,12 +25,11 @@ fi
 #
 
 export EDITOR='nvim'
-export VISUAL='nvim'
-export SUDO_EDITOR='nvim'
+export VISUAL="$EDITOR"
+export SUDO_EDITOR="$EDITOR"
 export ALTERNATE_EDITOR='vim'
 export PAGER='less'
-
-export MANPAGER='nvim +Man!'
+export MANPAGER="$EDITOR +Man!"
 export MANWIDTH=999
 
 # export ALTERNATE_EDITOR=""
@@ -60,6 +59,7 @@ if (( $+commands[lesspipe.sh] )); then
 fi
 
 
+export GIT_REPO_DIR="$HOME/dev"
 export HOMEBREW_NO_ANALYTICS=1
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 export BREW_PATH="$(brew --prefix)"
