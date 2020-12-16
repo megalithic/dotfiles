@@ -8,6 +8,7 @@ websocket-client
 saws
 neovim
 neovim-remote
+notificationcenter
 opendrop
 pynvim
 pygments
