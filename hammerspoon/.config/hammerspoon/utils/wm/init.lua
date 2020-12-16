@@ -9,10 +9,10 @@
 --  │ 6. applyContext                                                         │
 --  └─────────────────────────────────────────────────────────────────────────┘
 
-local log = hs.logger.new('[wm]', 'debug')
+local log = hs.logger.new("[wm]", "debug")
 
 local cache = {
-  watcher = {},
+  dock_watcher = {},
   windowFilter = {}
 }
 
@@ -21,7 +21,7 @@ local M = {
 }
 
 local wh = require("utils.wm.window-handlers")
-local fn = require('hs.fnutils')
+local fn = require("hs.fnutils")
 
 M.numScreens = 0
 
@@ -33,30 +33,36 @@ M.applyLayout = function(win, app, app_config, windows, event)
   wh.snapRelated(app, app_config, windows.valid)
 end
 
-
 -- applyContext(hs.window, hs.application, table, {hs.window, hs.window, hs.window}, string) :: nil
 -- evaluates and applies global config for contexts related to the given app
 M.applyContext = function(win, bundleID, app_config, windows, event)
-  if app_config.context == nil then return end
+  if app_config.context == nil then
+    return
+  end
 
-  local context = require('contexts')
-  if context == nil then return end
+  local context = require("contexts")
+  if context == nil then
+    return
+  end
 
   log.df("applyContext::%s -> [%s, %s(%s)]", event, win, bundleID, #windows.valid)
   context.load(event, win, app_config.context, "info")
 end
 
-
 -- autoLayout(hs.window, string, string) :: nil
 -- evaluates and sets up layout and contexts for an app/window
 M.handleFilters = function(win, appName, event)
   local app = win:application()
-  if app == nil then return end
+  if app == nil then
+    return
+  end
 
   log.df("handleFilters::%s -> [%s, %s, %s]", event, app:bundleID(), appName, win:title())
 
   local app_config = config.apps[app:bundleID()]
-  if app_config == nil then return end
+  if app_config == nil then
+    return
+  end
 
   -- ignore certain window titles that we apply specific app config rules to
   local ignoredWindowTitles = wh.ignoredWindowTitles(app_config)
@@ -125,33 +131,51 @@ end
 --   end
 -- end
 
-M.applyAutoLayout = function()
-  M.layouts = {}
+M.setAppLayout = function(app_config)
+  local bundleID = app_config["bundleID"]
+  if app_config.rules and #app_config.rules > 0 then
+    log.wf("applyAutoLayout::%s", bundleID, hs.inspect(app_config.rules))
 
-  fn.map(config.apps, function(app_config)
-    local bundleID = app_config['bundleID']
-    if app_config.rules and #app_config.rules > 0 then
-      log.wf("applyAutoLayout::%s", bundleID, hs.inspect(app_config.rules))
-
-      fn.map(app_config.rules, function(rule)
+    fn.map(
+      app_config.rules,
+      function(rule)
         if rule["title"] ~= nil or rule["action"] ~= nil or rule["position"] ~= nil then
           return
         end
 
         local title_pattern, screen, position = rule[1], rule[2], rule[3]
         local layout = {
-          hs.application.get(bundleID),       -- application name
-          hs.window.find(title_pattern),      -- window title
-          wh.targetDisplay(screen),           -- screen #
-          position,                           -- layout/postion
+          hs.application.get(bundleID), -- application name
+          hs.window.find(title_pattern), -- window title
+          wh.targetDisplay(screen), -- screen #
+          position, -- layout/postion
           nil,
           nil
         }
 
         table.insert(M.layouts, layout)
-      end)
+      end
+    )
+  end
+end
+
+M.applyAppLayout = function(app)
+  if app ~= nil then
+    local app_config = config.apps[app:bundleID()]
+    M.setAppLayout(app_config)
+    hs.layout.apply(M.layouts)
+  end
+end
+
+M.applyAutoLayout = function()
+  M.layouts = {}
+
+  fn.map(
+    config.apps,
+    function(app_config)
+      M.setAppLayout(app_config)
     end
-  end)
+  )
 
   hs.layout.apply(M.layouts)
 end
@@ -161,11 +185,16 @@ M.applyWindowFilters = function()
 
   log.i("preparing apps for window filtering ->", hs.inspect(appFilters))
 
-  cache.windowFilter = hs.window.filter.new(appFilters)
-    :subscribe(hs.window.filter.windowCreated, M.handleFilters, true)
-    :subscribe(hs.window.filter.windowDestroyed, M.handleFilters, true)
-    :subscribe(hs.window.filter.windowFocused, M.handleFilters, true)
-    :subscribe(hs.window.filter.windowUnfocused, M.handleFilters, true)
+  cache.windowFilter =
+    hs.window.filter.new(appFilters):subscribe(hs.window.filter.windowCreated, M.handleFilters, true):subscribe(
+    hs.window.filter.windowDestroyed,
+    M.handleFilters,
+    true
+  ):subscribe(hs.window.filter.windowFocused, M.handleFilters, true):subscribe(
+    hs.window.filter.windowUnfocused,
+    M.handleFilters,
+    true
+  )
 end
 
 -- prepare() :: nil
@@ -175,14 +204,15 @@ M.prepare = function()
   M.applyWindowFilters()
 end
 
-
 -- generateAppFilters() :: {string}
 -- generates a table of application names for applying window filters
 M.generateAppFilters = function()
   local appFilters = {}
 
   for appBundleID, app_config in pairs(config.apps) do
-    if app_config == nil or appBundleID == "_" then return end
+    if app_config == nil or appBundleID == "_" then
+      return
+    end
 
     table.insert(appFilters, app_config.name)
   end
@@ -190,24 +220,25 @@ M.generateAppFilters = function()
   return appFilters
 end
 
-
 -- appCleanup(hs.application) :: nil
 -- does app-wide cleanup of window filters
 -- FIXME: finish this
 M.appCleanup = function(app)
-  if app == nil then return end
+  if app == nil then
+    return
+  end
 
   log.df("unsubscribing window filter events -> %s", app:bundleID())
   cache.windowFilter[app:name()]:unsubcribe()
 end
-
 
 -- initialize watchers
 M.start = function()
   log.i("starting..")
 
   -- watch for docking status changes
-  cache.watcher = hs.watchable.watch('status.isDocked', M.prepare)
+  cache.dock_watcher = hs.watchable.watch("status.isDocked", M.prepare)
+  cache.application_watcher = hs.application.watcher.new(M.applyAppLayout)
 
   -- initial invocation
   M.prepare()

@@ -2,7 +2,7 @@
 -- https://github.com/dbmrq/dotfiles/blob/master/home/.hammerspoon/winman.lua
 
 -- local log = hs.logger.new('[bindings.snap]', 'warning')
-local chain = require("ext.window").chain
+-- local chain = require("ext.window").chain
 local wh = require("utils.wm.window-handlers")
 local movewindows = hs.hotkey.modal.new()
 local alertUuids = {}
@@ -10,7 +10,6 @@ local alertUuids = {}
 local module = {}
 
 function movewindows:entered()
-  print(hs.inspect(hs.screen.allScreens()))
   alertUuids =
     hs.fnutils.map(
     hs.screen.allScreens(),
@@ -106,13 +105,61 @@ module.start = function()
   end
 
   movewindows:bind(
-    "",
-    "v",
-    function()
-      module.windowSplitter()
-      movewindows:exit()
-    end
+  "",
+  "v",
+  function()
+    module.windowSplitter()
+    movewindows:exit()
+  end
+  ):bind(
+  "ctrl",
+  "[",
+  function()
+    movewindows:exit()
+  end
+  ):bind(
+  "",
+  "escape",
+  function()
+    movewindows:exit()
+  end
+  ):bind(
+  "shift",
+  "h",
+  function()
+    hs.window.focusedWindow():moveOneScreenWest()
+    movewindows:exit()
+  end
+  ):bind(
+  "shift",
+  "l",
+  function()
+    hs.window.focusedWindow():moveOneScreenEast()
+    movewindows:exit()
+  end
+  ):bind(
+  "",
+  ",",
+  function()
+    hs.window.focusedWindow():application():selectMenuItem("Tile Window to Left of Screen")
+    movewindows:exit()
+  end
+  ):bind(
+  "",
+  ".",
+  function()
+    hs.window.focusedWindow():application():selectMenuItem("Tile Window to Right of Screen")
+    movewindows:exit()
+  end
+  ):bind(
+  "",
+  "tab",
+  function()
+    hs.window.focusedWindow():centerOnScreen()
+    movewindows:exit()
+  end
   )
+
 
   -- hs.fnutils.each(
   --   hyper.grid,

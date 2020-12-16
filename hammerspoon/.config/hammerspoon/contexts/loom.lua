@@ -1,10 +1,10 @@
-local cache  = {}
-local module = { cache = cache, }
+local cache = {}
+local module = {cache = cache}
 
-local fn = require('hs.fnutils')
-local wh = require('utils.wm.window-handlers')
-local spotify = require('bindings.media').spotify
-local ptt = require('bindings.ptt')
+local fn = require("hs.fnutils")
+local wh = require("utils.wm.window-handlers")
+local spotify = require("bindings.media").media_control
+local ptt = require("bindings.ptt")
 local initApplyComplete = false
 
 -- apply(string, hs.window, hs.logger) :: nil
@@ -14,12 +14,12 @@ module.apply = function(event, win, log)
       ----------------------------------------------------------------------
       -- handle DND toggling
       log.df("toggling on DND for %s..", event)
-      wh.dndHandler(win, { enabled = true, mode = "loom" }, event)
+      wh.dndHandler(win, {enabled = true, mode = "loom"}, event)
 
       ----------------------------------------------------------------------
       -- naively handle spotify pause (always pause it, no matter the event)
       log.df("pausing spotify for %s..", event)
-      spotify('pause')
+      spotify("pause")
 
       -- unmute (PTM) by default
       log.df("toggling on PTM for %s..", event)
@@ -31,11 +31,14 @@ module.apply = function(event, win, log)
 
   ----------------------------------------------------------------------
   -- mute (PTT) by default
-  wh.onAppQuit(win, function()
-    log.df("toggling on PTT for %s..", event)
-    ptt.setState("push-to-talk")
-    initApplyComplete = false
-  end)
+  wh.onAppQuit(
+    win,
+    function()
+      log.df("toggling on PTT for %s..", event)
+      ptt.setState("push-to-talk")
+      initApplyComplete = false
+    end
+  )
 end
 
 return module

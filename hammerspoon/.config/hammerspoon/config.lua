@@ -1,4 +1,4 @@
-local log = hs.logger.new("[config]", "warning")
+-- local log = hs.logger.new("[config]", "warning")
 
 -- grid config
 hs.grid.GRIDWIDTH = 8
@@ -140,7 +140,6 @@ M.apps = {
     bundleID = "com.culturedcode.ThingsMac",
     name = "Things",
     hyper_key = "t",
-    preferred_display = 1,
     hideAfter = 1,
     position = M.grid.centeredMedium,
     local_bindings = {",", "."},
@@ -220,7 +219,7 @@ M.apps = {
     rules = {
       -- {title = 'Zoom', action = 'quit'},
       -- {title = 'Zoom Meeting', action = 'snap'},
-      {"Zoom Meeting", 2, M.layout.fullScreen}
+      {"Zoom Meeting", 1, M.layout.fullScreen}
     }
   },
   ["com.loom.desktop"] = {
@@ -234,7 +233,8 @@ M.apps = {
   ["com.spotify.client"] = {
     bundleID = "com.spotify.client",
     name = "Spotify",
-    hyper_key = "\\",
+    hyper_key = "p",
+    modifier = M.modifiers.shift,
     hideAfter = 1,
     position = M.grid.rightHalf,
     rules = {
