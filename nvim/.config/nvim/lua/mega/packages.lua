@@ -29,7 +29,10 @@ return {
 
     -- (paq-nvim) --
     paq {"savq/paq-nvim", opt = true}
-    -- require('plenary.reload').reload_module('paq-nvim')
+    local plenary_exists, plenary = pcall(require, "plenary.reload")
+    if plenary_exists then
+      plenary.reload_module("paq-nvim")
+    end
 
     -- (ui, interface) --
     paq "trevordmiller/nova-vim"
