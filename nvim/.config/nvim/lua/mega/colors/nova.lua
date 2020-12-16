@@ -1,37 +1,24 @@
--- local icons = {
---statusline_checking = "\uf110",   --"
---statusline_ok = "\uf00c",         --"
---statusline_error = "\uf05e",      --"
---statusline_warning = "\uf071",    --"
---statusline_information = "\uf7fc",--"
---statusline_hint = "\uf835",       --"
---modified_symbol = "\uf085",       --" vcs_symbol = "\uf418",            --"
---readonly_symbol = "\uf023",       --"
---ln_sep = "\ue0a1",                --"
---col_sep = "\uf6da",               --"
---perc_sep = "\uf44e",              --"
---right_sep = "\ue0b4",             --" nf-ple-*
---left_sep = "\ue0b6",              --"
---term_mode = "\ufcb5",             --"\ue7a2  ﲵ
-
---sign_error = "\uf655",
---sign_warning = "\ufa36",          --"喝
---sign_information = "\uf7fc",   --"\uf0da
---sign_hint = "\uf835",    --"\uf105
-
---virtual_text_symbol = "\uf63d",   --"
-
---spinner_frames = {'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'},
--- }
-
 local cu = require("mega.colors.utils")
 
 local icons = {
-  sign_error = mega.utf8(0xf655), --"",
-  sign_warning = "喝", --"\ufa36 喝
-  sign_information = "", --\uf7fc \uf0da 
-  sign_hint = "", --"\uf835" \uf105
-  virtual_text = mega.utf8(0xf63d)
+  sign_error = mega.utf8(0xf655),
+  sign_warning = mega.utf8(0xfa36),
+  sign_information = mega.utf8(0xf7fc),
+  sign_hint = mega.utf8(0xf835),
+  virtual_text = mega.utf8(0xf63d),
+  mode_term = mega.utf8(0xfcb5),
+  ln_sep = mega.utf8(0xe0a1),
+  col_sep = mega.utf8(0xf6da),
+  perc_sep = mega.utf8(0xf44e),
+  right_sep = mega.utf8(0xe0b4),
+  left_sep = mega.utf8(0xe0b6),
+  modified_symbol = mega.utf8(0xf085),
+  vcs_symbol = mega.utf8(0xf418),
+  readonly_symbol = mega.utf8(0xf023),
+  statusline_error = mega.utf8(0xf05e),
+  statusline_warning = mega.utf8(0xf071),
+  statusline_information = mega.utf8(0xf7fc),
+  statusline_hint = mega.utf8(0xf835)
 }
 
 local base = {
@@ -49,8 +36,8 @@ local base = {
   dark_yellow = "#f2c38f",
   orange = "#f2c38f",
   brown = "#db9c5e",
-  lightest_gray = "#afafaf",
-  lighter_gray = "#dddddd",
+  lightest_gray = "#dddddd",
+  lighter_gray = "#afafaf",
   light_gray = "#afafaf",
   gray = "#aaaaaa",
   dark_gray = "#667796",
@@ -58,7 +45,7 @@ local base = {
   darkest_gray = "#2f3c44",
   visual_gray = "#6A7D89",
   special_gray = "#1E272C",
-  section_bg = "#333333",
+  section_bg = "#333333"
 }
 
 local status = {
@@ -92,6 +79,7 @@ local status = {
   insert_color = base.green,
   replace_color = base.light_red,
   visual_color = base.light_yellow,
+  terminal_color = "#6f6f6f",
   active_bg = base.visual_gray,
   inactive_bg = base.special_gray
 }

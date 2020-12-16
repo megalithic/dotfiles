@@ -324,7 +324,7 @@ M.apps = {
     hideAfter = 1,
     quitGuard = true,
     rules = {
-      {'Hammerspoon Console', 2, M.layout.rightHalf},
+      {'Hammerspoon Console', 2, M.layout.fullScreen},
       -- {title = 'Hammerspoon Console', action = 'snap', position = M.grid.rightHalf}
     }
   },
@@ -390,10 +390,10 @@ M.utilities = {
     modifier = M.modifiers.ctrlShift,
     shortcut = 's',
     fn = (function()
-      current_date = os.date('%Y%m%d-%H%M%S')
-      filename = "capture_" .. current_date .. ".png"
-      capture_target = "~/Dropbox/captures/"..filename
-      print("SCREENCAPTURE: "..hs.inspect(capture_target))
+      -- current_date = os.date('%Y%m%d-%H%M%S')
+      -- filename = "capture_" .. current_date .. ".png"
+      -- capture_target = "~/Dropbox/captures/"..filename
+      -- print("SCREENCAPTURE: "..hs.inspect(capture_target))
 
       -- hs.execute("screencapture -i ~/Dropbox/captures/shot_`date '+%Y-%m-%d_%H-%M-%S'`.png");
     end)

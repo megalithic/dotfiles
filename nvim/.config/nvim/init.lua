@@ -21,7 +21,7 @@ _G["mega"] = require("mega.global")
 -- [ debugging ] ---------------------------------------------------------------
 
 -- Can set this lower if needed (used in tandem with mega.inspect) ->
---  require('vim.lsp.log').set_level("trace")
+-- require('vim.lsp.log').set_level("trace")
 -- require("vim.lsp.log").set_level("debug")
 
 -- To execute in :cmd ->
@@ -49,8 +49,4 @@ do
   mega.load("ft", "mega.ft", "setup")
   mega.load("ft", "mega.ft", "trigger_ft")
   mega.load("statusline", "mega.statusline", "activate")
-
-  vim.schedule(function()
-    print("after loading things ->" .. vim.inspect(vim.g.fzf_command_prefix))
-  end)
 end

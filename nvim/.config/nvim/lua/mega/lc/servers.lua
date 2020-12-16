@@ -30,28 +30,16 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
-  efm = {
-    init_options = {documentFormatting = true},
-    settings = {
-      rootMarkers = {".git/"},
-      languages = {
-        lua = {
-          {formatCommand = "lua-format -i", formatStdin = true}
-        }
-      }
-    }
-  },
+  efm = {init_options = {documentFormatting = true}},
   elmls = {
-    cmd = {vim.fn.stdpath("cache") .. "/lspconfig/elmls/node_modules/.bin/elm-language-server"},
+    cmd = {
+      vim.fn.stdpath("cache") .. "/lspconfig/elmls/node_modules/.bin/elm-language-server"
+    },
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")
   },
   elixirls = {
-    settings = {
-      elixirLS = {
-        dialyzerEnabled = true
-      }
-    },
+    settings = {elixirLS = {dialyzerEnabled = true}},
     filetypes = {"elixir", "eelixir"},
     root_dir = root_pattern("mix.lock", "mix.exs", ".git")
   },
@@ -78,7 +66,11 @@ local servers = {
           },
           {
             description = "Babel configuration",
-            fileMatch = {".babelrc.json", ".babelrc", "babel.config.json"},
+            fileMatch = {
+              ".babelrc.json",
+              ".babelrc",
+              "babel.config.json"
+            },
             url = "http://json.schemastore.org/lerna"
           },
           {
@@ -93,7 +85,11 @@ local servers = {
           },
           {
             description = "Prettier config",
-            fileMatch = {".prettierrc", ".prettierrc.json", "prettier.config.json"},
+            fileMatch = {
+              ".prettierrc",
+              ".prettierrc.json",
+              "prettier.config.json"
+            },
             url = "http://json.schemastore.org/prettierrc"
           },
           {
@@ -103,7 +99,11 @@ local servers = {
           },
           {
             description = "Stylelint config",
-            fileMatch = {".stylelintrc", ".stylelintrc.json", "stylelint.config.json"},
+            fileMatch = {
+              ".stylelintrc",
+              ".stylelintrc.json",
+              "stylelint.config.json"
+            },
             url = "http://json.schemastore.org/stylelintrc"
           }
         }
@@ -112,12 +112,7 @@ local servers = {
   },
   pyls = {
     enable = true,
-    plugins = {
-      pyls_mypy = {
-        enabled = true,
-        live_mode = false
-      }
-    }
+    plugins = {pyls_mypy = {enabled = true, live_mode = false}}
   },
   rust_analyzer = {},
   sumneko_lua = {
@@ -185,9 +180,7 @@ local servers = {
           ["http://json.schemastore.org/stylelintrc"] = ".stylelintrc.{yml,yaml}",
           ["http://json.schemastore.org/circleciconfig"] = ".circleci/**/*.{yml,yaml}"
         },
-        format = {
-          enable = true
-        },
+        format = {enable = true},
         validate = true,
         hover = true,
         completion = true

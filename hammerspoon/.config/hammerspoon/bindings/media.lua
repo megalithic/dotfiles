@@ -1,3 +1,5 @@
+-- NOTE: hyper.lua loads this module
+--
 local log = hs.logger.new('[bindings.media]', 'warning')
 
 local module = {}
