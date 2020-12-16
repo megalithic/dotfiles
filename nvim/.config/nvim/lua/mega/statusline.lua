@@ -1,13 +1,9 @@
 return {
   activate = function()
-    local galaxyline = require "galaxyline"
-    -- local diagnostic = require "galaxyline.provider_diagnostic"
-    -- local buffer = require("galaxyline.provider_buffer")
-    -- local fileinfo = require("galaxyline.provider_fileinfo")
-    local gls = galaxyline.section
+    local gl = require "galaxyline"
+    local gls = gl.section
     local colors = require("mega.colors.nova").colors
     local icons = require("mega.colors.nova").icons
-    -- DiagnosticError = diagnostic.get_diagnostic_error
 
     local mode_color = function()
       local mode_colors = {
@@ -30,6 +26,28 @@ return {
       end
       return false
     end
+
+    local checkwidth = function()
+      local squeeze_width = vim.fn.winwidth(0) / 2
+      if squeeze_width > 40 then
+        return true
+      end
+      return false
+    end
+
+    gl.short_line_list = {
+      "LuaTree",
+      "vista",
+      "dbui",
+      "startify",
+      "term",
+      "nerdtree",
+      "fugitive",
+      "fugitiveblame",
+      "plug",
+      "packer",
+      "paq"
+    }
 
     gls.left[1] = {
       ViMode = {
@@ -55,7 +73,7 @@ return {
       GitBranch = {
         provider = "GitBranch",
         condition = buffer_not_empty,
-        icon = "  " .. icons.vcs_symbol,
+        icon = "  " .. icons.vcs_symbol .. " ",
         -- icon = "   ",
         separator = " ",
         separator_highlight = {colors.bg, colors.bg},
@@ -92,33 +110,37 @@ return {
     gls.right[1] = {
       DiagnosticError = {
         provider = "DiagnosticError",
-        icon = icons.statusline_error .. " ",
+        icon = " " .. icons.statusline_error .. " ",
+        condition = checkwidth,
         separator = " ",
-        highlight = {colors.fg, colors.error_status}
+        highlight = {colors.bg, colors.error_status}
       }
     }
     gls.right[2] = {
       DiagnosticWarn = {
         provider = "DiagnosticWarn",
-        icon = icons.statusline_warning .. " ",
+        icon = " " .. icons.statusline_warning .. " ",
+        condition = checkwidth,
         separator = " ",
-        highlight = {colors.fg, colors.warning_status}
+        highlight = {colors.bg, colors.warning_status}
       }
     }
     gls.right[3] = {
       DiagnosticInfo = {
         provider = "DiagnosticInfo",
-        icon = icons.statusline_information .. " ",
+        icon = " " .. icons.statusline_information .. " ",
+        condition = checkwidth,
         separator = " ",
-        highlight = {colors.fg, colors.information_status}
+        highlight = {colors.bg, colors.information_status}
       }
     }
     gls.right[4] = {
       DiagnosticHint = {
         provider = "DiagnosticHint",
         icon = icons.statusline_hint .. " ",
+        condition = checkwidth,
         separator = " ",
-        highlight = {colors.fg, colors.hint_status}
+        highlight = {colors.bg, colors.hint_status}
       }
     }
     gls.right[5] = {
@@ -179,29 +201,13 @@ return {
     }
 
     gls.short_line_left[1] = {
-      FileName = {
+      BufferName = {
         provider = function()
-          local file = vim.fn.expand("%")
-          if vim.bo.readonly and vim.bo.filetype ~= "help" then
-            file = file .. " "
-          end
-          if vim.bo.modified then
-            file = file .. " " .. icons.modified_symbol
-            vim.api.nvim_command("hi GalaxyFileName gui=bold guifg=" .. colors.light_red .. " guibg=" .. colors.bg)
-          else
-            vim.api.nvim_command("hi GalaxyFileName guifg=" .. colors.blue .. " guibg=" .. colors.bg)
-          end
-
-          return file
+          return ""
         end,
         separator = " ",
-        separator_highlight = {colors.bg, colors.bg},
-        highlight = {colors.blue, colors.bg},
-        highlight_modifier = function()
-          if vim.bo.modified then
-            return "Dirty"
-          end
-        end
+        separator_highlight = {colors.gutter_gray, colors.bg},
+        highlight = {colors.gutter_gray, colors.bg},
       }
     }
 
@@ -209,11 +215,12 @@ return {
       BufferType = {
         provider = "FileTypeName",
         separator = " ",
+        condition = buffer_not_empty,
         separator_highlight = {colors.gutter_gray, colors.bg},
         highlight = {colors.gutter_gray, colors.bg}
       }
     }
 
-    galaxyline.load_galaxyline()
+    gl.load_galaxyline()
   end
 }
