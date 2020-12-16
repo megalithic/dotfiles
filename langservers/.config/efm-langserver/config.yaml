@@ -3,8 +3,8 @@
 # https://github.com/johejo/dotfiles/blob/master/efm-langserver/config.yaml
 
 version: 2
-log-file: "~/.local/share/nvim/efm.log"
-log-level: 1
+# log-file: "~/.local/share/nvim/efm.log"
+# log-level: 1
 # root-markers:
 #   - .git/
 #   - mix.lock

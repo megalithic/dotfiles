@@ -56,7 +56,7 @@ return {
           function()
             vim.api.nvim_command [[autocmd! * <buffer>]]
             vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
-            vim.api.nvim_command [[autocmd BufWritePost plugins.lua PackerCompile]]
+            -- vim.api.nvim_command [[autocmd BufWritePost plugins.lua PackerCompile]]
           end
         )
       end
@@ -96,7 +96,7 @@ return {
         "lc.diagnostics",
         function()
           vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
-          vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
+          -- vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
         end
       )
     end

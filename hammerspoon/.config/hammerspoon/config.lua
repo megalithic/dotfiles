@@ -106,7 +106,6 @@ M.apps = {
     bundleID = 'net.kovidgoyal.kitty',
     name = 'kitty',
     hyper_key = 'k',
-    preferredDisplay = 1,
     position = M.grid.fullScreen,
     quitGuard = true,
     rules = {
@@ -117,7 +116,6 @@ M.apps = {
     bundleID = 'com.brave.Browser',
     name = 'Brave Browser',
     hyper_key = 'j',
-    preferredDisplay = 1,
     position = M.grid.fullScreen,
     quitGuard = true,
     rules = {
@@ -128,11 +126,10 @@ M.apps = {
     bundleID = 'com.insomnia.app',
     name = 'Insomnia',
     hyper_key ='i',
-    preferredDisplay = 1,
     position = M.grid.rightHalf,
     quitGuard = false,
     rules = {
-      {nil, 2, M.layout.rightHalf}
+      {nil, 1, M.layout.rightHalf}
     }
   },
   ['com.runningwithcrayons.Alfred'] = {
@@ -145,7 +142,6 @@ M.apps = {
     name = 'Drafts',
     hyper_key ='d',
     local_bindings = {';'},
-    preferredDisplay = 1,
     quitGuard = false,
     hideAfter = 1,
     rules = {
@@ -169,19 +165,17 @@ M.apps = {
     name = 'Dash',
     hyper_key = 'd',
     modifier = M.modifiers.shift,
-    preferredDisplay = 1,
     rules = {
-      {nil, 2, M.layout.centeredLarge},
+      {nil, 1, M.layout.centeredLarge},
     },
 
   },
   ['com.brettterpstra.marked2'] = {
     bundleID = 'com.brettterpstra.marked2',
     name = 'Marked',
-    preferredDisplay = 2,
     position = M.grid.leftHalf,
     rules = {
-      {nil, 2, M.layout.leftHalf},
+      {nil, 1, M.layout.leftHalf},
     },
   },
   ['com.tinyspeck.slackmacgap'] = {
@@ -190,11 +184,10 @@ M.apps = {
     hyper_key ='s',
     context = 'slack',
     distraction = true,
-    preferredDisplay = 2,
     position = M.grid.leftHalf,
     quitGuard = true,
     rules = {
-      {nil, 2, M.layout.leftHalf},
+      {nil, 1, M.layout.leftHalf},
       -- {title = 'Slack Call Minipanel', action = 'ignore'},
     }
   },
@@ -204,10 +197,9 @@ M.apps = {
     hyper_key ='e',
     context = 'spark',
     distraction = true,
-    preferredDisplay = 2,
     position = M.grid.rightHalf,
     rules = {
-      {nil, 2, M.layout.rightHalf},
+      {nil, 1, M.layout.rightHalf},
     },
   },
 
@@ -217,10 +209,9 @@ M.apps = {
     -- hyper_key ='e',
     context = 'canary',
     distraction = true,
-    preferredDisplay = 2,
     position = M.grid.rightHalf,
     rules = {
-      {nil, 2, M.layout.rightHalf}
+      {nil, 1, M.layout.rightHalf}
       -- {title = 'Main Window', action = 'snap'},
       -- {title = 'Preferences', action = 'ignore'},
     }
@@ -229,7 +220,6 @@ M.apps = {
     bundleID = 'com.apple.finder',
     name = 'Finder',
     hyper_key ='f',
-    preferredDisplay = 1,
     rules = {
       {"Finder", 1, M.layout.centeredMedium}
     },
@@ -239,7 +229,6 @@ M.apps = {
     name = 'zoom.us',
     context = 'zoom',
     hyper_key ='z',
-    preferredDisplay = 1,
     position = M.grid.fullScreen,
     launchMode = 'focus',
     rules = {
@@ -253,18 +242,17 @@ M.apps = {
     name = 'Loom',
     context = 'loom',
     -- rules = {
-    --   {nil, 2, M.grid.leftHalf},
+    --   {nil, 1, M.grid.leftHalf},
     -- },
   },
   ['com.spotify.client'] = {
     bundleID = 'com.spotify.client',
     name = 'Spotify',
     hyper_key ='\\',
-    preferredDisplay = 2,
     hideAfter = 1,
     position = M.grid.rightHalf,
     rules = {
-      {nil, 2, M.layout.rightHalf},
+      {nil, 1, M.layout.rightHalf},
     },
   },
   ['com.apple.iChat'] = {
@@ -273,7 +261,6 @@ M.apps = {
     hyper_key ='m',
     context = 'messages',
     distraction = true,
-    preferredDisplay = 1,
     position = '5,5 3x3',
     rules = {
       {nil, 1, M.layout.bottomRight30},
@@ -285,7 +272,6 @@ M.apps = {
     modifier = M.modifiers.cmdCtrl,
     shortcut = 'm',
     distraction = true,
-    preferredDisplay = 1,
     tabjump = 'hangouts.google.com',
     -- rules = {
     --   {nil, 1, M.layout.leftHalf},
@@ -297,7 +283,6 @@ M.apps = {
     -- hyper_key ='w',
     context = 'whatsapp',
     distraction = true,
-    preferredDisplay = 1,
     position = '5,5 3x3',
     rules = {
       {nil, 1, M.layout.bottomRight30},
@@ -309,7 +294,6 @@ M.apps = {
     hyper_key ='w',
     context = 'signal',
     distraction = true,
-    preferredDisplay = 1,
     position = '5,5 3x3',
     rules = {
       {nil, 1, M.layout.bottomRight30},
@@ -319,7 +303,6 @@ M.apps = {
     bundleID = 'com.agilebits.onepassword7',
     name = '1Password',
     hyper_key = '1',
-    preferredDisplay = 1,
     hideAfter = 1,
     rules = {
       {nil, 1, M.layout.centeredMedium},
@@ -328,7 +311,6 @@ M.apps = {
   ['com.teamviewer.TeamViewer'] = {
     bundleID = 'com.teamviewer.TeamViewer',
     name = 'TeamViewer',
-    preferredDisplay = 1,
     rules = {
       {nil, 1, M.layout.centeredLarge},
     },
@@ -338,19 +320,17 @@ M.apps = {
     name = 'Hammerspoon',
     hyper_key = 'r',
     context = 'hammerspoon',
-    preferredDisplay = 2,
     position = M.grid.rightHalf,
     hideAfter = 1,
     quitGuard = true,
     rules = {
-      {'Hammerspoon Console', 2, M.layout.rightHalf},
+      {'Hammerspoon Console', 2, M.layout.fullScreen},
       -- {title = 'Hammerspoon Console', action = 'snap', position = M.grid.rightHalf}
     }
   },
   ['com.apple.systempreferences'] = {
     bundleID = 'com.apple.systempreferences',
     name = 'System Preferences',
-    preferredDisplay = 1,
     rules = {
       {nil, 1, M.layout.centeredMedium},
     },
@@ -360,27 +340,24 @@ M.apps = {
     name = 'Fantastical',
     hyper_key ='y',
     local_bindings = {']'},
-    preferredDisplay = 1,
     quitGuard = true,
     hideAfter = 1,
     rules = {
-      {nil, 2, M.layout.centeredLarge},
+      {nil, 1, M.layout.centeredLarge},
     }
   },
   ['org.pqrs.Karabiner-Elements.Preferences'] = {
     bundleID = 'org.pqrs.Karabiner-Elements.Preferences',
     name = 'Karabiner-Elements',
-    preferredDisplay = 1,
     quitGuard = true,
     hideAfter = 0.5,
     rules = {
-      {nil, 2, M.layout.centeredSmall},
+      {nil, 1, M.layout.centeredSmall},
     }
   },
   ['com.microsoft.autoupdate2'] = {
     bundleID = 'com.microsoft.autoupdate2',
     name = 'Microsoft AutoUpdate',
-    preferredDisplay = 1,
     quitAfter = 0,
   }
 }
@@ -413,10 +390,10 @@ M.utilities = {
     modifier = M.modifiers.ctrlShift,
     shortcut = 's',
     fn = (function()
-      current_date = os.date('%Y%m%d-%H%M%S')
-      filename = "capture_" .. current_date .. ".png"
-      capture_target = "~/Dropbox/captures/"..filename
-      print("SCREENCAPTURE: "..hs.inspect(capture_target))
+      -- current_date = os.date('%Y%m%d-%H%M%S')
+      -- filename = "capture_" .. current_date .. ".png"
+      -- capture_target = "~/Dropbox/captures/"..filename
+      -- print("SCREENCAPTURE: "..hs.inspect(capture_target))
 
       -- hs.execute("screencapture -i ~/Dropbox/captures/shot_`date '+%Y-%m-%d_%H-%M-%S'`.png");
     end)
@@ -533,7 +510,7 @@ M.docking = {
     vendorName = 'CalDigit, Inc.'
   },
   ['docked'] = {
-    wifi = 'off', -- wifi status
+    wifi = 'on', -- wifi status
     profile = 'dz60', -- Karabiner-Elements profile name
     input = 'Samson GoMic', -- microphone source
     output = 'CalDigit Thunderbolt 3 Audio', -- speaker source

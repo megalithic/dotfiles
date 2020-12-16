@@ -1,20 +1,18 @@
--- Window shortcuts originally from @tmiller, now _heavily_ modified.
-
-local movewindows = hs.hotkey.modal.new()
+local spotify = hs.hotkey.modal.new()
 local alertUuids = {}
 
-function movewindows:entered()
+function spotify:entered()
   alertUuids =
     hs.fnutils.map(
     hs.screen.allScreens(),
     function(screen)
-      local prompt = string.format("◱ : %s", hs.window.focusedWindow():application():title())
+      local prompt = string.format("♬ : %s", hs.window.focusedWindow():application():title())
       return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
     end
   )
 end
 
-function movewindows:exited()
+function spotify:exited()
   hs.fnutils.ieach(
     alertUuids,
     function(uuid)
@@ -23,7 +21,7 @@ function movewindows:exited()
   )
 end
 
-movewindows.grid = {
+spotify.grid = {
   {key = "j", unit = hs.geometry.rect(0, 0.5, 1, 0.5)},
   {key = "k", unit = hs.geometry.rect(0, 0, 1, 0.5)},
   {key = "h", unit = hs.layout.left50},
@@ -37,7 +35,7 @@ movewindows.grid = {
   {key = "space", unit = hs.layout.maximized}
 }
 
-movewindows.start = function()
+spotify.start = function()
   local hyper = require("hyper")
   hs.window.animationDuration = 0
 
@@ -46,63 +44,63 @@ movewindows.start = function()
     "v",
     nil,
     function()
-      movewindows:enter()
+      spotify:enter()
     end
   )
 
   hs.fnutils.each(
-    movewindows.grid,
+    spotify.grid,
     function(entry)
-      movewindows:bind(
+      spotify:bind(
         "",
         entry.key,
         function()
           hs.window.focusedWindow():moveToUnit(entry.unit)
-          movewindows:exit()
+          spotify:exit()
         end
       )
     end
   )
 
-  movewindows:bind(
+  spotify:bind(
     "ctrl",
     "[",
     function()
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "",
     "escape",
     function()
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "shift",
     "h",
     function()
       hs.window.focusedWindow():moveOneScreenWest()
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "shift",
     "l",
     function()
       hs.window.focusedWindow():moveOneScreenEast()
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "",
     ",",
     function()
       hs.window.focusedWindow():application():selectMenuItem("Tile Window to Left of Screen")
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "",
     ".",
     function()
       hs.window.focusedWindow():application():selectMenuItem("Tile Window to Right of Screen")
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "",
@@ -155,16 +153,16 @@ movewindows.start = function()
 
       )
 
-      movewindows:exit()
+      spotify:exit()
     end
   ):bind(
     "",
     "tab",
     function()
       hs.window.focusedWindow():centerOnScreen()
-      movewindows:exit()
+      spotify:exit()
     end
   )
 end
 
-return movewindows
+return spotify
