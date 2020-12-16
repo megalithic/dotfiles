@@ -14,8 +14,12 @@ function movewindows:entered()
     hs.fnutils.map(
     hs.screen.allScreens(),
     function(screen)
-      local prompt = string.format("◱ : %s", hs.window.focusedWindow():application():title())
-      return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+      if screen == hs.screen.mainScreen() then
+        local prompt = string.format("◱ : %s", hs.window.focusedWindow():application():title())
+        return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+      end
+
+      return nil
     end
   )
 end
@@ -105,61 +109,60 @@ module.start = function()
   end
 
   movewindows:bind(
-  "",
-  "v",
-  function()
-    module.windowSplitter()
-    movewindows:exit()
-  end
+    "",
+    "v",
+    function()
+      module.windowSplitter()
+      movewindows:exit()
+    end
   ):bind(
-  "ctrl",
-  "[",
-  function()
-    movewindows:exit()
-  end
+    "ctrl",
+    "[",
+    function()
+      movewindows:exit()
+    end
   ):bind(
-  "",
-  "escape",
-  function()
-    movewindows:exit()
-  end
+    "",
+    "escape",
+    function()
+      movewindows:exit()
+    end
   ):bind(
-  "shift",
-  "h",
-  function()
-    hs.window.focusedWindow():moveOneScreenWest()
-    movewindows:exit()
-  end
+    "shift",
+    "h",
+    function()
+      hs.window.focusedWindow():moveOneScreenWest()
+      movewindows:exit()
+    end
   ):bind(
-  "shift",
-  "l",
-  function()
-    hs.window.focusedWindow():moveOneScreenEast()
-    movewindows:exit()
-  end
+    "shift",
+    "l",
+    function()
+      hs.window.focusedWindow():moveOneScreenEast()
+      movewindows:exit()
+    end
   ):bind(
-  "",
-  ",",
-  function()
-    hs.window.focusedWindow():application():selectMenuItem("Tile Window to Left of Screen")
-    movewindows:exit()
-  end
+    "",
+    ",",
+    function()
+      hs.window.focusedWindow():application():selectMenuItem("Tile Window to Left of Screen")
+      movewindows:exit()
+    end
   ):bind(
-  "",
-  ".",
-  function()
-    hs.window.focusedWindow():application():selectMenuItem("Tile Window to Right of Screen")
-    movewindows:exit()
-  end
+    "",
+    ".",
+    function()
+      hs.window.focusedWindow():application():selectMenuItem("Tile Window to Right of Screen")
+      movewindows:exit()
+    end
   ):bind(
-  "",
-  "tab",
-  function()
-    hs.window.focusedWindow():centerOnScreen()
-    movewindows:exit()
-  end
+    "",
+    "tab",
+    function()
+      hs.window.focusedWindow():centerOnScreen()
+      movewindows:exit()
+    end
   )
-
 
   -- hs.fnutils.each(
   --   hyper.grid,
