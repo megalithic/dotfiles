@@ -56,9 +56,9 @@ return {
     -- (file navigation) --
     paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
     paq "junegunn/fzf.vim"
-    paq "ojroques/nvim-lspfuzzy"
-    paq "justinmk/vim-sneak"
-    paq "unblevable/quick-scope"
+    -- paq "ojroques/nvim-lspfuzzy"
+    -- paq "justinmk/vim-sneak"
+    -- paq "unblevable/quick-scope"
 
     -- (text objects) --
     paq {"tpope/vim-rsi"}

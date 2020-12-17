@@ -199,37 +199,19 @@ function stow_away {
     log_ok "-> DONE stowing things"
 }
 
-
-function _do_setup_ssh_key {
-    key_id = "$USER@$HOST"
-    key_file = "$HOME/.ssh/$USER_$HOST"
-    key_type = "ed25519"
-    key_path = $HOME/.ssh/$key_file
-
-    log_ok "-> generating an ssh public/private key with params:"
-    echo "- key_id = $key_id"
-    echo "- key_file = $key_file"
-    echo "- key_type = $key_type"
-    echo
-
-    ssh-keygen -t key_type -C $key_id -N "" -f $key_file
-    eval "$(ssh-agent -s)"
-    ssh-add -K $key_path
-    pbcopy < $key_path
-    log_ok "-> DONE creating ssh key at $key_path; copied to clipboard."
-}
-
 function setup_ssh_key {
     # REF: 
     #  1.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
     #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
 
-    log_warn -n "-> you'll need to setup an ssh public/private key to do more github things later; continue? [yN]"
+    skip_message="-> skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
+    log_warn -n "-> you'll need to setup an ssh public/private key to do more github things later; do this now? [yN]"
     read continue_reply
+
     case $continue_reply in
-        [Yy]) _do_setup_ssh_key ;;
-        [Nn]) log_warn "-> skipping; be sure to set up an ssh at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent" ;;
-        *) log_warn "-> skipping; be sure to set up an ssh at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent" ;;
+      [Yy]) $(bin/ssh-setup) ;;
+      [Nn]) log_warn "$skip_message" ;;
+      *) log_warn "$skip_message" ;;
     esac
 }
 

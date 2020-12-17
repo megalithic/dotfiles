@@ -105,9 +105,9 @@ return {
     end
 
     local function set_quickscope()
-      vim.g.qs_enable = 1
-      vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
-      vim.g.qs_lazy_highlight = 1
+      -- vim.g.qs_enable = 1
+      -- vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
+      -- vim.g.qs_lazy_highlight = 1
     end
 
     local function set_textobj_parameter()

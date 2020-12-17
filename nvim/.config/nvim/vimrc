@@ -88,8 +88,8 @@ nnoremap / /\v
 vnoremap / /\v
 
 
-" flip between two last edited files
-nnoremap <Leader><Leader> <C-^>
+" flip between two last edited files/alternate/buffer
+" nnoremap <Leader><Leader> <C-^>
 
 " Don't overwrite blackhole register with selection
 " https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
