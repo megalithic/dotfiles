@@ -92,18 +92,6 @@ return {
       require("lspfuzzy").setup {}
     end
 
-    local function set_sneak()
-      vim.g["sneak#label"] = 1
-      vim.g["sneak#s_use_ic_scs"] = 1
-      vim.g["sneak#s_next"] = 1
-      vim.g["sneak#prompt"] = ""
-
-      mega.map("n", "f", "<Plug>Sneak_s")
-      mega.map("n", "F", "<Plug>Sneak_S")
-      mega.map("n", "gS", "<Plug>Sneak_,")
-      mega.map("n", "gs", "<Plug>Sneak_;")
-    end
-
     local function set_quickscope()
       -- vim.g.qs_enable = 1
       -- vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
@@ -171,7 +159,6 @@ return {
     set_delimit_mate()
     set_git_messenger()
     set_textobj_parameter()
-    -- set_sneak()
     set_quickscope()
     set_fzf()
     set_lsp_fuzzy()

@@ -132,6 +132,26 @@ return {
     paq "christoomey/vim-tmux-runner"
     paq "wellle/visual-split.vim"
 
+    -- (langs, syntax, et al) --
+    paq "tpope/vim-rails"
+    paq "gleam-lang/gleam.vim"
+    paq "vim-erlang/vim-erlang-runtime"
+    paq "Zaptic/elm-vim"
+    paq "antew/vim-elm-analyse"
+    paq "elixir-lang/vim-elixir"
+    paq "avdgaag/vim-phoenix"
+    paq "lucidstack/hex.vim"
+    paq "neoclide/jsonc.vim"
+    paq "gerrard00/vim-mocha-only"
+    paq "plasticboy/vim-markdown"
+    paq "florentc/vim-tla"
+    paq "euclidianace/betterlua.vim"
+    paq "andrejlevkovitch/vim-lua-format"
+    paq "yyq123/vim-syntax-logfile"
+    paq "jparise/vim-graphql"
+    paq "darfink/vim-plist"
+    paq "sheerun/vim-polyglot"
+
     Paq.update()
     Paq.install()
 

@@ -482,6 +482,14 @@ let g:netrw_dirhistmax = 0 " no netrw history
 " -- vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
 " -- vim.g.fzf_action = {enter = "vsplit"}
 " -- vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
+function! RipgrepFzf(query, fullscreen)
+  let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
+  let initial_command = printf(command_fmt, shellescape(a:query))
+  let reload_command = printf(command_fmt, '{q}')
+  let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+  call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+endfunction
+command! -nargs=* -bang Rg call RipgrepFzf(<q-args>, <bang>0)
 
 " Polyglot
 let g:polyglot_disabled = [
