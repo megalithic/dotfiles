@@ -202,12 +202,10 @@ return {
 
     gls.short_line_left[1] = {
       BufferName = {
-        provider = function()
-          return ""
-        end,
+        provider = "FileName",
         separator = " ",
         separator_highlight = {colors.gutter_gray, colors.bg},
-        highlight = {colors.gutter_gray, colors.bg},
+        highlight = {colors.gutter_gray, colors.bg}
       }
     }
 

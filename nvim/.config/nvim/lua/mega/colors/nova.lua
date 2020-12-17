@@ -96,9 +96,6 @@ return {
     -- (highlights) --
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
 
-    cu.hi("HighlightedyankRegion", status.highlighted_yank, "NONE", "bold")
-    cu.hi("HighlightedYankRegion", status.highlighted_yank, "NONE", "bold")
-    cu.hi("IncSearch", status.incsearch, "NONE", "bold")
     cu.hi("SignColumn", nil, "NONE", nil)
     cu.hi("CursorLineNr", status.cursorlinenr, status.special_bg, "italic")
     cu.hi("VertSplit", status.separator, "NONE", "NONE")
@@ -110,8 +107,17 @@ return {
     cu.hi("Comment", nil, nil, "italic")
     cu.hi("MatchWord", nil, nil, "underline,undercurl,italic")
     cu.hi("MatchParen", nil, nil, "underline,undercurl,italic")
+
+    cu.hi("HighlightedyankRegion", base.white, status.highlighted_yank, "bold")
+    cu.hi("HighlightedYankRegion", base.white, status.highlighted_yank, "bold")
+    cu.hi("Search", nil, base.brown, "underline")
+    cu.hi("IncSearch", nil, status.incsearch, "bold")
+
+    cu.hi("QuickScopePrimary", "#afff5f", status.special_bg, "NONE")
+    cu.hi("QuickScopeSecondary", "#00C7DF", status.special_bg, "NONE")
     cu.hi("CleverFDefaultLabel", status.cursorlinenr, status.special_bg, nil)
-    cu.hi("CleverFDefaultLabel", status.cursorlinenr, status.special_bg, nil)
+    cu.hi("Sneak", "#afff5f", status.special_bg, "NONE")
+    cu.hi("SneakScope", "#00C7DF", status.special_bg, "NONE")
 
     cu.hi("ErrorMsg", status.error_status, nil, "underline,undercurl,italic")
     cu.hi("WarningMsg", status.warning_status, nil, "italic")
@@ -132,6 +138,7 @@ return {
     cu.hi("DiffAdd", status.added, status.bg, "NONE")
     cu.hi("DiffDelete", status.removed, status.bg, "NONE")
     cu.hi("DiffChange", status.changed, status.bg, "NONE")
+
 
     local lsp_highlights = {
       ["Error"] = "error_status",

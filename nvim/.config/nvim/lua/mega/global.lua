@@ -3,10 +3,10 @@ local M = {}
 M.map_opts = {noremap = true, silent = false, expr = false}
 
 function M.load(key, req, loader_fn)
-  local loaded, key = pcall(require, req)
+  local loaded, loader = pcall(require, req)
 
   if loaded then
-    key[loader_fn]()
+    loader[loader_fn]()
   else
     mega.inspect("", key, 4)
   end
@@ -313,34 +313,40 @@ function M.plogpath()
 end
 
 function M.copy(obj, seen)
-    if type(obj) ~= 'table' then return obj end
-    if seen and seen[obj] then return seen[obj] end
-    local s = seen or {}
-    local res = {}
-    s[obj] = res
-    for k, v in next, obj do res[M.copy(k, s)] = M.copy(v, s) end
-    return setmetatable(res, getmetatable(obj))
+  if type(obj) ~= "table" then
+    return obj
+  end
+  if seen and seen[obj] then
+    return seen[obj]
+  end
+  local s = seen or {}
+  local res = {}
+  s[obj] = res
+  for k, v in next, obj do
+    res[M.copy(k, s)] = M.copy(v, s)
+  end
+  return setmetatable(res, getmetatable(obj))
 end
 
 function M.dump(...)
-    local objects = vim.tbl_map(vim.inspect, {...})
-    print(unpack(objects))
+  local objects = vim.tbl_map(vim.inspect, {...})
+  print(unpack(objects))
 end
 
 function M.activeLSP()
-    local servers = {}
-    for _, lsp in pairs(vim.lsp.get_active_clients()) do
-        table.insert(servers, {name = lsp.name, id = lsp.id})
-    end
-    M.dump(servers)
+  local servers = {}
+  for _, lsp in pairs(vim.lsp.get_active_clients()) do
+    table.insert(servers, {name = lsp.name, id = lsp.id})
+  end
+  M.dump(servers)
 end
 
 function M.bufferActiveLSP()
-    local servers = {}
-    for _, lsp in pairs(vim.lsp.buf_get_clients()) do
-        table.insert(servers, {name = lsp.name, id = lsp.id})
-    end
-    M.dump(servers)
+  local servers = {}
+  for _, lsp in pairs(vim.lsp.buf_get_clients()) do
+    table.insert(servers, {name = lsp.name, id = lsp.id})
+  end
+  M.dump(servers)
 end
 
 return M
