@@ -1,3 +1,5 @@
+-- REF: might want to make our own without galaxyline?
+-- https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/lua/statusline.lua
 return {
   activate = function()
     local gl = require "galaxyline"
