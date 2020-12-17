@@ -28,7 +28,7 @@ module.defaultSize = 24
 
 function module.showOnly(opts)
   module.close()
-  module.show({text = opts.text, duration = opts.duration, size = opts.size})
+  module.show({text = opts.text, duration = opts.duration, size = opts.size, screen = opts.screen})
 end
 
 function module.close()

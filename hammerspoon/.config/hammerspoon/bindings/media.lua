@@ -131,6 +131,11 @@ module.start = function()
     nil,
     function()
       media:enter()
+      
+      -- set a timeout to kill our modal in case no follow-on keys are pressed
+      hs.timer.doAfter(2, function()
+        media:exit()
+      end)
     end
   )
 

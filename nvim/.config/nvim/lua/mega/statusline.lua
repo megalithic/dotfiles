@@ -113,7 +113,7 @@ return {
         icon = " " .. icons.statusline_error .. " ",
         condition = checkwidth,
         separator = " ",
-        highlight = {colors.bg, colors.error_status}
+        highlight = {colors.error_status, colors.bg}
       }
     }
     gls.right[2] = {
@@ -122,7 +122,7 @@ return {
         icon = " " .. icons.statusline_warning .. " ",
         condition = checkwidth,
         separator = " ",
-        highlight = {colors.bg, colors.warning_status}
+        highlight = {colors.warning_status, colors.bg}
       }
     }
     gls.right[3] = {
@@ -131,7 +131,7 @@ return {
         icon = " " .. icons.statusline_information .. " ",
         condition = checkwidth,
         separator = " ",
-        highlight = {colors.bg, colors.information_status}
+        highlight = {colors.information_status, colors.bg}
       }
     }
     gls.right[4] = {
@@ -140,7 +140,7 @@ return {
         icon = icons.statusline_hint .. " ",
         condition = checkwidth,
         separator = " ",
-        highlight = {colors.bg, colors.hint_status}
+        highlight = {colors.hint_status, colors.bg}
       }
     }
     gls.right[5] = {
