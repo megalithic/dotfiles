@@ -2,7 +2,8 @@
 -- https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/lua/statusline.lua
 return {
   activate = function()
-    local gl = require "galaxyline"
+    local gl = require("galaxyline")
+    local diag = require("galaxyline.provider_diagnostic")
     local gls = gl.section
     local colors = require("mega.colors.nova").colors
     local icons = require("mega.colors.nova").icons
@@ -29,11 +30,21 @@ return {
       return false
     end
 
-    local checkwidth = function()
-      local squeeze_width = vim.fn.winwidth(0) / 2
-      if squeeze_width > 40 then
+    -- local checkwidth = function()
+    --   local squeeze_width = vim.fn.winwidth(0) / 2
+    --   if squeeze_width > 40 then
+    --     return true
+    --   end
+    --   return false
+    -- end
+
+    local check_diagnostics = function(diag_type)
+      local fn_string = "get_diagnostic_" .. diag_type
+      local result = diag["" .. fn_string .. ""]()
+      if result then
         return true
       end
+
       return false
     end
 
@@ -111,44 +122,64 @@ return {
 
     gls.right[1] = {
       DiagnosticError = {
-        provider = "DiagnosticError",
+        provider = function()
+          return diag.get_diagnostic_error()
+        end,
         icon = " " .. icons.statusline_error .. " ",
-        condition = checkwidth,
-        separator = " ",
+        condition = function()
+          return check_diagnostics("error")
+        end,
+        separator = "",
+        separator_highlight = {colors.bg, colors.bg},
         highlight = {colors.error_status, colors.bg}
       }
     }
     gls.right[2] = {
       DiagnosticWarn = {
-        provider = "DiagnosticWarn",
+        provider = function()
+          return diag.get_diagnostic_warn()
+        end,
         icon = " " .. icons.statusline_warning .. " ",
-        condition = checkwidth,
-        separator = " ",
+        condition = function()
+          return check_diagnostics("warn")
+        end,
+        separator = "",
+        separator_highlight = {colors.bg, colors.bg},
         highlight = {colors.warning_status, colors.bg}
       }
     }
     gls.right[3] = {
       DiagnosticInfo = {
-        provider = "DiagnosticInfo",
+        provider = function()
+          return diag.get_diagnostic_info()
+        end,
         icon = " " .. icons.statusline_information .. " ",
-        condition = checkwidth,
-        separator = " ",
+        condition = function()
+          return check_diagnostics("info")
+        end,
+        separator = "",
+        separator_highlight = {colors.bg, colors.bg},
         highlight = {colors.information_status, colors.bg}
       }
     }
     gls.right[4] = {
       DiagnosticHint = {
-        provider = "DiagnosticHint",
+        provider = function()
+          return diag.get_diagnostic_hint()
+        end,
         icon = icons.statusline_hint .. " ",
-        condition = checkwidth,
-        separator = " ",
+        condition = function()
+          return check_diagnostics("hint")
+        end,
+        separator = "",
+        separator_highlight = {colors.bg, colors.bg},
         highlight = {colors.hint_status, colors.bg}
       }
     }
     gls.right[5] = {
       Space = {
         provider = function()
-          return ""
+          return " "
         end,
         icon = "",
         separator = "",
@@ -163,7 +194,8 @@ return {
         icon = " ",
         separator = "",
         separator_highlight = {colors.gutter_gray, colors.bg},
-        highlight = {colors.gutter_gray, colors.bg}
+        -- highlight = {colors.gutter_gray, colors.bg}
+        highlight = {colors.bg, colors.visual_gray}
       }
     }
     gls.right[7] = {
@@ -171,18 +203,21 @@ return {
         provider = "FileTypeName",
         icon = "",
         separator = "",
-        separator_highlight = {colors.gutter_gray, colors.bg},
-        highlight = {colors.gutter_gray, colors.bg}
+        separator_highlight = {colors.bg, colors.visual_gray},
+        -- highlight = {colors.gutter_gray, colors.bg}
+        highlight = {colors.bg, colors.visual_gray}
       }
     }
+    -- FIXME: unused?
     gls.right[8] = {
       Space = {
         provider = function()
           return ""
         end,
-        separator = " ",
-        separator_highlight = {colors.gutter_gray, colors.bg},
-        highlight = {colors.gutter_gray, colors.bg}
+        icon = "",
+        separator = "",
+        separator_highlight = {colors.bg, colors.visual_gray},
+        highlight = {colors.bg, colors.visual_gray}
       }
     }
     gls.right[9] = {

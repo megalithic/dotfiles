@@ -139,7 +139,6 @@ return {
     cu.hi("DiffDelete", status.removed, status.bg, "NONE")
     cu.hi("DiffChange", status.changed, status.bg, "NONE")
 
-
     local lsp_highlights = {
       ["Error"] = "error_status",
       ["Warning"] = "warning_status",
@@ -154,5 +153,8 @@ return {
       cu.hi("LspDiagnosticsFloating" .. group, status[id], nil, "italic")
       cu.hi("LspDiagnosticsSign" .. group, status[id], nil, nil)
     end
+
+    cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
+    cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
   end
 }

@@ -11,6 +11,7 @@ local alert = require("ext.alert")
 local module = {}
 
 function movewindows:entered()
+  print("-> we've entered our snap modal..")
   alertUuids =
     hs.fnutils.map(
     hs.screen.allScreens(),
@@ -23,7 +24,7 @@ function movewindows:entered()
           local prompt = string.format("◱ : %s", app_title)
 
           alert.showOnly({text = prompt, screen = screen})
-          -- return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+        -- return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
         end
       else
         -- unable to move a specific window. ¯\_(ツ)_/¯
@@ -44,6 +45,7 @@ function movewindows:exited()
   )
 
   alert.close()
+  print("-> we've exited our snap modal..")
 end
 
 module.windowSplitter = function()
@@ -88,7 +90,9 @@ module.windowSplitter = function()
     end
   )
 
-  chooser:placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30."):searchSubText(true):choices(windows):show()
+  chooser:placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30."):searchSubText(true):choices(windows):show(
+
+  )
 end
 
 module.start = function()
@@ -101,9 +105,12 @@ module.start = function()
     function()
       movewindows:enter()
       -- set a timeout to kill our modal in case no follow-on keys are pressed
-      hs.timer.doAfter(2, function()
-        movewindows:exit()
-      end)
+      hs.timer.doAfter(
+        2,
+        function()
+          movewindows:exit()
+        end
+      )
     end
   )
 

@@ -10,14 +10,15 @@ function media:entered()
   local icon = isPlaying and "契" or ""
   local state = isPlaying and "playing" or "paused"
   module.notify(
-  {
-    icon = icon,
-    state = state,
-    artist = hs.spotify.getCurrentArtist(),
-    track = hs.spotify.getCurrentTrack(),
-    album = hs.spotify.getCurrentAlbum(),
-    image = image
-  }, false
+    {
+      icon = icon,
+      state = state,
+      artist = hs.spotify.getCurrentArtist(),
+      track = hs.spotify.getCurrentTrack(),
+      album = hs.spotify.getCurrentAlbum(),
+      image = image
+    },
+    false
   )
 end
 
@@ -104,7 +105,8 @@ module.media_control = function(event, alertText)
               track = hs.spotify.getCurrentTrack(),
               album = hs.spotify.getCurrentAlbum(),
               image = image
-            }, true
+            },
+            true
           )
         else
           module.notify(
@@ -115,7 +117,8 @@ module.media_control = function(event, alertText)
               track = hs.spotify.getCurrentTrack(),
               album = hs.spotify.getCurrentAlbum(),
               image = image
-            }, true
+            },
+            true
           )
         end
       end
@@ -131,11 +134,14 @@ module.start = function()
     nil,
     function()
       media:enter()
-      
+
       -- set a timeout to kill our modal in case no follow-on keys are pressed
-      hs.timer.doAfter(2, function()
-        media:exit()
-      end)
+      -- hs.timer.doAfter(
+      --   2,
+      --   function()
+      --     media:exit()
+      --   end
+      -- )
     end
   )
 
@@ -149,6 +155,15 @@ module.start = function()
       end
     )
   end
+
+  -- media:bind(
+  --   "",
+  --   c.shortcut,
+  --   function()
+  --     module.media_control(c.action, c.label)
+  --     media:exit()
+  --   end
+  -- )
 end
 
 module.stop = function()

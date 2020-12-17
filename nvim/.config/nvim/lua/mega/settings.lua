@@ -174,6 +174,6 @@ return {
     -- set_sneak()
     set_quickscope()
     set_fzf()
-    -- set_lsp_fuzzy()
+    set_lsp_fuzzy()
   end
 }
