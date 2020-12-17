@@ -56,8 +56,9 @@ return {
     -- (file navigation) --
     paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
     paq "junegunn/fzf.vim"
-    paq "ojroques/nvim-lspfuzzy"
-    paq "justinmk/vim-sneak"
+    -- paq "ojroques/nvim-lspfuzzy"
+    -- paq "justinmk/vim-sneak"
+    -- paq "unblevable/quick-scope"
 
     -- (text objects) --
     paq {"tpope/vim-rsi"}
@@ -131,7 +132,9 @@ return {
     paq "christoomey/vim-tmux-runner"
     paq "wellle/visual-split.vim"
 
-    -- Paq.update()
+    Paq.update()
+    Paq.install()
+
     vim.cmd([[packloadall!]])
   end
 }

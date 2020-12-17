@@ -6,6 +6,7 @@
 local wh = require("utils.wm.window-handlers")
 local movewindows = hs.hotkey.modal.new()
 local alertUuids = {}
+local alert = require("ext.alert")
 
 local module = {}
 
@@ -14,9 +15,19 @@ function movewindows:entered()
     hs.fnutils.map(
     hs.screen.allScreens(),
     function(screen)
-      if screen == hs.screen.mainScreen() then
-        local prompt = string.format("◱ : %s", hs.window.focusedWindow():application():title())
-        return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+      local win = hs.window.focusedWindow()
+
+      if win ~= nil then
+        if screen == hs.screen.mainScreen() then
+          local app_title = win:application():title()
+          local prompt = string.format("◱ : %s", app_title)
+
+          alert.showOnly({text = prompt, screen = screen})
+          -- return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+        end
+      else
+        -- unable to move a specific window. ¯\_(ツ)_/¯
+        movewindows:exit()
       end
 
       return nil
@@ -31,6 +42,8 @@ function movewindows:exited()
       hs.alert.closeSpecific(uuid)
     end
   )
+
+  alert.close()
 end
 
 module.windowSplitter = function()
@@ -53,7 +66,6 @@ module.windowSplitter = function()
     hs.chooser.new(
     function(choice)
       if choice ~= nil then
-        -- local layout = {}
         local focused = hs.window.focusedWindow()
         local toRead = hs.window.find(choice.id)
         if hs.eventtap.checkKeyboardModifiers()["alt"] then
@@ -76,20 +88,22 @@ module.windowSplitter = function()
     end
   )
 
-  chooser:placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30."):searchSubText(true):choices(windows):show(
-
-  )
+  chooser:placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30."):searchSubText(true):choices(windows):show()
 end
 
 module.start = function()
   local hyper = require("bindings.hyper")
-  -- hyper:bind('', 'v', module.windowSplitter)
+
   hyper:bind(
     {},
     "v",
     nil,
     function()
       movewindows:enter()
+      -- set a timeout to kill our modal in case no follow-on keys are pressed
+      hs.timer.doAfter(2, function()
+        movewindows:exit()
+      end)
     end
   )
 

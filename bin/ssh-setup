@@ -1,20 +1,55 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 set -e
 
-# setup ssh stuff
-echo "setting up ssh stuffs"
+function log {
+    printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
+}
 
+function log_ok {
+    printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
+}
+
+ssh_path="$HOME/.ssh"
+key_id="$USER@$HOST"
+key_file="$USER-$HOST"
+key_type="ed25519"
+key_path="$ssh_path/$key_file"
+key_path_pub="$ssh_path/$key_file.pub"
+skip_message="-> skipping; be sure to visit https://github.com/settings/keys to add your new key!"
+
+log "-> generating an ssh public/private key with params:"
+echo "- key_id = $key_id"
+echo "- key_type = $key_type"
+echo "- key_file = $key_file"
+echo "- key_path = $key_path"
+echo "- key_path_pub = $key_path.pub"
+echo
+
+log "-> executing command: \"ssh-keygen -t key_type -C '$key_id' -N '' -f '$key_path'\""
+ssh-keygen -t "$key_type" -C "$key_id" -N "" -f "$key_path"
+
+sleep 0.5
+log "-> executing command: \"eval "$(ssh-agent -s)"\""
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_rsa
 
-echo 'added key to ssh-agent...'
+sleep 0.5
+log "-> executing command: \"ssh-add -K "$key_path"\""
+ssh-add -K "$key_path"
 
-if [[ -f '~/.ssh/id_rsa.pub' ]]
-then
-  pbcopy < ~/.ssh/id_rsa.pub
-  echo 'copied public key to clipboard. paste it into your Github account...'
-  open 'https://github.com/account/ssh'
-fi
+sleep 0.5
+log "-> executing command: \"pbcopy < "$key_path_pub"\""
+pbcopy < "$key_path_pub"
 
-echo "To verify the key was setup correctly: `ssh -T git@github.com`..."
+log_ok "-> DONE creating ssh key at "$key_path_pub"; copied to clipboard."
+
+log_warn -n "-> add this key to your github account? [yN]"
+read continue_reply
+
+case $continue_reply in
+  [Yy]) $(open "https://github.com/settings/keys") ;;
+  [Nn]) log_warn "$skip_message" ;;
+  *) log_warn "$skip_message" ;;
+esac
+
+log "-> if you did add your key to github, you can verify with: `ssh -T git@github.com`"

@@ -1,7 +1,6 @@
 local log = hs.logger.new("[bindings.media]", "warning")
 local media = hs.hotkey.modal.new()
 local alert = require("ext.alert")
-local alertUuids = {}
 
 local module = {}
 
@@ -10,30 +9,23 @@ function media:entered()
   local isPlaying = hs.spotify.isPlaying()
   local icon = isPlaying and "契" or ""
   local state = isPlaying and "playing" or "paused"
-  alertUuids = {
-    module.notify(
-      {
-        icon = icon,
-        state = state,
-        artist = hs.spotify.getCurrentArtist(),
-        track = hs.spotify.getCurrentTrack(),
-        album = hs.spotify.getCurrentAlbum(),
-        image = image
-      }
-    )
-  }
-end
-
-function media:exited()
-  hs.fnutils.ieach(
-    alertUuids,
-    function(uuid)
-      hs.alert.closeSpecific(uuid)
-    end
+  module.notify(
+  {
+    icon = icon,
+    state = state,
+    artist = hs.spotify.getCurrentArtist(),
+    track = hs.spotify.getCurrentTrack(),
+    album = hs.spotify.getCurrentAlbum(),
+    image = image
+  }, false
   )
 end
 
-module.notify = function(n)
+function media:exited()
+  alert.close()
+end
+
+module.notify = function(n, shouldAlert)
   log.df("Spotify notification: %s", hs.inspect(n))
 
   hs.notify.new(
@@ -44,9 +36,9 @@ module.notify = function(n)
     }
   ):setIdImage(n.image):send()
 
-  local notification_alert = alert.showOnly({text = "♬ " .. n.state .. " " .. n.icon})
-
-  return notification_alert
+  if shouldAlert then
+    alert.showOnly({text = "♬ " .. n.state .. " " .. n.icon})
+  end
 end
 
 module.volume_control = function(vol)
@@ -112,7 +104,7 @@ module.media_control = function(event, alertText)
               track = hs.spotify.getCurrentTrack(),
               album = hs.spotify.getCurrentAlbum(),
               image = image
-            }
+            }, true
           )
         else
           module.notify(
@@ -123,7 +115,7 @@ module.media_control = function(event, alertText)
               track = hs.spotify.getCurrentTrack(),
               album = hs.spotify.getCurrentAlbum(),
               image = image
-            }
+            }, true
           )
         end
       end
@@ -139,6 +131,11 @@ module.start = function()
     nil,
     function()
       media:enter()
+      
+      -- set a timeout to kill our modal in case no follow-on keys are pressed
+      hs.timer.doAfter(2, function()
+        media:exit()
+      end)
     end
   )
 
@@ -156,7 +153,6 @@ end
 
 module.stop = function()
   media:exit()
-  alertUuids = nil
 end
 
 return module

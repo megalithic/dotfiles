@@ -19,8 +19,9 @@ local M = {
     currentConnected = hs.wifi.currentNetwork()
   },
   preferred = {
-    terms = {"kitty"},
+    terms = {"kitty", "alacritty", "iTerm"},
     browsers = {"Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari"},
+    media = {"Spotify"},
     vpn = {"ExpressVPN"}
   },
   displays = displays,
@@ -409,7 +410,7 @@ M.media = {
     hyper_key = "\\",
     hyper_mod = {"shift"},
     modifier = M.modifiers.ctrlShift,
-    shortcut = "\\",
+    shortcut = "p",
     label = "play/pause"
   }
 }
