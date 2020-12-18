@@ -30,24 +30,6 @@ return {
       return false
     end
 
-    -- local checkwidth = function()
-    --   local squeeze_width = vim.fn.winwidth(0) / 2
-    --   if squeeze_width > 40 then
-    --     return true
-    --   end
-    --   return false
-    -- end
-
-    local check_diagnostics = function(diag_type)
-      local fn_string = "get_diagnostic_" .. diag_type
-      local result = diag["" .. fn_string .. ""]()
-      if result then
-        return true
-      end
-
-      return false
-    end
-
     gl.short_line_list = {
       "LuaTree",
       "vista",
@@ -125,12 +107,9 @@ return {
         provider = function()
           return diag.get_diagnostic_error()
         end,
-        icon = " " .. icons.statusline_error .. " ",
-        condition = function()
-          return check_diagnostics("error")
-        end,
-        separator = "",
-        separator_highlight = {colors.bg, colors.bg},
+        icon = icons.statusline_error .. " ",
+        separator = " ",
+        separator_highlight = {colors.white, colors.bg},
         highlight = {colors.error_status, colors.bg}
       }
     }
@@ -139,12 +118,9 @@ return {
         provider = function()
           return diag.get_diagnostic_warn()
         end,
-        icon = " " .. icons.statusline_warning .. " ",
-        condition = function()
-          return check_diagnostics("warn")
-        end,
-        separator = "",
-        separator_highlight = {colors.bg, colors.bg},
+        icon = icons.statusline_warning .. " ",
+        separator = " ",
+        separator_highlight = {colors.white, colors.bg},
         highlight = {colors.warning_status, colors.bg}
       }
     }
@@ -153,12 +129,9 @@ return {
         provider = function()
           return diag.get_diagnostic_info()
         end,
-        icon = " " .. icons.statusline_information .. " ",
-        condition = function()
-          return check_diagnostics("info")
-        end,
-        separator = "",
-        separator_highlight = {colors.bg, colors.bg},
+        icon = icons.statusline_information .. " ",
+        separator = " ",
+        separator_highlight = {colors.white, colors.bg},
         highlight = {colors.information_status, colors.bg}
       }
     }
@@ -168,11 +141,8 @@ return {
           return diag.get_diagnostic_hint()
         end,
         icon = icons.statusline_hint .. " ",
-        condition = function()
-          return check_diagnostics("hint")
-        end,
-        separator = "",
-        separator_highlight = {colors.bg, colors.bg},
+        separator = " ",
+        separator_highlight = {colors.white, colors.bg},
         highlight = {colors.hint_status, colors.bg}
       }
     }
@@ -205,10 +175,9 @@ return {
         separator = "",
         separator_highlight = {colors.bg, colors.visual_gray},
         -- highlight = {colors.gutter_gray, colors.bg}
-        highlight = {colors.bg, colors.visual_gray}
+        highlight = {colors.bg, colors.visual_gray, "bold"}
       }
     }
-    -- FIXME: unused?
     gls.right[8] = {
       Space = {
         provider = function()

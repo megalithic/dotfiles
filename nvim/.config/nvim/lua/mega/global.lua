@@ -76,8 +76,8 @@ function augroup(name, commands)
   vim.cmd("augroup END")
 end
 
---- Split given string with given separator
---- and returns the result as a table.
+-- Split given string with given separator
+-- and returns the result as a table.
 function M.split(inputstr, separator)
   if separator == nil then
     separator = "%s"
@@ -348,5 +348,44 @@ function M.bufferActiveLSP()
   end
   M.dump(servers)
 end
+
+-- M.fzfwrap = {}
+-- M.fzfwrap.files = function()
+--   vim.fn["fzf#vim#files"](
+--     "",
+--     {
+--       options = {
+--         "--history=" .. vim.env.HOME .. "/.fzf.history",
+--         "--preview",
+--         "cat {}",
+--         "--preview-window",
+--         "right:50%:hidden",
+--         "--bind=alt-c:execute(cp_file2clipboard.sh {})+abort",
+--         "--bind=alt-o:execute(open {})+abort",
+--         "--bind=alt-r:execute(open -R {})+abort",
+--         "--bind=alt-p:toggle-preview",
+--         "--info=inline"
+--       }
+--     },
+--     false
+--   )
+-- end
+
+-- M.fzfwrap.buffers = function()
+--   vim.fn["fzf#vim#buffers"](
+--     "",
+--     {
+--       options = {
+--         "--history=" .. vim.env.HOME .. "/.fzf.history",
+--         "--bind=alt-c:execute(cp_file2clipboard.sh {4})+abort",
+--         "--bind=alt-o:execute(eval open {4})+abort",
+--         "--bind=alt-r:execute(eval open -R {4})+abort",
+--         "--header-lines=0",
+--         "--info=inline"
+--       }
+--     },
+--     false
+--   )
+-- end
 
 return M

@@ -18,7 +18,7 @@ function media:entered()
       album = hs.spotify.getCurrentAlbum(),
       image = image
     },
-    false
+    true
   )
 end
 
