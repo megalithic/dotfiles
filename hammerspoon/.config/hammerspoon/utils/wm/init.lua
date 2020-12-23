@@ -9,7 +9,7 @@
 --  │ 6. applyContext                                                         │
 --  └─────────────────────────────────────────────────────────────────────────┘
 
-local log = hs.logger.new("[wm]", "debug")
+local log = hs.logger.new("[wm]", "warning")
 
 local cache = {
   dock_watcher = {},

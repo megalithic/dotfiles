@@ -390,11 +390,20 @@ M.utilities = {
 -- TODO: want to control these with hyper_key too..
 M.media = {
   {
+    action = "view",
+    hyper_key = "[",
+    hyper_mod = {"shift"},
+    modifier = M.modifiers.ctrlShift,
+    shortcut = "k",
+    label = "Spotify",
+    bundleID = "com.spotify.client"
+  },
+  {
     action = "previous",
     hyper_key = "[",
     hyper_mod = {"shift"},
     modifier = M.modifiers.ctrlShift,
-    shortcut = "[",
+    shortcut = "h",
     label = "⇤ previous"
   },
   {
@@ -402,7 +411,7 @@ M.media = {
     hyper_key = "]",
     hyper_mod = {"shift"},
     modifier = M.modifiers.ctrlShift,
-    shortcut = "]",
+    shortcut = "l",
     label = "next ⇥"
   },
   {
@@ -410,7 +419,7 @@ M.media = {
     hyper_key = "\\",
     hyper_mod = {"shift"},
     modifier = M.modifiers.ctrlShift,
-    shortcut = "p",
+    shortcut = "j",
     label = "play/pause"
   }
 }
@@ -502,7 +511,7 @@ M.docking = {
     vendorName = "CalDigit, Inc."
   },
   ["docked"] = {
-    wifi = "on", -- wifi status
+    wifi = "off", -- wifi status
     profile = "dz60", -- Karabiner-Elements profile name
     input = "Samson GoMic", -- microphone source
     output = "CalDigit Thunderbolt 3 Audio", -- speaker source

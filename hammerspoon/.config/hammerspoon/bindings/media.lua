@@ -146,24 +146,26 @@ module.start = function()
   )
 
   for _, c in pairs(config.media) do
-    media:bind(
-      "",
-      c.shortcut,
-      function()
-        module.media_control(c.action, c.label)
-        media:exit()
-      end
-    )
+    if (c.action == "view") then
+      media:bind(
+        "",
+        c.shortcut,
+        function()
+          require('ext.application').toggle(c.bundleID, false)
+          media:exit()
+        end
+      )
+    else
+      media:bind(
+        "",
+        c.shortcut,
+        function()
+          module.media_control(c.action, c.label)
+          media:exit()
+        end
+      )
+    end
   end
-
-  -- media:bind(
-  --   "",
-  --   c.shortcut,
-  --   function()
-  --     module.media_control(c.action, c.label)
-  --     media:exit()
-  --   end
-  -- )
 end
 
 module.stop = function()
