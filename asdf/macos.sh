@@ -54,3 +54,7 @@ sh $DOTS/asdf/lua.sh
 #
 # rust-specific...
 sh $DOTS/asdf/rust.sh
+
+#
+# elixir-specific...
+sh $DOTS/asdf/elixir.sh
