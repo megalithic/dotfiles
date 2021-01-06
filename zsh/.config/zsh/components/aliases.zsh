@@ -133,9 +133,10 @@ alias ec=em
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-alias nvimupdate="brew update; brew reinstall neovim; brew postinstall neovim; pip install --upgrade pynvim; pip3 install --upgrade pynvim; pip2 install --upgrade pynvim; npm install -g neovim --force; yarn global add neovim; gem install neovim; nvim +PackerSync +qall; brew outdated"
+alias nvimupdate="brew update; brew reinstall neovim; brew postinstall neovim; pip install --upgrade pynvim; pip3 install --upgrade pynvim; pip2 install --upgrade pynvim; npm install -g neovim --force; yarn global add neovim; gem install neovim; nvim +PaqUpdate +qall; brew outdated"
 alias im="nvim"
 alias nv="nvim"
+alias vm="nvim"
 alias vim="nvim"
 alias v=vim
 alias vi="/usr/local/bin/vim"
@@ -168,7 +169,7 @@ alias eze="nvim ~/.config/zsh/**/env.zsh"
 alias ezkb="nvim ~/.config/zsh/**/keybindings.zsh"
 alias ev="nvim ~/.config/nvim/init.lua"
 alias ek="nvim ~/.config/kitty/kitty.conf"
-alias et="nvim ~/.tmux"
+alias et="nvim ~/.tmux.conf"
 
 # FOLDERS
 # -----------------------------------------------------------------------------

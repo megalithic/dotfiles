@@ -29,20 +29,20 @@ M.apply = function(event, win, log)
       -- mute (PTT) by default
       ptt.setState("push-to-talk")
 
-      -- FIXME: something is dying/failing with this:
-      -- 2020-12-16 11:31:30: -- Loading extension: osascript
-      -- 2020-12-16 11:31:30: 11:31:30 ERROR:                 LuaSkin: Unable to initialize script: {
-      --   NSLocalizedDescription = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-      --   NSLocalizedFailureReason = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-      --   OSAScriptErrorBriefMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-      --   OSAScriptErrorMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-      --   OSAScriptErrorNumberKey = "-2700";
-      --   OSAScriptErrorRangeKey = "NSRange: {0, 0}";
-      -- }
+    -- FIXME: something is dying/failing with this:
+    -- 2020-12-16 11:31:30: -- Loading extension: osascript
+    -- 2020-12-16 11:31:30: 11:31:30 ERROR:                 LuaSkin: Unable to initialize script: {
+    --   NSLocalizedDescription = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+    --   NSLocalizedFailureReason = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+    --   OSAScriptErrorBriefMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+    --   OSAScriptErrorMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+    --   OSAScriptErrorNumberKey = "-2700";
+    --   OSAScriptErrorRangeKey = "NSRange: {0, 0}";
+    -- }
 
-      ----------------------------------------------------------------------
-      -- close web browser "zoom launching" tabs
-      browser.killTabsByDomain("*.zoom.us")
+    ----------------------------------------------------------------------
+    -- close web browser "zoom launching" tabs
+    -- browser.killTabsByDomain("*.zoom.us")
     end
 
     init_apply_complete = true

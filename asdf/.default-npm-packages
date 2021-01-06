@@ -8,7 +8,17 @@ eslint-plugin-cypress
 markdownlint
 neovim
 lua-fmt
+prettier
 trash-cli
 typescript
 vim-node-rpc
 yarn
+bash-language-server
+vscode-css-languageserver-bin
+dockerfile-language-server-nodejs
+@elm-tooling/elm-language-server
+vscode-html-languageserver-bin
+vscode-json-languageserver
+typescript-language-server
+yaml-language-server
+vim-language-server

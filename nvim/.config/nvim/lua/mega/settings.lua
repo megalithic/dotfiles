@@ -89,7 +89,7 @@ return {
     end
 
     local function set_lsp_fuzzy()
-      require("lspfuzzy").setup {}
+      -- require("lspfuzzy").setup({})
     end
 
     local function set_quickscope()

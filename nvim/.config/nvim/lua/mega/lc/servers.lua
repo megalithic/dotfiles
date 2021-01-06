@@ -25,16 +25,16 @@ local function root_pattern(...)
 end
 
 local servers = {
-  -- bashls = {},
+  bashls = {
+    cmd = {"bash-language-server", "start"},
+    filetypes = {"bash", "sh", "zsh"}
+  },
   cssls = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
   efm = {init_options = {documentFormatting = true}},
   elmls = {
-    cmd = {
-      vim.fn.stdpath("cache") .. "/lspconfig/elmls/node_modules/.bin/elm-language-server"
-    },
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")
   },

@@ -55,24 +55,16 @@ M["textDocument/hover"] = function(_, method, result)
       if not (result and result.contents) then
         return
       end
-      local markdown_lines =
-        lsp.util.convert_input_to_markdown_lines(result.contents)
+      local markdown_lines = lsp.util.convert_input_to_markdown_lines(result.contents)
       markdown_lines = lsp.util.trim_empty_lines(markdown_lines)
       if vim.tbl_isempty(markdown_lines) then
         return
       end
-      local bufnr, winnr =
-        lsp.util.fancy_floating_markdown(
-        markdown_lines,
-        {pad_left = 1, pad_right = 1}
-      )
+      local bufnr, winnr = lsp.util.fancy_floating_markdown(markdown_lines, {pad_left = 1, pad_right = 1})
       api.nvim_buf_set_option(bufnr, "readonly", true)
       api.nvim_buf_set_option(bufnr, "modifiable", false)
       api.nvim_win_set_option(winnr, "relativenumber", false)
-      lsp.util.close_preview_autocmd(
-        {"CursorMoved", "BufHidden", "InsertCharPre"},
-        winnr
-      )
+      lsp.util.close_preview_autocmd({"CursorMoved", "BufHidden", "InsertCharPre"}, winnr)
       return bufnr, winnr
     end
   )
@@ -88,21 +80,22 @@ M["textDocument/documentHighlight"] = function(_, _, result, _)
 end
 
 M["textDocument/formatting"] = function(err, _, result, _, bufnr)
-    if err ~= nil or result == nil then
-        return
-    end
-    if not api.nvim_buf_get_option(bufnr, "modified") then
-        local view = fn.winsaveview()
-        lsp.util.apply_text_edits(result, bufnr)
-        fn.winrestview(view)
-        api.nvim_command("noautocmd :update")
-        -- api.nvim_command("GitGutter")
-    end
+  if err ~= nil or result == nil then
+    return
+  end
+  if not api.nvim_buf_get_option(bufnr, "modified") then
+    local view = fn.winsaveview()
+    lsp.util.apply_text_edits(result, bufnr)
+    fn.winrestview(view)
+    api.nvim_command("noautocmd :update")
+  -- api.nvim_command("GitGutter")
+  end
 end
 
 M["textDocument/publishDiagnostics"] = function(...)
   lsp.with(
-    lsp.diagnostic.on_publish_diagnostics, {
+    lsp.diagnostic.on_publish_diagnostics,
+    {
       underline = true,
       virtual_text = false,
       -- virtual_text = {
@@ -110,7 +103,7 @@ M["textDocument/publishDiagnostics"] = function(...)
       --   prefix = vim.api.nvim_get_var("virtual_text_symbol"),
       -- },
       signs = true,
-      update_in_insert = false,
+      update_in_insert = false
     }
   )(...)
   pcall(vim.lsp.diagnostic.set_loclist, {open_loclist = false})

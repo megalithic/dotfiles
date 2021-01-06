@@ -8,7 +8,7 @@ function media:entered()
   local image = hs.image.imageFromAppBundle("com.spotify.client")
   local isPlaying = hs.spotify.isPlaying()
   local icon = isPlaying and "契" or ""
-  local state = isPlaying and "playing" or "paused"
+  local state = isPlaying and "Currently Playing" or "Currently Paused"
   module.notify(
     {
       icon = icon,
@@ -29,13 +29,17 @@ end
 module.notify = function(n, shouldAlert)
   log.df("Spotify notification: %s", hs.inspect(n))
 
-  hs.notify.new(
-    {
-      title = n.artist .. " (" .. n.state .. ")",
-      subTitle = n.track,
-      informativeText = n.album
-    }
-  ):setIdImage(n.image):send()
+  if n.artist ~= nil then
+    hs.notify.new(
+      {
+        title = n.artist .. " (" .. n.state .. ")",
+        subTitle = n.track,
+        informativeText = n.album
+      }
+    ):setIdImage(n.image):send()
+  else
+    log.wf("Spotify unable to get current song info: %s", hs.inspect(n))
+  end
 
   if shouldAlert then
     alert.showOnly({text = "♬ " .. n.state .. " " .. n.icon})
@@ -100,7 +104,7 @@ module.media_control = function(event, alertText)
           module.notify(
             {
               icon = "",
-              state = "Paused",
+              state = "Now Paused",
               artist = hs.spotify.getCurrentArtist(),
               track = hs.spotify.getCurrentTrack(),
               album = hs.spotify.getCurrentAlbum(),
@@ -112,7 +116,7 @@ module.media_control = function(event, alertText)
           module.notify(
             {
               icon = "契",
-              state = "Playing",
+              state = "Now Playing",
               artist = hs.spotify.getCurrentArtist(),
               track = hs.spotify.getCurrentTrack(),
               album = hs.spotify.getCurrentAlbum(),
@@ -151,7 +155,7 @@ module.start = function()
         "",
         c.shortcut,
         function()
-          require('ext.application').toggle(c.bundleID, false)
+          require("ext.application").toggle(c.bundleID, false)
           media:exit()
         end
       )

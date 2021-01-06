@@ -45,7 +45,7 @@ return {
         au([[autocmd!]])
 
         au(
-          "autocmd TextYankPost * lua vim.highlight.on_yank({ higroup = 'HighlightedYankRegion', timeout = 130, on_macro = true })"
+          "autocmd TextYankPost * lua vim.highlight.on_yank({ higroup = 'HighlightedYankRegion', timeout = 170, on_macro = true })"
         )
       end
     )

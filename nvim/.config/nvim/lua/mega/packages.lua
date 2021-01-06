@@ -111,7 +111,7 @@ return {
     paq "wsdjeg/vim-fetch" -- vim path/to/file.ext:12:3
     paq {"Raimondi/delimitMate"}
     paq "tpope/vim-endwise"
-    paq {"rstacruz/vim-closer"}
+    -- paq {"rstacruz/vim-closer"}
     paq "tpope/vim-eunuch"
     paq "tpope/vim-abolish"
     paq "tpope/vim-rhubarb"
@@ -152,8 +152,11 @@ return {
     paq "darfink/vim-plist"
     paq "sheerun/vim-polyglot"
 
-    Paq.update()
-    Paq.install()
+    -- vim.api.nvim_command [[autocmd BufWritePost packages.lua PaqUpdate]]
+    vim.api.nvim_command [[autocmd BufRead packages.lua PaqUpdate]]
+    vim.api.nvim_command [[autocmd BufRead packages.lua PaqInstall]]
+    -- Paq.update()
+    -- Paq.install()
 
     vim.cmd([[packloadall!]])
   end

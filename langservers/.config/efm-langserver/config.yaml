@@ -20,7 +20,7 @@ tools:
       - '%f:%l:%c: %m'
 
   eslint: &eslint
-    lint-command: './node_modules/.bin/eslint -f unix --stdin'
+    lint-command: 'eslint -f unix --stdin'
     lint-ignore-exit-code: true
     lint-stdin: true
 
@@ -35,7 +35,7 @@ tools:
       - mix.exs
 
   prettier: &prettier
-    format-command: './node_modules/.bin/prettier'
+    format-command: 'prettier'
 
   golint: &golint
     lint-command: 'golint'

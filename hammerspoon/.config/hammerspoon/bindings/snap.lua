@@ -105,12 +105,12 @@ module.start = function()
     function()
       movewindows:enter()
       -- set a timeout to kill our modal in case no follow-on keys are pressed
-      hs.timer.doAfter(
-        2,
-        function()
-          movewindows:exit()
-        end
-      )
+      -- hs.timer.doAfter(
+      --   2,
+      --   function()
+      --     movewindows:exit()
+      --   end
+      -- )
     end
   )
 
