@@ -49,6 +49,4 @@ do
   mega.load("ft", "mega.ft", "setup")
   mega.load("ft", "mega.ft", "trigger_ft")
   mega.load("statusline", "mega.statusline", "activate")
-  -- lua statusline = require('statusline')
-  -- lua vim.o.statusline = '%!v:lua.statusline()'
 end

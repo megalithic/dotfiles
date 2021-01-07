@@ -39,6 +39,7 @@ local servers = {
     root_dir = root_pattern("elm.json", ".git")
   },
   elixirls = {
+    cmd = {vim.fn.expand("$XDG_CONFIG_HOME/elixir_ls/release") .. "/language_server.sh"},
     settings = {elixirLS = {dialyzerEnabled = true}},
     filetypes = {"elixir", "eelixir"},
     root_dir = root_pattern("mix.lock", "mix.exs", ".git")

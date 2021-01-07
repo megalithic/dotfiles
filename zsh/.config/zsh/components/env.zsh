@@ -117,11 +117,11 @@ export GREP_COLOR='3;33'
 export ARCHFLAGS='-arch x86_64'
 
 # for libffi and ruby things
-export LDFLAGS="-L/usr/local/opt/libffi/lib"
-export LDFLAGS="-L/usr/local/opt/perl@5.18/lib"
+export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
+export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.18/lib"
 # export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
-export CPPFLAGS="-I/usr/local/opt/libffi/include"
-export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
 
 # OPEN SSL
 # =====================================================
@@ -133,7 +133,7 @@ export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
 export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openssl@1.1/include"
 
 # For pkg-config to find openssl@1.1 you may need to set:
-export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
 
 # Compile erlang with OpenSSL from Homebrew via asdf
 export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
@@ -147,7 +147,7 @@ export LC_COLLATE=C
 export RUBY_GC_MALLOC_LIMIT=1000000000
 export RUBY_GC_HEAP_FREE_SLOTS=500000
 export RUBY_GC_HEAP_INIT_SLOTS=40000
-export RUBY_CONFIGURE_OPTS=--with-readline-dir="$(brew --prefix readline)"
+export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
 
 export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
 

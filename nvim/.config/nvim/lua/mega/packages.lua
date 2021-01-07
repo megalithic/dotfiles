@@ -24,6 +24,8 @@ return {
       return
     end
 
+    vim.cmd([[packadd paq-nvim]])
+
     local Paq = require("paq-nvim")
     local paq = Paq.paq
 
@@ -153,10 +155,10 @@ return {
     paq "sheerun/vim-polyglot"
 
     -- vim.api.nvim_command [[autocmd BufWritePost packages.lua PaqUpdate]]
-    vim.api.nvim_command [[autocmd BufRead packages.lua PaqUpdate]]
-    vim.api.nvim_command [[autocmd BufRead packages.lua PaqInstall]]
-    -- Paq.update()
-    -- Paq.install()
+    -- vim.api.nvim_command [[autocmd BufRead packages.lua PaqUpdate]]
+    -- vim.api.nvim_command [[autocmd BufRead packages.lua PaqInstall]]
+    Paq.update()
+    Paq.install()
 
     vim.cmd([[packloadall!]])
   end

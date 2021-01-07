@@ -5,6 +5,7 @@ local alert = require("ext.alert")
 local module = {}
 
 function media:entered()
+  print("-> entered media modal..")
   local image = hs.image.imageFromAppBundle("com.spotify.client")
   local isPlaying = hs.spotify.isPlaying()
   local icon = isPlaying and "契" or ""
@@ -23,6 +24,7 @@ function media:entered()
 end
 
 function media:exited()
+  print("-> exited media modal..")
   alert.close()
 end
 
@@ -170,6 +172,14 @@ module.start = function()
       )
     end
   end
+
+  media:bind(
+    "",
+    "escape",
+    function()
+      media:exit()
+    end
+    )
 end
 
 module.stop = function()

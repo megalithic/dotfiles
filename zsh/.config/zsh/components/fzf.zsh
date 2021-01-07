@@ -67,6 +67,12 @@ if [ -n "$(command -v fzf)" ]; then
     # )
     # # '--color=hl:$(( $#headers == 0 ? 108 : 255 ))'
     # zstyle ':fzf-tab:*' command $FZF_TAB_COMMAND
+
+    # export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS" 
+    # --color=fg:#c5cdd9,bg:$colorbg,hl:#6cb6eb 
+    # --color=fg+:#c5cdd9,bg+:$colorbg,hl+:#5dbbc1 
+    # --color=info:#88909f,prompt:#ec7279,pointer:#d38aea 
+    # --color=marker:#a0c980,spinner:#ec7279,header:#5dbbc1"
   }
   _gen_fzf_default_opts
 

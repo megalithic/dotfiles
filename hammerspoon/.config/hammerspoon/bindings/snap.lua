@@ -11,7 +11,7 @@ local alert = require("ext.alert")
 local module = {}
 
 function movewindows:entered()
-  print("-> we've entered our snap modal..")
+  print("-> entered snap modal..")
   alertUuids =
     hs.fnutils.map(
     hs.screen.allScreens(),
@@ -45,7 +45,7 @@ function movewindows:exited()
   )
 
   alert.close()
-  print("-> we've exited our snap modal..")
+  print("-> exited snap modal..")
 end
 
 module.windowSplitter = function()
