@@ -84,8 +84,8 @@ return {
       vim.g.fzf_action = {enter = "vsplit"}
       vim.g.fzf_preview_window = {"right:50%", "alt-p"}
 
-      mega.map("n", "<Leader>m", "<cmd>Files<CR>")
-      mega.map("n", "<Leader>a", "<cmd>Rg<CR>")
+      mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
+      mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
     end
 
     local function set_lsp_fuzzy()

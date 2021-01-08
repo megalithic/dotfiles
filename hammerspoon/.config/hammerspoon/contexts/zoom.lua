@@ -5,7 +5,7 @@ local fn = require("hs.fnutils")
 local wh = require("utils.wm.window-handlers")
 local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
-local browser = require("bindings.browser")
+-- local browser = require("bindings.browser")
 local init_apply_complete = false
 
 -- apply(string, hs.window, hs.logger) :: nil
