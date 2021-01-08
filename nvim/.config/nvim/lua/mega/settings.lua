@@ -92,6 +92,11 @@ return {
       -- require("lspfuzzy").setup({})
     end
 
+    local function set_sneak()
+      -- vim.g["sneak#label"] = 1
+      vim.g["sneak#label"] = true
+    end
+
     local function set_quickscope()
       -- vim.g.qs_enable = 1
       -- vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
@@ -160,6 +165,7 @@ return {
     set_git_messenger()
     set_textobj_parameter()
     set_quickscope()
+    set_sneak()
     set_fzf()
     set_lsp_fuzzy()
   end

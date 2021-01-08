@@ -41,6 +41,8 @@ source "$ZDOTDIR/components/kitty.zsh"
 source "$ZDOTDIR/components/fzf.zsh"
 source "$ZDOTDIR/components/zlua.zsh"
 source "$ZDOTDIR/components/asdf.zsh"
+source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # source "$ZDOTDIR/components/prompt.zsh"

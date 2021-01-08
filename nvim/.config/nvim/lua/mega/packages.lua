@@ -54,12 +54,13 @@ return {
     paq "steelsojka/completion-buffers"
     paq "hrsh7th/vim-vsnip"
     paq "hrsh7th/vim-vsnip-integ"
+    paq "RRethy/vim-illuminate"
 
     -- (file navigation) --
     paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
     paq "junegunn/fzf.vim"
     -- paq "ojroques/nvim-lspfuzzy"
-    -- paq "justinmk/vim-sneak"
+    paq "justinmk/vim-sneak"
     -- paq "unblevable/quick-scope"
 
     -- (text objects) --
@@ -133,6 +134,7 @@ return {
     paq "tmux-plugins/vim-tmux-focus-events"
     paq "christoomey/vim-tmux-runner"
     paq "wellle/visual-split.vim"
+    paq "romainl/vim-cool"
 
     -- (langs, syntax, et al) --
     paq "tpope/vim-rails"
@@ -154,12 +156,11 @@ return {
     paq "darfink/vim-plist"
     paq "sheerun/vim-polyglot"
 
-    -- vim.api.nvim_command [[autocmd BufWritePost packages.lua PaqUpdate]]
-    -- vim.api.nvim_command [[autocmd BufRead packages.lua PaqUpdate]]
-    -- vim.api.nvim_command [[autocmd BufRead packages.lua PaqInstall]]
-    Paq.update()
-    Paq.install()
-
-    vim.cmd([[packloadall!]])
+    local filename = vim.api.nvim_buf_get_name(0)
+    if string.match(filename, "packages.lua") == "packages.lua" then
+      Paq.update()
+      Paq.install()
+    -- vim.cmd([[packloadall!]])
+    end
   end
 }

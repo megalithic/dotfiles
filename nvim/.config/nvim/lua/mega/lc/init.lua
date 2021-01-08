@@ -48,6 +48,8 @@ return {
         end
       end
 
+      require "illuminate".on_attach(client)
+
       -- [ mappings ] --------------------------------------------------------------
 
       if client.resolved_capabilities.document_formatting then

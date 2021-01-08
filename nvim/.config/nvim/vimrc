@@ -87,6 +87,9 @@ vnoremap <C-z> <ESC>zv`<ztgv
 nnoremap / /\v
 vnoremap / /\v
 
+" always paste from 0 register to avoid pasting deleted text (from r/vim)
+xnoremap <silent> p p:let @"=@0<CR>
+
 
 " flip between two last edited files/alternate/buffer
 " nnoremap <Leader><Leader> <C-^>
@@ -362,7 +365,7 @@ set nobackup          " No backup files
 set nocompatible      " No Vi support
 set noemoji           " don't assume all emoji are double width (@wincent)
 set noexrc            " Disable reading of working directory vimrc files
-set nohlsearch        " Don't highlight search results by default
+set hlsearch        " Don't highlight search results by default
 set nojoinspaces      " No to double-spaces when joining lines
 set noshowcmd         " No to showing command in bottom-right corner
 set noshowmatch       " No jumping jumping cursors when matching pairs
