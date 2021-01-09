@@ -42,5 +42,7 @@ if [ -f "/etc/debian_version" ]; then
   esac
 
   make CMAKE_BUILD_TYPE=Release && log_ok "DONE building and installing neovim nightly" || log_error "failed to build and install neovim nightly"
+
+  echo -e '\nalias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"' >> ~/.bashrc
   cd -
 fi
