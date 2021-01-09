@@ -240,27 +240,27 @@ function setup_ssh_key {
 
 function setup_platform {
     log "-> running platform-specific ($platform) scripts..."
-    sh "$DOTS/platform/$platform.sh" && log_ok "-> DONE setting up platform" || log_error "failed to setup platform-specific scripts"
+    source "$DOTS/platform/$platform.sh" && log_ok "-> DONE setting up platform" || log_error "failed to setup platform-specific scripts"
 }
 
 function setup_asdf {
     log "-> setting up asdf..."
-    sh "$DOTS/asdf/$platform.sh" && log_ok "-> DONE setting up asdf" || log_error "failed to setup asdf"
+    source "$DOTS/asdf/$platform.sh" && log_ok "-> DONE setting up asdf" || log_error "failed to setup asdf"
 }
 
 function setup_python {
     log "-> setting up python..."
-    sh "$DOTS/python/$platform.sh" && log_ok "-> DONE setting up python" || log_error "failed to setup python"
+    source "$DOTS/python/$platform.sh" && log_ok "-> DONE setting up python" || log_error "failed to setup python"
 }
 
 function setup_keyboard {
     log "-> setting up keyboard..."
-    sh "$DOTS/keyboard/$platform.sh" && log_ok "-> DONE setting up keyboard" || log_error "failed to setup keyboard"
+    source "$DOTS/keyboard/$platform.sh" && log_ok "-> DONE setting up keyboard" || log_error "failed to setup keyboard"
 }
 
 function setup_terminfo {
     log "-> setting up terminfo..."
-    sh "$DOTS/terminfo/$platform.sh" && log_ok "-> DONE setting up terminfo" || log_error "failed to setup terminfo"
+    source "$DOTS/terminfo/$platform.sh" && log_ok "-> DONE setting up terminfo" || log_error "failed to setup terminfo"
 }
 
 function setup_zsh {
