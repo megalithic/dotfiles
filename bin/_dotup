@@ -298,7 +298,7 @@ function post_install {
         kill "$caffeinatepid" && log_ok "finished caffeination.."
     fi
 
-    log_ok "DONE with $platform dotfiles setup!"
+    log_ok "DONE with dotfiles install and configuration for $platform!"
     exit 0
 }
 

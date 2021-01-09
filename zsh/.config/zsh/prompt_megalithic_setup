@@ -100,6 +100,13 @@ background_process_indicator() {
   echo "$background_indicator"
 }
 
+ssh_indicator() {
+  local indicator=''
+  [[ -n ${SSH_CONNECTION-}${SSH_CLIENT-}${SSH_TTY-} ]] && indicator="%F{166}@${(%):-%m}%{$reset_color%}"
+
+  echo "$indicator"
+}
+
 # # handle vi-mode / prompt_symbol / return code switching..
 function zle-line-init zle-keymap-select {
   # We keep the prompt as a single var, so that reset-prompt redraws the whole thing
@@ -124,4 +131,4 @@ prompt_status_symbol() {
 }
 
 # render dat prompt
-PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT${NEWLINE}$(background_process_indicator)${return_status_prompt} '
+PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT$(ssh_indicator)${NEWLINE}$(background_process_indicator)${return_status_prompt} '
