@@ -1,5 +1,40 @@
 local M = {}
 
+local home = os.getenv("HOME")
+local path_sep = M.is_windows and "\\" or "/"
+local os_name = vim.loop.os_uname().sysname
+
+function M:load_variables()
+  self.is_mac = os_name == "Darwin"
+  self.is_linux = os_name == "Linux"
+  self.is_windows = os_name == "Windows"
+  self.vim_path = home .. path_sep .. ".config" .. path_sep .. "nvim"
+  self.cache_dir = home .. path_sep .. ".cache" .. path_sep .. "nvim" .. path_sep
+  self.modules_dir = self.vim_path .. path_sep .. "modules"
+  self.path_sep = path_sep
+  self.home = home
+end
+
+M:load_variables()
+
+-- check file exists
+function M.exists(file)
+  local ok, err, code = os.rename(file, file)
+  if not ok then
+    if code == 13 then
+      -- Permission denied, but it exists
+      return true
+    end
+  end
+  return ok, err
+end
+
+--- Check if a directory exists in this path
+function M.isdir(path)
+  -- "/" works on both Unix and Windows
+  return M.exists(path .. "/")
+end
+
 M.map_opts = {noremap = true, silent = false, expr = false}
 
 function M.load(key, req, loader_fn)

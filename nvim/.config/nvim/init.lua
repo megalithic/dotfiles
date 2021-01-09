@@ -32,16 +32,32 @@ _G["mega"] = require("mega.global")
 -- LSP log location ->
 --  `tail -n150 -f $HOME/.local/share/nvim/lsp.log`
 
+-- [ engage! ] ---------------------------------------------------------------
+
 do
-  -- [ leader ] ---------------------------------------------------------------
-  -- mega.map('n', '<Space>', '', {})
-  -- mega.map("n", ",", "", {})
-  -- vim.g.mapleader = ","
-  -- vim.g.maplocalleader = ","
+  local data_dir = {
+    mega.cache_dir .. "backup",
+    mega.cache_dir .. "session",
+    mega.cache_dir .. "swap",
+    mega.cache_dir .. "tags",
+    mega.cache_dir .. "undo"
+  }
+  -- Only check once that If cache_dir exists
+  -- Then I don't want to check subs dir exists
+  if not mega.isdir(mega.cache_dir) then
+    os.execute("mkdir -p " .. mega.cache_dir)
+
+    for _, v in pairs(data_dir) do
+      if not mega.isdir(v) then
+        os.execute("mkdir -p " .. v)
+      end
+    end
+  end
 
   vim.cmd([[runtime vimrc]])
 
   -- [ loaders ] ---------------------------------------------------------------
+
   mega.load("packages", "mega.packages", "activate")
   mega.load("nova", "mega.colors.nova", "activate")
   mega.load("settings", "mega.settings", "activate")
