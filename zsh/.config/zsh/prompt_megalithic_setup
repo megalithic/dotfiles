@@ -104,7 +104,7 @@ background_process_indicator() {
 ssh_indicator() {
   if [[ -n ${SSH_CONNECTION-}${SSH_CLIENT-}${SSH_TTY-} ]]; then
     # echo "%F{166} @${(%):-%m}%{$reset_color%}"
-    echo "%F{166}$SSH_SYMBOL%{$reset_color%}"
+    echo "%F{166}$SSH_SYMBOL %{$reset_color%}"
   fi
 }
 
