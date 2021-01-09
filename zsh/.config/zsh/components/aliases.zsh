@@ -1,3 +1,6 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+
 # delete symlinks (remove evertyhing after '*' to just search for symlinks): find /home -maxdepth 1 -lname '*' -exec rm {} \;
 # create the target folder and move the source to the new destination: mkdir -p ~/.dotfiles/git/bak && mv git* "$_"
 
@@ -51,7 +54,7 @@ alias dotup='_dotup'
 
 
 alias utc="date -u"
-alias s='ssh $(grep -iE "^host[[:space:]]+[^*]" ~/.ssh/config | fzf | awk "{print \$2}")'
+# alias s='ssh $(grep -iE "^host[[:space:]]+[^*]" ~/.ssh/config | fzf | awk "{print \$2}")'
 alias webcam="sudo killall VDCAssistant"
 alias dsnuke="find . -name '*.DS_Store' -type f -ls -delete"
 alias pkey="pbcopy < ~/.ssh/id_rsa.pub"
@@ -133,7 +136,7 @@ alias ec=em
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-[[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] && alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
+[[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] && alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim" || alias nvim="nvim"
 alias nvimupdate="brew update; brew reinstall neovim; brew postinstall neovim; pip install --upgrade pynvim; pip3 install --upgrade pynvim; pip2 install --upgrade pynvim; npm install -g neovim --force; yarn global add neovim; gem install neovim; nvim +PaqUpdate +qall; brew outdated"
 alias im="nvim"
 alias nv="nvim"
@@ -263,7 +266,7 @@ alias map="xargs -n1"
 alias tig="nvim +:GV" # https://github.com/junegunn/gv.vim#mappings
 alias lg="lazygit"
 alias gin="gitin"
-alias gc='git co `git b | fzf | sed -e "s/\* //g" | awk "{print \$1}"`'
+# alias gc='git co `git b | fzf | sed -e "s/\* //g" | awk "{print \$1}"`'
 alias gb='git b | fzf | xargs git branch -d'
 alias gcb="git rev-parse --abbrev-ref HEAD | tr -d '\n'"
 alias gcp="gcb | pbcopy"

@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 # REFS:
 # - fantastic prompt and zsh plugin stuff: https://github.com/tardypad/dotfiles/blob/master/configs/zsh/config.d/plugins.zsh
@@ -14,7 +15,7 @@ VCS_UNTRACKED_SYMBOL="?"      #…
 VCS_STASHES_SYMBOL=$'\uf530'  #
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
-# •
+SSH_SYMBOL=$'\uf502'
 
 if [[ "$(uname)" == "Darwin" ]]; then
   source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
@@ -101,10 +102,10 @@ background_process_indicator() {
 }
 
 ssh_indicator() {
-  local indicator=''
-  [[ -n ${SSH_CONNECTION-}${SSH_CLIENT-}${SSH_TTY-} ]] && indicator="%F{166}@${(%):-%m}%{$reset_color%}"
-
-  echo "$indicator"
+  if [[ -n ${SSH_CONNECTION-}${SSH_CLIENT-}${SSH_TTY-} ]]; then
+    # echo "%F{166} @${(%):-%m}%{$reset_color%}"
+    echo "%F{166}$SSH_SYMBOL%{$reset_color%}"
+  fi
 }
 
 # # handle vi-mode / prompt_symbol / return code switching..
@@ -131,4 +132,4 @@ prompt_status_symbol() {
 }
 
 # render dat prompt
-PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT$(ssh_indicator)${NEWLINE}$(background_process_indicator)${return_status_prompt} '
+PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT${NEWLINE}$(ssh_indicator)$(background_process_indicator)${return_status_prompt} '

@@ -140,7 +140,7 @@ return {
     paq "tpope/vim-rails"
     paq "gleam-lang/gleam.vim"
     paq "vim-erlang/vim-erlang-runtime"
-    paq "Zaptic/elm-vim"
+    -- paq "Zaptic/elm-vim"
     paq "antew/vim-elm-analyse"
     paq "elixir-lang/vim-elixir"
     paq "avdgaag/vim-phoenix"

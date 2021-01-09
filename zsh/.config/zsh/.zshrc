@@ -20,7 +20,6 @@ prompt megalithic
 
 # Ensures we use emacs/readline keybindings
 bindkey -e
-set -e
 
 # NOTE: source order matters!
 #
