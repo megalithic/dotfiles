@@ -223,7 +223,6 @@ function setup_ssh_key {
     # REF: 
     #  1.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
     #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
-
     skip_message="skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
     log_warn "you'll need to setup an ssh public/private key to do more github things later.."
     # echo -n "[?] do this now? [yN]"
@@ -264,8 +263,7 @@ function setup_terminfo {
 }
 
 function setup_zsh {
-    zsh_path=/usr/local/bin/zsh
-    [[ "$platform" == "linux" ]] && zsh_path=/usr/bin/zsh
+    [[ "$platform" == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
 
     log "attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells" && log_ok "DONE adding $zsh_path"
@@ -275,7 +273,7 @@ function setup_zsh {
     source $HOME/.config/zsh/.zshenv
 
     # compaudit | xargs chmod g-w
-    #
+
     log "changing your shell to user-installed version: $zsh_path"
     sudo chsh -s "$zsh_path" $USER && log_ok "DONE setting up zsh"
 }
