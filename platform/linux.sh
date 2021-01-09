@@ -21,7 +21,16 @@ if [ -f "/etc/debian_version" ]; then
   cd $HOME/builds/neovim
   git fetch && git merge origin/master
 
-  make distclean && make CMAKE_BUILD_TYPE=Release && log_ok "DONE building and installing neovim nightly" || log_error "failed to install neovim nightly"
+  skip_message="skipping clean"
+  vared -p "[?] clean before the rebuild? [yN]" -c continue_reply
+
+  case $continue_reply in
+    [Yy]) make distclean && log_ok "DONE dist-cleaning" || log_error "failed to make distclean" ;;
+    [Nn]) log_warn "$skip_message" ;;
+    *) log_warn "$skip_message" ;;
+  esac
+
+  make CMAKE_BUILD_TYPE=Release && log_ok "DONE building and installing neovim nightly" || log_error "failed to build and install neovim nightly"
   cd -
 
   log_warn "to launch neovim nightly, use: VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
