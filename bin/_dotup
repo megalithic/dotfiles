@@ -28,8 +28,7 @@ function clean_exit {
 }
 
 
-log '
-
+log "
 ==================================================================================
 
 ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
@@ -37,11 +36,11 @@ log '
 ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
 @megalithic
 
-Setting up dotfiles. If the ~/.dotfiles folder does not exist, it will be
-cloned from https://github.com/megalithic/dotfiles.
+Setting up dotfiles. If $HOME/.dotfiles does not exist, it will be
+cloned from https://github.com/megalithic/dotfiles
 
 ==================================================================================
-'
+"
 
 
 log_warn "-> some steps require sudo; please grant access:"
@@ -64,7 +63,6 @@ function detect_platform {
     if [[ -z $PLATFORM ]]
     then
         log "-> setting PLATFORM env"
-        # unamestr=`uname`
         platform="unknown"
 
         if [[ "$(uname)" == "Darwin" ]]; then
@@ -148,7 +146,7 @@ function clone_dotfiles_repo {
             #     _do_clone
             # fi
 
-            log_warn "-> ~/.dotfiles exists; deleting and retrying clone.."
+            log_warn "-> $HOME/.dotfiles exists; deleting and retrying clone.."
             rm -rf $DOTS
             _do_clone
         fi
