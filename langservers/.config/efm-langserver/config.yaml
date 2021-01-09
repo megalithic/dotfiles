@@ -125,6 +125,8 @@ languages:
     - <<: *luafmt
   sh:
     - <<: *shellcheck
+  zsh:
+    - <<: *shellcheck
   elixir:
     - <<: *mix_credo
   eelixir:

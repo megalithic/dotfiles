@@ -7,9 +7,8 @@
 # Using glob patterns to include/exclude files or folders
 --glob
 !git/*
+--glob
 !**/.git/*
-!.git/*
-!**/gitstatus/*
 
 # Set the colors.
 --colors=line:none
@@ -17,6 +16,12 @@
 
 # Because who cares about case!?
 --smart-case
+
+# most of my config files are ./hidden files; let's see them
+--hidden
+
+# and i want to follow my symlinks.. i have many of those. 
+--follow
 
 # Add my 'web' type.
 --type-add
@@ -32,4 +37,4 @@ railsmigrations:*/migrate/*
 --type-add
 rails:include:ruby,rabl,erb
 
-" vim:ft=conf
+# vim:ft=conf
