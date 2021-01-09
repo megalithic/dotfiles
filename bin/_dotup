@@ -262,14 +262,19 @@ function setup_terminfo {
 
 function setup_zsh {
     zsh_path=/usr/local/bin/zsh
-    [[ "$platform" == "macos" ]] && zsh_path=/usr/bin/zsh
+    [[ "$platform" == "linux" ]] && zsh_path=/usr/bin/zsh
+
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
-    grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
+    grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells" && log_ok "-> DONE adding $zsh_path"
+
+    log "-> symlinking and sourcing .zshenv"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
     source $HOME/.config/zsh/.zshenv
+
     # compaudit | xargs chmod g-w
+    #
     log "-> changing your shell to user-installed version: $zsh_path"
-    chsh -s "$zsh_path" $USER && log_ok "-> DONE setting up zsh"
+    sudo chsh -s "$zsh_path" $USER && log_ok "-> DONE setting up zsh"
 }
 
 function setup_fish {
