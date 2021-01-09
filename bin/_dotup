@@ -69,6 +69,7 @@ function detect_platform {
             platform="macos"
         elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
             platform="linux"
+            lsb_release -a
         elif [[ "$(expr substr $(uname -s) 1 5)" == 'FreeBSD' ]]; then
             platform='freebsd'
         elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]]; then
@@ -147,7 +148,7 @@ function clone_dotfiles_repo {
             # fi
 
             log_warn "-> $HOME/.dotfiles exists; deleting and retrying clone.."
-            rm -rf $DOTS
+            # rm -rf $DOTS
             _do_clone
         fi
     fi

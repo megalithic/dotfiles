@@ -5,7 +5,7 @@
 if [ -f "/etc/debian_version" ]; then
   log "-> installing necessary deps"
   # install some deps..
-  sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip
+  sudo apt-get -y install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip
 
   log "-> installing neovim nightly"
   # install neovim nightly please..
