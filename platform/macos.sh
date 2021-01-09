@@ -1,21 +1,14 @@
 #!/usr/bin/env zsh
 
-
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change
 osascript -e 'tell application "System Preferences" to quit'
 
 BACKUP_FILE="${HOME}/Desktop/defaults-backup.$(date '+%Y%m%d_%H%M%S').plist"
-echo "Backing up current macOS X defaults to: ${BACKUP_FILE}"
+log "-> backing up current macOS X defaults to: ${BACKUP_FILE}"
 defaults read > "$BACKUP_FILE"
 
-echo
 set -x
-
-
-echo ""
-echo ":: setting up macOS system related things"
-echo ""
 
 # ------------------
 # great references:
@@ -438,7 +431,6 @@ defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true
 
 
 set +x
-echo
 
 ##
 # Kill affected applications
@@ -461,13 +453,11 @@ dock_apps_to_remove=(
  "Safari"
 )
 for app in "${dock_apps_to_remove[@]}"; do
-    echo "Removing \"${app}\" from the dock."
+    log "-> removing \"${app}\" from the dock."
 
     # remove apps from dock
     # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
-    dockutil --remove "${app}"
-
-    echo
+    dockutil --remove "${app}" && log_ok "done"
 done
 
 function app_is_running {
@@ -506,16 +496,8 @@ apps_to_restart=(
 
 for app in "${apps_to_restart[@]}"; do
   if [[ "$(app_is_running "${app}")" == "true" ]]; then
-    echo "\"${app}\" needs to be restarted."
-
-    # if ( ask "${app}" ); then
-      echo "Quitting ${app}"
-      killall "${app}" &> /dev/null
-    # else
-    #   log "Leaving ${app} open"
-    # fi
-
-    echo
+    log "-> \"${app}\" needs to be restarted; proceeding to quit"
+    killall "${app}" &> /dev/null && log_ok "done"
   fi
 done
 
@@ -560,19 +542,16 @@ apps_to_startup=(
 "Witch"
 )
 for app in "${apps_to_startup[@]}"; do
-    echo "Setting to \"${app}\" to launch at startup."
+    log "-> setting to \"${app}\" to launch at startup."
 
     # Enable apps at startup
-    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
-
-    echo
+    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null && log_ok "done"
 done
 
 # Set brave as default browser!
 defaults write "com.brave.Browser" ExternalProtocolDialogShowAlwaysOpenCheckbox -bool true
 
-
-echo "Done. Note that some of these changes require a full logout/restart to take effect."
+log_ok "-> done. please note that some of these changes require a full logout/restart to take effect."
 
 # TODO:
 # - programmatically set keyboard shortcuts for apps: https://github.com/kassio/dotfiles/blob/master/lib/macos/shortcuts
