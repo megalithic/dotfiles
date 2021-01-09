@@ -192,7 +192,12 @@ function stow_away {
     stow langservers && log_ok "stowed langservers"
     stow nvim && log_ok "stowed nvim"
     stow keyboard && log_ok "stowed keyboard"
-    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
+
+    if [[ "$platform" == "macos" ]]
+    then
+        defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
+    fi
+
     stow misc && log_ok "stowed misc"
     stow weechat && log_ok "stowed weechat"
     cd -
@@ -205,7 +210,8 @@ function setup_ssh_key {
     #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
 
     skip_message="-> skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
-    log_warn -n "-> you'll need to setup an ssh public/private key to do more github things later; do this now? [yN]"
+    log_warn -n "-> you'll need to setup an ssh public/private key to do more github things later.."
+    echo -n "[?] do this now? [yN]"
     read continue_reply
 
     case $continue_reply in
@@ -286,30 +292,36 @@ then
 fi
 
 export_dirs
+
 if [[ "$platform" == "macos" ]]
-then 
+then
     setup_xcode_and_git
 fi
+
 clone_dotfiles_repo
-if [[ "$platform" == "macos" ]] 
-then 
+
+if [[ "$platform" == "macos" ]]
+then
     install_homebrew
     bundle_brews
 fi
 
 stow_away
 setup_ssh_key
-if [[ "$platform" == "macos" ]] 
-then 
+
+if [[ "$platform" == "macos" ]]
+then
     setup_zsh
 fi
+
 setup_platform
 setup_asdf
 setup_terminfo
 setup_keyboard
 setup_python
-if [[ "$platform" == "macos" ]] 
-then 
+
+if [[ "$platform" == "macos" ]]
+then
     post_install
 fi
 
