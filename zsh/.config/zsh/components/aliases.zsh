@@ -212,8 +212,8 @@ alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
 
 # MISC
 # -----------------------------------------------------------------------------
-alias rm="/usr/local/bin/trash"
-# alias rm="rm -v"
+alias rm="rm -v"
+[[ "$(uname)" == "Darwin" ]] && alias rm="/usr/local/bin/trash"
 alias dash="open dash://" # lang:query
 alias trunc=": > "
 alias server="python -m SimpleHTTPServer"

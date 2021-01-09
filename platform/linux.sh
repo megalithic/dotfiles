@@ -4,7 +4,7 @@
 # we're on a familiar distro (debian based)
 if [ -f "/etc/debian_version" ]; then
   export XDG_CONFIG_HOME="$HOME/.config"
-  builds_path = "$HOME/builds"
+  builds_path="$HOME/builds"
 
   [[ ! -d "$builds_path" ]] && mkdir -p "$builds_path"
 
