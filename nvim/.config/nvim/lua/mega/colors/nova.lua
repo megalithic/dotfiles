@@ -98,6 +98,7 @@ return {
 
     cu.hi("SignColumn", nil, "NONE", nil)
     cu.hi("CursorLineNr", status.cursorlinenr, status.special_bg, "italic")
+    cu.hi("CursorLineNR", status.cursorlinenr, status.special_bg, "italic")
     cu.hi("VertSplit", status.separator, "NONE", "NONE")
     cu.hi("Visual", status.bg, status.selection, "NONE")
     cu.hi("Normal", status.normal_text, "NONE", "NONE")
