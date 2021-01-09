@@ -75,18 +75,23 @@ zstyle ':completion:*' insert-tab pending
 # Uses git's autocompletion for inner commands. Assumes an install of git's
 # bash `git-completion` script at $completion below (this is where Homebrew
 # tosses it, at least).
-completion='$(brew --prefix)/share/zsh/site-functions/_git'
-if test -f $completion
-then
-  source $completion
+if [[ "$(uname)" == "Darwin" ]]; then
+  completion='$(brew --prefix)/share/zsh/site-functions/_git'
+  if test -f $completion
+  then
+    source $completion
+  fi
 fi
 
 # Completion for teamocil autocompletion definitions: http://www.teamocil.com/#zsh-autocompletion
 compctl -g '~/.teamocil/*(:t:r)' teamocil
 
 # Completion for kitty (https://sw.kovidgoyal.net/kitty/#zsh)
-if command -v kitty >/dev/null; then
-  kitty + complete setup zsh | source /dev/stdin
+#
+if [[ "$(uname)" == "Darwin" ]]; then
+  if command -v kitty >/dev/null; then
+    kitty + complete setup zsh | source /dev/stdin
+  fi
 fi
 
 # ============================================================================

@@ -16,7 +16,11 @@ VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
 # •
 
-source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
+if [[ "$(uname)" == "Darwin" ]]; then
+  source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+  source $HOME/builds/gitstatus/gitstatus.plugin.zsh
+fi
 
 function gitstatus_prompt_update() {
   emulate -L zsh

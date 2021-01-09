@@ -41,9 +41,16 @@ source "$ZDOTDIR/components/kitty.zsh"
 source "$ZDOTDIR/components/fzf.zsh"
 source "$ZDOTDIR/components/zlua.zsh"
 source "$ZDOTDIR/components/asdf.zsh"
-source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
-source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+if [[ "$(uname)" == "Darwin" ]]; then
+  source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+  source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+  source $HOME/builds/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  source $HOME/builds/zsh-history-substring-search/zsh-history-substring-search.zsh
+  source $HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
 
 # source "$ZDOTDIR/components/prompt.zsh"
 

@@ -133,7 +133,7 @@ alias ec=em
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-[[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] && alias nvim="VIMRUNTIME=$HOME/neovim/runtime $HOME/neovim/build/bin/nvim"
+[[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] && alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
 alias nvimupdate="brew update; brew reinstall neovim; brew postinstall neovim; pip install --upgrade pynvim; pip3 install --upgrade pynvim; pip2 install --upgrade pynvim; npm install -g neovim --force; yarn global add neovim; gem install neovim; nvim +PaqUpdate +qall; brew outdated"
 alias im="nvim"
 alias nv="nvim"
