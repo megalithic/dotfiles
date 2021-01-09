@@ -229,13 +229,13 @@ function setup_ssh_key {
     # echo -n "[?] do this now? [yN]"
     # read continue_reply
 
-    # vared -p "[?] do this now? [yN]" continue_reply
+    vared -p "[?] do this now? [yN]" -c continue_reply
 
-    # case $continue_reply in
-    #   [Yy]) $(bin/ssh-setup) ;;
-    #   [Nn]) log_warn "$skip_message" ;;
-    #   *) log_warn "$skip_message" ;;
-    # esac
+    case $continue_reply in
+      [Yy]) $(bin/ssh-setup) ;;
+      [Nn]) log_warn "$skip_message" ;;
+      *) log_warn "$skip_message" ;;
+    esac
 }
 
 function setup_platform {
@@ -308,7 +308,7 @@ export_dirs
 clone_dotfiles_repo
 [[ "$platform" == "macos" ]] && install_homebrew && bundle_brews
 stow_away
-# setup_ssh_key # FIXME: terminal input failing for some reason
+setup_ssh_key
 [[ "$platform" == "macos" ]] && setup_zsh
 setup_platform
 setup_asdf
