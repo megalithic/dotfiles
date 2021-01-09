@@ -25,10 +25,10 @@ local function root_pattern(...)
 end
 
 local servers = {
-  bashls = {
-    cmd = {"bash-language-server", "start"},
-    filetypes = {"bash", "sh", "zsh"}
-  },
+  -- bashls = {
+  --   cmd = {"bash-language-server", "start"},
+  --   filetypes = {"bash", "sh", "zsh"}
+  -- },
   cssls = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")

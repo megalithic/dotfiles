@@ -179,15 +179,30 @@ function bundle_brews {
     log_ok "-> DONE bundling brews"
 }
 
+function _install_stow {
+    if (command -v stow &> /dev/null); then
+        log "-> stow already installed; skipping."
+    else
+        log_warn "-> stow not found; installing stow..."
+        sudo apt-get install stow
+        log_ok "-> DONE installing stow"
+    fi
+
+}
+
 function stow_away {
     log "-> stowing things..."
+    if [[ "$platform" == "linux" ]]
+    then
+        _install_stow
+    fi
     cd $DOTS
     stow terminfo && log_ok "stowed terminfo"
     stow asdf && log_ok "stowed asdf"
     stow kitty && log_ok "stowed kitty"
     # stow fish && log_ok "stowed fish"
     stow zsh && log_ok "stowed zsh"
-    rm ~/.gitconfig && stow git && log_ok "stowed git"
+    rm $HOME/.gitconfig && stow git && log_ok "stowed git"
     stow tmux && log_ok "stowed tmux"
     stow langservers && log_ok "stowed langservers"
     stow nvim && log_ok "stowed nvim"
@@ -195,7 +210,7 @@ function stow_away {
 
     if [[ "$platform" == "macos" ]]
     then
-        defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
+        defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
     fi
 
     stow misc && log_ok "stowed misc"
@@ -210,9 +225,11 @@ function setup_ssh_key {
     #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
 
     skip_message="-> skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
-    log_warn -n "-> you'll need to setup an ssh public/private key to do more github things later.."
-    echo -n "[?] do this now? [yN]"
-    read continue_reply
+    log_warn "-> you'll need to setup an ssh public/private key to do more github things later.."
+    # echo -n "[?] do this now? [yN]"
+    # read continue_reply
+
+    vared -p "[?] do this now? [yN]" continue_reply
 
     case $continue_reply in
       [Yy]) $(bin/ssh-setup) ;;
@@ -307,7 +324,7 @@ then
 fi
 
 stow_away
-setup_ssh_key
+# setup_ssh_key
 
 if [[ "$platform" == "macos" ]]
 then
