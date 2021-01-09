@@ -34,23 +34,21 @@ log "installing asdf plugin versions.."
 # must initially symlink our tool-versions file for asdf to install the right things..
 asdf install
 
-#
 log "configuring ruby.."
 source $DOTS/asdf/ruby.sh && log_ok "DONE configuring ruby"
 
-#
 log "configuring node.."
 # TODO: it seems as though after installing a node vresion we have to explicitly set it with `asdf global nodejs <version>`
 source $DOTS/asdf/node.sh && log_ok "DONE configuring node"
 
-#
 log "configuring lua.."
 source $DOTS/asdf/lua.sh && log_ok "DONE configuring lua"
 
-#
 log "configuring rust.."
 source $DOTS/asdf/rust.sh && log_ok "DONE configuring rust"
 
-#
 log "configuring elixir.."
 source $DOTS/asdf/elixir.sh && log_ok "DONE configuring elixir"
+
+log "configuring go.."
+source $DOTS/asdf/go.sh && log_ok "DONE configuring go"
