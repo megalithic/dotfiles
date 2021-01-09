@@ -1,8 +1,8 @@
 #!/usr/bin/env zsh
 
 if (command -v luarocks &> /dev/null); then
-  luarocks install --server=http://luarocks.org/dev lua-lsp
-  luarocks install luacheck
-  luarocks install lcf
-  luarocks install --server=https://luarocks.org/dev luaformatter
+  (! command -v luacheck &> /dev/null) && luarocks install luacheck
+  (! command -v lcf &> /dev/null) && luarocks install lcf
+  (! command -v lua-lsp &> /dev/null) && luarocks install --server=https://luarocks.org/dev lua-lsp
+  (! command -v lua-format &> /dev/null) && luarocks install --server=https://luarocks.org/dev luaformatter
 fi
