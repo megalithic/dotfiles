@@ -299,13 +299,19 @@ fi
 
 stow_away
 setup_ssh_key
-setup_zsh
+if [[ "$platform" == "macos" ]] 
+then 
+    setup_zsh
+fi
 setup_platform
 setup_asdf
 setup_terminfo
 setup_keyboard
 setup_python
-post_install
+if [[ "$platform" == "macos" ]] 
+then 
+    post_install
+fi
 
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

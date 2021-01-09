@@ -7,6 +7,25 @@ return {
     local gls = gl.section
     local colors = require("mega.colors.nova").colors
     local icons = require("mega.colors.nova").icons
+    local mode_alias = function()
+      local mode_aliases = {
+        n = "N",
+        i = "I",
+        c = "C",
+        V = "VL",
+        [""] = "VB",
+        v = "V",
+        R = "R",
+        s = "S",
+        t = icons.mode_term
+      }
+
+      if (mode_aliases[vim.fn.mode()] == nil) then
+        return vim.fn.mode()
+      end
+
+      return mode_aliases[vim.fn.mode()]
+    end
 
     local mode_color = function()
       local mode_colors = {
@@ -19,6 +38,10 @@ return {
         R = colors.replace_color,
         t = colors.terminal_color
       }
+
+      if (mode_colors[vim.fn.mode()] == nil) then
+        return vim.fn.mode()
+      end
 
       return mode_colors[vim.fn.mode()]
     end
@@ -47,18 +70,8 @@ return {
     gls.left[1] = {
       ViMode = {
         provider = function()
-          local alias = {
-            n = "N",
-            i = "I",
-            c = "C",
-            V = "VL",
-            [""] = "VB",
-            v = "V",
-            R = "R",
-            t = icons.mode_term
-          }
           vim.api.nvim_command("hi GalaxyViMode gui=bold guifg=" .. colors.bg .. " guibg=" .. mode_color())
-          return "  " .. alias[vim.fn.mode()] .. " "
+          return "  " .. mode_alias() .. " "
         end,
         separator_highlight = {colors.bg, colors.bg},
         highlight = {colors.bg, colors.bg}
