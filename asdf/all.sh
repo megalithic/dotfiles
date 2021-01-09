@@ -1,15 +1,11 @@
 #!/usr/bin/env zsh
 
-echo ""
-echo ":: setting up asdf-vm..."
-echo ""
+log "-> installing asdf for all platforms.."
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
 if [[ ! -d "$HOME/.asdf" ]]
 then
-  echo ""
-  echo ":: $HOME/.asdf not found; cloning it now.."
-  echo ""
+  log_warn "-> $HOME/.asdf not found; cloning it now.."
   git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
 fi
 
