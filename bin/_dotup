@@ -184,10 +184,8 @@ function _install_stow {
         log "-> stow already installed; skipping."
     else
         log_warn "-> stow not found; installing stow..."
-        sudo apt-get install stow
-        log_ok "-> DONE installing stow"
+        sudo apt-get install stow && log_ok "-> DONE installing stow" || log_error "failed to install stow"; exit 1;
     fi
-
 }
 
 function stow_away {
@@ -197,24 +195,24 @@ function stow_away {
         _install_stow
     fi
     cd $DOTS
-    stow terminfo && log_ok "stowed terminfo"
-    stow asdf && log_ok "stowed asdf"
-    stow kitty && log_ok "stowed kitty"
-    # stow fish && log_ok "stowed fish"
-    stow zsh && log_ok "stowed zsh"
-    rm $HOME/.gitconfig && stow git && log_ok "stowed git"
-    stow tmux && log_ok "stowed tmux"
-    stow langservers && log_ok "stowed langservers"
-    stow nvim && log_ok "stowed nvim"
-    stow keyboard && log_ok "stowed keyboard"
+    stow terminfo && log_ok "stowed terminfo" || log_error "terminfo stow failed"
+    stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
+    stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
+    # stow fish && log_ok "stowed fish" || log_error "fish stow failed"
+    stow zsh && log_ok "stowed zsh" || log_error "zsh stow failed"
+    [[ -f $HOME/.gitconfig ]] && rm $HOME/.gitconfig; stow git && log_ok "stowed git" || log_error "git stow failed"
+    stow tmux && log_ok "stowed tmux" || log_error "tmux stow failed"
+    stow langservers && log_ok "stowed langservers" || log_error "langservers stow failed"
+    stow nvim && log_ok "stowed nvim" || log_error "nvim stow failed"
+    stow keyboard && log_ok "stowed keyboard" || log_error "keyboard stow failed"
 
     if [[ "$platform" == "macos" ]]
     then
-        defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon"
+        defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon" || log_error "hammerspoon stow failed"
     fi
 
-    stow misc && log_ok "stowed misc"
-    stow weechat && log_ok "stowed weechat"
+    stow misc && log_ok "stowed misc" || log_error "misc stow failed"
+    stow weechat && log_ok "stowed weechat" || log_error "weechat stow failed"
     cd -
     log_ok "-> DONE stowing things"
 }
@@ -303,44 +301,20 @@ function post_install {
 # -- engage!
 
 detect_platform
-if [[ "$platform" == "macos" ]]
-then
-    keep_awake
-fi
-
+[[ "$platform" == "macos" ]] && keep_awake
 export_dirs
-
-if [[ "$platform" == "macos" ]]
-then
-    setup_xcode_and_git
-fi
-
+[[ "$platform" == "macos" ]] && setup_xcode_and_git
 clone_dotfiles_repo
-
-if [[ "$platform" == "macos" ]]
-then
-    install_homebrew
-    bundle_brews
-fi
-
+[[ "$platform" == "macos" ]] && install_homebrew && bundle_brews
 stow_away
 # setup_ssh_key
-
-if [[ "$platform" == "macos" ]]
-then
-    setup_zsh
-fi
-
+[[ "$platform" == "macos" ]] && setup_zsh
 setup_platform
 setup_asdf
 setup_terminfo
 setup_keyboard
 setup_python
-
-if [[ "$platform" == "macos" ]]
-then
-    post_install
-fi
+[[ "$platform" == "macos" ]] && post_install
 
 
 #ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
