@@ -294,7 +294,7 @@ function post_install {
         kill "$caffeinatepid" && log_ok "-> finished caffeination.."
     fi
 
-    log_ok "-> DONE with $platform setup! Would be a good idea to restart your mac."
+    log_ok "-> DONE with $platform dotfiles setup!"
     exit 0
 }
 
