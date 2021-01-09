@@ -7,7 +7,7 @@ if [ -f "/etc/debian_version" ]; then
 
   log "installing necessary deps"
   # install some deps..
-  sudo apt-get -y install linux-headers-$(uname -r) build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip zsh lib32readline-dev libreadline-dev dirmngr gpg curl
+  sudo apt-get -y install linux-headers-$(uname -r) build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip zsh lib32readline-dev libreadline-dev dirmngr gpg curl && log_ok "DONE installing linux deps" || log_error "failed to install linux deps"
 
   log "installing neovim nightly"
   # install neovim nightly please..
@@ -21,7 +21,7 @@ if [ -f "/etc/debian_version" ]; then
   cd $HOME/builds/neovim
   git fetch && git merge origin/master
 
-  make distclean && make CMAKE_BUILD_TYPE=Release
+  make distclean && make CMAKE_BUILD_TYPE=Release && log_ok "DONE building and installing neovim nightly" || log_error "failed to install neovim nightly"
   cd -
 
   log_warn "to launch neovim nightly, use: VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
