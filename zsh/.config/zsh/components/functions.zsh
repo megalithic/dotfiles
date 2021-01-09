@@ -2,6 +2,33 @@
 # Functions
 #
 
+# wrapper for ssh that also set tmux title for ssh connection:
+ssh() {
+  # grep -w: match command names such as "tmux-2.1" or "tmux: server"
+  if ps -p $$ -o ppid= \
+    | xargs -i ps -p {} -o comm= \
+    | grep -qw tmux; then
+      # Note: Options without parameter were hardcoded,
+      # in order to distinguish an option's parameter from the destination.
+      #
+      #                   s/[[:space:]]*\(\( | spaces before options
+      #     \(-[46AaCfGgKkMNnqsTtVvXxYy]\)\| | option without parameter
+      #                     \(-[^[:space:]]* | option
+      # \([[:space:]]\+[^[:space:]]*\)\?\)\) | parameter
+      #                      [[:space:]]*\)* | spaces between options
+      #                        [[:space:]]\+ | spaces before destination
+      #                \([^-][^[:space:]]*\) | destination
+      #                                   .* | command
+      #                                 /\6/ | replace with destination
+      tmux rename-window "$(echo "$@" \
+        | sed 's/[[:space:]]*\(\(\(-[46AaCfGgKkMNnqsTtVvXxYy]\)\|\(-[^[:space:]]*\([[:space:]]\+[^[:space:]]*\)\?\)\)[[:space:]]*\)*[[:space:]]\+\([^-][^[:space:]]*\).*/\6/')"
+              command ssh "$@"
+              tmux set-window-option automatic-rename "on" 1> /dev/null
+            else
+              command ssh "$@"
+  fi
+}
+
 disable_symantec() {
   for f in /Library/LaunchDaemons/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done
   for f in /Library/LaunchAgents/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done

@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 # ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -19,6 +20,7 @@ prompt megalithic
 
 # Ensures we use emacs/readline keybindings
 bindkey -e
+set -e
 
 # NOTE: source order matters!
 #
@@ -42,23 +44,29 @@ source "$ZDOTDIR/components/fzf.zsh"
 source "$ZDOTDIR/components/zlua.zsh"
 source "$ZDOTDIR/components/asdf.zsh"
 
+# for file in ~/.{prompt,zsh_aliases,exports,extra}; do
+#   # shellcheck disable=SC1090
+#   [ -r "$file" ] && [ -f "$file" ] && source "$file"
+# done
+# unset file
+
 if [[ "$(uname)" == "Darwin" ]]; then
   source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
   source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
   source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
-  source $HOME/builds/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-  source $HOME/builds/zsh-history-substring-search/zsh-history-substring-search.zsh
-  source $HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh
+  source "$HOME/builds/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+  source "$HOME/builds/zsh-history-substring-search/zsh-history-substring-search.zsh"
+  source "$HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
 
 # source "$ZDOTDIR/components/prompt.zsh"
 
 # use .localrc for SUPER SECRET STUFF that you don't
 # want in your public, versioned repo.
-if [[ -a ~/.localrc ]]
+if [[ -a $HOME/.localrc ]]
 then
-  source ~/.localrc
+  source "$HOME/.localrc"
 fi
 
 # leave this commented out so fzf won't try to keep adding it on updates
