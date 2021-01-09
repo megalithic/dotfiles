@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-log "-> installing asdf for all platforms.."
+log "-> setting up asdf for all platforms.."
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
 if [[ ! -d "$HOME/.asdf" ]]
@@ -11,7 +11,7 @@ fi
 
 source $HOME/.asdf/asdf.sh
 
-#
+log "-> adding asdf plugins.."
 # preferred plugins..
 asdf plugin-add ruby https://github.com/asdf-vm/asdf-ruby.git
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
@@ -30,27 +30,27 @@ bash $HOME/.asdf/plugins/nodejs/bin/import-release-team-keyring
 # https://github.com/danhper/asdf-python
 # asdf plugin-add python https://github.com/tuvistavie/asdf-python.git
 
-#
+log "-> installing asdf plugin versions.."
 # must initially symlink our tool-versions file for asdf to install the right things..
 asdf install
 
 #
-# ruby-specific...
-source $DOTS/asdf/ruby.sh
+log "-> configuring ruby-specific.."
+source $DOTS/asdf/ruby.sh && log_ok "-> DONE configuring ruby"
 
 #
-# node-specific...
+log "-> configuring node-specific.."
 # TODO: it seems as though after installing a node vresion we have to explicitly set it with `asdf global nodejs <version>`
-source $DOTS/asdf/node.sh
+source $DOTS/asdf/node.sh && log_ok "-> DONE configuring node"
 
 #
-# lua-specific...
-source $DOTS/asdf/lua.sh
+log "-> configuring lua-specific.."
+source $DOTS/asdf/lua.sh && log_ok "-> DONE configuring lua"
 
 #
-# rust-specific...
-source $DOTS/asdf/rust.sh
+log "-> configuring rust-specific.."
+source $DOTS/asdf/rust.sh && log_ok "-> DONE configuring rust"
 
 #
-# elixir-specific...
-source $DOTS/asdf/elixir.sh
+log "-> configuring elixir-specific.."
+source $DOTS/asdf/elixir.sh && log_ok "-> DONE configuring elixir"
