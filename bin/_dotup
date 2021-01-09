@@ -131,25 +131,21 @@ function clone_dotfiles_repo {
     else
         if [[ -z $SKIP_DOTFILES_UPDATE ]]
         then
-            # if ls -A $DOTS | grep -q '^'; then
-            #     log "-> ~/.dotfiles found; updating to latest.."
-            #     cd $DOTS
-            #     git stash
-            #     git fetch
-            #     git merge origin/main
-            #     # git pull origin main
-            #     # git stash pop
-            #     log_ok "-> finished fetching and merging latest"
-            #     cd $HOME
-            # else
-            #     log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
-            #     rm -rf $DOTS
-            #     _do_clone
-            # fi
-
-            log_warn "-> $HOME/.dotfiles exists; deleting and retrying clone.."
-            # rm -rf $DOTS
-            _do_clone
+            if ls -A $DOTS | grep -q '^'; then
+                log "-> ~/.dotfiles found; updating to latest.."
+                cd $DOTS
+                git stash
+                git fetch
+                git merge origin/main
+                # git pull origin main
+                # git stash pop
+                log_ok "-> finished fetching and merging latest"
+                cd $HOME
+            else
+                log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
+                rm -rf $DOTS
+                _do_clone
+            fi
         fi
     fi
 }
@@ -266,12 +262,13 @@ function setup_terminfo {
 
 function setup_zsh {
     zsh_path=/usr/local/bin/zsh
+    [[ "$platform" == "macos" ]] && zsh_path=/usr/bin/zsh
     log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
     source $HOME/.config/zsh/.zshenv
     # compaudit | xargs chmod g-w
-    log "-> changing your shell to homebrew version: $zsh_path"
+    log "-> changing your shell to user-installed version: $zsh_path"
     chsh -s "$zsh_path" $USER && log_ok "-> DONE setting up zsh"
 }
 
@@ -310,7 +307,7 @@ clone_dotfiles_repo
 [[ "$platform" == "macos" ]] && install_homebrew && bundle_brews
 stow_away
 setup_ssh_key
-[[ "$platform" == "macos" ]] && setup_zsh
+setup_zsh
 setup_platform
 setup_asdf
 setup_terminfo
