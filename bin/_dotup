@@ -5,25 +5,25 @@ set -e
 trap 'clean_exit $? $LINENO' EXIT
 
 function log {
-    printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
+    printf '-> %s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
 }
 
 function log_ok {
-    printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
+    printf '%s[%s] -> [✓] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
 function log_warn {
-    printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "$*" $(tput sgr 0)
+    printf '%s%s[%s] -> [!] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
 function log_error {
-    printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "$*" $(tput sgr 0)
+    printf '%s%s[%s] -> [x] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
 function clean_exit {
     set +x
     if [[ "$1" != "0" ]]; then
-        log_error "Fatal error code \"${1}\" occurred on line \"${2}\""
+        log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
     fi
 }
 
@@ -43,7 +43,7 @@ cloned from https://github.com/megalithic/dotfiles
 "
 
 
-log_warn "-> some steps require sudo; please grant access:"
+log_warn "some steps require sudo; please grant access:"
 sudo -v
 
 
@@ -52,17 +52,17 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
 function keep_awake {
-    log "-> caffinating macos.."
+    log "caffinating macos.."
     caffeinate -d -i -m -u &
     caffeinatepid=$!
-    log_ok "-> caffinated under process id: $caffeinatepid"
+    log_ok "caffinated under process id: $caffeinatepid"
 }
 
 # Detect OS
 function detect_platform {
     if [[ -z $PLATFORM ]]
     then
-        log "-> setting PLATFORM env"
+        log "setting PLATFORM env"
         platform="unknown"
 
         if [[ "$(uname)" == "Darwin" ]]; then
@@ -78,7 +78,7 @@ function detect_platform {
 
         export PLATFORM=$platform
 
-        log_ok "-> set PLATFORM to $platform"
+        log_ok "set PLATFORM to $platform"
     fi
 }
 
@@ -86,23 +86,23 @@ function export_dirs {
     # DOTDIR export exists?
     if [[ -z $DOTS ]]
     then
-        log "-> setting DOTS env"
+        log "setting DOTS env"
         export DOTS="$HOME/.dotfiles"
-        log_ok "-> set DOTS to $DOTS"
+        log_ok "set DOTS to $DOTS"
         export DOTDIR="$HOME/.dotfiles"
-        log_ok "-> set DOTDIR to $DOTDIR"
+        log_ok "set DOTDIR to $DOTDIR"
         export DIRDOTS="$HOME/.dotfiles"
-        log_ok "-> set DIRDOTS to $DIRDOTS"
+        log_ok "set DIRDOTS to $DIRDOTS"
     fi
 
     # PRIVATES export exists?
     if [[ -z $PRIVATES ]]
     then
-        log "-> setting PRIVATES env"
+        log "setting PRIVATES env"
         export PRIVATES="$DOTS/private"
-        log_ok "-> set PRIVATES to $PRIVATES"
+        log_ok "set PRIVATES to $PRIVATES"
         export PRIVATE="$DOTS/private"
-        log_ok "-> set PRIVATE to $PRIVATE"
+        log_ok "set PRIVATE to $PRIVATE"
     fi
 }
 
@@ -111,17 +111,17 @@ function setup_xcode_and_git {
     if [[ "$check" != 1 ]]
     then
         sleep 1
-        log "-> installing xcode cli tools..."; read -k1 -s
+        log "installing xcode cli tools..."; read -k1 -s
         xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
-        log_ok "-> DONE install xcode cli tools"
+        log_ok "DONE install xcode cli tools"
     fi
 }
 
 function _do_clone {
-    log "-> cloning dotfiles..."
+    log "cloning dotfiles..."
     mkdir -p $DOTS
     git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
-    log_ok "-> DONE cloning dotfiles"
+    log_ok "DONE cloning dotfiles"
 }
 
 function clone_dotfiles_repo {
@@ -132,16 +132,16 @@ function clone_dotfiles_repo {
         if [[ -z $SKIP_DOTFILES_UPDATE ]]
         then
             if ls -A $DOTS | grep -q '^'; then
-                log "-> ~/.dotfiles found; updating to latest.."
+                log "~/.dotfiles found; updating to latest.."
                 cd $DOTS
                 git stash
                 git fetch
                 git merge origin/main
-                git stash pop || log_warn "-> [!] unable to pop the last stash"
-                log_ok "-> finished fetching and merging latest"
+                git stash pop || log_warn "[!] unable to pop the last stash"
+                log_ok "finished fetching and merging latest"
                 cd $HOME
             else
-                log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
+                log_warn "~/.dotfiles exists, but is empty; retrying clone.."
                 rm -rf $DOTS
                 _do_clone
             fi
@@ -151,16 +151,16 @@ function clone_dotfiles_repo {
 
 function install_homebrew {
     if (command -v brew &> /dev/null); then
-        log "-> brew already installed; skipping."
+        log "brew already installed; skipping."
     else
-        log_warn "-> brew not found; installing Homebrew..."
+        log_warn "brew not found; installing Homebrew..."
         /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-        log_ok "-> DONE installing homebrew"
+        log_ok "DONE installing homebrew"
     fi
 }
 
 function bundle_brews {
-    log "-> brewing things from our brewfile..."
+    log "brewing things from our brewfile..."
     sudo xcodebuild -license accept
 
     export HOMEBREW_CASK_OPTS="--appdir=/Applications"
@@ -170,24 +170,24 @@ function bundle_brews {
     then
         sleep 1
         open -a "App Store"
-        log_warn "-> in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
+        log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."; read -k1 -s
     fi
 
     brew bundle --file="$DOTS/Brewfile" || { log_error 'brew bundling failed'; exit 1; }
-    log_ok "-> DONE bundling brews"
+    log_ok "DONE bundling brews"
 }
 
 function _install_stow {
     if (command -v stow &> /dev/null); then
-        log "-> stow already installed; skipping."
+        log "stow already installed; skipping."
     else
-        log_warn "-> stow not found; installing stow..."
-        sudo apt-get install stow && log_ok "-> DONE installing stow" || log_error "failed to install stow"; exit 1;
+        log_warn "stow not found; installing stow..."
+        sudo apt-get install stow && log_ok "DONE installing stow" || log_error "failed to install stow"; exit 1;
     fi
 }
 
 function stow_away {
-    log "-> stowing things..."
+    log "stowing things..."
     if [[ "$platform" == "linux" ]]
     then
         _install_stow
@@ -212,7 +212,7 @@ function stow_away {
     stow misc && log_ok "stowed misc" || log_error "misc stow failed"
     stow weechat && log_ok "stowed weechat" || log_error "weechat stow failed"
     cd -
-    log_ok "-> DONE stowing things"
+    log_ok "DONE stowing things"
 }
 
 function setup_ssh_key {
@@ -220,8 +220,8 @@ function setup_ssh_key {
     #  1.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
     #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
 
-    skip_message="-> skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
-    log_warn "-> you'll need to setup an ssh public/private key to do more github things later.."
+    skip_message="skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
+    log_warn "you'll need to setup an ssh public/private key to do more github things later.."
     # echo -n "[?] do this now? [yN]"
     # read continue_reply
 
@@ -235,68 +235,68 @@ function setup_ssh_key {
 }
 
 function setup_platform {
-    log "-> running platform-specific ($platform) scripts..."
-    source "$DOTS/platform/$platform.sh" && log_ok "-> DONE setting up platform" || log_error "failed to setup platform-specific scripts"
+    log "running platform-specific ($platform) scripts..."
+    source "$DOTS/platform/$platform.sh" && log_ok "DONE setting up platform" || log_error "failed to setup platform-specific scripts"
 }
 
 function setup_asdf {
-    log "-> setting up asdf..."
-    source "$DOTS/asdf/$platform.sh" && log_ok "-> DONE setting up asdf" || log_error "failed to setup asdf"
+    log "setting up asdf..."
+    source "$DOTS/asdf/$platform.sh" && log_ok "DONE setting up asdf" || log_error "failed to setup asdf"
 }
 
 function setup_python {
-    log "-> setting up python..."
-    source "$DOTS/python/$platform.sh" && log_ok "-> DONE setting up python" || log_error "failed to setup python"
+    log "setting up python..."
+    source "$DOTS/python/$platform.sh" && log_ok "DONE setting up python" || log_error "failed to setup python"
 }
 
 function setup_keyboard {
-    log "-> setting up keyboard..."
-    source "$DOTS/keyboard/$platform.sh" && log_ok "-> DONE setting up keyboard" || log_error "failed to setup keyboard"
+    log "setting up keyboard..."
+    source "$DOTS/keyboard/$platform.sh" && log_ok "DONE setting up keyboard" || log_error "failed to setup keyboard"
 }
 
 function setup_terminfo {
-    log "-> setting up terminfo..."
-    source "$DOTS/terminfo/$platform.sh" && log_ok "-> DONE setting up terminfo" || log_error "failed to setup terminfo"
+    log "setting up terminfo..."
+    source "$DOTS/terminfo/$platform.sh" && log_ok "DONE setting up terminfo" || log_error "failed to setup terminfo"
 }
 
 function setup_zsh {
     zsh_path=/usr/local/bin/zsh
     [[ "$platform" == "linux" ]] && zsh_path=/usr/bin/zsh
 
-    log "-> attempting to set $zsh_path as your zsh path in /etc/shells"
-    grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells" && log_ok "-> DONE adding $zsh_path"
+    log "attempting to set $zsh_path as your zsh path in /etc/shells"
+    grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells" && log_ok "DONE adding $zsh_path"
 
-    log "-> symlinking and sourcing .zshenv"
+    log "symlinking and sourcing .zshenv"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
     source $HOME/.config/zsh/.zshenv
 
     # compaudit | xargs chmod g-w
     #
-    log "-> changing your shell to user-installed version: $zsh_path"
-    sudo chsh -s "$zsh_path" $USER && log_ok "-> DONE setting up zsh"
+    log "changing your shell to user-installed version: $zsh_path"
+    sudo chsh -s "$zsh_path" $USER && log_ok "DONE setting up zsh"
 }
 
 function setup_fish {
     # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
     fish_path=/usr/local/bin/fish
-    log "-> changing your shell to fish..."
-    log "-> attempting to set $fish_path as your fish path in /etc/shells"
+    log "changing your shell to fish..."
+    log "attempting to set $fish_path as your fish path in /etc/shells"
     echo "$fish_path" | sudo tee -a /etc/shells
-    chsh -s "$fish_path" $USER && log_ok "-> DONE setting up fish"
+    chsh -s "$fish_path" $USER && log_ok "DONE setting up fish"
 }
 
 function post_install {
     if [[ "$platform" == "macos" ]]
     then
-        log "-> post-brewing operations.."
+        log "post-brewing operations.."
         $(brew --prefix)/opt/fzf/install            # <- fzf
         initdb /usr/local/var/postgres -E utf8      # <- postgresql
-        log_ok "-> DONE"
+        log_ok "DONE"
 
-        kill "$caffeinatepid" && log_ok "-> finished caffeination.."
+        kill "$caffeinatepid" && log_ok "finished caffeination.."
     fi
 
-    log_ok "-> DONE with $platform dotfiles setup!"
+    log_ok "DONE with $platform dotfiles setup!"
     exit 0
 }
 

@@ -5,7 +5,7 @@
 osascript -e 'tell application "System Preferences" to quit'
 
 BACKUP_FILE="${HOME}/Desktop/defaults-backup.$(date '+%Y%m%d_%H%M%S').plist"
-log "-> backing up current macOS X defaults to: ${BACKUP_FILE}"
+log "backing up current macOS X defaults to: ${BACKUP_FILE}"
 defaults read > "$BACKUP_FILE"
 
 set -x
@@ -453,7 +453,7 @@ dock_apps_to_remove=(
  "Safari"
 )
 for app in "${dock_apps_to_remove[@]}"; do
-    log "-> removing \"${app}\" from the dock."
+    log "removing \"${app}\" from the dock."
 
     # remove apps from dock
     # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
@@ -496,8 +496,8 @@ apps_to_restart=(
 
 for app in "${apps_to_restart[@]}"; do
   if [[ "$(app_is_running "${app}")" == "true" ]]; then
-    log "-> \"${app}\" needs to be restarted; proceeding to quit"
-    killall "${app}" &> /dev/null && log_ok "done"
+    log "\"${app}\" needs to be restarted; proceeding to quit"
+    killall "${app}" &> /dev/null && log_ok "DONE"
   fi
 done
 
@@ -542,16 +542,16 @@ apps_to_startup=(
 "Witch"
 )
 for app in "${apps_to_startup[@]}"; do
-    log "-> setting to \"${app}\" to launch at startup."
+    log "setting to \"${app}\" to launch at startup."
 
     # Enable apps at startup
-    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null && log_ok "done"
+    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null && log_ok "DONE"
 done
 
 # Set brave as default browser!
 defaults write "com.brave.Browser" ExternalProtocolDialogShowAlwaysOpenCheckbox -bool true
 
-log_ok "-> done. please note that some of these changes require a full logout/restart to take effect."
+log_ok "DONE please note that some of these changes require a full logout/restart to take effect."
 
 # TODO:
 # - programmatically set keyboard shortcuts for apps: https://github.com/kassio/dotfiles/blob/master/lib/macos/shortcuts

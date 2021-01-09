@@ -1,17 +1,17 @@
 #!/usr/bin/env zsh
 
-log "-> setting up asdf for all platforms.."
+log "setting up asdf for all platforms.."
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
 if [[ ! -d "$HOME/.asdf" ]]
 then
-  log_warn "-> $HOME/.asdf not found; cloning it now.."
+  log_warn "$HOME/.asdf not found; cloning it now.."
   git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
 fi
 
 source $HOME/.asdf/asdf.sh
 
-log "-> adding asdf plugins.."
+log "adding asdf plugins.."
 # preferred plugins..
 asdf plugin-add ruby https://github.com/asdf-vm/asdf-ruby.git
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
@@ -30,27 +30,27 @@ bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-ke
 # https://github.com/danhper/asdf-python
 # asdf plugin-add python https://github.com/tuvistavie/asdf-python.git
 
-log "-> installing asdf plugin versions.."
+log "installing asdf plugin versions.."
 # must initially symlink our tool-versions file for asdf to install the right things..
 asdf install
 
 #
-log "-> configuring ruby-specific.."
-source $DOTS/asdf/ruby.sh && log_ok "-> DONE configuring ruby"
+log "configuring ruby.."
+source $DOTS/asdf/ruby.sh && log_ok "DONE configuring ruby"
 
 #
-log "-> configuring node-specific.."
+log "configuring node.."
 # TODO: it seems as though after installing a node vresion we have to explicitly set it with `asdf global nodejs <version>`
-source $DOTS/asdf/node.sh && log_ok "-> DONE configuring node"
+source $DOTS/asdf/node.sh && log_ok "DONE configuring node"
 
 #
-log "-> configuring lua-specific.."
-source $DOTS/asdf/lua.sh && log_ok "-> DONE configuring lua"
+log "configuring lua.."
+source $DOTS/asdf/lua.sh && log_ok "DONE configuring lua"
 
 #
-log "-> configuring rust-specific.."
-source $DOTS/asdf/rust.sh && log_ok "-> DONE configuring rust"
+log "configuring rust.."
+source $DOTS/asdf/rust.sh && log_ok "DONE configuring rust"
 
 #
-log "-> configuring elixir-specific.."
-source $DOTS/asdf/elixir.sh && log_ok "-> DONE configuring elixir"
+log "configuring elixir.."
+source $DOTS/asdf/elixir.sh && log_ok "DONE configuring elixir"
