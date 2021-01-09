@@ -15,7 +15,7 @@ VCS_UNTRACKED_SYMBOL="?"      #…
 VCS_STASHES_SYMBOL=$'\uf530'  #
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
-SSH_SYMBOL=$'\uf502'
+SSH_SYMBOL=$'\uf5df'
 
 if [[ "$(uname)" == "Darwin" ]]; then
   source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
