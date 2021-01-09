@@ -132,22 +132,25 @@ function clone_dotfiles_repo {
     else
         if [[ -z $SKIP_DOTFILES_UPDATE ]]
         then
-            if ls -A $DOTS | grep -q '^'; then
-                log "-> ~/.dotfiles found; updating to latest.."
-                cd $DOTS
-                git stash
-                git fetch
-                git merge origin/main
-                # git pull origin main
-                # git stash pop
-                log_ok "-> finished fetching and merging latest"
-                cd $HOME
-                $DOTS/bin/_dotup
-            else
-                log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
-                rm -rf $DOTS
-                _do_clone
-            fi
+            # if ls -A $DOTS | grep -q '^'; then
+            #     log "-> ~/.dotfiles found; updating to latest.."
+            #     cd $DOTS
+            #     git stash
+            #     git fetch
+            #     git merge origin/main
+            #     # git pull origin main
+            #     # git stash pop
+            #     log_ok "-> finished fetching and merging latest"
+            #     cd $HOME
+            # else
+            #     log_warn "-> ~/.dotfiles exists, but is empty; retrying clone.."
+            #     rm -rf $DOTS
+            #     _do_clone
+            # fi
+
+            log_warn "-> ~/.dotfiles exists; deleting and retrying clone.."
+            rm -rf $DOTS
+            _do_clone
         fi
     fi
 }
