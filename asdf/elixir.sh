@@ -19,9 +19,9 @@ function _mix {
 if [[ ! -d "$elixir_ls_path" ]]
 then
   # elixir_ls not there, so clone it..
-  _do_clone && _mix && log_ok "DONE installing elixir_ls"
+  _do_clone && _mix
 else
   # elixir_ls exists so we need to rm and then clone it..
   rm -rf $elixir_ls_path
-  _do_clone && _mix && log_ok "DONE installing elixir_ls"
+  _do_clone && _mix
 fi
