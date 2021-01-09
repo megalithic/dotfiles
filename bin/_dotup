@@ -4,6 +4,10 @@ set -e
 
 trap 'clean_exit $? $LINENO' EXIT
 
+function log_raw {
+    printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
+}
+
 function log {
     printf '-> %s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
 }
@@ -28,7 +32,7 @@ function clean_exit {
 }
 
 
-log "
+log_raw "
 ==================================================================================
 
 ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
