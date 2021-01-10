@@ -399,5 +399,5 @@ alias tidy="/usr/local/bin/tidy"
 # -- linux-specific aliases..
 if [[ "$PLATFORM" == "linux" ]]; then
   alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
-  alias fd="fdfind"
+  # alias fd="fdfind"
 fi
