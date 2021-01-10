@@ -206,10 +206,6 @@ done
 unset path_file
 
 
-#
-# Function Paths
-#
-# fpath=( $fpath)
 fpath+=(
   $ZDOTDIR
   $ZDOTDIR/components
@@ -219,10 +215,6 @@ fpath+=(
   $fpath
 )
 
-
-#
-# Temporary Files
-#
 if [[ -d "$TMPDIR" ]]; then
   export TMPPREFIX="${TMPDIR%/}/zsh"
   if [[ ! -d "$TMPPREFIX" ]]; then
@@ -230,21 +222,11 @@ if [[ -d "$TMPDIR" ]]; then
   fi
 fi
 
-
-#
-# asdf/ruby/node/misc
-#
 if [[ -f "$HOME/.asdf/asdf.sh" ]]; then
     source "$ZDOTDIR/components/asdf.zsh"
 fi
 
-# source "$DOTS/components/completion.zsh"
-# source "$DOTS/components/colors.zsh"
-
-
-#
-# Privates
-#
-# if [[ -f "$HOME/.zprivate" ]] ; then
-#   source "$HOME/.zprivate"
-# fi
+if [[ "$PLATFORM" == "linux" ]]; then
+  alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
+  alias fd="fdfind"
+fi

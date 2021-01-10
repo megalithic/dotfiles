@@ -54,7 +54,7 @@ return {
     paq "steelsojka/completion-buffers"
     paq "hrsh7th/vim-vsnip"
     paq "hrsh7th/vim-vsnip-integ"
-    paq "RRethy/vim-illuminate"
+    -- paq "RRethy/vim-illuminate"
 
     -- (file navigation) --
     paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
