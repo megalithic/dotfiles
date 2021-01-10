@@ -76,7 +76,8 @@ return {
 
       if client.resolved_capabilities.find_references then
         mega.bmap("n", "<Leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>")
-        mega.bmap("n", "<Leader>lgr", '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
+        mega.bmap("n", "<Leader>lgr", "<cmd>lua vim.lsp.buf.references()<CR>")
+      -- mega.bmap("n", "<Leader>lgr", '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
       end
 
       if client.resolved_capabilities.rename then
