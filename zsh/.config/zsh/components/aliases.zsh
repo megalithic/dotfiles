@@ -136,7 +136,6 @@ alias ec=em
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-[[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]] && alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim" || alias nvim="nvim"
 alias nvimupdate="brew update; brew reinstall neovim; brew postinstall neovim; pip install --upgrade pynvim; pip3 install --upgrade pynvim; pip2 install --upgrade pynvim; npm install -g neovim --force; yarn global add neovim; gem install neovim; nvim +PaqUpdate +qall; brew outdated"
 alias im="nvim"
 alias nv="nvim"
@@ -396,3 +395,9 @@ alias nerd="echo -ne \\u"
 alias nf="echo -ne \\u"
 
 alias tidy="/usr/local/bin/tidy"
+
+# -- linux-specific aliases..
+if [[ "$PLATFORM" == "linux" ]]; then
+  alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
+  alias fd="fdfind"
+fi

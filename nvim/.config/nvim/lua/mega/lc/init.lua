@@ -49,7 +49,7 @@ return {
       end
 
       if client.resolved_capabilities.document_highlight then
-        require "illuminate".on_attach(client)
+      -- require "illuminate".on_attach(client)
       end
 
       -- [ mappings ] --------------------------------------------------------------

@@ -69,21 +69,31 @@ function detect_platform {
     then
         log "setting PLATFORM env"
         platform="unknown"
+        derived_platform=$(uname | tr "[:upper:]" "[:lower:]")
 
-        if [[ "$(uname)" == "Darwin" ]]; then
+        if [[ "$derived_platform" == "darwin" ]]; then
             platform="macos"
-        elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+        elif [[ "$derived_platform" == "linux" ]]; then
             platform="linux"
             lsb_release -a
-        elif [[ "$(expr substr $(uname -s) 1 5)" == 'FreeBSD' ]]; then
-            platform='freebsd'
-        elif [[ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]]; then
-            platform="windows"
         fi
 
         export PLATFORM=$platform
 
-        log_ok "set PLATFORM to $platform"
+        if [[ "$PLATFORM" == "linux" ]]; then
+            # If available, use LSB to identify distribution
+            if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
+                export DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
+                # Otherwise, use release info file
+            else
+                export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
+            fi
+        fi
+
+        log_ok "set PLATFORM to $PLATFORM"
+
+        unset platform
+        unset derived_platform
     fi
 }
 
@@ -193,7 +203,7 @@ function _install_stow {
 
 function stow_away {
     log "stowing things..."
-    if [[ "$platform" == "linux" ]]
+    if [[ "$PLATFORM" == "linux" ]]
     then
         _install_stow
     fi
@@ -209,7 +219,7 @@ function stow_away {
     stow nvim && log_ok "stowed nvim" || log_error "nvim stow failed"
     stow keyboard && log_ok "stowed keyboard" || log_error "keyboard stow failed"
 
-    if [[ "$platform" == "macos" ]]
+    if [[ "$PLATFORM" == "macos" ]]
     then
         defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua" && stow hammerspoon && log_ok "stowed hammerspoon" || log_error "hammerspoon stow failed"
     fi
@@ -239,32 +249,32 @@ function setup_ssh_key {
 }
 
 function setup_platform {
-    log "running platform-specific ($platform) scripts..."
-    source "$DOTS/platform/$platform.sh" && log_ok "DONE setting up platform" || log_error "failed to setup platform-specific scripts"
+    log "running platform-specific ($PLATFORM) scripts..."
+    source "$DOTS/platform/$PLATFORM.sh" && log_ok "DONE setting up platform" || log_error "failed to setup platform-specific scripts"
 }
 
 function setup_asdf {
     log "setting up asdf..."
-    source "$DOTS/asdf/$platform.sh" && log_ok "DONE setting up asdf" || log_error "failed to setup asdf"
+    source "$DOTS/asdf/$PLATFORM.sh" && log_ok "DONE setting up asdf" || log_error "failed to setup asdf"
 }
 
 function setup_python {
     log "setting up python..."
-    source "$DOTS/python/$platform.sh" && log_ok "DONE setting up python" || log_error "failed to setup python"
+    source "$DOTS/python/$PLATFORM.sh" && log_ok "DONE setting up python" || log_error "failed to setup python"
 }
 
 function setup_keyboard {
     log "setting up keyboard..."
-    source "$DOTS/keyboard/$platform.sh" && log_ok "DONE setting up keyboard" || log_error "failed to setup keyboard"
+    source "$DOTS/keyboard/$PLATFORM.sh" && log_ok "DONE setting up keyboard" || log_error "failed to setup keyboard"
 }
 
 function setup_terminfo {
     log "setting up terminfo..."
-    source "$DOTS/terminfo/$platform.sh" && log_ok "DONE setting up terminfo" || log_error "failed to setup terminfo"
+    source "$DOTS/terminfo/$PLATFORM.sh" && log_ok "DONE setting up terminfo" || log_error "failed to setup terminfo"
 }
 
 function setup_zsh {
-    [[ "$platform" == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
+    [[ "$PLATFORM" == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
 
     log "attempting to set $zsh_path as your zsh path in /etc/shells"
     grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells" && log_ok "DONE adding $zsh_path"
@@ -289,7 +299,7 @@ function setup_fish {
 }
 
 function post_install {
-    if [[ "$platform" == "macos" ]]
+    if [[ "$PLATFORM" == "macos" ]]
     then
         log "post-brewing operations.."
         $(brew --prefix)/opt/fzf/install            # <- fzf
@@ -299,7 +309,7 @@ function post_install {
         kill "$caffeinatepid" && log_ok "finished caffeination.."
     fi
 
-    log_ok "DONE with dotfiles install and configuration for $platform!"
+    log_ok "DONE with dotfiles install and configuration for $PLATFORM!"
     exit 0
 }
 
@@ -307,11 +317,11 @@ function post_install {
 # -- engage!
 
 detect_platform
-[[ "$platform" == "macos" ]] && keep_awake
+[[ "$PLATFORM" == "macos" ]] && keep_awake
 export_dirs
-[[ "$platform" == "macos" ]] && setup_xcode_and_git
+[[ "$PLATFORM" == "macos" ]] && setup_xcode_and_git
 clone_dotfiles_repo
-[[ "$platform" == "macos" ]] && install_homebrew && bundle_brews
+[[ "$PLATFORM" == "macos" ]] && install_homebrew && bundle_brews
 stow_away
 setup_ssh_key
 setup_zsh
