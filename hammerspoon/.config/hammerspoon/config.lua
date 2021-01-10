@@ -56,6 +56,7 @@ local M = {
     bottomRight40 = {.6, .5, .4, .5},
     bottomRight60 = {.4, .5, .6, .5},
     bottomRight70 = {.3, .5, .7, .5},
+    topRight30 = {.7, 0, .3, .5},
     leftHalf = hs.layout.left50,
     leftOneThird = hs.layout.left30,
     leftTwoThirds = hs.layout.left70,
@@ -134,7 +135,8 @@ M.apps = {
     quitGuard = false,
     hideAfter = 1,
     rules = {
-      {nil, 1, M.layout.rightHalf}
+      {nil, 1, M.layout.rightHalf},
+      {"Capture", 1, M.layout.topRight30}
     }
   },
   ["com.culturedcode.ThingsMac"] = {
