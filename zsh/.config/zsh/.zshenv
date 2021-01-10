@@ -14,7 +14,6 @@ function detect_platform {
             platform="macos"
         elif [[ "$derived_platform" == "linux" ]]; then
             platform="linux"
-            lsb_release -a
         fi
 
         export PLATFORM=$platform
