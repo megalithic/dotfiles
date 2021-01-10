@@ -132,4 +132,5 @@ prompt_status_symbol() {
 }
 
 # render dat prompt
-PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT $(ssh_indicator)${NEWLINE}$(background_process_indicator)${return_status_prompt} '
+PROMPT='${NEWLINE}$(prompt_path) $GITSTATUS_PROMPT${NEWLINE}$(background_process_indicator)${return_status_prompt} '
+RPROMPT='$(ssh_indicator)'
