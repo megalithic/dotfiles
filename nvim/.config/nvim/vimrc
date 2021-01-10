@@ -485,10 +485,6 @@ let g:netrw_liststyle = 3  " tree style listing
 let g:netrw_dirhistmax = 0 " no netrw history
 
 " FZF
-" -- vim.g.fzf_command_prefix = "Fzf"
-" -- vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
-" -- vim.g.fzf_action = {enter = "vsplit"}
-" -- vim.g.fzf_preview_window = {"right:50%:hidden", "alt-p"}
 function! RipgrepFzf(query, fullscreen)
   let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
   let initial_command = printf(command_fmt, shellescape(a:query))
