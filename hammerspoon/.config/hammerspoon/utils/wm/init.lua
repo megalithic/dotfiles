@@ -159,8 +159,10 @@ M.setAppLayout = function(app_config)
   end
 end
 
-M.applyAppLayout = function(app)
-  if app ~= nil then
+M.applyAppLayout = function(_, event, app)
+  log.df("beginning to layout windows for app: %s", hs.inspect(app))
+
+  if app ~= nil and event == hs.application.watcher.launched then
     local app_config = config.apps[app:bundleID()]
     M.setAppLayout(app_config)
     hs.layout.apply(M.layouts)
@@ -238,7 +240,7 @@ M.start = function()
 
   -- watch for docking status changes
   cache.dock_watcher = hs.watchable.watch("status.isDocked", M.prepare)
-  cache.application_watcher = hs.application.watcher.new(M.applyAppLayout)
+  cache.application_watcher = hs.application.watcher.new(M.applyAppLayout):start()
 
   -- initial invocation
   M.prepare()
