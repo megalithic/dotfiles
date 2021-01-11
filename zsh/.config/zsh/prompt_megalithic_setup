@@ -15,7 +15,7 @@ VCS_UNTRACKED_SYMBOL="?"      #…
 VCS_STASHES_SYMBOL=$'\uf530'  #
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
-SSH_SYMBOL=$'\uf105'
+SSH_SYMBOL=$'\uf101'
 
 if [[ "$(uname)" == "Darwin" ]]; then
   source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
@@ -103,7 +103,7 @@ background_process_indicator() {
 
 ssh_indicator() {
   if [[ -n ${SSH_CONNECTION-}${SSH_CLIENT-}${SSH_TTY-} ]]; then
-    echo "%F{166}$SSH_SYMBOL %{$reset_color%}"
+    echo "%F{166}$SSH_SYMBOL%{$reset_color%}"
   fi
 }
 
