@@ -155,7 +155,6 @@ path=(
     /usr/local/opt/libffi/lib
     # $HOME/.yarn/bin
     # $HOME/.config/yarn/global/node_modules/.bin
-    /Users/replicant/.local/bin
     /usr/local/opt/gnu-sed/libexec/gnubin
     /usr/local/opt/imagemagick@6/bin
     /usr/local/opt/qt@5.5/bin
@@ -171,19 +170,20 @@ path=(
     /usr/local/lib/python3.9/bin
     /usr/local/lib/python3.9/site-packages
     /usr/local/opt/python@3.9/bin
-    /usr/local/opt/perl/bin
-    /usr/local/opt/perl6/bin
-    /usr/local/opt/perl@5.18/bin
-    /usr/local/opt/perl@5.28/bin
-    /usr/local/opt/perl@5.32/bin
-    /usr/local/opt/perl@5.32
-    /usr/local/opt/openssl@1.1/bin
+    # /usr/local/opt/perl/bin
+    # /usr/local/opt/perl6/bin
+    # /usr/local/opt/perl@5.18/bin
+    # /usr/local/opt/perl@5.28/bin
+    # /usr/local/opt/perl@5.32/bin
+    # /usr/local/opt/perl@5.32
+    # /usr/local/opt/openssl@1.1/bin
     /usr/{bin,sbin}
     /{bin,sbin}
     /usr/local/opt/curl/bin
     # $HOME/.yarn/bin
     # $HOME/.config/yarn/global/node_modules/.bin
     ${HOME}/.local/bin(N-/)
+    ${HOME}/.dotfiles/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
@@ -193,8 +193,8 @@ path=(
     ${GOBIN}(N-/)
     ${HOME}/Library/Python/3.*/bin(Nn[-1]-/)
     ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/ruby/bin(N-/)
-    ${HOMEBREW_PREFIX}/lib/ruby/gems/*/bin(Nn[-1]-/)
+    # ${HOMEBREW_PREFIX}/opt/ruby/bin(N-/)
+    # ${HOMEBREW_PREFIX}/lib/ruby/gems/*/bin(Nn[-1]-/)
     /usr/local/{bin,sbin}
     ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
     $path
