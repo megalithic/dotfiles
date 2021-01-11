@@ -117,12 +117,14 @@ local servers = {
   },
   rust_analyzer = {},
   solargraph = {
-    -- cmd = { "solargraph", "stdio" },
-    -- filetypes = { "ruby" },
+    cmd = {"solargraph", "stdio"},
+    filetypes = {"ruby"},
     root_dir = root_pattern("Gemfile", ".git"),
     settings = {
       solargraph = {
-        diagnostics = true
+        diagnostics = true,
+        completion = true,
+        formatting = true
       }
     }
   },

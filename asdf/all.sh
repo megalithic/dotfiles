@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 log "setting up asdf for all platforms.."
 
