@@ -116,6 +116,16 @@ local servers = {
     plugins = {pyls_mypy = {enabled = true, live_mode = false}}
   },
   rust_analyzer = {},
+  solargraph = {
+    -- cmd = { "solargraph", "stdio" },
+    -- filetypes = { "ruby" },
+    root_dir = root_pattern("Gemfile", ".git"),
+    settings = {
+      solargraph = {
+        diagnostics = true
+      }
+    }
+  },
   sumneko_lua = {
     settings = {
       Lua = {
