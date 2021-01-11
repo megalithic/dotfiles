@@ -12,13 +12,12 @@ tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 tap "caius/jo"
 tap "simeji/jid"
-tap "jeroenknoops/tap"
 tap "browsh-org/homebrew-browsh"
 tap "qmk/qmk"
 tap "heroku/brew"
 # NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
 tap "microsoft/git"
-
+tap "isacikgoz/taps"
 
 # -- for qmk_toolbox --
 
@@ -69,6 +68,7 @@ brew "fzy"
 brew "gawk"
 brew "gist"
 brew "git"
+brew "gitin"
 brew "romkatv/gitstatus/gitstatus"
 brew "gh"
 brew "gnutls"

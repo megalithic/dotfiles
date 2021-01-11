@@ -514,7 +514,7 @@ M.docking = {
   },
   ["docked"] = {
     wifi = "off", -- wifi status
-    profile = "dz60", -- Karabiner-Elements profile name
+    profile = "atreus62", -- Karabiner-Elements profile name
     input = "Samson GoMic", -- microphone source
     output = "CalDigit Thunderbolt 3 Audio", -- speaker source
     fontSize = 14.0

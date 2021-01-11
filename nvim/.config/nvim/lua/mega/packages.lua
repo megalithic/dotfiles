@@ -162,5 +162,8 @@ return {
       Paq.install()
     -- vim.cmd([[packloadall!]])
     end
+
+    vim.cmd("autocmd BufWritePost packages.lua PaqUpdate")
+    vim.cmd("autocmd BufWritePost packages.lua PaqInstall")
   end
 }
