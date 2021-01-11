@@ -10,7 +10,7 @@ then
   git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
 fi
 
-source $HOME/.asdf/asdf.sh
+source "$HOME/.asdf/asdf.sh"
 
 log "adding asdf plugins.."
 # preferred plugins..
