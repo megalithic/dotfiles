@@ -4,22 +4,24 @@
 # REFS:
 # - fantastic prompt and zsh plugin stuff: https://github.com/tardypad/dotfiles/blob/master/configs/zsh/config.d/plugins.zsh
 
-# :: le prompt symbols n such
+# :: le prompt symbols and such
 NEWLINE=$'\n'
-PROMPT_SYMBOL="❯"
+ORIG_PROMPT_SYMBOL="❯"
+PROMPT_SYMBOL=$'\uf460'       # #(f054)
 PROMPT_VICMD_SYMBOL="%F{244}❮%{$reset_color%}"
-PROMPT_BACKGROUND_SYMBOL="❯"
+PROMPT_BG_SYMBOL=$'\uf105'    #
 VCS_STAGED_SYMBOL=$'\uf067'   #
 VCS_UNSTAGED_SYMBOL=$'\ufbc2' #﯂
 VCS_UNTRACKED_SYMBOL="?"      #…
 VCS_STASHES_SYMBOL=$'\uf530'  #
 VCS_AHEAD_SYMBOL="↑"
 VCS_BEHIND_SYMBOL="↓"
-SSH_SYMBOL=$'\uf101'
+SSH_SYMBOL=$'\uf0da'          #
 
-if [[ "$(uname)" == "Darwin" ]]; then
+# load gitstatus lib
+if [[ "$PLATFORM" == "macos" ]]; then
   source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
-elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+elif [[ "$PLATFORM" == "linux" ]]; then
   source $HOME/builds/gitstatus/gitstatus.plugin.zsh
 fi
 
@@ -96,7 +98,7 @@ prompt_path() {
 # returns a fancy indicator when there are running background jobs..
 background_process_indicator() {
   local background_indicator=''
-  [[ $(jobs -l | wc -l) -gt 0 ]] && background_indicator="%F{183}$PROMPT_BACKGROUND_SYMBOL%{$reset_color%}"
+  [[ $(jobs -l | wc -l) -gt 0 ]] && background_indicator="%F{183}$PROMPT_BG_SYMBOL%{$reset_color%}"
 
   echo "$background_indicator"
 }
