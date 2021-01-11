@@ -211,7 +211,7 @@ function stow_away {
     stow terminfo && log_ok "stowed terminfo" || log_error "terminfo stow failed"
     stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
     stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
-    # stow fish && log_ok "stowed fish" || log_error "fish stow failed"
+    stow fish && log_ok "stowed fish" || log_error "fish stow failed"
     stow zsh && log_ok "stowed zsh" || log_error "zsh stow failed"
     [[ -f $HOME/.gitconfig ]] && rm $HOME/.gitconfig; stow git && log_ok "stowed git" || log_error "git stow failed"
     stow tmux && log_ok "stowed tmux" || log_error "tmux stow failed"
@@ -246,6 +246,8 @@ function setup_ssh_key {
       [Nn]) log_warn "$skip_message" ;;
       *) log_warn "$skip_message" ;;
     esac
+
+    unset continue_reply
 }
 
 function setup_platform {
@@ -276,8 +278,9 @@ function setup_terminfo {
 function setup_zsh {
     [[ "$PLATFORM" == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
 
-    log "attempting to set $zsh_path as your zsh path in /etc/shells"
-    grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells" && log_ok "DONE adding $zsh_path"
+    log "attempting to add $zsh_path to /etc/shells"
+    # grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
+    grep -Fxq "$zsh_path" /etc/shells || echo "$zsh_path" | sudo tee -a /etc/shells
 
     log "symlinking and sourcing .zshenv"
     ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
@@ -285,17 +288,35 @@ function setup_zsh {
 
     # compaudit | xargs chmod g-w
 
-    log "changing your shell to user-installed version: $zsh_path"
+    log "changing your shell to user-installed version of zsh: $zsh_path"
     sudo chsh -s "$zsh_path" $USER && log_ok "DONE setting up zsh"
+    unset zsh_path
 }
 
 function setup_fish {
     # https://fishshell.com/docs/current/tutorial.html#switching-to-fish
-    fish_path=/usr/local/bin/fish
-    log "changing your shell to fish..."
-    log "attempting to set $fish_path as your fish path in /etc/shells"
-    echo "$fish_path" | sudo tee -a /etc/shells
-    chsh -s "$fish_path" $USER && log_ok "DONE setting up fish"
+    [[ "$PLATFORM" == "linux" ]] && fish_path="/usr/bin/fish" || fish_path="/usr/local/bin/fish"
+    log "attempting to add $fish_path to /etc/shells"
+    grep -Fxq "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
+
+    log "changing your shell to user-installed version of fish: $fish_path"
+    sudo chsh -s "$fish_path" $USER && log_ok "DONE setting up fish"
+    unset fish_path
+}
+
+function set_shell {
+    skip_message="skipping; you can run this later via _dotup; or set it manually wth the steps in this script."
+
+    log_warn "we need to set a shell; you can always run this later, or set it manually."
+    vared -p "[?] which shell? [zsh|shell|SKIP]" -c continue_reply
+
+    case $continue_reply in
+      [zsh]) setup_zsh ;;
+      [fish]) setup_fish ;;
+      *) log_warn "$skip_message" ;;
+    esac
+
+    unset continue_reply
 }
 
 function post_install {
@@ -322,9 +343,9 @@ export_dirs
 [[ "$PLATFORM" == "macos" ]] && setup_xcode_and_git
 clone_dotfiles_repo
 [[ "$PLATFORM" == "macos" ]] && install_homebrew && bundle_brews
-stow_away
 setup_ssh_key
-setup_zsh
+stow_away
+set_shell
 setup_platform
 setup_asdf
 setup_terminfo

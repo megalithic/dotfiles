@@ -29,7 +29,7 @@ return {
           sass = {rgb_fn = true},
           stylus = {rgb_fn = true},
           vim = {names = false},
-          tmux = {names = false},
+          tmux = {names = true},
           "eelixir",
           "javascript",
           "javascriptreact",

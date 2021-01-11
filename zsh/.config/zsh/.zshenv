@@ -186,6 +186,7 @@ path=(
     ${HOME}/.dotfiles/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/perl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
