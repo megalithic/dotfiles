@@ -336,9 +336,8 @@ set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 set completeopt=menuone,noinsert,noselect " Don't auto select first one
 "set nocursorcolumn
-"set nocursorline
 "set cursorlineopt=number
-set cursorline
+set nocursorline
 set dictionary=/usr/share/dict/words
 set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
 set spelllang=en

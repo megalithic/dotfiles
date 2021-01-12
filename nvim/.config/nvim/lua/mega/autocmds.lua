@@ -33,8 +33,8 @@ return {
     mega.augroup(
       "mega.focus",
       function()
-        au([[autocmd BufEnter,FocusGained,WinEnter * silent setlocal relativenumber number colorcolumn=81 cursorline]])
-        au([[autocmd BufLeave,FocusLost,WinLeave * silent setlocal norelativenumber number colorcolumn=0 nocursorline]])
+        au([[autocmd BufEnter,FocusGained,WinEnter * silent setlocal relativenumber number colorcolumn=81 ]])
+        au([[autocmd BufLeave,FocusLost,WinLeave * silent setlocal norelativenumber number colorcolumn=0]])
       end
     )
 

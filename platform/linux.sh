@@ -46,7 +46,9 @@ if [ -f "/etc/debian_version" ]; then
 
   make CMAKE_BUILD_TYPE=Release && log_ok "DONE building and installing neovim nightly" || log_error "failed to build and install neovim nightly"
 
-  echo -e '\nalias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"' >> ~/.bashrc
-  echo -e '\nalias fd="fdfind"' >> ~/.bashrc
+
+#   grep -Fxq "$zsh_path" /etc/shells || bash -c "echo -c $zsh_path >> ~/.bashrc"
+#   echo -e '\nalias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"' >> ~/.bashrc
+#   echo -e '\nalias fd="fdfind"' >> ~/.bashrc
   cd -
 fi

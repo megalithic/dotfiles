@@ -1,15 +1,18 @@
+-- print("loading packages.lua..")
+
 return {
   activate = function()
     mega.inspect("activating packages.lua..")
+    -- print("activating packages..")
 
-    local exists = pcall(vim.cmd, [[packadd paq-nvim]])
+    -- REF: https://github.com/savq/dotfiles/blob/master/install.sh#L12-L14
     local repo_url = "https://github.com/savq/paq-nvim"
     local install_path = string.format("%s/site/pack/paqs/opt/", vim.fn.stdpath("data"))
-    -- ~/.local/share/nvim/site/pack/paq/opt/paq-nvim/
+    -- ~/.local/share/nvim/site/pack/paqs/opt/paq-nvim/
 
     -- clone paq-nvim if we haven't already..
-    if not exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-      if vim.fn.input("-> download paq-nvim? [yn] -> ") ~= "y" then
+    if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+      if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
         return
       end
 
@@ -20,7 +23,7 @@ return {
 
       vim.cmd([[packadd paq-nvim]])
 
-      print("-> paq-nvim installed.")
+      print("-> paq-nvim downloaded.")
       return
     end
 
@@ -160,10 +163,9 @@ return {
     if string.match(filename, "packages.lua") == "packages.lua" then
       Paq.update()
       Paq.install()
-    -- vim.cmd([[packloadall!]])
     end
 
-    vim.cmd("autocmd BufWritePost packages.lua PaqUpdate")
-    vim.cmd("autocmd BufWritePost packages.lua PaqInstall")
+    vim.cmd([[autocmd BufWritePost packages.lua PaqUpdate]])
+    vim.cmd([[autocmd BufWritePost packages.lua PaqInstall]])
   end
 }
