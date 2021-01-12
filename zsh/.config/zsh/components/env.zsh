@@ -59,15 +59,53 @@ if (( $+commands[lesspipe.sh] )); then
 fi
 
 
-export GIT_REPO_DIR="$HOME/dev"
-export HOMEBREW_NO_ANALYTICS=1
-export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-export BREW_PATH="$(brew --prefix)"
-export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
+if [[ "$PLATFORM" == "macos" ]]
+then
+  export HOMEBREW_NO_ANALYTICS=1
+  export HOMEBREW_CASK_OPTS="--appdir=/Applications"
+  export BREW_PATH="$(brew --prefix)"
+  export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
+
+  export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
+
+  export LIBARCHIVE=/usr/local/opt/libarchive/lib/libarchive.dylib
+  export LIBCRYPTO=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib
+
+  # for libffi and ruby things
+  export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
+  # export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.18/lib"
+  # export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
+  export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
+
+  # OPEN SSL
+  # =====================================================
+  # REF: https://github.com/dkarter/dotfiles/commit/9d4ebad752b4de8b2bdfbe204a34b89c1986f33b
+  export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
+
+  # For compilers to find openssl@1.1 you may need to set:
+  export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
+  export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openssl@1.1/include"
+
+  # For pkg-config to find openssl@1.1 you may need to set:
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
+
+  # Compile erlang with OpenSSL from Homebrew via asdf
+  export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
+  export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
+
+  # export LDFLAGS="-L/usr/local/opt/openssl/lib"
+  # export CPPFLAGS="-I/usr/local/opt/openssl/include"
+  # export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"
+
+  export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
+  export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
+  export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
+fi
+
+export GIT_REPO_DIR="$HOME/code"
 export TERMINFO=$HOME/.terminfo
 # export TERMINFO=/usr/share/terminfo
-export LIBARCHIVE=/usr/local/opt/libarchive/lib/libarchive.dylib
-export LIBCRYPTO=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib
 export _Z_DATA="$HOME/.z-history"
 export TERM_ITALICS="TRUE"
 
@@ -116,30 +154,6 @@ export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
 export ARCHFLAGS='-arch x86_64'
 
-# for libffi and ruby things
-export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
-# export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.18/lib"
-# export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
-export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
-export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
-
-# OPEN SSL
-# =====================================================
-# REF: https://github.com/dkarter/dotfiles/commit/9d4ebad752b4de8b2bdfbe204a34b89c1986f33b
-export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
-
-# For compilers to find openssl@1.1 you may need to set:
-export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
-export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openssl@1.1/include"
-
-# For pkg-config to find openssl@1.1 you may need to set:
-export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
-
-# Compile erlang with OpenSSL from Homebrew via asdf
-export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
-export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
-
-
 # CTAGS Sorting in VIM/Emacs is better behaved with this in place
 export LC_COLLATE=C
 
@@ -147,7 +161,6 @@ export LC_COLLATE=C
 export RUBY_GC_MALLOC_LIMIT=1000000000
 export RUBY_GC_HEAP_FREE_SLOTS=500000
 export RUBY_GC_HEAP_INIT_SLOTS=40000
-export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
 
 export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
 
@@ -179,19 +192,3 @@ export ERL_AFLAGS="-kernel shell_history enabled"
 # fixing an issue for weechat and wee-slack: https://blog.phusion.nl/2017/10/13/why-ruby-app-servers-break-on-macos-high-sierra-and-what-can-be-done-about-it/
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
 
-
-# # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/Users/replicant/.asdf/installs/python/3.8.2/python3.8/config-3.8-darwin/libpython3.8.a
-# # export LD_PRELOAD="/Users/replicant/.asdf/installs/python/3.8.2/python3.8/config-3.8-darwin/libpython3.8.a""
-# export DYLD_LIBRARY_PATH="/Users/replicant/.asdf/shims"
-# # export PYTHONPATH="/Users/replicant/.asdf/shims"
-# export LDFLAGS="-L/Users/replicant/.asdf/installs/python/3.8.2/lib"
-# export PKG_CONFIG_PATH="/Users/replicant/.asdf/installs/python/3.8.2/lib/pkgconfig"
-# export PYTHONPATH="$DYLD_LIBRARY_PATH:$LDFLAGS:$PKG_CONFIG_PATH:$PYTHONPATH"
-
-# export LDFLAGS="-L/usr/local/opt/openssl/lib"
-# export CPPFLAGS="-I/usr/local/opt/openssl/include"
-# export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"
-
-export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
-export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
-export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
