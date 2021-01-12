@@ -4,6 +4,11 @@
 set -e
 
 trap 'clean_exit $? $LINENO' EXIT
+trap ctrl_c INT # trap ctrl-c and call ctrl_c()
+
+function ctrl_c() {
+    halt_caffeination
+}
 
 function log_raw {
     printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
@@ -29,7 +34,13 @@ function clean_exit {
     set +x
     if [[ "$1" != "0" ]]; then
         log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
+        halt_caffeination
     fi
+}
+
+function halt_caffeination {
+    kill "$caffeinatepid" && log_warn "halted caffeination.."
+    unset caffeinatepid
 }
 
 
@@ -56,12 +67,12 @@ sudo -v
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
-function keep_awake {
-    log "caffinating macos.."
-    caffeinate -d -i -m -u &
-    caffeinatepid=$!
-    log_ok "caffinated under process id: $caffeinatepid"
-}
+    function keep_awake {
+        log "caffinating macos.."
+        caffeinate -d -i -m -u &
+        caffeinatepid=$!
+        log_ok "caffinated under process id: $caffeinatepid"
+    }
 
 # Detect OS
 function detect_platform {
@@ -126,7 +137,7 @@ function setup_xcode_and_git {
     if [[ "$check" != 1 ]]
     then
         sleep 1
-        log "installing xcode cli tools..."; read -k1 -s
+        log "installing xcode cli tools; press any key to continue.."; read -k1 -s
         xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
         log_ok "DONE install xcode cli tools"
     fi
@@ -242,9 +253,9 @@ function setup_ssh_key {
     vared -p "[?] do this now? [yN]" -c continue_reply
 
     case $continue_reply in
-      [Yy]) $(bin/ssh-setup) ;;
-      [Nn]) log_warn "$skip_message" ;;
-      *) log_warn "$skip_message" ;;
+        [Yy]) $(bin/ssh-setup) ;;
+        [Nn]) log_warn "$skip_message" ;;
+        *) log_warn "$skip_message" ;;
     esac
 
     unset continue_reply
@@ -311,9 +322,9 @@ function set_shell {
     vared -p "[?] which shell? [zsh|shell|SKIP]" -c continue_reply
 
     case $continue_reply in
-      [zsh]) setup_zsh ;;
-      [fish]) setup_fish ;;
-      *) log_warn "$skip_message" ;;
+        [zsh]) setup_zsh ;;
+        [fish]) setup_fish ;;
+        *) log_warn "$skip_message" ;;
     esac
 
     unset continue_reply
@@ -326,10 +337,9 @@ function post_install {
         $(brew --prefix)/opt/fzf/install            # <- fzf
         initdb /usr/local/var/postgres -E utf8      # <- postgresql
         log_ok "DONE"
-
-        kill "$caffeinatepid" && log_ok "finished caffeination.."
     fi
 
+    halt_caffeination
     log_ok "DONE with dotfiles install and configuration for $PLATFORM!"
     exit 0
 }

@@ -135,8 +135,8 @@ M.apps = {
     quitGuard = false,
     hideAfter = 1,
     rules = {
-      {nil, 1, M.layout.rightHalf},
-      {"Capture", 1, M.layout.topRight30}
+      {"Capture", 1, M.layout.topRight30},
+      {nil, 1, M.layout.rightHalf}
     }
   },
   ["com.culturedcode.ThingsMac"] = {
@@ -222,7 +222,8 @@ M.apps = {
     rules = {
       -- {title = 'Zoom', action = 'quit'},
       -- {title = 'Zoom Meeting', action = 'snap'},
-      {"Zoom Meeting", 1, M.layout.fullScreen}
+      {"Zoom Meeting", 1, M.layout.fullScreen},
+      {nil, 1, M.layout.centeredMedium}
     }
   },
   ["com.loom.desktop"] = {

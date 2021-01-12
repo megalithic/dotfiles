@@ -9,16 +9,18 @@ if (command -v luarocks &> /dev/null); then
   (! command -v lua-format &> /dev/null) && luarocks install --server=https://luarocks.org/dev luaformatter
 fi
 
-log "installing sumneko lua-language-server"
-build_path="$XDG_CONFIG_HOME/sumneko_lua"
+# if (command -v lua-language-server &> /dev/null); then
+  log "installing sumneko lua-language-server"
+  build_path="$XDG_CONFIG_HOME/sumneko_lua"
 
-git clone https://github.com/sumneko/lua-language-server "$build_path"
-cd "$build_path"
-git submodule update --init --recursive
+  git clone https://github.com/sumneko/lua-language-server "$build_path"
+  cd "$build_path"
+  git submodule update --init --recursive
 
-cd 3rd/luamake
-ninja -f "ninja/$PLATFORM.ninja"
-cd ../..
-./3rd/luamake/luamake rebuild && log_ok "DONE building sumneko_lua" || log_error "failed to build sumneko_lua"
+  cd 3rd/luamake
+  ninja -f "ninja/$PLATFORM.ninja"
+  cd ../..
+  ./3rd/luamake/luamake rebuild && log_ok "DONE building sumneko_lua" || log_error "failed to build sumneko_lua"
 
-unset build_path
+  unset build_path
+# fi
