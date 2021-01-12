@@ -132,9 +132,13 @@ end
 -- end
 
 M.setAppLayout = function(app_config)
+  if app_config == nil then
+    return
+  end
+
   local bundleID = app_config["bundleID"]
   if app_config.rules and #app_config.rules > 0 then
-    log.wf("applyAutoLayout::%s", bundleID, hs.inspect(app_config.rules))
+    log.df("applyAutoLayout::%s", bundleID, hs.inspect(app_config.rules))
 
     fn.map(
       app_config.rules,
@@ -160,7 +164,7 @@ M.setAppLayout = function(app_config)
 end
 
 M.applyAppLayout = function(_, event, app)
-  log.df("beginning to layout windows for app: %s", hs.inspect(app))
+  log.df("beginning to layout windows for app: %s, and event: %s", hs.inspect(app), hs.inspect(event))
 
   if app ~= nil and event == hs.application.watcher.launched then
     local app_config = config.apps[app:bundleID()]
@@ -240,7 +244,8 @@ M.start = function()
 
   -- watch for docking status changes
   cache.dock_watcher = hs.watchable.watch("status.isDocked", M.prepare)
-  cache.application_watcher = hs.application.watcher.new(M.applyAppLayout):start()
+  cache.application_watcher = hs.application.watcher.new(M.applyAppLayout)
+  cache.application_watcher:start()
 
   -- initial invocation
   M.prepare()
@@ -251,6 +256,7 @@ M.stop = function()
 
   cache.windowFilter:unsubscribeAll()
   cache.windowFilter = nil
+  cache.application_watcher:stop()
 end
 
 return M

@@ -1,0 +1,20 @@
+{
+  "debug": {
+    "prefix": "debug",
+    "body": [
+      "_ =",
+      "  Debug.log '${1}' ${2:$1}"
+    ],
+    "description": "Debug.log statement"
+  },
+  "ldebug": {
+    "prefix": "ldebug",
+    "body": [
+      "let",
+      "  _ =",
+      "    Debug.log '${1}' ${2:$1}",
+      "in"
+    ],
+    "description": "let..in block with a Debug.log statement"
+  }
+}

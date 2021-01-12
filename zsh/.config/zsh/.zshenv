@@ -231,3 +231,5 @@ if [[ "$PLATFORM" == "linux" ]]; then
   alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
   # alias fd="fdfind"
 fi
+
+#ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2

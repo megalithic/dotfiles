@@ -513,7 +513,9 @@ let g:polyglot_disabled = [
       \ "elixir",
       \ "eelixir",
       \ "ex",
-      \ "exs"
+      \ "exs",
+      \ "zsh",
+      \ "sh",
       \ ]
 
 " -- [ abbreviations ] ---------------------------------------------------------
