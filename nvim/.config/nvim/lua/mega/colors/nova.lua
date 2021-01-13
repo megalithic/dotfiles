@@ -111,8 +111,8 @@ return {
 
     cu.hi("HighlightedyankRegion", base.white, status.highlighted_yank, "bold")
     cu.hi("HighlightedYankRegion", base.white, status.highlighted_yank, "bold")
-    cu.hi("Search", nil, base.brown, "underline")
-    cu.hi("IncSearch", nil, status.incsearch, "bold")
+    cu.hi("Search", base.darkest_gray, base.brown, "underline,undercurl,bold,italic")
+    cu.hi("IncSearch", base.darkest_gray, status.incsearch, "bold,italic")
 
     cu.hi("QuickScopePrimary", "#afff5f", status.special_bg, "NONE")
     cu.hi("QuickScopeSecondary", "#00C7DF", status.special_bg, "NONE")
