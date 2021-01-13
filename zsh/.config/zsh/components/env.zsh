@@ -1,29 +1,45 @@
 #
-# Locations
+# Utils
 #
 
-export HOMEDIR=$HOME
-export ZDOTDIR=$HOME/.config/zsh
-export DOTS=$HOME/.dotfiles
-export PRIVATES=$HOME/.dotfiles/private
-export DOTDIR=$DOTS
-export DOTSDIR=$DOTS
-export DOTFILES=$DOTS
+function detect_platform {
+    if [[ -z $PLATFORM ]]
+    then
+        platform="unknown"
+        derived_platform=$(uname | tr "[:upper:]" "[:lower:]")
 
-export WEECHAT_HOME=$XDG_CONFIG_HOME/weechat
+        if [[ "$derived_platform" == "darwin" ]]; then
+            platform="macos"
+        elif [[ "$derived_platform" == "linux" ]]; then
+            platform="linux"
+        fi
 
-#
-# Browser
-#
+        export PLATFORM=$platform
 
-if [[ "$platform" == darwin* ]]; then
-  export BROWSER='open'
+        # if [[ "$PLATFORM" == "linux" ]]; then
+        #     # If available, use LSB to identify distribution
+        #     if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
+        #         export DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
+        #         # Otherwise, use release info file
+        #     else
+        #         export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
+        #     fi
+        # fi
+        unset platform
+        unset derived_platform
+    fi
+}
+detect_platform
+
+
+if [[ "$PLATFORM" == "linux" ]]; then
+    export TERMINAL="kitty --single-instance --listen-on unix:/tmp/mykitty -o allow_remote_control=yes"
+else
+    export TERMINAL="kitty"
 fi
 
 #
-# Editors
-#
-
+# editors
 export EDITOR='nvim'
 export VISUAL="$EDITOR"
 export SUDO_EDITOR="$EDITOR"
@@ -31,39 +47,75 @@ export ALTERNATE_EDITOR='vim'
 export PAGER='less'
 export MANPAGER="$EDITOR +Man!"
 export MANWIDTH=999
-
-# export ALTERNATE_EDITOR=""
-# export EDITOR="emacsclient -t"                  # $EDITOR opens in terminal
-# export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
+export LESS='-F -g -i -M -R -S -w -X -z-4'
+if (( $+commands[lesspipe.sh] )); then
+    # Set the Less input preprocessor.
+    export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
+fi
 
 #
-# Language
-#
-
+# language
+export LANG='en_US.UTF-8'
+export LC_ALL='en_US.UTF-8'
 if [[ -z "$LANG" ]]; then
   eval "$(locale)"
 fi
 
 #
-# Less
+# dir locatons
+export DOTS="$HOME/.dotfiles"
+export DOTFILES=$DOTS
+export DOTDIR=$DOTS
+export DOTSDIR=$DOTS
+export PRIVATES="$DOTS/private"
+export PRIVATE=$PRIVATES
+export HOMEDIR=$HOME
+export QMK_HOME="$HOME/code/qmk_firmware"
+export GOPATH="$HOME/.go"
+export GOBIN="$GOPATH/bin"
+export CARGOPATH="$HOME/.cargo"
+export CARGOBIN="$CARGOPATH/bin"
+export ASDF_DIR="$HOME/.asdf"
+# export ASDF_BIN="$ASDF_DIR/shims"
+export ASDF_SHIMS="$ASDF_DIR/shims"
+export ASDF_INSTALLS="$ASDF_DIR/installs"
+export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+if [ ! -w ${XDG_RUNTIME_DIR:="/run/user/$UID"} ]; then
+  XDG_RUNTIME_DIR=/tmp
+fi
+export WEECHAT_HOME=$XDG_CONFIG_HOME/weechat
+
 #
-
-# Set the default Less options.
-# Mouse-wheel scrolling has been disabled by -X (disable screen clearing).
-# Remove -X and -F (exit if the content fits on one screen) to enable it.
-export LESS='-F -g -i -M -R -S -w -X -z-4'
-
-# Set the Less input preprocessor.
-if (( $+commands[lesspipe.sh] )); then
-  export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
+# browser
+if [[ "$PLATFORM" == "macos" ]]; then
+  export BROWSER='open'
 fi
 
+export GIT_REPO_DIR="$HOME/code"
+export TERMINFO=$HOME/.terminfo
+# export TERMINFO=/usr/share/terminfo
+export _Z_DATA="$HOME/.z-history"
+export TERM_ITALICS="TRUE"
 
+export BAT_THEME="base16"
+export BAT_CONFIG_PATH="$HOME/.batrc"
+
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=23"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55" 
+export ZSH_AUTOSUGGEST_USE_ASYNC=1
+
+#
+# platform-specific
 if [[ "$PLATFORM" == "macos" ]]
 then
   export HOMEBREW_NO_ANALYTICS=1
   export HOMEBREW_CASK_OPTS="--appdir=/Applications"
   export BREW_PATH="$(brew --prefix)"
+  export HOMEBREW_PREFIX=$BREW_PATH
   export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
   export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
@@ -102,21 +154,6 @@ then
   export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
   export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
 fi
-
-export GIT_REPO_DIR="$HOME/code"
-export TERMINFO=$HOME/.terminfo
-# export TERMINFO=/usr/share/terminfo
-export _Z_DATA="$HOME/.z-history"
-export TERM_ITALICS="TRUE"
-
-export BAT_THEME="base16"
-export BAT_CONFIG_PATH="~/.batrc"
-
-export QMK_HOME='~/code/qmk_firmware'
-
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=23"
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55" 
-export ZSH_AUTOSUGGEST_USE_ASYNC=1
 
 #
 # NVIM
@@ -191,4 +228,125 @@ export ERL_AFLAGS="-kernel shell_history enabled"
 
 # fixing an issue for weechat and wee-slack: https://blog.phusion.nl/2017/10/13/why-ruby-app-servers-break-on-macos-high-sierra-and-what-can-be-done-about-it/
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
+
+#
+# Paths
+#
+typeset -agU cdpath fpath manpath infopath path
+
+# Set the the list of directories that cd searches.
+cdpath=(
+    $HOME/code
+    $cdpath
+)
+
+# Set the list of directories that info searches for manuals.
+infopath=(
+    /usr/local/share/info
+    /usr/share/info
+    $infopath
+)
+
+# Set the list of directories that man searches for manuals.
+manpath=(
+    /usr/local/share/man
+    /usr/share/man
+    ${HOMEBREW_PREFIX}/opt/*/libexec/gnuman(N-/)
+    $manpath
+)
+for man_file in /etc/manpaths.d/*(.N); do
+    manpath+=($(<$man_file))
+done
+unset man_file
+
+# Set the list of directories that Zsh searches for programs.
+# "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
+path=(
+    ./bin
+    ./.bin
+    ./vendor/bundle/bin
+    $HOME/bin
+    $HOME/.bin
+    $DOTS/bin
+    $ASDF_DIR
+    $ASDF_BIN
+    $ASDF_SHIMS
+    $ASDF_INSTALLS
+    $ASDF_LUAROCKS
+    $GOBIN
+    $N_PREFIX/bin
+    $CARGOPATH
+    $CARGOBIN
+    /usr/local/{bin,sbin}
+    /usr/local/share/npm/bin
+    /usr/local/lib/node_modules
+    /usr/local/opt/libffi/lib
+    # $HOME/.yarn/bin
+    # $HOME/.config/yarn/global/node_modules/.bin
+    /usr/local/opt/gnu-sed/libexec/gnubin
+    /usr/local/opt/imagemagick@6/bin
+    /usr/local/opt/qt@5.5/bin
+    /usr/local/opt/mysql@5.6/bin
+    /usr/local/opt/postgresql@9.5/bin
+    /Applications/Postgres.app/Contents/Versions/9.5/bin
+    /usr/local/lib/python2.7/site-packages
+    $HOME/Library/Python/3.8/bin
+    /usr/local/lib/python3.8/bin
+    /usr/local/lib/python3.8/site-packages
+    /usr/local/opt/python@3.8/bin
+    $HOME/Library/Python/3.9/bin
+    /usr/local/lib/python3.9/bin
+    /usr/local/lib/python3.9/site-packages
+    /usr/local/opt/python@3.9/bin
+    # /usr/local/opt/perl/bin
+    # /usr/local/opt/perl6/bin
+    # /usr/local/opt/perl@5.18/bin
+    # /usr/local/opt/perl@5.28/bin
+    # /usr/local/opt/perl@5.32/bin
+    # /usr/local/opt/perl@5.32
+    # /usr/local/opt/openssl@1.1/bin
+    /usr/{bin,sbin}
+    /{bin,sbin}
+    /usr/local/opt/curl/bin
+    # $HOME/.yarn/bin
+    # $HOME/.config/yarn/global/node_modules/.bin
+    ${HOME}/.local/bin(N-/)
+    ${HOME}/.dotfiles/bin(N-/)
+    ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
+    ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/perl@*/bin(Nn[-1]-/)
+    ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
+    ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
+    ${CARGO_HOME}/bin(N-/)
+    ${GOBIN}(N-/)
+    ${HOME}/Library/Python/3.*/bin(Nn[-1]-/)
+    ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
+    # ${HOMEBREW_PREFIX}/opt/ruby/bin(N-/)
+    # ${HOMEBREW_PREFIX}/lib/ruby/gems/*/bin(Nn[-1]-/)
+    /usr/local/{bin,sbin}
+    ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
+    $path
+)
+for path_file in /etc/paths.d/*(.N); do
+    path+=($(<$path_file))
+done
+unset path_file
+
+
+fpath+=(
+    $ZDOTDIR
+    $ZDOTDIR/components
+    $ZDOTDIR/completions
+    $ZDOTDIR/plugins
+    $ZDOTDIR/functions
+    $fpath
+)
+
+# if [[ -d "$TMPDIR" ]]; then
+#     export TMPPREFIX="${TMPDIR%/}/zsh"
+#     if [[ ! -d "$TMPPREFIX" ]]; then
+#         mkdir -p "$TMPPREFIX"
+#     fi
+# fi
 

@@ -12,11 +12,6 @@
 # ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 #
 
-fpath=($fpath $ZDOTDIR)             # user defined config and function dirs
-autoload -Uz compinit; compinit     # load completion system
-autoload -U promptinit; promptinit  # load prompt themes
-prompt megalithic                   # load my prompt
-
 bindkey -e                          # ensures we use emacs/readline keybindings
 
 if [[ "$PLATFORM" == "macos" ]]; then
@@ -35,6 +30,10 @@ for file in $ZDOTDIR/components/{env,aliases,functions,colors,opts,keybindings,c
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
+
+# autoload -Uz compinit; compinit     # load completion system - remove? handled in completion.zsh
+autoload -U promptinit; promptinit  # load prompt themes
+prompt megalithic                   # load my prompt
 
 # use .localrc for SUPER SECRET stuff
 if [[ -a $HOME/.localrc ]]
