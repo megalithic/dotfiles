@@ -1,12 +1,12 @@
 return function(_) -- bufnr
-  -- vim.api.nvim_buf_set_option(bufnr, 'formatexpr', '')
-  -- vim.api.nvim_buf_set_option(bufnr, 'formatprg', '')
   vim.api.nvim_exec(
     [[
 " Usages of Nuake and other elixir things
 " REF: https://github.com/alexcastano/dotfiles/blob/master/vim/.vim/vimrc#L402-L418
-augroup ft_elixir
-  au!
+"augroup ft_elixir
+"  au!
+
+  echo "elixir things!"
 
   nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>
   nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
@@ -83,8 +83,8 @@ augroup ft_elixir
   let test#elixir#exunit#options = {
         \ 'suite':   '--stale',
         \}
-augroup END
+"augroup END
       ]],
-    true
+    false
   )
 end

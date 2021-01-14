@@ -37,11 +37,11 @@ end
 
 M.map_opts = {noremap = true, silent = false, expr = false}
 
-function M.load(key, req, loader_fn)
+function M.load(key, req)
   local loaded, loader = pcall(require, req)
 
   if loaded then
-    loader[loader_fn]()
+    return loader
   else
     mega.inspect("", key, 4)
   end
@@ -64,6 +64,10 @@ end
 
 function M.autocmd(cmd)
   vim.cmd("autocmd " .. cmd)
+end
+
+function M.au(cmd)
+  vim.api.nvim_exec(cmd, true)
 end
 
 function M.map(mode, lhs, rhs, opts)

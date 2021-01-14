@@ -98,12 +98,17 @@ end
 -- utils.lmap("l", "<cmd>luafile %<cr>") -- source lua file
 -- utils.lmap("t", "<cmd> sp<cr>|<cmd>te   <cr>i") -- open terminal
 -- utils.lmap("rc", "<cmd> e ~/.config/nvim <cr>") -- open config directory
---
+
+local function plugin_mappings()
+  vim.cmd([[nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>]])
+end
+
 return {
   activate = function()
     -- global_mappings()
     override_mappings()
     convenience_mappings()
     custom_mappings()
+    plugin_mappings()
   end
 }

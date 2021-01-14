@@ -35,36 +35,26 @@ _G["mega"] = require("mega.global")
 -- [ engage! ] ---------------------------------------------------------------
 
 do
-  local data_dir = {
-    mega.cache_dir .. "backup",
-    mega.cache_dir .. "session",
-    mega.cache_dir .. "swap",
-    mega.cache_dir .. "tags",
-    mega.cache_dir .. "undo"
-  }
-  -- Only check once that If cache_dir exists
-  -- Then I don't want to check subs dir exists
-  if not mega.isdir(mega.cache_dir) then
-    os.execute("mkdir -p " .. mega.cache_dir)
-
-    for _, v in pairs(data_dir) do
-      if not mega.isdir(v) then
-        os.execute("mkdir -p " .. v)
-      end
-    end
-  end
-
   vim.cmd([[runtime vimrc]])
 
   -- [ loaders ] ---------------------------------------------------------------
 
-  mega.load("packages", "mega.packages", "activate")
-  mega.load("nova", "mega.colors.nova", "activate")
-  mega.load("settings", "mega.settings", "activate")
-  mega.load("lc", "mega.lc", "activate")
-  mega.load("mappings", "mega.mappings", "activate")
-  mega.load("autocmds", "mega.autocmds", "activate")
-  mega.load("ft", "mega.ft", "setup")
-  mega.load("ft", "mega.ft", "trigger_ft")
-  mega.load("statusline", "mega.statusline", "activate")
+  mega.load("preflight", "mega.preflight").activate()
+  mega.load("packages", "mega.packages").activate()
+  mega.load("nova", "mega.colors.nova").activate()
+  mega.load("settings", "mega.settings").activate()
+  mega.load("lc", "mega.lc").activate()
+  mega.load("mappings", "mega.mappings").activate()
+  mega.load("autocmds", "mega.autocmds").activate()
+  vim.schedule(
+    function()
+      mega.load("ft", "mega.ft").setup()
+    end
+  )
+  vim.schedule(
+    function()
+      mega.load("ft", "mega.ft").trigger_ft()
+    end
+  )
+  mega.load("statusline", "mega.statusline").activate()
 end
