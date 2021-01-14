@@ -93,6 +93,7 @@ brew "mas"
 brew "moreutils"
 brew "ncurses"
 brew "neovim", args: ["HEAD"]
+brew "ninja" # for lua sumneko lsp
 brew "nmap"
 brew "noti"
 brew "openssl"

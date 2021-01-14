@@ -163,9 +163,10 @@ local servers = {
       }
     },
     cmd = {
-      vim.fn.stdpath("cache") .. "/lspconfig/sumneko_lua/lua-language-server/bin/macOS/lua-language-server",
+      vim.fn.expand("$XDG_CONFIG_HOME") ..
+        "/lsp/sumneko_lua/bin/" .. vim.fn.expand("$PLATFORM") .. "/lua-language-server",
       "-E",
-      vim.fn.stdpath("cache") .. "/lspconfig/sumneko_lua/lua-language-server/main.lua"
+      vim.fn.expand("$XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
     }
   },
   tsserver = {

@@ -93,6 +93,7 @@ Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/c
 ### Refs
 
 - A wealth of handy scripts/bins for future use: https://github.com/salman-abedin/alfred
+- Neovim lua migration resource: https://github.com/nanotee/nvim-lua-guide
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>

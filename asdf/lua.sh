@@ -11,7 +11,7 @@ fi
 
 # if (command -v lua-language-server &> /dev/null); then
   log "installing sumneko lua-language-server"
-  build_path="$XDG_CONFIG_HOME/sumneko_lua"
+  build_path="$XDG_CONFIG_HOME/lsp/sumneko_lua"
 
   git clone https://github.com/sumneko/lua-language-server "$build_path"
   cd "$build_path"
@@ -21,6 +21,9 @@ fi
   ninja -f "ninja/$PLATFORM.ninja"
   cd ../..
   ./3rd/luamake/luamake rebuild && log_ok "DONE building sumneko_lua" || log_error "failed to build sumneko_lua"
+
+  # rename our build platform folder to be all lowercase if it's `macOS`; ugh.
+  [[ "$PLATFORM" == "macos" ]] && mv $XDG_CONFIG_HOME/lsp/sumneko_lua/bin/macOS $XDG_CONFIG_HOME/lsp/sumneko_lua/bin/$PLATFORM
 
   unset build_path
 # fi

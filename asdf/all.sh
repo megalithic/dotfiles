@@ -36,6 +36,11 @@ log "installing asdf plugin versions.."
 # must initially symlink our tool-versions file for asdf to install the right things..
 asdf install
 
+log "creating $XDG_CONFIG_HOME if it doesn't exist"
+export $XDG_CONFIG_HOME="$HOME/.config"
+[[ ! -d "$HOME/.config" ]] && mkdir -p "$HOME/.config"
+[[ ! -d "$HOME/.config/lsp" ]] && mkdir -p "$HOME/.config/lsp"
+
 log "configuring ruby.."
 source $DOTS/asdf/ruby.sh && log_ok "DONE configuring ruby"
 
