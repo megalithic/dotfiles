@@ -1,8 +1,6 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
-local function au(cmd)
-  vim.api.nvim_exec(cmd, true)
-end
+local au=mega.au
 
 return {
   activate = function()
@@ -87,6 +85,7 @@ augroup gitcommit
     setlocal wrap
     setlocal linebreak
     setlocal colorcolumn=72
+    echo "gitcommit entered"
   endfunction
 
   autocmd BufNewFile,BufRead .git/index setlocal nolist

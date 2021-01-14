@@ -66,6 +66,10 @@ function M.autocmd(cmd)
   vim.cmd("autocmd " .. cmd)
 end
 
+function M.au(cmd)
+  vim.api.nvim_exec(cmd, true)
+end
+
 function M.map(mode, lhs, rhs, opts)
   opts = vim.tbl_extend("force", M.map_opts, opts or {})
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts)

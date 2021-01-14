@@ -46,7 +46,15 @@ do
   mega.load("lc", "mega.lc").activate()
   mega.load("mappings", "mega.mappings").activate()
   mega.load("autocmds", "mega.autocmds").activate()
-  mega.load("ft", "mega.ft").setup()
-  mega.load("ft", "mega.ft").trigger_ft()
+  vim.schedule(
+    function()
+      mega.load("ft", "mega.ft").setup()
+    end
+  )
+  vim.schedule(
+    function()
+      mega.load("ft", "mega.ft").trigger_ft()
+    end
+  )
   mega.load("statusline", "mega.statusline").activate()
 end

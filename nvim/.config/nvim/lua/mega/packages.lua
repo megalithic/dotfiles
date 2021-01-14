@@ -39,7 +39,7 @@ return {
       -- (file navigation) --
       paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
       paq "junegunn/fzf.vim"
-      -- paq "ojroques/nvim-lspfuzzy"
+      paq "ojroques/nvim-lspfuzzy"
       paq "justinmk/vim-sneak"
       -- paq "unblevable/quick-scope"
       paq "nvim-telescope/telescope.nvim"
@@ -137,7 +137,7 @@ return {
       paq "darfink/vim-plist"
       paq "sheerun/vim-polyglot"
 
-      local filename = vim.api.nvim_buf_get_name(0)
+      local filename = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
       if string.match(filename, "packages.lua") == "packages.lua" then
         Paq.update()
         Paq.install()

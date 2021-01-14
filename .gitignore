@@ -52,5 +52,5 @@ Session.vim
 Brewfile.lock.json
 **/.zcompdump
 **/.zcompcache
-tmn
+tmp
 nvim/**/nvim-python-debug.log_py3_rplugin

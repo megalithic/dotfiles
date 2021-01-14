@@ -13,22 +13,6 @@ return {
       return
     end
 
-    local function get_all_diagnostics()
-      local result = {}
-      local levels = {
-        errors = "Error",
-        warnings = "Warning",
-        info = "Information",
-        hints = "Hint"
-      }
-
-      for k, level in pairs(levels) do
-        result[k] = vim.lsp.diagnostic.get_count(level)
-      end
-
-      return result
-    end
-
     -- [ custom on_attach ] --------------------------------------------------------
     local on_attach = function(client, bufnr)
       -- print("on_attaching for client -> " .. vim.inspect(client))
@@ -37,19 +21,11 @@ return {
 
       vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
-      if not vim.tbl_isempty(vim.lsp.buf_get_clients(0)) then
-        mega.inspect("get_all_diagnostics", get_all_diagnostics())
-      end
-
       if client.resolved_capabilities.completion then
         local completion_loaded, completion = pcall(require, "mega.lc.completion")
         if completion_loaded then
           completion.activate()
         end
-      end
-
-      if client.resolved_capabilities.document_highlight then
-      -- require "illuminate".on_attach(client)
       end
 
       -- [ mappings ] --------------------------------------------------------------
