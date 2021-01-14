@@ -10,6 +10,7 @@ local init_apply_complete = false
 
 -- apply(string, hs.window, hs.logger) :: nil
 M.apply = function(event, win, log)
+  log = hs.logger.new("[zoom]", "debug")
   local app = win:application()
 
   -- prevents excessive actions on multiple window creations

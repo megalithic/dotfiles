@@ -9,6 +9,8 @@ local initApplyComplete = false
 
 -- apply(string, hs.window, hs.logger) :: nil
 module.apply = function(event, win, log)
+  log = hs.logger.new("[loom]", "debug")
+
   if not initApplyComplete then
     if fn.contains({"windowCreated"}, event) then
       ----------------------------------------------------------------------

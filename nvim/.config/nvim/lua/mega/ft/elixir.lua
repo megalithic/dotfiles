@@ -1,16 +1,6 @@
 return function(_) -- bufnr
-  -- local function elixir_umbrella_transform(cmd)
-  -- end
-
   vim.api.nvim_exec(
     [[
-" Usages of Nuake and other elixir things
-" REF: https://github.com/alexcastano/dotfiles/blob/master/vim/.vim/vimrc#L402-L418
-"augroup ft_elixir
-"  au!
-
-  echo "elixir things!"
-
   nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>
   nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
   nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
@@ -40,40 +30,35 @@ return function(_) -- bufnr
   " https://github.com/janko/vim-test/issues/136
   " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
-    echom "a:cmd -> " . a:cmd
-
-    " if a:cmd =~ ':\d+'
-    "   echo "is_nearest mode"
-    " else
-    "   echo "not is_nearest mode"
-    " endif
-
+    let sub = ""
 
     if match(a:cmd, 'vpp/') != -1
       if g:elixir_test_nearest == 1
-        return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '') .. ":" .. line(".")
+        let sub = substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '') .. ":" .. line(".")
+        echom "sub in vpp nearest -> " . sub
+        return sub
       else
-        return substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '')
+        let sub  = substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '')
+        echom "sub in vpp NOT nearest -> " . sub
+        return sub
       end
-
     elseif match(a:cmd, 'sims/') != -1
       if g:elixir_test_nearest == 1
-        return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '') .. ":" .. line(".")
+        let sub = substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '') .. ":" .. line(".")
+        echom "sub in sims nearest -> " . sub
+        return sub
       else
-        return substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
+        let sub = substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
+        echom "sub in sims NOT nearest -> " . sub
+        return sub
       end
     else
-      " if g:elixir_test_nearest == 1
-      " return a:cmd .. ":" .. line(".")
-      " else
-      " return a:cmd
-      let s:cmd = substitute(a:cmd, 'mix test', 'mix test --color', '')
-      " echom "s:cmd -> " . s:cmd
-
-      return s:cmd
-      " end
+      let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
+      echom "sub in somewhere else -> " . sub
+      return sub
     end
   endfunction
+
   let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
   let g:test#transformation = 'elixir_umbrella'
 
@@ -82,12 +67,11 @@ return function(_) -- bufnr
   " let test#elixir#exunit#executable = "MIX_ENV=test mix test"
 
   let test#elixir#exunit#executable = "mix test"
-  let test#elixir#exunit#options = '--stale'
-  let test#elixir#exunit#options = {
-        \ 'suite':   '--stale',
-        \}
-"augroup END
+  " let test#elixir#exunit#options = '--trace'
+  " let test#elixir#exunit#options = {
+  "       \ 'suite':   '--stale',
+  "       \}
       ]],
-    false
+    true
   )
 end

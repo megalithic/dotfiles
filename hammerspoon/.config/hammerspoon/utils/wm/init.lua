@@ -150,7 +150,7 @@ M.setAppLayout = function(app_config)
         local title_pattern, screen, position = rule[1], rule[2], rule[3]
         local layout = {
           hs.application.get(bundleID), -- application name
-          hs.window.find(title_pattern), -- window title
+          title_pattern, -- window title
           wh.targetDisplay(screen), -- screen #
           position, -- layout/postion
           nil,
@@ -169,6 +169,7 @@ M.applyAppLayout = function(_, event, app)
   if app ~= nil and event == hs.application.watcher.launched then
     local app_config = config.apps[app:bundleID()]
     M.setAppLayout(app_config)
+    log.wf("applyAppLayout: app configs to layout: %s", hs.inspect(M.layouts))
     hs.layout.apply(M.layouts)
   end
 end
@@ -183,6 +184,7 @@ M.applyAutoLayout = function()
     end
   )
 
+  log.wf("applyAutoLayout: app configs to layout: %s", hs.inspect(M.layouts))
   hs.layout.apply(M.layouts)
 end
 

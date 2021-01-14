@@ -96,7 +96,6 @@ M.apps = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
     hyper_key = "k",
-    position = M.grid.fullScreen,
     quitGuard = true,
     rules = {
       {nil, 1, M.layout.fullScreen}
@@ -106,7 +105,6 @@ M.apps = {
     bundleID = "com.brave.Browser",
     name = "Brave Browser",
     hyper_key = "j",
-    position = M.grid.fullScreen,
     quitGuard = true,
     rules = {
       {nil, 1, M.layout.fullScreen}
@@ -116,7 +114,6 @@ M.apps = {
     bundleID = "com.insomnia.app",
     name = "Insomnia",
     hyper_key = "i",
-    position = M.grid.rightHalf,
     quitGuard = false,
     rules = {
       {nil, 1, M.layout.rightHalf}
@@ -144,7 +141,6 @@ M.apps = {
     name = "Things",
     hyper_key = "t",
     hideAfter = 1,
-    position = M.grid.centeredMedium,
     local_bindings = {",", "."},
     rules = {
       {nil, 1, M.layout.centeredMedium}
@@ -162,7 +158,6 @@ M.apps = {
   ["com.brettterpstra.marked2"] = {
     bundleID = "com.brettterpstra.marked2",
     name = "Marked",
-    position = M.grid.leftHalf,
     rules = {
       {nil, 1, M.layout.leftHalf}
     }
@@ -173,7 +168,6 @@ M.apps = {
     hyper_key = "s",
     context = "slack",
     distraction = true,
-    position = M.grid.leftHalf,
     quitGuard = true,
     rules = {
       {nil, 1, M.layout.leftHalf}
@@ -186,7 +180,6 @@ M.apps = {
     hyper_key = "e",
     context = "spark",
     distraction = true,
-    position = M.grid.rightHalf,
     rules = {
       {nil, 1, M.layout.rightHalf}
     }
@@ -197,7 +190,6 @@ M.apps = {
     -- hyper_key ='e',
     context = "canary",
     distraction = true,
-    position = M.grid.rightHalf,
     rules = {
       {nil, 1, M.layout.rightHalf}
       -- {title = 'Main Window', action = 'snap'},
@@ -217,13 +209,12 @@ M.apps = {
     name = "zoom.us",
     context = "zoom",
     hyper_key = "z",
-    position = M.grid.fullScreen,
     launchMode = "focus",
     rules = {
       -- {title = 'Zoom', action = 'quit'},
       -- {title = 'Zoom Meeting', action = 'snap'},
-      {"Zoom Meeting", 1, M.layout.fullScreen},
-      {nil, 1, M.layout.centeredMedium}
+      {nil, 1, M.layout.centeredMedium},
+      {"Zoom Meeting", 1, M.layout.fullScreen}
     }
   },
   ["com.loom.desktop"] = {
@@ -240,7 +231,6 @@ M.apps = {
     hyper_key = "p",
     modifier = M.modifiers.shift,
     hideAfter = 1,
-    position = M.grid.rightHalf,
     rules = {
       {nil, 1, M.layout.rightHalf}
     }
@@ -251,7 +241,6 @@ M.apps = {
     hyper_key = "m",
     context = "messages",
     distraction = true,
-    position = "5,5 3x3",
     rules = {
       {nil, 1, M.layout.bottomRight30}
     }
@@ -273,7 +262,6 @@ M.apps = {
     -- hyper_key ='w',
     context = "whatsapp",
     distraction = true,
-    position = "5,5 3x3",
     rules = {
       {nil, 1, M.layout.bottomRight30}
     }
@@ -284,7 +272,6 @@ M.apps = {
     hyper_key = "w",
     context = "signal",
     distraction = true,
-    position = "5,5 3x3",
     rules = {
       {nil, 1, M.layout.bottomRight30}
     }
@@ -310,7 +297,6 @@ M.apps = {
     name = "Hammerspoon",
     hyper_key = "r",
     context = "hammerspoon",
-    position = M.grid.rightHalf,
     hideAfter = 1,
     quitGuard = true,
     rules = {
