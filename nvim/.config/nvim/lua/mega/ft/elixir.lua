@@ -1,4 +1,7 @@
 return function(_) -- bufnr
+  -- local function elixir_umbrella_transform(cmd)
+  -- end
+
   vim.api.nvim_exec(
     [[
 " Usages of Nuake and other elixir things
@@ -37,7 +40,7 @@ return function(_) -- bufnr
   " https://github.com/janko/vim-test/issues/136
   " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
-    " echom "a:cmd -> " . a:cmd
+    echom "a:cmd -> " . a:cmd
 
     " if a:cmd =~ ':\d+'
     "   echo "is_nearest mode"
