@@ -37,11 +37,11 @@ end
 
 M.map_opts = {noremap = true, silent = false, expr = false}
 
-function M.load(key, req, loader_fn)
+function M.load(key, req)
   local loaded, loader = pcall(require, req)
 
   if loaded then
-    loader[loader_fn]()
+    return loader
   else
     mega.inspect("", key, 4)
   end
