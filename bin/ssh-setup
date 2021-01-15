@@ -35,7 +35,11 @@ eval "$(ssh-agent -s)"
 
 sleep 0.5
 log "-> executing command: \"ssh-add -K "$key_path"\""
-ssh-add -K "$key_path"
+if [[ "$PLATFORM" == "macos" ]]; then
+  ssh-add -K "$key_path"
+elif[[ "$PLATFORM" == "linux" ]]; then
+  ssh-add "$key_path"
+fi
 
 sleep 0.5
 log "-> executing command: \"pbcopy < "$key_path_pub"\""
