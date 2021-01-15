@@ -132,8 +132,8 @@ M.apps = {
     quitGuard = false,
     hideAfter = 1,
     rules = {
-      {"Capture", 1, M.layout.topRight30},
-      {nil, 1, M.layout.rightHalf}
+      {nil, 1, M.layout.rightHalf},
+      {"Capture", 1, M.layout.topRight30}
     }
   },
   ["com.culturedcode.ThingsMac"] = {

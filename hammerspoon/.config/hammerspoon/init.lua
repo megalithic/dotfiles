@@ -18,7 +18,7 @@ hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
--- requires
+-- global requires
 config = require("config")
 bindings = require("bindings")
 controlplane = require("utils.controlplane")

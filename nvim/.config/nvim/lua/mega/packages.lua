@@ -115,7 +115,7 @@ return {
       paq "tmux-plugins/vim-tmux-focus-events"
       paq "christoomey/vim-tmux-runner"
       paq "wellle/visual-split.vim"
-      paq "romainl/vim-cool"
+      paq "junegunn/vim-slash"
 
       -- (langs, syntax, et al) --
       paq "tpope/vim-rails"

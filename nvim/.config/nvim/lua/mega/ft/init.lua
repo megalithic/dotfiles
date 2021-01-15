@@ -1,12 +1,5 @@
 local M = {}
 
-
--- function M.trigger_ft()
---   if vim.bo.ft and vim.bo.ft ~= '' then
---     vim.cmd([[doautocmd FileType ]] .. vim.bo.ft)
---   end
--- end
-
 function M.trigger_ft()
   if vim.bo.ft and vim.bo.ft ~= "" then
     vim.cmd("doautocmd FileType " .. vim.bo.ft)
@@ -14,13 +7,15 @@ function M.trigger_ft()
 end
 
 function M.handle()
-  if vim.bo.ft and vim.bo.ft ~= '' then
-    local status, ft_plugin = pcall(require, 'mega.ft.' .. vim.bo.ft)
+  if vim.bo.ft and vim.bo.ft ~= "" then
+    local status, ft_plugin = pcall(require, "mega.ft." .. vim.bo.ft)
     if status then
-      local bufnr =vim.api.nvim_get_current_buf()
-      pcall(function()
-        ft_plugin(bufnr)
-      end)
+      local bufnr = vim.api.nvim_get_current_buf()
+      pcall(
+        function()
+          ft_plugin(bufnr)
+        end
+      )
     end
   end
 end

@@ -101,6 +101,16 @@ end
 
 local function plugin_mappings()
   vim.cmd([[nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>]])
+  vim.cmd([[noremap <plug>(slash-after) zz]])
+  vim.api.nvim_exec(
+    [[
+if has('timers')
+  " Blink 2 times with 50ms interval
+  noremap <expr> <plug>(slash-after) slash#blink(2, 50)
+endif
+  ]],
+    true
+  )
 end
 
 return {

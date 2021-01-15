@@ -172,6 +172,7 @@ alias essh="nvim ~/.ssh/config"
 alias eze="nvim ~/.config/zsh/**/env.zsh"
 alias ezkb="nvim ~/.config/zsh/**/keybindings.zsh"
 alias ev="nvim ~/.config/nvim/init.lua"
+alias evp="nvim ~/.config/nvim/lua/mega/packages.lua"
 alias ek="nvim ~/.config/kitty/kitty.conf"
 alias et="nvim ~/.tmux.conf"
 
