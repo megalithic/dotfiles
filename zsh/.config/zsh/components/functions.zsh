@@ -11,16 +11,6 @@ enable_symantec() {
   for f in /Library/LaunchAgents/com.symantec.*.plist.disabled; do sudo mv -- "$f" "${f%.plist.disabled}.plist"; done
 }
 
-# function g() {
-#   if [[ $# > 0 ]]; then
-#     git "$@"
-#   else
-#     git status --short --branch
-#   fi
-# }
-# # get tab completion with my function
-# __git_complete g _git
-
 #
 # git
 #
@@ -294,15 +284,3 @@ fzstash() {
     fi
   done
 }
-
-# # paging ripgrep: https://github.com/BurntSushi/ripgrep/issues/86#issuecomment-425744884
-# export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
-# function rg(){
-#   # If outputting (fd 1 = stdout) directly to a terminal, page automatically:
-#   if [ -t 1 ]; then
-#     command rg --pretty "$@" \
-#       | less --no-init --quit-if-one-screen --RAW-CONTROL-CHARS
-#         else
-#           command rg "$@"
-#       fi
-#     }

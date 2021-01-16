@@ -340,6 +340,7 @@ fpath+=(
     $ZDOTDIR/completions
     $ZDOTDIR/plugins
     $ZDOTDIR/functions
+    ${ASDF_DIR}/completions
     $fpath
 )
 
