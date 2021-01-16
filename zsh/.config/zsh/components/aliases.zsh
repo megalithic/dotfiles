@@ -24,7 +24,7 @@ alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
 alias dirs="ls *(/)"
-alias ff="ffind -S"
+alias fd="fd -H"
 alias ff="fd"
 alias files="find . -type f | wc -l"
 alias new="print -rl -- **/*(Dom[1,5])"
@@ -403,5 +403,5 @@ if [[ "$PLATFORM" == "linux" ]]; then
   alias pbcopy="xclip -sel clip"
   alias pbpaste='xclip -sel clip -o'
 
-  # alias fd="fdfind"
+  alias fd="fdfind -H"
 fi

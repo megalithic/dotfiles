@@ -16,6 +16,7 @@ local chain_complete_list = {
     {mode = "<c-p>"},
     {mode = "<c-n>"},
     {mode = "dict"},
+    {mode = "spel"}
   },
   string = {
     {complete_items = {"path"}, triggered_only = {"./", "/"}},
@@ -45,6 +46,7 @@ local customize_lsp_label = {
   Unit = mega.utf8(0xe3ce) .. " [unit]",
   ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
   ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs]",
+  ["vsnip"] = mega.utf8(0xf68e) .. " [vs]",
   Snippet = mega.utf8(0xf68e) .. " [s]",
   Text = mega.utf8(0xf52b) .. " [text]",
   Buffers = mega.utf8(0xf64d) .. " [buff]",
@@ -53,7 +55,7 @@ local customize_lsp_label = {
 
 function M.activate()
   -- [ snippets ] --------------------------------------------------------------
-  vim.api.nvim_set_var("vsnip_snippet_dir", "~/.dotfiles/nvim/vsnips")
+  vim.api.nvim_set_var("vsnip_snippet_dir", vim.fn.stdpath("config").."/vsnips")
 
   -- [ nvim-completion ] --------------------------------------------------------------
   local has_completion, completion = pcall(require, "completion")
@@ -71,10 +73,11 @@ function M.activate()
         completion_enable_snippet = "vim-vsnip",
         completion_trigger_on_delete = 0,
         completion_trigger_keyword_length = 2,
+        completio_sorting = "none",
         max_items = 10,
-        -- sorting = "none", -- 'alphabet'
+        sorting = "none", -- 'alphabet'
         matching_strategy_list = {"exact", "substring", "fuzzy"},
-        matching_smart_case = 1,
+        matching_smart_case = 1
       }
     )
   end
