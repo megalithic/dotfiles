@@ -137,7 +137,7 @@ return {
       paq "darfink/vim-plist"
       paq "sheerun/vim-polyglot"
 
-      local filename = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
+      local filename = vim.api.nvim_buf_get_name(0)
       if string.match(filename, "packages.lua") == "packages.lua" then
         Paq.update()
         Paq.install()
