@@ -28,6 +28,7 @@ local servers = {
   bashls = {
     filetypes = {"bash", "sh", "zsh"}
   },
+  clangd = {},
   cssls = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")

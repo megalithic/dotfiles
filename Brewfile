@@ -44,7 +44,7 @@ brew "aspell"
 brew "awscli"
 brew "bat"
 brew "browsh"
-brew "ccls" # c-lang lsp
+brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
 brew "cmake"
 brew "coreutils"
 brew "curl"
@@ -84,7 +84,7 @@ brew "htop"
 brew "jq"
 brew 'lazydocker'
 brew 'lazygit'
-brew "llvm" # contains c-lang lsp 
+brew "llvm" # contains c-lang lsp (the preferred one?)
 brew "lnav"
 brew "lsd"
 brew "luajit"
