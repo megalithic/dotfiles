@@ -15,8 +15,7 @@ return {
 
     -- [ custom on_attach ] --------------------------------------------------------
     local on_attach = function(client, bufnr)
-      -- print("on_attaching for client -> " .. vim.inspect(client))
-
+      mega.inspect("client.cmd", client.name)
       mega.inspect("client.resolved_capabilities", client.resolved_capabilities)
 
       vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")

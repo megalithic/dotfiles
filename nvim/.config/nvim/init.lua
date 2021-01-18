@@ -5,14 +5,14 @@ vim.cmd [[packadd vimball]]
 -- [ debugging ] ---------------------------------------------------------------
 
 -- Can set this lower if needed (used in tandem with mega.inspect) ->
--- require('vim.lsp.log').set_level("trace")
 -- require("vim.lsp.log").set_level("debug")
+-- require("vim.lsp").set_log_level("debug")
 
 -- To execute in :cmd ->
 --  :lua <the_command>
 
 -- LSP log location ->
---  `tail -n150 -f $HOME/.local/share/nvim/lsp.log`
+--  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 
 do
   vim.cmd([[runtime vimrc]])

@@ -192,7 +192,41 @@ nmap <silent> <leader>to :copen<CR>
 
     local function treesitter()
       local ts = require "nvim-treesitter.configs"
-      ts.setup {ensure_installed = "maintained", highlight = {enable = true}}
+      ts.setup {
+        ensure_installed = "maintained",
+        highlight = {enable = true},
+        textobjects = {
+          select = {
+            enable = true,
+            keymaps = {
+              -- use capture groups from textobjects.scm or define your own
+              ["af"] = "@function.outer",
+              ["if"] = "@function.inner",
+              ["ac"] = "@class.outer",
+              ["ic"] = "@class.inner"
+            }
+          },
+          move = {
+            enable = true,
+            goto_next_start = {
+              ["]m"] = "@function.outer",
+              ["]]"] = "@class.outer"
+            },
+            goto_next_end = {
+              ["]M"] = "@function.outer",
+              ["]["] = "@class.outer"
+            },
+            goto_previous_start = {
+              ["[m"] = "@function.outer",
+              ["[["] = "@class.outer"
+            },
+            goto_previous_end = {
+              ["[M"] = "@function.outer",
+              ["[]"] = "@class.outer"
+            }
+          }
+        }
+      }
     end
 
     -- load'em up!
@@ -207,7 +241,7 @@ nmap <silent> <leader>to :copen<CR>
     quickscope()
     sneak()
     fzf()
-    lsp_fuzzy()
+    -- lsp_fuzzy()
     test()
     treesitter()
   end
