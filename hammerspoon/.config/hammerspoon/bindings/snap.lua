@@ -100,7 +100,7 @@ module.start = function()
 
   hyper:bind(
     {},
-    "v",
+    "l",
     nil,
     function()
       movewindows:enter()
