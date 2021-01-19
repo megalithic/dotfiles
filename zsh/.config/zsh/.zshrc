@@ -1,7 +1,10 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
+# zmodload zsh/zprof # top of your .zshrc file
 
 bindkey -e                          # ensures we use emacs/readline keybindings
+
+source $ZDOTDIR/components/_preload.zsh
 
 if [[ "$PLATFORM" == "macos" ]]; then
   source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -14,7 +17,7 @@ elif [[ "$PLATFORM" == "linux" ]]; then
 fi
 
 # NOTE: source order matters!
-for file in $ZDOTDIR/components/{env,aliases,functions,colors,opts,keybindings,completion,git,tmux,ssh,kitty,fzf,zlua,asdf}.zsh; do
+for file in $ZDOTDIR/components/{env,aliases,functions,colors,opts,keybindings,completion,ssh,fzf,zlua,asdf}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
@@ -32,3 +35,5 @@ fi
 
 # leave this commented out so fzf won't try to keep adding it on updates
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# zprof # bottom of .zshrc

@@ -1,103 +1,62 @@
-#
-# Utils
-#
-
-function detect_platform {
-    if [[ -z $PLATFORM ]]
-    then
-        platform="unknown"
-        derived_platform=$(uname | tr "[:upper:]" "[:lower:]")
-
-        if [[ "$derived_platform" == "darwin" ]]; then
-            platform="macos"
-        elif [[ "$derived_platform" == "linux" ]]; then
-            platform="linux"
-        fi
-
-        export PLATFORM=$platform
-
-        # if [[ "$PLATFORM" == "linux" ]]; then
-        #     # If available, use LSB to identify distribution
-        #     if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
-        #         export DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-        #         # Otherwise, use release info file
-        #     else
-        #         export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-        #     fi
-        # fi
-        unset platform
-        unset derived_platform
-    fi
-}
-detect_platform
-
-
-if [[ "$PLATFORM" == "linux" ]]; then
-    export TERMINAL="kitty --single-instance --listen-on unix:/tmp/mykitty -o allow_remote_control=yes"
-else
-    export TERMINAL="kitty"
-fi
+# if [[ "$PLATFORM" == "linux" ]]; then
+#     export TERMINAL="kitty --single-instance --listen-on unix:/tmp/mykitty -o allow_remote_control=yes"
+# else
+#     export TERMINAL="kitty"
+# fi
 
 #
 # editors
-export EDITOR='nvim'
+export EDITOR="nvim"
 export VISUAL="$EDITOR"
 export SUDO_EDITOR="$EDITOR"
-export ALTERNATE_EDITOR='vim'
-export PAGER='less'
+export ALTERNATE_EDITOR="vim"
+export PAGER="less"
 export MANPAGER="$EDITOR +Man!"
 export MANWIDTH=999
-export LESS='-F -g -i -M -R -S -w -X -z-4'
-if (( $+commands[lesspipe.sh] )); then
-    # Set the Less input preprocessor.
-    export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
-fi
+export LESS="-F -g -i -M -R -S -w -X -z-4"
+# if (( $+commands[lesspipe.sh] )); then
+#     # Set the Less input preprocessor.
+#     export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
+# fi
 
 #
-# language
+# lang
 export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
-if [[ -z "$LANG" ]]; then
-  eval "$(locale)"
-fi
 
 #
 # dir locatons
 export DOTS="$HOME/.dotfiles"
-export DOTFILES=$DOTS
-export DOTDIR=$DOTS
-export DOTSDIR=$DOTS
+export DOTFILES="$DOTS"
+export DOTDIR="$DOTS"
+export DOTSDIR="$DOTS"
 export PRIVATES="$DOTS/private"
-export PRIVATE=$PRIVATES
-export HOMEDIR=$HOME
+export PRIVATE="$PRIVATES"
+export HOMEDIR="$HOME"
+
 export QMK_HOME="$HOME/code/qmk_firmware"
+
 export GOPATH="$HOME/.go"
 export GOBIN="$GOPATH/bin"
+
 export CARGOPATH="$HOME/.cargo"
 export CARGOBIN="$CARGOPATH/bin"
+
 export ASDF_DIR="$HOME/.asdf"
-# export ASDF_BIN="$ASDF_DIR/shims"
 export ASDF_SHIMS="$ASDF_DIR/shims"
+export ASDF_BIN="$ASDF_SHIMS"
 export ASDF_INSTALLS="$ASDF_DIR/installs"
 export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
+
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
-export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
-if [ ! -w ${XDG_RUNTIME_DIR:="/run/user/$UID"} ]; then
-  XDG_RUNTIME_DIR=/tmp
-fi
-export WEECHAT_HOME=$XDG_CONFIG_HOME/weechat
 
-#
-# browser
-if [[ "$PLATFORM" == "macos" ]]; then
-  export BROWSER='open'
-fi
+export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 
 export GIT_REPO_DIR="$HOME/code"
 export TERMINFO=$HOME/.terminfo
-# export TERMINFO=/usr/share/terminfo
 export _Z_DATA="$HOME/.z-history"
 export TERM_ITALICS="TRUE"
 
@@ -110,12 +69,12 @@ export ZSH_AUTOSUGGEST_USE_ASYNC=1
 
 #
 # platform-specific
-if [[ "$PLATFORM" == "macos" ]]
-then
+if [[ "$PLATFORM" == "macos" ]]; then
+  export BROWSER="open"
   export HOMEBREW_NO_ANALYTICS=1
   export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-  export BREW_PATH="$(brew --prefix)"
   export HOMEBREW_PREFIX=$BREW_PATH
+  export BREW_PATH="$(brew --prefix)"
   export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
   export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
@@ -125,53 +84,29 @@ then
 
   # for libffi and ruby things
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
-  # export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.18/lib"
-  # export LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
-  export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
-  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
-
-  # OPEN SSL
-  # =====================================================
-  # REF: https://github.com/dkarter/dotfiles/commit/9d4ebad752b4de8b2bdfbe204a34b89c1986f33b
-  export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
-
-  # For compilers to find openssl@1.1 you may need to set:
+  export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.18/lib"
+  export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
+  export LDFLAGS="$LDFLAGS -I/usr/local/opt/openssl/include"
+
+  export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
   export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openssl@1.1/include"
 
-  # For pkg-config to find openssl@1.1 you may need to set:
+  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
   export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
 
-  # Compile erlang with OpenSSL from Homebrew via asdf
   export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
   export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
-
-  # export LDFLAGS="-L/usr/local/opt/openssl/lib"
-  # export CPPFLAGS="-I/usr/local/opt/openssl/include"
-  # export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"
-
-  export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
-  export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
-  export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
 fi
-
-#
-# NVIM
-#
 
 export NVIMRUNTIME='/usr/local/share/nvim/runtime'
 export NVIM_TUI_ENABLE_TRUE_COLOR=1
-export NVIM_NODE_LOG_FILE="$DOTS/nvim/nvim-node-debug.log"
-# export NVIM_NODE_LOG_LEVEL=debug
-export NVIM_PYTHON_LOG_FILE="$DOTS/nvim/nvim-python-debug.log"
-# export NVIM_PYTHON_LOG_LEVEL=debug
-export NVIM_COC_LOG_LEVEL=debug
 
 # by default: export WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>'
 # we take out the slash, period, angle brackets, dash here.
 export WORDCHARS='*?_[]~=&;!#$%^(){}'
 export ACK_COLOR_MATCH='red'
-# export CC=/usr/bin/gcc
+export CC=/usr/bin/gcc
 export DISPLAY=:0.0
 
 # reduce ESC key delay to 0.1
@@ -179,14 +114,7 @@ export KEYTIMEOUT=1
 
 # so I can run USPTO/jboss stuff sensibly
 export JAVA_OPTS="$JAVA_OPTS -Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
-# export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home"
-# export ANDROID_HOME=/usr/local/opt/android-sdk
-# export ANDROID_SDK_ROOT=/usr/local/share/android-sdk
 export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
-
-# Enable color in grep - DEPRECATED
-# export GREP_OPTIONS='--color=auto'
-# export GREP_COLOR='3;33'
 
 # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
 export ARCHFLAGS='-arch x86_64'
@@ -201,17 +129,16 @@ export RUBY_GC_HEAP_INIT_SLOTS=40000
 
 export NODEJS_CHECK_SIGNATURES=no # https://github.com/asdf-vm/asdf-nodejs#use
 
-export ECLIPSE_HOME=/Applications/Eclipse
 export SSL_CERT_FILE=''
 unset SSL_CERT_FILE
 
 export CURL_CA_BUNDLE=''
 
+#
+# yubikey
 # GNUpg setup: https://github.com/drduh/YubiKey-Guide#create-temporary-working-directory-for-gpg
 # export GNUPGHOME=$(mktemp -d) #; echo $GNUPGHOME
-
 # export GNUPGHOME="$HOME/.gnupg"
-
 # https://github.com/asdf-vm/asdf-nodejs#using-a-dedicated-openpgp-keyring
 # export GNUPGHOME="${ASDF_DIR:-$HOME/.asdf}/keyrings/nodejs" && mkdir -p "$GNUPGHOME" && chmod 0700 "$GNUPGHOME"
 
@@ -225,129 +152,3 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:/usr/local/lib
 
 # elixir and erlang things for `iex`, etc:
 export ERL_AFLAGS="-kernel shell_history enabled"
-
-# fixing an issue for weechat and wee-slack: https://blog.phusion.nl/2017/10/13/why-ruby-app-servers-break-on-macos-high-sierra-and-what-can-be-done-about-it/
-export OBJC_DISABLE_INITIALIZE_FORK_SAFETY='YES'
-
-#
-# Paths
-#
-typeset -agU cdpath fpath manpath infopath path
-
-# Set the the list of directories that cd searches.
-cdpath=(
-    $HOME/code
-    $cdpath
-)
-
-# Set the list of directories that info searches for manuals.
-infopath=(
-    /usr/local/share/info
-    /usr/share/info
-    $infopath
-)
-
-# Set the list of directories that man searches for manuals.
-manpath=(
-    /usr/local/share/man
-    /usr/share/man
-    ${HOMEBREW_PREFIX}/opt/*/libexec/gnuman(N-/)
-    $manpath
-)
-for man_file in /etc/manpaths.d/*(.N); do
-    manpath+=($(<$man_file))
-done
-unset man_file
-
-# Set the list of directories that Zsh searches for programs.
-# "${HOME}/.asdf/installs/elixir/`asdf current elixir | awk '{print $1}'`/.mix"
-path=(
-    ./bin
-    ./.bin
-    ./vendor/bundle/bin
-    $HOME/bin
-    $HOME/.bin
-    $DOTS/bin
-    $ASDF_DIR
-    $ASDF_BIN
-    $ASDF_SHIMS
-    $ASDF_INSTALLS
-    $ASDF_LUAROCKS
-    $GOBIN
-    $N_PREFIX/bin
-    $CARGOPATH
-    $CARGOBIN
-    /usr/local/{bin,sbin}
-    /usr/local/share/npm/bin
-    /usr/local/lib/node_modules
-    /usr/local/opt/libffi/lib
-    # $HOME/.yarn/bin
-    # $HOME/.config/yarn/global/node_modules/.bin
-    /usr/local/opt/gnu-sed/libexec/gnubin
-    /usr/local/opt/imagemagick@6/bin
-    /usr/local/opt/qt@5.5/bin
-    /usr/local/opt/mysql@5.6/bin
-    /usr/local/opt/postgresql@9.5/bin
-    /Applications/Postgres.app/Contents/Versions/9.5/bin
-    /usr/local/lib/python2.7/site-packages
-    $HOME/Library/Python/3.8/bin
-    /usr/local/lib/python3.8/bin
-    /usr/local/lib/python3.8/site-packages
-    /usr/local/opt/python@3.8/bin
-    $HOME/Library/Python/3.9/bin
-    /usr/local/lib/python3.9/bin
-    /usr/local/lib/python3.9/site-packages
-    /usr/local/opt/python@3.9/bin
-    # /usr/local/opt/perl/bin
-    # /usr/local/opt/perl6/bin
-    # /usr/local/opt/perl@5.18/bin
-    # /usr/local/opt/perl@5.28/bin
-    # /usr/local/opt/perl@5.32/bin
-    # /usr/local/opt/perl@5.32
-    # /usr/local/opt/openssl@1.1/bin
-    /usr/{bin,sbin}
-    /{bin,sbin}
-    /usr/local/opt/curl/bin
-    # $HOME/.yarn/bin
-    # $HOME/.config/yarn/global/node_modules/.bin
-    ${HOME}/.local/bin(N-/)
-    ${HOME}/.dotfiles/bin(N-/)
-    ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
-    ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/perl@*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
-    ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
-    ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
-    ${CARGO_HOME}/bin(N-/)
-    ${GOBIN}(N-/)
-    ${HOME}/Library/Python/3.*/bin(Nn[-1]-/)
-    ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-    # ${HOMEBREW_PREFIX}/opt/ruby/bin(N-/)
-    # ${HOMEBREW_PREFIX}/lib/ruby/gems/*/bin(Nn[-1]-/)
-    /usr/local/{bin,sbin}
-    ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
-    $path
-)
-for path_file in /etc/paths.d/*(.N); do
-    path+=($(<$path_file))
-done
-unset path_file
-
-
-fpath+=(
-    $ZDOTDIR
-    $ZDOTDIR/components
-    $ZDOTDIR/completions
-    $ZDOTDIR/plugins
-    $ZDOTDIR/functions
-    ${ASDF_DIR}/completions
-    $fpath
-)
-
-# if [[ -d "$TMPDIR" ]]; then
-#     export TMPPREFIX="${TMPDIR%/}/zsh"
-#     if [[ ! -d "$TMPPREFIX" ]]; then
-#         mkdir -p "$TMPPREFIX"
-#     fi
-# fi
-

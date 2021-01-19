@@ -14,7 +14,7 @@ umask 022
 # fpath=($ZSH/completions/src $ZSH/functions $fpath)
 # autoload -U $ZSH/functions/*(:t)
 
-HISTFILE=~/.zsh_history
+HISTFILE="$HOME/.zsh_history"
 HISTSIZE=1000
 SAVEHIST=1000
 COMPLETION_WAITING_DOTS="true"

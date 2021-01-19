@@ -86,6 +86,7 @@ module.media_control = function(event, alertText)
   if event == "playpause" then
     hs.spotify.playpause()
   elseif event == "pause" then
+    print("pausing spotify")
     hs.spotify.pause()
   elseif event == "play" then
     hs.spotify.play()
@@ -179,7 +180,7 @@ module.start = function()
     function()
       media:exit()
     end
-    )
+  )
 end
 
 module.stop = function()
