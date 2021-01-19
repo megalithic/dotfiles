@@ -1,6 +1,13 @@
-#
-# Functions
-#
+# try and autoload tmux session	
+if [[ -z $TMUX ]]; then	
+  function tmux() {	
+    if [[ $# == 0 ]] && tmux has-session 2>/dev/null; then	
+      command tmux attach-session	
+    else	
+      command tmux "$@"	
+    fi	
+  }	
+fi
 
 disable_symantec() {
   for f in /Library/LaunchDaemons/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done

@@ -222,7 +222,7 @@ function stow_away {
     stow terminfo && log_ok "stowed terminfo" || log_error "terminfo stow failed"
     stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
     stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
-    stow fish && log_ok "stowed fish" || log_error "fish stow failed"
+    # stow fish && log_ok "stowed fish" || log_error "fish stow failed"
     stow zsh && log_ok "stowed zsh" || log_error "zsh stow failed"
     [[ -f $HOME/.gitconfig ]] && rm $HOME/.gitconfig; stow git && log_ok "stowed git" || log_error "git stow failed"
     stow tmux && log_ok "stowed tmux" || log_error "tmux stow failed"
