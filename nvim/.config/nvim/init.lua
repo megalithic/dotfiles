@@ -15,7 +15,7 @@ vim.cmd [[packadd vimball]]
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 
 do
-  vim.cmd([[runtime vimrc]])
+  vim.cmd([[runtime .vimrc]])
 
   -- [ loaders ] ---------------------------------------------------------------
 
