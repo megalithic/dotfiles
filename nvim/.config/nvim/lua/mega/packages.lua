@@ -25,24 +25,27 @@ return {
       paq {"kyazdani42/nvim-web-devicons", opt = true}
 
       -- (lsp, completion, diagnostics, snippets, treesitter) --
-      paq "neovim/nvim-lspconfig"
-      paq "nvim-lua/completion-nvim"
-      paq "nvim-lua/lsp_extensions.nvim"
-      paq "nvim-treesitter/nvim-treesitter"
-      paq "nvim-lua/plenary.nvim"
-      paq "nvim-lua/popup.nvim"
-      paq "steelsojka/completion-buffers"
-      paq "hrsh7th/vim-vsnip"
-      paq "hrsh7th/vim-vsnip-integ"
+      paq {"neovim/nvim-lspconfig"}
+      paq {"nvim-lua/completion-nvim"}
+      paq {"nvim-lua/lsp_extensions.nvim"}
+      paq {"nvim-treesitter/nvim-treesitter"}
+      paq {"nvim-treesitter/nvim-treesitter-textobjects"}
+      paq {"nvim-treesitter/completion-treesitter"}
+      paq {"nvim-treesitter/nvim-treesitter-refactor"}
+      paq {"nvim-lua/plenary.nvim"}
+      paq {"nvim-lua/popup.nvim"}
+      paq {"steelsojka/completion-buffers"}
+      paq {"hrsh7th/vim-vsnip"}
+      paq {"hrsh7th/vim-vsnip-integ"}
       -- paq "RRethy/vim-illuminate"
 
       -- (file navigation) --
       paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
       paq "junegunn/fzf.vim"
       paq "ojroques/nvim-lspfuzzy"
-      paq "justinmk/vim-sneak"
+      -- paq "justinmk/vim-sneak"
       -- paq "unblevable/quick-scope"
-      paq "nvim-telescope/telescope.nvim"
+      -- paq "nvim-telescope/telescope.nvim"
 
       -- (text objects) --
       paq {"tpope/vim-rsi"}
@@ -142,9 +145,6 @@ return {
         Paq.update()
         Paq.install()
       end
-
-      vim.cmd([[autocmd BufWritePost packages.lua PaqUpdate]])
-      vim.cmd([[autocmd BufWritePost packages.lua PaqInstall]])
     end
   end
 }

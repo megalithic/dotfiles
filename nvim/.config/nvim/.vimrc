@@ -102,6 +102,12 @@ xnoremap <silent> p p:let @"=@0<CR>
 " clear incsearch term
 nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
 
+" REF: https://github.com/savq/dotfiles/blob/master/nvim/init.lua#L90-L101
+"      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
+nnoremap z= :setlocal spell<CR>z=
+
+
+" TODO: move all this to init.lua and mega.mappings
 if has('nvim')
   function! CheckBackspace() abort
     let col = col('.') - 1
@@ -146,173 +152,7 @@ if has('nvim')
   nnoremap <silent> K :call ShowDocumentation()<CR>
 endif
 
-" Modified version of Damian Conway's Die Blinkënmatchen: highlight matches
-"
-" This is how long you want the blinking to last in milliseconds. If you're
-" using an earlier Vim without the `+timers` feature, you need a much shorter
-" blink time because Vim blocks while it waits for the blink to complete.
-let s:blink_length = has("timers") ? 500 : 100
-
-if has("timers")
-  " This is the length of each blink in milliseconds. If you just want an
-  " interruptible non-blinking highlight, set this to match s:blink_length
-  " by uncommenting the line below
-  let s:blink_freq = 50
-  "let s:blink_freq = s:blink_length
-  let s:blink_match_id = 0
-  let s:blink_timer_id = 0
-  let s:blink_stop_id = 0
-
-  " Toggle the blink highlight. This is called many times repeatedly in order
-  " to create the blinking effect.
-  function! BlinkToggle(target_pat, timer_id)
-    if s:blink_match_id > 0
-      " Clear highlight
-      call BlinkClear()
-    else
-      " Set highlight
-      let s:blink_match_id = matchadd('ErrorMsg', a:target_pat, 101)
-      redraw
-    endif
-  endfunction
-
-  " Remove the blink highlight
-  function! BlinkClear()
-    call matchdelete(s:blink_match_id)
-    let s:blink_match_id = 0
-    redraw
-  endfunction
-
-  " Stop blinking
-  "
-  " Cancels all the timers and removes the highlight if necessary.
-  function! BlinkStop(timer_id)
-    " Cancel timers
-    if s:blink_timer_id > 0
-      call timer_stop(s:blink_timer_id)
-      let s:blink_timer_id = 0
-    endif
-    if s:blink_stop_id > 0
-      call timer_stop(s:blink_stop_id)
-      let s:blink_stop_id = 0
-    endif
-    " And clear blink highlight
-    if s:blink_match_id > 0
-      call BlinkClear()
-    endif
-  endfunction
-
-  augroup die_blinkmatchen
-    autocmd!
-    autocmd CursorMoved * call BlinkStop(0)
-    autocmd InsertEnter * call BlinkStop(0)
-  augroup END
-endif
-
-function! HLNext(blink_length, blink_freq)
-  let target_pat = '\c\%#'.@/
-  if has("timers")
-    " Reset any existing blinks
-    call BlinkStop(0)
-    " Start blinking. It is necessary to call this now so that the match is
-    " highlighted initially (in case of large values of a:blink_freq)
-    call BlinkToggle(target_pat, 0)
-    " Set up blink timers.
-    let s:blink_timer_id = timer_start(a:blink_freq, function('BlinkToggle', [target_pat]), {'repeat': -1})
-    let s:blink_stop_id = timer_start(a:blink_length, 'BlinkStop')
-  else
-    " Vim doesn't have the +timers feature. Just use Conway's original
-    " code.
-    "
-    " Highlight the match
-    let ring = matchadd('ErrorMsg', target_pat, 101)
-    redraw
-    " Wait
-    exec 'sleep ' . a:blink_length . 'm'
-    " Remove the highlight
-    call matchdelete(ring)
-    redraw
-  endif
-endfunction
-
-" Set up maps for n and N that blink the match
-execute printf("nnoremap <silent> n n:call HLNext(%d, %d)<cr>", s:blink_length, has("timers") ? s:blink_freq : s:blink_length)
-execute printf("nnoremap <silent> N N:call HLNext(%d, %d)<cr>", s:blink_length, has("timers") ? s:blink_freq : s:blink_length)
-
-
 " -- [ options ] ---------------------------------------------------------------
-
-"""" General
-"set mouse=a
-"set number
-"set relativenumber
-"set wildignorecase
-"set noshowmode
-"set confirm            "Ask to save stuff
-"set hidden             "Hides buffers instead of closing them
-"set fileencoding=utf-8 "Encoding written to file
-
-"""" LSP-related
-"set completeopt=menuone,noinsert,noselect
-"set shortmess+=c
-"set signcolumn=number
-"set updatetime=300
-
-"""" Split windows
-"set splitbelow
-"set splitright
-
-"""" Position
-"set nocursorcolumn
-"set nocursorline
-"set colorcolumn=81
-
-"""" Search
-"set ignorecase
-"set smartcase
-
-"""" Whitespace
-"set list
-
-"" -> theirs:
-"set listchars=tab:\|-,trail:*,extends:>,precedes:<,nbsp:_,eol:~
-"set listchars+=space:· "not ASCII
-
-"" -> mine:
-"set listchars=tab:\ \ ,trail:·
-
-"""" Indentation
-"set expandtab     "<tab> inserts spaces
-"set smartindent
-"set shiftwidth=4
-"set softtabstop=4
-"set tabstop=4
-
-"""" Folds
-"set foldlevel=2
-"set foldmethod=indent
-
-"""" Scrolling
-"set nowrap
-"set scrolloff=20    "Keeps cursor centred
-"set sidescrolloff=20
-
-"""" Vim 8
-"if !has('nvim')
-"  syntax enable
-"  set ruler
-"  "colorscheme desert
-"  set showcmd
-"  set autoread
-"  set wildmenu
-"  set hlsearch
-"  set incsearch
-"  set autoindent
-"  set laststatus=2
-"endif
-
-" ------------------------------------------------------------------------------
-"  my opts
 set autoindent        " Indented text
 set autoread          " Pick up external changes to files
 set autowrite         " Write files when navigating with :next/:previous
@@ -341,6 +181,7 @@ set nocursorline
 set dictionary=/usr/share/dict/words
 set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
 set spelllang=en
+set nospell
 set expandtab         " Use spaces instead of tabs
 set foldlevelstart=20
 set foldmethod=indent " Simple and fast
@@ -484,39 +325,6 @@ let g:netrw_banner = 0     " no banner
 let g:netrw_liststyle = 3  " tree style listing
 let g:netrw_dirhistmax = 0 " no netrw history
 
-" FZF
-function! RipgrepFzf(query, fullscreen)
-  let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
-  let initial_command = printf(command_fmt, shellescape(a:query))
-  let reload_command = printf(command_fmt, '{q}')
-  let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-  call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-endfunction
-command! -nargs=* -bang Rg call RipgrepFzf(<q-args>, <bang>0)
-
-" Polyglot
-let g:polyglot_disabled = [
-      \ "typescript",
-      \ "typescriptreact",
-      \ "typescript.tsx",
-      \ "javascriptreact",
-      \ "markdown",
-      \ "md",
-      \ "graphql",
-      \ "lua",
-      \ "tsx",
-      \ "jsx",
-      \ "sass",
-      \ "scss",
-      \ "css",
-      \ "elm",
-      \ "elixir",
-      \ "eelixir",
-      \ "ex",
-      \ "exs",
-      \ "zsh",
-      \ "sh",
-      \ ]
 
 " -- [ abbreviations ] ---------------------------------------------------------
 

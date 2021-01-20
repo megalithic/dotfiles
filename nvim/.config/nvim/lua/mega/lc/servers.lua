@@ -46,6 +46,13 @@ local servers = {
   },
   html = {},
   jsonls = {
+    commands = {
+      Format = {
+        function()
+          vim.lsp.buf.range_formatting({}, {0, 0}, {vim.fn.line("$"), 0})
+        end
+      }
+    },
     settings = {
       json = {
         format = {enable = true},
@@ -214,6 +221,8 @@ function M.activate(on_attach_fn)
           {
             on_attach = on_attach_fn,
             handlers = vim.tbl_deep_extend("keep", {}, require("mega.lc.handlers"), vim.lsp.handlers)
+            -- TODO: give this a look:
+            -- https://github.com/RishabhRD/nvim-lsputils
           },
           config
         )

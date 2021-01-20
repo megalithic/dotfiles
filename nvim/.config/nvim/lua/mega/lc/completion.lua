@@ -10,9 +10,9 @@ local M = {}
 local chain_complete_list = {
   default = {
     {complete_items = {"lsp", "snippet"}},
-    {complete_items = {"path"}, triggered_only = {"./", "/"}},
-    {complete_items = {"buffers"}},
     {complete_items = {"ts"}},
+    {complete_items = {"buffers"}},
+    {complete_items = {"path"}, triggered_only = {"./", "/"}},
     {mode = "<c-p>"},
     {mode = "<c-n>"},
     {mode = "dict"},
@@ -22,9 +22,7 @@ local chain_complete_list = {
     {complete_items = {"path"}, triggered_only = {"./", "/"}},
     {complete_items = {"buffers"}}
   },
-  comment = {
-    {complete_items = {"buffers"}}
-  }
+  comment = {}
 }
 
 local customize_lsp_label = {
@@ -54,8 +52,10 @@ local customize_lsp_label = {
 }
 
 function M.activate()
+  vim.cmd [[ set shortmess+=c ]]
+
   -- [ snippets ] --------------------------------------------------------------
-  vim.api.nvim_set_var("vsnip_snippet_dir", vim.fn.stdpath("config").."/vsnips")
+  vim.api.nvim_set_var("vsnip_snippet_dir", vim.fn.stdpath("config") .. "/vsnips")
 
   -- [ nvim-completion ] --------------------------------------------------------------
   local has_completion, completion = pcall(require, "completion")
@@ -69,6 +69,7 @@ function M.activate()
         auto_change_source = 1,
         enable_auto_paren = 1,
         enable_auto_hover = 1,
+        completion_auto_change_source = 1,
         completion_enable_fuzzy_match = 1,
         completion_enable_snippet = "vim-vsnip",
         completion_trigger_on_delete = 0,
