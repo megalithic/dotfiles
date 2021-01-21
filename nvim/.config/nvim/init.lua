@@ -19,13 +19,13 @@ do
 
   -- [ loaders ] ---------------------------------------------------------------
 
-  mega.load("preflight", "mega.preflight").activate()
-  mega.load("packages", "mega.packages").activate()
-  mega.load("nova", "mega.colors.nova").activate()
-  mega.load("settings", "mega.settings").activate()
-  mega.load("lc", "mega.lc").activate()
-  mega.load("mappings", "mega.mappings").activate()
-  mega.load("autocmds", "mega.autocmds").activate()
+  mega.load("preflight", "mega.preflight")
+  mega.load("packages", "mega.packages")
+  mega.load("nova", "mega.colors.nova").load()
+  mega.load("settings", "mega.settings")
+  mega.load("lc", "mega.lc")
+  mega.load("mappings", "mega.mappings")
+  mega.load("autocmds", "mega.autocmds")
   vim.schedule(
     function()
       mega.load("ft", "mega.ft").setup()
@@ -36,5 +36,5 @@ do
       mega.load("ft", "mega.ft").trigger_ft()
     end
   )
-  mega.load("statusline", "mega.statusline").activate()
+  mega.load("statusline", "mega.statusline")
 end

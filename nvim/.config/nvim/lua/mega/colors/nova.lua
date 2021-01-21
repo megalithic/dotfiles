@@ -87,7 +87,7 @@ local status = {
 return {
   icons = icons,
   colors = mega.table_merge(base, status),
-  activate = function()
+  load = function()
     -- (set nova colorscheme) --
     vim.o.background = "dark"
     vim.g.nova_transparent = 1

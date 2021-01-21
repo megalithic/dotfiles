@@ -13,8 +13,9 @@ function M:load_variables()
   self.modules_dir = self.vim_path .. path_sep .. "modules"
   self.path_sep = path_sep
   self.home = home
-end
 
+  return self
+end
 M:load_variables()
 
 -- check file exists
@@ -43,7 +44,7 @@ function M.load(key, req)
   if loaded then
     return loader
   else
-    mega.inspect("", key, 4)
+    mega.inspect("loading failed", key, 4)
   end
 end
 

@@ -113,12 +113,8 @@ endif
   )
 end
 
-return {
-  activate = function()
-    -- global_mappings()
-    override_mappings()
-    convenience_mappings()
-    custom_mappings()
-    plugin_mappings()
-  end
-}
+-- global_mappings()
+override_mappings()
+convenience_mappings()
+custom_mappings()
+plugin_mappings()
