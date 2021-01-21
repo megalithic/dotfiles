@@ -209,77 +209,77 @@ nmap <silent> <leader>to :copen<CR>
 )
 
 -- treesitter
-local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
-if ts_installed then
-  treesitter.setup(
-    {
-      ensure_installed = {
-        "bash",
-        "c",
-        "cpp",
-        "css",
-        "elm",
-        "erlang",
-        "fennel",
-        "html",
-        "jsdoc",
-        "javascript",
-        "json",
-        "lua",
-        "nix",
-        "python",
-        "regex",
-        "ruby",
-        "rust",
-        "toml",
-        "tsx",
-        "typescript",
-        "yaml"
-      },
-      highlight = {enable = true},
-      indent = {enable = true},
-      textobjects = {
-        select = {
-          enable = true,
-          keymaps = {
-            -- use capture groups from textobjects.scm or define your own
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-            ["aC"] = "@class.outer",
-            ["iC"] = "@class.inner",
-            ["ac"] = "@conditional.outer",
-            ["ic"] = "@conditional.inner",
-            ["ae"] = "@block.outer",
-            ["ie"] = "@block.inner",
-            ["al"] = "@loop.outer",
-            ["il"] = "@loop.inner",
-            ["is"] = "@statement.inner",
-            ["as"] = "@statement.outer",
-            ["ad"] = "@comment.outer",
-            ["am"] = "@call.outer",
-            ["im"] = "@call.inner"
-          }
-        },
-        move = {
-          enable = true,
-          goto_next_start = {
-            ["]m"] = "@function.outer",
-            ["]]"] = "@class.outer"
-          },
-          goto_next_end = {
-            ["]M"] = "@function.outer",
-            ["]["] = "@class.outer"
-          },
-          goto_previous_start = {
-            ["[m"] = "@function.outer",
-            ["[["] = "@class.outer"
-          },
-          goto_previous_end = {
-            ["[M"] = "@function.outer",
-            ["[]"] = "@class.outer"
-          }
-        }
-      }
-    }
-  )
-end
+-- local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
+-- if ts_installed then
+--   treesitter.setup(
+--     {
+--       ensure_installed = {
+--         "bash",
+--         "c",
+--         "cpp",
+--         "css",
+--         "elm",
+--         "erlang",
+--         "fennel",
+--         "html",
+--         "jsdoc",
+--         "javascript",
+--         "json",
+--         "lua",
+--         "nix",
+--         "python",
+--         "regex",
+--         "ruby",
+--         "rust",
+--         "toml",
+--         "tsx",
+--         "typescript",
+--         "yaml"
+--       },
+--       highlight = {enable = true},
+--       indent = {enable = true},
+--       textobjects = {
+--         select = {
+--           enable = true,
+--           keymaps = {
+--             -- use capture groups from textobjects.scm or define your own
+--             ["af"] = "@function.outer",
+--             ["if"] = "@function.inner",
+--             ["aC"] = "@class.outer",
+--             ["iC"] = "@class.inner",
+--             ["ac"] = "@conditional.outer",
+--             ["ic"] = "@conditional.inner",
+--             ["ae"] = "@block.outer",
+--             ["ie"] = "@block.inner",
+--             ["al"] = "@loop.outer",
+--             ["il"] = "@loop.inner",
+--             ["is"] = "@statement.inner",
+--             ["as"] = "@statement.outer",
+--             ["ad"] = "@comment.outer",
+--             ["am"] = "@call.outer",
+--             ["im"] = "@call.inner"
+--           }
+--         },
+--         move = {
+--           enable = true,
+--           goto_next_start = {
+--             ["]m"] = "@function.outer",
+--             ["]]"] = "@class.outer"
+--           },
+--           goto_next_end = {
+--             ["]M"] = "@function.outer",
+--             ["]["] = "@class.outer"
+--           },
+--           goto_previous_start = {
+--             ["[m"] = "@function.outer",
+--             ["[["] = "@class.outer"
+--           },
+--           goto_previous_end = {
+--             ["[M"] = "@function.outer",
+--             ["[]"] = "@class.outer"
+--           }
+--         }
+--       }
+--     }
+--   )
+-- end
