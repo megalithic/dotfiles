@@ -16,6 +16,7 @@ if paq_exists then
 
   -- (ui, interface) --
   paq {"trevordmiller/nova-vim"}
+  paq {"sainnhe/gruvbox-material"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}
@@ -27,10 +28,10 @@ if paq_exists then
   paq {"neovim/nvim-lspconfig"}
   paq {"nvim-lua/completion-nvim"}
   paq {"nvim-lua/lsp_extensions.nvim"}
-  paq {"nvim-treesitter/nvim-treesitter"}
-  paq {"nvim-treesitter/nvim-treesitter-textobjects"}
-  paq {"nvim-treesitter/completion-treesitter"}
-  paq {"nvim-treesitter/nvim-treesitter-refactor"}
+  -- paq {"nvim-treesitter/nvim-treesitter"}
+  -- paq {"nvim-treesitter/nvim-treesitter-textobjects"}
+  -- paq {"nvim-treesitter/completion-treesitter"}
+  -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
   paq {"nvim-lua/plenary.nvim"}
   paq {"nvim-lua/popup.nvim"}
   paq {"steelsojka/completion-buffers"}
@@ -80,15 +81,14 @@ if paq_exists then
   paq {"lewis6991/gitsigns.nvim"}
 
   -- (development, writing, et al) --
-  paq {"tpope/vim-projectionist"} -- projectionist.vim
-  paq {"janko/vim-test"} -- test.vim
-  paq {"tpope/vim-ragtag"} -- ragtag.vim
+  paq {"tpope/vim-projectionist"}
+  paq {"janko/vim-test"}
+  paq {"tpope/vim-ragtag"}
   paq {"axvr/zepl.vim"}
   paq {"rizzatti/dash.vim"}
   paq {"skywind3000/vim-quickui"}
   paq {"sgur/vim-editorconfig"}
   paq {"zenbro/mirror.vim"}
-  paq {"metakirby5/codi.vim"}
   paq {"junegunn/goyo.vim"}
   paq {"junegunn/limelight.vim"}
   paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}

@@ -15,8 +15,8 @@ local chain_complete_list = {
     {complete_items = {"path"}, triggered_only = {"./", "/"}},
     {mode = "<c-p>"},
     {mode = "<c-n>"},
-    {mode = "dict"},
-    {mode = "spel"}
+    -- {mode = "dict"},
+    -- {mode = "spel"}
   },
   string = {
     {complete_items = {"path"}, triggered_only = {"./", "/"}},

@@ -183,8 +183,6 @@ vim.api.nvim_exec(
   [[
 " custom test display strategy:
 function! TerminalSplit(cmd)
-echom  "termianlsplit"
-echom a:cmd
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
 
@@ -283,3 +281,81 @@ nmap <silent> <leader>to :copen<CR>
 --     }
 --   )
 -- end
+
+-- vim-projectionist
+vim.g.projectionist_heuristics = {
+  ["*.rb"] = {
+    ["lib/*.rb"] = {
+      ["alternate"] = "spec/{}_spec.rb",
+      ["type"] = "source"
+    },
+    ["spec/*_spec.rb"] = {
+      ["alternate"] = "lib/{}.rb",
+      ["type"] = "test"
+    }
+  },
+  ["*.go"] = {
+    ["*.go"] = {
+      ["alternate"] = "{}_test.go",
+      ["type"] = "source"
+    },
+    ["*_test.go"] = {
+      ["alternate"] = "{}.go",
+      ["type"] = "test"
+    }
+  },
+  ["*.py"] = {
+    ["*.py"] = {
+      ["alternate"] = "{}_test.py",
+      ["type"] = "source"
+    },
+    ["*_test.py"] = {
+      ["alternate"] = "{}.py",
+      ["type"] = "test"
+    }
+  },
+  ["package.json"] = {
+    ["src/*.js"] = {
+      ["alternate"] = "{}.test.js",
+      ["type"] = "source"
+    },
+    ["src/*.test.js"] = {
+      ["alternate"] = "src/{}.js",
+      ["type"] = "test"
+    }
+  },
+  ["*.js"] = {
+    ["*.test.js"] = {
+      ["alternate"] = "{}.js",
+      ["type"] = "test"
+    },
+    ["*.js"] = {
+      ["alternate"] = "{}.test.js",
+      ["type"] = "source"
+    }
+  },
+  ["*.c|*.h|*.cpp|*.hpp"] = {
+    ["*.c"] = {["alternate"] = {"{}.h"}},
+    ["*.cpp"] = {["alternate"] = {"{}.h", "{}.hpp"}},
+    ["*.h"] = {["alternate"] = {"{}.cpp", "{}.c"}},
+    ["*.hpp"] = {["alternate"] = "{}.cpp"}
+  },
+  ["mix.exs"] = {
+    ["lib/*_live.ex"] = {
+      ["alternate"] = "lib/{}_live.html.leex",
+      ["type"] = "source"
+    },
+    ["lib/*.ex"] = {
+      ["alternate"] = "test/{}_test.exs",
+      ["type"] = "source"
+    },
+    ["test/*_test.exs"] = {
+      ["alternate"] = "lib/{}.ex",
+      ["type"] = "test"
+    },
+    ["lib/*.html.leex"] = {
+      ["alternate"] = "lib/{}.ex",
+      ["type"] = "live_view"
+    }
+  }
+}
