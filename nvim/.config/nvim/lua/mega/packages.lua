@@ -42,10 +42,12 @@ if paq_exists then
   -- (file navigation) --
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
+  paq {"vijaymarupudi/nvim-fzf"}
+  paq {"vijaymarupudi/nvim-fzf-commands"}
   paq {"ojroques/nvim-lspfuzzy"}
   -- paq {"justinmk/vim-sneak"}
   -- paq {"unblevable/quick-scope"}
-  -- paq {"nvim-telescope/telescope.nvim"}
+  paq {"nvim-telescope/telescope.nvim"}
 
   -- (text objects) --
   paq {"tpope/vim-rsi"}
@@ -118,6 +120,7 @@ if paq_exists then
   paq {"christoomey/vim-tmux-runner"}
   paq {"wellle/visual-split.vim"}
   paq {"junegunn/vim-slash"}
+  paq {"junegunn/vim-peekaboo"}
 
   -- (langs, syntax, et al) --
   paq {"tpope/vim-rails"}

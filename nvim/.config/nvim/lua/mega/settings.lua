@@ -77,9 +77,6 @@ vim.g.fzf_command_prefix = "Fzf"
 vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
 vim.g.fzf_action = {enter = "vsplit"}
 vim.g.fzf_preview_window = {"right:50%", "alt-p"}
-mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
-mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
-mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
 
 -- vim-polyglot
 vim.g.polyglot_disabled = {

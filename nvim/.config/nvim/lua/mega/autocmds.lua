@@ -23,12 +23,15 @@ mega.augroup(
     au([[autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
     au([[autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
     au([[autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')]])
+    au([[autocmd WinEnter * if &previewwindow | setlocal wrap | endif]])
   end
 )
 
 mega.augroup(
   "mega.focus",
   function()
+    au([[autocmd!]])
+
     au([[autocmd BufEnter,FocusGained,WinEnter * silent setlocal relativenumber number colorcolumn=81 ]])
     au([[autocmd BufLeave,FocusLost,WinLeave * silent setlocal norelativenumber number colorcolumn=0]])
   end
@@ -39,11 +42,47 @@ mega.augroup(
   function()
     -- vim.api.nvim_exec([[autocmd! * <buffer>]], true)
     au([[autocmd!]])
-
     au(
-      "autocmd TextYankPost * lua vim.highlight.on_yank({ higroup = 'HighlightedYankRegion', timeout = 170, on_macro = true })"
+      [[autocmd TextYankPost * lua vim.highlight.on_yank({ higroup = 'HighlightedYankRegion', timeout = 170, on_macro = true })]]
     )
   end
+)
+
+mega.augroup(
+  "mega.terminal",
+  function()
+    au([[autocmd!]])
+    au([[autocmd! TermClose * noremap <buffer><silent><ESC> :bd!<CR>]])
+    au([[autocmd! TermOpen * setlocal nonumber norelativenumber conceallevel=0 nocolorcolumn]])
+    au([[autocmd! TermOpen * startinsert]])
+    au([[autocmd! BufEnter term://* startinsert]])
+  end
+)
+
+vim.api.nvim_exec(
+  [[
+augroup fzf
+  autocmd!
+  function s:fzf_buf_in() abort
+    echo
+    set laststatus=0
+    set noruler
+    set nonumber
+    set norelativenumber
+    set signcolumn=no
+  endfunction
+
+  function s:fzf_buf_out() abort
+    set laststatus=2
+    set ruler
+  endfunction
+  autocmd FileType fzf call s:fzf_buf_in()
+  autocmd BufEnter \v[0-9]+;#FZF$ call s:fzf_buf_in()
+  autocmd BufLeave \v[0-9]+;#FZF$ call s:fzf_buf_out()
+  autocmd TermClose \v[0-9]+;#FZF$ call s:fzf_buf_out()
+augroup END
+]],
+  true
 )
 
 vim.api.nvim_exec(

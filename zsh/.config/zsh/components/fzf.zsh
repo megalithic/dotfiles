@@ -47,11 +47,11 @@ if [ -n "$(command -v fzf)" ]; then
 
 
   if (command -v fd &> /dev/null); then
-    export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
-    export FZF_ALT_C_COMMAND="fd --type d --exclude 'Library'"
+    export FZF_DEFAULT_COMMAND='fd --type f -H --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
+    export FZF_ALT_C_COMMAND="fd --type d -H --exclude 'Library'"
   elif (command -v fdfind &> /dev/null); then
-    export FZF_DEFAULT_COMMAND='fdfind --type f --hidden --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
-    export FZF_ALT_C_COMMAND="fdfind --type d --exclude 'Library'"
+    export FZF_DEFAULT_COMMAND='fdfind --type f -H --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
+    export FZF_ALT_C_COMMAND="fdfind --type d -H --exclude 'Library'"
   fi
 
   if (command -v rg &> /dev/null); then

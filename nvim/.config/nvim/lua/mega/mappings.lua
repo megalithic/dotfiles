@@ -100,7 +100,7 @@ end
 -- utils.lmap("rc", "<cmd> e ~/.config/nvim <cr>") -- open config directory
 
 local function plugin_mappings()
-  vim.cmd([[nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>]])
+  -- vim.cmd([[nnoremap <leader>f <cmd>lua require('telescope.builtin').find_files()<cr>]])
   vim.cmd([[noremap <plug>(slash-after) zz]])
   vim.api.nvim_exec(
     [[
@@ -110,6 +110,16 @@ if has('timers')
 endif
   ]],
     true
+  )
+
+  mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
+  mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
+  mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
+  -- mega.map("n", "<Leader>m", [[<cmd>lua require('fzf-commands').files()<cr>]])
+  mega.map(
+    "n",
+    "<Leader>f",
+    [[<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ winblend = 10 }))<cr>]]
   )
 end
 
