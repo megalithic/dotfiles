@@ -343,3 +343,41 @@ vim.g.projectionist_heuristics = {
     }
   }
 }
+
+-- telescope
+-- require("telescope").setup {
+--   defaults = {
+--     mappings = {
+--       i = {
+--         ["<esc>"] = require("telescope.actions").close
+--       }
+--     }
+--   }
+-- }
+-- local theme =
+--   require("telescope.themes").get_dropdown(
+--   {
+--     results_height = 20,
+--     winblend = 20,
+--     width = 0.8,
+--     prompt_title = "",
+--     prompt_prefix = "Files>",
+--     previewer = false,
+--     borderchars = {
+--       prompt = {"▀", "▐", "▄", "▌", "▛", "▜", "▟", "▙"},
+--       results = {" ", "▐", "▄", "▌", "▌", "▐", "▟", "▙"},
+--       preview = {"▀", "▐", "▄", "▌", "▛", "▜", "▟", "▙"}
+--     }
+--   }
+-- )
+
+-- -- Telescope
+-- require('telescope').setup {
+--     defaults = {
+--         file_previewer = require'telescope.previewers'.vim_buffer_cat.new,
+--     }
+-- }
+-- map('ff', "Telescope find_files")
+-- map('fg', "Telescope live_grep")
+-- map('fb', "Telescope buffers")
+-- map('fh', "Telescope help_tags")

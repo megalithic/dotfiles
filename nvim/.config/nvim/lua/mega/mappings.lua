@@ -116,11 +116,11 @@ endif
   mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
   mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
   -- mega.map("n", "<Leader>m", [[<cmd>lua require('fzf-commands').files()<cr>]])
-  mega.map(
-    "n",
-    "<Leader>f",
-    [[<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ winblend = 10 }))<cr>]]
-  )
+  -- mega.map(
+  --   "n",
+  --   "<Leader>f",
+  --   [[<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ winblend = 10 }))<cr>]]
+  -- )
 end
 
 -- global_mappings()

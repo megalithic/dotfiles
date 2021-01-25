@@ -1,8 +1,6 @@
 #!/usr/bin/env zsh
 
 if [ -n "$(command -v fzf)" ]; then
-  # -- setup fzf
-  # consider these handy fzf functions: https://github.com/junegunn/dotfiles/blob/master/bashrc#L267
   [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
   local colorbg='#3C4C55'
@@ -26,7 +24,7 @@ if [ -n "$(command -v fzf)" ]; then
   local color0E='#6C71C4'
   local color0F='#D33682'
 
-  export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS"
+  export FZF_DEFAULT_OPTS="
   --inline-info
   --select-1
   --ansi
@@ -42,22 +40,21 @@ if [ -n "$(command -v fzf)" ]; then
   --no-border
   --preview-window=right:60%:wrap
   --preview 'bat --theme="base16" --style=numbers,changes --color always {}'
-  --layout=reverse
   "
 
+  # if (command -v rg &> /dev/null); then
+  #   export FZF_CTRL_T_COMMAND='rg --files --hidden --line-number --follow -g "!{.git,node_modules,vendor,build,_build}"'
+  # fi
 
   if (command -v fd &> /dev/null); then
-    export FZF_DEFAULT_COMMAND='fd --type f -H --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
-    export FZF_ALT_C_COMMAND="fd --type d -H --exclude 'Library'"
+    export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global'
+    export FZF_CTRL_T_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global'
+    export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --exclude 'Library'"
   elif (command -v fdfind &> /dev/null); then
-    export FZF_DEFAULT_COMMAND='fdfind --type f -H --follow --color=always --exclude .git --ignore-file ~/.gitignore 2> /dev/null'
-    export FZF_ALT_C_COMMAND="fdfind --type d -H --exclude 'Library'"
+    export FZF_DEFAULT_COMMAND='fdfind --type f -follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global'
+    export FZF_CTRL_T_COMMAND='fdfind --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global'
+    export FZF_ALT_C_COMMAND="fdfind --type d --follow --hidden --exclude 'Library'"
   fi
 
-  if (command -v rg &> /dev/null); then
-    export FZF_CTRL_T_COMMAND='rg --files --hidden --line-number --follow -g "!{.git,node_modules,vendor,build,_build}" 2> /dev/null'
-  fi
   export FZF_TMUX_HEIGHT='20%'
-
-  zstyle ':completion:*:descriptions' format '-- %d --'
 fi
