@@ -267,79 +267,47 @@ nmap <silent> <leader>to :copen<CR>
 -- -- end
 
 -- vim-projectionist
--- vim.g.projectionist_heuristics = {
---   ["*.rb"] = {
---     ["lib/*.rb"] = {
---       ["alternate"] = "spec/{}_spec.rb",
---       ["type"] = "source"
---     },
---     ["spec/*_spec.rb"] = {
---       ["alternate"] = "lib/{}.rb",
---       ["type"] = "test"
---     }
---   },
---   ["*.go"] = {
---     ["*.go"] = {
---       ["alternate"] = "{}_test.go",
---       ["type"] = "source"
---     },
---     ["*_test.go"] = {
---       ["alternate"] = "{}.go",
---       ["type"] = "test"
---     }
---   },
---   ["*.py"] = {
---     ["*.py"] = {
---       ["alternate"] = "{}_test.py",
---       ["type"] = "source"
---     },
---     ["*_test.py"] = {
---       ["alternate"] = "{}.py",
---       ["type"] = "test"
---     }
---   },
---   ["package.json"] = {
---     ["src/*.js"] = {
---       ["alternate"] = "{}.test.js",
---       ["type"] = "source"
---     },
---     ["src/*.test.js"] = {
---       ["alternate"] = "src/{}.js",
---       ["type"] = "test"
---     }
---   },
---   ["*.js"] = {
---     ["*.test.js"] = {
---       ["alternate"] = "{}.js",
---       ["type"] = "test"
---     },
---     ["*.js"] = {
---       ["alternate"] = "{}.test.js",
---       ["type"] = "source"
---     }
---   },
---   ["*.c|*.h|*.cpp|*.hpp"] = {
---     ["*.c"] = {["alternate"] = {"{}.h"}},
---     ["*.cpp"] = {["alternate"] = {"{}.h", "{}.hpp"}},
---     ["*.h"] = {["alternate"] = {"{}.cpp", "{}.c"}},
---     ["*.hpp"] = {["alternate"] = "{}.cpp"}
---   },
---   ["mix.exs"] = {
---     ["lib/*_live.ex"] = {
---       ["alternate"] = "lib/{}_live.html.leex",
---       ["type"] = "source"
---     },
---     ["lib/*.ex"] = {
---       ["alternate"] = "test/{}_test.exs",
---       ["type"] = "source"
---     },
---     ["test/*_test.exs"] = {
---       ["alternate"] = "lib/{}.ex",
---       ["type"] = "test"
---     },
---     ["lib/*.html.leex"] = {
---       ["alternate"] = "lib/{}.ex",
---       ["type"] = "live_view"
---     }
---   }
--- }
+vim.g.projectionist_heuristics = {
+  ["mix.exs"] = {
+    ["lib/**/views/*_view.ex"] = {
+      ["type"] = "view",
+      ["alternate"] = "test/{dirname}/views/{basename}_view_test.exs",
+      ["template"] = {
+        "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View do",
+        "  use {dirname|camelcase|capitalize}, :view",
+        "end"
+      }
+    },
+    ["test/**/views/*_view_test.exs"] = {
+      ["type"] = "test",
+      ["alternate"] = "lib/{dirname}/views/{basename}_view.ex",
+      ["template"] = {
+        "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}ViewTest do",
+        "  use ExUnit.Case, async: true",
+        "",
+        "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View",
+        "end"
+      }
+    },
+    ["lib/*.ex"] = {
+      ["type"] = "source",
+      ["alternate"] = "test/{}_test.exs",
+      ["template"] = {
+        "defmodule {camelcase|capitalize|dot} do",
+        "",
+        "end"
+      }
+    },
+    ["test/*_test.exs"] = {
+      ["type"] = "test",
+      ["alternate"] = "lib/{}.ex",
+      ["template"] = {
+        "defmodule {camelcase|capitalize|dot}Test do",
+        "  use ExUnit.Case, async: true",
+        "",
+        "  alias {camelcase|capitalize|dot}",
+        "end"
+      }
+    }
+  }
+}
