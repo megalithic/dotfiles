@@ -17,6 +17,7 @@ if paq_exists then
   -- (ui, interface) --
   paq {"trevordmiller/nova-vim"}
   paq {"sainnhe/gruvbox-material"}
+  paq {"sainnhe/edge"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}
@@ -27,27 +28,27 @@ if paq_exists then
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
   paq {"nvim-lua/completion-nvim"}
+  paq {"hrsh7th/nvim-compe"}
   paq {"nvim-lua/lsp_extensions.nvim"}
-  -- paq {"nvim-treesitter/nvim-treesitter"}
-  -- paq {"nvim-treesitter/nvim-treesitter-textobjects"}
-  -- paq {"nvim-treesitter/completion-treesitter"}
-  -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
   paq {"nvim-lua/plenary.nvim"}
   paq {"nvim-lua/popup.nvim"}
   paq {"steelsojka/completion-buffers"}
   paq {"hrsh7th/vim-vsnip"}
   paq {"hrsh7th/vim-vsnip-integ"}
+  -- paq {"nvim-treesitter/nvim-treesitter"}
+  -- paq {"nvim-treesitter/nvim-treesitter-textobjects"}
+  -- paq {"nvim-treesitter/completion-treesitter"}
+  -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
   -- paq {"RRethy/vim-illuminate"}
 
   -- (file navigation) --
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
-  paq {"vijaymarupudi/nvim-fzf"}
-  paq {"vijaymarupudi/nvim-fzf-commands"}
+  -- paq {"vijaymarupudi/nvim-fzf"}
+  -- paq {"vijaymarupudi/nvim-fzf-commands"}
   paq {"ojroques/nvim-lspfuzzy"}
   -- paq {"justinmk/vim-sneak"}
   -- paq {"unblevable/quick-scope"}
-  paq {"nvim-telescope/telescope.nvim"}
 
   -- (text objects) --
   paq {"tpope/vim-rsi"}
@@ -97,6 +98,8 @@ if paq_exists then
 
   -- (the rest...) --
   paq {"wsdjeg/vim-fetch"} -- vim path/to/file.ext:12:3
+  -- paq {"windwp/nvim-autopairs"}
+  -- paq {"cohama/lexima.vim"}
   paq {"Raimondi/delimitMate"}
   paq "tpope/vim-endwise"
   -- paq {"rstacruz/vim-closer"}
@@ -141,9 +144,9 @@ if paq_exists then
   paq {"darfink/vim-plist"}
   paq {"sheerun/vim-polyglot"}
 
-  local filename = vim.api.nvim_buf_get_name(0)
-  if string.match(filename, "packages.lua") == "packages.lua" then
-    Paq.update()
-    Paq.install()
-  end
+-- local filename = vim.api.nvim_buf_get_name(0)
+-- if string.match(filename, "packages.lua") == "packages.lua" then
+--   Paq.update()
+--   Paq.install()
+-- end
 end

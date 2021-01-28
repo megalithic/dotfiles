@@ -81,6 +81,11 @@ end
 
 -- [ nvim-lsp/diagnostics ] -------------------------------------------------------
 
+-- vim.fn.sign_define("LspDiagnosticsSignError", {text = "", numhl = "LspDiagnosticsDefaultError"})
+-- vim.fn.sign_define("LspDiagnosticsSignWarning", {text = "", numhl = "LspDiagnosticsDefaultWarning"})
+-- vim.fn.sign_define("LspDiagnosticsSignInformation", {text = "", numhl = "LspDiagnosticsDefaultInformation"})
+-- vim.fn.sign_define("LspDiagnosticsSignHint", {text = "", numhl = "LspDiagnosticsDefaultHint"})
+
 local sign_error = nova.icons.sign_error
 local sign_warning = nova.icons.sign_warning
 local sign_information = nova.icons.sign_information

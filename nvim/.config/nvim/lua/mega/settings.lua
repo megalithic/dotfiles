@@ -1,15 +1,5 @@
 mega.inspect("activating package settings.lua..")
 
--- indentLine
-vim.g.indentLine_enabled = 1
-vim.g.indentLine_color_gui = "#556874"
-vim.g.indentLine_char = "│"
-vim.g.indentLine_bufTypeExclude = {"help", "terminal", "nerdtree", "tagbar", "startify", "fzf"}
-vim.g.indentLine_bufNameExclude = {"_.*", "NERD_tree.*", "startify", "fzf"}
-vim.g.indentLine_fileTypeExclude = {"text", "markdown"}
-vim.g.indentLine_faster = 1
-vim.g.indentLine_setConceal = 0
-
 -- nvim-colorizer
 -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
 local colorizer_installed, colorizer = pcall(require, "colorizer")
@@ -74,9 +64,23 @@ end
 
 -- fzf
 vim.g.fzf_command_prefix = "Fzf"
-vim.g.fzf_layout = {window = {width = 0.6, height = 0.5}}
+vim.g.fzf_layout = {window = {width = 0.5, height = 0.5}}
 vim.g.fzf_action = {enter = "vsplit"}
-vim.g.fzf_preview_window = {"right:50%", "alt-p"}
+vim.g.fzf_preview_window = {"right:40%", "alt-p"}
+vim.env.FZF_DEFAULT_COMMAND = "fd --type f --hidden --follow --exclude '.git' --exclude 'node_modules'"
+vim.api.nvim_exec(
+  [[
+  function! RipgrepFzf(query, fullscreen)
+    let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
+    let initial_command = printf(command_fmt, shellescape(a:query))
+    let reload_command = printf(command_fmt, '{q}')
+    let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+    call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+    endfunction
+    ]],
+  false
+)
+vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
 
 -- vim-polyglot
 vim.g.polyglot_disabled = {
@@ -111,7 +115,6 @@ require("lspfuzzy").setup(
 
 -- vim-sneak
 -- vim.g["sneak#label"] = true
-
 -- quickscope
 -- vim.g.qs_enable = 1
 -- vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
@@ -159,8 +162,8 @@ if gitsigns_installed then
   )
 end
 
--- delimitMate
-vim.g.delimitMate_expand_cr = 0
+-- -- delimitMate
+-- vim.g.delimitMate_expand_cr = 0
 
 -- vim-test
 vim.api.nvim_exec(
@@ -169,13 +172,10 @@ vim.api.nvim_exec(
 function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
-
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
-
 let g:test#filename_modifier = ':.'
 let g:test#preserve_screen = 0
-
 nmap <silent> <leader>tf :TestFile<CR>
 nmap <silent> <leader>tt :TestVisit<CR>
 nmap <silent> <leader>tn :TestNearest<CR>
@@ -190,194 +190,156 @@ nmap <silent> <leader>to :copen<CR>
   false
 )
 
--- treesitter
--- local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
--- if ts_installed then
---   treesitter.setup(
---     {
---       ensure_installed = {
---         "bash",
---         "c",
---         "cpp",
---         "css",
---         "elm",
---         "erlang",
---         "fennel",
---         "html",
---         "jsdoc",
---         "javascript",
---         "json",
---         "lua",
---         "nix",
---         "python",
---         "regex",
---         "ruby",
---         "rust",
---         "toml",
---         "tsx",
---         "typescript",
---         "yaml"
---       },
---       highlight = {enable = true},
---       indent = {enable = true},
---       textobjects = {
---         select = {
---           enable = true,
---           keymaps = {
---             -- use capture groups from textobjects.scm or define your own
---             ["af"] = "@function.outer",
---             ["if"] = "@function.inner",
---             ["aC"] = "@class.outer",
---             ["iC"] = "@class.inner",
---             ["ac"] = "@conditional.outer",
---             ["ic"] = "@conditional.inner",
---             ["ae"] = "@block.outer",
---             ["ie"] = "@block.inner",
---             ["al"] = "@loop.outer",
---             ["il"] = "@loop.inner",
---             ["is"] = "@statement.inner",
---             ["as"] = "@statement.outer",
---             ["ad"] = "@comment.outer",
---             ["am"] = "@call.outer",
---             ["im"] = "@call.inner"
---           }
---         },
---         move = {
---           enable = true,
---           goto_next_start = {
---             ["]m"] = "@function.outer",
---             ["]]"] = "@class.outer"
---           },
---           goto_next_end = {
---             ["]M"] = "@function.outer",
---             ["]["] = "@class.outer"
---           },
---           goto_previous_start = {
---             ["[m"] = "@function.outer",
---             ["[["] = "@class.outer"
---           },
---           goto_previous_end = {
---             ["[M"] = "@function.outer",
---             ["[]"] = "@class.outer"
---           }
---         }
---       }
---     }
---   )
--- end
+-- -- treesitter
+-- -- local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
+-- -- if ts_installed then
+-- --   treesitter.setup(
+-- --     {
+-- --       ensure_installed = {
+-- --         "bash",
+-- --         "c",
+-- --         "cpp",
+-- --         "css",
+-- --         "elm",
+-- --         "erlang",
+-- --         "fennel",
+-- --         "html",
+-- --         "jsdoc",
+-- --         "javascript",
+-- --         "json",
+-- --         "lua",
+-- --         "nix",
+-- --         "python",
+-- --         "regex",
+-- --         "ruby",
+-- --         "rust",
+-- --         "toml",
+-- --         "tsx",
+-- --         "typescript",
+-- --         "yaml"
+-- --       },
+-- --       highlight = {enable = true},
+-- --       indent = {enable = true},
+-- --       textobjects = {
+-- --         select = {
+-- --           enable = true,
+-- --           keymaps = {
+-- --             -- use capture groups from textobjects.scm or define your own
+-- --             ["af"] = "@function.outer",
+-- --             ["if"] = "@function.inner",
+-- --             ["aC"] = "@class.outer",
+-- --             ["iC"] = "@class.inner",
+-- --             ["ac"] = "@conditional.outer",
+-- --             ["ic"] = "@conditional.inner",
+-- --             ["ae"] = "@block.outer",
+-- --             ["ie"] = "@block.inner",
+-- --             ["al"] = "@loop.outer",
+-- --             ["il"] = "@loop.inner",
+-- --             ["is"] = "@statement.inner",
+-- --             ["as"] = "@statement.outer",
+-- --             ["ad"] = "@comment.outer",
+-- --             ["am"] = "@call.outer",
+-- --             ["im"] = "@call.inner"
+-- --           }
+-- --         },
+-- --         move = {
+-- --           enable = true,
+-- --           goto_next_start = {
+-- --             ["]m"] = "@function.outer",
+-- --             ["]]"] = "@class.outer"
+-- --           },
+-- --           goto_next_end = {
+-- --             ["]M"] = "@function.outer",
+-- --             ["]["] = "@class.outer"
+-- --           },
+-- --           goto_previous_start = {
+-- --             ["[m"] = "@function.outer",
+-- --             ["[["] = "@class.outer"
+-- --           },
+-- --           goto_previous_end = {
+-- --             ["[M"] = "@function.outer",
+-- --             ["[]"] = "@class.outer"
+-- --           }
+-- --         }
+-- --       }
+-- --     }
+-- --   )
+-- -- end
 
 -- vim-projectionist
-vim.g.projectionist_heuristics = {
-  ["*.rb"] = {
-    ["lib/*.rb"] = {
-      ["alternate"] = "spec/{}_spec.rb",
-      ["type"] = "source"
-    },
-    ["spec/*_spec.rb"] = {
-      ["alternate"] = "lib/{}.rb",
-      ["type"] = "test"
-    }
-  },
-  ["*.go"] = {
-    ["*.go"] = {
-      ["alternate"] = "{}_test.go",
-      ["type"] = "source"
-    },
-    ["*_test.go"] = {
-      ["alternate"] = "{}.go",
-      ["type"] = "test"
-    }
-  },
-  ["*.py"] = {
-    ["*.py"] = {
-      ["alternate"] = "{}_test.py",
-      ["type"] = "source"
-    },
-    ["*_test.py"] = {
-      ["alternate"] = "{}.py",
-      ["type"] = "test"
-    }
-  },
-  ["package.json"] = {
-    ["src/*.js"] = {
-      ["alternate"] = "{}.test.js",
-      ["type"] = "source"
-    },
-    ["src/*.test.js"] = {
-      ["alternate"] = "src/{}.js",
-      ["type"] = "test"
-    }
-  },
-  ["*.js"] = {
-    ["*.test.js"] = {
-      ["alternate"] = "{}.js",
-      ["type"] = "test"
-    },
-    ["*.js"] = {
-      ["alternate"] = "{}.test.js",
-      ["type"] = "source"
-    }
-  },
-  ["*.c|*.h|*.cpp|*.hpp"] = {
-    ["*.c"] = {["alternate"] = {"{}.h"}},
-    ["*.cpp"] = {["alternate"] = {"{}.h", "{}.hpp"}},
-    ["*.h"] = {["alternate"] = {"{}.cpp", "{}.c"}},
-    ["*.hpp"] = {["alternate"] = "{}.cpp"}
-  },
-  ["mix.exs"] = {
-    ["lib/*_live.ex"] = {
-      ["alternate"] = "lib/{}_live.html.leex",
-      ["type"] = "source"
-    },
-    ["lib/*.ex"] = {
-      ["alternate"] = "test/{}_test.exs",
-      ["type"] = "source"
-    },
-    ["test/*_test.exs"] = {
-      ["alternate"] = "lib/{}.ex",
-      ["type"] = "test"
-    },
-    ["lib/*.html.leex"] = {
-      ["alternate"] = "lib/{}.ex",
-      ["type"] = "live_view"
-    }
-  }
-}
-
--- telescope
--- require("telescope").setup {
---   defaults = {
---     mappings = {
---       i = {
---         ["<esc>"] = require("telescope.actions").close
---       }
+-- vim.g.projectionist_heuristics = {
+--   ["*.rb"] = {
+--     ["lib/*.rb"] = {
+--       ["alternate"] = "spec/{}_spec.rb",
+--       ["type"] = "source"
+--     },
+--     ["spec/*_spec.rb"] = {
+--       ["alternate"] = "lib/{}.rb",
+--       ["type"] = "test"
+--     }
+--   },
+--   ["*.go"] = {
+--     ["*.go"] = {
+--       ["alternate"] = "{}_test.go",
+--       ["type"] = "source"
+--     },
+--     ["*_test.go"] = {
+--       ["alternate"] = "{}.go",
+--       ["type"] = "test"
+--     }
+--   },
+--   ["*.py"] = {
+--     ["*.py"] = {
+--       ["alternate"] = "{}_test.py",
+--       ["type"] = "source"
+--     },
+--     ["*_test.py"] = {
+--       ["alternate"] = "{}.py",
+--       ["type"] = "test"
+--     }
+--   },
+--   ["package.json"] = {
+--     ["src/*.js"] = {
+--       ["alternate"] = "{}.test.js",
+--       ["type"] = "source"
+--     },
+--     ["src/*.test.js"] = {
+--       ["alternate"] = "src/{}.js",
+--       ["type"] = "test"
+--     }
+--   },
+--   ["*.js"] = {
+--     ["*.test.js"] = {
+--       ["alternate"] = "{}.js",
+--       ["type"] = "test"
+--     },
+--     ["*.js"] = {
+--       ["alternate"] = "{}.test.js",
+--       ["type"] = "source"
+--     }
+--   },
+--   ["*.c|*.h|*.cpp|*.hpp"] = {
+--     ["*.c"] = {["alternate"] = {"{}.h"}},
+--     ["*.cpp"] = {["alternate"] = {"{}.h", "{}.hpp"}},
+--     ["*.h"] = {["alternate"] = {"{}.cpp", "{}.c"}},
+--     ["*.hpp"] = {["alternate"] = "{}.cpp"}
+--   },
+--   ["mix.exs"] = {
+--     ["lib/*_live.ex"] = {
+--       ["alternate"] = "lib/{}_live.html.leex",
+--       ["type"] = "source"
+--     },
+--     ["lib/*.ex"] = {
+--       ["alternate"] = "test/{}_test.exs",
+--       ["type"] = "source"
+--     },
+--     ["test/*_test.exs"] = {
+--       ["alternate"] = "lib/{}.ex",
+--       ["type"] = "test"
+--     },
+--     ["lib/*.html.leex"] = {
+--       ["alternate"] = "lib/{}.ex",
+--       ["type"] = "live_view"
 --     }
 --   }
 -- }
--- local theme =
---   require("telescope.themes").get_dropdown(
---   {
---     results_height = 20,
---     winblend = 20,
---     width = 0.8,
---     prompt_title = "",
---     prompt_prefix = "Files>",
---     previewer = false,
---     borderchars = {
---       prompt = {"▀", "▐", "▄", "▌", "▛", "▜", "▟", "▙"},
---       results = {" ", "▐", "▄", "▌", "▌", "▐", "▟", "▙"},
---       preview = {"▀", "▐", "▄", "▌", "▛", "▜", "▟", "▙"}
---     }
---   }
--- )
-
--- -- Telescope
--- require('telescope').setup {
---     defaults = {
---         file_previewer = require'telescope.previewers'.vim_buffer_cat.new,
---     }
--- }
--- map('ff', "Telescope find_files")
--- map('fg', "Telescope live_grep")
--- map('fb', "Telescope buffers")
--- map('fh', "Telescope help_tags")

@@ -14,7 +14,7 @@ local chain_complete_list = {
     {complete_items = {"buffers"}},
     {complete_items = {"path"}, triggered_only = {"./", "/"}},
     {mode = "<c-p>"},
-    {mode = "<c-n>"},
+    {mode = "<c-n>"}
     -- {mode = "dict"},
     -- {mode = "spel"}
   },
@@ -43,8 +43,8 @@ local customize_lsp_label = {
   Color = mega.utf8(0xe22b) .. " [color]",
   Unit = mega.utf8(0xe3ce) .. " [unit]",
   ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
-  ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs]",
-  ["vsnip"] = mega.utf8(0xf68e) .. " [vs]",
+  ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs1]",
+  ["vsnip"] = mega.utf8(0xf68e) .. " [vs2]",
   Snippet = mega.utf8(0xf68e) .. " [s]",
   Text = mega.utf8(0xf52b) .. " [text]",
   Buffers = mega.utf8(0xf64d) .. " [buff]",
@@ -52,6 +52,7 @@ local customize_lsp_label = {
 }
 
 function M.activate()
+  vim.cmd([[ set completeopt=menu,menuone,noselect ]])
   vim.cmd [[ set shortmess+=c ]]
 
   -- [ snippets ] --------------------------------------------------------------
@@ -78,10 +79,39 @@ function M.activate()
         max_items = 10,
         sorting = "none", -- 'alphabet'
         matching_strategy_list = {"exact", "substring", "fuzzy"},
-        matching_smart_case = 1
+        matching_smart_case = 1,
+        completion_items_priority = {
+          ["vim-vsnip"] = 0
+        }
       }
     )
   end
-end
 
+  -- [ nvim-compe ] ------------------------------------------------------------
+  -- TODO/REFS:
+  -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/plugin/_completion.lua
+  -- https://github.com/ahmedelgabri/dotfiles/blob/master/config/.vim/lua/_/completion.lua
+  -- local has_compe, compe = pcall(require, "compe")
+  -- if has_compe then
+  --   compe.setup(
+  --     {
+  --       enabled = true,
+  --       debug = false,
+  --       min_length = 2,
+  --       preselect = "disable",
+  --       allow_prefix_unmatch = false,
+  --       throttle_time = 120,
+  --       source_timeout = 200,
+  --       incomplete_delay = 400,
+  --       source = {
+  --         path = true,
+  --         buffer = true,
+  --         vsnip = true,
+  --         nvim_lsp = true,
+  --         nvim_lua = true
+  --       }
+  --     }
+  --   )
+  -- end
+end
 return M

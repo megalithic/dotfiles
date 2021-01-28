@@ -6,28 +6,20 @@
 
 # Auto-correction exceptions
 # -----------------------------------------------------------------------------
-alias bundle='nocorrect bundle'
-alias cabal='nocorrect cabal'
 alias man='nocorrect man'
 alias mkdir='nocorrect mkdir'
 alias mv='nocorrect mv'
 alias cp='nocorrect cp'
-alias stack='nocorrect stack'
 alias sudo='nocorrect sudo'
 alias git="nocorrect git"
 alias nmap="nocorrect nmap"
-# alias avn='nocorrect avn'
 
 # Files & directories
 # -----------------------------------------------------------------------------
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
-alias dirs="ls *(/)"
-alias fd="fd -H"
-alias ff="fd"
-alias files="find . -type f | wc -l"
-alias new="print -rl -- **/*(Dom[1,5])"
+alias fd="fd --hidden"
 
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
@@ -42,6 +34,7 @@ then
   alias ll="gls -l"
   alias la="gls -A"
 fi
+
 alias ls="exa -gahF --group-directories-first"
 alias l="exa -lahF --icons --group-directories-first --git"
 alias s="ls"
@@ -51,7 +44,6 @@ alias cat='bat'
 alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias help='tldr'
 alias dotup='_dotup'
-
 
 alias utc="date -u"
 # alias s='ssh $(grep -iE "^host[[:space:]]+[^*]" ~/.ssh/config | fzf | awk "{print \$2}")'
@@ -94,7 +86,6 @@ alias mux="tmux"
 alias takeover="tmux detach -a"
 alias teama="tmux attach-session -t enbala"
 alias team="teamocil --here enbala"
-alias fmate="unset TMUX tmate"
 alias trw="tmux rename-window"
 alias trs="tmux rename-session"
 
@@ -120,19 +111,9 @@ alias b="brew"
 # alias python=python3.8
 # alias pip3=/usr/local/Cellar/python@3.8/3.8.2/bin/pip3
 
-# ALACRITTY
-# -----------------------------------------------------------------------------
-alias updatealacritty='cd ~/code/rust/alacritty; git co master; git fetch; git merge origin/master; rustup override set nightly; cargo build --release; sudo cp target/release/alacritty /usr/local/bin; cd -'
-alias ala='alacritty;'
-
 # KITTY
 # -----------------------------------------------------------------------------
 alias kitty='/Applications/kitty.app/Contents/MacOS/kitty'
-
-# EMACS/SPACEMACS
-# -----------------------------------------------------------------------------
-alias em='emacsclient -create-frame --alternate-editor=""'
-alias ec=em
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
@@ -145,7 +126,7 @@ alias vim="nvim"
 alias v=vim
 alias vi="/usr/local/bin/vim"
 alias minvim="nvim -u NONE"
-alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
+# alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
 # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
 # alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
@@ -158,45 +139,37 @@ alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
 # CONFIG EDITS
 # -----------------------------------------------------------------------------
-alias ez="nvim ~/.config/zsh/.zshrc"
-alias ezz="nvim ~/.config/zsh/.zshenv"
-alias ezl="nvim ~/.localrc"
-alias eza="nvim ~/.config/zsh/**/aliases.zsh"
-alias ezf="nvim ~/.config/zsh/**/functions.zsh"
-alias ezo="nvim ~/.config/zsh/**/opts.zsh"
-alias ehs="nvim ~/.config/hammerspoon/config.lua"
-alias eh="nvim ~/.config/hammerspoon/init.lua"
-alias eg="nvim ~/.gitconfig"
-alias eb="nvim ~/.dotfiles/Brewfile"
-alias essh="nvim ~/.ssh/config"
-alias eze="nvim ~/.config/zsh/**/env.zsh"
-alias ezkb="nvim ~/.config/zsh/**/keybindings.zsh"
-alias ev="nvim ~/.config/nvim/init.lua"
-alias evp="nvim ~/.config/nvim/lua/mega/packages.lua"
-alias ek="nvim ~/.config/kitty/kitty.conf"
-alias et="nvim ~/.tmux.conf"
+alias ez="nvim $ZDOTDIR/.zshrc"
+alias ezz="nvim $ZDOTDIR/.zshenv"
+alias ezl="nvim $HOME/.localrc"
+alias eza="nvim $HOME/.config/zsh/**/aliases.zsh"
+alias ezf="nvim $HOME/.config/zsh/**/functions.zsh"
+alias ezo="nvim $HOME/.config/zsh/**/opts.zsh"
+alias ehs="nvim $HOME/.config/hammerspoon/config.lua"
+alias eh="nvim $HOME/.config/hammerspoon/init.lua"
+alias eg="nvim $HOME/.gitconfig"
+alias eb="nvim $HOME/.dotfiles/Brewfile"
+alias essh="nvim $HOME/.ssh/config"
+alias eze="nvim $HOME/.config/zsh/**/env.zsh"
+alias ezkb="nvim $HOME/.config/zsh/**/keybindings.zsh"
+alias ev="nvim $HOME/.config/nvim/init.lua"
+alias evp="nvim $HOME/.config/nvim/lua/mega/packages.lua"
+alias ek="nvim $HOME/.config/kitty/kitty.conf"
+alias et="nvim $HOME/.tmux.conf"
 
 # FOLDERS
 # -----------------------------------------------------------------------------
 alias dot="cd $DOTS"
+alias dots="cd $DOTS"
 alias priv="cd $PRIVATES"
 alias ot=dot
-alias code="cd ~/code"
-# alias dev="cd ~/code"
-alias repos="cd ~/code"
-alias logs="cd ~/code/logs/"
-alias docs="cd ~/Documents"
+alias code="cd $HOME/code"
+alias repos="cd $HOME/code"
+alias logs="cd $HOME/code/logs/"
+alias docs="cd $HOME/Documents"
 alias box="cd $HOME/Dropbox/"
+alias box="cd $HOME/Downloads/"
 alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
-alias dropbox="box"
-alias scripts="cd ~/Dropbox/scripts/"
-# alias android="cd ~/Dropbox/Android/adb/"
-# alias adb="/Users/replicant/Dropbox/Android/adb/platform-tools/adb"
-# alias fastboot="/Users/replicant/Dropbox/Android/adb/platform-tools/fastboot"
-alias dl="cd $HOME/Downloads/"
-alias gop="cd $GOPATH"
-alias geny="/Applications/Genymotion\ Shell.app/Contents/MacOS/genyshell -c "
-alias genyplay="/Applications/Genymotion.app/Contents/MacOS/player.app/Contents/MacOS/player --vm-name "
 
 # POSTGRES
 # -----------------------------------------------------------------------------
@@ -218,8 +191,7 @@ alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
 alias rm="rm -v"
 [[ "$(uname)" == "Darwin" ]] && alias rm="/usr/local/bin/trash"
 alias dash="open dash://" # lang:query
-alias trunc=": > "
-alias server="python -m SimpleHTTPServer"
+alias pyserve="python -m SimpleHTTPServer"
 # alias srv=server
 alias chromedebug="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --js-flags=--stack_trace_limit=-1 --user-data-dir=/tmp/jsleakcheck"
 alias chrome="open -a '/Applications/Google Chrome.app' --args --disable-web-security"
@@ -227,10 +199,9 @@ alias chrome="open -a '/Applications/Google Chrome.app' --args --disable-web-sec
 # [C] explained: http://www.commandlinefu.com/commands/view/402/exclude-grep-from-your-grepped-output-of-ps-alias-included-in-description
 # Thanks @sindersorhus: https://github.com/mathiasbynens/dotfiles/commit/bd9429af1cfdc7f4caa73e6f98773ed69a161c9c
 alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
+alias bravekill="ps ux | grep '[B]rave Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
 alias die='pkill -9 -f'
 alias port='lsof -i :'
-alias ex=extract
-alias cleanrails="rm -rf .DS_Store .gitignore .rspec .rvmrc Gemfile GuardFile README.md"
 alias sz="source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zshrc && \reset"
 alias zz=z
 alias cls="clr && ls"
@@ -247,7 +218,6 @@ alias irc="weechat"
 # alias irc="rm ~/.weechat/weechat_crash*.log; weechat-curses"
 alias rc=irc
 alias clr=clear
-alias syncoctoprint="scp pi@octopi.local:/home/pi/.octoprint/config.yaml $HOME/Dropbox/3d/configs/octoprint"
 alias dif="kitty +kitten diff"
 alias zshtime="/usr/bin/time $(which zsh) -i -c echo"
 # alias zshtime="for i in $(seq 1 10); do /usr/bin/time zsh -i -c exit; done"
@@ -263,28 +233,9 @@ alias map="xargs -n1"
 
 # GIT
 # -----------------------------------------------------------------------------
-alias tig="nvim +:GV" # https://github.com/junegunn/gv.vim#mappings
-alias lg="lazygit"
-alias gin="gitin"
-# alias gc='git co `git b | fzf | sed -e "s/\* //g" | awk "{print \$1}"`'
-alias gb='git b | fzf | xargs git branch -d'
-alias gcb="git rev-parse --abbrev-ref HEAD | tr -d '\n'"
-alias gcp="gcb | pbcopy"
-alias push="git push"
-alias gs="git s"
-alias gst="git status"
-alias gcv="git cv"
-alias gcm="git cm"
 alias gpreq="~/.dotfiles/bin/git-pr"
 alias preq=gpreq
 alias req=gpreq
-alias changes="git diff --cached"
-alias clean="git clean -f"
-alias reset="git reset --hard HEAD"
-alias log="git log --stat"
-alias show='git show --pretty="format:" --name-only '
-alias branch='git for-each-ref --sort=-committerdate refs/heads/ | less'
-alias glog="git l"
 alias dangled="git fsck --no-reflog | awk '/dangling commit/ {print $3}'" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
 alias conflicted="git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR"
 alias conflicts="git ls-files -u | cut -f 2 | sort -u"
@@ -298,28 +249,6 @@ alias resolve="git mergetool --tool=nvimdiff"
 # elixir
 # -----------------------------------------------------------------------------
 alias imix="iex -S mix"
-
-# RUBY/RAILS
-# -----------------------------------------------------------------------------
-alias be="bundle exec"
-alias br="bundle exec ruby"
-alias b="bundle"
-alias bu="bundle"
-alias gen="bundle exec rails g"
-alias annotate="bundle exec annotate"
-alias dbm="rake db:migrate"
-alias dbt="rake db:test:prepare"
-alias dbrb="rake db:rollback STEP=1"
-alias spork="bundle exec spork"
-alias guard="bundle exec guard start"
-alias nodeapp="nodemon app.js 3000"
-alias rs="bundle exec rails server"
-alias rsp="bundle exec rails server -p"
-alias rc="bundle exec rails console"
-alias bec=rc
-alias migrate="rake db:migrate db:test:prepare"
-alias rollback="rake db:rollback"
-alias uuid="ruby -r securerandom -e 'puts SecureRandom.uuid'"
 
 # MISC / RANDOM
 # -----------------------------------------------------------------------------
@@ -353,25 +282,6 @@ alias httpdump="sudo tcpdump -i en1 -n -s 0 -w - | grep -a -o -E \"Host\: .*|GET
 alias show="defaults write com.apple.Finder AppleShowAllFiles -bool true && killall Finder"
 alias hide="defaults write com.apple.Finder AppleShowAllFiles -bool false && killall Finder"
 
-# Show/hide the desktop
-alias hidedesk="defaults write com.apple.finder CreateDesktop false; killall Finder; open /Applications/TotalFinder"
-alias showdesk="defaults write com.apple.finder CreateDesktop true; killall Finder; open /Applications/TotalFinder"
-
-# enable yubikey and ssh
-alias remote="osascript -e 'tell application \"yubiswitch\" to KeyOn' && ssh remote.github.com -t gh-screen && osascript -e 'tell application \"yubiswitch\" to KeyOff' "
-
-# edit home-assistant (hass) config
-alias hassconfig="pushd ~/.dotfiles/private/homeassistant; vim configuration.yaml; popd"
-alias haconfig=hassconfig
-# alias rsync="/usr/local/bin/rsync"
-alias hasssync="/usr/local/bin/rsync -a root@homeassistant.local:/config ~/.dotfiles/private/homeassistant"
-alias hasync=hasssync
-alias synchass=hasssync
-alias syncha=hasssync
-
-alias elmserve='elm-reactor -p 8080'
-alias rn='react-native'
-
 alias secureinput='ioreg -l -w 0 | grep SecureInput'
 alias geo='curl -s "http://www.geoiptool.com/en/?IP=${IP}" | textutil -stdin -format html -stdout -convert txt | sed -n "/Host Name/,/Postal code/p"'
 # alias geoip="curl ipinfo.io/"
@@ -388,20 +298,13 @@ alias weather='curl -s wttr.in | sed -n "1,7p"'
 alias wthr='curl -s wttr.in/hoover,al | sed -n "1,7p"'
 alias moon='curl -4 http://wttr.in/Moon'
 
-# covid-19
-alias covidst='curl "https://corona-stats.online/states/us?minimal=true"'
-alias covid='curl "https://corona-stats.online/usa?minimal=true"'
-
 alias nerd="echo -ne \\u"
 alias nf="echo -ne \\u"
-
-alias tidy="/usr/local/bin/tidy"
 
 # -- linux-specific aliases..
 if [[ "$PLATFORM" == "linux" ]]; then
   alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
   alias pbcopy="xclip -sel clip"
   alias pbpaste='xclip -sel clip -o'
-
-  alias fd="fdfind -H"
+  alias fd="fdfind --hidden"
 fi

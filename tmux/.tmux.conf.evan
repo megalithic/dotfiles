@@ -1,0 +1,69 @@
+# bind tmux-leader to `<c-space>`
+unbind-key C-b
+set-option -g prefix C-space
+
+# use vi keys in search mode
+set-window-option -g mode-keys vi
+
+# status bar
+set-option -g status-left "⧉ #S "
+set-option -g status-right "#{battery_percentage} ⋮ %a, %b %d ⋮ %-l:%M %p"
+set-option -g set-titles-string "tmux:#I #W"
+
+# window status (tab selected/unselected)
+set-window-option -g window-status-current-format "#[fg=colour15] ⬥ #I:#W#{?window_zoomed_flag, ◯,}"
+set-window-option -g window-status-format " ⬦ #I:#W"
+
+# options from tmux-sensible
+
+# address vim mode switching delay (http://superuser.com/a/252717/65504)
+set -s escape-time 0
+
+# increase scrollback buffer size
+set -g history-limit 50000
+
+# tmux messages are displayed for 4 seconds
+set -g display-time 4000
+
+# refresh 'status-left' and 'status-right' more often
+set -g status-interval 5
+
+# emacs key bindings in tmux command prompt (prefix + :) are better than
+# vi keys, even for vim users
+set -g status-keys emacs
+
+# focus events enabled for terminals that support them
+set -g focus-events on
+
+# super useful when using "grouped sessions" and multi-monitor setup
+setw -g aggressive-resize on
+
+# more colors and themes
+set -g default-terminal "xterm-kitty"
+set -g message-style bg="black",fg="yellow"
+set -g pane-active-border-style fg="colour237"
+set -g pane-border-style fg="colour237"
+set -g status-position "top"
+set -g status-style bg="default",fg="colour7"
+set-window-option -g window-status-current-style fg="colour15"
+
+# dim inactive window text
+set -g window-style fg=colour7
+set -g window-active-style fg=colour15
+
+# Specify plugins
+set-option -g @plugin 'Morantron/tmux-fingers'
+set-option -g @plugin 'tmux-plugins/tmux-battery-osx'
+set-option -g @plugin 'tmux-plugins/tmux-logging'
+set-option -g @plugin 'tmux-plugins/tmux-open'
+set-option -g @plugin 'tmux-plugins/tmux-pain-control'
+set-option -g @plugin 'tmux-plugins/tmux-resurrect'
+set-option -g @plugin 'tmux-plugins/tmux-sessionist'
+set-option -g @plugin 'tmux-plugins/tmux-yank'
+set-option -g @plugin 'tmux-plugins/tmux-copycat'
+set-option -g @plugin 'tmux-plugins/tpm'
+
+# Initialize tmux plugin manager
+run '~/.tmux/plugins/tpm/tpm'
+
+# vim:fileencoding=utf-8:ft=tmux

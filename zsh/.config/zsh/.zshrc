@@ -16,8 +16,9 @@ elif [[ "$PLATFORM" == "linux" ]]; then
   source "$HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
 
+
 # NOTE: source order matters!
-for file in $ZDOTDIR/components/{env,aliases,functions,colors,opts,keybindings,completion,ssh,fzf,zlua,asdf}.zsh; do
+for file in $ZDOTDIR/components/{opts,env,fzf,aliases,functions,colors,keybindings,completion,ssh,zlua,asdf}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
