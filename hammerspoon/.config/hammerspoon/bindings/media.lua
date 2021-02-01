@@ -1,11 +1,11 @@
-local log = hs.logger.new("[bindings.media]", "warning")
+local log = hs.logger.new("[bindings.media]", "info")
 local media = hs.hotkey.modal.new()
 local alert = require("ext.alert")
 
 local module = {}
 
 function media:entered()
-  print("-> entered media modal..")
+  log.i("-> entered media modal..")
   local image = hs.image.imageFromAppBundle("com.spotify.client")
   local isPlaying = hs.spotify.isPlaying()
   local icon = isPlaying and "契" or ""
@@ -24,7 +24,7 @@ function media:entered()
 end
 
 function media:exited()
-  print("-> exited media modal..")
+  log.i("-> exited media modal..")
   alert.close()
 end
 

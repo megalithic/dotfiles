@@ -1,4 +1,74 @@
 {
+	"__MODULE__": {
+		"prefix": "uumod",
+		"body": [
+			"__MODULE__"
+		]
+	},
+	"__something__": {
+		"prefix": "uu",
+		"body": [
+			"__${1:MODULE}__$0"
+		]
+	},
+	"Define function": {
+		"prefix": "dfun",
+		"body": [
+			"def ${1:function_name}(${2:args}) $3do",
+			"  $0",
+			"end"
+		]
+	},
+	"Define 1-line function": {
+		"prefix": "d1f",
+		"body": [
+			"def ${1:function_name}(${2:args}), $3do: $0"
+		]
+	},
+	"Define private function": {
+		"prefix": "pfun",
+		"body": [
+			"defp ${1:function_name}(${2:args}) $3do",
+			"  $0",
+			"end"
+		]
+	},
+	"Define 1-line private function": {
+		"prefix": "p1f",
+		"body": [
+			"defp ${1:function_name}(${2:args}), $3do: $0"
+		]
+	},
+	"Define module": {
+		"prefix": "dmod",
+		"body": [
+			"defmodule ${1:ModuleName} do",
+			"  $0",
+			"end"
+		]
+	},
+	"Define struct": {
+		"prefix": "dstruct",
+		"body": [
+			"defstruct [${1:contents}]"
+		]
+	},
+	"Define test": {
+		"prefix": "test",
+		"body": [
+			"test \"${1:test description}\" do",
+			"  $0",
+			"end"
+		]
+	},
+	"Ecto alter table": {
+		"prefix": "altt",
+		"body": [
+			"alter table(:${1:name}) do",
+			"  $0",
+			"end"
+		]
+	},
   "lv_module": {
     "prefix": "lv",
     "body": [

@@ -171,7 +171,6 @@ M.apps = {
     quitGuard = true,
     rules = {
       {nil, 1, M.layout.leftHalf}
-      -- {title = 'Slack Call Minipanel', action = 'ignore'},
     }
   },
   ["com.readdle.smartemail-Mac"] = {
@@ -181,7 +180,7 @@ M.apps = {
     context = "spark",
     distraction = true,
     rules = {
-      {nil, 1, M.layout.rightHalf}
+      {nil, 2, M.layout.fullScreen}
     }
   },
   ["io.canarymail.mac"] = {
@@ -191,9 +190,7 @@ M.apps = {
     context = "canary",
     distraction = true,
     rules = {
-      {nil, 1, M.layout.rightHalf}
-      -- {title = 'Main Window', action = 'snap'},
-      -- {title = 'Preferences', action = 'ignore'},
+      {nil, 2, M.layout.fullScreen}
     }
   },
   ["com.apple.finder"] = {
@@ -211,8 +208,6 @@ M.apps = {
     hyper_key = "z",
     launchMode = "focus",
     rules = {
-      -- {title = 'Zoom', action = 'quit'},
-      -- {title = 'Zoom Meeting', action = 'snap'},
       {nil, 1, M.layout.centeredMedium},
       {"Zoom Meeting", 1, M.layout.fullScreen}
     }
@@ -221,9 +216,6 @@ M.apps = {
     bundleID = "com.loom.desktop",
     name = "Loom",
     context = "loom"
-    -- rules = {
-    --   {nil, 1, M.grid.leftHalf},
-    -- },
   },
   ["com.spotify.client"] = {
     bundleID = "com.spotify.client",

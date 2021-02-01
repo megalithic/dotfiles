@@ -1,7 +1,7 @@
 -- REF: some interesting and useful things:
 -- https://github.com/dbmrq/dotfiles/blob/master/home/.hammerspoon/winman.lua
 
--- local log = hs.logger.new('[bindings.snap]', 'warning')
+local log = hs.logger.new("[bindings.snap]", "info")
 -- local chain = require("ext.window").chain
 local wh = require("utils.wm.window-handlers")
 local movewindows = hs.hotkey.modal.new()
@@ -11,7 +11,7 @@ local alert = require("ext.alert")
 local module = {}
 
 function movewindows:entered()
-  print("-> entered snap modal..")
+  log.i("-> entered snap modal..")
   alertUuids =
     hs.fnutils.map(
     hs.screen.allScreens(),
@@ -45,7 +45,7 @@ function movewindows:exited()
   )
 
   alert.close()
-  print("-> exited snap modal..")
+  log.i("-> exited snap modal..")
 end
 
 module.windowSplitter = function()

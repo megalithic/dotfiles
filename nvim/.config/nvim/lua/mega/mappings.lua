@@ -1,4 +1,17 @@
--- ( general ) .................................................................
+function _G.check_back_space()
+  local col = vim.fn.col(".") - 1
+  if col == 0 or vim.fn.getline("."):sub(col, col):match("%s") then
+    return true
+  else
+    return false
+  end
+end
+
+-- ["i|<C-e>"]      = map_cmd([[pumvisible() ? "\<C-e>" : "\<End>"]]):with_noremap():with_expr(),
+-- -- TODO Wrap line
+-- ["i|<TAB>"]      = map_cmd([[pumvisible() ? "\<C-n>" : vsnip#available(1) ?"\<Plug>(vsnip-expand-or-jump)" : v:lua.check_back_space() ? "\<TAB>" : completion#trigger_completion()]]):with_expr():with_silent(),
+-- ["i|<S-TAB>"]    = map_cmd([[pumvisible() ? "\<C-p>" : "\<C-h>"]]):with_noremap():with_expr(),
+-- ["i|<CR>"]       = map_cmd('compe#confirm("<Plug>delimitMateCR")'):with_noremap():with_expr(),
 
 local function convenience_mappings()
   -- make the tab key match bracket pairs
@@ -116,11 +129,20 @@ endif
   mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
   mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
   -- mega.map("n", "<Leader>m", [[<cmd>lua require('fzf-commands').files()<cr>]])
-  -- mega.map(
-  --   "n",
-  --   "<Leader>f",
-  --   [[<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ winblend = 10 }))<cr>]]
-  -- )
+
+  local has_compe, _ = pcall(require, "compe")
+  if has_compe then
+    mega.map("i", "<C-e>", [[pumvisible() ? "\<C-e>" : "\<End>"]], {expr = true})
+    mega.map(
+      "i",
+      "<TAB>",
+      [[pumvisible() ? "\<C-n>" : vsnip#available(1) ?"\<Plug>(vsnip-expand-or-jump)" : v:lua.check_back_space() ? "\<TAB>" : completion#trigger_completion()]],
+      {expr = true}
+    )
+    mega.map("i", "<S-TAB>", [[pumvisible() ? "\<C-p>" : "\<C-h>"]], {expr = true})
+    -- mega.map("i", "<CR>", [[compe#confirm({ 'keys': "\<Plug>delimitMateCR", 'mode': '' })]], {expr = true})
+    mega.map("i", "<CR>", [[compe#confirm(lexima#expand('<LT>CR>', 'i'))]], {expr = true})
+  end
 end
 
 -- global_mappings()

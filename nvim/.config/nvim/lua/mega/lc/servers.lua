@@ -40,7 +40,12 @@ local servers = {
   },
   elixirls = {
     cmd = {vim.fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"},
-    settings = {elixirLS = {dialyzerEnabled = false}},
+    settings = {
+      elixirLS = {
+        fetchDeps = false,
+        dialyzerEnabled = false
+      }
+    },
     filetypes = {"elixir", "eelixir"},
     root_dir = root_pattern("mix.lock", "mix.exs", ".git")
   },
@@ -221,8 +226,6 @@ function M.activate(on_attach_fn)
           {
             on_attach = on_attach_fn,
             handlers = vim.tbl_deep_extend("keep", {}, require("mega.lc.handlers"), vim.lsp.handlers)
-            -- TODO: give this a look:
-            -- https://github.com/RishabhRD/nvim-lsputils
           },
           config
         )

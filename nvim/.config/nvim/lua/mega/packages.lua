@@ -15,9 +15,9 @@ if paq_exists then
   paq {"savq/paq-nvim", opt = true}
 
   -- (ui, interface) --
+
   paq {"trevordmiller/nova-vim"}
-  paq {"sainnhe/gruvbox-material"}
-  paq {"sainnhe/edge"}
+  paq {"glepnir/zephyr-nvim"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}
@@ -27,26 +27,34 @@ if paq_exists then
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
-  paq {"nvim-lua/completion-nvim"}
+  -- paq {"nvim-lua/completion-nvim"}
+  -- paq {"steelsojka/completion-buffers"}
+  -- paq {"nvim-treesitter/completion-treesitter"}
   paq {"hrsh7th/nvim-compe"}
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"nvim-lua/plenary.nvim"}
   paq {"nvim-lua/popup.nvim"}
-  paq {"steelsojka/completion-buffers"}
   paq {"hrsh7th/vim-vsnip"}
   paq {"hrsh7th/vim-vsnip-integ"}
-  -- paq {"nvim-treesitter/nvim-treesitter"}
+  paq {"RishabhRD/popfix"}
+  paq {"RishabhRD/nvim-lsputils"}
+  paq {"glepnir/lspsaga.nvim"}
+  paq {
+    "nvim-treesitter/nvim-treesitter",
+    hook = function()
+      vim.api.nvim_command("TSUpdate")
+    end
+  }
   -- paq {"nvim-treesitter/nvim-treesitter-textobjects"}
-  -- paq {"nvim-treesitter/completion-treesitter"}
   -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
   -- paq {"RRethy/vim-illuminate"}
 
   -- (file navigation) --
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
+  paq {"ojroques/nvim-lspfuzzy"}
   -- paq {"vijaymarupudi/nvim-fzf"}
   -- paq {"vijaymarupudi/nvim-fzf-commands"}
-  paq {"ojroques/nvim-lspfuzzy"}
   -- paq {"justinmk/vim-sneak"}
   -- paq {"unblevable/quick-scope"}
 
@@ -98,17 +106,18 @@ if paq_exists then
 
   -- (the rest...) --
   paq {"wsdjeg/vim-fetch"} -- vim path/to/file.ext:12:3
+  paq {"cohama/lexima.vim"}
   -- paq {"windwp/nvim-autopairs"}
-  -- paq {"cohama/lexima.vim"}
-  paq {"Raimondi/delimitMate"}
-  paq "tpope/vim-endwise"
-  -- paq {"rstacruz/vim-closer"}
+  -- paq {"Raimondi/delimitMate"}
+  -- paq {"tpope/vim-endwise"}
+  -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`
+  -- paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
+  paq {"tpope/vim-commentary"}
   paq {"tpope/vim-eunuch"}
   paq {"tpope/vim-abolish"}
   paq {"tpope/vim-rhubarb"}
   paq {"tpope/vim-repeat"}
   paq {"tpope/vim-surround"}
-  paq {"tpope/vim-commentary"}
   paq {"tpope/vim-unimpaired"}
   paq {"EinfachToll/DidYouMean"}
   paq {"jordwalke/VimAutoMakeDirectory"}

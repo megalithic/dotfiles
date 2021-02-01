@@ -80,6 +80,21 @@ vim.api.nvim_exec(
     ]],
   false
 )
+-- vim.g.fzf_colors = {
+--   fg = {"fg", "Normal"},
+--   bg = {"bg", "Normal"},
+--   hl = {"fg", "Comment"},
+--   ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
+--   ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
+--   ["hl+"] = {"fg", "Statement"},
+--   info = {"fg", "PreProc"},
+--   border = {"fg", "Ignore"},
+--   prompt = {"fg", "Conditional"},
+--   pointer = {"fg", "Exception"},
+--   marker = {"fg", "Keyword"},
+--   spinner = {"fg", "Label"},
+--   header = {"fg", "Comment"}
+-- }
 vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
 
 -- vim-polyglot
@@ -162,8 +177,8 @@ if gitsigns_installed then
   )
 end
 
--- -- delimitMate
--- vim.g.delimitMate_expand_cr = 0
+-- delimitMate
+vim.g.delimitMate_expand_cr = 0
 
 -- vim-test
 vim.api.nvim_exec(
@@ -190,81 +205,81 @@ nmap <silent> <leader>to :copen<CR>
   false
 )
 
--- -- treesitter
--- -- local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
--- -- if ts_installed then
--- --   treesitter.setup(
--- --     {
--- --       ensure_installed = {
--- --         "bash",
--- --         "c",
--- --         "cpp",
--- --         "css",
--- --         "elm",
--- --         "erlang",
--- --         "fennel",
--- --         "html",
--- --         "jsdoc",
--- --         "javascript",
--- --         "json",
--- --         "lua",
--- --         "nix",
--- --         "python",
--- --         "regex",
--- --         "ruby",
--- --         "rust",
--- --         "toml",
--- --         "tsx",
--- --         "typescript",
--- --         "yaml"
--- --       },
--- --       highlight = {enable = true},
--- --       indent = {enable = true},
--- --       textobjects = {
--- --         select = {
--- --           enable = true,
--- --           keymaps = {
--- --             -- use capture groups from textobjects.scm or define your own
--- --             ["af"] = "@function.outer",
--- --             ["if"] = "@function.inner",
--- --             ["aC"] = "@class.outer",
--- --             ["iC"] = "@class.inner",
--- --             ["ac"] = "@conditional.outer",
--- --             ["ic"] = "@conditional.inner",
--- --             ["ae"] = "@block.outer",
--- --             ["ie"] = "@block.inner",
--- --             ["al"] = "@loop.outer",
--- --             ["il"] = "@loop.inner",
--- --             ["is"] = "@statement.inner",
--- --             ["as"] = "@statement.outer",
--- --             ["ad"] = "@comment.outer",
--- --             ["am"] = "@call.outer",
--- --             ["im"] = "@call.inner"
--- --           }
--- --         },
--- --         move = {
--- --           enable = true,
--- --           goto_next_start = {
--- --             ["]m"] = "@function.outer",
--- --             ["]]"] = "@class.outer"
--- --           },
--- --           goto_next_end = {
--- --             ["]M"] = "@function.outer",
--- --             ["]["] = "@class.outer"
--- --           },
--- --           goto_previous_start = {
--- --             ["[m"] = "@function.outer",
--- --             ["[["] = "@class.outer"
--- --           },
--- --           goto_previous_end = {
--- --             ["[M"] = "@function.outer",
--- --             ["[]"] = "@class.outer"
--- --           }
--- --         }
--- --       }
--- --     }
--- --   )
--- -- end
+-- treesitter
+local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
+if ts_installed then
+  treesitter.setup(
+    {
+      ensure_installed = {
+        "bash",
+        "c",
+        "cpp",
+        "css",
+        "elm",
+        "erlang",
+        "fennel",
+        "html",
+        "jsdoc",
+        "javascript",
+        "json",
+        "lua",
+        "nix",
+        "python",
+        "regex",
+        "ruby",
+        "rust",
+        "toml",
+        "tsx",
+        "typescript",
+        "yaml"
+      },
+      highlight = {enable = true},
+      indent = {enable = true}
+      -- textobjects = {
+      --   select = {
+      --     enable = true,
+      --     keymaps = {
+      --       -- use capture groups from textobjects.scm or define your own
+      --       ["af"] = "@function.outer",
+      --       ["if"] = "@function.inner",
+      --       ["aC"] = "@class.outer",
+      --       ["iC"] = "@class.inner",
+      --       ["ac"] = "@conditional.outer",
+      --       ["ic"] = "@conditional.inner",
+      --       ["ae"] = "@block.outer",
+      --       ["ie"] = "@block.inner",
+      --       ["al"] = "@loop.outer",
+      --       ["il"] = "@loop.inner",
+      --       ["is"] = "@statement.inner",
+      --       ["as"] = "@statement.outer",
+      --       ["ad"] = "@comment.outer",
+      --       ["am"] = "@call.outer",
+      --       ["im"] = "@call.inner"
+      --     }
+      --   },
+      --   move = {
+      --     enable = true,
+      --     goto_next_start = {
+      --       ["]m"] = "@function.outer",
+      --       ["]]"] = "@class.outer"
+      --     },
+      --     goto_next_end = {
+      --       ["]M"] = "@function.outer",
+      --       ["]["] = "@class.outer"
+      --     },
+      --     goto_previous_start = {
+      --       ["[m"] = "@function.outer",
+      --       ["[["] = "@class.outer"
+      --     },
+      --     goto_previous_end = {
+      --       ["[M"] = "@function.outer",
+      --       ["[]"] = "@class.outer"
+      --     }
+      --   }
+      -- }
+    }
+  )
+end
 
 -- vim-projectionist
 vim.g.projectionist_heuristics = {
@@ -286,6 +301,26 @@ vim.g.projectionist_heuristics = {
         "  use ExUnit.Case, async: true",
         "",
         "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View",
+        "end"
+      }
+    },
+    ["lib/**/live/*_live.ex"] = {
+      ["type"] = "liveview",
+      ["alternate"] = "test/{dirname}/views/{basename}_live_test.exs",
+      ["template"] = {
+        "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live do",
+        "  use {dirname|camelcase|capitalize}, :live_view",
+        "end"
+      }
+    },
+    ["test/**/live/*_live_test.exs"] = {
+      ["type"] = "test",
+      ["alternate"] = "lib/{dirname}/live/{basename}_live.ex",
+      ["template"] = {
+        "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}LiveTest do",
+        "  use ExUnit.Case, async: true",
+        "",
+        "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live",
         "end"
       }
     },

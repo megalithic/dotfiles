@@ -37,6 +37,10 @@ function M.isdir(path)
 end
 
 M.map_opts = {noremap = true, silent = false, expr = false}
+function M.map(mode, lhs, rhs, opts)
+  opts = vim.tbl_extend("force", M.map_opts, opts or {})
+  vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
+end
 
 function M.load(key, req)
   local loaded, loader = pcall(require, req)
@@ -44,7 +48,7 @@ function M.load(key, req)
   if loaded then
     return loader
   else
-    mega.inspect("loading failed", key, 4)
+    mega.inspect("loading failed", {key, loader}, 4)
   end
 end
 
@@ -69,11 +73,6 @@ end
 
 function M.au(cmd)
   vim.api.nvim_exec(cmd, true)
-end
-
-function M.map(mode, lhs, rhs, opts)
-  opts = vim.tbl_extend("force", M.map_opts, opts or {})
-  vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
 function M.create_mappings(mappings, bufnr)

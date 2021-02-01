@@ -18,6 +18,11 @@ local on_attach = function(client, bufnr)
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
+  require("lspsaga").init_lsp_saga {
+    use_saga_diagnostic_sign = false,
+    max_hover_width = vim.fn.winwidth(0) - 20
+  }
+
   if client.resolved_capabilities.completion then
     local completion_loaded, completion = pcall(require, "mega.lc.completion")
     if completion_loaded then
@@ -39,41 +44,62 @@ local on_attach = function(client, bufnr)
   end
 
   if client.resolved_capabilities.hover then
-    mega.bmap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>")
+    -- mega.map("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>")
+    mega.map("n", "K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
   end
 
   if client.resolved_capabilities.goto_definition then
-    mega.bmap("n", "<C-]>", "<cmd>lua vim.lsp.buf.definition()<CR>")
-    mega.bmap("n", "<Leader>lgd", "<cmd>lua vim.lsp.buf.definition()<CR>")
+    mega.map("n", "<C-]>", "<cmd>lua vim.lsp.buf.definition()<CR>")
+    -- mega.bmap("n", "<Leader>lgd", "<cmd>lua vim.lsp.buf.definition()<CR>")
+    mega.map("n", "<leader>lgd", "<cmd>lua require'lspsaga.provider'.preview_definition()<CR>")
   end
 
   if client.resolved_capabilities.find_references then
-    mega.bmap("n", "<Leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>")
-    mega.bmap("n", "<Leader>lgr", "<cmd>lua vim.lsp.buf.references()<CR>")
+    mega.map("n", "<Leader>lr", "<cmd>lua vim.lsp.buf.references()<CR>")
+    mega.map("n", "<Leader>lgr", "<cmd>lua vim.lsp.buf.references()<CR>")
+    mega.map("n", "<leader>lgf", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
+    mega.map("n", "<leader>lf", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
   -- mega.bmap("n", "<Leader>lgr", '<cmd>lua require("telescope.builtin").lsp_references()<CR>')
   end
 
   if client.resolved_capabilities.rename then
-    mega.bmap("n", "<Leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
-    mega.bmap("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
+    mega.map("n", "<Leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
+    mega.map("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
+    mega.map("n", "<leader>rn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
   end
 
-  mega.bmap("n", "<Leader>lgi", "<cmd>lua vim.lsp.buf.implementation()<CR>")
-  mega.bmap("n", "<Leader>lgt", "<cmd>lua vim.lsp.buf.type_definition()<CR>")
-  mega.bmap("n", "<Leader>lgs", "<cmd>lua vim.lsp.buf.document_symbol()<CR>")
-  mega.bmap("n", "<Leader>lgS", "<cmd>lua vim.lsp.buf.workspace_symbol()<CR>")
-  mega.bmap("n", "<Leader>dE", "<cmd>lua vim.lsp.buf.declaration()<CR>")
-  mega.bmap("n", "<Leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>")
+  if client.resolved_capabilities.code_action then
+    mega.map("n", "<leader>lca", "<cmd>lua require('lspsaga.codeaction').code_action()<CR>")
+  -- mega.map("x", "<leader>a", "<cmd>'<,'>lua require('lspsaga.codeaction').range_code_action()<CR>")
+  end
 
-  mega.bmap("n", "[d", "<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>")
-  mega.bmap("n", "]d", "<cmd>lua vim.lsp.diagnostic.goto_next()<CR>")
-  mega.bmap("n", "<Leader>ll", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>")
-  mega.bmap("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
+  mega.map("n", "<Leader>lgi", "<cmd>lua vim.lsp.buf.implementation()<CR>")
+  mega.map("n", "<Leader>lgt", "<cmd>lua vim.lsp.buf.type_definition()<CR>")
+  mega.map("n", "<Leader>lgs", "<cmd>lua vim.lsp.buf.document_symbol()<CR>")
+  mega.map("n", "<Leader>lgS", "<cmd>lua vim.lsp.buf.workspace_symbol()<CR>")
+  mega.map("n", "<Leader>dE", "<cmd>lua vim.lsp.buf.declaration()<CR>")
+  mega.map("i", "<c-k>", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
+
+  -- jump diagnostic
+  mega.map("n", "]d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
+  mega.map("n", "[d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
+  mega.map("n", "<Leader>ll", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>")
+  mega.map("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
 
   mega.augroup(
     "lc.diagnostics",
     function()
       vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
+      -- vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
+    end
+  )
+
+  mega.augroup(
+    "lc.diagnostics",
+    function()
+      -- vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
+      vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
+      vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
       -- vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
     end
   )

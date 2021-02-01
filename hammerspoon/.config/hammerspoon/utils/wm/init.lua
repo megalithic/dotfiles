@@ -169,7 +169,7 @@ M.applyAppLayout = function(_, event, app)
   if app ~= nil and event == hs.application.watcher.launched then
     local app_config = config.apps[app:bundleID()]
     M.setAppLayout(app_config)
-    log.wf("applyAppLayout: app configs to layout: %s", hs.inspect(M.layouts))
+    log.df("applyAppLayout: app configs to layout: %s", hs.inspect(M.layouts))
     hs.layout.apply(M.layouts)
   end
 end
@@ -184,7 +184,7 @@ M.applyAutoLayout = function()
     end
   )
 
-  log.wf("applyAutoLayout: app configs to layout: %s", hs.inspect(M.layouts))
+  log.df("applyAutoLayout: app configs to layout: %s", hs.inspect(M.layouts))
   hs.layout.apply(M.layouts)
 end
 
