@@ -10,10 +10,6 @@
 # https://github.com/pjg/dotfiles/blob/master/.zshrc#L24
 umask 022
 
-# TODO do we need these?
-# fpath=($ZSH/completions/src $ZSH/functions $fpath)
-# autoload -U $ZSH/functions/*(:t)
-
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=1000
 SAVEHIST=1000

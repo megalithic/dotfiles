@@ -108,8 +108,7 @@ unset path_file
 
 
 fpath+=(
-    $ZDOTDIR
-    $ZDOTDIR/components
+    $ZDOTDIR/prompt
     $ZDOTDIR/completions
     $ZDOTDIR/plugins
     $ZDOTDIR/functions
@@ -170,7 +169,7 @@ export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 
 export GIT_REPO_DIR="$HOME/code"
-export TERMINFO=$HOME/.terminfo
+export TERMINFO="$HOME/.terminfo"
 export _Z_DATA="$HOME/.z-history"
 export TERM_ITALICS="TRUE"
 
@@ -191,7 +190,9 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export BREW_PATH="$(brew --prefix)"
   export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
-  export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
+  # FIXME:
+  # THIS IS A MAJOR SLOWDOWN
+  # export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
 
   export LIBARCHIVE=/usr/local/opt/libarchive/lib/libarchive.dylib
   export LIBCRYPTO=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib

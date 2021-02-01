@@ -145,6 +145,17 @@ path() {
       print }"
 }
 
+fpath() {
+  echo $FPATH | tr ":" "\n" | \
+    awk "{ sub(\"/usr\",   \"$fg_no_bold[green]/usr$reset_color\"); \
+      sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
+      sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
+      sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
+      sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
+      sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
+      print }"
+}
+
 mcd() { mkdir -p $1 && cd $1 }
 alias cdm=mcd
 

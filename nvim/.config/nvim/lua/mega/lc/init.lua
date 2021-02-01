@@ -20,7 +20,13 @@ local on_attach = function(client, bufnr)
 
   require("lspsaga").init_lsp_saga {
     use_saga_diagnostic_sign = false,
-    max_hover_width = vim.fn.winwidth(0) - 20
+    border_style = 2,
+    finder_action_keys = {
+      open = "<CR>",
+      vsplit = "s",
+      split = "i",
+      quit = "q"
+    }
   }
 
   if client.resolved_capabilities.completion then
@@ -81,25 +87,17 @@ local on_attach = function(client, bufnr)
   mega.map("i", "<c-k>", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
 
   -- jump diagnostic
-  mega.map("n", "]d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
-  mega.map("n", "[d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
+  mega.map("n", "[d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
+  mega.map("n", "]d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
   mega.map("n", "<Leader>ll", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>")
   mega.map("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
 
   mega.augroup(
     "lc.diagnostics",
     function()
-      vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
-      -- vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
-    end
-  )
-
-  mega.augroup(
-    "lc.diagnostics",
-    function()
       -- vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
       vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
-      vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
+      -- vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
       -- vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
     end
   )

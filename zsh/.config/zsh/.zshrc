@@ -4,7 +4,7 @@
 
 bindkey -e                          # ensures we use emacs/readline keybindings
 
-source $ZDOTDIR/components/_preload.zsh
+source "$ZDOTDIR/components/_preload.zsh"
 
 if [[ "$PLATFORM" == "macos" ]]; then
   source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -16,7 +16,6 @@ elif [[ "$PLATFORM" == "linux" ]]; then
   source "$HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
 
-
 # NOTE: source order matters!
 for file in $ZDOTDIR/components/{opts,env,fzf,aliases,functions,colors,keybindings,completion,ssh,zlua,asdf}.zsh; do
   # shellcheck disable=SC1090
@@ -24,7 +23,6 @@ for file in $ZDOTDIR/components/{opts,env,fzf,aliases,functions,colors,keybindin
 done
 unset file
 
-# autoload -Uz compinit; compinit     # load completion system - remove? handled in completion.zsh
 autoload -U promptinit; promptinit  # load prompt themes
 prompt megalithic                   # load my prompt
 

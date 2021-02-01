@@ -35,9 +35,9 @@ if paq_exists then
   paq {"nvim-lua/plenary.nvim"}
   paq {"nvim-lua/popup.nvim"}
   paq {"hrsh7th/vim-vsnip"}
-  paq {"hrsh7th/vim-vsnip-integ"}
-  paq {"RishabhRD/popfix"}
-  paq {"RishabhRD/nvim-lsputils"}
+  -- paq {"hrsh7th/vim-vsnip-integ"}
+  -- paq {"RishabhRD/popfix"}
+  -- paq {"RishabhRD/nvim-lsputils"}
   paq {"glepnir/lspsaga.nvim"}
   paq {
     "nvim-treesitter/nvim-treesitter",
@@ -107,7 +107,9 @@ if paq_exists then
   -- (the rest...) --
   paq {"wsdjeg/vim-fetch"} -- vim path/to/file.ext:12:3
   paq {"cohama/lexima.vim"}
-  -- paq {"windwp/nvim-autopairs"}
+  -- paq {"blackCauldron7/surround.nvim"}
+  -- paq {"windwp/nvim-autopairs"} --
+  -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
   -- paq {"Raimondi/delimitMate"}
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`

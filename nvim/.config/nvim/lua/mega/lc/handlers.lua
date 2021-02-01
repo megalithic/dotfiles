@@ -65,7 +65,7 @@ end
 
 -- https://github.com/RishabhRD/nvim-lsputils#setup
 -- M["textDocument/codeAction"] = require "lsputil.codeAction".code_action_handler
-M["textDocument/references"] = require "lsputil.locations".references_handler
+-- M["textDocument/references"] = require "lsputil.locations".references_handler
 -- M["textDocument/definition"] = require "lsputil.locations".definition_handler
 -- M["textDocument/declaration"] = require "lsputil.locations".declaration_handler
 -- M["textDocument/typeDefinition"] = require "lsputil.locations".typeDefinition_handler
