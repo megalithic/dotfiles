@@ -1,18 +1,3 @@
-function _G.check_back_space()
-  local col = vim.fn.col(".") - 1
-  if col == 0 or vim.fn.getline("."):sub(col, col):match("%s") then
-    return true
-  else
-    return false
-  end
-end
-
--- ["i|<C-e>"]      = map_cmd([[pumvisible() ? "\<C-e>" : "\<End>"]]):with_noremap():with_expr(),
--- -- TODO Wrap line
--- ["i|<TAB>"]      = map_cmd([[pumvisible() ? "\<C-n>" : vsnip#available(1) ?"\<Plug>(vsnip-expand-or-jump)" : v:lua.check_back_space() ? "\<TAB>" : completion#trigger_completion()]]):with_expr():with_silent(),
--- ["i|<S-TAB>"]    = map_cmd([[pumvisible() ? "\<C-p>" : "\<C-h>"]]):with_noremap():with_expr(),
--- ["i|<CR>"]       = map_cmd('compe#confirm("<Plug>delimitMateCR")'):with_noremap():with_expr(),
-
 local function convenience_mappings()
   -- make the tab key match bracket pairs
   vim.api.nvim_exec("silent! unmap [%", true)
@@ -130,37 +115,76 @@ endif
   mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
   -- mega.map("n", "<Leader>m", [[<cmd>lua require('fzf-commands').files()<cr>]])
 
-  local has_compe, _ = pcall(require, "compe")
-  if has_compe then
-    -- local npairs = require('nvim-autopairs')
-    -- vim.g.completion_confirm_key = ""
-    -- _G.completion_confirm=function()
-    --   if vim.fn.pumvisible() ~= 0  then
-    --     if vim.fn.complete_info()["selected"] ~= -1 then
-    --       vim.fn["compe#confirm"]()
-    --       return npairs.esc("<c-y>")
-    --     else
-    --       vim.fn.nvim_select_popupmenu_item(0, false, false,{})
-    --       vim.fn["compe#confirm"]()
-    --       return npairs.esc("<c-n><c-y>")
-    --     end
-    --   else
-    --     return npairs.check_break_line_char()
-    --   end
+  -- local has_compe, _ = pcall(require, "compe")
+  -- if has_compe then
+  --   local npairs = require("nvim-autopairs")
+  --   vim.g.completion_confirm_key = ""
+
+  --   _G.check_back_space = function()
+  --     local col = vim.fn.col(".") - 1
+  --     if col == 0 or vim.fn.getline("."):sub(col, col):match("%s") then
+  --       return true
+  --     else
+  --       return false
+  --     end
+  --   end
+
+  --   -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/plugins/_compe.lua
+  --   _G.trigger_completion = function()
+  --     if vim.fn.pumvisible() ~= 0 then
+  --       if vim.fn.complete_info()["selected"] ~= -1 then
+  --         return vim.fn["compe#confirm"]()
+  --       end
+
+  --       vim.fn.nvim_select_popupmenu_item(0, false, false, {})
+  --       return vim.fn["compe#confirm"]()
+  --     end
+
+  --     return npairs.check_break_line_char()
+  --   end
+
+  --   _G.completion_confirm = function()
+  --     if vim.fn.pumvisible() ~= 0 then
+  --       if vim.fn.complete_info()["selected"] ~= -1 then
+  --         vim.fn["compe#confirm"]()
+  --         return npairs.esc("<c-y>")
+  --       else
+  --         vim.fn.nvim_select_popupmenu_item(0, false, false, {})
+  --         vim.fn["compe#confirm"]()
+  --         return npairs.esc("<c-n><c-y>")
+  --       end
+  --     else
+  --       return npairs.check_break_line_char()
+  --     end
+  --   end
 
 
-    --   vim.api.nvim_set_keymap('i' , '<CR>','v:lua.completion_confirm()', {expr = true , noremap = true})
-    mega.map("i", "<C-e>", [[pumvisible() ? "\<C-e>" : "\<End>"]], {expr = true})
-    mega.map(
-      "i",
-      "<TAB>",
-      [[pumvisible() ? "\<C-n>" : vsnip#available(1) ?"\<Plug>(vsnip-expand-or-jump)" : v:lua.check_back_space() ? "\<TAB>" : completion#trigger_completion()]],
-      {expr = true}
-    )
-    mega.map("i", "<S-TAB>", [[pumvisible() ? "\<C-p>" : "\<C-h>"]], {expr = true})
-    -- mega.map("i", "<CR>", [[compe#confirm({ 'keys': "\<Plug>delimitMateCR", 'mode': '' })]], {expr = true})
-    mega.map("i", "<CR>", [[compe#confirm(lexima#expand('<LT>CR>', 'i'))]], {expr = true})
-  end
+  --   -- ["i|<C-e>"]      = map_cmd([[pumvisible() ? "\<C-e>" : "\<End>"]]):with_noremap():with_expr(),
+  --   mega.map("i", "<CR>", "v:lua.trigger_completion()", {expr = true, noremap = true})
+  --   mega.map("i", "<C-e>", [[pumvisible() ? "\<C-e>" : "\<End>"]], {expr = true})
+  --   mega.map(
+  --     "i",
+  --     "<TAB>",
+  --     [[pumvisible() ? "\<C-n>" : vsnip#available(1) ?"\<Plug>(vsnip-expand-or-jump)" : v:lua.check_back_space() ? "\<TAB>" : completion#trigger_completion()]],
+  --     {expr = true}
+  --   )
+  --   mega.map("i", "<S-TAB>", [[pumvisible() ? "\<C-p>" : "\<C-h>"]], {expr = true})
+  --   -- mega.map("i", "<CR>", [[compe#confirm({ 'keys': "\<Plug>delimitMateCR", 'mode': '' })]], {expr = true})
+  --   -- mega.map("i", "<CR>", [[compe#confirm(lexima#expand('<LT>CR>', 'i'))]], {expr = true})
+
+  --   -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/plugins/_snippets.lua
+  --   mega.map("i", "<C-n>", 'vsnip#jumpable(1) ? "<Plug>(vsnip-jump-next)" : "<C-n>"', {silent = true, expr = true})
+  --   mega.map("s", "<C-n>", 'vsnip#jumpable(1) ? "<Plug>(vsnip-jump-next)" : "<C-n>"', {silent = true, expr = true})
+  --   mega.map("i", "<C-p>", 'vsnip#jumpable(-1) ? "<Plug>(vsnip-jump-prev)" : "<C-p>"', {silent = true, expr = true})
+  --   mega.map("s", "<C-p>", 'vsnip#jumpable(-1) ? "<Plug>(vsnip-jump-prev)" : "<C-p>"', {silent = true, expr = true})
+
+  --   -- ["i|<C-e>"]      = map_cmd([[pumvisible() ? "\<C-e>" : "\<End>"]]):with_noremap():with_expr(),
+  --   -- -- TODO Wrap line
+  --   -- ["i|<TAB>"]      = map_cmd([[pumvisible() ? "\<C-n>" : vsnip#available(1) ?"\<Plug>(vsnip-expand-or-jump)" : v:lua.check_back_space() ? "\<TAB>" : completion#trigger_completion()]]):with_expr():with_silent(),
+  --   -- ["i|<S-TAB>"]    = map_cmd([[pumvisible() ? "\<C-p>" : "\<C-h>"]]):with_noremap():with_expr(),
+  --   -- ["i|<CR>"]       = map_cmd('compe#confirm("<Plug>delimitMateCR")'):with_noremap():with_expr(),
+
+  -- end
 end
 
 -- global_mappings()

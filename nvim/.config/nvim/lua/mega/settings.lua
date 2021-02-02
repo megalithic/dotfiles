@@ -1,6 +1,6 @@
 mega.inspect("activating package settings.lua..")
 
--- nvim-colorizer
+-- [nvim-colorizer] ------------------------------------------------------------
 -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
 local colorizer_installed, colorizer = pcall(require, "colorizer")
 if colorizer_installed then
@@ -31,7 +31,7 @@ if colorizer_installed then
   )
 end
 
--- golden_ratio
+-- [golden_size] ---------------------------------------------------------------
 local golden_size_installed, golden_size = pcall(require, "golden_size")
 if golden_size_installed then
   local function ignore_by_buftype(types)
@@ -62,7 +62,10 @@ if golden_size_installed then
   )
 end
 
--- fzf
+-- [nvim-autopairs] ------------------------------------------------------------
+require("nvim-autopairs").setup()
+
+-- [fzf] -----------------------------------------------------------------------
 vim.g.fzf_command_prefix = "Fzf"
 vim.g.fzf_layout = {window = {width = 0.5, height = 0.5}}
 vim.g.fzf_action = {enter = "vsplit"}
@@ -80,24 +83,40 @@ vim.api.nvim_exec(
     ]],
   false
 )
+vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
 vim.g.fzf_colors = {
   fg = {"fg", "Normal"},
   bg = {"bg", "Normal"},
-  hl = {"fg", "Comment"},
+  hl = {"fg", "IncSearch"},
   ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
   ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
-  ["hl+"] = {"fg", "Statement"},
-  info = {"fg", "PreProc"},
+  ["hl+"] = {"fg", "IncSearch"},
+  info = {"fg", "IncSearch"},
   border = {"fg", "Ignore"},
-  prompt = {"fg", "Conditional"},
-  pointer = {"fg", "Exception"},
-  marker = {"fg", "Keyword"},
-  spinner = {"fg", "Label"},
-  header = {"fg", "Comment"}
+  prompt = {"fg", "Comment"},
+  pointer = {"fg", "IncSearch"},
+  marker = {"fg", "IncSearch"},
+  spinner = {"fg", "IncSearch"},
+  header = {"fg", "WildMenu"}
 }
-vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
+-- @evantravers:
+-- vim.g.fzf_colors = {
+--   fg = {"fg", "Normal"},
+--   bg = {"bg", "Normal"},
+--   hl = {"fg", "Comment"},
+--   ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
+--   ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
+--   ["hl+"] = {"fg", "Statement"},
+--   info = {"fg", "PreProc"},
+--   border = {"fg", "Ignore"},
+--   prompt = {"fg", "Conditional"},
+--   pointer = {"fg", "Exception"},
+--   marker = {"fg", "Keyword"},
+--   spinner = {"fg", "Label"},
+--   header = {"fg", "Comment"}
+-- }
 
--- vim-polyglot
+-- [vim-polyglot] --------------------------------------------------------------
 vim.g.polyglot_disabled = {
   "typescript",
   "typescriptreact",
@@ -121,30 +140,32 @@ vim.g.polyglot_disabled = {
   "sh"
 }
 
--- lspfuzzy
+-- [lspfuzzy] ------------------------------------------------------------------
 require("lspfuzzy").setup(
   {
     methods = "all" -- either 'all' or a list of LSP methods (see below)
   }
 )
 
--- vim-sneak
+-- [vim-sneak] -----------------------------------------------------------------
 -- vim.g["sneak#label"] = true
+
+-- [quickscope] ----------------------------------------------------------------
 -- quickscope
 -- vim.g.qs_enable = 1
 -- vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
 -- vim.g.qs_lazy_highlight = 1
 
--- textobj_parameter
+-- [textobj_parameter] ---------------------------------------------------------
 vim.g.vim_textobj_parameter_mapping = ","
 
--- git_messenger
+-- [git_messenger] -------------------------------------------------------------
 vim.g.git_messenger_no_default_mappings = true
 vim.g.git_messenger_max_popup_width = 100
 vim.g.git_messenger_max_popup_height = 100
 mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 
--- gitsigns
+-- [gitsigns] ------------------------------------------------------------------
 local gitsigns_installed, gitsigns = pcall(require, "gitsigns")
 if gitsigns_installed then
   gitsigns.setup(
@@ -177,10 +198,7 @@ if gitsigns_installed then
   )
 end
 
--- delimitMate
-vim.g.delimitMate_expand_cr = 0
-
--- vim-test
+-- [vim-test] ------------------------------------------------------------------
 vim.api.nvim_exec(
   [[
 " custom test display strategy:
@@ -205,7 +223,7 @@ nmap <silent> <leader>to :copen<CR>
   false
 )
 
--- treesitter
+-- [nvim-treesitter] -----------------------------------------------------------
 local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
 if ts_installed then
   treesitter.setup(
@@ -281,7 +299,7 @@ if ts_installed then
   )
 end
 
--- vim-projectionist
+-- [vim-projectionist] ---------------------------------------------------------
 vim.g.projectionist_heuristics = {
   ["mix.exs"] = {
     ["lib/**/views/*_view.ex"] = {
