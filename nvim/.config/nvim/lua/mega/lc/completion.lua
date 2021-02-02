@@ -76,7 +76,7 @@ function M.activate()
         completion_enable_snippet = "vim-vsnip",
         completion_trigger_on_delete = 0,
         completion_trigger_keyword_length = 1,
-        completio_sorting = "none",
+        completion_sorting = "none",
         max_items = 10,
         sorting = "none", -- 'alphabet'
         matching_strategy_list = {"exact", "substring", "fuzzy"},
@@ -99,7 +99,7 @@ function M.activate()
         enabled = true,
         debug = false,
         min_length = 1,
-        preselect = "enable",
+        preselect = "disabled",
         allow_prefix_unmatch = false,
         throttle_time = 120,
         source_timeout = 200,
@@ -116,4 +116,5 @@ function M.activate()
     )
   end
 end
+
 return M

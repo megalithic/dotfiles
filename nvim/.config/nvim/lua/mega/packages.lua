@@ -17,7 +17,8 @@ if paq_exists then
   -- (ui, interface) --
 
   paq {"trevordmiller/nova-vim"}
-  paq {"glepnir/zephyr-nvim"}
+  -- paq {"glepnir/zephyr-nvim"}
+  -- paq {"sainnhe/gruvbox-material"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}
@@ -106,10 +107,9 @@ if paq_exists then
 
   -- (the rest...) --
   paq {"wsdjeg/vim-fetch"} -- vim path/to/file.ext:12:3
-  paq {"cohama/lexima.vim"}
+  -- paq {"cohama/lexima.vim"}
   -- paq {"blackCauldron7/surround.nvim"}
-  -- paq {"windwp/nvim-autopairs"} --
-  -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
+  paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
   -- paq {"Raimondi/delimitMate"}
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`

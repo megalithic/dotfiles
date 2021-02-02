@@ -1,4 +1,4 @@
-# = theme/colors/layout (gruvbox-material-dark-soft) -- 
+# = theme/colors/layout (zephyr) -- 
 
 # -- active pane decorations
 
@@ -9,13 +9,13 @@ setw -g pane-border-status top # currently renders incorrectly in HEAD, top/off
 setw -g pane-border-format ""
 setw -g pane-border-format '─'
 
-setw -g pane-border-style 'bg=#32302f,fg=#555555'
-setw -g pane-active-border-style 'bg=#32302f,fg=blue'
-# set -g pane-active-border-style 'bg=#32302f,fg=#6A7D89'
+setw -g pane-border-style 'bg=default,fg=#555555'
+setw -g pane-active-border-style 'bg=default,fg=blue'
+# set -g pane-active-border-style 'bg=default,fg=#6A7D89'
 
 # dim inactive window text
-set -g window-style 'fg=#666666,bg=#32302f'
-set -g window-active-style 'fg=white,bg=#32302f'
+set -g window-style 'fg=#666666,bg=default'
+set -g window-active-style 'fg=white,bg=default'
 # setw -g window-status-activity-style 'bg=red'
 
 # setw -g window-status-style
@@ -30,7 +30,7 @@ set -g mode-style 'bg=#ffffff,fg=#000000'
 
 # colorize messages in the command line
 set -g status-style 'bg=default,fg=#aaaaaa'
-set -g message-style 'bg=#32302f,fg=brightred,italics'
+set -g message-style 'bg=default,fg=brightred,italics'
 set -g message-command-style bg=black,fg=blue
 
 # set -g message-style bg=default,fg=brightred #base02
@@ -47,10 +47,10 @@ set -g status-left-length 100
 
 # - windows -
 setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#32302f,bold]● }#I:#W "
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=default,bold]● }#I:#W "
 setw -g window-status-activity-style none
 # setw -g window-status-activity-style bg=default,fg=colour243
-setw -g window-status-bell-style 'fg=#32302f,bg=#6a7d8a,dim'
+setw -g window-status-bell-style 'fg=default,bg=#6a7d8a,dim'
 # setw -g window-status-bell-style bg=default,fg=brightred
 # setw -g window-status-current-style none
 setw -g window-status-current-style bg=default,fg=colour004
@@ -64,9 +64,5 @@ setw -g window-status-current-style bg=default,fg=colour004
 # status_cpu "#{prefix_highlight}"
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/GMT' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
-
-set -g @prefix_highlight_empty_attr     'fg=default,bg=#32302f' # default is 'fg=default,bg=default'
-set -g @prefix_highlight_copy_mode_attr 'fg=#32302f,bg=yellow,bold'
-set -g @prefix_highlight_bg             '#32302f'
 
 # vim: ft=tmux tw=0

@@ -132,6 +132,24 @@ endif
 
   local has_compe, _ = pcall(require, "compe")
   if has_compe then
+    -- local npairs = require('nvim-autopairs')
+    -- vim.g.completion_confirm_key = ""
+    -- _G.completion_confirm=function()
+    --   if vim.fn.pumvisible() ~= 0  then
+    --     if vim.fn.complete_info()["selected"] ~= -1 then
+    --       vim.fn["compe#confirm"]()
+    --       return npairs.esc("<c-y>")
+    --     else
+    --       vim.fn.nvim_select_popupmenu_item(0, false, false,{})
+    --       vim.fn["compe#confirm"]()
+    --       return npairs.esc("<c-n><c-y>")
+    --     end
+    --   else
+    --     return npairs.check_break_line_char()
+    --   end
+
+
+    --   vim.api.nvim_set_keymap('i' , '<CR>','v:lua.completion_confirm()', {expr = true , noremap = true})
     mega.map("i", "<C-e>", [[pumvisible() ? "\<C-e>" : "\<End>"]], {expr = true})
     mega.map(
       "i",

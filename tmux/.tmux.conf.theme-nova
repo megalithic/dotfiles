@@ -65,4 +65,8 @@ setw -g window-status-current-style bg=default,fg=colour004
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/GMT' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
+set -g @prefix_highlight_empty_attr     'fg=default,bg=#3c4c55' # default is 'fg=default,bg=default'
+set -g @prefix_highlight_copy_mode_attr 'fg=#3c4c55,bg=yellow,bold'
+set -g @prefix_highlight_bg             '#3c4c55'
+
 # vim: ft=tmux tw=0

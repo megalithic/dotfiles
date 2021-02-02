@@ -4,8 +4,8 @@ vim.cmd [[packadd vimball]]
 
 -- [ debugging ] ---------------------------------------------------------------
 
--- Can set this lower if needed (used in tandem with mega.inspect) ->
--- vim.lsp.set_log_level("debug")
+-- Can set this lower if needed (used in tandem with `mega.inspect`) ->
+--  vim.lsp.set_log_level("debug")
 
 -- To execute in :cmd ->
 --  :lua <the_command>
@@ -21,6 +21,7 @@ do
   mega.load("preflight", "mega.preflight")
   mega.load("packages", "mega.packages")
   mega.load("nova", "mega.colors.nova").load()
+  -- mega.load("zephyr", "mega.colors.zephyr").load()
   -- mega.load("nova", "mega.colors.edge").load()
   -- mega.load("gruvbox_material", "mega.colors.gruvbox_material").load()
   mega.load("settings", "mega.settings")

@@ -88,20 +88,13 @@ return {
   icons = icons,
   colors = mega.table_merge(base, status),
   load = function()
-    -- (set gruvbox_material colorscheme) --
+    -- (set zephyr colorscheme) --
     vim.o.background = "dark"
-    vim.g.nova_transparent = 1
-    vim.api.nvim_exec([[ colorscheme gruvbox-material ]], true)
-
-    vim.g.gruvbox_material_background = "soft"
-    vim.g.gruvbox_material_palette = "material"
-    vim.g.gruvbox_material_enable_italic = 1
-    vim.g.gruvbox_material_enable_bold = 1
-    vim.g.gruvbox_material_transparent_background = 1
-    vim.g.gruvbox_material_sign_column_background = "none"
+    vim.api.nvim_exec([[ colorscheme zephyr ]], true)
 
     -- (highlights) --
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
+
     cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
     cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
   end
