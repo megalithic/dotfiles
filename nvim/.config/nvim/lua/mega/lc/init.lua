@@ -23,9 +23,9 @@ local on_attach = function(client, bufnr)
     border_style = 2,
     finder_action_keys = {
       open = "<CR>",
-      vsplit = "s",
-      split = "i",
-      quit = "q"
+      vsplit = "v",
+      split = "s",
+      quit = "<ESC>"
     }
   }
 
@@ -50,7 +50,6 @@ local on_attach = function(client, bufnr)
   end
 
   if client.resolved_capabilities.hover then
-    -- mega.map("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>")
     mega.map("n", "K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
   end
 
