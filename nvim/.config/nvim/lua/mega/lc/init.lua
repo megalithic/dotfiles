@@ -51,6 +51,10 @@ local on_attach = function(client, bufnr)
 
   if client.resolved_capabilities.hover then
     mega.map("n", "K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
+    -- scroll down hover doc
+    mega.map("n", "<C-n>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
+    -- scroll up hover doc
+    mega.map("n", "<C-p>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
   end
 
   if client.resolved_capabilities.goto_definition then
