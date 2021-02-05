@@ -125,7 +125,7 @@ brew "switchaudio-osx"
 brew "terminal-notifier"
 brew "tidy-html5"
 brew "tldr"
-brew "tmux"
+brew "tmux", args: ["HEAD"]
 brew "trash"
 brew "tree"
 brew "tree-sitter"
