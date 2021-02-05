@@ -4,8 +4,8 @@
 # What in tarnation?
 #
 # CLI tool to control macOS/notification center do-not-disturb (DND) mode
+# REF: https://gist.github.com/a7madgamal/9d3518a62c21477a92be461fbd652533#file-change-do-not-disturb-dnd-setting-on-macos-big-sur-using-the-terminal-md
 #
-
 
 command="$(basename "$0")"
 

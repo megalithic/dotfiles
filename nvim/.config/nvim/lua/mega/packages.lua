@@ -32,6 +32,7 @@ if paq_exists then
   -- paq {"steelsojka/completion-buffers"}
   -- paq {"nvim-treesitter/completion-treesitter"}
   paq {"hrsh7th/nvim-compe"}
+  paq {"onsails/lspkind-nvim"}
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"nvim-lua/plenary.nvim"}
   paq {"nvim-lua/popup.nvim"}
@@ -116,6 +117,7 @@ if paq_exists then
   -- paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
   paq {"tpope/vim-commentary"}
   paq {"tpope/vim-eunuch"}
+  paq {"tpope/vim-abolish"}
   paq {"tpope/vim-rhubarb"}
   paq {"tpope/vim-repeat"}
   paq {"tpope/vim-surround"}

@@ -1,5 +1,20 @@
 mega.inspect("activating package settings.lua..")
 
+-- [conflict-marker] ----------------------------------------------------------------
+-- disable the default highlight group
+vim.g.conflict_marker_highlight_group = ""
+-- Include text after begin and end markers
+vim.g.conflict_marker_begin = "^<<<<<<< .*$"
+vim.g.conflict_marker_end = "^>>>>>>> .*$"
+
+-- [kommentary] ----------------------------------------------------------------
+-- require("kommentary.config").configure_language(
+-- "lua",
+-- {
+-- prefer_single_line_comments = true
+-- }
+-- )
+
 -- [nvim-colorizer] ------------------------------------------------------------
 -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
 local colorizer_installed, colorizer = pcall(require, "colorizer")
@@ -201,14 +216,15 @@ end
 -- [vim-test] ------------------------------------------------------------------
 vim.api.nvim_exec(
   [[
-" custom test display strategy:
 function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
 endfunction
+
 let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
 let g:test#strategy = 'terminal_split'
 let g:test#filename_modifier = ':.'
 let g:test#preserve_screen = 0
+
 nmap <silent> <leader>tf :TestFile<CR>
 nmap <silent> <leader>tt :TestVisit<CR>
 nmap <silent> <leader>tn :TestNearest<CR>
@@ -217,7 +233,6 @@ nmap <silent> <leader>tv :TestVisit<CR>
 nmap <silent> <leader>ta :TestSuite<CR>
 nmap <silent> <leader>tP :A<CR>
 nmap <silent> <leader>tp :AV<CR>
-" https://github.com/megalithic/dotfiles/blob/8a9f7d9913f586f1ed5f400525ffa04906691311/nvim_hybrid/plugin/helpers.vim
 nmap <silent> <leader>to :copen<CR>
 ]],
   false

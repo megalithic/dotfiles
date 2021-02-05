@@ -55,6 +55,7 @@ local on_attach = function(client, bufnr)
     mega.map("n", "<C-n>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
     -- scroll up hover doc
     mega.map("n", "<C-p>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
+    mega.map("i", "<c-k>", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
   end
 
   if client.resolved_capabilities.goto_definition then
@@ -87,7 +88,6 @@ local on_attach = function(client, bufnr)
   mega.map("n", "<Leader>lgs", "<cmd>lua vim.lsp.buf.document_symbol()<CR>")
   mega.map("n", "<Leader>lgS", "<cmd>lua vim.lsp.buf.workspace_symbol()<CR>")
   mega.map("n", "<Leader>dE", "<cmd>lua vim.lsp.buf.declaration()<CR>")
-  mega.map("i", "<c-k>", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
 
   -- jump diagnostic
   mega.map("n", "[d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
@@ -96,12 +96,12 @@ local on_attach = function(client, bufnr)
   mega.map("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
 
   mega.augroup(
-    "lc.diagnostics",
+    "lc.cursor_commands",
     function()
-      -- vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()]]
       vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
+      -- if client.resolved_capabilities.hover then
       -- vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
-      -- vim.api.nvim_command [[autocmd InsertLeave * lua vim.lsp.diagnostic.set_loclist({open_loclist = false})]]
+      -- end
     end
   )
 end

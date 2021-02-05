@@ -11,11 +11,14 @@ function M.activate()
   vim.cmd([[ set completeopt=menu,menuone,noselect ]])
   vim.cmd [[ set shortmess+=c ]]
 
+  require("lspkind").init()
+
   -- [ snippets ] --------------------------------------------------------------
   vim.g.vsnip_snippet_dir = vim.fn.stdpath("config") .. "/vsnips"
   -- vim.api.nvim_set_var("vsnip_snippet_dir", vim.fn.stdpath("config") .. "/vsnips")
 
   -- [ nvim-completion ] --------------------------------------------------------------
+  -- REF: for mapping: https://github.com/FrancoBregante/nvim/blob/main/lua/plugins/_completion.lua
   local has_completion, completion = pcall(require, "completion")
   if has_completion then
     local chain_complete_list = {

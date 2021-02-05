@@ -48,6 +48,7 @@ module.jump = function(url)
 end
 
 module.snip = function()
+  -- TODO: https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L248-L281
   local appName = config.preferred.browsers[1]
   log.wf("snipping with appName -> %s", appName)
 
