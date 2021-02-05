@@ -111,6 +111,7 @@ function M.activate()
           vsnip = true,
           nvim_lsp = true,
           nvim_lua = true,
+          treesitter = true,
           buffer = true,
           path = true,
           spell = true

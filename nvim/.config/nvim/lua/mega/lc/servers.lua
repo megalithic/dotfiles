@@ -219,13 +219,17 @@ function M.activate(on_attach_fn)
   for server, config in pairs(servers) do
     local server_disabled = (config.disabled ~= nil and config.disabled) or false
 
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+
     if not server_disabled then
       lspconfig[server].setup(
         vim.tbl_deep_extend(
           "force",
           {
             on_attach = on_attach_fn,
-            handlers = vim.tbl_deep_extend("keep", {}, require("mega.lc.handlers"), vim.lsp.handlers)
+            handlers = vim.tbl_deep_extend("keep", {}, require("mega.lc.handlers"), vim.lsp.handlers),
+            capabilities = capabilities
           },
           config
         )

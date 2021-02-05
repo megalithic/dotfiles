@@ -99,9 +99,9 @@ local on_attach = function(client, bufnr)
     "lc.cursor_commands",
     function()
       vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
-      -- if client.resolved_capabilities.hover then
-      -- vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
-      -- end
+      if client.resolved_capabilities.signature_help then
+        vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
+      end
     end
   )
 end
