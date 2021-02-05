@@ -73,8 +73,33 @@ _fzf_gruvbox() {
   "
 }
 
+_fzf_forest_night() {
+  local color00='#323d43'
+  local color01='#3c474d'
+  local color02='#465258'
+  local color03='#505a60'
+  local color04='#d8caac'
+  local color05='#d5c4a1'
+  local color06='#ebdbb2'
+  local color07='#fbf1c7'
+  local color08='#fb4934'
+  local color09='#fe8019'
+  local color0A='#fabd2f'
+  local color0B='#b8bb26'
+  local color0C='#8ec07c'
+  local color0D='#83a598'
+  local color0E='#d3869b'
+  local color0F='#d65d0e'
+
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
+  --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
+  --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
+  --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D
+  "
+}
+
 # TODO: figure out how to automate this based on the loaded kitty theme, mayhaps?
-_fzf_nova
+_fzf_forest_night
 
   # if (command -v rg &> /dev/null); then
   #   export FZF_CTRL_T_COMMAND='rg --files --hidden --line-number --follow -g "!{.git,node_modules,vendor,build,_build}"'

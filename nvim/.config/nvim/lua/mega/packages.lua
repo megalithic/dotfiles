@@ -19,6 +19,7 @@ if paq_exists then
   paq {"trevordmiller/nova-vim"}
   -- paq {"glepnir/zephyr-nvim"}
   -- paq {"sainnhe/gruvbox-material"}
+  paq {"sainnhe/forest-night"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}

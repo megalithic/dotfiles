@@ -149,7 +149,7 @@ return {
 
     for group, id in pairs(lsp_highlights) do
       cu.hi("LspDiagnosticsVirtualText" .. group, status[id], nil, "undercurl,italic")
-      cu.hi("LspDiagnosticsUnderline" .. group, status[id], nil, "undercurl,italic")
+      cu.hi("LspDiagnosticsUnderline" .. group, status[id], nil, "undercurl,underline,italic")
       cu.hi("LspDiagnosticsDefault" .. group, status[id], nil, "undercurl,italic")
       cu.hi("LspDiagnosticsFloating" .. group, status[id], nil, "italic")
       cu.hi("LspDiagnosticsSign" .. group, status[id], nil, nil)
