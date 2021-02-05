@@ -44,7 +44,7 @@ A few of the _must-have_ tools I roll with:
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   - see `~/.dotfiles/keyboard` for macOS specific config things
-  - see my [QMK dz60 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/dz60/keymaps/megalithic) for my custom keyboard setup
+  - see my [Atreus62 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic) for my custom keyboard setup
 - [tmux](https://github.com/tmux/tmux/wiki)
   - additional tmux statusbar binaries available (see `tmux-*` files in
     `~/.dotfiles/bin`).
