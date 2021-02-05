@@ -266,8 +266,8 @@ if ts_installed then
         "typescript",
         "yaml"
       },
-      highlight = {enable = false},
-      indent = {enable = false}
+      highlight = {enable = true},
+      indent = {enable = true}
       -- textobjects = {
       --   select = {
       --     enable = true,
