@@ -307,6 +307,10 @@ if has("nvim")
   " Block in normal mode
   let &t_EI = "\e[2 q"
 
+  " supposed to be undercurl things?
+  " let &t_Cs = "\e[4:3m"
+  " let &t_Ce = "\e[4:0m"
+
   let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $EDITOR      = 'nvr -l'

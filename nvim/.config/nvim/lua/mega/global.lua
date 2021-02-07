@@ -36,12 +36,35 @@ function M.isdir(path)
   return M.exists(path .. "/")
 end
 
+function M.set_highlight(group, _fg, _bg, _style, _bang)
+  local fg, bg, style, bang = "", "", "", ""
+
+  if _fg ~= nil then
+    fg = "guifg=" .. _fg
+  end
+
+  if _bg ~= nil then
+    bg = "guibg=" .. _bg
+  end
+
+  if _style ~= nil then
+    style = "gui=" .. _style
+  end
+
+  if _bang ~= nil and _bang then
+    bang = "!"
+  end
+
+  vim.api.nvim_exec("highlight" .. bang .. " " .. group .. " " .. fg .. " " .. bg .. " " .. style, true)
+end
+
 M.map_opts = {noremap = true, silent = false, expr = false}
 function M.map(mode, lhs, rhs, opts)
   opts = vim.tbl_extend("force", M.map_opts, opts or {})
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
+-- a safe module loader
 function M.load(key, req)
   local loaded, loader = pcall(require, req)
 
@@ -67,14 +90,6 @@ function M.vcmd_map(cmd)
   return string.format([[<cmd>'<,'>%s<cr>]], cmd)
 end
 
-function M.autocmd(cmd)
-  vim.cmd("autocmd " .. cmd)
-end
-
-function M.au(cmd)
-  vim.api.nvim_exec(cmd, true)
-end
-
 function M.create_mappings(mappings, bufnr)
   local fn = vim.api.nvim_set_keymap
   if bufnr then
@@ -90,15 +105,18 @@ function M.create_mappings(mappings, bufnr)
   end
 end
 
-function new_command(s)
-  vim.cmd("command! " .. s)
-end
-
 function M.exec_cmds(cmd_list)
   vim.cmd(table.concat(cmd_list, "\n"))
 end
 
-function augroup(name, commands)
+function M.augroup(group, fn)
+  vim.api.nvim_command("augroup " .. group)
+  vim.api.nvim_command("autocmd!")
+  fn()
+  vim.api.nvim_command("augroup END")
+end
+
+function M.augroup_cmds(name, commands)
   vim.cmd("augroup " .. name)
   vim.cmd("autocmd!")
   for _, c in ipairs(commands) do
@@ -197,6 +215,7 @@ function M.debounce(interval_ms, fn)
   }
 end
 
+-- helps with nerdfonts usages
 local bytemarkers = {{0x7FF, 192}, {0xFFFF, 224}, {0x1FFFFF, 240}}
 function M.utf8(decimal)
   if decimal < 128 then
@@ -227,21 +246,6 @@ function M.bmap(mode, key, result, opts)
   vim.api.nvim_buf_set_keymap(0, mode, key, result, map_opts)
 end
 
-function M.gmap(mode, key, result, opts)
-  if opts == nil then
-    map_opts = {noremap = true, silent = true}
-  end
-
-  vim.api.nvim_set_keymap(mode, key, result, map_opts)
-end
-
-function M.augroup(group, fn)
-  vim.api.nvim_command("augroup " .. group)
-  vim.api.nvim_command("autocmd!")
-  fn()
-  vim.api.nvim_command("augroup END")
-end
-
 function M.get_icon(icon_name)
   local ICONS = {
     paste = "⍴",
@@ -262,57 +266,6 @@ end
 
 function M.get_color(synID, what, mode)
   return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(synID)), what, mode)
-end
-
-function M.locations_to_items(locations)
-  local items = {}
-  local grouped =
-    setmetatable(
-    {},
-    {
-      __index = function(t, k)
-        local v = {}
-        rawset(t, k, v)
-        return v
-      end
-    }
-  )
-  local fname = vim.api.nvim_buf_get_name(0)
-  for _, d in ipairs(locations) do
-    local range = d.range or d.targetSelectionRange
-    table.insert(grouped[fname], {start = range.start})
-  end
-
-  local keys = vim.tbl_keys(grouped)
-  table.sort(keys)
-  local rows = grouped[fname]
-
-  table.sort(rows, vim.position_sort)
-  local bufnr = vim.fn.bufnr()
-  for _, temp in ipairs(rows) do
-    local pos = temp.start
-    local row = pos.line
-    local line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
-    if line then
-      local col
-      if pos.character > #line then
-        col = #line
-      else
-        col = vim.str_byteindex(line, pos.character)
-      end
-
-      table.insert(
-        items,
-        {
-          bufnr = bufnr,
-          lnum = row + 1,
-          col = col + 1,
-          text = line
-        }
-      )
-    end
-  end
-  return items
 end
 
 function M.inspect(k, v, l)
@@ -387,44 +340,5 @@ function M.bufferActiveLSP()
   end
   M.dump(servers)
 end
-
--- M.fzfwrap = {}
--- M.fzfwrap.files = function()
---   vim.fn["fzf#vim#files"](
---     "",
---     {
---       options = {
---         "--history=" .. vim.env.HOME .. "/.fzf.history",
---         "--preview",
---         "cat {}",
---         "--preview-window",
---         "right:50%:hidden",
---         "--bind=alt-c:execute(cp_file2clipboard.sh {})+abort",
---         "--bind=alt-o:execute(open {})+abort",
---         "--bind=alt-r:execute(open -R {})+abort",
---         "--bind=alt-p:toggle-preview",
---         "--info=inline"
---       }
---     },
---     false
---   )
--- end
-
--- M.fzfwrap.buffers = function()
---   vim.fn["fzf#vim#buffers"](
---     "",
---     {
---       options = {
---         "--history=" .. vim.env.HOME .. "/.fzf.history",
---         "--bind=alt-c:execute(cp_file2clipboard.sh {4})+abort",
---         "--bind=alt-o:execute(eval open {4})+abort",
---         "--bind=alt-r:execute(eval open -R {4})+abort",
---         "--header-lines=0",
---         "--info=inline"
---       }
---     },
---     false
---   )
--- end
 
 return M

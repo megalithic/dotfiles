@@ -1,4 +1,4 @@
-local cu = require("mega.colors.utils")
+local highlight = mega.set_highlight
 
 local icons = {
   sign_error = mega.utf8(0xf655),
@@ -22,6 +22,7 @@ local icons = {
 }
 
 -- https://github.com/sainnhe/forest-night/blob/master/autoload/lightline/colorscheme/forest_night.vim
+-- TODO: should really look at switching to "standard" color names/enums
 local cs = {
   bg0 = "#323d43",
   bg1 = "#3c474d",
@@ -116,27 +117,87 @@ return {
   load = function()
     -- (set forest_night colorscheme) --
     vim.o.background = "dark"
-    vim.api.nvim_exec([[ colorscheme forest-night ]], true)
 
     vim.g.forest_night_background = "soft"
     vim.g.forest_night_enable_italic = 1
     vim.g.forest_night_enable_bold = 1
     vim.g.forest_night_transparent_background = 1
-    vim.g.forest_night_sign_column_background = "none"
+    vim.g.forest_night_sign_column_background = "default"
 
     -- (highlights) --
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
 
-    cu.hi("SpellBad", status.error_status, status.bg, "undercurl,underline,italic")
-    cu.hi("SpellCap", status.error_status, status.bg, "undercurl,underline,italic")
-    cu.hi("SpellRare", status.error_status, status.bg, "undercurl,underline,italic")
-    cu.hi("SpellLocal", status.error_status, status.bg, "undercurl,underline,italic")
+    -- mega.augroup_cmds(
+    --   "colorscheme_overrides",
+    --   {
+    --     {
+    --       events = {"ColorScheme"},
+    --       targets = {"*"},
+    --       command = [[ v:lua.mega.set_highlight("SpellBad", status.error_status, status.bg, "undercurl,italic") ]]
+    --     },
+    --     {
+    --       events = {"ColorScheme"},
+    --       targets = {"*"},
+    --       command = [[ v:lua.mega.set_highlight("SpellCap", status.error_status, status.bg, "undercurl,italic") ]]
+    --     },
+    --     {
+    --       events = {"ColorScheme"},
+    --       targets = {"*"},
+    --       command = [[ v:lua.mega.set_highlight("SpellRare", status.error_status, status.bg, "undercurl,italic") ]]
+    --     },
+    --     {
+    --       events = {"ColorScheme"},
+    --       targets = {"*"},
+    --       command = [[ v:lua.mega.set_highlight("SpellLocal", status.error_status, status.bg, "undercurl,italic") ]]
+    --     },
+    --   }
+    -- )
 
+    -- mega.augroup(
+    --   "lc.format",
+    --   function()
+    --     vim.api.nvim_command [[autocmd! * <buffer>]]
+    --     vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
+    --     -- vim.api.nvim_command [[autocmd BufWritePost plugins.lua PackerCompile]]
+    --   end
+    -- )
 
-    cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
-    cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
-    cu.hi("LspLinesDiagBorder", cs.bg_green, "NONE", "NONE")
+    -- vim.api.nvim_exec([[
+    --     function! Forest_night_custom() abort
+    --     " Link a highlight group to a predefined highlight group.
+    --     " See `colors/forest-night.vim` for all predefined highlight groups.
+    --     " highlight! link groupA groupB
+    --     " highlight! link groupC groupD
+      
+    --     " Initialize the color palette.
+    --     let l:palette = forest_night#get_palette()
+
+    --     " Define a highlight group.
+    --     " The first parameter is the name of a highlight group,
+    --     " the second parameter is the foreground color,
+    --     " the third parameter is the background color,
+    --     " the fourth parameter is for UI highlighting which is optional,
+    --     " and the last parameter is for `guisp` which is also optional.
+    --     " See `autoload/forest_night.vim` for the format of `l:palette`.
+
+    --     call forest_night#highlight('SpellBad', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
+    --     call forest_night#highlight('SpellCap', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
+    --     call forest_night#highlight('SpellRare', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
+    --     call forest_night#highlight('SpellLocal', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
+    --   endfunction
+      
+    --   augroup ForestNightCustom
+    --     autocmd!
+    --     autocmd ColorScheme forest-night call Forest_night_custom()
+    --   augroup END
+    -- ]], false)
+
+    highlight("default GalaxyStatusline", "NONE", status.bg, "NONE")
+    highlight("default GalaxyStatuslineNC", "NONE", status.bg, "NONE")
+    highlight("default LspLinesDiagBorder", cs.bg_green, "NONE", "NONE")
 
     mega.load("statusline", "mega.statusline").load("forest_night")
+
+    vim.api.nvim_exec([[ colorscheme forest-night ]], true)
   end
 }

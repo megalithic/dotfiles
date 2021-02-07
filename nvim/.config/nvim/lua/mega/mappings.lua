@@ -112,3 +112,4 @@ endif
 mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
 mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
 mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
+mega.map("n", "<Leader>b", "<cmd>FzfBuffers<CR>")

@@ -25,7 +25,7 @@ local on_attach = function(client, bufnr)
       open = "<CR>",
       vsplit = "v",
       split = "s",
-      quit = "<ESC>"
+      quit = {"q", [[\<ESC>]]}
     }
   }
 
