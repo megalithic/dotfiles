@@ -21,29 +21,29 @@ local icons = {
   statusline_hint = mega.utf8(0xf835)
 }
 
-
+-- https://github.com/sainnhe/forest-night/blob/master/autoload/lightline/colorscheme/forest_night.vim
 local cs = {
-  bg0=        '#323d43',
-  bg1=        '#3c474d',
-  bg2=        '#465258',
-  bg3=        '#505a60',
-  bg4=        '#576268',
-  bg_visual=  '#5d4251',
-  bg_red=     '#614b51',
-  bg_green=   '#4e6053',
-  bg_blue=    '#415c6d',
-  bg_yellow=  '#5d5c50',
-  grey0=      '#7c8377',
-  grey1=      '#868d80',
-  grey2=      '#999f93',
-  fg=         '#d8caac',
-  red=        '#e68183',
-  orange=     '#e39b7b',
-  yellow=     '#d9bb80',
-  green=      '#a7c080',
-  cyan=       '#87c095',
-  blue=       '#83b6af',
-  purple=     '#d39bb6'
+  bg0 = "#323d43",
+  bg1 = "#3c474d",
+  bg2 = "#465258",
+  bg3 = "#505a60",
+  bg4 = "#576268",
+  bg_visual = "#5d4251",
+  bg_red = "#614b51",
+  bg_green = "#4e6053",
+  bg_blue = "#415c6d",
+  bg_yellow = "#5d5c50",
+  grey0 = "#7c8377",
+  grey1 = "#868d80",
+  grey2 = "#999f93",
+  fg = "#d8caac",
+  red = "#e68183",
+  orange = "#e39b7b",
+  yellow = "#d9bb80",
+  green = "#a7c080",
+  cyan = "#87c095",
+  blue = "#83b6af",
+  purple = "#d39bb6"
 }
 
 local base = {
@@ -128,6 +128,7 @@ return {
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
     cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
     cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
+    cu.hi("LspLinesDiagBorder", cs.bg_green, "NONE", "NONE")
 
     mega.load("statusline", "mega.statusline").load("forest_night")
   end

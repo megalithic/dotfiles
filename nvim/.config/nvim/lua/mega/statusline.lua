@@ -88,7 +88,7 @@ return {
         -- icon = "   ",
         separator = " ",
         separator_highlight = {colors.bg, colors.bg},
-        highlight = {colors.bg, colors.visual_gray}
+        highlight = {colors.light_gray, colors.visual_gray}
       }
     }
     gls.left[3] = {
@@ -181,7 +181,7 @@ return {
         separator = "",
         separator_highlight = {colors.gutter_gray, colors.bg},
         -- highlight = {colors.gutter_gray, colors.bg}
-        highlight = {colors.bg, colors.visual_gray}
+        highlight = {colors.light_gray, colors.visual_gray}
       }
     }
     gls.right[7] = {
@@ -191,7 +191,7 @@ return {
         separator = "",
         separator_highlight = {colors.bg, colors.visual_gray},
         -- highlight = {colors.gutter_gray, colors.bg}
-        highlight = {colors.bg, colors.visual_gray, "bold"}
+        highlight = {colors.light_gray, colors.visual_gray, "bold"}
       }
     }
     gls.right[8] = {
