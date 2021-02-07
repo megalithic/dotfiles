@@ -51,7 +51,7 @@ local base = {
   white = cs.fg,
   fg = cs.fg,
   red = cs.red,
-  light_red = "#df8c8c",
+  light_red = cs.red,
   dark_red = "#d75f5f",
   green = cs.green,
   blue = cs.blue,
@@ -126,6 +126,13 @@ return {
 
     -- (highlights) --
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
+
+    cu.hi("SpellBad", status.error_status, status.bg, "undercurl,underline,italic")
+    cu.hi("SpellCap", status.error_status, status.bg, "undercurl,underline,italic")
+    cu.hi("SpellRare", status.error_status, status.bg, "undercurl,underline,italic")
+    cu.hi("SpellLocal", status.error_status, status.bg, "undercurl,underline,italic")
+
+
     cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
     cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
     cu.hi("LspLinesDiagBorder", cs.bg_green, "NONE", "NONE")

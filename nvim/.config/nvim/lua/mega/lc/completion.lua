@@ -114,7 +114,7 @@ function M.activate()
           treesitter = true,
           buffer = true,
           path = true,
-          spell = true
+          -- spell = true
         }
       }
     )
