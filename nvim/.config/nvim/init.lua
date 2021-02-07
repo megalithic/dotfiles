@@ -39,5 +39,4 @@ do
       mega.load("ft", "mega.ft").trigger_ft()
     end
   )
-  mega.load("statusline", "mega.statusline")
 end

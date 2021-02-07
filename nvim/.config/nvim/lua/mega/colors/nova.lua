@@ -157,5 +157,7 @@ return {
 
     cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
     cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
+
+    mega.load("statusline", "mega.statusline").load("nova")
   end
 }

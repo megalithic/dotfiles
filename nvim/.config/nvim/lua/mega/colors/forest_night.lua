@@ -21,31 +21,57 @@ local icons = {
   statusline_hint = mega.utf8(0xf835)
 }
 
+
+local cs = {
+  bg0=        '#323d43',
+  bg1=        '#3c474d',
+  bg2=        '#465258',
+  bg3=        '#505a60',
+  bg4=        '#576268',
+  bg_visual=  '#5d4251',
+  bg_red=     '#614b51',
+  bg_green=   '#4e6053',
+  bg_blue=    '#415c6d',
+  bg_yellow=  '#5d5c50',
+  grey0=      '#7c8377',
+  grey1=      '#868d80',
+  grey2=      '#999f93',
+  fg=         '#d8caac',
+  red=        '#e68183',
+  orange=     '#e39b7b',
+  yellow=     '#d9bb80',
+  green=      '#a7c080',
+  cyan=       '#87c095',
+  blue=       '#83b6af',
+  purple=     '#d39bb6'
+}
+
 local base = {
-  black = "#3c4c55",
-  white = "#c5d4dd",
-  fg = "#c5d4dd",
-  red = "#df8c8c",
+  black = cs.bg0,
+  white = cs.fg,
+  fg = cs.fg,
+  red = cs.red,
   light_red = "#df8c8c",
   dark_red = "#d75f5f",
-  green = "#a8ce93",
-  blue = "#83afe5",
-  cyan = "#7fc1ca",
-  magenta = "#9a93e1",
+  green = cs.green,
+  blue = cs.blue,
+  cyan = cs.cyan,
+  magenta = cs.purple,
+  yellow = cs.yellow,
   light_yellow = "#dada93",
-  dark_yellow = "#f2c38f",
-  orange = "#f2c38f",
+  dark_yellow = cs.bg_yellow,
+  orange = cs.orange,
   brown = "#db9c5e",
-  lightest_gray = "#dddddd",
-  lighter_gray = "#afafaf",
-  light_gray = "#afafaf",
-  gray = "#aaaaaa",
-  dark_gray = "#667796",
-  darker_gray = "#333333",
-  darkest_gray = "#2f3c44",
-  visual_gray = "#6A7D89",
+  lightest_gray = cs.grey2,
+  lighter_gray = cs.grey1,
+  light_gray = cs.grey0,
+  gray = cs.bg4,
+  dark_gray = cs.bg3,
+  darker_gray = cs.bg2,
+  darkest_gray = cs.bg1,
+  visual_gray = cs.bg_blue,
   special_gray = "#1E272C",
-  section_bg = "#333333"
+  section_bg = cs.bg1
 }
 
 local status = {
@@ -68,7 +94,7 @@ local status = {
   incsearch = "#fffacd",
   highlighted_yank = "#13354A",
   comment_gray = base.white,
-  gutter_gray = "#899ba6",
+  gutter_gray = cs.bg_green,
   cursor_gray = base.black,
   visual_gray = base.visual_gray,
   menu_gray = base.visual_gray,
@@ -102,5 +128,7 @@ return {
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
     cu.hi("GalaxyStatusline", "NONE", status.bg, "NONE")
     cu.hi("GalaxyStatuslineNC", "NONE", status.bg, "NONE")
+
+    mega.load("statusline", "mega.statusline").load("forest_night")
   end
 }
