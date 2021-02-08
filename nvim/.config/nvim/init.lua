@@ -5,7 +5,7 @@ vim.cmd [[packadd vimball]]
 -- [ debugging ] ---------------------------------------------------------------
 
 -- Can set this lower if needed (used in tandem with `mega.inspect`) ->
---  vim.lsp.set_log_level("debug")
+-- vim.lsp.set_log_level("debug")
 
 -- To execute in :cmd ->
 --  :lua <the_command>

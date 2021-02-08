@@ -19,7 +19,6 @@ mega.augroup(
     au([[autocmd FileType help wincmd L]])
     au([[autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
     au([[autocmd VimResized * lua require('golden_size').on_win_enter()]])
-    au([[autocmd BufRead * nohls]])
     au([[autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
     au([[autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
     au([[autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')]])

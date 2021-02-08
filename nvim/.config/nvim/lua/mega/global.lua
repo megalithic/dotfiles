@@ -109,6 +109,10 @@ function M.exec_cmds(cmd_list)
   vim.cmd(table.concat(cmd_list, "\n"))
 end
 
+function M.au(cmd)
+  vim.api.nvim_exec(cmd, true)
+end
+
 function M.augroup(group, fn)
   vim.api.nvim_command("augroup " .. group)
   vim.api.nvim_command("autocmd!")
