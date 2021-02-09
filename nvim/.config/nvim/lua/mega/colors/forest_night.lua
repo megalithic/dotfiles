@@ -18,7 +18,8 @@ local icons = {
   statusline_error = mega.utf8(0xf05e),
   statusline_warning = mega.utf8(0xf071),
   statusline_information = mega.utf8(0xf7fc),
-  statusline_hint = mega.utf8(0xf835)
+  statusline_hint = mega.utf8(0xf835),
+  statusline_ok = mega.utf8(0xf00c),
 }
 
 -- https://github.com/sainnhe/forest-night/blob/master/autoload/lightline/colorscheme/forest_night.vim
@@ -168,7 +169,7 @@ return {
     --     " See `colors/forest-night.vim` for all predefined highlight groups.
     --     " highlight! link groupA groupB
     --     " highlight! link groupC groupD
-      
+
     --     " Initialize the color palette.
     --     let l:palette = forest_night#get_palette()
 
@@ -185,7 +186,7 @@ return {
     --     call forest_night#highlight('SpellRare', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
     --     call forest_night#highlight('SpellLocal', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
     --   endfunction
-      
+
     --   augroup ForestNightCustom
     --     autocmd!
     --     autocmd ColorScheme forest-night call Forest_night_custom()
@@ -197,7 +198,6 @@ return {
     highlight("default LspLinesDiagBorder", cs.bg_green, "NONE", "NONE")
 
     mega.load("statusline", "mega.statusline").load("forest_night")
-
     vim.api.nvim_exec([[ colorscheme forest-night ]], true)
   end
 }

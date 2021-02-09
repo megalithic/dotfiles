@@ -24,11 +24,13 @@ if paq_exists then
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}
   paq {"junegunn/rainbow_parentheses.vim"}
-  paq {"glepnir/galaxyline.nvim"}
+  -- paq {"glepnir/galaxyline.nvim"}
+  paq {"hoob3rt/lualine.nvim"}
   paq {"kyazdani42/nvim-web-devicons", opt = true}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
+  paq {"nvim-lua/lsp-status.nvim"}
   -- paq {"nvim-lua/completion-nvim"}
   -- paq {"steelsojka/completion-buffers"}
   -- paq {"nvim-treesitter/completion-treesitter"}
