@@ -13,31 +13,31 @@ hs.ipc.cliInstall()
 require("hs.hotkey").setLogLevel("warning")
 
 -- misc configuration
-hs.window.animationDuration = 0.0
+-- hs.window.animationDuration = 0.0
 hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
 -- global requires
-config = require("config")
-bindings = require("bindings")
-controlplane = require("utils.controlplane")
-watchables = require("utils.watchables")
-watchers = require("utils.watchers")
-wm = require("utils.wm")
+Config = require("config")
+Bindings = require("bindings")
+Controlplane = require("utils.controlplane")
+Watchables = require("utils.watchables")
+Watchers = require("utils.watchers")
+Wm = require("utils.wm")
 
 -- controlplane
-controlplane.enabled = {"dock", "office", "vpn"}
+Controlplane.enabled = {"dock", "office", "vpn"}
 
 -- watchers
-watchers.enabled = {"urlevent"} -- urlevent
-watchers.urlPreference = config.preferred.browsers
+watchers.enabled = {"urlevent"}
+watchers.urlPreference = Config.preferred.browsers
 
 -- bindings
-bindings.enabled = {"ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser"}
+Bindings.enabled = {"ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser"}
 
 -- start/stop modules
-local modules = {wm, bindings, controlplane, watchables, watchers}
+local modules = {Wm, Bindings, Controlplane, Watchables, Watchers}
 
 hs.fnutils.each(
   modules,
