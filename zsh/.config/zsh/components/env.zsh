@@ -74,7 +74,6 @@ path=(
     /usr/local/opt/python@3.9/bin
     # /usr/local/opt/perl/bin
     # /usr/local/opt/perl6/bin
-    # /usr/local/opt/perl@5.18/bin
     # /usr/local/opt/perl@5.28/bin
     # /usr/local/opt/perl@5.32/bin
     # /usr/local/opt/perl@5.32
@@ -199,7 +198,8 @@ if [[ "$PLATFORM" == "macos" ]]; then
 
   # for libffi and ruby things
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
-  export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.18/lib"
+  export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.32/lib"
+  export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
   export LDFLAGS="$LDFLAGS -I/usr/local/opt/openssl/include"
