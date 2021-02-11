@@ -60,7 +60,7 @@ local on_attach = function(client, bufnr)
 
   if client.resolved_capabilities.goto_definition then
     mega.map("n", "<C-]>", "<cmd>lua vim.lsp.buf.definition()<CR>")
-    -- mega.bmap("n", "<Leader>lgd", "<cmd>lua vim.lsp.buf.definition()<CR>")
+    mega.map("n", "<Leader>lgD", "<cmd>lua vim.lsp.buf.definition()<CR>")
     mega.map("n", "<leader>lgd", "<cmd>lua require'lspsaga.provider'.preview_definition()<CR>")
   end
 

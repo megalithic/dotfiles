@@ -13,7 +13,7 @@ hs.ipc.cliInstall()
 require("hs.hotkey").setLogLevel("warning")
 
 -- misc configuration
-hs.window.animationDuration = 0.0
+-- hs.window.animationDuration = 0.0
 hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)

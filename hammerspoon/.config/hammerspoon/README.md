@@ -6,7 +6,7 @@ The simplest answer is that Hammerspoon is a Lua-based automation framework for
 your macOS-based computer. It has a robust and [well-documented](http://www.hammerspoon.org/docs/) Lua layer on top
 of the macOS core libraries and APIs.
 
-### So, what does my [config](hammerspoon.symlink/config.lua) do (it's the primary setup for everything; and contains the trigger for many automations)?
+### So, what does my [config](hammerspoon/.config/hammerspoon/config.lua) do (it's the primary setup for everything; and contains the trigger for many automations)?
 
 - **Push-to-Talk (PTT)**: includes a handy menubar icon for current "talk" status. Bound to holding `cmd+opt`.
 

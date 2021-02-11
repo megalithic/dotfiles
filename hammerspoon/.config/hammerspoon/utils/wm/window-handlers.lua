@@ -200,7 +200,7 @@ M.validWindows = function(app)
     fn.filter(
     windowProvider,
     (function(win)
-      log.wf("validWindow::%s | isVisible? -> %s", win:title(), win:isVisible())
+      log.df("validWindow::%s | isVisible? -> %s", win:title(), win:isVisible())
       return win ~= nil and win:title() ~= "" and win:isStandard() and win:isVisible() and not win:isFullScreen()
     end)
   )

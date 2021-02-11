@@ -163,8 +163,12 @@ M.setAppLayout = function(app_config)
   end
 end
 
-M.applyAppLayout = function(_, event, app)
-  log.df("beginning to layout windows for app: %s, and event: %s", hs.inspect(app), hs.inspect(event))
+M.handleAppEvent = function(app_name, event, app)
+  M.applyAppLayout(app_name, event, app)
+end
+
+M.applyAppLayout = function(app_name, event, app)
+  log.wf("beginning to layout windows for app %s [%s]", app_name, hs.inspect(event))
 
   if app ~= nil and event == hs.application.watcher.launched then
     local app_config = config.apps[app:bundleID()]
@@ -205,9 +209,10 @@ M.applyWindowFilters = function()
   )
 end
 
--- prepare() :: nil
+-- prepare(...) :: nil
 -- evaluates global config and obeys the rules.
-M.prepare = function()
+M.prepare = function(...)
+  log.wf("dock_watcher event occurred.. %s", hs.inspect(...))
   M.applyAutoLayout()
   M.applyWindowFilters()
 end
@@ -246,8 +251,10 @@ M.start = function()
 
   -- watch for docking status changes
   cache.dock_watcher = hs.watchable.watch("status.isDocked", M.prepare)
-  cache.application_watcher = hs.application.watcher.new(M.applyAppLayout)
+  cache.application_watcher = hs.application.watcher.new(M.handleAppEvent)
   cache.application_watcher:start()
+
+  -- TODO: need to watch newly launched apps AND running apps
 
   -- initial invocation
   M.prepare()
