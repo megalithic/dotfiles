@@ -8,22 +8,20 @@ local ptt = require("bindings.ptt")
 -- local browser = require("bindings.browser")
 local init_apply_complete = false
 
--- apply(string, hs.window, hs.logger) :: nil
-M.apply = function(event, win, log)
-  log = hs.logger.new("[zoom]", "debug")
-  local app = win:application()
+-- apply(string, hs.application, hs.logger) :: nil
+M.apply = function(event, app, log)
 
   -- prevents excessive actions on multiple window creations
   if not init_apply_complete then
-    if fn.contains({"windowCreated"}, event) then
+    if fn.contains({"windowCreated", hs.application.watcher.launched}, event) or app:isRunning() then
       ----------------------------------------------------------------------
       -- handle DND toggling
-      log.df("toggling DND for %s..", event)
-      wh.dndHandler(win, {enabled = true, mode = "zoom"}, event)
+      log.df("toggling DND for event %s..", event)
+      wh.dndHandler(app, {enabled = true, mode = "zoom"}, event)
 
       ----------------------------------------------------------------------
       -- pause spotify
-      log.df("pausing spotify for %s..", event)
+      log.df("pausing spotify for event %s..", event)
       spotify("pause")
 
       ----------------------------------------------------------------------
@@ -52,7 +50,7 @@ M.apply = function(event, win, log)
   ----------------------------------------------------------------------
   -- things to do on app exit
   wh.onAppQuit(
-    win,
+    app,
     function()
       ptt.setState("push-to-talk")
       init_apply_complete = false
@@ -61,19 +59,19 @@ M.apply = function(event, win, log)
 
   ----------------------------------------------------------------------
   -- handle window rules
-  if app == nil then
-    return
-  end
-
-  local app_config = config.apps[app:bundleID()]
-  if app_config == nil or app_config.rules == nil then
-    return
-  end
-
-  if fn.contains({"windowCreated"}, event) then
-    -- wh.snapRelated()
-    wh.applyRules(app_config.rules, win, app_config)
-  end
+--   if app == nil then
+--     return
+--   end
+-- 
+--   local app_config = config.apps[app:bundleID()]
+--   if app_config == nil or app_config.rules == nil then
+--     return
+--   end
+-- 
+--   if fn.contains({"windowCreated"}, event) then
+--     -- wh.snapRelated()
+--     wh.applyRules(app_config.rules, win, app_config)
+--   end
 end
 
 return M

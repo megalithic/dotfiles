@@ -3,11 +3,11 @@ local module = { cache = cache, }
 
 local wh = require('utils.wm.window-handlers')
 
--- apply(string, hs.window, hs.logger) :: nil
-module.apply = function(event, win, _)
+-- apply(string, hs.application, hs.logger) :: nil
+module.apply = function(event, app, _)
   ----------------------------------------------------------------------
   -- handle hide-after interval
-  wh.hideAfterHandler(win, 2, event)
+  wh.hideAfterHandler(app, 1, event)
 end
 
 return module

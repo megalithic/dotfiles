@@ -42,44 +42,42 @@ local exit = function(log)
   cache.modal:exit()
 end
 
--- apply(string, hs.window, hs.logger) :: nil
-module.apply = function(event, win, log)
-  local app = win:application()
-
+-- apply(string, hs.application, hs.logger) :: nil
+module.apply = function(event, app, log)
   ----------------------------------------------------------------------
   -- set-up hotkey modal
   if hs.fnutils.contains({"windowFocused"}, event) then
-    if win:application():isFrontmost() then
+    if app:isFrontmost() then
       -- cache.modal = hs.hotkey.modal.new({}, nil)
       -- enter(log)
       log.df("enabled bindings -> %s", #cache.modal.keys)
     end
   elseif hs.fnutils.contains({"windowUnfocused"}, event) then
-    if not win:application():isFrontmost() then
+    if not app:isFrontmost() then
       -- exit(log)
       log.df("disabled bindings -> %s", #cache.modal.keys)
       -- cache.modal = hs.hotkey.modal.new({}, nil)
     end
   end
 
-  wh.onAppQuit(win, function()
+  wh.onAppQuit(app, function()
     exit(log)
   end)
 
   ----------------------------------------------------------------------
   -- handle hide-after interval
-  wh.hideAfterHandler(win, 5, event)
+  wh.hideAfterHandler(app, 5, event)
 
   ----------------------------------------------------------------------
   -- handle window rules
-  if app == nil then return end
-
-  local appConfig = config.apps[app:bundleID()]
-  if appConfig == nil or appConfig.rules == nil then return end
-
-  if hs.fnutils.contains({"windowCreated"}, event) then
-    wh.applyRules(appConfig.rules, win, appConfig)
-  end
+--   if app == nil then return end
+-- 
+--   local appConfig = config.apps[app:bundleID()]
+--   if appConfig == nil or appConfig.rules == nil then return end
+-- 
+--   if hs.fnutils.contains({"windowCreated"}, event) then
+--     wh.applyRules(appConfig.rules, win, appConfig)
+--   end
 end
 
 return module

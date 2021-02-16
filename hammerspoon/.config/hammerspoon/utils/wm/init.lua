@@ -25,11 +25,44 @@ local M = {
 local wh = require("utils.wm.window-handlers")
 local fn = require("hs.fnutils")
 
+local gather_windows = function(app)
+  if app == nil then return end
 
--- apply_context(hs.window, hs.application, table, {hs.window, hs.window, hs.window}, string) :: nil
+  local app_config = Config.apps[app:bundleID()]
+  if app_config == nil then
+    return
+  end
+
+  -- ignore certain window titles that we apply specific app config rules to
+  local ignoredWindowTitles = wh.ignoredWindowTitles(app_config)
+
+  -- only valid windows that fit certain window/app requirements
+  local validWindows = wh.validWindows(app)
+
+  -- only managed windows that we want to layout from an "app" level perspective
+  -- e.g., no windows that might be getting contextual rules applied
+  local managedWindows = wh.managedWindows(app, validWindows, ignoredWindowTitles)
+
+  -- a table of our various windows we might want to use/manipulate
+  local windows = {
+    all = app:allWindows(),
+    valid = validWindows,
+    managed = managedWindows
+  }
+
+  return windows
+end
+
+-- apply_context(hs.application, hs.application, table, {hs.window, hs.window, hs.window}, string) :: nil
 -- evaluates and applies global config for contexts related to the given app
-M.apply_context = function(win, bundleID, app_config, windows, event)
+M.apply_context = function(app, bundleID, app_config, windows, event)
   if app_config.context == nil then
+    log.wf("no context received; skipping -> %s", bundleID)
+    return
+  end
+
+  if event == nil then
+    log.wf("no event received; skipping -> %s", bundleID)
     return
   end
 
@@ -38,53 +71,9 @@ M.apply_context = function(win, bundleID, app_config, windows, event)
     return
   end
 
-  log.df("applyContext::%s -> [%s, %s(%s)]", event, win, bundleID, #windows.valid)
-  context.load(event, win, app_config.context, "info")
+  log.wf("apply_context[%s] -> %s - %s(%s)]", event, app, bundleID, #windows.valid)
+  context.load(event, app, app_config.context, "info")
 end
-
--- autoLayout(hs.window, string, string) :: nil
--- evaluates and sets up layout and contexts for an app/window
--- M.handle_filters = function(win, app_name, event)
---   local app = win:application()
---   if app == nil then
---     return
---   end
---
---   log.df("handleFilters::%s -> [%s, %s, %s]", event, app:bundleID(), app_name, win:title())
---
---   local app_config = Config.apps[app:bundleID()]
---   if app_config == nil then
---     return
---   end
---
---   -- ignore certain window titles that we apply specific app config rules to
---   local ignoredWindowTitles = wh.ignoredWindowTitles(app_config)
---
---   -- only valid windows that fit certain window/app requirements
---   local validWindows = wh.validWindows(app)
---
---   -- only managed windows that we want to layout from an "app" level perspective
---   -- e.g., no windows that might be getting contextual rules applied
---   local managed = wh.managedWindows(app, validWindows, ignoredWindowTitles)
---
---   -- a table of our various windows we might want to use/manipulate
---   local windows = {
---     all = app:allWindows(),
---     valid = validWindows,
---     managed = managed
---   }
---
---   if #windows.all == 0 then
---     log.wf("autoLayout::%s (ignoring) -> no valid windows found [%s (all: %s)]", event, app:bundleID(), #windows.all)
---     return
---   else
---     -- if fn.contains({"windowCreated", "windowDestroyed"}, event) then
---     --   M.applyLayout(win, app, app_config, windows, event)
---     -- end
---
---     M.apply_context(win, app:bundleID(), app_config, windows, event)
---   end
--- end
 
 M.set_app_layout = function(app_config)
   if app_config == nil then
@@ -155,7 +144,7 @@ M.handle_app_event = function(app_name, event, app)
   -- presently just handling launched and terminated apps
   if event == hs.application.watcher.launched then
     log.df("app launched -> %s", app:bundleID())
-    M.watch_running_app(app)
+    M.watch_running_app(app, event)
   elseif event == hs.application.watcher.terminated then
     -- Only the PID is set for terminated apps, so can't log bundleID.
     local pid = app:pid()
@@ -188,7 +177,7 @@ M.watch_existing_window = function(window)
   local watched_windows = cache.running_app_watcher[pid].windows
   local window_id = window:id()
 
-  log.wf("watching existing window -> %s", hs.inspect(window))
+  -- log.wf("watching existing window -> %s", hs.inspect(window))
 
   -- Watch for window-closed events, if a window with an ID exists..
   if window_id then
@@ -210,7 +199,7 @@ M.watch_existing_window = function(window)
 end
 
 -- watches running apps to deal with new app windows being opened/created
-M.watch_running_app = function(app)
+M.watch_running_app = function(app, event)
   if not app then
     log.ef("app not found -> %s", hs.inspect(app))
     return
@@ -248,9 +237,14 @@ M.watch_running_app = function(app)
 
   -- an app config exists for app; e.g. it's managed in our Config.apps;
   -- apply the app layout..
-  if Config.apps[bundleID] then
+  local app_config = Config.apps[bundleID]
+  if app_config then
     log.df("attempting to apply app layout for %s -> %s", app_name, hs.inspect(app))
     M.apply_app_layout(app_name, app)
+
+    log.df("attempting to apply context for %s -> %s", app_name, hs.inspect(app))
+    -- gather_windows gets us interesting info about windows we have
+    M.apply_context(app, bundleID, app_config, gather_windows(app), event)
   end
 end
 

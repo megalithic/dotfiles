@@ -29,11 +29,11 @@ local on_attach = function(client, bufnr)
     }
   }
 
-  require("lspfuzzy").setup(
-    {
-      methods = "all" -- either 'all' or a list of LSP methods (see below)
-    }
-  )
+  -- require("lspfuzzy").setup(
+  --   {
+  --     methods = "all" -- either 'all' or a list of LSP methods (see below)
+  --   }
+  -- )
 
   if client.resolved_capabilities.completion then
     local completion_loaded, completion = pcall(require, "mega.lc.completion")

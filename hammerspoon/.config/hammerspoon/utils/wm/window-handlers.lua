@@ -12,11 +12,26 @@ local function dnd_command_updater(cmd, cb, args)
   end
 end
 
-M.killApp = function(win)
-  if win == nil then
+-- onAppQuit(hs.application, function) :: nil
+-- evaluates and returns valid/usable windows for an app
+M.onAppQuit = function(app, callback, providedInterval)
+  local interval = providedInterval or 0.2
+
+  hs.timer.waitUntil(
+    function()
+      return app == nil or #app:allWindows() == 0
+      -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
+    end,
+    callback,
+    interval
+  )
+end
+
+M.killApp = function(app)
+  if app == nil then
+    log.wf("no valid app given; unable to kill -> %s")
     return
   end
-  local app = win:application()
 
   app:kill()
 end
@@ -29,7 +44,7 @@ M.killWindow = function(win)
   win:close()
 end
 
-M.dndHandler = function(win, dndConfig, event)
+M.dndHandler = function(app, dndConfig, event)
   if dndConfig == nil then
     return
   end
@@ -40,21 +55,21 @@ M.dndHandler = function(win, dndConfig, event)
     -- local slackCmd = os.getenv("HOME") ..  "/.dotfiles/bin/slack"
     local dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 
-    if (event == "windowCreated") then
+    if fn.contains({"windowCreated", hs.application.watcher.launched}, event) then
       log.df("DND Handler: on/" .. mode)
 
       dnd_command_updater(dndCmd, nil, {"on"})
 
       M.onAppQuit(
-        win,
+        app,
         function()
           log.df("DND Handler: off/back")
           dnd_command_updater(dndCmd, nil, {"off"})
         end
       )
-    elseif (event == "windowDestroyed") then
+    elseif fn.contains({"windowDestroyed", hs.application.watcher.terminated}, event) then
       M.onAppQuit(
-        win,
+        app,
         function()
           log.df("DND Handler: off/back")
           dnd_command_updater(dndCmd, nil, {"off"})
@@ -64,31 +79,38 @@ M.dndHandler = function(win, dndConfig, event)
   end
 end
 
-M.quitAfterHandler = function(win, interval, event)
+M.quitAfterHandler = function(app, interval, event)
   if interval ~= nil then
-    local app = win:application()
-    local appName = app:name()
+    local app_name = app:name()
 
     if (app:isRunning()) then
-      if cache.timers[appName] ~= nil then
-        log.df("stopping quit timer on " .. win:title())
+      if cache.timers[app_name] ~= nil then
+        log.df("stopping quit timer on " .. app_name)
 
-        cache.timers[appName]:stop()
+        cache.timers[app_name]:stop()
       end
 
       if
         fn.contains(
-          {"windowUnfocused", "windowHidden", "windowMinimized", "windowNotVisible", "windowNotOnScreen"},
+          {
+            "windowUnfocused",
+            "windowHidden",
+            "windowMinimized",
+            "windowNotVisible",
+            "windowNotOnScreen",
+            hs.application.watcher.deactivated,
+            hs.application.watcher.hidden
+          },
           event
         )
        then
-        log.df("starting quit timer on " .. win:title())
+        log.df("starting quit timer on " .. app_name)
 
-        cache.timers[appName] =
+        cache.timers[app_name] =
           hs.timer.doAfter(
           (interval * 60),
           function()
-            M.killApp(win)
+            M.killApp(app)
           end
         )
       end
@@ -98,27 +120,34 @@ M.quitAfterHandler = function(win, interval, event)
   end
 end
 
-M.hideAfterHandler = function(win, interval, event)
+M.hideAfterHandler = function(app, interval, event)
   if interval ~= nil then
-    local app = win:application()
-    local appName = app:name()
+    local app_name = app:name()
 
     if app:isRunning() and not app:isHidden() then
-      if cache.timers[appName] ~= nil then
-        log.df("stopping hide timer on " .. win:title())
+      if cache.timers[app_name] ~= nil then
+        log.df("stopping hide timer on " .. app_name)
 
-        cache.timers[appName]:stop()
+        cache.timers[app_name]:stop()
       end
 
       if
         fn.contains(
-          {"windowUnfocused", "windowHidden", "windowMinimized", "windowNotVisible", "windowNotOnScreen"},
+          {
+            "windowUnfocused",
+            "windowHidden",
+            "windowMinimized",
+            "windowNotVisible",
+            "windowNotOnScreen",
+            hs.application.watcher.deactivated,
+            hs.application.watcher.hidden
+          },
           event
         )
        then
-        log.df("starting hide timer on " .. win:title())
+        log.df("starting hide timer on " .. app_name)
 
-        cache.timers[appName] =
+        cache.timers[app_name] =
           hs.timer.doAfter(
           (interval * 60),
           function()
@@ -130,22 +159,6 @@ M.hideAfterHandler = function(win, interval, event)
   else
     return
   end
-end
-
--- onAppQuit(hs.window, function) :: nil
--- evaluates and returns valid/usable windows for an app
-M.onAppQuit = function(win, callback, providedInterval)
-  local interval = providedInterval or 0.2
-  local app = win:application()
-
-  hs.timer.waitUntil(
-    function()
-      return app == nil or #app:allWindows() == 0
-      -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
-    end,
-    callback,
-    interval
-  )
 end
 
 M.layoutFromGrid = function(gridCell, screenNum)
