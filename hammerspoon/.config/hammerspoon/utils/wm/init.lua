@@ -74,6 +74,7 @@ M.apply_context = function(app, bundleID, app_config, windows, event)
 
   local context = require("contexts")
   if context == nil then
+    log.wf("no context created, but _should_ be there; regardless, skipping -> %s", bundleID)
     return
   end
 
