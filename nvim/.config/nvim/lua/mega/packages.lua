@@ -27,6 +27,7 @@ if paq_exists then
   -- paq {"glepnir/galaxyline.nvim"}
   paq {"hoob3rt/lualine.nvim"}
   paq {"kyazdani42/nvim-web-devicons", opt = true}
+  paq {"danilamihailov/beacon.nvim"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
@@ -61,7 +62,7 @@ if paq_exists then
   -- paq {"vijaymarupudi/nvim-fzf"}
   -- paq {"vijaymarupudi/nvim-fzf-commands"}
   -- paq {"justinmk/vim-sneak"}
-  -- paq {"unblevable/quick-scope"}
+  paq {"unblevable/quick-scope"}
 
   -- (text objects) --
   paq {"tpope/vim-rsi"}
@@ -118,7 +119,8 @@ if paq_exists then
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`
   -- paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
-  paq {"tpope/vim-commentary"}
+  paq {"terrortylor/nvim-comment"}
+  -- paq {"tpope/vim-commentary"}
   paq {"tpope/vim-eunuch"}
   paq {"tpope/vim-abolish"}
   paq {"tpope/vim-rhubarb"}

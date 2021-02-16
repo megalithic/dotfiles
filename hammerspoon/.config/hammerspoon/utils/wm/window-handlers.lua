@@ -194,7 +194,7 @@ end
 -- optional: hs.application
 -- evaluates and returns valid/usable windows for an app
 M.validWindows = function(app)
-  local windowProvider = (app and app:allWindows()) or hs.window.filter.default:getWindows()
+  local windowProvider = (app and app:allWindows()) or hs.window.orderedWindows()
 
   local windows =
     fn.filter(

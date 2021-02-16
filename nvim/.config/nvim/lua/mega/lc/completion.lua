@@ -108,13 +108,13 @@ function M.activate()
         source_timeout = 200,
         incomplete_delay = 400,
         source = {
-          vsnip = true,
-          nvim_lsp = true,
-          nvim_lua = true,
-          treesitter = true,
-          buffer = true,
-          path = true,
-          -- spell = true
+          vsnip = {menu = "[SNIP]"},
+          nvim_lsp = {menu = "[LSP]"},
+          nvim_lua = {menu = "[LUA]"},
+          treesitter = {menu = "[TS]"},
+          buffer = {menu = "[BUF]"},
+          path = true
+          -- spell = {menu = '[SPL]'},
         }
       }
     )

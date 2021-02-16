@@ -13,13 +13,15 @@ hs.ipc.cliInstall()
 require("hs.hotkey").setLogLevel("warning")
 
 -- misc configuration
--- hs.window.animationDuration = 0.0
+hs.window.animationDuration = 0.1
 hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
 -- global requires
-config = require("config")
+Config = require("config")
+-- TODO: replace lowercase references of `config` to `Config`
+config = Config
 bindings = require("bindings")
 controlplane = require("utils.controlplane")
 watchables = require("utils.watchables")
@@ -31,7 +33,7 @@ controlplane.enabled = {"dock", "office", "vpn"}
 
 -- watchers
 watchers.enabled = {"urlevent"} -- urlevent
-watchers.urlPreference = config.preferred.browsers
+watchers.urlPreference = Config.preferred.browsers
 
 -- bindings
 bindings.enabled = {"ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser"}

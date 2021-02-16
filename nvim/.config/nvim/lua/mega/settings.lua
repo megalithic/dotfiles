@@ -1,6 +1,15 @@
 mega.inspect("activating package settings.lua..")
 
--- [conflict-marker] ----------------------------------------------------------------
+-- [beacon] --------------------------------------------------------------------
+vim.g.beacon_size = 90
+vim.g.beacon_minimal_jump = 25
+vim.g.beacon_shrink = 0
+vim.g.beacon_ignore_filetypes = {"fzf"}
+
+-- [nvim_comment] --------------------------------------------------------------
+require("nvim_comment").setup()
+
+-- [conflict-marker] -----------------------------------------------------------
 -- disable the default highlight group
 vim.g.conflict_marker_highlight_group = ""
 -- Include text after begin and end markers
@@ -155,21 +164,11 @@ vim.g.polyglot_disabled = {
   "sh"
 }
 
--- [lspfuzzy] ------------------------------------------------------------------
-require("lspfuzzy").setup(
-  {
-    methods = "all" -- either 'all' or a list of LSP methods (see below)
-  }
-)
-
--- [vim-sneak] -----------------------------------------------------------------
--- vim.g["sneak#label"] = true
-
 -- [quickscope] ----------------------------------------------------------------
--- quickscope
--- vim.g.qs_enable = 1
--- vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
--- vim.g.qs_lazy_highlight = 1
+vim.g.qs_enable = 1
+vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
+vim.g.qs_buftype_blacklist = {"terminal", "nofile"}
+vim.g.qs_lazy_highlight = 1
 
 -- [textobj_parameter] ---------------------------------------------------------
 vim.g.vim_textobj_parameter_mapping = ","

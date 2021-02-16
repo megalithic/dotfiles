@@ -180,7 +180,8 @@ M.apps = {
     context = "spark",
     distraction = true,
     rules = {
-      {nil, 2, M.layout.fullScreen}
+      {nil, 1, M.layout.centeredMedium},
+      {"Spark - INBOX", 1, M.layout.rightHalf}
     }
   },
   ["io.canarymail.mac"] = {

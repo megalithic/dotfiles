@@ -195,7 +195,6 @@ return {
 
     highlight("default GalaxyStatusline", "NONE", status.bg, "NONE")
     highlight("default GalaxyStatuslineNC", "NONE", status.bg, "NONE")
-    highlight("default LspLinesDiagBorder", cs.bg_green, "NONE", "NONE")
 
     mega.load("statusline", "mega.statusline").load("forest_night")
     vim.api.nvim_exec([[ colorscheme forest-night ]], true)
