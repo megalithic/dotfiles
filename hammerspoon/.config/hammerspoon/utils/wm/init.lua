@@ -3,10 +3,10 @@
 --  │─────────────────────────────────────────────────────────────────────────│
 --  │ 1. start                                                                │
 --  │ 2. prepare                                                              │
---  │ 3. applyAutoLayout                                                      │
---  │ 4. applyWindowFilters                                                   │
---  │ 5. handleFilters                                                        │
---  │ 6. applyContext                                                         │
+--  │ 3. create new app watcher                                               │
+--  │ 4. create running app watcher                                           │
+--  │ 5. apply app layout                                                     │
+--  │ 6. apply app context                                                    │
 --  └─────────────────────────────────────────────────────────────────────────┘
 
 local log = hs.logger.new("[wm]", "warning")
@@ -26,7 +26,9 @@ local wh = require("utils.wm.window-handlers")
 local fn = require("hs.fnutils")
 
 local gather_windows = function(app)
-  if app == nil then return end
+  if app == nil then
+    return
+  end
 
   local app_config = Config.apps[app:bundleID()]
   if app_config == nil then
@@ -117,13 +119,12 @@ M.handle_window_element_event = function(element, event, window_watcher, info)
 
   -- presently just handling the closed-window case
   if event == cache.element_event_watcher.elementDestroyed then
+    -- FIXME:
+    -- do we re-layout things for the given app?
     log.df("window %s destroyed for %s", info.id, element:application():bundleID())
     window_watcher:stop()
     -- nil that window in our watched windows for the running app
     cache.running_app_watcher[info.pid].windows[info.id] = nil
-
-    -- FIXME:
-    -- do we re-layout things for the given app?
   else
     log.wf("window element event error; unexpected window event (%d) received", event)
   end
@@ -299,7 +300,9 @@ end
 M.stop = function()
   log.i("stopping..")
 
-  if cache.new_app_watcher then cache.new_app_watcher:stop() end
+  if cache.new_app_watcher then
+    cache.new_app_watcher:stop()
+  end
 
   for pid, _ in pairs(cache.running_app_watcher) do
     M.unwatch_running_app(pid)
