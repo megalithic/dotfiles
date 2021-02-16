@@ -47,21 +47,22 @@ M.apply = function(event, app, log)
       --     return not hs.application.get("com.agiletortoise.Drafts-OSX"):isFrontmost()
       --   end,
       --   function()
-          local drafts = hs.application("Drafts")
-          drafts:selectMenuItem("Enable Minimal Mode")
-          drafts:selectMenuItem("Hide Toolbar")
-          drafts:selectMenuItem("Hide Tag Entry")
+      local drafts = hs.application("Drafts")
+      drafts:setFrontmost()
+      drafts:selectMenuItem("Enable Minimal Mode")
+      drafts:selectMenuItem("Hide Draft list")
+      drafts:selectMenuItem("Hide Filters")
 
-          -- drafts:mainWindow():setFullScreen(true)
-          layouts = {
-            {"Drafts", nil, hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
-            {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
-          }
-          hs.layout.apply(layouts)
-        end
---       )
---     end
--- 
+      local layouts = {
+        {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
+        {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
+      }
+
+      hs.layout.apply(layouts)
+    end
+    --       )
+    --     end
+    --
     init_apply_complete = true
   end
 
