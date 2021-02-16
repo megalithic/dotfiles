@@ -48,6 +48,13 @@ M.apply = function(event, app, log)
       --   end,
       --   function()
       local drafts = hs.application("Drafts")
+      --       local template = string.format([[%s
+      --       %s
+      --         [%s](%s)
+      --         ]], title, quote, title, url)
+      --
+      --       -- format and send to drafts
+      --       hs.urlevent.openURL("drafts://x-callback-url/create?tag=links&text=" .. hs.http.encodeForQuery(template))
       drafts:setFrontmost()
       drafts:selectMenuItem("Enable Minimal Mode")
       drafts:selectMenuItem("Hide Draft list")
