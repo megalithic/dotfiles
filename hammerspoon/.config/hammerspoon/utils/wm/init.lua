@@ -63,6 +63,10 @@ M.apply_context = function(app, bundleID, app_config, windows, event)
     return
   end
 
+  -- NOTE:
+  -- many contexts require an event to happen to automate toggling things on and
+  -- off, etc; look at @evantravers `headspace` module for explicit "context
+  -- setting" instead of relying on hooks to "fully" automate it.
   if event == nil then
     log.wf("no event received; skipping -> %s", bundleID)
     return
@@ -113,6 +117,22 @@ M.set_app_layout = function(app_config)
   return layouts
 end
 
+-- gathers layout for a found app_config and applies it
+M.apply_app_layout = function(app_name, app)
+  log.df("attempting to apply layout for %s -> %s", app_name, hs.inspect(app))
+
+  if app then
+    local app_config = Config.apps[app:bundleID()]
+    log.df("applying layout for %s -> %s", app_name, hs.inspect(app_config))
+
+    local layouts = M.set_app_layout(app_config)
+    if layouts ~= nil then
+      log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
+      hs.layout.apply(layouts)
+    end
+  end
+end
+
 -- hs.uielement.watcher for an window
 M.handle_window_element_event = function(element, event, window_watcher, info)
   log.wf("handle window element event for %s", hs.inspect(info))
@@ -151,22 +171,6 @@ M.handle_app_event = function(app_name, event, app)
     local pid = app:pid()
     log.df("app (%s) terminated -> %d", app_name, pid)
     M.unwatch_running_app(pid)
-  end
-end
-
--- gathers layout for a found app_config and applies it
-M.apply_app_layout = function(app_name, app)
-  log.df("attempting to apply layout for %s -> %s", app_name, hs.inspect(app))
-
-  if app then
-    local app_config = Config.apps[app:bundleID()]
-    log.df("applying layout for %s -> %s", app_name, hs.inspect(app_config))
-
-    local layouts = M.set_app_layout(app_config)
-    if layouts ~= nil then
-      log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
-      hs.layout.apply(layouts)
-    end
   end
 end
 

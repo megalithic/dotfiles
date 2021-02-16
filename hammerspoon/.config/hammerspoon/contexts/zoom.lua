@@ -10,7 +10,6 @@ local init_apply_complete = false
 
 -- apply(string, hs.application, hs.logger) :: nil
 M.apply = function(event, app, log)
-
   -- prevents excessive actions on multiple window creations
   if not init_apply_complete then
     if fn.contains({"windowCreated", hs.application.watcher.launched}, event) or app:isRunning() then
@@ -28,22 +27,41 @@ M.apply = function(event, app, log)
       -- mute (PTT) by default
       ptt.setState("push-to-talk")
 
-    -- FIXME: something is dying/failing with this:
-    -- 2020-12-16 11:31:30: -- Loading extension: osascript
-    -- 2020-12-16 11:31:30: 11:31:30 ERROR:                 LuaSkin: Unable to initialize script: {
-    --   NSLocalizedDescription = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-    --   NSLocalizedFailureReason = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-    --   OSAScriptErrorBriefMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-    --   OSAScriptErrorMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
-    --   OSAScriptErrorNumberKey = "-2700";
-    --   OSAScriptErrorRangeKey = "NSRange: {0, 0}";
-    -- }
+      -- FIXME: something is dying/failing with this:
+      -- 2020-12-16 11:31:30: -- Loading extension: osascript
+      -- 2020-12-16 11:31:30: 11:31:30 ERROR:                 LuaSkin: Unable to initialize script: {
+      --   NSLocalizedDescription = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+      --   NSLocalizedFailureReason = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+      --   OSAScriptErrorBriefMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+      --   OSAScriptErrorMessageKey = "Error on line 29: SyntaxError: Multiline comment was not closed properly";
+      --   OSAScriptErrorNumberKey = "-2700";
+      --   OSAScriptErrorRangeKey = "NSRange: {0, 0}";
+      -- }
 
-    ----------------------------------------------------------------------
-    -- close web browser "zoom launching" tabs
-    -- browser.killTabsByDomain("*.zoom.us")
-    end
+      ----------------------------------------------------------------------
+      -- close web browser "zoom launching" tabs
+      -- browser.killTabsByDomain("*.zoom.us")
 
+      -- hs.timer.waitWhile(
+      --   function()
+      --     return not hs.application.get("com.agiletortoise.Drafts-OSX"):isFrontmost()
+      --   end,
+      --   function()
+          local drafts = hs.application("Drafts")
+          drafts:selectMenuItem("Enable Minimal Mode")
+          drafts:selectMenuItem("Hide Toolbar")
+          drafts:selectMenuItem("Hide Tag Entry")
+
+          -- drafts:mainWindow():setFullScreen(true)
+          layouts = {
+            {"Drafts", nil, hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
+            {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
+          }
+          hs.layout.apply(layouts)
+        end
+--       )
+--     end
+-- 
     init_apply_complete = true
   end
 
@@ -59,19 +77,19 @@ M.apply = function(event, app, log)
 
   ----------------------------------------------------------------------
   -- handle window rules
---   if app == nil then
---     return
---   end
--- 
---   local app_config = config.apps[app:bundleID()]
---   if app_config == nil or app_config.rules == nil then
---     return
---   end
--- 
---   if fn.contains({"windowCreated"}, event) then
---     -- wh.snapRelated()
---     wh.applyRules(app_config.rules, win, app_config)
---   end
+  --   if app == nil then
+  --     return
+  --   end
+  --
+  --   local app_config = config.apps[app:bundleID()]
+  --   if app_config == nil or app_config.rules == nil then
+  --     return
+  --   end
+  --
+  --   if fn.contains({"windowCreated"}, event) then
+  --     -- wh.snapRelated()
+  --     wh.applyRules(app_config.rules, win, app_config)
+  --   end
 end
 
 return M
