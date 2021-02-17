@@ -18,23 +18,6 @@ local on_attach = function(client, bufnr)
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
-  require("lspsaga").init_lsp_saga {
-    use_saga_diagnostic_sign = false,
-    border_style = 2,
-    finder_action_keys = {
-      open = "<CR>",
-      vsplit = "v",
-      split = "s",
-      quit = {"q", [[\<ESC>]]}
-    }
-  }
-
-  -- require("lspfuzzy").setup(
-  --   {
-  --     methods = "all" -- either 'all' or a list of LSP methods (see below)
-  --   }
-  -- )
-
   if client.resolved_capabilities.completion then
     local completion_loaded, completion = pcall(require, "mega.lc.completion")
     if completion_loaded then
@@ -61,7 +44,6 @@ local on_attach = function(client, bufnr)
     mega.map("n", "<C-n>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
     -- scroll up hover doc
     mega.map("n", "<C-p>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
-    mega.map("i", "<c-k>", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
   end
 
   if client.resolved_capabilities.goto_definition then
@@ -107,6 +89,7 @@ local on_attach = function(client, bufnr)
       vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
       if client.resolved_capabilities.signature_help then
         vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
+        mega.map("i", "<c-k>", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
       end
     end
   )

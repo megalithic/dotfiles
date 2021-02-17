@@ -17,23 +17,19 @@ if paq_exists then
   -- (ui, interface) --
 
   paq {"trevordmiller/nova-vim"}
-  -- paq {"glepnir/zephyr-nvim"}
-  -- paq {"sainnhe/gruvbox-material"}
   paq {"sainnhe/forest-night"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"ryanoasis/vim-devicons"}
   paq {"junegunn/rainbow_parentheses.vim"}
-  -- paq {"glepnir/galaxyline.nvim"}
-  paq {"hoob3rt/lualine.nvim"}
   paq {"kyazdani42/nvim-web-devicons", opt = true}
+  -- paq {"glepnir/galaxyline.nvim", branch = "main"}
+  paq {"hoob3rt/lualine.nvim"}
   paq {"danilamihailov/beacon.nvim"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
   paq {"nvim-lua/lsp-status.nvim"}
-  -- paq {"nvim-lua/completion-nvim"}
-  -- paq {"steelsojka/completion-buffers"}
   -- paq {"nvim-treesitter/completion-treesitter"}
   paq {"hrsh7th/nvim-compe"}
   paq {"onsails/lspkind-nvim"}
@@ -42,8 +38,6 @@ if paq_exists then
   paq {"nvim-lua/popup.nvim"}
   paq {"hrsh7th/vim-vsnip"}
   -- paq {"hrsh7th/vim-vsnip-integ"}
-  -- paq {"RishabhRD/popfix"}
-  -- paq {"RishabhRD/nvim-lsputils"}
   paq {"glepnir/lspsaga.nvim"}
   paq {
     "nvim-treesitter/nvim-treesitter",
@@ -58,7 +52,7 @@ if paq_exists then
   -- (file navigation) --
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
-  paq {"ojroques/nvim-lspfuzzy"}
+  -- paq {"ojroques/nvim-lspfuzzy"}
   -- paq {"vijaymarupudi/nvim-fzf"}
   -- paq {"vijaymarupudi/nvim-fzf-commands"}
   -- paq {"justinmk/vim-sneak"}
@@ -119,8 +113,8 @@ if paq_exists then
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`
   -- paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
-  paq {"terrortylor/nvim-comment"}
-  -- paq {"tpope/vim-commentary"}
+  -- paq {"terrortylor/nvim-comment"}
+  paq {"tpope/vim-commentary"}
   paq {"tpope/vim-eunuch"}
   paq {"tpope/vim-abolish"}
   paq {"tpope/vim-rhubarb"}

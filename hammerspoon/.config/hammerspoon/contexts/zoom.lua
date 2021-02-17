@@ -47,6 +47,13 @@ M.apply = function(event, app, log)
       --     return not hs.application.get("com.agiletortoise.Drafts-OSX"):isFrontmost()
       --   end,
       --   function()
+      local layouts = {
+        {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
+        {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
+      }
+
+      hs.layout.apply(layouts)
+
       local drafts = hs.application("Drafts")
       --       local template = string.format([[%s
       --       %s
@@ -60,12 +67,6 @@ M.apply = function(event, app, log)
       drafts:selectMenuItem("Hide Draft list")
       drafts:selectMenuItem("Hide Filters")
 
-      local layouts = {
-        {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
-        {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
-      }
-
-      hs.layout.apply(layouts)
     end
     --       )
     --     end

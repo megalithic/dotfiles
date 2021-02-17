@@ -1,5 +1,17 @@
 mega.inspect("activating package settings.lua..")
 
+-- [lspsaga] -------------------------------------------------------------------
+require("lspsaga").init_lsp_saga {
+  use_saga_diagnostic_sign = false,
+  border_style = 2,
+  finder_action_keys = {
+    open = "<CR>",
+    vsplit = "v",
+    split = "s",
+    quit = {"q", [[\<ESC>]]}
+  }
+}
+
 -- [beacon] --------------------------------------------------------------------
 vim.g.beacon_size = 90
 vim.g.beacon_minimal_jump = 25
@@ -7,7 +19,7 @@ vim.g.beacon_shrink = 0
 vim.g.beacon_ignore_filetypes = {"fzf"}
 
 -- [nvim_comment] --------------------------------------------------------------
-require("nvim_comment").setup()
+-- require("nvim_comment").setup()
 
 -- [conflict-marker] -----------------------------------------------------------
 -- disable the default highlight group
@@ -15,14 +27,6 @@ vim.g.conflict_marker_highlight_group = ""
 -- Include text after begin and end markers
 vim.g.conflict_marker_begin = "^<<<<<<< .*$"
 vim.g.conflict_marker_end = "^>>>>>>> .*$"
-
--- [kommentary] ----------------------------------------------------------------
--- require("kommentary.config").configure_language(
--- "lua",
--- {
--- prefer_single_line_comments = true
--- }
--- )
 
 -- [nvim-colorizer] ------------------------------------------------------------
 -- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
@@ -240,6 +244,15 @@ nmap <silent> <leader>to :copen<CR>
 -- [nvim-treesitter] -----------------------------------------------------------
 local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
 if ts_installed then
+  local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
+  parser_configs.elixir = {
+    install_info = {
+      url = "~/.config/treesitter/tree-sitter-elixir",
+      files = {"src/parser.c"}
+    },
+    filetype = "elixir",
+    used_by = {"eelixir"}
+  }
   treesitter.setup(
     {
       ensure_installed = {

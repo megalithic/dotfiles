@@ -15,6 +15,8 @@ end
 -- onAppQuit(hs.application, function) :: nil
 -- evaluates and returns valid/usable windows for an app
 M.onAppQuit = function(app, callback, providedInterval)
+  log.wf("onAppQuit -> %s", app)
+
   local interval = providedInterval or 0.2
 
   hs.timer.waitUntil(

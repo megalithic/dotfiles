@@ -114,7 +114,7 @@ local status = {
 
 return {
   icons = icons,
-  colors = mega.table_merge(base, status),
+  colors = mega.table_merge(base, status, cs),
   load = function()
     -- (set forest_night colorscheme) --
     vim.o.background = "dark"
