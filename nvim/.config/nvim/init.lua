@@ -13,6 +13,10 @@ vim.cmd [[packadd vimball]]
 -- LSP log location ->
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 
+-- NOTE:
+-- why use a do block?
+-- -> https://stackoverflow.com/a/23899152/213904
+-- sub-note: the below is _NOT_ a good example of why you would want to use it
 do
   vim.cmd([[runtime .vimrc]])
 

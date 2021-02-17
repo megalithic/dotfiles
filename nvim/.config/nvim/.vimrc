@@ -106,6 +106,9 @@ nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<C
 "      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
 nnoremap z= :setlocal spell<CR>z=
 
+" fix current word (setting local spell on, then off)
+nnoremap <leader>s :setlocal spell<CR>1z=1<BAR>:setlocal nospell<CR><BAR>g;
+
 " ["c|<C-b>"]      = map_cmd('<Left>'):with_noremap(),
 " ["c|<C-f>"]      = map_cmd('<Right>'):with_noremap(),
 " ["c|<C-a>"]      = map_cmd('<Home>'):with_noremap(),
@@ -320,11 +323,11 @@ if has("nvim")
   let g:python3_host_prog = '~/.asdf/shims/python3'
 
   " share data between nvim instances (registers etc)
-  "  augroup SHADA
-  "    autocmd!
-  "    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
-  "          \ if exists(':rshada') | rshada | wshada | endif
-  "  augroup END
+   augroup SHADA
+     autocmd!
+     autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
+           \ if exists(':rshada') | rshada | wshada | endif
+   augroup END
 else
   set emoji                 " treat emojis 😄 as full width characters
   set cryptmethod=blowfish2
