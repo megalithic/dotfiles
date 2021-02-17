@@ -52,7 +52,7 @@ if paq_exists then
   -- (file navigation) --
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
-  -- paq {"ojroques/nvim-lspfuzzy"}
+  paq {"ojroques/nvim-lspfuzzy"}
   -- paq {"vijaymarupudi/nvim-fzf"}
   -- paq {"vijaymarupudi/nvim-fzf-commands"}
   -- paq {"justinmk/vim-sneak"}

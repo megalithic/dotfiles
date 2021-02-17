@@ -16,6 +16,8 @@ local on_attach = function(client, bufnr)
   mega.inspect("client.cmd", client.name)
   mega.inspect("client.resolved_capabilities", client.resolved_capabilities)
 
+  -- mega.dump(client.resolved_capabilities)
+
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
   if client.resolved_capabilities.completion then
@@ -64,6 +66,7 @@ local on_attach = function(client, bufnr)
     mega.map("n", "<Leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
     mega.map("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
     mega.map("n", "<leader>rn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
+    mega.map("n", "<leader>lrn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
   end
 
   if client.resolved_capabilities.code_action then

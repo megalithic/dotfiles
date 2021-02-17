@@ -1,5 +1,12 @@
 mega.inspect("activating package settings.lua..")
 
+-- [lspfuzzy] ------------------------------------------------------------------
+require("lspfuzzy").setup(
+  {
+    methods = "all" -- either 'all' or a list of LSP methods (see below)
+  }
+)
+
 -- [lspsaga] -------------------------------------------------------------------
 require("lspsaga").init_lsp_saga {
   use_saga_diagnostic_sign = false,
@@ -8,7 +15,8 @@ require("lspsaga").init_lsp_saga {
     open = "<CR>",
     vsplit = "v",
     split = "s",
-    quit = {"q", [[\<ESC>]]}
+    -- quit = {"q", [[\<ESC>]]}
+    quit = {"<ESC>", "q"}
   }
 }
 

@@ -4,7 +4,7 @@
 return {
   load = function(colorscheme_str)
     local colorscheme = require(string.format("mega.colors.%s", colorscheme_str or "nova"))
-    local colors = colorscheme.colors
+    -- local colors = colorscheme.colors
     local icons = colorscheme.icons
 
     local lsp_status = require "lsp-status"
@@ -39,7 +39,8 @@ return {
         }
       },
       lualine_x = {LspStatus},
-      lualine_y = {"encoding", {"fileformat", icons_enabled = false}, "filetype"},
+      lualine_y = {"filetype", {"fileformat", icons_enabled = false}},
+      -- lualine_y = {"encoding", {"fileformat", icons_enabled = false}, "filetype"},
       lualine_z = {"location", "progress"},
       lualine_diagnostics = {}
     }

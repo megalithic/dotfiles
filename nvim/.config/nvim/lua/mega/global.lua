@@ -36,6 +36,12 @@ function M.isdir(path)
   return M.exists(path .. "/")
 end
 
+-- Make printing in nvim's prompt easier
+function M.dump(...)
+  local objects = vim.tbl_map(vim.inspect, {...})
+  print(unpack(objects))
+end
+
 function M.set_highlight(group, _fg, _bg, _style, _bang)
   local fg, bg, style, bang = "", "", "", ""
 
