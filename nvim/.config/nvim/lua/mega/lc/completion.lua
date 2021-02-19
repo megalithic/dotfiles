@@ -110,12 +110,12 @@ function M.activate()
         incomplete_delay = 400,
         documentation = true,
         source = {
-          nvim_lsp = {menu = '[LSP]', priority = 10, sort = false},
-          vsnip = {menu = '[VS]', priority = 10},
-          nvim_lua = {menu = '[LUA]', priority = 9},
-          path = {menu = '[PATH]', priority = 9},
-          treesitter = {menu = '[TS]', priority = 9},
-          buffer = {menu = '[BUF]', priority = 8},
+          nvim_lsp = {menu = "[LSP]", priority = 10, sort = false},
+          vsnip = {menu = "[VS]", priority = 10},
+          nvim_lua = {menu = "[LUA]", priority = 9},
+          path = {menu = "[PATH]", priority = 9},
+          treesitter = {menu = "[TS]", priority = 9},
+          buffer = {menu = "[BUF]", priority = 8},
           spell = {menu = "[SPL]"}
           -- vsnip = {menu = "[SNIP]"},
           -- nvim_lsp = {menu = "[LSP]"},
@@ -149,6 +149,7 @@ function M.activate()
         return npairs.esc("<C-n>")
       else
         if vim.fn["vsnip#available"](1) ~= 0 then
+          -- adds a `0` to the end for some reason
           return vim.fn.feedkeys(string.format("%c%c%c(vsnip-expand-or-jump)", 0x80, 253, 83))
         else
           return npairs.esc("<Tab>")
