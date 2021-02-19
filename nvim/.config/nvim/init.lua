@@ -25,7 +25,7 @@ mega.load("preflight", "mega.preflight")
 mega.load("packages", "mega.packages")
 
 -- Force loading of astronauta first.
-vim.cmd [[runtime plugin/astronauta.vim]]
+-- vim.cmd [[runtime plugin/astronauta.vim]]
 
 mega.load("forest_night", "mega.colors.forest_night").load()
 mega.load("settings", "mega.settings")

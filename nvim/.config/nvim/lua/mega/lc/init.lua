@@ -15,14 +15,10 @@ end
 local on_attach = function(client, bufnr)
   mega.inspect("client.cmd", client.name)
   mega.inspect("client.resolved_capabilities", client.resolved_capabilities)
+  -- mega.dump(client.resolved_capabilities)
 
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
-  end
-
-  -- mega.dump(client.resolved_capabilities)
-  if client.resolved_capabilities.code_lens then
-    require "virtualtypes".on_attach()
   end
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
@@ -50,15 +46,16 @@ local on_attach = function(client, bufnr)
   if client.resolved_capabilities.hover then
     mega.map("n", "K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
     -- scroll down hover doc
-    mega.map("n", "<C-n>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
-    -- scroll up hover doc
-    mega.map("n", "<C-p>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
+    -- mega.map("n", "<C-f>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
+    -- -- scroll up hover doc
+    -- mega.map("n", "<C-d>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
   end
 
   if client.resolved_capabilities.goto_definition then
     mega.map("n", "<C-]>", "<cmd>lua vim.lsp.buf.definition()<CR>")
     mega.map("n", "<Leader>lgD", "<cmd>lua vim.lsp.buf.definition()<CR>")
     mega.map("n", "<leader>lgd", "<cmd>lua require'lspsaga.provider'.preview_definition()<CR>")
+    mega.map("n", "<leader>lf", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
   end
 
   if client.resolved_capabilities.find_references then
@@ -70,10 +67,10 @@ local on_attach = function(client, bufnr)
   end
 
   if client.resolved_capabilities.rename then
-    mega.map("n", "<Leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
-    mega.map("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
+    -- mega.map("n", "<Leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
+    -- mega.map("n", "<Leader>ln", "<cmd>lua vim.lsp.buf.rename()<CR>")
     mega.map("n", "<leader>rn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
-    mega.map("n", "<leader>lrn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
+    mega.map("n", "<leader>ln", "<cmd>lua require('lspsaga.rename').rename()<CR>")
   end
 
   if client.resolved_capabilities.code_action then

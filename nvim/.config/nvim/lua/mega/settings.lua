@@ -1,6 +1,11 @@
 mega.inspect("activating package settings.lua..")
 
 -- [lspfuzzy] ------------------------------------------------------------------
+-- vim.g.lexima_enable_basic_rules = 0
+-- vim.g.lexima_enable_newline_rules = 0
+-- vim.g.lexima_enable_endwise_rules = 1
+
+-- [lexima] --------------------------------------------------------------------
 require("lspfuzzy").setup(
   {
     methods = "all" -- either 'all' or a list of LSP methods (see below)

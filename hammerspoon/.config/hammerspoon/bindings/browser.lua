@@ -49,8 +49,8 @@ end
 
 module.snip = function()
   -- TODO: https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L248-L281
-  local appName = config.preferred.browsers[1]
-  log.wf("snipping with appName -> %s", appName)
+  local app_name = config.preferred.browsers[1]
+  log.wf("snipping with appName -> %s", app_name)
 
   hs.osascript.applescript(
     template(
@@ -76,7 +76,7 @@ module.snip = function()
       tell application "{APP_NAME}" to get the title of the active tab in the first window
     end currentTitle
   ]],
-      {APP_NAME = appName}
+      {APP_NAME = app_name}
     )
   )
 

@@ -13,15 +13,16 @@ if paq_exists then
 
   -- (paq-nvim) --
   paq {"savq/paq-nvim", opt = true}
+  -- paq {"tweekmonster/startuptime.vim"}
+  -- :StartupTime 100 -- -u ~/foo.vim -i NONE -- ~/foo.vim
 
   -- (ui, interface) --
-  paq {"trevordmiller/nova-vim"}
+  -- paq {"trevordmiller/nova-vim"}
   paq {"sainnhe/forest-night"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
-  paq {"ryanoasis/vim-devicons"}
   paq {"junegunn/rainbow_parentheses.vim"}
-  paq {"kyazdani42/nvim-web-devicons", opt = true}
+  paq {"ryanoasis/vim-devicons"}
   -- paq {"glepnir/galaxyline.nvim", branch = "main"}
   paq {"hoob3rt/lualine.nvim"}
   paq {"danilamihailov/beacon.nvim"}
@@ -53,7 +54,7 @@ if paq_exists then
       vim.api.nvim_command("TSUpdate")
     end
   }
-  paq {"jubnzv/virtual-types.nvim"}
+  -- paq {"jubnzv/virtual-types.nvim"}
   -- paq {"nvim-treesitter/nvim-treesitter-textobjects"}
   -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
   -- paq {"RRethy/vim-illuminate"}
@@ -69,7 +70,7 @@ if paq_exists then
   -- paq {"justinmk/vim-sneak"}
   paq {"unblevable/quick-scope"}
   -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/modules/_mappings.lua
-  paq {"tjdevries/astronauta.nvim"}
+  -- paq {"tjdevries/astronauta.nvim"}
 
   -- (text objects) --
   paq {"tpope/vim-rsi"}
@@ -108,25 +109,32 @@ if paq_exists then
   paq {"tpope/vim-projectionist"}
   paq {"janko/vim-test"}
   paq {"tpope/vim-ragtag"}
-  paq {"axvr/zepl.vim"}
+  -- paq {"axvr/zepl.vim"}
   paq {"rizzatti/dash.vim"}
   paq {"skywind3000/vim-quickui"}
   paq {"sgur/vim-editorconfig"}
   paq {"zenbro/mirror.vim"}
   paq {"junegunn/goyo.vim"}
   paq {"junegunn/limelight.vim"}
+  -- paq {"reedes/vim-wordy", opt = true}
+
+  -- Building on Vim’s spell-check and thesaurus/dictionary completion
+  -- paq {"reedes/vim-lexical", opt = true}
+
+  -- handful of tweaks needed to smooth the path to writing prose
+  paq {"reedes/vim-pencil", opt = true}
   paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}
 
   -- (the rest...) --
   paq {"ojroques/vim-oscyank"}
   paq {"wsdjeg/vim-fetch"} -- vim path/to/file.ext:12:3
   paq {"farmergreg/vim-lastplace"}
-  -- paq {"cohama/lexima.vim"}
   -- paq {"blackCauldron7/surround.nvim"}
   paq {"andymass/vim-matchup"}
   paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
   paq {"alvan/vim-closetag"}
   -- paq {"Raimondi/delimitMate"}
+  -- paq {"cohama/lexima.vim"}
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`
   -- paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
@@ -149,7 +157,7 @@ if paq_exists then
   paq {"christoomey/vim-tmux-navigator"} -- https://github.com/knubie/vim-kitty-navigator analog
   paq {"tmux-plugins/vim-tmux-focus-events"}
   paq {"christoomey/vim-tmux-runner"}
-  paq {"wellle/visual-split.vim"}
+  -- paq {"wellle/visual-split.vim"}
   paq {"junegunn/vim-slash"}
   paq {"junegunn/vim-peekaboo"}
   -- https://github.com/awesome-streamers/awesome-streamerrc/blob/master/ThePrimeagen/plugin/firenvim.vim
@@ -169,9 +177,9 @@ if paq_exists then
   paq {"avdgaag/vim-phoenix"}
   paq {"lucidstack/hex.vim"}
   paq {"neoclide/jsonc.vim"}
-  paq {"gerrard00/vim-mocha-only"}
+  -- paq {"gerrard00/vim-mocha-only"}
   paq {"plasticboy/vim-markdown"}
-  paq {"florentc/vim-tla"}
+  -- paq {"florentc/vim-tla"}
   paq {"euclidianace/betterlua.vim"}
   -- paq {"TravonteD/luajob"}
   paq {"andrejlevkovitch/vim-lua-format"}

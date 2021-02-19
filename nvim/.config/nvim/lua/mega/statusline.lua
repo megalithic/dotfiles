@@ -1,6 +1,3 @@
--- REF: might want to make our own without galaxyline?
--- https://github.com/wbthomason/dotfiles/blob/linux/neovim/.config/nvim/lua/statusline.lua
-
 return {
   load = function(colorscheme_str)
     local colorscheme = require(string.format("mega.colors.%s", colorscheme_str or "nova"))

@@ -116,7 +116,7 @@ function M.activate()
           path = {menu = "[PATH]", priority = 9},
           treesitter = {menu = "[TS]", priority = 9},
           buffer = {menu = "[BUF]", priority = 8},
-          spell = {menu = "[SPL]"}
+          spell = true
           -- vsnip = {menu = "[SNIP]"},
           -- nvim_lsp = {menu = "[LSP]"},
           -- nvim_lua = {menu = "[LUA]"},
@@ -129,6 +129,7 @@ function M.activate()
     )
 
     local npairs = require("nvim-autopairs")
+
     _G.completion_confirm = function()
       if vim.fn.pumvisible() ~= 0 then
         if vim.fn.complete_info()["selected"] ~= -1 then
@@ -149,8 +150,8 @@ function M.activate()
         return npairs.esc("<C-n>")
       else
         if vim.fn["vsnip#available"](1) ~= 0 then
-          -- adds a `0` to the end for some reason
-          return vim.fn.feedkeys(string.format("%c%c%c(vsnip-expand-or-jump)", 0x80, 253, 83))
+          vim.fn.feedkeys(string.format("%c%c%c(vsnip-expand-or-jump)", 0x80, 253, 83))
+          return npairs.esc("")
         else
           return npairs.esc("<Tab>")
         end
@@ -162,7 +163,8 @@ function M.activate()
         return npairs.esc("<C-p>")
       else
         if vim.fn["vsnip#jumpable"](-1) ~= 0 then
-          return vim.fn.feedkeys(string.format("%c%c%c(vsnip-jump-prev)", 0x80, 253, 83))
+          vim.fn.feedkeys(string.format("%c%c%c(vsnip-jump-prev)", 0x80, 253, 83))
+          return npairs.esc("")
         else
           return npairs.esc("<C-h>")
         end
@@ -173,7 +175,9 @@ function M.activate()
     -- https://github.com/33kk/dotfiles/blob/master/nvim/lua/plugins/compe.lua#L38-L76
     mega.map("i", "<CR>", "v:lua.completion_confirm()", {expr = true, noremap = true})
     mega.map("i", "<Tab>", "v:lua.tab()", {expr = true, noremap = true})
+    mega.map("s", "<Tab>", "v:lua.tab()", {expr = true, noremap = true})
     mega.map("i", "<S-Tab>", "v:lua.s_tab()", {expr = true, noremap = true})
+    mega.map("s", "<S-Tab>", "v:lua.s_tab()", {expr = true, noremap = true})
   end
 end
 
