@@ -95,6 +95,7 @@ function M.activate()
   -- TODO/REFS:
   -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/plugin/_completion.lua
   -- https://github.com/ahmedelgabri/dotfiles/blob/master/config/.vim/lua/_/completion.lua
+  -- https://github.com/YaBoiBurner/dotfiles/blob/dom/.config/nvim/lua/plugins.lua#L104-L154
   local has_compe, compe = pcall(require, "compe")
   if has_compe then
     compe.setup(
@@ -107,14 +108,22 @@ function M.activate()
         throttle_time = 120,
         source_timeout = 200,
         incomplete_delay = 400,
+        documentation = true,
         source = {
-          vsnip = {menu = "[SNIP]"},
-          nvim_lsp = {menu = "[LSP]"},
-          nvim_lua = {menu = "[LUA]"},
-          treesitter = {menu = "[TS]"},
-          buffer = {menu = "[BUF]"},
-          path = true
-          -- spell = {menu = '[SPL]'},
+          nvim_lsp = {menu = '[LSP]', priority = 10, sort = false},
+          vsnip = {menu = '[VS]', priority = 10},
+          nvim_lua = {menu = '[LUA]', priority = 9},
+          path = {menu = '[PATH]', priority = 9},
+          treesitter = {menu = '[TS]', priority = 9},
+          buffer = {menu = '[BUF]', priority = 8},
+          spell = {menu = "[SPL]"}
+          -- vsnip = {menu = "[SNIP]"},
+          -- nvim_lsp = {menu = "[LSP]"},
+          -- nvim_lua = {menu = "[LUA]"},
+          -- treesitter = {menu = "[TS]"},
+          -- buffer = {menu = "[BUF]"},
+          -- path = true,
+          -- spell = {menu = "[SPL]"}
         }
       }
     )
@@ -160,6 +169,7 @@ function M.activate()
     end
 
     -- Autocompletion and snippets
+    -- https://github.com/33kk/dotfiles/blob/master/nvim/lua/plugins/compe.lua#L38-L76
     mega.map("i", "<CR>", "v:lua.completion_confirm()", {expr = true, noremap = true})
     mega.map("i", "<Tab>", "v:lua.tab()", {expr = true, noremap = true})
     mega.map("i", "<S-Tab>", "v:lua.s_tab()", {expr = true, noremap = true})

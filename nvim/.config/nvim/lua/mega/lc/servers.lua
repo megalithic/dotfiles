@@ -33,6 +33,7 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
+  -- https://github.com/disrupted/dotfiles/blob/master/.config/nvim/lua/conf/lsp.lua#L180-L228 
   efm = {init_options = {documentFormatting = true}},
   elmls = {
     filetypes = {"elm"},

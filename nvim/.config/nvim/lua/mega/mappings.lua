@@ -65,19 +65,7 @@ mega.map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
 -- map("x", "b1z=e") -- Correct previous word
--- utils.lmap("c", "1z=1") -- Correct current word
--- utils.lmap("s", ":lua cycle_lang()<cr>") -- Change spelling language
 --
---do
---  local i = 1
---  local langs = {"", "en", "es", "de"}
---  function cycle_lang()
---    i = (i % #langs) + 1 -- update index
---    b.spelllang = langs[i] -- change spelllang
---    w.spell = langs[i] ~= "" -- if empty then nospell
---  end
---end
-
 -- Zoom the current split into it's own tab (toggleable)
 -- local function toggle_zen()
 --   vim.wo.list = not vim.wo.list --(hidden chars)
@@ -109,7 +97,11 @@ endif
 
 -- [plugin mappings] -----------------------------------------------------------
 
+-- # FZF
 mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
 mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
 mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
 mega.map("n", "<Leader>b", "<cmd>FzfBuffers<CR>")
+
+-- # Dash
+mega.map("n", "<leader>D", "<cmd>Dash<CR>")

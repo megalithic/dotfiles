@@ -16,27 +16,29 @@ vim.cmd [[packadd vimball]]
 -- NOTE:
 -- why use a do block?
 -- -> https://stackoverflow.com/a/23899152/213904
--- sub-note: the below is _NOT_ a good example of why you would want to use it
-do
-  vim.cmd([[runtime .vimrc]])
 
-  -- [ loaders ] ---------------------------------------------------------------
+vim.cmd([[runtime .vimrc]])
 
-  mega.load("preflight", "mega.preflight")
-  mega.load("packages", "mega.packages")
-  mega.load("forest_night", "mega.colors.forest_night").load()
-  mega.load("settings", "mega.settings")
-  mega.load("lc", "mega.lc")
-  mega.load("mappings", "mega.mappings")
-  mega.load("autocmds", "mega.autocmds")
-  vim.schedule(
-    function()
-      mega.load("ft", "mega.ft").setup()
-    end
-  )
-  vim.schedule(
-    function()
-      mega.load("ft", "mega.ft").trigger_ft()
-    end
-  )
-end
+-- [ loaders ] ---------------------------------------------------------------
+
+mega.load("preflight", "mega.preflight")
+mega.load("packages", "mega.packages")
+
+-- Force loading of astronauta first.
+vim.cmd [[runtime plugin/astronauta.vim]]
+
+mega.load("forest_night", "mega.colors.forest_night").load()
+mega.load("settings", "mega.settings")
+mega.load("lc", "mega.lc")
+mega.load("mappings", "mega.mappings")
+mega.load("autocmds", "mega.autocmds")
+vim.schedule(
+  function()
+    mega.load("ft", "mega.ft").setup()
+  end
+)
+vim.schedule(
+  function()
+    mega.load("ft", "mega.ft").trigger_ft()
+  end
+)

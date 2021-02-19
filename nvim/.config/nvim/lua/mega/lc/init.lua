@@ -16,7 +16,14 @@ local on_attach = function(client, bufnr)
   mega.inspect("client.cmd", client.name)
   mega.inspect("client.resolved_capabilities", client.resolved_capabilities)
 
+  if client.config.flags then
+    client.config.flags.allow_incremental_sync = true
+  end
+
   -- mega.dump(client.resolved_capabilities)
+  if client.resolved_capabilities.code_lens then
+    require "virtualtypes".on_attach()
+  end
 
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
@@ -34,8 +41,8 @@ local on_attach = function(client, bufnr)
       "lc.format",
       function()
         vim.api.nvim_command [[autocmd! * <buffer>]]
-        vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
-        -- vim.api.nvim_command [[autocmd BufWritePost plugins.lua PackerCompile]]
+        -- vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
+        vim.api.nvim_command [[autocmd BufWritePost <buffer> lua vim.lsp.buf.formatting()]]
       end
     )
   end

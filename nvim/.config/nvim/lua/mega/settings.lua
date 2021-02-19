@@ -26,8 +26,21 @@ vim.g.beacon_minimal_jump = 25
 vim.g.beacon_shrink = 0
 vim.g.beacon_ignore_filetypes = {"fzf"}
 
+-- [surround] ------------------------------------------------------------------
+-- vim.g.surround_mappings_style = "surround"
+-- require "surround".setup {}
+
 -- [nvim_comment] --------------------------------------------------------------
 -- require("nvim_comment").setup()
+
+-- [kommentary] ----------------------------------------------------------------
+-- require('kommentary.config').configure_language("default", {
+--         prefer_single_line_comments = true
+--     })
+--     require('kommentary.config').configure_language("lua", {
+--         single_line_comment_string = "--",
+--         prefer_single_line_comments = true
+--     })
 
 -- [conflict-marker] -----------------------------------------------------------
 -- disable the default highlight group
@@ -100,6 +113,17 @@ end
 
 -- [nvim-autopairs] ------------------------------------------------------------
 require("nvim-autopairs").setup()
+-- require('nvim-autopairs').setup({
+--   pairs_map = {
+--     ["'"] = "'",
+--     ['"'] = '"',
+--     ['('] = ')',
+--     ['['] = ']',
+--     ['{'] = '}',
+--     ['`'] = '`',
+--     ['$'] = '$'
+--   }
+-- })
 
 -- [fzf] -----------------------------------------------------------------------
 vim.g.fzf_command_prefix = "Fzf"
@@ -194,6 +218,7 @@ mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 -- [gitsigns] ------------------------------------------------------------------
 local gitsigns_installed, gitsigns = pcall(require, "gitsigns")
 if gitsigns_installed then
+  -- https://github.com/JoosepAlviste/dotfiles/blob/master/config/nvim/lua/j/gitsigns.lua
   gitsigns.setup(
     {
       signs = {

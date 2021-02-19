@@ -42,34 +42,33 @@ M.apply = function(event, app, log)
       -- close web browser "zoom launching" tabs
       -- browser.killTabsByDomain("*.zoom.us")
 
-      -- hs.timer.waitWhile(
-      --   function()
-      --     return not hs.application.get("com.agiletortoise.Drafts-OSX"):isFrontmost()
-      --   end,
-      --   function()
-      local layouts = {
-        {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
-        {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
-      }
+      hs.timer.waitWhile(
+        function()
+          return not hs.application.get("com.agiletortoise.Drafts-OSX"):isFrontmost()
+        end,
+        function()
+          local drafts = hs.application("Drafts")
+          local layouts = {
+            {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
+            {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
+          }
 
-      hs.layout.apply(layouts)
+          hs.layout.apply(layouts)
 
-      local drafts = hs.application("Drafts")
-      --       local template = string.format([[%s
-      --       %s
-      --         [%s](%s)
-      --         ]], title, quote, title, url)
-      --
-      --       -- format and send to drafts
-      --       hs.urlevent.openURL("drafts://x-callback-url/create?tag=links&text=" .. hs.http.encodeForQuery(template))
-      drafts:setFrontmost()
-      drafts:selectMenuItem("Enable Minimal Mode")
-      drafts:selectMenuItem("Hide Draft list")
-      drafts:selectMenuItem("Hide Filters")
-
+          --       local template = string.format([[%s
+          --       %s
+          --         [%s](%s)
+          --         ]], title, quote, title, url)
+          --
+          --       -- format and send to drafts
+          --       hs.urlevent.openURL("drafts://x-callback-url/create?tag=links&text=" .. hs.http.encodeForQuery(template))
+          drafts:setFrontmost()
+          drafts:selectMenuItem("Enable Minimal Mode")
+          drafts:selectMenuItem("Hide Draft list")
+          drafts:selectMenuItem("Hide Filters")
+        end
+      )
     end
-    --       )
-    --     end
     --
     init_apply_complete = true
   end

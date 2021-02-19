@@ -284,12 +284,12 @@ M.prepare = function()
   -- watch running apps..
   local all_running_apps = hs.application.runningApplications()
   for _, app in pairs(all_running_apps) do
-    local managed_app = Config.apps[app:bundleID()]
+    local managed_and_running_app = Config.apps[app:bundleID()]
     -- we actually only want to watch running apps that have an app_config, aka,
     -- considered to be "managed".
-    if managed_app ~= nil then
+    if managed_and_running_app ~= nil then
       log.df("found managed and running app -> %s (%s)", app:name(), app:bundleID())
-      M.watch_running_app(app)
+      M.watch_running_app(app, hs.application.watcher.launched)
     end
   end
 end
