@@ -123,7 +123,7 @@ return {
     vim.g.forest_night_enable_italic = 1
     vim.g.forest_night_enable_bold = 1
     vim.g.forest_night_transparent_background = 1
-    vim.g.forest_night_sign_column_background = "default"
+    -- vim.g.forest_night_sign_column_background = "default"
 
     -- (highlights) --
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
@@ -195,6 +195,10 @@ return {
 
     highlight("default GalaxyStatusline", "NONE", status.bg, "NONE")
     highlight("default GalaxyStatuslineNC", "NONE", status.bg, "NONE")
+
+    highlight("DiffAdd", status.added, status.bg, "NONE")
+    highlight("DiffDelete", status.removed, status.bg, "NONE")
+    highlight("DiffChange", status.changed, status.bg, "NONE")
 
     mega.load("statusline", "mega.statusline").load("forest_night")
     vim.api.nvim_exec([[ colorscheme forest-night ]], true)

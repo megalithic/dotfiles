@@ -2,13 +2,12 @@
 
 local au = mega.au
 
-mega.inspect("Activating autocmds..")
+mega.inspect("activating autocmds..")
 
 mega.augroup(
   "mega.general",
   function()
     au([[autocmd!]])
-
     au([[autocmd FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
     au([[
           if argc() > 1
@@ -84,57 +83,33 @@ mega.augroup(
 --   false
 -- )
 
-vim.api.nvim_exec(
-  [[
-augroup gitcommit
-  autocmd!
-  function! BufReadIndex()
-    " Use j/k in status
-    setlocal nohlsearch
-    nnoremap <buffer> <silent> j :call search('^#\t.*','W')<Bar>.<CR>
-    nnoremap <buffer> <silent> k :call search('^#\t.*','Wbe')<Bar>.<CR>
-  endfunction
+-- _G.gitcommit_exec = function()
+--   vim.cmd([[normal gg0]])
 
-  function! BufEnterCommit()
-    " Start in insert mode for commit
-    normal gg0
-    if getline('.') ==? ''
-      start
-    end
+--   vim.bo.textwidth = 72
+--   vim.wo.colorcolumn = "72"
+--   vim.wo.spell = true
+--   vim.bo.spelllang = "en_us"
+--   vim.wo.list = false
+--   vim.wo.number = false
+--   vim.wo.relativenumber = false
+--   vim.wo.wrap = true
+--   vim.wo.linebreak = true
 
-    " Allow automatic formatting of bulleted lists and blockquotes
-    " https://github.com/lencioni/dotfiles/blob/master/.vim/after/ftplugin/gitcommit.vim
-    setlocal comments+=fb:*
-    setlocal comments+=fb:-
-    setlocal comments+=fb:+
-    setlocal comments+=b:>
+--   vim.cmd([[setlocal comments+=fb:*]])
+--   vim.cmd([[setlocal comments+=fb:-]])
+--   vim.cmd([[setlocal comments+=fb:+]])
+--   vim.cmd([[setlocal comments+=b:>]])
 
-    setlocal formatoptions+=c " Auto-wrap comments using textwidth
-    setlocal formatoptions+=q " Allow formatting of comments with `gq`
+--   vim.cmd([[setlocal formatoptions+=c]])
+--   vim.cmd([[setlocal formatoptions+=q]])
+-- end
 
-    setlocal textwidth=72
-    setlocal spell
-    setlocal spelllang=en_us
-    setlocal complete+=kspell
-    setlocal nolist
-    setlocal nonumber
-    setlocal wrap
-    setlocal linebreak
-    setlocal colorcolumn=72
-    echo "gitcommit entered"
-  endfunction
-
-  autocmd BufNewFile,BufRead .git/index setlocal nolist
-  autocmd BufReadPost fugitive://* set bufhidden=delete
-  autocmd BufReadCmd *.git/index exe BufReadIndex()
-  autocmd BufEnter *.git/index silent normal gg0j
-  autocmd BufEnter *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe BufEnterCommit()
-  autocmd FileType gitcommit,gitrebase exe BufEnterCommit()
-
-  au BufReadPost,BufNewFile *.md,*.txt,COMMIT_EDITMSG set wrap linebreak nolist spell spelllang=en_us complete+=kspell
-  au BufReadPost,BufNewFile .html,*.txt,*.md,*.adoc set spell spelllang=en_us complete+=kspell
-
-augroup END
-        ]],
-  false
-)
+-- mega.augroup(
+--   "mega.git",
+--   function()
+--     au([[autocmd!]])
+--     au([[autocmd! BufEnter,WinEnter,FocusGained *COMMIT_EDITMSG,*PULLREQ_EDITMSG exe v:lua.gitcommit_exec()]])
+--     au([[autocmd! FileType gitcommit,gitrebase exe v:lua.gitcommit_exec()]])
+--   end
+-- )

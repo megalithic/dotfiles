@@ -70,6 +70,27 @@ function M.map(mode, lhs, rhs, opts)
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
+function M.inspect(k, v, l)
+  local should_log = require("vim.lsp.log").should_log(1)
+  if not should_log then
+    return
+  end
+
+  local level = "[DEBUG]"
+  if level ~= nil and l == 4 then
+    level = "[ERROR]"
+  end
+
+  if v then
+    print(level .. " " .. k .. " -> " .. vim.inspect(v))
+  else
+    print(level .. " " .. k .. "..")
+  end
+
+  return v
+end
+
+
 -- a safe module loader
 function M.load(key, req)
   local loaded, loader = pcall(require, req)
@@ -276,26 +297,6 @@ end
 
 function M.get_color(synID, what, mode)
   return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(synID)), what, mode)
-end
-
-function M.inspect(k, v, l)
-  local should_log = require("vim.lsp.log").should_log(1)
-  if not should_log then
-    return
-  end
-
-  local level = "[DEBUG]"
-  if level ~= nil and l == 4 then
-    level = "[ERROR]"
-  end
-
-  if v then
-    print(level .. " " .. k .. " -> " .. vim.inspect(v))
-  else
-    print(level .. " " .. k .. "..")
-  end
-
-  return v
 end
 
 function M.pclients()

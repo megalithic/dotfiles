@@ -16,6 +16,8 @@ function M.handle()
           ft_plugin(bufnr)
         end
       )
+    else
+      mega.inspect("ft loading failed", {vim.bo.ft, ft_plugin}, 4)
     end
   end
 end
