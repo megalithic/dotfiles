@@ -24,6 +24,35 @@ local function root_pattern(...)
   end
 end
 
+-- https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp.lua#L208-L253
+local function get_lua_runtime()
+  local result = {}
+  for _, path in pairs(vim.api.nvim_list_runtime_paths()) do
+    local lua_path = path .. "/lua/"
+    if vim.fn.isdirectory(lua_path) then
+      result[lua_path] = true
+    end
+  end
+
+  result[vim.fn.expand("$VIMRUNTIME/lua")] = true
+  result[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
+  result[vim.fn.expand("~/build/neovim/src/nvim/lua")] = true
+
+  return result
+end
+
+local efm_languages = mega.load("efm", "mega.lc.efm")
+
+-- local efm_language_keys = function()
+--   local tbl = vim.tbl_keys(efm_languages)
+--   for i, v in ipairs(tbl) do
+--     if v == "=" then
+--       return table.remove(tbl, i)
+--     end
+--   end
+-- end
+-- mega.dump(efm_language_keys())
+
 local servers = {
   bashls = {
     filetypes = {"bash", "sh", "zsh"}
@@ -33,8 +62,17 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
-  -- https://github.com/disrupted/dotfiles/blob/master/.config/nvim/lua/conf/lsp.lua#L180-L228 
-  efm = {init_options = {documentFormatting = true}},
+  efm = {
+    init_options = {documentFormatting = true},
+    -- root_dir = lspconfig.util.root_pattern('package.json'),
+    filetypes = vim.tbl_keys(efm_languages),
+    -- filetypes = efm_language_keys(),
+    settings = {
+      rootMarkers = {".git/", "package.json", "elm.json", "mix.lock", "mix.exs"},
+      lintDebounce = 500,
+      languages = efm_languages
+    }
+  },
   elmls = {
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")
@@ -150,10 +188,9 @@ local servers = {
           path = vim.split(package.path, ";")
         },
         workspace = {
-          library = {
-            [vim.fn.expand("$VIMRUNTIME/lua")] = true,
-            [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
-          }
+          maxPreload = 1000,
+          preloadFileSize = 1000,
+          library = get_lua_runtime()
         },
         diagnostics = {
           enable = true,
@@ -171,7 +208,8 @@ local servers = {
             "hs",
             "spoon",
             "config",
-            "watchers"
+            "watchers",
+            "mega"
           }
         }
       }

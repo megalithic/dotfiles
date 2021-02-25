@@ -13,7 +13,7 @@ if paq_exists then
 
   -- (paq-nvim) --
   paq {"savq/paq-nvim", opt = true}
-  -- paq {"tweekmonster/startuptime.vim"}
+  paq {"tweekmonster/startuptime.vim"}
   -- :StartupTime 100 -- -u ~/foo.vim -i NONE -- ~/foo.vim
 
   -- (ui, interface) --
@@ -28,6 +28,8 @@ if paq_exists then
   paq {"danilamihailov/beacon.nvim"}
   paq {"antoinemadec/FixCursorHold.nvim"}
   paq {"psliwka/vim-smoothie"}
+  -- paq {"Yggdroot/indentLine"}
+  -- paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
@@ -109,21 +111,18 @@ if paq_exists then
   paq {"tpope/vim-projectionist"}
   paq {"janko/vim-test"}
   paq {"tpope/vim-ragtag"}
-  -- paq {"axvr/zepl.vim"}
   paq {"rizzatti/dash.vim"}
   paq {"skywind3000/vim-quickui"}
   paq {"sgur/vim-editorconfig"}
   paq {"zenbro/mirror.vim"}
   paq {"junegunn/goyo.vim"}
   paq {"junegunn/limelight.vim"}
-  -- paq {"reedes/vim-wordy", opt = true}
-
-  -- Building on Vim’s spell-check and thesaurus/dictionary completion
-  -- paq {"reedes/vim-lexical", opt = true}
-
-  -- handful of tweaks needed to smooth the path to writing prose
   paq {"reedes/vim-pencil", opt = true}
+  -- paq {"lervag/wiki.vim"}
+  -- paq {"michal-h21/vim-zettel"}
   paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}
+  -- paq {"reedes/vim-wordy", opt = true}
+  -- paq {"reedes/vim-lexical", opt = true}
 
   -- (the rest...) --
   paq {"ojroques/vim-oscyank"}

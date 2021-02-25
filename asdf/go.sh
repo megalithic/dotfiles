@@ -3,5 +3,6 @@
 
 if (command -v go &> /dev/null); then
   go get golang.org/x/tools/gopls@latest
-  go get github.com/mattn/efm-langserver
+  # using Brewfile -> brew "efm-langserver" instead
+  # go get github.com/mattn/efm-langserver@HEAD
 fi

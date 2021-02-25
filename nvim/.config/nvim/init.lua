@@ -33,12 +33,12 @@ mega.load("lc", "mega.lc")
 mega.load("mappings", "mega.mappings")
 mega.load("autocmds", "mega.autocmds")
 vim.schedule(
-  function()
-    mega.load("ft", "mega.ft").setup()
-  end
+    function()
+        mega.load("ft", "mega.ft").setup()
+    end
 )
 vim.schedule(
-  function()
-    mega.load("ft", "mega.ft").trigger_ft()
-  end
+    function()
+        mega.load("ft", "mega.ft").trigger_ft()
+    end
 )
