@@ -34,7 +34,7 @@ local on_attach = function(client, bufnr)
 
   if client.resolved_capabilities.document_formatting then
     mega.augroup(
-      "lc.format",
+      "lc.format_on_save",
       function()
         vim.api.nvim_command [[autocmd! * <buffer>]]
         -- vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]

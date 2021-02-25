@@ -116,15 +116,7 @@ function M.activate()
           path = {menu = "[PATH]", priority = 9},
           treesitter = {menu = "[TS]", priority = 9},
           buffer = {menu = "[BUF]", priority = 8},
-          omni = {menu = "[OMNI]"},
           spell = {menu = "[SPL]"}
-          -- vsnip = {menu = "[SNIP]"},
-          -- nvim_lsp = {menu = "[LSP]"},
-          -- nvim_lua = {menu = "[LUA]"},
-          -- treesitter = {menu = "[TS]"},
-          -- buffer = {menu = "[BUF]"},
-          -- path = true,
-          -- spell = {menu = "[SPL]"}
         }
       }
     )

@@ -1,6 +1,6 @@
 local vint = require "mega/lc/efm/vint"
 local luafmt = require "mega/lc/efm/luafmt"
-local mixcredo = require "mega/lc/efm/mixcredo"
+local mix_credo = require "mega/lc/efm/mix_credo"
 local golint = require "mega/lc/efm/golint"
 local goimports = require "mega/lc/efm/goimports"
 local black = require "mega/lc/efm/black"
@@ -10,15 +10,15 @@ local mypy = require "mega/lc/efm/mypy"
 local prettier = require "mega/lc/efm/prettier"
 local eslint = require "mega/lc/efm/eslint"
 local shellcheck = require "mega/lc/efm/shellcheck"
-local terraform = require "mega/lc/efm/terraform"
--- local misspell = require "mega/lc/efm/misspell"
+local misspell = require "mega/lc/efm/misspell"
+-- local terraform = require "mega/lc/efm/terraform"
 
 return {
-  -- ["="] = {misspell},
+  ["="] = {misspell},
   vim = {vint},
   lua = {luafmt},
-  elixir = {mixcredo},
-  -- eelixir = {mixcredo},
+  elixir = {mix_credo},
+  eelixir = {mix_credo},
   go = {golint, goimports},
   python = {black, isort, flake8, mypy},
   typescript = {prettier, eslint},
@@ -31,6 +31,6 @@ return {
   scss = {prettier},
   css = {prettier},
   markdown = {prettier},
-  sh = {shellcheck},
-  tf = {terraform}
+  sh = {shellcheck}
+  -- tf = {terraform},
 }
