@@ -116,7 +116,8 @@ function M.activate()
           path = {menu = "[PATH]", priority = 9},
           treesitter = {menu = "[TS]", priority = 9},
           buffer = {menu = "[BUF]", priority = 8},
-          spell = true
+          omni = {menu = "[OMNI]"},
+          spell = {menu = "[SPL]"}
           -- vsnip = {menu = "[SNIP]"},
           -- nvim_lsp = {menu = "[LSP]"},
           -- nvim_lua = {menu = "[LUA]"},
@@ -130,6 +131,7 @@ function M.activate()
 
     local npairs = require("nvim-autopairs")
 
+    -- https://github.com/lukas-reineke/dotfiles/blob/master/vim/init.vim#L26-L30
     _G.completion_confirm = function()
       if vim.fn.pumvisible() ~= 0 then
         if vim.fn.complete_info()["selected"] ~= -1 then

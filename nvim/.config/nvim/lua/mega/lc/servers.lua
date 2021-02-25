@@ -24,6 +24,9 @@ local function root_pattern(...)
   end
 end
 
+-- local efm_languages = mega.load("efm", "mega.lc.efm")
+-- mega.dump(efm_languages)
+
 local servers = {
   bashls = {
     filetypes = {"bash", "sh", "zsh"}
@@ -33,8 +36,17 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
-  -- https://github.com/disrupted/dotfiles/blob/master/.config/nvim/lua/conf/lsp.lua#L180-L228 
-  efm = {init_options = {documentFormatting = true}},
+  -- 
+  -- efm = {
+  --   init_options = {documentFormatting = true},
+  --   -- root_dir = lspconfig.util.root_pattern('package.json'),
+  --   filetypes = vim.tbl_keys(efm_languages),
+  --   settings = {
+  --     rootMarkers = {".git/", "package.json", "elm.json", "mix.lock", "mix.exs"},
+  --     lintDebounce = 500,
+  --     languages = efm_languages
+  --   }
+  -- },
   elmls = {
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")

@@ -24,7 +24,17 @@ return {
 
     local lualine = require("lualine")
     lualine.theme = colorscheme_str
-    lualine.separator = "|"
+    -- lualine.separator = "|"
+    -- lualine.section_separators = {"", ""}
+    -- lualine.section_separators = {" ", " "}
+    -- lualine.component_separators = {"", ""}
+    -- lualine.component_separators = {"|", "|"}
+    lualine.options = {
+      theme = "gruvbox",
+      section_separators = {"", ""},
+      component_separators = {"|", "|"},
+      icons_enabled = true
+    }
     lualine.sections = {
       lualine_a = {"mode"},
       lualine_b = {"branch"},

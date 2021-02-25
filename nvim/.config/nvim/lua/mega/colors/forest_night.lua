@@ -19,7 +19,7 @@ local icons = {
   statusline_warning = mega.utf8(0xf071),
   statusline_information = mega.utf8(0xf7fc),
   statusline_hint = mega.utf8(0xf835),
-  statusline_ok = mega.utf8(0xf00c),
+  statusline_ok = mega.utf8(0xf00c)
 }
 
 -- https://github.com/sainnhe/forest-night/blob/master/autoload/lightline/colorscheme/forest_night.vim
@@ -114,15 +114,16 @@ local status = {
 
 return {
   icons = icons,
-  colors = mega.table_merge(base, status, cs),
+  colors = mega.table_merge(mega.table_merge(base, status), cs),
   load = function()
-    -- (set forest_night colorscheme) --
     vim.o.background = "dark"
 
     vim.g.forest_night_background = "soft"
     vim.g.forest_night_enable_italic = 1
     vim.g.forest_night_enable_bold = 1
     vim.g.forest_night_transparent_background = 1
+    vim.g.forest_night_diagnostic_text_highlight = 1
+    vim.g.forest_night_better_performance = 1
     -- vim.g.forest_night_sign_column_background = "default"
 
     -- (highlights) --
@@ -199,6 +200,13 @@ return {
     highlight("DiffAdd", status.added, status.bg, "NONE")
     highlight("DiffDelete", status.removed, status.bg, "NONE")
     highlight("DiffChange", status.changed, status.bg, "NONE")
+
+    highlight("CursorLineNr", status.cursorlinenr, status.special_bg, "italic")
+    highlight("CursorLineNR", status.cursorlinenr, status.special_bg, "italic")
+
+    vim.g.indentLine_color_gui = status.cursorlinenr
+
+    -- vim.cmd("colorscheme forest-night")
 
     mega.load("statusline", "mega.statusline").load("forest_night")
     vim.api.nvim_exec([[ colorscheme forest-night ]], true)

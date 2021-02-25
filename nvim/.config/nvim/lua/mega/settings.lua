@@ -1,9 +1,66 @@
 mega.inspect("activating package settings.lua..")
 
+-- ---- Markdown and Wiki
+-- g.markdown_enable_conceal = 1
+-- g.wiki_root = '~/Documents/wiki'
+-- g.wiki_filetypes = {'md'}
+-- g.wiki_link_target_type = 'md'
+-- g.wiki_map_link_create = 'CreateLinks' -- cannot use anonymous functions
+-- cmd [[
+-- function! CreateLinks(text) abort
+--     return substitute(tolower(a:text), '\s\+', '-', 'g')
+-- endfunction
+-- ]]
+
+-- PROSE MODE
+-- I write prose in markdown, all the following is to help with that.
+-- function _G.toggleProse()
+--   if (vim.g.proseMode == true) then
+--     vim.cmd "PencilOff"
+--     vim.cmd "Limelight!"
+--     vim.cmd "Goyo!"
+--     vim.cmd [[set wrap!]]
+--     vim.cmd [[silent !tmux set status on]]
+--     vim.o.showmode = true
+--     vim.o.showcmd = true
+--     vim.g.proseMode = false
+--   else
+--     vim.cmd "packadd vim-pencil"
+--     vim.cmd "packadd goyo.vim"
+--     vim.cmd "packadd limelight.vim"
+--     vim.cmd [[silent !tmux set status off]]
+--     vim.o.showmode = false
+--     vim.o.showcmd = false
+--     vim.wo.foldlevel = 4
+--     vim.cmd "PencilSoft"
+--     vim.cmd "Limelight"
+--     vim.cmd "Goyo"
+--     vim.g.proseMode = true
+--   end
+-- end
+
+-- paq {'junegunn/limelight.vim', opt = true}
+
+-- paq {'junegunn/goyo.vim', opt = true}
+-- vim.g.goyo_width = 60
+
+-- paq {'reedes/vim-pencil', opt = true}
+-- vim.g['pencil#conceallevel'] = 0
+-- vim.g['pencil#wrapModeDefault'] = 'soft'
+-- vim.api.nvim_set_keymap(
+--   'n',
+--   '<localleader>m',
+--   ':lua _G.toggleProse()<cr>',
+--   {noremap = true, silent = true}
+-- )
+
 -- [lspfuzzy] ------------------------------------------------------------------
 -- vim.g.lexima_enable_basic_rules = 0
 -- vim.g.lexima_enable_newline_rules = 0
 -- vim.g.lexima_enable_endwise_rules = 1
+
+-- [fixcursorhold] -------------------------------------------------------------
+vim.g.cursorhold_updatetime = 100
 
 -- [lexima] --------------------------------------------------------------------
 require("lspfuzzy").setup(
@@ -139,13 +196,13 @@ vim.env.FZF_DEFAULT_COMMAND = "fd --type f --hidden --follow --exclude '.git' --
 vim.api.nvim_exec(
   [[
   function! RipgrepFzf(query, fullscreen)
-    let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
-    let initial_command = printf(command_fmt, shellescape(a:query))
-    let reload_command = printf(command_fmt, '{q}')
-    let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-    call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-    endfunction
-    ]],
+  let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
+  let initial_command = printf(command_fmt, shellescape(a:query))
+  let reload_command = printf(command_fmt, '{q}')
+  let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+  call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+  endfunction
+  ]],
   false
 )
 vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
@@ -220,6 +277,19 @@ vim.g.git_messenger_max_popup_width = 100
 vim.g.git_messenger_max_popup_height = 100
 mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 
+-- [indentLine/indent_blankline] -----------------------------------------------
+-- set concealcursor=n
+-- vim.g.indentLine_char = "│"
+-- vim.g.indentLine_first_char = vim.g.indentLine_char
+-- vim.g.indentLine_showFirstIndentLevel = 1
+-- -- " vim.g.indentLine_color_gui = onedark#GetColors().cursor_grey.gui
+-- vim.g.indentLine_bgcolor_gui = "NONE"
+-- vim.g.indentLine_setConceal = 0
+-- vim.g.indentLine_fileTypeExclude = {"help", "defx", "vimwiki", "prcomment"}
+-- vim.g.indentLine_autoResetWidth = 0
+-- vim.g.indent_blankline_space_char = " "
+-- vim.g.indent_blankline_debug = true
+
 -- [gitsigns] ------------------------------------------------------------------
 local gitsigns_installed, gitsigns = pcall(require, "gitsigns")
 if gitsigns_installed then
@@ -257,25 +327,25 @@ end
 -- [vim-test] ------------------------------------------------------------------
 vim.api.nvim_exec(
   [[
-function! TerminalSplit(cmd)
+  function! TerminalSplit(cmd)
   vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
-endfunction
+  endfunction
 
-let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
-let g:test#strategy = 'terminal_split'
-let g:test#filename_modifier = ':.'
-let g:test#preserve_screen = 0
+  let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
+  let g:test#strategy = 'terminal_split'
+  let g:test#filename_modifier = ':.'
+  let g:test#preserve_screen = 0
 
-nmap <silent> <leader>tf :TestFile<CR>
-nmap <silent> <leader>tt :TestVisit<CR>
-nmap <silent> <leader>tn :TestNearest<CR>
-nmap <silent> <leader>tl :TestLast<CR>
-nmap <silent> <leader>tv :TestVisit<CR>
-nmap <silent> <leader>ta :TestSuite<CR>
-nmap <silent> <leader>tP :A<CR>
-nmap <silent> <leader>tp :AV<CR>
-nmap <silent> <leader>to :copen<CR>
-]],
+  nmap <silent> <leader>tf :TestFile<CR>
+  nmap <silent> <leader>tt :TestVisit<CR>
+  nmap <silent> <leader>tn :TestNearest<CR>
+  nmap <silent> <leader>tl :TestLast<CR>
+  nmap <silent> <leader>tv :TestVisit<CR>
+  nmap <silent> <leader>ta :TestSuite<CR>
+  nmap <silent> <leader>tP :A<CR>
+  nmap <silent> <leader>tp :AV<CR>
+  nmap <silent> <leader>to :copen<CR>
+  ]],
   false
 )
 
@@ -300,6 +370,7 @@ if ts_installed then
         "css",
         "elm",
         "erlang",
+        "elixir",
         "fennel",
         "html",
         "jsdoc",
