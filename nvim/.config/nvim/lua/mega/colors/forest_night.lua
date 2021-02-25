@@ -119,12 +119,14 @@ return {
     vim.o.background = "dark"
 
     vim.g.forest_night_background = "soft"
-    vim.g.forest_night_enable_italic = 1
-    vim.g.forest_night_enable_bold = 1
-    vim.g.forest_night_transparent_background = 1
-    vim.g.forest_night_diagnostic_text_highlight = 1
-    vim.g.forest_night_better_performance = 1
-    -- vim.g.forest_night_sign_column_background = "default"
+    vim.g.forest_night_enable_italic = true
+    vim.g.forest_night_enable_bold = true
+    vim.g.forest_night_transparent_background = true
+    vim.g.forest_night_diagnostic_text_highlight = true
+    vim.g.forest_night_diagnostic_line_highlight = true
+    vim.g.forest_night_cursor = "green"
+    vim.g.forest_night_better_performance = true
+    vim.g.forest_night_sign_column_background = "none"
 
     -- (highlights) --
     vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
