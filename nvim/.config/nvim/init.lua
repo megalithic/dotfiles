@@ -1,3 +1,4 @@
+-- easy and defined access to global things
 _G["mega"] = require("mega.global")
 
 vim.cmd [[packadd vimball]]

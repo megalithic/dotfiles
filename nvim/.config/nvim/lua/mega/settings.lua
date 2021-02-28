@@ -1,60 +1,23 @@
 mega.inspect("activating package settings.lua..")
 
--- ---- Markdown and Wiki
--- g.markdown_enable_conceal = 1
--- g.wiki_root = '~/Documents/wiki'
--- g.wiki_filetypes = {'md'}
--- g.wiki_link_target_type = 'md'
--- g.wiki_map_link_create = 'CreateLinks' -- cannot use anonymous functions
+-- [prose,wiki,md] -------------------------------------------------------------
+vim.g.goyo_width = 120
+vim.g.goyo_height = "50%"
+vim.g["pencil#conceallevel"] = 0
+vim.g["pencil#wrapModeDefault"] = "soft"
+
+-- vim.g.markdown_enable_conceal = 1
+-- vim.g.wiki_root = '~/Documents/wiki'
+-- vim.g.wiki_filetypes = {'md'}
+-- vim.g.wiki_link_target_type = 'md'
+-- vim.g.wiki_map_link_create = 'CreateLinks' -- cannot use anonymous functions
 -- cmd [[
 -- function! CreateLinks(text) abort
 --     return substitute(tolower(a:text), '\s\+', '-', 'g')
 -- endfunction
 -- ]]
 
--- PROSE MODE
--- I write prose in markdown, all the following is to help with that.
--- function _G.toggleProse()
---   if (vim.g.proseMode == true) then
---     vim.cmd "PencilOff"
---     vim.cmd "Limelight!"
---     vim.cmd "Goyo!"
---     vim.cmd [[set wrap!]]
---     vim.cmd [[silent !tmux set status on]]
---     vim.o.showmode = true
---     vim.o.showcmd = true
---     vim.g.proseMode = false
---   else
---     vim.cmd "packadd vim-pencil"
---     vim.cmd "packadd goyo.vim"
---     vim.cmd "packadd limelight.vim"
---     vim.cmd [[silent !tmux set status off]]
---     vim.o.showmode = false
---     vim.o.showcmd = false
---     vim.wo.foldlevel = 4
---     vim.cmd "PencilSoft"
---     vim.cmd "Limelight"
---     vim.cmd "Goyo"
---     vim.g.proseMode = true
---   end
--- end
-
--- paq {'junegunn/limelight.vim', opt = true}
-
--- paq {'junegunn/goyo.vim', opt = true}
--- vim.g.goyo_width = 60
-
--- paq {'reedes/vim-pencil', opt = true}
--- vim.g['pencil#conceallevel'] = 0
--- vim.g['pencil#wrapModeDefault'] = 'soft'
--- vim.api.nvim_set_keymap(
---   'n',
---   '<localleader>m',
---   ':lua _G.toggleProse()<cr>',
---   {noremap = true, silent = true}
--- )
-
--- [lspfuzzy] ------------------------------------------------------------------
+-- [lexima] ------------------------------------------------------------------
 -- vim.g.lexima_enable_basic_rules = 0
 -- vim.g.lexima_enable_newline_rules = 0
 -- vim.g.lexima_enable_endwise_rules = 1
@@ -62,7 +25,7 @@ mega.inspect("activating package settings.lua..")
 -- [fixcursorhold] -------------------------------------------------------------
 vim.g.cursorhold_updatetime = 100
 
--- [lexima] --------------------------------------------------------------------
+-- [lspfuzzy] --------------------------------------------------------------------
 require("lspfuzzy").setup(
   {
     methods = "all" -- either 'all' or a list of LSP methods (see below)

@@ -133,21 +133,13 @@ return {
         "CursorLineNr",
         {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
       )
-      mega.highlight(
-        "DiffAdd",
-        {guifg = status.added, guibg = "NONE", force = true}
-      )
-      mega.highlight(
-        "DiffDelete",
-        {guifg = status.removed, guibg = "NONE", force = true}
-      )
-      mega.highlight(
-        "DiffChange",
-        {guifg = status.changed, guibg = "NONE", force = true}
-      )
+      mega.highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
+      mega.highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
+      mega.highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
 
       vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
       vim.g.indentLine_color_gui = status.cursorlinenr
+      vim.g.limelight_conceal_guifg = cs.bg2
     end
 
     mega.augroup_cmds(

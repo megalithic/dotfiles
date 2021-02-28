@@ -134,9 +134,9 @@ if paq_exists then
   paq {"rizzatti/dash.vim"}
   paq {"skywind3000/vim-quickui"}
   paq {"sgur/vim-editorconfig"}
-  paq {"zenbro/mirror.vim"}
-  paq {"junegunn/goyo.vim"}
-  paq {"junegunn/limelight.vim"}
+  paq {"zenbro/mirror.vim", opt = true}
+  paq {"junegunn/goyo.vim", opt = true}
+  paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
   -- paq {"lervag/wiki.vim"}
   -- paq {"michal-h21/vim-zettel"}

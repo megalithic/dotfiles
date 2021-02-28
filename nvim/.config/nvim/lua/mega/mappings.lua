@@ -65,19 +65,20 @@ mega.map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
 -- map("x", "b1z=e") -- Correct previous word
---
+
+-- ZEN MODE
 -- Zoom the current split into it's own tab (toggleable)
--- local function toggle_zen()
---   vim.wo.list = not vim.wo.list --(hidden chars)
---   vim.wo.number = not vim.wo.number
---   vim.wo.relativenumber = not vim.wo.relativenumber
---   vim.wo.cursorline = not vim.wo.cursorline
---   vim.wo.cursorcolumn = not vim.wo.cursorcolumn
---   vim.wo.colorcolumn = vim.wo.colorcolumn == "0" and "80" or "0"
---   vim.wo.laststatus = vim.o.laststatus == 2 and 0 or 2
---   vim.o.ruler = not vim.o.ruler
--- end
--- mega.map("n", "<leader>z", ":lua toggle_zen()<cr>")
+_G.toggle_zen = function()
+  vim.wo.list = not vim.wo.list --(hidden chars)
+  vim.wo.number = not vim.wo.number
+  vim.wo.relativenumber = not vim.wo.relativenumber
+  vim.wo.cursorline = not vim.wo.cursorline
+  vim.wo.cursorcolumn = not vim.wo.cursorcolumn
+  vim.wo.colorcolumn = vim.wo.colorcolumn == "0" and "80" or "0"
+  vim.o.laststatus = vim.o.laststatus == 2 and 0 or 2
+  vim.o.ruler = not vim.o.ruler
+end
+mega.map("n", "<leader>z", ":lua toggle_zen()<cr>")
 
 -- Other mappings
 -- utils.lmap("l", "<cmd>luafile %<cr>") -- source lua file
@@ -95,6 +96,39 @@ endif
   true
 )
 
+-- PROSE MODE
+-- @evantravers, thanks!
+function _G.toggle_prose()
+  toggle_zen()
+  if (vim.g.proseMode == true) then
+    vim.cmd "PencilOff"
+    vim.cmd "Limelight!"
+    vim.cmd "Goyo!"
+    vim.cmd [[set wrap!]]
+    vim.cmd [[silent !tmux set status on]]
+    -- vim.o.showmode = true
+    -- vim.o.showcmd = true
+    -- vim.wo.number = true
+    -- vim.wo.relativenumber = true
+    vim.g.proseMode = false
+  else
+    vim.cmd "packadd vim-pencil"
+    vim.cmd "packadd goyo.vim"
+    vim.cmd "packadd limelight.vim"
+    vim.cmd [[silent !tmux set status off]]
+    -- vim.o.showmode = false
+    -- vim.o.showcmd = false
+    -- vim.wo.number = false
+    -- vim.wo.relativenumber = false
+    vim.wo.foldlevel = 4
+    vim.cmd "PencilSoft"
+    vim.cmd "Limelight"
+    vim.cmd "Goyo"
+    vim.g.proseMode = true
+  end
+end
+-- mega.map("n", "<leader>gp", "<cmd>lua toggle_prose()<cr>")
+
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # FZF
@@ -105,3 +139,6 @@ mega.map("n", "<Leader>b", "<cmd>FzfBuffers<CR>")
 
 -- # Dash
 mega.map("n", "<leader>D", "<cmd>Dash<CR>")
+
+-- # markdown-preview
+mega.map("n", "<leader>gm", "<cmd>MarkdownPreview<CR>")
