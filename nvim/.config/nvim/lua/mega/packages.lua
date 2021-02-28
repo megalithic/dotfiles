@@ -66,6 +66,26 @@ if paq_exists then
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
   paq {"ojroques/nvim-lspfuzzy"}
+  paq "nvim-lua/popup.nvim"
+  paq "nvim-lua/plenary.nvim"
+  paq "nvim-telescope/telescope.nvim"
+
+  -- function _G.searchWiki()
+  --   require("telescope.builtin").find_files {
+  --     prompt_title = "Search ZK",
+  --     shorten_path = false,
+  --     cwd = "~/src/github.com/evantravers/undo-zk/wiki/"
+  --   }
+  -- end
+
+  vim.api.nvim_set_keymap("n", "<c-p>", ":lua require('telescope.builtin').git_files()<cr>", {noremap = true})
+  -- vim.api.nvim_set_keymap(
+  --   "n",
+  --   "<localleader><space>",
+  --   ":lua require('telescope.builtin').buffers()<cr>",
+  --   {noremap = true}
+  -- )
+  -- vim.api.nvim_set_keymap("n", "<localleader>ww", ":lua _G.searchWiki()<cr>", {noremap = true})
   -- paq {"vijaymarupudi/nvim-fzf"}
   -- --> example usage: https://github.com/JoosepAlviste/dotfiles/blob/master/config/nvim/lua/j/fzf.lua
   -- paq {"vijaymarupudi/nvim-fzf-commands"}
@@ -154,7 +174,7 @@ if paq_exists then
   -- :Time     <- measure how long it takes to run some stuff.
   paq {"tpope/vim-scriptease"}
   paq {"christoomey/vim-tmux-navigator"} -- https://github.com/knubie/vim-kitty-navigator analog
-  paq {"tmux-plugins/vim-tmux-focus-events"}
+  -- paq {"tmux-plugins/vim-tmux-focus-events"}
   paq {"christoomey/vim-tmux-runner"}
   -- paq {"wellle/visual-split.vim"}
   paq {"junegunn/vim-slash"}

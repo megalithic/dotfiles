@@ -13,10 +13,6 @@ vim.cmd [[packadd vimball]]
 -- LSP log location ->
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 
--- NOTE:
--- why use a do block?
--- -> https://stackoverflow.com/a/23899152/213904
-
 vim.cmd([[runtime .vimrc]])
 
 -- [ loaders ] ---------------------------------------------------------------
@@ -33,12 +29,12 @@ mega.load("lc", "mega.lc")
 mega.load("mappings", "mega.mappings")
 mega.load("autocmds", "mega.autocmds")
 vim.schedule(
-    function()
-        mega.load("ft", "mega.ft").setup()
-    end
+  function()
+    mega.load("ft", "mega.ft").setup()
+  end
 )
 vim.schedule(
-    function()
-        mega.load("ft", "mega.ft").trigger_ft()
-    end
+  function()
+    mega.load("ft", "mega.ft").trigger_ft()
+  end
 )

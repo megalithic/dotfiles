@@ -11,6 +11,7 @@ then
 fi
 
 tic -o $HOME/.terminfo $HOME/.terminfo/xterm-256color.terminfo
+tic -o $HOME/.terminfo $HOME/.terminfo/xterm-kitty
 
 echo ':: veriying italics and standouts work..'
 echo `tput sitm`italics`tput ritm` `tput smso`standout`tput rmso`

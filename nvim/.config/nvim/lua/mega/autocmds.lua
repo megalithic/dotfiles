@@ -57,6 +57,37 @@ mega.augroup(
   end
 )
 
+--- automatically clear commandline messages after a few seconds delay
+--- source: https://unix.stackexchange.com/a/613645
+-- local function clear_messages()
+--   local id
+--   return function()
+--     if id then
+--       vim.fn.timer_stop(id)
+--     end
+--     id =
+--       vim.fn.timer_start(
+--       2000,
+--       function()
+--         if vim.fn.mode() == "n" then
+--           vim.cmd [[echon '']]
+--         end
+--       end
+--     )
+--   end
+-- end
+
+-- mega.augroup(
+--   "ClearCommandMessages",
+--   {
+--     {
+--       events = {"CmdlineLeave", "CmdlineChanged"},
+--       targets = {":"},
+--       command = "lua require('as.autocommands').clear_messages()"
+--     }
+--   }
+-- )
+
 -- vim.api.nvim_exec(
 --   [[
 -- augroup fzf

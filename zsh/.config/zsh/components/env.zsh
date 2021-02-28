@@ -168,7 +168,7 @@ export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 
 export GIT_REPO_DIR="$HOME/code"
-export TERMINFO="$HOME/.terminfo"
+# export TERMINFO="$HOME/.terminfo"
 export _Z_DATA="$HOME/.z-history"
 export TERM_ITALICS="TRUE"
 

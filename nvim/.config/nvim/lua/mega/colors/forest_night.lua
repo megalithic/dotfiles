@@ -1,5 +1,3 @@
-local highlight = mega.set_highlight
-
 local icons = {
   sign_error = mega.utf8(0xf655),
   sign_warning = mega.utf8(0xfa36),
@@ -129,86 +127,39 @@ return {
     vim.g.forest_night_sign_column_background = "none"
 
     -- (highlights) --
-    vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
 
-    -- mega.augroup_cmds(
-    --   "colorscheme_overrides",
-    --   {
-    --     {
-    --       events = {"ColorScheme"},
-    --       targets = {"*"},
-    --       command = [[ v:lua.mega.set_highlight("SpellBad", status.error_status, status.bg, "undercurl,italic") ]]
-    --     },
-    --     {
-    --       events = {"ColorScheme"},
-    --       targets = {"*"},
-    --       command = [[ v:lua.mega.set_highlight("SpellCap", status.error_status, status.bg, "undercurl,italic") ]]
-    --     },
-    --     {
-    --       events = {"ColorScheme"},
-    --       targets = {"*"},
-    --       command = [[ v:lua.mega.set_highlight("SpellRare", status.error_status, status.bg, "undercurl,italic") ]]
-    --     },
-    --     {
-    --       events = {"ColorScheme"},
-    --       targets = {"*"},
-    --       command = [[ v:lua.mega.set_highlight("SpellLocal", status.error_status, status.bg, "undercurl,italic") ]]
-    --     },
-    --   }
-    -- )
+    _G.forest_night_overrides = function()
+      mega.highlight(
+        "CursorLineNr",
+        {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
+      )
+      mega.highlight(
+        "DiffAdd",
+        {guifg = status.added, guibg = "NONE", force = true}
+      )
+      mega.highlight(
+        "DiffDelete",
+        {guifg = status.removed, guibg = "NONE", force = true}
+      )
+      mega.highlight(
+        "DiffChange",
+        {guifg = status.changed, guibg = "NONE", force = true}
+      )
 
-    -- mega.augroup(
-    --   "lc.format",
-    --   function()
-    --     vim.api.nvim_command [[autocmd! * <buffer>]]
-    --     vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
-    --     -- vim.api.nvim_command [[autocmd BufWritePost plugins.lua PackerCompile]]
-    --   end
-    -- )
+      vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
+      vim.g.indentLine_color_gui = status.cursorlinenr
+    end
 
-    -- vim.api.nvim_exec([[
-    --     function! Forest_night_custom() abort
-    --     " Link a highlight group to a predefined highlight group.
-    --     " See `colors/forest-night.vim` for all predefined highlight groups.
-    --     " highlight! link groupA groupB
-    --     " highlight! link groupC groupD
-
-    --     " Initialize the color palette.
-    --     let l:palette = forest_night#get_palette()
-
-    --     " Define a highlight group.
-    --     " The first parameter is the name of a highlight group,
-    --     " the second parameter is the foreground color,
-    --     " the third parameter is the background color,
-    --     " the fourth parameter is for UI highlighting which is optional,
-    --     " and the last parameter is for `guisp` which is also optional.
-    --     " See `autoload/forest_night.vim` for the format of `l:palette`.
-
-    --     call forest_night#highlight('SpellBad', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
-    --     call forest_night#highlight('SpellCap', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
-    --     call forest_night#highlight('SpellRare', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
-    --     call forest_night#highlight('SpellLocal', l:palette.red, l:palette.none, 'undercurl', l:palette.red)
-    --   endfunction
-
-    --   augroup ForestNightCustom
-    --     autocmd!
-    --     autocmd ColorScheme forest-night call Forest_night_custom()
-    --   augroup END
-    -- ]], false)
-
-    highlight("default GalaxyStatusline", "NONE", status.bg, "NONE")
-    highlight("default GalaxyStatuslineNC", "NONE", status.bg, "NONE")
-
-    highlight("DiffAdd", status.added, status.bg, "NONE")
-    highlight("DiffDelete", status.removed, status.bg, "NONE")
-    highlight("DiffChange", status.changed, status.bg, "NONE")
-
-    highlight("CursorLineNr", status.cursorlinenr, status.special_bg, "italic")
-    highlight("CursorLineNR", status.cursorlinenr, status.special_bg, "italic")
-
-    vim.g.indentLine_color_gui = status.cursorlinenr
-
-    -- vim.cmd("colorscheme forest-night")
+    mega.augroup_cmds(
+      "ForestNightOverrides",
+      {
+        {
+          events = {"ColorScheme"},
+          targets = {"forest-night"},
+          command = "lua forest_night_overrides()"
+        }
+      }
+    )
 
     mega.load("statusline", "mega.statusline").load("forest_night")
     vim.api.nvim_exec([[ colorscheme forest-night ]], true)

@@ -42,28 +42,6 @@ function M.dump(...)
   print(unpack(objects))
 end
 
-function M.set_highlight(group, _fg, _bg, _style, _bang)
-  local fg, bg, style, bang = "", "", "", ""
-
-  if _fg ~= nil then
-    fg = "guifg=" .. _fg
-  end
-
-  if _bg ~= nil then
-    bg = "guibg=" .. _bg
-  end
-
-  if _style ~= nil then
-    style = "gui=" .. _style
-  end
-
-  if _bang ~= nil and _bang then
-    bang = "!"
-  end
-
-  vim.api.nvim_exec("highlight" .. bang .. " " .. group .. " " .. fg .. " " .. bg .. " " .. style, true)
-end
-
 M.map_opts = {noremap = true, silent = false, expr = false}
 function M.map(mode, lhs, rhs, opts)
   opts = vim.tbl_extend("force", M.map_opts, opts or {})
@@ -147,6 +125,19 @@ function M.augroup(group, fn)
   vim.api.nvim_command("augroup END")
 end
 
+-- Source: https://teukka.tech/luanvim.html
+function M.create(definitions)
+  for group_name, definition in pairs(definitions) do
+    vim.cmd("augroup " .. group_name)
+    vim.cmd("autocmd!")
+    for _, def in pairs(definition) do
+      local command = table.concat(vim.tbl_flatten {"autocmd", def}, " ")
+      vim.cmd(command)
+    end
+    vim.cmd("augroup END")
+  end
+end
+
 function M.augroup_cmds(name, commands)
   vim.cmd("augroup " .. name)
   vim.cmd("autocmd!")
@@ -155,13 +146,45 @@ function M.augroup_cmds(name, commands)
       string.format(
         "autocmd %s %s %s %s",
         table.concat(c.events, ","),
-        table.concat(c.targets, ","),
+        table.concat(c.targets or {}, ","),
         table.concat(c.modifiers or {}, " "),
         c.command
       )
     )
   end
   vim.cmd("augroup END")
+end
+
+--- TODO eventually move to using `nvim_set_hl`
+--- however for the time being that expects colors
+--- to be specified as rgb not hex
+---@param name string
+---@param opts table
+function M.highlight(name, opts)
+  local force = opts.force or false
+  if name and vim.tbl_count(opts) > 0 then
+    if opts.link and opts.link ~= "" then
+      vim.cmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
+    else
+      local cmd = {"highlight", name}
+      if opts.guifg and opts.guifg ~= "" then
+        table.insert(cmd, "guifg=" .. opts.guifg)
+      end
+      if opts.guibg and opts.guibg ~= "" then
+        table.insert(cmd, "guibg=" .. opts.guibg)
+      end
+      if opts.gui and opts.gui ~= "" then
+        table.insert(cmd, "gui=" .. opts.gui)
+      end
+      if opts.guisp and opts.guisp ~= "" then
+        table.insert(cmd, "guisp=" .. opts.guisp)
+      end
+      if opts.cterm and opts.cterm ~= "" then
+        table.insert(cmd, "cterm=" .. opts.cterm)
+      end
+      vim.cmd(table.concat(cmd, " "))
+    end
+  end
 end
 
 -- Split given string with given separator
@@ -195,56 +218,56 @@ end
 -- Stolen from https://github.com/kyazdani42/nvim-palenight.lua/blob/master/lua/palenight.lua#L10
 -- Usage:
 -- highlight(Cursor, { fg = bg_dark, bg = yellow })
-function M.highlight(group, styles)
-  local gui = styles.gui and "gui=" .. styles.gui or "gui=NONE"
-  local sp = styles.sp and "guisp=" .. styles.sp or "guisp=NONE"
-  local fg = styles.fg and "guifg=" .. styles.fg or "guifg=NONE"
-  local bg = styles.bg and "guibg=" .. styles.bg or "guibg=NONE"
-  vim.cmd("highlight " .. group .. " " .. gui .. " " .. sp .. " " .. fg .. " " .. bg)
-end
+-- function M.highlight(group, styles)
+--   local gui = styles.gui and "gui=" .. styles.gui or "gui=NONE"
+--   local sp = styles.sp and "guisp=" .. styles.sp or "guisp=NONE"
+--   local fg = styles.fg and "guifg=" .. styles.fg or "guifg=NONE"
+--   local bg = styles.bg and "guibg=" .. styles.bg or "guibg=NONE"
+--   vim.cmd("highlight " .. group .. " " .. gui .. " " .. sp .. " " .. fg .. " " .. bg)
+-- end
 
 -- Usage:
 -- highlight({
 --      CursorLine   = { bg = bg },
 --      Cursor       = { fg = bg_dark, bg = yellow }
 -- })
-function M.highlights(hi_table)
-  for group, styles in pairs(hi_table) do
-    M.highlight(group, styles)
-  end
-end
+-- function M.highlights(hi_table)
+--   for group, styles in pairs(hi_table) do
+--     M.highlight(group, styles)
+--   end
+-- end
 
-function M.hiLink(src, dest)
-  vim.cmd("highlight link " .. src .. " " .. dest)
-end
+-- function M.hiLink(src, dest)
+--   vim.cmd("highlight link " .. src .. " " .. dest)
+-- end
 
-function M.hiLinks(hi_table)
-  for src, dest in pairs(hi_table) do
-    M.hiLink(src, dest)
-  end
-end
+-- function M.hiLinks(hi_table)
+--   for src, dest in pairs(hi_table) do
+--     M.hiLink(src, dest)
+--   end
+-- end
 
-function M.debounce(interval_ms, fn)
-  local timer = vim.loop.new_timer()
-  local last_call = {}
+-- function M.debounce(interval_ms, fn)
+--   local timer = vim.loop.new_timer()
+--   local last_call = {}
 
-  local make_call = function()
-    if #last_call > 0 then
-      fn(unpack(last_call))
-      last_call = {}
-    end
-  end
-  timer:start(interval_ms, interval_ms, make_call)
-  return {
-    call = function(...)
-      last_call = {...}
-    end,
-    stop = function()
-      make_call()
-      timer:close()
-    end
-  }
-end
+--   local make_call = function()
+--     if #last_call > 0 then
+--       fn(unpack(last_call))
+--       last_call = {}
+--     end
+--   end
+--   timer:start(interval_ms, interval_ms, make_call)
+--   return {
+--     call = function(...)
+--       last_call = {...}
+--     end,
+--     stop = function()
+--       make_call()
+--       timer:close()
+--     end
+--   }
+-- end
 
 -- helps with nerdfonts usages
 local bytemarkers = {{0x7FF, 192}, {0xFFFF, 224}, {0x1FFFFF, 240}}

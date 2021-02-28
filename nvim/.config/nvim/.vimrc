@@ -310,14 +310,20 @@ if has("nvim")
   " Block in normal mode
   let &t_EI = "\e[2 q"
 
+  " Inform vim how to enable undercurl in wezterm
+  let &t_Cs = "\e[60m"
+  " Inform vim how to disable undercurl in wezterm (this disables all underline modes)
+  let &t_Ce = "\e[24m"
+
   " supposed to be undercurl things?
-  " let &t_Cs = "\e[4:3m"
-  " let &t_Ce = "\e[4:0m"
+  let &t_Cs = "\e[4:3m"
+  let &t_Ce = "\e[4:0m"
 
   let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $EDITOR      = 'nvr -l'
   let $ECTO_EDITOR = 'nvr -l'
+  let $TERM        = 'xterm-kitty'
 
   let g:python_host_prog = '~/.asdf/shims/python'
   let g:python3_host_prog = '~/.asdf/shims/python3'
