@@ -23,11 +23,15 @@ function M.handle()
 end
 
 function M.setup()
-  mega.augroup(
+  mega.augroup_cmds(
     "mega.ft",
-    function()
-      vim.cmd([[autocmd FileType * lua require('mega.ft').handle()]])
-    end
+    {
+      {
+        events = {"FileType"},
+        targets = {"*"},
+        command = "lua require('mega.ft').handle()"
+      }
+    }
   )
 end
 

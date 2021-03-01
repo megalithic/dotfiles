@@ -63,7 +63,7 @@ mega.augroup_cmds(
     {
       events = {"TermOpen"},
       targets = {"*"},
-      command = "setlocal nonumber norelativenumber conceallevel=0"
+      command = [[setlocal nonumber norelativenumber conceallevel=0]]
     },
     {
       events = {"TermOpen"},

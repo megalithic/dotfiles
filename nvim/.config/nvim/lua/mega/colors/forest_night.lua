@@ -28,7 +28,8 @@ local cs = {
   bg2 = "#465258",
   bg3 = "#505a60",
   bg4 = "#576268",
-  bg_visual = "#5d4251",
+  bg_visual = "#4e6053",
+  -- bg_visual = "#5d4251",
   bg_red = "#614b51",
   bg_green = "#4e6053",
   bg_blue = "#415c6d",
@@ -146,7 +147,7 @@ return {
       "ForestNightOverrides",
       {
         {
-          events = {"ColorScheme"},
+          events = {"VimEnter", "ColorScheme"},
           targets = {"forest-night"},
           command = "lua forest_night_overrides()"
         }
