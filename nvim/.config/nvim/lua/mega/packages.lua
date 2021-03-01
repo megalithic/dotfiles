@@ -33,16 +33,15 @@ if paq_exists then
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
-  paq {"nvim-lua/lsp-status.nvim"}
-  -- paq {"nvim-treesitter/completion-treesitter"}
-  paq {"hrsh7th/nvim-compe"}
-  paq {"onsails/lspkind-nvim"}
-  paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"nvim-lua/plenary.nvim"}
   paq {"nvim-lua/popup.nvim"}
+  paq {"hrsh7th/nvim-compe"}
+  paq {"onsails/lspkind-nvim"}
   paq {"hrsh7th/vim-vsnip"}
   paq {"hrsh7th/vim-vsnip-integ"}
   -- paq {"stevearc/vim-vsnip-snippets"}
+  paq {"nvim-lua/lsp-status.nvim"}
+  paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
   paq {
     "nvim-treesitter/nvim-treesitter",
@@ -66,26 +65,7 @@ if paq_exists then
   paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
   paq {"ojroques/nvim-lspfuzzy"}
-  paq "nvim-lua/popup.nvim"
-  paq "nvim-lua/plenary.nvim"
   paq "nvim-telescope/telescope.nvim"
-
-  -- function _G.searchWiki()
-  --   require("telescope.builtin").find_files {
-  --     prompt_title = "Search ZK",
-  --     shorten_path = false,
-  --     cwd = "~/src/github.com/evantravers/undo-zk/wiki/"
-  --   }
-  -- end
-
-  vim.api.nvim_set_keymap("n", "<c-p>", ":lua require('telescope.builtin').git_files()<cr>", {noremap = true})
-  -- vim.api.nvim_set_keymap(
-  --   "n",
-  --   "<localleader><space>",
-  --   ":lua require('telescope.builtin').buffers()<cr>",
-  --   {noremap = true}
-  -- )
-  -- vim.api.nvim_set_keymap("n", "<localleader>ww", ":lua _G.searchWiki()<cr>", {noremap = true})
   -- paq {"vijaymarupudi/nvim-fzf"}
   -- --> example usage: https://github.com/JoosepAlviste/dotfiles/blob/master/config/nvim/lua/j/fzf.lua
   -- paq {"vijaymarupudi/nvim-fzf-commands"}

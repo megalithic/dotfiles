@@ -294,13 +294,9 @@ if has("nvim")
   " set winblend=10
   set jumpoptions=stack
 
-  set guicursor=
-        \n:block-Cursor,
-        \a:block-blinkon0,
-        \i:ver25-blinkwait200-blinkoff150-blinkon200-CursorInsert,
-        \r:blinkwait200-blinkoff150-blinkon200-CursorReplace,
-        \v:CursorVisual,
-        \c:ver25-blinkon300-CursorInsert
+  set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
+        \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
+        \,sm:block-blinkwait175-blinkoff150-blinkon175
 
   " Set cursor shape based on mode (:h termcap-cursor-shape)
   " Vertical bar in insert mode

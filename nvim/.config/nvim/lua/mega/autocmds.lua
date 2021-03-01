@@ -25,36 +25,52 @@ mega.augroup(
   end
 )
 
-mega.augroup(
+mega.augroup_cmds(
   "mega.focus",
-  function()
-    au([[autocmd!]])
-
-    au([[autocmd BufEnter,FocusGained,WinEnter * silent setlocal relativenumber number colorcolumn=81 ]])
-    au([[autocmd BufLeave,FocusLost,WinLeave * silent setlocal norelativenumber number colorcolumn=0]])
-  end
+  {
+    {
+      events = {"BufEnter", "FocusGained", "WinEnter"},
+      targets = {"*"},
+      command = "silent setlocal relativenumber number colorcolumn=81"
+    },
+    {
+      events = {"BufLeave", "FocusLost", "WinLeave"},
+      targets = {"*"},
+      command = "silent setlocal norelativenumber nonumber colorcolumn=0"
+    }
+  }
 )
 
-mega.augroup(
+mega.augroup_cmds(
   "mega.yank_highlighted_region",
-  function()
-    -- vim.api.nvim_exec([[autocmd! * <buffer>]], true)
-    au([[autocmd!]])
-    au(
-      [[autocmd TextYankPost * lua vim.highlight.on_yank({ higroup = 'HighlightedYankRegion', timeout = 170, on_macro = true })]]
-    )
-  end
+  {
+    {
+      events = {"TextYankPost"},
+      targets = {"*"},
+      command = "lua vim.highlight.on_yank({ higroup = 'HighlightedYankRegion', timeout = 170, on_macro = true })"
+    }
+  }
 )
 
-mega.augroup(
+mega.augroup_cmds(
   "mega.terminal",
-  function()
-    au([[autocmd!]])
-    au([[autocmd! TermClose * noremap <buffer><silent><ESC> :bd!<CR>]])
-    au([[autocmd! TermOpen * setlocal nonumber norelativenumber conceallevel=0 nocolorcolumn]])
-    au([[autocmd! TermOpen * startinsert]])
-    au([[autocmd! BufEnter term://* startinsert]])
-  end
+  {
+    {
+      events = {"TermClose"},
+      targets = {"*"},
+      command = "noremap <buffer><silent><ESC> :bd!<CR>"
+    },
+    {
+      events = {"TermOpen"},
+      targets = {"*"},
+      command = "setlocal nonumber norelativenumber conceallevel=0"
+    },
+    {
+      events = {"TermOpen"},
+      targets = {"*"},
+      command = "startinsert"
+    }
+  }
 )
 
 -- automatically clear commandline messages after a few seconds delay
