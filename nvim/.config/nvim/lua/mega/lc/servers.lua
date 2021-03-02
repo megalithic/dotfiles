@@ -1,4 +1,4 @@
-local has_lsp, lspconfig = pcall(require, "lspconfig")
+local has_lsp, lspconf = pcall(require, "lspconfig")
 if not has_lsp then
   print("[WARN] lspconfig not found/installed/loaded..")
 
@@ -12,10 +12,10 @@ local function root_pattern(...)
 
   return function(startpath)
     for _, pattern in ipairs(patterns) do
-      return lspconfig.util.search_ancestors(
+      return lspconf.util.search_ancestors(
         startpath,
         function(path)
-          if lspconfig.util.path.exists(vim.fn.glob(lspconfig.util.path.join(path, pattern))) then
+          if lspconf.util.path.exists(vim.fn.glob(lspconf.util.path.join(path, pattern))) then
             return path
           end
         end
@@ -262,7 +262,7 @@ function M.activate(on_attach_fn)
     capabilities.textDocument.completion.completionItem.snippetSupport = true
 
     if not server_disabled then
-      lspconfig[server].setup(
+      lspconf[server].setup(
         vim.tbl_deep_extend(
           "force",
           {

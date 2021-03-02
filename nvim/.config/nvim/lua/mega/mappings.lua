@@ -131,6 +131,15 @@ end
 
 -- [plugin mappings] -----------------------------------------------------------
 
+-- # easy-align
+-- start interactive EasyAlign in visual mode (e.g. vipga)
+-- mega.map("v", "<Enter>", "<Plug>(EasyAlign)")
+mega.map("v", "ga", "<Plug>(EasyAlign)")
+mega.map("x", "ga", "<Plug>(EasyAlign)")
+
+-- start interactive EasyAlign for a motion/text object (e.g. gaip)
+mega.map("n", "ga", "<Plug>(EasyAlign)")
+
 -- # FZF
 mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
 mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")

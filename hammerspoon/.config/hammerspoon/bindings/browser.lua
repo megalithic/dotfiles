@@ -47,6 +47,32 @@ module.jump = function(url)
   )
 end
 
+module.killTabsByDomain = function(domain)
+  hs.osascript.javascript(
+    [[
+  (function() {
+    var browser = Application(']] .. runningBrowserName .. [[');
+    browser.activate();
+    for (win of browser.windows()) {
+      for (tab of win.tabs()) {
+        if (tab.url().match(/]] .. domain .. [[/)) {
+          tab.close()
+        }
+      }
+
+      // var tabIndex =
+      //   win.tabs().findIndex(tab => tab.url().match(/]] .. domain .. [[/));
+      // if (tabIndex != -1) {
+      //   win.activeTabIndex = (tabIndex + 1);
+      //   win.index = 1;
+      //   win.close()
+      // }
+    }
+  })();
+  ]]
+  )
+end
+
 module.snip = function()
   -- TODO: https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L248-L281
   local app_name = config.preferred.browsers[1]
@@ -119,28 +145,6 @@ module.kill = function(list)
       )
     end
   )
-end
-
-module.killTabsByDomain = function(domain)
-  if runningBrowserName ~= nil and domain ~= nil then
-    hs.osascript.javascript(
-      [[
-    (function() {
-      var browser = Application(']] ..
-        runningBrowserName ..
-          [[');
-      for (win of browser.windows()) {
-        for (tab of win.tabs()) {
-          if (tab.url().match(/]] ..
-            domain .. [[/)) {
-            tab.close()
-          }
-        }
-      }
-    })();
-    ]]
-    )
-  end
 end
 
 module.start = function()

@@ -21,6 +21,7 @@ if paq_exists then
   paq {"sainnhe/forest-night"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
+  -- paq {"beauwilliams/focus.nvim"}
   paq {"junegunn/rainbow_parentheses.vim"}
   paq {"ryanoasis/vim-devicons"}
   -- paq {"glepnir/galaxyline.nvim", branch = "main"}
@@ -96,6 +97,7 @@ if paq_exists then
   paq {"Julian/vim-textobj-variable-segment"} -- variable parts (av/iv)
   paq {"sgur/vim-textobj-parameter"} -- function parameters (a,/i,)
   paq {"wellle/targets.vim"} -- improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
+  paq {"junegunn/vim-easy-align"}
 
   -- (git, vcs, et al) --
   paq {"tpope/vim-fugitive"}
@@ -119,7 +121,8 @@ if paq_exists then
   paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
   -- paq {"lervag/wiki.vim"}
-  -- paq {"michal-h21/vim-zettel"}
+  paq {"vimwiki/vimwiki", branch = "dev"}
+  paq {"michal-h21/vim-zettel"}
   paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}
   -- paq {"reedes/vim-wordy", opt = true}
   -- paq {"reedes/vim-lexical", opt = true}

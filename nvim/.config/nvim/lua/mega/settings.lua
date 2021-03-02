@@ -6,16 +6,52 @@ vim.g.goyo_height = "50%"
 vim.g["pencil#conceallevel"] = 0
 vim.g["pencil#wrapModeDefault"] = "soft"
 
--- vim.g.markdown_enable_conceal = 1
--- vim.g.wiki_root = '~/Documents/wiki'
--- vim.g.wiki_filetypes = {'md'}
--- vim.g.wiki_link_target_type = 'md'
--- vim.g.wiki_map_link_create = 'CreateLinks' -- cannot use anonymous functions
--- cmd [[
--- function! CreateLinks(text) abort
---     return substitute(tolower(a:text), '\s\+', '-', 'g')
--- endfunction
--- ]]
+vim.g.markdown_enable_conceal = 1
+vim.g.wiki_root = "~/Documents/_wiki"
+vim.g.wiki_filetypes = {"md"}
+vim.g.wiki_link_target_type = "md"
+vim.g.wiki_map_link_create = "CreateLinks" -- cannot use anonymous functions
+vim.cmd [[
+  function! CreateLinks(text) abort
+    return substitute(tolower(a:text), '\s\+', '-', 'g')
+  endfunction
+]]
+
+vim.g.vimwiki_list = {
+  {path = "~/Documents/notes/", syntax = "markdown", ext = ".md", auto_tags = 1, auto_diary_index = 1},
+  {path = "~/Documents/wiki/", syntax = "markdown", ext = ".md", auto_tags = 1}
+}
+
+vim.g.nv_search_paths = {"~/Documents/notes/"}
+vim.g.zettel_format = "%Y%m%d-%H%M%S"
+-- vim.g.zettel_format = "%Y%m%d%H%M-%S"
+-- vim.g.zettel_options = [{},{"front_matter" : {"tags" : ""}, "template" :  "~/Templates/zettel.tpl"}]
+vim.g.zettel_fzf_command = "rg --column --line-number --ignore-case --no-heading --color=always "
+--
+-- nnoremap <leader>vt :VimwikiSearchTags<space>
+-- nnoremap <leader>vs :VimwikiSearch<space>
+-- nnoremap <leader>gt :VimwikiRebuildTags!<cr>:ZettelGenerateTags<cr><c-l>
+-- nnoremap <leader>zl :ZettelSearch<cr>
+-- nnoremap <leader>zn :ZettelNew<cr><cr>:4d<cr>:w<cr>ggA
+-- nnoremap <leader>bl :VimwikiBacklinks<cr>
+-- let g:vimwiki_list = [{'path': '~/Documents/notes/', 'syntax': 'markdown', 'ext': '.md', 'auto_tags': 1, 'auto_diary_index': 1},
+--                      \{'path': '~/Documents/wiki/', 'syntax': 'markdown', 'ext': '.md', 'auto_tags': 1}]
+
+-- let g:nv_search_paths = ['~/Documents/notes/']
+
+-- " Filename format. The filename is created using strftime() function
+-- let g:zettel_format = "%y%m%d-%H%M"
+
+-- let g:zettel_fzf_command = "rg --column --line-number --ignore-case --no-heading --color=always "
+
+-- " Set template and custom header variable for the second Wiki
+-- " let g:zettel_options = [{"front_matter" : {"tags" : ""}, "template" :  "./vimztl.tpl"},{}]
+
+-- nnoremap <leader>sn/ :NV<CR>
+
+-- nnoremap <leader>zn :ZettelNew<space>
+-- nnoremap <leader>z<leader>i :ZettelGenerateLinks<CR>
+-- nnoremap <leader>z<leader>t :ZettelGenerateTags<CR>
 
 -- [lexima] ------------------------------------------------------------------
 -- vim.g.lexima_enable_basic_rules = 0
@@ -104,6 +140,17 @@ if colorizer_installed then
     }
   )
 end
+
+-- [focus] ---------------------------------------------------------------------
+-- do
+--   local focus = require("focus")
+--   focus.enable = true
+--   focus.width = 120
+--   focus.height = 40
+--   focus.cursorline = true
+--   focus.signcolumn = true
+--   focus.winhighlight = false
+-- end
 
 -- [golden_size] ---------------------------------------------------------------
 local golden_size_installed, golden_size = pcall(require, "golden_size")
@@ -315,15 +362,15 @@ vim.api.nvim_exec(
 -- [nvim-treesitter] -----------------------------------------------------------
 local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
 if ts_installed then
-  local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
-  parser_configs.elixir = {
-    install_info = {
-      url = "~/.config/treesitter/tree-sitter-elixir",
-      files = {"src/parser.c"}
-    },
-    filetype = "elixir",
-    used_by = {"eelixir"}
-  }
+  -- local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
+  -- parser_configs.elixir = {
+  --   install_info = {
+  --     url = "~/.config/treesitter/tree-sitter-elixir",
+  --     files = {"src/parser.c"}
+  --   },
+  --   filetype = "elixir",
+  --   used_by = {"eelixir"}
+  -- }
   treesitter.setup(
     {
       ensure_installed = {

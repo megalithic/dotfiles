@@ -29,12 +29,12 @@ mega.augroup_cmds(
   "mega.focus",
   {
     {
-      events = {"BufEnter", "FocusGained", "WinEnter"},
+      events = {"BufEnter", "WinEnter"},
       targets = {"*"},
       command = "silent setlocal relativenumber number colorcolumn=81"
     },
     {
-      events = {"BufLeave", "FocusLost", "WinLeave"},
+      events = {"BufLeave", "WinLeave"},
       targets = {"*"},
       command = "silent setlocal norelativenumber nonumber colorcolumn=0"
     }

@@ -10,6 +10,10 @@ function log_ok {
     printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
+function log_warn {
+    printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "-> [!] $*" $(tput sgr 0)
+}
+
 ssh_path="$HOME/.ssh"
 key_id="$USER@$HOST"
 key_file="$USER-$HOST"
@@ -19,11 +23,12 @@ key_path_pub="$ssh_path/$key_file.pub"
 skip_message="-> skipping; be sure to visit https://github.com/settings/keys to add your new key!"
 
 log "-> generating an ssh public/private key with params:"
-echo "- key_id = $key_id"
-echo "- key_type = $key_type"
-echo "- key_file = $key_file"
-echo "- key_path = $key_path"
-echo "- key_path_pub = $key_path.pub"
+echo "- platform      = $PLATFORM"
+echo "- key_id        = $key_id"
+echo "- key_type      = $key_type"
+echo "- key_file      = $key_file"
+echo "- key_path      = $key_path"
+echo "- key_path_pub  = $key_path.pub"
 echo
 
 log "-> executing command: \"ssh-keygen -t key_type -C '$key_id' -N '' -f '$key_path'\""
@@ -37,7 +42,7 @@ sleep 0.5
 log "-> executing command: \"ssh-add -K "$key_path"\""
 if [[ "$PLATFORM" == "macos" ]]; then
   ssh-add -K "$key_path"
-elif[[ "$PLATFORM" == "linux" ]]; then
+elif [[ "$PLATFORM" == "linux" ]]; then
   ssh-add "$key_path"
 fi
 
