@@ -24,7 +24,9 @@ local function root_pattern(...)
   end
 end
 
+-- REFS:
 -- https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp.lua#L208-L253
+-- https://github.com/Xuyuanp/vimrc/blob/master/lua/dotvim/lsp/init.lua#L79-L91
 local function get_lua_runtime()
   local result = {}
   for _, path in pairs(vim.api.nvim_list_runtime_paths()) do

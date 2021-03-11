@@ -11,6 +11,7 @@ lua-fmt
 prettier
 prettier-plugin-eex
 trash-cli
+tree-sitter-cli
 typescript
 vim-node-rpc
 yarn

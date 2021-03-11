@@ -117,7 +117,7 @@ alias kitty='/Applications/kitty.app/Contents/MacOS/kitty'
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-alias nvimupdate="brew update; brew reinstall neovim; brew postinstall neovim; pip install --upgrade pynvim; pip3 install --upgrade pynvim; npm install -g neovim --force; gem install neovim; nvim +PaqUpdate +PaqInstall +qall; brew outdated"
+alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && nvim +PaqUpdate +PaqInstall +qall && brew outdated"
 alias im="nvim"
 alias nv="nvim"
 alias vm="nvim"
@@ -154,6 +154,7 @@ alias eze="nvim $HOME/.config/zsh/**/env.zsh"
 alias ezkb="nvim $HOME/.config/zsh/**/keybindings.zsh"
 alias ev="nvim $HOME/.config/nvim/init.lua"
 alias evp="nvim $HOME/.config/nvim/lua/mega/packages.lua"
+alias evs="nvim $HOME/.config/nvim/lua/mega/settings.lua"
 alias ek="nvim $HOME/.config/kitty/kitty.conf"
 alias et="nvim $HOME/.tmux.conf"
 

@@ -1,8 +1,14 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
+-- REF:
+-- https://github.com/mhartington/dotfiles/blob/master/config/nvim/lua/mh/autocmds/init.lua
+
 local au = mega.au
 
 mega.inspect("activating autocmds..")
+
+vim.cmd('autocmd bufenter *.png,*.jpg,*.jpeg,*.gif exec "!imv \'".expand("%")."\' &" | :bd')
+vim.cmd('autocmd bufenter *.pdf exec "!zathura \'".expand("%")."\' &" | :bw')
 
 mega.augroup(
   "mega.general",

@@ -213,6 +213,17 @@ M.apps = {
       {"Zoom Meeting", 1, M.layout.fullScreen}
     }
   },
+  ["com.microsoft.teams"] = {
+    bundleID = "com.microsoft.teams",
+    name = "Microsoft Teams",
+    -- context = "teams",
+    -- hyper_key = "z",
+    -- launchMode = "focus",
+    rules = {
+      {nil, 1, M.layout.centeredMedium}
+      -- {"Zoom Meeting", 1, M.layout.fullScreen}
+    }
+  },
   ["com.loom.desktop"] = {
     bundleID = "com.loom.desktop",
     name = "Loom",
@@ -308,7 +319,7 @@ M.apps = {
     bundleID = "com.flexibits.fantastical2.mac",
     name = "Fantastical",
     hyper_key = "y",
-    local_bindings = {"]"},
+    local_bindings = {"-"},
     quitGuard = true,
     hideAfter = 1,
     rules = {
@@ -492,11 +503,17 @@ M.docking = {
     vendorID = 8584,
     vendorName = "CalDigit, Inc."
   },
+  ["keyboard"] = {
+    productID = 24674,
+    productName = "Atreus62",
+    vendorID = 65261,
+    vendorName = "Profet"
+  },
   ["docked"] = {
     wifi = "off", -- wifi status
     profile = "atreus62", -- Karabiner-Elements profile name
     input = "Samson GoMic", -- microphone source
-    output = "CalDigit Thunderbolt 3 Audio", -- speaker source
+    output = "Audioengine HD3", -- speaker source
     fontSize = 14.0
   },
   ["undocked"] = {
