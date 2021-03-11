@@ -220,8 +220,7 @@ M.apps = {
     -- hyper_key = "z",
     -- launchMode = "focus",
     rules = {
-      {nil, 1, M.layout.centeredMedium}
-      -- {"Zoom Meeting", 1, M.layout.fullScreen}
+      {nil, 1, M.layout.fullScreen}
     }
   },
   ["com.loom.desktop"] = {
@@ -319,7 +318,7 @@ M.apps = {
     bundleID = "com.flexibits.fantastical2.mac",
     name = "Fantastical",
     hyper_key = "y",
-    local_bindings = {"-"},
+    local_bindings = {"'"},
     quitGuard = true,
     hideAfter = 1,
     rules = {

@@ -42,11 +42,26 @@ function M.dump(...)
   print(unpack(objects))
 end
 
+-- Key mapping
 M.map_opts = {noremap = true, silent = false, expr = false}
 function M.map(mode, lhs, rhs, opts)
   opts = vim.tbl_extend("force", M.map_opts, opts or {})
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
+
+-- function M.map(mode, key, result, opts)
+--   opts =
+--     M.table_merge(
+--     {
+--       noremap = true,
+--       silent = true,
+--       expr = false
+--     },
+--     opts or {}
+--   )
+
+--   vim.api.nvim_set_keymap(mode, key, result, opts)
+-- end
 
 function M.inspect(k, v, l)
   local should_log = require("vim.lsp.log").should_log(1)
@@ -67,7 +82,6 @@ function M.inspect(k, v, l)
 
   return v
 end
-
 
 -- a safe module loader
 function M.load(key, req)
@@ -198,21 +212,6 @@ function M.split(inputstr, separator)
     table.insert(t, str)
   end
   return t
-end
-
--- Key mapping
-function M.map(mode, key, result, opts)
-  opts =
-    M.table_merge(
-    {
-      noremap = true,
-      silent = true,
-      expr = false
-    },
-    opts or {}
-  )
-
-  vim.fn.nvim_set_keymap(mode, key, result, opts)
 end
 
 -- Stolen from https://github.com/kyazdani42/nvim-palenight.lua/blob/master/lua/palenight.lua#L10
