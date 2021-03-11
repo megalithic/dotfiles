@@ -84,7 +84,8 @@ local servers = {
     settings = {
       elixirLS = {
         fetchDeps = false,
-        dialyzerEnabled = false
+        dialyzerEnabled = false,
+        suggestSpecs = true
       }
     },
     filetypes = {"elixir", "eelixir"},
