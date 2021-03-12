@@ -45,7 +45,9 @@ if paq_exists then
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
   paq {
-    "nvim-treesitter/nvim-treesitter",
+    -- "nvim-treesitter/nvim-treesitter",
+    "theHamsta/nvim-treesitter",
+    branch = "lockfile",
     hook = function()
       vim.api.nvim_command("TSUpdate")
     end
@@ -120,12 +122,12 @@ if paq_exists then
   paq {"vimwiki/vimwiki", branch = "dev"}
   paq {"michal-h21/vim-zettel"}
   paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}
-  paq {
-    "npxbr/glow.nvim",
-    hook = function()
-      vim.api.nvim_command("GlowInstall")
-    end
-  }
+  -- paq {
+  --   "npxbr/glow.nvim",
+  --   hook = function()
+  --     vim.api.nvim_command("GlowInstall")
+  --   end
+  -- }
 
   -- paq {""}
   -- paq {"reedes/vim-wordy", opt = true}

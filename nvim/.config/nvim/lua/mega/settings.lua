@@ -294,17 +294,6 @@ if colorizer_installed then
   )
 end
 
--- [focus] ---------------------------------------------------------------------
--- do
---   local focus = require("focus")
---   focus.enable = true
---   focus.width = 120
---   focus.height = 40
---   focus.cursorline = true
---   focus.signcolumn = true
---   focus.winhighlight = false
--- end
-
 -- [golden_size] ---------------------------------------------------------------
 local golden_size_installed, golden_size = pcall(require, "golden_size")
 if golden_size_installed then
@@ -515,115 +504,90 @@ vim.api.nvim_exec(
 -- [nvim-treesitter] -----------------------------------------------------------
 local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
 if ts_installed then
--- local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
--- parser_configs.elixir = {
---   install_info = {
---     url = "~/.config/treesitter/tree-sitter-elixir",
---     files = {"src/parser.c"}
---   },
---   filetype = "elixir",
---   used_by = {"eelixir"}
--- }
--- treesitter.setup(
---   {
---     -- ensure_installed = "maintained",
---     ensure_installed = {
---       "bash",
---       "c",
---       "cpp",
---       "css",
---       "elm",
---       "erlang",
---       -- "elixir",
---       -- "fennel",
---       "html",
---       "jsdoc",
---       "javascript",
---       "json",
---       "lua",
---       -- "nix",
---       "python",
---       "regex",
---       "ruby",
---       -- "rust",
---       -- "toml",
---       "tsx",
---       "typescript",
---       "yaml"
---     },
---     -- ensure_installed = {
---     --   "bash",
---     --   "c",
---     --   "cpp",
---     --   "css",
---     --   "elm",
---     --   "erlang",
---     --   "elixir",
---     --   "fennel",
---     --   "html",
---     --   "jsdoc",
---     --   "javascript",
---     --   "json",
---     --   "lua",
---     --   "nix",
---     --   "python",
---     --   "regex",
---     --   "ruby",
---     --   "rust",
---     --   "toml",
---     --   "tsx",
---     --   "typescript",
---     --   "yaml"
---     -- },
---     highlight = {enable = false, use_languagetree = true},
---     indent = {enable = true},
---     incremental_selection = {
---       enable = false,
---       keymaps = {
---         init_selection = "gnn",
---         node_incremental = "grn",
---         scope_incremental = "grc",
---         node_decremental = "grm"
---       }
---     },
---     textobjects = {
---       select = {
---         enable = true,
---         keymaps = {
---           ["af"] = "@function.outer",
---           ["if"] = "@function.inner",
---           ["as"] = "@class.outer",
---           ["is"] = "@class.inner",
---           ["ac"] = "@conditional.outer",
---           ["ic"] = "@conditional.inner",
---           ["al"] = "@loop.outer",
---           ["il"] = "@loop.inner",
---           ["ab"] = "@block.outer",
---           ["ib"] = "@block.inner",
---           ["cm"] = "@comment.outer"
---           -- ["ss"] = "@statement.outer",
---         }
---       },
---       move = {
---         enable = true,
---         goto_next_start = {
---           ["nf"] = "@function.outer",
---           ["ns"] = "@class.outer",
---           ["nc"] = "@conditional.outer",
---           ["nl"] = "@loop.outer",
---           ["nb"] = "@block.outer"
---         },
---         goto_previous_start = {
---           ["Nf"] = "@function.outer",
---           ["Ns"] = "@class.outer",
---           ["Nc"] = "@conditional.outer",
---           ["Nl"] = "@loop.outer",
---           ["Nb"] = "@block.outer"
---         }
---       }
---     }
---   }
--- )
+  local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
+  parser_configs.elixir = {
+    install_info = {
+      url = "~/.config/treesitter/tree-sitter-elixir",
+      files = {"src/parser.c"}
+    },
+    filetype = "elixir",
+    used_by = {"eelixir"}
+  }
+  treesitter.setup(
+    {
+      ensure_installed = {
+        "bash",
+        "c",
+        "cpp",
+        "css",
+        "elm",
+        "erlang",
+        "elixir",
+        -- "fennel",
+        "html",
+        "jsdoc",
+        "javascript",
+        "json",
+        "lua",
+        -- "nix",
+        "python",
+        "regex",
+        "ruby",
+        "rust",
+        "toml",
+        "tsx",
+        "typescript",
+        "yaml"
+      },
+      highlight = {enable = false, use_languagetree = true},
+      indent = {enable = true},
+      incremental_selection = {
+        enable = false,
+        keymaps = {
+          init_selection = "gnn",
+          node_incremental = "grn",
+          scope_incremental = "grc",
+          node_decremental = "grm"
+        }
+      },
+      textobjects = {
+        select = {
+          enable = true,
+          keymaps = {
+            ["af"] = "@function.outer",
+            ["if"] = "@function.inner",
+            ["as"] = "@class.outer",
+            ["is"] = "@class.inner",
+            ["ac"] = "@conditional.outer",
+            ["ic"] = "@conditional.inner",
+            ["al"] = "@loop.outer",
+            ["il"] = "@loop.inner",
+            ["ab"] = "@block.outer",
+            ["ib"] = "@block.inner",
+            ["cm"] = "@comment.outer"
+            -- ["ss"] = "@statement.outer",
+          }
+        },
+        move = {
+          enable = true,
+          goto_next_start = {
+            ["nf"] = "@function.outer",
+            ["ns"] = "@class.outer",
+            ["nc"] = "@conditional.outer",
+            ["nl"] = "@loop.outer",
+            ["nb"] = "@block.outer"
+          },
+          goto_previous_start = {
+            ["Nf"] = "@function.outer",
+            ["Ns"] = "@class.outer",
+            ["Nc"] = "@conditional.outer",
+            ["Nl"] = "@loop.outer",
+            ["Nb"] = "@block.outer"
+          }
+        }
+      }
+    }
+  )
 end
 
 -- [vim-projectionist] ---------------------------------------------------------
