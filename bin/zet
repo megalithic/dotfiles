@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+if [ ! $(command -v kitty) ]; then
+  brew install --cask kitty
+fi
+
+base_command="$(basename "$0")"
+
+command=""
+
+help() {
+  printf -- "Usage: "$base_command" <subcommand>\n"
+  printf -- "\n"
+  printf -- "Subcommands:\n"
+  printf -- "    new               Start a new meeting note\n"
+}
+
+new() {
+  kitty @ launch --type=os-window --cwd=$HOME/Documents/_zettel --title="New Meeting Note" zsh --login -c "exec nvim \"+ZkNew Meeting Note - $(date +"%Y%m%d%H%M%S")\""
+}
+
+subcommand=$1
+
+case $subcommand in
+  '' | '-h' | '--help')
+    help ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

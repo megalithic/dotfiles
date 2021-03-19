@@ -1,7 +1,5 @@
--- Easy and defined access to global things
+-- easy access to `mega` global things
 _G["mega"] = require("mega.global")
-
-vim.cmd [[packadd vimball]]
 
 -- [ debugging ] ---------------------------------------------------------------
 
@@ -14,9 +12,10 @@ vim.cmd [[packadd vimball]]
 -- LSP log location ->
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 
+vim.cmd([[packadd vimball]])
 vim.cmd([[runtime .vimrc]])
 
--- [ loaders ] ---------------------------------------------------------------
+-- [ loaders ] -----------------------------------------------------------------
 
 mega.load("preflight", "mega.preflight")
 mega.load("packages", "mega.packages")

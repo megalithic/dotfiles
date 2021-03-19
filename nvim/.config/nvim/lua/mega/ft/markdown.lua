@@ -18,6 +18,8 @@ return function(_) -- bufnr
     "elixir",
     "eelixir"
   }
+
+  vim.g.markdown_enable_conceal = 1
   vim.g.vim_markdown_folding_disabled = 1
   vim.g.vim_markdown_conceal = 0
   vim.g.vim_markdown_conceal_code_blocks = 0
@@ -30,6 +32,48 @@ return function(_) -- bufnr
   vim.g.vim_markdown_no_extensions_in_markdown = 1
   vim.g.vim_markdown_math = 1
   vim.g.vim_markdown_strikethrough = 1
+
+  -- ## markdown/mkdx
+  vim.g["mkdx#settings"] = {
+    highlight = {enable = 1},
+    enter = {shift = 1},
+    links = {external = {enable = 1}},
+    toc = {text = "Table of Contents", update_on_write = 1},
+    fold = {enable = 1}
+  }
+  -- vim.api.nvim_exec(
+  --   [[
+  --   nmap <leader>ml <Plug>(mkdx-toggle-list-n)
+  --   xmap <leader>ml <Plug>(mkdx-toggle-list-v)
+  --   nmap <leader>mc <Plug>(mkdx-toggle-checkbox-n)
+  --   xmap <leader>mc <Plug>(mkdx-toggle-checkbox-v)
+  --   ]],
+  --   true
+  -- )
+
+  -- ## markdown/mkdx
+  vim.g.wiki_root = "~/Documents/_wiki"
+  vim.g.wiki_filetypes = {"md"}
+  vim.g.wiki_link_target_type = "md"
+  -- vim.g.wiki_mappings_default = "none"
+  vim.g.wiki_mappings_use_defaults = 0
+  -- vim.g.wiki_mappings_global = {
+  --       \ '<plug>(wiki-index)': '<leader>ww',
+  --       \ '<plug>(wiki-journal-index)': '<leader>wj',
+  --       \ }
+
+  -- vim.g.wiki_mappings_local = {
+  --       \ '<plug>(wiki-journal-prev)': '<c-Down>',
+  --       \ '<plug>(wiki-journal-next)': '<c-Up>',
+  --       \ '<plug>(wiki-link-next)' : '<leader><tab>',
+  --       \ '<plug>(wiki-link-return)' : '<leader><bs>',
+  --       \ }
+  vim.g.wiki_map_link_create = "CreateLinks" -- cannot use anonymous functions
+  vim.cmd [[
+  function! CreateLinks(text) abort
+  return substitute(tolower(a:text), '\s\+', '-', 'g')
+  endfunction
+  ]]
 
   vim.cmd([[set conceallevel=0]])
 

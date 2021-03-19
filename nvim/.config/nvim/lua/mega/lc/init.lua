@@ -1,5 +1,9 @@
 mega.inspect("activating lsp_config.lua..")
 
+-- TODO:
+-- - Handy commands for LSP things
+-- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/lspconfig.lua#L154-L184
+
 -- [ requires ] ----------------------------------------------------------------
 
 local nova = require("mega.colors.nova")
@@ -45,10 +49,10 @@ local on_attach = function(client, bufnr)
 
   if client.resolved_capabilities.hover then
     mega.map("n", "K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
-    -- scroll down hover doc
-    -- mega.map("n", "<C-f>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
-    -- -- scroll up hover doc
-    -- mega.map("n", "<C-d>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
+  -- scroll down hover doc
+  -- mega.map("n", "<C-f>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(1)<CR>")
+  -- -- scroll up hover doc
+  -- mega.map("n", "<C-d>", "<cmd>lua require('lspsaga.hover').smart_scroll_hover(-1)<CR>")
   end
 
   if client.resolved_capabilities.goto_definition then

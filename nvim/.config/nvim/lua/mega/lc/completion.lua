@@ -130,7 +130,7 @@ function M.activate()
           vim.fn["compe#confirm"]()
           return npairs.esc("")
         else
-          vim.fn.nvim_select_popupmenu_item(0, false, false, {})
+          vim.api.nvim_select_popupmenu_item(0, false, false, {})
           vim.fn["compe#confirm"]()
           return npairs.esc("<c-n>")
         end

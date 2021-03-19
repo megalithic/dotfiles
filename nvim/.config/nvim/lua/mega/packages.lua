@@ -28,9 +28,9 @@ if paq_exists then
   paq {"danilamihailov/beacon.nvim"}
   paq {"antoinemadec/FixCursorHold.nvim"}
   paq {"psliwka/vim-smoothie"}
-  paq {"glepnir/indent-guides.nvim"}
+  -- paq {"glepnir/indent-guides.nvim"}
   -- paq {"Yggdroot/indentLine"}
-  -- paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
+  paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
@@ -45,27 +45,22 @@ if paq_exists then
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
   paq {
-    -- "nvim-treesitter/nvim-treesitter",
-    "theHamsta/nvim-treesitter",
-    branch = "lockfile",
-    hook = function()
-      vim.api.nvim_command("TSUpdate")
-    end
+    "nvim-treesitter/nvim-treesitter"
+    -- run = function()
+    --   vim.api.nvim_command("TSUpdate")
+    -- end
   }
   paq {
-    "nvim-treesitter/completion-treesitter",
-    hook = function()
-      vim.api.nvim_command("TSUpdate")
-    end
+    "nvim-treesitter/completion-treesitter"
+    -- run = function()
+    --   vim.api.nvim_command("TSUpdate")
+    -- end
   }
   paq {"nvim-treesitter/nvim-treesitter-textobjects"}
   -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
-  -- paq {"RRethy/vim-illuminate"}
-  -- paq {"kosayoda/nvim-lightbulb"}
-  -- paq {"jubnzv/virtual-types.nvim"}
 
   -- (file navigation) --
-  paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
+  paq {"junegunn/fzf", run = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
   paq {"ojroques/nvim-lspfuzzy"}
   paq {"nvim-telescope/telescope.nvim"}
@@ -99,7 +94,7 @@ if paq_exists then
 
   -- (git, vcs, et al) --
   paq {"tpope/vim-fugitive"}
-  paq {"keith/gist.vim", hook = "!chmod -HR 0600 ~/.netrc"}
+  paq {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"}
   paq {"mattn/webapi-vim"}
   paq {"rhysd/conflict-marker.vim"}
   paq {"itchyny/vim-gitbranch"}
@@ -118,13 +113,13 @@ if paq_exists then
   paq {"junegunn/goyo.vim", opt = true}
   paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
+  paq {"megalithic/zk.nvim", branch = "main"}
   -- paq {"lervag/wiki.vim"}
-  paq {"vimwiki/vimwiki", branch = "dev"}
-  paq {"michal-h21/vim-zettel"}
-  paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}
+  paq {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]}
+  -- paq {"SidOfc/mkdx"}
   -- paq {
   --   "npxbr/glow.nvim",
-  --   hook = function()
+  --   run = function()
   --     vim.api.nvim_command("GlowInstall")
   --   end
   -- }
@@ -174,7 +169,7 @@ if paq_exists then
   -- https://github.com/awesome-streamers/awesome-streamerrc/blob/master/ThePrimeagen/plugin/firenvim.vim
   -- paq {
   --   "glacambre/firenvim",
-  --   hook = function()
+  --   run = function()
   --     vim.fn["firenvim#install"](0)
   --   end
   -- }
@@ -200,9 +195,25 @@ if paq_exists then
 
   paq {"sheerun/vim-polyglot"}
 
--- local filename = vim.api.nvim_buf_get_name(0)
--- if string.match(filename, "packages.lua") == "packages.lua" then
---   Paq.update()
---   Paq.install()
--- end
+  _G.paq_actions = function()
+    vim.cmd([[<cmd>PaqClean<CR>]])
+    vim.cmd([[<cmd>PaqUpdate<CR>]])
+    vim.cmd([[<cmd>PaqInstall<CR>]])
+  end
+
+  mega.augroup_cmds(
+    "mega.paq",
+    {
+      {
+        events = {"BufWritePost"},
+        targets = {"packages.lua"},
+        command = "luafile %"
+      }
+      -- {
+      --   events = {"BufWritePost"},
+      --   targets = {"packages.lua"},
+      --   command = "lua paq_actions()"
+      -- }
+    }
+  )
 end
