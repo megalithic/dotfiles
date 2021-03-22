@@ -20,8 +20,8 @@ local icons = {
   statusline_ok = mega.utf8(0xf00c)
 }
 
--- https://github.com/sainnhe/everforest/blob/master/autoload/lightline/colorscheme/everforest.vim
--- TODO: should really look at switching to "standard" color names/enums
+-- TODO: thieve @mhanberg's lush theme that wraps everforest/forest_night:
+-- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/lush_theme/thicc_forest.lua
 local cs = {
   bg0 = "#323d43",
   bg1 = "#3c474d",

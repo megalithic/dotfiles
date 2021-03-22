@@ -113,7 +113,7 @@ if paq_exists then
   paq {"junegunn/goyo.vim", opt = true}
   paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
-  paq {"megalithic/zk.nvim", branch = "main"}
+  paq {"megalithic/zk.nvim"}
   -- paq {"lervag/wiki.vim"}
   paq {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]}
   -- paq {"SidOfc/mkdx"}
