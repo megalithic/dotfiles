@@ -18,7 +18,7 @@ if paq_exists then
 
   -- (ui, interface) --
   -- paq {"trevordmiller/nova-vim"}
-  paq {"sainnhe/forest-night"}
+  paq {"sainnhe/everforest"}
   -- paq {"cocopon/inspecthi.vim"}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}

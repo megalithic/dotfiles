@@ -20,7 +20,7 @@ local icons = {
   statusline_ok = mega.utf8(0xf00c)
 }
 
--- https://github.com/sainnhe/forest-night/blob/master/autoload/lightline/colorscheme/forest_night.vim
+-- https://github.com/sainnhe/everforest/blob/master/autoload/lightline/colorscheme/everforest.vim
 -- TODO: should really look at switching to "standard" color names/enums
 local cs = {
   bg0 = "#323d43",
@@ -117,19 +117,19 @@ return {
   load = function()
     vim.o.background = "dark"
 
-    vim.g.forest_night_background = "soft"
-    vim.g.forest_night_enable_italic = true
-    vim.g.forest_night_enable_bold = true
-    vim.g.forest_night_transparent_background = true
-    vim.g.forest_night_diagnostic_text_highlight = true
-    vim.g.forest_night_diagnostic_line_highlight = true
-    vim.g.forest_night_cursor = "green"
-    vim.g.forest_night_better_performance = true
-    vim.g.forest_night_sign_column_background = "none"
+    vim.g.everforest_background = "soft"
+    vim.g.everforest_enable_italic = true
+    vim.g.everforest_enable_bold = true
+    vim.g.everforest_transparent_background = true
+    vim.g.everforest_diagnostic_text_highlight = true
+    vim.g.everforest_diagnostic_line_highlight = true
+    vim.g.everforest_cursor = "green"
+    vim.g.everforest_better_performance = true
+    vim.g.everforest_sign_column_background = "none"
 
     -- (highlights) --
 
-    _G.forest_night_overrides = function()
+    _G.everforest_overrides = function()
       mega.highlight(
         "CursorLineNr",
         {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
@@ -144,17 +144,17 @@ return {
     end
 
     mega.augroup_cmds(
-      "ForestNightOverrides",
+      "EverforestOverrides",
       {
         {
           events = {"VimEnter", "ColorScheme"},
-          targets = {"forest-night"},
-          command = "lua forest_night_overrides()"
+          targets = {"everforest"},
+          command = "lua everforest_overrides()"
         }
       }
     )
 
-    mega.load("statusline", "mega.statusline").load("forest_night")
-    vim.api.nvim_exec([[ colorscheme forest-night ]], true)
+    mega.load("statusline", "mega.statusline").load("everforest")
+    vim.api.nvim_exec([[ colorscheme everforest ]], true)
   end
 }

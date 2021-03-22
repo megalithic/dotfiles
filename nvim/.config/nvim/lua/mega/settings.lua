@@ -1,6 +1,6 @@
 mega.inspect("activating package settings.lua..")
 
-local cs = require("mega.colors.forest_night")
+local cs = require("mega.colors.everforest")
 
 do
   require("zk").setup()
