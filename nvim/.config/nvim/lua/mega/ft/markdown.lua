@@ -98,19 +98,19 @@ return function(_) -- bufnr
     local marker = "#"
 
     for i = 1, #lines do
-      _, Level = lines[i]:find("^" .. marker .. "+")
-      if Level == 1 then
+      local _, level = lines[i]:find("^" .. marker .. "+")
+      if level == 1 then
         vim.fn.sign_place(0, markdown_sign_namespace, "firstHeadline", bufnr, {lnum = i + offset})
       end
-      if Level == 2 then
+      if level == 2 then
         vim.fn.sign_place(0, markdown_sign_namespace, "secondHeadline", bufnr, {lnum = i + offset})
       end
-      if Level and Level > 2 then
+      if level and level > 2 then
         vim.fn.sign_place(0, markdown_sign_namespace, "thirdHeadline", bufnr, {lnum = i + offset})
       end
 
-      _, Dashes = lines[i]:find("^---+$")
-      if Dashes then
+      local _, dashes = lines[i]:find("^---+$")
+      if dashes then
         vim.api.nvim_buf_set_virtual_text(
           bufnr,
           markdown_dash_namespace,

@@ -1,23 +1,25 @@
 mega.inspect("activating package settings.lua..")
 
-local cs = require("mega.colors.everforest")
+-- local cs = require("mega.colors.everforest")
 
 do
-  require("zk").setup()
+  require("zk").setup(
+    {
+      debug = true
+    }
+  )
 end
 
 do
   -- [indent-blankline] --------------------------------------------------------
   vim.g.indent_blankline_char = "│"
-  -- require("indent_guides").setup(
-  --   {
-  --     even_colors = {fg = "#ffffff", bg = cs.colors.darker_gray},
-  --     odd_colors = {fg = "#ffffff", bg = cs.colors.darkest_gray},
-  --     -- even_colors = {fg = "#ffffff", bg = "#332b36"},
-  --     -- odd_colors = {fg = "#ffffff", bg = "#2a3834"},
-  --     indent_char = "│"
-  --   }
-  -- )
+  vim.g.indent_blankline_filetype_exclude = {'help', 'defx', 'vimwiki', 'fzf'}
+  vim.g.indent_blankline_space_char_blankline = ' '
+  vim.g.indent_blankline_strict_tabs = true
+  vim.g.indent_blankline_debug = true
+  vim.g.indent_blankline_show_current_context = true
+  vim.g.indent_blankline_context_highlight = 'TSIndentContext'
+  vim.g.indent_blankline_context_patterns = {'class', 'function', 'method', '^if', 'while', 'for', 'with', 'func_literal', 'block' }
 end
 
 -- [prose] ---------------------------------------------------------------------
@@ -63,6 +65,7 @@ do
       -- quit = {"q", [[\<ESC>]]}
       quit = {"<ESC>", "q"}
     },
+    code_action_keys = {quit = "<ESC>", exec = "<CR>"},
     code_action_prompt = {
       enable = true,
       sign = false,

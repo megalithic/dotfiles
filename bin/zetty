@@ -18,7 +18,7 @@ help() {
 new() {
   # TODO: allow for custom arg to set the note title
   # kitty @ launch --type=os-window --cwd=$HOME/Documents/_zettel --title="New Note" zsh --interactive -c "exec zk new --title=\"Meeting Note - $(date +"%Y%m%d%H%M%S")\""
-  kitty @ launch --type=os-window --cwd=$HOME/Documents/_zettel --title="New Note" zsh --interactive -c "exec nvim \"+ZkNew Meeting Note - $(date +"%Y%m%d%H%M%S")\""
+  kitty @ launch --type=os-window --cwd=$HOME/Documents/_zettel --title="New Note" zsh --interactive -c "exec nvim \"+ZkNew Meeting\ Note\ -\ $(date +"%Y%m%d%H%M%S")\ edit\""
 }
 
 subcommand=$1
