@@ -1,11 +1,13 @@
+--NOTE: Packages are in the runtimepath, this file is only loaded for updates.
 mega.inspect("activating packages.lua..")
 
 vim.cmd([[packadd paq-nvim]])
+package.loaded["paq-nvim"] = nil -- Refresh package list
 
-local plenary_exists, plenary = pcall(require, "plenary.reload")
-if plenary_exists then
-  plenary.reload_module("paq-nvim")
-end
+-- local plenary_exists, plenary = pcall(require, "plenary.reload")
+-- if plenary_exists then
+--   plenary.reload_module("paq-nvim")
+-- end
 
 local paq_exists, Paq = pcall(require, "paq-nvim")
 if paq_exists then
@@ -19,7 +21,7 @@ if paq_exists then
   -- (ui, interface) --
   -- paq {"trevordmiller/nova-vim"}
   paq {"sainnhe/everforest"}
-  -- paq {"cocopon/inspecthi.vim"}
+  -- paq {"cocopon/inspecthi.vim", opt=true}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"junegunn/rainbow_parentheses.vim"}
@@ -28,8 +30,6 @@ if paq_exists then
   paq {"danilamihailov/beacon.nvim"}
   paq {"antoinemadec/FixCursorHold.nvim"}
   paq {"psliwka/vim-smoothie"}
-  -- paq {"glepnir/indent-guides.nvim"}
-  -- paq {"Yggdroot/indentLine"}
   paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
@@ -40,7 +40,6 @@ if paq_exists then
   paq {"onsails/lspkind-nvim"}
   paq {"hrsh7th/vim-vsnip"}
   paq {"hrsh7th/vim-vsnip-integ"}
-  -- paq {"stevearc/vim-vsnip-snippets"}
   paq {"nvim-lua/lsp-status.nvim"}
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
@@ -93,6 +92,7 @@ if paq_exists then
   paq {"sgur/vim-textobj-parameter"} -- function parameters (a,/i,)
   paq {"wellle/targets.vim"} -- improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
   paq {"junegunn/vim-easy-align"}
+  -- https://github.com/AckslD/nvim-revJ.lua
 
   -- (git, vcs, et al) --
   paq {"tpope/vim-fugitive"}
@@ -194,25 +194,14 @@ if paq_exists then
 
   paq {"sheerun/vim-polyglot"}
 
-  _G.paq_actions = function()
-    vim.cmd([[<cmd>PaqClean<CR>]])
-    vim.cmd([[<cmd>PaqUpdate<CR>]])
-    vim.cmd([[<cmd>PaqInstall<CR>]])
-  end
-
   mega.augroup_cmds(
     "mega.paq",
     {
       {
         events = {"BufWritePost"},
         targets = {"packages.lua"},
-        command = "luafile %"
+        command = [[luafile %]]
       }
-      -- {
-      --   events = {"BufWritePost"},
-      --   targets = {"packages.lua"},
-      --   command = "lua paq_actions()"
-      -- }
     }
   )
 end

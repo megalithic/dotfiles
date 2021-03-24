@@ -122,7 +122,6 @@ function M.activate()
     )
 
     if true then
-      print("lexima")
       -- lexima
       -- https://github.com/hrsh7th/nvim-compe/blob/master/README.md#how-to-use-tab-to-navigate-completion-menu
       -- https://github.com/hrsh7th/nvim-compe/blob/master/README.md#mappings (for lexima)
@@ -181,7 +180,6 @@ function M.activate()
     end
 
     if false then
-      print("nvim-autopairs")
       -- nvim-autopairs
       local npairs = require("nvim-autopairs")
       -- https://github.com/lukas-reineke/dotfiles/blob/master/vim/init.vim#L26-L30

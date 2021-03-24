@@ -430,52 +430,22 @@ do
           "yaml"
         },
         highlight = {enable = false, use_languagetree = false},
-        indent = {enable = true}
-        -- incremental_selection = {
-        --   enable = false,
-        --   keymaps = {
-        --     init_selection = "gnn",
-        --     node_incremental = "grn",
-        --     scope_incremental = "grc",
-        --     node_decremental = "grm"
-        --   }
-        -- },
-        -- textobjects = {
-        --   select = {
-        --     enable = true,
-        --     keymaps = {
-        --       ["af"] = "@function.outer",
-        --       ["if"] = "@function.inner",
-        --       ["as"] = "@class.outer",
-        --       ["is"] = "@class.inner",
-        --       ["ac"] = "@conditional.outer",
-        --       ["ic"] = "@conditional.inner",
-        --       ["al"] = "@loop.outer",
-        --       ["il"] = "@loop.inner",
-        --       ["ab"] = "@block.outer",
-        --       ["ib"] = "@block.inner",
-        --       ["cm"] = "@comment.outer"
-        --       -- ["ss"] = "@statement.outer",
-        --     }
-        --   },
-        --   move = {
-        --     enable = true,
-        --     goto_next_start = {
-        --       ["nf"] = "@function.outer",
-        --       ["ns"] = "@class.outer",
-        --       ["nc"] = "@conditional.outer",
-        --       ["nl"] = "@loop.outer",
-        --       ["nb"] = "@block.outer"
-        --     },
-        --     goto_previous_start = {
-        --       ["Nf"] = "@function.outer",
-        --       ["Ns"] = "@class.outer",
-        --       ["Nc"] = "@conditional.outer",
-        --       ["Nl"] = "@loop.outer",
-        --       ["Nb"] = "@block.outer"
-        --     }
-        --   }
-        -- }
+        indent = {enable = true},
+        textobjects = {
+          select = {
+            enable = true,
+            keymaps = {
+              ["if"] = "@function.inner",
+              ["af"] = "@function.outer",
+              ["ik"] = "@call.inner",
+              ["ak"] = "@call.outer",
+              ["il"] = "@loop.inner",
+              ["al"] = "@loop.outer",
+              ["ic"] = "@conditional.inner",
+              ["ac"] = "@conditional.outer"
+            }
+          }
+        }
       }
     )
   end
