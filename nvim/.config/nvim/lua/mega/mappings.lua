@@ -127,44 +127,15 @@ mega.map("x", "ga", "<Plug>(EasyAlign)")
 mega.map("n", "ga", "<Plug>(EasyAlign)")
 
 -- # FZF
-mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
+-- mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
 mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
 mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
-mega.map("n", "<Leader>b", "<cmd>FzfBuffers<CR>")
+mega.map(
+  "n",
+  "<leader>ff",
+  "<cmd>lua require('fzf-commands').files({ fzf = function(contents, options) return require('fzf').fzf(contents, options, { height = 50, width = 200 }) end })<CR>"
+)
 
--- # Dash
-mega.map("n", "<leader>D", "<cmd>Dash<CR>")
-
--- # markdown-preview
-mega.map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
-
--- # telescope
-mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files({ hidden = true })<cr>")
--- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
--- mega.map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
--- mega.map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")
--- mega.map("n", "<leader>A", ":lua require('telescope.builtin').grep_string { search = vim.fn.expand('<cword>') }<CR>")
-mega.map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
-
--- mega.map("n", "<leader>ff", "<cmd>lua require('fzf-commands').files()<CR>")
-
--- nnoremap <leader>ps :lua require('telescope.builtin').grep_string({ search = vim.fn.input("Grep For > ")})<CR>
--- nnoremap <C-p> :lua require('telescope.builtin').git_files()<CR>
--- nnoremap <Leader>pf :lua require('telescope.builtin').find_files()<CR>
-
--- nnoremap <leader>pw :lua require('telescope.builtin').grep_string { search = vim.fn.expand("<cword>") }<CR>
-
--- mega.map(
---   "n",
---   "<leader>f",
---   "<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ winblend = 10, hidden = true }))<cr>"
--- )
--- vim.api.nvim_set_keymap(
---   "n",
---   "<localleader><space>",
---   ":lua require('telescope.builtin').buffers()<cr>",
---   {noremap = true}
--- )
 function _G.search_zettel()
   require("telescope.builtin").find_files {
     prompt_title = "Search ZK",
@@ -174,3 +145,17 @@ function _G.search_zettel()
   }
 end
 mega.map("n", "<leader>fz", ":lua _G.search_zettel()<cr>")
+
+-- # Dash
+mega.map("n", "<leader>D", "<cmd>Dash<CR>")
+
+-- # markdown-preview
+mega.map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
+
+-- # telescope
+-- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files({ hidden = true })<cr>")
+-- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
+-- mega.map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
+-- mega.map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")
+-- mega.map("n", "<leader>A", ":lua require('telescope.builtin').grep_string { search = vim.fn.expand('<cword>') }<CR>")
+-- mega.map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")

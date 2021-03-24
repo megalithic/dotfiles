@@ -3,23 +3,33 @@ mega.inspect("activating package settings.lua..")
 -- local cs = require("mega.colors.everforest")
 
 do
-  require("zk").setup(
+  --[[ require("zk").setup(
     {
       debug = true
     }
-  )
+  ) ]]
 end
 
 do
   -- [indent-blankline] --------------------------------------------------------
   vim.g.indent_blankline_char = "│"
-  vim.g.indent_blankline_filetype_exclude = {'help', 'defx', 'vimwiki', 'fzf'}
-  vim.g.indent_blankline_space_char_blankline = ' '
+  vim.g.indent_blankline_filetype_exclude = {"help", "defx", "vimwiki", "fzf"}
+  vim.g.indent_blankline_space_char_blankline = " "
   vim.g.indent_blankline_strict_tabs = true
   vim.g.indent_blankline_debug = true
   vim.g.indent_blankline_show_current_context = true
-  vim.g.indent_blankline_context_highlight = 'TSIndentContext'
-  vim.g.indent_blankline_context_patterns = {'class', 'function', 'method', '^if', 'while', 'for', 'with', 'func_literal', 'block' }
+  vim.g.indent_blankline_context_highlight = "TSIndentContext"
+  vim.g.indent_blankline_context_patterns = {
+    "class",
+    "function",
+    "method",
+    "^if",
+    "while",
+    "for",
+    "with",
+    "func_literal",
+    "block"
+  }
 end
 
 -- [prose] ---------------------------------------------------------------------
@@ -33,11 +43,6 @@ do
   vim.g["pencil#wrapModeDefault"] = "soft"
   -- https://github.com/ishchow/dotfiles/blob/master/.config/nvim/plugin/vim-lexical.vim
 end
-
--- [lexima] --------------------------------------------------------------------
--- vim.g.lexima_enable_basic_rules = 0
--- vim.g.lexima_enable_newline_rules = 0
--- vim.g.lexima_enable_endwise_rules = 1
 
 -- [fixcursorhold] -------------------------------------------------------------
 do
@@ -195,20 +200,31 @@ do
   end
 end
 
+-- [lexima] --------------------------------------------------------------------
+vim.g.lexima_no_default_rules = 1
+-- vim.g.lexima_enable_basic_rules = 0
+vim.g.lexima_enable_newline_rules = 0
+vim.g.lexima_enable_endwise_rules = 1
+-- NOTE: Order is important. You can't lazy loading lexima.vim.
+vim.cmd([[call lexima#set_default_rules()]])
+
 -- [nvim-autopairs] ------------------------------------------------------------
 do
-  require("nvim-autopairs").setup()
-  -- require('nvim-autopairs').setup({
-  --   pairs_map = {
-  --     ["'"] = "'",
-  --     ['"'] = '"',
-  --     ['('] = ')',
-  --     ['['] = ']',
-  --     ['{'] = '}',
-  --     ['`'] = '`',
-  --     ['$'] = '$'
-  --   }
-  -- })
+  -- require("nvim-autopairs").setup()
+  -- -- require('nvim-autopairs').setup({
+  -- --   pairs_map = {
+  -- --     ["'"] = "'",
+  -- --     ['"'] = '"',
+  -- --     ['('] = ')',
+  -- --     ['['] = ']',
+  -- --     ['{'] = '}',
+  -- --     ['`'] = '`',
+  -- --     ['$'] = '$',
+  -- --     ['function'] = 'end',
+  -- --     ['def'] = 'end',
+  -- --     ['defp'] = 'end',
+  -- --   }
+  -- -- })
 end
 
 -- [fzf] -----------------------------------------------------------------------

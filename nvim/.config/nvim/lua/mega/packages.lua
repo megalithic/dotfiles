@@ -62,6 +62,8 @@ if paq_exists then
   -- (file navigation) --
   paq {"junegunn/fzf", run = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
+  paq {"vijaymarupudi/nvim-fzf"}
+  paq {"megalithic/fzf.lua"}
   paq {"ojroques/nvim-lspfuzzy"}
   paq {"nvim-telescope/telescope.nvim"}
   paq {"unblevable/quick-scope"}
@@ -113,10 +115,12 @@ if paq_exists then
   paq {"junegunn/goyo.vim", opt = true}
   paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
-  paq {"megalithic/zk.nvim"}
-  -- paq {"lervag/wiki.vim"}
+  -- paq {"megalithic/zk.nvim"}
   paq {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]}
   -- paq {"SidOfc/mkdx"}
+  -- paq {"reedes/vim-wordy", opt = true}
+  -- paq {"reedes/vim-lexical", opt = true}
+  -- paq {"sedm0784/vim-you-autocorrect"}
   -- paq {
   --   "npxbr/glow.nvim",
   --   run = function()
@@ -124,21 +128,16 @@ if paq_exists then
   --   end
   -- }
 
-  -- paq {""}
-  -- paq {"reedes/vim-wordy", opt = true}
-  -- paq {"reedes/vim-lexical", opt = true}
-  -- paq {"sedm0784/vim-you-autocorrect"}
-
   -- (the rest...) --
   paq {"ojroques/vim-oscyank"}
   paq {"wsdjeg/vim-fetch"} -- vim path/to/file.ext:12:3
   paq {"farmergreg/vim-lastplace"}
   -- paq {"blackCauldron7/surround.nvim"}
   paq {"andymass/vim-matchup"}
-  paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
+  -- paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
+  paq {"megalithic/lexima.vim"}
   paq {"alvan/vim-closetag"}
   -- paq {"Raimondi/delimitMate"}
-  -- paq {"cohama/lexima.vim"}
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`
   paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
