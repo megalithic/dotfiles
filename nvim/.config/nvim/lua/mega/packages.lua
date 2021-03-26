@@ -13,6 +13,12 @@ local paq_exists, Paq = pcall(require, "paq-nvim")
 if paq_exists then
   local paq = Paq.paq
 
+  -- (local/development packages) --
+  --    -- located in: ~/.local/share/nvim/site/pack/local
+  -- paq {"megalithic/zk.nvim"}
+  -- paq {"megalithic/lexima.vim"}
+  -- paq {"megalithic/fzf.lua"}
+
   -- (paq-nvim) --
   paq {"savq/paq-nvim", opt = true}
   paq {"tweekmonster/startuptime.vim"}
@@ -62,7 +68,6 @@ if paq_exists then
   paq {"junegunn/fzf", run = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
   paq {"vijaymarupudi/nvim-fzf"}
-  paq {"megalithic/fzf.lua"}
   paq {"ojroques/nvim-lspfuzzy"}
   paq {"nvim-telescope/telescope.nvim"}
   paq {"unblevable/quick-scope"}
@@ -115,7 +120,6 @@ if paq_exists then
   paq {"junegunn/goyo.vim", opt = true}
   paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
-  -- paq {"megalithic/zk.nvim"}
   paq {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]}
   -- paq {"SidOfc/mkdx"}
   -- paq {"reedes/vim-wordy", opt = true}
@@ -135,7 +139,6 @@ if paq_exists then
   -- paq {"blackCauldron7/surround.nvim"}
   paq {"andymass/vim-matchup"}
   -- paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
-  paq {"megalithic/lexima.vim"}
   paq {"alvan/vim-closetag"}
   -- paq {"Raimondi/delimitMate"}
   -- paq {"tpope/vim-endwise"}

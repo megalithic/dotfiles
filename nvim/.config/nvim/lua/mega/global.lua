@@ -63,9 +63,10 @@ end
 --   vim.api.nvim_set_keymap(mode, key, result, opts)
 -- end
 
-function M.inspect(k, v, l)
+function M.inspect(k, v, l, f)
+  local force = f or false
   local should_log = require("vim.lsp.log").should_log(1)
-  if not should_log then
+  if not should_log and not force then
     return
   end
 
@@ -90,7 +91,7 @@ function M.load(key, req)
   if loaded then
     return loader
   else
-    mega.inspect("loading failed", {key, loader}, 4)
+    mega.inspect("loading failed", {key, loader}, 4, true)
   end
 end
 

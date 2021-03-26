@@ -3,17 +3,17 @@ mega.inspect("activating package settings.lua..")
 -- local cs = require("mega.colors.everforest")
 
 do
-  --[[ require("zk").setup(
+  require("zk").setup(
     {
       debug = true
     }
-  ) ]]
+  )
 end
 
 do
   -- [indent-blankline] --------------------------------------------------------
   vim.g.indent_blankline_char = "│"
-  vim.g.indent_blankline_filetype_exclude = {"help", "defx", "vimwiki", "fzf"}
+  vim.g.indent_blankline_filetype_exclude = {"help", "defx", "vimwiki", "fzf", "sagasignature", "markdown", "vimwiki"}
   vim.g.indent_blankline_space_char_blankline = " "
   vim.g.indent_blankline_strict_tabs = true
   vim.g.indent_blankline_debug = true

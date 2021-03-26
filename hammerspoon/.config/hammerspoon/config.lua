@@ -133,7 +133,7 @@ M.apps = {
     hideAfter = 1,
     rules = {
       {nil, 1, M.layout.rightHalf},
-      {"Capture", 1, M.layout.topRight30}
+      {"Capture", 1, M.layout.centeredSmall}
     }
   },
   ["com.culturedcode.ThingsMac"] = {
@@ -176,7 +176,7 @@ M.apps = {
   ["com.readdle.smartemail-Mac"] = {
     bundleID = "com.readdle.smartemail-Mac",
     name = "Spark",
-    hyper_key = "e",
+    -- hyper_key = "e",
     context = "spark",
     distraction = true,
     rules = {
@@ -187,11 +187,12 @@ M.apps = {
   ["io.canarymail.mac"] = {
     bundleID = "io.canarymail.mac",
     name = "Canary Mail",
-    -- hyper_key ='e',
+    hyper_key = "e",
     context = "canary",
     distraction = true,
     rules = {
-      {nil, 2, M.layout.fullScreen}
+      {nil, 1, M.layout.centeredMedium},
+      {"Inbox - All", 1, M.layout.rightHalf}
     }
   },
   ["com.apple.finder"] = {

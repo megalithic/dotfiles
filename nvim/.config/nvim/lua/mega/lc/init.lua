@@ -83,23 +83,19 @@ local on_attach = function(client, bufnr)
   mega.map("n", "<leader>lS", "<cmd>lua vim.lsp.buf.workspace_symbol()<CR>")
   mega.map("n", "<leader>dE", "<cmd>lua vim.lsp.buf.declaration()<CR>")
 
-  if client.resolved_capabilities.publish_diagnostics then
-    -- jump diagnostic
-    mega.map("n", "[d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
-    mega.map("n", ",d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
-    mega.map("n", "]d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
-    mega.map("n", ";d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
+  -- jump diagnostic
+  mega.map("n", "[d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
+  mega.map("n", ",d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>")
+  mega.map("n", "]d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
+  mega.map("n", ";d", "<cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>")
 
-    mega.map("n", "<leader>ll", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>")
-    mega.map("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
-  end
+  mega.map("n", "<leader>ll", "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>")
+  mega.map("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
 
   mega.augroup(
     "lc.cursor_commands",
     function()
-      if client.resolved_capabilities.publish_diagnostics then
-        vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
-      end
+      vim.api.nvim_command [[autocmd CursorHold * lua require('lspsaga.diagnostic').show_line_diagnostics()]]
 
       if client.resolved_capabilities.signature_help then
         vim.api.nvim_command [[autocmd CursorHoldI * lua require('lspsaga.signaturehelp').signature_help()]]
