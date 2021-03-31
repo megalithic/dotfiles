@@ -1,4 +1,16 @@
 return function(_) -- bufnr
+  vim.cmd ([[setlocal spell linebreak]])
+
+  -- mega.augroup_cmds(
+  --   "mega.filetypes",
+  --   {
+  --     {
+  --       events = {"BufRead", "BufNewFile"},
+  --       targets = {"*.md"},
+  --       command = "setlocal spell linebreak"
+  --     }
+  --   })
+
   -- ## plasticboy/vim-markdown
   vim.g.markdown_fenced_languages = {
     "javascript",
@@ -50,30 +62,6 @@ return function(_) -- bufnr
   --   ]],
   --   true
   -- )
-
-  -- ## markdown/mkdx
-  vim.g.wiki_root = "~/Documents/_wiki"
-  vim.g.wiki_filetypes = {"md"}
-  vim.g.wiki_link_target_type = "md"
-  -- vim.g.wiki_mappings_default = "none"
-  vim.g.wiki_mappings_use_defaults = 0
-  -- vim.g.wiki_mappings_global = {
-  --       \ '<plug>(wiki-index)': '<leader>ww',
-  --       \ '<plug>(wiki-journal-index)': '<leader>wj',
-  --       \ }
-
-  -- vim.g.wiki_mappings_local = {
-  --       \ '<plug>(wiki-journal-prev)': '<c-Down>',
-  --       \ '<plug>(wiki-journal-next)': '<c-Up>',
-  --       \ '<plug>(wiki-link-next)' : '<leader><tab>',
-  --       \ '<plug>(wiki-link-return)' : '<leader><bs>',
-  --       \ }
-  vim.g.wiki_map_link_create = "CreateLinks" -- cannot use anonymous functions
-  vim.cmd [[
-  function! CreateLinks(text) abort
-  return substitute(tolower(a:text), '\s\+', '-', 'g')
-  endfunction
-  ]]
 
   vim.cmd([[set conceallevel=0]])
 

@@ -1,7 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
-if [ ! $(command -v kitty) ]; then
-  brew install --cask kitty
+if [ ! $(command -v /usr/local/bin/kitty) ]; then
+  /usr/local/bin/brew install --cask kitty
+fi
+
+if [ ! $(command -v $HOME/.go/bin/zk) ]; then
+  GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD
 fi
 
 base_command="$(basename "$0")"
@@ -12,13 +16,38 @@ help() {
   printf -- "Usage: "$base_command" <subcommand>\n"
   printf -- "\n"
   printf -- "Subcommands:\n"
-  printf -- "    new               Start a new meeting note\n"
+  printf -- "    new               Start a new note\n"
+  printf -- "    meeting           Start a meeting note\n"
 }
 
 new() {
-  # TODO: allow for custom arg to set the note title
-  # kitty @ launch --type=os-window --cwd=$HOME/Documents/_zettel --title="New Note" zsh --interactive -c "exec zk new --title=\"Meeting Note - $(date +"%Y%m%d%H%M%S")\""
-  kitty @ launch --type=os-window --cwd=$HOME/Documents/_zettel --title="New Note" zsh --interactive -c "exec nvim \"+ZkNew Meeting\ Note\ -\ $(date +"%Y%m%d%H%M%S")\ edit\""
+  case $1 in
+    *)
+      title=$1
+      /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="New Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('zk.command').new({ title = '$title', action = 'edit'})\""
+      ;;
+  esac
+}
+
+meeting() {
+  case $1 in
+    '')
+      # get the current meeting info:
+      cal_event_info=("${(@f)$(/usr/local/bin/icalBuddy --limitItems 1 -nc -npn -b '' -ic 'Calendar,Personal Calendar' -ps '|\n     |' -df '' -eed -iep title,attendees -po 'title,attendees' --includeOnlyEventsFromNowOn --excludeAllDayEvents eventsNow)}")
+
+      # assign title
+      [ -z "$cal_event_info" ] && title="Meeting Note" || title=$cal_event_info[1]
+     
+      # assign attendees
+      [ -z "$cal_event_info" ] && attendees="" || attendees=$cal_event_info[2]
+
+      /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('zk.command').new({ title = '$title', action = 'edit', notebook = 'meetings', content = 'Attendees: $attendees\n' })\""
+      ;;
+    *)
+      title=$1
+      /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('zk.command').new({ title = '$title', action = 'edit', notebook = 'meetings'})\""
+      ;;
+  esac
 }
 
 subcommand=$1

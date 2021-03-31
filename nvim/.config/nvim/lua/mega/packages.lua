@@ -17,7 +17,7 @@ if paq_exists then
   --    -- located in: ~/.local/share/nvim/site/pack/local
   -- paq {"megalithic/zk.nvim"}
   -- paq {"megalithic/lexima.vim"}
-  -- paq {"megalithic/fzf.lua"}
+  -- paq {"megalithic/nvim-fzf-commands"}
 
   -- (paq-nvim) --
   paq {"savq/paq-nvim", opt = true}
@@ -169,12 +169,12 @@ if paq_exists then
   paq {"gennaro-tedesco/nvim-peekup"} -- peek into the vim registers in floating window
 
   -- https://github.com/awesome-streamers/awesome-streamerrc/blob/master/ThePrimeagen/plugin/firenvim.vim
-  -- paq {
-  --   "glacambre/firenvim",
-  --   run = function()
-  --     vim.fn["firenvim#install"](0)
-  --   end
-  -- }
+  paq {
+    "glacambre/firenvim",
+    run = function()
+      vim.fn["firenvim#install"](777)
+    end
+  }
 
   -- (langs, syntax, et al) --
   paq {"tpope/vim-rails"}

@@ -191,7 +191,7 @@ M.apps = {
     context = "canary",
     distraction = true,
     rules = {
-      {nil, 1, M.layout.centeredMedium},
+      {nil, 1, M.layout.centeredSmall},
       {"Inbox - All", 1, M.layout.rightHalf}
     }
   },

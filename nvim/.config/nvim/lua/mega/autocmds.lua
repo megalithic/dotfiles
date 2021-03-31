@@ -7,8 +7,8 @@ local au = mega.au
 
 mega.inspect("activating autocmds..")
 
-vim.cmd('autocmd bufenter *.png,*.jpg,*.jpeg,*.gif exec "!imv \'".expand("%")."\' &" | :bd')
-vim.cmd('autocmd bufenter *.pdf exec "!zathura \'".expand("%")."\' &" | :bw')
+-- vim.cmd('autocmd bufenter *.png,*.jpg,*.jpeg,*.gif exec "!imv \'".expand("%")."\' &" | :bd')
+-- vim.cmd('autocmd bufenter *.pdf exec "!zathura \'".expand("%")."\' &" | :bw')
 
 mega.augroup(
   "mega.general",
@@ -78,6 +78,19 @@ mega.augroup_cmds(
     }
   }
 )
+
+mega.augroup_cmds(
+  "mega.filetypes",
+  {
+    {
+      events = {"BufRead", "BufNewFile"},
+      targets = {"*.lexs"},
+      command = "set filetype=elixir"
+    }
+  }
+)
+
+-- autocmd [[BufRead,BufNewFile *.lexs set filetype=elixir]]
 
 -- automatically clear commandline messages after a few seconds delay
 -- source: https://unix.stackexchange.com/a/613645

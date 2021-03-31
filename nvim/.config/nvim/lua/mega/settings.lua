@@ -5,7 +5,7 @@ mega.inspect("activating package settings.lua..")
 do
   require("zk").setup(
     {
-      debug = true
+      debug = false
     }
   )
 end
@@ -517,4 +517,55 @@ do
       }
     }
   }
+end
+
+do
+  if vim.g.started_by_firenvim then
+    -- if vim.fn.exists("g:started_by_firenvim") == 1 then
+    vim.cmd [[set laststatus=0]]
+    vim.cmd [[set showtabline=0]]
+    vim.cmd [[set guifont=JetBrainsMono:h24]]
+
+    vim.g.firenvim_config = {
+      globalSettings = {
+        alt = "all"
+      },
+      localSettings = {
+        [".*"] = {
+          cmdline = "firenvim", -- or "neovim"
+          takeover = "always",
+          selector = "textarea",
+          priority = 0
+        },
+        ["https://studio.youtube.com.*"] = {takeover = "never", priority = 1},
+        ["https?://instagram.com.*"] = {},
+        ["https?://twitter.com.*"] = {},
+        ["https://.*gmail.com.*"] = {},
+        ["https?://.*twitch.tv.*"] = {}
+      }
+    }
+
+    -- vim.api.nvim_set_keymap("n", "<Esc><Esc>", "<cmd>call firenvim#focus_page()<CR>", {noremap = true})
+    -- vim.api.nvim_set_keymap("n", "<C-z>", "<cmd>write<CR><cmd>call firenvim#hide_frame()<CR>", {noremap = true})
+    --
+    -- vim.cmd("au BufEnter github.com_*.txt set filetype=markdown")
+    -- vim.cmd("au BufEnter stackoverflow_*.txt set filetype=markdown")
+    -- vim.cmd("au BufEnter txti.es_*.txt set filetype=typescript")
+
+    mega.augroup_cmds(
+      "mega.focus",
+      {
+        {
+          events = {"BufEnter"},
+          targets = {"github.com_*.txt,stackoverflow_*.txt"},
+          command = "set filetype=markdown"
+        },
+        {
+          events = {"BufEnter"},
+          targets = {"txti.es_*.txt"},
+          command = "set filetype=typescript"
+        }
+      }
+    )
+  end
 end

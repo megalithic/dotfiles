@@ -155,7 +155,7 @@ M.apply_app_layout = function(app_name, app)
       log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
       -- hs.layout.apply(layouts, string.match)
       -- hs.layout.apply(layouts, match_title)
-      hs.layout.apply(layouts, match_title)
+      hs.layout.apply(layouts)
     end
   end
 end

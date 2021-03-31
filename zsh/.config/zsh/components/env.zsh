@@ -14,7 +14,7 @@ export PAGER="less"
 export MANPAGER="$EDITOR +Man!"
 export MANWIDTH=999
 export LESS="-F -g -i -M -R -S -w -X -z-4"
-export ZK_NOTEBOOK_DIR="$HOME/Documents/_zettel"
+export ZK_NOTEBOOK_DIR="$HOME/Documents/_notes"
 # if (( $+commands[lesspipe.sh] )); then
 #     # Set the Less input preprocessor.
 #     export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
@@ -76,7 +76,7 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export HOMEBREW_NO_ANALYTICS=1
   export HOMEBREW_CASK_OPTS="--appdir=/Applications"
   export HOMEBREW_PREFIX=$BREW_PATH
-  export BREW_PATH="$(brew --prefix)"
+  export BREW_PATH="$(/usr/local/bin/brew --prefix)"
   export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
   # FIXME:

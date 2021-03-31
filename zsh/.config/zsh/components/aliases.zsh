@@ -111,10 +111,6 @@ alias b="brew"
 # alias python=python3.8
 # alias pip3=/usr/local/Cellar/python@3.8/3.8.2/bin/pip3
 
-# KITTY
-# -----------------------------------------------------------------------------
-alias kitty='/Applications/kitty.app/Contents/MacOS/kitty'
-
 # (NEO)VIM
 # -----------------------------------------------------------------------------
 alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && nvim +PaqUpdate +PaqInstall +qall && brew outdated"

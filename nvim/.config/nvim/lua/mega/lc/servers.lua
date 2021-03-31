@@ -38,7 +38,7 @@ local function get_lua_runtime()
 
   result[vim.fn.expand("$VIMRUNTIME/lua")] = true
   result[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
-  -- result[vim.fn.expand("~/build/neovim/src/nvim/lua")] = true
+  result[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs")] = true
 
   return result
 end

@@ -32,46 +32,54 @@ M.apply = function(event, app, log)
       browser.killTabsByDomain("zoom.us")
 
       do
-        local drafts = hs.application.get("Drafts")
+        -- local kitty = hs.application.get("kitty")
         local zoom = hs.application.get("zoom.us")
+        -- local drafts = hs.application.get("Drafts")
+
+        local buttonValue, inputValue =
+          hs.dialog.textPrompt(
+          "Meeting Note Title",
+          "If you don't enter anything we'll just use the derived data from the calendar"
+        )
+
+        log.wf("dialog input -> buttonValue: %s, inputValue: %s", buttonValue, inputValue)
 
         hs.timer.waitUntil(
           function()
-            return zoom:getWindow("Zoom Meeting")
+            return zoom:getWindow("Zoom Meeting") and buttonValue == "OK"
           end,
           function()
-            local layouts = {
-              {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
-              {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
-            }
-            hs.layout.apply(layouts)
-
-            zoom:getWindow("Zoom"):close()
-            drafts:setFrontmost()
-
-            hs.timer.waitUntil(
+            local task =
+              hs.task.new(
+              os.getenv("HOME") .. "/.dotfiles/bin/zetty",
               function()
-                return drafts:isFrontmost()
+              end, -- Fake callback
+              function(t, o, e)
+                log.wf("launching kitty in new note mode: %s / %s / %s", t, o, e)
+
+                local target_close_window = zoom:getWindow("Zoom")
+                if target_close_window ~= nil then
+                  target_close_window:close()
+                end
+
+                local layouts = {
+                  {"kitty", "Meeting Note", hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
+                  -- {"Drafts", drafts:mainWindow():title(), hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
+                  {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
+                }
+                hs.layout.apply(layouts)
+
+                -- drafts:setFrontmost()
+                return true
               end,
-              function()
-                drafts:setFrontmost()
-                -- drafts:selectMenuItem("Enable Minimal Mode")
-                drafts:selectMenuItem("Hide Draft list")
-                -- drafts:selectMenuItem("Hide Filters")
-              end
+              {"meeting", inputValue}
             )
+            task:start()
           end
         )
-        --       local template = string.format([[%s
-        --       %s
-        --         [%s](%s)
-        --         ]], title, quote, title, url)
-        --
-        --       -- format and send to drafts
-        --       hs.urlevent.openURL("drafts://x-callback-url/create?tag=links&text=" .. hs.http.encodeForQuery(template))
       end
     end
-    --
+
     init_apply_complete = true
   end
 
@@ -84,22 +92,6 @@ M.apply = function(event, app, log)
       init_apply_complete = false
     end
   )
-
-  ----------------------------------------------------------------------
-  -- handle window rules
-  --   if app == nil then
-  --     return
-  --   end
-  --
-  --   local app_config = config.apps[app:bundleID()]
-  --   if app_config == nil or app_config.rules == nil then
-  --     return
-  --   end
-  --
-  --   if fn.contains({"windowCreated"}, event) then
-  --     -- wh.snapRelated()
-  --     wh.applyRules(app_config.rules, win, app_config)
-  --   end
 end
 
 return M

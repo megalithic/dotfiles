@@ -229,6 +229,7 @@ function stow_away {
     stow langservers && log_ok "stowed langservers" || log_error "langservers stow failed"
     stow nvim && log_ok "stowed nvim" || log_error "nvim stow failed"
     stow keyboard && log_ok "stowed keyboard" || log_error "keyboard stow failed"
+    stow zk && log_ok "stowed zk" || log_error "zk stow failed"
 
     if [[ "$PLATFORM" == "macos" ]]
     then
