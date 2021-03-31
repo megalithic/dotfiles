@@ -1,15 +1,23 @@
+--NOTE: Packages are in the runtimepath, this file is only loaded for updates.
 mega.inspect("activating packages.lua..")
 
 vim.cmd([[packadd paq-nvim]])
+package.loaded["paq-nvim"] = nil -- Refresh package list
 
-local plenary_exists, plenary = pcall(require, "plenary.reload")
-if plenary_exists then
-  plenary.reload_module("paq-nvim")
-end
+-- local plenary_exists, plenary = pcall(require, "plenary.reload")
+-- if plenary_exists then
+--   plenary.reload_module("paq-nvim")
+-- end
 
 local paq_exists, Paq = pcall(require, "paq-nvim")
 if paq_exists then
   local paq = Paq.paq
+
+  -- (local/development packages) --
+  --    -- located in: ~/.local/share/nvim/site/pack/local
+  -- paq {"megalithic/zk.nvim"}
+  -- paq {"megalithic/lexima.vim"}
+  -- paq {"megalithic/nvim-fzf-commands"}
 
   -- (paq-nvim) --
   paq {"savq/paq-nvim", opt = true}
@@ -18,19 +26,17 @@ if paq_exists then
 
   -- (ui, interface) --
   -- paq {"trevordmiller/nova-vim"}
-  paq {"sainnhe/forest-night"}
+  paq {"sainnhe/everforest"}
+  -- paq {"cocopon/inspecthi.vim", opt=true}
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
-  -- paq {"beauwilliams/focus.nvim"}
   paq {"junegunn/rainbow_parentheses.vim"}
   paq {"ryanoasis/vim-devicons"}
-  -- paq {"glepnir/galaxyline.nvim", branch = "main"}
   paq {"hoob3rt/lualine.nvim"}
   paq {"danilamihailov/beacon.nvim"}
   paq {"antoinemadec/FixCursorHold.nvim"}
   paq {"psliwka/vim-smoothie"}
-  -- paq {"Yggdroot/indentLine"}
-  -- paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
+  paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
@@ -40,37 +46,30 @@ if paq_exists then
   paq {"onsails/lspkind-nvim"}
   paq {"hrsh7th/vim-vsnip"}
   paq {"hrsh7th/vim-vsnip-integ"}
-  -- paq {"stevearc/vim-vsnip-snippets"}
   paq {"nvim-lua/lsp-status.nvim"}
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
   paq {
-    "nvim-treesitter/nvim-treesitter",
-    hook = function()
-      vim.api.nvim_command("TSUpdate")
-    end
+    "nvim-treesitter/nvim-treesitter"
+    -- run = function()
+    --   vim.api.nvim_command("TSUpdate")
+    -- end
   }
   paq {
-    "nvim-treesitter/completion-treesitter",
-    hook = function()
-      vim.api.nvim_command("TSUpdate")
-    end
+    "nvim-treesitter/completion-treesitter"
+    -- run = function()
+    --   vim.api.nvim_command("TSUpdate")
+    -- end
   }
-  -- paq {"jubnzv/virtual-types.nvim"}
-  -- paq {"nvim-treesitter/nvim-treesitter-textobjects"}
+  paq {"nvim-treesitter/nvim-treesitter-textobjects"}
   -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
-  -- paq {"RRethy/vim-illuminate"}
-  -- paq {"kosayoda/nvim-lightbulb"}
 
   -- (file navigation) --
-  paq {"junegunn/fzf", hook = vim.fn["fzf#install"]}
+  paq {"junegunn/fzf", run = vim.fn["fzf#install"]}
   paq {"junegunn/fzf.vim"}
+  paq {"vijaymarupudi/nvim-fzf"}
   paq {"ojroques/nvim-lspfuzzy"}
-  paq "nvim-telescope/telescope.nvim"
-  -- paq {"vijaymarupudi/nvim-fzf"}
-  -- --> example usage: https://github.com/JoosepAlviste/dotfiles/blob/master/config/nvim/lua/j/fzf.lua
-  -- paq {"vijaymarupudi/nvim-fzf-commands"}
-  -- paq {"justinmk/vim-sneak"}
+  paq {"nvim-telescope/telescope.nvim"}
   paq {"unblevable/quick-scope"}
   -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/modules/_mappings.lua
   -- paq {"tjdevries/astronauta.nvim"}
@@ -98,10 +97,11 @@ if paq_exists then
   paq {"sgur/vim-textobj-parameter"} -- function parameters (a,/i,)
   paq {"wellle/targets.vim"} -- improved targets line cin) next parens) https://github.com/wellle/targets.vim/blob/master/cheatsheet.md
   paq {"junegunn/vim-easy-align"}
+  -- https://github.com/AckslD/nvim-revJ.lua
 
   -- (git, vcs, et al) --
   paq {"tpope/vim-fugitive"}
-  paq {"keith/gist.vim", hook = "!chmod -HR 0600 ~/.netrc"}
+  paq {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"}
   paq {"mattn/webapi-vim"}
   paq {"rhysd/conflict-marker.vim"}
   paq {"itchyny/vim-gitbranch"}
@@ -120,12 +120,17 @@ if paq_exists then
   paq {"junegunn/goyo.vim", opt = true}
   paq {"junegunn/limelight.vim", opt = true}
   paq {"reedes/vim-pencil", opt = true}
-  -- paq {"lervag/wiki.vim"}
-  paq {"vimwiki/vimwiki", branch = "dev"}
-  paq {"michal-h21/vim-zettel"}
-  paq {"iamcco/markdown-preview.nvim", hook = vim.fn["mkdp#util#install"]}
+  paq {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]}
+  -- paq {"SidOfc/mkdx"}
   -- paq {"reedes/vim-wordy", opt = true}
   -- paq {"reedes/vim-lexical", opt = true}
+  -- paq {"sedm0784/vim-you-autocorrect"}
+  -- paq {
+  --   "npxbr/glow.nvim",
+  --   run = function()
+  --     vim.api.nvim_command("GlowInstall")
+  --   end
+  -- }
 
   -- (the rest...) --
   paq {"ojroques/vim-oscyank"}
@@ -133,15 +138,14 @@ if paq_exists then
   paq {"farmergreg/vim-lastplace"}
   -- paq {"blackCauldron7/surround.nvim"}
   paq {"andymass/vim-matchup"}
-  paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
+  -- paq {"windwp/nvim-autopairs"} -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
   paq {"alvan/vim-closetag"}
   -- paq {"Raimondi/delimitMate"}
-  -- paq {"cohama/lexima.vim"}
   -- paq {"tpope/vim-endwise"}
   -- paq {"rstacruz/vim-closer"} -- broke: has conflicting tags `closer`
-  -- paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
+  paq {"b3nj5m1n/kommentary"} -- broke: issues with multiline in lua
   -- paq {"terrortylor/nvim-comment"}
-  paq {"tpope/vim-commentary"}
+  -- paq {"tpope/vim-commentary"}
   paq {"tpope/vim-eunuch"}
   paq {"tpope/vim-abolish"}
   paq {"tpope/vim-rhubarb"}
@@ -161,14 +165,16 @@ if paq_exists then
   paq {"christoomey/vim-tmux-runner"}
   -- paq {"wellle/visual-split.vim"}
   paq {"junegunn/vim-slash"}
-  paq {"junegunn/vim-peekaboo"}
+  -- paq {"junegunn/vim-peekaboo"}
+  paq {"gennaro-tedesco/nvim-peekup"} -- peek into the vim registers in floating window
+
   -- https://github.com/awesome-streamers/awesome-streamerrc/blob/master/ThePrimeagen/plugin/firenvim.vim
-  -- paq {
-  --   "glacambre/firenvim",
-  --   hook = function()
-  --     vim.fn["firenvim#install"](0)
-  --   end
-  -- }
+  paq {
+    "glacambre/firenvim",
+    run = function()
+      vim.fn["firenvim#install"](777)
+    end
+  }
 
   -- (langs, syntax, et al) --
   paq {"tpope/vim-rails"}
@@ -191,9 +197,14 @@ if paq_exists then
 
   paq {"sheerun/vim-polyglot"}
 
--- local filename = vim.api.nvim_buf_get_name(0)
--- if string.match(filename, "packages.lua") == "packages.lua" then
---   Paq.update()
---   Paq.install()
--- end
+  mega.augroup_cmds(
+    "mega.paq",
+    {
+      {
+        events = {"BufWritePost"},
+        targets = {"packages.lua"},
+        command = [[luafile %]]
+      }
+    }
+  )
 end

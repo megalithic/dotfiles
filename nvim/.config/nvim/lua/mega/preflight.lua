@@ -41,3 +41,7 @@ if not mega.isdir(mega.cache_dir) then
     end
   end
 end
+
+-- Ensure our runtime path has our local packs loaded in
+local local_packs = string.format("%s/site/pack/local", vim.fn.stdpath("data"))
+vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs

@@ -25,6 +25,26 @@ local M = {
 local wh = require("utils.wm.window-handlers")
 local fn = require("hs.fnutils")
 
+-- return true if title matches pattern
+local function match_title(title, pattern)
+  log.i("match_title: title(" .. title .. ") pattern(" .. pattern .. ")")
+
+  print("match_title: title(" .. title .. ") pattern(" .. pattern .. ")")
+  if title == nil then
+    return
+  end
+
+  log.wf("did we match? %s", (string.match(title, pattern) == title))
+
+  -- if pattern starts with ! then reverse match
+  if string.sub(pattern, 1, 1) == "!" then
+    local actual_pattern = string.sub(pattern, 2, string.len(pattern))
+    return not string.match(title, actual_pattern)
+  else
+    return string.match(title, pattern) == pattern
+  end
+end
+
 local gather_windows = function(app)
   if app == nil then
     return
@@ -101,9 +121,13 @@ M.set_app_layout = function(app_config)
         end
 
         local title_pattern, screen, position = rule[1], rule[2], rule[3]
+
+        log.wf("set_app_layout::%s | %s, %s, %s", bundleID, title_pattern, screen, position)
+
         local layout = {
           hs.application.get(bundleID), -- application name
-          title_pattern, -- window title
+          -- title_pattern, -- window title
+          hs.window.find(title_pattern), -- window title
           wh.targetDisplay(screen), -- screen #
           position, -- layout/postion
           nil,
@@ -129,6 +153,8 @@ M.apply_app_layout = function(app_name, app)
     local layouts = M.set_app_layout(app_config)
     if layouts ~= nil then
       log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
+      -- hs.layout.apply(layouts, string.match)
+      -- hs.layout.apply(layouts, match_title)
       hs.layout.apply(layouts)
     end
   end

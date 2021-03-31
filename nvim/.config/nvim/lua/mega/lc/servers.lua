@@ -24,7 +24,9 @@ local function root_pattern(...)
   end
 end
 
+-- REFS:
 -- https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp.lua#L208-L253
+-- https://github.com/Xuyuanp/vimrc/blob/master/lua/dotvim/lsp/init.lua#L79-L91
 local function get_lua_runtime()
   local result = {}
   for _, path in pairs(vim.api.nvim_list_runtime_paths()) do
@@ -36,7 +38,7 @@ local function get_lua_runtime()
 
   result[vim.fn.expand("$VIMRUNTIME/lua")] = true
   result[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
-  result[vim.fn.expand("~/build/neovim/src/nvim/lua")] = true
+  result[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs")] = true
 
   return result
 end
@@ -62,17 +64,6 @@ local servers = {
     filetypes = {"css", "scss", "less", "sass"},
     root_dir = root_pattern("package.json", ".git")
   },
-  efm = {
-    init_options = {documentFormatting = true},
-    -- root_dir = lspconfig.util.root_pattern('package.json'),
-    filetypes = vim.tbl_keys(efm_languages),
-    -- filetypes = efm_language_keys(),
-    settings = {
-      rootMarkers = {".git/", "package.json", "elm.json", "mix.lock", "mix.exs"},
-      lintDebounce = 500,
-      languages = efm_languages
-    }
-  },
   elmls = {
     filetypes = {"elm"},
     root_dir = root_pattern("elm.json", ".git")
@@ -82,11 +73,23 @@ local servers = {
     settings = {
       elixirLS = {
         fetchDeps = false,
-        dialyzerEnabled = false
+        dialyzerEnabled = false,
+        suggestSpecs = true
       }
     },
     filetypes = {"elixir", "eelixir"},
     root_dir = root_pattern("mix.lock", "mix.exs", ".git")
+  },
+  efm = {
+    init_options = {documentFormatting = true},
+    filetypes = vim.tbl_keys(efm_languages),
+    settings = {
+      rootMarkers = {"mix.lock", "mix.exs", "elm.json", "package.json", ".git/"},
+      lintDebounce = 500,
+      logLevel = 2,
+      logFile = vim.fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log",
+      languages = efm_languages
+    }
   },
   html = {},
   jsonls = {

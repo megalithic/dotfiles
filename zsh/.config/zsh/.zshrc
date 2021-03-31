@@ -17,7 +17,7 @@ elif [[ "$PLATFORM" == "linux" ]]; then
 fi
 
 # NOTE: source order matters!
-for file in $ZDOTDIR/components/{opts,env,fzf,aliases,functions,colors,keybindings,completion,ssh,zlua,asdf}.zsh; do
+for file in $ZDOTDIR/components/{opts,env,asdf,fzf,aliases,functions,colors,keybindings,completion,ssh,zlua}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done

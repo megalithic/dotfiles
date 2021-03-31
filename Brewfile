@@ -82,6 +82,7 @@ brew "heroku"
 brew "hub"
 brew "highlight"
 brew "htop"
+brew "ical-buddy"
 brew "jq"
 brew 'lazydocker'
 brew 'lazygit'
@@ -187,6 +188,7 @@ cask "micro-snitch"
 cask "little-snitch4"
 cask "loom"
 cask "ngrok"
+cask "obsidian"
 cask "oracle-jdk"
 cask "postico"
 cask "signal"
@@ -212,4 +214,4 @@ mas "Spark", id: 1176895641
 mas "Drafts", id: 1435957248
 mas "Things", id: 904280696
 # mas "Xcode", id: 497799835
-# mas "Canary Mail", id: 1236045954
+mas "Canary Mail", id: 1236045954

@@ -135,9 +135,9 @@ print_status() {
   fi
 
   if ((output_tmux)); then
-    printf "%s%s %s%s" "$COLOR""$GRAPH""$BATTERY_STATUS" "#[default]"
+    printf "%s%s %s%s" "$COLOR""$GRAPH""$BATTERY_STATUS%" "#[default]"
   else
-    printf "\e[0;%sm%s %s \e[m\n"  "$COLOR" "$BATTERY_STATUS" "$GRAPH"
+    printf "\e[0;%sm%s %s \e[m\n"  "$COLOR" "$BATTERY_STATUS%" "$GRAPH"
   fi
 }
 

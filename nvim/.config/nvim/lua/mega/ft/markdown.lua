@@ -1,4 +1,16 @@
 return function(_) -- bufnr
+  vim.cmd ([[setlocal spell linebreak]])
+
+  -- mega.augroup_cmds(
+  --   "mega.filetypes",
+  --   {
+  --     {
+  --       events = {"BufRead", "BufNewFile"},
+  --       targets = {"*.md"},
+  --       command = "setlocal spell linebreak"
+  --     }
+  --   })
+
   -- ## plasticboy/vim-markdown
   vim.g.markdown_fenced_languages = {
     "javascript",
@@ -18,6 +30,8 @@ return function(_) -- bufnr
     "elixir",
     "eelixir"
   }
+
+  vim.g.markdown_enable_conceal = 1
   vim.g.vim_markdown_folding_disabled = 1
   vim.g.vim_markdown_conceal = 0
   vim.g.vim_markdown_conceal_code_blocks = 0
@@ -30,6 +44,24 @@ return function(_) -- bufnr
   vim.g.vim_markdown_no_extensions_in_markdown = 1
   vim.g.vim_markdown_math = 1
   vim.g.vim_markdown_strikethrough = 1
+
+  -- ## markdown/mkdx
+  vim.g["mkdx#settings"] = {
+    highlight = {enable = 1},
+    enter = {shift = 1},
+    links = {external = {enable = 1}},
+    toc = {text = "Table of Contents", update_on_write = 1},
+    fold = {enable = 1}
+  }
+  -- vim.api.nvim_exec(
+  --   [[
+  --   nmap <leader>ml <Plug>(mkdx-toggle-list-n)
+  --   xmap <leader>ml <Plug>(mkdx-toggle-list-v)
+  --   nmap <leader>mc <Plug>(mkdx-toggle-checkbox-n)
+  --   xmap <leader>mc <Plug>(mkdx-toggle-checkbox-v)
+  --   ]],
+  --   true
+  -- )
 
   vim.cmd([[set conceallevel=0]])
 
@@ -54,19 +86,19 @@ return function(_) -- bufnr
     local marker = "#"
 
     for i = 1, #lines do
-      _, Level = lines[i]:find("^" .. marker .. "+")
-      if Level == 1 then
+      local _, level = lines[i]:find("^" .. marker .. "+")
+      if level == 1 then
         vim.fn.sign_place(0, markdown_sign_namespace, "firstHeadline", bufnr, {lnum = i + offset})
       end
-      if Level == 2 then
+      if level == 2 then
         vim.fn.sign_place(0, markdown_sign_namespace, "secondHeadline", bufnr, {lnum = i + offset})
       end
-      if Level and Level > 2 then
+      if level and level > 2 then
         vim.fn.sign_place(0, markdown_sign_namespace, "thirdHeadline", bufnr, {lnum = i + offset})
       end
 
-      _, Dashes = lines[i]:find("^---+$")
-      if Dashes then
+      local _, dashes = lines[i]:find("^---+$")
+      if dashes then
         vim.api.nvim_buf_set_virtual_text(
           bufnr,
           markdown_dash_namespace,

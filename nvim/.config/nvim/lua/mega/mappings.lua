@@ -66,25 +66,46 @@ mega.map("n", "<Leader>T", "<cmd>Things<CR>")
 -- Spelling
 -- map("x", "b1z=e") -- Correct previous word
 
--- ZEN MODE
--- Zoom the current split into it's own tab (toggleable)
-_G.toggle_zen = function()
-  vim.wo.list = not vim.wo.list --(hidden chars)
-  vim.wo.number = not vim.wo.number
-  vim.wo.relativenumber = not vim.wo.relativenumber
-  vim.wo.cursorline = not vim.wo.cursorline
-  vim.wo.cursorcolumn = not vim.wo.cursorcolumn
-  vim.wo.colorcolumn = vim.wo.colorcolumn == "0" and "80" or "0"
-  vim.o.laststatus = vim.o.laststatus == 2 and 0 or 2
-  vim.o.ruler = not vim.o.ruler
+-- PROSE MODE
+-- @evantravers, thanks!
+function _G.toggle_prose()
+  -- toggle_zen()
+  local gitsigns = require("gitsigns")
+  if (vim.g.proseMode == true) then
+    vim.cmd "PencilOff"
+    vim.cmd "Limelight!"
+    vim.cmd "Goyo!"
+    vim.cmd [[set wrap!]]
+    vim.cmd [[silent !tmux set status on]]
+
+    gitsigns.attach()
+    vim.o.showmode = true
+    vim.o.showcmd = true
+    -- vim.wo.number = true
+    -- vim.wo.relativenumber = true
+    vim.g.proseMode = false
+  else
+    vim.cmd "packadd vim-pencil"
+    vim.cmd "packadd goyo.vim"
+    vim.cmd "packadd limelight.vim"
+    vim.cmd [[silent !tmux set status off]]
+    vim.o.showmode = false
+    vim.o.showcmd = false
+    gitsigns.detach()
+    -- vim.wo.number = false
+    -- vim.wo.relativenumber = false
+    vim.wo.foldlevel = 4
+    vim.cmd "PencilSoft"
+    vim.cmd "Limelight"
+    vim.cmd "Goyo"
+    vim.g.proseMode = true
+  end
 end
-mega.map("n", "<leader>z", ":lua toggle_zen()<cr>")
+mega.map("n", "<leader>gp", "<cmd>lua toggle_prose()<cr>")
 
--- Other mappings
--- utils.lmap("l", "<cmd>luafile %<cr>") -- source lua file
--- utils.lmap("t", "<cmd> sp<cr>|<cmd>te   <cr>i") -- open terminal
--- utils.lmap("rc", "<cmd> e ~/.config/nvim <cr>") -- open config directory
+-- [plugin mappings] -----------------------------------------------------------
 
+-- # slash
 vim.cmd([[noremap <plug>(slash-after) zz]])
 vim.api.nvim_exec(
   [[
@@ -96,41 +117,6 @@ endif
   true
 )
 
--- PROSE MODE
--- @evantravers, thanks!
-function _G.toggle_prose()
-  toggle_zen()
-  if (vim.g.proseMode == true) then
-    vim.cmd "PencilOff"
-    vim.cmd "Limelight!"
-    vim.cmd "Goyo!"
-    vim.cmd [[set wrap!]]
-    vim.cmd [[silent !tmux set status on]]
-    -- vim.o.showmode = true
-    -- vim.o.showcmd = true
-    -- vim.wo.number = true
-    -- vim.wo.relativenumber = true
-    vim.g.proseMode = false
-  else
-    vim.cmd "packadd vim-pencil"
-    vim.cmd "packadd goyo.vim"
-    vim.cmd "packadd limelight.vim"
-    vim.cmd [[silent !tmux set status off]]
-    -- vim.o.showmode = false
-    -- vim.o.showcmd = false
-    -- vim.wo.number = false
-    -- vim.wo.relativenumber = false
-    vim.wo.foldlevel = 4
-    vim.cmd "PencilSoft"
-    vim.cmd "Limelight"
-    vim.cmd "Goyo"
-    vim.g.proseMode = true
-  end
-end
--- mega.map("n", "<leader>gp", "<cmd>lua toggle_prose()<cr>")
-
--- [plugin mappings] -----------------------------------------------------------
-
 -- # easy-align
 -- start interactive EasyAlign in visual mode (e.g. vipga)
 -- mega.map("v", "<Enter>", "<Plug>(EasyAlign)")
@@ -141,23 +127,35 @@ mega.map("x", "ga", "<Plug>(EasyAlign)")
 mega.map("n", "ga", "<Plug>(EasyAlign)")
 
 -- # FZF
-mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
+-- mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
 mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
 mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
-mega.map("n", "<Leader>b", "<cmd>FzfBuffers<CR>")
+mega.map(
+  "n",
+  "<leader>ff",
+  "<cmd>lua require('fzf-commands').files({ fzf = function(contents, options) return require('fzf').fzf(contents, options, { height = 50, width = 200 }) end })<CR>"
+)
+
+function _G.search_zettel()
+  require("telescope.builtin").find_files {
+    prompt_title = "Search ZK",
+    hidden = true,
+    shorten_path = false,
+    cwd = "~/Documents/_zettel"
+  }
+end
+mega.map("n", "<leader>fz", ":lua _G.search_zettel()<cr>")
 
 -- # Dash
 mega.map("n", "<leader>D", "<cmd>Dash<CR>")
 
 -- # markdown-preview
-mega.map("n", "<leader>gm", "<cmd>MarkdownPreview<CR>")
+mega.map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
 
 -- # telescope
-vim.api.nvim_set_keymap("n", "<c-p>", ":lua require('telescope.builtin').git_files()<cr>", {noremap = true})
--- vim.api.nvim_set_keymap(
---   "n",
---   "<localleader><space>",
---   ":lua require('telescope.builtin').buffers()<cr>",
---   {noremap = true}
--- )
--- vim.api.nvim_set_keymap("n", "<localleader>ww", ":lua _G.searchWiki()<cr>", {noremap = true})
+-- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files({ hidden = true })<cr>")
+-- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
+-- mega.map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
+-- mega.map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")
+-- mega.map("n", "<leader>A", ":lua require('telescope.builtin').grep_string { search = vim.fn.expand('<cword>') }<CR>")
+-- mega.map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")

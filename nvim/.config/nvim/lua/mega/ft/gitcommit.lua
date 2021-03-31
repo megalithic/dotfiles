@@ -18,4 +18,6 @@ return function(_) -- bufnr
 
   vim.cmd([[setlocal formatoptions+=c]])
   vim.cmd([[setlocal formatoptions+=q]])
+
+  vim.cmd("set complete+=kspell")
 end
