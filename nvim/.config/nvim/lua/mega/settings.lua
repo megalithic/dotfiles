@@ -519,8 +519,7 @@ do
 end
 
 do
-  if vim.g.started_by_firenvim then
-    -- if vim.fn.exists("g:started_by_firenvim") == 1 then
+  if vim.fn.exists("g:started_by_firenvim") == 1 and vim.g.started_by_firenvim then
     vim.cmd [[set laststatus=0]]
     vim.cmd [[set showtabline=0]]
     vim.cmd [[set guifont=JetBrainsMono:h24]]
@@ -531,7 +530,7 @@ do
       },
       localSettings = {
         [".*"] = {
-          cmdline = "firenvim", -- or "neovim"
+          cmdline = "neovim", -- or "firenvim"
           takeover = "always",
           selector = "textarea",
           priority = 0
@@ -546,13 +545,9 @@ do
 
     -- vim.api.nvim_set_keymap("n", "<Esc><Esc>", "<cmd>call firenvim#focus_page()<CR>", {noremap = true})
     -- vim.api.nvim_set_keymap("n", "<C-z>", "<cmd>write<CR><cmd>call firenvim#hide_frame()<CR>", {noremap = true})
-    --
-    -- vim.cmd("au BufEnter github.com_*.txt set filetype=markdown")
-    -- vim.cmd("au BufEnter stackoverflow_*.txt set filetype=markdown")
-    -- vim.cmd("au BufEnter txti.es_*.txt set filetype=typescript")
 
     mega.augroup_cmds(
-      "mega.focus",
+      "mega.firenvim",
       {
         {
           events = {"BufEnter"},
@@ -563,6 +558,11 @@ do
           events = {"BufEnter"},
           targets = {"txti.es_*.txt"},
           command = "set filetype=typescript"
+        },
+        {
+          events = {"BufWinEnter"},
+          targets = {"*"},
+          command = "if line('$') == 1 && getline(1) == '' && bufname() != '' | startinsert | endif"
         }
       }
     )
