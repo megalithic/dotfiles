@@ -151,6 +151,7 @@ alias ezkb="nvim $HOME/.config/zsh/**/keybindings.zsh"
 alias ev="nvim $HOME/.config/nvim/init.lua"
 alias evp="nvim $HOME/.config/nvim/lua/mega/packages.lua"
 alias evs="nvim $HOME/.config/nvim/lua/mega/settings.lua"
+alias evm="nvim $HOME/.config/nvim/lua/mega/mappings.lua"
 alias ek="nvim $HOME/.config/kitty/kitty.conf"
 alias et="nvim $HOME/.tmux.conf"
 

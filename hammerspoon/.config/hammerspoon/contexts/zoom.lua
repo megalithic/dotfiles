@@ -36,17 +36,21 @@ M.apply = function(event, app, log)
         local zoom = hs.application.get("zoom.us")
         -- local drafts = hs.application.get("Drafts")
 
-        local buttonValue, inputValue =
-          hs.dialog.textPrompt(
-          "Meeting Note Title",
-          "If you don't enter anything we'll just use the derived data from the calendar"
-        )
+        -- local buttonValue, inputValue =
+        --   hs.dialog.textPrompt(
+        --   "Meeting Note Title",
+        --   "If you don't enter anything we'll just use the derived data from the calendar"
+        -- )
 
-        log.wf("dialog input -> buttonValue: %s, inputValue: %s", buttonValue, inputValue)
+        -- log.wf("dialog input -> buttonValue: %s, inputValue: %s", buttonValue, inputValue)
+
+        -- local hammerspoon = hs.application.get("Hammerspoon")
+        -- hammerspoon:activate(true)
 
         hs.timer.waitUntil(
           function()
-            return zoom:getWindow("Zoom Meeting") and buttonValue == "OK"
+            return zoom:getWindow("Zoom Meeting")
+            -- and buttonValue == "OK"
           end,
           function()
             local task =
@@ -72,7 +76,7 @@ M.apply = function(event, app, log)
                 -- drafts:setFrontmost()
                 return true
               end,
-              {"meeting", inputValue}
+              {"meeting", ""}
             )
             task:start()
           end

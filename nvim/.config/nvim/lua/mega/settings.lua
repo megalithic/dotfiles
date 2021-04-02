@@ -324,7 +324,6 @@ do
   vim.g.git_messenger_no_default_mappings = true
   vim.g.git_messenger_max_popup_width = 100
   vim.g.git_messenger_max_popup_height = 100
-  mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 end
 
 -- [gitsigns] ------------------------------------------------------------------

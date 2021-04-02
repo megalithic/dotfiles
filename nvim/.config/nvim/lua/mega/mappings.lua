@@ -64,7 +64,7 @@ vim.api.nvim_exec(
 mega.map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
--- map("x", "b1z=e") -- Correct previous word
+mega.map("n", "<leader>s", "b1z=e") -- Correct previous word
 
 -- PROSE MODE
 -- @evantravers, thanks!
@@ -104,6 +104,16 @@ end
 mega.map("n", "<leader>gp", "<cmd>lua toggle_prose()<cr>")
 
 -- [plugin mappings] -----------------------------------------------------------
+
+-- # git-related
+mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+mega.map("n", "<Leader>gh", "<cmd>GBrowse!<CR>")
+mega.map("x", "<Leader>gh", "<cmd>GBrowse!<CR>")
+mega.map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
+mega.map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
+
+-- # markdown-related
+mega.map("n", "<Leader>mp", "<cmd>MarkdownPreview<CR>")
 
 -- # slash
 vim.cmd([[noremap <plug>(slash-after) zz]])

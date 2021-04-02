@@ -44,7 +44,7 @@ local on_attach = function(client, bufnr)
         vim.api.nvim_command [[autocmd! * <buffer>]]
         -- vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
         vim.api.nvim_command [[autocmd BufWritePost <buffer> lua vim.lsp.buf.formatting()]]
-        vim.cmd("command! Format <buffer> :lua vim.lsp.buf.formatting()")
+        vim.cmd("command! Format :lua vim.lsp.buf.formatting()")
       end
     )
   end

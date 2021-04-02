@@ -375,4 +375,35 @@ function M.bufferActiveLSP()
   M.dump(servers)
 end
 
+function M.zetty(args)
+  local default_opts = {
+    cmd = "meeting",
+    action = "edit",
+    title = "",
+    notebook = "",
+    tags = "",
+    attendees = ""
+  }
+
+  local opts = vim.tbl_extend("force", default_opts, args or {})
+
+  local title = string.format([[%s]], opts.title)
+  local content = ""
+
+  if opts.attendees ~= nil and opts.attendees ~= "" then
+    content = string.format("Attendees:\n%s\n---\n", opts.attendees)
+  end
+
+  local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to: ", title))
+  if changed_title ~= "" then
+    title = changed_title
+  end
+
+  if opts.cmd == "meeting" then
+    require("zk.command").new({title = title, action = "edit", notebook = "meetings", content = content})
+  elseif opts.cmd == "new" then
+    require("zk.command").new({title = title, action = "edit"})
+  end
+end
+
 return M

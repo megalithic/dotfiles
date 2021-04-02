@@ -31,7 +31,7 @@ author = "Seth Messer"
 [group.meetings]
 # Directories listed here will automatically use this group when creating notes.
 paths = ["meetings"]
-# [group.meetings.note]
+[group.meetings.note]
 # %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
 filename = "{{title}}-{{date now 'timestamp'}}"
 extension = "md"
@@ -39,7 +39,7 @@ template = "meeting.md"
 
 [group.zettel]
 paths = ["zettel"]
-# [group.zettel.note]
+[group.zettel.note]
 # %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
 filename = "{{date now 'timestamp'}}"
 extension = "md"
@@ -47,7 +47,7 @@ template = "zettel.md"
 
 [group.wiki]
 paths = ["wiki"]
-# [group.wiki.note]
+[group.wiki.note]
 # %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
 filename = "{{title}}-{{date now 'timestamp'}}"
 extension = "md"
@@ -68,7 +68,8 @@ editor = "nvim"
 # Pager used to scroll through long output.
 pager = "less -FIRX"
 # Command used to preview a note during interactive fzf mode.
-fzf-preview = "bat -p --color always {-1}"
+# fzf-preview = "bat -p --color always {-1}"
+fzf-preview = "zk list --quiet --format full --limit 1 {-1}"
 
 
 # COMMAND ALIASES

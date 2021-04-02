@@ -24,14 +24,14 @@ return {
 
     local lualine = require("lualine")
     local config = {}
-    config.theme = colorscheme_str
+    -- config.theme = colorscheme_str
     -- lualine.separator = "|"
     -- lualine.section_separators = {"", ""}
     -- lualine.section_separators = {" ", " "}
     -- lualine.component_separators = {"", ""}
     -- lualine.component_separators = {"|", "|"}
     config.options = {
-      theme = "gruvbox",
+      theme = "everforest",
       section_separators = {"", ""},
       component_separators = {"|", "|"},
       icons_enabled = true
