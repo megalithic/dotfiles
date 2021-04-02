@@ -106,60 +106,6 @@ nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<C
 "      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
 nnoremap z= :setlocal spell<CR>z=
 
-" ["c|<C-b>"]      = map_cmd('<Left>'):with_noremap(),
-" ["c|<C-f>"]      = map_cmd('<Right>'):with_noremap(),
-" ["c|<C-a>"]      = map_cmd('<Home>'):with_noremap(),
-" ["c|<C-e>"]      = map_cmd('<End>'):with_noremap(),
-" ["c|<C-d>"]      = map_cmd('<Del>'):with_noremap(),
-" ["c|<C-h>"]      = map_cmd('<BS>'):with_noremap(),
-" ["c|<C-t>"]      = map_cmd([[<C-R>=expand("%:p:h") . "/" <CR>]]):with_noremap(),
-
-" TODO: move all this to init.lua and mega.mappings
-" -- for completion-nvim specificially
-" if has('nvim')
-"   function! CheckBackspace() abort
-"     let col = col('.') - 1
-"     return !col || getline('.')[col - 1]  =~ '\s'
-"   endfunction
-
-"   function! ShowDocumentation()
-"     if (index(['vim','help'], &filetype) >= 0)
-"       execute 'vert h '.expand('<cword>')
-"     elseif (index(['c','sh'], &filetype) >=0)
-"       execute 'vert Man '.expand('<cword>')
-"     else
-"       lua vim.lsp.buf.hover()
-"     endif
-"   endfunction
-
-"   imap <expr> <Tab>
-"         \ pumvisible() ? "\<C-n>" :
-"         \ vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' :
-"         \ CheckBackspace() ? "\<Tab>" :
-"         \ completion#trigger_completion()
-"   smap <expr> <Tab> vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<Tab>'
-
-"   imap <expr> <S-Tab>
-"         \ pumvisible() ? "\<C-p>" :
-"         \ vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' :
-"         \ "\<C-h>"
-"   smap <expr> <S-Tab> vsnip#available(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'
-
-"   let g:endwise_no_mappings = 1
-"   let g:completion_confirm_key = ""
-"   imap <expr> <CR>  pumvisible() ?
-"         \ complete_info()["selected"] != "-1" ?
-"         \ "\<Plug>(completion_confirm_completion)" :
-"         \ get(b:, 'closer') ?
-"         \ "\<c-e>\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
-"         \ : "\<c-e>\<CR>\<Plug>DiscretionaryEnd"
-"         \ : get(b:, 'closer') ?
-"         \ "\<CR>\<Plug>DiscretionaryEnd\<Plug>CloserClose"
-"         \ : "\<CR>\<Plug>DiscretionaryEnd"
-
-"   nnoremap <silent> K :call ShowDocumentation()<CR>
-" endif
-
 " -- [ options ] ---------------------------------------------------------------
 set autoindent        " Indented text
 set autoread          " Pick up external changes to files
@@ -187,7 +133,7 @@ set completeopt=menuone,noinsert,noselect " Don't auto select first one
 "set cursorlineopt=number
 set nocursorline
 set dictionary=/usr/share/dict/words
-set spellfile=$HOME/.dotfiles/nvim/spell/en.utf-8.add
+set spellfile=$HOME/.dotfiles/nvim/.config/nvim/spell/en.utf-8.add
 set spelllang=en
 set nospell
 set expandtab         " Use spaces instead of tabs
