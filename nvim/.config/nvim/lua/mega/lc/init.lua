@@ -104,6 +104,8 @@ local on_attach = function(client, bufnr)
       end
     end
   )
+
+  vim.cmd([[command! LspLog lua vim.cmd('e'..vim.lsp.get_log_path())]])
 end
 
 -- [ diagnostics config ] ------------------------------------------------------

@@ -428,8 +428,14 @@ do
           "typescript",
           "yaml"
         },
-        highlight = {enable = false, use_languagetree = false},
+        highlight = {
+          enable = false,
+          use_languagetree = false
+        },
         indent = {enable = true},
+        autotag = {
+          enable = true
+        },
         textobjects = {
           select = {
             enable = true,
@@ -522,7 +528,9 @@ do
   if vim.fn.exists("g:started_by_firenvim") == 1 and vim.g.started_by_firenvim then
     vim.cmd [[set laststatus=0]]
     vim.cmd [[set showtabline=0]]
-    vim.cmd [[set guifont=JetBrainsMono:h24]]
+    vim.cmd [[set nonumber]]
+    vim.cmd [[set norelativenumber]]
+    vim.cmd [[set guifont=JetBrainsMono:h20]]
 
     vim.g.firenvim_config = {
       globalSettings = {
@@ -536,10 +544,10 @@ do
           priority = 0
         },
         ["https://studio.youtube.com.*"] = {takeover = "never", priority = 1},
-        ["https?://instagram.com.*"] = {},
-        ["https?://twitter.com.*"] = {},
-        ["https://.*gmail.com.*"] = {},
-        ["https?://.*twitch.tv.*"] = {}
+        ["https?://instagram.com.*"] = {takeover = "never", priority = 1},
+        ["https?://twitter.com.*"] = {takeover = "never", priority = 1},
+        ["https://.*gmail.com.*"] = {takeover = "never", priority = 1},
+        ["https?://.*twitch.tv.*"] = {takeover = "never", priority = 1}
       }
     }
 

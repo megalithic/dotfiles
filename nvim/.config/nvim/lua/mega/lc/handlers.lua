@@ -32,6 +32,29 @@ M["textDocument/formatting"] = function(err, _, result, _, bufnr)
   end
 end
 
+local function location_handler(_, method, result)
+  if result == nil or vim.tbl_isempty(result) then
+    local _ = log.info() and log.info(method, "No location found")
+    return nil
+  end
+
+  -- textDocument/definition can return Location or Location[]
+  -- https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition
+
+  if vim.tbl_islist(result) then
+    vim.lsp.util.jump_to_location(result[1])
+
+    if #result > 1 then
+      vim.lsp.util.set_qflist(vim.lsp.util.locations_to_items(result))
+      vim.api.nvim_command("copen")
+      vim.api.nvim_command("wincmd p")
+    end
+  else
+    vim.lsp.util.jump_to_location(result)
+  end
+end
+M["textDocument/documentLink"] = location_handler
+
 -- M["textDocument/formatting"] = function(err, _, result, _, bufnr)
 --   if err ~= nil or result == nil then
 --     return

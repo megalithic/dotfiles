@@ -1,5 +1,5 @@
 return function(_) -- bufnr
-  vim.cmd ([[setlocal spell linebreak]])
+  vim.cmd([[setlocal spell linebreak]])
 
   -- mega.augroup_cmds(
   --   "mega.filetypes",

@@ -55,7 +55,20 @@ local efm_languages = mega.load("efm", "mega.lc.efm")
 -- end
 -- mega.dump(efm_language_keys())
 
+local configs = require("lspconfig/configs")
+configs.zk = {
+  default_config = {
+    cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
+    filetypes = {"markdown"},
+    root_dir = function()
+      return vim.loop.cwd()
+    end,
+    settings = {}
+  };
+}
+
 local servers = {
+  zk = {},
   bashls = {
     filetypes = {"bash", "sh", "zsh"}
   },

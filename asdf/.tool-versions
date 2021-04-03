@@ -6,5 +6,5 @@ ruby 2.7.1
 nodejs 15.4.0
 rust 1.48.0
 # python 3.9.0 2.7.17
-golang 1.15.6
+golang 1.16.2
 perl 5.32.0
