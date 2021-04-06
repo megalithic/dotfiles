@@ -126,8 +126,9 @@ M.set_app_layout = function(app_config)
 
         local layout = {
           hs.application.get(bundleID), -- application name
-          -- title_pattern, -- window title
-          hs.window.find(title_pattern), -- window title
+          title_pattern, -- window title
+          -- hs.window.find(title_pattern), -- window title NOTE: this doesn't
+          -- handle `nil` window title instances
           wh.targetDisplay(screen), -- screen #
           position, -- layout/postion
           nil,
@@ -152,8 +153,8 @@ M.apply_app_layout = function(app_name, app)
 
     local layouts = M.set_app_layout(app_config)
     if layouts ~= nil then
-      log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
-      -- hs.layout.apply(layouts, string.match)
+      log.wf("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
+      --   hk.layout.apply(layouts, string.match)
       -- hs.layout.apply(layouts, match_title)
       hs.layout.apply(layouts)
     end
