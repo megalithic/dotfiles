@@ -1,5 +1,11 @@
+-- REFs:
+-- * https://jdhao.github.io/2019/01/15/markdown_edit_preview_nvim/
 return function(_) -- bufnr
   vim.cmd([[setlocal spell linebreak]])
+  vim.cmd([[set conceallevel=0]])
+
+  -- continuous meeting note datetime entry
+  vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 
   -- mega.augroup_cmds(
   --   "mega.filetypes",
@@ -28,7 +34,12 @@ return function(_) -- bufnr
     "zsh",
     "elm",
     "elixir",
-    "eelixir"
+    "eelixir",
+    "lua",
+    "vim",
+    "viml",
+    "vimscript",
+    "vim-script"
   }
 
   vim.g.markdown_enable_conceal = 1
@@ -38,7 +49,9 @@ return function(_) -- bufnr
   vim.g.vim_markdown_folding_style_pythonic = 0
   vim.g.vim_markdown_override_foldtext = 0
   vim.g.vim_markdown_follow_anchor = 1
-  vim.g.vim_markdown_frontmatter = 1
+  vim.g.vim_markdown_frontmatter = 1 -- for YAML format
+  vim.g.vim_markdown_toml_frontmatter = 1 -- for TOML format
+  vim.g.vim_markdown_json_frontmatter = 1 -- for JSON format
   vim.g.vim_markdown_new_list_item_indent = 2
   vim.g.vim_markdown_auto_insert_bullets = 0
   vim.g.vim_markdown_no_extensions_in_markdown = 1
@@ -62,8 +75,6 @@ return function(_) -- bufnr
   --   ]],
   --   true
   -- )
-
-  vim.cmd([[set conceallevel=0]])
 
   vim.fn.sign_define("firstHeadline", {linehl = "markdownFirstHeadline"})
   vim.fn.sign_define("secondHeadline", {linehl = "markdownSecondHeadline"})
