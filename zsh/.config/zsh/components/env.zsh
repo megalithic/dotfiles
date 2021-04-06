@@ -1,4 +1,4 @@
-# if [[ "$PLATFORM" == "linux" ]]; then
+# hf [[ "$PLATFORM" == "linux" ]]; then
 #     export TERMINAL="kitty --single-instance --listen-on unix:/tmp/mykitty -o allow_remote_control=yes"
 # else
 #     export TERMINAL="kitty"
@@ -22,9 +22,10 @@ export ZK_NOTEBOOK_DIR="$HOME/Documents/_notes"
 
 #
 # lang
-export LANG='en_US.UTF-8'
-export LC_ALL='en_US.UTF-8'
-export LC_CTYPE='en_US.UTF-8'
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
+export TZ="/usr/share/zoneinfo/US/Central"
 
 #
 # dir locatons

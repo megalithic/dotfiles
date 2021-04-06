@@ -56,13 +56,10 @@ setw -g window-status-bell-style 'fg=#323d43,bg=#6a7d8a,dim'
 setw -g window-status-current-style bg=default,fg=colour004
 
 # - right - 
-# status_prefix = "#{prefix_highlight}"
-# status_dnd = "#{prefix_highlight}"
-# status_battery = "#{prefix_highlight}"
-# status_datetime = "#{prefix_highlight}"
-# status_utc = "#{prefix_highlight}"
-# status_cpu "#{prefix_highlight}"
-set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M (#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/GMT' date +%%H:%%M)#[fg=green]) #[fg=colour255]⋮ #{cpu_percentage}"
+# Broken UTC output in tmux~HEAD:
+# (#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')#[fg=green]) 
+
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
 set -g @prefix_highlight_empty_attr     'fg=default,bg=#323d43' # default is 'fg=default,bg=default'
