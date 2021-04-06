@@ -122,12 +122,12 @@ M.set_app_layout = function(app_config)
 
         local title_pattern, screen, position = rule[1], rule[2], rule[3]
 
-        log.wf("set_app_layout::%s | %s, %s, %s", bundleID, title_pattern, screen, position)
+        log.df("set_app_layout::%s | %s, %s, %s", bundleID, title_pattern, screen, position)
 
         local layout = {
           hs.application.get(bundleID), -- application name
           title_pattern, -- window title
-          -- hs.window.find(title_pattern), -- window title NOTE: this doesn't
+          -- hs.window.get(title_pattern), -- window title NOTE: this doesn't
           -- handle `nil` window title instances
           wh.targetDisplay(screen), -- screen #
           position, -- layout/postion
