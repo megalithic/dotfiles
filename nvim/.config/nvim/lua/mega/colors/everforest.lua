@@ -138,9 +138,9 @@ return {
       mega.highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
       mega.highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
 
-      mega.highlight("markdownHeadline", {guibg = status.vertsplit, force = true})
-      mega.highlight("markdownFirstHeadline", {guibg = status.added, force = true})
-      mega.highlight("markdownSecondHeadline", {guibg = status.changed, force = true})
+      mega.highlight("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
+      mega.highlight("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
+      mega.highlight("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
 
       vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
       vim.g.indentLine_color_gui = status.cursorlinenr

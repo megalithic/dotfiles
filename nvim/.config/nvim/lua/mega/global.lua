@@ -394,9 +394,11 @@ function M.zetty(args)
     content = string.format("Attendees:\n%s\n---\n", opts.attendees)
   end
 
-  local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to: ", title))
+  local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to (`n` to cancel): ", title))
   if changed_title ~= "" then
     title = changed_title
+  elseif changed_title == "n" then
+    return
   end
 
   if opts.cmd == "meeting" then

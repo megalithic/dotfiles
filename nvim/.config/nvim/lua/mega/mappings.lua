@@ -65,6 +65,7 @@ mega.map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
 mega.map("n", "<leader>s", "b1z=e") -- Correct previous word
+mega.map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
 -- PROSE MODE
 -- @evantravers, thanks!
