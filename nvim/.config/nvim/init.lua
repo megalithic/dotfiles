@@ -11,6 +11,7 @@ _G["mega"] = require("mega.global")
 
 -- LSP log location ->
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
+--  :lua vim.cmd('vnew'..vim.lsp.get_log_path())
 
 vim.cmd([[packadd vimball]])
 vim.cmd([[runtime .vimrc]])

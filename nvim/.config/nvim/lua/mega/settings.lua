@@ -38,7 +38,7 @@ do
   -- - handle things for goyo toggling:
   -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/goyo.lua
   vim.g.goyo_width = 120
-  vim.g.goyo_height = "50%"
+  vim.g.goyo_height = "85%"
   vim.g["pencil#conceallevel"] = 0
   vim.g["pencil#wrapModeDefault"] = "soft"
   -- https://github.com/ishchow/dotfiles/blob/master/.config/nvim/plugin/vim-lexical.vim
@@ -394,14 +394,14 @@ do
   local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
   if ts_installed then
     local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
-    parser_configs.elixir = {
-      install_info = {
-        url = "~/.config/treesitter/tree-sitter-elixir",
-        files = {"src/parser.c"}
-      },
-      filetype = "elixir",
-      used_by = {"eelixir"}
-    }
+    -- parser_configs.elixir = {
+    --   install_info = {
+    --     url = "~/.config/treesitter/tree-sitter-elixir",
+    --     files = {"src/parser.c"}
+    --   },
+    --   filetype = "elixir",
+    --   used_by = {"eelixir"}
+    -- }
     treesitter.setup(
       {
         ensure_installed = {
@@ -411,7 +411,7 @@ do
           "css",
           "elm",
           "erlang",
-          "elixir",
+          -- "elixir",
           -- "fennel",
           "html",
           "jsdoc",

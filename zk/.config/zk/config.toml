@@ -5,9 +5,9 @@
 # This is used to generate slugs or with date formats.
 language = "en"
 # The default title used for new note, if no `--title` flag is provided.
-default-title = "untitled-zettel"
+default-title = "quick thought"
 # Template used to generate a note's filename, without extension.
-filename = "{{title}}-{{date now 'timestamp'}}"
+filename = "{{date now 'timestamp'}}"
 # The file extension used for the notes.
 extension = "md"
 # Template used to generate a note's content.
@@ -37,13 +37,13 @@ filename = "{{title}}"
 extension = "md"
 template = "meeting.md"
 
-[group.zettel]
-paths = ["zettel"]
-[group.zettel.note]
-# %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
-filename = "{{date now 'timestamp'}}"
-extension = "md"
-template = "zettel.md"
+# [group.zettel]
+# paths = ["zettel"]
+# [group.zettel.note]
+# # %Y-%m-%d is actually the default format, so you could use {{date now}} instead.
+# filename = "{{date now 'timestamp'}}"
+# extension = "md"
+# template = "zettel.md"
 
 [group.wiki]
 paths = ["wiki"]

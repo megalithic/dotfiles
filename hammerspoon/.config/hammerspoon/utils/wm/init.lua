@@ -116,6 +116,8 @@ M.set_app_layout = function(app_config)
     fn.map(
       app_config.rules,
       function(rule)
+        -- hold-over to protect from old app configs
+        -- TODO: remove if not needed
         if rule["title"] ~= nil or rule["action"] ~= nil or rule["position"] ~= nil then
           return
         end
@@ -153,7 +155,7 @@ M.apply_app_layout = function(app_name, app)
 
     local layouts = M.set_app_layout(app_config)
     if layouts ~= nil then
-      log.wf("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
+      log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
       --   hk.layout.apply(layouts, string.match)
       -- hs.layout.apply(layouts, match_title)
       hs.layout.apply(layouts)

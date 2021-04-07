@@ -31,35 +31,42 @@ M.apply = function(event, app, log)
 
       do
         local zoom = hs.application.get("zoom.us")
+        local kitty = hs.application.get("kitty")
+
         hs.timer.waitUntil(
           function()
             return zoom:getWindow("Zoom Meeting")
           end,
           function()
-            local task =
-              hs.task.new(
-              os.getenv("HOME") .. "/.dotfiles/bin/zetty",
-              function()
-              end, -- noop callback
-              function(t, o, e)
-                log.df("launching kitty in new note mode: %s / %s / %s", hs.inspect(t), hs.inspect(o), hs.inspect(e))
+            -- local task =
+            --   hs.task.new(
+            --   os.getenv("HOME") .. "/.dotfiles/bin/zetty",
+            --   function(ec, o, e)
+            --     log.wf("exiting task: %s / %s / %s", ec, o, e)
+            --     return true
+            --   end, -- noop callback
+            --   function(t, o, e)
+            --     log.wf("launching task: %s / %s / %s", hs.inspect(t), o, e)
+            --     return true
+            --   end,
+            --   {"meeting"}
+            -- )
+            -- log.wf("task to start: %s", hs.inspect(task))
+            -- task:start()
 
-                local target_close_window = zoom:getWindow("Zoom")
-                if target_close_window ~= nil then
-                  target_close_window:close()
-                end
+            hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
 
-                local layouts = {
-                  {"kitty", nil, hs.screen.primaryScreen():name(), hs.layout.right50, 0, 0},
-                  {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, 0, 0}
-                }
-                hs.layout.apply(layouts)
+            local target_close_window = zoom:getWindow("Zoom")
+            if target_close_window ~= nil then
+              target_close_window:close()
+            end
 
-                return true
-              end,
-              {"meeting"}
-            )
-            task:start()
+            local layouts = {
+              {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil},
+              {"kitty", "note", hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil}
+            }
+            hs.layout.apply(layouts)
+            kitty:setFrontmost(true)
           end
         )
       end
@@ -75,8 +82,12 @@ M.apply = function(event, app, log)
     function()
       ptt.setState("push-to-talk")
       init_apply_complete = false
+
+      local kitty = hs.application.get("kitty")
+      kitty:setFrontmost(true)
+
       local layouts = {
-        {"kitty", nil, hs.screen.primaryScreen():name(), hs.layout.fullScreen, 0, 0}
+        {"kitty", nil, hs.screen.primaryScreen():name(), hs.layout.fullScreen, nil, nil}
       }
       hs.layout.apply(layouts)
     end

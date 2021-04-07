@@ -10,11 +10,11 @@ local mypy = require "mega.lc.efm.mypy"
 local prettier = require "mega.lc.efm.prettier"
 local eslint = require "mega.lc.efm.eslint"
 local shellcheck = require "mega.lc.efm.shellcheck"
-local misspell = require "mega.lc.efm.misspell"
+-- local misspell = require "mega.lc.efm.misspell"
 -- local terraform = require "mega.lc.efm.terraform"
 
 return {
-  ["="] = {misspell},
+  -- ["="] = {misspell},
   vim = {vint},
   lua = {luafmt},
   elixir = {mix_credo},

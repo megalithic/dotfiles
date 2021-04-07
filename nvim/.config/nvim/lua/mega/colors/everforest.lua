@@ -131,6 +131,14 @@ return {
 
     _G.everforest_overrides = function()
       mega.highlight(
+        "SpellBad",
+        {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true}
+      )
+      -- mega.highlight("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
+      -- mega.highlight("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
+      -- mega.highlight("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
+
+      mega.highlight(
         "CursorLineNr",
         {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
       )

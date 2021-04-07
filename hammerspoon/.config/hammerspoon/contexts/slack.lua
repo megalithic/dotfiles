@@ -2,7 +2,7 @@ local cache = {}
 
 local module = {cache = cache}
 local wh = require("utils.wm.window-handlers")
-local log = hs.logger.new("[slack]", "debug")
+-- local log = hs.logger.new("[slack]", "debug")
 
 local enter = function(app, log)
   log.df("entering slack hotkey modal..")
@@ -93,7 +93,7 @@ module.apply = function(event, app, log)
   wh.onAppQuit(
     app,
     function()
-      exit(log)
+      exit(app, log)
     end
   )
 

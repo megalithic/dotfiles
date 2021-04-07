@@ -27,7 +27,7 @@ function M.setup()
     "mega.ft",
     {
       {
-        events = {"FileType"},
+        events = {"FileType", "BufEnter", "FileChangedShellPost"},
         targets = {"*"},
         command = "lua require('mega.ft').handle()"
       }

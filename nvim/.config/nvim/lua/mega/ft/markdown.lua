@@ -1,5 +1,6 @@
 -- REFs:
 -- * https://jdhao.github.io/2019/01/15/markdown_edit_preview_nvim/
+-- * https://github.com/dkarter/bullets.vim
 return function(_) -- bufnr
   vim.cmd([[setlocal spell linebreak]])
   vim.cmd([[set conceallevel=0]])
@@ -59,13 +60,13 @@ return function(_) -- bufnr
   vim.g.vim_markdown_strikethrough = 1
 
   -- ## markdown/mkdx
-  vim.g["mkdx#settings"] = {
-    highlight = {enable = 1},
-    enter = {shift = 1},
-    links = {external = {enable = 1}},
-    toc = {text = "Table of Contents", update_on_write = 1},
-    fold = {enable = 1}
-  }
+  -- vim.g["mkdx#settings"] = {
+  --   highlight = {enable = 1},
+  --   enter = {shift = 1},
+  --   links = {external = {enable = 1}},
+  --   toc = {text = "Table of Contents", update_on_write = 1},
+  --   fold = {enable = 1}
+  -- }
   -- vim.api.nvim_exec(
   --   [[
   --   nmap <leader>ml <Plug>(mkdx-toggle-list-n)

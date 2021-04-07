@@ -400,6 +400,7 @@ function M.zetty(args)
   elseif changed_title == "n" then
     return
   end
+  vim.cmd([[redraw]])
 
   if opts.cmd == "meeting" then
     require("zk.command").new({title = title, action = "edit", notebook = "meetings", content = content})

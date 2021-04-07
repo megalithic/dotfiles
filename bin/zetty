@@ -24,9 +24,9 @@ help() {
   printf -- "    new               Start a new note\n"
   printf -- "    meeting           Start a meeting note\n"
   printf -- "\n"
-  printf -- "Options:\n"
-  printf -- "    --mode, -m        Set the launch mode to `tmux` or `kitty`\n"
-  printf -- "\n"
+  # printf -- "Options:\n"
+  # printf -- "    --mode, -m        Set the launch mode to `tmux` or `kitty`\n"
+  # printf -- "\n"
 }
 
 # tmux_command(
@@ -40,7 +40,7 @@ tmux_command() {
   notebook=$2
   title=$3
   attendees=$4
-  /usr/local/bin/tmux neww -n meeting_note nvim "+lua require('mega.global').zetty({ cmd = [[$cmd]], title = [[$title]], action = 'e', notebook = [[$notebook]], attendees = [[$attendees]] })"
+  /usr/local/bin/tmux neww -n note nvim "+lua require('mega.global').zetty({ cmd = [[$cmd]], title = [[$title]], action = 'e', notebook = [[$notebook]], attendees = [[$attendees]] })"
 }
 
 # new(
@@ -49,7 +49,19 @@ tmux_command() {
 new() {
   case $1 in
     *)
-      tmux_command "new" "meetings" $1 ""
+      tmux_command "new" $1 "" || echo "there was a problem launching tmux command for new"
+      # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="New Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('mega.global').zetty({ cmd = 'meeting', title = [[$1]], action = 'e'})\""
+      ;;
+  esac
+}
+
+# wiki(
+#   $1 - title
+# )
+new() {
+  case $1 in
+    *)
+      tmux_command "new" "wiki" $1 "" || echo "there was a problem launching tmux command for wiki"
       # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="New Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('mega.global').zetty({ cmd = 'meeting', title = [[$1]], action = 'e'})\""
       ;;
   esac
@@ -74,11 +86,11 @@ meeting() {
       # assign attendees
       [ -z "$cal_event_info" ] && attendees="" || attendees="$cal_event_info[2]" | awk '{gsub(/^[ \t]+| [ \t]+$/,""); print $0 }'
 
-      tmux_command "meeting" "meetings" $title $attendees
+      tmux_command "meeting" "meetings" $title $attendees || echo "there was a problem launching tmux command for meeting"
       # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('mega.global').zetty({ cmd = 'meeting', title = [[$title]], action = 'e', notebook = 'meetings', attendees = [[$attendees]] })\""
       ;;
     *)
-      tmux_command "meeting" "meetings" $1 ""
+      tmux_command "meeting" "meetings" $1 "" || echo "there was a problem launching tmux command for meeting"
       # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('mega.global').zetty({ cmd = 'meeting', title = [[$title]], action = 'e', notebook = 'meetings'})\""
       ;;
   esac
@@ -89,10 +101,10 @@ subcommand=$1
 case $subcommand in
   '' | '-h' | '--help')
     help ;;
-  '-m' | '--mode')
-    # TODO: find the best way to set "kitty" mode vs. "tmux" mode
-    echo "`--mode` option not yet implemented."
-    help ;;
+  # '-m' | '--mode')
+  #   # TODO: find the best way to set "kitty" mode vs. "tmux" mode
+  #   echo "`--mode` option not yet implemented."
+  #   help ;;
   *)
     shift
     ${subcommand} $@
