@@ -56,6 +56,9 @@ end
 
 -- [custom mappings] -----------------------------------------------------------
 
+-- execute our current lua file
+mega.map("n", "<leader>x", "<cmd>luafile %<cr>")
+
 -- Things 3
 vim.api.nvim_exec(
   [[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
@@ -64,6 +67,7 @@ vim.api.nvim_exec(
 mega.map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
+-- mega.map("n", "<leader>s", "z=e") -- Correct current word
 mega.map("n", "<leader>s", "b1z=e") -- Correct previous word
 mega.map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
@@ -73,10 +77,11 @@ function _G.toggle_prose()
   -- toggle_zen()
   local gitsigns = require("gitsigns")
   if (vim.g.proseMode == true) then
-    vim.cmd "PencilOff"
+    -- vim.cmd "PencilOff"
     vim.cmd "Limelight!"
     vim.cmd "Goyo!"
     vim.cmd [[set wrap!]]
+    vim.cmd [[set colorcolumn=+1]]
     vim.cmd [[silent !tmux set status on]]
 
     gitsigns.attach()
@@ -86,9 +91,10 @@ function _G.toggle_prose()
     -- vim.wo.relativenumber = true
     vim.g.proseMode = false
   else
-    vim.cmd "packadd vim-pencil"
+    -- vim.cmd "packadd vim-pencil"
     vim.cmd "packadd goyo.vim"
     vim.cmd "packadd limelight.vim"
+    vim.cmd [[set colorcolumn=0]]
     vim.cmd [[silent !tmux set status off]]
     vim.o.showmode = false
     vim.o.showcmd = false
@@ -96,15 +102,17 @@ function _G.toggle_prose()
     -- vim.wo.number = false
     -- vim.wo.relativenumber = false
     vim.wo.foldlevel = 4
-    vim.cmd "PencilSoft"
+    -- vim.cmd "PencilSoft"
     vim.cmd "Limelight"
     vim.cmd "Goyo"
     vim.g.proseMode = true
   end
 end
-mega.map("n", "<leader>gp", "<cmd>lua toggle_prose()<cr>")
 
 -- [plugin mappings] -----------------------------------------------------------
+
+-- # golden_size
+mega.map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
 -- # git-related
 mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
@@ -114,7 +122,8 @@ mega.map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
 mega.map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
 
 -- # markdown-related
-mega.map("n", "<Leader>mp", "<cmd>MarkdownPreview<CR>")
+mega.map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
+mega.map("n", "<leader>mp", "<cmd>lua toggle_prose()<cr>")
 
 -- # slash
 vim.cmd([[noremap <plug>(slash-after) zz]])

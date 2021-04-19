@@ -45,30 +45,29 @@ end
 
 local efm_languages = mega.load("efm", "mega.lc.efm")
 
--- local efm_language_keys = function()
---   local tbl = vim.tbl_keys(efm_languages)
---   for i, v in ipairs(tbl) do
---     if v == "=" then
---       return table.remove(tbl, i)
---     end
---   end
--- end
--- mega.dump(efm_language_keys())
+do
+  local configs = require("lspconfig/configs")
+  configs["zk"] = {
+    default_config = {
+      cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
+      filetypes = {"markdown"},
+      root_dir = function()
+        return vim.loop.cwd()
+      end,
+      settings = {}
+    }
+  }
+end
 
-local configs = require("lspconfig/configs")
-configs.zk = {
-  default_config = {
+local servers = {
+  zk = {
     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
-    filetypes = {"markdown"},
+    filetypes = {"markdown", "md"},
     root_dir = function()
       return vim.loop.cwd()
     end,
     settings = {}
-  };
-}
-
-local servers = {
-  zk = {},
+  },
   bashls = {
     filetypes = {"bash", "sh", "zsh"}
   },
@@ -91,7 +90,7 @@ local servers = {
       }
     },
     filetypes = {"elixir", "eelixir"},
-    root_dir = root_pattern("mix.lock", "mix.exs", ".git")
+    root_dir = root_pattern("mix.exs", ".git")
   },
   efm = {
     init_options = {documentFormatting = true},
@@ -276,6 +275,9 @@ function M.activate(on_attach_fn)
 
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+    -- mega.inspect("server to configure", server)
+    -- mega.inspect("config to use", config)
 
     if not server_disabled then
       lspconf[server].setup(

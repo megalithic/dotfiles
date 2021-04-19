@@ -30,7 +30,7 @@ return {
   html = {prettier},
   scss = {prettier},
   css = {prettier},
-  markdown = {prettier},
+  -- markdown = {prettier},
   sh = {shellcheck}
   -- tf = {terraform},
 }

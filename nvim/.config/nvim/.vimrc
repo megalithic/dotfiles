@@ -91,6 +91,11 @@ vnoremap / /\v
 xnoremap <silent> p p:let @"=@0<CR>
 
 
+function! Show_position()
+  return ":\<c-u>echo 'start=" . string(getpos("v")) . " end=" . string(getpos(".")) . "'\<cr>gv"
+endfunction
+vmap <expr> <leader>P Show_position()
+
 " flip between two last edited files/alternate/buffer
 " nnoremap <Leader><Leader> <C-^>
 
@@ -104,7 +109,7 @@ nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<C
 
 " REF: https://github.com/savq/dotfiles/blob/master/nvim/init.lua#L90-L101
 "      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
-nnoremap z= :setlocal spell<CR>z=
+" nnoremap z= :setlocal spell<CR>z=
 
 " -- [ options ] ---------------------------------------------------------------
 set autoindent        " Indented text

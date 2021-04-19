@@ -119,8 +119,9 @@ if paq_exists then
   paq {"zenbro/mirror.vim", opt = true}
   paq {"junegunn/goyo.vim", opt = true}
   paq {"junegunn/limelight.vim", opt = true}
-  paq {"reedes/vim-pencil", opt = true}
+  -- paq {"reedes/vim-pencil", opt = true}
   paq {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]}
+  paq {"dkarter/bullets.vim"}
   -- paq {"SidOfc/mkdx"}
   -- paq {"reedes/vim-wordy", opt = true}
   -- paq {"reedes/vim-lexical", opt = true}

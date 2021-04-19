@@ -1,9 +1,16 @@
 -- REFs:
 -- * https://jdhao.github.io/2019/01/15/markdown_edit_preview_nvim/
 -- * https://github.com/dkarter/bullets.vim
+-- * https://github.com/mnarrell/dotfiles/blob/main/nvim/lua/ftplugin/markdown.lua
+-- * https://vim.works/2019/03/16/using-markdown-in-vim/
 return function(_) -- bufnr
-  vim.cmd([[setlocal spell linebreak]])
-  vim.cmd([[set conceallevel=0]])
+  vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
+  vim.o.makeprg = [[open %]]
+  vim.o.textwidth = 0
+  vim.o.wrapmargin = 0
+  vim.o.list = false
+  vim.o.wrap = true
+  vim.cmd([[setlocal spell linebreak textwidth=0 wrap conceallevel=0]])
 
   -- continuous meeting note datetime entry
   vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
@@ -20,9 +27,11 @@ return function(_) -- bufnr
 
   -- ## plasticboy/vim-markdown
   vim.g.markdown_fenced_languages = {
+    "diff",
     "javascript",
     "js=javascript",
     "json=javascript",
+    "typescript",
     "css",
     "scss",
     "sass",
@@ -32,15 +41,13 @@ return function(_) -- bufnr
     "haml",
     "html",
     "bash=sh",
-    "zsh",
+    "zsh=sh",
     "elm",
     "elixir",
     "eelixir",
     "lua",
     "vim",
-    "viml",
-    "vimscript",
-    "vim-script"
+    "viml"
   }
 
   vim.g.markdown_enable_conceal = 1
@@ -105,7 +112,7 @@ return function(_) -- bufnr
       if level == 2 then
         vim.fn.sign_place(0, markdown_sign_namespace, "secondHeadline", bufnr, {lnum = i + offset})
       end
-      if level and level > 2 then
+      if level and level == 3 then
         vim.fn.sign_place(0, markdown_sign_namespace, "thirdHeadline", bufnr, {lnum = i + offset})
       end
 
@@ -123,6 +130,7 @@ return function(_) -- bufnr
       ::continue::
     end
   end
+  MarkdownHeadlines()
 
   vim.cmd [[autocmd FileChangedShellPost,Syntax,TextChanged,InsertLeave,WinScrolled * lua MarkdownHeadlines()]]
 end

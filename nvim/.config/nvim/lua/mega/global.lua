@@ -394,13 +394,10 @@ function M.zetty(args)
     content = string.format("Attendees:\n%s\n---\n", opts.attendees)
   end
 
-  local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to (`n` to cancel): ", title))
+  local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to: ", title))
   if changed_title ~= "" then
     title = changed_title
-  elseif changed_title == "n" then
-    return
   end
-  vim.cmd([[redraw]])
 
   if opts.cmd == "meeting" then
     require("zk.command").new({title = title, action = "edit", notebook = "meetings", content = content})

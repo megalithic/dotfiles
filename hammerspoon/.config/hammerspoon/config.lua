@@ -141,7 +141,7 @@ M.apps = {
     name = "Things",
     hyper_key = "t",
     hideAfter = 1,
-    local_bindings = {",", "."},
+    -- local_bindings = {",", "."},
     rules = {
       {nil, 1, M.layout.centeredMedium}
     }
@@ -304,7 +304,7 @@ M.apps = {
     hideAfter = 1,
     quitGuard = true,
     rules = {
-      {"Hammerspoon Console", 2, M.layout.fullScreen}
+      {"Hammerspoon Console", 2, M.layout.rightHalf}
       -- {title = 'Hammerspoon Console', action = 'snap', position = M.grid.rightHalf}
     }
   },

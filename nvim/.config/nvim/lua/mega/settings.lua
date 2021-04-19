@@ -1,17 +1,12 @@
 mega.inspect("activating package settings.lua..")
 
--- local cs = require("mega.colors.everforest")
-
+-- [zk.nvim] -------------------------------------------------------------------
 do
-  require("zk").setup(
-    {
-      debug = false
-    }
-  )
+  require("zk").setup({debug = true})
 end
 
+-- [indent-blankline] ----------------------------------------------------------
 do
-  -- [indent-blankline] --------------------------------------------------------
   vim.g.indent_blankline_char = "│"
   vim.g.indent_blankline_filetype_exclude = {"help", "defx", "vimwiki", "fzf", "sagasignature", "markdown", "vimwiki"}
   vim.g.indent_blankline_space_char_blankline = " "
@@ -29,6 +24,16 @@ do
     "with",
     "func_literal",
     "block"
+  }
+end
+
+-- [bullets.vim] ---------------------------------------------------------------
+do
+  vim.g.bullets_enabled_file_types = {
+    "markdown",
+    "text",
+    "gitcommit",
+    "scratch"
   }
 end
 
@@ -67,7 +72,6 @@ do
       open = "<CR>",
       vsplit = "v",
       split = "s",
-      -- quit = {"q", [[\<ESC>]]}
       quit = {"<ESC>", "q"}
     },
     code_action_keys = {quit = "<ESC>", exec = "<CR>"},
@@ -236,14 +240,14 @@ do
   vim.env.FZF_DEFAULT_COMMAND = "fd --type f --hidden --follow --exclude '.git' --exclude 'node_modules'"
   vim.api.nvim_exec(
     [[
-    function! RipgrepFzf(query, fullscreen)
-    let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
-    let initial_command = printf(command_fmt, shellescape(a:query))
-    let reload_command = printf(command_fmt, '{q}')
-    let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-    call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-    endfunction
-    ]],
+function! RipgrepFzf(query, fullscreen)
+let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
+let initial_command = printf(command_fmt, shellescape(a:query))
+let reload_command = printf(command_fmt, '{q}')
+let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+endfunction
+]],
     false
   )
   vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
@@ -344,7 +348,7 @@ do
           -- Default keymap options
           noremap = true,
           buffer = true,
-          ["n ]g"] = {expr = true, '&diff ? \']g\' : \'<cmd>lua require"gitsigns".next_hunk()<CR>\''},
+          ["n ]g"] = {expr = true, '&diff ? \' }g\' : \'<cmd>lua require"gitsigns".next_hunk()<CR>\''},
           ["n [g"] = {expr = true, '&diff ? \'[g\' : \'<cmd>lua require"gitsigns".prev_hunk()<CR>\''},
           ["n <leader>hs"] = '<cmd>lua require"gitsigns".stage_hunk()<CR>',
           ["n <leader>hu"] = '<cmd>lua require"gitsigns".undo_stage_hunk()<CR>',
@@ -393,8 +397,7 @@ end
 do
   local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
   if ts_installed then
-    local parser_configs = require "nvim-treesitter.parsers".get_parser_configs()
-    -- parser_configs.elixir = {
+    -- parser_config.elixir = {
     --   install_info = {
     --     url = "~/.config/treesitter/tree-sitter-elixir",
     --     files = {"src/parser.c"}
@@ -402,6 +405,16 @@ do
     --   filetype = "elixir",
     --   used_by = {"eelixir"}
     -- }
+    -- local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+    -- parser_config.elixir = {
+    --   install_info = {
+    --     url = "https://github.com/wingyplus/tree-sitter-elixir",
+    --     files = {"src/parser.c"},
+    --     branch = "main",
+    --     filetype = {"elixir"}
+    --   }
+    -- }
+
     treesitter.setup(
       {
         ensure_installed = {
@@ -412,13 +425,13 @@ do
           "elm",
           "erlang",
           -- "elixir",
-          -- "fennel",
+          "fennel",
           "html",
           "jsdoc",
           "javascript",
           "json",
           "lua",
-          -- "nix",
+          "nix",
           "python",
           "regex",
           "ruby",
@@ -429,7 +442,7 @@ do
           "yaml"
         },
         highlight = {
-          enable = false,
+          enable = true,
           use_languagetree = false
         },
         indent = {enable = true},

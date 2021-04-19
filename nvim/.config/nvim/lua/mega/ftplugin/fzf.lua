@@ -1,22 +1,22 @@
 return function(_) -- bufnr
   _G.fzf_enter = function()
-    vim.o.ruler=false
-    vim.o.number=false
-    vim.o.relativenumber=false
-    vim.o.signcolumn=0
+    vim.o.ruler = false
+    vim.o.number = false
+    vim.o.relativenumber = false
+    vim.o.signcolumn = 0
   end
 
   _G.fzf_leave = function()
-    vim.o.ruler=true
-    vim.o.number=true
-    vim.o.relativenumber=true
-    vim.o.signcolumn=2
+    vim.o.ruler = true
+    vim.o.number = true
+    vim.o.relativenumber = true
+    vim.o.signcolumn = 2
   end
 
   _G.fzf_enter()
 
   mega.augroup_cmds(
-    "mega.ft.fzf",
+    "mega.ftplugin.fzf",
     {
       {
         events = {"BufLeave", "TermClose"},

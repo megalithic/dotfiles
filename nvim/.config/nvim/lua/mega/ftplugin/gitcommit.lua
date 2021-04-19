@@ -10,6 +10,7 @@ return function(_) -- bufnr
   vim.wo.relativenumber = false
   vim.wo.wrap = true
   vim.wo.linebreak = true
+  vim.wo.foldenable = false
 
   vim.cmd([[setlocal comments+=fb:*]])
   vim.cmd([[setlocal comments+=fb:-]])
@@ -19,5 +20,7 @@ return function(_) -- bufnr
   vim.cmd([[setlocal formatoptions+=c]])
   vim.cmd([[setlocal formatoptions+=q]])
 
-  vim.cmd("set complete+=kspell")
+  vim.cmd([[setlocal spell]])
+
+  vim.bo.formatoptions = vim.bo.formatoptions .. "t"
 end

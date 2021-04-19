@@ -21,7 +21,10 @@ M.onAppQuit = function(app, callback, providedInterval)
 
   hs.timer.waitUntil(
     function()
-      return app == nil or #app:allWindows() == 0
+      local success = app == nil or #app:allWindows() == 0
+      -- log.wf("success for onAppQuit -> %s", success)
+
+      return success
       -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
     end,
     callback,

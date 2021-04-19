@@ -54,8 +54,6 @@ M.apply = function(event, app, log)
             -- log.wf("task to start: %s", hs.inspect(task))
             -- task:start()
 
-            hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
-
             local target_close_window = zoom:getWindow("Zoom")
             if target_close_window ~= nil then
               target_close_window:close()
@@ -63,10 +61,17 @@ M.apply = function(event, app, log)
 
             local layouts = {
               {"zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil},
-              {"kitty", "note", hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil}
+              {"kitty", nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil}
             }
             hs.layout.apply(layouts)
             kitty:setFrontmost(true)
+
+            hs.timer.doAfter(
+              1,
+              function()
+                hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
+              end
+            )
           end
         )
       end
@@ -80,16 +85,17 @@ M.apply = function(event, app, log)
   wh.onAppQuit(
     app,
     function()
+      local kitty = hs.application.get("kitty")
+      -- FIXME: do i really need all the error checking here?
+      if kitty ~= nil then
+        local kitty_win = kitty:mainWindow()
+        if kitty_win ~= nil then
+          kitty_win:moveToUnit(hs.layout.maximized)
+        end
+      end
+
       ptt.setState("push-to-talk")
       init_apply_complete = false
-
-      local kitty = hs.application.get("kitty")
-      kitty:setFrontmost(true)
-
-      local layouts = {
-        {"kitty", nil, hs.screen.primaryScreen():name(), hs.layout.fullScreen, nil, nil}
-      }
-      hs.layout.apply(layouts)
     end
   )
 end

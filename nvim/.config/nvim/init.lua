@@ -29,13 +29,14 @@ mega.load("settings", "mega.settings")
 mega.load("lc", "mega.lc")
 mega.load("mappings", "mega.mappings")
 mega.load("autocmds", "mega.autocmds")
+-- mega.load("filetypes", "mega.filetypes")
 vim.schedule(
   function()
-    mega.load("ft", "mega.ft").setup()
+    mega.load("ftplugin", "mega.ftplugin").setup()
   end
 )
 vim.schedule(
   function()
-    mega.load("ft", "mega.ft").trigger_ft()
+    mega.load("ftplugin", "mega.ftplugin").trigger_ft()
   end
 )

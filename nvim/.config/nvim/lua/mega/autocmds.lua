@@ -24,6 +24,7 @@ mega.augroup(
     au([[autocmd FileType help wincmd L]])
     au([[autocmd CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
     au([[autocmd VimResized * lua require('golden_size').on_win_enter()]])
+    au([[autocmd VimResized * wincmd =]])
     au([[autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
     au([[autocmd Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
     au([[autocmd Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')]])
@@ -83,45 +84,47 @@ mega.augroup_cmds(
   "mega.filetypes",
   {
     {
-      events = {"BufRead", "BufNewFile"},
+      events = {"BufEnter", "BufRead", "BufNewFile"},
       targets = {"*.lexs"},
       command = "set filetype=elixir"
+    },
+    {
+      events = {"BufEnter", "BufNewFile", "FileType"},
+      targets = {"*.md"},
+      command = "lua require('mega.ftplugin.markdown')()"
     }
   }
 )
-
--- autocmd [[BufRead,BufNewFile *.lexs set filetype=elixir]]
 
 -- automatically clear commandline messages after a few seconds delay
 -- source: https://unix.stackexchange.com/a/613645
-_G.clear_messages = function()
-  local id
-  return function()
-    if id then
-      vim.fn.timer_stop(id)
-    end
-    id =
-      vim.fn.timer_start(
-      2000,
-      function()
-        if vim.fn.mode() == "n" then
-          vim.cmd [[echon '']]
-        end
-      end
-    )
-  end
-end
-
-mega.augroup_cmds(
-  "ClearCommandMessages",
-  {
-    {
-      events = {"CmdlineLeave", "CmdlineChanged"},
-      targets = {":"},
-      command = "lua clear_messages()"
-    }
-  }
-)
+-- _G.clear_messages = function()
+--   local id
+--   return function()
+--     if id then
+--       vim.fn.timer_stop(id)
+--     end
+--     id =
+--       vim.fn.timer_start(
+--       2000,
+--       function()
+--         if vim.fn.mode() == "n" then
+--           vim.cmd [[echon '']]
+--         end
+--       end
+--     )
+--   end
+-- end
+-- mega.augroup_cmds(
+--   "ClearCommandMessages",
+--   {
+--     {
+--       events = {"CmdlineLeave", "CmdlineChanged"},
+--       targets = {":"},
+--       command = "lua clear_messages()"
+--     }
+--   }
+-- )
 
 -- vim.api.nvim_exec(
 --   [[
