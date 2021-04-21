@@ -61,6 +61,14 @@ template = "wiki.md"
 hashtags = true
 # Enable support for :colon:separated:tags:
 colon-tags = true
+# Format used to generate links between notes.
+# Either "wiki", "markdown" or a custom template. Default is "markdown".
+# link-format = "wiki"
+link-format = "[[{{path}}|{{title}}]]"
+# Indicates whether a link's path will be percent-encoded.
+link-encode-path = false
+# Indicates whether a link's path file extension will be removed.
+link-drop-extension = true
 
 
 # EXTERNAL TOOLS

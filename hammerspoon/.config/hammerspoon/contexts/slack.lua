@@ -3,7 +3,6 @@ local cache = {}
 local module = {cache = cache}
 local wh = require("utils.wm.window-handlers")
 -- local log = hs.logger.new("[slack]", "debug")
-local init_apply_complete = false
 
 local enter = function(app, log)
   log.wf("entering slack hotkey modal..")
@@ -62,43 +61,42 @@ local enter = function(app, log)
 end
 
 local exit = function(app, log)
-  log.wf("exiting slack hotkey modal..")
+  log.wf("exiting slack hotkey modal for app: %s", hs.inspect(app))
 
   cache.modal:exit()
 end
 
 -- apply(string, hs.application, hs.logger) :: nil
 module.apply = function(event, app, log)
-  if not init_apply_complete then
-    -- FIXME: figure out why/where/how/when to instantiate our modal for correct
-    -- enabling/disabling of bindings for our various window events. Presently, it
-    -- works, but we're instantiating THREE TIMES!!1!1!
-    cache.modal = hs.hotkey.modal.new({}, nil)
-    -- log.df("setting up context for %s [%s]", hs.inspect(app), event)
+  -- FIXME: figure out why/where/how/when to instantiate our modal for correct
+  -- enabling/disabling of bindings for our various window events. Presently, it
+  -- works, but we're instantiating THREE TIMES!!1!1!
+  cache.modal = hs.hotkey.modal.new({}, nil)
+  log.wf("SETTING UP CONTEXT for %s [%s]", hs.inspect(app), event)
 
-    ----------------------------------------------------------------------
-    -- set-up hotkey modal
-    if hs.fnutils.contains({"windowFocused", hs.application.watcher.activated, hs.application.watcher.unhidden, 5}, event) then
-      if app:isFrontmost() then
-        -- cache.modal = hs.hotkey.modal.new({}, nil)
-        enter(app, log)
-        log.wf("enabled bindings -> %s", #cache.modal.keys)
-      end
-    elseif hs.fnutils.contains({"windowUnfocused", hs.application.watcher.deactivated, hs.application.watcher.hidden, 6}, event) then
-      if not app:isFrontmost() then
-        exit(app, log)
-        log.wf("disabled bindings -> %s", #cache.modal.keys)
-      -- cache.modal = hs.hotkey.modal.new({}, nil)
-      end
+  ----------------------------------------------------------------------
+  -- set-up hotkey modal
+  if hs.fnutils.contains({"windowFocused", hs.application.watcher.activated, hs.application.watcher.unhidden, 5}, event) then
+    if app:isFrontmost() then
+      enter(app, log)
+      log.wf("enabled bindings -> %s", #cache.modal.keys)
     end
-    init_apply_complete = true
+  elseif
+    hs.fnutils.contains(
+      {"windowUnfocused", hs.application.watcher.deactivated, hs.application.watcher.hidden, 6},
+      event
+    )
+   then
+    if not app:isFrontmost() then
+      exit(app, log)
+      log.wf("disabled bindings -> %s", #cache.modal.keys)
+    end
   end
 
   wh.onAppQuit(
     app,
     function()
       exit(app, log)
-      init_apply_complete = false
     end
   )
 

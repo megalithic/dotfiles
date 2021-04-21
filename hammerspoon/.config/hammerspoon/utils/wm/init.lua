@@ -25,6 +25,10 @@ local M = {
 local wh = require("utils.wm.window-handlers")
 local fn = require("hs.fnutils")
 
+local get_app_config = function(bundleID)
+  return Config.apps[bundleID]
+end
+
 -- return true if title matches pattern
 local function match_title(title, pattern)
   log.i("match_title: title(" .. title .. ") pattern(" .. pattern .. ")")
@@ -79,7 +83,7 @@ end
 -- evaluates and applies global config for contexts related to the given app
 M.apply_context = function(app, bundleID, app_config, windows, event)
   if app_config.context == nil then
-    log.wf("no context received; skipping -> %s", bundleID)
+    log.df("no context received; skipping -> %s", bundleID)
     return
   end
 
@@ -88,13 +92,13 @@ M.apply_context = function(app, bundleID, app_config, windows, event)
   -- off, etc; look at @evantravers `headspace` module for explicit "context
   -- setting" instead of relying on hooks to "fully" automate it.
   if event == nil then
-    log.wf("no event received; skipping -> %s", bundleID)
+    log.df("no event received; skipping -> %s", bundleID)
     return
   end
 
   local context = require("contexts")
   if context == nil then
-    log.wf("no context created, but _should_ be there; regardless, skipping -> %s", bundleID)
+    log.df("no context created, but _should_ be there; regardless, skipping -> %s", bundleID)
     return
   end
 
@@ -192,10 +196,17 @@ end
 
 -- standard hs.application.watcher
 M.handle_app_event = function(app_name, event, app)
+  -- log.wf("handle_app_event -> %s (%s)", app_name, event)
+  local bundleID = app:bundleID()
+
   -- presently just handling launched and terminated apps
   if event == hs.application.watcher.launched then
-    log.df("app launched -> %s", app:bundleID())
+    log.df("app launched -> %s", bundleID)
     M.watch_running_app(app, event)
+  -- elseif event == hs.application.watcher.activated then
+  --   M.apply_context(app, bundleID, get_app_config(bundleID), gather_windows(app), event)
+  -- elseif event == hs.application.watcher.deactivated then
+  --   M.apply_context(app, bundleID, get_app_config(bundleID), gather_windows(app), event)
   elseif event == hs.application.watcher.terminated then
     -- Only the PID is set for terminated apps, so can't log bundleID.
     local pid = app:pid()
@@ -243,7 +254,7 @@ M.watch_running_app = function(app, event)
   local pid = app:pid()
   local bundleID = app:bundleID()
   local app_name = app:name()
-  log.df("running app watcher -> %s (%s [%s])", app_name, bundleID, pid)
+  log.wf("running app watcher -> %s (%s [%s])", app_name, bundleID, pid)
 
   -- verify we don't already have this pid and app being watched; if so, ignore
   if cache.running_app_watcher[pid] then
@@ -270,14 +281,18 @@ M.watch_running_app = function(app, event)
     M.watch_existing_window(window)
   end
 
+  M.do_event_callbacks(app, event, bundleID, app_name)
+end
+
+M.do_event_callbacks = function(app, event, bundleID, app_name)
   -- an app config exists for app; e.g. it's managed in our Config.apps;
   -- apply the app layout..
   local app_config = Config.apps[bundleID]
   if app_config then
-    log.df("attempting to apply app layout for %s -> %s", app_name, hs.inspect(app))
+    log.wf("attempting to apply app layout for %s -> %s", app_name, hs.inspect(app))
     M.apply_app_layout(app_name, app)
 
-    log.df("attempting to apply context for %s -> %s", app_name, hs.inspect(app))
+    log.wf("attempting to apply context for %s -> %s", app_name, hs.inspect(app))
     -- gather_windows gets us interesting info about windows we have
     M.apply_context(app, bundleID, app_config, gather_windows(app), event)
   end
@@ -312,12 +327,15 @@ M.prepare = function()
 
   -- watch running apps..
   local all_running_apps = hs.application.runningApplications()
+  log.wf("found managed and running apps -> %s", #all_running_apps)
+
   for _, app in pairs(all_running_apps) do
     local managed_and_running_app = Config.apps[app:bundleID()]
     -- we actually only want to watch running apps that have an app_config, aka,
     -- considered to be "managed".
     if managed_and_running_app ~= nil then
       log.df("found managed and running app -> %s (%s)", app:name(), app:bundleID())
+      -- FIXME: handle other events? don't just assume "launched"?
       M.watch_running_app(app, hs.application.watcher.launched)
     end
   end

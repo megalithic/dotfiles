@@ -13,7 +13,7 @@ module.load = function(event, app, context, level)
 
   local targetContext = require("contexts." .. context)
   if targetContext ~= nil then
-    log.wf("applying target context::%s -> %s (%s)", event, app:name(), app:bundleID())
+    log.df("applying target context::%s -> %s (%s)", event, app:name(), app:bundleID())
     targetContext.apply(event, app, log)
   end
 end

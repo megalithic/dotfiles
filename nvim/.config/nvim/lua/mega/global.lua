@@ -387,11 +387,12 @@ function M.zetty(args)
 
   local opts = vim.tbl_extend("force", default_opts, args or {})
 
-  local title = string.format([[%s]], opts.title)
+  local title = string.format([[%s]], string.gsub(opts.title, "|", "&"))
+
   local content = ""
 
   if opts.attendees ~= nil and opts.attendees ~= "" then
-    content = string.format("Attendees:\n%s\n---\n", opts.attendees)
+    content = string.format("Attendees:\n%s\n\n---\n", opts.attendees)
   end
 
   local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to: ", title))

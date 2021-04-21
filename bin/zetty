@@ -42,11 +42,6 @@ tmux_command() {
   title=$3
   attendees=$4
 
-  echo "cmd: $cmd"
-  echo "notebook: $notebook"
-  echo "title: $title"
-  echo "attendees: $attendees"
-
   /usr/local/bin/tmux neww -n note nvim "+lua require('mega.global').zetty({ cmd = [[$cmd]], title = [[$title]], action = 'e', notebook = [[$notebook]], attendees = [[$attendees]] })"
 }
 

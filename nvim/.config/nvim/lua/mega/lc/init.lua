@@ -43,7 +43,7 @@ local on_attach = function(client, bufnr)
       function()
         vim.api.nvim_command [[autocmd! * <buffer>]]
         -- vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
-        vim.api.nvim_command [[autocmd BufWritePost <buffer> lua vim.lsp.buf.formatting()]]
+        vim.api.nvim_command [[autocmd BufWritePost <buffer> lua vim.lsp.buf.formatting(nil, 1000)]]
         vim.cmd [[command! Format lua vim.lsp.buf.formatting()]]
       end
     )
@@ -59,13 +59,14 @@ local on_attach = function(client, bufnr)
 
   if client.resolved_capabilities.goto_definition then
     mega.map("n", "<C-]>", "<cmd>lua vim.lsp.buf.definition()<CR>")
-    mega.map("n", "<leader>lgd", [[<cmd>lua require'lspsaga.provider'.preview_definition()<CR>]])
-    mega.map("n", "<leader>ld", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
+    mega.map("n", "<leader>ld", [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]])
+    -- mega.map("n", "<leader>lgd", [[<cmd>lua require'lspsaga.provider'.preview_definition()<CR>]])
+    -- mega.map("n", "<leader>ld", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
     mega.map("n", "<leader>lf", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
   end
 
   if client.resolved_capabilities.find_references then
-    mega.map("n", "<leader>lr", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
+    mega.map("n", "<leader>lr", [[<cmd>lua require('telescope.builtin').lsp_references()<cr>]])
     mega.map("n", "<leader>lf", [[<cmd>lua require'lspsaga.provider'.lsp_finder()<CR>]])
   end
 

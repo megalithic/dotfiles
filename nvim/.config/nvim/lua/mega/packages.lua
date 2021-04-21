@@ -44,6 +44,7 @@ if paq_exists then
   paq {"nvim-lua/popup.nvim"}
   paq {"hrsh7th/nvim-compe"}
   paq {"onsails/lspkind-nvim"}
+  paq {"rafamadriz/friendly-snippets"}
   paq {"hrsh7th/vim-vsnip"}
   paq {"hrsh7th/vim-vsnip-integ"}
   paq {"nvim-lua/lsp-status.nvim"}
