@@ -2,7 +2,6 @@
 -- https://github.com/dbmrq/dotfiles/blob/master/home/.hammerspoon/winman.lua
 
 local log = hs.logger.new("[bindings.snap]", "info")
--- local chain = require("ext.window").chain
 local wh = require("utils.wm.window-handlers")
 local movewindows = hs.hotkey.modal.new()
 local alertUuids = {}
@@ -120,13 +119,18 @@ module.start = function()
       "",
       c.shortcut,
       function()
-        -- chain(c.locations)()
-        hs.window.focusedWindow():moveToUnit(c.position)
-        movewindows:exit()
+        require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
+        -- hs.hotkey.bind(c.modifier, c.shortcut, chain(c.locations))
+        -- hs.window.focusedWindow():moveToUnit(c.position)
+        hs.timer.doAfter(
+          0.5,
+          function()
+            movewindows:exit()
+          end
+        )
       end
     )
 
-    -- hs.hotkey.bind(c.modifier, c.shortcut, chain(c.locations))
   end
 
   movewindows:bind(

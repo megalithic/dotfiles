@@ -51,6 +51,9 @@ do
     default_config = {
       cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
       filetypes = {"markdown"},
+      get_language_id = function()
+        return "markdown"
+      end,
       root_dir = function()
         return vim.loop.cwd()
       end,

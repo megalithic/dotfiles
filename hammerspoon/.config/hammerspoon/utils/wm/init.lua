@@ -31,21 +31,16 @@ end
 
 -- return true if title matches pattern
 local function match_title(title, pattern)
-  log.i("match_title: title(" .. title .. ") pattern(" .. pattern .. ")")
-
-  print("match_title: title(" .. title .. ") pattern(" .. pattern .. ")")
   if title == nil then
     return
   end
-
-  log.wf("did we match? %s", (string.match(title, pattern) == title))
 
   -- if pattern starts with ! then reverse match
   if string.sub(pattern, 1, 1) == "!" then
     local actual_pattern = string.sub(pattern, 2, string.len(pattern))
     return not string.match(title, actual_pattern)
   else
-    return string.match(title, pattern) == pattern
+    return string.match(title, pattern)
   end
 end
 
@@ -160,9 +155,9 @@ M.apply_app_layout = function(app_name, app)
     local layouts = M.set_app_layout(app_config)
     if layouts ~= nil then
       log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
-      --   hk.layout.apply(layouts, string.match)
-      -- hs.layout.apply(layouts, match_title)
-      hs.layout.apply(layouts)
+      -- hs.layout.apply(layouts, string.match)
+      hs.layout.apply(layouts, match_title)
+    -- hs.layout.apply(layouts)
     end
   end
 end
@@ -201,12 +196,12 @@ M.handle_app_event = function(app_name, event, app)
 
   -- presently just handling launched and terminated apps
   if event == hs.application.watcher.launched then
+    -- elseif event == hs.application.watcher.activated then
+    --   M.apply_context(app, bundleID, get_app_config(bundleID), gather_windows(app), event)
+    -- elseif event == hs.application.watcher.deactivated then
+    --   M.apply_context(app, bundleID, get_app_config(bundleID), gather_windows(app), event)
     log.df("app launched -> %s", bundleID)
     M.watch_running_app(app, event)
-  -- elseif event == hs.application.watcher.activated then
-  --   M.apply_context(app, bundleID, get_app_config(bundleID), gather_windows(app), event)
-  -- elseif event == hs.application.watcher.deactivated then
-  --   M.apply_context(app, bundleID, get_app_config(bundleID), gather_windows(app), event)
   elseif event == hs.application.watcher.terminated then
     -- Only the PID is set for terminated apps, so can't log bundleID.
     local pid = app:pid()

@@ -1,5 +1,5 @@
 return function(_) -- bufnr
-  vim.cmd([[normal gg0]])
+  -- vim.cmd([[normal gg0]])
 
   vim.bo.textwidth = 72
   vim.wo.colorcolumn = "72"

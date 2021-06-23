@@ -12,7 +12,8 @@ return {
       indicator_warnings = icons.statusline_warning,
       indicator_info = icons.statusline_info,
       indicator_hint = icons.statusline_hint,
-      indicator_ok = icons.statusline_ok
+      indicator_ok = icons.statusline_ok,
+      spinner_frames = {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"}
     }
 
     local function LspStatus()

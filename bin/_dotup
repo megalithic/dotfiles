@@ -138,7 +138,7 @@ function setup_xcode_and_git {
     then
         sleep 1
         log "installing xcode cli tools; press any key to continue.."; read -k1 -s
-        xcode-select --install && sudo xcodebuild -license accept && softwareupdate -ia
+        xcode-select --install && sudo xcodebuild -license accept && softwareupdate -iaf
         log_ok "DONE install xcode cli tools"
     fi
 }
@@ -243,7 +243,7 @@ function stow_away {
 }
 
 function setup_ssh_key {
-    # REF: 
+    # REF:
     #  1.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
     #  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
     skip_message="skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"

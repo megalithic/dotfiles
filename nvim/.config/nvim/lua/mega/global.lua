@@ -43,9 +43,9 @@ function M.dump(...)
 end
 
 -- Key mapping
-M.map_opts = {noremap = true, silent = false, expr = false}
 function M.map(mode, lhs, rhs, opts)
-  opts = vim.tbl_extend("force", M.map_opts, opts or {})
+  local map_opts = {noremap = true, silent = false, expr = false}
+  opts = vim.tbl_extend("force", map_opts, opts or {})
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 

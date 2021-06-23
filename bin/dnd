@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 #
 # What in tarnation?
 #
 # CLI tool to control macOS/notification center do-not-disturb (DND) mode
-# REF: https://gist.github.com/a7madgamal/9d3518a62c21477a92be461fbd652533#file-change-do-not-disturb-dnd-setting-on-macos-big-sur-using-the-terminal-md
+# REQUIRES: `brew install "vitorgalvao/tiny-scripts/calm-notifications"`
 #
 
 command="$(basename "$0")"
@@ -18,44 +18,22 @@ help() {
   printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
 }
 
-nc_pref="$HOME/Library/Preferences/ByHost/com.apple.notificationcenterui"
-# nc_pref=$(fd notificationcenterui $HOME/Library/Preferences/ByHost)
-
 on() {
-  sleep 1
-  defaults -currentHost write "$nc_pref" doNotDisturb -boolean true
-  defaults -currentHost write "$nc_pref" doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +0000\"`"
-  killall NotificationCenter
+  calm-notifications on
 }
 
 off() {
-  defaults -currentHost write "$nc_pref" doNotDisturb -boolean false
-  killall NotificationCenter
+  calm-notifications off
 }
 
 toggle() {
-  if $(dnd_enabled); then
-    off
-  else
-    on
-  fi
+  calm-notifications toggle
 
   status
 }
 
-dnd_enabled() {
-  dnd_enabled=$(defaults -currentHost read "$nc_pref" doNotDisturb)
-  $([[ "$dnd_enabled" -eq 1 ]] && true || false)
-}
-
 status() {
-  # echo "nc_pref -> $nc_pref"
-
-  if $(dnd_enabled); then
-    echo "DND: on"
-  else
-    echo "DND: off"
-  fi
+  echo "$(calm-notifications status)"
 }
 
 subcommand=$1

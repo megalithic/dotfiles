@@ -115,7 +115,7 @@ print_status() {
     # GRAPH="⚇"
     # GRAPH=""
     GRAPH=" "
-    BATTERY_STATUS="$BATTERY_STATUS%"
+    BATTERY_STATUS="$BATTERY_STATUS"
 
   elif ((ascii)); then
     barlength=${#ascii_bar}

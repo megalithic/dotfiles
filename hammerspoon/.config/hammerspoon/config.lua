@@ -181,7 +181,7 @@ M.apps = {
     distraction = true,
     rules = {
       {nil, 1, M.layout.centeredMedium},
-      {"Spark - INBOX", 1, M.layout.rightHalf}
+      {"INBOX", 1, M.layout.rightHalf}
     }
   },
   ["io.canarymail.mac"] = {
@@ -192,7 +192,7 @@ M.apps = {
     distraction = true,
     rules = {
       {nil, 1, M.layout.centeredSmall},
-      {"Inbox - All", 1, M.layout.rightHalf}
+      {"All", 1, M.layout.rightHalf}
     }
   },
   ["com.apple.finder"] = {
@@ -239,8 +239,8 @@ M.apps = {
       {nil, 1, M.layout.rightHalf}
     }
   },
-  ["com.apple.iChat"] = {
-    bundleID = "com.apple.iChat",
+  ["com.apple.MobileSMS"] = {
+    bundleID = "com.apple.MobileSMS",
     name = "Messages",
     hyper_key = "m",
     context = "messages",

@@ -109,6 +109,9 @@ function _G.toggle_prose()
   end
 end
 
+-- # find and replace in multiple files
+mega.map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
+
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # golden_size
@@ -171,6 +174,59 @@ mega.map("n", "<leader>D", "<cmd>Dash<CR>")
 
 -- # markdown-preview
 mega.map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
+
+-- # paq
+mega.map("n", "<F5>", "<cmd>PaqUpdate<CR>")
+
+-- # bullets.vim
+-- mega.map(
+--   "i",
+--   "<CR>",
+--   -- "<cmd>pumvisible() ? '\<C-y>' : ''",
+--   -- function()
+--   --   if vim.fn.pumvisible() == 0 then
+--   --     -- vim.cmd[[pumvisible() ? "\<C-y>" : "\<Plug>(bullets-insert-new-bullet)"]]
+--   --     vim.cmd([[InsertNewBullet]])
+--   --   end
+--   -- end,
+--   {silent = false, expr = true, noremap = false}
+-- )
+-- mega.map(
+--   "i",
+--   "<C-T>",
+--   function()
+--     vim.cmd([[BulletDemote]])
+--   end
+-- )
+-- mega.map(
+--   "i",
+--   "<C-D>",
+--   function()
+--     vim.cmd([[BulletPromote]])
+--   end
+-- )
+-- vim.keymap.imap<silent><expr> <CR> pumvisible() ? "\<C-y>" : "\<Plug>(bullets-insert-new-bullet)"
+-- inoremap {
+--   "<M-CR>",
+--   function()
+--     vim.cmd [[InsertNewBullet]]
+--   end,
+--   {nowait = true, buffer = true}
+-- }
+-- inoremap {
+--   "<C-T>",
+--   function()
+--     vim.cmd [[BulletDemote]]
+--   end,
+--   {nowait = true, buffer = true}
+-- }
+-- inoremap {
+--   "<C-D>",
+--   function()
+--     vim.cmd [[BulletPromote]]
+--   end,
+--   {nowait = true, buffer = true}
+-- }
 
 -- # telescope
 -- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files({ hidden = true })<cr>")

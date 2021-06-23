@@ -1,4 +1,4 @@
-# = theme/colors/layout (forest night) -- 
+# = theme/colors/layout (forest night) --
 
 # -- active pane decorations
 
@@ -37,7 +37,7 @@ set -g message-command-style bg=black,fg=blue
 # set -g message-command-style bg=black,fg=blue
 
 
-# = layout -- 
+# = layout --
 
 # - left -
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
@@ -55,10 +55,11 @@ setw -g window-status-bell-style 'fg=#323d43,bg=#6a7d8a,dim'
 # setw -g window-status-current-style none
 setw -g window-status-current-style bg=default,fg=colour004
 
-# - right - 
+# - right -
 # Broken UTC output in tmux~HEAD:
-# (#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')#[fg=green]) 
+# (#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')#[fg=green])
 
+# set -g status-right "#{prefix_highlight} #(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
 

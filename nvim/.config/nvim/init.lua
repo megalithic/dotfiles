@@ -13,7 +13,9 @@ _G["mega"] = require("mega.global")
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 --  :lua vim.cmd('vnew'..vim.lsp.get_log_path())
 
-vim.cmd([[packadd vimball]])
+-- FIXME: do we need to do this packadd?
+-- vim.cmd([[packadd vimball]])
+
 vim.cmd([[runtime .vimrc]])
 
 -- [ loaders ] -----------------------------------------------------------------

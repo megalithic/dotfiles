@@ -63,8 +63,8 @@ hashtags = true
 colon-tags = true
 # Format used to generate links between notes.
 # Either "wiki", "markdown" or a custom template. Default is "markdown".
-# link-format = "wiki"
-link-format = "[[{{path}}|{{title}}]]"
+link-format = "wiki"
+# link-format = "[[{{path}}|{{title}}]]"
 # Indicates whether a link's path will be percent-encoded.
 link-encode-path = false
 # Indicates whether a link's path file extension will be removed.

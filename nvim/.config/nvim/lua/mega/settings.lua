@@ -5,27 +5,37 @@ do
   require("zk").setup({debug = true})
 end
 
--- [indent-blankline] ----------------------------------------------------------
+-- [lsp-trouble] ---------------------------------------------------------------
 do
-  vim.g.indent_blankline_char = "│"
-  vim.g.indent_blankline_filetype_exclude = {"help", "defx", "vimwiki", "fzf", "sagasignature", "markdown", "vimwiki"}
-  vim.g.indent_blankline_space_char_blankline = " "
-  vim.g.indent_blankline_strict_tabs = true
-  vim.g.indent_blankline_debug = true
-  vim.g.indent_blankline_show_current_context = true
-  vim.g.indent_blankline_context_highlight = "TSIndentContext"
-  vim.g.indent_blankline_context_patterns = {
-    "class",
-    "function",
-    "method",
-    "^if",
-    "while",
-    "for",
-    "with",
-    "func_literal",
-    "block"
-  }
+  require("trouble").setup({})
 end
+
+-- [nvim-spectre] --------------------------------------------------------------
+do
+  -- require("spectre").setup()
+end
+
+-- [indent-blankline] ----------------------------------------------------------
+-- do
+-- vim.g.indent_blankline_char = "│"
+-- vim.g.indent_blankline_filetype_exclude = {"help", "defx", "vimwiki", "fzf", "sagasignature", "markdown", "vimwiki"}
+-- vim.g.indent_blankline_space_char_blankline = " "
+-- vim.g.indent_blankline_strict_tabs = true
+-- vim.g.indent_blankline_debug = true
+-- vim.g.indent_blankline_show_current_context = true
+-- vim.g.indent_blankline_context_highlight = "TSIndentContext"
+-- vim.g.indent_blankline_context_patterns = {
+--   "class",
+--   "function",
+--   "method",
+--   "^if",
+--   "while",
+--   "for",
+--   "with",
+--   "func_literal",
+--   "block"
+-- }
+-- end
 
 -- [bullets.vim] ---------------------------------------------------------------
 do
@@ -35,6 +45,8 @@ do
     "gitcommit",
     "scratch"
   }
+  vim.g.bullets_checkbox_markers = " ○◐✗"
+  -- vim.g.bullets_set_mappings = 0
 end
 
 -- [prose] ---------------------------------------------------------------------
@@ -72,22 +84,48 @@ do
       open = "<CR>",
       vsplit = "v",
       split = "s",
-      quit = {"<ESC>", "q"}
+      quit = {"<ESC>", "q"},
+      scroll_down = "<C-n>",
+      scroll_up = "<C-p>"
     },
     code_action_keys = {quit = "<ESC>", exec = "<CR>"},
     code_action_prompt = {
       enable = true,
       sign = false,
       virtual_text = true
-    }
+    },
+    finder_definition_icon = "•d",
+    finder_reference_icon = "•r"
   }
 end
+
+-- [specs] ---------------------------------------------------------------------
+-- do
+--   require("specs").setup {
+--     show_jumps = true,
+--     min_jump = 20,
+--     popup = {
+--       delay_ms = 0, -- delay before popup displays
+--       inc_ms = 8, -- time increments used for fade/resize effects
+--       blend = 40, -- starting blend, between 0-100 (fully transparent), see :h winblend
+--       width = 50,
+--       winhl = "PMenu",
+--       fader = require("specs").linear_fader,
+--       resizer = require("specs").slide_resizer
+--     },
+--     ignore_filetypes = {"fzf"},
+--     ignore_buftypes = {
+--       nofile = true
+--     }
+--   }
+-- end
 
 -- [beacon] --------------------------------------------------------------------
 do
   vim.g.beacon_size = 90
   vim.g.beacon_minimal_jump = 25
-  vim.g.beacon_shrink = 0
+  -- vim.g.beacon_shrink = 0
+  -- vim.g.beacon_fade = 0
   vim.g.beacon_ignore_filetypes = {"fzf"}
 end
 
@@ -397,24 +435,6 @@ end
 do
   local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
   if ts_installed then
-    -- parser_config.elixir = {
-    --   install_info = {
-    --     url = "~/.config/treesitter/tree-sitter-elixir",
-    --     files = {"src/parser.c"}
-    --   },
-    --   filetype = "elixir",
-    --   used_by = {"eelixir"}
-    -- }
-    -- local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-    -- parser_config.elixir = {
-    --   install_info = {
-    --     url = "https://github.com/wingyplus/tree-sitter-elixir",
-    --     files = {"src/parser.c"},
-    --     branch = "main",
-    --     filetype = {"elixir"}
-    --   }
-    -- }
-
     treesitter.setup(
       {
         ensure_installed = {
@@ -424,7 +444,7 @@ do
           "css",
           "elm",
           "erlang",
-          -- "elixir",
+          "elixir",
           "fennel",
           "html",
           "jsdoc",
@@ -443,7 +463,7 @@ do
         },
         highlight = {
           enable = true,
-          use_languagetree = false
+          use_languagetree = true
         },
         indent = {enable = true},
         autotag = {
@@ -554,13 +574,13 @@ do
           cmdline = "neovim", -- or "firenvim"
           takeover = "always",
           selector = "textarea",
-          priority = 0
+          priority = 1
         },
-        ["https://studio.youtube.com.*"] = {takeover = "never", priority = 1},
-        ["https?://instagram.com.*"] = {takeover = "never", priority = 1},
-        ["https?://twitter.com.*"] = {takeover = "never", priority = 1},
-        ["https://.*gmail.com.*"] = {takeover = "never", priority = 1},
-        ["https?://.*twitch.tv.*"] = {takeover = "never", priority = 1}
+        ["https://studio.youtube.com.*"] = {takeover = "never", priority = 0},
+        ["https?://instagram.com.*"] = {takeover = "never", priority = 0},
+        ["https?://twitter.com.*"] = {takeover = "never", priority = 0},
+        ["https://.*gmail.com.*"] = {takeover = "never", priority = 0},
+        ["https?://.*twitch.tv.*"] = {takeover = "never", priority = 0}
       }
     }
 

@@ -240,7 +240,7 @@ module.chain = function(movements)
   local lastSeenWindow = nil
   local lastSeenAt = hs.timer.secondsSinceEpoch()
 
-  return function()
+  return function(msg)
     local win = hs.window.focusedWindow()
     local id = win:id()
     local now = hs.timer.secondsSinceEpoch()
@@ -255,6 +255,8 @@ module.chain = function(movements)
     end
     lastSeenAt = now
     lastSeenWindow = id
+
+    log.wf("chain -> %s / %s (%s)", msg, sequenceNumber, hs.inspect(movements))
 
     -- hs.layout.apply(win:application():bundleID(), win:title(), screen, movements[sequenceNumber])
     hs.grid.set(win, movements[sequenceNumber], screen)

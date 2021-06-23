@@ -1,9 +1,11 @@
 local M = {}
 
 function M.trigger_ft()
-  if vim.bo.ft and vim.bo.ft ~= "" then
-    vim.cmd("doautocmd FileType " .. vim.bo.ft)
-  end
+  vim.cmd("doautoall FileType")
+
+  -- if vim.bo.ft and vim.bo.ft ~= "" then
+  --   vim.cmd("doautocmd FileType " .. vim.bo.ft)
+  -- end
 end
 
 function M.handle()

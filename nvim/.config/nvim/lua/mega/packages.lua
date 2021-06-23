@@ -31,12 +31,14 @@ if paq_exists then
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"junegunn/rainbow_parentheses.vim"}
-  paq {"ryanoasis/vim-devicons"}
+  -- paq {"ryanoasis/vim-devicons"}
+  paq {"kyazdani42/nvim-web-devicons"}
   paq {"hoob3rt/lualine.nvim"}
   paq {"danilamihailov/beacon.nvim"}
+  -- paq {"edluffy/specs.nvim"}
   paq {"antoinemadec/FixCursorHold.nvim"}
   paq {"psliwka/vim-smoothie"}
-  paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
+  -- paq {"lukas-reineke/indent-blankline.nvim", branch = "lua"}
 
   -- (lsp, completion, diagnostics, snippets, treesitter) --
   paq {"neovim/nvim-lspconfig"}
@@ -50,6 +52,7 @@ if paq_exists then
   paq {"nvim-lua/lsp-status.nvim"}
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
+  paq {"folke/lsp-trouble.nvim"}
   paq {
     "nvim-treesitter/nvim-treesitter"
     -- run = function()
@@ -63,6 +66,7 @@ if paq_exists then
     -- end
   }
   paq {"nvim-treesitter/nvim-treesitter-textobjects"}
+  paq {"windwp/nvim-ts-autotag"}
   -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
 
   -- (file navigation) --
@@ -72,6 +76,8 @@ if paq_exists then
   paq {"ojroques/nvim-lspfuzzy"}
   paq {"nvim-telescope/telescope.nvim"}
   paq {"unblevable/quick-scope"}
+  -- paq {"kevinhwang91/nvim-bqf"}
+  -- paq {"windwp/nvim-spectre"}
   -- https://github.com/elianiva/dotfiles/blob/master/nvim/.config/nvim/lua/modules/_mappings.lua
   -- paq {"tjdevries/astronauta.nvim"}
 
@@ -171,12 +177,12 @@ if paq_exists then
   paq {"gennaro-tedesco/nvim-peekup"} -- peek into the vim registers in floating window
 
   -- https://github.com/awesome-streamers/awesome-streamerrc/blob/master/ThePrimeagen/plugin/firenvim.vim
-  paq {
-    "glacambre/firenvim",
-    run = function()
-      vim.fn["firenvim#install"](777)
-    end
-  }
+  -- paq {
+  --   "glacambre/firenvim",
+  --   run = function()
+  --     vim.fn["firenvim#install"](777)
+  --   end
+  -- }
 
   -- (langs, syntax, et al) --
   paq {"tpope/vim-rails"}
