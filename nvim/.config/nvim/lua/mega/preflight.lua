@@ -8,13 +8,14 @@ local install_path = string.format("%s/site/pack/paqs/opt/", vim.fn.stdpath("dat
 if not exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   print "should be installing things"
   if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
+    print "-> skipping paq-nvim install."
     return
   end
 
   vim.fn.mkdir(install_path, "p")
 
   print("-> downloading paq-nvim...")
-  vim.fn.system(string.format("git clone %s %s/%s", repo_url, install_path, "paq-nvim"))
+  vim.fn.system(string.format("git clone --depth 1 %s %s/%s", repo_url, install_path, "paq-nvim"))
 
   vim.cmd([[packadd paq-nvim]])
 

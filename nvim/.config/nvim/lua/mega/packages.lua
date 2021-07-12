@@ -15,9 +15,9 @@ if paq_exists then
 
   -- (local/development packages) --
   --    -- located in: ~/.local/share/nvim/site/pack/local
-  -- paq {"megalithic/zk.nvim"}
-  -- paq {"megalithic/lexima.vim"}
-  -- paq {"megalithic/nvim-fzf-commands"}
+  -- "megalithic/zk.nvim"
+  -- "megalithic/lexima.vim"
+  -- "megalithic/nvim-fzf-commands"
 
   -- (paq-nvim) --
   paq {"savq/paq-nvim", opt = true}
@@ -31,8 +31,7 @@ if paq_exists then
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"junegunn/rainbow_parentheses.vim"}
-  -- paq {"ryanoasis/vim-devicons"}
-  paq {"kyazdani42/nvim-web-devicons"}
+  paq {"kyazdani42/nvim-web-devicons", opt = true}
   paq {"hoob3rt/lualine.nvim"}
   paq {"danilamihailov/beacon.nvim"}
   -- paq {"edluffy/specs.nvim"}
@@ -52,19 +51,9 @@ if paq_exists then
   paq {"nvim-lua/lsp-status.nvim"}
   paq {"nvim-lua/lsp_extensions.nvim"}
   paq {"glepnir/lspsaga.nvim"}
-  paq {"folke/lsp-trouble.nvim"}
-  paq {
-    "nvim-treesitter/nvim-treesitter"
-    -- run = function()
-    --   vim.api.nvim_command("TSUpdate")
-    -- end
-  }
-  paq {
-    "nvim-treesitter/completion-treesitter"
-    -- run = function()
-    --   vim.api.nvim_command("TSUpdate")
-    -- end
-  }
+  -- paq {"folke/trouble.nvim"}
+  paq {"nvim-treesitter/nvim-treesitter", run = "TSUpdate"}
+  paq {"nvim-treesitter/completion-treesitter", run = "TSUpdate"}
   paq {"nvim-treesitter/nvim-treesitter-textobjects"}
   paq {"windwp/nvim-ts-autotag"}
   -- paq {"nvim-treesitter/nvim-treesitter-refactor"}
