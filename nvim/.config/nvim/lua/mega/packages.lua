@@ -31,7 +31,8 @@ if paq_exists then
   paq {"norcalli/nvim-colorizer.lua"}
   paq {"dm1try/golden_size"}
   paq {"junegunn/rainbow_parentheses.vim"}
-  paq {"kyazdani42/nvim-web-devicons", opt = true}
+  paq {"ryanoasis/vim-devicons"}
+  -- paq {"kyazdani42/nvim-web-devicons", opt = true}
   paq {"hoob3rt/lualine.nvim"}
   paq {"danilamihailov/beacon.nvim"}
   -- paq {"edluffy/specs.nvim"}
