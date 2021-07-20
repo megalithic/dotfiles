@@ -149,6 +149,10 @@ mega.map("x", "ga", "<Plug>(EasyAlign)")
 -- start interactive EasyAlign for a motion/text object (e.g. gaip)
 mega.map("n", "ga", "<Plug>(EasyAlign)")
 
+-- easyalign
+mega.map("v", "<Enter>", "<Plug>(EasyAlign)")
+mega.map("n", "<Leader>a", "<Plug>(EasyAlign)")
+
 -- # FZF
 -- mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
 mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
@@ -167,7 +171,7 @@ function _G.search_zettel()
     cwd = "~/Documents/_zettel"
   }
 end
-mega.map("n", "<leader>fz", ":lua _G.search_zettel()<cr>")
+mega.map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
 
 -- # Dash
 mega.map("n", "<leader>D", "<cmd>Dash<CR>")
@@ -176,7 +180,8 @@ mega.map("n", "<leader>D", "<cmd>Dash<CR>")
 mega.map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
 
 -- # paq
-mega.map("n", "<F5>", "<cmd>PaqUpdate<CR>")
+mega.map("n", "<F5>", "<cmd>lua mega.packages()<cr>")
+mega.map("n", "<Leader>pq", "<cmd>lua mega.packages()<cr>")
 
 -- # bullets.vim
 -- mega.map(
@@ -229,7 +234,14 @@ mega.map("n", "<F5>", "<cmd>PaqUpdate<CR>")
 -- }
 
 -- # telescope
--- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files({ hidden = true })<cr>")
+-- mega.map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({hidden = true})<cr>")
+mega.map(
+  "n",
+  "<leader>ff",
+  "<cmd>lua require('telescope.builtin').git_files(require('telescope.themes').get_dropdown({}))<cr>"
+)
+
+-- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown({ winblend = 10, hidden = true }))<cr>")
 -- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
 -- mega.map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
 -- mega.map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")

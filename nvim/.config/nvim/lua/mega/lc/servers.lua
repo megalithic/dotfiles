@@ -279,8 +279,10 @@ function M.activate(on_attach_fn)
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-    -- mega.inspect("server to configure", server)
-    -- mega.inspect("config to use", config)
+    if lspconf[server] == nil or config == nil or lspconf == nil or server == nil then
+      mega.inspect("nil value being indexed", {server, config, lspconf})
+      return
+    end
 
     if not server_disabled then
       lspconf[server].setup(
@@ -289,7 +291,8 @@ function M.activate(on_attach_fn)
           {
             on_attach = on_attach_fn,
             handlers = vim.tbl_deep_extend("keep", {}, require("mega.lc.handlers"), vim.lsp.handlers),
-            capabilities = capabilities
+            capabilities = capabilities,
+            flags = {debounce_text_changes = 150}
           },
           config
         )

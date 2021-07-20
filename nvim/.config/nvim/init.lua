@@ -1,5 +1,5 @@
--- easy access to `mega` global things
-_G["mega"] = require("mega.global")
+setmetatable(_G, {__index = vim})
+_G["mega"] = require("global")
 
 -- [ debugging ] ---------------------------------------------------------------
 
@@ -13,32 +13,22 @@ _G["mega"] = require("mega.global")
 --  `tail -n150 -f $HOME/.config/nvim/lsp.log`
 --  :lua vim.cmd('vnew'..vim.lsp.get_log_path())
 
--- FIXME: do we need to do this packadd?
--- vim.cmd([[packadd vimball]])
+vim.cmd([[source ~/.vimrc]])
 
-vim.cmd([[runtime .vimrc]])
-
--- [ loaders ] -----------------------------------------------------------------
-
-mega.load("preflight", "mega.preflight")
-mega.load("packages", "mega.packages")
-
--- Force loading of astronauta first.
--- vim.cmd [[runtime plugin/astronauta.vim]]
-
-mega.load("everforest", "mega.colors.everforest").load()
-mega.load("settings", "mega.settings")
-mega.load("lc", "mega.lc")
-mega.load("mappings", "mega.mappings")
-mega.load("autocmds", "mega.autocmds")
--- mega.load("filetypes", "mega.filetypes")
+-- [ loaders ] ------------------------------------------------------------- {{{
+mega.load("preflight")
+mega.load("settings")
+mega.load("autocmds")
+mega.load("mappings")
+mega.load("lsp")
 vim.schedule(
   function()
-    mega.load("ftplugin", "mega.ftplugin").setup()
+    mega.load("ftplugin").setup()
   end
 )
 vim.schedule(
   function()
-    mega.load("ftplugin", "mega.ftplugin").trigger_ft()
+    mega.load("ftplugin").trigger_ft()
   end
 )
+-- }}}

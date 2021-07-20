@@ -95,6 +95,7 @@ local on_attach = function(client, bufnr)
   -- mega.map("n", "<CR>", "<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>")
   -- # lsp-trouble
   mega.map("n", "<leader>ll", "<cmd>LspTroubleToggle<cr>")
+  mega.map("n", "<leader>lt", "<cmd>LspTroubleToggle<cr>")
 
   mega.augroup(
     "lc.cursor_commands",

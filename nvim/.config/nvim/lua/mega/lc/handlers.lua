@@ -78,10 +78,11 @@ M["textDocument/publishDiagnostics"] = function(...)
       virtual_text = false,
       -- virtual_text = {
       --   spacing = 4,
-      --   prefix = vim.api.nvim_get_var("virtual_text_symbol"),
+      --   prefix = "●"
       -- },
       signs = true,
-      update_in_insert = false
+      update_in_insert = false,
+      severity_sort = true
     }
   )(...)
   pcall(vim.lsp.diagnostic.set_loclist, {open_loclist = false})

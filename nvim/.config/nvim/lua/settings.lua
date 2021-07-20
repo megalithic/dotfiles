@@ -1,4 +1,40 @@
--- [orgmode] -------------------------------------------------------------------
+-- [ui/appearance] --------------------------------------------------------- {{{
+do
+  vim.g.everforest_enable_italic = true
+  vim.g.everforest_enable_bold = true
+  vim.g.everforest_transparent_background = true
+  -- vim.g.everforest_diagnostic_text_highlight = true
+  -- vim.g.everforest_diagnostic_line_highlight = true
+  -- vim.g.everforest_sign_column_background = "none"
+  vim.g.everforest_background = "soft"
+  vim.g.everforest_cursor = "green"
+  vim.g.everforest_better_performance = true
+  vim.cmd("colorscheme everforest")
+end
+-- }}}
+
+-- [nvim options] ---------------------------------------------------------- {{{
+do
+  vim.opt.foldmethod = "expr"
+  vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+  vim.g.no_man_maps = true
+  vim.g.vim_json_syntax_conceal = false
+  vim.g.vim_json_conceal = false
+  vim.g.floating_window_border = {"╭", "─", "╮", "│", "╯", "─", "╰", "│"}
+  vim.g.floating_window_border_dark = {
+    {"╭", "FloatBorderDark"},
+    {"─", "FloatBorderDark"},
+    {"╮", "FloatBorderDark"},
+    {"│", "FloatBorderDark"},
+    {"╯", "FloatBorderDark"},
+    {"─", "FloatBorderDark"},
+    {"╰", "FloatBorderDark"},
+    {"│", "FloatBorderDark"}
+  }
+end
+-- }}}
+
+-- [orgmode] --------------------------------------------------------------- {{{
 do
   require("orgmode").setup(
     {
@@ -7,18 +43,21 @@ do
     }
   )
 end
+-- }}}
 
--- [zk.nvim] -------------------------------------------------------------------
+-- [zk] -------------------------------------------------------------------- {{{
 do
   require("zk").setup({debug = true})
 end
+-- }}}
 
--- [trouble] ---------------------------------------------------------------
+-- [trouble] --------------------------------------------------------------- {{{
 do
   require("trouble").setup({})
 end
+-- }}}
 
--- [bullets.vim] ---------------------------------------------------------------
+-- [bullets] --------------------------------------------------------------- {{{
 do
   vim.g.bullets_enabled_file_types = {
     "markdown",
@@ -29,13 +68,15 @@ do
   vim.g.bullets_checkbox_markers = " ○◐✗"
   -- vim.g.bullets_set_mappings = 0
 end
+-- }}}
 
--- [fixcursorhold] -------------------------------------------------------------
+-- [fixcursorhold] --------------------------------------------------------- {{{
 do
   vim.g.cursorhold_updatetime = 100
 end
+-- }}}
 
--- [lspsaga] -------------------------------------------------------------------
+-- [lspsaga] --------------------------------------------------------------- {{{
 -- do
 --   require("lspsaga").init_lsp_saga {
 --     use_saga_diagnostic_sign = false,
@@ -58,8 +99,9 @@ end
 --     finder_reference_icon = "•r"
 --   }
 -- end
+-- }}}
 
--- [beacon] --------------------------------------------------------------------
+-- [beacon] ---------------------------------------------------------------- {{{
 do
   vim.g.beacon_size = 90
   vim.g.beacon_minimal_jump = 25
@@ -67,12 +109,9 @@ do
   -- vim.g.beacon_fade = 0
   vim.g.beacon_ignore_filetypes = {"fzf"}
 end
+-- }}}
 
--- [surround] ------------------------------------------------------------------
--- vim.g.surround_mappings_style = "surround"
--- require "surround".setup {}
-
--- [kommentary] ----------------------------------------------------------------
+-- [kommentary] ------------------------------------------------------------ {{{
 do
   local kommentary_config = require("kommentary.config")
   kommentary_config.configure_language(
@@ -105,8 +144,9 @@ do
     }
   )
 end
+-- }}}
 
--- [conflict-marker] -----------------------------------------------------------
+-- [conflict-marker] ------------------------------------------------------- {{{
 do
   -- disable the default highlight group
   vim.g.conflict_marker_highlight_group = ""
@@ -114,41 +154,39 @@ do
   vim.g.conflict_marker_begin = "^<<<<<<< .*$"
   vim.g.conflict_marker_end = "^>>>>>>> .*$"
 end
+-- }}}
 
--- [nvim-colorizer] ------------------------------------------------------------
--- https://github.com/norcalli/nvim-colorizer.lua/issues/4#issuecomment-543682160
+-- [colorizer] ------------------------------------------------------------- {{{
 do
-  local colorizer_installed, colorizer = pcall(require, "colorizer")
-  if colorizer_installed then
-    colorizer.setup(
-      {
-        -- '*',
-        -- '!vim',
-        -- }, {
-        css = {rgb_fn = true},
-        scss = {rgb_fn = true},
-        sass = {rgb_fn = true},
-        stylus = {rgb_fn = true},
-        vim = {names = false},
-        tmux = {names = true},
-        "eelixir",
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-        "zsh",
-        "sh",
-        "conf",
-        "lua",
-        html = {
-          mode = "foreground"
-        }
+  require("colorizer").setup(
+    {
+      -- '*',
+      -- '!vim',
+      -- }, {
+      css = {rgb_fn = true},
+      scss = {rgb_fn = true},
+      sass = {rgb_fn = true},
+      stylus = {rgb_fn = true},
+      vim = {names = false},
+      tmux = {names = true},
+      "eelixir",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+      "zsh",
+      "sh",
+      "conf",
+      "lua",
+      html = {
+        mode = "foreground"
       }
-    )
-  end
+    }
+  )
 end
+-- }}}
 
--- [golden_size] ---------------------------------------------------------------
+-- [golden-size] ----------------------------------------------------------- {{{
 do
   local golden_size_installed, golden_size = pcall(require, "golden_size")
   if golden_size_installed then
@@ -180,16 +218,9 @@ do
     )
   end
 end
+-- }}}
 
--- [lexima] --------------------------------------------------------------------
-vim.g.lexima_no_default_rules = 1
--- vim.g.lexima_enable_basic_rules = 0
-vim.g.lexima_enable_newline_rules = 0
-vim.g.lexima_enable_endwise_rules = 1
--- NOTE: Order is important. You can't lazy loading lexima.vim.
-vim.cmd([[call lexima#set_default_rules()]])
-
--- [nvim-autopairs] ------------------------------------------------------------
+-- [autopairs] ------------------------------------------------------------- {{{
 do
   -- require("nvim-autopairs").setup()
   -- -- require('nvim-autopairs').setup({
@@ -207,86 +238,40 @@ do
   -- --   }
   -- -- })
 end
+-- }}}
 
--- [fzf] -----------------------------------------------------------------------
-do
-  vim.g.fzf_command_prefix = "Fzf"
-  vim.g.fzf_layout = {window = {width = 0.5, height = 0.5}}
-  vim.g.fzf_action = {enter = "vsplit"}
-  vim.g.fzf_preview_window = {"right:40%", "alt-p"}
-  vim.env.FZF_DEFAULT_COMMAND = "fd --type f --hidden --follow --exclude '.git' --exclude 'node_modules'"
-  vim.api.nvim_exec(
-    [[
-function! RipgrepFzf(query, fullscreen)
-let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
-let initial_command = printf(command_fmt, shellescape(a:query))
-let reload_command = printf(command_fmt, '{q}')
-let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-endfunction
-]],
-    false
-  )
-  vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
-  vim.g.fzf_colors = {
-    fg = {"fg", "Normal"},
-    bg = {"bg", "Normal"},
-    hl = {"fg", "IncSearch"},
-    ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
-    ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
-    ["hl+"] = {"fg", "IncSearch"},
-    info = {"fg", "IncSearch"},
-    border = {"fg", "Ignore"},
-    prompt = {"fg", "Comment"},
-    pointer = {"fg", "IncSearch"},
-    marker = {"fg", "IncSearch"},
-    spinner = {"fg", "IncSearch"},
-    header = {"fg", "WildMenu"}
-  }
-  -- @evantravers:
-  -- vim.g.fzf_colors = {
-  --   fg = {"fg", "Normal"},
-  --   bg = {"bg", "Normal"},
-  --   hl = {"fg", "Comment"},
-  --   ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
-  --   ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
-  --   ["hl+"] = {"fg", "Statement"},
-  --   info = {"fg", "PreProc"},
-  --   border = {"fg", "Ignore"},
-  --   prompt = {"fg", "Conditional"},
-  --   pointer = {"fg", "Exception"},
-  --   marker = {"fg", "Keyword"},
-  --   spinner = {"fg", "Label"},
-  --   header = {"fg", "Comment"}
-  -- }
-end
-
--- [vim-polyglot] --------------------------------------------------------------
+-- [polyglot] -------------------------------------------------------------- {{{
 do
   vim.g.polyglot_disabled = {"markdown"}
 end
+-- }}}
 
--- [quickscope] ----------------------------------------------------------------
+
+-- [quickscope] ------------------------------------------------------------ {{{
 do
   vim.g.qs_enable = 1
   vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
   vim.g.qs_buftype_blacklist = {"terminal", "nofile"}
   vim.g.qs_lazy_highlight = 1
 end
+-- }}}
 
--- [textobj_parameter] ---------------------------------------------------------
+-- [diffview] -------------------------------------------------------------- {{{
 do
-  vim.g.vim_textobj_parameter_mapping = ","
+  require'diffview'.setup({})
 end
+-- }}}
 
--- [git_messenger] -------------------------------------------------------------
+-- [git-messenger] --------------------------------------------------------- {{{
 do
+  vim.g.git_messenger_floating_win_opts = {border = vim.g.floating_window_border_dark}
   vim.g.git_messenger_no_default_mappings = true
   vim.g.git_messenger_max_popup_width = 100
   vim.g.git_messenger_max_popup_height = 100
 end
+-- }}}
 
--- [vim-test] ------------------------------------------------------------------
+-- [vim-test] -------------------------------------------------------------- {{{
 do
   vim.api.nvim_exec(
     [[
@@ -312,43 +297,62 @@ do
     false
   )
 end
+-- }}}
 
--- [nvim-treesitter] -----------------------------------------------------------
+-- [tree-sitter] ----------------------------------------------------------- {{{
 do
-  local ts_installed, treesitter = pcall(require, "nvim-treesitter.configs")
-  if ts_installed then
-    treesitter.setup(
-      {
-        ensure_installed = "maintained",
-        highlight = {
-          enable = true,
-          use_languagetree = true
-        },
-        indent = {enable = true},
-        autotag = {
-          enable = true
-        },
-        textobjects = {
-          select = {
-            enable = true,
-            keymaps = {
-              ["if"] = "@function.inner",
-              ["af"] = "@function.outer",
-              ["ik"] = "@call.inner",
-              ["ak"] = "@call.outer",
-              ["il"] = "@loop.inner",
-              ["al"] = "@loop.outer",
-              ["ic"] = "@conditional.inner",
-              ["ac"] = "@conditional.outer"
-            }
-          }
+  require("nvim-treesitter.configs").setup {
+    ensure_installed = {
+      "c",
+      "cpp",
+      "javascript",
+      "elixir",
+      "elm",
+      "lua",
+      "python",
+      "rust",
+      "html",
+      "query",
+      "toml",
+      "css",
+      "nix",
+      "tsx",
+      "typescript",
+      "ruby",
+      "jsdoc",
+      "erlang"
+    },
+    highlight = {enable = true},
+    indent = {enable = false},
+    autotag = { enable = true },
+    textobjects = {
+      select = {
+        enable = true,
+        keymaps = {
+          ["if"] = "@function.inner",
+          ["af"] = "@function.outer",
+
+          ["ar"] = "@parameter.outer",
+
+          ["iC"] = "@class.inner",
+          ["aC"] = "@class.outer",
+
+          ["ik"] = "@call.inner",
+          ["ak"] = "@call.outer",
+
+          ["il"] = "@loop.inner",
+          ["al"] = "@loop.outer",
+
+          ["ic"] = "@conditional.outer",
+          ["ac"] = "@conditional.inner",
         }
       }
-    )
-  end
+    }
+  }
 end
+-- }}}
 
--- [vim-projectionist] ---------------------------------------------------------
+-- [projectionist] --------------------------------------------------------- {{{
 do
   vim.g.projectionist_heuristics = {
     ["mix.exs"] = {
@@ -415,7 +419,9 @@ do
     }
   }
 end
+-- }}}
 
+-- [telescope] ------------------------------------------------------------- {{{
 do
   local telescope = require("telescope")
   local actions = require("telescope.actions")
@@ -440,3 +446,4 @@ do
       } ,
   })
 end
+-- }}}
