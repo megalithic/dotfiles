@@ -10,6 +10,18 @@ do
   vim.g.everforest_cursor = "green"
   vim.g.everforest_better_performance = true
   vim.cmd("colorscheme everforest")
+
+  vim.opt.statusline = table.concat({
+      "%2{mode()} | ",
+      "f",            -- relative path
+      "m",            -- modified flag
+      "r",
+      "=",
+      "{&spelllang}",
+      "y",            -- filetype
+      "8(%l,%c%)",    -- line, column
+      "8p%% ",        -- file percentage
+    }, " %")
 end
 -- }}}
 

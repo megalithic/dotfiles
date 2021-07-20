@@ -1,11 +1,53 @@
 local M = {}
 
-function M.map(lhs, rhs, mode, expr) -- wait for lua keymaps: neovim/neovim#13823
-  mode = mode or "n"
-  if mode == "n" then
-    rhs = "<cmd>" .. rhs .. "<cr>"
+local home = os.getenv("HOME")
+local path_sep = M.is_windows and "\\" or "/"
+local os_name = vim.loop.os_uname().sysname
+
+function M:load_variables()
+  self.is_mac = os_name == "Darwin"
+  self.is_linux = os_name == "Linux"
+  self.is_windows = os_name == "Windows"
+  self.vim_path = home .. path_sep .. ".config" .. path_sep .. "nvim"
+  self.cache_dir = home .. path_sep .. ".cache" .. path_sep .. "nvim" .. path_sep
+  self.modules_dir = self.vim_path .. path_sep .. "modules"
+  self.path_sep = path_sep
+  self.home = home
+
+  return self
+end
+M:load_variables()
+
+-- check file exists
+function M.exists(file)
+  local ok, err, code = os.rename(file, file)
+  if not ok then
+    if code == 13 then
+      -- Permission denied, but it exists
+      return true
+    end
   end
-  vim.api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
+  return ok, err
+end
+
+--- Check if a directory exists in this path
+function M.isdir(path)
+  -- "/" works on both Unix and Windows
+  return M.exists(path .. "/")
+end
+
+-- function M.map(lhs, rhs, mode, expr) -- wait for lua keymaps: neovim/neovim#13823
+--   mode = mode or "n"
+--   if mode == "n" then
+--     rhs = "<cmd>" .. rhs .. "<cr>"
+--   end
+--   vim.api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
+-- end
+
+function M.map(mode, lhs, rhs, opts)
+  local map_opts = {noremap = true, silent = true, expr = false}
+  opts = vim.tbl_extend("force", map_opts, opts or {})
+  vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
 function M.bufmap(lhs, rhs, mode, expr)
@@ -18,6 +60,34 @@ end
 
 function M.au(s)
   vim.cmd("au!" .. s)
+end
+
+function M.augroup(group, fn)
+  vim.api.nvim_command("augroup " .. group)
+  vim.api.nvim_command("autocmd!")
+  fn()
+  vim.api.nvim_command("augroup END")
+end
+
+function M.augroup_cmds(name, commands)
+  vim.cmd("augroup " .. name)
+  vim.cmd("autocmd!")
+  for _, c in ipairs(commands) do
+    vim.cmd(
+      string.format(
+        "autocmd %s %s %s %s",
+        table.concat(c.events, ","),
+        table.concat(c.targets or {}, ","),
+        table.concat(c.modifiers or {}, " "),
+        c.command
+      )
+    )
+  end
+  vim.cmd("augroup END")
+end
+
+function M.exec(cmd)
+  vim.api.nvim_exec(cmd, true)
 end
 
 function M.inspect(k, v, l, f)
