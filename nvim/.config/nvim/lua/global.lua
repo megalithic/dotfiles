@@ -124,6 +124,34 @@ function M.load(req, key)
   end
 end
 
+function M.table_merge(dest, src)
+  for k, v in pairs(src) do
+    dest[k] = v
+  end
+  return dest
+end
+
+-- helps with nerdfonts usages
+local bytemarkers = {{0x7FF, 192}, {0xFFFF, 224}, {0x1FFFFF, 240}}
+function M.utf8(decimal)
+  if decimal < 128 then
+    return string.char(decimal)
+  end
+  local charbytes = {}
+  for bytes, vals in ipairs(bytemarkers) do
+    if decimal <= vals[1] then
+      for b = bytes + 1, 2, -1 do
+        local mod = decimal % 64
+        decimal = (decimal - mod) / 64
+        charbytes[b] = string.char(128 + mod)
+      end
+      charbytes[1] = string.char(vals[2] + decimal)
+      break
+    end
+  end
+  return table.concat(charbytes)
+end
+
 function M.dump(...)
   print(unpack(vim.tbl_map(inspect, {...})))
 end

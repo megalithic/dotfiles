@@ -1,7 +1,6 @@
 return {
   load = function(colorscheme_str)
-    local colorscheme = require(string.format("mega.colors.%s", colorscheme_str or "nova"))
-    -- local colors = colorscheme.colors
+    local colorscheme = require(string.format("colors.%s", colorscheme_str or "everforest"))
     local icons = colorscheme.icons
 
     local lsp_status = require "lsp-status"
@@ -25,12 +24,6 @@ return {
 
     local lualine = require("lualine")
     local config = {}
-    -- config.theme = colorscheme_str
-    -- lualine.separator = "|"
-    -- lualine.section_separators = {"", ""}
-    -- lualine.section_separators = {" ", " "}
-    -- lualine.component_separators = {"", ""}
-    -- lualine.component_separators = {"|", "|"}
     config.options = {
       theme = "everforest",
       section_separators = {"", ""},
@@ -49,7 +42,6 @@ return {
       },
       lualine_x = {LspStatus},
       lualine_y = {"filetype", {"fileformat", icons_enabled = false}},
-      -- lualine_y = {"encoding", {"fileformat", icons_enabled = false}, "filetype"},
       lualine_z = {"location", "progress"},
       lualine_diagnostics = {}
     }
@@ -61,7 +53,6 @@ return {
       lualine_y = {},
       lualine_z = {}
     }
-    config.extensions = {"fzf"}
     lualine.setup(config)
   end
 }

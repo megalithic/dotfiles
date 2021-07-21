@@ -1,11 +1,6 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
--- REF:
--- https://github.com/mhartington/dotfiles/blob/master/config/nvim/lua/mh/autocmds/init.lua
-
 local au, exec, augroup = mega.au, mega.exec, mega.augroup_cmds
-
-mega.inspect("activating autocmds..")
 
 au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
 au([[StdinReadPost * set buftype=nofile]])

@@ -1,16 +1,6 @@
 -- [ui/appearance] --------------------------------------------------------- {{{
 do
-  vim.g.everforest_enable_italic = true
-  vim.g.everforest_enable_bold = true
-  vim.g.everforest_transparent_background = true
-  -- vim.g.everforest_diagnostic_text_highlight = true
-  -- vim.g.everforest_diagnostic_line_highlight = true
-  -- vim.g.everforest_sign_column_background = "none"
-  vim.g.everforest_background = "soft"
-  vim.g.everforest_cursor = "green"
-  vim.g.everforest_better_performance = true
-  vim.cmd("colorscheme everforest")
-
+  -- fallback in the event our statusline plugins fail to load
   vim.opt.statusline = table.concat({
       "%2{mode()} | ",
       "f",            -- relative path
