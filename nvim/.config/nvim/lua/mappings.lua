@@ -1,40 +1,47 @@
+local api = vim.api
+local map = mega.map
+
 -- [convenience mappings] ------------------------------------------------------
 
 -- make the tab key match bracket pairs
-vim.api.nvim_exec("silent! unmap [%", true)
-vim.api.nvim_exec("silent! unmap ]%", true)
+api.nvim_exec("silent! unmap [%", true)
+api.nvim_exec("silent! unmap ]%", true)
 
-mega.map("n", "<Tab>", "%", {noremap = false})
-mega.map("s", "<Tab>", "%", {noremap = false})
-mega.map("n", "<Tab>", "%", {noremap = true})
-mega.map("v", "<Tab>", "%", {noremap = true})
-mega.map("x", "<Tab>", "%", {noremap = true})
+map("n", "<Tab>", "%", {noremap = false})
+map("s", "<Tab>", "%", {noremap = false})
+map("n", "<Tab>", "%", {noremap = true})
+map("v", "<Tab>", "%", {noremap = true})
+map("x", "<Tab>", "%", {noremap = true})
 
 -- [override mappings] ---------------------------------------------------------
 
 -- Convenient Line operations
-mega.map("n", "H", "^")
-mega.map("n", "L", "$")
-mega.map("v", "L", "g_")
-mega.map("n", "Y", '"+y')
+map("n", "H", "^")
+map("n", "L", "$")
+map("v", "L", "g_")
+map("n", "Y", '"+y')
 -- Remap VIM 0 to first non-blank character
-mega.map("n", "0", "^")
+map("n", "0", "^")
 
-mega.map("n", "q", "<Nop>")
-mega.map("n", "Q", "@q")
-mega.map("v", "Q", ":norm @q<CR>")
+map("n", "q", "<Nop>")
+map("n", "Q", "@q")
+map("v", "Q", ":norm @q<CR>")
 
 -- Join / Split Lines
-mega.map("n", "J", "mzJ`z") -- Join lines
-mega.map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
+map("n", "J", "mzJ`z") -- Join lines
+map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
+
+--Remap for dealing with word wrap
+map('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
+api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
 
 -- clear highlights
--- mega.map("n", "<ESC>", "<cmd>syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>", {silent = true})
-vim.api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
+-- map("n", "<ESC>", "<cmd>syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>", {silent = true})
+api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
 
 -- keep line in middle of buffer when searching
-mega.map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
-mega.map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
+map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
+map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
 
 -- readline bindings
 local rl_bindings = {
@@ -47,29 +54,29 @@ local rl_bindings = {
   {lhs = "<c-d>", rhs = "<del>", opts = {noremap = true}}
 }
 for _, binding in ipairs(rl_bindings) do
-  mega.map("c", binding.lhs, binding.rhs, binding.opts)
+  map("c", binding.lhs, binding.rhs, binding.opts)
 end
 
 -- Default to case insensitive search
--- mega.map("n", "/", "/\v")
--- mega.map("v", "/", "/\v")
+-- map("n", "/", "/\v")
+-- map("v", "/", "/\v")
 
 -- [custom mappings] -----------------------------------------------------------
 
 -- execute our current lua file
-mega.map("n", "<leader>x", "<cmd>luafile %<cr>")
+map("n", "<leader>x", "<cmd>luafile %<cr>")
 
 -- Things 3
-vim.api.nvim_exec(
+api.nvim_exec(
   [[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
   true
 )
-mega.map("n", "<Leader>T", "<cmd>Things<CR>")
+map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
--- mega.map("n", "<leader>s", "z=e") -- Correct current word
-mega.map("n", "<leader>s", "b1z=e") -- Correct previous word
-mega.map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
+-- map("n", "<leader>s", "z=e") -- Correct current word
+map("n", "<leader>s", "b1z=e") -- Correct previous word
+map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
 -- PROSE MODE
 -- @evantravers, thanks!
@@ -110,27 +117,27 @@ function _G.toggle_prose()
 end
 
 -- # find and replace in multiple files
-mega.map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
+map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
 
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # golden_size
-mega.map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
+map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
 -- # git-related
-mega.map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
-mega.map("n", "<Leader>gh", "<cmd>GBrowse!<CR>")
-mega.map("x", "<Leader>gh", "<cmd>GBrowse!<CR>")
-mega.map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
-mega.map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
+map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+map("n", "<Leader>gh", "<cmd>GBrowse!<CR>")
+map("x", "<Leader>gh", "<cmd>GBrowse!<CR>")
+map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
+map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
 
 -- # markdown-related
-mega.map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
-mega.map("n", "<leader>mp", "<cmd>lua toggle_prose()<cr>")
+map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
+map("n", "<leader>mp", "<cmd>lua toggle_prose()<cr>")
 
 -- # slash
 vim.cmd([[noremap <plug>(slash-after) zz]])
-vim.api.nvim_exec(
+api.nvim_exec(
   [[
 if has('timers')
   " Blink 2 times with 50ms interval
@@ -142,49 +149,38 @@ endif
 
 -- # easy-align
 -- start interactive EasyAlign in visual mode (e.g. vipga)
--- mega.map("v", "<Enter>", "<Plug>(EasyAlign)")
-mega.map("v", "ga", "<Plug>(EasyAlign)")
-mega.map("x", "ga", "<Plug>(EasyAlign)")
+-- map("v", "<Enter>", "<Plug>(EasyAlign)")
+map("v", "ga", "<Plug>(EasyAlign)")
+map("x", "ga", "<Plug>(EasyAlign)")
 
 -- start interactive EasyAlign for a motion/text object (e.g. gaip)
-mega.map("n", "ga", "<Plug>(EasyAlign)")
+map("n", "ga", "<Plug>(EasyAlign)")
 
 -- easyalign
-mega.map("v", "<Enter>", "<Plug>(EasyAlign)")
-mega.map("n", "<Leader>a", "<Plug>(EasyAlign)")
+map("v", "<Enter>", "<Plug>(EasyAlign)")
+map("n", "<Leader>a", "<Plug>(EasyAlign)")
 
 -- # FZF
--- mega.map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
-mega.map("n", "<Leader>a", "<cmd>FzfRg<CR>")
-mega.map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
-mega.map(
+-- map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
+map("n", "<Leader>a", "<cmd>FzfRg<CR>")
+map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
+map(
   "n",
   "<leader>ff",
   "<cmd>lua require('fzf-commands').files({ fzf = function(contents, options) return require('fzf').fzf(contents, options, { height = 50, width = 200 }) end })<CR>"
 )
 
-function _G.search_zettel()
-  require("telescope.builtin").find_files {
-    prompt_title = "Search ZK",
-    hidden = true,
-    shorten_path = false,
-    cwd = "~/Documents/_zettel"
-  }
-end
-mega.map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
-
 -- # Dash
-mega.map("n", "<leader>D", "<cmd>Dash<CR>")
+map("n", "<leader>D", "<cmd>Dash<CR>")
 
 -- # markdown-preview
-mega.map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
+map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
 
 -- # paq
-mega.map("n", "<F5>", "<cmd>lua mega.packages()<cr>")
-mega.map("n", "<Leader>pq", "<cmd>lua mega.packages()<cr>")
+map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
 -- # bullets.vim
--- mega.map(
+-- map(
 --   "i",
 --   "<CR>",
 --   -- "<cmd>pumvisible() ? '\<C-y>' : ''",
@@ -196,14 +192,14 @@ mega.map("n", "<Leader>pq", "<cmd>lua mega.packages()<cr>")
 --   -- end,
 --   {silent = false, expr = true, noremap = false}
 -- )
--- mega.map(
+-- map(
 --   "i",
 --   "<C-T>",
 --   function()
 --     vim.cmd([[BulletDemote]])
 --   end
 -- )
--- mega.map(
+-- map(
 --   "i",
 --   "<C-D>",
 --   function()
@@ -234,16 +230,35 @@ mega.map("n", "<Leader>pq", "<cmd>lua mega.packages()<cr>")
 -- }
 
 -- # telescope
--- mega.map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({hidden = true})<cr>")
-mega.map(
+-- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({hidden = true})<cr>")
+map(
   "n",
   "<leader>ff",
   "<cmd>lua require('telescope.builtin').git_files(require('telescope.themes').get_dropdown({}))<cr>"
 )
 
--- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown({ winblend = 10, hidden = true }))<cr>")
--- mega.map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
--- mega.map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
--- mega.map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")
--- mega.map("n", "<leader>A", ":lua require('telescope.builtin').grep_string { search = vim.fn.expand('<cword>') }<CR>")
--- mega.map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
+-- map("n", "<leader>ff", ":lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown({ winblend = 10, hidden = true }))<cr>")
+-- map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
+-- map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
+map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")
+map("n", "<leader>A", ":lua require('telescope.builtin').grep_string { search = vim.fn.expand('<cword>') }<CR>")
+-- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
+
+-- zettelkasten
+function _G.search_zettel()
+  require("telescope.builtin").find_files {
+    prompt_title = "Search ZK",
+    hidden = true,
+    shorten_path = false,
+    cwd = "~/Documents/_zettel"
+  }
+end
+map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
+
+-- orgmode
+map('n', '<leader>os', [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+map('n', '<leader>of', [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+
+map('n', '<leader>,', ':buffer *')
+map('n', '<leader>.', ':e<space>**/')
+map('n', '<leader>sT', ':tjump *')

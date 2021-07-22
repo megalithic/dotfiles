@@ -35,6 +35,7 @@ return {
   --
   -- (file/document navigation) --
   "nvim-telescope/telescope.nvim",
+  {"nvim-telescope/telescope-fzf-native.nvim", run = "make"},
   "unblevable/quick-scope",
 
   --

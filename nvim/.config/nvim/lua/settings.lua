@@ -224,27 +224,16 @@ end
 
 -- [autopairs] ------------------------------------------------------------- {{{
 do
-  -- require("nvim-autopairs").setup()
-  -- -- require('nvim-autopairs').setup({
-  -- --   pairs_map = {
-  -- --     ["'"] = "'",
-  -- --     ['"'] = '"',
-  -- --     ['('] = ')',
-  -- --     ['['] = ']',
-  -- --     ['{'] = '}',
-  -- --     ['`'] = '`',
-  -- --     ['$'] = '$',
-  -- --     ['function'] = 'end',
-  -- --     ['def'] = 'end',
-  -- --     ['defp'] = 'end',
-  -- --   }
-  -- -- })
+  require("nvim-autopairs").setup({
+    map_cr = true, --  map <CR> on insert mode
+    map_complete = false -- it will auto insert `(` after select function or method item
+  })
 end
 -- }}}
 
 -- [polyglot] -------------------------------------------------------------- {{{
 do
-  vim.g.polyglot_disabled = {"markdown"}
+  vim.g.polyglot_disabled = {}
 end
 -- }}}
 
@@ -325,11 +314,12 @@ do
       "erlang"
     },
     highlight = {enable = true},
-    indent = {enable = false},
-    autotag = { enable = true },
+    indent = {enable = true},
+    autotag = {enable = true},
     textobjects = {
       select = {
         enable = true,
+        lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
         keymaps = {
           ["if"] = "@function.inner",
           ["af"] = "@function.outer",
@@ -428,7 +418,8 @@ do
   local telescope = require("telescope")
   local actions = require("telescope.actions")
 
-  telescope.setup({
+  telescope.setup(
+    {
     defaults =
       {
         file_ignore_patterns = {".git/*"},
@@ -445,7 +436,18 @@ do
             ["<C-o>"] = actions.select_default,
           },
         }
-      } ,
-  })
+      },
+      extensions = {
+        fzf = {
+          fuzzy = true,
+          override_generic_sorter = true, -- override the generic sorter
+          override_file_sorter = true, -- override the file sorter
+          case_mode = 'smart_case', -- or "ignore_case" or "respect_case"
+          -- the default case_mode is "smart_case"
+        },
+      },
+    }
+  )
+  telescope.load_extension('fzf')
 end
 -- }}}

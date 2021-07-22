@@ -1,6 +1,8 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
+source "_helpers"
+
 log "installing luarocks modules"
 if (command -v luarocks &> /dev/null); then
   (! command -v luacheck &> /dev/null) && luarocks install luacheck

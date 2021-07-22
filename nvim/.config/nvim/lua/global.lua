@@ -50,6 +50,7 @@ function M.map(mode, lhs, rhs, opts)
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
+-- TODO: support passed in bufnr
 function M.bufmap(lhs, rhs, mode, expr)
   mode = mode or "n"
   if mode == "n" then

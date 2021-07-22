@@ -1,5 +1,3 @@
-mega.inspect("activating lsp_config.lua..")
-
 -- NOTE:
 -- - Handy commands for LSP things:
 -- - https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/lspconfig.lua#L154-L184

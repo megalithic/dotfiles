@@ -181,89 +181,18 @@ do
   end
 end
 
--- [lexima] --------------------------------------------------------------------
-vim.g.lexima_no_default_rules = 1
--- vim.g.lexima_enable_basic_rules = 0
-vim.g.lexima_enable_newline_rules = 0
-vim.g.lexima_enable_endwise_rules = 1
--- NOTE: Order is important. You can't lazy loading lexima.vim.
-vim.cmd([[call lexima#set_default_rules()]])
-
 -- [nvim-autopairs] ------------------------------------------------------------
 do
-  -- require("nvim-autopairs").setup()
-  -- -- require('nvim-autopairs').setup({
-  -- --   pairs_map = {
-  -- --     ["'"] = "'",
-  -- --     ['"'] = '"',
-  -- --     ['('] = ')',
-  -- --     ['['] = ']',
-  -- --     ['{'] = '}',
-  -- --     ['`'] = '`',
-  -- --     ['$'] = '$',
-  -- --     ['function'] = 'end',
-  -- --     ['def'] = 'end',
-  -- --     ['defp'] = 'end',
-  -- --   }
-  -- -- })
+  require("nvim-autopairs").setup({
+    map_cr = true, --  map <CR> on insert mode
+    map_complete = false -- it will auto insert `(` after select function or method item
+  })
 end
 
--- [fzf] -----------------------------------------------------------------------
-do
-  vim.g.fzf_command_prefix = "Fzf"
-  vim.g.fzf_layout = {window = {width = 0.5, height = 0.5}}
-  vim.g.fzf_action = {enter = "vsplit"}
-  vim.g.fzf_preview_window = {"right:40%", "alt-p"}
-  vim.env.FZF_DEFAULT_COMMAND = "fd --type f --hidden --follow --exclude '.git' --exclude 'node_modules'"
-  vim.api.nvim_exec(
-    [[
-function! RipgrepFzf(query, fullscreen)
-let command_fmt = 'rg --column --line-number --no-heading --color=always -- %s || true'
-let initial_command = printf(command_fmt, shellescape(a:query))
-let reload_command = printf(command_fmt, '{q}')
-let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-endfunction
-]],
-    false
-  )
-  vim.cmd([[command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)]])
-  vim.g.fzf_colors = {
-    fg = {"fg", "Normal"},
-    bg = {"bg", "Normal"},
-    hl = {"fg", "IncSearch"},
-    ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
-    ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
-    ["hl+"] = {"fg", "IncSearch"},
-    info = {"fg", "IncSearch"},
-    border = {"fg", "Ignore"},
-    prompt = {"fg", "Comment"},
-    pointer = {"fg", "IncSearch"},
-    marker = {"fg", "IncSearch"},
-    spinner = {"fg", "IncSearch"},
-    header = {"fg", "WildMenu"}
-  }
-  -- @evantravers:
-  -- vim.g.fzf_colors = {
-  --   fg = {"fg", "Normal"},
-  --   bg = {"bg", "Normal"},
-  --   hl = {"fg", "Comment"},
-  --   ["fg+"] = {"fg", "CursorLine", "CursorColumn", "Normal"},
-  --   ["bg+"] = {"bg", "CursorLine", "CursorColumn"},
-  --   ["hl+"] = {"fg", "Statement"},
-  --   info = {"fg", "PreProc"},
-  --   border = {"fg", "Ignore"},
-  --   prompt = {"fg", "Conditional"},
-  --   pointer = {"fg", "Exception"},
-  --   marker = {"fg", "Keyword"},
-  --   spinner = {"fg", "Label"},
-  --   header = {"fg", "Comment"}
-  -- }
-end
 
 -- [vim-polyglot] --------------------------------------------------------------
 do
-  vim.g.polyglot_disabled = {"markdown"}
+  vim.g.polyglot_disabled = {}
 end
 
 -- [quickscope] ----------------------------------------------------------------

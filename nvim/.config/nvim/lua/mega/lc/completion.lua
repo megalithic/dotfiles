@@ -28,7 +28,7 @@ function M.activate()
       {
         enabled = true,
         debug = false,
-        min_length = 1,
+        min_length = 2,
         preselect = "disable",
         allow_prefix_unmatch = false,
         throttle_time = 120,

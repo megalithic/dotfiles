@@ -164,7 +164,7 @@ return {
       -- vim.g.everforest_diagnostic_line_highlight = true
       -- vim.g.everforest_sign_column_background = "none"
       vim.g.everforest_background = "soft"
-      vim.g.everforest_cursor = "green"
+      vim.g.everforest_cursor = "auto"
       vim.g.everforest_better_performance = true
       vim.cmd("colorscheme everforest")
     end
