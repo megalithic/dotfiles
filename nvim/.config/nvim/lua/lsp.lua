@@ -11,7 +11,9 @@ do --- Auto-completion
     throttle_time = 120,
     source_timeout = 200,
     incomplete_delay = 400,
-    documentation = true,
+    documentation = {
+      border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+    },
     source = {
       nvim_lsp = {menu = "[lsp]", priority = 10},
       vsnip = {menu = "[vsnip]", priority = 10},
@@ -137,9 +139,9 @@ do --- LSP
   lsp.handlers["textDocument.publishDiagnostics"] = lsp.with(
     lsp.diagnostic.on_publish_diagnostics,
     {
-      virtual_text = true,
+      virtual_text = false,
       signs = true,
-      update_in_insert = false,
+      update_in_insert = true,
     }
   )
 
