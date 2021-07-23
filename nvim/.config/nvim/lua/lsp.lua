@@ -19,7 +19,7 @@ lsp.handlers["textDocument/publishDiagnostics"] = function(...)
     lsp.diagnostic.on_publish_diagnostics,
     {
       underline = true,
-      virtual_text = false,
+      virtual_text = false, -- FIXME: virtual text still shows up. ¯\_(ツ)_/¯
       -- virtual_text = {
       --   spacing = 4,
       --   prefix = "●"
