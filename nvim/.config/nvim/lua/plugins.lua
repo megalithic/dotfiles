@@ -7,14 +7,15 @@ return {
   "norcalli/nvim-colorizer.lua",
   {"dm1try/golden_size", branch = "layout_resizing"},
   "junegunn/rainbow_parentheses.vim",
-  {"kyazdani42/nvim-web-devicons", opt = true},
+  "kyazdani42/nvim-web-devicons",
+  "yamatsum/nvim-nonicons",
   "hoob3rt/lualine.nvim",
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
   "psliwka/vim-smoothie",
 
   --
-  -- (lsp) --
+  -- (lsp/completion) --
   "neovim/nvim-lspconfig",
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
@@ -25,8 +26,11 @@ return {
   "hrsh7th/vim-vsnip-integ",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
-  "glepnir/lspsaga.nvim",
-  "folke/trouble.nvim",
+  -- "glepnir/lspsaga.nvim",
+  -- "folke/trouble.nvim",
+
+  --
+  -- (treesitter) --
   {"nvim-treesitter/nvim-treesitter", run = "TSUpdate"},
   {"nvim-treesitter/completion-treesitter", run = "TSUpdate"},
   "nvim-treesitter/nvim-treesitter-textobjects",

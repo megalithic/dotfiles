@@ -1,5 +1,8 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
+
+# source "$DOTS/bin/_helpers"
+
 function detect_platform {
     if [[ -z $PLATFORM ]]
     then

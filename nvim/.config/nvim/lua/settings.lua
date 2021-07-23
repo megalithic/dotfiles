@@ -47,6 +47,15 @@ do
 end
 -- }}}
 
+-- [orgmode] --------------------------------------------------------------- {{{
+do
+--[[ require"zen-mode".setup {
+  window = { backdrop = 1, options = { signcolumn = "no" } },
+  plugins = { tmux = true },
+} ]]
+end
+-- }}}
+
 -- [zk] -------------------------------------------------------------------- {{{
 do
   require("zk").setup({debug = true})
@@ -55,7 +64,7 @@ end
 
 -- [trouble] --------------------------------------------------------------- {{{
 do
-  require("trouble").setup({})
+  -- require("trouble").setup({})
 end
 -- }}}
 

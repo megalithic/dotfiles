@@ -115,8 +115,7 @@ return {
   icons = icons,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   load = function()
-    -- [highlight/overrides] ----------------------------------------------- {{{
-    do
+    -- [colorscheme/highlight/overrides] ----------------------------------------------- {{{
       _G.everforest_overrides = function()
         -- mega.highlight(
           --   "SpellBad",
@@ -152,11 +151,7 @@ return {
           }
         }
       )
-    end
-    -- }}}
 
-    -- [colorscheme] ------------------------------------------------------- {{{
-    do
       vim.g.everforest_enable_italic = true
       vim.g.everforest_enable_bold = true
       vim.g.everforest_transparent_background = true
@@ -167,7 +162,6 @@ return {
       vim.g.everforest_cursor = "auto"
       vim.g.everforest_better_performance = true
       vim.cmd("colorscheme everforest")
-    end
     -- }}}
   end
 }

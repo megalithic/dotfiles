@@ -12,22 +12,29 @@ au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
 au([[Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
 au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
+au("BufRead,BufNewFile *.md set filetype=markdown")
+
 --  Open multiple files in splits
-exec([[
+exec(
+  [[
       if argc() > 1
         silent vertical all | lua require('golden_size').on_win_enter()
       endif
-      ]])
+      ]]
+)
 
 --  Trim Whitespace
-vim.api.nvim_exec([[
+vim.api.nvim_exec(
+  [[
     fun! TrimWhitespace()
         let l:save = winsaveview()
         keeppatterns %s/\s\+$//e
         call winrestview(l:save)
     endfun
     autocmd BufWritePre * :call TrimWhitespace()
-]], false)
+]],
+  false
+)
 
 augroup(
   "paq",
