@@ -1,4 +1,3 @@
-setmetatable(_G, {__index = vim})
 _G["mega"] = require("global")
 
 local load = mega.load

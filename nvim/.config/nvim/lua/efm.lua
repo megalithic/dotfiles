@@ -56,7 +56,7 @@ return {
   lua = {luafmt},
   elixir = {mix_credo},
   eelixir = {mix_credo},
-  go = {golint, goimports},
+  -- go = {golint, goimports},
   -- python = {black, isort, flake8, mypy},
   typescript = {prettier, eslint},
   javascript = {prettier, eslint},

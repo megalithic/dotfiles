@@ -141,7 +141,7 @@ map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = true})
 
 local lspconfig = require("lspconfig")
-local function on_attach(client, bufnr)
+local function on_attach(client, _)
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
   end
@@ -237,6 +237,12 @@ local function get_lua_runtime()
 
   return result
 end
+
+local runtime_path = vim.split(package.path, ';')
+table.insert(runtime_path, 'lua/?.lua')
+table.insert(runtime_path, 'lua/?/init.lua')
+table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
+table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
 
 --- servers
 local efm_languages = require("efm")
@@ -358,19 +364,16 @@ local servers = {
   },
   sumneko_lua = {
     settings = {
-      Lua = {
-        completion = {keywordSnippet = "Disable"},
-        runtime = {
-          version = "LuaJIT",
-          path = vim.split(package.path, ";")
-        },
-        workspace = {
-          maxPreload = 1000,
-          preloadFileSize = 1000,
-          library = get_lua_runtime()
-        },
-        diagnostics = {
-          enable = true,
+Lua = {
+  completion = {keywordSnippet = "Disable"},
+      runtime = {
+        -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+        version = 'LuaJIT',
+        -- Setup your lua path
+        path = runtime_path,
+      },
+      diagnostics = {
+        -- Get the language server to recognize the `vim` global
           globals = {
             "vim",
             "Color",
@@ -387,17 +390,58 @@ local servers = {
             "config",
             "watchers",
             "mega"
-          }
-        },
-        telemetry = {
-          enable = false
-        }
-      }
+          },
+      },
+      workspace = {
+        -- Make the server aware of Neovim runtime files
+        library = vim.api.nvim_get_runtime_file('', true),
+        --     library = get_lua_runtime()
+      },
+      -- Do not send telemetry data containing a randomized but unique identifier
+      telemetry = {
+        enable = false,
+      },
+    },
+      -- Lua = {
+      --   completion = {keywordSnippet = "Disable"},
+      --   runtime = {
+      --     version = "LuaJIT",
+      --     path = vim.split(package.path, ";")
+      --   },
+      --   workspace = {
+      --     maxPreload = 1000,
+      --     preloadFileSize = 1000,
+      --     library = get_lua_runtime()
+      --   },
+      --   diagnostics = {
+      --     enable = true,
+      --     globals = {
+      --       "vim",
+      --       "Color",
+      --       "c",
+      --       "Group",
+      --       "g",
+      --       "s",
+      --       "describe",
+      --       "it",
+      --       "before_each",
+      --       "after_each",
+      --       "hs",
+      --       "spoon",
+      --       "config",
+      --       "watchers",
+      --       "mega"
+      --     }
+      --   },
+      --   telemetry = {
+      --     enable = false
+      --   }
+      -- }
     },
     cmd = {
-      fn.expand("$XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.expand("$PLATFORM") .. "/lua-language-server",
+      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
       "-E",
-      fn.expand("$XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
+      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
     }
   },
   tsserver = {
