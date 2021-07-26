@@ -1,5 +1,6 @@
 local cmd, lsp, opt, api, fn = vim.cmd, vim.lsp, vim.opt, vim.api, vim.fn
-local map, bufmap, au, inspect = mega.map, mega.bufmap, mega.au, mega.inspect
+local map, bufmap, au = mega.map, mega.bufmap, mega.au
+local lspconfig = require("lspconfig")
 local colors = require("colors")
 
 local sign_error = colors.icons.sign_error
@@ -33,7 +34,7 @@ lsp.handlers["textDocument/publishDiagnostics"] = function(...)
 end
 
 -- hover
-local overridden_hover = lsp.with(lsp.handlers.hover, {border = "single"})
+local overridden_hover = lsp.with(lsp.handlers.hover, {border = "single", focusable = false})
 lsp.handlers["textDocument/hover"] = function(...)
   local bufnr = overridden_hover(...)
   api.nvim_buf_set_keymap(bufnr, "n", "K", "<cmd>wincmd p<CR>", {noremap = true, silent = true})
@@ -140,11 +141,19 @@ map("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = true})
 
-local lspconfig = require("lspconfig")
 local function on_attach(client, _)
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
   end
+
+  require "lsp_signature".on_attach(
+    {
+      bind = true, -- This is mandatory, otherwise border config won't get registered.
+      handler_opts = {
+        border = "single"
+      }
+    }
+  )
 
   --- goto mappings
   bufmap("gd", "lua vim.lsp.buf.definition()")
@@ -152,8 +161,8 @@ local function on_attach(client, _)
   bufmap("gs", "lua vim.lsp.buf.document_symbol()")
 
   --- diagnostics navigation mappings
-  bufmap("dn", "lua vim.lsp.diagnostic.goto_prev()")
-  bufmap("dN", "lua vim.lsp.diagnostic.goto_next()")
+  -- bufmap("dn", "lua vim.lsp.diagnostic.goto_prev()")
+  -- bufmap("dN", "lua vim.lsp.diagnostic.goto_next()")
 
   --- misc mappings
   bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
@@ -170,6 +179,7 @@ local function on_attach(client, _)
   map("n", "<leader>lt", "<cmd>LspTroubleToggle<cr>")
 
   --- auto-commands
+  -- au "BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
   au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
   au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()"
   -- au "BufWritePost <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
@@ -195,6 +205,7 @@ end
 
 --- capabilities
 local capabilities = lsp.protocol.make_client_capabilities()
+capabilities.textDocument.codeLens = {dynamicRegistration = false}
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 capabilities.textDocument.completion.completionItem.resolveSupport = {
   properties = {
@@ -238,31 +249,62 @@ local function get_lua_runtime()
   return result
 end
 
-local runtime_path = vim.split(package.path, ';')
-table.insert(runtime_path, 'lua/?.lua')
-table.insert(runtime_path, 'lua/?/init.lua')
+local runtime_path = vim.split(package.path, ";")
+table.insert(runtime_path, "lua/?.lua")
+table.insert(runtime_path, "lua/?/init.lua")
 table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
 table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
 
 --- servers
-local efm_languages = require("efm")
+-- local servers = {
+--   zk = {
+--     disabled = true,
+--     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
+--     filetypes = {"markdown", "md"},
+--     root_dir = function()
+--       return vim.loop.cwd()
+--     end,
+--     settings = {}
+--   },
+--   elmls = {
+--     filetypes = {"elm"},
+--     root_dir = root_pattern("elm.json", ".git")
+--   },
+--   tsserver = {
+--     filetypes = {
+--       "javascript",
+--       "javascriptreact",
+--       "javascript.jsx",
+--       "typescript",
+--       "typescriptreact",
+--       "typescript.tsx"
+--     },
+--     -- See https://github.com/neovim/nvim-lsp/issues/237
+--     root_dir = root_pattern("tsconfig.json", "package.json", ".git")
+--   },
+-- }
 local servers = {
-  bashls = {},
-  clangd = {},
-  cssls = {},
-  html = {},
-  rust_analyzer = {},
-  vimls = {},
-  zk = {
-    disabled = true,
-    cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
-    filetypes = {"markdown", "md"},
-    root_dir = function()
-      return vim.loop.cwd()
-    end,
-    settings = {}
-  },
-  efm = {
+  "bashls",
+  "elmls",
+  "clangd",
+  "cssls",
+  "html",
+  "rust_analyzer",
+  "vimls"
+}
+for _, ls in ipairs(servers) do
+  lspconfig[ls].setup(
+    {
+      on_attach = on_attach,
+      capabilities = capabilities,
+      flags = {debounce_text_changes = 150}
+    }
+  )
+end
+
+local efm_languages = require("efm")
+lspconfig["efm"].setup(
+  {
     init_options = {documentFormatting = true},
     filetypes = vim.tbl_keys(efm_languages),
     settings = {
@@ -271,13 +313,39 @@ local servers = {
       logLevel = 2,
       logFile = vim.fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log",
       languages = efm_languages
+    },
+    on_attach = on_attach,
+    capabilities = capabilities,
+    flags = {debounce_text_changes = 150}
+  }
+)
+
+lspconfig["yamlls"].setup(
+  {
+    settings = {
+      yaml = {
+        schemas = {
+          ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*.{yml,yaml}",
+          ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
+          ["http://json.schemastore.org/ansible-stable-2.9"] = "roles/tasks/*.{yml,yaml}",
+          ["http://json.schemastore.org/prettierrc"] = ".prettierrc.{yml,yaml}",
+          ["http://json.schemastore.org/stylelintrc"] = ".stylelintrc.{yml,yaml}",
+          ["http://json.schemastore.org/circleciconfig"] = ".circleci/**/*.{yml,yaml}"
+        },
+        format = {enable = true},
+        validate = true,
+        hover = true,
+        completion = true
+      },
+      on_attach = on_attach,
+      capabilities = capabilities,
+      flags = {debounce_text_changes = 150}
     }
-  },
-  elmls = {
-    filetypes = {"elm"},
-    root_dir = root_pattern("elm.json", ".git")
-  },
-  elixirls = {
+  }
+)
+
+lspconfig["elixirls"].setup(
+  {
     cmd = {fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"},
     settings = {
       elixirLS = {
@@ -287,9 +355,68 @@ local servers = {
       }
     },
     filetypes = {"elixir", "eelixir"},
-    root_dir = root_pattern("mix.exs", ".git")
-  },
-  jsonls = {
+    root_dir = root_pattern("mix.exs", ".git"),
+    on_attach = on_attach,
+    capabilities = capabilities,
+    flags = {debounce_text_changes = 150}
+  }
+)
+
+lspconfig["sumneko_lua"].setup(
+  {
+    settings = {
+      Lua = {
+        completion = {keywordSnippet = "Disable"},
+        runtime = {
+          -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+          version = "LuaJIT",
+          -- Setup your lua path
+          path = runtime_path
+        },
+        diagnostics = {
+          -- Get the language server to recognize the `vim` global
+          globals = {
+            "vim",
+            "Color",
+            "c",
+            "Group",
+            "g",
+            "s",
+            "describe",
+            "it",
+            "before_each",
+            "after_each",
+            "hs",
+            "spoon",
+            "config",
+            "watchers",
+            "mega"
+          }
+        },
+        workspace = {
+          -- Make the server aware of Neovim runtime files
+          library = vim.api.nvim_get_runtime_file("", true)
+          --     library = get_lua_runtime()
+        },
+        -- Do not send telemetry data containing a randomized but unique identifier
+        telemetry = {
+          enable = false
+        }
+      }
+    },
+    cmd = {
+      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
+      "-E",
+      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
+    },
+    on_attach = on_attach,
+    capabilities = capabilities,
+    flags = {debounce_text_changes = 150}
+  }
+)
+
+lspconfig["jsonls"].setup(
+  {
     commands = {
       Format = {
         function()
@@ -360,141 +487,46 @@ local servers = {
           }
         }
       }
-    }
-  },
-  sumneko_lua = {
-    settings = {
-Lua = {
-  completion = {keywordSnippet = "Disable"},
-      runtime = {
-        -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-        version = 'LuaJIT',
-        -- Setup your lua path
-        path = runtime_path,
-      },
-      diagnostics = {
-        -- Get the language server to recognize the `vim` global
-          globals = {
-            "vim",
-            "Color",
-            "c",
-            "Group",
-            "g",
-            "s",
-            "describe",
-            "it",
-            "before_each",
-            "after_each",
-            "hs",
-            "spoon",
-            "config",
-            "watchers",
-            "mega"
-          },
-      },
-      workspace = {
-        -- Make the server aware of Neovim runtime files
-        library = vim.api.nvim_get_runtime_file('', true),
-        --     library = get_lua_runtime()
-      },
-      -- Do not send telemetry data containing a randomized but unique identifier
-      telemetry = {
-        enable = false,
-      },
     },
-      -- Lua = {
-      --   completion = {keywordSnippet = "Disable"},
-      --   runtime = {
-      --     version = "LuaJIT",
-      --     path = vim.split(package.path, ";")
-      --   },
-      --   workspace = {
-      --     maxPreload = 1000,
-      --     preloadFileSize = 1000,
-      --     library = get_lua_runtime()
-      --   },
-      --   diagnostics = {
-      --     enable = true,
-      --     globals = {
-      --       "vim",
-      --       "Color",
-      --       "c",
-      --       "Group",
-      --       "g",
-      --       "s",
-      --       "describe",
-      --       "it",
-      --       "before_each",
-      --       "after_each",
-      --       "hs",
-      --       "spoon",
-      --       "config",
-      --       "watchers",
-      --       "mega"
-      --     }
-      --   },
-      --   telemetry = {
-      --     enable = false
-      --   }
-      -- }
-    },
-    cmd = {
-      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
-      "-E",
-      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
-    }
-  },
-  tsserver = {
-    filetypes = {
-      "javascript",
-      "javascriptreact",
-      "javascript.jsx",
-      "typescript",
-      "typescriptreact",
-      "typescript.tsx"
-    },
-    -- See https://github.com/neovim/nvim-lsp/issues/237
-    root_dir = root_pattern("tsconfig.json", "package.json", ".git")
-  },
-  yamlls = {
-    settings = {
-      yaml = {
-        schemas = {
-          ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*.{yml,yaml}",
-          ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
-          ["http://json.schemastore.org/ansible-stable-2.9"] = "roles/tasks/*.{yml,yaml}",
-          ["http://json.schemastore.org/prettierrc"] = ".prettierrc.{yml,yaml}",
-          ["http://json.schemastore.org/stylelintrc"] = ".stylelintrc.{yml,yaml}",
-          ["http://json.schemastore.org/circleciconfig"] = ".circleci/**/*.{yml,yaml}"
-        },
-        format = {enable = true},
-        validate = true,
-        hover = true,
-        completion = true
-      }
-    }
+    on_attach = on_attach,
+    capabilities = capabilities,
+    flags = {debounce_text_changes = 150}
   }
-}
+)
 
-for server, config in pairs(servers) do
-  local server_disabled = (config.disabled ~= nil and config.disabled) or false
+-- local null_ls_sources = {
+-- 	require("null-ls").builtins.formatting.prettier,
+-- 	require("null-ls").builtins.formatting.stylua,
+-- 	require("null-ls").builtins.diagnostics.eslint.with({ command = "eslint_d" }),
+-- 	require("null-ls").builtins.diagnostics.write_good,
+-- 	require("null-ls").builtins.code_actions.gitsigns,
+-- }
 
-  if lspconfig[server] == nil or config == nil or lspconfig == nil or server == nil then
-    inspect("-> unable to load lsp config", {server, config, lspconfig})
-    return
-  end
+-- require("null-ls").config({
+--     sources = null_ls_sources
+-- })
 
-  if not server_disabled then
-    lspconfig[server].setup(
-      vim.tbl_deep_extend(
-        "force",
-        {
-          on_attach = on_attach,
-          capabilities = capabilities,
-          flags = {debounce_text_changes = 150}
-        },
-        config
-      )
-    )
-  end
-end
+-- for server, config in pairs(servers) do
+--   local server_disabled = (config.disabled ~= nil and config.disabled) or false
+
+--   inspect("-> unable to load lsp config", {server, config, lspconfig})
+
+--   if lspconfig[server] == nil or config == nil or lspconfig == nil or server == nil then
+--     inspect("-> unable to load lsp config", {server, config, lspconfig})
+--     return
+--   end
+
+--   if not server_disabled then
+--     lspconfig[server].setup(
+--       vim.tbl_deep_extend(
+--         "force",
+--         {
+--           on_attach = on_attach,
+--           capabilities = capabilities,
+--           flags = {debounce_text_changes = 150}
+--         },
+--         config
+--       )
+--     )
+--   end
+-- end

@@ -32,8 +32,8 @@ map("n", "J", "mzJ`z") -- Join lines
 map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
 --Remap for dealing with word wrap
-map('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
-api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
+map("n", "k", "v:count == 0 ? 'gk' : 'k'", {noremap = true, expr = true, silent = true})
+api.nvim_set_keymap("n", "j", "v:count == 0 ? 'gj' : 'j'", {noremap = true, expr = true, silent = true})
 
 -- clear highlights
 -- map("n", "<ESC>", "<cmd>syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>", {silent = true})
@@ -256,9 +256,9 @@ end
 map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
 
 -- orgmode
-map('n', '<leader>os', [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
-map('n', '<leader>of', [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
 
-map('n', '<leader>,', ':buffer *')
-map('n', '<leader>.', ':e<space>**/')
-map('n', '<leader>sT', ':tjump *')
+map("n", "<leader>,", ":buffer *")
+map("n", "<leader>.", ":e<space>**/")
+map("n", "<leader>sT", ":tjump *")

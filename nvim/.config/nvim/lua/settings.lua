@@ -1,17 +1,21 @@
 -- [ui/appearance] --------------------------------------------------------- {{{
 do
   -- fallback in the event our statusline plugins fail to load
-  vim.opt.statusline = table.concat({
+  vim.opt.statusline =
+    table.concat(
+    {
       "%2{mode()} | ",
-      "f",            -- relative path
-      "m",            -- modified flag
+      "f", -- relative path
+      "m", -- modified flag
       "r",
       "=",
       "{&spelllang}",
-      "y",            -- filetype
-      "8(%l,%c%)",    -- line, column
-      "8p%% ",        -- file percentage
-    }, " %")
+      "y", -- filetype
+      "8(%l,%c%)", -- line, column
+      "8p%% " -- file percentage
+    },
+    " %"
+  )
 end
 -- }}}
 
@@ -36,6 +40,59 @@ do
 end
 -- }}}
 
+-- [tree-sitter] ----------------------------------------------------------- {{{
+do
+  require("nvim-treesitter.configs").setup {
+    ensure_installed = {
+      "c",
+      "cpp",
+      "javascript",
+      "elixir",
+      "elm",
+      "lua",
+      "python",
+      "rust",
+      "html",
+      "query",
+      "toml",
+      "css",
+      "nix",
+      "tsx",
+      "typescript",
+      "ruby",
+      "jsdoc",
+      "erlang"
+    },
+    highlight = {enable = true},
+    indent = {enable = true},
+    autotag = {enable = true},
+    textobjects = {
+      select = {
+        enable = true,
+        lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
+        keymaps = {
+          ["if"] = "@function.inner",
+          ["af"] = "@function.outer",
+          ["ar"] = "@parameter.outer",
+          ["iC"] = "@class.inner",
+          ["aC"] = "@class.outer",
+          ["ik"] = "@call.inner",
+          ["ak"] = "@call.outer",
+          ["il"] = "@loop.inner",
+          ["al"] = "@loop.outer",
+          ["ic"] = "@conditional.outer",
+          ["ac"] = "@conditional.inner"
+        }
+      }
+    }
+  }
+end
+-- }}}
+
+-- [devicons] -------------------------------------------------------------- {{{
+require "nvim-web-devicons".setup({default = true})
+-- }}}
+
 -- [orgmode] --------------------------------------------------------------- {{{
 do
   require("orgmode").setup(
@@ -47,9 +104,31 @@ do
 end
 -- }}}
 
--- [orgmode] --------------------------------------------------------------- {{{
+-- [tabout] ---------------------------------------------------------------- {{{
 do
---[[ require"zen-mode".setup {
+  require("tabout").setup(
+    {
+      tabkey = "<Tab>", -- key to trigger tabout
+      act_as_tab = true, -- shift content if tab out is not possible
+      completion = true, -- if the tabkey is used in a completion pum
+      tabouts = {
+        {open = "'", close = "'"},
+        {open = '"', close = '"'},
+        {open = "`", close = "`"},
+        {open = "(", close = ")"},
+        {open = "[", close = "]"},
+        {open = "{", close = "}"}
+      },
+      ignore_beginning = true --[[ if the cursor is at the beginning of a filled element it will rather tab out than shift the content ]],
+      exclude = {}
+    }
+  )
+end
+-- }}}
+
+-- [zenmode] --------------------------------------------------------------- {{{
+do
+  --[[ require"zen-mode".setup {
   window = { backdrop = 1, options = { signcolumn = "no" } },
   plugins = { tmux = true },
 } ]]
@@ -233,10 +312,12 @@ end
 
 -- [autopairs] ------------------------------------------------------------- {{{
 do
-  require("nvim-autopairs").setup({
-    map_cr = true, --  map <CR> on insert mode
-    map_complete = false -- it will auto insert `(` after select function or method item
-  })
+  require("nvim-autopairs").setup(
+    {
+      map_cr = true, --  map <CR> on insert mode
+      map_complete = false -- it will auto insert `(` after select function or method item
+    }
+  )
 end
 -- }}}
 
@@ -245,7 +326,6 @@ do
   vim.g.polyglot_disabled = {}
 end
 -- }}}
-
 
 -- [quickscope] ------------------------------------------------------------ {{{
 do
@@ -258,7 +338,7 @@ end
 
 -- [diffview] -------------------------------------------------------------- {{{
 do
-  require'diffview'.setup({})
+  require "diffview".setup({})
 end
 -- }}}
 
@@ -296,60 +376,6 @@ do
     ]],
     false
   )
-end
--- }}}
-
--- [tree-sitter] ----------------------------------------------------------- {{{
-do
-  require("nvim-treesitter.configs").setup {
-    ensure_installed = {
-      "c",
-      "cpp",
-      "javascript",
-      "elixir",
-      "elm",
-      "lua",
-      "python",
-      "rust",
-      "html",
-      "query",
-      "toml",
-      "css",
-      "nix",
-      "tsx",
-      "typescript",
-      "ruby",
-      "jsdoc",
-      "erlang"
-    },
-    highlight = {enable = true},
-    indent = {enable = true},
-    autotag = {enable = true},
-    textobjects = {
-      select = {
-        enable = true,
-        lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-        keymaps = {
-          ["if"] = "@function.inner",
-          ["af"] = "@function.outer",
-
-          ["ar"] = "@parameter.outer",
-
-          ["iC"] = "@class.inner",
-          ["aC"] = "@class.outer",
-
-          ["ik"] = "@call.inner",
-          ["ak"] = "@call.outer",
-
-          ["il"] = "@loop.inner",
-          ["al"] = "@loop.outer",
-
-          ["ic"] = "@conditional.outer",
-          ["ac"] = "@conditional.inner",
-        }
-      }
-    }
-  }
 end
 -- }}}
 
@@ -429,8 +455,7 @@ do
 
   telescope.setup(
     {
-    defaults =
-      {
+      defaults = {
         file_ignore_patterns = {".git/*"},
         path_display = {"absolute"},
         winblend = 0,
@@ -442,8 +467,8 @@ do
             ["<C-d>"] = false,
             ["<C-s>"] = actions.select_horizontal,
             ["<CR>"] = actions.select_vertical,
-            ["<C-o>"] = actions.select_default,
-          },
+            ["<C-o>"] = actions.select_default
+          }
         }
       },
       extensions = {
@@ -451,12 +476,12 @@ do
           fuzzy = true,
           override_generic_sorter = true, -- override the generic sorter
           override_file_sorter = true, -- override the file sorter
-          case_mode = 'smart_case', -- or "ignore_case" or "respect_case"
+          case_mode = "smart_case" -- or "ignore_case" or "respect_case"
           -- the default case_mode is "smart_case"
-        },
-      },
+        }
+      }
     }
   )
-  telescope.load_extension('fzf')
+  telescope.load_extension("fzf")
 end
 -- }}}

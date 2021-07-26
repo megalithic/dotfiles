@@ -116,52 +116,50 @@ return {
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   load = function()
     -- [colorscheme/highlight/overrides] ----------------------------------------------- {{{
-      _G.everforest_overrides = function()
-        -- mega.highlight(
-          --   "SpellBad",
-          --   {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true}
-          -- )
-        -- -- mega.highlight("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
-        -- -- mega.highlight("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
-        -- -- mega.highlight("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
-
-        -- mega.highlight(
-          --   "CursorLineNr",
-          --   {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
-          -- )
-        -- mega.highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
-        -- mega.highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
-        -- mega.highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
-
-        -- mega.highlight("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
-        -- mega.highlight("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
-        -- mega.highlight("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
-
-        -- vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
-        -- vim.g.indentLine_color_gui = status.cursorlinenr
-        -- vim.g.limelight_conceal_guifg = cs.bg2
-      end
-      mega.augroup_cmds(
-        "EverforestOverrides",
+    _G.everforest_overrides = function()
+      -- mega.highlight(
+      --   "SpellBad",
+      --   {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true}
+      -- )
+      -- -- mega.highlight("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
+      -- -- mega.highlight("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
+      -- -- mega.highlight("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
+      -- mega.highlight(
+      --   "CursorLineNr",
+      --   {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
+      -- )
+      -- mega.highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
+      -- mega.highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
+      -- mega.highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
+      -- mega.highlight("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
+      -- mega.highlight("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
+      -- mega.highlight("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
+      -- vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
+      -- vim.g.indentLine_color_gui = status.cursorlinenr
+      -- vim.g.limelight_conceal_guifg = cs.bg2
+    end
+    mega.augroup_cmds(
+      "EverforestOverrides",
+      {
         {
-          {
-            events = {"VimEnter", "ColorScheme"},
-            targets = {"everforest"},
-            command = "lua everforest_overrides()"
-          }
+          events = {"VimEnter", "ColorScheme"},
+          targets = {"everforest"},
+          command = "lua everforest_overrides()"
         }
-      )
+      }
+    )
 
-      vim.g.everforest_enable_italic = true
-      vim.g.everforest_enable_bold = true
-      vim.g.everforest_transparent_background = true
-      -- vim.g.everforest_diagnostic_text_highlight = true
-      -- vim.g.everforest_diagnostic_line_highlight = true
-      -- vim.g.everforest_sign_column_background = "none"
-      vim.g.everforest_background = "soft"
-      vim.g.everforest_cursor = "auto"
-      vim.g.everforest_better_performance = true
-      vim.cmd("colorscheme everforest")
+    vim.opt.termguicolors = true
+    vim.g.everforest_enable_italic = true
+    vim.g.everforest_enable_bold = true
+    vim.g.everforest_transparent_background = true
+    -- vim.g.everforest_diagnostic_text_highlight = true
+    -- vim.g.everforest_diagnostic_line_highlight = true
+    -- vim.g.everforest_sign_column_background = "none"
+    vim.g.everforest_background = "soft"
+    vim.g.everforest_cursor = "auto"
+    vim.g.everforest_better_performance = true
+    vim.cmd("colorscheme everforest")
     -- }}}
   end
 }

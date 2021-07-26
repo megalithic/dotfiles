@@ -1,6 +1,5 @@
 return {
   {"savq/paq-nvim", opt = true},
-
   --
   -- (appearance/ui) --
   "sainnhe/everforest",
@@ -13,7 +12,6 @@ return {
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
   "psliwka/vim-smoothie",
-
   --
   -- (lsp/completion) --
   "neovim/nvim-lspconfig",
@@ -26,8 +24,11 @@ return {
   "hrsh7th/vim-vsnip-integ",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
+  "ray-x/lsp_signature.nvim",
+  "jose-elias-alvarez/null-ls.nvim",
+  {"abecodes/tabout.nvim", branch = "feature/issue-4_vim_plug_fix"},
+  "folke/trouble.nvim",
   -- "glepnir/lspsaga.nvim",
-  -- "folke/trouble.nvim",
 
   --
   -- (treesitter) --
@@ -35,19 +36,16 @@ return {
   {"nvim-treesitter/completion-treesitter", run = "TSUpdate"},
   "nvim-treesitter/nvim-treesitter-textobjects",
   "windwp/nvim-ts-autotag",
-
   --
   -- (file/document navigation) --
   "nvim-telescope/telescope.nvim",
   {"nvim-telescope/telescope-fzf-native.nvim", run = "make"},
   "unblevable/quick-scope",
-
   --
   -- (text objects) --
   "tpope/vim-rsi",
   "kana/vim-operator-user",
   "wellle/targets.vim",
-
   --
   -- (git, vcs, et al) --
   "tpope/vim-fugitive",
@@ -59,7 +57,6 @@ return {
   "sindrets/diffview.nvim",
   -- "lewis6991/gitsigns.nvim",
   "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
-
   --
   -- (development, et al) --
   "tpope/vim-projectionist",
@@ -69,14 +66,12 @@ return {
   "skywind3000/vim-quickui",
   "sgur/vim-editorconfig",
   {"zenbro/mirror.vim", opt = true},
-
   --
   -- (markdown/prose/notes) --
   {"folke/zen-mode.nvim", opt = true},
   {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
   "dkarter/bullets.vim",
   "kristijanhusak/orgmode.nvim",
-
   --
   -- (the rest...) --
   "ojroques/vim-oscyank",
@@ -119,4 +114,3 @@ return {
   "darfink/vim-plist",
   "sheerun/vim-polyglot"
 }
-

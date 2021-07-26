@@ -34,12 +34,12 @@ config.sections = {
   lualine_c = {
     {
       "filename",
-      shorten = true,
-      full_path = true
+      file_status = true,
+      path = 1
     }
   },
   lualine_x = {LspStatus},
-  lualine_y = {"filetype", {"fileformat", icons_enabled = false}},
+  lualine_y = {{"filetype", colored = true}, {"fileformat", icons_enabled = false}},
   lualine_z = {"location", "progress"},
   lualine_diagnostics = {}
 }
