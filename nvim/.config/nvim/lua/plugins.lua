@@ -41,6 +41,9 @@ return {
   "p00f/nvim-ts-rainbow",
   --
   -- (file/document navigation) --
+
+  "ibhagwan/fzf-lua",
+  "vijaymarupudi/nvim-fzf",
   "nvim-telescope/telescope.nvim",
   {"nvim-telescope/telescope-fzf-native.nvim", run = "make"},
   "unblevable/quick-scope",
@@ -114,6 +117,7 @@ return {
   "avdgaag/vim-phoenix",
   "lucidstack/hex.vim",
   "euclidianace/betterlua.vim",
+  "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   "darfink/vim-plist",
   "sheerun/vim-polyglot"

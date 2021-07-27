@@ -1,5 +1,4 @@
--- [ui/appearance] --------------------------------------------------------- {{{
-do
+do -- [ui/appearance] --
   -- fallback in the event our statusline plugins fail to load
   vim.opt.statusline =
     table.concat(
@@ -17,10 +16,8 @@ do
     " %"
   )
 end
--- }}}
 
--- [nvim options] ---------------------------------------------------------- {{{
-do
+do -- [nvim options] --
   vim.opt.foldmethod = "expr"
   vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
   vim.g.no_man_maps = true
@@ -38,10 +35,8 @@ do
     {"│", "FloatBorderDark"}
   }
 end
--- }}}
 
--- [tree-sitter] ----------------------------------------------------------- {{{
-do
+do -- [nvim-treesitter] --
   require("nvim-treesitter.configs").setup {
     ensure_installed = {
       "c",
@@ -108,10 +103,8 @@ do
     }
   )
 end
--- }}}
 
--- [orgmode] --------------------------------------------------------------- {{{
-do
+do -- [indent-blankline] --
   vim.g.indent_blankline_buftype_exclude = {"terminal", "nofile"}
   vim.g.indent_blankline_filetype_exclude = {
     "help",
@@ -149,14 +142,12 @@ do
     "operation_type"
   }
 end
--- }}}
 
 -- [devicons] -------------------------------------------------------------- {{{
 require "nvim-web-devicons".setup({default = true})
 -- }}}
 
--- [orgmode] --------------------------------------------------------------- {{{
-do
+do -- [orgmode] --
   require("orgmode").setup(
     {
       org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
@@ -164,10 +155,8 @@ do
     }
   )
 end
--- }}}
 
--- [tabout] ---------------------------------------------------------------- {{{
-do
+do -- [tabout] --
   require("tabout").setup(
     {
       tabkey = "<Tab>", -- key to trigger tabout
@@ -186,31 +175,23 @@ do
     }
   )
 end
--- }}}
 
--- [zenmode] --------------------------------------------------------------- {{{
-do
+do -- [zenmode] --
   --[[ require"zen-mode".setup {
   window = { backdrop = 1, options = { signcolumn = "no" } },
   plugins = { tmux = true },
 } ]]
 end
--- }}}
 
--- [zk] -------------------------------------------------------------------- {{{
-do
+do -- [zk] --
   require("zk").setup({debug = true})
 end
--- }}}
 
--- [trouble] --------------------------------------------------------------- {{{
-do
-  -- require("trouble").setup({})
+do -- [trouble] --
+  require("trouble").setup({auto_close = true})
 end
--- }}}
 
--- [bullets] --------------------------------------------------------------- {{{
-do
+do -- [bullets] --
   vim.g.bullets_enabled_file_types = {
     "markdown",
     "text",
@@ -220,16 +201,12 @@ do
   vim.g.bullets_checkbox_markers = " ○◐✗"
   -- vim.g.bullets_set_mappings = 0
 end
--- }}}
 
--- [fixcursorhold] --------------------------------------------------------- {{{
-do
+do -- [fixcursorhold] --
   vim.g.cursorhold_updatetime = 100
 end
--- }}}
 
--- [lspsaga] --------------------------------------------------------------- {{{
--- do
+-- do -- [lspsaga] --
 --   require("lspsaga").init_lsp_saga {
 --     use_saga_diagnostic_sign = false,
 --     border_style = 2,
@@ -251,20 +228,16 @@ end
 --     finder_reference_icon = "•r"
 --   }
 -- end
--- }}}
 
--- [beacon] ---------------------------------------------------------------- {{{
-do
+do -- [beacon] --
   vim.g.beacon_size = 90
   vim.g.beacon_minimal_jump = 25
   -- vim.g.beacon_shrink = 0
   -- vim.g.beacon_fade = 0
   vim.g.beacon_ignore_filetypes = {"fzf"}
 end
--- }}}
 
--- [kommentary] ------------------------------------------------------------ {{{
-do
+do -- [kommentary] --
   local kommentary_config = require("kommentary.config")
   kommentary_config.configure_language(
     "default",
@@ -296,20 +269,16 @@ do
     }
   )
 end
--- }}}
 
--- [conflict-marker] ------------------------------------------------------- {{{
-do
+do -- [conflict-marker] --
   -- disable the default highlight group
   vim.g.conflict_marker_highlight_group = ""
   -- Include text after begin and end markers
   vim.g.conflict_marker_begin = "^<<<<<<< .*$"
   vim.g.conflict_marker_end = "^>>>>>>> .*$"
 end
--- }}}
 
--- [colorizer] ------------------------------------------------------------- {{{
-do
+do -- [colorizer] --
   require("colorizer").setup(
     {
       -- '*',
@@ -336,10 +305,8 @@ do
     }
   )
 end
--- }}}
 
--- [golden-size] ----------------------------------------------------------- {{{
-do
+do -- [golden-size] --
   local golden_size_installed, golden_size = pcall(require, "golden_size")
   if golden_size_installed then
     local function ignore_by_buftype(types)
@@ -370,10 +337,8 @@ do
     )
   end
 end
--- }}}
 
--- [autopairs] ------------------------------------------------------------- {{{
-do
+do -- [autopairs] --
   require("nvim-autopairs").setup(
     {
       map_cr = true, --  map <CR> on insert mode
@@ -381,40 +346,30 @@ do
     }
   )
 end
--- }}}
 
--- [polyglot] -------------------------------------------------------------- {{{
-do
+do -- [polyglot] --
   vim.g.polyglot_disabled = {}
 end
--- }}}
 
--- [quickscope] ------------------------------------------------------------ {{{
-do
+do -- [quickscope] --
   vim.g.qs_enable = 1
   vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
   vim.g.qs_buftype_blacklist = {"terminal", "nofile"}
   vim.g.qs_lazy_highlight = 1
 end
--- }}}
 
--- [diffview] -------------------------------------------------------------- {{{
-do
+do -- [diffview] --
   require "diffview".setup({})
 end
--- }}}
 
--- [git-messenger] --------------------------------------------------------- {{{
-do
+do -- [git-messenger] --
   vim.g.git_messenger_floating_win_opts = {border = vim.g.floating_window_border_dark}
   vim.g.git_messenger_no_default_mappings = true
   vim.g.git_messenger_max_popup_width = 100
   vim.g.git_messenger_max_popup_height = 100
 end
--- }}}
 
--- [vim-test] -------------------------------------------------------------- {{{
-do
+do -- [vim-test] --
   vim.api.nvim_exec(
     [[
     function! TerminalSplit(cmd)
@@ -439,10 +394,8 @@ do
     false
   )
 end
--- }}}
 
--- [projectionist] --------------------------------------------------------- {{{
-do
+do -- [projectionist] --
   vim.g.projectionist_heuristics = {
     ["mix.exs"] = {
       ["lib/**/views/*_view.ex"] = {
@@ -508,18 +461,67 @@ do
     }
   }
 end
--- }}}
 
--- [telescope] ------------------------------------------------------------- {{{
 do
+  local actions = require "fzf-lua.actions"
+  require "fzf-lua".setup {
+    win_height = 0.6,
+    win_width = 0.65,
+    -- preview_border = "noborder",
+    -- win_border=false
+    preview_cmd = 'bat --theme="base16" --style=numbers,changes --color always $FZF_PREVIEW_LINES', -- 'head -n $FZF_PREVIEW_LINES',
+    preview_border = "border", -- border|noborder
+    preview_wrap = "nowrap", -- wrap|nowrap
+    preview_opts = "nohidden", -- hidden|nohidden
+    preview_vertical = "down:45%", -- up|down:size
+    preview_horizontal = "right:60%", -- right|left:size
+    preview_layout = "flex", -- horizontal|vertical|flex
+    files = {
+      cmd = "fd --type f --follow --hidden --color=always --exclude '.git' --exclude '*.png' --ignore-file '~/.gitignore_global'",
+      git_icons = true,
+      file_icons = true,
+      actions = {
+        ["default"] = actions.file_vsplit,
+        ["ctrl-t"] = actions.file_tabedit
+      }
+    },
+    grep = {
+      git_icons = false, -- show git icons?
+      file_icons = false, -- show file icons?
+      actions = {
+        ["default"] = actions.file_vsplit,
+        ["ctrl-t"] = actions.file_tabedit
+      }
+    }
+  }
+end
+
+do -- [telescope] --
   local telescope = require("telescope")
   local actions = require("telescope.actions")
 
   telescope.setup(
     {
       defaults = {
-        file_ignore_patterns = {".git/*"},
+        file_ignore_patterns = {".git/*", "node-modules", "**/automatic_backups/*", "**/*.jpg", "**/*.png"},
         path_display = {"absolute"},
+        vimgrep_arguments = {
+          "fd",
+          "--type f",
+          "--follow",
+          "--hidden",
+          "--color=always",
+          "--exclude .git",
+          "--ignore-file ~/.gitignore_global"
+          -- "rg",
+          -- "--color=never",
+          -- "--no-heading",
+          -- "--with-filename",
+          -- "--line-number",
+          -- "--column",
+          -- "--smart-case"
+        },
+        prompt_prefix = " ",
         winblend = 0,
         mappings = {
           i = {
@@ -546,4 +548,3 @@ do
   )
   telescope.load_extension("fzf")
 end
--- }}}

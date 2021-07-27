@@ -175,7 +175,7 @@ local function on_attach(client, _)
   bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
 
   --- trouble mappings
-  map("n", "<leader>lt", "<cmd>LspTroubleToggle<cr>")
+  map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
   --- auto-commands
   -- au "BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
@@ -231,28 +231,6 @@ local function root_pattern(...)
     end
   end
 end
-
-local function get_lua_runtime()
-  local result = {}
-  for _, path in pairs(api.nvim_list_runtime_paths()) do
-    local lua_path = path .. "/lua/"
-    if fn.isdirectory(lua_path) then
-      result[lua_path] = true
-    end
-  end
-
-  result[fn.expand("$VIMRUNTIME/lua")] = true
-  result[fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
-  result[fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs")] = true
-
-  return result
-end
-
-local runtime_path = vim.split(package.path, ";")
-table.insert(runtime_path, "lua/?.lua")
-table.insert(runtime_path, "lua/?/init.lua")
-table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
-table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
 
 --- servers
 -- local servers = {
@@ -362,58 +340,85 @@ lspconfig["elixirls"].setup(
   }
 )
 
-lspconfig["sumneko_lua"].setup(
-  {
-    settings = {
-      Lua = {
-        completion = {keywordSnippet = "Disable"},
-        runtime = {
-          -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-          version = "LuaJIT",
-          -- Setup your lua path
-          path = runtime_path
-        },
-        diagnostics = {
-          -- Get the language server to recognize the `vim` global
-          globals = {
-            "vim",
-            "Color",
-            "c",
-            "Group",
-            "g",
-            "s",
-            "describe",
-            "it",
-            "before_each",
-            "after_each",
-            "hs",
-            "spoon",
-            "config",
-            "watchers",
-            "mega"
+do -- lua
+  -- local function get_lua_runtime()
+  --   local result = {}
+  --   for _, path in pairs(api.nvim_list_runtime_paths()) do
+  --     local lua_path = path .. "/lua/"
+  --     if fn.isdirectory(lua_path) then
+  --       result[lua_path] = true
+  --     end
+  --   end
+
+  --   result[fn.expand("$VIMRUNTIME/lua")] = true
+  --   result[fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
+  --   result[fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs")] = true
+
+  --   return result
+  -- end
+
+  local runtime_path = vim.split(package.path, ";")
+  table.insert(runtime_path, "lua/?.lua")
+  table.insert(runtime_path, "lua/?/init.lua")
+  table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
+  table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
+  local luadev =
+    require("lua-dev").setup(
+    {
+      lspconfig = {
+        settings = {
+          Lua = {
+            completion = {keywordSnippet = "Disable"},
+            runtime = {
+              -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+              version = "LuaJIT",
+              -- Setup your lua path
+              path = runtime_path
+            },
+            diagnostics = {
+              -- Get the language server to recognize the `vim` global
+              globals = {
+                "vim",
+                "Color",
+                "c",
+                "Group",
+                "g",
+                "s",
+                "describe",
+                "it",
+                "before_each",
+                "after_each",
+                "hs",
+                "spoon",
+                "config",
+                "watchers",
+                "mega"
+              }
+            },
+            workspace = {
+              -- Make the server aware of Neovim runtime files
+              library = api.nvim_get_runtime_file("", true)
+              --     library = get_lua_runtime()
+            },
+            -- Do not send telemetry data containing a randomized but unique identifier
+            telemetry = {
+              enable = false
+            }
           }
         },
-        workspace = {
-          -- Make the server aware of Neovim runtime files
-          library = api.nvim_get_runtime_file("", true)
-          --     library = get_lua_runtime()
+        cmd = {
+          fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
+          "-E",
+          fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
         },
-        -- Do not send telemetry data containing a randomized but unique identifier
-        telemetry = {
-          enable = false
-        }
+        on_attach = on_attach,
+        capabilities = capabilities,
+        flags = {debounce_text_changes = 150}
       }
-    },
-    cmd = {
-      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
-      "-E",
-      fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua"
-    },
-    on_attach = on_attach,
-    capabilities = capabilities,
-    flags = {debounce_text_changes = 150}
-  }
-)
+    }
+  )
+  lspconfig["sumneko_lua"].setup(luadev)
+end
 
 lspconfig["jsonls"].setup(
   {

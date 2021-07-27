@@ -36,7 +36,6 @@ map("n", "k", "v:count == 0 ? 'gk' : 'k'", {noremap = true, expr = true, silent 
 api.nvim_set_keymap("n", "j", "v:count == 0 ? 'gj' : 'j'", {noremap = true, expr = true, silent = true})
 
 -- clear highlights
--- map("n", "<ESC>", "<cmd>syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>", {silent = true})
 api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
 
 -- keep line in middle of buffer when searching
@@ -78,44 +77,6 @@ map("n", "<Leader>T", "<cmd>Things<CR>")
 map("n", "<leader>s", "b1z=e") -- Correct previous word
 map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
--- PROSE MODE
--- @evantravers, thanks!
-function _G.toggle_prose()
-  -- toggle_zen()
-  local gitsigns = require("gitsigns")
-  if (vim.g.proseMode == true) then
-    -- vim.cmd "PencilOff"
-    vim.cmd "Limelight!"
-    vim.cmd "Goyo!"
-    vim.cmd [[set wrap!]]
-    vim.cmd [[set colorcolumn=+1]]
-    vim.cmd [[silent !tmux set status on]]
-
-    gitsigns.attach()
-    vim.o.showmode = true
-    vim.o.showcmd = true
-    -- vim.wo.number = true
-    -- vim.wo.relativenumber = true
-    vim.g.proseMode = false
-  else
-    -- vim.cmd "packadd vim-pencil"
-    vim.cmd "packadd goyo.vim"
-    vim.cmd "packadd limelight.vim"
-    vim.cmd [[set colorcolumn=0]]
-    vim.cmd [[silent !tmux set status off]]
-    vim.o.showmode = false
-    vim.o.showcmd = false
-    gitsigns.detach()
-    -- vim.wo.number = false
-    -- vim.wo.relativenumber = false
-    vim.wo.foldlevel = 4
-    -- vim.cmd "PencilSoft"
-    vim.cmd "Limelight"
-    vim.cmd "Goyo"
-    vim.g.proseMode = true
-  end
-end
-
 -- # find and replace in multiple files
 map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
 
@@ -133,7 +94,6 @@ map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
 
 -- # markdown-related
 map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
-map("n", "<leader>mp", "<cmd>lua toggle_prose()<cr>")
 
 -- # slash
 vim.cmd([[noremap <plug>(slash-after) zz]])
@@ -162,80 +122,22 @@ map("n", "<Leader>a", "<Plug>(EasyAlign)")
 
 -- # FZF
 -- map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
-map("n", "<Leader>a", "<cmd>FzfRg<CR>")
-map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
-map(
-  "n",
-  "<leader>ff",
-  "<cmd>lua require('fzf-commands').files({ fzf = function(contents, options) return require('fzf').fzf(contents, options, { height = 50, width = 200 }) end })<CR>"
-)
+-- map("n", "<Leader>a", "<cmd>FzfRg<CR>")
+-- map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
+-- map(
+--   "n",
+--   "<leader>ff",
+--   "<cmd>lua require('fzf-commands').files({ fzf = function(contents, options) return require('fzf').fzf(contents, options, { height = 50, width = 200 }) end })<CR>"
+-- )
 
 -- # Dash
 map("n", "<leader>D", "<cmd>Dash<CR>")
 
--- # markdown-preview
-map("n", "<leader>gm", "<Plug>(MarkdownPreview)")
-
 -- # paq
 map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
--- # bullets.vim
--- map(
---   "i",
---   "<CR>",
---   -- "<cmd>pumvisible() ? '\<C-y>' : ''",
---   -- function()
---   --   if vim.fn.pumvisible() == 0 then
---   --     -- vim.cmd[[pumvisible() ? "\<C-y>" : "\<Plug>(bullets-insert-new-bullet)"]]
---   --     vim.cmd([[InsertNewBullet]])
---   --   end
---   -- end,
---   {silent = false, expr = true, noremap = false}
--- )
--- map(
---   "i",
---   "<C-T>",
---   function()
---     vim.cmd([[BulletDemote]])
---   end
--- )
--- map(
---   "i",
---   "<C-D>",
---   function()
---     vim.cmd([[BulletPromote]])
---   end
--- )
--- vim.keymap.imap<silent><expr> <CR> pumvisible() ? "\<C-y>" : "\<Plug>(bullets-insert-new-bullet)"
--- inoremap {
---   "<M-CR>",
---   function()
---     vim.cmd [[InsertNewBullet]]
---   end,
---   {nowait = true, buffer = true}
--- }
--- inoremap {
---   "<C-T>",
---   function()
---     vim.cmd [[BulletDemote]]
---   end,
---   {nowait = true, buffer = true}
--- }
--- inoremap {
---   "<C-D>",
---   function()
---     vim.cmd [[BulletPromote]]
---   end,
---   {nowait = true, buffer = true}
--- }
-
 -- # telescope
--- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({hidden = true})<cr>")
 map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")
-
--- map("n", "<leader>ff", ":lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown({ winblend = 10, hidden = true }))<cr>")
--- map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
--- map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
 map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ') })<CR>")
 map("n", "<leader>A", ":lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<CR>")
 -- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
@@ -250,6 +152,11 @@ function _G.search_zettel()
   }
 end
 map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
+
+-- # fzf-lua
+map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
+map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
+map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 
 -- orgmode
 map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
