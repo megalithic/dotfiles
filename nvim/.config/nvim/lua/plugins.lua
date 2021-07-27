@@ -38,6 +38,7 @@ return {
   "nvim-treesitter/nvim-treesitter-textobjects",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
+  "p00f/nvim-ts-rainbow",
   --
   -- (file/document navigation) --
   "nvim-telescope/telescope.nvim",

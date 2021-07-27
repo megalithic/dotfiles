@@ -86,6 +86,38 @@ function M.augroup_cmds(name, commands)
   vim.cmd("augroup END")
 end
 
+--- TODO eventually move to using `nvim_set_hl`
+--- however for the time being that expects colors
+--- to be specified as rgb not hex
+---@param name string
+---@param opts table
+function M.highlight(name, opts)
+  local force = opts.force or false
+  if name and vim.tbl_count(opts) > 0 then
+    if opts.link and opts.link ~= "" then
+      vim.cmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
+    else
+      local cmd = {"highlight", name}
+      if opts.guifg and opts.guifg ~= "" then
+        table.insert(cmd, "guifg=" .. opts.guifg)
+      end
+      if opts.guibg and opts.guibg ~= "" then
+        table.insert(cmd, "guibg=" .. opts.guibg)
+      end
+      if opts.gui and opts.gui ~= "" then
+        table.insert(cmd, "gui=" .. opts.gui)
+      end
+      if opts.guisp and opts.guisp ~= "" then
+        table.insert(cmd, "guisp=" .. opts.guisp)
+      end
+      if opts.cterm and opts.cterm ~= "" then
+        table.insert(cmd, "cterm=" .. opts.cterm)
+      end
+      vim.cmd(table.concat(cmd, " "))
+    end
+  end
+end
+
 function M.exec(cmd)
   vim.api.nvim_exec(cmd, true)
 end
@@ -113,7 +145,9 @@ end
 
 -- a safe module loader
 function M.load(req, key)
-  if key == nil then key = "loader" end
+  if key == nil then
+    key = "loader"
+  end
 
   local loaded, loader = pcall(require, req)
 

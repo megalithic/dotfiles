@@ -67,6 +67,11 @@ do
     indent = {enable = true},
     autotag = {enable = true},
     context_commentstring = {enable = true},
+    rainbow = {
+      enable = true,
+      extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
+      max_file_lines = 1000 -- Do not enable for files with more than 1000 lines, int
+    },
     textobjects = {
       select = {
         enable = true,
@@ -87,6 +92,21 @@ do
       }
     }
   }
+
+  require("nvim-ts-autotag").setup(
+    {
+      filetypes = {
+        "html",
+        "xml",
+        "javascript",
+        "typescriptreact",
+        "javascriptreact",
+        "vue",
+        "elixir",
+        "eelixir"
+      }
+    }
+  )
 end
 -- }}}
 

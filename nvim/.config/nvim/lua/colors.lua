@@ -1,23 +1,26 @@
+local cmd = vim.cmd
+local au, highlight, utf8 = mega.au, mega.highlight, mega.utf8
+
 local icons = {
-  sign_error = mega.utf8(0xf655),
-  sign_warning = mega.utf8(0xfa36),
-  sign_information = mega.utf8(0xf7fc),
-  sign_hint = mega.utf8(0xf835),
-  virtual_text = mega.utf8(0xf63d),
-  mode_term = mega.utf8(0xfcb5),
-  ln_sep = mega.utf8(0xe0a1),
-  col_sep = mega.utf8(0xf6da),
-  perc_sep = mega.utf8(0xf44e),
-  right_sep = mega.utf8(0xe0b4),
-  left_sep = mega.utf8(0xe0b6),
-  modified_symbol = mega.utf8(0xf085),
-  vcs_symbol = mega.utf8(0xf418),
-  readonly_symbol = mega.utf8(0xf023),
-  statusline_error = mega.utf8(0xf05e),
-  statusline_warning = mega.utf8(0xf071),
-  statusline_information = mega.utf8(0xf7fc),
-  statusline_hint = mega.utf8(0xf835),
-  statusline_ok = mega.utf8(0xf00c)
+  sign_error = utf8(0xf655),
+  sign_warning = utf8(0xfa36),
+  sign_information = utf8(0xf7fc),
+  sign_hint = utf8(0xf835),
+  virtual_text = utf8(0xf63d),
+  mode_term = utf8(0xfcb5),
+  ln_sep = utf8(0xe0a1),
+  col_sep = utf8(0xf6da),
+  perc_sep = utf8(0xf44e),
+  right_sep = utf8(0xe0b4),
+  left_sep = utf8(0xe0b6),
+  modified_symbol = utf8(0xf085),
+  vcs_symbol = utf8(0xf418),
+  readonly_symbol = utf8(0xf023),
+  statusline_error = utf8(0xf05e),
+  statusline_warning = utf8(0xf071),
+  statusline_information = utf8(0xf7fc),
+  statusline_hint = utf8(0xf835),
+  statusline_ok = utf8(0xf00c)
 }
 
 -- TODO: thieve @mhanberg's lush theme that wraps everforest/forest_night:
@@ -116,24 +119,24 @@ return {
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   load = function()
     -- [colorscheme/highlight/overrides] ----------------------------------------------- {{{
-    _G.everforest_overrides = function()
-      -- mega.highlight(
+    mega.everforest_overrides = function()
+      -- highlight(
       --   "SpellBad",
       --   {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true}
       -- )
-      -- -- mega.highlight("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
-      -- -- mega.highlight("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
-      -- -- mega.highlight("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
-      -- mega.highlight(
-      --   "CursorLineNr",
-      --   {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "italic", force = true}
-      -- )
-      -- mega.highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
-      -- mega.highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
-      -- mega.highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
-      -- mega.highlight("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
-      -- mega.highlight("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
-      -- mega.highlight("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
+      -- -- highlight("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
+      -- -- highlight("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
+      -- -- highlight("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
+      highlight(
+        "CursorLineNr",
+        {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true}
+      )
+      -- highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
+      -- highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
+      -- highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
+      -- highlight("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
+      -- highlight("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
+      -- highlight("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
       -- vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
       -- vim.g.indentLine_color_gui = status.cursorlinenr
       -- vim.g.limelight_conceal_guifg = cs.bg2
@@ -144,7 +147,7 @@ return {
         {
           events = {"VimEnter", "ColorScheme"},
           targets = {"everforest"},
-          command = "lua everforest_overrides()"
+          command = "lua mega.everforest_overrides()"
         }
       }
     )
@@ -159,7 +162,7 @@ return {
     vim.g.everforest_background = "soft"
     vim.g.everforest_cursor = "auto"
     vim.g.everforest_better_performance = true
-    vim.cmd("colorscheme everforest")
+    cmd("colorscheme everforest")
     -- }}}
   end
 }
