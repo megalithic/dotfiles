@@ -231,17 +231,13 @@ map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
 -- # telescope
 -- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').find_files({hidden = true})<cr>")
-map(
-  "n",
-  "<leader>ff",
-  "<cmd>lua require('telescope.builtin').git_files(require('telescope.themes').get_dropdown({}))<cr>"
-)
+map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")
 
 -- map("n", "<leader>ff", ":lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown({ winblend = 10, hidden = true }))<cr>")
 -- map("n", "<leader>ff", ":lua require('telescope.builtin').git_files()<cr>")
 -- map("n", "<leader>m", ":lua require('telescope.builtin').find_files()<cr>")
-map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ')})<CR>")
-map("n", "<leader>A", ":lua require('telescope.builtin').grep_string { search = vim.fn.expand('<cword>') }<CR>")
+map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ') })<CR>")
+map("n", "<leader>A", ":lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<CR>")
 -- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
 
 -- zettelkasten

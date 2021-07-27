@@ -47,7 +47,6 @@ end
 --
 -- ensure our runtime path has our local pack paths added; so we can just put
 -- "dev" packages into that folder and they just load and work..
-local local_packs = string.format("%s/site/pack/local", vim.fn.stdpath("data"))
-vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs
+-- local local_packs = string.format("%s/site/pack/local", vim.fn.stdpath("data"))
+-- vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs
 -- resolved to -> ~/.local/share/nvim/site/pack/local/*
-

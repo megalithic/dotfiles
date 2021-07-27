@@ -12,6 +12,7 @@ return {
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
   "psliwka/vim-smoothie",
+  "lukas-reineke/indent-blankline.nvim",
   --
   -- (lsp/completion) --
   "neovim/nvim-lspconfig",
@@ -26,7 +27,7 @@ return {
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
   "jose-elias-alvarez/null-ls.nvim",
-  {"abecodes/tabout.nvim", branch = "feature/issue-4_vim_plug_fix"},
+  "abecodes/tabout.nvim",
   "folke/trouble.nvim",
   -- "glepnir/lspsaga.nvim",
 
@@ -35,6 +36,7 @@ return {
   {"nvim-treesitter/nvim-treesitter", run = "TSUpdate"},
   {"nvim-treesitter/completion-treesitter", run = "TSUpdate"},
   "nvim-treesitter/nvim-treesitter-textobjects",
+  "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   --
   -- (file/document navigation) --
@@ -72,6 +74,7 @@ return {
   {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
   "dkarter/bullets.vim",
   "kristijanhusak/orgmode.nvim",
+  "megalithic/zk.nvim",
   --
   -- (the rest...) --
   "ojroques/vim-oscyank",

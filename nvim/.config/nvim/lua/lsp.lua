@@ -3,6 +3,9 @@ local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local colors = require("colors")
 
+cmd [[ set completeopt=menu,menuone,noselect ]]
+cmd [[ set shortmess+=c ]]
+
 local sign_error = colors.icons.sign_error
 local sign_warning = colors.icons.sign_warning
 local sign_information = colors.icons.sign_information
@@ -21,10 +24,6 @@ lsp.handlers["textDocument/publishDiagnostics"] = function(...)
     {
       underline = true,
       virtual_text = false, -- FIXME: virtual text still shows up. ¯\_(ツ)_/¯
-      -- virtual_text = {
-      --   spacing = 4,
-      --   prefix = "●"
-      -- },
       signs = true,
       update_in_insert = false,
       severity_sort = true
@@ -51,15 +50,15 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 
   -- If the buffer hasn't been modified before the formatting has finished,
   -- update the buffer
-  if not vim.api.nvim_buf_get_option(bufnr, "modified") then
-    local view = vim.fn.winsaveview()
-    vim.lsp.util.apply_text_edits(result, bufnr)
-    vim.fn.winrestview(view)
-    if bufnr == vim.api.nvim_get_current_buf() then
-      vim.api.nvim_command("noautocmd :update")
+  if not api.nvim_buf_get_option(bufnr, "modified") then
+    local view = fn.winsaveview()
+    lsp.util.apply_text_edits(result, bufnr)
+    fn.winrestview(view)
+    if bufnr == api.nvim_get_current_buf() then
+      api.nvim_command("noautocmd :update")
 
       -- Trigger post-formatting autocommand which can be used to refresh gitgutter
-      vim.api.nvim_command("silent doautocmd <nomodeline> User FormatterPost")
+      api.nvim_command("silent doautocmd <nomodeline> User FormatterPost")
     end
   end
 end
@@ -235,7 +234,7 @@ end
 
 local function get_lua_runtime()
   local result = {}
-  for _, path in pairs(vim.api.nvim_list_runtime_paths()) do
+  for _, path in pairs(api.nvim_list_runtime_paths()) do
     local lua_path = path .. "/lua/"
     if fn.isdirectory(lua_path) then
       result[lua_path] = true
@@ -311,7 +310,7 @@ lspconfig["efm"].setup(
       rootMarkers = {"mix.lock", "mix.exs", "elm.json", "package.json", ".git"},
       lintDebounce = 500,
       logLevel = 2,
-      logFile = vim.fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log",
+      logFile = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log",
       languages = efm_languages
     },
     on_attach = on_attach,
@@ -351,6 +350,7 @@ lspconfig["elixirls"].setup(
       elixirLS = {
         fetchDeps = false,
         dialyzerEnabled = false,
+        enableTestLenses = true,
         suggestSpecs = true
       }
     },
@@ -395,7 +395,7 @@ lspconfig["sumneko_lua"].setup(
         },
         workspace = {
           -- Make the server aware of Neovim runtime files
-          library = vim.api.nvim_get_runtime_file("", true)
+          library = api.nvim_get_runtime_file("", true)
           --     library = get_lua_runtime()
         },
         -- Do not send telemetry data containing a randomized but unique identifier
@@ -420,7 +420,7 @@ lspconfig["jsonls"].setup(
     commands = {
       Format = {
         function()
-          vim.lsp.buf.range_formatting({}, {0, 0}, {fn.line("$"), 0})
+          lsp.buf.range_formatting({}, {0, 0}, {fn.line("$"), 0})
         end
       }
     },

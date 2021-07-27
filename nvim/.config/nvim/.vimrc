@@ -238,7 +238,7 @@ if has("nvim")
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set pumblend=10
   set pumheight=20      " Height of complete list
-  set signcolumn=yes:2  " always showsigncolumn
+  set signcolumn=yes    " always showsigncolumn
   set switchbuf=useopen,vsplit,split,usetab
   set wildoptions+=pum
   " set winblend=10
