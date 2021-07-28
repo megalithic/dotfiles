@@ -27,7 +27,7 @@ return {
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
   "jose-elias-alvarez/null-ls.nvim",
-  "abecodes/tabout.nvim",
+  -- "abecodes/tabout.nvim",
   "folke/trouble.nvim",
   -- "glepnir/lspsaga.nvim",
 

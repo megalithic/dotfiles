@@ -146,7 +146,7 @@ map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = 
 map("n", "<leader>A", ":lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<CR>")
 -- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
 
--- zettelkasten
+-- telescope-zettelkasten
 function _G.search_zettel()
   require("telescope.builtin").find_files {
     prompt_title = "Search ZK",
@@ -157,12 +157,12 @@ function _G.search_zettel()
 end
 map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
 
+-- telescope-orgmode
+map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
-
--- orgmode
-map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
-map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
