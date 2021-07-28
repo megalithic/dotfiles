@@ -1,12 +1,12 @@
 local vint = {
-    lintCommand = "vint -",
-    lintStdin = true,
-    lintFormats = {"%f:%l:%c: %m"}
+  lintCommand = "vint -",
+  lintStdin = true,
+  lintFormats = {"%f:%l:%c: %m"}
 }
 local luafmt = {
-    formatCommand = "luafmt --indent-count 2 --stdin",
-    -- formatCommand = "luafmt ${-i:tabWidth} --stdin",
-    formatStdin = true
+  formatCommand = "luafmt --indent-count 2 --stdin",
+  -- formatCommand = "luafmt ${-i:tabWidth} --stdin",
+  formatStdin = true
 }
 local mix_credo = {
   lintCommand = "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}",
@@ -22,32 +22,35 @@ local mix_credo = {
 -- local flake8 = require "mega.lc.efm.flake8"
 -- local mypy = require "mega.lc.efm.mypy"
 local prettier = {
-    formatCommand = ([[
+  formatCommand = ([[
         ./node_modules/.bin/prettier
         ${--config-precedence:configPrecedence}
         ${--tab-width:tabWidth}
         ${--single-quote:singleQuote}
         ${--trailing-comma:trailingComma}
     ]]):gsub(
-        "\n",
-        ""
-    )
+    "\n",
+    ""
+  )
 }
 local eslint = {
-    lintCommand = "./node_modules/.bin/eslint -f unix --stdin",
-    lintIgnoreExitCode = true,
-    lintStdin = true
+  lintCommand = "./node_modules/.bin/eslint -f unix --stdin",
+  lintIgnoreExitCode = true,
+  lintStdin = true
 }
 local shellcheck = {
-    lintCommand = "shellcheck -f gcc -x -",
-    lintStdin = true,
-    lintFormats = {"%f=%l:%c: %trror: %m", "%f=%l:%c: %tarning: %m", "%f=%l:%c: %tote: %m"}
+  lintCommand = "shellcheck -f gcc -x -",
+  lintStdin = true,
+  lintFormats = {"%f:%l:%c: %trror: %m", "%f:%l:%c: %tarning: %m", "%f:%l:%c: %tote: %m"}
 }
 local misspell = {
-    lintCommand = "misspell",
-    lintIgnoreExitCode = true,
-    lintStdin = true,
-    lintFormats = {"%f:%l:%c: %m"}
+  lintCommand = "misspell",
+  lintIgnoreExitCode = true,
+  lintStdin = true,
+  lintFormats = {"%f:%l:%c: %m"}
+}
+local shfmt = {
+  formatCommand = "shfmt -i 2"
 }
 
 return {
@@ -68,6 +71,6 @@ return {
   scss = {prettier},
   css = {prettier},
   markdown = {prettier},
-  sh = {shellcheck}
+  sh = {shellcheck, shfmt}
   -- tf = {terraform},
 }

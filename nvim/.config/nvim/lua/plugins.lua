@@ -52,6 +52,7 @@ return {
   "tpope/vim-rsi",
   "kana/vim-operator-user",
   "wellle/targets.vim",
+  -- research: windwp/nvim-spectre
   --
   -- (git, vcs, et al) --
   "tpope/vim-fugitive",
@@ -66,7 +67,7 @@ return {
   --
   -- (development, et al) --
   "tpope/vim-projectionist",
-  "janko/vim-test",
+  "janko/vim-test", -- research: rcarriga/vim-ultest
   "tpope/vim-ragtag",
   "rizzatti/dash.vim",
   "skywind3000/vim-quickui",
