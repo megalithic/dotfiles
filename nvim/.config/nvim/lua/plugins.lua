@@ -8,7 +8,7 @@ return {
   {"dm1try/golden_size", branch = "layout_resizing"},
   "junegunn/rainbow_parentheses.vim",
   "kyazdani42/nvim-web-devicons",
-  "yamatsum/nvim-nonicons",
+  -- "yamatsum/nvim-nonicons",
   "hoob3rt/lualine.nvim",
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",

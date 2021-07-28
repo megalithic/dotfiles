@@ -1,6 +1,8 @@
+local opt, g, api = vim.opt, vim.g, vim.api
+
 do -- [ui/appearance] --
   -- fallback in the event our statusline plugins fail to load
-  vim.opt.statusline =
+  opt.statusline =
     table.concat(
     {
       "%2{mode()} | ",
@@ -18,13 +20,13 @@ do -- [ui/appearance] --
 end
 
 do -- [nvim options] --
-  vim.opt.foldmethod = "expr"
-  vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-  vim.g.no_man_maps = true
-  vim.g.vim_json_syntax_conceal = false
-  vim.g.vim_json_conceal = false
-  vim.g.floating_window_border = {"╭", "─", "╮", "│", "╯", "─", "╰", "│"}
-  vim.g.floating_window_border_dark = {
+  opt.foldmethod = "expr"
+  opt.foldexpr = "nvim_treesitter#foldexpr()"
+  g.no_man_maps = true
+  g.vim_json_syntax_conceal = false
+  g.vim_json_conceal = false
+  g.floating_window_border = {"╭", "─", "╮", "│", "╯", "─", "╰", "│"}
+  g.floating_window_border_dark = {
     {"╭", "FloatBorderDark"},
     {"─", "FloatBorderDark"},
     {"╮", "FloatBorderDark"},
@@ -34,6 +36,9 @@ do -- [nvim options] --
     {"╰", "FloatBorderDark"},
     {"│", "FloatBorderDark"}
   }
+  g.loaded_python_provider = 0
+  g.loaded_ruby_provider = 0
+  g.loaded_perl_provider = 0
 end
 
 do -- [nvim-treesitter] --
@@ -105,8 +110,8 @@ do -- [nvim-treesitter] --
 end
 
 do -- [indent-blankline] --
-  vim.g.indent_blankline_buftype_exclude = {"terminal", "nofile"}
-  vim.g.indent_blankline_filetype_exclude = {
+  g.indent_blankline_buftype_exclude = {"terminal", "nofile"}
+  g.indent_blankline_filetype_exclude = {
     "help",
     "startify",
     "dashboard",
@@ -115,11 +120,11 @@ do -- [indent-blankline] --
     "NvimTree",
     "Trouble"
   }
-  vim.g.indent_blankline_char = "│"
-  vim.g.indent_blankline_use_treesitter = true
-  vim.g.indent_blankline_show_trailing_blankline_indent = false
-  vim.g.indent_blankline_show_current_context = true
-  vim.g.indent_blankline_context_patterns = {
+  g.indent_blankline_char = "│"
+  g.indent_blankline_use_treesitter = true
+  g.indent_blankline_show_trailing_blankline_indent = false
+  g.indent_blankline_show_current_context = true
+  g.indent_blankline_context_patterns = {
     "class",
     "return",
     "function",
@@ -143,9 +148,8 @@ do -- [indent-blankline] --
   }
 end
 
--- [devicons] -------------------------------------------------------------- {{{
-require "nvim-web-devicons".setup({default = true})
--- }}}
+-- [devicons] --
+require "nvim-web-devicons".setup({default = false})
 
 do -- [orgmode] --
   require("orgmode").setup(
@@ -192,18 +196,18 @@ do -- [trouble] --
 end
 
 do -- [bullets] --
-  vim.g.bullets_enabled_file_types = {
+  g.bullets_enabled_file_types = {
     "markdown",
     "text",
     "gitcommit",
     "scratch"
   }
-  vim.g.bullets_checkbox_markers = " ○◐✗"
-  -- vim.g.bullets_set_mappings = 0
+  g.bullets_checkbox_markers = " ○◐✗"
+  -- g.bullets_set_mappings = 0
 end
 
 do -- [fixcursorhold] --
-  vim.g.cursorhold_updatetime = 100
+  g.cursorhold_updatetime = 100
 end
 
 -- do -- [lspsaga] --
@@ -230,11 +234,11 @@ end
 -- end
 
 do -- [beacon] --
-  vim.g.beacon_size = 90
-  vim.g.beacon_minimal_jump = 25
-  -- vim.g.beacon_shrink = 0
-  -- vim.g.beacon_fade = 0
-  vim.g.beacon_ignore_filetypes = {"fzf"}
+  g.beacon_size = 90
+  g.beacon_minimal_jump = 25
+  -- g.beacon_shrink = 0
+  -- g.beacon_fade = 0
+  g.beacon_ignore_filetypes = {"fzf"}
 end
 
 do -- [kommentary] --
@@ -272,10 +276,10 @@ end
 
 do -- [conflict-marker] --
   -- disable the default highlight group
-  vim.g.conflict_marker_highlight_group = ""
+  g.conflict_marker_highlight_group = ""
   -- Include text after begin and end markers
-  vim.g.conflict_marker_begin = "^<<<<<<< .*$"
-  vim.g.conflict_marker_end = "^>>>>>>> .*$"
+  g.conflict_marker_begin = "^<<<<<<< .*$"
+  g.conflict_marker_end = "^>>>>>>> .*$"
 end
 
 do -- [colorizer] --
@@ -310,7 +314,7 @@ do -- [golden-size] --
   local golden_size_installed, golden_size = pcall(require, "golden_size")
   if golden_size_installed then
     local function ignore_by_buftype(types)
-      local buftype = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
+      local buftype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
       for _, type in pairs(types) do
         if type == buftype then
           return 1
@@ -348,14 +352,14 @@ do -- [autopairs] --
 end
 
 do -- [polyglot] --
-  vim.g.polyglot_disabled = {}
+  g.polyglot_disabled = {}
 end
 
 do -- [quickscope] --
-  vim.g.qs_enable = 1
-  vim.g.qs_highlight_on_keys = {"f", "F", "t", "T"}
-  vim.g.qs_buftype_blacklist = {"terminal", "nofile"}
-  vim.g.qs_lazy_highlight = 1
+  g.qs_enable = 1
+  g.qs_highlight_on_keys = {"f", "F", "t", "T"}
+  g.qs_buftype_blacklist = {"terminal", "nofile"}
+  g.qs_lazy_highlight = 1
 end
 
 do -- [diffview] --
@@ -363,14 +367,14 @@ do -- [diffview] --
 end
 
 do -- [git-messenger] --
-  vim.g.git_messenger_floating_win_opts = {border = vim.g.floating_window_border_dark}
-  vim.g.git_messenger_no_default_mappings = true
-  vim.g.git_messenger_max_popup_width = 100
-  vim.g.git_messenger_max_popup_height = 100
+  g.git_messenger_floating_win_opts = {border = g.floating_window_border_dark}
+  g.git_messenger_no_default_mappings = true
+  g.git_messenger_max_popup_width = 100
+  g.git_messenger_max_popup_height = 100
 end
 
 do -- [vim-test] --
-  vim.api.nvim_exec(
+  api.nvim_exec(
     [[
     function! TerminalSplit(cmd)
     vert new | set filetype=test | call termopen(['/usr/local/bin/zsh', '-c', a:cmd], {'curwin':1})
@@ -396,7 +400,7 @@ do -- [vim-test] --
 end
 
 do -- [projectionist] --
-  vim.g.projectionist_heuristics = {
+  g.projectionist_heuristics = {
     ["mix.exs"] = {
       ["lib/**/views/*_view.ex"] = {
         ["type"] = "view",

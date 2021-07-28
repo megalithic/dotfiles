@@ -1,3 +1,4 @@
+local api, fn, cmd = vim.api, vim.fn, vim.cmd
 local M = {}
 
 local home = os.getenv("HOME")
@@ -41,13 +42,13 @@ end
 --   if mode == "n" then
 --     rhs = "<cmd>" .. rhs .. "<cr>"
 --   end
---   vim.api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
+--   api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
 -- end
 
 function M.map(mode, lhs, rhs, opts)
   local map_opts = {noremap = true, silent = true, expr = false}
   opts = vim.tbl_extend("force", map_opts, opts or {})
-  vim.api.nvim_set_keymap(mode, lhs, rhs, opts)
+  api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 
 function M.bufmap(lhs, rhs, mode, expr)
@@ -55,25 +56,25 @@ function M.bufmap(lhs, rhs, mode, expr)
   if mode == "n" then
     rhs = "<cmd>" .. rhs .. "<cr>"
   end
-  vim.api.nvim_buf_set_keymap(0, mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
+  api.nvim_buf_set_keymap(0, mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
 end
 
 function M.au(s)
-  vim.cmd("au!" .. s)
+  cmd("au!" .. s)
 end
 
-function M.augroup(group, fn)
-  vim.api.nvim_command("augroup " .. group)
-  vim.api.nvim_command("autocmd!")
-  fn()
-  vim.api.nvim_command("augroup END")
+function M.augroup(group, fun)
+  api.nvim_command("augroup " .. group)
+  api.nvim_command("autocmd!")
+  fun()
+  api.nvim_command("augroup END")
 end
 
 function M.augroup_cmds(name, commands)
-  vim.cmd("augroup " .. name)
-  vim.cmd("autocmd!")
+  cmd("augroup " .. name)
+  cmd("autocmd!")
   for _, c in ipairs(commands) do
-    vim.cmd(
+    cmd(
       string.format(
         "autocmd %s %s %s %s",
         table.concat(c.events, ","),
@@ -83,7 +84,7 @@ function M.augroup_cmds(name, commands)
       )
     )
   end
-  vim.cmd("augroup END")
+  cmd("augroup END")
 end
 
 --- TODO eventually move to using `nvim_set_hl`
@@ -95,31 +96,31 @@ function M.highlight(name, opts)
   local force = opts.force or false
   if name and vim.tbl_count(opts) > 0 then
     if opts.link and opts.link ~= "" then
-      vim.cmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
+      cmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
     else
-      local cmd = {"highlight", name}
+      local hi_opt = {"highlight", name}
       if opts.guifg and opts.guifg ~= "" then
-        table.insert(cmd, "guifg=" .. opts.guifg)
+        table.insert(hi_opt, "guifg=" .. opts.guifg)
       end
       if opts.guibg and opts.guibg ~= "" then
-        table.insert(cmd, "guibg=" .. opts.guibg)
+        table.insert(hi_opt, "guibg=" .. opts.guibg)
       end
       if opts.gui and opts.gui ~= "" then
-        table.insert(cmd, "gui=" .. opts.gui)
+        table.insert(hi_opt, "gui=" .. opts.gui)
       end
       if opts.guisp and opts.guisp ~= "" then
-        table.insert(cmd, "guisp=" .. opts.guisp)
+        table.insert(hi_opt, "guisp=" .. opts.guisp)
       end
       if opts.cterm and opts.cterm ~= "" then
-        table.insert(cmd, "cterm=" .. opts.cterm)
+        table.insert(hi_opt, "cterm=" .. opts.cterm)
       end
-      vim.cmd(table.concat(cmd, " "))
+      cmd(table.concat(hi_opt, " "))
     end
   end
 end
 
 function M.exec(cmd)
-  vim.api.nvim_exec(cmd, true)
+  api.nvim_exec(cmd, true)
 end
 
 function M.inspect(k, v, l, f)
@@ -210,7 +211,7 @@ function M.zetty(args)
     content = string.format("Attendees:\n%s\n\n---\n", opts.attendees)
   end
 
-  local changed_title = vim.fn.input(string.format("[?] Change title from [%s] to: ", title))
+  local changed_title = fn.input(string.format("[?] Change title from [%s] to: ", title))
   if changed_title ~= "" then
     title = changed_title
   end

@@ -80,14 +80,14 @@ require("compe").setup {
     border = {"╭", "─", "╮", "│", "╯", "─", "╰", "│"}
   },
   source = {
+    vsnip = {menu = "[vsnip]", priority = 11},
     nvim_lsp = {menu = "[lsp]", priority = 10},
-    vsnip = {menu = "[vsnip]", priority = 10},
     nvim_lua = {menu = "[lua]", priority = 9},
-    path = {menu = "[path]", priority = 9},
     treesitter = {menu = "[ts]", priority = 9},
-    buffer = {menu = "[buf]", priority = 8},
-    spell = {menu = "[spl]", filetypes = {"markdown"}},
-    orgmode = {menu = "[org]"}
+    path = {menu = "[path]", priority = 8},
+    orgmode = {menu = "[org]", priority = 8, filetypes = {"org"}},
+    spell = {menu = "[spl]", filetypes = {"markdown"}, priority = 8},
+    buffer = {menu = "[buf]", priority = 7}
   }
 }
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 ## -- setup elixir_ls
 ls_build_path="$XDG_CONFIG_HOME/lsp/elixir_ls"
