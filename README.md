@@ -25,7 +25,8 @@ within `~/.dotfiles`, though. The majority of files and folders get `stow`ed in
 to your `$HOME`, or to `$XDG_CONFIG_HOME`.
 
 I have tried to be platform agnostic, but the majority of scripts that run here
-are for macos, with a handful of debian/ubuntu linux specific platform scripts and
+are for macOS (specifically Big Sur at the time of this edit), with a handful of
+debian/ubuntu linux specific platform scripts and
 provisions. This means that certain tools/binaries I rely on may or may not
 install/configure on linux.  Though, I have tested it decently well on an
 Ubuntu-based Linode instance.
