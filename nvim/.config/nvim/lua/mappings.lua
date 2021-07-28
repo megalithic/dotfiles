@@ -157,6 +157,7 @@ map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
+map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 
 -- orgmode
 map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
