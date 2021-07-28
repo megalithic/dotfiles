@@ -104,6 +104,8 @@ vmap <expr> <leader>P Show_position()
 " xnoremap p "_c<c-r>"<esc>
 " xmap P p
 
+vnoremap <C-r> "hy:%Subvert/<C-r>h//gc<left><left><left>
+
 " clear incsearch term
 nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
 
@@ -236,7 +238,7 @@ if has("nvim")
   " set listchars=tab:»\ ,extends:›,precedes:‹,trail:·,nbsp:⚋
   " set pumblend=10
   set pumheight=20      " Height of complete list
-  set signcolumn=yes:2  " always showsigncolumn
+  set signcolumn=yes    " always showsigncolumn
   set switchbuf=useopen,vsplit,split,usetab
   set wildoptions+=pum
   " set winblend=10
@@ -285,10 +287,33 @@ else
   set ttymouse=xterm2
 endif
 
-" Netrw
-let g:netrw_banner = 0     " no banner
-let g:netrw_liststyle = 3  " tree style listing
-let g:netrw_dirhistmax = 0 " no netrw history
+""" Vim 8
+if !has('nvim')
+    syntax enable
+    set ruler
+    set showcmd
+    set autoread
+    set wildmenu
+    set hlsearch
+    set incsearch
+    set autoindent
+    set foldmethod=indent
+endif
+
+""" Netrw
+let g:netrw_banner = 0        " no banner
+let g:netrw_liststyle = 3     " tree style listing
+let g:netrw_dirhistmax = 0    " no netrw history
+
+
+" Disable unnecessary internal plugins
+let g:loaded_2html_plugin = 1
+let g:loaded_gzip = 1
+let g:loaded_remote_plugins = 1
+let g:loaded_spellfile_plugin = 1
+let g:loaded_tarPlugin = 1
+let g:loaded_tutor_mode_plugin = 1
+let g:loaded_zipPlugin = 1
 
 
 " -- [ abbreviations ] ---------------------------------------------------------

@@ -2,7 +2,7 @@
 # shellcheck shell=bash
 # zmodload zsh/zprof # top of your .zshrc file
 
-bindkey -e                          # ensures we use emacs/readline keybindings
+bindkey -e # ensures we use emacs/readline keybindings
 
 source "$ZDOTDIR/components/_preload.zsh"
 

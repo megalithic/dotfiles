@@ -2,9 +2,10 @@
 local exists = pcall(vim.cmd, [[packadd paq-nvim]])
 local repo_url = "https://github.com/savq/paq-nvim"
 local install_path = string.format("%s/site/pack/paqs/opt/", vim.fn.stdpath("data"))
--- ~/.local/share/nvim/site/pack/paqs/opt/paq-nvim/
+-- resolved to -> ~/.local/share/nvim/site/pack/paqs/opt/paq-nvim
 
--- clone paq-nvim if we haven't already..
+--
+-- clone paq-nvim and install if it doesn't exist..
 if not exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   print "should be installing things"
   if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
@@ -23,7 +24,8 @@ if not exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
 
   return
 end
-
+--
+-- setup vim's various config directories
 local data_dir = {
   mega.cache_dir .. "backup",
   mega.cache_dir .. "session",
@@ -42,7 +44,9 @@ if not mega.isdir(mega.cache_dir) then
     end
   end
 end
-
--- Ensure our runtime path has our local packs loaded in
-local local_packs = string.format("%s/site/pack/local", vim.fn.stdpath("data"))
-vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs
+--
+-- ensure our runtime path has our local pack paths added; so we can just put
+-- "dev" packages into that folder and they just load and work..
+-- local local_packs = string.format("%s/site/pack/local", vim.fn.stdpath("data"))
+-- vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs
+-- resolved to -> ~/.local/share/nvim/site/pack/local/*

@@ -2,6 +2,7 @@
 # shellcheck shell=bash
 
 log "installing luarocks modules"
+
 if (command -v luarocks &> /dev/null); then
   (! command -v luacheck &> /dev/null) && luarocks install luacheck
   (! command -v lcf &> /dev/null) && luarocks install lcf

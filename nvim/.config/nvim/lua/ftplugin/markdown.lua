@@ -4,6 +4,9 @@
 -- * https://github.com/mnarrell/dotfiles/blob/main/nvim/lua/ftplugin/markdown.lua
 -- * https://vim.works/2019/03/16/using-markdown-in-vim/
 return function(_) -- bufnr
+  vim.cmd([[syntax match todoCheckbox "\[\ \]" conceal cchar=]])
+  vim.cmd([[syntax match todoCheckbox "\[x\]" conceal cchar=]])
+
   vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
   vim.o.makeprg = [[open %]]
   vim.o.textwidth = 0
@@ -11,6 +14,8 @@ return function(_) -- bufnr
   vim.o.list = false
   vim.o.wrap = true
   vim.cmd([[setlocal spell linebreak textwidth=0 wrap conceallevel=0]])
+
+  vim.cmd([[setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-]])
 
   -- continuous meeting note datetime entry
   vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])

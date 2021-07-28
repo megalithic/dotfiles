@@ -10,7 +10,7 @@ end
 
 function M.handle()
   if vim.bo.ft and vim.bo.ft ~= "" then
-    local status, ft_plugin = pcall(require, "mega.ftplugin." .. vim.bo.ft)
+    local status, ft_plugin = pcall(require, "ftplugin." .. vim.bo.ft)
     if status then
       local bufnr = vim.api.nvim_get_current_buf()
       pcall(
@@ -26,12 +26,12 @@ end
 
 function M.setup()
   mega.augroup_cmds(
-    "mega.ftplugin",
+    "ftplugin",
     {
       {
         events = {"FileType"},
         targets = {"*"},
-        command = "lua require('mega.ftplugin').handle()"
+        command = "lua require('ftplugin').handle()"
       }
     }
   )
