@@ -19,7 +19,7 @@ cmd([[source ~/.vimrc]])
 
 -- [ loaders ] ------------------------------------------------------------- {{{
 load("preflight")
-load("colors").load()
+load("colors").setup()
 load("settings")
 load("lsp")
 load("autocmds")

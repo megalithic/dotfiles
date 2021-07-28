@@ -117,7 +117,7 @@ local status = {
 return {
   icons = icons,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
-  load = function()
+  setup = function()
     -- [colorscheme/highlight/overrides] ----------------------------------------------- {{{
     mega.everforest_overrides = function()
       -- highlight(
