@@ -118,7 +118,6 @@ return {
   icons = icons,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   setup = function()
-    -- [colorscheme/highlight/overrides] ----------------------------------------------- {{{
     mega.everforest_overrides = function()
       -- highlight(
       --   "SpellBad",
@@ -131,6 +130,7 @@ return {
         "CursorLineNr",
         {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true}
       )
+      -- highlight("HighlightedYankRegion", {guifg = "NONE", guibg = status.highlighted_yank, gui = "NONE", force = true})
       -- highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
       -- highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
       -- highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
@@ -163,6 +163,5 @@ return {
     vim.g.everforest_cursor = "auto"
     vim.g.everforest_better_performance = true
     cmd("colorscheme everforest")
-    -- }}}
   end
 }

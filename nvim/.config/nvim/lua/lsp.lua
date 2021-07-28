@@ -160,8 +160,8 @@ local function on_attach(client, _)
   bufmap("gs", "lua vim.lsp.buf.document_symbol()")
 
   --- diagnostics navigation mappings
-  -- bufmap("dn", "lua vim.lsp.diagnostic.goto_prev()")
-  -- bufmap("dN", "lua vim.lsp.diagnostic.goto_next()")
+  bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
+  bufmap("]d", "lua vim.lsp.diagnostic.goto_next()")
 
   --- misc mappings
   bufmap("<leader>ln", "lua vim.lsp.buf.rename()")

@@ -30,7 +30,7 @@ config.options = {
 }
 config.sections = {
   lualine_a = {"mode"},
-  lualine_b = {"branch"},
+  lualine_b = {{"branch", icon = mega.utf8(0xe725)}},
   lualine_c = {
     {
       "filename",
