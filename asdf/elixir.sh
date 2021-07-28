@@ -1,7 +1,5 @@
 #!/usr/bin/env zsh
 
-source "_helpers"
-
 ## -- setup elixir_ls
 ls_build_path="$XDG_CONFIG_HOME/lsp/elixir_ls"
 function _do_clone {
