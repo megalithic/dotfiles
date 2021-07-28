@@ -3,7 +3,7 @@ _G["mega"] = require("global")
 local load = mega.load
 local cmd = vim.cmd
 
-cmd([[source ~/.vimrc]])
+cmd("runtime .vimrc")
 
 -- [ debugging ] ----------------------------------------------------------- {{{
 -- Can set this lower if needed (used in tandem with `mega.inspect`) ->

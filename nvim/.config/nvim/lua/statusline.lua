@@ -39,7 +39,7 @@ config.sections = {
     }
   },
   lualine_x = {LspStatus},
-  lualine_y = {{"filetype", colored = true}, {"fileformat", icons_enabled = false}},
+  lualine_y = {{"filetype", colored = true, icons_enabled = true}, {"fileformat", icons_enabled = true}},
   lualine_z = {"location", "progress"},
   lualine_diagnostics = {}
 }

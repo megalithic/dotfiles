@@ -1,5 +1,6 @@
 return {
   {"savq/paq-nvim", opt = true},
+  "tweekmonster/startuptime.vim",
   --
   -- (appearance/ui) --
   "sainnhe/everforest",
@@ -84,7 +85,7 @@ return {
   -- (the rest...) --
   "ojroques/vim-oscyank",
   "farmergreg/vim-lastplace",
-  "andymass/vim-matchup",
+  "andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
   "windwp/nvim-autopairs", -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
   "alvan/vim-closetag",
   "b3nj5m1n/kommentary",

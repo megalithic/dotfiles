@@ -71,7 +71,7 @@ return {
   scss = {prettier},
   css = {prettier},
   markdown = {prettier},
-  sh = {shellcheck, shfmt},
-  zsh = {shellcheck, shfmt}
+  sh = {shellcheck},
+  zsh = {shellcheck}
   -- tf = {terraform},
 }

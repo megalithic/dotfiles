@@ -314,6 +314,7 @@ let g:loaded_spellfile_plugin = 1
 let g:loaded_tarPlugin = 1
 let g:loaded_tutor_mode_plugin = 1
 let g:loaded_zipPlugin = 1
+let g:loaded_matchit = 1
 
 
 " -- [ abbreviations ] ---------------------------------------------------------
