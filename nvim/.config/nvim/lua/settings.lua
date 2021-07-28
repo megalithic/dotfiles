@@ -465,29 +465,24 @@ end
 do
   local actions = require "fzf-lua.actions"
   require "fzf-lua".setup {
+    fzf_layout = "default",
     win_height = 0.6,
     win_width = 0.65,
-    -- preview_border = "noborder",
-    -- win_border=false
-    preview_cmd = 'bat --theme="base16" --style=numbers,changes --color always $FZF_PREVIEW_LINES', -- 'head -n $FZF_PREVIEW_LINES',
-    preview_border = "border", -- border|noborder
-    preview_wrap = "nowrap", -- wrap|nowrap
-    preview_opts = "nohidden", -- hidden|nohidden
+    preview_cmd = 'bat --theme="base16" --style=numbers,changes --color always $FZF_PREVIEW_LINES',
+    preview_border = "border",
     preview_vertical = "down:45%", -- up|down:size
     preview_horizontal = "right:60%", -- right|left:size
     preview_layout = "flex", -- horizontal|vertical|flex
     files = {
-      cmd = "fd --type f --follow --hidden --color=always --exclude '.git' --exclude '*.png' --ignore-file '~/.gitignore_global'",
-      git_icons = true,
-      file_icons = true,
+      prompt = "FILES  ",
+      cmd = "fd --type f --follow --hidden --color=always -E '.git' -E '*.png' -E '*.jpg' --ignore-file '~/.gitignore_global'",
       actions = {
         ["default"] = actions.file_vsplit,
         ["ctrl-t"] = actions.file_tabedit
       }
     },
     grep = {
-      git_icons = false, -- show git icons?
-      file_icons = false, -- show file icons?
+      prompt = "GREP  ",
       actions = {
         ["default"] = actions.file_vsplit,
         ["ctrl-t"] = actions.file_tabedit

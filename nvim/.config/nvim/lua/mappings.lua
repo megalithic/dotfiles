@@ -62,6 +62,10 @@ end
 
 -- [custom mappings] -----------------------------------------------------------
 
+map("n", "<leader>,", ":buffer *")
+map("n", "<leader>.", ":e<space>**/")
+map("n", "<leader>sT", ":tjump *")
+
 -- execute our current lua file
 map("n", "<leader>x", "<cmd>luafile %<cr>")
 
@@ -162,7 +166,3 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 -- orgmode
 map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
 map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
-
-map("n", "<leader>,", ":buffer *")
-map("n", "<leader>.", ":e<space>**/")
-map("n", "<leader>sT", ":tjump *")
