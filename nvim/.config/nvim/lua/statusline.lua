@@ -1,7 +1,8 @@
 local colorscheme = require("colors")
 local icons = colorscheme.icons
-
+local lualine = require("lualine")
 local lsp_status = require "lsp-status"
+
 lsp_status.register_progress()
 lsp_status.config {
   status_symbol = "",
@@ -20,14 +21,15 @@ local function LspStatus()
   return ""
 end
 
-local lualine = require("lualine")
 local config = {}
+
 config.options = {
   theme = "everforest",
   section_separators = {"", ""},
   component_separators = {"|", "|"},
   icons_enabled = true
 }
+
 config.sections = {
   lualine_a = {"mode"},
   lualine_b = {{"branch", icon = mega.utf8(0xe725)}},
@@ -43,6 +45,7 @@ config.sections = {
   lualine_z = {"location", "progress"},
   lualine_diagnostics = {}
 }
+
 config.inactive_sections = {
   lualine_a = {},
   lualine_b = {},
@@ -51,4 +54,5 @@ config.inactive_sections = {
   lualine_y = {},
   lualine_z = {}
 }
+
 lualine.setup(config)
