@@ -76,9 +76,7 @@ require("compe").setup {
   max_abbr_width = 100,
   max_kind_width = 100,
   max_menu_width = 100,
-  documentation = {
-    border = {"╭", "─", "╮", "│", "╯", "─", "╰", "│"}
-  },
+  documentation = true,
   source = {
     vsnip = {menu = "[vsnip]", priority = 11},
     nvim_lsp = {menu = "[lsp]", priority = 10},
@@ -140,6 +138,53 @@ map("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = true})
 
+local lsp_rename_prompt_prefix = function()
+  return colors.icons.prompt_symbol .. " "
+end
+
+function mega.lsp_rename()
+  local current_val = vim.fn.expand("<cword>")
+  local contents = lsp_rename_prompt_prefix() .. current_val
+  local bufnr, winnr =
+    vim.lsp.util.open_floating_preview(
+    {contents},
+    "",
+    {
+      border = "rounded",
+      width = math.max(current_val:len() + 10, 30)
+    }
+  )
+  api.nvim_set_current_win(winnr)
+  api.nvim_buf_set_option(bufnr, "modifiable", true)
+  api.nvim_win_set_option(winnr, "sidescrolloff", 0)
+  api.nvim_win_set_option(winnr, "scrolloff", 0)
+  api.nvim_win_set_option(winnr, "number", false)
+  api.nvim_win_set_option(winnr, "relativenumber", false)
+  api.nvim_buf_set_option(bufnr, "buftype", "prompt")
+  api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+  api.nvim_win_set_option(winnr, "winblend", 0)
+  api.nvim_win_set_option(winnr, "foldlevel", 100)
+
+  -- exec the renaming
+  bufmap("<cr>", "<cmd>lua mega.lsp_do_rename()<cr>", "i")
+  -- close the rename popup
+  bufmap("<esc>", "<cmd>q<cr>", "i")
+  bufmap("<c-c>", "<cmd>q<cr>", "i")
+  vim.defer_fn(
+    function()
+      cmd([[startinsert!]])
+    end,
+    10
+  )
+end
+
+function mega.lsp_do_rename()
+  local new_name = vim.trim(vim.fn.getline("."):sub(#lsp_rename_prompt_prefix() + 1, -1))
+  api.nvim_win_close(0, true)
+  api.nvim_feedkeys(t("<Esc>"), "i", true)
+  lsp.buf.rename(new_name)
+end
+
 local function on_attach(client, _)
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
@@ -164,7 +209,8 @@ local function on_attach(client, _)
   bufmap("]d", "lua vim.lsp.diagnostic.goto_next()")
 
   --- misc mappings
-  bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
+  bufmap("<leader>ln", "lua mega.lsp_rename()")
+  -- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
   bufmap("<leader>la", "lua vim.lsp.buf.code_action()")
   bufmap(
     "<leader>ld",

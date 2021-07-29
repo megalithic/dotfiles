@@ -20,7 +20,8 @@ local icons = {
   statusline_warning = utf8(0xf071),
   statusline_information = utf8(0xf7fc),
   statusline_hint = utf8(0xf835),
-  statusline_ok = utf8(0xf00c)
+  statusline_ok = utf8(0xf00c),
+  prompt_symbol = utf8(0xf460)
 }
 
 -- TODO: thieve @mhanberg's lush theme that wraps everforest/forest_night:
