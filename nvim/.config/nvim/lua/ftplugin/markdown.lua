@@ -89,9 +89,9 @@ return function(_) -- bufnr
   --   true
   -- )
 
-  vim.fn.sign_define("firstHeadline", {linehl = "markdownFirstHeadline"})
-  vim.fn.sign_define("secondHeadline", {linehl = "markdownSecondHeadline"})
-  vim.fn.sign_define("thirdHeadline", {linehl = "markdownHeadline"})
+  vim.fn.sign_defines("firstHeadline", {linehl = "markdownFirstHeadline"})
+  vim.fn.sign_defines("secondHeadline", {linehl = "markdownSecondHeadline"})
+  vim.fn.sign_defines("thirdHeadline", {linehl = "markdownHeadline"})
 
   local markdown_dash_namespace = vim.api.nvim_create_namespace("markdown_dash")
 

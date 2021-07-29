@@ -138,13 +138,14 @@ map("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = true})
 
-local lsp_rename_prompt_prefix = function()
-  return colors.icons.prompt_symbol .. " "
-end
+-- local lsp_rename_prompt_prefix = function()
+--   return colors.icons.prompt_symbol .. " "
+-- end
 
 function mega.lsp_rename()
   local current_val = vim.fn.expand("<cword>")
-  local contents = lsp_rename_prompt_prefix() .. current_val
+  -- local contents = lsp_rename_prompt_prefix() .. current_val
+  local contents = current_val
   local bufnr, winnr =
     vim.lsp.util.open_floating_preview(
     {contents},
@@ -160,10 +161,11 @@ function mega.lsp_rename()
   api.nvim_win_set_option(winnr, "scrolloff", 0)
   api.nvim_win_set_option(winnr, "number", false)
   api.nvim_win_set_option(winnr, "relativenumber", false)
-  api.nvim_buf_set_option(bufnr, "buftype", "prompt")
+  -- api.nvim_buf_set_option(bufnr, "buftype", "prompt")
+  api.nvim_buf_set_option(bufnr, "buftype", "nofile")
   api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
   api.nvim_win_set_option(winnr, "winblend", 0)
-  api.nvim_win_set_option(winnr, "foldlevel", 100)
+  -- api.nvim_win_set_option(winnr, "foldlevel", 100)
 
   -- exec the renaming
   bufmap("<cr>", "<cmd>lua mega.lsp_do_rename()<cr>", "i")
@@ -179,7 +181,8 @@ function mega.lsp_rename()
 end
 
 function mega.lsp_do_rename()
-  local new_name = vim.trim(vim.fn.getline("."):sub(#lsp_rename_prompt_prefix() + 1, -1))
+  -- local new_name = vim.trim(vim.fn.getline("."):sub(#lsp_rename_prompt_prefix() + 1, -1))
+  local new_name = vim.trim(vim.fn.getline("."))
   api.nvim_win_close(0, true)
   api.nvim_feedkeys(t("<Esc>"), "i", true)
   lsp.buf.rename(new_name)
@@ -545,6 +548,36 @@ lspconfig["jsonls"].setup(
   }
 )
 
+do
+  local function do_organize_imports()
+    local params = {
+      command = "_typescript.organizeImports",
+      arguments = {api.nvim_buf_get_name(0)},
+      title = ""
+    }
+    lsp.buf.execute_command(params)
+  end
+  lspconfig["tsserver"].setup {
+    filetypes = {
+      "javascript",
+      "javascriptreact",
+      "javascript.jsx",
+      "typescript",
+      "typescriptreact",
+      "typescript.tsx"
+    },
+    on_attach = on_attach,
+    capabilities = capabilities,
+    commands = {
+      OrganizeImports = {
+        do_organize_imports,
+        description = "Organize Imports"
+      }
+    }
+  }
+end
+
+-- TODO:
 -- local null_ls_sources = {
 -- 	require("null-ls").builtins.formatting.prettier,
 -- 	require("null-ls").builtins.formatting.stylua,
