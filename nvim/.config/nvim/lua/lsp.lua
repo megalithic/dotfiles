@@ -65,6 +65,7 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
   end
 end
 
+--- completion
 require("compe").setup {
   enabled = true,
   autocomplete = true,
@@ -89,6 +90,33 @@ require("compe").setup {
     spell = {menu = "[spl]", filetypes = {"markdown"}, priority = 8},
     buffer = {menu = "[buf]", priority = 7}
   }
+}
+require("vim.lsp.protocol").CompletionItemKind = {
+  "", -- Text          = 1;
+  "", -- Method        = 2;
+  "ƒ", -- Function      = 3;
+  "", -- Constructor   = 4;
+  "", -- Field         = 5;
+  "", -- Variable      = 6;
+  "", -- Class         = 7;
+  "ﰮ", -- Interface     = 8;
+  "", -- Module        = 9;
+  "", -- Property      = 10;
+  "", -- Unit          = 11;
+  "", -- Value         = 12;
+  "了", -- Enum          = 13;
+  "", -- Keyword       = 14;
+  "﬌", -- Snippet       = 15;
+  "", -- Color         = 16;
+  "", -- File          = 17;
+  "", -- Reference     = 18;
+  "", -- Folder        = 19;
+  "", -- EnumMember    = 20;
+  "", -- Constant      = 21;
+  "", -- Struct        = 22;
+  "⌘", -- Event         = 23;
+  "", -- Operator      = 24;
+  "♛" -- TypeParameter = 25;
 }
 
 local t = function(str)
@@ -127,8 +155,23 @@ _G.s_tab_complete = function()
 end
 
 _G.cr_complete = function()
-  if fn.pumvisible() == 1 then
-    return fn["compe#confirm"]({keys = "<cr>", select = true})
+  -- if fn.pumvisible() == 1 then
+  --   return fn["compe#confirm"]({keys = "<cr>", select = true})
+  -- else
+  --   return require("nvim-autopairs").autopairs_cr()
+  -- end
+  if vim.fn.pumvisible() ~= 0 then
+    if vim.fn.complete_info()["selected"] ~= -1 then
+      return vim.fn["compe#confirm"](t("<cr>"))
+    else
+      vim.defer_fn(
+        function()
+          vim.fn["compe#confirm"]("<cr>")
+        end,
+        20
+      )
+      return t("<c-n>")
+    end
   else
     return require("nvim-autopairs").autopairs_cr()
   end
@@ -198,6 +241,7 @@ local function on_attach(client, _)
   require "lsp_signature".on_attach(
     {
       bind = true, -- This is mandatory, otherwise border config won't get registered.
+      hint_prefix = "",
       handler_opts = {
         border = "single"
       }
@@ -225,6 +269,10 @@ local function on_attach(client, _)
   bufmap("<C-k>", "lua vim.lsp.buf.signature_help()")
   bufmap("<C-k>", "lua vim.lsp.buf.signature_help()", "i")
   bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
+
+  --- fzf-lua
+  bufmap("gd", "lua require('fzf-lua').lsp_definition()")
+  bufmap("gr", "lua require('fzf-lua').lsp_references()")
 
   --- trouble mappings
   map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
@@ -363,25 +411,46 @@ lspconfig["yamlls"].setup(
     }
   }
 )
-
-lspconfig["elixirls"].setup(
-  {
-    cmd = {fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"},
-    settings = {
-      elixirLS = {
-        fetchDeps = false,
-        dialyzerEnabled = false,
-        enableTestLenses = true,
-        suggestSpecs = true
+do
+  local manipulate_pipes = function(command)
+    return function()
+      local position_params = vim.lsp.util.make_position_params()
+      vim.lsp.buf.execute_command(
+        {
+          command = "manipulatePipes:" .. command,
+          arguments = {
+            command,
+            position_params.textDocument.uri,
+            position_params.position.line,
+            position_params.position.character
+          }
+        }
+      )
+    end
+  end
+  lspconfig["elixirls"].setup(
+    {
+      cmd = {fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"},
+      settings = {
+        elixirLS = {
+          fetchDeps = false,
+          dialyzerEnabled = false,
+          enableTestLenses = true,
+          suggestSpecs = true
+        }
+      },
+      filetypes = {"elixir", "eelixir"},
+      root_dir = root_pattern("mix.exs", ".git"),
+      on_attach = on_attach,
+      capabilities = capabilities,
+      flags = {debounce_text_changes = 150},
+      commands = {
+        ToPipe = {manipulate_pipes("toPipe"), "Convert function call to pipe operator"},
+        FromPipe = {manipulate_pipes("fromPipe"), "Convert pipe operator to function call"}
       }
-    },
-    filetypes = {"elixir", "eelixir"},
-    root_dir = root_pattern("mix.exs", ".git"),
-    on_attach = on_attach,
-    capabilities = capabilities,
-    flags = {debounce_text_changes = 150}
-  }
-)
+    }
+  )
+end
 
 do -- lua
   -- local function get_lua_runtime()
@@ -589,19 +658,19 @@ do
   )
 end
 
-lspconfig["zk"].setup(
-  {
-    cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
-    filetypes = {"markdown", "md"},
-    root_dir = function()
-      return vim.loop.cwd()
-    end,
-    settings = {},
-    on_attach = on_attach,
-    capabilities = capabilities,
-    flags = {debounce_text_changes = 150}
-  }
-)
+-- lspconfig["zk"].setup(
+--   {
+--     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
+--     filetypes = {"markdown", "md"},
+--     root_dir = function()
+--       return vim.loop.cwd()
+--     end,
+--     settings = {},
+--     on_attach = on_attach,
+--     capabilities = capabilities,
+--     flags = {debounce_text_changes = 150}
+--   }
+-- )
 
 -- TODO:
 -- local null_ls_sources = {

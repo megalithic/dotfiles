@@ -64,7 +64,7 @@ end
 
 map("n", "<leader>,", ":buffer *")
 map("n", "<leader>.", ":e<space>**/")
-map("n", "<leader>sT", ":tjump *")
+-- map("n", "<leader>sT", ":tjump *")
 
 -- execute our current lua file
 map("n", "<leader>x", "<cmd>luafile %<cr>")
@@ -123,16 +123,6 @@ map("n", "ga", "<Plug>(EasyAlign)")
 -- easyalign
 map("v", "<Enter>", "<Plug>(EasyAlign)")
 map("n", "<Leader>a", "<Plug>(EasyAlign)")
-
--- # FZF
--- map("n", "<Leader>m", "<cmd>FzfFiles<CR>")
--- map("n", "<Leader>a", "<cmd>FzfRg<CR>")
--- map("n", "<Leader>A", "<ESC>:exe('FzfRg '.expand('<cword>'))<CR>")
--- map(
---   "n",
---   "<leader>ff",
---   "<cmd>lua require('fzf-commands').files({ fzf = function(contents, options) return require('fzf').fzf(contents, options, { height = 50, width = 200 }) end })<CR>"
--- )
 
 -- # Dash
 map("n", "<leader>D", "<cmd>Dash<CR>")

@@ -343,10 +343,21 @@ do -- [golden-size] --
 end
 
 do -- [autopairs] --
-  require("nvim-autopairs").setup(
+  local npairs = require("nvim-autopairs")
+  npairs.setup()
+  require("nvim-autopairs.completion.compe").setup(
     {
-      map_cr = true, --  map <CR> on insert mode
-      map_complete = false -- it will auto insert `(` after select function or method item
+      map_cr = false, --  map <CR> on insert mode
+      map_complete = true -- it will auto insert `(` after select function or method item
+    }
+  )
+
+  local endwise = require("nvim-autopairs.ts-rule").endwise
+  npairs.add_rules(
+    {
+      endwise("then$", "end", "lua", nil),
+      endwise("do$", "end", "lua", nil),
+      endwise(" do$", "end", "elixir", nil)
     }
   )
 end

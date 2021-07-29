@@ -1,4 +1,7 @@
 return function(_) -- bufnr
+  vim.api.nvim_set_keymap("n", "<leader>etp", ":ToPipe<CR>", {noremap = true})
+  vim.api.nvim_set_keymap("n", "<leader>efp", ":FromPipe<CR>", {noremap = true})
+
   vim.api.nvim_exec(
     [[
       set filetype=elixir

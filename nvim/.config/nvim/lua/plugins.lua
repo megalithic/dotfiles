@@ -20,18 +20,14 @@ return {
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-compe",
-  "onsails/lspkind-nvim",
-  "rafamadriz/friendly-snippets",
   "hrsh7th/vim-vsnip",
   "hrsh7th/vim-vsnip-integ",
+  "rafamadriz/friendly-snippets",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
   "jose-elias-alvarez/null-ls.nvim",
-  -- "abecodes/tabout.nvim",
   "folke/trouble.nvim",
-  -- "glepnir/lspsaga.nvim",
-
   --
   -- (treesitter) --
   {"nvim-treesitter/nvim-treesitter", run = "TSUpdate"},
@@ -42,7 +38,6 @@ return {
   "p00f/nvim-ts-rainbow",
   --
   -- (file/document navigation) --
-
   "ibhagwan/fzf-lua",
   "vijaymarupudi/nvim-fzf",
   "nvim-telescope/telescope.nvim",
@@ -68,7 +63,8 @@ return {
   --
   -- (development, et al) --
   "tpope/vim-projectionist",
-  "janko/vim-test", -- research: rcarriga/vim-ultest
+  "janko/vim-test",
+  -- research: rcarriga/vim-ultest
   "tpope/vim-ragtag",
   "rizzatti/dash.vim",
   "skywind3000/vim-quickui",
@@ -76,7 +72,6 @@ return {
   {"zenbro/mirror.vim", opt = true},
   --
   -- (markdown/prose/notes) --
-  {"folke/zen-mode.nvim", opt = true},
   {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
   "dkarter/bullets.vim",
   "kristijanhusak/orgmode.nvim",
@@ -107,11 +102,8 @@ return {
   "christoomey/vim-tmux-navigator",
   "tmux-plugins/vim-tmux-focus-events",
   "christoomey/vim-tmux-runner",
-  -- "wellle/visual-split.vim",
   "junegunn/vim-slash",
   "junegunn/vim-easy-align",
-  -- "gennaro-tedesco/nvim-peekup", -- peek into the vim registers in floating window
-
   --
   -- (langs, syntax, et al) --
   "tpope/vim-rails",
