@@ -6,15 +6,17 @@ local colors = require("colors")
 cmd [[ set completeopt=menu,menuone,noselect ]]
 cmd [[ set shortmess+=c ]]
 
-local sign_error = colors.icons.sign_error
-local sign_warning = colors.icons.sign_warning
-local sign_information = colors.icons.sign_information
-local sign_hint = colors.icons.sign_hint
+do
+  local sign_error = colors.icons.sign_error
+  local sign_warning = colors.icons.sign_warning
+  local sign_information = colors.icons.sign_information
+  local sign_hint = colors.icons.sign_hint
 
-fn.sign_define("LspDiagnosticsSignError", {text = sign_error, numhl = "LspDiagnosticsDefaultError"})
-fn.sign_define("LspDiagnosticsSignWarning", {text = sign_warning, numhl = "LspDiagnosticsDefaultWarning"})
-fn.sign_define("LspDiagnosticsSignInformation", {text = sign_information, numhl = "LspDiagnosticsDefaultInformation"})
-fn.sign_define("LspDiagnosticsSignHint", {text = sign_hint, numhl = "LspDiagnosticsDefaultHint"})
+  fn.sign_define("LspDiagnosticsSignError", {text = sign_error, numhl = "LspDiagnosticsDefaultError"})
+  fn.sign_define("LspDiagnosticsSignWarning", {text = sign_warning, numhl = "LspDiagnosticsDefaultWarning"})
+  fn.sign_define("LspDiagnosticsSignInformation", {text = sign_information, numhl = "LspDiagnosticsDefaultInformation"})
+  fn.sign_define("LspDiagnosticsSignHint", {text = sign_hint, numhl = "LspDiagnosticsDefaultHint"})
+end
 
 --- LSP handlers
 -- diagnostics
@@ -206,6 +208,7 @@ local function on_attach(client, _)
   bufmap("gd", "lua vim.lsp.buf.definition()")
   bufmap("gr", "lua vim.lsp.buf.references()")
   bufmap("gs", "lua vim.lsp.buf.document_symbol()")
+  bufmap("gi", "lua vim.lsp.buf.implementation()")
 
   --- diagnostics navigation mappings
   bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
@@ -283,15 +286,6 @@ end
 
 --- servers
 -- local servers = {
---   zk = {
---     disabled = true,
---     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
---     filetypes = {"markdown", "md"},
---     root_dir = function()
---       return vim.loop.cwd()
---     end,
---     settings = {}
---   },
 --   elmls = {
 --     filetypes = {"elm"},
 --     root_dir = root_pattern("elm.json", ".git")
@@ -548,6 +542,21 @@ lspconfig["jsonls"].setup(
   }
 )
 
+lspconfig["html"].setup(
+  {
+    init_options = {
+      configurationSection = {"html", "css", "javascript", "eelixir"},
+      embeddedLanguages = {
+        css = true,
+        javascript = true
+      }
+    },
+    on_attach = on_attach,
+    capabilities = capabilities,
+    flags = {debounce_text_changes = 150}
+  }
+)
+
 do
   local function do_organize_imports()
     local params = {
@@ -557,25 +566,42 @@ do
     }
     lsp.buf.execute_command(params)
   end
-  lspconfig["tsserver"].setup {
-    filetypes = {
-      "javascript",
-      "javascriptreact",
-      "javascript.jsx",
-      "typescript",
-      "typescriptreact",
-      "typescript.tsx"
-    },
-    on_attach = on_attach,
-    capabilities = capabilities,
-    commands = {
-      OrganizeImports = {
-        do_organize_imports,
-        description = "Organize Imports"
+  lspconfig["tsserver"].setup(
+    {
+      filetypes = {
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx"
+      },
+      on_attach = on_attach,
+      capabilities = capabilities,
+      flags = {debounce_text_changes = 150},
+      commands = {
+        OrganizeImports = {
+          do_organize_imports,
+          description = "Organize Imports"
+        }
       }
     }
-  }
+  )
 end
+
+lspconfig["zk"].setup(
+  {
+    cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
+    filetypes = {"markdown", "md"},
+    root_dir = function()
+      return vim.loop.cwd()
+    end,
+    settings = {},
+    on_attach = on_attach,
+    capabilities = capabilities,
+    flags = {debounce_text_changes = 150}
+  }
+)
 
 -- TODO:
 -- local null_ls_sources = {

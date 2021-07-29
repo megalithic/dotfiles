@@ -14,6 +14,7 @@ au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au("BufRead,BufNewFile *.md set filetype=markdown")
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
+au([[BufWritePre * %s/\n\+\%$//e]])
 
 --  Open multiple files in splits
 exec(
