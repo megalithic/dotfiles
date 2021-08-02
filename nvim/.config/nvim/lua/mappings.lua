@@ -13,13 +13,15 @@ map("n", "<Tab>", "%", {noremap = true})
 map("v", "<Tab>", "%", {noremap = true})
 map("x", "<Tab>", "%", {noremap = true})
 
--- [override mappings] ---------------------------------------------------------
+-- [overrides/remaps mappings] ---------------------------------------------------------
 
 -- Convenient Line operations
 map("n", "H", "^")
 map("n", "L", "$")
 map("v", "L", "g_")
-map("n", "Y", '"+y')
+-- map("n", "Y", '"+y$')
+map("n", "Y", 'yg_') -- copy to last non-blank char of the line
+
 -- Remap VIM 0 to first non-blank character
 map("n", "0", "^")
 
@@ -28,21 +30,21 @@ map("n", "Q", "@q")
 map("v", "Q", ":norm @q<CR>")
 
 -- Join / Split Lines
-map("n", "J", "mzJ`z") -- Join lines
+map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
 map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
 --Remap for dealing with word wrap
 map("n", "k", "v:count == 0 ? 'gk' : 'k'", {noremap = true, expr = true, silent = true})
 api.nvim_set_keymap("n", "j", "v:count == 0 ? 'gj' : 'j'", {noremap = true, expr = true, silent = true})
 
--- clear highlights
+-- Clear highlights
 api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
 
--- keep line in middle of buffer when searching
+-- Keep line in middle of buffer when searching
 map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
 map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
 
--- readline bindings
+-- Readline bindings (command)
 local rl_bindings = {
   {lhs = "<c-a>", rhs = "<home>", opts = {noremap = true}},
   {lhs = "<c-e>", rhs = "<end>", opts = {noremap = true}},
@@ -55,6 +57,28 @@ local rl_bindings = {
 for _, binding in ipairs(rl_bindings) do
   map("c", binding.lhs, binding.rhs, binding.opts)
 end
+
+-- useful remaps from theprimeagen:
+-- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
+
+-- Undo breakpoints
+map("n", ",", ",<C-g>u")
+map("n", ".", ".<C-g>u")
+map("n", "!", "!<C-g>u")
+map("n", "?", "?<C-g>u")
+
+-- Jumplist mutations
+map("n", "k", "(v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true})
+map("n", "j", "(v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true})
+
+
+-- nnoremap cn *``cgn
+-- nnoremap cN *``cgN
+-- - Go on top of a word you want to change
+-- - Press cn or cN
+-- - Type the new word you want to replace it with
+-- - Smash that dot '.' multiple times to change all the other occurrences of the word
+-- It's quicker than searching or replacing. It's pure magic.
 
 -- Default to case insensitive search
 -- map("n", "/", "/\v")

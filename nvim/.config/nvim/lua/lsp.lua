@@ -1,9 +1,10 @@
-local cmd, lsp, opt, api, fn = vim.cmd, vim.lsp, vim.opt, vim.api, vim.fn
+local cmd, lsp, api, fn = vim.cmd, vim.lsp, vim.api, vim.fn
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local colors = require("colors")
 
 cmd [[ set completeopt=menu,menuone,noselect ]]
+vim.o.completeopt = "menuone,noselect"
 cmd [[ set shortmess+=c ]]
 
 do
@@ -20,29 +21,38 @@ end
 
 --- LSP handlers
 -- diagnostics
-lsp.handlers["textDocument/publishDiagnostics"] = function(...)
+lsp.handlers["textDocument/publishDiagnostics"] =
   lsp.with(
     lsp.diagnostic.on_publish_diagnostics,
     {
       underline = true,
-      virtual_text = false, -- FIXME: virtual text still shows up. ¯\_(ツ)_/¯
+      virtual_text = false,
       signs = true,
       update_in_insert = false,
       severity_sort = true
     }
-  )(...)
-  pcall(lsp.diagnostic.set_loclist, {open_loclist = false})
-end
+  )
 
--- hover
-local overridden_hover = lsp.with(lsp.handlers.hover, {border = "single", focusable = false})
-lsp.handlers["textDocument/hover"] = function(...)
-  local bufnr = overridden_hover(...)
-  api.nvim_buf_set_keymap(bufnr, "n", "K", "<cmd>wincmd p<CR>", {noremap = true, silent = true})
-end
+-- lsp.handlers["textDocument/hover"] = function(_, method, result)
+--   lsp.util.focusable_float(
+--     method,
+--     function()
+--       if not (result and result.contents) then
+--         return
+--       end
+--       local markdown_lines = lsp.util.convert_input_to_markdown_lines(result.contents)
+--       markdown_lines = lsp.util.trim_empty_lines(markdown_lines)
+--       if vim.tbl_isempty(markdown_lines) then
+--         return
+--       end
 
--- signature-help
-lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, {border = "single"})
+--       local bufnr, contents_winid, _, border_winid = window.fancy_floating_markdown(markdown_lines)
+--       lsp.util.close_preview_autocmd({"CursorMoved", "BufHidden", "InsertCharPre"}, contents_winid)
+--       lsp.util.close_preview_autocmd({"CursorMoved", "BufHidden", "InsertCharPre"}, border_winid)
+--       return bufnr, contents_winid
+--     end
+--   )
+-- end
 
 -- formatting
 lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
@@ -70,9 +80,9 @@ require("compe").setup {
   enabled = true,
   autocomplete = true,
   debug = false,
-  min_length = 2,
+  min_length = 1,
   preselect = "disable",
-  allow_prefix_unmatch = false,
+  -- allow_prefix_unmatch = false,
   throttle_time = 80,
   source_timeout = 200,
   incomplete_delay = 400,
@@ -84,7 +94,7 @@ require("compe").setup {
     vsnip = {menu = "[vsnip]", priority = 11},
     nvim_lsp = {menu = "[lsp]", priority = 10},
     nvim_lua = {menu = "[lua]", priority = 9},
-    treesitter = {menu = "[ts]", priority = 9},
+    treesitter = false, --{menu = "[ts]", priority = 9},
     path = {menu = "[path]", priority = 8},
     orgmode = {menu = "[org]", priority = 8, filetypes = {"org"}},
     spell = {menu = "[spl]", filetypes = {"markdown"}, priority = 8},
@@ -166,7 +176,7 @@ _G.cr_complete = function()
     else
       vim.defer_fn(
         function()
-          vim.fn["compe#confirm"]("<cr>")
+          vim.fn["compe#confirm"]({keys = "<cr>", select = true})
         end,
         20
       )
@@ -233,7 +243,7 @@ function mega.lsp_do_rename()
   lsp.buf.rename(new_name)
 end
 
-local function on_attach(client, _)
+local function on_attach(client, bufnr)
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
   end
@@ -241,12 +251,26 @@ local function on_attach(client, _)
   require "lsp_signature".on_attach(
     {
       bind = true, -- This is mandatory, otherwise border config won't get registered.
-      hint_prefix = "",
+      hint_prefix = " ",
+      floating_window = true,
+      -- fix_pos = true,
+      hint_enable = true,
       handler_opts = {
         border = "single"
       }
     }
   )
+  --     bind = false,
+  --     use_lspsaga = false,
+  --     floating_window = true,
+  --     fix_pos = true,
+  --     hint_enable = true,
+  --     hi_parameter = "Search",
+  --     handler_opts = {
+  --       "shadow"
+  --     }
+  --   }
+  -- )
 
   --- goto mappings
   bufmap("gd", "lua vim.lsp.buf.definition()")
@@ -281,6 +305,8 @@ local function on_attach(client, _)
   -- au "BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
   au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
   au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()"
+  au [[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]]
+
   -- au "BufWritePost <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
   -- au "BufWritePre *.rs,*.c,*.lua lua vim.lsp.buf.formatting_sync()"
   -- au "CursorHold *.rs,*.c,*.lua lua vim.lsp.diagnostic.show_line_diagnostics()"
@@ -299,7 +325,7 @@ local function on_attach(client, _)
   cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
   cmd [[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]]
 
-  opt.omnifunc = "v:lua.vim.lsp.omnifunc"
+  api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
 --- capabilities

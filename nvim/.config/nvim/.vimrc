@@ -10,7 +10,7 @@ let maplocalleader = ","
 noremap <C-]> K
 
 " Copy to system clipboard
-noremap Y "+y
+noremap Y y$
 
 " Better buffer navigation
 "noremap J }
