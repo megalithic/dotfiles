@@ -1,11 +1,10 @@
-local cmd, lsp, api, fn = vim.cmd, vim.lsp, vim.api, vim.fn
+local cmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local colors = require("colors")
 
-cmd [[ set completeopt=menu,menuone,noselect ]]
-vim.o.completeopt = "menuone,noselect"
-cmd [[ set shortmess+=c ]]
+set.completeopt = {"menuone", "noselect", "noinsert"}
+set.shortmess:append("c")
 
 do
   local sign_error = colors.icons.sign_error
@@ -23,15 +22,15 @@ end
 -- diagnostics
 lsp.handlers["textDocument/publishDiagnostics"] =
   lsp.with(
-    lsp.diagnostic.on_publish_diagnostics,
-    {
-      underline = true,
-      virtual_text = false,
-      signs = true,
-      update_in_insert = false,
-      severity_sort = true
-    }
-  )
+  lsp.diagnostic.on_publish_diagnostics,
+  {
+    underline = true,
+    virtual_text = false,
+    signs = true,
+    update_in_insert = false,
+    severity_sort = true
+  }
+)
 
 -- lsp.handlers["textDocument/hover"] = function(_, method, result)
 --   lsp.util.focusable_float(
@@ -91,7 +90,8 @@ require("compe").setup {
   max_menu_width = 100,
   documentation = true,
   source = {
-    vsnip = {menu = "[vsnip]", priority = 11},
+    -- vsnip = {menu = "[vsnip]", priority = 11},
+    luasnip = {menu = "[lsnip]", priority = 11},
     nvim_lsp = {menu = "[lsp]", priority = 10},
     nvim_lua = {menu = "[lua]", priority = 9},
     treesitter = false, --{menu = "[ts]", priority = 9},
@@ -101,6 +101,7 @@ require("compe").setup {
     buffer = {menu = "[buf]", priority = 7}
   }
 }
+
 require("vim.lsp.protocol").CompletionItemKind = {
   "", -- Text          = 1;
   "", -- Method        = 2;
@@ -117,6 +118,10 @@ require("vim.lsp.protocol").CompletionItemKind = {
   "了", -- Enum          = 13;
   "", -- Keyword       = 14;
   "﬌", -- Snippet       = 15;
+  -- ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
+  -- ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs1]",
+  -- ["vsnip"] = mega.utf8(0xf68e) .. " [vs2]",
+  -- Snippet = mega.utf8(0xf68e) .. " [s]",
   "", -- Color         = 16;
   "", -- File          = 17;
   "", -- Reference     = 18;
@@ -141,25 +146,46 @@ end
 -- Use (s-)tab to:
 --- move to prev/next item in completion menuone
 --- jump to prev/next snippet's placeholder
+-- _G.tab_complete = function()
+--   if fn.pumvisible() == 1 then
+--     return t "<C-n>"
+--   elseif fn["vsnip#available"](1) == 1 then
+--     return t "<Plug>(vsnip-expand-or-jump)"
+--   elseif check_back_space() then
+--     return t "<Tab>"
+--   else
+--     return fn["compe#complete"]()
+--   end
+-- end
+-- _G.s_tab_complete = function()
+--   if fn.pumvisible() == 1 then
+--     return t "<C-p>"
+--   elseif fn["vsnip#jumpable"](-1) == 1 then
+--     return t "<Plug>(vsnip-jump-prev)"
+--   else
+--     -- If <S-Tab> is not working in your terminal, change it to <C-h>
+--     return t "<S-Tab>"
+--   end
+-- end
+
 _G.tab_complete = function()
-  if fn.pumvisible() == 1 then
+  if vim.fn.pumvisible() == 1 then
     return t "<C-n>"
-  elseif fn["vsnip#available"](1) == 1 then
-    return t "<Plug>(vsnip-expand-or-jump)"
+  elseif require("luasnip").expand_or_jumpable() then
+    return t "<cmd>lua require'luasnip'.jump(1)<Cr>"
   elseif check_back_space() then
     return t "<Tab>"
   else
-    return fn["compe#complete"]()
+    return vim.fn["compe#complete"]()
   end
 end
 
 _G.s_tab_complete = function()
-  if fn.pumvisible() == 1 then
+  if vim.fn.pumvisible() == 1 then
     return t "<C-p>"
-  elseif fn["vsnip#jumpable"](-1) == 1 then
-    return t "<Plug>(vsnip-jump-prev)"
+  elseif require("luasnip").jumpable(-1) then
+    return t "<cmd>lua require'luasnip'.jump(-1)<CR>"
   else
-    -- If <S-Tab> is not working in your terminal, change it to <C-h>
     return t "<S-Tab>"
   end
 end
@@ -187,11 +213,11 @@ _G.cr_complete = function()
   end
 end
 
-map("i", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = true})
-map("s", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = true})
-map("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
-map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
-map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = true})
+map("i", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = false})
+map("s", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = false})
+map("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = false})
+map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = false})
+map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = false})
 
 -- local lsp_rename_prompt_prefix = function()
 --   return colors.icons.prompt_symbol .. " "

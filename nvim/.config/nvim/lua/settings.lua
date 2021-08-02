@@ -1,8 +1,8 @@
-local opt, g, api = vim.opt, vim.g, vim.api
+local set, g, api = vim.opt, vim.g, vim.api
 
 do -- [ui/appearance] --
   -- fallback in the event our statusline plugins fail to load
-  opt.statusline =
+  set.statusline =
     table.concat(
     {
       "%2{mode()} | ",
@@ -20,8 +20,8 @@ do -- [ui/appearance] --
 end
 
 do -- [nvim options] --
-  opt.foldmethod = "expr"
-  opt.foldexpr = "nvim_treesitter#foldexpr()"
+  set.foldmethod = "expr"
+  set.foldexpr = "nvim_treesitter#foldexpr()"
   g.no_man_maps = true
   g.vim_json_syntax_conceal = false
   g.vim_json_conceal = false
@@ -105,6 +105,20 @@ do -- [nvim-treesitter] --
         "elixir",
         "eelixir"
       }
+    }
+  )
+end
+
+do -- [luasnip] --
+  require("luasnip").config.set_config(
+    {
+      history = true,
+      updateevents = "TextChanged,TextChangedI"
+    }
+  )
+  require("luasnip/loaders/from_vscode").load(
+    {
+      paths = {vim.fn.stdpath("config") .. "/vsnips"}
     }
   )
 end

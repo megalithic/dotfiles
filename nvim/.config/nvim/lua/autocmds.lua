@@ -97,18 +97,23 @@ augroup(
   }
 )
 
--- augroup(
---   "filetypes",
---   {
---     {
---       events = {"BufEnter", "BufRead", "BufNewFile"},
---       targets = {"*.lexs"},
---       command = "set filetype=elixir"
---     },
---     {
---       events = {"BufEnter", "BufNewFile", "FileType"},
---       targets = {"*.md"},
---       command = "lua require('ftplugin.markdown')()"
---     }
---   }
--- )
+augroup(
+  "filetypes",
+  {
+    {
+      events = {"BufEnter", "BufRead", "BufNewFile"},
+      targets = {"*.lexs"},
+      command = "set filetype=elixir"
+    },
+    {
+      events = {"BufEnter", "BufRead", "BufNewFile"},
+      targets = {"Brewfile"},
+      command = "set filetype=ruby"
+    },
+    -- {
+    --   events = {"BufEnter", "BufNewFile", "FileType"},
+    --   targets = {"*.md"},
+    --   command = "lua require('ftplugin.markdown')()"
+    -- }
+  }
+)

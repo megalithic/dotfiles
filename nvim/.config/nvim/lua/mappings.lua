@@ -20,7 +20,7 @@ map("n", "H", "^")
 map("n", "L", "$")
 map("v", "L", "g_")
 -- map("n", "Y", '"+y$')
-map("n", "Y", 'yg_') -- copy to last non-blank char of the line
+map("n", "Y", "yg_") -- copy to last non-blank char of the line
 
 -- Remap VIM 0 to first non-blank character
 map("n", "0", "^")
@@ -62,15 +62,14 @@ end
 -- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
 
 -- Undo breakpoints
-map("n", ",", ",<C-g>u")
-map("n", ".", ".<C-g>u")
-map("n", "!", "!<C-g>u")
-map("n", "?", "?<C-g>u")
+map("i", ",", ",<C-g>u")
+map("i", ".", ".<C-g>u")
+map("i", "!", "!<C-g>u")
+map("i", "?", "?<C-g>u")
 
 -- Jumplist mutations
-map("n", "k", "(v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true})
-map("n", "j", "(v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true})
-
+map("n", "k", '(v:count > 5 ? "m\'" . v:count : \'\') . \'k\'', {expr = true})
+map("n", "j", '(v:count > 5 ? "m\'" . v:count : \'\') . \'j\'', {expr = true})
 
 -- nnoremap cn *``cgn
 -- nnoremap cN *``cgN

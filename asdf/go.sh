@@ -7,7 +7,7 @@ if (command -v go &> /dev/null); then
 
   # -- install efm-langserver
   # using Brewfile -> brew "efm-langserver" instead
-  GO111MODULE=on go get github.com/mattn/efm-langserver@latest
+  # GO111MODULE=on go get github.com/mattn/efm-langserver@latest
 
   # -- install zk
   GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD

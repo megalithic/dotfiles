@@ -20,8 +20,9 @@ return {
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-compe",
-  "hrsh7th/vim-vsnip",
-  "hrsh7th/vim-vsnip-integ",
+  -- "hrsh7th/vim-vsnip",
+  -- "hrsh7th/vim-vsnip-integ",
+  "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
@@ -30,8 +31,8 @@ return {
   "folke/trouble.nvim",
   --
   -- (treesitter) --
-  {"nvim-treesitter/nvim-treesitter", run = "TSUpdate"},
-  {"nvim-treesitter/completion-treesitter", run = "TSUpdate"},
+  {"nvim-treesitter/nvim-treesitter", run = ":TSUpdate"},
+  {"nvim-treesitter/completion-treesitter", run = ":TSUpdate"},
   "nvim-treesitter/nvim-treesitter-textobjects",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
