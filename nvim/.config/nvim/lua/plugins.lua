@@ -31,8 +31,12 @@ return {
   "folke/trouble.nvim",
   --
   -- (treesitter) --
-  {"nvim-treesitter/nvim-treesitter", run = ":TSUpdate"},
-  {"nvim-treesitter/completion-treesitter", run = ":TSUpdate"},
+  {
+    "nvim-treesitter/nvim-treesitter",
+    run = function()
+      vim.cmd "TSUpdate"
+    end
+  },
   "nvim-treesitter/nvim-treesitter-textobjects",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
