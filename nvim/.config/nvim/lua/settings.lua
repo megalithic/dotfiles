@@ -358,7 +358,18 @@ end
 
 do -- [autopairs] --
   local npairs = require("nvim-autopairs")
-  npairs.setup()
+  npairs.setup(
+    {
+      check_ts = true,
+      ts_config = {
+        lua = {"string"},
+        -- it will not add pair on that treesitter node
+        javascript = {"template_string"},
+        java = false
+        -- don't check treesitter on java
+      }
+    }
+  )
   require("nvim-autopairs.completion.compe").setup(
     {
       map_cr = false, --  map <CR> on insert mode
@@ -366,6 +377,8 @@ do -- [autopairs] --
     }
   )
 
+  npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+  -- npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
   local endwise = require("nvim-autopairs.ts-rule").endwise
   npairs.add_rules(
     {

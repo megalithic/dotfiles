@@ -15,6 +15,9 @@ map("x", "<Tab>", "%", {noremap = true})
 
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
+-- useful remaps from theprimeagen:
+-- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
+
 -- Convenient Line operations
 map("n", "H", "^")
 map("n", "L", "$")
@@ -33,9 +36,14 @@ map("v", "Q", ":norm @q<CR>")
 map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
 map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
---Remap for dealing with word wrap
-map("n", "k", "v:count == 0 ? 'gk' : 'k'", {noremap = true, expr = true, silent = true})
-api.nvim_set_keymap("n", "j", "v:count == 0 ? 'gj' : 'j'", {noremap = true, expr = true, silent = true})
+-- TODO: merge the two remaps of j/k below
+-- Jumplist mutations
+map("n", "k", '(v:count > 5 ? "m\'" . v:count : \'\') . \'k\'', {expr = true})
+map("n", "j", '(v:count > 5 ? "m\'" . v:count : \'\') . \'j\'', {expr = true})
+
+-- Remap for dealing with word wrap
+map("n", "k", "v:count == 0 ? 'gk' : 'k'", {expr = true})
+map("n", "j", "v:count == 0 ? 'gj' : 'j'", {expr = true})
 
 -- Clear highlights
 api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
@@ -58,18 +66,11 @@ for _, binding in ipairs(rl_bindings) do
   map("c", binding.lhs, binding.rhs, binding.opts)
 end
 
--- useful remaps from theprimeagen:
--- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
-
 -- Undo breakpoints
 map("i", ",", ",<C-g>u")
 map("i", ".", ".<C-g>u")
 map("i", "!", "!<C-g>u")
 map("i", "?", "?<C-g>u")
-
--- Jumplist mutations
-map("n", "k", '(v:count > 5 ? "m\'" . v:count : \'\') . \'k\'', {expr = true})
-map("n", "j", '(v:count > 5 ? "m\'" . v:count : \'\') . \'j\'', {expr = true})
 
 -- nnoremap cn *``cgn
 -- nnoremap cN *``cgN
