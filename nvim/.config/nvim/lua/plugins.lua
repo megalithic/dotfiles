@@ -5,10 +5,10 @@ return {
   -- (appearance/ui) --
   "sainnhe/everforest",
   "norcalli/nvim-colorizer.lua",
-  {"dm1try/golden_size", branch = "layout_resizing"},
+  "dm1try/golden_size",
   "junegunn/rainbow_parentheses.vim",
   "kyazdani42/nvim-web-devicons",
-  -- "yamatsum/nvim-nonicons",
+  -- "yamatsum/nvim-nonicons", -- FIXME: these do weird things
   "hoob3rt/lualine.nvim",
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
@@ -20,7 +20,7 @@ return {
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-compe",
-  -- "hrsh7th/vim-vsnip",
+  -- "hrsh7th/vim-vsnip", -- FIXME: trying out Luasnip for now
   -- "hrsh7th/vim-vsnip-integ",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
@@ -69,7 +69,7 @@ return {
   -- (development, et al) --
   "tpope/vim-projectionist",
   "janko/vim-test",
-  -- research: rcarriga/vim-ultest
+  -- research to supplement vim-test: rcarriga/vim-ultest
   "tpope/vim-ragtag",
   "rizzatti/dash.vim",
   "skywind3000/vim-quickui",

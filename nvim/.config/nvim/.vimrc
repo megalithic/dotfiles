@@ -242,6 +242,7 @@ if has("nvim")
   set switchbuf=useopen,vsplit,split,usetab
   set wildoptions+=pum
   " set winblend=10
+  set winminwidth=15
   set jumpoptions=stack
 
   set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
