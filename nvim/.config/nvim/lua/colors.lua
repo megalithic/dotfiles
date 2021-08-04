@@ -1,5 +1,5 @@
 local cmd = vim.cmd
-local au, highlight, utf8 = mega.au, mega.highlight, mega.utf8
+local au, hi, utf8 = mega.au, mega.highlight, mega.utf8
 
 local icons = {
   sign_error = utf8(0xf655),
@@ -120,24 +120,19 @@ return {
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   setup = function()
     mega.everforest_overrides = function()
-      -- highlight(
-      --   "SpellBad",
-      --   {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true}
-      -- )
-      -- -- highlight("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
-      -- -- highlight("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
-      -- -- highlight("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
-      highlight(
-        "CursorLineNr",
-        {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true}
-      )
-      -- highlight("HighlightedYankRegion", {guifg = "NONE", guibg = status.highlighted_yank, gui = "NONE", force = true})
-      -- highlight("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
-      -- highlight("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
-      -- highlight("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
-      -- highlight("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
-      -- highlight("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
-      -- highlight("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
+      -- hi("SpellBad", {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true})
+      -- -- hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
+      -- -- hi("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
+      -- -- hi("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
+      hi("CursorLineNr", {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true})
+      hi("OrgDone", {guifg = status.green, guibg = "NONE", gui = "bold", force = true})
+      hi("OrgAgendaScheduled", {guifg = status.cyan, guibg = "NONE", gui = "NONE", force = true})
+      -- hi("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
+      -- hi("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
+      -- hi("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
+      -- hi("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
+      -- hi("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
+      -- hi("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
       -- vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
       -- vim.g.indentLine_color_gui = status.cursorlinenr
       -- vim.g.limelight_conceal_guifg = cs.bg2

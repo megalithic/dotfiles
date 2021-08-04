@@ -37,6 +37,43 @@ function M.isdir(path)
   return M.exists(path .. "/")
 end
 
+function M.log(msg, hl)
+  vim.api.nvim_echo({ { "mega -> ", hl }, { msg } }, true, {})
+end
+
+function M.warn(msg)
+  M.log(msg, "WarningMsg")
+end
+
+function M.error(msg)
+  M.log(msg, "ErrorMsg")
+end
+
+function M.inspect(k, v, l, f)
+  local force = f or false
+  local should_log = require("vim.lsp.log").should_log(1)
+  if not should_log and not force then
+    return
+  end
+
+  local level = "[DEBUG]"
+  local hl = "WarningMsg"
+  if level ~= nil and l == 4 then
+    level = "[ERROR]"
+    hl = "ErrorMsg"
+  end
+
+  if v then
+    M.log(string.format("%s %s -> %s", level, k, vim.inspect(v)), hl)
+    -- print(level .. " " .. k .. " -> " .. vim.inspect(v))
+  else
+    M.log(string.format("%s %s", level, k), hl)
+    -- print(level .. " " .. k .. "..")
+  end
+
+  return v
+end
+
 -- function M.map(lhs, rhs, mode, expr) -- wait for lua keymaps: neovim/neovim#13823
 --   mode = mode or "n"
 --   if mode == "n" then
@@ -119,29 +156,8 @@ function M.highlight(name, opts)
   end
 end
 
-function M.exec(cmd)
-  api.nvim_exec(cmd, true)
-end
-
-function M.inspect(k, v, l, f)
-  local force = f or false
-  local should_log = require("vim.lsp.log").should_log(1)
-  if not should_log and not force then
-    return
-  end
-
-  local level = "[DEBUG]"
-  if level ~= nil and l == 4 then
-    level = "[ERROR]"
-  end
-
-  if v then
-    print(level .. " " .. k .. " -> " .. vim.inspect(v))
-  else
-    print(level .. " " .. k .. "..")
-  end
-
-  return v
+function M.exec(c)
+  api.nvim_exec(c, true)
 end
 
 -- a safe module loader

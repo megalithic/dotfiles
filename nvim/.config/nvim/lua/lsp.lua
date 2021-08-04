@@ -32,33 +32,12 @@ lsp.handlers["textDocument/publishDiagnostics"] =
   }
 )
 
+-- hover
+-- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
 local max_width = math.max(math.floor(vim.o.columns * 0.7), 100)
 local max_height = math.max(math.floor(vim.o.lines * 0.3), 30)
-
--- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
 vim.lsp.handlers["textDocument/hover"] =
   vim.lsp.with(vim.lsp.handlers.hover, {border = "rounded", max_width = max_width, max_height = max_height})
-
--- lsp.handlers["textDocument/hover"] = function(_, method, result)
---   lsp.util.focusable_float(
---     method,
---     function()
---       if not (result and result.contents) then
---         return
---       end
---       local markdown_lines = lsp.util.convert_input_to_markdown_lines(result.contents)
---       markdown_lines = lsp.util.trim_empty_lines(markdown_lines)
---       if vim.tbl_isempty(markdown_lines) then
---         return
---       end
-
---       local bufnr, contents_winid, _, border_winid = window.fancy_floating_markdown(markdown_lines)
---       lsp.util.close_preview_autocmd({"CursorMoved", "BufHidden", "InsertCharPre"}, contents_winid)
---       lsp.util.close_preview_autocmd({"CursorMoved", "BufHidden", "InsertCharPre"}, border_winid)
---       return bufnr, contents_winid
---     end
---   )
--- end
 
 -- formatting
 lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
@@ -146,10 +125,6 @@ require("vim.lsp.protocol").CompletionItemKind = {
   -- "了", -- Enum          = 13;
   -- "", -- Keyword       = 14;
   -- "﬌", -- Snippet       = 15;
-  -- -- ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
-  -- -- ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs1]",
-  -- -- ["vsnip"] = mega.utf8(0xf68e) .. " [vs2]",
-  -- -- Snippet = mega.utf8(0xf68e) .. " [s]",
   -- "", -- Color         = 16;
   -- "", -- File          = 17;
   -- "", -- Reference     = 18;
@@ -275,47 +250,61 @@ map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = false})
 map("i", "<C-f>", "compe#scroll({ 'delta': +4 })", {expr = true})
 map("i", "<C-d>", "compe#scroll({ 'delta': -4 })", {expr = true})
 
-function mega.lsp_rename()
-  local current_val = vim.fn.expand("<cword>")
-  local contents = current_val
-  local bufnr, winnr =
-    vim.lsp.util.open_floating_preview(
-    {contents},
-    "",
-    {
-      border = "rounded",
-      width = math.max(current_val:len() + 10, 30)
-    }
-  )
-  api.nvim_set_current_win(winnr)
-  api.nvim_buf_set_option(bufnr, "modifiable", true)
-  api.nvim_win_set_option(winnr, "sidescrolloff", 0)
-  api.nvim_win_set_option(winnr, "scrolloff", 0)
-  api.nvim_win_set_option(winnr, "number", false)
-  api.nvim_win_set_option(winnr, "relativenumber", false)
-  api.nvim_buf_set_option(bufnr, "buftype", "nofile")
-  api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
-  api.nvim_win_set_option(winnr, "winblend", 0)
+local function make_prompt(opts)
+  local prompt_buf = api.nvim_create_buf(false, true)
 
-  -- exec the renaming
-  bufmap("<cr>", "<cmd>lua mega.lsp_do_rename()<cr>", "i")
-  -- close the rename popup
-  bufmap("<esc>", "<cmd>q<cr>", "i")
-  bufmap("<c-c>", "<cmd>q<cr>", "i")
-  vim.defer_fn(
-    function()
-      cmd([[startinsert!]])
-    end,
-    10
+  api.nvim_buf_set_option(prompt_buf, "buftype", "prompt")
+
+  local prompt_window =
+    api.nvim_open_win(
+    prompt_buf,
+    true,
+    {relative = "cursor", row = 1, col = 1, width = 20, height = 1, border = "rounded", style = "minimal"}
   )
+  fn.prompt_setprompt(prompt_buf, opts.prompt)
+
+  function mega.halt_lsp_rename()
+    api.nvim_win_close(prompt_window, true)
+    api.nvim_buf_delete(prompt_buf, {force = true})
+    cmd("stopinsert")
+  end
+
+  fn.prompt_setcallback(
+    prompt_buf,
+    function(text)
+      if opts.callback(text) then
+        mega.halt_lsp_rename()
+      end
+    end
+  )
+
+  if opts.initial then
+    cmd("norm i" .. opts.initial)
+  end
+
+  bufmap("<esc>", "<cmd>lua mega.halt_lsp_rename()<cr>", "i")
+  bufmap("<c-c>", "<cmd>lua mega.halt_lsp_rename()<cr>", "i")
+  cmd("startinsert")
+
+  return prompt_buf, prompt_window
 end
 
-function mega.lsp_do_rename()
-  -- local new_name = vim.trim(vim.fn.getline("."):sub(#lsp_rename_prompt_prefix() + 1, -1))
-  local new_name = vim.trim(vim.fn.getline("."))
-  api.nvim_win_close(0, true)
-  api.nvim_feedkeys(t("<Esc>"), "i", true)
-  lsp.buf.rename(new_name)
+function mega.lsp_rename()
+  local bufnr = api.nvim_get_current_buf()
+  local params = lsp.util.make_position_params()
+  make_prompt(
+    {
+      prompt = " → ",
+      callback = function(new_name)
+        if not (new_name and #new_name > 0) then
+          return true
+        end
+        params.newName = new_name
+        lsp.buf_request(bufnr, "textDocument/rename", params)
+        return true
+      end
+    }
+  )
 end
 
 local function on_attach(client, bufnr)
@@ -328,8 +317,7 @@ local function on_attach(client, bufnr)
       bind = true, -- This is mandatory, otherwise border config won't get registered.
       hint_prefix = " ",
       floating_window = true,
-      -- fix_pos = true,
-      hint_enable = true,
+      hint_enable = false,
       handler_opts = {
         border = "rounded"
       }
@@ -339,12 +327,14 @@ local function on_attach(client, bufnr)
   --- goto mappings
   -- bufmap("gd", "lua vim.lsp.buf.definition()")
   -- bufmap("gr", "lua vim.lsp.buf.references()")
-  bufmap("gs", "lua vim.lsp.buf.document_symbol()")
-  bufmap("gi", "lua vim.lsp.buf.implementation()")
+  -- bufmap("gs", "lua vim.lsp.buf.document_symbol()")
+  -- bufmap("gi", "lua vim.lsp.buf.implementation()")
 
-  --- fzf-lua
-  bufmap("gd", "lua require('fzf-lua').lsp_definitions()")
-  bufmap("gr", "lua require('fzf-lua').lsp_references()")
+  --- via fzf-lua
+  bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
+  bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
+  bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
+  bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
 
   --- diagnostics navigation mappings
   bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
@@ -353,13 +343,14 @@ local function on_attach(client, bufnr)
   --- misc mappings
   bufmap("<leader>ln", "lua mega.lsp_rename()")
   -- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
-  bufmap("<leader>la", "lua vim.lsp.buf.code_action()")
+  -- bufmap("<leader>la", "lua vim.lsp.buf.code_action()")
+  bufmap("<leader>la", "lua require('fzf-lua').lsp_code_actions({ jump_to_single_result = true })")
   bufmap(
     "<leader>ld",
     "lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
   )
   bufmap("<C-k>", "lua vim.lsp.buf.signature_help()")
-  bufmap("<C-k>", "lua vim.lsp.buf.signature_help()", "i")
+  bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
   bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
 
   --- trouble mappings
@@ -367,11 +358,11 @@ local function on_attach(client, bufnr)
 
   --- auto-commands
   au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
-  au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()"
+  au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
   au [[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]]
 
   if vim.bo.ft ~= "vim" then
-    bufmap("K", "<Cmd>lua vim.lsp.buf.hover()<CR>")
+    bufmap("K", "lua vim.lsp.buf.hover()")
   end
 
   --- commands
@@ -417,25 +408,6 @@ local function root_pattern(...)
   end
 end
 
---- servers
--- local servers = {
---   elmls = {
---     filetypes = {"elm"},
---     root_dir = root_pattern("elm.json", ".git")
---   },
---   tsserver = {
---     filetypes = {
---       "javascript",
---       "javascriptreact",
---       "javascript.jsx",
---       "typescript",
---       "typescriptreact",
---       "typescript.tsx"
---     },
---     -- See https://github.com/neovim/nvim-lsp/issues/237
---     root_dir = root_pattern("tsconfig.json", "package.json", ".git")
---   },
--- }
 local servers = {
   "bashls",
   "elmls",
@@ -443,9 +415,17 @@ local servers = {
   "cssls",
   "html",
   "rust_analyzer",
+  -- "tailwindcss",
+  -- "dockerfile",
   "vimls"
 }
 for _, ls in ipairs(servers) do
+  -- handle language servers not installed/found; TODO: should probably handle
+  -- logging/install them at some point
+  if ls == nil or lspconfig[ls] == nil then
+    mega.inspect("unable to setup ls", {ls})
+    return
+  end
   lspconfig[ls].setup(
     {
       on_attach = on_attach,

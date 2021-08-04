@@ -41,6 +41,11 @@ do -- [nvim options] --
   g.loaded_perl_provider = 0
 end
 
+do
+  vim.g.startuptime_tries = 10
+  -- vim.g.startuptime_exe_args = {"+let g:auto_session_enabled = 0"}
+end
+
 do -- [nvim-treesitter] --
   require("nvim-treesitter.configs").setup {
     ensure_installed = {
@@ -51,8 +56,10 @@ do -- [nvim-treesitter] --
       "elixir",
       "elm",
       "erlang",
+      "fish",
       "html",
       "javascript",
+      -- "markdown",
       "jsdoc",
       "json",
       "lua",
@@ -66,10 +73,14 @@ do -- [nvim-treesitter] --
       "tsx",
       "typescript"
     },
-    highlight = {enable = true},
+    highlight = {
+      enable = true,
+      additional_vim_regex_highlighting = true
+    },
     indent = {enable = true},
     autotag = {enable = true},
     context_commentstring = {enable = true},
+    matchup = {enable = true},
     rainbow = {
       enable = true,
       extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
@@ -95,7 +106,7 @@ do -- [nvim-treesitter] --
       }
     }
   }
-
+  -- require("spellsitter").setup()
   require("nvim-ts-autotag").setup(
     {
       filetypes = {
@@ -165,11 +176,12 @@ do -- [indent-blankline] --
   }
 end
 
-do
+do -- [neoscroll] --
   require("neoscroll").setup {
     mappings = {"<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb"},
     stop_eof = false,
-    hide_cursor = false
+    hide_cursor = false,
+    easing_function = "circular"
   }
 end
 
@@ -178,39 +190,48 @@ require "nvim-web-devicons".setup({default = false})
 
 do -- [orgmode] --
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
+  local org_dir = "~/Library/Mobile Documents/com~apple~CloudDocs/org"
   require("orgmode").setup(
     {
-      org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
-      org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
+      -- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
+      -- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
+      org_agenda_files = {org_dir .. "/**/*"},
+      org_default_notes_file = org_dir .. "/refile.org",
+      org_todo_keywords = {"TODO", "WAITING", "NEXT", "|", "DONE", "CANCELLED", "HACK"},
+      org_todo_keyword_faces = {
+        NEXT = ":foreground royalblue :weight bold :slant italic",
+        CANCELLED = ":foreground darkred",
+        HOLD = ":foreground orange :weight bold"
+      },
+      org_hide_emphasis_markers = true,
+      org_hide_leading_stars = true,
+      org_agenda_skip_scheduled_if_done = true,
+      org_agenda_skip_deadline_if_done = true,
+      org_agenda_templates = {
+        t = {description = "Task", template = "* TODO %?\n SCHEDULED: %t"},
+        l = {description = "Link", template = "* %?\n%a"},
+        j = {
+          description = "Journal",
+          template = "\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?",
+          target = org_dir .. "/journal.org"
+        },
+        p = {
+          description = "Project Todo",
+          template = "* TODO %? \nSCHEDULED: %t",
+          target = org_dir .. "/projects.org"
+        }
+      },
+      mappings = {
+        org = {
+          org_toggle_checkbox = "<leader>x"
+        }
+      },
+      notifications = {
+        enabled = true
+      }
     }
   )
-end
-
-do -- [tabout] --
-  -- require("tabout").setup(
-  --   {
-  --     tabkey = "<Tab>", -- key to trigger tabout
-  --     act_as_tab = true, -- shift content if tab out is not possible
-  --     completion = true, -- if the tabkey is used in a completion pum
-  --     tabouts = {
-  --       {open = "'", close = "'"},
-  --       {open = '"', close = '"'},
-  --       {open = "`", close = "`"},
-  --       {open = "(", close = ")"},
-  --       {open = "[", close = "]"},
-  --       {open = "{", close = "}"}
-  --     },
-  --     ignore_beginning = true --[[ if the cursor is at the beginning of a filled element it will rather tab out than shift the content ]],
-  --     exclude = {}
-  --   }
-  -- )
-end
-
-do -- [zenmode] --
-  --[[ require"zen-mode".setup {
-  window = { backdrop = 1, options = { signcolumn = "no" } },
-  plugins = { tmux = true },
-} ]]
+  require("org-bullets").setup()
 end
 
 do -- [zk] --
@@ -522,11 +543,14 @@ do
     fzf_layout = "default",
     win_height = 0.6,
     win_width = 0.65,
-    preview_cmd = 'bat --theme="base16" --style=numbers,changes --color always $FZF_PREVIEW_LINES',
-    preview_border = "border",
-    preview_vertical = "down:45%", -- up|down:size
-    preview_horizontal = "right:60%", -- right|left:size
-    preview_layout = "flex", -- horizontal|vertical|flex
+    previewers = {
+      bat = {
+        cmd = "bat",
+        args = "--style=numbers,changes --color always",
+        theme = "base16",
+        config = nil -- nil uses $BAT_CONFIG_PATH
+      }
+    },
     files = {
       prompt = "FILES  ",
       cmd = "fd --type f --follow --hidden --color=always -E '.git' -E '*.png' -E '*.jpg' --ignore-file '~/.gitignore_global'",
@@ -540,6 +564,20 @@ do
       actions = {
         ["default"] = actions.file_vsplit,
         ["ctrl-t"] = actions.file_tabedit
+      }
+    },
+    lsp = {
+      prompt = "❯ ",
+      -- cwd               = vim.loop.cwd(),
+      file_icons = true,
+      git_icons = false,
+      lsp_icons = true,
+      severity = "hint",
+      icons = {
+        ["Error"] = {icon = "", color = "red"}, -- error
+        ["Warning"] = {icon = "", color = "yellow"}, -- warning
+        ["Information"] = {icon = "", color = "blue"}, -- info
+        ["Hint"] = {icon = "", color = "magenta"} -- hint
       }
     }
   }

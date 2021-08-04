@@ -15,13 +15,14 @@ tree-sitter-cli
 typescript
 vim-node-rpc
 yarn
+pyright
 bash-language-server
 vscode-css-languageserver-bin
 dockerfile-language-server-nodejs
 @elm-tooling/elm-language-server
 vscode-html-languageserver-bin
 vscode-json-languageserver
-pyright
+tailwindcss-language-server
 typescript-language-server
 yaml-language-server
 vim-language-server

@@ -1,6 +1,8 @@
 return {
-  {"savq/paq-nvim", opt = true},
-  "tweekmonster/startuptime.vim",
+  {"savq/paq-nvim"},
+  --
+  -- (profiling) --
+  "dstein64/vim-startuptime",
   --
   -- (appearance/ui) --
   "sainnhe/everforest",
@@ -32,24 +34,20 @@ return {
   "folke/trouble.nvim",
   --
   -- (treesitter) --
-  {
-    "nvim-treesitter/nvim-treesitter",
-    run = function()
-      vim.cmd "TSUpdate"
-    end
-  },
+  {"nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"]},
   "nvim-treesitter/nvim-treesitter-textobjects",
   "serenadeai/tree-sitter-scss",
   "ikatyang/tree-sitter-markdown",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
+  "lewis6991/spellsitter.nvim",
   --
   -- (file/document navigation) --
   "ibhagwan/fzf-lua",
   "vijaymarupudi/nvim-fzf",
-  "nvim-telescope/telescope.nvim",
-  {"nvim-telescope/telescope-fzf-native.nvim", run = "make"},
+  -- "nvim-telescope/telescope.nvim",
+  -- {"nvim-telescope/telescope-fzf-native.nvim", run = "make"},
   "unblevable/quick-scope",
   --
   -- (text objects) --
@@ -115,6 +113,7 @@ return {
   {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
   {"harshad1/bullets.vim", branch = "performance_improvements"}, -- "dkarter/bullets.vim"
   "kristijanhusak/orgmode.nvim",
+  "akinsho/org-bullets.nvim",
   "megalithic/zk.nvim",
   "dhruvasagar/vim-table-mode",
   -- ruby/rails

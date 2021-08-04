@@ -1,5 +1,5 @@
-local colorscheme = require("colors")
-local icons = colorscheme.icons
+local colors = require("colors")
+local icons = colors.icons
 local lualine = require("lualine")
 local lsp_status = require "lsp-status"
 
@@ -111,7 +111,8 @@ config.sections = {
     {
       "filename",
       file_status = true,
-      path = 1
+      path = 1,
+      symbols = {modified = string.format(" %s", icons.modified_symbol)}
     }
   },
   lualine_x = {LspStatus},
