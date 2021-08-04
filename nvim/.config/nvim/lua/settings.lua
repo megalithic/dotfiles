@@ -165,10 +165,19 @@ do -- [indent-blankline] --
   }
 end
 
+do
+  require("neoscroll").setup {
+    mappings = {"<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb"},
+    stop_eof = false,
+    hide_cursor = false
+  }
+end
+
 -- [devicons] --
 require "nvim-web-devicons".setup({default = false})
 
 do -- [orgmode] --
+  -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
   require("orgmode").setup(
     {
       org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
@@ -536,55 +545,55 @@ do
   }
 end
 
-do -- [telescope] --
-  local telescope = require("telescope")
-  local actions = require("telescope.actions")
+-- do -- [telescope] --
+--   local telescope = require("telescope")
+--   local actions = require("telescope.actions")
 
-  telescope.setup(
-    {
-      defaults = {
-        file_ignore_patterns = {".git/*", "node-modules", "**/automatic_backups/*", "**/*.jpg", "**/*.png"},
-        path_display = {"absolute"},
-        vimgrep_arguments = {
-          "fd",
-          "--type f",
-          "--follow",
-          "--hidden",
-          "--color=always",
-          "--exclude .git",
-          "--ignore-file ~/.gitignore_global"
-          -- "rg",
-          -- "--color=never",
-          -- "--no-heading",
-          -- "--with-filename",
-          -- "--line-number",
-          -- "--column",
-          -- "--smart-case"
-        },
-        prompt_prefix = " ",
-        winblend = 0,
-        mappings = {
-          i = {
-            ["<Esc>"] = actions.close,
-            ["<C-x>"] = false,
-            ["<C-u>"] = false,
-            ["<C-d>"] = false,
-            ["<C-s>"] = actions.select_horizontal,
-            ["<CR>"] = actions.select_vertical,
-            ["<C-o>"] = actions.select_default
-          }
-        }
-      },
-      extensions = {
-        fzf = {
-          fuzzy = true,
-          override_generic_sorter = true, -- override the generic sorter
-          override_file_sorter = true, -- override the file sorter
-          case_mode = "smart_case" -- or "ignore_case" or "respect_case"
-          -- the default case_mode is "smart_case"
-        }
-      }
-    }
-  )
-  telescope.load_extension("fzf")
-end
+--   telescope.setup(
+--     {
+--       defaults = {
+--         file_ignore_patterns = {".git/*", "node-modules", "**/automatic_backups/*", "**/*.jpg", "**/*.png"},
+--         path_display = {"absolute"},
+--         vimgrep_arguments = {
+--           "fd",
+--           "--type f",
+--           "--follow",
+--           "--hidden",
+--           "--color=always",
+--           "--exclude .git",
+--           "--ignore-file ~/.gitignore_global"
+--           -- "rg",
+--           -- "--color=never",
+--           -- "--no-heading",
+--           -- "--with-filename",
+--           -- "--line-number",
+--           -- "--column",
+--           -- "--smart-case"
+--         },
+--         prompt_prefix = " ",
+--         winblend = 0,
+--         mappings = {
+--           i = {
+--             ["<Esc>"] = actions.close,
+--             ["<C-x>"] = false,
+--             ["<C-u>"] = false,
+--             ["<C-d>"] = false,
+--             ["<C-s>"] = actions.select_horizontal,
+--             ["<CR>"] = actions.select_vertical,
+--             ["<C-o>"] = actions.select_default
+--           }
+--         }
+--       },
+--       extensions = {
+--         fzf = {
+--           fuzzy = true,
+--           override_generic_sorter = true, -- override the generic sorter
+--           override_file_sorter = true, -- override the file sorter
+--           case_mode = "smart_case" -- or "ignore_case" or "respect_case"
+--           -- the default case_mode is "smart_case"
+--         }
+--       }
+--     }
+--   )
+--   telescope.load_extension("fzf")
+-- end

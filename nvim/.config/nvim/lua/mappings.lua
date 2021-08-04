@@ -154,26 +154,26 @@ map("n", "<leader>D", "<cmd>Dash<CR>")
 -- # paq
 map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
--- # telescope
-map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")
-map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ') })<CR>")
-map("n", "<leader>A", ":lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<CR>")
--- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
+-- -- # telescope
+-- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")
+-- map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ') })<CR>")
+-- map("n", "<leader>A", ":lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<CR>")
+-- -- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
 
--- telescope-zettelkasten
-function _G.search_zettel()
-  require("telescope.builtin").find_files {
-    prompt_title = "Search ZK",
-    hidden = true,
-    shorten_path = false,
-    cwd = "~/Documents/_zettel"
-  }
-end
-map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
+-- -- telescope-zettelkasten
+-- function _G.search_zettel()
+--   require("telescope.builtin").find_files {
+--     prompt_title = "Search ZK",
+--     hidden = true,
+--     shorten_path = false,
+--     cwd = "~/Documents/_zettel"
+--   }
+-- end
+-- map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
 
--- telescope-orgmode
-map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
-map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+-- -- telescope-orgmode
+-- map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+-- map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
 
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")

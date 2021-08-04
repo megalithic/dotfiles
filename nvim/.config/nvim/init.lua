@@ -1,13 +1,16 @@
 _G["mega"] = require("global")
 
 local load = mega.load
-local cmd = vim.cmd
+local cmd, lsp, env = vim.cmd, vim.lsp, vim.env
 
 cmd("runtime .vimrc")
 
 -- [ debugging ] ----------------------------------------------------------- {{{
 -- Can set this lower if needed (used in tandem with `mega.inspect`) ->
 -- vim.lsp.set_log_level("debug")
+if env.DEV then
+  lsp.set_log_level(lsp.log_levels.DEBUG)
+end
 
 -- To execute in :cmd ->
 --  :lua <the_command>

@@ -12,7 +12,8 @@ return {
   "hoob3rt/lualine.nvim",
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
-  "psliwka/vim-smoothie",
+  -- "psliwka/vim-smoothie",
+  "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   --
   -- (lsp/completion) --
@@ -27,7 +28,7 @@ return {
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
-  "jose-elias-alvarez/null-ls.nvim",
+  "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
   "folke/trouble.nvim",
   --
   -- (treesitter) --

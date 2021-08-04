@@ -32,6 +32,13 @@ lsp.handlers["textDocument/publishDiagnostics"] =
   }
 )
 
+local max_width = math.max(math.floor(vim.o.columns * 0.7), 100)
+local max_height = math.max(math.floor(vim.o.lines * 0.3), 30)
+
+-- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
+vim.lsp.handlers["textDocument/hover"] =
+  vim.lsp.with(vim.lsp.handlers.hover, {border = "rounded", max_width = max_width, max_height = max_height})
+
 -- lsp.handlers["textDocument/hover"] = function(_, method, result)
 --   lsp.util.focusable_float(
 --     method,
@@ -88,50 +95,97 @@ require("compe").setup {
   max_abbr_width = 100,
   max_kind_width = 100,
   max_menu_width = 100,
-  documentation = true,
+  documentation = {
+    border = "rounded",
+    winhighlight = table.concat(
+      {
+        "NormalFloat:CompeDocumentation",
+        "Normal:CompeDocumentation",
+        "FloatBorder:CompeDocumentationBorder"
+      },
+      ","
+    )
+  },
   source = {
+    -- path = true,
+    -- buffer = { kind = ' ' },
+    -- vsnip = { kind = ' ' },
+    -- spell = true,
+    -- emoji = { kind = 'ﲃ', filetypes = { 'markdown', 'gitcommit' } },
+    -- nvim_lsp = { priority = 101 },
+    -- nvim_lua = true,
+    -- orgmode = true,
+    -- neorg = true,
     -- vsnip = {menu = "[vsnip]", priority = 11},
-    luasnip = {menu = "[lsnip]", priority = 11},
+    luasnip = {menu = "[lsnip]", kind = " ", priority = 11},
     nvim_lsp = {menu = "[lsp]", priority = 10},
     nvim_lua = {menu = "[lua]", priority = 9},
     treesitter = false, --{menu = "[ts]", priority = 9},
     path = {menu = "[path]", priority = 8},
     orgmode = {menu = "[org]", priority = 8, filetypes = {"org"}},
+    neorg = {menu = "[norg]", priority = 8, filetypes = {"org"}},
+    emoji = {kind = "ﲃ", filetypes = {"markdown", "gitcommit", priority = 8}},
     spell = {menu = "[spl]", filetypes = {"markdown"}, priority = 8},
-    buffer = {menu = "[buf]", priority = 7}
+    buffer = {menu = "[buf]", kind = " ", priority = 7}
   }
 }
 
 require("vim.lsp.protocol").CompletionItemKind = {
-  "", -- Text          = 1;
-  "", -- Method        = 2;
-  "ƒ", -- Function      = 3;
-  "", -- Constructor   = 4;
-  "", -- Field         = 5;
-  "", -- Variable      = 6;
-  "", -- Class         = 7;
-  "ﰮ", -- Interface     = 8;
-  "", -- Module        = 9;
-  "", -- Property      = 10;
-  "", -- Unit          = 11;
-  "", -- Value         = 12;
-  "了", -- Enum          = 13;
-  "", -- Keyword       = 14;
-  "﬌", -- Snippet       = 15;
-  -- ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
-  -- ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs1]",
-  -- ["vsnip"] = mega.utf8(0xf68e) .. " [vs2]",
-  -- Snippet = mega.utf8(0xf68e) .. " [s]",
-  "", -- Color         = 16;
-  "", -- File          = 17;
-  "", -- Reference     = 18;
-  "", -- Folder        = 19;
-  "", -- EnumMember    = 20;
-  "", -- Constant      = 21;
-  "", -- Struct        = 22;
-  "⌘", -- Event         = 23;
-  "", -- Operator      = 24;
-  "♛" -- TypeParameter = 25;
+  -- "", -- Text          = 1;
+  -- "", -- Method        = 2;
+  -- "ƒ", -- Function      = 3;
+  -- "", -- Constructor   = 4;
+  -- "", -- Field         = 5;
+  -- "", -- Variable      = 6;
+  -- "", -- Class         = 7;
+  -- "ﰮ", -- Interface     = 8;
+  -- "", -- Module        = 9;
+  -- "", -- Property      = 10;
+  -- "", -- Unit          = 11;
+  -- "", -- Value         = 12;
+  -- "了", -- Enum          = 13;
+  -- "", -- Keyword       = 14;
+  -- "﬌", -- Snippet       = 15;
+  -- -- ["snippets.nvim"] = mega.utf8(0xf68e) .. " [ns]",
+  -- -- ["vim-vsnip"] = mega.utf8(0xf68e) .. " [vs1]",
+  -- -- ["vsnip"] = mega.utf8(0xf68e) .. " [vs2]",
+  -- -- Snippet = mega.utf8(0xf68e) .. " [s]",
+  -- "", -- Color         = 16;
+  -- "", -- File          = 17;
+  -- "", -- Reference     = 18;
+  -- "", -- Folder        = 19;
+  -- "", -- EnumMember    = 20;
+  -- "", -- Constant      = 21;
+  -- "", -- Struct        = 22;
+  -- "⌘", -- Event         = 23;
+  -- "", -- Operator      = 24;
+  -- "♛" -- TypeParameter = 25;
+
+  " Text", -- Text
+  " Method", -- Method
+  "ƒ Function", -- Function
+  " Constructor", -- Constructor
+  "識 Field", -- Field
+  " Variable", -- Variable
+  " Class", -- Class
+  "ﰮ Interface", -- Interface
+  " Module", -- Module
+  " Property", -- Property
+  " Unit", -- Unit
+  " Value", -- Value
+  "了 Enum", -- Enum
+  " Keyword", -- Keyword
+  " Snippet", -- Snippet
+  " Color", -- Color
+  " File", -- File
+  "渚 Reference", -- Reference
+  " Folder", -- Folder
+  " Enum", -- Enum
+  " Constant", -- Constant
+  " Struct", -- Struct
+  "鬒 Event", -- Event
+  "\u{03a8} Operator", -- Operator
+  " Type Parameter" -- TypeParameter
 }
 
 local t = function(str)
@@ -218,14 +272,11 @@ map("s", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = false})
 map("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = false})
 map("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = false})
 map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = false})
-
--- local lsp_rename_prompt_prefix = function()
---   return colors.icons.prompt_symbol .. " "
--- end
+map("i", "<C-f>", "compe#scroll({ 'delta': +4 })", {expr = true})
+map("i", "<C-d>", "compe#scroll({ 'delta': -4 })", {expr = true})
 
 function mega.lsp_rename()
   local current_val = vim.fn.expand("<cword>")
-  -- local contents = lsp_rename_prompt_prefix() .. current_val
   local contents = current_val
   local bufnr, winnr =
     vim.lsp.util.open_floating_preview(
@@ -242,11 +293,9 @@ function mega.lsp_rename()
   api.nvim_win_set_option(winnr, "scrolloff", 0)
   api.nvim_win_set_option(winnr, "number", false)
   api.nvim_win_set_option(winnr, "relativenumber", false)
-  -- api.nvim_buf_set_option(bufnr, "buftype", "prompt")
   api.nvim_buf_set_option(bufnr, "buftype", "nofile")
   api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
   api.nvim_win_set_option(winnr, "winblend", 0)
-  -- api.nvim_win_set_option(winnr, "foldlevel", 100)
 
   -- exec the renaming
   bufmap("<cr>", "<cmd>lua mega.lsp_do_rename()<cr>", "i")
@@ -282,27 +331,20 @@ local function on_attach(client, bufnr)
       -- fix_pos = true,
       hint_enable = true,
       handler_opts = {
-        border = "single"
+        border = "rounded"
       }
     }
   )
-  --     bind = false,
-  --     use_lspsaga = false,
-  --     floating_window = true,
-  --     fix_pos = true,
-  --     hint_enable = true,
-  --     hi_parameter = "Search",
-  --     handler_opts = {
-  --       "shadow"
-  --     }
-  --   }
-  -- )
 
   --- goto mappings
-  bufmap("gd", "lua vim.lsp.buf.definition()")
-  bufmap("gr", "lua vim.lsp.buf.references()")
+  -- bufmap("gd", "lua vim.lsp.buf.definition()")
+  -- bufmap("gr", "lua vim.lsp.buf.references()")
   bufmap("gs", "lua vim.lsp.buf.document_symbol()")
   bufmap("gi", "lua vim.lsp.buf.implementation()")
+
+  --- fzf-lua
+  bufmap("gd", "lua require('fzf-lua').lsp_definitions()")
+  bufmap("gr", "lua require('fzf-lua').lsp_references()")
 
   --- diagnostics navigation mappings
   bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
@@ -320,22 +362,13 @@ local function on_attach(client, bufnr)
   bufmap("<C-k>", "lua vim.lsp.buf.signature_help()", "i")
   bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
 
-  --- fzf-lua
-  bufmap("gd", "lua require('fzf-lua').lsp_definition()")
-  bufmap("gr", "lua require('fzf-lua').lsp_references()")
-
   --- trouble mappings
   map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
   --- auto-commands
-  -- au "BufWritePre <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
   au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
   au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics()"
   au [[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]]
-
-  -- au "BufWritePost <buffer> lua vim.lsp.buf.formatting(nil, 1000)"
-  -- au "BufWritePre *.rs,*.c,*.lua lua vim.lsp.buf.formatting_sync()"
-  -- au "CursorHold *.rs,*.c,*.lua lua vim.lsp.diagnostic.show_line_diagnostics()"
 
   if vim.bo.ft ~= "vim" then
     bufmap("K", "<Cmd>lua vim.lsp.buf.hover()<CR>")
@@ -348,7 +381,7 @@ local function on_attach(client, bufnr)
     lsp.buf.range_formatting({}, start_pos, end_pos)
   end
   cmd [[ command! -range FormatRange execute 'lua FormatRange()' ]]
-  cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
+  cmd [[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]]
   cmd [[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]]
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
@@ -532,7 +565,7 @@ do -- lua
       lspconfig = {
         settings = {
           Lua = {
-            completion = {keywordSnippet = "Disable"},
+            completion = {keywordSnippet = "Replace", callSnippet = "Replace"}, -- or `Disable`
             runtime = {
               -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
               version = "LuaJIT",
