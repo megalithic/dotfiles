@@ -38,6 +38,8 @@ return {
     end
   },
   "nvim-treesitter/nvim-treesitter-textobjects",
+  "serenadeai/tree-sitter-scss",
+  "ikatyang/tree-sitter-markdown",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
@@ -52,6 +54,8 @@ return {
   -- (text objects) --
   "tpope/vim-rsi",
   "kana/vim-operator-user",
+  -- "whatyouhide/vim-textobj-xmlattr",
+  -- "amiralies/vim-textobj-elixir",
   "wellle/targets.vim",
   -- research: windwp/nvim-spectre
   --
@@ -75,12 +79,6 @@ return {
   "skywind3000/vim-quickui",
   "sgur/vim-editorconfig",
   {"zenbro/mirror.vim", opt = true},
-  --
-  -- (markdown/prose/notes) --
-  {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
-  "dkarter/bullets.vim",
-  "kristijanhusak/orgmode.nvim",
-  "megalithic/zk.nvim",
   --
   -- (the rest...) --
   "ojroques/vim-oscyank",
@@ -111,13 +109,47 @@ return {
   "junegunn/vim-easy-align",
   --
   -- (langs, syntax, et al) --
+  -- markdown/prose
+  "plasticboy/vim-markdown",
+  {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
+  {"harshad1/bullets.vim", branch = "performance_improvements"}, -- "dkarter/bullets.vim"
+  "kristijanhusak/orgmode.nvim",
+  "megalithic/zk.nvim",
+  "dhruvasagar/vim-table-mode",
+  -- ruby/rails
+  "vim-ruby/vim-ruby",
   "tpope/vim-rails",
+  -- elm
   "antew/vim-elm-analyse",
+  -- elixir/phoenix/erlang
+  "elixir-editors/vim-elixir",
   "avdgaag/vim-phoenix",
   "lucidstack/hex.vim",
+  -- lua
+  "tjdevries/nlua.nvim",
+  "norcalli/nvim.lua",
   "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
-  "darfink/vim-plist",
-  "sheerun/vim-polyglot"
+  -- rust
+  "rust-lang/rust.vim",
+  "racer-rust/vim-racer",
+  -- JS/TS/JSON
+  -- "pangloss/vim-javascript",
+  -- "isRuslan/vim-es6",
+  "othree/yajs.vim",
+  "MaxMEllon/vim-jsx-pretty",
+  "heavenshell/vim-jsdoc",
+  "HerringtonDarkholme/yats.vim",
+  "jxnblk/vim-mdx-js",
+  -- HTML
+  "othree/html5.vim",
+  "mattn/emmet-vim",
+  "skwp/vim-html-escape",
+  "pedrohdz/vim-yaml-folds",
+  -- CSS
+  "hail2u/vim-css3-syntax",
+  -- misc
+  "avakhov/vim-yaml"
+  -- "sheerun/vim-polyglot"
 }

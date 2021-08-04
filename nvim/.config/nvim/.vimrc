@@ -77,8 +77,8 @@ cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
 
 " open a (new)file in a new vsplit
-nnoremap <silent><leader>o :vnew<CR>:e<space><C-d>
-nnoremap <leader>o :vnew<CR>:e<space>
+" nnoremap <silent><leader>o :vnew<CR>:e<space><C-d>
+" nnoremap <leader>o :vnew<CR>:e<space>
 
 " Background (n)vim
 vnoremap <C-z> <ESC>zv`<ztgv
