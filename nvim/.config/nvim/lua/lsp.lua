@@ -263,9 +263,18 @@ local function make_prompt(opts)
   )
   fn.prompt_setprompt(prompt_buf, opts.prompt)
 
+  function mega.clear_highlight()
+    vim.w.cursorword = nil
+    if vim.w.cursorword_match_id then
+      pcall(fn.matchdelete, vim.w.cursorword_match_id)
+      vim.w.cursorword_match_id = nil
+    end
+  end
+
   function mega.halt_lsp_rename()
     api.nvim_win_close(prompt_window, true)
     api.nvim_buf_delete(prompt_buf, {force = true})
+    mega.clear_highlight()
     cmd("stopinsert")
   end
 
@@ -292,15 +301,30 @@ end
 function mega.lsp_rename()
   local bufnr = api.nvim_get_current_buf()
   local params = lsp.util.make_position_params()
+  local prompt_prefix = " → "
+
+  do
+    vim.cmd("hi! CursorWord cterm=underline gui=underline")
+    local column = api.nvim_win_get_cursor(0)[2]
+    local line = api.nvim_get_current_line()
+    local cursorword =
+      fn.matchstr(line:sub(1, column + 1), [[\k*$]]) .. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
+    print(vim.inspect(cursorword))
+
+    vim.w.cursorword = cursorword
+    vim.w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
+  end
+
   make_prompt(
     {
-      prompt = " → ",
+      prompt = prompt_prefix,
       callback = function(new_name)
         if not (new_name and #new_name > 0) then
           return true
         end
         params.newName = new_name
         lsp.buf_request(bufnr, "textDocument/rename", params)
+        mega.clear_highlight()
         return true
       end
     }
@@ -389,7 +413,7 @@ local function on_attach(client, bufnr)
       bind = true, -- This is mandatory, otherwise border config won't get registered.
       hint_prefix = " ",
       floating_window = true,
-      hi_parameter = "LspSelectedParam",
+      -- hi_parameter = "LspSelectedParam",
       hint_enable = false,
       handler_opts = {
         border = "rounded"
