@@ -86,26 +86,16 @@ require("compe").setup {
     )
   },
   source = {
-    -- path = true,
-    -- buffer = { kind = ' ' },
-    -- vsnip = { kind = ' ' },
-    -- spell = true,
-    -- emoji = { kind = 'ﲃ', filetypes = { 'markdown', 'gitcommit' } },
-    -- nvim_lsp = { priority = 101 },
-    -- nvim_lua = true,
-    -- orgmode = true,
-    -- neorg = true,
-    -- vsnip = {menu = "[vsnip]", priority = 11},
     luasnip = {menu = "[lsnip]", kind = " ", priority = 11},
     nvim_lsp = {menu = "[lsp]", priority = 10},
     nvim_lua = {menu = "[lua]", priority = 9},
-    treesitter = false, --{menu = "[ts]", priority = 9},
+    orgmode = {menu = "[org]", priority = 9, filetypes = {"org"}},
+    neorg = {menu = "[norg]", priority = 9, filetypes = {"org"}},
     path = {menu = "[path]", priority = 8},
-    orgmode = {menu = "[org]", priority = 8, filetypes = {"org"}},
-    neorg = {menu = "[norg]", priority = 8, filetypes = {"org"}},
-    emoji = {kind = "ﲃ", filetypes = {"markdown", "gitcommit", priority = 8}},
-    spell = {menu = "[spl]", filetypes = {"markdown"}, priority = 8},
-    buffer = {menu = "[buf]", kind = " ", priority = 7}
+    emoji = {menu = "[emo]", kind = "ﲃ", priority = 8, filetypes = {"markdown", "gitcommit"}},
+    spell = {menu = "[spl]", priority = 8, filetypes = {"markdown"}},
+    buffer = {menu = "[buf]", kind = " ", priority = 7},
+    treesitter = false --{menu = "[ts]", priority = 9},
   }
 }
 
@@ -250,159 +240,6 @@ map("i", "<CR>", "v:lua.cr_complete()", {expr = true, noremap = false})
 map("i", "<C-f>", "compe#scroll({ 'delta': +4 })", {expr = true})
 map("i", "<C-d>", "compe#scroll({ 'delta': -4 })", {expr = true})
 
-local function make_prompt(opts)
-  local prompt_buf = api.nvim_create_buf(false, true)
-
-  api.nvim_buf_set_option(prompt_buf, "buftype", "prompt")
-
-  local prompt_window =
-    api.nvim_open_win(
-    prompt_buf,
-    true,
-    {relative = "cursor", row = 1, col = 1, width = 20, height = 1, border = "rounded", style = "minimal"}
-  )
-  fn.prompt_setprompt(prompt_buf, opts.prompt)
-
-  function mega.clear_highlight()
-    vim.w.cursorword = nil
-    if vim.w.cursorword_match_id then
-      pcall(fn.matchdelete, vim.w.cursorword_match_id)
-      vim.w.cursorword_match_id = nil
-    end
-  end
-
-  function mega.halt_lsp_rename()
-    api.nvim_win_close(prompt_window, true)
-    api.nvim_buf_delete(prompt_buf, {force = true})
-    mega.clear_highlight()
-    cmd("stopinsert")
-  end
-
-  fn.prompt_setcallback(
-    prompt_buf,
-    function(text)
-      if opts.callback(text) then
-        mega.halt_lsp_rename()
-      end
-    end
-  )
-
-  if opts.initial then
-    cmd("norm i" .. opts.initial)
-  end
-
-  bufmap("<esc>", "<cmd>lua mega.halt_lsp_rename()<cr>", "i")
-  bufmap("<c-c>", "<cmd>lua mega.halt_lsp_rename()<cr>", "i")
-  cmd("startinsert")
-
-  return prompt_buf, prompt_window
-end
-
-function mega.lsp_rename()
-  local bufnr = api.nvim_get_current_buf()
-  local params = lsp.util.make_position_params()
-  local prompt_prefix = " → "
-
-  do
-    vim.cmd("hi! CursorWord cterm=underline gui=underline")
-    local column = api.nvim_win_get_cursor(0)[2]
-    local line = api.nvim_get_current_line()
-    local cursorword =
-      fn.matchstr(line:sub(1, column + 1), [[\k*$]]) .. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
-    print(vim.inspect(cursorword))
-
-    vim.w.cursorword = cursorword
-    vim.w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
-  end
-
-  make_prompt(
-    {
-      prompt = prompt_prefix,
-      callback = function(new_name)
-        if not (new_name and #new_name > 0) then
-          return true
-        end
-        params.newName = new_name
-        lsp.buf_request(bufnr, "textDocument/rename", params)
-        mega.clear_highlight()
-        return true
-      end
-    }
-  )
-end
-
-local windows = {}
-
-local function set_auto_close()
-  vim.cmd([[ au CursorMoved * ++once lua mega.remove_wins() ]])
-end
-
-local function fit_to_node(window)
-  local node = require("nvim-treesitter.ts_utils").get_node_at_cursor()
-  if node:type() == "identifier" then
-    node = node:parent()
-  end
-  local start_row, _, end_row, _ = node:range()
-  local new_height = math.min(math.max(end_row - start_row + 6, 15), 30)
-  vim.api.nvim_win_set_height(window, new_height)
-end
-
-local open_preview_win = function(target, position)
-  local buffer = vim.uri_to_bufnr(target)
-  local win_opts = {
-    relative = "cursor",
-    row = 4,
-    col = 4,
-    width = 120,
-    height = 15,
-    border = vim.g.floating_window_border
-  }
-  -- Don't jump immediately, we need the windows list to contain ID before autocmd
-  windows[#windows + 1] = vim.api.nvim_open_win(buffer, false, win_opts)
-  vim.api.nvim_set_current_win(windows[#windows])
-  vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
-  set_auto_close()
-  vim.api.nvim_win_set_cursor(windows[#windows], position)
-  fit_to_node(windows[#windows])
-
-  bufmap("<esc>", "lua mega.remove_wins()")
-  bufmap("<c-c>", "lua mega.remove_wins()")
-  bufmap("q", "lua mega.remove_wins()")
-end
-
-function mega.remove_wins()
-  local current = vim.api.nvim_get_current_win()
-  for i = #windows, 1, -1 do
-    if current == windows[i] then
-      break
-    end
-    pcall(vim.api.nvim_win_close, windows[i], true)
-    table.remove(windows, i)
-  end
-  if #windows > 0 then
-    set_auto_close()
-  end
-end
-
-function mega.preview(request)
-  local params = vim.lsp.util.make_position_params()
-  pcall(
-    vim.lsp.buf_request,
-    0,
-    request,
-    params,
-    function(_, _, result)
-      if not result then
-        return
-      end
-      local data = result[1]
-      local target = data.targetUri or data.uri
-      local range = data.targetRange or data.range
-      open_preview_win(target, {range.start.line + 1, range.start.character})
-    end
-  )
-end
-
 local function on_attach(client, bufnr)
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
@@ -429,7 +266,7 @@ local function on_attach(client, bufnr)
 
   --- via fzf-lua
   bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
-  bufmap("gD", "lua mega.preview('textDocument/definition')")
+  bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
   bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
   bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
   bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
@@ -439,7 +276,7 @@ local function on_attach(client, bufnr)
   bufmap("]d", "lua vim.lsp.diagnostic.goto_next()")
 
   --- misc mappings
-  bufmap("<leader>ln", "lua mega.lsp_rename()")
+  bufmap("<leader>ln", "lua require('utils').lsp.rename()")
   -- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
   -- bufmap("<leader>la", "lua vim.lsp.buf.code_action()")
   bufmap("<leader>la", "lua require('fzf-lua').lsp_code_actions({ jump_to_single_result = true })")

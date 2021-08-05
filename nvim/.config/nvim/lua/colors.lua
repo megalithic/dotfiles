@@ -124,6 +124,7 @@ return {
       -- -- hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
       -- -- hi("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
       -- -- hi("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
+      hi("CursorWord", {gui = "bold,underline", force = true})
       hi("CursorLineNr", {guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true})
       hi("OrgDone", {guifg = status.green, guibg = "NONE", gui = "bold", force = true})
       hi("OrgAgendaScheduled", {guifg = status.cyan, guibg = "NONE", gui = "NONE", force = true})

@@ -21,7 +21,7 @@ au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYa
 exec(
   [[
       if argc() > 1
-        silent vertical all | lua require('golden_size').on_win_enter()
+        silent vertical all | lua require('golden_size').on_win_enter() | bufdo e
       endif
       ]]
 )
