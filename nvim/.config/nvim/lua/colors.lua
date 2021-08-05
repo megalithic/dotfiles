@@ -1,5 +1,5 @@
 local cmd = vim.cmd
-local au, hi, utf8 = mega.au, mega.highlight, mega.utf8
+local hi, utf8 = mega.highlight, mega.utf8
 
 local icons = {
   sign_error = utf8(0xf655),
@@ -120,6 +120,7 @@ return {
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   setup = function()
     mega.everforest_overrides = function()
+      vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
       -- hi("SpellBad", {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true})
       -- -- hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
       -- -- hi("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
@@ -131,12 +132,9 @@ return {
       -- hi("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
       -- hi("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
       -- hi("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
-      -- hi("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
-      -- hi("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
-      -- hi("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
-      -- vim.api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
-      -- vim.g.indentLine_color_gui = status.cursorlinenr
-      -- vim.g.limelight_conceal_guifg = cs.bg2
+      hi("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
+      hi("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
+      hi("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
     end
     mega.augroup_cmds(
       "EverforestOverrides",
