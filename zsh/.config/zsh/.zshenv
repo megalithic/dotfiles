@@ -1,8 +1,6 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-echo ".zshenv"
-
 # set our working zsh directory
 XDG_CONFIG_HOME=~/.config
 ZDOTDIR=$XDG_CONFIG_HOME/zsh

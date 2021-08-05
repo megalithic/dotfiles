@@ -51,7 +51,8 @@ export ASDF_BIN="$ASDF_SHIMS"
 export ASDF_INSTALLS="$ASDF_DIR/installs"
 export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 
-export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CONFIG_HOME  # Value is set in .zshenv
+# export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
 
@@ -66,7 +67,7 @@ export TERM_ITALICS="TRUE"
 export BAT_THEME="base16"
 export BAT_CONFIG_PATH="$HOME/.batrc"
 
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89" 
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89"
 # export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"  # nova bg
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 
