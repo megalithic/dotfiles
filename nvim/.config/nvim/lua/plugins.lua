@@ -46,8 +46,7 @@ return {
   -- (file/document navigation) --
   "ibhagwan/fzf-lua",
   "vijaymarupudi/nvim-fzf",
-  -- "nvim-telescope/telescope.nvim",
-  -- {"nvim-telescope/telescope-fzf-native.nvim", run = "make"},
+  "archaict/fzf-lua-extensions",
   "unblevable/quick-scope",
   --
   -- (text objects) --

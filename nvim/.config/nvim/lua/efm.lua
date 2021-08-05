@@ -50,7 +50,8 @@ local misspell = {
   lintFormats = {"%f:%l:%c: %m"}
 }
 local shfmt = {
-  formatCommand = "shfmt -i 2"
+  formatCommand = "shfmt -ci -s -bn",
+  formatStdin = true
 }
 
 return {
@@ -71,7 +72,7 @@ return {
   scss = {prettier},
   css = {prettier},
   markdown = {prettier},
-  sh = {shellcheck},
-  zsh = {shellcheck}
+  sh = {shellcheck, shfmt},
+  zsh = {shellcheck, shfmt}
   -- tf = {terraform},
 }

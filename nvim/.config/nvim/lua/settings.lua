@@ -1,4 +1,8 @@
 local set, g, api = vim.opt, vim.g, vim.api
+local dirs = {
+  org = "~/Library/Mobile Documents/com~apple~CloudDocs/org",
+  dots = "~/.dotfiles"
+}
 
 do -- [ui/appearance] --
   -- fallback in the event our statusline plugins fail to load
@@ -190,13 +194,12 @@ require "nvim-web-devicons".setup({default = false})
 
 do -- [orgmode] --
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
-  local org_dir = "~/Library/Mobile Documents/com~apple~CloudDocs/org"
   require("orgmode").setup(
     {
       -- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
       -- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
-      org_agenda_files = {org_dir .. "/**/*"},
-      org_default_notes_file = org_dir .. "/refile.org",
+      org_agenda_files = {dirs.org .. "/**/*"},
+      org_default_notes_file = dirs.org .. "/refile.org",
       org_todo_keywords = {"TODO", "WAITING", "NEXT", "|", "DONE", "CANCELLED", "HACK"},
       org_todo_keyword_faces = {
         NEXT = ":foreground royalblue :weight bold :slant italic",
@@ -213,12 +216,12 @@ do -- [orgmode] --
         j = {
           description = "Journal",
           template = "\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?",
-          target = org_dir .. "/journal.org"
+          target = dirs.org .. "/journal.org"
         },
         p = {
           description = "Project Todo",
           template = "* TODO %? \nSCHEDULED: %t",
-          target = org_dir .. "/projects.org"
+          target = dirs.org .. "/projects.org"
         }
       },
       mappings = {
@@ -434,7 +437,45 @@ do -- [quickscope] --
 end
 
 do -- [diffview] --
-  require "diffview".setup({})
+  local cb = require("diffview.config").diffview_callback
+
+  require("diffview").setup(
+    {
+      diff_binaries = false, -- Show diffs for binaries
+      file_panel = {
+        width = 50,
+        use_icons = true -- Requires nvim-web-devicons
+      },
+      key_bindings = {
+        disable_defaults = false, -- Disable the default key bindings
+        -- The `view` bindings are active in the diff buffers, only when the current
+        -- tabpage is a Diffview.
+        view = {
+          ["<tab>"] = cb("select_next_entry"), -- Open the diff for the next file
+          ["<s-tab>"] = cb("select_prev_entry"), -- Open the diff for the previous file
+          ["<leader>e"] = cb("focus_files"), -- Bring focus to the files panel
+          ["<leader>b"] = cb("toggle_files") -- Toggle the files panel.
+        },
+        file_panel = {
+          ["j"] = cb("next_entry"), -- Bring the cursor to the next file entry
+          ["<down>"] = cb("next_entry"),
+          ["k"] = cb("prev_entry"), -- Bring the cursor to the previous file entry.
+          ["<up>"] = cb("prev_entry"),
+          ["<cr>"] = cb("select_entry"), -- Open the diff for the selected entry.
+          ["o"] = cb("select_entry"),
+          ["<2-LeftMouse>"] = cb("select_entry"),
+          ["-"] = cb("toggle_stage_entry"), -- Stage / unstage the selected entry.
+          ["S"] = cb("stage_all"), -- Stage all entries.
+          ["U"] = cb("unstage_all"), -- Unstage all entries.
+          ["R"] = cb("refresh_files"), -- Update stats and entries in the file list.
+          ["<tab>"] = cb("select_next_entry"),
+          ["<s-tab>"] = cb("select_prev_entry"),
+          ["<leader>e"] = cb("focus_files"),
+          ["<leader>b"] = cb("toggle_files")
+        }
+      }
+    }
+  )
 end
 
 do -- [git-messenger] --
@@ -543,6 +584,7 @@ do
     fzf_layout = "default",
     win_height = 0.6,
     win_width = 0.65,
+    default_previewer = "bat",
     previewers = {
       bat = {
         cmd = "bat",
@@ -565,73 +607,30 @@ do
         ["default"] = actions.file_vsplit,
         ["ctrl-t"] = actions.file_tabedit
       }
-    },
-    lsp = {
-      prompt = "❯ ",
-      -- cwd               = vim.loop.cwd(),
-      file_icons = true,
-      git_icons = false,
-      lsp_icons = true,
-      severity = "hint",
-      icons = {
-        ["Error"] = {icon = "", color = "red"}, -- error
-        ["Warning"] = {icon = "", color = "yellow"}, -- warning
-        ["Information"] = {icon = "", color = "blue"}, -- info
-        ["Hint"] = {icon = "", color = "magenta"} -- hint
-      }
     }
   }
+  -- nmap ( '<leader>no', ':silent! lua fzf_orgmode{}<CR>' )
+  -- nmap ( '<leader>nr', ':silent! lua fzf_orgmode{}<CR>' )
+  -- nmap ( '<leader>nd', ":silent! e " .. ROAM .. '/notebook.org<cr>' )
+  --   function fzf_orgmode()
+  --     local choice = dirs.org
+  --     require("fzf-lua").files(
+  --       {
+  --         prompt = "ORGFILES » ",
+  --         cwd = choice
+  --       }
+  --     )
+  --     vim.cmd("chdir " .. choice)
+  --   end
+
+  --   function fzf_dotfiles()
+  --     local choice = dirs.dots
+  --     require("fzf-lua").files(
+  --       {
+  --         prompt = "DOTS » ",
+  --         cwd = choice
+  --       }
+  --     )
+  --     vim.cmd("chdir " .. choice)
+  --   end
 end
-
--- do -- [telescope] --
---   local telescope = require("telescope")
---   local actions = require("telescope.actions")
-
---   telescope.setup(
---     {
---       defaults = {
---         file_ignore_patterns = {".git/*", "node-modules", "**/automatic_backups/*", "**/*.jpg", "**/*.png"},
---         path_display = {"absolute"},
---         vimgrep_arguments = {
---           "fd",
---           "--type f",
---           "--follow",
---           "--hidden",
---           "--color=always",
---           "--exclude .git",
---           "--ignore-file ~/.gitignore_global"
---           -- "rg",
---           -- "--color=never",
---           -- "--no-heading",
---           -- "--with-filename",
---           -- "--line-number",
---           -- "--column",
---           -- "--smart-case"
---         },
---         prompt_prefix = " ",
---         winblend = 0,
---         mappings = {
---           i = {
---             ["<Esc>"] = actions.close,
---             ["<C-x>"] = false,
---             ["<C-u>"] = false,
---             ["<C-d>"] = false,
---             ["<C-s>"] = actions.select_horizontal,
---             ["<CR>"] = actions.select_vertical,
---             ["<C-o>"] = actions.select_default
---           }
---         }
---       },
---       extensions = {
---         fzf = {
---           fuzzy = true,
---           override_generic_sorter = true, -- override the generic sorter
---           override_file_sorter = true, -- override the file sorter
---           case_mode = "smart_case" -- or "ignore_case" or "respect_case"
---           -- the default case_mode is "smart_case"
---         }
---       }
---     }
---   )
---   telescope.load_extension("fzf")
--- end

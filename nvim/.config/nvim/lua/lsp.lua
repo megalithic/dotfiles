@@ -307,6 +307,78 @@ function mega.lsp_rename()
   )
 end
 
+local windows = {}
+
+local function set_auto_close()
+  vim.cmd([[ au CursorMoved * ++once lua mega.remove_wins() ]])
+end
+
+local function fit_to_node(window)
+  local node = require("nvim-treesitter.ts_utils").get_node_at_cursor()
+  if node:type() == "identifier" then
+    node = node:parent()
+  end
+  local start_row, _, end_row, _ = node:range()
+  local new_height = math.min(math.max(end_row - start_row + 6, 15), 30)
+  vim.api.nvim_win_set_height(window, new_height)
+end
+
+local open_preview_win = function(target, position)
+  local buffer = vim.uri_to_bufnr(target)
+  local win_opts = {
+    relative = "cursor",
+    row = 4,
+    col = 4,
+    width = 120,
+    height = 15,
+    border = vim.g.floating_window_border
+  }
+  -- Don't jump immediately, we need the windows list to contain ID before autocmd
+  windows[#windows + 1] = vim.api.nvim_open_win(buffer, false, win_opts)
+  vim.api.nvim_set_current_win(windows[#windows])
+  vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
+  set_auto_close()
+  vim.api.nvim_win_set_cursor(windows[#windows], position)
+  fit_to_node(windows[#windows])
+
+  bufmap("<esc>", "lua mega.remove_wins()")
+  bufmap("<c-c>", "lua mega.remove_wins()")
+  bufmap("q", "lua mega.remove_wins()")
+end
+
+function mega.remove_wins()
+  local current = vim.api.nvim_get_current_win()
+  for i = #windows, 1, -1 do
+    if current == windows[i] then
+      break
+    end
+    pcall(vim.api.nvim_win_close, windows[i], true)
+    table.remove(windows, i)
+  end
+  if #windows > 0 then
+    set_auto_close()
+  end
+end
+
+function mega.preview(request)
+  local params = vim.lsp.util.make_position_params()
+  pcall(
+    vim.lsp.buf_request,
+    0,
+    request,
+    params,
+    function(_, _, result)
+      if not result then
+        return
+      end
+      local data = result[1]
+      local target = data.targetUri or data.uri
+      local range = data.targetRange or data.range
+      open_preview_win(target, {range.start.line + 1, range.start.character})
+    end
+  )
+end
+
 local function on_attach(client, bufnr)
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
@@ -317,6 +389,7 @@ local function on_attach(client, bufnr)
       bind = true, -- This is mandatory, otherwise border config won't get registered.
       hint_prefix = " ",
       floating_window = true,
+      hi_parameter = "LspSelectedParam",
       hint_enable = false,
       handler_opts = {
         border = "rounded"
@@ -332,6 +405,7 @@ local function on_attach(client, bufnr)
 
   --- via fzf-lua
   bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
+  bufmap("gD", "lua mega.preview('textDocument/definition')")
   bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
   bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
   bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
