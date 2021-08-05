@@ -15,6 +15,7 @@ au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au("BufRead,BufNewFile *.md set filetype=markdown")
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
+au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | OSCYankReg " | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
 --  Open multiple files in splits
 exec(
@@ -109,7 +110,7 @@ augroup(
       events = {"BufEnter", "BufRead", "BufNewFile"},
       targets = {"Brewfile"},
       command = "set filetype=ruby"
-    },
+    }
     -- {
     --   events = {"BufEnter", "BufNewFile", "FileType"},
     --   targets = {"*.md"},

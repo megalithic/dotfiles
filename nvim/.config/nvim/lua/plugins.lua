@@ -48,6 +48,7 @@ return {
   "vijaymarupudi/nvim-fzf",
   "archaict/fzf-lua-extensions",
   "unblevable/quick-scope",
+  -- research: ggandor/lightspeed.nvim
   --
   -- (text objects) --
   "tpope/vim-rsi",

@@ -24,15 +24,14 @@ alias fd="fd --hidden"
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
 #   `brew install coreutils`
-if $(gls &>/dev/null)
-then
-  alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
-  alias ls="gls -FA"
-  alias lst="gls -FAt"
-  alias l="gls -lAh"
-  alias lt="gls -lAht"
-  alias ll="gls -l"
-  alias la="gls -A"
+if $(gls &>/dev/null); then
+	alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
+	alias ls="gls -FA"
+	alias lst="gls -FAt"
+	alias l="gls -lAh"
+	alias lt="gls -lAht"
+	alias ll="gls -l"
+	alias la="gls -A"
 fi
 
 alias ls="exa -gahF --group-directories-first"
@@ -153,6 +152,7 @@ alias ezkb="nvim $HOME/.config/zsh/**/keybindings.zsh"
 alias ev="nvim $HOME/.config/nvim/init.lua"
 alias evp="nvim $HOME/.config/nvim/lua/plugins.lua"
 alias evs="nvim $HOME/.config/nvim/lua/settings.lua"
+alias evl="nvim $HOME/.config/nvim/lua/lsp.lua"
 alias evm="nvim $HOME/.config/nvim/lua/mappings.lua"
 alias ek="nvim $HOME/.config/kitty/kitty.conf"
 alias et="nvim $HOME/.tmux.conf"
@@ -174,15 +174,15 @@ alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
 # POSTGRES
 # -----------------------------------------------------------------------------
 alias startpg="pg_ctl -D /usr/local/var/postgres -l logfile start" #`pg_ctl -D /usr/local/var/postgres -l ~/code/logs/server.log start` OR `postgres -D /usr/local/var/postgres` OR `pg_ctl -D /usr/local/var/postgres -l logfile start`
-alias stoppg="pg_ctl -D /usr/local/var/postgres -l logfile stop" #`postgres -D /usr/local/var/postgres`
+alias stoppg="pg_ctl -D /usr/local/var/postgres -l logfile stop"   #`postgres -D /usr/local/var/postgres`
 alias pgstart="launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist"
 alias pgstop="launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist"
-  # To have launchd start postgresql at login:
-  #     ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
-  # Then to load postgresql now:
-  #     launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
-  # Or, if you don't want/need launchctl, you can just run:
-  #     pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
+# To have launchd start postgresql at login:
+#     ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
+# Then to load postgresql now:
+#     launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
+# Or, if you don't want/need launchctl, you can just run:
+#     pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
 alias pgsetup="sh ~/Dropbox/scripts/postgresql_db_setup.sh"
 alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
 
@@ -239,7 +239,7 @@ alias req=gpreq
 alias dangled="git fsck --no-reflog | awk '/dangling commit/ {print $3}'" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
 alias conflicted="git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR"
 alias conflicts="git ls-files -u | cut -f 2 | sort -u"
-alias uncommit="git reset --soft 'HEAD^'" # re-commit with `git commit -c ORIG_HEAD`
+alias uncommit="git reset --soft 'HEAD^'"  # re-commit with `git commit -c ORIG_HEAD`
 alias gex="git archive master | tar -x -C" # update this to support more than the master branch
 alias resolve="git mergetool --tool=nvimdiff"
 # alias rebase="git pull --rebase origin master"
@@ -302,9 +302,9 @@ alias nerd="echo -ne \\u"
 alias nf="echo -ne \\u"
 
 # -- linux-specific aliases..
-if [[ "$PLATFORM" == "linux" ]]; then
-  alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
-  alias pbcopy="xclip -sel clip"
-  alias pbpaste='xclip -sel clip -o'
-  alias fd="fdfind --hidden"
+if [[ $PLATFORM == "linux" ]]; then
+	alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
+	alias pbcopy="xclip -sel clip"
+	alias pbpaste='xclip -sel clip -o'
+	alias fd="fdfind --hidden"
 fi

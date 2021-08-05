@@ -489,9 +489,10 @@ local servers = {
   "cssls",
   "html",
   "rust_analyzer",
+  "vimls",
+  "solargraph"
   -- "tailwindcss",
   -- "dockerfile",
-  "vimls"
 }
 for _, ls in ipairs(servers) do
   -- handle language servers not installed/found; TODO: should probably handle
