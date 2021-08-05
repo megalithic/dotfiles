@@ -194,6 +194,7 @@ require "nvim-web-devicons".setup({default = false})
 
 do -- [orgmode] --
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
+  -- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
   require("orgmode").setup(
     {
       -- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
