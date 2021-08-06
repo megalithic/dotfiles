@@ -30,25 +30,26 @@ return {
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
-  "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
+  -- "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
   "folke/trouble.nvim",
   --
   -- (treesitter) --
   {"nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"]},
   "nvim-treesitter/nvim-treesitter-textobjects",
-  "serenadeai/tree-sitter-scss",
-  "ikatyang/tree-sitter-markdown",
+  "RRethy/nvim-treesitter-textsubjects",
+  -- "serenadeai/tree-sitter-scss",
+  -- "ikatyang/tree-sitter-markdown",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
-  "lewis6991/spellsitter.nvim",
+  -- "lewis6991/spellsitter.nvim",
   --
   -- (file/document navigation) --
   "ibhagwan/fzf-lua",
   "vijaymarupudi/nvim-fzf",
   "archaict/fzf-lua-extensions",
-  "unblevable/quick-scope",
-  -- research: ggandor/lightspeed.nvim
+  -- "unblevable/quick-scope",
+  "ggandor/lightspeed.nvim",
   --
   -- (text objects) --
   "tpope/vim-rsi",

@@ -90,6 +90,13 @@ do -- [nvim-treesitter] --
       extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
       max_file_lines = 1000 -- Do not enable for files with more than 1000 lines, int
     },
+    textsubjects = {
+      enable = true,
+      keymaps = {
+        ["."] = "textsubjects-smart",
+        [";"] = "textsubjects-container-outer"
+      }
+    },
     textobjects = {
       select = {
         enable = true,
@@ -430,12 +437,33 @@ do -- [polyglot] --
   g.polyglot_disabled = {}
 end
 
-do -- [quickscope] --
-  g.qs_enable = 1
-  g.qs_highlight_on_keys = {"f", "F", "t", "T"}
-  g.qs_buftype_blacklist = {"terminal", "nofile"}
-  g.qs_lazy_highlight = 1
+do -- [lightspeed] --
+  require("lightspeed").setup(
+    {
+      jump_to_first_match = false,
+      jump_on_partial_input_safety_timeout = 400,
+      -- This can get _really_ slow if the window has a lot of content,
+      -- turn it on only if your machine can always cope with it.
+      highlight_unique_chars = false,
+      grey_out_search_area = true,
+      match_only_the_start_of_same_char_seqs = true,
+      limit_ft_matches = 5
+      -- full_inclusive_prefix_key = '<c-x>',
+      -- By default, the values of these will be decided at runtime,
+      -- based on `jump_to_first_match`.
+      -- labels = nil,
+      -- cycle_group_fwd_key = nil,
+      -- cycle_group_bwd_key = nil,
+    }
+  )
 end
+
+-- do -- [quickscope] --
+--   g.qs_enable = 1
+--   g.qs_highlight_on_keys = {"f", "F", "t", "T"}
+--   g.qs_buftype_blacklist = {"terminal", "nofile"}
+--   g.qs_lazy_highlight = 1
+-- end
 
 -- do -- [diffview] --
 --   local cb = require("diffview.config").diffview_callback

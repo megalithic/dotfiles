@@ -140,11 +140,8 @@ endif
 -- map("v", "<Enter>", "<Plug>(EasyAlign)")
 map("v", "ga", "<Plug>(EasyAlign)")
 map("x", "ga", "<Plug>(EasyAlign)")
-
 -- start interactive EasyAlign for a motion/text object (e.g. gaip)
 map("n", "ga", "<Plug>(EasyAlign)")
-
--- easyalign
 map("v", "<Enter>", "<Plug>(EasyAlign)")
 map("n", "<Leader>a", "<Plug>(EasyAlign)")
 
@@ -153,6 +150,17 @@ map("n", "<leader>D", "<cmd>Dash<CR>")
 
 -- # paq
 map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
+
+-- # lightspeed
+function repeat_ft(reverse)
+  local ls = require "lightspeed"
+  ls.ft["instant-repeat?"] = true
+  ls.ft:to(reverse, ls.ft["prev-t-like?"])
+end
+vim.api.nvim_set_keymap("n", ";", "<cmd>lua repeat_ft(false)<cr>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("x", ";", "<cmd>lua repeat_ft(false)<cr>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("n", ",", "<cmd>lua repeat_ft(true)<cr>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", {noremap = true, silent = true})
 
 -- -- # telescope
 -- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")

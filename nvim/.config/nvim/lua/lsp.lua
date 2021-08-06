@@ -3,7 +3,7 @@ local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local colors = require("colors")
 
-set.completeopt = {"menuone", "noselect", "noinsert"}
+set.completeopt = {"menu", "menuone", "noselect", "noinsert"}
 set.shortmess:append("c")
 
 do
@@ -25,8 +25,12 @@ lsp.handlers["textDocument/publishDiagnostics"] =
   lsp.diagnostic.on_publish_diagnostics,
   {
     underline = true,
-    virtual_text = false,
-    signs = true,
+    virtual_text = {
+      prefix = "",
+      spacing = 2,
+      severity_limit = "Warning"
+    },
+    signs = {severity_limit = "Warning"},
     update_in_insert = false,
     severity_sort = true
   }
@@ -293,7 +297,7 @@ local function on_attach(client, bufnr)
 
   --- auto-commands
   au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
-  au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
+  -- au "CursorHold, CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
   au [[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]]
 
   if vim.bo.ft ~= "vim" then
