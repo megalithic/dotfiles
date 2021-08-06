@@ -1,12 +1,12 @@
-local log = hs.logger.new('[bindings.misc]', 'debug')
+local log = hs.logger.new("[bindings.misc]", "debug")
 
 local module = {}
 
-local alert           = require('ext.alert')
+local alert = require("ext.alert")
 -- local setLayoutForAll = require('utils.wm').setLayoutForAll
 -- local setLayoutForApp = require('utils.wm').setLayoutForApp
-local browser         = require('bindings.browser')
-local ptt             = require('bindings.ptt')
+local browser = require("bindings.browser")
+local ptt = require("bindings.ptt")
 
 module.start = function()
   -- misc things
@@ -16,12 +16,16 @@ module.start = function()
     end
   end
 
-
   -- additional things that cause cyclical reference issues from config.lua
-  hs.hotkey.bind(config.modifiers.cmdAlt, 'p', function()
-    local toggled_to_state = ptt.toggleStates()
-    alert.show({text="Toggling PTT mode to " .. toggled_to_state})
-  end)
+  hs.hotkey.bind(
+    config.modifiers.cmdAlt,
+    "p",
+    function()
+      local toggled_to_state = ptt.toggleStates()
+      -- local icons = ptt.icons
+      alert.show({text = "Toggling PTT mode to " .. toggled_to_state})
+    end
+  )
 
   -- hs.hotkey.bind(config.modifiers.mashShift, 'w', function()
   --   alert.show({text="Relayout of all apps"})
@@ -37,9 +41,13 @@ module.start = function()
   -- end)
 
   -- Snip current highlight text in browser and send to Drafts
-  hs.hotkey.bind(config.modifiers.ctrlShift, 's', function()
-    browser.snip()
-  end)
+  hs.hotkey.bind(
+    config.modifiers.ctrlShift,
+    "s",
+    function()
+      browser.snip()
+    end
+  )
 end
 
 module.stop = function()

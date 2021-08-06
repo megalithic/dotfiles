@@ -6,15 +6,14 @@ return {
   --
   -- (appearance/ui) --
   "sainnhe/everforest",
+  "rktjmp/lush.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "junegunn/rainbow_parentheses.vim",
   "kyazdani42/nvim-web-devicons",
-  -- "yamatsum/nvim-nonicons", -- FIXME: these do weird things
   "hoob3rt/lualine.nvim",
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
-  -- "psliwka/vim-smoothie",
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   --
@@ -23,13 +22,12 @@ return {
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-compe",
-  -- "hrsh7th/vim-vsnip", -- FIXME: trying out Luasnip for now
-  -- "hrsh7th/vim-vsnip-integ",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
+  "jose-elias-alvarez/nvim-lsp-ts-utils",
   -- "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
   "folke/trouble.nvim",
   --
@@ -48,7 +46,6 @@ return {
   "ibhagwan/fzf-lua",
   "vijaymarupudi/nvim-fzf",
   "archaict/fzf-lua-extensions",
-  -- "unblevable/quick-scope",
   "ggandor/lightspeed.nvim",
   --
   -- (text objects) --
@@ -111,7 +108,7 @@ return {
   "junegunn/vim-easy-align",
   --
   -- (langs, syntax, et al) --
-  -- markdown/prose
+  -- # markdown/prose
   "plasticboy/vim-markdown",
   {"iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"]},
   {"harshad1/bullets.vim", branch = "performance_improvements"}, -- "dkarter/bullets.vim"
@@ -119,25 +116,25 @@ return {
   "akinsho/org-bullets.nvim",
   "megalithic/zk.nvim",
   "dhruvasagar/vim-table-mode",
-  -- ruby/rails
+  -- # ruby/rails
   "vim-ruby/vim-ruby",
   "tpope/vim-rails",
-  -- elm
+  -- # elm
   "antew/vim-elm-analyse",
-  -- elixir/phoenix/erlang
+  -- # elixir/phoenix/erlang
   "elixir-editors/vim-elixir",
   "avdgaag/vim-phoenix",
   "lucidstack/hex.vim",
-  -- lua
+  -- # lua
   "tjdevries/nlua.nvim",
   "norcalli/nvim.lua",
   "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
-  -- rust
+  -- # rust
   "rust-lang/rust.vim",
   "racer-rust/vim-racer",
-  -- JS/TS/JSON
+  -- # JS/TS/JSON
   -- "pangloss/vim-javascript",
   -- "isRuslan/vim-es6",
   "othree/yajs.vim",
@@ -145,14 +142,14 @@ return {
   "heavenshell/vim-jsdoc",
   "HerringtonDarkholme/yats.vim",
   "jxnblk/vim-mdx-js",
-  -- HTML
+  -- # HTML
   "othree/html5.vim",
   "mattn/emmet-vim",
   "skwp/vim-html-escape",
   "pedrohdz/vim-yaml-folds",
-  -- CSS
+  -- # CSS
   "hail2u/vim-css3-syntax",
-  -- misc
-  "avakhov/vim-yaml"
-  -- "sheerun/vim-polyglot"
+  -- # misc
+  "avakhov/vim-yaml",
+  "chr4/nginx.vim"
 }

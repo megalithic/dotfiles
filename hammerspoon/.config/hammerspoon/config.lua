@@ -89,7 +89,7 @@ local M = {
   }
 }
 
-M.ptt = M.modifiers.cmdAlt
+M.ptt = M.modifiers.cmdAlt -- toggling happens in bindings/misc.lua
 
 M.apps = {
   ["net.kovidgoyal.kitty"] = {

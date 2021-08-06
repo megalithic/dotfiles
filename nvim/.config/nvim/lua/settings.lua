@@ -1,4 +1,4 @@
-local set, g, api = vim.opt, vim.g, vim.api
+local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
 local dirs = {
   org = "~/Library/Mobile Documents/com~apple~CloudDocs/org",
   dots = "~/.dotfiles"
@@ -246,6 +246,8 @@ do -- [orgmode] --
 end
 
 do -- [zk] --
+  -- REF:
+  -- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
   require("zk").setup({debug = true})
 end
 
@@ -538,6 +540,7 @@ do -- [vim-test] --
     ]],
     false
   )
+  cmd [[let g:test#javascript#jest#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$']]
 end
 
 do -- [projectionist] --

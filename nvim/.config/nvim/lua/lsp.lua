@@ -27,7 +27,7 @@ lsp.handlers["textDocument/publishDiagnostics"] =
     underline = true,
     virtual_text = {
       prefix = "",
-      spacing = 2,
+      spacing = 4,
       severity_limit = "Warning"
     },
     signs = {severity_limit = "Warning"},
@@ -262,6 +262,23 @@ local function on_attach(client, bufnr)
     }
   )
 
+  if client.name == "typescript" or client.name == "tsserver" then
+    local ts = require("nvim-lsp-ts-utils")
+    ts.setup(
+      {
+        disable_commands = false,
+        enable_import_on_completion = false,
+        import_on_completion_timeout = 5000,
+        eslint_bin = "eslint_d", -- use eslint_d if possible!
+        eslint_enable_diagnostics = true,
+        -- eslint_fix_current = false,
+        eslint_enable_disable_comments = true
+      }
+    )
+
+    ts.setup_client(client)
+  end
+
   --- goto mappings
   -- bufmap("gd", "lua vim.lsp.buf.definition()")
   -- bufmap("gr", "lua vim.lsp.buf.references()")
@@ -296,7 +313,9 @@ local function on_attach(client, bufnr)
   map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
   --- auto-commands
-  au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
+  au "BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()"
+  -- au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
+
   -- au "CursorHold, CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
   au [[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]]
 

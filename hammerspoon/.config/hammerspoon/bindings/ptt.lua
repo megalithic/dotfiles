@@ -12,6 +12,11 @@ module.state = module.defaultState
 module.defaultInputVolume = 50
 module.pushed = false
 
+local iconPath = hs.configdir .. "/assets/"
+local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({w = 16, h = 16})
+local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({w = 16, h = 16})
+module.icons = {ptm = speakIcon, ptt = mutedIcon}
+
 module.states = function()
   log.df("current module.state from module.states(): %s", module.state)
 
@@ -34,9 +39,6 @@ end
 
 local showState = function()
   local device = hs.audiodevice.defaultInputDevice()
-  local iconPath = hs.configdir .. "/assets/"
-  local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({w = 16, h = 16})
-  local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({w = 16, h = 16})
 
   -- starting point:
   local muted = false

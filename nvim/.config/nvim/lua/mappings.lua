@@ -86,11 +86,7 @@ map("i", "?", "?<C-g>u")
 
 -- [custom mappings] -----------------------------------------------------------
 
-map("n", "<leader>,", ":buffer *")
-map("n", "<leader>.", ":e<space>**/")
--- map("n", "<leader>sT", ":tjump *")
-
--- execute our current lua file
+-- execute our current lua File
 map("n", "<leader>x", "<cmd>luafile %<cr>")
 
 -- Things 3
