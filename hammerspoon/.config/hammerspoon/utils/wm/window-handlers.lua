@@ -5,11 +5,12 @@ local M = {cache = cache}
 
 local fn = require("hs.fnutils")
 
-local function dnd_command_updater(cmd, cb, args)
+local function dnd_cmd_updater(cmd)
   if cmd ~= nil then
-    local task = hs.task.new(cmd, cb, args)
-    task:start()
+    return hs.execute(cmd, true)
   end
+
+  return nil
 end
 
 -- onAppQuit(hs.application, function) :: nil
@@ -63,13 +64,13 @@ M.dndHandler = function(app, dndConfig, event)
     if fn.contains({"windowCreated", hs.application.watcher.launched}, event) then
       log.df("DND Handler: on/" .. mode)
 
-      dnd_command_updater(dndCmd, nil, {"on"})
+      dnd_cmd_updater(dndCmd .. " on")
 
       M.onAppQuit(
         app,
         function()
           log.df("DND Handler: off/back")
-          dnd_command_updater(dndCmd, nil, {"off"})
+          dnd_cmd_updater(dndCmd .. " off")
         end
       )
     elseif fn.contains({"windowDestroyed", hs.application.watcher.terminated}, event) then
@@ -77,7 +78,7 @@ M.dndHandler = function(app, dndConfig, event)
         app,
         function()
           log.df("DND Handler: off/back")
-          dnd_command_updater(dndCmd, nil, {"off"})
+          dnd_cmd_updater(dndCmd .. " off")
         end
       )
     end

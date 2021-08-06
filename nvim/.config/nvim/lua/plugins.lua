@@ -52,9 +52,11 @@ return {
   --
   -- (text objects) --
   "tpope/vim-rsi",
+  "kana/vim-textobj-user",
   "kana/vim-operator-user",
-  -- "whatyouhide/vim-textobj-xmlattr",
-  -- "amiralies/vim-textobj-elixir",
+  "mattn/vim-textobj-url",
+  "whatyouhide/vim-textobj-xmlattr",
+  "amiralies/vim-textobj-elixir",
   "wellle/targets.vim",
   -- research: windwp/nvim-spectre
   --

@@ -115,10 +115,10 @@ map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
 -- # git-related
 map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
-map("n", "<Leader>gh", "<cmd>GBrowse!<CR>")
-map("x", "<Leader>gh", "<cmd>GBrowse!<CR>")
-map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
-map("v", "<Leader>gh", "<cmd>GBrowse!<CR>")
+map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
+map("x", "<Leader>gh", "<cmd>GBrowse<CR>")
+map("v", "<Leader>gh", "<cmd>GBrowse<CR>")
+map("v", "<Leader>gh", "<cmd>GBrowse<CR>")
 
 -- # markdown-related
 map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
