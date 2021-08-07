@@ -354,7 +354,6 @@ local servers = {
   "cssls",
   "html",
   "rust_analyzer",
-  "null-ls",
   "vimls",
   "solargraph"
   -- "tailwindcss",
@@ -666,20 +665,6 @@ do
   )
 end
 
--- lspconfig["zk"].setup(
---   {
---     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
---     filetypes = {"markdown", "md"},
---     root_dir = function()
---       return vim.loop.cwd()
---     end,
---     settings = {},
---     on_attach = on_attach,
---     capabilities = capabilities,
---     flags = {debounce_text_changes = 150}
---   }
--- )
-
 do
   local nls = require("null-ls")
   nls.config(
@@ -698,4 +683,25 @@ do
       }
     }
   )
+  -- lspconfig["null-ls"].setup(
+  --   {
+  --     on_attach = on_attach,
+  --     capabilities = capabilities,
+  --     flags = {debounce_text_changes = 150}
+  --   }
+  -- )
 end
+
+-- lspconfig["zk"].setup(
+--   {
+--     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
+--     filetypes = {"markdown", "md"},
+--     root_dir = function()
+--       return vim.loop.cwd()
+--     end,
+--     settings = {},
+--     on_attach = on_attach,
+--     capabilities = capabilities,
+--     flags = {debounce_text_changes = 150}
+--   }
+-- )

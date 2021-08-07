@@ -11,6 +11,7 @@ fi
 
 if (command -v cargo &>/dev/null); then
 	cargo install selene # https://kampfkarren.github.io/selene/selene.html
+	cargo install stylua # https://github.com/johnnymorganz/stylua
 
 	if [[ $PLATFORM == "linux" ]]; then
 		cargo install git-delta

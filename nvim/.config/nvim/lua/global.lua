@@ -38,9 +38,9 @@ function M.isdir(path)
 end
 
 function M.log(msg, hl, name)
-  name = name or "mega"
+  name = name or "megavim"
   hl = hl or "Todo"
-  api.nvim_echo({{name .. "-> ", hl}, {msg}}, true, {})
+  api.nvim_echo({{name .. " -> ", hl}, {msg}}, true, {})
 end
 
 function M.warn(msg)
@@ -67,7 +67,7 @@ function M.inspect(k, v, l, f)
 
   if v then
     -- print(level .. " " .. k .. " -> " .. vim.inspect(v))
-    M.log(string.format("%s %s -> %s", level, k, vim.inspect(v)), hl)
+    M.log(string.format("%s %s: %s", level, k, vim.inspect(v)), hl)
   else
     -- print(level .. " " .. k .. "..")
     M.log(string.format("%s %s", level, k), hl)

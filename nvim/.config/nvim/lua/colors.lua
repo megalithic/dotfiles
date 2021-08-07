@@ -132,6 +132,8 @@ return {
       -- hi("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
       -- hi("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
       -- hi("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
+      hi("WarningMsg", {guifg = status.warning_status, guibg = status.bg2, gui = "bold", force = true})
+      hi("ErrorMsg", {guifg = status.error_status, guibg = status.bg2, gui = "bold", force = true})
       hi("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
       hi("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
       hi("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
