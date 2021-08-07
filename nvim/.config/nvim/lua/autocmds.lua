@@ -10,10 +10,12 @@ au([[VimResized * lua require('golden_size').on_win_enter()]])
 au([[VimResized * wincmd =]])
 au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
 au([[Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
-au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\)')]])
+au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au("BufRead,BufNewFile *.md set filetype=markdown")
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
+au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
+au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 

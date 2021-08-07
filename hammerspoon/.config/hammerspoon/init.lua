@@ -18,6 +18,10 @@ hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
+-- spoons
+hs.loadSpoon("SpoonInstall")
+hs.loadSpoon("EmmyLua")
+
 -- global requires
 Config = require("config")
 -- TODO: replace lowercase references of `config` to `Config`

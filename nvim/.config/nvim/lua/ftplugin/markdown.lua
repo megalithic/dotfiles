@@ -7,6 +7,8 @@ return function(_) -- bufnr
   vim.cmd([[syntax match todoCheckbox "\[\ \]" conceal cchar=]])
   vim.cmd([[syntax match todoCheckbox "\[x\]" conceal cchar=]])
 
+  vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
+
   vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
   vim.o.makeprg = [[open %]]
   vim.o.textwidth = 0
@@ -47,6 +49,9 @@ return function(_) -- bufnr
     "html",
     "bash=sh",
     "zsh=sh",
+    "shell=sh",
+    "console=sh",
+    "sh",
     "elm",
     "elixir",
     "eelixir",
@@ -56,10 +61,11 @@ return function(_) -- bufnr
   }
 
   vim.g.markdown_enable_conceal = 1
+  vim.g.vim_markdown_folding_level = 10
   vim.g.vim_markdown_folding_disabled = 1
   vim.g.vim_markdown_conceal = 0
   vim.g.vim_markdown_conceal_code_blocks = 0
-  vim.g.vim_markdown_folding_style_pythonic = 0
+  vim.g.vim_markdown_folding_style_pythonic = 1
   vim.g.vim_markdown_override_foldtext = 0
   vim.g.vim_markdown_follow_anchor = 1
   vim.g.vim_markdown_frontmatter = 1 -- for YAML format

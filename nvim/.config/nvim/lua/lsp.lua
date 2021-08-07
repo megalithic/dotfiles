@@ -169,28 +169,6 @@ end
 -- Use (s-)tab to:
 --- move to prev/next item in completion menuone
 --- jump to prev/next snippet's placeholder
--- _G.tab_complete = function()
---   if fn.pumvisible() == 1 then
---     return t "<C-n>"
---   elseif fn["vsnip#available"](1) == 1 then
---     return t "<Plug>(vsnip-expand-or-jump)"
---   elseif check_back_space() then
---     return t "<Tab>"
---   else
---     return fn["compe#complete"]()
---   end
--- end
--- _G.s_tab_complete = function()
---   if fn.pumvisible() == 1 then
---     return t "<C-p>"
---   elseif fn["vsnip#jumpable"](-1) == 1 then
---     return t "<Plug>(vsnip-jump-prev)"
---   else
---     -- If <S-Tab> is not working in your terminal, change it to <C-h>
---     return t "<S-Tab>"
---   end
--- end
-
 _G.tab_complete = function()
   if vim.fn.pumvisible() == 1 then
     return t "<C-n>"
@@ -221,14 +199,17 @@ _G.cr_complete = function()
   -- end
   if vim.fn.pumvisible() ~= 0 then
     if vim.fn.complete_info()["selected"] ~= -1 then
+      print("none selected!")
       return vim.fn["compe#confirm"](t("<cr>"))
     else
-      vim.defer_fn(
-        function()
-          vim.fn["compe#confirm"]({keys = "<cr>", select = true})
-        end,
-        20
-      )
+      print("one selected!")
+      vim.fn["compe#confirm"]({keys = "<cr>", select = false})
+      -- vim.defer_fn(
+      --   function()
+      --     vim.fn["compe#confirm"]({keys = "<cr>", select = false})
+      --   end,
+      --   20
+      -- )
       return t("<c-n>")
     end
   else
@@ -373,6 +354,7 @@ local servers = {
   "cssls",
   "html",
   "rust_analyzer",
+  "null-ls",
   "vimls",
   "solargraph"
   -- "tailwindcss",
@@ -493,11 +475,13 @@ do -- lua
   --   return result
   -- end
 
+  -- (build lua runtime libraries)
   local runtime_path = vim.split(package.path, ";")
   table.insert(runtime_path, "lua/?.lua")
   table.insert(runtime_path, "lua/?/init.lua")
   table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
   table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
+  table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
   local luadev =
     require("lua-dev").setup(
     {
@@ -696,40 +680,22 @@ end
 --   }
 -- )
 
--- TODO:
--- local null_ls_sources = {
--- 	require("null-ls").builtins.formatting.prettier,
--- 	require("null-ls").builtins.formatting.stylua,
--- 	require("null-ls").builtins.diagnostics.eslint.with({ command = "eslint_d" }),
--- 	require("null-ls").builtins.diagnostics.write_good,
--- 	require("null-ls").builtins.code_actions.gitsigns,
--- }
-
--- require("null-ls").config({
---     sources = null_ls_sources
--- })
-
--- for server, config in pairs(servers) do
---   local server_disabled = (config.disabled ~= nil and config.disabled) or false
-
---   inspect("-> unable to load lsp config", {server, config, lspconfig})
-
---   if lspconfig[server] == nil or config == nil or lspconfig == nil or server == nil then
---     inspect("-> unable to load lsp config", {server, config, lspconfig})
---     return
---   end
-
---   if not server_disabled then
---     lspconfig[server].setup(
---       vim.tbl_deep_extend(
---         "force",
---         {
---           on_attach = on_attach,
---           capabilities = capabilities,
---           flags = {debounce_text_changes = 150}
---         },
---         config
---       )
---     )
---   end
--- end
+do
+  local nls = require("null-ls")
+  nls.config(
+    {
+      debounce = 150,
+      save_after_format = false,
+      sources = {
+        nls.builtins.formatting.prettierd,
+        nls.builtins.formatting.stylua,
+        nls.builtins.formatting.eslint_d,
+        nls.builtins.diagnostics.shellcheck,
+        nls.builtins.diagnostics.markdownlint,
+        nls.builtins.diagnostics.selene
+        -- nls.builtins.diagnostics.write_good,
+        -- nls.builtins.code_actions.gitsigns
+      }
+    }
+  )
+end

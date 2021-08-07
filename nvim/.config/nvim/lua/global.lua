@@ -37,16 +37,18 @@ function M.isdir(path)
   return M.exists(path .. "/")
 end
 
-function M.log(msg, hl)
-  vim.api.nvim_echo({ { "mega -> ", hl }, { msg } }, true, {})
+function M.log(msg, hl, name)
+  name = name or "mega"
+  hl = hl or "Todo"
+  api.nvim_echo({{name .. "-> ", hl}, {msg}}, true, {})
 end
 
 function M.warn(msg)
-  M.log(msg, "WarningMsg")
+  M.log(msg, "WarningMsg") -- LspDiagnosticsDefaultWarning
 end
 
 function M.error(msg)
-  M.log(msg, "ErrorMsg")
+  M.log(msg, "ErrorMsg") -- LspDiagnosticsDefaultError
 end
 
 function M.inspect(k, v, l, f)
@@ -64,11 +66,11 @@ function M.inspect(k, v, l, f)
   end
 
   if v then
-    M.log(string.format("%s %s -> %s", level, k, vim.inspect(v)), hl)
     -- print(level .. " " .. k .. " -> " .. vim.inspect(v))
+    M.log(string.format("%s %s -> %s", level, k, vim.inspect(v)), hl)
   else
-    M.log(string.format("%s %s", level, k), hl)
     -- print(level .. " " .. k .. "..")
+    M.log(string.format("%s %s", level, k), hl)
   end
 
   return v

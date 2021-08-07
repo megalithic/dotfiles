@@ -28,7 +28,7 @@ return {
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
-  -- "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
+  "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
   "folke/trouble.nvim",
   --
   -- (treesitter) --

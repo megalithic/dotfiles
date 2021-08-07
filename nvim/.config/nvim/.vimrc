@@ -218,6 +218,7 @@ set viminfo=          " No backups
 set wildcharm=<Tab>   " Defines the trigger for 'wildmenu' in mappings
 set wildmenu          " Nice command completions
 set wildmode=full
+set wildmode=longest:full,full
 set wildignore+=*.o,*.obj,*.bin,*.dll,*.exe
 set wildignore+=*/.git/*,*/.svn/*,*/__pycache__/*,*/build/**
 set wildignore+=*.pyc

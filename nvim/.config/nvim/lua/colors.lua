@@ -135,6 +135,24 @@ return {
       hi("markdownHeadline", {guifg = status.normal_text, guibg = status.vertsplit, force = true})
       hi("markdownFirstHeadline", {guifg = status.bg, guibg = status.added, force = true})
       hi("markdownSecondHeadline", {guifg = status.bg, guibg = status.changed, force = true})
+      hi(
+        "LspDiagnosticsVirtualTextError",
+        {guifg = status.error_status, guibg = status.bg2, gui = "italic", force = true}
+      )
+      hi(
+        "LspDiagnosticsVirtualTextWarning",
+        {guifg = status.warning_status, guibg = status.bg2, gui = "italic", force = true}
+      )
+      hi(
+        "LspDiagnosticsVirtualTextInformation",
+        {guifg = status.information_status, guibg = status.bg2, gui = "italic", force = true}
+      )
+      hi(
+        "LspDiagnosticsVirtualTextHint",
+        {guifg = status.hint_status, guibg = status.bg2, gui = "italic", force = true}
+      )
+      -- hi("Todo", {guifg = status.purple, guibg = status.bg2, force = true})
+      -- hi("Debug", {guifg = status.orange, guibg = status.bg2, force = true})
     end
     mega.augroup_cmds(
       "EverforestOverrides",
