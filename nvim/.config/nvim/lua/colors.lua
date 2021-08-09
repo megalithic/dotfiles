@@ -15,6 +15,7 @@ local icons = {
   left_sep = utf8(0xe0b6),
   modified_symbol = utf8(0xf085),
   vcs_symbol = utf8(0xf418),
+  git_symbol = utf8(0xe725),
   readonly_symbol = utf8(0xf023),
   statusline_error = utf8(0xf05e),
   statusline_warning = utf8(0xf071),
@@ -117,6 +118,9 @@ local status = {
 
 return {
   icons = icons,
+  cs = cs,
+  base = base,
+  status = status,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   setup = function()
     mega.everforest_overrides = function()
