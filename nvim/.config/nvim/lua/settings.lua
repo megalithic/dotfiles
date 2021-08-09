@@ -61,6 +61,7 @@ do -- [nvim-treesitter] --
       "elm",
       "erlang",
       "fish",
+      "graphql",
       "html",
       "javascript",
       -- "markdown",

@@ -6,6 +6,7 @@ return {
   --
   -- (appearance/ui) --
   "sainnhe/everforest",
+  "savq/melange",
   "rktjmp/lush.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
@@ -36,7 +37,6 @@ return {
   {"nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"]},
   "nvim-treesitter/nvim-treesitter-textobjects",
   "RRethy/nvim-treesitter-textsubjects",
-  "serenadeai/tree-sitter-scss",
   "ikatyang/tree-sitter-markdown",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
@@ -118,7 +118,7 @@ return {
   "megalithic/zk.nvim",
   "dhruvasagar/vim-table-mode",
   -- # ruby/rails
-  "vim-ruby/vim-ruby",
+  -- "vim-ruby/vim-ruby",
   "tpope/vim-rails",
   -- # elm
   "antew/vim-elm-analyse",
@@ -133,23 +133,23 @@ return {
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   -- # rust
-  "rust-lang/rust.vim",
+  -- "rust-lang/rust.vim",
   "racer-rust/vim-racer",
   -- # JS/TS/JSON
   -- "pangloss/vim-javascript",
   -- "isRuslan/vim-es6",
-  "othree/yajs.vim",
+  -- "othree/yajs.vim",
   "MaxMEllon/vim-jsx-pretty",
   "heavenshell/vim-jsdoc",
-  "HerringtonDarkholme/yats.vim",
+  -- "HerringtonDarkholme/yats.vim",
   "jxnblk/vim-mdx-js",
   -- # HTML
-  "othree/html5.vim",
-  "mattn/emmet-vim",
+  -- "othree/html5.vim",
+  -- "mattn/emmet-vim",
   "skwp/vim-html-escape",
   "pedrohdz/vim-yaml-folds",
   -- # CSS
-  "hail2u/vim-css3-syntax",
+  -- "hail2u/vim-css3-syntax",
   -- # misc
   "avakhov/vim-yaml",
   "chr4/nginx.vim"
