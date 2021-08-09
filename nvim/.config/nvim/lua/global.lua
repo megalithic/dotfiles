@@ -242,7 +242,7 @@ function M.zetty(args)
 end
 
 function M.plugins()
-  print("-> syncing plugins..")
+  M.log("-> syncing plugins..")
 
   package.loaded["plugins"] = nil
   require("paq"):setup({verbose = false})(require("plugins")):sync()

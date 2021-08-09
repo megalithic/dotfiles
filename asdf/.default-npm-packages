@@ -12,6 +12,8 @@ prettier
 prettier-plugin-eex
 trash-cli
 tree-sitter-cli
+tree-sitter-scss
+tree-sitter-markdown
 typescript
 vim-node-rpc
 yarn

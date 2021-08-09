@@ -19,6 +19,7 @@ return {
   --
   -- (lsp/completion) --
   "neovim/nvim-lspconfig",
+  "kabouzeid/nvim-lspinstall",
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-compe",
@@ -35,12 +36,12 @@ return {
   {"nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"]},
   "nvim-treesitter/nvim-treesitter-textobjects",
   "RRethy/nvim-treesitter-textsubjects",
-  -- "serenadeai/tree-sitter-scss",
-  -- "ikatyang/tree-sitter-markdown",
+  "serenadeai/tree-sitter-scss",
+  "ikatyang/tree-sitter-markdown",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
-  -- "lewis6991/spellsitter.nvim",
+  -- "lewis6991/spellsitter.nvim", -- https://github.com/ful1e5/dotfiles/blob/main/nvim/.config/nvim/lua/plugins-cfg/spellsitter/init.lua
   --
   -- (file/document navigation) --
   "ibhagwan/fzf-lua",

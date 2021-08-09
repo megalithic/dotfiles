@@ -35,6 +35,38 @@ lsp.handlers["textDocument/publishDiagnostics"] =
     severity_sort = true
   }
 )
+-- only show one virtual text prefix for diagnostic items on a line:
+-- REF: https://www.reddit.com/r/neovim/comments/p0jx12/weird_diagnostic_signs_behavior/h898ft6/
+vim.lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
+  assert(bufnr or line)
+
+  if #line_diags == 0 then
+    return nil
+  end
+
+  opts = opts or {}
+  local prefix = opts.prefix or "■"
+  local spacing = opts.spacing or 4
+
+  -- Create a little more space between virtual text and contents
+  local virt_texts = {{string.rep(" ", spacing)}}
+
+  local last = line_diags[#line_diags]
+
+  -- TODO(tjdevries): Allow different servers to be shown first somehow?
+  -- TODO(tjdevries): Display server name associated with these?
+  if last.message then
+    table.insert(
+      virt_texts,
+      {
+        string.format("%s %s", prefix, last.message:gsub("\r", ""):gsub("\n", "  ")),
+        vim.lsp.diagnostic._get_severity_highlight_name(last.severity)
+      }
+    )
+
+    return virt_texts
+  end
+end
 
 -- hover
 -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
@@ -101,6 +133,16 @@ require("compe").setup {
     buffer = {menu = "[buf]", kind = " ", priority = 7},
     treesitter = false --{menu = "[ts]", priority = 9},
   }
+  -- path = {kind = "   (Path)"},
+  -- buffer = {kind = "   (Buffer)"},
+  -- calc = {kind = "   (Calc)"},
+  -- vsnip = {kind = "   (Snippet)"},
+  -- nvim_lsp = {kind = "   (LSP)"},
+  -- nvim_lua = true,
+  -- spell = {kind = "   (Spell)"},
+  -- tags = false,
+  -- vim_dadbod_completion = true,
+  -- emoji = {kind = " ﲃ  (Emoji)"}
 }
 
 require("vim.lsp.protocol").CompletionItemKind = {
