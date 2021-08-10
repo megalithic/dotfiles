@@ -12,7 +12,6 @@ return {
   "dm1try/golden_size",
   "junegunn/rainbow_parentheses.vim",
   "kyazdani42/nvim-web-devicons",
-  "hoob3rt/lualine.nvim",
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim",
   "karb94/neoscroll.nvim",
