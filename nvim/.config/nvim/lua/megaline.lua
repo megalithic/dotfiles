@@ -1,39 +1,70 @@
 local colorscheme = require("colors")
+local hi, au = mega.highlight, mega.au
+local fn, cmd = vim.fn, vim.cmd
+local lsp_status = require "lsp-status"
 
 local statusline = {}
-vim.cmd [[augroup custom_statusline]]
-vim.cmd [[autocmd!]]
-vim.cmd [[autocmd VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]]
-vim.cmd [[augroup END]]
+au [[VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]]
 vim.o.statusline = "%!v:lua.mega.statusline.setup()"
 
 local c = {}
 
 function statusline.set_colors()
-  c.normal_bg = colorscheme.cs.bg0
+  c.statusline_bg = colorscheme.cs.bg1
+
   c.normal_fg = colorscheme.cs.green
-  c.statusline_bg = vim.fn.synIDattr(vim.fn.hlID("Statusline"), "bg")
-  c.comment_fg = colorscheme.cs.fg
-  c.warning_fg = colorscheme.status.warning_status
-  c.error_fg = colorscheme.status.error_status
+  c.normal_bg = c.statusline_bg
+  c.insert_fg = colorscheme.cs.fg
+  c.insert_bg = c.statusline_bg
+  c.replace_fg = colorscheme.cs.orange
+  c.replace_bg = c.statusline_bg
+  c.visual_fg = colorscheme.cs.red
+  c.replace_bg = c.statusline_bg
 
-  -- c.normal_bg = colorscheme.cs. .vim.fn.synIDattr(vim.fn.hlID("Normal"), "bg")
-  -- c.normal_fg = vim.fn.synIDattr(vim.fn.hlID("Normal"), "fg")
-  -- c.statusline_bg = vim.fn.synIDattr(vim.fn.hlID("Statusline"), "bg")
-  -- c.comment_fg = vim.fn.synIDattr(vim.fn.hlID("Comment"), "fg")
-  -- c.warning_fg = vim.fn.synIDattr(vim.fn.hlID("WarningMsg"), "fg")
-  -- c.error_fg = vim.fn.synIDattr(vim.fn.hlID("ErrorMsg"), "fg")
+  c.secondary_fg = colorscheme.cs.grey2
+  c.secondary_bg = c.statusline_bg
 
-  vim.cmd("hi StItem guibg=" .. c.normal_fg .. " guifg=" .. c.normal_bg .. " gui=NONE")
-  vim.cmd("hi StItem2 guibg=" .. c.comment_fg .. " guifg=" .. c.normal_bg .. " gui=NONE")
-  vim.cmd("hi StSep guifg=" .. c.normal_fg .. " guibg=" .. c.statusline_bg .. " gui=NONE")
-  vim.cmd("hi StSep2 guifg=" .. c.comment_fg .. " guibg=" .. c.statusline_bg .. " gui=NONE")
-  vim.cmd("hi StErr guibg=" .. c.error_fg .. " guifg=" .. c.normal_bg .. " gui=bold")
-  vim.cmd("hi StErrSep guifg=" .. c.error_fg .. " guibg=" .. c.statusline_bg .. " gui=NONE")
-  vim.cmd("hi StWarn guibg=" .. c.warning_fg .. " guifg=" .. c.normal_bg .. " gui=bold")
-  vim.cmd("hi StWarnSep guifg=" .. c.warning_fg .. " guibg=" .. c.statusline_bg .. " gui=NONE")
+  c.tertiary_fg = colorscheme.cs.grey0
+  c.tertiary_bg = c.statusline_bg
+
+  c.warning = colorscheme.status.warning_status
+  c.error = colorscheme.status.error_status
+
+  hi("StItem", {guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold"})
+  hi("StItem2", {guifg = c.secondary_fg, guibg = c.secondary_bg})
+  hi("StItem3", {guifg = c.tertiary_fg, guibg = c.tertiary_bg})
+
+  hi("StSep", {guifg = c.normal_bg, guibg = c.normal_fg})
+  hi("StSep2", {guifg = c.secondary_bg, guibg = c.secondary_fg})
+  hi("StSep3", {guifg = c.tertiary_bg, guibg = c.tertiary_fg})
+
+  hi("StErr", {guifg = c.error, guibg = c.statusline_bg})
+  hi("StErrSep", {guifg = c.statusline_bg, guibg = c.error})
+
+  hi("StWarn", {guifg = c.normal, guibg = c.warning})
+  hi("StWarnSep", {guifg = c.statusline_bg, guibg = c.warning})
 end
 
+-- # LSP status
+lsp_status.register_progress()
+lsp_status.config {
+  status_symbol = "",
+  indicator_errors = colorscheme.icons.statusline_error,
+  indicator_warnings = colorscheme.icons.statusline_warning,
+  indicator_info = colorscheme.icons.statusline_information,
+  indicator_hint = colorscheme.icons.statusline_hint,
+  indicator_ok = colorscheme.icons.statusline_ok
+  -- spinner_frames = {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
+  -- spinner_frames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+}
+local function get_lsp_status()
+  if #vim.lsp.buf_get_clients() > 0 then
+    return lsp_status.status()
+  end
+  return ""
+end
+
+-- REF: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/statusline.lua#L29-L57
 local function sep(item, opts, show)
   opts = opts or {}
   if show == nil then
@@ -43,55 +74,54 @@ local function sep(item, opts, show)
     return ""
   end
 
-  local no_after = opts.no_after or false
-  local no_before = opts.no_before or false
-  local sep_color = opts.sep_color or "%#StSep#"
   local color = opts.color or "%#StItem#"
-  local side = opts.side or "left"
-
-  local sep_before = "█"
-  local sep_after = "█"
-  if side ~= "left" then
-    sep_before = "█"
-    sep_after = "█"
+  local pad = " "
+  if opts.no_padding then
+    pad = ""
   end
 
-  if no_before then
-    sep_before = "█"
-  end
-
-  if no_after then
-    sep_after = "█"
-  end
-
-  return sep_color .. sep_before .. color .. item .. sep_color .. sep_after .. "%*"
+  return pad .. color .. item .. pad .. "%*"
 end
 
+local st_mode_block = {color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true, no_padding = true}
 local st_mode = {color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true}
-local st_err = {color = "%#StErr#", sep_color = "%#StErrSep#"}
 local st_mode_right = vim.tbl_extend("force", st_mode, {side = "right", no_before = false})
+local section_2 = {color = "%#StItem2#", sep_color = "%#StSep2#"}
+local section_3 = {color = "%#StItem3#", sep_color = "%#StSep3#"}
+local st_err = {color = "%#StErr#", sep_color = "%#StErrSep#"}
 local st_err_right = vim.tbl_extend("force", st_err, {side = "right"})
-local st_warn = {color = "%#StWarn#", sep_color = "%#StWarnSep#", side = "right", no_after = true}
-local sec_2 = {color = "%#StItem2#", sep_color = "%#StSep2#"}
+local st_warn_right = {color = "%#StWarn#", sep_color = "%#StWarnSep#", side = "right", no_after = true}
 
 local function mode_highlight(mode)
-  if mode == "i" then
-    vim.cmd [[hi StMode guibg=#83a598 guifg=#3c3836]]
-    vim.cmd [[hi StModeSep guifg=#83a598]]
+  if mode == "n" then
+    hi("StModeSep", {guifg = c.normal_bg, guibg = c.normal_fg})
+    hi("StMode", {guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold"})
+  elseif mode == "i" then
+    hi("StModeSep", {guifg = c.insert_bg, guibg = c.insert_fg})
+    hi("StMode", {guifg = c.insert_fg, guibg = c.insert_bg, gui = "bold"})
   elseif vim.tbl_contains({"v", "V", ""}, mode) then
-    vim.cmd [[hi StMode guibg=#fe8019 guifg=#3c3836]]
-    vim.cmd [[hi StModeSep guifg=#fe8019]]
+    hi("StModeSep", {guifg = c.visual_bg, guibg = c.visual_fg})
+    hi("StMode", {guifg = c.visual_fg, guibg = c.visual_bg, gui = "bold"})
   elseif mode == "R" then
-    vim.cmd [[hi StMode guibg=#8ec07c guifg=#3c3836]]
-    vim.cmd [[hi StModeSep guifg=#8ec07c]]
-  else
-    vim.cmd("hi StMode guibg=" .. c.normal_fg .. " guifg=" .. c.normal_bg .. " gui=NONE")
-    vim.cmd("hi StModeSep guifg=" .. c.normal_fg .. " guibg=" .. c.statusline_bg .. " gui=NONE")
+    hi("StModeSep", {guifg = c.replace_bg, guibg = c.replace_fg})
+    hi("StMode", {guifg = c.replace_fg, guibg = c.replace_bg, gui = "bold"})
   end
 end
 
-local function mode_statusline()
-  local mode = vim.fn.mode()
+local function with_icon(value, icon, after)
+  if not value then
+    return value
+  end
+
+  if after then
+    return value .. " " .. icon
+  end
+
+  return icon .. " " .. value
+end
+
+local function get_mode_status()
+  local mode = fn.mode()
   mode_highlight(mode)
   local modeMap = {
     -- n = "NORMAL",
@@ -104,7 +134,7 @@ local function mode_statusline()
     -- s = "SELECT",
     -- S = "S-LINE",
     -- [""] = "S-BLOCK",
-    -- t = "TERMINAL",
+    -- t = "TERMINAL"
     ["n"] = "N",
     ["niI"] = "N",
     ["niR"] = "N",
@@ -132,23 +162,20 @@ local function mode_statusline()
     ["t"] = "T"
   }
 
-  return modeMap[mode] or "?"
+  return with_icon(string.format("%s", modeMap[mode]), colorscheme.icons.mode_symbol, true) or "?"
 end
 
-local function with_icon(value, icon)
-  if not value then
-    return value
-  end
-  return icon .. " " .. value
+local function get_mode_block()
+  get_mode_status()
+  local item = "" --█
+  return item .. "" .. "%*"
 end
 
-local function git_statusline()
+local function get_vcs_status()
   local result = {}
-  if vim.b.gitsigns_head then
-    table.insert(result, vim.b.gitsigns_head)
-  end
-  if vim.b.gitsigns_status then
-    table.insert(result, vim.b.gitsigns_status)
+  local branch = fn["fugitive#head"](7)
+  if branch ~= nil and branch:len() > 0 then
+    table.insert(result, branch)
   end
   if #result == 0 then
     return ""
@@ -156,77 +183,112 @@ local function git_statusline()
   return with_icon(table.concat(result, " "), colorscheme.icons.git_symbol)
 end
 
-local function get_path()
-  local full_path = vim.fn.expand("%:p")
+local function get_filepath()
+  local full_path = fn.expand("%:p")
   local path = full_path
-  local cwd = vim.fn.getcwd()
+  local cwd = fn.getcwd()
   if path == "" then
     path = cwd
   end
   local stats = vim.loop.fs_stat(path)
   if stats and stats.type == "directory" then
-    return vim.fn.fnamemodify(path, ":~")
+    return fn.fnamemodify(path, ":~")
   end
 
   if full_path:match("^" .. cwd) then
-    path = vim.fn.expand("%:.")
+    path = fn.expand("%:.")
   else
-    path = vim.fn.expand("%:~")
+    path = fn.expand("%:~")
   end
 
   if #path < 20 then
     return "%f"
   end
 
-  return vim.fn.pathshorten(path)
+  return fn.pathshorten(path)
 end
 
-function statusline.search_result()
+-- REF: https://github.com/vheon/home/blob/master/.config/nvim/lua/statusline.lua#L114-L132
+local function get_filetype()
+  local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
+  local extension = string.match(filename, "%a+$")
+
+  local ft = vim.bo.filetype
+
+  local devicons = require("nvim-web-devicons")
+  local icon = devicons.get_icon(filename, extension) or ""
+  return table.concat(
+    {
+      icon,
+      " ",
+      ft
+    },
+    ""
+  )
+end
+
+local function search_result()
   if vim.v.hlsearch == 0 then
     return ""
   end
-  local last_search = vim.fn.getreg("/")
+  local last_search = fn.getreg("/")
   if not last_search or last_search == "" then
     return ""
   end
-  local searchcount = vim.fn.searchcount({maxcount = 9999})
-  return last_search .. "(" .. searchcount.current .. "/" .. searchcount.total .. ")"
+  local searchcount = fn.searchcount({maxcount = 9999})
+  return " " .. last_search:gsub("\\v", "") .. "(" .. searchcount.current .. "/" .. searchcount.total .. ")"
 end
 
-local function lsp_status(type)
-  local count = vim.lsp.diagnostic.get_count(0, type)
-  if count > 0 then
-    return count .. " " .. type:sub(1, 1)
-  end
-  return ""
+-- local function lsp_status(type)
+--   local count = vim.lsp.diagnostic.get_count(0, type)
+--   if count > 0 then
+--     return count .. " " .. type:sub(1, 1)
+--   end
+--   return ""
+-- end
+
+local function get_lineinfo()
+  -- vert_sep = "\uf6d8"             "
+  -- ln_sep   = "\ue0a1"             "
+  -- col_sep  = "\uf6da"             "
+  -- perc_sep = "\uf44e"             "
+  return "%l:%c  %p%%/%L"
 end
 
 local function statusline_active()
-  local mode = mode_statusline()
-  local git_status = git_statusline()
-  local search = statusline.search_result()
-  -- local db_ui = vim.fn["db_ui#statusline"]() or ""
-  local ft = vim.bo.filetype
-  local err = lsp_status("Error")
-  local warn = lsp_status("Warning")
+  local mode_block = get_mode_block()
+  local mode = get_mode_status()
+  local vcs_status = get_vcs_status()
+  local search = search_result()
+  -- local db_ui = fn["db_ui#statusline"]() or ""
+  local ft = get_filetype()
+  local lineinfo = get_lineinfo()
+  -- local err = lsp_status("Error")
+  -- local warn = lsp_status("Warning")
+  local lsp_status = get_lsp_status()
+
   local statusline_sections = {
+    sep(mode_block, st_mode_block),
     sep(mode, st_mode),
     "%<",
-    sep(git_status, sec_2, git_status ~= ""),
-    sep(get_path(), vim.bo.modified and st_err or sec_2),
-    sep(" + ", st_err, vim.bo.modified),
-    sep(" - ", st_err, not vim.bo.modifiable),
+    sep(vcs_status, section_2, vcs_status ~= ""),
+    sep(get_filepath(), vim.bo.modified and st_err or section_3),
+    sep(string.format("%s", colorscheme.icons.modified_symbol), st_err, vim.bo.modified),
+    sep(string.format("%s", colorscheme.icons.readonly_symbol), st_err, not vim.bo.modifiable),
     sep("%w", nil, vim.wo.previewwindow),
     sep("%r", nil, vim.bo.readonly),
     sep("%q", nil, vim.bo.buftype == "quickfix"),
     -- sep(db_ui, sec_2, db_ui ~= ""),
     "%=",
-    sep(search, vim.tbl_extend("keep", {side = "right"}, sec_2), search ~= ""),
-    sep(ft, vim.tbl_extend("keep", {side = "right"}, sec_2), ft ~= ""),
-    sep("%l:%c", st_mode_right),
-    sep("%p%%/%L", vim.tbl_extend("keep", {no_after = err == "" and warn == ""}, st_mode_right)),
-    sep(err, vim.tbl_extend("keep", {no_after = warn == ""}, st_err_right), err ~= ""),
-    sep(warn, st_warn, warn ~= ""),
+    sep(lsp_status, vim.tbl_extend("keep", {side = "right"}, section_3), lsp_status ~= ""),
+    sep(search, vim.tbl_extend("keep", {side = "right"}, section_3), search ~= ""),
+    sep(ft, vim.tbl_extend("keep", {side = "right"}, section_2), ft ~= ""),
+    -- sep("%l:%c", st_mode_right),
+    sep(lineinfo, st_mode_right),
+    -- sep(lineinfo, vim.tbl_extend("keep", {no_after = err == "" and warn == ""}, st_mode_right)),
+    -- sep(err, vim.tbl_extend("keep", {no_after = warn == ""}, st_err_right), err ~= ""),
+    -- sep(warn, st_warn_right, warn ~= ""),
+    sep(mode_block, st_mode_block),
     "%<"
   }
 
@@ -238,7 +300,7 @@ local function statusline_inactive()
 end
 
 function statusline.setup()
-  local focus = vim.g.statusline_winid == vim.fn.win_getid()
+  local focus = vim.g.statusline_winid == fn.win_getid()
   if focus then
     return statusline_active()
   end

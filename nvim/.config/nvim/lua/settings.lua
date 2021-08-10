@@ -13,6 +13,7 @@ do -- [ui/appearance] --
       "f", -- relative path
       "m", -- modified flag
       "r",
+      "%{FugitiveStatusline()}",
       "=",
       "{&spelllang}",
       "y", -- filetype
@@ -266,6 +267,20 @@ do -- [bullets] --
   g.bullets_checkbox_markers = " ○◐✗"
   -- g.bullets_set_mappings = 0
 end
+
+-- do
+--   require("gitsigns").setup(
+--     {
+--       signs = {
+--         add = {hl = "GitSignsAdd", text = "│", numhl = "GitSignsAddNr", linehl = "GitSignsAddLn"},
+--         change = {hl = "GitSignsChange", text = "│", numhl = "GitSignsChangeNr", linehl = "GitSignsChangeLn"},
+--         delete = {hl = "GitSignsDelete", text = "_", numhl = "GitSignsDeleteNr", linehl = "GitSignsDeleteLn"},
+--         topdelete = {hl = "GitSignsDelete", text = "‾", numhl = "GitSignsDeleteNr", linehl = "GitSignsDeleteLn"},
+--         changedelete = {hl = "GitSignsChange", text = "~", numhl = "GitSignsChangeNr", linehl = "GitSignsChangeLn"}
+--       }
+--     }
+--   )
+-- end
 
 do -- [fixcursorhold] --
   g.cursorhold_updatetime = 100

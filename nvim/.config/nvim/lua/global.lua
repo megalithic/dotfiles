@@ -132,7 +132,7 @@ end
 ---@param name string
 ---@param opts table
 function M.highlight(name, opts)
-  local force = opts.force or false
+  local force = opts.force or true
   if name and vim.tbl_count(opts) > 0 then
     if opts.link and opts.link ~= "" then
       cmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
@@ -242,7 +242,7 @@ function M.zetty(args)
 end
 
 function M.plugins()
-  M.log("-> syncing plugins..")
+  M.log("paq-nvim: syncing plugins..")
 
   package.loaded["plugins"] = nil
   require("paq"):setup({verbose = false})(require("plugins")):sync()

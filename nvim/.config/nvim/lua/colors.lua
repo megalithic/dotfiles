@@ -14,6 +14,7 @@ local icons = {
   right_sep = utf8(0xe0b4),
   left_sep = utf8(0xe0b6),
   modified_symbol = utf8(0xf085),
+  mode_symbol = utf8(0xf101),
   vcs_symbol = utf8(0xf418),
   git_symbol = utf8(0xe725),
   readonly_symbol = utf8(0xf023),
@@ -25,8 +26,6 @@ local icons = {
   prompt_symbol = utf8(0xf460)
 }
 
--- TODO: thieve @mhanberg's lush theme that wraps everforest/forest_night:
--- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/lush_theme/thicc_forest.lua
 local cs = {
   bg0 = "#323d43",
   bg1 = "#3c474d",
@@ -89,7 +88,7 @@ local status = {
   selection = base.cyan,
   ok_status = base.green,
   error_status = base.light_red,
-  warning_status = base.dark_yellow,
+  warning_status = base.yellow,
   hint_status = base.lighter_gray,
   information_status = base.gray,
   cursorlinenr = base.brown,

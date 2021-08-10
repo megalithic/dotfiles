@@ -24,12 +24,13 @@ PID=$!
 # SPINNER_PARTS="/-\|"
 # SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏" # https://github.com/sindresorhus/cli-spinners/blob/master/spinners.json
 SPINNER_PARTS="⣾⣽⣻⢿⡿⣟⣯⣷"
+SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 ACC=1
 
 printf " "
 while ps a | awk '{print $1}' | grep -q "${PID}"; do
-    printf "\b%s" "${SPINNER_PARTS:ACC++%${#SPINNER_PARTS}:1}"
-    sleep .15
+	printf "\b%s" "${SPINNER_PARTS:ACC++%${#SPINNER_PARTS}:1}"
+	sleep .15
 done
 printf "\b"
 
