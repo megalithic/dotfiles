@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# `git-recent` logs local and unpushed commits if there are any. If not, it logs
+# the local tree against `origin/master`.
+
+set -e
+
+git_log() {
+  git log --graph --decorate --oneline "$@"
+}
+
+has_upstream() {
+  git_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+  [ -n "$(git config "branch.$git_branch.remote" 2>/dev/null)" ]
+}
+
+has_local_commits() {
+  [ "$(git_log '@{upstream}..HEAD' | wc -l)" -gt 0 ]
+}
+
+has_unpulled_commits() {
+  [ "$(git_log 'HEAD..@{upstream}' | wc -l)" -gt 0 ]
+}
+
+if has_upstream && has_local_commits; then
+  git_log "@{upstream}..HEAD" "$@"
+elif has_upstream && has_unpulled_commits; then
+  git_log "HEAD..@{upstream}" "$@"
+else
+  git_log "origin/master..HEAD" "$@"
+fi
