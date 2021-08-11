@@ -18,11 +18,9 @@ vim-node-rpc
 yarn
 pyright
 bash-language-server
-vscode-css-languageserver-bin
+vscode-langservers-extracted
 dockerfile-language-server-nodejs
 @elm-tooling/elm-language-server
-vscode-html-languageserver-bin
-vscode-json-languageserver
 tailwindcss-language-server
 typescript-language-server
 yaml-language-server

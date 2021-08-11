@@ -65,7 +65,7 @@ local function get_lsp_status()
 end
 
 -- REF: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/statusline.lua#L29-L57
-local function sep(item, opts, show)
+local function seg(item, opts, show)
   opts = opts or {}
   if show == nil then
     show = true
@@ -124,50 +124,51 @@ local function get_mode_status()
   local mode = fn.mode()
   mode_highlight(mode)
   local modeMap = {
-    -- n = "NORMAL",
-    -- i = "INSERT",
-    -- R = "REPLACE",
-    -- v = "VISUAL",
-    -- V = "V-LINE",
-    -- c = "COMMAND",
-    -- [""] = "V-BLOCK",
-    -- s = "SELECT",
-    -- S = "S-LINE",
-    -- [""] = "S-BLOCK",
-    -- t = "TERMINAL"
-    ["n"] = "N",
-    ["niI"] = "N",
-    ["niR"] = "N",
-    ["niV"] = "N",
-    ["v"] = "V",
-    ["V"] = "VL",
-    [""] = "VB",
-    ["s"] = "S",
-    ["S"] = "SL",
-    [""] = "SB",
-    ["i"] = "I",
-    ["ic"] = "I",
-    ["ix"] = "I",
-    ["R"] = "R",
-    ["Rc"] = "R",
-    ["Rx"] = "R",
-    ["Rv"] = "VR",
-    ["c"] = "C",
-    ["cv"] = "EX",
-    ["ce"] = "EX",
-    ["r"] = "R",
-    ["rm"] = "MORE",
-    ["r?"] = "CONFIRM",
-    ["!"] = "SHELL",
-    ["t"] = "T"
+    n = "NORMAL",
+    i = "INSERT",
+    R = "REPLACE",
+    v = "VISUAL",
+    V = "V-LINE",
+    c = "COMMAND",
+    [""] = "V-BLOCK",
+    s = "SELECT",
+    S = "S-LINE",
+    [""] = "S-BLOCK",
+    t = "TERMINAL"
+    -- ["n"] = "N",
+    -- ["niI"] = "N",
+    -- ["niR"] = "N",
+    -- ["niV"] = "N",
+    -- ["v"] = "V",
+    -- ["V"] = "VL",
+    -- [""] = "VB",
+    -- ["s"] = "S",
+    -- ["S"] = "SL",
+    -- [""] = "SB",
+    -- ["i"] = "I",
+    -- ["ic"] = "I",
+    -- ["ix"] = "I",
+    -- ["R"] = "R",
+    -- ["Rc"] = "R",
+    -- ["Rx"] = "R",
+    -- ["Rv"] = "VR",
+    -- ["c"] = "C",
+    -- ["cv"] = "EX",
+    -- ["ce"] = "EX",
+    -- ["r"] = "R",
+    -- ["rm"] = "MORE",
+    -- ["r?"] = "CONFIRM",
+    -- ["!"] = "SHELL",
+    -- ["t"] = "T"
   }
 
-  return with_icon(string.format("%s", modeMap[mode]), colorscheme.icons.mode_symbol, true) or "?"
+  -- return with_icon(string.format("%s", modeMap[mode]), colorscheme.icons.mode_symbol, true) or "?"
+  return with_icon(string.format("%s", modeMap[mode]), "", true) or "?"
 end
 
 local function get_mode_block()
   get_mode_status()
-  local item = "" --█
+  local item = "" -- █
   return item .. "" .. "%*"
 end
 
@@ -268,27 +269,28 @@ local function statusline_active()
   local lsp_status = get_lsp_status()
 
   local statusline_sections = {
-    sep(mode_block, st_mode_block),
-    sep(mode, st_mode),
+    seg(mode_block, st_mode_block),
+    seg(mode, st_mode),
     "%<",
-    sep(vcs_status, section_2, vcs_status ~= ""),
-    sep(get_filepath(), vim.bo.modified and st_err or section_3),
-    sep(string.format("%s", colorscheme.icons.modified_symbol), st_err, vim.bo.modified),
-    sep(string.format("%s", colorscheme.icons.readonly_symbol), st_err, not vim.bo.modifiable),
-    sep("%w", nil, vim.wo.previewwindow),
-    sep("%r", nil, vim.bo.readonly),
-    sep("%q", nil, vim.bo.buftype == "quickfix"),
+    -- seg(""),
+    seg(vcs_status, section_2, vcs_status ~= ""),
+    seg(get_filepath(), vim.bo.modified and st_err or section_3),
+    seg(string.format("%s", colorscheme.icons.modified_symbol), st_err, vim.bo.modified),
+    seg(string.format("%s", colorscheme.icons.readonly_symbol), st_err, not vim.bo.modifiable),
+    seg("%w", nil, vim.wo.previewwindow),
+    seg("%r", nil, vim.bo.readonly),
+    seg("%q", nil, vim.bo.buftype == "quickfix"),
     -- sep(db_ui, sec_2, db_ui ~= ""),
     "%=",
-    sep(lsp_status, vim.tbl_extend("keep", {side = "right"}, section_3), lsp_status ~= ""),
-    sep(search, vim.tbl_extend("keep", {side = "right"}, section_3), search ~= ""),
-    sep(ft, vim.tbl_extend("keep", {side = "right"}, section_2), ft ~= ""),
+    seg(lsp_status, vim.tbl_extend("keep", {side = "right"}, section_3), lsp_status ~= ""),
+    seg(search, vim.tbl_extend("keep", {side = "right"}, section_3), search ~= ""),
+    seg(ft, vim.tbl_extend("keep", {side = "right"}, section_2), ft ~= ""),
     -- sep("%l:%c", st_mode_right),
-    sep(lineinfo, st_mode_right),
+    seg(lineinfo, st_mode_right),
     -- sep(lineinfo, vim.tbl_extend("keep", {no_after = err == "" and warn == ""}, st_mode_right)),
     -- sep(err, vim.tbl_extend("keep", {no_after = warn == ""}, st_err_right), err ~= ""),
     -- sep(warn, st_warn_right, warn ~= ""),
-    sep(mode_block, st_mode_block),
+    seg(mode_block, st_mode_block),
     "%<"
   }
 

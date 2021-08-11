@@ -97,13 +97,27 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 end
 
 --- completion
+-- require("cmp_nvim_lsp").setup()
+-- require("cmp").setup {
+--   snippet = {
+--     expand = function(args)
+--       require("luasnip").lsp_expand(args.body)
+--     end
+--   },
+--   sources = {
+--     {name = "nvim_lsp"},
+--     {name = "luasnip"},
+--     {name = "path"},
+--     {name = "buffer"}
+--   }
+-- }
 require("compe").setup {
   enabled = true,
   autocomplete = true,
   debug = false,
   min_length = 1,
   preselect = "disable",
-  -- allow_prefix_unmatch = false,
+  allow_prefix_unmatch = false,
   throttle_time = 80,
   source_timeout = 200,
   incomplete_delay = 400,
@@ -212,19 +226,21 @@ end
 --- move to prev/next item in completion menuone
 --- jump to prev/next snippet's placeholder
 _G.tab_complete = function()
-  if vim.fn.pumvisible() == 1 then
+  if fn.pumvisible() == 1 then
     return t "<C-n>"
   elseif require("luasnip").expand_or_jumpable() then
     return t "<cmd>lua require'luasnip'.jump(1)<Cr>"
   elseif check_back_space() then
     return t "<Tab>"
   else
-    return vim.fn["compe#complete"]()
+    -- return vim.fn["compe#complete"]()
+    require("cmp").complete()
+    return ""
   end
 end
 
 _G.s_tab_complete = function()
-  if vim.fn.pumvisible() == 1 then
+  if fn.pumvisible() == 1 then
     return t "<C-p>"
   elseif require("luasnip").jumpable(-1) then
     return t "<cmd>lua require'luasnip'.jump(-1)<CR>"
@@ -232,6 +248,15 @@ _G.s_tab_complete = function()
     return t "<S-Tab>"
   end
 end
+
+-- _G.cr_complete = function()
+--   local npairs = require("nvim-autopairs")
+--   if fn.pumvisible() ~= 0 then
+--     return npairs.esc("<cr>")
+--   else
+--     return npairs.autopairs_cr()
+--   end
+-- end
 
 _G.cr_complete = function()
   -- if fn.pumvisible() == 1 then

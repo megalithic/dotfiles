@@ -23,6 +23,11 @@ return {
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-compe",
+  -- "hrsh7th/nvim-cmp",
+  -- "hrsh7th/cmp-buffer",
+  -- "hrsh7th/cmp-nvim-lsp",
+  -- "saadparwaiz1/cmp_luasnip",
+  -- "hrsh7th/cmp-path",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "nvim-lua/lsp-status.nvim",
@@ -131,6 +136,7 @@ return {
   "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
+  "milisims/nvim-luaref",
   -- # rust
   -- "rust-lang/rust.vim",
   "racer-rust/vim-racer",
@@ -151,5 +157,6 @@ return {
   -- "hail2u/vim-css3-syntax",
   -- # misc
   "avakhov/vim-yaml",
-  "chr4/nginx.vim"
+  "chr4/nginx.vim",
+  "nanotee/luv-vimdocs"
 }

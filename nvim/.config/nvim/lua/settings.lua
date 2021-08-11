@@ -13,7 +13,7 @@ do -- [ui/appearance] --
       "f", -- relative path
       "m", -- modified flag
       "r",
-      "%{FugitiveStatusline()}",
+      -- "%{FugitiveStatusline()}",
       "=",
       "{&spelllang}",
       "y", -- filetype
@@ -49,6 +49,14 @@ end
 do
   vim.g.startuptime_tries = 10
   -- vim.g.startuptime_exe_args = {"+let g:auto_session_enabled = 0"}
+end
+
+do
+  vim.g.matchup_matchparen_offscreen = {
+    method = "popup",
+    fullwidth = true,
+    highlight = "Normal"
+  }
 end
 
 do -- [nvim-treesitter] --
@@ -434,7 +442,7 @@ do -- [autopairs] --
   )
   require("nvim-autopairs.completion.compe").setup(
     {
-      map_cr = false, --  map <CR> on insert mode
+      map_cr = true, --  map <CR> on insert mode
       map_complete = true -- it will auto insert `(` after select function or method item
     }
   )
@@ -643,7 +651,7 @@ do
     },
     files = {
       prompt = "FILES  ",
-      cmd = "fd --type f --follow --hidden --color=always -E '.git' -E '*.png' -E '*.jpg' --ignore-file '~/.gitignore_global'",
+      cmd = "fd --type f --follow --hidden --color=always -E '.git' -E '*.png' -E '*.jpg' -E '**/Spoons' --ignore-file '~/.gitignore_global'",
       git_icons = false, -- failing if ths is `true`; see failing line: https://github.com/ibhagwan/fzf-lua/blob/main/lua/fzf-lua/core.lua#L53
       git_diff_cmd = "git diff --name-status --relative HEAD",
       actions = {
