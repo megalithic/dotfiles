@@ -42,14 +42,14 @@ export QMK_HOME="$HOME/code/qmk_firmware"
 export GOPATH="$HOME/.go"
 export GOBIN="$GOPATH/bin"
 
-export CARGOPATH="$HOME/.cargo"
-export CARGOBIN="$CARGOPATH/bin"
+# export CARGOPATH="$HOME/.cargo"
+# export CARGOBIN="$CARGOPATH/bin"
 
 export ASDF_DIR="$HOME/.asdf"
 export ASDF_SHIMS="$ASDF_DIR/shims"
 export ASDF_BIN="$ASDF_SHIMS"
 export ASDF_INSTALLS="$ASDF_DIR/installs"
-export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
+# export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 
 export XDG_CONFIG_HOME  # Value is set in .zshenv
 # export XDG_CONFIG_HOME="$HOME/.config"

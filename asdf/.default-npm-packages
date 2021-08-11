@@ -5,11 +5,14 @@ elm-format
 elm-test
 eslint
 eslint-plugin-cypress
+eslint_d
+@typescript-eslint/typescript-estree
 markdownlint
 neovim
 lua-fmt
 prettier
 prettier-plugin-eex
+@fsouza/prettierd
 trash-cli
 tree-sitter-cli
 tree-sitter-markdown
