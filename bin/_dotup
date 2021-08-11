@@ -10,10 +10,8 @@ function ctrl_c() {
 	halt_caffeination
 }
 
-# source "$HOME/.dotfiles/bin/_helpers"
-
 # -- see bin/_helpers
-# TODO: load these in from bin/_helpers
+# TODO: load these in from bin/_helpers.zsh
 function log_raw {
 	printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
 }
@@ -80,6 +78,8 @@ function keep_awake {
 }
 
 # Detect OS
+# TODO: can we use `$VENDOR` instead? -> "apple/__"
+# TODO: can we use `$OSTYPE` instead? -> "darwin*/linux*"
 function detect_platform {
 	if [[ -z $PLATFORM ]]; then
 		log "setting PLATFORM env"
@@ -147,7 +147,7 @@ function setup_xcode_and_git {
 
 function _do_clone {
 	log "cloning dotfiles..."
-	mkdir -p $DOTS
+	mkdir -p "$DOTS"
 	git clone --recursive git://github.com/megalithic/dotfiles.git "$DOTS"
 	log_ok "DONE cloning dotfiles"
 }
@@ -158,7 +158,7 @@ function clone_dotfiles_repo {
 	else
 		if [[ -z $SKIP_DOTFILES_UPDATE ]]; then
 			if ls -A $DOTS | grep -q '^'; then
-				log "~/.dotfiles found; updating to latest.."
+				log "$HOME/.dotfiles found; updating to latest.."
 				cd $DOTS
 				git stash
 				git fetch
@@ -167,7 +167,7 @@ function clone_dotfiles_repo {
 				log_ok "finished fetching and merging latest"
 				cd $HOME
 			else
-				log_warn "~/.dotfiles exists, but is empty; retrying clone.."
+				log_warn "$HOME/.dotfiles exists, but is empty; retrying clone.."
 				rm -rf $DOTS
 				_do_clone
 			fi
@@ -300,6 +300,16 @@ function setup_zsh {
 	log "symlinking and sourcing .zshenv"
 	ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
 	source $HOME/.config/zsh/.zshenv
+
+	log "symlinking and sourcing .zprofile"
+	ln -sfv $HOME/.config/zsh/.zprofile $HOME/.zprofile
+	source $HOME/.config/zsh/.zprofile
+
+	log "installing znap (zsh-snap)"
+	if [[ ! -e $HOME/.znap/znap.zsh ]]; then
+		git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git $HOME/.znap
+		source $HOME/.znap/install.zsh
+	fi
 
 	# compaudit | xargs chmod g-w
 

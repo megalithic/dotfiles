@@ -54,3 +54,4 @@ Brewfile.lock.json
 **/.zcompcache
 tmp
 nvim/**/nvim-python-debug.log_py3_rplugin
+zsh/.config/zsh/**/*.zwc

@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# --> or? #!/bin/zsh
 # shellcheck shell=bash
 
 # REFS:

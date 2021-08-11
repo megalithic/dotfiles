@@ -30,7 +30,7 @@ lsp.handlers["textDocument/publishDiagnostics"] =
       spacing = 4,
       severity_limit = "Warning"
     },
-    signs = {severity_limit = "Warning"},
+    signs = true, -- {severity_limit = "Warning"},
     update_in_insert = false,
     severity_sort = true
   }
@@ -434,8 +434,6 @@ local servers = {
   "bashls",
   "elmls",
   "clangd",
-  "cssls",
-  "html",
   "rust_analyzer",
   "vimls",
   "solargraph"
@@ -453,6 +451,7 @@ for _, ls in ipairs(servers) do
 end
 
 local efm_languages = require("efm")
+local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
 lspconfig["efm"].setup(
   lsp_with_defaults(
     {
@@ -462,7 +461,7 @@ lspconfig["efm"].setup(
         rootMarkers = {"mix.lock", "mix.exs", "elm.json", "package.json", ".git"},
         lintDebounce = 500,
         logLevel = 2,
-        logFile = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log",
+        logFile = efm_log,
         languages = efm_languages
       }
     }
