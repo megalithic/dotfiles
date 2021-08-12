@@ -90,7 +90,13 @@ do -- [nvim-treesitter] --
 		},
 		indent = { enable = true },
 		autotag = { enable = true },
-		context_commentstring = { enable = true },
+		context_commentstring = {
+			enable = true,
+			config = {
+				css = "// %s",
+				lua = "-- %s",
+			},
+		},
 		matchup = { enable = true },
 		rainbow = {
 			enable = true,
@@ -314,26 +320,34 @@ do -- [beacon] --
 	g.beacon_ignore_filetypes = { "fzf" }
 end
 
-do -- [kommentary] --
-	local kommentary_config = require("kommentary.config")
-	kommentary_config.configure_language("default", {
-		single_line_comment_string = "auto",
-		prefer_single_line_comments = true,
-		multi_line_comment_strings = false,
-	})
-	kommentary_config.configure_language("typescriptreact", {
-		single_line_comment_string = "auto",
-		prefer_single_line_comments = true,
-	})
-	kommentary_config.configure_language("vue", {
-		single_line_comment_string = "auto",
-		prefer_single_line_comments = true,
-	})
-	kommentary_config.configure_language("css", {
-		single_line_comment_string = "auto",
-		prefer_single_line_comments = true,
+do -- [nvim-comment] --
+	require("nvim_comment").setup({
+		hook = function()
+			require("ts_context_commentstring.internal").update_commentstring()
+		end,
 	})
 end
+
+-- do -- [kommentary] --
+-- 	local kommentary_config = require("kommentary.config")
+-- 	kommentary_config.configure_language("default", {
+-- 		single_line_comment_string = "auto",
+-- 		prefer_single_line_comments = true,
+-- 		multi_line_comment_strings = false,
+-- 	})
+-- 	kommentary_config.configure_language("typescriptreact", {
+-- 		single_line_comment_string = "auto",
+-- 		prefer_single_line_comments = true,
+-- 	})
+-- 	kommentary_config.configure_language("vue", {
+-- 		single_line_comment_string = "auto",
+-- 		prefer_single_line_comments = true,
+-- 	})
+-- 	kommentary_config.configure_language("css", {
+-- 		single_line_comment_string = "auto",
+-- 		prefer_single_line_comments = true,
+-- 	})
+-- end
 
 do -- [conflict-marker] --
 	-- disable the default highlight group

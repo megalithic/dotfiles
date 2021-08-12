@@ -90,7 +90,8 @@ return {
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
 	"windwp/nvim-autopairs", -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
 	"alvan/vim-closetag",
-	"b3nj5m1n/kommentary",
+	-- "b3nj5m1n/kommentary",
+	"terrortylor/nvim-comment",
 	"tpope/vim-eunuch",
 	"tpope/vim-abolish",
 	"tpope/vim-rhubarb",
