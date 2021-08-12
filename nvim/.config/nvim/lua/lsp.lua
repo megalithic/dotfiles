@@ -44,12 +44,11 @@ end
 
 -- hover
 -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
-local max_width = math.max(math.floor(vim.o.columns * 0.7), 100)
-local max_height = math.max(math.floor(vim.o.lines * 0.3), 30)
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-	vim.lsp.handlers.hover,
-	{ border = "rounded", max_width = max_width, max_height = max_height }
-)
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+	border = "rounded",
+	max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
+	max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
+})
 
 -- formatting
 lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
@@ -66,6 +65,7 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 		if bufnr == api.nvim_get_current_buf() then
 			api.nvim_command("noautocmd :update")
 
+			-- FIXME: do i need this stuffs?
 			-- Trigger post-formatting autocommand which can be used to refresh gitgutter
 			api.nvim_command("silent doautocmd <nomodeline> User FormatterPost")
 		end
@@ -73,22 +73,6 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 end
 
 --- completion
--- TODO: future completion plugin?
--- require("cmp_nvim_lsp").setup()
--- require("cmp").setup {
---   snippet = {
---     expand = function(args)
---       require("luasnip").lsp_expand(args.body)
---     end
---   },
---   sources = {
---     {name = "nvim_lsp"},
---     {name = "luasnip"},
---     {name = "path"},
---     {name = "buffer"}
---   }
--- }
-
 require("compe").setup({
 	enabled = true,
 	autocomplete = true,
@@ -111,27 +95,17 @@ require("compe").setup({
 		}, ","),
 	},
 	source = {
-		luasnip = { menu = "[lsnip]", kind = " ", priority = 11 },
-		nvim_lsp = { menu = "[lsp]", priority = 10 },
-		nvim_lua = { menu = "[lua]", priority = 9 },
+		luasnip = { menu = " [lsnip]", priority = 12 },
+		nvim_lua = { menu = "[lua]", priority = 11 },
+		nvim_lsp = { menu = " [lsp]", priority = 10 },
 		orgmode = { menu = "[org]", priority = 9, filetypes = { "org" } },
 		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
-		path = { menu = "[path]", priority = 8 },
-		emoji = { menu = "[emo]", kind = "ﲃ", priority = 8, filetypes = { "markdown", "gitcommit" } },
-		spell = { menu = "[spl]", priority = 8, filetypes = { "markdown" } },
-		buffer = { menu = "[buf]", kind = " ", priority = 7 },
+		path = { menu = " [path]", priority = 8 },
+		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "gitcommit" } },
+		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org" } },
+		buffer = { menu = " [buf]", priority = 7 },
 		treesitter = false, --{menu = "[ts]", priority = 9},
 	},
-	-- path = {kind = "   (Path)"},
-	-- buffer = {kind = "   (Buffer)"},
-	-- calc = {kind = "   (Calc)"},
-	-- vsnip = {kind = "   (Snippet)"},
-	-- nvim_lsp = {kind = "   (LSP)"},
-	-- nvim_lua = true,
-	-- spell = {kind = "   (Spell)"},
-	-- tags = false,
-	-- vim_dadbod_completion = true,
-	-- emoji = {kind = " ﲃ  (Emoji)"}
 })
 
 require("vim.lsp.protocol").CompletionItemKind = {
