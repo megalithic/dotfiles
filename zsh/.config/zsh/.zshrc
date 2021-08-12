@@ -4,16 +4,15 @@
 
 bindkey -e # ensures we use emacs/readline keybindings
 
-if [[ -e $HOME/.znap/znap.zsh ]]; then
-	zstyle ':znap:*' repos-dir ~/.znap/plugins
-	source $HOME/.znap/znap.zsh
+if [[ $PLATFORM == "macos" ]]; then
+	source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+	source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+	source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+elif [[ $PLATFORM == "linux" ]]; then
+	source "$HOME/builds/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+	source "$HOME/builds/zsh-history-substring-search/zsh-history-substring-search.zsh"
+	source "$HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
-
-# `znap source` automatically downloads and installs your plugins.
-znap source marlonrichert/zsh-autocomplete
-znap source zsh-users/zsh-autosuggestions
-znap source zsh-users/zsh-syntax-highlighting
-znap source zsh-users/zsh-history-substring-search
 
 # NOTE: source order matters!
 for file in $ZDOTDIR/components/{opts,asdf,fzf,aliases,functions,colors,keybindings,completion,ssh,zlua}.zsh; do
@@ -30,8 +29,5 @@ prompt megalithic # load my prompt
 if [[ -e $HOME/.localrc ]]; then
 	source "$HOME/.localrc"
 fi
-
-# leave this commented out so fzf won't try to keep adding it on updates
-# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # zprof # bottom of .zshrc
