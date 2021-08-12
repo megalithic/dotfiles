@@ -44,6 +44,7 @@ vim.lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line
 	end
 
 	opts = opts or {}
+	-- defaults, just in case
 	local prefix = opts.prefix or "■"
 	local spacing = opts.spacing or 4
 
@@ -51,8 +52,15 @@ vim.lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line
 	local virt_texts = { { string.rep(" ", spacing) } }
 	local last = line_diags[#line_diags]
 	if last.message then
+		local message = ""
+		if #line_diags > 1 then
+			message = string.format("%s [%d] %s", prefix, #line_diags, last.message:gsub("\r", ""):gsub("\n", "  "))
+		else
+			message = string.format("%s %s", prefix, last.message:gsub("\r", ""):gsub("\n", "  "))
+		end
+
 		table.insert(virt_texts, {
-			string.format("%s %s", prefix, last.message:gsub("\r", ""):gsub("\n", "  ")),
+			message,
 			vim.lsp.diagnostic._get_severity_highlight_name(last.severity),
 		})
 		return virt_texts
