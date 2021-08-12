@@ -177,11 +177,22 @@ function M.load(req, key)
   end
 end
 
-function M.table_merge(dest, src)
-  for k, v in pairs(src) do
-    dest[k] = v
+function M.table_merge(t1, t2)
+  -- # shallow_merge:
+  -- for k, v in pairs(t2) do
+  --   t1[k] = v
+  -- end
+  -- return t1
+
+  -- # deep_merge:
+  for k, v in pairs(t2) do
+    if (type(v) == "table") and (type(t1[k] or false) == "table") then
+      M.table_merge(t1[k], t2[k])
+    else
+      t1[k] = v
+    end
   end
-  return dest
+  return t1
 end
 
 -- helps with nerdfonts usages

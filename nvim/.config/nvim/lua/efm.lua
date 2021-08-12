@@ -21,23 +21,46 @@ local mix_credo = {
 -- local isort = require "mega.lc.efm.isort"
 -- local flake8 = require "mega.lc.efm.flake8"
 -- local mypy = require "mega.lc.efm.mypy"
-local prettier = {
-  formatCommand = ([[
-        ./node_modules/.bin/prettier
-        ${--config-precedence:configPrecedence}
-        ${--tab-width:tabWidth}
-        ${--single-quote:singleQuote}
-        ${--trailing-comma:trailingComma}
-    ]]):gsub(
-    "\n",
-    ""
-  )
-}
-local eslint = {
-  lintCommand = "./node_modules/.bin/eslint -f unix --stdin",
+local stylua = {formatCommand = "stylua -", formatStdin = true}
+local selene = {
+  lintCommand = "selene --display-style quiet -",
   lintIgnoreExitCode = true,
-  lintStdin = true
+  lintStdin = true,
+  lintFormats = {"%f:%l:%c: %tarning%m", "%f:%l:%c: %tarning%m"}
 }
+
+local prettierLocal = {
+  formatCommand = "./node_modules/.bin/prettier --stdin --stdin-filepath ${INPUT}",
+  formatStdin = true
+}
+
+local prettierGlobal = {
+  formatCommand = "prettier --stdin --stdin-filepath ${INPUT}",
+  formatStdin = true
+}
+
+local eslint = {
+  lintCommand = "eslint_d -f visualstudio --stdin --stdin-filename ${INPUT}",
+  lintIgnoreExitCode = true,
+  lintStdin = true,
+  lintFormats = {"%f(%l,%c): %tarning %m", "%f(%l,%c): %trror %m"}
+}
+
+local shellcheck = {
+  lintCommand = "shellcheck -f gcc -x -",
+  lintStdin = true,
+  lintFormats = {"%f=%l:%c: %trror: %m", "%f=%l:%c: %tarning: %m", "%f=%l:%c: %tote: %m"}
+}
+
+local markdownlint = {
+  lintCommand = "markdownlint -s",
+  lintStdin = true,
+  lintFormats = {"%f:%l:%c %m"}
+}
+
+local fish = {formatCommand = "fish_indent", formatStdin = true}
+
+local eslintPrettier = {prettierGlobal, eslint}
 local shellcheck = {
   lintCommand = "shellcheck -f gcc -x -",
   lintStdin = true,
@@ -57,21 +80,21 @@ local shfmt = {
 return {
   -- ["="] = {misspell},
   vim = {vint},
-  lua = {luafmt},
+  lua = {stylua},
   elixir = {mix_credo},
   eelixir = {mix_credo},
   -- go = {golint, goimports},
   -- python = {black, isort, flake8, mypy},
-  typescript = {prettier, eslint},
-  javascript = {prettier, eslint},
-  typescriptreact = {prettier, eslint},
-  javascriptreact = {prettier, eslint},
-  yaml = {prettier},
-  json = {prettier},
-  html = {prettier},
-  scss = {prettier},
-  css = {prettier},
-  markdown = {prettier},
+  typescript = eslintPrettier,
+  javascript = eslintPrettier,
+  typescriptreact = eslintPrettier,
+  javascriptreact = eslintPrettier,
+  yaml = eslintPrettier,
+  json = eslintPrettier,
+  html = eslintPrettier,
+  scss = eslintPrettier,
+  css = eslintPrettier,
+  markdown = eslintPrettier,
   sh = {shellcheck, shfmt},
   zsh = {shellcheck, shfmt}
   -- tf = {terraform},

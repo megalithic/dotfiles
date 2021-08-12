@@ -1,3 +1,4 @@
+yarn
 babel-eslint
 convert-snippets
 elm
@@ -18,10 +19,12 @@ tree-sitter-cli
 tree-sitter-markdown
 typescript
 vim-node-rpc
-yarn
 pyright
 bash-language-server
 vscode-langservers-extracted
+vscode-css-languageserver-bin
+vscode-html-languageserver-bin
+vscode-json-languageserver
 dockerfile-language-server-nodejs
 @elm-tooling/elm-language-server
 tailwindcss-language-server

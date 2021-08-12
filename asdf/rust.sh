@@ -5,6 +5,8 @@
 # set -x
 
 # -- handling the install of rust with asdf
+# - or - 
+# -- handle with direct install via rustup
 # if (command -v rustup &>/dev/null); then
 #   log "installing rustup"
 # 	rustup install stable
