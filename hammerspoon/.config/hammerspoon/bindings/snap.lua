@@ -48,9 +48,13 @@ function movewindows:exited()
 end
 
 module.windowSplitter = function()
+  -- local windows =
+  --   hs.fnutils.map(
+  --   wh.validWindows(),
+  --   function(win)
   local windows =
     hs.fnutils.map(
-    wh.validWindows(),
+    hs.window.filter.new():getWindows(),
     function(win)
       if win ~= hs.window.focusedWindow() then
         return {
@@ -130,7 +134,6 @@ module.start = function()
         )
       end
     )
-
   end
 
   movewindows:bind(
