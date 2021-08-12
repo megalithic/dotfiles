@@ -147,12 +147,12 @@ function M.lsp.preview(request)
 end
 
 function M.lsp.config()
-	local ret = {}
+	local cfg = {}
 	for _, client in pairs(lsp.get_active_clients()) do
-		ret[client.name] = { root_dir = client.config.root_dir, settings = client.config.settings }
+		cfg[client.name] = { root_dir = client.config.root_dir, settings = client.config.settings }
 	end
 
-	mega.log(ret)
+	mega.log(vim.inspect(cfg))
 end
 
 return M
