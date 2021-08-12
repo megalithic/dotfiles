@@ -146,6 +146,37 @@ function M.lsp.preview(request)
 	end)
 end
 
+function M.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
+	assert(bufnr or line)
+
+	if #line_diags == 0 then
+		return nil
+	end
+
+	opts = opts or {}
+	-- defaults, just in case
+	local prefix = opts.prefix or "■"
+	local spacing = opts.spacing or 4
+
+	-- Create a little more space between virtual text and contents
+	local virt_texts = { { string.rep(" ", spacing) } }
+	local last = line_diags[#line_diags]
+	if last.message then
+		local message = ""
+		if #line_diags > 1 then
+			message = string.format("%s [%d] %s", prefix, #line_diags, last.message:gsub("\r", ""):gsub("\n", "  "))
+		else
+			message = string.format("%s %s", prefix, last.message:gsub("\r", ""):gsub("\n", "  "))
+		end
+
+		table.insert(virt_texts, {
+			message,
+			vim.lsp.diagnostic._get_severity_highlight_name(last.severity),
+		})
+		return virt_texts
+	end
+end
+
 function M.lsp.config()
 	local cfg = {}
 	for _, client in pairs(lsp.get_active_clients()) do

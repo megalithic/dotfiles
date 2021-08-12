@@ -2,6 +2,7 @@ local cmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local colors = require("colors")
+local utils = require("utils")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c")
@@ -34,37 +35,11 @@ lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_pub
 	update_in_insert = false,
 	severity_sort = true,
 })
+
 -- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
 -- REF: https://www.reddit.com/r/neovim/comments/p0jx12/weird_diagnostic_signs_behavior/h898ft6/
 vim.lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
-	assert(bufnr or line)
-
-	if #line_diags == 0 then
-		return nil
-	end
-
-	opts = opts or {}
-	-- defaults, just in case
-	local prefix = opts.prefix or "■"
-	local spacing = opts.spacing or 4
-
-	-- Create a little more space between virtual text and contents
-	local virt_texts = { { string.rep(" ", spacing) } }
-	local last = line_diags[#line_diags]
-	if last.message then
-		local message = ""
-		if #line_diags > 1 then
-			message = string.format("%s [%d] %s", prefix, #line_diags, last.message:gsub("\r", ""):gsub("\n", "  "))
-		else
-			message = string.format("%s %s", prefix, last.message:gsub("\r", ""):gsub("\n", "  "))
-		end
-
-		table.insert(virt_texts, {
-			message,
-			vim.lsp.diagnostic._get_severity_highlight_name(last.severity),
-		})
-		return virt_texts
-	end
+	utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
 end
 
 -- hover
