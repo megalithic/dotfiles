@@ -210,6 +210,7 @@ do -- [orgmode] --
 	-- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
 	-- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
 	--        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
+	--        https://github.com/tkmpypy/dotfiles/blob/master/.config/nvim/lua/plugins.lua#L358-L470
 	require("orgmode").setup({
 		-- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
 		-- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
@@ -228,6 +229,11 @@ do -- [orgmode] --
 		org_agenda_templates = {
 			t = { description = "Task", template = "* TODO %?\n SCHEDULED: %t" },
 			l = { description = "Link", template = "* %?\n%a" },
+			n = {
+				description = "Note",
+				template = "* NOTE %?\n  %u",
+				target = dirs.org .. "/note.org",
+			},
 			j = {
 				description = "Journal",
 				template = "\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?",

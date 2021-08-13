@@ -158,12 +158,6 @@ vim.api.nvim_set_keymap("x", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = t
 vim.api.nvim_set_keymap("n", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
 
--- -- # telescope
--- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")
--- map("n", "<leader>a", ":lua require('telescope.builtin').grep_string({ search = vim.fn.input('grep > ') })<CR>")
--- map("n", "<leader>A", ":lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<CR>")
--- -- map("n", "z=", "<cmd>lua require('telescope.builtin').spell_suggest()<CR>")
-
 -- -- telescope-zettelkasten
 -- function _G.search_zettel()
 --   require("telescope.builtin").find_files {
@@ -185,3 +179,8 @@ map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
+
+-- # orgmode
+vim.api.nvim_set_keymap("n", "<Leader>on", "<cmd>:e ~/Dropbox/org/note.org<cr>", { silent = true, noremap = true })
+vim.api.nvim_set_keymap("n", "<Leader>ot", "<cmd>:e ~/Dropbox/org/todo.org<cr>", { silent = true, noremap = true })
+vim.api.nvim_set_keymap("n", "<Leader>oj", "<cmd>:e ~/Dropbox/org/journal.org<cr>", { silent = true, noremap = true })
