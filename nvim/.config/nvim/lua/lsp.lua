@@ -39,7 +39,7 @@ lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_pub
 -- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
 -- REF: https://www.reddit.com/r/neovim/comments/p0jx12/weird_diagnostic_signs_behavior/h898ft6/
 vim.lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
-	utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
+	return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
 end
 
 -- hover
