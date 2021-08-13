@@ -1,8 +1,5 @@
 local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
-local dirs = {
-	org = "~/Library/Mobile Documents/com~apple~CloudDocs/org",
-	dots = "~/.dotfiles",
-}
+local dirs = mega.dirs
 
 do -- [ui/appearance] --
 	-- fallback in the event our statusline plugins fail to load
@@ -87,6 +84,22 @@ do -- [nvim-treesitter] --
 		highlight = {
 			enable = true,
 			additional_vim_regex_highlighting = true,
+			custom_captures = {
+				["h1"] = "h1",
+				["_h1"] = "_h1",
+				["h2"] = "h2",
+				["_h2"] = "_h2",
+				["h3"] = "h3",
+				["_h3"] = "_h3",
+				["h4"] = "h4",
+				["_h4"] = "_h4",
+				["h5"] = "h5",
+				["_h5"] = "_h5",
+				["emphasis"] = "emphasis",
+				["strong_emphasis"] = "strong_emphasis",
+				["strikethrough"] = "strikethrough",
+				["info_string"] = "info_string",
+			},
 		},
 		indent = { enable = true },
 		autotag = { enable = true },
@@ -108,6 +121,7 @@ do -- [nvim-treesitter] --
 			keymaps = {
 				["."] = "textsubjects-smart",
 				[";"] = "textsubjects-container-outer",
+				-- [";"] = "textsubjects-big",
 			},
 		},
 		textobjects = {
@@ -165,6 +179,17 @@ do -- [indent-blankline] --
 		"neogitstatus",
 		"NvimTree",
 		"Trouble",
+		"git",
+		"org",
+		"orgagenda",
+		"log",
+		"fugitive",
+		"gitcommit",
+		"packer",
+		"vimwiki",
+		"markdown",
+		"json",
+		"txt",
 	}
 	g.indent_blankline_char = "│"
 	g.indent_blankline_use_treesitter = true
@@ -211,6 +236,7 @@ do -- [orgmode] --
 	-- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
 	--        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
 	--        https://github.com/tkmpypy/dotfiles/blob/master/.config/nvim/lua/plugins.lua#L358-L470
+	--        https://github.com/tricktux/dotfiles/blob/master/defaults/.config/nvim/lua/config/plugins/orgmode.lua
 	require("orgmode").setup({
 		-- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
 		-- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
@@ -675,19 +701,27 @@ do -- [fzf] --
 		files = {
 			prompt = "FILES  ",
 			cmd = "fd --type f --follow --hidden --color=always -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' --ignore-file '~/.gitignore_global'",
+			color_icons = "",
 			git_icons = true, -- failing if ths is `true`; see failing line: https://github.com/ibhagwan/fzf-lua/blob/main/lua/fzf-lua/core.lua#L53
 			git_diff_cmd = "git diff --name-status --relative HEAD",
+			cwd = vim.fn.getcwd(),
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
 			},
 		},
 		grep = {
+			input_prompt = "GREP FOR  ",
 			prompt = "GREP  ",
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
 			},
+		},
+		lsp = {
+			prompt = "❯ ",
+			cwd_only = false, -- LSP/diagnostics for cwd only?
+			async_or_timeout = true,
 		},
 	})
 	-- nmap ( '<leader>no', ':silent! lua fzf_orgmode{}<CR>' )

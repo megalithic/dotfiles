@@ -177,6 +177,14 @@ function M.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
 	end
 end
 
+function M.lsp.hover()
+	if next(lsp.buf_get_clients()) == nil then
+		cmd([[execute printf('h %s', expand('<cword>'))]])
+	else
+		lsp.buf.hover()
+	end
+end
+
 function M.lsp.config()
 	local cfg = {}
 	for _, client in pairs(lsp.get_active_clients()) do

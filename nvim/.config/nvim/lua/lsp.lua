@@ -135,31 +135,31 @@ require("vim.lsp.protocol").CompletionItemKind = {
 	-- "", -- Operator      = 24;
 	-- "♛" -- TypeParameter = 25;
 
-	" Text", -- Text
-	" Method", -- Method
-	"ƒ Function", -- Function
-	" Constructor", -- Constructor
-	"識Field", -- Field
-	" Variable", -- Variable
-	" Class", -- Class
-	"ﰮ Interface", -- Interface
-	" Module", -- Module
-	" Property", -- Property
-	" Unit", -- Unit
-	" Value", -- Value
-	"了Enum", -- Enum
-	" Keyword", -- Keyword
-	" Snippet", -- Snippet
-	" Color", -- Color
-	" File", -- File
-	"渚Reference", -- Reference
-	" Folder", -- Folder
-	" Enum", -- Enum
-	" Constant", -- Constant
-	" Struct", -- Struct
-	"鬒Event", -- Event
-	"\u{03a8} Operator", -- Operator
-	" Type Parameter", -- TypeParameter
+	" text", -- Text
+	" method", -- Method
+	"ƒ function", -- Function
+	" constructor", -- Constructor
+	"識field", -- Field
+	" variable", -- Variable
+	" class", -- Class
+	"ﰮ interface", -- Interface
+	" module", -- Module
+	" property", -- Property
+	" unit", -- Unit
+	" value", -- Value
+	"了enum", -- Enum
+	" keyword", -- Keyword
+	" snippet", -- Snippet
+	" color", -- Color
+	" file", -- File
+	"渚ref", -- Reference
+	" folder", -- Folder
+	" enum", -- Enum
+	" const", -- Constant
+	" struct", -- Struct
+	"鬒event", -- Event
+	"\u{03a8} operator", -- Operator
+	" type param", -- TypeParameter
 }
 
 local t = function(str)
@@ -253,6 +253,7 @@ local function on_attach(client, bufnr)
 		floating_window = true,
 		-- hi_parameter = "LspSelectedParam",
 		hint_enable = false,
+		decorator = { "`", "`" },
 		handler_opts = {
 			border = "rounded",
 		},
@@ -283,11 +284,15 @@ local function on_attach(client, bufnr)
 	-- bufmap("gi", "lua vim.lsp.buf.implementation()")
 
 	--- via fzf-lua
-	bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
-	bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
-	bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
-	bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
-	bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
+	-- # https://github.com/ibhagwan/fzf-lua/issues/39#issuecomment-897099304 (LSP async/sync)
+	--
+	if pcall(require, "fzf-lua") then
+		bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
+		bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
+		bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
+		bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
+		bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
+	end
 
 	--- diagnostics navigation mappings
 	bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
@@ -302,9 +307,15 @@ local function on_attach(client, bufnr)
 		"<leader>ld",
 		"lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	)
+	bufmap("K", "lua require('utils').lsp.hover()")
 	bufmap("<C-k>", "lua vim.lsp.buf.signature_help()")
 	bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
 	bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
+
+	if client.resolved_capabilities.code_lens then
+		bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
+		au([[CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()]])
+	end
 
 	--- trouble mappings
 	map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
@@ -318,10 +329,6 @@ local function on_attach(client, bufnr)
 
 	-- au "CursorHold, CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
-
-	if vim.bo.ft ~= "vim" then
-		bufmap("K", "lua vim.lsp.buf.hover()")
-	end
 
 	--- commands
 	FormatRange = function()

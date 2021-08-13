@@ -4,16 +4,17 @@
 log "setting up asdf for all platforms.."
 
 # clone asdf-vm (no need for homebrew version of asdf if we're doing this)
-if [[ ! -d "$HOME/.asdf" ]]
-then
-  log_warn "$HOME/.asdf not found; cloning it now.."
-  git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
+if [[ ! -d "$HOME/.asdf" ]]; then
+	log_warn "$HOME/.asdf not found; cloning it now.."
+	git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf
 fi
 
 source "$HOME/.asdf/asdf.sh"
 
 log "adding asdf plugins.."
 # preferred plugins..
+#  -- generic things to manage with asdf:
+#     https://github.com/asdf-community/asdf-link
 asdf plugin-add ruby https://github.com/asdf-vm/asdf-ruby.git
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
@@ -22,7 +23,8 @@ asdf plugin-add golang https://github.com/kennyp/asdf-golang.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
 asdf plugin-add rust https://github.com/code-lever/asdf-rust.git
 asdf plugin-add python https://github.com/danhper/asdf-python.git
-asdf plugin add perl https://github.com/ouest/asdf-perl.git
+# asdf plugin add perl https://github.com/ouest/asdf-perl.git
+asdf plugin add perl https://github.com/chrolis/asdf-perl.git
 asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git
 bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-keyring'
 

@@ -1,4 +1,4 @@
-local api = vim.api
+local api, cmd = vim.api, vim.cmd
 local map = mega.map
 
 -- [convenience mappings] ------------------------------------------------------
@@ -120,7 +120,7 @@ map("v", "<Leader>gh", "<cmd>GBrowse<CR>")
 map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
 
 -- # slash
-vim.cmd([[noremap <plug>(slash-after) zz]])
+cmd([[noremap <plug>(slash-after) zz]])
 api.nvim_exec(
 	[[
 if has('timers')
@@ -153,25 +153,10 @@ function repeat_ft(reverse)
 	ls.ft["instant-repeat?"] = true
 	ls.ft:to(reverse, ls.ft["prev-t-like?"])
 end
-vim.api.nvim_set_keymap("n", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("x", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
-
--- -- telescope-zettelkasten
--- function _G.search_zettel()
---   require("telescope.builtin").find_files {
---     prompt_title = "Search ZK",
---     hidden = true,
---     shorten_path = false,
---     cwd = "~/Documents/_zettel"
---   }
--- end
--- map("n", "<leader>fz", "<cmd>lua _G.search_zettel()<cr>")
-
--- -- telescope-orgmode
--- map("n", "<leader>os", [[<cmd>lua require('telescope.builtin').live_grep({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
--- map("n", "<leader>of", [[<cmd>lua require('telescope.builtin').find_files({search_dirs={'$HOME/Nextcloud/org'}})<cr>]])
+api.nvim_set_keymap("n", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = true, silent = true })
+api.nvim_set_keymap("x", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = true, silent = true })
+api.nvim_set_keymap("n", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
+api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
 
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
@@ -179,8 +164,37 @@ map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
-
--- # orgmode
-vim.api.nvim_set_keymap("n", "<Leader>on", "<cmd>:e ~/Dropbox/org/note.org<cr>", { silent = true, noremap = true })
-vim.api.nvim_set_keymap("n", "<Leader>ot", "<cmd>:e ~/Dropbox/org/todo.org<cr>", { silent = true, noremap = true })
-vim.api.nvim_set_keymap("n", "<Leader>oj", "<cmd>:e ~/Dropbox/org/journal.org<cr>", { silent = true, noremap = true })
+-- function fzf_projectionist()
+-- 	local action = require("fzf.actions").action
+-- 	coroutine.wrap(function()
+-- 		local choice = require("fzf").fzf(mega.dirs.project, '--preview="ls -la --color=auto {}"')
+--
+-- 		if choice then
+-- 			require("fzf-lua").files({
+-- 				prompt = "Project » ",
+-- 				cwd = choice[1],
+-- 			})
+-- 			vim.cmd("chdir" .. choice[1])
+-- 		end
+-- 	end)()
+-- end
+function fzf_orgfiles()
+	require("fzf-lua").files({
+		cwd = vim.fn.expand(mega.dirs.org),
+		prompt = "ORGFILES  ",
+	})
+	cmd("chdir " .. mega.dirs.org)
+end
+map("n", "<leader>fo", "<cmd>lua fzf_orgfiles()<cr>")
+-- function fzf_zettels()
+-- 	require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZETTELS  " })
+-- 	cmd("chdir " .. mega.dirs.zettel)
+-- end
+-- map("n", "<leader>fz", "<cmd>lua fzf_zettels()<cr>")
+-- map("n", "<leader>fp", "<cmd>lua fzf_projectionist()<cr>")
+-- nmap ('<leader>no', ':silent! lua fzf_orgmode{}<CR>')
+-- nmap ('<leader>nr', ':silent! lua fzf_orgmode{}<CR>')
+-- nmap ('<leader>nd', ":silent! e " .. ROAM .. '/notebook.org<cr>')
+-- api.nvim_set_keymap("n", "<Leader>on", "<cmd>:e ~/Dropbox/org/note.org<cr>", { silent = true, noremap = true })
+-- api.nvim_set_keymap("n", "<Leader>ot", "<cmd>:e ~/Dropbox/org/todo.org<cr>", { silent = true, noremap = true })
+-- api.nvim_set_keymap("n", "<Leader>oj", "<cmd>:e ~/Dropbox/org/journal.org<cr>", { silent = true, noremap = true })

@@ -6,8 +6,8 @@ au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' 
 au([[StdinReadPost * set buftype=nofile]])
 au([[FileType help wincmd L]])
 au([[CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
+-- au([[VimResized * wincmd =]])
 au([[VimResized * lua require('golden_size').on_win_enter()]])
-au([[VimResized * wincmd =]])
 au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
 au([[Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
 au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
@@ -17,7 +17,7 @@ au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
 au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
-au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
+-- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
 --  Open multiple files in splits
 exec([[
@@ -57,6 +57,16 @@ augroup("focus", {
 		events = { "BufLeave", "WinLeave" },
 		targets = { "*" },
 		command = "silent setlocal norelativenumber nonumber colorcolumn=0",
+	},
+	{
+		events = { "BufEnter", "FileType", "FocusGained", "InsertLeave" },
+		targets = { "*" },
+		command = "silent setlocal relativenumber number",
+	},
+	{
+		events = { "FocusLost", "BufLeave", "InsertEnter", "TermOpen" },
+		targets = { "*" },
+		command = "silent setlocal norelativenumber number",
 	},
 })
 

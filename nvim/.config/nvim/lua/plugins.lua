@@ -45,6 +45,7 @@ return {
 	{ "nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"] },
 	"nvim-treesitter/nvim-treesitter-textobjects",
 	"RRethy/nvim-treesitter-textsubjects",
+	"mfussenegger/nvim-ts-hint-textobject",
 	"ikatyang/tree-sitter-markdown",
 	"JoosepAlviste/nvim-ts-context-commentstring",
 	"windwp/nvim-ts-autotag",
@@ -54,7 +55,6 @@ return {
 	-- (file/document navigation) --
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
-	"archaict/fzf-lua-extensions",
 	"ggandor/lightspeed.nvim",
 	--
 	-- (text objects) --
@@ -89,7 +89,6 @@ return {
 	--
 	-- (the rest...) --
 	"nacro90/numb.nvim",
-	"ojroques/vim-oscyank",
 	"farmergreg/vim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
 	"windwp/nvim-autopairs", -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
@@ -121,7 +120,7 @@ return {
 	-- # markdown/prose
 	"plasticboy/vim-markdown",
 	{ "iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"] },
-	{ "harshad1/bullets.vim", branch = "performance_improvements" }, -- "dkarter/bullets.vim"
+	{ "harshad1/bullets.vim", branch = "performance_improvements" },
 	"kristijanhusak/orgmode.nvim",
 	"akinsho/org-bullets.nvim",
 	"megalithic/zk.nvim",
