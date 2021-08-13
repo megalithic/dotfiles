@@ -178,14 +178,14 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 -- 		end
 -- 	end)()
 -- end
-function fzf_orgfiles()
-	require("fzf-lua").files({
-		cwd = vim.fn.expand(mega.dirs.org),
-		prompt = "ORGFILES  ",
-	})
-	cmd("chdir " .. mega.dirs.org)
-end
-map("n", "<leader>fo", "<cmd>lua fzf_orgfiles()<cr>")
+-- function fzf_orgfiles()
+-- 	require("fzf-lua").files({
+-- 		cwd = vim.fn.expand(mega.dirs.org),
+-- 		prompt = "ORGFILES  ",
+-- 	})
+-- 	cmd("chdir " .. mega.dirs.org)
+-- end
+-- map("n", "<leader>fo", "<cmd>lua fzf_orgfiles()<cr>")
 -- function fzf_zettels()
 -- 	require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZETTELS  " })
 -- 	cmd("chdir " .. mega.dirs.zettel)

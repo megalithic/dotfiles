@@ -20,6 +20,7 @@ cmd("runtime .vimrc")
 -- }}}
 
 -- [ loaders ] ------------------------------------------------------------- {{{
+--
 load("preflight")
 load("colors").setup()
 load("settings")
@@ -29,4 +30,5 @@ load("mappings")
 load("megaline")
 load("ftplugin").setup()
 load("ftplugin").trigger_ft()
+--
 -- }}}

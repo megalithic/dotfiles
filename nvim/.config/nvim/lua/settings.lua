@@ -1,25 +1,24 @@
 local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
 local dirs = mega.dirs
 
-do -- [ui/appearance] --
+do -- [nvim options/ui/appearance] --
 	-- fallback in the event our statusline plugins fail to load
 	set.statusline = table.concat({
 		"%2{mode()} | ",
 		"f", -- relative path
 		"m", -- modified flag
 		"r",
-		-- "%{FugitiveStatusline()}",
+		"%{FugitiveStatusline()}",
 		"=",
 		"{&spelllang}",
 		"y", -- filetype
 		"8(%l,%c%)", -- line, column
 		"8p%% ", -- file percentage
 	}, " %")
-end
 
-do -- [nvim options] --
 	set.foldmethod = "expr"
 	set.foldexpr = "nvim_treesitter#foldexpr()"
+	set.indentexpr = "nvim_treesitter#indent()"
 	-- set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 	g.no_man_maps = true
 	g.vim_json_syntax_conceal = false
@@ -42,7 +41,6 @@ end
 
 do
 	vim.g.startuptime_tries = 10
-	-- vim.g.startuptime_exe_args = {"+let g:auto_session_enabled = 0"}
 end
 
 do
