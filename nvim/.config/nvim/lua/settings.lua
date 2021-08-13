@@ -23,7 +23,7 @@ end
 do -- [nvim options] --
 	set.foldmethod = "expr"
 	set.foldexpr = "nvim_treesitter#foldexpr()"
-	set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
+	-- set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 	g.no_man_maps = true
 	g.vim_json_syntax_conceal = false
 	g.vim_json_conceal = false
@@ -630,8 +630,8 @@ do
 		},
 		files = {
 			prompt = "FILES  ",
-			cmd = "fd --type f --follow --hidden --color=always -E '.git' -E '*.png' -E '*.jpg' -E '**/Spoons' --ignore-file '~/.gitignore_global'",
-			git_icons = false, -- failing if ths is `true`; see failing line: https://github.com/ibhagwan/fzf-lua/blob/main/lua/fzf-lua/core.lua#L53
+			cmd = "fd --type f --follow --hidden --color=always -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' --ignore-file '~/.gitignore_global'",
+			git_icons = true, -- failing if ths is `true`; see failing line: https://github.com/ibhagwan/fzf-lua/blob/main/lua/fzf-lua/core.lua#L53
 			git_diff_cmd = "git diff --name-status --relative HEAD",
 			actions = {
 				["default"] = actions.file_vsplit,

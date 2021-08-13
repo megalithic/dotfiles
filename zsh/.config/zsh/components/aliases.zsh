@@ -166,6 +166,7 @@ alias priv="cd $PRIVATES"
 alias ot=dot
 alias code="cd $HOME/code"
 alias repos="cd $HOME/code"
+alias play="cd $HOME/code/playground"
 alias logs="cd $HOME/code/logs/"
 alias docs="cd $HOME/Documents"
 alias box="cd $HOME/Dropbox/"

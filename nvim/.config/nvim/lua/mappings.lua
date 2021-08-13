@@ -7,11 +7,11 @@ local map = mega.map
 api.nvim_exec("silent! unmap [%", true)
 api.nvim_exec("silent! unmap ]%", true)
 
-map("n", "<Tab>", "%", {noremap = false})
-map("s", "<Tab>", "%", {noremap = false})
-map("n", "<Tab>", "%", {noremap = true})
-map("v", "<Tab>", "%", {noremap = true})
-map("x", "<Tab>", "%", {noremap = true})
+map("n", "<Tab>", "%", { noremap = false })
+map("s", "<Tab>", "%", { noremap = false })
+map("n", "<Tab>", "%", { noremap = true })
+map("v", "<Tab>", "%", { noremap = true })
+map("x", "<Tab>", "%", { noremap = true })
 
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
@@ -38,32 +38,32 @@ map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
 -- TODO: merge the two remaps of j/k below
 -- Jumplist mutations
-map("n", "k", '(v:count > 5 ? "m\'" . v:count : \'\') . \'k\'', {expr = true})
-map("n", "j", '(v:count > 5 ? "m\'" . v:count : \'\') . \'j\'', {expr = true})
+map("n", "k", "(v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
+map("n", "j", "(v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
 
 -- Remap for dealing with word wrap
-map("n", "k", "v:count == 0 ? 'gk' : 'k'", {expr = true})
-map("n", "j", "v:count == 0 ? 'gj' : 'j'", {expr = true})
+map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true })
+map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true })
 
 -- Clear highlights
 api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
 
 -- Keep line in middle of buffer when searching
-map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", {noremap = true, expr = true})
-map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", {noremap = true, expr = true})
+map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { noremap = true, expr = true })
+map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { noremap = true, expr = true })
 
 -- Readline bindings (command)
 local rl_bindings = {
-  {lhs = "<c-a>", rhs = "<home>", opts = {noremap = true}},
-  {lhs = "<c-e>", rhs = "<end>", opts = {noremap = true}},
-  {lhs = "<c-f>", rhs = "<right>", opts = {noremap = true}},
-  {lhs = "<c-b>", rhs = "<left>", opts = {noremap = true}},
-  {lhs = "<c-p>", rhs = "<up>", opts = {noremap = true}},
-  {lhs = "<c-n>", rhs = "<down>", opts = {noremap = true}},
-  {lhs = "<c-d>", rhs = "<del>", opts = {noremap = true}}
+	{ lhs = "<c-a>", rhs = "<home>", opts = { noremap = true } },
+	{ lhs = "<c-e>", rhs = "<end>", opts = { noremap = true } },
+	{ lhs = "<c-f>", rhs = "<right>", opts = { noremap = true } },
+	{ lhs = "<c-b>", rhs = "<left>", opts = { noremap = true } },
+	{ lhs = "<c-p>", rhs = "<up>", opts = { noremap = true } },
+	{ lhs = "<c-n>", rhs = "<down>", opts = { noremap = true } },
+	{ lhs = "<c-d>", rhs = "<del>", opts = { noremap = true } },
 }
 for _, binding in ipairs(rl_bindings) do
-  map("c", binding.lhs, binding.rhs, binding.opts)
+	map("c", binding.lhs, binding.rhs, binding.opts)
 end
 
 -- Undo breakpoints
@@ -91,8 +91,8 @@ map("n", "<leader>x", "<cmd>luafile %<cr>")
 
 -- Things 3
 api.nvim_exec(
-  [[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
-  true
+	[[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
+	true
 )
 map("n", "<Leader>T", "<cmd>Things<CR>")
 
@@ -122,13 +122,13 @@ map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
 -- # slash
 vim.cmd([[noremap <plug>(slash-after) zz]])
 api.nvim_exec(
-  [[
+	[[
 if has('timers')
   " Blink 2 times with 50ms interval
   noremap <expr> <plug>(slash-after) slash#blink(2, 50)
 endif
   ]],
-  true
+	true
 )
 
 -- # easy-align
@@ -149,14 +149,14 @@ map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
 -- # lightspeed
 function repeat_ft(reverse)
-  local ls = require "lightspeed"
-  ls.ft["instant-repeat?"] = true
-  ls.ft:to(reverse, ls.ft["prev-t-like?"])
+	local ls = require("lightspeed")
+	ls.ft["instant-repeat?"] = true
+	ls.ft:to(reverse, ls.ft["prev-t-like?"])
 end
-vim.api.nvim_set_keymap("n", ";", "<cmd>lua repeat_ft(false)<cr>", {noremap = true, silent = true})
-vim.api.nvim_set_keymap("x", ";", "<cmd>lua repeat_ft(false)<cr>", {noremap = true, silent = true})
-vim.api.nvim_set_keymap("n", ",", "<cmd>lua repeat_ft(true)<cr>", {noremap = true, silent = true})
-vim.api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", {noremap = true, silent = true})
+vim.api.nvim_set_keymap("n", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("x", ";", "<cmd>lua repeat_ft(false)<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", { noremap = true, silent = true })
 
 -- -- # telescope
 -- map("n", "<leader>ff", "<cmd>lua require('telescope.builtin').git_files()<cr>")
@@ -181,6 +181,7 @@ vim.api.nvim_set_keymap("x", ",", "<cmd>lua repeat_ft(true)<cr>", {noremap = tru
 
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
+map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
