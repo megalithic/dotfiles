@@ -84,11 +84,11 @@ return {
 	-- research to supplement vim-test: rcarriga/vim-ultest
 	"tpope/vim-ragtag",
 	"rizzatti/dash.vim",
-	"skywind3000/vim-quickui",
 	"sgur/vim-editorconfig",
 	{ "zenbro/mirror.vim", opt = true },
 	--
 	-- (the rest...) --
+	"nacro90/numb.nvim",
 	"ojroques/vim-oscyank",
 	"farmergreg/vim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration

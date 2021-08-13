@@ -654,6 +654,10 @@ do -- [projectionist] --
 end
 
 do
+	require("numb").setup()
+end
+
+do -- [fzf] --
 	local actions = require("fzf-lua.actions")
 	require("fzf-lua").setup({
 		fzf_layout = "default",

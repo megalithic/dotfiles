@@ -1,6 +1,6 @@
 local colorscheme = require("colors")
 local hi, au = mega.highlight, mega.au
-local fn, cmd = vim.fn, vim.cmd
+local fn, cmd, bo, wo = vim.fn, vim.cmd, vim.bo, vim.wo
 local lsp_status = require("lsp-status")
 
 local statusline = {}
@@ -220,7 +220,7 @@ local function get_filetype()
 	local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
 	local extension = string.match(filename, "%a+$")
 
-	local ft = vim.bo.filetype
+	local ft = bo.filetype
 
 	local devicons = require("nvim-web-devicons")
 	local icon = devicons.get_icon(filename, extension) or ""
@@ -243,56 +243,38 @@ local function search_result()
 	return " " .. last_search:gsub("\\v", "") .. "(" .. searchcount.current .. "/" .. searchcount.total .. ")"
 end
 
--- local function lsp_status(type)
---   local count = vim.lsp.diagnostic.get_count(0, type)
---   if count > 0 then
---     return count .. " " .. type:sub(1, 1)
---   end
---   return ""
--- end
-
 local function get_lineinfo()
 	-- vert_sep = "\uf6d8"             "
 	-- ln_sep   = "\ue0a1"             "
 	-- col_sep  = "\uf6da"             "
 	-- perc_sep = "\uf44e"             "
-	return "%l:%c  %p%%/%L"
+	local item = ""
+	return "" .. item .. " %l:%c  %p%%/%L%*"
 end
 
 local function statusline_active()
 	local mode_block = get_mode_block()
-	local mode = get_mode_status()
 	local vcs_status = get_vcs_status()
 	local search = search_result()
-	-- local db_ui = fn["db_ui#statusline"]() or ""
 	local ft = get_filetype()
-	local lineinfo = get_lineinfo()
-	-- local err = lsp_status("Error")
-	-- local warn = lsp_status("Warning")
 	local lsp = get_lsp_status()
 
 	local statusline_sections = {
 		seg(mode_block, s.mode_block),
-		seg(mode, s.mode),
+		seg(get_mode_status(), s.mode),
 		"%<",
-		-- seg(""),
 		seg(vcs_status, s.section_2, vcs_status ~= ""),
-		seg(get_filepath(), vim.bo.modified and s.err or s.section_3),
-		seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), vim.bo.modified),
-		seg(string.format("%s", colorscheme.icons.readonly_symbol), s.err, not vim.bo.modifiable),
-		seg("%w", nil, vim.wo.previewwindow),
-		seg("%r", nil, vim.bo.readonly),
-		seg("%q", nil, vim.bo.buftype == "quickfix"),
-		-- seg(db_ui, sec_2, db_ui ~= ""),
+		seg(get_filepath(), bo.modified and s.err or s.section_3),
+		seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), bo.modified),
+		seg(string.format("%s", colorscheme.icons.readonly_symbol), s.err, not bo.modifiable),
+		seg("%w", nil, wo.previewwindow),
+		seg("%r", nil, bo.readonly),
+		seg("%q", nil, bo.buftype == "quickfix"),
 		"%=",
 		seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),
 		seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
 		seg(ft, vim.tbl_extend("keep", { side = "right" }, s.section_2), ft ~= ""),
-		-- seg("%l:%c", st_mode_right),
-		seg(lineinfo, s.mode_right),
-		-- seg(lineinfo, vim.tbl_extend("keep", {no_after = err == "" and warn == ""}, st_mode_right)),
-		-- seg(err, vim.tbl_extend("keep", {no_after = warn == ""}, st_err_right), err ~= ""),
-		-- seg(warn, st_warn_right, warn ~= ""),
+		seg(get_lineinfo(), s.mode_right),
 		seg(mode_block, s.mode_block),
 		"%<",
 	}

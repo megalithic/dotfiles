@@ -4,8 +4,15 @@
 -- * https://github.com/mnarrell/dotfiles/blob/main/nvim/lua/ftplugin/markdown.lua
 -- * https://vim.works/2019/03/16/using-markdown-in-vim/
 return function(_) -- bufnr
-  vim.cmd([[syntax match todoCheckbox "\[\ \]" conceal cchar=]])
-  vim.cmd([[syntax match todoCheckbox "\[x\]" conceal cchar=]])
+  -- " source: https://gist.github.com/huytd/668fc018b019fbc49fa1c09101363397
+  -- " based on: https://www.reddit.com/r/vim/comments/h8pgor/til_conceal_in_vim/
+  -- " youtube video: https://youtu.be/UuHJloiDErM?t=793
+  -- Custom conceal (does not work with existing syntax highlight plugin)
+  vim.cmd([[syntax match todoCheckbox "\v.*\[\ \]"hs=e-2 conceal cchar=]])
+  vim.cmd([[syntax match todoCheckbox "\v.*\[x\]"hs=e-2 conceal cchar=]])
+  mega.highlight("Conceal", {guibg="NONE"})
+  -- https://vi.stackexchange.com/a/4003/16249
+  vim.cmd([[syntax match NoSpellAcronym '\<\(\u\|\d\)\{3,}s\?\>' contains=@NoSpell]])
 
   vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 
@@ -15,7 +22,7 @@ return function(_) -- bufnr
   vim.o.wrapmargin = 0
   vim.o.list = false
   vim.o.wrap = true
-  vim.cmd([[setlocal spell linebreak textwidth=0 wrap conceallevel=0]])
+  vim.cmd([[setlocal spell linebreak textwidth=0 wrap conceallevel=2]])
 
   vim.cmd([[setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-]])
 

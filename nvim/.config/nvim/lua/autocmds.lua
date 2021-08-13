@@ -20,95 +20,91 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
 --  Open multiple files in splits
-exec(
-  [[
+exec([[
       if argc() > 1
         silent vertical all | lua require('golden_size').on_win_enter()
       endif
-      ]]
+      ]])
+
+--  Trim Whitespace
+vim.api.nvim_exec(
+	[[
+    fun! TrimWhitespace()
+        let l:save = winsaveview()
+        keeppatterns %s/\s\+$//e
+        call winrestview(l:save)
+    endfun
+    autocmd BufWritePre * :call TrimWhitespace()
+]],
+	false
 )
 
-augroup(
-  "paq",
-  {
-    {
-      events = {"BufWritePost"},
-      targets = {"packages.lua"},
-      command = [[luafile %]]
-    }
-  }
-)
+augroup("paq", {
+	{
+		events = { "BufWritePost" },
+		targets = { "packages.lua" },
+		command = [[luafile %]],
+	},
+})
 
-augroup(
-  "focus",
-  {
-    {
-      events = {"BufEnter", "WinEnter"},
-      targets = {"*"},
-      command = "silent setlocal relativenumber number colorcolumn=81"
-    },
-    {
-      events = {"BufLeave", "WinLeave"},
-      targets = {"*"},
-      command = "silent setlocal norelativenumber nonumber colorcolumn=0"
-    }
-  }
-)
+augroup("focus", {
+	{
+		events = { "BufEnter", "WinEnter" },
+		targets = { "*" },
+		command = "silent setlocal relativenumber number colorcolumn=81",
+	},
+	{
+		events = { "BufLeave", "WinLeave" },
+		targets = { "*" },
+		command = "silent setlocal norelativenumber nonumber colorcolumn=0",
+	},
+})
 
-augroup(
-  "yank_highlighted_region",
-  {
-    {
-      events = {"TextYankPost"},
-      targets = {"*"},
-      command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 170, on_macro = true })"
-    }
-  }
-)
+augroup("yank_highlighted_region", {
+	{
+		events = { "TextYankPost" },
+		targets = { "*" },
+		command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 170, on_macro = true })",
+	},
+})
 
-augroup(
-  "terminal",
-  {
-    {
-      events = {"TermClose"},
-      targets = {"*"},
-      command = "noremap <buffer><silent><ESC> :bd!<CR>"
-    },
-    {
-      events = {"TermOpen"},
-      targets = {"*"},
-      command = [[setlocal nonumber norelativenumber conceallevel=0]]
-    },
-    {
-      events = {"TermOpen"},
-      targets = {"*"},
-      command = "startinsert"
-    }
-  }
-)
+augroup("terminal", {
+	{
+		events = { "TermClose" },
+		targets = { "*" },
+		command = "noremap <buffer><silent><ESC> :bd!<CR>",
+	},
+	{
+		events = { "TermOpen" },
+		targets = { "*" },
+		command = [[setlocal nonumber norelativenumber conceallevel=0]],
+	},
+	{
+		events = { "TermOpen" },
+		targets = { "*" },
+		command = "startinsert",
+	},
+})
 
-augroup(
-  "filetypes",
-  {
-    {
-      events = {"BufEnter", "BufRead", "BufNewFile"},
-      targets = {"*.lexs"},
-      command = "set filetype=elixir"
-    },
-    {
-      events = {"BufEnter", "BufRead", "BufNewFile"},
-      targets = {"Brewfile"},
-      command = "set filetype=ruby"
-    },
-    {
-      events = {"BufEnter", "BufRead", "BufNewFile"},
-      targets = {".eslintrc"},
-      command = "set filetype=javascript"
-    }
-    -- {
-    --   events = {"BufEnter", "BufNewFile", "FileType"},
-    --   targets = {"*.md"},
-    --   command = "lua require('ftplugin.markdown')()"
-    -- }
-  }
-)
+augroup("filetypes", {
+	{
+		events = { "BufEnter", "BufRead", "BufNewFile" },
+		targets = { "*.lexs" },
+		command = "set filetype=elixir",
+	},
+	{
+		events = { "BufEnter", "BufRead", "BufNewFile" },
+		targets = { "Brewfile" },
+		command = "set filetype=ruby",
+	},
+	{
+		events = { "BufEnter", "BufRead", "BufNewFile" },
+		targets = { ".eslintrc" },
+		command = "set filetype=javascript",
+	},
+	-- {
+	--   events = {"BufEnter", "BufNewFile", "FileType"},
+	--   targets = {"*.md"},
+	--   command = "lua require('ftplugin.markdown')()"
+	-- }
+})

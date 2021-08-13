@@ -4,7 +4,7 @@ local lspconfig = require("lspconfig")
 local colors = require("colors")
 local utils = require("utils")
 
-set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
+set.completeopt = { "menuone", "noselect", "noinsert" }
 set.shortmess:append("c")
 
 do
@@ -100,7 +100,7 @@ require("compe").setup({
 		nvim_lsp = { menu = " [lsp]", priority = 10 },
 		orgmode = { menu = "[org]", priority = 9, filetypes = { "org" } },
 		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
-		path = { menu = " [path]", priority = 8 },
+		path = { menu = "", kind = " [path]", priority = 8 },
 		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "gitcommit" } },
 		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org" } },
 		buffer = { menu = " [buf]", priority = 7 },
@@ -139,7 +139,7 @@ require("vim.lsp.protocol").CompletionItemKind = {
 	" Method", -- Method
 	"ƒ Function", -- Function
 	" Constructor", -- Constructor
-	"識 Field", -- Field
+	"識Field", -- Field
 	" Variable", -- Variable
 	" Class", -- Class
 	"ﰮ Interface", -- Interface
@@ -147,17 +147,17 @@ require("vim.lsp.protocol").CompletionItemKind = {
 	" Property", -- Property
 	" Unit", -- Unit
 	" Value", -- Value
-	"了 Enum", -- Enum
+	"了Enum", -- Enum
 	" Keyword", -- Keyword
 	" Snippet", -- Snippet
 	" Color", -- Color
 	" File", -- File
-	"渚 Reference", -- Reference
+	"渚Reference", -- Reference
 	" Folder", -- Folder
 	" Enum", -- Enum
 	" Constant", -- Constant
 	" Struct", -- Struct
-	"鬒 Event", -- Event
+	"鬒Event", -- Event
 	"\u{03a8} Operator", -- Operator
 	" Type Parameter", -- TypeParameter
 }
