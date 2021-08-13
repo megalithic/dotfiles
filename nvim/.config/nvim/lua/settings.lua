@@ -209,6 +209,7 @@ require("nvim-web-devicons").setup({ default = false })
 do -- [orgmode] --
 	-- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
 	-- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
+	--        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
 	require("orgmode").setup({
 		-- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
 		-- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
@@ -244,7 +245,40 @@ do -- [orgmode] --
 			},
 		},
 		notifications = {
-			enabled = true,
+			reminder_time = { 0, 1, 5, 10 },
+			repeater_reminder_time = { 0, 1, 5, 10 },
+			deadline_warning_reminder_time = { 0 },
+			cron_notifier = function(tasks)
+				for _, task in ipairs(tasks) do
+					local title = string.format("%s (%s)", task.category, task.humanized_duration)
+					local subtitle = string.format("%s %s %s", string.rep("*", task.level), task.todo, task.title)
+					local date = string.format("%s: %s", task.type, task.time:to_string())
+
+					-- helpful docs for options: https://github.com/julienXX/terminal-notifier#options
+					if vim.fn.executable("terminal-notifier") then
+						vim.loop.spawn("terminal-notifier", {
+							args = {
+								"-title",
+								title,
+								"-subtitle",
+								subtitle,
+								"-message",
+								date,
+								"-appIcon ~/.local/share/nvim/site/pack/paqs/start/orgmode.nvim/assets/orgmode_nvim.png",
+								"-ignoreDnD",
+							},
+						})
+					end
+					-- if vim.fn.executable("notify-send") then
+					-- 	vim.loop.spawn("notify-send", {
+					-- 		args = {
+					-- 			"--icon=~/.local/share/nvim/site/pack/paqs/start/orgmode.nvim/assets/orgmode_nvim.png",
+					-- 			string.format("%s\n%s\n%s", title, subtitle, date),
+					-- 		},
+					-- 	})
+					-- end
+				end
+			end,
 		},
 	})
 	require("org-bullets").setup()

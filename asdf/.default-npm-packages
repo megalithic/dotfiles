@@ -18,6 +18,7 @@ trash-cli
 tree-sitter-cli
 tree-sitter-markdown
 typescript
+tsd
 vim-node-rpc
 pyright
 bash-language-server
