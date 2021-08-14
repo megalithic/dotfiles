@@ -1,5 +1,6 @@
 local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
 local dirs = mega.dirs
+local colors = require("colors")
 
 do -- [nvim options/ui/appearance] --
 	-- fallback in the event our statusline plugins fail to load
@@ -678,6 +679,23 @@ do -- [projectionist] --
 end
 
 do
+	require("package-info").setup({
+		colors = {
+			up_to_date = colors.cs.bg2, -- Text color for up to date package virtual text
+			outdated = "#d19a66", -- Text color for outdated package virtual text
+		},
+		icons = {
+			enable = true, -- Whether to display icons
+			style = {
+				up_to_date = "|  ", -- Icon for up to date packages
+				outdated = "|  ", -- Icon for outdated packages
+			},
+		},
+		autostart = true, -- Whether to autostart when `package.json` is opened
+	})
+end
+
+do
 	require("numb").setup()
 end
 
@@ -697,7 +715,7 @@ do -- [fzf] --
 			},
 		},
 		files = {
-			prompt = "FILES  ",
+			prompt = string.format("files %s ", colors.icons.prompt_symbol),
 			cmd = "fd --type f --follow --hidden --color=always -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' --ignore-file '~/.gitignore_global'",
 			color_icons = "",
 			git_icons = true, -- failing if ths is `true`; see failing line: https://github.com/ibhagwan/fzf-lua/blob/main/lua/fzf-lua/core.lua#L53
@@ -709,17 +727,20 @@ do -- [fzf] --
 			},
 		},
 		grep = {
-			input_prompt = "GREP FOR  ",
-			prompt = "GREP  ",
+			input_prompt = string.format("grep for %s ", colors.icons.prompt_symbol),
+			prompt = string.format("grep %s ", colors.icons.prompt_symbol),
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
 			},
 		},
 		lsp = {
-			prompt = "❯ ",
+			prompt = string.format("%s ", colors.icons.prompt_symbol),
 			cwd_only = false, -- LSP/diagnostics for cwd only?
 			async_or_timeout = true,
+		},
+		buffers = {
+			prompt = string.format("buffers %s ", colors.icons.prompt_symbol),
 		},
 	})
 	-- nmap ( '<leader>no', ':silent! lua fzf_orgmode{}<CR>' )

@@ -96,45 +96,19 @@ require("compe").setup({
 	},
 	source = {
 		luasnip = { menu = " [lsnip]", priority = 12 },
-		nvim_lua = { menu = "[lua]", priority = 11 },
+		nvim_lua = { menu = " [lua]", priority = 11 },
 		nvim_lsp = { menu = " [lsp]", priority = 10 },
-		orgmode = { menu = "[org]", priority = 9, filetypes = { "org" } },
+		orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
 		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
 		path = { menu = "", kind = " [path]", priority = 8 },
-		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "gitcommit" } },
-		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org" } },
+		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
 		buffer = { menu = " [buf]", priority = 7 },
 		treesitter = false, --{menu = "[ts]", priority = 9},
 	},
 })
 
 require("vim.lsp.protocol").CompletionItemKind = {
-	-- "", -- Text          = 1;
-	-- "", -- Method        = 2;
-	-- "ƒ", -- Function      = 3;
-	-- "", -- Constructor   = 4;
-	-- "", -- Field         = 5;
-	-- "", -- Variable      = 6;
-	-- "", -- Class         = 7;
-	-- "ﰮ", -- Interface     = 8;
-	-- "", -- Module        = 9;
-	-- "", -- Property      = 10;
-	-- "", -- Unit          = 11;
-	-- "", -- Value         = 12;
-	-- "了", -- Enum          = 13;
-	-- "", -- Keyword       = 14;
-	-- "﬌", -- Snippet       = 15;
-	-- "", -- Color         = 16;
-	-- "", -- File          = 17;
-	-- "", -- Reference     = 18;
-	-- "", -- Folder        = 19;
-	-- "", -- EnumMember    = 20;
-	-- "", -- Constant      = 21;
-	-- "", -- Struct        = 22;
-	-- "⌘", -- Event         = 23;
-	-- "", -- Operator      = 24;
-	-- "♛" -- TypeParameter = 25;
-
 	" text", -- Text
 	" method", -- Method
 	"ƒ function", -- Function

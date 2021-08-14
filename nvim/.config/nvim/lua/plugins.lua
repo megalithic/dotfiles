@@ -86,6 +86,7 @@ return {
 	"rizzatti/dash.vim",
 	"sgur/vim-editorconfig",
 	{ "zenbro/mirror.vim", opt = true },
+	"vuki656/package-info.nvim",
 	--
 	-- (the rest...) --
 	"nacro90/numb.nvim",
