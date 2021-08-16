@@ -320,7 +320,6 @@ capabilities.textDocument.completion.completionItem.resolveSupport = {
 local status_capabilities = require("lsp-status").capabilities
 capabilities = mega.table_merge(status_capabilities, capabilities)
 
---- server setup utils
 local function lsp_with_defaults(opts)
 	opts = opts or {}
 	return vim.tbl_deep_extend("keep", opts, {
@@ -351,7 +350,6 @@ local servers = {
 	"clangd",
 	"rust_analyzer",
 	"vimls",
-	"solargraph",
 	-- "tailwindcss",
 	-- "dockerfile",
 }
@@ -364,6 +362,18 @@ for _, ls in ipairs(servers) do
 	end
 	lspconfig[ls].setup(lsp_with_defaults())
 end
+
+lspconfig["solargraph"].setup(lsp_with_defaults({
+	cmd = { "solargraph", "stdio" },
+	filetypes = { "ruby" },
+	root_dir = root_pattern("Gemfile", ".git"),
+	settings = {
+		solargraph = {
+			diagnostics = true,
+			useBundler = true,
+		},
+	},
+}))
 
 local efm_languages = require("efm")
 local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
@@ -432,22 +442,6 @@ do
 end
 
 do -- lua
-	-- local function get_lua_runtime()
-	--   local result = {}
-	--   for _, path in pairs(api.nvim_list_runtime_paths()) do
-	--     local lua_path = path .. "/lua/"
-	--     if fn.isdirectory(lua_path) then
-	--       result[lua_path] = true
-	--     end
-	--   end
-
-	--   result[fn.expand("$VIMRUNTIME/lua")] = true
-	--   result[fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true
-	--   result[fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs")] = true
-
-	--   return result
-	-- end
-
 	-- (build lua runtime libraries)
 	local runtime_path = vim.split(package.path, ";")
 	table.insert(runtime_path, "lua/?.lua")
@@ -455,6 +449,7 @@ do -- lua
 	table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
 	table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
 	table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
+
 	local luadev = require("lua-dev").setup({
 		lspconfig = lsp_with_defaults({
 			settings = {
@@ -488,8 +483,12 @@ do -- lua
 					},
 					workspace = {
 						-- Make the server aware of Neovim runtime files
-						library = api.nvim_get_runtime_file("", true),
-						--     library = get_lua_runtime()
+						library = {
+							-- [api.nvim_get_runtime_file("", true)],
+							[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+							[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+							[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/")] = true,
+						},
 					},
 					-- Do not send telemetry data containing a randomized but unique identifier
 					telemetry = {
