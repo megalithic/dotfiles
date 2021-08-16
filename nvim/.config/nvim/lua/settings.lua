@@ -722,7 +722,6 @@ do -- [fzf] --
 			color_icons = "",
 			git_icons = true,
 			git_diff_cmd = "git diff --name-status --relative HEAD",
-			cwd = vim.fn.getcwd(),
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
