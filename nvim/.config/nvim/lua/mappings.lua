@@ -164,34 +164,9 @@ map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
--- function fzf_projectionist()
--- 	local action = require("fzf.actions").action
--- 	coroutine.wrap(function()
--- 		local choice = require("fzf").fzf(mega.dirs.project, '--preview="ls -la --color=auto {}"')
---
--- 		if choice then
--- 			require("fzf-lua").files({
--- 				prompt = "Project » ",
--- 				cwd = choice[1],
--- 			})
--- 			vim.cmd("chdir" .. choice[1])
--- 		end
--- 	end)()
--- end
-function fzf_orgfiles()
-	require("fzf-lua").files({
-		cwd = vim.fn.expand(mega.dirs.org),
-		prompt = "ORGFILES  ",
-	})
-	-- cmd("chdir " .. mega.dirs.org)
-end
-map("n", "<leader>fo", "<cmd>lua fzf_orgfiles()<cr>")
--- function fzf_zettels()
--- 	require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZETTELS  " })
--- 	cmd("chdir " .. mega.dirs.zettel)
--- end
--- map("n", "<leader>fz", "<cmd>lua fzf_zettels()<cr>")
--- map("n", "<leader>fp", "<cmd>lua fzf_projectionist()<cr>")
+map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org, prompt = "ORG  " })<cr>]])
+map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
+
 -- nmap ('<leader>no', ':silent! lua fzf_orgmode{}<CR>')
 -- nmap ('<leader>nr', ':silent! lua fzf_orgmode{}<CR>')
 -- nmap ('<leader>nd', ":silent! e " .. ROAM .. '/notebook.org<cr>')

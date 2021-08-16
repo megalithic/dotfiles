@@ -716,9 +716,11 @@ do -- [fzf] --
 		},
 		files = {
 			prompt = string.format("files %s ", colors.icons.prompt_symbol),
-			cmd = "fd --type f --follow --hidden --color=always -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' --ignore-file '~/.gitignore_global'",
+			fd_opts = [[--type f --follow --hidden --color=always]]
+				.. [[ -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons']]
+				.. [[ --ignore-file '~/.gitignore_global']],
 			color_icons = "",
-			git_icons = true, -- failing if ths is `true`; see failing line: https://github.com/ibhagwan/fzf-lua/blob/main/lua/fzf-lua/core.lua#L53
+			git_icons = true,
 			git_diff_cmd = "git diff --name-status --relative HEAD",
 			cwd = vim.fn.getcwd(),
 			actions = {
