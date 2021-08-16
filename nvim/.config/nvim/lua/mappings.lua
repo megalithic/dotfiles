@@ -112,9 +112,9 @@ map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 -- # git-related
 map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
-map("x", "<Leader>gh", "<cmd>GBrowse<CR>")
-map("v", "<Leader>gh", "<cmd>GBrowse<CR>")
-map("v", "<Leader>gh", "<cmd>GBrowse<CR>")
+map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
+
+-- map("x", "<Leader>gh", "<cmd>'<'>GBrowse!<CR>")
 
 -- # markdown-related
 map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
@@ -178,14 +178,14 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 -- 		end
 -- 	end)()
 -- end
--- function fzf_orgfiles()
--- 	require("fzf-lua").files({
--- 		cwd = vim.fn.expand(mega.dirs.org),
--- 		prompt = "ORGFILES  ",
--- 	})
--- 	cmd("chdir " .. mega.dirs.org)
--- end
--- map("n", "<leader>fo", "<cmd>lua fzf_orgfiles()<cr>")
+function fzf_orgfiles()
+	require("fzf-lua").files({
+		cwd = vim.fn.expand(mega.dirs.org),
+		prompt = "ORGFILES  ",
+	})
+	-- cmd("chdir " .. mega.dirs.org)
+end
+map("n", "<leader>fo", "<cmd>lua fzf_orgfiles()<cr>")
 -- function fzf_zettels()
 -- 	require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZETTELS  " })
 -- 	cmd("chdir " .. mega.dirs.zettel)

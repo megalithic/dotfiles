@@ -172,15 +172,6 @@ _G.s_tab_complete = function()
 	end
 end
 
--- _G.cr_complete = function()
---   local npairs = require("nvim-autopairs")
---   if fn.pumvisible() ~= 0 then
---     return npairs.esc("<cr>")
---   else
---     return npairs.autopairs_cr()
---   end
--- end
-
 -- REF: https://github.com/fsouza/dotfiles/blob/main/nvim/lua/fsouza/lsp/completion.lua#L16-L24
 _G.cr_complete = function()
 	-- if fn.pumvisible() == 1 then
@@ -194,7 +185,7 @@ _G.cr_complete = function()
 			return vim.fn["compe#confirm"](t("<cr>"))
 		else
 			mega.log("one selected!")
-			-- vim.fn["compe#confirm"]({keys = "<cr>", select = false})
+			vim.fn["compe#confirm"]({ keys = "<cr>", select = true })
 			-- vim.defer_fn(
 			--   function()
 			--     vim.fn["compe#confirm"]({keys = "<cr>", select = false})
@@ -223,9 +214,7 @@ local function on_attach(client, bufnr)
 
 	require("lsp_signature").on_attach({
 		bind = true, -- This is mandatory, otherwise border config won't get registered.
-		-- hint_prefix = " ",
 		floating_window = true,
-		-- hi_parameter = "LspSelectedParam",
 		hint_enable = false,
 		decorator = { "`", "`" },
 		handler_opts = {
@@ -251,21 +240,21 @@ local function on_attach(client, bufnr)
 		client.resolved_capabilities.document_formatting = false
 	end
 
-	--- goto mappings
-	-- bufmap("gd", "lua vim.lsp.buf.definition()")
-	-- bufmap("gr", "lua vim.lsp.buf.references()")
-	-- bufmap("gs", "lua vim.lsp.buf.document_symbol()")
-	-- bufmap("gi", "lua vim.lsp.buf.implementation()")
-
 	--- via fzf-lua
 	-- # https://github.com/ibhagwan/fzf-lua/issues/39#issuecomment-897099304 (LSP async/sync)
 	--
+	--- goto mappings
 	if pcall(require, "fzf-lua") then
 		bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
 		bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
 		bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
 		bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
 		bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
+	else
+		bufmap("gd", "lua vim.lsp.buf.definition()")
+		bufmap("gr", "lua vim.lsp.buf.references()")
+		bufmap("gs", "lua vim.lsp.buf.document_symbol()")
+		bufmap("gi", "lua vim.lsp.buf.implementation()")
 	end
 
 	--- diagnostics navigation mappings
@@ -296,12 +285,12 @@ local function on_attach(client, bufnr)
 
 	--- auto-commands
 	if client.resolved_capabilities.document_formatting then
-		au("BufWritePost <buffer> lua vim.lsp.buf.formatting()")
-		-- au "BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()"
+		-- au("BufWritePost <buffer> lua vim.lsp.buf.formatting()")
+		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
 		-- au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
 	end
 
-	-- au "CursorHold, CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
+	-- au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
 
 	--- commands
@@ -331,6 +320,7 @@ capabilities.textDocument.completion.completionItem.resolveSupport = {
 local status_capabilities = require("lsp-status").capabilities
 capabilities = mega.table_merge(status_capabilities, capabilities)
 
+--- server setup utils
 local function lsp_with_defaults(opts)
 	opts = opts or {}
 	return vim.tbl_deep_extend("keep", opts, {
@@ -341,7 +331,6 @@ local function lsp_with_defaults(opts)
 	})
 end
 
---- server setup utils
 local function root_pattern(...)
 	local patterns = vim.tbl_flatten({ ... })
 
