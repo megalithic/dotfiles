@@ -88,6 +88,9 @@ do
 				require("luasnip").lsp_expand(args.body)
 			end,
 		},
+		documentation = {
+			border = "rounded",
+		},
 		completion = {
 			autocomplete = {
 				types.cmp.TriggerEvent.InsertEnter,
