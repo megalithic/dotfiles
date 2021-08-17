@@ -108,6 +108,8 @@ function M.remove_wins()
 	end
 end
 
+-- # REF:
+-- - https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
 function M.lsp.rename()
 	local bufnr = api.nvim_get_current_buf()
 	local params = lsp.util.make_position_params()
@@ -192,6 +194,10 @@ function M.lsp.config()
 	end
 
 	mega.log(vim.inspect(cfg))
+end
+
+function M.lsp.t(str)
+	return api.nvim_replace_termcodes(str, true, true, true)
 end
 
 return M

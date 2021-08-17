@@ -490,13 +490,7 @@ do -- [autopairs] --
 			-- don't check treesitter on java
 		},
 	})
--- 	require("nvim-autopairs.completion.compe").setup({
--- 		map_cr = true, --  map <CR> on insert mode
--- 		map_complete = true, -- it will auto insert `(` after select function or method item
--- 	})
---
 	npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
-	-- npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
 	local endwise = require("nvim-autopairs.ts-rule").endwise
 	npairs.add_rules({
 		endwise("then$", "end", "lua", nil),
@@ -529,10 +523,10 @@ do -- [lightspeed] --
 end
 
 -- do -- [quickscope] --
---   g.qs_enable = 1
---   g.qs_highlight_on_keys = {"f", "F", "t", "T"}
---   g.qs_buftype_blacklist = {"terminal", "nofile"}
---   g.qs_lazy_highlight = 1
+-- 	g.qs_enable = 1
+-- 	g.qs_highlight_on_keys = { "f", "F", "t", "T" }
+-- 	g.qs_buftype_blacklist = { "terminal", "nofile", "fzf" }
+-- 	g.qs_lazy_highlight = 1
 -- end
 
 -- do -- [diffview] --
@@ -699,9 +693,9 @@ do
 	require("numb").setup()
 end
 
-do
-	require("toggleterm").setup({})
-end
+-- do
+-- 	require("toggleterm").setup({})
+-- end
 
 do -- [fzf] --
 	local actions = require("fzf-lua.actions")

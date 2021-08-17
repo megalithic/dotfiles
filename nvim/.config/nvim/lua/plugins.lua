@@ -28,9 +28,10 @@ return {
 	"nvim-lua/popup.nvim",
 	-- "hrsh7th/nvim-compe",
 	"hrsh7th/nvim-cmp",
-	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-nvim-lsp",
+	"hrsh7th/cmp-nvim-lua",
 	"saadparwaiz1/cmp_luasnip",
+	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-emoji",
 	"L3MON4D3/LuaSnip",
@@ -56,8 +57,9 @@ return {
 	-- (file/document navigation) --
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
+	-- "unblevable/quick-scope",
 	"ggandor/lightspeed.nvim",
-	"akinsho/nvim-toggleterm.lua",
+	-- "akinsho/nvim-toggleterm.lua",
 	--
 	-- (text objects) --
 	"tpope/vim-rsi",
@@ -94,7 +96,8 @@ return {
 	"nacro90/numb.nvim",
 	"farmergreg/vim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
-	"windwp/nvim-autopairs", -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
+	{ "megalithic/nvim-autopairs", branch = "feat/master/pass-in-nvim-cmp-mapping-setup" }, -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
+	-- "tpope/vim-endwise",
 	"alvan/vim-closetag",
 	-- "b3nj5m1n/kommentary",
 	"terrortylor/nvim-comment",
