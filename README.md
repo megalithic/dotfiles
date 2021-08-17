@@ -90,6 +90,7 @@ Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/c
   * [Evan Travers](https://github.com/evantravers/dotfiles)
   * [Dorian Karter](https://github.com/dkarter/dotfiles)
   * [Phil Ridlen](https://github.com/philtr/dotfiles)
+  * .. and many, many others.
 
 ### Refs
 

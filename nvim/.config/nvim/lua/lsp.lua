@@ -96,7 +96,7 @@ do
 				types.cmp.TriggerEvent.InsertEnter,
 				types.cmp.TriggerEvent.TextChanged,
 			},
-			-- completeopt = "menu,menuone,noselect,noinsert",
+			completeopt = "menu,menuone,noselect,noinsert",
 			keyword_pattern = [[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%(-\w*\)*\)]],
 			keyword_length = 1,
 		},
