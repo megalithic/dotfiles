@@ -1,6 +1,7 @@
 local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
 local dirs = mega.dirs
 local colors = require("colors")
+local is_dev = mega.has("nvim-0.6")
 
 do -- [nvim options/ui/appearance] --
 	-- fallback in the event our statusline plugins fail to load
@@ -20,6 +21,10 @@ do -- [nvim options/ui/appearance] --
 	set.foldmethod = "expr"
 	set.foldexpr = "nvim_treesitter#foldexpr()"
 	set.indentexpr = "nvim_treesitter#indent()"
+	set.signcolumn = is_dev and "auto:2-4" or "yes:2"
+	if is_dev then
+		set.cursorlineopt = "screenline,number"
+	end
 	-- set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 	g.no_man_maps = true
 	g.vim_json_syntax_conceal = false
@@ -155,16 +160,6 @@ do -- [nvim-treesitter] --
 			"elixir",
 			"eelixir",
 		},
-	})
-end
-
-do -- [luasnip] --
-	require("luasnip").config.set_config({
-		history = true,
-		updateevents = "TextChanged,TextChangedI",
-	})
-	require("luasnip/loaders/from_vscode").load({
-		paths = { vim.fn.stdpath("config") .. "/vsnips" },
 	})
 end
 

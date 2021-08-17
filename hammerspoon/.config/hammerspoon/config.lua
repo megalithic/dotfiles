@@ -113,7 +113,7 @@ M.apps = {
 	["com.insomnia.app"] = {
 		bundleID = "com.insomnia.app",
 		name = "Insomnia",
-		hyper_key = "i",
+		-- hyper_key = "i",
 		quitGuard = false,
 		rules = {
 			{ nil, 1, M.layout.rightHalf },

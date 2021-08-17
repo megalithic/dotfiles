@@ -71,20 +71,19 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 	end
 end
 
-local source_kind = {
-	luasnip = { menu = " [lsnip]", priority = 12 },
-	nvim_lua = { menu = " [lua]", priority = 11 },
-	nvim_lsp = { menu = " [lsp]", priority = 10 },
-	orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
-	neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
-	path = { menu = "", kind = " [path]", priority = 8 },
-	emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
-	spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
-	buffer = { menu = " [buf]", priority = 7 },
-	treesitter = false, --{menu = "[ts]", priority = 9},
-}
+-- local source_kind = {
+-- 	luasnip = { menu = " [lsnip]", priority = 12 },
+-- 	nvim_lua = { menu = " [lua]", priority = 11 },
+-- 	nvim_lsp = { menu = " [lsp]", priority = 10 },
+-- 	orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
+-- 	neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
+-- 	path = { menu = "", kind = " [path]", priority = 8 },
+-- 	emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+-- 	spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+-- 	buffer = { menu = " [buf]", priority = 7 },
+-- 	treesitter = false, --{menu = "[ts]", priority = 9},
+-- }
 
--- require("vim.lsp.protocol").CompletionItemKind = {
 local kind_icons = {
 	Text = " text", -- Text
 	Method = " method", -- Method
@@ -111,21 +110,39 @@ local kind_icons = {
 	Operator = "\u{03a8} operator", -- Operator
 	TypeParameter = " type param", -- TypeParameter
 	-- Buffer = " [buf]",
+	-- Path = " [path]",
+	-- LuaSnip = " [lsnip]",
 }
 for key, value in pairs(kind_icons) do
 	lsp.protocol.CompletionItemKind[key] = value
-	-- require("vim.lsp.protocol").CompletionItemKind[key] = value
 	-- cmp.lsp.CompletionItemKind[key] = value
 end
 
---- completion
+--- completion/snippets
 --
--- # nvim-cmp
 do
-	cmd("packadd luasnip")
-	require("cmp_nvim_lsp").setup()
-
+	-- [luasnip] --
 	local luasnip = require("luasnip")
+	luasnip.config.set_config({
+		history = true,
+		updateevents = "TextChanged,TextChangedI",
+		ext_opts = {
+			[require("luasnip.util.types").choiceNode] = {
+				active = {
+					virt_text = { { "choiceNode", "Comment" } },
+				},
+			},
+		},
+		enable_autosnippets = true,
+	})
+	require("luasnip/loaders/from_vscode").lazy_load({
+		paths = vim.fn.stdpath("config") .. "/vsnips",
+	})
+	map("i", "<c-n>", "<Plug>luasnip-next-choice")
+	map("s", "<c-n>", "<Plug>luasnip-next-choice")
+
+	-- [nvim-cmp] --
+	require("cmp_nvim_lsp").setup()
 	local cmp = require("cmp")
 	-- local types = require("cmp.types")
 	-- local compare = require("cmp.config.compare")
@@ -160,8 +177,8 @@ do
 			border = "rounded",
 		},
 		mapping = {
-			["<C-p>"] = cmp.mapping.prev_item(),
-			["<C-n>"] = cmp.mapping.next_item(),
+			-- ["<C-p>"] = cmp.mapping.prev_item(),
+			-- ["<C-n>"] = cmp.mapping.next_item(),
 			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(_, fallback)
 				if fn.pumvisible() == 1 then
 					fn.feedkeys(api.nvim_replace_termcodes("<C-n>", true, true, true), "n")
@@ -180,7 +197,7 @@ do
 					fallback()
 				end
 			end),
-			["<C-d>"] = cmp.mapping.scroll(-4),
+			["<C-b>"] = cmp.mapping.scroll(-4),
 			["<C-f>"] = cmp.mapping.scroll(4),
 			["<C-Space>"] = cmp.mapping.close(),
 			["<C-e>"] = cmp.mapping.close(),
@@ -195,6 +212,7 @@ do
 		},
 		formatting = {
 			format = function(_, item)
+				mega.log(item.kind)
 				item.kind = kind_icons[item.kind]
 				return item
 			end,
@@ -365,7 +383,7 @@ local function lsp_with_defaults(opts)
 	return vim.tbl_deep_extend("keep", opts, {
 		on_attach = on_attach,
 		capabilities = capabilities,
-		flags = { debounce_text_changes = 150 },
+		flags = { debounce_text_changes = 500 },
 		root_dir = vim.loop.cwd,
 	})
 end

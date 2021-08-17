@@ -227,6 +227,10 @@ function M.dump(...)
 	print(unpack(vim.tbl_map(inspect, { ... })))
 end
 
+function M.has(feature)
+	return fn.has(feature) > 0
+end
+
 function M.zetty(args)
 	local default_opts = {
 		cmd = "meeting",
