@@ -1,26 +1,26 @@
 return function(_) -- bufnr
-  -- vim.cmd([[normal gg0]])
+	-- vim.cmd([[normal gg0]])
 
-  vim.bo.textwidth = 72
-  vim.wo.colorcolumn = "72"
-  vim.wo.spell = true
-  vim.bo.spelllang = "en_us"
-  vim.wo.list = false
-  vim.wo.number = false
-  vim.wo.relativenumber = false
-  vim.wo.wrap = true
-  vim.wo.linebreak = true
-  vim.wo.foldenable = false
+	vim.opt.textwidth = 72
+	vim.opt.colorcolumn = "50,72"
+	vim.opt.spell = true
+	vim.opt.spelllang = "en_us"
+	vim.opt.list = false
+	vim.opt.number = false
+	vim.opt.relativenumber = false
+	vim.opt.wrap = true
+	vim.opt.linebreak = true
+	vim.opt.foldenable = false
 
-  vim.cmd([[setlocal comments+=fb:*]])
-  vim.cmd([[setlocal comments+=fb:-]])
-  vim.cmd([[setlocal comments+=fb:+]])
-  vim.cmd([[setlocal comments+=b:>]])
+	vim.cmd([[setlocal comments+=fb:*]])
+	vim.cmd([[setlocal comments+=fb:-]])
+	vim.cmd([[setlocal comments+=fb:+]])
+	vim.cmd([[setlocal comments+=b:>]])
 
-  vim.cmd([[setlocal formatoptions+=c]])
-  vim.cmd([[setlocal formatoptions+=q]])
+	vim.cmd([[setlocal formatoptions+=c]])
+	vim.cmd([[setlocal formatoptions+=q]])
 
-  vim.cmd([[setlocal spell]])
+	vim.cmd([[setlocal spell]])
 
-  vim.bo.formatoptions = vim.bo.formatoptions .. "t"
+	vim.bo.formatoptions = vim.bo.formatoptions .. "t"
 end

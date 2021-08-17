@@ -18,6 +18,10 @@ do -- [nvim options/ui/appearance] --
 		"8p%% ", -- file percentage
 	}, " %")
 
+	-- # really great settings explainers:
+	-- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/general/settings.lua
+	set.copyindent = true
+	set.preserveindent = true
 	set.foldmethod = "expr"
 	set.foldexpr = "nvim_treesitter#foldexpr()"
 	set.indentexpr = "nvim_treesitter#indent()"
@@ -43,6 +47,8 @@ do -- [nvim options/ui/appearance] --
 	g.loaded_python_provider = 1
 	g.loaded_ruby_provider = 1
 	g.loaded_perl_provider = 1
+	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
+	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 end
 
 do

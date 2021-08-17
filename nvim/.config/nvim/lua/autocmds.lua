@@ -74,7 +74,7 @@ augroup("yank_highlighted_region", {
 	{
 		events = { "TextYankPost" },
 		targets = { "*" },
-		command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 170, on_macro = true })",
+		command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 150, on_macro = true })",
 	},
 })
 

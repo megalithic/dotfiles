@@ -127,6 +127,7 @@ do
 	luasnip.config.set_config({
 		history = true,
 		updateevents = "TextChanged,TextChangedI",
+		store_selection_keys = "<Tab>",
 		ext_opts = {
 			[types.insertNode] = {
 				passive = {
@@ -141,11 +142,12 @@ do
 		},
 		enable_autosnippets = true,
 	})
-	require("luasnip/loaders/from_vscode").lazy_load({
-		paths = vim.fn.stdpath("config") .. "/vsnips",
+	require("luasnip/loaders/from_vscode").load({
+		paths = vim.fn.stdpath("config") .. "/snippets",
+		-- should get these for react/javascript/ts:
+		-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
 	})
-	map("i", "<c-n>", "<Plug>luasnip-next-choice")
-	map("s", "<c-n>", "<Plug>luasnip-next-choice")
+	require("luasnip/loaders/from_vscode").lazy_load()
 
 	local check_backspace = function()
 		local col = vim.fn.col(".") - 1
@@ -223,7 +225,7 @@ do
 		},
 		formatting = {
 			format = function(_, item)
-				mega.log(item.kind)
+				-- mega.log(item.kind)
 				item.kind = kind_icons[item.kind]
 				return item
 			end,
@@ -306,7 +308,7 @@ local function on_attach(client, bufnr)
 		-- au("BufWritePost <buffer> lua vim.lsp.buf.formatting()")
 		-- au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
 	end
-
+	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	-- au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
 
@@ -336,6 +338,10 @@ local function on_attach(client, bufnr)
 		-- bufmap("n", "<leader>zj", ":ZkNew {dir = 'journal/daily'}<CR>")
 		-- REF: thanks @mhanberg ->
 		-- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
+	end
+
+	if client.name == "jsonls" then
+		client.resolved_capabilities.document_formatting = false
 	end
 
 	-- typescript/tsserver
