@@ -23,15 +23,16 @@ return {
 	--
 	-- (lsp/completion) --
 	"neovim/nvim-lspconfig",
-	"kabouzeid/nvim-lspinstall", -- https://github.com/kabouzeid/nvim-lspinstall/wiki
+	-- "kabouzeid/nvim-lspinstall", -- https://github.com/kabouzeid/nvim-lspinstall/wiki
 	"nvim-lua/plenary.nvim",
 	"nvim-lua/popup.nvim",
-	"hrsh7th/nvim-compe",
-	-- "hrsh7th/nvim-cmp",
-	-- "hrsh7th/cmp-buffer",
-	-- "hrsh7th/cmp-nvim-lsp",
-	-- "saadparwaiz1/cmp_luasnip",
-	-- "hrsh7th/cmp-path",
+	-- "hrsh7th/nvim-compe",
+	"hrsh7th/nvim-cmp",
+	"hrsh7th/cmp-buffer",
+	"hrsh7th/cmp-nvim-lsp",
+	"saadparwaiz1/cmp_luasnip",
+	"hrsh7th/cmp-path",
+	"hrsh7th/cmp-emoji",
 	"L3MON4D3/LuaSnip",
 	"rafamadriz/friendly-snippets",
 	"nvim-lua/lsp-status.nvim",
@@ -56,6 +57,7 @@ return {
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",
+	"akinsho/nvim-toggleterm.lua",
 	--
 	-- (text objects) --
 	"tpope/vim-rsi",
@@ -124,7 +126,6 @@ return {
 	{ "harshad1/bullets.vim", branch = "performance_improvements" },
 	"kristijanhusak/orgmode.nvim",
 	"akinsho/org-bullets.nvim",
-	"megalithic/zk.nvim",
 	"dhruvasagar/vim-table-mode",
 	-- # ruby/rails
 	-- "vim-ruby/vim-ruby",

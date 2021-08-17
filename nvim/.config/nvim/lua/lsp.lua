@@ -4,7 +4,8 @@ local lspconfig = require("lspconfig")
 local colors = require("colors")
 local utils = require("utils")
 
-set.completeopt = { "menuone", "noselect", "noinsert" }
+-- set.completeopt = { "menu", "menuone", "noinsert" }
+set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c")
 
 do
@@ -73,40 +74,119 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 end
 
 --- completion
-require("compe").setup({
-	enabled = true,
-	autocomplete = true,
-	debug = false,
-	min_length = 1,
-	preselect = "disable",
-	allow_prefix_unmatch = false,
-	throttle_time = 80,
-	source_timeout = 200,
-	incomplete_delay = 400,
-	max_abbr_width = 100,
-	max_kind_width = 100,
-	max_menu_width = 100,
-	documentation = {
-		border = "rounded",
-		winhighlight = table.concat({
-			"NormalFloat:CompeDocumentation",
-			"Normal:CompeDocumentation",
-			"FloatBorder:CompeDocumentationBorder",
-		}, ","),
-	},
-	source = {
-		luasnip = { menu = " [lsnip]", priority = 12 },
-		nvim_lua = { menu = " [lua]", priority = 11 },
-		nvim_lsp = { menu = " [lsp]", priority = 10 },
-		orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
-		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
-		path = { menu = "", kind = " [path]", priority = 8 },
-		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
-		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
-		buffer = { menu = " [buf]", priority = 7 },
-		treesitter = false, --{menu = "[ts]", priority = 9},
-	},
-})
+--
+-- # nvim-cmp
+do
+	require("cmp_nvim_lsp").setup()
+	local luasnip = require("luasnip")
+	local cmp = require("cmp")
+	local types = require("cmp.types")
+	local compare = require("cmp.config.compare")
+	cmp.setup({
+		snippet = {
+			expand = function(args)
+				require("luasnip").lsp_expand(args.body)
+			end,
+		},
+		completion = {
+			autocomplete = {
+				types.cmp.TriggerEvent.InsertEnter,
+				types.cmp.TriggerEvent.TextChanged,
+			},
+			completeopt = "menu,menuone,noselect,noinsert",
+			keyword_pattern = [[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%(-\w*\)*\)]],
+			keyword_length = 1,
+		},
+		sorting = {
+			priority_weight = 2,
+			comparators = {
+				compare.offset,
+				compare.exact,
+				compare.score,
+				compare.kind,
+				compare.sort_text,
+				compare.length,
+				compare.order,
+			},
+		},
+		mapping = {
+			["<C-p>"] = cmp.mapping.prev_item(),
+			["<C-n>"] = cmp.mapping.next_item(),
+			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
+				if vim.fn.pumvisible() == 1 then
+					vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-n>", true, true, true), "n")
+				elseif luasnip.expand_or_jumpable() then
+					vim.fn.feedkeys(
+						vim.api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true),
+						""
+					)
+				else
+					fallback()
+				end
+			end),
+			["<S-Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
+				if vim.fn.pumvisible() == 1 then
+					vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-p>", true, true, true), "n")
+				elseif luasnip.jumpable(-1) then
+					vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
+				else
+					fallback()
+				end
+			end),
+			["<C-d>"] = cmp.mapping.scroll(-4),
+			["<C-f>"] = cmp.mapping.scroll(4),
+			["<C-Space>"] = function(core, fallback)
+				if vim.fn.pumvisible() == 1 then
+					cmp.mapping.close()(core, fallback)
+				else
+					cmp.mapping.complete()(core)
+				end
+			end,
+			["<C-e>"] = function(core, fallback)
+				if vim.fn.pumvisible() == 1 then
+					cmp.mapping.close()(core, fallback)
+				else
+					cmp.mapping.complete()(core)
+				end
+			end,
+			-- presently handled by nvim-autopairs
+			-- ["<CR>"] = cmp.mapping.confirm({
+			--     behavior = cmp.ConfirmBehavior.Replace,
+			--     select = true,
+			-- }),
+		},
+		sources = {
+			-- 		luasnip = { menu = " [lsnip]", priority = 12 },
+			-- 		nvim_lua = { menu = " [lua]", priority = 11 },
+			-- 		nvim_lsp = { menu = " [lsp]", priority = 10 },
+			-- 		orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
+			-- 		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
+			-- 		path = { menu = "", kind = " [path]", priority = 8 },
+			-- 		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+			-- 		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+			-- 		buffer = { menu = " [buf]", priority = 7 },
+			-- 		treesitter = false, --{menu = "[ts]", priority = 9},
+
+			{ name = "luasnip" },
+			{ name = "nvim_lua" },
+			{ name = "nvim_lsp" },
+			{ name = "emoji" },
+			{ name = "path" },
+			{ name = "buffer" },
+		},
+		formatting = {
+			format = function(entry, vim_item)
+				-- mega.log(string.format("entry for cmp -> %s", vim_item.kind)) -- vim.inspect({ entry, vim_item })))
+				-- vim_item.kind = lspkind.presets.default[vim_item.kind]
+				return vim_item
+			end,
+		},
+	})
+	require("nvim-autopairs.completion.cmp").setup({
+		map_cr = true, --  map <CR> on insert mode
+		map_complete = true, -- insert `(` when function/method is completed
+	})
+end
 
 require("vim.lsp.protocol").CompletionItemKind = {
 	" text", -- Text
@@ -136,6 +216,42 @@ require("vim.lsp.protocol").CompletionItemKind = {
 	" type param", -- TypeParameter
 }
 
+-- # nvim-compe
+-- require("compe").setup({
+-- 	enabled = true,
+-- 	autocomplete = true,
+-- 	debug = false,
+-- 	min_length = 1,
+-- 	preselect = "disable",
+-- 	allow_prefix_unmatch = false,
+-- 	throttle_time = 80,
+-- 	source_timeout = 200,
+-- 	incomplete_delay = 400,
+-- 	max_abbr_width = 100,
+-- 	max_kind_width = 100,
+-- 	max_menu_width = 100,
+-- 	documentation = {
+-- 		border = "rounded",
+-- 		winhighlight = table.concat({
+-- 			"NormalFloat:CompeDocumentation",
+-- 			"Normal:CompeDocumentation",
+-- 			"FloatBorder:CompeDocumentationBorder",
+-- 		}, ","),
+-- 	},
+-- 	source = {
+-- 		luasnip = { menu = " [lsnip]", priority = 12 },
+-- 		nvim_lua = { menu = " [lua]", priority = 11 },
+-- 		nvim_lsp = { menu = " [lsp]", priority = 10 },
+-- 		orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
+-- 		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
+-- 		path = { menu = "", kind = " [path]", priority = 8 },
+-- 		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+-- 		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+-- 		buffer = { menu = " [buf]", priority = 7 },
+-- 		treesitter = false, --{menu = "[ts]", priority = 9},
+-- 	},
+-- })
+
 local t = function(str)
 	return api.nvim_replace_termcodes(str, true, true, true)
 end
@@ -155,10 +271,10 @@ _G.tab_complete = function()
 		return t("<cmd>lua require'luasnip'.jump(1)<Cr>")
 	elseif check_back_space() then
 		return t("<Tab>")
-	else
-		-- require("cmp").complete()
-		-- return ""
-		return vim.fn["compe#complete"]()
+		-- else
+		-- 	-- require("cmp").complete()
+		-- 	-- return ""
+		-- 	return vim.fn["compe#complete"]()
 	end
 end
 
@@ -171,41 +287,41 @@ _G.s_tab_complete = function()
 		return t("<S-Tab>")
 	end
 end
-
--- REF: https://github.com/fsouza/dotfiles/blob/main/nvim/lua/fsouza/lsp/completion.lua#L16-L24
-_G.cr_complete = function()
-	-- if fn.pumvisible() == 1 then
-	--   return fn["compe#confirm"]({keys = "<cr>", select = true})
-	-- else
-	--   return require("nvim-autopairs").autopairs_cr()
-	-- end
-	if vim.fn.pumvisible() ~= 0 then
-		if vim.fn.complete_info()["selected"] ~= -1 then
-			mega.log("none selected!")
-			return vim.fn["compe#confirm"](t("<cr>"))
-		else
-			mega.log("one selected!")
-			vim.fn["compe#confirm"]({ keys = "<cr>", select = true })
-			-- vim.defer_fn(
-			--   function()
-			--     vim.fn["compe#confirm"]({keys = "<cr>", select = false})
-			--   end,
-			--   20
-			-- )
-			return t("<c-n>")
-		end
-	else
-		return require("nvim-autopairs").autopairs_cr()
-	end
-end
-
+--
+-- -- REF: https://github.com/fsouza/dotfiles/blob/main/nvim/lua/fsouza/lsp/completion.lua#L16-L24
+-- _G.cr_complete = function()
+-- 	-- if fn.pumvisible() == 1 then
+-- 	--   return fn["compe#confirm"]({keys = "<cr>", select = true})
+-- 	-- else
+-- 	--   return require("nvim-autopairs").autopairs_cr()
+-- 	-- end
+-- 	if vim.fn.pumvisible() ~= 0 then
+-- 		if vim.fn.complete_info()["selected"] ~= -1 then
+-- 			mega.log("none selected!")
+-- 			return vim.fn["compe#confirm"](t("<cr>"))
+-- 		else
+-- 			mega.log("one selected!")
+-- 			vim.fn["compe#confirm"]({ keys = "<cr>", select = false })
+-- 			-- vim.defer_fn(
+-- 			--   function()
+-- 			--     vim.fn["compe#confirm"]({keys = "<cr>", select = false})
+-- 			--   end,
+-- 			--   20
+-- 			-- )
+-- 			return t("<c-n>")
+-- 		end
+-- 	else
+-- 		return require("nvim-autopairs").autopairs_cr()
+-- 	end
+-- end
+--
 map("i", "<Tab>", "v:lua.tab_complete()", { expr = true, noremap = false })
 map("s", "<Tab>", "v:lua.tab_complete()", { expr = true, noremap = false })
 map("i", "<S-Tab>", "v:lua.s_tab_complete()", { expr = true, noremap = false })
 map("s", "<S-Tab>", "v:lua.s_tab_complete()", { expr = true, noremap = false })
-map("i", "<CR>", "v:lua.cr_complete()", { expr = true, noremap = true })
-map("i", "<C-f>", "compe#scroll({ 'delta': +4 })", { expr = true })
-map("i", "<C-d>", "compe#scroll({ 'delta': -4 })", { expr = true })
+-- map("i", "<CR>", "v:lua.cr_complete()", { expr = true, noremap = true })
+-- map("i", "<C-f>", "compe#scroll({ 'delta': +4 })", { expr = true })
+-- map("i", "<C-d>", "compe#scroll({ 'delta': -4 })", { expr = true })
 
 local function on_attach(client, bufnr)
 	if client.config.flags then
@@ -222,46 +338,27 @@ local function on_attach(client, bufnr)
 		},
 	})
 
-	if client.name == "typescript" or client.name == "tsserver" then
-		local ts = require("nvim-lsp-ts-utils")
-		ts.setup({
-			disable_commands = false,
-			enable_import_on_completion = false,
-			import_on_completion_timeout = 5000,
-			eslint_bin = "eslint_d", -- use eslint_d if possible!
-			eslint_enable_diagnostics = true,
-			-- eslint_fix_current = false,
-			eslint_enable_disable_comments = true,
-		})
-
-		ts.setup_client(client)
-
-		-- so tsserver doesn't compete with efm or null-ls
-		client.resolved_capabilities.document_formatting = false
-	end
-
-	--- via fzf-lua
-	-- # https://github.com/ibhagwan/fzf-lua/issues/39#issuecomment-897099304 (LSP async/sync)
-	--
-	--- goto mappings
 	if pcall(require, "fzf-lua") then
+		--- # via fzf-lua
+		--  * https://github.com/ibhagwan/fzf-lua/issues/39#issuecomment-897099304 (LSP async/sync)
 		bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
 		bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
 		bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
 		bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
 		bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
 	else
+		--- # goto mappings
 		bufmap("gd", "lua vim.lsp.buf.definition()")
 		bufmap("gr", "lua vim.lsp.buf.references()")
 		bufmap("gs", "lua vim.lsp.buf.document_symbol()")
 		bufmap("gi", "lua vim.lsp.buf.implementation()")
 	end
 
-	--- diagnostics navigation mappings
+	--- # diagnostics navigation mappings
 	bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
 	bufmap("]d", "lua vim.lsp.diagnostic.goto_next()")
 
-	--- misc mappings
+	--- # misc mappings
 	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
 	-- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
 	-- bufmap("<leader>la", "lua vim.lsp.buf.code_action()")
@@ -280,20 +377,20 @@ local function on_attach(client, bufnr)
 		au([[CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()]])
 	end
 
-	--- trouble mappings
+	--- # trouble mappings
 	map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
-	--- auto-commands
+	--- # auto-commands
 	if client.resolved_capabilities.document_formatting then
-		-- au("BufWritePost <buffer> lua vim.lsp.buf.formatting()")
 		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
+		-- au("BufWritePost <buffer> lua vim.lsp.buf.formatting()")
 		-- au "BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()"
 	end
 
 	-- au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
 
-	--- commands
+	--- # commands
 	FormatRange = function()
 		local start_pos = api.nvim_buf_get_mark(0, "<")
 		local end_pos = api.nvim_buf_get_mark(0, ">")
@@ -303,13 +400,63 @@ local function on_attach(client, bufnr)
 	cmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
 	cmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
 
+	--- # client-specific configs
+	-- zk
+	if client.name == "zk" then
+		cmd([[ command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index() ]])
+		cmd([[ command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>) ]])
+
+		au([[BufNewFile,BufWritePost <buffer> call jobstart('zk index') ]])
+
+		bufmap("<CR>", "lua vim.lsp.buf.definition()")
+		-- bufmap("<CR>", "lua require('lspconfig').zk.follow_link_or_create({title = vim.fn.expand('<cword>')})")
+		-- bufmap("<CR>", "<cmd>lua require('lspconfig').zk.follow_link_or_create({})<cr>", "x")
+		bufmap("K", "lua vim.lsp.buf.hover()")
+		bufmap("<leader>zi", "ZkIndex")
+		bufmap("<leader>zn", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<cr>", "v")
+		bufmap("<leader>zn", "ZkNew {title = vim.fn.input('Title: ')}")
+		-- bufmap("n", "<leader>zl", ":ZkNew {dir = 'log'}<CR>")
+		-- bufmap("n", "<leader>zj", ":ZkNew {dir = 'journal/daily'}<CR>")
+		--
+		-- vim.cmd [[command! ZkList :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=notes EDITOR=floaterm zk edit -i]]
+		-- vim.cmd [[command! ZkTags :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=tags zk list -q -f json | jq -r '. | map(.tags) | flatten | unique | join("\n")' | fzf | EDITOR=floaterm xargs -o -t zk edit -i -t]]
+		-- vim.cmd [[command! ZkBacklinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=backlinks EDITOR=floaterm zk edit -i -l %]]
+		-- vim.cmd [[command! ZkLinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=links EDITOR=floaterm zk edit -i -L %]]
+	end
+
+	-- typescript/tsserver
+	if client.name == "typescript" or client.name == "tsserver" then
+		local ts = require("nvim-lsp-ts-utils")
+		ts.setup({
+			disable_commands = false,
+			enable_import_on_completion = false,
+			import_on_completion_timeout = 5000,
+			eslint_bin = "eslint_d", -- use eslint_d if possible!
+			eslint_enable_diagnostics = true,
+			-- eslint_fix_current = false,
+			eslint_enable_disable_comments = true,
+		})
+
+		ts.setup_client(client)
+
+		-- so tsserver doesn't compete with efm or null-ls
+		client.resolved_capabilities.document_formatting = false
+	end
+
 	api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
 --- capabilities
 local capabilities = lsp.protocol.make_client_capabilities()
 capabilities.textDocument.codeLens = { dynamicRegistration = false }
+capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
 capabilities.textDocument.completion.completionItem.snippetSupport = true
+capabilities.textDocument.completion.completionItem.preselectSupport = true
+capabilities.textDocument.completion.completionItem.insertReplaceSupport = true
+capabilities.textDocument.completion.completionItem.labelDetailsSupport = true
+capabilities.textDocument.completion.completionItem.deprecatedSupport = true
+capabilities.textDocument.completion.completionItem.commitCharactersSupport = true
+capabilities.textDocument.completion.completionItem.tagSupport = { valueSet = { 1 } }
 capabilities.textDocument.completion.completionItem.resolveSupport = {
 	properties = {
 		"documentation",
@@ -317,6 +464,14 @@ capabilities.textDocument.completion.completionItem.resolveSupport = {
 		"additionalTextEdits",
 	},
 }
+-- capabilities.textDocument.completion.completionItem.snippetSupport = true
+-- capabilities.textDocument.completion.completionItem.resolveSupport = {
+-- 	properties = {
+-- 		"documentation",
+-- 		"detail",
+-- 		"additionalTextEdits",
+-- 	},
+-- }
 local status_capabilities = require("lsp-status").capabilities
 capabilities = mega.table_merge(status_capabilities, capabilities)
 
@@ -520,7 +675,7 @@ lspconfig["jsonls"].setup(lsp_with_defaults({
 	},
 	settings = {
 		json = {
-			format = { enable = true },
+			format = { enable = false },
 			-- TODO: clean up please!
 			-- more useful schemas:
 			-- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/lsp/language_servers/json.lua#L27
@@ -649,13 +804,46 @@ do
 	-- lspconfig["null-ls"].setup(lsp_with_defaults())
 end
 
--- lspconfig["zk"].setup(lsp_with_defaults(
---   {
---     cmd = {"zk", "lsp", "--log", "/tmp/zk-lsp.log"},
---     filetypes = {"markdown", "md"},
---     root_dir = function()
---       return vim.loop.cwd()
---     end,
---     settings = {},
---   })
--- )
+do
+	local configs = require("lspconfig/configs")
+	configs.zk = {
+		default_config = {
+			cmd = { "zk", "lsp", "--log", "/tmp/zk-lsp.log" },
+			filetypes = { "markdown" },
+			root_dir = function(...)
+				local dir = lspconfig.util.root_pattern(".zk/")(...)
+					or lspconfig.util.root_pattern(".git/")(...)
+					or vim.loop.cwd()
+				return dir
+			end,
+			settings = {},
+		},
+	}
+
+	-- # REFS:
+	--  * https://github.com/kaile256/dotfiles/blob/master/.config/nvim/lua/rc/lsp/config/ls/zk.lua
+	--  * https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
+	configs.zk.index = function()
+		vim.lsp.buf.execute_command({
+			command = "zk.index",
+			arguments = { vim.api.nvim_buf_get_name(0) },
+		})
+	end
+
+	configs.zk.new = function(...)
+		vim.lsp.buf_request(0, "workspace/executeCommand", {
+			command = "zk.new",
+			arguments = {
+				vim.api.nvim_buf_get_name(0),
+				...,
+			},
+		}, function(_, _, result)
+			if not (result and result.path) then
+				return
+			end
+			vim.cmd("vnew " .. result.path)
+		end)
+	end
+
+	lspconfig["zk"].setup(lsp_with_defaults())
+end

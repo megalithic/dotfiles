@@ -89,3 +89,11 @@ todos = "zk list -t 'todo'"
 edlast = "zk edit --limit 1 --sort modified- $@"
 # Edit the notes selected interactively among the notes created the last two weeks.
 recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
+
+# LSP INTEGRATION
+[lsp]
+[lsp.diagnostics]
+# Report titles of wiki-links as hints.
+wiki-title = "hint"
+# Warn for dead links between notes.
+dead-link = "error"

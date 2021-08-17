@@ -116,7 +116,7 @@ do -- [nvim-treesitter] --
 			max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
 		},
 		textsubjects = {
-			enable = true,
+			enable = false,
 			keymaps = {
 				["."] = "textsubjects-smart",
 				[";"] = "textsubjects-container-outer",
@@ -125,7 +125,7 @@ do -- [nvim-treesitter] --
 		},
 		textobjects = {
 			select = {
-				enable = true,
+				enable = false,
 				lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
 				keymaps = {
 					["if"] = "@function.inner",
@@ -490,11 +490,11 @@ do -- [autopairs] --
 			-- don't check treesitter on java
 		},
 	})
-	require("nvim-autopairs.completion.compe").setup({
-		map_cr = true, --  map <CR> on insert mode
-		map_complete = true, -- it will auto insert `(` after select function or method item
-	})
-
+-- 	require("nvim-autopairs.completion.compe").setup({
+-- 		map_cr = true, --  map <CR> on insert mode
+-- 		map_complete = true, -- it will auto insert `(` after select function or method item
+-- 	})
+--
 	npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
 	-- npairs.add_rules(require("nvim-autopairs.rules.endwise-lua"))
 	local endwise = require("nvim-autopairs.ts-rule").endwise
@@ -511,7 +511,7 @@ end
 
 do -- [lightspeed] --
 	require("lightspeed").setup({
-		jump_to_first_match = false,
+		jump_to_first_match = true,
 		jump_on_partial_input_safety_timeout = 400,
 		-- This can get _really_ slow if the window has a lot of content,
 		-- turn it on only if your machine can always cope with it.
@@ -697,6 +697,10 @@ end
 
 do
 	require("numb").setup()
+end
+
+do
+	require("toggleterm").setup({})
 end
 
 do -- [fzf] --
