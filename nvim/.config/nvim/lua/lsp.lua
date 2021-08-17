@@ -96,7 +96,7 @@ do
 				types.cmp.TriggerEvent.InsertEnter,
 				types.cmp.TriggerEvent.TextChanged,
 			},
-			completeopt = "menu,menuone,noselect,noinsert",
+			-- completeopt = "menu,menuone,noselect,noinsert",
 			keyword_pattern = [[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%(-\w*\)*\)]],
 			keyword_length = 1,
 		},
@@ -115,7 +115,7 @@ do
 		mapping = {
 			["<C-p>"] = cmp.mapping.prev_item(),
 			["<C-n>"] = cmp.mapping.next_item(),
-			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
+			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(_, fallback)
 				if vim.fn.pumvisible() == 1 then
 					vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-n>", true, true, true), "n")
 				elseif luasnip.expand_or_jumpable() then
@@ -127,7 +127,7 @@ do
 					fallback()
 				end
 			end),
-			["<S-Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
+			["<S-Tab>"] = cmp.mapping.mode({ "i", "s" }, function(_, fallback)
 				if vim.fn.pumvisible() == 1 then
 					vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<C-p>", true, true, true), "n")
 				elseif luasnip.jumpable(-1) then
@@ -153,10 +153,11 @@ do
 				end
 			end,
 			-- presently handled by nvim-autopairs
-			-- ["<CR>"] = cmp.mapping.confirm({
-			--     behavior = cmp.ConfirmBehavior.Replace,
-			--     select = true,
-			-- }),
+			-- # REF: https://github.com/benwoodward/dotfiles/blob/main/.config/nvim/lua/plugins/config/cmp.lua#L33-L65
+			["<CR>"] = cmp.mapping.confirm({
+				behavior = cmp.ConfirmBehavior.Replace,
+				select = false,
+			}),
 		},
 		sources = {
 			-- 		luasnip = { menu = " [lsnip]", priority = 12 },
@@ -224,77 +225,41 @@ do
 	end
 end
 
--- # nvim-compe
--- require("compe").setup({
--- 	enabled = true,
--- 	autocomplete = true,
--- 	debug = false,
--- 	min_length = 1,
--- 	preselect = "disable",
--- 	allow_prefix_unmatch = false,
--- 	throttle_time = 80,
--- 	source_timeout = 200,
--- 	incomplete_delay = 400,
--- 	max_abbr_width = 100,
--- 	max_kind_width = 100,
--- 	max_menu_width = 100,
--- 	documentation = {
--- 		border = "rounded",
--- 		winhighlight = table.concat({
--- 			"NormalFloat:CompeDocumentation",
--- 			"Normal:CompeDocumentation",
--- 			"FloatBorder:CompeDocumentationBorder",
--- 		}, ","),
--- 	},
--- 	source = {
--- 		luasnip = { menu = " [lsnip]", priority = 12 },
--- 		nvim_lua = { menu = " [lua]", priority = 11 },
--- 		nvim_lsp = { menu = " [lsp]", priority = 10 },
--- 		orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
--- 		neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
--- 		path = { menu = "", kind = " [path]", priority = 8 },
--- 		emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
--- 		spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
--- 		buffer = { menu = " [buf]", priority = 7 },
--- 		treesitter = false, --{menu = "[ts]", priority = 9},
--- 	},
--- })
-
-local t = function(str)
-	return api.nvim_replace_termcodes(str, true, true, true)
-end
-
-local check_back_space = function()
-	local col = fn.col(".") - 1
-	return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
-end
+-- local t = function(str)
+-- 	return api.nvim_replace_termcodes(str, true, true, true)
+-- end
+--
+-- local check_back_space = function()
+-- 	local col = fn.col(".") - 1
+-- 	return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
+-- end
 
 -- Use (s-)tab to:
 --- move to prev/next item in completion menuone
 --- jump to prev/next snippet's placeholder
-_G.tab_complete = function()
-	if fn.pumvisible() == 1 then
-		return t("<C-n>")
-	elseif require("luasnip").expand_or_jumpable() then
-		return t("<cmd>lua require'luasnip'.jump(1)<Cr>")
-	elseif check_back_space() then
-		return t("<Tab>")
-		-- else
-		-- 	-- require("cmp").complete()
-		-- 	-- return ""
-		-- 	return vim.fn["compe#complete"]()
-	end
-end
-
-_G.s_tab_complete = function()
-	if fn.pumvisible() == 1 then
-		return t("<C-p>")
-	elseif require("luasnip").jumpable(-1) then
-		return t("<cmd>lua require'luasnip'.jump(-1)<CR>")
-	else
-		return t("<S-Tab>")
-	end
-end
+-- _G.tab_complete = function()
+-- 	if fn.pumvisible() == 1 then
+-- 		return t("<C-n>")
+-- 	elseif require("luasnip").expand_or_jumpable() then
+-- 		return t("<cmd>lua require'luasnip'.jump(1)<Cr>")
+-- 	elseif check_back_space() then
+-- 		return t("<Tab>")
+-- 		-- else
+-- 		-- 	-- require("cmp").complete()
+-- 		-- 	-- return ""
+-- 		-- 	return vim.fn["compe#complete"]()
+-- 	end
+-- end
+--
+-- _G.s_tab_complete = function()
+-- 	if fn.pumvisible() == 1 then
+-- 		return t("<C-p>")
+-- 	elseif require("luasnip").jumpable(-1) then
+-- 		return t("<cmd>lua require'luasnip'.jump(-1)<CR>")
+-- 	else
+-- 		return t("<S-Tab>")
+-- 	end
+-- end
 --
 -- -- REF: https://github.com/fsouza/dotfiles/blob/main/nvim/lua/fsouza/lsp/completion.lua#L16-L24
 -- _G.cr_complete = function()
@@ -323,10 +288,10 @@ end
 -- 	end
 -- end
 --
-map("i", "<Tab>", "v:lua.tab_complete()", { expr = true, noremap = false })
-map("s", "<Tab>", "v:lua.tab_complete()", { expr = true, noremap = false })
-map("i", "<S-Tab>", "v:lua.s_tab_complete()", { expr = true, noremap = false })
-map("s", "<S-Tab>", "v:lua.s_tab_complete()", { expr = true, noremap = false })
+-- map("i", "<Tab>", "v:lua.tab_complete()", { expr = true, noremap = false })
+-- map("s", "<Tab>", "v:lua.tab_complete()", { expr = true, noremap = false })
+-- map("i", "<S-Tab>", "v:lua.s_tab_complete()", { expr = true, noremap = false })
+-- map("s", "<S-Tab>", "v:lua.s_tab_complete()", { expr = true, noremap = false })
 -- map("i", "<CR>", "v:lua.cr_complete()", { expr = true, noremap = true })
 -- map("i", "<C-f>", "compe#scroll({ 'delta': +4 })", { expr = true })
 -- map("i", "<C-d>", "compe#scroll({ 'delta': -4 })", { expr = true })
