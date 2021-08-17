@@ -182,39 +182,44 @@ do
 			end,
 		},
 	})
+	-- REF: homemade version:
+	-- https://github.com/elianiva/dotfiles/blob/master/config/nvim/lua/modules/util.lua#L10-L33
 	require("nvim-autopairs.completion.cmp").setup({
 		map_cr = true, --  map <CR> on insert mode
 		map_complete = true, -- insert `(` when function/method is completed
 	})
-end
 
-require("vim.lsp.protocol").CompletionItemKind = {
-	" text", -- Text
-	" method", -- Method
-	"ƒ function", -- Function
-	" constructor", -- Constructor
-	"識field", -- Field
-	" variable", -- Variable
-	" class", -- Class
-	"ﰮ interface", -- Interface
-	" module", -- Module
-	" property", -- Property
-	" unit", -- Unit
-	" value", -- Value
-	"了enum", -- Enum
-	" keyword", -- Keyword
-	" snippet", -- Snippet
-	" color", -- Color
-	" file", -- File
-	"渚ref", -- Reference
-	" folder", -- Folder
-	" enum", -- Enum
-	" const", -- Constant
-	" struct", -- Struct
-	"鬒event", -- Event
-	"\u{03a8} operator", -- Operator
-	" type param", -- TypeParameter
-}
+	require("vim.lsp.protocol").CompletionItemKind = {
+		" text", -- Text
+		" method", -- Method
+		"ƒ function", -- Function
+		" constructor", -- Constructor
+		"識field", -- Field
+		" variable", -- Variable
+		" class", -- Class
+		"ﰮ interface", -- Interface
+		" module", -- Module
+		" property", -- Property
+		" unit", -- Unit
+		" value", -- Value
+		"了enum", -- Enum
+		" keyword", -- Keyword
+		" snippet", -- Snippet
+		" color", -- Color
+		" file", -- File
+		"渚ref", -- Reference
+		" folder", -- Folder
+		" enum", -- Enum
+		" const", -- Constant
+		" struct", -- Struct
+		"鬒event", -- Event
+		"\u{03a8} operator", -- Operator
+		" type param", -- TypeParameter
+	}
+	for index, value in ipairs(vim.lsp.protocol.CompletionItemKind) do
+		cmp.lsp.CompletionItemKind[index] = value
+	end
+end
 
 -- # nvim-compe
 -- require("compe").setup({
