@@ -123,13 +123,19 @@ end
 do
 	-- [luasnip] --
 	local luasnip = require("luasnip")
+	local types = require("luasnip.util.types")
 	luasnip.config.set_config({
 		history = true,
 		updateevents = "TextChanged,TextChangedI",
 		ext_opts = {
-			[require("luasnip.util.types").choiceNode] = {
+			[types.insertNode] = {
+				passive = {
+					hl_group = "Substitute",
+				},
+			},
+			[types.choiceNode] = {
 				active = {
-					virt_text = { { "choiceNode", "Comment" } },
+					virt_text = { { "choiceNode", "IncSearch" } },
 				},
 			},
 		},
@@ -140,6 +146,11 @@ do
 	})
 	map("i", "<c-n>", "<Plug>luasnip-next-choice")
 	map("s", "<c-n>", "<Plug>luasnip-next-choice")
+
+	local check_backspace = function()
+		local col = vim.fn.col(".") - 1
+		return col == 0 or vim.fn.getline("."):sub(col, col):match("%s") ~= nil
+	end
 
 	-- [nvim-cmp] --
 	require("cmp_nvim_lsp").setup()
@@ -177,13 +188,13 @@ do
 			border = "rounded",
 		},
 		mapping = {
-			-- ["<C-p>"] = cmp.mapping.prev_item(),
-			-- ["<C-n>"] = cmp.mapping.next_item(),
-			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(_, fallback)
+			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
 				if fn.pumvisible() == 1 then
 					fn.feedkeys(api.nvim_replace_termcodes("<C-n>", true, true, true), "n")
 				elseif luasnip.expand_or_jumpable() then
 					fn.feedkeys(api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
+				elseif not check_backspace() then
+					cmp.mapping.complete()(core, fallback)
 				else
 					fallback()
 				end
