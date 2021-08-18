@@ -136,9 +136,9 @@ set colorcolumn=81 " Highlight 81 and 82 columns
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 set completeopt=menuone,noinsert,noselect " Don't auto select first one
-"set nocursorcolumn
-"set cursorlineopt=number
-set nocursorline
+" set nocursorcolumn
+set cursorlineopt=number
+set cursorline
 set dictionary=/usr/share/dict/words
 set spellfile=$HOME/.dotfiles/nvim/.config/nvim/spell/en.utf-8.add
 set spelllang=en

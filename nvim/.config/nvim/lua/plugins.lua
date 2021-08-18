@@ -11,6 +11,8 @@ return {
 	-- (appearance/ui) --
 	"sainnhe/everforest",
 	"savq/melange",
+	"EdenEast/nightfox.nvim",
+	"folke/tokyonight.nvim",
 	"rktjmp/lush.nvim",
 	"norcalli/nvim-colorizer.lua",
 	"dm1try/golden_size",

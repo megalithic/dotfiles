@@ -113,7 +113,7 @@ alias b="brew"
 # (NEO)VIM
 # -----------------------------------------------------------------------------
 alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
-alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && nvim -c +PaqSync --headless 2>/dev/null && brew outdated"
+alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
 alias im="nvim"
 alias nv="nvim"
 alias vm="nvim"

@@ -1,5 +1,6 @@
-local cmd, api = vim.cmd, vim.api
+local cmd, api, g = vim.cmd, vim.api, vim.g
 local hi, utf8 = mega.highlight, mega.utf8
+local target = "everforest"
 
 local icons = {
 	sign_error = utf8(0xf655),
@@ -123,7 +124,7 @@ return {
 	status = status,
 	colors = mega.table_merge(mega.table_merge(base, status), cs),
 	setup = function()
-		mega.everforest_overrides = function()
+		mega.color_overrides = function()
 			api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
 			-- hi("SpellBad", {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true})
 			-- -- hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
@@ -135,12 +136,6 @@ return {
 			-- call everforest#highlight('StatusLineTerm', s:palette.grey1, s:palette.bg1)
 			-- call everforest#highlight('StatusLineNC', s:palette.grey1, s:palette.bg0)
 			-- call everforest#highlight('StatusLineTermNC', s:palette.grey1, s:palette.bg0)
-
-			hi("CursorWord", { gui = "bold,underline", force = true })
-			hi(
-				"CursorLineNr",
-				{ guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true }
-			)
 			hi("OrgDone", { guifg = base.bright_green, guibg = "NONE", gui = "bold", force = true })
 			hi("OrgDONE", { guifg = base.bright_green, guibg = "NONE", gui = "bold", force = true })
 			hi("OrgAgendaScheduled", { guifg = base.green, guibg = "NONE", gui = "NONE", force = true })
@@ -169,27 +164,41 @@ return {
 				"LspDiagnosticsVirtualTextHint",
 				{ guifg = status.hint_status, guibg = status.bg2, gui = "italic", force = true }
 			)
-			-- hi("Todo", {guifg = status.purple, guibg = status.bg2, force = true})
-			-- hi("Debug", {guifg = status.orange, guibg = status.bg2, force = true})
+			hi("CursorWord", { gui = "bold,underline", force = true })
+			hi(
+				"CursorLineNr",
+				{ guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true }
+			)
 		end
-		mega.augroup_cmds("EverforestOverrides", {
+
+		mega.augroup_cmds("colorscheme_overrides", {
 			{
 				events = { "VimEnter", "ColorScheme" },
-				targets = { "everforest" },
-				command = "lua mega.everforest_overrides()",
+				targets = { target },
+				command = "lua mega.color_overrides()",
 			},
 		})
 
 		vim.opt.termguicolors = true
-		vim.g.everforest_enable_italic = true
-		vim.g.everforest_enable_bold = true
-		vim.g.everforest_transparent_background = true
-		-- vim.g.everforest_diagnostic_text_highlight = true
-		-- vim.g.everforest_diagnostic_line_highlight = true
-		-- vim.g.everforest_sign_column_background = "none"
-		vim.g.everforest_background = "soft"
-		vim.g.everforest_cursor = "auto"
-		vim.g.everforest_better_performance = true
-		cmd("colorscheme everforest")
+		if target == "everforest" then
+			g.everforest_enable_italic = true
+			g.everforest_enable_bold = true
+			g.everforest_transparent_background = true
+			g.everforest_current_word = "underline"
+			-- g.everforest_diagnostic_text_highlight = true
+			-- g.everforest_diagnostic_line_highlight = true
+			-- g.everforest_sign_column_background = "none"
+			g.everforest_background = "soft"
+			g.everforest_cursor = "auto"
+			g.everforest_better_performance = true
+		elseif target == "nightfox" then
+			require(target).set()
+			g.nightfox_style = "nordfox"
+		elseif target == "tokyonight" then
+			require(target).set()
+			g.tokyonight_style = "storm"
+		end
+
+		cmd("colorscheme " .. target)
 	end,
 }

@@ -1,7 +1,6 @@
 local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
 local dirs = mega.dirs
 local colors = require("colors")
-local is_dev = mega.has("nvim-0.6")
 
 do -- [nvim options/ui/appearance] --
 	-- fallback in the event our statusline plugins fail to load
@@ -25,10 +24,6 @@ do -- [nvim options/ui/appearance] --
 	set.foldmethod = "expr"
 	set.foldexpr = "nvim_treesitter#foldexpr()"
 	set.indentexpr = "nvim_treesitter#indent()"
-	set.signcolumn = is_dev and "auto:2-4" or "yes:2"
-	if is_dev then
-		set.cursorlineopt = "screenline,number"
-	end
 	-- set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 	g.no_man_maps = true
 	g.vim_json_syntax_conceal = false
@@ -52,11 +47,11 @@ do -- [nvim options/ui/appearance] --
 end
 
 do
-	vim.g.startuptime_tries = 10
+	g.startuptime_tries = 10
 end
 
 do
-	vim.g.matchup_matchparen_offscreen = {
+	g.matchup_matchparen_offscreen = {
 		method = "popup",
 		fullwidth = true,
 		highlight = "Normal",
