@@ -1,6 +1,6 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
-local au, exec, augroup = mega.au, mega.exec, mega.augroup_cmds
+local au, exec, augroup = mega.au, mega.exec, mega.augroup
 
 au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
 au([[StdinReadPost * set buftype=nofile]])
@@ -48,25 +48,30 @@ augroup("paq", {
 })
 
 augroup("focus", {
-	{
-		events = { "BufEnter", "WinEnter" },
-		targets = { "*" },
-		command = "silent setlocal relativenumber number colorcolumn=81",
-	},
-	{
-		events = { "BufLeave", "WinLeave" },
-		targets = { "*" },
-		command = "silent setlocal norelativenumber nonumber colorcolumn=0",
-	},
+	-- {
+	-- 	events = { "BufEnter", "WinEnter" },
+	-- 	targets = { "*" },
+	-- 	command = "silent setlocal relativenumber number colorcolumn=81",
+	-- },
+	-- {
+	-- 	events = { "BufLeave", "WinLeave" },
+	-- 	targets = { "*" },
+	-- 	command = "silent setlocal norelativenumber nonumber colorcolumn=0",
+	-- },
 	{
 		events = { "BufEnter", "FileType", "FocusGained", "InsertLeave" },
 		targets = { "*" },
 		command = "silent setlocal relativenumber number",
 	},
 	{
-		events = { "FocusLost", "BufLeave", "InsertEnter", "TermOpen" },
+		events = { "FocusLost", "BufLeave", "InsertEnter" },
 		targets = { "*" },
 		command = "silent setlocal norelativenumber number",
+	},
+	{
+		events = { "TermOpen" },
+		targets = { "*" },
+		command = "silent setlocal norelativenumber nonumber",
 	},
 })
 

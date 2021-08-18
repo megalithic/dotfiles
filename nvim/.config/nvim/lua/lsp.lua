@@ -221,7 +221,18 @@ do
 			{ name = "nvim_lsp" },
 			{ name = "emoji" },
 			{ name = "path" },
-			{ name = "buffer" },
+			{
+				name = "buffer",
+				opts = {
+					get_bufnrs = function()
+						local bufs = {}
+						for _, win in ipairs(api.nvim_list_wins()) do
+							bufs[api.nvim_win_get_buf(win)] = true
+						end
+						return vim.tbl_keys(bufs)
+					end,
+				},
+			},
 		},
 		formatting = {
 			format = function(_, item)

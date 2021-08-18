@@ -1,5 +1,5 @@
-local cmd, api, g = vim.cmd, vim.api, vim.g
-local hi, utf8 = mega.highlight, mega.utf8
+local cmd, api, g, set = vim.cmd, vim.api, vim.g, vim.opt
+local hi, link, utf8 = mega.hi, mega.hi_link, mega.utf8
 local target = "everforest"
 
 local icons = {
@@ -125,7 +125,26 @@ return {
 	colors = mega.table_merge(mega.table_merge(base, status), cs),
 	setup = function()
 		mega.color_overrides = function()
-			api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], true)
+			api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], false)
+			-- if target == "everforest" then
+			-- 	-- if we're using everforest, let's use their method for highlight
+			-- 	-- overrides; e.g., with `call everforest#highlight()`
+			-- 	hi = function(grp, opts)
+			-- 		cmd(
+			-- 			"call everforest#highlight('"
+			-- 				.. grp
+			-- 				.. "', "
+			-- 				.. opts.guifg
+			-- 				.. ", "
+			-- 				.. opts.guibg
+			-- 				.. ", '"
+			-- 				.. opts.gui
+			-- 				.. "')"
+			-- 		)
+			-- 	end
+			-- 	mega.log(string.format("everforest highlight: %s", vim.inspect(hi)))
+			-- end
+
 			-- hi("SpellBad", {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true})
 			-- -- hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
 			-- -- hi("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
@@ -139,13 +158,13 @@ return {
 			hi("OrgDone", { guifg = base.bright_green, guibg = "NONE", gui = "bold", force = true })
 			hi("OrgDONE", { guifg = base.bright_green, guibg = "NONE", gui = "bold", force = true })
 			hi("OrgAgendaScheduled", { guifg = base.green, guibg = "NONE", gui = "NONE", force = true })
-			cmd("hi link OrgAgendaDay Directory")
+			link("OrgAgendaDay", "Directory")
 			-- hi("DiffAdd", {guifg = status.added, guibg = "NONE", force = true})
 			-- hi("DiffDelete", {guifg = status.removed, guibg = "NONE", force = true})
 			-- hi("DiffChange", {guifg = status.changed, guibg = "NONE", force = true})
 			hi("WarningMsg", { guifg = status.warning_status, guibg = status.bg2, gui = "bold", force = true })
 			hi("ErrorMsg", { guifg = status.error_status, guibg = status.bg2, gui = "bold", force = true })
-			hi("markdownHeadline", { guifg = status.normal_text, guibg = status.vertsplit, force = true })
+			hi("markdownHeadline", { guifg = cs.bg_blue, gui = "bold,underline", force = true })
 			hi("markdownFirstHeadline", { guifg = status.bg, guibg = status.added, force = true })
 			hi("markdownSecondHeadline", { guifg = status.bg, guibg = status.changed, force = true })
 			hi(
@@ -169,35 +188,33 @@ return {
 				"CursorLineNr",
 				{ guifg = status.cursorlinenr, guibg = status.special_bg, gui = "bold,italic", force = true }
 			)
+			hi("IndentBlanklineContextChar", { guifg = cs.grey2, force = true })
+			-- hi("IndentBlanklineChar", { guifg = base.special_grey, force = true })
+			-- link("IndentBlanklineChar", "IndentBlanklineSpaceChar")
 		end
 
-		mega.augroup_cmds("colorscheme_overrides", {
-			{
-				events = { "VimEnter", "ColorScheme" },
-				targets = { target },
-				command = "lua mega.color_overrides()",
-			},
-		})
+		set.termguicolors = true
 
-		vim.opt.termguicolors = true
 		if target == "everforest" then
 			g.everforest_enable_italic = true
 			g.everforest_enable_bold = true
 			g.everforest_transparent_background = true
 			g.everforest_current_word = "underline"
-			-- g.everforest_diagnostic_text_highlight = true
-			-- g.everforest_diagnostic_line_highlight = true
-			-- g.everforest_sign_column_background = "none"
 			g.everforest_background = "soft"
 			g.everforest_cursor = "auto"
 			g.everforest_better_performance = true
-		elseif target == "nightfox" then
-			require(target).set()
-			g.nightfox_style = "nordfox"
-		elseif target == "tokyonight" then
-			require(target).set()
-			g.tokyonight_style = "storm"
+			-- g.everforest_diagnostic_text_highlight = true
+			-- g.everforest_diagnostic_line_highlight = true
+			-- g.everforest_sign_column_background = "none"
 		end
+
+		mega.augroup("colorscheme_overrides", {
+			{
+				events = { "ColorScheme" },
+				targets = { target },
+				command = "lua mega.color_overrides()",
+			},
+		})
 
 		cmd("colorscheme " .. target)
 	end,

@@ -109,14 +109,14 @@ function M.au(s)
 	cmd("au!" .. s)
 end
 
-function M.augroup(group, fun)
-	api.nvim_command("augroup " .. group)
-	api.nvim_command("autocmd!")
-	fun()
-	api.nvim_command("augroup END")
-end
+-- function M.augroup(group, fun)
+-- 	api.nvim_command("augroup " .. group)
+-- 	api.nvim_command("autocmd!")
+-- 	fun()
+-- 	api.nvim_command("augroup END")
+-- end
 
-function M.augroup_cmds(name, commands)
+function M.augroup(name, commands)
 	cmd("augroup " .. name)
 	cmd("autocmd!")
 	for _, c in ipairs(commands) do
@@ -163,6 +163,14 @@ function M.highlight(name, opts)
 			cmd(table.concat(hi_opt, " "))
 		end
 	end
+end
+
+function M.hi(...)
+	M.highlight(...)
+end
+
+function M.hi_link(src, dest)
+	cmd("hi! link " .. src .. " " .. dest)
 end
 
 function M.exec(c)

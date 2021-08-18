@@ -29,7 +29,7 @@ return function(_) -- bufnr
   -- continuous meeting note datetime entry
   vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 
-  -- mega.augroup_cmds(
+  -- mega.augroup(
   --   "mega.filetypes",
   --   {
   --     {

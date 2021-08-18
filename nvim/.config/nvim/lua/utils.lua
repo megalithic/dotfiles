@@ -13,7 +13,7 @@ local function add_highlights()
 		.. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
 
 	w.cursorword = cursorword
-	w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
+	-- w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
 end
 
 local function clear_highlights()
@@ -28,6 +28,8 @@ local function make_prompt(opts)
 	prompt_buf = api.nvim_create_buf(false, true)
 
 	api.nvim_buf_set_option(prompt_buf, "buftype", "prompt")
+	-- api.nvim_buf_set_option(prompt_buf, "number", false)
+	-- api.nvim_buf_set_option(prompt_buf, "relativenumber", false)
 
 	prompt_window = api.nvim_open_win(
 		prompt_buf,
