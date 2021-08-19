@@ -1,6 +1,9 @@
 local cmd, api, g, set = vim.cmd, vim.api, vim.g, vim.opt
 local hi, link, utf8 = mega.hi, mega.hi_link, mega.utf8
-local target = "everforest"
+
+local hsl = require("lush").hsl
+
+local theme = "megaforest"
 
 local icons = {
 	sign_error = utf8(0xf655),
@@ -27,30 +30,55 @@ local icons = {
 	prompt_symbol = utf8(0xf460),
 }
 
-local cs = {
-	bg0 = "#323d43",
-	bg1 = "#3c474d",
-	bg2 = "#465258",
-	bg3 = "#505a60",
-	bg4 = "#576268",
-	bg_visual = "#4e6053",
-	-- bg_visual = "#5d4251",
-	bg_red = "#614b51",
-	bg_green = "#4e6053",
-	bg_blue = "#415c6d",
-	bg_yellow = "#5d5c50",
-	grey0 = "#7c8377",
-	grey1 = "#868d80",
-	grey2 = "#999f93",
-	fg = "#d8caac",
-	red = "#e68183",
-	orange = "#e39b7b",
-	yellow = "#d9bb80",
-	green = "#a7c080",
-	cyan = "#87c095",
-	blue = "#83b6af",
-	purple = "#d39bb6",
-}
+local cs = {}
+cs.bg0 = hsl("#323d43")
+cs.bg1 = hsl("#3c474d")
+cs.bg2 = hsl("#465258")
+cs.bg3 = hsl("#505a60")
+cs.bg4 = hsl("#576268")
+cs.bg_visual = hsl("#4e6053")
+-- theme.bg_visual = "#5d4251"
+cs.bg_red = hsl("#614b51")
+cs.bg_green = hsl("#4e6053")
+cs.bg_blue = hsl("#415c6d")
+cs.bg_yellow = hsl("#5d5c50")
+cs.grey0 = hsl("#7c8377")
+cs.grey1 = hsl("#868d80")
+cs.grey2 = hsl("#999f93")
+cs.fg = hsl("#d8caac")
+cs.red = hsl("#e68183")
+cs.orange = hsl("#e39b7b")
+cs.yellow = hsl("#d9bb80")
+cs.green = hsl("#a7c080")
+cs.cyan = hsl("#87c095")
+cs.blue = hsl("#83b6af")
+cs.aqua = cs.blue
+cs.purple = hsl("#d39bb6")
+
+-- local cs = {
+-- 	bg0 = "#323d43",
+-- 	bg1 = "#3c474d",
+-- 	bg2 = "#465258",
+-- 	bg3 = "#505a60",
+-- 	bg4 = "#576268",
+-- 	bg_visual = "#4e6053",
+-- 	-- bg_visual = "#5d4251",
+-- 	bg_red = "#614b51",
+-- 	bg_green = "#4e6053",
+-- 	bg_blue = "#415c6d",
+-- 	bg_yellow = "#5d5c50",
+-- 	grey0 = "#7c8377",
+-- 	grey1 = "#868d80",
+-- 	grey2 = "#999f93",
+-- 	fg = "#d8caac",
+-- 	red = "#e68183",
+-- 	orange = "#e39b7b",
+-- 	yellow = "#d9bb80",
+-- 	green = "#a7c080",
+-- 	cyan = "#87c095",
+-- 	blue = "#83b6af",
+-- 	purple = "#d39bb6",
+-- }
 
 local base = {
 	black = cs.bg0,
@@ -195,7 +223,7 @@ return {
 
 		set.termguicolors = true
 
-		if target == "everforest" then
+		if theme == "everforest" then
 			g.everforest_enable_italic = true
 			g.everforest_enable_bold = true
 			g.everforest_transparent_background = true
@@ -211,11 +239,11 @@ return {
 		mega.augroup("colorscheme_overrides", {
 			{
 				events = { "ColorScheme" },
-				targets = { target },
+				targets = { theme },
 				command = "lua mega.color_overrides()",
 			},
 		})
 
-		cmd("colorscheme " .. target)
+		cmd("colorscheme " .. theme)
 	end,
 }

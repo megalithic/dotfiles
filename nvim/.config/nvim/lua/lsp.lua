@@ -337,16 +337,10 @@ local function on_attach(client, bufnr)
 	-- zk
 	if client.name == "zk" then
 		au([[BufNewFile,BufWritePost <buffer> call jobstart('zk index') ]])
-		cmd([[ command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index() ]])
-		cmd([[ command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>) ]])
 		bufmap("<CR>", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<CR>", "v")
 		bufmap("<CR>", "lua vim.lsp.buf.definition()")
 		bufmap("K", "lua vim.lsp.buf.hover()")
-		bufmap("<leader>zi", "ZkIndex")
-		bufmap("<leader>zn", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<cr>", "v")
-		bufmap("<leader>zn", "ZkNew {title = vim.fn.input('Title: ')}")
-		-- bufmap("n", "<leader>zl", ":ZkNew {dir = 'log'}<CR>")
-		-- bufmap("n", "<leader>zj", ":ZkNew {dir = 'journal/daily'}<CR>")
+
 		-- REF: thanks @mhanberg ->
 		-- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
 	end

@@ -132,6 +132,7 @@ return {
 	"kristijanhusak/orgmode.nvim",
 	"akinsho/org-bullets.nvim",
 	"dhruvasagar/vim-table-mode",
+	-- "NFrid/due.nvim",
 	-- # ruby/rails
 	-- "vim-ruby/vim-ruby",
 	"tpope/vim-rails",
