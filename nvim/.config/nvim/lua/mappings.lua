@@ -109,12 +109,10 @@ map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
 -- # golden_size
 map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
--- # git-related
+-- # git-related (fugitive, et al)
 map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
 map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
-
--- map("x", "<Leader>gh", "<cmd>'<'>GBrowse!<CR>")
 
 -- # markdown-related
 map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
@@ -130,6 +128,16 @@ endif
   ]],
 	true
 )
+
+-- # zk
+-- REF: https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
+cmd([[ command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index() ]])
+cmd([[ command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>) ]])
+map("n", "<leader>zi", "<cmd>ZkIndex<cr>")
+map("v", "<leader>zn", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<cr>")
+map("n", "<leader>zn", "<cmd>ZkNew {title = vim.fn.input('Title: ')}<cr>")
+-- bufmap("n", "<leader>zl", ":ZkNew {dir = 'log'}<CR>")
+-- bufmap("n", "<leader>zj", ":ZkNew {dir = 'journal/daily'}<CR>")
 
 -- # treesitter
 map("o", "m", ":<C-U>lua require('tsht').nodes()<CR>")

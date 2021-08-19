@@ -10,9 +10,6 @@ return {
 	--
 	-- (appearance/ui) --
 	"sainnhe/everforest",
-	"savq/melange",
-	"EdenEast/nightfox.nvim",
-	"folke/tokyonight.nvim",
 	"rktjmp/lush.nvim",
 	"norcalli/nvim-colorizer.lua",
 	"dm1try/golden_size",
@@ -82,12 +79,11 @@ return {
 	"rhysd/git-messenger.vim",
 	"sindrets/diffview.nvim",
 	-- "lewis6991/gitsigns.nvim",
-	"drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
+	-- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
 	--
 	-- (development, et al) --
 	"tpope/vim-projectionist",
-	"janko/vim-test",
-	-- research to supplement vim-test: rcarriga/vim-ultest
+	"janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest
 	"tpope/vim-ragtag",
 	"rizzatti/dash.vim",
 	"sgur/vim-editorconfig",
