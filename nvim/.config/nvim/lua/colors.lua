@@ -3,7 +3,7 @@ local hi, link, utf8 = mega.hi, mega.hi_link, mega.utf8
 
 local hsl = require("lush").hsl
 
-local theme = "everforest"
+local theme = "megaforest"
 
 local icons = {
 	sign_error = utf8(0xf655),
