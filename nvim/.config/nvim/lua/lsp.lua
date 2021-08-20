@@ -100,6 +100,8 @@ do
 		-- TODO: should get these for react/javascript/ts:
 		-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
 	})
+	require("luasnip/loaders/from_vscode").load()
+
 	--- <tab> to jump to next snippet's placeholder
 	local function on_tab()
 		return luasnip.jump(1) and "" or utils.lsp.t("<Tab>")
@@ -145,11 +147,19 @@ do
 	})
 	map("i", "<C-Space>", "compe#complete()", { expr = true })
 	map("i", "<C-e>", "compe#close('<C-e>')", { expr = true })
-	require("nvim-autopairs.completion.compe").setup({
-		map_cr = true,
-		map_complete = true,
-		auto_select = false,
-	})
+	-- require("nvim-autopairs.completion.compe").setup({
+	-- 	map_cr = true,
+	-- 	map_complete = true,
+	-- 	auto_select = false,
+	-- })
+	local function complete()
+		if fn.pumvisible() == 1 then
+			return fn["compe#confirm"]({ keys = "<cr>", select = false })
+		else
+			return require("nvim-autopairs").autopairs_cr()
+		end
+	end
+	map("i", "<CR>", complete, { expr = true })
 	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
 
 	require("vim.lsp.protocol").CompletionItemKind = {
