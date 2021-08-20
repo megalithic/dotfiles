@@ -148,7 +148,39 @@ do -- [nvim-treesitter] --
 				},
 			},
 		},
+		query_linter = {
+			enable = true,
+			use_virtual_text = true,
+			lint_events = { "BufWrite", "CursorHold" },
+		},
+		playground = {
+			enable = true,
+			disable = {},
+			updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
+			persist_queries = true, -- Whether the query persists across vim sessions
+			keybindings = {
+				toggle_query_editor = "o",
+				toggle_hl_groups = "i",
+				toggle_injected_languages = "t",
+				toggle_anonymous_nodes = "a",
+				toggle_language_display = "I",
+				focus_language = "f",
+				unfocus_language = "F",
+				update = "R",
+				goto_node = "<cr>",
+				show_help = "?",
+			},
+		},
 	})
+	-- Add Markdown
+	local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+	parser_config.jsonc.used_by = "json"
+	parser_config.markdown = {
+		install_info = {
+			url = "https://github.com/ikatyang/tree-sitter-markdown",
+			files = { "src/parser.c", "src/scanner.cc" },
+		},
+	}
 	-- require("spellsitter").setup()
 	require("nvim-ts-autotag").setup({
 		filetypes = {
@@ -444,6 +476,8 @@ do -- [golden-size] --
 		local function ignore_by_buftype(types)
 			local buftype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
 			for _, type in pairs(types) do
+				-- mega.log(string.format("type: %s / buftype: %s", type, buftype))
+
 				if type == buftype then
 					return 1
 				end
@@ -460,6 +494,7 @@ do -- [golden-size] --
 					"Vista",
 					"LuaTree",
 					"nofile",
+					"tsplayground",
 				},
 			},
 			{ golden_size.ignore_float_windows }, -- default one, ignore float windows
@@ -472,13 +507,13 @@ do -- [autopairs] --
 	local npairs = require("nvim-autopairs")
 	npairs.setup({
 		check_ts = true,
-		ts_config = {
-			lua = { "string" },
-			-- it will not add pair on that treesitter node
-			javascript = { "template_string" },
-			java = false,
-			-- don't check treesitter on java
-		},
+		-- ts_config = {
+		-- 	lua = { "string" },
+		-- 	-- it will not add pair on that treesitter node
+		-- 	javascript = { "template_string" },
+		-- 	java = false,
+		-- 	-- don't check treesitter on java
+		-- },
 	})
 	npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
 	local endwise = require("nvim-autopairs.ts-rule").endwise
@@ -690,6 +725,7 @@ end
 do -- [fzf] --
 	local actions = require("fzf-lua.actions")
 	require("fzf-lua").setup({
+		-- fzf_args = vim.env.FZF_DEFAULT_OPTS .. " --border rounded",
 		fzf_layout = "default",
 		win_height = 0.6,
 		win_width = 0.65,

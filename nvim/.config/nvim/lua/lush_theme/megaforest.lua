@@ -134,7 +134,7 @@ return lush(function()
 		NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
 		-- NormalNC     { }, -- normal text in non-current windows
 		Pmenu({ fg = fg, bg = bg2 }), -- Popup menu: normal item.
-		PmenuSel({ fg = green, bg = nil }), -- Popup menu: selected item.
+		PmenuSel({ fg = green, bg = bg3 }), -- Popup menu: selected item.
 		PmenuSbar({ fg = nil, bg = bg2 }), -- Popup menu: scrollbar.
 		PmenuThumb({ fg = nil, bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
 		Question({ fg = yellow, bg = nil }), -- |hit-enter| prompt and yes/no questions
@@ -333,8 +333,8 @@ return lush(function()
 		TSPunctSpecial({ Fg }),
 		TSRepeat({ Red }),
 		TSString({ Yellow }),
-		TSStringEscape({ Green }),
-		TSStringRegex({ Green }),
+		TSStringRegex({ Blue }),
+		TSStringEscape({ Purple }),
 		TSStructure({ Orange }),
 		TSTag({ Orange }),
 		TSTagDelimiter({ Green }),

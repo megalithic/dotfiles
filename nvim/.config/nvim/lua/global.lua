@@ -91,9 +91,28 @@ end
 --   api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
 -- end
 
+M.functions = {}
+
+function M.execute(id)
+	local func = M.functions[id]
+	if not func then
+		M.error("Function doest not exist: " .. id)
+	end
+	return func()
+end
+
 function M.map(mode, lhs, rhs, opts)
 	local map_opts = { noremap = true, silent = true, expr = false }
 	opts = vim.tbl_extend("force", map_opts, opts or {})
+
+	if type(rhs) == "function" then
+		table.insert(M.functions, rhs)
+		if opts.expr then
+			rhs = ([[luaeval('require("global").execute(%d)')]]):format(#M.functions)
+		else
+			rhs = ("<cmd>lua require('global').execute(%d)<cr>"):format(#M.functions)
+		end
+	end
 	api.nvim_set_keymap(mode, lhs, rhs, opts)
 end
 

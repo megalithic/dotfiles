@@ -71,53 +71,6 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 	end
 end
 
--- local source_kind = {
--- 	luasnip = { menu = " [lsnip]", priority = 12 },
--- 	nvim_lua = { menu = " [lua]", priority = 11 },
--- 	nvim_lsp = { menu = " [lsp]", priority = 10 },
--- 	orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
--- 	neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
--- 	path = { menu = "", kind = " [path]", priority = 8 },
--- 	emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
--- 	spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
--- 	buffer = { menu = " [buf]", priority = 7 },
--- 	treesitter = false, --{menu = "[ts]", priority = 9},
--- }
-
-local kind_icons = {
-	Text = " text", -- Text
-	Method = " method", -- Method
-	Function = "ƒ function", -- Function
-	Constructor = " constructor", -- Constructor
-	Field = "識field", -- Field
-	Variable = " variable", -- Variable
-	Class = " class", -- Class
-	Interface = "ﰮ interface", -- Interface
-	Module = " module", -- Module
-	Property = " property", -- Property
-	Unit = " unit", -- Unit
-	Value = " value", -- Value
-	Enum = "了enum", -- Enum 
-	Keyword = " keyword", -- Keyword
-	Snippet = " snippet", -- Snippet
-	Color = " color", -- Color
-	File = " file", -- File
-	Reference = "渚ref", -- Reference
-	Folder = " folder", -- Folder
-	Constant = " const", -- Constant
-	Struct = " struct", -- Struct
-	Event = "鬒event", -- Event
-	Operator = "\u{03a8} operator", -- Operator
-	TypeParameter = " type param", -- TypeParameter
-	-- Buffer = " [buf]",
-	-- Path = " [path]",
-	-- LuaSnip = " [lsnip]",
-}
-for key, value in pairs(kind_icons) do
-	lsp.protocol.CompletionItemKind[key] = value
-	-- cmp.lsp.CompletionItemKind[key] = value
-end
-
 --- completion/snippets
 --
 do
@@ -144,115 +97,188 @@ do
 	})
 	require("luasnip/loaders/from_vscode").load({
 		paths = vim.fn.stdpath("config") .. "/snippets",
-		-- should get these for react/javascript/ts:
+		-- TODO: should get these for react/javascript/ts:
 		-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
 	})
-	require("luasnip/loaders/from_vscode").lazy_load()
-
-	local check_backspace = function()
-		local col = vim.fn.col(".") - 1
-		return col == 0 or vim.fn.getline("."):sub(col, col):match("%s") ~= nil
+	--- <tab> to jump to next snippet's placeholder
+	local function on_tab()
+		return luasnip.jump(1) and "" or utils.lsp.t("<Tab>")
 	end
+	--- <s-tab> to jump to next snippet's placeholder
+	local function on_s_tab()
+		return luasnip.jump(-1) and "" or utils.lsp.t("<S-Tab>")
+	end
+	map("i", "<Tab>", on_tab, { expr = true })
+	map("s", "<Tab>", on_tab, { expr = true })
+	map("i", "<S-Tab>", on_s_tab, { expr = true })
+	map("s", "<S-Tab>", on_s_tab, { expr = true })
+
+	-- [nvim-compe] --
+	require("compe").setup({
+		enabled = true,
+		autocomplete = true,
+		debug = false,
+		min_length = 1,
+		preselect = "disable",
+		allow_prefix_unmatch = false,
+		throttle_time = 80,
+		source_timeout = 200,
+		incomplete_delay = 400,
+		max_abbr_width = 100,
+		max_kind_width = 100,
+		max_menu_width = 100,
+		documentation = {
+			border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+		},
+		source = {
+			luasnip = { menu = " [lsnip]", priority = 12 },
+			nvim_lua = { menu = " [lua]", priority = 11 },
+			nvim_lsp = { menu = " [lsp]", priority = 10 },
+			orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
+			neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
+			path = { menu = "", kind = " [path]", priority = 8 },
+			emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+			spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+			buffer = { menu = " [buf]", priority = 7 },
+			treesitter = false, --{menu = "[ts]", priority = 9},
+		},
+	})
+	map("i", "<C-Space>", "compe#complete()", { expr = true })
+	map("i", "<C-e>", "compe#close('<C-e>')", { expr = true })
+	require("nvim-autopairs.completion.compe").setup({
+		map_cr = true,
+		map_complete = true,
+		auto_select = false,
+	})
+	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
+
+	require("vim.lsp.protocol").CompletionItemKind = {
+		" text", -- Text
+		" method", -- Method
+		"ƒ function", -- Function
+		" constructor", -- Constructor
+		"識field", -- Field
+		" variable", -- Variable
+		" class", -- Class
+		"ﰮ interface", -- Interface
+		" module", -- Module
+		" property", -- Property
+		" unit", -- Unit
+		" value", -- Value
+		-- "了enum", -- Enum
+		" keyword", -- Keyword
+		" snippet", -- Snippet
+		" color", -- Color
+		" file", -- File
+		"渚ref", -- Reference
+		" folder", -- Folder
+		" enum", -- Enum
+		" const", -- Constant
+		" struct", -- Struct
+		"鬒event", -- Event
+		"\u{03a8} operator", -- Operator
+		" type param", -- TypeParameter
+	}
 
 	-- [nvim-cmp] --
-	require("cmp_nvim_lsp").setup()
-	local cmp = require("cmp")
-	-- local types = require("cmp.types")
-	-- local compare = require("cmp.config.compare")
-	cmp.setup({
-		-- completion = {
-		-- 	autocomplete = {
-		-- 		types.cmp.TriggerEvent.InsertEnter,
-		-- 		types.cmp.TriggerEvent.TextChanged,
-		-- 	},
-		-- 	completeopt = "menu,menuone,noselect,noinsert",
-		-- 	keyword_pattern = [[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%(-\w*\)*\)]],
-		-- 	keyword_length = 1,
-		-- },
-		-- sorting = {
-		-- 	priority_weight = 2,
-		-- 	comparators = {
-		-- 		compare.offset,
-		-- 		compare.exact,
-		-- 		compare.score,
-		-- 		compare.kind,
-		-- 		compare.sort_text,
-		-- 		compare.length,
-		-- 		compare.order,
-		-- 	},
-		-- },
-		snippet = {
-			expand = function(args)
-				luasnip.lsp_expand(args.body)
-			end,
-		},
-		documentation = {
-			border = "rounded",
-		},
-		mapping = {
-			["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
-				if fn.pumvisible() == 1 then
-					fn.feedkeys(api.nvim_replace_termcodes("<C-n>", true, true, true), "n")
-				elseif luasnip.expand_or_jumpable() then
-					fn.feedkeys(api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
-				elseif not check_backspace() then
-					cmp.mapping.complete()(core, fallback)
-				else
-					fallback()
-				end
-			end),
-			["<S-Tab>"] = cmp.mapping.mode({ "i", "s" }, function(_, fallback)
-				if fn.pumvisible() == 1 then
-					fn.feedkeys(api.nvim_replace_termcodes("<C-p>", true, true, true), "n")
-				elseif luasnip.jumpable(-1) then
-					fn.feedkeys(api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
-				else
-					fallback()
-				end
-			end),
-			["<C-b>"] = cmp.mapping.scroll(-4),
-			["<C-f>"] = cmp.mapping.scroll(4),
-			["<C-Space>"] = cmp.mapping.close(),
-			["<C-e>"] = cmp.mapping.close(),
-		},
-		sources = {
-			{ name = "luasnip" },
-			{ name = "nvim_lua" },
-			{ name = "nvim_lsp" },
-			{ name = "emoji" },
-			{ name = "path" },
-			{
-				name = "buffer",
-				opts = {
-					get_bufnrs = function()
-						local bufs = {}
-						for _, win in ipairs(api.nvim_list_wins()) do
-							bufs[api.nvim_win_get_buf(win)] = true
-						end
-						return vim.tbl_keys(bufs)
-					end,
-				},
-			},
-		},
-		formatting = {
-			format = function(_, item)
-				-- mega.log(item.kind)
-				item.kind = kind_icons[item.kind]
-				return item
-			end,
-		},
-	})
-	-- # while using nvim-autopairs we want to fully control what the <CR> key does:
-	require("nvim-autopairs.completion.cmp").setup({
-		map_cr = true, --  map <CR> on insert mode
-		map_complete = true, -- insert `(` when function/method is completed
-		mapping_config = {
-			["<CR>"] = cmp.mapping.confirm({
-				behavior = cmp.ConfirmBehavior.Replace,
-				select = false,
-			}),
-		},
-	})
+	-- require("cmp_nvim_lsp").setup()
+	-- local cmp = require("cmp")
+	-- -- local types = require("cmp.types")
+	-- -- local compare = require("cmp.config.compare")
+	-- cmp.setup({
+	-- 	-- completion = {
+	-- 	-- 	autocomplete = {
+	-- 	-- 		types.cmp.TriggerEvent.InsertEnter,
+	-- 	-- 		types.cmp.TriggerEvent.TextChanged,
+	-- 	-- 	},
+	-- 	-- 	completeopt = "menu,menuone,noselect,noinsert",
+	-- 	-- 	keyword_pattern = [[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%(-\w*\)*\)]],
+	-- 	-- 	keyword_length = 1,
+	-- 	-- },
+	-- 	-- sorting = {
+	-- 	-- 	priority_weight = 2,
+	-- 	-- 	comparators = {
+	-- 	-- 		compare.offset,
+	-- 	-- 		compare.exact,
+	-- 	-- 		compare.score,
+	-- 	-- 		compare.kind,
+	-- 	-- 		compare.sort_text,
+	-- 	-- 		compare.length,
+	-- 	-- 		compare.order,
+	-- 	-- 	},
+	-- 	-- },
+	-- 	snippet = {
+	-- 		expand = function(args)
+	-- 			luasnip.lsp_expand(args.body)
+	-- 		end,
+	-- 	},
+	-- 	documentation = {
+	-- 		border = "rounded",
+	-- 	},
+	-- 	mapping = {
+	-- 		["<Tab>"] = cmp.mapping.mode({ "i", "s" }, function(core, fallback)
+	-- 			if fn.pumvisible() == 1 then
+	-- 				fn.feedkeys(api.nvim_replace_termcodes("<C-n>", true, true, true), "n")
+	-- 			elseif luasnip.expand_or_jumpable() then
+	-- 				fn.feedkeys(api.nvim_replace_termcodes("<Plug>luasnip-expand-or-jump", true, true, true), "")
+	-- 			elseif not check_backspace() then
+	-- 				cmp.mapping.complete()(core, fallback)
+	-- 			else
+	-- 				fallback()
+	-- 			end
+	-- 		end),
+	-- 		["<S-Tab>"] = cmp.mapping.mode({ "i", "s" }, function(_, fallback)
+	-- 			if fn.pumvisible() == 1 then
+	-- 				fn.feedkeys(api.nvim_replace_termcodes("<C-p>", true, true, true), "n")
+	-- 			elseif luasnip.jumpable(-1) then
+	-- 				fn.feedkeys(api.nvim_replace_termcodes("<Plug>luasnip-jump-prev", true, true, true), "")
+	-- 			else
+	-- 				fallback()
+	-- 			end
+	-- 		end),
+	-- 		["<C-b>"] = cmp.mapping.scroll(-4),
+	-- 		["<C-f>"] = cmp.mapping.scroll(4),
+	-- 		["<C-Space>"] = cmp.mapping.close(),
+	-- 		["<C-e>"] = cmp.mapping.close(),
+	-- 	},
+	-- 	sources = {
+	-- 		{ name = "luasnip" },
+	-- 		{ name = "nvim_lua" },
+	-- 		{ name = "nvim_lsp" },
+	-- 		{ name = "emoji" },
+	-- 		{ name = "path" },
+	-- 		{
+	-- 			name = "buffer",
+	-- 			opts = {
+	-- 				get_bufnrs = function()
+	-- 					local bufs = {}
+	-- 					for _, win in ipairs(api.nvim_list_wins()) do
+	-- 						bufs[api.nvim_win_get_buf(win)] = true
+	-- 					end
+	-- 					return vim.tbl_keys(bufs)
+	-- 				end,
+	-- 			},
+	-- 		},
+	-- 	},
+	-- 	formatting = {
+	-- 		format = function(_, item)
+	-- 			-- mega.log(item.kind)
+	-- 			item.kind = kind_icons[item.kind]
+	-- 			return item
+	-- 		end,
+	-- 	},
+	-- })
+	-- -- # while using nvim-autopairs we want to fully control what the <CR> key does:
+	-- require("nvim-autopairs.completion.cmp").setup({
+	-- 	map_cr = true, --  map <CR> on insert mode
+	-- 	map_complete = true, -- insert `(` when function/method is completed
+	-- 	mapping_config = {
+	-- 		["<CR>"] = cmp.mapping.confirm({
+	-- 			behavior = cmp.ConfirmBehavior.Replace,
+	-- 			select = false,
+	-- 		}),
+	-- 	},
+	-- })
 end
 
 local function on_attach(client, bufnr)

@@ -25,14 +25,14 @@ return {
 	-- "kabouzeid/nvim-lspinstall", -- https://github.com/kabouzeid/nvim-lspinstall/wiki
 	"nvim-lua/plenary.nvim",
 	"nvim-lua/popup.nvim",
-	-- "hrsh7th/nvim-compe",
-	"hrsh7th/nvim-cmp",
-	"hrsh7th/cmp-nvim-lsp",
-	"hrsh7th/cmp-nvim-lua",
-	"saadparwaiz1/cmp_luasnip",
-	"hrsh7th/cmp-buffer",
-	"hrsh7th/cmp-path",
-	"hrsh7th/cmp-emoji",
+	"hrsh7th/nvim-compe",
+	-- "hrsh7th/nvim-cmp",
+	-- "hrsh7th/cmp-nvim-lsp",
+	-- "hrsh7th/cmp-nvim-lua",
+	-- "saadparwaiz1/cmp_luasnip",
+	-- "hrsh7th/cmp-buffer",
+	-- "hrsh7th/cmp-path",
+	-- "hrsh7th/cmp-emoji",
 	"L3MON4D3/LuaSnip",
 	"rafamadriz/friendly-snippets",
 	"nvim-lua/lsp-status.nvim",
@@ -45,6 +45,7 @@ return {
 	-- (treesitter) --
 	{ "nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"] },
 	"nvim-treesitter/nvim-treesitter-textobjects",
+	"nvim-treesitter/playground",
 	"RRethy/nvim-treesitter-textsubjects",
 	"mfussenegger/nvim-ts-hint-textobject",
 	"ikatyang/tree-sitter-markdown",
@@ -64,9 +65,13 @@ return {
 	"tpope/vim-rsi",
 	"kana/vim-textobj-user",
 	"kana/vim-operator-user",
-	"mattn/vim-textobj-url",
+	"mattn/vim-textobj-url", -- au/iu for url
 	"whatyouhide/vim-textobj-xmlattr",
 	"amiralies/vim-textobj-elixir",
+	"kana/vim-textobj-entire", -- ae/ie for entire buffer
+	"Julian/vim-textobj-variable-segment", -- av/iv for variable segment
+	"beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
+	"michaeljsmith/vim-indent-object", -- ai/ii for indentation area
 	"wellle/targets.vim",
 	-- research: windwp/nvim-spectre
 	--
@@ -119,6 +124,8 @@ return {
 	"christoomey/vim-tmux-runner",
 	"junegunn/vim-slash",
 	"junegunn/vim-easy-align",
+	-- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations
+	--     use_with_config("svermeulen/vim-yoink", "yoink") -- improves paste
 	--
 	-- (langs, syntax, et al) --
 	-- # markdown/prose
