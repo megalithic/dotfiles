@@ -92,7 +92,7 @@ return {
 	"janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest
 	"tpope/vim-ragtag",
 	"rizzatti/dash.vim",
-	"sgur/vim-editorconfig",
+	"editorconfig/editorconfig-vim",
 	{ "zenbro/mirror.vim", opt = true },
 	"vuki656/package-info.nvim",
 	--
