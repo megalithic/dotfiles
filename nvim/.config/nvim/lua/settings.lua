@@ -503,6 +503,10 @@ do -- [golden-size] --
 	end
 end
 
+do
+	require("nvim-gps").setup({})
+end
+
 do -- [autopairs] --
 	local npairs = require("nvim-autopairs")
 	npairs.setup({

@@ -5,7 +5,7 @@ local colors = require("colors")
 local utils = require("utils")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
-set.shortmess:append("c")
+set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
 do
 	local sign_error = colors.icons.sign_error
@@ -95,7 +95,7 @@ do
 		},
 		enable_autosnippets = true,
 	})
-	require("luasnip/loaders/from_vscode").load({
+	require("luasnip/loaders/from_vscode").lazy_load({
 		paths = vim.fn.stdpath("config") .. "/snippets",
 		-- TODO: should get these for react/javascript/ts:
 		-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
@@ -147,19 +147,19 @@ do
 	})
 	map("i", "<C-Space>", "compe#complete()", { expr = true })
 	map("i", "<C-e>", "compe#close('<C-e>')", { expr = true })
-	-- require("nvim-autopairs.completion.compe").setup({
-	-- 	map_cr = true,
-	-- 	map_complete = true,
-	-- 	auto_select = false,
-	-- })
-	local function complete()
-		if fn.pumvisible() == 1 then
-			return fn["compe#confirm"]({ keys = "<cr>", select = false })
-		else
-			return require("nvim-autopairs").autopairs_cr()
-		end
-	end
-	map("i", "<CR>", complete, { expr = true })
+	require("nvim-autopairs.completion.compe").setup({
+		map_cr = true,
+		map_complete = true,
+		auto_select = false,
+	})
+	-- local function complete()
+	-- 	if fn.pumvisible() == 1 then
+	-- 		return fn["compe#confirm"]({ keys = "<cr>", select = false })
+	-- 	else
+	-- 		return require("nvim-autopairs").autopairs_cr()
+	-- 	end
+	-- end
+	-- map("i", "<CR>", complete, { expr = true })
 	au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
 
 	require("vim.lsp.protocol").CompletionItemKind = {

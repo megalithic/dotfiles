@@ -1,7 +1,6 @@
 local colorscheme = require("colors")
 local hi, au = mega.highlight, mega.au
 local fn, cmd, bo, wo = vim.fn, vim.cmd, vim.bo, vim.wo
-local lsp_status = require("lsp-status")
 
 local statusline = {}
 au([[VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]])
@@ -15,7 +14,7 @@ function statusline.set_colors()
 
 	c.normal_fg = colorscheme.cs.green
 	c.normal_bg = c.statusline_bg
-	c.insert_fg = colorscheme.cs.fg
+	c.insert_fg = colorscheme.cs.yellow
 	c.insert_bg = c.statusline_bg
 	c.replace_fg = colorscheme.cs.orange
 	c.replace_bg = c.statusline_bg
@@ -60,19 +59,21 @@ function statusline.set_colors()
 	s.warn_right = { color = "%#StWarn#", sep_color = "%#StWarnSep#", side = "right", no_after = true }
 end
 
--- # LSP status
-lsp_status.register_progress()
-lsp_status.config({
-	status_symbol = "",
-	indicator_errors = colorscheme.icons.statusline_error,
-	indicator_warnings = colorscheme.icons.statusline_warning,
-	indicator_info = colorscheme.icons.statusline_information,
-	indicator_hint = colorscheme.icons.statusline_hint,
-	indicator_ok = colorscheme.icons.statusline_ok,
-	-- spinner_frames = {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
-	-- spinner_frames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-})
 local function get_lsp_status()
+	-- # LSP status
+	local lsp_status = require("lsp-status")
+	lsp_status.register_progress()
+	lsp_status.config({
+		status_symbol = "",
+		indicator_errors = colorscheme.icons.statusline_error,
+		indicator_warnings = colorscheme.icons.statusline_warning,
+		indicator_info = colorscheme.icons.statusline_information,
+		indicator_hint = colorscheme.icons.statusline_hint,
+		indicator_ok = colorscheme.icons.statusline_ok,
+		-- spinner_frames = {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
+		-- spinner_frames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	})
+
 	if #vim.lsp.buf_get_clients() > 0 then
 		return lsp_status.status()
 	end
@@ -252,12 +253,24 @@ local function get_lineinfo()
 	return "" .. item .. " %l:%c  %p%%/%L%*"
 end
 
+local function get_gps_status()
+	local gps = require("nvim-gps")
+
+	gps.is_available() -- Returns boolean value indicating whether a output can be provided
+	if gps.is_available() then
+		return gps.get_location() -- Returns a string with context information
+	else
+		return ""
+	end
+end
+
 local function statusline_active()
 	local mode_block = get_mode_block()
 	local vcs_status = get_vcs_status()
 	local search = search_result()
 	local ft = get_filetype()
 	local lsp = get_lsp_status()
+	local gps = get_gps_status()
 
 	local statusline_sections = {
 		seg(mode_block, s.mode_block),
@@ -270,6 +283,7 @@ local function statusline_active()
 		seg("%w", nil, wo.previewwindow),
 		seg("%r", nil, bo.readonly),
 		seg("%q", nil, bo.buftype == "quickfix"),
+		seg(gps, s.search, gps ~= ""),
 		"%=",
 		seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),
 		seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),

@@ -1,5 +1,6 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
+local cmd = vim.cmd
 local au, exec, augroup = mega.au, mega.exec, mega.augroup
 
 au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
@@ -20,11 +21,10 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
 --  Open multiple files in splits
-exec([[
-      if argc() > 1
-        silent vertical all | lua require('golden_size').on_win_enter()
-      endif
-      ]])
+exec([[ if argc() > 1 | silent vertical all | lua require('golden_size').on_win_enter() | endif ]])
+
+--  Open :intro only if no file args passed in
+cmd([[ if argc() == 0 && !exists("s:std_in") | :intro | endif ]])
 
 --  Trim Whitespace
 vim.api.nvim_exec(

@@ -22,7 +22,7 @@ return {
 	--
 	-- (lsp/completion) --
 	"neovim/nvim-lspconfig",
-	-- "kabouzeid/nvim-lspinstall", -- https://github.com/kabouzeid/nvim-lspinstall/wiki
+	"williamboman/nvim-lsp-installer",
 	"nvim-lua/plenary.nvim",
 	"nvim-lua/popup.nvim",
 	"hrsh7th/nvim-compe",
@@ -41,6 +41,7 @@ return {
 	"jose-elias-alvarez/nvim-lsp-ts-utils",
 	"jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
 	"folke/trouble.nvim",
+	"SmiteshP/nvim-gps",
 	--
 	-- (treesitter) --
 	{ "nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"] },
