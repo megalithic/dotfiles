@@ -33,13 +33,15 @@ return {
 	-- "hrsh7th/cmp-buffer",
 	-- "hrsh7th/cmp-path",
 	-- "hrsh7th/cmp-emoji",
+	"hrsh7th/vim-vsnip",
+	"hrsh7th/vim-vsnip-integ",
 	"L3MON4D3/LuaSnip",
 	"rafamadriz/friendly-snippets",
 	"nvim-lua/lsp-status.nvim",
 	"nvim-lua/lsp_extensions.nvim",
 	"ray-x/lsp_signature.nvim",
 	"jose-elias-alvarez/nvim-lsp-ts-utils",
-	"jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
+	"megalithic/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
 	"folke/trouble.nvim",
 	"SmiteshP/nvim-gps",
 	--

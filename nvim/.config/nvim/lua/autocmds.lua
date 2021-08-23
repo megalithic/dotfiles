@@ -24,7 +24,7 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 exec([[ if argc() > 1 | silent vertical all | lua require('golden_size').on_win_enter() | endif ]])
 
 --  Open :intro only if no file args passed in
-cmd([[ if argc() == 0 && !exists("s:std_in") | :intro | endif ]])
+-- cmd([[ if argc() == 0 && !exists("s:std_in") | :intro | endif ]])
 
 --  Trim Whitespace
 vim.api.nvim_exec(

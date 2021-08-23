@@ -102,9 +102,10 @@ return function(_) -- bufnr
   --   true
   -- )
 
-  vim.fn.sign_define("firstHeadline", {linehl = "markdownFirstHeadline"})
-  vim.fn.sign_define("secondHeadline", {linehl = "markdownSecondHeadline"})
-  vim.fn.sign_define("thirdHeadline", {linehl = "markdownHeadline"})
+  vim.fn.sign_define("markdownH1", {linehl = "markdownH1"})
+  vim.fn.sign_define("markdownH2", {linehl = "markdownH2"})
+  vim.fn.sign_define("markdownH3", {linehl = "markdownH3"})
+  vim.fn.sign_define("markdownH4", {linehl = "markdownH4"})
 
   local markdown_dash_namespace = vim.api.nvim_create_namespace("markdown_dash")
 
@@ -125,13 +126,16 @@ return function(_) -- bufnr
     for i = 1, #lines do
       local _, level = lines[i]:find("^" .. marker .. "+")
       if level == 1 then
-        vim.fn.sign_place(0, markdown_sign_namespace, "firstHeadline", bufnr, {lnum = i + offset})
+        vim.fn.sign_place(0, markdown_sign_namespace, "markdownH1", bufnr, {lnum = i + offset})
       end
       if level == 2 then
-        vim.fn.sign_place(0, markdown_sign_namespace, "secondHeadline", bufnr, {lnum = i + offset})
+        vim.fn.sign_place(0, markdown_sign_namespace, "markdownH2", bufnr, {lnum = i + offset})
       end
-      if level and level == 3 then
-        vim.fn.sign_place(0, markdown_sign_namespace, "thirdHeadline", bufnr, {lnum = i + offset})
+      if level == 3 then
+        vim.fn.sign_place(0, markdown_sign_namespace, "markdownH3", bufnr, {lnum = i + offset})
+      end
+      if level and level == 4 then
+        vim.fn.sign_place(0, markdown_sign_namespace, "markdownH4", bufnr, {lnum = i + offset})
       end
 
       local _, dashes = lines[i]:find("^---+$")
@@ -154,33 +158,33 @@ return function(_) -- bufnr
 
   -- needs this scheme file to work correctly for md files:
   -- https://github.com/b3nj5m1n/dotfiles/tree/master/files/nvim/after/queries/markdown
-  vim.cmd([[
-    highlight h1 guifg=#50fa7b gui=bold
-    highlight _h1 guifg=#50fa7b gui=nocombine
-    highlight h2 guifg=#ff79c6 gui=bold
-    highlight _h2 guifg=#ff79c6 gui=nocombine
-    highlight h3 guifg=#ffb86c gui=bold
-    highlight _h3 guifg=#ffb86c gui=nocombine
-    highlight h4 guifg=#8be9fd gui=bold
-    highlight _h4 guifg=#8be9fd gui=nocombine
-    highlight h5 guifg=#f1fa8c gui=bold
-    highlight _h5 guifg=#f1fa8c gui=nocombine
-    highlight emphasis gui=italic
-    highlight strong_emphasis gui=bold
-    highlight strikethrough gui=strikethrough
-    highlight info_string guifg=#f1fa8c gui=italic
-
-    highlight markdownH1 guifg=#50fa7b gui=bold
-    highlight markdownH1Delimiter guifg=#50fa7b
-    highlight markdownH2 guifg=#ff79c6 gui=bold
-    highlight markdownH2Delimiter guifg=#ff79c6
-    highlight markdownH3 guifg=#ffb86c gui=bold
-    highlight markdownH3Delimiter guifg=#ffb86c
-    highlight markdownH4 guifg=#8be9fd gui=bold
-    highlight markdownH4Delimiter guifg=#8be9fd
-    highlight markdownH5 guifg=#ff5555 gui=bold
-    highlight markdownH5Delimiter guifg=#ff5555
-  ]])
+--   vim.cmd([[
+--     highlight h1 guifg=#50fa7b gui=bold
+--     highlight _h1 guifg=#50fa7b gui=nocombine
+--     highlight h2 guifg=#ff79c6 gui=bold
+--     highlight _h2 guifg=#ff79c6 gui=nocombine
+--     highlight h3 guifg=#ffb86c gui=bold
+--     highlight _h3 guifg=#ffb86c gui=nocombine
+--     highlight h4 guifg=#8be9fd gui=bold
+--     highlight _h4 guifg=#8be9fd gui=nocombine
+--     highlight h5 guifg=#f1fa8c gui=bold
+--     highlight _h5 guifg=#f1fa8c gui=nocombine
+--     highlight emphasis gui=italic
+--     highlight strong_emphasis gui=bold
+--     highlight strikethrough gui=strikethrough
+--     highlight info_string guifg=#f1fa8c gui=italic
+--
+--     highlight markdownH1 guifg=#50fa7b gui=bold
+--     highlight markdownH1Delimiter guifg=#50fa7b
+--     highlight markdownH2 guifg=#ff79c6 gui=bold
+--     highlight markdownH2Delimiter guifg=#ff79c6
+--     highlight markdownH3 guifg=#ffb86c gui=bold
+--     highlight markdownH3Delimiter guifg=#ffb86c
+--     highlight markdownH4 guifg=#8be9fd gui=bold
+--     highlight markdownH4Delimiter guifg=#8be9fd
+--     highlight markdownH5 guifg=#ff5555 gui=bold
+--     highlight markdownH5Delimiter guifg=#ff5555
+--   ]])
 
   vim.cmd([[
   unlet b:current_syntax

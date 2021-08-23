@@ -1,13 +1,16 @@
-local cmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
+local cmd, lsp, api, fn, set, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt, vim.g
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local colors = require("colors")
 local utils = require("utils")
 
+local snippet_provider = "luasnip" -- vsnip or luasnip
+local format_provider = "efm" -- efm or null-ls
+
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
-do
+do --- sign column config
 	local sign_error = colors.icons.sign_error
 	local sign_warning = colors.icons.sign_warning
 	local sign_information = colors.icons.sign_information
@@ -74,46 +77,82 @@ end
 --- completion/snippets
 --
 do
-	-- [luasnip] --
-	local luasnip = require("luasnip")
-	local types = require("luasnip.util.types")
-	luasnip.config.set_config({
-		history = true,
-		updateevents = "TextChanged,TextChangedI",
-		store_selection_keys = "<Tab>",
-		ext_opts = {
-			[types.insertNode] = {
-				passive = {
-					hl_group = "Substitute",
+	if snippet_provider == "vsnip" then
+		-- [vnsip] --
+		g.vsnip_snippet_dir = vim.fn.stdpath("config") .. "/snippets"
+		--- Use (s-)tab to:
+		--- move to prev/next item in completion menuone
+		--- jump to prev/next snippet's placeholder
+		_G.tab_complete = function()
+			-- if fn.pumvisible() == 1 then
+			-- 	return utils.lsp.t("<C-n>")
+			if fn["vsnip#available"](1) == 1 then
+				print("should be in vsnip#available")
+				return utils.lsp.t("<Plug>(vsnip-expand-or-jump)")
+			elseif utils.lsp.check_back_space() then
+				return utils.lsp.t("<Tab>")
+			else
+				return fn["compe#complete"]()
+			end
+		end
+		_G.s_tab_complete = function()
+			-- if fn.pumvisible() == 1 then
+			-- 	return utils.lsp.t("<C-p>")
+			if fn["vsnip#jumpable"](-1) == 1 then
+				print("should be in vsnip#jumpable")
+				return utils.lsp.t("<Plug>(vsnip-jump-prev)")
+			else
+				return utils.lsp.t("<S-Tab>")
+			end
+		end
+		local opts = { expr = true, noremap = false }
+		map("i", "<Tab>", "v:lua.tab_complete()", opts)
+		map("s", "<Tab>", "v:lua.tab_complete()", opts)
+		map("i", "<S-Tab>", "v:lua.s_tab_complete()", opts)
+		map("s", "<S-Tab>", "v:lua.s_tab_complete()", opts)
+	elseif snippet_provider == "luasnip" then
+		-- [luasnip] --
+		local luasnip = require("luasnip")
+		local types = require("luasnip.util.types")
+		luasnip.config.set_config({
+			history = false,
+			updateevents = "TextChanged,TextChangedI",
+			store_selection_keys = "<Tab>",
+			ext_opts = {
+				[types.insertNode] = {
+					passive = {
+						hl_group = "Substitute",
+					},
+				},
+				[types.choiceNode] = {
+					active = {
+						virt_text = { { "choiceNode", "IncSearch" } },
+					},
 				},
 			},
-			[types.choiceNode] = {
-				active = {
-					virt_text = { { "choiceNode", "IncSearch" } },
-				},
-			},
-		},
-		enable_autosnippets = true,
-	})
-	require("luasnip/loaders/from_vscode").lazy_load({
-		paths = vim.fn.stdpath("config") .. "/snippets",
-		-- TODO: should get these for react/javascript/ts:
-		-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
-	})
-	require("luasnip/loaders/from_vscode").load()
+			enable_autosnippets = true,
+		})
+		require("luasnip/loaders/from_vscode").lazy_load({
+			paths = vim.fn.stdpath("config") .. "/snippets",
+			-- TODO: should get these for react/javascript/ts:
+			-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
+		})
+		require("luasnip/loaders/from_vscode").load()
 
-	--- <tab> to jump to next snippet's placeholder
-	local function on_tab()
-		return luasnip.jump(1) and "" or utils.lsp.t("<Tab>")
+		--- <tab> to jump to next snippet's placeholder
+		local function on_tab()
+			return luasnip.jump(1) and "" or utils.lsp.t("<Tab>")
+		end
+		--- <s-tab> to jump to next snippet's placeholder
+		local function on_s_tab()
+			return luasnip.jump(-1) and "" or utils.lsp.t("<S-Tab>")
+		end
+		local opts = { expr = true, noremap = false }
+		map("i", "<Tab>", on_tab, opts)
+		map("s", "<Tab>", on_tab, opts)
+		map("i", "<S-Tab>", on_s_tab, opts)
+		map("s", "<S-Tab>", on_s_tab, opts)
 	end
-	--- <s-tab> to jump to next snippet's placeholder
-	local function on_s_tab()
-		return luasnip.jump(-1) and "" or utils.lsp.t("<S-Tab>")
-	end
-	map("i", "<Tab>", on_tab, { expr = true })
-	map("s", "<Tab>", on_tab, { expr = true })
-	map("i", "<S-Tab>", on_s_tab, { expr = true })
-	map("s", "<S-Tab>", on_s_tab, { expr = true })
 
 	-- [nvim-compe] --
 	require("compe").setup({
@@ -133,20 +172,21 @@ do
 			border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
 		},
 		source = {
-			luasnip = { menu = " [lsnip]", priority = 12 },
+			luasnip = snippet_provider == "luasnip" and { menu = " [lsnip]", priority = 12 } or false,
+			vsnip = snippet_provider == "vsnip" and { menu = " [vsnip]", priority = 12 } or false,
 			nvim_lua = { menu = " [lua]", priority = 11 },
 			nvim_lsp = { menu = " [lsp]", priority = 10 },
 			orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
 			neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
 			path = { menu = "", kind = " [path]", priority = 8 },
-			emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
+			-- emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
 			spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
 			buffer = { menu = " [buf]", priority = 7 },
 			treesitter = false, --{menu = "[ts]", priority = 9},
 		},
 	})
 	map("i", "<C-Space>", "compe#complete()", { expr = true })
-	map("i", "<C-e>", "compe#close('<C-e>')", { expr = true })
+	map("i", "<C-e>", "compe#close('<C-e>')", { expr = true, silent = false })
 	require("nvim-autopairs.completion.compe").setup({
 		map_cr = true,
 		map_complete = true,
@@ -154,7 +194,8 @@ do
 	})
 	-- local function complete()
 	-- 	if fn.pumvisible() == 1 then
-	-- 		return fn["compe#confirm"]({ keys = "<cr>", select = false })
+	-- 		fn["compe#confirm"]({ keys = "<cr>", select = false })
+	-- 		return t("<CR>")
 	-- 	else
 	-- 		return require("nvim-autopairs").autopairs_cr()
 	-- 	end
@@ -175,14 +216,14 @@ do
 		" property", -- Property
 		" unit", -- Unit
 		" value", -- Value
-		-- "了enum", -- Enum
+		"了enum", -- Enum
 		" keyword", -- Keyword
 		" snippet", -- Snippet
 		" color", -- Color
 		" file", -- File
 		"渚ref", -- Reference
 		" folder", -- Folder
-		" enum", -- Enum
+		" enum member", -- EnumMember
 		" const", -- Constant
 		" struct", -- Struct
 		"鬒event", -- Event
@@ -491,20 +532,6 @@ lspconfig["solargraph"].setup(lsp_with_defaults({
 	},
 }))
 
-local efm_languages = require("efm")
-local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
-lspconfig["efm"].setup(lsp_with_defaults({
-	init_options = { documentFormatting = true },
-	filetypes = vim.tbl_keys(efm_languages),
-	settings = {
-		rootMarkers = { "mix.lock", "mix.exs", "elm.json", "package.json", ".git" },
-		lintDebounce = 500,
-		logLevel = 2,
-		logFile = efm_log,
-		languages = efm_languages,
-	},
-}))
-
 lspconfig["yamlls"].setup(lsp_with_defaults({
 	settings = {
 		yaml = {
@@ -743,26 +770,43 @@ do
 end
 
 do
-	local nls = require("null-ls")
-	nls.config({
-		debounce = 150,
-		save_after_format = false,
-		sources = {
-			nls.builtins.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-			nls.builtins.formatting.prettierd,
-			nls.builtins.formatting.stylua,
-			nls.builtins.formatting.eslint_d, --https://github.com/wesbos/eslint-config-wesbos
-			nls.builtins.formatting.mix,
-			nls.builtins.formatting.elm_format,
-			-- nls.builtins.formatting.lua_format,
-			nls.builtins.diagnostics.shellcheck,
-			nls.builtins.diagnostics.markdownlint,
-			-- nls.builtins.diagnostics.selene,
-			nls.builtins.diagnostics.write_good,
-			nls.builtins.diagnostics.eslint.with({ command = "eslint_d" }),
-		},
-	})
-	-- lspconfig["null-ls"].setup(lsp_with_defaults())
+	if format_provider == "efm" then
+		local efm_languages = require("efm")
+		local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
+		lspconfig["efm"].setup(lsp_with_defaults({
+			init_options = { documentFormatting = true },
+			filetypes = vim.tbl_keys(efm_languages),
+			settings = {
+				rootMarkers = { "mix.lock", "mix.exs", "elm.json", "package.json", ".git" },
+				lintDebounce = 500,
+				logLevel = 2,
+				logFile = efm_log,
+				languages = efm_languages,
+			},
+		}))
+	elseif format_provider == "null-ls" then
+		local nls = require("null-ls")
+		nls.config({
+			debounce = 150,
+			save_after_format = false,
+			sources = {
+				nls.builtins.formatting.trim_whitespace.with({ filetypes = { "*" } }),
+				nls.builtins.formatting.prettierd,
+				nls.builtins.formatting.stylua,
+				nls.builtins.formatting.eslint_d, --https://github.com/wesbos/eslint-config-wesbos
+				-- nls.builtins.formatting.mix,
+				nls.builtins.formatting.elm_format,
+				-- nls.builtins.formatting.lua_format,
+				nls.builtins.diagnostics.shellcheck,
+				nls.builtins.diagnostics.markdownlint,
+				nls.builtins.diagnostics.mix_credo.with({ filetypes = { "elixir", "eelixir" } }),
+				-- nls.builtins.diagnostics.selene,
+				nls.builtins.diagnostics.write_good,
+				nls.builtins.diagnostics.eslint.with({ command = "eslint_d" }),
+			},
+		})
+		lspconfig["null-ls"].setup(lsp_with_defaults())
+	end
 end
 
 do

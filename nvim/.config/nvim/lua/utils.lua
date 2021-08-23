@@ -202,4 +202,9 @@ function M.lsp.t(str)
 	return api.nvim_replace_termcodes(str, true, true, true)
 end
 
+function M.lsp.check_back_space()
+	local col = fn.col(".") - 1
+	return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
+end
+
 return M

@@ -12,8 +12,11 @@ local mix_credo = {
 	lintCommand = "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}",
 	lintStdin = true,
 	lintIgnoreExitCode = true,
-	lintFormats = { "%f:%l:%c: %m" },
-	rootMarkers = { "mix.lock" }, -- for some reason, only mix.lock works in vpp
+	lintFormats = {
+		"%f:%l:%c: %t: %m",
+		"%f:%l: %t: %m",
+	},
+	rootMarkers = { "mix.lock", "mix.exs" }, -- for some reason, only mix.lock works in vpp
 }
 -- local golint = require "mega.lc.efm.golint"
 -- local goimports = require "mega.lc.efm.goimports"
@@ -69,8 +72,8 @@ return {
 	-- ["="] = {misspell},
 	vim = { vint },
 	lua = { stylua },
-	elixir = { mix_credo },
-	eelixir = { mix_credo },
+	-- elixir = { mix_credo },
+	-- eelixir = { mix_credo },
 	-- go = {golint, goimports},
 	-- python = {black, isort, flake8, mypy},
 	typescript = eslintPrettier,

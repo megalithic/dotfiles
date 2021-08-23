@@ -22,8 +22,9 @@ map("x", "<Tab>", "%", { noremap = true })
 map("n", "H", "^")
 map("n", "L", "$")
 map("v", "L", "g_")
+-- TODO: no longer needed; nightly adds these things?
 -- map("n", "Y", '"+y$')
-map("n", "Y", "yg_") -- copy to last non-blank char of the line
+-- map("n", "Y", "yg_") -- copy to last non-blank char of the line
 
 -- Remap VIM 0 to first non-blank character
 map("n", "0", "^")
@@ -37,16 +38,12 @@ map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
 map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
 -- TODO: merge the two remaps of j/k below
--- Jumplist mutations
-map("n", "k", "(v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
-map("n", "j", "(v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
-
--- Remap for dealing with word wrap
-map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true })
-map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true })
+-- Jumplist mutations and dealing with word wrapped lines
+map("n", "k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
+map("n", "j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
 
 -- Clear highlights
-api.nvim_exec([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]], true)
+cmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
 
 -- Keep line in middle of buffer when searching
 map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { noremap = true, expr = true })

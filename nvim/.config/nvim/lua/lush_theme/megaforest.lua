@@ -273,12 +273,12 @@ return lush(function()
 		-- TSError -> Error for example, so you do not have to define these unless
 		-- you explicitly want to support Treesitter's improved syntax awareness.
 
-		markdownH1({ fg = red, bg = nil, gui = "bold" }),
-		markdownH2({ fg = orange, bg = nil, gui = "bold" }),
-		markdownH3({ fg = yellow, bg = nil, gui = "bold" }),
-		markdownH4({ fg = green, bg = nil, gui = "bold" }),
-		markdownH5({ fg = blue, bg = nil, gui = "bold" }),
-		markdownH6({ fg = purple, bg = nil, gui = "bold" }),
+		markdownH1({ fg = fg, bg = red, gui = "bold" }),
+		markdownH2({ fg = orange, bg = nil, gui = "bold,italic" }),
+		markdownH3({ fg = yellow, bg = nil, gui = "underline" }),
+		markdownH4({ fg = green, bg = nil, gui = "italic" }),
+		markdownH5({ fg = blue, bg = nil, gui = "" }),
+		markdownH6({ fg = purple, bg = nil, gui = "" }),
 		markdownUrl({ fg = blue, bg = nil, gui = "underline" }),
 		markdownItalic({ fg = nil, bg = nil, gui = "italic" }),
 		markdownBold({ fg = nil, bg = nil, gui = "bold" }),

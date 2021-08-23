@@ -258,7 +258,7 @@ local function get_gps_status()
 
 	gps.is_available() -- Returns boolean value indicating whether a output can be provided
 	if gps.is_available() then
-		return gps.get_location() -- Returns a string with context information
+		return " " .. gps.get_location() -- Returns a string with context information
 	else
 		return ""
 	end
@@ -283,7 +283,7 @@ local function statusline_active()
 		seg("%w", nil, wo.previewwindow),
 		seg("%r", nil, bo.readonly),
 		seg("%q", nil, bo.buftype == "quickfix"),
-		seg(gps, s.search, gps ~= ""),
+		seg(gps, vim.tbl_extend("keep", { no_padding = false }, s.search), gps ~= ""),
 		"%=",
 		seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),
 		seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
