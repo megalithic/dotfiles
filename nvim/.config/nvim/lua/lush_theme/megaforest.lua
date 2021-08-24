@@ -1,4 +1,5 @@
---
+---@diagnostic disable: undefined-global
+
 -- `megaforest` built with,
 --
 --        ,gggg,

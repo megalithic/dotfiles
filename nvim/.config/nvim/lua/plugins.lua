@@ -133,6 +133,7 @@ return {
 	-- (langs, syntax, et al) --
 	-- # markdown/prose
 	"plasticboy/vim-markdown",
+	"rhysd/vim-gfm-syntax",
 	{ "iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"] },
 	{ "harshad1/bullets.vim", branch = "performance_improvements" },
 	"kristijanhusak/orgmode.nvim",
