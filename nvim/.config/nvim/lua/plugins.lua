@@ -63,6 +63,7 @@ return {
 	-- "unblevable/quick-scope",
 	"ggandor/lightspeed.nvim",
 	-- "akinsho/nvim-toggleterm.lua",
+	"voldikss/vim-floaterm",
 	--
 	-- (text objects) --
 	"tpope/vim-rsi",
@@ -90,6 +91,7 @@ return {
 	-- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
 	--
 	-- (development, et al) --
+	"ahmedkhalf/project.nvim",
 	"tpope/vim-projectionist",
 	"janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest
 	"tpope/vim-ragtag",
@@ -100,7 +102,7 @@ return {
 	--
 	-- (the rest...) --
 	"nacro90/numb.nvim",
-	"farmergreg/vim-lastplace",
+	"ethanholz/nvim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
 	{ "megalithic/nvim-autopairs", branch = "feat/master/pass-in-nvim-cmp-mapping-setup" }, -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
 	-- "tpope/vim-endwise",
@@ -141,7 +143,6 @@ return {
 	"dhruvasagar/vim-table-mode",
 	-- "NFrid/due.nvim",
 	-- # ruby/rails
-	-- "vim-ruby/vim-ruby",
 	"tpope/vim-rails",
 	-- # elm
 	"antew/vim-elm-analyse",
@@ -156,24 +157,14 @@ return {
 	"folke/lua-dev.nvim",
 	"andrejlevkovitch/vim-lua-format",
 	"milisims/nvim-luaref",
-	-- # rust
-	-- "rust-lang/rust.vim",
-	"racer-rust/vim-racer",
 	-- # JS/TS/JSON
-	-- "pangloss/vim-javascript",
-	-- "isRuslan/vim-es6",
-	-- "othree/yajs.vim",
 	"MaxMEllon/vim-jsx-pretty",
 	"heavenshell/vim-jsdoc",
-	-- "HerringtonDarkholme/yats.vim",
 	"jxnblk/vim-mdx-js",
 	-- # HTML
-	-- "othree/html5.vim",
 	-- "mattn/emmet-vim",
 	"skwp/vim-html-escape",
 	"pedrohdz/vim-yaml-folds",
-	-- # CSS
-	-- "hail2u/vim-css3-syntax",
 	-- # misc
 	"avakhov/vim-yaml",
 	"chr4/nginx.vim",

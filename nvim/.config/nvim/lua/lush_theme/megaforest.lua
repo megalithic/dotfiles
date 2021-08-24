@@ -16,7 +16,7 @@
 -- @megalithic
 --
 -- credits:
---  * @sainhe for everforest
+--  * @sainnhe for everforest
 --  * @mhanberg for thicc_forest
 
 local set = vim.g
@@ -203,12 +203,12 @@ return lush(function()
 		Todo({ fg = purple, bg = nil, gui = italics }),
 		Delimiter({ fg = fg, bg = nil }),
 		Ignore({ fg = grey1, bg = nil }),
-		Underlined({ fg = nil, bg = nil, gui = "underline" }),
 		Debug({ fg = orange, bg = nil }), --    debugging statements
 		debugPC({ fg = bg0, bg = green }), --    debugging statements
 		debugBreakpoint({ fg = bg0, bg = red }), --    debugging statements
 		Bold({ gui = "bold" }),
 		Italic({ gui = "italic" }),
+		Underlined({ fg = nil, bg = nil, gui = "underline" }),
 		CurrentWord({ fg = nil, bg = nil }),
 		RedSign({ fg = red, bg = bg1 }),
 		OrangeSign({ fg = orange, bg = bg1 }),
@@ -233,6 +233,7 @@ return lush(function()
 		AquaItalic({ fg = cyan, bg = nil, gui = italics }),
 		BlueItalic({ fg = blue, bg = nil, gui = italics }),
 		PurpleItalic({ fg = purple, bg = nil, gui = italics }),
+		PurpleBold({ fg = purple, bg = nil, gui = "bold" }),
 		ErrorText({ fg = nil, bg = bg_red, gui = "undercurl", sp = red }),
 		WarningText({ fg = nil, bg = bg_yellow, gui = "undercurl", sp = yellow }),
 		InfoText({ fg = nil, bg = bg_blue, gui = "undercurl", sp = blue }),
@@ -278,6 +279,7 @@ return lush(function()
 		-- TSError -> Error for example, so you do not have to define these unless
 		-- you explicitly want to support Treesitter's improved syntax awareness.
 
+		-- # built-in markdown
 		markdownH1({ fg = fg, bg = green, gui = "bold" }),
 		markdownH2({ fg = orange, bg = nil, gui = "bold,italic" }),
 		markdownH3({ fg = blue, bg = nil, gui = "underline" }),
@@ -305,6 +307,45 @@ return lush(function()
 		markdownIdDeclaration({ markdownLinkText }),
 		markdownBoldDelimiter({ Grey }),
 		markdownId({ Yellow }),
+
+		-- # vim-markdown
+		-- REF: https://github.com/plasticboy/vim-markdown/blob/master/syntax/markdown.vim
+		mkdItalic({ markdownItalic }),
+		mkdBold({ markdownBold }),
+		mkdBoldItalic({ markdownBold }),
+		mkdUnderline({ Underlined }),
+		-- mkdStrike({}),
+		mkdLink({ markdownBold }),
+		mkdURL({ markdownUrl }),
+		mkdInlineURL({ markdownUrl }),
+		-- mkdLinkDef({}),
+		-- mkdLinkDefTarget({}),
+		-- mkdLinkTitle({}),
+		-- mkdCodeDelimiter({}),
+		-- mkdHeading({}),
+		-- mkdListItem({}),
+		-- mkdRule({}),
+		-- mkdDelimiter({}),
+		mkdId({ markdownId }),
+		-- mkdLineBreak({}),
+		-- mkdBlockquote({}),
+		-- mkdFootnote({}),
+		mkdCode({ markdownCode }),
+		-- mkdCodeDelimiter({}),
+		-- mkdListItem({}),
+		-- mkdListItemLine({}),
+		-- mkdNonListItemBlock({}),
+		-- mkdRule({}),
+		htmlH1({ markdownH1 }),
+		htmlH2({ markdownH2 }),
+		htmlH3({ markdownH3 }),
+		htmlH4({ markdownH4 }),
+		htmlH5({ markdownH5 }),
+		htmlH6({ markdownH6 }),
+		htmlBold({ markdownBold }),
+		htmlItalic({ markdownItalic }),
+		-- htmlStrike({ mkdStrike }),
+		-- htmlBoldItalic({}),
 
 		TSAnnotation({ Purple }),
 		TSAttribute({ Purple }),
@@ -406,7 +447,15 @@ return lush(function()
 		gitcommitOnBranch({ Grey }),
 		gitcommitArrow({ Grey }),
 		gitcommitFile({ Green }),
+		helpNote({ fg = purple, gui = "bold" }),
+		helpHeadline({ fg = red, gui = "bold" }),
+		helpHeader({ fg = orange, gui = "bold" }),
+		helpURL({ fg = green, gui = "underline" }),
+		helpHyperTextEntry({ fg = yellow, gui = "bold" }),
+		helpHyperTextJump({ Yellow }),
+		helpCommand({ Aqua }),
+		helpExample({ Green }),
+		helpSpecial({ Blue }),
+		helpSectionDelim({ Grey }),
 	}
 end)
-
--- vi:nowrap

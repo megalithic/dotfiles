@@ -1,4 +1,4 @@
-local set, g, api, cmd = vim.opt, vim.g, vim.api, vim.cmd
+local set, g, api, cmd, fn = vim.opt, vim.g, vim.api, vim.cmd, vim.fn
 local dirs, map = mega.dirs, mega.map
 local colors = require("colors")
 
@@ -89,22 +89,6 @@ do -- [nvim-treesitter] --
 		highlight = {
 			enable = true,
 			additional_vim_regex_highlighting = true,
-			custom_captures = {
-				["h1"] = "h1",
-				["_h1"] = "_h1",
-				["h2"] = "h2",
-				["_h2"] = "_h2",
-				["h3"] = "h3",
-				["_h3"] = "_h3",
-				["h4"] = "h4",
-				["_h4"] = "_h4",
-				["h5"] = "h5",
-				["_h5"] = "_h5",
-				["emphasis"] = "emphasis",
-				["strong_emphasis"] = "strong_emphasis",
-				["strikethrough"] = "strikethrough",
-				["info_string"] = "info_string",
-			},
 		},
 		indent = { enable = true },
 		autotag = { enable = true },
@@ -129,6 +113,7 @@ do -- [nvim-treesitter] --
 				-- [";"] = "textsubjects-big",
 			},
 		},
+		-- REF: https://github.com/stehessel/nix-dotfiles/blob/master/program/editor/neovim/config/lua/plugins/treesitter.lua
 		textobjects = {
 			select = {
 				enable = false,
@@ -504,6 +489,14 @@ do -- [golden-size] --
 end
 
 do
+	require("nvim-lastplace").setup({
+		lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
+		lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
+		lastplace_open_folds = true,
+	})
+end
+
+do
 	require("nvim-gps").setup({})
 end
 
@@ -726,6 +719,53 @@ end
 -- 	require("toggleterm").setup({})
 -- end
 
+do
+	cmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
+	cmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
+	cmd(
+		[[command! ZkList :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=notes EDITOR=floaterm zk edit -i]]
+	)
+	cmd(
+		[[command! ZkTags :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=tags zk list -q -f json | jq -r '. | map(.tags) | flatten | unique | join("\n")' | fzf | EDITOR=floaterm xargs -o -t zk edit -i -t]]
+	)
+	cmd(
+		[[command! ZkBacklinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=backlinks EDITOR=floaterm zk edit -i -l %]]
+	)
+	cmd(
+		[[command! ZkLinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=links EDITOR=floaterm zk edit -i -L %]]
+	)
+
+	mega.zk_list = function()
+		cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+		cmd([[ZkList]])
+	end
+
+	mega.zk_by_tags = function()
+		cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+		cmd([[ZkTags]])
+	end
+
+	mega.zk_backlinks = function()
+		cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+		cmd([[ZkBacklinks]])
+	end
+
+	mega.zk_links = function()
+		cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+		cmd([[ZkLinks]])
+	end
+
+	local rooter = require("lspconfig").util.root_pattern(".zk")
+	local rooted = rooter(api.nvim_buf_get_name(0))
+	local is_zk = fn.empty(rooted)
+	if is_zk == 0 then
+		map("n", "<leader>fz", ":lua mega.zk_list()<cr>")
+		map("n", "<leader>zt", ":lua mega.zk_by_tags()<cr>")
+		map("n", "<leader>zb", ":lua mega.zk_backlinks()<cr>")
+		map("n", "<leader>zl", ":lua mega.zk_links()<cr>")
+	end
+end
+
 do -- [fzf] --
 	local actions = require("fzf-lua.actions")
 	require("fzf-lua").setup({
@@ -766,7 +806,8 @@ do -- [fzf] --
 		lsp = {
 			prompt = string.format("%s ", colors.icons.prompt_symbol),
 			cwd_only = false, -- LSP/diagnostics for cwd only?
-			async_or_timeout = true,
+			async_or_timeout = false,
+			jump_to_single_result = true,
 		},
 		buffers = {
 			prompt = string.format("buffers %s ", colors.icons.prompt_symbol),

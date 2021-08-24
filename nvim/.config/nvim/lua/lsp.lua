@@ -351,12 +351,12 @@ local function on_attach(client, bufnr)
 	if pcall(require, "fzf-lua") then
 		--- # via fzf-lua
 		--  * https://github.com/ibhagwan/fzf-lua/issues/39#issuecomment-897099304 (LSP async/sync)
-		bufmap("gd", "lua require('fzf-lua').lsp_definitions({ jump_to_single_result = true })")
+		bufmap("gd", "lua require('fzf-lua').lsp_definitions()")
 		bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
-		bufmap("gr", "lua require('fzf-lua').lsp_references({ jump_to_single_result = true })")
-		bufmap("gs", "lua require('fzf-lua').lsp_symbols({ jump_to_single_result = true })")
-		bufmap("gi", "lua require('fzf-lua').lsp_implementations({ jump_to_single_result = true })")
-		bufmap("<leader>la", "lua require('fzf-lua').lsp_code_actions({ jump_to_single_result = true })")
+		bufmap("gr", "lua require('fzf-lua').lsp_references()")
+		bufmap("gs", "lua require('fzf-lua').lsp_symbols()")
+		bufmap("gi", "lua require('fzf-lua').lsp_implementations()")
+		bufmap("<leader>la", "lua require('fzf-lua').lsp_code_actions()")
 	else
 		-- # via defaults
 		bufmap("gd", "lua vim.lsp.buf.definition()")
@@ -664,6 +664,7 @@ do -- lua
 						},
 					},
 					workspace = {
+						preloadFileSize = 500,
 						-- Make the server aware of Neovim runtime files
 						library = {
 							-- [api.nvim_get_runtime_file("", true)],

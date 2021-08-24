@@ -142,12 +142,10 @@ map("v", "m", ":'<'>lua require('tsht').nodes()<CR>", { noremap = true })
 
 -- # easy-align
 -- start interactive EasyAlign in visual mode (e.g. vipga)
--- map("v", "<Enter>", "<Plug>(EasyAlign)")
 map("v", "ga", "<Plug>(EasyAlign)")
 map("x", "ga", "<Plug>(EasyAlign)")
 -- start interactive EasyAlign for a motion/text object (e.g. gaip)
 map("n", "ga", "<Plug>(EasyAlign)")
-map("v", "<CR>", "<Plug>(EasyAlign)")
 
 -- # Dash
 map("n", "<leader>D", "<cmd>Dash<CR>")
