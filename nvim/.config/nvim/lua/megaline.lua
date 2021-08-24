@@ -1,6 +1,6 @@
 local colorscheme = require("colors")
 local hi, au = mega.highlight, mega.au
-local fn, cmd, bo, wo, set = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o
+local fn, _, bo, wo, set = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o
 
 local statusline = {}
 au([[VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]])
@@ -41,7 +41,7 @@ function statusline.set_colors()
 	hi("StSep2", { guifg = c.secondary_bg, guibg = c.secondary_fg })
 	hi("StSep3", { guifg = c.tertiary_bg, guibg = c.tertiary_fg })
 
-	hi("StErr", { guifg = c.error, guibg = c.statusline_bg })
+	hi("StErr", { guifg = c.error, guibg = c.statusline_bg, gui = "italic" })
 	hi("StErrSep", { guifg = c.statusline_bg, guibg = c.error })
 
 	hi("StWarn", { guifg = c.normal, guibg = c.warning })
