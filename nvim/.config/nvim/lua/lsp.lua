@@ -5,7 +5,7 @@ local colors = require("colors")
 local utils = require("utils")
 
 local snippet_provider = "luasnip" -- vsnip or luasnip
-local format_provider = "efm" -- efm or null-ls
+local formatting_provider = "efm" -- efm or null-ls
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -520,6 +520,46 @@ for _, ls in ipairs(servers) do
 	lspconfig[ls].setup(lsp_with_defaults())
 end
 
+do
+	if formatting_provider == "efm" then
+		local efm_languages = require("efm")
+		local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
+		lspconfig["efm"].setup(lsp_with_defaults({
+			init_options = { documentFormatting = true },
+			filetypes = vim.tbl_keys(efm_languages),
+			settings = {
+				rootMarkers = { "mix.lock", "mix.exs", "elm.json", "package.json", ".git" },
+				lintDebounce = 500,
+				logLevel = 2,
+				logFile = efm_log,
+				languages = efm_languages,
+			},
+		}))
+	elseif formatting_provider == "null-ls" then
+		local nls = require("null-ls")
+		nls.config({
+			debounce = 150,
+			save_after_format = false,
+			sources = {
+				nls.builtins.formatting.trim_whitespace.with({ filetypes = { "*" } }),
+				nls.builtins.formatting.prettierd,
+				nls.builtins.formatting.stylua,
+				nls.builtins.formatting.eslint_d, --https://github.com/wesbos/eslint-config-wesbos
+				-- nls.builtins.formatting.mix,
+				nls.builtins.formatting.elm_format,
+				-- nls.builtins.formatting.lua_format,
+				nls.builtins.diagnostics.shellcheck,
+				nls.builtins.diagnostics.markdownlint,
+				nls.builtins.diagnostics.mix_credo.with({ filetypes = { "elixir", "eelixir" } }),
+				-- nls.builtins.diagnostics.selene,
+				nls.builtins.diagnostics.write_good,
+				nls.builtins.diagnostics.eslint.with({ command = "eslint_d" }),
+			},
+		})
+		lspconfig["null-ls"].setup(lsp_with_defaults())
+	end
+end
+
 lspconfig["solargraph"].setup(lsp_with_defaults({
 	cmd = { "solargraph", "stdio" },
 	filetypes = { "ruby" },
@@ -767,46 +807,6 @@ do
 			},
 		},
 	}))
-end
-
-do
-	if format_provider == "efm" then
-		local efm_languages = require("efm")
-		local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
-		lspconfig["efm"].setup(lsp_with_defaults({
-			init_options = { documentFormatting = true },
-			filetypes = vim.tbl_keys(efm_languages),
-			settings = {
-				rootMarkers = { "mix.lock", "mix.exs", "elm.json", "package.json", ".git" },
-				lintDebounce = 500,
-				logLevel = 2,
-				logFile = efm_log,
-				languages = efm_languages,
-			},
-		}))
-	elseif format_provider == "null-ls" then
-		local nls = require("null-ls")
-		nls.config({
-			debounce = 150,
-			save_after_format = false,
-			sources = {
-				nls.builtins.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-				nls.builtins.formatting.prettierd,
-				nls.builtins.formatting.stylua,
-				nls.builtins.formatting.eslint_d, --https://github.com/wesbos/eslint-config-wesbos
-				-- nls.builtins.formatting.mix,
-				nls.builtins.formatting.elm_format,
-				-- nls.builtins.formatting.lua_format,
-				nls.builtins.diagnostics.shellcheck,
-				nls.builtins.diagnostics.markdownlint,
-				nls.builtins.diagnostics.mix_credo.with({ filetypes = { "elixir", "eelixir" } }),
-				-- nls.builtins.diagnostics.selene,
-				nls.builtins.diagnostics.write_good,
-				nls.builtins.diagnostics.eslint.with({ command = "eslint_d" }),
-			},
-		})
-		lspconfig["null-ls"].setup(lsp_with_defaults())
-	end
 end
 
 do

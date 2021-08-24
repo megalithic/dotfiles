@@ -1,5 +1,5 @@
 --
--- Built with,
+-- `megaforest` built with,
 --
 --        ,gggg,
 --       d8" "8I                         ,dPYb,
@@ -13,6 +13,10 @@
 --  "Y8P"  "Y888888P'"Y88P"`Y8P' "YY8P8P88P     `Y8
 --
 -- @megalithic
+--
+-- credits:
+--  * @sainhe for everforest
+--  * @mhanberg for thicc_forest
 
 local set = vim.g
 
@@ -273,11 +277,11 @@ return lush(function()
 		-- TSError -> Error for example, so you do not have to define these unless
 		-- you explicitly want to support Treesitter's improved syntax awareness.
 
-		markdownH1({ fg = fg, bg = red, gui = "bold" }),
+		markdownH1({ fg = fg, bg = green, gui = "bold" }),
 		markdownH2({ fg = orange, bg = nil, gui = "bold,italic" }),
-		markdownH3({ fg = yellow, bg = nil, gui = "underline" }),
-		markdownH4({ fg = green, bg = nil, gui = "italic" }),
-		markdownH5({ fg = blue, bg = nil, gui = "" }),
+		markdownH3({ fg = blue, bg = nil, gui = "underline" }),
+		markdownH4({ fg = yellow, bg = nil, gui = "italic" }),
+		markdownH5({ fg = red, bg = nil, gui = "" }),
 		markdownH6({ fg = purple, bg = nil, gui = "" }),
 		markdownUrl({ fg = blue, bg = nil, gui = "underline" }),
 		markdownItalic({ fg = nil, bg = nil, gui = "italic" }),

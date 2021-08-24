@@ -47,6 +47,9 @@ function statusline.set_colors()
 	hi("StWarn", { guifg = c.normal, guibg = c.warning })
 	hi("StWarnSep", { guifg = c.statusline_bg, guibg = c.warning })
 
+	hi("StInactive", { guifg = colorscheme.cs.bg2, gui = "italic" })
+	s.inactive = { color = "%#StInactive#", no_padding = true }
+
 	s.mode_block = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true, no_padding = true }
 	s.mode = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true }
 	s.mode_right = vim.tbl_extend("force", s.mode, { side = "right", no_before = false })
@@ -335,7 +338,7 @@ local function statusline_active()
 end
 
 local function statusline_inactive()
-	return [[%f %y %m]]
+	return seg([[%f %y %m]], s.inactive)
 end
 
 function statusline.setup()
