@@ -1,10 +1,10 @@
 local colorscheme = require("colors")
 local hi, au = mega.highlight, mega.au
-local fn, cmd, bo, wo = vim.fn, vim.cmd, vim.bo, vim.wo
+local fn, cmd, bo, wo, set = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o
 
 local statusline = {}
 au([[VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]])
-vim.o.statusline = "%!v:lua.mega.statusline.setup()"
+set.statusline = "%!v:lua.mega.statusline.setup()"
 
 local c = {}
 local s = {}
@@ -131,17 +131,44 @@ local function get_mode_status()
 	local mode = fn.mode()
 	mode_highlight(mode)
 	local modeMap = {
-		n = "NORMAL",
-		i = "INSERT",
-		R = "REPLACE",
-		v = "VISUAL",
-		V = "V-LINE",
-		c = "COMMAND",
-		[""] = "V-BLOCK",
-		s = "SELECT",
-		S = "S-LINE",
-		[""] = "S-BLOCK",
-		t = "TERMINAL",
+		["n"] = "NORMAL",
+		["niI"] = "NORMAL",
+		["niR"] = "NORMAL",
+		["niV"] = "NORMAL",
+		["v"] = "VISUAL",
+		["V"] = "VLINE",
+		[""] = "VBLOCK",
+		["s"] = "SELECT",
+		["S"] = "SLINE",
+		[""] = "SBLOCK",
+		["i"] = "INSERT",
+		["ic"] = "INSERT",
+		["ix"] = "INSERT",
+		["R"] = "REPLACE",
+		["Rc"] = "REPLACE",
+		["Rx"] = "REPLACE",
+		["Rv"] = "VREPLACE",
+		["c"] = "COMMAND",
+		["cv"] = "EX",
+		["ce"] = "EX",
+		["r"] = "R",
+		["rm"] = "MORE",
+		["r?"] = "CONFIRM",
+		["!"] = "SHELL",
+		["t"] = "TERMINAL",
+
+		-- n = "NORMAL",
+		-- i = "INSERT",
+		-- R = "REPLACE",
+		-- v = "VISUAL",
+		-- V = "V-LINE",
+		-- c = "COMMAND",
+		-- [""] = "V-BLOCK",
+		-- s = "SELECT",
+		-- S = "S-LINE",
+		-- [""] = "S-BLOCK",
+		-- t = "TERMINAL",
+
 		-- ["n"] = "N",
 		-- ["niI"] = "N",
 		-- ["niR"] = "N",
@@ -191,7 +218,16 @@ local function get_vcs_status()
 	return with_icon(table.concat(result, " "), colorscheme.icons.git_symbol)
 end
 
-local function get_filepath()
+local function get_fileicon()
+	local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
+	local extension = string.match(filename, "%a+$")
+	local devicons = require("nvim-web-devicons")
+	local icon = devicons.get_icon(filename, extension) or ""
+	return icon
+end
+
+local function get_filepath(_uses_icon)
+	local uses_icon = _uses_icon or true
 	local full_path = fn.expand("%:p")
 	local path = full_path
 	local cwd = fn.getcwd()
@@ -213,18 +249,19 @@ local function get_filepath()
 		return "%f"
 	end
 
-	return fn.pathshorten(path)
+	local icon = uses_icon and get_fileicon() or ""
+	return table.concat({
+		icon,
+		" ",
+		fn.pathshorten(path),
+	}, "")
 end
 
 -- REF: https://github.com/vheon/home/blob/master/.config/nvim/lua/statusline.lua#L114-L132
 local function get_filetype()
-	local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
-	local extension = string.match(filename, "%a+$")
-
+	local icon = get_fileicon()
 	local ft = bo.filetype
 
-	local devicons = require("nvim-web-devicons")
-	local icon = devicons.get_icon(filename, extension) or ""
 	return table.concat({
 		icon,
 		" ",
@@ -277,13 +314,14 @@ local function statusline_active()
 		seg(get_mode_status(), s.mode),
 		"%<",
 		seg(vcs_status, s.section_2, vcs_status ~= ""),
-		seg(get_filepath(), bo.modified and s.err or s.section_3),
+		seg(get_filepath(true), bo.modified and s.err or s.section_3),
 		seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), bo.modified),
 		seg(string.format("%s", colorscheme.icons.readonly_symbol), s.err, not bo.modifiable),
 		seg("%w", nil, wo.previewwindow),
 		seg("%r", nil, bo.readonly),
 		seg("%q", nil, bo.buftype == "quickfix"),
-		seg(gps, vim.tbl_extend("keep", { no_padding = false }, s.search), gps ~= ""),
+		"%=",
+		seg(gps, s.search, gps ~= ""),
 		"%=",
 		seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),
 		seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
