@@ -85,7 +85,7 @@ return {
 	html = eslintPrettier,
 	scss = eslintPrettier,
 	css = eslintPrettier,
-	markdown = eslintPrettier,
+	-- markdown = eslintPrettier,
 	sh = { shellcheck, shfmt },
 	zsh = { shfmt },
 	-- tf = {terraform},

@@ -47,7 +47,7 @@ function statusline.set_colors()
 	hi("StWarn", { guifg = c.normal, guibg = c.warning })
 	hi("StWarnSep", { guifg = c.statusline_bg, guibg = c.warning })
 
-	hi("StInactive", { guifg = colorscheme.cs.bg2, gui = "italic" })
+	hi("StInactive", { guifg = colorscheme.cs.bg4, gui = "italic" })
 	s.inactive = { color = "%#StInactive#", no_padding = true }
 
 	s.mode_block = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true, no_padding = true }
