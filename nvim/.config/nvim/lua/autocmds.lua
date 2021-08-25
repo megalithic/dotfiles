@@ -16,6 +16,7 @@ au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au("BufRead,BufNewFile *.md set filetype=markdown")
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
+au([[FileType help,startuptime,qf,lspinfo,fzf setlocal nonumber norelativenumber nocursorline nocursorcolumn nospell]])
 au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration

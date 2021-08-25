@@ -65,7 +65,7 @@ end
 local function get_lsp_status()
 	-- # LSP status
 	local lsp_status = require("lsp-status")
-	-- lsp_status.register_progress()
+	lsp_status.register_progress()
 	lsp_status.config({
 		status_symbol = "",
 		indicator_errors = colorscheme.icons.statusline_error,

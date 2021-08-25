@@ -1,4 +1,4 @@
-  _G["mega"] = require("global")
+_G["mega"] = require("global")
 
 local load = mega.load
 local cmd = vim.cmd

@@ -452,26 +452,18 @@ end
 local capabilities = lsp.protocol.make_client_capabilities()
 capabilities.textDocument.codeLens = { dynamicRegistration = false }
 capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-capabilities.textDocument.completion.completionItem.snippetSupport = true
-capabilities.textDocument.completion.completionItem.preselectSupport = true
-capabilities.textDocument.completion.completionItem.insertReplaceSupport = true
-capabilities.textDocument.completion.completionItem.labelDetailsSupport = true
-capabilities.textDocument.completion.completionItem.deprecatedSupport = true
-capabilities.textDocument.completion.completionItem.commitCharactersSupport = true
-capabilities.textDocument.completion.completionItem.tagSupport = { valueSet = { 1 } }
-capabilities.textDocument.completion.completionItem.resolveSupport = {
-	properties = {
-		"documentation",
-		"detail",
-		"additionalTextEdits",
-	},
-}
+
+if completion_provider == "cmp" then
+	capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
+end
+
 local status_capabilities = require("lsp-status").capabilities
 capabilities = mega.table_merge(status_capabilities, capabilities)
 
 local function lsp_with_defaults(opts)
 	opts = opts or {}
 	return vim.tbl_deep_extend("keep", opts, {
+		autostart = true,
 		on_attach = on_attach,
 		capabilities = capabilities,
 		flags = { debounce_text_changes = 500 },
@@ -625,62 +617,62 @@ do -- lua
 	table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
 	table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
 
-	local luadev = require("lua-dev").setup({
-		lspconfig = lsp_with_defaults({
-			settings = {
-				Lua = {
-					completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
-					runtime = {
-						-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-						version = "LuaJIT",
-						-- Setup your lua path
-						path = runtime_path,
-					},
-					diagnostics = {
-						globals = {
-							"vim",
-							"Color",
-							"c",
-							"Group",
-							"g",
-							"s",
-							"describe",
-							"it",
-							"before_each",
-							"after_each",
-							"hs",
-							"spoon",
-							"config",
-							"watchers",
-							"mega",
-						},
-					},
-					workspace = {
-						preloadFileSize = 500,
-						-- Make the server aware of Neovim runtime files
-						library = {
-							-- [api.nvim_get_runtime_file("", true)],
-							[vim.fn.expand("$VIMRUNTIME/lua")] = true,
-							[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-							[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/")] = true,
-						},
-					},
-					-- Do not send telemetry data containing a randomized but unique identifier
-					telemetry = {
-						enable = false,
+	local sumneko_lua_settings = lsp_with_defaults({
+		settings = {
+			Lua = {
+				completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
+				runtime = {
+					-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+					version = "LuaJIT",
+					-- Setup your lua path
+					path = runtime_path,
+				},
+				diagnostics = {
+					globals = {
+						"vim",
+						"Color",
+						"c",
+						"Group",
+						"g",
+						"s",
+						"describe",
+						"it",
+						"before_each",
+						"after_each",
+						"hs",
+						"spoon",
+						"config",
+						"watchers",
+						"mega",
 					},
 				},
+				workspace = {
+					preloadFileSize = 500,
+					-- Make the server aware of Neovim runtime files
+					library = {
+						-- [api.nvim_get_runtime_file("", true)],
+						[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+						[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+						[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/")] = true,
+					},
+				},
+				-- Do not send telemetry data containing a randomized but unique identifier
+				telemetry = {
+					enable = false,
+				},
 			},
-			cmd = {
-				fn.getenv("XDG_CONFIG_HOME")
-					.. "/lsp/sumneko_lua/bin/"
-					.. fn.getenv("PLATFORM")
-					.. "/lua-language-server",
-				"-E",
-				fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
-			},
-		}),
+		},
+		cmd = {
+			fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
+			"-E",
+			fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
+		},
 	})
+
+	local luadev = require("lua-dev").setup({
+		lspconfig = sumneko_lua_settings,
+	})
+
 	lspconfig["sumneko_lua"].setup(luadev)
 end
 
