@@ -19,7 +19,6 @@ return {
 	"antoinemadec/FixCursorHold.nvim",
 	"karb94/neoscroll.nvim",
 	"lukas-reineke/indent-blankline.nvim",
-	"folke/which-key.nvim",
 	--
 	-- (lsp/completion) --
 	"neovim/nvim-lspconfig",
@@ -33,7 +32,7 @@ return {
 	"saadparwaiz1/cmp_luasnip",
 	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
-	-- "hrsh7th/cmp-emoji",
+	"hrsh7th/cmp-emoji",
 	"hrsh7th/vim-vsnip",
 	"hrsh7th/vim-vsnip-integ",
 	"L3MON4D3/LuaSnip",
@@ -61,9 +60,7 @@ return {
 	-- (file/document navigation) --
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
-	-- "unblevable/quick-scope",
 	"ggandor/lightspeed.nvim",
-	-- "akinsho/nvim-toggleterm.lua",
 	"voldikss/vim-floaterm",
 	--
 	-- (text objects) --

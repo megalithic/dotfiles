@@ -241,14 +241,6 @@ do -- [neoscroll] --
 	})
 end
 
--- [which-key] --
--- require("which-key").setup()
-require("which-key").setup({
-	show_help = true,
-	triggers = "auto",
-	plugins = { spelling = true },
-})
-
 -- [devicons] --
 require("nvim-web-devicons").setup({ default = false })
 

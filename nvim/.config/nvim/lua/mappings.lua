@@ -83,8 +83,11 @@ map("i", "?", "?<C-g>u")
 
 -- [custom mappings] -----------------------------------------------------------
 
--- execute our current lua File
-map("n", "<leader>x", "<cmd>luafile %<cr>")
+-- # simple REPLs -- TODO: find something more robust?
+map("n", "<leader>rsh", [[:12sp | term<cr>]])
+map("n", "<leader>rpy", [[:12so | e term://python3 -q | wincmd k<cr>]])
+map("n", "<leader>rex", [[:12sp | e term://iex | wincmd k<cr>]])
+map("n", "<leader>rjs", [[:12sp | e term://node | wincmd k<cr>]])
 
 -- Things 3
 api.nvim_exec(
