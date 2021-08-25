@@ -21,7 +21,7 @@ SSH_SYMBOL=$'\uf0da'          #
 
 # load gitstatus lib
 if [[ "$PLATFORM" == "macos" ]]; then
-  source /usr/local/opt/gitstatus/gitstatus.plugin.zsh
+  source $(brew --prefix)/opt/gitstatus/gitstatus.plugin.zsh
 elif [[ "$PLATFORM" == "linux" ]]; then
   source $HOME/builds/gitstatus/gitstatus.plugin.zsh
 fi

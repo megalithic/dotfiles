@@ -115,7 +115,7 @@ map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
 map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
 
 -- # markdown-related
-map("n", "<Leader>mP", "<cmd>MarkdownPreview<CR>")
+map("n", "<Leader>mp", "<cmd>MarkdownPreview<CR>")
 
 -- # slash
 cmd([[noremap <plug>(slash-after) zz]])

@@ -159,10 +159,10 @@ set cmdheight=1
 set lazyredraw        " should make scrolling faster
 set matchpairs=(:),{:},[:]
 set matchpairs+=<:>             " Match, to be used with %
-try
+" try
   set matchpairs+=《:》,〈:〉,［:］,（:）,「:」,『:』,‘:’,“:”
-catch /^Vim\%((\a\+)\)\=:E474
-endtry
+" catch /^Vim\%((\a\+)\)\=:E474
+" endtry
 set mouse=nva         " Mouse support in different modes
 set mousemodel=popup  " Set the behaviour of mouse
 set mousehide         " Hide mouse when typing text

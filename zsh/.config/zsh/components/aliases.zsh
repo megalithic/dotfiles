@@ -13,6 +13,9 @@ alias cp='nocorrect cp'
 alias sudo='nocorrect sudo'
 alias git="nocorrect git"
 alias nmap="nocorrect nmap"
+# if $(gh &>/dev/null); then
+# 	alias git="gh"
+# fi
 
 # Files & directories
 # -----------------------------------------------------------------------------

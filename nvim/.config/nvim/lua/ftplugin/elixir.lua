@@ -1,5 +1,10 @@
 return function(_) -- bufnr
+	-- REF:
+	-- running tests in iex:
+	-- https://curiosum.com/til/run-tests-in-elixir-iex-shell?utm_medium=email&utm_source=elixir-radar
+
 	vim.cmd([[setlocal iskeyword+=!,?]])
+
 	vim.api.nvim_set_keymap("n", "<leader>etp", ":ToPipe<CR>", { noremap = true })
 	vim.api.nvim_set_keymap("n", "<leader>efp", ":FromPipe<CR>", { noremap = true })
 
