@@ -305,11 +305,11 @@ function setup_zsh {
 	ln -sfv $HOME/.config/zsh/.zprofile $HOME/.zprofile
 	source $HOME/.config/zsh/.zprofile
 
-	log "installing znap (zsh-snap)"
-	if [[ ! -e $HOME/.znap/znap.zsh ]]; then
-		git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git $HOME/.znap
-		source $HOME/.znap/install.zsh
-	fi
+	# log "installing znap (zsh-snap)"
+	# if [[ ! -e $HOME/.znap/znap.zsh ]]; then
+	# 	git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git $HOME/.znap
+	# 	source $HOME/.znap/install.zsh
+	# fi
 
 	# compaudit | xargs chmod g-w
 

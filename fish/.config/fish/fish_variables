@@ -1,0 +1,134 @@
+# This file contains fish universal variable definitions.
+# VERSION: 3.0
+SETUVAR --export BAT_THEME:Dracula
+SETUVAR --export COMPOSE_DOCKER_CLI_BUILD:1
+SETUVAR --export DOTDROP_AUTOUPDATE:no
+SETUVAR --export EDITOR:nvim
+SETUVAR FZF_DISABLE_KEYBINDINGS:0
+SETUVAR FZF_LEGACY_KEYBINDINGS:1
+SETUVAR FZF_PREVIEW_DIR_CMD:ls
+SETUVAR FZF_PREVIEW_FILE_CMD:head\x20\x2dn\x2010
+SETUVAR --export --path GOPATH:/Users/sethmesser/go
+SETUVAR --export HOMEBREW_NO_AUTO_UPDATE:1
+SETUVAR --export LESS:\x2drF
+SETUVAR --export MANPAGER:nvim\x20\x2bMan\x21
+SETUVAR --export MANROFFOPT:\x2dc
+SETUVAR --export VISUAL:nvim
+SETUVAR __fish_initialized:3100
+SETUVAR _fish_abbr_aria2c_2D_daemon:aria2c\x20\x2dD
+SETUVAR _fish_abbr_cp:cp\x20\x2driv
+SETUVAR _fish_abbr_df:grc\x20/bin/df\x20\x2dh
+SETUVAR _fish_abbr_fda:fd\x20\x2dIH
+SETUVAR _fish_abbr_g:hub
+SETUVAR _fish_abbr_git:hub
+SETUVAR _fish_abbr_gl:hub\x20l\x20\x2d\x2dcolor\x20\x7c\x20devmoji\x20\x2d\x2dlog\x20\x2d\x2dcolor\x20\x7c\x20less\x20\x2drXF
+SETUVAR _fish_abbr_gotop:btm
+SETUVAR _fish_abbr_grep:rg
+SETUVAR _fish_abbr_helpme:bat\x20\x7e/HELP\x2emd
+SETUVAR _fish_abbr_hide_2D_cursor:tput\x20civis
+SETUVAR _fish_abbr_l:ll
+SETUVAR _fish_abbr_lg:lazygit
+SETUVAR _fish_abbr_mkdir:mkdir\x20\x2dvp
+SETUVAR _fish_abbr_mux:tmuxinator
+SETUVAR _fish_abbr_mv:mv\x20\x2div
+SETUVAR _fish_abbr_ncdu:ncdu\x20\x2d\x2dcolor\x20dark
+SETUVAR _fish_abbr_nd:nix\x2denv\x20\x2de
+SETUVAR _fish_abbr_ni:nix\x2denv\x20\x2df\x20\x27\x3cnixpkgs\x3e\x27\x20\x2diA
+SETUVAR _fish_abbr_nq:nix\x2denv\x20\x2dq
+SETUVAR _fish_abbr_nqa:nix\x2denv\x20\x2dqa
+SETUVAR _fish_abbr_ntop:ultra\x20\x2d\x2dmonitor
+SETUVAR _fish_abbr_nu:nix\x2denv\x20\x2du
+SETUVAR _fish_abbr_pull:hub\x20pull
+SETUVAR _fish_abbr_push:hub\x20push
+SETUVAR _fish_abbr_rga:rg\x20\x2duu
+SETUVAR _fish_abbr_show_2D_cursor:tput\x20cnorm
+SETUVAR _fish_abbr_st:hub\x20st
+SETUVAR _fish_abbr_suod:sudo
+SETUVAR _fish_abbr_t:tmux
+SETUVAR _fish_abbr_ta:tmux\x20attach\x20\x2dt
+SETUVAR _fish_abbr_tad:tmux\x20attach\x20\x2dd\x20\x2dt
+SETUVAR _fish_abbr_tc:tmux\x20attach
+SETUVAR _fish_abbr_tk:tmux\x20kill\x2dsession\x20\x2dt
+SETUVAR _fish_abbr_tl:tmux\x20ls
+SETUVAR _fish_abbr_ts:tmux\x20new\x20\x2ds
+SETUVAR _fish_abbr_tt:tn\x20src/tt\x2ets
+SETUVAR _fish_abbr_v:nvim
+SETUVAR _fish_abbr_vi:nvim
+SETUVAR _fish_abbr_vim:nvim
+SETUVAR _fish_abbr_weather:curl\x20\x2ds\x20wttr\x2ein/Ghent\x20\x7c\x20grep\x20\x2dv\x20Follow
+SETUVAR _fish_abbr_ytop:btm
+SETUVAR fish_color_autosuggestion:555\x1ebrblack
+SETUVAR fish_color_cancel:\x2dr
+SETUVAR fish_color_command:005fd7
+SETUVAR fish_color_comment:990000
+SETUVAR fish_color_cwd:green
+SETUVAR fish_color_cwd_root:red
+SETUVAR fish_color_end:009900
+SETUVAR fish_color_error:ff0000
+SETUVAR fish_color_escape:00a6b2
+SETUVAR fish_color_history_current:\x2d\x2dbold
+SETUVAR fish_color_host:normal
+SETUVAR fish_color_host_remote:yellow
+SETUVAR fish_color_normal:normal
+SETUVAR fish_color_operator:00a6b2
+SETUVAR fish_color_param:00afff
+SETUVAR fish_color_quote:999900
+SETUVAR fish_color_redirection:00afff
+SETUVAR fish_color_search_match:bryellow\x1e\x2d\x2dbackground\x3dbrblack
+SETUVAR fish_color_selection:white\x1e\x2d\x2dbold\x1e\x2d\x2dbackground\x3dbrblack
+SETUVAR fish_color_status:red
+SETUVAR fish_color_user:brgreen
+SETUVAR fish_color_valid_path:\x2d\x2dunderline
+SETUVAR fish_config_changed:1629914208
+SETUVAR fish_emoji_width:2
+SETUVAR fish_key_bindings:fish_default_key_bindings
+SETUVAR fish_pager_color_completion:\x1d
+SETUVAR fish_pager_color_description:B3A06D\x1eyellow
+SETUVAR fish_pager_color_prefix:normal\x1e\x2d\x2dbold\x1e\x2d\x2dunderline
+SETUVAR fish_pager_color_progress:brwhite\x1e\x2d\x2dbackground\x3dcyan
+SETUVAR --export fish_user_paths:/Users/sethmesser/\x2ego\x1e/Users/sethmesser/\x2ego/bin\x1e/usr/local/sbin\x1e/usr/local/opt/sqlite/bin
+SETUVAR pure_begin_prompt_with_current_directory:true
+SETUVAR pure_check_for_new_release:false
+SETUVAR pure_color_at_sign:pure_color_mute
+SETUVAR pure_color_command_duration:pure_color_warning
+SETUVAR pure_color_current_directory:pure_color_primary
+SETUVAR pure_color_danger:red
+SETUVAR pure_color_dark:black
+SETUVAR pure_color_git_branch:pure_color_mute
+SETUVAR pure_color_git_dirty:pure_color_mute
+SETUVAR pure_color_git_stash:pure_color_info
+SETUVAR pure_color_git_unpulled_commits:pure_color_info
+SETUVAR pure_color_git_unpushed_commits:pure_color_info
+SETUVAR pure_color_hostname:pure_color_mute
+SETUVAR pure_color_info:cyan
+SETUVAR pure_color_jobs:pure_color_normal
+SETUVAR pure_color_light:white
+SETUVAR pure_color_mute:brblack
+SETUVAR pure_color_normal:normal
+SETUVAR pure_color_prefix_root_prompt:pure_color_danger
+SETUVAR pure_color_primary:blue
+SETUVAR pure_color_prompt_on_error:pure_color_danger
+SETUVAR pure_color_prompt_on_success:pure_color_success
+SETUVAR pure_color_success:magenta
+SETUVAR pure_color_system_time:pure_color_mute
+SETUVAR pure_color_username_normal:pure_color_mute
+SETUVAR pure_color_username_root:pure_color_light
+SETUVAR pure_color_virtualenv:pure_color_mute
+SETUVAR pure_color_warning:yellow
+SETUVAR pure_enable_git:true
+SETUVAR pure_enable_single_line_prompt:false
+SETUVAR pure_reverse_prompt_symbol_in_vimode:true
+SETUVAR pure_separate_prompt_on_error:false
+SETUVAR pure_show_jobs:false
+SETUVAR pure_show_prefix_root_prompt:false
+SETUVAR pure_show_subsecond_command_duration:false
+SETUVAR pure_show_system_time:false
+SETUVAR pure_symbol_git_dirty:\x2a
+SETUVAR pure_symbol_git_stash:\u2261
+SETUVAR pure_symbol_git_unpulled_commits:\u21e3
+SETUVAR pure_symbol_git_unpushed_commits:\u21e1
+SETUVAR pure_symbol_prefix_root_prompt:\x23
+SETUVAR pure_symbol_prompt:\u276f
+SETUVAR pure_symbol_reverse_prompt:\u276e
+SETUVAR pure_symbol_title_bar_separator:\x2d
+SETUVAR pure_threshold_command_duration:5

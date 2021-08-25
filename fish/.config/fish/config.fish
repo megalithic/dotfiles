@@ -26,7 +26,8 @@ fish_add_path ~/.local/bin/pnpm
 
 # Fish
 set -U fish_emoji_width 2
-alias -s fish_greeting color-test
+# alias -s fish_greeting color-test
+# alias fish_greeting "hi!"
 
 # Emacs
 # set -l emacs_path /Applications/Emacs.app/Contents/MacOS
