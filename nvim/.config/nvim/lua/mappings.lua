@@ -128,8 +128,6 @@ endif
 
 -- # zk
 -- REF: https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
-cmd([[ command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index() ]])
-cmd([[ command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>) ]])
 map("n", "<leader>zi", "<cmd>ZkIndex<cr>")
 map("v", "<leader>zn", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<cr>")
 map("n", "<leader>zn", "<cmd>ZkNew {title = vim.fn.input('Title: ')}<cr>")

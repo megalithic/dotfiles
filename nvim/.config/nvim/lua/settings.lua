@@ -340,7 +340,8 @@ do -- [bullets] --
 		"scratch",
 	}
 	g.bullets_checkbox_markers = " ○◐✗"
-	-- g.bullets_set_mappings = 0
+	g.bullets_set_mappings = 0
+	-- g.bullets_outline_levels = { "num" }
 end
 
 -- do
@@ -504,6 +505,7 @@ do -- [autopairs] --
 	local npairs = require("nvim-autopairs")
 	npairs.setup({
 		check_ts = true,
+		close_triple_quotes = true,
 		-- ts_config = {
 		-- 	lua = { "string" },
 		-- 	-- it will not add pair on that treesitter node

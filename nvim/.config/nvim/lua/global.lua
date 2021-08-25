@@ -284,9 +284,9 @@ function M.zetty(args)
 	end
 
 	if opts.cmd == "meeting" then
-		require("zk.command").new({ title = title, action = "edit", notebook = "meetings", content = content })
+		-- require("zk.command").new({ title = title, action = "edit", notebook = "meetings", content = content })
 	elseif opts.cmd == "new" then
-		require("zk.command").new({ title = title, action = "edit" })
+		-- require("zk.command").new({ title = title, action = "edit" })
 	end
 end
 

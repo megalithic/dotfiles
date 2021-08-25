@@ -280,7 +280,7 @@ return lush(function()
 		-- you explicitly want to support Treesitter's improved syntax awareness.
 
 		-- # built-in markdown
-		markdownH1({ fg = fg, bg = green, gui = "bold" }),
+		markdownH1({ fg = bg0, bg = green, gui = "bold" }),
 		markdownH2({ fg = orange, bg = nil, gui = "bold,italic" }),
 		markdownH3({ fg = blue, bg = nil, gui = "underline" }),
 		markdownH4({ fg = yellow, bg = nil, gui = "italic" }),
