@@ -45,6 +45,7 @@ do -- [nvim options/ui/appearance] --
 	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 	set.timeoutlen = 300
+  set.shell="/usr/local/bin/zsh --login"
 end
 
 do
