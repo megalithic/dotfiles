@@ -21,13 +21,6 @@ au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
--- # simple file SourCing
-au([[FileType lua         noremap <buffer><leader>sc <cmd>luafile %<cr>]])
-au([[FileType vim         noremap <buffer><leader>sc <cmd>source %<cr>]])
-au([[FileType javascript  noremap <buffer><leader>sc <cmd>!node %<cr>]])
-au([[FileType elixir      noremap <buffer><leader>sc <cmd>!elixir %<cr>]])
-au([[FileType python      noremap <buffer><leader>sc <cmd>!python3 %<cr>]])
-
 --  Open multiple files in splits
 exec([[ if argc() > 1 | silent vertical all | lua require('golden_size').on_win_enter() | endif ]])
 
