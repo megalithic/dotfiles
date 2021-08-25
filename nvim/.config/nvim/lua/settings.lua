@@ -77,7 +77,7 @@ do -- [nvim-treesitter] --
 			"javascript",
 			-- "markdown",
 			"jsdoc",
-			"json",
+			"jsonc",
 			"lua",
 			"nix",
 			"python",
