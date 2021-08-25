@@ -817,7 +817,7 @@ do
 		},
 	}
 
-	-- # REFS:
+	-- # REF:
 	--  * https://github.com/kaile256/dotfiles/blob/master/.config/nvim/lua/rc/lsp/config/ls/zk.lua
 	--  * https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
 	configs.zk.index = function()

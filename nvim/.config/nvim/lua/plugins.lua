@@ -19,6 +19,7 @@ return {
 	"antoinemadec/FixCursorHold.nvim",
 	"karb94/neoscroll.nvim",
 	"lukas-reineke/indent-blankline.nvim",
+	"folke/which-key.nvim",
 	--
 	-- (lsp/completion) --
 	"neovim/nvim-lspconfig",

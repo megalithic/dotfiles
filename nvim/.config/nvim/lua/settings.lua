@@ -44,6 +44,7 @@ do -- [nvim options/ui/appearance] --
 	g.loaded_perl_provider = 1
 	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
+	set.timeoutlen = 300
 end
 
 do
@@ -239,6 +240,14 @@ do -- [neoscroll] --
 		easing_function = "circular",
 	})
 end
+
+-- [which-key] --
+-- require("which-key").setup()
+require("which-key").setup({
+	show_help = true,
+	triggers = "auto",
+	plugins = { spelling = true },
+})
 
 -- [devicons] --
 require("nvim-web-devicons").setup({ default = false })
