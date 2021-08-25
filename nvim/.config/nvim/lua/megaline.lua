@@ -65,7 +65,7 @@ end
 local function get_lsp_status()
 	-- # LSP status
 	local lsp_status = require("lsp-status")
-	lsp_status.register_progress()
+	-- lsp_status.register_progress()
 	lsp_status.config({
 		status_symbol = "",
 		indicator_errors = colorscheme.icons.statusline_error,
@@ -74,7 +74,7 @@ local function get_lsp_status()
 		indicator_hint = colorscheme.icons.statusline_hint,
 		indicator_ok = colorscheme.icons.statusline_ok,
 		-- spinner_frames = {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
-		-- spinner_frames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+		spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
 	})
 
 	if #vim.lsp.buf_get_clients() > 0 then

@@ -7,7 +7,7 @@ cmd("runtime .vimrc")
 
 -- [ debugging ] ----------------------------------------------------------- {{{
 --
--- Can set this lower if needed (used in tandem with `mega.inspect`) ->
+-- We can set this lower if needed (used in tandem with `mega.inspect`) ->
 -- vim.lsp.set_log_level(vim.lsp.log_levels.DEBUG)
 
 -- LSP log location ->

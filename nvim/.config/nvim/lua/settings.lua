@@ -243,6 +243,9 @@ end
 -- [devicons] --
 require("nvim-web-devicons").setup({ default = false })
 
+-- [project.nvim] --
+require("project_nvim").setup({}) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
+
 do -- [orgmode] --
 	-- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
 	-- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
