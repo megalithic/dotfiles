@@ -11,7 +11,10 @@ if [ -f "/etc/debian_version" ]; then
 	log "installing necessary deps"
 	sudo apt-add-repository ppa:fish-shell/release-3
 	sudo apt-get update
-	sudo apt-get -y install linux-headers-$(uname -r) build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip bat xclip lib32readline-dev libreadline-dev dirmngr gpg curl fd-find fish zsh exa shellcheck ripgrep libgsl-dev && log_ok "DONE installing linux deps" || log_error "failed to install linux deps"
+	sudo apt-get -y install linux-headers-$(uname -r) build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip bat xclip lib32readline-dev libreadline-dev dirmngr gpg curl fd-find fish zsh exa silversearcher-ag shellcheck ripgrep libgsl-dev && log_ok "DONE installing linux deps" || log_error "failed to install linux deps"
+
+	log "installing starship prompt"
+	sh -c "$(curl -fsSL https://starship.rs/install.sh)" && log_ok "DONE installing starship" || log_error "failed to install starship"
 
 	log "installing gitstatus for zsh"
 	git clone --depth=1 https://github.com/romkatv/gitstatus.git "$builds_path/gitstatus"

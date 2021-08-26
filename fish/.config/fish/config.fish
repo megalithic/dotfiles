@@ -114,7 +114,7 @@ abbr push "hub push"
 abbr pull "hub pull"
 alias -s tn "npx --no-install ts-node --transpile-only"
 abbr tt "tn src/tt.ts"
-alias -s todo "rg --color-line-number '1;36' --color-path '1;36' --print-long-lines --silent '((//|#|<!--|;|/\*|^)\s*(TODO|FIXME|FIX|BUG|UGLY|HACK|NOTE|IDEA|REVIEW|DEBUG|OPTIMIZE|REF)|^\s*- \[ \])'"
+alias -s todo "ag --color-line-number '1;36' --color-path '1;36' --print-long-lines --silent '((//|#|<!--|;|/\*|^)\s*(TODO|FIXME|FIX|BUG|UGLY|HACK|NOTE|IDEA|REVIEW|DEBUG|OPTIMIZE|REF)|^\s*- \[ \])'"
 
 # Nix
 abbr ni "nix-env -f '<nixpkgs>' -iA"

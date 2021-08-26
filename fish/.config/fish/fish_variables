@@ -102,7 +102,7 @@ SETUVAR --export fish_color_selection:orange
 SETUVAR --export fish_color_status:red
 SETUVAR --export fish_color_user:\x1d
 SETUVAR --export fish_color_valid_path:\x2d\x2dunderline
-SETUVAR fish_config_changed:1629988100
+SETUVAR fish_config_changed:1629993006
 SETUVAR fish_emoji_width:2
 SETUVAR fish_greeting:
 SETUVAR fish_key_bindings:fish_default_key_bindings
