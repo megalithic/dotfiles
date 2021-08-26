@@ -80,7 +80,7 @@ SETUVAR fish_color_selection:orange
 SETUVAR fish_color_status:red
 SETUVAR fish_color_user:\x1d
 SETUVAR fish_color_valid_path:\x2d\x2dunderline
-SETUVAR fish_config_changed:1629946538
+SETUVAR fish_config_changed:1629948955
 SETUVAR fish_emoji_width:2
 SETUVAR fish_key_bindings:fish_default_key_bindings
 SETUVAR fish_pager_color_completion:magenta
