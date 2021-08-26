@@ -491,6 +491,7 @@ local servers = {
 	"clangd",
 	"rust_analyzer",
 	"vimls",
+	"pyright",
 	-- "tailwindcss",
 	-- "dockerfile",
 }
@@ -791,6 +792,21 @@ do
 			},
 		},
 	}))
+end
+
+do
+	local configs = require("lspconfig/configs")
+	configs.emmet_ls = {
+		default_config = {
+			cmd = { "emmet-ls", "--stdio" },
+			filetypes = { "html", "css", "eelixir", "eruby" },
+			root_dir = function(_)
+				return vim.loop.cwd()
+			end,
+			settings = {},
+		},
+	}
+	lspconfig.emmet_ls.setup(lsp_with_defaults())
 end
 
 do
