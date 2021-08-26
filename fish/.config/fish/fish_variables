@@ -57,31 +57,32 @@ SETUVAR _fish_abbr_vi:nvim
 SETUVAR _fish_abbr_vim:nvim
 SETUVAR _fish_abbr_weather:curl\x20\x2ds\x20wttr\x2ein/Ghent\x20\x7c\x20grep\x20\x2dv\x20Follow
 SETUVAR _fish_abbr_ytop:btm
-SETUVAR fish_color_autosuggestion:brblack
-SETUVAR fish_color_cancel:red
-SETUVAR fish_color_command:brgreen\x1e\x2do
-SETUVAR fish_color_comment:brred
-SETUVAR fish_color_cwd:\x1d
-SETUVAR fish_color_cwd_root:red
-SETUVAR fish_color_end:purple
-SETUVAR fish_color_error:\x1d
-SETUVAR fish_color_escape:yellow
-SETUVAR fish_color_history_current:\x2d\x2dbold
-SETUVAR fish_color_host:\x1d
-SETUVAR fish_color_host_remote:\x1d
-SETUVAR fish_color_keyword:purple
-SETUVAR fish_color_normal:white
-SETUVAR fish_color_operator:yellow
-SETUVAR fish_color_param:white
-SETUVAR fish_color_quote:yellow\x1e\x2di
-SETUVAR fish_color_redirection:brgreen
-SETUVAR fish_color_search_match:orange
-SETUVAR fish_color_selection:orange
-SETUVAR fish_color_status:red
-SETUVAR fish_color_user:\x1d
-SETUVAR fish_color_valid_path:\x2d\x2dunderline
-SETUVAR fish_config_changed:1629948955
+SETUVAR --export fish_color_autosuggestion:brblack
+SETUVAR --export fish_color_cancel:red
+SETUVAR --export fish_color_command:brgreen\x1e\x2do
+SETUVAR --export fish_color_comment:brred
+SETUVAR --export fish_color_cwd:\x1d
+SETUVAR --export fish_color_cwd_root:red
+SETUVAR --export fish_color_end:purple
+SETUVAR --export fish_color_error:\x1d
+SETUVAR --export fish_color_escape:yellow
+SETUVAR --export fish_color_history_current:\x2d\x2dbold
+SETUVAR --export fish_color_host:\x1d
+SETUVAR --export fish_color_host_remote:\x1d
+SETUVAR --export fish_color_keyword:purple
+SETUVAR --export fish_color_normal:white
+SETUVAR --export fish_color_operator:yellow
+SETUVAR --export fish_color_param:white
+SETUVAR --export fish_color_quote:yellow\x1e\x2di
+SETUVAR --export fish_color_redirection:brgreen
+SETUVAR --export fish_color_search_match:orange
+SETUVAR --export fish_color_selection:orange
+SETUVAR --export fish_color_status:red
+SETUVAR --export fish_color_user:\x1d
+SETUVAR --export fish_color_valid_path:\x2d\x2dunderline
+SETUVAR fish_config_changed:1629984109
 SETUVAR fish_emoji_width:2
+SETUVAR fish_greeting:
 SETUVAR fish_key_bindings:fish_default_key_bindings
 SETUVAR fish_pager_color_completion:magenta
 SETUVAR fish_pager_color_description:yellow

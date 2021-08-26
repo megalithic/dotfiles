@@ -18,6 +18,7 @@ format = "[$symbol$branch]($style) "
 [directory]
 truncation_length = 8
 truncation_symbol = "…/"
+style = "bold blue"
 
 [aws]
 symbol = " "

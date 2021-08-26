@@ -2,6 +2,10 @@
 # shellcheck shell=bash
 # zmodload zsh/zprof # top of your .zshrc file
 
+# REF:
+# https://spin.atomicobject.com/2021/08/02/zprofile-on-macos/
+#   (👆describes some of macos' annoying zprofile handling.)
+
 bindkey -e # ensures we use emacs/readline keybindings
 
 if [[ $PLATFORM == "macos" ]]; then
