@@ -799,7 +799,7 @@ do
 	configs.emmet_ls = {
 		default_config = {
 			cmd = { "emmet-ls", "--stdio" },
-			filetypes = { "html", "css", "eelixir", "eruby" },
+			filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact" },
 			root_dir = function(_)
 				return vim.loop.cwd()
 			end,
