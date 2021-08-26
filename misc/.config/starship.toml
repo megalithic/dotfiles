@@ -16,8 +16,9 @@ symbol = " "
 format = "[$symbol$branch]($style) "
 
 [directory]
-truncation_length = 8
+truncation_length = 10
 truncation_symbol = "…/"
+truncate_to_repo = false
 style = "bold blue"
 
 [aws]
