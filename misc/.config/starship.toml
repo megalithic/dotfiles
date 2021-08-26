@@ -11,8 +11,13 @@ style = "dimmed blue"
 format = "[$output]($style)"
 shell =["dash"]
 
+[git_branch]
+symbol = " "
+format = "[$symbol$branch]($style) "
 
-# [git_status]
+[directory]
+truncation_length = 8
+truncation_symbol = "…/"
 
 [aws]
 symbol = " "
@@ -37,9 +42,6 @@ symbol = " "
 
 [elm]
 symbol = " "
-
-[git_branch]
-symbol = " "
 
 [golang]
 symbol = " "
