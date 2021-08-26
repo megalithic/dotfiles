@@ -16,7 +16,7 @@
 If you want to kick the tires, you can simply:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/main/bin/_dotup | /usr/bin/env zsh
+curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/main/bin/_dotup | zsh
 ```
 
 The install script will install things and symlink the appropriate files in
@@ -58,6 +58,7 @@ A few of the _must-have_ tools I roll with:
   + using lua with neovim? https://github.com/nanotee/nvim-lua-guide
 * [zsh](https://www.zsh.org/)
   + custom prompt (in the spirit of [pure](https://github.com/sindresorhus/pure)), using [gitstatus](https://github.com/romkatv/gitstatus) for fast git-specific vcs status.
+* [fish](https://fishshell.com)
 * [weechat](https://www.weechat.org/)
 
 ### Stuff
