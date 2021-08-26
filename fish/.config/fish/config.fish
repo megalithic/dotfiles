@@ -75,6 +75,30 @@ alias -s ll 'exa --color=always --icons --group-directories-first --all --long'
 abbr l ll
 abbr ncdu "ncdu --color dark"
 
+# Config Edits
+abbr ef "nvim $HOME/.config/fish/config.fish"
+abbr ez "nvim $ZDOTDIR/.zshrc"
+abbr ezz "nvim $ZDOTDIR/.zshenv"
+abbr ezl "nvim $HOME/.localrc"
+abbr eza "nvim $HOME/.config/zsh/**/aliases.zsh"
+abbr ezf "nvim $HOME/.config/zsh/**/functions.zsh"
+abbr ezo "nvim $HOME/.config/zsh/**/opts.zsh"
+abbr ehs "nvim $HOME/.config/hammerspoon/config.lua"
+abbr eh "nvim $HOME/.config/hammerspoon/init.lua"
+abbr eg "nvim $HOME/.gitconfig"
+abbr eb "nvim $HOME/.dotfiles/Brewfile"
+abbr essh "nvim $HOME/.ssh/config"
+abbr eze "nvim $HOME/.config/zsh/**/env.zsh"
+abbr ezkb "nvim $HOME/.config/zsh/**/keybindings.zsh"
+abbr ev "nvim $HOME/.config/nvim/init.lua"
+abbr evv "nvim $HOME/.config/nvim/.vimrc"
+abbr evp "nvim $HOME/.config/nvim/lua/plugins.lua"
+abbr evs "nvim $HOME/.config/nvim/lua/settings.lua"
+abbr evl "nvim $HOME/.config/nvim/lua/lsp.lua"
+abbr evm "nvim $HOME/.config/nvim/lua/mappings.lua"
+abbr ek "nvim $HOME/.config/kitty/kitty.conf"
+abbr et "nvim $HOME/.tmux.conf"
+
 # Editor
 abbr vim nvim
 abbr vi nvim
@@ -90,7 +114,7 @@ abbr push "hub push"
 abbr pull "hub pull"
 alias -s tn "npx --no-install ts-node --transpile-only"
 abbr tt "tn src/tt.ts"
-alias -s todo "ag --color-line-number '1;36' --color-path '1;36' --print-long-lines --silent '((//|#|<!--|;|/\*|^)\s*(TODO|FIXME|FIX|BUG|UGLY|HACK|NOTE|IDEA|REVIEW|DEBUG|OPTIMIZE)|^\s*- \[ \])'"
+alias -s todo "rg --color-line-number '1;36' --color-path '1;36' --print-long-lines --silent '((//|#|<!--|;|/\*|^)\s*(TODO|FIXME|FIX|BUG|UGLY|HACK|NOTE|IDEA|REVIEW|DEBUG|OPTIMIZE|REF)|^\s*- \[ \])'"
 
 # Nix
 abbr ni "nix-env -f '<nixpkgs>' -iA"

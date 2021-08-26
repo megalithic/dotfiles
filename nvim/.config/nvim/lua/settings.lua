@@ -250,7 +250,9 @@ end
 require("nvim-web-devicons").setup({ default = false })
 
 -- [project.nvim] --
-require("project_nvim").setup({}) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
+require("project_nvim").setup({
+	patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
+}) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
 
 do -- [orgmode] --
 	-- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
