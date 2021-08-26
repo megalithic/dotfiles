@@ -45,8 +45,8 @@ do -- [nvim options/ui/appearance] --
 	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 	set.timeoutlen = 300
-  set.shell="/usr/local/bin/zsh --login"
-  set.concealcursor = "n" -- Hide * markup for bold and italic
+	set.shell = "/usr/local/bin/zsh --login"
+	set.concealcursor = "n" -- Hide * markup for bold and italic
 end
 
 do
@@ -97,10 +97,12 @@ do -- [nvim-treesitter] --
 		autotag = { enable = true },
 		context_commentstring = {
 			enable = true,
+			enable_autocmd = false,
 			config = {
 				css = "// %s",
 				lua = "-- %s",
 				fish = "# %s",
+				toml = "# %s",
 			},
 		},
 		matchup = { enable = true },
@@ -402,7 +404,7 @@ end
 
 do -- [nvim-comment] --
 	require("nvim_comment").setup({
-    comment_empty = false,
+		comment_empty = false,
 		hook = function()
 			require("ts_context_commentstring.internal").update_commentstring()
 		end,
