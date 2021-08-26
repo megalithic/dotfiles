@@ -40,7 +40,7 @@ set -Ux GOPATH ~/go
 fish_add_path $GOPATH $GOPATH/bin
 
 
-fish_add_path -m ~/.nix-profile/bin /etc/profiles/per-user/folke/bin /run/current-system/sw/bin /nix/var/nix/profiles/default/bin
+# fish_add_path -m ~/.nix-profile/bin /etc/profiles/per-user/folke/bin /run/current-system/sw/bin /nix/var/nix/profiles/default/bin
 # Exports
 set -Ux EDITOR nvim
 set -Ux VISUAL nvim
