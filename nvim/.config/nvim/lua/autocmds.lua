@@ -7,7 +7,6 @@ au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' 
 au([[StdinReadPost * set buftype=nofile]])
 au([[FileType help wincmd L]])
 au([[CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
--- au([[VimResized * wincmd =]])
 au([[VimResized * lua require('golden_size').on_win_enter()]])
 au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
 au([[Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
@@ -49,16 +48,6 @@ augroup("paq", {
 })
 
 augroup("focus", {
-	-- {
-	-- 	events = { "BufEnter", "WinEnter" },
-	-- 	targets = { "*" },
-	-- 	command = "silent setlocal relativenumber number colorcolumn=81",
-	-- },
-	-- {
-	-- 	events = { "BufLeave", "WinLeave" },
-	-- 	targets = { "*" },
-	-- 	command = "silent setlocal norelativenumber nonumber colorcolumn=0",
-	-- },
 	{
 		events = { "BufEnter", "FileType", "FocusGained", "InsertLeave" },
 		targets = { "*" },

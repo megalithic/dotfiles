@@ -132,7 +132,7 @@ if empty($SSH_CONNECTION) && has('clipboard')
     set clipboard+=unnamedplus
   endif
 endif
-set colorcolumn=81 " Highlight 81 and 82 columns
+set colorcolumn=81 " Highlight column 81
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 set completeopt=menuone,noinsert,noselect " Don't auto select first one

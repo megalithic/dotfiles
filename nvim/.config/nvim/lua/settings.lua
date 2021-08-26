@@ -46,7 +46,7 @@ do -- [nvim options/ui/appearance] --
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 	set.timeoutlen = 300
 	set.shell = "/usr/local/bin/zsh --login"
-	set.concealcursor = "n" -- Hide * markup for bold and italic
+	-- set.concealcursor = "n" -- Hide * markup for bold and italic
 end
 
 do
