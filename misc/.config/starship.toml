@@ -25,9 +25,7 @@ style = "bold fg:bright-red"
 when = "sudo -vn &>/dev/null"
 
 [custom.git_status_dirty]
-# command = "set -l gs (git status --porcelain)"
 when = "string length -q -- (git status --porcelain)"
-# when = 'test -z "$gs"'
 symbol = '○'
 style = 'red bold'
 format = '[$symbol]($style) '
@@ -40,7 +38,7 @@ format = "[$symbol$branch]($style) "
 style = "bold fg:245"
 
 [git_status]
-disabled = false
+disabled = true
 # # REF:
 # # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
 format = '([\[$all_status$ahead_behind\]]($style))' #(bold fg:#8be9fd)
