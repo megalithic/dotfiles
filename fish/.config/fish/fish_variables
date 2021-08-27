@@ -4,12 +4,13 @@ SETUVAR --export BAT_THEME:Dracula
 SETUVAR --export COMPOSE_DOCKER_CLI_BUILD:1
 SETUVAR --export DOTDROP_AUTOUPDATE:no
 SETUVAR --export EDITOR:nvim
+SETUVAR --export FZF_DEFAULT_OPTS:\x0a\x20\x20\x2d\x2dinline\x2dinfo\x0a\x20\x20\x2d\x2dselect\x2d1\x0a\x20\x20\x2d\x2dansi\x0a\x20\x20\x2d\x2dextended\x0a\x20\x20\x2d\x2dbind\x20ctrl\x2dj\x3aignore\x2cctrl\x2dk\x3aignore\x0a\x20\x20\x2d\x2dbind\x20ctrl\x2df\x3apage\x2ddown\x2cctrl\x2db\x3apage\x2dup\x2cJ\x3adown\x2cK\x3aup\x0a\x20\x20\x2d\x2dcycle\x0a\x20\x20\x2d\x2dno\x2dmulti\x0a\x20\x20\x2d\x2dno\x2dborder\x0a\x20\x20\x2d\x2dpreview\x2dwindow\x3dright\x3a60\x25\x3awrap\x0a\x20\x20\x2d\x2dpreview\x20\x27bat\x20\x2d\x2dtheme\x3dbase16\x20\x2d\x2dstyle\x3dnumbers\x2cchanges\x20\x2d\x2dcolor\x20always\x20\x7b\x7d\x27\x0a\x20\x20\x0a\x20\x20\x2d\x2dcolor\x3dbg\x2b\x3a\x233c474d\x2cbg\x3a\x23323d43\x2cspinner\x3a\x238ec07c\x2chl\x3a\x2383a598\x0a\x20\x20\x2d\x2dcolor\x3dfg\x3a\x23d8caac\x2cheader\x3a\x2383a598\x2cinfo\x3a\x23fabd2f\x2cpointer\x3a\x238ec07c\x0a\x20\x20\x2d\x2dcolor\x3dmarker\x3a\x238ec07c\x2cfg\x2b\x3a\x23ebdbb2\x2cprompt\x3a\x23fabd2f\x2chl\x2b\x3a\x2383a598\x0a\x20\x20\x1e\x20\x20\x20\x2d\x2dcolor\x3dbg\x2b\x3a\x233c474d\x2cbg\x3a\x23323d43\x2cspinner\x3a\x238ec07c\x2chl\x3a\x2383a598\x20\x20\x20\x2d\x2dcolor\x3dfg\x3a\x23d8caac\x2cheader\x3a\x2383a598\x2cinfo\x3a\x23fabd2f\x2cpointer\x3a\x238ec07c\x20\x20\x20\x2d\x2dcolor\x3dmarker\x3a\x238ec07c\x2cfg\x2b\x3a\x23ebdbb2\x2cprompt\x3a\x23fabd2f\x2chl\x2b\x3a\x2383a598\x20
 SETUVAR FZF_DISABLE_KEYBINDINGS:0
 SETUVAR FZF_LEGACY_KEYBINDINGS:1
 SETUVAR FZF_PREVIEW_DIR_CMD:ls
 SETUVAR FZF_PREVIEW_FILE_CMD:head\x20\x2dn\x2010
-SETUVAR FZF_TMUX:1
-SETUVAR FZF_TMUX_HEIGHT:40\x25
+SETUVAR --export FZF_TMUX:1\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x1e1
+SETUVAR --export FZF_TMUX_HEIGHT:20\x25\x1e30\x25
 SETUVAR --export --path GOPATH:/Users/sethmesser/go
 SETUVAR --export HOMEBREW_NO_AUTO_UPDATE:1
 SETUVAR --export LESS:\x2drF
@@ -82,6 +83,9 @@ SETUVAR _fish_abbr_vim:nvim
 SETUVAR _fish_abbr_vm:nvim
 SETUVAR _fish_abbr_weather:curl\x20\x2ds\x20wttr\x2ein/Ghent\x20\x7c\x20grep\x20\x2dv\x20Follow
 SETUVAR _fish_abbr_ytop:btm
+SETUVAR _fisher_PatrickF1_2F_fzf_2E_fish_files:/Users/sethmesser/\x2econfig/fish/functions/_fzf_configure_bindings_help\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_extract_var_info\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_preview_file\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_report_file_type\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_search_directory\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_search_git_log\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_search_git_status\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_search_history\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_search_variables\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/_fzf_wrapper\x2efish\x1e/Users/sethmesser/\x2econfig/fish/functions/fzf_configure_bindings\x2efish\x1e/Users/sethmesser/\x2econfig/fish/conf\x2ed/fzf\x2efish\x1e/Users/sethmesser/\x2econfig/fish/completions/fzf_configure_bindings\x2efish
+SETUVAR _fisher_jorgebucaran_2F_fisher_files:/Users/sethmesser/\x2econfig/fish/functions/fisher\x2efish\x1e/Users/sethmesser/\x2econfig/fish/completions/fisher\x2efish
+SETUVAR _fisher_plugins:jorgebucaran/fisher\x1ePatrickF1/fzf\x2efish
 SETUVAR --export fish_color_autosuggestion:brblack
 SETUVAR --export fish_color_cancel:red
 SETUVAR --export fish_color_command:brgreen\x1e\x2do
@@ -105,7 +109,7 @@ SETUVAR --export fish_color_selection:orange
 SETUVAR --export fish_color_status:red
 SETUVAR --export fish_color_user:\x1d
 SETUVAR --export fish_color_valid_path:\x2d\x2dunderline
-SETUVAR fish_config_changed:1630004050
+SETUVAR fish_config_changed:1630088410
 SETUVAR fish_emoji_width:2
 SETUVAR fish_greeting:
 SETUVAR fish_key_bindings:fish_default_key_bindings
