@@ -24,12 +24,14 @@ format = "[$symbol$output]($style) "
 style = "bold fg:bright-red"
 when = "sudo -vn &>/dev/null"
 
-[custom.git_status_simplified]
+[custom.git_status_dirty]
+# command = "git status --porcelain 2>/dev/null"
 when = 'test -n (git status --porcelain ^/dev/null)'
 symbol = '○'
 style = 'red bold'
 format = '[$symbol]($style) '
 shell = ['fish']
+disabled = true
 
 [git_branch]
 symbol = " "
@@ -37,10 +39,10 @@ format = "[$symbol$branch]($style) "
 style = "bold fg:245"
 
 [git_status]
-disabled = true
+disabled = false
 # # REF:
 # # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
-format = '([$ahead_behind]($style))' #(bold fg:#8be9fd)
+format = '([\[$all_status$ahead_behind\]]($style))' #(bold fg:#8be9fd)
 # staged = "•" #•﯂
 # modified = "~"
 # untracked = "?" #+
