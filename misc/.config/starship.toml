@@ -1,10 +1,10 @@
-# starship!!
+# 🚀 starship!!
 
 # REF:
 # * customs: https://github.com/starship/starship/discussions/1252
 
 
-[character]      # The name of the module we are configuring is "character"
+[character]
 format = "$symbol "
 success_symbol = "[](bold green)"
 error_symbol = "[](bold red)"
@@ -25,13 +25,14 @@ style = "bold fg:bright-red"
 when = "sudo -vn &>/dev/null"
 
 [custom.git_status_dirty]
-# command = "git status --porcelain 2>/dev/null"
-when = 'test -n (git status --porcelain ^/dev/null)'
+# command = "set -l gs (git status --porcelain)"
+when = "string length -q -- (git status --porcelain)"
+# when = 'test -z "$gs"'
 symbol = '○'
 style = 'red bold'
 format = '[$symbol]($style) '
 shell = ['fish']
-disabled = true
+disabled = false
 
 [git_branch]
 symbol = " "
