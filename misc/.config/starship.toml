@@ -59,7 +59,7 @@ disabled = false
 # # REF:
 # # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
 # format = '([\[$all_status$ahead_behind\]]($style))' #(bold fg:#8be9fd)
-format = '([$ahead_behind]($style))' #(bold fg:#8be9fd)
+format = '([ $ahead_behind ]($style))' #(bold fg:#8be9fd)
 ahead = "↑"
 behind = "↓"
 # staged = "•" #•﯂
