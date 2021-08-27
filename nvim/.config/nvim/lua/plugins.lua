@@ -104,7 +104,7 @@ return {
 	"nacro90/numb.nvim",
 	"ethanholz/nvim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
-	{ "windwp/nvim-autopairs" },
+	"windwp/nvim-autopairs",
 	"alvan/vim-closetag",
 	"terrortylor/nvim-comment",
 	"tpope/vim-eunuch",
