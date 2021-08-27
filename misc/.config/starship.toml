@@ -25,7 +25,7 @@ style = "bold fg:bright-red"
 when = "sudo -vn &>/dev/null"
 
 [custom.git_status_simplified]
-when = 'git status --porcelain'
+when = 'test -n (git status --porcelain)'
 symbol = '○'
 style = 'red bold'
 format = '[$symbol]($style) '
@@ -46,7 +46,7 @@ format = '([$ahead_behind]($style))' #(bold fg:#8be9fd)
 # untracked = "?" #+
 # deleted = "" #x
 # stashed = "([ ${count}]))(fg:white)"
-ahead = "↑"#"[ ${count} ](fg:#523333 bg:#d8712c)"
+ahead = " ↑"#"[ ${count} ](fg:#523333 bg:#d8712c)"
 behind = "↓"#"[ ${count} ](fg:black bg:#d8712c)"
 # ---
 # # REF:
