@@ -55,17 +55,18 @@ format = "[$symbol$branch]($style) "
 style = "bold fg:245"
 
 [git_status]
-disabled = true
+disabled = false
 # # REF:
 # # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
-format = '([\[$all_status$ahead_behind\]]($style))' #(bold fg:#8be9fd)
+# format = '([\[$all_status$ahead_behind\]]($style))' #(bold fg:#8be9fd)
+format = '([$ahead_behind]($style))' #(bold fg:#8be9fd)
+ahead = "↑"
+behind = "↓"
 # staged = "•" #•﯂
 # modified = "~"
 # untracked = "?" #+
 # deleted = "" #x
 # stashed = "([ ${count}]))(fg:white)"
-ahead = " ↑"#"[ ${count} ](fg:#523333 bg:#d8712c)"
-behind = "↓"#"[ ${count} ](fg:black bg:#d8712c)"
 # ---
 # # REF:
 # # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml

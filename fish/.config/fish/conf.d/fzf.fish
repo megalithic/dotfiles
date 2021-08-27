@@ -67,31 +67,54 @@ bind \cr __fzf_history
 bind \ch __fzf_tldr
 bind \ct __fzf_files
 
-set -l color00 '#292D3E'
-set -l color01 '#444267'
-set -l color02 '#32374D'
-set -l color03 '#676E95'
-set -l color04 '#8796B0'
-set -l color05 '#959DCB'
-set -l color06 '#959DCB'
-set -l color07 '#FFFFFF'
-set -l color08 '#F07178'
-set -l color09 '#F78C6C'
-set -l color0A '#FFCB6B'
-set -l color0B '#C3E88D'
-set -l color0C '#89DDFF'
-set -l color0D '#82AAFF'
-set -l color0E '#C792EA'
-set -l color0F '#FF5370'
+set -l color00 '#323d43'
+set -l color01 '#3c474d'
+set -l color02 '#465258'
+set -l color03 '#505a60'
+set -l color04 '#d8caac'
+set -l color05 '#d5c4a1'
+set -l color06 '#ebdbb2'
+set -l color07 '#fbf1c7'
+set -l color08 '#fb4934'
+set -l color09 '#fe8019'
+set -l color0A '#fabd2f'
+set -l color0B '#b8bb26'
+set -l color0C '#8ec07c'
+set -l color0D '#83a598'
+set -l color0E '#d3869b'
+set -l color0F '#d65d0e'
 
-set -q FZF_TMUX_HEIGHT; or set -U FZF_TMUX_HEIGHT "40%"
-set -q FZF_DEFAULT_OPTS; or set -U FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT"
-set -q FZF_LEGACY_KEYBINDINGS; or set -U FZF_LEGACY_KEYBINDINGS 1
-set -q FZF_DISABLE_KEYBINDINGS; or set -U FZF_DISABLE_KEYBINDINGS 0
-set -q FZF_PREVIEW_FILE_CMD; or set -U FZF_PREVIEW_FILE_CMD "head -n 10"
-set -q FZF_PREVIEW_DIR_CMD; or set -U FZF_PREVIEW_DIR_CMD ls
 
-set -x FZF_DEFAULT_OPTS "--cycle --layout=reverse --border --height 40% --preview-window=right:70% \
-    --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D \
-    --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C \
-    --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D"
+# set -q FZF_TMUX_HEIGHT; or set -U FZF_TMUX_HEIGHT "40%"
+# set -q FZF_DEFAULT_OPTS; or set -U FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT"
+# set -q FZF_LEGACY_KEYBINDINGS; or set -U FZF_LEGACY_KEYBINDINGS 1
+# set -q FZF_DISABLE_KEYBINDINGS; or set -U FZF_DISABLE_KEYBINDINGS 0
+# set -q FZF_PREVIEW_FILE_CMD; or set -U FZF_PREVIEW_FILE_CMD "head -n 10"
+# set -q FZF_PREVIEW_DIR_CMD; or set -U FZF_PREVIEW_DIR_CMD ls
+
+set -U FZF_TMUX 1
+set -x FZF_TMUX_HEIGHT "30%"
+set -x FZF_DEFAULT_OPTS " \
+--inline-info \
+--select-1 \
+--ansi \
+--extended \
+--bind ctrl-j:ignore,ctrl-k:ignore \
+--bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up \
+--cycle \
+--no-multi \
+--no-border \
+--preview-window=right:60%:wrap \
+--preview 'bat --theme="base16" --style=numbers,changes --color always {}' \
+"
+
+set -x FZF_DEFAULT_OPTS " \
+  --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D \
+  --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C \
+  --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D \
+"
+
+# set -x FZF_DEFAULT_OPTS "--cycle --layout=reverse --border --height 40% --preview-window=right:70% \
+#     --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D \
+#     --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C \
+#     --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D"

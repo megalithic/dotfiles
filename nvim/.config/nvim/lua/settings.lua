@@ -459,6 +459,7 @@ do -- [colorizer] --
 		"typescript",
 		"typescriptreact",
 		"zsh",
+		"fish",
 		"sh",
 		"conf",
 		"lua",
