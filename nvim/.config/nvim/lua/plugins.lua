@@ -86,6 +86,7 @@ return {
 	"itchyny/vim-gitbranch",
 	"rhysd/git-messenger.vim",
 	"sindrets/diffview.nvim",
+	-- "dinhhuy258/git.nvim",
 	-- "lewis6991/gitsigns.nvim",
 	-- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
 	--
@@ -103,10 +104,8 @@ return {
 	"nacro90/numb.nvim",
 	"ethanholz/nvim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
-	{ "megalithic/nvim-autopairs", branch = "feat/master/pass-in-nvim-cmp-mapping-setup" }, -- https://github.com/windwp/nvim-autopairs#using-nvim-compe
-	-- "tpope/vim-endwise",
+	{ "windwp/nvim-autopairs" },
 	"alvan/vim-closetag",
-	-- "b3nj5m1n/kommentary",
 	"terrortylor/nvim-comment",
 	"tpope/vim-eunuch",
 	"tpope/vim-abolish",
