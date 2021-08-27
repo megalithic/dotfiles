@@ -84,7 +84,14 @@ set -l color0D '#82AAFF'
 set -l color0E '#C792EA'
 set -l color0F '#FF5370'
 
-set -x FZF_DEFAULT_OPTS "--cycle --layout=reverse --border --height 90% --preview-window=right:70% \
+set -q FZF_TMUX_HEIGHT; or set -U FZF_TMUX_HEIGHT "40%"
+set -q FZF_DEFAULT_OPTS; or set -U FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT"
+set -q FZF_LEGACY_KEYBINDINGS; or set -U FZF_LEGACY_KEYBINDINGS 1
+set -q FZF_DISABLE_KEYBINDINGS; or set -U FZF_DISABLE_KEYBINDINGS 0
+set -q FZF_PREVIEW_FILE_CMD; or set -U FZF_PREVIEW_FILE_CMD "head -n 10"
+set -q FZF_PREVIEW_DIR_CMD; or set -U FZF_PREVIEW_DIR_CMD ls
+
+set -x FZF_DEFAULT_OPTS "--cycle --layout=reverse --border --height 40% --preview-window=right:70% \
     --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D \
     --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C \
     --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D"

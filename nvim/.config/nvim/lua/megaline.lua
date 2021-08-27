@@ -317,7 +317,7 @@ local function statusline_active()
 		seg(get_mode_status(), s.mode),
 		"%<",
 		seg(vcs_status, s.section_2, vcs_status ~= ""),
-		seg(get_filepath(true), bo.modified and s.err or s.section_3),
+		seg(get_filepath(false), bo.modified and s.err or s.section_3),
 		seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), bo.modified),
 		seg(string.format("%s", colorscheme.icons.readonly_symbol), s.err, not bo.modifiable),
 		seg("%w", nil, wo.previewwindow),

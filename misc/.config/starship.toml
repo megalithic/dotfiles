@@ -1,3 +1,9 @@
+# starship!!
+
+# REF:
+# * customs: https://github.com/starship/starship/discussions/1252
+
+
 [character]      # The name of the module we are configuring is "character"
 format = "$symbol "
 success_symbol = "[](bold green)"
@@ -9,11 +15,54 @@ command = "echo $STARSHIP_SHELL"  # shows output of command
 when = """ test "$STARSHIP_SHELL" != "fish" """
 style = "dimmed blue"
 format = "[$output]($style)"
-shell =["dash"]
+shell =["zsh"]
+
+[custom.sudo]
+description = "valid sudo timestamp marker"
+command = "echo -n '!'"
+format = "[$symbol$output]($style) "
+style = "bold fg:bright-red"
+when = "sudo -vn &>/dev/null"
+
+[custom.git_status_simplified]
+when = 'git status --porcelain'
+symbol = '○'
+style = 'red bold'
+format = '[$symbol]($style) '
+shell = ['fish']
 
 [git_branch]
 symbol = " "
 format = "[$symbol$branch]($style) "
+style = "bold fg:245"
+
+[git_status]
+disabled = false
+# # REF:
+# # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
+format = '([$ahead_behind]($style))' #(bold fg:#8be9fd)
+# staged = "•" #•﯂
+# modified = "~"
+# untracked = "?" #+
+# deleted = "" #x
+# stashed = "([ ${count}]))(fg:white)"
+ahead = "↑"#"[ ${count} ](fg:#523333 bg:#d8712c)"
+behind = "↓"#"[ ${count} ](fg:black bg:#d8712c)"
+# ---
+# # REF:
+# # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml
+# style = "#d8712c"
+# format = "(\b$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind(fg:$style))"
+# conflicted = "[ ](bold fg:88 bg:#d8712c)[  ${count} ](fg:black bg:#d8712c)"
+# staged = "[ $count ](fg:black bg:#d8712c)"
+# modified = "[ ${count} ](fg:black bg:#d8712c)"
+# renamed = "[ ${count} ](fg:black bg:#d8712c)"
+# deleted = "[ ${count} ](fg:black bg:#d8712c)"
+# untracked = "[?${count} ](fg:black bg:#d8712c)"
+# stashed = "[ ${count} ](fg:black bg:#d8712c)"
+# ahead = "[ ${count} ](fg:#523333 bg:#d8712c)"
+# behind = "[ ${count} ](fg:black bg:#d8712c)"
+# diverged = "[ ](fg:88 bg:#d8712c)[ נּ ](fg:black bg:#d8712c)[ ${ahead_count} ](fg:black bg:#d8712c)[ ${behind_count} ](fg:black bg:#d8712c)"
 
 [directory]
 truncation_length = 10
@@ -29,6 +78,7 @@ disabled = true
 full_symbol = ""
 charging_symbol = ""
 discharging_symbol = ""
+disabled = true
 
 [conda]
 symbol = " "

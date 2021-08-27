@@ -77,6 +77,7 @@ SETUVAR _fish_abbr_tt:tn\x20src/tt\x2ets
 SETUVAR _fish_abbr_v:nvim
 SETUVAR _fish_abbr_vi:nvim
 SETUVAR _fish_abbr_vim:nvim
+SETUVAR _fish_abbr_vm:nvim
 SETUVAR _fish_abbr_weather:curl\x20\x2ds\x20wttr\x2ein/Ghent\x20\x7c\x20grep\x20\x2dv\x20Follow
 SETUVAR _fish_abbr_ytop:btm
 SETUVAR --export fish_color_autosuggestion:brblack
@@ -102,7 +103,7 @@ SETUVAR --export fish_color_selection:orange
 SETUVAR --export fish_color_status:red
 SETUVAR --export fish_color_user:\x1d
 SETUVAR --export fish_color_valid_path:\x2d\x2dunderline
-SETUVAR fish_config_changed:1629993006
+SETUVAR fish_config_changed:1630004050
 SETUVAR fish_emoji_width:2
 SETUVAR fish_greeting:
 SETUVAR fish_key_bindings:fish_default_key_bindings

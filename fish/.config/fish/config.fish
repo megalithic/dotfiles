@@ -102,6 +102,7 @@ abbr et "nvim $HOME/.tmux.conf"
 # Editor
 abbr vim nvim
 abbr vi nvim
+abbr vm nvim
 abbr v nvim
 
 # Dev
