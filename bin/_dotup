@@ -132,6 +132,14 @@ function export_dirs {
 		export PRIVATE="$DOTS/private"
 		log_ok "set PRIVATE to $PRIVATE"
 	fi
+	
+	# XDG_CONFIG_HOME
+	if [[ -z $XDG_CONFIG_HOME ]]; then
+		log "setting XDG_CONFIG_HOME env"
+		mkdir -p $HOME/.config
+		export XDG_CONFIG_HOME="$HOME/.config"
+		log_ok "DONE setting XDG_CONFIG_HOME to $XDG_CONFIG_HOME"
+	fi
 }
 
 function setup_xcode_and_git {
@@ -366,7 +374,7 @@ function post_install {
 	if [[ $PLATFORM == "macos" ]]; then
 		log "post-brewing operations.."
 		$(brew --prefix)/opt/fzf/install       # <- fzf
-		initdb /usr/local/var/postgres -E utf8 # <- postgresql
+		#initdb /usr/local/var/postgres -E utf8 # <- postgresql
 		log_ok "DONE"
 	fi
 
