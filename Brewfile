@@ -18,6 +18,7 @@ tap "heroku/brew"
 # NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
 tap "microsoft/git"
 tap "isacikgoz/taps"
+tap "vitorgalvao/tiny-scripts"
 
 # -- for qmk_toolbox --
 
