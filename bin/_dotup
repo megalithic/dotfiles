@@ -146,7 +146,8 @@ function setup_xcode_and_git {
 		
 	
 		#sudo rm -rf /Library/Developer/CommandLineTools && 
-		sudo xcode-select -switch /Library/Developer/CommandLineTools && sudo xcodebuild -license accept && softwareupdate -iaf && log_ok "DONE setting up more things for the xcode cli tools" || log_error "FAILED to setup the xcode cli tools things.."
+		#sudo xcodebuild -license accept && 
+		sudo xcode-select -switch /Library/Developer/CommandLineTools && softwareupdate -iaf && log_ok "DONE setting up more things for the xcode cli tools" || log_error "FAILED to setup the xcode cli tools things.."
 	#fi
 }
 
