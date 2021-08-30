@@ -197,18 +197,24 @@ function bundle_brews {
 
 	export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
+	brew bundle --file="$DOTS/Brewfile" || {
+		log_error 'brew bundling failed'
+		exit 1
+	}
+	
 	# if we're not signed in, let's open the App Store
-	if [[ $(mas account | grep "Not signed in") ]]; then
+	if [[ (command -v mas &>/dev/null) && $(mas account | grep "Not signed in") ]]; then
 		sleep 1
 		open -a "App Store"
 		log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."
 		read -k1 -s
 	fi
-
-	brew bundle --file="$DOTS/Brewfile" || {
-		log_error 'brew bundling failed'
+	
+	brew bundle --file="$DOTS/Brewfile.mas" || {
+		log_error 'brew bundling of mas brewfile failed'
 		exit 1
 	}
+	
 	log_ok "DONE bundling brews"
 }
 
