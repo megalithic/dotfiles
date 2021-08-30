@@ -1,1 +1,9 @@
+# -- app store (mas) --
 
+mas "Fantastical", id: 975937182
+mas "Spark", id: 1176895641
+mas "Canary Mail", id: 1236045954
+# mas "Tweetbot", id: 557168941
+mas "Drafts", id: 1435957248
+# mas "Things", id: 904280696  # might be bailing from this
+# mas "Xcode", id: 497799835
