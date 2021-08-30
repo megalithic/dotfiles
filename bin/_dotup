@@ -270,7 +270,7 @@ function setup_ssh_key {
 	vared -p "[?] do this now? [yN]" -c continue_reply
 
 	case $continue_reply in
-		[Yy]) $(bin/ssh-setup) ;;
+		[Yy]) source $DOTS/bin/ssh-setup ;;
 		[Nn]) log_warn "$skip_message" ;;
 		*) log_warn "$skip_message" ;;
 	esac
