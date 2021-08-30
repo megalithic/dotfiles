@@ -203,12 +203,13 @@ function bundle_brews {
 	}
 	
 	# if we're not signed in, let's open the App Store
-		if (command -v brew &>/dev/null); then
+		if (command -v mas &>/dev/null); then
 			if [[ $(mas account | grep "Not signed in") ]]; then
 		sleep 1
 		open -a "App Store"
 		log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."
 		read -k1 -s
+		fi
 	fi
 fi
 
