@@ -243,7 +243,7 @@ function stow_away {
 		_install_stow
 	fi
 	cd $DOTS
-	stow terminfo && log_ok "stowed terminfo" || log_error "terminfo stow failed"
+	#stow terminfo && log_ok "stowed terminfo" || log_error "terminfo stow failed"
 	stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
 	stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
 	stow fish && log_ok "stowed fish" || log_error "fish stow failed"
@@ -341,7 +341,8 @@ function setup_zsh {
 
 function setup_fish {
 	# install fisher:
-	#   curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+	   curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+	   fisher install
 	# install fisher plugins:
 	#   fisher install rafaelrinaldi/pure
 	#   fisher install PatrickF1/fzf.fish
@@ -359,11 +360,11 @@ function set_shell {
 	skip_message="skipping; you can run this later via _dotup; or set it manually wth the steps in this script."
 
 	log_warn "we need to set a shell; you can always run this later, or set it manually."
-	vared -p "[?] which shell? [zsh|shell|SKIP]" -c continue_reply
+	vared -p "[?] which shell? [z|f|SKIP]" -c continue_reply
 
 	case $continue_reply in
-		[zsh]) setup_zsh ;;
-		[fish]) setup_fish ;;
+		[z]) setup_zsh ;;
+		[f]) setup_fish ;;
 		*) log_warn "$skip_message" ;;
 	esac
 
@@ -396,7 +397,7 @@ stow_away
 setup_platform
 set_shell
 setup_asdf
-setup_terminfo
+#setup_terminfo # FIXME: no longer needed?
 setup_keyboard
 setup_python
 post_install
