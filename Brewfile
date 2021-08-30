@@ -191,7 +191,7 @@ cask "karabiner-elements"
 cask "kitty"
 cask "marta"
 cask "micro-snitch"
-cask "little-snitch4" # requires kernel extension, see notes from install message
+#cask "little-snitch4" # requires kernel extension, see notes from install message
 cask "ngrok"
 cask "obsidian"
 # cask "oracle-jdk"
