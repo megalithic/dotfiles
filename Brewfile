@@ -81,7 +81,6 @@ brew "gnupg"
 brew "gnu-sed"
 brew "gpg" # required for asdf-nodejs
 brew "grc"
-brew "grv"
 brew "heroku"
 brew "hub"
 brew "highlight"
