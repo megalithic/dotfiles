@@ -162,7 +162,7 @@ function clone_dotfiles_repo {
 				git stash
 				git fetch
 				git merge origin/main
-				git stash pop || log_warn "[!] unable to pop the last stash"
+				git stash pop || log_warn "unable to pop the last stash"
 				log_ok "finished fetching and merging latest"
 				cd $HOME
 			else
