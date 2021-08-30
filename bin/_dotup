@@ -135,13 +135,13 @@ function export_dirs {
 }
 
 function setup_xcode_and_git {
-	check=$(pkgutil --pkgs | grep com.apple.pkg.CLTools_Executables | wc -l | awk '{ print $1 }')
-	if [[ $check != 1 ]]; then
+	#check=$(pkgutil --pkgs | grep com.apple.pkg.CLTools_Executables | wc -l | awk '{ print $1 }')
+	#if [[ $check != 1 ]]; then
 		sleep 1
 		log "installing xcode cli tools; press any key to continue.."
 		read -k1 -s
 		sudo rm -rf /Library/Developer/CommandLineTools && xcode-select --install && sudo xcode-select -s /Applications/Xcode.app/Contents/Developer && sudo xcodebuild -license accept && softwareupdate -iaf && log_ok "DONE install xcode cli tools" || log_error "FAILED to install the xcode cli tools"
-	fi
+	#fi
 }
 
 function _do_clone {
