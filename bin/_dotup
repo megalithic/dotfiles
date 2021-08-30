@@ -140,8 +140,7 @@ function setup_xcode_and_git {
 		sleep 1
 		log "installing xcode cli tools; press any key to continue.."
 		read -k1 -s
-		xcode-select --install && sudo xcodebuild -license accept && softwareupdate -iaf
-		log_ok "DONE install xcode cli tools"
+		sudo rm -rf /Library/Developer/CommandLineTools && sudo xcode-select --install && sudo xcodebuild -license accept && softwareupdate -iaf && log_ok "DONE install xcode cli tools" || log_error "FAILED to install the xcode cli tools"
 	fi
 }
 
