@@ -372,8 +372,8 @@ clone_dotfiles_repo
 [[ $PLATFORM == "macos" ]] && install_homebrew && bundle_brews
 setup_ssh_key
 stow_away
-set_shell
 setup_platform
+set_shell
 setup_asdf
 setup_terminfo
 setup_keyboard
