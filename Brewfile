@@ -19,6 +19,7 @@ tap "heroku/brew"
 tap "microsoft/git"
 tap "isacikgoz/taps"
 tap "vitorgalvao/tiny-scripts"
+tap "romkatv/gitstatus"
 
 # -- for qmk_toolbox --
 
