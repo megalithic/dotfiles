@@ -193,7 +193,7 @@ function install_homebrew {
 
 function bundle_brews {
 	log "brewing things from our brewfile..."
-	sudo xcodebuild -license accept
+	#sudo xcodebuild -license accept
 
 	export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
