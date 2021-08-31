@@ -35,19 +35,35 @@ local data_dir = {
   mega.cache_dir .. "session",
   mega.cache_dir .. "swap",
   mega.cache_dir .. "tags",
-  mega.cache_dir .. "undo"
+  mega.cache_dir .. "undo",
 }
+
 -- Only check once that If cache_dir exists
 -- Then I don't want to check subs dir exists
 if not mega.isdir(mega.cache_dir) then
   os.execute("mkdir -p " .. mega.cache_dir)
+end
 
   for _, v in pairs(data_dir) do
     if not mega.isdir(v) then
       os.execute("mkdir -p " .. v)
     end
   end
+
+if not mega.isdir(mega.local_share_dir) then
+  os.execute("mkdir -p " .. mega.local_share_dir)
 end
+
+local local_share_dir = {
+  mega.local_share_dir .. "shada"
+}
+
+  for _, v in pairs(local_share_dir) do
+    if not mega.isdir(v) then
+      os.execute("mkdir -p " .. v)
+    end
+  end
+
 --
 -- ensure our runtime path has our local pack paths added; so we can just put
 -- "dev" packages into that folder and they just load and work..

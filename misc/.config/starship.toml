@@ -6,9 +6,9 @@
 
 [character]
 format = "$symbol "
-success_symbol = "[](bold green)"
-error_symbol = "[](bold red)"
-vicmd_symbol = "[](bold purple)"
+success_symbol = "[](bold green)"
+error_symbol = "[](bold red)"
+vicmd_symbol = "[](bold purple)"
 
 [custom.shell]
 command = "echo $STARSHIP_SHELL"  # shows output of command

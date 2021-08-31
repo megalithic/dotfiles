@@ -36,6 +36,7 @@ bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-ke
 
 log "installing asdf plugin versions.."
 # must initially symlink our tool-versions file for asdf to install the right things..
+export KERL_CONFIGURE_OPTIONS="--without-javac --with-ssl=$(brew --prefix openssl)"
 asdf install
 
 log "creating $XDG_CONFIG_HOME if it doesn't exist"

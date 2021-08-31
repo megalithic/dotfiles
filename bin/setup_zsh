@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+
+source ~/.dotfiles/bin/_helpers.zsh
+
+	[[ $PLATFORM == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
+
+	log "attempting to add $zsh_path to /etc/shells"
+	# grep -Fxq "$zsh_path" /etc/shells || sudo bash -c "echo $zsh_path >> /etc/shells"
+	grep -Fxq "$zsh_path" /etc/shells || echo "$zsh_path" | sudo tee -a /etc/shells
+
+	log "symlinking and sourcing .zshenv"
+	ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
+	source $HOME/.config/zsh/.zshenv
+
+	log "symlinking and sourcing .zprofile"
+	ln -sfv $HOME/.config/zsh/.zprofile $HOME/.zprofile
+	source $HOME/.config/zsh/.zprofile
+
+	# log "installing znap (zsh-snap)"
+	# if [[ ! -e $HOME/.znap/znap.zsh ]]; then
+	# 	git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git $HOME/.znap
+	# 	source $HOME/.znap/install.zsh
+	# fi
+
+	# compaudit | xargs chmod g-w
+
+	log "changing your shell to user-installed version of zsh: $zsh_path"
+	sudo chsh -s "$zsh_path" $USER && log_ok "DONE setting up zsh"
+	unset zsh_path

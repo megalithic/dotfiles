@@ -8,7 +8,8 @@
 # :: le prompt symbols and such
 NEWLINE=$'\n'
 ORIG_PROMPT_SYMBOL="❯"
-PROMPT_SYMBOL=$'\uf460'       # #(f054)
+# PROMPT_SYMBOL=$'\uf460'       # #(f054)
+PROMPT_SYMBOL=""
 PROMPT_VICMD_SYMBOL="%F{244}❮%{$reset_color%}"
 PROMPT_BG_SYMBOL=$'\uf105'    #
 VCS_STAGED_SYMBOL=$'\uf914'   # (f067)   ﰃ(fc03) 樂(f914)
