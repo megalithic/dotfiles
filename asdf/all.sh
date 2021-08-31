@@ -39,7 +39,7 @@ log "installing asdf plugin versions.."
 asdf install
 
 log "creating $XDG_CONFIG_HOME if it doesn't exist"
-export $XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CONFIG_HOME="$HOME/.config"
 [[ ! -d "$HOME/.config" ]] && mkdir -p "$HOME/.config"
 [[ ! -d "$HOME/.config/lsp" ]] && mkdir -p "$HOME/.config/lsp"
 [[ ! -d "$HOME/.config/treesitter" ]] && mkdir -p "$HOME/.config/treesitter"
