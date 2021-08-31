@@ -195,7 +195,7 @@ function install_homebrew {
 		log "brew already installed; skipping."
 	else
 		log_warn "brew not found; installing Homebrew..."
-		/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 		log_ok "DONE installing homebrew"
 	fi
 }
@@ -388,7 +388,9 @@ clone_dotfiles_repo
 setup_ssh_key
 stow_away
 setup_platform
-set_shell
+#set_shell
+# setup_fish
+setup_zsh
 setup_asdf
 setup_keyboard
 setup_python

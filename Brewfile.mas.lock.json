@@ -1,0 +1,34 @@
+{
+  "entries": {
+    "mas": {
+      "Fantastical": {
+        "id": "975937182",
+        "version": "3.4.3"
+      },
+      "Spark": {
+        "id": "1176895641",
+        "version": "2.10.11"
+      },
+      "Canary Mail": {
+        "id": "1236045954",
+        "version": "3.30"
+      },
+      "Drafts": {
+        "id": "1435957248",
+        "version": "27.0"
+      }
+    }
+  },
+  "system": {
+    "macos": {
+      "big_sur": {
+        "HOMEBREW_VERSION": "3.2.10",
+        "HOMEBREW_PREFIX": "/usr/local",
+        "Homebrew/homebrew-core": "6ec3da0538bae6a600ff6f18ebcdf37d402bfe1e",
+        "CLT": "12.5.1.0.1.1623191612",
+        "Xcode": "12.5",
+        "macOS": "11.5.2"
+      }
+    }
+  }
+}
