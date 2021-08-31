@@ -206,7 +206,7 @@ function bundle_brews {
 
 	export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
-	brew bundle --file="$DOTS/Brewfile" && log_ok "DONE bundling casks and brews bundles" || {
+	/usr/local/bin/brew bundle --file="$DOTS/Brewfile" && log_ok "DONE bundling casks and brews bundles" || {
 		log_error 'brew bundling failed'
 		exit 1
 	}
@@ -219,7 +219,7 @@ function bundle_brews {
 			read -k1 -s
 		fi
 	
-	brew bundle --file="$DOTS/Brewfile.mas" && log_ok "DONE bundling mas bundles" || {
+	/usr/local/bin/brew bundle --file="$DOTS/Brewfile.mas" && log_ok "DONE bundling mas bundles" || {
 		log_error 'brew bundling of mas brewfile failed'
 		exit 1
 	}
