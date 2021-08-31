@@ -338,10 +338,8 @@ function setup_zsh {
 
 function setup_fish {
 	# install fisher:
-	   curl -sL https://git.io/fisher | source
-	   fisher install jorgebucaran/fisher
-	   fisher install
-	# https://fishshell.com/docs/current/tutorial.html#switching-to-fish
+	curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+	fisher install
 	[[ $PLATFORM == "linux" ]] && fish_path="/usr/bin/fish" || fish_path="/usr/local/bin/fish"
 	log "attempting to add $fish_path to /etc/shells"
 	grep -Fxq "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
