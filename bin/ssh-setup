@@ -61,4 +61,4 @@ case $continue_reply in
   *) log_warn "$skip_message" ;;
 esac
 
-log "-> if you did add your key to github, you can verify with: `ssh -T git@github.com`"
+log "-> if you did add your key to github, you can verify with: 'ssh -T git@github.com'"
