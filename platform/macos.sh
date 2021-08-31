@@ -457,7 +457,7 @@ for app in "${dock_apps_to_remove[@]}"; do
 
     # remove apps from dock
     # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
-    dockutil --remove "${app}" && log_ok "done"
+    dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
 done
 
 function app_is_running {
