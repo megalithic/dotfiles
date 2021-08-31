@@ -98,6 +98,7 @@ brew "luarocks"
 brew "luv"
 brew "mas"
 brew "moreutils"
+brew "mysql"
 brew "ncurses"
 brew "neovim", args: ["HEAD"]
 brew "ninja" # for lua sumneko lsp
