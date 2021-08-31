@@ -243,7 +243,6 @@ function stow_away {
 		_install_stow
 	fi
 	cd $DOTS
-	#stow terminfo && log_ok "stowed terminfo" || log_error "terminfo stow failed"
 	stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
 	stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
 	stow fish && log_ok "stowed fish" || log_error "fish stow failed"
@@ -272,8 +271,6 @@ function setup_ssh_key {
 	#  2.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account
 	skip_message="skipping; be sure to set up an pub/private key at some point! https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"
 	log_warn "you'll need to setup an ssh public/private key to do more github things later.."
-	# echo -n "[?] do this now? [yN]"
-	# read continue_reply
 
 	vared -p "[?] do this now? [yN]" -c continue_reply
 
@@ -341,11 +338,9 @@ function setup_zsh {
 
 function setup_fish {
 	# install fisher:
-	   curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+	   curl -sL https://git.io/fisher | source
+	   fisher install jorgebucaran/fisher
 	   fisher install
-	# install fisher plugins:
-	#   fisher install rafaelrinaldi/pure
-	#   fisher install PatrickF1/fzf.fish
 	# https://fishshell.com/docs/current/tutorial.html#switching-to-fish
 	[[ $PLATFORM == "linux" ]] && fish_path="/usr/bin/fish" || fish_path="/usr/local/bin/fish"
 	log "attempting to add $fish_path to /etc/shells"
@@ -397,7 +392,6 @@ stow_away
 setup_platform
 set_shell
 setup_asdf
-#setup_terminfo # FIXME: no longer needed?
 setup_keyboard
 setup_python
 post_install
