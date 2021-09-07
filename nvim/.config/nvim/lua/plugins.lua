@@ -34,6 +34,7 @@ return {
 	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-emoji",
+	"f3fora/cmp-spell",
 	"L3MON4D3/LuaSnip",
 	"rafamadriz/friendly-snippets",
 	"nvim-lua/lsp-status.nvim",
@@ -123,7 +124,7 @@ return {
 	-- :Time     <- measure how long it takes to run some stuff.
 	"tpope/vim-scriptease",
 	"christoomey/vim-tmux-navigator",
-	"tmux-plugins/vim-tmux-focus-events",
+	-- "tmux-plugins/vim-tmux-focus-events",
 	"christoomey/vim-tmux-runner",
 	"junegunn/vim-slash",
 	"junegunn/vim-easy-align",

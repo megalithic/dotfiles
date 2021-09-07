@@ -167,10 +167,36 @@ do
 			Operator = "\u{03a8} operator", -- Operator
 			TypeParameter = " type param", -- TypeParameter
 		}
+
+		local function tab(fallback)
+			if fn.pumvisible() == 1 then
+				return fn.feedkeys(utils.lsp.t("<C-n>"), "n")
+			elseif luasnip and luasnip.expand_or_jumpable() then
+				return fn.feedkeys(utils.lsp.t("<Plug>luasnip-expand-or-jump"), "")
+			elseif utils.lsp.check_back_space() then
+				fn.feedkeys(utils.lsp.t("<Tab>"), "n")
+			else
+				fallback()
+			end
+		end
+
+		local function shift_tab(fallback)
+			if fn.pumvisible() == 1 then
+				fn.feedkeys(utils.lsp.t("<C-p>"), "n")
+			elseif luasnip and luasnip.jumpable(-1) then
+				fn.feedkeys(utils.lsp.t("<Plug>luasnip-jump-prev"), "")
+			else
+				fallback()
+			end
+		end
+
 		require("cmp_nvim_lsp").setup()
 		local cmp = require("cmp")
 		-- local types = require("cmp.types")
 		cmp.setup({
+			experimental = {
+				ghost_text = false,
+			},
 			completion = {
 				-- autocomplete = {
 				-- 	types.cmp.TriggerEvent.InsertEnter,
@@ -187,6 +213,8 @@ do
 				border = "rounded",
 			},
 			mapping = {
+				["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
+				["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
 				["<C-b>"] = cmp.mapping.scroll_docs(-4),
 				["<C-f>"] = cmp.mapping.scroll_docs(4),
 				["<C-Space>"] = cmp.mapping.complete(),
@@ -197,6 +225,7 @@ do
 				{ name = "nvim_lua" },
 				{ name = "nvim_lsp" },
 				{ name = "orgmode" },
+				{ name = "spell" },
 				{ name = "emoji" },
 				{ name = "path" },
 				{
@@ -219,9 +248,10 @@ do
 						luasnip = snippet_provider == "luasnip" and "[lsnip]" or false,
 						vsnip = snippet_provider == "vsnip" and "[vsnip]" or false,
 						nvim_lsp = "[lsp]",
+						orgmode = "[org]",
 						path = "[path]",
 						buffer = "[buf]",
-						-- spell = "[spl]",
+						spell = "[spl]",
 						-- calc = "[calc]",
 						-- emoji = "[emo]",
 					})[entry.source.name]
@@ -263,6 +293,7 @@ local function on_attach(client, bufnr)
 		bufmap("gs", "lua require('fzf-lua').lsp_symbols()")
 		bufmap("gi", "lua require('fzf-lua').lsp_implementations()")
 		bufmap("<leader>la", "lua require('fzf-lua').lsp_code_actions()")
+		bufmap("<leader>ca", "lua require('fzf-lua').lsp_code_actions()")
 	else
 		-- # via defaults
 		bufmap("gd", "lua vim.lsp.buf.definition()")
