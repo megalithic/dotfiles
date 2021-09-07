@@ -22,9 +22,9 @@ vicmd_symbol = "[](bold purple)"
 
 [custom.sudo]
 description = "valid sudo timestamp marker"
-command = "echo -n '!'"
+command = "echo -n ''"
 format = "[$symbol$output]($style) "
-style = "bold fg:bright-red"
+style = "bold fg:#614b51"
 when = "sudo -vn &>/dev/null"
 
 [custom.git_status_ahead]

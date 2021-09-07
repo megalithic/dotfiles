@@ -20,6 +20,7 @@ tap "microsoft/git"
 tap "isacikgoz/taps"
 tap "vitorgalvao/tiny-scripts"
 tap "romkatv/gitstatus"
+tap "mutagen-io/mutagen"
 
 # -- for qmk_toolbox --
 
@@ -98,6 +99,7 @@ brew "luarocks"
 brew "luv"
 brew "mas"
 brew "moreutils"
+brew "mutagen-io/mutagen/mutagen"
 brew "mysql"
 brew "ncurses"
 brew "neovim", args: ["HEAD"]
@@ -207,19 +209,8 @@ cask "thingsmacsandboxhelper"
 cask "the-unarchiver"
 # cask "usb-overdrive" # causes issues with QMK keyboards
 cask "virtualbox" # requires restart with security allow (oracle things)
-cask "witch"
+# cask "witch" # using contexts in stead
 cask "yubico-authenticator"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"
-
-
-# -- app store (mas) --
-
-#mas "Fantastical", id: 975937182
-#mas "Spark", id: 1176895641
-#mas "Canary Mail", id: 1236045954
-## mas "Tweetbot", id: 557168941
-#mas "Drafts", id: 1435957248
-## mas "Things", id: 904280696  # might be bailing from this
-## mas "Xcode", id: 497799835
