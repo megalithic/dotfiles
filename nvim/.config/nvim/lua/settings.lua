@@ -260,6 +260,7 @@ do -- [orgmode] --
 	--        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
 	--        https://github.com/tkmpypy/dotfiles/blob/master/.config/nvim/lua/plugins.lua#L358-L470
 	--        https://github.com/tricktux/dotfiles/blob/master/defaults/.config/nvim/lua/config/plugins/orgmode.lua
+	-- ENABLE TREESITTER: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter#setup
 	require("orgmode").setup({
 		-- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
 		-- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"

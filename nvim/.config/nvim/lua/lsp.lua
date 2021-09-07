@@ -196,6 +196,7 @@ do
 				{ name = "luasnip" },
 				{ name = "nvim_lua" },
 				{ name = "nvim_lsp" },
+				{ name = "orgmode" },
 				{ name = "emoji" },
 				{ name = "path" },
 				{
