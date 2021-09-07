@@ -132,7 +132,7 @@ function export_dirs {
 		export PRIVATE="$DOTS/private"
 		log_ok "set PRIVATE to $PRIVATE"
 	fi
-	
+
 	# XDG_CONFIG_HOME
 	if [[ -z $XDG_CONFIG_HOME ]]; then
 		log "setting XDG_CONFIG_HOME env"
@@ -146,17 +146,16 @@ function setup_xcode_and_git {
 	#check=$(pkgutil --pkgs | grep com.apple.pkg.CLTools_Executables | wc -l | awk '{ print $1 }')
 	#if [[ $check != 1 ]]; then
 	if [[ ! -d /Library/Developer/CommandLineTools ]]; then
-	sleep 1
+		sleep 1
 		log "installing xcode cli tools; press any key to continue.."
-			read -k1 -s
+		read -k1 -s
 		xcode-select --install && log_ok "DONE install xcode cli tools" || log_error "FAILED to install the xcode cli tools"
 	fi
-		
-	
-		#sudo rm -rf /Library/Developer/CommandLineTools && 
-		#sudo xcodebuild -license accept && 
-		sudo xcode-select -switch /Library/Developer/CommandLineTools
-		softwareupdate --all --install --force --agree-to-license && log_ok "DONE setting up more things for the xcode cli tools" || log_error "FAILED to setup the xcode cli tools things.."
+
+	#sudo rm -rf /Library/Developer/CommandLineTools &&
+	#sudo xcodebuild -license accept &&
+	sudo xcode-select -switch /Library/Developer/CommandLineTools
+	softwareupdate --all --install --force --agree-to-license && log_ok "DONE setting up more things for the xcode cli tools" || log_error "FAILED to setup the xcode cli tools things.."
 	#fi
 }
 
@@ -210,20 +209,20 @@ function bundle_brews {
 		log_error 'brew bundling failed'
 		exit 1
 	}
-	
+
 	# if we're not signed in, let's open the App Store
-		if [[ $(mas account | grep "Not signed in") ]]; then
-			sleep 1
-			open -a "App Store"
-			log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."
-			read -k1 -s
-		fi
-	
+	if [[ $(mas account | grep "Not signed in") ]]; then
+		sleep 1
+		open -a "App Store"
+		log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."
+		read -k1 -s
+	fi
+
 	/usr/local/bin/brew bundle --file="$DOTS/Brewfile.mas" && log_ok "DONE bundling mas bundles" || {
 		log_error 'brew bundling of mas brewfile failed'
 		exit 1
 	}
-	
+
 	log_ok "DONE bundling brews"
 }
 
@@ -367,8 +366,9 @@ function set_shell {
 function post_install {
 	if [[ $PLATFORM == "macos" ]]; then
 		log "post-brewing operations.."
-		$(brew --prefix)/opt/fzf/install       # <- fzf
-		#initdb /usr/local/var/postgres -E utf8 # <- postgresql
+		# $(brew --prefix)/opt/fzf/install # <- fzf
+		initdb -D /usr/local/var/postgres/
+
 		log_ok "DONE"
 	fi
 

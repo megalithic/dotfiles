@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local cmd, lsp, api, fn, set, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt, vim.g
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
@@ -42,13 +43,13 @@ lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_pub
 })
 
 -- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
-vim.lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
+lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
 	return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
 end
 
 -- hover
 -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
 	border = "rounded",
 	max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
 	max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
@@ -59,60 +60,43 @@ lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
 	if err ~= nil or result == nil then
 		return
 	end
-
-	-- If the buffer hasn't been modified before the formatting has finished,
-	-- update the buffer
-	if not api.nvim_buf_get_option(bufnr, "modified") then
-		local view = fn.winsaveview()
+	if api.nvim_buf_get_var(bufnr, "init_changedtick") == vim.api.nvim_buf_get_var(bufnr, "changedtick") then
+		local view = vim.fn.winsaveview()
 		lsp.util.apply_text_edits(result, bufnr)
 		fn.winrestview(view)
-		if bufnr == api.nvim_get_current_buf() then
-			api.nvim_command("noautocmd :update")
-
-			-- FIXME: do i need this stuffs?
-			-- Trigger post-formatting autocommand which can be used to refresh gitgutter
-			api.nvim_command("silent doautocmd <nomodeline> User FormatterPost")
+		if bufnr == vim.api.nvim_get_current_buf() then
+			vim.b.saving_format = true
+			cmd([[update]])
+			vim.b.saving_format = false
 		end
 	end
 end
 
+-- lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
+-- 	if err ~= nil or result == nil then
+-- 		return
+-- 	end
+
+-- 	-- If the buffer hasn't been modified before the formatting has finished,
+-- 	-- update the buffer
+-- 	if not api.nvim_buf_get_option(bufnr, "modified") then
+-- 		local view = fn.winsaveview()
+-- 		lsp.util.apply_text_edits(result, bufnr)
+-- 		fn.winrestview(view)
+-- 		if bufnr == api.nvim_get_current_buf() then
+-- 			api.nvim_command("noautocmd :update")
+
+-- 			-- FIXME: do i need this stuffs?
+-- 			-- Trigger post-formatting autocommand which can be used to refresh gitgutter
+-- 			api.nvim_command("silent doautocmd <nomodeline> User FormatterPost")
+-- 		end
+-- 	end
+-- end
+
 --- completion/snippets
 --
 do
-	if snippet_provider == "vsnip" then
-		-- [vnsip] --
-		g.vsnip_snippet_dir = vim.fn.stdpath("config") .. "/snippets"
-		--- Use (s-)tab to:
-		--- move to prev/next item in completion menuone
-		--- jump to prev/next snippet's placeholder
-		_G.tab_complete = function()
-			-- if fn.pumvisible() == 1 then
-			-- 	return utils.lsp.t("<C-n>")
-			if fn["vsnip#available"](1) == 1 then
-				print("should be in vsnip#available")
-				return utils.lsp.t("<Plug>(vsnip-expand-or-jump)")
-			elseif utils.lsp.check_back_space() then
-				return utils.lsp.t("<Tab>")
-			else
-				return fn["compe#complete"]()
-			end
-		end
-		_G.s_tab_complete = function()
-			-- if fn.pumvisible() == 1 then
-			-- 	return utils.lsp.t("<C-p>")
-			if fn["vsnip#jumpable"](-1) == 1 then
-				print("should be in vsnip#jumpable")
-				return utils.lsp.t("<Plug>(vsnip-jump-prev)")
-			else
-				return utils.lsp.t("<S-Tab>")
-			end
-		end
-		local opts = { expr = true, noremap = false }
-		map("i", "<Tab>", "v:lua.tab_complete()", opts)
-		map("s", "<Tab>", "v:lua.tab_complete()", opts)
-		map("i", "<S-Tab>", "v:lua.s_tab_complete()", opts)
-		map("s", "<S-Tab>", "v:lua.s_tab_complete()", opts)
-	elseif snippet_provider == "luasnip" then
+	if snippet_provider == "luasnip" then
 		-- [luasnip] --
 		local types = require("luasnip.util.types")
 		luasnip.config.set_config({
@@ -154,83 +138,7 @@ do
 		map("s", "<S-Tab>", on_s_tab, opts)
 	end
 
-	if completion_provider == "compe" then
-		-- [nvim-compe] --
-		require("compe").setup({
-			enabled = true,
-			autocomplete = true,
-			debug = false,
-			min_length = 1,
-			preselect = "disable",
-			allow_prefix_unmatch = false,
-			throttle_time = 80,
-			source_timeout = 200,
-			incomplete_delay = 400,
-			max_abbr_width = 100,
-			max_kind_width = 100,
-			max_menu_width = 100,
-			documentation = {
-				border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-			},
-			source = {
-				luasnip = snippet_provider == "luasnip" and { menu = " [lsnip]", priority = 12 } or false,
-				vsnip = snippet_provider == "vsnip" and { menu = " [vsnip]", priority = 12 } or false,
-				nvim_lua = { menu = " [lua]", priority = 11 },
-				nvim_lsp = { menu = " [lsp]", priority = 10 },
-				orgmode = { menu = "ﴬ [org]", priority = 9, filetypes = { "org" } },
-				neorg = { menu = "[norg]", priority = 9, filetypes = { "org" } },
-				path = { menu = "", kind = " [path]", priority = 8 },
-				-- emoji = { menu = "ﲃ [emo]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
-				spell = { menu = " [spl]", priority = 8, filetypes = { "markdown", "org", "gitcommit" } },
-				buffer = { menu = " [buf]", priority = 7 },
-				treesitter = false, --{menu = "[ts]", priority = 9},
-			},
-		})
-		map("i", "<C-Space>", "compe#complete()", { expr = true })
-		map("i", "<C-e>", "compe#close('<C-e>')", { expr = true, silent = false })
-		require("nvim-autopairs.completion.compe").setup({
-			map_cr = true,
-			map_complete = true,
-			auto_select = false,
-		})
-		-- local function complete()
-		-- 	if fn.pumvisible() == 1 then
-		-- 		fn["compe#confirm"]({ keys = "<cr>", select = false })
-		-- 		return t("<CR>")
-		-- 	else
-		-- 		return require("nvim-autopairs").autopairs_cr()
-		-- 	end
-		-- end
-		-- map("i", "<CR>", complete, { expr = true })
-		au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
-		require("vim.lsp.protocol").CompletionItemKind = {
-			" text", -- Text
-			" method", -- Method
-			"ƒ function", -- Function
-			" constructor", -- Constructor
-			"識field", -- Field
-			" variable", -- Variable
-			" class", -- Class
-			"ﰮ interface", -- Interface
-			" module", -- Module
-			" property", -- Property
-			" unit", -- Unit
-			" value", -- Value
-			"了enum", -- Enum
-			" keyword", -- Keyword
-			" snippet", -- Snippet
-			" color", -- Color
-			" file", -- File
-			"渚ref", -- Reference
-			" folder", -- Folder
-			" enum member", -- EnumMember
-			" const", -- Constant
-			" struct", -- Struct
-			"鬒event", -- Event
-			"\u{03a8} operator", -- Operator
-			" type param", -- TypeParameter
-		}
-	elseif completion_provider == "cmp" then
+	if completion_provider == "cmp" then
 		-- [nvim-cmp] --
 		local kind_icons = {
 			Text = " text", -- Text
@@ -395,10 +303,6 @@ local function on_attach(client, bufnr)
 	end
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	-- au "CursorHold <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
-
-	if completion_provider == "compe" then
-		au([[User CompeConfirmDone silent! lua vim.lsp.buf.signature_help()]])
-	end
 
 	--- # commands
 	FormatRange = function()

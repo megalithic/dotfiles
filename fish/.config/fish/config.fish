@@ -24,6 +24,10 @@ fish_add_path /usr/local/sbin
 fish_add_path ~/.gem/ruby/2.6.0/bin
 fish_add_path ~/.local/bin/pnpm
 
+
+# Zsh
+set -Ux ZDOTDIR ~/.config/zsh
+
 # Fish
 set -U fish_emoji_width 2
 # alias -s fish_greeting color-test
@@ -148,6 +152,9 @@ bind \cr __fzf_history
 bind \ch __fzf_tldr
 bind \ct __fzf_files
 
+fzf_configure_bindings --directory=\cf
+fzf_configure_bindings --history=\cr
+
 set -l color00 '#323d43'
 set -l color01 '#3c474d'
 set -l color02 '#465258'
@@ -164,6 +171,14 @@ set -l color0C '#8ec07c'
 set -l color0D '#83a598'
 set -l color0E '#d3869b'
 set -l color0F '#d65d0e'
+
+function fzf --wraps=fzf --description="Use fzf-tmux if in tmux session"
+    if set --query TMUX
+        fzf-tmux $argv
+    else
+        command fzf $argv
+    end
+end
 
 
 # # set -q FZF_TMUX_HEIGHT; or set -U FZF_TMUX_HEIGHT "40%"

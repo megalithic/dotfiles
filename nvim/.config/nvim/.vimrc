@@ -277,11 +277,11 @@ if has("nvim")
   let g:python3_host_prog = '~/.asdf/shims/python3'
 
   " share data between nvim instances (registers etc)
-   " augroup SHADA
-   "   autocmd!
-   "   autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
-   "         \ if exists(':rshada') | rshada | wshada | endif
-   " augroup END
+  augroup SHADA
+    autocmd!
+    autocmd CursorHold,TextYankPost,FocusGained,FocusLost *
+          \ if exists(':rshada') | rshada | wshada | endif
+  augroup END
 else
   set emoji                 " treat emojis 😄 as full width characters
   set cryptmethod=blowfish2

@@ -112,6 +112,7 @@ end
 
 -- # REF:
 -- - https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
+-- - https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/rename.lua (simpler impl to investigate)
 function M.lsp.rename()
 	local bufnr = api.nvim_get_current_buf()
 	local params = lsp.util.make_position_params()

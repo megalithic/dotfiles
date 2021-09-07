@@ -4,18 +4,21 @@
 # * customs: https://github.com/starship/starship/discussions/1252
 
 
+[cmd_duration]
+format = "[$duration]($style) "
+
 [character]
 format = "$symbol "
 success_symbol = "[](bold green)"
 error_symbol = "[](bold red)"
 vicmd_symbol = "[](bold purple)"
 
-[custom.shell]
-command = "echo $STARSHIP_SHELL"  # shows output of command
-when = """ test "$STARSHIP_SHELL" != "fish" """
-style = "dimmed blue"
-format = "[$output]($style)"
-shell =["zsh"]
+# [custom.shell]
+# command = "echo $STARSHIP_SHELL"  # shows output of command
+# when = """ test "$STARSHIP_SHELL" != "fish" """
+# style = "dimmed blue"
+# format = "[$output]($style)"
+# shell =["zsh"]
 
 [custom.sudo]
 description = "valid sudo timestamp marker"

@@ -5,7 +5,7 @@
 # set -x
 
 # -- handling the install of rust with asdf
-# - or - 
+# - or -
 # -- handle with direct install via rustup
 # if (command -v rustup &>/dev/null); then
 #   log "installing rustup"
@@ -15,11 +15,11 @@
 
 if (command -v cargo &>/dev/null); then
 
-  # if [[ ! -d $HOME/.cargo ]]; then
-  #   mkdir -p $HOME/.cargo
-  # fi
+	# if [[ ! -d $HOME/.cargo ]]; then
+	#   mkdir -p $HOME/.cargo
+	# fi
 
-  log "installing cargo crates"
+	log "installing cargo crates"
 	cargo install selene # https://kampfkarren.github.io/selene/selene.html
 	cargo install stylua # https://github.com/johnnymorganz/stylua
 

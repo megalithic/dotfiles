@@ -212,6 +212,7 @@ end
 local function get_vcs_status()
 	local result = {}
 	local branch = fn["fugitive#head"](7)
+	-- local branch = fn["gitbranch#name()"]
 	if branch ~= nil and branch:len() > 0 then
 		table.insert(result, branch)
 	end
@@ -230,7 +231,7 @@ local function get_fileicon()
 end
 
 local function get_filepath(_uses_icon)
-	local uses_icon = _uses_icon or true
+	local uses_icon = _uses_icon == nil and true
 	local full_path = fn.expand("%:p")
 	local path = full_path
 	local cwd = fn.getcwd()

@@ -9,7 +9,7 @@ do -- [nvim options/ui/appearance] --
 		"f", -- relative path
 		"m", -- modified flag
 		"r",
-		"%{FugitiveStatusline()}",
+		"%{gitstatus#name()}",
 		"=",
 		"{&spelllang}",
 		"y", -- filetype
@@ -730,6 +730,14 @@ do
 	require("numb").setup()
 end
 
+do
+	require("impatient")
+end
+
+do
+	-- require("alpha").setup(require("alpha.themes.startify").opts)
+end
+
 -- do
 -- 	require("toggleterm").setup({})
 -- end
@@ -852,4 +860,8 @@ do -- [fzf] --
 	--     )
 	--     vim.cmd("chdir " .. choice)
 	--   end
+end
+
+do
+	-- require("git").setup()
 end

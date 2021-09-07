@@ -56,3 +56,4 @@ tmp
 nvim/**/nvim-python-debug.log_py3_rplugin
 zsh/.config/zsh/**/*.zwc
 fish_variable
+keyboard/.config/karabiner/automatic_backups/*.json

@@ -25,11 +25,11 @@ for file in $ZDOTDIR/components/{opts,asdf,fzf,aliases,functions,colors,keybindi
 done
 unset file
 
-autoload -U promptinit
-promptinit        # load prompt themes
-prompt megalithic # load my prompt
+# autoload -U promptinit
+# promptinit        # load prompt themes
+# prompt megalithic # load my prompt
 
-# eval "$(starship init zsh)"
+eval "$(starship init zsh)"
 
 # use .localrc for SUPER SECRET stuff
 if [[ -e $HOME/.localrc ]]; then

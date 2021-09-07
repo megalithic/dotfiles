@@ -7,10 +7,12 @@ return {
 	--
 	-- (profiling) --
 	"dstein64/vim-startuptime",
+	"lewis6991/impatient.nvim",
 	--
 	-- (appearance/ui) --
 	"sainnhe/everforest",
 	"rktjmp/lush.nvim",
+	-- "goolord/alpha-nvim", -- "folke/persistence.nvim"
 	"norcalli/nvim-colorizer.lua",
 	"dm1try/golden_size",
 	"junegunn/rainbow_parentheses.vim",
@@ -25,7 +27,6 @@ return {
 	"williamboman/nvim-lsp-installer",
 	"nvim-lua/plenary.nvim",
 	"nvim-lua/popup.nvim",
-	"hrsh7th/nvim-compe",
 	"hrsh7th/nvim-cmp",
 	"hrsh7th/cmp-nvim-lsp",
 	"hrsh7th/cmp-nvim-lua",
@@ -33,8 +34,6 @@ return {
 	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-emoji",
-	"hrsh7th/vim-vsnip",
-	"hrsh7th/vim-vsnip-integ",
 	"L3MON4D3/LuaSnip",
 	"rafamadriz/friendly-snippets",
 	"nvim-lua/lsp-status.nvim",
@@ -44,6 +43,7 @@ return {
 	"megalithic/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
 	"folke/trouble.nvim",
 	"SmiteshP/nvim-gps",
+	-- https://github.com/kosayoda/nvim-lightbulb
 	--
 	-- (treesitter) --
 	{ "nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"] },
@@ -81,9 +81,9 @@ return {
 	-- (git, vcs, et al) --
 	"tpope/vim-fugitive",
 	-- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"},
-	-- "mattn/webapi-vim",
+	"mattn/webapi-vim",
 	"rhysd/conflict-marker.vim",
-	"itchyny/vim-gitbranch",
+	-- "itchyny/vim-gitbranch",
 	"rhysd/git-messenger.vim",
 	"sindrets/diffview.nvim",
 	-- "dinhhuy258/git.nvim",
@@ -93,7 +93,7 @@ return {
 	-- (development, et al) --
 	"ahmedkhalf/project.nvim",
 	"tpope/vim-projectionist",
-	"janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest
+	"janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
 	"tpope/vim-ragtag",
 	"rizzatti/dash.vim",
 	"editorconfig/editorconfig-vim",
@@ -139,6 +139,9 @@ return {
 	"kristijanhusak/orgmode.nvim",
 	"akinsho/org-bullets.nvim",
 	"dhruvasagar/vim-table-mode",
+	-- https://github.com/jghauser/follow-md-links.nvim
+	-- https://github.com/jakewvincent/mkdnflow.nvim
+	-- https://github.com/jubnzv/mdeval.nvim
 	-- "megalithic/zk.nvim",
 	-- "NFrid/due.nvim",
 	-- # ruby/rails

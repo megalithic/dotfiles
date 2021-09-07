@@ -42,8 +42,8 @@ export QMK_HOME="$HOME/code/qmk_firmware"
 export GOPATH="$HOME/.go"
 export GOBIN="$GOPATH/bin"
 
-# export CARGOPATH="$HOME/.cargo"
-# export CARGOBIN="$CARGOPATH/bin"
+export CARGOPATH="$HOME/.cargo"
+export CARGOBIN="$CARGOPATH/bin"
 
 export ASDF_DIR="$HOME/.asdf"
 export ASDF_SHIMS="$ASDF_DIR/shims"
@@ -103,7 +103,9 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
 
   export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
-  export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
+  # export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
+  # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
+  export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
 fi
 
 export NVIMRUNTIME='/usr/local/share/nvim/runtime'

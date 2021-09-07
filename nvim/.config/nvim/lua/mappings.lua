@@ -17,6 +17,8 @@ map("x", "<Tab>", "%", { noremap = true })
 
 -- useful remaps from theprimeagen:
 -- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
+-- useful remaps/maps from lukas-reineke:
+-- - ref: https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/mappings.lua
 
 -- Convenient Line operations
 map("n", "H", "^")
@@ -80,6 +82,18 @@ map("i", "?", "?<C-g>u")
 -- Default to case insensitive search
 -- map("n", "/", "/\v")
 -- map("v", "/", "/\v")
+
+-- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
+map("n", "n", "'Nn'[v:searchforward]", { expr = true })
+map("x", "n", "'Nn'[v:searchforward]", { expr = true })
+map("o", "n", "'Nn'[v:searchforward]", { expr = true })
+map("n", "N", "'nN'[v:searchforward]", { expr = true })
+map("x", "N", "'nN'[v:searchforward]", { expr = true })
+map("o", "N", "'nN'[v:searchforward]", { expr = true })
+
+-- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
+map("c", "<C-n", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
+map("c", "<C-p", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 
 -- [custom mappings] -----------------------------------------------------------
 
