@@ -322,14 +322,6 @@ function setup_zsh {
 	ln -sfv $HOME/.config/zsh/.zprofile $HOME/.zprofile
 	source $HOME/.config/zsh/.zprofile
 
-	# log "installing znap (zsh-snap)"
-	# if [[ ! -e $HOME/.znap/znap.zsh ]]; then
-	# 	git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git $HOME/.znap
-	# 	source $HOME/.znap/install.zsh
-	# fi
-
-	# compaudit | xargs chmod g-w
-
 	log "changing your shell to user-installed version of zsh: $zsh_path"
 	sudo chsh -s "$zsh_path" $USER && log_ok "DONE setting up zsh"
 	unset zsh_path
@@ -343,11 +335,7 @@ function setup_fish {
 	log "attempting to add $fish_path to /etc/shells"
 	grep -Fxq "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
 
-	log "changing your shell to user-installed version of fish: $fish_path"
-	sudo chsh -s "$fish_path" $USER && log_ok "DONE setting up fish"
-	unset fish_path
-}
-
+	log "changing your shell to user-installed version of fish: $fish_path" sudo chsh -s "$fish_path" $USER && log_ok "DONE setting up fish" unset fish_path }
 function set_shell {
 	skip_message="skipping; you can run this later via _dotup; or set it manually wth the steps in this script."
 
@@ -366,7 +354,7 @@ function set_shell {
 function post_install {
 	if [[ $PLATFORM == "macos" ]]; then
 		log "post-brewing operations.."
-		# $(brew --prefix)/opt/fzf/install # <- fzf
+		$(brew --prefix)/opt/fzf/install # <- fzf
 		initdb -D /usr/local/var/postgres/
 
 		log_ok "DONE"
@@ -388,10 +376,10 @@ clone_dotfiles_repo
 setup_ssh_key
 stow_away
 setup_platform
-#set_shell
+# set_shell
 # setup_fish
 setup_zsh
-setup_asdf
+(! command -v asdf &>/dev/null) && setup_asdf
 setup_keyboard
 setup_python
 post_install
