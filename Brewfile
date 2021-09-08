@@ -182,6 +182,7 @@ cask "colorsnapper"
 cask "contexts"
 cask "controlplane"
 cask "copyq" # https://github.com/hluk/CopyQ
+cask "cyberduck"
 cask "dash"
 # cask "docker-edge"
 cask "dropbox"

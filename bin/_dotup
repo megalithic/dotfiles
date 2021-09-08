@@ -173,13 +173,13 @@ function clone_dotfiles_repo {
 		if [[ -z $SKIP_DOTFILES_UPDATE ]]; then
 			if ls -A $DOTS | grep -q '^'; then
 				log "$HOME/.dotfiles found; updating to latest.."
-				cd $DOTS
+				pushd $DOTS
 				git stash
 				git fetch
 				git merge origin/main
 				git stash pop || log_warn "unable to pop the last stash"
 				log_ok "finished fetching and merging latest"
-				cd $HOME
+				popd
 			else
 				log_warn "$HOME/.dotfiles exists, but is empty; retrying clone.."
 				rm -rf $DOTS
@@ -190,6 +190,17 @@ function clone_dotfiles_repo {
 }
 
 function install_homebrew {
+	if [[ $PLATFORM == "linux" ]]; then
+	  linuxbrew_path="/home/linuxbrew/.linuxbrew"
+	  [[ ! -d $linuxbrew_path ]] && mkdir -p "$linuxbrew_path"
+    # chown ubuntu:ubuntu /home/linuxbrew/.linuxbrew
+    # gosu ubuntu /bin/bash -c "NONINTERACTIVE=1 USER=ubuntu $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.bashrc
+    # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.zshrc
+    # chown ubuntu:ubuntu /home/ubuntu/.bashrc
+    # chown ubuntu:ubuntu /home/ubuntu/.zshrc
+	elif
+	fi
 	if (command -v brew &>/dev/null); then
 		log "brew already installed; skipping."
 	else
@@ -199,6 +210,7 @@ function install_homebrew {
 	fi
 }
 
+# TODO: handle brewing macos/linux/etc
 function bundle_brews {
 	log "brewing things from our brewfile..."
 	#sudo xcodebuild -license accept
@@ -243,15 +255,17 @@ function stow_away {
 	if [[ $PLATFORM == "linux" ]]; then
 		_install_stow
 	fi
-	cd $DOTS
+
+	pushd $DOTS
+
 	stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
 	stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
 	stow fish && log_ok "stowed fish" || log_error "fish stow failed"
 	stow zsh && log_ok "stowed zsh" || log_error "zsh stow failed"
 	[[ -f $HOME/.gitconfig ]] && rm $HOME/.gitconfig
 	stow git && log_ok "stowed git" || log_error "git stow failed"
-	stow tmux && log_ok "stowed tmux" || log_error "tmux stow failed"
-	stow langservers && log_ok "stowed langservers" || log_error "langservers stow failed"
+	[[ $PLATFORM == "macos" ]] && stow tmux && log_ok "stowed tmux" || log_error "tmux stow failed"
+	# stow langservers && log_ok "stowed langservers" || log_error "langservers stow failed" -- # presently not using this
 	stow nvim && log_ok "stowed nvim" || log_error "nvim stow failed"
 	stow keyboard && log_ok "stowed keyboard" || log_error "keyboard stow failed"
 	stow zk && log_ok "stowed zk" || log_error "zk stow failed"
@@ -262,10 +276,13 @@ function stow_away {
 
 	stow misc && log_ok "stowed misc" || log_error "misc stow failed"
 	stow weechat && log_ok "stowed weechat" || log_error "weechat stow failed"
-	cd -
+
+	popd
+
 	log_ok "DONE stowing things"
 }
 
+# TODO: handle key migration to what's in `private/ssh`
 function setup_ssh_key {
 	# REF:
 	#  1.) https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
@@ -292,6 +309,7 @@ function setup_platform {
 }
 
 function setup_asdf {
+  # TODO: handle linuxbrew install of asdf
   if (! command -v asdf &>/dev/null); then
 	  if [ -f $DOTS/asdf/$PLATFORM.sh ]; then
 	    log "setting up asdf..."
@@ -342,7 +360,10 @@ function setup_fish {
 	log "attempting to add $fish_path to /etc/shells"
 	grep -Fxq "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
 
-	log "changing your shell to user-installed version of fish: $fish_path" sudo chsh -s "$fish_path" $USER && log_ok "DONE setting up fish" unset fish_path }
+	log "changing your shell to user-installed version of fish: $fish_path" sudo chsh -s "$fish_path" $USER && log_ok "DONE setting up fish" unset fish_path
+}
+
+# TODO: handle selecting which shell to default to
 function set_shell {
 	skip_message="skipping; you can run this later via _dotup; or set it manually wth the steps in this script."
 
@@ -379,7 +400,9 @@ detect_platform
 export_dirs
 [[ $PLATFORM == "macos" ]] && setup_xcode_and_git
 clone_dotfiles_repo
-[[ $PLATFORM == "macos" ]] && install_homebrew && bundle_brews
+# [[ $PLATFORM == "macos" ]] && install_homebrew && bundle_brews
+install_homebrew
+bundle_brews
 setup_ssh_key
 stow_away
 setup_platform
@@ -391,4 +414,4 @@ setup_keyboard
 setup_python
 post_install
 
-# ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
+# vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2

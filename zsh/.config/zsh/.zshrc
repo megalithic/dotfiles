@@ -16,6 +16,8 @@ elif [[ $PLATFORM == "linux" ]]; then
 	source "$HOME/builds/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 	source "$HOME/builds/zsh-history-substring-search/zsh-history-substring-search.zsh"
 	source "$HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+	[[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 # NOTE: source order matters!

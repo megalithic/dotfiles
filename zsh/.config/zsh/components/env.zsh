@@ -77,8 +77,8 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export BROWSER="open"
   export HOMEBREW_NO_ANALYTICS=1
   export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-  export HOMEBREW_PREFIX=$BREW_PATH
   export BREW_PATH="$(/usr/local/bin/brew --prefix)"
+  export HOMEBREW_PREFIX=$BREW_PATH
   export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
   # FIXME:
@@ -104,9 +104,13 @@ if [[ "$PLATFORM" == "macos" ]]; then
 
   export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
   # export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
-  # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
-  export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
+elif [[ "$PLATFORM" == "linux" ]]; then
+  export BREW_PATH="$(/home/linuxbrew/.linuxbrew/bin/brew --prefix)"
+  export HOMEBREW_PREFIX=$BREW_PATH
 fi
+
+# REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
+export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
 
 export NVIMRUNTIME='/usr/local/share/nvim/runtime'
 export NVIM_TUI_ENABLE_TRUE_COLOR=1

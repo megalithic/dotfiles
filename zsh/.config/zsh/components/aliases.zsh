@@ -260,7 +260,7 @@ alias imix="iex -S mix"
 # -----------------------------------------------------------------------------
 
 # http://unix.stackexchange.com/a/174596
-alias dircolors="gdircolors"
+# alias dircolors="gdircolors"
 
 # IP addresses
 alias findlan="sudo nmap -sP -n 192.168.1.0/24"
