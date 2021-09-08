@@ -336,6 +336,13 @@ function setup_keyboard {
 	fi
 }
 
+function setup_neovim {
+	if [ -f $DOTS/neovim/$PLATFORM.sh ]; then
+	  log "setting up neovim..."
+	  source "$DOTS/neovim/$PLATFORM.sh" && log_ok "DONE setting up neovim" || log_error "failed to setup neovim"
+	fi
+}
+
 function setup_zsh {
 	[[ $PLATFORM == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
 
@@ -414,6 +421,7 @@ setup_platform
 # setup_fish
 setup_zsh
 setup_asdf
+setup_neovim
 setup_keyboard
 setup_python
 post_install

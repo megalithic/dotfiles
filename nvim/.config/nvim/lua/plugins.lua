@@ -47,7 +47,13 @@ return {
 	-- https://github.com/kosayoda/nvim-lightbulb
 	--
 	-- (treesitter) --
-	{ "nvim-treesitter/nvim-treesitter", vim.fn[":TSUpdate"] },
+	{
+		"nvim-treesitter/nvim-treesitter",
+		run = function()
+			vim.cmd("TSUpdate")
+		end,
+		pin = true,
+	},
 	"nvim-treesitter/nvim-treesitter-textobjects",
 	"nvim-treesitter/playground",
 	"RRethy/nvim-treesitter-textsubjects",
@@ -59,6 +65,7 @@ return {
 	-- "lewis6991/spellsitter.nvim", -- https://github.com/ful1e5/dotfiles/blob/main/nvim/.config/nvim/lua/plugins-cfg/spellsitter/init.lua
 	--
 	-- (file/document navigation) --
+	{ "junegunn/fzf", run = "./install --bin" },
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",

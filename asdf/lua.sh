@@ -32,8 +32,9 @@ compile/install.sh
 cd ../..
 ./3rd/luamake/luamake rebuild && log_ok "DONE building sumneko_lua" || log_error "failed to build sumneko_lua"
 
-# rename our build platform folder to be all lowercase if it's `macOS`; ugh.
+# rename our build platform folder to be all lowercase if it's `macOS` or `Linux`; ugh.
 [[ $PLATFORM == "macos" ]] && mv $XDG_CONFIG_HOME/lsp/sumneko_lua/bin/macOS $XDG_CONFIG_HOME/lsp/sumneko_lua/bin/$PLATFORM
+[[ $PLATFORM == "linux" ]] && mv $XDG_CONFIG_HOME/lsp/sumneko_lua/bin/Linux $XDG_CONFIG_HOME/lsp/sumneko_lua/bin/$PLATFORM
 
 unset build_path
 cd $HOME/.dotfiles

@@ -308,8 +308,8 @@ let g:netrw_liststyle = 3     " tree style listing
 let g:netrw_dirhistmax = 0    " no netrw history
 
 " Disable unnecessary internal plugins
-" let g:loaded_netrw        = 1
-" let g:loaded_netrwPlugin  = 1
+let g:loaded_netrw        = 1
+let g:loaded_netrwPlugin  = 1
 let g:loaded_2html_plugin = 1
 let g:loaded_gzip         = 1
 let g:loaded_gzip         = 1
