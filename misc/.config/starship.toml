@@ -3,6 +3,16 @@
 # REF:
 # * customs: https://github.com/starship/starship/discussions/1252
 
+[username]
+# show_always = true
+style_root = "red"
+style_user = "purple"
+format = "[$user]($style)@"
+
+[hostname]
+# ssh_only = false
+style = "yellow"
+format = "[$hostname]($style) "
 
 [cmd_duration]
 format = "[$duration]($style) "
