@@ -170,7 +170,7 @@ M.apps = {
 		distraction = true,
 		quitGuard = true,
 		rules = {
-			{ nil, 1, M.layout.leftHalf },
+			{ nil, 2, M.layout.fullScreen },
 		},
 	},
 	["com.readdle.smartemail-Mac"] = {
@@ -180,8 +180,8 @@ M.apps = {
 		context = "spark",
 		distraction = true,
 		rules = {
-			{ nil, 1, M.layout.centeredMedium },
-			{ "INBOX", 1, M.layout.rightHalf },
+			{ nil, 2, M.layout.centeredMedium },
+			{ "INBOX", 2, M.layout.fullScreen },
 		},
 	},
 	["io.canarymail.mac"] = {
@@ -191,8 +191,8 @@ M.apps = {
 		context = "canary",
 		distraction = true,
 		rules = {
-			{ nil, 1, M.layout.centeredSmall },
-			{ "All", 1, M.layout.rightHalf },
+			{ nil, 2, M.layout.centeredSmall },
+			{ "All", 2, M.layout.fullScreen },
 		},
 	},
 	["com.apple.finder"] = {

@@ -27,7 +27,7 @@ M.apply = function(event, app, log)
 
 			----------------------------------------------------------------------
 			-- close web browser "zoom launching" tabs
-			browser.killTabsByDomain("zoom.us")
+			-- browser.killTabsByDomain("zoom.us")
 
 			do
 				local zoom = hs.application.get("zoom.us")
