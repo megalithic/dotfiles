@@ -1,6 +1,10 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
+# TODO:
+# - possible ways to update and improve interactive installation here:
+#     https://github.com/LunarVim/LunarVim/blob/rolling/utils/installer/install.sh
+
 set -e
 
 trap 'clean_exit $? $LINENO' EXIT
