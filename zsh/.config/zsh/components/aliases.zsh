@@ -140,26 +140,29 @@ alias rmpaqs="packs; rm -rf paqs; cd -"
 
 # CONFIG EDITS
 # -----------------------------------------------------------------------------
-alias ez="nvim $ZDOTDIR/.zshrc"
-alias ezz="nvim $ZDOTDIR/.zshenv"
+alias ez="nvim $DOTS/zsh/.config/zsh/.zshrc"
+alias ezz="nvim $DOTS/zsh/.config/zsh/.zshenv"
+alias eza="nvim $DOTS/zsh/.config/zsh/**/aliases.zsh"
+alias ezf="nvim $DOTS/zsh/.config/zsh/**/functions.zsh"
+alias ezo="nvim $DOTS/zsh/.config/zsh/**/opts.zsh"
+alias eze="nvim $DOTS/zsh/.config/zsh/**/env.zsh"
+alias ezkb="nvim $DOTS/zsh/.config/zsh/**/keybindings.zsh"
 alias ezl="nvim $HOME/.localrc"
-alias eza="nvim $HOME/.config/zsh/**/aliases.zsh"
-alias ezf="nvim $HOME/.config/zsh/**/functions.zsh"
-alias ezo="nvim $HOME/.config/zsh/**/opts.zsh"
+
+alias ev="nvim $DOTS/nvim/.config/nvim/init.lua"
+alias evv="nvim $DOTS/nvim/.config/nvim/.vimrc"
+alias evp="nvim $DOTS/nvim/.config/nvim/lua/plugins.lua"
+alias evs="nvim $DOTS/nvim/.config/nvim/lua/settings.lua"
+alias evl="nvim $DOTS/nvim/.config/nvim/lua/lsp.lua"
+alias evm="nvim $DOTS/nvim/.config/nvim/lua/mappings.lua"
+
 alias ehs="nvim $HOME/.config/hammerspoon/config.lua"
 alias eh="nvim $HOME/.config/hammerspoon/init.lua"
 alias eg="nvim $HOME/.gitconfig"
-alias eb="nvim $HOME/.dotfiles/Brewfile"
+alias eb="nvim $DOTS/Brewfile"
 alias essh="nvim $HOME/.ssh/config"
-alias eze="nvim $HOME/.config/zsh/**/env.zsh"
-alias ezkb="nvim $HOME/.config/zsh/**/keybindings.zsh"
-alias ev="nvim $HOME/.config/nvim/init.lua"
-alias evv="nvim $HOME/.config/nvim/.vimrc"
-alias evp="nvim $HOME/.config/nvim/lua/plugins.lua"
-alias evs="nvim $HOME/.config/nvim/lua/settings.lua"
-alias evl="nvim $HOME/.config/nvim/lua/lsp.lua"
-alias evm="nvim $HOME/.config/nvim/lua/mappings.lua"
-alias ek="nvim $HOME/.config/kitty/kitty.conf"
+
+alias ek="nvim $DOTS/.config/kitty/kitty.conf"
 alias et="nvim $HOME/.tmux.conf"
 
 # FOLDERS
@@ -313,5 +316,5 @@ if [[ $PLATFORM == "linux" ]]; then
 	alias pbcopy="xclip -sel clip"
 	alias pbpaste='xclip -sel clip -o'
 	# alias fd="fdfind --hidden"
-  alias luamake=$HOME/.config/lsp/sumneko_lua/3rd/luamake/luamake
+	alias luamake=$HOME/.config/lsp/sumneko_lua/3rd/luamake/luamake
 fi
