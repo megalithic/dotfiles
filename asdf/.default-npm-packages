@@ -16,7 +16,6 @@ prettier-plugin-eex
 @fsouza/prettierd
 trash-cli
 tree-sitter-cli
-tree-sitter-markdown
 typescript
 tsd
 vim-node-rpc

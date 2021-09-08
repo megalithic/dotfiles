@@ -8,6 +8,11 @@
 
 bindkey -e # ensures we use emacs/readline keybindings
 
+# use .localrc for SUPER SECRET stuff
+if [[ -e $HOME/.localrc ]]; then
+	source "$HOME/.localrc"
+fi
+
 if [[ $PLATFORM == "macos" ]]; then
 	source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 	source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
@@ -32,10 +37,5 @@ unset file
 # prompt megalithic # load my prompt
 
 eval "$(starship init zsh)"
-
-# use .localrc for SUPER SECRET stuff
-if [[ -e $HOME/.localrc ]]; then
-	source "$HOME/.localrc"
-fi
 
 # zprof # bottom of .zshrc
