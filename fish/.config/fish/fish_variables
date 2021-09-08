@@ -11,39 +11,39 @@ SETUVAR FZF_PREVIEW_DIR_CMD:ls
 SETUVAR FZF_PREVIEW_FILE_CMD:head\x20\x2dn\x2010
 SETUVAR --export FZF_TMUX:1\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x201\x1e1\x1e1\x1e1\x1e1
 SETUVAR --export FZF_TMUX_HEIGHT:20\x25\x1e30\x25
-SETUVAR --export --path GOPATH:/home/ubuntu/go
+SETUVAR --export --path GOPATH:/Users/seth/go
 SETUVAR --export HOMEBREW_NO_AUTO_UPDATE:1
 SETUVAR --export LESS:\x2drF
 SETUVAR --export MANPAGER:nvim\x20\x2bMan\x21
 SETUVAR --export MANROFFOPT:\x2dc
 SETUVAR --export VISUAL:nvim
-SETUVAR --export ZDOTDIR:/home/ubuntu/\x2econfig/zsh
+SETUVAR --export ZDOTDIR:/Users/seth/\x2econfig/zsh
 SETUVAR __fish_initialized:3100
 SETUVAR _fish_abbr_aria2c_2D_daemon:aria2c\x20\x2dD
 SETUVAR _fish_abbr_cp:cp\x20\x2driv
 SETUVAR _fish_abbr_df:grc\x20/bin/df\x20\x2dh
-SETUVAR _fish_abbr_eb:nvim\x20/home/ubuntu/\x2edotfiles/Brewfile
-SETUVAR _fish_abbr_ef:nvim\x20/home/ubuntu/\x2econfig/fish/config\x2efish
-SETUVAR _fish_abbr_eg:nvim\x20/home/ubuntu/\x2egitconfig
-SETUVAR _fish_abbr_eh:nvim\x20/home/ubuntu/\x2econfig/hammerspoon/init\x2elua
-SETUVAR _fish_abbr_ehs:nvim\x20/home/ubuntu/\x2econfig/hammerspoon/config\x2elua
-SETUVAR _fish_abbr_ek:nvim\x20/home/ubuntu/\x2econfig/kitty/kitty\x2econf
-SETUVAR _fish_abbr_essh:nvim\x20/home/ubuntu/\x2essh/config
-SETUVAR _fish_abbr_et:nvim\x20/home/ubuntu/\x2etmux\x2econf
-SETUVAR _fish_abbr_ev:nvim\x20/home/ubuntu/\x2econfig/nvim/init\x2elua
-SETUVAR _fish_abbr_evl:nvim\x20/home/ubuntu/\x2econfig/nvim/lua/lsp\x2elua
-SETUVAR _fish_abbr_evm:nvim\x20/home/ubuntu/\x2econfig/nvim/lua/mappings\x2elua
-SETUVAR _fish_abbr_evp:nvim\x20/home/ubuntu/\x2econfig/nvim/lua/plugins\x2elua
-SETUVAR _fish_abbr_evs:nvim\x20/home/ubuntu/\x2econfig/nvim/lua/settings\x2elua
-SETUVAR _fish_abbr_evv:nvim\x20/home/ubuntu/\x2econfig/nvim/\x2evimrc
-SETUVAR _fish_abbr_ez:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2ezshrc
-SETUVAR _fish_abbr_eza:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2a\x2a/aliases\x2ezsh
-SETUVAR _fish_abbr_eze:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2a\x2a/env\x2ezsh
-SETUVAR _fish_abbr_ezf:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2a\x2a/functions\x2ezsh
-SETUVAR _fish_abbr_ezkb:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2a\x2a/keybindings\x2ezsh
-SETUVAR _fish_abbr_ezl:nvim\x20/home/ubuntu/\x2elocalrc
-SETUVAR _fish_abbr_ezo:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2a\x2a/opts\x2ezsh
-SETUVAR _fish_abbr_ezz:nvim\x20/home/ubuntu/\x2econfig/zsh/\x2ezshenv
+SETUVAR _fish_abbr_eb:nvim\x20/Users/seth/\x2edotfiles/Brewfile
+SETUVAR _fish_abbr_ef:nvim\x20/Users/seth/\x2econfig/fish/config\x2efish
+SETUVAR _fish_abbr_eg:nvim\x20/Users/seth/\x2egitconfig
+SETUVAR _fish_abbr_eh:nvim\x20/Users/seth/\x2econfig/hammerspoon/init\x2elua
+SETUVAR _fish_abbr_ehs:nvim\x20/Users/seth/\x2econfig/hammerspoon/config\x2elua
+SETUVAR _fish_abbr_ek:nvim\x20/Users/seth/\x2econfig/kitty/kitty\x2econf
+SETUVAR _fish_abbr_essh:nvim\x20/Users/seth/\x2essh/config
+SETUVAR _fish_abbr_et:nvim\x20/Users/seth/\x2etmux\x2econf
+SETUVAR _fish_abbr_ev:nvim\x20/Users/seth/\x2econfig/nvim/init\x2elua
+SETUVAR _fish_abbr_evl:nvim\x20/Users/seth/\x2econfig/nvim/lua/lsp\x2elua
+SETUVAR _fish_abbr_evm:nvim\x20/Users/seth/\x2econfig/nvim/lua/mappings\x2elua
+SETUVAR _fish_abbr_evp:nvim\x20/Users/seth/\x2econfig/nvim/lua/plugins\x2elua
+SETUVAR _fish_abbr_evs:nvim\x20/Users/seth/\x2econfig/nvim/lua/settings\x2elua
+SETUVAR _fish_abbr_evv:nvim\x20/Users/seth/\x2econfig/nvim/\x2evimrc
+SETUVAR _fish_abbr_ez:nvim\x20/Users/seth/\x2econfig/zsh/\x2ezshrc
+SETUVAR _fish_abbr_eza:nvim\x20/Users/seth/\x2econfig/zsh/\x2a\x2a/aliases\x2ezsh
+SETUVAR _fish_abbr_eze:nvim\x20/Users/seth/\x2econfig/zsh/\x2a\x2a/env\x2ezsh
+SETUVAR _fish_abbr_ezf:nvim\x20/Users/seth/\x2econfig/zsh/\x2a\x2a/functions\x2ezsh
+SETUVAR _fish_abbr_ezkb:nvim\x20/Users/seth/\x2econfig/zsh/\x2a\x2a/keybindings\x2ezsh
+SETUVAR _fish_abbr_ezl:nvim\x20/Users/seth/\x2elocalrc
+SETUVAR _fish_abbr_ezo:nvim\x20/Users/seth/\x2econfig/zsh/\x2a\x2a/opts\x2ezsh
+SETUVAR _fish_abbr_ezz:nvim\x20/Users/seth/\x2econfig/zsh/\x2ezshenv
 SETUVAR _fish_abbr_fda:fd\x20\x2dIH
 SETUVAR _fish_abbr_g:hub
 SETUVAR _fish_abbr_git:hub
@@ -110,7 +110,7 @@ SETUVAR --export fish_color_selection:orange
 SETUVAR --export fish_color_status:red
 SETUVAR --export fish_color_user:\x1d
 SETUVAR --export fish_color_valid_path:\x2d\x2dunderline
-SETUVAR fish_config_changed:1631051182
+SETUVAR fish_config_changed:1630441403
 SETUVAR fish_emoji_width:2
 SETUVAR fish_greeting:
 SETUVAR fish_key_bindings:fish_default_key_bindings
@@ -122,7 +122,7 @@ SETUVAR fish_pager_color_selected_background:bryellow
 SETUVAR fish_pager_color_selected_completion:\x1d
 SETUVAR fish_pager_color_selected_description:brblack
 SETUVAR fish_pager_color_selected_prefix:\x1d
-SETUVAR --export fish_user_paths:/usr/local/sbin\x1e/home/ubuntu/\x2elocal/bin
+SETUVAR --export fish_user_paths:/Users/seth/\x2ego\x1e/Users/seth/\x2ego/bin\x1e/usr/local/sbin\x1e/usr/local/opt/sqlite/bin\x1e/Users/seth/\x2ecargo/bin
 SETUVAR pure_begin_prompt_with_current_directory:true
 SETUVAR pure_check_for_new_release:false
 SETUVAR pure_color_at_sign:pure_color_mute

@@ -57,3 +57,6 @@ nvim/**/nvim-python-debug.log_py3_rplugin
 zsh/.config/zsh/**/*.zwc
 fish_variable
 keyboard/**/automatic_backups/*.json
+fish/.config/fish/fish_variables
+fish/.config/fish/functions/apropos.fish
+fish/.config/fish/functions/whatis.fish

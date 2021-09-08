@@ -1,3 +1,3 @@
-function whatis --description 'alias whatis MANPATH=/home/ubuntu/.cache/fish command whatis'
-  MANPATH=/home/ubuntu/.cache/fish command whatis $argv; 
+function whatis --description 'alias whatis MANPATH=/Users/seth/.cache/fish command whatis'
+  MANPATH=/Users/seth/.cache/fish command whatis $argv; 
 end
