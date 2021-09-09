@@ -46,8 +46,8 @@ set -g status-left "#[fg=#fffacd]\uf490 #S #[fg=colour255]⋮ " #
 set -g status-left-length 100
 
 # - windows - 旅
-setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W #(tmux-ssh)"
-setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#323d43,bold]● }#I:#W #(tmux-ssh)"
+setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
+setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bg=#323d43,bold]● }#I:#W "
 # -- #{?#(tmux-ssh),(ssh) ,}
  # -- #(echo $SSH_CONNECTION &>/dev/null && 'ssh')
 setw -g window-status-activity-style none
