@@ -13,8 +13,6 @@ if [[ -e $HOME/.localrc ]]; then
 	source "$HOME/.localrc"
 fi
 
-eval "$(starship init zsh)"
-
 if [[ $PLATFORM == "macos" ]]; then
 	source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 	source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
@@ -33,6 +31,9 @@ for file in $ZDOTDIR/components/{opts,asdf,fzf,aliases,functions,colors,keybindi
 	[ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
+
+eval "$(zoxide init zsh)"
+eval "$(starship init zsh)"
 
 # autoload -U promptinit
 # promptinit        # load prompt themes

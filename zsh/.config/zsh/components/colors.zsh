@@ -25,7 +25,7 @@ export CLICOLOR=1
 
 # -------- do not want here right now; breaking stuff
 # # color stuffs
-# (command -v gdircolors &> /dev/null) && eval `gdircolors $HOME/.dircolors`
+(command -v gdircolors &>/dev/null) && eval `gdircolors $HOME/.dircolors`
 
 # Fallback to built in ls colors
 # zstyle ':completion:*' list-colors ''
