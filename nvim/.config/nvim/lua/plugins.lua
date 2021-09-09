@@ -34,6 +34,7 @@ return {
 	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-emoji",
+	"megalithic/cmp-gitmoji",
 	"f3fora/cmp-spell",
 	"L3MON4D3/LuaSnip",
 	"rafamadriz/friendly-snippets",

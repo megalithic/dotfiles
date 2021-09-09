@@ -48,9 +48,9 @@ M.apply = function(event, app, log)
 					hs.layout.apply(layouts)
 					kitty:setFrontmost(true)
 
-					hs.timer.doAfter(0.5, function()
-						hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
-					end)
+					-- hs.timer.doAfter(0.5, function()
+					-- 	hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
+					-- end)
 				end)
 			end
 		end

@@ -79,6 +79,8 @@ brew "heroku"
 brew "hub"
 brew "highlight"
 brew "htop"
+brew "httpie"
+brew "hunspell"
 brew "ical-buddy"
 brew "jq"
 brew 'lazydocker'
