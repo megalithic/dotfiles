@@ -99,7 +99,7 @@ augroup("filetypes", {
 	},
 	{
 		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { "Brewfile", "Brewfile.mas" },
+		targets = { "Brewfile", "Brewfile.mas", "Brewfile.cask" },
 		command = "set filetype=ruby",
 	},
 	{

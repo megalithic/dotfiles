@@ -45,7 +45,7 @@ do -- [nvim options/ui/appearance] --
 	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 	set.timeoutlen = 300
-	set.shell = "/usr/local/bin/zsh --login"
+	-- set.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
 	-- set.concealcursor = "n" -- Hide * markup for bold and italic
 end
 

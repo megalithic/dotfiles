@@ -194,50 +194,69 @@ function clone_dotfiles_repo {
 }
 
 function install_homebrew {
+  linux_user="ubuntu"
 	if [[ $PLATFORM == "linux" ]]; then
-	  linuxbrew_path="/home/linuxbrew/.linuxbrew"
-	  [[ ! -d $linuxbrew_path ]] && mkdir -p "$linuxbrew_path"
-    # chown ubuntu:ubuntu /home/linuxbrew/.linuxbrew
-    # gosu ubuntu /bin/bash -c "NONINTERACTIVE=1 USER=ubuntu $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.bashrc
-    # echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.zshrc
-    # chown ubuntu:ubuntu /home/ubuntu/.bashrc
-    # chown ubuntu:ubuntu /home/ubuntu/.zshrc
-	elif
-	fi
+		linuxbrew_path="/home/linuxbrew/.linuxbrew"
+		[[ ! -d $linuxbrew_path ]] && mkdir -p "$linuxbrew_path"
+		if [[$(whoami) == $linux_user]]; then
+		  chown ubuntu:ubuntu /home/linuxbrew/.linuxbrew
+		fi
+
+		# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.bashrc
+		# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.zshrc
+		# chown ubuntu:ubuntu /home/ubuntu/.bashrc
+		# chown ubuntu:ubuntu /home/ubuntu/.zshrc
+
 	if (command -v brew &>/dev/null); then
 		log "brew already installed; skipping."
 	else
-		log_warn "brew not found; installing Homebrew..."
-		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+		log_warn "brew not found; installing homebrew..."
+		if [[$(whoami) == $linux_user]]; then
+	    if (command -v gosu &>/dev/null); then
+		    gosu ubuntu /bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	    else
+		    /bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	    fi
+    else
+		  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+
 		log_ok "DONE installing homebrew"
 	fi
 }
 
-# TODO: handle brewing macos/linux/etc
 function bundle_brews {
-	log "brewing things from our brewfile..."
-	#sudo xcodebuild -license accept
+	log "brewing things from our Brewfile..."
 
-	export HOMEBREW_CASK_OPTS="--appdir=/Applications"
+	brew_bin=/usr/local/bin/brew
+	[[ $PLATFORM == "linux" ]] && brew_bin=/home/linuxbrew/.linuxbrew/bin/brew
 
-	/usr/local/bin/brew bundle --file="$DOTS/Brewfile" && log_ok "DONE bundling casks and brews bundles" || {
+	($brew_bin bundle --file="$DOTS/Brewfile") && log_ok "DONE bundling brews" || {
 		log_error 'brew bundling failed'
 		exit 1
 	}
 
-	# if we're not signed in, let's open the App Store
-	if [[ $(mas account | grep "Not signed in") ]]; then
-		sleep 1
-		open -a "App Store"
-		log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."
-		read -k1 -s
-	fi
+	if [[ $PLATFORM == "macos" ]]; then
+		export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
-	/usr/local/bin/brew bundle --file="$DOTS/Brewfile.mas" && log_ok "DONE bundling mas bundles" || {
-		log_error 'brew bundling of mas brewfile failed'
-		exit 1
-	}
+		# if we're not signed in, let's open the App Store
+		if [[ $(mas account | grep "Not signed in") ]]; then
+			sleep 1
+			open -a "App Store"
+			log_warn "in order to install mas apps, you must manually signin to the Apple App Store (AAS); press any key to continue."
+			read -k1 -s
+		fi
+
+		($brew_bin bundle --file="$DOTS/Brewfile.cask") && log_ok "DONE bundling cask bundles" || {
+			log_error 'brew bundling of cask brewfile failed'
+			exit 1
+		}
+
+		($brew_bin bundle --file="$DOTS/Brewfile.mas") && log_ok "DONE bundling mas bundles" || {
+			log_error 'brew bundling of mas brewfile failed'
+			exit 1
+		}
+	fi
 
 	log_ok "DONE bundling brews"
 }
@@ -248,8 +267,8 @@ function _install_stow {
 	else
 		log_warn "stow not found; installing stow..."
 		sudo apt-get install stow && log_ok "DONE installing stow" || {
-		  log_error "failed to install stow"
-		  exit 1
+			log_error "failed to install stow"
+			exit 1
 		}
 	fi
 }
@@ -307,39 +326,39 @@ function setup_ssh_key {
 
 function setup_platform {
 	if [ -f $DOTS/platform/$PLATFORM.sh ]; then
-	  log "running platform-specific ($PLATFORM) scripts..."
-	  source "$DOTS/platform/$PLATFORM.sh" && log_ok "DONE setting up platform" || log_error "failed to setup platform-specific scripts"
+		log "running platform-specific ($PLATFORM) scripts..."
+		source "$DOTS/platform/$PLATFORM.sh" && log_ok "DONE setting up platform" || log_error "failed to setup platform-specific scripts"
 	fi
 }
 
 function setup_asdf {
-  # TODO: handle linuxbrew install of asdf
-  if (! command -v asdf &>/dev/null); then
-	  if [ -f $DOTS/asdf/$PLATFORM.sh ]; then
-	    log "setting up asdf..."
-	    source "$DOTS/asdf/$PLATFORM.sh" && log_ok "DONE setting up asdf" || log_error "failed to setup asdf"
-	  fi
-  fi
+	# TODO: handle linuxbrew install of asdf
+	if (! command -v asdf &>/dev/null); then
+		if [ -f $DOTS/asdf/$PLATFORM.sh ]; then
+			log "setting up asdf..."
+			source "$DOTS/asdf/$PLATFORM.sh" && log_ok "DONE setting up asdf" || log_error "failed to setup asdf"
+		fi
+	fi
 }
 
 function setup_python {
 	if [ -f $DOTS/python/$PLATFORM.sh ]; then
-	  log "setting up python..."
-	  source "$DOTS/python/$PLATFORM.sh" && log_ok "DONE setting up python" || log_error "failed to setup python"
+		log "setting up python..."
+		source "$DOTS/python/$PLATFORM.sh" && log_ok "DONE setting up python" || log_error "failed to setup python"
 	fi
 }
 
 function setup_keyboard {
 	if [ -f $DOTS/keyboard/$PLATFORM.sh ]; then
-	  log "setting up keyboard..."
-	  source "$DOTS/keyboard/$PLATFORM.sh" && log_ok "DONE setting up keyboard" || log_error "failed to setup keyboard"
+		log "setting up keyboard..."
+		source "$DOTS/keyboard/$PLATFORM.sh" && log_ok "DONE setting up keyboard" || log_error "failed to setup keyboard"
 	fi
 }
 
 function setup_neovim {
 	if [ -f $DOTS/neovim/$PLATFORM.sh ]; then
-	  log "setting up neovim..."
-	  source "$DOTS/neovim/$PLATFORM.sh" && log_ok "DONE setting up neovim" || log_error "failed to setup neovim"
+		log "setting up neovim..."
+		source "$DOTS/neovim/$PLATFORM.sh" && log_ok "DONE setting up neovim" || log_error "failed to setup neovim"
 	fi
 }
 
@@ -393,9 +412,8 @@ function set_shell {
 function post_install {
 	if [[ $PLATFORM == "macos" ]]; then
 		log "post-brewing operations.."
-		$(brew --prefix)/opt/fzf/install # <- fzf
+		$(brew --prefix)/opt/fzf/install
 		initdb -D /usr/local/var/postgres/
-
 		log_ok "DONE"
 	fi
 
@@ -411,7 +429,6 @@ detect_platform
 export_dirs
 [[ $PLATFORM == "macos" ]] && setup_xcode_and_git
 clone_dotfiles_repo
-# [[ $PLATFORM == "macos" ]] && install_homebrew && bundle_brews
 install_homebrew
 bundle_brews
 setup_ssh_key
@@ -420,8 +437,8 @@ setup_platform
 # set_shell
 # setup_fish
 setup_zsh
-setup_asdf
 setup_neovim
+setup_asdf
 setup_keyboard
 setup_python
 post_install

@@ -1,14 +1,9 @@
 #!/usr/bin/env zsh
 
-cask_args appdir: "/Applications"
-
 # -- taps --
 
 tap "homebrew/bundle"
 tap "homebrew/services"
-tap "homebrew/cask-versions"
-tap "homebrew/cask"
-tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 tap "caius/jo"
 tap "simeji/jid"
@@ -27,16 +22,13 @@ tap "mutagen-io/mutagen"
 # brew tap osx-cross/avr; brew tap PX4/homebrew-px4; brew install avr-gcc@8; brew link --force avr-gcc@8; brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk; brew cask install qmk-toolbox;
 tap "osx-cross/avr"
 tap "PX4/homebrew-px4"
-tap "homebrew/cask-drivers"
 # NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
 brew "avr-gcc@8", link: true
 brew "dfu-programmer"
 brew "dfu-util"
 brew "gcc-arm-none-eabi"
 brew "avrdude"
-cask "qmk-toolbox"
 brew "qmk"
-
 
 # -- cli --
 
@@ -159,62 +151,3 @@ brew "zsh-completions"
 brew "zsh-lovers"
 brew "zsh-syntax-highlighting"
 brew "zsh-history-substring-search"
-
-# - fonts
-cask "font-jetbrains-mono"
-cask "font-jetbrains-mono-nerd-font"
-cask "font-ia-writer-quattro"
-
-# - gui
-cask "1password"
-cask "1password-cli"
-cask "alfred"
-cask "backblaze"
-cask "balenaetcher"
-cask "bartender"
-cask "bettertouchtool"
-# cask "box-drive"
-cask "brave-browser"
-cask "cloudflare-warp"
-cask "colorsnapper"
-# cask "caldigit-thunderbolt-charging"
-# cask "caldigit-docking-utility"
-cask "contexts"
-cask "controlplane"
-cask "copyq" # https://github.com/hluk/CopyQ
-cask "cyberduck"
-cask "dash"
-# cask "docker-edge"
-cask "dropbox"
-# cask "discord"
-cask "expressvpn"
-cask "git-credential-manager-core"
-cask "hazel"
-cask "hammerspoon"
-cask "intel-power-gadget" # requires restart with security allow (intel things)
-cask "insomnia"
-cask "istat-menus"
-cask "itsycal"
-cask "kap"
-cask "karabiner-elements"
-cask "kitty"
-cask "marta"
-cask "micro-snitch"
-#cask "little-snitch4" # requires kernel extension, see notes from install message
-cask "ngrok"
-cask "obsidian"
-# cask "oracle-jdk"
-cask "postico"
-cask "signal"
-cask "slack"
-cask "spotify"
-cask "thingsmacsandboxhelper"
-# cask "vagrant"
-cask "the-unarchiver"
-# cask "usb-overdrive" # causes issues with QMK keyboards
-# cask "virtualbox" # requires restart with security allow (oracle things)
-# cask "witch" # using contexts in stead
-cask "yubico-authenticator"
-cask "yubico-yubikey-manager"
-cask "yubico-yubikey-piv-manager"
-cask "zoom"

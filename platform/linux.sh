@@ -15,12 +15,10 @@ if [ -f "/etc/debian_version" ]; then
 	# sudo apt-get install -y linux-headers-$(uname -r)
 	sudo apt-get -y install build-essential unzip amazon-ecr-credential-helper gosu fontconfig python3-pip libnss3-tools autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip bat xclip lib32readline-dev libreadline-dev dirmngr gpg curl fd-find fish zsh exa silversearcher-ag shellcheck ripgrep libgsl-dev && log_ok "DONE installing linux deps" || log_error "failed to install linux deps"
 
-	if (command -v fzf &>/dev/null); then
-		log "starship prompt already installed; skipping."
-	else
-		log_warn "starship prompt not found; installing.."
-		sh -c "$(curl -fsSL https://starship.rs/install.sh)" && log_ok "DONE installing starship" || log_error "failed to install starship"
-	fi
+	# NOTE: installing this via linuxbrew now..
+	# --
+	# log "starship prompt not found; installing.."
+	# l -fsSL https://starship.rs/install.sh)" && log_ok "DONE installing starship" || log_error "failed to install starship"
 
 	# log "installing gitstatus for zsh"
 	# git clone --depth=1 https://github.com/romkatv/gitstatus.git "$builds_path/gitstatus"
@@ -30,13 +28,15 @@ if [ -f "/etc/debian_version" ]; then
 	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$builds_path/zsh-syntax-highlighting"
 	git clone https://github.com/zsh-users/zsh-history-substring-search "$builds_path/zsh-history-substring-search"
 
-	if (command -v fzf &>/dev/null); then
-		log "fzf already installed; skipping."
-	else
-		log_warn "fzf not found; installing.."
-		git clone --depth 1 https://github.com/junegunn/fzf.git "$builds_path/fzf"
-		$builds_path/fzf/install
-	fi
+	# NOTE: installing this via linuxbrew now..
+	# --
+	# if (command -v fzf &>/dev/null); then
+	# 	log "fzf already installed; skipping."
+	# else
+	# 	log_warn "fzf not found; installing.."
+	# 	git clone --depth 1 https://github.com/junegunn/fzf.git "$builds_path/fzf"
+	# 	$builds_path/fzf/install
+	# fi
 
 	log "installing neovim nightly"
 	# REF: https://dev.to/creativenull/installing-neovim-nightly-alongside-stable-10d0
@@ -57,9 +57,5 @@ if [ -f "/etc/debian_version" ]; then
 	esac
 
 	make CMAKE_BUILD_TYPE=Release && log_ok "DONE building and installing neovim nightly" || log_error "failed to build and install neovim nightly"
-
-	#   grep -Fxq "$zsh_path" /etc/shells || bash -c "echo -c $zsh_path >> ~/.bashrc"
-	#   echo -e '\nalias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"' >> ~/.bashrc
-	#   echo -e '\nalias fd="fdfind"' >> ~/.bashrc
 	cd - || exit
 fi
