@@ -2,7 +2,7 @@ nodejs lts
 elixir 1.12.2-otp-24
 elm 0.19.1
 lua 5.1.5
-ruby 2.7.1
+ruby 2.7.4
 rust stable 1.48.0
 # python 3.9.0 2.7.17
 golang 1.16.2

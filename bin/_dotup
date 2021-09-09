@@ -198,7 +198,7 @@ function install_homebrew {
 	if [[ $PLATFORM == "linux" ]]; then
 		linuxbrew_path="/home/linuxbrew/.linuxbrew"
 		[[ ! -d $linuxbrew_path ]] && mkdir -p "$linuxbrew_path"
-		if [[$(whoami) == $linux_user]]; then
+		if [[ $(whoami) == $linux_user ]]; then
 		  chown ubuntu:ubuntu /home/linuxbrew/.linuxbrew
 		fi
 
@@ -211,7 +211,7 @@ function install_homebrew {
 		log "brew already installed; skipping."
 	else
 		log_warn "brew not found; installing homebrew..."
-		if [[$(whoami) == $linux_user]]; then
+		if [[ $(whoami) == $linux_user ]]; then
 	    if (command -v gosu &>/dev/null); then
 		    gosu ubuntu /bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 	    else
