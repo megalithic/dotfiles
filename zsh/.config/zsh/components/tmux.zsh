@@ -32,3 +32,20 @@ if (env | rg starship &>/dev/null); then
 	}
 	starship_precmd_user_func="indicate_ssh_in_tmux"
 fi
+
+# DANGER!
+#
+# This is something that may destroy all the things..
+#
+# TODO: need to have a way to "undo" the window-option setting and put the old
+# title back.. 🤦
+#
+ssh() {
+	if [ -n "$TMUX" ]; then
+		tmux -2u rename-window "$(echo $* | rev | cut -d '@' -f1 | rev)"
+		command ssh "$@"
+		tmux -2u set-window-option automatic-rename "on" >/dev/null
+	else
+		command ssh "$@"
+	fi
+}
