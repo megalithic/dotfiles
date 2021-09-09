@@ -269,6 +269,7 @@ return lush(function()
 		LspReferenceText({ CurrentWord }),
 		LspReferenceRead({ CurrentWord }),
 		LspReferenceWrite({ CurrentWord }),
+		LspCodeLens({ InfoFloat }), -- Used to color the virtual text of the codelens,
 		TermCursor({ Cursor }),
 		healthError({ Red }),
 		healthSuccess({ Green }),

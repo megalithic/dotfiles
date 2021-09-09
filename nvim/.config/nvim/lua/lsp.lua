@@ -583,7 +583,9 @@ do -- lua
 					},
 				},
 				workspace = {
-					preloadFileSize = 500,
+					-- preloadFileSize = 500,
+					maxPreload = 100000,
+					preloadFileSize = 10000,
 					-- Make the server aware of Neovim runtime files
 					library = {
 						-- [api.nvim_get_runtime_file("", true)],
