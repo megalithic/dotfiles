@@ -6,7 +6,7 @@ osascript -e 'tell application "System Preferences" to quit'
 
 BACKUP_FILE="${HOME}/Desktop/defaults-backup.$(date '+%Y%m%d_%H%M%S').plist"
 log "backing up current macOS X defaults to: ${BACKUP_FILE}"
-defaults read > "$BACKUP_FILE"
+defaults read >"$BACKUP_FILE"
 
 set -x
 
@@ -29,14 +29,18 @@ osascript -e 'tell application "System Preferences" to quit'
 
 # handy folders we always use/seem to need
 if [ ! -d "$HOME/code" ]; then
-  mkdir -p $HOME/code
+	mkdir -p $HOME/code
 fi
 if [ ! -d "$HOME/tmp" ]; then
-  mkdir -p $HOME/tmp
+	mkdir -p $HOME/tmp
 fi
 
 # Keep-alive: update existing `sudo` time stamp until `osx/osx.sh` has finished
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+while true; do
+	sudo -n true
+	sleep 60
+	kill -0 "$$" || exit
+done 2>/dev/null &
 
 # Set standby delay to 24 hours (default is 1 hour)
 # sudo pmset -a standbydelay 86400
@@ -125,7 +129,6 @@ defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -int 1
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 2
 defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -int 2
 
-
 # Open App from 3rd-party developer
 defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool NO
 
@@ -204,7 +207,6 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 defaults delete com.apple.dock persistent-apps
 defaults delete com.apple.dock persistent-others
 
-
 ##
 # Finder
 ##
@@ -250,7 +252,6 @@ chflags nohidden ~/Library
 
 # Show the /Volumes folder
 sudo chflags nohidden /Volumes
-
 
 ##
 # Safari
@@ -305,7 +306,6 @@ defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebK
 # Update extensions automatically
 defaults write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true
 
-
 ##
 # Terminal & iTerm
 ##
@@ -323,7 +323,6 @@ defaults write com.apple.Terminal ShowLineMarks -int 0
 # Don’t display the annoying prompt when quitting iTerm
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 
-
 ##
 # Time Machine
 ##
@@ -334,7 +333,6 @@ defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 # Disable local Time Machine backups
 # NOTE: Apple removed the ability to set `disablelocal`. Thanks Apple.
 # hash tmutil &> /dev/null && sudo tmutil disablelocal
-
 
 ##
 # Activity Monitor
@@ -353,7 +351,6 @@ defaults write com.apple.ActivityMonitor ShowCategory -int 0
 defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
-
 ##
 # Text Edit
 ##
@@ -364,7 +361,6 @@ defaults write com.apple.TextEdit RichText -int 0
 defaults write com.apple.TextEdit PlainTextEncoding -int 4
 defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 
-
 ##
 # Disk Utility
 ##
@@ -372,7 +368,6 @@ defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 # Enable the debug menu in Disk Utility
 defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 defaults write com.apple.DiskUtility advanced-image-options -bool true
-
 
 ##
 # App Store
@@ -412,7 +407,6 @@ defaults write com.apple.commerce AutoUpdateRestartRequired -bool true
 # Prevent Photos from opening automatically when devices are plugged in
 defaults -currentHost write com.apple.ImageCapture disableHotPlug -bool true
 
-
 ##
 # Google Chrome
 ##
@@ -429,7 +423,6 @@ defaults write com.google.Chrome DisablePrintPreview -bool true
 # Expand the print dialog by default
 defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true
 
-
 set +x
 
 ##
@@ -437,31 +430,31 @@ set +x
 ##
 
 dock_apps_to_remove=(
- "Launchpad"
- "Mail"
- "Contacts"
- "Notes"
- "Reminders"
- "Maps"
- "Photos"
- "FaceTime"
- "iTunes"
- "iBooks"
- "App Store"
- "System Preferences"
- "Calendar"
- "Safari"
+	"Launchpad"
+	"Mail"
+	"Contacts"
+	"Notes"
+	"Reminders"
+	"Maps"
+	"Photos"
+	"FaceTime"
+	"iTunes"
+	"iBooks"
+	"App Store"
+	"System Preferences"
+	"Calendar"
+	"Safari"
 )
 for app in "${dock_apps_to_remove[@]}"; do
-    log "removing \"${app}\" from the dock."
+	log "removing \"${app}\" from the dock."
 
-    # remove apps from dock
-    # osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
-    dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
+	# remove apps from dock
+	# osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null
+	dockutil --remove "${app}" && log_ok "done" || log_error "unable to remove ${app} from the dock"
 done
 
 function app_is_running {
-  osascript -so -e "application \"$1\" is running"
+	osascript -so -e "application \"$1\" is running"
 }
 
 # function ask {
@@ -481,42 +474,41 @@ function app_is_running {
 # }
 
 apps_to_restart=(
-  "Activity Monitor"
-  "Address Book"
-  "Calendar"
-  "cfprefsd"
-  "Contacts"
-  "Dock"
-  "Finder"
-  "Google Chrome"
-  "Photos"
-  "Safari"
-  "SystemUIServer"
+	"Activity Monitor"
+	"Address Book"
+	"Calendar"
+	"cfprefsd"
+	"Contacts"
+	"Dock"
+	"Finder"
+	"Google Chrome"
+	"Photos"
+	"Safari"
+	"SystemUIServer"
 )
 
 for app in "${apps_to_restart[@]}"; do
-  if [[ "$(app_is_running "${app}")" == "true" ]]; then
-    log "\"${app}\" needs to be restarted; proceeding to quit"
-    killall "${app}" &> /dev/null && log_ok "DONE"
-  fi
+	if [[ "$(app_is_running "${app}")" == "true" ]]; then
+		log "\"${app}\" needs to be restarted; proceeding to quit"
+		killall "${app}" &>/dev/null && log_ok "DONE"
+	fi
 done
 
 apps_to_launch=(
-"1Password 7"
-"Alfred 4"
-"Bartender 3"
-"BetterTouchTool"
-"Brave Browser"
-# "Contexts"
-"Docker"
-# "Dropbox"
-"ExpressVPN"
-"Fantastical"
-"Hammerspoon"
-"iStat Menus"
-"Karabiner-Elements"
-"kitty"
-"Witch"
+	"1Password 7"
+	"Alfred 4"
+	"Bartender 4"
+	"BetterTouchTool"
+	"Brave Browser"
+	"Contexts"
+	# "Docker"
+	# "Dropbox"
+	# "ExpressVPN"
+	"Fantastical"
+	"Hammerspoon"
+	# "iStat Menus"
+	"Karabiner-Elements"
+	"kitty"
 )
 # for app in "${apps_to_launch[@]}"; do
 #   if [[ ! "$(app_is_running "${app}")" == "true" ]]; then
@@ -527,25 +519,24 @@ apps_to_launch=(
 # done
 
 apps_to_startup=(
-"1Password 7"
-"Alfred 4"
-"Bartender 3"
-"BetterTouchTool"
-# "Contexts"
-"Docker"
-# "Dropbox"
-"Fantastical"
-"Hammerspoon"
-# "Hazel"
-"iStat Menus"
-"Karabiner-Elements"
-"Witch"
+	"1Password 7"
+	"Alfred 4"
+	"Bartender 4"
+	"BetterTouchTool"
+	"Contexts"
+	# "Docker"
+	# "Dropbox"
+	"Fantastical"
+	"Hammerspoon"
+	# "Hazel"
+	# "iStat Menus"
+	"Karabiner-Elements"
 )
 for app in "${apps_to_startup[@]}"; do
-    log "setting to \"${app}\" to launch at startup."
+	log "setting to \"${app}\" to launch at startup."
 
-    # Enable apps at startup
-    osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' > /dev/null && log_ok "DONE"
+	# Enable apps at startup
+	osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/${app}.app", hidden:true}' >/dev/null && log_ok "DONE"
 done
 
 # Set brave as default browser!

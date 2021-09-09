@@ -16,15 +16,19 @@
       "Drafts": {
         "id": "1435957248",
         "version": "27.0"
+      },
+      "Battery Indicator": {
+        "id": "1206020918",
+        "version": "2.10.0"
       }
     }
   },
   "system": {
     "macos": {
       "big_sur": {
-        "HOMEBREW_VERSION": "3.2.10",
+        "HOMEBREW_VERSION": "3.2.11",
         "HOMEBREW_PREFIX": "/usr/local",
-        "Homebrew/homebrew-core": "9ad240f862fb8230af612bd4997d2d1d16ab0e6a",
+        "Homebrew/homebrew-core": "b88b6b36cb475c58956ed0825252a43a4d809359",
         "CLT": "12.5.1.0.1.1623191612",
         "Xcode": "12.5",
         "macOS": "11.5.2"

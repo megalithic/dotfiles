@@ -303,17 +303,12 @@ local function on_attach(client, bufnr)
 		bufmap("<leader>la", "lua vim.lsp.buf.code_action()")
 	end
 
-	if client.resolved_capabilities.code_lens then
-		bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
-	end
-
 	--- # diagnostics navigation mappings
 	bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
 	bufmap("]d", "lua vim.lsp.diagnostic.goto_next()")
 
 	--- # misc mappings
 	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
-	-- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
 	bufmap(
 		"<leader>ld",
 		"lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
@@ -323,20 +318,21 @@ local function on_attach(client, bufnr)
 	bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
 	bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
 
+	if client.resolved_capabilities.code_lens then
+		bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
+	end
+
 	--- # trouble mappings
 	map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
-	--- # auto-commands
-	au("CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({ focusable=false })")
+	--- # autocommands/autocmds
+	au("CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({focusable=false})")
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	if client.resolved_capabilities.document_formatting then
 		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
 	end
-	if client.resolved_capabilities.document_highlight then
-		au("CursorHold,CursorHoldI <buffer> lua vim.lsp.buf.document_highlight()")
-	end
 	if client.resolved_capabilities.code_lens then
-		au([[CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()]])
+		au("CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()")
 	end
 
 	--- # commands
@@ -356,12 +352,12 @@ local function on_attach(client, bufnr)
 		bufmap("<CR>", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<CR>", "v")
 		bufmap("<CR>", "lua vim.lsp.buf.definition()")
 		bufmap("K", "lua vim.lsp.buf.hover()")
+
 		-- REF: special thanks @mhanberg ->
 		-- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
 	end
 
 	if client.name == "jsonls" then
-		-- so jsonls doesn't compete with efm or null-ls
 		client.resolved_capabilities.document_formatting = false
 	end
 
@@ -431,8 +427,8 @@ local servers = {
 	"rust_analyzer",
 	"vimls",
 	"pyright",
-	"tailwindcss",
-	"dockerfile",
+	-- "tailwindcss",
+	-- "dockerfile",
 }
 for _, ls in ipairs(servers) do
 	-- handle language servers not installed/found; TODO: should probably handle

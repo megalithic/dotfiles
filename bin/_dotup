@@ -194,32 +194,33 @@ function clone_dotfiles_repo {
 }
 
 function install_homebrew {
-  linux_user="ubuntu"
+	linux_user="ubuntu"
 	if [[ $PLATFORM == "linux" ]]; then
 		linuxbrew_path="/home/linuxbrew/.linuxbrew"
 		[[ ! -d $linuxbrew_path ]] && mkdir -p "$linuxbrew_path"
-		if [[ $(whoami) == $linux_user ]]; then
-		  chown ubuntu:ubuntu /home/linuxbrew/.linuxbrew
+		if [[ $(whoami) == "$linux_user" ]]; then
+			chown ubuntu:ubuntu /home/linuxbrew/.linuxbrew
 		fi
+	fi
 
-		# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.bashrc
-		# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.zshrc
-		# chown ubuntu:ubuntu /home/ubuntu/.bashrc
-		# chown ubuntu:ubuntu /home/ubuntu/.zshrc
+	# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.bashrc
+	# echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/ubuntu/.zshrc
+	# chown ubuntu:ubuntu /home/ubuntu/.bashrc
+	# chown ubuntu:ubuntu /home/ubuntu/.zshrc
 
 	if (command -v brew &>/dev/null); then
 		log "brew already installed; skipping."
 	else
 		log_warn "brew not found; installing homebrew..."
-		if [[ $(whoami) == $linux_user ]]; then
-	    if (command -v gosu &>/dev/null); then
-		    gosu ubuntu /bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-	    else
-		    /bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-	    fi
-    else
-		  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
+		if [[ $(whoami) == "$linux_user" ]]; then
+			if (command -v gosu &>/dev/null); then
+				gosu ubuntu /bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+			else
+				/bin/bash -c "NONINTERACTIVE=1 USER=$linux_user $(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+			fi
+		else
+			/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+		fi
 
 		log_ok "DONE installing homebrew"
 	fi

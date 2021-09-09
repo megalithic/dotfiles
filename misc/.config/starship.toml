@@ -23,6 +23,10 @@ success_symbol = "[](bold green)"
 error_symbol = "[](bold red)"
 vicmd_symbol = "[](bold purple)"
 
+[jobs]
+symbol = ""
+format = "$symbol"
+
 # [custom.shell]
 # command = "echo $STARSHIP_SHELL"  # shows output of command
 # when = """ test "$STARSHIP_SHELL" != "fish" """

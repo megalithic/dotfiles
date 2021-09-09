@@ -76,7 +76,7 @@ return {
 	-- eelixir = { mix_credo },
 	-- go = {golint, goimports},
 	-- python = {black, isort, flake8, mypy},
-	fish = {fish},
+	fish = { fish },
 	typescript = eslintPrettier,
 	javascript = eslintPrettier,
 	typescriptreact = eslintPrettier,
@@ -88,6 +88,6 @@ return {
 	css = eslintPrettier,
 	-- markdown = eslintPrettier,
 	sh = { shellcheck, shfmt },
-	zsh = { shfmt },
+	zsh = { shellcheck, shfmt },
 	-- tf = {terraform},
 }
