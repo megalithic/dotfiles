@@ -172,6 +172,7 @@ return {
 	"MaxMEllon/vim-jsx-pretty",
 	"heavenshell/vim-jsdoc",
 	"jxnblk/vim-mdx-js",
+	"kchmck/vim-coffee-script",
 	-- # HTML
 	-- "mattn/emmet-vim",
 	"skwp/vim-html-escape",
