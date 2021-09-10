@@ -173,6 +173,8 @@ return {
 	"heavenshell/vim-jsdoc",
 	"jxnblk/vim-mdx-js",
 	"kchmck/vim-coffee-script",
+	"briancollins/vim-jst",
+	"pangloss/vim-javascript", -- needed for vim-jst?
 	-- # HTML
 	-- "mattn/emmet-vim",
 	"skwp/vim-html-escape",

@@ -107,6 +107,11 @@ augroup("filetypes", {
 		targets = { ".eslintrc" },
 		command = "set filetype=javascript",
 	},
+	{
+		events = { "BufEnter", "BufRead", "BufNewFile" },
+		targets = { "*.jst.eco" },
+		command = "set filetype=jst",
+	},
 	-- {
 	--   events = {"BufEnter", "BufNewFile", "FileType"},
 	--   targets = {"*.md"},
