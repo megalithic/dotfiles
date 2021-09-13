@@ -658,8 +658,8 @@ do -- [projectionist] --
 				alternate = "package.json",
 			},
 		},
-		-- outstand'ing (tsx)
 		["package.json"] = {
+			-- outstand'ing (ts/tsx)
 			["spec/javascript/*.test.tsx"] = {
 				["alternate"] = "app/webpacker/src/javascript/{}.tsx",
 				["type"] = "spec",
