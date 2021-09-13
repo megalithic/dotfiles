@@ -127,6 +127,7 @@ return {
 	"jordwalke/VimAutoMakeDirectory",
 	"wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
 	"ConradIrwin/vim-bracketed-paste",
+	"kana/vim-fakeclip",
 	"sickill/vim-pasta",
 	-- :Messages <- view messages in quickfix list
 	-- :Verbose  <- view verbose output in preview window.

@@ -41,7 +41,16 @@ fi
 # title back.. 🤦
 #
 ssh() {
+	# WIP!
+	# start lemonade!
+	# if (command -v lemonade &>/dev/null); then
+	# lemonade server &>/dev/null &
+	# lemonade server &
+	# fi
+
 	if [ -n "$TMUX" ]; then
+		# TODO: get old window name, store it as a local; then be able to rename
+		# once exiting?
 		tmux -2u rename-window "$(echo $* | rev | cut -d '@' -f1 | rev)"
 		command ssh "$@"
 		tmux -2u set-window-option automatic-rename "on" >/dev/null
