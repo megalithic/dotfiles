@@ -60,3 +60,4 @@ keyboard/**/automatic_backups/*.json
 fish/.config/fish/fish_variables
 fish/.config/fish/functions/apropos.fish
 fish/.config/fish/functions/whatis.fish
+fish/.config/fish/functions/fzf_key_bindings.fish

@@ -268,7 +268,7 @@ if has("nvim")
   let &t_Ce = "\e[4:0m"
 
   let $VISUAL      = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
-  let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
+  " let $GIT_EDITOR  = 'nvr -cc split --remote-wait +"setlocal bufhidden=delete"'
   let $EDITOR      = 'nvr -l'
   let $ECTO_EDITOR = 'nvr -l'
   let $TERM        = 'xterm-kitty'
