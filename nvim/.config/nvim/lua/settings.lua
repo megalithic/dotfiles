@@ -646,6 +646,40 @@ end
 
 do -- [projectionist] --
 	g.projectionist_heuristics = {
+		["&package.json"] = {
+			["package.json"] = {
+				type = "package",
+				alternate = { "yarn.lock", "package-lock.json" },
+			},
+			["package-lock.json"] = {
+				alternate = "package.json",
+			},
+			["yarn.lock"] = {
+				alternate = "package.json",
+			},
+		},
+		-- outstand'ing (tsx)
+		["*.tsx"] = {
+			["spec/javascript/*.test.tsx"] = {
+				["alternate"] = "app/webpacker/src/javascript/{}.tsx",
+				["type"] = "spec",
+			},
+			["app/webpacker/src/javascript/*.tsx"] = {
+				["alternate"] = "spec/javascript/{}.test.tsx",
+				["type"] = "source",
+			},
+		},
+		-- outstand'ing (ts)
+		["*.ts"] = {
+			["spec/javascript/*.test.ts"] = {
+				["alternate"] = "app/webpacker/src/javascript/{}.ts",
+				["type"] = "spec",
+			},
+			["app/webpacker/src/javascript/*.ts"] = {
+				["alternate"] = "spec/javascript/{}.test.ts",
+				["type"] = "source",
+			},
+		},
 		["mix.exs"] = {
 			["lib/**/views/*_view.ex"] = {
 				["type"] = "view",
