@@ -659,7 +659,7 @@ do -- [projectionist] --
 			},
 		},
 		-- outstand'ing (tsx)
-		["*.tsx"] = {
+		["package.json"] = {
 			["spec/javascript/*.test.tsx"] = {
 				["alternate"] = "app/webpacker/src/javascript/{}.tsx",
 				["type"] = "spec",
@@ -668,9 +668,6 @@ do -- [projectionist] --
 				["alternate"] = "spec/javascript/{}.test.tsx",
 				["type"] = "source",
 			},
-		},
-		-- outstand'ing (ts)
-		["*.ts"] = {
 			["spec/javascript/*.test.ts"] = {
 				["alternate"] = "app/webpacker/src/javascript/{}.ts",
 				["type"] = "spec",
