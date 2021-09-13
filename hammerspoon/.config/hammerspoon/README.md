@@ -88,3 +88,5 @@ of the macOS core libraries and APIs.
 - [Example user of same module layout](https://github.com/AhmedAbdulrahman/dotfiles/blob/master/hammerspoon/init.lua)
 - [Clipboard things](https://github.com/victorandree/dotfiles/blob/master/hammerspoon/.hammerspoon/common.lua)
 - [More pomodoro](https://github.com/jacks808/hammerspoon-config/blob/master/pomodoor/pomodoor.lua)
+- https://github.com/AdamWagner/stackline
+- https://github.com/folke/dot/blob/master/hammerspoon/running.lua

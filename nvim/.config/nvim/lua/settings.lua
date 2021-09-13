@@ -764,16 +764,16 @@ do
 end
 
 do
-	require("impatient")
+	-- require("impatient")
+	local ok, impatient = mega.safe_require("impatient")
+	if ok then
+		impatient.enable_profile()
+	end
 end
 
 do
 	-- require("alpha").setup(require("alpha.themes.startify").opts)
 end
-
--- do
--- 	require("toggleterm").setup({})
--- end
 
 do
 	cmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])

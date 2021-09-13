@@ -212,6 +212,16 @@ function M.load(req, key)
 	end
 end
 
+function M.safe_require(module, opts)
+	opts = opts or { silent = false }
+	local ok, result = pcall(require, module)
+	if not ok and not opts.silent then
+		-- vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module) })
+		vim.notify(result, "ERROR", { title = string.format("Error requiring: %s", module) })
+	end
+	return ok, result
+end
+
 function M.table_merge(t1, t2)
 	-- # shallow_merge:
 	-- for k, v in pairs(t2) do
