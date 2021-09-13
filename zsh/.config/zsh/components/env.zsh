@@ -230,6 +230,7 @@ path=(
     /usr/local/lib/python3.9/bin
     /usr/local/lib/python3.9/site-packages
     /usr/local/opt/python@3.9/bin
+    $HOME/.asdf/installs/rust/stable/bin
     # /usr/local/opt/perl/bin
     # /usr/local/opt/perl6/bin
     # /usr/local/opt/perl@5.28/bin
