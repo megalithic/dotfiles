@@ -171,6 +171,15 @@ do -- [nvim-treesitter] --
 			url = "https://github.com/ikatyang/tree-sitter-markdown",
 			files = { "src/parser.c", "src/scanner.cc" },
 		},
+		filetype = "md",
+	}
+	parser_config.org = {
+		install_info = {
+			url = "https://github.com/milisims/tree-sitter-org",
+			revision = "main",
+			files = { "src/parser.c", "src/scanner.cc" },
+		},
+		filetype = "org",
 	}
 	-- require("spellsitter").setup()
 	require("nvim-ts-autotag").setup({

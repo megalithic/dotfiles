@@ -20,12 +20,12 @@ function M:load_variables()
 end
 M:load_variables()
 
-M.dirs = {
-	-- org = vim.fn.expand("$HOME/Library/Mobile Documents/com~apple~CloudDocs/org"),
-	org = vim.fn.expand("$HOME/Documents/_org"),
-	dots = vim.fn.expand("$HOME/.dotfiles"),
-	zettel = vim.fn.expand("$HOME/Documents/_notes"),
-}
+M.dirs = {}
+M.dirs.dots = vim.fn.expand("$HOME/.dotfiles")
+M.dirs.icloud = vim.fn.expand("$HOME/Library/Mobile Documents/com~apple~CloudDocs")
+M.dirs.docs = vim.fn.expand(M.dirs.icloud .. "/Documents")
+M.dirs.org = vim.fn.expand(M.dirs.docs .. "/_org")
+M.dirs.zettel = vim.fn.expand(M.dirs.docs .. "/_notes")
 
 -- check file exists
 function M.exists(file)
