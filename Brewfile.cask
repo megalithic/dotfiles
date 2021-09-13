@@ -7,8 +7,6 @@ tap "homebrew/cask"
 tap "homebrew/cask-fonts"
 tap "homebrew/cask-drivers"
 
-
-
 # - fonts
 cask "font-jetbrains-mono"
 cask "font-jetbrains-mono-nerd-font"
@@ -49,6 +47,7 @@ cask "karabiner-elements"
 cask "kitty"
 cask "marta"
 cask "micro-snitch"
+cask "microsoft-edge"
 #cask "little-snitch4" # requires kernel extension, see notes from install message
 cask "ngrok"
 cask "obsidian"

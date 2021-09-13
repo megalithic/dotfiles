@@ -41,12 +41,11 @@ fi
 # title back.. 🤦
 #
 ssh() {
-	# WIP!
 	# start lemonade!
-	# if (command -v lemonade &>/dev/null); then
-	# lemonade server &>/dev/null &
-	# lemonade server &
-	# fi
+	if (command -v lemonade &>/dev/null); then
+		# lemonade server &>/dev/null &
+		lemonade server &
+	fi
 
 	if [ -n "$TMUX" ]; then
 		# TODO: get old window name, store it as a local; then be able to rename
