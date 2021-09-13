@@ -326,7 +326,7 @@ local function on_attach(client, bufnr)
 	map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
 	--- # autocommands/autocmds
-	au("CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({focusable=false})")
+	-- au("CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({focusable=false})")
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	if client.resolved_capabilities.document_formatting then
 		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
@@ -377,7 +377,7 @@ local function on_attach(client, bufnr)
 		ts.setup_client(client)
 
 		-- so tsserver doesn't compete with efm or null-ls
-		client.resolved_capabilities.document_formatting = false
+		client.resolved_capabilities.document_formatting = true
 	end
 
 	api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
