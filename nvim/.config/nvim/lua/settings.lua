@@ -621,7 +621,7 @@ do -- [vim-test] --
 	api.nvim_exec(
 		[[
     function! TerminalSplit(cmd)
-    vert new | set filetype=test | call termopen(["$SHELL", '-c', a:cmd], {'curwin':1})
+    vert new | set filetype=test | call termopen(['zsh', '-c', a:cmd], {'curwin':1})
     endfunction
 
     let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
