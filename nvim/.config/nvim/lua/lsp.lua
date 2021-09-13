@@ -377,7 +377,7 @@ local function on_attach(client, bufnr)
 		ts.setup_client(client)
 
 		-- so tsserver doesn't compete with efm or null-ls
-		client.resolved_capabilities.document_formatting = true
+		client.resolved_capabilities.document_formatting = false
 	end
 
 	api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
