@@ -9,6 +9,7 @@
 export EDITOR="nvim"
 export VISUAL="$EDITOR"
 export SUDO_EDITOR="$EDITOR"
+export GIT_EDITOR="$EDITOR"
 export ALTERNATE_EDITOR="vim"
 export PAGER="less"
 export MANPAGER="$EDITOR +Man!"
