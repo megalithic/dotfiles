@@ -818,6 +818,7 @@ do -- [fzf] --
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
+				["ctrl-o"] = actions.file_edit,
 			},
 		},
 		grep = {
@@ -826,6 +827,7 @@ do -- [fzf] --
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
+				["ctrl-o"] = actions.file_edit,
 			},
 		},
 		lsp = {
@@ -833,6 +835,11 @@ do -- [fzf] --
 			cwd_only = false, -- LSP/diagnostics for cwd only?
 			async_or_timeout = false,
 			jump_to_single_result = true,
+			actions = {
+				["default"] = actions.file_vsplit,
+				["ctrl-t"] = actions.file_tabedit,
+				["ctrl-o"] = actions.file_edit,
+			},
 		},
 		buffers = {
 			prompt = string.format("buffers %s ", colors.icons.prompt_symbol),
