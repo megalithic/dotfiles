@@ -121,18 +121,18 @@ set backspace=indent,eol,start
 set belloff=all       " Bells are annoying
 set breakindent       " Wrap long lines *with* indentation
 set breakindentopt=shift:2
-" if empty($SSH_CONNECTION) && has('clipboard')
-"   set clipboard=unnamed  " Use clipboard register
+if empty($SSH_CONNECTION) && has('clipboard')
+  set clipboard=unnamed  " Use clipboard register
 
-"   " Share X windows clipboard. NOT ON NEOVIM -- neovim automatically uses
-"   " system clipboard when xclip/xsel/pbcopy are available.
-"   if has('nvim') && !has('mac')
-"     set clipboard=unnamedplus
-"   elseif has('unnamedplus')
-"     set clipboard+=unnamedplus
-"   endif
-" endif
-set clipboard+=unnamedplus
+  " Share X windows clipboard. NOT ON NEOVIM -- neovim automatically uses
+  " system clipboard when xclip/xsel/pbcopy are available.
+  if has('nvim') && !has('mac')
+    set clipboard=unnamedplus
+  elseif has('unnamedplus')
+    set clipboard+=unnamedplus
+  endif
+endif
+" set clipboard+=unnamedplus
 set colorcolumn=81 " Highlight column 81
 set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions

@@ -1,4 +1,4 @@
-local set, g, api, cmd, fn = vim.opt, vim.g, vim.api, vim.cmd, vim.fn
+local set, g, api, cmd, fn, env = vim.opt, vim.g, vim.api, vim.cmd, vim.fn, vim.env
 local dirs, map = mega.dirs, mega.map
 local colors = require("colors")
 
@@ -47,6 +47,7 @@ do -- [nvim options/ui/appearance] --
 	set.timeoutlen = 300
 	-- set.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
 	-- set.concealcursor = "n" -- Hide * markup for bold and italic
+	--
 end
 
 do
