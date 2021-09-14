@@ -195,7 +195,7 @@ do
 		-- local types = require("cmp.types")
 		cmp.setup({
 			experimental = {
-				ghost_text = true,
+				ghost_text = false,
 			},
 			completion = {
 				-- autocomplete = {

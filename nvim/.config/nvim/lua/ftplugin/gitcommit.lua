@@ -21,5 +21,6 @@ return function(_) -- bufnr
 
 	vim.cmd([[setlocal spell]])
 
+	vim.cmd([[startinsert]])
 	vim.bo.formatoptions = vim.bo.formatoptions .. "t"
 end

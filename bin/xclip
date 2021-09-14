@@ -4,7 +4,8 @@ if [[ $(uname -s) == Darwin ]]; then
 	pbcopy
 else
 	# if (command -v lemonade &>/dev/null); then
-	lemonade copy
+	# lemonade copy
+	/usr/bin/xclip
 	# else
 	# 	command /bin/xclip
 	# fi
