@@ -40,7 +40,7 @@ do -- [nvim options/ui/appearance] --
 		{ "│", "FloatBorderDark" },
 	}
 	g.loaded_python_provider = 1
-	g.loaded_ruby_provider = 1
+	-- g.loaded_ruby_provider = 1
 	g.loaded_perl_provider = 1
 	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"

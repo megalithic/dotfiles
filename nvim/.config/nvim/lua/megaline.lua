@@ -58,6 +58,7 @@ function statusline.set_colors()
 	s.section_3 = { color = "%#StItem3#", sep_color = "%#StSep3#" }
 	s.lsp = vim.tbl_extend("force", s.section_3, { no_padding = true })
 	s.search = vim.tbl_extend("force", s.section_3, { color = "%#StItemSearch#" })
+	s.gps = vim.tbl_extend("force", s.section_3, { color = "%#StItemInfo#" })
 	s.err = { color = "%#StErr#", sep_color = "%#StErrSep#" }
 	s.err_right = vim.tbl_extend("force", s.err, { side = "right" })
 	s.warn_right = { color = "%#StWarn#", sep_color = "%#StWarnSep#", side = "right", no_after = true }
@@ -288,13 +289,12 @@ end
 
 local function get_lineinfo()
 	-- vert_sep = "\uf6d8"             "⋮
-	-- ln_sep   = "\ue0a1"             "
+	-- ln_sep   = "\ue0a1"             "
 	-- col_sep  = "\uf6da"             "
 	-- perc_sep = "\uf44e"             "
 	--
-	-- local item = ""
-	-- return "" .. item .. " %l:%c ⋮ %p%%/%L%*"
-	return " %l:%c ⋮ %p%%/%L%*"
+	local item = ""
+	return "" .. item .. " %l:%c ⋮ %p%%/%L%*"
 end
 
 local function get_gps_status()
@@ -328,7 +328,7 @@ local function statusline_active()
 		seg("%r", nil, bo.readonly),
 		seg("%q", nil, bo.buftype == "quickfix"),
 		"%=",
-		seg(gps, s.search, gps ~= ""),
+		seg(gps, s.gps, gps ~= ""),
 		"%=",
 		seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
 		seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),
