@@ -1,7 +1,11 @@
 #!/usr/bin/env sh
 
-if [[ $(uname -s) = Darwin ]]; then
-    pbcopy
+if [[ $(uname -s) == Darwin ]]; then
+	pbcopy
 else
-    lemonade copy
+	if (command -v lemonade &>/dev/null); then
+		lemonade copy
+	else
+		command /usr/bin/xclip
+	fi
 fi

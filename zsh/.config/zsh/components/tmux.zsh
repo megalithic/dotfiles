@@ -46,7 +46,7 @@ ssh() {
 		server_running=$(pgrep -l lemonade)
 
 		if ! (echo "$server_running" | rg lemonade); then
-			lemonade server &
+			# lemonade server &
 		else
 			log_warn "lemonade server already running.."
 		fi
