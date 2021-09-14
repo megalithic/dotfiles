@@ -139,7 +139,6 @@ set conceallevel=2
 set complete=.,w,b    " Sources for term and line completions
 set completeopt=menuone,noinsert,noselect " Don't auto select first one
 " set nocursorcolumn
-set cursorlineopt=number
 set cursorline
 set dictionary=/usr/share/dict/words
 set spellfile=$HOME/.dotfiles/nvim/.config/nvim/spell/en.utf-8.add
@@ -247,7 +246,7 @@ if has("nvim")
   " set winblend=10
   set winminwidth=15
   set jumpoptions=stack
-
+  set cursorlineopt=number
   set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
         \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
         \,sm:block-blinkwait175-blinkoff150-blinkon175
