@@ -43,8 +43,13 @@ fi
 ssh() {
 	# start lemonade!
 	if (command -v lemonade &>/dev/null); then
-		# lemonade server &>/dev/null &
-		lemonade server &
+		server_running=$(pgrep -l lemonade)
+
+		if ! (echo "$server_running" | rg lemonade); then
+			lemonade server &
+		else
+			log_warn "lemonade server already running.."
+		fi
 	fi
 
 	if [ -n "$TMUX" ]; then

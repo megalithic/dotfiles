@@ -16,6 +16,7 @@ tap "isacikgoz/taps"
 tap "vitorgalvao/tiny-scripts"
 tap "romkatv/gitstatus"
 tap "mutagen-io/mutagen"
+tap "bvgastel/clippy"
 
 # -- for qmk_toolbox --
 
