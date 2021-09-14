@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+if [[ $(uname -s) = Darwin ]]; then
+    pbcopy
+else
+    lemonade copy
+fi
