@@ -196,12 +196,17 @@ do -- [nvim-treesitter] --
 	})
 end
 
+do
+	require("hclipboard").start()
+end
+
 do -- [indent-blankline] --
 	g.indent_blankline_buftype_exclude = { "terminal", "nofile" }
 	g.indent_blankline_filetype_exclude = {
 		"help",
 		"startify",
 		"dashboard",
+		"alpha",
 		"packer",
 		"neogitstatus",
 		"NvimTree",
@@ -209,6 +214,8 @@ do -- [indent-blankline] --
 		"git",
 		"org",
 		"orgagenda",
+		"NvimTree",
+		"fzf",
 		"log",
 		"fugitive",
 		"gitcommit",

@@ -36,6 +36,7 @@ function statusline.set_colors()
 	hi("StItem2", { guifg = c.secondary_fg, guibg = c.secondary_bg })
 	hi("StItem3", { guifg = c.tertiary_fg, guibg = c.tertiary_bg })
 	hi("StItemInfo", { guifg = colorscheme.cs.blue, guibg = c.normal_bg })
+	hi("StItemSearch", { guifg = colorscheme.cs.cyan, guibg = c.normal_bg })
 
 	hi("StSep", { guifg = c.normal_bg, guibg = c.normal_fg })
 	hi("StSep2", { guifg = c.secondary_bg, guibg = c.secondary_fg })
@@ -56,7 +57,7 @@ function statusline.set_colors()
 	s.section_2 = { color = "%#StItem2#", sep_color = "%#StSep2#" }
 	s.section_3 = { color = "%#StItem3#", sep_color = "%#StSep3#" }
 	s.lsp = vim.tbl_extend("force", s.section_3, { no_padding = true })
-	s.search = vim.tbl_extend("force", s.section_3, { color = "%#StItemInfo#" })
+	s.search = vim.tbl_extend("force", s.section_3, { color = "%#StItemSearch#" })
 	s.err = { color = "%#StErr#", sep_color = "%#StErrSep#" }
 	s.err_right = vim.tbl_extend("force", s.err, { side = "right" })
 	s.warn_right = { color = "%#StWarn#", sep_color = "%#StWarnSep#", side = "right", no_after = true }
@@ -200,7 +201,7 @@ local function get_mode_status()
 	}
 
 	-- return with_icon(string.format("%s", modeMap[mode]), colorscheme.icons.mode_symbol, true) or "?"
-	return with_icon(string.format("%s", modeMap[mode]), "", true) or "?"
+	return with_icon(string.format("%s", modeMap[mode]), "", true) or "?"
 end
 
 local function get_mode_block()
@@ -286,12 +287,14 @@ local function search_result()
 end
 
 local function get_lineinfo()
-	-- vert_sep = "\uf6d8"             "
+	-- vert_sep = "\uf6d8"             "⋮
 	-- ln_sep   = "\ue0a1"             "
 	-- col_sep  = "\uf6da"             "
 	-- perc_sep = "\uf44e"             "
-	local item = ""
-	return "" .. item .. " %l:%c  %p%%/%L%*"
+	--
+	-- local item = ""
+	-- return "" .. item .. " %l:%c ⋮ %p%%/%L%*"
+	return " %l:%c ⋮ %p%%/%L%*"
 end
 
 local function get_gps_status()

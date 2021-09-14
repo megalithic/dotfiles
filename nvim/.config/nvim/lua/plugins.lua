@@ -2,6 +2,7 @@
 --  ~/.local/share/nvim/site/pack/paqs
 -- # local/deve paqs stored here:
 --  ~/.local/share/nvim/site/pack/local
+
 return {
 	{ "savq/paq-nvim" },
 	--
@@ -67,7 +68,6 @@ return {
 	-- "lewis6991/spellsitter.nvim", -- https://github.com/ful1e5/dotfiles/blob/main/nvim/.config/nvim/lua/plugins-cfg/spellsitter/init.lua
 	--
 	-- (file/document navigation) --
-	{ "junegunn/fzf", run = "./install --bin" },
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",
@@ -128,6 +128,7 @@ return {
 	"wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
 	"ConradIrwin/vim-bracketed-paste",
 	"sickill/vim-pasta",
+	"kevinhwang91/nvim-hclipboard",
 	-- :Messages <- view messages in quickfix list
 	-- :Verbose  <- view verbose output in preview window.
 	-- :Time     <- measure how long it takes to run some stuff.
