@@ -47,6 +47,9 @@ map("n", "j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'
 -- Clear highlights
 cmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
 
+-- Fast previous buffer switching
+map("n", "<leader><leader>", "<C-^>", { noremap = true })
+
 -- Keep line in middle of buffer when searching
 map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { noremap = true, expr = true })
 map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { noremap = true, expr = true })
