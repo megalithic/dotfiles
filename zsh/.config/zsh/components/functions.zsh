@@ -10,21 +10,21 @@ if [[ -z $TMUX ]]; then
 fi
 
 #
-# -- elixir/mix
-function mix()  {
-	if (command -v umbrella &>/dev/null); then
-    umbrella_check=$(umbrella mix)
-    is_bare_mix=$(echo $umbrella_check | grep -q "ERROR")
+# -- elixir/mix (for Deskfile thing for `pages`)
+# function mix()  {
+# 	if (command -v umbrella &>/dev/null); then
+#     umbrella_check=$(umbrella mix)
+#     is_bare_mix=$(echo $umbrella_check | grep -q "ERROR")
 
-    if $is_bare_mix; then
-      command mix "$@"
-    else
-      umbrella mix "$@"
-    fi
-  else
-    command mix "$@"
-  fi
-}
+#     if $is_bare_mix; then
+#       command mix "$@"
+#     else
+#       umbrella mix "$@"
+#     fi
+#   else
+#     command mix "$@"
+#   fi
+# }
 
 #
 # git

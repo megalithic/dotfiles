@@ -312,7 +312,7 @@ alias nf="echo -ne \\u"
 
 # -- linux-specific aliases..
 if [[ $PLATFORM == "linux" ]]; then
-	alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
+	# alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
 	alias pbcopy="xclip -sel clip"
 	alias pbpaste='xclip -sel clip -o'
 	alias luamake=$HOME/.config/lsp/sumneko_lua/3rd/luamake/luamake
