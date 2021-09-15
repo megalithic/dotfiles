@@ -41,33 +41,24 @@ fi
 # title back.. 🤦
 #
 ssh() {
-	# start lemonade!
-	if (command -v lemonade &>/dev/null); then
-		server_running=$(pgrep -l lemonade)
-
-		if ! (echo "$server_running" | rg lemonade); then
-			# lemonade server &
-		else
-			log_warn "lemonade server already running.."
-		fi
-	fi
-
-	if (command -v clippy &>/dev/null); then
-
-		if ! (echo "$server_running" | rg lemonade); then
-			# lemonade server &
-		else
-			log_warn "lemonade server already running.."
-		fi
-	fi
-
 	if [ -n "$TMUX" ]; then
+		# start lemonade!
+		if (command -v lemonade &>/dev/null); then
+			server_running=$(pgrep -l lemonade)
+
+			if ! (echo "$server_running" | rg lemonade); then
+				# lemonade server &
+			else
+				log_warn "lemonade server already running.."
+			fi
+		fi
+
 		# TODO: get old window name, store it as a local; then be able to rename
 		# once exiting?
 		tmux -2u rename-window "$(echo $* | rev | cut -d '@' -f1 | rev)"
-		(command -v clippy &>/dev/null) && command clippy ssh "$@" || command ssh "$@"
+		command ssh "$@"
 		tmux -2u set-window-option automatic-rename "on" >/dev/null
 	else
-		(command -v clippy &>/dev/null) && command clippy ssh "$@" || command ssh "$@"
+		command ssh "$@"
 	fi
 }
