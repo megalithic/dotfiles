@@ -121,6 +121,7 @@ set backspace=indent,eol,start
 set belloff=all       " Bells are annoying
 set breakindent       " Wrap long lines *with* indentation
 set breakindentopt=shift:2
+
 if empty($SSH_CONNECTION) && has('clipboard')
   set clipboard=unnamed  " Use clipboard register
 

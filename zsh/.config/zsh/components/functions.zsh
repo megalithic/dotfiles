@@ -1,22 +1,26 @@
-# try and autoload tmux session	
-if [[ -z $TMUX ]]; then	
-  function tmux() {	
-    if [[ $# == 0 ]] && tmux has-session 2>/dev/null; then	
-      command tmux attach-session	
-    else	
-      command tmux "$@"	
-    fi	
-  }	
+# try and autoload tmux session
+if [[ -z $TMUX ]]; then
+  function tmux() {
+    if [[ $# == 0 ]] && tmux has-session 2>/dev/null; then
+      command tmux attach-session
+    else
+      command tmux "$@"
+    fi
+  }
 fi
 
-disable_symantec() {
-  for f in /Library/LaunchDaemons/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done
-  for f in /Library/LaunchAgents/com.symantec.*.plist; do sudo mv -- "$f" "${f%.plist}.plist.disabled"; done
-}
-enable_symantec() {
-  for f in /Library/LaunchDaemons/com.symantec.*.plist.disabled; do sudo mv -- "$f" "${f%.plist.disabled}.plist"; done
-  for f in /Library/LaunchAgents/com.symantec.*.plist.disabled; do sudo mv -- "$f" "${f%.plist.disabled}.plist"; done
-}
+#
+# -- elixir/mix
+function mix()  {
+  umbrella_check=$(umbrella mix)
+  is_bare_mix=$(echo $umbrella_check | grep -q "ERROR")
+
+  if is_bare_mix; then
+    command mix "$@"
+  else
+    umbrella mix "$@"
+  fi
+)
 
 #
 # git
