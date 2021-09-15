@@ -15,7 +15,6 @@ export PAGER="less"
 export MANPAGER="$EDITOR +Man!"
 export MANWIDTH=999
 export LESS="-F -g -i -M -R -S -w -X -z-4"
-export ZK_NOTEBOOK_DIR="$HOME/Documents/_notes"
 # if (( $+commands[lesspipe.sh] )); then
 #     # Set the Less input preprocessor.
 #     export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
@@ -75,6 +74,10 @@ export ZSH_AUTOSUGGEST_USE_ASYNC=1
 #
 # platform-specific
 if [[ "$PLATFORM" == "macos" ]]; then
+  export ICLOUD_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+  export DOCUMENTS_DIR="$ICLOUD_DIR/Documents"
+  export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes"
+
   export BROWSER="open"
   export HOMEBREW_NO_ANALYTICS=1
   export HOMEBREW_CASK_OPTS="--appdir=/Applications"

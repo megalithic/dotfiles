@@ -91,7 +91,7 @@ brew 'lazygit'
 brew "llvm" # contains c-lang lsp (the preferred one?)
 brew "lnav"
 brew "lsd"
-brew "luajit"
+brew "luajit", args: ["HEAD"]
 brew "luarocks"
 brew "luv"
 brew "mas"
