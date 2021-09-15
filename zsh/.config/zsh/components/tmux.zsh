@@ -52,13 +52,22 @@ ssh() {
 		fi
 	fi
 
+	if (command -v clippy &>/dev/null); then
+
+		if ! (echo "$server_running" | rg lemonade); then
+			# lemonade server &
+		else
+			log_warn "lemonade server already running.."
+		fi
+	fi
+
 	if [ -n "$TMUX" ]; then
 		# TODO: get old window name, store it as a local; then be able to rename
 		# once exiting?
 		tmux -2u rename-window "$(echo $* | rev | cut -d '@' -f1 | rev)"
-		command ssh "$@"
+		(command -v clippy &>/dev/null) && command clippy ssh "$@" || command ssh "$@"
 		tmux -2u set-window-option automatic-rename "on" >/dev/null
 	else
-		command ssh "$@"
+		(command -v clippy &>/dev/null) && command clippy ssh "$@" || command ssh "$@"
 	fi
 }

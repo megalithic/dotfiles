@@ -23,6 +23,13 @@ if [ -f "/etc/debian_version" ]; then
 	# log "installing gitstatus for zsh"
 	# git clone --depth=1 https://github.com/romkatv/gitstatus.git "$builds_path/gitstatus"
 
+	log "installing clippy"
+	sudo apt install curl lsb-release
+	sh -c 'printf "deb http://packages.bitpowder.com/ubuntu-%s stable core\n" `lsb_release -cs`' | sudo tee /etc/apt/sources.list.d/bitpowder-repo.list
+	curl -L https://bitpowder.com/linux-packages.gpg | sudo tee /etc/apt/trusted.gpg.d/bitpowder.asc
+	sudo apt-get update
+	sudo apt-get -y install clippy
+
 	log "installing zsh addons"
 	git clone https://github.com/zsh-users/zsh-autosuggestions.git "$builds_path/zsh-autosuggestions"
 	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$builds_path/zsh-syntax-highlighting"
