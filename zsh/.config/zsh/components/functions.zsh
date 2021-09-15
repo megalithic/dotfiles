@@ -12,15 +12,19 @@ fi
 #
 # -- elixir/mix
 function mix()  {
-  umbrella_check=$(umbrella mix)
-  is_bare_mix=$(echo $umbrella_check | grep -q "ERROR")
+	if (command -v umbrella &>/dev/null); then
+    umbrella_check=$(umbrella mix)
+    is_bare_mix=$(echo $umbrella_check | grep -q "ERROR")
 
-  if is_bare_mix; then
-    command mix "$@"
+    if $is_bare_mix; then
+      command mix "$@"
+    else
+      umbrella mix "$@"
+    fi
   else
-    umbrella mix "$@"
+    command mix "$@"
   fi
-)
+}
 
 #
 # git
