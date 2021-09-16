@@ -62,7 +62,6 @@ brew "fasd"
 brew "fd"
 brew "ffind"
 brew "findutils"
-brew "fish"
 brew "fontforge"
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"

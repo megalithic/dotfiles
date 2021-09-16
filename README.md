@@ -57,8 +57,7 @@ A few of the _must-have_ tools I roll with:
 * [neovim](https://neovim.io/)
   + using lua with neovim? https://github.com/nanotee/nvim-lua-guide
 * [zsh](https://www.zsh.org/)
-  + custom prompt (in the spirit of [pure](https://github.com/sindresorhus/pure)), using [gitstatus](https://github.com/romkatv/gitstatus) for fast git-specific vcs status.
-* [fish](https://fishshell.com)
+  + [starship](https://starship.rs)
 * [weechat](https://www.weechat.org/)
 
 ### Stuff

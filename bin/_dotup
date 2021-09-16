@@ -284,7 +284,6 @@ function stow_away {
 
 	stow asdf && log_ok "stowed asdf" || log_error "adsf stow failed"
 	stow kitty && log_ok "stowed kitty" || log_error "kitty stow failed"
-	stow fish && log_ok "stowed fish" || log_error "fish stow failed"
 	stow zsh && log_ok "stowed zsh" || log_error "zsh stow failed"
 	[[ -f $HOME/.gitconfig ]] && rm $HOME/.gitconfig
 	stow git && log_ok "stowed git" || log_error "git stow failed"
@@ -383,33 +382,6 @@ function setup_zsh {
 	unset zsh_path
 }
 
-function setup_fish {
-	# install fisher:
-	# -> curl -sL https://git.io/fisher | bash && fisher install jorgebucaran/fisher && fisher install
-
-	[[ $PLATFORM == "linux" ]] && fish_path="/usr/bin/fish" || fish_path="/usr/local/bin/fish"
-	log "attempting to add $fish_path to /etc/shells"
-	grep -Fxq "$fish_path" /etc/shells || echo "$fish_path" | sudo tee -a /etc/shells
-
-	log "changing your shell to user-installed version of fish: $fish_path" sudo chsh -s "$fish_path" $USER && log_ok "DONE setting up fish" unset fish_path
-}
-
-# TODO: handle selecting which shell to default to
-function set_shell {
-	skip_message="skipping; you can run this later via _dotup; or set it manually wth the steps in this script."
-
-	log_warn "we need to set a shell; you can always run this later, or set it manually."
-	vared -p "[?] which shell? [z|f|SKIP]" -c continue_reply
-
-	case $continue_reply in
-		[z]) setup_zsh ;;
-		[f]) setup_fish ;;
-		*) log_warn "$skip_message" ;;
-	esac
-
-	unset continue_reply
-}
-
 function post_install {
 	if [[ $PLATFORM == "macos" ]]; then
 		log "post-brewing operations.."
@@ -435,8 +407,6 @@ bundle_brews
 setup_ssh_key
 stow_away
 setup_platform
-# set_shell
-# setup_fish
 setup_zsh
 setup_neovim
 setup_asdf
