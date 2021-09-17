@@ -35,6 +35,8 @@ map("n", "q", "<Nop>")
 map("n", "Q", "@q")
 map("v", "Q", ":norm @q<CR>")
 
+map("n", "<leader>e", ":e **/<TAB>")
+
 -- Join / Split Lines
 map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
 map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line

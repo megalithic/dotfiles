@@ -269,6 +269,15 @@ function M.has(feature)
 	return fn.has(feature) > 0
 end
 
+-- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`
+function M.auto_mkdir()
+	local dir = fn.expand("%:p:h")
+
+	if fn.isdirectory(dir) == 0 then
+		fn.mkdir(dir, "p")
+	end
+end
+
 function M.zetty(args)
 	local default_opts = {
 		cmd = "meeting",
@@ -295,9 +304,9 @@ function M.zetty(args)
 	end
 
 	if opts.cmd == "meeting" then
-		-- require("zk.command").new({ title = title, action = "edit", notebook = "meetings", content = content })
+		require("zk.command").new({ title = title, action = "edit", notebook = "meetings", content = content })
 	elseif opts.cmd == "new" then
-		-- require("zk.command").new({ title = title, action = "edit" })
+		require("zk.command").new({ title = title, action = "edit" })
 	end
 end
 

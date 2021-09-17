@@ -1,8 +1,9 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
-local cmd = vim.cmd
+local cmd, fn = vim.cmd, vim.fn
 local au, exec, augroup = mega.au, mega.exec, mega.augroup
 
+au([[BufWritePre * lua mega.auto_mkdir()]])
 au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
 au([[StdinReadPost * set buftype=nofile]])
 au([[FileType help wincmd L]])
@@ -38,6 +39,33 @@ vim.api.nvim_exec(
 ]],
 	false
 )
+
+augroup("auto-cursor", {
+	-- When editing a file, always jump to the last known cursor position.
+	-- Don't do it for commit messages, when the position is invalid, or when
+	-- inside an event handler (happens when dropping a file on gvim).
+	events = { "BufReadPost" },
+	targets = { "*" },
+	command = function()
+		local pos = fn.line("'\"")
+		if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
+			vim.cmd('keepjumps normal g`"')
+		end
+	end,
+})
+
+-- augroup("NvimTreeOverrides", {
+-- 	{
+-- 		events = { "ColorScheme" },
+-- 		targets = { "*" },
+-- 		command = set_highlights,
+-- 	},
+-- 	{
+-- 		events = { "FileType" },
+-- 		targets = { "NvimTree" },
+-- 		command = set_highlights,
+-- 	},
+-- })
 
 augroup("paq", {
 	{

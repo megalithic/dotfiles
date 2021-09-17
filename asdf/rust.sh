@@ -20,8 +20,9 @@ if (command -v cargo &>/dev/null); then
 	# fi
 
 	log "installing cargo crates"
-	cargo install selene # https://kampfkarren.github.io/selene/selene.html
-	cargo install stylua # https://github.com/johnnymorganz/stylua
+	cargo install selene  # https://kampfkarren.github.io/selene/selene.html
+	cargo install stylua  # https://github.com/johnnymorganz/stylua
+	cargo install distant # https://github.com/chipsenkbeil/distant
 
 	if [[ $PLATFORM == "linux" ]]; then
 		cargo install git-delta

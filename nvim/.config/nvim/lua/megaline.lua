@@ -308,6 +308,10 @@ local function get_gps_status()
 	end
 end
 
+local function get_container_info()
+	return vim.g.currentContainer
+end
+
 local function statusline_active()
 	local mode_block = get_mode_block()
 	local vcs_status = get_vcs_status()
@@ -315,12 +319,14 @@ local function statusline_active()
 	local ft = get_filetype()
 	local lsp = get_lsp_status()
 	local gps = get_gps_status()
+	local container_info = get_container_info()
 
 	local statusline_sections = {
 		seg(mode_block, s.mode_block),
 		seg(get_mode_status(), s.mode),
 		"%<",
 		seg(vcs_status, s.section_2, vcs_status ~= ""),
+		-- seg(container_info, s.section_3, container_info ~= ""),
 		seg(get_filepath(false), bo.modified and s.err or s.section_3),
 		seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), bo.modified),
 		seg(string.format("%s", colorscheme.icons.readonly_symbol), s.err, not bo.modifiable),

@@ -29,3 +29,7 @@ tailwindcss-language-server
 typescript-language-server
 yaml-language-server
 vim-language-server
+import-sort-cli
+import-sort-parser-babylon
+import-sort-parser-typescript
+import-sort-style-renke

@@ -59,12 +59,12 @@ disabled = true
 # fi
 
 [custom.git_status_dirty]
+disabled = true
 when = "string length -q -- (git status --porcelain)"
 symbol = '○'
 style = 'red bold'
 format = '[$symbol]($style) '
-shell = ['fish']
-disabled = false
+shell =["zsh"]
 
 [git_branch]
 symbol = " "
@@ -75,8 +75,8 @@ style = "bold fg:245"
 disabled = false
 # # REF:
 # # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
-# format = '([\[$all_status$ahead_behind\]]($style))' #(bold fg:#8be9fd)
-format = '([$ahead_behind]($style) )' #(bold fg:#8be9fd)
+format = '([\[$all_status$ahead_behind\]]($style) )' #(bold fg:#8be9fd)
+# format = '([$ahead_behind]($style) )' #(bold fg:#8be9fd)
 ahead = "↑"
 behind = "↓"
 # staged = "•" #•﯂

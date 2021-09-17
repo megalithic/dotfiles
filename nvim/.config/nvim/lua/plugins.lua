@@ -5,10 +5,12 @@
 
 return {
 	{ "savq/paq-nvim" },
+
 	--
 	-- (profiling) --
 	"dstein64/vim-startuptime",
 	"lewis6991/impatient.nvim",
+
 	--
 	-- (appearance/ui) --
 	"sainnhe/everforest",
@@ -23,6 +25,8 @@ return {
 	"karb94/neoscroll.nvim",
 	"lukas-reineke/indent-blankline.nvim",
 	"MunifTanjim/nui.nvim",
+	"folke/which-key.nvim",
+
 	--
 	-- (lsp/completion) --
 	"neovim/nvim-lspconfig",
@@ -48,6 +52,7 @@ return {
 	"folke/trouble.nvim",
 	"SmiteshP/nvim-gps",
 	-- https://github.com/kosayoda/nvim-lightbulb
+
 	--
 	-- (treesitter) --
 	{
@@ -66,12 +71,15 @@ return {
 	"windwp/nvim-ts-autotag",
 	"p00f/nvim-ts-rainbow",
 	-- "lewis6991/spellsitter.nvim", -- https://github.com/ful1e5/dotfiles/blob/main/nvim/.config/nvim/lua/plugins-cfg/spellsitter/init.lua
+
 	--
 	-- (file/document navigation) --
 	"ibhagwan/fzf-lua",
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",
 	"voldikss/vim-floaterm",
+	-- "kyazdani42/nvim-tree.lua",
+
 	--
 	-- (text objects) --
 	"tpope/vim-rsi",
@@ -87,6 +95,7 @@ return {
 	-- "chaoren/vim-wordmotion", -- to move across cases and words and such
 	"wellle/targets.vim",
 	-- research: windwp/nvim-spectre
+
 	--
 	-- (git, vcs, et al) --
 	"tpope/vim-fugitive",
@@ -99,6 +108,7 @@ return {
 	-- "dinhhuy258/git.nvim",
 	-- "lewis6991/gitsigns.nvim",
 	-- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
+
 	--
 	-- (development, et al) --
 	"ahmedkhalf/project.nvim",
@@ -109,8 +119,11 @@ return {
 	"editorconfig/editorconfig-vim",
 	{ "zenbro/mirror.vim", opt = true },
 	"vuki656/package-info.nvim",
+
 	--
 	-- (the rest...) --
+	"jamestthompson3/nvim-remote-containers",
+	"b0o/mapx.nvim",
 	"nacro90/numb.nvim",
 	"ethanholz/nvim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
@@ -124,7 +137,6 @@ return {
 	"tpope/vim-surround",
 	"tpope/vim-unimpaired",
 	"EinfachToll/DidYouMean",
-	"jordwalke/VimAutoMakeDirectory",
 	"wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
 	"ConradIrwin/vim-bracketed-paste",
 	"sickill/vim-pasta",
@@ -140,6 +152,7 @@ return {
 	"junegunn/vim-easy-align",
 	-- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations
 	--     use_with_config("svermeulen/vim-yoink", "yoink") -- improves paste
+
 	--
 	-- (langs, syntax, et al) --
 	-- # markdown/prose
@@ -150,6 +163,7 @@ return {
 	"kristijanhusak/orgmode.nvim",
 	"akinsho/org-bullets.nvim",
 	"dhruvasagar/vim-table-mode",
+	-- https://github.com/preservim/vim-wordy
 	-- https://github.com/jghauser/follow-md-links.nvim
 	-- https://github.com/jakewvincent/mkdnflow.nvim
 	-- https://github.com/jubnzv/mdeval.nvim

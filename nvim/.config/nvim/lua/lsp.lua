@@ -275,7 +275,7 @@ local function on_attach(client, bufnr)
 
 	require("lsp_signature").on_attach({
 		bind = true, -- This is mandatory, otherwise border config won't get registered.
-		floating_window = true,
+		floating_window = false,
 		hint_enable = false,
 		decorator = { "`", "`" },
 		handler_opts = {
@@ -446,11 +446,12 @@ do
 		local efm_log = fn.expand("$XDG_CACHE_HOME/nvim") .. "/efm-lsp.log"
 		lspconfig["efm"].setup(lsp_with_defaults({
 			init_options = { documentFormatting = true },
+			cmd = { "efm-langserver", "-loglevel", "5" },
 			filetypes = vim.tbl_keys(efm_languages),
 			settings = {
 				rootMarkers = { "mix.lock", "mix.exs", "elm.json", "package.json", ".git" },
 				lintDebounce = 500,
-				logLevel = 2,
+				logLevel = 5,
 				logFile = efm_log,
 				languages = efm_languages,
 			},
@@ -591,6 +592,29 @@ do -- lua
 						"config",
 						"watchers",
 						"mega",
+						-- mapx.lua:
+						"map",
+						"nmap",
+						"vmap",
+						"xmap",
+						"smap",
+						"omap",
+						"imap",
+						"lmap",
+						"cmap",
+						"tmap",
+						"noremap",
+						"nnoremap",
+						"vnoremap",
+						"xnoremap",
+						"snoremap",
+						"onoremap",
+						"inoremap",
+						"lnoremap",
+						"cnoremap",
+						"tnoremap",
+						"mapbang",
+						"noremapbang",
 					},
 				},
 				workspace = {
@@ -615,6 +639,8 @@ do -- lua
 			fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
 			"-E",
 			fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
+			'--logpath="' .. vim.fn.stdpath("cache") .. '/nvim/log"',
+			'--metapath="' .. vim.fn.stdpath("cache") .. '/nvim/meta"',
 		},
 	})
 
