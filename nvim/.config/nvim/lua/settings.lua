@@ -842,14 +842,6 @@ do
 end
 
 do
-	-- require("impatient")
-	local ok, impatient = mega.safe_require("impatient")
-	if ok then
-		impatient.enable_profile()
-	end
-end
-
-do
 	-- require("alpha").setup(require("alpha.themes.startify").opts)
 end
 

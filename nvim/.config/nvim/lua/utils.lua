@@ -1,60 +1,8 @@
-local cmd, lsp, api, fn, w = vim.cmd, vim.lsp, vim.api, vim.fn, vim.w
+local cmd, lsp, api, fn, w, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.w, vim.g
 local bufmap, au = mega.bufmap, mega.au
 
 local M = { lsp = {} }
 local windows = {}
-local prompt_window = {}
-local prompt_buf = {}
-
-local function add_highlights()
-	local column = api.nvim_win_get_cursor(0)[2]
-	local line = api.nvim_get_current_line()
-	local cursorword = fn.matchstr(line:sub(1, column + 1), [[\k*$]])
-		.. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
-
-	w.cursorword = cursorword
-	-- w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
-end
-
-local function clear_highlights()
-	w.cursorword = nil
-	if w.cursorword_match_id then
-		pcall(fn.matchdelete, w.cursorword_match_id)
-		w.cursorword_match_id = nil
-	end
-end
-
-local function make_prompt(opts)
-	prompt_buf = api.nvim_create_buf(false, true)
-
-	api.nvim_buf_set_option(prompt_buf, "buftype", "prompt")
-	-- api.nvim_buf_set_option(prompt_buf, "number", false)
-	-- api.nvim_buf_set_option(prompt_buf, "relativenumber", false)
-
-	prompt_window = api.nvim_open_win(
-		prompt_buf,
-		true,
-		{ relative = "cursor", row = 1, col = 1, width = 20, height = 1, border = "rounded", style = "minimal" }
-	)
-	fn.prompt_setprompt(prompt_buf, opts.prompt)
-
-	fn.prompt_setcallback(prompt_buf, function(text)
-		if opts.callback(text) then
-			M.halt_rename()
-		end
-	end)
-
-	if opts.initial then
-		cmd("norm i" .. opts.initial)
-	end
-
-	bufmap("<esc>", [[<cmd>lua require('utils').halt_rename()<cr>]], "i")
-	bufmap("<c-c>", [[<cmd>lua require('utils').halt_rename()<cr>]], "i")
-
-	cmd("startinsert")
-
-	return prompt_buf, prompt_window
-end
 
 local function set_auto_close()
 	au([[ CursorMoved * ++once lua require('utils').remove_wins() ]])
@@ -78,7 +26,7 @@ local open_preview_win = function(target, position)
 		col = 4,
 		width = 120,
 		height = 15,
-		border = vim.g.floating_window_border,
+		border = g.floating_window_border,
 	}
 	-- Don't jump immediately, we need the windows list to contain ID before autocmd
 	windows[#windows + 1] = api.nvim_open_win(buffer, false, win_opts)
@@ -87,13 +35,6 @@ local open_preview_win = function(target, position)
 	set_auto_close()
 	api.nvim_win_set_cursor(windows[#windows], position)
 	fit_to_node(windows[#windows])
-end
-
-function M.halt_rename()
-	api.nvim_win_close(prompt_window, true)
-	api.nvim_buf_delete(prompt_buf, { force = true })
-	clear_highlights()
-	cmd("stopinsert")
 end
 
 function M.remove_wins()
@@ -110,30 +51,76 @@ function M.remove_wins()
 	end
 end
 
--- # REF:
--- - https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
--- - https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/rename.lua (simpler impl to investigate)
-function M.lsp.rename()
-	local bufnr = api.nvim_get_current_buf()
-	local params = lsp.util.make_position_params()
-	local prompt_prefix = " → "
-
-	add_highlights()
-
-	make_prompt({
-		prompt = prompt_prefix,
-		callback = function(new_name)
-			if not (new_name and #new_name > 0) then
-				return true
-			end
-			params.newName = new_name
-			lsp.buf_request(bufnr, "textDocument/rename", params)
-			clear_highlights()
-			return true
-		end,
-	})
+function M.t(str)
+	return api.nvim_replace_termcodes(str, true, true, true)
 end
 
+function M.check_back_space()
+	local col = fn.col(".") - 1
+	return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
+end
+
+-- # [ rename ] ----------------------------------------------------------------
+local rename_prompt = "Rename -> "
+local function highlight_rename_word()
+	local column = api.nvim_win_get_cursor(0)[2]
+	local line = api.nvim_get_current_line()
+	local cursorword = fn.matchstr(line:sub(1, column + 1), [[\k*$]])
+		.. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
+
+	w.cursorword = cursorword
+	-- w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
+end
+local clear_rename_highlights = function()
+	w.cursorword = nil
+	if w.cursorword_match_id then
+		pcall(fn.matchdelete, w.cursorword_match_id)
+		w.cursorword_match_id = nil
+	end
+end
+local cancel_rename_callback = function()
+	clear_rename_highlights()
+	cmd([[stopinsert]])
+	cmd([[bd!]])
+end
+local rename_callback = function()
+	local new_name = vim.trim(fn.getline("."):sub(#rename_prompt + 1, -1))
+	cmd([[stopinsert]])
+	cmd([[bd!]])
+	if #new_name == 0 or new_name == fn.expand("<cword>") then
+		return
+	end
+	local params = lsp.util.make_position_params()
+	params.newName = new_name
+	lsp.buf_request(0, "textDocument/rename", params)
+	clear_rename_highlights()
+end
+
+M.lsp.rename = function()
+	local current_name = fn.expand("<cword>")
+	local bufnr = api.nvim_create_buf(false, true)
+	api.nvim_buf_set_option(bufnr, "buftype", "prompt")
+	api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+	api.nvim_buf_add_highlight(bufnr, -1, "RenamePrompt", 0, 0, #rename_prompt)
+	highlight_rename_word()
+	fn.prompt_setprompt(bufnr, rename_prompt)
+	local winnr = api.nvim_open_win(bufnr, true, {
+		relative = "cursor",
+		width = 50,
+		height = 1,
+		row = -3,
+		col = 1,
+		style = "minimal",
+		border = g.floating_window_border,
+	})
+	api.nvim_win_set_option(winnr, "winhl", "Normal:Floating")
+	map("n", "<ESC>", cancel_rename_callback, { silent = true, buffer = true })
+	map({ "n", "i" }, "<CR>", rename_callback, { silent = true, buffer = true })
+	map("i", "<BS>", "<ESC>xi", { silent = true, buffer = true })
+	cmd(string.format("normal i%s", current_name))
+end
+
+-- # [ preview ] ---------------------------------------------------------------
 function M.lsp.preview(request)
 	local params = lsp.util.make_position_params()
 	pcall(lsp.buf_request, 0, request, params, function(_, _, result)
@@ -151,6 +138,7 @@ function M.lsp.preview(request)
 	end)
 end
 
+-- # [ diagnostics ] -----------------------------------------------------------
 function M.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
 	assert(bufnr or line)
 
@@ -182,6 +170,7 @@ function M.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
 	end
 end
 
+-- # [ hover ] -----------------------------------------------------------------
 function M.lsp.hover()
 	if next(lsp.buf_get_clients()) == nil then
 		cmd([[execute printf('h %s', expand('<cword>'))]])
@@ -190,6 +179,7 @@ function M.lsp.hover()
 	end
 end
 
+-- # [ config ] ----------------------------------------------------------------
 function M.lsp.config()
 	local cfg = {}
 	for _, client in pairs(lsp.get_active_clients()) do
@@ -197,15 +187,6 @@ function M.lsp.config()
 	end
 
 	mega.log(vim.inspect(cfg))
-end
-
-function M.lsp.t(str)
-	return api.nvim_replace_termcodes(str, true, true, true)
-end
-
-function M.lsp.check_back_space()
-	local col = fn.col(".") - 1
-	return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
 end
 
 return M

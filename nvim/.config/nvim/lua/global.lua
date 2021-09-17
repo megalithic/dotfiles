@@ -1,11 +1,11 @@
 local api, fn, cmd = vim.api, vim.fn, vim.cmd
-local M = {}
-
-local home = os.getenv("HOME")
-local path_sep = M.is_windows and "\\" or "/"
-local os_name = vim.loop.os_uname().sysname
+local M = { functions = {} }
 
 function M:load_variables()
+	local home = os.getenv("HOME")
+	local path_sep = M.is_windows and "\\" or "/"
+	local os_name = vim.loop.os_uname().sysname
+
 	self.is_mac = os_name == "Darwin"
 	self.is_linux = os_name == "Linux"
 	self.is_windows = os_name == "Windows"
@@ -21,78 +21,104 @@ end
 M:load_variables()
 
 M.dirs = {}
-M.dirs.dots = vim.fn.expand("$HOME/.dotfiles")
-M.dirs.icloud = vim.fn.expand("$ICLOUD_DIR")
-M.dirs.docs = vim.fn.expand("$DOCUMENTS_DIR")
-M.dirs.org = vim.fn.expand(M.dirs.docs .. "/_org")
-M.dirs.zettel = vim.fn.expand("$ZK_NOTEBOOK_DIR")
-
--- check file exists
-function M.exists(file)
-	local ok, err, code = os.rename(file, file)
-	if not ok then
-		if code == 13 then
-			-- Permission denied, but it exists
-			return true
-		end
-	end
-	return ok, err
-end
+M.dirs.dots = fn.expand("$HOME/.dotfiles")
+M.dirs.icloud = fn.expand("$ICLOUD_DIR")
+M.dirs.docs = fn.expand("$DOCUMENTS_DIR")
+M.dirs.org = fn.expand(M.dirs.docs .. "/_org")
+M.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 
 --- Check if a directory exists in this path
 function M.isdir(path)
-	-- "/" works on both Unix and Windows
-	return M.exists(path .. "/")
-end
-
-function M.log(msg, hl, name)
-	name = name or "megavim"
-	hl = hl or "Todo"
-	api.nvim_echo({ { name .. " -> ", hl }, { msg } }, true, {})
-end
-
-function M.warn(msg)
-	M.log(msg, "WarningMsg") -- LspDiagnosticsDefaultWarning
-end
-
-function M.error(msg)
-	M.log(msg, "ErrorMsg") -- LspDiagnosticsDefaultError
-end
-
-function M.inspect(k, v, l, f)
-	local force = f or false
-	local should_log = require("vim.lsp.log").should_log(1)
-	if not should_log and not force then
-		return
+	-- check if file exists
+	local function file_exists(file)
+		local ok, err, code = os.rename(file, file)
+		if not ok then
+			if code == 13 then
+				-- Permission denied, but it exists
+				return true
+			end
+		end
+		return ok, err
 	end
 
-	local level = "[DEBUG]"
+	-- "/" works on both Unix and Windows
+	return file_exists(path .. "/")
+end
+
+function M.log(msg, hl, reason)
+	if hl == nil and reason == nil then
+		api.nvim_echo({ { msg } }, true, {})
+	else
+		local name = "megavim"
+		local prefix = name .. " -> \n"
+		if reason ~= nil then
+			prefix = name .. " -> " .. reason .. "\n"
+		end
+		hl = hl or "Todo"
+		api.nvim_echo({ { prefix, hl }, { msg } }, true, {})
+	end
+end
+
+function M.warn(msg, reason)
+	M.log(msg, "WarningMsg", reason) -- LspDiagnosticsDefaultWarning
+end
+
+function M.error(msg, reason)
+	M.log(msg, "ErrorMsg", reason) -- LspDiagnosticsDefaultError
+end
+
+-- FIXME: this _DOES NOT_ work?
+-- function M.dump(...)
+-- 	print(unpack(vim.tbl_map(inspect, { ... })))
+-- end
+
+function M.get_log_string(label, level)
+	local display_level = "[DEBUG]"
 	local hl = "WarningMsg"
-	if level ~= nil and l == 4 then
-		level = "[ERROR]"
+
+	if display_level ~= nil and (level == 4 or level == "ERROR" or level == vim.log.levels.ERROR) then
+		display_level = "[ERROR]"
 		hl = "ErrorMsg"
 	end
 
-	if v then
-		-- print(level .. " " .. k .. " -> " .. vim.inspect(v))
-		M.log(string.format("%s %s: %s", level, k, vim.inspect(v)), hl)
-	else
-		-- print(level .. " " .. k .. "..")
-		M.log(string.format("%s %s", level, k), hl)
-	end
+	local str = string.format("%s %s", display_level, label)
+
+	return str, hl
+end
+
+function M.inspect(label, v, level)
+	local str, hl = M.get_log_string(label, level)
+
+	M.log(str, hl)
+	M.log(v)
 
 	return v
 end
 
--- function M.map(lhs, rhs, mode, expr) -- wait for lua keymaps: neovim/neovim#13823
---   mode = mode or "n"
---   if mode == "n" then
---     rhs = "<cmd>" .. rhs .. "<cr>"
---   end
---   api.nvim_set_keymap(mode, lhs, rhs, {noremap = true, silent = true, expr = expr})
--- end
+-- a safe module loader
+function M.load(module, opts)
+	opts = opts or { silent = false, safe = false }
 
-M.functions = {}
+	if opts.key == nil then
+		opts.key = "loader"
+	end
+
+	local ok, result = pcall(require, module)
+
+	if not ok and not opts.silent then
+		-- REF: https://github.com/neovim/neovim/blob/master/src/nvim/lua/vim.lua#L421
+		local level = vim.log.levels.ERROR
+		local reason = M.get_log_string("loading failed", level)
+
+		M.error(result, reason)
+	end
+
+	if opts.safe == true then
+		return ok, result
+	else
+		return result
+	end
+end
 
 function M.execute(id)
 	local func = M.functions[id]
@@ -102,10 +128,17 @@ function M.execute(id)
 	return func()
 end
 
-function M.map(mode, lhs, rhs, opts)
-	local map_opts = { noremap = true, silent = true, expr = false }
-	opts = vim.tbl_extend("force", map_opts, opts or {})
+-- look at exposing some map helpers like b0o/mapx does
+function M.map(modes, lhs, rhs, opts)
+	-- TODO: extract these to a function or a module var
+	local map_opts = { noremap = true, silent = true, expr = false, nowait = false }
 
+	opts = vim.tbl_extend("force", map_opts, opts or {})
+	local buffer = opts.buffer
+	opts.buffer = nil
+
+	-- let's us pass in local lua functions without having to shove them on the
+	-- global first!
 	if type(rhs) == "function" then
 		table.insert(M.functions, rhs)
 		if opts.expr then
@@ -114,27 +147,35 @@ function M.map(mode, lhs, rhs, opts)
 			rhs = ("<cmd>lua require('global').execute(%d)<cr>"):format(#M.functions)
 		end
 	end
-	api.nvim_set_keymap(mode, lhs, rhs, opts)
+
+	-- just a string mode? shove that junk into a table!
+	if type(modes) ~= "table" then
+		modes = { modes }
+	end
+
+	for i = 1, #modes do
+		if buffer then
+			vim.api.nvim_buf_set_keymap(0, modes[i], lhs, rhs, opts)
+		else
+			vim.api.nvim_set_keymap(modes[i], lhs, rhs, opts)
+		end
+	end
 end
 
+-- this assumes the first buffer (0); refactor to accept a buffer
 function M.bufmap(lhs, rhs, mode, expr)
 	mode = mode or "n"
+
 	if mode == "n" then
 		rhs = "<cmd>" .. rhs .. "<cr>"
 	end
-	api.nvim_buf_set_keymap(0, mode, lhs, rhs, { noremap = true, silent = true, expr = expr })
+
+	M.map(mode, lhs, rhs, { noremap = true, silent = true, expr = expr, buffer = 0 })
 end
 
 function M.au(s)
 	cmd("au!" .. s)
 end
-
--- function M.augroup(group, fun)
--- 	api.nvim_command("augroup " .. group)
--- 	api.nvim_command("autocmd!")
--- 	fun()
--- 	api.nvim_command("augroup END")
--- end
 
 function M.augroup(name, commands)
 	cmd("augroup " .. name)
@@ -184,10 +225,7 @@ function M.highlight(name, opts)
 		end
 	end
 end
-
-function M.hi(...)
-	M.highlight(...)
-end
+M.hi = M.highlight
 
 function M.hi_link(src, dest)
 	cmd("hi! link " .. src .. " " .. dest)
@@ -197,47 +235,32 @@ function M.exec(c)
 	api.nvim_exec(c, true)
 end
 
--- a safe module loader
-function M.load(req, key)
-	if key == nil then
-		key = "loader"
-	end
+function M.table_merge(t1, t2, opts)
+	opts = opts or { strategy = "deep" }
 
-	local loaded, loader = pcall(require, req)
-
-	if loaded then
-		return loader
+	if opts.strategy == "deep" then
+		-- # deep_merge:
+		for k, v in pairs(t2) do
+			if (type(v) == "table") and (type(t1[k] or false) == "table") then
+				M.table_merge(t1[k], t2[k])
+			else
+				t1[k] = v
+			end
+		end
 	else
-		mega.inspect("loading failed", { key, loader }, 4, true)
-	end
-end
-
-function M.safe_require(module, opts)
-	opts = opts or { silent = false }
-	local ok, result = pcall(require, module)
-	if not ok and not opts.silent then
-		-- vim.notify(result, L.ERROR, { title = fmt("Error requiring: %s", module) })
-		vim.notify(result, "ERROR", { title = string.format("Error requiring: %s", module) })
-	end
-	return ok, result
-end
-
-function M.table_merge(t1, t2)
-	-- # shallow_merge:
-	-- for k, v in pairs(t2) do
-	--   t1[k] = v
-	-- end
-	-- return t1
-
-	-- # deep_merge:
-	for k, v in pairs(t2) do
-		if (type(v) == "table") and (type(t1[k] or false) == "table") then
-			M.table_merge(t1[k], t2[k])
-		else
+		-- # shallow_merge:
+		for k, v in pairs(t2) do
 			t1[k] = v
 		end
 	end
+
 	return t1
+end
+M.deep_merge = function(...)
+	M.table_merge(..., { strategy = "deep" })
+end
+M.shallow_merge = function(...)
+	M.table_merge(..., { strategy = "shallow" })
 end
 
 -- helps with nerdfonts usages
@@ -259,10 +282,6 @@ function M.utf8(decimal)
 		end
 	end
 	return table.concat(charbytes)
-end
-
-function M.dump(...)
-	print(unpack(vim.tbl_map(inspect, { ... })))
 end
 
 function M.has(feature)

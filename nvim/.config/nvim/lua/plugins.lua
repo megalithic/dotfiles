@@ -146,6 +146,7 @@ return {
 	-- :Time     <- measure how long it takes to run some stuff.
 	"tpope/vim-scriptease",
 	"christoomey/vim-tmux-navigator",
+	-- "https://github.com/aserowy/tmux.nvim"
 	-- "tmux-plugins/vim-tmux-focus-events",
 	"christoomey/vim-tmux-runner",
 	"junegunn/vim-slash",
