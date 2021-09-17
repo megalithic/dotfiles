@@ -3,6 +3,32 @@
 # REF:
 # * customs: https://github.com/starship/starship/discussions/1252
 
+format = """
+$username\
+$hostname\
+$shlvl\
+$directory\
+$vcsh\
+$git_branch\
+$git_commit\
+$git_state\
+$git_metrics\
+$git_status\
+$hg_branch\
+$memory_usage\
+$env_var\
+$crystal\
+$custom\
+$cmd_duration\
+$line_break\
+$lua\
+$jobs\
+$battery\
+$time\
+$status\
+$shell\
+$character"""
+
 [username]
 # show_always = true
 style_root = "red"
