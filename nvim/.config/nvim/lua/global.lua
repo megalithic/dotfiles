@@ -128,17 +128,17 @@ function M.execute(id)
 	return func()
 end
 
--- look at exposing some map helpers like b0o/mapx does
-function M.map(modes, lhs, rhs, opts)
-	-- TODO: extract these to a function or a module var
-	local map_opts = { noremap = true, silent = true, expr = false, nowait = false }
+-- TODO: extract these to a function or a module var
+local map_opts = { noremap = true, silent = true, expr = false, nowait = false }
 
+-- TODO: look at exposing some map helpers like b0o/mapx does
+function M.map(modes, lhs, rhs, opts)
 	opts = vim.tbl_extend("force", map_opts, opts or {})
 	local buffer = opts.buffer
 	opts.buffer = nil
 
-	-- let's us pass in local lua functions without having to shove them on the
-	-- global first!
+	-- this let's us pass in local lua functions without having to shove them on
+	-- the global first!
 	if type(rhs) == "function" then
 		table.insert(M.functions, rhs)
 		if opts.expr then
@@ -148,16 +148,26 @@ function M.map(modes, lhs, rhs, opts)
 		end
 	end
 
-	-- just a string mode? shove that junk into a table!
+	-- handle single mode being given
 	if type(modes) ~= "table" then
 		modes = { modes }
 	end
 
 	for i = 1, #modes do
-		if buffer then
-			vim.api.nvim_buf_set_keymap(0, modes[i], lhs, rhs, opts)
+		-- auto switch between buffer mode or not; TODO: deprecate M.bufmap
+		if buffer and type(buffer) == "number" then
+			vim.api.nvim_buf_set_keymap(buffer, modes[i], lhs, rhs, opts)
 		else
 			vim.api.nvim_set_keymap(modes[i], lhs, rhs, opts)
+		end
+
+		-- auto-register which-key item
+		if opts.label then
+			local ok, wk = M.load("which-key", { silent = true, safe = true })
+			if ok then
+				wk.register({ [lhs] = opts.label }, { mode = modes[i] })
+			end
+			opts.label = nil
 		end
 	end
 end

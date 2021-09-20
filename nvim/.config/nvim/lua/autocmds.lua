@@ -47,7 +47,7 @@ augroup("auto-cursor", {
 	events = { "BufReadPost" },
 	targets = { "*" },
 	command = function()
-		local pos = fn.line("'\"")
+		local pos = fn.line([['"]])
 		if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
 			vim.cmd('keepjumps normal g`"')
 		end

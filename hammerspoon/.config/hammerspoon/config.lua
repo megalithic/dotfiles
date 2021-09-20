@@ -246,7 +246,7 @@ M.apps = {
 		context = "messages",
 		distraction = true,
 		rules = {
-			{ nil, 1, M.layout.bottomRight30 },
+			{ nil, 2, M.layout.bottomRight30 },
 		},
 	},
 	["hangouts"] = {
@@ -267,7 +267,7 @@ M.apps = {
 		context = "whatsapp",
 		distraction = true,
 		rules = {
-			{ nil, 1, M.layout.bottomRight30 },
+			{ nil, 2, M.layout.bottomRight30 },
 		},
 	},
 	["org.whispersystems.signal-desktop"] = {
@@ -277,7 +277,7 @@ M.apps = {
 		context = "signal",
 		distraction = true,
 		rules = {
-			{ nil, 1, M.layout.bottomRight30 },
+			{ nil, 2, M.layout.bottomRight30 },
 		},
 	},
 	["com.agilebits.onepassword7"] = {

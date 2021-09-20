@@ -3,6 +3,7 @@ local bufmap, au = mega.bufmap, mega.au
 
 local M = { lsp = {} }
 local windows = {}
+local diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostic")
 
 local function set_auto_close()
 	au([[ CursorMoved * ++once lua require('utils').remove_wins() ]])
@@ -62,63 +63,97 @@ end
 
 -- # [ rename ] ----------------------------------------------------------------
 local rename_prompt = "Rename -> "
-local function highlight_rename_word()
-	local column = api.nvim_win_get_cursor(0)[2]
-	local line = api.nvim_get_current_line()
-	local cursorword = fn.matchstr(line:sub(1, column + 1), [[\k*$]])
-		.. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
-
-	w.cursorword = cursorword
-	-- w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
-end
-local clear_rename_highlights = function()
-	w.cursorword = nil
-	if w.cursorword_match_id then
-		pcall(fn.matchdelete, w.cursorword_match_id)
-		w.cursorword_match_id = nil
-	end
-end
-local cancel_rename_callback = function()
-	clear_rename_highlights()
-	cmd([[stopinsert]])
-	cmd([[bd!]])
-end
-local rename_callback = function()
-	local new_name = vim.trim(fn.getline("."):sub(#rename_prompt + 1, -1))
-	cmd([[stopinsert]])
-	cmd([[bd!]])
-	if #new_name == 0 or new_name == fn.expand("<cword>") then
-		return
-	end
-	local params = lsp.util.make_position_params()
-	params.newName = new_name
-	lsp.buf_request(0, "textDocument/rename", params)
-	clear_rename_highlights()
-end
-
 M.lsp.rename = function()
-	local current_name = fn.expand("<cword>")
-	local bufnr = api.nvim_create_buf(false, true)
-	api.nvim_buf_set_option(bufnr, "buftype", "prompt")
-	api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
-	api.nvim_buf_add_highlight(bufnr, -1, "RenamePrompt", 0, 0, #rename_prompt)
-	highlight_rename_word()
-	fn.prompt_setprompt(bufnr, rename_prompt)
-	local winnr = api.nvim_open_win(bufnr, true, {
+	local current_name = vim.fn.expand("<cword>")
+	local bufnr = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_option(bufnr, "buftype", "prompt")
+	vim.api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+	vim.api.nvim_buf_add_highlight(bufnr, -1, "RenamePrompt", 0, 0, #rename_prompt)
+	vim.fn.prompt_setprompt(bufnr, rename_prompt)
+	local winnr = vim.api.nvim_open_win(bufnr, true, {
 		relative = "cursor",
 		width = 50,
 		height = 1,
 		row = -3,
 		col = 1,
 		style = "minimal",
-		border = g.floating_window_border,
+		border = vim.g.floating_window_border,
 	})
-	api.nvim_win_set_option(winnr, "winhl", "Normal:Floating")
-	map("n", "<ESC>", cancel_rename_callback, { silent = true, buffer = true })
-	map({ "n", "i" }, "<CR>", rename_callback, { silent = true, buffer = true })
-	map("i", "<BS>", "<ESC>xi", { silent = true, buffer = true })
-	cmd(string.format("normal i%s", current_name))
+	vim.api.nvim_win_set_option(winnr, "winhl", "Normal:Floating")
+	mega.map("n", "<ESC>", "<cmd>bd!<CR>", { silent = true, buffer = true })
+	mega.map({ "n", "i" }, "<CR>", "<cmd>lua require('utils').callback()<CR>", { silent = true, buffer = true })
+	mega.map("i", "<BS>", "<ESC>xi", { silent = true, buffer = true })
+	vim.cmd(string.format("normal i%s", current_name))
 end
+
+M.callback = function()
+	local new_name = vim.trim(vim.fn.getline("."):sub(#rename_prompt + 1, -1))
+	vim.cmd([[stopinsert]])
+	vim.cmd([[bd!]])
+	if #new_name == 0 or new_name == vim.fn.expand("<cword>") then
+		return
+	end
+	local params = vim.lsp.util.make_position_params()
+	params.newName = new_name
+	vim.lsp.buf_request(0, "textDocument/rename", params)
+end
+-- local function highlight_rename_word()
+-- 	local column = api.nvim_win_get_cursor(0)[2]
+-- 	local line = api.nvim_get_current_line()
+-- 	local cursorword = fn.matchstr(line:sub(1, column + 1), [[\k*$]])
+-- 		.. fn.matchstr(line:sub(column + 1), [[^\k*]]):sub(2)
+
+-- 	w.cursorword = cursorword
+-- 	-- w.cursorword_match_id = fn.matchadd("CursorWord", [[\<]] .. cursorword .. [[\>]])
+-- end
+-- local clear_rename_highlights = function()
+-- 	w.cursorword = nil
+-- 	if w.cursorword_match_id then
+-- 		pcall(fn.matchdelete, w.cursorword_match_id)
+-- 		w.cursorword_match_id = nil
+-- 	end
+-- end
+-- local cancel_rename_callback = function()
+-- 	clear_rename_highlights()
+-- 	cmd([[stopinsert]])
+-- 	cmd([[bd!]])
+-- end
+-- local rename_callback = function()
+-- 	local new_name = vim.trim(fn.getline("."):sub(#rename_prompt + 1, -1))
+-- 	cmd([[stopinsert]])
+-- 	cmd([[bd!]])
+-- 	if #new_name == 0 or new_name == fn.expand("<cword>") then
+-- 		return
+-- 	end
+-- 	local params = lsp.util.make_position_params()
+-- 	params.newName = new_name
+-- 	lsp.buf_request(0, "textDocument/rename", params)
+-- 	clear_rename_highlights()
+-- end
+
+-- M.lsp.rename = function()
+-- 	local current_name = fn.expand("<cword>")
+-- 	local bufnr = api.nvim_create_buf(false, true)
+-- 	api.nvim_buf_set_option(bufnr, "buftype", "prompt")
+-- 	api.nvim_buf_set_option(bufnr, "bufhidden", "wipe")
+-- 	api.nvim_buf_add_highlight(bufnr, -1, "RenamePrompt", 0, 0, #rename_prompt)
+-- 	highlight_rename_word()
+-- 	fn.prompt_setprompt(bufnr, rename_prompt)
+-- 	local winnr = api.nvim_open_win(bufnr, true, {
+-- 		relative = "cursor",
+-- 		width = 50,
+-- 		height = 1,
+-- 		row = -3,
+-- 		col = 1,
+-- 		style = "minimal",
+-- 		border = g.floating_window_border,
+-- 	})
+-- 	api.nvim_win_set_option(winnr, "winhl", "Normal:Floating")
+-- 	map("n", "<ESC>", cancel_rename_callback, { silent = true, buffer = true })
+-- 	map({ "n", "i" }, "<CR>", rename_callback, { silent = true, buffer = true })
+-- 	map("i", "<BS>", "<ESC>xi", { silent = true, buffer = true })
+-- 	cmd(string.format("normal i%s", current_name))
+-- end
 
 -- # [ preview ] ---------------------------------------------------------------
 function M.lsp.preview(request)
@@ -139,35 +174,17 @@ function M.lsp.preview(request)
 end
 
 -- # [ diagnostics ] -----------------------------------------------------------
-function M.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
-	assert(bufnr or line)
-
-	if #line_diags == 0 then
-		return nil
-	end
-
-	opts = opts or {}
-	-- defaults, just in case
-	local prefix = opts.prefix or "■"
-	local spacing = opts.spacing or 4
-
-	-- Create a little more space between virtual text and contents
-	local virt_texts = { { string.rep(" ", spacing) } }
-	local last = line_diags[#line_diags]
-	if last.message then
-		local message = ""
-		if #line_diags > 1 then
-			message = string.format("%s [%d] %s", prefix, #line_diags, last.message:gsub("\r", ""):gsub("\n", "  "))
-		else
-			message = string.format("%s %s", prefix, last.message:gsub("\r", ""):gsub("\n", "  "))
+function M.lsp.show_diagnostics()
+	vim.schedule(function()
+		local line = api.nvim_win_get_cursor(0)[1] - 1
+		local diagnostics = vim.lsp.diagnostic.get_line_diagnostics()
+		api.nvim_buf_clear_namespace(0, diagnostic_ns, 0, -1)
+		if #diagnostics == 0 then
+			return false
 		end
-
-		table.insert(virt_texts, {
-			message,
-			vim.lsp.diagnostic._get_severity_highlight_name(last.severity),
-		})
-		return virt_texts
-	end
+		local virt_texts = vim.lsp.diagnostic.get_virtual_text_chunks_for_line(0, line, diagnostics)
+		api.nvim_buf_set_virtual_text(0, diagnostic_ns, line, virt_texts, {})
+	end)
 end
 
 -- # [ hover ] -----------------------------------------------------------------

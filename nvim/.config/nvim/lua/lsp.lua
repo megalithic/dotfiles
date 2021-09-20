@@ -19,17 +19,14 @@ local function setup_sign_column()
 	local sign_information = colors.icons.sign_information
 	local sign_hint = colors.icons.sign_hint
 
-	fn.sign_define("LspDiagnosticsSignError", { text = sign_error, numhl = "LspDiagnosticsDefaultError" })
-	fn.sign_define("LspDiagnosticsSignWarning", { text = sign_warning, numhl = "LspDiagnosticsDefaultWarning" })
-	fn.sign_define(
-		"LspDiagnosticsSignInformation",
-		{ text = sign_information, numhl = "LspDiagnosticsDefaultInformation" }
-	)
-	fn.sign_define("LspDiagnosticsSignHint", { text = sign_hint, numhl = "LspDiagnosticsDefaultHint" })
-end
+	fn.sign_define("DiagnosticSignError", { text = sign_error, numhl = "DiagnosticDefaultError" })
+	fn.sign_define("DiagnosticSignWarning", { text = sign_warning, numhl = "DiagnosticDefaultWarning" })
+	fn.sign_define("DiagnosticSignInformation", { text = sign_information, numhl = "DiagnosticDefaultInformation" })
+	fn.sign_define("DiagnosticSignHint", { text = sign_hint, numhl = "DiagnosticDefaultHint" })
 
-local function setup_lsp_handlers()
-	lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, {
+	-- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
+	-- REF: https://github.com/neovim/neovim/pull/15585
+	vim.diagnostic.config({
 		underline = true,
 		virtual_text = {
 			prefix = "",
@@ -40,12 +37,9 @@ local function setup_lsp_handlers()
 		update_in_insert = false,
 		severity_sort = true,
 	})
+end
 
-	-- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
-	lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
-		return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
-	end
-
+local function setup_lsp_handlers()
 	-- hover
 	-- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
 	lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
@@ -302,8 +296,8 @@ local function on_attach(client, bufnr)
 	end
 
 	--- # diagnostics navigation mappings
-	bufmap("[d", "lua vim.lsp.diagnostic.goto_prev()")
-	bufmap("]d", "lua vim.lsp.diagnostic.goto_next()")
+	bufmap("[d", "lua vim.diagnostic.goto_prev()")
+	bufmap("]d", "lua vim.diagnostic.goto_next()")
 
 	--- # misc mappings
 	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
@@ -324,7 +318,8 @@ local function on_attach(client, bufnr)
 	map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
 	--- # autocommands/autocmds
-	-- au("CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({focusable=false})")
+	-- au("CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({focusable=false})")
+	-- au("CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()")
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	if client.resolved_capabilities.document_formatting then
 		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")

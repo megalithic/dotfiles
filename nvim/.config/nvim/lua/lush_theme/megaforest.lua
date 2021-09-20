@@ -246,6 +246,9 @@ return lush(function()
 		WarningFloat({ fg = yellow, bg = bg2 }),
 		InfoFloat({ fg = blue, bg = bg2 }),
 		HintFloat({ fg = green, bg = bg2 }),
+
+		-- These to be deprecated?
+		-- REF: https://github.com/neovim/neovim/pull/15585
 		LspDiagnosticsFloatingError({ ErrorFloat }),
 		LspDiagnosticsFloatingWarning({ WarningFloat }),
 		LspDiagnosticsFloatingInformation({ InfoFloat }),
@@ -266,6 +269,28 @@ return lush(function()
 		LspDiagnosticsSignWarning({ YellowSign }),
 		LspDiagnosticsSignInformation({ BlueSign }),
 		LspDiagnosticsSignHint({ AquaSign }),
+		-- .. and to be replaced with these:
+		DiagnosticFloatingError({ ErrorFloat }),
+		DiagnosticFloatingWarning({ WarningFloat }),
+		DiagnosticFloatingInformation({ InfoFloat }),
+		DiagnosticFloatingHint({ HintFloat }),
+		DiagnosticDefaultError({ ErrorText }),
+		DiagnosticDefaultWarning({ WarningText }),
+		DiagnosticDefaultInformation({ InfoText }),
+		DiagnosticDefaultHint({ HintText }),
+		DiagnosticVirtualTextError({ ErrorFloat }),
+		DiagnosticVirtualTextWarning({ WarningFloat }),
+		DiagnosticVirtualTextInformation({ InfoFloat }),
+		DiagnosticVirtualTextHint({ HintFloat }),
+		DiagnosticUnderlineError({ ErrorText }),
+		DiagnosticUnderlineWarning({ WarningText }),
+		DiagnosticUnderlineInformation({ InfoText }),
+		DiagnosticUnderlineHint({ HintText }),
+		DiagnosticSignError({ RedSign }),
+		DiagnosticSignWarning({ YellowSign }),
+		DiagnosticSignInformation({ BlueSign }),
+		DiagnosticSignHint({ AquaSign }),
+
 		LspReferenceText({ CurrentWord }),
 		LspReferenceRead({ CurrentWord }),
 		LspReferenceWrite({ CurrentWord }),
