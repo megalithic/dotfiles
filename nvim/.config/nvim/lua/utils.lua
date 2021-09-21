@@ -5,53 +5,6 @@ local M = { lsp = {} }
 local windows = {}
 local diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostic")
 
-local function set_auto_close()
-	au([[ CursorMoved * ++once lua require('utils').remove_wins() ]])
-end
-
-local function fit_to_node(window)
-	local node = require("nvim-treesitter.ts_utils").get_node_at_cursor()
-	if node:type() == "identifier" then
-		node = node:parent()
-	end
-	local start_row, _, end_row, _ = node:range()
-	local new_height = math.min(math.max(end_row - start_row + 6, 15), 30)
-	api.nvim_win_set_height(window, new_height)
-end
-
-local open_preview_win = function(target, position)
-	local buffer = vim.uri_to_bufnr(target)
-	local win_opts = {
-		relative = "cursor",
-		row = 4,
-		col = 4,
-		width = 120,
-		height = 15,
-		border = g.floating_window_border,
-	}
-	-- Don't jump immediately, we need the windows list to contain ID before autocmd
-	windows[#windows + 1] = api.nvim_open_win(buffer, false, win_opts)
-	api.nvim_set_current_win(windows[#windows])
-	api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
-	set_auto_close()
-	api.nvim_win_set_cursor(windows[#windows], position)
-	fit_to_node(windows[#windows])
-end
-
-function M.remove_wins()
-	local current = api.nvim_get_current_win()
-	for i = #windows, 1, -1 do
-		if current == windows[i] then
-			break
-		end
-		pcall(api.nvim_win_close, windows[i], true)
-		table.remove(windows, i)
-	end
-	if #windows > 0 then
-		set_auto_close()
-	end
-end
-
 function M.t(str)
 	return api.nvim_replace_termcodes(str, true, true, true)
 end
@@ -125,9 +78,43 @@ function M.cleanup_rename_callback()
 end
 
 -- # [ preview ] ---------------------------------------------------------------
+local function set_auto_close()
+	au([[ CursorMoved * ++once lua require('utils').remove_wins() ]])
+end
+
+local function fit_to_node(window)
+	local node = require("nvim-treesitter.ts_utils").get_node_at_cursor()
+	if node:type() == "identifier" then
+		node = node:parent()
+	end
+	local start_row, _, end_row, _ = node:range()
+	local new_height = math.min(math.max(end_row - start_row + 6, 15), 30)
+	api.nvim_win_set_height(window, new_height)
+end
+
+local open_preview_win = function(target, position)
+	local buffer = vim.uri_to_bufnr(target)
+	local win_opts = {
+		relative = "cursor",
+		row = 4,
+		col = 4,
+		width = 120,
+		height = 15,
+		border = g.floating_window_border,
+	}
+
+	-- Don't jump immediately, we need the windows list to contain ID before autocmd
+	windows[#windows + 1] = api.nvim_open_win(buffer, false, win_opts)
+	api.nvim_set_current_win(windows[#windows])
+	api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
+	set_auto_close()
+	api.nvim_win_set_cursor(windows[#windows], position)
+	fit_to_node(windows[#windows])
+end
+
 function M.lsp.preview(request)
 	local params = lsp.util.make_position_params()
-	pcall(lsp.buf_request, 0, request, params, function(_, _, result)
+	pcall(lsp.buf_request, 0, request, params, function(_, result)
 		if not result then
 			return
 		end
@@ -137,10 +124,24 @@ function M.lsp.preview(request)
 		local range = data.targetRange or data.range
 		open_preview_win(target, { range.start.line + 1, range.start.character })
 
-		bufmap("<esc>", [[lua require('utils').remove_wins()]])
-		bufmap("<c-c>", [[lua require('utils').remove_wins()]])
-		bufmap("q", [[lua require('utils').remove_wins()]])
+		-- 		bufmap("<esc>", [[lua require('utils').remove_wins()]])
+		-- 		bufmap("<c-c>", [[lua require('utils').remove_wins()]])
+		-- 		bufmap("q", [[lua require('utils').remove_wins()]])
 	end)
+end
+
+function M.remove_wins()
+	local current = api.nvim_get_current_win()
+	for i = #windows, 1, -1 do
+		if current == windows[i] then
+			break
+		end
+		pcall(api.nvim_win_close, windows[i], true)
+		table.remove(windows, i)
+	end
+	if #windows > 0 then
+		set_auto_close()
+	end
 end
 
 -- # [ diagnostics ] -----------------------------------------------------------
