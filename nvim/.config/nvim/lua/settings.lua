@@ -59,69 +59,6 @@ do -- [nvim options/ui/appearance] --
 		vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
 		vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
 	end
-
-	-- # clipboard
-	local clipboard
-	-- if env.DISPLAY and fn.executable("xsel") == 1 then
-	-- 	clipboard = {
-	-- 		name = "xsel",
-	-- 		copy = {
-	-- 			["+"] = { "xsel", "--nodetach", "-i", "-b" },
-	-- 			["*"] = { "xsel", "--nodetach", "-i", "-p" },
-	-- 		},
-	-- 		paste = { ["+"] = { "xsel", "-o", "-b" }, ["*"] = { "xsel", "-o", "-p" } },
-	-- 		cache_enabled = true,
-	-- 	}
-	if env.DISPLAY and fn.executable("clippy") == 1 then
-		clipboard = {
-			name = "lemonade",
-			copy = {
-				["+"] = { "clippy", "set" },
-				["*"] = { "clippy", "set" },
-			},
-			paste = {
-				["+"] = { "clippy", "get" },
-				["*"] = { "clippy", "get" },
-			},
-			cache_enabled = false,
-		}
-	elseif env.DISPLAY and fn.executable("lemonade") == 1 then
-		clipboard = {
-			name = "lemonade",
-			copy = {
-				["+"] = { "lemonade", "copy" },
-				["*"] = { "lemonade", "copy" },
-			},
-			paste = {
-				["+"] = { "lemonade", "paste" },
-				["*"] = { "lemonade", "paste" },
-			},
-			cache_enabled = false,
-		}
-	elseif env.TMUX then
-		clipboard = {
-			name = "tmux",
-			copy = { ["+"] = { "tmux", "load-buffer", "-w", "-" } },
-			paste = { ["+"] = { "tmux", "save-buffer", "-" } },
-			cache_enabled = true,
-		}
-		clipboard.copy["*"] = clipboard.copy["+"]
-		clipboard.paste["*"] = clipboard.paste["+"]
-	elseif fn.executable("osc52send") == 1 then
-		clipboard = {
-			name = "osc52send",
-			copy = { ["+"] = { "osc52send" } },
-			paste = {
-				["+"] = function()
-					return { fn.getreg("0", 1, true), fn.getregtype("0") }
-				end,
-			},
-			cache_enabled = false,
-		}
-		clipboard.copy["*"] = clipboard.copy["+"]
-		clipboard.paste["*"] = clipboard.paste["+"]
-	end
-	g.clipboard = clipboard
 end
 
 do

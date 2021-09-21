@@ -126,12 +126,15 @@ if empty($SSH_CONNECTION) && has('clipboard')
   set clipboard=unnamed  " Use clipboard register
 
   " Share X windows clipboard. NOT ON NEOVIM -- neovim automatically uses
-  " system clipboard when xclip/xsel/pbcopy are available.
+  " system clipboard when xclip/xsel/pbcopy/lemonade are available.
   if has('nvim') && !has('mac')
     set clipboard=unnamedplus
   elseif has('unnamedplus')
     set clipboard+=unnamedplus
   endif
+else
+  " for linux
+  set clipboard+=unnamedplus
 endif
 
 set colorcolumn=81 " Highlight column 81
