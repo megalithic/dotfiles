@@ -15,10 +15,6 @@ export PAGER="less"
 export MANPAGER="$EDITOR +Man!"
 export MANWIDTH=999
 export LESS="-F -g -i -M -R -S -w -X -z-4"
-# if (( $+commands[lesspipe.sh] )); then
-#     # Set the Less input preprocessor.
-#     export LESSOPEN='| /usr/bin/env lesspipe.sh %s 2>&-'
-# fi
 
 #
 # lang
@@ -29,6 +25,9 @@ export TZ="/usr/share/zoneinfo/US/Central"
 
 #
 # dir locatons
+export XDG_CONFIG_HOME  # we've set this .zshenv
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
 export DOTS="$HOME/.dotfiles"
 export DOTFILES="$DOTS"
 export DOTDIR="$DOTS"
@@ -36,40 +35,46 @@ export DOTSDIR="$DOTS"
 export PRIVATES="$DOTS/private"
 export PRIVATE="$PRIVATES"
 export HOMEDIR="$HOME"
-
+export PROJECTS="$HOME/code"
+export GIT_REPO_DIR="$PROJECTS"
+#
+# -- qmk
 export QMK_HOME="$HOME/code/qmk_firmware"
-
+#
+# -- golang
 export GOPATH="$HOME/.go"
 export GOBIN="$GOPATH/bin"
-
+#
+# -- rust/cargo
 export CARGOPATH="$HOME/.cargo"
 export CARGOBIN="$CARGOPATH/bin"
-
+#
+# -- asdf
 export ASDF_DIR="$HOME/.asdf"
 export ASDF_SHIMS="$ASDF_DIR/shims"
 export ASDF_BIN="$ASDF_SHIMS"
 export ASDF_INSTALLS="$ASDF_DIR/installs"
 # export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 
-export XDG_CONFIG_HOME  # Value is set in .zshenv
-# export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_CACHE_HOME="$HOME/.cache"
-
+#
+# -- rg
 export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+#
+# -- weechat
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 
-export GIT_REPO_DIR="$HOME/code"
 # export TERMINFO="$HOME/.terminfo"
-export _Z_DATA="$HOME/.z-history"
-export TERM_ITALICS="TRUE"
+# export _Z_DATA="$HOME/.z-history"
 
+# -- bat
 export BAT_THEME="base16"
 export BAT_CONFIG_PATH="$HOME/.batrc"
 
+# -- zsh plugins
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89"
 # export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"  # nova bg
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
+export TERM_ITALICS="TRUE"
 
 #
 # platform-specific
@@ -124,7 +129,6 @@ export NVIM_TUI_ENABLE_TRUE_COLOR=1
 export WORDCHARS='*?_[]~=&;!#$%^(){}'
 export ACK_COLOR_MATCH='red'
 export CC=/usr/bin/gcc
-export DISPLAY=:0.0
 
 # reduce ESC key delay to 0.1
 export KEYTIMEOUT=1
@@ -205,6 +209,7 @@ path=(
     $HOME/bin
     $HOME/.bin
     $DOTS/bin
+    $PRIVATES/bin
     $ASDF_DIR
     $ASDF_BIN
     $ASDF_SHIMS

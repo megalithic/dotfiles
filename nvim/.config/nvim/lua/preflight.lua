@@ -72,8 +72,15 @@ end
 do
 	-- handle caching for SPEED #gainz
 	-- https://github.com/lewis6991/impatient.nvim
-	local ok, impatient = mega.load("impatient", { safe = true })
-	if ok then
-		impatient.enable_profile()
-	end
+	--
+	-- ****
+	-- FIXME: presently (2021-09-21) crashing due to:
+	-- ...pack/paqs/start/impatient.nvim/lua/impatient/profile.lua:142: attempt to perform arithmetic on field 'exec' (a nil value)
+	-- presumably from this commit: https://github.com/lewis6991/impatient.nvim/commit/165a28c1097923c88022bb9e494430a096ca1b95
+	-- ****
+	--
+	-- local ok, impatient = mega.load("impatient", { safe = true })
+	-- if ok then
+	-- 	impatient.enable_profile()
+	-- end
 end

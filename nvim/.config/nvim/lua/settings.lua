@@ -143,6 +143,7 @@ do -- [nvim-treesitter] --
 			"c",
 			"cpp",
 			"css",
+			"comment",
 			"elixir",
 			"elm",
 			"erlang",

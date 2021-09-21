@@ -43,15 +43,15 @@ fi
 ssh() {
 	if [ -n "$TMUX" ]; then
 		# start lemonade!
-		if (command -v lemonade &>/dev/null); then
-			server_running=$(pgrep -l lemonade)
+		# 		if (command -v lemonade &>/dev/null); then
+		# 			server_running=$(pgrep -l lemonade)
 
-			if ! (echo "$server_running" | rg lemonade); then
-				# lemonade server &
-			else
-				log_warn "lemonade server already running.."
-			fi
-		fi
+		# 			if ! (echo "$server_running" | rg lemonade); then
+		# 				# lemonade server &
+		# 			else
+		# 				log_warn "lemonade server already running.."
+		# 			fi
+		# 		fi
 
 		# TODO: get old window name, store it as a local; then be able to rename
 		# once exiting?

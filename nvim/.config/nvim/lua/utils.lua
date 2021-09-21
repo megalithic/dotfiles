@@ -5,8 +5,9 @@ local M = { lsp = {} }
 local windows = {}
 local diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostic")
 
-function M.t(str)
-	return api.nvim_replace_termcodes(str, true, true, true)
+function M.t(cmd_str)
+	-- return api.nvim_replace_termcodes(cmd, true, true, true) -- TODO: why 3rd param false?
+	return api.nvim_replace_termcodes(cmd_str, true, false, true)
 end
 
 function M.check_back_space()
@@ -46,7 +47,6 @@ M.lsp.rename = function()
 	api.nvim_win_set_option(winnr, "number", false)
 
 	bufmap("<CR>", "<cmd>lua require('utils').rename_callback()<CR>", "i")
-	bufmap("<esc>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "n")
 	bufmap("<esc>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "i")
 	bufmap("<c-c>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "i")
 
@@ -54,24 +54,21 @@ M.lsp.rename = function()
 end
 
 M.rename_callback = function()
-	-- print("current name", current_name)
-	-- print("new name", fn.getline("."):sub(#rename_prompt + 1, -1))
-	local new_name = vim.trim(fn.getline("."):sub(#rename_prompt + 1, -1))
-	if #new_name == 0 or new_name == fn.expand("<cword>") then
-		return
-	end
-	local params = lsp.util.make_position_params()
-	params.newName = new_name
-	lsp.buf_request(0, "textDocument/rename", params)
+	print("current name:", current_name)
+	print("new name raw:", fn.getline("."))
+	print("new name trimmed:", vim.trim(fn.getline(".")))
+	print("rename prompt:", rename_prompt)
+	print("rename prompt#:", #rename_prompt)
+	print("new name:", vim.trim(fn.getline("."):sub(#rename_prompt, -1)))
 
+	local new_name = vim.trim(fn.getline("."):sub(#rename_prompt, -1))
 	M.cleanup_rename_callback()
+	vim.lsp.buf.rename(new_name)
 end
 
 function M.cleanup_rename_callback()
-	-- api.nvim_win_close(prompt_window, true)
-	-- api.nvim_buf_delete(prompt_buf, { force = true })
-	cmd([[stopinsert]])
-	cmd([[bd!]])
+	vim.api.nvim_win_close(0, true)
+	vim.api.nvim_feedkeys(M.t("<Esc>"), "i", true)
 
 	current_name = ""
 	rename_prompt = default_rename_prompt
@@ -153,7 +150,7 @@ function M.lsp.show_diagnostics()
 		if #diagnostics == 0 then
 			return false
 		end
-		local virt_texts = vim.lsp.diagnostic.get_virtual_text_chunks_for_line(0, line, diagnostics)
+		local virt_texts = vim.diagnostic.get_virt_text_chunks(diagnostics)
 		api.nvim_buf_set_virtual_text(0, diagnostic_ns, line, virt_texts, {})
 	end)
 end

@@ -1,5 +1,7 @@
 local api, fn, cmd = vim.api, vim.fn, vim.cmd
 local M = { functions = {} }
+local L = vim.log.levels
+local get_log_level = require("vim.lsp.log").get_level
 
 function M:load_variables()
 	local home = os.getenv("HOME")
@@ -81,7 +83,7 @@ function M.log(msg, hl, reason)
 		api.nvim_echo({ { msg } }, true, {})
 	else
 		local name = "megavim"
-		local prefix = name .. " -> \n"
+		local prefix = name .. " -> "
 		if reason ~= nil then
 			prefix = name .. " -> " .. reason .. "\n"
 		end
@@ -100,11 +102,16 @@ end
 
 function M.get_log_string(label, level)
 	local display_level = "[DEBUG]"
-	local hl = "WarningMsg"
+	local hl = "Todo"
 
-	if display_level ~= nil and (level == 4 or level == "ERROR" or level == vim.log.levels.ERROR) then
-		display_level = "[ERROR]"
-		hl = "ErrorMsg"
+	if level ~= nil then
+		if level == L.ERROR then
+			display_level = "[ERROR]"
+			hl = "ErrorMsg"
+		elseif level == L.WARN then
+			display_level = "[WARNING]"
+			hl = "WarningMsg"
+		end
 	end
 
 	local str = string.format("%s %s", display_level, label)
@@ -112,11 +119,23 @@ function M.get_log_string(label, level)
 	return str, hl
 end
 
-function M.inspect(label, v, level)
-	local log_str, hl = M.get_log_string(label, level)
+function M.inspect(label, v, opts)
+	opts = opts or {}
+	opts = vim.tbl_deep_extend("keep", opts, { data_before = true, level = L.INFO })
 
-	M.log(log_str, hl)
-	M.log(vim.inspect(v))
+	local log_str, hl = M.get_log_string(label, opts.level)
+
+	-- presently no better API to get the current lsp log level
+	-- L.DEBUG == 3
+	if get_log_level() == L.DEBUG or get_log_level() == 3 then
+		if opts.data_before then
+			M.P(v)
+			M.log(log_str, hl)
+		else
+			M.log(log_str, hl)
+			M.P(v)
+		end
+	end
 
 	return v
 end
@@ -133,7 +152,7 @@ function M.load(module, opts)
 
 	if not ok and not opts.silent then
 		-- REF: https://github.com/neovim/neovim/blob/master/src/nvim/lua/vim.lua#L421
-		local level = vim.log.levels.ERROR
+		local level = L.ERROR
 		local reason = M.get_log_string("loading failed", level)
 
 		M.error(result, reason)

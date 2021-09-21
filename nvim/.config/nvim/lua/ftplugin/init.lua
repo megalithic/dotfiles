@@ -17,7 +17,7 @@ function M.handle()
 				ft_plugin(bufnr)
 			end)
 		else
-			mega.inspect("ftplugin loading failed", { vim.bo.ft, ft_plugin }, 4)
+			mega.inspect("ftplugin loading failed for ft: " .. vim.bo.ft, ft_plugin, { level = vim.log.levels.WARN })
 		end
 	end
 end

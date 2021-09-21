@@ -24,6 +24,13 @@ local function setup_sign_column()
 	fn.sign_define("DiagnosticSignInformation", { text = sign_information, numhl = "DiagnosticDefaultInformation" })
 	fn.sign_define("DiagnosticSignHint", { text = sign_hint, numhl = "DiagnosticDefaultHint" })
 
+	vim.cmd([[
+    sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
+    sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
+    sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
+    sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
+  ]])
+
 	-- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
 	-- REF: https://github.com/neovim/neovim/pull/15585
 	vim.diagnostic.config({
@@ -37,6 +44,11 @@ local function setup_sign_column()
 		update_in_insert = false,
 		severity_sort = true,
 	})
+
+	-- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
+	lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
+		return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
+	end
 end
 
 local function setup_lsp_handlers()
@@ -280,8 +292,8 @@ local function on_attach(client, bufnr)
 	bufmap("]d", "lua vim.diagnostic.goto_next()")
 
 	--- # misc mappings
-	-- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
-	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
+	bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
+	-- bufmap("<leader>ln", "lua require('utils').lsp.rename()")
 	bufmap(
 		"<leader>ld",
 		"lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
@@ -539,9 +551,9 @@ local function setup_lsp_servers()
 		local runtime_path = vim.split(package.path, ";")
 		table.insert(runtime_path, "lua/?.lua")
 		table.insert(runtime_path, "lua/?/init.lua")
-		table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
-		table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
-		table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
+		-- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
+		-- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
+		-- table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
 
 		local sumneko_lua_settings = lsp_with_defaults({
 			settings = {
@@ -595,18 +607,18 @@ local function setup_lsp_servers()
 							"noremapbang",
 						},
 					},
-					workspace = {
-						-- preloadFileSize = 500,
-						maxPreload = 100000,
-						preloadFileSize = 10000,
-						-- Make the server aware of Neovim runtime files
-						library = {
-							-- [api.nvim_get_runtime_file("", true)],
-							[vim.fn.expand("$VIMRUNTIME/lua")] = true,
-							[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-							[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/")] = true,
-						},
-					},
+					-- workspace = {
+					-- 	-- preloadFileSize = 500,
+					-- 	maxPreload = 100000,
+					-- 	preloadFileSize = 10000,
+					-- 	-- Make the server aware of Neovim runtime files
+					-- 	library = {
+					-- 		-- [api.nvim_get_runtime_file("", true)],
+					-- 		[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+					-- 		[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+					-- 		[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/")] = true,
+					-- 	},
+					-- },
 					-- Do not send telemetry data containing a randomized but unique identifier
 					telemetry = {
 						enable = false,

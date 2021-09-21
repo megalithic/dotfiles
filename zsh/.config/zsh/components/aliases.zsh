@@ -183,17 +183,6 @@ alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
 
 # POSTGRES
 # -----------------------------------------------------------------------------
-alias startpg="pg_ctl -D /usr/local/var/postgres -l logfile start" #`pg_ctl -D /usr/local/var/postgres -l ~/code/logs/server.log start` OR `postgres -D /usr/local/var/postgres` OR `pg_ctl -D /usr/local/var/postgres -l logfile start`
-alias stoppg="pg_ctl -D /usr/local/var/postgres -l logfile stop"   #`postgres -D /usr/local/var/postgres`
-alias pgstart="launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist"
-alias pgstop="launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist"
-# To have launchd start postgresql at login:
-#     ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
-# Then to load postgresql now:
-#     launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
-# Or, if you don't want/need launchctl, you can just run:
-#     pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
-alias pgsetup="sh ~/Dropbox/scripts/postgresql_db_setup.sh"
 alias fixpg="kill $(head -1 /usr/local/var/postgres/postmaster.pid)"
 
 # MISC
@@ -313,9 +302,9 @@ alias nf="echo -ne \\u"
 
 # -- linux-specific aliases..
 if [[ $PLATFORM == "linux" ]]; then
-	# alias nvim="VIMRUNTIME=$HOME/builds/neovim/runtime $HOME/builds/neovim/build/bin/nvim"
 	alias pbcopy="xclip -sel clip"
 	alias pbpaste='xclip -sel clip -o'
+	# TODO: why do we have this luamake entry
 	alias luamake=$HOME/.config/lsp/sumneko_lua/3rd/luamake/luamake
 
 	if (command -v lemonade &>/dev/null); then

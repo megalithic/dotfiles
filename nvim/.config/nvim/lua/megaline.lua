@@ -307,9 +307,9 @@ local function get_gps_status()
 	end
 end
 
-local function get_container_info()
-	return vim.g.currentContainer
-end
+-- local function get_container_info()
+-- 	return vim.g.currentContainer
+-- end
 
 local function statusline_active()
 	local mode_block = get_mode_block()
@@ -318,7 +318,7 @@ local function statusline_active()
 	local ft = get_filetype()
 	local lsp = get_lsp_status()
 	local gps = get_gps_status()
-	local container_info = get_container_info()
+	-- local container_info = get_container_info()
 
 	local statusline_sections = {
 		seg(mode_block, s.mode_block),
@@ -347,7 +347,7 @@ local function statusline_active()
 end
 
 local function statusline_inactive()
-	return seg([[%f %y %m]], s.inactive)
+	return seg([[%f %m %r]], s.inactive) -- relativepath modified readonly
 end
 
 function statusline.setup()

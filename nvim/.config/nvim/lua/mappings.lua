@@ -124,9 +124,9 @@ map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
 map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
 -- # git-related (fugitive, et al)
-map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
-map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
-map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
+-- map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+-- map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
+-- map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
 map("n", "<Leader>gd", "<cmd>DiffviewOpen<CR>")
 
 -- # markdown-related
