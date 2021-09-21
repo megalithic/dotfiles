@@ -13,7 +13,7 @@ local completion_provider = "cmp" -- cmp or compe
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
-local function setup_sign_column()
+local function setup_diagnostics()
 	local sign_error = colors.icons.sign_error
 	local sign_warning = colors.icons.sign_warning
 	local sign_information = colors.icons.sign_information
@@ -292,8 +292,8 @@ local function on_attach(client, bufnr)
 	bufmap("]d", "lua vim.diagnostic.goto_next()")
 
 	--- # misc mappings
-	bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
-	-- bufmap("<leader>ln", "lua require('utils').lsp.rename()")
+	-- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
+	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
 	bufmap(
 		"<leader>ld",
 		"lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
@@ -822,6 +822,6 @@ local function setup_lsp_servers()
 end
 
 setup_completion()
-setup_sign_column()
+setup_diagnostics()
 setup_lsp_handlers()
 setup_lsp_servers()

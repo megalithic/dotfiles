@@ -17,8 +17,9 @@ end
 
 -- # [ rename ] ----------------------------------------------------------------
 -- REF:
--- - https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
--- - https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/rename.lua (simpler impl to investigate)
+-- * https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
+-- * https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/rename.lua (simpler impl to investigate)
+-- * https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/lsp.lua#L197-L217
 local rename_prompt = ""
 local default_rename_prompt = " -> "
 local current_name = ""
@@ -54,16 +55,16 @@ M.lsp.rename = function()
 end
 
 M.rename_callback = function()
-	print("current name:", current_name)
-	print("new name raw:", fn.getline("."))
-	print("new name trimmed:", vim.trim(fn.getline(".")))
-	print("rename prompt:", rename_prompt)
-	print("rename prompt#:", #rename_prompt)
-	print("new name:", vim.trim(fn.getline("."):sub(#rename_prompt, -1)))
-
 	local new_name = vim.trim(fn.getline("."):sub(#rename_prompt, -1))
-	M.cleanup_rename_callback()
-	vim.lsp.buf.rename(new_name)
+
+	if new_name ~= current_name then
+		M.cleanup_rename_callback()
+		local params = lsp.util.make_position_params()
+		params.newName = new_name
+		lsp.buf_request(0, "textDocument/rename", params)
+	else
+		mega.warn("Rename text matches; try again.")
+	end
 end
 
 function M.cleanup_rename_callback()
