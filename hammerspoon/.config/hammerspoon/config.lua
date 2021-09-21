@@ -214,16 +214,6 @@ M.apps = {
 			{ "Zoom Meeting", 1, M.layout.fullScreen },
 		},
 	},
-	["com.microsoft.teams"] = {
-		bundleID = "com.microsoft.teams",
-		name = "Microsoft Teams",
-		-- context = "teams",
-		-- hyper_key = "z",
-		-- launchMode = "focus",
-		rules = {
-			{ nil, 1, M.layout.fullScreen },
-		},
-	},
 	["com.loom.desktop"] = {
 		bundleID = "com.loom.desktop",
 		name = "Loom",
@@ -246,7 +236,7 @@ M.apps = {
 		context = "messages",
 		distraction = true,
 		rules = {
-			{ nil, 2, M.layout.bottomRight30 },
+			{ nil, 2, M.layout.bottomRight40 },
 		},
 	},
 	["hangouts"] = {
@@ -260,16 +250,6 @@ M.apps = {
 		--   {nil, 1, M.layout.leftHalf},
 		-- },
 	},
-	["WhatsApp"] = {
-		bundleID = "WhatsApp",
-		name = "WhatsApp",
-		-- hyper_key ='w',
-		context = "whatsapp",
-		distraction = true,
-		rules = {
-			{ nil, 2, M.layout.bottomRight30 },
-		},
-	},
 	["org.whispersystems.signal-desktop"] = {
 		bundleID = "org.whispersystems.signal-desktop",
 		name = "Signal",
@@ -277,7 +257,7 @@ M.apps = {
 		context = "signal",
 		distraction = true,
 		rules = {
-			{ nil, 2, M.layout.bottomRight30 },
+			{ nil, 2, M.layout.bottomRight40 },
 		},
 	},
 	["com.agilebits.onepassword7"] = {
