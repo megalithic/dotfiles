@@ -48,6 +48,19 @@ do -- [nvim options/ui/appearance] --
 	-- set.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
 	-- set.concealcursor = "n" -- Hide * markup for bold and italic
 
+	-- # spelling
+	vim.opt.spellsuggest:prepend({ 12 })
+	vim.opt.spelloptions = "camel"
+	vim.opt.spellcapcheck = "" -- don't check for capital letters at start of sentence
+	vim.opt.fileformats = { "unix", "mac", "dos" }
+
+	-- # git editor
+	if vim.fn.executable("nvr") then
+		vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+		vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+	end
+
+	-- # clipboard
 	local clipboard
 	-- if env.DISPLAY and fn.executable("xsel") == 1 then
 	-- 	clipboard = {
@@ -638,55 +651,73 @@ do -- [lightspeed] --
 	})
 end
 
--- do -- [quickscope] --
--- 	g.qs_enable = 1
--- 	g.qs_highlight_on_keys = { "f", "F", "t", "T" }
--- 	g.qs_buftype_blacklist = { "terminal", "nofile", "fzf" }
--- 	g.qs_lazy_highlight = 1
--- end
+do -- [diffview] --
+	local cb = require("diffview.config").diffview_callback
 
--- do -- [diffview] --
---   local cb = require("diffview.config").diffview_callback
+	require("diffview").setup({
+		diff_binaries = false, -- Show diffs for binaries
+		use_icons = true, -- Requires nvim-web-devicons
+		file_panel = {
+			width = 50,
+		},
+		enhanced_diff_hl = true,
+		key_bindings = {
+			disable_defaults = false, -- Disable the default key bindings
+			-- The `view` bindings are active in the diff buffers, only when the current
+			-- tabpage is a Diffview.
+			view = {
+				["<tab>"] = cb("select_next_entry"), -- Open the diff for the next file
+				["<s-tab>"] = cb("select_prev_entry"), -- Open the diff for the previous file
+				["<leader>e"] = cb("focus_files"), -- Bring focus to the files panel
+				["<leader>b"] = cb("toggle_files"), -- Toggle the files panel.
+			},
+			file_panel = {
+				["j"] = cb("next_entry"), -- Bring the cursor to the next file entry
+				["<down>"] = cb("next_entry"),
+				["k"] = cb("prev_entry"), -- Bring the cursor to the previous file entry.
+				["<up>"] = cb("prev_entry"),
+				["<cr>"] = cb("select_entry"), -- Open the diff for the selected entry.
+				["o"] = cb("select_entry"),
+				["<2-LeftMouse>"] = cb("select_entry"),
+				["-"] = cb("toggle_stage_entry"), -- Stage / unstage the selected entry.
+				["S"] = cb("stage_all"), -- Stage all entries.
+				["U"] = cb("unstage_all"), -- Unstage all entries.
+				["R"] = cb("refresh_files"), -- Update stats and entries in the file list.
+				["<tab>"] = cb("select_next_entry"),
+				["<s-tab>"] = cb("select_prev_entry"),
+				["<leader>e"] = cb("focus_files"),
+				["<leader>b"] = cb("toggle_files"),
+			},
+		},
+	})
+end
 
---   require("diffview").setup(
---     {
---       diff_binaries = false, -- Show diffs for binaries
---       file_panel = {
---         width = 50,
---         use_icons = true -- Requires nvim-web-devicons
---       },
---       enhanced_diff_hl = true,
---       key_bindings = {
---         disable_defaults = false, -- Disable the default key bindings
---         -- The `view` bindings are active in the diff buffers, only when the current
---         -- tabpage is a Diffview.
---         view = {
---           ["<tab>"] = cb("select_next_entry"), -- Open the diff for the next file
---           ["<s-tab>"] = cb("select_prev_entry"), -- Open the diff for the previous file
---           ["<leader>e"] = cb("focus_files"), -- Bring focus to the files panel
---           ["<leader>b"] = cb("toggle_files") -- Toggle the files panel.
---         },
---         file_panel = {
---           ["j"] = cb("next_entry"), -- Bring the cursor to the next file entry
---           ["<down>"] = cb("next_entry"),
---           ["k"] = cb("prev_entry"), -- Bring the cursor to the previous file entry.
---           ["<up>"] = cb("prev_entry"),
---           ["<cr>"] = cb("select_entry"), -- Open the diff for the selected entry.
---           ["o"] = cb("select_entry"),
---           ["<2-LeftMouse>"] = cb("select_entry"),
---           ["-"] = cb("toggle_stage_entry"), -- Stage / unstage the selected entry.
---           ["S"] = cb("stage_all"), -- Stage all entries.
---           ["U"] = cb("unstage_all"), -- Unstage all entries.
---           ["R"] = cb("refresh_files"), -- Update stats and entries in the file list.
---           ["<tab>"] = cb("select_next_entry"),
---           ["<s-tab>"] = cb("select_prev_entry"),
---           ["<leader>e"] = cb("focus_files"),
---           ["<leader>b"] = cb("toggle_files")
---         }
---       }
---     }
---   )
--- end
+require("git").setup({
+	keymaps = {
+		-- Open blame window
+		blame = "<Leader>gb",
+		-- Close blame window
+		quit_blame = "q",
+		-- Open blame commit
+		blame_commit = "<CR>",
+		-- Open file/folder in git repository
+		browse = "<Leader>gh",
+		-- Open pull request of the current branch
+		open_pull_request = "<Leader>gp",
+		-- Create a pull request with the target branch is set in the `target_branch` option
+		create_pull_request = "<Leader>gn",
+		-- Opens a new diff that compares against the current index
+		diff = "<Leader>gd",
+		-- Close git diff
+		diff_close = "<Leader>gD",
+		-- Revert to the specific commit
+		revert = "<Leader>gr",
+		-- Revert the current file to the specific commit
+		revert_file = "<Leader>gR",
+	},
+	-- Default target branch when create a pull request
+	target_branch = "main",
+})
 
 do -- [git-messenger] --
 	g.git_messenger_floating_win_opts = { border = g.floating_window_border_dark }
@@ -973,7 +1004,116 @@ do -- [fzf] --
 end
 
 do
-	require("which-key").setup({})
+	local wk = require("which-key")
+	wk.setup({
+		plugins = {
+			spelling = {
+				enabled = true,
+			},
+		},
+	})
+
+	wk.register({
+		d = {
+			f = "treesitter: peek function definition",
+			F = "treesitter: peek class definition",
+		},
+		["]"] = {
+			name = "+next",
+			["<space>"] = "add space below",
+		},
+		["["] = {
+			name = "+prev",
+			["<space>"] = "add space above",
+		},
+		["g>"] = "show message history",
+		["<leader>"] = {
+			["0"] = "which_key_ignore",
+			["1"] = "which_key_ignore",
+			["2"] = "which_key_ignore",
+			["3"] = "which_key_ignore",
+			["4"] = "which_key_ignore",
+			["5"] = "which_key_ignore",
+			["6"] = "which_key_ignore",
+			["7"] = "which_key_ignore",
+			["8"] = "which_key_ignore",
+			["9"] = "which_key_ignore",
+			n = {
+				name = "+new",
+				f = "create a new file",
+				s = "create new file in a split",
+			},
+			E = "show token under the cursor",
+			p = {
+				name = "+packer",
+				c = "clean",
+				s = "sync",
+			},
+			q = {
+				name = "+quit",
+				w = "close window (and buffer)",
+				q = "delete buffer",
+			},
+			g = "grep word under the cursor",
+			l = {
+				name = "+list",
+				i = "toggle location list",
+				s = "toggle quickfix",
+			},
+			e = {
+				name = "+edit",
+				v = "open vimrc in a vertical split",
+				p = "open plugins file in a vertical split",
+				z = "open zshrc in a vertical split",
+				t = "open tmux config in a vertical split",
+			},
+			o = {
+				name = "+only",
+				n = "close all other buffers",
+			},
+			t = {
+				name = "+tab",
+				c = "tab close",
+				n = "tab edit current buffer",
+			},
+			sw = "swap buffers horizontally",
+			so = "source current buffer",
+			sv = "source init.vim",
+			U = "uppercase all word",
+			["<CR>"] = "repeat previous macro",
+			[","] = "go to previous buffer",
+			["="] = "make windows equal size",
+			[")"] = "wrap with parens",
+			["}"] = "wrap with braces",
+			['"'] = "wrap with double quotes",
+			["'"] = "wrap with single quotes",
+			["`"] = "wrap with back ticks",
+			["["] = "replace cursor word in file",
+			["]"] = "replace cursor word in line",
+		},
+		["<localleader>"] = {
+			name = "local leader",
+			w = {
+				name = "+window",
+				h = "change two vertically split windows to horizontal splits",
+				v = "change two horizontally split windows to vertical splits",
+				x = "swap current window with the next",
+				j = "resize: downwards",
+				k = "resize: upwards",
+			},
+			l = "redraw window",
+			z = "center view port",
+			[","] = "add comma to end of line",
+			[";"] = "add semicolon to end of line",
+			["?"] = "search for word under cursor in google",
+			["!"] = "search for word under cursor in google",
+			["["] = "abolish = subsitute cursor word in file",
+			["]"] = "abolish = substitute cursor word on line",
+			["/"] = "find matching word in buffer",
+			["<space>"] = "Toggle current fold",
+			["<tab>"] = "open commandline bufferlist",
+		},
+	})
 end
 
 do

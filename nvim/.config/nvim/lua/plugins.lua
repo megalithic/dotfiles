@@ -60,7 +60,6 @@ return {
 		run = function()
 			vim.cmd("TSUpdate")
 		end,
-		pin = true,
 	},
 	"nvim-treesitter/nvim-treesitter-textobjects",
 	"nvim-treesitter/playground",
@@ -98,14 +97,14 @@ return {
 
 	--
 	-- (git, vcs, et al) --
-	"tpope/vim-fugitive",
+	-- "tpope/vim-fugitive",
 	-- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"},
 	"mattn/webapi-vim",
 	"rhysd/conflict-marker.vim",
-	-- "itchyny/vim-gitbranch",
+	"itchyny/vim-gitbranch",
 	"rhysd/git-messenger.vim",
 	"sindrets/diffview.nvim",
-	-- "dinhhuy258/git.nvim",
+	"dinhhuy258/git.nvim",
 	-- "lewis6991/gitsigns.nvim",
 	-- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
 

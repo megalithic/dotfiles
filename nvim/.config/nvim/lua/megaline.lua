@@ -213,8 +213,7 @@ end
 
 local function get_vcs_status()
 	local result = {}
-	local branch = fn["fugitive#head"](7)
-	-- local branch = fn["gitbranch#name()"]
+	local branch = fn["gitbranch#name"]()
 	if branch ~= nil and branch:len() > 0 then
 		table.insert(result, branch)
 	end

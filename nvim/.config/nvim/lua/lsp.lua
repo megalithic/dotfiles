@@ -60,31 +60,11 @@ local function setup_lsp_handlers()
 			if bufnr == vim.api.nvim_get_current_buf() then
 				vim.b.saving_format = true
 				cmd([[update]])
+				api.nvim_command("noautocmd :update")
 				vim.b.saving_format = false
 			end
 		end
 	end
-
-	-- lsp.handlers["textDocument/formatting"] = function(err, _, result, _, bufnr)
-	-- 	if err ~= nil or result == nil then
-	-- 		return
-	-- 	end
-
-	-- 	-- If the buffer hasn't been modified before the formatting has finished,
-	-- 	-- update the buffer
-	-- 	if not api.nvim_buf_get_option(bufnr, "modified") then
-	-- 		local view = fn.winsaveview()
-	-- 		lsp.util.apply_text_edits(result, bufnr)
-	-- 		fn.winrestview(view)
-	-- 		if bufnr == api.nvim_get_current_buf() then
-	-- 			api.nvim_command("noautocmd :update")
-
-	-- 			-- FIXME: do i need this stuffs?
-	-- 			-- Trigger post-formatting autocommand which can be used to refresh gitgutter
-	-- 			api.nvim_command("silent doautocmd <nomodeline> User FormatterPost")
-	-- 		end
-	-- 	end
-	-- end
 end
 
 local function setup_completion()
@@ -300,6 +280,7 @@ local function on_attach(client, bufnr)
 	bufmap("]d", "lua vim.diagnostic.goto_next()")
 
 	--- # misc mappings
+	-- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
 	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
 	bufmap(
 		"<leader>ld",

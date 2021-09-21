@@ -45,6 +45,37 @@ function M.isdir(path)
 	return file_exists(path .. "/")
 end
 
+-- inspect the contents of an object very quickly
+-- in your code or from the command-line:
+-- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
+-- USAGE:
+-- in lua: P({1, 2, 3})
+-- in commandline: :lua P(vim.loop)
+---@vararg any
+function M.P(...)
+	local objects, v = {}, nil
+	for i = 1, select("#", ...) do
+		v = select(i, ...)
+		table.insert(objects, vim.inspect(v))
+	end
+
+	print(table.concat(objects, "\n"))
+	return ...
+end
+
+function M.dump_text(...)
+	local objects, v = {}, nil
+	for i = 1, select("#", ...) do
+		v = select(i, ...)
+		table.insert(objects, vim.inspect(v))
+	end
+
+	local lines = vim.split(table.concat(objects, "\n"), "\n")
+	local lnum = vim.api.nvim_win_get_cursor(0)[1]
+	vim.fn.append(lnum, lines)
+	return ...
+end
+
 function M.log(msg, hl, reason)
 	if hl == nil and reason == nil then
 		api.nvim_echo({ { msg } }, true, {})
@@ -67,11 +98,6 @@ function M.error(msg, reason)
 	M.log(msg, "ErrorMsg", reason) -- LspDiagnosticsDefaultError
 end
 
--- FIXME: this _DOES NOT_ work?
--- function M.dump(...)
--- 	print(unpack(vim.tbl_map(inspect, { ... })))
--- end
-
 function M.get_log_string(label, level)
 	local display_level = "[DEBUG]"
 	local hl = "WarningMsg"
@@ -87,10 +113,10 @@ function M.get_log_string(label, level)
 end
 
 function M.inspect(label, v, level)
-	local str, hl = M.get_log_string(label, level)
+	local log_str, hl = M.get_log_string(label, level)
 
-	M.log(str, hl)
-	M.log(v)
+	M.log(log_str, hl)
+	M.log(vim.inspect(v))
 
 	return v
 end
@@ -128,11 +154,11 @@ function M.execute(id)
 	return func()
 end
 
--- TODO: extract these to a function or a module var
-local map_opts = { noremap = true, silent = true, expr = false, nowait = false }
-
 -- TODO: look at exposing some map helpers like b0o/mapx does
-function M.map(modes, lhs, rhs, opts)
+local function map(modes, lhs, rhs, opts)
+	-- TODO: extract these to a function or a module var
+	local map_opts = { noremap = true, silent = true, expr = false, nowait = false }
+
 	opts = vim.tbl_extend("force", map_opts, opts or {})
 	local buffer = opts.buffer
 	opts.buffer = nil
@@ -164,6 +190,7 @@ function M.map(modes, lhs, rhs, opts)
 		-- auto-register which-key item
 		if opts.label then
 			local ok, wk = M.load("which-key", { silent = true, safe = true })
+			M.P(wk)
 			if ok then
 				wk.register({ [lhs] = opts.label }, { mode = modes[i] })
 			end
@@ -171,6 +198,52 @@ function M.map(modes, lhs, rhs, opts)
 		end
 	end
 end
+
+function M.map(mode, key, rhs, opts)
+	return map(mode, key, rhs, opts)
+end
+
+-- function M.map(mode, key, rhs, opts, defaults)
+-- 	return map(mode, key, rhs, opts, defaults)
+-- end
+
+-- function M.nmap(key, rhs, opts)
+-- 	return map("n", key, rhs, opts)
+-- end
+-- function M.vmap(key, rhs, opts)
+-- 	return map("v", key, rhs, opts)
+-- end
+-- function M.xmap(key, rhs, opts)
+-- 	return map("x", key, rhs, opts)
+-- end
+-- function M.imap(key, rhs, opts)
+-- 	return map("i", key, rhs, opts)
+-- end
+-- function M.omap(key, rhs, opts)
+-- 	return map("o", key, rhs, opts)
+-- end
+-- function M.smap(key, rhs, opts)
+-- 	return map("s", key, rhs, opts)
+-- end
+
+-- function M.nnoremap(key, rhs, opts)
+-- 	return map("n", key, rhs, opts, { noremap = true })
+-- end
+-- function M.vnoremap(key, rhs, opts)
+-- 	return map("v", key, rhs, opts, { noremap = true })
+-- end
+-- function M.xnoremap(key, rhs, opts)
+-- 	return map("x", key, rhs, opts, { noremap = true })
+-- end
+-- function M.inoremap(key, rhs, opts)
+-- 	return map("i", key, rhs, opts, { noremap = true })
+-- end
+-- function M.onoremap(key, rhs, opts)
+-- 	return map("o", key, rhs, opts, { noremap = true })
+-- end
+-- function M.snoremap(key, rhs, opts)
+-- 	return map("s", key, rhs, opts, { noremap = true })
+-- end
 
 -- this assumes the first buffer (0); refactor to accept a buffer
 function M.bufmap(lhs, rhs, mode, expr)
