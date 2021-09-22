@@ -1,8 +1,8 @@
-local set, g, api, cmd, fn, env = vim.opt, vim.g, vim.api, vim.cmd, vim.fn, vim.env
+local set, g, api, cmd, fn = vim.opt, vim.g, vim.api, vim.cmd, vim.fn
 local dirs, map = mega.dirs, mega.map
 local colors = require("colors")
 
-do -- [nvim options/ui/appearance] --
+local function setup_nvim_options()
 	-- fallback in the event our statusline plugins fail to load
 	set.statusline = table.concat({
 		"%2{mode()} | ",
@@ -61,11 +61,11 @@ do -- [nvim options/ui/appearance] --
 	end
 end
 
-do
+local function setup_startuptime()
 	g.startuptime_tries = 10
 end
 
-do
+local function setup_matchup()
 	g.matchup_matchparen_offscreen = {
 		method = "popup",
 		fullwidth = true,
@@ -73,7 +73,7 @@ do
 	}
 end
 
-do -- [nvim-treesitter] --
+local function setup_treesitter()
 	require("nvim-treesitter.configs").setup({
 		ensure_installed = {
 			"bash",
@@ -209,11 +209,11 @@ do -- [nvim-treesitter] --
 	})
 end
 
-do
-	-- require("hclipboard").start()
+local function setup_hclipboard()
+	require("hclipboard").start()
 end
 
-do -- [indent-blankline] --
+local function setup_indent_blankline()
 	g.indent_blankline_buftype_exclude = { "terminal", "nofile" }
 	g.indent_blankline_filetype_exclude = {
 		"help",
@@ -266,7 +266,7 @@ do -- [indent-blankline] --
 	}
 end
 
-do -- [neoscroll] --
+local function setup_neoscroll()
 	require("neoscroll").setup({
 		mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
 		stop_eof = false,
@@ -275,15 +275,17 @@ do -- [neoscroll] --
 	})
 end
 
--- [devicons] --
-require("nvim-web-devicons").setup({ default = false })
+local function setup_devicons()
+	require("nvim-web-devicons").setup({ default = false })
+end
 
--- [project.nvim] --
-require("project_nvim").setup({
-	patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
-}) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
+local function setup_project_nvim()
+	require("project_nvim").setup({
+		patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
+	}) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
+end
 
-do -- [orgmode] --
+local function setup_orgmode()
 	-- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
 	-- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
 	--        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
@@ -369,11 +371,11 @@ do -- [orgmode] --
 	require("org-bullets").setup()
 end
 
-do -- [trouble] --
+local function setup_trouble()
 	require("trouble").setup({ auto_close = true })
 end
 
-do -- [bullets] --
+local function setup_bullets()
 	g.bullets_enabled_file_types = {
 		"markdown",
 		"text",
@@ -385,48 +387,12 @@ do -- [bullets] --
 	-- g.bullets_outline_levels = { "num" }
 end
 
--- do
---   require("gitsigns").setup(
---     {
---       signs = {
---         add = {hl = "GitSignsAdd", text = "│", numhl = "GitSignsAddNr", linehl = "GitSignsAddLn"},
---         change = {hl = "GitSignsChange", text = "│", numhl = "GitSignsChangeNr", linehl = "GitSignsChangeLn"},
---         delete = {hl = "GitSignsDelete", text = "_", numhl = "GitSignsDeleteNr", linehl = "GitSignsDeleteLn"},
---         topdelete = {hl = "GitSignsDelete", text = "‾", numhl = "GitSignsDeleteNr", linehl = "GitSignsDeleteLn"},
---         changedelete = {hl = "GitSignsChange", text = "~", numhl = "GitSignsChangeNr", linehl = "GitSignsChangeLn"}
---       }
---     }
---   )
--- end
-
-do -- [fixcursorhold] --
+local function setup_cursorhold()
 	g.cursorhold_updatetime = 100
 end
 
--- do -- [lspsaga] --
---   require("lspsaga").init_lsp_saga {
---     use_saga_diagnostic_sign = false,
---     border_style = 2,
---     finder_action_keys = {
---       open = "<CR>",
---       vsplit = "v",
---       split = "s",
---       quit = {"<ESC>", "q"},
---       scroll_down = "<C-n>",
---       scroll_up = "<C-p>"
---     },
---     code_action_keys = {quit = "<ESC>", exec = "<CR>"},
---     code_action_prompt = {
---       enable = true,
---       sign = false,
---       virtual_text = true
---     },
---     finder_definition_icon = "•d",
---     finder_reference_icon = "•r"
---   }
--- end
-
-do -- [beacon] --
+local function setup_beacon()
+	-- TODO: replace with specs
 	g.beacon_size = 90
 	g.beacon_minimal_jump = 25
 	-- g.beacon_shrink = 0
@@ -434,7 +400,7 @@ do -- [beacon] --
 	g.beacon_ignore_filetypes = { "fzf" }
 end
 
-do -- [nvim-comment] --
+local function setup_nvim_comment()
 	require("nvim_comment").setup({
 		comment_empty = false,
 		hook = function()
@@ -443,28 +409,7 @@ do -- [nvim-comment] --
 	})
 end
 
--- do -- [kommentary] --
--- 	local kommentary_config = require("kommentary.config")
--- 	kommentary_config.configure_language("default", {
--- 		single_line_comment_string = "auto",
--- 		prefer_single_line_comments = true,
--- 		multi_line_comment_strings = false,
--- 	})
--- 	kommentary_config.configure_language("typescriptreact", {
--- 		single_line_comment_string = "auto",
--- 		prefer_single_line_comments = true,
--- 	})
--- 	kommentary_config.configure_language("vue", {
--- 		single_line_comment_string = "auto",
--- 		prefer_single_line_comments = true,
--- 	})
--- 	kommentary_config.configure_language("css", {
--- 		single_line_comment_string = "auto",
--- 		prefer_single_line_comments = true,
--- 	})
--- end
-
-do -- [conflict-marker] --
+local function setup_conflict_marker()
 	-- disable the default highlight group
 	g.conflict_marker_highlight_group = ""
 	-- Include text after begin and end markers
@@ -472,7 +417,7 @@ do -- [conflict-marker] --
 	g.conflict_marker_end = "^>>>>>>> .*$"
 end
 
-do -- [colorizer] --
+local function setup_colorizer()
 	require("colorizer").setup({
 		-- '*',
 		-- '!vim',
@@ -499,7 +444,7 @@ do -- [colorizer] --
 	})
 end
 
-do -- [golden-size] --
+local function setup_golden_size()
 	local golden_size_installed, golden_size = pcall(require, "golden_size")
 	if golden_size_installed then
 		local function ignore_by_buftype(types)
@@ -532,7 +477,7 @@ do -- [golden-size] --
 	end
 end
 
-do
+local function setup_lastplace()
 	require("nvim-lastplace").setup({
 		lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
 		lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
@@ -540,11 +485,11 @@ do
 	})
 end
 
-do
+local function setup_gps()
 	require("nvim-gps").setup({})
 end
 
-do -- [autopairs] --
+local function setup_autopairs()
 	local npairs = require("nvim-autopairs")
 	npairs.setup({
 		check_ts = true,
@@ -566,11 +511,7 @@ do -- [autopairs] --
 	})
 end
 
-do -- [polyglot] --
-	g.polyglot_disabled = {}
-end
-
-do -- [lightspeed] --
+local function setup_lightspeed()
 	require("lightspeed").setup({
 		jump_to_first_match = true,
 		jump_on_partial_input_safety_timeout = 400,
@@ -589,7 +530,7 @@ do -- [lightspeed] --
 	})
 end
 
-do -- [diffview] --
+local function setup_diffview()
 	local cb = require("diffview.config").diffview_callback
 
 	require("diffview").setup({
@@ -630,41 +571,43 @@ do -- [diffview] --
 	})
 end
 
-require("git").setup({
-	keymaps = {
-		-- Open blame window
-		blame = "<Leader>gb",
-		-- Close blame window
-		quit_blame = "q",
-		-- Open blame commit
-		blame_commit = "<CR>",
-		-- Open file/folder in git repository
-		browse = "<Leader>gh",
-		-- Open pull request of the current branch
-		open_pull_request = "<Leader>gp",
-		-- Create a pull request with the target branch is set in the `target_branch` option
-		create_pull_request = "<Leader>gn",
-		-- Opens a new diff that compares against the current index
-		diff = "<Leader>gd",
-		-- Close git diff
-		diff_close = "<Leader>gD",
-		-- Revert to the specific commit
-		revert = "<Leader>gr",
-		-- Revert the current file to the specific commit
-		revert_file = "<Leader>gR",
-	},
-	-- Default target branch when create a pull request
-	target_branch = "main",
-})
+local function setup_git()
+	require("git").setup({
+		keymaps = {
+			-- Open blame window
+			blame = "<Leader>gb",
+			-- Close blame window
+			quit_blame = "q",
+			-- Open blame commit
+			blame_commit = "<CR>",
+			-- Open file/folder in git repository
+			browse = "<Leader>gh",
+			-- Open pull request of the current branch
+			open_pull_request = "<Leader>gp",
+			-- Create a pull request with the target branch is set in the `target_branch` option
+			create_pull_request = "<Leader>gn",
+			-- Opens a new diff that compares against the current index
+			diff = "<Leader>gd",
+			-- Close git diff
+			diff_close = "<Leader>gD",
+			-- Revert to the specific commit
+			revert = "<Leader>gr",
+			-- Revert the current file to the specific commit
+			revert_file = "<Leader>gR",
+		},
+		-- Default target branch when create a pull request
+		target_branch = "main",
+	})
+end
 
-do -- [git-messenger] --
+local function setup_git_messenger()
 	g.git_messenger_floating_win_opts = { border = g.floating_window_border_dark }
 	g.git_messenger_no_default_mappings = true
 	g.git_messenger_max_popup_width = 100
 	g.git_messenger_max_popup_height = 100
 end
 
-do -- [vim-test] --
+local function setup_vim_test()
 	api.nvim_exec(
 		[[
     function! TerminalSplit(cmd)
@@ -691,7 +634,7 @@ do -- [vim-test] --
 	cmd([[let g:test#javascript#jest#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$']])
 end
 
-do -- [projectionist] --
+local function setup_projectionist()
 	g.projectionist_heuristics = {
 		["&package.json"] = {
 			["package.json"] = {
@@ -789,7 +732,7 @@ do -- [projectionist] --
 	}
 end
 
-do
+local function setup_package_info()
 	require("package-info").setup({
 		colors = {
 			up_to_date = colors.cs.bg2, -- Text color for up to date package virtual text
@@ -806,15 +749,11 @@ do
 	})
 end
 
-do
+local function setup_numb()
 	require("numb").setup()
 end
 
-do
-	-- require("alpha").setup(require("alpha.themes.startify").opts)
-end
-
-do
+local function setup_zk()
 	cmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
 	cmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
 	cmd(
@@ -861,7 +800,7 @@ do
 	end
 end
 
-do -- [fzf/fzf-lua/fzflua] --
+local function setup_fzf_lua()
 	local actions = require("fzf-lua.actions")
 	require("fzf-lua").setup({
 		-- fzf_args = vim.env.FZF_DEFAULT_OPTS .. " --border rounded",
@@ -941,7 +880,7 @@ do -- [fzf/fzf-lua/fzflua] --
 	--   end
 end
 
-do
+local function setup_which_key()
 	local wk = require("which-key")
 	wk.setup({
 		plugins = {
@@ -1054,8 +993,42 @@ do
 	})
 end
 
-do
+local function setup_tmux_navigator()
 	require("Navigator").setup({
 		auto_save = "current",
 	})
 end
+
+setup_nvim_options()
+setup_treesitter()
+setup_devicons()
+setup_matchup()
+setup_neoscroll()
+setup_lightspeed()
+setup_golden_size()
+setup_colorizer()
+setup_autopairs()
+setup_tmux_navigator()
+setup_fzf_lua()
+setup_beacon()
+setup_which_key()
+setup_startuptime()
+setup_indent_blankline()
+-- setup_hclipboard()
+setup_zk()
+setup_numb()
+setup_orgmode()
+setup_package_info()
+setup_projectionist()
+setup_project_nvim()
+setup_vim_test()
+setup_bullets()
+setup_trouble()
+setup_cursorhold()
+setup_nvim_comment()
+setup_conflict_marker()
+setup_lastplace()
+setup_gps()
+setup_diffview()
+setup_git()
+setup_git_messenger()

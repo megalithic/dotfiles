@@ -35,6 +35,7 @@ local function setup_diagnostics()
 	-- REF: https://github.com/neovim/neovim/pull/15585
 	vim.diagnostic.config({
 		underline = true,
+		-- virtual_text = false,
 		virtual_text = {
 			prefix = "",
 			spacing = 4,
@@ -46,9 +47,9 @@ local function setup_diagnostics()
 	})
 
 	-- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
-	lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
-		return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
-	end
+	-- lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
+	-- 	return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
+	-- end
 end
 
 local function setup_lsp_handlers()
@@ -259,7 +260,9 @@ local function on_attach(client, bufnr)
 
 	require("lsp_signature").on_attach({
 		bind = true, -- This is mandatory, otherwise border config won't get registered.
-		floating_window = false,
+		floating_window = true,
+		floating_window_above_cur_line = true, -- try to place the floating above the current line
+		floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
 		hint_enable = false,
 		decorator = { "`", "`" },
 		handler_opts = {
@@ -313,7 +316,14 @@ local function on_attach(client, bufnr)
 	--- # autocommands/autocmds
 	-- au("CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({focusable=false})")
 	-- au("CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()")
+
+	-- FIXME: totes does the wrong thing with other buffer diagnostics
+	-- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
+	-- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
+	--
+	-- au([[CursorHoldI <buffer> lua vim.lsp.buf.signature_help()]]) -- using lsp-signature
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
+
 	if client.resolved_capabilities.document_formatting then
 		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
 	end

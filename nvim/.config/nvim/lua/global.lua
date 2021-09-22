@@ -132,7 +132,9 @@ function M.inspect(label, v, opts)
 
 	-- presently no better API to get the current lsp log level
 	-- L.DEBUG == 3
-	if get_log_level() == L.DEBUG or get_log_level() == 3 then
+	M.log("loglevel: " .. get_log_level())
+
+	if opts.level == L.DEBUG and get_log_level() == L.DEBUG or get_log_level() == 3 then
 		if opts.data_before then
 			M.P(v)
 			M.log(log_str, hl)

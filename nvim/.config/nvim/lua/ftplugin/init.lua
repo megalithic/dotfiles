@@ -1,5 +1,11 @@
 local M = {}
 
+local filetype_blacklist = { "Trouble" }
+
+local function filetype_blacklisted(ft)
+	return ft ~= nil and vim.tbl_contains(filetype_blacklist, ft)
+end
+
 function M.trigger_ft()
 	vim.cmd("doautoall FileType")
 
@@ -9,7 +15,7 @@ function M.trigger_ft()
 end
 
 function M.handle()
-	if vim.bo.ft and vim.bo.ft ~= "" then
+	if vim.bo.ft and vim.bo.ft ~= "" and not filetype_blacklisted(vim.bo.ft) then
 		local status, ft_plugin = pcall(require, "ftplugin." .. vim.bo.ft)
 		if status then
 			local bufnr = vim.api.nvim_get_current_buf()

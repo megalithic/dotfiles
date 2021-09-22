@@ -143,10 +143,11 @@ function M.remove_wins()
 end
 
 -- # [ diagnostics ] -----------------------------------------------------------
+-- FIXME: this pulls in incorrect diagnostics from other buffers. ¯\_(ツ)_/¯
 function M.lsp.show_diagnostics()
 	vim.schedule(function()
-		local line = api.nvim_win_get_cursor(0)[1] - 1
-		local diagnostics = vim.lsp.diagnostic.get_line_diagnostics()
+		local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+		local diagnostics = lsp.diagnostic.get_line_diagnostics()
 		api.nvim_buf_clear_namespace(0, diagnostic_ns, 0, -1)
 		if #diagnostics == 0 then
 			return false
@@ -154,6 +155,14 @@ function M.lsp.show_diagnostics()
 		local virt_texts = vim.diagnostic.get_virt_text_chunks(diagnostics)
 		api.nvim_buf_set_virtual_text(0, diagnostic_ns, line, virt_texts, {})
 	end)
+end
+
+function M.lsp.refresh_diagnostics()
+	vim.diagnostic.setloclist({ open = false })
+	M.lsp.show_diagnostics()
+	if vim.tbl_isempty(vim.fn.getloclist(0)) then
+		vim.cmd([[lclose]])
+	end
 end
 
 -- # [ hover ] -----------------------------------------------------------------

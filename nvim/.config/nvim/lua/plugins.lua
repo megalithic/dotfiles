@@ -16,7 +16,7 @@ return {
 	"rktjmp/lush.nvim",
 	"norcalli/nvim-colorizer.lua",
 	"dm1try/golden_size",
-	"junegunn/rainbow_parentheses.vim",
+	-- "junegunn/rainbow_parentheses.vim",
 	"kyazdani42/nvim-web-devicons",
 	"danilamihailov/beacon.nvim",
 	"antoinemadec/FixCursorHold.nvim",
@@ -75,7 +75,6 @@ return {
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",
 	"voldikss/vim-floaterm",
-	-- "kyazdani42/nvim-tree.lua",
 
 	--
 	-- (text objects) --
