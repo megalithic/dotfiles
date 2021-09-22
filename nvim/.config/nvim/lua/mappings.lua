@@ -145,7 +145,7 @@ endif
 )
 
 -- # lightspeed
--- do
+-- do -- this continues to break my f/t movements :(
 -- 	function repeat_ft(reverse)
 -- 		local ls = require("lightspeed")
 -- 		ls.ft["instant-repeat?"] = true
@@ -192,3 +192,9 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 -- TODO: figure out how to use shortened paths
 map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org, prompt = "ORG  " })<cr>]])
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
+
+-- # tmux Navigator
+map("n", "<C-h>", ':lua require("Navigator").left()<CR>')
+map("n", "<C-k>", ':lua require("Navigator").up()<CR>')
+map("n", "<C-l>", ':lua require("Navigator").right()<CR>')
+map("n", "<C-j>", ':lua require("Navigator").down()<CR>')

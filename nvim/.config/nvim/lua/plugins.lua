@@ -139,14 +139,15 @@ return {
 	"wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
 	"ConradIrwin/vim-bracketed-paste",
 	"sickill/vim-pasta",
-	"kevinhwang91/nvim-hclipboard",
+	-- "kevinhwang91/nvim-hclipboard",
 	-- :Messages <- view messages in quickfix list
 	-- :Verbose  <- view verbose output in preview window.
 	-- :Time     <- measure how long it takes to run some stuff.
 	"tpope/vim-scriptease",
-	"christoomey/vim-tmux-navigator",
+	-- "christoomey/vim-tmux-navigator",
 	-- "https://github.com/aserowy/tmux.nvim"
 	-- "tmux-plugins/vim-tmux-focus-events",
+	"numtostr/Navigator.nvim",
 	"christoomey/vim-tmux-runner",
 	"junegunn/vim-slash",
 	"junegunn/vim-easy-align",
