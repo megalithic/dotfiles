@@ -60,8 +60,8 @@ return function(_) -- bufnr
     "console=sh",
     "sh",
     "elm",
-    "elixir",
-    "eelixir",
+    -- "elixir",
+    -- "eelixir",
     "lua",
     "vim",
     "viml"

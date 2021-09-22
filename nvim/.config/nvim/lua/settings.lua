@@ -861,7 +861,7 @@ do
 	end
 end
 
-do -- [fzf] --
+do -- [fzf/fzf-lua/fzflua] --
 	local actions = require("fzf-lua.actions")
 	require("fzf-lua").setup({
 		-- fzf_args = vim.env.FZF_DEFAULT_OPTS .. " --border rounded",
@@ -882,7 +882,7 @@ do -- [fzf] --
 			fd_opts = [[--type f --follow --hidden --color=always]]
 				.. [[ -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons']]
 				.. [[ --ignore-file '~/.gitignore_global' --ignore-file '.gitignore']],
-			color_icons = "",
+			color_icons = true,
 			git_icons = true,
 			git_diff_cmd = "git diff --name-status --relative HEAD",
 			actions = {

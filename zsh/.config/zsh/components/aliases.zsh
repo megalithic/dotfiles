@@ -125,6 +125,7 @@ alias vim="nvim"
 alias v=vim
 alias vi="/usr/local/bin/vim"
 alias minvim="nvim -u NONE"
+alias barevim="nvim -u NONE"
 alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
 alias rmpaqs="packs; rm -rf paqs; cd -"
 # alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"

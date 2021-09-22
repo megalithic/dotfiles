@@ -502,6 +502,16 @@ local function setup_lsp_servers()
 		},
 	}))
 	do
+		-- 	local elixirlsp_cmd = function()
+		-- 		local project_root = root_pattern("mix.exs")
+		-- 		local is_mix = project_root ~= nil and project_root ~= ""
+		-- 		local has_elixirls = fn.expand(string.format("%s/.elixir_ls", project_root))
+		-- 		print(has_elixirls)
+
+		-- 		-- if has_elixirls
+		-- 	end
+		-- 	mega.ex_cmd = elixirlsp_cmd
+
 		local manipulate_pipes = function(command)
 			return function()
 				local position_params = vim.lsp.util.make_position_params()
@@ -516,16 +526,6 @@ local function setup_lsp_servers()
 				})
 			end
 		end
-
-		-- 	local elixirlsp_cmd = function()
-		-- 		local project_root = root_pattern("mix.exs")
-		-- 		local is_mix = project_root ~= nil and project_root ~= ""
-		-- 		local has_elixirls = fn.expand(string.format("%s/.elixir_ls", project_root))
-		-- 		print(has_elixirls)
-
-		-- 		-- if has_elixirls
-		-- 	end
-		-- 	mega.ex_cmd = elixirlsp_cmd
 
 		lspconfig["elixirls"].setup(lsp_with_defaults({
 			cmd = { fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh" },

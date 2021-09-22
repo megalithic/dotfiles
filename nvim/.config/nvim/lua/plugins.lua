@@ -13,9 +13,7 @@ return {
 
 	--
 	-- (appearance/ui) --
-	"sainnhe/everforest",
 	"rktjmp/lush.nvim",
-	-- "goolord/alpha-nvim", -- "folke/persistence.nvim"
 	"norcalli/nvim-colorizer.lua",
 	"dm1try/golden_size",
 	"junegunn/rainbow_parentheses.vim",
@@ -40,9 +38,9 @@ return {
 	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-emoji",
-	"megalithic/cmp-gitmoji",
 	"f3fora/cmp-spell",
 	"L3MON4D3/LuaSnip",
+	-- "megalithic/cmp-gitmoji",
 	"rafamadriz/friendly-snippets",
 	"nvim-lua/lsp-status.nvim",
 	"nvim-lua/lsp_extensions.nvim",
@@ -174,10 +172,6 @@ return {
 	"tpope/vim-rails",
 	-- # elm
 	"antew/vim-elm-analyse",
-	-- # elixir/phoenix/erlang
-	"elixir-editors/vim-elixir",
-	"avdgaag/vim-phoenix",
-	"lucidstack/hex.vim",
 	-- # lua
 	"tjdevries/nlua.nvim",
 	"norcalli/nvim.lua",

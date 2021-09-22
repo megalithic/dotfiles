@@ -288,6 +288,10 @@ function M.augroup(name, commands)
 	cmd("augroup " .. name)
 	cmd("autocmd!")
 	for _, c in ipairs(commands) do
+		if c.events == nil then
+			return
+		end
+
 		cmd(
 			string.format(
 				"autocmd %s %s %s %s",

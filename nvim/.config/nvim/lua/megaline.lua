@@ -3,6 +3,7 @@ local hi, au = mega.highlight, mega.au
 local fn, _, bo, wo, set = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o
 
 local statusline = {}
+au([[ColorScheme * call v:lua.mega.statusline.set_colors()]])
 au([[VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]])
 set.statusline = "%!v:lua.mega.statusline.setup()"
 

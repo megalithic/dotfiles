@@ -66,6 +66,7 @@ brew "fontforge"
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"
 brew "gawk"
+brew "gdb"
 brew "gist"
 brew "git"
 brew "gitin"
