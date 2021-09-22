@@ -22,7 +22,11 @@ local function setup_nvim_options()
 	set.copyindent = true
 	set.preserveindent = true
 	set.foldmethod = "expr"
+
+	-- FIXME: THIS BREAKS opening *.exs files!
 	set.foldexpr = "nvim_treesitter#foldexpr()"
+	-- ---------------------------------------
+
 	set.indentexpr = "nvim_treesitter#indent()"
 	-- set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 	g.no_man_maps = true
@@ -39,9 +43,6 @@ local function setup_nvim_options()
 		{ "╰", "FloatBorderDark" },
 		{ "│", "FloatBorderDark" },
 	}
-	g.loaded_python_provider = 1
-	-- g.loaded_ruby_provider = 1
-	g.loaded_perl_provider = 1
 	set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
 	set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 	set.timeoutlen = 300
