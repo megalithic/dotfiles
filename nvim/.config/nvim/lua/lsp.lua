@@ -56,6 +56,7 @@ local function setup_diagnostics()
 		signs = true, -- {severity_limit = "Warning"},
 		update_in_insert = false,
 		severity_sort = true,
+		source = "if_many",
 	})
 
 	-- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
@@ -629,19 +630,7 @@ local function setup_lsp_servers()
 							"noremapbang",
 						},
 					},
-					-- workspace = {
-					-- 	-- preloadFileSize = 500,
-					-- 	maxPreload = 100000,
-					-- 	preloadFileSize = 10000,
-					-- 	-- Make the server aware of Neovim runtime files
-					-- 	library = {
-					-- 		-- [api.nvim_get_runtime_file("", true)],
-					-- 		[vim.fn.expand("$VIMRUNTIME/lua")] = true,
-					-- 		[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-					-- 		[vim.fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/")] = true,
-					-- 	},
-					-- },
-					-- Do not send telemetry data containing a randomized but unique identifier
+					-- do not send telemetry data containing a randomized but unique identifier
 					telemetry = {
 						enable = false,
 					},
