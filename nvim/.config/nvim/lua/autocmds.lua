@@ -24,13 +24,13 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
 --  Open multiple files in splits
-cmd([[ if argc() > 1 | silent vertical all | endif ]])
+exec([[ if argc() > 1 | silent vertical all | endif ]])
 
 --  Open :intro only if no file args passed in
 -- cmd([[ if argc() == 0 && !exists("s:std_in") | :intro | endif ]])
 
 --  Trim Whitespace
-vim.api.nvim_exec(
+exec(
 	[[
     fun! TrimWhitespace()
         let l:save = winsaveview()

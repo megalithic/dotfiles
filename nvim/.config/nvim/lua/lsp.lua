@@ -19,17 +19,29 @@ local function setup_diagnostics()
 	local sign_information = colors.icons.sign_information
 	local sign_hint = colors.icons.sign_hint
 
-	fn.sign_define("DiagnosticSignError", { text = sign_error, numhl = "DiagnosticDefaultError" })
-	fn.sign_define("DiagnosticSignWarning", { text = sign_warning, numhl = "DiagnosticDefaultWarning" })
-	fn.sign_define("DiagnosticSignInformation", { text = sign_information, numhl = "DiagnosticDefaultInformation" })
-	fn.sign_define("DiagnosticSignHint", { text = sign_hint, numhl = "DiagnosticDefaultHint" })
+	fn.sign_define(
+		"DiagnosticSignError",
+		{ text = sign_error, texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError" }
+	)
+	fn.sign_define(
+		"DiagnosticSignWarning",
+		{ text = sign_warning, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning" }
+	)
+	fn.sign_define(
+		"DiagnosticSignInformation",
+		{ text = sign_information, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultInformation" }
+	)
+	fn.sign_define(
+		"DiagnosticSignHint",
+		{ text = sign_hint, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultHint" }
+	)
 
-	vim.cmd([[
-    sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
-    sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
-    sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
-    sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
-  ]])
+	-- vim.cmd([[
+	--     sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
+	--     sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
+	--     sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
+	--     sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
+	--   ]])
 
 	-- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
 	-- REF: https://github.com/neovim/neovim/pull/15585
@@ -301,7 +313,8 @@ local function on_attach(client, bufnr)
 		"<leader>ld",
 		"lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	)
-	bufmap("K", "lua require('utils').lsp.hover()")
+	-- bufmap("K", "lua require('utils').lsp.hover()")
+	bufmap("K", "lua vim.lsp.buf.hover()")
 	bufmap("<C-k>", "lua vim.lsp.buf.signature_help()")
 	bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
 	bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
@@ -315,7 +328,6 @@ local function on_attach(client, bufnr)
 
 	--- # autocommands/autocmds
 	-- au("CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({focusable=false})")
-	-- au("CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()")
 
 	-- FIXME: totes does the wrong thing with other buffer diagnostics
 	-- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
@@ -573,7 +585,7 @@ local function setup_lsp_servers()
 						-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
 						version = "LuaJIT",
 						-- Setup your lua path
-						path = runtime_path,
+						-- path = runtime_path,
 					},
 					diagnostics = {
 						globals = {

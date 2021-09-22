@@ -362,6 +362,13 @@ function setup_neovim {
 	fi
 }
 
+function setup_kitty {
+	if [ -f $DOTS/neovim/$PLATFORM.sh ]; then
+		log "setting up kitty..."
+		source "$DOTS/neovim/$PLATFORM.sh" && log_ok "DONE setting up kitty" || log_error "failed to setup kitty"
+	fi
+}
+
 function setup_zsh {
 	[[ $PLATFORM == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
 
