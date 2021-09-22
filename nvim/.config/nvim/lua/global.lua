@@ -344,8 +344,9 @@ function M.hi_link(src, dest)
 	cmd("hi! link " .. src .. " " .. dest)
 end
 
-function M.exec(c)
-	api.nvim_exec(c, true)
+function M.exec(c, bool)
+	bool = bool or true
+	api.nvim_exec(c, bool)
 end
 
 function M.table_merge(t1, t2, opts)

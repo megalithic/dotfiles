@@ -21,10 +21,10 @@ local function setup_nvim_options()
 	-- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/general/settings.lua
 	set.copyindent = true
 	set.preserveindent = true
-	set.foldmethod = "expr"
 
 	-- FIXME: THIS BREAKS opening *.exs files!
-	set.foldexpr = "nvim_treesitter#foldexpr()"
+	-- set.foldmethod = "expr"
+	-- set.foldexpr = "nvim_treesitter#foldexpr()"
 	-- ---------------------------------------
 
 	set.indentexpr = "nvim_treesitter#indent()"
@@ -1002,11 +1002,11 @@ end
 
 setup_nvim_options()
 setup_treesitter()
+setup_golden_size()
 setup_devicons()
 setup_matchup()
 setup_neoscroll()
 setup_lightspeed()
-setup_golden_size()
 setup_colorizer()
 setup_autopairs()
 setup_tmux_navigator()

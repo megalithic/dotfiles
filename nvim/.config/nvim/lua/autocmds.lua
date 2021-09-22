@@ -24,7 +24,7 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 
 --  Open multiple files in splits
-exec([[ if argc() > 1 | silent vertical all | lua require('golden_size').on_win_enter() | endif ]])
+cmd([[ if argc() > 1 | silent vertical all | endif ]])
 
 --  Open :intro only if no file args passed in
 -- cmd([[ if argc() == 0 && !exists("s:std_in") | :intro | endif ]])
