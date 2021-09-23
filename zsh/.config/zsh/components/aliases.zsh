@@ -316,4 +316,6 @@ if [[ $PLATFORM == "linux" ]]; then
 		alias pbpaste="lemonade paste"
 	fi
 	alias distro="cat /etc/*release"
+	alias ports="netstat -lntu"
+	alias rules="sudo iptables -v -L"
 fi
