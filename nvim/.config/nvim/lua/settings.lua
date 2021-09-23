@@ -1018,7 +1018,7 @@ local function setup_distant()
 				distant = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
 				username = "ubuntu",
 				identity_file = "~/.ssh/seth-Seths-MBP.lan",
-				-- extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace --shutdown-after 30"',
+				extra_server_args = '"--log-file ~/tmp/distant-seth_dev-server.log --log-level trace --port 8081:8099 --shutdown-after 60"',
 				-- lsp = {
 				-- 	["outstand/pages (elixirls)"] = {
 				-- 		cmd = "",
@@ -1052,8 +1052,7 @@ local function setup_distant()
 				log_level = "trace",
 			},
 			launch = {
-				extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace"',
-				-- extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace --shutdown-after 30"',
+				extra_server_args = '"--log-file ~/tmp/distant-all-server.log --log-level trace --port 8080:8999 --shutdown-after 60"',
 			},
 			file = {
 				mappings = {
