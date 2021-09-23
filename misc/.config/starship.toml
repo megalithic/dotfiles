@@ -55,7 +55,7 @@ format = "$symbol"
 
 [custom.desk]
 description = "indicators whether you're in a desk-spawned shell"
-command = "(command -v desk &>/dev/null && desk | grep -q 'No desk activated.') && echo '' || echo "
+command = "(command -v desk &>/dev/null && desk | grep -q 'No desk activated.') && echo '' || echo '🚀'"
 
 [custom.sudo]
 description = "valid sudo timestamp marker"
