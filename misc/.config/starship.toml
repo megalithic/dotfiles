@@ -53,18 +53,10 @@ vicmd_symbol = "[](bold purple)"
 symbol = ""
 format = "$symbol"
 
-# [custom.shell]
-# command = "echo $STARSHIP_SHELL"  # shows output of command
-# when = """ test "$STARSHIP_SHELL" != "fish" """
-# style = "dimmed blue"
-# format = "[$output]($style)"
-# shell =["zsh"]
-
 [custom.desk]
 description = "indicators whether you're in a desk"
-command = "echo 🧐"
+command = "(command -v desk &>/dev/null && desk | grep -q 'No desk activated.') && echo '' || echo 🧐"
 files = ["Deskfile"]
-when = """ (command -v desk &>/dev/null) && desk | grep 'No desk activated.' &>/dev/null; echo $? """
 
 [custom.sudo]
 description = "valid sudo timestamp marker"
