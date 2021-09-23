@@ -145,8 +145,9 @@ return {
 	-- "christoomey/vim-tmux-navigator",
 	-- "https://github.com/aserowy/tmux.nvim"
 	-- "tmux-plugins/vim-tmux-focus-events",
-	"numtostr/Navigator.nvim",
-	"christoomey/vim-tmux-runner",
+	-- "numtostr/Navigator.nvim",
+	-- "christoomey/vim-tmux-runner",
+	"aserowy/tmux.nvim",
 	"junegunn/vim-slash",
 	"junegunn/vim-easy-align",
 	-- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations

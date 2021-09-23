@@ -1000,6 +1000,10 @@ local function setup_tmux_navigator()
 	})
 end
 
+local function setup_tmux()
+	require("tmux").setup()
+end
+
 local function setup_distant()
 	local actions = require("distant.nav.actions")
 
@@ -1073,7 +1077,8 @@ setup_neoscroll()
 setup_lightspeed()
 setup_colorizer()
 setup_autopairs()
-setup_tmux_navigator()
+-- setup_tmux_navigator()
+setup_tmux()
 setup_fzf_lua()
 setup_beacon()
 setup_which_key()
