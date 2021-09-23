@@ -120,8 +120,7 @@ remac() {
 }
 
 chk() { grep $1 =(ps auxwww) }
-
-portchk() { lsof -n -i4TCP:$1 }
+portchk() { nc -z -v $1 $2 }
 alias chkport=portchk
 
 changeMac() {

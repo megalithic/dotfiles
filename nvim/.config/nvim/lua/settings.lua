@@ -1052,7 +1052,8 @@ local function setup_distant()
 				log_level = "trace",
 			},
 			launch = {
-				extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace --shutdown-after 30"',
+				extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace"',
+				-- extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace --shutdown-after 30"',
 			},
 			file = {
 				mappings = {
