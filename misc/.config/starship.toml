@@ -63,11 +63,8 @@ format = "$symbol"
 [custom.desk]
 description = "indicators whether you're in a desk"
 command = "echo 🧐"
-when = "desk | grep -q 'No desk activated.' && echo true || exit 1"
-# when = """ :monocle_face: """
-# symbol = "🧐"
-# style = "dimmed blue"
-# format = "[$symbol$output]($style) "
+files = ["Deskfile"]
+when = """ command -v desk &>/dev/null && desk | grep -q 'No desk activated.' &>/dev/null; exit (echo $?) """
 
 [custom.sudo]
 description = "valid sudo timestamp marker"

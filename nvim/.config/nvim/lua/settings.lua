@@ -994,11 +994,11 @@ local function setup_which_key()
 	})
 end
 
-local function setup_tmux_navigator()
-	require("Navigator").setup({
-		auto_save = "current",
-	})
-end
+-- local function setup_tmux_navigator()
+-- 	require("Navigator").setup({
+-- 		auto_save = "current",
+-- 	})
+-- end
 
 local function setup_tmux()
 	require("tmux").setup({
