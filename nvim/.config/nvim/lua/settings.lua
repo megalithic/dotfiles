@@ -1001,7 +1001,12 @@ local function setup_tmux_navigator()
 end
 
 local function setup_tmux()
-	require("tmux").setup()
+	require("tmux").setup({
+		navigation = {
+			-- enables default keybindings (C-hjkl) for normal mode
+			enable_default_keybindings = true,
+		},
+	})
 end
 
 local function setup_distant()
