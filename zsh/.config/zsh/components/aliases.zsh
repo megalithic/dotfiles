@@ -315,4 +315,5 @@ if [[ $PLATFORM == "linux" ]]; then
 		alias pbcopy="lemonade copy"
 		alias pbpaste="lemonade paste"
 	fi
+	alias distro="cat /etc/*release"
 fi

@@ -1,9 +1,9 @@
-local cmd, lsp, api, fn, w, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.w, vim.g
-local map, bufmap, au = mega.map, mega.bufmap, mega.au
+local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
+local bufmap, au = mega.bufmap, mega.au
 
 local M = { lsp = {} }
 local windows = {}
-local diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostic")
+local diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostics")
 
 function M.t(cmd_str)
 	-- return api.nvim_replace_termcodes(cmd, true, true, true) -- TODO: why 3rd param false?
@@ -51,7 +51,7 @@ M.lsp.rename = function()
 	bufmap("<esc>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "i")
 	bufmap("<c-c>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "i")
 
-	cmd("startinsert")
+	vcmd("startinsert")
 end
 
 M.rename_callback = function()
@@ -147,28 +147,24 @@ end
 function M.lsp.show_diagnostics()
 	vim.schedule(function()
 		local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-		local diagnostics = lsp.diagnostic.get_line_diagnostics()
-		api.nvim_buf_clear_namespace(0, diagnostic_ns, 0, -1)
-		if #diagnostics == 0 then
-			return false
-		end
-		local virt_texts = vim.diagnostic.get_virt_text_chunks(diagnostics)
-		api.nvim_buf_set_virtual_text(0, diagnostic_ns, line, virt_texts, {})
+		local bufnr = vim.api.nvim_get_current_buf()
+		local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
+		vim.diagnostic.show(diagnostic_ns, bufnr, diagnostics, { virtual_text = true })
 	end)
 end
 
 function M.lsp.refresh_diagnostics()
 	vim.diagnostic.setloclist({ open = false })
 	M.lsp.show_diagnostics()
-	if vim.tbl_isempty(vim.fn.getloclist(0)) then
-		vim.cmd([[lclose]])
+	if vim.tbl_isempty(fn.getloclist(0)) then
+		vcmd([[lclose]])
 	end
 end
 
 -- # [ hover ] -----------------------------------------------------------------
 function M.lsp.hover()
 	if next(lsp.buf_get_clients()) == nil then
-		cmd([[execute printf('h %s', expand('<cword>'))]])
+		vcmd([[execute printf('h %s', expand('<cword>'))]])
 	else
 		lsp.buf.hover()
 	end

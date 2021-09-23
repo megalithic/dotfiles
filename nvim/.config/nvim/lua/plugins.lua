@@ -96,6 +96,7 @@ return {
 	-- (git, vcs, et al) --
 	-- "tpope/vim-fugitive",
 	-- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"},
+	"chipsenkbeil/distant.nvim",
 	"mattn/webapi-vim",
 	"rhysd/conflict-marker.vim",
 	"itchyny/vim-gitbranch",

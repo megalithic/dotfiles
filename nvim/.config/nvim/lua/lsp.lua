@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local cmd, lsp, api, fn, set, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt, vim.g
+local vcmd, lsp, api, fn, set, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt, vim.g
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local luasnip = require("luasnip")
@@ -36,7 +36,7 @@ local function setup_diagnostics()
 		{ text = sign_hint, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultHint" }
 	)
 
-	-- vim.cmd([[
+	-- vcmd([[
 	--     sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
 	--     sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
 	--     sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
@@ -47,28 +47,23 @@ local function setup_diagnostics()
 	-- REF: https://github.com/neovim/neovim/pull/15585
 	vim.diagnostic.config({
 		underline = true,
-		-- virtual_text = false,
-		virtual_text = {
-			prefix = "",
-			spacing = 4,
-			severity_limit = "Warning",
-		},
+		virtual_text = false,
+		-- virtual_text = {
+		-- 	prefix = "",
+		-- 	spacing = 4,
+		-- 	severity_limit = "Warning",
+		-- },
 		signs = true, -- {severity_limit = "Warning"},
 		update_in_insert = false,
 		severity_sort = true,
 		source = "if_many",
 	})
-
-	-- monkeypatch: only show one virtual text prefix for all of the possible diagnostic items on a line..
-	-- lsp.diagnostic.get_virtual_text_chunks_for_line = function(bufnr, line, line_diags, opts)
-	-- 	return utils.lsp.set_virtual_text_chunks(bufnr, line, line_diags, opts)
-	-- end
 end
 
 local function setup_lsp_handlers()
 	-- hover
 	-- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
-	lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+	lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, {
 		border = "rounded",
 		max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
 		max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
@@ -79,13 +74,13 @@ local function setup_lsp_handlers()
 		if err ~= nil or result == nil then
 			return
 		end
-		if api.nvim_buf_get_var(bufnr, "init_changedtick") == vim.api.nvim_buf_get_var(bufnr, "changedtick") then
-			local view = vim.fn.winsaveview()
+		if api.nvim_buf_get_var(bufnr, "init_changedtick") == api.nvim_buf_get_var(bufnr, "changedtick") then
+			local view = fn.winsaveview()
 			lsp.util.apply_text_edits(result, bufnr)
 			fn.winrestview(view)
-			if bufnr == vim.api.nvim_get_current_buf() then
+			if bufnr == api.nvim_get_current_buf() then
 				vim.b.saving_format = true
-				cmd([[update]])
+				vcmd([[update]])
 				api.nvim_command("noautocmd :update")
 				vim.b.saving_format = false
 			end
@@ -116,7 +111,7 @@ local function setup_completion()
 			enable_autosnippets = true,
 		})
 		require("luasnip/loaders/from_vscode").load({
-			paths = vim.fn.stdpath("config") .. "/snippets",
+			paths = fn.stdpath("config") .. "/snippets",
 			-- TODO: should get these for react/javascript/ts:
 			-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
 		})
@@ -328,12 +323,8 @@ local function on_attach(client, bufnr)
 	map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
 	--- # autocommands/autocmds
-	-- au("CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({focusable=false})")
-
-	-- FIXME: totes does the wrong thing with other buffer diagnostics
-	-- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
-	-- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
-	--
+	au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
+	au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
 	-- au([[CursorHoldI <buffer> lua vim.lsp.buf.signature_help()]]) -- using lsp-signature
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 
@@ -350,9 +341,9 @@ local function on_attach(client, bufnr)
 		local end_pos = api.nvim_buf_get_mark(0, ">")
 		lsp.buf.range_formatting({}, start_pos, end_pos)
 	end
-	cmd([[ command! -range FormatRange execute 'lua FormatRange()' ]])
-	cmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
-	cmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
+	vcmd([[ command! -range FormatRange execute 'lua FormatRange()' ]])
+	vcmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
+	vcmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
 
 	--- # client-specific configs
 	-- (zk)
@@ -537,8 +528,8 @@ local function setup_lsp_servers()
 
 		local manipulate_pipes = function(command)
 			return function()
-				local position_params = vim.lsp.util.make_position_params()
-				vim.lsp.buf.execute_command({
+				local position_params = lsp.util.make_position_params()
+				lsp.buf.execute_command({
 					command = "manipulatePipes:" .. command,
 					arguments = {
 						command,
@@ -643,8 +634,8 @@ local function setup_lsp_servers()
 					.. "/lua-language-server",
 				"-E",
 				fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
-				'--logpath="' .. vim.fn.stdpath("cache") .. '/nvim/log"',
-				'--metapath="' .. vim.fn.stdpath("cache") .. '/nvim/meta"',
+				'--logpath="' .. fn.stdpath("cache") .. '/nvim/log"',
+				'--metapath="' .. fn.stdpath("cache") .. '/nvim/meta"',
 			},
 		})
 
@@ -807,24 +798,24 @@ local function setup_lsp_servers()
 		--  * https://github.com/kaile256/dotfiles/blob/master/.config/nvim/lua/rc/lsp/config/ls/zk.lua
 		--  * https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
 		configs.zk.index = function()
-			vim.lsp.buf.execute_command({
+			lsp.buf.execute_command({
 				command = "zk.index",
-				arguments = { vim.api.nvim_buf_get_name(0) },
+				arguments = { api.nvim_buf_get_name(0) },
 			})
 		end
 
 		configs.zk.new = function(...)
-			vim.lsp.buf_request(0, "workspace/executeCommand", {
+			lsp.buf_request(0, "workspace/executeCommand", {
 				command = "zk.new",
 				arguments = {
-					vim.api.nvim_buf_get_name(0),
+					api.nvim_buf_get_name(0),
 					...,
 				},
 			}, function(_, _, result)
 				if not (result and result.path) then
 					return
 				end
-				vim.cmd("vnew " .. result.path)
+				vcmd("vnew " .. result.path)
 			end)
 		end
 

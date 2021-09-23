@@ -1000,6 +1000,70 @@ local function setup_tmux_navigator()
 	})
 end
 
+local function setup_distant()
+	local actions = require("distant.nav.actions")
+
+	require("distant").setup({
+		["198.74.55.152"] = {
+			launch = {
+				distant = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
+				username = "ubuntu",
+				identity_file = "~/.ssh/seth-Seths-MBP.lan",
+				-- extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace --shutdown-after 30"',
+				-- lsp = {
+				-- 	["outstand/pages (elixirls)"] = {
+				-- 		cmd = "",
+				-- 		root_dir = "/home/ubuntu/dev/pages",
+				-- 		filetypes = { "elixir", "eelixir" },
+				-- 		on_attach = function() end,
+				-- 		opts = {
+				-- 			log_file = "~/tmp/distant-pages-elixirls.log",
+				-- 			log_level = "trace",
+				-- 		},
+				-- 	},
+				-- 	["outstand/app (solargraph)"] = {
+				-- 		cmd = "",
+				-- 		root_dir = "/home/ubuntu/dev/app",
+				-- 		filetypes = { "ruby", "eruby" },
+				-- 		on_attach = function() end,
+				-- 		opts = {
+				-- 			log_file = "~/tmp/distant-app-solargraph.log",
+				-- 			log_level = "trace",
+				-- 		},
+				-- 	},
+			},
+		},
+
+		-- Apply these settings to any remote host
+		["*"] = {
+			-- max_timeout = 60000,
+			-- timeout_interval = 200,
+			client = {
+				log_file = "~/tmp/distant-client.log",
+				log_level = "trace",
+			},
+			launch = {
+				extra_server_args = '"--log-file ~/tmp/distant-server.log --log-level trace --shutdown-after 30"',
+			},
+			file = {
+				mappings = {
+					["-"] = actions.up,
+				},
+			},
+			dir = {
+				mappings = {
+					["<Return>"] = actions.edit,
+					["-"] = actions.up,
+					["K"] = actions.mkdir,
+					["N"] = actions.newfile,
+					["R"] = actions.rename,
+					["D"] = actions.remove,
+				},
+			},
+		},
+	})
+end
+
 setup_nvim_options()
 setup_treesitter()
 setup_golden_size()
@@ -1033,3 +1097,4 @@ setup_gps()
 setup_diffview()
 setup_git()
 setup_git_messenger()
+setup_distant()
