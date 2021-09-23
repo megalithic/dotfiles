@@ -60,29 +60,21 @@ format = "$symbol"
 # format = "[$output]($style)"
 # shell =["zsh"]
 
+[custom.desk]
+description = "indicators whether you're in a desk"
+command = "echo 🧐"
+when = "desk | grep -q 'No desk activated.' && echo true || exit 1"
+# when = """ :monocle_face: """
+# symbol = "🧐"
+# style = "dimmed blue"
+# format = "[$symbol$output]($style) "
+
 [custom.sudo]
 description = "valid sudo timestamp marker"
 command = "echo -n ''"
 format = "[$symbol$output]($style) "
 style = "bold fg:#614b51"
 when = "sudo -vn &>/dev/null"
-
-[custom.git_status_ahead]
-disabled = true
-# INDEX=$(command git status --porcelain -b 2> /dev/null)
-# # Check whether branch is ahead
-# local is_ahead=false
-# if $(echo "$INDEX" | command grep '^## [^ ]\+ .*ahead' &> /dev/null); then
-#   is_ahead=true
-# fi
-
-[custom.git_status_behind]
-disabled = true
-# # Check whether branch is behind
-# local is_behind=false
-# if $(echo "$INDEX" | command grep '^## [^ ]\+ .*behind' &> /dev/null); then
-#   is_behind=true
-# fi
 
 [custom.git_status_dirty]
 disabled = true
