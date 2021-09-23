@@ -64,7 +64,7 @@ format = "$symbol"
 description = "indicators whether you're in a desk"
 command = "echo 🧐"
 files = ["Deskfile"]
-when = """ command -v desk &>/dev/null && desk | grep -q 'No desk activated.' &>/dev/null; exit (echo $?) """
+when = """ (command -v desk &>/dev/null) && desk | grep 'No desk activated.' &>/dev/null; echo $? """
 
 [custom.sudo]
 description = "valid sudo timestamp marker"
