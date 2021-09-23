@@ -19,29 +19,29 @@ local function setup_diagnostics()
 	local sign_information = colors.icons.sign_information
 	local sign_hint = colors.icons.sign_hint
 
-	fn.sign_define(
-		"DiagnosticSignError",
-		{ text = sign_error, texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError" }
-	)
-	fn.sign_define(
-		"DiagnosticSignWarning",
-		{ text = sign_warning, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning" }
-	)
-	fn.sign_define(
-		"DiagnosticSignInformation",
-		{ text = sign_information, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultInformation" }
-	)
-	fn.sign_define(
-		"DiagnosticSignHint",
-		{ text = sign_hint, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultHint" }
-	)
+	-- fn.sign_define(
+	-- 	"DiagnosticSignError",
+	-- 	{ text = sign_error, texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError" }
+	-- )
+	-- fn.sign_define(
+	-- 	"DiagnosticSignWarning",
+	-- 	{ text = sign_warning, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning" }
+	-- )
+	-- fn.sign_define(
+	-- 	"DiagnosticSignInformation",
+	-- 	{ text = sign_information, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultInformation" }
+	-- )
+	-- fn.sign_define(
+	-- 	"DiagnosticSignHint",
+	-- 	{ text = sign_hint, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultHint" }
+	-- )
 
-	-- vcmd([[
-	--     sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
-	--     sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
-	--     sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
-	--     sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
-	--   ]])
+	vcmd([[
+	    sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
+	    sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
+	    sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
+	    sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
+	  ]])
 
 	-- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
 	-- REF: https://github.com/neovim/neovim/pull/15585

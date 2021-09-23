@@ -207,6 +207,9 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 defaults delete com.apple.dock persistent-apps
 defaults delete com.apple.dock persistent-others
 
+# HiDPI things? needed for big sur?
+# defaults write /Library/Preferences/com.apple.windowserver.plist DisplayResolutionEnabled -bool true
+
 ##
 # Finder
 ##
