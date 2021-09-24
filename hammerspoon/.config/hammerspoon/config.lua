@@ -141,7 +141,7 @@ M.apps = {
 		name = "Things",
 		hyper_key = "t",
 		hideAfter = 1,
-		-- local_bindings = {",", "."},
+		-- local_bindings = { ",", "." },
 		rules = {
 			{ nil, 1, M.layout.centeredMedium },
 		},
