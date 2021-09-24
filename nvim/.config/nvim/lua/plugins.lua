@@ -133,6 +133,7 @@ return {
 	"tpope/vim-repeat",
 	"tpope/vim-surround",
 	"tpope/vim-unimpaired",
+	"danro/rename.vim",
 	"EinfachToll/DidYouMean",
 	"wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
 	"ConradIrwin/vim-bracketed-paste",

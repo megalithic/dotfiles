@@ -36,6 +36,8 @@ export PRIVATES="$DOTS/private"
 export PRIVATE="$PRIVATES"
 export HOMEDIR="$HOME"
 export PROJECTS="$HOME/code"
+export WORKSPACE="$HOME/code"
+export LINODES="$HOME/code/linodes"
 export GIT_REPO_DIR="$PROJECTS"
 #
 # -- qmk

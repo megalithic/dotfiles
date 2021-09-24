@@ -3,7 +3,7 @@
 # zmodload zsh/zprof # top of your .zshrc file
 
 # REF:
-# https://spin.atomicobject.com/2021/08/02/zprofile-on-macos/
+# Fix zprofile things: https://spin.atomicobject.com/2021/08/02/zprofile-on-macos/
 #   (👆describes some of macos' annoying zprofile handling.)
 
 bindkey -e # ensures we use emacs/readline keybindings
@@ -34,6 +34,13 @@ unset file
 
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
+
+zle -N fprj
+bindkey '^w' fprj
+
+if [ -z "$IGNORE_GREETING_MESSAGE" ]; then
+	greeting_message
+fi
 
 # autoload -U promptinit
 # promptinit        # load prompt themes

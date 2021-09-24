@@ -1,30 +1,91 @@
-# try and autoload tmux session
-if [[ -z $TMUX ]]; then
-  function tmux() {
-    if [[ $# == 0 ]] && tmux has-session 2>/dev/null; then
-      command tmux attach-session
-    else
-      command tmux "$@"
+#!/bin/zsh
+
+function __close_all_apps() {
+  apps=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s;", $i}')
+  while [ "$apps" ] ;do
+    app=${apps%%;*}
+    if [[ $app != 'alacritty' && $app != 'kitty' ]]
+    then
+      pkill -x echo $app
+    fi
+
+    [ "$apps" = "$app" ] && \
+        apps='' || \
+        apps="${apps#*;}"
+  done
+}
+
+function reboot() {
+  __close_all_apps
+
+  sudo reboot
+}
+
+function shutdown() {
+  __close_all_apps
+
+  sudo shutdown -h now
+}
+
+function greeting_message() {
+  e_success "$(whoami)@$(hostname)"
+  e_success "os: $(sw_vers -productName)$(sw_vers -productVersion), build version: $(sw_vers -buildVersion)"
+  e_success "shell: $(zsh --version)"
+  e_success "term: $TERM"
+  e_success "uptime: $(uptime | sed 's/.*up \([^,]*\), .*/\1/')"
+}
+
+## -- [FZF] --------------------------------------------------------------------
+# Open fzf in tmux popup
+function __fzfp() {
+  fzf-tmux -p -w 70% -h 70%
+}
+# Open project under workspace folder
+function fprj() {
+  cd $WORKSPACE; ls -d */ | __fzfp | {
+    cd -;
+    read result;
+    if [ ! -z "$result" ]; then
+      cd $WORKSPACE/$result
     fi
   }
-fi
+  zle && zle reset-prompt
+}
+# Run frequently used commands
+# First param takes local path to set of commands, i.e. ~/local/cmds
+function fcmd() {
+  echo $1
+  local cmd=$(cat $1 | ${2-"__fzfp"})
+  if [ -n "$cmd" ]; then
+    local escape=$(echo $cmd | sed 's/[]\/$*.^[]/\\&/g')
+    echo -e "$cmd\n$(cat $1 | sed "s/$escape//g" | sed '/^$/d')" > $1
+    echo ""
+    echo $fg[yellow] "$cmd"
+    echo ""
+    eval $cmd
+  else
+    echo $fg[red] "Run nothing!"
+  fi
+}
 
-#
-# -- elixir/mix (for Deskfile thing for `pages`)
-# function mix()  {
-# 	if (command -v umbrella &>/dev/null); then
-#     umbrella_check=$(umbrella mix)
-#     is_bare_mix=$(echo $umbrella_check | grep -q "ERROR")
 
-#     if $is_bare_mix; then
-#       command mix "$@"
-#     else
-#       umbrella mix "$@"
-#     fi
-#   else
-#     command mix "$@"
-#   fi
-# }
+# Launch application
+function fapp() {
+  local app=$((ls /Applications; ls /System/Applications/; ls /System/Applications/Utilities) | cat | sed 's/.app//g' | fzf)
+  open -a $app
+}
+# Close application
+function fkill() {
+  select_app=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s\n", $i}'  | fzf)
+  if [ -n "$select_app" ]; then
+    printf "${bold}Do you want to kill ${select_app}? (y/n)${reset}\n"
+    read
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      pkill -x "${select_app}"
+    fi
+  fi
+}
+
 
 #
 # git
@@ -131,16 +192,6 @@ changeMac() {
   echo "Your new physical address is $mac"
 }
 
-# childprocs() {
-#   htop -p $(ps -ef | awk -v proc=$1 '$3 == proc { cnt++;if (cnt == 1) { printf "%s",$2 } else { printf ",%s",$2 } }')
-# }
-
-# children() {
-#   proc="$1"
-#   echo "getting children for $proc"
-#   chk $1 | awk '/$proc/ { print $2 }' | head -n 1 | xargs pstree -p
-# }
-
 path() {
   echo $PATH | tr ":" "\n" | \
     awk "{ sub(\"/usr\",   \"$fg_no_bold[green]/usr$reset_color\"); \
@@ -165,28 +216,7 @@ fpath() {
 
 mcd() { mkdir -p $1 && cd $1 }
 alias cdm=mcd
-
 cdf() { cd *$1*/ } # stolen from @topfunky
-
-# run() { open -a "/Applications/$1.app" } revert() { git reset $1 #resets index to former commit; replace '56e05fced' with your commit code git reset --soft HEAD@{1} #moves pointer back to previous HEAD git commit -m "Revert to $1"
-#   git reset --hard #updates working copy to reflect the new commit
-# }
-
-note () {
-  local notes_dir="$HOME/Dropbox/notes"
-  case "$1" in
-    c)
-      cd "$notes_dir"
-      ;;
-    l)
-      ls "$notes_dir"
-      ;;
-    *)
-      pushd "$notes_dir"
-      nvim "$1"
-      popd
-  esac
-}
 
 # Codi
 # Usage: codi [filetype] [filename]
@@ -215,10 +245,6 @@ iron() {
     hi VertSplit ctermbg=NONE |\
     hi NonText ctermfg=0 |\
     call IronStartRepl('$syntax', 0, 1)"
-}
-
-function ssh_ec2() {
-  ssh $(aws ec2 describe-instances --filters "Name=tag:Name,Values=$1" | jq -r '.Reservations[].Instances[] | .PublicDnsName');
 }
 
 ## FZF FUNCTIONS ##
