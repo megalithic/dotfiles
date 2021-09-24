@@ -29,7 +29,5 @@ load("lsp")
 load("autocmds")
 load("mappings")
 load("megaline")
-load("ftplugin").setup()
-load("ftplugin").trigger_ft()
 --
 -- }}}

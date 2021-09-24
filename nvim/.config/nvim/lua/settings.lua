@@ -994,12 +994,6 @@ local function setup_which_key()
 	})
 end
 
--- local function setup_tmux_navigator()
--- 	require("Navigator").setup({
--- 		auto_save = "current",
--- 	})
--- end
-
 local function setup_tmux()
 	require("tmux").setup({
 		navigation = {
@@ -1082,7 +1076,6 @@ setup_neoscroll()
 setup_lightspeed()
 setup_colorizer()
 setup_autopairs()
--- setup_tmux_navigator()
 setup_tmux()
 setup_fzf_lua()
 setup_beacon()

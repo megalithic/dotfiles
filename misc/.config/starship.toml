@@ -17,11 +17,9 @@ $git_status\
 $hg_branch\
 $memory_usage\
 $env_var\
-$crystal\
 $custom\
 $cmd_duration\
 $line_break\
-$lua\
 $jobs\
 $battery\
 $time\

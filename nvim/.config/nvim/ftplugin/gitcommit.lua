@@ -1,4 +1,3 @@
-return function(_) -- bufnr
 	vim.opt.textwidth = 72
 	vim.opt.colorcolumn = "50,72"
 	vim.opt.spell = true
@@ -23,4 +22,3 @@ return function(_) -- bufnr
 
 	vim.cmd([[startinsert]])
 	vim.bo.formatoptions = vim.bo.formatoptions .. "t"
-end

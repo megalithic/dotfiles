@@ -1,15 +1,14 @@
-return function(_) -- bufnr
-	-- REF:
-	-- running tests in iex:
-	-- https://curiosum.com/til/run-tests-in-elixir-iex-shell?utm_medium=email&utm_source=elixir-radar
+-- REF:
+-- running tests in iex:
+-- https://curiosum.com/til/run-tests-in-elixir-iex-shell?utm_medium=email&utm_source=elixir-radar
 
-	vim.cmd([[setlocal iskeyword+=!,?]])
+vim.cmd([[setlocal iskeyword+=!,?]])
 
-	vim.api.nvim_set_keymap("n", "<leader>etp", ":ToPipe<CR>", { noremap = true })
-	vim.api.nvim_set_keymap("n", "<leader>efp", ":FromPipe<CR>", { noremap = true })
+vim.api.nvim_set_keymap("n", "<leader>etp", ":ToPipe<CR>", { noremap = true })
+vim.api.nvim_set_keymap("n", "<leader>efp", ":FromPipe<CR>", { noremap = true })
 
-	vim.api.nvim_exec(
-		[[
+vim.api.nvim_exec(
+  [[
       set filetype=elixir
   nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>
   nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
@@ -82,6 +81,6 @@ return function(_) -- bufnr
   "       \ 'suite':   '--stale',
   "       \}
       ]],
-		true
-	)
-end
+
+  true
+)

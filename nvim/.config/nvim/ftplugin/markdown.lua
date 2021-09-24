@@ -3,7 +3,7 @@
 -- * https://github.com/dkarter/bullets.vim
 -- * https://github.com/mnarrell/dotfiles/blob/main/nvim/lua/ftplugin/markdown.lua
 -- * https://vim.works/2019/03/16/using-markdown-in-vim/
-return function(_) -- bufnr
+
   -- " source: https://gist.github.com/huytd/668fc018b019fbc49fa1c09101363397
   -- " based on: https://www.reddit.com/r/vim/comments/h8pgor/til_conceal_in_vim/
   -- " youtube video: https://youtu.be/UuHJloiDErM?t=793
@@ -257,4 +257,3 @@ return function(_) -- bufnr
   hi def link mkdURL markdownURL
   hi def link mkdCode markdownCode
   ]])
-end

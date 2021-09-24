@@ -1,6 +1,6 @@
 local colorscheme = require("colors")
 local hi, au = mega.highlight, mega.au
-local fn, _, bo, wo, set = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o
+local fn, _, bo, wo, set, api = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o, vim.api
 
 local statusline = {}
 au([[ColorScheme * call v:lua.mega.statusline.set_colors()]])
@@ -134,7 +134,7 @@ local function with_icon(value, icon, after)
 end
 
 local function get_mode_status()
-	local mode = fn.mode()
+	local mode = api.nvim_get_mode().mode
 	mode_highlight(mode)
 	local modeMap = {
 		["n"] = "NORMAL",
