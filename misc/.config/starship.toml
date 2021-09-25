@@ -4,8 +4,6 @@
 # * customs: https://github.com/starship/starship/discussions/1252
 
 format = """
-$username\
-$hostname\
 $shlvl\
 $directory\
 $vcsh\
@@ -20,6 +18,8 @@ $env_var\
 $custom\
 $cmd_duration\
 $line_break\
+$username\
+$hostname\
 $jobs\
 $battery\
 $time\
@@ -51,15 +51,10 @@ vicmd_symbol = "[](bold purple)"
 symbol = ""
 format = "$symbol"
 
-# FIXME: get this working when no desk exists
 [custom.desk]
 description = "indicates whether you're in a desk-spawned shell"
-# command = "(command -v desk &>/dev/null && desk | grep -q 'No desk activated.') && echo '' || echo '🚀'"
 command = "(command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo '🚀')) || echo ''"
 when = "true"
-# files = ["Deskfile"]
-
-
 
 [custom.sudo]
 description = "valid sudo timestamp marker"
