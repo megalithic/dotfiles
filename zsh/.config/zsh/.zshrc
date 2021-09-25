@@ -38,9 +38,9 @@ eval "$(starship init zsh)"
 zle -N fprj
 bindkey '^w' fprj
 
-if [ -z "$IGNORE_GREETING_MESSAGE" ]; then
-	greeting_message
-fi
+# if [ -z "$IGNORE_GREETING_MESSAGE" ]; then
+# 	greeting_message
+# fi
 
 # autoload -U promptinit
 # promptinit        # load prompt themes
