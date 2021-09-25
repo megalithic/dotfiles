@@ -4,6 +4,8 @@
 # * customs: https://github.com/starship/starship/discussions/1252
 
 format = """
+($username\
+$hostname)\
 $shlvl\
 $directory\
 $vcsh\
@@ -18,8 +20,6 @@ $env_var\
 $custom\
 $cmd_duration\
 $line_break\
-$username\
-$hostname\
 $jobs\
 $battery\
 $time\
