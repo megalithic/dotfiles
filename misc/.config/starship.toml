@@ -54,9 +54,10 @@ format = "$symbol"
 # FIXME: get this working when no desk exists
 [custom.desk]
 description = "indicates whether you're in a desk-spawned shell"
-command = "(command -v desk &>/dev/null && desk | grep -q 'No desk activated.') && echo '' || echo '🚀'"
-# when = "true"
-files = ["Deskfile"]
+# command = "(command -v desk &>/dev/null && desk | grep -q 'No desk activated.') && echo '' || echo '🚀'"
+command = "(command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo '🚀')) || echo ''"
+when = "true"
+# files = ["Deskfile"]
 
 
 
