@@ -19,7 +19,7 @@ return {
 	-- "junegunn/rainbow_parentheses.vim",
 	"kyazdani42/nvim-web-devicons",
 	"danilamihailov/beacon.nvim",
-	"antoinemadec/FixCursorHold.nvim",
+	"antoinemadec/FixCursorHold.nvim",  -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
 	"karb94/neoscroll.nvim",
 	"lukas-reineke/indent-blankline.nvim",
 	"MunifTanjim/nui.nvim",
@@ -147,12 +147,11 @@ return {
 	-- :Verbose  <- view verbose output in preview window.
 	-- :Time     <- measure how long it takes to run some stuff.
 	"tpope/vim-scriptease",
+	"aserowy/tmux.nvim",
 	-- "christoomey/vim-tmux-navigator",
-	-- "https://github.com/aserowy/tmux.nvim"
 	-- "tmux-plugins/vim-tmux-focus-events",
 	-- "numtostr/Navigator.nvim",
 	-- "christoomey/vim-tmux-runner",
-	"aserowy/tmux.nvim",
 	"junegunn/vim-slash",
 	"junegunn/vim-easy-align",
 	-- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations

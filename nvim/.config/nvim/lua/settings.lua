@@ -391,6 +391,7 @@ local function setup_bullets()
 end
 
 local function setup_cursorhold()
+	-- https://github.com/antoinemadec/FixCursorHold.nvim#configuration
 	g.cursorhold_updatetime = 100
 end
 
