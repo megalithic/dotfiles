@@ -1,4 +1,4 @@
-local api, cmd = vim.api, vim.cmd
+local api, cmd, fn = vim.api, vim.cmd, vim.fn
 local map = mega.map
 
 -- [convenience mappings] ------------------------------------------------------
@@ -143,6 +143,39 @@ endif
   ]],
 	true
 )
+
+do
+	function Dirvish_toggle()
+		local lines = vim.o.lines
+		local columns = vim.o.columns
+		local width = fn.float2nr(columns * 0.3)
+		local height = fn.float2nr(lines * 0.8)
+		local top = ((lines - height) / 2) - 1
+		local left = columns - width
+		local path = fn.expand("%:p")
+		local fdir = fn.expand("%:h")
+		api.nvim_open_win(api.nvim_create_buf(false, true), true, {
+			relative = "editor",
+			row = top,
+			col = left,
+			width = width,
+			height = height,
+			style = "minimal",
+			border = "single",
+		})
+
+		if fdir == "" then
+			fdir = "."
+		end
+
+		fn["dirvish#open"](fdir)
+
+		if path ~= "" then
+			fn.search("\\V\\^" .. fn.escape(path, "\\") .. "\\$", "cw")
+		end
+	end
+	map("n", "-", ":<C-U>lua Dirvish_toggle()<CR>")
+end
 
 -- # lightspeed
 -- do -- this continues to break my f/t movements :(

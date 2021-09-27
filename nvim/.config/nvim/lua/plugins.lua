@@ -75,6 +75,8 @@ return {
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",
 	"voldikss/vim-floaterm",
+	-- "tamago324/lir.nvim",
+	"lewis6991/vim-dirvish",
 
 	--
 	-- (text objects) --
@@ -96,7 +98,6 @@ return {
 	-- (git, vcs, et al) --
 	-- "tpope/vim-fugitive",
 	-- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"},
-	"chipsenkbeil/distant.nvim",
 	"mattn/webapi-vim",
 	"rhysd/conflict-marker.vim",
 	"itchyny/vim-gitbranch",
@@ -116,17 +117,19 @@ return {
 	"editorconfig/editorconfig-vim",
 	{ "zenbro/mirror.vim", opt = true },
 	"vuki656/package-info.nvim",
+	"jamestthompson3/nvim-remote-containers",
+	"chipsenkbeil/distant.nvim",
 
 	--
 	-- (the rest...) --
-	"jamestthompson3/nvim-remote-containers",
-	"b0o/mapx.nvim",
+	-- "b0o/mapx.nvim",
 	"nacro90/numb.nvim",
 	"ethanholz/nvim-lastplace",
 	"andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
 	"windwp/nvim-autopairs",
 	"alvan/vim-closetag",
 	"terrortylor/nvim-comment",
+	-- "winston0410/commented.nvim", -- TODO: go to this!
 	"tpope/vim-eunuch",
 	"tpope/vim-abolish",
 	"tpope/vim-rhubarb",
