@@ -117,6 +117,8 @@ local function setup_treesitter()
 				lua = "-- %s",
 				fish = "# %s",
 				toml = "# %s",
+				yaml = "# %s",
+				["eruby.yaml"] = "# %s",
 			},
 		},
 		matchup = { enable = true },
