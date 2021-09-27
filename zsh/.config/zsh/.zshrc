@@ -35,13 +35,6 @@ unset file
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
 
-zle -N fprj
-bindkey '^w' fprj
-
-# if [ -z "$IGNORE_GREETING_MESSAGE" ]; then
-# 	greeting_message
-# fi
-
 # autoload -U promptinit
 # promptinit        # load prompt themes
 # prompt megalithic # load my prompt

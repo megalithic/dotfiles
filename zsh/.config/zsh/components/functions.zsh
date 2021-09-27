@@ -27,46 +27,46 @@ function shutdown() {
   sudo shutdown -h now
 }
 
-function greeting_message() {
-  e_success "$(whoami)@$(hostname)"
-  e_success "os: $(sw_vers -productName)$(sw_vers -productVersion), build version: $(sw_vers -buildVersion)"
-  e_success "shell: $(zsh --version)"
-  e_success "term: $TERM"
-  e_success "uptime: $(uptime | sed 's/.*up \([^,]*\), .*/\1/')"
-}
+# function greeting_message() {
+#   e_success "$(whoami)@$(hostname)"
+#   e_success "os: $(sw_vers -productName)$(sw_vers -productVersion), build version: $(sw_vers -buildVersion)"
+#   e_success "shell: $(zsh --version)"
+#   e_success "term: $TERM"
+#   e_success "uptime: $(uptime | sed 's/.*up \([^,]*\), .*/\1/')"
+# }
 
 ## -- [FZF] --------------------------------------------------------------------
 # Open fzf in tmux popup
-function __fzfp() {
-  fzf-tmux -p -w 70% -h 70%
-}
-# Open project under workspace folder
-function fprj() {
-  cd $WORKSPACE; ls -d */ | __fzfp | {
-    cd -;
-    read result;
-    if [ ! -z "$result" ]; then
-      cd $WORKSPACE/$result
-    fi
-  }
-  zle && zle reset-prompt
-}
-# Run frequently used commands
-# First param takes local path to set of commands, i.e. ~/local/cmds
-function fcmd() {
-  echo $1
-  local cmd=$(cat $1 | ${2-"__fzfp"})
-  if [ -n "$cmd" ]; then
-    local escape=$(echo $cmd | sed 's/[]\/$*.^[]/\\&/g')
-    echo -e "$cmd\n$(cat $1 | sed "s/$escape//g" | sed '/^$/d')" > $1
-    echo ""
-    echo $fg[yellow] "$cmd"
-    echo ""
-    eval $cmd
-  else
-    echo $fg[red] "Run nothing!"
-  fi
-}
+# function __fzfp() {
+#   fzf-tmux -p -w 70% -h 70%
+# }
+# # Open project under workspace folder
+# function fprj() {
+#   cd $WORKSPACE; ls -d */ | __fzfp | {
+#     cd -;
+#     read result;
+#     if [ ! -z "$result" ]; then
+#       cd $WORKSPACE/$result
+#     fi
+#   }
+#   zle && zle reset-prompt
+# }
+# # Run frequently used commands
+# # First param takes local path to set of commands, i.e. ~/local/cmds
+# function fcmd() {
+#   echo $1
+#   local cmd=$(cat $1 | ${2-"__fzfp"})
+#   if [ -n "$cmd" ]; then
+#     local escape=$(echo $cmd | sed 's/[]\/$*.^[]/\\&/g')
+#     echo -e "$cmd\n$(cat $1 | sed "s/$escape//g" | sed '/^$/d')" > $1
+#     echo ""
+#     echo $fg[yellow] "$cmd"
+#     echo ""
+#     eval $cmd
+#   else
+#     echo $fg[red] "Run nothing!"
+#   fi
+# }
 
 
 # Launch application

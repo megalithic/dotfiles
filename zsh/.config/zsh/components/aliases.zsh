@@ -161,7 +161,7 @@ alias eg="nvim $HOME/.gitconfig"
 alias eb="nvim $DOTS/Brewfile"
 alias essh="nvim $HOME/.ssh/config"
 
-alias ek="nvim $DOTS/.config/kitty/kitty.conf"
+alias ek="nvim $DOTS/kitty/.config/kitty/kitty.conf"
 alias et="nvim $HOME/.tmux.conf"
 
 # FOLDERS
