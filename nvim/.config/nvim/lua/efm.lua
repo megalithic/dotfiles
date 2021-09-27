@@ -1,12 +1,16 @@
+local prettierd = function()
+	return {
+		exe = "prettierd",
+		args = { vim.api.nvim_buf_get_name(0) },
+		stdin = true,
+	}
+end
+local prettier = prettierd
+
 local vint = {
 	lintCommand = "vint -",
 	lintStdin = true,
 	lintFormats = { "%f:%l:%c: %m" },
-}
-local luafmt = {
-	formatCommand = "luafmt --indent-count 2 --stdin",
-	-- formatCommand = "luafmt ${-i:tabWidth} --stdin",
-	formatStdin = true,
 }
 local mix_credo = {
 	lintCommand = "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}",
@@ -31,14 +35,14 @@ local selene = {
 	lintStdin = true,
 	lintFormats = { "%f:%l:%c: %tarning%m", "%f:%l:%c: %tarning%m" },
 }
-local prettierLocal = {
-	formatCommand = "./node_modules/.bin/prettier --stdin --stdin-filepath ${INPUT}",
-	formatStdin = true,
-}
-local prettierGlobal = {
-	formatCommand = "prettier --stdin --stdin-filepath ${INPUT}",
-	formatStdin = true,
-}
+-- local prettierLocal = {
+-- 	formatCommand = "./node_modules/.bin/prettier --stdin --stdin-filepath ${INPUT}",
+-- 	formatStdin = true,
+-- }
+-- local prettierGlobal = {
+-- 	formatCommand = "prettier --stdin --stdin-filepath ${INPUT}",
+-- 	formatStdin = true,
+-- }
 local eslint = {
 	lintCommand = "eslint_d -f visualstudio --stdin --stdin-filename ${INPUT}",
 	lintIgnoreExitCode = true,
@@ -66,7 +70,7 @@ local shfmt = {
 	formatCommand = "shfmt -ci -s -bn",
 	formatStdin = true,
 }
-local eslintPrettier = { prettierGlobal, eslint }
+local eslintPrettier = { prettier, eslint }
 
 return {
 	-- ["="] = {misspell},
