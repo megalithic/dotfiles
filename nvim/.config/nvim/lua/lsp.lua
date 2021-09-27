@@ -221,18 +221,19 @@ local function setup_completion()
 				{ name = "spell" },
 				{ name = "emoji" },
 				{ name = "path" },
-				{
-					name = "buffer",
-					opts = {
-						get_bufnrs = function()
-							local bufs = {}
-							for _, win in ipairs(api.nvim_list_wins()) do
-								bufs[api.nvim_win_get_buf(win)] = true
-							end
-							return vim.tbl_keys(bufs)
-						end,
-					},
-				},
+				{ name = "buffer" },
+				-- {
+				-- 	name = "buffer",
+				-- 	opts = {
+				-- 		get_bufnrs = function()
+				-- 			local bufs = {}
+				-- 			for _, win in ipairs(api.nvim_list_wins()) do
+				-- 				bufs[api.nvim_win_get_buf(win)] = true
+				-- 			end
+				-- 			return vim.tbl_keys(bufs)
+				-- 		end,
+				-- 	},
+				-- },
 			},
 			formatting = {
 				format = function(entry, item)
@@ -307,7 +308,7 @@ local function on_attach(client, bufnr)
 	bufmap("<leader>ln", "lua require('utils').lsp.rename()")
 	bufmap(
 		"<leader>ld",
-		"lua vim.lsp.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
+		"lua vim.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
 	)
 	-- bufmap("K", "lua require('utils').lsp.hover()")
 	bufmap("K", "lua vim.lsp.buf.hover()")
