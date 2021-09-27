@@ -76,7 +76,8 @@ return {
 	"ggandor/lightspeed.nvim",
 	"voldikss/vim-floaterm",
 	-- "tamago324/lir.nvim",
-	"lewis6991/vim-dirvish",
+	"justinmk/vim-dirvish",
+	-- "lewis6991/vim-dirvish",
 
 	--
 	-- (text objects) --
