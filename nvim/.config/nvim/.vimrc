@@ -54,20 +54,16 @@ nnoremap <lt>> V`]<
 nnoremap ><lt> V`]>
 nnoremap =- V`]=
 
-" Better window navigation
+" Don't overwrite blackhole register with selection
+" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
+xnoremap p "_c<c-r>"<esc>
+xmap P p
 
-if exists('$TMUX')
-  nnoremap <C-h> :TmuxNavigateLeft<cr>
-  nnoremap <C-j> :TmuxNavigateDown<cr>
-  nnoremap <C-k> :TmuxNavigateUp<cr>
-  nnoremap <C-l> :TmuxNavigateRight<cr>
-  nnoremap <C-\> :TmuxNavigatePrevious<cr>
-else
-  nnoremap <C-h> <C-w>h
-  nnoremap <C-j> <C-w>j
-  nnoremap <C-k> <C-w>k
-  nnoremap <C-l> <C-w>l
-endif
+" Better window navigation
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
 
 " Better save and quit
 silent! unmap <leader>w

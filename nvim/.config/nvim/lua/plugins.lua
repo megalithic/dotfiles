@@ -16,7 +16,6 @@ return {
 	"rktjmp/lush.nvim",
 	"norcalli/nvim-colorizer.lua",
 	"dm1try/golden_size",
-	-- "junegunn/rainbow_parentheses.vim",
 	"kyazdani42/nvim-web-devicons",
 	"danilamihailov/beacon.nvim",
 	"antoinemadec/FixCursorHold.nvim",  -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
@@ -49,7 +48,6 @@ return {
 	"megalithic/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
 	"folke/trouble.nvim",
 	"SmiteshP/nvim-gps",
-	-- https://github.com/kosayoda/nvim-lightbulb
 
 	--
 	-- (treesitter) --
@@ -75,9 +73,6 @@ return {
 	"vijaymarupudi/nvim-fzf",
 	"ggandor/lightspeed.nvim",
 	"voldikss/vim-floaterm",
-	-- "tamago324/lir.nvim",
-	"justinmk/vim-dirvish",
-	-- "lewis6991/vim-dirvish",
 
 	--
 	-- (text objects) --
@@ -97,15 +92,13 @@ return {
 
 	--
 	-- (git, vcs, et al) --
-	-- "tpope/vim-fugitive",
-	-- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"},
+	-- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
 	"mattn/webapi-vim",
 	"rhysd/conflict-marker.vim",
 	"itchyny/vim-gitbranch",
 	"rhysd/git-messenger.vim",
 	"sindrets/diffview.nvim",
 	"dinhhuy258/git.nvim",
-	-- "lewis6991/gitsigns.nvim",
 	-- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
 
 	--
