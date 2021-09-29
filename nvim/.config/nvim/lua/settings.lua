@@ -612,6 +612,9 @@ local function setup_git_messenger()
 end
 
 local function setup_vim_test()
+  -- REF:
+  -- neat ways to detect jest things
+  -- https://github.com/weilbith/vim-blueplanet/blob/master/pack/plugins/start/test_/autoload/test/typescript/jest.vim
 	api.nvim_exec(
 		[[
     function! TerminalSplit(cmd)

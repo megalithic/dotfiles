@@ -68,7 +68,7 @@ nnoremap <C-l> <C-w>l
 " Better save and quit
 silent! unmap <leader>w
 nnoremap <silent><leader>w :w<CR>
-nnoremap <silent><leader>W :w !sudo tee > /dev/null %<CR>
+nnoremap <silent><leader>W :w !sudo -S tee > /dev/null %<CR>
 cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
 

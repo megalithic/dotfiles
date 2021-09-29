@@ -65,10 +65,11 @@ function M.P(...)
 	return ...
 end
 
-function M.dump(...)
+function _G.dump(...)
 	local objects = vim.tbl_map(vim.inspect, { ... })
 	print(unpack(objects))
 end
+M.dump = dump
 
 function M.dump_text(...)
 	local objects, v = {}, nil

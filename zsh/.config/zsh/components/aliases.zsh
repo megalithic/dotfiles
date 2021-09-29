@@ -315,7 +315,8 @@ if [[ $PLATFORM == "linux" ]]; then
 	fi
 	alias distro="cat /etc/*release"
 	alias ports="netstat -lntu"
+  alias port="sudo netstat -lp | rg"
 
 	# REF: https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
-	alias rules="sudo iptables -v -L"
+	alias rules="sudo iptables -L -nv"
 fi

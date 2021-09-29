@@ -272,6 +272,7 @@ local function on_attach(client, bufnr)
 		floating_window = true,
 		floating_window_above_cur_line = true, -- try to place the floating above the current line
 		floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
+		fix_pos = true,
 		hint_enable = false,
 		decorator = { "`", "`" },
 		handler_opts = {
@@ -363,19 +364,19 @@ local function on_attach(client, bufnr)
 	end
 
 	-- (typescript/tsserver)
-	if client.name == "typescript" or client.name == "tsserver" then
-		local ts = require("nvim-lsp-ts-utils")
-		ts.setup({
-			disable_commands = false,
-			enable_import_on_completion = false,
-			import_on_completion_timeout = 5000,
-			eslint_bin = "eslint_d", -- use eslint_d if possible!
-			eslint_enable_diagnostics = true,
-			-- eslint_fix_current = false,
-			eslint_enable_disable_comments = true,
-		})
+	if client.name == "tsserver" then
+		-- local ts = require("nvim-lsp-ts-utils")
+		-- 		ts.setup({
+		-- 			disable_commands = false,
+		-- 			enable_import_on_completion = false,
+		-- 			import_on_completion_timeout = 5000,
+		-- 			eslint_bin = "eslint_d", -- use eslint_d if possible!
+		-- 			eslint_enable_diagnostics = true,
+		-- 			-- eslint_fix_current = false,
+		-- 			eslint_enable_disable_comments = true,
+		-- 		})
 
-		ts.setup_client(client)
+		-- 		ts.setup_client(client)
 
 		-- so tsserver doesn't compete with efm or null-ls
 		client.resolved_capabilities.document_formatting = false
