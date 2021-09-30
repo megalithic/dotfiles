@@ -18,7 +18,7 @@ return {
 	"dm1try/golden_size",
 	"kyazdani42/nvim-web-devicons",
 	"danilamihailov/beacon.nvim",
-	"antoinemadec/FixCursorHold.nvim",  -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
+	"antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
 	"karb94/neoscroll.nvim",
 	"lukas-reineke/indent-blankline.nvim",
 	"MunifTanjim/nui.nvim",
@@ -45,7 +45,7 @@ return {
 	"nvim-lua/lsp_extensions.nvim",
 	"ray-x/lsp_signature.nvim",
 	"jose-elias-alvarez/nvim-lsp-ts-utils",
-	"megalithic/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
+	"jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
 	"folke/trouble.nvim",
 	"SmiteshP/nvim-gps",
 
@@ -133,14 +133,14 @@ return {
 	"danro/rename.vim",
 	"EinfachToll/DidYouMean",
 	"wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
-	"ConradIrwin/vim-bracketed-paste",
-	"sickill/vim-pasta",
+	-- "ConradIrwin/vim-bracketed-paste", -- FIXME: delete?
+	-- "sickill/vim-pasta", -- FIXME: delete?
 	-- "kevinhwang91/nvim-hclipboard",
 	-- :Messages <- view messages in quickfix list
 	-- :Verbose  <- view verbose output in preview window.
 	-- :Time     <- measure how long it takes to run some stuff.
 	"tpope/vim-scriptease",
-	"aserowy/tmux.nvim",
+	-- "aserowy/tmux.nvim",
 	-- "christoomey/vim-tmux-navigator",
 	-- "tmux-plugins/vim-tmux-focus-events",
 	-- "numtostr/Navigator.nvim",

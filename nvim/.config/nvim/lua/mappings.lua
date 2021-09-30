@@ -197,3 +197,26 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 -- TODO: figure out how to use shortened paths
 map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org, prompt = "ORG  " })<cr>]])
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
+
+-- # tmux
+do
+	local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
+
+	local tmux_move = function(direction)
+		vim.fn.system("tmux selectp -" .. tmux_directions[direction])
+	end
+
+	function Move(direction)
+		local current_win = api.nvim_get_current_win()
+		vim.cmd("wincmd " .. direction)
+
+		if api.nvim_get_current_win() == current_win then
+			tmux_move(direction)
+		end
+	end
+
+	map("n", "<C-h>", ":lua Move('h')<CR>")
+	map("n", "<C-j>", ":lua Move('j')<CR>")
+	map("n", "<C-k>", ":lua Move('k')<CR>")
+	map("n", "<C-l>", ":lua Move('l')<CR>")
+end

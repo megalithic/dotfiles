@@ -17,3 +17,14 @@
   "useTabs": false,
   "vueIndentScriptAndStyle": false
 }
+// REF: app
+// {
+//   "trailingComma": "none",
+//   "printWidth": 120,
+//   "tabWidth": 2,
+//   "semi": true,
+//   "singleQuote": false,
+//   "quoteProps": "consistent",
+//   "bracketSpacing": true,
+//   "arrowParens": "avoid"
+// }

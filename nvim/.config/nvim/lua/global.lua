@@ -348,6 +348,15 @@ function M.exec(c, bool)
 	api.nvim_exec(c, bool)
 end
 
+-- essentially allows for a ternary operator of sorts
+function M._if(bool, a, b)
+    if bool then
+        return a
+    else
+        return b
+    end
+end
+
 function M.table_merge(t1, t2, opts)
 	opts = opts or { strategy = "deep" }
 

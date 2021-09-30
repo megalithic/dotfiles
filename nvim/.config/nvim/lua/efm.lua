@@ -1,93 +1,87 @@
--- local prettierd = function()
--- 	return {
--- 		exe = "prettierd",
--- 		args = { vim.api.nvim_buf_get_name(0) },
--- 		stdin = true,
--- 	}
--- end
-local prettier_format_options = {
-	tabWidth = 4,
-	singleQuote = true,
-	trailingComma = "all",
-	configPrecedence = "prefer-file",
-}
 local prettier = {
-	formatCommand = ([[
+  formatCommand = ([[
   $([ -n "$(command -v node_modules/.bin/prettier)" ] && echo "node_modules/.bin/prettier" || echo "prettier")
-  ${--config-precedence:prettier_format_options.configPrecedence}
-  ${--tab-width:prettier_format_options.tabWidth}
-  ${--single-quote:prettier_format_options.singleQuote}
-  ${--trailing-comma:prettier_format_options.trailingComma}
+  ${--config-precedence:configPrecedence}
+  ${--tab-width:tabWidth}
+  ${--single-quote:singleQuote}
+  ${--trailing-comma:trailingComma}
   ]]):gsub("\n", ""),
 }
 local vint = {
-	lintCommand = "vint -",
-	lintStdin = true,
-	lintFormats = { "%f:%l:%c: %m" },
+  lintCommand = "vint -",
+  lintStdin = true,
+  lintFormats = { "%f:%l:%c: %m" },
 }
 local mix_credo = {
-	lintCommand = "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}",
-	lintStdin = true,
-	lintIgnoreExitCode = true,
-	lintFormats = {
-		"%f:%l:%c: %t: %m",
-		"%f:%l: %t: %m",
-	},
-	rootMarkers = { "mix.lock", "mix.exs" }, -- for some reason, only mix.lock works in vpp
+  lintCommand = "mix credo suggest --format=flycheck --read-from-stdin ${INPUT}",
+  lintStdin = true,
+  lintIgnoreExitCode = true,
+  lintFormats = {
+    "%f:%l:%c: %t: %m",
+    "%f:%l: %t: %m",
+  },
+  rootMarkers = { "mix.lock", "mix.exs" }, -- for some reason, only mix.lock works in vpp
 }
-local stylua = { formatCommand = "stylua -", formatStdin = true }
+local stylua = {
+  -- formatCommand = "stylua -",
+  formatCommand = "stylua -s --stdin-filepath ${INPUT} -",
+  formatStdin = true,
+}
 local selene = {
-	lintCommand = "selene --display-style quiet -",
-	lintIgnoreExitCode = true,
-	lintStdin = true,
-	lintFormats = { "%f:%l:%c: %tarning%m", "%f:%l:%c: %tarning%m" },
+  lintCommand = "selene --display-style quiet -",
+  lintIgnoreExitCode = true,
+  lintStdin = true,
+  lintFormats = { "%f:%l:%c: %tarning%m", "%f:%l:%c: %tarning%m" },
+  lintSource = "selene",
 }
 local eslint = {
-	lintCommand = "eslint_d -f visualstudio --stdin --stdin-filename ${INPUT}",
-	lintIgnoreExitCode = true,
-	lintStdin = true,
-	lintFormats = { "%f(%l,%c): %tarning %m", "%f(%l,%c): %trror %m" },
+  lintCommand = "eslint_d -f visualstudio --stdin --stdin-filename ${INPUT}",
+  lintIgnoreExitCode = true,
+  lintStdin = true,
+  -- lintFormats = { "%f(%l,%c): %tarning %m", "%f(%l,%c): %trror %m" },
+  lintFormats = {
+    "%f(%l,%c): %tarning %m",
+    "%f(%l,%c): %rror %m",
+  },
+  lintSource = "eslint",
 }
 local shellcheck = {
-	lintCommand = "shellcheck -f gcc -x -",
-	lintStdin = true,
-	lintFormats = { "%f=%l:%c: %trror: %m", "%f=%l:%c: %tarning: %m", "%f=%l:%c: %tote: %m" },
-}
-local markdownlint = {
-	lintCommand = "markdownlint -s",
-	lintStdin = true,
-	lintFormats = { "%f:%l:%c %m" },
+  lintCommand = "shellcheck -f gcc -x -",
+  lintStdin = true,
+  lintFormats = { "%f=%l:%c: %trror: %m", "%f=%l:%c: %tarning: %m", "%f=%l:%c: %tote: %m" },
+  lintSource = "shellcheck",
 }
 local fish = { formatCommand = "fish_indent", formatStdin = true }
 local misspell = {
-	lintCommand = "misspell",
-	lintIgnoreExitCode = true,
-	lintStdin = true,
-	lintFormats = { "%f:%l:%c: %m" },
+  lintCommand = "misspell",
+  lintIgnoreExitCode = true,
+  lintStdin = true,
+  lintFormats = { "%f:%l:%c: %m" },
+  lintSource = "misspell",
 }
 local shfmt = {
-	formatCommand = "shfmt -ci -s -bn",
-	formatStdin = true,
+  formatCommand = "shfmt -ci -s -bn",
+  -- formatCommand = "shfmt ${-i:tabWidth}",
+  formatStdin = true,
 }
-local eslintPrettier = { prettier, eslint }
 return {
-	-- ["="] = {misspell},
-	vim = { vint },
-	lua = { stylua },
-	-- elixir = { mix_credo },
-	-- eelixir = { mix_credo },
-	fish = { fish },
-	typescript = eslintPrettier,
-	javascript = eslintPrettier,
-	tsx = eslintPrettier,
-	typescriptreact = eslintPrettier,
-	javascriptreact = eslintPrettier,
-	yaml = eslintPrettier,
-	json = eslintPrettier,
-	html = eslintPrettier,
-	scss = eslintPrettier,
-	css = eslintPrettier,
-	-- markdown = eslintPrettier,
-	sh = { shellcheck, shfmt },
-	zsh = { shellcheck, shfmt },
+  ["="] = {misspell},
+  bash = { shellcheck, shfmt },
+  css = { prettier, eslint },
+  eelixir = { mix_credo },
+  elixir = { mix_credo },
+  fish = { fish },
+  html = { prettier, eslint },
+  javascript = { prettier, eslint },
+  javascriptreact = { prettier, eslint },
+  json = { prettier, eslint },
+  lua = { stylua },
+  markdown = { prettier, eslint },
+  scss = { prettier, eslint },
+  sh = { shellcheck, shfmt },
+  typescript = { prettier, eslint },
+  typescriptreact = { prettier, eslint },
+  vim = { vint },
+  yaml = { prettier, eslint },
+  zsh = { shellcheck, shfmt },
 }
