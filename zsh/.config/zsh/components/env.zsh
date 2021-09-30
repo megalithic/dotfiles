@@ -5,6 +5,11 @@
 # fi
 
 #
+# term
+export TERM=${TERM:=xterm-kitty}
+export COLORTERM=${COLORTERM:=truecolor}
+
+#
 # editors
 export EDITOR="nvim"
 export VISUAL="$EDITOR"
@@ -75,6 +80,7 @@ export BAT_CONFIG_PATH="$HOME/.batrc"
 # -- zsh plugins
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89"
 # export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"  # nova bg
+# export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 export TERM_ITALICS="TRUE"
 
