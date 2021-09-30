@@ -98,6 +98,7 @@ brew "mkcert"
 brew "moreutils"
 brew "mosh", args: ["HEAD"]
 brew "mutagen-io/mutagen/mutagen-beta"
+brew "mycli"
 brew "mysql"
 brew "ncurses"
 brew "neovim", args: ["HEAD"]
