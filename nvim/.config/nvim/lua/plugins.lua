@@ -160,6 +160,7 @@ return {
 	{ "harshad1/bullets.vim", branch = "performance_improvements" },
 	"kristijanhusak/orgmode.nvim",
 	"akinsho/org-bullets.nvim",
+	"lervag/vim-rainbow-lists", -- :RBListToggle
 	"dhruvasagar/vim-table-mode",
 	-- https://github.com/preservim/vim-wordy
 	-- https://github.com/jghauser/follow-md-links.nvim

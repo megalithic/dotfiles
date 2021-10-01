@@ -13,7 +13,6 @@ au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
 au([[Syntax * call matchadd('Todo', '\W\zs\(TODO\|FIXME\|CHANGED\|BUG\|HACK\)')]])
 au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
-au("BufRead,BufNewFile *.md set filetype=markdown")
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
 au(
@@ -22,6 +21,7 @@ au(
 au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
+-- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
 
 --  Open multiple files in splits
 exec([[ if argc() > 1 | silent vertical all | endif ]])
@@ -142,9 +142,9 @@ augroup("filetypes", {
 		targets = { "*.jst.eco" },
 		command = "set filetype=jst",
 	},
-	-- {
-	--   events = {"BufEnter", "BufNewFile", "FileType"},
-	--   targets = {"*.md"},
-	--   command = "lua require('ftplugin.markdown')()"
-	-- }
+	{
+	  events = {"BufEnter", "BufRead", "BufNewFile"},
+	  targets = {"*.md"},
+		command = "set filetype=markdown",
+	}
 })
