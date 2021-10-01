@@ -80,8 +80,9 @@ do
 	-- presumably from this commit: https://github.com/lewis6991/impatient.nvim/commit/165a28c1097923c88022bb9e494430a096ca1b95
 	-- ****
 	--
-	local ok, impatient = mega.load("impatient", { safe = true })
-	if ok then
-		impatient.enable_profile()
-	end
+	mega.load("impatient")
+	-- local ok, impatient = mega.load("impatient", { safe = true })
+	-- if ok then
+	-- 	impatient.enable_profile()
+	-- end
 end

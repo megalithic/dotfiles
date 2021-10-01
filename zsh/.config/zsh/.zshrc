@@ -35,6 +35,9 @@ unset file
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
 
+## adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
+autoload -U zmv
+
 # autoload -U promptinit
 # promptinit        # load prompt themes
 # prompt megalithic # load my prompt

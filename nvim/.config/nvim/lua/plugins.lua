@@ -112,7 +112,7 @@ return {
 	{ "zenbro/mirror.vim", opt = true },
 	"vuki656/package-info.nvim",
 	"jamestthompson3/nvim-remote-containers",
-	"chipsenkbeil/distant.nvim",
+	-- { "chipsenkbeil/distant.nvim", branch = "MigrateToRustLib" },
 
 	--
 	-- (the rest...) --
@@ -140,6 +140,7 @@ return {
 	-- :Verbose  <- view verbose output in preview window.
 	-- :Time     <- measure how long it takes to run some stuff.
 	"tpope/vim-scriptease",
+	"sunaku/tmux-navigate",
 	-- "aserowy/tmux.nvim",
 	-- "christoomey/vim-tmux-navigator",
 	-- "tmux-plugins/vim-tmux-focus-events",

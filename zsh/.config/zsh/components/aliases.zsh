@@ -23,6 +23,7 @@ alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
 alias fd="fd --hidden"
+alias fdd="fd -H -t d -d 10"
 
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
@@ -63,7 +64,7 @@ alias count='wc -l'
 alias dirsize="du -sh * | sort -n"
 alias dus='du -sckx * | sort -nr'
 alias top='top -o cpu'
-alias tree="tree -L"
+# alias tree="tree -L"
 
 alias icat="kitty +kitten icat"
 
@@ -162,7 +163,7 @@ alias eb="nvim $DOTS/Brewfile"
 alias essh="nvim $HOME/.ssh/config"
 
 alias ek="nvim $DOTS/kitty/.config/kitty/kitty.conf"
-alias et="nvim $HOME/.tmux.conf"
+alias et="nvim $DOTS/tmux/.tmux.conf"
 
 # FOLDERS
 # -----------------------------------------------------------------------------
@@ -315,7 +316,7 @@ if [[ $PLATFORM == "linux" ]]; then
 	fi
 	alias distro="cat /etc/*release"
 	alias ports="netstat -lntu"
-  alias port="sudo netstat -lp | rg"
+	alias port="sudo netstat -lp | rg"
 
 	# REF: https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
 	alias rules="sudo iptables -L -nv"

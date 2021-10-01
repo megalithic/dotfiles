@@ -23,8 +23,8 @@ local mix_credo = {
   rootMarkers = { "mix.lock", "mix.exs" }, -- for some reason, only mix.lock works in vpp
 }
 local stylua = {
-  -- formatCommand = "stylua -",
-  formatCommand = "stylua -s --stdin-filepath ${INPUT} -",
+  formatCommand = "stylua -",
+  -- formatCommand = "stylua -s --stdin-filepath ${INPUT} -",
   formatStdin = true,
 }
 local selene = {
