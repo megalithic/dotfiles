@@ -458,7 +458,7 @@ local function setup_lsp_servers()
 				init_options = { documentFormatting = true },
 				cmd = { "efm-langserver" },
 				-- cmd = { "efm-langserver", "-logfile", efm_log, "-loglevel", "5" },
-				-- filetypes = vim.tbl_keys(efm_languages),
+				filetypes = vim.tbl_keys(efm_languages),
 				settings = {
 					rootMarkers = { "mix.lock", "mix.exs", "elm.json", "package.json", ".git" },
 					lintDebounce = 250,
