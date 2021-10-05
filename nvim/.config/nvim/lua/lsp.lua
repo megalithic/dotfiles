@@ -437,7 +437,7 @@ local function setup_lsp_servers()
 		"rust_analyzer",
 		"vimls",
 		"pyright",
-		-- "tailwindcss",
+		"tailwindcss",
 		-- "dockerfile",
 	}
 	for _, ls in ipairs(servers) do
@@ -794,18 +794,18 @@ local function setup_lsp_servers()
 	end
 
 	do
-		local configs = require("lspconfig/configs")
-		configs.emmet_ls = {
-			default_config = {
-				cmd = { "emmet-ls", "--stdio" },
-				filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact" },
-				root_dir = function(_)
-					return vim.loop.cwd()
-				end,
-				settings = {},
-			},
-		}
-		lspconfig.emmet_ls.setup(lsp_with_defaults())
+		-- local configs = require("lspconfig/configs")
+		-- configs.emmet_ls = {
+		-- 	default_config = {
+		-- 		cmd = { "emmet-ls", "--stdio" },
+		-- 		filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact" },
+		-- 		root_dir = function(_)
+		-- 			return vim.loop.cwd()
+		-- 		end,
+		-- 		settings = {},
+		-- 	},
+		-- }
+		-- lspconfig.emmet_ls.setup(lsp_with_defaults())
 	end
 
 	do

@@ -25,7 +25,7 @@ bash-language-server
 vscode-langservers-extracted
 dockerfile-language-server-nodejs
 @elm-tooling/elm-language-server
-tailwindcss-language-server
+@tailwindcss/language-server
 typescript-language-server
 yaml-language-server
 vim-language-server

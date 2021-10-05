@@ -170,7 +170,7 @@ function M.lsp.hover()
   end
 end
 
--- # [ config ] ----------------------------------------------------------------
+-- # [ formatting ] ----------------------------------------------------------------
 local format_disabled_var = function()
   return string.format("format_disabled_%s", vim.bo.filetype)
 end

@@ -113,6 +113,7 @@ return {
 	"vuki656/package-info.nvim",
 	"jamestthompson3/nvim-remote-containers",
 	-- { "chipsenkbeil/distant.nvim", branch = "MigrateToRustLib" },
+	"chipsenkbeil/distant.nvim",
 
 	--
 	-- (the rest...) --

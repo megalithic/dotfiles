@@ -614,9 +614,9 @@ local function setup_git_messenger()
 end
 
 local function setup_vim_test()
-  -- REF:
-  -- neat ways to detect jest things
-  -- https://github.com/weilbith/vim-blueplanet/blob/master/pack/plugins/start/test_/autoload/test/typescript/jest.vim
+	-- REF:
+	-- neat ways to detect jest things
+	-- https://github.com/weilbith/vim-blueplanet/blob/master/pack/plugins/start/test_/autoload/test/typescript/jest.vim
 	api.nvim_exec(
 		[[
     function! TerminalSplit(cmd)
@@ -1015,7 +1015,7 @@ local function setup_distant()
 	local actions = require("distant.nav.actions")
 
 	require("distant").setup({
-		["198.74.55.152"] = {
+		["seth-dev"] = { --198.74.55.152
 			launch = {
 				distant = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
 				username = "ubuntu",
@@ -1044,6 +1044,14 @@ local function setup_distant()
 				-- 	},
 			},
 		},
+		["megalithic.io"] = {
+			launch = {
+				distant = "/home/replicant/.cargo/bin/distant",
+				username = "replicant",
+				identity_file = "~/.ssh/seth-Seths-MacBook-Pro.local",
+				extra_server_args = '"--log-file ~/tmp/distant-megalithic_io-server.log --log-level trace --port 8081:8099 --shutdown-after 60"',
+			},
+		},
 
 		-- Apply these settings to any remote host
 		["*"] = {
@@ -1054,7 +1062,7 @@ local function setup_distant()
 				log_level = "trace",
 			},
 			launch = {
-				extra_server_args = '"--log-file ~/tmp/distant-all-server.log --log-level trace --port 8080:8999 --shutdown-after 60"',
+				extra_server_args = '"--log-file ~/tmp/distant-all-server.log --log-level trace --port 8081:8999 --shutdown-after 60"',
 			},
 			file = {
 				mappings = {
@@ -1108,4 +1116,4 @@ setup_gps()
 setup_diffview()
 setup_git()
 setup_git_messenger()
--- setup_distant()
+setup_distant()

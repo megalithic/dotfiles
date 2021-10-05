@@ -1,12 +1,14 @@
 -- [ lua runtime ] ----------------------------------------------------------- {{{
 -- REF: https://github.com/neovim/neovim/pull/14686#issue-907487329
--- colors [First found]
--- compiler [First found]
--- ftplugin [All]
--- ftdetect [All | Ran at startup or packadd]
--- indent [All]
--- plugin [All | Ran at startup or packadd]
--- syntax [All]
+--
+-- order:
+-- colors [first]
+-- compiler [first]
+-- ftplugin [all]
+-- ftdetect [all | ran at startup or packadd]
+-- indent [all]
+-- plugin [all | ran at startup or packadd]
+-- syntax [all]
 
 _G["mega"] = require("global")
 
