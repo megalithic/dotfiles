@@ -690,6 +690,7 @@ local function setup_projectionist()
 				["type"] = "source",
 			},
 		},
+		-- https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/after/ftplugin/elixir.vim
 		["mix.exs"] = {
 			["lib/**/views/*_view.ex"] = {
 				["type"] = "view",

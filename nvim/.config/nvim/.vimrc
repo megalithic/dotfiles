@@ -322,3 +322,8 @@ let g:loaded_tar          = 1
 let g:loaded_tarPlugin    = 1
 let g:loaded_tutor_mode_plugin = 1
 let g:loaded_zipPlugin    = 1
+
+
+""" Custom Commands
+command! Code execute ":!code -g %:p\:" . line('.') . ":" . col('.')
+cabbrev code Code
