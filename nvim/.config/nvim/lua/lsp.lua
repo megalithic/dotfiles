@@ -548,19 +548,23 @@ local function setup_lsp_servers()
 
 	do
 		local elixirls_cmd = function()
-			local function exists(dir)
-				return vim.fn.empty(vim.fn.glob(dir)) == 0
-			end
+			-- local function exists(dir)
+			-- 	-- mega.root_has_file(".git")
+			-- 	return vim.fn.empty(vim.fn.glob(dir)) == 0
+			-- end
 
 			-- we have a locally installed .elixir_ls
-			if exists(fn.expand("$PWD/.elixir_ls")) then
-				print("we have an .elixir_ls here!")
-				return fn.expand("$PWD/.elixir_ls/release") .. "/language_server.sh"
+			if utils.root_has_file(".elixir_ls") then
+				-- if exists(fn.expand("$PWD/.elixir_ls")) then
+				print("we have an .elixir_ls here! yay")
+				return fn.expand(vim.loop.cwd() .. "/.elixir_ls/release") .. "/language_server.sh"
 			end
 
+			print("we have NO .elixir_ls here! noo")
 			-- otherwise just use our globally installed elixir_ls
 			return fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"
 		end
+		_G.ex_cmd = elixirls_cmd
 
 		local manipulate_pipes = function(command)
 			return function()
