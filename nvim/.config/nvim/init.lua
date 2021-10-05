@@ -15,6 +15,20 @@ _G["mega"] = require("global")
 local load = mega.load
 local cmd = vim.cmd
 
+do
+	--
+	-- handle caching for SPEED #gainz
+	-- https://github.com/lewis6991/impatient.nvim
+	--
+	-- mega.load("impatient")
+	local ok, impatient = load("impatient", { safe = true })
+	if ok then
+		impatient.enable_profile()
+	end
+end
+
+vim.g.did_load_filetypes = 1
+
 cmd("runtime .vimrc")
 
 -- [ debugging ] ----------------------------------------------------------- {{{

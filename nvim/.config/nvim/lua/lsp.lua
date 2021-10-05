@@ -545,16 +545,22 @@ local function setup_lsp_servers()
 			},
 		},
 	}))
-	do
-		-- 	local elixirlsp_cmd = function()
-		-- 		local project_root = root_pattern("mix.exs")
-		-- 		local is_mix = project_root ~= nil and project_root ~= ""
-		-- 		local has_elixirls = fn.expand(string.format("%s/.elixir_ls", project_root))
-		-- 		print(has_elixirls)
 
-		-- 		-- if has_elixirls
-		-- 	end
-		-- 	mega.ex_cmd = elixirlsp_cmd
+	do
+		local elixirls_cmd = function()
+			local function exists(dir)
+				return vim.fn.empty(vim.fn.glob(dir)) == 0
+			end
+
+			-- we have a locally installed .elixir_ls
+			if exists(fn.expand("$PWD/.elixir_ls")) then
+				print("we have an .elixir_ls here!")
+				return fn.expand("$PWD/.elixir_ls/release") .. "/language_server.sh"
+			end
+
+			-- otherwise just use our globally installed elixir_ls
+			return fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"
+		end
 
 		local manipulate_pipes = function(command)
 			return function()
@@ -572,7 +578,7 @@ local function setup_lsp_servers()
 		end
 
 		lspconfig["elixirls"].setup(lsp_with_defaults({
-			cmd = { fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh" },
+			cmd = { elixirls_cmd() },
 			settings = {
 				elixirLS = {
 					fetchDeps = false,

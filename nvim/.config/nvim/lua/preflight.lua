@@ -1,12 +1,12 @@
 -- REF: https://github.com/savq/dotfiles/blob/master/install.sh#L12-L14
-local exists = pcall(vim.cmd, [[packadd paq-nvim]])
+local paq_exists = pcall(vim.cmd, [[packadd paq-nvim]])
 local repo_url = "https://github.com/savq/paq-nvim"
 local install_path = string.format("%s/site/pack/paqs/start/", vim.fn.stdpath("data"))
 -- resolved to -> ~/.local/share/nvim/site/pack/paqs/start/paq-nvim
 
 --
 -- clone paq-nvim and install if it doesn't exist..
-if not exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
 	print("should be installing things")
 	if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
 		print("-> skipping paq-nvim install.")
@@ -68,21 +68,3 @@ end
 -- vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs
 -- resolved to -> ~/.local/share/nvim/site/pack/local/*
 --
-
-do
-	--
-	-- handle caching for SPEED #gainz
-	-- https://github.com/lewis6991/impatient.nvim
-	--
-	-- ****
-	-- FIXME: presently (2021-09-21) crashing due to:
-	-- ...pack/paqs/start/impatient.nvim/lua/impatient/profile.lua:142: attempt to perform arithmetic on field 'exec' (a nil value)
-	-- presumably from this commit: https://github.com/lewis6991/impatient.nvim/commit/165a28c1097923c88022bb9e494430a096ca1b95
-	-- ****
-	--
-	mega.load("impatient")
-	-- local ok, impatient = mega.load("impatient", { safe = true })
-	-- if ok then
-	-- 	impatient.enable_profile()
-	-- end
-end

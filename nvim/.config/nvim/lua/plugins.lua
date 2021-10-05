@@ -7,9 +7,10 @@ return {
 	{ "savq/paq-nvim" },
 
 	--
-	-- (profiling) --
+	-- (profiling/speed improvements) --
 	"dstein64/vim-startuptime",
 	"lewis6991/impatient.nvim",
+	"nathom/filetype.nvim",
 
 	--
 	-- (appearance/ui) --

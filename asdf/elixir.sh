@@ -3,15 +3,15 @@
 
 ## -- setup elixir_ls
 if [[ $1 != "" ]]; then
-	ls_build_path="$1" # something like: ./.elixir_ls
+	ls_build_path="$1" # something like: .elixir_ls
 else
 	ls_build_path="$XDG_CONFIG_HOME/lsp/elixir_ls"
 fi
 
 function _do_clone {
 	# clone project
-	git clone https://github.com/elixir-lsp/elixir-ls "$ls_build_path"
-	pushd "$ls_build_path"
+	git clone git@github.com:elixir-lsp/elixir-ls.git $ls_build_path
+	cd "$ls_build_path"
 }
 
 function _mix {
@@ -22,11 +22,11 @@ function _mix {
 		mix elixir_ls.release -o release
 
 	# cd out of that mug..
-	popd
+	cd -
 }
 
 function main {
-	echo "building elixir_ls in -> $ls_build_path"
+	echo "building elixir_ls in -> $PWD/$ls_build_path"
 
 	if [[ ! -d $ls_build_path ]]; then
 		# elixir_ls not there, so clone it..
