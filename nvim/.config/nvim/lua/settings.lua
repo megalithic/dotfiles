@@ -75,6 +75,33 @@ local function setup_matchup()
 end
 
 local function setup_treesitter()
+	-- custom treesitter parsers and grammars
+	local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+	parser_config.jsonc.used_by = "json"
+	parser_config.org = {
+		install_info = {
+			url = "https://github.com/milisims/tree-sitter-org",
+			revision = "main",
+			files = { "src/parser.c", "src/scanner.cc" },
+		},
+		filetype = "org",
+	}
+	parser_config.embedded_template = {
+		install_info = {
+			url = "https://github.com/tree-sitter/tree-sitter-embedded-template",
+			files = { "src/parser.c" },
+			requires_generate_from_grammar = true,
+		},
+		used_by = { "eex", "leex", "sface", "eelixir", "eruby", "erb" },
+	}
+	parser_config.markdown = {
+		install_info = {
+			url = "https://github.com/ikatyang/tree-sitter-markdown",
+			files = { "src/parser.c", "src/scanner.cc", "-DTREE_SITTER_MARKDOWN_AVOID_CRASH=1" },
+			requires_generate_from_grammar = true,
+			filetype = "md",
+		},
+	}
 	require("nvim-treesitter.configs").setup({
 		ensure_installed = {
 			"bash",
@@ -82,21 +109,25 @@ local function setup_treesitter()
 			"cpp",
 			"css",
 			"comment",
+			"dockerfile",
 			"elixir",
 			"elm",
+			"embedded_template",
 			"erlang",
 			"fish",
+			"go",
 			"graphql",
 			"html",
 			"heex",
 			"javascript",
-			-- "markdown",
+			"markdown",
 			"jsdoc",
 			"jsonc",
 			"lua",
 			"nix",
 			"python",
 			"query",
+			"regex",
 			"ruby",
 			"rust",
 			"scss",
@@ -104,6 +135,7 @@ local function setup_treesitter()
 			"toml",
 			"tsx",
 			"typescript",
+			"yaml",
 		},
 		highlight = {
 			enable = true,
@@ -181,24 +213,6 @@ local function setup_treesitter()
 			},
 		},
 	})
-	-- Add Markdown
-	local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-	parser_config.jsonc.used_by = "json"
-	parser_config.markdown = {
-		install_info = {
-			url = "https://github.com/ikatyang/tree-sitter-markdown",
-			files = { "src/parser.c", "src/scanner.cc" },
-		},
-		filetype = "md",
-	}
-	parser_config.org = {
-		install_info = {
-			url = "https://github.com/milisims/tree-sitter-org",
-			revision = "main",
-			files = { "src/parser.c", "src/scanner.cc" },
-		},
-		filetype = "org",
-	}
 	-- require("spellsitter").setup()
 	require("nvim-ts-autotag").setup({
 		filetypes = {

@@ -578,6 +578,7 @@ local function setup_lsp_servers()
 				elixirLS = {
 					fetchDeps = false,
 					dialyzerEnabled = false,
+					dialyzerFormat = "dialyxir_short",
 					enableTestLenses = true,
 					suggestSpecs = true,
 				},
@@ -588,6 +589,10 @@ local function setup_lsp_servers()
 				ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
 				FromPipe = { manipulate_pipes("fromPipe"), "Convert pipe operator to function call" },
 			},
+			on_init = function(client)
+				client.notify("workspace/didChangeConfiguration")
+				return true
+			end,
 		}))
 	end
 
