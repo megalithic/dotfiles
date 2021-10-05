@@ -134,6 +134,11 @@ augroup("filetypes", {
 	},
 	{
 		events = { "BufEnter", "BufRead", "BufNewFile" },
+		targets = { "Deskfile" },
+		command = "set filetype=sh",
+	},
+	{
+		events = { "BufEnter", "BufRead", "BufNewFile" },
 		targets = { ".eslintrc" },
 		command = "set filetype=javascript",
 	},
@@ -143,8 +148,8 @@ augroup("filetypes", {
 		command = "set filetype=jst",
 	},
 	{
-	  events = {"BufEnter", "BufRead", "BufNewFile"},
-	  targets = {"*.md"},
+		events = { "BufEnter", "BufRead", "BufNewFile" },
+		targets = { "*.md" },
 		command = "set filetype=markdown",
-	}
+	},
 })
