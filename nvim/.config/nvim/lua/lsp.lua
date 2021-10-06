@@ -48,16 +48,10 @@ local function setup_diagnostics()
 	vim.diagnostic.config({
 		underline = true,
 		virtual_text = false,
-		-- virtual_text = {
-		-- 	prefix = "",
-		-- 	spacing = 4,
-		-- 	severity_limit = "Warning",
-		-- },
 		signs = true, -- {severity_limit = "Warning"},
 		update_in_insert = false,
 		severity_sort = true,
-		source = "if_many",
-	})
+	}, utils.lsp.diagnostic_ns)
 end
 
 -- some of our custom LSP handlers
@@ -326,9 +320,8 @@ local function on_attach(client, bufnr)
 
 	--- # autocommands/autocmds
 	au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
-	-- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
-	au([[CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({focusable=false})]])
-	-- au([[CursorHoldI <buffer> lua vim.lsp.buf.signature_help()]]) -- using lsp-signature
+	au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
+	-- au([[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({focusable=false})]])
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
 	vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])

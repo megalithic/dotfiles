@@ -1,9 +1,12 @@
 local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
 local bufmap, au = mega.bufmap, mega.au
 
-local M = { lsp = {} }
+local M = {
+	lsp = {
+		diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostics"),
+	},
+}
 local windows = {}
-local diagnostic_ns = vim.api.nvim_create_namespace("lsp_diagnostics")
 
 function M.t(cmd_str)
 	-- return api.nvim_replace_termcodes(cmd, true, true, true) -- TODO: why 3rd param false?
@@ -155,7 +158,7 @@ function M.lsp.show_diagnostics()
 		local line = vim.api.nvim_win_get_cursor(0)[1] - 1
 		local bufnr = vim.api.nvim_get_current_buf()
 		local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
-		vim.diagnostic.show(diagnostic_ns, bufnr, diagnostics, { virtual_text = true })
+		vim.diagnostic.show(M.lsp.diagnostic_ns, bufnr, diagnostics, { virtual_text = true })
 	end)
 end
 
