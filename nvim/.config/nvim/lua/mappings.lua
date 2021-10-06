@@ -191,7 +191,7 @@ map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
 map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
-map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep({ continue_last_search = false })<cr>")
+map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 -- TODO: figure out how to use shortened paths

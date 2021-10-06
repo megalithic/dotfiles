@@ -840,6 +840,13 @@ local function setup_fzf_lua()
 				config = nil, -- nil uses $BAT_CONFIG_PATH
 			},
 		},
+		oldfiles = {
+			actions = {
+				["default"] = actions.file_vsplit,
+				["ctrl-t"] = actions.file_tabedit,
+				["ctrl-o"] = actions.file_edit,
+			},
+		},
 		files = {
 			prompt = string.format("files %s ", colors.icons.prompt_symbol),
 			fd_opts = [[--type f --follow --hidden --color=always]]
@@ -857,6 +864,7 @@ local function setup_fzf_lua()
 		grep = {
 			input_prompt = string.format("grep for %s ", colors.icons.prompt_symbol),
 			prompt = string.format("grep %s ", colors.icons.prompt_symbol),
+			continue_last_search = false,
 			actions = {
 				["default"] = actions.file_vsplit,
 				["ctrl-t"] = actions.file_tabedit,
@@ -1064,9 +1072,21 @@ local function setup_alpha()
 
 	dashboard.section.header.opts.hl = pick_color()
 	dashboard.section.buttons.val = {
-		button("m", "  Recently opened files", "<cmd>lua require('fzf-lua').oldfiles()<cr>"),
-		button("f", "  Find file", "<cmd>lua require('fzf-lua').files()<cr>"),
-		button("a", "  Find word", "<cmd>lua require('fzf-lua').live_grep({ continue_last_search = false })<cr>"),
+		button(
+			"m",
+			"  Recently opened files",
+			"<cmd>lua require('fzf-lua').oldfiles({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
+		),
+		button(
+			"f",
+			"  Find file",
+			"<cmd>lua require('fzf-lua').files({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
+		),
+		button(
+			"a",
+			"  Find word",
+			"<cmd>lua require('fzf-lua').live_grep({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
+		),
 		button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
 		button("p", "  Update plugins", "<cmd>lua require('global').plugins()<CR>"),
 		button("q", "  Quit", "<cmd>qa<CR>"),
