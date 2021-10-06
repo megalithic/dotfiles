@@ -76,7 +76,6 @@ return {
 	javascriptreact = { prettier, eslint },
 	json = { prettier, eslint },
 	lua = { stylua },
-	markdown = { prettier, eslint },
 	scss = { prettier, eslint },
 	sh = { shellcheck, shfmt },
 	-- typescript = { prettier, eslint },

@@ -129,35 +129,6 @@ return {
 	setup = function()
 		mega.color_overrides = function()
 			api.nvim_exec([[match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$']], false)
-			-- if target == "everforest" then
-			-- 	-- if we're using everforest, let's use their method for highlight
-			-- 	-- overrides; e.g., with `call everforest#highlight()`
-			-- 	hi = function(grp, opts)
-			-- 		cmd(
-			-- 			"call everforest#highlight('"
-			-- 				.. grp
-			-- 				.. "', "
-			-- 				.. opts.guifg
-			-- 				.. ", "
-			-- 				.. opts.guibg
-			-- 				.. ", '"
-			-- 				.. opts.gui
-			-- 				.. "')"
-			-- 		)
-			-- 	end
-			-- 	mega.log(string.format("everforest highlight: %s", vim.inspect(hi)))
-			-- end
-
-			-- hi("SpellBad", {guifg = status.error_status, guibg = status.bg, gui = "undercurl,italic", force = true})
-			-- -- hi("SpellCap", status.error_status, status.bg, "underline,undercurl,italic")
-			-- -- hi("SpellRare", status.error_status, status.bg, "underline,undercurl,italic")
-			-- -- hi("SpellLocal", status.error_status, status.bg, "underline,undercurl,italic")
-			-- cmd(string.format('hi StatusLineNC guibg=%s', colors[bg_statusline]))
-
-			-- call everforest#highlight('StatusLine', s:palette.grey1, s:palette.bg1)
-			-- call everforest#highlight('StatusLineTerm', s:palette.grey1, s:palette.bg1)
-			-- call everforest#highlight('StatusLineNC', s:palette.grey1, s:palette.bg0)
-			-- call everforest#highlight('StatusLineTermNC', s:palette.grey1, s:palette.bg0)
 			hi("OrgDone", { guifg = base.bright_green, guibg = "NONE", gui = "bold", force = true })
 			hi("OrgDONE", { guifg = base.bright_green, guibg = "NONE", gui = "bold", force = true })
 			hi("OrgAgendaScheduled", { guifg = base.green, guibg = "NONE", gui = "NONE", force = true })
@@ -197,19 +168,6 @@ return {
 		end
 
 		set.termguicolors = true
-
-		if theme == "everforest" then
-			g.everforest_enable_italic = true
-			g.everforest_enable_bold = true
-			g.everforest_transparent_background = true
-			g.everforest_current_word = "underline"
-			g.everforest_background = "soft"
-			g.everforest_cursor = "auto"
-			g.everforest_better_performance = true
-			-- g.everforest_diagnostic_text_highlight = true
-			-- g.everforest_diagnostic_line_highlight = true
-			-- g.everforest_sign_column_background = "none"
-		end
 
 		mega.augroup("colorscheme_overrides", {
 			{

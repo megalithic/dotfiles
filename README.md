@@ -53,7 +53,7 @@ A few of the _must-have_ tools I roll with:
 * [jetbrains mono](https://www.jetbrains.com/lp/mono/)
   + patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 * [kitty](https://github.com/kovidgoyal/kitty)
-* [~~forest night~~ everforest](https://github.com/sainnhe/everforest)
+* [everforest](https://github.com/sainnhe/everforest) & `megaforest`
 * [neovim](https://neovim.io/)
   + using lua with neovim? https://github.com/nanotee/nvim-lua-guide
 * [zsh](https://www.zsh.org/)
