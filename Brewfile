@@ -104,6 +104,7 @@ brew "ncurses"
 brew "neovim", args: ["HEAD"]
 brew "ninja" # for lua sumneko lsp
 brew "nmap"
+brew "nnn"
 brew "noti"
 brew "openssl"
 brew "openssl@1.1"

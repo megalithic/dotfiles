@@ -1171,6 +1171,10 @@ local function setup_distant()
 	})
 end
 
+local function setup_nnn()
+	require("nnn").setup()
+end
+
 setup_nvim_options()
 setup_treesitter()
 setup_golden_size()
@@ -1205,3 +1209,4 @@ setup_diffview()
 setup_git()
 setup_git_messenger()
 setup_distant()
+-- setup_nnn()

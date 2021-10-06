@@ -535,7 +535,7 @@ local function setup_lsp_servers()
 			local local_elixir_ls_dir_exists, local_elixir_ls_dir = utils.root_has_file(
 				".elixir_ls/release/language_server.sh"
 			)
-			local local_elixir_ls_bin_exists, local_elixir_ls_bin = utils.root_has_file(".bin/elixirls.sh")
+			local local_elixir_ls_bin_exists, local_elixir_ls_bin = utils.root_has_file(".bin/elixir_ls.sh")
 
 			-- we have a locally installed .elixir_ls
 			if local_elixir_ls_dir_exists then
@@ -606,7 +606,7 @@ local function setup_lsp_servers()
 						-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
 						version = "LuaJIT",
 						-- Setup your lua path
-						-- path = runtime_path,
+						path = runtime_path,
 					},
 					diagnostics = {
 						globals = {
@@ -649,6 +649,11 @@ local function setup_lsp_servers()
 							"mapbang",
 							"noremapbang",
 						},
+					},
+					workspace = {
+						-- Make the server aware of Neovim runtime files
+						library = vim.api.nvim_get_runtime_file("", true),
+						maxPreload = 5000,
 					},
 					-- do not send telemetry data containing a randomized but unique identifier
 					telemetry = {
