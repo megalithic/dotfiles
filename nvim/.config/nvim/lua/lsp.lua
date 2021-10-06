@@ -271,12 +271,12 @@ local function on_attach(client, bufnr)
 		bind = true, -- This is mandatory, otherwise border config won't get registered.
 		floating_window = true,
 		floating_window_above_cur_line = true, -- try to place the floating above the current line
-		floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
-		fix_pos = true,
+		-- floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
+		-- fix_pos = true,
 		hint_enable = false,
 		decorator = { "`", "`" },
 		handler_opts = {
-			border = "rounded",
+			border = "double",
 		},
 	})
 

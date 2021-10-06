@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
+
 # zmodload zsh/zprof # top of your .zshrc file
 
 # REF:
@@ -13,15 +14,18 @@ if [[ -e $HOME/.localrc ]]; then
 	source "$HOME/.localrc"
 fi
 
-if [[ $PLATFORM == "macos" ]]; then
-	source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-	source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
-	source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-elif [[ $PLATFORM == "linux" ]]; then
-	source "$HOME/builds/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-	source "$HOME/builds/zsh-history-substring-search/zsh-history-substring-search.zsh"
-	source "$HOME/builds/zsh-autosuggestions/zsh-autosuggestions.zsh"
+# zcomet for plugin install and management
+if [[ ! -f ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh ]]; then
+	command git clone https://github.com/agkozak/zcomet.git ${ZDOTDIR:-${HOME}}/.zcomet/bin
+fi
+source ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh
+zcomet load olets/zsh-abbr
+zcomet load zsh-users/zsh-syntax-highlighting
+zcomet load zsh-users/zsh-history-substring-search
+zcomet load zsh-users/zsh-autosuggestions
+zcomet load zdharma/fast-syntax-highlighting
 
+if [[ $PLATFORM == "macos" ]]; then
 	[[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
@@ -38,8 +42,7 @@ eval "$(starship init zsh)"
 ## adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv
 
-# autoload -U promptinit
-# promptinit        # load prompt themes
-# prompt megalithic # load my prompt
+# Run compinit and compile its cache
+zcomet compinit
 
 # zprof # bottom of .zshrc

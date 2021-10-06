@@ -631,6 +631,7 @@ local function setup_vim_test()
 	-- REF:
 	-- neat ways to detect jest things
 	-- https://github.com/weilbith/vim-blueplanet/blob/master/pack/plugins/start/test_/autoload/test/typescript/jest.vim
+	-- https://github.com/roginfarrer/dotfiles/blob/main/nvim/.config/nvim/lua/rf/plugins/vim-test.lua#L19
 	api.nvim_exec(
 		[[
     function! TerminalSplit(cmd)

@@ -1,5 +1,1 @@
-vim.opt.number = false
-vim.opt.relativenumber = false
-vim.opt.foldenable = false
-
-print("ftdetect alpha")
+mega.au([[FileType alpha set nonumber norelativenumber nofoldenable]])

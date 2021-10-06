@@ -62,3 +62,5 @@ fish/.config/fish/functions/apropos.fish
 fish/.config/fish/functions/whatis.fish
 fish/.config/fish/functions/fzf_key_bindings.fish
 zsh/.config/zsh/.zsh_sessions
+zsh/.config/zsh/.zcomet/bin
+zsh/.config/zsh/.zcompdump*
