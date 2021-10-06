@@ -21,7 +21,7 @@ end
 function M.root_has_file(name)
 	local cwd = vim.loop.cwd()
 	local lsputil = require("lspconfig.util")
-	return lsputil.path.exists(lsputil.path.join(cwd, name))
+	return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
 end
 
 -- # [ rename ] ----------------------------------------------------------------

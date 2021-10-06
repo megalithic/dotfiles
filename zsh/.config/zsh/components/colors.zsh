@@ -15,12 +15,12 @@ export PR_BOLD_RED PR_BOLD_GREEN PR_BOLD_YELLOW PR_BOLD_BLUE
 export PR_BOLD_WHITE PR_BOLD_BLACK
 
 # Clear LSCOLORS
-unset LSCOLORS
+# unset LSCOLORS
 
 # Main change, you can see directories on a dark background
 # export LSCOLORS=gxfxcxdxbxegedabagacad
 # export CLICOLOR=true
-export LSCOLORS="ExGxBxDxCxEgEdxbxgxcxd"
+# export LSCOLORS="ExGxBxDxCxEgEdxbxgxcxd"
 export CLICOLOR=1
 
 # -------- do not want here right now; breaking stuff
@@ -31,3 +31,6 @@ export CLICOLOR=1
 # zstyle ':completion:*' list-colors ''
 # ref: https://github.com/robbyrussell/oh-my-zsh/issues/1563#issuecomment-53638038
 zstyle ':completion:*:default' list-colors "${(@s.:.)LS_COLORS}"
+
+# https://github.com/xPMo/zsh-ls-colors#customizing-colors-with-styles
+zstyle -e '*' list-colors 'reply=(${(s[:])LS_COLORS})'

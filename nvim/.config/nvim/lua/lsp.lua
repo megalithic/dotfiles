@@ -50,7 +50,7 @@ local function setup_diagnostics()
 		signs = true, -- {severity_limit = "Warning"},
 		update_in_insert = false,
 		severity_sort = true,
-	}, utils.lsp.diagnostic_ns)
+	})
 end
 
 -- some of our custom LSP handlers
@@ -104,10 +104,6 @@ local function setup_completion()
 		enable_autosnippets = true,
 	})
 	require("luasnip/loaders/from_vscode").lazy_load()
-	-- 	paths = fn.stdpath("config") .. "/snippets",
-	-- 	-- TODO: should get these for react/javascript/ts:
-	-- 	-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
-	-- })
 
 	--- <tab> to jump to next snippet's placeholder
 	local function on_tab()
@@ -326,6 +322,7 @@ local function on_attach(client, bufnr)
 		au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
 		-- au[[BufWritePost <buffer> lua require('utils').lsp.format()]]
 	end
+
 	if client.resolved_capabilities.code_lens then
 		au("CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()")
 	end
@@ -535,9 +532,18 @@ local function setup_lsp_servers()
 
 	do
 		local elixirls_cmd = function()
+			local local_elixir_ls_dir_exists, local_elixir_ls_dir = utils.root_has_file(
+				".elixir_ls/release/language_server.sh"
+			)
+			local local_elixir_ls_bin_exists, local_elixir_ls_bin = utils.root_has_file(".bin/elixirls.sh")
+
 			-- we have a locally installed .elixir_ls
-			if utils.root_has_file(".elixir_ls") then
-				return fn.expand(vim.loop.cwd() .. "/.elixir_ls/release") .. "/language_server.sh"
+			if local_elixir_ls_dir_exists then
+				return fn.expand(local_elixir_ls_dir)
+
+				-- we have a locally installed .elixir_ls
+			elseif local_elixir_ls_bin_exists then
+				return fn.expand(local_elixir_ls_bin)
 			end
 
 			-- otherwise, just use our globally installed elixir_ls

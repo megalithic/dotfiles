@@ -30,7 +30,7 @@ cmd("runtime .vimrc")
 -- [ debugging ] ----------------------------------------------------------- {{{
 --
 -- We can set this lower if needed (used in tandem with `mega.inspect`) ->
--- vim.lsp.set_log_level(vim.log.levels.DEBUG)
+vim.lsp.set_log_level(vim.log.levels.DEBUG)
 
 -- LSP/efm log locations ->
 --  `tail -n150 -f $HOME/.cache/nvim/lsp.log`

@@ -72,8 +72,8 @@ return {
 	-- elixir = { mix_credo },
 	fish = { fish },
 	html = { prettier, eslint },
-	javascript = { prettier, eslint },
-	javascriptreact = { prettier, eslint },
+	-- javascript = { prettier, eslint },
+	-- javascriptreact = { prettier, eslint },
 	json = { prettier, eslint },
 	lua = { stylua },
 	scss = { prettier, eslint },
@@ -81,6 +81,6 @@ return {
 	-- typescript = { prettier, eslint },
 	-- typescriptreact = { prettier, eslint },
 	vim = { vint },
-	yaml = { prettier, eslint },
+	-- yaml = { prettier, eslint },
 	zsh = { shellcheck, shfmt },
 }
