@@ -541,7 +541,7 @@ local function setup_lsp_servers()
 			if local_elixir_ls_dir_exists then
 				return fn.expand(local_elixir_ls_dir)
 
-				-- we have a locally installed .elixir_ls
+				-- we have .bin.elixirls.sh
 			elseif local_elixir_ls_bin_exists then
 				return fn.expand(local_elixir_ls_bin)
 			end
