@@ -30,7 +30,9 @@ export CLICOLOR=1
 # Fallback to built in ls colors
 # zstyle ':completion:*' list-colors ''
 # ref: https://github.com/robbyrussell/oh-my-zsh/issues/1563#issuecomment-53638038
-zstyle ':completion:*:default' list-colors "${(@s.:.)LS_COLORS}"
+# zstyle ':completion:*:default' list-colors "${(@s.:.)LS_COLORS}"
+# zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 
 # https://github.com/xPMo/zsh-ls-colors#customizing-colors-with-styles
 zstyle -e '*' list-colors 'reply=(${(s[:])LS_COLORS})'
