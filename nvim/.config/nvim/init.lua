@@ -29,8 +29,12 @@ cmd("runtime .vimrc")
 
 -- [ debugging ] ----------------------------------------------------------- {{{
 --
+-- Discover runtime files (change path) ->
+--  :lua mega.dump(vim.api.nvim_get_runtime_file('ftplugin/**/*.lua', true))
+--
 -- We can set this lower if needed (used in tandem with `mega.inspect`) ->
-vim.lsp.set_log_level(vim.log.levels.DEBUG)
+-- TODO: does this still work?
+-- vim.lsp.set_log_level(vim.log.levels.DEBUG)
 
 -- LSP/efm log locations ->
 --  `tail -n150 -f $HOME/.cache/nvim/lsp.log`
