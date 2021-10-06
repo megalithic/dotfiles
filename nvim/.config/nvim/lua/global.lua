@@ -1,7 +1,16 @@
 local api, fn, cmd = vim.api, vim.fn, vim.cmd
-local M = { functions = {} }
+_G.__mega_global_callbacks = __mega_global_callbacks or {}
+local M = {
+	_store = __mega_global_callbacks,
+	functions = {},
+	dirs = {},
+}
 local L = vim.log.levels
 local get_log_level = require("vim.lsp.log").get_level
+
+-- Global namespace
+--- Inspired by @tjdevries' astraunauta.nvim/ @TimUntersberger's config
+--- store all callbacks in one global table so they are able to survive re-requiring this file
 
 function M:load_variables()
 	local home = os.getenv("HOME")
@@ -22,7 +31,6 @@ function M:load_variables()
 end
 M:load_variables()
 
-M.dirs = {}
 M.dirs.dots = fn.expand("$HOME/.dotfiles")
 M.dirs.icloud = fn.expand("$ICLOUD_DIR")
 M.dirs.docs = fn.expand("$DOCUMENTS_DIR")
@@ -171,6 +179,20 @@ function M.load(module, opts)
 	end
 end
 
+function M._create(f)
+	table.insert(M._store, f)
+	return #M._store
+end
+
+function M._execute(id, args)
+	local func = M._store[id]
+	if not func then
+		M.error("function for id doesn't exist: " .. id)
+	end
+	M._store[id](args)
+	-- return M._store[id](args)
+end
+
 function M.execute(id)
 	local func = M.functions[id]
 	if not func then
@@ -191,11 +213,11 @@ local function map(modes, lhs, rhs, opts)
 	-- this let's us pass in local lua functions without having to shove them on
 	-- the global first!
 	if type(rhs) == "function" then
-		table.insert(M.functions, rhs)
+		local fn_id = mega._create(rhs)
 		if opts.expr then
-			rhs = ([[luaeval('require("global").execute(%d)')]]):format(#M.functions)
+			rhs = ([[luaeval('mega._execute(%d)')]]):format(fn_id)
 		else
-			rhs = ("<cmd>lua require('global').execute(%d)<cr>"):format(#M.functions)
+			rhs = ("<cmd>lua mega._execute(%d)<cr>"):format(fn_id)
 		end
 	end
 
@@ -285,23 +307,36 @@ function M.au(s)
 	cmd("au!" .. s)
 end
 
+local function is_valid_target(command)
+	local valid_type = command.targets and vim.tbl_islist(command.targets)
+	return valid_type or vim.startswith(command.events[1], "User ")
+end
 function M.augroup(name, commands)
 	cmd("augroup " .. name)
 	cmd("autocmd!")
 	for _, c in ipairs(commands) do
-		if c.events == nil then
-			return
-		end
-
-		cmd(
-			string.format(
-				"autocmd %s %s %s %s",
-				table.concat(c.events, ","),
-				table.concat(c.targets or {}, ","),
-				table.concat(c.modifiers or {}, " "),
-				c.command
+		if c.command and c.events and is_valid_target(c) then
+			local command = c.command
+			if type(command) == "function" then
+				local fn_id = mega._create(command)
+				command = string.format("lua mega._execute(%s)", fn_id)
+			end
+			c.events = type(c.events) == "string" and { c.events } or c.events
+			vim.cmd(
+				string.format(
+					"autocmd %s %s %s %s",
+					table.concat(c.events, ","),
+					table.concat(c.targets or {}, ","),
+					table.concat(c.modifiers or {}, " "),
+					command
+				)
 			)
-		)
+		else
+			vim.notify(
+				string.format("An autocommand in %s is specified incorrectly: %s", name, vim.inspect(name)),
+				L.ERROR
+			)
+		end
 	end
 	cmd("augroup END")
 end
@@ -350,11 +385,11 @@ end
 
 -- essentially allows for a ternary operator of sorts
 function M._if(bool, a, b)
-    if bool then
-        return a
-    else
-        return b
-    end
+	if bool then
+		return a
+	else
+		return b
+	end
 end
 
 function M.table_merge(t1, t2, opts)

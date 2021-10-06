@@ -180,7 +180,7 @@ set noswapfile        " No backup files
 set number            " Show line numbers
 set nrformats=alpha,hex,octal        " No to oct/hex support when doing CTRL-a/x
 set path=**
-" set relativenumber    " Show relative numbers
+set relativenumber    " Show relative numbers
 set ruler
 " set scrolloff=5       " Start scrolling when we're 5 lines away from margins
 set shiftwidth=2
