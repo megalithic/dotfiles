@@ -7,7 +7,6 @@ local luasnip = require("luasnip")
 local colors = require("colors")
 local utils = require("utils")
 
-local snippet_provider = "luasnip" -- vsnip or luasnip
 local formatting_provider = "efm" -- efm or null-ls
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
@@ -84,47 +83,45 @@ local function setup_lsp_handlers()
 end
 
 local function setup_completion()
-	if snippet_provider == "luasnip" then
-		-- [luasnip] --
-		local types = require("luasnip.util.types")
-		luasnip.config.set_config({
-			history = false,
-			updateevents = "TextChanged,TextChangedI",
-			store_selection_keys = "<Tab>",
-			ext_opts = {
-				[types.insertNode] = {
-					passive = {
-						hl_group = "Substitute",
-					},
-				},
-				[types.choiceNode] = {
-					active = {
-						virt_text = { { "choiceNode", "IncSearch" } },
-					},
+	-- [luasnip] --
+	local types = require("luasnip.util.types")
+	luasnip.config.set_config({
+		history = false,
+		updateevents = "TextChanged,TextChangedI",
+		store_selection_keys = "<Tab>",
+		ext_opts = {
+			[types.insertNode] = {
+				passive = {
+					hl_group = "Substitute",
 				},
 			},
-			enable_autosnippets = true,
-		})
-		require("luasnip/loaders/from_vscode").load({
-			paths = fn.stdpath("config") .. "/snippets",
-			-- TODO: should get these for react/javascript/ts:
-			-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
-		})
+			[types.choiceNode] = {
+				active = {
+					virt_text = { { "choiceNode", "IncSearch" } },
+				},
+			},
+		},
+		enable_autosnippets = true,
+	})
+	require("luasnip/loaders/from_vscode").lazy_load()
+	-- 	paths = fn.stdpath("config") .. "/snippets",
+	-- 	-- TODO: should get these for react/javascript/ts:
+	-- 	-- https://github.com/Lazytangent/nvim-conf/tree/main/lua/snippets
+	-- })
 
-		--- <tab> to jump to next snippet's placeholder
-		local function on_tab()
-			return luasnip.jump(1) and "" or utils.t("<Tab>")
-		end
-		--- <s-tab> to jump to next snippet's placeholder
-		local function on_s_tab()
-			return luasnip.jump(-1) and "" or utils.t("<S-Tab>")
-		end
-		local opts = { expr = true, noremap = false }
-		map("i", "<Tab>", on_tab, opts)
-		map("s", "<Tab>", on_tab, opts)
-		map("i", "<S-Tab>", on_s_tab, opts)
-		map("s", "<S-Tab>", on_s_tab, opts)
+	--- <tab> to jump to next snippet's placeholder
+	local function on_tab()
+		return luasnip.jump(1) and "" or utils.t("<Tab>")
 	end
+	--- <s-tab> to jump to next snippet's placeholder
+	local function on_s_tab()
+		return luasnip.jump(-1) and "" or utils.t("<S-Tab>")
+	end
+	local opts = { expr = true, noremap = false }
+	map("i", "<Tab>", on_tab, opts)
+	map("s", "<Tab>", on_tab, opts)
+	map("i", "<S-Tab>", on_s_tab, opts)
+	map("s", "<S-Tab>", on_s_tab, opts)
 
 	-- [nvim-cmp] --
 	local kind_icons = {
@@ -233,8 +230,7 @@ local function setup_completion()
 			format = function(entry, item)
 				item.kind = kind_icons[item.kind]
 				item.menu = ({
-					luasnip = snippet_provider == "luasnip" and "[lsnip]" or false,
-					vsnip = snippet_provider == "vsnip" and "[vsnip]" or false,
+					luasnip = "[lsnip]",
 					nvim_lsp = "[lsp]",
 					orgmode = "[org]",
 					path = "[path]",
