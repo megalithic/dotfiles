@@ -220,6 +220,7 @@
 
 [pull]
 	rebase = true
+	ff = only
 
 [rerere]
   enabled = true

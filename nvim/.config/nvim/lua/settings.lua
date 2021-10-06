@@ -1017,13 +1017,65 @@ local function setup_which_key()
 	})
 end
 
-local function setup_tmux()
-	require("tmux").setup({
-		navigation = {
-			-- enables default keybindings (C-hjkl) for normal mode
-			enable_default_keybindings = true,
-		},
-	})
+local function setup_alpha()
+	local alpha = require("alpha")
+	local dashboard = require("alpha.themes.dashboard")
+
+	math.randomseed(os.time())
+
+	local function button(sc, txt, keybind, keybind_opts)
+		local b = dashboard.button(sc, txt, keybind, keybind_opts)
+		b.opts.hl = "Function"
+		b.opts.hl_shortcut = "Type"
+		return b
+	end
+
+	local function pick_color()
+		local colors = { "String", "Identifier", "Keyword", "Number" }
+		return colors[math.random(#colors)]
+	end
+
+	-- 	local function paqs()
+	-- 		local handle = io.popen(
+	-- 			'fd -d 2 . "$HOME/.local/share/nvim/site/pack/paqs/start" | head -n -2 | wc -l | tr -d "\n" '
+	-- 		)
+	-- 		local plugins = handle:read("*a")
+	-- 		handle:close()
+
+	-- 		return plugins
+	-- 	end
+
+	local function footer()
+		-- local total_plugins = #vim.tbl_keys(packer_plugins)
+		local datetime = os.date("%d-%m-%Y  %H:%M:%S")
+		-- return paqs() .. " plugins  " .. datetime
+		-- return "  " .. datetime
+		return datetime
+	end
+
+	-- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
+	dashboard.section.header.val = {
+		"• ▌ ▄ ·. ▄▄▄ . ▄▄ •  ▄▄▄· ▄▄▌  ▪  ▄▄▄▄▄ ▄ .▄▪   ▄▄·",
+		"·██ ▐███▪▀▄.▀·▐█ ▀ ▪▐█ ▀█ ██•  ██ •██  ██▪▐███ ▐█ ▌▪",
+		"▐█ ▌▐▌▐█·▐▀▀▪▄▄█ ▀█▄▄█▀▀█ ██▪  ▐█· ▐█.▪██▀▐█▐█·██ ▄▄",
+		"██ ██▌▐█▌▐█▄▄▌▐█▄▪▐█▐█ ▪▐▌▐█▌▐▌▐█▌ ▐█▌·██▌▐▀▐█▌▐███▌",
+		"▀▀  █▪▀▀▀ ▀▀▀ ·▀▀▀▀  ▀  ▀ .▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ·▀▀▀·▀▀▀",
+	}
+
+	dashboard.section.header.opts.hl = pick_color()
+	dashboard.section.buttons.val = {
+		button("m", "  Recently opened files", "<cmd>lua require('fzf-lua').oldfiles()<cr>"),
+		button("f", "  Find file", "<cmd>lua require('fzf-lua').files()<cr>"),
+		button("a", "  Find word", "<cmd>lua require('fzf-lua').live_grep({ continue_last_search = false })<cr>"),
+		button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
+		button("p", "  Update plugins", "<cmd>lua require('global').plugins()<CR>"),
+		button("q", "  Quit", "<cmd>qa<CR>"),
+	}
+
+	dashboard.section.footer.val = footer()
+	dashboard.section.footer.opts.hl = "Constant"
+
+	alpha.setup(dashboard.opts)
 end
 
 local function setup_distant()
@@ -1059,7 +1111,7 @@ local function setup_distant()
 				-- 	},
 			},
 		},
-		["megalithic.io"] = {
+		["megalithic.io"] = { -- 198.199.91.123
 			launch = {
 				distant = "/home/replicant/.cargo/bin/distant",
 				username = "replicant",
@@ -1107,7 +1159,7 @@ setup_neoscroll()
 setup_lightspeed()
 setup_colorizer()
 setup_autopairs()
---setup_tmux()
+setup_alpha()
 setup_fzf_lua()
 setup_beacon()
 setup_which_key()

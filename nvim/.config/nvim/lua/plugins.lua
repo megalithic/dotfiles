@@ -24,6 +24,7 @@ return {
 	"lukas-reineke/indent-blankline.nvim",
 	"MunifTanjim/nui.nvim",
 	"folke/which-key.nvim",
+	"goolord/alpha-nvim",
 
 	--
 	-- (lsp/completion) --
