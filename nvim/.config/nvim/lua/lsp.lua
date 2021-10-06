@@ -1,4 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
+
 local vcmd, lsp, api, fn, set, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt, vim.g
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
@@ -8,7 +9,6 @@ local utils = require("utils")
 
 local snippet_provider = "luasnip" -- vsnip or luasnip
 local formatting_provider = "efm" -- efm or null-ls
-local completion_provider = "cmp" -- cmp or compe
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -37,11 +37,11 @@ local function setup_diagnostics()
 	-- )
 
 	vcmd([[
-	    sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
-	    sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
-	    sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
-	    sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
-	  ]])
+	sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
+	sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
+	sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
+	sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
+	]])
 
 	-- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
 	-- REF: https://github.com/neovim/neovim/pull/15585
@@ -60,6 +60,7 @@ local function setup_diagnostics()
 	})
 end
 
+-- some of our custom LSP handlers
 local function setup_lsp_handlers()
 	-- hover
 	-- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
@@ -131,137 +132,136 @@ local function setup_completion()
 		map("s", "<S-Tab>", on_s_tab, opts)
 	end
 
-	if completion_provider == "cmp" then
-		-- [nvim-cmp] --
-		local kind_icons = {
-			Text = " text", -- Text
-			Method = " method", -- Method
-			Function = "ƒ function", -- Function
-			Constructor = " constructor", -- Constructor
-			Field = "識field", -- Field
-			Variable = " variable", -- Variable
-			Class = " class", -- Class
-			Interface = "ﰮ interface", -- Interface
-			Module = " module", -- Module
-			Property = " property", -- Property
-			Unit = " unit", -- Unit
-			Value = " value", -- Value
-			Enum = "了enum", -- Enum 
-			Keyword = " keyword", -- Keyword
-			Snippet = " snippet", -- Snippet
-			Color = " color", -- Color
-			File = " file", -- File
-			Reference = "渚ref", -- Reference
-			Folder = " folder", -- Folder
-			EnumMember = " enum member", -- EnumMember
-			Constant = " const", -- Constant
-			Struct = " struct", -- Struct
-			Event = "鬒event", -- Event
-			Operator = "\u{03a8} operator", -- Operator
-			TypeParameter = " type param", -- TypeParameter
-		}
+	-- [nvim-cmp] --
+	local kind_icons = {
+		Text = " text", -- Text
+		Method = " method", -- Method
+		Function = "ƒ function", -- Function
+		Constructor = " constructor", -- Constructor
+		Field = "識field", -- Field
+		Variable = " variable", -- Variable
+		Class = " class", -- Class
+		Interface = "ﰮ interface", -- Interface
+		Module = " module", -- Module
+		Property = " property", -- Property
+		Unit = " unit", -- Unit
+		Value = " value", -- Value
+		Enum = "了enum", -- Enum 
+		Keyword = " keyword", -- Keyword
+		Snippet = " snippet", -- Snippet
+		Color = " color", -- Color
+		File = " file", -- File
+		Reference = "渚ref", -- Reference
+		Folder = " folder", -- Folder
+		EnumMember = " enum member", -- EnumMember
+		Constant = " const", -- Constant
+		Struct = " struct", -- Struct
+		Event = "鬒event", -- Event
+		Operator = "\u{03a8} operator", -- Operator
+		TypeParameter = " type param", -- TypeParameter
+	}
 
-		local function tab(fallback)
-			if fn.pumvisible() == 1 then
-				return fn.feedkeys(utils.t("<C-n>"), "n")
-			elseif luasnip and luasnip.expand_or_jumpable() then
-				return fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
-			elseif utils.check_back_space() then
-				fn.feedkeys(utils.t("<Tab>"), "n")
-			else
-				fallback()
-			end
+	local function tab(fallback)
+		if fn.pumvisible() == 1 then
+			return fn.feedkeys(utils.t("<C-n>"), "n")
+		elseif luasnip and luasnip.expand_or_jumpable() then
+			return fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
+		elseif utils.check_back_space() then
+			fn.feedkeys(utils.t("<Tab>"), "n")
+		else
+			fallback()
 		end
-
-		local function shift_tab(fallback)
-			if fn.pumvisible() == 1 then
-				fn.feedkeys(utils.t("<C-p>"), "n")
-			elseif luasnip and luasnip.jumpable(-1) then
-				fn.feedkeys(utils.t("<Plug>luasnip-jump-prev"), "")
-			else
-				fallback()
-			end
-		end
-
-		require("cmp_nvim_lsp").setup()
-		local cmp = require("cmp")
-		-- local types = require("cmp.types")
-		cmp.setup({
-			experimental = {
-				ghost_text = false,
-			},
-			completion = {
-				-- autocomplete = {
-				-- 	types.cmp.TriggerEvent.InsertEnter,
-				-- 	types.cmp.TriggerEvent.TextChanged,
-				-- },
-				keyword_length = 1,
-			},
-			snippet = {
-				expand = function(args)
-					luasnip.lsp_expand(args.body)
-				end,
-			},
-			documentation = {
-				border = "rounded",
-			},
-			mapping = {
-				["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
-				["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
-				["<C-b>"] = cmp.mapping.scroll_docs(-4),
-				["<C-f>"] = cmp.mapping.scroll_docs(4),
-				["<C-Space>"] = cmp.mapping.complete(),
-				["<C-e>"] = cmp.mapping.close(),
-			},
-			sources = {
-				{ name = "luasnip" },
-				{ name = "nvim_lua" },
-				{ name = "nvim_lsp" },
-				{ name = "orgmode" },
-				{ name = "spell" },
-				{ name = "emoji" },
-				{ name = "path" },
-				{ name = "buffer" },
-				-- {
-				-- 	name = "buffer",
-				-- 	opts = {
-				-- 		get_bufnrs = function()
-				-- 			local bufs = {}
-				-- 			for _, win in ipairs(api.nvim_list_wins()) do
-				-- 				bufs[api.nvim_win_get_buf(win)] = true
-				-- 			end
-				-- 			return vim.tbl_keys(bufs)
-				-- 		end,
-				-- 	},
-				-- },
-			},
-			formatting = {
-				format = function(entry, item)
-					item.kind = kind_icons[item.kind]
-					item.menu = ({
-						luasnip = snippet_provider == "luasnip" and "[lsnip]" or false,
-						vsnip = snippet_provider == "vsnip" and "[vsnip]" or false,
-						nvim_lsp = "[lsp]",
-						orgmode = "[org]",
-						path = "[path]",
-						buffer = "[buf]",
-						spell = "[spl]",
-						-- calc = "[calc]",
-						-- emoji = "[emo]",
-					})[entry.source.name]
-					return item
-				end,
-			},
-		})
-		-- # while using nvim-autopairs we want to fully control what the <CR> key does:
-		require("nvim-autopairs.completion.cmp").setup({
-			map_cr = true,
-			map_complete = true,
-			auto_select = false,
-		})
 	end
+
+	local function shift_tab(fallback)
+		if fn.pumvisible() == 1 then
+			fn.feedkeys(utils.t("<C-p>"), "n")
+		elseif luasnip and luasnip.jumpable(-1) then
+			fn.feedkeys(utils.t("<Plug>luasnip-jump-prev"), "")
+		else
+			fallback()
+		end
+	end
+
+	require("cmp_nvim_lsp").setup()
+	local cmp = require("cmp")
+	-- local types = require("cmp.types")
+	cmp.setup({
+		experimental = {
+			ghost_text = false,
+		},
+		completion = {
+			-- autocomplete = {
+			-- 	types.cmp.TriggerEvent.InsertEnter,
+			-- 	types.cmp.TriggerEvent.TextChanged,
+			-- },
+			keyword_length = 1,
+		},
+		snippet = {
+			expand = function(args)
+				luasnip.lsp_expand(args.body)
+			end,
+		},
+		documentation = {
+			border = "rounded",
+		},
+		mapping = {
+			["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
+			["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
+			["<C-b>"] = cmp.mapping.scroll_docs(-4),
+			["<C-f>"] = cmp.mapping.scroll_docs(4),
+			["<C-Space>"] = cmp.mapping.complete(),
+			["<C-e>"] = cmp.mapping.close(),
+		},
+		sources = {
+			{ name = "luasnip" },
+			{ name = "nvim_lua" },
+			{ name = "nvim_lsp" },
+			{ name = "orgmode" },
+			{ name = "spell" },
+			{ name = "emoji" },
+			{ name = "path" },
+			{ name = "buffer" },
+			-- {
+			-- 	name = "buffer",
+			-- 	opts = {
+			-- 		get_bufnrs = function()
+			-- 			local bufs = {}
+			-- 			for _, win in ipairs(api.nvim_list_wins()) do
+			-- 				bufs[api.nvim_win_get_buf(win)] = true
+			-- 			end
+			-- 			return vim.tbl_keys(bufs)
+			-- 		end,
+			-- 	},
+			-- },
+		},
+		formatting = {
+			format = function(entry, item)
+				item.kind = kind_icons[item.kind]
+				item.menu = ({
+					luasnip = snippet_provider == "luasnip" and "[lsnip]" or false,
+					vsnip = snippet_provider == "vsnip" and "[vsnip]" or false,
+					nvim_lsp = "[lsp]",
+					orgmode = "[org]",
+					path = "[path]",
+					buffer = "[buf]",
+					spell = "[spl]",
+					-- calc = "[calc]",
+					-- emoji = "[emo]",
+				})[entry.source.name]
+				return item
+			end,
+		},
+	})
+	-- # while using nvim-autopairs we want to fully control what the <CR> key does:
+	require("nvim-autopairs.completion.cmp").setup({
+		map_cr = true,
+		map_complete = true,
+		auto_select = false,
+	})
 end
 
+-- our on_attach function to pass to each language server config..
 local function on_attach(client, bufnr)
 	if client.config.flags then
 		client.config.flags.allow_incremental_sync = true
@@ -326,7 +326,8 @@ local function on_attach(client, bufnr)
 
 	--- # autocommands/autocmds
 	au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
-	au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
+	-- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
+	au([[CursorHold,CursorHoldI <buffer> lua vim.lsp.diagnostic.show_line_diagnostics({focusable=false})]])
 	-- au([[CursorHoldI <buffer> lua vim.lsp.buf.signature_help()]]) -- using lsp-signature
 	au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
 	vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
@@ -394,10 +395,7 @@ local function setup_lsp_capabilities()
 	local capabilities = lsp.protocol.make_client_capabilities()
 	capabilities.textDocument.codeLens = { dynamicRegistration = false }
 	capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-
-	if completion_provider == "cmp" then
-		capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
-	end
+	capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
 
 	local status_capabilities = require("lsp-status").capabilities
 
