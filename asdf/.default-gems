@@ -12,9 +12,9 @@ rubocop
 sidekiq
 solargraph
 teamocil
+tmuxinator
 # terminal-notifier
 weechat
 language_server
 nokogiri
 yard
-

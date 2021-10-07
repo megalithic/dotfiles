@@ -13,34 +13,29 @@ set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
 local function setup_diagnostics()
-  local sign_error = colors.icons.sign_error
-  local sign_warning = colors.icons.sign_warning
-  local sign_information = colors.icons.sign_information
-  local sign_hint = colors.icons.sign_hint
+  local sign_error = colors.icons.sign_error -- or: 
+  local sign_warning = colors.icons.sign_warning -- or: 
+  local sign_information = colors.icons.sign_information -- or: 
+  local sign_hint = colors.icons.sign_hint -- or: 
 
-  -- fn.sign_define(
-  -- 	"DiagnosticSignError",
-  -- 	{ text = sign_error, texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError" }
-  -- )
-  -- fn.sign_define(
-  -- 	"DiagnosticSignWarning",
-  -- 	{ text = sign_warning, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning" }
-  -- )
-  -- fn.sign_define(
-  -- 	"DiagnosticSignInformation",
-  -- 	{ text = sign_information, texthl = "DiagnosticDefaultInformation", numhl = "DiagnosticDefaultInformation" }
-  -- )
-  -- fn.sign_define(
-  -- 	"DiagnosticSignHint",
-  -- 	{ text = sign_hint, texthl = "DiagnosticDefaultHint", numhl = "DiagnosticDefaultHint" }
-  -- )
-
-  vcmd([[
-	sign define DiagnosticSignError text= texthl=DiagnosticSignError linehl= numhl=
-	sign define DiagnosticSignWarn text= texthl=DiagnosticSignWarn linehl= numhl=
-	sign define DiagnosticSignInfo text= texthl=DiagnosticSignInfo linehl= numhl=
-	sign define DiagnosticSignHint text= texthl=DiagnosticSignHint linehl= numhl=
-	]])
+  fn.sign_define(
+    "DiagnosticSignError",
+    { text = sign_error, texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError", linehl = "" }
+  )
+  fn.sign_define(
+    "DiagnosticSignWarning",
+    { text = sign_warning, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning", linehl = "" }
+  )
+  fn.sign_define("DiagnosticSignInformation", {
+    text = sign_information,
+    texthl = "DiagnosticDefaultInformation",
+    numhl = "DiagnosticDefaultInformation",
+    linehl = "",
+  })
+  fn.sign_define(
+    "DiagnosticSignHint",
+    { text = sign_hint, texthl = "DiagnosticDefaultHint", numhl = "DiagnosticDefaultHint", linehl = "" }
+  )
 
   -- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
   -- REF: https://github.com/neovim/neovim/pull/15585
@@ -279,13 +274,12 @@ local function on_attach(client, bufnr)
   bufmap("<leader>ln", "lua require('utils').lsp.rename()")
   bufmap(
     "<leader>ld",
-    "lua vim.diagnostic.show_line_diagnostics({ border = 'rounded', show_header = false, focusable = false })"
+    "lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source='if_many', show_header=false})"
   )
   -- bufmap("K", "lua require('utils').lsp.hover()")
   bufmap("K", "lua vim.lsp.buf.hover()")
-  bufmap("<C-k>", "lua vim.lsp.buf.signature_help()")
   bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
-  bufmap("<leader>lf", "lua vim.lsp.buf.formatting()")
+  bufmap("<leader>lf", "lua require('utils').lsp.format()")
 
   if client.resolved_capabilities.code_lens then
     bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
@@ -295,9 +289,11 @@ local function on_attach(client, bufnr)
   map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
   --- # autocommands/autocmds
-  au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
-  au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
-  -- au([[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({focusable=false})]])
+  -- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
+  -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
+  au(
+    [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source="if_many", show_header=false})]]
+  )
   au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
   -- vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
   -- vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
