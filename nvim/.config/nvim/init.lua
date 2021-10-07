@@ -1,7 +1,9 @@
--- [ lua runtime ] ----------------------------------------------------------- {{{
+-- [ lua runtime ] --------------------------------------------------------- {{{
+--
 -- REF: https://github.com/neovim/neovim/pull/14686#issue-907487329
 --
--- order:
+-- order of operations:
+--
 -- colors [first]
 -- compiler [first]
 -- ftplugin [all]
@@ -9,23 +11,32 @@
 -- indent [all]
 -- plugin [all | ran at startup or packadd]
 -- syntax [all]
+--
+-- }}}
 
+-- [ assigns ] ------------------------------------------------------------- {{{
+--
 _G["mega"] = require("global")
-
 local load = mega.load
 local cmd = vim.cmd
-
 --
--- handle caching for SPEED #gainz
--- https://github.com/lewis6991/impatient.nvim
+-- }}}
+
+-- [ speed ] --------------------------------------------------------------- {{{
 --
 local ok, impatient = load("impatient", { safe = true })
 if ok then
 	impatient.enable_profile()
 end
 vim.g.did_load_filetypes = 1
+--
+-- }}}
 
+-- [ plain old vim ] ------------------------------------------------------- {{{
+--
 cmd("runtime .vimrc")
+--
+-- }}}
 
 -- [ debugging ] ----------------------------------------------------------- {{{
 --
@@ -35,7 +46,7 @@ cmd("runtime .vimrc")
 -- We can set this lower if needed (used in tandem with `mega.inspect`) ->
 -- TODO: does this still work?
 -- vim.lsp.set_log_level(vim.log.levels.DEBUG)
-
+--
 -- LSP/efm log locations ->
 --  `tail -n150 -f $HOME/.cache/nvim/lsp.log`
 --  `tail -n150 -f $HOME/.cache/nvim/efm-lsp.log`
