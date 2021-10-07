@@ -32,6 +32,10 @@ function M.setup()
       }),
       nls.builtins.formatting.elm_format,
       nls.builtins.formatting.eslint_d,
+      nls.builtins.formatting.shfmt.with({
+        extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
+        filetypes = { "sh", "zsh" },
+      }),
       nls.builtins.diagnostics.shellcheck,
       -- nls.builtins.diagnostics.markdownlint,
       -- nls.builtins.diagnostics.selene,
