@@ -21,6 +21,7 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
 
 --  Open multiple files in splits
+-- TODO: https://github.com/goolord/alpha-nvim/blob/main/lua/alpha.lua#L396
 exec([[ if argc() > 1 | silent vertical all | endif ]])
 
 --  Open :intro only if no file args passed in
@@ -28,7 +29,7 @@ exec([[ if argc() > 1 | silent vertical all | endif ]])
 
 --  Trim Whitespace
 exec(
-	[[
+  [[
     fun! TrimWhitespace()
         let l:save = winsaveview()
         keeppatterns %s/\s\+$//e
@@ -36,21 +37,21 @@ exec(
     endfun
     autocmd BufWritePre * :call TrimWhitespace()
 ]],
-	false
+  false
 )
 
 augroup("auto-cursor", {
-	-- When editing a file, always jump to the last known cursor position.
-	-- Don't do it for commit messages, when the position is invalid, or when
-	-- inside an event handler (happens when dropping a file on gvim).
-	events = { "BufReadPost" },
-	targets = { "*" },
-	command = function()
-		local pos = fn.line([['"]])
-		if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
-			vim.cmd('keepjumps normal g`"')
-		end
-	end,
+  -- When editing a file, always jump to the last known cursor position.
+  -- Don't do it for commit messages, when the position is invalid, or when
+  -- inside an event handler (happens when dropping a file on gvim).
+  events = { "BufReadPost" },
+  targets = { "*" },
+  command = function()
+    local pos = fn.line([['"]])
+    if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
+      vim.cmd('keepjumps normal g`"')
+    end
+  end,
 })
 
 -- augroup("NvimTreeOverrides", {
@@ -67,76 +68,76 @@ augroup("auto-cursor", {
 -- })
 
 augroup("paq", {
-	{
-		events = { "BufWritePost" },
-		targets = { "packages.lua" },
-		command = [[luafile %]],
-	},
+  {
+    events = { "BufWritePost" },
+    targets = { "packages.lua" },
+    command = [[luafile %]],
+  },
 })
 
 augroup("focus", {
-	{
-		events = { "TermOpen" },
-		targets = { "*" },
-		command = "silent setlocal norelativenumber nospell nonumber nocursorcolumn nocursorline",
-	},
+  {
+    events = { "TermOpen" },
+    targets = { "*" },
+    command = "silent setlocal norelativenumber nospell nonumber nocursorcolumn nocursorline",
+  },
 })
 
 augroup("yank_highlighted_region", {
-	{
-		events = { "TextYankPost" },
-		targets = { "*" },
-		command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 150, on_macro = true })",
-	},
+  {
+    events = { "TextYankPost" },
+    targets = { "*" },
+    command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 150, on_macro = true })",
+  },
 })
 
 augroup("terminal", {
-	{
-		events = { "TermClose" },
-		targets = { "*" },
-		command = "noremap <buffer><silent><ESC> :bd!<CR>",
-	},
-	{
-		events = { "TermOpen" },
-		targets = { "*" },
-		command = [[setlocal nonumber norelativenumber conceallevel=0]],
-	},
-	{
-		events = { "TermOpen" },
-		targets = { "*" },
-		command = "startinsert",
-	},
+  {
+    events = { "TermClose" },
+    targets = { "*" },
+    command = "noremap <buffer><silent><ESC> :bd!<CR>",
+  },
+  {
+    events = { "TermOpen" },
+    targets = { "*" },
+    command = [[setlocal nonumber norelativenumber conceallevel=0]],
+  },
+  {
+    events = { "TermOpen" },
+    targets = { "*" },
+    command = "startinsert",
+  },
 })
 
 augroup("filetypes", {
-	{
-		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { "*.lexs", "*.heex", "*.exs" },
-		command = "set filetype=elixir",
-	},
-	{
-		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { "Brewfile", "Brewfile.mas", "Brewfile.cask" },
-		command = "set filetype=ruby",
-	},
-	{
-		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { "Deskfile" },
-		command = "set filetype=sh",
-	},
-	{
-		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { ".eslintrc" },
-		command = "set filetype=javascript",
-	},
-	{
-		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { "*.jst.eco" },
-		command = "set filetype=jst",
-	},
-	{
-		events = { "BufEnter", "BufRead", "BufNewFile" },
-		targets = { "*.md" },
-		command = "set filetype=markdown",
-	},
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { "*.lexs", "*.heex", "*.exs" },
+    command = "set filetype=elixir",
+  },
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { "Brewfile", "Brewfile.mas", "Brewfile.cask" },
+    command = "set filetype=ruby",
+  },
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { "Deskfile" },
+    command = "set filetype=sh",
+  },
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { ".eslintrc" },
+    command = "set filetype=javascript",
+  },
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { "*.jst.eco" },
+    command = "set filetype=jst",
+  },
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { "*.md" },
+    command = "set filetype=markdown",
+  },
 })

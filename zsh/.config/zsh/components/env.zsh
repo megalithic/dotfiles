@@ -17,7 +17,7 @@ export SUDO_EDITOR="$EDITOR"
 export GIT_EDITOR="$EDITOR"
 export ALTERNATE_EDITOR="vim"
 export PAGER="less"
-export MANPAGER="$EDITOR +Man!"
+export MANPAGER="$EDITOR -c Man!"
 export MANWIDTH=999
 export LESS="-F -g -i -M -R -S -w -X -z-4"
 

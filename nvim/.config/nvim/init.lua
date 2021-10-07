@@ -26,7 +26,7 @@ local cmd = vim.cmd
 --
 local ok, impatient = load("impatient", { safe = true })
 if ok then
-	impatient.enable_profile()
+  impatient.enable_profile()
 end
 vim.g.did_load_filetypes = 1
 --

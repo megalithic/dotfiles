@@ -101,17 +101,17 @@ function M.log(msg, hl, reason)
 		if reason ~= nil then
 			prefix = name .. " -> " .. reason .. "\n"
 		end
-		hl = hl or "Todo"
+		hl = hl or "DiagnosticDefaultInformation"
 		api.nvim_echo({ { prefix, hl }, { msg } }, true, {})
 	end
 end
 
 function M.warn(msg, reason)
-	M.log(msg, "WarningMsg", reason) -- LspDiagnosticsDefaultWarning
+	M.log(msg, "DiagnosticDefaultWarning", reason)
 end
 
 function M.error(msg, reason)
-	M.log(msg, "ErrorMsg", reason) -- LspDiagnosticsDefaultError
+	M.log(msg, "DiagnosticDefaultError", reason)
 end
 
 function M.get_log_string(label, level)

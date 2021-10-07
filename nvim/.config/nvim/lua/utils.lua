@@ -180,53 +180,47 @@ function M.lsp.hover()
 end
 
 -- # [ formatting ] ----------------------------------------------------------------
-local format_disabled_var = function()
-	return string.format("format_disabled_%s", vim.bo.filetype)
-end
-local format_options_var = function()
-	return string.format("format_options_%s", vim.bo.filetype)
-end
+M.lsp.autoformat = true
 
-local format_options_prettier = {
-	tabWidth = 2,
-	singleQuote = true,
-	trailingComma = "all",
-	configPrecedence = "prefer-file",
-	-- {
-	--   "trailingComma": "none",
-	--   "printWidth": 120,
-	--   "tabWidth": 2,
-	--   "semi": true,
-	--   "singleQuote": false,
-	--   "quoteProps": "consistent",
-	--   "bracketSpacing": true,
-	--   "arrowParens": "avoid"
-	-- }
-}
-vim.g.format_options_typescript = format_options_prettier
-vim.g.format_options_javascript = format_options_prettier
-vim.g.format_options_typescriptreact = format_options_prettier
-vim.g.format_options_javascriptreact = format_options_prettier
-vim.g.format_options_json = format_options_prettier
-vim.g.format_options_css = format_options_prettier
-vim.g.format_options_scss = format_options_prettier
-vim.g.format_options_html = format_options_prettier
-vim.g.format_options_yaml = format_options_prettier
-vim.g.format_options_markdown = format_options_prettier
-vim.g.format_options_sh = {
-	tabWidth = 2,
-}
-
-M.formatToggle = function(value)
-	local var = format_disabled_var()
-	vim.g[var] = mega._if(value ~= nil, value, not vim.g[var])
+function M.lsp.format_toggle()
+  M.lsp.autoformat = not M.lsp.autoformat
+  if M.lsp.autoformat then
+    mega.log("enabled format on save", nil, "Formatting")
+  else
+    mega.warn("disabled format on save", "Formatting")
+  end
 end
 
-M.format = function()
-	if not vim.b.saving_format and not vim.g[format_disabled_var()] then
-		vim.b.init_changedtick = vim.b.changedtick
-		vim.lsp.buf.formatting(vim.g[format_options_var()] or {})
-	end
+function M.lsp.format()
+  if M.lsp.autoformat then
+    vim.lsp.buf.formatting_sync()
+  end
+end
+
+function M.lsp.format_setup(client, buf)
+  local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+  local nls = require("lsp.null-ls")
+  local efm_formatted = require("lsp.efm").formatted_languages
+
+  local enable = false
+  if nls.has_formatter(ft) then
+    enable = client.name == "null-ls"
+  elseif efm_formatted[ft] then
+    enable = client.name == "efm"
+  else
+    enable = not (client.name == "efm" or client.name == "null-ls")
+  end
+
+  client.resolved_capabilities.document_formatting = enable
+  -- format on save
+  if client.resolved_capabilities.document_formatting then
+    vim.cmd([[
+      augroup LspFormat
+        autocmd! * <buffer>
+        autocmd BufWritePre <buffer> lua require("utils").lsp.format()
+      augroup END
+    ]])
+  end
 end
 
 -- # [ config ] ----------------------------------------------------------------
