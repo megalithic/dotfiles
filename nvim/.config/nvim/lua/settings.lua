@@ -1171,8 +1171,11 @@ local function setup_distant()
 	})
 end
 
-local function setup_nnn()
-	require("nnn").setup()
+local function setup_shade()
+	require("shade").setup({
+		overlay_opacity = 50,
+		opacity_step = 1,
+	})
 end
 
 setup_nvim_options()
@@ -1209,4 +1212,4 @@ setup_diffview()
 setup_git()
 setup_git_messenger()
 setup_distant()
--- setup_nnn()
+setup_shade()

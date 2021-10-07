@@ -25,6 +25,7 @@ return {
 	"MunifTanjim/nui.nvim",
 	-- "folke/which-key.nvim",
 	"goolord/alpha-nvim",
+	"sunjon/shade.nvim",
 
 	--
 	-- (lsp/completion) --
