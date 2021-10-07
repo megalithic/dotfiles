@@ -19,6 +19,9 @@ if [[ ! -f ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh ]]; then
 	command git clone https://github.com/agkozak/zcomet.git ${ZDOTDIR:-${HOME}}/.zcomet/bin
 fi
 source ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh
+
+# zcomet snippet https://github.com/lincheney/fzf-tab-completion/blob/master/zsh/fzf-zsh-completion.sh
+# zcomet load xPMo/zsh-ls-colors
 zcomet load Aloxaf/fzf-tab
 zcomet load djui/alias-tips
 zcomet load olets/zsh-abbr
@@ -30,6 +33,7 @@ zcomet load ohmyzsh plugins/mix
 zcomet load ohmyzsh plugins/mix-fast
 zcomet load ohmyzsh plugins/rake
 zcomet load ohmyzsh plugins/rake-fast
+# zcomet snippet https://github.com/zimfw/completion/blob/master/init.zsh
 
 if [[ $PLATFORM == "macos" ]]; then
 	[[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

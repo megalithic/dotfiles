@@ -43,11 +43,11 @@
   aa = add --all :/
   ap = add --patch
 
-  b = branch
-  ba = branch -A
-	bm = branch -m
-	bd = branch -d
-  bbd = branch -D $1 && push origin --delete $1
+	;   b = branch
+	;   ba = branch -A
+	; bm = branch -m
+	; bd = branch -d
+	;   bbd = branch -D $1 && push origin --delete $1
 
   cv = commit -v
   cm = commit -m
@@ -55,36 +55,32 @@
   cp = commit -p
 
   co = checkout
-  cob = checkout -b
-  com = checkout master
-
-  con = config --local -l
-  cfg = config --local -l
 
   cl = clone
 
   # stash
-  sshow = "!f() { git stash show stash^{/$*} -p; }; f"
-  sapply = "!f() { git stash apply stash^{/$*}; }; f"
+  ; sshow = "!f() { git stash show stash^{/$*} -p; }; f"
+  ; sapply = "!f() { git stash apply stash^{/$*}; }; f"
 
   di = diff
   dc = diff --cached
   df = diff
   ds = diff --stat=160,120
 
-  mf = merge --ff-only
-  m = merge --no-ff
-  ff = merge --no-ff
+  ; mf = merge --ff-only
+  ; m = merge --no-ff
+  ; ff = merge --no-ff
+
   # open rebase/merge conflicted files
 	fix = !sh -c "'vim `git diff --name-only --diff-filter=U`'"
 	# add unmerged files (when conflicts are resolved)
 	au = !sh -c "'git add `git diff --name-only --diff-filter=U`'"
 
-  plf = pull --ff-only
-  plom = pull origin master
+  ; plf = pull --ff-only
+  ; plom = pull origin master
 
-  fa = fetch --all
-  pom = push origin master
+  ; fa = fetch --all
+  ; pom = push origin master
 
   s = status -sb
   st = status
@@ -92,12 +88,14 @@
   # git submodules
 	subpull = submodule foreach git pull
 
-  sha = name-rev --name-only --refs=refs/heads/*
-  g = grep --break --heading --line-number
-  gi = grep --break --heading --line-number -i
+  ; sha = name-rev --name-only --refs=refs/heads/*
+  ; g = grep --break --heading --line-number
+  ; gi = grep --break --heading --line-number -i
   tree = log --graph --pretty=oneline --decorate
   undo = reset --soft HEAD^
-  # reset = reset --hard HEAD^
+	uncommit = reset --soft HEAD^
+	unamend = reset --soft HEAD@{1}
+  ; reset = reset --hard HEAD^
 
   # Divergence (commits we added and commits remote added)
   div = divergence
@@ -114,42 +112,39 @@
   #   l = all commits, only current branch
   #   la = all commits, all reachable refs
   head = !git l -1
-  h = !git head
-  hp = "!. ~/.githelpers && show_git_head"
-  r = !git l -30
-  ra = !git r --all
-  l = "!. ~/.githelpers && pretty_git_log"
-  la = !git l --all
-  lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  ; h = !git head
+  ; hp = "!. ~/.githelpers && show_git_head"
+  ; r = !git l -30
+  ; ra = !git r --all
+  ; l = "!. ~/.githelpers && pretty_git_log"
+  ; la = !git l --all
   last = !git log --max-count=1 | awk '{print $2}' | awk 'NR==1{print $1}'
-
-  promote = !$DOTFILES/bin/git-promote
-  wtf     = !$DOTFILES/bin/git-wtf
-  rank-contributers = !$DOTFILES/bin/git-rank-contributers
-  count   = !git shortlog -sn
-  this = !git init && git add . && git commit -m \"Initial commit\"
-  who = shortlog -s -n --no-merges
-	standup = shortlog --since=yesterday
-	today = shortlog --since=midnight
-	uncommit = reset --soft HEAD^
-	unamend = reset --soft HEAD@{1}
-	subs = submodule foreach git pull origin master
-	hist = for-each-ref --count=5 --sort=-committerdate --format='%(refname:short)' refs/heads/
-  refresh = !ssh-add -l && STASH=$(git stash) && git fetch && git rebase origin/master && test \"$STASH\" != \"No local changes to save\" && git stash pop
-
-  fix = !$DOTFILES/bin/git-recent
-
-  up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
-
-  rb = rebase
-  rb = rebase -i
-
-  # gitin aliases
-  ; st = !gitin status
-  log = !gitin log
+  lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  log = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  ; log = !gitin log
   lg = !gitin log
   ; branch = !gitin branch
   br = !gitin branch
+  ; st = !gitin status
+
+  ; promote = !$DOTFILES/bin/git-promote
+  ; wtf     = !$DOTFILES/bin/git-wtf
+  ; rank-contributers = !$DOTFILES/bin/git-rank-contributers
+  ; count   = !git shortlog -sn
+  ; this = !git init && git add . && git commit -m \"Initial commit\"
+  ; who = shortlog -s -n --no-merges
+	standup = shortlog --since=yesterday
+	today = shortlog --since=midnight
+	subs = submodule foreach git pull origin master
+	hist = for-each-ref --count=5 --sort=-committerdate --format='%(refname:short)' refs/heads/
+  ; refresh = !ssh-add -l && STASH=$(git stash) && git fetch && git rebase origin/master && test \"$STASH\" != \"No local changes to save\" && git stash pop
+
+  ; fix = !$DOTFILES/bin/git-recent
+
+  up = !git pull --autostash --rebase && git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+
+  ; rb = rebase
+  ; rb = rebase -i
 
   # <3 @jeffweiss / @gifwise
   oops = !git commit --amend -CHEAD

@@ -166,15 +166,19 @@ zstyle ':completion:*' expand yes
 zstyle ':completion:*:processes-names' command \
   'ps c -u ${USER} -o command | uniq'
 
-# rsync and SSH use hosts from ~/.ssh/config
-[ -r "$HOME/.ssh/config" ] && {
-  # Vanilla parsing of config file :)
-  # @see {@link https://github.com/Eriner/zim/issues/46#issuecomment-219344931}
-  hosts=($h ${${${(@M)${(f)"$(cat ~/.ssh/config)"}:#Host *}#Host }:#*[*?]*})
-  #hosts=($(egrep '^Host ' "$HOME/.ssh/config" | grep -v '*' | awk '{print $2}' ))
-  zstyle ':completion:*:ssh:*'    hosts $hosts
-  zstyle ':completion:*:rsync:*'  hosts $hosts
-}
+# # rsync and SSH use hosts from ~/.ssh/config
+# [ -r "$HOME/.ssh/config" ] && {
+#   # Vanilla parsing of config file :)
+#   # @see {@link https://github.com/Eriner/zim/issues/46#issuecomment-219344931}
+#   hosts=($h ${${${(M)${(f)"$(cat ~/.ssh/config)"}:#Host *}#Host }:#*[*?]*})
+#   #hosts=($(egrep '^Host ' "$HOME/.ssh/config" | grep -v '*' | awk '{print $2}' ))
+#   zstyle ':completion:*:ssh:*'    hosts $hosts
+#   zstyle ':completion:*:rsync:*'  hosts $hosts
+# }
+# zstyle ':completion:*:ssh:*' hosts off
+
+zstyle -e ':completion:*:*:ssh:*:my-accounts' users-hosts \
+    '[[ -f ${HOME}/.ssh/config && ${key} == hosts ]] && key=my_hosts reply=()'
 
 # colorful kill command completion -- probably overridden by fzf
 zstyle ':completion:*:*:kill:*:processes' list-colors \
@@ -197,3 +201,4 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
 # switch group using `,` and `.`
 zstyle ':fzf-tab:*' switch-group ',' '.'
+zstyle ':fzf-tab:*' show-group brief # brief, full, none
