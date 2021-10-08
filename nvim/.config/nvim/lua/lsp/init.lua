@@ -1,6 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
 
-local vcmd, lsp, api, fn, set, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt, vim.g
+local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local luasnip = require("luasnip")
@@ -8,6 +8,7 @@ local colors = require("colors")
 local utils = require("utils")
 
 local formatting_provider = "null-ls" -- efm or null-ls
+local diagnostic_ns = vim.api.nvim_create_namespace("diagnostics")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -45,7 +46,7 @@ local function setup_diagnostics()
     signs = true, -- {severity_limit = "Warning"},
     update_in_insert = false,
     severity_sort = true,
-  })
+  }, diagnostic_ns)
 end
 
 -- some of our custom LSP handlers
@@ -97,6 +98,7 @@ local function setup_completion()
   map("s", "<S-Tab>", on_s_tab, opts)
 
   -- [nvim-cmp] --
+  local cmp = require("cmp")
   local kind_icons = {
     Text = " text", -- Text
     Method = " method", -- Method
@@ -147,18 +149,42 @@ local function setup_completion()
     end
   end
 
+  --   local function tab(_) -- _fallback
+  --     if cmp.visible() then
+  --       cmp.select_next_item()
+  --       -- return fn.feedkeys(utils.t("<C-n>"), "n")
+  --     elseif luasnip and luasnip.expand_or_jumpable() then
+  --       luasnip.exand_or_jump()
+  --       -- fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
+  --       -- return fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
+  --     elseif utils.check_back_space() then
+  --       fn.feedkeys(utils.t("<Tab>"), "n")
+  --     else
+  --       api.nvim_feedkeys(utils.t("<Plug>(Tabout)"), "", true)
+  --       -- fallback()
+  --     end
+  --   end
+
+  --   local function shift_tab(_) -- _fallback
+  --     if cmp.visible() then
+  --       -- fn.feedkeys(utils.t("<C-p>"), "n")
+  --       cmp.select_prev_item()
+  --     elseif luasnip and luasnip.jumpable(-1) then
+  --       luasnip.exand_or_jump()
+  --       -- fn.feedkeys(utils.t("<Plug>luasnip-jump-prev"), "")
+  --     else
+  --       api.nvim_feedkeys(utils.t("<Plug>(TaboutBack)"), "", true)
+  --       -- fallback()
+  --     end
+  --   end
+
   require("cmp_nvim_lsp").setup()
-  local cmp = require("cmp")
-  -- local types = require("cmp.types")
   cmp.setup({
     experimental = {
       ghost_text = false,
+      native_menu = true,
     },
     completion = {
-      -- autocomplete = {
-      -- 	types.cmp.TriggerEvent.InsertEnter,
-      -- 	types.cmp.TriggerEvent.TextChanged,
-      -- },
       keyword_length = 1,
     },
     snippet = {
@@ -200,6 +226,7 @@ local function setup_completion()
       -- },
     },
     formatting = {
+      deprecated = true,
       format = function(entry, item)
         item.kind = kind_icons[item.kind]
         item.menu = ({
@@ -290,7 +317,7 @@ local function on_attach(client, bufnr)
 
   --- # autocommands/autocmds
   -- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
-  -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
+  -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics(diagnostic_ns)]])
   au(
     [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source="if_many", show_header=false})]]
   )
