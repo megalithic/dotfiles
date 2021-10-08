@@ -1,2 +1,3 @@
+abbr dl="eval "
 abbr ev="nvim ~/.dotfiles/nvim/.config/nvim/init.lua"
 abbr out="tmuxinator start outstand -n outstand"
