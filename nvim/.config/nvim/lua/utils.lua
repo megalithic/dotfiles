@@ -210,6 +210,7 @@ function M.lsp.format_setup(client, buf)
   end
 
   client.resolved_capabilities.document_formatting = enable
+
   -- format on save
   if client.resolved_capabilities.document_formatting then
     vim.cmd([[

@@ -14,8 +14,8 @@ function M.setup()
           -- "javascriptreact",
           -- "typescript",
           -- "typescriptreact",
-          "vue",
-          "svelte",
+          -- "vue",
+          -- "svelte",
           "css",
           "scss",
           "html",
@@ -31,7 +31,7 @@ function M.setup()
         end,
       }),
       nls.builtins.formatting.elm_format,
-      nls.builtins.formatting.eslint_d,
+      -- nls.builtins.formatting.eslint_d,
       nls.builtins.formatting.shfmt.with({
         extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
@@ -46,6 +46,9 @@ end
 function M.has_formatter(ft)
   local config = require("null-ls.config").get()
   local formatters = config._generators["NULL_LS_FORMATTING"]
+
+  if formatters == nil then return false end
+
   for _, f in ipairs(formatters) do
     if vim.tbl_contains(f.filetypes, ft) then
       return true

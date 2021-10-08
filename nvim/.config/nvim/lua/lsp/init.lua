@@ -7,7 +7,7 @@ local luasnip = require("luasnip")
 local colors = require("colors")
 local utils = require("utils")
 
-local formatting_provider = "null-ls" -- efm or null-ls
+local formatting_provider = "efm" -- efm or null-ls
 local diagnostic_ns = vim.api.nvim_create_namespace("diagnostics")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
@@ -58,6 +58,12 @@ local function setup_lsp_handlers()
     max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
   })
+
+  -- diagnostics (< v0.5.1)
+  -- lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(
+  --   lsp.diagnostic.on_publish_diagnostics,
+  --   { underline = true, signs = true, virtual_text = false }
+  -- )
 end
 
 local function setup_completion()
@@ -373,7 +379,7 @@ local function on_attach(client, bufnr)
       -- 			eslint_enable_disable_comments = true,
     })
 
-    ts.setup_client(client)
+    -- ts.setup_client(client)
 
     -- so tsserver doesn't compete with efm or null-ls
     -- client.resolved_capabilities.document_formatting = false
@@ -443,9 +449,10 @@ local function setup_lsp_servers()
 
   do
     if formatting_provider == "efm" then
-      local efm = require("efm")
-      lspconfig["lsp.efm"].setup(lsp_with_defaults(efm.config()))
+      local efm = require("lsp.efm")
+      lspconfig["efm"].setup(lsp_with_defaults(efm.config))
     elseif formatting_provider == "null-ls" then
+      -- FIXME: presently this is dying! with vim.lsp.diagnostic handler issues
       require("lsp.null-ls").setup()
       lspconfig["null-ls"].setup(lsp_with_defaults())
     end
@@ -806,7 +813,7 @@ local function setup_lsp_servers()
   end
 end
 
-setup_completion()
-setup_diagnostics()
 setup_lsp_handlers()
+setup_diagnostics()
+setup_completion()
 setup_lsp_servers()
