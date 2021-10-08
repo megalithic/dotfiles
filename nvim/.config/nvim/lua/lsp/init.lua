@@ -350,7 +350,7 @@ local function on_attach(client, bufnr)
   vcmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
   vcmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
 
-  --- # client-specific configs
+  --- # ls client-specific configs
   -- (zk)
   if client.name == "zk" then
     au([[BufNewFile,BufWritePost <buffer> call jobstart('zk index') ]])
@@ -362,8 +362,13 @@ local function on_attach(client, bufnr)
     -- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
   end
 
-  if client.name == "jsonls" then
-    client.resolved_capabilities.document_formatting = false
+  -- disable formatting for the following language-servers:
+  local disabled_formatting_ls = { "jsonls", "tailwindcss" }
+  for i = 1, #disabled_formatting_ls do
+    if disabled_formatting_ls[i] == client.name then
+      client.resolved_capabilities.document_formatting = false
+      client.resolved_capabilities.document_range_formatting = false
+    end
   end
 
   -- (typescript/tsserver)
@@ -380,10 +385,6 @@ local function on_attach(client, bufnr)
     })
 
     -- ts.setup_client(client)
-
-    -- so tsserver doesn't compete with efm or null-ls
-    -- client.resolved_capabilities.document_formatting = false
-    -- client.resolved_capabilities.document_range_formatting = false
   end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
