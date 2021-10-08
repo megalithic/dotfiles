@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck shell=bash
 
 function __close_all_apps() {
   apps=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s;", $i}')
@@ -10,10 +11,10 @@ function __close_all_apps() {
     fi
 
     [ "$apps" = "$app" ] && \
-        apps='' || \
-        apps="${apps#*;}"
-  done
-}
+      apps='' || \
+      apps="${apps#*;}"
+    done
+  }
 
 function reboot() {
   __close_all_apps
@@ -120,34 +121,34 @@ function gss() { # smart show diffs
 # Thanks @dkarter!
 # https://github.com/dkarter/dotfiles/blob/master/zshrc#L312-L339
 # fgstash - easier way to deal with stashes
-  # type fstash to get a list of your stashes
-  # enter shows you the contents of the stash
-  # ctrl-d shows a diff of the stash against your current HEAD
-  # ctrl-b checks the stash out as a branch, for easier merging
-  function fgstash() {
-    local out q k sha
-    while out=$(
-      git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
-        fzf --ansi --no-sort --query="$q" --print-query \
-          --expect=ctrl-d,ctrl-b
-    ); do
-      mapfile -t out <<<"$out"
-      q="${out[0]}"
-      k="${out[1]}"
-      sha="${out[-1]}"
-      sha="${sha%% *}"
-      [[ -z "$sha" ]] && continue
-      if [[ "$k" == 'ctrl-d' ]]; then
-        git diff $sha
-      elif [[ "$k" == 'ctrl-b' ]]; then
-        git stash branch "stash-$sha" $sha
-        break
-      else
-        git stash show -p $sha
-      fi
-    done
-  }
-alias fstash=fgstash
+# type fstash to get a list of your stashes
+# enter shows you the contents of the stash
+# ctrl-d shows a diff of the stash against your current HEAD
+# ctrl-b checks the stash out as a branch, for easier merging
+function fgstash() {
+  local out q k sha
+  while out=$(
+    git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
+      fzf --ansi --no-sort --query="$q" --print-query \
+      --expect=ctrl-d,ctrl-b
+          ); do
+          mapfile -t out <<<"$out"
+          q="${out[0]}"
+          k="${out[1]}"
+          sha="${out[-1]}"
+          sha="${sha%% *}"
+          [[ -z "$sha" ]] && continue
+          if [[ "$k" == 'ctrl-d' ]]; then
+            git diff $sha
+          elif [[ "$k" == 'ctrl-b' ]]; then
+            git stash branch "stash-$sha" $sha
+            break
+          else
+            git stash show -p $sha
+          fi
+        done
+      }
+    alias fstash=fgstash
 
 # Test whether a given command exists
 # Adapted from http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script/3931779#3931779
@@ -227,24 +228,24 @@ changeMac() {
 path() {
   echo $PATH | tr ":" "\n" | \
     awk "{ sub(\"/usr\",   \"$fg_no_bold[green]/usr$reset_color\"); \
-      sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
-      sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
-      sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
-      sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
-      sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
-      print }"
-}
+    sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
+    sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
+    sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
+    sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
+    sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
+    print }"
+  }
 
 fpath() {
   echo $FPATH | tr ":" "\n" | \
     awk "{ sub(\"/usr\",   \"$fg_no_bold[green]/usr$reset_color\"); \
-      sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
-      sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
-      sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
-      sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
-      sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
-      print }"
-}
+    sub(\"/bin\",   \"$fg_no_bold[blue]/bin$reset_color\"); \
+    sub(\"/opt\",   \"$fg_no_bold[cyan]/opt$reset_color\"); \
+    sub(\"/sbin\",  \"$fg_no_bold[magenta]/sbin$reset_color\"); \
+    sub(\"/local\", \"$fg_no_bold[yellow]/local$reset_color\"); \
+    sub(\"/.rvm\",  \"$fg_no_bold[red]/.rvm$reset_color\"); \
+    print }"
+  }
 
 mcd() { mkdir -p $1 && cd $1 }
 alias cdm=mcd
@@ -259,11 +260,11 @@ codi() {
     "let g:startify_disable_at_vimenter = 1 |\
     set bt=nofile ls=0 noru nonu nornu |\
     hi CodiVirtualText guifg=red
-    hi ColorColumn ctermbg=NONE |\
-    hi VertSplit ctermbg=NONE |\
-    hi NonText ctermfg=0 |\
-    Codi $syntax" "$@"
-}
+      hi ColorColumn ctermbg=NONE |\
+        hi VertSplit ctermbg=NONE |\
+        hi NonText ctermfg=0 |\
+        Codi $syntax" "$@"
+      }
 
 # iron.nvim
 # Usage: repl [filetype] [filename]
@@ -277,7 +278,7 @@ iron() {
     hi VertSplit ctermbg=NONE |\
     hi NonText ctermfg=0 |\
     call IronStartRepl('$syntax', 0, 1)"
-}
+  }
 
 ## FZF FUNCTIONS ##
 
@@ -300,10 +301,10 @@ fh() {
 fgb() {
   local branches branch
   branches=$(git for-each-ref --count=30 --sort=-committerdate refs/heads/ --format="%(refname:short)") &&
-  branch=$(echo "$branches" |
-           fzf-tmux -d $(( 2 + $(wc -l <<< "$branches") )) +m) &&
-  git checkout $(echo "$branch" | sed "s/.* //" | sed "s#remotes/[^/]*/##")
-}
+    branch=$(echo "$branches" |
+    fzf-tmux -d $(( 2 + $(wc -l <<< "$branches") )) +m) &&
+    git checkout $(echo "$branch" | sed "s/.* //" | sed "s#remotes/[^/]*/##")
+  }
 
 # tm [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to existing one.
 # Running `tm` will let you fuzzy-find a session mame
@@ -335,7 +336,7 @@ fgr() {
 
   if [[ -n $file ]]
   then
-     vim $file +$line
+    vim $file +$line
   fi
 }
 
@@ -348,22 +349,22 @@ fzstash() {
   local out q k sha
   while out=$(
     git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
-    fzf --ansi --no-sort --query="$q" --print-query \
-        --expect=ctrl-d,ctrl-b);
-  do
-    mapfile -t out <<< "$out"
-    q="${out[0]}"
-    k="${out[1]}"
-    sha="${out[-1]}"
-    sha="${sha%% *}"
-    [[ -z "$sha" ]] && continue
-    if [[ "$k" == 'ctrl-d' ]]; then
-      git diff $sha
-    elif [[ "$k" == 'ctrl-b' ]]; then
-      git stash branch "stash-$sha" $sha
-      break;
-    else
-      git stash show -p $sha
-    fi
-  done
-}
+      fzf --ansi --no-sort --query="$q" --print-query \
+      --expect=ctrl-d,ctrl-b);
+        do
+          mapfile -t out <<< "$out"
+          q="${out[0]}"
+          k="${out[1]}"
+          sha="${out[-1]}"
+          sha="${sha%% *}"
+          [[ -z "$sha" ]] && continue
+          if [[ "$k" == 'ctrl-d' ]]; then
+            git diff $sha
+          elif [[ "$k" == 'ctrl-b' ]]; then
+            git stash branch "stash-$sha" $sha
+            break;
+          else
+            git stash show -p $sha
+          fi
+        done
+      }

@@ -362,8 +362,8 @@ local function on_attach(client, bufnr)
     -- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
   end
 
-  -- disable formatting for the following language-servers:
-  local disabled_formatting_ls = { "jsonls", "tailwindcss" }
+  -- disable formatting for the following language-server clients:
+  local disabled_formatting_ls = { "jsonls", "tailwindcss", "tsserver" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
       client.resolved_capabilities.document_formatting = false
