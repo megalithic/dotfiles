@@ -837,7 +837,6 @@ local function setup_fzf_lua()
       border = vim.g.floating_window_border,
       preview = {
         default = "bat",
-        border = "border",
         title = true,
         scrollbar = false,
       },
