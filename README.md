@@ -39,7 +39,7 @@ is going on (because it does a lot that I'm not describing here) before you
 install a stranger's shell scripts all willy-nilly, throwing caution to the
 wind. 🤣
 
-### 💻 Things
+### ✨ Things
 
 A few of the _must-have_ tools I roll with:
 
@@ -63,7 +63,7 @@ A few of the _must-have_ tools I roll with:
   + [starship](https://starship.rs)
 * [weechat](https://www.weechat.org/)
 
-### ✨ Stuff
+### 💻 Stuff
 
 The file hierarchy:
 
