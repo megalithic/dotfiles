@@ -112,6 +112,7 @@ return {
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "tpope/vim-ragtag",
   "rizzatti/dash.vim",
+  -- "mrjones2014/dash.nvim", -- https://github.com/mrjones2014/dash.nvim/issues/25#issuecomment-940331156
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",

@@ -100,6 +100,7 @@ Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/c
 * A wealth of handy scripts/bins for future use: https://github.com/salman-abedin/alfred
 * Neovim lua migration resource: https://github.com/nanotee/nvim-lua-guide
 * Great (n)vim knowledge base: https://github.com/feniljain/knowledge-base/blob/main/vim/README.md
+* My reference for things to research/add/remove/etc.: https://github.com/megalithic/dotfiles/issues/23
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
