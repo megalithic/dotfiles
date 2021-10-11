@@ -834,12 +834,13 @@ local function setup_fzf_lua()
     winopts = {
       height = 0.6,
       width = 0.65,
-      border = vim.g.border,
-      -- preview = {
-      --   default = "bat",
-      --   title = false,
-      --   scrollbar = false,
-      -- },
+      border = vim.g.floating_window_border,
+      preview = {
+        default = "bat",
+        border = "border",
+        title = true,
+        scrollbar = false,
+      },
     },
     previewers = {
       bat = {
