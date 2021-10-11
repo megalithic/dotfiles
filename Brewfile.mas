@@ -9,3 +9,5 @@ mas "Battery Indicator", id: 1206020918
 mas "Brother iPrint&Scan", id: 1193539993
 mas "Things", id: 904280696  # might be bailing from this
 # mas "Xcode", id: 497799835
+mas "Affinity Photo", id: 824183456
+mas "Affinity Designer", id: 824171161

@@ -420,11 +420,12 @@ local function setup_beacon()
   g.beacon_ignore_filetypes = { "fzf" }
 end
 
-local function setup_nvim_comment()
-  require("nvim_comment").setup({
-    comment_empty = false,
-    hook = function()
-      require("ts_context_commentstring.internal").update_commentstring()
+local function setup_comment()
+  require("Comment").setup({
+    ignore = "^$",
+    pre_hook = function(_) -- ctx
+      return require("ts_context_commentstring.internal").calculate_commentstring()
+      -- require("ts_context_commentstring.internal").update_commentstring()
     end,
   })
 end
@@ -830,9 +831,16 @@ local function setup_fzf_lua()
   require("fzf-lua").setup({
     -- fzf_args = vim.env.FZF_DEFAULT_OPTS .. " --border rounded",
     fzf_layout = "default",
-    win_height = 0.6,
-    win_width = 0.65,
-    default_previewer = "bat",
+    winopts = {
+      height = 0.6,
+      width = 0.65,
+      border = vim.g.border,
+      preview = {
+        default = "bat",
+        title = false,
+        scrollbar = false,
+      },
+    },
     previewers = {
       bat = {
         cmd = "bat",
@@ -1262,14 +1270,14 @@ setup_vim_test()
 setup_bullets()
 setup_trouble()
 setup_cursorhold()
-setup_nvim_comment()
+setup_comment()
 setup_conflict_marker()
 setup_lastplace()
 setup_gps()
 setup_diffview()
 setup_git()
 setup_git_messenger()
-setup_distant()
+-- setup_distant()
 setup_shade()
 setup_tabout()
 setup_headlines()

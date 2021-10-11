@@ -139,7 +139,7 @@ brew "the_silver_searcher"
 brew "tidy-html5"
 brew "timg" # for image rendering in kitty
 brew "tldr"
-brew "tmux", args: ["HEAD"]
+brew "tmux" #, args: ["HEAD"]
 brew "trash"
 brew "tree"
 brew "tree-sitter"

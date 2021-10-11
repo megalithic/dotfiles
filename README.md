@@ -11,7 +11,7 @@
   <img src="screenshot.png" alt="screenshot" />
 </p>
 
-### Installation
+### 🚀 Installation
 
 If you want to kick the tires, you can simply:
 
@@ -31,12 +31,15 @@ provisions. This means that certain tools/binaries I rely on may or may not
 install/configure on linux. Though, I have tested it decently well on an
 Ubuntu-based Linode instance.
 
+
+##### ⚠️  Thar be dragons..
+
 I highly recommend you dig into the scripts and configs to see what all
 is going on (because it does a lot that I'm not describing here) before you
 install a stranger's shell scripts all willy-nilly, throwing caution to the
 wind. 🤣
 
-### Things
+### 💻 Things
 
 A few of the _must-have_ tools I roll with:
 
@@ -60,7 +63,7 @@ A few of the _must-have_ tools I roll with:
   + [starship](https://starship.rs)
 * [weechat](https://www.weechat.org/)
 
-### Stuff
+### ✨ Stuff
 
 The file hierarchy:
 
@@ -69,7 +72,7 @@ The file hierarchy:
 * Everything else is handled by custom installers based upon the current
   platform; otherwise, `stow` handles the rest (clean and easy symlinking).
 
-### Privates
+### 🔐 Privates
 
 Use `~/.localrc` as your location for sensitive information. ~~Optionally, you
 can let `bin/_dotup` handle the cloning of your private repo to
@@ -80,7 +83,7 @@ _NOTE:_ You'll want to be sure to setup an SSH key for github access to this rep
 
 Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/caching-your-github-credentials-in-git
 
-### Props
+### :pray: Props
 
 * So many esteemed individuals in the community have, in some way, left their
   mark on my own dotfilery (they're all legends in my book):
@@ -92,7 +95,7 @@ Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/c
   + [Phil Ridlen](https://github.com/philtr/dotfiles)
   + _.. and many, many others._
 
-### Refs
+### 🧐 Refs:
 
 * A wealth of handy scripts/bins for future use: https://github.com/salman-abedin/alfred
 * Neovim lua migration resource: https://github.com/nanotee/nvim-lua-guide

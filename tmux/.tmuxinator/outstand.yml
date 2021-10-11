@@ -3,7 +3,16 @@ root: ~/code/outstand
 
 tmux_options: -2
 windows:
-  - app:
+  - dots:
+      panes:
+        - code:
+            - cd ~/.dotfiles
+  - ssh-dots:
+      panes:
+        - code:
+            - ssh seth-dev
+            - cd ~/.dotfiles
+  - ssh-app:
       layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
       panes:
         - code:
@@ -15,27 +24,27 @@ windows:
             - cd ~/dev/app
             - eval $(desk load)
           # - eval $(desk load); dev logs -f
-  - atlas:
+  - ssh-pages:
       layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
       panes:
         - code:
             - ssh seth-dev
-            - cd ~/dev/atlas
+            - cd ~/dev/pages
             - eval $(desk load); nvim
         - logs:
             - ssh seth-dev
-            - cd ~/dev/atlas
+            - cd ~/dev/pages
             - eval $(desk load)
           # - eval $(desk load); dev logs -f
-  - pages:
+  - ssh-atlas:
       layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
       panes:
         - code:
             - ssh seth-dev
-            - cd ~/dev/pages
+            - cd ~/dev/atlas
             - eval $(desk load); nvim
         - logs:
             - ssh seth-dev
-            - cd ~/dev/pages
+            - cd ~/dev/atlas
             - eval $(desk load)
           # - eval $(desk load); dev logs -f

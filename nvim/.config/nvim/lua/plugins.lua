@@ -117,7 +117,7 @@ return {
   "vuki656/package-info.nvim",
   "jamestthompson3/nvim-remote-containers",
   -- { "chipsenkbeil/distant.nvim", branch = "MigrateToRustLib" },
-  "chipsenkbeil/distant.nvim",
+  -- "chipsenkbeil/distant.nvim",
 
   --
   -- (the rest...) --
@@ -127,8 +127,7 @@ return {
   "andymass/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
   "windwp/nvim-autopairs",
   "alvan/vim-closetag",
-  "terrortylor/nvim-comment",
-  -- "winston0410/commented.nvim", -- TODO: go to this!
+  "numToStr/Comment.nvim",
   "tpope/vim-eunuch",
   "tpope/vim-abolish",
   "tpope/vim-rhubarb",
