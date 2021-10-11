@@ -58,11 +58,11 @@ map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { noremap = true, expr =
 
 -- Readline bindings (command)
 local rl_bindings = {
-	{ lhs = "<c-a>", rhs = "<home>", opts = { noremap = true } },
-	{ lhs = "<c-e>", rhs = "<end>", opts = { noremap = true } },
+  { lhs = "<c-a>", rhs = "<home>", opts = { noremap = true } },
+  { lhs = "<c-e>", rhs = "<end>", opts = { noremap = true } },
 }
 for _, binding in ipairs(rl_bindings) do
-	map("c", binding.lhs, binding.rhs, binding.opts)
+  map("c", binding.lhs, binding.rhs, binding.opts)
 end
 
 -- Undo breakpoints
@@ -105,8 +105,8 @@ map("n", "<leader>rjs", [[:12sp | e term://node | wincmd k<cr>]])
 
 -- Things 3
 api.nvim_exec(
-	[[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
-	true
+  [[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
+  true
 )
 map("n", "<Leader>T", "<cmd>Things<CR>")
 
@@ -140,13 +140,13 @@ map("n", "<Leader>mp", "<cmd>MarkdownPreview<CR>")
 -- # slash
 cmd([[noremap <plug>(slash-after) zz]])
 api.nvim_exec(
-	[[
+  [[
 if has('timers')
   " Blink 2 times with 50ms interval
   noremap <expr> <plug>(slash-after) slash#blink(2, 50)
 endif
   ]],
-	true
+  true
 )
 
 -- # lightspeed
@@ -191,6 +191,7 @@ map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
 map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
+map("n", "<leader>fm", "<cmd>lua require('fzf-lua').oldfiles()<cr>")
 map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>")
 map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>")
 map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
@@ -200,23 +201,23 @@ map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zet
 
 -- # tmux
 do
-	local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
+  local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
 
-	local tmux_move = function(direction)
-		vim.fn.system("tmux selectp -" .. tmux_directions[direction])
-	end
+  local tmux_move = function(direction)
+    vim.fn.system("tmux selectp -" .. tmux_directions[direction])
+  end
 
-	function Move(direction)
-		local current_win = api.nvim_get_current_win()
-		vim.cmd("wincmd " .. direction)
+  function Move(direction)
+    local current_win = api.nvim_get_current_win()
+    vim.cmd("wincmd " .. direction)
 
-		if api.nvim_get_current_win() == current_win then
-			tmux_move(direction)
-		end
-	end
+    if api.nvim_get_current_win() == current_win then
+      tmux_move(direction)
+    end
+  end
 
-	map("n", "<C-h>", ":lua Move('h')<CR>")
-	map("n", "<C-j>", ":lua Move('j')<CR>")
-	map("n", "<C-k>", ":lua Move('k')<CR>")
-	map("n", "<C-l>", ":lua Move('l')<CR>")
+  map("n", "<C-h>", ":lua Move('h')<CR>")
+  map("n", "<C-j>", ":lua Move('j')<CR>")
+  map("n", "<C-k>", ":lua Move('k')<CR>")
+  map("n", "<C-l>", ":lua Move('l')<CR>")
 end
