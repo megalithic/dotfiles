@@ -835,11 +835,11 @@ local function setup_fzf_lua()
       height = 0.6,
       width = 0.65,
       border = vim.g.border,
-      preview = {
-        default = "bat",
-        title = false,
-        scrollbar = false,
-      },
+      -- preview = {
+      --   default = "bat",
+      --   title = false,
+      --   scrollbar = false,
+      -- },
     },
     previewers = {
       bat = {
