@@ -18,15 +18,15 @@ windows:
       panes:
         - code:
             - ssh seth-dev
-            - cd ~/dev/app
+            - cd ~/code/app
             - eval $(desk load); nvim
         - logs:
             - ssh seth-dev
-            - cd ~/dev/app
+            - cd ~/code/app
             - eval $(desk load)
         - repl:
             - ssh seth-dev
-            - cd ~/dev/app
+            - cd ~/code/app
             - eval $(desk load); rails c
   - ssh-pages:
       # layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
@@ -34,16 +34,16 @@ windows:
       panes:
         - code:
             - ssh seth-dev
-            - cd ~/dev/pages
+            - cd ~/code/pages
             - eval $(desk load); nvim
         - logs:
             - ssh seth-dev
-            - cd ~/dev/pages
+            - cd ~/code/pages
             - eval $(desk load)
           # - eval $(desk load); dev logs -f
         - repl:
             - ssh seth-dev
-            - cd ~/dev/pages
+            - cd ~/code/pages
             - eval $(desk load); iex -S mix
   - ssh-atlas:
       # layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
@@ -51,14 +51,14 @@ windows:
       panes:
         - code:
             - ssh seth-dev
-            - cd ~/dev/atlas
+            - cd ~/code/atlas
             - eval $(desk load); nvim
         - logs:
             - ssh seth-dev
-            - cd ~/dev/atlas
+            - cd ~/code/atlas
             - eval $(desk load)
           # - eval $(desk load); dev logs -f
         - repl:
             - ssh seth-dev
-            - cd ~/dev/atlas
+            - cd ~/code/atlas
             - eval $(desk load); iex -S mix

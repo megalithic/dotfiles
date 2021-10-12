@@ -1,0 +1,63 @@
+name: "outstand"
+windows:
+  - name: "dots"
+    root: "~/.dotfiles"
+    focus: true
+    panes:
+      - commands:
+          - ls
+  - name: "ssh-dots"
+    root: "~/.dotfiles"
+    panes:
+      - commands:
+          - ssh seth-dev
+          - cd ~/.dotfiles
+          - eval $(desk load); nvim
+  - name: "ssh-app"
+    root: "~/code/linodes/seth"
+    layouts: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
+    panes:
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/app
+          - eval $(desk load); nvim
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/app
+          - eval $(desk load);
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/app
+          - eval $(desk load); rails c
+  - name: "ssh-pages"
+    root: "~/code/linodes/seth"
+    layouts: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
+    panes:
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/pages
+          - eval $(desk load); nvim
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/pages
+          - eval $(desk load);
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/pages
+          - eval $(desk load); iex -S mix
+  - name: "ssh-atlas"
+    root: "~/code/linodes/seth"
+    layouts: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
+    panes:
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/atlas
+          - eval $(desk load); nvim
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/atlas
+          - eval $(desk load);
+      - commands:
+          - ssh seth-dev
+          - cd ~/code/atlas
+          - eval $(desk load); iex -S mix
