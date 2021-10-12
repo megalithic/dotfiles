@@ -1,5 +1,5 @@
 local api, cmd, fn = vim.api, vim.cmd, vim.fn
-local map = mega.map
+local map, command = mega.map, mega.command
 
 -- [convenience mappings] ------------------------------------------------------
 
@@ -205,24 +205,28 @@ map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zet
 map("n", "<C-n>", "<cmd>NvimTreeToggle<CR>")
 
 -- # tmux
-do
-  local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
+-- do
+--   local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
 
-  local tmux_move = function(direction)
-    vim.fn.system("tmux selectp -" .. tmux_directions[direction])
-  end
+--   local tmux_move = function(direction)
+--     vim.fn.system("tmux selectp -" .. tmux_directions[direction])
+--   end
 
-  function Move(direction)
-    local current_win = api.nvim_get_current_win()
-    vim.cmd("wincmd " .. direction)
+--   function Move(direction)
+--     local current_win = api.nvim_get_current_win()
+--     vim.cmd("wincmd " .. direction)
 
-    if api.nvim_get_current_win() == current_win then
-      tmux_move(direction)
-    end
-  end
+--     if api.nvim_get_current_win() == current_win then
+--       tmux_move(direction)
+--     end
+--   end
 
-  map("n", "<C-h>", ":lua Move('h')<CR>")
-  map("n", "<C-j>", ":lua Move('j')<CR>")
-  map("n", "<C-k>", ":lua Move('k')<CR>")
-  map("n", "<C-l>", ":lua Move('l')<CR>")
-end
+--   map("n", "<C-h>", ":lua Move('h')<CR>")
+--   map("n", "<C-j>", ":lua Move('j')<CR>")
+--   map("n", "<C-k>", ":lua Move('k')<CR>")
+--   map("n", "<C-l>", ":lua Move('l')<CR>")
+-- end
+
+-- # commands
+
+command({ "Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]] })

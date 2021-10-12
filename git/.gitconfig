@@ -58,6 +58,8 @@
 
   cl = clone
 
+  pr = !$HOME/.dotfiles/bin/git-bin/git-pr
+
   # stash
   ; sshow = "!f() { git stash show stash^{/$*} -p; }; f"
   ; sapply = "!f() { git stash apply stash^{/$*}; }; f"

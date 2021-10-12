@@ -231,7 +231,7 @@ alias map="xargs -n1"
 
 # GIT
 # -----------------------------------------------------------------------------
-alias gpreq="~/.dotfiles/bin/git-pr"
+alias gpreq="~/.dotfiles/bin/git-bin/git-pr"
 alias preq=gpreq
 alias req=gpreq
 alias dangled="git fsck --no-reflog | awk '/dangling commit/ {print $3}'" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )

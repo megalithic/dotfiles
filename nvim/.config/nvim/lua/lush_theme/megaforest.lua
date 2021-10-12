@@ -436,6 +436,11 @@ return lush(function()
     TSVariableBuiltin({ PurpleItalic }),
     TSEmphasis({ fg = nil, bg = nil, gui = "bold" }),
     TSUnderline({ fg = nil, bg = nil, gui = "underline" }),
+    -- highlight FIXME comments
+    commentTSWarning({ fg = red, gui = "bold" }),
+    commentTSDanger({ fg = orange, gui = "bold" }),
+
+    ---- :help git-gutter -------------------------------------------
 
     GitGutterAdd({ GreenSign }),
     GitGutterChange({ BlueSign }),

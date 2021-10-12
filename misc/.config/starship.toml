@@ -87,7 +87,7 @@ behind = "↓"
 # staged = "•" #•﯂
 # modified = "~"
 # untracked = "?" #+
-# deleted = "" #x
+deleted = "" #x
 # stashed = "([ ${count}]))(fg:white)"
 # ---
 # # REF:
