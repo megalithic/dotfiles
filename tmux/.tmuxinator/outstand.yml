@@ -13,7 +13,8 @@ windows:
             - ssh seth-dev
             - cd ~/.dotfiles
   - ssh-app:
-      layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
+      # layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
+      layout: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
       panes:
         - code:
             - ssh seth-dev
@@ -23,9 +24,13 @@ windows:
             - ssh seth-dev
             - cd ~/dev/app
             - eval $(desk load)
-          # - eval $(desk load); dev logs -f
+        - repl:
+            - ssh seth-dev
+            - cd ~/dev/app
+            - eval $(desk load); rails c
   - ssh-pages:
-      layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
+      # layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
+      layout: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
       panes:
         - code:
             - ssh seth-dev
@@ -36,8 +41,13 @@ windows:
             - cd ~/dev/pages
             - eval $(desk load)
           # - eval $(desk load); dev logs -f
+        - repl:
+            - ssh seth-dev
+            - cd ~/dev/pages
+            - eval $(desk load); iex -S mix
   - ssh-atlas:
-      layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
+      # layout: a59c,206x60,0,0[206x51,0,0,0,206x8,0,52,1]
+      layout: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
       panes:
         - code:
             - ssh seth-dev
@@ -48,3 +58,7 @@ windows:
             - cd ~/dev/atlas
             - eval $(desk load)
           # - eval $(desk load); dev logs -f
+        - repl:
+            - ssh seth-dev
+            - cd ~/dev/atlas
+            - eval $(desk load); iex -S mix
