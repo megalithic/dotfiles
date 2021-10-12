@@ -1245,7 +1245,7 @@ local function setup_filetype()
 end
 
 local function setup_nvim_tree()
-  local action = require("nvim-tree.config").nvim_tree_callback
+  -- local action = require("nvim-tree.config").nvim_tree_callback
   vim.g.nvim_tree_icons = {
     default = "",
     git = {
@@ -1270,9 +1270,8 @@ local function setup_nvim_tree()
       width = "20%",
       auto_resize = true,
       list = {
-        { key = "cd", cb = action("cd") },
+        -- { key = "cd", cb = action("cd") },
       },
-      side = "left",
     },
     diagnostics = {
       enable = true,
