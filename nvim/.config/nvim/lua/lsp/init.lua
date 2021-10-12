@@ -133,56 +133,49 @@ local function setup_completion()
     TypeParameter = " type param", -- TypeParameter
   }
 
-  local function tab(fallback)
-    if fn.pumvisible() == 1 then
-      return fn.feedkeys(utils.t("<C-n>"), "n")
+  -- local function tab(fallback)
+  --   if fn.pumvisible() == 1 then
+  --     return fn.feedkeys(utils.t("<C-n>"), "n")
+  --   elseif luasnip and luasnip.expand_or_jumpable() then
+  --     return fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
+  --   elseif utils.check_back_space() then
+  --     fn.feedkeys(utils.t("<Tab>"), "n")
+  --   else
+  --     fallback()
+  --   end
+  -- end
+
+  -- local function shift_tab(fallback)
+  --   if fn.pumvisible() == 1 then
+  --     fn.feedkeys(utils.t("<C-p>"), "n")
+  --   elseif luasnip and luasnip.jumpable(-1) then
+  --     fn.feedkeys(utils.t("<Plug>luasnip-jump-prev"), "")
+  --   else
+  --     fallback()
+  --   end
+  -- end
+
+  local function tab(_) -- _fallback
+    if cmp.visible() then
+      cmp.select_next_item()
     elseif luasnip and luasnip.expand_or_jumpable() then
-      return fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
+      luasnip.exand_or_jump()
     elseif utils.check_back_space() then
       fn.feedkeys(utils.t("<Tab>"), "n")
     else
-      fallback()
+      api.nvim_feedkeys(utils.t("<Plug>(Tabout)"), "", true)
     end
   end
 
-  local function shift_tab(fallback)
-    if fn.pumvisible() == 1 then
-      fn.feedkeys(utils.t("<C-p>"), "n")
+  local function shift_tab(_) -- _fallback
+    if cmp.visible() then
+      cmp.select_prev_item()
     elseif luasnip and luasnip.jumpable(-1) then
-      fn.feedkeys(utils.t("<Plug>luasnip-jump-prev"), "")
+      luasnip.exand_or_jump()
     else
-      fallback()
+      api.nvim_feedkeys(utils.t("<Plug>(TaboutBack)"), "", true)
     end
   end
-
-  --   local function tab(_) -- _fallback
-  --     if cmp.visible() then
-  --       cmp.select_next_item()
-  --       -- return fn.feedkeys(utils.t("<C-n>"), "n")
-  --     elseif luasnip and luasnip.expand_or_jumpable() then
-  --       luasnip.exand_or_jump()
-  --       -- fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
-  --       -- return fn.feedkeys(utils.t("<Plug>luasnip-expand-or-jump"), "")
-  --     elseif utils.check_back_space() then
-  --       fn.feedkeys(utils.t("<Tab>"), "n")
-  --     else
-  --       api.nvim_feedkeys(utils.t("<Plug>(Tabout)"), "", true)
-  --       -- fallback()
-  --     end
-  --   end
-
-  --   local function shift_tab(_) -- _fallback
-  --     if cmp.visible() then
-  --       -- fn.feedkeys(utils.t("<C-p>"), "n")
-  --       cmp.select_prev_item()
-  --     elseif luasnip and luasnip.jumpable(-1) then
-  --       luasnip.exand_or_jump()
-  --       -- fn.feedkeys(utils.t("<Plug>luasnip-jump-prev"), "")
-  --     else
-  --       api.nvim_feedkeys(utils.t("<Plug>(TaboutBack)"), "", true)
-  --       -- fallback()
-  --     end
-  --   end
 
   require("cmp_nvim_lsp").setup()
   cmp.setup({
@@ -202,8 +195,8 @@ local function setup_completion()
       border = "rounded",
     },
     mapping = {
-      -- ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
-      -- ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
+      ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
+      ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
       ["<C-b>"] = cmp.mapping.scroll_docs(-4),
       ["<C-f>"] = cmp.mapping.scroll_docs(4),
       ["<C-Space>"] = cmp.mapping.complete(),

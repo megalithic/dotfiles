@@ -84,8 +84,8 @@ alias mmv='noglob zmv -W'
 # -----------------------------------------------------------------------------
 # alias mux="tmux" #-> see function for tmux in tmux.zsh
 alias takeover="tmux detach -a"
-alias teama="tmux attach-session -t enbala"
-alias team="teamocil --here enbala"
+alias outa="tmux attach-session -t outstand"
+# alias out="teamocil --here outstand"
 alias trw="tmux rename-window"
 alias trs="tmux rename-session"
 
