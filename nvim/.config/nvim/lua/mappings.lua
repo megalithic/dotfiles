@@ -184,6 +184,7 @@ map("n", "ga", "<Plug>(EasyAlign)")
 
 -- # Dash
 map("n", "<leader>D", "<cmd>Dash<CR>")
+map("n", "<leader>d", "<cmd>Dash<CR>")
 
 -- # paq
 map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")

@@ -46,7 +46,7 @@ local function setup_diagnostics()
     signs = true, -- {severity_limit = "Warning"},
     update_in_insert = false,
     severity_sort = true,
-  }, diagnostic_ns)
+  })
 end
 
 -- some of our custom LSP handlers
@@ -188,7 +188,7 @@ local function setup_completion()
   cmp.setup({
     experimental = {
       ghost_text = false,
-      native_menu = true,
+      native_menu = false,
     },
     completion = {
       keyword_length = 1,
@@ -202,8 +202,8 @@ local function setup_completion()
       border = "rounded",
     },
     mapping = {
-      ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
-      ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
+      -- ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
+      -- ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
       ["<C-b>"] = cmp.mapping.scroll_docs(-4),
       ["<C-f>"] = cmp.mapping.scroll_docs(4),
       ["<C-Space>"] = cmp.mapping.complete(),
