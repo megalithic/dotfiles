@@ -60,7 +60,7 @@ cmd("runtime .vimrc")
 -- [ loaders ] ------------------------------------------------------------- {{{
 --
 load("preflight")
-load("colors").setup()
+load("colors").setup("megaforest")
 load("settings")
 load("lsp")
 load("autocmds")

@@ -320,14 +320,10 @@ local function on_attach(client, bufnr)
   au(
     [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source="if_many", show_header=false})]]
   )
-  au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
-  -- vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
-  -- vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
 
-  -- if client.resolved_capabilities.document_formatting then
-  --   au("BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
-  --   -- au[[BufWritePost <buffer> lua require('utils').lsp.format()]]
-  -- end
+  au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
+  vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
+  vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
 
   if client.resolved_capabilities.code_lens then
     au("CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()")

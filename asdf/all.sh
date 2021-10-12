@@ -28,6 +28,9 @@ asdf plugin add perl https://github.com/chrolis/asdf-perl.git
 asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git
 bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-keyring'
 
+# TODO: dope way of installing all the latest langs:
+# https://github.com/paulfioravanti/dotfiles/blob/master/asdf/setup.sh
+
 #
 # TODO:
 # add python asdf installer.. his notes about multiple python versions and reshim

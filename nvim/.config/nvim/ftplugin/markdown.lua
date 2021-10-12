@@ -152,9 +152,9 @@
       ::continue::
     end
   end
-  MarkdownHeadlines()
+  -- MarkdownHeadlines()
 
-  vim.cmd [[autocmd FileChangedShellPost,Syntax,TextChanged,InsertLeave,WinScrolled * lua MarkdownHeadlines()]]
+  -- vim.cmd [[autocmd FileChangedShellPost,Syntax,TextChanged,InsertLeave,WinScrolled * lua MarkdownHeadlines()]]
 
   -- needs this scheme file to work correctly for md files:
   -- https://github.com/b3nj5m1n/dotfiles/tree/master/files/nvim/after/queries/markdown

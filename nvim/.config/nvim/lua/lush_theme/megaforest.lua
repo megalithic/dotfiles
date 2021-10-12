@@ -45,21 +45,23 @@ local red = cs.red
 local orange = cs.orange
 local yellow = cs.yellow
 local green = cs.green
+local bright_green = cs.bright_green
 local cyan = cs.cyan
 local aqua = cs.aqua
 local blue = cs.blue
 local purple = cs.purple
+local brown = cs.brown
 
-local tc = {
-  black = bg0,
-  red = red,
-  yellow = yellow,
-  green = green,
-  cyan = aqua,
-  blue = blue,
-  purple = purple,
-  white = fg,
-}
+-- local tc = {
+--   black = bg0,
+--   red = red,
+--   yellow = yellow,
+--   green = green,
+--   cyan = aqua,
+--   blue = blue,
+--   purple = purple,
+--   white = fg,
+-- }
 
 -- set.terminal_color_0 = tc.black
 -- set.terminal_color_1 = tc.red
@@ -102,7 +104,9 @@ set.VM_Insert_hl = "Cursor"
 
 return lush(function()
   return {
+
     ---- :help highlight-default -------------------------------
+
     ColorColumn({ fg = nil, bg = bg1 }), -- used for the columns set with 'colorcolumn'
     Conceal({ fg = grey1, bg = nil }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = nil, bg = nil, gui = "reverse" }), -- character under the cursor
@@ -112,6 +116,8 @@ return lush(function()
     CursorIM({ Cursor }), -- like Cursor, but used when in IME mode |CursorIM|
     CursorColumn({ fg = nil, bg = bg1 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
     CursorLine({ fg = nil, bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR guifg) is not set.
+    CursorWord({ fg = nil, bg = nil, gui = "bold,underline" }),
+    CursorLineNr({ fg = brown, bg = bg1, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     Directory({ fg = green, bg = nil }), -- directory names (and other special names in listings)
     DiffAdd({ fg = nil, bg = bg_green }), -- diff mode: Added line |diff.txt|
     DiffChange({ fg = nil, bg = bg_blue }), -- diff mode: Changed line |diff.txt|
@@ -128,7 +134,6 @@ return lush(function()
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
     Substitute({ fg = bg0, bg = yellow }), -- |:substitute| replacement text highlighting
     LineNr({ fg = grey0, bg = nil }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
-    CursorLineNr({ fg = fg, bg = bg1 }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     MatchParen({ fg = nil, bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
     ModeMsg({ fg = fg, bg = nil, gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
     -- MsgArea      { }, -- Area for messages and cmdline
@@ -146,10 +151,14 @@ return lush(function()
     QuickFixLine({ fg = purple, bg = nil, gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
     Search({ fg = bg0, bg = green }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     SpecialKey({ fg = bg3, bg = nil }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
+
+    ---- :help spell -------------------------------------------
+
     SpellBad({ fg = red, bg = nil, gui = "undercurl", sp = red }),
     SpellCap({ fg = blue, bg = nil, gui = "undercurl", sp = blue }),
     SpellLocal({ fg = cyan, bg = nil, gui = "undercurl", sp = cyan }),
     SpellRare({ fg = purple, bg = nil, gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
+
     StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
     StatusLineTerm({ fg = grey1, bg = bg1 }), -- status line of current window
     StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
@@ -247,8 +256,8 @@ return lush(function()
     InfoFloat({ fg = blue, bg = bg2 }),
     HintFloat({ fg = green, bg = bg2 }),
 
-    -- These to be deprecated?
-    -- REF: https://github.com/neovim/neovim/pull/15585
+    ---- :help lsp-highlight -----------------------------------
+
     LspDiagnosticsFloatingError({ ErrorFloat }),
     LspDiagnosticsFloatingWarning({ WarningFloat }),
     LspDiagnosticsFloatingInformation({ InfoFloat }),
@@ -269,7 +278,14 @@ return lush(function()
     LspDiagnosticsSignWarning({ YellowSign }),
     LspDiagnosticsSignInformation({ BlueSign }),
     LspDiagnosticsSignHint({ AquaSign }),
-    -- .. and to be replaced with these:
+    LspReferenceText({ CurrentWord }),
+    LspReferenceRead({ CurrentWord }),
+    LspReferenceWrite({ CurrentWord }),
+    LspCodeLens({ InfoFloat }), -- Used to color the virtual text of the codelens,
+
+    ---- :help diagnostic-highlight ----------------------------
+
+    -- REF: https://github.com/neovim/neovim/pull/15585
     DiagnosticFloatingError({ ErrorFloat }),
     DiagnosticFloatingWarning({ WarningFloat }),
     DiagnosticFloatingInformation({ InfoFloat }),
@@ -291,11 +307,10 @@ return lush(function()
     DiagnosticSignInformation({ BlueSign }),
     DiagnosticSignHint({ AquaSign }),
 
-    LspReferenceText({ CurrentWord }),
-    LspReferenceRead({ CurrentWord }),
-    LspReferenceWrite({ CurrentWord }),
-    LspCodeLens({ InfoFloat }), -- Used to color the virtual text of the codelens,
     TermCursor({ Cursor }),
+
+    ---- :help health ----------------------------
+
     healthError({ Red }),
     healthSuccess({ Green }),
     healthWarning({ Yellow }),
@@ -373,6 +388,8 @@ return lush(function()
     -- htmlStrike({ mkdStrike }),
     -- htmlBoldItalic({}),
 
+    ---- :help nvim-treesitter-highlights (external plugin) ----
+
     TSAnnotation({ Purple }),
     TSAttribute({ Purple }),
     TSBoolean({ Purple }),
@@ -419,10 +436,14 @@ return lush(function()
     TSVariableBuiltin({ PurpleItalic }),
     TSEmphasis({ fg = nil, bg = nil, gui = "bold" }),
     TSUnderline({ fg = nil, bg = nil, gui = "underline" }),
+
     GitGutterAdd({ GreenSign }),
     GitGutterChange({ BlueSign }),
     GitGutterDelete({ RedSign }),
     GitGutterChangeDelete({ PurpleSign }),
+
+    ---- :help :diff -------------------------------------------
+
     diffAdded({ Green }),
     diffRemoved({ Red }),
     diffChanged({ Blue }),
@@ -431,6 +452,9 @@ return lush(function()
     diffFile({ Aqua }),
     diffLine({ Grey }),
     diffIndexLine({ Purple }),
+
+    --- netrw: there's no comprehensive list of highlights... --
+
     netrwDir({ Green }),
     netrwClassify({ Green }),
     netrwLink({ Grey }),
@@ -441,6 +465,9 @@ return lush(function()
     netrwHelpCmd({ Blue }),
     netrwCmdSep({ Grey }),
     netrwVersion({ Orange }),
+
+    ---- :help elixir -------------------------------------------
+
     elixirStringDelimiter({ Green }),
     elixirKeyword({ Orange }),
     elixirInterpolation({ Yellow }),
@@ -487,5 +514,11 @@ return lush(function()
     CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
     -- { 'CmpItemAbbrDeprecated', { gui = 'strikethrough', inherit = 'Comment' } },
     --     { 'CmpItemAbbrMatchFuzzy', { gui = 'italic', guifg = 'fg' } }
+    IndentBlanklineContextChar({ fg = grey2, bg = nil }),
+
+    OrgDone({ fg = bright_green, bg = nil }),
+    OrgDONE({ fg = bright_green, bg = nil }),
+    OrgAgendaScheduled({ fg = green, bg = nil }),
+    OrgAgendaDay({ Directory }),
   }
 end)
