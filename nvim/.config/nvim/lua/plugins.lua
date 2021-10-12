@@ -77,6 +77,7 @@ return {
   "vijaymarupudi/nvim-fzf",
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
+  "kyazdani42/nvim-tree.lua",
 
   --
   -- (text objects) --

@@ -1244,6 +1244,51 @@ local function setup_filetype()
   })
 end
 
+local function setup_nvim_tree()
+  local action = require("nvim-tree.config").nvim_tree_callback
+  vim.g.nvim_tree_icons = {
+    default = "",
+    git = {
+      unstaged = "",
+      staged = "",
+      unmerged = "",
+      renamed = "",
+      untracked = "",
+      deleted = "",
+    },
+  }
+  vim.g.nvim_tree_special_files = {}
+  vim.g.nvim_tree_indent_markers = 1
+  vim.g.nvim_tree_group_empty = 1
+  vim.g.nvim_tree_git_hl = 1
+  vim.g.nvim_tree_width_allow_resize = 1
+  vim.g.nvim_tree_root_folder_modifier = ":t"
+  vim.g.nvim_tree_ignore = { ".DS_Store", "fugitive:", ".git" }
+  vim.g.nvim_tree_highlight_opened_files = 1
+  require("nvim-tree").setup({
+    view = {
+      width = "20%",
+      auto_resize = true,
+      list = {
+        { key = "cd", cb = action("cd") },
+      },
+      side = "left",
+    },
+    diagnostics = {
+      enable = true,
+    },
+    disable_netrw = true,
+    hijack_netrw = true,
+    open_on_setup = true,
+    hijack_cursor = true,
+    update_cwd = true,
+    update_focused_file = {
+      enable = true,
+      update_cwd = true,
+    },
+  })
+end
+
 setup_nvim_options()
 setup_treesitter()
 setup_golden_size()
@@ -1282,3 +1327,4 @@ setup_shade()
 setup_tabout()
 setup_headlines()
 setup_filetype()
+setup_nvim_tree()

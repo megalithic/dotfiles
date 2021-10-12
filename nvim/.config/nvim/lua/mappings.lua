@@ -199,6 +199,10 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>")
 map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org, prompt = "ORG  " })<cr>]])
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
 
+-- # nvim-tree
+-- map("n", "-", "<cmd>NvimTreeToggle<CR>")
+map("n", "<C-n>", "<cmd>NvimTreeToggle<CR>")
+
 -- # tmux
 do
   local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
