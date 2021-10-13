@@ -159,6 +159,9 @@
   ; stash specific file(s) with a contextual message
   ; git stash push -m <message> <filename>
 
+[clean]
+  requireForce = true
+
 [mergetool]
   prompt = true
 
