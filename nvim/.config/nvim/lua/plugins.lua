@@ -26,6 +26,7 @@ return {
   -- "folke/which-key.nvim",
   "goolord/alpha-nvim",
   "megalithic/shade.nvim",
+  -- "akinsho/bufferline.nvim",
 
   --
   -- (lsp/completion) --

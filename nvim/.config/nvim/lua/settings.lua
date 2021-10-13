@@ -1292,6 +1292,10 @@ local function setup_nvim_tree()
   })
 end
 
+local function setup_bufferline()
+  require("bufferline").setup({})
+end
+
 setup_nvim_options()
 setup_treesitter()
 setup_golden_size()
@@ -1331,3 +1335,4 @@ setup_tabout()
 setup_headlines()
 setup_filetype()
 setup_nvim_tree()
+-- setup_bufferline()

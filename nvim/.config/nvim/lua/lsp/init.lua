@@ -155,25 +155,48 @@ local function setup_completion()
   --   end
   -- end
 
-  local function tab(_) -- _fallback
+  -- local function tab(_) -- _fallback
+  --   if cmp.visible() then
+  --     cmp.select_next_item()
+  --   elseif luasnip and luasnip.expand_or_jumpable() then
+  --     luasnip.expand_or_jump()
+  --   elseif utils.check_back_space() then
+  --     fn.feedkeys(utils.t("<Tab>"), "n")
+  --   else
+  --     api.nvim_feedkeys(utils.t("<Plug>(Tabout)"), "", true)
+  --   end
+  -- end
+
+  -- local function shift_tab(_) -- _fallback
+  --   if cmp.visible() then
+  --     cmp.select_prev_item()
+  --   elseif luasnip and luasnip.jumpable(-1) then
+  --     luasnip.expand_or_jump()
+  --   else
+  --     api.nvim_feedkeys(utils.t("<Plug>(TaboutBack)"), "", true)
+  --   end
+  -- end
+  local function feed(key, mode)
+    api.nvim_feedkeys(utils.t(key), mode or "", true)
+  end
+
+  local function tab(_)
     if cmp.visible() then
       cmp.select_next_item()
     elseif luasnip and luasnip.expand_or_jumpable() then
-      luasnip.exand_or_jump()
-    elseif utils.check_back_space() then
-      fn.feedkeys(utils.t("<Tab>"), "n")
+      luasnip.expand_or_jump()
     else
-      api.nvim_feedkeys(utils.t("<Plug>(Tabout)"), "", true)
+      feed("<Plug>(Tabout)")
     end
   end
 
-  local function shift_tab(_) -- _fallback
+  local function shift_tab(_)
     if cmp.visible() then
       cmp.select_prev_item()
     elseif luasnip and luasnip.jumpable(-1) then
-      luasnip.exand_or_jump()
+      luasnip.jump(-1)
     else
-      api.nvim_feedkeys(utils.t("<Plug>(TaboutBack)"), "", true)
+      feed("<Plug>(TaboutBack)")
     end
   end
 
@@ -195,8 +218,8 @@ local function setup_completion()
       border = "rounded",
     },
     mapping = {
-      -- ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
-      -- ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
+      ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
+      ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
       ["<C-b>"] = cmp.mapping.scroll_docs(-4),
       ["<C-f>"] = cmp.mapping.scroll_docs(4),
       ["<C-Space>"] = cmp.mapping.complete(),
