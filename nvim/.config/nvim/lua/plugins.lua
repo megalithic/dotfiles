@@ -66,7 +66,6 @@ return {
   "nvim-treesitter/playground",
   "RRethy/nvim-treesitter-textsubjects",
   "mfussenegger/nvim-ts-hint-textobject",
-  "ikatyang/tree-sitter-markdown",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",

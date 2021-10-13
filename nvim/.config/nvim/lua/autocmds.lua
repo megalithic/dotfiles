@@ -107,7 +107,7 @@ augroup("terminal", {
 augroup("filetypes", {
   {
     events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.lexs", "*.heex", "*.exs" },
+    targets = { "*.lexs", "*.exs" },
     command = "set filetype=elixir",
   },
   {
