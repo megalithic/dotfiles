@@ -201,4 +201,5 @@ return {
   "avakhov/vim-yaml",
   "chr4/nginx.vim",
   "nanotee/luv-vimdocs",
+  "fladson/vim-kitty",
 }
