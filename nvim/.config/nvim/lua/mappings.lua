@@ -201,8 +201,7 @@ map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
 
 -- # nvim-tree
--- map("n", "-", "<cmd>NvimTreeToggle<CR>")
-map("n", "<C-n>", "<cmd>NvimTreeToggle<CR>")
+-- map("n", "<C-'>", ":lua require('nvim-tree').toggle()<CR>")
 
 -- # tmux
 -- do
