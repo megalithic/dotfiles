@@ -1062,12 +1062,34 @@ local function setup_alpha()
   -- 		return plugins
   -- 	end
 
+  -- local function git_cwd(cmd, cwd)
+  --   if not cwd then
+  --     return cmd
+  --   end
+  --   cwd = vim.fn.expand(cwd)
+  --   local arg_cwd = ("-C %s "):format(vim.fn.shellescape(cwd))
+  --   cmd = cmd:gsub("^git ", "git " .. arg_cwd)
+  --   return cmd
+  -- end
+
+  -- local function git_root(cwd, noerr)
+  --   local cmd = git_cwd("git rev-parse --show-toplevel", cwd)
+  --   local output = vim.fn.systemlist(cmd)
+  --   if vim.v.shell_error ~= 0 then
+  --     if not noerr then
+  --       mega.dump(output)
+  --     end
+  --     return nil
+  --   end
+  --   return output[1]
+  -- end
+
   local function footer()
     -- local total_plugins = #vim.tbl_keys(packer_plugins)
     local datetime = os.date("%d-%m-%Y  %H:%M:%S")
-    -- return paqs() .. " plugins  " .. datetime
+    return vim.loop.cwd() .. " (" .. vim.fn["gitbranch#name"]() .. ") | " .. datetime
     -- return "  " .. datetime
-    return datetime
+    -- return datetime
   end
 
   -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
@@ -1103,6 +1125,7 @@ local function setup_alpha()
 
   dashboard.section.footer.val = footer()
   dashboard.section.footer.opts.hl = "Constant"
+  dashboard.section.footer.opts.position = "center"
 
   alpha.setup(dashboard.opts)
 end
