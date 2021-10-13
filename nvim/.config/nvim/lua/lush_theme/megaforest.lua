@@ -388,6 +388,19 @@ return lush(function()
     -- htmlStrike({ mkdStrike }),
     -- htmlBoldItalic({}),
 
+    -- M.link("Dash", "markdownBold")
+    -- M.highlight("CodeBlock", { bg = M.colors.dimm_black })
+    -- M.highlight("HeadlineGreen", { bg = M.colors.diff_green })
+    -- M.highlight("HeadlineYellow", { bg = M.colors.diff_yellow })
+    -- M.highlight("HeadlineBlue", { bg = M.colors.dark_cursor_grey })
+    -- M.highlight("HeadlineRed", { bg = M.colors.diff_red })
+    -- M.highlight("HeadlinePurple", { bg = M.colors.diff_purple })
+    -- vim.fn.sign_define("HeadlineGreen", { linehl = "HeadlineGreen" })
+    -- vim.fn.sign_define("HeadlineYellow", { linehl = "HeadlineYellow" })
+    -- vim.fn.sign_define("HeadlineBlue", { linehl = "HeadlineBlue" })
+    -- vim.fn.sign_define("HeadlineRed", { linehl = "HeadlineRed" })
+    -- vim.fn.sign_define("HeadlinePurple", { linehl = "HeadlinePurple" })
+
     ---- :help nvim-treesitter-highlights (external plugin) ----
 
     TSAnnotation({ Purple }),
@@ -446,6 +459,29 @@ return lush(function()
     GitGutterChange({ BlueSign }),
     GitGutterDelete({ RedSign }),
     GitGutterChangeDelete({ PurpleSign }),
+
+    ---- :help gitcommit -------------------------------------------
+
+    -- M.highlight("gitcommitComment", { fg = M.colors.gutter_fg_grey, gui = "italic,bold" })
+    -- M.highlight("gitcommitUnmerged", { fg = M.colors.green })
+    -- M.highlight("gitcommitOnBranch", {})
+    -- M.highlight("gitcommitBranch", { fg = M.colors.purple })
+    -- M.highlight("gitcommitDiscardedType", { fg = M.colors.red })
+    -- M.highlight("gitcommitSelectedType", { fg = M.colors.green })
+    -- M.highlight("gitcommitHeader", {})
+    -- M.highlight("gitcommitUntrackedFile", { fg = M.colors.cyan })
+    -- M.highlight("gitcommitDiscardedFile", { fg = M.colors.red })
+    -- M.highlight("gitcommitSelectedFile", { fg = M.colors.green })
+    -- M.highlight("gitcommitUnmergedFile", { fg = M.colors.yellow })
+    -- M.highlight("gitcommitFile", {})
+    -- M.highlight("gitcommitSummary", { fg = M.colors.white })
+    -- M.highlight("gitcommitOverflow", { fg = M.colors.red })
+    -- M.link("gitcommitUntracked", "gitcommitComment")
+    -- M.link("gitcommitDiscarded", "gitcommitComment")
+    -- M.link("gitcommitSelected", "gitcommitComment")
+    -- M.link("gitcommitDiscardedArrow", "gitcommitDiscardedFile")
+    -- M.link("gitcommitSelectedArrow", "gitcommitSelectedFile")
+    -- M.link("gitcommitUnmergedArrow", "gitcommitUnmergedFile")
 
     ---- :help :diff -------------------------------------------
 

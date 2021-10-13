@@ -55,19 +55,11 @@ augroup("auto-cursor", {
     end
   end,
 })
-
--- augroup("NvimTreeOverrides", {
--- 	{
--- 		events = { "ColorScheme" },
--- 		targets = { "*" },
--- 		command = set_highlights,
--- 	},
--- 	{
--- 		events = { "FileType" },
--- 		targets = { "NvimTree" },
--- 		command = set_highlights,
--- 	},
--- })
+augroup("auto-mkdir", {
+  events = { "BufNewFile" },
+  targets = { "*" },
+  command = mega.auto_mkdir(),
+})
 
 augroup("paq", {
   {
@@ -77,13 +69,13 @@ augroup("paq", {
   },
 })
 
-augroup("focus", {
-  {
-    events = { "TermOpen" },
-    targets = { "*" },
-    command = "silent setlocal norelativenumber nospell nonumber nocursorcolumn nocursorline",
-  },
-})
+-- augroup("focus", {
+--   {
+--     events = { "TermOpen" },
+--     targets = { "*" },
+--     command = "silent setlocal norelativenumber nospell nonumber nocursorcolumn nocursorline",
+--   },
+-- })
 
 augroup("yank_highlighted_region", {
   {

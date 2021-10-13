@@ -86,14 +86,14 @@ local function setup_treesitter()
     },
     filetype = "org",
   }
-  parser_config.embedded_template = {
-    install_info = {
-      url = "https://github.com/tree-sitter/tree-sitter-embedded-template",
-      files = { "src/parser.c" },
-      requires_generate_from_grammar = true,
-    },
-    used_by = { "eex", "leex", "sface", "eelixir", "eruby", "erb" },
-  }
+  -- parser_config.embedded_template = {
+  --   install_info = {
+  --     url = "https://github.com/tree-sitter/tree-sitter-embedded-template",
+  --     files = { "src/parser.c" },
+  --     requires_generate_from_grammar = true,
+  --   },
+  --   used_by = { "eex", "leex", "sface", "eelixir", "eruby", "erb" },
+  -- }
   parser_config.markdown = {
     install_info = {
       url = "https://github.com/ikatyang/tree-sitter-markdown",
@@ -112,7 +112,7 @@ local function setup_treesitter()
       "dockerfile",
       "elixir",
       "elm",
-      "embedded_template",
+      -- "embedded_template",
       "erlang",
       "fish",
       "go",
@@ -1194,34 +1194,46 @@ local function setup_tabout()
 end
 
 local function setup_headlines()
+  vim.cmd([[highlight Headline1 guibg=#1e2718]])
+  vim.cmd([[highlight Headline2 guibg=#21262d]])
+  vim.cmd([[highlight CodeBlock guibg=#1c1c1c]])
+  vim.cmd([[highlight Dash guibg=#D19A66 gui=bold]])
+  vim.fn.sign_define("Headline1", { linehl = "Headline1" })
+  vim.fn.sign_define("Headline2", { linehl = "Headline2" })
+
+  -- require("headlines").setup {
+  --     org = {
+  --         headline_signs = { "Headline1", "Headline2" },
+  --     },
+  -- }
   require("headlines").setup({
     markdown = {
       source_pattern_start = "^```",
       source_pattern_end = "^```$",
       dash_pattern = "^---+$",
       headline_pattern = "^#+",
-      headline_signs = { "Headline" },
+      headline_signs = { "Headline1", "Headline2" },
       codeblock_sign = "CodeBlock",
       dash_highlight = "Dash",
     },
-    rmd = {
-      source_pattern_start = "^```",
-      source_pattern_end = "^```$",
-      dash_pattern = "^---+$",
-      headline_pattern = "^#+",
-      headline_signs = { "Headline" },
-      codeblock_sign = "CodeBlock",
-      dash_highlight = "Dash",
-    },
-    vimwiki = {
-      source_pattern_start = "^{{{%a+",
-      source_pattern_end = "^}}}$",
-      dash_pattern = "^---+$",
-      headline_pattern = "^=+",
-      headline_signs = { "Headline" },
-      codeblock_sign = "CodeBlock",
-      dash_highlight = "Dash",
-    },
+    -- rmd = {
+    --   source_pattern_start = "^```",
+    --   source_pattern_end = "^```$",
+    --   dash_pattern = "^---+$",
+    --   headline_pattern = "^#+",
+    --   headline_signs = { "Headline" },
+    --   codeblock_sign = "CodeBlock",
+    --   dash_highlight = "Dash",
+    -- },
+    -- vimwiki = {
+    --   source_pattern_start = "^{{{%a+",
+    --   source_pattern_end = "^}}}$",
+    --   dash_pattern = "^---+$",
+    --   headline_pattern = "^=+",
+    --   headline_signs = { "Headline" },
+    --   codeblock_sign = "CodeBlock",
+    --   dash_highlight = "Dash",
+    -- },
     org = {
       source_pattern_start = "#%+[bB][eE][gG][iI][nN]_[sS][rR][cC]",
       source_pattern_end = "#%+[eE][nN][dD]_[sS][rR][cC]",
@@ -1324,6 +1336,6 @@ setup_git_messenger()
 -- setup_distant()
 setup_shade()
 setup_tabout()
--- setup_headlines()
+setup_headlines()
 setup_filetype()
 setup_nvim_tree()

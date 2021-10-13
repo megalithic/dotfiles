@@ -55,6 +55,18 @@ function M.isdir(path)
   return file_exists(path .. "/")
 end
 
+-- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`
+function M.auto_mkdir()
+  local dir = fn.expand("%:p:h")
+
+  if fn.isdirectory(dir) == 0 then
+    local create_dir = fn.input(string.format("[?] Parent dir [%s] doesn't exist; create it? (yes|no)", dir))
+    if create_dir == "y" or create_dir == "yes" then
+      fn.mkdir(dir, "p")
+    end
+  end
+end
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -456,15 +468,6 @@ function M.has(feature)
   return fn.has(feature) > 0
 end
 
--- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`
-function M.auto_mkdir()
-  local dir = fn.expand("%:p:h")
-
-  if fn.isdirectory(dir) == 0 then
-    fn.mkdir(dir, "p")
-  end
-end
-
 function M.zetty(args)
   local default_opts = {
     cmd = "meeting",
@@ -498,7 +501,8 @@ function M.zetty(args)
 end
 
 function M.plugins()
-  M.log("paq-nvim: syncing plugins..")
+  -- M.log("paq-nvim: syncing plugins..")
+  M.log("syncing plugins.. ", "Debug", "paq-nvim")
 
   package.loaded["plugins"] = nil
   require("paq"):setup({ verbose = false })(require("plugins")):sync()

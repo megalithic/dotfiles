@@ -8,11 +8,6 @@
   -- " based on: https://www.reddit.com/r/vim/comments/h8pgor/til_conceal_in_vim/
   -- " youtube video: https://youtu.be/UuHJloiDErM?t=793
   -- Custom conceal (does not work with existing syntax highlight plugin)
-  vim.cmd([[syntax match todoCheckbox "\v.*\[\ \]"hs=e-2 conceal cchar=]])
-  vim.cmd([[syntax match todoCheckbox "\v.*\[x\]"hs=e-2 conceal cchar=]])
-  mega.highlight("Conceal", {guibg="NONE"})
-  -- https://vi.stackexchange.com/a/4003/16249
-  vim.cmd([[syntax match NoSpellAcronym '\<\(\u\|\d\)\{3,}s\?\>' contains=@NoSpell]])
 
   vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 
@@ -20,7 +15,6 @@
   vim.o.makeprg = [[open %]]
   vim.o.textwidth = 0
   vim.o.wrapmargin = 0
-  vim.o.list = false
   vim.o.wrap = true
   vim.cmd([[setlocal spell linebreak textwidth=0 wrap conceallevel=2]])
 
@@ -28,6 +22,19 @@
 
   -- continuous meeting note datetime entry
   vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
+
+  vim.cmd([[
+  setlocal nowrap
+  setlocal spell
+  setlocal nolist
+  setlocal colorcolumn=
+  setlocal foldexpr=markdown#FoldExpression(v:lnum)
+  setlocal foldmethod=expr
+  setlocal formatoptions+=t
+  setlocal nolist
+  ]])
+vim.opt_local.spell = true
+vim.opt_local.list = false
 
   -- mega.augroup(
   --   "mega.filetypes",
