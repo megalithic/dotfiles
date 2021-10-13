@@ -131,7 +131,6 @@ return {
     -- mega.color_overrides = function()
     --   hi("Group", {guifg = cs.fg, guibg = cs.bg, gui = "", force = true})
     -- end
-
     -- mega.augroup("colorscheme_overrides", {
     --   {
     --     events = { "ColorScheme" },

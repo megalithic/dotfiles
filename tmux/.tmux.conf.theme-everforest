@@ -47,7 +47,9 @@ set -g status-left-length 100
 
 # - windows - 旅
 setw -g window-status-format "#{?window_zoomed_flag, ,○ }#I:#W "
+setw -g window-status-style "fg=#415c6d"
 setw -g window-status-current-format "#{?window_zoomed_flag,#[fg=red] ,#[fg=blue,bold,bg=#323d43]● }#I:#W "
+setw -g window-status-current-style bg=default,fg=blue
 # -- #{?#(tmux-ssh),(ssh) ,}
  # -- #(echo $SSH_CONNECTION &>/dev/null && 'ssh')
 setw -g window-status-activity-style none
@@ -55,7 +57,6 @@ setw -g window-status-activity-style none
 setw -g window-status-bell-style 'fg=#323d43,bg=#6a7d8a,dim'
 # setw -g window-status-bell-style bg=default,fg=brightred
 # setw -g window-status-current-style none
-setw -g window-status-current-style bg=default,fg=colour004
 
 # - right -
 # Broken UTC output in tmux~HEAD:
