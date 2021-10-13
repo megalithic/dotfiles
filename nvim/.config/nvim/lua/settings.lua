@@ -1048,48 +1048,17 @@ local function setup_alpha()
   end
 
   local function pick_color()
-    local colors = { "String", "Identifier", "Keyword", "Number" }
-    return colors[math.random(#colors)]
+    local clrs = { "String", "Identifier", "Keyword", "Number" }
+    return clrs[math.random(#clrs)]
   end
 
-  -- 	local function paqs()
-  -- 		local handle = io.popen(
-  -- 			'fd -d 2 . "$HOME/.local/share/nvim/site/pack/paqs/start" | head -n -2 | wc -l | tr -d "\n" '
-  -- 		)
-  -- 		local plugins = handle:read("*a")
-  -- 		handle:close()
-
-  -- 		return plugins
-  -- 	end
-
-  -- local function git_cwd(cmd, cwd)
-  --   if not cwd then
-  --     return cmd
-  --   end
-  --   cwd = vim.fn.expand(cwd)
-  --   local arg_cwd = ("-C %s "):format(vim.fn.shellescape(cwd))
-  --   cmd = cmd:gsub("^git ", "git " .. arg_cwd)
-  --   return cmd
-  -- end
-
-  -- local function git_root(cwd, noerr)
-  --   local cmd = git_cwd("git rev-parse --show-toplevel", cwd)
-  --   local output = vim.fn.systemlist(cmd)
-  --   if vim.v.shell_error ~= 0 then
-  --     if not noerr then
-  --       mega.dump(output)
-  --     end
-  --     return nil
-  --   end
-  --   return output[1]
-  -- end
-
   local function footer()
-    -- local total_plugins = #vim.tbl_keys(packer_plugins)
     local datetime = os.date("%d-%m-%Y  %H:%M:%S")
-    return vim.loop.cwd() .. " (" .. vim.fn["gitbranch#name"]() .. ") | " .. datetime
-    -- return "  " .. datetime
-    -- return datetime
+    return {
+      -- require("colors").icons.git_symbol .. " " .. vim.fn["gitbranch#name"](),
+      vim.loop.cwd(),
+      datetime,
+    }
   end
 
   -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
