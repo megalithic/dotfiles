@@ -117,9 +117,8 @@ return {
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",
-  "jamestthompson3/nvim-remote-containers",
-  -- { "chipsenkbeil/distant.nvim", branch = "MigrateToRustLib" },
-  -- "chipsenkbeil/distant.nvim",
+  -- "jamestthompson3/nvim-remote-containers",
+  "chipsenkbeil/distant.nvim",
 
   --
   -- (the rest...) --

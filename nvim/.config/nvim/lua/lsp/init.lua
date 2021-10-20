@@ -341,9 +341,9 @@ local function on_attach(client, bufnr)
   --- # autocommands/autocmds
   -- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
   -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics(diagnostic_ns)]])
-  au(
-    [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source="if_many", show_header=false})]]
-  )
+  --au(
+  --  [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source="if_many", show_header=false})]]
+  --)
 
   au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
