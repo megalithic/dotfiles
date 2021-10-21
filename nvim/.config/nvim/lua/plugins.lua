@@ -177,6 +177,8 @@ return {
   -- "NFrid/due.nvim",
   -- # ruby/rails
   "tpope/vim-rails",
+  -- # elixir
+  "elixir-editors/vim-elixir",
   -- # elm
   "antew/vim-elm-analyse",
   -- # lua

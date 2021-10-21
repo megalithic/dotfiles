@@ -110,7 +110,7 @@ local function setup_treesitter()
       "css",
       "comment",
       "dockerfile",
-      "elixir",
+      -- "elixir",
       "elm",
       -- "embedded_template",
       "erlang",

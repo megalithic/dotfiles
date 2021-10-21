@@ -452,7 +452,7 @@ return lush(function()
     -- highlight FIXME comments
     commentTSWarning({ fg = red, gui = "bold" }),
     commentTSDanger({ fg = orange, gui = "bold" }),
-    TreesitterContext({ bg = colors.bg1 }),
+    TreesitterContext({ bg = cs.bg1 }),
 
     ---- :help git-gutter -------------------------------------------
 
@@ -570,5 +570,26 @@ return lush(function()
     OrgDONE({ fg = bright_green, bg = nil }),
     OrgAgendaScheduled({ fg = green, bg = nil }),
     OrgAgendaDay({ Directory }),
+
+    ---- :help lightspeed.nvim -------------------------------------------
+
+    -- LightspeedCursor({ fg = cs.bg, bg = cs.blue, gui = "bold, underline" }),
+    -- LightspeedLabel({ fg = cs.red, gui = "bold, underline" }),
+    -- -- LightspeedLabelOverlapped {fg = cs.green_2, gui = "bold"},
+    -- LightspeedLabelDistant({ fg = cs.orange, gui = "bold, underline" }),
+    -- -- LightspeedLabelDistantOverlapped {fg = cs.orange, gui = "bold"},
+    -- LightspeedShortcut({
+    --   fg = cs.bg,
+    --   bg = cs.yellow_2,
+    --   gui = "bold",
+    -- }),
+    -- -- LightspeedShortcutOverlapped {fg = cs.bg, bg = cs.green_2, gui = "bold"},
+    -- LightspeedMaskedChar({ fg = cs.fg, gui = "bold" }),
+    -- LightspeedGreyWash({ fg = cs.bg3 }),
+    -- LightspeedUnlabeledMatch({ fg = cs.fg, gui = "italic, bold" }),
+    -- LightspeedOneCharMatch({ fg = cs.bg, bg = cs.yellow_2, gui = "bold" }),
+    -- -- LightspeedUniqueChar {fg = cs.white, gui = "bold"},
+    -- -- LightspeedPendingOpArea {fg = cs.fg, bg = cs.lightspeed.primary},
+    -- -- LightspeedPendingChangeOpArea {fg = cs.lightspeed.primary, gui = "italic, strikethrough"},
   }
 end)
