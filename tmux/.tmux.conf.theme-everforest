@@ -14,7 +14,7 @@ setw -g pane-active-border-style 'bg=#323d43,fg=blue'
 # set -g pane-active-border-style 'bg=#323d43,fg=#6A7D89'
 
 # dim inactive window text
-set -g window-style 'bg=#323d43,fg=#666666,dim'
+set -g window-style 'bg=#323d43,fg=#666666'
 set -g window-active-style 'bg=#323d43,fg=white'
 # setw -g window-status-activity-style 'bg=red'
 

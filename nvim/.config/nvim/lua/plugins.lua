@@ -53,6 +53,7 @@ return {
   "folke/trouble.nvim",
   "SmiteshP/nvim-gps",
   "abecodes/tabout.nvim",
+  { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
 
   --
   -- (treesitter) --

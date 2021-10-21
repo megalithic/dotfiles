@@ -452,6 +452,7 @@ return lush(function()
     -- highlight FIXME comments
     commentTSWarning({ fg = red, gui = "bold" }),
     commentTSDanger({ fg = orange, gui = "bold" }),
+    TreesitterContext({ bg = colors.bg1 }),
 
     ---- :help git-gutter -------------------------------------------
 
@@ -551,11 +552,19 @@ return lush(function()
     helpExample({ Green }),
     helpSpecial({ Blue }),
     helpSectionDelim({ Grey }),
+
+    ---- :help nvim-cmp -------------------------------------------
+
+    CmpItemKind({ Special }),
+    CmpItemAttr({ Comment }),
+    CmpItemMenu({ NonText }),
+    CmpItemAbbrMatch({ PmenuSel, gui = "bold" }),
     CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
     CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
-    -- { 'CmpItemAbbrDeprecated', { gui = 'strikethrough', inherit = 'Comment' } },
-    --     { 'CmpItemAbbrMatchFuzzy', { gui = 'italic', guifg = 'fg' } }
+
     IndentBlanklineContextChar({ fg = grey2, bg = nil }),
+
+    ---- :help orgmode.nvim -------------------------------------------
 
     OrgDone({ fg = bright_green, bg = nil }),
     OrgDONE({ fg = bright_green, bg = nil }),

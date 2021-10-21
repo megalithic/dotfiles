@@ -25,4 +25,10 @@ vim.bo.formatoptions = vim.bo.formatoptions .. "t"
 
 -- set specific sources for nvim-cmp for specific filetype
 -- require("cmp").setup.buffer({ enabled = false })
-require("cmp").setup.buffer({ sources = { { name = "buffer" }, { name = "spell" }, { name = "emoji" } } })
+require("cmp").setup.buffer({
+  sources = {
+    { name = "buffer" },
+    { name = "spell" },
+    { name = "emoji" },
+  },
+})

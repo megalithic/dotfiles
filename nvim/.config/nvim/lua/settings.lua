@@ -1296,6 +1296,10 @@ local function setup_bufferline()
   require("bufferline").setup({})
 end
 
+local function setup_dd()
+  require("dd").setup({ timeout = 1000 })
+end
+
 setup_nvim_options()
 setup_treesitter()
 setup_golden_size()
@@ -1336,3 +1340,4 @@ setup_headlines()
 setup_filetype()
 setup_nvim_tree()
 -- setup_bufferline()
+setup_dd()
