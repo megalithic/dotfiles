@@ -1,6 +1,7 @@
 # -- app store (mas) --
 
 mas "Fantastical", id: 975937182
+mas "Mayday", id: 1473168024
 mas "Spark", id: 1176895641
 mas "Canary Mail", id: 1236045954
 # mas "Tweetbot", id: 557168941
