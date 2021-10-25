@@ -4,7 +4,7 @@
 local appw = hs.application.watcher
 local module = { apps = {}, observers = {}, windows = {} }
 
-local spaces = require("hs._asm.undocumented.spaces")
+-- local spaces = require("hs._asm.undocumented.spaces")
 -- local desktop = require("desktop")
 
 module.appEvents = {
@@ -38,23 +38,14 @@ module.getWindowsPerSpace = function()
 end
 
 ---@return hs.window[]
-module.getWindows = function(currentSpaceOnly)
+module.getWindows = function()
   -- local mySpace = desktop.activeSpace()
   local ret = {}
   for _, windows in pairs(module.windows) do
     for _, ax in pairs(windows) do
       if ax:isValid() then
         local win = ax:asHSWindow()
-        local keep = false
-        if currentSpaceOnly then
-          for _, space in pairs(win:spaces()) do
-            -- if space == mySpace then
-            keep = true
-            -- end
-          end
-        else
-          keep = true
-        end
+        local keep = true
         if keep then
           table.insert(ret, win)
         end
@@ -175,14 +166,6 @@ module._watchApp =
     end
   end
 
-module._updateSpaces = function()
-  for _, space in pairs(spaces.layout()[spaces.mainScreenUUID()]) do
-    for _, w in pairs(spaces.allWindowsForSpace(space)) do
-      module._addAppWindow(w:application(), hs.axuielement.windowElement(w))
-    end
-  end
-end
-
 module._updateRunning = function()
   for _, app in ipairs(hs.application.runningApplications()) do
     module._watchApp(app)
@@ -248,14 +231,8 @@ module._appWatcher = appw.new(function(appName, event, app)
   end
 end)
 
-module._spaceWatcher = hs.spaces.watcher.new(module._updateRunning)
-
 module.start = function()
-  module._updateSpaces()
-  module._spaceWatcher:start()
   module._appWatcher:start()
 end
-
-module.start()
 
 return module

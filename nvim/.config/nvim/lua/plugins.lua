@@ -79,6 +79,8 @@ return {
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
+  "nvim-telescope/telescope.nvim",
+  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
 
   --
   -- (text objects) --

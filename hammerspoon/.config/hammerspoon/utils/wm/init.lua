@@ -15,19 +15,16 @@ local cache = {
   dock_watcher = {},
   new_app_watcher = {},
   running_app_watcher = {},
-  element_event_watcher = {}
+  element_event_watcher = {},
 }
 
 local M = {
-  cache = cache
+  cache = cache,
 }
 
 local wh = require("utils.wm.window-handlers")
 local fn = require("hs.fnutils")
-
-local get_app_config = function(bundleID)
-  return Config.apps[bundleID]
-end
+local running = require("utils.wm.running")
 
 -- return true if title matches pattern
 local function match_title(title, pattern)
@@ -68,7 +65,7 @@ local gather_windows = function(app)
   local windows = {
     all = app:allWindows(),
     valid = validWindows,
-    managed = managedWindows
+    managed = managedWindows,
   }
 
   return windows
@@ -112,33 +109,30 @@ M.set_app_layout = function(app_config)
   if app_config.rules and #app_config.rules > 0 then
     log.df("set_app_layout::%s", bundleID, hs.inspect(app_config.rules))
 
-    fn.map(
-      app_config.rules,
-      function(rule)
-        -- hold-over to protect from old app configs
-        -- TODO: remove if not needed
-        if rule["title"] ~= nil or rule["action"] ~= nil or rule["position"] ~= nil then
-          return
-        end
-
-        local title_pattern, screen, position = rule[1], rule[2], rule[3]
-
-        log.df("set_app_layout::%s | %s, %s, %s", bundleID, title_pattern, screen, position)
-
-        local layout = {
-          hs.application.get(bundleID), -- application name
-          title_pattern, -- window title
-          -- hs.window.get(title_pattern), -- window title NOTE: this doesn't
-          -- handle `nil` window title instances
-          wh.targetDisplay(screen), -- screen #
-          position, -- layout/postion
-          nil,
-          nil
-        }
-
-        table.insert(layouts, layout)
+    fn.map(app_config.rules, function(rule)
+      -- hold-over to protect from old app configs
+      -- TODO: remove if not needed
+      if rule["title"] ~= nil or rule["action"] ~= nil or rule["position"] ~= nil then
+        return
       end
-    )
+
+      local title_pattern, screen, position = rule[1], rule[2], rule[3]
+
+      log.df("set_app_layout::%s | %s, %s, %s", bundleID, title_pattern, screen, position)
+
+      local layout = {
+        hs.application.get(bundleID), -- application name
+        title_pattern, -- window title
+        -- hs.window.get(title_pattern), -- window title NOTE: this doesn't
+        -- handle `nil` window title instances
+        wh.targetDisplay(screen), -- screen #
+        position, -- layout/postion
+        nil,
+        nil,
+      }
+
+      table.insert(layouts, layout)
+    end)
   end
 
   return layouts
@@ -157,7 +151,7 @@ M.apply_app_layout = function(app_name, app)
       log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
       -- hs.layout.apply(layouts, string.match)
       hs.layout.apply(layouts, match_title)
-    -- hs.layout.apply(layouts)
+      -- hs.layout.apply(layouts)
     end
   end
 end
@@ -223,16 +217,12 @@ M.watch_existing_window = function(window)
   -- Watch for window-closed events, if a window with an ID exists..
   if window_id then
     if not watched_windows[window_id] then
-      local window_watcher =
-        window:newWatcher(
-        M.handle_window_element_event,
-        {
-          id = window_id,
-          pid = pid
-        }
-      )
+      local window_watcher = window:newWatcher(M.handle_window_element_event, {
+        id = window_id,
+        pid = pid,
+      })
       watched_windows[window_id] = window_watcher
-      window_watcher:start({cache.element_event_watcher.elementDestroyed})
+      window_watcher:start({ cache.element_event_watcher.elementDestroyed })
     end
   else
     log.wf("unable to watch window [%s - %s, %s]", window_id, bundleID, window:title())
@@ -263,11 +253,11 @@ M.watch_running_app = function(app, event)
   local app_watcher = app:newWatcher(M.handle_app_element_event)
   cache.running_app_watcher[pid] = {
     watcher = app_watcher,
-    windows = {}
+    windows = {},
   }
   -- start up a special hs.uielement.watcher for windows and watch specifically
   -- for newly created windows.
-  app_watcher:start({cache.element_event_watcher.windowCreated})
+  app_watcher:start({ cache.element_event_watcher.windowCreated })
 
   -- begin watching for existing windows..
   -- TODO: determine if we want to handle on specific windows defined in our
@@ -339,6 +329,9 @@ end
 -- initialize watchers
 M.start = function()
   log.i("starting..")
+
+  -- monitor all window/app events
+  running.start()
 
   -- watch for docking status changes..
   cache.dock_watcher = hs.watchable.watch("status.isDocked", M.prepare)

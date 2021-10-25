@@ -1300,6 +1300,59 @@ local function setup_dd()
   require("dd").setup({ timeout = 1000 })
 end
 
+local function setup_telescope()
+  -- telescope - customized pickers
+  local actions = require("telescope.actions")
+  local utils = require("telescope.utils")
+  require("telescope").setup({
+    extensions = {
+      fzf = {
+        fuzzy = true, -- false will only do exact matching
+        override_generic_sorter = false,
+        override_file_sorter = true,
+        case_mode = "smart_case", -- this is default
+      },
+    },
+    defaults = {
+      preview = {
+        timeout = 500,
+        msg_bg_fillchar = "",
+      },
+      vimgrep_arguments = {
+        "rg",
+        "--color=never",
+        "--no-heading",
+        "--with-filename",
+        "--line-number",
+        "--column",
+        "--smart-case",
+        "--hidden",
+      },
+      prompt_prefix = "❯ ",
+      selection_caret = "❯ ",
+      sorting_strategy = "ascending",
+      color_devicons = true,
+      layout_config = {
+        prompt_position = "bottom",
+        horizontal = {
+          width_padding = 0.04,
+          height_padding = 0.1,
+          preview_width = 0.6,
+        },
+        vertical = {
+          width_padding = 0.05,
+          height_padding = 1,
+          preview_height = 0.5,
+        },
+      },
+      mappings = { n = { ["<Del>"] = actions.close } },
+      dynamic_preview_title = true,
+    },
+  })
+  require("telescope").load_extension("fzf")
+  -- require("telescope").load_extension "fzy_native"
+end
+
 setup_nvim_options()
 setup_treesitter()
 setup_golden_size()
@@ -1341,3 +1394,4 @@ setup_filetype()
 setup_nvim_tree()
 -- setup_bufferline()
 setup_dd()
+setup_telescope()

@@ -33,35 +33,29 @@ watchers = require("utils.watchers")
 wm = require("utils.wm")
 
 -- controlplane
-controlplane.enabled = {"dock", "office", "vpn"}
+controlplane.enabled = { "dock", "office", "vpn" }
 
 -- watchers
-watchers.enabled = {"urlevent"} -- urlevent
+watchers.enabled = { "urlevent" } -- urlevent
 watchers.urlPreference = Config.preferred.browsers
 
 -- bindings
-bindings.enabled = {"ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser"}
+bindings.enabled = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" }
 
 -- start/stop modules
-local modules = {wm, bindings, controlplane, watchables, watchers}
+local modules = { wm, bindings, controlplane, watchables, watchers }
 
-hs.fnutils.each(
-  modules,
-  function(module)
-    if module then
-      module.start()
-    end
+hs.fnutils.each(modules, function(module)
+  if module then
+    module.start()
   end
-)
+end)
 
 -- stop modules on shutdown
 hs.shutdownCallback = function()
-  hs.fnutils.each(
-    modules,
-    function(module)
-      if module then
-        module.stop()
-      end
+  hs.fnutils.each(modules, function(module)
+    if module then
+      module.stop()
     end
-  )
+  end)
 end
