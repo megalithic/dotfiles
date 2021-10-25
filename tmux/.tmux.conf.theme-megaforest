@@ -15,8 +15,8 @@ setw -g pane-active-border-style 'bg=#323d43,fg=blue'
 
 # dim inactive window text
 set -g window-style 'bg=#323d43,fg=#666666'
-set -g window-active-style 'bg=#323d43,fg=white'
-# setw -g window-status-activity-style 'bg=red'
+set -g window-active-style 'bg=#323d43,fg=#aaaaaa'
+setw -g window-status-activity-style 'bg=red'
 
 # setw -g window-status-style
 # setw -g window-status-activity-style
@@ -65,9 +65,5 @@ setw -g window-status-bell-style 'fg=#323d43,bg=#6a7d8a,dim'
 # set -g status-right "#{prefix_highlight} #(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=green]%H:%M #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=cyan]%H:%M #[fg=colour255]⋮ #{cpu_percentage}"
 set -g status-right-length 200
-
-set -g @prefix_highlight_empty_attr     'fg=default,bg=#323d43' # default is 'fg=default,bg=default'
-set -g @prefix_highlight_copy_mode_attr 'fg=#323d43,bg=yellow,bold'
-set -g @prefix_highlight_bg             '#323d43'
 
 # vim: ft=tmux tw=0
