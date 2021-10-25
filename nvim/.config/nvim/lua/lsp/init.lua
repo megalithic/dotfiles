@@ -8,7 +8,6 @@ local colors = require("colors")
 local utils = require("utils")
 
 local formatting_provider = "efm" -- efm or null-ls
-local diagnostic_ns = vim.api.nvim_create_namespace("diagnostics")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -46,6 +45,13 @@ local function setup_diagnostics()
     signs = true, -- {severity_limit = "Warning"},
     update_in_insert = false,
     severity_sort = true,
+    float = {
+      show_header = true,
+      source = "if_many",
+      border = "rounded",
+      focusable = false,
+      severity_sort = true,
+    },
   })
 end
 
@@ -58,12 +64,6 @@ local function setup_lsp_handlers()
     max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
   })
-
-  -- diagnostics (< v0.5.1)
-  -- lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(
-  --   lsp.diagnostic.on_publish_diagnostics,
-  --   { underline = true, signs = true, virtual_text = false }
-  -- )
 end
 
 local function setup_completion()
@@ -339,13 +339,8 @@ local function on_attach(client, bufnr)
   map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
   --- # autocommands/autocmds
-  -- au([[User LspDiagnosticsChanged :lua require('utils').lsp.refresh_diagnostics()]])
-  -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics(diagnostic_ns)]])
-  --au(
-  --  [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source="if_many", show_header=false})]]
-  --)
-
-  au("CursorMoved <buffer> lua vim.lsp.buf.clear_references()")
+  au([[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope="line"})]])
+  au([[CursorMoved <buffer> lua vim.lsp.buf.clear_references()]])
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
   vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
 
