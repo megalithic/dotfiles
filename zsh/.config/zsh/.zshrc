@@ -34,7 +34,7 @@ zcomet load ohmyzsh plugins/mix-fast
 zcomet load ohmyzsh plugins/rake
 zcomet load ohmyzsh plugins/rake-fast
 
-if [[ $PLATFORM == "macos" ]]; then
+if [[ $PLATFORM == "linux" ]]; then
 	[[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
