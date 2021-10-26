@@ -562,6 +562,9 @@ return lush(function()
     CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
     CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
 
+    ---- :help luasnip -------------------------------------------
+    -- Luasnip*Node{Active,Passive,SnippetPassive}
+
     IndentBlanklineContextChar({ fg = grey2, bg = nil }),
 
     ---- :help orgmode.nvim -------------------------------------------

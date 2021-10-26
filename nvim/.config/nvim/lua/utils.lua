@@ -160,13 +160,13 @@ function M.lsp.show_diagnostics(ns)
   end)
 end
 
-function M.lsp.refresh_diagnostics()
-  vim.diagnostic.setloclist({ open = false })
-  M.lsp.show_diagnostics()
-  if vim.tbl_isempty(fn.getloclist(0)) then
-    vcmd([[lclose]])
-  end
-end
+-- function M.lsp.refresh_diagnostics()
+--   vim.diagnostic.setloclist({ open = false })
+--   M.lsp.show_diagnostics()
+--   if vim.tbl_isempty(fn.getloclist(0)) then
+--     vcmd([[lclose]])
+--   end
+-- end
 
 -- # [ hover ] -----------------------------------------------------------------
 function M.lsp.hover()

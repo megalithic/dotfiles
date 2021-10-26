@@ -4,7 +4,6 @@ local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, au = mega.map, mega.bufmap, mega.au
 local lspconfig = require("lspconfig")
 local luasnip = require("luasnip")
-local colors = require("colors")
 local utils = require("utils")
 
 local formatting_provider = "efm" -- efm or null-ls
@@ -13,29 +12,41 @@ set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
 local function setup_diagnostics()
-  local sign_error = colors.icons.sign_error -- or: 
-  local sign_warning = colors.icons.sign_warning -- or: 
-  local sign_information = colors.icons.sign_information -- or: 
-  local sign_hint = colors.icons.sign_hint -- or: 
-
-  fn.sign_define(
+  -- LSP signs default
+  vim.fn.sign_define(
     "DiagnosticSignError",
-    { text = sign_error, texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError", linehl = "" }
+    { texthl = "DiagnosticSignError", text = "", numhl = "DiagnosticSignError" }
   )
-  fn.sign_define(
+  vim.fn.sign_define(
     "DiagnosticSignWarning",
-    { text = sign_warning, texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning", linehl = "" }
+    { texthl = "DiagnosticSignWarning", text = "", numhl = "DiagnosticSignWarning" }
   )
-  fn.sign_define("DiagnosticSignInformation", {
-    text = sign_information,
-    texthl = "DiagnosticDefaultInformation",
-    numhl = "DiagnosticDefaultInformation",
-    linehl = "",
-  })
-  fn.sign_define(
+  vim.fn.sign_define(
     "DiagnosticSignHint",
-    { text = sign_hint, texthl = "DiagnosticDefaultHint", numhl = "DiagnosticDefaultHint", linehl = "" }
+    { texthl = "DiagnosticSignHint", text = "", numhl = "DiagnosticSignHint" }
   )
+  vim.fn.sign_define(
+    "DiagnosticSignInformation",
+    { texthl = "DiagnosticSignInformation", text = "", numhl = "DiagnosticSignInformation" }
+  )
+
+  -- fn.sign_define(
+  --   "DiagnosticSignError",
+  --   { text = "", texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError" }
+  -- )
+  -- fn.sign_define(
+  --   "DiagnosticSignWarning",
+  --   { text = "", texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning" }
+  -- )
+  -- fn.sign_define("DiagnosticSignInformation", {
+  --   text = "",
+  --   texthl = "DiagnosticDefaultInformation",
+  --   numhl = "DiagnosticDefaultInformation",
+  -- })
+  -- fn.sign_define(
+  --   "DiagnosticSignHint",
+  --   { text = "", texthl = "DiagnosticDefaultHint", numhl = "DiagnosticDefaultHint" }
+  -- )
 
   -- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
   -- REF: https://github.com/neovim/neovim/pull/15585
@@ -284,11 +295,15 @@ local function on_attach(client, bufnr)
 
   require("lsp_signature").on_attach({
     bind = true, -- This is mandatory, otherwise border config won't get registered.
+    doc_lines = 2,
     floating_window = true,
     floating_window_above_cur_line = true, -- try to place the floating above the current line
     -- floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
     -- fix_pos = true,
     hint_enable = false,
+    hi_parameter = "Search", -- how your parameter will be highlight
+    max_height = 12,
+    max_width = 120,
     decorator = { "`", "`" },
     handler_opts = {
       border = "rounded",
@@ -320,13 +335,8 @@ local function on_attach(client, bufnr)
   bufmap("]d", "lua vim.diagnostic.goto_next()")
 
   --- # misc mappings
-  -- bufmap("<leader>ln", "lua vim.lsp.buf.rename()")
   bufmap("<leader>ln", "lua require('utils').lsp.rename()")
-  bufmap(
-    "<leader>ld",
-    "lua vim.diagnostic.show_line_diagnostics({severity_sort=true, border='rounded', focusable=false, source='if_many', show_header=false})"
-  )
-  -- bufmap("K", "lua require('utils').lsp.hover()")
+  bufmap("<leader>ld", "lua vim.diagnostic.open_float(0, {scope='line'})")
   bufmap("K", "lua vim.lsp.buf.hover()")
   bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
   bufmap("<leader>lf", "lua require('utils').lsp.format()")
@@ -340,7 +350,8 @@ local function on_attach(client, bufnr)
 
   --- # autocommands/autocmds
   au([[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope="line"})]])
-  au([[CursorMoved <buffer> lua vim.lsp.buf.clear_references()]])
+  au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
+  -- au([[CursorMoved,BufLeave <buffer> lua vim.diagnostic.hide(0)]])
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
   vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
 
