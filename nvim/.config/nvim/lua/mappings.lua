@@ -116,7 +116,7 @@ map("n", "<leader>s", "b1z=e") -- Correct previous word
 map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
 -- # find and replace in multiple files
-map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
+map("n", "<Leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
 
 -- # save and execute vim/lua file
 map("n", "<Leader>x", mega.save_and_exec)

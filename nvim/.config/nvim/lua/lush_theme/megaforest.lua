@@ -1,5 +1,8 @@
 ---@diagnostic disable: undefined-global
 
+-- # REFS:
+-- - https://github.com/svitax/fennec-gruvbox.nvim/blob/master/lua/lush_theme/fennec-gruvbox.lua
+
 -- `megaforest` built with,
 --
 --        ,gggg,

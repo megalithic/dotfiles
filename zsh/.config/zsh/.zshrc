@@ -29,10 +29,10 @@ zcomet load zsh-users/zsh-completions
 zcomet load zsh-users/zsh-history-substring-search
 zcomet load zsh-users/zsh-autosuggestions
 zcomet load zdharma/fast-syntax-highlighting
-zcomet load ohmyzsh plugins/mix
-zcomet load ohmyzsh plugins/mix-fast
-zcomet load ohmyzsh plugins/rake
-zcomet load ohmyzsh plugins/rake-fast
+# zcomet load ohmyzsh plugins/mix
+# zcomet load ohmyzsh plugins/mix-fast
+# zcomet load ohmyzsh plugins/rake
+# zcomet load ohmyzsh plugins/rake-fast
 
 if [[ $PLATFORM == "linux" ]]; then
 	[[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
