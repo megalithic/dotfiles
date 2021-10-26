@@ -10,12 +10,18 @@ IFS=$'\n' && options=("New Session" $(tmux list-sessions -F "#S" 2>/dev/null))
 echo "Available sessions"
 echo "------------------"
 echo " "
-select opt in "${options[@]}"
-do
+select opt in "${options[@]}"; do
 	case $opt in
 		"New Session")
 			read -rp "Enter new session name: " SESSION_NAME
-			tmux new -s "$SESSION_NAME"
+			config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmuxinator"
+
+			if [[-f "$config_dir/$SESSION_NAME.yml"]]; then
+				log "launching tmuxinator config for $SESSION_NAME.."
+				tmuxinator start $SESSION_NAME -n $SESSION_NAME
+			else
+				tmux new -s "$SESSION_NAME"
+			fi
 			break
 			;;
 		*)
