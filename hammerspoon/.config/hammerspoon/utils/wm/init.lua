@@ -81,18 +81,21 @@ end
 -- apply_context(hs.application, hs.application, table, {hs.window, hs.window, hs.window}, string) :: nil
 -- evaluates and applies global config for contexts related to the given app
 M.apply_app_context = function(app, win, event)
-  local context = Config.apps[app:bundleID()].context
-  if context == nil then
-    log.df("no context received; skipping -> %s", app:bundleID())
-    return
-  end
+  local app_config = Config.apps[app:bundleID()]
+  if app_config ~= nil then
+    local context = app_config.context
+    if context == nil then
+      log.df("no context received; skipping -> %s", app:bundleID())
+      return
+    end
 
-  if event == nil then
-    log.df("no event received; skipping -> %s", app:bundleID())
-    return
-  end
+    if event == nil then
+      log.df("no event received; skipping -> %s", app:bundleID())
+      return
+    end
 
-  require("contexts").load(app, win, event, context, "info")
+    require("contexts").load(app, win, event, context, "info")
+  end
 end
 
 -- gathers layout for a found app_config and applies it

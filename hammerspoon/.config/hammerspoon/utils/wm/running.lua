@@ -160,7 +160,13 @@ M._watchApp =
         if not axel:matchesCriteria("AXWindow") then
           return
         end
-        print(hs.inspect(notif))
+
+        if type(notif) == "string" then
+          print("- axui:" .. notif)
+        else
+          print(hs.inspect(notif))
+        end
+
         local win = axel:asHSWindow()
         -- check for all focus changes, or only for the condition below?
         -- and app:kind() > 0
