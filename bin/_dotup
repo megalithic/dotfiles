@@ -335,16 +335,16 @@ function setup_keyboard {
 }
 
 function setup_neovim {
-	if [ -f $DOTS/neovim/$PLATFORM.sh ]; then
+	if [ -f $DOTS/nvim/$PLATFORM.sh ]; then
 		log "setting up neovim..."
-		source "$DOTS/neovim/$PLATFORM.sh" && log_ok "DONE setting up neovim" || log_error "failed to setup neovim"
+		source "$DOTS/nvim/$PLATFORM.sh" && log_ok "DONE setting up neovim" || log_error "failed to setup neovim"
 	fi
 }
 
 function setup_kitty {
-	if [ -f $DOTS/neovim/$PLATFORM.sh ]; then
+	if [ -f $DOTS/kitty/$PLATFORM.sh ]; then
 		log "setting up kitty..."
-		source "$DOTS/neovim/$PLATFORM.sh" && log_ok "DONE setting up kitty" || log_error "failed to setup kitty"
+		source "$DOTS/kitty/$PLATFORM.sh" && log_ok "DONE setting up kitty" || log_error "failed to setup kitty"
 	fi
 }
 
@@ -400,4 +400,4 @@ setup_keyboard
 setup_python
 post_install
 
-# vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2
+# vim:ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2

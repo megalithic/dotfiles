@@ -34,6 +34,7 @@ end
 
 -- [ plain old vim ] ------------------------------------------------------- {{{
 --
+-- TODO: migrate to lua?
 cmd("runtime .vimrc")
 --
 -- }}}

@@ -561,7 +561,7 @@ return lush(function()
     CmpItemKind({ Special }),
     CmpItemAttr({ Comment }),
     CmpItemMenu({ NonText }),
-    CmpItemAbbrMatch({ PmenuSel, gui = "bold" }),
+    CmpItemAbbrMatch({ PmenuSel, gui = "underline" }),
     CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
     CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
 

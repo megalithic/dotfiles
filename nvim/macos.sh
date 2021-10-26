@@ -3,7 +3,7 @@
 echo "## NEOVIM..."
 
 log "symlinking vimrc to $HOME"
-ln -sfv $HOME/.config/nvim/vimrc $HOME/.vimrc && log_ok "done symlinking vimrc" || {
+ln -sfv $HOME/.config/nvim/.vimrc $HOME/.vimrc && log_ok "done symlinking vimrc" || {
 	echo 'symlinking failed'
 	exit 1
 }
