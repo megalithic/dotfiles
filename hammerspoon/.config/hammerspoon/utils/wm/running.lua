@@ -1,13 +1,13 @@
 -- HT: @folke
 --
 
-local appw = hs.application.watcher
-local module = { apps = {}, observers = {}, windows = {} }
-
 -- local spaces = require("hs._asm.undocumented.spaces")
--- local desktop = require("desktop")
 
-module.appEvents = {
+local log = hs.logger.new("[running]", "warning")
+local appw = hs.application.watcher
+local M = { apps = {}, observers = {}, windows = {} }
+
+M.appEvents = {
   [appw.activated] = "activated",
   [appw.deactivated] = "deactivated",
   [appw.hidden] = "hidden",
@@ -17,11 +17,19 @@ module.appEvents = {
   [appw.unhidden] = "unhidden",
 }
 
-module.events = { focused = "focused", framed = "framed", closed = "closed", created = "created", hidden = "hidden" }
+M.events = {
+  focused = "focused",
+  framed = "framed",
+  closed = "closed",
+  created = "created",
+  hidden = "hidden",
+  launched = "launched",
+  terminated = "terminated",
+}
 
-module.getWindowsPerSpace = function()
+M.getWindowsPerSpace = function()
   local ret = {}
-  for _, windows in pairs(module.windows) do
+  for _, windows in pairs(M.windows) do
     for _, ax in pairs(windows) do
       if ax:isValid() then
         local win = ax:asHSWindow()
@@ -38,10 +46,10 @@ module.getWindowsPerSpace = function()
 end
 
 ---@return hs.window[]
-module.getWindows = function()
+M.getWindows = function()
   -- local mySpace = desktop.activeSpace()
   local ret = {}
-  for _, windows in pairs(module.windows) do
+  for _, windows in pairs(M.windows) do
     for _, ax in pairs(windows) do
       if ax:isValid() then
         local win = ax:asHSWindow()
@@ -55,68 +63,70 @@ module.getWindows = function()
   return ret
 end
 
-module._addAppWindow = function(app, ax)
+M._addAppWindow = function(app, ax)
   if ax ~= nil and ax.AXSubrole == "AXStandardWindow" then
     local pid = app:pid()
-    if module.windows[pid] == nil then
-      module.windows[pid] = {}
+    if M.windows[pid] == nil then
+      M.windows[pid] = {}
     end
     local win = ax:asHSWindow()
-    if win and not module.windows[pid][win:id()] then
-      module.windows[pid][win:id()] = ax
-      module.triggerChange(app, win, module.events.created)
+    if win and not M.windows[pid][win:id()] then
+      M.windows[pid][win:id()] = ax
+      M.triggerChange(app, win, M.events.created)
     end
   end
 end
 
-module._updateAppWindows = function(app, ax)
-  if module.windows[app:pid()] == nil then
-    module.windows[app:pid()] = {}
+M._updateAppWindows = function(app, ax)
+  if M.windows[app:pid()] == nil then
+    M.windows[app:pid()] = {}
   end
   if ax.AXChildren then
     for _, child in ipairs(ax.AXChildren) do
       if child:matchesCriteria("AXWindow") then
-        module._addAppWindow(app, child)
+        M._addAppWindow(app, child)
       end
     end
   end
 
-  module._addAppWindow(app, ax.AXMainWindow)
-  module._addAppWindow(app, ax.AXFocusedWindow)
+  M._addAppWindow(app, ax.AXMainWindow)
+  M._addAppWindow(app, ax.AXFocusedWindow)
 
-  for elId, el in pairs(module.windows[app:pid()]) do
+  for elId, el in pairs(M.windows[app:pid()]) do
     if not el:isValid() then
-      module.windows[app:pid()][elId] = nil
-      module.triggerChange(app, nil, module.events.closed)
+      M.windows[app:pid()][elId] = nil
+      M.triggerChange(app, nil, M.events.closed)
     end
   end
 end
 
-module.triggerChange = function(app, win, event)
+M.triggerChange = function(app, win, event)
   local winTitle = ""
+  local sep = ""
   if win then
+    sep = " -- "
     winTitle = win:title()
   end
-  print(">> " .. event .. ":" .. app:name() .. " -- " .. winTitle)
-  for _, fn in ipairs(module._listeners) do
+  print("->> " .. event .. ":" .. app:name() .. sep .. winTitle)
+  for _, fn in ipairs(M._listeners) do
     fn(app, win, event)
     -- hs.timer.doAfter(.01, function() fn(app, win, event) end)
   end
 end
 
-module._listeners = {}
-module.onChange = function(fn)
-  table.insert(module._listeners, fn)
+M._listeners = {}
+M.onChange = function(fn)
+  table.insert(M._listeners, fn)
   local win = hs.window.focusedWindow()
   if win ~= nil then
-    fn(win:application(), win, module.events.focused)
+    fn(win:application(), win, M.events.focused)
   end
 end
 
-module._watchApp =
+M._watchApp =
   ---@param app hs.application
   function(app)
-    if module.apps[app:pid()] ~= nil then
+    if M.apps[app:pid()] ~= nil then
       return
     end
     local ax = hs.axuielement.applicationElement(app)
@@ -124,8 +134,8 @@ module._watchApp =
     -- the next event to setup the observers
     if ax:isValid() then
       print("## watching: " .. app:name())
-      module.apps[app:pid()] = app
-      module._updateAppWindows(app, ax)
+      M.apps[app:pid()] = app
+      M._updateAppWindows(app, ax)
       ---@type hs.axuielement.observer
       local w = hs.axuielement.observer.new(app:pid())
       local addWatcher = function(notif)
@@ -142,7 +152,7 @@ module._watchApp =
       w:callback(function(_, axel, notif, _notifData)
         if notif == "AXUIElementDestroyed" then
           if not app:focusedWindow() then
-            module._updateAppWindows(app, ax)
+            M._updateAppWindows(app, ax)
           end
           return
         end
@@ -155,35 +165,35 @@ module._watchApp =
         -- check for all focus changes, or only for the condition below?
         -- and app:kind() > 0
         if notif == "AXFocusedWindowChanged" then
-          module._updateAppWindows(app, ax)
-          module.triggerChange(app, win, module.events.focused)
+          M._updateAppWindows(app, ax)
+          M.triggerChange(app, win, M.events.focused)
         elseif notif == "AXResized" or notif == "AXMoved" then
-          module.triggerChange(app, win, module.events.framed)
+          M.triggerChange(app, win, M.events.framed)
         end
       end)
       w:start()
-      module.observers[app:pid()] = w
+      M.observers[app:pid()] = w
     end
   end
 
-module._updateRunning = function()
+M._updateRunning = function()
   for _, app in ipairs(hs.application.runningApplications()) do
-    module._watchApp(app)
+    M._watchApp(app)
   end
 end
 
-module.switcher = function()
-  if module._chooser == nil then
-    module._chooser = hs.chooser.new(function(choice)
+M.switcher = function()
+  if M._chooser == nil then
+    M._chooser = hs.chooser.new(function(choice)
       if choice ~= nil then
         choice.win:focus()
       end
     end):bgDark(true):placeholderText("Switch to Window"):searchSubText(true)
-  elseif module._chooser:isVisible() then
-    module._chooser:hide()
+  elseif M._chooser:isVisible() then
+    M._chooser:hide()
     return
   end
-  local windows = hs.fnutils.map(module.getWindows(), function(win)
+  local windows = hs.fnutils.map(M.getWindows(), function(win)
     local ret = {
       text = win:title(),
       subText = win:application():title(),
@@ -194,10 +204,10 @@ module.switcher = function()
     end
     return ret
   end)
-  module._chooser:choices(windows):show()
+  M._chooser:choices(windows):show()
 end
 
-module._appWatcher = appw.new(function(appName, event, app)
+M._appWatcher = appw.new(function(appName, event, app)
   if appName == nil then
     appName = ""
   end
@@ -207,32 +217,45 @@ module._appWatcher = appw.new(function(appName, event, app)
   end
 
   if event == appw.terminated then
-    module.apps[app:pid()] = nil
-    if module.observers[app:pid()] ~= nil then
-      module.observers[app:pid()]:stop()
-      module.observers[app:pid()] = nil
+    local terminated_app = M.apps[app:pid()]
+
+    M.apps[app:pid()] = nil
+    if M.observers[app:pid()] ~= nil then
+      M.observers[app:pid()]:stop()
+      M.observers[app:pid()] = nil
+      M.triggerChange(terminated_app, terminated_app:mainWindow(), M.events.terminated)
     end
     return
   end
 
-  if module.apps[app:pid()] == nil then
-    module._watchApp(app)
+  if event == appw.launched then
+    local win = app:focusedWindow() or app:mainWindow()
+    M.triggerChange(app, win, M.events.launched)
   end
 
-  if event == appw.activated or event == appw.launched then
+  if M.apps[app:pid()] == nil then
+    M._watchApp(app)
+  end
+
+  if event == appw.activated then
     local win = app:focusedWindow()
     if win ~= nil then
-      module.triggerChange(app, win, module.events.focused)
+      M.triggerChange(app, win, M.events.focused)
     end
   end
 
-  if event == appw.hidden then
-    module.triggerChange(app, app:mainWindow(), module.events.hidden)
+  if event == appw.hidden or event == appw.deactivated then
+    M.triggerChange(app, app:mainWindow(), M.events.hidden)
   end
 end)
 
-module.start = function()
-  module._appWatcher:start()
+M.addToAppWatcher = function(app)
+  M._watchApp(app)
 end
 
-return module
+M.start = function()
+  M._appWatcher:start()
+  -- log.wf(spaces.layout())
+end
+
+return M

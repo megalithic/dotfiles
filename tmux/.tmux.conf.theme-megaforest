@@ -11,11 +11,10 @@ setw -g pane-border-format '─'
 
 setw -g pane-border-style 'bg=#323d43,fg=#555555'
 setw -g pane-active-border-style 'bg=#323d43,fg=blue'
-# set -g pane-active-border-style 'bg=#323d43,fg=#6A7D89'
 
-# dim inactive window text
-set -g window-style 'bg=#323d43,fg=#666666'
-set -g window-active-style 'bg=#323d43,fg=white,dim'
+# dim inactive window text -- FIXME: failing when inactive set!
+# set -g window-style 'bg=#323d43,fg=#666666'
+set -g window-active-style 'bg=#323d43,fg=white'
 setw -g window-status-activity-style 'bg=red'
 
 # setw -g window-status-style

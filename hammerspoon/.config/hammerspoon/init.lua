@@ -1,13 +1,15 @@
 -- logging configuration
-require("hs.logger").idLength(24)
+-- require("hs.logger").idLength(24)
 
 local log = hs.logger.new("[init]", "warning")
 
--- global stuff
+-- global stuff for console things
 require("console").init()
 
 -- ensure IPC is there
-hs.ipc.cliInstall()
+if not hs.ipc.cliStatus() then
+  hs.ipc.cliInstall()
+end
 
 -- lower logging level for hotkeys
 require("hs.hotkey").setLogLevel("warning")
@@ -22,9 +24,9 @@ hs.allowAppleScript(true)
 hs.loadSpoon("SpoonInstall")
 hs.loadSpoon("EmmyLua")
 
+-- FIXME: replace lowercase references of `foo` to `Foo`, e.g., `config` -> `Config`
 -- global requires
 Config = require("config")
--- TODO: replace lowercase references of `config` to `Config`
 config = Config
 bindings = require("bindings")
 controlplane = require("utils.controlplane")
