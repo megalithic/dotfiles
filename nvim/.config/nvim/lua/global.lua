@@ -60,9 +60,10 @@ function M.auto_mkdir()
   local dir = fn.expand("%:p:h")
 
   if fn.isdirectory(dir) == 0 then
-    local create_dir = fn.input(string.format("[?] Parent dir [%s] doesn't exist; create it? (yes|no)", dir))
+    local create_dir = fn.input(string.format("[?] Parent dir [%s] doesn't exist; create it? (y|n)", dir))
     if create_dir == "y" or create_dir == "yes" then
       fn.mkdir(dir, "p")
+      vim.cmd("redraw")
     end
   end
 end
