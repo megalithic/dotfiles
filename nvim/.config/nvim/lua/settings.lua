@@ -171,14 +171,14 @@ local function setup_treesitter()
     },
     -- REF: https://github.com/stehessel/nix-dotfiles/blob/master/program/editor/neovim/config/lua/plugins/treesitter.lua
     textobjects = {
-      lsp_interop = {
-        enable = true,
-        border = "none",
-        peek_definition_code = {
-          ["df"] = "@function.outer",
-          ["dF"] = "@class.outer",
-        },
-      },
+      -- lsp_interop = {
+      --   enable = true,
+      --   border = "none",
+      --   peek_definition_code = {
+      --     ["df"] = "@function.outer",
+      --     ["dF"] = "@class.outer",
+      --   },
+      -- },
       select = {
         enable = false,
         lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
