@@ -867,8 +867,8 @@ local function setup_fzf_lua()
     files = {
       prompt = string.format("files %s ", colors.icons.prompt_symbol),
       fd_opts = [[--type f --follow --hidden --color=always]]
-        .. [[ -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons']]
-        .. [[ --ignore-file '~/.gitignore_global' --ignore-file '.gitignore']],
+        .. [[ -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' -E '.yarn' ]]
+        .. [[ --ignore-file '.gitignore']],
       color_icons = true,
       git_icons = true,
       git_diff_cmd = "git diff --name-status --relative HEAD",
