@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# TODO: https://github.com/ryansch/dotfiles/blob/main/bin/mux
+
 # abort if we're already inside a TMUX session
 [ "$TMUX" == "" ] || exit 0
 
