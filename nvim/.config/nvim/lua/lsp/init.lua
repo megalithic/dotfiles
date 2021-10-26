@@ -208,7 +208,9 @@ local function setup_completion()
   require("cmp_nvim_lsp").setup()
   cmp.setup({
     experimental = {
-      ghost_text = false,
+      ghost_text = {
+        hl_group = "LineNr",
+      },
       native_menu = false, -- false == use fancy floaty menu for now
     },
     completion = {

@@ -469,6 +469,28 @@ function M.has(feature)
   return fn.has(feature) > 0
 end
 
+-- open URI under cursor
+function M.open_uri()
+  local Job = require("plenary.job")
+  local uri = vim.fn.expand("<cWORD>")
+  Job
+    :new({
+      "open",
+      uri,
+    })
+    :sync()
+end
+
+function M.save_and_exec()
+  if vim.bo.filetype == "vim" then
+    vim.cmd("silent! write")
+    vim.cmd("source %")
+  elseif vim.bo.filetype == "lua" then
+    vim.cmd("silent! write")
+    vim.cmd("luafile %")
+  end
+end
+
 function M.zetty(args)
   local default_opts = {
     cmd = "meeting",

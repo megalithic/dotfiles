@@ -60,6 +60,13 @@ local function setup_nvim_options()
     vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
     vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
   end
+
+  -- # registers
+  vim.g.registers_return_symbol = " ﬋ " -- "'⏎' by default
+  vim.g.registers_tab_symbol = "." -- "'·' by default
+  vim.g.registers_space_symbol = " " -- "' ' by default
+  vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before closing the window when a register key is pressed
+  vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
 end
 
 local function setup_startuptime()
@@ -294,12 +301,23 @@ local function setup_indent_blankline()
 end
 
 local function setup_neoscroll()
+  local mappings = {}
   require("neoscroll").setup({
-    mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
+    -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
     stop_eof = false,
     hide_cursor = false,
     easing_function = "circular",
   })
+  mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
+  mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
+  mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
+  mappings["<C-f>"] = { "scroll", { "vim.api.nvim_win_get_height(0)", "true", "250" } }
+  mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
+  mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
+  mappings["zt"] = { "zt", { "150" } }
+  mappings["zz"] = { "zz", { "150" } }
+  mappings["zb"] = { "zb", { "150" } }
+  require("neoscroll.config").set_mappings(mappings)
 end
 
 local function setup_devicons()

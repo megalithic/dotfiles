@@ -118,6 +118,12 @@ map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 -- # find and replace in multiple files
 map("n", "<leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
 
+-- # save and execute vim/lua file
+map("n", "<Leader>x", mega.save_and_exec)
+
+-- # open uri under cursor:
+map("n", "go", mega.open_uri)
+
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # golden_size
