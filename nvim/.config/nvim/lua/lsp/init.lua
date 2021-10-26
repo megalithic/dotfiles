@@ -349,7 +349,8 @@ local function on_attach(client, bufnr)
   map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
 
   --- # autocommands/autocmds
-  au([[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope="line"})]])
+  -- au([[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope="line"})]])
+  au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
   au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
   -- au([[CursorMoved,BufLeave <buffer> lua vim.diagnostic.hide(0)]])
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])

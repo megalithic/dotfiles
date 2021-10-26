@@ -205,4 +205,5 @@ return {
   "chr4/nginx.vim",
   "nanotee/luv-vimdocs",
   "fladson/vim-kitty",
+  "SirJson/fzf-gitignore",
 }

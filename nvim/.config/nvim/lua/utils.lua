@@ -152,6 +152,7 @@ end
 -- # [ diagnostics ] -----------------------------------------------------------
 -- FIXME: this pulls in incorrect diagnostics from other buffers. ¯\_(ツ)_/¯
 function M.lsp.show_diagnostics(ns)
+  ns = ns or vim.api.nvim_create_namespace("diagnostics")
   vim.schedule(function()
     local line = vim.api.nvim_win_get_cursor(0)[1] - 1
     local bufnr = vim.api.nvim_get_current_buf()

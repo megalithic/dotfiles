@@ -76,7 +76,7 @@ M.apply = function(app, win, event, log)
 
   ----------------------------------------------------------------------
   -- handle hide-after interval
-  wh.hideAfterHandler(app, 5, event)
+  -- wh.hideAfterHandler(app, 5, event)
 
   ----------------------------------------------------------------------
   -- handle window rules
