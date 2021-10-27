@@ -52,35 +52,8 @@ module.killTabsByDomain = function(domain)
 end
 
 module.snip = function()
-  -- TODO: https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L248-L281
   local app_name = config.preferred.browsers[1]
-  log.wf("snipping with appName -> %s", app_name)
-
-  -- hs.osascript.applescript(template(
-  -- 	[[
-  --    -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
-
-  --    if (count of currentSelection()) is greater than 0 then
-  --      set str to "tags: #link\n\n" & currentTitle() & "\n\n> " & currentSelection() & "\n\n[" & currentTitle() & "](" & currentUrl() & ")"
-  --      tell application "Drafts"
-  --        make new draft with properties {content:str, tags: {"link"}}
-  --      end tell
-  --    end if
-
-  --    on currentUrl()
-  --      tell application "{APP_NAME}" to get the URL of the active tab in the first window
-  --    end currentUrl
-
-  --    on currentSelection()
-  --      tell application "{APP_NAME}" to execute front window's active tab javascript "getSelection().toString();"
-  --    end currentSelection
-
-  --    on currentTitle()
-  --      tell application "{APP_NAME}" to get the title of the active tab in the first window
-  --    end currentTitle
-  --  ]],
-  -- 	{ APP_NAME = app_name }
-  -- ))
+  log.wf("snipping with %s", app_name)
 
   -- https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
   local function magiclines(s)
@@ -120,8 +93,6 @@ module.snip = function()
   -- format and send to drafts
   hs.urlevent.openURL("drafts://x-callback-url/create?tag=links&text=" .. hs.http.encodeForQuery(template))
   hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
-
-  -- alert.show({ text = "Snipped! The url and snippet have been sent to Drafts" })
 end
 
 module.urlsTaggedWith = function(tag)

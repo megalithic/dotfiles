@@ -233,4 +233,24 @@ function M.lsp.config()
   mega.log(vim.inspect(cfg))
 end
 
+-- # [ lsp_commands ] ----------------------------------------------------------------
+function M.lsp.elixirls_cmd()
+  local local_elixir_ls_dir_exists, local_elixir_ls_dir = M.root_has_file(".elixir_ls/release/language_server.sh")
+
+  -- for linode/docker/atlas things:
+  local local_elixir_ls_bin_exists, local_elixir_ls_bin = M.root_has_file(".bin/elixir_ls.sh")
+
+  -- we have a locally installed .elixir_ls
+  if local_elixir_ls_dir_exists then
+    return fn.expand(local_elixir_ls_dir)
+
+    -- we have .bin.elixirls.sh
+  elseif local_elixir_ls_bin_exists then
+    return fn.expand(local_elixir_ls_bin)
+  end
+
+  -- otherwise, just use our globally installed elixir_ls
+  return fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"
+end
+
 return M

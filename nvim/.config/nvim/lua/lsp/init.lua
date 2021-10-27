@@ -514,25 +514,6 @@ local function setup_lsp_servers()
   }))
 
   do
-    local elixirls_cmd = function()
-      local local_elixir_ls_dir_exists, local_elixir_ls_dir = utils.root_has_file(
-        ".elixir_ls/release/language_server.sh"
-      )
-      local local_elixir_ls_bin_exists, local_elixir_ls_bin = utils.root_has_file(".bin/elixir_ls.sh")
-
-      -- we have a locally installed .elixir_ls
-      if local_elixir_ls_dir_exists then
-        return fn.expand(local_elixir_ls_dir)
-
-        -- we have .bin.elixirls.sh
-      elseif local_elixir_ls_bin_exists then
-        return fn.expand(local_elixir_ls_bin)
-      end
-
-      -- otherwise, just use our globally installed elixir_ls
-      return fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"
-    end
-
     local manipulate_pipes = function(command)
       return function()
         local position_params = lsp.util.make_position_params()
@@ -549,7 +530,7 @@ local function setup_lsp_servers()
     end
 
     lspconfig["elixirls"].setup(lsp_with_defaults({
-      cmd = { elixirls_cmd() },
+      cmd = { utils.lsp.elixirls_cmd() },
       settings = {
         elixirLS = {
           fetchDeps = false,

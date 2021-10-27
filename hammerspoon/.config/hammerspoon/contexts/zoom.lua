@@ -33,6 +33,7 @@ M.apply = function(app, win, event, log)
       do
         local zoom = hs.application.get("zoom.us")
         local kitty = hs.application.get("kitty")
+        local brave = hs.application.get(Config.preferred.browsers[1])
 
         hs.timer.waitUntil(function()
           return zoom:getWindow("Zoom Meeting")
@@ -44,11 +45,13 @@ M.apply = function(app, win, event, log)
 
           local layouts = {
             { "zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
+            { brave:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
             { "kitty", nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
           }
           hs.layout.apply(layouts)
           kitty:setFrontmost(true)
 
+          -- TODO: disabling zetty notes for now
           -- hs.timer.doAfter(0.5, function()
           -- 	hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
           -- end)
@@ -63,7 +66,15 @@ M.apply = function(app, win, event, log)
   -- things to do on app exit
   wh.onAppQuit(app, function()
     local kitty = hs.application.get("kitty")
+    local brave = hs.application.get(Config.preferred.browsers[1])
+
     -- FIXME: do i really need all the error checking here?
+    if brave ~= nil then
+      local brave_win = brave:mainWindow()
+      if brave_win ~= nil then
+        brave_win:moveToUnit(hs.layout.maximized)
+      end
+    end
     if kitty ~= nil then
       local kitty_win = kitty:mainWindow()
       if kitty_win ~= nil then

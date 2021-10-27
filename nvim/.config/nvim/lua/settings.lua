@@ -149,7 +149,7 @@ local function setup_treesitter()
       additional_vim_regex_highlighting = true,
     },
     indent = { enable = true },
-    autotag = { enable = true },
+    -- autotag = { enable = true },
     context_commentstring = {
       enable = true,
       enable_autocmd = false,
@@ -921,7 +921,18 @@ local function setup_fzf_lua()
       prompt = string.format("buffers %s ", colors.icons.prompt_symbol),
     },
   })
-  -- nmap ( '<leader>no', ':silent! lua fzf_orgmode{}<CR>' )
+
+  function _G.distant_fzf(root_dir)
+    local fzf = require("fzf").fzf
+    -- local action = require("fzf.actions").action
+
+    coroutine.wrap(function()
+      local choice = fzf(vim.cmd("DistantOpen " .. root_dir))
+      if choice then
+        require("distant.editor").open({ path = choice[1] })
+      end
+    end)()
+  end
   -- nmap ( '<leader>nr', ':silent! lua fzf_orgmode{}<CR>' )
   -- nmap ( '<leader>nd', ":silent! e " .. ROAM .. '/notebook.org<cr>' )
   --   function fzf_orgmode()
@@ -1129,33 +1140,33 @@ local function setup_distant()
   local actions = require("distant.nav.actions")
 
   require("distant").setup({
-    ["198.74.55.152"] = {
-      launch = {
-        distant = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
-        username = "ubuntu",
+    ["198.74.55.152"] = { -- 198.74.55.152
+      max_timeout = 15000,
+      poll_interval = 250,
+      timeout_interval = 250,
+      mode = "ssh",
+      ssh = {
+        user = "ubuntu",
         identity_file = "~/.ssh/seth-Seths-MBP.lan",
-        extra_server_args = '"--log-file ~/tmp/distant-seth_dev-server.log --log-level trace --port 8081:8099 --shutdown-after 60"',
-        -- lsp = {
-        -- 	["outstand/pages (elixirls)"] = {
-        -- 		cmd = "",
-        -- 		root_dir = "/home/ubuntu/dev/pages",
-        -- 		filetypes = { "elixir", "eelixir" },
-        -- 		on_attach = function() end,
-        -- 		opts = {
-        -- 			log_file = "~/tmp/distant-pages-elixirls.log",
-        -- 			log_level = "trace",
-        -- 		},
-        -- 	},
-        -- 	["outstand/app (solargraph)"] = {
-        -- 		cmd = "",
-        -- 		root_dir = "/home/ubuntu/dev/app",
-        -- 		filetypes = { "ruby", "eruby" },
-        -- 		on_attach = function() end,
-        -- 		opts = {
-        -- 			log_file = "~/tmp/distant-app-solargraph.log",
-        -- 			log_level = "trace",
-        -- 		},
-        -- 	},
+      },
+      distant = {
+        bin = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
+        username = "ubuntu",
+        -- args = '"--log-file ~/tmp/distant-seth_dev-server.log --log-level trace --port 8081:8099 --shutdown-after 60"',
+      },
+      file = {},
+      dir = {},
+      lsp = {
+        ["outstand/atlas (elixirls)"] = {
+          cmd = { require("utils").lsp.elixirls_cmd() },
+          root_dir = "/home/ubuntu/code/atlas",
+          filetypes = { "elixir", "eelixir" },
+          on_attach = function(client, bufnr)
+            print(vim.inspect(client), bufnr)
+          end,
+          log_file = "~/tmp/distant-pages-elixirls.log",
+          log_level = "trace",
+        },
       },
     },
     ["megalithic.io"] = { -- 198.199.91.123

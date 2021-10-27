@@ -326,4 +326,3 @@ let g:loaded_zipPlugin    = 1
 
 """ Custom Commands
 command! Code execute ":!code -g %:p\:" . line('.') . ":" . col('.')
-cabbrev code Code
