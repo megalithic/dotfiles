@@ -155,15 +155,16 @@ function M:focus() end
 ---@return hs.window
 function M.focusedWindow() end
 
--- Focuses the tab in the window's tab group at index, or the last tab if
--- index is out of bounds. Returns true if a tab was pressed.
--- Works with document tab groups and some app tabs, like Chrome and Safari.
+-- Focuses the tab in the window's tab group at index, or the last tab if index is out of bounds
 --
 -- Parameters:
 --  * index - A number, a 1-based index of a tab to focus
 --
 -- Returns:
 --  * true if the tab was successfully pressed, or false if there was a problem
+--
+-- Notes:
+--  * This method works with document tab groups and some app tabs, like Chrome and Safari.
 ---@return boolean
 function M:focusTab(index, ...) end
 
@@ -559,15 +560,14 @@ function M:role() end
 --  * None
 --
 -- Returns:
---  * An `hs.screen` object representing the screen which most contains the window (by area)
+--  * An `hs.screen` object representing the screen which contains the window.
+--
+-- Notes:
+--  * While windows can be dragged to span multiple screens, part of the window will disappear when the mouse is released. The screen returned by this method will be the part of the window that remains visible.
 ---@return hs.screen
 function M:screen() end
 
 -- Sends the window to the back
---
--- This method works by focusing all overlapping windows behind this one, front to back.
--- If called on the focused window, this method will switch focus to the topmost window under this one; otherwise, the
--- currently focused window will regain focus after this window has been sent to the back.
 --
 -- Parameters:
 --  * None
@@ -576,10 +576,8 @@ function M:screen() end
 --  * The `hs.window` object
 --
 -- Notes:
---  * Due to the way this method works and OSX limitations, calling this method when you have a lot of randomly overlapping
---   (as opposed to neatly tiled) windows might be visually jarring, and take a fair amount of time to complete.
---   So if you don't use orderly layouts, or if you have a lot of windows in general, you're probably better off using
---   `hs.application:hide()` (or simply `cmd-h`)
+--  * Due to the way this method works and OSX limitations, calling this method when you have a lot of randomly overlapping (as opposed to neatly tiled) windows might be visually jarring, and take a fair amount of time to complete. So if you don't use orderly layouts, or if you have a lot of windows in general, you're probably better off using `hs.application:hide()` (or simply `cmd-h`)
+--  * This method works by focusing all overlapping windows behind this one, front to back. If called on the focused window, this method will switch focus to the topmost window under this one; otherwise, the currently focused window will regain focus after this window has been sent to the back.
 ---@return hs.window
 function M:sendToBack() end
 
@@ -728,15 +726,16 @@ function M.snapshotForID(ID, keepTransparency, ...) end
 ---@return string
 function M:subrole() end
 
--- Gets the number of tabs in the window has, or nil if the window doesn't have tabs.
--- Intended for use with the focusTab method, if this returns a number, then focusTab
--- can switch between that many tabs.
+-- Gets the number of tabs in the window has
 --
 -- Parameters:
 --  * None
 --
 -- Returns:
 --  * A number containing the number of tabs, or nil if an error occurred
+--
+-- Notes:
+--  * Intended for use with the focusTab method, if this returns a number, then focusTab can switch between that many tabs.
 function M:tabCount() end
 
 -- Sets the timeout value used in the accessibility API.

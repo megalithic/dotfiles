@@ -391,16 +391,13 @@ function M:setBufferSize(size, version, ...) end
 
 -- Sets the read callback for the [`hs.socket.udp`](#new) instance. Must be set to read data from the socket
 --
--- The callback receives 2 parameters:
---  * data - The data read from the socket as a string
---  * sockaddr - The sending address as a binary socket address structure. See [`parseAddress`](#parseAddress)
---
 -- Parameters:
---  * fn - An optional callback function to process data read from the socket. `nil` or no argument clears the callback
+--  * fn - An optional callback function to process data read from the socket. `nil` or no argument clears the callback. The callback receives 2 parameters:
+--    * data - The data read from the socket as a string
+--    * sockaddr - The sending address as a binary socket address structure. See [`parseAddress`](#parseAddress)
 --
 -- Returns:
 --  * The [`hs.socket.udp`](#new) object
--- 
 ---@return hs.socket.udp
 function M:setCallback(fn) end
 

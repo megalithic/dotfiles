@@ -18,8 +18,8 @@ select opt in "${options[@]}"; do
 			read -rp "Enter new session name: " SESSION_NAME
 			config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmuxinator"
 
-			if [[-f "$config_dir/$SESSION_NAME.yml"]]; then
-				log "launching tmuxinator config for $SESSION_NAME.."
+			if [[ -f "$config_dir/$SESSION_NAME.yml" ]]; then
+				echo ">> launching tmuxinator config for $SESSION_NAME.."
 				tmuxinator start $SESSION_NAME -n $SESSION_NAME
 			else
 				tmux new -s "$SESSION_NAME"

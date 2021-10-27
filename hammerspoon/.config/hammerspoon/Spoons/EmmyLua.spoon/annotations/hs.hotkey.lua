@@ -184,8 +184,7 @@ function M.getHotkeys() end
 ---@return hs.hotkey
 function M.new(mods, key, message, pressedfn, releasedfn, repeatfn, ...) end
 
--- Creates (and enables) a hotkey that shows all currently active hotkeys (i.e. enabled and not "shadowed"
--- in the current context) while pressed
+-- Creates (and enables) a hotkey that shows all currently active hotkeys (i.e. enabled and not "shadowed" in the current context) while pressed
 --
 -- Parameters:
 --  * mods - A table or a string containing (as elements, or as substrings with any separator) the keyboard modifiers required,

@@ -32,16 +32,15 @@ M.COLORRAMP = nil
 
 -- Subscribes a callback to be notified when the color inversion status changes
 --
--- You can use this to dynamically adjust the UI colors in your modules or configuration, if appropriate.
---
 -- Parameters:
---  * id - (optional) a string identifying the requester (usually the module name); if omitted, `fn`
---    itself will be the identifier; this identifier must be passed to `hs.redshift.invertUnsubscribe()`
---  * fn - a function that will be called whenever color inversion status changes; it must accept a
---    single parameter, a string or false as per the return value of `hs.redshift.isInverted()`
+--  * id - (optional) a string identifying the requester (usually the module name); if omitted, `fn` itself will be the identifier; this identifier must be passed to `hs.redshift.invertUnsubscribe()`
+--  * fn - a function that will be called whenever color inversion status changes; it must accept a single parameter, a string or false as per the return value of `hs.redshift.isInverted()`
 --
 -- Returns:
 --  * None
+--
+-- Notes:
+--  * You can use this to dynamically adjust the UI colors in your modules or configuration, if appropriate.
 function M.invertSubscribe(id, fn, ...) end
 
 -- Unsubscribes a previously subscribed color inversion change callback
@@ -119,31 +118,25 @@ function M.stop() end
 
 -- Sets or clears the user override for color temperature adjustment.
 --
--- This function should be bound to a hotkey, e.g.:
--- `hs.hotkey.bind('ctrl-cmd','-','Redshift',hs.redshift.toggle)`
---
 -- Parameters:
---  * v - (optional) a boolean; if true, the override will enable color temperature adjustment on
---    the given schedule; if false, the override will disable color temperature adjustment;
---    if omitted or nil, it will toggle the override, i.e. clear it if it's currently enforced, or
---    set it to the opposite of the current color temperature adjustment status otherwise.
+--  * v - (optional) a boolean; if true, the override will enable color temperature adjustment on the given schedule; if false, the override will disable color temperature adjustment; if omitted or nil, it will toggle the override, i.e. clear it if it's currently enforced, or set it to the opposite of the current color temperature adjustment status otherwise.
 --
 -- Returns:
 --  * None
+--
+-- Notes:
+--  * This function should be bound to a hotkey, e.g.: `hs.hotkey.bind('ctrl-cmd','-','Redshift',hs.redshift.toggle)`
 function M.toggle(v) end
 
 -- Sets or clears the user override for color inversion.
 --
--- This function should be bound to a hotkey, e.g.:
--- `hs.hotkey.bind('ctrl-cmd','=','Invert',hs.redshift.toggleInvert)`
---
 -- Parameters:
---  * v - (optional) a boolean; if true, the override will invert the colors no matter what; if false,
---    the override will disable color inversion no matter what; if omitted or nil, it will toggle the
---    override, i.e. clear it if it's currently enforced, or set it to the opposite of the current
---    color inversion status otherwise.
+--  * v - (optional) a boolean; if true, the override will invert the colors no matter what; if false, the override will disable color inversion no matter what; if omitted or nil, it will toggle the override, i.e. clear it if it's currently enforced, or set it to the opposite of the current color inversion status otherwise.
 --
 -- Returns:
 --  * None
+--
+-- Notes:
+--  * This function should be bound to a hotkey, e.g.: `hs.hotkey.bind('ctrl-cmd','=','Invert',hs.redshift.toggleInvert)`
 function M.toggleInvert(v) end
 

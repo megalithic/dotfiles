@@ -13,15 +13,13 @@ local module = { cache = cache }
 --  Hat-tip to @evantravers: https://github.com/evantravers/hammerspoon/blob/master/brave.lua
 
 local fn = require("hs.fnutils")
-local template = require("ext.template")
-local alert = require("ext.alert")
 
 local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
-	return hs.application.get(browserName) ~= nil
+  return hs.application.get(browserName) ~= nil
 end)
 
 module.jump = function(url)
-	hs.osascript.javascript([[
+  hs.osascript.javascript([[
   (function() {
     var browser = Application(']] .. runningBrowserName .. [[');
     browser.activate();
@@ -38,7 +36,7 @@ module.jump = function(url)
 end
 
 module.killTabsByDomain = function(domain)
-	hs.osascript.javascript([[
+  hs.osascript.javascript([[
   (function() {
     var browser = Application(']] .. runningBrowserName .. [[');
     browser.activate();
@@ -54,68 +52,106 @@ module.killTabsByDomain = function(domain)
 end
 
 module.snip = function()
-	-- TODO: https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L248-L281
-	local app_name = config.preferred.browsers[1]
-	log.wf("snipping with appName -> %s", app_name)
+  -- TODO: https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L248-L281
+  local app_name = config.preferred.browsers[1]
+  log.wf("snipping with appName -> %s", app_name)
 
-	hs.osascript.applescript(template(
-		[[
-    -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
+  -- hs.osascript.applescript(template(
+  -- 	[[
+  --    -- stolen from: https://gist.github.com/gabeanzelini/1931128eb233b0da8f51a8d165b418fa
 
-    if (count of currentSelection()) is greater than 0 then
-      set str to "tags: #link\n\n" & currentTitle() & "\n\n> " & currentSelection() & "\n\n[" & currentTitle() & "](" & currentUrl() & ")"
-      tell application "Drafts"
-        make new draft with properties {content:str, tags: {"link"}}
-      end tell
-    end if
+  --    if (count of currentSelection()) is greater than 0 then
+  --      set str to "tags: #link\n\n" & currentTitle() & "\n\n> " & currentSelection() & "\n\n[" & currentTitle() & "](" & currentUrl() & ")"
+  --      tell application "Drafts"
+  --        make new draft with properties {content:str, tags: {"link"}}
+  --      end tell
+  --    end if
 
-    on currentUrl()
-      tell application "{APP_NAME}" to get the URL of the active tab in the first window
-    end currentUrl
+  --    on currentUrl()
+  --      tell application "{APP_NAME}" to get the URL of the active tab in the first window
+  --    end currentUrl
 
-    on currentSelection()
-      tell application "{APP_NAME}" to execute front window's active tab javascript "getSelection().toString();"
-    end currentSelection
+  --    on currentSelection()
+  --      tell application "{APP_NAME}" to execute front window's active tab javascript "getSelection().toString();"
+  --    end currentSelection
 
-    on currentTitle()
-      tell application "{APP_NAME}" to get the title of the active tab in the first window
-    end currentTitle
-  ]],
-		{ APP_NAME = app_name }
-	))
+  --    on currentTitle()
+  --      tell application "{APP_NAME}" to get the title of the active tab in the first window
+  --    end currentTitle
+  --  ]],
+  -- 	{ APP_NAME = app_name }
+  -- ))
 
-	hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
-	alert.show({ text = "Snipped! The url and snippet have been sent to Drafts" })
+  -- https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
+  local function magiclines(s)
+    if s:sub(-1) ~= "\n" then
+      s = s .. "\n"
+    end
+    return s:gmatch("(.-)\n")
+  end
+
+  -- Snip current highlight
+  local win = hs.window.focusedWindow()
+
+  -- get the window title
+  local title = win:title():gsub("- Brave", ""):gsub("- Google Chrome", "")
+  -- get the highlighted item
+  hs.eventtap.keyStroke("command", "c")
+  local highlight = hs.pasteboard.readString()
+  local quote = ""
+  for line in magiclines(highlight) do
+    quote = quote .. "> " .. line .. "\n"
+  end
+  -- get the URL
+  hs.eventtap.keyStroke("command", "l")
+  hs.eventtap.keyStroke("command", "c")
+  local url = hs.pasteboard.readString():gsub("?utm_source=.*", "")
+  --
+  local template = string.format(
+    [[%s
+
+%s
+[%s](%s)]],
+    title,
+    quote,
+    title,
+    url
+  )
+  -- format and send to drafts
+  hs.urlevent.openURL("drafts://x-callback-url/create?tag=links&text=" .. hs.http.encodeForQuery(template))
+  hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
+
+  -- alert.show({ text = "Snipped! The url and snippet have been sent to Drafts" })
 end
 
 module.urlsTaggedWith = function(tag)
-	return fn.filter(config.domains, function(domain)
-		return domain.tags and fn.contains(domain.tags, tag)
-	end)
+  return fn.filter(config.domains, function(domain)
+    return domain.tags and fn.contains(domain.tags, tag)
+  end)
 end
 
 module.launch = function(list)
-	fn.map(list, function(tag)
-		fn.map(module.urlsTaggedWith(tag), function(site)
-			hs.urlevent.openURL("http://" .. site.url)
-		end)
-	end)
+  fn.map(list, function(tag)
+    fn.map(module.urlsTaggedWith(tag), function(site)
+      hs.urlevent.openURL("http://" .. site.url)
+    end)
+  end)
 end
 
 module.kill = function(list)
-	fn.map(list, function(tag)
-		fn.map(module.urlsTaggedWith(tag), function(site)
-			module.killTabsByDomain(site.url)
-		end)
-	end)
+  fn.map(list, function(tag)
+    fn.map(module.urlsTaggedWith(tag), function(site)
+      module.killTabsByDomain(site.url)
+    end)
+  end)
 end
 
 module.start = function()
-	log.df("starting..")
+  log.df("starting..")
 end
 
 module.stop = function()
-	log.df("stopping..")
+  log.df("stopping..")
 end
 
 return module

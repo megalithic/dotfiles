@@ -25,6 +25,7 @@ hs.inspect = M
 --
 -- Notes:
 --  * For convenience, you can call this function as `hs.inspect(variable)`
+--  * To view the output in Hammerspoon's Console, use `print(hs.inspect(variable))`
 --  * For more information on the options, and some examples, see [the upstream docs](https://github.com/kikito/inspect.lua)
 ---@return string
 function M.inspect(variable, options, ...) end

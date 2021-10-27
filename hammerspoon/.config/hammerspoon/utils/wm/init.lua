@@ -9,7 +9,7 @@
 --  │ 6. apply app context                                                    │
 --  └─────────────────────────────────────────────────────────────────────────┘
 
-local log = hs.logger.new("[wm]", "error")
+local log = hs.logger.new("[wm]", "info")
 
 local cache = {
   dock_watcher = {},
@@ -111,7 +111,7 @@ M.apply_app_layout = function(app, _, event) -- app, win, event
       local layouts = M._set_app_layout(app_config)
       if layouts ~= nil then
         log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
-        print("> layout:" .. app:name())
+        log.f("> layout:" .. app:name())
         hs.layout.apply(layouts, match_title)
       end
     end
@@ -139,21 +139,25 @@ end
 
 -- initialize watchers
 M.start = function()
-  log.i("starting..")
+  log.f("starting..")
 
   -- monitor all window/app events
   running.start()
 
   -- watch for docking status changes..
-  cache.dock_watcher = hs.watchable.watch("status.isDocked", function()
+  cache.dock_watcher = hs.watchable.watch("status.docked", function(watcher, path, key, old, new)
     -- print("isDocked callback:")
     -- print(hs.inspect(...))
-    M.prepare()
+    print(hs.inspect({ watcher, path, key, old, new }))
+    if old ~= new then
+      log.f("### preparing app layouts and contexts..")
+      M.prepare()
+    end
   end)
 end
 
 M.stop = function()
-  log.i("stopping..")
+  log.f("stopping..")
 
   -- if cache.new_app_watcher then
   --   cache.new_app_watcher:stop()

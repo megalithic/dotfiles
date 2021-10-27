@@ -87,7 +87,6 @@ function M.getGrid(screen, ...) end
 function M.getGridFrame(screen, ...) end
 
 -- Hides the grid, if visible, and exits the modal resizing mode.
--- Call this function if you need to make sure the modal is exited without waiting for the user to press `esc`.
 --
 -- Parameters:
 --  * None
@@ -96,6 +95,7 @@ function M.getGridFrame(screen, ...) end
 --  * None
 --
 -- Notes:
+--  * Call this function if you need to make sure the modal is exited without waiting for the user to press `esc`.
 --  * If an exit callback was provided when invoking the modal interface, calling `.hide()` will call it
 function M.hide() end
 
@@ -271,7 +271,6 @@ function M.setGrid(grid, screen, frame, ...) end
 function M.setMargins(margins, ...) end
 
 -- Shows the grid and starts the modal interactive resizing process for the focused or frontmost window.
--- In most cases this function should be invoked via `hs.hotkey.bind` with some keyboard shortcut.
 --
 -- Parameters:
 --  * exitedCallback - (optional) a function that will be called after the user dismisses the modal interface
@@ -281,6 +280,7 @@ function M.setMargins(margins, ...) end
 --  * None
 --
 -- Notes:
+--  * In most cases this function should be invoked via `hs.hotkey.bind` with some keyboard shortcut.
 --  * In the modal interface, press the arrow keys to jump to adjacent screens; spacebar to maximize/unmaximize; esc to quit without any effect
 --  * Pressing `tab` or `shift-tab` in the modal interface will cycle to the next or previous window; if `multipleWindows`
 --    is false or omitted, the first press will just enable the multiple windows behaviour

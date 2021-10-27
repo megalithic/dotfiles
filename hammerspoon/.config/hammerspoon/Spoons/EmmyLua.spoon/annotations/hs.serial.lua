@@ -16,6 +16,15 @@
 local M = {}
 hs.serial = M
 
+-- Returns a table of currently connected serial ports details, organised by port name.
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * A table containing the IOKit details of any connected serial ports, organised by port name.
+function M.availablePortDetails() end
+
 -- Returns a table of currently connected serial ports names.
 --
 -- Parameters:

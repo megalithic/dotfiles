@@ -199,13 +199,7 @@ M.reserved.parameter = nil
 ---@type number
 M.port = nil
 
--- Sends a "bytestring" message to the Tangent Hub. This should be a full
--- encoded string for the command you want to send, withouth the leading 'size' section,
--- which the function will calculate automatically.
---
--- In general, you should use the more specific functions that package the command for you,
--- such as `sendParameterValue(...)`. This function can be used to send a message that
--- this API doesn't yet support.
+-- Sends a "bytestring" message to the Tangent Hub.
 --
 -- Parameters:
 --  * byteString   - The string of bytes to send to tangent.
@@ -215,22 +209,24 @@ M.port = nil
 --  * errorMessage - An error message if an error occurs, as a string
 --
 -- Notes:
+--  * This should be a full encoded string for the command you want to send, withouth the leading 'size' section, which the function will calculate automatically.
+--  * In general, you should use the more specific functions that package the command for you, such as `sendParameterValue(...)`. This function can be used to send a message that this API doesn't yet support.
 --  * Full documentation for the Tangent API can be downloaded [here](http://www.tangentwave.co.uk/download/developer-support-pack/).
 function M.send(byteString, ...) end
 
 -- Tells the Hub that a large number of software-controls have changed.
--- The Hub responds by requesting all the current values of
--- software-controls it is currently controlling.
 --
 -- Parameters:
 --  * None
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * The Hub responds by requesting all the current values of software-controls it is currently controlling.
 function M.sendAllChange() end
 
 -- Sends the application details to the Tangent Hub.
--- If no details are provided the ones stored in the module are used.
 --
 -- Parameters:
 --  * appName       - The human-readable name of the application.
@@ -239,30 +235,12 @@ function M.sendAllChange() end
 --
 -- Returns:
 --  * `true` if successful, `false` and an error message if there was a problem.
+--
+-- Notes:
+--  * If no details are provided the ones stored in the module are used.
 function M.sendApplicationDefinition(appName, systemPath, userPath, ...) end
 
---  * Updates the Hub with a number of character strings that will be displayed
---   on connected panels if there is space.
---  * Strings may either be 32 character, single height or 16 character
---   double-height. They will be displayed in the order received; the first
---   string displayed at the top of the display.
---  * If a string is not defined as double-height then it will occupy the
---   next line.
---  * If a string is defined as double-height then it will occupy the next
---   2 lines.
---  * The maximum number of lines which will be used by the application
---   must be indicated in the Controls XML file.
---  * Text which exceeds 32 (single-height) or 16 (double-height) characters will be truncated.
---
--- Example:
---
--- ```lua
--- hs.tangent.sendDisplayText(
---     { "Single Height", "Double Height" }, {false, true}
--- )
--- ```
---
--- If all text is single-height, the `doubleHeight` table can be omitted.
+-- Updates the Hub with a number of character strings that will be displayed on connected panels if there is space.
 --
 -- Parameters:
 --  * messages      - A list of messages to send.
@@ -270,11 +248,25 @@ function M.sendApplicationDefinition(appName, systemPath, userPath, ...) end
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * Strings may either be 32 character, single height or 16 character double-height. They will be displayed in the order received; the first string displayed at the top of the display.
+--  * If a string is not defined as double-height then it will occupy the next line.
+--  * If a string is defined as double-height then it will occupy the next 2 lines.
+--  * The maximum number of lines which will be used by the application must be indicated in the Controls XML file.
+--  * Text which exceeds 32 (single-height) or 16 (double-height) characters will be truncated.
+--  * If all text is single-height, the `doubleHeight` table can be omitted.
+--
+-- Examples:
+--
+-- ```lua
+-- hs.tangent.sendDisplayText(
+--     { "Single Height", "Double Height" }, {false, true}
+-- )
+-- ```
 function M.sendDisplayText(messages, doubleHeight, ...) end
 
---  * Highlights the control on any panel where this feature is available.
---  * When applied to Modes, buttons which are mapped to the reserved "Go To
---   Mode" action for this particular mode will highlight.
+-- Highlights the control on any panel where this feature is available.
 --
 -- Parameters:
 --  * targetID      - The id of any application defined Parameter, Menu, Action or Mode (Unsigned Int)
@@ -282,15 +274,12 @@ function M.sendDisplayText(messages, doubleHeight, ...) end
 --
 -- Returns:
 --  * `true` if sent successfully, `false` and an error message if no.
+--
+-- Notes:
+--  * When applied to Modes, buttons which are mapped to the reserved "Go To Mode" action for this particular mode will highlight.
 function M.sendHighlightControl(targetID, active, ...) end
 
---  * Sets the Indicator of the control on any panel where this feature is
---   available.
---  * This indicator is driven by the `atDefault` argument for Parameters and
---   Menus. This command therefore only applies to controls mapped to Actions
---   and Modes.
---  * When applied to Modes, buttons which are mapped to the reserved "Go To
---   Mode" action for this particular mode will have their indicator set.
+-- Sets the Indicator of the control on any panel where this feature is available.
 --
 -- Parameters:
 --  * targetID      - The id of any application defined Parameter, Menu, Action or Mode
@@ -298,13 +287,13 @@ function M.sendHighlightControl(targetID, active, ...) end
 --
 -- Returns:
 --  * `true` if sent successfully, `false` and an error message if no.
+--
+-- Notes:
+--  * This indicator is driven by the `atDefault` argument for Parameters and Menus. This command therefore only applies to controls mapped to Actions and Modes.
+--  * When applied to Modes, buttons which are mapped to the reserved "Go To Mode" action for this particular mode will have their indicator set.
 function M.sendIndicateControl(targetID, indicated, ...) end
 
 -- Updates the Hub with a menu value.
--- The Hub then updates the displays of any panels which are currently
--- showing the menu.
--- If a value of `nil` is sent then the Hub will not attempt to display a
--- value for the menu. However the `atDefault` flag will still be recognised.
 --
 -- Parameters:
 --  * menuID - The ID value of the menu (Unsigned Int)
@@ -313,34 +302,37 @@ function M.sendIndicateControl(targetID, indicated, ...) end
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * The Hub then updates the displays of any panels which are currently showing the menu.
+--  * If a value of `nil` is sent then the Hub will not attempt to display a value for the menu. However the `atDefault` flag will still be recognised.
 function M.sendMenuString(menuID, value, atDefault, ...) end
 
 -- Updates the Hub with a mode value.
--- The Hub then changes mode and requests all the current values of
--- software-controls it is controlling.
 --
 -- Parameters:
 --  * modeID - The ID value of the mode (Unsigned Int)
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * The Hub then changes mode and requests all the current values of software-controls it is controlling.
 function M.sendModeValue(modeID, ...) end
 
---  * Requests the Hub to respond with a sequence of PanelConnectionState
---   (0x35) commands to report the connected/disconnected status of each
---   configured panel.
---  * A single request may result in multiple state responses.
+-- Requests the Hub to respond with a sequence of PanelConnectionState (0x35) commands to report the connected/disconnected status of each configured panel
 --
 -- Parameters:
 --  * None
 --
 -- Returns:
 --  * `true` if sent successfully, `false` and an error message if not.
+--
+-- Notes:
+--  * A single request may result in multiple state responses.
 function M.sendPanelConnectionStatesRequest() end
 
 -- Updates the Hub with a parameter value.
--- The Hub then updates the displays of any panels which are currently
--- showing the parameter value.
 --
 -- Parameters:
 --  * paramID - The ID value of the parameter (Unsigned Int)
@@ -349,16 +341,12 @@ function M.sendPanelConnectionStatesRequest() end
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * The Hub then updates the displays of any panels which are currently showing the parameter value.
 function M.sendParameterValue(paramID, value, atDefault, ...) end
 
---  * Renames a control dynamically.
---  * The string supplied will replace the normal text which has been
---   derived from the Controls XML file.
---  * To remove any existing replacement name set `newName` to `""`,
---   this will remove any renaming and return the system to the normal
---   display text
---  * When applied to Modes, the string displayed on buttons which mapped to
---   the reserved "Go To Mode" action for this particular mode will also change.
+-- Renames a control dynamically.
 --
 -- Parameters:
 --  * targetID  - The id of any application defined Parameter, Menu, Action or Mode (Unsigned Int)
@@ -366,13 +354,14 @@ function M.sendParameterValue(paramID, value, atDefault, ...) end
 --
 -- Returns:
 --  * `true` if successful, `false` and an error message if not.
+--
+-- Notes:
+--  * The string supplied will replace the normal text which has been derived from the Controls XML file.
+--  * To remove any existing replacement name set `newName` to `""`, this will remove any renaming and return the system to the normal display text
+--  * When applied to Modes, the string displayed on buttons which mapped to the reserved "Go To Mode" action for this particular mode will also change.
 function M.sendRenameControl(targetID, newName, ...) end
 
---  * Only used when working in Unmanaged panel mode.
---  * Updates the Hub with text that will be displayed on a specific panel at
---   the given line and starting position where supported by the panel capabilities.
---  * If the most significant bit of any individual text character in `message`
---   is set it will be displayed as inversed with dark text on a light background.
+-- Updates the Hub with text that will be displayed on a specific panel at the given line and starting position where supported by the panel capabilities.
 --
 -- Parameters:
 --  * panelID       - The ID of the panel as reported in the InitiateComms command (Unsigned Int)
@@ -383,16 +372,22 @@ function M.sendRenameControl(targetID, newName, ...) end
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * Only used when working in Unmanaged panel mode.
+--  * If the most significant bit of any individual text character in `message` is set it will be displayed as inversed with dark text on a light background.
 function M.sendUnmanagedDisplayWrite(panelID, displayID, lineNum, pos, message, ...) end
 
---  * Only used when working in Unmanaged panel mode
---  * Requests the Hub to respond with an UnmanagedPanelCapabilities (0x30) command.
+-- Requests the Hub to respond with an UnmanagedPanelCapabilities (0x30) command.
 --
 -- Parameters:
 --  * panelID - The ID of the panel as reported in the InitiateComms command (Unsigned Int)
 --
 -- Returns:
 --  * `true` if successful, or `false` and an error message if not.
+--
+-- Notes:
+--  * Only used when working in Unmanaged panel mode
 function M.sendUnmanagedPanelCapabilitiesRequest(panelID, ...) end
 
 -- Sets the Log Level.

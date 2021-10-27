@@ -35,7 +35,7 @@ hs.fs.volume = M
 --   * NSURLVolumeNameKey - The volume's name
 --   * NSURLVolumeLocalizedFormatDescriptionKey - Localized description of the volume
 -- * Not all keys will be present for all volumes
--- * The meanings of NSURLVolumeIsEjectableKey and NSURLVolumeIsRemovableKey are not generally what they sound like. If you want a simple test as to whether or not a volume is a removable drive (e.g. a USB hard disk), check for NSURLVolumeIsInternalKey being false (this is what Finder does)
+-- * The meanings of NSURLVolumeIsEjectableKey and NSURLVolumeIsRemovableKey are not generally useful for determining if a drive is removable in the modern sense (e.g. a USB drive) as much of this terminology dates back to when USB didn't exist and removable drives were things like Floppy/DVD drives. If you're trying to determine if a drive is not fixed into the computer, you may need to use a combination of these keys, but which exact combination you should use, is not consistent across macOS versions.
 function M.allVolumes(showHidden, ...) end
 
 -- A volume was mounted

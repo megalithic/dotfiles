@@ -1129,7 +1129,7 @@ local function setup_distant()
   local actions = require("distant.nav.actions")
 
   require("distant").setup({
-    ["seth-dev"] = { --198.74.55.152
+    ["198.74.55.152"] = {
       launch = {
         distant = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
         username = "ubuntu",

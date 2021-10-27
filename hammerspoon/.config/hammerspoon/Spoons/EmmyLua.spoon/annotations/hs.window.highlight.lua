@@ -47,9 +47,6 @@ function M.stop() end
 
 -- Sets or clears the user override for "isolate" mode.
 --
--- This function should be bound to a hotkey, e.g.:
--- `hs.hotkey.bind('ctrl-cmd','\','Isolate',hs.window.highlight.toggleIsolate)`
---
 -- Parameters:
 --  * v - (optional) a boolean; if true, enable isolate mode; if false, disable isolate mode,
 --    even when `windowfilterIsolate` passed to `.start()` would otherwise enable it; if omitted or nil,
@@ -58,6 +55,9 @@ function M.stop() end
 --
 -- Returns:
 --  * None
+--
+-- Notes:
+--  * This function should be bound to a hotkey, e.g.: `hs.hotkey.bind('ctrl-cmd','\','Isolate',hs.window.highlight.toggleIsolate)`
 function M.toggleIsolate(v) end
 
 -- Allows customization of the highlight overlays and behaviour.

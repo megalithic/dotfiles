@@ -3,7 +3,7 @@
 
 -- local spaces = require("hs._asm.undocumented.spaces")
 
-local log = hs.logger.new("[running]", "warning")
+local log = hs.logger.new("[wm.run]", "info")
 local appw = hs.application.watcher
 local M = { apps = {}, observers = {}, windows = {} }
 
@@ -103,11 +103,18 @@ end
 M.triggerChange = function(app, win, event)
   local winTitle = ""
   local sep = ""
+  local appName = ""
+
   if win then
     sep = " -- "
     winTitle = win:title()
   end
-  print("->> " .. event .. ":" .. app:name() .. sep .. winTitle)
+
+  if app ~= nil and app:name() ~= nil then
+    appName = app:name()
+  end
+
+  log.f("->> " .. event .. ":" .. appName .. sep .. winTitle)
   for _, fn in ipairs(M._listeners) do
     fn(app, win, event)
     -- hs.timer.doAfter(.01, function() fn(app, win, event) end)
@@ -133,7 +140,7 @@ M._watchApp =
     -- when the app just launched, we might have to wait for
     -- the next event to setup the observers
     if ax:isValid() then
-      print("## watching: " .. app:name())
+      log.f("## watching: " .. app:name())
       M.apps[app:pid()] = app
       M._updateAppWindows(app, ax)
       ---@type hs.axuielement.observer
@@ -162,9 +169,9 @@ M._watchApp =
         end
 
         if type(notif) == "string" then
-          print("- axui:" .. notif)
+          log.f("- axui:" .. notif)
         else
-          print(hs.inspect(notif))
+          log.f(hs.inspect(notif))
         end
 
         local win = axel:asHSWindow()

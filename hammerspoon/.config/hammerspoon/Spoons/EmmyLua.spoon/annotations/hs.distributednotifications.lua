@@ -36,6 +36,9 @@ function M.new(callback, name, object, ...) end
 --  * name - A string containing the name of the notification
 --  * sender - An optional string containing the name of the sender of the notification (in the form `com.domain.application.foo`). Defaults to nil.
 --  * userInfo - An optional table containing additional information to post with the notification. Defaults to nil.
+--
+-- Returns:
+--  * None
 function M.post(name, sender, userInfo, ...) end
 
 -- Starts a NSDistributedNotificationCenter watcher

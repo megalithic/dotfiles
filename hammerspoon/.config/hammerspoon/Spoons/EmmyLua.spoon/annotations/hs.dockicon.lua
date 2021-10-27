@@ -12,6 +12,9 @@ hs.dockicon = M
 --
 -- Parameters:
 --  * indefinitely - A boolean value, true if the dock icon should bounce until the dock icon is clicked, false if the dock icon should only bounce briefly
+--
+-- Returns:
+--  * None
 function M.bounce(indefinitely, ...) end
 
 -- Hide Hammerspoon's dock icon
@@ -27,6 +30,9 @@ function M.hide() end
 --
 -- Parameters:
 --  * badge - A string containing the label to place inside the dock icon badge. If the string is empty, the badge will be cleared
+--
+-- Returns:
+--  * None
 function M.setBadge(badge, ...) end
 
 -- Make Hammerspoon's dock icon visible
