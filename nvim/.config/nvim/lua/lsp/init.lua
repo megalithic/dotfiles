@@ -230,7 +230,7 @@ local function setup_completion()
       ["<C-b>"] = cmp.mapping.scroll_docs(-4),
       ["<C-f>"] = cmp.mapping.scroll_docs(4),
       ["<C-Space>"] = cmp.mapping.complete(),
-      ["<CR>"] = cmp.mapping.complete(),
+      ["<CR>"] = cmp.mapping.confirm({ select = false }),
       ["<C-e>"] = cmp.mapping.close(),
     },
     sources = {
@@ -273,12 +273,9 @@ local function setup_completion()
       end,
     },
   })
-  -- # while using nvim-autopairs we want to fully control what the <CR> key does:
-  require("nvim-autopairs.completion.cmp").setup({
-    map_cr = true,
-    map_complete = true,
-    auto_select = false,
-  })
+  -- If you want insert `(` after select function or method item
+  local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+  cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 end
 
 -- our on_attach function to pass to each language server config..
