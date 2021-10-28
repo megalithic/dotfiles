@@ -40,6 +40,7 @@ brew "automake"
 brew "aspell"
 brew "awscli"
 brew "bat"
+brew "blueutil"
 brew "browsh"
 brew "vitorgalvao/tiny-scripts/calm-notifications"
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
