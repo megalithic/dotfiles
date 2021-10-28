@@ -7,7 +7,12 @@
 # https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
 
 if [ -n "$(command -v fzf)" ]; then
-	[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+	# -- use this if not using zsh-vi-mode
+	# TODO: need a condition to make this cleaner
+	# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+	# -- this fixes an issue with zsh-vi-mode gobbling fzf keybindings
+	zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 	export FZF_TMUX_HEIGHT='20%'
 	export FZF_DEFAULT_OPTS="
@@ -62,5 +67,4 @@ if [ -n "$(command -v fzf)" ]; then
 		export FZF_CTRL_T_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global --ignore-file .gitignore'
 		export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --exclude 'Library'"
 	fi
-
 fi
