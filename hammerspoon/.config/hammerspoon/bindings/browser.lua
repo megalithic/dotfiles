@@ -135,6 +135,11 @@ end
 
 module.start = function()
   log.df("starting..")
+
+  -- Snip current highlight text in browser and send to Drafts
+  hs.hotkey.bind(Config.modifiers.ctrlShift, "s", function()
+    M.snip()
+  end)
 end
 
 module.stop = function()

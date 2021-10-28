@@ -19,12 +19,12 @@ function M.setup()
           "css",
           "scss",
           "html",
-          "json",
           "yaml",
           "markdown",
           "markdown.mdx",
         },
       }),
+      nls.builtins.formatting.fixjson.with({ filetypes = { "jsonc" } }),
       nls.builtins.formatting.stylua.with({
         condition = function(util)
           return util.root_has_file("stylua.toml")
@@ -47,7 +47,9 @@ function M.has_formatter(ft)
   local config = require("null-ls.config").get()
   local formatters = config._generators["NULL_LS_FORMATTING"]
 
-  if formatters == nil then return false end
+  if formatters == nil then
+    return false
+  end
 
   for _, f in ipairs(formatters) do
     if vim.tbl_contains(f.filetypes, ft) then

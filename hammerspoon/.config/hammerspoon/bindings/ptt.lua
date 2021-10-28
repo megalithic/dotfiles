@@ -5,6 +5,7 @@ local log = hs.logger.new("[bindings.ptt]", "warning")
 local module = {}
 
 local template = require("ext.template")
+local alert = require("ext.alert")
 
 module.defaultState = "push-to-talk"
 
@@ -15,7 +16,7 @@ module.pushed = false
 local iconPath = hs.configdir .. "/assets/"
 local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({ w = 16, h = 16 })
 local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({ w = 16, h = 16 })
-module.icons = { ptm = speakIcon, ptt = mutedIcon }
+module.icons = { ["push-to-mute"] = speakIcon, ["push-to-talk"] = mutedIcon }
 
 module.states = function()
   log.df("current module.state from module.states(): %s", module.state)
@@ -168,6 +169,11 @@ module.start = function()
   module.menubar = hs.menubar.new()
   module.menubar:setMenu(buildMenu())
   module.setState(module.state)
+
+  hs.hotkey.bind(Config.ptt, "p", function()
+    local toggled_to_state = M.toggleStates()
+    alert.show({ text = M.icons[toggled_to_state] .. "Toggling PTT mode to " .. toggled_to_state })
+  end)
 end
 
 module.stop = function()

@@ -25,7 +25,7 @@ M.preferred = {
   browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
-  bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" },
+  bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser", "quake" },
   controlplane = { "dock", "office", "vpn" },
   watchers = { "urlevent" },
 }
@@ -101,6 +101,7 @@ M.distractionUrls = {
 }
 
 M.ptt = M.modifiers.cmdAlt -- toggling happens in bindings/misc.lua
+M.quake = { M.modifiers.cmd, "~" } -- toggling happens in bindings/misc.lua
 
 M.apps = {
   ["net.kovidgoyal.kitty"] = {
