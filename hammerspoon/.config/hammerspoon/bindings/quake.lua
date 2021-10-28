@@ -23,6 +23,8 @@ M.toggle = function()
     else
       print("kitty: focus")
       local win = app:mainWindow()
+
+      win:moveToScreen(1)
       win:focus()
     end
   else
@@ -30,6 +32,7 @@ M.toggle = function()
     os.execute(
       "/usr/local/bin/kitty -d ~ --title scratchpad -1 --instance-group scratchpad -o background_opacity=0.95 -o macos_hide_from_tasks=yes -o macos_quit_when_last_window_closed=yes &"
     )
+    -- hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty", true)
   end
 end
 

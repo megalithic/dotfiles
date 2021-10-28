@@ -101,7 +101,7 @@ M.distractionUrls = {
 }
 
 M.ptt = M.modifiers.cmdAlt -- toggling happens in bindings/misc.lua
-M.quake = { M.modifiers.cmd, "~" } -- toggling happens in bindings/misc.lua
+M.quake = { M.modifiers.ctrl, "`" } -- toggling happens in bindings/misc.lua
 
 M.apps = {
   ["net.kovidgoyal.kitty"] = {
