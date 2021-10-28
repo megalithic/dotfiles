@@ -1157,7 +1157,7 @@ local function setup_distant()
       dir = {},
       lsp = {
         ["outstand/atlas (elixirls)"] = {
-          cmd = { require("utils").lsp.elixirls_cmd("/home/ubuntu/.config") },
+          cmd = { require("utils").lsp.elixirls_cmd({ fallback_dir = "/home/ubuntu/.config" }) },
           root_dir = "/home/ubuntu/code/atlas",
           filetypes = { "elixir", "eelixir" },
           on_attach = function(client, bufnr)
