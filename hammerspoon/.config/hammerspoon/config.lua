@@ -1,4 +1,4 @@
--- local log = hs.logger.new("[config]", "warning")
+local log = hs.logger.new("[config]", "warning")
 
 -- grid config
 hs.grid.GRIDWIDTH = 8
@@ -6,92 +6,98 @@ hs.grid.GRIDHEIGHT = 8
 hs.grid.MARGINX = 0
 hs.grid.MARGINY = 0
 
+local M = {}
+
 -- available and preferred displays
-local displays = {
+M.displays = {
   laptop = "Color LCD",
   external = "LG UltraFine",
 }
 
-local M = {
-  network = {
-    home = "shaolin",
-    hostname = hs.host.localizedName(),
-    currentConnected = hs.wifi.currentNetwork(),
-  },
-  preferred = {
-    terms = { "kitty", "alacritty", "iTerm" },
-    browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
-    media = { "Spotify" },
-    vpn = { "Cloudflare WARP" },
-    bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" },
-    controlplane = { "dock", "office", "vpn" },
-    watchers = { "urlevent" },
-  },
-  displays = displays,
-  window = {
-    highlightBorder = false,
-    highlightMouse = true,
-    historyLimit = 0,
-  },
-  office = {},
-  -- legacy layouts:
-  grid = {
-    topHalf = "0,0 8x4",
-    bottomHalf = "0,4 8x4",
-    rightHalf = "4,0 4x8",
-    rightOneThird = "5,0 3x8",
-    rightTwoThirds = "3,0 5x8",
-    leftHalf = "0,0 4x8",
-    leftOneThird = "0,0 3x8",
-    leftTwoThirds = "0,0 5x8",
-    fullScreen = "0,0 8x8",
-    centeredLarge = "1,1 6x6",
-    centeredMedium = "2,2 4x4",
-    centeredSmall = "3,3 2x2",
-  },
-  -- actively used layouts:
-  layout = {
-    topHalf = { 0, 0, 1, 0.5 },
-    bottomHalf = { 0, 0.5, 1, 0.5 },
-    rightHalf = hs.layout.right50,
-    rightOneThird = hs.layout.right30,
-    rightTwoThirds = hs.layout.right70,
-    bottomRight = { 0.5, 0.5, 0.5, 0.5 },
-    bottomRight30 = { 0.7, 0.5, 0.3, 0.5 },
-    bottomRight40 = { 0.6, 0.5, 0.4, 0.5 },
-    bottomRight60 = { 0.4, 0.5, 0.6, 0.5 },
-    bottomRight70 = { 0.3, 0.5, 0.7, 0.5 },
-    topRight30 = { 0.7, 0, 0.3, 0.5 },
-    leftHalf = hs.layout.left50,
-    leftOneThird = hs.layout.left30,
-    leftTwoThirds = hs.layout.left70,
-    fullScreen = hs.layout.maximized,
-    centeredLarge = { x = 0.10, y = 0.10, w = 0.80, h = 0.80 },
-    centeredMedium = { x = 0.25, y = 0.25, w = 0.50, h = 0.50 },
-    centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
-  },
-  modifiers = {
-    ctrl = { "ctrl" },
-    shift = { "shift" },
-    cmd = { "cmd" },
-    cmdAlt = { "cmd", "alt" },
-    cmdShift = { "cmd", "shift" },
-    ctrlShift = { "ctrl", "shift" },
-    cmdCtrl = { "cmd", "ctrl" },
-    ctrlAlt = { "ctrl", "alt" },
-    mashShift = { "cmd", "ctrl", "shift" },
-    mash = { "cmd", "alt", "ctrl" },
-    ultra = { "cmd", "alt", "ctrl", "shift" },
-    hyper = "F19",
-  },
-  -- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
-  distractionUrls = {
-    "https://www.youtube.com",
-    "https://www.twitter.com",
-    "https://www.instagram.com",
-    "https://www.facebook.com",
-    "https://www.reddit.com",
-  },
+M.network = {
+  home = "shaolin",
+  hostname = hs.host.localizedName(),
+  currentConnected = hs.wifi.currentNetwork(),
+}
+
+M.preferred = {
+  terms = { "kitty", "alacritty", "iTerm" },
+  browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
+  media = { "Spotify" },
+  vpn = { "Cloudflare WARP" },
+  bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" },
+  controlplane = { "dock", "office", "vpn" },
+  watchers = { "urlevent" },
+}
+
+M.window = {
+  highlightBorder = false,
+  highlightMouse = true,
+  historyLimit = 0,
+}
+
+M.office = {}
+
+-- legacy layouts:
+M.grid = {
+  topHalf = "0,0 8x4",
+  bottomHalf = "0,4 8x4",
+  rightHalf = "4,0 4x8",
+  rightOneThird = "5,0 3x8",
+  rightTwoThirds = "3,0 5x8",
+  leftHalf = "0,0 4x8",
+  leftOneThird = "0,0 3x8",
+  leftTwoThirds = "0,0 5x8",
+  fullScreen = "0,0 8x8",
+  centeredLarge = "1,1 6x6",
+  centeredMedium = "2,2 4x4",
+  centeredSmall = "3,3 2x2",
+}
+
+-- actively used layouts:
+M.layout = {
+  topHalf = { 0, 0, 1, 0.5 },
+  bottomHalf = { 0, 0.5, 1, 0.5 },
+  rightHalf = hs.layout.right50,
+  rightOneThird = hs.layout.right30,
+  rightTwoThirds = hs.layout.right70,
+  bottomRight = { 0.5, 0.5, 0.5, 0.5 },
+  bottomRight30 = { 0.7, 0.5, 0.3, 0.5 },
+  bottomRight40 = { 0.6, 0.5, 0.4, 0.5 },
+  bottomRight60 = { 0.4, 0.5, 0.6, 0.5 },
+  bottomRight70 = { 0.3, 0.5, 0.7, 0.5 },
+  topRight30 = { 0.7, 0, 0.3, 0.5 },
+  leftHalf = hs.layout.left50,
+  leftOneThird = hs.layout.left30,
+  leftTwoThirds = hs.layout.left70,
+  fullScreen = hs.layout.maximized,
+  centeredLarge = { x = 0.10, y = 0.10, w = 0.80, h = 0.80 },
+  centeredMedium = { x = 0.25, y = 0.25, w = 0.50, h = 0.50 },
+  centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
+}
+
+M.modifiers = {
+  ctrl = { "ctrl" },
+  shift = { "shift" },
+  cmd = { "cmd" },
+  cmdAlt = { "cmd", "alt" },
+  cmdShift = { "cmd", "shift" },
+  ctrlShift = { "ctrl", "shift" },
+  cmdCtrl = { "cmd", "ctrl" },
+  ctrlAlt = { "ctrl", "alt" },
+  mashShift = { "cmd", "ctrl", "shift" },
+  mash = { "cmd", "alt", "ctrl" },
+  ultra = { "cmd", "alt", "ctrl", "shift" },
+  hyper = "F19",
+}
+
+-- REF for url handling: https://github.com/sjthespian/dotfiles/blob/master/hammerspoon/config.lua#L76
+M.distractionUrls = {
+  "https://www.youtube.com",
+  "https://www.twitter.com",
+  "https://www.instagram.com",
+  "https://www.facebook.com",
+  "https://www.reddit.com",
 }
 
 M.ptt = M.modifiers.cmdAlt -- toggling happens in bindings/misc.lua

@@ -20,9 +20,10 @@ hs.window.setShadows(false)
 hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
--- spoons
+-- spoons to load
 hs.loadSpoon("SpoonInstall")
 hs.loadSpoon("EmmyLua")
+hs.loadSpoon("VimMode")
 
 -- global requires
 Config = require("config")
@@ -44,7 +45,7 @@ hs.fnutils.each(modules, function(module)
   end
 end)
 
--- stop modules on shutdown
+-- stop modules on hs shutdown
 hs.shutdownCallback = function()
   hs.fnutils.each(modules, function(module)
     if module then

@@ -101,10 +101,6 @@ module.split = function()
   require("bindings.snap").leftHalf()
 
   hs.timer.doAfter(100 / 1000, function()
-    -- -- Pop out the current tab
-    -- hs.application.launchOrFocus('/Applications/Google Chrome.app')
-
-    -- local chrome = hs.appfinder.appFromName("Google Chrome")
     local browser = hs.appfinder.appFromName(Config.preferred.browsers[1])
     local moveTab = { "Tab", "Move Tab to New Window" }
 
