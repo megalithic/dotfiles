@@ -234,7 +234,8 @@ function M.lsp.config()
 end
 
 -- # [ lsp_commands ] ----------------------------------------------------------------
-function M.lsp.elixirls_cmd()
+function M.lsp.elixirls_cmd(opts)
+  opts = opts or {}
   local local_elixir_ls_dir_exists, local_elixir_ls_dir = M.root_has_file(".elixir_ls/release/language_server.sh")
 
   -- for linode/docker/atlas things:
@@ -249,8 +250,10 @@ function M.lsp.elixirls_cmd()
     return fn.expand(local_elixir_ls_bin)
   end
 
+  local fallback_dir = opts.fallback_dir or "$XDG_CONFIG_HOME"
+
   -- otherwise, just use our globally installed elixir_ls
-  return fn.expand("$XDG_CONFIG_HOME/lsp/elixir_ls/release") .. "/language_server.sh"
+  return fn.expand(string.format("%s/lsp/elixir_ls/release/%s", fallback_dir, "language_server.sh"))
 end
 
 return M

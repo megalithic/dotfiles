@@ -1,4 +1,4 @@
-local set, g, api, cmd, fn = vim.opt, vim.g, vim.api, vim.cmd, vim.fn
+local set, g, api, vcmd, fn = vim.opt, vim.g, vim.api, vim.cmd, vim.fn
 local dirs, map = mega.dirs, mega.map
 local colors = require("colors")
 
@@ -682,7 +682,7 @@ local function setup_vim_test()
     ]],
     false
   )
-  cmd([[let g:test#javascript#jest#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$']])
+  vcmd([[let g:test#javascript#jest#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$']])
 end
 
 local function setup_projectionist()
@@ -806,39 +806,39 @@ local function setup_numb()
 end
 
 local function setup_zk()
-  cmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
-  cmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
-  cmd(
+  vcmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
+  vcmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
+  vcmd(
     [[command! ZkList :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=notes EDITOR=floaterm zk edit -i]]
   )
-  cmd(
+  vcmd(
     [[command! ZkTags :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=tags zk list -q -f json | jq -r '. | map(.tags) | flatten | unique | join("\n")' | fzf | EDITOR=floaterm xargs -o -t zk edit -i -t]]
   )
-  cmd(
+  vcmd(
     [[command! ZkBacklinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=backlinks EDITOR=floaterm zk edit -i -l %]]
   )
-  cmd(
+  vcmd(
     [[command! ZkLinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=links EDITOR=floaterm zk edit -i -L %]]
   )
 
   mega.zk_list = function()
-    cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    cmd([[ZkList]])
+    vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+    vcmd([[ZkList]])
   end
 
   mega.zk_by_tags = function()
-    cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    cmd([[ZkTags]])
+    vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+    vcmd([[ZkTags]])
   end
 
   mega.zk_backlinks = function()
-    cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    cmd([[ZkBacklinks]])
+    vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+    vcmd([[ZkBacklinks]])
   end
 
   mega.zk_links = function()
-    cmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    cmd([[ZkLinks]])
+    vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
+    vcmd([[ZkLinks]])
   end
 
   local rooter = require("lspconfig").util.root_pattern(".zk")
@@ -1144,7 +1144,6 @@ local function setup_distant()
       max_timeout = 15000,
       poll_interval = 250,
       timeout_interval = 250,
-      mode = "ssh",
       ssh = {
         user = "ubuntu",
         identity_file = "~/.ssh/seth-Seths-MBP.lan",
@@ -1152,13 +1151,13 @@ local function setup_distant()
       distant = {
         bin = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
         username = "ubuntu",
-        -- args = '"--log-file ~/tmp/distant-seth_dev-server.log --log-level trace --port 8081:8099 --shutdown-after 60"',
+        args = '"--log-file ~/tmp/distant-seth_dev-server.log --log-level trace --port 8081:8099 --shutdown-after 60"',
       },
       file = {},
       dir = {},
       lsp = {
         ["outstand/atlas (elixirls)"] = {
-          cmd = { require("utils").lsp.elixirls_cmd() },
+          cmd = { require("utils").lsp.elixirls_cmd("/home/ubuntu/.config") },
           root_dir = "/home/ubuntu/code/atlas",
           filetypes = { "elixir", "eelixir" },
           on_attach = function(client, bufnr)
