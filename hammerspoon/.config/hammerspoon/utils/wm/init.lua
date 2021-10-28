@@ -101,7 +101,7 @@ end
 -- gathers layout for a found app_config and applies it
 M.apply_app_layout = function(app, _, event) -- app, win, event
   -- only apply app layout for launched apps
-  if event == running.events.launched or event == running.events.created then
+  if event == running.events.launched then
     log.df("attempting to apply layout for %s -> %s", app:name(), hs.inspect(app))
 
     if app then
@@ -145,10 +145,7 @@ M.start = function()
   running.start()
 
   -- watch for docking status changes..
-  cache.dock_watcher = hs.watchable.watch("status.docked", function(watcher, path, key, old, new)
-    -- print("isDocked callback:")
-    -- print(hs.inspect(...))
-    print(hs.inspect({ watcher, path, key, old, new }))
+  cache.dock_watcher = hs.watchable.watch("status.isDocked", function(watcher, path, key, old, new)
     if old ~= new then
       log.f("### preparing app layouts and contexts..")
       M.prepare()

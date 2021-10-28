@@ -116,6 +116,12 @@ M.start = function()
     :bind("ctrl", "[", function()
       movewindows:exit()
     end)
+    :bind("", "s", function()
+      if hs.window.focusedWindow():application():name() == Config.preferred.browsers[1] then
+        require("bindings.browser").split()
+      end
+      movewindows:exit()
+    end)
     :bind("", "escape", function()
       movewindows:exit()
     end)
@@ -139,27 +145,13 @@ M.start = function()
       hs.window.focusedWindow():centerOnScreen()
       movewindows:exit()
     end)
-
-  -- hs.fnutils.each(
-  --   hyper.grid,
-  --   function(entry)
-  --     hyper:bind(
-  --       "",
-  --       entry.key,
-  --       function()
-  --         hs.window.focusedWindow():moveToUnit(entry.unit)
-  --         movewindows:exit()
-  --       end
-  --     )
-  --   end
-  -- )
 end
 
 M.leftHalf = function()
-  require("ext.window").chain(Config.snap.left.position)(string.format("shortcut: %s", Config.snap.left.shortcut))
+  require("ext.window").chain(Config.snap.left.locations)("left half")
 end
 M.rightHalf = function()
-  require("ext.window").chain(Config.snap.right.position)(string.format("shortcut: %s", Config.snap.right.shortcut))
+  require("ext.window").chain(Config.snap.right.locations)("right half")
 end
 
 M.stop = function()
