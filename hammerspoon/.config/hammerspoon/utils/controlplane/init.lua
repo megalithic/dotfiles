@@ -1,9 +1,9 @@
-local cache  = {}
+local cache = {}
 local module = { cache = cache }
 
 module.start = function()
-  hs.fnutils.each(controlplane.enabled, function(controlName)
-    cache[controlName] = require('utils.controlplane.' .. controlName)
+  hs.fnutils.each(Config.preferred.controlplane, function(controlName)
+    cache[controlName] = require("utils.controlplane." .. controlName)
     cache[controlName]:start()
   end)
 end

@@ -14,7 +14,7 @@ local module = { cache = cache }
 
 local fn = require("hs.fnutils")
 
-local runningBrowserName = fn.find(watchers.urlPreference, function(browserName)
+local runningBrowserName = fn.find(Config.preferred.browsers, function(browserName)
   return hs.application.get(browserName) ~= nil
 end)
 

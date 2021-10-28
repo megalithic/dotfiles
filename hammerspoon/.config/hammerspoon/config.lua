@@ -22,7 +22,10 @@ local M = {
     terms = { "kitty", "alacritty", "iTerm" },
     browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
     media = { "Spotify" },
-    vpn = { "ExpressVPN" },
+    vpn = { "Cloudflare WARP" },
+    bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" },
+    controlplane = { "dock", "office", "vpn" },
+    watchers = { "urlevent" },
   },
   displays = displays,
   window = {
@@ -31,6 +34,7 @@ local M = {
     historyLimit = 0,
   },
   office = {},
+  -- legacy layouts:
   grid = {
     topHalf = "0,0 8x4",
     bottomHalf = "0,4 8x4",
@@ -45,6 +49,7 @@ local M = {
     centeredMedium = "2,2 4x4",
     centeredSmall = "3,3 2x2",
   },
+  -- actively used layouts:
   layout = {
     topHalf = { 0, 0, 1, 0.5 },
     bottomHalf = { 0, 0.5, 1, 0.5 },

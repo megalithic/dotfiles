@@ -24,28 +24,20 @@ hs.allowAppleScript(true)
 hs.loadSpoon("SpoonInstall")
 hs.loadSpoon("EmmyLua")
 
--- FIXME: replace lowercase references of `foo` to `Foo`, e.g., `config` -> `Config`
 -- global requires
 Config = require("config")
-Bindings = require("bindings")
-controlplane = require("utils.controlplane")
-watchables = require("utils.watchables")
-watchers = require("utils.watchers")
-wm = require("utils.wm")
 
--- controlplane
-controlplane.enabled = { "dock", "office", "vpn" }
+-- local requires
+local bindings = require("bindings")
+local controlplane = require("utils.controlplane")
+local watchables = require("utils.watchables")
+local wm = require("utils.wm")
+local watchers = require("utils.watchers")
 
--- watchers
-watchers.enabled = { "urlevent" } -- urlevent
-watchers.urlPreference = Config.preferred.browsers
+-- modules to load/configure
+local modules = { wm, bindings, controlplane, watchables, watchers }
 
--- bindings
-Bindings.enabled = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" }
-
--- start/stop modules
-local modules = { wm, Bindings, controlplane, watchables, watchers }
-
+-- start modules
 hs.fnutils.each(modules, function(module)
   if module then
     module.start()
