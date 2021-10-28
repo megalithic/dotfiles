@@ -112,7 +112,10 @@ M.apply_app_layout = function(app, _, event) -- app, win, event
       if layouts ~= nil then
         log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
         log.f("> layout:" .. app:name())
-        hs.layout.apply(layouts, match_title)
+
+        hs.timer.doAfter(0.5, function()
+          hs.layout.apply(layouts, match_title)
+        end)
       end
     end
   end
@@ -137,6 +140,11 @@ M.prepare = function()
   end
 end
 
+M.prepare_app = function(app_name)
+  local app = hs.application.find(app_name)
+  running.addToAppWatcher(app)
+end
+
 -- initialize watchers
 M.start = function()
   log.f("starting..")
@@ -145,7 +153,7 @@ M.start = function()
   running.start()
 
   -- watch for docking status changes..
-  cache.dock_watcher = hs.watchable.watch("status.isDocked", function(watcher, path, key, old, new)
+  cache.dock_watcher = hs.watchable.watch("status.isDocked", function(_, _, _, old, new) -- watcher, path, key, old, new
     if old ~= new then
       log.f("___ preparing app layouts and contexts..")
       M.prepare()

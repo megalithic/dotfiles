@@ -306,7 +306,7 @@ M.apps = {
     hyper_key = "y",
     local_bindings = { "'" },
     quitGuard = true,
-    hideAfter = 1,
+    hideAfter = 2,
     rules = {
       { nil, 1, M.layout.centeredLarge },
     },
@@ -324,6 +324,15 @@ M.apps = {
     bundleID = "com.microsoft.autoupdate2",
     name = "Microsoft AutoUpdate",
     quitAfter = 0,
+  },
+  ["com.figma.Desktop"] = {
+    bundleID = "com.figma.Desktop",
+    name = "Figma",
+    -- hyper_key = "y",
+    quitGuard = true,
+    rules = {
+      { nil, 1, M.layout.centeredLarge },
+    },
   },
 }
 
