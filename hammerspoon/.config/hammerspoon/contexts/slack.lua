@@ -38,7 +38,7 @@ local wh = require("utils.wm.window-handlers")
 --   cache.modal:exit()
 -- end
 
-local function find()
+local function _find()
   local module = {}
 
   module.traverseChildren = function(element, matchFn)
@@ -82,6 +82,7 @@ local function find()
 end
 
 local function _focus()
+  local find = _find()
   local function getAxSlackWindow()
     local app = hs.application.find("Slack")
     if not app then
@@ -107,8 +108,6 @@ local function _focus()
 
     return hs.fnutils.contains(classList, class)
   end
-
-  -----------
 
   local module = {}
 
@@ -247,14 +246,14 @@ local function _focus()
 end
 
 -- apply(hs.application, hs.window, running.events, hs.logger) :: nil
-M.apply = function(app, win, event, log)
+M.apply = function(app, _, _, log)
   local focus = _focus()
   local function slackUp()
-    hs.eventtap.keyStroke({}, "up", app)
+    hs.eventtap.keyStroke({ "alt" }, "up", app)
   end
 
   local function slackDown()
-    hs.eventtap.keyStroke({}, "down", app)
+    hs.eventtap.keyStroke({ "alt" }, "down", app)
   end
 
   -- local function startSlackReminder()
@@ -290,6 +289,15 @@ M.apply = function(app, win, event, log)
   slackModal:bind({ "ctrl" }, "g", function()
     hs.eventtap.keyStroke({ "cmd" }, "k", app)
   end)
+
+  -- basically no-ops:
+  slackModal:bind({ "cmd" }, "w", function()
+    hs.eventtap.keyStroke({}, "escape", app)
+  end)
+  slackModal:bind({ "cmd" }, "r", function()
+    hs.eventtap.keyStroke({}, "escape", app)
+  end)
+
   -- slackModal:bind({ "ctrl" }, "r", nil, startSlackReminder, nil, startSlackReminder)
   -- slackModal:bind({ "ctrl" }, "t", nil, openSlackThread, nil, openSlackThread)
   -- slackModal:bind({ "shift", "cmd" }, "delete", nil, focus.leaveChannel, nil, nil)
