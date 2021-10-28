@@ -257,6 +257,9 @@ M.apply = function(app, _, _, _)
   slackModal:bind({ "ctrl" }, "g", function()
     hs.eventtap.keyStroke({ "cmd" }, "k", app)
   end)
+  slackModal:bind({ "ctrl" }, "/", function()
+    hs.eventtap.keyStroke({ "cmd" }, "f", app)
+  end)
 
   -- basically no-ops:
   slackModal:bind({ "cmd" }, "w", function()
