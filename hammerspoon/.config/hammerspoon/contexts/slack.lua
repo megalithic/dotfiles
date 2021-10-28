@@ -1,42 +1,10 @@
+-- HT @dbalatero
+-- REF: https://github.com/dbalatero/dotfiles/tree/master/hammerspoon/slack
+
 local cache = {}
 
 local M = { cache = cache }
 local wh = require("utils.wm.window-handlers")
--- local log = hs.logger.new("[slack]", "debug")
-
--- local enter = function(app, log)
---   log.wf("entering slack hotkey modal..")
-
---   cache.modal:bind({ "ctrl" }, "j", function()
---     hs.eventtap.keyStroke({ "alt" }, "down", app)
---   end)
---   cache.modal:bind({ "ctrl" }, "k", function()
---     hs.eventtap.keyStroke({ "alt" }, "up", app)
---   end)
---   cache.modal:bind({ "ctrl", "shift" }, "j", function()
---     hs.eventtap.keyStroke({ "alt", "shift" }, "down", app)
---   end)
---   cache.modal:bind({ "ctrl", "shift" }, "k", function()
---     hs.eventtap.keyStroke({ "alt", "shift" }, "up", app)
---   end)
---   cache.modal:bind({ "cmd" }, "w", function()
---     hs.eventtap.keyStroke({}, "escape", app)
---   end)
---   cache.modal:bind({ "cmd" }, "r", function()
---     hs.eventtap.keyStroke({}, "escape", app)
---   end)
---   cache.modal:bind({ "ctrl" }, "g", function()
---     hs.eventtap.keyStroke({ "cmd" }, "k", app)
---   end)
-
---   cache.modal:enter()
--- end
-
--- local exit = function(app, log)
---   log.wf("exiting slack hotkey modal for app: %s", hs.inspect(app))
-
---   cache.modal:exit()
--- end
 
 local function _find()
   local module = {}
@@ -246,7 +214,7 @@ local function _focus()
 end
 
 -- apply(hs.application, hs.window, running.events, hs.logger) :: nil
-M.apply = function(app, _, _, log)
+M.apply = function(app, _, _, _)
   local focus = _focus()
   local function slackUp()
     hs.eventtap.keyStroke({ "alt" }, "up", app)
