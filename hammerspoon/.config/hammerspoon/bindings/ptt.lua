@@ -13,16 +13,16 @@ module.defaultInputVolume = 50
 module.pushed = false
 
 local iconPath = hs.configdir .. "/assets/"
-local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({w = 16, h = 16})
-local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({w = 16, h = 16})
-module.icons = {ptm = speakIcon, ptt = mutedIcon}
+local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({ w = 16, h = 16 })
+local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({ w = 16, h = 16 })
+module.icons = { ptm = speakIcon, ptt = mutedIcon }
 
 module.states = function()
   log.df("current module.state from module.states(): %s", module.state)
 
   return {
-    {title = "Push-to-talk", state = "push-to-talk", checked = (module.state == "push-to-talk")},
-    {title = "Push-to-mute", state = "push-to-mute", checked = (module.state == "push-to-mute")}
+    { title = "Push-to-talk", state = "push-to-talk", checked = (module.state == "push-to-talk") },
+    { title = "Push-to-mute", state = "push-to-mute", checked = (module.state == "push-to-mute") },
   }
 end
 
@@ -76,26 +76,22 @@ local showState = function()
 end
 
 local buildMenu = function()
-  local menutable =
-    hs.fnutils.map(
-    module.states(),
-    function(item)
-      local title = ""
-      if item.checked then
-        title = template("{TITLE} ({PTT})", {TITLE = tostring(item.title), PTT = to_psv(config.ptt)})
-      else
-        title = item.title
-      end
-
-      return {
-        title = title,
-        fn = function()
-          module.setState(item.state)
-        end,
-        checked = item.checked
-      }
+  local menutable = hs.fnutils.map(module.states(), function(item)
+    local title = ""
+    if item.checked then
+      title = template("{TITLE} ({PTT})", { TITLE = tostring(item.title), PTT = to_psv(Config.ptt) })
+    else
+      title = item.title
     end
-  )
+
+    return {
+      title = title,
+      fn = function()
+        module.setState(item.state)
+      end,
+      checked = item.checked,
+    }
+  end)
 
   return menutable
 end
@@ -150,15 +146,11 @@ end
 
 module.toggleStates = function()
   local current_state = module.state
-  local toggle_to =
-    hs.fnutils.find(
-    module.states(),
-    function(item)
-      if not item.checked then
-        return item
-      end
+  local toggle_to = hs.fnutils.find(module.states(), function(item)
+    if not item.checked then
+      return item
     end
-  )
+  end)
 
   module.setState(toggle_to.state)
 
@@ -169,8 +161,8 @@ end
 module.start = function()
   module.stop()
 
-  module.modifierKeys = config.ptt
-  module.eventTapWatcher = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, eventTapWatcher)
+  module.modifierKeys = Config.ptt
+  module.eventTapWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, eventTapWatcher)
   module.eventTapWatcher:start()
 
   module.menubar = hs.menubar.new()

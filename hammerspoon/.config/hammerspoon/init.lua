@@ -27,8 +27,7 @@ hs.loadSpoon("EmmyLua")
 -- FIXME: replace lowercase references of `foo` to `Foo`, e.g., `config` -> `Config`
 -- global requires
 Config = require("config")
-config = Config
-bindings = require("bindings")
+Bindings = require("bindings")
 controlplane = require("utils.controlplane")
 watchables = require("utils.watchables")
 watchers = require("utils.watchers")
@@ -42,10 +41,10 @@ watchers.enabled = { "urlevent" } -- urlevent
 watchers.urlPreference = Config.preferred.browsers
 
 -- bindings
-bindings.enabled = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" }
+Bindings.enabled = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" }
 
 -- start/stop modules
-local modules = { wm, bindings, controlplane, watchables, watchers }
+local modules = { wm, Bindings, controlplane, watchables, watchers }
 
 hs.fnutils.each(modules, function(module)
   if module then

@@ -97,7 +97,7 @@ M.start = function()
   end)
 
   -- :: window-manipulation (manual window snapping)
-  for _, c in pairs(config.snap) do
+  for _, c in pairs(Config.snap) do
     movewindows:bind("", c.shortcut, function()
       require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
       -- hs.hotkey.bind(c.modifier, c.shortcut, chain(c.locations))

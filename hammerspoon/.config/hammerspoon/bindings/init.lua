@@ -1,9 +1,9 @@
-local cache  = {}
+local cache = {}
 local module = { cache = cache }
 
 module.start = function()
-  hs.fnutils.each(bindings.enabled, function(binding)
-    cache[binding] = require('bindings.' .. binding)
+  hs.fnutils.each(Bindings.enabled, function(binding)
+    cache[binding] = require("bindings." .. binding)
     cache[binding].start()
   end)
 end

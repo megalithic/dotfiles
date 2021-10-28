@@ -2,8 +2,8 @@ local log = hs.logger.new("[watchables]", "debug")
 
 local status = hs.watchable.new("status")
 
-local cache = {status = status}
-local module = {cache = cache}
+local cache = { status = status }
+local module = { cache = cache }
 
 -- local VPN_CONFIG_KEY  = "State:/Network/Global/Proxies"
 -- local NETWORK_SHARING = "com.apple.NetworkSharing"
@@ -16,21 +16,17 @@ local updateBattery = function()
     percentage = hs.battery.percentage(),
     powerSource = hs.battery.powerSource(),
     amperage = hs.battery.amperage(),
-    burnRate = burnRate
+    burnRate = burnRate,
   }
 end
 
 local updateScreen = function()
   status.connectedScreens = #hs.screen.allScreens()
-  status.connectedScreenIds =
-    hs.fnutils.map(
-    hs.screen.allScreens(),
-    function(screen)
-      return screen:id()
-    end
-  )
-  status.is4kConnected = hs.screen.findByName(config.displays.external) ~= nil
-  status.isLaptopScreenConnected = hs.screen.findByName(config.displays.laptop) ~= nil
+  status.connectedScreenIds = hs.fnutils.map(hs.screen.allScreens(), function(screen)
+    return screen:id()
+  end)
+  status.is4kConnected = hs.screen.find(Config.displays.external) ~= nil
+  status.isLaptopScreenConnected = hs.screen.find(Config.displays.laptop) ~= nil
 
   log.d("updated screens:", hs.inspect(status.connectedScreenIds))
 end
@@ -55,21 +51,13 @@ local updateSleep = function(event) -- int
 end
 
 local updateUSB = function()
-  status.docked =
-    hs.fnutils.find(
-    hs.usb.attachedDevices(),
-    function(device)
-      return device.productName == config.docking.device.productName
-    end
-  ) ~= nil
+  status.docked = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
+    return device.productName == Config.docking.device.productName
+  end) ~= nil
 
-  status.connectedExternalKeyboard =
-    hs.fnutils.find(
-    hs.usb.attachedDevices(),
-    function(device)
-      return device.productName == config.docking.keyboard.productName
-    end
-  ) ~= nil
+  status.connectedExternalKeyboard = hs.fnutils.find(hs.usb.attachedDevices(), function(device)
+    return device.productName == Config.docking.keyboard.productName
+  end) ~= nil
 
   status.isDocked = status.docked
 
@@ -87,7 +75,7 @@ module.start = function()
     screen = hs.screen.watcher.new(updateScreen):start(),
     sleep = hs.caffeinate.watcher.new(updateSleep):start(),
     usb = hs.usb.watcher.new(updateUSB):start(),
-    wifi = hs.wifi.watcher.new(updateWiFi):start()
+    wifi = hs.wifi.watcher.new(updateWiFi):start(),
     -- network = cache.configuration:monitorKeys({ VPN_CONFIG_KEY, NETWORK_SHARING }):setCallback(updateNetwork):start(),
   }
 
@@ -101,12 +89,9 @@ module.start = function()
 end
 
 module.stop = function()
-  hs.fnutils.each(
-    cache.watchers,
-    function(watcher)
-      watcher:stop()
-    end
-  )
+  hs.fnutils.each(cache.watchers, function(watcher)
+    watcher:stop()
+  end)
 
   cache.configuration:stop()
 end

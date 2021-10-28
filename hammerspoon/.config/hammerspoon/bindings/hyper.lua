@@ -23,7 +23,7 @@ local released = function()
 end
 
 local hyperLocalBindingsTap = function(key)
-  return hs.eventtap.keyStroke(config.modifiers.ultra, key)
+  return hs.eventtap.keyStroke(Config.modifiers.ultra, key)
 end
 
 local hyperArrowBindingsTap = function(key)
@@ -35,21 +35,17 @@ local appLaunchOrFocus = function(app)
     log.df("hyper_key found for %s (%s)", app.name, app.hyper_key)
     local mod = app.modifier or {}
 
-    hyper:bind(
-      mod,
-      app.hyper_key,
-      function()
-        if app.launchMode ~= nil then
-          if app.launchMode == "focus" then
-            focusOnly(app.bundleID)
-          else
-            toggle(app.bundleID, false)
-          end
+    hyper:bind(mod, app.hyper_key, function()
+      if app.launchMode ~= nil then
+        if app.launchMode == "focus" then
+          focusOnly(app.bundleID)
         else
           toggle(app.bundleID, false)
         end
+      else
+        toggle(app.bundleID, false)
       end
-    )
+    end)
   end
 end
 
@@ -58,76 +54,44 @@ local localBindingLaunchOrFocus = function(app)
     for _, key in pairs(app.local_bindings) do
       log.df("hyper local_bindings found for %s (%s)", app.name, hs.inspect(app.local_bindings))
 
-      hyper:bind(
-        {},
-        key,
-        nil,
-        function()
-          if hs.application.find(app.bundleID) then
-            log.df("hyper local_bindings tap %s (%s)", app.name, app.bundleID)
+      hyper:bind({}, key, nil, function()
+        if hs.application.find(app.bundleID) then
+          log.df("hyper local_bindings tap %s (%s)", app.name, app.bundleID)
+          hyperLocalBindingsTap(key)
+        else
+          toggle(app.bundleID, false)
+          hs.timer.waitWhile(function()
+            return hs.application.find(app.bundleID) == nil
+          end, function()
             hyperLocalBindingsTap(key)
-          else
-            toggle(app.bundleID, false)
-            hs.timer.waitWhile(
-              function()
-                return hs.application.find(app.bundleID) == nil
-              end,
-              function()
-                hyperLocalBindingsTap(key)
-              end
-            )
-          end
+          end)
         end
-      )
+      end)
     end
   end
 end
 
 local vimNavigationKeyBindings = function()
-  hyper:bind(
-    {"shift"},
-    "h",
-    nil,
-    function()
-      hyperArrowBindingsTap("left")
-    end,
-    function()
-      hyperArrowBindingsTap("left")
-    end
-  )
-  hyper:bind(
-    {"shift"},
-    "j",
-    nil,
-    function()
-      hyperArrowBindingsTap("down")
-    end,
-    function()
-      hyperArrowBindingsTap("down")
-    end
-  )
-  hyper:bind(
-    {"shift"},
-    "k",
-    nil,
-    function()
-      hyperArrowBindingsTap("up")
-    end,
-    function()
-      hyperArrowBindingsTap("up")
-    end
-  )
-  hyper:bind(
-    {"shift"},
-    "l",
-    nil,
-    function()
-      hyperArrowBindingsTap("right")
-    end,
-    function()
-      hyperArrowBindingsTap("right")
-    end
-  )
+  hyper:bind({ "shift" }, "h", nil, function()
+    hyperArrowBindingsTap("left")
+  end, function()
+    hyperArrowBindingsTap("left")
+  end)
+  hyper:bind({ "shift" }, "j", nil, function()
+    hyperArrowBindingsTap("down")
+  end, function()
+    hyperArrowBindingsTap("down")
+  end)
+  hyper:bind({ "shift" }, "k", nil, function()
+    hyperArrowBindingsTap("up")
+  end, function()
+    hyperArrowBindingsTap("up")
+  end)
+  hyper:bind({ "shift" }, "l", nil, function()
+    hyperArrowBindingsTap("right")
+  end, function()
+    hyperArrowBindingsTap("right")
+  end)
 end
 
 local miscKeyBindings = function(misc)
@@ -139,9 +103,9 @@ end
 
 module.start = function()
   log.df("starting..")
-  hs.hotkey.bind({}, config.modifiers.hyper, pressed, released)
+  hs.hotkey.bind({}, Config.modifiers.hyper, pressed, released)
 
-  for _, app in pairs(config.apps) do
+  for _, app in pairs(Config.apps) do
     -- :: apps
     appLaunchOrFocus(app)
 
@@ -154,12 +118,12 @@ module.start = function()
   vimNavigationKeyBindings()
 
   -- :: misc (utilities)
-  for _, misc in pairs(config.utilities) do
+  for _, misc in pairs(Config.utilities) do
     miscKeyBindings(misc)
   end
 
   -- -- :: media (spotify/volume)
-  -- for _, m in pairs(config.media) do
+  -- for _, m in pairs(Config.media) do
   --   hyper:bind(
   --     m.hyper_mod,
   --     m.hyper_key,
@@ -170,7 +134,7 @@ module.start = function()
   -- end
 
   -- -- :: volume control
-  -- for _, v in pairs(config.volume) do
+  -- for _, v in pairs(Config.volume) do
   --   hyper:bind(
   --     v.hyper_mod,
   --     v.hyper_key,
@@ -194,20 +158,15 @@ function module:bind(mod, key, pressedFn, releasedFn)
     mod = {}
   end
 
-  hyper:bind(
-    mod,
-    key,
-    function()
-      if pressedFn then
-        pressedFn()
-      end
-    end,
-    function()
-      if releasedFn then
-        releasedFn()
-      end
+  hyper:bind(mod, key, function()
+    if pressedFn then
+      pressedFn()
     end
-  )
+  end, function()
+    if releasedFn then
+      releasedFn()
+    end
+  end)
 end
 
 return module
