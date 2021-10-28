@@ -6,7 +6,6 @@ local fn = require("hs.fnutils")
 local wh = require("utils.wm.window-handlers")
 local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
-local browser = require("bindings.browser")
 local init_apply_complete = false
 
 -- apply(hs.application, hs.window, running.events, hs.logger) :: nil
@@ -33,7 +32,7 @@ M.apply = function(app, win, event, log)
       do
         local zoom = hs.application.get("zoom.us")
         local kitty = hs.application.get("kitty")
-        local brave = hs.application.get(Config.preferred.browsers[1])
+        local browser = hs.application.get(Config.preferred.browsers[1])
 
         hs.timer.waitUntil(function()
           return zoom:getWindow("Zoom Meeting")
@@ -45,7 +44,7 @@ M.apply = function(app, win, event, log)
 
           local layouts = {
             { "zoom.us", "Zoom Meeting", hs.screen.primaryScreen():name(), hs.layout.left50, nil, nil },
-            { brave:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
+            { browser:name(), nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
             { "kitty", nil, hs.screen.primaryScreen():name(), hs.layout.right50, nil, nil },
           }
           hs.layout.apply(layouts)
@@ -66,13 +65,13 @@ M.apply = function(app, win, event, log)
   -- things to do on app exit
   wh.onAppQuit(app, function()
     local kitty = hs.application.get("kitty")
-    local brave = hs.application.get(Config.preferred.browsers[1])
+    local browser = hs.application.get(Config.preferred.browsers[1])
 
     -- FIXME: do i really need all the error checking here?
-    if brave ~= nil then
-      local brave_win = brave:mainWindow()
-      if brave_win ~= nil then
-        brave_win:moveToUnit(hs.layout.maximized)
+    if browser ~= nil then
+      local browser_win = browser:mainWindow()
+      if browser_win ~= nil then
+        browser_win:moveToUnit(hs.layout.maximized)
       end
     end
     if kitty ~= nil then

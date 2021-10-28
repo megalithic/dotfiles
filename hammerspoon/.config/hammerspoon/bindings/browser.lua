@@ -95,6 +95,26 @@ module.snip = function()
   hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
 end
 
+module.split = function()
+  -- Move current window to the left half
+
+  require("bindings.snap").leftHalf()
+
+  hs.timer.doAfter(100 / 1000, function()
+    -- -- Pop out the current tab
+    -- hs.application.launchOrFocus('/Applications/Google Chrome.app')
+
+    -- local chrome = hs.appfinder.appFromName("Google Chrome")
+    local browser = hs.appfinder.appFromName(Config.preferred.browsers[1])
+    local moveTab = { "Tab", "Move Tab to New Window" }
+
+    browser:selectMenuItem(moveTab)
+
+    -- Move it to the right of the screen
+    require("bindings.snap").rightHalf()
+  end)
+end
+
 module.urlsTaggedWith = function(tag)
   return fn.filter(config.domains, function(domain)
     return domain.tags and fn.contains(domain.tags, tag)

@@ -166,7 +166,7 @@ M.apps = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
     hyper_key = "s",
-    -- context = "slack",
+    context = "slack",
     distraction = true,
     quitGuard = true,
     rules = {
@@ -416,7 +416,7 @@ M.volume = {
 }
 
 M.snap = {
-  {
+  left = {
     name = "left",
     modifier = M.modifiers.cmdCtrl,
     -- hyperKey = M.modifiers.hyper,
@@ -428,7 +428,7 @@ M.snap = {
       M.grid.leftTwoThirds,
     },
   },
-  {
+  right = {
     name = "right",
     modifier = M.modifiers.cmdCtrl,
     -- hyperKey = M.modifiers.hyper,
@@ -440,7 +440,7 @@ M.snap = {
       M.grid.rightTwoThirds,
     },
   },
-  {
+  down = {
     name = "down",
     modifier = M.modifiers.cmdCtrl,
     -- hyperKey = M.modifiers.hyper,
@@ -452,7 +452,7 @@ M.snap = {
       M.grid.centeredSmall,
     },
   },
-  {
+  up = {
     name = "up",
     modifier = M.modifiers.cmdCtrl,
     -- hyperKey = M.modifiers.hyper,
@@ -462,7 +462,7 @@ M.snap = {
       M.grid.fullScreen,
     },
   },
-  {
+  full = {
     name = "full",
     modifier = M.modifiers.cmdCtrl,
     -- hyperKey = M.modifiers.hyper,
