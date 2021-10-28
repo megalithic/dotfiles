@@ -52,7 +52,7 @@ module.killTabsByDomain = function(domain)
 end
 
 module.snip = function()
-  local app_name = config.preferred.browsers[1]
+  local app_name = Config.preferred.browsers[1]
   log.wf("snipping with %s", app_name)
 
   -- https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
@@ -116,7 +116,7 @@ module.split = function()
 end
 
 module.urlsTaggedWith = function(tag)
-  return fn.filter(config.domains, function(domain)
+  return fn.filter(Config.domains, function(domain)
     return domain.tags and fn.contains(domain.tags, tag)
   end)
 end
