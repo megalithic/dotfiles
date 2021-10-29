@@ -18,10 +18,12 @@ local function setup_diagnostics()
     "DiagnosticSignWarning",
     { texthl = "DiagnosticSignWarning", text = "", numhl = "DiagnosticSignWarning" }
   )
+  fn.sign_define("DiagnosticSignWarn", { texthl = "DiagnosticSignWarn", text = "", numhl = "DiagnosticSignWarn" })
   fn.sign_define(
     "DiagnosticSignInformation",
     { texthl = "DiagnosticSignInformation", text = "", numhl = "DiagnosticSignInformation" }
   )
+  fn.sign_define("DiagnosticSignInfo", { texthl = "DiagnosticSignInfo", text = "", numhl = "DiagnosticSignInfo" })
   fn.sign_define("DiagnosticSignHint", { texthl = "DiagnosticSignHint", text = "", numhl = "DiagnosticSignHint" })
 
   -- fn.sign_define(
