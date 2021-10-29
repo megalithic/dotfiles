@@ -23,7 +23,7 @@ return {
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
-  -- "folke/which-key.nvim",
+  "folke/which-key.nvim",
   "goolord/alpha-nvim",
   -- "megalithic/shade.nvim", -- FIXME: too many broke things for various plugins
   -- "akinsho/bufferline.nvim",
