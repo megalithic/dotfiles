@@ -115,8 +115,8 @@ return {
   "tpope/vim-projectionist",
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "tpope/vim-ragtag",
-  "rizzatti/dash.vim",
-  -- 'megalithic/dash.nvim', -- https://github.com/mrjones2014/dash.nvim/issues/25#issuecomment-940331156
+  -- "rizzatti/dash.vim",
+  { "mrjones2014/dash.nvim", run = "make install" }, -- https://github.com/mrjones2014/dash.nvim/issues/25#issuecomment-940331156
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",
@@ -166,7 +166,7 @@ return {
   -- "rhysd/vim-gfm-syntax",
   { "iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"] },
   { "harshad1/bullets.vim", branch = "performance_improvements" },
-  "kristijanhusak/orgmode.nvim",
+  { "kristijanhusak/orgmode.nvim", branch = "tree-sitter" },
   "akinsho/org-bullets.nvim",
   "lervag/vim-rainbow-lists", -- :RBListToggle
   "dhruvasagar/vim-table-mode",
