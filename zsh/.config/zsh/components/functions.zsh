@@ -1,6 +1,11 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
+# Shorten Github URL with vanity (url, vanity code) - saves to clipboard!
+ghurl() {
+  curl -i -s https://git.io -F "url=$1" -F "code=$2" | rg "Location" | cut -f 2 -d " " | pbcopy
+}
+
 function __close_all_apps() {
   apps=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s;", $i}')
   while [ "$apps" ] ;do

@@ -40,3 +40,13 @@ if [[ -z $TMUX ]]; then
 		tmux -2u set-window-option automatic-rename "on" >/dev/null
 	}
 fi
+
+# # Automatically start tmux on remote server when logging in via SSH
+# if [ -n "$PS1" ] && [ -z "$TMUX" ] && [ -n "$SSH_CONNECTION" ]; then
+# 	tmux attach-session -t ssh_tmux || tmux new-session -s ssh_tmux
+# fi
+
+# # Automatically start tmux on local machine if not running yet
+# if [ -z "$SSH_CONNECTION" ] && ! tmux info &> /dev/null; then
+#   tmux
+# fi

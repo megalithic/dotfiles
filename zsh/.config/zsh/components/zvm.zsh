@@ -1,0 +1,28 @@
+#!/bin/zsh
+
+# Change to Zsh's default readkey engine
+ZVM_READKEY_ENGINE=$ZVM_READKEY_ENGINE_NEX #NEW
+
+ZVM_KEYTIMEOUT=0.4
+ZVM_ESCAPE_KEYTIMEOUT=0.03
+
+ZVM_LINE_INIT_MODE="$ZVM_MODE_INSERT"
+ZVM_INSERT_MODE_CURSOR="$ZVM_CURSOR_BEAM"
+ZVM_NORMAL_MODE_CURSOR="$ZVM_CURSOR_BLOCK"
+ZVM_VI_HIGHLIGHT_BACKGROUND="black"
+ZVM_VI_HIGHLIGHT_FOREGROUND="white"
+ZVM_VI_HIGHLIGHT_EXTRASTYLE="bold,underline"
+
+# ZVM_VI_HIGHLIGHT_FOREGROUND=green             # Color name
+# ZVM_VI_HIGHLIGHT_FOREGROUND=#008800           # Hex value
+# ZVM_VI_HIGHLIGHT_BACKGROUND=red               # Color name
+# ZVM_VI_HIGHLIGHT_BACKGROUND=#ff0000           # Hex value
+ZVM_VI_HIGHLIGHT_EXTRASTYLE=bold,underline # bold and underline
+ZVM_INSERT_MODE_CURSOR=$ZVM_CURSOR_BEAM
+ZVM_NORMAL_MODE_CURSOR=$ZVM_CURSOR_BLOCK
+ZVM_OPPEND_MODE_CURSOR=$ZVM_CURSOR_UNDERLINE
+
+function zvm_after_lazy_keybindings() {
+	zvm_bindkey vicmd "H" vi-beginning-of-line
+	zvm_bindkey vicmd "L" vi-end-of-line
+}
