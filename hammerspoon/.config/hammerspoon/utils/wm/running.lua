@@ -82,6 +82,10 @@ M._updateAppWindows = function(app, ax)
     M.windows[app:pid()] = {}
   end
   if ax.AXChildren then
+    if ax == nil or ax.AXChildren == nil then
+      return
+    end
+
     for _, child in ipairs(ax.AXChildren) do
       if child:matchesCriteria("AXWindow") then
         M._addAppWindow(app, child)

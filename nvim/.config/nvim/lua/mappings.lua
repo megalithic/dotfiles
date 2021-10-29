@@ -195,6 +195,9 @@ map("n", "<leader>d", "<cmd>Dash<CR>")
 -- # paq
 map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
+-- # yanil
+map("n", "-", "<Cmd>YanilToggle<cr>", { nowait = true })
+
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
 map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>")
