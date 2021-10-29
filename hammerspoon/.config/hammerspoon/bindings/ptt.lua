@@ -2,28 +2,28 @@
 
 local log = hs.logger.new("[bindings.ptt]", "warning")
 
-local module = {}
+local M = {}
 
 local template = require("ext.template")
 local alert = require("ext.alert")
 
-module.defaultState = "push-to-talk"
+M.defaultState = "push-to-talk"
 
-module.state = module.defaultState
-module.defaultInputVolume = 50
-module.pushed = false
+M.state = M.defaultState
+M.defaultInputVolume = 50
+M.pushed = false
 
 local iconPath = hs.configdir .. "/assets/"
 local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({ w = 16, h = 16 })
 local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({ w = 16, h = 16 })
-module.icons = { ["push-to-mute"] = speakIcon, ["push-to-talk"] = mutedIcon }
+M.icons = { ["push-to-mute"] = speakIcon, ["push-to-talk"] = mutedIcon }
 
-module.states = function()
-  log.df("current module.state from module.states(): %s", module.state)
+M.states = function()
+  log.df("current module.state from module.states(): %s", M.state)
 
   return {
-    { title = "Push-to-talk", state = "push-to-talk", checked = (module.state == "push-to-talk") },
-    { title = "Push-to-mute", state = "push-to-mute", checked = (module.state == "push-to-mute") },
+    { title = "Push-to-talk", state = "push-to-talk", checked = (M.state == "push-to-talk") },
+    { title = "Push-to-mute", state = "push-to-mute", checked = (M.state == "push-to-mute") },
   }
 end
 
@@ -43,31 +43,31 @@ local showState = function()
 
   -- starting point:
   local muted = false
-  local inputVolume = module.defaultInputVolume
+  local inputVolume = M.defaultInputVolume
 
-  if module.state == "push-to-talk" then
-    if module.pushed then
-      module.menubar:setIcon(speakIcon)
+  if M.state == "push-to-talk" then
+    if M.pushed then
+      M.menubar:setIcon(speakIcon)
 
       muted = false
-      inputVolume = module.defaultInputVolume
+      inputVolume = M.defaultInputVolume
     else
-      module.menubar:setIcon(mutedIcon)
+      M.menubar:setIcon(mutedIcon)
 
       muted = true
       inputVolume = 0
     end
-  elseif module.state == "push-to-mute" then
-    if module.pushed then
-      module.menubar:setIcon(mutedIcon)
+  elseif M.state == "push-to-mute" then
+    if M.pushed then
+      M.menubar:setIcon(mutedIcon)
 
       muted = true
       inputVolume = 0
     else
-      module.menubar:setIcon(speakIcon)
+      M.menubar:setIcon(speakIcon)
 
       muted = false
-      inputVolume = module.defaultInputVolume
+      inputVolume = M.defaultInputVolume
     end
   end
 
@@ -77,7 +77,7 @@ local showState = function()
 end
 
 local buildMenu = function()
-  local menutable = hs.fnutils.map(module.states(), function(item)
+  local menutable = hs.fnutils.map(M.states(), function(item)
     local title = ""
     if item.checked then
       title = template("{TITLE} ({PTT})", { TITLE = tostring(item.title), PTT = to_psv(Config.ptt) })
@@ -88,7 +88,7 @@ local buildMenu = function()
     return {
       title = title,
       fn = function()
-        module.setState(item.state)
+        M.setState(item.state)
       end,
       checked = item.checked,
     }
@@ -100,7 +100,7 @@ end
 local eventKeysMatchModifiers = function(modifiers)
   local modifiersMatch = true
 
-  for _, key in ipairs(module.modifierKeys) do
+  for _, key in ipairs(M.modifierKeys) do
     if modifiers[key] ~= true then
       modifiersMatch = false
     end
@@ -114,61 +114,61 @@ local eventTapWatcher = function(event)
   local modifiersMatch = eventKeysMatchModifiers(event:getFlags())
 
   if modifiersMatch then
-    module.pushed = true
+    M.pushed = true
   else
-    module.pushed = false
+    M.pushed = false
   end
 
   showState()
 
-  if module.pushed then
+  if M.pushed then
     log.df(
       "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
       device:inputMuted(),
       device:inputVolume(),
-      module.state,
-      module.pushed
+      M.state,
+      M.pushed
     )
   end
 end
 
-module.setState = function(s)
-  module.state = s
+M.setState = function(s)
+  M.state = s
   log.df("Setting PTT state to %s", s)
 
-  if module.menubar ~= nil then
-    module.menubar:delete()
-    module.menubar = hs.menubar.new()
-    module.menubar:setMenu(buildMenu())
+  if M.menubar ~= nil then
+    M.menubar:delete()
+    M.menubar = hs.menubar.new()
+    M.menubar:setMenu(buildMenu())
 
     showState()
   end
 end
 
-module.toggleStates = function()
-  local current_state = module.state
-  local toggle_to = hs.fnutils.find(module.states(), function(item)
+M.toggleStates = function()
+  local current_state = M.state
+  local toggle_to = hs.fnutils.find(M.states(), function(item)
     if not item.checked then
       return item
     end
   end)
 
-  module.setState(toggle_to.state)
+  M.setState(toggle_to.state)
 
   log.df("Toggling PTT state to %s", toggle_to.state, current_state)
   return toggle_to.state
 end
 
-module.start = function()
-  module.stop()
+M.start = function()
+  M.stop()
 
-  module.modifierKeys = Config.ptt
-  module.eventTapWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, eventTapWatcher)
-  module.eventTapWatcher:start()
+  M.modifierKeys = Config.ptt
+  M.eventTapWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, eventTapWatcher)
+  M.eventTapWatcher:start()
 
-  module.menubar = hs.menubar.new()
-  module.menubar:setMenu(buildMenu())
-  module.setState(module.state)
+  M.menubar = hs.menubar.new()
+  M.menubar:setMenu(buildMenu())
+  M.setState(M.state)
 
   hs.hotkey.bind(Config.ptt, "p", function()
     local toggled_to_state = M.toggleStates()
@@ -176,13 +176,13 @@ module.start = function()
   end)
 end
 
-module.stop = function()
-  if module.eventTapWatcher then
-    module.eventTapWatcher:stop()
+M.stop = function()
+  if M.eventTapWatcher then
+    M.eventTapWatcher:stop()
   end
-  if module.menubar then
-    module.menubar:delete()
+  if M.menubar then
+    M.menubar:delete()
   end
 end
 
-return module
+return M
