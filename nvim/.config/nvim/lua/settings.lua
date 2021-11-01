@@ -326,6 +326,7 @@ end
 
 local function setup_project_nvim()
   require("project_nvim").setup({
+    manual_mode = true,
     patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
   }) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
 end
@@ -1404,7 +1405,7 @@ setup_numb()
 setup_orgmode()
 setup_package_info()
 setup_projectionist()
--- setup_project_nvim()
+setup_project_nvim()
 setup_vim_test()
 setup_bullets()
 setup_trouble()
