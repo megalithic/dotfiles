@@ -1,5 +1,5 @@
 local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
-local bufmap, au = mega.bufmap, mega.au
+local bmap, au = mega.bmap, mega.au
 
 local M = {
   lsp = {},
@@ -54,9 +54,9 @@ M.lsp.rename = function()
   api.nvim_win_set_option(winnr, "relativenumber", false)
   api.nvim_win_set_option(winnr, "number", false)
 
-  bufmap("<CR>", "<cmd>lua require('utils').rename_callback()<CR>", "i")
-  bufmap("<esc>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "i")
-  bufmap("<c-c>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>", "i")
+  bmap("i", "<CR>", "<cmd>lua require('utils').rename_callback()<CR>")
+  bmap("i", "<esc>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>")
+  bmap("i", "<c-c>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>")
 
   vcmd("startinsert")
 end
@@ -128,10 +128,6 @@ function M.lsp.preview(request)
     local target = data.targetUri or data.uri
     local range = data.targetRange or data.range
     open_preview_win(target, { range.start.line + 1, range.start.character })
-
-    -- 		bufmap("<esc>", [[lua require('utils').remove_wins()]])
-    -- 		bufmap("<c-c>", [[lua require('utils').remove_wins()]])
-    -- 		bufmap("q", [[lua require('utils').remove_wins()]])
   end)
 end
 

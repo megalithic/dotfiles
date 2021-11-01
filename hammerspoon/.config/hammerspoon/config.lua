@@ -134,7 +134,8 @@ M.apps = {
   ["com.runningwithcrayons.Alfred"] = {
     name = "Alfred",
     bundleID = "com.runningwithcrayons.Alfred",
-    local_bindings = { "c", "space", "o" },
+    -- hyper_key = " ",
+    -- local_bindings = { "c", "space", "o" },
   },
   ["com.agiletortoise.Drafts-OSX"] = {
     bundleID = "com.agiletortoise.Drafts-OSX",

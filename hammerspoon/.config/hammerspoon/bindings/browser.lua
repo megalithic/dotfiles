@@ -1,7 +1,7 @@
 local log = hs.logger.new("[bindings.browser]", "debug")
 
 local cache = {}
-local module = { cache = cache }
+local M = { cache = cache }
 
 -- Some utility functions for controlling current defined web browser.
 -- Probably would work super similarly on Brave, Chrome and Safari, or any webkit
@@ -18,7 +18,7 @@ local runningBrowserName = fn.find(Config.preferred.browsers, function(browserNa
   return hs.application.get(browserName) ~= nil
 end)
 
-module.jump = function(url)
+M.jump = function(url)
   hs.osascript.javascript([[
   (function() {
     var browser = Application(']] .. runningBrowserName .. [[');
@@ -35,7 +35,7 @@ module.jump = function(url)
   ]])
 end
 
-module.killTabsByDomain = function(domain)
+M.killTabsByDomain = function(domain)
   hs.osascript.javascript([[
   (function() {
     var browser = Application(']] .. runningBrowserName .. [[');
@@ -51,7 +51,7 @@ module.killTabsByDomain = function(domain)
   ]])
 end
 
-module.snip = function()
+M.snip = function()
   local app_name = Config.preferred.browsers[1]
   log.wf("snipping with %s", app_name)
 
@@ -95,7 +95,7 @@ module.snip = function()
   hs.notify.show("Snipped!", "The snippet has been sent to Drafts", "")
 end
 
-module.split = function()
+M.split = function()
   -- Move current window to the left half
 
   require("bindings.snap").leftHalf()
@@ -111,29 +111,29 @@ module.split = function()
   end)
 end
 
-module.urlsTaggedWith = function(tag)
+M.urlsTaggedWith = function(tag)
   return fn.filter(Config.domains, function(domain)
     return domain.tags and fn.contains(domain.tags, tag)
   end)
 end
 
-module.launch = function(list)
+M.launch = function(list)
   fn.map(list, function(tag)
-    fn.map(module.urlsTaggedWith(tag), function(site)
+    fn.map(M.urlsTaggedWith(tag), function(site)
       hs.urlevent.openURL("http://" .. site.url)
     end)
   end)
 end
 
-module.kill = function(list)
+M.kill = function(list)
   fn.map(list, function(tag)
-    fn.map(module.urlsTaggedWith(tag), function(site)
-      module.killTabsByDomain(site.url)
+    fn.map(M.urlsTaggedWith(tag), function(site)
+      M.killTabsByDomain(site.url)
     end)
   end)
 end
 
-module.start = function()
+M.start = function()
   log.df("starting..")
 
   -- Snip current highlight text in browser and send to Drafts
@@ -142,8 +142,8 @@ module.start = function()
   end)
 end
 
-module.stop = function()
+M.stop = function()
   log.df("stopping..")
 end
 
-return module
+return M

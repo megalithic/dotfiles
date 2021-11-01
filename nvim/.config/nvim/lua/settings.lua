@@ -1374,7 +1374,9 @@ local function setup_telescope()
 end
 
 local function setup_dash()
-  require("dash").setup({})
+  if fn.getenv("PLATFORM") == "macos" then
+    require("dash").setup({})
+  end
 end
 
 local function setup_misc()
