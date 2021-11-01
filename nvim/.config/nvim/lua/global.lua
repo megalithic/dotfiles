@@ -340,7 +340,9 @@ function M.bufmap(lhs, rhs, mode, expr)
     rhs = "<cmd>" .. rhs .. "<cr>"
   end
 
-  mega.log("`bufmap` is deprecated, please use `bmap` instead")
+  if bufnr == vim.api.nvim_get_current_buf() then
+    mega.log("`bufmap` is deprecated, please use `bmap` instead")
+  end
   M.map(mode, lhs, rhs, { noremap = true, silent = true, expr = expr, buffer = bufnr })
 end
 
