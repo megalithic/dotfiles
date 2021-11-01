@@ -80,8 +80,8 @@ return {
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
   "Xuyuanp/yanil",
-  "nvim-telescope/telescope.nvim",
-  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  -- "nvim-telescope/telescope.nvim",
+  -- { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
 
   --
   -- (text objects) --

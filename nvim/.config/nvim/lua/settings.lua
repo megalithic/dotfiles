@@ -1373,6 +1373,10 @@ local function setup_telescope()
   -- require("telescope").load_extension "fzy_native"
 end
 
+local function setup_dash()
+  require("dash").setup({})
+end
+
 local function setup_misc()
   vim.g.fzf_gitignore_no_maps = true
 end
@@ -1418,6 +1422,7 @@ setup_filetype()
 -- setup_nvim_tree()
 -- setup_bufferline()
 setup_dd()
+setup_dash()
 -- setup_telescope()
 
 -- NOTE: this goes last!
