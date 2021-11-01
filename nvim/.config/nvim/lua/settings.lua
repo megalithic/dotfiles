@@ -1287,7 +1287,6 @@ local function setup_nvim_tree()
   vim.g.nvim_tree_git_hl = 1
   vim.g.nvim_tree_width_allow_resize = 1
   vim.g.nvim_tree_root_folder_modifier = ":t"
-  vim.g.nvim_tree_ignore = { ".DS_Store", "fugitive:", ".git" }
   vim.g.nvim_tree_highlight_opened_files = 1
   require("nvim-tree").setup({
     view = {
@@ -1297,6 +1296,7 @@ local function setup_nvim_tree()
         -- { key = "cd", cb = action("cd") },
       },
     },
+    nvim_tree_ignore = { ".DS_Store", "fugitive:", ".git" },
     diagnostics = {
       enable = true,
     },
@@ -1421,7 +1421,7 @@ setup_distant()
 setup_tabout()
 setup_headlines()
 setup_filetype()
--- setup_nvim_tree()
+setup_nvim_tree()
 -- setup_bufferline()
 setup_dd()
 setup_dash()

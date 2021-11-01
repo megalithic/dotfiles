@@ -196,7 +196,7 @@ map("n", "<leader>D", "<cmd>DashWord<CR>")
 map("n", "<F5>", "<cmd>lua mega.plugins()<cr>")
 
 -- # yanil
-map("n", "-", "<Cmd>YanilToggle<cr>", { nowait = true })
+-- map("n", "-", "<Cmd>YanilToggle<cr>", { nowait = true })
 
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>")
@@ -212,7 +212,7 @@ map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
 
 -- # nvim-tree
--- map("n", "<C-'>", ":lua require('nvim-tree').toggle()<CR>")
+map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")
 
 -- # tmux
 -- do
