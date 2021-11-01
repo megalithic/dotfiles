@@ -154,7 +154,7 @@ local function setup_treesitter()
       enable = true,
       enable_autocmd = false,
       config = {
-        css = "// %s",
+        css = "/* %s */",
         lua = "-- %s",
         fish = "# %s",
         toml = "# %s",
