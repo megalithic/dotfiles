@@ -415,7 +415,6 @@ local function setup_lsp_servers()
     "rust_analyzer",
     "vimls",
     "pyright",
-    "tailwindcss",
     -- "dockerfile",
   }
   for _, ls in ipairs(servers) do
@@ -470,7 +469,56 @@ local function setup_lsp_servers()
     },
   }))
 
-  do
+  lspconfig["tailwindcss"].setup(lsp_with_defaults({
+    cmd = { utils.lsp.elixirls_cmd() },
+    init_options = {
+      userLanguages = {
+        eelixir = "html-eex",
+        eruby = "erb",
+      },
+    },
+    settings = {
+      includeLanguages = {
+        typescript = "javascript",
+        typescriptreact = "javascript",
+      },
+      tailwindCSS = {
+        experimental = {
+          classRegex = {
+            [[class: "([^"]*)]],
+            "tw`([^`]*)",
+            'tw="([^"]*)',
+            'tw={"([^"}]*)',
+            "tw\\.\\w+`([^`]*)",
+            "tw\\(.*?\\)`([^`]*)",
+          },
+        },
+      },
+    },
+    filetypes = {
+      "elixir",
+      "eelixir",
+      "css",
+      "scss",
+      "sass",
+      "html",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+    },
+    root_dir = lspconfig.util.root_pattern(
+      "tailwind.config.js",
+      "tailwind.config.ts",
+      "postcss.config.js",
+      "postcss.config.ts",
+      "package.json",
+      "node_modules",
+      ".git"
+    ),
+  }))
+
+  do -- elixirls
     local manipulate_pipes = function(command)
       return function()
         local position_params = lsp.util.make_position_params()
