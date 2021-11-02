@@ -26,24 +26,6 @@ local function setup_diagnostics()
   fn.sign_define("DiagnosticSignInfo", { texthl = "DiagnosticSignInfo", text = "", numhl = "DiagnosticSignInfo" })
   fn.sign_define("DiagnosticSignHint", { texthl = "DiagnosticSignHint", text = "", numhl = "DiagnosticSignHint" })
 
-  -- fn.sign_define(
-  --   "DiagnosticSignError",
-  --   { text = "", texthl = "DiagnosticDefaultError", numhl = "DiagnosticDefaultError" }
-  -- )
-  -- fn.sign_define(
-  --   "DiagnosticSignWarning",
-  --   { text = "", texthl = "DiagnosticDefaultWarning", numhl = "DiagnosticDefaultWarning" }
-  -- )
-  -- fn.sign_define("DiagnosticSignInformation", {
-  --   text = "",
-  --   texthl = "DiagnosticDefaultInformation",
-  --   numhl = "DiagnosticDefaultInformation",
-  -- })
-  -- fn.sign_define(
-  --   "DiagnosticSignHint",
-  --   { text = "", texthl = "DiagnosticDefaultHint", numhl = "DiagnosticDefaultHint" }
-  -- )
-
   -- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
   -- REF: https://github.com/neovim/neovim/pull/15585
   vim.diagnostic.config({
@@ -415,7 +397,7 @@ local function setup_lsp_servers()
     "elmls",
     "pyright",
     "rust_analyzer",
-    "tailwindcss",
+    -- "tailwindcss",
     "vimls",
   }
   for _, ls in ipairs(servers) do
@@ -472,41 +454,41 @@ local function setup_lsp_servers()
 
   lspconfig["tailwindcss"].setup(lsp_with_defaults({
     cmd = { "tailwindcss-language-server", "--stdio" },
-    init_options = {
-      userLanguages = {
-        eelixir = "html-eex",
-        eruby = "erb",
-        heex = "phoenix-heex",
-      },
-    },
+    -- init_options = {
+    --   userLanguages = {
+    --     eelixir = "html-eex",
+    --     eruby = "erb",
+    --     heex = "phoenix-heex",
+    --   },
+    -- },
     settings = {
       includeLanguages = {
         typescript = "javascript",
         typescriptreact = "javascript",
         ["html-eex"] = "html",
-        ["phoenix-heex"] = "html",
-        heex = "html",
+        ["phoenix-heex"] = "eelixir",
+        heex = "eelixir",
       },
-      tailwindCSS = {
-        experimental = {
-          classRegex = {
-            -- REF:
-            -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
-            [[class: "([^"]*)]],
-            'class="([^"]*)',
-            "tw`([^`]*)",
-            'tw="([^"]*)',
-            'tw={"([^"}]*)',
-            "tw\\.\\w+`([^`]*)",
-            "tw\\(.*?\\)`([^`]*)",
-            [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
-            [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
-            [[":class\\s*=>\\s*\"([^\"]*)"]],
-            [["class:\\s+\"([^\"]*)"]],
-            [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
-          },
-        },
-      },
+      -- tailwindCSS = {
+      --   experimental = {
+      --     classRegex = {
+      --       -- REF:
+      --       -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
+      --       [[class: "([^"]*)]],
+      --       'class="([^"]*)',
+      --       "tw`([^`]*)",
+      --       'tw="([^"]*)',
+      --       'tw={"([^"}]*)',
+      --       "tw\\.\\w+`([^`]*)",
+      --       "tw\\(.*?\\)`([^`]*)",
+      --       [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
+      --       [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
+      --       [[":class\\s*=>\\s*\"([^\"]*)"]],
+      --       [["class:\\s+\"([^\"]*)"]],
+      --       [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
+      --     },
+      --   },
+      -- },
     },
     filetypes = {
       "elixir",
@@ -522,7 +504,7 @@ local function setup_lsp_servers()
       "typescript",
       "typescriptreact",
     },
-    root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
+    root_dir = root_pattern("package.json", "tailwind.config.js", "**/assets/tailwind.config.js"),
   }))
 
   do -- elixirls
