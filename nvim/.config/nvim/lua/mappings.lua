@@ -1,6 +1,24 @@
 local api, cmd, fn = vim.api, vim.cmd, vim.fn
 local map, command = mega.map, mega.command
 
+--[[
+  ╭────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │  String value  │  Help page   │  Affected modes                           │  Vimscript equivalent  │
+  │────────────────────────────────────────────────────────────────────────────────────────────────────│
+  │  ''            │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map                  │
+  │  'n'           │  mapmode-n   │  Normal                                   │  :nmap                 │
+  │  'v'           │  mapmode-v   │  Visual and Select                        │  :vmap                 │
+  │  's'           │  mapmode-s   │  Select                                   │  :smap                 │
+  │  'x'           │  mapmode-x   │  Visual                                   │  :xmap                 │
+  │  'o'           │  mapmode-o   │  Operator-pending                         │  :omap                 │
+  │  '!'           │  mapmode-ic  │  Insert and Command-line                  │  :map!                 │
+  │  'i'           │  mapmode-i   │  Insert                                   │  :imap                 │
+  │  'l'           │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap                 │
+  │  'c'           │  mapmode-c   │  Command-line                             │  :cmap                 │
+  │  't'           │  mapmode-t   │  Terminal                                 │  :tmap                 │
+  ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
+--]]
+
 -- [convenience mappings] ------------------------------------------------------
 
 -- make the tab key match bracket pairs

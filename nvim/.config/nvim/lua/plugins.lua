@@ -139,6 +139,7 @@ return {
   "tpope/vim-surround",
   "tpope/vim-unimpaired",
   "danro/rename.vim",
+  "lambdalisue/suda.vim",
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
   -- "ConradIrwin/vim-bracketed-paste", -- FIXME: delete?

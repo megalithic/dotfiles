@@ -18,6 +18,12 @@ vim.api.nvim_exec(
   inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
   inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
 
+"au FileType elixir nnoremap io o\|> IO.inspect(printable_limit: :infinity)<Esc>
+"au FileType elixir nnoremap IO o\|> IO.inspect(label: "<C-r>=line(".")<C-M>: ", printable_limit: :infinity)<Esc>F"i
+"au FileType elixir nnoremap ii a \|> IO.inspect(printable_limit: :infinity)<Esc>i
+"au FileType elixir nnoremap II a \|> IO.inspect(label: "<C-r>=line(".")<C-M>: ", printable_limit: :infinity)<Esc>F"i
+"au FileType elixir nnoremap <leader>r orequire IEx; IEx.pry<esc>
+
   " NOTE: use ctrl-] to complete without adding the space, otherwise just use
   " space to complete the `iabbrev` expansions.
   iabbrev epry  require IEx; IEx.pry

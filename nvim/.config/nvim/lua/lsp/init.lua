@@ -410,12 +410,13 @@ local function setup_lsp_servers()
 
   local servers = {
     "bashls",
-    "elmls",
     "clangd",
-    "rust_analyzer",
-    "vimls",
-    "pyright",
     -- "dockerfile",
+    "elmls",
+    "pyright",
+    "rust_analyzer",
+    "tailwindcss",
+    "vimls",
   }
   for _, ls in ipairs(servers) do
     -- handle language servers not installed/found; TODO: should probably handle
@@ -469,54 +470,68 @@ local function setup_lsp_servers()
     },
   }))
 
-  lspconfig["tailwindcss"].setup(lsp_with_defaults({
-    cmd = { utils.lsp.elixirls_cmd() },
-    init_options = {
-      userLanguages = {
-        eelixir = "html-eex",
-        eruby = "erb",
-      },
-    },
-    settings = {
-      includeLanguages = {
-        typescript = "javascript",
-        typescriptreact = "javascript",
-      },
-      tailwindCSS = {
-        experimental = {
-          classRegex = {
-            [[class: "([^"]*)]],
-            "tw`([^`]*)",
-            'tw="([^"]*)',
-            'tw={"([^"}]*)',
-            "tw\\.\\w+`([^`]*)",
-            "tw\\(.*?\\)`([^`]*)",
-          },
-        },
-      },
-    },
-    filetypes = {
-      "elixir",
-      "eelixir",
-      "css",
-      "scss",
-      "sass",
-      "html",
-      "javascript",
-      "javascriptreact",
-      "typescript",
-      "typescriptreact",
-    },
-    root_dir = lspconfig.util.root_pattern(
-      "tailwind.config.js",
-      "tailwind.config.ts",
-      "postcss.config.js",
-      "postcss.config.ts",
-      "package.json",
-      "node_modules",
-      ".git"
-    ),
-  }))
+  -- lspconfig["tailwindcss"].setup(lsp_with_defaults({
+  --   cmd = { "tailwindcss-language-server", "--stdio" },
+  --   init_options = {
+  --     userLanguages = {
+  --       eelixir = "html-eex",
+  --       eruby = "erb",
+  --       heex = "phoenix-heex",
+  --     },
+  --   },
+  --   settings = {
+  --     includeLanguages = {
+  --       typescript = "javascript",
+  --       typescriptreact = "javascript",
+  --       ["html-eex"] = "html",
+  --       ["phoenix-heex"] = "html",
+  --       heex = "html",
+  --     },
+  --     tailwindCSS = {
+  --       experimental = {
+  --         classRegex = {
+  --           -- REF:
+  --           -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
+  --           [[class: "([^"]*)]],
+  --           'class="([^"]*)',
+  --           "tw`([^`]*)",
+  --           'tw="([^"]*)',
+  --           'tw={"([^"}]*)',
+  --           "tw\\.\\w+`([^`]*)",
+  --           "tw\\(.*?\\)`([^`]*)",
+  --           [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
+  --           [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
+  --           [[":class\\s*=>\\s*\"([^\"]*)"]],
+  --           [["class:\\s+\"([^\"]*)"]],
+  --           [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
+  --         },
+  --       },
+  --     },
+  --   },
+  --   filetypes = {
+  --     "elixir",
+  --     "eelixir",
+  --     "css",
+  --     "scss",
+  --     "sass",
+  --     "html",
+  --     "heex",
+  --     "leex",
+  --     "javascript",
+  --     "javascriptreact",
+  --     "typescript",
+  --     "typescriptreact",
+  --   },
+  --   root_dir = lspconfig.util.root_pattern(
+  --     "tailwind.config.js",
+  --     "tailwind.config.ts",
+  --     "postcss.config.js",
+  --     "postcss.config.ts",
+  --     "package.json",
+  --     "node_modules",
+  --     ".git"
+  --   ),
+  -- }))
 
   do -- elixirls
     local manipulate_pipes = function(command)
@@ -546,7 +561,7 @@ local function setup_lsp_servers()
         },
       },
       filetypes = { "elixir", "eelixir" },
-      root_dir = root_pattern("mix.exs", ".git"),
+      root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
       commands = {
         ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
         FromPipe = { manipulate_pipes("fromPipe"), "Convert pipe operator to function call" },
