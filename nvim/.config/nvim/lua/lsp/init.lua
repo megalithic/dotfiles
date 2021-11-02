@@ -470,68 +470,60 @@ local function setup_lsp_servers()
     },
   }))
 
-  -- lspconfig["tailwindcss"].setup(lsp_with_defaults({
-  --   cmd = { "tailwindcss-language-server", "--stdio" },
-  --   init_options = {
-  --     userLanguages = {
-  --       eelixir = "html-eex",
-  --       eruby = "erb",
-  --       heex = "phoenix-heex",
-  --     },
-  --   },
-  --   settings = {
-  --     includeLanguages = {
-  --       typescript = "javascript",
-  --       typescriptreact = "javascript",
-  --       ["html-eex"] = "html",
-  --       ["phoenix-heex"] = "html",
-  --       heex = "html",
-  --     },
-  --     tailwindCSS = {
-  --       experimental = {
-  --         classRegex = {
-  --           -- REF:
-  --           -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
-  --           [[class: "([^"]*)]],
-  --           'class="([^"]*)',
-  --           "tw`([^`]*)",
-  --           'tw="([^"]*)',
-  --           'tw={"([^"}]*)',
-  --           "tw\\.\\w+`([^`]*)",
-  --           "tw\\(.*?\\)`([^`]*)",
-  --           [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
-  --           [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
-  --           [[":class\\s*=>\\s*\"([^\"]*)"]],
-  --           [["class:\\s+\"([^\"]*)"]],
-  --           [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
-  --         },
-  --       },
-  --     },
-  --   },
-  --   filetypes = {
-  --     "elixir",
-  --     "eelixir",
-  --     "css",
-  --     "scss",
-  --     "sass",
-  --     "html",
-  --     "heex",
-  --     "leex",
-  --     "javascript",
-  --     "javascriptreact",
-  --     "typescript",
-  --     "typescriptreact",
-  --   },
-  --   root_dir = lspconfig.util.root_pattern(
-  --     "tailwind.config.js",
-  --     "tailwind.config.ts",
-  --     "postcss.config.js",
-  --     "postcss.config.ts",
-  --     "package.json",
-  --     "node_modules",
-  --     ".git"
-  --   ),
-  -- }))
+  lspconfig["tailwindcss"].setup(lsp_with_defaults({
+    cmd = { "tailwindcss-language-server", "--stdio" },
+    init_options = {
+      userLanguages = {
+        eelixir = "html-eex",
+        eruby = "erb",
+        heex = "phoenix-heex",
+      },
+    },
+    settings = {
+      includeLanguages = {
+        typescript = "javascript",
+        typescriptreact = "javascript",
+        ["html-eex"] = "html",
+        ["phoenix-heex"] = "html",
+        heex = "html",
+      },
+      tailwindCSS = {
+        experimental = {
+          classRegex = {
+            -- REF:
+            -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
+            [[class: "([^"]*)]],
+            'class="([^"]*)',
+            "tw`([^`]*)",
+            'tw="([^"]*)',
+            'tw={"([^"}]*)',
+            "tw\\.\\w+`([^`]*)",
+            "tw\\(.*?\\)`([^`]*)",
+            [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
+            [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
+            [[":class\\s*=>\\s*\"([^\"]*)"]],
+            [["class:\\s+\"([^\"]*)"]],
+            [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
+          },
+        },
+      },
+    },
+    filetypes = {
+      "elixir",
+      "eelixir",
+      "css",
+      "scss",
+      "sass",
+      "html",
+      "heex",
+      "leex",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+    },
+    root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
+  }))
 
   do -- elixirls
     local manipulate_pipes = function(command)
