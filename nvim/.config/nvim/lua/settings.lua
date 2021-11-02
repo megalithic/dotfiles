@@ -154,7 +154,6 @@ local function setup_treesitter()
       enable = true,
       enable_autocmd = false,
       config = {
-        css = "/* %s */",
         lua = "-- %s",
         fish = "# %s",
         toml = "# %s",
@@ -1376,6 +1375,7 @@ end
 
 local function setup_dash()
   if fn.getenv("PLATFORM") == "macos" then
+    vcmd([[packadd dash.nvim]])
     require("dash").setup({})
   end
 end

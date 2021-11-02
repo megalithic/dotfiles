@@ -116,8 +116,7 @@ return {
   "tpope/vim-projectionist",
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "tpope/vim-ragtag",
-  -- "rizzatti/dash.vim",
-  { "mrjones2014/dash.nvim", run = "make install" }, -- https://github.com/mrjones2014/dash.nvim/issues/25#issuecomment-940331156
+  { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",
