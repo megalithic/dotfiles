@@ -182,6 +182,7 @@ return {
   "tpope/vim-rails",
   -- # elixir
   "elixir-editors/vim-elixir",
+  "ngscheurich/edeex.nvim",
   -- # elm
   "antew/vim-elm-analyse",
   -- # lua

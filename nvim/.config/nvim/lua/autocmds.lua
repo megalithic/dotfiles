@@ -112,6 +112,11 @@ augroup("filetypes", {
   },
   {
     events = { "BufEnter", "BufRead", "BufNewFile" },
+    targets = { "*.leex", "*.heex" },
+    command = "set filetype=eelixir",
+  },
+  {
+    events = { "BufEnter", "BufRead", "BufNewFile" },
     targets = { "Brewfile", "Brewfile.mas", "Brewfile.cask" },
     command = "set filetype=ruby",
   },
