@@ -111,6 +111,7 @@ local function setup_treesitter()
   }
   require("nvim-treesitter.configs").setup({
     ensure_installed = "maintained",
+    ignore_install = { "elixir" }, -- poor, poor elixir, how i doth want thee.
     -- ensure_installed = {
     --   "bash",
     --   "c",
@@ -147,7 +148,7 @@ local function setup_treesitter()
     -- },
     highlight = {
       enable = true,
-      additional_vim_regex_highlighting = true,
+      additional_vim_regex_highlighting = false,
     },
     indent = { enable = true },
     -- autotag = { enable = true },
