@@ -454,20 +454,23 @@ local function setup_lsp_servers()
 
   lspconfig["tailwindcss"].setup(lsp_with_defaults({
     cmd = { "tailwindcss-language-server", "--stdio" },
-    -- init_options = {
-    --   userLanguages = {
-    --     eelixir = "html-eex",
-    --     eruby = "erb",
-    --     heex = "phoenix-heex",
-    --   },
-    -- },
+    init_options = {
+      userLanguages = {
+        eelixir = "html-eex",
+        eruby = "erb",
+        ["html-eex"] = "html",
+        ["phoenix-heex"] = "html-eex",
+        heex = "phoenix-eex",
+      },
+    },
     settings = {
       includeLanguages = {
         typescript = "javascript",
         typescriptreact = "javascript",
         ["html-eex"] = "html",
-        ["phoenix-heex"] = "eelixir",
+        ["phoenix-heex"] = "html",
         heex = "eelixir",
+        elm = "html",
       },
       -- tailwindCSS = {
       --   experimental = {
@@ -486,6 +489,7 @@ local function setup_lsp_servers()
       --       [[":class\\s*=>\\s*\"([^\"]*)"]],
       --       [["class:\\s+\"([^\"]*)"]],
       --       [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
+      --      "\\bclass\\s+\"([^\"]*)\""
       --     },
       --   },
       -- },
@@ -499,12 +503,24 @@ local function setup_lsp_servers()
       "html",
       "heex",
       "leex",
+      "html-eex",
+      "phoenix-html",
+      "phoenix-eex",
+      "phoenix-heex",
       "javascript",
       "javascriptreact",
       "typescript",
       "typescriptreact",
     },
-    root_dir = root_pattern("package.json", "tailwind.config.js", "**/assets/tailwind.config.js"),
+    root_dir = root_pattern(
+      "tailwind.config.js",
+      "tailwind.config.ts",
+      "postcss.config.js",
+      "postcss.config.ts",
+      "package.json",
+      "node_modules",
+      ".git"
+    ),
   }))
 
   do -- elixirls
@@ -534,7 +550,7 @@ local function setup_lsp_servers()
           suggestSpecs = true,
         },
       },
-      filetypes = { "elixir", "eelixir" },
+      filetypes = { "elixir", "eelixir", "heex" },
       root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
       commands = {
         ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
@@ -713,14 +729,20 @@ local function setup_lsp_servers()
     },
   }))
 
-  lspconfig["cssls"].setup(lsp_with_defaults({ cmd = { "vscode-css-language-server", "--stdio" } }))
+  lspconfig["cssls"].setup(lsp_with_defaults({
+    cmd = { "vscode-css-language-server", "--stdio" },
+    filetypes = { "css", "scss" },
+  }))
   lspconfig["html"].setup(lsp_with_defaults({
     cmd = { "vscode-html-language-server", "--stdio" },
+    filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "heex" },
     init_options = {
-      configurationSection = { "html", "css", "javascript", "eelixir" },
+      configurationSection = { "html", "css", "javascript", "eelixir", "heex" },
       embeddedLanguages = {
         css = true,
         javascript = true,
+        elixir = true,
+        heex = true,
       },
     },
   }))

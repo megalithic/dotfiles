@@ -110,48 +110,46 @@ local function setup_treesitter()
     },
   }
   require("nvim-treesitter.configs").setup({
-    ensure_installed = "maintained",
-    ignore_install = { "elixir" }, -- poor, poor elixir, how i doth want thee.
-    -- ensure_installed = {
-    --   "bash",
-    --   "c",
-    --   "cpp",
-    --   "css",
-    --   "comment",
-    --   "dockerfile",
-    --   -- "elixir",
-    --   "elm",
-    --   -- "embedded_template",
-    --   "erlang",
-    --   "fish",
-    --   "go",
-    --   "graphql",
-    --   "html",
-    --   "heex",
-    --   "javascript",
-    --   "markdown",
-    --   "jsdoc",
-    --   "jsonc",
-    --   "lua",
-    --   "nix",
-    --   "python",
-    --   "query",
-    --   "regex",
-    --   "ruby",
-    --   "rust",
-    --   "scss",
-    --   "surface",
-    --   "toml",
-    --   "tsx",
-    --   "typescript",
-    --   "yaml",
-    -- },
+    ensure_installed = {
+      "bash",
+      "c",
+      "cpp",
+      "css",
+      "comment",
+      "dockerfile",
+      -- "elixir",
+      "elm",
+      "erlang",
+      "fish",
+      "go",
+      "graphql",
+      "html",
+      "heex",
+      "javascript",
+      "markdown",
+      "jsdoc",
+      "jsonc",
+      "lua",
+      "nix",
+      "perl",
+      "python",
+      "query",
+      "regex",
+      "ruby",
+      "rust",
+      "scss",
+      "surface",
+      "toml",
+      "tsx",
+      "typescript",
+      "yaml",
+    },
     highlight = {
       enable = true,
       additional_vim_regex_highlighting = false,
     },
     indent = { enable = true },
-    -- autotag = { enable = true },
+    autotag = { enable = true },
     context_commentstring = {
       enable = true,
       enable_autocmd = false,
@@ -169,65 +167,65 @@ local function setup_treesitter()
       extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
       max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
     },
-    textsubjects = {
-      enable = false,
-      keymaps = {
-        ["."] = "textsubjects-smart",
-        [";"] = "textsubjects-container-outer",
-        -- [";"] = "textsubjects-big",
-      },
-    },
+    -- textsubjects = {
+    --   enable = false,
+    --   keymaps = {
+    --     ["."] = "textsubjects-smart",
+    --     [";"] = "textsubjects-container-outer",
+    --     -- [";"] = "textsubjects-big",
+    --   },
+    -- },
     -- REF: https://github.com/stehessel/nix-dotfiles/blob/master/program/editor/neovim/config/lua/plugins/treesitter.lua
-    textobjects = {
-      -- lsp_interop = {
-      --   enable = true,
-      --   border = "none",
-      --   peek_definition_code = {
-      --     ["df"] = "@function.outer",
-      --     ["dF"] = "@class.outer",
-      --   },
-      -- },
-      select = {
-        enable = false,
-        lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-        keymaps = {
-          ["if"] = "@function.inner",
-          ["af"] = "@function.outer",
-          ["ar"] = "@parameter.outer",
-          ["iC"] = "@class.inner",
-          ["aC"] = "@class.outer",
-          ["ik"] = "@call.inner",
-          ["ak"] = "@call.outer",
-          ["il"] = "@loop.inner",
-          ["al"] = "@loop.outer",
-          ["ic"] = "@conditional.outer",
-          ["ac"] = "@conditional.inner",
-        },
-      },
-    },
-    query_linter = {
-      enable = true,
-      use_virtual_text = true,
-      lint_events = { "BufWrite", "CursorHold" },
-    },
-    playground = {
-      enable = true,
-      disable = {},
-      updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
-      persist_queries = true, -- Whether the query persists across vim sessions
-      keybindings = {
-        toggle_query_editor = "o",
-        toggle_hl_groups = "i",
-        toggle_injected_languages = "t",
-        toggle_anonymous_nodes = "a",
-        toggle_language_display = "I",
-        focus_language = "f",
-        unfocus_language = "F",
-        update = "R",
-        goto_node = "<cr>",
-        show_help = "?",
-      },
-    },
+    -- textobjects = {
+    --   -- lsp_interop = {
+    --   --   enable = true,
+    --   --   border = "none",
+    --   --   peek_definition_code = {
+    --   --     ["df"] = "@function.outer",
+    --   --     ["dF"] = "@class.outer",
+    --   --   },
+    --   -- },
+    --   select = {
+    --     enable = false,
+    --     lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
+    --     keymaps = {
+    --       ["if"] = "@function.inner",
+    --       ["af"] = "@function.outer",
+    --       ["ar"] = "@parameter.outer",
+    --       ["iC"] = "@class.inner",
+    --       ["aC"] = "@class.outer",
+    --       ["ik"] = "@call.inner",
+    --       ["ak"] = "@call.outer",
+    --       ["il"] = "@loop.inner",
+    --       ["al"] = "@loop.outer",
+    --       ["ic"] = "@conditional.outer",
+    --       ["ac"] = "@conditional.inner",
+    --     },
+    --   },
+    -- },
+    -- query_linter = {
+    --   enable = true,
+    --   use_virtual_text = true,
+    --   lint_events = { "BufWrite", "CursorHold" },
+    -- },
+    -- playground = {
+    --   enable = true,
+    --   disable = {},
+    --   updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
+    --   persist_queries = true, -- Whether the query persists across vim sessions
+    --   keybindings = {
+    --     toggle_query_editor = "o",
+    --     toggle_hl_groups = "i",
+    --     toggle_injected_languages = "t",
+    --     toggle_anonymous_nodes = "a",
+    --     toggle_language_display = "I",
+    --     focus_language = "f",
+    --     unfocus_language = "F",
+    --     update = "R",
+    --     goto_node = "<cr>",
+    --     show_help = "?",
+    --   },
+    -- },
   })
   -- require("spellsitter").setup()
   require("nvim-ts-autotag").setup({
@@ -451,16 +449,19 @@ end
 local function setup_comment()
   require("Comment").setup({
     ignore = "^$",
-    pre_hook = function(_) -- ctx
-      return require("ts_context_commentstring.internal").calculate_commentstring()
-      -- require("ts_context_commentstring.internal").update_commentstring()
+    pre_hook = function(ctx)
+      local U = require("Comment.utils")
+      local type = ctx.ctype == U.ctype.line and "__default" or "__multiline"
+      return require("ts_context_commentstring.internal").calculate_commentstring({
+        key = type,
+      })
     end,
   })
 end
 
 local function setup_conflict_marker()
   -- disable the default highlight group
-  g.conflict_marker_highlight_group = ""
+  g.conflict_marker_highlight_group = "Error"
   -- Include text after begin and end markers
   g.conflict_marker_begin = "^<<<<<<< .*$"
   g.conflict_marker_end = "^>>>>>>> .*$"

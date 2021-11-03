@@ -9,10 +9,10 @@
 if [ -n "$(command -v fzf)" ]; then
 	# -- use this if not using zsh-vi-mode
 	# TODO: need a condition to make this cleaner
-	# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+	[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 	# -- this fixes an issue with zsh-vi-mode gobbling fzf keybindings
-	zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
+	# zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 	export FZF_TMUX_HEIGHT='20%'
 	export FZF_DEFAULT_OPTS="

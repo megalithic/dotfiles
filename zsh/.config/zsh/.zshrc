@@ -22,6 +22,7 @@ source ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh
 
 # zcomet snippet https://github.com/lincheney/fzf-tab-completion/blob/master/zsh/fzf-zsh-completion.sh
 # zcomet load xPMo/zsh-ls-colors
+# zcomet load jeffreytse/zsh-vi-mode
 zcomet load Aloxaf/fzf-tab
 zcomet load djui/alias-tips
 zcomet load olets/zsh-abbr
@@ -29,7 +30,6 @@ zcomet load zsh-users/zsh-completions
 zcomet load zsh-users/zsh-history-substring-search
 zcomet load zsh-users/zsh-autosuggestions
 zcomet load zdharma/fast-syntax-highlighting
-zcomet load jeffreytse/zsh-vi-mode
 # zcomet load ohmyzsh plugins/mix
 # zcomet load ohmyzsh plugins/mix-fast
 # zcomet load ohmyzsh plugins/rake

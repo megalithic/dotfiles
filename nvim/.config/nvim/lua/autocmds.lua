@@ -110,11 +110,11 @@ augroup("filetypes", {
     targets = { "*.lexs", "*.exs" },
     command = "set filetype=elixir",
   },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.leex", "*.heex" },
-    command = "set filetype=eelixir",
-  },
+  -- {
+  --   events = { "BufEnter", "BufRead", "BufNewFile" },
+  --   targets = { "*.leex", "*.heex" },
+  --   command = "set filetype=eelixir",
+  -- },
   {
     events = { "BufEnter", "BufRead", "BufNewFile" },
     targets = { "Brewfile", "Brewfile.mas", "Brewfile.cask" },
