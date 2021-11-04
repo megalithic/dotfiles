@@ -336,10 +336,11 @@ M.apps = {
   ["com.figma.Desktop"] = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
-    -- hyper_key = "y",
+    hyper_key = "f",
+    modifier = M.modifiers.shift,
     quitGuard = true,
     rules = {
-      { nil, 1, M.layout.centeredLarge },
+      { nil, 1, M.layout.fullScreen },
     },
   },
 }
