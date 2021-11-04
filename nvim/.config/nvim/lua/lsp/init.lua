@@ -131,8 +131,8 @@ local function setup_completion()
       cmp.select_next_item()
     elseif luasnip and luasnip.expand_or_jumpable() then
       luasnip.expand_or_jump()
-    else
-      feed("<Plug>(Tabout)")
+      -- else
+      --   feed("<Plug>(Tabout)")
     end
   end
 
@@ -141,8 +141,8 @@ local function setup_completion()
       cmp.select_prev_item()
     elseif luasnip and luasnip.jumpable(-1) then
       luasnip.jump(-1)
-    else
-      feed("<Plug>(TaboutBack)")
+      -- else
+      --   feed("<Plug>(TaboutBack)")
     end
   end
 
