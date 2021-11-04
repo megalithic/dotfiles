@@ -325,7 +325,7 @@ local function on_attach(client, bufnr)
   end
 
   -- disable formatting for the following language-server clients:
-  local disabled_formatting_ls = { "jsonls", "tailwindcss" }
+  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
       client.resolved_capabilities.document_formatting = false
