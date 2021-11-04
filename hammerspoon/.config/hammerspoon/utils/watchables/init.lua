@@ -3,10 +3,7 @@ local log = hs.logger.new("[watchables]", "debug")
 local status = hs.watchable.new("status")
 
 local cache = { status = status }
-local module = { cache = cache }
-
--- local VPN_CONFIG_KEY  = "State:/Network/Global/Proxies"
--- local NETWORK_SHARING = "com.apple.NetworkSharing"
+local M = { cache = cache }
 
 local updateBattery = function()
   local burnRate = hs.battery.designCapacity() / math.abs(hs.battery.amperage())
@@ -30,13 +27,6 @@ local updateScreen = function()
 
   log.d("updated screens:", hs.inspect(status.connectedScreenIds))
 end
-
--- local updateNetwork = function()
---   status.networkSharing   = cache.configuration:contents(NETWORK_SHARING)[NETWORK_SHARING]
---   status.vpnConfiguration = cache.configuration:contents(VPN_CONFIG_KEY)[VPN_CONFIG_KEY]
-
---   log.d('updated network config')
--- end
 
 local updateWiFi = function()
   status.currentNetwork = hs.wifi.currentNetwork()
@@ -65,10 +55,7 @@ local updateUSB = function()
   log.df("updated connectedExternalKeyboard: %s", status.connectedExternalKeyboard)
 end
 
-module.start = function()
-  -- open network config for vpn watching
-  cache.configuration = hs.network.configuration.open()
-
+M.start = function()
   -- start watchers
   cache.watchers = {
     battery = hs.battery.watcher.new(updateBattery):start(),
@@ -76,7 +63,6 @@ module.start = function()
     sleep = hs.caffeinate.watcher.new(updateSleep):start(),
     usb = hs.usb.watcher.new(updateUSB):start(),
     wifi = hs.wifi.watcher.new(updateWiFi):start(),
-    -- network = cache.configuration:monitorKeys({ VPN_CONFIG_KEY, NETWORK_SHARING }):setCallback(updateNetwork):start(),
   }
 
   -- setup on start
@@ -85,10 +71,9 @@ module.start = function()
   updateSleep()
   updateUSB()
   updateWiFi()
-  -- updateNetwork()
 end
 
-module.stop = function()
+M.stop = function()
   hs.fnutils.each(cache.watchers, function(watcher)
     watcher:stop()
   end)
@@ -96,4 +81,4 @@ module.stop = function()
   cache.configuration:stop()
 end
 
-return module
+return M

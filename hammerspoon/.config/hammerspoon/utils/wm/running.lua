@@ -272,7 +272,6 @@ end
 
 M.start = function()
   M._appWatcher:start()
-  -- log.wf(spaces.layout())
 end
 
 return M
