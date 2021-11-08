@@ -172,7 +172,7 @@ M.start = function()
 
   hs.hotkey.bind(Config.ptt, "p", function()
     local toggled_to_state = M.toggleStates()
-    alert.show({ text = M.icons[toggled_to_state] .. "Toggling PTT mode to " .. toggled_to_state })
+    -- alert.show({ text = M.icons[toggled_to_state] .. "Toggling PTT mode to " .. toggled_to_state })
   end)
 end
 

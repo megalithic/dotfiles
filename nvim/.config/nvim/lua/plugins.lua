@@ -15,6 +15,7 @@ return {
   --
   -- (appearance/ui) --
   "rktjmp/lush.nvim",
+  "mhanberg/thicc_forest",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
@@ -167,7 +168,7 @@ return {
   -- "rhysd/vim-gfm-syntax",
   { "iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"] },
   { "harshad1/bullets.vim", branch = "performance_improvements" },
-  { "kristijanhusak/orgmode.nvim", branch = "tree-sitter" },
+  "kristijanhusak/orgmode.nvim",
   "akinsho/org-bullets.nvim",
   "lervag/vim-rainbow-lists", -- :RBListToggle
   "dhruvasagar/vim-table-mode",
