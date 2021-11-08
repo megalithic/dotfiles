@@ -456,11 +456,10 @@ local function setup_lsp_servers()
     cmd = { "tailwindcss-language-server", "--stdio" },
     init_options = {
       userLanguages = {
-        eelixir = "html",
-        eruby = "html",
-        ["html-eex"] = "html",
-        ["phoenix-heex"] = "html",
-        heex = "html",
+        eelixir = "html-eex",
+        eruby = "erb",
+        ["phoenix-heex"] = "html-eex",
+        heex = "phoenix-eex",
       },
     },
     settings = {
@@ -470,7 +469,9 @@ local function setup_lsp_servers()
         ["html-eex"] = "html",
         ["phoenix-heex"] = "html",
         heex = "html",
+        eelixir = "html",
         elm = "html",
+        erb = "html",
       },
       -- tailwindCSS = {
       --   experimental = {
