@@ -568,7 +568,7 @@ return lush(function()
     ---- :help luasnip -------------------------------------------
     -- Luasnip*Node{Active,Passive,SnippetPassive}
 
-    IndentBlanklineContextChar({ fg = grey2, bg = nil }),
+    -- IndentBlanklineContextChar({ fg = grey2, bg = nil }),
 
     ---- :help orgmode.nvim -------------------------------------------
 

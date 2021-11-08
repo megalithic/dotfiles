@@ -397,7 +397,7 @@ local function setup_lsp_servers()
     "elmls",
     "pyright",
     "rust_analyzer",
-    -- "tailwindcss",
+    "tailwindcss",
     "vimls",
   }
   for _, ls in ipairs(servers) do
@@ -456,11 +456,11 @@ local function setup_lsp_servers()
     cmd = { "tailwindcss-language-server", "--stdio" },
     init_options = {
       userLanguages = {
-        eelixir = "html-eex",
-        eruby = "erb",
+        eelixir = "html",
+        eruby = "html",
         ["html-eex"] = "html",
-        ["phoenix-heex"] = "html-eex",
-        heex = "phoenix-eex",
+        ["phoenix-heex"] = "html",
+        heex = "html",
       },
     },
     settings = {
@@ -469,7 +469,7 @@ local function setup_lsp_servers()
         typescriptreact = "javascript",
         ["html-eex"] = "html",
         ["phoenix-heex"] = "html",
-        heex = "eelixir",
+        heex = "html",
         elm = "html",
       },
       -- tailwindCSS = {
