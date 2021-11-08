@@ -13,8 +13,8 @@
 
 [credential "https://github.com"]
   helper =
-  ; helper = osxkeychain
-  helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+  helper = osxkeychain
+  ; helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
 
 [hub]
   protocol = https
