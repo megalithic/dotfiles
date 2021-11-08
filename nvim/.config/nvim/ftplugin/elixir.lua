@@ -28,7 +28,8 @@ vim.api.nvim_exec(
   " space to complete the `iabbrev` expansions.
   iabbrev epry  require IEx; IEx.pry
   iabbrev ep    \|>
-  iabbrev ei    IO.inspect
+  " iabbrev ei    IO.inspect
+  iabbrev ei    IO.inspect\(\)
   " iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
   iabbrev eputs IO.puts
 
@@ -68,7 +69,7 @@ vim.api.nvim_exec(
         return sub
       end
     else
-      let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
+      let sub = substitute(a:cmd, 'mix test', 'eval $(desk load); mix test --color', '')
       echom "sub in somewhere else -> " . sub
       return sub
     end

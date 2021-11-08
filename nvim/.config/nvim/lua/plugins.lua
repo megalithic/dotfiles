@@ -96,7 +96,7 @@ return {
   "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
   "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
-  -- "chaoren/vim-wordmotion", -- to move across cases and words and such
+  "chaoren/vim-wordmotion", -- to move across cases and words and such
   "wellle/targets.vim",
   -- research: windwp/nvim-spectre
 

@@ -247,56 +247,63 @@ local function setup_hclipboard()
 end
 
 local function setup_indent_blankline()
-  g.indent_blankline_buftype_exclude = { "terminal", "nofile" }
-  g.indent_blankline_filetype_exclude = {
-    "help",
-    "startify",
-    "dashboard",
-    "alpha",
-    "packer",
-    "neogitstatus",
-    "NvimTree",
-    "Trouble",
-    "git",
-    "org",
-    "orgagenda",
-    "NvimTree",
-    "fzf",
-    "log",
-    "fugitive",
-    "gitcommit",
-    "packer",
-    "vimwiki",
-    "markdown",
-    "json",
-    "txt",
-  }
-  g.indent_blankline_char = "│"
-  g.indent_blankline_use_treesitter = true
-  g.indent_blankline_show_trailing_blankline_indent = false
-  g.indent_blankline_show_current_context = true
-  g.indent_blankline_context_patterns = {
-    "class",
-    "return",
-    "function",
-    "method",
-    "^if",
-    "^while",
-    "jsx_element",
-    "^for",
-    "^object",
-    "^table",
-    "block",
-    "arguments",
-    "if_statement",
-    "else_clause",
-    "jsx_element",
-    "jsx_self_closing_element",
-    "try_statement",
-    "catch_clause",
-    "import_statement",
-    "operation_type",
-  }
+  require("indent_blankline").setup({
+    char = "│", -- ┆ ┊ 
+    show_foldtext = false,
+    show_current_context = true,
+    show_current_context_start = true,
+    show_first_indent_level = true,
+    indent_blankline_use_treesitter = true,
+    indent_blankline_show_trailing_blankline_indent = false,
+    filetype_exclude = {
+      "startify",
+      "dashboard",
+      "alpha",
+      "log",
+      "fugitive",
+      "gitcommit",
+      "packer",
+      "vimwiki",
+      "markdown",
+      "json",
+      "txt",
+      "vista",
+      "help",
+      "NvimTree",
+      "git",
+      "fzf",
+      "TelescopePrompt",
+      "undotree",
+      "flutterToolsOutline",
+      "norg",
+      "org",
+      "orgagenda",
+      "", -- for all buffers without a file type
+    },
+    buftype_exclude = { "terminal", "nofile" },
+    context_patterns = {
+      "class",
+      "function",
+      "method",
+      "block",
+      "list_literal",
+      "selector",
+      "^if",
+      "^table",
+      "if_statement",
+      "while",
+      "for",
+      "^object",
+      "arguments",
+      "else_clause",
+      "jsx_element",
+      "jsx_self_closing_element",
+      "try_statement",
+      "catch_clause",
+      "import_statement",
+      "operation_type",
+    },
+  })
 end
 
 local function setup_neoscroll()
