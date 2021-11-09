@@ -514,7 +514,7 @@ local function setup_lsp_servers()
       "typescriptreact",
     },
     root_dir = root_pattern(
-      "assets/tailwind.config.js",
+      "./assets/tailwind.config.js",
       "tailwind.config.js",
       "tailwind.config.ts",
       "postcss.config.js",

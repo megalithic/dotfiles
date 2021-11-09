@@ -43,15 +43,17 @@ cmd("runtime .vimrc")
 -- Discover runtime files (change path) ->
 --  :lua mega.dump(vim.api.nvim_get_runtime_file('ftplugin/**/*.lua', true))
 --
--- We can set this lower if needed (used in tandem with `mega.inspect`) ->
--- TODO: does this still work?
--- vim.lsp.set_log_level(vim.log.levels.DEBUG)
+-- Debug LSP traffic ->
+-- vim.lsp.set_log_level("trace")
+-- if vim.fn.has("nvim-0.5.1") == 1 then
+--   require("vim.lsp.log").set_format_func(vim.inspect)
+-- end
 --
 -- LSP/efm log locations ->
 --  `tail -n150 -f $HOME/.cache/nvim/lsp.log`
 --  `tail -n150 -f $HOME/.cache/nvim/efm-lsp.log`
 --  -or-
---  :lua vim.cmd('vnew '..vim.lsp.get_log_path())
+--  :lua vim.cmd('vnew'..vim.lsp.get_log_path())
 --  -or-
 --  :LspLog
 --
