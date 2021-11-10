@@ -525,6 +525,7 @@ local function setup_golden_size()
           "current",
           "Vista",
           "LuaTree",
+          "NvimTree",
           "nofile",
           "tsplayground",
         },
