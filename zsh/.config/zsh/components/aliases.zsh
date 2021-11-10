@@ -156,9 +156,9 @@ alias evl="nvim $DOTS/nvim/.config/nvim/lua/lsp/init.lua"
 alias evm="nvim $DOTS/nvim/.config/nvim/lua/mappings.lua"
 alias evg="nvim $DOTS/nvim/.config/nvim/lua/global.lua"
 
-alias ehs="nvim $HOME/.config/hammerspoon/config.lua"
-alias eh="nvim $HOME/.config/hammerspoon/init.lua"
-alias eg="nvim $HOME/.gitconfig"
+alias ehs="nvim $DOTS/hammerspoon/.config/hammerspoon/config.lua"
+alias eh="nvim $DOTS/hammerspoon/.config/hammerspoon/init.lua"
+alias eg="nvim $DOTS/git/.gitconfig"
 alias eb="nvim $DOTS/Brewfile"
 alias essh="nvim $HOME/.ssh/config"
 

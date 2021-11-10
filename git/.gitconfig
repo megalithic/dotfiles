@@ -1,3 +1,5 @@
+# vim:foldenable:foldmethod=marker:ft=gitconfig
+#
 [user]
   name = Seth Messer
   email = seth.messer@gmail.com
@@ -329,6 +331,4 @@
   linenumber = normal
 
 [include]
-  path = ~/.gitconfig.local
-
-# vim:foldenable:foldmethod=marker:ft=gitconfig
+  path = ~/.gitconfig.linux

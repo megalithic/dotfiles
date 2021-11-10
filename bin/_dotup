@@ -348,6 +348,11 @@ function setup_kitty {
 	fi
 }
 
+function setup_gitconfig {
+	# TODO: look at doing this, just like dr. @ryansch
+	# https://github.com/ryansch/dotfiles/blob/main/script/gitconfig
+}
+
 function setup_zsh {
 	[[ $PLATFORM == "linux" ]] && zsh_path="/usr/bin/zsh" || zsh_path="/usr/local/bin/zsh"
 
@@ -398,6 +403,7 @@ setup_neovim
 setup_asdf
 setup_keyboard
 setup_python
+setup_gitconfig
 post_install
 
-# vim:ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2
+# vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2
