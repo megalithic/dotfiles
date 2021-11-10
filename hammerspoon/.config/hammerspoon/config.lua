@@ -141,6 +141,7 @@ M.apps = {
     bundleID = "com.agiletortoise.Drafts-OSX",
     name = "Drafts",
     hyper_key = "d",
+    modifier = M.modifiers.shift,
     local_bindings = { ";" },
     quitGuard = false,
     hideAfter = 1,
@@ -163,7 +164,6 @@ M.apps = {
     bundleID = "com.kapeli.dashdoc",
     name = "Dash",
     hyper_key = "d",
-    modifier = M.modifiers.shift,
     rules = {
       { nil, 1, M.layout.centeredLarge },
     },
