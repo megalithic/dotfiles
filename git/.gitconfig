@@ -8,13 +8,8 @@
 ; 	helper = pass
 ; 	helper = /usr/local/share/gcm-core/git-credential-manager-core
 
-; [credential "https://dev.azure.com"]
-; 	useHttpPath = true
-
 [credential "https://github.com"]
-  helper =
   helper = osxkeychain
-  ; helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
 
 [hub]
   protocol = https
