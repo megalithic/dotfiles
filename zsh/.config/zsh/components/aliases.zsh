@@ -113,29 +113,33 @@ alias b="brew"
 
 # (NEO)VIM
 # -----------------------------------------------------------------------------
-alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
-alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
-alias im="nvim"
-alias nv="nvim"
-alias vm="nvim"
-alias nvm="nvim"
-alias vim="nvim"
-alias v=vim
-alias vi="/usr/local/bin/vim"
-alias minvim="nvim -u NONE"
-alias barevim="nvim -u NONE"
-alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
-alias rmpaqs="packs; rm -rf paqs; cd -"
-# alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
-# alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
-# alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
-# # While in a nvim terminal, open file to current session
-# if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
-#   alias nvh='nvr -o'
-#   alias nvv='nvr -O'
-#   alias nvt='nvr --remote-tab'
-# fi
+if type nvim >/dev/null 2>&1; then
+	alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
+	alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
+	alias nvim="nvim -O" # let's always open multiple files passed in as vsplits
+	alias im="nvim"
+	alias nv="nvim"
+	alias vm="nvim"
+	alias nvm="nvim"
+	alias vim="nvim"
+	alias v=vim
+	alias vi="/usr/local/bin/vim"
+	alias minvim="nvim -u NONE"
+	alias barevim="nvim -u NONE"
+	alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
+	alias rmpaqs="packs; rm -rf paqs; cd -"
+	# alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
+
+	# alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
+	# alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
+	# # While in a nvim terminal, open file to current session
+	# if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
+	#   alias nvh='nvr -o'
+	#   alias nvv='nvr -O'
+	#   alias nvt='nvr --remote-tab'
+	# fi
+fi
 
 # CONFIG EDITS
 # -----------------------------------------------------------------------------

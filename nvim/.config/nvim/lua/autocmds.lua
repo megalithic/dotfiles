@@ -23,13 +23,6 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 -- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
 
---  Open multiple files in splits
--- TODO: https://github.com/goolord/alpha-nvim/blob/main/lua/alpha.lua#L396
-exec([[ if argc() > 1 | silent vertical all | endif ]])
-
---  Open :intro only if no file args passed in
--- cmd([[ if argc() == 0 && !exists("s:std_in") | :intro | endif ]])
-
 --  Trim Whitespace
 exec(
   [[
