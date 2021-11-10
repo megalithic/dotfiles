@@ -333,4 +333,7 @@
   separator = red bold
   linenumber = normal
 
+[include]
+  path = ~/.gitconfig.local
+
 # vim:foldenable:foldmethod=marker:ft=gitconfig
