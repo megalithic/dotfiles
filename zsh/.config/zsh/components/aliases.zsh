@@ -240,6 +240,8 @@ alias conflicts="git ls-files -u | cut -f 2 | sort -u"
 alias uncommit="git reset --soft 'HEAD^'"  # re-commit with `git commit -c ORIG_HEAD`
 alias gex="git archive master | tar -x -C" # update this to support more than the master branch
 alias resolve="git mergetool --tool=nvimdiff"
+alias gs="git status --branch --short ."
+alias gwt="git worktree"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"
