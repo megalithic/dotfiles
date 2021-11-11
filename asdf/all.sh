@@ -66,3 +66,6 @@ source "$DOTS/asdf/elixir.sh" && log_ok "DONE configuring elixir"
 
 log "configuring go.."
 source "$DOTS/asdf/go.sh" && log_ok "DONE configuring go"
+
+log "configuring perl.."
+cpan install Pod::Parser && log_ok "DONE configuring go"
