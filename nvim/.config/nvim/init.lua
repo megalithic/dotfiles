@@ -34,6 +34,7 @@ end
 -- [ plain old vim ] ------------------------------------------------------- {{{
 
 -- TODO: migrate to lua?
+-- mayhaps? https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/plugin/options.lua
 cmd("runtime .vimrc")
 
 -- }}}

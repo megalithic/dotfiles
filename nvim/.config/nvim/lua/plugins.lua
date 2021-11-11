@@ -43,6 +43,7 @@ return {
   "hrsh7th/cmp-path",
   "hrsh7th/cmp-emoji",
   "f3fora/cmp-spell",
+  "hrsh7th/cmp-nvim-lsp-document-symbol",
   "L3MON4D3/LuaSnip",
   -- "megalithic/cmp-gitmoji",
   "rafamadriz/friendly-snippets",
@@ -110,6 +111,9 @@ return {
   "sindrets/diffview.nvim",
   "dinhhuy258/git.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
+  "pwntester/octo.nvim",
+  "ruifm/gitlinker.nvim",
+  "rhysd/committia.vim",
 
   --
   -- (development, et al) --
@@ -123,7 +127,9 @@ return {
   "vuki656/package-info.nvim",
   -- "jamestthompson3/nvim-remote-containers",
   "chipsenkbeil/distant.nvim",
-
+  "tpope/vim-dadbod",
+  "kristijanhusak/vim-dadbod-completion",
+  "kristijanhusak/vim-dadbod-ui",
   --
   -- (the rest...) --
   -- "b0o/mapx.nvim",
