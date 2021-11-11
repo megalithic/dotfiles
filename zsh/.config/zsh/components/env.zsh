@@ -124,8 +124,8 @@ if [[ "$PLATFORM" == "macos" ]]; then
 
   # for libffi and ruby things
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
-  export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.32/lib"
-  export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl/lib"
+  # export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.32/lib"
+  # export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
   export LDFLAGS="$LDFLAGS -I/usr/local/opt/openssl/include"
@@ -278,7 +278,7 @@ path=(
     ${HOME}/.dotfiles/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
-    ${HOMEBREW_PREFIX}/opt/perl@*/bin(Nn[-1]-/)
+    # ${HOMEBREW_PREFIX}/opt/perl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)

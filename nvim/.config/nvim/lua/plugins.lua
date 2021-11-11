@@ -13,7 +13,7 @@ return {
   "nathom/filetype.nvim",
 
   --
-  -- (appearance/ui) --
+  -- (appearance/ui/visuals) --
   "rktjmp/lush.nvim",
   "mhanberg/thicc_forest",
   "norcalli/nvim-colorizer.lua",
@@ -27,6 +27,7 @@ return {
   "folke/which-key.nvim",
   "goolord/alpha-nvim",
   -- "megalithic/shade.nvim", -- FIXME: too many broke things for various plugins
+  "jceb/blinds.nvim",
   -- "akinsho/bufferline.nvim",
 
   --
@@ -113,7 +114,6 @@ return {
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
   "pwntester/octo.nvim",
   "ruifm/gitlinker.nvim",
-  "rhysd/committia.vim",
 
   --
   -- (development, et al) --
