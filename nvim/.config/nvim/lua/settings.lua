@@ -131,6 +131,7 @@ local function setup_treesitter()
       "jsonc",
       "lua",
       "nix",
+      "org",
       "perl",
       "python",
       "query",
