@@ -255,6 +255,7 @@ local function setup_indent_blankline()
     show_current_context = true,
     show_current_context_start = true,
     show_first_indent_level = true,
+    show_end_of_line = true,
     indent_blankline_use_treesitter = true,
     indent_blankline_show_trailing_blankline_indent = false,
     filetype_exclude = {

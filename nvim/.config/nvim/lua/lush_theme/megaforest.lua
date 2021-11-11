@@ -566,9 +566,13 @@ return lush(function()
     CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
 
     ---- :help luasnip -------------------------------------------
+
     -- Luasnip*Node{Active,Passive,SnippetPassive}
 
-    -- IndentBlanklineContextChar({ fg = grey2, bg = nil }),
+    ---- :help indent-blankline -------------------------------------------
+
+    IndentBlanklineContextChar({ fg = purple, bg = bg1 }),
+    IndentBlanklineContextStart({ sp = purple, bg = bg1, gui = "underline" }),
 
     ---- :help orgmode.nvim -------------------------------------------
 
