@@ -42,7 +42,8 @@ magic seems to handle linking things right to where weechat works with it.
 - https://demu.red/blog/2016/12/setting-up-sms-in-irc-via-bitlbee-with-purple-hangouts/#installing-bitlbee
 - https://weechat.org/files/doc/stable/weechat_user.en.html#command_weechat_secure
 - https://www.weechat.org/files/doc/stable/weechat_user.en.html#secured_data
+- http://www.futurile.net/2020/11/30/weechat-for-slack/
 
 #### TODO
 
-- [ ] implement [SASL support for weechat](https://freenode.net/kb/answer/weechat)
+- [x] implement [SASL support for weechat](https://freenode.net/kb/answer/weechat)
