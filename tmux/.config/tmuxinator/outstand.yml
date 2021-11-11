@@ -6,14 +6,16 @@ on_project_start: gohome && dowork
 
 tmux_options: -2
 windows:
-  - chats|dots:
-      layout: horizontal
+  - chats:
       panes:
         - chats:
             - cd ~/.dotfiles
             - weechat
+  - dots:
+      panes:
         - dots:
             - cd ~/.dotfiles
+            - nvim
   - ssh-dots:
       panes:
         - code:

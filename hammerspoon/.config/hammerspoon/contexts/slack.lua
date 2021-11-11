@@ -216,6 +216,14 @@ end
 -- apply(hs.application, hs.window, running.events, hs.logger) :: nil
 M.apply = function(app, _, _, _)
   local focus = _focus()
+  local function messageUp()
+    hs.eventtap.keyStroke({}, "up", app)
+  end
+
+  local function messageDown()
+    hs.eventtap.keyStroke({}, "down", app)
+  end
+
   local function slackUp()
     hs.eventtap.keyStroke({ "alt" }, "up", app)
   end
@@ -224,44 +232,63 @@ M.apply = function(app, _, _, _)
     hs.eventtap.keyStroke({ "alt" }, "down", app)
   end
 
-  -- local function startSlackReminder()
-  --   focus.mainMessageBox()
+  local function startSlackReminder()
+    focus.mainMessageBox()
 
-  --   hs.timer.doAfter(0.3, function()
-  --     hs.eventtap.keyStrokes("/remind me at ")
-  --   end)
-  -- end
+    hs.timer.doAfter(0.3, function()
+      hs.eventtap.keyStrokes("/remind me at ")
+    end)
+  end
 
-  -- local function openSlackThread()
-  --   focus.mainMessageBox()
+  local function openSlackThread()
+    focus.mainMessageBox()
 
-  --   hs.timer.doAfter(0.1, function()
-  --     slackUp()
-  --     hs.eventtap.keyStroke({}, "t", 0)
-  --     focus.threadMessageBox(true)
-  --   end)
-  -- end
+    hs.timer.doAfter(0.1, function()
+      slackUp()
+      hs.eventtap.keyStroke({}, "t", 0)
+      focus.threadMessageBox(true)
+    end)
+  end
 
   local slackModal = hs.hotkey.modal.new()
 
+  -- move up and down messages
+  slackModal:bind({ "ctrl" }, "j", nil, messageDown, nil, messageDown)
+  slackModal:bind({ "ctrl" }, "k", nil, messageUp, nil, messageUp)
+
+  -- move up and down slacks (read or unread)
+  slackModal:bind({ "ctrl" }, "n", nil, slackDown, nil, slackDown)
+  slackModal:bind({ "ctrl" }, "p", nil, slackUp, nil, slackUp)
+
+  -- misc
   slackModal:bind({ "ctrl" }, "h", nil, focus.mainMessageBox, nil, focus.mainMessageBox)
-  slackModal:bind({ "ctrl" }, "j", nil, slackDown, nil, slackDown)
-  slackModal:bind({ "ctrl" }, "k", nil, slackUp, nil, slackUp)
   slackModal:bind({ "ctrl" }, "l", nil, focus.threadMessageBox, nil, focus.threadMessageBox)
+
+  -- move up and down unread slacks
   slackModal:bind({ "ctrl", "shift" }, "j", function()
     hs.eventtap.keyStroke({ "alt", "shift" }, "down", app)
   end)
   slackModal:bind({ "ctrl", "shift" }, "k", function()
     hs.eventtap.keyStroke({ "alt", "shift" }, "up", app)
   end)
+  slackModal:bind({ "ctrl", "cmd" }, "n", function()
+    hs.eventtap.keyStroke({ "alt", "shift" }, "down", app)
+  end)
+  slackModal:bind({ "ctrl", "cmd" }, "p", function()
+    hs.eventtap.keyStroke({ "alt", "shift" }, "up", app)
+  end)
+
+  -- "better" jump to a thing
   slackModal:bind({ "ctrl" }, "g", function()
     hs.eventtap.keyStroke({ "cmd" }, "k", app)
   end)
+
+  -- "better" find a thing
   slackModal:bind({ "ctrl" }, "/", function()
     hs.eventtap.keyStroke({ "cmd" }, "f", app)
   end)
 
-  -- basically no-ops:
+  -- no-ops:
   slackModal:bind({ "cmd" }, "w", function()
     hs.eventtap.keyStroke({}, "escape", app)
   end)
@@ -269,9 +296,9 @@ M.apply = function(app, _, _, _)
     hs.eventtap.keyStroke({}, "escape", app)
   end)
 
-  -- slackModal:bind({ "ctrl" }, "r", nil, startSlackReminder, nil, startSlackReminder)
-  -- slackModal:bind({ "ctrl" }, "t", nil, openSlackThread, nil, openSlackThread)
-  -- slackModal:bind({ "shift", "cmd" }, "delete", nil, focus.leaveChannel, nil, nil)
+  slackModal:bind({ "ctrl" }, "r", nil, startSlackReminder, nil, startSlackReminder)
+  slackModal:bind({ "ctrl" }, "t", nil, openSlackThread, nil, openSlackThread)
+  slackModal:bind({ "shift", "cmd" }, "delete", nil, focus.leaveChannel, nil, nil)
 
   local slackWatcher = hs.application.watcher.new(function(applicationName, eventType)
     if applicationName ~= "Slack" then
