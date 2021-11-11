@@ -167,6 +167,13 @@ function M.inspect(label, v, opts)
   return v
 end
 
+function M.opt(o, v, scopes)
+  scopes = scopes or { vim.o }
+  for _, s in ipairs(scopes) do
+    s[o] = v
+  end
+end
+
 -- a safe module loader
 function M.load(module, opts)
   opts = opts or { silent = false, safe = false }
