@@ -36,6 +36,11 @@ then weechat. Still not perfect solution. I was using asdf to manage python vers
 but it looks like weechat wants system installed things and homebrew's black
 magic seems to handle linking things right to where weechat works with it.
 
+##### Issues
+
+- If you have perl issues, see this: https://github.com/NixOS/nixpkgs/issues/106506#issuecomment-795775642
+  - `brew install perl && cpan install Pod::Parser`
+
 #### References
 
 - https://megalithic.io/thoughts/weechat-setup-with-irc-bitlbee-slack

@@ -34,10 +34,11 @@ brew "qmk"
 # -- cli --
 
 brew "ansible"
+# brew "asdf"
+brew "asciidoctor"
+brew "aspell"
 brew "autoconf"
 brew "automake"
-# brew "asdf"
-brew "aspell"
 brew "awscli"
 brew "bat"
 brew "blueutil"
