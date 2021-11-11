@@ -7,15 +7,11 @@ on_project_start: gohome && dowork
 tmux_options: -2
 windows:
   - chats:
-      panes:
-        - chats:
-            - cd ~/.dotfiles
-            - weechat
+      - cd ~/.dotfiles
+      - weechat
   - dots:
-      panes:
-        - dots:
-            - cd ~/.dotfiles
-            - nvim
+      - cd ~/.dotfiles
+      - nvim
   - ssh-dots:
       panes:
         - code:
