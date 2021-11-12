@@ -159,7 +159,8 @@ map("n", "q", "<Nop>")
 map("n", "Q", "@q")
 map("v", "Q", ":norm @q<CR>")
 
-map("n", "<leader>e", ":e **/<TAB>")
+-- Open file with wildmenu pum;
+map("n", "<leader>e", ":vnew **/<TAB>")
 
 -- Map <leader>o & <leader>O to newline without insert mode
 map("n", "<leader>o", ':<C-u>call append(line("."), repeat([""], v:count1))<CR>', { noremap = true, silent = true })
