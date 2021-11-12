@@ -17,17 +17,8 @@ local function setup_nvim_options()
     "8p%% ", -- file percentage
   }, " %")
 
-  -- # really great settings explainers:
-  -- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/general/settings.lua
-  set.copyindent = true
-  set.preserveindent = true
-
-  -- FIXME: THIS BREAKS opening *.exs files!
-  -- set.foldmethod = "expr"
-  -- set.foldexpr = "nvim_treesitter#foldexpr()"
   -- ---------------------------------------
 
-  set.indentexpr = "nvim_treesitter#indent()"
   -- set.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
   g.no_man_maps = true
   g.vim_json_syntax_conceal = false
@@ -43,17 +34,8 @@ local function setup_nvim_options()
     { "╰", "FloatBorderDark" },
     { "│", "FloatBorderDark" },
   }
-  set.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
-  set.grepformat = "%f:%l:%c:%m,%f:%l:%m"
-  set.timeoutlen = 300
   -- set.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
   -- set.concealcursor = "n" -- Hide * markup for bold and italic
-
-  -- # spelling
-  vim.opt.spellsuggest:prepend({ 12 })
-  vim.opt.spelloptions = "camel"
-  vim.opt.spellcapcheck = "" -- don't check for capital letters at start of sentence
-  vim.opt.fileformats = { "unix", "mac", "dos" }
 
   -- # git editor
   if vim.fn.executable("nvr") then
@@ -82,6 +64,8 @@ local function setup_matchup()
 end
 
 local function setup_treesitter()
+  set.indentexpr = "nvim_treesitter#indent()"
+
   -- custom treesitter parsers and grammars
   local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
   parser_config.jsonc.used_by = "json"
@@ -1432,7 +1416,7 @@ end
 
 local function setup_misc()
   vim.g.fzf_gitignore_no_maps = true
-  vim.g.blinds_guibg = tostring(require("colors").cs.bg1)
+  -- vim.g.blinds_guibg = tostring(require("colors").cs.bg1)
 end
 
 setup_nvim_options()

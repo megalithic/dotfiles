@@ -1,6 +1,9 @@
 local o, g = vim.opt, vim.g
 local exec, is_macos = mega.exec, mega.is_macos
 
+-- REFS for explaining these options
+-- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/general/settings.lua
+
 -- o.mouse = "" -- disable the mouse
 o.mouse = "nva" -- Mouse support in different modes
 o.mousemodel = "popup" -- Set the behaviour of mouse
@@ -11,6 +14,8 @@ o.errorbells = false -- disable error bells (no beep/flash)
 o.termguicolors = true -- enable 24bit colors
 
 o.updatetime = 250 -- decrease update time
+o.timeoutlen = 300
+
 o.autoread = true -- auto read file if changed outside of vim
 o.fileformat = "unix" -- <nl> for EOL
 o.switchbuf = { "useopen", "vsplit", "split", "usetab" }
@@ -46,6 +51,8 @@ g.colorcolumn = 81 -- global var, mark column 81
 o.colorcolumn = tostring(g.colorcolumn)
 o.wrap = true -- wrap long lines
 o.breakindent = true -- start wrapped lines indented
+o.copyindent = true
+o.preserveindent = true
 o.linebreak = true -- do not break words on line wrap
 o.jumpoptions = "stack"
 
@@ -138,6 +145,10 @@ o.dictionary = "/usr/share/dict/words"
 o.spellfile = "$DOTS/nvim/.config/nvim/spell/en.utf-8.add"
 o.spelllang = "en"
 o.spell = false -- turn off by default (ft will enable it)
+o.spellsuggest:prepend({ 12 })
+o.spelloptions = "camel"
+o.spellcapcheck = "" -- don't check for capital letters at start of sentence
+o.fileformats = { "unix", "mac", "dos" }
 
 --[[
   ShDa (viminfo for vim): session data history
@@ -212,8 +223,9 @@ end
 -- use ':grep' to send resulsts to quickfix
 -- use ':lgrep' to send resulsts to loclist
 if vim.fn.executable("rg") == 1 then
-  o.grepprg = "rg --vimgrep --no-heading --smart-case --hidden"
+  o.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
   o.grepformat = "%f:%l:%c:%m"
+  o.grepformat = "%f:%l:%c:%m,%f:%l:%m"
 end
 
 -- Disable providers we do not care a about

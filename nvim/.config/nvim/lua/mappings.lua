@@ -170,23 +170,23 @@ map("n", "<leader>O", ':<C-u>call append(line(".")-1, repeat([""], v:count1))<CR
 --
 -- <leader>v|<leader>s act as <cmd-v>|<cmd-s>
 -- <leader>p|P paste from yank register (0)
-map("n", "<leader>v", '"+p', { noremap = true })
-map("n", "<leader>V", '"+P', { noremap = true })
-map("v", "<leader>v", '"_d"+p', { noremap = true })
-map("v", "<leader>v", '"_d"+P', { noremap = true })
-map("n", "<leader>s", '"*p', { noremap = true })
-map("n", "<leader>S", '"*P', { noremap = true })
-map("v", "<leader>s", '"*p', { noremap = true })
-map("v", "<leader>S", '"*p', { noremap = true })
+-- map("n", "<leader>v", '"+p', { noremap = true })
+-- map("n", "<leader>V", '"+P', { noremap = true })
+-- map("v", "<leader>v", '"_d"+p', { noremap = true })
+-- map("v", "<leader>v", '"_d"+P', { noremap = true })
+-- map("n", "<leader>s", '"*p', { noremap = true })
+-- map("n", "<leader>S", '"*P', { noremap = true })
+-- map("v", "<leader>s", '"*p', { noremap = true })
+-- map("v", "<leader>S", '"*p', { noremap = true })
 
--- Overloads for 'd|c' that don't pollute the unnamed registers
--- In visual-select mode 'd=delete, x=cut (unchanged)'
-map("n", "<leader>d", '"_d', { noremap = true })
-map("n", "<leader>D", '"_D', { noremap = true })
-map("n", "<leader>c", '"_c', { noremap = true })
-map("n", "<leader>C", '"_C', { noremap = true })
-map("v", "<leader>c", '"_c', { noremap = true })
-map("v", "d", '"_d', { noremap = true })
+-- -- Overloads for 'd|c' that don't pollute the unnamed registers
+-- -- In visual-select mode 'd=delete, x=cut (unchanged)'
+-- map("n", "<leader>d", '"_d', { noremap = true })
+-- map("n", "<leader>D", '"_D', { noremap = true })
+-- map("n", "<leader>c", '"_c', { noremap = true })
+-- map("n", "<leader>C", '"_C', { noremap = true })
+-- map("v", "<leader>c", '"_c', { noremap = true })
+-- map("v", "d", '"_d', { noremap = true })
 
 -- Join / Split Lines
 map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
