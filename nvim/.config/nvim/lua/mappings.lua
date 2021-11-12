@@ -1,4 +1,4 @@
-local api, cmd, fn = vim.api, vim.cmd, vim.fn
+local cmd = vim.cmd
 local map, command, exec = mega.map, mega.command, mega.exec
 
 --[[
@@ -22,8 +22,8 @@ local map, command, exec = mega.map, mega.command, mega.exec
 -- [convenience mappings] ------------------------------------------------------
 
 -- make the tab key match bracket pairs
-api.nvim_exec("silent! unmap [%", true)
-api.nvim_exec("silent! unmap ]%", true)
+exec("silent! unmap [%", true)
+exec("silent! unmap ]%", true)
 
 map("n", "<Tab>", "%", { noremap = false })
 map("s", "<Tab>", "%", { noremap = false })
@@ -161,6 +161,33 @@ map("v", "Q", ":norm @q<CR>")
 
 map("n", "<leader>e", ":e **/<TAB>")
 
+-- Map <leader>o & <leader>O to newline without insert mode
+map("n", "<leader>o", ':<C-u>call append(line("."), repeat([""], v:count1))<CR>', { noremap = true, silent = true })
+map("n", "<leader>O", ':<C-u>call append(line(".")-1, repeat([""], v:count1))<CR>', { noremap = true, silent = true })
+
+-- REF/HT:
+-- https://github.com/ibhagwan/nvim-lua/blob/main/lua/keymaps.lua#L121-L139
+--
+-- <leader>v|<leader>s act as <cmd-v>|<cmd-s>
+-- <leader>p|P paste from yank register (0)
+map("n", "<leader>v", '"+p', { noremap = true })
+map("n", "<leader>V", '"+P', { noremap = true })
+map("v", "<leader>v", '"_d"+p', { noremap = true })
+map("v", "<leader>v", '"_d"+P', { noremap = true })
+map("n", "<leader>s", '"*p', { noremap = true })
+map("n", "<leader>S", '"*P', { noremap = true })
+map("v", "<leader>s", '"*p', { noremap = true })
+map("v", "<leader>S", '"*p', { noremap = true })
+
+-- Overloads for 'd|c' that don't pollute the unnamed registers
+-- In visual-select mode 'd=delete, x=cut (unchanged)'
+map("n", "<leader>d", '"_d', { noremap = true })
+map("n", "<leader>D", '"_D', { noremap = true })
+map("n", "<leader>c", '"_c', { noremap = true })
+map("n", "<leader>C", '"_C', { noremap = true })
+map("v", "<leader>c", '"_c', { noremap = true })
+map("v", "d", '"_d', { noremap = true })
+
 -- Join / Split Lines
 map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
 map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
@@ -216,8 +243,8 @@ map("x", "N", "'nN'[v:searchforward]", { expr = true })
 map("o", "N", "'nN'[v:searchforward]", { expr = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
-map("c", "<C-n", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
-map("c", "<C-p", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
+map("c", "<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
+map("c", "<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 
 -- [custom mappings] -----------------------------------------------------------
 
@@ -228,10 +255,7 @@ map("n", "<leader>rex", [[:12sp | e term://iex | wincmd k<cr>]])
 map("n", "<leader>rjs", [[:12sp | e term://node | wincmd k<cr>]])
 
 -- Things 3
-api.nvim_exec(
-  [[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]],
-  true
-)
+exec([[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]], true)
 map("n", "<Leader>T", "<cmd>Things<CR>")
 
 -- Spelling
@@ -268,13 +292,13 @@ map("n", "<Leader>gd", "<cmd>DiffviewOpen<CR>")
 map("n", "<Leader>mp", "<cmd>MarkdownPreview<CR>")
 
 -- # slash
-cmd([[noremap <plug>(slash-after) zz]])
-api.nvim_exec(
+exec(
   [[
-if has('timers')
-  " Blink 2 times with 50ms interval
-  noremap <expr> <plug>(slash-after) slash#blink(2, 50)
-endif
+  noremap <plug>(slash-after) zz
+  if has('timers')
+    " blink 2 times with 50ms interval
+    noremap <expr> <plug>(slash-after) 'zz'.slash#blink(2, 50)
+  endif
   ]],
   true
 )
@@ -337,29 +361,6 @@ map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zet
 
 -- # nvim-tree
 map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")
-
--- # tmux
--- do
---   local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
-
---   local tmux_move = function(direction)
---     vim.fn.system("tmux selectp -" .. tmux_directions[direction])
---   end
-
---   function Move(direction)
---     local current_win = api.nvim_get_current_win()
---     vim.cmd("wincmd " .. direction)
-
---     if api.nvim_get_current_win() == current_win then
---       tmux_move(direction)
---     end
---   end
-
---   map("n", "<C-h>", ":lua Move('h')<CR>")
---   map("n", "<C-j>", ":lua Move('j')<CR>")
---   map("n", "<C-k>", ":lua Move('k')<CR>")
---   map("n", "<C-l>", ":lua Move('l')<CR>")
--- end
 
 -- # commands
 
