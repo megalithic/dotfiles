@@ -14,28 +14,9 @@
 
 --]]
 
--- [ assigns ] ------------------------------------------------------------- {{{
-
-_G["mega"] = require("global")
-local load = mega.load
-
--- }}}
-
--- [ speed ] --------------------------------------------------------------- {{{
-
-local ok, impatient = load("impatient", { safe = true })
-if ok then
-  impatient.enable_profile()
-end
-
--- }}}
-
--- [ plain old vim ] ------------------------------------------------------- {{{
-
--- TODO: migrate to lua?
--- mayhaps? https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/plugin/options.lua
--- vim.cmd("runtime .vimrc")
-
+-- [ leader bindings ] ----------------------------------------------------- {{{
+vim.g.mapleader = "," -- Remap leader key
+vim.g.maplocalleader = " " -- Local leader is <Space>
 -- }}}
 
 --[[ debugging ] ---------------------------------------------------------------
@@ -60,14 +41,23 @@ end
 --]]
 
 -- [ loaders ] ------------------------------------------------------------- {{{
+local reload_ok, reload = pcall(require, "plenary.reload")
+RELOAD = reload_ok and reload.reload_module or function(...)
+  return ...
+end
+function R(name)
+  RELOAD(name)
+  return require(name)
+end
 
-load("preflight")
-load("options")
-load("colors").setup("megaforest")
-load("settings")
-load("lsp")
-load("autocmds")
-load("mappings")
-load("megaline")
-
+R("globals")
+R("preflight")
+-- R("options")
+R("opts")
+R("colors").setup("megaforest")
+R("settings")
+R("lsp")
+R("autocmds")
+R("mappings")
+R("megaline")
 -- }}}

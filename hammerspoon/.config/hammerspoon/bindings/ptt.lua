@@ -137,9 +137,10 @@ M.setState = function(s)
   log.df("Setting PTT state to %s", s)
 
   if M.menubar ~= nil then
-    M.menubar:delete()
-    M.menubar = hs.menubar.new()
+    -- M.menubar:delete()
+    -- M.menubar = hs.menubar.new()
     M.menubar:setMenu(buildMenu())
+    M.menubar:setIcon(M.icons[M.state])
 
     showState()
   end
@@ -166,13 +167,15 @@ M.start = function()
   M.eventTapWatcher = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, eventTapWatcher)
   M.eventTapWatcher:start()
 
-  M.menubar = hs.menubar.new()
-  M.menubar:setMenu(buildMenu())
+  if M.menubar == nil then
+    M.menubar = hs.menubar.new()
+  end
+
   M.setState(M.state)
 
   hs.hotkey.bind(Config.ptt, "p", function()
     local toggled_to_state = M.toggleStates()
-    -- alert.show({ text = M.icons[toggled_to_state] .. "Toggling PTT mode to " .. toggled_to_state })
+    alert.show({ text = "Toggling to mode: " .. toggled_to_state })
   end)
 end
 

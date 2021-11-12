@@ -7,58 +7,58 @@ local install_path = string.format("%s/site/pack/paqs/start/", vim.fn.stdpath("d
 --
 -- clone paq-nvim and install if it doesn't exist..
 if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-	print("should be installing things")
-	if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
-		print("-> skipping paq-nvim install.")
-		return
-	end
+  print("should be installing things")
+  if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
+    print("-> skipping paq-nvim install.")
+    return
+  end
 
-	vim.fn.mkdir(install_path, "p")
+  vim.fn.mkdir(install_path, "p")
 
-	print("-> downloading paq-nvim...")
-	vim.fn.system(string.format("git clone --depth 1 %s %s/%s", repo_url, install_path, "paq-nvim"))
+  print("-> downloading paq-nvim...")
+  vim.fn.system(string.format("git clone --depth 1 %s %s/%s", repo_url, install_path, "paq-nvim"))
 
-	vim.cmd([[packadd paq-nvim]])
+  vim.cmd([[packadd paq-nvim]])
 
-	print("-> paq-nvim downloaded.")
+  print("-> paq-nvim downloaded.")
 
-	-- install plugins
-	mega.plugins()
-	vim.cmd("bufdo e")
+  -- install plugins
+  mega.sync_plugins()
+  vim.cmd("bufdo e")
 
-	return
+  return
 end
 
 -- setup vim's various config directories
 --
 -- # cache_dirs
 local data_dir = {
-	mega.cache_dir .. "backup",
-	mega.cache_dir .. "session",
-	mega.cache_dir .. "swap",
-	mega.cache_dir .. "tags",
-	mega.cache_dir .. "undo",
+  mega.cache_dir .. "backup",
+  mega.cache_dir .. "session",
+  mega.cache_dir .. "swap",
+  mega.cache_dir .. "tags",
+  mega.cache_dir .. "undo",
 }
 if not mega.isdir(mega.cache_dir) then
-	os.execute("mkdir -p " .. mega.cache_dir)
+  os.execute("mkdir -p " .. mega.cache_dir)
 end
 for _, v in pairs(data_dir) do
-	if not mega.isdir(v) then
-		os.execute("mkdir -p " .. v)
-	end
+  if not mega.isdir(v) then
+    os.execute("mkdir -p " .. v)
+  end
 end
 
 -- # local_share_dirs
 local local_share_dir = {
-	mega.local_share_dir .. "shada",
+  mega.local_share_dir .. "shada",
 }
 if not mega.isdir(mega.local_share_dir) then
-	os.execute("mkdir -p " .. mega.local_share_dir)
+  os.execute("mkdir -p " .. mega.local_share_dir)
 end
 for _, v in pairs(local_share_dir) do
-	if not mega.isdir(v) then
-		os.execute("mkdir -p " .. v)
-	end
+  if not mega.isdir(v) then
+    os.execute("mkdir -p " .. v)
+  end
 end
 
 --
@@ -68,3 +68,10 @@ end
 -- vim.o.runtimepath = vim.o.runtimepath .. "," .. local_packs
 -- resolved to -> ~/.local/share/nvim/site/pack/local/*
 --
+
+-- [ speed ] --------------------------------------------------------------- {{{
+local impatient_ok, impatient = mega.load("impatient", { safe = true })
+if impatient_ok then
+  impatient.enable_profile()
+end
+-- }}}

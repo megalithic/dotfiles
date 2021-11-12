@@ -34,7 +34,7 @@ o.clipboard = "unnamedplus"
 
 o.showmode = true -- show current mode (insert, etc) under the cmdline
 o.showcmd = true -- show current command under the cmd line
-o.cmdheight = 1 -- cmdline height
+o.cmdheight = 2 -- cmdline height
 o.laststatus = 2 -- 2 = always show status line (filename, etc)
 o.lazyredraw = true -- should make scrolling faster
 o.scrolloff = 3 -- min number of lines to keep between cursor and screen edge

@@ -1416,7 +1416,7 @@ end
 
 local function setup_misc()
   vim.g.fzf_gitignore_no_maps = true
-  -- vim.g.blinds_guibg = tostring(require("colors").cs.bg1)
+  -- vim.g.blinds_guibg = tostring(require("colors").cs.bg0)
 end
 
 setup_nvim_options()

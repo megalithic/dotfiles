@@ -1,6 +1,9 @@
-local api, fn, cmd = vim.api, vim.fn, vim.cmd
+local api = vim.api
+local fn = vim.fn
+local vcmd = vim.cmd
+
 _G.__mega_global_callbacks = __mega_global_callbacks or {}
-local M = {
+_G.mega = {
   _store = __mega_global_callbacks,
   functions = {},
   dirs = {},
@@ -12,9 +15,9 @@ local get_log_level = require("vim.lsp.log").get_level
 --- Inspired by @tjdevries' astraunauta.nvim/ @TimUntersberger's config
 --- store all callbacks in one global table so they are able to survive re-requiring this file
 
-function M:load_variables()
+function mega:load_variables()
   local home = os.getenv("HOME")
-  local path_sep = M.is_windows and "\\" or "/"
+  local path_sep = mega.is_windows and "\\" or "/"
   local os_name = vim.loop.os_uname().sysname
 
   self.is_macos = os_name == "Darwin"
@@ -29,16 +32,63 @@ function M:load_variables()
 
   return self
 end
-M:load_variables()
+mega:load_variables()
 
-M.dirs.dots = fn.expand("$HOME/.dotfiles")
-M.dirs.icloud = fn.expand("$ICLOUD_DIR")
-M.dirs.docs = fn.expand("$DOCUMENTS_DIR")
-M.dirs.org = fn.expand(M.dirs.docs .. "/_org")
-M.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
+mega.dirs.dots = fn.expand("$HOME/.dotfiles")
+mega.dirs.icloud = fn.expand("$ICLOUD_DIR")
+mega.dirs.docs = fn.expand("$DOCUMENTS_DIR")
+mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
+mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
+
+-- inspect the contents of an object very quickly
+-- in your code or from the command-line:
+-- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
+-- USAGE:
+-- in lua: P({1, 2, 3})
+-- in commandline: :lua P(vim.loop)
+---@vararg any
+function _G.P(...)
+  local objects, v = {}, nil
+  for i = 1, select("#", ...) do
+    v = select(i, ...)
+    table.insert(objects, vim.inspect(v))
+  end
+
+  print(table.concat(objects, "\n"))
+  return ...
+end
+
+function _G.dump_text(...)
+  local objects, v = {}, nil
+  for i = 1, select("#", ...) do
+    v = select(i, ...)
+    table.insert(objects, vim.inspect(v))
+  end
+
+  local lines = vim.split(table.concat(objects, "\n"), "\n")
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  vim.fn.append(lnum, lines)
+  return ...
+end
+
+local installed
+---Check if a plugin is on the system not whether or not it is loaded
+---@param plugin_name string
+---@return boolean
+function mega.plugin_installed(plugin_name)
+  if not installed then
+    local dirs = fn.expand(fn.stdpath("data") .. "/site/pack/paqs/start/*", true, true)
+    local opt = fn.expand(fn.stdpath("data") .. "/site/pack/paqs/opt/*", true, true)
+    vim.list_extend(dirs, opt)
+    installed = vim.tbl_map(function(path)
+      return fn.fnamemodify(path, ":t")
+    end, dirs)
+  end
+  return vim.tbl_contains(installed, plugin_name)
+end
 
 --- Check if a directory exists in this path
-function M.isdir(path)
+function mega.isdir(path)
   -- check if file exists
   local function file_exists(file)
     local ok, err, code = os.rename(file, file)
@@ -56,14 +106,14 @@ function M.isdir(path)
 end
 
 -- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`
-function M.auto_mkdir()
+function mega.auto_mkdir()
   local dir = fn.expand("%:p:h")
 
   if fn.isdirectory(dir) == 0 then
-    local create_dir = fn.input(string.format("[?] Parent dir [%s] doesn't exist; create it? (y|n)", dir))
+    local create_dir = fn.input(string.format("[?] Parent dir [%s] doesn't exist; create it? (y/n)", dir))
     if create_dir == "y" or create_dir == "yes" then
       fn.mkdir(dir, "p")
-      vim.cmd("redraw")
+      vcmd("redraw")
     end
   end
 end
@@ -75,7 +125,7 @@ end
 -- in lua: P({1, 2, 3})
 -- in commandline: :lua P(vim.loop)
 ---@vararg any
-function M.P(...)
+function mega.P(...)
   local objects, v = {}, nil
   for i = 1, select("#", ...) do
     v = select(i, ...)
@@ -90,9 +140,9 @@ function _G.dump(...)
   local objects = vim.tbl_map(vim.inspect, { ... })
   print(unpack(objects))
 end
-M.dump = dump
+mega.dump = dump
 
-function M.dump_text(...)
+function mega.dump_text(...)
   local objects, v = {}, nil
   for i = 1, select("#", ...) do
     v = select(i, ...)
@@ -105,7 +155,7 @@ function M.dump_text(...)
   return ...
 end
 
-function M.log(msg, hl, reason)
+function mega.log(msg, hl, reason)
   if hl == nil and reason == nil then
     api.nvim_echo({ { msg } }, true, {})
   else
@@ -119,15 +169,15 @@ function M.log(msg, hl, reason)
   end
 end
 
-function M.warn(msg, reason)
-  M.log(msg, "DiagnosticDefaultWarning", reason)
+function mega.warn(msg, reason)
+  mega.log(msg, "DiagnosticDefaultWarning", reason)
 end
 
-function M.error(msg, reason)
-  M.log(msg, "DiagnosticDefaultError", reason)
+function mega.error(msg, reason)
+  mega.log(msg, "DiagnosticDefaultError", reason)
 end
 
-function M.get_log_string(label, level)
+function mega.get_log_string(label, level)
   local display_level = "[DEBUG]"
   local hl = "Todo"
 
@@ -146,28 +196,28 @@ function M.get_log_string(label, level)
   return str, hl
 end
 
-function M.inspect(label, v, opts)
+function mega.inspect(label, v, opts)
   opts = opts or {}
   opts = vim.tbl_deep_extend("keep", opts, { data_before = true, level = L.INFO })
 
-  local log_str, hl = M.get_log_string(label, opts.level)
+  local log_str, hl = mega.get_log_string(label, opts.level)
 
   -- presently no better API to get the current lsp log level
   -- L.DEBUG == 3
   if opts.level == L.DEBUG and (get_log_level() == L.DEBUG or get_log_level() == 3) then
     if opts.data_before then
-      M.P(v)
-      M.log(log_str, hl)
+      mega.P(v)
+      mega.log(log_str, hl)
     else
-      M.log(log_str, hl)
-      M.P(v)
+      mega.log(log_str, hl)
+      mega.P(v)
     end
   end
 
   return v
 end
 
-function M.opt(o, v, scopes)
+function mega.opt(o, v, scopes)
   scopes = scopes or { vim.o }
   for _, s in ipairs(scopes) do
     s[o] = v
@@ -175,7 +225,7 @@ function M.opt(o, v, scopes)
 end
 
 -- a safe module loader
-function M.load(module, opts)
+function mega.load(module, opts)
   opts = opts or { silent = false, safe = false }
 
   if opts.key == nil then
@@ -187,9 +237,9 @@ function M.load(module, opts)
   if not ok and not opts.silent then
     -- REF: https://github.com/neovim/neovim/blob/master/src/nvim/lua/vim.lua#L421
     local level = L.ERROR
-    local reason = M.get_log_string("loading failed", level)
+    local reason = mega.get_log_string("loading failed", level)
 
-    M.error(result, reason)
+    mega.error(result, reason)
   end
 
   if opts.safe == true then
@@ -199,32 +249,32 @@ function M.load(module, opts)
   end
 end
 
-function M._create(f)
-  table.insert(M._store, f)
-  return #M._store
+function mega._create(f)
+  table.insert(mega._store, f)
+  return #mega._store
 end
 
-function M._execute(id, args)
-  local func = M._store[id]
+function mega._execute(id, args)
+  local func = mega._store[id]
   if not func then
-    M.error("function for id doesn't exist: " .. id)
+    mega.error("function for id doesn't exist: " .. id)
   end
-  M._store[id](args)
+  mega._store[id](args)
   -- return M._store[id](args)
 end
 
-function M.command(args)
+function mega.command(args)
   local nargs = args.nargs or 0
   local name = args[1]
   local rhs = args[2]
   local types = (args.types and type(args.types) == "table") and table.concat(args.types, " ") or ""
 
   if type(rhs) == "function" then
-    local fn_id = M._create(rhs)
+    local fn_id = mega._create(rhs)
     rhs = string.format("lua mega._execute(%d%s)", fn_id, nargs > 0 and ", <f-args>" or "")
   end
 
-  vim.cmd(string.format("command! -nargs=%s %s %s %s", nargs, types, name, rhs))
+  vcmd(string.format("command! -nargs=%s %s %s %s", nargs, types, name, rhs))
 end
 
 -- function M.execute(id)
@@ -269,8 +319,8 @@ local function map(modes, lhs, rhs, opts)
 
     -- auto-register which-key item
     if opts.label then
-      local ok, wk = M.load("which-key", { silent = true, safe = true })
-      M.P(wk)
+      local ok, wk = mega.load("which-key", { silent = true, safe = true })
+      mega.P(wk)
       if ok then
         wk.register({ [lhs] = opts.label }, { mode = modes[i] })
       end
@@ -279,7 +329,7 @@ local function map(modes, lhs, rhs, opts)
   end
 end
 
-function M.map(mode, key, rhs, opts)
+function mega.map(mode, key, rhs, opts)
   return map(mode, key, rhs, opts)
 end
 
@@ -325,7 +375,7 @@ end
 -- 	return map("s", key, rhs, opts, { noremap = true })
 -- end
 
-function M.bmap(mode, lhs, rhs, opts)
+function mega.bmap(mode, lhs, rhs, opts)
   opts = opts or { noremap = true, silent = true, expr = false, buffer = 0 }
   mode = mode or "n"
 
@@ -333,12 +383,12 @@ function M.bmap(mode, lhs, rhs, opts)
     rhs = "<cmd>" .. rhs .. "<cr>"
   end
 
-  M.map(mode, lhs, rhs, opts)
+  mega.map(mode, lhs, rhs, opts)
 end
 
 -- this assumes the first buffer (0); refactor to accept a buffer
 -- TODO: _deprecate_ this immediately
-function M.bufmap(lhs, rhs, mode, expr)
+function mega.bufmap(lhs, rhs, mode, expr)
   local bufnr = 0
 
   mode = mode or "n"
@@ -350,20 +400,20 @@ function M.bufmap(lhs, rhs, mode, expr)
   if bufnr == vim.api.nvim_get_current_buf() then
     mega.log("`bufmap` is deprecated, please use `bmap` instead")
   end
-  M.map(mode, lhs, rhs, { noremap = true, silent = true, expr = expr, buffer = bufnr })
+  mega.map(mode, lhs, rhs, { noremap = true, silent = true, expr = expr, buffer = bufnr })
 end
 
-function M.au(s)
-  cmd("au!" .. s)
+function mega.au(s)
+  vcmd("au!" .. s)
 end
 
 local function is_valid_target(command)
   local valid_type = command.targets and vim.tbl_islist(command.targets)
   return valid_type or vim.startswith(command.events[1], "User ")
 end
-function M.augroup(name, commands)
-  cmd("augroup " .. name)
-  cmd("autocmd!")
+function mega.augroup(name, commands)
+  vcmd("augroup " .. name)
+  vcmd("autocmd!")
   for _, c in ipairs(commands) do
     if c.command and c.events and is_valid_target(c) then
       local command = c.command
@@ -372,7 +422,7 @@ function M.augroup(name, commands)
         command = string.format("lua mega._execute(%s)", fn_id)
       end
       c.events = type(c.events) == "string" and { c.events } or c.events
-      vim.cmd(
+      vcmd(
         string.format(
           "autocmd %s %s %s %s",
           table.concat(c.events, ","),
@@ -385,7 +435,7 @@ function M.augroup(name, commands)
       vim.notify(string.format("An autocommand in %s is specified incorrectly: %s", name, vim.inspect(name)), L.ERROR)
     end
   end
-  cmd("augroup END")
+  vcmd("augroup END")
 end
 
 --- TODO eventually move to using `nvim_set_hl`
@@ -393,11 +443,11 @@ end
 --- to be specified as rgb not hex
 ---@param name string
 ---@param opts table
-function M.highlight(name, opts)
+function mega.highlight(name, opts)
   local force = opts.force or true
   if name and vim.tbl_count(opts) > 0 then
     if opts.link and opts.link ~= "" then
-      cmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
+      vcmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
     else
       local hi_opt = { "highlight", name }
       if opts.guifg and opts.guifg ~= "" then
@@ -415,27 +465,34 @@ function M.highlight(name, opts)
       if opts.cterm and opts.cterm ~= "" then
         table.insert(hi_opt, "cterm=" .. opts.cterm)
       end
-      cmd(table.concat(hi_opt, " "))
+      vcmd(table.concat(hi_opt, " "))
     end
   end
 end
-M.hi = M.highlight
+mega.hi = mega.highlight
 
-function M.hi_link(src, dest)
-  cmd("hi! link " .. src .. " " .. dest)
+function mega.hi_link(src, dest)
+  vcmd("hi! link " .. src .. " " .. dest)
 end
 
-function M.exec(c, bool)
+function mega.exec(c, bool)
   bool = bool or true
   api.nvim_exec(c, bool)
 end
 
-function M.noop()
+function mega.noop()
   return
 end
 
+---A terser proxy for `nvim_replace_termcodes`
+---@param str string
+---@return any
+function mega.replace_termcodes(str)
+  return api.nvim_replace_termcodes(str, true, true, true)
+end
+
 -- essentially allows for a ternary operator of sorts
-function M._if(bool, a, b)
+function mega._if(bool, a, b)
   if bool then
     return a
   else
@@ -443,14 +500,14 @@ function M._if(bool, a, b)
   end
 end
 
-function M.table_merge(t1, t2, opts)
+function mega.table_merge(t1, t2, opts)
   opts = opts or { strategy = "deep" }
 
   if opts.strategy == "deep" then
     -- # deep_merge:
     for k, v in pairs(t2) do
       if (type(v) == "table") and (type(t1[k] or false) == "table") then
-        M.table_merge(t1[k], t2[k])
+        mega.table_merge(t1[k], t2[k])
       else
         t1[k] = v
       end
@@ -465,15 +522,15 @@ function M.table_merge(t1, t2, opts)
   return t1
 end
 
-M.deep_merge = function(...)
-  M.table_merge(..., { strategy = "deep" })
+mega.deep_merge = function(...)
+  mega.table_merge(..., { strategy = "deep" })
 end
 
-M.shallow_merge = function(...)
-  M.table_merge(..., { strategy = "shallow" })
+mega.shallow_merge = function(...)
+  mega.table_merge(..., { strategy = "shallow" })
 end
 
-function M.iter(list_or_iter)
+function mega.iter(list_or_iter)
   if type(list_or_iter) == "function" then
     return list_or_iter
   end
@@ -485,8 +542,8 @@ function M.iter(list_or_iter)
   end)
 end
 
-function M.reduce(list, memo, func)
-  for i in M.iter(list) do
+function mega.reduce(list, memo, func)
+  for i in mega.iter(list) do
     memo = func(memo, i)
   end
   return memo
@@ -494,7 +551,7 @@ end
 
 -- helps with nerdfonts usages
 local bytemarkers = { { 0x7FF, 192 }, { 0xFFFF, 224 }, { 0x1FFFFF, 240 } }
-function M.utf8(decimal)
+function mega.utf8(decimal)
   if decimal < 128 then
     return string.char(decimal)
   end
@@ -513,12 +570,16 @@ function M.utf8(decimal)
   return table.concat(charbytes)
 end
 
-function M.has(feature)
+function mega.has(feature)
   return fn.has(feature) > 0
 end
 
+function mega.executable(e)
+  return fn.executable(e) > 0
+end
+
 -- open URI under cursor
-function M.open_uri()
+function mega.open_uri()
   local Job = require("plenary.job")
   local uri = vim.fn.expand("<cWORD>")
   Job
@@ -529,17 +590,17 @@ function M.open_uri()
     :sync()
 end
 
-function M.save_and_exec()
+function mega.save_and_exec()
   if vim.bo.filetype == "vim" then
-    vim.cmd("silent! write")
-    vim.cmd("source %")
+    vcmd("silent! write")
+    vcmd("source %")
   elseif vim.bo.filetype == "lua" then
-    vim.cmd("silent! write")
-    vim.cmd("luafile %")
+    vcmd("silent! write")
+    vcmd("luafile %")
   end
 end
 
-function M.zetty(args)
+function mega.zetty(args)
   local default_opts = {
     cmd = "meeting",
     action = "edit",
@@ -611,7 +672,7 @@ function border_symbols:draw(width, height)
   return border_lines
 end
 
-function M.floating_window_big(bufnr)
+function mega.floating_window_big(bufnr)
   local winnr_bak = vim.fn.winnr()
   local altwinnr_bak = vim.fn.winnr("#")
 
@@ -661,7 +722,7 @@ function M.floating_window_big(bufnr)
   return winnr
 end
 
-function M.floating_window_small(bufnr, opts)
+function mega.floating_window_small(bufnr, opts)
   opts = opts or {}
   local winnr_bak = vim.fn.winnr()
   local altwinnr_bak = vim.fn.winnr("#")
@@ -712,7 +773,7 @@ function M.floating_window_small(bufnr, opts)
   return winnr
 end
 
-function M.get_num_entries(iter)
+function mega.get_num_entries(iter)
   local i = 0
   for _ in iter do
     i = i + 1
@@ -720,11 +781,56 @@ function M.get_num_entries(iter)
   return i
 end
 
-function M.plugins()
-  M.log("paq-nvim: syncing plugins..")
+function mega.sync_plugins()
+  mega.log("paq-nvim: syncing plugins..")
 
   package.loaded["plugins"] = nil
   require("paq"):setup({ verbose = false })(require("plugins")):sync()
 end
 
-return M
+--- Usage:
+--- 1. Call `local stop = utils.profile('my-log')` at the top of the file
+--- 2. At the bottom of the file call `stop()`
+--- 3. Restart neovim, the newly created log file should open
+function mega.profile(filename)
+  local base = "/tmp/config/profile/"
+  fn.mkdir(base, "p")
+  local success, profile = pcall(require, "plenary.profile.lua_profiler")
+  if not success then
+    vim.api.nvim_echo({ "Plenary is not installed.", "Title" }, true, {})
+  end
+  profile.start()
+  return function()
+    profile.stop()
+    local logfile = base .. filename .. ".log"
+    profile.report(logfile)
+    vim.defer_fn(function()
+      vcmd("tabedit " .. logfile)
+    end, 1000)
+  end
+end
+
+local function fileicon()
+  local name = fn.bufname()
+  local icon, hl
+  local loaded, devicons = mega.load("nvim-web-devicons", { safe = true })
+  if loaded then
+    icon, hl = devicons.get_icon(name, fn.fnamemodify(name, ":e"), { default = true })
+  end
+  return icon, hl
+end
+
+function mega.title_string()
+  -- if not hl_ok then
+  --   return
+  -- end
+  local dir = fn.fnamemodify(fn.getcwd(), ":t")
+  local icon, _ = fileicon()
+  -- if not hl then
+  --   return (icon or "") .. " "
+  -- end
+  return string.format("%s %s ", dir, icon)
+  -- return string.format("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon)
+end
+
+return mega

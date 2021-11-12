@@ -82,7 +82,7 @@ M.apply = function(app, win, event, log)
     end
 
     -- FIXME: this `setState` function call breaks hammerspoon.. right!?
-    -- ptt.setState("push-to-talk")
+    ptt.setState("push-to-talk")
     init_apply_complete = false
   end)
 end

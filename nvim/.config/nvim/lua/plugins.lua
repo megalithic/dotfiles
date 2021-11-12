@@ -27,7 +27,7 @@ return {
   "folke/which-key.nvim",
   "goolord/alpha-nvim",
   -- "megalithic/shade.nvim", -- FIXME: too many broke things for various plugins
-  "jceb/blinds.nvim",
+  -- "jceb/blinds.nvim",
   -- "akinsho/bufferline.nvim",
 
   --
