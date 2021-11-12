@@ -1,5 +1,5 @@
 local api, cmd, fn = vim.api, vim.cmd, vim.fn
-local map, command = mega.map, mega.command
+local map, command, exec = mega.map, mega.command, mega.exec
 
 --[[
   ╭────────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -32,6 +32,112 @@ map("v", "<Tab>", "%", { noremap = true })
 map("x", "<Tab>", "%", { noremap = true })
 
 -- [overrides/remaps mappings] ---------------------------------------------------------
+--
+exec([[
+" -- ( overrides ) --
+" Help
+noremap <C-]> K
+
+" Copy to system clipboard
+noremap Y y$
+
+" Better buffer navigation
+"noremap J }
+"noremap K {
+noremap H ^
+noremap L $
+vnoremap L g_
+
+" Start search on current word under the cursor
+nnoremap <leader>/ /<CR>
+
+" Start reverse search on current word under the cursor
+nnoremap <leader>? ?<CR>
+
+" Faster sort
+vnoremap <leader>S :!sort<CR>
+
+" Command mode conveniences
+noremap <leader>: :!
+noremap <leader>; :<Up>
+
+" Remap VIM 0 to first non-blank character
+map 0 ^
+
+" ## Selections
+" reselect pasted content:
+nnoremap gV `[v`]
+" select all text in the file
+nnoremap <leader>v ggVG
+" Easier linewise reselection of what you just pasted.
+nnoremap <leader>V V`]
+" gi already moves to 'last place you exited insert mode', so we'll map gI to
+" something similar: move to last change
+nnoremap gI `.
+" reselect visually selected content:
+xnoremap > >gv
+
+" ## Indentions
+" Indent/dedent/autoindent what you just pasted.
+nnoremap <lt>> V`]<
+nnoremap ><lt> V`]>
+nnoremap =- V`]=
+
+" Don't overwrite blackhole register with selection
+" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
+xnoremap p "_c<c-r>"<esc>
+xmap P p
+
+" Better window navigation
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" Better save and quit
+silent! unmap <leader>w
+nnoremap <silent><leader>w :w<CR>
+nnoremap <silent><leader>W :w !sudo -S tee > /dev/null %<CR>
+cmap w!! w !sudo tee > /dev/null %
+nnoremap <leader>q :q<CR>
+
+" open a (new)file in a new vsplit
+" nnoremap <silent><leader>o :vnew<CR>:e<space><C-d>
+" nnoremap <leader>o :vnew<CR>:e<space>
+
+" Background (n)vim
+vnoremap <C-z> <ESC>zv`<ztgv
+
+" Default to case insensitive search
+nnoremap / /\v
+vnoremap / /\v
+
+" always paste from 0 register to avoid pasting deleted text (from r/vim)
+xnoremap <silent> p p:let @"=@0<CR>
+
+
+function! Show_position()
+  return ":\<c-u>echo 'start=" . string(getpos("v")) . " end=" . string(getpos(".")) . "'\<cr>gv"
+endfunction
+vmap <expr> <leader>P Show_position()
+
+" flip between two last edited files/alternate/buffer
+" nnoremap <Leader><Leader> <C-^>
+
+" Don't overwrite blackhole register with selection
+" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
+" xnoremap p "_c<c-r>"<esc>
+" xmap P p
+
+vnoremap <C-r> "hy:%Subvert/<C-r>h//gc<left><left><left>
+
+" clear incsearch term
+nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
+
+" REF: https://github.com/savq/dotfiles/blob/master/nvim/init.lua#L90-L101
+"      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
+" nnoremap z= :setlocal spell<CR>z=
+]])
 
 -- useful remaps from theprimeagen:
 -- - ref: https://www.youtube.com/watch?v=hSHATqh8svM

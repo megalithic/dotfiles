@@ -17,7 +17,7 @@ function M:load_variables()
   local path_sep = M.is_windows and "\\" or "/"
   local os_name = vim.loop.os_uname().sysname
 
-  self.is_mac = os_name == "Darwin"
+  self.is_macos = os_name == "Darwin"
   self.is_linux = os_name == "Linux"
   self.is_windows = os_name == "Windows"
   self.vim_path = home .. path_sep .. ".config" .. path_sep .. "nvim"

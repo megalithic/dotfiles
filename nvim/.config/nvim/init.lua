@@ -18,7 +18,6 @@
 
 _G["mega"] = require("global")
 local load = mega.load
-local cmd = vim.cmd
 
 -- }}}
 
@@ -35,7 +34,7 @@ end
 
 -- TODO: migrate to lua?
 -- mayhaps? https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/plugin/options.lua
-cmd("runtime .vimrc")
+-- vim.cmd("runtime .vimrc")
 
 -- }}}
 
@@ -63,6 +62,7 @@ cmd("runtime .vimrc")
 -- [ loaders ] ------------------------------------------------------------- {{{
 
 load("preflight")
+load("options")
 load("colors").setup("megaforest")
 load("settings")
 load("lsp")

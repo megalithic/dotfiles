@@ -246,6 +246,7 @@ if has("nvim")
   set winminwidth=15
   set jumpoptions=stack
   set cursorlineopt=number
+
   set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
         \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
         \,sm:block-blinkwait175-blinkoff150-blinkon175
@@ -291,15 +292,15 @@ endif
 
 """ Vim 8
 if !has('nvim')
-    syntax enable
-    set ruler
-    set showcmd
-    set autoread
-    set wildmenu
-    set hlsearch
-    set incsearch
-    set autoindent
-    set foldmethod=indent
+  syntax enable
+  set ruler
+  set showcmd
+  set autoread
+  set wildmenu
+  set hlsearch
+  set incsearch
+  set autoindent
+  set foldmethod=indent
 endif
 
 """ Netrw
