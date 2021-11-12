@@ -10,23 +10,28 @@ fi
 
 function _do_clone {
 	# clone project
+	echo "cloning elixir-lsp into -> $ls_build_path"
 	git clone git@github.com:elixir-lsp/elixir-ls.git $ls_build_path
+
+	echo "cd'ing into -> $ls_build_path"
 	cd "$ls_build_path"
 }
 
 function _mix {
 	# fetch dependencies and compile
+	echo "running mix and building elixir_ls"
 	mix deps.get && mix compile \
 		&&
 		# install executable
 		mix elixir_ls.release -o release
 
 	# cd out of that mug..
+	echo "cd'ing back out"
 	cd -
 }
 
 function main {
-	echo "building elixir_ls in -> $PWD/$ls_build_path"
+	echo "building elixir_ls in -> $ls_build_path"
 
 	if [[ ! -d $ls_build_path ]]; then
 		# elixir_ls not there, so clone it..
