@@ -561,9 +561,9 @@ return lush(function()
     CmpItemKind({ Special }),
     CmpItemAttr({ Comment }),
     CmpItemMenu({ NonText }),
-    CmpItemAbbrMatch({ PmenuSel, gui = "underline" }),
-    CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
+    CmpItemAbbrMatch({ PmenuSel, gui = "underline", sp = purple }),
     CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
+    CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
 
     ---- :help luasnip -------------------------------------------
 

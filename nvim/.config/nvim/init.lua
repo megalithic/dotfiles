@@ -1,4 +1,4 @@
---[[ lua runtime ] -----------------------------------------------------------
+--[[ lua runtime ] -------------------------------------------------------------
 
    REF: https://github.com/neovim/neovim/pull/14686#issue-907487329
 
@@ -12,14 +12,7 @@
    plugin [all | ran at startup or packadd]
    syntax [all]
 
---]]
-
--- [ leader bindings ] ----------------------------------------------------- {{{
-vim.g.mapleader = "," -- Remap leader key
-vim.g.maplocalleader = " " -- Local leader is <Space>
--- }}}
-
---[[ debugging ] ---------------------------------------------------------------
+--[ debugging ] ----------------------------------------------------------------
 
    Discover runtime files (change path) ->
     :lua mega.dump(vim.api.nvim_get_runtime_file('ftplugin/**/*.lua', true))
@@ -40,11 +33,18 @@ vim.g.maplocalleader = " " -- Local leader is <Space>
 
 --]]
 
+-- [ leader bindings ] ----------------------------------------------------- {{{
+vim.g.mapleader = "," -- Remap leader key
+vim.g.maplocalleader = " " -- Local leader is <Space>
+--}}}
+
 -- [ loaders ] ------------------------------------------------------------- {{{
 local reload_ok, reload = pcall(require, "plenary.reload")
+
 RELOAD = reload_ok and reload.reload_module or function(...)
   return ...
 end
+
 function R(name)
   RELOAD(name)
   return require(name)
@@ -52,7 +52,7 @@ end
 
 R("globals")
 R("preflight")
--- R("options")
+R("options")
 R("opts")
 R("colors").setup("megaforest")
 R("settings")
@@ -60,4 +60,6 @@ R("lsp")
 R("autocmds")
 R("mappings")
 R("megaline")
--- }}}
+--}}}
+
+-- vim:foldmethod=marker

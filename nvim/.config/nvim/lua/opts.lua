@@ -225,24 +225,45 @@ vim.opt.titlelen = 70
 -----------------------------------------------------------------------------//
 vim.opt.showmode = false
 vim.opt.sessionoptions = {
+  "blank",
   "globals",
   "buffers",
   "curdir",
+  "folds",
   "help",
   "winpos",
+  "winsize",
   -- "tabpages",
 }
+-- vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize"
 vim.opt.viewoptions = { "cursor", "folds" } -- save/restore just these (with `:{mk,load}view`)
 vim.opt.virtualedit = "block" -- allow cursor to move where there is no text in visual block mode
 -----------------------------------------------------------------------------//
--- Shada (Shared Data)
+-- ShaDa (viminfo for vim): session data history
 -----------------------------------------------------------------------------//
--- NOTE: don't store marks as they are currently broke i.e.
--- are incorrectly resurrected after deletion
--- replace '100 with '0 the default which stores 100 marks
--- add f0 so file marks aren't stored
--- @credit: wincent
-vim.opt.shada = "!,'0,f0,<50,s10,h"
+--[[
+   NOTE: don't store marks as they are currently broke i.e.
+   are incorrectly resurrected after deletion
+   replace '100 with '0 the default which stores 100 marks
+   add f0 so file marks aren't stored
+   @credit: wincent
+
+  ! - Save and restore global variables (their names should be without lowercase letter).
+  ' - Specify the maximum number of marked files remembered. It also saves the jump list and the change list.
+  < - Maximum of lines saved for each register. All the lines are saved if this is not included, <0 to disable pessistent registers.
+  % - Save and restore the buffer list. You can specify the maximum number of buffer stored with a number.
+  / or : - Number of search patterns and entries from the command-line history saved. o.history is used if it’s not specified.
+  f - Store file (uppercase) marks, use 'f0' to disable.
+  s - Specify the maximum size of an item’s content in KiB (kilobyte).
+      For the viminfo file, it only applies to register.
+      For the shada file, it applies to all items except for the buffer list and header.
+  h - Disable the effect of 'hlsearch' when loading the shada file.
+  :oldfiles - all files with a mark in the shada file
+  :rshada   - read the shada file (:rviminfo for vim)
+  :wshada   - write the shada file (:wrviminfo for vim)
+]]
+-- vim.opt.shada = [[!,'0,f0,<50,s10,h]]
+vim.opt.shada = [[!,'100,<0,s100,h]]
 -------------------------------------------------------------------------------
 -- BACKUP AND SWAPS {{{
 -------------------------------------------------------------------------------
@@ -276,6 +297,9 @@ vim.opt.sidescroll = 1
 vim.opt.spellsuggest:prepend({ 12 })
 vim.opt.spelloptions = "camel"
 vim.opt.spellcapcheck = "" -- don't check for capital letters at start of sentence
+vim.opt.dictionary = "/usr/share/dict/words"
+vim.opt.spellfile = "$DOTS/nvim/.config/nvim/spell/en.utf-8.add"
+vim.opt.spelllang = "en"
 vim.opt.fileformats = { "unix", "mac", "dos" }
 -----------------------------------------------------------------------------//
 -- Mouse {{{1
