@@ -45,7 +45,11 @@ end
 
 function M.has_formatter(ft)
   local config = require("null-ls.config").get()
-  local formatters = config._generators["NULL_LS_FORMATTING"]
+  -- FIXME: this is presently _broke_ as of https://github.com/jose-elias-alvarez/null-ls.nvim/pull/332
+
+  local ok, formatters = pcall(config, "_generators['NULL_LS_FORMATTING']")
+
+  if not ok then return false end
 
   if formatters == nil then
     return false

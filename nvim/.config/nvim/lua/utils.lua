@@ -195,11 +195,12 @@ end
 
 function M.lsp.format_setup(client, buf)
   local ft = vim.api.nvim_buf_get_option(buf, "filetype")
-  local nls = require("lsp.null-ls")
+  local nls = mega.load("lsp.null-ls")
   local efm_formatted = require("lsp.efm").formatted_languages
 
+
   local enable = false
-  if nls.has_formatter(ft) then
+  if ok and nls.has_formatter(ft) then
     enable = client.name == "null-ls"
   elseif efm_formatted[ft] then
     enable = client.name == "efm"
