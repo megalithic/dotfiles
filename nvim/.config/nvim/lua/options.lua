@@ -136,6 +136,8 @@ o.swapfile = false -- no swap file
 
 o.dictionary = "/usr/share/dict/words"
 o.spellfile = "$DOTS/nvim/.config/nvim/spell/en.utf-8.add"
+o.spelllang = "en"
+o.spell = false -- turn off by default (ft will enable it)
 
 --[[
   ShDa (viminfo for vim): session data history
@@ -267,8 +269,8 @@ g.markdown_fenced_languages = {
 }
 
 -- Map leader to ,
-vim.g.mapleader = ","
-vim.g.maplocalleader = " "
+g.mapleader = ","
+g.maplocalleader = " "
 
 -- We do this to prevent the loading of the system fzf.vim plugin. This is
 -- present at least on Arch/Manjaro/Void
