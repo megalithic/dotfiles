@@ -36,6 +36,7 @@
 -- [ leader bindings ] ----------------------------------------------------- {{{
 vim.g.mapleader = "," -- Remap leader key
 vim.g.maplocalleader = " " -- Local leader is <Space>
+-- TODO: do things with localleader: https://github.com/jose-elias-alvarez/dotfiles/commit/1f87c48fd2162d824cc4a1e2a9ae5b2fee0e83e5
 --}}}
 
 -- [ loaders ] ------------------------------------------------------------- {{{

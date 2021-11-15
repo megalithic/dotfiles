@@ -59,16 +59,15 @@ local function setup_completion()
   local t = mega.replace_termcodes
 
   -- [copilot] --
-  vim.g.copilot_no_tab_map = true
-  vim.g.copilot_assume_mapped = true
-  vim.g.copilot_tab_fallback = ""
-  vim.g.copilot_filetypes = {
-    ["*"] = true,
-    dart = false,
-    gitcommit = false,
-    NeogitCommitMessage = false,
-  }
-  map("i", "<c-e>", [[copilot#Accept("\<CR>")]], { expr = true, script = true })
+  -- vim.g.copilot_no_tab_map = true
+  -- vim.g.copilot_assume_mapped = true
+  -- vim.g.copilot_tab_fallback = ""
+  -- vim.g.copilot_filetypes = {
+  --   ["*"] = true,
+  --   gitcommit = false,
+  --   NeogitCommitMessage = false,
+  -- }
+  -- map("i", "<C-h>", [[copilot#Accept("\<CR>")]], { expr = true, script = true })
 
   -- [luasnip] --
   local types = require("luasnip.util.types")
@@ -161,12 +160,13 @@ local function setup_completion()
   -- end
 
   local function tab(fallback)
-    local copilot_keys = vim.fn["copilot#Accept"]()
+    -- local copilot_keys = vim.fn["copilot#Accept"]()
     if cmp.visible() then
       cmp.select_next_item()
-    elseif copilot_keys ~= "" then -- prioritise copilot over snippets
-      -- Copilot keys do not need to be wrapped in termcodes
-      api.nvim_feedkeys(copilot_keys, "i", true)
+      -- elseif copilot_keys ~= "" then -- prioritise copilot over snippets
+      --   -- Copilot keys do not need to be wrapped in termcodes
+      --   print("copilot! <tab>")
+      --   api.nvim_feedkeys(copilot_keys, "i", true)
     elseif luasnip and luasnip.expand_or_locally_jumpable() then
       luasnip.expand_or_jump()
     elseif api.nvim_get_mode().mode == "c" then
@@ -184,12 +184,13 @@ local function setup_completion()
     elseif api.nvim_get_mode().mode == "c" then
       fallback()
     else
-      local copilot_keys = vim.fn["copilot#Accept"]()
-      if copilot_keys ~= "" then
-        feed(copilot_keys, "i")
-      else
-        feed("<Plug>(Tabout)")
-      end
+      -- local copilot_keys = vim.fn["copilot#Accept"]()
+      -- if copilot_keys ~= "" then
+      --   print("copilot! <s-tab>")
+      --   feed(copilot_keys, "i")
+      -- else
+      feed("<Plug>(Tabout)")
+      -- end
     end
   end
 

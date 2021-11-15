@@ -1261,6 +1261,7 @@ local function setup_filetype()
     overrides = {
       literal = {
         ["kitty.conf"] = "kitty",
+        [".gitignore"] = "conf",
       },
     },
   })
