@@ -437,7 +437,7 @@ local function setup_beacon()
   g.beacon_minimal_jump = 25
   -- g.beacon_shrink = 0
   -- g.beacon_fade = 0
-  g.beacon_ignore_filetypes = { "fzf" }
+  g.beacon_ignore_filetypes = { "fzf", "NvimTree" }
 end
 
 local function setup_comment()
