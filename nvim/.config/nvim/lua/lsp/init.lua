@@ -95,11 +95,11 @@ local function setup_completion()
   -- [nvim-cmp] --
   local cmp = require("cmp")
   local kind_icons = {
-    Text = " text", -- Text
+    Text = " text", -- Text
     Method = " method", -- Method
-    Function = "ƒ function", -- Function
+    Function = " function", -- Function
     Constructor = " constructor", -- Constructor
-    Field = "識field", -- Field
+    Field = "ﰠ field", -- Field
     Variable = " variable", -- Variable
     Class = " class", -- Class
     Interface = "ﰮ interface", -- Interface
@@ -112,11 +112,11 @@ local function setup_completion()
     Snippet = " snippet", -- Snippet
     Color = " color", -- Color
     File = " file", -- File
-    Reference = "渚ref", -- Reference
+    Reference = " ref", -- Reference
     Folder = " folder", -- Folder
     EnumMember = " enum member", -- EnumMember
     Constant = " const", -- Constant
-    Struct = " struct", -- Struct
+    Struct = "פּ struct", -- Struct
     Event = "鬒event", -- Event
     Operator = "\u{03a8} operator", -- Operator
     TypeParameter = " type param", -- TypeParameter
@@ -203,6 +203,7 @@ local function setup_completion()
         item.kind = kind_icons[item.kind]
         item.menu = ({
           luasnip = "[lsnip]",
+          nvim_lua = "[api]",
           nvim_lsp = "[lsp]",
           orgmode = "[org]",
           path = "[path]",
@@ -558,10 +559,10 @@ local function setup_lsp_servers()
         ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
         FromPipe = { manipulate_pipes("fromPipe"), "Convert pipe operator to function call" },
       },
-      on_init = function(client)
-        client.notify("workspace/didChangeConfiguration")
-        return true
-      end,
+      -- on_init = function(client)
+      --   client.notify("workspace/didChangeConfiguration")
+      --   return true
+      -- end,
     }))
   end
 
