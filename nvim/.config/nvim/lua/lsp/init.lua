@@ -56,6 +56,20 @@ local function setup_lsp_handlers()
 end
 
 local function setup_completion()
+  local t = mega.replace_termcodes
+
+  -- [copilot] --
+  vim.g.copilot_no_tab_map = true
+  vim.g.copilot_assume_mapped = true
+  vim.g.copilot_tab_fallback = ""
+  vim.g.copilot_filetypes = {
+    ["*"] = true,
+    dart = false,
+    gitcommit = false,
+    NeogitCommitMessage = false,
+  }
+  map("i", "<c-e>", [[copilot#Accept("\<CR>")]], { expr = true, script = true })
+
   -- [luasnip] --
   local types = require("luasnip.util.types")
   luasnip.config.set_config({
@@ -123,26 +137,59 @@ local function setup_completion()
   }
 
   local function feed(key, mode)
-    api.nvim_feedkeys(utils.t(key), mode or "", true)
+    api.nvim_feedkeys(t(key), mode or "", true)
   end
 
-  local function tab(_)
+  -- local function tab(_)
+  --   if cmp.visible() then
+  --     cmp.select_next_item()
+  --   elseif luasnip and luasnip.expand_or_jumpable() then
+  --     luasnip.expand_or_jump()
+  --     -- else
+  --     --   feed("<Plug>(Tabout)")
+  --   end
+  -- end
+
+  -- local function shift_tab(_)
+  --   if cmp.visible() then
+  --     cmp.select_prev_item()
+  --   elseif luasnip and luasnip.jumpable(-1) then
+  --     luasnip.jump(-1)
+  --     -- else
+  --     --   feed("<Plug>(TaboutBack)")
+  --   end
+  -- end
+
+  local function tab(fallback)
+    local copilot_keys = vim.fn["copilot#Accept"]()
     if cmp.visible() then
       cmp.select_next_item()
-    elseif luasnip and luasnip.expand_or_jumpable() then
+    elseif copilot_keys ~= "" then -- prioritise copilot over snippets
+      -- Copilot keys do not need to be wrapped in termcodes
+      api.nvim_feedkeys(copilot_keys, "i", true)
+    elseif luasnip and luasnip.expand_or_locally_jumpable() then
       luasnip.expand_or_jump()
-      -- else
-      --   feed("<Plug>(Tabout)")
+    elseif api.nvim_get_mode().mode == "c" then
+      fallback()
+    else
+      feed("<Plug>(Tabout)")
     end
   end
 
-  local function shift_tab(_)
+  local function shift_tab(fallback)
     if cmp.visible() then
       cmp.select_prev_item()
     elseif luasnip and luasnip.jumpable(-1) then
       luasnip.jump(-1)
-      -- else
-      --   feed("<Plug>(TaboutBack)")
+    elseif api.nvim_get_mode().mode == "c" then
+      fallback()
+    else
+      local copilot_keys = vim.fn["copilot#Accept"]()
+      if copilot_keys ~= "" then
+        feed(copilot_keys, "i")
+      else
+        feed("<Plug>(Tabout)")
+      end
     end
   end
 
@@ -199,6 +246,7 @@ local function setup_completion()
     },
     formatting = {
       deprecated = true,
+      -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       format = function(entry, item)
         item.kind = kind_icons[item.kind]
         item.menu = ({

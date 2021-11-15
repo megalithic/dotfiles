@@ -48,6 +48,7 @@ return {
   "L3MON4D3/LuaSnip",
   -- "megalithic/cmp-gitmoji",
   "rafamadriz/friendly-snippets",
+  "github/copilot.vim",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
