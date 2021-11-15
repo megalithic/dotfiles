@@ -101,7 +101,7 @@ local function setup_treesitter()
       "css",
       "comment",
       "dockerfile",
-      -- "elixir",
+      "elixir",
       "elm",
       "erlang",
       "fish",
@@ -1449,7 +1449,7 @@ setup_cursorhold()
 setup_comment()
 setup_conflict_marker()
 setup_lastplace()
-setup_gps()
+-- setup_gps()
 setup_diffview()
 setup_git()
 setup_git_messenger()

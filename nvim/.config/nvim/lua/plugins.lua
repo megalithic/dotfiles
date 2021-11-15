@@ -55,7 +55,7 @@ return {
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
   "folke/trouble.nvim",
-  "SmiteshP/nvim-gps",
+  -- "SmiteshP/nvim-gps", -- this is breaking elixir TS parser/grammar
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
 
