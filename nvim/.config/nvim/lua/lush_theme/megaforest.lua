@@ -571,8 +571,8 @@ return lush(function()
 
     ---- :help indent-blankline -------------------------------------------
 
-    IndentBlanklineContextChar({ fg = purple, bg = nil }),
-    IndentBlanklineContextStart({ sp = purple, bg = nil, gui = "underline" }),
+    IndentBlanklineContextChar({ fg = blue, bg = nil }),
+    IndentBlanklineContextStart({ sp = blue, bg = nil, gui = "underline" }),
 
     ---- :help orgmode.nvim -------------------------------------------
 

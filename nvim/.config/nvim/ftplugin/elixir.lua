@@ -69,7 +69,7 @@ vim.api.nvim_exec(
         return sub
       end
     else
-      let sub = substitute(a:cmd, 'mix test', 'eval $(desk load); mix test --color', '')
+      let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
       echom "sub in somewhere else -> " . sub
       return sub
     end

@@ -27,9 +27,14 @@ exec("silent! unmap ]%", true)
 
 map("n", "<Tab>", "%", { noremap = false })
 map("s", "<Tab>", "%", { noremap = false })
-map("n", "<Tab>", "%", { noremap = true })
-map("v", "<Tab>", "%", { noremap = true })
-map("x", "<Tab>", "%", { noremap = true })
+map("v", "<Tab>", "%", { noremap = false })
+map("x", "<Tab>", "%", { noremap = false })
+map("o", "<Tab>", "%", { noremap = false })
+
+-- map("x", "i<Tab>", "<Plug>(matchup-i%)", { noremap = false })
+-- map("o", "i<Tab>", "<Plug>(matchup-i%)", { noremap = false })
+-- map("x", "a<Tab>", "<Plug>(matchup-a%)", { noremap = false })
+-- map("o", "a<Tab>", "<Plug>(matchup-a%)", { noremap = false })
 
 -- [overrides/remaps mappings] ---------------------------------------------------------
 --

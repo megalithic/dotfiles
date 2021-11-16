@@ -56,10 +56,13 @@ local function setup_startuptime()
 end
 
 local function setup_matchup()
+  g.matchup_surround_enabled = true
+  g.matchup_matchparen_deferred = true
   g.matchup_matchparen_offscreen = {
     method = "popup",
     fullwidth = true,
     highlight = "Normal",
+    border = "shadow",
   }
 end
 
@@ -660,7 +663,7 @@ local function setup_vim_test()
   api.nvim_exec(
     [[
     function! TerminalSplit(cmd)
-    vert new | set filetype=test | call termopen(['zsh', '-c', a:cmd], {'curwin':1})
+    vert new | set filetype=test | call termopen(['zsh', '-c', 'eval $(desk load); ' . a:cmd], {'curwin':1})
     endfunction
 
     let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
