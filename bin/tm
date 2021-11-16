@@ -19,7 +19,12 @@ select opt in "${options[@]}"; do
 
 			if [[ -f "$config_dir/$SESSION_NAME.yml" ]]; then
 				echo ">> launching tmuxinator config for $SESSION_NAME.."
-				tmuxinator start $SESSION_NAME -n $SESSION_NAME
+				# function tmux-into() { tmuxinator start $1 --no-attach && tmux switch -t $1 && exit }
+
+				# tmuxinator start $SESSION_NAME -n $SESSION_NAME
+
+				# this will "attach" the session to an existing window/session
+				tmuxinator start $SESSION_NAME --no-attach && tmux switch -t $SESSION_NAME && exit
 			else
 				tmux new -s "$SESSION_NAME"
 			fi
