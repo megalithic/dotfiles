@@ -60,6 +60,27 @@ vim.opt.diffopt = vim.opt.diffopt
 -----------------------------------------------------------------------------//
 -- Format Options {{{1
 -----------------------------------------------------------------------------//
+-- c: auto-wrap comments using textwidth
+-- r: auto-insert the current comment leader after hitting <Enter>
+-- o: auto-insert the current comment leader after hitting 'o' or 'O'
+-- q: allow formatting comments with 'gq'
+-- n: recognize numbered lists
+-- 1: don't break a line after a one-letter word
+-- j: remove comment leader when it makes sense
+-- this gets overwritten by ftplugins (:verb set fo)
+-- we use autocmd to remove 'o' in '/lua/autocmd.lua'
+-- borrowed from tjdevries
+--
+-- - "a" -- Auto formatting is BAD.
+-- - "t" -- Don't auto format my code. I got linters for that.
+-- + "c" -- In general, I like it when comments respect textwidth
+-- + "q" -- Allow formatting comments w/ gq
+-- - "o" -- O and o, don't continue comments
+-- + "r" -- But do continue when pressing enter.
+-- + "n" -- Indent past the formatlistpat, not underneath it.
+-- + "j" -- Auto-remove comments if possible.
+-- - "2" -- I'm not in gradeschool anymore
+
 vim.opt.formatoptions = {
   ["1"] = true,
   ["2"] = true, -- Use indent from 2nd line of a paragraph
@@ -78,11 +99,15 @@ vim.opt.formatoptions = {
 -----------------------------------------------------------------------------//
 -- Folds {{{1
 -----------------------------------------------------------------------------//
+-- vim.opt.foldenable = true -- enable folding
 vim.opt.foldtext = "v:lua.mega.folds()"
 vim.opt.foldopen = vim.opt.foldopen + "search"
-vim.opt.foldlevelstart = 3
+vim.opt.foldlevelstart = 10 -- open most folds by default
+vim.opt.foldnestmax = 10 -- 10 nested fold max
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldmethod = "expr"
+-- or --
+vim.opt.foldmethod = "indent" -- fold based on indent level
 -----------------------------------------------------------------------------//
 -- Quickfix {{{1
 -----------------------------------------------------------------------------//
