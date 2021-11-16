@@ -1,0 +1,30 @@
+name: outstand-app
+root: ~/code/outstand
+
+# Runs on project start, always
+on_project_start: gohome && dowork
+
+tmux_options: -2
+windows:
+  - chats:
+      - cd ~/.dotfiles; weechat
+  - dots:
+      - cd ~/.dotfiles; nvim
+  - ssh-dots:
+      - ssh seth-dev
+      - cd ~/.dotfiles
+  - code:
+      panes:
+        - ssh seth-dev
+        - cd ~/code/app
+        - eval $(desk load); nvim
+  - services:
+      panes:
+        - logs:
+            - ssh seth-dev
+            - cd ~/code/pages
+            - eval $(desk load)
+        - repl:
+            - ssh seth-dev
+            - cd ~/code/pages
+            - eval $(desk load); iex -S mix

@@ -1,0 +1,9 @@
+name: stuff
+root: ~/.dotfiles
+
+tmux_options: -2
+windows:
+  - chats:
+      - weechat
+  - dots:
+      - nvim

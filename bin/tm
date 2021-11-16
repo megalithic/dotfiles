@@ -8,21 +8,41 @@
 # present menu for user to choose which workspace to open
 PS3="Please choose your session: "
 # shellcheck disable=SC2207
-IFS=$'\n' && options=("New Session" $(tmux list-sessions -F "#S" 2>/dev/null))
-echo "Available sessions"
+
+IFS=$'\n' && options=("New Session" "New Session (takeover)" $(tmux list-sessions -F "#S" 2>/dev/null))
+
+echo ""
+echo "available sessions"
 echo "------------------"
+
 select opt in "${options[@]}"; do
 	case $opt in
 		"New Session")
-			read -rp "Enter new session name: " SESSION_NAME
+			read -rp "new session: " SESSION_NAME
 			config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmuxinator"
+
+			if [[ $SESSION_NAME == "" ]]; then
+				SESSION_NAME="default"
+			fi
 
 			if [[ -f "$config_dir/$SESSION_NAME.yml" ]]; then
 				echo ">> launching tmuxinator config for $SESSION_NAME.."
-				# function tmux-into() { tmuxinator start $1 --no-attach && tmux switch -t $1 && exit }
+				tmuxinator start $SESSION_NAME
+			else
+				tmux new -s "$SESSION_NAME"
+			fi
+			break
+			;;
+		"New Session (takeover)")
+			read -rp "new session with takeover: " SESSION_NAME
+			config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmuxinator"
 
-				# tmuxinator start $SESSION_NAME -n $SESSION_NAME
+			if [[ $SESSION_NAME == "" ]]; then
+				SESSION_NAME="default"
+			fi
 
+			if [[ -f "$config_dir/$SESSION_NAME.yml" ]]; then
+				echo ">> launching tmuxinator config for $SESSION_NAME.."
 				# this will "attach" the session to an existing window/session
 				tmuxinator start $SESSION_NAME --no-attach && tmux switch -t $SESSION_NAME && exit
 			else
