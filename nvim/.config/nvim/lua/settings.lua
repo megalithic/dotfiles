@@ -862,6 +862,7 @@ local function setup_fzf_lua()
       height = 0.6,
       width = 0.65,
       border = vim.g.floating_window_border,
+      preview = { scrollbar = false },
     },
     oldfiles = {
       actions = {
