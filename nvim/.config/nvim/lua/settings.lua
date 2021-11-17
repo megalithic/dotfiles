@@ -862,19 +862,6 @@ local function setup_fzf_lua()
       height = 0.6,
       width = 0.65,
       border = vim.g.floating_window_border,
-      preview = {
-        default = "bat",
-        title = true,
-        scrollbar = false,
-      },
-    },
-    previewers = {
-      bat = {
-        cmd = "bat",
-        args = "--style=numbers,changes --color always",
-        theme = "base16",
-        config = nil, -- nil uses $BAT_CONFIG_PATH
-      },
     },
     oldfiles = {
       actions = {
