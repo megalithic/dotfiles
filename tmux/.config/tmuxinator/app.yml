@@ -17,9 +17,9 @@ windows:
       panes:
         - logs:
             - ssh seth-dev
-            - cd ~/code/pages
+            - cd ~/code/app
             - eval $(desk load)
         - repl:
             - ssh seth-dev
-            - cd ~/code/pages
-            - eval $(desk load); iex -S mix
+            - cd ~/code/app
+            - eval $(desk load); rails console
