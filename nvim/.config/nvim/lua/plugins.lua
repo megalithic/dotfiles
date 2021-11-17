@@ -22,6 +22,7 @@ return {
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "karb94/neoscroll.nvim",
+  "luukvbaal/stabilize.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
@@ -54,6 +55,7 @@ return {
   "ray-x/lsp_signature.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L203-L226
+  "b0o/schemastore.nvim",
   "folke/trouble.nvim",
   -- "SmiteshP/nvim-gps", -- this is breaking elixir TS parser/grammar
   "abecodes/tabout.nvim",

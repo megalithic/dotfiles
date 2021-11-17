@@ -23,6 +23,7 @@ source ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh
 # zcomet snippet https://github.com/lincheney/fzf-tab-completion/blob/master/zsh/fzf-zsh-completion.sh
 # zcomet load xPMo/zsh-ls-colors
 # zcomet load jeffreytse/zsh-vi-mode
+# TODO: this instead: https://github.com/jose-elias-alvarez/dotfiles/commit/1b1d725459df1ba1fc62b1bacc510fe8f28b3eaa
 zcomet load Aloxaf/fzf-tab
 zcomet load djui/alias-tips
 zcomet load olets/zsh-abbr

@@ -486,14 +486,6 @@ local function setup_lsp_servers()
   lspconfig["yamlls"].setup(lsp_with_defaults({
     settings = {
       yaml = {
-        schemas = {
-          ["http://json.schemastore.org/github-workflow"] = ".github/workflows/*.{yml,yaml}",
-          ["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
-          ["http://json.schemastore.org/ansible-stable-2.9"] = "roles/tasks/*.{yml,yaml}",
-          ["http://json.schemastore.org/prettierrc"] = ".prettierrc.{yml,yaml}",
-          ["http://json.schemastore.org/stylelintrc"] = ".stylelintrc.{yml,yaml}",
-          ["http://json.schemastore.org/circleciconfig"] = ".circleci/**/*.{yml,yaml}",
-        },
         format = { enable = true },
         validate = true,
         hover = true,
@@ -715,68 +707,7 @@ local function setup_lsp_servers()
     settings = {
       json = {
         format = { enable = false },
-        -- TODO: clean up please!
-        -- more useful schemas:
-        -- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/lsp/language_servers/json.lua#L27
-        schemas = {
-          {
-            description = "Lua sumneko setting schema validation",
-            fileMatch = { "*.lua" },
-            url = "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
-          },
-          {
-            description = "TypeScript compiler configuration file",
-            fileMatch = { "tsconfig.json", "tsconfig.*.json" },
-            url = "http://json.schemastore.org/tsconfig",
-          },
-          {
-            description = "Lerna config",
-            fileMatch = { "lerna.json" },
-            url = "http://json.schemastore.org/lerna",
-          },
-          {
-            description = "Babel configuration",
-            fileMatch = {
-              ".babelrc.json",
-              ".babelrc",
-              "babel.config.json",
-            },
-            url = "http://json.schemastore.org/lerna",
-          },
-          {
-            description = "ESLint config",
-            fileMatch = { ".eslintrc.json", ".eslintrc" },
-            url = "http://json.schemastore.org/eslintrc",
-          },
-          {
-            description = "Bucklescript config",
-            fileMatch = { "bsconfig.json" },
-            url = "https://bucklescript.github.io/bucklescript/docson/build-schema.json",
-          },
-          {
-            description = "Prettier config",
-            fileMatch = {
-              ".prettierrc",
-              ".prettierrc.json",
-              "prettier.config.json",
-            },
-            url = "http://json.schemastore.org/prettierrc",
-          },
-          {
-            description = "Vercel Now config",
-            fileMatch = { "now.json", "vercel.json" },
-            url = "http://json.schemastore.org/now",
-          },
-          {
-            description = "Stylelint config",
-            fileMatch = {
-              ".stylelintrc",
-              ".stylelintrc.json",
-              "stylelint.config.json",
-            },
-            url = "http://json.schemastore.org/stylelintrc",
-          },
-        },
+        schemas = require("schemastore").json.schemas(),
       },
     },
   }))
