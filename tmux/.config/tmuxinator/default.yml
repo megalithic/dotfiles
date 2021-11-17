@@ -1,4 +1,4 @@
-name: stuff
+name: chats
 root: ~/.dotfiles
 
 tmux_options: -2

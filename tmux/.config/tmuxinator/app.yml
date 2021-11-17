@@ -6,10 +6,6 @@ on_project_start: gohome && dowork
 
 tmux_options: -2
 windows:
-  - chats:
-      - cd ~/.dotfiles; weechat
-  - dots:
-      - cd ~/.dotfiles; nvim
   - ssh-dots:
       - ssh seth-dev
       - cd ~/.dotfiles
