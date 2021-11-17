@@ -1,4 +1,4 @@
-name: outstand-pages
+name: atlas-outstand
 root: ~/code/outstand
 
 # Runs on project start, always
@@ -14,17 +14,16 @@ windows:
       - ssh seth-dev
       - cd ~/.dotfiles
   - code:
-      panes:
-        - ssh seth-dev
-        - cd ~/code/pages
-        - eval $(desk load); nvim
+      - ssh seth-dev
+      - cd ~/code/atlas
+      - eval $(desk load); nvim
   - services:
       panes:
         - logs:
             - ssh seth-dev
-            - cd ~/code/pages
+            - cd ~/code/atlas
             - eval $(desk load)
         - repl:
             - ssh seth-dev
-            - cd ~/code/pages
+            - cd ~/code/atlas
             - eval $(desk load); iex -S mix

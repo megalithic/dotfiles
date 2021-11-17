@@ -1,4 +1,4 @@
-name: outstand-app
+name: pages-outstand
 root: ~/code/outstand
 
 # Runs on project start, always
@@ -14,10 +14,9 @@ windows:
       - ssh seth-dev
       - cd ~/.dotfiles
   - code:
-      panes:
-        - ssh seth-dev
-        - cd ~/code/app
-        - eval $(desk load); nvim
+      - ssh seth-dev
+      - cd ~/code/pages
+      - eval $(desk load); nvim
   - services:
       panes:
         - logs:

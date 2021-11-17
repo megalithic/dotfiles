@@ -184,6 +184,8 @@ alias docs="cd $HOME/Documents"
 alias box="cd $HOME/Dropbox/"
 alias box="cd $HOME/Downloads/"
 alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
+alias nvim-plugins="cd ~/.local/share/nvim/site/pack/packer/start"
+# alias icloud="cd $HOME/Library/Mobile\ Documents/com~apple~CloudDocs"
 
 # POSTGRES
 # -----------------------------------------------------------------------------
