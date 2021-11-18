@@ -571,6 +571,7 @@ return lush(function()
 
     ---- :help indent-blankline -------------------------------------------
 
+    IndentBlanklineChar({ fg = bg1, bg = nil }),
     IndentBlanklineContextChar({ fg = blue, bg = nil }),
     IndentBlanklineContextStart({ sp = blue, bg = nil, gui = "underline" }),
 

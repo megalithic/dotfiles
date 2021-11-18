@@ -238,6 +238,7 @@ end
 local function setup_indent_blankline()
   require("indent_blankline").setup({
     char = "│", -- ┆ ┊ 
+    -- char_list = { "│", "|", "¦", "┆", "┊" },
     space_char_blankline = " ",
     show_foldtext = false,
     show_current_context = true,
