@@ -42,7 +42,7 @@ alias ls="exa -gahF --group-directories-first"
 alias l="exa -lahF --icons --group-directories-first --git"
 alias s="ls"
 alias last='ls *(.om[1])'
-alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'
+# alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'
 alias cat='bat'
 alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias help='tldr'

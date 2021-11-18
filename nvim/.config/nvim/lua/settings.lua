@@ -864,12 +864,14 @@ local function setup_fzf_lua()
       height = 0.6,
       width = 0.65,
       border = false,
-      preview = { scrollbar = false },
+      preview = { default = "bat_native", scrollbar = false },
     },
     previewers = {
       bat = {
         cmd = "bat",
-        args = "",
+        args = "--style=numbers,changes --color always",
+        theme = "Forest%20Night%20(Italic)",
+        config = nil,
       },
     },
     oldfiles = {
