@@ -277,6 +277,14 @@ function mega.command(args)
   vcmd(string.format("command! -nargs=%s %s %s %s", nargs, types, name, rhs))
 end
 
+mega.comm = function(name, fun)
+  vim.cmd(string.format("command! %s %s", name, fun))
+end
+
+mega.lua_comm = function(name, fun)
+  mega.comm(name, "lua " .. fun)
+end
+
 -- function M.execute(id)
 -- 	local func = M.functions[id]
 -- 	if not func then
@@ -331,6 +339,12 @@ end
 
 function mega.map(mode, key, rhs, opts)
   return map(mode, key, rhs, opts)
+end
+
+for _, mode in ipairs({ "n", "o", "i", "x", "t" }) do
+  mega[mode .. "map"] = function(...)
+    mega.map(mode, ...)
+  end
 end
 
 -- function M.map(mode, key, rhs, opts, defaults)
@@ -831,6 +845,23 @@ function mega.title_string()
   -- end
   return string.format("%s %s ", dir, icon)
   -- return string.format("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon)
+end
+
+function mega.showCursorHighlights()
+  local ft = vim.bo.filetype
+  local ts_ft = ft
+  -- if ts_ft == "cs" then
+  --   ts_ft = "c_sharp"
+  -- end
+  local is_ts_enabled = require("nvim-treesitter.configs").is_enabled("highlight", ts_ft)
+    and require("nvim-treesitter.configs").is_enabled("playground", ts_ft)
+  if is_ts_enabled then
+    require("nvim-treesitter-playground.hl-info").show_hl_captures()
+  else
+    local synstack = vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))
+    local lmap = vim.fn.map(synstack, 'synIDattr(v:val, "name")')
+    print(vim.fn.join(vim.fn.reverse(lmap), " "))
+  end
 end
 
 return mega

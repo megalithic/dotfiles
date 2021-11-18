@@ -9,6 +9,7 @@ local M = {}
 vim.g.number_filetype_exclusions = {
   "alpha",
   "prompt",
+  "fzf",
   "netrw",
   "undotree",
   "log",

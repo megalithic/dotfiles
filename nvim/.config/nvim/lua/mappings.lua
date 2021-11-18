@@ -278,6 +278,8 @@ map("n", "<Leader>x", mega.save_and_exec)
 -- # open uri under cursor:
 map("n", "go", mega.open_uri)
 
+map("n", "zS", mega.showCursorHighlights)
+
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # golden_size

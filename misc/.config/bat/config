@@ -2,17 +2,17 @@
 --theme="Forest Night (Italic)"
 
 # Show line numbers, Git modifications and file header (but no grid)
---style="numbers,changes,header"
+--style="numbers,changes"
 
 # Use italic text on the terminal (not supported on all terminals)
---italic-text=always
+#--italic-text=always
 
 # Add mouse scrolling support in less (does not work with older
 # versions of "less")
---pager="less -FR"
+#--pager="less -FR"
 
 # Use C++ syntax (instead of C) for .h header files
---map-syntax h:cpp
+#--map-syntax h:cpp
 
 # Use "gitignore" highlighting for ".ignore" files
 --map-syntax .ignore:.gitignore

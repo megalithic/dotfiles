@@ -6,7 +6,7 @@ local lspconfig = require("lspconfig")
 local luasnip = require("luasnip")
 local utils = require("utils")
 
-local formatting_provider = "efm" -- efm or null-ls
+local formatting_provider = "null-ls" -- efm or null-ls
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -37,7 +37,7 @@ local function setup_diagnostics()
     float = {
       show_header = true,
       source = "if_many",
-      border = "rounded",
+      border = "single",
       focusable = false,
       severity_sort = true,
     },
@@ -46,13 +46,16 @@ end
 
 -- some of our custom LSP handlers
 local function setup_lsp_handlers()
+  local border_opts = { border = "single", focusable = false, scope = "line" }
   -- hover
   -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
   lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, {
-    border = "rounded",
+    border = "single",
     max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
   })
+
+  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
 end
 
 local function setup_completion()
@@ -268,6 +271,11 @@ local function setup_completion()
   -- If you want insert `(` after select function or method item
   local cmp_autopairs = require("nvim-autopairs.completion.cmp")
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+  cmp.setup.cmdline(":", {
+    sources = {
+      { name = "cmdline" },
+    },
+  })
 end
 
 -- our on_attach function to pass to each language server config..
@@ -279,14 +287,14 @@ local function on_attach(client, bufnr)
   require("utils").lsp.format_setup(client, bufnr)
 
   require("lsp_signature").on_attach({
-    bind = true, -- This is mandatory, otherwise border config won't get registered.
+    bind = false, -- This is mandatory, otherwise border config won't get registered.
     doc_lines = 2,
     floating_window = true,
     floating_window_above_cur_line = true, -- try to place the floating above the current line
     -- floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
     -- fix_pos = true,
     hint_enable = false,
-    hi_parameter = "Search", -- how your parameter will be highlight
+    -- hi_parameter = "LspSignatureActiveParameter",
     max_height = 12,
     max_width = 120,
     decorator = { "`", "`" },
@@ -465,7 +473,6 @@ local function setup_lsp_servers()
       local efm = require("lsp.efm")
       lspconfig["efm"].setup(lsp_with_defaults(efm.config))
     elseif formatting_provider == "null-ls" then
-      -- FIXME: presently this is dying! with vim.lsp.diagnostic handler issues
       require("lsp.null-ls").setup()
       lspconfig["null-ls"].setup(lsp_with_defaults())
     end
@@ -495,6 +502,7 @@ local function setup_lsp_servers()
   }))
 
   lspconfig["tailwindcss"].setup(lsp_with_defaults({
+    -- TODO: https://github.com/sethlowie/dotfiles/blob/master/vim/lua/sethlowie/tailwind.lua
     cmd = { "tailwindcss-language-server", "--stdio" },
     init_options = {
       userLanguages = {

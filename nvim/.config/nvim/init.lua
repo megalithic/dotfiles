@@ -33,34 +33,45 @@
 
 --]]
 
--- [ leader bindings ] ----------------------------------------------------- {{{
-vim.g.mapleader = "," -- Remap leader key
-vim.g.maplocalleader = " " -- Local leader is <Space>
--- TODO: do things with localleader: https://github.com/jose-elias-alvarez/dotfiles/commit/1f87c48fd2162d824cc4a1e2a9ae5b2fee0e83e5
---}}}
+-- [ leader bindings ] ---------------------------------------------------------
 
--- [ loaders ] ------------------------------------------------------------- {{{
+vim.g.mapleader = "," -- Remap leader to ,
+vim.g.maplocalleader = " " -- Remap localleader to <Space>
+
+-- TODO: do things with localleader:
+-- https://github.com/jose-elias-alvarez/dotfiles/commit/1f87c48fd2162d824cc4a1e2a9ae5b2fee0e83e5
+
+-- [ loaders ] -----------------------------------------------------------------
+
 local reload_ok, reload = pcall(require, "plenary.reload")
-
 RELOAD = reload_ok and reload.reload_module or function(...)
   return ...
 end
-
 function R(name)
   RELOAD(name)
   return require(name)
 end
 
 R("globals")
-R("preflight")
-R("options")
-R("opts")
-R("colors").setup("megaforest")
-R("settings")
-R("lsp")
-R("autocmds")
-R("mappings")
-R("megaline")
---}}}
+-- R("preflight")
+-- -- R("options")
+-- R("opts")
+-- R("colors").setup("megaforest")
+-- R("settings")
+-- R("lsp")
+-- R("autocmds")
+-- R("mappings")
+-- R("megaline")
+
+-- mega.load("globals")
+mega.load("preflight")
+-- mega.load("options")
+mega.load("opts")
+mega.load("colors").setup("megaforest")
+mega.load("settings")
+mega.load("lsp")
+mega.load("autocmds")
+mega.load("mappings")
+mega.load("megaline")
 
 -- vim:foldmethod=marker

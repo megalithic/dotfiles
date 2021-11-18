@@ -26,7 +26,7 @@ M.preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
   bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser", "quake" },
-  controlplane = { "dock", "office", "vpn" },
+  controlplane = { "dock", "office" },
   watchers = { "urlevent" },
 }
 
@@ -181,7 +181,7 @@ M.apps = {
     hyper_key = "s",
     context = "slack",
     distraction = true,
-    quitGuard = true,
+    quitGuard = false,
     rules = {
       { nil, 2, M.layout.fullScreen },
     },

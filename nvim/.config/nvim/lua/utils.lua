@@ -200,7 +200,7 @@ function M.lsp.format_setup(client, buf)
 
 
   local enable = false
-  if ok and nls.has_formatter(ft) then
+  if nls.has_formatter(ft) then
     enable = client.name == "null-ls"
   elseif efm_formatted[ft] then
     enable = client.name == "efm"

@@ -22,7 +22,6 @@ return {
   "danilamihailov/beacon.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "karb94/neoscroll.nvim",
-  "luukvbaal/stabilize.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
@@ -41,6 +40,7 @@ return {
   "hrsh7th/cmp-nvim-lsp",
   "hrsh7th/cmp-nvim-lua",
   "saadparwaiz1/cmp_luasnip",
+  "hrsh7th/cmp-cmdline",
   "hrsh7th/cmp-buffer",
   "hrsh7th/cmp-path",
   "hrsh7th/cmp-emoji",
@@ -70,7 +70,7 @@ return {
     end,
   },
   -- "nvim-treesitter/nvim-treesitter-textobjects",
-  -- "nvim-treesitter/playground",
+  "nvim-treesitter/playground",
   -- "RRethy/nvim-treesitter-textsubjects",
   -- "mfussenegger/nvim-ts-hint-textobject",
   "JoosepAlviste/nvim-ts-context-commentstring",
@@ -85,8 +85,9 @@ return {
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
-  -- "nvim-telescope/telescope.nvim",
-  -- { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  "nvim-telescope/telescope.nvim",
+  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  "nvim-telescope/telescope-file-browser.nvim",
 
   --
   -- (text objects) --
