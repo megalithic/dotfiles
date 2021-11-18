@@ -168,8 +168,13 @@ map("v", "Q", ":norm @q<CR>")
 map("n", "<leader>e", ":vnew **/<TAB>")
 
 -- Map <leader>o & <leader>O to newline without insert mode
-map("n", "<leader>o", ':<C-u>call append(line("."), repeat([""], v:count1))<CR>', { noremap = true, silent = true })
-map("n", "<leader>O", ':<C-u>call append(line(".")-1, repeat([""], v:count1))<CR>', { noremap = true, silent = true })
+map("n", "<leader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>", { noremap = true, silent = true })
+map(
+  "n",
+  "<leader>O",
+  ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>",
+  { noremap = true, silent = true }
+)
 
 -- REF/HT:
 -- https://github.com/ibhagwan/nvim-lua/blob/main/lua/keymaps.lua#L121-L139
@@ -286,7 +291,7 @@ map("n", "zS", mega.showCursorHighlights)
 map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
 -- # git-related (fugitive, et al)
--- map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
 -- map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
 -- map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
 map("n", "<Leader>gd", "<cmd>DiffviewOpen<CR>")

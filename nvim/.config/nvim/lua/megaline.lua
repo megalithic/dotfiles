@@ -289,23 +289,12 @@ end
 
 local function get_lineinfo()
   -- vert_sep = "\uf6d8"             "⋮
-  -- ln_sep   = "\ue0a1"             "
+  -- ln_sep   = "\ue0a1"             "ℓ
   -- col_sep  = "\uf6da"             "
   -- perc_sep = "\uf44e"             "
   --
-  local item = ""
+  local item = "ℓ"
   return "" .. item .. " %l:%c ⋮ %p%%/%L%*"
-end
-
-local function get_gps_status()
-  local gps = require("nvim-gps")
-
-  gps.is_available() -- Returns boolean value indicating whether a output can be provided
-  if gps.is_available() then
-    return " " .. gps.get_location() -- Returns a string with context information
-  else
-    return ""
-  end
 end
 
 -- local function get_container_info()
@@ -318,7 +307,6 @@ local function statusline_active()
   local search = search_result()
   local ft = get_filetype()
   local lsp = get_lsp_status()
-  -- local gps = get_gps_status()
   -- local container_info = get_container_info()
 
   local statusline_sections = {
@@ -333,8 +321,7 @@ local function statusline_active()
     seg("%w", nil, wo.previewwindow),
     seg("%r", nil, bo.readonly),
     seg("%q", nil, bo.buftype == "quickfix"),
-    -- "%=",
-    -- seg(gps, s.gps, gps ~= ""),
+    "%=",
     "%=",
     seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
     seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),

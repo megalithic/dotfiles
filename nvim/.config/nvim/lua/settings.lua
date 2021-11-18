@@ -5,11 +5,10 @@ local colors = require("colors")
 local function setup_nvim_options()
   -- fallback in the event our statusline plugins fail to load
   set.statusline = table.concat({
-    "%2{mode()} | ",
+    "[ %2{mode()} ] ",
     "f", -- relative path
     "m", -- modified flag
     "r",
-    "%{gitstatus#name()}",
     "=",
     "{&spelllang}",
     "y", -- filetype
@@ -229,10 +228,6 @@ local function setup_treesitter()
       "eelixir",
     },
   })
-end
-
-local function setup_hclipboard()
-  require("hclipboard").start()
 end
 
 local function setup_indent_blankline()
@@ -533,10 +528,6 @@ local function setup_lastplace()
     lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
     lastplace_open_folds = true,
   })
-end
-
-local function setup_gps()
-  require("nvim-gps").setup({})
 end
 
 local function setup_autopairs()
@@ -932,29 +923,6 @@ local function setup_fzf_lua()
       end
     end)()
   end
-  -- nmap ( '<leader>nr', ':silent! lua fzf_orgmode{}<CR>' )
-  -- nmap ( '<leader>nd', ":silent! e " .. ROAM .. '/notebook.org<cr>' )
-  --   function fzf_orgmode()
-  --     local choice = dirs.org
-  --     require("fzf-lua").files(
-  --       {
-  --         prompt = "ORGFILES » ",
-  --         cwd = choice
-  --       }
-  --     )
-  --     vim.cmd("chdir " .. choice)
-  --   end
-
-  --   function fzf_dotfiles()
-  --     local choice = dirs.dots
-  --     require("fzf-lua").files(
-  --       {
-  --         prompt = "DOTS » ",
-  --         cwd = choice
-  --       }
-  --     )
-  --     vim.cmd("chdir " .. choice)
-  --   end
 end
 
 local function setup_which_key()
@@ -1206,13 +1174,6 @@ local function setup_distant()
   })
 end
 
-local function setup_shade()
-  require("shade").setup({
-    overlay_opacity = 50,
-    opacity_step = 1,
-  })
-end
-
 local function setup_tabout()
   require("tabout").setup({
     completion = false,
@@ -1348,509 +1309,8 @@ local function setup_nvim_tree()
   })
 end
 
-local function setup_bufferline()
-  require("bufferline").setup({})
-end
-
 local function setup_dd()
   require("dd").setup({ timeout = 1000 })
-end
-
-local function setup_telescope()
-  -- local telescope = require("telescope")
-  -- local actions = require("telescope.actions")
-  -- telescope.setup({
-  --   extensions = {
-  --     fzf = {
-  --       fuzzy = true,
-  --       override_generic_sorter = true,
-  --       override_file_sorter = true,
-  --     },
-  --   },
-  --   defaults = {
-  --     vimgrep_arguments = {
-  --       "rg",
-  --       "--color=never",
-  --       "--no-heading",
-  --       "--with-filename",
-  --       "--line-number",
-  --       "--column",
-  --       "--smart-case",
-  --       "--ignore",
-  --       "--hidden",
-  --       "-g",
-  --       "!.git",
-  --     },
-  --     pickers = {
-  --       find_files = {
-  --         theme = "dropdown",
-  --       },
-  --     },
-  --     mappings = {
-  --       i = {
-  --         ["<C-u>"] = false,
-  --         ["<Esc>"] = actions.close,
-  --         ["<M-u>"] = actions.preview_scrolling_up,
-  --         ["<M-d>"] = actions.preview_scrolling_down,
-  --       },
-  --     },
-  --   },
-  -- })
-
-  -- telescope.load_extension("fzf")
-  -- telescope.load_extension("file_browser")
-
-  -- mega.telescope = {
-  --   -- try git_files and fall back to find_files
-  --   find_files = function()
-  --     local lset = require("telescope.actions.set")
-  --     local builtin = require("telescope.builtin")
-  --     local bufnr = api.nvim_get_current_buf()
-
-  --     local opts = {
-  --       attach_mappings = function(_, lmap)
-  --         lmap("i", "<C-v>", function(prompt_bufnr)
-  --           lset.edit(prompt_bufnr, "vsplit")
-  --         end)
-
-  --         -- edit file and matching test file in split
-  --         lmap("i", "<C-f>", function(prompt_bufnr)
-  --           lset.edit(prompt_bufnr, "edit")
-  --           -- commands.edit_test_file("vsplit $FILE | wincmd w")
-  --         end)
-
-  --         -- replace current buffer with selection
-  --         lmap("i", "<C-r>", function(prompt_bufnr)
-  --           lset.edit(prompt_bufnr, "edit")
-  --           vim.cmd("BufDel " .. bufnr)
-  --         end)
-
-  --         -- close all other buffers
-  --         lmap("i", "<C-o>", function(prompt_bufnr)
-  --           lset.edit(prompt_bufnr, "edit")
-  --           vim.cmd("Bonly")
-  --         end)
-
-  --         return true
-  --       end,
-  --     }
-
-  --     local is_git_project = pcall(builtin.git_files, opts)
-  --     if not is_git_project then
-  --       builtin.find_files(opts)
-  --     end
-  --   end,
-  --   file_browser = function()
-  --     telescope.extensions.file_browser.file_browser({
-  --       dir_icon = "",
-  --       hidden = true,
-  --       cwd = require("telescope.utils").buffer_dir(),
-  --     })
-  --   end,
-  -- }
-
-  -- mega.lua_comm("Files", "mega.telescope.find_files()")
-  -- mega.lua_comm("FileBrowser", "mega.telescope.file_browser()")
-  -- mega.comm("Rg", "Telescope live_grep")
-  -- mega.comm("BLines", "Telescope current_buffer_fuzzy_find")
-  -- mega.comm("History", "Telescope oldfiles")
-  -- mega.comm("Buffers", "Telescope buffers")
-  -- mega.comm("BCommits", "Telescope git_bcommits")
-  -- mega.comm("Commits", "Telescope git_commits")
-  -- mega.comm("HelpTags", "Telescope help_tags")
-  -- mega.comm("ManPages", "Telescope man_pages")
-
-  -- mega.nmap("<Leader>ff", "<cmd>Files<CR>")
-  -- mega.nmap("<Leader>fs", "<cmd>Rg<CR>")
-  -- mega.nmap("<Leader>fo", "<cmd>History<CR>")
-  -- mega.nmap("<Leader>fh", "<cmd>HelpTags<CR>")
-  -- mega.nmap("<Leader>fl", "<cmd>BLines<CR>")
-  -- mega.nmap("<Leader>fc", "<cmd>BCommits<CR>")
-  -- mega.nmap("<Leader>fs", "<cmd>LspSym<CR>")
-  -- mega.nmap("-", "<cmd>FileBrowser<CR>")
-  -- mega.nmap("<LocalLeader><LocalLeader>", "<cmd>Buffers<CR>")
-
-  -- -- lsp
-  -- mega.comm("LspRef", "Telescope lsp_references")
-  -- mega.comm("LspDef", "Telescope lsp_definitions")
-  -- mega.comm("LspSym", "Telescope lsp_workspace_symbols")
-  -- mega.comm("LspAct", "Telescope lsp_code_actions")
-  -- mega.comm("LspRangeAct", "Telescope lsp_range_code_actions")
-
-  -- vim.cmd(
-  --   [[nnoremap <localleader>f :lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ winblend = 10 }))<cr>]]
-  -- )
-  -- vim.cmd(
-  --   [[nnoremap <localleader>a :lua require'telescope.builtin'.live_grep(require('telescope.themes').get_dropdown({ winblend = 10 }))<cr>]]
-  -- )
-
-  -- -- local telescope = require("telescope")
-  -- -- local actions = require("telescope.actions")
-  -- -- local function dropdown(opts)
-  -- --   return require("telescope.themes").get_dropdown(vim.tbl_deep_extend("force", opts or {}, {
-  -- --     borderchars = {
-  -- --       { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-  -- --       prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
-  -- --       results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
-  -- --       preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-  -- --     },
-  -- --   }))
-  -- -- end
-
-  -- -- telescope.setup({
-  -- --   defaults = {
-  -- --     set_env = { ["TERM"] = vim.env.TERM },
-  -- --     borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-  -- --     prompt_prefix = " ",
-  -- --     selection_caret = "» ",
-  -- --     mappings = {
-  -- --       i = {
-  -- --         ["<C-w>"] = actions.send_selected_to_qflist,
-  -- --         ["<c-c>"] = function()
-  -- --           vim.cmd("stopinsert!")
-  -- --         end,
-  -- --         ["<esc>"] = actions.close,
-  -- --         ["<c-s>"] = actions.select_horizontal,
-  -- --         ["<c-j>"] = actions.cycle_history_next,
-  -- --         ["<c-k>"] = actions.cycle_history_prev,
-  -- --       },
-  -- --       n = {
-  -- --         ["<C-w>"] = actions.send_selected_to_qflist,
-  -- --       },
-  -- --     },
-  -- --     file_ignore_patterns = { "%.jpg", "%.jpeg", "%.png", "%.otf", "%.ttf" },
-  -- --     path_display = { "smart", "absolute", "truncate" },
-  -- --     layout_strategy = "flex",
-  -- --     layout_config = {
-  -- --       horizontal = {
-  -- --         preview_width = 0.45,
-  -- --       },
-  -- --     },
-  -- --     winblend = 3,
-  -- --     history = {
-  -- --       path = vim.fn.stdpath("data") .. "/telescope_history.sqlite3",
-  -- --     },
-  -- --   },
-  -- --   extensions = {
-  -- --     frecency = {
-  -- --       workspaces = {
-  -- --         conf = vim.env.DOTFILES,
-  -- --         project = vim.env.PROJECTS_DIR,
-  -- --         wiki = vim.g.wiki_path,
-  -- --       },
-  -- --     },
-  -- --     fzf = {
-  -- --       override_generic_sorter = true, -- override the generic sorter
-  -- --       override_file_sorter = true, -- override the file sorter
-  -- --     },
-  -- --   },
-  -- --   pickers = {
-  -- --     buffers = dropdown({
-  -- --       sort_mru = true,
-  -- --       sort_lastused = true,
-  -- --       show_all_buffers = true,
-  -- --       ignore_current_buffer = true,
-  -- --       previewer = false,
-  -- --       theme = "dropdown",
-  -- --       mappings = {
-  -- --         i = { ["<c-x>"] = "delete_buffer" },
-  -- --         n = { ["<c-x>"] = "delete_buffer" },
-  -- --       },
-  -- --     }),
-  -- --     oldfiles = dropdown(),
-  -- --     live_grep = {
-  -- --       file_ignore_patterns = { ".git/" },
-  -- --     },
-  -- --     current_buffer_fuzzy_find = dropdown({
-  -- --       previewer = false,
-  -- --       shorten_path = false,
-  -- --     }),
-  -- --     lsp_code_actions = {
-  -- --       theme = "cursor",
-  -- --     },
-  -- --     colorscheme = {
-  -- --       enable_preview = true,
-  -- --     },
-  -- --     find_files = {
-  -- --       hidden = true,
-  -- --     },
-  -- --     git_branches = dropdown(),
-  -- --     git_bcommits = {
-  -- --       layout_config = {
-  -- --         horizontal = {
-  -- --           preview_width = 0.55,
-  -- --         },
-  -- --       },
-  -- --     },
-  -- --     git_commits = {
-  -- --       layout_config = {
-  -- --         horizontal = {
-  -- --           preview_width = 0.55,
-  -- --         },
-  -- --       },
-  -- --     },
-  -- --     reloader = dropdown(),
-  -- --   },
-  -- -- })
-  -- --
-  -- -- local actions = require("telescope.actions")
-  -- -- require("telescope").setup({
-  -- --   defaults = {
-  -- --     preview = {
-  -- --       timeout = 500,
-  -- --       msg_bg_fillchar = "",
-  -- --     },
-  -- --     layout_strategy = "horizontal",
-  -- --     layout_config = {
-  -- --       horizontal = {
-  -- --         width_padding = 0.04,
-  -- --         height_padding = 0.1,
-  -- --         preview_width = 0.6,
-  -- --       },
-  -- --     },
-  -- --     file_ignore_patterns = {
-  -- --       "^.git/",
-  -- --     },
-  -- --     vimgrep_arguments = {
-  -- --       "rg",
-  -- --       "--color=never",
-  -- --       "--no-heading",
-  -- --       "--with-filename",
-  -- --       "--line-number",
-  -- --       "--column",
-  -- --       "--smart-case",
-  -- --       "--hidden",
-  -- --       "--no-ignore",
-  -- --       "--follow",
-  -- --       "--glob '!.git/*'",
-  -- --     },
-  -- --     color_devicons = true,
-  -- --     mappings = {
-  -- --       i = {
-  -- --         ["<esc>"] = actions.close,
-  -- --         ["<C-u>"] = false,
-  -- --         ["<C-d>"] = false,
-  -- --       },
-  -- --     },
-  -- --     dynamic_preview_title = true,
-  -- --   },
-  -- --   extensions = {
-  -- --     fzf = {
-  -- --       fuzzy = true, -- false will only do exact matching
-  -- --       override_generic_sorter = true, -- override the generic sorter
-  -- --       override_file_sorter = true, -- override the file sorter
-  -- --       case_mode = "smart_case", -- or "ignore_case" or "respect_case"
-  -- --       -- the default case_mode is "smart_case"
-  -- --     },
-  -- --   },
-  -- -- })
-
-  -- -- -- Load fzf native extension for telescope
-  -- -- require("telescope").load_extension("fzf")
-
-  -- -- Add leader shortcuts
-  -- vim.api.nvim_set_keymap(
-  --   "n",
-  --   "<leader>fb",
-  --   [[<cmd>lua require('telescope.builtin').buffers()<CR>]],
-  --   { noremap = true, silent = true }
-  -- )
-  -- vim.api.nvim_set_keymap(
-  --   "n",
-  --   "<leader>ff",
-  --   [[<cmd>lua require('telescope.builtin').find_files({ hidden = true, no_ignore = true, follow = true })<CR>]],
-  --   { noremap = true, silent = true }
-  -- )
-  -- -- vim.api.nvim_set_keymap(
-  -- --   "n",
-  -- --   "<leader>sb",
-  -- --   [[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<CR>]],
-  -- --   { noremap = true, silent = true }
-  -- -- )
-  -- -- vim.api.nvim_set_keymap(
-  -- --   "n",
-  -- --   "<leader>sh",
-  -- --   [[<cmd>lua require('telescope.builtin').help_tags()<CR>]],
-  -- --   { noremap = true, silent = true }
-  -- -- )
-  -- -- vim.api.nvim_set_keymap(
-  -- --   "n",
-  -- --   "<leader>st",
-  -- --   [[<cmd>lua require('telescope.builtin').tags()<CR>]],
-  -- --   { noremap = true, silent = true }
-  -- -- )
-  -- vim.api.nvim_set_keymap(
-  --   "n",
-  --   "<leader>A",
-  --   [[<cmd>lua require('telescope.builtin').grep_string()<CR>]],
-  --   { noremap = true, silent = true }
-  -- )
-  -- vim.api.nvim_set_keymap(
-  --   "n",
-  --   "<leader>a",
-  --   [[<cmd>lua require('telescope.builtin').live_grep()<CR>]],
-  --   { noremap = true, silent = true }
-  -- )
-  -- -- vim.api.nvim_set_keymap(
-  -- --   "n",
-  -- --   "<leader>so",
-  -- --   [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<CR>]],
-  -- --   { noremap = true, silent = true }
-  -- -- )
-  -- -- vim.api.nvim_set_keymap(
-  -- --   "n",
-  -- --   "<leader>?",
-  -- --   [[<cmd>lua require('telescope.builtin').oldfiles()<CR>]],
-  -- --   { noremap = true, silent = true }
-  -- -- )
-
-  -- -- telescope - customized pickers
-  -- -- local actions = require("telescope.actions")
-  -- -- local utils = require("telescope.utils")
-  -- -- require("telescope").setup({
-  -- --   extensions = {
-  -- --     fzf = {
-  -- --       fuzzy = true, -- false will only do exact matching
-  -- --       override_generic_sorter = false,
-  -- --       override_file_sorter = true,
-  -- --       case_mode = "smart_case", -- this is default
-  -- --     },
-  -- --   },
-  -- --   defaults = {
-  -- --     preview = {
-  -- --       timeout = 500,
-  -- --       msg_bg_fillchar = "",
-  -- --     },
-  -- --     vimgrep_arguments = {
-  -- --       "rg",
-  -- --       "--color=never",
-  -- --       "--no-heading",
-  -- --       "--with-filename",
-  -- --       "--line-number",
-  -- --       "--column",
-  -- --       "--smart-case",
-  -- --       "--hidden",
-  -- --     },
-  -- --     prompt_prefix = "❯ ",
-  -- --     selection_caret = "❯ ",
-  -- --     sorting_strategy = "ascending",
-  -- --     color_devicons = true,
-  -- --     layout_config = {
-  -- --       prompt_position = "bottom",
-  -- --       horizontal = {
-  -- --         width_padding = 0.04,
-  -- --         height_padding = 0.1,
-  -- --         preview_width = 0.6,
-  -- --       },
-  -- --       vertical = {
-  -- --         width_padding = 0.05,
-  -- --         height_padding = 1,
-  -- --         preview_height = 0.5,
-  -- --       },
-  -- --     },
-  -- --     mappings = { n = { ["<Del>"] = actions.close } },
-  -- --     dynamic_preview_title = true,
-  -- --   },
-  -- -- })
-  -- -- require("telescope").load_extension("fzf")
-  -- -- -- require("telescope").load_extension "fzy_native"
-
-  local actions = require("telescope.actions")
-  local pickers = require("telescope.pickers")
-  local sorters = require("telescope.sorters")
-  local finders = require("telescope.finders")
-  local builtin = require("telescope.builtin")
-  local themes = require("telescope.themes")
-  -- local map = require('helpers.map')
-
-  local checkout_actions = {}
-
-  -- TODO: Redo tags selection + make PR to add it upstream
-  checkout_actions.set_branch = function(prompt_bufnr)
-    local entry = actions.get_selected_entry(prompt_bufnr)
-
-    actions.close(prompt_bufnr)
-
-    local git_cmd = "!git checkout " .. entry.value
-    vim.cmd(git_cmd)
-  end
-
-  local function tags(opts)
-    opts = opts or {}
-    local tags_list = vim.fn.systemlist("git ls-remote -t --refs")
-    table.remove(tags_list, 1)
-
-    local results = {}
-    for _, tag in pairs(tags_list) do
-      tag = vim.fn.substitute(tag, "^.*refs/tags/", "", "")
-      table.insert(results, tag)
-    end
-
-    pickers.new(opts, {
-      prompt = "Tags",
-      finder = finders.new_table(results),
-      sorter = sorters.get_generic_fuzzy_sorter(),
-
-      attach_mappings = function(_, lmap)
-        lmap("i", "<CR>", checkout_actions.set_branch)
-        lmap("n", "<CR>", checkout_actions.set_branch)
-        return true
-      end,
-    }):find()
-  end
-
-  local function rg(opts)
-    local input = vim.fn.input("Ripgrep: ")
-
-    if input ~= "" then
-      opts = opts or {}
-      builtin.grep_string(vim.tbl_extend("force", opts, { search = input }))
-    else
-      print("Exiting: given input was empty")
-    end
-  end
-
-  --   code_actions = function()
-  --     builtin.lsp_code_actions(themes.get_cursor())
-  --   end,
-  require("telescope").setup({
-    defaults = {
-      prompt_prefix = " ",
-      layout_strategy = "flex",
-      file_sorter = sorters.get_fzy_sorter,
-      generic_sorter = sorters.get_fzy_sorter,
-      mappings = {
-        i = {
-          -- close in insert mode
-          ["<esc>"] = actions.close,
-        },
-      },
-    },
-  })
-
-  local fix_folds = {
-    attach_mappings = function(_)
-      -- TEMP: Fix fold issues (https://github.com/nvim-telescope/telescope.nvim/issues/559)
-      require("telescope.actions.set").select:enhance({
-        post = function(_)
-          vim.cmd(":normal zx")
-        end,
-      })
-      return true
-    end,
-  }
-
-  map("n", "<localleader>ff", function()
-    builtin.find_files(fix_folds)
-  end)
-  map("n", "<localleader>fb", function()
-    builtin.buffers({ show_all_buffers = true })
-  end)
-  map("n", "<localleader>a", function()
-    rg(fix_folds)
-  end)
-  map("n", "<localleader>gb", builtin.git_branches)
-  map("n", "<localleader>gt", tags)
 end
 
 local function setup_dash()
@@ -1880,7 +1340,6 @@ setup_fzf_lua()
 setup_beacon()
 setup_startuptime()
 setup_indent_blankline()
--- setup_hclipboard()
 setup_zk()
 setup_numb()
 setup_orgmode()
@@ -1894,20 +1353,16 @@ setup_cursorhold()
 setup_comment()
 setup_conflict_marker()
 setup_lastplace()
--- setup_gps()
 setup_diffview()
 setup_git()
 setup_git_messenger()
 setup_distant()
--- setup_shade()
 setup_tabout()
 setup_headlines()
 setup_filetype()
 setup_nvim_tree()
--- setup_bufferline()
 setup_dd()
 setup_dash()
-setup_telescope()
 
 -- NOTE: this goes last!
 setup_misc()
