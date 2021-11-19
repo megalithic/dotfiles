@@ -1310,7 +1310,7 @@ local function setup_nvim_tree()
 end
 
 local function setup_dd()
-  require("dd").setup({ timeout = 1000 })
+  require("dd").setup({ timeout = 500 })
 end
 
 local function setup_dash()
@@ -1361,7 +1361,7 @@ setup_tabout()
 setup_headlines()
 setup_filetype()
 setup_nvim_tree()
-setup_dd()
+-- setup_dd()
 setup_dash()
 
 -- NOTE: this goes last!

@@ -59,7 +59,7 @@ return {
   "folke/trouble.nvim",
   -- "SmiteshP/nvim-gps", -- this is breaking elixir TS parser/grammar
   "abecodes/tabout.nvim",
-  { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
+  -- { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
 
   --
   -- (treesitter) --
