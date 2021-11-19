@@ -33,7 +33,7 @@ return {
   --
   -- (lsp/completion) --
   "neovim/nvim-lspconfig",
-  -- "williamboman/nvim-lsp-installer",
+  -- "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "hrsh7th/nvim-cmp",

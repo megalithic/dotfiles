@@ -55,7 +55,7 @@ local function setup_lsp_handlers()
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
   })
 
-  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
+  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
 end
 
 local function setup_completion()
@@ -287,20 +287,19 @@ local function on_attach(client, bufnr)
   require("utils").lsp.format_setup(client, bufnr)
 
   require("lsp_signature").on_attach({
-    bind = false, -- This is mandatory, otherwise border config won't get registered.
-    doc_lines = 2,
-    floating_window = true,
-    floating_window_above_cur_line = true, -- try to place the floating above the current line
-    -- floating_window_off_y = 1, -- adjust float windows y position. allow the pum to show a few lines
-    -- fix_pos = true,
+    bind = true,
+    fix_pos = function(signatures, _client)
+      if signatures[1].activeParameter >= 0 and #signatures[1].parameters == 1 then
+        return false
+      end
+      if _client.name == "sumneko_lua" then
+        return true
+      end
+      return false
+    end,
+    auto_close_after = 15, -- close after 15 seconds
     hint_enable = false,
-    -- hi_parameter = "LspSignatureActiveParameter",
-    max_height = 12,
-    max_width = 120,
-    decorator = { "`", "`" },
-    handler_opts = {
-      border = "rounded",
-    },
+    handler_opts = { border = "rounded" },
   })
 
   --- # goto mappings
@@ -395,13 +394,24 @@ local function on_attach(client, bufnr)
   if client.name == "tsserver" then
     local ts = require("nvim-lsp-ts-utils")
     ts.setup({
+      debug = false,
       disable_commands = false,
       enable_import_on_completion = false,
       import_on_completion_timeout = 5000,
-      eslint_bin = "eslint_d", -- use eslint_d if possible!
-      eslint_enable_diagnostics = true,
-      -- eslint_fix_current = false,
+
+      -- linting
+      eslint_enable_code_actions = true,
       eslint_enable_disable_comments = true,
+      eslint_bin = "eslint",
+      eslint_enable_diagnostics = true,
+      eslint_opts = {},
+
+      -- formatting
+      enable_formatting = true,
+      formatter = "prettier",
+      formatter_opts = {},
+
+      -- filter diagnostics
       -- {
       --    80001 - require modules
       --    6133 - import is declared but never used
@@ -409,6 +419,10 @@ local function on_attach(client, bufnr)
       --    2304 - cannot find name {jest, expect, beforeEach, afterEach}
       -- }
       filter_out_diagnostics_by_code = { 80001, 2582, 2304 },
+
+      -- inlay hints
+      auto_inlay_hints = true,
+      inlay_hints_highlight = "Comment",
     })
 
     ts.setup_client(client)
