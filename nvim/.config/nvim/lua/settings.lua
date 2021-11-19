@@ -1361,7 +1361,7 @@ setup_tabout()
 setup_headlines()
 setup_filetype()
 setup_nvim_tree()
--- setup_dd()
+setup_dd()
 setup_dash()
 
 -- NOTE: this goes last!

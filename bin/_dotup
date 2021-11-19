@@ -361,12 +361,10 @@ function setup_zsh {
 	grep -Fxq "$zsh_path" /etc/shells || echo "$zsh_path" | sudo tee -a /etc/shells
 
 	log "symlinking and sourcing .zshenv"
-	ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv
-	source $HOME/.config/zsh/.zshenv
+	ln -sfv $HOME/.config/zsh/.zshenv $HOME/.zshenv && source $HOME/.config/zsh/.zshenv
 
 	log "symlinking and sourcing .zprofile"
-	ln -sfv $HOME/.config/zsh/.zprofile $HOME/.zprofile
-	source $HOME/.config/zsh/.zprofile
+	ln -sfv $HOME/.config/zsh/.zprofile $HOME/.zprofile && source $HOME/.config/zsh/.zprofile
 
 	log "changing your shell to user-installed version of zsh: $zsh_path"
 	sudo chsh -s "$zsh_path" $USER && log_ok "DONE setting up zsh"
