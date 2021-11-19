@@ -13,152 +13,153 @@
 # Attribution: https://github.com/matthewfallshaw/utilities/blob/master/shell/slack-status
 #
 
-
 base_command="$(basename "$0")"
 
 help() {
-  printf -- "Usage: "$base_command" <subcommand> <options>\n"
-  printf -- "\n"
-  printf -- "Subcommands:\n"
-  printf -- "    away               Set presence to away, and profile for being gone\n"
-  printf -- "    lunch              Set presence to away, and profile for lunch\n"
-  printf -- "    pair               Set DND to on, and profile for pairing\n"
-  printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
-  printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
-  printf -- "    back               Set presence to auto, and profile accordingly\n"
-  printf -- "\n"
+	printf -- "Usage: "$base_command" <subcommand> <options>\n"
+	printf -- "\n"
+	printf -- "Subcommands:\n"
+	printf -- "    away               Set presence to away, and profile for being gone\n"
+	printf -- "    lunch              Set presence to away, and profile for lunch\n"
+	printf -- "    pair               Set DND to on, and profile for pairing\n"
+	printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
+	printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
+	printf -- "    back               Set presence to auto, and profile accordingly\n"
+	printf -- "\n"
 }
 
 function request() {
-  # $1=token
-  # $2=options
-  # $3=endpoint
+	# $1=token
+	# $2=options
+	# $3=endpoint
 
-  # non-zero length string AND a value not equal to 0
-  # TODO: need better way to handle options/args that don't exist
-  if [[ -n $2 && $2 != 0 ]]; then
-    2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | $HOME/.dotfiles/bin/spinner
-  else
-    2>/dev/null 1>&2 curl -s -S --data "" "https://slack.com/api/$3?token=$1" | $HOME/.dotfiles/bin/spinner
-  fi
+	# non-zero length string AND a value not equal to 0
+	# TODO: need better way to handle options/args that don't exist
+	if [[ -n $2 && $2 != 0 ]]; then
+		curl 2>/dev/null 1>&2 -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | $HOME/.dotfiles/bin/spinner
+	else
+		curl 2>/dev/null 1>&2 -s -S --data "" "https://slack.com/api/$3?token=$1" | $HOME/.dotfiles/bin/spinner
+	fi
 }
 
 function set_profile() {
-  # $1=token
-  # $2=options
-  request $1 $2 "users.profile.set"
+	# $1=token
+	# $2=options
+	request $1 $2 "users.profile.set"
 }
 
 function set_presence() {
-  # $1=token
-  # $2=options
-  request $1 $2 "users.setPresence"
+	# $1=token
+	# $2=options
+	request $1 $2 "users.setPresence"
 }
 
 function set_dnd() {
-  # $1=token
-  # $2=options
-  request $1 $2 "dnd.setSnooze"
+	# $1=token
+	# $2=options
+	request $1 $2 "dnd.setSnooze"
 }
 
 function end_dnd() {
-  # $1=token
-  # $2=options
-  request $1 $2 "dnd.endDnd"
+	# $1=token
+	# $2=options
+	request $1 $2 "dnd.endDnd"
 }
 
-
 function set_all_presence() {
-  set_presence $ENBALA_TOKEN $1
-  # set_presence $CIT_TOKEN $1
-  # set_presence $MAGICCITYTECH_TOKEN $1
+	set_presence $OUTSTAND_TOKEN $1
+	# set_presence $CIT_TOKEN $1
+	# set_presence $MAGICCITYTECH_TOKEN $1
 }
 
 function set_all_profile() {
-  set_profile $ENBALA_TOKEN $1
-  # set_profile $CIT_TOKEN $1
-  # set_profile $MAGICCITYTECH_TOKEN $1
+	set_profile $OUTSTAND_TOKEN $1
+	# set_profile $CIT_TOKEN $1
+	# set_profile $MAGICCITYTECH_TOKEN $1
 }
 
 function set_all_dnd() {
-  set_dnd $ENBALA_TOKEN $1
-  # set_dnd $CIT_TOKEN $1
-  # set_dnd $MAGICCITYTECH_TOKEN $1
+	set_dnd $OUTSTAND_TOKEN $1
+	# set_dnd $CIT_TOKEN $1
+	# set_dnd $MAGICCITYTECH_TOKEN $1
 }
 
 function end_all_dnd() {
-  end_dnd $ENBALA_TOKEN $1
-  # end_dnd $CIT_TOKEN $1
-  # end_dnd $MAGICCITYTECH_TOKEN $1
+	end_dnd $OUTSTAND_TOKEN $1
+	# end_dnd $CIT_TOKEN $1
+	# end_dnd $MAGICCITYTECH_TOKEN $1
 }
 
 function away() {
-  presence="presence=away"
-  set_all_presence $presence
-  # profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
-  profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-  set_all_profile $profile
+	presence="presence=away"
+	set_all_presence $presence
+	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
+	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+	set_all_profile $profile
 }
 
 function lunch() {
-  presence="presence=away"
-  set_all_presence $presence
-  profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
-  set_all_profile $profile
+	presence="presence=away"
+	set_all_presence $presence
+	profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
+	set_all_profile $profile
 }
 
 function gone() {
-  presence="presence=away"
-  set_all_presence $presence
-  # profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
-  profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-  set_all_profile $profile
-  dnd="num_minutes=930"
-  set_all_dnd $dnd
+	presence="presence=away"
+	set_all_presence $presence
+	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
+	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+	set_all_profile $profile
+	dnd="num_minutes=930"
+	set_all_dnd $dnd
 }
 
 function pair() {
-  profile="profile=%7B%22status_text%22:%22..pairing..%22,%22status_emoji%22:%22:pear:%22%7D"
-  set_all_profile $profile
-  dnd="num_minutes=120"
-  set_all_dnd $dnd
+	profile="profile=%7B%22status_text%22:%22..pairing..%22,%22status_emoji%22:%22:pear:%22%7D"
+	set_all_profile $profile
+	dnd="num_minutes=120"
+	set_all_dnd $dnd
 }
 
 function zoom() {
-  profile="profile=%7B%22status_text%22:%22..on%20a%20call..%22,%22status_emoji%22:%22:calendar:%22%7D"
-  set_all_profile $profile
-  dnd="num_minutes=120"
-  set_all_dnd $dnd
+	profile="profile=%7B%22status_text%22:%22..on%20a%20call..%22,%22status_emoji%22:%22:calendar:%22%7D"
+	set_all_profile $profile
+	dnd="num_minutes=120"
+	set_all_dnd $dnd
 }
 
 function dnd() {
-  profile="profile=%7B%22status_text%22:%22..focused%20work%20time..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
-  set_all_profile $profile
-  dnd="num_minutes=120"
-  set_all_dnd $dnd
+	profile="profile=%7B%22status_text%22:%22..focused%20work%20time..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
+	set_all_profile $profile
+	dnd="num_minutes=120"
+	set_all_dnd $dnd
 }
 
 function back() {
-  presence="presence=auto"
-  set_all_presence $presence
-  profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-  set_all_profile $profile
-  dnd=0
-  end_all_dnd $dnd
+	presence="presence=auto"
+	set_all_presence $presence
+	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+	set_all_profile $profile
+	dnd=0
+	end_all_dnd $dnd
 }
 
 subcommand=$1
 options=$2
 
 case $subcommand in
-  '' | '-h' | '--help')
-    help ;;
-  here)
-    back ;;
-  meeting | meet | loom)
-    zoom ;;
-  *)
-    shift
-    ${subcommand} $@
-    ;;
+	'' | '-h' | '--help')
+		help
+		;;
+	here)
+		back
+		;;
+	meeting | meet | loom)
+		zoom
+		;;
+	*)
+		shift
+		${subcommand} $@
+		;;
 esac
