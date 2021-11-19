@@ -5,7 +5,8 @@
 # - possible ways to update and improve interactive installation here:
 #     https://github.com/LunarVim/LunarVim/blob/rolling/utils/installer/install.sh
 
-set -e
+set -euo pipefail
+# ^-- what is this? http://redsymbol.net/articles/unofficial-bash-strict-mode/
 
 trap 'clean_exit $? $LINENO' EXIT
 trap ctrl_c INT # trap ctrl-c and call ctrl_c()

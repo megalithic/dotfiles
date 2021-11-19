@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+set -euo pipefail
+
 #
 # What in tarnation?
 #
@@ -10,40 +12,42 @@
 command="$(basename "$0")"
 
 help() {
-  printf -- "Usage: "$command" <subcommand> [options]\n"
-  printf -- "Subcommands:\n"
-  printf -- "    on       Turn ON do-not-disturb (DND) mode\n"
-  printf -- "    off      Turn OFF do-not-disturb (DND) mode\n"
-  printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
-  printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
+	printf -- "Usage: "$command" <subcommand> [options]\n"
+	printf -- "Subcommands:\n"
+	printf -- "    on       Turn ON do-not-disturb (DND) mode\n"
+	printf -- "    off      Turn OFF do-not-disturb (DND) mode\n"
+	printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
+	printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
 }
 
 on() {
-  calm-notifications on
+	calm-notifications on
 }
 
 off() {
-  calm-notifications off
+	calm-notifications off
 }
 
 toggle() {
-  calm-notifications toggle
+	calm-notifications toggle
 
-  status
+	status
 }
 
 status() {
-  echo "$(calm-notifications status)"
+	echo "$(calm-notifications status)"
 }
 
 subcommand=$1
 case $subcommand in
-  '')
-    toggle ;;
-  '-h' | '--help')
-    help ;;
-  *)
-    shift
-    ${subcommand} $@
-    ;;
+	'')
+		toggle
+		;;
+	'-h' | '--help')
+		help
+		;;
+	*)
+		shift
+		${subcommand} $@
+		;;
 esac
