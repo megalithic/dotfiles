@@ -395,16 +395,23 @@ local function on_attach(client, bufnr)
   if client.name == "tsserver" then
     local ts = require("nvim-lsp-ts-utils")
     ts.setup({
-      -- 			disable_commands = false,
-      -- 			enable_import_on_completion = false,
-      -- 			import_on_completion_timeout = 5000,
-      -- 			eslint_bin = "eslint_d", -- use eslint_d if possible!
-      -- 			eslint_enable_diagnostics = true,
-      -- 			-- eslint_fix_current = false,
-      -- 			eslint_enable_disable_comments = true,
+      disable_commands = false,
+      enable_import_on_completion = false,
+      import_on_completion_timeout = 5000,
+      eslint_bin = "eslint_d", -- use eslint_d if possible!
+      eslint_enable_diagnostics = true,
+      -- eslint_fix_current = false,
+      eslint_enable_disable_comments = true,
+      -- {
+      --    80001 - require modules
+      --    6133 - import is declared but never used
+      --    2582 - cannot find name {describe, test}
+      --    2304 - cannot find name {jest, expect, beforeEach, afterEach}
+      -- }
+      filter_out_diagnostics_by_code = { 80001, 2582, 2304 },
     })
 
-    -- ts.setup_client(client)
+    ts.setup_client(client)
   end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
@@ -691,8 +698,8 @@ local function setup_lsp_servers()
         fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
         "-E",
         fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
-        '--logpath="' .. fn.stdpath("cache") .. '/nvim/log"',
-        '--metapath="' .. fn.stdpath("cache") .. '/nvim/meta"',
+        "--logpath=\"" .. fn.stdpath("cache") .. "/nvim/log\"",
+        "--metapath=\"" .. fn.stdpath("cache") .. "/nvim/meta\"",
       },
     })
 
