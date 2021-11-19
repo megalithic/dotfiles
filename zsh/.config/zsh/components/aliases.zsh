@@ -80,7 +80,7 @@ autoload -U zmv
 # mmv *.c.orig orig/*.c
 alias mmv='noglob zmv -W'
 
-# TMUX
+# TMUX / SSH
 # -----------------------------------------------------------------------------
 # alias mux="tmux" #-> see function for tmux in tmux.zsh
 alias takeover="tmux detach -a"
@@ -88,6 +88,8 @@ alias outa="tmux attach-session -t outstand"
 alias out="tmuxinator start outstand -n outstand"
 alias trw="tmux rename-window"
 alias trs="tmux rename-session"
+
+alias ssh="kitty +kitten ssh"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents

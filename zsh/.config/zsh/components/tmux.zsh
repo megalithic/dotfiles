@@ -21,25 +21,25 @@ if [[ -z $TMUX ]]; then
 	# TODO: need to have a way to "undo" the window-option setting and put the old
 	# title back.. 🤦
 	#
-	ssh() {
-		# start lemonade!
-		# 		if (command -v lemonade &>/dev/null); then
-		# 			server_running=$(pgrep -l lemonade)
+# 	ssh() {
+# 		# start lemonade!
+# 		# 		if (command -v lemonade &>/dev/null); then
+# 		# 			server_running=$(pgrep -l lemonade)
 
-		# 			if ! (echo "$server_running" | rg lemonade); then
-		# 				# lemonade server &
-		# 			else
-		# 				log_warn "lemonade server already running.."
-		# 			fi
-		# 		fi
+# 		# 			if ! (echo "$server_running" | rg lemonade); then
+# 		# 				# lemonade server &
+# 		# 			else
+# 		# 				log_warn "lemonade server already running.."
+# 		# 			fi
+# 		# 		fi
 
-		# TODO: get old window name, store it as a local; then be able to rename
-		# once exiting?
-		tmux -2u rename-window "$(echo $* | rev | cut -d '@' -f1 | rev)"
-		command ssh "$@"
-		tmux -2u set-window-option automatic-rename "on" >/dev/null
-	}
-fi
+# 		# TODO: get old window name, store it as a local; then be able to rename
+# 		# once exiting?
+# 		tmux -2u rename-window "$(echo $* | rev | cut -d '@' -f1 | rev)"
+# 		command ssh "$@"
+# 		tmux -2u set-window-option automatic-rename "on" >/dev/null
+# 	}
+# fi
 
 # # Automatically start tmux on remote server when logging in via SSH
 # if [ -n "$PS1" ] && [ -z "$TMUX" ] && [ -n "$SSH_CONNECTION" ]; then
