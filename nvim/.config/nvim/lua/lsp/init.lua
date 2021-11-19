@@ -402,13 +402,13 @@ local function on_attach(client, bufnr)
       -- linting
       eslint_enable_code_actions = true,
       eslint_enable_disable_comments = true,
-      eslint_bin = "eslint",
+      eslint_bin = "eslint_d",
       eslint_enable_diagnostics = true,
       eslint_opts = {},
 
       -- formatting
-      enable_formatting = true,
-      formatter = "prettier",
+      enable_formatting = false,
+      formatter = "prettierd",
       formatter_opts = {},
 
       -- filter diagnostics

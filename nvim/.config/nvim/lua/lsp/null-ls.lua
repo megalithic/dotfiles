@@ -9,7 +9,7 @@ function M.setup()
     save_after_format = false,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-      b.formatting.prettier.with({
+      b.formatting.prettierd.with({
         filetypes = {
           -- "javascript",
           -- "javascriptreact",
@@ -25,7 +25,7 @@ function M.setup()
           "markdown.mdx",
         },
         condition = function()
-          return mega.executable("prettier")
+          return mega.executable("prettierd")
         end,
       }),
       b.formatting.fixjson.with({ filetypes = { "jsonc" } }),
