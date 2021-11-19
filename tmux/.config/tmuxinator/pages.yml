@@ -6,9 +6,6 @@ on_project_start: gohome && dowork
 
 tmux_options: -2
 windows:
-  - ssh-dots:
-      - ssh seth-dev
-      - cd ~/.dotfiles
   - code:
       - ssh seth-dev
       - cd ~/code/pages
