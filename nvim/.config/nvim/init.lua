@@ -38,9 +38,6 @@
 vim.g.mapleader = "," -- Remap leader to ,
 vim.g.maplocalleader = " " -- Remap localleader to <Space>
 
--- TODO: do things with localleader:
--- https://github.com/jose-elias-alvarez/dotfiles/commit/1f87c48fd2162d824cc4a1e2a9ae5b2fee0e83e5
-
 -- [ loaders ] -----------------------------------------------------------------
 
 local reload_ok, reload = pcall(require, "plenary.reload")
@@ -53,19 +50,7 @@ function R(name)
 end
 
 R("globals")
--- R("preflight")
--- -- R("options")
--- R("opts")
--- R("colors").setup("megaforest")
--- R("settings")
--- R("lsp")
--- R("autocmds")
--- R("mappings")
--- R("megaline")
-
--- mega.load("globals")
 mega.load("preflight")
--- mega.load("options")
 mega.load("opts")
 mega.load("colors").setup("megaforest")
 mega.load("settings")

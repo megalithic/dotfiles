@@ -1,4 +1,5 @@
 local nls = require("null-ls")
+local b = nls.builtins
 
 local M = {}
 
@@ -7,8 +8,8 @@ function M.setup()
     debounce = 150,
     save_after_format = false,
     sources = {
-      nls.builtins.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-      nls.builtins.formatting.prettierd.with({
+      b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
+      b.formatting.prettierd.with({
         filetypes = {
           -- "javascript",
           -- "javascriptreact",
@@ -24,19 +25,20 @@ function M.setup()
           "markdown.mdx",
         },
       }),
-      nls.builtins.formatting.fixjson.with({ filetypes = { "jsonc" } }),
-      nls.builtins.formatting.stylua.with({
+      b.formatting.fixjson.with({ filetypes = { "jsonc" } }),
+      b.formatting.stylua.with({
         condition = function(util)
+          print("has stylua.toml root file?", util.root_has_file("stylua.toml"))
           return util.root_has_file("stylua.toml")
         end,
       }),
-      nls.builtins.formatting.elm_format,
+      b.formatting.elm_format,
       -- nls.builtins.formatting.eslint_d,
-      nls.builtins.formatting.shfmt.with({
+      b.formatting.shfmt.with({
         extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
       }),
-      nls.builtins.diagnostics.shellcheck,
+      b.diagnostics.shellcheck,
       -- nls.builtins.diagnostics.markdownlint,
       -- nls.builtins.diagnostics.selene,
     },
