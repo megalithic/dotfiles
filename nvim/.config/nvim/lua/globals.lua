@@ -249,6 +249,10 @@ function mega.load(module, opts)
   end
 end
 
+function mega.safe_require(module)
+  mega.load(module, { safe = true })
+end
+
 function mega._create(f)
   table.insert(mega._store, f)
   return #mega._store
@@ -614,6 +618,37 @@ function mega.save_and_exec()
   end
 end
 
+---Find an item in a list
+---@generic T
+---@param haystack T[]
+---@param matcher fun(arg: T):boolean
+---@return T
+function mega.find(haystack, matcher)
+  local found
+  for _, needle in ipairs(haystack) do
+    if matcher(needle) then
+      found = needle
+      break
+    end
+  end
+  return found
+end
+
+---Determine if a value of any type is empty
+---@param item any
+---@return boolean
+function mega.empty(item)
+  if not item then
+    return true
+  end
+  local item_type = type(item)
+  if item_type == "string" then
+    return item == ""
+  elseif item_type == "table" then
+    return vim.tbl_isempty(item)
+  end
+end
+
 function mega.zetty(args)
   local default_opts = {
     cmd = "meeting",
@@ -859,9 +894,75 @@ function mega.showCursorHighlights()
     require("nvim-treesitter-playground.hl-info").show_hl_captures()
   else
     local synstack = vim.fn.synstack(vim.fn.line("."), vim.fn.col("."))
-    local lmap = vim.fn.map(synstack, 'synIDattr(v:val, "name")')
+    local lmap = vim.fn.map(synstack, "synIDattr(v:val, \"name\")")
     print(vim.fn.join(vim.fn.reverse(lmap), " "))
   end
+end
+
+mega.nightly = mega.has("nvim-0.6")
+
+do
+  local palette = {
+    pale_red = "#E06C75",
+    dark_red = "#be5046",
+    light_red = "#c43e1f",
+    dark_orange = "#FF922B",
+    green = "#98c379",
+    bright_yellow = "#FAB005",
+    light_yellow = "#e5c07b",
+    dark_blue = "#4e88ff",
+    magenta = "#c678dd",
+    comment_grey = "#5c6370",
+    grey = "#3E4556",
+    whitesmoke = "#626262",
+    bright_blue = "#51afef",
+    teal = "#15AABF",
+  }
+
+  mega.style = {
+    icons = {
+      error = "✗",
+      warn = "",
+      info = "",
+      hint = "",
+    },
+    lsp = {
+      colors = {
+        error = palette.pale_red,
+        warn = palette.dark_orange,
+        hint = palette.bright_yellow,
+        info = palette.teal,
+      },
+      kinds = {
+        Text = "",
+        Method = "",
+        Function = "",
+        Constructor = "",
+        Field = "ﰠ",
+        Variable = "",
+        Class = "ﴯ",
+        Interface = "",
+        Module = "",
+        Property = "ﰠ",
+        Unit = "塞",
+        Value = "",
+        Enum = "",
+        Keyword = "",
+        Snippet = "",
+        Color = "",
+        File = "",
+        Reference = "",
+        Folder = "",
+        EnumMember = "",
+        Constant = "",
+        Struct = "פּ",
+        Event = "",
+        Operator = "",
+        TypeParameter = "",
+      },
+    },
+    palette = palette,
+  }
 end
 
 return mega

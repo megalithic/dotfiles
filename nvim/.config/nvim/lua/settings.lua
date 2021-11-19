@@ -5,7 +5,7 @@ local colors = require("colors")
 local function setup_nvim_options()
   -- fallback in the event our statusline plugins fail to load
   set.statusline = table.concat({
-    "[ %2{mode()} ] ",
+    "[%2{mode()} ] ",
     "f", -- relative path
     "m", -- modified flag
     "r",
