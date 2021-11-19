@@ -9,6 +9,14 @@ set -euo pipefail
 # REQUIRES: `brew install "vitorgalvao/tiny-scripts/calm-notifications"`
 #
 
+command=""
+subcommand=""
+
+if ! which calm-notifications &>/dev/null; then
+	printf "$(tput setaf 1)✖ %s$(tput sgr0)\n" 'unable to run dnd; it requires `brew install "vitorgalvao/tiny-scripts/calm-notifications"`'
+	return 1
+fi
+
 command="$(basename "$0")"
 
 help() {
