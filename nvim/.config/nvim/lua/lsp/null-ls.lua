@@ -28,7 +28,6 @@ function M.setup()
       b.formatting.fixjson.with({ filetypes = { "jsonc" } }),
       b.formatting.stylua.with({
         condition = function(util)
-          print("has stylua.toml root file?", util.root_has_file("stylua.toml"))
           return util.root_has_file("stylua.toml")
         end,
       }),
