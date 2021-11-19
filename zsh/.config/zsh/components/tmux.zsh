@@ -39,7 +39,7 @@ if [[ -z $TMUX ]]; then
 # 		command ssh "$@"
 # 		tmux -2u set-window-option automatic-rename "on" >/dev/null
 # 	}
-# fi
+fi
 
 # # Automatically start tmux on remote server when logging in via SSH
 # if [ -n "$PS1" ] && [ -z "$TMUX" ] && [ -n "$SSH_CONNECTION" ]; then

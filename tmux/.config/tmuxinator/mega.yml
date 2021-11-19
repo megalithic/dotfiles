@@ -11,3 +11,6 @@ windows:
       - weechat
   - dots:
       - nvim
+  - ssh-dots:
+      - ssh seth-dev
+      - nvim
