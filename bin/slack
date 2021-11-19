@@ -21,6 +21,7 @@ help() {
 	printf -- "Subcommands:\n"
 	printf -- "    away               Set presence to away, and profile for being gone\n"
 	printf -- "    lunch              Set presence to away, and profile for lunch\n"
+	printf -- "    coffee             Set presence to away, and profile for coffee\n"
 	printf -- "    pair               Set DND to on, and profile for pairing\n"
 	printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
 	printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
@@ -102,6 +103,13 @@ function lunch() {
 	presence="presence=away"
 	set_all_presence $presence
 	profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
+	set_all_profile $profile
+}
+
+function coffee() {
+	presence="presence=away"
+	set_all_presence $presence
+	profile="profile=%7B%22status_text%22:%22..covfefe..%22,%22status_emoji%22:%22:coffee:%22%7D"
 	set_all_profile $profile
 }
 

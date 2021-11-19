@@ -6,7 +6,7 @@ local M = { cache = cache }
 
 local fn = require("hs.fnutils")
 
-local function dnd_cmd_updater(cmd)
+local function cmd_updater(cmd)
   if cmd ~= nil then
     return hs.execute(cmd, true)
   end
@@ -55,22 +55,25 @@ M.dndHandler = function(app, dndConfig, event)
   local mode = dndConfig.mode
 
   if dndConfig.enabled then
-    -- local slackCmd = os.getenv("HOME") ..  "/.dotfiles/bin/slack"
+    local slackCmd = os.getenv("HOME") .. "/.dotfiles/bin/slack"
     local dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 
     if event == running.events.created or event == running.events.launched then
       log.df("DND Handler: on/" .. mode)
 
-      dnd_cmd_updater(dndCmd .. " on")
+      cmd_updater(dndCmd .. " on")
+      cmd_updater(slackCmd .. " " .. mode)
 
       M.onAppQuit(app, function()
         log.df("DND Handler: off/back")
-        dnd_cmd_updater(dndCmd .. " off")
+        cmd_updater(dndCmd .. " off")
+        cmd_updater(slackCmd .. " back")
       end)
     elseif event == running.events.closed or event == running.events.terminated then
       M.onAppQuit(app, function()
         log.df("DND Handler: off/back")
-        dnd_cmd_updater(dndCmd .. " off")
+        cmd_updater(dndCmd .. " off")
+        cmd_updater(slackCmd .. " back")
       end)
     end
   end
