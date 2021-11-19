@@ -15,6 +15,13 @@ set -euo pipefail
 # Attribution: https://github.com/matthewfallshaw/utilities/blob/master/shell/slack-status
 #
 
+base_command=""
+subcommand=""
+options=""
+presence=""
+profile=""
+dnd=""
+
 base_command="$(basename "$0")"
 
 help() {
@@ -156,7 +163,7 @@ function back() {
 }
 
 subcommand=$1
-options=$2
+# options=$2
 
 case $subcommand in
 	'' | '-h' | '--help')
