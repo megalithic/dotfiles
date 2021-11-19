@@ -9,7 +9,7 @@ function M.setup()
     save_after_format = false,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-      b.formatting.prettierd.with({
+      b.formatting.prettier.with({
         filetypes = {
           -- "javascript",
           -- "javascriptreact",
@@ -24,11 +24,14 @@ function M.setup()
           "markdown",
           "markdown.mdx",
         },
+        condition = function()
+          return mega.executable("prettier")
+        end,
       }),
       b.formatting.fixjson.with({ filetypes = { "jsonc" } }),
       b.formatting.stylua.with({
         condition = function(util)
-          return util.root_has_file("stylua.toml")
+          return mega.executable("stylua") and util.root_has_file("stylua.toml")
         end,
       }),
       b.formatting.elm_format,
