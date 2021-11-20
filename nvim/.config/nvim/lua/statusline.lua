@@ -1,6 +1,7 @@
 --- =====================================================================
 --- Resources:
 --- =====================================================================
+--- 0. STOLE THIS FROM @akinsho; thank you for your amazing contributions
 --- 1. https://gabri.me/blog/diy-vim-statusline
 --- 2. https://github.com/elenapan/dotfiles/blob/master/config/nvim/statusline.vim
 --- 3. https://got-ravings.blogspot.com/2008/08/vim-pr0n-making-statuslines-that-own.html
@@ -27,17 +28,18 @@ local function colors()
   local normal_fg = H.get_hl("Normal", "fg")
   local pmenu_bg = H.get_hl("Pmenu", "bg")
   local string_fg = H.get_hl("String", "fg")
+  local modified_fg = H.get_hl("Error", "fg")
   local number_fg = H.get_hl("Number", "fg")
   local identifier_fg = H.get_hl("Identifier", "fg")
   local inc_search_bg = H.get_hl("Search", "bg")
 
-  local bg_color = H.alter_color(H.get_hl("Normal", "bg"), -16)
+  local bg_color = H.alter_color(H.get_hl("Normal", "bg"), -10)
 
   H.all({
     { "StMetadata", { guibg = bg_color, inherit = "Comment" } },
     { "StMetadataPrefix", { guibg = bg_color, inherit = "Comment", gui = "NONE" } },
     { "StIndicator", { guibg = bg_color, guifg = indicator_color } },
-    { "StModified", { guifg = string_fg, guibg = bg_color } },
+    { "StModified", { guifg = modified_fg, guibg = bg_color } },
     { "StGit", { guifg = P.light_red, guibg = bg_color } },
     { "StGreen", { guifg = string_fg, guibg = bg_color } },
     { "StBlue", { guifg = P.dark_blue, guibg = bg_color, gui = "bold" } },
