@@ -111,6 +111,7 @@ return {
   "itchyny/vim-gitbranch",
   "rhysd/git-messenger.vim",
   "sindrets/diffview.nvim",
+  "lewis6991/gitsigns.nvim",
   "dinhhuy258/git.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
   "pwntester/octo.nvim", -- https://github.com/ryansch/dotfiles/commit/2d0dc63bea2f921de1236c2800605551fb4b3041#diff-45b8a59e398d12063977c5b27e0d065150544908fd4ad8b3e10b2d003c5f4439R119-R246

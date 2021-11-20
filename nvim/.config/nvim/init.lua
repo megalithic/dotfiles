@@ -57,7 +57,7 @@ mega.load("settings")
 mega.load("lsp")
 mega.load("autocmds")
 mega.load("mappings")
-mega.load("megaline")
--- mega.load("statusline")
+-- mega.load("megaline")
+mega.load("statusline")
 
 -- vim:foldmethod=marker
