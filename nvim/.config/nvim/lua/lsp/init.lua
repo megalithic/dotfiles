@@ -442,9 +442,10 @@ local function on_attach(client, bufnr)
       --    80001 - require modules
       --    6133 - import is declared but never used
       --    2582 - cannot find name {describe, test}
-      --    2304 - cannot find name {jest, expect, beforeEach, afterEach}
+      --    2304 - cannot find name {expect, beforeEach, afterEach}
+      --    2503 - cannot find name {jest}
       -- }
-      filter_out_diagnostics_by_code = { 80001, 2582, 2304 },
+      filter_out_diagnostics_by_code = { 80001, 2582, 2304, 2503 },
 
       -- inlay hints
       auto_inlay_hints = true,
