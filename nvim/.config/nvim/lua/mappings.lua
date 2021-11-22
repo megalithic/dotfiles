@@ -113,10 +113,6 @@ nnoremap <leader>q :q<CR>
 " Background (n)vim
 vnoremap <C-z> <ESC>zv`<ztgv
 
-" Default to case insensitive search
-nnoremap / /\v
-vnoremap / /\v
-
 " always paste from 0 register to avoid pasting deleted text (from r/vim)
 xnoremap <silent> p p:let @"=@0<CR>
 
@@ -240,10 +236,6 @@ map("i", "?", "?<C-g>u")
 -- - Type the new word you want to replace it with
 -- - Smash that dot '.' multiple times to change all the other occurrences of the word
 -- It's quicker than searching or replacing. It's pure magic.
-
--- Default to case insensitive search
--- map("n", "/", "/\v")
--- map("v", "/", "/\v")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
 map("n", "n", "'Nn'[v:searchforward]", { expr = true })

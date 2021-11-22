@@ -46,6 +46,11 @@ return {
   "hrsh7th/cmp-emoji",
   "f3fora/cmp-spell",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
+  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  "tzachar/fuzzy.nvim",
+  "tzachar/cmp-fuzzy-path",
+  "tzachar/cmp-fuzzy-buffer",
+
   "L3MON4D3/LuaSnip",
   -- "megalithic/cmp-gitmoji",
   "rafamadriz/friendly-snippets",

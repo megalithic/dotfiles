@@ -1356,6 +1356,18 @@ local function setup_dash()
   end
 end
 
+local function setup_lsp_status()
+  local status = require("lsp-status")
+  status.config({
+    indicator_hint = "",
+    indicator_info = "",
+    indicator_errors = "✗",
+    indicator_warnings = "",
+    status_symbol = " ",
+  })
+  status.register_progress()
+end
+
 local function setup_misc()
   vim.g.fzf_gitignore_no_maps = true
   -- vim.g.blinds_guibg = tostring(require("colors").cs.bg0)
@@ -1400,6 +1412,7 @@ setup_filetype()
 setup_nvim_tree()
 setup_dd()
 setup_dash()
+setup_lsp_status()
 
 -- NOTE: this goes last!
 setup_misc()

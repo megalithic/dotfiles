@@ -226,7 +226,7 @@ local function setup_completion()
       ["<CR>"] = cmp.mapping.confirm({ select = false }),
       ["<C-e>"] = cmp.mapping.close(),
     },
-    sources = {
+    sources = cmp.config.sources({
       { name = "luasnip" },
       { name = "nvim_lua" },
       { name = "nvim_lsp" },
@@ -235,6 +235,8 @@ local function setup_completion()
       { name = "emoji" },
       { name = "path" },
       { name = "buffer" },
+      { name = "cmp_git" },
+
       -- {
       -- 	name = "buffer",
       -- 	opts = {
@@ -247,7 +249,10 @@ local function setup_completion()
       -- 		end,
       -- 	},
       -- },
-    },
+    }, {
+      { name = "fuzzy_buffer" },
+    }),
+
     formatting = {
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
@@ -268,14 +273,26 @@ local function setup_completion()
       end,
     },
   })
+  local search_sources = {
+    sources = cmp.config.sources({
+      { name = "nvim_lsp_document_symbol" },
+    }, {
+      { name = "fuzzy_buffer" },
+    }),
+  }
+  cmp.setup.cmdline("/", search_sources)
+  cmp.setup.cmdline("?", search_sources)
+  cmp.setup.cmdline(":", {
+    sources = cmp.config.sources({
+      { name = "fuzzy_path" },
+    }, {
+      { name = "cmdline" },
+    }),
+  })
+
   -- If you want insert `(` after select function or method item
   local cmp_autopairs = require("nvim-autopairs.completion.cmp")
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-  cmp.setup.cmdline(":", {
-    sources = {
-      { name = "cmdline" },
-    },
-  })
 end
 
 -- our on_attach function to pass to each language server config..
