@@ -234,7 +234,7 @@ function mega.load(module, opts)
 
   local ok, result = pcall(require, module)
 
-  if not ok and not opts.silent then
+  if not ok and (opts.silent ~= nil and not opts.silent) then
     -- REF: https://github.com/neovim/neovim/blob/master/src/nvim/lua/vim.lua#L421
     local level = L.ERROR
     local reason = mega.get_log_string("loading failed", level)
@@ -242,7 +242,7 @@ function mega.load(module, opts)
     mega.error(result, reason)
   end
 
-  if opts.safe == true then
+  if opts.safe ~= nil and opts.safe == true then
     return ok, result
   else
     return result

@@ -104,7 +104,16 @@ function away() {
 	presence="presence=away"
 	set_all_presence $presence
 	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
-	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+	# profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+	profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:afk:%22%7D"
+	set_all_profile $profile
+}
+
+function brb() {
+	presence="presence=away"
+	set_all_presence $presence
+	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
+	profile="profile=%7B%22status_text%22:%22..be%20right%20back..%22,%22status_emoji%22:%22:brb:%22%7D"
 	set_all_profile $profile
 }
 

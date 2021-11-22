@@ -314,7 +314,7 @@ local function setup_neoscroll()
 end
 
 local function setup_devicons()
-  require("nvim-web-devicons").setup({ default = false })
+  require("nvim-web-devicons").setup({ default = true })
 end
 
 local function setup_project_nvim()
