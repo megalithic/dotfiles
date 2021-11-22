@@ -68,10 +68,16 @@ alias top='top -o cpu'
 
 alias icat="kitty +kitten icat"
 
-alias back="slack back; dnd off"
-alias gone="slack gone; dnd on"
-alias away="slack away; dnd off"
-alias lunch="slack lunch; dnd off"
+# alias back="slack back; dnd off"
+# alias gone="slack gone; dnd on"
+# alias away="slack away; dnd off"
+# alias lunch="slack lunch; dnd off"
+alias back="slack back"
+alias gone="slack gone"
+alias away="slack away"
+alias lunch="slack lunch"
+alias brb="slack brb"
+alias coffee="slack coffee"
 
 # ZMV
 # -----------------------------------------------------------------------------

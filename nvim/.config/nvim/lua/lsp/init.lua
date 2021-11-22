@@ -301,6 +301,7 @@ local function on_attach(client, bufnr)
     client.config.flags.allow_incremental_sync = true
   end
 
+  require("lsp-status").on_attach(client)
   require("utils").lsp.format_setup(client, bufnr)
 
   require("lsp_signature").on_attach({
