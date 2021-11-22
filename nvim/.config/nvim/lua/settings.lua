@@ -317,6 +317,15 @@ local function setup_devicons()
   require("nvim-web-devicons").setup({ default = true })
 end
 
+local function setup_todo_comments()
+  require("todo-comments").setup({
+    highlight = {
+      exclude = { "org", "orgagenda", "vimwiki", "markdown" },
+    },
+  })
+  -- as.nnoremap("<leader>lt", "<Cmd>TodoTrouble<CR>", "trouble: todos")
+end
+
 local function setup_project_nvim()
   require("project_nvim").setup({
     manual_mode = true,
@@ -1413,6 +1422,7 @@ setup_nvim_tree()
 setup_dd()
 setup_dash()
 setup_lsp_status()
+setup_todo_comments()
 
 -- NOTE: this goes last!
 setup_misc()
