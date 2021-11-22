@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
-local map, bufmap, au = mega.map, mega.bufmap, mega.au
+local map, bufmap, bmap, au = mega.map, mega.bufmap, mega.bmap, mega.au
 local lspconfig = require("lspconfig")
 local luasnip = require("luasnip")
 local utils = require("utils")
@@ -324,15 +324,15 @@ local function on_attach(client, bufnr)
   if pcall(require, "fzf-lua") then
     --- # via fzf-lua
     --  * https://github.com/ibhagwan/fzf-lua/issues/39#issuecomment-897099304 (LSP async/sync)
-    bufmap("gd", "lua require('fzf-lua').lsp_definitions()")
-    bufmap("gD", "lua require('utils').lsp.preview('textDocument/definition')")
-    bufmap("gr", "lua require('fzf-lua').lsp_references()")
-    bufmap("gt", "lua require('fzf-lua').lsp_typedefs()")
-    bufmap("gs", "lua require('fzf-lua').lsp_document_symbols()")
-    bufmap("gw", "lua require('fzf-lua').lsp_workspace_symbols()")
-    bufmap("gi", "lua require('fzf-lua').lsp_implementations()")
-    bufmap("<leader>la", "lua require('fzf-lua').lsp_code_actions()")
-    bufmap("<leader>ca", "lua require('fzf-lua').lsp_code_actions()")
+    bmap("n", "gd", "lua require('fzf-lua').lsp_definitions()", { label = "lsp: go to definition" })
+    bmap("n", "gD", "lua require('utils').lsp.preview('textDocument/definition')")
+    bmap("n", "gr", "lua require('fzf-lua').lsp_references()", { label = "lsp: go to references" })
+    bmap("n", "gt", "lua require('fzf-lua').lsp_typedefs()", { label = "lsp: go to type definitions" })
+    bmap("n", "gs", "lua require('fzf-lua').lsp_document_symbols()", { label = "lsp: go to document symbols" })
+    bmap("n", "gw", "lua require('fzf-lua').lsp_workspace_symbols()", { label = "lsp: go to workspace symbols" })
+    bmap("n", "gi", "lua require('fzf-lua').lsp_implementations()", { label = "lsp: go to implementations" })
+    bmap("n", "<leader>la", "lua require('fzf-lua').lsp_code_actions()", { label = "lsp: go to code actions" })
+    bmap("n", "<leader>ca", "lua require('fzf-lua').lsp_code_actions()", { label = "lsp: go to code actions" })
   else
     -- # via defaults
     bufmap("gd", "lua vim.lsp.buf.definition()")
@@ -343,11 +343,11 @@ local function on_attach(client, bufnr)
   end
 
   --- # diagnostics navigation mappings
-  bufmap("[d", "lua vim.diagnostic.goto_prev()")
-  bufmap("]d", "lua vim.diagnostic.goto_next()")
+  bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })
+  bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
 
   --- # misc mappings
-  bufmap("<leader>ln", "lua require('utils').lsp.rename()")
+  bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
   bufmap(
     "<leader>ld",
     [[lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
@@ -361,7 +361,12 @@ local function on_attach(client, bufnr)
   end
 
   --- # trouble mappings
-  map("n", "<leader>lt", "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>")
+  map(
+    "n",
+    "<leader>lt",
+    "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>",
+    { label = "lsp: toggle LspTrouble for document" }
+  )
 
   --- # autocommands/autocmds
   au(

@@ -315,6 +315,8 @@ local function map(modes, lhs, rhs, opts)
   opts = vim.tbl_extend("force", map_opts, opts or {})
   local buffer = opts.buffer
   opts.buffer = nil
+  local label = opts.label
+  opts.label = nil
 
   -- this let's us pass in local lua functions without having to shove them on
   -- the global first!
@@ -341,9 +343,8 @@ local function map(modes, lhs, rhs, opts)
     end
 
     -- auto-register which-key item
-    if opts.label then
-      local ok, wk = mega.load("which-key", { silent = true, safe = true })
-      mega.P(wk)
+    if label and type(label) == "string" then
+      local ok, wk = mega.safe_require("which-key")
       if ok then
         wk.register({ [lhs] = opts.label }, { mode = modes[i] })
       end
@@ -356,53 +357,12 @@ function mega.map(mode, key, rhs, opts)
   return map(mode, key, rhs, opts)
 end
 
+-- create convenience method wrappers around `mega.map` for each mode
 for _, mode in ipairs({ "n", "o", "i", "x", "t" }) do
   mega[mode .. "map"] = function(...)
     mega.map(mode, ...)
   end
 end
-
--- function M.map(mode, key, rhs, opts, defaults)
--- 	return map(mode, key, rhs, opts, defaults)
--- end
-
--- function M.nmap(key, rhs, opts)
--- 	return map("n", key, rhs, opts)
--- end
--- function M.vmap(key, rhs, opts)
--- 	return map("v", key, rhs, opts)
--- end
--- function M.xmap(key, rhs, opts)
--- 	return map("x", key, rhs, opts)
--- end
--- function M.imap(key, rhs, opts)
--- 	return map("i", key, rhs, opts)
--- end
--- function M.omap(key, rhs, opts)
--- 	return map("o", key, rhs, opts)
--- end
--- function M.smap(key, rhs, opts)
--- 	return map("s", key, rhs, opts)
--- end
-
--- function M.nnoremap(key, rhs, opts)
--- 	return map("n", key, rhs, opts, { noremap = true })
--- end
--- function M.vnoremap(key, rhs, opts)
--- 	return map("v", key, rhs, opts, { noremap = true })
--- end
--- function M.xnoremap(key, rhs, opts)
--- 	return map("x", key, rhs, opts, { noremap = true })
--- end
--- function M.inoremap(key, rhs, opts)
--- 	return map("i", key, rhs, opts, { noremap = true })
--- end
--- function M.onoremap(key, rhs, opts)
--- 	return map("o", key, rhs, opts, { noremap = true })
--- end
--- function M.snoremap(key, rhs, opts)
--- 	return map("s", key, rhs, opts, { noremap = true })
--- end
 
 function mega.bmap(mode, lhs, rhs, opts)
   opts = opts or { noremap = true, silent = true, expr = false, buffer = 0 }
@@ -418,18 +378,12 @@ end
 -- this assumes the first buffer (0); refactor to accept a buffer
 -- TODO: _deprecate_ this immediately
 function mega.bufmap(lhs, rhs, mode, expr)
-  local bufnr = 0
-
-  mode = mode or "n"
-
-  if mode == "n" then
-    rhs = "<cmd>" .. rhs .. "<cr>"
+  if 0 == vim.api.nvim_get_current_buf() then
+    mega.log("`bufmap` is deprecated; please use `bmap` instead.")
   end
 
-  if bufnr == vim.api.nvim_get_current_buf() then
-    mega.log("`bufmap` is deprecated, please use `bmap` instead")
-  end
-  mega.map(mode, lhs, rhs, { noremap = true, silent = true, expr = expr, buffer = bufnr })
+  local opts = { noremap = true, silent = true, expr = expr, buffer = 0 }
+  mega.bmap(mode, lhs, rhs, opts)
 end
 
 function mega.au(s)
