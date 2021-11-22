@@ -19,7 +19,7 @@ local function colors()
   --- terminal emulators like kitty handle this by fetching nerd fonts elsewhere
   --- but this is not universal across terminals so should be avoided
 
-  local indicator_color = C.cs.bright_blue
+  local indicator_color = C.cs.blue
   local warning_fg = C.style.lsp.colors.warn
 
   local error_color = C.style.lsp.colors.error

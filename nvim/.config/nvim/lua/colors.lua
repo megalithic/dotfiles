@@ -29,6 +29,7 @@ local icons = {
 }
 
 local cs = {}
+cs.bg_dark = hsl("#273433")
 cs.bg0 = hsl("#323d43")
 cs.bg1 = hsl("#3c474d")
 cs.bg2 = hsl("#465258")
@@ -49,18 +50,18 @@ cs.orange = hsl("#e39b7b")
 cs.yellow = hsl("#d9bb80")
 cs.green = hsl("#a7c080")
 cs.bright_green = hsl("#6bc46d")
-cs.cyan = hsl("#87c095")
+cs.cyan = hsl("#87c095").darken(5)
 cs.blue = hsl("#83b6af")
-cs.bright_blue = cs.blue.lighten(10)
+cs.bright_blue = cs.blue.lighten(5)
 cs.dark_blue = cs.blue.darken(25)
 cs.aqua = cs.blue
 cs.purple = hsl("#d39bb6")
 cs.brown = hsl("#db9c5e")
+-- fiddling with these colours:
 cs.magenta = "#c678dd"
 cs.comment_grey = "#5c6370"
 cs.grey = "#3E4556"
 cs.whitesmoke = "#626262"
-cs.bright_blue = "#51afef"
 cs.teal = "#15AABF"
 cs.bright_yellow = "#FAB005"
 cs.light_yellow = "#e5c07b"

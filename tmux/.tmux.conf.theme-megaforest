@@ -58,7 +58,8 @@ setw -g window-status-bell-style 'fg=#323d43,bg=#6a7d8a,dim'
 # setw -g window-status-current-style none
 
 # - right -
-set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=cyan]%H:%M #[fg=colour250]#[bg=#3c474d]#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')#[bg=#323d43]#[fg=colour255] ⋮ #{cpu_percentage}"
+set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮ #[fg=blue]%H:%M #[fg=colour250]#[bg=#3c474d]#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')#[bg=#323d43]#[fg=colour255] ⋮ #{cpu_percentage}"
+# set -g status-right "#{prefix_highlight} #{dnd_status}#(~/.dotfiles/bin/battery -t -p)#[fg=colour255]⋮#[fg=blue] %a, %b %d #[fg=colour255]⋮ #[fg=cyan]%H:%M #[fg=colour250]#[bg=#3c474d]#[fg=colour244]UTC #[fg=colour248]#(TZ='/usr/share/zoneinfo/UTC' date '+%%H:%%M')#[bg=#323d43]#[fg=colour255] ⋮ #{cpu_percentage}"
 set -g status-right-length 200
 
 # vim: ft=tmux tw=0

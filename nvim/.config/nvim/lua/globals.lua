@@ -249,9 +249,20 @@ function mega.load(module, opts)
   end
 end
 
-function mega.safe_require(module)
-  mega.load(module, { safe = true })
+function mega.safe_require(module, opts)
+  opts = opts or { silent = false, safe = true }
+
+  return mega.load(module, opts)
 end
+
+-- function mega.safe_require(module, opts)
+--   opts = opts or { silent = false }
+--   local ok, result = pcall(require, module)
+--   if not ok and not opts.silent then
+--     vim.notify(result, L.ERROR, { title = string.format("Error requiring: %s", module) })
+--   end
+--   return ok, result
+-- end
 
 function mega._create(f)
   table.insert(mega._store, f)
