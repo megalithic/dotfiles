@@ -174,6 +174,9 @@ vim.opt.signcolumn = "yes"
 vim.opt.ruler = false
 vim.opt.cmdheight = 2 -- Set command line height to two lines
 vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
+vim.opt.lazyredraw = true -- should make scrolling faster
+vim.g.colorcolumn = 81 -- global var, mark column 81
+vim.opt.colorcolumn = tostring(vim.g.colorcolumn)
 --- This is used to handle markdown code blocks where the language might
 --- be set to a value that isn't equivalent to a vim filetype
 vim.g.markdown_fenced_languages = {
@@ -226,7 +229,7 @@ vim.opt.completeopt = { "menuone", "noselect" }
 vim.opt.hlsearch = false
 vim.opt.autowriteall = true -- automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
-vim.opt.laststatus = 2
+vim.opt.laststatus = 2 -- 2 = always show status line (filename, etc)
 vim.opt.termguicolors = true
 -----------------------------------------------------------------------------//
 -- Emoji {{{1
@@ -260,7 +263,7 @@ vim.opt.titlelen = 70
 -----------------------------------------------------------------------------//
 -- Utilities {{{1
 -----------------------------------------------------------------------------//
-vim.opt.showmode = false
+vim.opt.showmode = false -- show current mode (insert, etc) under the cmdline
 vim.opt.sessionoptions = {
   "blank",
   "globals",
