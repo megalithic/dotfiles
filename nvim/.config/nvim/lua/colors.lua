@@ -84,7 +84,7 @@ local style = {
       error = cs.pale_red,
       warn = cs.dark_orange,
       hint = cs.bright_yellow,
-      info = cs.teal,
+      info = cs.cyan,
     },
     kinds = {
       Text = "",

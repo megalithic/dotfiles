@@ -193,7 +193,7 @@ M.apps = {
     context = "spark",
     distraction = true,
     rules = {
-      { nil, 2, M.layout.centeredMedium },
+      { nil, 2, M.layout.centereLarge },
       { "INBOX", 2, M.layout.fullScreen },
     },
   },

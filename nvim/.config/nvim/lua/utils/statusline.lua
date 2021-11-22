@@ -416,9 +416,35 @@ end
 -----------------------------------------------------------------------------//
 -- Last search count
 -----------------------------------------------------------------------------//
+function M.search_result()
+  if vim.v.hlsearch == 0 then
+    return ""
+  end
+  local last_search = fn.getreg("/")
+  if not last_search or last_search == "" then
+    return ""
+  end
+  local result = fn.searchcount({ maxcount = 9999 })
+  if vim.tbl_isempty(result) then
+    return ""
+  end
+  -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
+
+  if result.incomplete == 1 then -- timed out
+    return printf("  ?/?? ")
+  elseif result.incomplete == 2 then -- max count exceeded
+    if result.total > result.maxcount and result.current > result.maxcount then
+      return printf("  >%d/>%d ", result.current, result.total)
+    elseif result.total > result.maxcount then
+      return printf("  %d/>%d ", result.current, result.total)
+    end
+  end
+  return printf("  %d/%d ", result.current, result.total)
+end
+
 -- FIXME: presently not working
 function M.search_count()
-  local result = fn.searchcount({ recompute = 0 })
+  local result = fn.searchcount()
   if vim.tbl_isempty(result) then
     return ""
   end
@@ -426,15 +452,15 @@ function M.search_count()
   --- using [%s] but this value seems flaky
   -- local search_reg = fn.getreg("@/")
   if result.incomplete == 1 then -- timed out
-    return printf(" ?/?? ")
+    return printf("  ?/?? ")
   elseif result.incomplete == 2 then -- max count exceeded
     if result.total > result.maxcount and result.current > result.maxcount then
-      return printf(" >%d/>%d ", result.current, result.total)
+      return printf("  >%d/>%d ", result.current, result.total)
     elseif result.total > result.maxcount then
-      return printf(" %d/>%d ", result.current, result.total)
+      return printf("  %d/>%d ", result.current, result.total)
     end
   end
-  return printf(" %d/%d ", result.current, result.total)
+  return printf("  %d/%d ", result.current, result.total)
 end
 
 ---@type number

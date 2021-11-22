@@ -193,7 +193,8 @@ function _G.__statusline()
     { item_if(file_modified, ctx.modified, "StModified"), 1 },
     { readonly_item, 2 },
     { item(utils.mode()), 0 },
-    { item(utils.search_count(), "StCount"), 1 },
+    -- { item(utils.search_count(), "StCount"), 1 },
+    { item(utils.search_result(), "StCount"), 1 },
     { dir_item, 3 },
     { parent_item, 2 },
     { file_item, 0 },
@@ -310,9 +311,9 @@ local function setup_autocommands()
     },
     --- NOTE: enable to update search count on cursor move
     -- {
-    --   events = {"CursorMoved", "CursorMovedI"},
-    --   targets = {"*"},
-    --   command = utils.update_search_count
+    --   events = { "CursorMoved", "CursorMovedI" },
+    --   targets = { "*" },
+    --   command = utils.update_search_count,
     -- },
     -- NOTE: user autocommands can't be joined into one autocommand
     {

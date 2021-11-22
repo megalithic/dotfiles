@@ -17,7 +17,6 @@ set -euo pipefail
 
 base_command=""
 subcommand=""
-options=""
 presence=""
 profile=""
 dnd=""
@@ -25,7 +24,7 @@ dnd=""
 base_command="$(basename "$0")"
 
 help() {
-	printf -- "Usage: "$base_command" <subcommand> <options>\n"
+	printf -- "Usage: %s <subcommand>\n" "$base_command"
 	printf -- "\n"
 	printf -- "Subcommands:\n"
 	printf -- "    away               Set presence to away, and profile for being gone\n"
@@ -186,6 +185,6 @@ case $subcommand in
 		;;
 	*)
 		shift
-		${subcommand} $@
+		${subcommand} "$@"
 		;;
 esac
