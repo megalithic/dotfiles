@@ -160,6 +160,7 @@ vim.opt.wildignore = {
 }
 vim.opt.wildoptions = "pum"
 vim.opt.pumblend = 3 -- Make popup window translucent
+vim.opt.pumheight = 20 -- completion menu height
 -----------------------------------------------------------------------------//
 -- Display {{{1
 -----------------------------------------------------------------------------//
@@ -176,12 +177,24 @@ vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 --- This is used to handle markdown code blocks where the language might
 --- be set to a value that isn't equivalent to a vim filetype
 vim.g.markdown_fenced_languages = {
-  "js=javascript",
-  "ts=typescript",
   "shell=sh",
   "bash=sh",
+  "zsh=sh",
   "console=sh",
+  "vim",
+  "lua",
+  "cpp",
+  "sql",
+  "elixir",
+  "python",
+  "javascript",
+  "typescript",
+  "js=javascript",
+  "ts=typescript",
+  "yaml",
+  "json",
 }
+vim.opt.winminwidth = 20
 -----------------------------------------------------------------------------//
 -- List chars {{{1
 -----------------------------------------------------------------------------//
@@ -208,7 +221,6 @@ vim.opt.shiftwidth = 2
 --- NOTE: remove this once 0.6 lands, it is now default
 vim.opt.joinspaces = false
 vim.opt.gdefault = true
-vim.opt.pumheight = 15
 vim.opt.confirm = true -- make vim prompt me to save before doing destructive things
 vim.opt.completeopt = { "menuone", "noselect" }
 vim.opt.hlsearch = false
@@ -341,5 +353,36 @@ vim.opt.exrc = true -- Allow project local vimrc files example .nvimrc see :h ex
 if mega.executable("nvr") then
   vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
   vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+end
+-----------------------------------------------------------------------------//
+-- Disable built-ins
+-----------------------------------------------------------------------------//
+-- Disable some in built plugins completely
+local disabled_built_ins = {
+  "2html_plugin",
+  "getscript",
+  "getscriptPlugin",
+  "gzip",
+  "loaded_tutor_mode_plugin",
+  "logipat",
+  "matchit",
+  "matchparen",
+  "netrw",
+  "netrwFileHandlers",
+  "netrwPlugin",
+  "netrwSettings",
+  "remote_plugins",
+  "rrhelper",
+  "spec",
+  "spellfile_plugin",
+  "tar",
+  "tarPlugin",
+  "vimball",
+  "vimballPlugin",
+  "zip",
+  "zipPlugin",
+}
+for _, plugin in pairs(disabled_built_ins) do
+  vim.g["loaded_" .. plugin] = 1
 end
 -- vim:foldmethod=marker

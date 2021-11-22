@@ -51,6 +51,7 @@ end
 
 R("globals")
 mega.load("preflight")
+-- mega.load("options")
 mega.load("opts")
 mega.load("colors").setup("megaforest")
 mega.load("settings")

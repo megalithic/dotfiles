@@ -464,6 +464,10 @@ return lush(function()
     GitGutterDelete({ RedSign }),
     GitGutterChangeDelete({ PurpleSign }),
 
+    GitSignsAdd({ GreenSign }),
+    GitSignsDelete({ BlueSign }),
+    GitSignsChange({ RedSign }),
+
     ---- :help gitcommit -------------------------------------------
 
     -- M.highlight("gitcommitComment", { fg = M.colors.gutter_fg_grey, gui = "italic,bold" })

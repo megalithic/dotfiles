@@ -1,7 +1,8 @@
 local fmt = string.format
 local api = vim.api
-local P = mega.style.palette
-local L = mega.style.lsp.colors
+local colors = require("colors")
+local P = colors.style.palette
+local L = colors.style.lsp.colors
 local levels = vim.log.levels
 
 local M = {}

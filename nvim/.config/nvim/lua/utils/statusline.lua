@@ -1,4 +1,5 @@
 local H = require("utils.highlights")
+local C = require("colors")
 
 local fn = vim.fn
 local api = vim.api
@@ -380,7 +381,7 @@ function M.diagnostic_info(context)
   if vim.tbl_isempty(vim.lsp.buf_get_clients(buf)) then
     return { error = {}, warning = {}, info = {} }
   end
-  local icons = mega.style.icons
+  local icons = C.style.icons
   return {
     error = { count = get_count(buf, "Error"), sign = icons.error },
     warning = { count = get_count(buf, "Warning"), sign = icons.warn },

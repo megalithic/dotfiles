@@ -51,9 +51,69 @@ cs.green = hsl("#a7c080")
 cs.bright_green = hsl("#6bc46d")
 cs.cyan = hsl("#87c095")
 cs.blue = hsl("#83b6af")
+cs.bright_blue = cs.blue.lighten(10)
+cs.dark_blue = cs.blue.darken(25)
 cs.aqua = cs.blue
 cs.purple = hsl("#d39bb6")
 cs.brown = hsl("#db9c5e")
+cs.magenta = "#c678dd"
+cs.comment_grey = "#5c6370"
+cs.grey = "#3E4556"
+cs.whitesmoke = "#626262"
+cs.bright_blue = "#51afef"
+cs.teal = "#15AABF"
+cs.bright_yellow = "#FAB005"
+cs.light_yellow = "#e5c07b"
+cs.dark_orange = "#FF922B"
+cs.pale_red = "#E06C75"
+cs.dark_red = "#be5046"
+cs.light_red = "#c43e1f"
+-- cs.dark_blue = "#4e88ff"
+-- cs.bright_blue = "#51afef"
+
+local style = {
+  icons = {
+    error = "✗",
+    warn = "",
+    info = "",
+    hint = "",
+  },
+  lsp = {
+    colors = {
+      error = cs.pale_red,
+      warn = cs.dark_orange,
+      hint = cs.bright_yellow,
+      info = cs.teal,
+    },
+    kinds = {
+      Text = "",
+      Method = "",
+      Function = "",
+      Constructor = "",
+      Field = "ﰠ",
+      Variable = "",
+      Class = "ﴯ",
+      Interface = "",
+      Module = "",
+      Property = "ﰠ",
+      Unit = "塞",
+      Value = "",
+      Enum = "",
+      Keyword = "",
+      Snippet = "",
+      Color = "",
+      File = "",
+      Reference = "",
+      Folder = "",
+      EnumMember = "",
+      Constant = "",
+      Struct = "פּ",
+      Event = "",
+      Operator = "",
+      TypeParameter = "",
+    },
+  },
+}
 
 local base = {
   black = cs.bg0,
@@ -127,6 +187,7 @@ return {
   base = base,
   status = status,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
+  style = style,
   setup = function(theme)
     -- mega.color_overrides = function()
     --   hi("Group", {guifg = cs.fg, guibg = cs.bg, gui = "", force = true})
