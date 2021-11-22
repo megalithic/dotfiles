@@ -392,7 +392,7 @@ end
 ---The lsp servers current status
 ---@return string
 function M.lsp_status()
-  local ok, lsp_status = mega.safe_require("lsp-status", { silent = true })
+  local ok, lsp_status = mega.load("lsp-status", { safe = true, silent = false })
   if ok and lsp_status then
     return lsp_status.status_progress()
   end
