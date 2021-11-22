@@ -348,7 +348,6 @@ local function map(modes, lhs, rhs, opts)
       if ok then
         wk.register({ [lhs] = opts.label }, { mode = modes[i] })
       end
-      opts.label = nil
     end
   end
 end

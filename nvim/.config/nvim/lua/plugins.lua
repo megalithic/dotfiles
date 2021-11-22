@@ -50,9 +50,8 @@ return {
   "tzachar/fuzzy.nvim",
   "tzachar/cmp-fuzzy-path",
   "tzachar/cmp-fuzzy-buffer",
-
+  "petertriho/cmp-git",
   "L3MON4D3/LuaSnip",
-  -- "megalithic/cmp-gitmoji",
   "rafamadriz/friendly-snippets",
   -- "github/copilot.vim",
   "nvim-lua/lsp-status.nvim",

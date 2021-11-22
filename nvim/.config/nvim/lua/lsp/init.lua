@@ -197,7 +197,10 @@ local function setup_completion()
     end
   end
 
+  --cmp source setups
+  require("cmp_git").setup()
   require("cmp_nvim_lsp").setup()
+
   cmp.setup({
     experimental = {
       -- ghost_text = {
@@ -275,7 +278,7 @@ local function setup_completion()
   })
   local search_sources = {
     sources = cmp.config.sources({
-      { name = "nvim_lsp_document_symbol" },
+      { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {
       { name = "fuzzy_buffer" },
     }),
