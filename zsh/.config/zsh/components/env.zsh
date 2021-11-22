@@ -74,8 +74,11 @@ export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 # export _Z_DATA="$HOME/.z-history"
 
 # -- bat
-export BAT_THEME="base16"
-export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat"
+#
+if ! type "$bat" > /dev/null; then
+  export BAT_THEME="Forest%20Night%20Italic"
+  export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat"
+fi
 
 # -- zsh plugins
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89"

@@ -15,6 +15,7 @@ if [ -n "$(command -v fzf)" ]; then
 	# zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 	export FZF_TMUX_HEIGHT='20%'
+	export FZF_TMUX=0
 	export FZF_DEFAULT_OPTS="
   --inline-info
   --select-1
@@ -26,7 +27,7 @@ if [ -n "$(command -v fzf)" ]; then
   --no-multi
   --no-border
   --preview-window=right:60%:wrap
-  --preview 'bat --theme="base16" --style=numbers,changes --color always {}'
+  --preview '{}'
   "
 
 	_fzf_megaforest() {
@@ -69,7 +70,7 @@ if [ -n "$(command -v fzf)" ]; then
 		FZF_CTRL_T_OPTS="--preview 'if [[ -f {} ]]; then $LIST_FILE_CONTENTS; elif [[ -d {} ]]; then $LIST_DIR_CONTENTS; fi'"
 
 		export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global --ignore-file .gitignore'
-		export FZF_CTRL_T_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global --ignore-file .gitignore'
+		export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 		export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --exclude 'Library'"
 	fi
 fi

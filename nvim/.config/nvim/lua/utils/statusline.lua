@@ -379,20 +379,21 @@ end
 function M.diagnostic_info(context)
   local buf = context.bufnum
   if vim.tbl_isempty(vim.lsp.buf_get_clients(buf)) then
-    return { error = {}, warning = {}, info = {} }
+    return { error = {}, warning = {}, info = {}, hint = {} }
   end
   local icons = C.style.icons
   return {
     error = { count = get_count(buf, "Error"), sign = icons.error },
     warning = { count = get_count(buf, "Warning"), sign = icons.warn },
     info = { count = get_count(buf, "Information"), sign = icons.info },
+    hint = { count = get_count(buf, "Hint"), sign = icons.hint },
   }
 end
 
 ---The lsp servers current status
 ---@return string
 function M.lsp_status()
-  local ok, lsp_status = mega.load("lsp-status", { safe = true, silent = false })
+  local ok, lsp_status = mega.safe_require("lsp-status")
   if ok and lsp_status then
     return lsp_status.status_progress()
   end
@@ -400,6 +401,7 @@ end
 
 ---The currently focused function
 ---@return string?
+-- FIXME: presently not working
 function M.current_function()
   return vim.b.lsp_current_function
 end
@@ -414,6 +416,7 @@ end
 -----------------------------------------------------------------------------//
 -- Last search count
 -----------------------------------------------------------------------------//
+-- FIXME: presently not working
 function M.search_count()
   local result = fn.searchcount({ recompute = 0 })
   if vim.tbl_isempty(result) then
