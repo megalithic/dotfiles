@@ -906,7 +906,7 @@ local function setup_fzf_lua()
       bat = {
         cmd = "bat",
         args = "--style=numbers,changes --color always",
-        theme = "Forest%20Night%20(Italic)",
+        theme = "Forest%20Night%20Italic",
         config = nil,
       },
     },
