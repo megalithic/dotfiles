@@ -27,7 +27,7 @@ if [ -n "$(command -v fzf)" ]; then
   --no-multi
   --no-border
   --preview-window=right:60%:wrap
-  --preview '{}'
+  --preview 'bat {}'
   "
 
 	_fzf_megaforest() {
