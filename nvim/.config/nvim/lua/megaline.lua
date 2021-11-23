@@ -1,4 +1,5 @@
-local colorscheme = require("colors")
+local C = require("colors")
+local utils = require("utils.statusline")
 local hi, au = mega.highlight, mega.au
 local fn, _, bo, wo, set, api = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o, vim.api
 
@@ -11,33 +12,33 @@ local c = {}
 local s = {}
 
 function statusline.set_colors()
-  c.statusline_bg = colorscheme.cs.bg1
+  c.statusline_bg = C.cs.bg1
 
-  c.normal_fg = colorscheme.cs.green
+  c.normal_fg = C.cs.green
   c.normal_bg = c.statusline_bg
-  c.insert_fg = colorscheme.cs.yellow
+  c.insert_fg = C.cs.yellow
   c.insert_bg = c.statusline_bg
-  c.replace_fg = colorscheme.cs.orange
+  c.replace_fg = C.cs.orange
   c.replace_bg = c.statusline_bg
-  c.visual_fg = colorscheme.cs.red
+  c.visual_fg = C.cs.red
   c.replace_bg = c.statusline_bg
 
-  c.secondary_fg = colorscheme.cs.grey2
+  c.secondary_fg = C.cs.grey2
   c.secondary_bg = c.statusline_bg
 
-  c.tertiary_fg = colorscheme.cs.grey0
+  c.tertiary_fg = C.cs.grey0
   c.tertiary_bg = c.statusline_bg
 
-  c.warning = colorscheme.status.warning_status
-  c.error = colorscheme.status.error_status
+  c.warning = C.status.warning_status
+  c.error = C.status.error_status
 
   hi("StatusLine", { guibg = c.statusline_bg })
 
   hi("StItem", { guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold" })
   hi("StItem2", { guifg = c.secondary_fg, guibg = c.secondary_bg })
   hi("StItem3", { guifg = c.tertiary_fg, guibg = c.tertiary_bg })
-  hi("StItemInfo", { guifg = colorscheme.cs.blue, guibg = c.normal_bg })
-  hi("StItemSearch", { guifg = colorscheme.cs.cyan, guibg = c.normal_bg })
+  hi("StItemInfo", { guifg = C.cs.blue, guibg = c.normal_bg })
+  hi("StItemSearch", { guifg = C.cs.cyan, guibg = c.normal_bg })
 
   hi("StSep", { guifg = c.normal_bg, guibg = c.normal_fg })
   hi("StSep2", { guifg = c.secondary_bg, guibg = c.secondary_fg })
@@ -49,7 +50,7 @@ function statusline.set_colors()
   hi("StWarn", { guifg = c.normal, guibg = c.warning })
   hi("StWarnSep", { guifg = c.statusline_bg, guibg = c.warning })
 
-  hi("StInactive", { guifg = colorscheme.cs.bg4, gui = "italic" })
+  hi("StInactive", { guifg = C.cs.bg4, gui = "italic" })
   s.inactive = { color = "%#StInactive#", no_padding = true }
 
   s.mode_block = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true, no_padding = true }
@@ -71,11 +72,11 @@ local function get_lsp_status()
   lsp_status.register_progress()
   lsp_status.config({
     status_symbol = "",
-    indicator_errors = colorscheme.icons.statusline_error,
-    indicator_warnings = colorscheme.icons.statusline_warning,
-    indicator_info = colorscheme.icons.statusline_information,
-    indicator_hint = colorscheme.icons.statusline_hint,
-    indicator_ok = colorscheme.icons.statusline_ok,
+    indicator_errors = C.icons.statusline_error,
+    indicator_warnings = C.icons.statusline_warning,
+    indicator_info = C.icons.statusline_information,
+    indicator_hint = C.icons.statusline_hint,
+    indicator_ok = C.icons.statusline_ok,
     -- spinner_frames = {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
     spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
   })
@@ -137,27 +138,49 @@ local function get_mode_status()
   local mode = api.nvim_get_mode().mode
   mode_highlight(mode)
   local modeMap = {
+    -- ["n"] = "NORMAL",
+    -- ["niI"] = "NORMAL",
+    -- ["niR"] = "NORMAL",
+    -- ["niV"] = "NORMAL",
+    -- ["v"] = "VISUAL",
+    -- ["V"] = "VLINE",
+    -- [""] = "VBLOCK",
+    -- ["s"] = "SELECT",
+    -- ["S"] = "SLINE",
+    -- [""] = "SBLOCK",
+    -- ["i"] = "INSERT",
+    -- ["ic"] = "INSERT",
+    -- ["ix"] = "INSERT",
+    -- ["R"] = "REPLACE",
+    -- ["Rc"] = "REPLACE",
+    -- ["Rx"] = "REPLACE",
+    -- ["Rv"] = "VREPLACE",
+    -- ["c"] = "COMMAND",
+    -- ["cv"] = "EX",
+    -- ["ce"] = "EX",
+    -- ["r"] = "R",
+    -- ["rm"] = "MORE",
+    -- ["r?"] = "CONFIRM",
+    -- ["!"] = "SHELL",
+    -- ["t"] = "TERMINAL",
+
     ["n"] = "NORMAL",
-    ["niI"] = "NORMAL",
-    ["niR"] = "NORMAL",
-    ["niV"] = "NORMAL",
+    ["no"] = "N·OPERATOR PENDING ",
     ["v"] = "VISUAL",
-    ["V"] = "VLINE",
-    [""] = "VBLOCK",
+    ["V"] = "V·LINE",
+    [""] = "V·BLOCK",
     ["s"] = "SELECT",
-    ["S"] = "SLINE",
-    [""] = "SBLOCK",
+    ["S"] = "S·LINE",
+    ["^S"] = "S·BLOCK",
     ["i"] = "INSERT",
-    ["ic"] = "INSERT",
-    ["ix"] = "INSERT",
     ["R"] = "REPLACE",
-    ["Rc"] = "REPLACE",
-    ["Rx"] = "REPLACE",
-    ["Rv"] = "VREPLACE",
+    ["Rv"] = "V·REPLACE",
+    ["Rx"] = "C·REPLACE",
+    ["Rc"] = "C·REPLACE",
     ["c"] = "COMMAND",
-    ["cv"] = "EX",
+    ["cv"] = "VIM EX",
     ["ce"] = "EX",
-    ["r"] = "R",
+    ["r"] = "PROMPT",
     ["rm"] = "MORE",
     ["r?"] = "CONFIRM",
     ["!"] = "SHELL",
@@ -221,7 +244,7 @@ local function get_vcs_status()
   if #result == 0 then
     return ""
   end
-  return with_icon(table.concat(result, " "), colorscheme.icons.git_symbol)
+  return with_icon(table.concat(result, " "), C.icons.git_symbol)
 end
 
 local function get_fileicon()
@@ -294,7 +317,7 @@ local function get_lineinfo()
   -- perc_sep = "\uf44e"             "
   --
   local item = "ℓ"
-  return "" .. item .. " %l:%c ⋮ %p%%/%L%*"
+  return "" .. item .. " %l:%c/%L%*"
 end
 
 -- local function get_container_info()
@@ -302,6 +325,39 @@ end
 -- end
 
 local function statusline_active()
+  local curwin = vim.g.statusline_winid or 0
+  local curbuf = vim.api.nvim_win_get_buf(curwin)
+
+  -- TODO: reduce the available space whenever we add
+  -- a component so we can use it to determine what to add
+  local available_space = vim.api.nvim_win_get_width(curwin)
+
+  local ctx = {
+    bufnum = curbuf,
+    winid = curwin,
+    bufname = vim.fn.bufname(curbuf),
+    preview = vim.wo[curwin].previewwindow,
+    readonly = vim.bo[curbuf].readonly,
+    filetype = vim.bo[curbuf].ft,
+    buftype = vim.bo[curbuf].bt,
+    modified = vim.bo[curbuf].modified,
+    fileformat = vim.bo[curbuf].fileformat,
+    shiftwidth = vim.bo[curbuf].shiftwidth,
+    expandtab = vim.bo[curbuf].expandtab,
+  }
+
+  local plain = utils.is_plain(ctx)
+  local file_modified = utils.modified(ctx, "●")
+  local inactive = vim.api.nvim_get_current_win() ~= curwin
+  local focused = vim.g.vim_in_focus or true
+  local minimal = plain or inactive or not focused
+
+  local segments = utils.file(ctx, minimal)
+  local dir, parent, file = segments.dir, segments.parent, segments.file
+  local dir_item = utils.item(dir.item, dir.hl, dir.opts)
+  local parent_item = utils.item(parent.item, parent.hl, parent.opts)
+  local file_item = utils.item(file.item, file.hl, file.opts)
+
   local mode_block = get_mode_block()
   local vcs_status = get_vcs_status()
   local search = search_result()
@@ -316,12 +372,19 @@ local function statusline_active()
     seg(vcs_status, s.section_2, vcs_status ~= ""),
     -- seg(container_info, s.section_3, container_info ~= ""),
     seg(get_filepath(false), bo.modified and s.err or s.section_3),
+    seg(dir.item),
+    seg(parent.item),
+    seg(file.item),
+    -- dir_item,
+    -- parent_item,
+    -- file_item,
     seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), bo.modified),
-    seg(string.format("%s", colorscheme.icons.readonly_symbol), s.err, not bo.modifiable),
+    seg(string.format("%s", C.icons.readonly_symbol), s.err, not bo.modifiable),
     seg("%w", nil, wo.previewwindow),
     seg("%r", nil, bo.readonly),
     seg("%q", nil, bo.buftype == "quickfix"),
     "%=",
+    -- middle section for whatever we want..
     "%=",
     seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
     seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),

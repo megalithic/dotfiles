@@ -169,20 +169,29 @@ function _G.__statusline()
   -- show a minimal statusline with only the mode and file component
   ----------------------------------------------------------------------------//
   if minimal then
-    add({ readonly_item, 1 }, { dir_item, 3 }, { parent_item, 2 }, { file_item, 0 })
+    add(
+      { item_if(file_modified, ctx.modified, "StModified"), 1 },
+      { readonly_item, 1 },
+      { dir_item, 3 },
+      { parent_item, 2 },
+      { file_item, 0 }
+    )
     return display(statusline, available_space)
   end
   -----------------------------------------------------------------------------//
   -- Variables
   -----------------------------------------------------------------------------//
-  local status = vim.b.gitsigns_status_dict or {}
-  local updates = vim.g.git_statusline_updates or {}
-  local ahead = updates.ahead and tonumber(updates.ahead) or 0
-  local behind = updates.behind and tonumber(updates.behind) or 0
-
-  -- Github notifications
-  local ghn_ok, ghn = pcall(require, "github-notifications")
-  local notifications = ghn_ok and ghn.statusline_notification_count() or ""
+  local function git_status()
+    local result = {}
+    local branch = vim.fn["gitbranch#name"]()
+    if branch ~= nil and branch:len() > 0 then
+      table.insert(result, branch)
+    end
+    if #result == 0 then
+      return ""
+    end
+    return table.concat(result, " ")
+  end
 
   -- LSP Diagnostics
   local diagnostics = utils.diagnostic_info(ctx)
@@ -206,17 +215,6 @@ function _G.__statusline()
         prefix_color = "StIdentifier",
       }),
       4,
-    },
-    -- Local plugin dev indicator
-    {
-      item_if(available_space > 100 and "local dev" or "", vim.env.DEVELOPING ~= nil, "StComment", {
-        prefix = "",
-        padding = "none",
-        before = "  ",
-        prefix_color = "StWarning",
-        small = 1,
-      }),
-      2,
     },
     { separator },
     -----------------------------------------------------------------------------//
@@ -249,21 +247,27 @@ function _G.__statusline()
       }),
       4,
     },
-    { item(notifications, "StTitle"), 3 },
-    -- Git Status
-    { item(status.head, "StBlue", { prefix = "", prefix_color = "StGit" }), 1 },
-    { item(status.changed, "StTitle", { prefix = "", prefix_color = "StWarning" }), 3 },
-    { item(status.removed, "StTitle", { prefix = "", prefix_color = "StError" }), 3 },
-    { item(status.added, "StTitle", { prefix = "", prefix_color = "StGreen" }), 3 },
     {
-      item(
-        ahead,
-        "StTitle",
-        { prefix = "⇡", prefix_color = "StGreen", after = behind > 0 and "" or " ", before = "" }
-      ),
-      5,
+      item_if(diagnostics.hint.count, diagnostics.hint, "StHint", {
+        prefix = diagnostics.hint.sign,
+      }),
+      4,
     },
-    { item(behind, "StTitle", { prefix = "⇣", prefix_color = "StNumber", after = " " }), 5 },
+    -- Git Status
+    { item(git_status(), "StBlue", { prefix = "", prefix_color = "StGit" }), 1 },
+    -- { item(status.head, "StBlue", { prefix = "", prefix_color = "StGit" }), 1 },
+    -- { item(status.changed, "StTitle", { prefix = "", prefix_color = "StWarning" }), 3 },
+    -- { item(status.removed, "StTitle", { prefix = "", prefix_color = "StError" }), 3 },
+    -- { item(status.added, "StTitle", { prefix = "", prefix_color = "StGreen" }), 3 },
+    -- {
+    --   item(
+    --     ahead,
+    --     "StTitle",
+    --     { prefix = "⇡", prefix_color = "StGreen", after = behind > 0 and "" or " ", before = "" }
+    --   ),
+    --   5,
+    -- },
+    -- { item(behind, "StTitle", { prefix = "⇣", prefix_color = "StNumber", after = " " }), 5 },
     -- Current line number/total line number,  alternatives 
     {
       utils.line_info({
@@ -271,6 +275,7 @@ function _G.__statusline()
         prefix_color = "StMetadataPrefix",
         current_hl = "StTitle",
         total_hl = "StComment",
+        col_hl = "StComment",
         sep_hl = "StComment",
       }),
       7,
@@ -291,24 +296,24 @@ end
 
 local function setup_autocommands()
   mega.augroup("CustomStatusline", {
-    { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
-    { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
+    -- { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
+    -- { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
     {
       events = { "VimEnter", "ColorScheme" },
       targets = { "*" },
       command = colors,
     },
-    {
-      events = { "BufReadPre" },
-      modifiers = { "++once" },
-      targets = { "*" },
-      command = utils.git_updates,
-    },
-    {
-      events = { "DirChanged" },
-      targets = { "*" },
-      command = utils.git_update_toggle,
-    },
+    -- {
+    --   events = { "BufReadPre" },
+    --   modifiers = { "++once" },
+    --   targets = { "*" },
+    --   command = utils.git_updates,
+    -- },
+    -- {
+    --   events = { "DirChanged" },
+    --   targets = { "*" },
+    --   command = utils.git_update_toggle,
+    -- },
     --- NOTE: enable to update search count on cursor move
     -- {
     --   events = { "CursorMoved", "CursorMovedI" },
@@ -316,14 +321,14 @@ local function setup_autocommands()
     --   command = utils.update_search_count,
     -- },
     -- NOTE: user autocommands can't be joined into one autocommand
-    {
-      events = { "User NeogitStatusRefresh" },
-      command = utils.git_updates_refresh,
-    },
-    {
-      events = { "User FugitiveChanged" },
-      command = utils.git_updates_refresh,
-    },
+    -- {
+    --   events = { "User NeogitStatusRefresh" },
+    --   command = utils.git_updates_refresh,
+    -- },
+    -- {
+    --   events = { "User FugitiveChanged" },
+    --   command = utils.git_updates_refresh,
+    -- },
   })
 end
 

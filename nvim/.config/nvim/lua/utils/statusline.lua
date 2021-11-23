@@ -21,6 +21,7 @@ local plain_filetypes = {
   "ctrlsf",
   "minimap",
   "Trouble",
+  "fzf",
   "tsplayground",
   "coc-explorer",
   "NvimTree",
@@ -94,6 +95,7 @@ local exceptions = {
     ["vim-plug"] = "vim plug",
     vimwiki = "vim wiki",
     help = "help",
+    fzf = "fzf-lua",
     undotree = "UndoTree",
     octo = "Octo",
     ["coc-explorer"] = "Coc Explorer",
@@ -298,13 +300,15 @@ function M.line_info(opts)
   local prefix = opts.prefix or "L"
   local prefix_color = opts.prefix_color
   local current_hl = opts.current_hl
+  local col_hl = opts.col_hl
   local total_hl = opts.total_hl
   local sep_hl = opts.total_hl
 
   local current = fn.line(".")
   local last = fn.line("$")
+  local col = ":%c"
 
-  local length = strwidth(prefix .. current .. sep .. last)
+  local length = strwidth(prefix .. current .. col .. sep .. last)
   return {
     table.concat({
       " ",
@@ -317,6 +321,8 @@ function M.line_info(opts)
       sep,
       M.wrap(total_hl),
       last,
+      M.wrap(col_hl),
+      col,
       " ",
     }),
     length,
@@ -367,13 +373,9 @@ end
 ---@param severity string
 ---@return number
 local function get_count(buf, severity)
-  if mega.nightly then
-    local s = vim.diagnostic.severity[severity:upper()]
-    return #vim.diagnostic.get(buf, { severity = s })
-  end
-  --- FIXME: remove  this once 0.6 or 5.1 is stable
-  ---@diagnostic disable-next-line: deprecated
-  return vim.lsp.diagnostic.get_count(buf, severity)
+  local s = vim.diagnostic.severity[severity:upper()]
+
+  return #vim.diagnostic.get(buf, { severity = s })
 end
 
 function M.diagnostic_info(context)
@@ -385,7 +387,7 @@ function M.diagnostic_info(context)
   return {
     error = { count = get_count(buf, "Error"), sign = icons.error },
     warning = { count = get_count(buf, "Warning"), sign = icons.warn },
-    info = { count = get_count(buf, "Information"), sign = icons.info },
+    info = { count = get_count(buf, "Info"), sign = icons.info },
     hint = { count = get_count(buf, "Hint"), sign = icons.hint },
   }
 end
