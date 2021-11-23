@@ -15,7 +15,7 @@ if [ -n "$(command -v fzf)" ]; then
 	# zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 	export FZF_TMUX_HEIGHT='20%'
-	export FZF_TMUX=0
+	# export FZF_TMUX=0
 	export FZF_DEFAULT_OPTS="
   --inline-info
   --select-1

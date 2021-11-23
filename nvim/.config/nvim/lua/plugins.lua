@@ -89,7 +89,7 @@ return {
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
-  "folke/todo-comments.nvim",
+  -- "folke/todo-comments.nvim",
 
   --
   -- (text objects) --

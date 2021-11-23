@@ -1422,7 +1422,7 @@ setup_nvim_tree()
 setup_dd()
 setup_dash()
 setup_lsp_status()
-setup_todo_comments()
+-- setup_todo_comments()
 
 -- NOTE: this goes last!
 setup_misc()

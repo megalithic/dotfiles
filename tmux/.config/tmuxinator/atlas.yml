@@ -7,9 +7,11 @@ on_project_start: gohome && dowork
 tmux_options: -2
 windows:
   - code:
-      - ssh seth-dev
-      - cd ~/code/atlas
-      - eval $(desk load); nvim
+      panes:
+        - code:
+          - ssh seth-dev
+          - cd ~/code/atlas
+          - eval $(desk load); nvim
   - services:
       layout: vertical
       panes:
