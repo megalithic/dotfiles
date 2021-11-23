@@ -99,7 +99,7 @@ vim.opt.formatoptions = {
 -----------------------------------------------------------------------------//
 -- Folds {{{1
 -----------------------------------------------------------------------------//
--- vim.opt.foldenable = true -- enable folding
+vim.opt.foldenable = true -- enable folding
 vim.opt.foldtext = "v:lua.mega.folds()"
 vim.opt.foldopen = vim.opt.foldopen + "search"
 vim.opt.foldlevelstart = 6 -- open most folds by default

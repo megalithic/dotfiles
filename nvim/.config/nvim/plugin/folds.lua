@@ -90,6 +90,7 @@ function mega.folds()
   if is_ignored() then
     return fn.foldtext()
   end
+
   local end_text = fn.getline(vim.v.foldend)
   local start_text = fn.getline(vim.v.foldstart)
   local line_end = get_fold_end(end_text)

@@ -1137,7 +1137,7 @@ local function setup_alpha()
       "<cmd>lua require('fzf-lua').live_grep({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
     ),
     button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
-    button("p", "  Update plugins", "<cmd>lua require('global').plugins()<CR>"),
+    button("p", "  Update plugins", "<cmd>lua mega.sync_plugins()<CR>"),
     button("q", "  Quit", "<cmd>qa<CR>"),
   }
 
