@@ -332,6 +332,7 @@ map("n", "<leader>D", "<cmd>DashWord<CR>")
 -- # paq
 -- map("n", "<F5>", mega.sync_plugins())
 map("n", "<F5>", "<cmd>lua mega.sync_plugins()<cr>")
+
 -- # fzf-lua
 map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>", "fzf: find files")
 map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>", "fzf: find buffers")
@@ -347,6 +348,24 @@ map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zet
 
 -- # nvim-tree
 map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")
+
+-- # vim-test
+nmap("<leader>tf", "<cmd>TestFile<CR>", "test: file")
+nmap("<leader>tn", "<cmd>TestNearest<CR>", "test: nearest")
+nmap("<leader>tl", "<cmd>TestLast<CR>", "test: last")
+nmap("<leader>ts", "<cmd>TestSuite --verbose<CR>", "test: suite")
+nmap("<leader>ta", "<cmd>TestSuite --verbose<CR>", "test: suite")
+nmap("<leader>tp", "<cmd>:AV<CR>", "project: open alternate file")
+
+-- nmap <silent> <leader>tf :TestFile<CR>
+-- nmap <silent> <leader>tt :TestVisit<CR>
+-- nmap <silent> <leader>tn :TestNearest<CR>
+-- nmap <silent> <leader>tl :TestLast<CR>
+-- nmap <silent> <leader>tv :TestVisit<CR>
+-- nmap <silent> <leader>ta :TestSuite<CR>
+-- nmap <silent> <leader>tP :A<CR>
+-- nmap <silent> <leader>tp :AV<CR>
+-- nmap <silent> <leader>to :copen<CR>
 
 -- # commands
 

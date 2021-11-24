@@ -234,11 +234,12 @@ local function setup_completion()
       { name = "nvim_lua" },
       { name = "nvim_lsp" },
       { name = "orgmode" },
-      { name = "spell" },
+      -- { name = "spell" },
       { name = "emoji" },
       { name = "path" },
-      { name = "buffer" },
       { name = "cmp_git" },
+    }, {
+      { name = "buffer" },
     }),
 
     formatting = {
