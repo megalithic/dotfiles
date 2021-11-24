@@ -179,19 +179,23 @@ exec([[
   " Set cursor shape based on mode (:h termcap-cursor-shape)
   " Vertical bar in insert mode
   let &t_SI = "\e[6 q"
-  " Underline in replace mode
+  " underline in replace mode
   let &t_SR = "\e[4 q"
-  " Block in normal mode
+  " block in normal mode
   let &t_EI = "\e[2 q"
 
-  " Inform vim how to enable undercurl in wezterm
+  " inform vim how to enable undercurl in wezterm
   let &t_Cs = "\e[60m"
-  " Inform vim how to disable undercurl in wezterm (this disables all underline modes)
+  " inform vim how to disable undercurl in wezterm (this disables all underline modes)
   let &t_Ce = "\e[24m"
 
   " supposed to be undercurl things?
   let &t_Cs = "\e[4:3m"
   let &t_Ce = "\e[4:0m"
+
+  " for kitty background things:
+  " https://sw.kovidgoyal.net/kitty/faq/?highlight=send_text#using-a-color-theme-with-a-background-color-does-not-work-well-in-vim
+  let &t_ut=''
 ]])
 --[[
 -- Install neovim-nightly on mac:

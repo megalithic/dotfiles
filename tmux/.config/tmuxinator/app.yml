@@ -7,8 +7,10 @@ on_project_start: gohome && dowork
 tmux_options: -2
 windows:
   - chats:
-    - tmux link-window -s mega:chats -t 0 && exit
-    - ls
+      layout: main-vertical
+      panes:
+        - chats:
+          - tmux link-window -s mega:chats -t 0 && exit
   - code:
       layout: main-vertical
       panes:

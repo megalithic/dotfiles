@@ -1,5 +1,5 @@
 local C = require("colors")
-local utils = require("utils.statusline")
+-- local utils = require("utils.statusline")
 local hi, au = mega.highlight, mega.au
 local fn, _, bo, wo, set, api = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o, vim.api
 
@@ -10,6 +10,23 @@ set.statusline = "%!v:lua.mega.statusline.setup()"
 
 local c = {}
 local s = {}
+
+local curwin = vim.g.statusline_winid or 0
+local curbuf = vim.api.nvim_win_get_buf(curwin)
+
+local ctx = {
+  bufnum = curbuf,
+  winid = curwin,
+  bufname = vim.fn.bufname(curbuf),
+  preview = vim.wo[curwin].previewwindow,
+  readonly = vim.bo[curbuf].readonly,
+  filetype = vim.bo[curbuf].ft,
+  buftype = vim.bo[curbuf].bt,
+  modified = vim.bo[curbuf].modified,
+  fileformat = vim.bo[curbuf].fileformat,
+  shiftwidth = vim.bo[curbuf].shiftwidth,
+  expandtab = vim.bo[curbuf].expandtab,
+}
 
 function statusline.set_colors()
   c.statusline_bg = C.cs.bg1
@@ -82,7 +99,7 @@ local function get_lsp_status()
   })
 
   if #vim.lsp.buf_get_clients() > 0 then
-    return lsp_status.status()
+    return lsp_status.status(ctx.bufnum)
   end
   return ""
 end
@@ -325,38 +342,21 @@ end
 -- end
 
 local function statusline_active()
-  local curwin = vim.g.statusline_winid or 0
-  local curbuf = vim.api.nvim_win_get_buf(curwin)
+  -- -- TODO: reduce the available space whenever we add
+  -- -- a component so we can use it to determine what to add
+  -- local available_space = vim.api.nvim_win_get_width(curwin)
 
-  -- TODO: reduce the available space whenever we add
-  -- a component so we can use it to determine what to add
-  local available_space = vim.api.nvim_win_get_width(curwin)
+  -- local plain = utils.is_plain(ctx)
+  -- local file_modified = utils.modified(ctx, "●")
+  -- local inactive = vim.api.nvim_get_current_win() ~= curwin
+  -- local focused = vim.g.vim_in_focus or true
+  -- local minimal = plain or inactive or not focused
 
-  local ctx = {
-    bufnum = curbuf,
-    winid = curwin,
-    bufname = vim.fn.bufname(curbuf),
-    preview = vim.wo[curwin].previewwindow,
-    readonly = vim.bo[curbuf].readonly,
-    filetype = vim.bo[curbuf].ft,
-    buftype = vim.bo[curbuf].bt,
-    modified = vim.bo[curbuf].modified,
-    fileformat = vim.bo[curbuf].fileformat,
-    shiftwidth = vim.bo[curbuf].shiftwidth,
-    expandtab = vim.bo[curbuf].expandtab,
-  }
-
-  local plain = utils.is_plain(ctx)
-  local file_modified = utils.modified(ctx, "●")
-  local inactive = vim.api.nvim_get_current_win() ~= curwin
-  local focused = vim.g.vim_in_focus or true
-  local minimal = plain or inactive or not focused
-
-  local segments = utils.file(ctx, minimal)
-  local dir, parent, file = segments.dir, segments.parent, segments.file
-  local dir_item = utils.item(dir.item, dir.hl, dir.opts)
-  local parent_item = utils.item(parent.item, parent.hl, parent.opts)
-  local file_item = utils.item(file.item, file.hl, file.opts)
+  -- local segments = utils.file(ctx, minimal)
+  -- local dir, parent, file = segments.dir, segments.parent, segments.file
+  -- local dir_item = utils.item(dir.item, dir.hl, dir.opts)
+  -- local parent_item = utils.item(parent.item, parent.hl, parent.opts)
+  -- local file_item = utils.item(file.item, file.hl, file.opts)
 
   local mode_block = get_mode_block()
   local vcs_status = get_vcs_status()
@@ -372,9 +372,9 @@ local function statusline_active()
     seg(vcs_status, s.section_2, vcs_status ~= ""),
     -- seg(container_info, s.section_3, container_info ~= ""),
     seg(get_filepath(false), bo.modified and s.err or s.section_3),
-    seg(dir.item),
-    seg(parent.item),
-    seg(file.item),
+    -- seg(dir.item),
+    -- seg(parent.item),
+    -- seg(file.item),
     -- dir_item,
     -- parent_item,
     -- file_item,

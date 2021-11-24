@@ -155,6 +155,15 @@ local function setup_treesitter()
       extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
       max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
     },
+    incremental_selection = {
+      enable = true,
+      keymaps = {
+        init_selection = "<CR>",
+        scope_incremental = "<CR>",
+        node_incremental = "<TAB>",
+        node_decremental = "<S-TAB>",
+      },
+    },
     -- textsubjects = {
     --   enable = false,
     --   keymaps = {
@@ -544,6 +553,7 @@ local function setup_autopairs()
   npairs.setup({
     check_ts = true,
     close_triple_quotes = true,
+    -- FIXME: what is this?
     -- ts_config = {
     -- 	lua = { "string" },
     -- 	-- it will not add pair on that treesitter node
