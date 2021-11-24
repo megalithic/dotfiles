@@ -239,21 +239,6 @@ local function setup_completion()
       { name = "path" },
       { name = "buffer" },
       { name = "cmp_git" },
-
-      -- {
-      -- 	name = "buffer",
-      -- 	opts = {
-      -- 		get_bufnrs = function()
-      -- 			local bufs = {}
-      -- 			for _, win in ipairs(api.nvim_list_wins()) do
-      -- 				bufs[api.nvim_win_get_buf(win)] = true
-      -- 			end
-      -- 			return vim.tbl_keys(bufs)
-      -- 		end,
-      -- 	},
-      -- },
-    }, {
-      { name = "fuzzy_buffer" },
     }),
 
     formatting = {
@@ -280,14 +265,14 @@ local function setup_completion()
     sources = cmp.config.sources({
       { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {
-      { name = "fuzzy_buffer" },
+      { name = "buffer" },
     }),
   }
   cmp.setup.cmdline("/", search_sources)
   cmp.setup.cmdline("?", search_sources)
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
-      { name = "fuzzy_path" },
+      { name = "path" },
     }, {
       { name = "cmdline" },
     }),

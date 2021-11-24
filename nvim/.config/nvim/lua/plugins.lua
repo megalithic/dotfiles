@@ -50,7 +50,7 @@ return {
   "tzachar/fuzzy.nvim",
   "tzachar/cmp-fuzzy-path",
   "tzachar/cmp-fuzzy-buffer",
-  "petertriho/cmp-git",
+  "petertriho/cmp-git", -- https://github.com/petertriho/cmp-git#github-private-repositories
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   -- "github/copilot.vim",
@@ -76,7 +76,7 @@ return {
   -- "nvim-treesitter/nvim-treesitter-textobjects",
   "nvim-treesitter/playground",
   -- "RRethy/nvim-treesitter-textsubjects",
-  -- "mfussenegger/nvim-ts-hint-textobject",
+  "mfussenegger/nvim-treehopper",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",

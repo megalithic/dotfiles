@@ -237,6 +237,7 @@ local function setup_treesitter()
       "eelixir",
     },
   })
+  require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
 end
 
 local function setup_indent_blankline()
@@ -1412,7 +1413,7 @@ setup_numb()
 setup_orgmode()
 setup_package_info()
 setup_projectionist()
-setup_project_nvim()
+-- setup_project_nvim()
 setup_vim_test()
 setup_bullets()
 setup_trouble()
