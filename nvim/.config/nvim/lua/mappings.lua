@@ -1,5 +1,8 @@
 local cmd = vim.cmd
-local map, command, exec = mega.map, mega.command, mega.exec
+local map = mega.map
+local command = mega.command
+-- NOTE: all convenience mode mappers are on the _G global; so no local assigns
+local exec = mega.exec
 
 --[[
   ╭────────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -25,16 +28,11 @@ local map, command, exec = mega.map, mega.command, mega.exec
 exec("silent! unmap [%", true)
 exec("silent! unmap ]%", true)
 
-map("n", "<Tab>", "%", { noremap = false })
-map("s", "<Tab>", "%", { noremap = false })
-map("v", "<Tab>", "%", { noremap = false })
-map("x", "<Tab>", "%", { noremap = false })
-map("o", "<Tab>", "%", { noremap = false })
-
--- map("x", "i<Tab>", "<Plug>(matchup-i%)", { noremap = false })
--- map("o", "i<Tab>", "<Plug>(matchup-i%)", { noremap = false })
--- map("x", "a<Tab>", "<Plug>(matchup-a%)", { noremap = false })
--- map("o", "a<Tab>", "<Plug>(matchup-a%)", { noremap = false })
+nmap("<Tab>", "%")
+smap("<Tab>", "%")
+vmap("<Tab>", "%")
+xmap("<Tab>", "%")
+omap("<Tab>", "%")
 
 -- [overrides/remaps mappings] ---------------------------------------------------------
 --
@@ -146,31 +144,26 @@ nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<C
 -- - ref: https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/mappings.lua
 
 -- Convenient Line operations
-map("n", "H", "^")
-map("n", "L", "$")
-map("v", "L", "g_")
+nmap("H", "^")
+nmap("L", "$")
+vmap("L", "g_")
 -- TODO: no longer needed; nightly adds these things?
 -- map("n", "Y", '"+y$')
 -- map("n", "Y", "yg_") -- copy to last non-blank char of the line
 
 -- Remap VIM 0 to first non-blank character
-map("n", "0", "^")
+nmap("0", "^")
 
-map("n", "q", "<Nop>")
-map("n", "Q", "@q")
-map("v", "Q", ":norm @q<CR>")
+nmap("q", "<Nop>")
+nmap("Q", "@q")
+vnoremap("Q", ":norm @q<CR>")
 
 -- Open file with wildmenu pum;
-map("n", "<leader>e", ":vnew **/<TAB>")
+nmap("<leader>e", ":vnew **/<TAB>")
 
 -- Map <leader>o & <leader>O to newline without insert mode
-map("n", "<leader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>", { noremap = true, silent = true })
-map(
-  "n",
-  "<leader>O",
-  ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>",
-  { noremap = true, silent = true }
-)
+nnoremap("<leader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>")
+nnoremap("<leader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1))<CR>")
 
 -- REF/HT:
 -- https://github.com/ibhagwan/nvim-lua/blob/main/lua/keymaps.lua#L121-L139
@@ -196,38 +189,37 @@ map(
 -- map("v", "d", '"_d', { noremap = true })
 
 -- Join / Split Lines
-map("n", "J", "mzJ`z") -- Join lines and keep our cursor stabilized
-map("n", "S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
+nnoremap("J", "mzJ`z") -- Join lines and keep our cursor stabilized
+nnoremap("S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
 
--- TODO: merge the two remaps of j/k below
 -- Jumplist mutations and dealing with word wrapped lines
-map("n", "k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
-map("n", "j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
+nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
+nnoremap("j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
 
 -- Clear highlights
 cmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
 
 -- Fast previous buffer switching
-map("n", "<leader><leader>", "<C-^>", { noremap = true })
+nnoremap("<leader><leader>", "<C-^>")
 
 -- Keep line in middle of buffer when searching
-map("n", "n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { noremap = true, expr = true })
-map("n", "N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { noremap = true, expr = true })
+nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true, force = true })
+nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true, force = true })
 
 -- Readline bindings (command)
 local rl_bindings = {
-  { lhs = "<c-a>", rhs = "<home>", opts = { noremap = true } },
-  { lhs = "<c-e>", rhs = "<end>", opts = { noremap = true } },
+  { lhs = "<c-a>", rhs = "<home>" },
+  { lhs = "<c-e>", rhs = "<end>" },
 }
 for _, binding in ipairs(rl_bindings) do
-  map("c", binding.lhs, binding.rhs, binding.opts)
+  cnoremap(binding.lhs, binding.rhs, binding.opts or {})
 end
 
 -- Undo breakpoints
-map("i", ",", ",<C-g>u")
-map("i", ".", ".<C-g>u")
-map("i", "!", "!<C-g>u")
-map("i", "?", "?<C-g>u")
+imap(",", ",<C-g>u")
+imap(".", ".<C-g>u")
+imap("!", "!<C-g>u")
+imap("?", "?<C-g>u")
 
 -- nnoremap cn *``cgn
 -- nnoremap cN *``cgN
@@ -238,28 +230,21 @@ map("i", "?", "?<C-g>u")
 -- It's quicker than searching or replacing. It's pure magic.
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-map("n", "n", "'Nn'[v:searchforward]", { expr = true })
-map("x", "n", "'Nn'[v:searchforward]", { expr = true })
-map("o", "n", "'Nn'[v:searchforward]", { expr = true })
-map("n", "N", "'nN'[v:searchforward]", { expr = true })
-map("x", "N", "'nN'[v:searchforward]", { expr = true })
-map("o", "N", "'nN'[v:searchforward]", { expr = true })
+nnoremap("n", "'Nn'[v:searchforward]", { expr = true, force = true })
+xnoremap("n", "'Nn'[v:searchforward]", { expr = true, force = true })
+onoremap("n", "'Nn'[v:searchforward]", { expr = true, force = true })
+nnoremap("N", "'nN'[v:searchforward]", { expr = true, force = true })
+xnoremap("N", "'nN'[v:searchforward]", { expr = true, force = true })
+onoremap("N", "'nN'[v:searchforward]", { expr = true, force = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
-map("c", "<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
-map("c", "<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
+cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
+cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 
 -- [custom mappings] -----------------------------------------------------------
 
--- # simple REPLs -- TODO: find something more robust?
-map("n", "<leader>rsh", [[:12sp | term<cr>]])
-map("n", "<leader>rpy", [[:12so | e term://python3 -q | wincmd k<cr>]])
-map("n", "<leader>rex", [[:12sp | e term://iex | wincmd k<cr>]])
-map("n", "<leader>rjs", [[:12sp | e term://node | wincmd k<cr>]])
-
 -- Things 3
-exec([[command! -nargs=* Things :silent !open "things:///add?show-quick-entry=true&title=%:t&notes=%<cr>"]], true)
-map("n", "<Leader>T", "<cmd>Things<CR>")
+nnoremap("<Leader>T", "<cmd>!open \"things:///add?show-quick-entry=true&title=%:t&notes=%\"<cr>", { expr = true })
 
 -- Spelling
 -- map("n", "<leader>s", "z=e") -- Correct current word
@@ -267,26 +252,25 @@ map("n", "<leader>s", "b1z=e") -- Correct previous word
 map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
 -- # find and replace in multiple files
-map("n", "<Leader>R", "<cmd>cfdo %s/<C-r>s//g | update<cr>")
+nnoremap("<Leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 
 -- # save and execute vim/lua file
-map("n", "<Leader>x", mega.save_and_exec)
+nmap("<Leader>x", mega.save_and_exec)
 
 -- # open uri under cursor:
-map("n", "go", mega.open_uri)
-
-map("n", "zS", mega.showCursorHighlights)
+nmap("go", mega.open_uri)
+nnoremap("zS", mega.showCursorHighlights)
 
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # golden_size
-map("n", "<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
+nmap("<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
 
 -- # git-related (fugitive, et al)
-map("n", "<Leader>gb", "<cmd>GitMessenger<CR>")
+nmap("<Leader>gb", "<cmd>GitMessenger<CR>")
 -- map("n", "<Leader>gh", "<cmd>GBrowse<CR>")
 -- map("v", "<Leader>gh", ":'<,'>GBrowse<CR>")
-map("n", "<Leader>gd", "<cmd>DiffviewOpen<CR>")
+nmap("<Leader>gd", "<cmd>DiffviewOpen<CR>")
 
 -- # gist
 -- vim.g.gist_open_url = true
@@ -294,7 +278,7 @@ map("n", "<Leader>gd", "<cmd>DiffviewOpen<CR>")
 -- map("v", "<Leader>gG", ":Gist -po<CR>")
 
 -- # markdown-related
-map("n", "<Leader>mp", "<cmd>MarkdownPreview<CR>")
+nnoremap("<Leader>mp", "<cmd>MarkdownPreview<CR>")
 
 -- # slash
 exec(
@@ -331,8 +315,8 @@ map("n", "<leader>zn", "<cmd>ZkNew {title = vim.fn.input('Title: ')}<cr>")
 -- bufmap("n", "<leader>zj", ":ZkNew {dir = 'journal/daily'}<CR>")
 
 -- # treesitter
-map("o", "m", ":<C-U>lua require('tsht').nodes()<CR>")
-map("v", "m", ":'<'>lua require('tsht').nodes()<CR>", { noremap = true })
+omap("m", ":<C-U>lua require('tsht').nodes()<CR>")
+vnoremap("m", ":'<'>lua require('tsht').nodes()<CR>")
 
 -- # easy-align
 -- start interactive EasyAlign in visual mode (e.g. vipga)

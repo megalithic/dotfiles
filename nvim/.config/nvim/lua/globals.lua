@@ -312,10 +312,16 @@ local function make_mapper(mode, o)
   ---@param rhs string|function
   ---@param opts table
   return function(lhs, rhs, opts)
-    assert(lhs ~= mode, fmt("The lhs should not be the same as mode for %s", lhs))
     assert(type(rhs) == "string" or type(rhs) == "function", "\"rhs\" should be a function or string")
     -- If the label is all that was passed in, set the opts automagically
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
+
+    local force = opts.force or false
+    opts.force = nil
+
+    if not force then
+      assert(not force and lhs ~= mode, fmt("The lhs should not be the same as mode for %s", lhs))
+    end
 
     local buffer = opts.buffer
     opts.buffer = nil
@@ -357,14 +363,18 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s" }) do
 
   -- A recursive mapping
   mega[mode .. "map"] = make_mapper(mode, map_opts)
+  _G[mode .. "map"] = mega[mode .. "map"]
   -- A non-recursive mapping
   mega[mode .. "noremap"] = make_mapper(mode, noremap_opts)
+  _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
 
 -- A recursive commandline mapping
 mega.cmap = make_mapper("c", { noremap = false, silent = false })
+_G["cmap"] = mega.cmap
 -- A non-recursive commandline mapping
 mega.cnoremap = make_mapper("c", { noremap = true, silent = false })
+_G["cnoremap"] = mega.cnoremap
 
 ---Factory function to create multi mode map functions
 ---e.g. `mega.map({"n", "s"}, lhs, rhs, opts)`
