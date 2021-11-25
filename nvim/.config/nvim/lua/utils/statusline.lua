@@ -17,6 +17,7 @@ local function get_toggleterm_name(_, buf)
 end
 
 local plain_filetypes = {
+  "alpha",
   "help",
   "ctrlsf",
   "minimap",
@@ -49,6 +50,7 @@ local exceptions = {
     quickfix = "",
   },
   filetypes = {
+    alpha = "",
     org = "",
     orgagenda = "",
     ["himalaya-msg-list"] = "",
@@ -77,6 +79,7 @@ local exceptions = {
     ["dap-repl"] = "",
   },
   names = {
+    alpha = "Alpha",
     orgagenda = "Org",
     ["himalaya-msg-list"] = "Inbox",
     mail = "Mail",
@@ -386,7 +389,7 @@ function M.diagnostic_info(context)
   local icons = C.style.icons
   return {
     error = { count = get_count(buf, "Error"), sign = icons.error },
-    warning = { count = get_count(buf, "Warning"), sign = icons.warn },
+    warning = { count = get_count(buf, "Warn"), sign = icons.warn },
     info = { count = get_count(buf, "Info"), sign = icons.info },
     hint = { count = get_count(buf, "Hint"), sign = icons.hint },
   }

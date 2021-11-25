@@ -36,19 +36,20 @@ exec(
   false
 )
 
-augroup("auto-cursor", {
-  -- When editing a file, always jump to the last known cursor position.
-  -- Don't do it for commit messages, when the position is invalid, or when
-  -- inside an event handler (happens when dropping a file on gvim).
-  events = { "BufReadPost" },
-  targets = { "*" },
-  command = function()
-    local pos = fn.line([['"]])
-    if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
-      vim.cmd('keepjumps normal g`"')
-    end
-  end,
-})
+-- augroup("auto-cursor", {
+--   -- When editing a file, always jump to the last known cursor position.
+--   -- Don't do it for commit messages, when the position is invalid, or when
+--   -- inside an event handler (happens when dropping a file on gvim).
+--   events = { "BufReadPost" },
+--   targets = { "*" },
+--   command = function()
+--     local pos = fn.line([['"]])
+--     if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
+--       vim.cmd('keepjumps normal g`"')
+--     end
+--   end,
+-- })
+
 augroup("auto-mkdir", {
   events = { "BufNewFile" },
   targets = { "*" },
@@ -62,14 +63,6 @@ augroup("paq", {
     command = [[luafile %]],
   },
 })
-
--- augroup("focus", {
---   {
---     events = { "TermOpen" },
---     targets = { "*" },
---     command = "silent setlocal norelativenumber nospell nonumber nocursorcolumn nocursorline",
---   },
--- })
 
 augroup("yank_highlighted_region", {
   {

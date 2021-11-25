@@ -1021,9 +1021,13 @@ local function setup_which_key()
         f = "create a new file",
         s = "create new file in a split",
       },
-      E = "show token under the cursor",
+      -- E = "show token under the cursor",
+      f = {
+        name = "+fzf",
+        ["<space>"] = "add space below",
+      },
       p = {
-        name = "+packer",
+        name = "+paq",
         c = "clean",
         s = "sync",
       },
@@ -1049,10 +1053,13 @@ local function setup_which_key()
         name = "+only",
         n = "close all other buffers",
       },
+      -- t = {
+      --   name = "+tab",
+      --   c = "tab close",
+      --   n = "tab edit current buffer",
+      -- },
       t = {
-        name = "+tab",
-        c = "tab close",
-        n = "tab edit current buffer",
+        name = "+test",
       },
       sw = "swap buffers horizontally",
       so = "source current buffer",
