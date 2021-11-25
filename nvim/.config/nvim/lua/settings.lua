@@ -1384,15 +1384,15 @@ local function setup_dash()
 end
 
 local function setup_lsp_status()
-  local status = require("lsp-status")
-  status.config({
+  local lsp_status = require("lsp-status")
+  lsp_status.register_progress()
+  lsp_status.config({
     indicator_hint = "",
     indicator_info = "",
     indicator_errors = "✗",
     indicator_warnings = "",
     status_symbol = " ",
   })
-  status.register_progress()
 end
 
 local function setup_misc()
@@ -1402,6 +1402,7 @@ end
 
 setup_nvim_options()
 setup_which_key()
+setup_lsp_status()
 setup_treesitter()
 setup_golden_size()
 setup_devicons()
@@ -1439,7 +1440,6 @@ setup_filetype()
 setup_nvim_tree()
 setup_dd()
 setup_dash()
-setup_lsp_status()
 -- setup_todo_comments()
 
 -- NOTE: this goes last!
