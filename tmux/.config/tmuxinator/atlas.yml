@@ -8,7 +8,6 @@ tmux_options: -2
 windows:
   - chats:
     - tmux link-window -s mega:chats -t 0 && exit
-    - ls
   - code:
       layout: main-vertical
       panes:

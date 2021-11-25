@@ -353,8 +353,8 @@ map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")
 nmap("<leader>tf", "<cmd>TestFile<CR>", "test: file")
 nmap("<leader>tn", "<cmd>TestNearest<CR>", "test: nearest")
 nmap("<leader>tl", "<cmd>TestLast<CR>", "test: last")
-nmap("<leader>ts", "<cmd>TestSuite --verbose<CR>", "test: suite")
-nmap("<leader>ta", "<cmd>TestSuite --verbose<CR>", "test: suite")
+nmap("<leader>ts", "<cmd>TestSuite<CR>", "test: suite")
+nmap("<leader>ta", "<cmd>TestSuite<CR>", "test: suite")
 nmap("<leader>tp", "<cmd>:AV<CR>", "project: open alternate file")
 
 -- nmap <silent> <leader>tf :TestFile<CR>
