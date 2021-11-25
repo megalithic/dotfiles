@@ -147,16 +147,92 @@ function M.remove_wins()
 end
 
 -- # [ diagnostics ] -----------------------------------------------------------
--- FIXME: this pulls in incorrect diagnostics from other buffers. ¯\_(ツ)_/¯
-function M.lsp.show_diagnostics(ns)
-  ns = ns or vim.api.nvim_create_namespace("diagnostics")
-  vim.schedule(function()
-    local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-    local bufnr = vim.api.nvim_get_current_buf()
-    local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
-    vim.diagnostic.show(ns, bufnr, diagnostics, { virtual_text = true })
-  end)
+local serverity_map = {
+  "DiagnosticError",
+  "DiagnosticWarn",
+  "DiagnosticInfo",
+  "DiagnosticHint",
+}
+local icon_map = {
+  "  ",
+  "  ",
+  "  ",
+  "  ",
+}
+
+local function source_string(source)
+  return string.format("  [%s]", source)
 end
+
+M.wrap_lines = function(input, width)
+  local output = {}
+  for _, line in ipairs(input) do
+    line = line:gsub("\r", "")
+    while #line > width + 2 do
+      local trimmed_line = string.sub(line, 1, width)
+      local index = trimmed_line:reverse():find(" ")
+      if index == nil or index > #trimmed_line / 2 then
+        break
+      end
+      table.insert(output, string.sub(line, 1, width - index))
+      line = vim.o.showbreak .. string.sub(line, width - index + 2, #line)
+    end
+    table.insert(output, line)
+  end
+
+  return output
+end
+M.lsp.line_diagnostics = function()
+  local width = 70
+  local bufnr, lnum = unpack(vim.fn.getcurpos())
+  local diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr, lnum - 1, {})
+  if vim.tbl_isempty(diagnostics) then
+    return
+  end
+
+  local lines = {}
+
+  for _, diagnostic in ipairs(diagnostics) do
+    table.insert(
+      lines,
+      icon_map[diagnostic.severity] .. " " .. diagnostic.message:gsub("\n", " ") .. source_string(diagnostic.source)
+    )
+  end
+
+  local floating_bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_option(floating_bufnr, "filetype", "diagnosticpopup")
+
+  for i, diagnostic in ipairs(diagnostics) do
+    local message_length = #lines[i] - #source_string(diagnostic.source)
+    vim.api.nvim_buf_add_highlight(floating_bufnr, -1, serverity_map[diagnostic.severity], i - 1, 0, message_length)
+    vim.api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
+  end
+
+  local winnr = vim.api.nvim_open_win(floating_bufnr, false, {
+    relative = "cursor",
+    width = width,
+    height = #M.wrap_lines(lines, width - 1),
+    row = 1,
+    col = 1,
+    style = "minimal",
+    border = vim.g.floating_window_border_dark,
+  })
+
+  vim.lsp.util.close_preview_autocmd(
+    { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "InsertCharPre" },
+    winnr
+  )
+end
+-- function M.lsp.show_diagnostics(ns)
+--   ns = ns or vim.api.nvim_create_namespace("diagnostics")
+--   vim.schedule(function()
+--     local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+--     local bufnr = vim.api.nvim_get_current_buf()
+--     local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
+--     vim.diagnostic.show(ns, bufnr, diagnostics, { virtual_text = true })
+--   end)
+-- end
 
 -- function M.lsp.refresh_diagnostics()
 --   vim.diagnostic.setloclist({ open = false })
@@ -197,7 +273,6 @@ function M.lsp.format_setup(client, buf)
   local ft = vim.api.nvim_buf_get_option(buf, "filetype")
   local nls = mega.load("lsp.null-ls")
   local efm_formatted = require("lsp.efm").formatted_languages
-
 
   local enable = false
   if nls.has_formatter(ft) then

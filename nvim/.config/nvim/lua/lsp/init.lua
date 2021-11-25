@@ -14,15 +14,7 @@ set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 local function setup_diagnostics()
   -- LSP signs default
   fn.sign_define("DiagnosticSignError", { texthl = "DiagnosticSignError", text = "", numhl = "DiagnosticSignError" })
-  fn.sign_define(
-    "DiagnosticSignWarning",
-    { texthl = "DiagnosticSignWarning", text = "", numhl = "DiagnosticSignWarning" }
-  )
   fn.sign_define("DiagnosticSignWarn", { texthl = "DiagnosticSignWarn", text = "", numhl = "DiagnosticSignWarn" })
-  fn.sign_define(
-    "DiagnosticSignInformation",
-    { texthl = "DiagnosticSignInformation", text = "", numhl = "DiagnosticSignInformation" }
-  )
   fn.sign_define("DiagnosticSignInfo", { texthl = "DiagnosticSignInfo", text = "", numhl = "DiagnosticSignInfo" })
   fn.sign_define("DiagnosticSignHint", { texthl = "DiagnosticSignHint", text = "", numhl = "DiagnosticSignHint" })
 
@@ -337,10 +329,11 @@ local function on_attach(client, bufnr)
 
   --- # misc mappings
   bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
-  bufmap(
-    "<leader>ld",
-    [[lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
-  )
+  bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
+  -- bufmap(
+  --   "<leader>ld",
+  --   [[lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
+  -- )
   bufmap("K", "lua vim.lsp.buf.hover()")
   bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
   bufmap("<leader>lf", "lua require('utils').lsp.format()")
@@ -358,9 +351,10 @@ local function on_attach(client, bufnr)
   )
 
   --- # autocommands/autocmds
-  au(
-    [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
-  )
+  -- au(
+  --   [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
+  -- )
+  au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.line_diagnostics()]])
   -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
   au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
   -- au([[CursorMoved,BufLeave <buffer> lua vim.diagnostic.hide(0)]])
