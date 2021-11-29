@@ -65,7 +65,7 @@ local function colors()
       "StFilenameInactive",
       { guifg = C.cs.comment_grey, guibg = bg_color, gui = "italic,bold" },
     },
-    { "StModeNormal", { guibg = bg_color, guifg = C.cs.whitesmoke, gui = "NONE" } },
+    { "StModeNormal", { guibg = bg_color, guifg = C.cs.bg5, gui = "NONE" } },
     { "StModeInsert", { guibg = bg_color, guifg = C.cs.green, gui = "bold" } },
     { "StModeVisual", { guibg = bg_color, guifg = C.cs.magenta, gui = "bold" } },
     { "StModeReplace", { guibg = bg_color, guifg = C.cs.dark_red, gui = "bold" } },
@@ -305,7 +305,7 @@ local function setup_autocommands()
     { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
     { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
     {
-      events = { "VimEnter", "ColorScheme" },
+      events = { "ColorScheme" },
       targets = { "*" },
       command = colors,
     },

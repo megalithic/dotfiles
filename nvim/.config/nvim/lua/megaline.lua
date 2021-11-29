@@ -1,12 +1,21 @@
 local C = require("colors")
 -- local utils = require("utils.statusline")
 local hi, au = mega.highlight, mega.au
-local fn, _, bo, wo, set, api = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o, vim.api
+local fn, bo, wo, api = vim.fn, vim.bo, vim.wo, vim.api
 
 mega.statusline = {}
 
-local c = {}
 local s = {}
+s.inactive = { color = "%#StInactive#", no_padding = true }
+s.mode_block = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true, no_padding = true }
+s.mode = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true }
+s.mode_right = vim.tbl_extend("force", s.mode, { side = "right", no_before = false })
+s.section_2 = { color = "%#StItem2#", sep_color = "%#StSep2#" }
+s.section_3 = { color = "%#StItem3#", sep_color = "%#StSep3#" }
+s.lsp = vim.tbl_extend("force", s.section_3, { no_padding = true })
+s.search = vim.tbl_extend("force", s.section_3, { color = "%#StItemSearch#" })
+s.gps = vim.tbl_extend("force", s.section_3, { color = "%#StItemInfo#" })
+s.err = { color = "%#StErr#", sep_color = "%#StErrSep#" }
 
 local curwin = vim.g.statusline_winid or 0
 local curbuf = vim.api.nvim_win_get_buf(curwin)
@@ -14,71 +23,16 @@ local curbuf = vim.api.nvim_win_get_buf(curwin)
 local ctx = {
   bufnum = curbuf,
   winid = curwin,
-  bufname = vim.fn.bufname(curbuf),
-  preview = vim.wo[curwin].previewwindow,
-  readonly = vim.bo[curbuf].readonly,
-  filetype = vim.bo[curbuf].ft,
-  buftype = vim.bo[curbuf].bt,
-  modified = vim.bo[curbuf].modified,
-  fileformat = vim.bo[curbuf].fileformat,
-  shiftwidth = vim.bo[curbuf].shiftwidth,
-  expandtab = vim.bo[curbuf].expandtab,
+  bufname = fn.bufname(curbuf),
+  preview = wo[curwin].previewwindow,
+  readonly = bo[curbuf].readonly,
+  filetype = bo[curbuf].ft,
+  buftype = bo[curbuf].bt,
+  modified = bo[curbuf].modified,
+  fileformat = bo[curbuf].fileformat,
+  shiftwidth = bo[curbuf].shiftwidth,
+  expandtab = bo[curbuf].expandtab,
 }
-
-function mega.statusline.colors()
-  c.statusline_bg = C.cs.bg1
-
-  c.normal_fg = C.cs.green
-  c.normal_bg = c.statusline_bg
-  c.insert_fg = C.cs.yellow
-  c.insert_bg = c.statusline_bg
-  c.replace_fg = C.cs.orange
-  c.replace_bg = c.statusline_bg
-  c.visual_fg = C.cs.red
-  c.replace_bg = c.statusline_bg
-
-  c.secondary_fg = C.cs.grey2
-  c.secondary_bg = c.statusline_bg
-
-  c.tertiary_fg = C.cs.grey0
-  c.tertiary_bg = c.statusline_bg
-
-  c.warning = C.status.warning_status
-  c.error = C.status.error_status
-
-  hi("StatusLine", { guibg = c.statusline_bg })
-
-  hi("StItem", { guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold" })
-  hi("StItem2", { guifg = c.secondary_fg, guibg = c.secondary_bg })
-  hi("StItem3", { guifg = c.tertiary_fg, guibg = c.tertiary_bg })
-  hi("StItemInfo", { guifg = C.cs.blue, guibg = c.normal_bg })
-  hi("StItemSearch", { guifg = C.cs.cyan, guibg = c.normal_bg })
-
-  hi("StSep", { guifg = c.normal_bg, guibg = c.normal_fg })
-  hi("StSep2", { guifg = c.secondary_bg, guibg = c.secondary_fg })
-  hi("StSep3", { guifg = c.tertiary_bg, guibg = c.tertiary_fg })
-
-  hi("StErr", { guifg = c.error, guibg = c.statusline_bg, gui = "italic" })
-  hi("StErrSep", { guifg = c.statusline_bg, guibg = c.error })
-
-  hi("StWarn", { guifg = c.normal, guibg = c.warning })
-  hi("StWarnSep", { guifg = c.statusline_bg, guibg = c.warning })
-
-  hi("StInactive", { guifg = C.cs.bg4, gui = "italic" })
-  s.inactive = { color = "%#StInactive#", no_padding = true }
-
-  s.mode_block = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true, no_padding = true }
-  s.mode = { color = "%#StMode#", sep_color = "%#StModeSep#", no_before = true }
-  s.mode_right = vim.tbl_extend("force", s.mode, { side = "right", no_before = false })
-  s.section_2 = { color = "%#StItem2#", sep_color = "%#StSep2#" }
-  s.section_3 = { color = "%#StItem3#", sep_color = "%#StSep3#" }
-  s.lsp = vim.tbl_extend("force", s.section_3, { no_padding = true })
-  s.search = vim.tbl_extend("force", s.section_3, { color = "%#StItemSearch#" })
-  s.gps = vim.tbl_extend("force", s.section_3, { color = "%#StItemInfo#" })
-  s.err = { color = "%#StErr#", sep_color = "%#StErrSep#" }
-  s.err_right = vim.tbl_extend("force", s.err, { side = "right" })
-  s.warn_right = { color = "%#StWarn#", sep_color = "%#StWarnSep#", side = "right", no_after = true }
-end
 
 local function get_lsp_status()
   -- # LSP status
@@ -101,7 +55,6 @@ local function get_lsp_status()
   return ""
 end
 
--- REF: https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/statusline.lua#L29-L57
 local function seg(item, opts, show)
   opts = opts or {}
   if show == nil then
@@ -111,7 +64,7 @@ local function seg(item, opts, show)
     return ""
   end
 
-  local color = opts.color or "%#StItem#"
+  local color = opts.color or "%#StItem1#"
   local pad = " "
   if opts.no_padding then
     pad = ""
@@ -122,17 +75,17 @@ end
 
 local function mode_highlight(mode)
   if mode == "n" then
-    hi("StModeSep", { guifg = c.normal_bg, guibg = c.normal_fg })
-    hi("StMode", { guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold" })
+    hi("StModeSep", { guifg = C.cs.bg1, guibg = C.cs.bg5 })
+    hi("StMode", { guifg = C.cs.bg5, guibg = C.cs.bg1 })
   elseif mode == "i" then
-    hi("StModeSep", { guifg = c.insert_bg, guibg = c.insert_fg })
-    hi("StMode", { guifg = c.insert_fg, guibg = c.insert_bg, gui = "bold" })
+    hi("StModeSep", { guifg = C.cs.bg1, guibg = C.cs.yellow })
+    hi("StMode", { guifg = C.cs.yellow, guibg = C.cs.bg1, gui = "bold" })
   elseif vim.tbl_contains({ "v", "V", "" }, mode) then
-    hi("StModeSep", { guifg = c.visual_bg, guibg = c.visual_fg })
-    hi("StMode", { guifg = c.visual_fg, guibg = c.visual_bg, gui = "bold" })
+    hi("StModeSep", { guifg = C.cs.bg1, guibg = C.cs.red })
+    hi("StMode", { guifg = C.cs.red, guibg = C.cs.bg1, gui = "bold" })
   elseif mode == "R" then
-    hi("StModeSep", { guifg = c.replace_bg, guibg = c.replace_fg })
-    hi("StMode", { guifg = c.replace_fg, guibg = c.replace_bg, gui = "bold" })
+    hi("StModeSep", { guifg = C.cs.bg1, guibg = C.cs.orange })
+    hi("StMode", { guifg = C.cs.orange, guibg = C.cs.bg1, gui = "bold" })
   end
 end
 
@@ -356,25 +309,16 @@ local function statusline_active()
   -- local file_item = utils.item(file.item, file.hl, file.opts)
 
   local mode_block = get_mode_block()
-  local vcs_status = get_vcs_status()
+  local git = get_vcs_status()
   local search = search_result()
   local ft = get_filetype()
   local lsp = get_lsp_status()
-  -- local container_info = get_container_info()
 
-  local statusline_sections = {
+  local statusline_segments = {
     seg(mode_block, s.mode_block),
     seg(get_mode_status(), s.mode),
     "%<",
-    seg(vcs_status, s.section_2, vcs_status ~= ""),
-    -- seg(container_info, s.section_3, container_info ~= ""),
     seg(get_filepath(false), bo.modified and s.err or s.section_3),
-    -- seg(dir.item),
-    -- seg(parent.item),
-    -- seg(file.item),
-    -- dir_item,
-    -- parent_item,
-    -- file_item,
     seg(string.format("%s", ""), vim.tbl_extend("keep", { no_padding = true }, s.err), bo.modified),
     seg(string.format("%s", C.icons.readonly_symbol), s.err, not bo.modifiable),
     seg("%w", nil, wo.previewwindow),
@@ -385,13 +329,14 @@ local function statusline_active()
     "%=",
     seg(search, vim.tbl_extend("keep", { side = "right" }, s.search), search ~= ""),
     seg(lsp, vim.tbl_extend("keep", { side = "right" }, s.section_3), lsp ~= ""),
+    seg(git, s.section_2, git ~= ""),
     seg(ft, vim.tbl_extend("keep", { side = "right" }, s.section_2), ft ~= ""),
     seg(get_lineinfo(), s.mode_right),
     seg(mode_block, s.mode_block),
     "%<",
   }
 
-  return table.concat(statusline_sections, "")
+  return table.concat(statusline_segments, "")
 end
 
 local function statusline_inactive()
@@ -406,41 +351,4 @@ function mega.statusline.setup()
   return statusline_inactive()
 end
 
--- mega.augroup("CustomStatusline", {
---   -- { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
---   -- { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
---   {
---     events = { "VimEnter", "ColorScheme" },
---     targets = { "*" },
---     command = mega.statusline.colors,
---   },
---   -- {
---   --   events = { "BufReadPre" },
---   --   modifiers = { "++once" },
---   --   targets = { "*" },
---   --   command = utils.git_updates,
---   -- },
---   -- {
---   --   events = { "DirChanged" },
---   --   targets = { "*" },
---   --   command = utils.git_update_toggle,
---   -- },
---   --- NOTE: enable to update search count on cursor move
---   -- {
---   --   events = { "CursorMoved", "CursorMovedI" },
---   --   targets = { "*" },
---   --   command = utils.update_search_count,
---   -- },
---   -- NOTE: user autocommands can't be joined into one autocommand
---   -- {
---   --   events = { "User NeogitStatusRefresh" },
---   --   command = utils.git_updates_refresh,
---   -- },
---   -- {
---   --   events = { "User FugitiveChanged" },
---   --   command = utils.git_updates_refresh,
---   -- },
--- })
-
-au([[VimEnter,ColorScheme * call v:lua.mega.statusline.colors()]])
-set.statusline = "%!v:lua.mega.statusline.setup()"
+vim.o.statusline = "%!v:lua.mega.statusline.setup()"

@@ -59,7 +59,7 @@ R("settings")
 R("lsp")
 R("autocmds")
 R("mappings")
--- R("megaline")
-R("statusline")
+R("megaline")
+-- R("statusline")
 
 -- vim:foldmethod=marker

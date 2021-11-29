@@ -265,8 +265,8 @@ function mega._execute(id, args)
   if not func then
     mega.error("function for id doesn't exist: " .. id)
   end
+
   mega._store[id](args)
-  -- return M._store[id](args)
 end
 
 function mega.command(args)

@@ -160,13 +160,6 @@ return lush(function()
     SpellLocal({ fg = cyan, bg = nil, gui = "undercurl", sp = cyan }),
     SpellRare({ fg = purple, bg = nil, gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
 
-    StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
-    StatusLineTerm({ fg = grey1, bg = bg1 }), -- status line of current window
-    StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StatusLineTermNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
-    TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
-    TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
     -- Title        { }, -- titles for output from ":set all", ":autocmd" etc.
     Visual({ fg = nil, bg = bg_visual }), -- Visual mode selection
     VisualNOS({ fg = nil, bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
@@ -670,5 +663,49 @@ return lush(function()
     -- -- LightspeedUniqueChar {fg = cs.white, gui = "bold"},
     -- -- LightspeedPendingOpArea {fg = cs.fg, bg = cs.lightspeed.primary},
     -- -- LightspeedPendingChangeOpArea {fg = cs.lightspeed.primary, gui = "italic, strikethrough"},
+
+    ---- :help tabline -------------------------------------------
+
+    TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
+    TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
+    TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
+
+    ---- :help statusline -------------------------------------------
+
+    StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
+    StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StatusLineTerm({ fg = grey1, bg = bg1 }), -- status line of current window
+    StatusLineTermNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StItem1({ fg = cs.green, bg = cs.bg1 }),
+    StItem2({ fg = cs.grey2, bg = cs.bg1 }),
+    StItem3({ fg = cs.grey0, bg = cs.bg1 }),
+    StItemInfo({ fg = cs.blue, bg = cs.bg1 }),
+    StItemSearch({ fg = cs.bg0, bg = cs.blue }),
+    StSep1({ fg = cs.bg1, bg = cs.green }),
+    StSep2({ fg = cs.bg1, bg = cs.grey2 }),
+    StSep3({ fg = cs.bg1, bg = cs.grey0 }),
+    StError({ bg = cs.pale_red }),
+    StWarn({ bg = cs.dark_orange }),
+    StInactive({ bg = bg4, gui = "italic" }),
+
+    -- hi("StatusLine", { guibg = c.statusline_bg })
+
+    -- hi("StItem", { guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold" })
+    -- hi("StItem2", { guifg = c.secondary_fg, guibg = c.secondary_bg })
+    -- hi("StItem3", { guifg = c.tertiary_fg, guibg = c.tertiary_bg })
+    -- hi("StItemInfo", { guifg = C.cs.blue, guibg = c.normal_bg })
+    -- hi("StItemSearch", { guifg = C.cs.cyan, guibg = c.normal_bg })
+
+    -- hi("StSep", { guifg = c.normal_bg, guibg = c.normal_fg })
+    -- hi("StSep2", { guifg = c.secondary_bg, guibg = c.secondary_fg })
+    -- hi("StSep3", { guifg = c.tertiary_bg, guibg = c.tertiary_fg })
+
+    -- hi("StErr", { guifg = c.error, guibg = c.statusline_bg, gui = "italic" })
+    -- hi("StErrSep", { guifg = c.statusline_bg, guibg = c.error })
+
+    -- hi("StWarn", { guifg = c.normal, guibg = c.warning })
+    -- hi("StWarnSep", { guifg = c.statusline_bg, guibg = c.warning })
+
+    -- hi("StInactive", { guifg = C.cs.bg4, gui = "italic" })
   }
 end)
