@@ -88,7 +88,7 @@ behind = "↓"
 # modified = "~"
 # untracked = "?" #+
 deleted = "" #x
-# stashed = "([ ${count}]))(fg:white)"
+stashed = "([ ${count}]))(fg:white)"
 # ---
 # # REF:
 # # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml
