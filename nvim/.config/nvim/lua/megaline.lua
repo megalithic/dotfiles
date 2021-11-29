@@ -3,10 +3,7 @@ local C = require("colors")
 local hi, au = mega.highlight, mega.au
 local fn, _, bo, wo, set, api = vim.fn, vim.cmd, vim.bo, vim.wo, vim.o, vim.api
 
-local statusline = {}
-au([[ColorScheme * call v:lua.mega.statusline.set_colors()]])
-au([[VimEnter,ColorScheme * call v:lua.mega.statusline.set_colors()]])
-set.statusline = "%!v:lua.mega.statusline.setup()"
+mega.statusline = {}
 
 local c = {}
 local s = {}
@@ -28,7 +25,7 @@ local ctx = {
   expandtab = vim.bo[curbuf].expandtab,
 }
 
-function statusline.set_colors()
+function mega.statusline.colors()
   c.statusline_bg = C.cs.bg1
 
   c.normal_fg = C.cs.green
@@ -401,7 +398,7 @@ local function statusline_inactive()
   return seg([[%f %m %r]], s.inactive) -- relativepath modified readonly
 end
 
-function statusline.setup()
+function mega.statusline.setup()
   local focus = vim.g.statusline_winid == fn.win_getid()
   if focus then
     return statusline_active()
@@ -409,4 +406,41 @@ function statusline.setup()
   return statusline_inactive()
 end
 
-_G.mega.statusline = statusline
+-- mega.augroup("CustomStatusline", {
+--   -- { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
+--   -- { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
+--   {
+--     events = { "VimEnter", "ColorScheme" },
+--     targets = { "*" },
+--     command = mega.statusline.colors,
+--   },
+--   -- {
+--   --   events = { "BufReadPre" },
+--   --   modifiers = { "++once" },
+--   --   targets = { "*" },
+--   --   command = utils.git_updates,
+--   -- },
+--   -- {
+--   --   events = { "DirChanged" },
+--   --   targets = { "*" },
+--   --   command = utils.git_update_toggle,
+--   -- },
+--   --- NOTE: enable to update search count on cursor move
+--   -- {
+--   --   events = { "CursorMoved", "CursorMovedI" },
+--   --   targets = { "*" },
+--   --   command = utils.update_search_count,
+--   -- },
+--   -- NOTE: user autocommands can't be joined into one autocommand
+--   -- {
+--   --   events = { "User NeogitStatusRefresh" },
+--   --   command = utils.git_updates_refresh,
+--   -- },
+--   -- {
+--   --   events = { "User FugitiveChanged" },
+--   --   command = utils.git_updates_refresh,
+--   -- },
+-- })
+
+au([[VimEnter,ColorScheme * call v:lua.mega.statusline.colors()]])
+set.statusline = "%!v:lua.mega.statusline.setup()"

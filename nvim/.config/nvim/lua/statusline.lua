@@ -11,6 +11,7 @@ local utils = require("utils.statusline")
 local C = require("colors")
 local H = require("utils.highlights")
 local M = {}
+_G.statusline = {}
 
 local function colors()
   --- NOTE: Unicode characters including vim devicons should NOT be highlighted
@@ -71,6 +72,7 @@ local function colors()
     { "StModeCommand", { guibg = bg_color, guifg = inc_search_bg, gui = "bold" } },
   })
 end
+_G.statusline.colors = colors
 
 --- @param tbl table
 --- @param next string
@@ -295,40 +297,18 @@ function _G.__statusline()
 end
 
 local function setup_autocommands()
+  -- FIXME: prevents which-key from firing (but is faster file loading):
+  -- mega.au([[VimEnter,ColorScheme * call v:lua.statusline.colors()]])
+
+  -- FIXME: which-key fires, but slower file loading and fzf-lua viewing/loading:
   mega.augroup("CustomStatusline", {
-    -- { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
-    -- { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
+    { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
+    { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
     {
       events = { "VimEnter", "ColorScheme" },
       targets = { "*" },
       command = colors,
     },
-    -- {
-    --   events = { "BufReadPre" },
-    --   modifiers = { "++once" },
-    --   targets = { "*" },
-    --   command = utils.git_updates,
-    -- },
-    -- {
-    --   events = { "DirChanged" },
-    --   targets = { "*" },
-    --   command = utils.git_update_toggle,
-    -- },
-    --- NOTE: enable to update search count on cursor move
-    -- {
-    --   events = { "CursorMoved", "CursorMovedI" },
-    --   targets = { "*" },
-    --   command = utils.update_search_count,
-    -- },
-    -- NOTE: user autocommands can't be joined into one autocommand
-    -- {
-    --   events = { "User NeogitStatusRefresh" },
-    --   command = utils.git_updates_refresh,
-    -- },
-    -- {
-    --   events = { "User FugitiveChanged" },
-    --   command = utils.git_updates_refresh,
-    -- },
   })
 end
 

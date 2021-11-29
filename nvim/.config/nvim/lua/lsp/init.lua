@@ -652,6 +652,7 @@ local function setup_lsp_servers()
     -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
     -- table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
 
+    -- ERROR: LSP[sumneko_lua][Info] Too large file: test/unit/viml/expressions/parser_tests.lua skipped. The currently set size limit is: 150 KB, and the file size is: 212.211 KB.
     local sumneko_lua_settings = lsp_with_defaults({
       settings = {
         Lua = {
@@ -704,11 +705,12 @@ local function setup_lsp_servers()
               "noremapbang",
             },
           },
-          -- workspace = {
+          workspace = {
+            preloadFileSize = 500
           --   -- Make the server aware of Neovim runtime files
           --   library = vim.api.nvim_get_runtime_file("", true),
           --   maxPreload = 5000,
-          -- },
+          },
           -- do not send telemetry data containing a randomized but unique identifier
           telemetry = {
             enable = false,

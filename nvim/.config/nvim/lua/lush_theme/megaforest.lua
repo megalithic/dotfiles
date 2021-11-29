@@ -28,8 +28,6 @@ local lush = require("lush")
 local palette = require("colors")
 local cs = palette.cs
 
-local italics = "italic"
-
 local bg0 = cs.bg0
 local bg1 = cs.bg1
 local bg2 = cs.bg2
@@ -184,16 +182,16 @@ return lush(function()
     Boolean({ fg = purple, bg = nil }),
     Number({ fg = purple, bg = nil }),
     Float({ fg = purple, bg = nil }),
-    PreProc({ fg = purple, bg = nil, gui = italics }),
-    PreCondit({ fg = purple, bg = nil, gui = italics }),
-    Include({ fg = purple, bg = nil, gui = italics }),
-    Define({ fg = purple, bg = nil, gui = italics }),
-    Conditional({ fg = red, bg = nil, gui = italics }),
-    Repeat({ fg = red, bg = nil, gui = italics }),
-    Keyword({ fg = red, bg = nil, gui = italics }),
-    Typedef({ fg = red, bg = nil, gui = italics }),
-    Exception({ fg = red, bg = nil, gui = italics }),
-    Statement({ fg = red, bg = nil, gui = italics }),
+    PreProc({ fg = purple, bg = nil, gui = "italic" }),
+    PreCondit({ fg = purple, bg = nil, gui = "italic" }),
+    Include({ fg = purple, bg = nil, gui = "italic" }),
+    Define({ fg = purple, bg = nil, gui = "italic" }),
+    Conditional({ fg = red, bg = nil, gui = "italic" }),
+    Repeat({ fg = red, bg = nil, gui = "italic" }),
+    Keyword({ fg = red, bg = nil, gui = "italic" }),
+    Typedef({ fg = red, bg = nil, gui = "italic" }),
+    Exception({ fg = red, bg = nil, gui = "italic" }),
+    Statement({ fg = red, bg = nil, gui = "italic" }),
     Error({ fg = red, bg = nil }),
     StorageClass({ fg = orange, bg = nil }),
     Tag({ fg = orange, bg = nil }),
@@ -210,9 +208,9 @@ return lush(function()
     Constant({ fg = aqua, bg = nil }),
     Macro({ fg = aqua, bg = nil }),
     Identifier({ fg = blue, bg = nil }),
-    Comment({ fg = grey1, bg = nil, gui = italics }),
-    SpecialComment({ fg = grey1, bg = nil, gui = italics }),
-    Todo({ fg = purple, bg = nil, gui = italics }),
+    Comment({ fg = grey1, bg = nil, gui = "italic" }),
+    SpecialComment({ fg = grey1, bg = nil, gui = "italic" }),
+    Todo({ fg = purple, bg = nil, gui = "italic" }),
     Delimiter({ fg = fg, bg = nil }),
     Ignore({ fg = grey1, bg = nil }),
     Debug({ fg = orange, bg = nil }), --    debugging statements
@@ -238,13 +236,13 @@ return lush(function()
     Aqua({ fg = aqua, bg = nil }),
     Blue({ fg = blue, bg = nil }),
     Purple({ fg = purple, bg = nil }),
-    RedItalic({ fg = red, bg = nil, gui = italics }),
-    OrangeItalic({ fg = orange, bg = nil, gui = italics }),
-    YellowItalic({ fg = yellow, bg = nil, gui = italics }),
-    GreenItalic({ fg = green, bg = nil, gui = italics }),
-    AquaItalic({ fg = cyan, bg = nil, gui = italics }),
-    BlueItalic({ fg = blue, bg = nil, gui = italics }),
-    PurpleItalic({ fg = purple, bg = nil, gui = italics }),
+    RedItalic({ fg = red, bg = nil, gui = "italic" }),
+    OrangeItalic({ fg = orange, bg = nil, gui = "italic" }),
+    YellowItalic({ fg = yellow, bg = nil, gui = "italic" }),
+    GreenItalic({ fg = green, bg = nil, gui = "italic" }),
+    AquaItalic({ fg = cyan, bg = nil, gui = "italic" }),
+    BlueItalic({ fg = blue, bg = nil, gui = "italic" }),
+    PurpleItalic({ fg = purple, bg = nil, gui = "italic" }),
     PurpleBold({ fg = purple, bg = nil, gui = "bold" }),
     ErrorText({ fg = nil, bg = bg_red, gui = "undercurl", sp = red }),
     WarningText({ fg = nil, bg = bg_yellow, gui = "undercurl", sp = yellow }),
@@ -561,13 +559,79 @@ return lush(function()
     helpSectionDelim({ Grey }),
 
     ---- :help nvim-cmp -------------------------------------------
+    -- https://github.com/hrsh7th/nvim-cmp#highlights
+    -- https://github.com/hrsh7th/nvim-cmp/blob/main/lua/cmp/types/lsp.lua#L108
 
     CmpItemKind({ Special }),
     CmpItemAttr({ Comment }),
-    CmpItemMenu({ NonText }),
-    CmpItemAbbrMatch({ PmenuSel, gui = "underline", sp = purple }),
-    CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
+    -- CmpItemMenu({ NonText }),
+    -- CmpItemAbbrMatch({ PmenuSel, gui = "underline", sp = purple }),
+    -- CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
     CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
+
+    CmpDocumentation({ fg = cs.fg, bg = cs.bg1 }),
+    CmpDocumentationBorder({ fg = cs.fg, bg = cs.bg1 }),
+
+    CmpItemAbbr({ fg = cs.fg }),
+    CmpItemAbbrMatch({ fg = cs.cyan, gui = "bold,italic" }),
+    CmpItemAbbrMatchFuzzy({ fg = cs.yellow }),
+
+    CmpItemMenu({ fg = cs.fg }),
+    CmpItemKind({ fg = cs.blue }),
+    CmpItemKindText({ fg = cs.fg }),
+    CmpItemKindMethod({ fg = cs.blue }),
+    CmpItemKindFunction({ CmpItemKindMethod }),
+    CmpItemKindConstructor({ fg = cs.cyan }),
+    CmpItemKindField({ fg = cs.fg }),
+    CmpItemKindVariable({ fg = cs.red }),
+    CmpItemKindClass({ fg = cs.yellow }),
+    CmpItemKindInterface({ CmpItemKindClass }),
+    -- CmpItemKindModule{},
+    CmpItemKindProperty({ fg = cs.red }),
+    -- CmpItemKindUnit{},
+    CmpItemKindValue({ fg = cs.orange }),
+    -- CmpItemKindEnum{},
+    CmpItemKindKeyword({ fg = cs.purple }),
+    CmpItemKindSnippet({ fg = cs.green }),
+    -- CmpItemKindVColor{},
+    -- CmpItemKindFile{},
+    -- CmpItemKindReference{},
+    -- CmpItemKindFolder{},
+    -- CmpItemKindEnumMember{},
+    CmpItemKindConstant({ fg = cs.green }),
+    -- CmpItemKindStruct{},
+    -- CmpItemKindEvent{},
+    -- CmpItemKindOperator{},
+    -- CmpItemKindTypeParameter{},
+
+    -- nvim-dap
+    -- DebugBreakpoint({ fg = cs.red }),
+    -- DebugBreakpointLine({ fg = cs.red, gui = "underline" }),
+    -- DebugHighlight({ fg = cs.blue }),
+    -- DebugHighlightLine({ fg = cs.purple, gui = "italic" }),
+    -- NvimDapVirtualText({ fg = cs.cyan, gui = "italic" }),
+
+    -- nvim-dap-ui
+    -- DapUIScope({ bg = cs.blue, fg = cs.bg }),
+    -- DapUIType({ fg = cs.blue }),
+    -- DapUIDecoration({ fg = cs.blue }),
+    -- DapUIThread({ fg = cs.purple }),
+    -- DapUIStoppedThread({ bg = cs.purple, fg = cs.bg }),
+    -- DapUIFrameName({ fg = cs.fg }),
+    -- DapUISource({ fg = cs.purple }),
+    -- DapUIBreakpointsPath({ bg = cs.yellow, fg = cs.bg }),
+    -- DapUIBreakpointsInfo({ fg = cs.fg }),
+    -- DapUIBreakpointsCurrentLine({ fg = cs.yellow, gui = "bold" }),
+    -- DapUIBreakpointsLine({ DapUIBreakpointsCurrentLine }),
+    -- DapUIWatchesEmpty({ bg = cs.red, fg = cs.bg }),
+    -- DapUIWatchesValue({ fg = cs.red }),
+    -- DapUIWatchesError({ fg = cs.red }),
+
+    -- nvim-hlslens
+    -- HlSearchNear({ bg = "#e2be7d", fg = cs.bg }),
+    -- HlSearchLens({ bg = cs.grey1 }),
+    -- HlSearchLensNear({ HlSearchNear }),
+    -- HlSearchFloat({ HlSearchNear }),
 
     ---- :help luasnip -------------------------------------------
 

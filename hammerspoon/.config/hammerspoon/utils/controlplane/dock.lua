@@ -74,7 +74,7 @@ local set_audio_input = function(state)
 end
 
 local toggle = function(docking_config)
-  toggle_wifi(docking_config.wifi)
+  -- toggle_wifi(docking_config.wifi)
   set_karabiner_profile(docking_config.profile)
   set_kitty_config(docking_config.fontSize)
   set_audio_output(docking_config.output)
