@@ -6,8 +6,6 @@ local lspconfig = require("lspconfig")
 local luasnip = require("luasnip")
 local utils = require("utils")
 
-local formatting_provider = "null-ls" -- efm or null-ls
-
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
@@ -47,7 +45,7 @@ local function setup_lsp_handlers()
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
   })
 
-  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
+  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
 end
 
 local function setup_completion()
@@ -496,15 +494,9 @@ local function setup_lsp_servers()
     lspconfig[ls].setup(lsp_with_defaults())
   end
 
-  do
-    if formatting_provider == "efm" then
-      local efm = require("lsp.efm")
-      lspconfig["efm"].setup(lsp_with_defaults(efm.config))
-    elseif formatting_provider == "null-ls" then
-      require("lsp.null-ls").setup()
-      lspconfig["null-ls"].setup(lsp_with_defaults())
-    end
-  end
+  -- local null-ls config
+  require("lsp.null-ls").setup()
+  lspconfig["null-ls"].setup(lsp_with_defaults())
 
   lspconfig["solargraph"].setup(lsp_with_defaults({
     cmd = { "solargraph", "stdio" },
@@ -706,10 +698,10 @@ local function setup_lsp_servers()
             },
           },
           workspace = {
-            preloadFileSize = 500
-          --   -- Make the server aware of Neovim runtime files
-          --   library = vim.api.nvim_get_runtime_file("", true),
-          --   maxPreload = 5000,
+            preloadFileSize = 500,
+            --   -- Make the server aware of Neovim runtime files
+            --   library = vim.api.nvim_get_runtime_file("", true),
+            --   maxPreload = 5000,
           },
           -- do not send telemetry data containing a randomized but unique identifier
           telemetry = {

@@ -58,7 +58,6 @@ brew "docker-compose"
 brew "docker-credential-helper-ecr"
 brew "docker-machine" #, restart_service: true, link: false
 brew "duck"
-brew "efm-langserver", args: ["HEAD"]
 brew "exa"
 brew "exercism"
 brew "fasd"

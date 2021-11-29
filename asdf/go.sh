@@ -7,10 +7,6 @@ if (command -v go &>/dev/null); then
 	# -- install gopls
 	GO111MODULE=on go get golang.org/x/tools/gopls@latest
 
-	# -- install efm-langserver
-	# using Brewfile -> brew "efm-langserver" instead
-	# GO111MODULE=on go get github.com/mattn/efm-langserver@latest
-
 	# -- install misspell
 	GO111MODULE=on go get -u github.com/client9/misspell/cmd/misspell
 

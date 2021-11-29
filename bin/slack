@@ -170,6 +170,10 @@ function back() {
 	end_all_dnd $dnd
 }
 
+function show() {
+    printf "[%s] at %s" "$subcommand" "$(date)"
+  }
+
 subcommand=$1
 # options=$2
 
@@ -179,12 +183,15 @@ case $subcommand in
 		;;
 	here)
 		back
+    show
 		;;
 	meeting | meet | loom)
 		zoom
+    show
 		;;
 	*)
 		shift
 		${subcommand} "$@"
+    show
 		;;
 esac
