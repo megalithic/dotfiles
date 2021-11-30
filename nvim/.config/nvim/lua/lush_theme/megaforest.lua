@@ -672,10 +672,10 @@ return lush(function()
 
     ---- :help statusline -------------------------------------------
 
-    StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
-    StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StatusLineTerm({ fg = grey1, bg = bg1 }), -- status line of current window
-    StatusLineTermNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StatusLine({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
+    StatusLineNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
+    StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     StItem1({ fg = cs.green, bg = cs.bg1 }),
     StItem2({ fg = cs.grey2, bg = cs.bg1 }),
     StItem3({ fg = cs.grey0, bg = cs.bg1 }),
@@ -686,7 +686,7 @@ return lush(function()
     StSep3({ fg = cs.bg1, bg = cs.grey0 }),
     StError({ bg = cs.pale_red }),
     StWarn({ bg = cs.dark_orange }),
-    StInactive({ bg = bg4, gui = "italic" }),
+    StInactive({ bg = cs.bg4, gui = "italic" }),
 
     -- hi("StatusLine", { guibg = c.statusline_bg })
 
