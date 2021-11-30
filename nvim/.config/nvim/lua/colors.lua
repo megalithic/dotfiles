@@ -181,7 +181,6 @@ local status = {
   inactive_bg = base.special_gray,
 }
 
--- FIXME: deprecate alllllll these things and migrate to a base palette
 return {
   icons = icons,
   cs = cs,
@@ -190,17 +189,6 @@ return {
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   style = style,
   setup = function(theme)
-    -- mega.color_overrides = function()
-    --   hi("Group", {guifg = cs.fg, guibg = cs.bg, gui = "", force = true})
-    -- end
-    -- mega.augroup("colorscheme_overrides", {
-    --   {
-    --     events = { "ColorScheme" },
-    --     targets = { theme },
-    --     command = "lua mega.color_overrides()",
-    --   },
-    -- })
-
     set.termguicolors = true
     vcmd("colorscheme " .. theme)
   end,

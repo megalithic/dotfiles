@@ -666,27 +666,27 @@ return lush(function()
 
     ---- :help tabline -------------------------------------------
 
-    TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
-    TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
-    TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
+    -- TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
+    -- TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
+    -- TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
 
     ---- :help statusline -------------------------------------------
 
     StatusLine({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
     StatusLineNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
-    StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StItem1({ fg = cs.green, bg = cs.bg1 }),
-    StItem2({ fg = cs.grey2, bg = cs.bg1 }),
-    StItem3({ fg = cs.grey0, bg = cs.bg1 }),
-    StItemInfo({ fg = cs.blue, bg = cs.bg1 }),
-    StItemSearch({ fg = cs.bg0, bg = cs.blue }),
-    StSep1({ fg = cs.bg1, bg = cs.green }),
-    StSep2({ fg = cs.bg1, bg = cs.grey2 }),
-    StSep3({ fg = cs.bg1, bg = cs.grey0 }),
-    StError({ bg = cs.pale_red }),
-    StWarn({ bg = cs.dark_orange }),
-    StInactive({ bg = cs.bg4, gui = "italic" }),
+    -- StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
+    -- StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    -- StItem1({ fg = cs.green, bg = cs.bg1 }),
+    -- StItem2({ fg = cs.grey2, bg = cs.bg1 }),
+    -- StItem3({ fg = cs.grey0, bg = cs.bg1 }),
+    -- StItemInfo({ fg = cs.blue, bg = cs.bg1 }),
+    -- StItemSearch({ fg = cs.bg0, bg = cs.blue }),
+    -- StSep1({ fg = cs.bg1, bg = cs.green }),
+    -- StSep2({ fg = cs.bg1, bg = cs.grey2 }),
+    -- StSep3({ fg = cs.bg1, bg = cs.grey0 }),
+    -- StError({ bg = cs.pale_red }),
+    -- StWarn({ bg = cs.dark_orange }),
+    StInactive({ bg = cs.bg0, gui = "italic" }),
 
     -- hi("StatusLine", { guibg = c.statusline_bg })
 
