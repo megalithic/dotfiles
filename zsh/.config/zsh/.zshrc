@@ -30,7 +30,8 @@ zcomet load olets/zsh-abbr
 zcomet load zsh-users/zsh-completions
 zcomet load zsh-users/zsh-history-substring-search
 zcomet load zsh-users/zsh-autosuggestions
-zcomet load zdharma/fast-syntax-highlighting
+zcomet load zdharma-zmirror/fast-syntax-highlighting
+zcomet load wfxr/forgit
 # zcomet load ohmyzsh plugins/mix
 # zcomet load ohmyzsh plugins/mix-fast
 # zcomet load ohmyzsh plugins/rake

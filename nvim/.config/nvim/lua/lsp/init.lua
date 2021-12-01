@@ -188,7 +188,6 @@ local function setup_completion()
   end
 
   --cmp source setups
-  require("cmp_git").setup()
   require("cmp_nvim_lsp").setup()
 
   cmp.setup({
@@ -227,7 +226,7 @@ local function setup_completion()
       -- { name = "spell" },
       { name = "emoji" },
       { name = "path" },
-      { name = "cmp_git" },
+      -- { name = "cmp_git" },
     }, {
       { name = "buffer" },
     }),
@@ -239,7 +238,7 @@ local function setup_completion()
         item.kind = kind_icons[item.kind]
         item.menu = ({
           luasnip = "[lsnip]",
-          nvim_lua = "[api]",
+          nvim_lua = "[lua]",
           nvim_lsp = "[lsp]",
           orgmode = "[org]",
           path = "[path]",
