@@ -52,7 +52,7 @@ end
 require("globals")
 
 R("preflight")
--- R("options")
+-- R("options") -- deprecate this!
 R("opts")
 R("colors").setup("megaforest")
 R("settings")

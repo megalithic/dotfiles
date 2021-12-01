@@ -96,6 +96,7 @@ local function setup_treesitter()
     },
   }
   require("nvim-treesitter.configs").setup({
+    ignore_install = { "elixir" },
     ensure_installed = {
       "bash",
       "c",
@@ -1287,6 +1288,7 @@ local function setup_filetype()
       literal = {
         ["kitty.conf"] = "kitty",
         [".gitignore"] = "conf",
+        [".env"] = "sh",
       },
     },
   })

@@ -32,6 +32,56 @@ local function setup_diagnostics()
       severity_sort = true,
     },
   })
+
+  ---Override diagnostics signs helper to only show the single most relevant sign
+  ---@see: http://reddit.com/r/neovim/comments/mvhfw7/can_built_in_lsp_diagnostics_be_limited_to_show_a
+  ---@param diagnostics table[]
+  ---@param bufnr number
+  ---@return table[]
+  local function filter_diagnostics(diagnostics, bufnr)
+    if not diagnostics then
+      return {}
+    end
+    -- Work out max severity diagnostic per line
+    local max_severity_per_line = {}
+    for _, d in pairs(diagnostics) do
+      local lnum = d.lnum
+      if max_severity_per_line[lnum] then
+        local current_d = max_severity_per_line[lnum]
+        if d.severity < current_d.severity then
+          max_severity_per_line[lnum] = d
+        end
+      else
+        max_severity_per_line[lnum] = d
+      end
+    end
+    -- map to list
+    local filtered_diagnostics = {}
+    for _, v in pairs(max_severity_per_line) do
+      table.insert(filtered_diagnostics, v)
+    end
+    return filtered_diagnostics
+  end
+
+  --- This overwrites the diagnostic show/set_signs function to replace it with a custom function
+  --- that restricts nvim's diagnostic signs to only the single most severe one per line
+  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local show = vim.diagnostic.show
+  local function display_signs(bufnr)
+    -- Get all diagnostics from the current buffer
+    local diagnostics = vim.diagnostic.get(bufnr)
+    local filtered = filter_diagnostics(diagnostics, bufnr)
+    show(ns, bufnr, filtered, {
+      virtual_text = false,
+      underline = false,
+      signs = true,
+    })
+  end
+
+  function vim.diagnostic.show(namespace, bufnr, ...)
+    show(namespace, bufnr, ...)
+    display_signs(bufnr)
+  end
 end
 
 -- some of our custom LSP handlers
@@ -45,7 +95,7 @@ local function setup_lsp_handlers()
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
   })
 
-  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
+  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
 end
 
 local function setup_completion()
@@ -233,7 +283,7 @@ local function setup_completion()
 
     formatting = {
       deprecated = true,
-      -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
+      fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       format = function(entry, item)
         item.kind = kind_icons[item.kind]
         item.menu = ({
@@ -340,8 +390,7 @@ local function on_attach(client, bufnr)
   end
 
   --- # trouble mappings
-  map(
-    "n",
+  nmap(
     "<leader>lt",
     "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>",
     { label = "lsp: toggle LspTrouble for document" }
@@ -648,12 +697,12 @@ local function setup_lsp_servers()
       settings = {
         Lua = {
           completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
-          runtime = {
-            -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-            version = "LuaJIT",
-            -- Setup your lua path
-            path = runtime_path,
-          },
+          -- runtime = {
+          --   -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+          --   version = "LuaJIT",
+          --   -- Setup your lua path
+          --   path = runtime_path,
+          -- },
           diagnostics = {
             globals = {
               "vim",
@@ -716,11 +765,9 @@ local function setup_lsp_servers()
         "--metapath=\"" .. fn.stdpath("cache") .. "/nvim/meta\"",
       },
     })
-
     local luadev = require("lua-dev").setup({
       lspconfig = sumneko_lua_settings,
     })
-
     lspconfig["sumneko_lua"].setup(luadev)
   end
 

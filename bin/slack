@@ -171,8 +171,8 @@ function back() {
 }
 
 function show() {
-    printf "[%s] at %s" "$subcommand" "$(date)"
-  }
+  printf "[%s] at %s" "$subcommand" "$(date)"
+}
 
 subcommand=$1
 # options=$2

@@ -952,6 +952,6 @@ function mega.showCursorHighlights()
   end
 end
 
-mega.nightly = mega.has("nvim-0.6")
+mega.nightly = mega.has("nvim-0.7")
 
 return mega
