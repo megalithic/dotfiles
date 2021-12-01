@@ -687,25 +687,5 @@ return lush(function()
     -- StError({ bg = cs.pale_red }),
     -- StWarn({ bg = cs.dark_orange }),
     StInactive({ bg = cs.bg0, gui = "italic" }),
-
-    -- hi("StatusLine", { guibg = c.statusline_bg })
-
-    -- hi("StItem", { guifg = c.normal_fg, guibg = c.normal_bg, gui = "bold" })
-    -- hi("StItem2", { guifg = c.secondary_fg, guibg = c.secondary_bg })
-    -- hi("StItem3", { guifg = c.tertiary_fg, guibg = c.tertiary_bg })
-    -- hi("StItemInfo", { guifg = C.cs.blue, guibg = c.normal_bg })
-    -- hi("StItemSearch", { guifg = C.cs.cyan, guibg = c.normal_bg })
-
-    -- hi("StSep", { guifg = c.normal_bg, guibg = c.normal_fg })
-    -- hi("StSep2", { guifg = c.secondary_bg, guibg = c.secondary_fg })
-    -- hi("StSep3", { guifg = c.tertiary_bg, guibg = c.tertiary_fg })
-
-    -- hi("StErr", { guifg = c.error, guibg = c.statusline_bg, gui = "italic" })
-    -- hi("StErrSep", { guifg = c.statusline_bg, guibg = c.error })
-
-    -- hi("StWarn", { guifg = c.normal, guibg = c.warning })
-    -- hi("StWarnSep", { guifg = c.statusline_bg, guibg = c.warning })
-
-    -- hi("StInactive", { guifg = C.cs.bg4, gui = "italic" })
   }
 end)

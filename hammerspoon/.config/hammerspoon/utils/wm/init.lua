@@ -102,6 +102,7 @@ end
 M.apply_app_layout = function(app, _, event) -- app, win, event
   -- only apply app layout for launched apps
   if event == running.events.launched then
+    -- if event == running.events.launched or event == running.events.created then
     log.df("attempting to apply layout for %s -> %s", app:name(), hs.inspect(app))
 
     if app then

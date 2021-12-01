@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+if [ ! -n "$1" ]; then
+	echo "Usage: $0 [file]"
+	return
+fi
+
+defaultExpireTime=3600 # // 1hour
+
+if [ -n "$2" ]; then
+	defaultExpireTime=$2
+fi
+
+friendlyName=$(echo $1 | sed -e "s/$HOME\/screenshots\///g")
+
+/usr/local/bin/aws s3 --profile "$S3_CLI_PROFILE" cp $1 s3://kaptures/tmp/
+
+# TODO: push to url shortener service for better aesthetic once pasted to destination
+/usr/local/bin/aws s3 --profile "$S3_CLI_PROFILE" presign s3://kaptures/tmp/$friendlyName --expires-in $defaultExpireTime | pbcopy

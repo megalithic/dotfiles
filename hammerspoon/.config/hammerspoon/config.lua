@@ -26,8 +26,10 @@ M.preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
   bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" },
-  controlplane = { "dock", "office" },
+  controlplane = { "dock", "office", "screenshots" },
   watchers = { "urlevent" },
+  screenshots = os.getenv("HOME") .. "/screenshots",
+  -- screenshots = os.getenv("HOME") .. "/Library/Mobile Documents/com~apple~CloudDocs/screenshots",
 }
 
 M.window = {
@@ -230,7 +232,7 @@ M.apps = {
   ["com.loom.desktop"] = {
     bundleID = "com.loom.desktop",
     name = "Loom",
-    context = "loom",
+    -- context = "loom",
   },
   ["com.spotify.client"] = {
     bundleID = "com.spotify.client",

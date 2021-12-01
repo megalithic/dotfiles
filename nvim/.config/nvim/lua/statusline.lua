@@ -305,7 +305,7 @@ local function setup_autocommands()
     { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
     { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
     {
-      events = { "ColorScheme" },
+      events = { "VimEnter,ColorScheme" },
       targets = { "*" },
       command = colors,
     },
