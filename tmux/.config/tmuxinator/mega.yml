@@ -10,7 +10,7 @@ windows:
   - chats:
       - weechat
   - dots:
-      - nvim
+      - ls
   - ssh-dots:
       - ssh seth-dev
       - nvim

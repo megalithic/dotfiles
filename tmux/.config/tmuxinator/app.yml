@@ -17,7 +17,7 @@ windows:
         - code:
           - ssh seth-dev
           - cd ~/code/app
-          - eval $(desk load); nvim
+          - eval $(desk load);
   - services:
       layout: even-horizontal
       panes:

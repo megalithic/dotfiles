@@ -16,7 +16,7 @@ function new_session() {
 
 # if we pass in a param to this binary, switch to it OR, create a new session
 if [ $1 ]; then
-	tmux $change -t "$1" 2>/dev/null || (new_session $1)
+	tmux $change -t "$1" 2>/dev/null || (new_session $1 && exit)
 	return
 fi
 
