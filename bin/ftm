@@ -21,13 +21,17 @@ function new_session() {
 
 # if we pass in a param to this binary, switch to it OR, create a new session
 if [ $1 ]; then
-	tmux $change -t "$1" 2>/dev/null || (new_session $1 && exit)
+	to_session $1 2>/dev/null || (new_session $1 && exit)
 	return
 fi
 
 # get our session from fzf (grabs the the active pane from each session as
 # preview, too!)
 sessions_count=$(tmux list-sessions -F "#S" | wc -l | sed -e 's/^[[:space:]]*//')
+
+# FIXME:
+# - do we want to filter out the current session or not? quick flip with just 2 sessions is nice though
+# - i want escape to not select _anything_ -- do we bind some other key other than `enter`?
 session=$(tmux list-sessions | sed -E 's/:.*$//' | grep -v "^$(tmux display-message -p '#S')\$" | fzf --reverse --exit-0 --header=" Select a session..." --bind=enter:replace-query+print-query --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")
 
 # TODO: need a way to force creating a new session in the event we just want to;

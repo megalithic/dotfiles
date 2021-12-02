@@ -13,4 +13,5 @@ windows:
       - ls
   - ssh-dots:
       - ssh seth-dev
-      - nvim
+      - cd ~/.dotfiles
+      - ls
