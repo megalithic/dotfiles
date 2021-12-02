@@ -3,7 +3,7 @@
 
 # tm [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to existing one.
 # Running `ftm` will let you fuzzy-find a session mame
-# Passing an argument to `ftm` will switch to that session if it exists or create it otherwise (as a tmuxinator sesison if it exists)
+# Passing an argument to `ftm` will switch to that session if it exists or create it otherwise (as a tmuxinator session if it exists)
 
 [[ -n $TMUX ]] && change="switch-client" || change="attach-session"
 
@@ -30,7 +30,8 @@ fi
 sessions_count=$(tmux list-sessions -F "#S" | wc -l | sed -e 's/^[[:space:]]*//')
 session=$(tmux list-sessions | sed -E 's/:.*$//' | grep -v "^$(tmux display-message -p '#S')\$" | fzf --reverse --exit-0 --header=" Select a session..." --bind=enter:replace-query+print-query --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")
 
-# TODO: need a way to force creating a new session in the event we just want to?
+# TODO: need a way to force creating a new session in the event we just want to;
+# if launching from within TMUX
 if [[ $sessions_count == 1 ]]; then
 	# only one session running, take input to create another (since nothing else
 	# to switch to):

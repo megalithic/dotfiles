@@ -14,7 +14,7 @@ windows:
         - code:
           - ssh seth-dev
           - cd ~/code/atlas
-          - eval $(desk load);
+          - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:

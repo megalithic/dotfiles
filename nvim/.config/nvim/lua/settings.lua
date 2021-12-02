@@ -1403,7 +1403,7 @@ local function setup_misc()
 end
 
 setup_nvim_options()
-setup_which_key()
+-- setup_which_key()
 setup_lsp_status()
 setup_treesitter()
 setup_golden_size()
