@@ -454,7 +454,7 @@ end
 local function setup_beacon()
   -- TODO: replace with specs
   g.beacon_size = 90
-  g.beacon_minimal_jump = 25
+  g.beacon_minimal_jump = 10
   -- g.beacon_shrink = 0
   -- g.beacon_fade = 0
   g.beacon_ignore_filetypes = { "fzf", "NvimTree" }

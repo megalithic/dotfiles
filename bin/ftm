@@ -4,6 +4,8 @@
 # tm [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to existing one.
 # Running `ftm` will let you fuzzy-find a session mame
 # Passing an argument to `ftm` will switch to that session if it exists or create it otherwise (as a tmuxinator session if it exists)
+#
+# NOTE: presently only works for zsh
 
 [[ -n $TMUX ]] && change="switch-client" || change="attach-session"
 
@@ -13,16 +15,20 @@ function to_session() {
 
 # new session with tmuxinator config, OR just new basic tmux session
 function new_session() {
-	tmuxinator start "$1" --no-attach \
+	(tmuxinator start "$1" --no-attach \
 		&& to_session $1 \
 		|| tmux new-session -d -s "$1" \
-		&& to_session $1
+		&& to_session $1) && exit
+}
+
+function try_session() {
+	to_session $1 2>/dev/null || new_session $1
+	return
 }
 
 # if we pass in a param to this binary, switch to it OR, create a new session
 if [ $1 ]; then
-	to_session $1 2>/dev/null || (new_session $1 && exit)
-	return
+	try_session $1
 fi
 
 # get our session from fzf (grabs the the active pane from each session as
@@ -30,9 +36,8 @@ fi
 sessions_count=$(tmux list-sessions -F "#S" | wc -l | sed -e 's/^[[:space:]]*//')
 
 # FIXME:
-# - do we want to filter out the current session or not? quick flip with just 2 sessions is nice though
-# - i want escape to not select _anything_ -- do we bind some other key other than `enter`?
-session=$(tmux list-sessions | sed -E 's/:.*$//' | grep -v "^$(tmux display-message -p '#S')\$" | fzf --reverse --exit-0 --header=" Select a session..." --bind=enter:replace-query+print-query --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")
+# - do we want to filter out the current session or not? quick flip with just 2 sessions is nice though.
+session=$(tmux list-sessions -F "#S" | grep -v "^$(tmux display-message -p '#S')\$" | fzf --reverse --header=" Select a session..." --bind='enter:replace-query+print-query' --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")
 
 # TODO: need a way to force creating a new session in the event we just want to;
 # if launching from within TMUX
@@ -40,10 +45,8 @@ if [[ $sessions_count == 1 ]]; then
 	# only one session running, take input to create another (since nothing else
 	# to switch to):
 	vared -p " Only 1 session running; create another? " -c input
-	new_session $input && exit
+	new_session $input
 else
 	# start the chain to either switch to it if it exists OR, create a new session
-	echo $session && to_session $session &>/dev/null \
-		|| new_session $session \
-		&& exit
+	try_session $session
 fi
