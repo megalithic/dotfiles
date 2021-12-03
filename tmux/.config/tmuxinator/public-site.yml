@@ -1,4 +1,4 @@
-name: public_site
+name: public-site
 root: ~/code/outstand
 
 # Runs on project start, always
@@ -12,17 +12,17 @@ windows:
       layout: main-vertical
       panes:
         - code:
-          - ssh seth-dev
+          # - ssh seth-dev
           - cd ~/code/public-site
-          - eval $(desk load); nvim
+          # - eval $(desk load); nvim
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - ssh seth-dev
+            # - ssh seth-dev
             - cd ~/code/public-site
-            - eval $(desk load)
+            # - eval $(desk load)
         - repl:
-            - ssh seth-dev
+            # - ssh seth-dev
             - cd ~/code/public-site
-            - eval $(desk load);
+            # - eval $(desk load);

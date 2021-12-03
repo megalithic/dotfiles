@@ -50,4 +50,13 @@ local function keyword(word, callback)
   end
 end
 
-mega.map("n", "gK", keyword, { buffer = 0, noremap = true })
+nnoremap("gK", keyword, { buffer = 0 })
+
+-- set specific sources for nvim-cmp for specific filetype
+-- require("cmp").setup.buffer({ enabled = false })
+require("cmp").setup.buffer({
+  sources = {
+    { name = "nvim_lua" },
+    require("lsp.completion").sources.buffer,
+  },
+})

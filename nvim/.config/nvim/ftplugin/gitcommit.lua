@@ -27,7 +27,7 @@ vim.bo.formatoptions = vim.bo.formatoptions .. "t"
 -- require("cmp").setup.buffer({ enabled = false })
 require("cmp").setup.buffer({
   sources = {
-    { name = "buffer" },
+    require("lsp.completion").sources.buffer,
     { name = "spell" },
     { name = "emoji" },
   },

@@ -475,7 +475,7 @@ function mega.bufmap(lhs, rhs, mode, expr)
 end
 
 function mega.au(s, override)
-  override = override or true
+  override = override or false
   if override then
     vcmd("au! " .. s)
   else

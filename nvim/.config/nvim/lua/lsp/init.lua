@@ -33,36 +33,6 @@ local function setup_diagnostics()
     },
   })
 
-  ---Override diagnostics signs helper to only show the single most relevant sign
-  ---@see: http://reddit.com/r/neovim/comments/mvhfw7/can_built_in_lsp_diagnostics_be_limited_to_show_a
-  ---@param diagnostics table[]
-  ---@param bufnr number
-  ---@return table[]
-  local function filter_diagnostics(diagnostics, bufnr)
-    if not diagnostics then
-      return {}
-    end
-    -- Work out max severity diagnostic per line
-    local max_severity_per_line = {}
-    for _, d in pairs(diagnostics) do
-      local lnum = d.lnum
-      if max_severity_per_line[lnum] then
-        local current_d = max_severity_per_line[lnum]
-        if d.severity < current_d.severity then
-          max_severity_per_line[lnum] = d
-        end
-      else
-        max_severity_per_line[lnum] = d
-      end
-    end
-    -- map to list
-    local filtered_diagnostics = {}
-    for _, v in pairs(max_severity_per_line) do
-      table.insert(filtered_diagnostics, v)
-    end
-    return filtered_diagnostics
-  end
-
   --- This overwrites the diagnostic show/set_signs function to replace it with a custom function
   --- that restricts nvim's diagnostic signs to only the single most severe one per line
   local ns = api.nvim_create_namespace("severe-diagnostics")
@@ -70,7 +40,7 @@ local function setup_diagnostics()
   local function display_signs(bufnr)
     -- Get all diagnostics from the current buffer
     local diagnostics = vim.diagnostic.get(bufnr)
-    local filtered = filter_diagnostics(diagnostics, bufnr)
+    local filtered = utils.lsp.filter_diagnostics(diagnostics, bufnr)
     show(ns, bufnr, filtered, {
       virtual_text = false,
       underline = false,
@@ -86,7 +56,7 @@ end
 
 -- some of our custom LSP handlers
 local function setup_lsp_handlers()
-  local border_opts = { border = "single", focusable = false, scope = "line" }
+  -- local border_opts = { border = "single", focusable = false, scope = "line" }
   -- hover
   -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
   lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, {
@@ -98,231 +68,6 @@ local function setup_lsp_handlers()
   -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
 end
 
-local function setup_completion()
-  local t = mega.replace_termcodes
-
-  -- [copilot] --
-  -- vim.g.copilot_no_tab_map = true
-  -- vim.g.copilot_assume_mapped = true
-  -- vim.g.copilot_tab_fallback = ""
-  -- vim.g.copilot_filetypes = {
-  --   ["*"] = true,
-  --   gitcommit = false,
-  --   NeogitCommitMessage = false,
-  -- }
-  -- map("i", "<C-h>", [[copilot#Accept("\<CR>")]], { expr = true, script = true })
-
-  -- [luasnip] --
-  local types = require("luasnip.util.types")
-  luasnip.config.set_config({
-    history = false,
-    updateevents = "TextChanged,TextChangedI",
-    store_selection_keys = "<Tab>",
-    ext_opts = {
-      [types.insertNode] = {
-        passive = {
-          hl_group = "Substitute",
-        },
-      },
-      [types.choiceNode] = {
-        active = {
-          virt_text = { { "choiceNode", "IncSearch" } },
-        },
-      },
-    },
-    enable_autosnippets = true,
-  })
-  require("luasnip/loaders/from_vscode").lazy_load()
-
-  --- <tab> to jump to next snippet's placeholder
-  local function on_tab()
-    return luasnip.jump(1) and "" or utils.t("<Tab>")
-  end
-  --- <s-tab> to jump to next snippet's placeholder
-  local function on_s_tab()
-    return luasnip.jump(-1) and "" or utils.t("<S-Tab>")
-  end
-  local opts = { expr = true, noremap = false }
-  map("i", "<Tab>", on_tab, opts)
-  map("s", "<Tab>", on_tab, opts)
-  map("i", "<S-Tab>", on_s_tab, opts)
-  map("s", "<S-Tab>", on_s_tab, opts)
-
-  -- [nvim-cmp] --
-  local cmp = require("cmp")
-  local kind_icons = {
-    Text = " text", -- Text
-    Method = " method", -- Method
-    Function = " function", -- Function
-    Constructor = " constructor", -- Constructor
-    Field = "ﰠ field", -- Field
-    Variable = " variable", -- Variable
-    Class = " class", -- Class
-    Interface = "ﰮ interface", -- Interface
-    Module = " module", -- Module
-    Property = " property", -- Property
-    Unit = " unit", -- Unit
-    Value = " value", -- Value
-    Enum = "了enum", -- Enum 
-    Keyword = " keyword", -- Keyword
-    Snippet = " snippet", -- Snippet
-    Color = " color", -- Color
-    File = " file", -- File
-    Reference = " ref", -- Reference
-    Folder = " folder", -- Folder
-    EnumMember = " enum member", -- EnumMember
-    Constant = " const", -- Constant
-    Struct = "פּ struct", -- Struct
-    Event = "鬒event", -- Event
-    Operator = "\u{03a8} operator", -- Operator
-    TypeParameter = " type param", -- TypeParameter
-  }
-
-  local function feed(key, mode)
-    api.nvim_feedkeys(t(key), mode or "", true)
-  end
-
-  -- local function tab(_)
-  --   if cmp.visible() then
-  --     cmp.select_next_item()
-  --   elseif luasnip and luasnip.expand_or_jumpable() then
-  --     luasnip.expand_or_jump()
-  --     -- else
-  --     --   feed("<Plug>(Tabout)")
-  --   end
-  -- end
-
-  -- local function shift_tab(_)
-  --   if cmp.visible() then
-  --     cmp.select_prev_item()
-  --   elseif luasnip and luasnip.jumpable(-1) then
-  --     luasnip.jump(-1)
-  --     -- else
-  --     --   feed("<Plug>(TaboutBack)")
-  --   end
-  -- end
-
-  local function tab(fallback)
-    -- local copilot_keys = vim.fn["copilot#Accept"]()
-    if cmp.visible() then
-      cmp.select_next_item()
-      -- elseif copilot_keys ~= "" then -- prioritise copilot over snippets
-      --   -- Copilot keys do not need to be wrapped in termcodes
-      --   print("copilot! <tab>")
-      --   api.nvim_feedkeys(copilot_keys, "i", true)
-    elseif luasnip and luasnip.expand_or_locally_jumpable() then
-      luasnip.expand_or_jump()
-    elseif api.nvim_get_mode().mode == "c" then
-      fallback()
-    else
-      feed("<Plug>(Tabout)")
-    end
-  end
-
-  local function shift_tab(fallback)
-    if cmp.visible() then
-      cmp.select_prev_item()
-    elseif luasnip and luasnip.jumpable(-1) then
-      luasnip.jump(-1)
-    elseif api.nvim_get_mode().mode == "c" then
-      fallback()
-    else
-      -- local copilot_keys = vim.fn["copilot#Accept"]()
-      -- if copilot_keys ~= "" then
-      --   print("copilot! <s-tab>")
-      --   feed(copilot_keys, "i")
-      -- else
-      feed("<Plug>(Tabout)")
-      -- end
-    end
-  end
-
-  --cmp source setups
-  require("cmp_nvim_lsp").setup()
-
-  cmp.setup({
-    experimental = {
-      -- ghost_text = {
-      --   hl_group = "LineNr",
-      -- },
-      ghost_text = false,
-      native_menu = false, -- false == use fancy floaty menu for now
-    },
-    completion = {
-      keyword_length = 1,
-    },
-    snippet = {
-      expand = function(args)
-        luasnip.lsp_expand(args.body)
-      end,
-    },
-    documentation = {
-      border = "rounded",
-    },
-    mapping = {
-      ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
-      ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
-      ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-      ["<C-f>"] = cmp.mapping.scroll_docs(4),
-      ["<C-Space>"] = cmp.mapping.complete(),
-      ["<CR>"] = cmp.mapping.confirm({ select = false }),
-      ["<C-e>"] = cmp.mapping.close(),
-    },
-    sources = cmp.config.sources({
-      { name = "luasnip" },
-      { name = "nvim_lua" },
-      { name = "nvim_lsp" },
-      { name = "orgmode" },
-      -- { name = "spell" },
-      { name = "emoji" },
-      { name = "path" },
-      -- { name = "cmp_git" },
-    }, {
-      { name = "buffer" },
-    }),
-
-    formatting = {
-      deprecated = true,
-      fields = { "kind", "abbr", "menu" }, -- determines order of menu items
-      format = function(entry, item)
-        item.kind = kind_icons[item.kind]
-        item.menu = ({
-          luasnip = "[lsnip]",
-          nvim_lua = "[lua]",
-          nvim_lsp = "[lsp]",
-          orgmode = "[org]",
-          path = "[path]",
-          buffer = "[buf]",
-          spell = "[spl]",
-          -- calc = "[calc]",
-          -- emoji = "[emo]",
-        })[entry.source.name]
-        return item
-      end,
-    },
-  })
-  local search_sources = {
-    sources = cmp.config.sources({
-      { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
-    }, {
-      { name = "buffer" },
-    }),
-  }
-  cmp.setup.cmdline("/", search_sources)
-  cmp.setup.cmdline("?", search_sources)
-  cmp.setup.cmdline(":", {
-    sources = cmp.config.sources({
-      { name = "path" },
-    }, {
-      { name = "cmdline" },
-    }),
-  })
-
-  -- If you want insert `(` after select function or method item
-  local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-  cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-end
-
 -- our on_attach function to pass to each language server config..
 local function on_attach(client, bufnr)
   if client.config.flags then
@@ -330,7 +75,7 @@ local function on_attach(client, bufnr)
   end
 
   require("lsp-status").on_attach(client)
-  require("utils").lsp.format_setup(client, bufnr)
+  utils.lsp.format_setup(client, bufnr)
 
   require("lsp_signature").on_attach({
     bind = true,
@@ -397,13 +142,8 @@ local function on_attach(client, bufnr)
   )
 
   --- # autocommands/autocmds
-  -- au(
-  --   [[CursorHold,CursorHoldI <buffer> lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
-  -- )
   au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.line_diagnostics()]])
-  -- au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.show_diagnostics()]])
   au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
-  -- au([[CursorMoved,BufLeave <buffer> lua vim.diagnostic.hide(0)]])
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
   vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
 
@@ -895,5 +635,5 @@ end
 
 setup_lsp_handlers()
 setup_diagnostics()
-setup_completion()
+require("lsp.completion").setup()
 setup_lsp_servers()
