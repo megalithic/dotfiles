@@ -108,6 +108,11 @@ sudo defaults write bluetoothaudiod "Enable AAC codec" -bool true
 # defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 0
 # defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 0
 
+# Mouse:
+# disables mouse tracking speed; HT: @evantravers ->
+# REF: https://etherealmind.com/mouse-tracking-speed-on-macos-fixing/
+# defaults write GlobalPreferences com.apple.mouse.scaling -1
+
 # Enable tap to click
 # Trackpad: enable tap to click for this user and for the login screen
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true

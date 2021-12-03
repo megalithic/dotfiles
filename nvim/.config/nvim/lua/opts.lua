@@ -328,7 +328,7 @@ end
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.wrapscan = true -- Searches wrap around the end of the file
-vim.opt.scrolloff = 9
+vim.opt.scrolloff = 9 -- for typerwritering (HT: @evantravers), see https://randomdeterminism.wordpress.com/2011/08/15/typewriter-scroll-mode-in-vim/
 vim.opt.sidescrolloff = 10
 vim.opt.sidescroll = 1
 -----------------------------------------------------------------------------//
