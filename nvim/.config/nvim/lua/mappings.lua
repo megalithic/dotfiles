@@ -345,6 +345,7 @@ map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>", "fzf: gre
 -- TODO: figure out how to use shortened paths
 map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org, prompt = "ORG  " })<cr>]])
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
+map("n", "<leader>fp", [[<cmd>lua require("fzf-lua").files({ cwd = "~/.dotfiles/private", prompt = "PRIV  " })<cr>]])
 
 -- # nvim-tree
 map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")

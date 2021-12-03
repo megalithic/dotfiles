@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 #
 # What in tarnation?
 #
@@ -14,6 +12,18 @@ set -euo pipefail
 #
 # Attribution: https://github.com/matthewfallshaw/utilities/blob/master/shell/slack-status
 #
+
+set -euo pipefail
+
+trap 'clean_exit $? $LINENO' EXIT
+trap ctrl_c INT # trap ctrl-c and call ctrl_c()
+
+function clean_exit {
+	set +x
+	if [[ $1 != "0" ]]; then
+		log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
+	fi
+}
 
 base_command=""
 subcommand=""
@@ -45,9 +55,16 @@ function request() {
 	# non-zero length string AND a value not equal to 0
 	# TODO: need better way to handle options/args that don't exist
 	if [[ -n $2 && $2 != 0 ]]; then
-		curl 2>/dev/null 1>&2 -s -S --data "" "https://slack.com/api/$3?token=$1&$2" | $HOME/.dotfiles/bin/spinner
+    # DEBUG: curl 2>/dev/null
+		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3?$2" | $HOME/.dotfiles/bin/spinner || {
+      log_error 'failed to make request'
+      exit 1
+    }
 	else
-		curl 2>/dev/null 1>&2 -s -S --data "" "https://slack.com/api/$3?token=$1" | $HOME/.dotfiles/bin/spinner
+		curl 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3" | $HOME/.dotfiles/bin/spinner || {
+      log_error 'failed to make request'
+      exit 1
+    }
 	fi
 }
 
@@ -69,6 +86,10 @@ function set_dnd() {
 	request $1 $2 "dnd.setSnooze"
 }
 
+function set_away_chan_text() {
+	request $OUTSTAND_TOKEN 0 "chat.postMessage?channel=$OUTSTAND_AWAY_CHAN_ID&as_user=$OUTSTAND_USER&text=$1"
+}
+
 function end_dnd() {
 	# $1=token
 	# $2=options
@@ -77,26 +98,18 @@ function end_dnd() {
 
 function set_all_presence() {
 	set_presence $OUTSTAND_TOKEN $1
-	# set_presence $CIT_TOKEN $1
-	# set_presence $MAGICCITYTECH_TOKEN $1
 }
 
 function set_all_profile() {
 	set_profile $OUTSTAND_TOKEN $1
-	# set_profile $CIT_TOKEN $1
-	# set_profile $MAGICCITYTECH_TOKEN $1
 }
 
 function set_all_dnd() {
 	set_dnd $OUTSTAND_TOKEN $1
-	# set_dnd $CIT_TOKEN $1
-	# set_dnd $MAGICCITYTECH_TOKEN $1
 }
 
 function end_all_dnd() {
 	end_dnd $OUTSTAND_TOKEN $1
-	# end_dnd $CIT_TOKEN $1
-	# end_dnd $MAGICCITYTECH_TOKEN $1
 }
 
 function away() {
@@ -106,6 +119,7 @@ function away() {
 	# profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
 	profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:afk:%22%7D"
 	set_all_profile $profile
+  set_away_chan_text "bbl"
 }
 
 function brb() {
@@ -114,6 +128,7 @@ function brb() {
 	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
 	profile="profile=%7B%22status_text%22:%22..be%20right%20back..%22,%22status_emoji%22:%22:brb:%22%7D"
 	set_all_profile $profile
+  set_away_chan_text "brb"
 }
 
 function lunch() {
@@ -121,6 +136,7 @@ function lunch() {
 	set_all_presence $presence
 	profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
 	set_all_profile $profile
+  set_away_chan_text "bbl, lunch"
 }
 
 function coffee() {
@@ -128,6 +144,7 @@ function coffee() {
 	set_all_presence $presence
 	profile="profile=%7B%22status_text%22:%22..covfefe..%22,%22status_emoji%22:%22:coffee:%22%7D"
 	set_all_profile $profile
+  set_away_chan_text "brb, coffee"
 }
 
 function gone() {
@@ -138,6 +155,7 @@ function gone() {
 	set_all_profile $profile
 	dnd="num_minutes=930"
 	set_all_dnd $dnd
+  set_away_chan_text "👋 have a good one y'all!"
 }
 
 function pair() {
@@ -168,6 +186,7 @@ function back() {
 	set_all_profile $profile
 	dnd=0
 	end_all_dnd $dnd
+  set_away_chan_text "back"
 }
 
 function show() {
