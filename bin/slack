@@ -12,7 +12,7 @@
 #
 # Attribution: https://github.com/matthewfallshaw/utilities/blob/master/shell/slack-status
 #
-
+#
 set -euo pipefail
 
 trap 'clean_exit $? $LINENO' EXIT
@@ -55,13 +55,13 @@ function request() {
 	# non-zero length string AND a value not equal to 0
 	# TODO: need better way to handle options/args that don't exist
 	if [[ -n $2 && $2 != 0 ]]; then
-    # DEBUG: curl 2>/dev/null
+    # SILENT: curl 2>/dev/null
 		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3?$2" | $HOME/.dotfiles/bin/spinner || {
       log_error 'failed to make request'
       exit 1
     }
 	else
-		curl 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3" | $HOME/.dotfiles/bin/spinner || {
+		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3" | $HOME/.dotfiles/bin/spinner || {
       log_error 'failed to make request'
       exit 1
     }
