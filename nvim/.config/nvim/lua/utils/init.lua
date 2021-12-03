@@ -205,6 +205,7 @@ M.lsp.line_diagnostics = function()
 
   for i, diagnostic in ipairs(diagnostics) do
     local message_length = #lines[i] - #source_string(diagnostic.source)
+    print(serverity_map[diagnostic.severity])
     vim.api.nvim_buf_add_highlight(floating_bufnr, -1, serverity_map[diagnostic.severity], i - 1, 0, message_length)
     vim.api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
   end

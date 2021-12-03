@@ -503,7 +503,7 @@ local function setup_lsp_servers()
       autostart = true,
       on_attach = on_attach,
       capabilities = setup_lsp_capabilities(),
-      flags = { debounce_text_changes = 500 },
+      flags = { debounce_text_changes = 150 },
       root_dir = vim.loop.cwd,
     })
   end

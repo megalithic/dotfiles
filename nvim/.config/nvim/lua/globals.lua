@@ -474,8 +474,13 @@ function mega.bufmap(lhs, rhs, mode, expr)
   mega.bmap(mode, lhs, rhs, opts)
 end
 
-function mega.au(s)
-  vcmd("au!" .. s)
+function mega.au(s, override)
+  override = override or true
+  if override then
+    vcmd("au! " .. s)
+  else
+    vcmd("au " .. s)
+  end
 end
 
 local function is_valid_target(command)

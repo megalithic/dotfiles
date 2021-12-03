@@ -382,18 +382,18 @@ local function user_highlights()
   set_sidebar_highlight()
 end
 
-mega.augroup("UserHighlights", {
-  {
-    events = { "ColorScheme" },
-    targets = { "*" },
-    command = user_highlights,
-  },
-  {
-    events = { "FileType" },
-    targets = sidebar_fts,
-    command = on_sidebar_enter,
-  },
-})
+-- mega.augroup("UserHighlights", {
+--   {
+--     events = { "ColorScheme" },
+--     targets = { "*" },
+--     command = user_highlights,
+--   },
+--   {
+--     events = { "FileType" },
+--     targets = sidebar_fts,
+--     command = on_sidebar_enter,
+--   },
+-- })
 
 -----------------------------------------------------------------------------//
 -- Color Scheme {{{1
