@@ -136,7 +136,7 @@ function lunch() {
 	set_all_presence $presence
 	profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
 	set_all_profile $profile
-  set_away_chan_text "bbl, lunch"
+  set_away_chan_text "bbl,%20lunch"
 }
 
 function coffee() {
@@ -144,7 +144,7 @@ function coffee() {
 	set_all_presence $presence
 	profile="profile=%7B%22status_text%22:%22..covfefe..%22,%22status_emoji%22:%22:coffee:%22%7D"
 	set_all_profile $profile
-  set_away_chan_text "brb, coffee"
+  set_away_chan_text "brb,%20coffee"
 }
 
 function gone() {
@@ -155,7 +155,7 @@ function gone() {
 	set_all_profile $profile
 	dnd="num_minutes=930"
 	set_all_dnd $dnd
-  set_away_chan_text "👋 have a good one y'all!"
+  set_away_chan_text "👋%20have%20a%20good%20one%20y'all!"
 }
 
 function pair() {
