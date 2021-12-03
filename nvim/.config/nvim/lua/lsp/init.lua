@@ -685,9 +685,9 @@ local function setup_lsp_servers()
 
   do -- lua
     -- (build lua runtime libraries)
-    local runtime_path = vim.split(package.path, ";")
-    table.insert(runtime_path, "lua/?.lua")
-    table.insert(runtime_path, "lua/?/init.lua")
+    -- local runtime_path = vim.split(package.path, ";")
+    -- table.insert(runtime_path, "lua/?.lua")
+    -- table.insert(runtime_path, "lua/?/init.lua")
     -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
     -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
     -- table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))

@@ -1,11 +1,14 @@
-#!/usr/bin/env zsh
-# shellcheck shell=bash
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # tm [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to existing one.
 # Running `ftm` will let you fuzzy-find a session mame
 # Passing an argument to `ftm` will switch to that session if it exists or create it otherwise (as a tmuxinator session if it exists)
 #
 # NOTE: presently only works for zsh
+
+session_name_param="${1:-}"
 
 [[ -n $TMUX ]] && change="switch-client" || change="attach-session"
 
@@ -27,8 +30,8 @@ function try_session() {
 }
 
 # if we pass in a param to this binary, switch to it OR, create a new session
-if [ $1 ]; then
-	try_session $1
+if [ $session_name_param ]; then
+	try_session $session_name_param
 fi
 
 # get our session from fzf (grabs the the active pane from each session as
