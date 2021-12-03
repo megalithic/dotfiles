@@ -147,6 +147,14 @@ function coffee() {
   set_away_chan_text "brb,%20coffee"
 }
 
+function dog() {
+	presence="presence=away"
+	set_all_presence $presence
+	profile="profile=%7B%22status_text%22:%22...walking%20the%20puppers..%22,%22status_emoji%22:%22:doge:%22%7D"
+	set_all_profile $profile
+  set_away_chan_text "bbiab,%20walking%20the%20puppers"
+}
+
 function gone() {
 	presence="presence=away"
 	set_all_presence $presence
