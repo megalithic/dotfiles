@@ -177,6 +177,7 @@ return {
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
   { "iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"] },
+  "ellisonleao/glow.nvim",
   { "harshad1/bullets.vim", branch = "performance_improvements" },
   "kristijanhusak/orgmode.nvim",
   "akinsho/org-bullets.nvim",

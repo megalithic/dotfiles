@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# slack [STATUS | FUZZY PATTERN] - create new slack status entry, or switch to pre-defined.
+# Running `slack` will let you fuzzy-find pre-defined slack statuses
+# Passing an argument to `slack` will create a slack away status/profile entry
+#
+
+# set -o errexit
+# set -o pipefail
+# set -o nounset
+# set -o xtrace
+
+# -- set some useful vars for executable info:
+# Set magic variables for current file & dir
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+base_command="$(basename "$0")"
+subcommand="${1:-}"
+fzf_cmd=""
+curl_cmd=""
+# -- possible slack statuses to support:
+statuses="away
+back
+brb
+gone
+zoom
+meeting
+coffee
+dog
+errand
+lunch"
+
+# NOTE: This requires GNU getopt.  On Mac OS X and FreeBSD, you have to install this
+# separately; see below.
+TEMP=$(getopt -o hvpd --long help,debug,popup,verbose \
+	-n 'slack_status' -- "$@")
+
+if [ $? != 0 ]; then
+	echo "Terminating..." >&2
+	exit 1
+fi
+
+# Note the quotes around '$TEMP': they are essential!
+eval set -- "$TEMP"
+
+__help() {
+	printf -- "Usage: %s <subcommand>\n" "$base_command"
+	printf -- "\n"
+	printf -- "Subcommands:\n"
+	printf -- "    away               Set presence to away, and profile for being gone\n"
+	printf -- "    lunch              Set presence to away, and profile for lunch\n"
+	printf -- "    coffee             Set presence to away, and profile for coffee\n"
+	printf -- "    dog                Set presence to away, and profile for dog walking\n"
+	printf -- "    errand             Set presence to away, and profile for running errand\n"
+	printf -- "    pair               Set DND to on, and profile for pairing\n"
+	printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
+	printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
+	printf -- "    back               Set presence to auto, and profile accordingly\n"
+	printf -- "\n"
+}
+
+# -- internal vars that will be set based on options given:
+VERBOSE="false"
+DEBUG="false"
+POPUP="false"
+
+
+# while getopts "hepd" OPTION; do
+# 	case $OPTION in
+
+# 		i)
+# 			INFO="true"
+# 			;;
+
+# 		d)
+# 			DEBUG="true"
+# 			;;
+
+# 		p)
+# 			POPUP="true"
+# 			;;
+
+# 		h)
+# 			__help
+# 			;;
+
+# 	esac
+# done
+
+
+while true; do
+	case "$1" in
+		-v | --verbose)
+			VERBOSE="true"
+			shift
+			;;
+		-d | --debug)
+			DEBUG="true"
+			shift
+			;;
+		-p | --popup)
+			POPUP="true"
+			shift
+			;;
+		-h | --help)
+			__help
+      break
+			;;
+		# -m | --memory)
+		# 	MEMORY="$2"
+		# 	shift 2
+		# 	;;
+		# --debugfile)
+		# 	DEBUGFILE="$2"
+		# 	shift 2
+		# 	;;
+		# --minheap)
+		# 	JAVA_MISC_OPT="$JAVA_MISC_OPT -XX:MinHeapFreeRatio=$2"
+		# 	shift 2
+		# 	;;
+		# --maxheap)
+		# 	JAVA_MISC_OPT="$JAVA_MISC_OPT -XX:MaxHeapFreeRatio=$2"
+		# 	shift 2
+		# 	;;
+		--)
+			shift
+			break
+			;;
+		*) break ;;
+	esac
+done
+
+# -- determine the fzf command to use
+[[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
+# -- determine if we want to be loud with curl, or it send it to the void
+[[ $DEBUG == "true" ]] && curl_cmd="curl" || curl_cmd="curl 2>/dev/null"
+
+# no arguments/options passed
+if [ $# -eq 0 ]; then
+	echo "no arguments given"
+fi
+
+if [[ $VERBOSE == "true" ]]; then
+  echo "fzf_cmd: $fzf_cmd"
+  echo "curl_cmd: $curl_cmd"
+  echo ""
+	echo "cwd: $__dir"
+	echo "filepath: $__file"
+	echo "basename: $__base"
+	echo "root: $__root"
+	echo "invocation: $__invocation"
+fi
+
+# echo "$statuses" \
+# 	| $fzf_cmd --reverse --prompt=' choose a status  ' \
+# 	| xargs slack_status
+# exit 0
+
+# case $subcommand in
+# 	'' | '-h' | '--help')
+# 		help
+# 		;;
+# 	here)
+# 		back
+# 		show
+# 		;;
+# 	meeting | meet | loom)
+# 		zoom
+# 		show
+# 		;;
+# 	*)
+# 		shift
+# 		${subcommand} "$@"
+# 		show
+# 		;;
+# esac
+
+# function try_status() {
+# 	to_session $1 2>/dev/null || new_session $1
+# 	return
+# }
+
+# # if we pass in a param to this binary, switch to it OR, create a new session
+# if [ $status_param ]; then
+# 	try_status $status_param
+# fi
+
+# # get our session from fzf (grabs the the active pane from each session as
+# # preview, too!)
+# sessions_count=$(tmux list-sessions -F "#S" | wc -l | sed -e 's/^[[:space:]]*//')
+
+# # FIXME:
+# # - do we want to filter out the current session or not? quick flip with just 2 sessions is nice though.
+# session=$(tmux list-sessions -F "#S" 2>/dev/null | grep -v "^$(tmux display-message -p '#S')\$" | fzf --reverse --header=" Select a session..." --bind='enter:replace-query+print-query' --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")
+
+# # TODO: need a way to force creating a new session in the event we just want to;
+# # if launching from within TMUX
+# if [[ $sessions_count == 1 ]]; then
+# 	# only one session running, take input to create another (since nothing else
+# 	# to switch to):
+# 	vared -p " Only 1 session running; create another? " -c input
+# 	new_session $input
+# else
+# 	# start the chain to either switch to it if it exists OR, create a new session
+# 	try_session $session
+# fi
+#
+#
+
+# vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2

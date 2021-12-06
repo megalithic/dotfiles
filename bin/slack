@@ -21,17 +21,17 @@ trap ctrl_c INT # trap ctrl-c and call ctrl_c()
 function clean_exit {
 	set +x
 	if [[ $1 != "0" ]]; then
-		log_error "FATAL error code \"${1}\" occurred on line \"${2}\""
+		printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
 	fi
 }
 
-base_command=""
-subcommand=""
-presence=""
-profile=""
-dnd=""
-
 base_command="$(basename "$0")"
+subcommand="${1:-}"
+presence="${1:-}"
+profile="${1:-}"
+dnd="${1:-}"
+away_text="${1:-}"
+away_chan_id=${OUTSTAND_AWAY_CHAN_ID:-}
 
 help() {
 	printf -- "Usage: %s <subcommand>\n" "$base_command"
@@ -40,10 +40,14 @@ help() {
 	printf -- "    away               Set presence to away, and profile for being gone\n"
 	printf -- "    lunch              Set presence to away, and profile for lunch\n"
 	printf -- "    coffee             Set presence to away, and profile for coffee\n"
+	printf -- "    dog                Set presence to away, and profile for dog walking\n"
+	printf -- "    errand             Set presence to away, and profile for running errand\n"
 	printf -- "    pair               Set DND to on, and profile for pairing\n"
 	printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
 	printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
+	printf -- "    focus              Set DND to on, and profile for DND/focus\n"
 	printf -- "    back               Set presence to auto, and profile accordingly\n"
+	printf -- "    here               Set presence to auto, and profile accordingly\n"
 	printf -- "\n"
 }
 
@@ -57,12 +61,12 @@ function request() {
 	if [[ -n $2 && $2 != 0 ]]; then
     # SILENT: curl 2>/dev/null
 		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3?$2" | $HOME/.dotfiles/bin/spinner || {
-      log_error 'failed to make request'
+      log 'failed to make request'
       exit 1
     }
 	else
 		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3" | $HOME/.dotfiles/bin/spinner || {
-      log_error 'failed to make request'
+      log 'failed to make request'
       exit 1
     }
 	fi
@@ -71,134 +75,126 @@ function request() {
 function set_profile() {
 	# $1=token
 	# $2=options
-	request $1 $2 "users.profile.set"
+	request $OUTSTAND_TOKEN $1 "users.profile.set"
 }
 
 function set_presence() {
 	# $1=token
 	# $2=options
-	request $1 $2 "users.setPresence"
+	request $OUTSTAND_TOKEN $1 "users.setPresence"
 }
 
 function set_dnd() {
 	# $1=token
 	# $2=options
-	request $1 $2 "dnd.setSnooze"
-}
-
-function set_away_chan_text() {
-	request $OUTSTAND_TOKEN 0 "chat.postMessage?channel=$OUTSTAND_AWAY_CHAN_ID&as_user=$OUTSTAND_USER&text=$1"
+	request $OUTSTAND_TOKEN $1 "dnd.setSnooze"
 }
 
 function end_dnd() {
 	# $1=token
 	# $2=options
-	request $1 $2 "dnd.endDnd"
+	request $OUTSTAND_TOKEN $1 "dnd.endDnd"
 }
 
-function set_all_presence() {
-	set_presence $OUTSTAND_TOKEN $1
+function set_away_chan_text() {
+	request $OUTSTAND_TOKEN 0 "chat.postMessage?channel=$away_chan_id&as_user=$OUTSTAND_USER&text=$1"
 }
 
-function set_all_profile() {
-	set_profile $OUTSTAND_TOKEN $1
-}
-
-function set_all_dnd() {
-	set_dnd $OUTSTAND_TOKEN $1
-}
-
-function end_all_dnd() {
-	end_dnd $OUTSTAND_TOKEN $1
-}
 
 function away() {
 	presence="presence=away"
-	set_all_presence $presence
+	set_presence $presence
 	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
 	# profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
 	profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:afk:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
   set_away_chan_text "bbl"
 }
 
 function brb() {
 	presence="presence=away"
-	set_all_presence $presence
+	set_presence $presence
 	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
 	profile="profile=%7B%22status_text%22:%22..be%20right%20back..%22,%22status_emoji%22:%22:brb:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
   set_away_chan_text "brb"
 }
 
 function lunch() {
 	presence="presence=away"
-	set_all_presence $presence
+	set_presence $presence
 	profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
   set_away_chan_text "bbl,%20lunch"
+}
+
+function errand() {
+	presence="presence=away"
+	set_presence $presence
+	profile="profile=%7B%22status_text%22:%22..running%20an%20errand..%22,%22status_emoji%22:%22:car:%22%7D"
+	set_profile $profile
+  set_away_chan_text "bbl,%20running%20an%20errand"
 }
 
 function coffee() {
 	presence="presence=away"
-	set_all_presence $presence
+	set_presence $presence
 	profile="profile=%7B%22status_text%22:%22..covfefe..%22,%22status_emoji%22:%22:coffee:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
   set_away_chan_text "brb,%20coffee"
 }
 
 function dog() {
 	presence="presence=away"
-	set_all_presence $presence
+	set_presence $presence
 	profile="profile=%7B%22status_text%22:%22...walking%20the%20puppers..%22,%22status_emoji%22:%22:doge:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
   set_away_chan_text "bbiab,%20walking%20the%20puppers"
 }
 
 function gone() {
 	presence="presence=away"
-	set_all_presence $presence
-	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
+	set_presence $presence
 	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-	set_all_profile $profile
+	set_profile $profile
 	dnd="num_minutes=930"
-	set_all_dnd $dnd
+	set_dnd $dnd
   set_away_chan_text "👋%20have%20a%20good%20one%20y'all!"
 }
 
 function pair() {
 	profile="profile=%7B%22status_text%22:%22..pairing..%22,%22status_emoji%22:%22:pear:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
 	dnd="num_minutes=120"
-	set_all_dnd $dnd
+	set_dnd $dnd
 }
 
 function zoom() {
 	profile="profile=%7B%22status_text%22:%22..on%20a%20call..%22,%22status_emoji%22:%22:calendar:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
 	dnd="num_minutes=120"
-	set_all_dnd $dnd
+	set_dnd $dnd
 }
 
 function dnd() {
 	profile="profile=%7B%22status_text%22:%22..focused%20work%20time..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
-	set_all_profile $profile
+	set_profile $profile
 	dnd="num_minutes=120"
-	set_all_dnd $dnd
+	set_dnd $dnd
 }
 
 function back() {
 	presence="presence=auto"
-	set_all_presence $presence
+	set_presence $presence
 	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
-	set_all_profile $profile
+	set_profile $profile
 	dnd=0
-	end_all_dnd $dnd
+	end_dnd $dnd
   set_away_chan_text "back"
 }
 
-function show() {
-  printf "[%s] at %s" "$subcommand" "$(date)"
+function log() {
+  printf "[%s] at %s... \r\n" "$subcommand" "$(date)"
 }
 
 subcommand="${1:-}"
@@ -209,15 +205,19 @@ case $subcommand in
 		;;
 	here)
 		back
-    show
+    log
 		;;
 	meeting | meet | loom)
 		zoom
-    show
+    log
+		;;
+	dnd | focus)
+		dnd
+    log
 		;;
 	*)
 		shift
 		${subcommand} "$@"
-    show
+    log
 		;;
 esac

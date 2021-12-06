@@ -1,56 +1,111 @@
-#!/usr/bin/env zsh
-# shellcheck shell=bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
-# tm [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to existing one.
-# Running `ftm` will let you fuzzy-find a session mame
-# Passing an argument to `ftm` will switch to that session if it exists or create it otherwise (as a tmuxinator session if it exists)
 #
-# NOTE: presently only works for zsh
+# ftm [options] [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to
+# existing one.
+#
+# Running `ftm` will let you fuzzy-find a session mame
+#
+# Passing an argument to `ftm` will switch to that session if it exists or
+# create it otherwise (as a tmuxinator session if it exists)
+#
+# see __help() for more information..
+#
 
-session_name_param="${1:-}"
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+POPUP="false"
+
+# -- check for our dependencies..
+(command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
+(command -v tmuxinator &>/dev/null) && TMUXINATOR_FOUND="installed" || TMUXINATOR_FOUND="not installed"
+
+# -- halt if we don't have FZF installed
+if [[ $FZF_FOUND == "not installed" ]]; then
+	printf -- "ERROR: %s requires FZF to be installed" "$__base"
+	__help
+	exit 1
+fi
+
+# -- friendly help if -h option given
+__help() {
+	printf -- "Usage: %s [options] [SESSION_NAME | FUZZY PATTERN]\n" "$__base"
+	printf -- "\n"
+	printf -- "   Options:\n"
+	printf -- "     -p              Run fzf normally for tmux' popup feature, else fzf-tmux\n"
+	printf -- "     -h              This help text you're presently reading. 😄\n"
+	printf -- "\n"
+	printf -- "   Dependencies:\n"
+	printf -- "     fzf             ($FZF_FOUND)\n"
+	printf -- "     tmuxinator      ($TMUXINATOR_FOUND)\n"
+	printf -- "\n"
+
+	exit 0
+}
+
+while getopts "ph" OPTION; do
+	case $OPTION in
+
+		p)
+			POPUP="true"
+			shift
+			;;
+
+		h)
+			__help
+			break
+			;;
+
+	esac
+done
+
+session_name="${1:-}"
 
 [[ -n $TMUX ]] && change="switch-client" || change="attach-session"
+[[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 
+# change to the given existing session
 function to_session() {
-	tmux $change -t "$1"
+	local session="$1"
+	tmux $change -t "$session"
 }
 
 # new session with tmuxinator config, OR just new basic tmux session
 function new_session() {
-	(tmuxinator start "$1" --no-attach 2>/dev/null \
-		&& to_session $1 \
-		|| tmux new-session -d -s "$1" \
-		&& to_session $1) && exit
+	local session="$1"
+	(tmuxinator start "$session" --no-attach 2>/dev/null \
+		&& to_session "$session" \
+		|| tmux new-session -d -s "$session" \
+		&& to_session "$session") && exit
 }
 
+# try to change to an existing session; otherwise, create a new one
 function try_session() {
-	to_session $1 2>/dev/null || new_session $1
-	return
+	local session="$1"
+	to_session "$session" 2>/dev/null || new_session "$session"
 }
 
-# if we pass in a param to this binary, switch to it OR, create a new session
-if [ $session_name_param ]; then
-	try_session $session_name_param
+# if we pass in a param to this binary, we switch to it OR, create a new session
+if [[ $session_name ]]; then
+	try_session "$session_name"
+	return
 fi
 
 # get our session from fzf (grabs the the active pane from each session as
 # preview, too!)
 sessions_count=$(tmux list-sessions -F "#S" | wc -l | sed -e 's/^[[:space:]]*//')
+[[ $sessions_count == 1 ]] && fzf_prompt_text=" create new session  " || fzf_prompt_text=" select session (or create new)  "
+[[ $sessions_count == 1 ]] && fzf_header_text="" || fzf_header_text="ﯲ running tmux sessions"
 
 # FIXME:
-# - do we want to filter out the current session or not? quick flip with just 2 sessions is nice though.
-session=$(tmux list-sessions -F "#S" 2>/dev/null | grep -v "^$(tmux display-message -p '#S')\$" | fzf --reverse --header=" Select a session..." --bind='enter:replace-query+print-query' --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")
-
-# TODO: need a way to force creating a new session in the event we just want to;
-# if launching from within TMUX
-if [[ $sessions_count == 1 ]]; then
-	# only one session running, take input to create another (since nothing else
-	# to switch to):
-	vared -p " Only 1 session running; create another? " -c input
-	new_session $input
-else
-	# start the chain to either switch to it if it exists OR, create a new session
-	try_session $session
-fi
+# - do we want to filter out the current session or not? quick flip when just 2 sessions is nice though.
+# - NOTE about this; if we want new session creation from fzf, we need the current session filter.
+try_session "$(tmux list-sessions -F "#S" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind='enter:replace-query+print-query' --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")"
