@@ -65,6 +65,7 @@ back
 here
 "
 
+# -- checks for needed dependencies
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 [[ -x "$spinner_path" ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
 
@@ -73,7 +74,7 @@ here
 function __help() {
 	printf -- "Usage: %s [options] [STATUS | FUZZY_PATTERN]\n" "$__base"
 	printf -- "\n"
-printf -- "   Statuses:\n"
+  printf -- "   Statuses:\n"
 	printf -- "     away              Set presence to away, and profile for being gone\n"
 	printf -- "     lunch             Set presence to away, and profile for lunch\n"
 	printf -- "     coffee            Set presence to away, and profile for coffee\n"
@@ -325,12 +326,15 @@ function back() {
 }
 
 function log() {
-  printf "\n[%s] at %s... \r\n" "$status" "$(date)"
+  local given_status="$1"
+  printf "\n[%s] at %s... \r\n" "$given_status" "$(date)"
 }
 
 function do_status() {
-  ${status} "$@"
-  log
+  local given_status="$1"
+
+  ${given_status} "$@"
+  log "$given_status"
 
   exit 0
 }
