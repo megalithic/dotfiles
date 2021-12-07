@@ -66,8 +66,8 @@ if [ -n "$(command -v fzf)" ]; then
 	if (command -v fd &>/dev/null); then
 		LIST_DIR_CONTENTS='ls --almost-all --group-directories-first --color=always {}'
 		LIST_FILE_CONTENTS='head -n128 {}'
-		FZF_ALT_C_OPTS="--preview '$LIST_DIR_CONTENTS'"
-		FZF_CTRL_T_OPTS="--preview 'if [[ -f {} ]]; then $LIST_FILE_CONTENTS; elif [[ -d {} ]]; then $LIST_DIR_CONTENTS; fi'"
+		export FZF_ALT_C_OPTS="--preview '$LIST_DIR_CONTENTS'"
+		export FZF_CTRL_T_OPTS="--preview 'if [[ -f {} ]]; then $LIST_FILE_CONTENTS; elif [[ -d {} ]]; then $LIST_DIR_CONTENTS; fi'"
 
 		export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global --ignore-file .gitignore'
 		export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"

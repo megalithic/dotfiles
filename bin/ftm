@@ -47,6 +47,7 @@ function __help() {
 	printf -- "   Options:\n"
 	printf -- "     -p              Run fzf normally for tmux' popup feature, else fzf-tmux\n"
 	printf -- "     -h              This help text you're presently reading. 😄\n"
+	printf -- "     -d              Make tmuxinator be extremely loud!11!!1! \n"
 	printf -- "\n"
 	printf -- "   Dependencies:\n"
 	printf -- "     fzf             ($FZF_FOUND)\n"
@@ -100,10 +101,10 @@ function get_tmuxinator_configs() {
   if [[ -n "$tmuxinator_configs_dir" ]]; then
     for config in "$tmuxinator_configs_dir"/*.yml
     do
-      config_name="$(basename ${config##*/} .yml)"  # get filename
+      config_name="$(basename ${config##*/} .yml)"
       tmuxinator_configs+=("$config_name")
     done
-    printf "%s\n"  "${tmuxinator_configs[@]}"
+    printf "%s\n" "${tmuxinator_configs[@]}"
   else
     return
   fi
@@ -121,14 +122,15 @@ function new_session() {
 	(exec tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
 		&& to_session "$session" \
 		|| tmux new-session -d -s "$session" \
-		&& to_session "$session")
+		&& to_session "$session") && exit
 }
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
 	local session="$1"
 	to_session "$session" 2>/dev/null || new_session "$session"
-  tmux display-message " $session activated.."
+  # TODO: do we really want this?
+  # tmux display-message " $session activated.."
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
@@ -140,6 +142,7 @@ fi
 sessions_list=$(tmux list-sessions -F "#S")
 current_session="$(tmux list-panes -F "#{session_name}")"
 sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
+preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
 
 # -- do certain things based upon only one active session
 if [[ $sessions_count == 1 ]]; then
@@ -147,13 +150,14 @@ if [[ $sessions_count == 1 ]]; then
   fzf_header_text=""
 
   # -- provide user with their avaialble tmuxinator configs (assumes certain dir)
-  # TODO: disable preview when no active sessions to switch to
   sessions_list="$(get_tmuxinator_configs)"
-  [[ $(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//') > 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
+  tmuxinator_sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
+  [[ $tmuxinator_sessions_count > 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
+  [[ $tmuxinator_sessions_count > 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
 else
   fzf_prompt_text=" select session (or create new)  "
-  fzf_header_text="ﯲ running tmux sessions (current: $current_session)"
+  fzf_header_text="ﯲ running tmux sessions (active: $current_session)"
 fi
 
 # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")"
+try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
