@@ -55,7 +55,7 @@
 
   cl = clone
 
-  pr = !$HOME/.dotfiles/bin/git-bin/git-pr
+  ; pr = !$HOME/.dotfiles/bin/git-bin/git-pr
 
   # stash
   ; sshow = "!f() { git stash show stash^{/$*} -p; }; f"

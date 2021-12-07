@@ -247,9 +247,10 @@ alias map="xargs -n1"
 
 # GIT
 # -----------------------------------------------------------------------------
-alias gpreq="~/.dotfiles/bin/git-bin/git-pr"
-alias preq=gpreq
-alias req=gpreq
+
+# alias hub -> git
+(command -v hub &>/dev/null) && alias git="hub"
+
 alias dangled="git fsck --no-reflog | awk '/dangling commit/ {print $3}'" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
 alias conflicted="git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR"
 alias conflicts="git ls-files -u | cut -f 2 | sort -u"
