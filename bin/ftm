@@ -17,6 +17,10 @@
 #   Required: `fzf`
 #   Optional: `tmuxinator`
 #
+# TODO:
+#   - not able to create a new session when at exactly 2 active sessions; must
+#   rely on `ftm [EXPLICIT_SESSION_NAME]` instead of the fzf TUI.
+#
 
 set -euo pipefail
 
@@ -34,6 +38,7 @@ DEBUG="false"
 # -- check for our dependencies..
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v tmuxinator &>/dev/null) && TMUXINATOR_FOUND="installed" || TMUXINATOR_FOUND="not installed"
+[[ -d "$HOME/.config/tmuxinator" ]] && tmuxinator_configs_dir="$HOME/.config/tmuxinator" || tmuxinator_configs_dir=""
 
 # -- friendly help if -h option given
 function __help() {
@@ -87,14 +92,30 @@ session_name="${1:-}"
 [[ "$POPUP" == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 [[ "$DEBUG" == "true" ]] && tmuxinator_start_cmd="debug" || tmuxinator_start_cmd="start"
 
+# -- array of available tmuxinator_configs
+declare -a tmuxinator_configs
 
-# change to the given existing session
+# -- gets possible tmuxinator configs (naive config dir assumption)
+function get_tmuxinator_configs() {
+  if [[ -n "$tmuxinator_configs_dir" ]]; then
+    for config in "$tmuxinator_configs_dir"/*.yml
+    do
+      config_name="$(basename ${config##*/} .yml)"  # get filename
+      tmuxinator_configs+=("$config_name")
+    done
+    printf "%s\n"  "${tmuxinator_configs[@]}"
+  else
+    return
+  fi
+}
+
+# -- change to the given existing session
 function to_session() {
 	local session="$1"
 	tmux $change -t "$session"
 }
 
-# new session with tmuxinator config, OR just new basic tmux session
+# -- new session with tmuxinator config, OR just new basic tmux session
 function new_session() {
 	local session="$1"
 	(exec tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
@@ -103,32 +124,36 @@ function new_session() {
 		&& to_session "$session")
 }
 
-# try to change to an existing session; otherwise, create a new one
+# -- try to change to an existing session; otherwise, create a new one
 function try_session() {
 	local session="$1"
 	to_session "$session" 2>/dev/null || new_session "$session"
   tmux display-message " $session activated.."
 }
 
-# if we pass in a session_name: attach/switch to it or, create new session
+# -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then
 	try_session "$session_name"
 	return
 fi
 
-# get our session from fzf (grabs the the active pane from each session as
-# preview, too!)
 sessions_list=$(tmux list-sessions -F "#S")
 current_session="$(tmux list-panes -F "#{session_name}")"
 sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-[[ $sessions_count == 1 ]] && fzf_prompt_text=" create new session  " || fzf_prompt_text=" select session (or create new)  "
-[[ $sessions_count == 1 ]] && fzf_header_text="" || fzf_header_text="ﯲ running tmux sessions (current: $current_session)"
 
-# if [[ $sessions_count == 1 ]]; then
-#   sessions_list=
-# fi
+# -- do certain things based upon only one active session
+if [[ $sessions_count == 1 ]]; then
+  fzf_prompt_text=" create new session  "
+  fzf_header_text=""
 
-# FIXME:
-# - do we want to filter out the current session or not? quick flip when just 2 sessions is nice though.
-# - NOTE about this; if we want new session creation from fzf, we need the current session filter.
+  # -- provide user with their avaialble tmuxinator configs (assumes certain dir)
+  # TODO: disable preview when no active sessions to switch to
+  sessions_list="$(get_tmuxinator_configs)"
+  [[ $(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//') > 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
+else
+  fzf_prompt_text=" select session (or create new)  "
+  fzf_header_text="ﯲ running tmux sessions (current: $current_session)"
+fi
+
+# -- get our session from fzf (grabs the the active pane from each session as preview, too!)
 try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")"

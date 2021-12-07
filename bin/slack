@@ -346,6 +346,6 @@ if [[ $status ]]; then
   do_status "$status"
 else
   # finally, just fuzzy-find based upon our supported statuses
-  selected_status="$(echo "$statuses" | $fzf_cmd --reverse --exit-0 --prompt=" select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query")"
+  selected_status="$(echo "$statuses" | $fzf_cmd --reverse --exit-0 --prompt="聆select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query")"
   [[ -n "$selected_status" ]] && do_status "$selected_status" || return
 fi
