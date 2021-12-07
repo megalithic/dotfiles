@@ -1,170 +1,285 @@
 #!/usr/bin/env bash
 
 #
-# What in tarnation?
+# What in tarnation is this?
 #
 # CLI tool to control slack status and presence
 #
-# Requires:
-# - ENV vars setup for your slack API tokens (KEEP THEM SAFE! DO NOT commit your tokens to github)
-#   * you can find them here: https://api.slack.com/custom-integrations/legacy-tokens
-# - `spinner` from my dotfiles' `bin` folder
+# slack [options] [STATUS_NAME | FUZZY_PATTERN]
 #
-# Attribution: https://github.com/matthewfallshaw/utilities/blob/master/shell/slack-status
+# Running `slack` with no argument will let you fuzzy-find pre-defined statuses
 #
+# Dependencies:
+#   Required: various ENV variables (see source below)
+#   Optional: `spinner` from my dotfiles' bin dir
 #
+
 set -euo pipefail
 
-trap 'clean_exit $? $LINENO' EXIT
-trap ctrl_c INT # trap ctrl-c and call ctrl_c()
+# trap 'clean_exit $? $LINENO' EXIT
+# trap ctrl_c INT # trap ctrl-c and call ctrl_c()
 
-function clean_exit {
-	set +x
-	if [[ $1 != "0" ]]; then
-		printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
-	fi
+# function clean_exit {
+# 	set +x
+# 	if [[ $1 != "0" ]]; then
+# 		printf -- "FATAL error code %s occurred on line %s" "$1" "$2"
+# 	fi
+# }
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+POPUP="false"
+VERBOSE="false"
+DEBUG="false"
+
+# -- ENV vars
+AWAY_CHAN_ID=${OUTSTAND_AWAY_CHAN_ID:-}
+SLACK_TOKEN=${OUTSTAND_TOKEN:-}
+SLACK_USER=${OUTSTAND_USER:-}
+
+# -- internal vars
+request=""
+api_url="https://slack.com/api"
+presence=""
+profile=""
+dnd=""
+away_text=""
+spinner_path="$HOME/.dotfiles/bin/spinner"
+statuses="away
+lunch
+coffee
+dog
+errand
+pair
+zoom
+meeting
+dnd
+focus
+back
+here
+"
+
+(command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
+[[ -x "$spinner_path" ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
+
+[[ $SPINNER_FOUND == "installed" ]] && spinner="$spinner_path" || spinner="echo '.'"
+
+function __help() {
+	printf -- "Usage: %s [options] [STATUS | FUZZY_PATTERN]\n" "$__base"
+	printf -- "\n"
+printf -- "   Statuses:\n"
+	printf -- "     away              Set presence to away, and profile for being gone\n"
+	printf -- "     lunch             Set presence to away, and profile for lunch\n"
+	printf -- "     coffee            Set presence to away, and profile for coffee\n"
+	printf -- "     dog               Set presence to away, and profile for dog walking\n"
+	printf -- "     errand            Set presence to away, and profile for running errand\n"
+	printf -- "     pair              Set DND to on, and profile for pairing\n"
+	printf -- "     zoom              Set DND to on, and profile for zoom/meeting\n"
+	printf -- "     dnd               Set DND to on, and profile for DND/focus\n"
+	printf -- "     focus             Set DND to on, and profile for DND/focus\n"
+	printf -- "     back              Set presence to auto, and profile accordingly\n"
+	printf -- "     here              Set presence to auto, and profile accordingly\n"
+	printf -- "\n"
+	printf -- "   Options:\n"
+	printf -- "     -p                Run fzf normally for tmux' popup feature, else fzf-tmux\n"
+	printf -- "     -h                This help text you're presently reading. 😄\n"
+	printf -- "\n"
+	printf -- "   Dependencies:\n"
+	printf -- "     fzf               ($FZF_FOUND)\n"
+	printf -- "     spinner           ($SPINNER_FOUND)\n"
+	printf -- "\n"
 }
 
-base_command="$(basename "$0")"
-subcommand="${1:-}"
-presence="${1:-}"
-profile="${1:-}"
-dnd="${1:-}"
-away_text="${1:-}"
-away_chan_id=${OUTSTAND_AWAY_CHAN_ID:-}
-
-help() {
-	printf -- "Usage: %s <subcommand>\n" "$base_command"
+function __info() {
+	printf -- "%s executation details:\n" "$__base"
+	printf -- "---------------------------------------------------\n"
+	printf -- "fzf:          %s\n" "$fzf_cmd"
+	printf -- "curl:         %s\n" "$curl_cmd"
 	printf -- "\n"
-	printf -- "Subcommands:\n"
-	printf -- "    away               Set presence to away, and profile for being gone\n"
-	printf -- "    lunch              Set presence to away, and profile for lunch\n"
-	printf -- "    coffee             Set presence to away, and profile for coffee\n"
-	printf -- "    dog                Set presence to away, and profile for dog walking\n"
-	printf -- "    errand             Set presence to away, and profile for running errand\n"
-	printf -- "    pair               Set DND to on, and profile for pairing\n"
-	printf -- "    zoom               Set DND to on, and profile for zoom/meeting\n"
-	printf -- "    dnd                Set DND to on, and profile for DND/focus\n"
-	printf -- "    focus              Set DND to on, and profile for DND/focus\n"
-	printf -- "    back               Set presence to auto, and profile accordingly\n"
-	printf -- "    here               Set presence to auto, and profile accordingly\n"
+	printf -- "cwd:          %s\n" "$__dir"
+	printf -- "filepath:     %s\n" "$__file"
+	printf -- "basename:     %s\n" "$__base"
+	printf -- "root:         %s\n" "$__root"
+	printf -- "invocation:   %s\n" "$__invocation"
 	printf -- "\n"
 }
+
+# -- halt if we don't have FZF installed
+if [[ $FZF_FOUND == "not installed" ]]; then
+	printf -- "ERROR: %s requires FZF to be installed" "$__base"
+	__help
+	exit 1
+fi
+
+while getopts "phdv" OPTION; do
+	case $OPTION in
+
+		p)
+			POPUP="true"
+			shift
+			;;
+
+		h)
+			__help
+			break
+			;;
+
+		d)
+			DEBUG="true"
+			shift
+			;;
+
+		v)
+			VERBOSE="true"
+			shift
+			;;
+
+	esac
+done
+
+# -- first param passed in, after options
+status="${1:-}"
+
+# -- handle options
+[[ $VERBOSE == "true" || $DEBUG == "true" ]] && curl_cmd="curl --verbose" || curl_cmd="curl --silent"
+[[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 
 function request() {
-	# $1=token
-	# $2=options
-	# $3=endpoint
+  local feature=$1
+  local options=$2
 
-	# non-zero length string AND a value not equal to 0
-	# TODO: need better way to handle options/args that don't exist
-	if [[ -n $2 && $2 != 0 ]]; then
-    # SILENT: curl 2>/dev/null
-		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3?$2" | $HOME/.dotfiles/bin/spinner || {
-      log 'failed to make request'
-      exit 1
-    }
+  # TODO: use -d / --data for building the request
+	if [[ -n $options && $options != 0 ]]; then
+    #  1>&2
+    request="$curl_cmd -S --data "token=$SLACK_TOKEN" "$api_url/$feature?$options""
 	else
-		curl 2>/dev/null 1>&2 -s -S --data "token=$1" "https://slack.com/api/$3" | $HOME/.dotfiles/bin/spinner || {
-      log 'failed to make request'
+    request="$curl_cmd -S --data "token=$SLACK_TOKEN" "$api_url/$feature""
+	fi
+
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && echo "executing request: $request"
+
+  if [[ $DEBUG == "true" ]]; then
+    exec $request | $spinner || {
+      echo 'failed to make slack request'
       exit 1
     }
-	fi
+  else
+    exec $request &>/dev/null | $spinner || {
+      echo 'failed to make slack request'
+      exit 1
+    }
+  fi
 }
 
 function set_profile() {
-	# $1=token
-	# $2=options
-	request $OUTSTAND_TOKEN $1 "users.profile.set"
+  local profile="$1"
+	request "users.profile.set" "$profile"
 }
 
 function set_presence() {
-	# $1=token
-	# $2=options
-	request $OUTSTAND_TOKEN $1 "users.setPresence"
+  local presence="$1"
+	request "users.setPresence" "$presence"
 }
 
 function set_dnd() {
-	# $1=token
-	# $2=options
-	request $OUTSTAND_TOKEN $1 "dnd.setSnooze"
+  local dnd="$1"
+	request "dnd.setSnooze" "$dnd"
 }
 
 function end_dnd() {
-	# $1=token
-	# $2=options
-	request $OUTSTAND_TOKEN $1 "dnd.endDnd"
+  local dnd="$1"
+	request "dnd.endDnd" "$dnd"
 }
 
 function set_away_chan_text() {
-	request $OUTSTAND_TOKEN 0 "chat.postMessage?channel=$away_chan_id&as_user=$OUTSTAND_USER&text=$1"
+  local away_text="$1"
+	request "chat.postMessage?channel=$AWAY_CHAN_ID&as_user=$SLACK_USER&text=$away_text" 0
 }
 
 
 function away() {
 	presence="presence=away"
 	set_presence $presence
-	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
-	# profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+
 	profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:afk:%22%7D"
 	set_profile $profile
+
   set_away_chan_text "bbl"
 }
 
 function brb() {
 	presence="presence=away"
 	set_presence $presence
-	# profile="profile=%7B%22status_text%22:%22..afk..%22,%22status_emoji%22:%22:wave:%22%7D"
+
 	profile="profile=%7B%22status_text%22:%22..be%20right%20back..%22,%22status_emoji%22:%22:brb:%22%7D"
 	set_profile $profile
+
   set_away_chan_text "brb"
 }
 
 function lunch() {
 	presence="presence=away"
 	set_presence $presence
+
 	profile="profile=%7B%22status_text%22:%22..lunch..%22,%22status_emoji%22:%22:taco:%22%7D"
 	set_profile $profile
+
   set_away_chan_text "bbl,%20lunch"
 }
 
 function errand() {
 	presence="presence=away"
 	set_presence $presence
+
 	profile="profile=%7B%22status_text%22:%22..running%20an%20errand..%22,%22status_emoji%22:%22:car:%22%7D"
 	set_profile $profile
+
   set_away_chan_text "bbl,%20running%20an%20errand"
 }
 
 function coffee() {
 	presence="presence=away"
 	set_presence $presence
+
 	profile="profile=%7B%22status_text%22:%22..covfefe..%22,%22status_emoji%22:%22:coffee:%22%7D"
 	set_profile $profile
+
   set_away_chan_text "brb,%20coffee"
 }
 
 function dog() {
 	presence="presence=away"
 	set_presence $presence
+
 	profile="profile=%7B%22status_text%22:%22...walking%20the%20puppers..%22,%22status_emoji%22:%22:doge:%22%7D"
 	set_profile $profile
+
   set_away_chan_text "bbiab,%20walking%20the%20puppers"
 }
 
 function gone() {
 	presence="presence=away"
 	set_presence $presence
+
 	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
 	set_profile $profile
+
 	dnd="num_minutes=930"
 	set_dnd $dnd
-  set_away_chan_text "👋%20have%20a%20good%20one%20y'all!"
+
+  set_away_chan_text "👋%20have%20a%20good%20one!"
 }
 
 function pair() {
 	profile="profile=%7B%22status_text%22:%22..pairing..%22,%22status_emoji%22:%22:pear:%22%7D"
 	set_profile $profile
+
 	dnd="num_minutes=120"
 	set_dnd $dnd
 }
@@ -172,6 +287,7 @@ function pair() {
 function zoom() {
 	profile="profile=%7B%22status_text%22:%22..on%20a%20call..%22,%22status_emoji%22:%22:calendar:%22%7D"
 	set_profile $profile
+
 	dnd="num_minutes=120"
 	set_dnd $dnd
 }
@@ -179,45 +295,53 @@ function zoom() {
 function dnd() {
 	profile="profile=%7B%22status_text%22:%22..focused%20work%20time..%22,%22status_emoji%22:%22:octagonal_sign:%22%7D"
 	set_profile $profile
+
 	dnd="num_minutes=120"
 	set_dnd $dnd
+}
+
+function here() {
+	presence="presence=auto"
+	set_presence $presence
+
+	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
+	set_profile $profile
+
+	dnd=0
+	end_dnd $dnd
 }
 
 function back() {
 	presence="presence=auto"
 	set_presence $presence
+
 	profile="profile=%7B%22status_text%22:%22%22,%22status_emoji%22:%22%22%7D"
 	set_profile $profile
+
 	dnd=0
 	end_dnd $dnd
+
   set_away_chan_text "back"
 }
 
 function log() {
-  printf "[%s] at %s... \r\n" "$subcommand" "$(date)"
+  printf "\n[%s] at %s... \r\n" "$status" "$(date)"
 }
 
-subcommand="${1:-}"
+function do_status() {
+  ${status} "$@"
+  log
 
-case $subcommand in
-	'' | '-h' | '--help')
-		help
-		;;
-	here)
-		back
-    log
-		;;
-	meeting | meet | loom)
-		zoom
-    log
-		;;
-	dnd | focus)
-		dnd
-    log
-		;;
-	*)
-		shift
-		${subcommand} "$@"
-    log
-		;;
-esac
+  exit 0
+}
+
+[[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
+
+# if we pass in a status, use it directly
+if [[ $status ]]; then
+  do_status "$status"
+else
+  # finally, just fuzzy-find based upon our supported statuses
+  selected_status="$(echo "$statuses" | $fzf_cmd --reverse --exit-0 --prompt=" select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query")"
+  [[ -n "$selected_status" ]] && do_status "$selected_status" || return
+fi

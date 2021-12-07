@@ -29,8 +29,10 @@ set -g mode-style 'bg=#ffffff,fg=#000000'
 
 # colorize messages in the command line
 set -g status-style 'bg=default,fg=#aaaaaa'
-set -g message-style 'bg=#323d43,fg=brightred,italics'
-set -g message-command-style bg=black,fg=blue
+# Styling when in command mode i.e. vi or emacs mode in tmux command line
+set -g message-command-style 'fg=green bg=default bold,blink'
+# Regular tmux commandline styling
+set -g message-style 'fg=magenta bg=default italics,bold'
 
 # set -g message-style bg=default,fg=brightred #base02
 # set -g message-command-style bg=black,fg=blue

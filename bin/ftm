@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 #
-# ftm [options] [SESSION_NAME | FUZZY PATTERN] - create new tmux session, or switch to
-# existing one.
+# What in tarnation is this?
 #
-# Running `ftm` will let you fuzzy-find a session mame
+# CLI tool to create new tmux(inator) session, or switch to running tmux
+# session.
+#
+# ftm [options] [SESSION_NAME | FUZZY_PATTERN]
+#
+# Running `ftm` with no argument will let you fuzzy-find a running session name
 #
 # Passing an argument to `ftm` will switch to that session if it exists or
 # create it otherwise (as a tmuxinator session if it exists)
 #
-# see __help() for more information..
+# Dependencies:
+#   Required: `fzf`
+#   Optional: `tmuxinator`
 #
+
+set -euo pipefail
 
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,16 +34,9 @@ POPUP="false"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v tmuxinator &>/dev/null) && TMUXINATOR_FOUND="installed" || TMUXINATOR_FOUND="not installed"
 
-# -- halt if we don't have FZF installed
-if [[ $FZF_FOUND == "not installed" ]]; then
-	printf -- "ERROR: %s requires FZF to be installed" "$__base"
-	__help
-	exit 1
-fi
-
 # -- friendly help if -h option given
-__help() {
-	printf -- "Usage: %s [options] [SESSION_NAME | FUZZY PATTERN]\n" "$__base"
+function __help() {
+	printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "$__base"
 	printf -- "\n"
 	printf -- "   Options:\n"
 	printf -- "     -p              Run fzf normally for tmux' popup feature, else fzf-tmux\n"
@@ -50,6 +49,13 @@ __help() {
 
 	exit 0
 }
+
+# -- halt if we don't have FZF installed
+if [[ $FZF_FOUND == "not installed" ]]; then
+	printf -- "ERROR: %s requires FZF to be installed" "$__base"
+	__help
+	exit 1
+fi
 
 while getopts "ph" OPTION; do
 	case $OPTION in
@@ -69,6 +75,7 @@ done
 
 session_name="${1:-}"
 
+# -- handle options
 [[ -n $TMUX ]] && change="switch-client" || change="attach-session"
 [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 
@@ -84,16 +91,17 @@ function new_session() {
 	(tmuxinator start "$session" --no-attach 2>/dev/null \
 		&& to_session "$session" \
 		|| tmux new-session -d -s "$session" \
-		&& to_session "$session") && exit
+		&& to_session "$session")
 }
 
 # try to change to an existing session; otherwise, create a new one
 function try_session() {
 	local session="$1"
 	to_session "$session" 2>/dev/null || new_session "$session"
+  tmux display-message " $session activated.."
 }
 
-# if we pass in a param to this binary, we switch to it OR, create a new session
+# if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then
 	try_session "$session_name"
 	return
@@ -101,11 +109,12 @@ fi
 
 # get our session from fzf (grabs the the active pane from each session as
 # preview, too!)
+current_session="$(tmux list-panes -F "#{session_name}")"
 sessions_count=$(tmux list-sessions -F "#S" | wc -l | sed -e 's/^[[:space:]]*//')
 [[ $sessions_count == 1 ]] && fzf_prompt_text=" create new session  " || fzf_prompt_text=" select session (or create new)  "
-[[ $sessions_count == 1 ]] && fzf_header_text="" || fzf_header_text="ﯲ running tmux sessions"
+[[ $sessions_count == 1 ]] && fzf_header_text="" || fzf_header_text="ﯲ running tmux sessions (current: $current_session)"
 
 # FIXME:
 # - do we want to filter out the current session or not? quick flip when just 2 sessions is nice though.
 # - NOTE about this; if we want new session creation from fzf, we need the current session filter.
-try_session "$(tmux list-sessions -F "#S" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind='enter:replace-query+print-query' --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")"
+try_session "$(tmux list-sessions -F "#S" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}")"
