@@ -74,7 +74,7 @@ while getopts "phd" OPTION; do
 
 		h)
 			__help
-			break
+			exit
 			;;
 
 		d)

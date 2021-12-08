@@ -5,10 +5,10 @@
   email = seth.messer@gmail.com
   color = auto
 
-; [credential]
-; 	helper = osxkeychain
+[credential]
+	helper = osxkeychain
 ; 	helper = pass
-; 	helper = /usr/local/share/gcm-core/git-credential-manager-core
+	helper = /usr/local/share/gcm-core/git-credential-manager-core
 
 [credential "https://github.com"]
   helper = osxkeychain
@@ -17,6 +17,7 @@
   protocol = https
 
 [github.com]
+	user = megalithic
   protocol = https
 # - gh config set -h github.com git_protocol ssh
   # protocol = https
@@ -40,11 +41,12 @@
   aa = add --all :/
   ap = add --patch
 
-	;   b = branch
-	;   ba = branch -A
+	b = branch
+	br = branch
+	; ba = branch -A
 	; bm = branch -m
 	; bd = branch -d
-	;   bbd = branch -D $1 && push origin --delete $1
+	; bbd = branch -D $1 && push origin --delete $1
 
   cv = commit -v
   cm = commit -m
