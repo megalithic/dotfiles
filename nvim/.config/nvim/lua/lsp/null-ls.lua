@@ -35,14 +35,17 @@ function M.setup()
         end,
       }),
       b.formatting.elm_format,
+      b.formatting.mix.with({ filetypes = { "elixir", "heex", "eelixir" } }),
+      b.formatting.surface.with({ filetypes = { "elixir", "heex", "eelixir", "surface" } }),
       -- nls.builtins.formatting.eslint_d,
       b.formatting.shfmt.with({
         extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
       }),
       b.diagnostics.shellcheck,
-      -- nls.builtins.diagnostics.markdownlint,
-      -- nls.builtins.diagnostics.selene,
+      b.diagnostics.credo,
+      -- b.diagnostics.stylelint,
+      b.diagnostics.selene,
     },
   })
 end
