@@ -59,6 +59,13 @@ return {
   -- "SmiteshP/nvim-gps", -- this is breaking elixir TS parser/grammar
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
+  -- "stevearc/dressing.nvim", -- auto UI things for new 0.6 apis
+  {
+    "rcarriga/nvim-notify",
+    -- config = function()
+    --   vim.notify = require("notify")
+    -- end,
+  },
 
   --
   -- (treesitter) --

@@ -5,6 +5,7 @@ local M = {}
 
 function M.setup()
   nls.config({
+    debug = true,
     debounce = 150,
     save_after_format = false,
     sources = {
@@ -57,8 +58,7 @@ function M.setup()
       }),
       b.diagnostics.shellcheck,
       b.diagnostics.credo,
-      b.diagnostics.stylelint,
-      b.diagnostics.selene,
+      -- b.diagnostics.selene, -- this breaks?
     },
   })
 end

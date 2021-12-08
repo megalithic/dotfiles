@@ -118,6 +118,8 @@ local function on_attach(client, bufnr)
   --- # diagnostics navigation mappings
   bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })
   bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
+  bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
+  bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
 
   --- # misc mappings
   bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
@@ -431,24 +433,13 @@ local function setup_lsp_servers()
   end
 
   do -- lua
-    -- (build lua runtime libraries)
-    local runtime_path = vim.split(package.path, ";")
-    table.insert(runtime_path, "lua/?.lua")
-    table.insert(runtime_path, "lua/?/init.lua")
-    -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
-    -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
-    -- table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
-
-    -- ERROR: LSP[sumneko_lua][Info] Too large file: test/unit/viml/expressions/parser_tests.lua skipped. The currently set size limit is: 150 KB, and the file size is: 212.211 KB.
     local sumneko_lua_settings = lsp_with_defaults({
       settings = {
         Lua = {
           completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
           runtime = {
-            -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
             version = "LuaJIT",
-            -- Setup your lua path
-            path = runtime_path,
+            path = vim.split(package.path, ";"),
           },
           diagnostics = {
             globals = {
@@ -494,11 +485,11 @@ local function setup_lsp_servers()
           },
           workspace = {
             preloadFileSize = 500,
-            --   -- Make the server aware of Neovim runtime files
-            --   library = vim.api.nvim_get_runtime_file("", true),
-            --   maxPreload = 5000,
+            library = {
+              [vim.fn.expand("$VIMRUNTIME/lua")] = true,
+              [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+            },
           },
-          -- do not send telemetry data containing a randomized but unique identifier
           telemetry = {
             enable = false,
           },
@@ -538,6 +529,24 @@ local function setup_lsp_servers()
   lspconfig["cssls"].setup(lsp_with_defaults({
     cmd = { "vscode-css-language-server", "--stdio" },
     filetypes = { "css", "scss" },
+    settings = {
+      css = {
+        lint = {
+          unknownProperties = "ignore",
+        },
+      },
+      scss = {
+        lint = {
+          idSelector = "warning",
+          zeroUnits = "warning",
+          duplicateProperties = "warning",
+        },
+        completion = {
+          completePropertyWithSemicolon = true,
+          triggerPropertyValueCompletion = true,
+        },
+      },
+    },
   }))
   lspconfig["html"].setup(lsp_with_defaults({
     cmd = { "vscode-html-language-server", "--stdio" },

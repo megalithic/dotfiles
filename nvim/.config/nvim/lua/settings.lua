@@ -463,11 +463,26 @@ end
 local function setup_comment()
   require("Comment").setup({
     ignore = "^$",
+    -- pre_hook = function(ctx)
+    --   local U = require("Comment.utils")
+    --   local type = ctx.ctype == U.ctype.line and "__default" or "__multiline"
+    --   return require("ts_context_commentstring.internal").calculate_commentstring({
+    --     key = type,
+    --   })
+    -- end,
     pre_hook = function(ctx)
       local U = require("Comment.utils")
-      local type = ctx.ctype == U.ctype.line and "__default" or "__multiline"
+
+      local location = nil
+      if ctx.ctype == U.ctype.block then
+        location = require("ts_context_commentstring.utils").get_cursor_location()
+      elseif ctx.cmotion == U.cmotion.v or ctx.cmotion == U.cmotion.V then
+        location = require("ts_context_commentstring.utils").get_visual_start_location()
+      end
+
       return require("ts_context_commentstring.internal").calculate_commentstring({
-        key = type,
+        key = ctx.ctype == U.ctype.line and "__default" or "__multiline",
+        location = location,
       })
     end,
   })
@@ -575,7 +590,7 @@ end
 
 local function setup_lightspeed()
   require("lightspeed").setup({
-    jump_to_first_match = true,
+    -- jump_to_first_match = true,
     jump_on_partial_input_safety_timeout = 400,
     -- This can get _really_ slow if the window has a lot of content,
     -- turn it on only if your machine can always cope with it.
