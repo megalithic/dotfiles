@@ -1,42 +1,36 @@
 local cache = {}
 local M = { cache = cache }
 
-local fn = require("hs.fnutils")
+local running = require("utils.wm.running")
 local wh = require("utils.wm.window-handlers")
 local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
-local initApplyComplete = false
+local init_apply_complete = false
 
 -- apply(hs.application, hs.window, running.events, hs.logger) :: nil
 M.apply = function(app, win, event, log)
-  local log = hs.logger.new("[loom]", "debug")
+  if not init_apply_complete then
+    log.f("app: %s", hs.inspect(app))
+    log.f("win: %s", hs.inspect(win))
+    log.f("event: %s", hs.inspect(event))
 
-  if not initApplyComplete then
-    if fn.contains({ "windowCreated" }, event) then
-      ----------------------------------------------------------------------
-      -- handle DND toggling
-      log.df("toggling on DND for %s..", event)
-      wh.dndHandler(win, { enabled = true, mode = "loom" }, event)
-
+    if event == running.events.launched or app:isRunning() then
       ----------------------------------------------------------------------
       -- naively handle spotify pause (always pause it, no matter the event)
-      log.df("pausing spotify for %s..", event)
       spotify("pause")
 
       -- unmute (PTM) by default
-      log.df("toggling on PTM for %s..", event)
       ptt.setState("push-to-mute")
     end
 
-    initApplyComplete = true
+    init_apply_complete = true
   end
 
   ----------------------------------------------------------------------
   -- mute (PTT) by default
   wh.onAppQuit(win, function()
-    log.df("toggling on PTT for %s..", event)
     ptt.setState("push-to-talk")
-    initApplyComplete = false
+    init_apply_complete = false
   end)
 end
 

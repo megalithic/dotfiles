@@ -232,7 +232,7 @@ M.apps = {
   ["com.loom.desktop"] = {
     bundleID = "com.loom.desktop",
     name = "Loom",
-    -- context = "loom",
+    context = "loom",
   },
   ["com.spotify.client"] = {
     bundleID = "com.spotify.client",

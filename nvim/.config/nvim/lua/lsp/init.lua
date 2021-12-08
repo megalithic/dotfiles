@@ -432,9 +432,9 @@ local function setup_lsp_servers()
 
   do -- lua
     -- (build lua runtime libraries)
-    -- local runtime_path = vim.split(package.path, ";")
-    -- table.insert(runtime_path, "lua/?.lua")
-    -- table.insert(runtime_path, "lua/?/init.lua")
+    local runtime_path = vim.split(package.path, ";")
+    table.insert(runtime_path, "lua/?.lua")
+    table.insert(runtime_path, "lua/?/init.lua")
     -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?.lua"))
     -- table.insert(runtime_path, fn.expand("/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/?/?.lua"))
     -- table.insert(runtime_path, fn.expand("~/.hammerspoon/Spoons/EmmyLua.spoon/annotations"))
@@ -444,12 +444,12 @@ local function setup_lsp_servers()
       settings = {
         Lua = {
           completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
-          -- runtime = {
-          --   -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-          --   version = "LuaJIT",
-          --   -- Setup your lua path
-          --   path = runtime_path,
-          -- },
+          runtime = {
+            -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+            version = "LuaJIT",
+            -- Setup your lua path
+            path = runtime_path,
+          },
           diagnostics = {
             globals = {
               "vim",
@@ -508,8 +508,8 @@ local function setup_lsp_servers()
         fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
         "-E",
         fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
-        "--logpath=\"" .. fn.stdpath("cache") .. "/nvim/log\"",
-        "--metapath=\"" .. fn.stdpath("cache") .. "/nvim/meta\"",
+        "--logpath=\"" .. fn.stdpath("cache") .. "/log\"",
+        "--metapath=\"" .. fn.stdpath("cache") .. "/meta\"",
       },
     })
     local luadev = require("lua-dev").setup({

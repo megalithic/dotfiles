@@ -104,6 +104,7 @@ function __info() {
 	printf -- "---------------------------------------------------\n"
 	printf -- "fzf:          %s\n" "$fzf_cmd"
 	printf -- "curl:         %s\n" "$curl_cmd"
+	printf -- "status:       %s\n" "$status"
 	printf -- "cwd:          %s\n" "$__dir"
 	printf -- "filepath:     %s\n" "$__file"
 	printf -- "basename:     %s\n" "$__base"
@@ -119,31 +120,35 @@ if [[ $JQ_FOUND == "not installed" ]]; then
 	exit 1
 fi
 
+# OPTERR=0
 while getopts "phdv" OPTION; do
 	case $OPTION in
 
 		p)
 			POPUP="true"
-			shift
 			;;
 
 		h)
 			__help
-      exit
+      exit 0
 			;;
 
 		d)
 			DEBUG="true"
-			shift
 			;;
 
 		v)
 			VERBOSE="true"
-			shift
 			;;
+
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
 
 	esac
 done
+shift $((OPTIND -1))
 
 # -- first param passed in, after options
 status="${1:-}"
@@ -162,8 +167,8 @@ function __request() {
 
   local data=$(printf -- "--data %s " "${request_data[@]}")
   # TODO: what's this for? `2>&1`
-  request_cmd="$curl_cmd --show-error --include -X POST "${data}" "$api_url/$feature""
-  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && echo "executing request: $request_cmd" && echo
+  request_cmd="$curl_cmd --show-error --include "${data}" "$api_url/$feature""
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && printf -- %s "$request_cmd\n"
 
   if [[ $DEBUG == "true" ]]; then
     exec $request_cmd | $spinner || {
@@ -287,7 +292,7 @@ function dnd() {
 }
 
 function here() {
-  __set_chan_text ":wave: :sunrise_over_mountains: good day!"
+  __set_chan_text ":wave: :sunrise_over_mountains:  good day!"
 	__set_presence "auto"
 	__end_status
 	__end_dnd
@@ -307,22 +312,27 @@ function log() {
 
 function do_status() {
   local given_status="$1"
+  status="$given_status"
 
-  ${given_status} "$@"
-  log "$given_status"
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
 
-  exit
+  ${given_status} "$@" && {
+      log "$given_status"
+      exit 0
+    } || {
+      echo "Failed to set status"
+      exit 1
+    }
 }
-
-[[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
 
 # if we pass in a status, use it directly
 if [[ $status ]]; then
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
   do_status "$status"
 else
   # otherwise, fuzzy-find based upon our supported statuses; if fzf installed
   if [[ $FZF_FOUND == "installed" ]]; then
-    selected_status="$(echo "$statuses" | $fzf_cmd --reverse --exit-0 --prompt="聆select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query" --preview-window="hidden")"
+    selected_status="$(echo "$statuses" | $fzf_cmd --reverse --prompt="聆select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query" --preview-window="hidden")"
     [[ -n "$selected_status" ]] && do_status "$selected_status"
   else
     printf -- "ERROR: %s requires FZF to be installed for fuzzy finding statuses" "$__base"

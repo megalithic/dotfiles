@@ -2,7 +2,6 @@ local cache = {}
 local M = { cache = cache }
 
 local running = require("utils.wm.running")
-local fn = require("hs.fnutils")
 local wh = require("utils.wm.window-handlers")
 local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
@@ -81,7 +80,6 @@ M.apply = function(app, win, event, log)
       end
     end
 
-    -- FIXME: this `setState` function call breaks hammerspoon.. right!?
     ptt.setState("push-to-talk")
     init_apply_complete = false
   end)

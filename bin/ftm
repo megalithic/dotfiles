@@ -32,10 +32,12 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
+TMUX="${TMUX:-}"
 POPUP="false"
 DEBUG="false"
 
 # -- check for our dependencies..
+[[ -n "$TMUX" ]] && TMUX_RUNNING="running" || TMUX_RUNNING="not running"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v tmuxinator &>/dev/null) && TMUXINATOR_FOUND="installed" || TMUXINATOR_FOUND="not installed"
 [[ -d "$HOME/.config/tmuxinator" ]] && tmuxinator_configs_dir="$HOME/.config/tmuxinator" || tmuxinator_configs_dir=""
@@ -50,6 +52,7 @@ function __help() {
 	printf -- "     -d              Make tmuxinator be extremely loud!11!!1! \n"
 	printf -- "\n"
 	printf -- "   Dependencies:\n"
+	printf -- "     tmux            ($TMUX_RUNNING)\n"
 	printf -- "     fzf             ($FZF_FOUND)\n"
 	printf -- "     tmuxinator      ($TMUXINATOR_FOUND)\n"
 	printf -- "\n"
@@ -82,14 +85,14 @@ while getopts "phd" OPTION; do
 			shift
 			;;
 
-
 	esac
 done
 
+# -- this is our given session_name param, sans options
 session_name="${1:-}"
 
 # -- handle options
-[[ -n $TMUX ]] && change="switch-client" || change="attach-session"
+[[ -n "$TMUX" ]] && change="switch-client" || change="attach-session"
 [[ "$POPUP" == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 [[ "$DEBUG" == "true" ]] && tmuxinator_start_cmd="debug" || tmuxinator_start_cmd="start"
 
@@ -119,7 +122,7 @@ function to_session() {
 # -- new session with tmuxinator config, OR just new basic tmux session
 function new_session() {
 	local session="$1"
-	(exec tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
+	(tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
 		&& to_session "$session" \
 		|| tmux new-session -d -s "$session" \
 		&& to_session "$session") && exit
@@ -133,31 +136,39 @@ function try_session() {
   # tmux display-message " $session activated.."
 }
 
+function fuzzy_find() {
+  # -- prepare for fuzzy-finding!!
+  sessions_list=$(tmux list-sessions -F "#S")
+  current_session="$(tmux list-panes -F "#{session_name}")"
+  sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
+  preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
+
+  # -- do certain things based upon only one active session
+  if [[ $sessions_count == 1 ]]; then
+    fzf_prompt_text=" create new session  "
+    fzf_header_text=""
+
+    # -- provide user with their avaialble tmuxinator configs (assumes certain dir)
+    sessions_list="$(get_tmuxinator_configs)"
+    tmuxinator_sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
+    [[ $tmuxinator_sessions_count > 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
+    [[ $tmuxinator_sessions_count > 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
+  else
+    fzf_prompt_text=" select session (or create new)  "
+    fzf_header_text="ﯲ running tmux sessions (active: $current_session)"
+  fi
+
+  # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
+  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+}
+
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then
 	try_session "$session_name"
 	return
+elif [[ -z "$TMUX" ]]; then
+  __help
 fi
 
-sessions_list=$(tmux list-sessions -F "#S")
-current_session="$(tmux list-panes -F "#{session_name}")"
-sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
-
-# -- do certain things based upon only one active session
-if [[ $sessions_count == 1 ]]; then
-  fzf_prompt_text=" create new session  "
-  fzf_header_text=""
-
-  # -- provide user with their avaialble tmuxinator configs (assumes certain dir)
-  sessions_list="$(get_tmuxinator_configs)"
-  tmuxinator_sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-  [[ $tmuxinator_sessions_count > 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
-  [[ $tmuxinator_sessions_count > 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
-else
-  fzf_prompt_text=" select session (or create new)  "
-  fzf_header_text="ﯲ running tmux sessions (active: $current_session)"
-fi
-
-# -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+# -- if we get this far, let's do our fuzzy-finding
+fuzzy_find
