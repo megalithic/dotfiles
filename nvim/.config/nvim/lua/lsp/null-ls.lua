@@ -38,6 +38,19 @@ function M.setup()
       b.formatting.mix.with({ filetypes = { "elixir", "heex", "eelixir" } }),
       b.formatting.surface.with({ filetypes = { "elixir", "heex", "eelixir", "surface" } }),
       -- nls.builtins.formatting.eslint_d,
+      nls.builtins.formatting.rustywind.with({
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+          "html",
+          "heex",
+          "elixir",
+          "eelixir",
+          "surface",
+        },
+      }),
       b.formatting.shfmt.with({
         extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
