@@ -49,6 +49,7 @@ SLACK_USER=${OUTSTAND_USER:-}
 api_url="https://slack.com/api"
 spinner_path="$HOME/.dotfiles/bin/spinner"
 statuses="away
+brb
 lunch
 coffee
 tea
