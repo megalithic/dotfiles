@@ -24,6 +24,7 @@ emmet-ls
 bash-language-server
 vscode-langservers-extracted
 dockerfile-language-server-nodejs
+rustywind
 @elm-tooling/elm-language-server
 @tailwindcss/language-server
 typescript-language-server
