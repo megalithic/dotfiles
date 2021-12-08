@@ -72,21 +72,25 @@ while getopts "phd" OPTION; do
 
 		p)
 			POPUP="true"
-			shift
 			;;
 
 		h)
 			__help
-			exit
+			exit 0
 			;;
 
 		d)
 			DEBUG="true"
-			shift
 			;;
+
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
 
 	esac
 done
+shift $((OPTIND -1))
 
 # -- this is our given session_name param, sans options
 session_name="${1:-}"
