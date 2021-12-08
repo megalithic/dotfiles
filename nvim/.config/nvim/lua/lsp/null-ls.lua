@@ -57,7 +57,7 @@ function M.setup()
       }),
       b.diagnostics.shellcheck,
       b.diagnostics.credo,
-      -- b.diagnostics.stylelint,
+      b.diagnostics.stylelint,
       b.diagnostics.selene,
     },
   })

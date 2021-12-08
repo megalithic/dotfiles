@@ -30,6 +30,8 @@ rustywind
 typescript-language-server
 yaml-language-server
 vim-language-server
+stylelint
+stylelint-config-standard
 import-sort-cli
 import-sort-parser-babylon
 import-sort-parser-typescript
