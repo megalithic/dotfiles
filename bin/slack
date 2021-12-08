@@ -160,7 +160,7 @@ function __request() {
 
   request_data+=("token=$SLACK_TOKEN")
 
-  local data=$(printf -- "--data %s\n" "${request_data[@]}")
+  local data=$(printf -- "--data %s " "${request_data[@]}")
   # TODO: what's this for? `2>&1`
   request_cmd="$curl_cmd --show-error --include -X POST "${data}" "$api_url/$feature""
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && echo "executing request: $request_cmd" && echo
@@ -202,12 +202,12 @@ function __set_presence() {
 
 function __set_dnd() {
   local dnd_mins="${1:-}"
-  request_data+=("num_mins=$dnd_mins")
+  request_data+=("num_minutes=$dnd_mins")
 	__request "dnd.setSnooze"
 }
 
 function __end_dnd() {
-  request_data+=("num_mins=0")
+  request_data+=("num_minutes=0")
 	__request "dnd.endDnd"
 }
 
@@ -223,80 +223,80 @@ function __set_chan_text() {
 
 # -- PUBLIC
 function away() {
+  __set_chan_text "bbl"
 	__set_presence "away"
 	__set_status "..afk.." ":afk:"
-  __set_chan_text "bbl"
 }
 
 function brb() {
+  __set_chan_text "brb"
 	__set_presence "away"
 	__set_status "..be right back.." ":brb:"
-  __set_chan_text "brb"
 }
 
 function lunch() {
+  __set_chan_text "bbl, lunch"
 	__set_presence "away"
 	__set_status "..lunch.." ":pizza:"
-  __set_chan_text "bbl, lunch"
 }
 
 function errand() {
+  __set_chan_text "bbiab, running an errand"
 	__set_presence "away"
 	__set_status "..running an errand.." ":car:"
-  __set_chan_text "bbiab, running an errand"
 }
 
 function coffee() {
+  __set_chan_text "brb, coffee"
 	__set_presence "away"
 	__set_status "..covfefe.." ":coffee:"
-  __set_chan_text "brb, coffee"
 }
 
 function tea() {
+  __set_chan_text "brb, tea"
 	__set_presence "away"
 	__set_status "..tea.." ":tea:"
-  __set_chan_text "brb, tea"
 }
 
 function dog() {
+  __set_chan_text "bbiab, walking the puppers"
 	__set_presence "away"
 	__set_status "..walking the puppers.." ":doge:"
-  __set_chan_text "bbiab, walking the puppers"
 }
 
 function gone() {
+  __set_chan_text ":wave: have a good one!"
 	__set_presence "away"
 	__end_status
-  __set_chan_text ":wave: have a good one!"
-	__set_dnd "930"
+	__set_dnd 930
 }
 
 function pair() {
 	__set_status "..pairing.." ":pear:"
-	__set_dnd "120"
+	__set_dnd 120
 }
 
 function zoom() {
 	__set_status "..on a call.." ":calendar:"
-	__set_dnd "120"
+	__set_dnd 120
 }
 
 function dnd() {
 	__set_status "..deep work focus time.." ":octagonal_sign:"
-	__set_dnd "240"
+	__set_dnd 120
 }
 
 function here() {
+  __set_chan_text ":wave: :sunrise_over_mountains: good day!"
 	__set_presence "auto"
 	__end_status
-  __set_chan_text ":wave: :sunrise_over_mountains: good day!"
 	__end_dnd
 }
 
 function back() {
+  __set_chan_text "back"
 	__set_presence "auto"
 	__end_status
-  __set_chan_text "back"
 	__end_dnd
 }
 
