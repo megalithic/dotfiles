@@ -495,13 +495,6 @@ local function setup_lsp_servers()
           },
         },
       },
-      cmd = {
-        fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/bin/" .. fn.getenv("PLATFORM") .. "/lua-language-server",
-        "-E",
-        fn.getenv("XDG_CONFIG_HOME") .. "/lsp/sumneko_lua/main.lua",
-        "--logpath=\"" .. fn.stdpath("cache") .. "/log\"",
-        "--metapath=\"" .. fn.stdpath("cache") .. "/meta\"",
-      },
     })
     local luadev = require("lua-dev").setup({
       lspconfig = sumneko_lua_settings,

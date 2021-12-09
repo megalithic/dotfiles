@@ -304,6 +304,23 @@ end
 ---@param mode string
 ---@param o table
 ---@return fun(lhs: string, rhs: string, opts: table|nil) 'create a mapping'
+--[[
+  ╭────────────────────────────────────────────────────────────────────────────────────────────────────╮
+  │  String value  │  Help page   │  Affected modes                           │  Vimscript equivalent  │
+  │────────────────────────────────────────────────────────────────────────────────────────────────────│
+  │  ''            │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map                  │
+  │  'n'           │  mapmode-n   │  Normal                                   │  :nmap                 │
+  │  'v'           │  mapmode-v   │  Visual and Select                        │  :vmap                 │
+  │  's'           │  mapmode-s   │  Select                                   │  :smap                 │
+  │  'x'           │  mapmode-x   │  Visual                                   │  :xmap                 │
+  │  'o'           │  mapmode-o   │  Operator-pending                         │  :omap                 │
+  │  '!'           │  mapmode-ic  │  Insert and Command-line                  │  :map!                 │
+  │  'i'           │  mapmode-i   │  Insert                                   │  :imap                 │
+  │  'l'           │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap                 │
+  │  'c'           │  mapmode-c   │  Command-line                             │  :cmap                 │
+  │  't'           │  mapmode-t   │  Terminal                                 │  :tmap                 │
+  ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
+--]]
 local function make_mapper(mode, o)
   -- copy the opts table as extends will mutate the opts table passed in otherwise
   local parent_opts = vim.deepcopy(o)
