@@ -5,7 +5,7 @@ local M = {}
 
 function M.setup()
   nls.config({
-    debug = true,
+    debug = false,
     debounce = 150,
     save_after_format = false,
     sources = {

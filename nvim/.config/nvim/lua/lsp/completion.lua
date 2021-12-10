@@ -180,7 +180,6 @@ local function setup_cmp()
       { name = "luasnip" },
       { name = "nvim_lua" },
       { name = "nvim_lsp" },
-      { name = "emoji" },
       { name = "path" },
     }, {
       M.sources.buffer,
@@ -213,8 +212,7 @@ local function setup_cmp()
           path = "[path]",
           buffer = "[buf]",
           spell = "[spl]",
-          -- calc = "[calc]",
-          -- emoji = "[emo]",
+          emoji = "[emo]",
         })[entry.source.name]
         return item
       end,
