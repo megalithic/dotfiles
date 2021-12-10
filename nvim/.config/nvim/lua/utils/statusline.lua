@@ -421,7 +421,10 @@ end
 ---The currently focused function
 ---@return string?
 function M.current_function()
-  return require("nvim-gps").get_location()
+  local ok, gps = mega.safe_require("nvim-gps")
+  if ok and gps and gps.is_available() then
+    return require("nvim-gps").get_location()
+  end
 end
 
 local function printf(format, current, total)
