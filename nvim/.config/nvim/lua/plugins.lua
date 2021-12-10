@@ -57,7 +57,6 @@ M.list = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "nvim-lua/lsp-status.nvim",
-  "doums/lsp_spinner.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "ray-x/lsp_signature.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
@@ -1446,13 +1445,11 @@ M.setup = function()
   end
 
   local function setup_gps()
-    require("nvim-gps").setup()
-  end
-
-  local function setup_lsp_spinner()
-    require("lsp_spinner").setup({
-      spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
-      interval = 80,
+    require("nvim-gps").setup({
+      languages = {
+        elixir = false,
+        eelixir = false,
+      },
     })
   end
 
@@ -1497,7 +1494,6 @@ M.setup = function()
   setup_dd()
   setup_dash()
   setup_gps()
-  setup_lsp_spinner()
   setup_misc()
 end
 

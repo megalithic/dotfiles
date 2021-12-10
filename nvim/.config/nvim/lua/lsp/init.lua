@@ -4,7 +4,6 @@ local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, bmap, au = mega.map, mega.bufmap, mega.bmap, mega.au
 local lspconfig = require("lspconfig")
 local utils = require("utils")
-local lsp_spinner = require("lsp_spinner")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -75,7 +74,6 @@ local function on_attach(client, bufnr)
   end
 
   require("lsp-status").on_attach(client)
-  lsp_spinner.on_attach(client, bufnr)
   utils.lsp.format_setup(client, bufnr)
 
   require("lsp_signature").on_attach({
@@ -231,7 +229,6 @@ local function setup_lsp_capabilities()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
   capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
-  lsp_spinner.init_capabilities(capabilities)
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   return capabilities

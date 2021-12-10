@@ -408,6 +408,7 @@ function M.lsp_status()
       indicator_warnings = "",
       status_symbol = " ",
       -- spinner_frames = { "▪", "■", "□", "▫" },
+      -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
     })
 
     if #vim.lsp.buf_get_clients() > 0 then
