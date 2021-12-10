@@ -184,21 +184,21 @@ local function setup_cmp()
     }, {
       M.sources.buffer,
     }),
-    -- sorting = {
-    --   priority_weight = 1.1,
-    --   comparators = {
-    --     function(...)
-    --       return require("cmp_buffer"):compare_locality(...)
-    --     end,
-    --     compare.offset,
-    --     compare.exact,
-    --     compare.score,
-    --     compare.kind,
-    --     compare.sort_text,
-    --     compare.length,
-    --     compare.order,
-    --   },
-    -- },
+    sorting = {
+      priority_weight = 1.1,
+      comparators = {
+        function(...)
+          return require("cmp_buffer"):compare_locality(...)
+        end,
+        compare.offset,
+        compare.exact,
+        compare.score,
+        compare.kind,
+        compare.sort_text,
+        compare.length,
+        compare.order,
+      },
+    },
     formatting = {
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items

@@ -27,7 +27,7 @@ M.list = {
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  "danilamihailov/beacon.nvim",
+  "edluffy/specs.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
@@ -616,13 +616,25 @@ M.setup = function()
     vim.g.cursorhold_updatetime = 100
   end
 
-  local function setup_beacon()
-    -- TODO: replace with specs
-    vim.g.beacon_size = 90
-    vim.g.beacon_minimal_jump = 10
-    -- vim.g.beacon_shrink = 0
-    -- vim.g.beacon_fade = 0
-    vim.g.beacon_ignore_filetypes = { "fzf", "NvimTree" }
+  local function setup_specs()
+    local specs = require("specs")
+    specs.setup({
+      show_jumps = true,
+      min_jump = 30,
+      popup = {
+        delay_ms = 0, -- delay before popup displays
+        inc_ms = 1, -- time increments used for fade/resize effects
+        blend = 10, -- starting blend, between 0-100 (fully transparent), see :h winblend
+        width = 100,
+        winhl = "PMenu",
+        fader = specs.linear_fader,
+        resizer = specs.slide_resizer,
+      },
+      ignore_filetypes = { "fzf", "NvimTree", "alpha" },
+      ignore_buftypes = {
+        nofile = true,
+      },
+    })
   end
 
   local function setup_comment()
@@ -1458,7 +1470,7 @@ M.setup = function()
   setup_autopairs()
   setup_alpha()
   setup_fzf_lua()
-  setup_beacon()
+  setup_specs()
   setup_startuptime()
   setup_indent_blankline()
   setup_zk()
