@@ -56,7 +56,9 @@ nnoremap("gK", keyword, { buffer = 0 })
 -- require("cmp").setup.buffer({ enabled = false })
 require("cmp").setup.buffer({
   sources = {
+    { name = "luasnip" },
     { name = "nvim_lua" },
+    { name = "nvim_lsp" },
     require("lsp.completion").sources.buffer,
   },
 })
