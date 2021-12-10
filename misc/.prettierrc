@@ -8,7 +8,7 @@
   "jsxSingleQuote": false,
   "printWidth": 80,
   "proseWrap": "preserve",
-  "quoteProps": "as-needed",
+  "quoteProps": "consistent",
   "requirePragma": false,
   "semi": true,
   "singleQuote": false,
@@ -17,14 +17,3 @@
   "useTabs": false,
   "vueIndentScriptAndStyle": false
 }
-// REF: app
-// {
-//   "trailingComma": "none",
-//   "printWidth": 120,
-//   "tabWidth": 2,
-//   "semi": true,
-//   "singleQuote": false,
-//   "quoteProps": "consistent",
-//   "bracketSpacing": true,
-//   "arrowParens": "avoid"
-// }

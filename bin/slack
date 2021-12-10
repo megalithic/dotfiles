@@ -271,7 +271,7 @@ function dog() {
 }
 
 function gone() {
-  __set_chan_text ":wave: have a good one!"
+  __set_chan_text ":v: catch you on the flip side!"
 	__set_presence "away"
 	__end_status
 	__set_dnd 930
@@ -293,7 +293,7 @@ function dnd() {
 }
 
 function here() {
-  __set_chan_text ":wave: :sunrise_over_mountains:  good day!"
+  __set_chan_text ":wave: :sunrise_over_mountains: :coffee: good day!"
 	__set_presence "auto"
 	__end_status
 	__end_dnd

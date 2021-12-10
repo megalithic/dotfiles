@@ -400,15 +400,27 @@ end
 function M.lsp_status()
   local ok, lsp_status = mega.safe_require("lsp-status")
   if ok and lsp_status then
-    return lsp_status.status_progress()
+    lsp_status.register_progress()
+    lsp_status.config({
+      indicator_hint = "",
+      indicator_info = "",
+      indicator_errors = "✗",
+      indicator_warnings = "",
+      status_symbol = " ",
+      -- spinner_frames = { "▪", "■", "□", "▫" },
+    })
+
+    if #vim.lsp.buf_get_clients() > 0 then
+      return lsp_status.status_progress()
+    end
   end
+  return ""
 end
 
 ---The currently focused function
 ---@return string?
--- FIXME: presently not working
 function M.current_function()
-  return vim.b.lsp_current_function
+  return require("nvim-gps").get_location()
 end
 
 local function printf(format, current, total)

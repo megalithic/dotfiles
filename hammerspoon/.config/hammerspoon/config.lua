@@ -345,6 +345,12 @@ M.apps = {
       { nil, 1, M.layout.fullScreen },
     },
   },
+  ["com.surteesstudios.Bartender"] = {
+    bundleID = "com.surteesstudios.Bartender",
+    name = "Bartender 4",
+    quitGuard = true,
+    local_bindings = { "b" },
+  },
 }
 
 M.utilities = {

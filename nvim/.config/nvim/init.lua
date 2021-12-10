@@ -55,11 +55,11 @@ R("preflight")
 -- R("options") -- deprecate this!
 R("opts")
 R("colors").setup("megaforest")
-R("settings")
+R("plugins").setup()
 R("lsp")
 R("autocmds")
 R("mappings")
--- R("megaline")
+-- R("megaline") -- deprecate this!
 R("statusline")
 
 -- vim:foldmethod=marker

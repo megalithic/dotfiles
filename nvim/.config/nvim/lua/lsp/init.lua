@@ -3,8 +3,8 @@
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, bmap, au = mega.map, mega.bufmap, mega.bmap, mega.au
 local lspconfig = require("lspconfig")
-local luasnip = require("luasnip")
 local utils = require("utils")
+local lsp_spinner = require("lsp_spinner")
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -75,6 +75,7 @@ local function on_attach(client, bufnr)
   end
 
   require("lsp-status").on_attach(client)
+  lsp_spinner.on_attach(client, bufnr)
   utils.lsp.format_setup(client, bufnr)
 
   require("lsp_signature").on_attach({
@@ -227,27 +228,26 @@ local function on_attach(client, bufnr)
 end
 
 local function setup_lsp_capabilities()
-  --- capabilities
-  local capabilities = lsp.protocol.make_client_capabilities()
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
+  capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
+  lsp_spinner.init_capabilities(capabilities)
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-  capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
-
-  local status_capabilities = require("lsp-status").capabilities
-
-  return mega.table_merge(status_capabilities, capabilities)
+  return capabilities
 end
 
 local function setup_lsp_servers()
   local function lsp_with_defaults(opts)
     opts = opts or {}
-    return vim.tbl_deep_extend("keep", opts, {
-      autostart = true,
+    local lsp_config = vim.tbl_deep_extend("keep", opts, {
       on_attach = on_attach,
       capabilities = setup_lsp_capabilities(),
       flags = { debounce_text_changes = 150 },
       root_dir = vim.loop.cwd,
     })
+
+    return lsp_config
   end
 
   local function root_pattern(...)
@@ -433,13 +433,16 @@ local function setup_lsp_servers()
   end
 
   do -- lua
+    local runtime_path = vim.split(package.path, ";")
+    table.insert(runtime_path, "lua/?.lua")
+    table.insert(runtime_path, "lua/?/init.lua")
     local sumneko_lua_settings = lsp_with_defaults({
       settings = {
         Lua = {
           completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
           runtime = {
             version = "LuaJIT",
-            path = vim.split(package.path, ";"),
+            path = runtime_path,
           },
           diagnostics = {
             globals = {
@@ -485,10 +488,12 @@ local function setup_lsp_servers()
           },
           workspace = {
             preloadFileSize = 500,
-            library = {
-              [vim.fn.expand("$VIMRUNTIME/lua")] = true,
-              [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-            },
+            maxPreload = 2000,
+            library = vim.api.nvim_get_runtime_file("", true),
+            -- library = {
+            --   [vim.fn.expand("$VIMRUNTIME/lua")] = true,
+            --   [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+            -- },
           },
           telemetry = {
             enable = false,
@@ -519,6 +524,8 @@ local function setup_lsp_servers()
     },
   }))
 
+  -- REF: https://github.com/microsoft/vscode/issues/103163
+  --      - custom css linting rules and custom data
   lspconfig["cssls"].setup(lsp_with_defaults({
     cmd = { "vscode-css-language-server", "--stdio" },
     filetypes = { "css", "scss" },
@@ -526,6 +533,7 @@ local function setup_lsp_servers()
       css = {
         lint = {
           unknownProperties = "ignore",
+          unknownAtRules = "ignore",
         },
       },
       scss = {

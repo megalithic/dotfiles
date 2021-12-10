@@ -411,4 +411,47 @@ mega.exec([[
   " https://sw.kovidgoyal.net/kitty/faq/?highlight=send_text#using-a-color-theme-with-a-background-color-does-not-work-well-in-vim
   let &t_ut=''
 ]])
+-----------------------------------------------------------------------------//
+-- Random Other Things
+-----------------------------------------------------------------------------//
+-- fallback in the event our statusline plugins fail to load
+vim.opt.statusline = table.concat({
+  "[%2{mode()} ] ",
+  "f", -- relative path
+  "m", -- modified flag
+  "r",
+  "=",
+  "{&spelllang}",
+  "y", -- filetype
+  "8(%l,%c%)", -- line, column
+  "8p%% ", -- file percentage
+}, " %")
+-- vim.opt.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
+vim.g.no_man_maps = true
+vim.g.vim_json_syntax_conceal = false
+vim.g.vim_json_conceal = false
+vim.g.floating_window_border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
+vim.g.floating_window_border_dark = {
+  { "╭", "FloatBorderDark" },
+  { "─", "FloatBorderDark" },
+  { "╮", "FloatBorderDark" },
+  { "│", "FloatBorderDark" },
+  { "╯", "FloatBorderDark" },
+  { "─", "FloatBorderDark" },
+  { "╰", "FloatBorderDark" },
+  { "│", "FloatBorderDark" },
+}
+-- vim.opt.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
+-- vim.opt.concealcursor = "n" -- Hide * markup for bold and italic
+-- # git editor
+if vim.fn.executable("nvr") then
+  vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+end
+-- # registers
+vim.g.registers_return_symbol = " ﬋ " -- "'⏎' by default
+vim.g.registers_tab_symbol = "." -- "'·' by default
+vim.g.registers_space_symbol = " " -- "' ' by default
+vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before closing the window when a register key is pressed
+vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
 -- vim:foldmethod=marker
