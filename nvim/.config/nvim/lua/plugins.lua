@@ -223,11 +223,11 @@ M.list = {
 }
 
 M.setup = function()
-  local function setup_startuptime()
+  do -- vim-startuptime
     vim.g.startuptime_tries = 10
   end
 
-  local function setup_matchup()
+  do -- vim-matchup
     vim.g.matchup_surround_enabled = true
     vim.g.matchup_matchparen_deferred = true
     vim.g.matchup_matchparen_offscreen = {
@@ -238,7 +238,7 @@ M.setup = function()
     }
   end
 
-  local function setup_treesitter()
+  do -- treesitter.nvim
     vim.opt.indentexpr = "nvim_treesitter#indent()"
 
     -- custom treesitter parsers and grammars
@@ -310,7 +310,7 @@ M.setup = function()
         additional_vim_regex_highlighting = false,
       },
       indent = { enable = true },
-      autotag = { enable = false },
+      autotag = { enable = true },
       context_commentstring = {
         enable = true,
         enable_autocmd = false,
@@ -407,14 +407,12 @@ M.setup = function()
         "typescriptreact",
         "javascriptreact",
         "vue",
-        "elixir",
-        "eelixir",
       },
     })
     require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
   end
 
-  local function setup_indent_blankline()
+  do -- indent-blankline
     require("indent_blankline").setup({
       char = "│", -- ┆ ┊ 
       -- char_list = { "│", "|", "¦", "┆", "┊" },
@@ -477,7 +475,7 @@ M.setup = function()
     })
   end
 
-  local function setup_neoscroll()
+  do -- neoscroll
     local mappings = {}
     require("neoscroll").setup({
       -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
@@ -497,18 +495,18 @@ M.setup = function()
     require("neoscroll.config").set_mappings(mappings)
   end
 
-  local function setup_devicons()
+  do -- nvim-web-devicons
     require("nvim-web-devicons").setup({ default = true })
   end
 
-  local function setup_project_nvim()
-    require("project_nvim").setup({
-      manual_mode = true,
-      patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
-    }) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
-  end
+  -- do -- project.nvim
+  --   require("project_nvim").setup({
+  --     manual_mode = true,
+  --     patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
+  --   }) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
+  -- end
 
-  local function setup_orgmode()
+  do -- orgmode.nvim
     -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
     -- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
     --        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
@@ -594,11 +592,11 @@ M.setup = function()
     require("org-bullets").setup()
   end
 
-  local function setup_trouble()
+  do -- trouble.nvim
     require("trouble").setup({ auto_close = true })
   end
 
-  local function setup_bullets()
+  do -- bullets
     vim.g.bullets_enabled_file_types = {
       "markdown",
       "text",
@@ -610,12 +608,12 @@ M.setup = function()
     -- vim.g.bullets_outline_levels = { "num" }
   end
 
-  local function setup_cursorhold()
+  do -- cursorhold
     -- https://github.com/antoinemadec/FixCursorHold.nvim#configuration
     vim.g.cursorhold_updatetime = 100
   end
 
-  local function setup_specs()
+  do -- specs.nvim
     local specs = require("specs")
     specs.setup({
       show_jumps = true,
@@ -636,16 +634,9 @@ M.setup = function()
     })
   end
 
-  local function setup_comment()
+  do -- comment.nvim
     require("Comment").setup({
       ignore = "^$",
-      -- pre_hook = function(ctx)
-      --   local U = require("Comment.utils")
-      --   local type = ctx.ctype == U.ctype.line and "__default" or "__multiline"
-      --   return require("ts_context_commentstring.internal").calculate_commentstring({
-      --     key = type,
-      --   })
-      -- end,
       pre_hook = function(ctx)
         local U = require("Comment.utils")
 
@@ -664,7 +655,7 @@ M.setup = function()
     })
   end
 
-  local function setup_conflict_marker()
+  do -- conflict-marker.nvim
     -- disable the default highlight group
     vim.g.conflict_marker_highlight_group = "Error"
     -- Include text after begin and end markers
@@ -672,7 +663,7 @@ M.setup = function()
     vim.g.conflict_marker_end = "^>>>>>>> .*$"
   end
 
-  local function setup_colorizer()
+  do -- colorizer.nvim
     require("colorizer").setup({
       -- '*',
       -- '!vim',
@@ -699,7 +690,7 @@ M.setup = function()
     })
   end
 
-  local function setup_golden_size()
+  do -- golden_size.nvim
     local golden_size_installed, golden_size = pcall(require, "golden_size")
     if golden_size_installed then
       local function ignore_by_buftype(types)
@@ -733,7 +724,7 @@ M.setup = function()
     end
   end
 
-  local function setup_lastplace()
+  do -- lastplace
     require("nvim-lastplace").setup({
       lastplace_ignore_buftype = { "quickfix", "nofile", "help" },
       lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
@@ -741,7 +732,7 @@ M.setup = function()
     })
   end
 
-  local function setup_autopairs()
+  do -- nvim-autopairs
     local npairs = require("nvim-autopairs")
     npairs.setup({
       check_ts = true,
@@ -764,7 +755,7 @@ M.setup = function()
     })
   end
 
-  local function setup_lightspeed()
+  do -- lightspeed.nvim
     require("lightspeed").setup({
       -- jump_to_first_match = true,
       jump_on_partial_input_safety_timeout = 400,
@@ -783,7 +774,7 @@ M.setup = function()
     })
   end
 
-  local function setup_diffview()
+  do -- diffview.nvim
     local cb = require("diffview.config").diffview_callback
 
     require("diffview").setup({
@@ -824,7 +815,7 @@ M.setup = function()
     })
   end
 
-  local function setup_git()
+  do -- git.nvim
     require("git").setup({
       keymaps = {
         -- Open blame window
@@ -853,50 +844,14 @@ M.setup = function()
     })
   end
 
-  local function setup_gitsigns()
-    local gitsigns = require("gitsigns")
-    gitsigns.setup({
-      signs = {
-        add = { hl = "GitSignsAdd", text = "▌" },
-        change = { hl = "GitSignsChange", text = "▌" },
-        delete = { hl = "GitSignsDelete", text = "▌" },
-        topdelete = { hl = "GitSignsDelete", text = "▌" },
-        changedelete = { hl = "GitSignsChange", text = "▌" },
-      },
-      word_diff = false,
-      numhl = false,
-      keymaps = {
-        -- Default keymap options
-        noremap = true,
-        buffer = true,
-        ["n [h"] = { expr = true, "&diff ? ']h' : '<cmd>lua require\"gitsigns\".next_hunk()<CR>'" },
-        ["n ]h"] = { expr = true, "&diff ? '[h' : '<cmd>lua require\"gitsigns\".prev_hunk()<CR>'" },
-        ["n <localleader>gw"] = "<cmd>lua require\"gitsigns\".stage_buffer()<CR>",
-        ["n <localleader>gre"] = "<cmd>lua require\"gitsigns\".reset_buffer()<CR>",
-        ["n <localleader>gbl"] = "<cmd>lua require\"gitsigns\".blame_line()<CR>",
-        ["n <localleader>gbd"] = "<cmd>lua require\"gitsigns\".toggle_word_diff()<CR>",
-        ["n <leader>lm"] = "<cmd>lua require\"gitsigns\".setqflist(\"all\")<CR>",
-        -- Text objects
-        ["o ih"] = ":<C-U>lua require\"gitsigns\".select_hunk()<CR>",
-        ["x ih"] = ":<C-U>lua require\"gitsigns\".select_hunk()<CR>",
-        ["n <leader>hs"] = "<cmd>lua require\"gitsigns\".stage_hunk()<CR>",
-        ["v <leader>hs"] = "<cmd>lua require\"gitsigns\".stage_hunk({vim.fn.line(\".\"), vim.fn.line(\"v\")})<CR>",
-        ["n <leader>hu"] = "<cmd>lua require\"gitsigns\".undo_stage_hunk()<CR>",
-        ["n <leader>hr"] = "<cmd>lua require\"gitsigns\".reset_hunk()<CR>",
-        ["v <leader>hr"] = "<cmd>lua require\"gitsigns\".reset_hunk({vim.fn.line(\".\"), vim.fn.line(\"v\")})<CR>",
-        ["n <leader>hp"] = "<cmd>lua require\"gitsigns\".preview_hunk()<CR>",
-      },
-    })
-  end
-
-  local function setup_git_messenger()
+  do -- git-messenger.nvim
     vim.g.git_messenger_floating_win_opts = { border = vim.g.floating_window_border_dark }
     vim.g.git_messenger_no_default_mappings = true
     vim.g.git_messenger_max_popup_width = 100
     vim.g.git_messenger_max_popup_height = 100
   end
 
-  local function setup_vim_test()
+  do -- vim-test
     -- REF:
     -- neat ways to detect jest things
     -- https://github.com/weilbith/vim-blueplanet/blob/master/pack/plugins/start/test_/autoload/test/typescript/jest.vim
@@ -927,7 +882,7 @@ M.setup = function()
     vcmd([[let g:test#javascript#jest#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$']])
   end
 
-  local function setup_projectionist()
+  do -- vim-projectionist
     vim.g.projectionist_heuristics = {
       ["&package.json"] = {
         ["package.json"] = {
@@ -1026,7 +981,7 @@ M.setup = function()
     }
   end
 
-  local function setup_package_info()
+  do -- package-info.nvim
     require("package-info").setup({
       colors = {
         up_to_date = C.cs.bg2, -- Text color for up to date package virtual text
@@ -1043,11 +998,11 @@ M.setup = function()
     })
   end
 
-  local function setup_numb()
+  do -- numb.nvim
     require("numb").setup()
   end
 
-  local function setup_zk()
+  do -- zk
     vcmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
     vcmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
     vcmd(
@@ -1094,7 +1049,7 @@ M.setup = function()
     end
   end
 
-  local function setup_fzf_lua()
+  do -- fzf-lua.nvim
     local actions = require("fzf-lua.actions")
     require("fzf-lua").setup({
       -- fzf_args = vim.env.FZF_DEFAULT_OPTS .. " --border rounded",
@@ -1161,7 +1116,7 @@ M.setup = function()
     })
   end
 
-  local function setup_alpha()
+  do -- alpha.nvim
     local alpha = require("alpha")
     local dashboard = require("alpha.themes.dashboard")
 
@@ -1226,7 +1181,7 @@ M.setup = function()
     alpha.setup(dashboard.opts)
   end
 
-  local function setup_distant()
+  do -- distant.nvim
     local actions = require("distant.nav.actions")
 
     require("distant").setup({
@@ -1297,14 +1252,14 @@ M.setup = function()
     })
   end
 
-  local function setup_tabout()
+  do -- tabout.nvim
     require("tabout").setup({
       completion = false,
       ignore_beginning = false,
     })
   end
 
-  local function setup_headlines()
+  do -- headlines.nvim
     -- vim.cmd([[highlight Headline1 guibg=#1e2718]])
     -- vim.cmd([[highlight Headline2 guibg=#21262d]])
     -- vim.cmd([[highlight CodeBlock guibg=#1c1c1c]])
@@ -1341,7 +1296,7 @@ M.setup = function()
     })
   end
 
-  local function setup_filetype()
+  do -- filetype.nvim
     require("filetype").setup({
       overrides = {
         literal = {
@@ -1353,7 +1308,7 @@ M.setup = function()
     })
   end
 
-  local function setup_nvim_tree()
+  do -- nvim-tree.nvim
     -- local action = require("nvim-tree.config").nvim_tree_callback
     vim.g.nvim_tree_icons = {
       default = "",
@@ -1433,18 +1388,18 @@ M.setup = function()
     })
   end
 
-  local function setup_dd()
+  do -- dd.nvim
     require("dd").setup({ timeout = 500 })
   end
 
-  local function setup_dash()
+  do -- dash.nvim
     if fn.getenv("PLATFORM") == "macos" then
       vcmd([[packadd dash.nvim]])
       require("dash").setup({})
     end
   end
 
-  local function setup_gps()
+  do -- nvim-gps
     require("nvim-gps").setup({
       languages = {
         elixir = false,
@@ -1453,48 +1408,9 @@ M.setup = function()
     })
   end
 
-  local function setup_misc()
+  do -- misc
     vim.g.fzf_gitignore_no_maps = true
   end
-
-  setup_treesitter()
-  setup_golden_size()
-  setup_devicons()
-  setup_matchup()
-  setup_neoscroll()
-  setup_lightspeed()
-  setup_colorizer()
-  setup_autopairs()
-  setup_alpha()
-  setup_fzf_lua()
-  setup_specs()
-  setup_startuptime()
-  setup_indent_blankline()
-  setup_zk()
-  setup_numb()
-  setup_orgmode()
-  setup_package_info()
-  setup_projectionist()
-  -- setup_project_nvim()
-  setup_vim_test()
-  setup_bullets()
-  setup_trouble()
-  setup_cursorhold()
-  setup_comment()
-  setup_conflict_marker()
-  setup_lastplace()
-  setup_diffview()
-  setup_git()
-  setup_git_messenger()
-  setup_distant()
-  setup_tabout()
-  setup_headlines()
-  setup_filetype()
-  setup_nvim_tree()
-  setup_dd()
-  setup_dash()
-  setup_gps()
-  setup_misc()
 end
 
 return M

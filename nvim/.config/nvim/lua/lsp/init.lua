@@ -238,6 +238,7 @@ local function setup_lsp_servers()
   local function lsp_with_defaults(opts)
     opts = opts or {}
     local lsp_config = vim.tbl_deep_extend("keep", opts, {
+      autorstart = true,
       on_attach = on_attach,
       capabilities = setup_lsp_capabilities(),
       flags = { debounce_text_changes = 150 },
@@ -430,16 +431,13 @@ local function setup_lsp_servers()
   end
 
   do -- lua
-    local runtime_path = vim.split(package.path, ";")
-    table.insert(runtime_path, "lua/?.lua")
-    table.insert(runtime_path, "lua/?/init.lua")
     local sumneko_lua_settings = lsp_with_defaults({
       settings = {
         Lua = {
           completion = { keywordSnippet = "Replace", callSnippet = "Replace" }, -- or `Disable`
           runtime = {
             version = "LuaJIT",
-            path = runtime_path,
+            path = vim.split(package.path, ";"),
           },
           diagnostics = {
             globals = {
@@ -485,7 +483,7 @@ local function setup_lsp_servers()
           },
           workspace = {
             preloadFileSize = 500,
-            maxPreload = 2000,
+            maxPreload = 500,
             library = vim.api.nvim_get_runtime_file("", true),
             -- library = {
             --   [vim.fn.expand("$VIMRUNTIME/lua")] = true,

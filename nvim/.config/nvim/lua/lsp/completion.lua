@@ -176,9 +176,9 @@ local function setup_cmp()
       ["<CR>"] = cmp.mapping.confirm({ select = false }),
       ["<C-e>"] = cmp.mapping.close(),
     },
+    -- see more configured sources in ftplugins/<filetype>.lua
     sources = cmp.config.sources({
       { name = "luasnip" },
-      { name = "nvim_lua" },
       { name = "nvim_lsp" },
       { name = "path" },
     }, {
