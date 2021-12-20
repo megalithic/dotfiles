@@ -402,13 +402,11 @@ function M.lsp_status()
   if ok and lsp_status then
     lsp_status.register_progress()
     lsp_status.config({
-      indicator_hint = "",
-      indicator_info = "",
-      indicator_errors = "✗",
-      indicator_warnings = "",
-      status_symbol = " ",
-      -- spinner_frames = { "▪", "■", "□", "▫" },
-      -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+      indicator_errors = C.icons.lsp.error,
+      indicator_warnings = C.icons.lsp.warn,
+      indicator_info = C.icons.lsp.info,
+      indicator_hint = C.icons.lsp.hint,
+      status_symbol = C.icons.lsp.ok,
     })
 
     if #vim.lsp.buf_get_clients() > 0 then

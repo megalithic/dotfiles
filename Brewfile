@@ -45,6 +45,7 @@ brew "blueutil"
 brew "broot"
 brew "browsh"
 brew "vitorgalvao/tiny-scripts/calm-notifications"
+brew "cameracontroller"
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
 brew "cmake"
 brew "coreutils"

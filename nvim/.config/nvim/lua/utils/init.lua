@@ -1,6 +1,7 @@
 local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
 local bmap, au = mega.bmap, mega.au
 local fmt = string.format
+local C = require("colors")
 
 local M = {
   lsp = {},
@@ -147,24 +148,25 @@ function M.remove_wins()
 end
 
 -- # [ diagnostics ] -----------------------------------------------------------
-local serverity_map = {
+local severity_map = {
   "DiagnosticError",
   "DiagnosticWarn",
   "DiagnosticInfo",
   "DiagnosticHint",
 }
+
 local icon_map = {
-  "  ",
+  " ✗ ",
   "  ",
   "  ",
   "  ",
 }
 
 M.lsp.diagnostic_types = {
-  { "Error", icon = "" },
-  { "Warn", icon = "" },
-  { "Info", icon = "" },
-  { "Hint", icon = "" },
+  { "Error", icon = C.icons.lsp.error },
+  { "Warn", icon = C.icons.lsp.warn },
+  { "Info", icon = C.icons.lsp.info },
+  { "Hint", icon = C.icons.lsp.hint },
 }
 
 local function source_string(source)
@@ -233,7 +235,7 @@ M.lsp.line_diagnostics = function()
 
   for i, diagnostic in ipairs(diagnostics) do
     local message_length = #lines[i] - #source_string(diagnostic.source)
-    vim.api.nvim_buf_add_highlight(floating_bufnr, -1, serverity_map[diagnostic.severity], i - 1, 0, message_length)
+    vim.api.nvim_buf_add_highlight(floating_bufnr, -1, severity_map[diagnostic.severity], i - 1, 0, message_length)
     vim.api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
   end
 

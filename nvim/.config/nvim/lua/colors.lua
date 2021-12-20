@@ -4,10 +4,15 @@ local hi, link, utf8 = mega.hi, mega.hi_link, mega.utf8
 local hsl = require("lush").hsl
 
 local icons = {
-  sign_error = utf8(0xf655),
-  sign_warning = utf8(0xfa36),
-  sign_information = utf8(0xf7fc),
-  sign_hint = utf8(0xf835),
+  lsp = {
+    error = "✗",
+    warn = "",
+    info = "",
+    hint = "",
+    ok = "",
+    -- spinner_frames = { "▪", "■", "□", "▫" },
+    -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+  },
   virtual_text = utf8(0xf63d),
   mode_term = utf8(0xfcb5),
   ln_sep = utf8(0xe0a1),
@@ -20,12 +25,7 @@ local icons = {
   vcs_symbol = utf8(0xf418),
   git_symbol = utf8(0xe725),
   readonly_symbol = utf8(0xf023),
-  statusline_error = utf8(0xf05e),
-  statusline_warning = utf8(0xf071),
-  statusline_information = utf8(0xf7fc),
-  statusline_hint = utf8(0xf835),
-  statusline_ok = utf8(0xf00c),
-  prompt_symbol = "", -- utf8(0xf460),
+  prompt = "", -- utf8(0xf460),
 }
 
 local cs = {}
