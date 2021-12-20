@@ -1,5 +1,6 @@
 local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
 local bmap, au = mega.bmap, mega.au
+local fmt = string.format
 
 local M = {
   lsp = {},
@@ -154,13 +155,20 @@ local serverity_map = {
 }
 local icon_map = {
   "  ",
-  "  ",
+  "  ",
   "  ",
-  "  ",
+  "  ",
+}
+
+M.lsp.diagnostic_types = {
+  { "Error", icon = "" },
+  { "Warn", icon = "" },
+  { "Info", icon = "" },
+  { "Hint", icon = "" },
 }
 
 local function source_string(source)
-  return string.format("  [%s]", source)
+  return fmt("  [%s]", source)
 end
 
 M.wrap_lines = function(input, width)
@@ -181,6 +189,19 @@ M.wrap_lines = function(input, width)
 
   return output
 end
+
+function M.lsp.close_preview_autocmd(events, winnr)
+  if #events > 0 then
+    api.nvim_command(
+      "autocmd "
+        .. table.concat(events, ",")
+        .. " <buffer> ++once lua pcall(vim.api.nvim_win_close, "
+        .. winnr
+        .. ", true)"
+    )
+  end
+end
+
 M.lsp.line_diagnostics = function()
   local width = 70
   local bufnr, lnum = unpack(vim.fn.getcurpos())
@@ -218,10 +239,10 @@ M.lsp.line_diagnostics = function()
     border = vim.g.floating_window_border_dark,
   })
 
-  -- vim.lsp.util.close_preview_autocmd(
-  --   { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "InsertCharPre" },
-  --   winnr
-  -- )
+  M.lsp.close_preview_autocmd(
+    { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "InsertCharPre" },
+    winnr
+  )
 end
 
 ---Override diagnostics signs helper to only show the single most relevant sign
@@ -253,23 +274,6 @@ M.lsp.filter_diagnostics = function(diagnostics, bufnr)
   end
   return filtered_diagnostics
 end
--- function M.lsp.show_diagnostics(ns)
---   ns = ns or vim.api.nvim_create_namespace("diagnostics")
---   vim.schedule(function()
---     local line = vim.api.nvim_win_get_cursor(0)[1] - 1
---     local bufnr = vim.api.nvim_get_current_buf()
---     local diagnostics = vim.diagnostic.get(bufnr, { lnum = line })
---     vim.diagnostic.show(ns, bufnr, diagnostics, { virtual_text = true })
---   end)
--- end
-
--- function M.lsp.refresh_diagnostics()
---   vim.diagnostic.setloclist({ open = false })
---   M.lsp.show_diagnostics()
---   if vim.tbl_isempty(fn.getloclist(0)) then
---     vcmd([[lclose]])
---   end
--- end
 
 -- # [ hover ] -----------------------------------------------------------------
 function M.lsp.hover()
@@ -352,7 +356,7 @@ function M.lsp.elixirls_cmd(opts)
   local fallback_dir = opts.fallback_dir or "$XDG_CONFIG_HOME"
 
   -- otherwise, just use our globally installed elixir_ls
-  return fn.expand(string.format("%s/lsp/elixir_ls/release/%s", fallback_dir, "language_server.sh"))
+  return fn.expand(fmt("%s/lsp/elixir_ls/release/%s", fallback_dir, "language_server.sh"))
 end
 
 return M

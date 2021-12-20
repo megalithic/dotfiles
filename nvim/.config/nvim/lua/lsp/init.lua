@@ -2,6 +2,7 @@
 
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local map, bufmap, bmap, au = mega.map, mega.bufmap, mega.bmap, mega.au
+local fmt = string.format
 local lspconfig = require("lspconfig")
 local utils = require("utils")
 
@@ -9,32 +10,20 @@ set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
 local function setup_diagnostics()
-  -- LSP signs default
-  fn.sign_define("DiagnosticSignError", { texthl = "DiagnosticSignError", text = "", numhl = "DiagnosticSignError" })
-  fn.sign_define("DiagnosticSignWarn", { texthl = "DiagnosticSignWarn", text = "", numhl = "DiagnosticSignWarn" })
-  fn.sign_define("DiagnosticSignInfo", { texthl = "DiagnosticSignInfo", text = "", numhl = "DiagnosticSignInfo" })
-  fn.sign_define("DiagnosticSignHint", { texthl = "DiagnosticSignHint", text = "", numhl = "DiagnosticSignHint" })
-
-  -- NOTE: recent updates to neovim vim.lsp.diagnostic to vim.diagnostic:
-  -- REF: https://github.com/neovim/neovim/pull/15585
-  vim.diagnostic.config({
-    underline = true,
-    virtual_text = false,
-    signs = true, -- {severity_limit = "Warning"},
-    update_in_insert = false,
-    severity_sort = true,
-    float = {
-      show_header = true,
-      source = "if_many",
-      border = "single",
-      focusable = false,
-      severity_sort = true,
-    },
-  })
+  fn.sign_define(vim.tbl_map(function(t)
+    local hl = "DiagnosticSign" .. t[1]
+    return {
+      name = hl,
+      text = t.icon,
+      texthl = hl,
+      numhl = hl,
+      linehl = fmt("%sLine", hl),
+    }
+  end, utils.lsp.diagnostic_types))
 
   --- This overwrites the diagnostic show/set_signs function to replace it with a custom function
   --- that restricts nvim's diagnostic signs to only the single most severe one per line
-  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local ns = api.nvim_create_namespace("lsp-diagnostics")
   local show = vim.diagnostic.show
   local function display_signs(bufnr)
     -- Get all diagnostics from the current buffer
@@ -52,64 +41,64 @@ local function setup_diagnostics()
     display_signs(bufnr)
   end
 
-  -- Change diagnostic symbols in the sign column (gutter)
-  local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
-  for type, icon in pairs(signs) do
-    local hl = "DiagnosticSign" .. type
-    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-  end
+  -- -- sort signs by severity (show most critical sign from those in the same line)
+  -- vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
+  --   severity_sort = true,
+  -- })
 
-  -- sort signs by severity (show most critical sign from those in the same line)
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-    severity_sort = true,
-  })
+  -- -- wrap open_float to inspect diagnostics and use the severity color for border
+  -- -- https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
+  -- vim.diagnostic.open_float = (function(orig)
+  --   return function(bufnr, opts)
+  --     local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+  --     opts = opts or {}
+  --     -- A more robust solution would check the "scope" value in `opts` to
+  --     -- determine where to get diagnostics from, but if you're only using
+  --     -- this for your own purposes you can make it as simple as you like
+  --     local diagnostics = vim.diagnostic.get(opts.bufnr or 0, { lnum = lnum })
+  --     local max_severity = vim.diagnostic.severity.HINT
+  --     for _, d in ipairs(diagnostics) do
+  --       -- Equality is "less than" based on how the severities are encoded
+  --       if d.severity < max_severity then
+  --         max_severity = d.severity
+  --       end
+  --     end
+  --     local border_color = ({
+  --       [vim.diagnostic.severity.HINT] = "DiagnosticHint",
+  --       [vim.diagnostic.severity.INFO] = "DiagnosticInfo",
+  --       [vim.diagnostic.severity.WARN] = "DiagnosticWarn",
+  --       [vim.diagnostic.severity.ERROR] = "DiagnosticError",
+  --     })[max_severity]
+  --     opts.border = {
+  --       { "🭽", border_color },
+  --       { "▔", border_color },
+  --       { "🭾", border_color },
+  --       { "▕", border_color },
+  --       { "🭿", border_color },
+  --       { "▁", border_color },
+  --       { "🭼", border_color },
+  --       { "▏", border_color },
+  --     }
+  --     orig(bufnr, opts)
+  --   end
+  -- end)(vim.diagnostic.open_float)
 
-  -- wrap open_float to inspect diagnostics and use the severity color for border
-  -- https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
-  vim.diagnostic.open_float = (function(orig)
-    return function(bufnr, opts)
-      local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-      local opts = opts or {}
-      -- A more robust solution would check the "scope" value in `opts` to
-      -- determine where to get diagnostics from, but if you're only using
-      -- this for your own purposes you can make it as simple as you like
-      local diagnostics = vim.diagnostic.get(opts.bufnr or 0, { lnum = lnum })
-      local max_severity = vim.diagnostic.severity.HINT
-      for _, d in ipairs(diagnostics) do
-        -- Equality is "less than" based on how the severities are encoded
-        if d.severity < max_severity then
-          max_severity = d.severity
-        end
-      end
-      local border_color = ({
-        [vim.diagnostic.severity.HINT] = "DiagnosticHint",
-        [vim.diagnostic.severity.INFO] = "DiagnosticInfo",
-        [vim.diagnostic.severity.WARN] = "DiagnosticWarn",
-        [vim.diagnostic.severity.ERROR] = "DiagnosticError",
-      })[max_severity]
-      opts.border = {
-        { "🭽", border_color },
-        { "▔", border_color },
-        { "🭾", border_color },
-        { "▕", border_color },
-        { "🭿", border_color },
-        { "▁", border_color },
-        { "🭼", border_color },
-        { "▏", border_color },
-      }
-      orig(bufnr, opts)
-    end
-  end)(vim.diagnostic.open_float)
+  -- -- Show line diagnostics in floating popup on hover, except insert mode (CursorHoldI)
+  -- vim.o.updatetime = 250
+  -- vim.cmd([[autocmd CursorHold * lua vim.diagnostic.open_float()]])
 
-  -- Show line diagnostics in floating popup on hover, except insert mode (CursorHoldI)
-  vim.o.updatetime = 250
-  vim.cmd([[autocmd CursorHold * lua vim.diagnostic.open_float()]])
-
-  -- Show source in diagnostics, not inline but as a floating popup
   vim.diagnostic.config({
+    underline = true,
     virtual_text = false,
+    signs = true, -- {severity_limit = "Warning"},
+    update_in_insert = false,
+    severity_sort = true,
     float = {
-      source = "always", -- Or "if_many"
+      show_header = true,
+      source = "if_many", -- or "always"
+      border = "single",
+      focusable = false,
+      severity_sort = true,
     },
   })
 end
@@ -186,12 +175,8 @@ local function on_attach(client, bufnr)
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
 
   --- # misc mappings
-  bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
   bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
-  -- bufmap(
-  --   "<leader>ld",
-  --   [[lua vim.diagnostic.open_float(0, {scope='line', close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertCharPre", "BufLeave" }})]]
-  -- )
+  bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
   bufmap("K", "lua vim.lsp.buf.hover()")
   bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
   bufmap("<leader>lf", "lua require('utils').lsp.format()")
@@ -208,7 +193,7 @@ local function on_attach(client, bufnr)
   )
 
   --- # autocommands/autocmds
-  au([[CursorHold,CursorHoldI <buffer> lua require('utils').lsp.line_diagnostics()]])
+  au([[CursorHold <buffer> lua require('utils').lsp.line_diagnostics()]])
   au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
   vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
