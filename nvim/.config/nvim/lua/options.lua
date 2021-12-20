@@ -1,98 +1,65 @@
-local o, g = vim.opt, vim.g
-local exec, is_macos = mega.exec, mega.is_macos
+local fn = vim.fn
 
--- REFS for explaining these options
--- https://github.com/sethigeet/Dotfiles/blob/master/.config/nvim/lua/general/settings.lua
-
--- o.mouse = "" -- disable the mouse
-o.mouse = "nva" -- Mouse support in different modes
-o.mousemodel = "popup" -- Set the behaviour of mouse
-o.exrc = false -- ignore '~/.exrc'
-o.secure = true
-o.modelines = 1 -- read a modeline at EOF
-o.errorbells = false -- disable error bells (no beep/flash)
-o.termguicolors = true -- enable 24bit colors
-
-o.updatetime = 250 -- decrease update time
-o.timeoutlen = 300
-
-o.autoread = true -- auto read file if changed outside of vim
-o.fileformat = "unix" -- <nl> for EOL
-o.switchbuf = { "useopen", "vsplit", "split", "usetab" }
-o.encoding = "utf-8"
-o.fileencoding = "utf-8"
-o.backspace = { "eol", "start", "indent" }
-o.matchpairs = { "(:)", "{:}", "[:]", "<:>" }
-
--- recursive :find in current dir
-vim.cmd([[set path=.,,,$PWD/**]])
-
--- vim clipboard copies to system clipboard
--- unnamed     = use the " register (cmd-s paste in our term)
--- unnamedplus = use the + register (cmd-v paste in our term)
-o.clipboard = "unnamedplus"
-
-o.showmode = true -- show current mode (insert, etc) under the cmdline
-o.showcmd = true -- show current command under the cmd line
-o.cmdheight = 2 -- cmdline height
-o.laststatus = 2 -- 2 = always show status line (filename, etc)
-o.lazyredraw = true -- should make scrolling faster
-o.scrolloff = 3 -- min number of lines to keep between cursor and screen edge
-o.sidescrolloff = 5 -- min number of cols to keep between cursor and screen edge
-o.textwidth = 78 -- max inserted text width for paste operations
-o.linespace = 0 -- font spacing
-o.ruler = true -- show line,col at the cursor pos
-o.number = true -- show absolute line no. at the cursor pos
-o.relativenumber = true -- otherwise, show relative numbers in the ruler
-o.cursorline = true -- Show a line where the current cursor is
-o.cursorlineopt = "number" -- Show a line where the current cursor is
-o.signcolumn = "yes" -- Show sign column as first column
-g.colorcolumn = 81 -- global var, mark column 81
-o.colorcolumn = tostring(g.colorcolumn)
-o.wrap = true -- wrap long lines
-o.breakindent = true -- start wrapped lines indented
-o.copyindent = true
-o.preserveindent = true
-o.linebreak = true -- do not break words on line wrap
-o.jumpoptions = "stack"
-
--- Characters to display on ':set list',explore glyphs using:
--- `xfd -fa "InputMonoNerdFont:style:Regular"` or
--- `xfd -fn "-misc-fixed-medium-r-semicondensed-*-13-*-*-*-*-*-iso10646-1"`
--- input special chars with the sequence <C-v-u> followed by the hex code
-o.listchars = {
-  tab = "→ ",
-  eol = "↲",
-  nbsp = "␣",
-  lead = "␣",
-  space = "␣",
-  trail = "•",
-  extends = "⟩",
-  precedes = "⟨",
+-----------------------------------------------------------------------------//
+-- Message output on vim actions {{{1
+-----------------------------------------------------------------------------//
+vim.opt.shortmess = {
+  t = true, -- truncate file messages at start
+  A = true, -- ignore annoying swap file messages
+  o = true, -- file-read message overwrites previous
+  O = true, -- file-read message overwrites previous
+  T = true, -- truncate non-file messages in middle
+  f = true, -- (file x of x) instead of just (x of x
+  F = true, -- Don't give file info when editing a file, NOTE: this breaks autocommand messages
+  s = true,
+  c = true,
+  W = true, -- Don't show [w] or written when writing
 }
-o.showbreak = "↪ "
-
--- show menu even for one item do not auto select/insert
-o.completeopt = { "noinsert", "menuone", "noselect" }
-o.wildmenu = true
-o.wildmode = "longest:full,full"
-o.wildoptions = "pum" -- Show completion items using the pop-up-menu (pum)
-o.pumblend = 5 -- completion menu transparency
-o.pumheight = 20 -- completion menu height
-o.winminwidth = 15
-
-o.joinspaces = true -- insert spaces after '.?!' when joining lines
-o.autoindent = true -- copy indent from current line on newline
-o.smartindent = true -- add <tab> depending on syntax (C/C++)
-o.startofline = false -- keep cursor column on navigation
-
-o.tabstop = 4 -- Tab indentation levels every two columns
-o.softtabstop = 4 -- Tab indentation when mixing tabs & spaces
-o.shiftwidth = 4 -- Indent/outdent by two columns
-o.shiftround = true -- Always indent/outdent to nearest tabstop
-o.expandtab = true -- Convert all tabs that are typed into spaces
-o.smarttab = true -- Use shiftwidths at left margin, tabstops everywhere else
-
+-----------------------------------------------------------------------------//
+-- Timings {{{1
+-----------------------------------------------------------------------------//
+vim.opt.updatetime = 300
+vim.opt.timeout = true
+vim.opt.timeoutlen = 500
+vim.opt.ttimeoutlen = 10
+-----------------------------------------------------------------------------//
+-- Window splitting and buffers {{{1
+-----------------------------------------------------------------------------//
+--- NOTE: remove this once 0.6 lands as it is now default
+vim.opt.hidden = true
+vim.opt.splitbelow = true
+vim.opt.splitright = true
+vim.opt.eadirection = "hor"
+-- exclude usetab as we do not want to jump to buffers in already open tabs
+-- do not use split or vsplit to ensure we don't open any new windows
+vim.o.switchbuf = "useopen,uselast"
+vim.opt.fillchars = {
+  vert = "▕", -- alternatives │
+  fold = " ",
+  eob = " ", -- suppress ~ at EndOfBuffer
+  diff = "╱", -- alternatives = ⣿ ░ ─
+  msgsep = "‾",
+  foldopen = "▾",
+  foldsep = "│",
+  foldclose = "▸",
+}
+-----------------------------------------------------------------------------//
+-- Diff {{{1
+-----------------------------------------------------------------------------//
+-- Use in vertical diff mode, blank lines to keep sides aligned, Ignore whitespace changes
+vim.opt.diffopt = vim.opt.diffopt
+  + {
+    "vertical",
+    "iwhite",
+    "hiddenoff",
+    "foldcolumn:0",
+    "context:4",
+    "algorithm:histogram",
+    "indent-heuristic",
+  }
+-----------------------------------------------------------------------------//
+-- Format Options {{{1
+-----------------------------------------------------------------------------//
 -- c: auto-wrap comments using textwidth
 -- r: auto-insert the current comment leader after hitting <Enter>
 -- o: auto-insert the current comment leader after hitting 'o' or 'O'
@@ -103,56 +70,224 @@ o.smarttab = true -- Use shiftwidths at left margin, tabstops everywhere else
 -- this gets overwritten by ftplugins (:verb set fo)
 -- we use autocmd to remove 'o' in '/lua/autocmd.lua'
 -- borrowed from tjdevries
-o.formatoptions = o.formatoptions
-  - "a" -- Auto formatting is BAD.
-  - "t" -- Don't auto format my code. I got linters for that.
-  + "c" -- In general, I like it when comments respect textwidth
-  + "q" -- Allow formatting comments w/ gq
-  - "o" -- O and o, don't continue comments
-  + "r" -- But do continue when pressing enter.
-  + "n" -- Indent past the formatlistpat, not underneath it.
-  + "j" -- Auto-remove comments if possible.
-  - "2" -- I'm not in gradeschool anymore
+--
+-- - "a" -- Auto formatting is BAD.
+-- - "t" -- Don't auto format my code. I got linters for that.
+-- + "c" -- In general, I like it when comments respect textwidth
+-- + "q" -- Allow formatting comments w/ gq
+-- - "o" -- O and o, don't continue comments
+-- + "r" -- But do continue when pressing enter.
+-- + "n" -- Indent past the formatlistpat, not underneath it.
+-- + "j" -- Auto-remove comments if possible.
+-- - "2" -- I'm not in gradeschool anymore
 
-o.splitbelow = true -- ':new' ':split' below current
-o.splitright = true -- ':vnew' ':vsplit' right of current
+vim.opt.formatoptions = {
+  ["1"] = true,
+  ["2"] = true, -- Use indent from 2nd line of a paragraph
+  q = true, -- continue comments with gq"
+  c = true, -- Auto-wrap comments using textwidth
+  r = true, -- Continue comments when pressing Enter
+  n = true, -- Recognize numbered lists
+  t = false, -- autowrap lines using text width value
+  j = true, -- remove a comment leader when joining lines.
+  -- Only break if the line was not longer than 'textwidth' when the insert
+  -- started and only at a white character that has been entered during the
+  -- current insert command.
+  l = true,
+  v = true,
+}
+-----------------------------------------------------------------------------//
+-- Folds {{{1
+-----------------------------------------------------------------------------//
+vim.opt.foldenable = true -- enable folding
+vim.opt.foldtext = "v:lua.mega.folds()"
+vim.opt.foldopen = vim.opt.foldopen + "search"
+vim.opt.foldlevelstart = 6 -- open most folds by default
+vim.opt.foldnestmax = 10 -- 10 nested fold max
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldmethod = "expr"
+-- or --
+vim.opt.foldmethod = "indent" -- fold based on indent level
+-----------------------------------------------------------------------------//
+-- Quickfix {{{1
+-----------------------------------------------------------------------------//
+--- FIXME: Need to use a lambda rather than a lua function directly
+--- @see https://github.com/neovim/neovim/pull/14886
+-- vim.o.quickfixtextfunc = '{i -> v:lua.mega.qftf(i)}'
+-----------------------------------------------------------------------------//
+-- Grepprg {{{1
+-----------------------------------------------------------------------------//
+-- Use faster grep alternatives if possible
+if mega.executable("rg") then
+  vim.o.grepprg = [[rg --glob "!.git" --no-heading --vimgrep --follow $*]]
+  vim.opt.grepformat = vim.opt.grepformat ^ { "%f:%l:%c:%m" }
+elseif mega.executable("ag") then
+  vim.o.grepprg = [[ag --nogroup --nocolor --vimgrep]]
+  vim.opt.grepformat = vim.opt.grepformat ^ { "%f:%l:%c:%m" }
+end
+-----------------------------------------------------------------------------//
+-- Wild and file globbing stuff in command mode {{{1
+-----------------------------------------------------------------------------//
+vim.opt.wildcharm = fn.char2nr(mega.replace_termcodes([[<Tab>]]))
+vim.opt.wildmode = "longest:full,full" -- Shows a menu bar as opposed to an enormous list
+vim.opt.wildignorecase = true -- Ignore case when completing file names and directories
+-- Binary
+vim.opt.wildignore = {
+  "*.aux",
+  "*.out",
+  "*.toc",
+  "*.o",
+  "*.obj",
+  "*.dll",
+  "*.jar",
+  "*.pyc",
+  "*.rbc",
+  "*.class",
+  "*.gif",
+  "*.ico",
+  "*.jpg",
+  "*.jpeg",
+  "*.png",
+  "*.avi",
+  "*.wav",
+  -- Temp/System
+  "*.*~",
+  "*~ ",
+  "*.swp",
+  ".lock",
+  ".DS_Store",
+  "tags.lock",
+}
+vim.opt.wildoptions = "pum"
+vim.opt.pumblend = 3 -- Make popup window translucent
+vim.opt.pumheight = 20 -- completion menu height
+-----------------------------------------------------------------------------//
+-- Display {{{1
+-----------------------------------------------------------------------------//
+vim.opt.conceallevel = 2
+vim.opt.breakindentopt = "sbr"
+vim.opt.linebreak = true -- lines wrap at words rather than random characters
+vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
+-- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
+--@see: https://github.com/neovim/neovim/issues?q=set_signs
+vim.opt.signcolumn = "yes"
+vim.opt.ruler = false
+vim.opt.cmdheight = 2 -- Set command line height to two lines
+vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
+vim.opt.lazyredraw = true -- should make scrolling faster
+vim.g.colorcolumn = 81 -- global var, mark column 81
+vim.opt.colorcolumn = tostring(vim.g.colorcolumn)
+--- This is used to handle markdown code blocks where the language might
+--- be set to a value that isn't equivalent to a vim filetype
+vim.g.markdown_fenced_languages = {
+  "shell=sh",
+  "bash=sh",
+  "zsh=sh",
+  "console=sh",
+  "vim",
+  "lua",
+  "cpp",
+  "sql",
+  "elixir",
+  "python",
+  "javascript",
+  "typescript",
+  "js=javascript",
+  "ts=typescript",
+  "yaml",
+  "json",
+}
+vim.opt.winminwidth = 20
+-----------------------------------------------------------------------------//
+-- List chars {{{1
+-----------------------------------------------------------------------------//
+vim.opt.list = true -- invisible chars
+vim.opt.listchars = {
+  eol = nil,
+  tab = "│ ",
+  extends = "›", -- Alternatives: … »
+  precedes = "‹", -- Alternatives: … «
+  trail = "•", -- BULLET (U+2022, UTF-8: E2 80 A2)
+}
+-----------------------------------------------------------------------------//
+-- Indentation
+-----------------------------------------------------------------------------//
+vim.opt.wrap = true
+vim.opt.wrapmargin = 2
+vim.opt.textwidth = 80
+vim.opt.autoindent = true
+vim.opt.shiftround = true
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 2
+-----------------------------------------------------------------------------//
+-- vim.o.debug = "msg"
+--- NOTE: remove this once 0.6 lands, it is now default
+vim.opt.joinspaces = false
+vim.opt.gdefault = true
+vim.opt.confirm = true -- make vim prompt me to save before doing destructive things
+vim.opt.completeopt = { "menuone", "noselect" }
+vim.opt.hlsearch = false
+vim.opt.autowriteall = true -- automatically :write before running commands and changing files
+vim.opt.clipboard = { "unnamedplus" }
+vim.opt.laststatus = 2 -- 2 = always show status line (filename, etc)
+vim.opt.termguicolors = true
+-----------------------------------------------------------------------------//
+-- Emoji {{{1
+-----------------------------------------------------------------------------//
+-- emoji is true by default but makes (n)vim treat all emoji as double width
+-- which breaks rendering so we turn this off.
+-- CREDIT: https://www.youtube.com/watch?v=F91VWOelFNE
+vim.opt.emoji = false
+-----------------------------------------------------------------------------//
+--- NOTE: remove this once 0.6 lands, it is now default
+vim.opt.inccommand = "nosplit"
+-----------------------------------------------------------------------------//
+-- Cursor {{{1
+-----------------------------------------------------------------------------//
+-- This is from the help docs, it enables mode shapes, "Cursor" highlight, and blinking
+vim.opt.guicursor = {
+  [[n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50]],
+  [[a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor]],
+  [[sm:block-blinkwait175-blinkoff150-blinkon175]],
+}
 
-o.foldenable = true -- enable folding
-o.foldlevelstart = 10 -- open most folds by default
-o.foldnestmax = 10 -- 10 nested fold max
-o.foldmethod = "indent" -- fold based on indent level
-
-o.undofile = false -- no undo file
-o.hidden = true -- do not unload buffer when abandoned
-o.autochdir = false -- do not change dir when opening a file
-
-o.magic = true --  use 'magic' chars in search patterns
-o.hlsearch = true -- highlight all text matching current search pattern
-o.incsearch = true -- show search matches as you type
-o.ignorecase = true -- ignore case on search
-o.smartcase = true -- case sensitive when search includes uppercase
-o.showmatch = true -- highlight matching [{()}]
-o.inccommand = "nosplit" -- show search and replace in real time
-o.autoread = true -- reread a file if it's changed outside of vim
-o.wrapscan = true -- begin search from top of the file when nothing is found
-o.cpoptions = vim.o.cpoptions .. "x" -- stay on search item when <esc>
-
-o.backup = false -- no backup file
-o.writebackup = false -- do not backup file before write
-o.swapfile = false -- no swap file
-
-o.dictionary = "/usr/share/dict/words"
-o.spellfile = "$DOTS/nvim/.config/nvim/spell/en.utf-8.add"
-o.spelllang = "en"
-o.spell = false -- turn off by default (ft will enable it)
-o.spellsuggest:prepend({ 12 })
-o.spelloptions = "camel"
-o.spellcapcheck = "" -- don't check for capital letters at start of sentence
-o.fileformats = { "unix", "mac", "dos" }
-
+vim.opt.cursorline = true -- Show a line where the current cursor is
+vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
+-----------------------------------------------------------------------------//
+-- Title {{{1
+-----------------------------------------------------------------------------//
+vim.opt.titlestring = mega.title_string() or " ❐ %t %r %m"
+vim.opt.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
+vim.opt.title = true
+vim.opt.titlelen = 70
+-----------------------------------------------------------------------------//
+-- Utilities {{{1
+-----------------------------------------------------------------------------//
+vim.opt.showmode = false -- show current mode (insert, etc) under the cmdline
+vim.opt.sessionoptions = {
+  "blank",
+  "globals",
+  "buffers",
+  "curdir",
+  "folds",
+  "help",
+  "winpos",
+  "winsize",
+  -- "tabpages",
+}
+-- vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize"
+vim.opt.viewoptions = { "cursor", "folds" } -- save/restore just these (with `:{mk,load}view`)
+vim.opt.virtualedit = "block" -- allow cursor to move where there is no text in visual block mode
+-----------------------------------------------------------------------------//
+-- ShaDa (viminfo for vim): session data history
+-----------------------------------------------------------------------------//
 --[[
-  ShDa (viminfo for vim): session data history
-  --------------------------------------------
+   NOTE: don't store marks as they are currently broke i.e.
+   are incorrectly resurrected after deletion
+   replace '100 with '0 the default which stores 100 marks
+   add f0 so file marks aren't stored
+   @credit: wincent
+
   ! - Save and restore global variables (their names should be without lowercase letter).
   ' - Specify the maximum number of marked files remembered. It also saves the jump list and the change list.
   < - Maximum of lines saved for each register. All the lines are saved if this is not included, <0 to disable pessistent registers.
@@ -167,77 +302,64 @@ o.fileformats = { "unix", "mac", "dos" }
   :rshada   - read the shada file (:rviminfo for vim)
   :wshada   - write the shada file (:wrviminfo for vim)
 ]]
-o.shada = [[!,'100,<0,s100,h]]
-o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize"
-o.diffopt = "internal,filler,algorithm:histogram,indent-heuristic"
-
-exec([[
-  set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
-        \,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
-        \,sm:block-blinkwait175-blinkoff150-blinkon175
-
-  " Set cursor shape based on mode (:h termcap-cursor-shape)
-  " Vertical bar in insert mode
-  let &t_SI = "\e[6 q"
-  " underline in replace mode
-  let &t_SR = "\e[4 q"
-  " block in normal mode
-  let &t_EI = "\e[2 q"
-
-  " inform vim how to enable undercurl in wezterm
-  let &t_Cs = "\e[60m"
-  " inform vim how to disable undercurl in wezterm (this disables all underline modes)
-  let &t_Ce = "\e[24m"
-
-  " supposed to be undercurl things?
-  let &t_Cs = "\e[4:3m"
-  let &t_Ce = "\e[4:0m"
-
-  " for kitty background things:
-  " https://sw.kovidgoyal.net/kitty/faq/?highlight=send_text#using-a-color-theme-with-a-background-color-does-not-work-well-in-vim
-  let &t_ut=''
-]])
---[[
--- Install neovim-nightly on mac:
-❯ brew tap jason0x43/homebrew-neovim-nightly
-❯ brew install --cask neovim-nightly
-]]
-
--- MacOS clipboard
-if is_macos then
-  g.clipboard = {
-    name = "macOS-clipboard",
-    copy = {
-      ["+"] = "pbcopy",
-      ["*"] = "pbcopy",
-    },
-    paste = {
-      ["+"] = "pbpaste",
-      ["*"] = "pbpaste",
-    },
-  }
+-- vim.opt.shada = [[!,'0,f0,<50,s10,h]]
+vim.opt.shada = [[!,'100,<0,s100,h]]
+-------------------------------------------------------------------------------
+-- BACKUP AND SWAPS {{{
+-------------------------------------------------------------------------------
+vim.opt.backup = false
+vim.opt.writebackup = false
+if fn.isdirectory(vim.o.undodir) == 0 then
+  fn.mkdir(vim.o.undodir, "p")
 end
-
-if is_macos then
-  g.python3_host_prog = "/usr/local/bin/python3"
-else
-  g.python3_host_prog = "/usr/bin/python3"
+vim.opt.undofile = true
+vim.opt.swapfile = false
+-- The // at the end tells Vim to use the absolute path to the file to create the swap file.
+-- This will ensure that swap file name is unique, so there are no collisions between files
+-- with the same name from different directories.
+vim.opt.directory = fn.stdpath("data") .. "/swap//"
+if fn.isdirectory(vim.o.directory) == 0 then
+  fn.mkdir(vim.o.directory, "p")
 end
-
--- use ':grep' to send resulsts to quickfix
--- use ':lgrep' to send resulsts to loclist
-if vim.fn.executable("rg") == 1 then
-  o.grepprg = "rg --vimgrep --no-heading --hidden --smart-case --no-ignore-vcs"
-  o.grepformat = "%f:%l:%c:%m"
-  o.grepformat = "%f:%l:%c:%m,%f:%l:%m"
+--}}}
+-----------------------------------------------------------------------------//
+-- Match and search {{{1
+-----------------------------------------------------------------------------//
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.wrapscan = true -- Searches wrap around the end of the file
+vim.opt.scrolloff = 9 -- for typerwritering (HT: @evantravers), see https://randomdeterminism.wordpress.com/2011/08/15/typewriter-scroll-mode-in-vim/
+vim.opt.sidescrolloff = 10
+vim.opt.sidescroll = 1
+-----------------------------------------------------------------------------//
+-- Spelling {{{1
+-----------------------------------------------------------------------------//
+vim.opt.spellsuggest:prepend({ 12 })
+vim.opt.spelloptions = "camel"
+vim.opt.spellcapcheck = "" -- don't check for capital letters at start of sentence
+vim.opt.dictionary = "/usr/share/dict/words"
+vim.opt.spellfile = "$DOTS/nvim/.config/nvim/spell/en.utf-8.add"
+vim.opt.spelllang = "en"
+vim.opt.fileformats = { "unix", "mac", "dos" }
+-----------------------------------------------------------------------------//
+-- Mouse {{{1
+-----------------------------------------------------------------------------//
+vim.opt.mouse = "a"
+vim.opt.mousefocus = true
+-----------------------------------------------------------------------------//
+-- these only read ".vim" files
+vim.opt.secure = true -- Disable autocmd etc for project local vimrc files.
+vim.opt.exrc = true -- Allow project local vimrc files example .nvimrc see :h exrc
+-----------------------------------------------------------------------------//
+-- Git editor
+-----------------------------------------------------------------------------//
+if mega.executable("nvr") then
+  vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
 end
-
--- Disable providers we do not care a about
-g.loaded_python_provider = 0
-g.loaded_ruby_provider = 0
-g.loaded_perl_provider = 0
-g.loaded_node_provider = 0
-
+-----------------------------------------------------------------------------//
+-- Disable built-ins
+-----------------------------------------------------------------------------//
 -- Disable some in built plugins completely
 local disabled_built_ins = {
   "2html_plugin",
@@ -263,31 +385,73 @@ local disabled_built_ins = {
   "zip",
   "zipPlugin",
 }
+-- for _, plugin in pairs(disabled_built_ins) do
+--   vim.g["loaded_" .. plugin] = 1
+-- end
 
-for _, plugin in pairs(disabled_built_ins) do
-  g["loaded_" .. plugin] = 1
-end
+mega.exec([[
+  " Set cursor shape based on mode (:h termcap-cursor-shape)
+  " Vertical bar in insert mode
+  let &t_SI = "\e[6 q"
+  " underline in replace mode
+  let &t_SR = "\e[4 q"
+  " block in normal mode
+  let &t_EI = "\e[2 q"
 
-g.markdown_fenced_languages = {
-  "vim",
-  "lua",
-  "cpp",
-  "sql",
-  "python",
-  "bash=sh",
-  "console=sh",
-  "javascript",
-  "typescript",
-  "js=javascript",
-  "ts=typescript",
-  "yaml",
-  "json",
+  " inform vim how to enable undercurl in wezterm
+  let &t_Cs = "\e[60m"
+  " inform vim how to disable undercurl in wezterm (this disables all underline modes)
+  let &t_Ce = "\e[24m"
+
+  " supposed to be undercurl things?
+  let &t_Cs = "\e[4:3m"
+  let &t_Ce = "\e[4:0m"
+
+  " for kitty background things:
+  " https://sw.kovidgoyal.net/kitty/faq/?highlight=send_text#using-a-color-theme-with-a-background-color-does-not-work-well-in-vim
+  let &t_ut=''
+]])
+-----------------------------------------------------------------------------//
+-- Random Other Things
+-----------------------------------------------------------------------------//
+-- fallback in the event our statusline plugins fail to load
+vim.opt.statusline = table.concat({
+  "[%2{mode()} ] ",
+  "f", -- relative path
+  "m", -- modified flag
+  "r",
+  "=",
+  "{&spelllang}",
+  "y", -- filetype
+  "8(%l,%c%)", -- line, column
+  "8p%% ", -- file percentage
+}, " %")
+-- vim.opt.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
+vim.g.no_man_maps = true
+vim.g.vim_json_syntax_conceal = false
+vim.g.vim_json_conceal = false
+vim.g.floating_window_border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
+vim.g.floating_window_border_dark = {
+  { "╭", "FloatBorderDark" },
+  { "─", "FloatBorderDark" },
+  { "╮", "FloatBorderDark" },
+  { "│", "FloatBorderDark" },
+  { "╯", "FloatBorderDark" },
+  { "─", "FloatBorderDark" },
+  { "╰", "FloatBorderDark" },
+  { "│", "FloatBorderDark" },
 }
-
--- Map leader to ,
-g.mapleader = ","
-g.maplocalleader = " "
-
--- We do this to prevent the loading of the system fzf.vim plugin. This is
--- present at least on Arch/Manjaro/Void
-vim.api.nvim_command("set rtp-=/usr/share/vim/vimfiles")
+-- vim.opt.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
+-- vim.opt.concealcursor = "n" -- Hide * markup for bold and italic
+-- # git editor
+if vim.fn.executable("nvr") then
+  vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
+end
+-- # registers
+vim.g.registers_return_symbol = " ﬋ " -- "'⏎' by default
+vim.g.registers_tab_symbol = "." -- "'·' by default
+vim.g.registers_space_symbol = " " -- "' ' by default
+vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before closing the window when a register key is pressed
+vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
+-- vim:foldmethod=marker

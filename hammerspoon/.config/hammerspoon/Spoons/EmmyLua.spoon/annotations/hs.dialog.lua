@@ -25,7 +25,8 @@ hs.dialog = M
 --  * The optional values must be entered in order (i.e. you can't supply `style` without also supplying `buttonOne` and `buttonTwo`).
 --  * [style] can be "warning", "informational" or "critical". If something other than these string values is given, it will use "informational".
 --  * Example:
---      ```testCallbackFn = function(result) print("Callback Result: " .. result) end
+--      ```lua
+--      testCallbackFn = function(result) print("Callback Result: " .. result) end
 --      hs.dialog.alert(100, 100, testCallbackFn, "Message", "Informative Text", "Button One", "Button Two", "NSCriticalAlertStyle")
 --      hs.dialog.alert(200, 200, testCallbackFn, "Message", "Informative Text", "Single Button")```
 ---@return string
@@ -115,7 +116,8 @@ function M.textPrompt(message, informativeText, defaultText, buttonOne, buttonTw
 --  * The optional values must be entered in order (i.e. you can't supply `style` without also supplying `buttonOne` and `buttonTwo`).
 --  * [style] can be "warning", "informational" or "critical". If something other than these string values is given, it will use "informational".
 --  * Example:
---      ```testCallbackFn = function(result) print("Callback Result: " .. result) end
+--      ```lua
+--      testCallbackFn = function(result) print("Callback Result: " .. result) end
 --      testWebviewA = hs.webview.newBrowser(hs.geometry.rect(250, 250, 250, 250)):show()
 --      testWebviewB = hs.webview.newBrowser(hs.geometry.rect(450, 450, 450, 450)):show()
 --      hs.dialog.webviewAlert(testWebviewA, testCallbackFn, "Message", "Informative Text", "Button One", "Button Two", "warning")

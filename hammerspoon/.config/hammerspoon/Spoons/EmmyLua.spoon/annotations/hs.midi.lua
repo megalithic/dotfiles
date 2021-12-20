@@ -175,7 +175,7 @@ hs.midi = M
 --      * isVirtual           - `true` if Virtual MIDI Source otherwise `false`.
 --
 --  * Example Usage:
---    ```
+--    ```lua
 --    midiDevice = hs.midi.new(hs.midi.devices()[3])
 --    midiDevice:callback(function(object, deviceName, commandType, description, metadata)
 --               print("object: " .. tostring(object))
@@ -183,8 +183,7 @@ hs.midi = M
 --               print("commandType: " .. commandType)
 --               print("description: " .. description)
 --               print("metadata: " .. hs.inspect(metadata))
---               end)
---    ```
+--               end)```
 function M:callback(callbackFn, ...) end
 
 -- A table containing the numeric value for the possible flags returned by the `commandType` parameter of the callback function.
@@ -224,12 +223,11 @@ M.commandTypes = {}
 --    * `devices` - A table containing the names of any physically connected MIDI devices as strings.
 --    * `virtualDevices` - A table containing the names of any virtual MIDI devices as strings.
 --  * Example Usage:
---    ```
+--    ```lua
 --    hs.midi.deviceCallback(function(devices, virtualDevices)
 --         print(hs.inspect(devices))
 --         print(hs.inspect(virtualDevices))
---    end)
---    ```
+--    end)```
 function M.deviceCallback(callbackFn, ...) end
 
 -- Returns a table of currently connected physical MIDI devices.
@@ -261,7 +259,7 @@ function M:displayName() end
 --
 -- Notes:
 --  * Example Usage:
---   ```
+--   ```lua
 --   midiDevice = hs.midi.new(hs.midi.devices()[3])
 --   midiDevice:callback(function(object, deviceName, commandType, description, metadata)
 --                         print("object: " .. tostring(object))
@@ -270,8 +268,7 @@ function M:displayName() end
 --                         print("description: " .. description)
 --                         print("metadata: " .. hs.inspect(metadata))
 --                       end)
---   midiDevice:identityRequest()
---   ```
+--   midiDevice:identityRequest()```
 function M:identityRequest() end
 
 -- Returns the online status of a `hs.midi` object.
@@ -397,7 +394,7 @@ function M.newVirtualSource(virtualSource, ...) end
 --      * channel             - The channel for the command. Must be a number between 0 and 16. Defaults to 0, which sends the command to All Channels.
 --
 --  * Example Usage:
---     ```
+--     ```lua
 --     midiDevice = hs.midi.new(hs.midi.devices()[1])
 --     midiDevice:sendCommand("noteOn", {
 --         ["note"] = 72,
@@ -429,8 +426,7 @@ function M.newVirtualSource(virtualSource, ...) end
 --     midiDevice:sendCommand("pitchWheelChange", {
 --         ["pitchChange"] = 3000,
 --         ["channel"] = 0,
---     })
---     ```
+--     })```
 ---@return boolean
 function M:sendCommand(commandType, metadata, ...) end
 
@@ -444,7 +440,8 @@ function M:sendCommand(commandType, metadata, ...) end
 --
 -- Notes:
 --  * Example Usage:
---    ```midiDevice:sendSysex("f07e7f06 01f7")```
+--    ```lua
+--    midiDevice:sendSysex("f07e7f06 01f7")```
 function M:sendSysex(command, ...) end
 
 -- Set or display whether or not the MIDI device should synthesize audio on your computer.

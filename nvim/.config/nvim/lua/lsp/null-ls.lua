@@ -3,11 +3,12 @@ local b = nls.builtins
 
 local M = {}
 
-function M.setup()
-  nls.config({
+function M.setup(on_attach)
+  nls.setup({
     debug = false,
     debounce = 150,
     save_after_format = false,
+    on_attach = on_attach,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
       b.formatting.prettierd.with({

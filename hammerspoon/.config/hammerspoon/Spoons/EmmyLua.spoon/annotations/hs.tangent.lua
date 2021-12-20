@@ -262,8 +262,7 @@ function M.sendApplicationDefinition(appName, systemPath, userPath, ...) end
 -- ```lua
 -- hs.tangent.sendDisplayText(
 --     { "Single Height", "Double Height" }, {false, true}
--- )
--- ```
+-- )```
 function M.sendDisplayText(messages, doubleHeight, ...) end
 
 -- Highlights the control on any panel where this feature is available.

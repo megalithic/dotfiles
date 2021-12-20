@@ -91,7 +91,7 @@ function M.preloadSpoonDocs() end
 --
 --  * You can unregister these defaults if you wish to start with a clean slate with the following commands:
 --    * `hs.doc.unregisterJSONFile(hs.docstrings_json_file)` -- to unregister the Hammerspoon API docs
---    * `hs.doc.unregisterJSONFile((hs.docstrings_json_file:gsub("/docs.json$","/extensions/hs/doc/lua.json")))` -- to unregister the Lua 5.3 Documentation.
+--    * `hs.doc.unregisterJSONFile((hs.docstrings_json_file:gsub("/docs.json$","/lua.json")))` -- to unregister the Lua 5.3 Documentation.
 function M.registeredFiles() end
 
 -- Register a JSON file for inclusion when Hammerspoon generates internal documentation.

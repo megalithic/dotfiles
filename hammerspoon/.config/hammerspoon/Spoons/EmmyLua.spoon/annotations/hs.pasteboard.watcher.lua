@@ -38,8 +38,7 @@ function M.interval(value, ...) end
 --  generalPBWatcher = hs.pasteboard.watcher.new(function(v) print(string.format("General Pasteboard Contents: %s", v)) end)
 --  specialPBWatcher = hs.pasteboard.watcher.new(function(v) print(string.format("Special Pasteboard Contents: %s", v)) end, "special")
 --  hs.pasteboard.writeObjects("This is on the general pasteboard.")
---  hs.pasteboard.writeObjects("This is on the special pasteboard.", "special")
---  ```
+--  hs.pasteboard.writeObjects("This is on the special pasteboard.", "special")```
 function M.new(callbackFn, name, ...) end
 
 -- Returns a boolean indicating whether or not the Pasteboard Watcher is currently running.

@@ -244,7 +244,7 @@ cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 -- [custom mappings] -----------------------------------------------------------
 
 -- Things 3
-nnoremap("<Leader>T", "<cmd>!open \"things:///add?show-quick-entry=true&title=%:t&notes=%\"<cr>", { expr = true })
+nnoremap("<leader>T", "<cmd>!open \"things:///add?show-quick-entry=true&title=%:t&notes=%\"<cr>", { expr = true })
 
 -- Spelling
 -- map("n", "<leader>s", "z=e") -- Correct current word
@@ -252,10 +252,10 @@ map("n", "<leader>s", "b1z=e") -- Correct previous word
 map("n", "<leader>S", "zg") -- Add word under cursor to dictionary
 
 -- # find and replace in multiple files
-nnoremap("<Leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
+nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 
 -- # save and execute vim/lua file
-nmap("<Leader>x", mega.save_and_exec)
+nmap("<leader>x", mega.save_and_exec)
 
 -- # open uri under cursor:
 nmap("go", mega.open_uri)

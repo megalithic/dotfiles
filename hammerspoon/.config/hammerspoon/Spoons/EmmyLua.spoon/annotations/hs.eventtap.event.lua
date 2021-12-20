@@ -314,8 +314,7 @@ function M.newEventFromData(data, ...) end
 --       b = require("hs.eventtap.event").newGesture("endRotate", -45)
 --       a:post()
 --       b:post()
---   end)
---   ```
+--   end)```
 ---@return hs.eventtap.event
 function M.newGesture(gestureType, gestureValue, ...) end
 

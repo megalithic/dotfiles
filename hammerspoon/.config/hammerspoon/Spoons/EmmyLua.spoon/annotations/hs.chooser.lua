@@ -67,7 +67,7 @@ function M:cancel() end
 --  * If you're using a hs.styledtext object for text or subText choices, make sure you specify a color, otherwise your text could appear transparent depending on the bgDark setting.
 --
 -- Example:
---  ```
+--  ```lua
 -- local choices = {
 --  {
 --   ["text"] = "First Choice",
@@ -82,8 +82,7 @@ function M:cancel() end
 --    ["subText"] = "What a lot of choosing there is going on here!",
 --    ["uuid"] = "III3"
 --  },
--- }
---  ```
+-- }```
 ---@return hs.chooser
 function M:choices(choices, ...) end
 

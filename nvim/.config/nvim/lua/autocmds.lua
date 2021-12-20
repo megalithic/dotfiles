@@ -59,7 +59,7 @@ augroup("auto-mkdir", {
 augroup("paq", {
   {
     events = { "BufWritePost" },
-    targets = { "packages.lua" },
+    targets = { "plugins.lua" },
     command = [[luafile %]],
   },
 })

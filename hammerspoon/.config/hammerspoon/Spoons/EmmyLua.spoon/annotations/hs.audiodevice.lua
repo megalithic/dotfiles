@@ -212,6 +212,15 @@ function M:inputMuted() end
 --  * The return value will be a floating point number
 function M:inputVolume() end
 
+-- Check if the audio device is in use
+--
+-- Parameters:
+--  * None
+--
+-- Returns:
+--  * True if the audio device is in use, False if not. nil if an error occurred.
+function M:inUse() end
+
 -- Determins if an audio device is an input device
 --
 -- Parameters:
@@ -462,6 +471,7 @@ function M:volume() end
 --    * jack - Jack sense state changed (usually this means headphones were plugged/unplugged)
 --    * span - Stereo pan changed
 --    * diff - Device configuration changed (if you are caching audio device properties, this event indicates you should flush your cache)
+--    * gone - The device's "in use" status changed (ie another app started using the device, or stopped using it)
 --   * A string containing the scope of the event. Possible values are:
 --    * glob - This is a global event pertaining to the whole device
 --    * inpt - This is an event pertaining only to the input functions of the device

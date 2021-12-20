@@ -85,7 +85,6 @@ M.list = {
   ------------------------------------------------------------------------------
   -- (FZF/file/document navigation) --
   "ibhagwan/fzf-lua",
-  "vijaymarupudi/nvim-fzf",
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
@@ -260,14 +259,14 @@ M.setup = function()
     --   },
     --   used_by = { "eex", "leex", "sface", "eelixir", "eruby", "erb" },
     -- }
-    parser_config.markdown = {
-      install_info = {
-        url = "https://github.com/ikatyang/tree-sitter-markdown",
-        files = { "src/parser.c", "src/scanner.cc", "-DTREE_SITTER_MARKDOWN_AVOID_CRASH=1" },
-        requires_generate_from_grammar = true,
-        filetype = "md",
-      },
-    }
+    -- parser_config.markdown = {
+    --   install_info = {
+    --     url = "https://github.com/ikatyang/tree-sitter-markdown",
+    --     files = { "src/parser.c", "src/scanner.cc", "-DTREE_SITTER_MARKDOWN_AVOID_CRASH=1" },
+    --     requires_generate_from_grammar = true,
+    --     filetype = "md",
+    --   },
+    -- }
     require("nvim-treesitter.configs").setup({
       ignore_install = { "elixir" },
       ensure_installed = {
@@ -286,7 +285,7 @@ M.setup = function()
         "html",
         "heex",
         "javascript",
-        "markdown",
+        -- "markdown",
         "jsdoc",
         "jsonc",
         "lua",
@@ -1076,6 +1075,7 @@ M.setup = function()
         },
       },
       files = {
+        multiprocess = true,
         prompt = string.format("files %s ", C.icons.prompt_symbol),
         fd_opts = [[--type f --follow --hidden --color=always]]
           .. [[ -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' -E '.yarn' ]]
@@ -1090,6 +1090,7 @@ M.setup = function()
         },
       },
       grep = {
+        multiprocess = true,
         input_prompt = string.format("grep for %s ", C.icons.prompt_symbol),
         prompt = string.format("grep %s ", C.icons.prompt_symbol),
         continue_last_search = false,

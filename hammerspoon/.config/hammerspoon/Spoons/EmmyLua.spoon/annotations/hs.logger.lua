@@ -130,8 +130,7 @@ M.level = nil
 -- Example:
 -- ```lua
 -- local log = hs.logger.new('mymodule','debug')
--- log.i('Initializing') -- will print "[mymodule] Initializing" to the console
--- ```
+-- log.i('Initializing') -- will print "[mymodule] Initializing" to the console```
 ---@return hs.logger
 function M.new(id, loglevel, ...) end
 

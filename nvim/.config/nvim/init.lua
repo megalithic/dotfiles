@@ -52,14 +52,12 @@ end
 require("globals")
 
 R("preflight")
--- R("options") -- deprecate this!
-R("opts")
+R("options")
 R("colors").setup("megaforest")
 R("plugins").setup()
 R("lsp")
 R("autocmds")
 R("mappings")
--- R("megaline") -- deprecate this!
 R("statusline")
 
 -- vim:foldmethod=marker

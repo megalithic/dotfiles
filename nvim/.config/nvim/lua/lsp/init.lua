@@ -282,9 +282,8 @@ local function setup_lsp_servers()
     lspconfig[ls].setup(lsp_with_defaults())
   end
 
-  -- local null-ls config
-  require("lsp.null-ls").setup()
-  lspconfig["null-ls"].setup(lsp_with_defaults())
+  -- null-ls setup
+  require("lsp.null-ls").setup(on_attach)
 
   lspconfig["solargraph"].setup(lsp_with_defaults({
     cmd = { "solargraph", "stdio" },
