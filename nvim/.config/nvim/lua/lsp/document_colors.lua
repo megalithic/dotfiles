@@ -110,11 +110,7 @@ function M.buf_attach(bufnr, options)
   options = options or {}
 
   -- VSCode extension also does 200ms debouncing
-  local trigger_update_highlight, timer = require("defer").debounce_trailing(
-    M.update_highlight,
-    options.debounce or 200,
-    false
-  )
+  local trigger_update_highlight, timer = mega.debounce_trailing(M.update_highlight, options.debounce or 200, false)
 
   -- for the first request, the server needs some time before it's ready
   -- sometimes 200ms is not enough for this

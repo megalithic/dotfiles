@@ -218,10 +218,10 @@ M.lsp.line_diagnostics = function()
     border = vim.g.floating_window_border_dark,
   })
 
-  vim.lsp.util.close_preview_autocmd(
-    { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "InsertCharPre" },
-    winnr
-  )
+  -- vim.lsp.util.close_preview_autocmd(
+  --   { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "InsertCharPre" },
+  --   winnr
+  -- )
 end
 
 ---Override diagnostics signs helper to only show the single most relevant sign

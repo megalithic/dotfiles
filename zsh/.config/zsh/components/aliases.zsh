@@ -125,7 +125,7 @@ alias b="brew"
 if type nvim >/dev/null 2>&1; then
 	alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
 	alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
-	alias nvimbuild="cd ~/code/neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install"
+	alias nvimbuild="cd ~/code/neovim && sudo make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install"
 	alias buildnvim=nvimbuild
 	alias nvim="nvim -O" # let's always open multiple files passed in as vsplits
 	alias im="nvim"
