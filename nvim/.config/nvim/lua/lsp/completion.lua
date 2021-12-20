@@ -183,6 +183,7 @@ local function setup_cmp()
       { name = "path" },
     }, {
       M.sources.buffer,
+      -- { name = "fuzzy_buffer" },
     }),
     sorting = {
       priority_weight = 1.1,
@@ -223,12 +224,14 @@ local function setup_cmp()
       { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {
       M.sources.buffer,
+      -- { name = "fuzzy_buffer" },
     }),
   }
   cmp.setup.cmdline("/", M.sources.search)
   cmp.setup.cmdline("?", M.sources.search)
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
+      -- { name = "fuzzy_path" },
       { name = "path" },
     }, {
       { name = "cmdline" },

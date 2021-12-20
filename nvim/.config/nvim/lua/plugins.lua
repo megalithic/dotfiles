@@ -54,6 +54,14 @@ M.list = {
   "hrsh7th/cmp-emoji",
   "f3fora/cmp-spell",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
+
+  -- for fuzzy things in nvim-cmp and command:
+  "tzachar/fuzzy.nvim",
+  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  "tzachar/cmp-fuzzy-path",
+  "tzachar/cmp-fuzzy-buffer",
+  --
+
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "nvim-lua/lsp-status.nvim",
@@ -220,6 +228,10 @@ M.list = {
   "fladson/vim-kitty",
   "SirJson/fzf-gitignore",
 }
+
+M.listy = function()
+  return M.list
+end
 
 M.setup = function()
   do -- vim-startuptime

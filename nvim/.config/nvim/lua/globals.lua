@@ -908,8 +908,10 @@ end
 function mega.sync_plugins()
   mega.log("paq-nvim: syncing plugins..")
 
-  -- package.loaded["plugins"] = nil
-  require("paq"):setup({ verbose = false })(require("plugins").list):sync()
+  package.loaded["plugins"] = nil
+  -- require("paq"):setup({ verbose = false })(require("plugins").list):sync()
+  require("paq")(require("plugins").list):sync()
+  -- paq(require("plugins").listy()):sync()
 end
 
 --- Usage:

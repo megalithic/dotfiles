@@ -60,7 +60,9 @@ augroup("paq", {
   {
     events = { "BufWritePost" },
     targets = { "plugins.lua" },
-    command = [[luafile %]],
+    command = function()
+      vim.cmd("luafile %")
+    end,
   },
 })
 

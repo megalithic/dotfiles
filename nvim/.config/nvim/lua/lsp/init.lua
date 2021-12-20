@@ -138,7 +138,7 @@ local function on_attach(client, bufnr)
   --- # trouble mappings
   nmap(
     "<leader>lt",
-    "<cmd>LspTroubleToggle lsp_document_diagnostics<cr>",
+    "<cmd>LspTroubleToggle document_diagnostics<cr>",
     { label = "lsp: toggle LspTrouble for document" }
   )
 
@@ -230,6 +230,7 @@ local function setup_lsp_capabilities()
   capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
   capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
+  capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   return capabilities
 end
