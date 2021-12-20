@@ -210,6 +210,14 @@ M.lsp.line_diagnostics = function()
     return
   end
 
+  local max_severity = vim.diagnostic.severity.HINT
+  for _, d in ipairs(diagnostics) do
+    -- Equality is "less than" based on how the severities are encoded
+    if d.severity < max_severity then
+      max_severity = d.severity
+    end
+  end
+
   local lines = {}
 
   for _, diagnostic in ipairs(diagnostics) do
@@ -229,6 +237,13 @@ M.lsp.line_diagnostics = function()
     vim.api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
   end
 
+  local border_color = ({
+    [vim.diagnostic.severity.HINT] = "DiagnosticHint",
+    [vim.diagnostic.severity.INFO] = "DiagnosticInfo",
+    [vim.diagnostic.severity.WARN] = "DiagnosticWarn",
+    [vim.diagnostic.severity.ERROR] = "DiagnosticError",
+  })[max_severity]
+
   local winnr = vim.api.nvim_open_win(floating_bufnr, false, {
     relative = "cursor",
     width = width,
@@ -236,7 +251,16 @@ M.lsp.line_diagnostics = function()
     row = 1,
     col = 1,
     style = "minimal",
-    border = vim.g.floating_window_border_dark,
+    border = {
+      { "╭", border_color },
+      { "─", border_color },
+      { "╮", border_color },
+      { "│", border_color },
+      { "╯", border_color },
+      { "─", border_color },
+      { "╰", border_color },
+      { "│", border_color },
+    },
   })
 
   M.lsp.close_preview_autocmd(
