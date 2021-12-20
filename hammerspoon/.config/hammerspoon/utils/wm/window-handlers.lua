@@ -67,13 +67,13 @@ M.dndHandler = function(app, dndConfig, event)
       M.onAppQuit(app, function()
         log.df("DND Handler: off/back")
         cmd_updater(dndCmd .. " off")
-        cmd_updater(slackCmd .. " back")
+        cmd_updater(slackCmd .. "slack -s back")
       end)
     elseif event == running.events.closed or event == running.events.terminated then
       M.onAppQuit(app, function()
         log.df("DND Handler: off/back")
         cmd_updater(dndCmd .. " off")
-        cmd_updater(slackCmd .. " back")
+        cmd_updater(slackCmd .. "slack -s back")
       end)
     end
   end

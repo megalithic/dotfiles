@@ -10,7 +10,7 @@
 # Running `slack` with no argument will let you fuzzy-find pre-defined statuses
 #
 # Dependencies:
-#   Required: `fzf`, `jq`, ENV variables (see source below)
+#   Required: `curl`, `fzf`, `jq`, ENV variables (see source below)
 #   Optional: `spinner` from my dotfiles' bin dir
 #
 
@@ -39,6 +39,7 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 POPUP="false"
 VERBOSE="false"
 DEBUG="false"
+SILENT="false"
 
 # -- ENV vars
 CHANNEL_ID=${OUTSTAND_AWAY_CHAN_ID:-}
@@ -66,6 +67,7 @@ zoom
 "
 
 # -- checks for needed dependencies
+(command -v curl &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
 [[ -x "$spinner_path" ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
@@ -92,8 +94,11 @@ function __help() {
 	printf -- "   Options:\n"
 	printf -- "     -p                Run fzf normally for tmux' popup feature, else fzf-tmux\n"
 	printf -- "     -h                This help text you're presently reading. 😄\n"
+  printf -- "     -d                Set debugging to true (used with curl) \n"
+  printf -- "     -s                Silent mode; don't message the channel on status chang. 😄\n"
 	printf -- "\n"
 	printf -- "   Dependencies:\n"
+  printf -- "     curl              ($CURL_FOUND)\n"
 	printf -- "     fzf               ($FZF_FOUND)\n"
 	printf -- "     jq                ($JQ_FOUND)\n"
 	printf -- "     spinner           ($SPINNER_FOUND)\n"
@@ -114,20 +119,30 @@ function __info() {
 	printf -- "\n"
 }
 
-# -- halt if we don't have jaq installed
+# -- halt if we don't have certain dependencies installed
 if [[ $JQ_FOUND == "not installed" ]]; then
 	printf -- "ERROR: %s requires jq to be installed" "$__base"
 	__help
 	exit 1
 fi
 
+if [[ $CURL_FOUND == "not installed" ]]; then
+  printf -- "ERROR: %s requires curl to be installed" "$__base"
+  __help
+  exit 1
+fi
+
 # OPTERR=0
-while getopts "phdv" OPTION; do
+while getopts "phdvs" OPTION; do
 	case $OPTION in
 
 		p)
 			POPUP="true"
 			;;
+
+    s)
+      SILENT="true"
+      ;;
 
 		h)
 			__help
@@ -219,12 +234,14 @@ function __end_dnd() {
 
 
 function __set_chan_text() {
-  # HT for `jq`: https://stackoverflow.com/a/34407620/213904
-  local text="$(printf %s "${1:-}" | jq -sRr @uri)"
-  request_data+=("channel=$CHANNEL_ID" \
-    "as_user=$SLACK_USER" \
-    "text=$text")
-	__request "chat.postMessage"
+  if [[ $SILENT == "false" ]]; then
+    # HT for `jq`: https://stackoverflow.com/a/34407620/213904
+    local text="$(printf %s "${1:-}" | jq -sRr @uri)"
+    request_data+=("channel=$CHANNEL_ID" \
+      "as_user=$SLACK_USER" \
+      "text=$text")
+    __request "chat.postMessage"
+  fi
 }
 
 # -- PUBLIC
