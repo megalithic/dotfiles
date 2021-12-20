@@ -56,10 +56,10 @@ M.list = {
   "hrsh7th/cmp-nvim-lsp-document-symbol",
 
   -- for fuzzy things in nvim-cmp and command:
-  "tzachar/fuzzy.nvim",
-  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-  "tzachar/cmp-fuzzy-path",
-  "tzachar/cmp-fuzzy-buffer",
+  -- "tzachar/fuzzy.nvim",
+  -- { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  -- "tzachar/cmp-fuzzy-path",
+  -- "tzachar/cmp-fuzzy-buffer",
   --
 
   "L3MON4D3/LuaSnip",
