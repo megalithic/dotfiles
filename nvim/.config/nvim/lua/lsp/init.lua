@@ -92,6 +92,10 @@ local function on_attach(client, bufnr)
     handler_opts = { border = "rounded" },
   })
 
+  if client.server_capabilities.colorProvider then
+    require("lsp.document_colors").buf_attach(bufnr)
+  end
+
   --- # goto mappings
   if pcall(require, "fzf-lua") then
     --- # via fzf-lua
@@ -338,27 +342,36 @@ local function setup_lsp_servers()
         elm = "html",
         erb = "html",
       },
-      -- tailwindCSS = {
-      --   experimental = {
-      --     classRegex = {
-      --       -- REF:
-      --       -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
-      --       [[class: "([^"]*)]],
-      --       'class="([^"]*)',
-      --       "tw`([^`]*)",
-      --       'tw="([^"]*)',
-      --       'tw={"([^"}]*)',
-      --       "tw\\.\\w+`([^`]*)",
-      --       "tw\\(.*?\\)`([^`]*)",
-      --       [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
-      --       [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
-      --       [[":class\\s*=>\\s*\"([^\"]*)"]],
-      --       [["class:\\s+\"([^\"]*)"]],
-      --       [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
-      --      "\\bclass\\s+\"([^\"]*)\""
-      --     },
-      --   },
-      -- },
+      tailwindCSS = {
+        lint = {
+          cssConflict = "warning",
+          invalidApply = "error",
+          invalidConfigPath = "error",
+          invalidScreen = "error",
+          invalidTailwindDirective = "error",
+          invalidVariant = "error",
+          recommendedVariantOrder = "warning",
+        },
+        validate = true,
+        --   experimental = {
+        --     classRegex = {
+        --       -- REF:
+        --       -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
+        --       [[class: "([^"]*)]],
+        --       'class="([^"]*)',
+        --       "tw`([^`]*)",
+        --       'tw="([^"]*)',
+        --       'tw={"([^"}]*)',
+        --       "tw\\.\\w+`([^`]*)",
+        --       "tw\\(.*?\\)`([^`]*)",
+        --       [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
+        --       [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
+        --       [[":class\\s*=>\\s*\"([^\"]*)"]],
+        --       [["class:\\s+\"([^\"]*)"]],
+        --       [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
+        --      "\\bclass\\s+\"([^\"]*)\""
+        --     },
+      },
     },
     filetypes = {
       "elixir",
