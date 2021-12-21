@@ -135,7 +135,7 @@ M.list = {
   -- "tjdevries/edit_alternate.vim",
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "tpope/vim-ragtag",
-  { "mrjones2014/dash.nvim", run = "make install", opt = true },
+  -- { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",
@@ -297,7 +297,7 @@ M.setup = function()
         "html",
         "heex",
         "javascript",
-        -- "markdown",
+        "markdown",
         "jsdoc",
         "jsonc",
         "lua",
@@ -1406,10 +1406,10 @@ M.setup = function()
   end
 
   do -- dash.nvim
-    if fn.getenv("PLATFORM") == "macos" then
-      vcmd([[packadd dash.nvim]])
-      require("dash").setup({})
-    end
+    -- if fn.getenv("PLATFORM") == "macos" then
+    --   vcmd([[packadd dash.nvim]])
+    --   require("dash").setup({})
+    -- end
   end
 
   do -- nvim-gps

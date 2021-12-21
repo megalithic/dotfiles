@@ -3,10 +3,10 @@ local paq_exists = pcall(vim.cmd, [[packadd paq-nvim]])
 local repo_url = "https://github.com/savq/paq-nvim"
 local install_path = string.format("%s/site/pack/paqs/start/", vim.fn.stdpath("data"))
 -- resolved to -> ~/.local/share/nvim/site/pack/paqs/start/paq-nvim
-
 --
 -- clone paq-nvim and install if it doesn't exist..
 if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+  -- REF: https://github.com/savq/paq-nvim/blob/master/doc/paq-nvim.txt#L374
   print("should be installing things")
   if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
     print("-> skipping paq-nvim install.")
@@ -21,6 +21,9 @@ if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   vim.cmd([[packadd paq-nvim]])
 
   print("-> paq-nvim downloaded.")
+
+  -- quit after installing plugins
+  vim.cmd("autocmd User PaqDoneInstall quit")
 
   -- install plugins
   mega.sync_plugins()
