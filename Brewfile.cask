@@ -11,6 +11,7 @@ tap "homebrew/cask-drivers"
 cask "font-jetbrains-mono"
 cask "font-jetbrains-mono-nerd-font"
 cask "font-ia-writer-quattro"
+cask "font-victor-mono-nerd-font"
 
 # - gui
 cask "1password"
