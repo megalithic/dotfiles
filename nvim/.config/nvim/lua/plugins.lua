@@ -300,6 +300,7 @@ M.setup = function()
         "javascript",
         "markdown",
         "jsdoc",
+        "json",
         "jsonc",
         "lua",
         "nix",

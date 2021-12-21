@@ -129,12 +129,12 @@ local function setup_cmp()
 
   --cmp source setups
   require("cmp_nvim_lsp").setup()
-  local compare = require("cmp.config.compare")
+  -- local compare = require("cmp.config.compare")
 
   M.sources.buffer = {
     name = "buffer",
     option = {
-      keyword_length = 3, -- start completion after 5 chars.
+      keyword_length = 5,
       max_item_count = 5, -- only show up to 5 items.
       get_bufnrs = function()
         -- local bufs = {}
@@ -146,6 +146,14 @@ local function setup_cmp()
         return vim.api.nvim_list_bufs()
       end,
     },
+  }
+  M.sources.search = {
+    sources = cmp.config.sources({
+      { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
+    }, {
+      M.sources.buffer,
+      -- { name = "fuzzy_buffer" },
+    }),
   }
 
   cmp.setup({
@@ -185,21 +193,21 @@ local function setup_cmp()
       M.sources.buffer,
       -- { name = "fuzzy_buffer" },
     }),
-    sorting = {
-      priority_weight = 1.1,
-      comparators = {
-        function(...)
-          return require("cmp_buffer"):compare_locality(...)
-        end,
-        compare.offset,
-        compare.exact,
-        compare.score,
-        compare.kind,
-        compare.sort_text,
-        compare.length,
-        compare.order,
-      },
-    },
+    -- sorting = {
+    --   priority_weight = 1.1,
+    --   comparators = {
+    --     function(...)
+    --       return require("cmp_buffer"):compare_locality(...)
+    --     end,
+    --     compare.offset,
+    --     compare.exact,
+    --     compare.score,
+    --     compare.kind,
+    --     compare.sort_text,
+    --     compare.length,
+    --     compare.order,
+    --   },
+    -- },
     formatting = {
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
@@ -219,14 +227,6 @@ local function setup_cmp()
       end,
     },
   })
-  M.sources.search = {
-    sources = cmp.config.sources({
-      { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
-    }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
-    }),
-  }
   cmp.setup.cmdline("/", M.sources.search)
   cmp.setup.cmdline("?", M.sources.search)
   cmp.setup.cmdline(":", {
