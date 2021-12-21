@@ -173,9 +173,10 @@ local function on_attach(client, bufnr)
   bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
   bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
+  bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
+  bmap("n", "<leader>lD", "lua vim.diagnostic.open_float()")
 
   --- # misc mappings
-  bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
   bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
   bufmap("K", "lua vim.lsp.buf.hover()")
   bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
@@ -212,18 +213,6 @@ local function on_attach(client, bufnr)
   vcmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
   vcmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
 
-  --- # ls client-specific configs
-  -- (zk)
-  if client.name == "zk" then
-    au([[BufNewFile,BufWritePost <buffer> call jobstart('zk index') ]])
-    bufmap("<CR>", "<cmd>'<,'>lua vim.lsp.buf.range_code_action()<CR>", "v")
-    bufmap("<CR>", "lua vim.lsp.buf.definition()")
-    bufmap("K", "lua vim.lsp.buf.hover()")
-
-    -- REF: special thanks @mhanberg ->
-    -- https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
-  end
-
   -- disable formatting for the following language-server clients:
   local disabled_formatting_ls = { "jsonls", "tailwindcss", "html" }
   for i = 1, #disabled_formatting_ls do
@@ -236,6 +225,7 @@ local function on_attach(client, bufnr)
   -- (typescript/tsserver)
   if client.name == "tsserver" then
     local ts = require("nvim-lsp-ts-utils")
+    -- REF: https://github.com/Iamafnan/my-nvimrc/blob/main/lua/afnan/lsp/language-servers.lua#L65
     ts.setup({
       debug = false,
       disable_commands = false,
@@ -336,118 +326,115 @@ local function setup_lsp_servers()
   -- null-ls setup
   require("lsp.null-ls").setup(on_attach)
 
-  lspconfig["solargraph"].setup(lsp_with_defaults({
-    cmd = { "solargraph", "stdio" },
-    filetypes = { "ruby" },
-    root_dir = root_pattern("Gemfile", ".git"),
-    settings = {
-      solargraph = {
-        diagnostics = true,
-        useBundler = true,
-      },
-    },
-  }))
-
-  lspconfig["yamlls"].setup(lsp_with_defaults({
-    settings = {
-      yaml = {
-        format = { enable = true },
-        validate = true,
-        hover = true,
-        completion = true,
-      },
-    },
-  }))
-
-  lspconfig["tailwindcss"].setup(lsp_with_defaults({
-    -- TODO: https://github.com/sethlowie/dotfiles/blob/master/vim/lua/sethlowie/tailwind.lua
-    cmd = { "tailwindcss-language-server", "--stdio" },
-    init_options = {
-      userLanguages = {
-        eelixir = "html-eex",
-        eruby = "erb",
-        ["phoenix-html"] = "html-eex",
-        ["phoenix-heex"] = "html-eex",
-        heex = "html-eex",
-      },
-    },
-    handlers = {
-      ["tailwindcss/getConfiguration"] = function(_, _, context)
-        -- tailwindcss lang server waits for this repsonse before providing hover
-        vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
-      end,
-    },
-    settings = {
-      includeLanguages = {
-        typescript = "javascript",
-        typescriptreact = "javascript",
-        ["html-eex"] = "html",
-        ["phoenix-heex"] = "html",
-        heex = "html",
-        eelixir = "html",
-        elm = "html",
-        erb = "html",
-      },
-      tailwindCSS = {
-        lint = {
-          cssConflict = "warning",
-          invalidApply = "error",
-          invalidConfigPath = "error",
-          invalidScreen = "error",
-          invalidTailwindDirective = "error",
-          invalidVariant = "error",
-          recommendedVariantOrder = "warning",
+  do -- ruby/solargraph
+    lspconfig["solargraph"].setup(lsp_with_defaults({
+      cmd = { "solargraph", "stdio" },
+      filetypes = { "ruby" },
+      root_dir = root_pattern("Gemfile", ".git"),
+      settings = {
+        solargraph = {
+          diagnostics = true,
+          useBundler = true,
         },
-        validate = true,
-        --   experimental = {
-        --     classRegex = {
-        --       -- REF:
-        --       -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
-        --       [[class: "([^"]*)]],
-        --       'class="([^"]*)',
-        --       "tw`([^`]*)",
-        --       'tw="([^"]*)',
-        --       'tw={"([^"}]*)',
-        --       "tw\\.\\w+`([^`]*)",
-        --       "tw\\(.*?\\)`([^`]*)",
-        --       [["classnames\\(([^)]*)\\)", "'([^']*)'"]],
-        --       [["%\\w+([^\\s]*)", "\\.([^\\.]*)"]],
-        --       [[":class\\s*=>\\s*\"([^\"]*)"]],
-        --       [["class:\\s+\"([^\"]*)"]],
-        --       [[":\\s*?[\"'`]([^\"'`]*).*?,"]],
-        --      "\\bclass\\s+\"([^\"]*)\""
-        --     },
       },
-    },
-    filetypes = {
-      "elixir",
-      "eelixir",
-      "css",
-      "scss",
-      "sass",
-      "html",
-      "heex",
-      "leex",
-      "html-eex",
-      "phoenix-html",
-      "phoenix-eex",
-      "phoenix-heex",
-      "javascript",
-      "javascriptreact",
-      "typescript",
-      "typescriptreact",
-    },
-    root_dir = root_pattern(
-      "./assets/tailwind.config.js",
-      "tailwind.config.js",
-      "tailwind.config.ts",
-      "postcss.config.js",
-      "postcss.config.ts",
-      "package.json",
-      "node_modules",
-      ".git"
-    ),
-  }))
+    }))
+  end
+
+  do -- yamlls
+    lspconfig["yamlls"].setup(lsp_with_defaults({
+      settings = {
+        yaml = {
+          format = { enable = true },
+          validate = true,
+          hover = true,
+          completion = true,
+          schemas = require("schemastore").json.schemas(),
+        },
+      },
+    }))
+  end
+
+  do -- tailwindcss
+    lspconfig["tailwindcss"].setup(lsp_with_defaults({
+      -- TODO: https://github.com/sethlowie/dotfiles/blob/master/vim/lua/sethlowie/tailwind.lua
+      cmd = { "tailwindcss-language-server", "--stdio" },
+      init_options = {
+        userLanguages = {
+          eelixir = "html-eex",
+          eruby = "erb",
+          ["phoenix-html"] = "html-eex",
+          ["phoenix-heex"] = "html-eex",
+          heex = "html-eex",
+        },
+      },
+      handlers = {
+        ["tailwindcss/getConfiguration"] = function(_, _, context)
+          -- tailwindcss lang server waits for this repsonse before providing hover
+          vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
+        end,
+      },
+      settings = {
+        includeLanguages = {
+          typescript = "javascript",
+          typescriptreact = "javascript",
+          ["html-eex"] = "html",
+          ["phoenix-heex"] = "html",
+          heex = "html",
+          eelixir = "html",
+          elm = "html",
+          erb = "html",
+        },
+        tailwindCSS = {
+          lint = {
+            cssConflict = "warning",
+            invalidApply = "error",
+            invalidConfigPath = "error",
+            invalidScreen = "error",
+            invalidTailwindDirective = "error",
+            invalidVariant = "error",
+            recommendedVariantOrder = "warning",
+          },
+          experimental = {
+            -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
+            classRegex = {
+              [[class: "([^"]*)]],
+              [[class= "([^"]*)]],
+            },
+          },
+          validate = true,
+        },
+      },
+      filetypes = {
+        "elixir",
+        "eelixir",
+        "css",
+        "scss",
+        "sass",
+        "html",
+        "heex",
+        "leex",
+        "liquid",
+        "html-eex",
+        "phoenix-html",
+        "phoenix-eex",
+        "phoenix-heex",
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+      },
+      root_dir = root_pattern(
+        "./assets/tailwind.config.js",
+        "tailwind.config.js",
+        "tailwind.config.ts",
+        "postcss.config.js",
+        "postcss.config.ts",
+        "package.json",
+        "node_modules",
+        ".git"
+      ),
+    }))
+  end
 
   do -- elixirls
     local manipulate_pipes = function(command)
@@ -489,7 +476,7 @@ local function setup_lsp_servers()
     }))
   end
 
-  do -- lua
+  do -- lua/sumneko
     local sumneko_lua_settings = lsp_with_defaults({
       settings = {
         Lua = {
@@ -561,63 +548,72 @@ local function setup_lsp_servers()
     lspconfig["sumneko_lua"].setup(luadev)
   end
 
-  lspconfig["jsonls"].setup(lsp_with_defaults({
-    cmd = { "vscode-json-language-server", "--stdio" },
-    commands = {
-      Format = {
-        function()
-          lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 })
-        end,
+  do -- jsonls
+    lspconfig["jsonls"].setup(lsp_with_defaults({
+      cmd = { "vscode-json-language-server", "--stdio" },
+      commands = {
+        Format = {
+          function()
+            lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 })
+          end,
+        },
       },
-    },
-    settings = {
-      json = {
-        format = { enable = false },
-        schemas = require("schemastore").json.schemas(),
+      init_options = { provideFormatter = true },
+      single_file_support = true,
+      settings = {
+        json = {
+          format = { enable = false },
+          schemas = require("schemastore").json.schemas(),
+        },
       },
-    },
-  }))
+    }))
+  end
 
-  -- REF: https://github.com/microsoft/vscode/issues/103163
-  --      - custom css linting rules and custom data
-  lspconfig["cssls"].setup(lsp_with_defaults({
-    cmd = { "vscode-css-language-server", "--stdio" },
-    filetypes = { "css", "scss" },
-    settings = {
-      css = {
-        lint = {
-          unknownProperties = "ignore",
-          unknownAtRules = "ignore",
+  do -- cssls
+    -- REF: https://github.com/microsoft/vscode/issues/103163
+    --      - custom css linting rules and custom data
+    lspconfig["cssls"].setup(lsp_with_defaults({
+      cmd = { "vscode-css-language-server", "--stdio" },
+      filetypes = { "css", "scss" },
+      settings = {
+        css = {
+          lint = {
+            unknownProperties = "ignore",
+            unknownAtRules = "ignore",
+          },
+        },
+        scss = {
+          lint = {
+            idSelector = "warning",
+            zeroUnits = "warning",
+            duplicateProperties = "warning",
+          },
+          completion = {
+            completePropertyWithSemicolon = true,
+            triggerPropertyValueCompletion = true,
+          },
         },
       },
-      scss = {
-        lint = {
-          idSelector = "warning",
-          zeroUnits = "warning",
-          duplicateProperties = "warning",
-        },
-        completion = {
-          completePropertyWithSemicolon = true,
-          triggerPropertyValueCompletion = true,
-        },
-      },
-    },
-  }))
-  lspconfig["html"].setup(lsp_with_defaults({
-    cmd = { "vscode-html-language-server", "--stdio" },
-    filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "heex" },
-    init_options = {
-      configurationSection = { "html", "css", "javascript", "eelixir", "heex" },
-      embeddedLanguages = {
-        css = true,
-        javascript = true,
-        elixir = true,
-        heex = true,
-      },
-    },
-  }))
+    }))
+  end
 
-  do
+  do -- html
+    lspconfig["html"].setup(lsp_with_defaults({
+      cmd = { "vscode-html-language-server", "--stdio" },
+      filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "heex" },
+      init_options = {
+        configurationSection = { "html", "css", "javascript", "eelixir", "heex" },
+        embeddedLanguages = {
+          css = true,
+          javascript = true,
+          elixir = true,
+          heex = true,
+        },
+      },
+    }))
+  end
+
+  do -- typescript/javascript
     local function do_organize_imports()
       local params = {
         command = "_typescript.organizeImports",
@@ -644,7 +640,7 @@ local function setup_lsp_servers()
     }))
   end
 
-  do
+  do -- emmetls
     -- local configs = require("lspconfig/configs")
     -- configs.emmet_ls = {
     -- 	default_config = {
@@ -658,53 +654,14 @@ local function setup_lsp_servers()
     -- }
     -- lspconfig.emmet_ls.setup(lsp_with_defaults())
   end
-
-  do
-    local configs = require("lspconfig/configs")
-    configs.zk = {
-      default_config = {
-        cmd = { "zk", "lsp", "--log", "/tmp/zk-lsp.log" },
-        filetypes = { "markdown" },
-        root_dir = function(...)
-          local dir = lspconfig.util.root_pattern(".zk/")(...)
-            or lspconfig.util.root_pattern(".git/")(...)
-            or vim.loop.cwd()
-          return dir
-        end,
-        settings = {},
-      },
-    }
-
-    -- # REF:
-    --  * https://github.com/kaile256/dotfiles/blob/master/.config/nvim/lua/rc/lsp/config/ls/zk.lua
-    --  * https://github.com/mhanberg/.dotfiles/blob/main/config/nvim/lua/plugin/zk.lua
-    configs.zk.index = function()
-      lsp.buf.execute_command({
-        command = "zk.index",
-        arguments = { api.nvim_buf_get_name(0) },
-      })
-    end
-
-    configs.zk.new = function(...)
-      lsp.buf_request(0, "workspace/executeCommand", {
-        command = "zk.new",
-        arguments = {
-          api.nvim_buf_get_name(0),
-          ...,
-        },
-      }, function(_, _, result)
-        if not (result and result.path) then
-          return
-        end
-        vcmd("vnew " .. result.path)
-      end)
-    end
-
-    lspconfig["zk"].setup(lsp_with_defaults())
-  end
 end
 
-setup_lsp_handlers()
-setup_diagnostics()
-require("lsp.completion").setup()
-setup_lsp_servers()
+return {
+  setup = function()
+    setup_lsp_handlers()
+    setup_diagnostics()
+    require("lsp.completion").setup()
+    setup_lsp_servers()
+  end,
+  on_attach = on_attach,
+}

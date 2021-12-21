@@ -196,7 +196,7 @@ M.list = {
   -- https://github.com/jghauser/follow-md-links.nvim
   -- https://github.com/jakewvincent/mkdnflow.nvim
   -- https://github.com/jubnzv/mdeval.nvim
-  -- "megalithic/zk.nvim",
+  "mickael-menu/zk-nvim",
   -- "NFrid/due.nvim",
   -- # ruby/rails
   "tpope/vim-rails",
@@ -1015,6 +1015,29 @@ M.setup = function()
   end
 
   do -- zk
+    local zk = require("zk")
+    zk.setup({
+      filetypes = { "markdown", "liquid" },
+      on_attach = function(client, bufnr)
+        local function buf_set_keymap(...)
+          vim.api.nvim_buf_set_keymap(bufnr, ...)
+        end
+        local opts = { noremap = true, silent = true }
+
+        require("lsp").on_attach(client, bufnr)
+
+        buf_set_keymap("n", "<C-p>", [[:Notes<cr>]], opts)
+        buf_set_keymap("n", "<leader>zt", [[:Tags<cr>]], opts)
+        buf_set_keymap("n", "<leader>zl", [[:Links<cr>]], opts)
+        buf_set_keymap("n", "<leader>zb", [[:Backlinks<cr>]], opts)
+        buf_set_keymap("n", "<leader>zd", ":ZkDaily<cr>", opts)
+        -- buf_set_keymap("v", "<leader>zn", ":'<,'>lua vim.lsp.buf.range_code_action()<CR>", opts)
+
+        buf_set_keymap("n", "<A-j>", [[:lua motch.dnd.move_to("previous")<cr>]], opts)
+        buf_set_keymap("n", "<A-k>", [[:lua motch.dnd.move_to("next")<cr>]], opts)
+      end,
+    })
+
     vcmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
     vcmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
     vcmd(
