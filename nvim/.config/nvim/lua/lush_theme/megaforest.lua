@@ -160,7 +160,6 @@ return lush(function()
     SpellLocal({ fg = cyan, bg = nil, gui = "undercurl", sp = cyan }),
     SpellRare({ fg = purple, bg = nil, gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
 
-    -- Title        { }, -- titles for output from ":set all", ":autocmd" etc.
     Visual({ fg = nil, bg = bg_visual }), -- Visual mode selection
     VisualNOS({ fg = nil, bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
     WarningMsg({ fg = yellow, bg = nil }), -- warning messages
@@ -192,7 +191,7 @@ return lush(function()
     Structure({ fg = orange, bg = nil }),
     Operator({ fg = orange, bg = nil }),
     Title({ fg = orange, bg = nil, gui = "bold" }),
-    Special({ fg = yellow, bg = nil }),
+    Special({ fg = fg.darken(20), bg = nil, gui="bold" }),
     SpecialChar({ fg = yellow, bg = nil }),
     Type({ fg = yellow, bg = nil }),
     Function({ fg = green, bg = nil }),
@@ -424,6 +423,7 @@ return lush(function()
     TSConstMacro({ Purple }),
     TSConstant({ PurpleItalic }),
     TSConstructor({ Fg }),
+    TSEmphasis({ fg = nil, bg = nil, gui = "italic" }),
     TSError({ ErrorText }),
     TSException({ Red }),
     TSField({ Green }),
@@ -449,21 +449,32 @@ return lush(function()
     TSString({ Yellow }),
     TSStringRegex({ Blue }),
     TSStringEscape({ Purple }),
+    TSStrong({ fg = nil, bg = nil, gui = "bold" }),
     TSStructure({ Orange }),
     TSTag({ Orange }),
     TSTagDelimiter({ Green }),
     TSText({ Green }),
     TSType({ Aqua }),
     TSTypeBuiltin({ BlueItalic }),
+    TSUnderline({ fg = nil, bg = nil, gui = "underline" }),
     TSURI({ markdownUrl }),
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
-    TSEmphasis({ fg = nil, bg = nil, gui = "bold" }),
-    TSUnderline({ fg = nil, bg = nil, gui = "underline" }),
     -- highlight FIXME comments
     commentTSWarning({ fg = red, gui = "bold" }),
     commentTSDanger({ fg = orange, gui = "bold" }),
     TreesitterContext({ bg = cs.bg1 }),
+
+    -- TS: Markdown
+    markdownTSPunctSpecial({ Special }),
+    markdownTSStringEscape({ SpecialKey }),
+    markdownTSTextReference({ Identifier, gui = "underline" }),
+    markdownTSEmphasis({ markdownItalic }),
+    markdownTSTitle({ Statement }),
+    markdownTSLiteral({ Type }),
+    markdownTSURI({ markdownUrl }),
+    markdownCode({ markdownTSLiteral }),
+    markdownLinkText({ markdownTSTextReference }),
 
     ---- :help git-gutter -------------------------------------------
 

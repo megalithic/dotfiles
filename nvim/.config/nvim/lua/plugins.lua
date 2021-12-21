@@ -89,6 +89,7 @@ M.list = {
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
   "SmiteshP/nvim-gps",
+  -- "romgrk/nvim-treesitter-context",
 
   ------------------------------------------------------------------------------
   -- (FZF/file/document navigation) --
