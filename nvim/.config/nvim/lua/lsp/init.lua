@@ -138,7 +138,7 @@ local function on_attach(client, bufnr)
       return false
     end,
     auto_close_after = 15, -- close after 15 seconds
-    hint_enable = false,
+    hint_enable = true,
     handler_opts = { border = "rounded" },
   })
 
@@ -306,7 +306,7 @@ local function setup_lsp_servers()
   local servers = {
     "bashls",
     "clangd",
-    -- "dockerfile",
+    "dockerls",
     "elmls",
     "pyright",
     "rust_analyzer",
