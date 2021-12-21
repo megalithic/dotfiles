@@ -182,7 +182,7 @@ function __request() {
   request_data+=("token=$SLACK_TOKEN")
 
   local data=$(printf -- "--data %s " "${request_data[@]}")
-  # TODO: what's this for? `2>&1`
+  # NOTE: `2>&1` -- stderr (2) going to where stdout would go (1)
   request_cmd="$curl_cmd --show-error --include "${data}" "$api_url/$feature""
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && printf -- %s "$request_cmd\n"
 
