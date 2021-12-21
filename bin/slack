@@ -199,6 +199,7 @@ function __request() {
   fi
 
   unset request_data
+  CHANNEL_ID=${OUTSTAND_AWAY_CHAN_ID:-}
 }
 
 function __set_status() {
@@ -310,7 +311,8 @@ function dnd() {
 }
 
 function here() {
-  __set_chan_text ":wave: :sunrise_over_mountains: :coffee: good day!"
+  CHANNEL_ID="$OUTSTAND_GENERAL_CHAN_ID"
+  __set_chan_text ":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
 	__set_presence "auto"
 	__end_status
 	__end_dnd

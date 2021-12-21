@@ -28,7 +28,7 @@ M.apply = function(app, win, event, log)
 
   ----------------------------------------------------------------------
   -- mute (PTT) by default
-  wh.onAppQuit(win, function()
+  wh.onAppQuit(app, function()
     ptt.setState("push-to-talk")
     init_apply_complete = false
   end)
