@@ -172,7 +172,7 @@ M.list = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   "sunaku/tmux-navigate",
-  "tmux-plugins/vim-tmux-focus-events",
+  -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "junegunn/vim-easy-align",
   -- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations
