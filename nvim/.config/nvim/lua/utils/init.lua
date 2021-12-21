@@ -266,7 +266,7 @@ M.lsp.line_diagnostics = function()
   })
 
   M.lsp.close_preview_autocmd(
-    { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "InsertCharPre" },
+    { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "BufWritePost", "InsertCharPre" },
     winnr
   )
 end

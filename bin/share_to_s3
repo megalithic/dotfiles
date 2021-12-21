@@ -13,7 +13,6 @@ fi
 
 friendlyName=$(echo "$1" | sed -e "s#$HOME/screenshots##g")
 
-/usr/local/bin/aws s3 --profile "$S3_CLI_PROFILE" cp $1 s3://kaptures/tmp/
-
+/usr/local/bin/aws s3 --profile "$AWS_PROFILE" cp "$1" s3://kaptures/tmp/
 # TODO: push to url shortener service for better aesthetic once pasted to destination
-/usr/local/bin/aws s3 --profile "$S3_CLI_PROFILE" presign s3://kaptures/tmp/$friendlyName --expires-in $defaultExpireTime | pbcopy
+/usr/local/bin/aws s3 --profile "$AWS_PROFILE" presign s3://kaptures/tmp/$friendlyName --expires-in $defaultExpireTime | pbcopy
