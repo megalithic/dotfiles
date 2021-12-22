@@ -13,12 +13,12 @@ function M.setup(on_attach)
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
       b.formatting.prettierd.with({
         filetypes = {
-          -- "javascript",
-          -- "javascriptreact",
-          -- "typescript",
-          -- "typescriptreact",
-          -- "vue",
-          -- "svelte",
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+          "vue",
+          "svelte",
           "css",
           "scss",
           "html",

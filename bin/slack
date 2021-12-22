@@ -45,6 +45,7 @@ SILENT="false"
 CHANNEL_ID=${OUTSTAND_AWAY_CHAN_ID:-}
 SLACK_TOKEN=${OUTSTAND_TOKEN:-}
 SLACK_USER=${OUTSTAND_USER:-}
+GENERAL_CHANNEL_ID=${OUTSTAND_GENERAL_CHAN_ID:-}
 
 # -- internal vars
 api_url="https://slack.com/api"
@@ -311,7 +312,7 @@ function dnd() {
 }
 
 function here() {
-  CHANNEL_ID="$OUTSTAND_GENERAL_CHAN_ID"
+  CHANNEL_ID="$GENERAL_CHANNEL_ID"
   __set_chan_text ":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
 	__set_presence "auto"
 	__end_status

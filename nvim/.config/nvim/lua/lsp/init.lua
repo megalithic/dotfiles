@@ -213,8 +213,8 @@ local function on_attach(client, bufnr)
   vcmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
   vcmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
 
-  -- disable formatting for the following language-server clients:
-  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html" }
+  -- disable formatting for the following language-servers:
+  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
       client.resolved_capabilities.document_formatting = false
