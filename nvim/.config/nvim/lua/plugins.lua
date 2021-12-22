@@ -687,6 +687,7 @@ M.setup = function()
       stylus = { rgb_fn = true },
       vim = { names = false },
       tmux = { names = true },
+      "toml",
       "eelixir",
       "javascript",
       "javascriptreact",

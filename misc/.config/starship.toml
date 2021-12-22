@@ -28,13 +28,11 @@ $shell\
 $character"""
 
 [username]
-# show_always = true
 style_root = "red"
 style_user = "purple"
 format = "[$user]($style)@"
 
 [hostname]
-# ssh_only = false
 style = "yellow"
 format = "[$hostname]($style) "
 
@@ -63,47 +61,46 @@ format = "[$symbol$output]($style) "
 style = "bold fg:#614b51"
 when = "sudo -vn &>/dev/null"
 
-[custom.git_status_dirty]
-disabled = true
-when = "string length -q -- (git status --porcelain)"
-symbol = '○'
-style = 'red bold'
-format = '[$symbol]($style) '
-shell =["zsh"]
-
 [git_branch]
 symbol = " "
 format = "[$symbol$branch]($style) "
 style = "bold fg:245"
 
 [git_status]
-disabled = false
 # # REF:
 # # https://github.com/avaaxcx/dotfiles/blob/master/.config/starship.toml
-format = '([\[$all_status$ahead_behind\]]($style) )' #(bold fg:#8be9fd)
-# format = '([$ahead_behind]($style) )' #(bold fg:#8be9fd)
-ahead = "↑"
-behind = "↓"
-# staged = "•" #•﯂
-# modified = "~"
+# # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml
+style = "#7c8377"
+format = '([\[$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind\]](fg:$style) )'
+ahead = "⇡${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+behind = "⇣${count}"
+modified = "[${count}](fg:red)"
+staged = "[$count](fg:green)"
+conflicted = "[ ](bold fg:88)[ ${count} ](fg:yellow bg:black)"
+stashed = "([${count}]))(fg:white)"
+deleted = "[$count](fg:red)" #x
+renamed = "[${count}](fg:white)"
+untracked = "[?${count}](fg:#7c8377)"
+# # staged = "•" #•﯂
+# # modified = "~"
 # untracked = "?" #+
-deleted = "" #x
-stashed = ""
+# stashed = ""
 # stashed = "([ ${count}]))(fg:white)"
 # ---
 # # REF:
 # # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml
 # style = "#d8712c"
 # format = "(\b$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind(fg:$style))"
-# conflicted = "[ ](bold fg:88 bg:#d8712c)[  ${count} ](fg:black bg:#d8712c)"
-# staged = "[ $count ](fg:black bg:#d8712c)"
-# modified = "[ ${count} ](fg:black bg:#d8712c)"
-# renamed = "[ ${count} ](fg:black bg:#d8712c)"
-# deleted = "[ ${count} ](fg:black bg:#d8712c)"
-# untracked = "[?${count} ](fg:black bg:#d8712c)"
-# stashed = "[ ${count} ](fg:black bg:#d8712c)"
-# ahead = "[ ${count} ](fg:#523333 bg:#d8712c)"
-# behind = "[ ${count} ](fg:black bg:#d8712c)"
+# conflicted = "[ ](bold fg:88)[  ${count} ](fg:black bg:#d8712c)"
+# staged = "[ $count ](fg:black)"
+# modified = "[ ${count} ](fg:black)"
+# renamed = "[ ${count} ](fg:black)"
+# deleted = "[ ${count} ](fg:black)"
+# untracked = "[?${count} ](fg:black)"
+# stashed = "[ ${count} ](fg:black)"
+# ahead = "[ ${count} ](fg:#523333)"
+# behind = "[ ${count} ](fg:black)"
 # diverged = "[ ](fg:88 bg:#d8712c)[ נּ ](fg:black bg:#d8712c)[ ${ahead_count} ](fg:black bg:#d8712c)[ ${behind_count} ](fg:black bg:#d8712c)"
 
 [directory]
