@@ -303,6 +303,7 @@ M.setup = function()
         "json",
         "jsonc",
         "lua",
+        "make",
         "nix",
         "org",
         "perl",

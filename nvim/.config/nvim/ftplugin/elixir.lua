@@ -47,32 +47,9 @@ vim.api.nvim_exec(
   " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
     let sub = ""
-
-    if match(a:cmd, 'vpp/') != -1
-      if g:elixir_test_nearest == 1
-        let sub = substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '') .. ":" .. line(".")
-        echom "sub in vpp nearest -> " . sub
-        return sub
-      else
-        let sub  = substitute(a:cmd, 'mix test vpp/apps/\([^/]*\)/', 'cd vpp \&\& mix cmd --app \1 mix test --color \2', '')
-        echom "sub in vpp NOT nearest -> " . sub
-        return sub
-      end
-    elseif match(a:cmd, 'sims/') != -1
-      if g:elixir_test_nearest == 1
-        let sub = substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '') .. ":" .. line(".")
-        echom "sub in sims nearest -> " . sub
-        return sub
-      else
-        let sub = substitute(a:cmd, 'mix test \([^/]*/\)\(.*\)', '(cd \1 \&\& mix test --color \2)', '')
-        echom "sub in sims NOT nearest -> " . sub
-        return sub
-      end
-    else
-      let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
-      echom "sub in somewhere else -> " . sub
-      return sub
-    end
+    let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
+    echom "running test -> " . sub
+    return sub
   endfunction
 
   let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
