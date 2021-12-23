@@ -11,11 +11,11 @@
   <img src="screenshot.png" alt="screenshot" />
 </p>
 
-### 🚀 Installation
+## 🚀 Installation
 
 If you want to kick the tires, you can simply:
 
-```sh
+```bash
 curl -fsSL https://raw.githubusercontent.com/megalithic/dotfiles/main/bin/_dotup | zsh
 ```
 
@@ -31,8 +31,7 @@ provisions. This means that certain tools/binaries I rely on may or may not
 install/configure on linux. Though, I have tested it decently well on an
 Ubuntu-based Linode instance.
 
-
-##### ⚠️  Thar be dragons..
+##### ⚠️ Thar be dragons..
 
 I highly recommend you dig into the scripts and configs to see what all
 is going on (because it does a lot that I'm not describing here) before you
@@ -43,33 +42,33 @@ wind. 🤣
 
 A few of the _must-have_ tools I roll with:
 
-* [homebrew](https://brew.sh/)
-  + see `~/.dotfiles/Brewfile` for all that gets installed
-* [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
-* [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
-  + see `~/.dotfiles/keyboard` for macOS specific config things
-  + see my [Atreus62 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic) for my custom keyboard setup
-* [tmux](https://github.com/tmux/tmux/wiki)
-  + additional tmux statusbar binaries available (see `tmux-*` files in
+- [homebrew](https://brew.sh/)
+  - see `~/.dotfiles/Brewfile` for all that gets installed
+- [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
+  - see `~/.dotfiles/keyboard` for macOS specific config things
+  - see my [Atreus62 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic) for my custom keyboard setup
+- [tmux](https://github.com/tmux/tmux/wiki)
+  - additional tmux statusbar binaries available (see `tmux-*` files in
     `~/.dotfiles/bin`).
-  + see also my [DND tmux plugin](https://github.com/megalithic/tmux-dnd-status)
-* [jetbrains mono](https://www.jetbrains.com/lp/mono/)
-  + patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
-* [kitty](https://github.com/kovidgoyal/kitty)
-* [everforest](https://github.com/sainnhe/everforest) & `megaforest`
-* [neovim](https://neovim.io/)
-  + using lua with neovim? https://github.com/nanotee/nvim-lua-guide
-* [zsh](https://www.zsh.org/)
-  + [starship](https://starship.rs)
-* [weechat](https://www.weechat.org/)
+  - see also my [DND tmux plugin](https://github.com/megalithic/tmux-dnd-status)
+- [jetbrains mono](https://www.jetbrains.com/lp/mono/)
+  - patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
+- [kitty](https://github.com/kovidgoyal/kitty)
+- [everforest](https://github.com/sainnhe/everforest) & `megaforest`
+- [neovim](https://neovim.io/)
+  - using lua with neovim? https://github.com/nanotee/nvim-lua-guide
+- [zsh](https://www.zsh.org/)
+  - [starship](https://starship.rs)
+- [weechat](https://www.weechat.org/)
 
 ### 💻 Stuff
 
 The file hierarchy:
 
-* **bin/**: Anything in `bin/` will get added to your `$PATH` and be made
+- **bin/**: Anything in `bin/` will get added to your `$PATH` and be made
   available everywhere.
-* Everything else is handled by custom installers based upon the current
+- Everything else is handled by custom installers based upon the current
   platform; otherwise, `stow` handles the rest (clean and easy symlinking).
 
 ### 🔐 Privates
@@ -85,22 +84,22 @@ Also helpful: https://docs.github.com/en/free-pro-team@latest/github/using-git/c
 
 ### :pray: Props
 
-* So many esteemed individuals in the community have, in some way, left their
+- So many esteemed individuals in the community have, in some way, left their
   mark on my own dotfilery (they're all legends in my book):
 
-  + [Zach Holman](https://github.com/holman/dotfiles)
-  + [Wynn Netherland](https://github.com/pengwynn/dotfiles)
-  + [Evan Travers](https://github.com/evantravers/dotfiles)
-  + [Dorian Karter](https://github.com/dkarter/dotfiles)
-  + [Phil Ridlen](https://github.com/philtr/dotfiles)
-  + _.. and many, many others._
+  - [Zach Holman](https://github.com/holman/dotfiles)
+  - [Wynn Netherland](https://github.com/pengwynn/dotfiles)
+  - [Evan Travers](https://github.com/evantravers/dotfiles)
+  - [Dorian Karter](https://github.com/dkarter/dotfiles)
+  - [Phil Ridlen](https://github.com/philtr/dotfiles)
+  - _.. and many, many others._
 
 ### 🧐 Refs:
 
-* A wealth of handy scripts/bins for future use: https://github.com/salman-abedin/alfred
-* Neovim lua migration resource: https://github.com/nanotee/nvim-lua-guide
-* Great (n)vim knowledge base: https://github.com/feniljain/knowledge-base/blob/main/vim/README.md
-* My reference for things to research/add/remove/etc.: https://github.com/megalithic/dotfiles/issues/23
+- A wealth of handy scripts/bins for future use: https://github.com/salman-abedin/alfred
+- Neovim lua migration resource: https://github.com/nanotee/nvim-lua-guide
+- Great (n)vim knowledge base: https://github.com/feniljain/knowledge-base/blob/main/vim/README.md
+- My reference for things to research/add/remove/etc.: https://github.com/megalithic/dotfiles/issues/23
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
