@@ -5,7 +5,7 @@ local hsl = require("lush").hsl
 
 local icons = {
   lsp = {
-    error = "✗",
+    error = "",
     warn = "",
     info = "",
     hint = "",
