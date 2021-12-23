@@ -31,6 +31,7 @@ zcomet load zsh-users/zsh-completions
 zcomet load zsh-users/zsh-history-substring-search
 zcomet load zsh-users/zsh-autosuggestions
 zcomet load zdharma-zmirror/fast-syntax-highlighting
+zcomet loda wfxr/emoji-cli
 zcomet load wfxr/forgit
 zcomet load ohmyzsh plugins/colored-man-pages
 # zcomet load ohmyzsh plugins/mix
@@ -43,7 +44,7 @@ if [[ $PLATFORM == "linux" ]]; then
 fi
 
 # NOTE: source order matters!
-for file in $ZDOTDIR/components/{opts,asdf,fzf,aliases,functions,colors,keybindings,completion,ssh,tmux,zvm}.zsh; do
+for file in $ZDOTDIR/components/{opts,asdf,fzf,aliases,funcs,colors,keybindings,completion,ssh,tmux,zvm}.zsh; do
 	# shellcheck disable=SC1090
 	[ -r "$file" ] && [ -f "$file" ] && source "$file"
 done

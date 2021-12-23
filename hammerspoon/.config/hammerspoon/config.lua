@@ -488,7 +488,7 @@ M.snap = {
     modifier = M.modifiers.cmdCtrl,
     -- hyperKey = M.modifiers.hyper,
     shortcut = "k",
-    position = M.layout.fullScreen,
+    position = M.layout.centeredMedium,
     locations = {
       M.grid.fullScreen,
     },

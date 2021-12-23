@@ -252,7 +252,7 @@ local function on_attach(client, bufnr)
       --    2304 - cannot find name {expect, beforeEach, afterEach}
       --    2503 - cannot find name {jest}
       -- }
-      filter_out_diagnostics_by_code = { 80001, 2582, 2304, 2503 },
+      -- filter_out_diagnostics_by_code = { 80001, 2582, 2304, 2503 },
 
       -- inlay hints
       auto_inlay_hints = true,
