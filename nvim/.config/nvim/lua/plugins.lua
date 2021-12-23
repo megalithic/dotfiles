@@ -298,7 +298,7 @@ M.setup = function()
         "html",
         "heex",
         "javascript",
-        "markdown",
+        -- "markdown",
         "jsdoc",
         "json",
         "jsonc",
