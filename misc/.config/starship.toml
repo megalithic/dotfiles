@@ -75,38 +75,18 @@ format = '([\[$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahea
 ahead = "[⇡${count}](fg:white)"
 behind = "[⇣${count}](fg:white)"
 diverged = "⇕⇡${ahead_count}⇣${behind_count}"
-modified = "[﯂](fg:purple)"
+modified = "[﯂](fg:purple)" #•﯂
 # modified = "[~${count}](fg:red)"
 staged = "[](fg:green)"
 # staged = "[$count](fg:green)"
 conflicted = "[ ](bold fg:#FAB005)[${count}](fg:#d9bb80)"
-stashed = "([${count}]))(fg:white)"
+stashed = "([${count}])(fg:white)"
 # stashed = "([${count}]))(fg:white)"
 deleted = "[](fg:red)"
 # deleted = "[$count](fg:red)"
 renamed = "[](fg:white)"
 # renamed = "[${count}](fg:white)"
 untracked = "[?${count}](fg:#7c8377)"
-# # staged = "•" #•﯂
-# # modified = "~"
-# untracked = "?" #+
-# stashed = ""
-# stashed = "([ ${count}]))(fg:white)"
-# ---
-# # REF:
-# # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml
-# style = "#d8712c"
-# format = "(\b$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind(fg:$style))"
-# conflicted = "[ ](bold fg:88)[  ${count} ](fg:black bg:#d8712c)"
-# staged = "[ $count ](fg:black)"
-# modified = "[ ${count} ](fg:black)"
-# renamed = "[ ${count} ](fg:black)"
-# deleted = "[ ${count} ](fg:black)"
-# untracked = "[?${count} ](fg:black)"
-# stashed = "[ ${count} ](fg:black)"
-# ahead = "[ ${count} ](fg:#523333)"
-# behind = "[ ${count} ](fg:black)"
-# diverged = "[ ](fg:88 bg:#d8712c)[ נּ ](fg:black bg:#d8712c)[ ${ahead_count} ](fg:black bg:#d8712c)[ ${behind_count} ](fg:black bg:#d8712c)"
 
 [directory]
 truncation_length = 10
