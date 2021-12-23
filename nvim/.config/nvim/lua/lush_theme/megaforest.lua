@@ -26,32 +26,33 @@ local set = vim.g
 
 local lush = require("lush")
 local palette = require("colors")
-local cs = palette.cs
+local C = palette.cs
 
-local bg0 = cs.bg0
-local bg1 = cs.bg1
-local bg2 = cs.bg2
-local bg3 = cs.bg3
-local bg4 = cs.bg4
-local bg_visual = cs.bg_visual
-local bg_red = cs.bg_red
-local bg_green = cs.bg_green
-local bg_blue = cs.bg_blue
-local bg_yellow = cs.bg_yellow
-local grey0 = cs.grey0
-local grey1 = cs.grey1
-local grey2 = cs.grey2
-local fg = cs.fg
-local red = cs.red
-local orange = cs.orange
-local yellow = cs.yellow
-local green = cs.green
-local bright_green = cs.bright_green
-local cyan = cs.cyan
-local aqua = cs.aqua
-local blue = cs.blue
-local purple = cs.purple
-local brown = cs.brown
+local bg_dark = C.bg_dark
+local bg0 = C.bg0
+local bg1 = C.bg1
+local bg2 = C.bg2
+local bg3 = C.bg3
+local bg4 = C.bg4
+local bg_visual = C.bg_visual
+local bg_red = C.bg_red
+local bg_green = C.bg_green
+local bg_blue = C.bg_blue
+local bg_yellow = C.bg_yellow
+local grey0 = C.grey0
+local grey1 = C.grey1
+local grey2 = C.grey2
+local fg = C.fg
+local red = C.red
+local orange = C.orange
+local yellow = C.yellow
+local green = C.green
+local bright_green = C.bright_green
+local cyan = C.cyan
+local aqua = C.aqua
+local blue = C.blue
+local purple = C.purple
+local brown = C.brown
 
 local tc = {
   black = bg0,
@@ -332,11 +333,11 @@ return lush(function()
 
     -- # built-in markdown
     markdownH1({ fg = bg0, bg = green, gui = "bold" }),
-    markdownH2({ fg = orange, bg = nil, gui = "bold,italic" }),
-    markdownH3({ fg = blue, bg = nil, gui = "underline" }),
+    markdownH2({ fg = orange, bg = nil, gui = "bold,italic,underline" }),
+    markdownH3({ fg = purple, bg = nil, gui = "bold,italic" }),
     markdownH4({ fg = yellow, bg = nil, gui = "italic" }),
-    markdownH5({ fg = cyan, bg = nil, gui = "NONE" }),
-    markdownH6({ fg = purple, bg = nil, gui = "NONE" }),
+    markdownH5({ fg = cyan, bg = nil, gui = "bold" }),
+    markdownH6({ fg = blue, bg = nil, gui = "NONE" }),
     Headline1({ markdownH1 }),
     Headline2({ markdownH2 }),
     Headline3({ markdownH3 }),
@@ -347,6 +348,7 @@ return lush(function()
     markdownItalic({ fg = grey1, bg = nil, gui = "italic" }),
     markdownBold({ fg = grey2, bg = nil, gui = "bold" }),
     markdownDash({ fg = bg1, gui = "bold" }),
+    Dash({ markdownDash }),
     markdownItalicDelimiter({ fg = grey1, bg = nil, gui = "italic" }),
     markdownCode({ Green }),
     markdownCodeBlock({ Aqua }),
@@ -470,7 +472,7 @@ return lush(function()
     -- highlight FIXME comments
     commentTSWarning({ fg = red, gui = "bold" }),
     commentTSDanger({ fg = orange, gui = "bold" }),
-    TreesitterContext({ bg = cs.bg1 }),
+    TreesitterContext({ bg = C.bg1 }),
 
     -- TS: Markdown
     markdownTSPunctSpecial({ Special }),
@@ -597,36 +599,36 @@ return lush(function()
     -- CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
     CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
 
-    CmpDocumentation({ fg = cs.fg, bg = cs.bg1 }),
-    CmpDocumentationBorder({ fg = cs.fg, bg = cs.bg1 }),
+    CmpDocumentation({ fg = C.fg, bg = C.bg1 }),
+    CmpDocumentationBorder({ fg = C.fg, bg = C.bg1 }),
 
-    CmpItemAbbr({ fg = cs.fg }),
-    CmpItemAbbrMatch({ fg = cs.cyan, gui = "bold,italic" }),
-    CmpItemAbbrMatchFuzzy({ fg = cs.yellow }),
-    CmpItemMenu({ fg = cs.fg }),
+    CmpItemAbbr({ fg = C.fg }),
+    CmpItemAbbrMatch({ fg = C.cyan, gui = "bold,italic" }),
+    CmpItemAbbrMatchFuzzy({ fg = C.yellow }),
+    CmpItemMenu({ fg = C.fg }),
 
-    CmpItemKind({ fg = cs.blue }),
-    CmpItemKindText({ fg = cs.fg }),
-    CmpItemKindMethod({ fg = cs.blue }),
+    CmpItemKind({ fg = C.blue }),
+    CmpItemKindText({ fg = C.fg }),
+    CmpItemKindMethod({ fg = C.blue }),
     CmpItemKindFunction({ CmpItemKindMethod }),
-    CmpItemKindConstructor({ fg = cs.cyan }),
-    CmpItemKindField({ fg = cs.fg }),
-    CmpItemKindVariable({ fg = cs.red }),
-    CmpItemKindClass({ fg = cs.yellow }),
+    CmpItemKindConstructor({ fg = C.cyan }),
+    CmpItemKindField({ fg = C.fg }),
+    CmpItemKindVariable({ fg = C.red }),
+    CmpItemKindClass({ fg = C.yellow }),
     CmpItemKindInterface({ CmpItemKindClass }),
     -- CmpItemKindModule({ Include }),
-    CmpItemKindProperty({ fg = cs.red }),
+    CmpItemKindProperty({ fg = C.red }),
     -- CmpItemKindUnit({ Constant }),
-    CmpItemKindValue({ fg = cs.orange }),
+    CmpItemKindValue({ fg = C.orange }),
     -- CmpItemKindEnum({ Type }),
-    CmpItemKindKeyword({ fg = cs.purple }),
-    CmpItemKindSnippet({ fg = cs.green }),
+    CmpItemKindKeyword({ fg = C.purple }),
+    CmpItemKindSnippet({ fg = C.green }),
     -- CmpItemKindVColor({}),
     -- CmpItemKindFile({ Dictionary }),
     -- CmpItemKindReference({ Preproc }),
     -- CmpItemKindFolder({}),
     -- CmpItemKindEnumMember({}),
-    CmpItemKindConstant({ fg = cs.green }),
+    CmpItemKindConstant({ fg = C.green }),
     -- CmpItemKindStruct({ Type }),
     -- CmpItemKindEvent({ Variable }),
     -- CmpItemKindOperator({ Operator }),
@@ -707,8 +709,8 @@ return lush(function()
 
     ---- :help statusline -------------------------------------------
 
-    StatusLine({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
-    StatusLineNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
+    StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     -- StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
     -- StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     -- StItem1({ fg = cs.green, bg = cs.bg1 }),
@@ -721,6 +723,6 @@ return lush(function()
     -- StSep3({ fg = cs.bg1, bg = cs.grey0 }),
     -- StError({ bg = cs.pale_red }),
     -- StWarn({ bg = cs.dark_orange }),
-    StInactive({ bg = cs.bg0, gui = "italic" }),
+    StInactive({ bg = C.bg0, gui = "italic" }),
   }
 end)

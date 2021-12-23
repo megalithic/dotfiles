@@ -413,7 +413,6 @@ local function setup_lsp_servers()
         "html",
         "heex",
         "leex",
-        "liquid",
         "html-eex",
         "phoenix-html",
         "phoenix-eex",
