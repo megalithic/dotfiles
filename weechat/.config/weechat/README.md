@@ -18,7 +18,6 @@ for the options used for installing `weechat` via homebrew on macOS.
 The nested `weechat.symlink` folder gets auto-symlinked to `~/.weechat` as part
 of running [`_dotup`](https://github.com/megalithic/dotfiles/blob/master/bin/_dotup).
 
-
 #### Notes
 
 All sensitive data is kept encrypted using weechat's `/secure` API.
@@ -48,6 +47,7 @@ magic seems to handle linking things right to where weechat works with it.
 - https://weechat.org/files/doc/stable/weechat_user.en.html#command_weechat_secure
 - https://www.weechat.org/files/doc/stable/weechat_user.en.html#secured_data
 - http://www.futurile.net/2020/11/30/weechat-for-slack/
+- http://www.futurile.net/2020/12/01/weechat-even-more-configuration-for-irc-and-slack/
 
 #### TODO
 
