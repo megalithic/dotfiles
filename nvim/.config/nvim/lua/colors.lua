@@ -8,11 +8,12 @@ local icons = {
     error = "",
     warn = "",
     info = "",
-    hint = "",
+    hint = "", -- 
     ok = "",
     -- spinner_frames = { "▪", "■", "□", "▫" },
     -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
   },
+  git_symbol = utf8(0xe725),
   virtual_text = utf8(0xf63d),
   mode_term = utf8(0xfcb5),
   ln_sep = utf8(0xe0a1),
@@ -23,7 +24,6 @@ local icons = {
   modified_symbol = utf8(0xf085),
   mode_symbol = utf8(0xf101),
   vcs_symbol = utf8(0xf418),
-  git_symbol = utf8(0xe725),
   readonly_symbol = utf8(0xf023),
   prompt = "", -- utf8(0xf460),
 }
@@ -73,12 +73,6 @@ cs.light_red = "#c43e1f"
 -- cs.bright_blue = "#51afef"
 
 local style = {
-  icons = {
-    error = "✗",
-    warn = "",
-    info = "",
-    hint = "",
-  },
   lsp = {
     colors = {
       error = cs.pale_red,

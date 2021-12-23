@@ -23,8 +23,8 @@ asdf plugin-add golang https://github.com/kennyp/asdf-golang.git
 asdf plugin-add lua https://github.com/Stratus3D/asdf-lua.git
 asdf plugin-add rust https://github.com/code-lever/asdf-rust.git
 asdf plugin-add python https://github.com/danhper/asdf-python.git
-# asdf plugin add perl https://github.com/ouest/asdf-perl.git
-asdf plugin add perl https://github.com/chrolis/asdf-perl.git
+# NOTE: using homebrew perl instead
+# asdf plugin add perl https://github.com/chrolis/asdf-perl.git
 asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git
 bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-keyring'
 
@@ -68,4 +68,5 @@ log "configuring go.."
 source "$DOTS/asdf/go.sh" && log_ok "DONE configuring go"
 
 log "configuring perl.."
+# REF: https://github.com/NixOS/nixpkgs/issues/106506#issuecomment-795775642
 cpan install Pod::Parser && log_ok "DONE configuring go"

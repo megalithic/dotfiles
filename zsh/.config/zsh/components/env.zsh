@@ -127,8 +127,6 @@ if [[ "$PLATFORM" == "macos" ]]; then
 
   # for libffi and ruby things
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
-  # export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl@5.32/lib"
-  # export LDFLAGS="$LDFLAGS -L/usr/local/opt/perl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl/lib"
   export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
   export LDFLAGS="$LDFLAGS -I/usr/local/opt/openssl/include"
@@ -268,11 +266,6 @@ path=(
     /usr/local/lib/python3.9/site-packages
     /usr/local/opt/python@3.9/bin
     $HOME/.asdf/installs/rust/stable/bin
-    # /usr/local/opt/perl/bin
-    # /usr/local/opt/perl6/bin
-    # /usr/local/opt/perl@5.28/bin
-    # /usr/local/opt/perl@5.32/bin
-    # /usr/local/opt/perl@5.32
     # /usr/local/opt/openssl@1.1/bin
     /usr/{bin,sbin}
     /{bin,sbin}
@@ -281,7 +274,6 @@ path=(
     ${HOME}/.dotfiles/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
-    # ${HOMEBREW_PREFIX}/opt/perl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
