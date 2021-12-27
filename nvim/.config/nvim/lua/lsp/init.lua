@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
-local map, bufmap, bmap, au = mega.map, mega.bufmap, mega.bmap, mega.au
+local bufmap, bmap, au = mega.bufmap, mega.bmap, mega.au
 local fmt = string.format
 local lspconfig = require("lspconfig")
 local utils = require("utils")
@@ -615,16 +615,21 @@ local function setup_lsp_servers()
     }))
   end
 
-  do -- emmet-ls
-    lspconfig["emmet_ls"].setup(lsp_with_defaults({
-      cmd = { "emmet-ls", "--stdio" },
-      single_file_support = true,
-      filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact", "heex", "tsx", "jsx" },
-      root_dir = function(_)
-        return vim.loop.cwd()
-      end,
-      settings = {},
-    }))
+  do -- ls_emmet/emmetls/emmet-ls/emmet_ls
+    local configs = require("lspconfig.configs")
+    if not configs.ls_emmet then
+      configs.ls_emmet = {
+        default_config = lsp_with_defaults({
+          cmd = { "ls_emmet", "--stdio" },
+          filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact", "heex", "tsx", "jsx" },
+          root_dir = function(_)
+            return vim.loop.cwd()
+          end,
+          single_file_support = true,
+          settings = {},
+        }),
+      }
+    end
   end
 
   do -- typescript/javascript

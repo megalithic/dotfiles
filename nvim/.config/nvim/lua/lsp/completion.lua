@@ -189,6 +189,7 @@ local function setup_cmp()
       { name = "luasnip" },
       { name = "nvim_lsp" },
       { name = "path" },
+      { name = "emmet_ls" },
     }, {
       M.sources.buffer,
       -- { name = "fuzzy_buffer" },

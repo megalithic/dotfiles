@@ -30,7 +30,7 @@ function _mix {
 	cd -
 }
 
-function main {
+function main_source {
 	echo "building elixir_ls in -> $ls_build_path"
 
 	if [[ ! -d $ls_build_path ]]; then
@@ -41,6 +41,13 @@ function main {
 		rm -rf $ls_build_path
 		_do_clone && _mix
 	fi
+}
+
+function main() {
+	curl -fLO https://github.com/elixir-lsp/elixir-ls/releases/latest/download/elixir-ls.zip
+	unzip elixir-ls.zip -d "$XDG_DATA_HOME/lsp/elixir-ls"
+	chmod +x "$XDG_DATA_HOME/lsp/elixir-ls/language_server.sh"
+	rm elixir-ls.zip
 }
 
 main

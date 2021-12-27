@@ -15,6 +15,7 @@ log "adding asdf plugins.."
 # preferred plugins..
 #  -- generic things to manage with asdf:
 #     https://github.com/asdf-community/asdf-link
+asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git
 asdf plugin-add ruby https://github.com/asdf-vm/asdf-ruby.git
 asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
@@ -25,8 +26,6 @@ asdf plugin-add rust https://github.com/code-lever/asdf-rust.git
 asdf plugin-add python https://github.com/danhper/asdf-python.git
 # NOTE: using homebrew perl instead
 # asdf plugin add perl https://github.com/chrolis/asdf-perl.git
-asdf plugin-add nodejs https://github.com/asdf-vm/asdf-nodejs.git
-bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-keyring'
 
 # TODO: dope way of installing all the latest langs:
 # https://github.com/paulfioravanti/dotfiles/blob/master/asdf/setup.sh
@@ -42,12 +41,6 @@ log "installing asdf plugin versions.."
 export KERL_CONFIGURE_OPTIONS="--without-javac --with-ssl=$(brew --prefix openssl)"
 asdf install
 
-log "creating $XDG_CONFIG_HOME if it doesn't exist"
-export XDG_CONFIG_HOME="$HOME/.config"
-[[ ! -d "$HOME/.config" ]] && mkdir -p "$HOME/.config"
-[[ ! -d "$HOME/.config/lsp" ]] && mkdir -p "$HOME/.config/lsp"
-[[ ! -d "$HOME/.config/treesitter" ]] && mkdir -p "$HOME/.config/treesitter"
-
 log "configuring ruby.."
 source $DOTS/asdf/ruby.sh && log_ok "DONE configuring ruby"
 
@@ -56,12 +49,13 @@ log "configuring node.."
 source "$DOTS/asdf/node.sh" && log_ok "DONE configuring node"
 
 log "configuring lua.."
-source "$DOTS/asdf/lua.sh" && log_ok "DONE configuring lua"
+# source "$DOTS/asdf/lua.sh" && log_ok "DONE configuring lua"
 
 log "configuring rust.."
 source "$DOTS/asdf/rust.sh" && log_ok "DONE configuring rust"
 
 log "configuring elixir.."
+# NOTE: in case of `erl not found` issues: https://github.com/asdf-vm/asdf-elixir/issues/60#issuecomment-964812953
 source "$DOTS/asdf/elixir.sh" && log_ok "DONE configuring elixir"
 
 log "configuring go.."
@@ -69,4 +63,6 @@ source "$DOTS/asdf/go.sh" && log_ok "DONE configuring go"
 
 log "configuring perl.."
 # REF: https://github.com/NixOS/nixpkgs/issues/106506#issuecomment-795775642
-cpan install Pod::Parser && log_ok "DONE configuring go"
+cpan install Pod::Parser && log_ok "DONE configuring perl"
+
+log_warn "BE SURE to read the install notes from the asdf installs above."

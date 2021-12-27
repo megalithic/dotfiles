@@ -1076,21 +1076,24 @@ M.setup = function()
         selection_caret = "» ",
         mappings = {
           i = {
-            ["<C-w>"] = actions.send_selected_to_qflist,
+            ["<c-w>"] = actions.send_selected_to_qflist,
             ["<c-c>"] = function()
               vim.cmd("stopinsert!")
             end,
             ["<esc>"] = actions.close,
+            ["<cr>"] = actions.select_vertical + actions.center,
+            ["<c-o>"] = actions.select_default + actions.center,
             ["<c-s>"] = actions.select_horizontal,
-            ["<c-j>"] = actions.cycle_history_next,
-            ["<c-k>"] = actions.cycle_history_prev,
+            ["<c-n>"] = actions.cycle_history_next,
+            ["<c-p>"] = actions.cycle_history_prev,
           },
           n = {
             ["<C-w>"] = actions.send_selected_to_qflist,
           },
         },
         file_ignore_patterns = { "%.jpg", "%.jpeg", "%.png", "%.otf", "%.ttf" },
-        path_display = { "smart", "absolute", "truncate" },
+        -- :help telescope.defaults.path_display
+        -- path_display = { "smart", "absolute", "truncate" },
         layout_strategy = "flex",
         layout_config = {
           width = 0.65,
@@ -1460,7 +1463,7 @@ M.setup = function()
         dir = {},
         lsp = {
           ["outstand/atlas (elixirls)"] = {
-            cmd = { require("utils").lsp.elixirls_cmd({ fallback_dir = "/home/ubuntu/.config" }) },
+            cmd = { require("utils").lsp.elixirls_cmd({ fallback_dir = "/home/ubuntu/.local/share" }) },
             root_dir = "/home/ubuntu/code/atlas",
             filetypes = { "elixir", "eelixir" },
             on_attach = function(client, bufnr)

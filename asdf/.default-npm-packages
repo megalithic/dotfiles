@@ -20,7 +20,7 @@ typescript
 tsd
 vim-node-rpc
 pyright
-emmet-ls
+ls_emmet
 bash-language-server
 vscode-langservers-extracted
 dockerfile-language-server-nodejs

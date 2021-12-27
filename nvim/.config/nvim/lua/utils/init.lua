@@ -367,22 +367,21 @@ function M.lsp.elixirls_cmd(opts)
   opts = opts or {}
   local local_elixir_ls_dir_exists, local_elixir_ls_dir = M.root_has_file(".elixir_ls/release/language_server.sh")
 
-  -- for linode/docker/atlas things:
+  -- for custom linode/docker/elixirls container/image:
   local local_elixir_ls_bin_exists, local_elixir_ls_bin = M.root_has_file(".bin/elixir_ls.sh")
 
   -- we have a locally installed .elixir_ls
   if local_elixir_ls_dir_exists then
     return fn.expand(local_elixir_ls_dir)
 
-    -- we have .bin.elixirls.sh
+    -- we have .bin/elixirls.sh
   elseif local_elixir_ls_bin_exists then
     return fn.expand(local_elixir_ls_bin)
   end
 
-  local fallback_dir = opts.fallback_dir or "$XDG_CONFIG_HOME"
-
-  -- otherwise, just use our globally installed elixir_ls
-  return fn.expand(fmt("%s/lsp/elixir_ls/release/%s", fallback_dir, "language_server.sh"))
+  -- otherwise, just use our globally installed elixir-ls binary
+  local fallback_dir = opts.fallback_dir or "$XDG_DATA_HOME"
+  return fn.expand(fmt("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
 end
 
 return M

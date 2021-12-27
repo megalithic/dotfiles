@@ -124,6 +124,10 @@ function export_dirs {
 		export XDG_CONFIG_HOME="$HOME/.config"
 		log_ok "DONE setting XDG_CONFIG_HOME to $XDG_CONFIG_HOME"
 	fi
+
+	[[ -z $XDG_DATA_HOME ]] && export XDG_DATA_HOME="$HOME/.local/share" && log_ok "DONE exporting XDG_DATA_HOME to $XDG_DATA_HOME"
+	[[ ! -d "$HOME/.local/share/lsp" ]] && mkdir -p "$HOME/.local/share/lsp" && log_ok "DONE creating $HOME/.local/share/lsp"
+	[[ ! -d "$HOME/.local/share/treesitter" ]] && mkdir -p "$HOME/.local/share/treesitter" && log_ok "DONE creating $HOME/.local/share/treesitter"
 }
 
 function setup_xcode_and_git {

@@ -155,6 +155,7 @@ brew "weechat"
 brew "wget"
 brew "wifi-password"
 brew "wxmac" # for erlang
+brew "wxwidgest" # for erlang
 brew "yubico-piv-tool"
 brew "libyubikey"
 brew "pam_yubico"

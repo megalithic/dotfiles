@@ -7,6 +7,7 @@ function M.setup(on_attach)
   nls.setup({
     debug = false,
     debounce = 150,
+    autostart = true,
     save_after_format = false,
     on_attach = on_attach,
     sources = {
