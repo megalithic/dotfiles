@@ -1030,76 +1030,6 @@ M.setup = function()
     require("numb").setup()
   end
 
-  do -- zk
-    local zk = require("zk")
-    zk.setup({
-      filetypes = { "markdown", "liquid" },
-      on_attach = function(client, bufnr)
-        local function buf_set_keymap(...)
-          vim.api.nvim_buf_set_keymap(bufnr, ...)
-        end
-        local opts = { noremap = true, silent = true }
-
-        require("lsp").on_attach(client, bufnr)
-
-        buf_set_keymap("n", "<C-t>", [[:Notes<cr>]], opts)
-        buf_set_keymap("n", "<leader>zt", [[:Tags<cr>]], opts)
-        buf_set_keymap("n", "<leader>zl", [[:Links<cr>]], opts)
-        buf_set_keymap("n", "<leader>zb", [[:Backlinks<cr>]], opts)
-        buf_set_keymap("n", "<leader>zd", ":ZkDaily<cr>", opts)
-        buf_set_keymap("v", "<leader>zn", ":'<,'>lua vim.lsp.buf.range_code_action()<CR>", opts)
-
-        -- buf_set_keymap("n", "<A-j>", [[:lua motch.dnd.move_to("previous")<cr>]], opts)
-        -- buf_set_keymap("n", "<A-k>", [[:lua motch.dnd.move_to("next")<cr>]], opts)
-      end,
-    })
-
-    -- vcmd([[command! -nargs=0 ZkIndex :lua require'lspconfig'.zk.index()]])
-    -- vcmd([[command! -nargs=? ZkNew :lua require'lspconfig'.zk.new(<args>)]])
-    -- vcmd(
-    --   [[command! ZkList :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=notes EDITOR=floaterm zk edit -i]]
-    -- )
-    -- vcmd(
-    --   [[command! ZkTags :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=tags zk list -q -f json | jq -r '. | map(.tags) | flatten | unique | join("\n")' | fzf | EDITOR=floaterm xargs -o -t zk edit -i -t]]
-    -- )
-    -- vcmd(
-    --   [[command! ZkBacklinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=backlinks EDITOR=floaterm zk edit -i -l %]]
-    -- )
-    -- vcmd(
-    --   [[command! ZkLinks :FloatermNew --autoclose=2 --position=top --opener=edit --width=0.9 --title=links EDITOR=floaterm zk edit -i -L %]]
-    -- )
-
-    -- mega.zk_list = function()
-    --   vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    --   vcmd([[ZkList]])
-    -- end
-
-    -- mega.zk_by_tags = function()
-    --   vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    --   vcmd([[ZkTags]])
-    -- end
-
-    -- mega.zk_backlinks = function()
-    --   vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    --   vcmd([[ZkBacklinks]])
-    -- end
-
-    -- mega.zk_links = function()
-    --   vcmd([[autocmd User FloatermOpen ++once :tnoremap <buffer> <esc> <C-c>]])
-    --   vcmd([[ZkLinks]])
-    -- end
-
-    -- local rooter = require("lspconfig").util.root_pattern(".zk")
-    -- local rooted = rooter(api.nvim_buf_get_name(0))
-    -- local is_zk = fn.empty(rooted)
-    -- if is_zk == 0 then
-    --   map("n", "<leader>fz", ":lua mega.zk_list()<cr>")
-    --   map("n", "<leader>zt", ":lua mega.zk_by_tags()<cr>")
-    --   map("n", "<leader>zb", ":lua mega.zk_backlinks()<cr>")
-    --   map("n", "<leader>zl", ":lua mega.zk_links()<cr>")
-    -- end
-  end
-
   do -- # telescope
     local telescope = require("telescope")
     local actions = require("telescope.actions")
@@ -1313,6 +1243,66 @@ M.setup = function()
     -- end
 
     require("telescope").load_extension("fzf")
+  end
+
+  do -- zk
+    local zk = require("zk")
+
+    vim.cmd("command! ZkNotes lua require('telescope').extensions.zk.notes()")
+    vim.cmd("command! ZkBacklinks lua require('telescope').extensions.zk.backlinks()")
+    vim.cmd("command! ZkLinks lua require('telescope').extensions.zk.links()")
+    vim.cmd("command! ZkTags lua require('telescope').extensions.zk.tags()")
+
+    zk.setup({
+      lsp = {
+        filetypes = { "markdown", "liquid" },
+        on_attach = function(client, bufnr)
+          -- local function buf_set_keymap(...)
+          --   vim.api.nvim_buf_set_keymap(bufnr, ...)
+          -- end
+          -- local opts = { noremap = true, silent = true }
+
+          require("lsp").on_attach(client, bufnr)
+
+          -- buf_set_keymap("n", "<C-t>", [[:Notes<cr>]], opts)
+          -- buf_set_keymap("n", "<leader>zt", [[:Tags<cr>]], opts)
+          -- buf_set_keymap("n", "<leader>zl", [[:Links<cr>]], opts)
+          -- buf_set_keymap("n", "<leader>zb", [[:Backlinks<cr>]], opts)
+          -- buf_set_keymap("n", "<leader>zd", ":ZkDaily<cr>", opts)
+          -- buf_set_keymap("v", "<leader>zn", ":'<,'>lua vim.lsp.buf.range_code_action()<CR>", opts)
+        end,
+      },
+    })
+
+    require("telescope").load_extension("zk")
+
+    vim.api.nvim_set_keymap(
+      "n",
+      "<Leader>zn",
+      "<cmd>lua require('telescope').extensions.zk.notes()<CR>",
+      { noremap = true }
+    )
+
+    vim.api.nvim_set_keymap(
+      "n",
+      "<Leader>zb",
+      "<cmd>lua require('telescope').extensions.zk.backlinks()<CR>",
+      { noremap = true }
+    )
+
+    vim.api.nvim_set_keymap(
+      "n",
+      "<Leader>zl",
+      "<cmd>lua require('telescope').extensions.zk.links()<CR>",
+      { noremap = true }
+    )
+
+    vim.api.nvim_set_keymap(
+      "n",
+      "<Leader>zt",
+      "<cmd>lua require('telescope').extensions.zk.tags()<CR>",
+      { noremap = true }
+    )
   end
 
   do -- fzf-lua.nvim

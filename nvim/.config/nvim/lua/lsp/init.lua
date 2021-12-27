@@ -615,6 +615,18 @@ local function setup_lsp_servers()
     }))
   end
 
+  do -- emmet-ls
+    lspconfig["emmet_ls"].setup(lsp_with_defaults({
+      cmd = { "emmet-ls", "--stdio" },
+      single_file_support = true,
+      filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact", "heex", "tsx", "jsx" },
+      root_dir = function(_)
+        return vim.loop.cwd()
+      end,
+      settings = {},
+    }))
+  end
+
   do -- typescript/javascript
     local function do_organize_imports()
       local params = {
@@ -640,21 +652,6 @@ local function setup_lsp_servers()
         },
       },
     }))
-  end
-
-  do -- emmetls
-    -- local configs = require("lspconfig/configs")
-    -- configs.emmet_ls = {
-    -- 	default_config = {
-    -- 		cmd = { "emmet-ls", "--stdio" },
-    -- 		filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact" },
-    -- 		root_dir = function(_)
-    -- 			return vim.loop.cwd()
-    -- 		end,
-    -- 		settings = {},
-    -- 	},
-    -- }
-    -- lspconfig.emmet_ls.setup(lsp_with_defaults())
   end
 end
 
