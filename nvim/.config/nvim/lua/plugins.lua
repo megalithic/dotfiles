@@ -56,10 +56,9 @@ M.list = {
   "hrsh7th/cmp-nvim-lsp-document-symbol",
 
   -- for fuzzy things in nvim-cmp and command:
-  -- "tzachar/fuzzy.nvim",
-  -- { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-  -- "tzachar/cmp-fuzzy-path",
-  -- "tzachar/cmp-fuzzy-buffer",
+  "tzachar/fuzzy.nvim",
+  "tzachar/cmp-fuzzy-path",
+  "tzachar/cmp-fuzzy-buffer",
   --
 
   "L3MON4D3/LuaSnip",
@@ -97,6 +96,11 @@ M.list = {
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
+
+  "tami5/sqlite.lua",
+  "nvim-telescope/telescope.nvim",
+  "nvim-telescope/telescope-frecency.nvim",
+  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
 
   ------------------------------------------------------------------------------
   -- (text objects) --
@@ -457,7 +461,6 @@ M.setup = function()
         "fzf",
         "TelescopePrompt",
         "undotree",
-        "flutterToolsOutline",
         "norg",
         "org",
         "orgagenda",
@@ -1087,6 +1090,221 @@ M.setup = function()
     -- end
   end
 
+  do -- # telescope
+    local telescope = require("telescope")
+    local actions = require("telescope.actions")
+    local themes = require("telescope.themes")
+
+    -- local H = require 'as.highlights'
+    -- H.plugin(
+    --   'telescope',
+    --   { 'TelescopeMatching', { link = 'Title', force = true } },
+    --   { 'TelescopeBorder', { link = 'GreyFloatBorder', force = true } },
+    --   { 'TelescopePromptPrefix', { link = 'Statement', force = true } },
+    --   { 'TelescopeTitle', { inherit = 'Normal', gui = 'bold' } },
+    --   {
+    --     'TelescopeSelectionCaret',
+    --     {
+    --       guifg = H.get_hl('Identifier', 'fg'),
+    --       guibg = H.get_hl('TelescopeSelection', 'bg'),
+    --     },
+    --   }
+    -- )
+
+    local function get_border(opts)
+      return vim.tbl_deep_extend("force", opts or {}, {
+        borderchars = {
+          { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
+          results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
+          preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+        },
+      })
+    end
+
+    ---@param opts table
+    ---@return table
+    local function dropdown(opts)
+      return themes.get_dropdown(get_border(opts))
+    end
+
+    telescope.setup({
+      defaults = {
+        set_env = { ["TERM"] = vim.env.TERM },
+        borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+        prompt_prefix = " ",
+        selection_caret = "» ",
+        mappings = {
+          i = {
+            ["<C-w>"] = actions.send_selected_to_qflist,
+            ["<c-c>"] = function()
+              vim.cmd("stopinsert!")
+            end,
+            ["<esc>"] = actions.close,
+            ["<c-s>"] = actions.select_horizontal,
+            ["<c-j>"] = actions.cycle_history_next,
+            ["<c-k>"] = actions.cycle_history_prev,
+          },
+          n = {
+            ["<C-w>"] = actions.send_selected_to_qflist,
+          },
+        },
+        file_ignore_patterns = { "%.jpg", "%.jpeg", "%.png", "%.otf", "%.ttf" },
+        path_display = { "smart", "absolute", "truncate" },
+        layout_strategy = "flex",
+        layout_config = {
+          width = 0.65,
+          height = 0.6,
+          horizontal = {
+            preview_width = 0.45,
+          },
+          cursor = get_border({
+            layout_config = {
+              cursor = { width = 0.3 },
+            },
+          }),
+        },
+        winblend = 3,
+        history = {
+          path = vim.fn.stdpath("data") .. "/telescope_history.sqlite3",
+        },
+      },
+      extensions = {
+        frecency = {
+          workspaces = {
+            conf = vim.env.DOTFILES,
+            project = vim.env.PROJECTS_DIR,
+            wiki = vim.g.wiki_path,
+          },
+        },
+        fzf = {
+          override_generic_sorter = true, -- override the generic sorter
+          override_file_sorter = true, -- override the file sorter
+        },
+      },
+      pickers = {
+        buffers = dropdown({
+          sort_mru = true,
+          sort_lastused = true,
+          show_all_buffers = true,
+          ignore_current_buffer = true,
+          previewer = false,
+          theme = "dropdown",
+          mappings = {
+            i = { ["<c-x>"] = "delete_buffer" },
+            n = { ["<c-x>"] = "delete_buffer" },
+          },
+        }),
+        oldfiles = dropdown(),
+        live_grep = {
+          file_ignore_patterns = { ".git/" },
+        },
+        current_buffer_fuzzy_find = dropdown({
+          previewer = false,
+          shorten_path = false,
+        }),
+        lsp_code_actions = {
+          theme = "cursor",
+        },
+        colorscheme = {
+          enable_preview = true,
+        },
+        find_files = {
+          hidden = true,
+        },
+        git_branches = dropdown(),
+        git_bcommits = {
+          layout_config = {
+            horizontal = {
+              preview_width = 0.55,
+            },
+          },
+        },
+        git_commits = {
+          layout_config = {
+            horizontal = {
+              preview_width = 0.55,
+            },
+          },
+        },
+        reloader = dropdown(),
+      },
+    })
+
+    --- NOTE: this must be required after setting up telescope
+    --- otherwise the result will be cached without the updates
+    --- from the setup call
+    -- local builtins = require 'telescope.builtin'
+
+    -- local function project_files(opts)
+    --   if not pcall(builtins.git_files, opts) then
+    --     builtins.find_files(opts)
+    --   end
+    -- end
+
+    -- local function nvim_config()
+    --   builtins.find_files {
+    --     prompt_title = '~ nvim config ~',
+    --     cwd = vim.fn.stdpath 'config',
+    --     file_ignore_patterns = { '.git/.*', 'dotbot/.*' },
+    --   }
+    -- end
+
+    -- local function dotfiles()
+    --   builtins.find_files {
+    --     prompt_title = '~ dotfiles ~',
+    --     cwd = vim.g.dotfiles,
+    --   }
+    -- end
+
+    -- local function orgfiles()
+    --   builtins.find_files {
+    --     prompt_title = 'Org',
+    --     cwd = vim.fn.expand '~/Dropbox/org/',
+    --   }
+    -- end
+
+    -- local function norgfiles()
+    --   builtins.find_files {
+    --     prompt_title = 'Norg',
+    --     cwd = vim.fn.expand '~/Dropbox/neorg/',
+    --   }
+    -- end
+
+    -- local function frecency()
+    --   telescope.extensions.frecency.frecency(dropdown {
+    --     -- NOTE: remove default text as it's slow
+    --     -- default_text = ':CWD:',
+    --     winblend = 10,
+    --     border = true,
+    --     previewer = false,
+    --     shorten_path = false,
+    --   })
+    -- end
+
+    -- local function gh_notifications()
+    --   telescope.extensions.ghn.ghn(dropdown())
+    -- end
+
+    -- local function installed_plugins()
+    --   require('telescope.builtin').find_files {
+    --     cwd = vim.fn.stdpath 'data' .. '/site/pack/packer',
+    --   }
+    -- end
+
+    -- local function tmux_sessions()
+    --   telescope.extensions.tmux.sessions {}
+    -- end
+
+    -- local function tmux_windows()
+    --   telescope.extensions.tmux.windows {
+    --     entry_format = '#S: #T',
+    --   }
+    -- end
+
+    require("telescope").load_extension("fzf")
+  end
+
   do -- fzf-lua.nvim
     local actions = require("fzf-lua.actions")
     require("fzf-lua").setup({
@@ -1101,7 +1319,7 @@ M.setup = function()
       previewers = {
         bat = {
           cmd = "bat",
-          args = "--style=numbers,changes --color always",
+          args = "--style=numbers,changes --color=always",
           theme = "Forest%20Night%20Italic",
           config = nil,
         },

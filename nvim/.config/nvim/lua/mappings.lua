@@ -347,6 +347,19 @@ map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org
 map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
 map("n", "<leader>fp", [[<cmd>lua require("fzf-lua").files({ cwd = "~/.dotfiles/private", prompt = "PRIV  " })<cr>]])
 
+do -- # telescope
+  local builtins = require("telescope.builtin")
+  map("n", "<leader>ff", builtins.find_files, "telescope: find files")
+  map("n", "<leader>fb", builtins.buffers, "telescope: find buffers")
+  map("n", "<leader>fh", builtins.help_tags, "telescope: help tags")
+  map("n", "<leader>fk", builtins.keymaps, "telescope: help tags")
+  map("n", "<leader>fm", builtins.oldfiles, "telescope: old files (mru)")
+  map("n", "<leader>fr", builtins.resume, "telescope: resume previous find")
+
+  map("n", "<leader>a", builtins.live_grep, "telescope: live grep")
+  map("v", "<leader>A", builtins.grep_string, "telescope: grep cursor string")
+end
+
 -- # nvim-tree
 map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")
 

@@ -9,11 +9,6 @@
 
 bindkey -e # ensures we use emacs/readline keybindings
 
-# use .localrc for SUPER SECRET stuff
-if [[ -e $HOME/.localrc ]]; then
-	source "$HOME/.localrc"
-fi
-
 # zcomet for plugin install and management
 if [[ ! -f ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh ]]; then
 	command git clone https://github.com/agkozak/zcomet.git ${ZDOTDIR:-${HOME}}/.zcomet/bin

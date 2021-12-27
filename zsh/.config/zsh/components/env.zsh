@@ -302,3 +302,8 @@ fpath+=(
     ${ASDF_DIR}/completions
     $fpath
 )
+
+# use .localrc for SUPER SECRET stuff
+if [[ -e $HOME/.localrc ]]; then
+  source "$HOME/.localrc"
+fi
