@@ -274,6 +274,7 @@ local function setup_lsp_capabilities()
   capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
   return capabilities
 end
