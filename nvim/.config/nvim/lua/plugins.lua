@@ -32,6 +32,7 @@ M.list = {
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
+  "stevearc/dressing.nvim",
   -- "folke/which-key.nvim",
   "goolord/alpha-nvim",
   -- "megalithic/shade.nvim", -- FIXME: too many broke things for various plugins
@@ -72,7 +73,6 @@ M.list = {
   "folke/trouble.nvim",
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
-  -- "stevearc/dressing.nvim", -- auto UI things for new 0.6 apis
 
   ------------------------------------------------------------------------------
   -- (treesitter) --
@@ -188,7 +188,7 @@ M.list = {
   -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  { "iamcco/markdown-preview.nvim", run = vim.fn["mkdp#util#install"] },
+  { "iamcco/markdown-preview.nvim", run = "cd app && yarn install" },
   "ellisonleao/glow.nvim",
   { "harshad1/bullets.vim", branch = "performance_improvements" },
   "kristijanhusak/orgmode.nvim",
@@ -241,6 +241,16 @@ end
 M.setup = function()
   do -- vim-startuptime
     vim.g.startuptime_tries = 10
+  end
+
+  do
+    require("dressing").setup({
+      select = {
+        telescope = {
+          theme = "cursor",
+        },
+      },
+    })
   end
 
   do -- vim-matchup
@@ -580,7 +590,7 @@ M.setup = function()
             local date = string.format("%s: %s", task.type, task.time:to_string())
 
             -- helpful docs for options: https://github.com/julienXX/terminal-notifier#options
-            if vim.fn.executable("terminal-notifier") then
+            if fn.executable("terminal-notifier") then
               vim.loop.spawn("terminal-notifier", {
                 args = {
                   "-title",
@@ -594,7 +604,7 @@ M.setup = function()
                 },
               })
             end
-            -- if vim.fn.executable("notify-send") then
+            -- if fn.executable("notify-send") then
             -- 	vim.loop.spawn("notify-send", {
             -- 		args = {
             -- 			"--icon=~/.local/share/nvim/site/pack/paqs/start/orgmode.nvim/assets/orgmode_nvim.png",
@@ -1166,7 +1176,7 @@ M.setup = function()
         },
         winblend = 3,
         history = {
-          path = vim.fn.stdpath("data") .. "/telescope_history.sqlite3",
+          path = fn.stdpath("data") .. "/telescope_history.sqlite3",
         },
       },
       extensions = {
@@ -1245,7 +1255,7 @@ M.setup = function()
     -- local function nvim_config()
     --   builtins.find_files {
     --     prompt_title = '~ nvim config ~',
-    --     cwd = vim.fn.stdpath 'config',
+    --     cwd = fn.stdpath 'config',
     --     file_ignore_patterns = { '.git/.*', 'dotbot/.*' },
     --   }
     -- end
@@ -1260,14 +1270,14 @@ M.setup = function()
     -- local function orgfiles()
     --   builtins.find_files {
     --     prompt_title = 'Org',
-    --     cwd = vim.fn.expand '~/Dropbox/org/',
+    --     cwd = fn.expand '~/Dropbox/org/',
     --   }
     -- end
 
     -- local function norgfiles()
     --   builtins.find_files {
     --     prompt_title = 'Norg',
-    --     cwd = vim.fn.expand '~/Dropbox/neorg/',
+    --     cwd = fn.expand '~/Dropbox/neorg/',
     --   }
     -- end
 
@@ -1288,7 +1298,7 @@ M.setup = function()
 
     -- local function installed_plugins()
     --   require('telescope.builtin').find_files {
-    --     cwd = vim.fn.stdpath 'data' .. '/site/pack/packer',
+    --     cwd = fn.stdpath 'data' .. '/site/pack/packer',
     --   }
     -- end
 
@@ -1395,7 +1405,7 @@ M.setup = function()
     local function footer()
       local datetime = os.date("%d-%m-%Y  %H:%M:%S")
       return {
-        -- require("colors").icons.git_symbol .. " " .. vim.fn["gitbranch#name"](),
+        -- require("colors").icons.git_symbol .. " " .. fn["gitbranch#name"](),
         vim.loop.cwd(),
         datetime,
       }
@@ -1518,12 +1528,12 @@ M.setup = function()
   end
 
   do -- headlines.nvim
-    vim.fn.sign_define("Headline1", { linehl = "Headline1" })
-    vim.fn.sign_define("Headline2", { linehl = "Headline2" })
-    vim.fn.sign_define("Headline3", { linehl = "Headline3" })
-    vim.fn.sign_define("Headline4", { linehl = "Headline4" })
-    vim.fn.sign_define("Headline5", { linehl = "Headline5" })
-    vim.fn.sign_define("Headline6", { linehl = "Headline6" })
+    fn.sign_define("Headline1", { linehl = "Headline1" })
+    fn.sign_define("Headline2", { linehl = "Headline2" })
+    fn.sign_define("Headline3", { linehl = "Headline3" })
+    fn.sign_define("Headline4", { linehl = "Headline4" })
+    fn.sign_define("Headline5", { linehl = "Headline5" })
+    fn.sign_define("Headline6", { linehl = "Headline6" })
 
     require("headlines").setup({
       markdown = {
@@ -1593,7 +1603,7 @@ M.setup = function()
       diagnostics = {
         enable = true,
       },
-      disable_netrw = true,
+      disable_netrw = false,
       hijack_netrw = true,
       open_on_setup = true,
       hijack_cursor = true,

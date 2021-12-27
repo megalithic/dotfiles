@@ -355,13 +355,13 @@ do -- # telescope
   map("n", "<leader>fk", builtins.keymaps, "telescope: help tags")
   map("n", "<leader>fm", builtins.oldfiles, "telescope: old files (mru)")
   map("n", "<leader>fr", builtins.resume, "telescope: resume previous find")
-
   map("n", "<leader>a", builtins.live_grep, "telescope: live grep")
+  map("v", "<leader>a", builtins.grep_string, "telescope: grep cursor string")
   map("v", "<leader>A", builtins.grep_string, "telescope: grep cursor string")
 end
 
 -- # nvim-tree
-map("n", "<C-p>", "<cmd>NvimTreeToggle<CR>")
+map("n", "<C-t>", "<cmd>NvimTreeToggle<CR>")
 
 -- # vim-test
 nmap("<leader>tf", "<cmd>TestFile<CR>", "test: file")
