@@ -282,7 +282,7 @@ end
 local function setup_lsp_servers()
   local function lsp_with_defaults(opts)
     opts = opts or {}
-    local lsp_config = vim.tbl_deep_extend("keep", opts, {
+    local config = vim.tbl_deep_extend("keep", opts, {
       autorstart = true,
       on_attach = on_attach,
       capabilities = setup_lsp_capabilities(),
@@ -290,7 +290,7 @@ local function setup_lsp_servers()
       root_dir = vim.loop.cwd,
     })
 
-    return lsp_config
+    return config
   end
 
   local function root_pattern(...)
@@ -618,19 +618,14 @@ local function setup_lsp_servers()
 
   do -- ls_emmet/emmetls/emmet-ls/emmet_ls
     local configs = require("lspconfig.configs")
-    if not configs.ls_emmet then
-      configs.ls_emmet = {
-        default_config = lsp_with_defaults({
-          cmd = { "ls_emmet", "--stdio" },
-          filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact", "heex", "tsx", "jsx" },
-          root_dir = function(_)
-            return vim.loop.cwd()
-          end,
-          single_file_support = true,
-          settings = {},
-        }),
-      }
-    end
+    configs.ls_emmet = {
+      default_config = {
+        cmd = { "ls_emmet", "--stdio" },
+        filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact", "heex", "tsx", "jsx" },
+        single_file_support = true,
+      },
+    }
+    lspconfig["ls_emmet"].setup(lsp_with_defaults({}))
   end
 
   do -- typescript/javascript
