@@ -387,10 +387,10 @@ function M.diagnostic_info(context)
     return { error = {}, warning = {}, info = {}, hint = {} }
   end
   return {
-    error = { count = get_count(buf, "Error"), sign = C.icons.error },
-    warning = { count = get_count(buf, "Warn"), sign = C.icons.warn },
-    info = { count = get_count(buf, "Info"), sign = C.icons.info },
-    hint = { count = get_count(buf, "Hint"), sign = C.icons.hint },
+    error = { count = get_count(buf, "Error"), sign = C.icons.lsp.error },
+    warning = { count = get_count(buf, "Warn"), sign = C.icons.lsp.warn },
+    info = { count = get_count(buf, "Info"), sign = C.icons.lsp.info },
+    hint = { count = get_count(buf, "Hint"), sign = C.icons.lsp.hint },
   }
 end
 
@@ -405,7 +405,7 @@ function M.lsp_status()
       indicator_warnings = C.icons.lsp.warn,
       indicator_info = C.icons.lsp.info,
       indicator_hint = C.icons.lsp.hint,
-      status_symbol = C.icons.lsp.ok,
+      -- status_symbol = C.icons.lsp.ok,
     })
 
     if #vim.lsp.buf_get_clients() > 0 then

@@ -161,9 +161,9 @@ local function on_attach(client, bufnr)
     -- else
     -- # via defaults
     bmap("n", "gd", "lua vim.lsp.buf.definition()")
-    bmap("n", "gD", "lua Trouble lsp_definitions")
+    bmap("n", "gD", "lua TroubleToggle lsp_definitions")
     bmap("n", "gr", "lua vim.lsp.buf.references()")
-    bmap("n", "gR", "lua Trouble lsp_references")
+    bmap("n", "gR", "lua TroubleToggle lsp_references")
     bmap("n", "gs", "lua vim.lsp.buf.document_symbol()")
     bmap("n", "gs", "lua vim.lsp.buf.workspace_symbol()")
     bmap("n", "gi", "lua vim.lsp.buf.implementation()")
@@ -192,8 +192,8 @@ local function on_attach(client, bufnr)
   --- # trouble mappings
   nmap(
     "<leader>lt",
-    "<cmd>LspTroubleToggle document_diagnostics<cr>",
-    { label = "lsp: toggle LspTrouble for document" }
+    "<cmd>TroubleToggle document_diagnostics<cr>",
+    { label = "lsp: toggle Trouble for document diagnostics" }
   )
 
   --- # autocommands/autocmds

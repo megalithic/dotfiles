@@ -32,3 +32,4 @@ flake8-tidy-imports
 isort
 reorder_python_imports
 md-tangle
+ueberzug

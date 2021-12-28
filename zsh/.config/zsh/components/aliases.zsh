@@ -180,6 +180,13 @@ alias essh="nvim $HOME/.ssh/config"
 alias ek="nvim $DOTS/kitty/.config/kitty/kitty.conf"
 alias et="nvim $DOTS/tmux/.tmux.conf"
 
+# ZK/notes/zettelkasten
+# -----------------------------------------------------------------------------
+alias zkn='zk new --title "$*"'
+alias zknc='zk new --print-path --title "$*" | pbcopy'
+alias zkl="zk list $@"
+alias ezk='$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
+
 # FOLDERS
 # -----------------------------------------------------------------------------
 alias dot="cd $DOTS"

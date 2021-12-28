@@ -386,9 +386,9 @@ local disabled_built_ins = {
   "zip",
   "zipPlugin",
 }
--- for _, plugin in pairs(disabled_built_ins) do
---   vim.g["loaded_" .. plugin] = 1
--- end
+for _, plugin in pairs(disabled_built_ins) do
+  vim.g["loaded_" .. plugin] = 1
+end
 
 mega.exec([[
   " Set cursor shape based on mode (:h termcap-cursor-shape)

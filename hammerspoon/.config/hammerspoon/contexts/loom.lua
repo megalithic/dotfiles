@@ -30,6 +30,7 @@ M.apply = function(app, win, event, log)
   -- mute (PTT) by default
   wh.onAppQuit(app, function()
     ptt.setState("push-to-talk")
+    hs.application.get("KeyCastr"):kill()
     init_apply_complete = false
   end)
 end

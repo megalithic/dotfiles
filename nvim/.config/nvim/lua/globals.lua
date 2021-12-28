@@ -36,10 +36,13 @@ end
 mega:load_variables()
 
 mega.dirs.dots = fn.expand("$HOME/.dotfiles")
+mega.dirs.privates = fn.expand("$HOME/.dotfiles/private")
+mega.dirs.code = fn.expand("$HOME/code")
 mega.dirs.icloud = fn.expand("$ICLOUD_DIR")
 mega.dirs.docs = fn.expand("$DOCUMENTS_DIR")
 mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
 mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
+mega.dirs.zk = mega.dirs.zettel
 
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:

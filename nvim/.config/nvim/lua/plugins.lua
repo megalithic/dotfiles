@@ -33,11 +33,8 @@ M.list = {
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
-  -- "folke/which-key.nvim",
   "goolord/alpha-nvim",
-  -- "megalithic/shade.nvim", -- FIXME: too many broke things for various plugins
-  -- "jceb/blinds.nvim",
-  -- "akinsho/bufferline.nvim",
+  -- "folke/which-key.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -131,6 +128,7 @@ M.list = {
   "dinhhuy258/git.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
   "pwntester/octo.nvim", -- https://github.com/ryansch/dotfiles/commit/2d0dc63bea2f921de1236c2800605551fb4b3041#diff-45b8a59e398d12063977c5b27e0d065150544908fd4ad8b3e10b2d003c5f4439R119-R246
+  "gabebw/vim-github-link-opener",
   "ruifm/gitlinker.nvim",
 
   ------------------------------------------------------------------------------
@@ -251,6 +249,10 @@ M.setup = function()
         },
       },
     })
+  end
+
+  do -- gitlinker.nvim
+    require("gitlinker").setup()
   end
 
   do -- vim-matchup
@@ -1084,8 +1086,8 @@ M.setup = function()
             ["<cr>"] = actions.select_vertical + actions.center,
             ["<c-o>"] = actions.select_default + actions.center,
             ["<c-s>"] = actions.select_horizontal,
-            ["<c-n>"] = actions.cycle_history_next,
-            ["<c-p>"] = actions.cycle_history_prev,
+            -- ["<c-n>"] = actions.cycle_history_next,
+            -- ["<c-p>"] = actions.cycle_history_prev,
           },
           n = {
             ["<C-w>"] = actions.send_selected_to_qflist,
@@ -1115,9 +1117,13 @@ M.setup = function()
       extensions = {
         frecency = {
           workspaces = {
-            conf = vim.env.DOTFILES,
-            project = vim.env.PROJECTS_DIR,
-            wiki = vim.g.wiki_path,
+            conf = mega.dirs.dots,
+            privates = mega.dirs.privates,
+            project = mega.dirs.code,
+            notes = mega.dirs.zettel,
+            icloud = mega.dirs.icloud,
+            org = mega.dirs.org,
+            docs = mega.dirs.docs,
           },
         },
         fzf = {

@@ -312,8 +312,8 @@ function dnd() {
 }
 
 function here() {
-  CHANNEL_ID="$GENERAL_CHANNEL_ID"
-  __set_chan_text ":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
+  # CHANNEL_ID="$GENERAL_CHANNEL_ID"
+  # __set_chan_text ":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
 	__set_presence "auto"
 	__end_status
 	__end_dnd
