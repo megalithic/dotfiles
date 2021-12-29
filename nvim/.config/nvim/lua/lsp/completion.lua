@@ -26,7 +26,7 @@ end
 local function setup_luasnip()
   local types = require("luasnip.util.types")
   luasnip.config.set_config({
-    history = false,
+    history = true,
     updateevents = "TextChanged,TextChangedI",
     store_selection_keys = "<Tab>",
     ext_opts = {
@@ -66,6 +66,11 @@ local function setup_cmp()
     api.nvim_feedkeys(t(key), mode or "", true)
   end
 
+  local has_words_before = function()
+    local line, col = unpack(api.nvim_win_get_cursor(0))
+    return col ~= 0 and api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+  end
+
   local function tab(fallback)
     -- local copilot_keys = vim.fn["copilot#Accept"]()
     if cmp.visible() then
@@ -78,6 +83,8 @@ local function setup_cmp()
       luasnip.expand_or_jump()
     elseif api.nvim_get_mode().mode == "c" then
       fallback()
+    elseif has_words_before() then
+      cmp.complete()
     else
       feed("<Plug>(Tabout)")
     end
@@ -165,8 +172,8 @@ local function setup_cmp()
       { name = "path" },
       { name = "emmet_ls" },
     }, {
-      -- M.sources.buffer,
-      { name = "fuzzy_buffer" },
+      M.sources.buffer,
+      -- { name = "fuzzy_buffer" },
     }),
     formatting = {
       deprecated = true,

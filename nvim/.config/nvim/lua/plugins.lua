@@ -559,12 +559,12 @@ M.setup = function()
         max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
       },
       incremental_selection = {
-        enable = false,
+        enable = true,
         keymaps = {
-          init_selection = "<CR>",
-          scope_incremental = "<CR>",
-          node_incremental = "<TAB>",
-          node_decremental = "<S-TAB>",
+          init_selection = "gnn",
+          scope_incremental = "gss",
+          node_incremental = ".",
+          node_decremental = ";",
         },
       },
       -- textsubjects = {
@@ -1276,8 +1276,8 @@ M.setup = function()
       defaults = {
         set_env = { ["TERM"] = vim.env.TERM },
         borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-        prompt_prefix = " ",
-        selection_caret = "» ",
+        prompt_prefix = "  ",
+        selection_caret = "» ", -- ❯
         mappings = {
           i = {
             ["<c-w>"] = actions.send_selected_to_qflist,
@@ -1295,7 +1295,7 @@ M.setup = function()
             ["<C-w>"] = actions.send_selected_to_qflist,
           },
         },
-        file_ignore_patterns = { "%.jpg", "%.jpeg", "%.png", "%.otf", "%.ttf" },
+        file_ignore_patterns = { "%.jpg", "%.jpeg", "%.png", "%.otf", "%.ttf", "EmmyLua.spoon" },
         -- :help telescope.defaults.path_display
         -- path_display = { "smart", "absolute", "truncate" },
         layout_strategy = "flex",
@@ -1314,6 +1314,15 @@ M.setup = function()
         winblend = 3,
         history = {
           path = fn.stdpath("data") .. "/telescope_history.sqlite3",
+        },
+        vimgrep_arguments = {
+          "rg",
+          "--hidden",
+          "--no-heading",
+          "--with-filename",
+          "--line-number",
+          "--column",
+          "--smart-case",
         },
       },
       extensions = {

@@ -33,6 +33,9 @@
 
 --]]
 
+vim.lsp.set_log_level("trace")
+require("vim.lsp.log").set_format_func(vim.inspect)
+
 -- [ leader bindings ] ---------------------------------------------------------
 
 vim.g.mapleader = "," -- Remap leader to ,
@@ -59,5 +62,8 @@ R("lsp").setup()
 R("autocmds")
 R("mappings")
 R("statusline")
+
+-- TODO: https://github.com/BlakeJC94/.dots/blob/master/.config/nvim/lua/commands.lua
+-- R("commands")
 
 -- vim:foldmethod=marker

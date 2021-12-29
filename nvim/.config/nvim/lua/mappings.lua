@@ -1,9 +1,32 @@
+--[[
+  ╭────────────────────────────────────────────────────────────────────────────╮
+  │  Str  │  Help page   │  Affected modes                           │  VimL   │
+  │────────────────────────────────────────────────────────────────────────────│
+  │  ''   │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map   │
+  │  'n'  │  mapmode-n   │  Normal                                   │  :nmap  │
+  │  'v'  │  mapmode-v   │  Visual and Select                        │  :vmap  │
+  │  's'  │  mapmode-s   │  Select                                   │  :smap  │
+  │  'x'  │  mapmode-x   │  Visual                                   │  :xmap  │
+  │  'o'  │  mapmode-o   │  Operator-pending                         │  :omap  │
+  │  '!'  │  mapmode-ic  │  Insert and Command-line                  │  :map!  │
+  │  'i'  │  mapmode-i   │  Insert                                   │  :imap  │
+  │  'l'  │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap  │
+  │  'c'  │  mapmode-c   │  Command-line                             │  :cmap  │
+  │  't'  │  mapmode-t   │  Terminal                                 │  :tmap  │
+  ╰────────────────────────────────────────────────────────────────────────────╯
+--]]
+
+-- REFS:
+-- https://github.com/BlakeJC94/.dots/blob/master/.config/nvim/lua/mappings.lua
+-- https://github.com/rafamadriz/NeoCode/blob/main/lua/core/mappings.lua
+
 local cmd = vim.cmd
 local map = mega.map
 local command = mega.command
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns
 local exec = mega.exec
 
+-- REF: https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/which-key.lua
 local has_wk, wk = mega.safe_require("which-key")
 if has_wk then
   wk.setup({
@@ -248,24 +271,6 @@ if has_wk then
   wk.register(v_mappings, { mode = "v" })
 end
 
---[[
-  ╭────────────────────────────────────────────────────────────────────────────────────────────────────╮
-  │  String value  │  Help page   │  Affected modes                           │  Vimscript equivalent  │
-  │────────────────────────────────────────────────────────────────────────────────────────────────────│
-  │  ''            │  mapmode-nvo │  Normal, Visual, Select, Operator-pending │  :map                  │
-  │  'n'           │  mapmode-n   │  Normal                                   │  :nmap                 │
-  │  'v'           │  mapmode-v   │  Visual and Select                        │  :vmap                 │
-  │  's'           │  mapmode-s   │  Select                                   │  :smap                 │
-  │  'x'           │  mapmode-x   │  Visual                                   │  :xmap                 │
-  │  'o'           │  mapmode-o   │  Operator-pending                         │  :omap                 │
-  │  '!'           │  mapmode-ic  │  Insert and Command-line                  │  :map!                 │
-  │  'i'           │  mapmode-i   │  Insert                                   │  :imap                 │
-  │  'l'           │  mapmode-l   │  Insert, Command-line, Lang-Arg           │  :lmap                 │
-  │  'c'           │  mapmode-c   │  Command-line                             │  :cmap                 │
-  │  't'           │  mapmode-t   │  Terminal                                 │  :tmap                 │
-  ╰────────────────────────────────────────────────────────────────────────────────────────────────────╯
---]]
-
 -- [convenience mappings] ------------------------------------------------------
 
 -- make the tab key match bracket pairs
@@ -433,8 +438,8 @@ nnoremap("<leader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1)
 -- map("v", "d", '"_d', { noremap = true })
 
 -- Join / Split Lines
-nnoremap("J", "mzJ`z") -- Join lines and keep our cursor stabilized
-nnoremap("S", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w") -- Split line
+nnoremap("gJ", "mzJ`z", "Join Lines") -- Join lines and keep our cursor stabilized
+nnoremap("gS", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "Split Lines") -- Split line
 
 -- Jumplist mutations and dealing with word wrapped lines
 nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
