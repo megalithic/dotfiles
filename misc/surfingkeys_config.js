@@ -22,18 +22,15 @@ settings.defaultSearchEngine = "d"; // duck duck go
 settings.focusAfterClosed = "left";
 settings.hintAlign = "left";
 settings.smoothScroll = false;
-settings.tabsThreshold = 0;
 settings.omnibarSuggestionTimeout = 500;
 settings.richHintsForKeystroke = 1;
-
-settings.defaultSearchEngine = "d";
-settings.hintAlign = "left";
 settings.omnibarPosition = "bottom";
 settings.focusFirstCandidate = false;
 settings.focusAfterClosed = "last";
-settings.scrollStepSize = 200;
+settings.scrollStepSize = 100;
 settings.tabsThreshold = 7;
 settings.modeAfterYank = "Normal";
+settings.useNeovim = true;
 
 // set hints style
 if (typeof Hints !== "undefined") {
@@ -75,7 +72,7 @@ map("L", "D");
 // set theme
 settings.theme = `
 :root {
-  --font: "DejaVu Sans", DejaVu, Arial, sans-serif;
+  --font: "JetBrains Mono", Arial, sans-serif;
   --font-size: 14;
   --font-weight: bold;
   --fg: #E5E9F0;
