@@ -318,6 +318,11 @@ return lush(function()
     DiagnosticInfo({ BlueSign }),
     DiagnosticHint({ AquaSign }),
 
+    DiagnosticErrorBorder({ RedSign, bg = nil }),
+    DiagnosticWarnBorder({ YellowSign, bg = nil }),
+    DiagnosticInfoBorder({ BlueSign, bg = nil }),
+    DiagnosticHintBorder({ AquaSign, bg = nil }),
+
     TermCursor({ Cursor }),
 
     ---- :help health ----------------------------

@@ -253,10 +253,10 @@ M.lsp.line_diagnostics = function()
   end
 
   local border_color = ({
-    [vim.diagnostic.severity.HINT] = "DiagnosticHint",
-    [vim.diagnostic.severity.INFO] = "DiagnosticInfo",
-    [vim.diagnostic.severity.WARN] = "DiagnosticWarn",
-    [vim.diagnostic.severity.ERROR] = "DiagnosticError",
+    [vim.diagnostic.severity.HINT] = "DiagnosticHintBorder",
+    [vim.diagnostic.severity.INFO] = "DiagnosticInfoBorder",
+    [vim.diagnostic.severity.WARN] = "DiagnosticWarnBorder",
+    [vim.diagnostic.severity.ERROR] = "DiagnosticErrorBorder",
   })[max_severity]
 
   local winnr = vim.api.nvim_open_win(floating_bufnr, false, {
@@ -266,16 +266,7 @@ M.lsp.line_diagnostics = function()
     row = 1,
     col = 1,
     style = "minimal",
-    border = {
-      { "╭", border_color },
-      { "─", border_color },
-      { "╮", border_color },
-      { "│", border_color },
-      { "╯", border_color },
-      { "─", border_color },
-      { "╰", border_color },
-      { "│", border_color },
-    },
+    border = mega.get_border(border_color),
   })
 
   M.lsp.close_preview_autocmd(
