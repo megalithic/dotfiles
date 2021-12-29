@@ -153,29 +153,15 @@ local function on_attach(client, bufnr)
   -- end
 
   --- # goto mappings
-  if pcall(require, "fzf-lua") then
-    --- # via fzf-lua
-    --   bmap("n", "gd", "lua require('fzf-lua').lsp_definitions()", { label = "lsp: go to definition" })
-    --   bmap("n", "gD", "lua require('utils').lsp.preview('textDocument/definition')")
-    --   bmap("n", "gr", "lua require('fzf-lua').lsp_references()", { label = "lsp: go to references" })
-    --   bmap("n", "gt", "lua require('fzf-lua').lsp_typedefs()", { label = "lsp: go to type definitions" })
-    --   bmap("n", "gs", "lua require('fzf-lua').lsp_document_symbols()", { label = "lsp: go to document symbols" })
-    --   bmap("n", "gw", "lua require('fzf-lua').lsp_workspace_symbols()", { label = "lsp: go to workspace symbols" })
-    --   bmap("n", "gi", "lua require('fzf-lua').lsp_implementations()", { label = "lsp: go to implementations" })
-    --   bmap("n", "<leader>la", "lua require('fzf-lua').lsp_code_actions()", { label = "lsp: go to code actions" })
-    --   bmap("n", "<leader>ca", "lua require('fzf-lua').lsp_code_actions()", { label = "lsp: go to code actions" })
-    -- else
-    -- # via defaults
-    bmap("n", "gd", "lua vim.lsp.buf.definition()")
-    bmap("n", "gD", "lua TroubleToggle lsp_definitions")
-    bmap("n", "gr", "lua vim.lsp.buf.references()")
-    bmap("n", "gR", "lua TroubleToggle lsp_references")
-    bmap("n", "gs", "lua vim.lsp.buf.document_symbol()")
-    bmap("n", "gs", "lua vim.lsp.buf.workspace_symbol()")
-    bmap("n", "gi", "lua vim.lsp.buf.implementation()")
-    bmap("n", "gca", "lua vim.lsp.buf.code_action()")
-    bmap("x", "gca", "<esc><cmd>lua vim.lsp.buf.range_code_action()<cr>")
-  end
+  bmap("n", "gd", "lua vim.lsp.buf.definition()")
+  bmap("n", "gD", "lua TroubleToggle lsp_definitions")
+  bmap("n", "gr", "lua vim.lsp.buf.references()")
+  bmap("n", "gR", "lua TroubleToggle lsp_references")
+  bmap("n", "gs", "lua vim.lsp.buf.document_symbol()")
+  bmap("n", "gs", "lua vim.lsp.buf.workspace_symbol()")
+  bmap("n", "gi", "lua vim.lsp.buf.implementation()")
+  bmap("n", "gca", "lua vim.lsp.buf.code_action()")
+  bmap("x", "gca", "<esc><cmd>lua vim.lsp.buf.range_code_action()<cr>")
 
   --- # diagnostics navigation mappings
   bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })

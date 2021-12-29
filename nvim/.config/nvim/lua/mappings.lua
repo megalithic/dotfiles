@@ -583,20 +583,6 @@ map("n", "<leader>D", "<cmd>DashWord<CR>")
 -- map("n", "<F5>", mega.sync_plugins())
 map("n", "<F5>", "<cmd>lua mega.sync_plugins()<cr>")
 
--- # fzf-lua
-map("n", "<leader>ff", "<cmd>lua require('fzf-lua').files()<cr>", "fzf: find files")
-map("n", "<leader>fb", "<cmd>lua require('fzf-lua').buffers()<cr>", "fzf: find buffers")
-map("n", "<leader>fm", "<cmd>lua require('fzf-lua').oldfiles()<cr>", "fzf: find old files")
-map("n", "<leader>fk", "<cmd>lua require('fzf-lua').keymaps()<cr>", "fzf: find keymaps")
-map("n", "<leader>fh", "<cmd>lua require('fzf-lua').help_tags()<cr>", "fzf: find help tags")
-map("n", "<leader>a", "<cmd>lua require('fzf-lua').live_grep()<cr>", "fzf: live grep for a word")
-map("n", "<leader>A", "<cmd>lua require('fzf-lua').grep_cword()<cr>", "fzf: grep for word under cursor")
-map("v", "<leader>A", "<cmd>lua require('fzf-lua').grep_visual()<cr>", "fzf: grep for selected word(s)")
--- TODO: figure out how to use shortened paths
-map("n", "<leader>fo", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.org, prompt = "ORG  " })<cr>]])
-map("n", "<leader>fz", [[<cmd>lua require("fzf-lua").files({ cwd = mega.dirs.zettel, prompt = "ZK  " })<cr>]])
-map("n", "<leader>fp", [[<cmd>lua require("fzf-lua").files({ cwd = "~/.dotfiles/private", prompt = "PRIV  " })<cr>]])
-
 do -- # telescope
   local builtins = require("telescope.builtin")
   map("n", "<leader>ff", builtins.find_files, "telescope: find files")

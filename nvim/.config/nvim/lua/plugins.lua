@@ -89,8 +89,7 @@ M.list = {
   -- "romgrk/nvim-treesitter-context",
 
   ------------------------------------------------------------------------------
-  -- (FZF/file/document navigation) --
-  "ibhagwan/fzf-lua",
+  -- (FZF/telescope/file/document navigation) --
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
@@ -862,7 +861,7 @@ M.setup = function()
         fader = specs.linear_fader,
         resizer = specs.slide_resizer,
       },
-      ignore_filetypes = { "fzf", "NvimTree", "alpha" },
+      ignore_filetypes = { "Telescope", "fzf", "NvimTree", "alpha" },
       ignore_buftypes = {
         nofile = true,
       },
@@ -1683,75 +1682,6 @@ M.setup = function()
     )
   end
 
-  do -- fzf-lua.nvim
-    local actions = require("fzf-lua.actions")
-    require("fzf-lua").setup({
-      -- fzf_args = vim.env.FZF_DEFAULT_OPTS .. " --border rounded",
-      fzf_layout = "default",
-      winopts = {
-        height = 0.6,
-        width = 0.65,
-        border = false,
-        preview = { default = "bat_native", scrollbar = false },
-      },
-      previewers = {
-        bat = {
-          cmd = "bat",
-          args = "--style=numbers,changes --color=always",
-          theme = "Forest%20Night%20Italic",
-          config = nil,
-        },
-      },
-      oldfiles = {
-        actions = {
-          ["default"] = actions.file_vsplit,
-          ["ctrl-t"] = actions.file_tabedit,
-          ["ctrl-o"] = actions.file_edit,
-        },
-      },
-      files = {
-        multiprocess = true,
-        prompt = string.format("files %s ", C.icons.prompt_symbol),
-        fd_opts = [[--type f --follow --hidden --color=always]]
-          .. [[ -E '.git' -E 'node_modules' -E '*.png' -E '*.jpg' -E '**/Spoons' -E '.yarn' ]]
-          .. [[ --ignore-file '.gitignore']],
-        color_icons = true,
-        git_icons = false,
-        git_diff_cmd = "git diff --name-status --relative HEAD",
-        actions = {
-          ["default"] = actions.file_vsplit,
-          ["ctrl-t"] = actions.file_tabedit,
-          ["ctrl-o"] = actions.file_edit,
-        },
-      },
-      grep = {
-        multiprocess = true,
-        input_prompt = string.format("grep for %s ", C.icons.prompt_symbol),
-        prompt = string.format("grep %s ", C.icons.prompt_symbol),
-        continue_last_search = false,
-        actions = {
-          ["default"] = actions.file_vsplit,
-          ["ctrl-t"] = actions.file_tabedit,
-          ["ctrl-o"] = actions.file_edit,
-        },
-      },
-      lsp = {
-        prompt = string.format("%s ", C.icons.prompt_symbol),
-        cwd_only = false, -- LSP/diagnostics for cwd only?
-        async_or_timeout = false,
-        jump_to_single_result = true,
-        actions = {
-          ["default"] = actions.file_vsplit,
-          ["ctrl-t"] = actions.file_tabedit,
-          ["ctrl-o"] = actions.file_edit,
-        },
-      },
-      buffers = {
-        prompt = string.format("buffers %s ", C.icons.prompt_symbol),
-      },
-    })
-  end
-
   do -- alpha.nvim
     local alpha = require("alpha")
     local dashboard = require("alpha.themes.dashboard")
@@ -1790,21 +1720,9 @@ M.setup = function()
 
     dashboard.section.header.opts.hl = pick_color()
     dashboard.section.buttons.val = {
-      button(
-        "m",
-        "  Recently opened files",
-        "<cmd>lua require('fzf-lua').oldfiles({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
-      ),
-      button(
-        "f",
-        "  Find file",
-        "<cmd>lua require('fzf-lua').files({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
-      ),
-      button(
-        "a",
-        "  Find word",
-        "<cmd>lua require('fzf-lua').live_grep({actions = {['default'] = require('fzf-lua.actions').file_edit}})<cr>"
-      ),
+      button("m", "  Recently opened files", "<cmd>lua require('telescope').oldfiles()<cr>"),
+      button("f", "  Find file", "<cmd>lua require('telescope').find_files()<cr>"),
+      button("a", "  Find word", "<cmd>lua require('telescope').live_grep()<cr>"),
       button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
       button("p", "  Update plugins", "<cmd>lua mega.sync_plugins()<CR>"),
       button("q", "  Quit", "<cmd>qa<CR>"),
