@@ -19,6 +19,7 @@
 -- REFS:
 -- https://github.com/BlakeJC94/.dots/blob/master/.config/nvim/lua/mappings.lua
 -- https://github.com/rafamadriz/NeoCode/blob/main/lua/core/mappings.lua
+-- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 
 local cmd = vim.cmd
 local map = mega.map
@@ -631,7 +632,7 @@ nmap("<leader>tp", "<cmd>:AV<CR>", "project: open alternate file")
 -- nmap <silent> <leader>to :copen<CR>
 
 -- vim.api.nvim_set_keymap("n", "gx", [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]], {})
-nnoremap("gx", [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]])
+nnoremap("gx", [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]], "go to link under cursor")
 
 -- # commands
 

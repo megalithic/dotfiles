@@ -5,32 +5,40 @@
 // - https://github.com/Foldex/surfingkeys-config/blob/master/config.js
 // - https://gist.github.com/Stvad/02d3d40b08e9505c548e00bba05ccea0
 // - https://github.com/b0o/surfingkeys-conf
+// - https://github.com/mindgitrwx/personal_configures/blob/master/Surfingkeys-config-ko-dev.js
 //
-// debugging:
+// TODO:
+// - https://brookhong.github.io/2018/11/18/bring-focus-back-to-page-content-from-address-bar.html
+// - https://github.com/brookhong/Surfingkeys/wiki/FAQ#how-to-go-to-nth-tab
+// - https://github.com/glacambre/firenvim
+
+// DEBUGGING:
 console.log(Object.keys(api));
+
 const { map, mapkey, Visual, Hints } = api;
-console.log({ map, mapkey, Visual, Hints });
 
-// previous/next tab
-map("<Ctrl-l>", "R");
-map("<Ctrl-h>", "E");
+// settings.aceKeybindings = 'emacs';
+settings.defaultSearchEngine = "d"; // duck duck go
+settings.focusAfterClosed = "left";
+settings.hintAlign = "left";
+settings.smoothScroll = false;
+settings.tabsThreshold = 0;
+settings.omnibarSuggestionTimeout = 500;
+settings.richHintsForKeystroke = 1;
 
-// close current tab
-map("<Ctrl-w>", "x");
-
-// page up/down
-map("<Ctrl-f>", "d");
-map("<Ctrl-b>", "e");
-
-// history Back/Forward
-map("H", "S");
-map("L", "D");
-// api.mapkey("K", "#1Click on the previous link on current page", previousPage);
-// api.mapkey("J", "#1Click on the next link on current page", nextPage);
+settings.defaultSearchEngine = "d";
+settings.hintAlign = "left";
+settings.omnibarPosition = "bottom";
+settings.focusFirstCandidate = false;
+settings.focusAfterClosed = "last";
+settings.scrollStepSize = 200;
+settings.tabsThreshold = 7;
+settings.modeAfterYank = "Normal";
 
 // set hints style
 if (typeof Hints !== "undefined") {
   Hints.characters = "qwertasdfgzxcvb";
+  // Hints.characters = "asdfgyuiopqwertnmzxcvb";
   Hints.style("border: solid 2px #4C566A; color:#A3BE8C; background: initial; background-color: #3B4252;");
   Hints.style(
     "border: solid 2px #4C566A !important; padding: 1px !important; color: #E5E9F0 !important; background: #3B4252 !important;",
@@ -43,6 +51,26 @@ if (typeof Visual !== "undefined") {
   Visual.style("marks", "background-color: #A3BE8C99;");
   Visual.style("cursor", "background-color: #88C0D0;");
 }
+
+// previous/next tab
+map("<Ctrl-l>", "R");
+map("<Ctrl-h>", "E");
+
+// close current tab
+map("<Ctrl-w>", "x");
+
+// page up/down
+map("<Ctrl-f>", "d");
+map("<Ctrl-b>", "e");
+
+// search opened tabs with `gt`
+map("gt", "T");
+
+// history Back/Forward
+map("H", "S");
+map("L", "D");
+// api.mapkey("K", "#1Click on the previous link on current page", previousPage);
+// api.mapkey("J", "#1Click on the next link on current page", nextPage);
 
 // set theme
 settings.theme = `
@@ -240,15 +268,6 @@ input {
   font-weight: var(--font-weight);
 }
 `;
-
-// settings.aceKeybindings = 'emacs';
-settings.defaultSearchEngine = "d"; // duck duck go
-settings.focusAfterClosed = "left";
-settings.hintAlign = "left";
-settings.smoothScroll = false;
-settings.tabsThreshold = 0;
-settings.omnibarSuggestionTimeout = 500;
-settings.richHintsForKeystroke = 1;
 
 // const commands = {
 //   import: function () {},

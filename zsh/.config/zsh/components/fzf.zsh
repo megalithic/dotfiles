@@ -26,7 +26,7 @@ if has fzf; then
   --no-multi
   --no-border
   --preview-window=right:60%:wrap
-  --margin=0,1
+  --margin=0,0
   --preview 'bat --color=always --style=header,grid --line-range :300 {}'
   "
 

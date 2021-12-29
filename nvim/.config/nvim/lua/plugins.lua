@@ -139,7 +139,6 @@ M.list = {
   -- "tjdevries/edit_alternate.vim",
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
-
   "tpope/vim-ragtag",
   -- { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
@@ -150,6 +149,12 @@ M.list = {
   "tpope/vim-dadbod",
   "kristijanhusak/vim-dadbod-completion",
   "kristijanhusak/vim-dadbod-ui",
+  {
+    "glacambre/firenvim",
+    run = function()
+      vim.fn["firenvim#install"](0)
+    end,
+  },
 
   ------------------------------------------------------------------------------
   -- (the rest...) --
@@ -1085,6 +1090,58 @@ M.setup = function()
     vim.g.git_messenger_max_popup_height = 100
   end
 
+  do -- firenvim
+    -- REFS:
+    -- * https://github.com/cgardner/dotfiles-bare/blob/master/.config/nvim/lua/plugins/firenvim.lua#L3-L9
+    vim.g.firenvim_config = {
+      globalSettings = {
+        alt = "all",
+      },
+      localSettings = {
+        [".*"] = {
+          cmdline = "neovim",
+          content = "text",
+          priority = 0,
+          selector = "textarea",
+          takeover = "never", -- disable until called with firefox hotkey <C-e>
+        },
+      },
+    }
+
+    if vim.g.started_by_firenvim ~= nil then
+      vim.opt.cmdheight = 1
+      -- selene: allow(global_usage)
+      function _G.set_firenvim_settings()
+        local min_lines = 18
+        if vim.opt.lines < min_lines then
+          vim.opt.lines = min_lines
+        end
+
+        vim.opt.guifont = [[Jetbrains Nerd Font:h13]]
+        vim.opt.wrap = true
+        vim.opt.number = false
+        vim.opt.relativenumber = false
+        vim.opt.signcolumn = "no"
+        vim.opt.list = true
+        vim.opt.linebreak = true
+        vim.opt.breakindentopt = true
+        vim.opt.colorcolumn = 0
+        vim.cmd("startinsert")
+      end
+
+      vim.cmd([[
+        function! OnUIEnter(event) abort
+          if 'Firenvim' ==# get(get(nvim_get_chan_info(a:event.chan), 'client', {}), 'name', '')
+            lua _G.set_firenvim_settings()
+          endif
+        endfunction
+        autocmd UIEnter * call OnUIEnter(deepcopy(v:event))
+        au BufEnter github.com_*.txt,gitlab.com_*.txt,mattermost.*.txt,mail.google.com_*.txt set filetype=markdown
+        au BufEnter mail.google.com_*.txt set tw=80
+      ]])
+    end
+  end
+
   do -- nvim-dap
     local dap = require("dap")
     dap.adapters.mix_task = {
@@ -1366,6 +1423,7 @@ M.setup = function()
         fzf = {
           override_generic_sorter = true, -- override the generic sorter
           override_file_sorter = true, -- override the file sorter
+          case_mode = "smart_case", -- or "ignore_case" or "respect_case"
         },
       },
       pickers = {
@@ -1492,6 +1550,11 @@ M.setup = function()
   end
 
   do -- zk
+    -- REFS:
+    -- https://github.com/mbriggs/nvim/blob/main/lua/mb/zk.lua
+    -- https://github.com/pwntester/dotfiles/blob/master/config/nvim/lua/pwntester/zk.lua
+    -- https://github.com/kabouzeid/dotfiles/blob/main/config/nvim/lua/lsp-settings.lua#L160-L198
+
     local zk = require("zk")
 
     vim.cmd("command! ZkNotes lua require('telescope').extensions.zk.notes()")

@@ -97,12 +97,13 @@ local function setup_lsp_handlers()
     border = mega.get_border(),
     max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
+    focusable = false,
+    silent = true,
+    severity_sort = true,
   }
   lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, float_opts)
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, float_opts)
-  lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, {
-    severity_sort = true,
-  })
+  lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, float_opts)
 end
 
 -- our on_attach function to pass to each language server config..
@@ -114,21 +115,21 @@ local function on_attach(client, bufnr)
   require("lsp-status").on_attach(client)
   utils.lsp.format_setup(client, bufnr)
 
-  -- require("lsp_signature").on_attach({
-  --   bind = true,
-  --   fix_pos = function(signatures, _client)
-  --     if signatures[1].activeParameter >= 0 and #signatures[1].parameters == 1 then
-  --       return false
-  --     end
-  --     if _client.name == "sumneko_lua" then
-  --       return true
-  --     end
-  --     return false
-  --   end,
-  --   auto_close_after = 15, -- close after 15 seconds
-  --   hint_enable = true,
-  --   handler_opts = { border = mega.get_border() },
-  -- })
+  require("lsp_signature").on_attach({
+    bind = true,
+    fix_pos = function(signatures, _client)
+      if signatures[1].activeParameter >= 0 and #signatures[1].parameters == 1 then
+        return false
+      end
+      if _client.name == "sumneko_lua" then
+        return true
+      end
+      return false
+    end,
+    auto_close_after = 15, -- close after 15 seconds
+    hint_enable = true,
+    handler_opts = { border = mega.get_border() },
+  })
 
   if client.resolved_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr)
@@ -182,7 +183,11 @@ local function on_attach(client, bufnr)
   bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
-  bmap("n", "<leader>lD", "lua vim.diagnostic.open_float()")
+  bmap(
+    "n",
+    "<leader>lD",
+    [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" }, source = "always" })]]
+  )
   bmap("n", "<leader>lp", "lua require('utils').lsp.peek_definition()", { label = "lsp: peek definition" })
 
   --- # misc mappings
