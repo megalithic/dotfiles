@@ -48,6 +48,8 @@ magic seems to handle linking things right to where weechat works with it.
 - https://www.weechat.org/files/doc/stable/weechat_user.en.html#secured_data
 - http://www.futurile.net/2020/11/30/weechat-for-slack/
 - http://www.futurile.net/2020/12/01/weechat-even-more-configuration-for-irc-and-slack/
+- https://gist.github.com/pascalpoitras/8406501
+- https://i.pinimg.com/originals/f6/bb/c6/f6bbc677af6291972006bdd08e297068.png
 
 #### TODO
 

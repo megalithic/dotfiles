@@ -4,11 +4,13 @@ local cmp = require("cmp")
 local luasnip = require("luasnip")
 local utils = require("utils")
 local t = mega.replace_termcodes
+local C = require("colors")
 
 local M = {
   sources = {},
 }
 
+-- Unused for now; maybe later?
 local function setup_copilot()
   vim.g.copilot_no_tab_map = true
   vim.g.copilot_assume_mapped = true
@@ -60,34 +62,6 @@ end
 
 local function setup_cmp()
   -- [nvim-cmp] --
-  local kind_icons = {
-    Text = " text", -- Text
-    Method = " method", -- Method
-    Function = " function", -- Function
-    Constructor = " constructor", -- Constructor
-    Field = "ﰠ field", -- Field
-    Variable = " variable", -- Variable
-    Class = " class", -- Class
-    Interface = "ﰮ interface", -- Interface
-    Module = " module", -- Module
-    Property = " property", -- Property
-    Unit = " unit", -- Unit
-    Value = " value", -- Value
-    Enum = "了enum", -- Enum 
-    Keyword = " keyword", -- Keyword
-    Snippet = " snippet", -- Snippet
-    Color = " color", -- Color
-    File = " file", -- File
-    Reference = " ref", -- Reference
-    Folder = " folder", -- Folder
-    EnumMember = " enum member", -- EnumMember
-    Constant = " const", -- Constant
-    Struct = "פּ struct", -- Struct
-    Event = "鬒event", -- Event
-    Operator = "\u{03a8} operator", -- Operator
-    TypeParameter = " type param", -- TypeParameter
-  }
-
   local function feed(key, mode)
     api.nvim_feedkeys(t(key), mode or "", true)
   end
@@ -191,29 +165,14 @@ local function setup_cmp()
       { name = "path" },
       { name = "emmet_ls" },
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      -- M.sources.buffer,
+      { name = "fuzzy_buffer" },
     }),
-    -- sorting = {
-    --   priority_weight = 1.1,
-    --   comparators = {
-    --     function(...)
-    --       return require("cmp_buffer"):compare_locality(...)
-    --     end,
-    --     compare.offset,
-    --     compare.exact,
-    --     compare.score,
-    --     compare.kind,
-    --     compare.sort_text,
-    --     compare.length,
-    --     compare.order,
-    --   },
-    -- },
     formatting = {
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       format = function(entry, item)
-        item.kind = kind_icons[item.kind]
+        item.kind = C.icons.lsp.kind[item.kind]
         item.menu = ({
           luasnip = "[lsnip]",
           nvim_lua = "[lua]",
@@ -232,8 +191,8 @@ local function setup_cmp()
   cmp.setup.cmdline("?", M.sources.search)
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
-      -- { name = "fuzzy_path" },
-      { name = "path" },
+      { name = "fuzzy_path" },
+      -- { name = "path" },
     }, {
       { name = "cmdline" },
     }),

@@ -142,8 +142,24 @@ local function on_attach(client, bufnr)
     handler_opts = { border = "rounded" },
   })
 
-  if client.server_capabilities.colorProvider then
+  if client.resolved_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr)
+  end
+
+  if client.resolved_capabilities.document_highlight then
+    api.nvim_exec(
+      [[
+    hi LspReferenceRead cterm=bold ctermbg=red guibg=#464646
+    hi LspReferenceText cterm=bold ctermbg=red guibg=#464646
+    hi LspReferenceWrite cterm=bold ctermbg=red guibg=#464646
+    augroup lsp_document_highlight
+      autocmd! * <buffer>
+      autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
+      autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
+    augroup END
+  ]],
+      false
+    )
   end
 
   --- # goto mappings
@@ -178,6 +194,7 @@ local function on_attach(client, bufnr)
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
   bmap("n", "<leader>lD", "lua vim.diagnostic.open_float()")
+  bmap("n", "<leader>lp", "lua require('utils').lsp.peek_definition()", { label = "lsp: peek definition" })
 
   --- # misc mappings
   bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
@@ -266,6 +283,50 @@ local function on_attach(client, bufnr)
   end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+  vim.notify(fmt("LSP: %s (%s)", client.name, bufnr))
+
+  local b_mappings = {
+    ["<leader>"] = {
+      l = {
+        name = "LSP",
+        [","] = { "LSP stop" },
+        [",a"] = { "<cmd>LspStop<cr>", "stop all" },
+        [",s"] = { "select" },
+        A = "code actions (range)",
+        D = "diagnostics (project)",
+        S = "symbols (project)",
+        a = "code actions (cursor)",
+        c = "clear diagnostics",
+        d = "diagnostics (buffer)",
+        f = "format",
+        g = { name = "go to" },
+        gD = "declaration",
+        gd = "definition",
+        gi = "implementation",
+        gr = "references",
+        gy = "type definition",
+        h = "hover",
+        i = "LSP info",
+        k = "signature help",
+        l = "line diagnostics",
+        p = "peek definition",
+        r = "rename",
+        n = "rename",
+        s = "symbols (buffer)",
+      },
+    },
+    ["g"] = {
+      ["D"] = "LSP declaration",
+      ["d"] = "LSP definition",
+      ["h"] = "LSP documentation",
+      ["i"] = "LSP implementation",
+      ["r"] = "LSP references",
+      ["y"] = "LSP type definition",
+    },
+  }
+
+  local wk = require("which-key")
+  wk.register(b_mappings)
 end
 
 local function setup_lsp_capabilities()
@@ -276,6 +337,20 @@ local function setup_lsp_capabilities()
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.snippetSupport = true
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+  capabilities.textDocument.completion.completionItem.snippetSupport = true
+  capabilities.textDocument.completion.completionItem.preselectSupport = true
+  capabilities.textDocument.completion.completionItem.insertReplaceSupport = true
+  capabilities.textDocument.completion.completionItem.labelDetailsSupport = true
+  capabilities.textDocument.completion.completionItem.deprecatedSupport = true
+  capabilities.textDocument.completion.completionItem.commitCharactersSupport = true
+  capabilities.textDocument.completion.completionItem.tagSupport = { valueSet = { 1 } }
+  capabilities.textDocument.completion.completionItem.resolveSupport = {
+    properties = {
+      "documentation",
+      "detail",
+      "additionalTextEdits",
+    },
+  }
   return capabilities
 end
 
@@ -534,10 +609,6 @@ local function setup_lsp_servers()
             preloadFileSize = 500,
             maxPreload = 500,
             library = vim.api.nvim_get_runtime_file("", true),
-            -- library = {
-            --   [vim.fn.expand("$VIMRUNTIME/lua")] = true,
-            --   [vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-            -- },
           },
           telemetry = {
             enable = false,

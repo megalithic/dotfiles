@@ -34,7 +34,7 @@ M.list = {
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
   "goolord/alpha-nvim",
-  -- "folke/which-key.nvim",
+  "folke/which-key.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -85,6 +85,7 @@ M.list = {
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
   "SmiteshP/nvim-gps",
+  -- "primeagen/harpoon",
   -- "romgrk/nvim-treesitter-context",
 
   ------------------------------------------------------------------------------
@@ -133,7 +134,7 @@ M.list = {
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
-  "ahmedkhalf/project.nvim",
+  -- "ahmedkhalf/project.nvim",
   "tpope/vim-projectionist",
   -- "tjdevries/edit_alternate.vim",
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
@@ -251,6 +252,204 @@ M.setup = function()
     })
   end
 
+  -- do -- which-key
+  --   local wk = require("which-key")
+  --   local gl = require("gitlinker")
+  --   local gla = require("gitlinker.actions")
+
+  --   -- alt modes
+  --   wk.register({
+  --     ["<leader>"] = {
+  --       g = {
+  --         l = {
+  --           function()
+  --             gl.get_buf_range_url("v", {
+  --               action_callback = gla.open_in_browser,
+  --             })
+  --           end,
+  --           "Web Link",
+  --           mode = "v",
+  --         },
+  --       },
+  --       c = {
+  --         s = { "<cmd>Sort<cr>", "Sort", mode = "v" },
+  --       },
+  --     },
+  --   })
+
+  --   wk.register({
+  --     ["<leader>"] = {
+  --       [";"] = { [[<cmd>Telescope find_files<cr>]], "Find File" },
+  --       ["<space>"] = { [[<cmd>Telescope oldfiles<cr>]], "Find Old File" },
+  --       ["<cr>"] = { [[<cmd>bp | sp | bn | bd<cr>]], "Close Buffer" },
+  --       [":"] = { [[<cmd>q<cr>]], "Close Window" },
+  --       ["-"] = { [[<cmd>only<cr>]], "Close other splits" },
+  --       ["'"] = { [[<cmd>vs<cr>]], "Split" },
+  --       ["\""] = { [[<cmd>sp<cr>]], "Horizontal Split" },
+  --       ["."] = { [[<cmd>Telescope coc definitions<cr>]], "Go to Definition" },
+  --       [">"] = { [[<cmd>Telescope coc references_used<cr>]], "Go to other references" },
+  --       [","] = { "<cmd>NnnPicker %:p:h<cr>", "File Picker" },
+  --       ["|"] = { "<cmd>NnnExplorer %:p:h<cr>", "Explore Files" },
+  --       ["/"] = {
+  --         function()
+  --           print("Current Buffer: " .. vim.api.nvim_buf_get_name(0))
+  --         end,
+  --         "Current Buffer",
+  --       },
+  --       f = {
+  --         name = "+find",
+  --         b = { [[<cmd>Telescope current_buffer_fuzzy_find<cr>]], "Find within buffer" },
+  --         k = { [[<cmd>Telescope dap list_breakpoints<cr>]], "Find Breakpoints" },
+  --         r = { [[<cmd>Telescope coc references<cr>]], "Find References" },
+  --         i = { [[<cmd>Telescope coc implementations<cr>]], "Find Implementations" },
+  --         f = { [[<cmd>Telescope live_grep<cr>]], "Live Grep" },
+  --         t = { [[<cmd>Telescope coc type_definitions<cr>]], "Type Definitions" },
+  --         s = { [[<cmd>Telescope search_history<cr>]], "Previous Searches" },
+  --         g = { [[<cmd>Telescope git_files<cr>]], "Git Files" },
+  --         m = { [[<cmd>Telescope coc document_symbols<cr>]], "Document Symbols" },
+  --         w = { [[<cmd>Telescope coc workspace_symbols<cr>]], "Workspace Symbols" },
+  --       },
+  --       h = {
+  --         name = "+github",
+  --         p = {
+  --           name = "+pr",
+  --           n = { [[<cmd>Octo pr create<cr>]], "Create PR" },
+  --           l = { [[<cmd>Octo pr list<cr>]], "List Open PRs" },
+  --           o = { [[<cmd>Octo pr checkout<cr>]], "Checkout current PR" },
+  --           e = { [[<cmd>Octo pr edit<cr>]], "Edit PR" },
+  --           m = { [[<cmd>Octo pr merge<cr>]], "Merge PR" },
+  --           c = { [[<cmd>Octo pr commits<cr>]], "PR Commits" },
+  --           k = { [[<cmd>Octo pr checks<cr>]], "State of PR Checks" },
+  --           d = { [[<cmd>Octo pr diff<cr>]], "PR Diff" },
+  --           b = { [[<cmd>Octo pr browser<cr>]], "Open PR in Browser" },
+  --           y = { [[<cmd>Octo pr url<cr>]], "Copy PR URL to clipboard" },
+  --           r = { [[<cmd>Octo reviewer add<cr>]], "Assign a PR reviewer" },
+  --           R = { [[<cmd>Octo pr reload<cr>]], "Reload PR" },
+  --         },
+  --         c = {
+  --           name = "+comment",
+  --           a = { [[<cmd>Octo comment add<cr>]], "Add a review comment" },
+  --           d = { [[<cmd>Octo comment delete<cr>]], "Delete a review comment" },
+  --           r = { [[<cmd>Octo thread resolve<cr>]], "Resolve thread" },
+  --           u = { [[<cmd>Octo thread unresolve<cr>]], "Unresolve thread" },
+  --         },
+  --         l = {
+  --           name = "+label",
+  --           a = { [[<cmd>Octo label add<cr>]], "Add a label" },
+  --           r = { [[<cmd>Octo label remove<cr>]], "Remove a review comment" },
+  --           c = { [[<cmd>Octo label create<cr>]], "Create a label" },
+  --         },
+  --         a = {
+  --           name = "+assignees",
+  --           a = { [[<cmd>Octo assignees add<cr>]], "Assign a user" },
+  --           r = { [[<cmd>Octo assignees remove<cr>]], "Unassign a user" },
+  --         },
+  --         r = {
+  --           name = "+reaction",
+  --           e = { [[<cmd>Octo reaction eyes<cr>]], "Add 👀 reaction" },
+  --           l = { [[<cmd>Octo reaction laugh<cr>]], "Add 😄 reaction" },
+  --           c = { [[<cmd>Octo reaction confused<cr>]], "Add 😕 reaction" },
+  --           r = { [[<cmd>Octo reaction rocket<cr>]], "Add 🚀 reaction" },
+  --           h = { [[<cmd>Octo reaction heart<cr>]], "Add ❤️ reaction" },
+  --           t = { [[<cmd>Octo reaction tada<cr>]], "Add 🎉 reaction" },
+  --         },
+  --       },
+  --       c = {
+  --         name = "+code",
+  --         e = { "<cmd>NnnExplorer %:p:h<cr>", "Explore" },
+  --         E = { "<cmd>NnnExplorer<cr>", "Explore (from root)" },
+  --         p = { "<cmd>NnnPicker %:p:h<cr>", "Picker" },
+  --         P = { "<cmd>NnnPicker<cr>", "Picker (from root)" },
+  --         r = { "<plug>(coc-rename)", "Rename Variable" },
+  --         i = { "<cmd>CocActionAsync('doHover')<cr>", "Info (hover)" },
+  --         d = { [[<cmd>Telescope coc diagnostics<cr>]], "Document Diagnostics" },
+  --         w = { [[<cmd>Telescope coc workspace_diagnostics<cr>]], "Workspace Diagnostics" },
+  --         c = { [[<plug>(coc-refactor)]], "Refactor" },
+  --         a = { [[<cmd>Telescope coc code_actions]], "Code Actions" },
+  --         ["."] = { [[<plug>(coc-fix-current)]], "Do first code action (fix)" },
+  --         s = { "<cmd>Sort<cr>", "Sort" },
+  --         t = { ":s/\"\\(\\w\\) \\(\\w\\)\"/\\1\", \"\\2/g<cr>", "Split word string" },
+  --       },
+  --       b = {
+  --         name = "+buffers",
+  --         b = { [[<cmd>Telescope buffers<cr>]], "Switch Buffer" },
+  --         d = { [[<cmd>BufDel<cr>]], "Delete Buffer" },
+  --         k = { [[<cmd>BufDel!<cr>]], "Kill Buffer" },
+  --       },
+  --       e = {
+  --         name = "+editor",
+  --         m = { [[<cmd>Telescope marks<cr>]], "Marks" },
+  --         h = { [[<cmd>Telescope help_tags<cr>]], "Help Tag" },
+  --         [";"] = { [[<cmd>Telescope commands<cr>]], "Commands" },
+  --         c = { [[<cmd>Telescope command_history<cr>]], "Previous Commands" },
+  --         k = { [[<cmd>Telescope keymaps<cr>]], "Keymap" },
+  --         q = { [[<cmd>Telescope quickfix<cr>]], "QuickFix" },
+  --         o = { [[<cmd>Telescope quickfix<cr>]], "Vim Options" },
+  --         v = { "<cmd>VsnipOpenEdit<cr>", "VSnip" },
+  --         w = { "<cmd>WinShift<cr>", "Move Window" },
+  --         s = {
+  --           name = "+sudo",
+  --           r = { "<cmd>SudaRead<cr>", "Read file with sudo" },
+  --           w = { "<cmd>SudaWrite<cr>", "Write file with sudo" },
+  --         },
+  --         p = {
+  --           name = "+packer",
+  --           p = { "<cmd>PackerSync<cr>", "Sync Plugins" },
+  --           c = { "<cmd>PackerCompile<cr>", "Compile Plugins" },
+  --         },
+  --         l = {
+  --           name = "+lsp",
+  --           f = { [[<cmd>LspInfo<cr>]], "Info" },
+  --           i = { [[<cmd>LspInstallInfo<cr>]], "Install" },
+  --         },
+  --       },
+  --       g = {
+  --         name = "+git",
+  --         c = { [[<cmd>Telescope git_bcommits<cr>]], "Git Commits" },
+  --         s = { [[<cmd>Telescope git_status<cr>]], "Git Status" },
+  --         t = { [[<cmd>Telescope git_stash<cr>]], "Git Stashes" },
+  --         g = { [[<cmd>LazyGit<cr>]], "LazyGit" },
+  --         b = { [[<cmd>GitMessenger<cr>]], "Blame" },
+  --         l = {
+  --           function()
+  --             gl.get_buf_range_url("n", {
+  --               action_callback = gla.open_in_browser,
+  --             })
+  --           end,
+  --           "Web Link",
+  --           silent = true,
+  --         },
+  --       },
+  --       t = {
+  --         name = "+test",
+  --         t = { "<cmd>TestNearest<cr>", "Test Nearest" },
+  --         n = { "<cmd>TestNearest<cr>", "Test Nearest" },
+  --         f = { "<cmd>TestFile<cr>", "Test File" },
+  --         a = { "<cmd>TestSuite<cr>", "Test Suite" },
+  --         [";"] = { "<cmd>TestLast<cr>", "Rerun Last Test" },
+  --         ["."] = { "<cmd>TestVisit<cr>", "Visit Test" },
+  --       },
+  --       x = {
+  --         name = "+trouble",
+  --         x = { "<cmd>TroubleToggle<cr>", "Toggle Trouble" },
+  --         w = { "<cmd>TroubleToggle lsp_workspace_diagnostics<cr>", "Toggle Workspace Diagnostics" },
+  --         d = { "<cmd>TroubleToggle lsp_document_diagnostics<cr>", "Toggle Document Diagnostics" },
+  --         r = { "<cmd>TroubleToggle lsp_references<cr>", "Toggle References" },
+  --         q = { "<cmd>TroubleToggle quickfix<cr>", "Toggle QuickFix" },
+  --         l = { "<cmd>TroubleToggle loclist<cr>", "Toggle Location List" },
+  --         t = { "<cmd>TodoTrouble<cr>", "Toggle TODOs" },
+  --       },
+  --       q = {
+  --         name = "+quit",
+  --         q = { "<cmd>:qa<cr>", "Quit" },
+  --         c = { "<cmd>:q!<cr>", "Close" },
+  --         k = { "<cmd>:qa!<cr>", "Quit without saving" },
+  --         s = { "<cmd>:wa | qa!<cr>", "Quit and save" },
+  --       },
+  --     },
+  --   })
+  -- end
+
   do -- gitlinker.nvim
     require("gitlinker").setup()
   end
@@ -360,7 +559,7 @@ M.setup = function()
         max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
       },
       incremental_selection = {
-        enable = true,
+        enable = false,
         keymaps = {
           init_selection = "<CR>",
           scope_incremental = "<CR>",
@@ -781,8 +980,11 @@ M.setup = function()
     npairs.add_rules({
       endwise("then$", "end", "lua", nil),
       endwise("do$", "end", "lua", nil),
+      endwise("function%(.*%)$", "end", "lua", nil),
       endwise(" do$", "end", "elixir", nil),
     })
+    -- REF: neat stuff:
+    -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end
 
   do -- lightspeed.nvim
@@ -1263,23 +1465,27 @@ M.setup = function()
     vim.cmd("command! ZkTags lua require('telescope').extensions.zk.tags()")
 
     zk.setup({
+      create_user_commands = true,
       lsp = {
-        filetypes = { "markdown", "liquid" },
+        cmd = { "zk", "lsp" },
+        name = "zk",
         on_attach = function(client, bufnr)
           -- local function buf_set_keymap(...)
           --   vim.api.nvim_buf_set_keymap(bufnr, ...)
           -- end
           -- local opts = { noremap = true, silent = true }
-
-          require("lsp").on_attach(client, bufnr)
-
           -- buf_set_keymap("n", "<C-t>", [[:Notes<cr>]], opts)
           -- buf_set_keymap("n", "<leader>zt", [[:Tags<cr>]], opts)
           -- buf_set_keymap("n", "<leader>zl", [[:Links<cr>]], opts)
           -- buf_set_keymap("n", "<leader>zb", [[:Backlinks<cr>]], opts)
           -- buf_set_keymap("n", "<leader>zd", ":ZkDaily<cr>", opts)
           -- buf_set_keymap("v", "<leader>zn", ":'<,'>lua vim.lsp.buf.range_code_action()<CR>", opts)
+          require("lsp").on_attach(client, bufnr)
         end,
+      },
+      auto_attach = {
+        enabled = true,
+        filetypes = { "markdown", "liquid" },
       },
     })
 
@@ -1289,6 +1495,15 @@ M.setup = function()
       "n",
       "<Leader>zn",
       "<cmd>lua require('telescope').extensions.zk.notes()<CR>",
+      { noremap = true }
+    )
+
+    vim.api.nvim_set_keymap("x", "<Leader>zc", "<esc><cmd>lua require('zk').new_link()<CR>", { noremap = true })
+
+    vim.api.nvim_set_keymap(
+      "n",
+      "<Leader>zo",
+      "<cmd>lua require('telescope').extensions.zk.orphans()<CR>",
       { noremap = true }
     )
 

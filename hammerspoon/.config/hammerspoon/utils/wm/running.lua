@@ -87,7 +87,7 @@ M._updateAppWindows = function(app, ax)
     end
 
     for _, child in ipairs(ax.AXChildren) do
-      if child:matchesCriteria("AXWindow") then
+      if child and child:matchesCriteria("AXWindow") then
         M._addAppWindow(app, child)
       end
     end

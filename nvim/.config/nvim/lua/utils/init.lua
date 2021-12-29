@@ -25,6 +25,19 @@ function M.root_has_file(name)
 end
 
 -- # [ rename ] ----------------------------------------------------------------
+M.lsp.peek_definition = function()
+  local function preview_location_callback(_, result)
+    if result == nil or vim.tbl_isempty(result) then
+      return nil
+    end
+    lsp.util.preview_location(result[1], { border = "single" })
+  end
+
+  local params = lsp.util.make_position_params()
+  return lsp.buf_request(0, "textDocument/definition", params, preview_location_callback)
+end
+
+-- # [ rename ] ----------------------------------------------------------------
 -- REF:
 -- * https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
 -- * https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/rename.lua (simpler impl to investigate)
