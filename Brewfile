@@ -21,8 +21,13 @@ tap "federico-terzi/espanso"
 tap "mhanberg/zk"
 
 # -- for qmk_toolbox --
-
-# brew tap osx-cross/avr; brew tap PX4/homebrew-px4; brew install avr-gcc@8; brew link --force avr-gcc@8; brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk; brew cask install qmk-toolbox;
+# brew tap osx-cross/avr;
+# brew tap PX4/homebrew-px4;
+# brew install avr-gcc@8;
+# brew link --force avr-gcc@8;
+# brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk;
+# brew cask install qmk-toolbox;
+#
 tap "osx-cross/avr"
 tap "PX4/homebrew-px4"
 # NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
@@ -59,7 +64,7 @@ brew "dockutil"
 brew "docker"
 brew "docker-compose"
 brew "docker-credential-helper-ecr"
-brew "docker-machine" #, restart_service: true, link: false
+brew "docker-machine" # , restart_service: true, link: false
 brew "duck"
 brew "espanso"
 brew "exa"
@@ -91,8 +96,8 @@ brew "htop"
 brew "httpie"
 brew "ical-buddy"
 brew "jq"
-brew 'lazydocker'
-brew 'lazygit'
+brew "lazydocker"
+brew "lazygit"
 brew "llvm" # contains c-lang lsp (the preferred one?)
 brew "lnav"
 brew "lsd"
@@ -147,7 +152,7 @@ brew "the_silver_searcher"
 brew "tidy-html5"
 brew "timg" # for image rendering in kitty
 brew "tldr"
-brew "tmux" #, args: ["HEAD"]
+brew "tmux" # , args: ["HEAD"]
 brew "transcrypt"
 brew "trash"
 brew "tree"

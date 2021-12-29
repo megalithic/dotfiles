@@ -401,7 +401,7 @@ local function setup_lsp_servers()
     lspconfig["solargraph"].setup(lsp_with_defaults({
       cmd = { "solargraph", "stdio" },
       filetypes = { "ruby" },
-      root_dir = root_pattern("Gemfile", ".git"),
+      -- root_dir = root_pattern("Gemfile", ".git"),
       settings = {
         solargraph = {
           diagnostics = true,

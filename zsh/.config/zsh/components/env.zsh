@@ -65,7 +65,7 @@ export ASDF_INSTALLS="$ASDF_DIR/installs"
 
 #
 # -- rg
-export RIPGREP_CONFIG_PATH="$HOME/.ripgreprc"
+export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/rc"
 #
 # -- weechat
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"

@@ -6,8 +6,8 @@
 # https://github.com/junegunn/fzf/wiki/Configuring-shell-key-bindings
 # https://gist.github.com/junegunn/8b572b8d4b5eddd8b85e5f4d40f17236
 
-if [ -n "$(command -v fzf)" ]; then
-	# -- use this if not using zsh-vi-mode
+if has fzf; then
+	# -- use this if NOT using zsh-vi-mode
 	# TODO: need a condition to make this cleaner
 	[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -15,19 +15,19 @@ if [ -n "$(command -v fzf)" ]; then
 	# zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
 	export FZF_TMUX_HEIGHT='20%'
-	# export FZF_TMUX=0
 	export FZF_DEFAULT_OPTS="
   --inline-info
   --select-1
   --ansi
   --extended
   --bind ctrl-j:ignore,ctrl-k:ignore
-  --bind ctrl-f:page-down,ctrl-b:page-up,J:down,K:up
+  --bind ctrl-f:page-down,ctrl-b:page-up,ctrl-j:down,ctrl-k:up
   --cycle
   --no-multi
   --no-border
   --preview-window=right:60%:wrap
-  --preview 'bat {}'
+  --margin=1,4
+  --preview 'bat --color=always --style=header,grid --line-range :300 {}'
   "
 
 	_fzf_megaforest() {
@@ -55,20 +55,15 @@ if [ -n "$(command -v fzf)" ]; then
   "
 	}
 
-	# TODO: figure out how to automate this based on the loaded kitty theme, mayhaps?
 	_fzf_megaforest
 
-	# if (command -v rg &> /dev/null); then
-	#   export FZF_CTRL_T_COMMAND='rg --files --hidden --line-number --follow -g "!{.git,node_modules,vendor,build,_build}"'
-	# fi
-	#
+	if has fd; then
+		# LIST_DIR_CONTENTS='ls --almost-all --group-directories-first --color=always {}'
+		# LIST_FILE_CONTENTS='head -n128 {}'
+		# export FZF_ALT_C_OPTS="--preview '$LIST_DIR_CONTENTS'"
+		# export FZF_CTRL_T_OPTS="--preview 'if [[ -f {} ]]; then $LIST_FILE_CONTENTS; elif [[ -d {} ]]; then $LIST_DIR_CONTENTS; fi'"
 
-	if (command -v fd &>/dev/null); then
-		LIST_DIR_CONTENTS='ls --almost-all --group-directories-first --color=always {}'
-		LIST_FILE_CONTENTS='head -n128 {}'
-		export FZF_ALT_C_OPTS="--preview '$LIST_DIR_CONTENTS'"
-		export FZF_CTRL_T_OPTS="--preview 'if [[ -f {} ]]; then $LIST_FILE_CONTENTS; elif [[ -d {} ]]; then $LIST_DIR_CONTENTS; fi'"
-
+		# export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --ignore-file \"$XDG_CONFIG_HOME/fd/ignore\"'
 		export FZF_DEFAULT_COMMAND='fd --type f --follow --hidden --color=always --exclude .git --ignore-file ~/.gitignore_global --ignore-file .gitignore'
 		export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 		export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --exclude 'Library'"

@@ -17,6 +17,10 @@
 # FIXME: this continues to _break_ things when sourced:
 # source "$ZDOTDIR/components/helpers.zsh"
 
+function has() {
+	type "$1" &>/dev/null
+}
+
 function log_raw {
 	printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
 }
@@ -65,7 +69,7 @@ function detect_platform {
 }
 detect_platform
 
+# this loads in all of our environment variables, etc.
 source "$ZDOTDIR/components/env.zsh"
 
-#ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
-#
+# vim:ft=zsh:foldenable:foldmethod=marker:ft=zsh;ts=2;sts=2;sw=2
