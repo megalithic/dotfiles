@@ -9,6 +9,9 @@ local utils = require("utils")
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
+-- vim.lsp.set_log_level("trace")
+require("vim.lsp.log").set_format_func(vim.inspect)
+
 local function setup_diagnostics()
   fn.sign_define(vim.tbl_map(function(t)
     local hl = "DiagnosticSign" .. t[1]
@@ -36,18 +39,14 @@ local function setup_diagnostics()
     })
   end
 
+  -- Monkey-patch vim.diagnostic.show() with our own impl to filter sign severity
   function vim.diagnostic.show(namespace, bufnr, ...)
     show(namespace, bufnr, ...)
     display_signs(bufnr)
   end
 
-  -- -- sort signs by severity (show most critical sign from those in the same line)
-  -- vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-  --   severity_sort = true,
-  -- })
-
-  -- -- wrap open_float to inspect diagnostics and use the severity color for border
-  -- -- https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
+  -- -- Monkey-patch vim.diagnostic.open_float() with our own impl..
+  -- -- REF: https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
   -- vim.diagnostic.open_float = (function(orig)
   --   return function(bufnr, opts)
   --     local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
@@ -69,20 +68,10 @@ local function setup_diagnostics()
   --       [vim.diagnostic.severity.WARN] = "DiagnosticWarn",
   --       [vim.diagnostic.severity.ERROR] = "DiagnosticError",
   --     })[max_severity]
-  --     opts.border = {
-  --       { "🭽", border_color },
-  --       { "▔", border_color },
-  --       { "🭾", border_color },
-  --       { "▕", border_color },
-  --       { "🭿", border_color },
-  --       { "▁", border_color },
-  --       { "🭼", border_color },
-  --       { "▏", border_color },
-  --     }
+  --     opts.border = mega.get_border(border_color)
   --     orig(bufnr, opts)
   --   end
   -- end)(vim.diagnostic.open_float)
-
   -- -- Show line diagnostics in floating popup on hover, except insert mode (CursorHoldI)
   -- vim.o.updatetime = 250
   -- vim.cmd([[autocmd CursorHold * lua vim.diagnostic.open_float()]])
@@ -96,7 +85,7 @@ local function setup_diagnostics()
     float = {
       show_header = true,
       source = "if_many", -- or "always"
-      border = "single",
+      border = mega.get_border(),
       focusable = false,
       severity_sort = true,
     },
@@ -105,16 +94,18 @@ end
 
 -- some of our custom LSP handlers
 local function setup_lsp_handlers()
-  -- local border_opts = { border = "single", focusable = false, scope = "line" }
   -- hover
   -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
-  lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, {
-    border = "single",
+  local float_opts = {
+    border = mega.get_border(),
     max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
+  }
+  lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, float_opts)
+  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, float_opts)
+  lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, {
+    severity_sort = true,
   })
-
-  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, border_opts)
 end
 
 -- our on_attach function to pass to each language server config..
@@ -126,42 +117,42 @@ local function on_attach(client, bufnr)
   require("lsp-status").on_attach(client)
   utils.lsp.format_setup(client, bufnr)
 
-  require("lsp_signature").on_attach({
-    bind = true,
-    fix_pos = function(signatures, _client)
-      if signatures[1].activeParameter >= 0 and #signatures[1].parameters == 1 then
-        return false
-      end
-      if _client.name == "sumneko_lua" then
-        return true
-      end
-      return false
-    end,
-    auto_close_after = 15, -- close after 15 seconds
-    hint_enable = true,
-    handler_opts = { border = "rounded" },
-  })
+  -- require("lsp_signature").on_attach({
+  --   bind = true,
+  --   fix_pos = function(signatures, _client)
+  --     if signatures[1].activeParameter >= 0 and #signatures[1].parameters == 1 then
+  --       return false
+  --     end
+  --     if _client.name == "sumneko_lua" then
+  --       return true
+  --     end
+  --     return false
+  --   end,
+  --   auto_close_after = 15, -- close after 15 seconds
+  --   hint_enable = true,
+  --   handler_opts = { border = mega.get_border() },
+  -- })
 
   if client.resolved_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr)
   end
 
-  if client.resolved_capabilities.document_highlight then
-    -- TODO: do we want this?
-    --   api.nvim_exec(
-    --     [[
-    --   hi LspReferenceRead cterm=bold ctermbg=red guibg=#464646
-    --   hi LspReferenceText cterm=bold ctermbg=red guibg=#464646
-    --   hi LspReferenceWrite cterm=bold ctermbg=red guibg=#464646
-    --   augroup lsp_document_highlight
-    --     autocmd! * <buffer>
-    --     autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
-    --     autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
-    --   augroup END
-    -- ]],
-    --     false
-    --   )
-  end
+  -- if client.resolved_capabilities.document_highlight then
+  --   -- TODO: do we want this?
+  --     api.nvim_exec(
+  --       [[
+  --     hi LspReferenceRead cterm=bold ctermbg=red guibg=#464646
+  --     hi LspReferenceText cterm=bold ctermbg=red guibg=#464646
+  --     hi LspReferenceWrite cterm=bold ctermbg=red guibg=#464646
+  --     augroup lsp_document_highlight
+  --       autocmd! * <buffer>
+  --       autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
+  --       autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
+  --     augroup END
+  --   ]],
+  --       false
+  --     )
+  -- end
 
   --- # goto mappings
   if pcall(require, "fzf-lua") then

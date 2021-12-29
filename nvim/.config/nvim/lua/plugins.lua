@@ -1077,7 +1077,7 @@ M.setup = function()
   end
 
   do -- git-messenger.nvim
-    vim.g.git_messenger_floating_win_opts = { border = vim.g.floating_window_border_dark }
+    vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }
     vim.g.git_messenger_no_default_mappings = true
     vim.g.git_messenger_max_popup_width = 100
     vim.g.git_messenger_max_popup_height = 100

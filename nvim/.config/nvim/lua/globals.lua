@@ -793,16 +793,11 @@ function mega.get_num_entries(iter)
 end
 
 function mega.get_border(hl)
-  return {
-    { "╭", hl or "FloatBorder" },
-    { "─", hl or "FloatBorder" },
-    { "╮", hl or "FloatBorder" },
-    { "│", hl or "FloatBorder" },
-    { "╯", hl or "FloatBorder" },
-    { "─", hl or "FloatBorder" },
-    { "╰", hl or "FloatBorder" },
-    { "│", hl or "FloatBorder" },
-  }
+  local border = {}
+  for _, char in ipairs(require("colors").icons.borderchars) do
+    table.insert(border, { char, hl or "FloatBorder" })
+  end
+  return border
 end
 
 function mega.sync_plugins()

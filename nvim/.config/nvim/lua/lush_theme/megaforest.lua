@@ -213,13 +213,6 @@ return lush(function()
     Italic({ gui = "italic" }),
     Underlined({ fg = nil, bg = nil, gui = "underline" }),
     CurrentWord({ fg = nil, bg = nil }),
-    RedSign({ fg = red, bg = bg1 }),
-    OrangeSign({ fg = orange, bg = bg1 }),
-    YellowSign({ fg = yellow, bg = bg1 }),
-    GreenSign({ fg = green, bg = bg1 }),
-    AquaSign({ fg = cyan, bg = bg1 }),
-    BlueSign({ fg = blue, bg = bg1 }),
-    PurpleSign({ fg = purple, bg = bg1 }),
     Fg({ fg = fg, bg = nil }),
     Grey({ fg = grey1, bg = nil }),
     Red({ fg = red, bg = nil }),
@@ -249,6 +242,13 @@ return lush(function()
     WarningFloat({ fg = yellow, bg = bg2 }),
     InfoFloat({ fg = blue, bg = bg2 }),
     HintFloat({ fg = green, bg = bg2 }),
+    RedSign({ fg = red, bg = bg1 }),
+    OrangeSign({ fg = orange, bg = bg1 }),
+    YellowSign({ fg = yellow, bg = bg1 }),
+    GreenSign({ fg = green, bg = bg1 }),
+    AquaSign({ fg = cyan, bg = bg1 }),
+    BlueSign({ fg = blue, bg = bg1 }),
+    PurpleSign({ fg = purple, bg = bg1 }),
 
     ---- :help lsp-highlight -----------------------------------
 
@@ -312,16 +312,14 @@ return lush(function()
     DiagnosticSignHint({ AquaSign }),
 
     DiagnosticError({ RedSign }),
-    DiagnosticWarning({ YellowSign }),
     DiagnosticWarn({ YellowSign }),
-    DiagnosticInformation({ BlueSign }),
     DiagnosticInfo({ BlueSign }),
     DiagnosticHint({ AquaSign }),
 
-    DiagnosticErrorBorder({ RedSign, bg = nil }),
-    DiagnosticWarnBorder({ YellowSign, bg = nil }),
-    DiagnosticInfoBorder({ BlueSign, bg = nil }),
-    DiagnosticHintBorder({ AquaSign, bg = nil }),
+    DiagnosticErrorBorder({ RedSign, bg = bg0 }),
+    DiagnosticWarnBorder({ YellowSign, bg = bg0 }),
+    DiagnosticInfoBorder({ BlueSign, bg = bg0 }),
+    DiagnosticHintBorder({ AquaSign, bg = bg0 }),
 
     TermCursor({ Cursor }),
 
