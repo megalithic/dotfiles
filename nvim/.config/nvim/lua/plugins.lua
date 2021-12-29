@@ -1108,7 +1108,9 @@ M.setup = function()
       },
     }
 
-    if vim.g.started_by_firenvim ~= nil then
+    if vim.g.started_by_firenvim then
+      print("hi from started by firenvim")
+
       vim.opt.cmdheight = 1
       -- selene: allow(global_usage)
       function _G.set_firenvim_settings()
@@ -1132,6 +1134,7 @@ M.setup = function()
       vim.cmd([[
         function! OnUIEnter(event) abort
           if 'Firenvim' ==# get(get(nvim_get_chan_info(a:event.chan), 'client', {}), 'name', '')
+            echom "hi!"
             lua _G.set_firenvim_settings()
           endif
         endfunction
@@ -1317,7 +1320,7 @@ M.setup = function()
     require("numb").setup()
   end
 
-  do -- # telescope
+  do -- telescope-nvim
     local telescope = require("telescope")
     local actions = require("telescope.actions")
     local themes = require("telescope.themes")
@@ -1478,13 +1481,66 @@ M.setup = function()
     --- NOTE: this must be required after setting up telescope
     --- otherwise the result will be cached without the updates
     --- from the setup call
-    -- local builtins = require 'telescope.builtin'
+    local builtins = require("telescope.builtin")
 
-    -- local function project_files(opts)
-    --   if not pcall(builtins.git_files, opts) then
-    --     builtins.find_files(opts)
-    --   end
-    -- end
+    local function project_files(opts)
+      if not pcall(builtins.git_files, opts) then
+        builtins.find_files(opts)
+      end
+    end
+
+    local function dotfiles()
+      builtins.find_files({
+        prompt_title = "~ dotfiles ~",
+        cwd = mega.dirs.dots,
+      })
+    end
+
+    local function privates()
+      builtins.find_files({
+        prompt_title = "~ privates ~",
+        cwd = mega.dirs.privates,
+      })
+    end
+
+    require("which-key").register({
+      ["<leader>f"] = {
+        name = "+telescope",
+        a = { builtins.builtin, "builtins" },
+        b = { builtins.current_buffer_fuzzy_find, "current buffer fuzzy find" },
+        d = { dotfiles, "dotfiles" },
+        p = { privates, "privates" },
+        f = { project_files, "find files" },
+        -- f = { builtins.find_files, 'find files' },
+        -- n = { gh_notifications, 'notifications' },
+        g = {
+          name = "+git",
+          c = { builtins.git_commits, "commits" },
+          b = { builtins.git_branches, "branches" },
+        },
+        m = { builtins.man_pages, "man pages" },
+        -- h = { frecency, 'history' },
+        -- c = { nvim_config, 'nvim config' },
+        o = { builtins.buffers, "buffers" },
+        -- p = { installed_plugins, 'plugins' },
+        -- O = { orgfiles, 'org files' },
+        -- N = { norgfiles, 'norg files' },
+        R = { builtins.reloader, "module reloader" },
+        r = { builtins.resume, "resume last picker" },
+        s = { builtins.live_grep, "grep string" },
+        -- t = {
+        --   name = '+tmux',
+        --   s = { tmux_sessions, 'sessions' },
+        --   w = { tmux_windows, 'windows' },
+        -- },
+        ["?"] = { builtins.help_tags, "help" },
+      },
+      ["<leader>c"] = {
+        d = { builtins.lsp_workspace_diagnostics, "telescope: workspace diagnostics" },
+        s = { builtins.lsp_document_symbols, "telescope: document symbols" },
+        w = { builtins.lsp_dynamic_workspace_symbols, "telescope: workspace symbols" },
+      },
+    })
 
     -- local function nvim_config()
     --   builtins.find_files {

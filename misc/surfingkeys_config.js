@@ -30,7 +30,7 @@ settings.focusAfterClosed = "last";
 settings.scrollStepSize = 100;
 settings.tabsThreshold = 7;
 settings.modeAfterYank = "Normal";
-settings.useNeovim = true;
+// settings.useNeovim = true;
 
 // set hints style
 if (typeof Hints !== "undefined") {
