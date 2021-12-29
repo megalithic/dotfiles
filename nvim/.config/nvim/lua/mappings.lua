@@ -630,6 +630,9 @@ nmap("<leader>tp", "<cmd>:AV<CR>", "project: open alternate file")
 -- nmap <silent> <leader>tp :AV<CR>
 -- nmap <silent> <leader>to :copen<CR>
 
+-- vim.api.nvim_set_keymap("n", "gx", [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]], {})
+nnoremap("gx", [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]])
+
 -- # commands
 
 command({ "Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]] })

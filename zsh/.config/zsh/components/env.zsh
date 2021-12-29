@@ -142,6 +142,7 @@ if [[ "$PLATFORM" == "macos" ]]; then
 elif [[ "$PLATFORM" == "linux" ]]; then
   export BREW_PATH="$(/home/linuxbrew/.linuxbrew/bin/brew --prefix)"
   export HOMEBREW_PREFIX=$BREW_PATH
+  export BROWSER="xdg-open"
 fi
 
 # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir

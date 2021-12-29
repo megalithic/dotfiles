@@ -129,7 +129,7 @@ M.list = {
   "dinhhuy258/git.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
   "pwntester/octo.nvim", -- https://github.com/ryansch/dotfiles/commit/2d0dc63bea2f921de1236c2800605551fb4b3041#diff-45b8a59e398d12063977c5b27e0d065150544908fd4ad8b3e10b2d003c5f4439R119-R246
-  "gabebw/vim-github-link-opener",
+  -- "gabebw/vim-github-link-opener",
   "ruifm/gitlinker.nvim",
 
   ------------------------------------------------------------------------------
@@ -138,6 +138,8 @@ M.list = {
   "tpope/vim-projectionist",
   -- "tjdevries/edit_alternate.vim",
   "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
+  "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
+
   "tpope/vim-ragtag",
   -- { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
@@ -1081,6 +1083,30 @@ M.setup = function()
     vim.g.git_messenger_no_default_mappings = true
     vim.g.git_messenger_max_popup_width = 100
     vim.g.git_messenger_max_popup_height = 100
+  end
+
+  do -- nvim-dap
+    local dap = require("dap")
+    dap.adapters.mix_task = {
+      type = "executable",
+      command = fn.stdpath("data") .. "/elixir-ls/debugger.sh",
+      args = {},
+    }
+    dap.configurations.elixir = {
+      {
+        type = "mix_task",
+        name = "mix test",
+        task = "test",
+        taskArgs = { "--trace" },
+        request = "launch",
+        startApps = true, -- for Phoenix projects
+        projectDir = "${workspaceFolder}",
+        requireFiles = {
+          "test/**/test_helper.exs",
+          "test/**/*_test.exs",
+        },
+      },
+    }
   end
 
   do -- vim-test

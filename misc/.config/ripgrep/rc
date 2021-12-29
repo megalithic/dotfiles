@@ -26,6 +26,7 @@ railsmigrations:*/migrate/*
 rails:include:ruby,rabl,erb
 
 # ignores, etc
+--glob=!EmmyLua.spoon
 --glob=!.git
 --glob=!.elixir_ls
 --glob=!node_modules
