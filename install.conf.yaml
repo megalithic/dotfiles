@@ -1,0 +1,24 @@
+# - defaults:
+#     link:
+#       relink: true
+
+# - clean: ['~']
+
+# - link:
+#     ~/.tmux.conf: tmux.conf
+#     ~/.vim: vim
+#     ~/.vimrc: vimrc
+
+# - create:
+#     - ~/downloads
+#     - ~/.vim/undo-history
+
+# - shell:
+#   - [git submodule update --init --recursive, Installing submodules]
+
+# https://github.com/radekmorytko/dotfiles/blob/master/dotbot.conf.yaml
+# https://github.com/duncz/dotfiles
+# https://github.com/tagoro9/dotfiles
+# https://github.com/evantravers/dotfiles/blob/master/Makefile
+# https://github.com/anishathalye/dotbot#configuration
+# https://github.com/sleekybadger/dotfiles

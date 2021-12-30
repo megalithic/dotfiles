@@ -16,10 +16,7 @@
 If you want to kick the tires, you can simply:
 
 ```bash
-git clone git@github.com:megalithic/dots.git ~/.dotfiles
-cd ~/.dotfiles
-xcode-select --install
-./install
+git clone git@github.com:megalithic/dots.git ~/.dotfiles && make -C ~/.dotfiles install
 ```
 
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot).
