@@ -1,0 +1,20 @@
+[core]
+  excludesfile = {{HOME_DIR}}/.global_gitignore
+
+[user]
+  name = {{NAME}}
+  email = {{EMAIL}}
+  signingkey = {{SIGNING_KEY}}
+
+[sendmail]
+  smtpserver = {{SMTP_SERVER}}
+  smtpserverport = {{SMTP_PORT}}
+  smtpencryption = {{SMTP_ENCRYPTION}}
+  smtpuser = {{EMAIL}}
+  from = {{EMAIL}}
+
+[github]
+  user = {{GITHUB_USERNAME}}
+
+[credential]
+  helper = {{CREDENTIAL_HELPER}}

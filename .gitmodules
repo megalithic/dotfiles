@@ -2,3 +2,9 @@
 	path = dotbot
 	url = https://github.com/anishathalye/dotbot
 	ignore = dirty
+[submodule "dotbot-template"]
+	path = dotbot-plugins/dotbot-template
+	url = https://github.com/ssbanerje/dotbot-template.git
+[submodule "dotbot-gh-extension"]
+	path = dotbot-plugins/dotbot-gh-extension
+	url = https://github.com/fundor333/dotbot-gh-extension.git

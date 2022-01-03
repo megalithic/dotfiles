@@ -1,0 +1,6 @@
+[submodule "lib/jinja"]
+	path = lib/jinja
+	url = git@github.com:pallets/jinja.git
+[submodule "lib/markupsafe"]
+	path = lib/markupsafe
+	url = git@github.com:pallets/markupsafe.git

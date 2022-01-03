@@ -22,11 +22,21 @@
 # https://github.com/evantravers/dotfiles/blob/master/Makefile
 # https://github.com/anishathalye/dotbot#configuration
 # https://github.com/sleekybadger/dotfiles
+# https://github.com/btmccollum/dotfiles/blob/master/install.conf.yaml
+#https://github.com/DmitryOtroshchenko/Dotfiles/blob/master/install/bootstrap-mac.sh
+# tmux conf location -> https://unix.stackexchange.com/a/644824/508489
 
 - defaults:
     link:
       create: true
       relink: true
+    shell:
+      stderr: true
+
+# - create:
+#     - ~/.ssh
+#     - ~/.config
+#     - ~/code
 
 # remove dead symlinks
 - clean:
@@ -54,15 +64,22 @@
     #   glob: true
     #   path: config/fish/*
     # ~/.config/broot/conf.hjson: config/broot/conf.hjson
-    # ~/Library/Application Support/lazygit/config.yml: config/lazygit/config.yml
+    # ~/Library/Application Support/lazygit/config.yml:
+    #   if: "[ `uname` = Darwin ]"
+    #   path: .config/lazygit/config.yml
+    # ~/.config/karabiner:
+    #   force: true
+    #   path: .config/karabiner
 
 - shell:
-    # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm, Installing TPM]
-    # - [
-    #     rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim,
-    #     Installing Packer,
-    #   ]
-    # - [
-    #     nvim --headless -u NONE -c 'autocmd User PackerComplete quitall' -c 'lua require("plugins")' -c 'lua require("packer").sync()',
-    #     Installing Neovim plugins,
-    #   ]
+    - [git submodule update --init --recursive, Installing submodules]
+      # - [cp ./git/config.template ~/.gitconfig.local]
+      # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm, Installing TPM]
+      # - [
+      #     rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim,
+      #     Installing Packer,
+      #   ]
+      # - [
+      #     nvim --headless -u NONE -c 'autocmd User PackerComplete quitall' -c 'lua require("plugins")' -c 'lua require("packer").sync()',
+      #     Installing Neovim plugins,
+      #   ]

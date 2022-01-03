@@ -1,0 +1,33 @@
+---
+
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Run Example
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          path: ./dotbot-template
+      - name: Checkout dotbot
+        uses: actions/checkout@v2
+        with:
+          repository: 'anishathalye/dotbot'
+          submodules: recursive
+          path: ./dotbot
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - name: Run dotbot
+        run: './dotbot/bin/dotbot -d ./dotbot-template/example --plugin-dir ./dotbot-template -c ./dotbot-template/example/git.yaml'
+      - name: Check results
+        run: '[[ -f ~/.gitconfig ]] && grep "name = John Doe" ~/.gitconfig && grep "helper = cache" ~/.gitconfig'
+
+...
