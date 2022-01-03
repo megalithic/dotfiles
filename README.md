@@ -22,7 +22,7 @@ git clone git@github.com:megalithic/dots.git ~/.dotfiles && make -C ~/.dotfiles 
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot).
 
 I have tried to be platform agnostic, but the majority of scripts that run here
-are for MacOS (specifically MacOS Big Sur at the time of this commit), with a
+are for MacOS (specifically MacOS Big Sur, non-M1, at the time of this commit), with a
 handful of Debian/Ubuntu Linux specific platform scripts and provisions. This
 means that certain tools/binaries I rely on may or may not install/configure on
 Linux. Though, I have tested it decently well on an Ubuntu-based Linode instance.

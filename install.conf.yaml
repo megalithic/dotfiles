@@ -22,3 +22,47 @@
 # https://github.com/evantravers/dotfiles/blob/master/Makefile
 # https://github.com/anishathalye/dotbot#configuration
 # https://github.com/sleekybadger/dotfiles
+
+- defaults:
+    link:
+      create: true
+      relink: true
+
+# remove dead symlinks
+- clean:
+    ~/:
+      force: true
+    ~/.config:
+      recursive: true
+
+- link:
+    # home
+    ~/:
+      glob: true
+      path: home/*
+      prefix: "."
+    # # nvim
+    # ~/.config/nvim/init.lua: config/nvim/init.lua
+    # ~/.config/nvim/ftplugin:
+    #   glob: true
+    #   path: config/nvim/ftplugin/*
+    # ~/.config/nvim/lua:
+    #   glob: true
+    #   path: config/nvim/lua/*
+    # # other
+    # ~/.config/fish:
+    #   glob: true
+    #   path: config/fish/*
+    # ~/.config/broot/conf.hjson: config/broot/conf.hjson
+    # ~/Library/Application Support/lazygit/config.yml: config/lazygit/config.yml
+
+- shell:
+    # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm, Installing TPM]
+    # - [
+    #     rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim,
+    #     Installing Packer,
+    #   ]
+    # - [
+    #     nvim --headless -u NONE -c 'autocmd User PackerComplete quitall' -c 'lua require("plugins")' -c 'lua require("packer").sync()',
+    #     Installing Neovim plugins,
+    #   ]
