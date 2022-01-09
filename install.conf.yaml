@@ -58,18 +58,18 @@
     ~/.config/fd:
       force: true
       path: config/fd
-    # ~/.config/hammerspoon:
-    #   force: true
-    #   path: config/hammerspoon
-    #   if: "[ `uname` = Darwin ]"
+    ~/.config/hammerspoon:
+      force: true
+      path: config/hammerspoon
+      if: "[ `uname` = Darwin ]"
     ~/.config/karabiner:
       force: true
       path: config/karabiner
       if: "[ `uname` = Darwin ]"
-    # ~/.config/kitty:
-    #   force: true
-    #   if: "[ `uname` = Darwin ]"
-    #   path: config/kitty
+    ~/.config/kitty:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/kitty
     ~/.config/nvim:
       force: true
       path: config/nvim
@@ -84,17 +84,17 @@
       force: true
       path: config/tmuxinator
       if: "[ `uname` = Darwin ]"
-    # ~/.config/weechat:
-    #   force: true
-    #   path: config/weechat
-    #   if: "[ `uname` = Darwin ]"
+    ~/.config/weechat:
+      force: true
+      path: config/weechat
+      if: "[ `uname` = Darwin ]"
     ~/.config/zk:
       force: true
       path: config/zk
       if: "[ `uname` = Darwin ]"
-    # ~/.config/zsh:
-    #   force: true
-    #   path: config/zsh
+    ~/.config/zsh:
+      force: true
+      path: config/zsh
     ~/.config/starship.toml:
       force: true
       path: config/starship.toml
@@ -118,7 +118,7 @@
 
     # ----- misc/other
     # ~/.tool-versions: asdf/tool-versions
-    ~/.vimrc: nvim/.vimrc
+    ~/.vimrc: config/nvim/vimrc
     # ~/Library/Application Support/lazygit/config.yml:
     #   force: true
     #   if: "[ `uname` = Darwin ]"
