@@ -17,20 +17,24 @@ If you want to kick the tires, you can simply:
 
 ```bash
 git clone git@github.com:megalithic/dotfiles.git ~/.dotfiles \
-  && make -C ~/.dotfiles
+  && cd ~/.dotfiles
+  && make
+  # defaults to using the `install` goal
 ```
 
 _For platform specific installs:_
 
 ```bash
-make -C ~/.dotfiles macos # (or `linux`, or `platforms` for both)
+cd ~/.dotfiles && make macos # or, `linux`
 ```
 
-_Get help:_
+_Get some help:_
 
 ```bash
-make -C ~/.dotfiles help # for more Makefile goals
+cd ~/.dotfiles && make help
 ```
+
+> **_NOTE_**: to execute a `make` command from anywhere; specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
 
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot).
 
@@ -42,7 +46,7 @@ Linux. Though, I have tested it decently well on an Ubuntu-based Linode instance
 
 ##### ⚠️ Thar be dragons..
 
-> I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot that I'm not describing here) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
+> I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
 
 ## ✨ Tree be thy guide
 

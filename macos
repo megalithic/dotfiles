@@ -94,6 +94,9 @@ defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 # Finder
 defaults write com.apple.finder NewWindowTarget -string "PfLo"
 defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
+# -- default to using ForkLift 3 for all the Finder things
+defaults write -g NSFileViewer -string com.binarynights.ForkLift-3
+defaults write com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array-add '{LSHandlerContentType="public.folder";LSHandlerRoleAll="com.binarynights.ForkLift-3";}'
 
 # Don’t automatically rearrange Spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
