@@ -1,0 +1,13 @@
+.DS_Store
+private
+**/.swp
+**/.log
+**/*.weechatlog
+**/sec.conf
+config/karabiner/automatic_backups/*
+**/*.zwc
+**/.zcomp*
+**/.zsh_sessions
+*.lock.json
+.elixir_ls
+cache

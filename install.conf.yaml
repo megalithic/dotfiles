@@ -20,10 +20,13 @@
       stderr: true
       include: ["tap", "brew", "cask", "mas"]
 
-# - create:
-#     - ~/.ssh
-#     - ~/.config
-#     - ~/code
+- create:
+    - ~/code
+    - ~/tmp
+    - ~/screenshots
+    - ~/.config
+    - ~/.local/share/packages
+    - ~/.local/share/src
 
 - clean:
     ~/:
@@ -47,7 +50,7 @@
       path: config/bat
     ~/.config/broot:
       force: true
-      path: config/bat
+      path: config/broot
     ~/.config/espanso:
       force: true
       path: config/espanso
@@ -55,18 +58,18 @@
     ~/.config/fd:
       force: true
       path: config/fd
-    ~/.config/hammerspoon:
-      force: true
-      if: "[ `uname` = Darwin ]"
-      path: config/hammerspoon
+    # ~/.config/hammerspoon:
+    #   force: true
+    #   path: config/hammerspoon
+    #   if: "[ `uname` = Darwin ]"
     ~/.config/karabiner:
       force: true
-      if: "[ `uname` = Darwin ]"
       path: config/karabiner
-    ~/.config/kitty:
-      force: true
       if: "[ `uname` = Darwin ]"
-      path: config/kitty
+    # ~/.config/kitty:
+    #   force: true
+    #   if: "[ `uname` = Darwin ]"
+    #   path: config/kitty
     ~/.config/nvim:
       force: true
       path: config/nvim
@@ -76,23 +79,29 @@
     ~/.config/tmux:
       force: true
       path: config/tmux
+      if: "[ `uname` = Darwin ]"
     ~/.config/tmuxinator:
       force: true
       path: config/tmuxinator
-    ~/.config/weechat:
-      force: true
       if: "[ `uname` = Darwin ]"
-      path: config/weechat
+    # ~/.config/weechat:
+    #   force: true
+    #   path: config/weechat
+    #   if: "[ `uname` = Darwin ]"
     ~/.config/zk:
       force: true
-      if: "[ `uname` = Darwin ]"
       path: config/zk
-    ~/.config/zsh:
-      force: true
-      path: config/zsh
+      if: "[ `uname` = Darwin ]"
+    # ~/.config/zsh:
+    #   force: true
+    #   path: config/zsh
     ~/.config/starship.toml:
       force: true
       path: config/starship.toml
+    ~/.config/surfingkeys:
+      force: true
+      path: config/surfingkeys
+      if: "[ `uname` = Darwin ]"
 
     # ----- git
     ~/.gitconfig:
@@ -108,7 +117,7 @@
       path: git/gitconfig_linux
 
     # ----- misc/other
-    ~/.tool-versions: asdf/tool-versions
+    # ~/.tool-versions: asdf/tool-versions
     ~/.vimrc: nvim/.vimrc
     # ~/Library/Application Support/lazygit/config.yml:
     #   force: true
@@ -118,39 +127,69 @@
 # - ghe:
 #     - mislav/gh-branch
 #     - dlvhdr/gh-prs
-
-- brewfile:
-    file: brew/Brewfile
-    stdout: true
-    stderr: true
-
-- asdf:
-    - plugin: java
-      global: openjdk-17.0.1
-      versions:
-        - openjdk-17.0.1
-    - plugin: nodejs
-      global: 17.3.0
-      versions:
-        - 17.3.0
-    - plugin: ruby
-      global: 3.1.0
-      versions:
-        - 3.1.0
-    - plugin: rust
-      global: 1.57.0
-      versions:
-        - 1.57.0
-
+# - brewfile:
+#     file: brew/Brewfile
+#     stdout: true
+#     stderr: true
+# - asdf:
+#     - plugin: java
+#       global: openjdk-17.0.1
+#       versions:
+#         - openjdk-17.0.1
+#     - plugin: nodejs
+#       global: 17.3.0
+#       versions:
+#         - 17.3.0
+#     - plugin: ruby
+#       global: 3.1.0
+#       versions:
+#         - 3.1.0
+#     - plugin: rust
+#       global: 1.57.0
+#       versions:
+#         - 1.57.0
 - shell:
-    - [~/.dotfiles/bin/gh-login, GitHub Auth]
-      # - [cp ./git/config.template ~/.gitconfig.local]
-      # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm, Installing TPM]
-      # - [
-      #     rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim,
-      #     Installing Packer,
-      #   ]
-      # - [
-      #     nvim --headless -u NONE -c 'autocmd User PackerComplete quitall' -c 'lua require("plugins")' -c 'lua require("packer").sync()',
-      #     Installing Neovim plugins,
-      #   ]
+    - description: Install from source
+      command: >-
+        cd ~/.local/share/src || exit 1;
+        git clone git@github.com:neovim/neovim.git \
+        && cd neovim \
+        && git checkout master \
+        && git up \
+        && make CMAKE_BUILD_TYPE=RelWithDebInfo \
+        && sudo make install
+
+    # - description: Download binaries
+    #   command: >-
+    #     cd ~/.local/share/packages || exit 1;
+    #     wget "https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz" -O - | tar -xz;
+    #     wget "https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep-13.0.0-x86_64-unknown-linux-musl.tar.gz" -O - | tar -xz;
+    #     wget "https://github.com/sharkdp/fd/releases/download/v8.3.0/fd-v8.3.0-x86_64-unknown-linux-gnu.tar.gz" -O - | tar -xz;
+    #     wget "https://nodejs.org/dist/v17.3.0/node-v17.3.0-linux-x64.tar.xz" -O - | tar -xJ;
+    #     wget "https://github.com/cli/cli/releases/download/v2.4.0/gh_2.4.0_linux_amd64.tar.gz" -O - | tar -xz;
+    #     wget "https://github.com/dandavison/delta/releases/download/0.11.3/delta-0.11.3-x86_64-unknown-linux-gnu.tar.gz" -O - | tar -xz;
+    #     wget "https://github.com/jesseduffield/lazygit/releases/download/v0.31.4/lazygit_0.31.4_Linux_x86_64.tar.gz" -O - | tar -xz lazygit;
+    #     wget "https://github.com/starship/starship/releases/download/v1.1.1/starship-x86_64-unknown-linux-gnu.tar.gz" -O - | tar -xz starship;
+    #     wget "https://github.com/ajeetdsouza/zoxide/releases/download/v0.8.0/zoxide-v0.8.0-x86_64-unknown-linux-musl.tar.gz" -O - | tar -xz zoxide;
+    #     wget "https://github.com/junegunn/fzf/releases/download/0.29.0/fzf-0.29.0-linux_amd64.tar.gz" -O - | tar -xz fzf;
+    #     wget "https://raw.githubusercontent.com/junegunn/fzf/0.29.0/shell/key-bindings.zsh" -O fzf-key-bindings.zsh;
+    #     wget "https://git.io/antigen" -O antigen.zsh
+
+    # - [~/.dotfiles/bin/gh-login, GitHub Auth]
+  #
+  # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm, Installing TPM]
+  #
+  # - [
+  #     rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim,
+  #     Installing Packer,
+  #   ]
+  #
+  # - [
+  #     git clone https://github.com/savq/paq-nvim.git "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/pack/paqs/opt/paq-nvim,
+  #     Installing paq-nvim
+  #   ],
+  #
+  # - [
+  #     nvim --headless -u NONE -c 'autocmd User PackerComplete quitall' -c 'lua require("plugins")' -c 'lua require("packer").sync()',
+  #     Installing Neovim plugins,
+  #   ]

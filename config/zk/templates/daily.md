@@ -1,0 +1,3 @@
+# {{date now "long"}}
+
+{{content}}
