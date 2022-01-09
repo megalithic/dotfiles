@@ -76,21 +76,22 @@ function shutdown() {
 
 
 # Launch application
-function fapp() {
-  local app=$((ls /Applications; ls /System/Applications/; ls /System/Applications/Utilities) | cat | sed 's/.app//g' | fzf)
-  open -a $app
-}
-# Close application
-function fkill() {
-  select_app=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s\n", $i}'  | fzf)
-  if [ -n "$select_app" ]; then
-    printf "${bold}Do you want to kill ${select_app}? (y/n)${reset}\n"
-    read
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      pkill -x "${select_app}"
-    fi
-  fi
-}
+# function fapp() {
+#   local app=$((ls /Applications; ls /System/Applications/; ls /System/Applications/Utilities) | cat | sed 's/.app//g' | fzf)
+#   open -a $app
+# }
+
+# # Close application
+# function fkill() {
+#   select_app=$(osascript -e 'tell application "System Events" to get name of (processes where background only is false)' | awk -F ', ' '{for(i=1;i<=NF;i++) printf "%s\n", $i}'  | fzf)
+#   if [ -n "$select_app" ]; then
+#     printf "${bold}Do you want to kill ${select_app}? (y/n)${reset}\n"
+#     read
+#     if [[ $REPLY =~ ^[Yy]$ ]]; then
+#       pkill -x "${select_app}"
+#     fi
+#   fi
+# }
 
 
 #
@@ -188,20 +189,7 @@ function push_ssh_cert() {
   fi
   test -f ~/.ssh/id_*sa.pub || ssh-keygen -t rsa
   echo "Pushing public key to $_user@$_host:$_port..."
-  ssh -p $_port $_user@$_host 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys' < ~/.ssh/id_*sa.pub
-}
-
-# Find and replace a string in all files recursively, starting from the current directory.
-# Adapted from code found at <http://forums.devshed.com/unix-help-35/unix-find-and-replace-text-within-all-files-within-a-146179.html>
-function replacein() {
-  find . -type f | xargs perl -pi -e "s/$1/$2/g"
-}
-
-#
-# home-assistant
-#
-lamp() {
-  sh $HOME/.dotfiles/bin/hs-to-ha "script.hs_office_lamp_$1"
+  ssh -p $_port $_user@$_host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys" < ~/.ssh/id_*sa.pub
 }
 
 geoip() {

@@ -33,7 +33,7 @@ export TZ="/usr/share/zoneinfo/US/Central"
 export XDG_CONFIG_HOME  # we've set this .zshenv
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
-export DOTS="$HOME/.dotfiles"
+export DOTS="$HOME/.dots"
 export DOTFILES="$DOTS"
 export DOTDIR="$DOTS"
 export DOTSDIR="$DOTS"

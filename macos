@@ -91,13 +91,6 @@ defaults write com.apple.screencapture disable-shadow -bool true
 # no .DS_Store on network
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 
-# Finder
-defaults write com.apple.finder NewWindowTarget -string "PfLo"
-defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
-# -- default to using ForkLift 3 for all the Finder things
-defaults write -g NSFileViewer -string com.binarynights.ForkLift-3
-defaults write com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array-add '{LSHandlerContentType="public.folder";LSHandlerRoleAll="com.binarynights.ForkLift-3";}'
-
 # Don’t automatically rearrange Spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
 
@@ -212,9 +205,6 @@ defaults write com.apple.systempreferences NSQuitAlwaysKeepsWindows -int 0
 # Automatically quit printer app once the print jobs complete
 defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 
-# show all hidden files and folders (or is it `true`?)
-defaults write com.apple.Finder AppleShowAllFiles YES
-
 # remove all default icons on the dock (for when first setting up)
 defaults delete com.apple.dock persistent-apps
 defaults delete com.apple.dock persistent-others
@@ -225,6 +215,17 @@ defaults delete com.apple.dock persistent-others
 ##
 # Finder
 ##
+
+defaults write com.apple.finder NewWindowTarget -string "PfLo"
+defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
+
+# -- default to using ForkLift 3 for all the Finder handlers
+defaults write -g NSFileViewer -string com.binarynights.ForkLift-3
+defaults write com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array-add '{LSHandlerContentType="public.folder";LSHandlerRoleAll="com.binarynights.ForkLift-3";}'
+
+# show all hidden files and folders (or is it `true`?)
+defaults write com.apple.Finder AppleShowAllFiles -boolean true
+defaults write com.apple.finder AppleShowAllExtensions -boolean true
 
 # Finder: show status bar
 defaults write com.apple.finder ShowStatusBar -bool true

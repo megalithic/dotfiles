@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+echo ""
+echo ":: setting up ssh stuffs"
+echo ""
+
+eval "$(ssh-agent -s)"
+
+if [[ -f "$HOME/.ssh/id_rsa" ]]
+then
+  ssh-add ~/.ssh/id_rsa
+  echo "++ added key to ssh-agent..."
+else
+  echo ""
+  echo ":: you need to run the following, to generate a priv/pub key:"
+  echo '  ssh-keygen -t rsa -b 4096 -C "your_email@example.com"'
+  echo "  - once done, re-run bin/_ssh; press any key to continue."; read -k1 -s
+
+  
+fi
+
+if [[ -f "$HOME/.ssh/id_rsa.pub" ]]
+then
+  pbcopy < ~/.ssh/id_rsa.pub
+  echo 'copied public key to clipboard. paste it into your Github account...'
+  open 'https://github.com/account/ssh'
+  
+  echo ":: to verify the key was setup correctly: `ssh -T git@github.com`..."
+fi
+

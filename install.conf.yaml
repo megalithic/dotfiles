@@ -104,6 +104,9 @@
       if: "[ `uname` = Darwin ]"
 
     # ----- git
+    ~/.gitmessage:
+      force: true
+      path: git/gitmessage
     ~/.gitconfig:
       force: true
       path: git/gitconfig
@@ -119,6 +122,7 @@
     # ----- misc/other
     # ~/.tool-versions: asdf/tool-versions
     ~/.vimrc: config/nvim/vimrc
+    ~/.zshenv: config/zsh/.zshenv
     # ~/Library/Application Support/lazygit/config.yml:
     #   force: true
     #   if: "[ `uname` = Darwin ]"
@@ -152,13 +156,13 @@
     - [compaudit | xargs chmod g-w, Handle compaudit insecure directories "warning"] # https://stackoverflow.com/a/22753363/213904
     - description: Install from source
       command: >-
-        cd ~/.local/share/src || exit 1;
-        git clone git@github.com:neovim/neovim.git || exit 1;
-        cd neovim || exit 1;
-        git checkout master || exit 1;
-        git up || exit 1;
-        make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1;
-        sudo make install || exit 1;
+        cd ~/.local/share/src && echo "-> cd successful";
+        [[ ! -d ~/.local/share/src/neovim ]] && git clone git@github.com:neovim/neovim.git && echo "-> clone successful";
+        cd neovim && echo "-> cd successful";
+        git checkout master && echo "-> checkout master successful";
+        git up && echo "-> git up successful";
+        make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
+        sudo make install || exit 1 && echo "-> make install successful";
     # - description: Download binaries
     #   command: >-
     #     cd ~/.local/share/packages || exit 1;

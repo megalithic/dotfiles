@@ -1,7 +1,8 @@
 .DS_Store
 private
-**/.swp
-**/.log
+**/*.swp
+**/*.log
+**/logs
 **/*.weechatlog
 **/sec.conf
 config/karabiner/automatic_backups/*

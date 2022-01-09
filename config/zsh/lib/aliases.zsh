@@ -128,7 +128,7 @@ if type nvim >/dev/null 2>&1; then
 	alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
 	alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
 	alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
-	alias nvimbuild="pushd ~/code/neovim && git co master && git up && sudo make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install && popd"
+	alias nvimbuild="pushd ~/.local/share/src/neovim && git co master && git up && make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install && popd"
 	alias buildnvim=nvimbuild
 	alias nvim="nvim -O" # let's always open multiple files passed in as vsplits
 	alias im="nvim"
@@ -156,33 +156,33 @@ fi
 
 # CONFIG EDITS
 # -----------------------------------------------------------------------------
-alias ez="nvim $DOTS/zsh/.config/zsh/.zshrc"
-alias ezz="nvim $DOTS/zsh/.config/zsh/.zshenv"
-alias eza="nvim $DOTS/zsh/.config/zsh/**/aliases.zsh"
-alias ezf="nvim $DOTS/zsh/.config/zsh/**/funcs.zsh"
-alias ezo="nvim $DOTS/zsh/.config/zsh/**/opts.zsh"
-alias eze="nvim $DOTS/zsh/.config/zsh/**/env.zsh"
-alias ezkb="nvim $DOTS/zsh/.config/zsh/**/keybindings.zsh"
+alias ez="nvim $DOTS/config/zsh/.zshrc"
+alias ezz="nvim $DOTS/config/zsh/.zshenv"
+alias eza="nvim $DOTS/config/zsh/**/aliases.zsh"
+alias ezf="nvim $DOTS/config/zsh/**/funcs.zsh"
+alias ezo="nvim $DOTS/config/zsh/**/opts.zsh"
+alias eze="nvim $DOTS/config/zsh/**/env.zsh"
+alias ezkb="nvim $DOTS/config/zsh/**/keybindings.zsh"
 alias ezl="nvim $HOME/.localrc"
 
-alias ev="nvim $DOTS/nvim/.config/nvim/init.lua"
-alias evv="nvim $DOTS/nvim/.config/nvim/.vimrc"
-alias evp="nvim $DOTS/nvim/.config/nvim/lua/plugins.lua"
-alias evs="nvim $DOTS/nvim/.config/nvim/lua/settings.lua"
-alias evo="nvim $DOTS/nvim/.config/nvim/lua/options.lua"
-alias evl="nvim $DOTS/nvim/.config/nvim/lua/lsp/init.lua"
-alias evm="nvim $DOTS/nvim/.config/nvim/lua/mappings.lua"
-alias evc="nvim $DOTS/nvim/.config/nvim/lua/commands.lua"
-alias evg="nvim $DOTS/nvim/.config/nvim/lua/globals.lua"
+alias ev="nvim $DOTS/config/nvim/init.lua"
+alias evv="nvim $DOTS/config/nvim/vimrc"
+alias evp="nvim $DOTS/config/nvim/lua/plugins.lua"
+alias evs="nvim $DOTS/config/nvim/lua/settings.lua"
+alias evo="nvim $DOTS/config/nvim/lua/options.lua"
+alias evl="nvim $DOTS/config/nvim/lua/lsp/init.lua"
+alias evm="nvim $DOTS/config/nvim/lua/mappings.lua"
+alias evc="nvim $DOTS/config/nvim/lua/commands.lua"
+alias evg="nvim $DOTS/config/nvim/lua/globals.lua"
 
-alias ehs="nvim $DOTS/hammerspoon/.config/hammerspoon/config.lua"
-alias eh="nvim $DOTS/hammerspoon/.config/hammerspoon/init.lua"
-alias eg="nvim $DOTS/git/.gitconfig"
-alias eb="nvim $DOTS/Brewfile"
+alias ehs="nvim $DOTS/config/hammerspoon/config.lua"
+alias eh="nvim $DOTS/config/hammerspoon/init.lua"
+alias eg="nvim $DOTS/git/gitconfig"
+alias eb="nvim $DOTS/brew/Brewfile"
 alias essh="nvim $HOME/.ssh/config"
 
-alias ek="nvim $DOTS/kitty/.config/kitty/kitty.conf"
-alias et="nvim $DOTS/tmux/.tmux.conf"
+alias ek="nvim $DOTS/config/kitty/kitty.conf"
+alias et="nvim $DOTS/config/tmux/.tmux.conf"
 
 # ZK/notes/zettelkasten
 # -----------------------------------------------------------------------------
@@ -203,10 +203,12 @@ alias play="cd $HOME/code/playground"
 alias logs="cd $HOME/code/logs/"
 alias docs="cd $HOME/Documents"
 alias box="cd $HOME/Dropbox/"
-alias box="cd $HOME/Downloads/"
+alias dl="cd $HOME/Downloads/"
 alias icloud="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs"
+alias idocs="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents"
 alias zknotes="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents/_notes"
-alias nvim-plugins="cd ~/.local/share/nvim/site/pack/packer/start"
+alias notes="cd $HOME/Library/Mobile\ Documents/com\~apple\~CloudDocs/Documents/_notes"
+alias nvim-plugins="cd ~/.local/share/nvim/site/pack/paqs/start"
 # alias icloud="cd $HOME/Library/Mobile\ Documents/com~apple~CloudDocs"
 
 # POSTGRES
@@ -251,7 +253,7 @@ alias zshtime="/usr/bin/time $(which zsh) -i -c echo"
 alias timezsh="time $(which zsh) -i -c exit"
 alias zshprofile="time ZPROFILE=1 $(which zsh) -i -c exit"
 alias zshclear="rm -f ~/.zcompdump ~/.zsh-dotfiles-compiled.zsh"
-alias vimtime="ruby $HOME/.dotfiles/bin/vim-plugins-profile.rb nvim"
+alias vimtime="ruby $DOTS/bin/vim-plugins-profile.rb nvim"
 
 # Intuitive map function
 # For example, to list all directories that contain a certain file:
