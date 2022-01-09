@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+
+function is_ssh {
+	if [[ $(ps -o comm= -p $PPID) == "sshd" ]]; then
+		print " "
+	fi
+}
+is_ssh
+
+# vim:set ft=zsh;foldenable;foldmethod=marker;ts=2;sts=2;sw=2

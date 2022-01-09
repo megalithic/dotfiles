@@ -1,7 +1,7 @@
 ```
 
      ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-     │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: bits & bobs, dots & things.
+     │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: bits & bobs, dots & things. 🛖
      ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
      @megalithic
 
@@ -16,29 +16,44 @@
 If you want to kick the tires, you can simply:
 
 ```bash
-git clone git@github.com:megalithic/dots.git ~/.dotfiles && make -C ~/.dotfiles install
+git clone git@github.com:megalithic/dotfiles.git ~/.dotfiles \
+  && make -C ~/.dotfiles
+```
+
+_For platform specific installs:_
+
+```bash
+make -C ~/.dotfiles macos # (or `linux`, or `platforms` for both)
+```
+
+_Get help:_
+
+```bash
+make -C ~/.dotfiles help # for more Makefile goals
 ```
 
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot).
 
 I have tried to be platform agnostic, but the majority of scripts that run here
-are for MacOS (specifically MacOS Big Sur, non-M1, at the time of this commit), with a
+are for MacOS (specifically MacOS Big Sur, _non-M1_, at the time of this commit), with a
 handful of Debian/Ubuntu Linux specific platform scripts and provisions. This
 means that certain tools/binaries I rely on may or may not install/configure on
 Linux. Though, I have tested it decently well on an Ubuntu-based Linode instance.
 
 ##### ⚠️ Thar be dragons..
 
-I highly recommend you dig into the scripts and configs to see what all
-is going on (because it does a lot that I'm not describing here) before you
--- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
+> I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot that I'm not describing here) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
 
-### ✨ Accoutrements
+## ✨ Tree be thy guide
 
-A few of the _must-have_ tools I roll with:
+A tree says a thousand words:
 
-- [homebrew](https://brew.sh/)
-  - see `~/.dotfiles/brew` for all that gets installed
+_img of tree output goes here.._
+
+## ✨ Accoutrements
+
+A few of the _must-have_ tools I roll with: - [asdf](https://asdf-vm.com/) [homebrew](https://brew.sh/) see `~/.dotfiles/brew` for all that gets installed
+
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
   - see `~/.dotfiles/keyboard` for macOS specific config things

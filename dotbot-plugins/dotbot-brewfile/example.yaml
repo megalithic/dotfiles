@@ -1,0 +1,10 @@
+- brewfile:
+    # Specify any file location:
+    file: Brewfile
+    # Will not upgrade any existing deps:
+    no-upgrade: true
+    # Will install only `taps` and `brews`, skipping `cask` and `mas`:
+    include: ['tap', 'brew']
+    # Will print all output from brew
+    stdout: true
+    stderr: true

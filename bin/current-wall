@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+osascript -e 'tell application "Finder"
+	set wall to desktop picture as alias
+	set wallpath to POSIX path of wall
+end tell'

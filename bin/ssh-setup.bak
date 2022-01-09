@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -e
+
+# setup ssh stuff
+echo "setting up ssh stuffs"
+
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa
+
+echo 'added key to ssh-agent...'
+
+if [[ -f '~/.ssh/id_rsa.pub' ]]
+then
+  pbcopy < ~/.ssh/id_rsa.pub
+  echo 'copied public key to clipboard. paste it into your Github account...'
+  open 'https://github.com/account/ssh'
+fi
+
+echo "To verify the key was setup correctly: `ssh -T git@github.com`..."

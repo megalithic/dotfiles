@@ -1,0 +1,28 @@
+name: atlas
+root: ~/code/outstand
+
+# Runs on project start, always
+on_project_start: gohome && dowork
+
+tmux_options: -2
+windows:
+  - chats:
+    - tmux link-window -s mega:chats -t 0 && exit
+  - code:
+      layout: main-vertical
+      panes:
+        - code:
+          - ssh seth-dev
+          - cd ~/code/atlas
+          - eval $(desk load); ls
+  - services:
+      layout: even-horizontal
+      panes:
+        - logs:
+            - ssh seth-dev
+            - cd ~/code/atlas
+            - eval $(desk load)
+        - repl:
+            - ssh seth-dev
+            - cd ~/code/atlas
+            - eval $(desk load); iex -S mix

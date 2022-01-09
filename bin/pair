@@ -1,0 +1,148 @@
+#!/bin/sh
+# http://iamvery.com/2013/11/16/tmux-pairing-anywhere-on-your-box.html
+# https://github.com/jeffweiss/dotfiles/blob/master/bin/pair
+
+command=$(basename $0)
+session="pairing"
+ssh_command=""
+user="pair"
+
+# Make sure dependencies are installed
+if [ ! $(command -v gh-auth) ]; then
+  gem install github-auth
+fi
+if [ ! $(command -v tmux) ]; then
+  echo "This script depends on tmux. Try: brew install tmux"
+  exit 1
+fi
+if [ ! $(command -v ng) ]; then
+  echo "This script depends on https://github.com/megalithic/dotfiles/blob/master/bin/ng"
+  exit 1
+fi
+
+help(){
+  echo "Usage: $command <subcommand> [options]\n"
+  echo "Subcommands:"
+  echo "    on    Sets pairing slack status and DND on"
+  echo "    off   Removes pairing slack status and DND off"
+  echo "    add   Add a github user"
+  echo "    rm    Remove a github user"
+  echo "    ls    List authorized github users"
+  echo "    up    Start shared tmux pairing session"
+  echo "    down  Stop shared tmux pairing session"
+  echo "    info  Display handy information about the pairing session"
+  echo "    ssh   Display the constructed ssh command"
+  echo "          See: https://ngrok.com"
+}
+
+add(){
+  gh-auth add --users $@ --command="$(which tmux) attach -t $session"
+}
+
+rm(){
+  gh-auth remove --users $@
+}
+
+ls() {
+  gh-auth list | sed 's/ /\n/g'
+}
+
+up(){
+  # Add any users, if specified
+  if [[ ! -z $@ ]]; then
+    add $@
+  fi
+
+  pair_status_on
+
+  tmux new-session -d -s $session "ng connect"
+  tmux switch -t $session
+  tmux split-window -h -t $session
+
+  # indicate some sort of progress while we wait to get the ngrok session's port number
+  DONE=0;
+  while [ $DONE -eq 0 ]; do
+    if [[ "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "" && "$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)" != "null" ]]; then
+      # once we have the ngrok session's port number, go ahead and display our pair session info
+      # TODO: figure out how to execute this without seeing the commands at the prompt
+      sleep 1 # some delay so tunnel has time to get up
+
+      # let's make sure we don't have existing services running
+ # &> /dev/null
+      pkill -9 -f erlang
+      pkill -9 -f beam.smp
+      pkill -9 -f start.js
+
+      tmux send-keys -t $session "cd ~; pair info" C-m
+      DONE=1
+    fi;
+    sleep 0.5;
+  done;
+}
+
+down() {
+  pair_status_off
+  pkill -9 -f ngrok
+  pkill -9 -f erlang
+  pkill -9 -f beam.smp
+  pkill -9 -f start.js
+
+  tmux kill-session -t $session
+}
+
+ssh() {
+  host="1.tcp.ngrok.io"
+  port=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' | cut -d : -f3)
+  # tunnel
+  ssh_command="ssh -p $port $user@$host"
+  echo $ssh_command
+}
+
+info() {
+  printf -- "\n"
+  printf -- '\033[32m  Pairing available at: \033[0m\n'
+  printf -- "$(pair ssh)\n"
+  printf -- "\n"
+  printf -- '\033[32m  The following users are authorized to connect: \033[0m\n'
+  printf -- "$(pair ls)\n"
+
+  # copy our pair address to the clipboard
+  echo "$(pair ssh)" | pbcopy
+  printf -- '\n\033[33m➜ Copied pairing ssh address to clipboard!\033[0m\n'
+}
+
+pair_status_on () {
+  [ -x "$(command -v dnd)" ] && dnd on
+  [ -x "$(command -v slack)" ] && slack pair
+}
+
+pair_status_off () {
+  [ -x "$(command -v dnd)" ] && dnd off
+  [ -x "$(command -v slack)" ] && slack back
+}
+
+toggle_pair_status() {
+  if [[ -x "$(command -v dnd)" ]]; then
+    if $(dnd dnd_enabled); then
+      pair_status_off
+    else
+      pair_status_on
+    fi
+  fi
+}
+
+subcommand=$1
+case $subcommand in
+  '')
+    toggle_pair_status ;;
+  '-h' | '--help')
+    help ;;
+  on)
+    pair_status_on ;;
+  off)
+    pair_status_off ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

@@ -1,0 +1,60 @@
+name: outstand
+root: ~/code/outstand
+
+# Runs on project start, always
+on_project_start: gohome && dowork
+
+tmux_options: -2
+windows:
+  - chats:
+      - cd ~/.dotfiles; weechat
+  - dots:
+      - cd ~/.dotfiles; nvim
+  - ssh-dots:
+      - ssh seth-dev
+      - cd ~/.dotfiles
+  - ssh-atlas:
+      layout: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
+      panes:
+        - code:
+            - ssh seth-dev
+            - cd ~/code/atlas
+            - eval $(desk load); nvim
+        - logs:
+            - ssh seth-dev
+            - cd ~/code/atlas
+            - eval $(desk load)
+        - repl:
+            - ssh seth-dev
+            - cd ~/code/atlas
+            - eval $(desk load); iex -S mix
+  - ssh-app:
+      layout: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
+      panes:
+        - code:
+            - ssh seth-dev
+            - cd ~/code/app
+            - eval $(desk load); nvim
+        - logs:
+            - ssh seth-dev
+            - cd ~/code/app
+            - eval $(desk load)
+        - repl:
+            - ssh seth-dev
+            - cd ~/code/app
+            - eval $(desk load); rails c
+  - ssh-pages:
+      layout: 4c2c,174x84,0,0[174x63,0,0,2,174x20,0,64{87x20,0,64,5,86x20,88,64,11}]
+      panes:
+        - code:
+            - ssh seth-dev
+            - cd ~/code/pages
+            - eval $(desk load); nvim
+        - logs:
+            - ssh seth-dev
+            - cd ~/code/pages
+            - eval $(desk load)
+        - repl:
+            - ssh seth-dev
+            - cd ~/code/pages
+            - eval $(desk load); iex -S mix

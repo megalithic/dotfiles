@@ -1,0 +1,7 @@
+#!/usr/bin/zsh
+
+if (command -v desk &>/dev/null); then
+  desk | grep -q 'No desk activated.') && exit 1 || exit 0
+else
+  exit 1
+fi

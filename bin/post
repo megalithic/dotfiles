@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+set -o errexit -o errtrace
+
+command="$(basename "$0")"
+root_path="$HOME/code/megalithic.io/priv/posts"
+
+help() {
+  printf -- "Usage: "$command" <subcommand> [options]\n"
+  printf -- "Subcommands:\n"
+  printf -- "    add   Create a new blog post\n"
+  printf -- "    view  View a specific blog post\n"
+  printf -- "    ls    List blog posts\n"
+}
+
+# post_file="$HOME/code/megalithic.io/priv/posts/$1.md"
+
+# echo ""
+# echo "Generating new blog post markdown file:"
+# echo ":: $post_file"
+# echo ":: Opening markdown post with $EDITOR"
+# echo ""
+
+# to_file_name(input) {
+#   file_name=$input
+#   return $file_name
+# }
+
+add() {
+  # file_name=""
+  post_file="$root_path/$1.md"
+  nvim $post_file
+}
+
+ls() {
+  ls -ahg $root_path
+}
+
+subcommand=$1
+case $subcommand in
+  '' | '-h' | '--help')
+    help ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

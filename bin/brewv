@@ -1,0 +1,56 @@
+#!/usr/bin/env zsh
+
+# REF:
+# - https://stackoverflow.com/questions/62032757/install-a-previous-version-of-chromedriver-with-brew/62765875#62765875
+# - https://git.tsundere.moe/Frederick888/frederick-settings/blob/master/.gitconfig
+# - https://gist.github.com/junegunn/f4fca918e937e6bf5bad
+
+set -euo pipefail
+
+trap 'clean_exit $? $LINENO' EXIT
+
+function clean_exit {
+	set +x
+	if [[ $1 != "0" ]]; then
+		echo "FATAL error code \"${1}\" occurred on line \"${2}\""
+	fi
+}
+
+formula_path="/usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula"
+formula_name="${1:-}"
+formula_version="${2:-}" # presently not doing anything with this since we use the commit sha
+
+pushd "$formula_path"
+
+git status --branch --short .
+
+selected_commit=$(echo "$(git log \
+	-n 10 \
+	--color=always \
+	--abbrev=7 \
+	--format=format:"%C(bold blue)%h%C(reset) %C(dim white)%an%C(reset)%C(bold yellow)%d%C(reset) %C(white)%s%C(reset) %C(bold green)(%ar)%C(reset)" "$formula_name.rb" \
+	| fzf-tmux \
+		--ansi \
+		--no-sort \
+		--layout=reverse \
+		--tiebreak=index \
+		--bind="ctrl-c:abort" \
+		--bind="enter:replace-query+print-query" \
+		--preview-window=hidden \
+	| grep -o '[a-f0-9]\{7\}' \
+	| head -1)")
+
+# cleanly exit if no commit selected
+if [[ -z $selected_commit ]]; then
+	exit 0
+fi
+
+echo "commit to revert: $selected_commit"
+git checkout "$selected_commit" -- "$formula_name.rb" \
+	&& brew unpin "$formula_name" \
+	&& brew reinstall "$formula_name" \
+	&& brew pin "$formula_name"
+
+popd
+
+# vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

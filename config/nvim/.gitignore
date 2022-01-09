@@ -1,0 +1,4 @@
+.cache
+repos
+packer_compiled.vim
+pack/*

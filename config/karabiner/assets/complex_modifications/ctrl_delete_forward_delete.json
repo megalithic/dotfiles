@@ -1,0 +1,25 @@
+{
+  "title": "Ctrl+Delete to Forward Delete",
+  "rules": [
+    {
+      "description": "Change ctrl+delete to forward delete",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "delete_or_backspace",
+            "modifiers": {
+              "mandatory": ["control"],
+              "optional": ["option"]
+            }
+          },
+          "to": [
+            {
+              "key_code": "delete_forward"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

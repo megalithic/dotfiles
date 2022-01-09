@@ -1,0 +1,61 @@
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+#
+# What in tarnation?
+#
+# CLI tool to control macOS/notification center do-not-disturb (DND) mode
+# REQUIRES: `brew install "vitorgalvao/tiny-scripts/calm-notifications"`
+#
+
+command=""
+subcommand=""
+
+if ! which calm-notifications &>/dev/null; then
+	printf "$(tput setaf 1)✖ %s$(tput sgr0)\n" 'unable to run dnd; it requires `brew install "vitorgalvao/tiny-scripts/calm-notifications"`'
+	return 1
+fi
+
+command="$(basename "$0")"
+
+help() {
+	printf -- "Usage: "$command" <subcommand> [options]\n"
+	printf -- "Subcommands:\n"
+	printf -- "    on       Turn ON do-not-disturb (DND) mode\n"
+	printf -- "    off      Turn OFF do-not-disturb (DND) mode\n"
+	printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
+	printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
+}
+
+on() {
+	calm-notifications on
+}
+
+off() {
+	calm-notifications off
+}
+
+toggle() {
+	calm-notifications toggle
+
+	status
+}
+
+status() {
+	echo "$(calm-notifications status)"
+}
+
+subcommand=$1
+case $subcommand in
+	'')
+		toggle
+		;;
+	'-h' | '--help')
+		help
+		;;
+	*)
+		shift
+		${subcommand} $@
+		;;
+esac

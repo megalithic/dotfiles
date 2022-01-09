@@ -8,3 +8,6 @@
 [submodule "dotbot-gh-extension"]
 	path = dotbot-plugins/dotbot-gh-extension
 	url = https://github.com/fundor333/dotbot-gh-extension.git
+[submodule "dotbot-brewfile"]
+	path = dotbot-plugins/dotbot-brewfile
+	url = https://github.com/sobolevn/dotbot-brewfile.git

@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+# display pairing ssh info when in pairing mode
+
+# # while true
+# # do
+# #   if [[ $(tmux display-message -p '#S') == 'pairing' ]]; then
+# #     echo "#[fg=colour245]  $(pair ssh)"
+# #     sleep 30
+# #   fi
+# # done
+
+# echo "  $(pair ssh)"
+
+# if [[ $(tmux display-message -p '#S') == 'pairing' ]]; then
+#   echo "#[fg=colour245]  $(pair ssh)"
+# fi

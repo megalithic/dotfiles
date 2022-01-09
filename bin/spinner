@@ -1,0 +1,37 @@
+#!/bin/bash -e
+
+# spinner
+
+# Display a spinner for long running commands
+# (this script leaves no trail of the spinner at finishing)
+
+# Usage:
+# spinner [long-running-command]
+
+# tl;dr
+# `stdout` will be whatever the output of your command is and
+# `stderr` will be the spinner spinning around round oud und nd d
+# So you can pipe stuff without problem ;)
+
+# Execute your stuffs in a background job
+eval "${@:-sleep 1}" &
+
+# Point fd#3 to fd#1 (Save it for later use), then point fd#1 to fd#2
+# PD: This does not interfere with the variable for the PID i.e. $!
+exec 3>&1 >&2
+
+PID=$!
+# SPINNER_PARTS="/-\|"
+# SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏" # https://github.com/sindresorhus/cli-spinners/blob/master/spinners.json
+SPINNER_PARTS="⣾⣽⣻⢿⡿⣟⣯⣷"
+SPINNER_PARTS="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+ACC=1
+
+printf " "
+while ps a | awk '{print $1}' | grep -q "${PID}"; do
+	printf "\b%s" "${SPINNER_PARTS:ACC++%${#SPINNER_PARTS}:1}"
+	sleep .15
+done
+printf "\b"
+
+exec >&3 3>&-

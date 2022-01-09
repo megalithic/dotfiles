@@ -1,0 +1,99 @@
+#!/usr/bin/env zsh
+
+# REFS: https://github.com/mattpetters/dotfiles/commit/92b4fa766daa1b00858de29ff1f6e33ac6ec296d
+
+
+event=$(/usr/local/bin/icalBuddy -n -li 2 -npn -nc -b "" -ic "Calendar,Personal Calendar" -iep "title,datetime" -ps "|=|" -po "datetime,title" -tf "=%H:%M" -df "" -eed eventsToday+)
+echo "$event"
+event_time=$(echo $event | awk -F "=" '{print substr($2,0,5)}')
+# current_time=$(date +%R)
+# current_time_in_ms=$(date +%s)
+# event_time_in_ms=$(date -j -f '%R' "$event_time" +'%s')
+# echo "current_time: $current_time"
+# echo "current_time_in_ms: $current_time_in_ms"
+# echo "event_time_in_ms: $event_time_in_ms"
+
+event_title=$(echo $event | awk -F "=" '{print $3}')
+
+# sec_old=$(date -d "1970-01-01 $old_hour:$old_min:00" +%s)
+# sec_new=$(date -d "1970-01-01 $hour:$min:00" +%s)
+
+# echo "the difference is $(( (sec_new - sec_old) / 60)) minutes"
+
+output=""
+
+if [[ -z $event ]]
+then
+  output=""
+else
+  if [[ -z $TMUX ]]
+  then
+    output="$event_title @ $event_time"
+  else
+    output="#[fg=red] $event_title @ $event_time #[fg=colour255]⋮ "
+  fi
+fi
+
+echo $output
+
+# echo "current time: $current_time"
+# echo "event time: $event_time"
+# echo "time diff: $time_diff"
+
+# if [[ "$current_time" < "$event_time" ]]; then
+#   echo $output
+# else
+#   echo ""
+# fi
+
+# osascript <<'END'
+# set theEventInfo to do shell script "/usr/local/bin/icalBuddy -n -li 1 -uid -ec 'Birthdays' -ps '/|/' eventsToday+10 | sed 's/^.*(\\(.*\\)).*uid: \\(.*\\)$/\\1|\\2/'"
+
+# set prevDelimiter to AppleScript's text item delimiters
+# set AppleScript's text item delimiters to {"|"}
+# set theEventInfos to every text item of theEventInfo
+# set AppleScript's text item delimiters to prevDelimiter
+
+# set theEventCalendar to first item of theEventInfos
+# set theEventUID to second item of theEventInfos
+
+# tell application "Calendar"
+#     tell calendar theEventCalendar
+#         set theEvent to first event whose uid is theEventUID
+#         set duration to (start date of theEvent) - (current date)
+#         return "next event in " & duration div hours & ":" & text -2 thru -1 of ("0" & (duration div minutes - (duration div hours * 60))) & return & "---" & return & summary of theEvent & return & start date of theEvent
+#     end tell
+# end tell
+# END
+
+# osascript <<'END'
+# set upcomingEvent to do shell script "/usr/local/bin/icalBuddy -n -npn -nc -ea -b '' -iep 'title,datetime,uid,calendar' -li 1 -uid -calendar -ic 'Calendar,Personal Calendar' -ps '/|/' eventsToday+ | sed 's/^.*(\\(.*\\)).*uid: \\(.*\\)$/\\1|\\2/'"
+
+# set prevDelimiter to AppleScript's text item delimiters
+# set AppleScript's text item delimiters to {"|"}
+# set eventAttrs to every text item of upcomingEvent
+# set AppleScript's text item delimiters to prevDelimiter
+
+# log upcomingEvent
+# log eventAttrs
+
+# # set eventTitle to first item of eventAttrs
+# # set eventDateTime to second item of eventAttrs
+# # set eventUID to third item of eventAttrs
+# # set eventCalendar to last item of eventAttrs
+
+# # log eventTitle
+# # log eventDateTime
+# # log eventUID
+# # log eventCalendar
+
+
+# # tell application "Calendar"
+# #     tell calendar eventCalendar
+# #         set targetEvent to first event whose uid is eventUID
+# #         log targetEvent
+# #         set duration to (start date of targetEvent) - (current date)
+# #         return "next event in " & duration div hours & ":" & text -2 thru -1 of ("0" & (duration div minutes - (duration div hours * 60))) & return & "---" & return & summary of targetEvent & return & start date of targetEvent
+# #     end tell
+# # end tell
+# END

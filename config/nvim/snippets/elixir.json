@@ -1,0 +1,205 @@
+{
+	"__MODULE__": {
+		"prefix": "uumod",
+		"body": [
+			"__MODULE__"
+		]
+	},
+	"__something__": {
+		"prefix": "uu",
+		"body": [
+			"__${1:MODULE}__$0"
+		]
+	},
+	"Define function": {
+		"prefix": "dfun",
+		"body": [
+			"def ${1:function_name}(${2:args}) $3do",
+			"  $0",
+			"end"
+		]
+	},
+	"Define 1-line function": {
+		"prefix": "d1f",
+		"body": [
+			"def ${1:function_name}(${2:args}), $3do: $0"
+		]
+	},
+	"Define private function": {
+		"prefix": "pfun",
+		"body": [
+			"defp ${1:function_name}(${2:args}) $3do",
+			"  $0",
+			"end"
+		]
+	},
+	"Define 1-line private function": {
+		"prefix": "p1f",
+		"body": [
+			"defp ${1:function_name}(${2:args}), $3do: $0"
+		]
+	},
+	"Define module": {
+		"prefix": "dmod",
+		"body": [
+			"defmodule ${1:ModuleName} do",
+			"  $0",
+			"end"
+		]
+	},
+	"Define struct": {
+		"prefix": "dstruct",
+		"body": [
+			"defstruct [${1:contents}]"
+		]
+	},
+	"Define test": {
+		"prefix": "test",
+		"body": [
+			"test \"${1:test description}\" do",
+			"  $0",
+			"end"
+		]
+	},
+	"Ecto alter table": {
+		"prefix": "altt",
+		"body": [
+			"alter table(:${1:name}) do",
+			"  $0",
+			"end"
+		]
+	},
+  "lv_module": {
+    "prefix": "lv",
+    "body": [
+      "defmodule LiveViewStudioWeb.${1}Live do",
+      "  use LiveViewStudioWeb, :live_view",
+      "end"
+    ],
+    "description": "LiveView module"
+  },
+  "lv_mount": {
+    "prefix": "mount",
+    "body": [
+      "def mount(_params, _session, socket) do",
+      "  socket = assign(socket, ${1:key}: ${2:value})",
+      "  {:ok, socket}",
+      "end"
+    ],
+    "description": "LiveView mount function"
+  },
+  "lv_rend": {
+    "prefix": "rend",
+    "body": [
+      "def render(assigns) do",
+      "  ~L\"\"\"",
+      "  ${0}",
+      "  \"\"\"",
+      "end"
+    ],
+    "description": "LiveView render function"
+  },
+  "lv_handle_event": {
+    "prefix": "he",
+    "body": [
+      "def handle_event(${1:event}, _, socket) do",
+      "  socket = assign(socket, ${2:key}: ${3:value})",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_event function"
+  },
+  "lv_handle_info": {
+    "prefix": "hi",
+    "body": [
+      "def handle_info(${1:message}, socket) do",
+      "  socket = assign(socket, ${2:key}: ${3:value})",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_info function"
+  },
+  "lv_handle_params": {
+    "prefix": "hp",
+    "body": [
+      "def handle_params(params, _url, socket) do",
+      "  {:noreply, socket}",
+      "end"
+    ],
+    "description": "LiveView handle_params function"
+  },
+  "lv_template": {
+    "prefix": "lt",
+    "body": [
+      "~L\"\"\"",
+      "${0}",
+      "\"\"\""
+    ],
+    "description": "LiveView inline template"
+  },
+  "genserver_boilerplate": {
+    "prefix": "gen_base",
+    "body": [
+      "defmodule $1 do",
+      "@moduledoc \"\"\"",
+      "  The `$1` server implementation",
+      "\"\"\"",
+      "",
+      "  use GenServer",
+      "",
+      "  require Logger",
+      "",
+      "##############################################################################",
+      "",
+      "  @doc \"Starts the `$1` server up\"",
+      "  def start_link(opts \\ []) do",
+      "    GenServer.start_link(__MODULE__, opts, name: __MODULE__)",
+      "  end",
+      "",
+      "  def init(args), do: {:ok, args}",
+      "",
+      "##############################################################################",
+      "",
+      "  @spec state() :: any()",
+      "  def state(), do: handle_call(__MODULE__, :state)",
+      "",
+      "  @spec state!(new_state) :: any()",
+      "  def state!(), do: handle_cast(__MODULE__, {:state!, new_state})",
+      "",
+      "##############################################################################",
+      "",
+      "  @doc false",
+      "  def handle_call(:state, _from, state), do: {:reply, state, state}",
+      "",
+      "  @doc false",
+      "  def handle_cast({:state!, new_state}, state), do: {:noreply, new_state}",
+      "",
+      "  @doc false",
+      "  def handle_info({:DOWN, _ref, :process, _pid, :normal}, state), do: {:noreply, state}",
+      "end"
+    ],
+    "description": "GenServer template with a state"
+  },
+  "genserver_handle_call": {
+    "prefix": "gen_call",
+    "body": [
+      "@impl GenServer",
+      "def handle_call(${1::event}, ${2:_from}, ${3:state}) do",
+      "  ${4:}",
+      "  {:reply, state, state}",
+      "end"
+    ],
+    "description": "GenServer handle_call"
+  },
+  "genserver_handle_cast": {
+    "prefix": "gen_cast",
+    "body": [
+      "@impl GenServer",
+      "def handle_cast({${1::event}, ${2:some_data}}, ${3:state}) do",
+      "  ${4:}",
+      "  {:noreply, state}",
+      "end"
+    ],
+    "description": "GenServer handle_cast"
+  }
+}

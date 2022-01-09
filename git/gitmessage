@@ -1,0 +1,15 @@
+
+
+# 50-character subject line:
+# - <type>[(optional scope)]: <subject>
+#
+# 72-character wrapped longer description. This should answer:
+# - Why was this change necessary?
+# - How does it address the problem?
+# - Are there any side effects?
+#
+# ---------------------------------------------------------------------
+# Conventional Commits:
+# A specification for adding human and machine readable meaning to
+# commit messages. https://www.conventionalcommits.org
+# ---------------------------------------------------------------------

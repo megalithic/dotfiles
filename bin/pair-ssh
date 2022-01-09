@@ -1,0 +1,147 @@
+#!/bin/sh
+
+#
+# What in tarnation?
+#
+# This is a CLI pairing tool that, IMO, is better than tmate. Bold statement.
+#
+# It has so far only been tested on macOS 10.14, but with some minor modifications should work on any platform.
+#
+# This tool has assumptions that you:
+#   1.)  have tmux installed and setup
+#   2.)  have the github-auth gem installed
+#   4.)  optionally, you have my dnd (https://github.com/megalithic/dotfiles/blob/master/bin/dnd) script in your path
+#   4a.) fancy icons will show up if you're using a fully nerd-fonts patched terminal font.
+#
+# Assuming this is good, then you can add users via their github usernames,
+# you can start up and tear down the ssh pairing session.
+#
+# You'll want to ensure you have some system things setup for the `pair` user:
+# `sudo dscl . -append /Users/$USER RecordName Pair pair`
+# Lastly, you'll want to make sure your macOS sshd config setup accepts public-key authentication:
+# `sudo sed -E -i.bak 's/^#?(PasswordAuthentication|ChallengeResponseAuthentication).*$/\1 no/' /etc/ssh/sshd_config`
+# `sudo sed -E -i.bak 's/^#?(PubkeyAuthentication).*$/\1 yes/' /etc/ssh/sshd_config`
+# `chmod 0600 ~/.ssh/authorized_keys`
+#
+# Be sure to check out this scripts integrations with tmux, too.
+#
+# Credit where credit is due!
+#   - thanks to @jeffweiss for pointing this out; parts of this script originated from
+#     @iamvery, and can be found here: https://github.com/iamvery/dotfiles/blob/pair-as-my-user/bin/ng
+#
+
+
+
+command="$(basename "$0")"
+session="pairing"
+ssh_command=""
+tunnel_command=""
+host_ip=$(dig +short myip.opendns.com @resolver1.opendns.com)
+port=1337
+user="pair"
+
+
+# Make sure dependencies are installed
+[ ! "$(command -v gh-auth)" ] && printf -- "gh-auth not found (gem install github-auth)\n" && exit 1
+[ ! "$(command -v tmux)" ] && printf -- "tmux not found, please install for your platform\n" && exit 1
+
+help() {
+  printf -- "Usage: "$command" <subcommand> [options]\n"
+  printf -- "Subcommands:\n"
+  printf -- "    add    Add a github user\n"
+  printf -- "    rm     Remove a github user\n"
+  printf -- "    ls     List github users\n"
+  printf -- "    up     Spin up and open shared tmux session\n"
+  printf -- "    down   Terminates shared tmux session\n"
+  printf -- "    ssh    Constructs and returns the ssh command\n"
+  printf -- "    tunnel Constructs and returns the tunnel command\n"
+  printf -- "    info   Displays handle information about the pairing session\n"
+}
+
+add() {
+  gh-auth add --users "$@" --command="$(which tmux) attach -t $session"
+}
+
+rm() {
+  gh-auth remove --users "$@"
+}
+
+ls() {
+  gh-auth list | sed 's/ /\n/g'
+}
+
+up() {
+  for user in "$@";do
+    add "$user"
+  done
+
+  [ -x "$(command -v dnd)" ] && dnd on
+
+  tunnel_and_connect
+
+  DONE=0;
+  while [ $DONE -eq 0 ]; do
+    if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
+      tmux send-keys -t $session "cd ~; pair info" C-m
+      DONE=1
+    fi;
+    sleep 0.5;
+  done;
+}
+
+down() {
+  [ -x "$(command -v dnd)" ] && dnd off
+  pkill -9 -f 1337:localhost
+  pkill -9 -f pair
+  # pkill -9 -f tmate
+  tmux kill-session -t $session
+}
+
+tunnel_and_connect() {
+  DONE=0;
+  sleep 1.0;
+  while [ $DONE -eq 0 ]; do
+    if [[ "$host_ip" != "" && "$host_ip" != "null" ]]; then
+      tmux new -s $session -d
+      tmux switch -t $session
+      tmux send-keys -t $session "cd ~; $(tunnel);" C-m
+      tmux split-window -h -t $session
+      DONE=1
+    fi;
+    sleep 0.5;
+  done;
+}
+
+tunnel() {
+  tunnel_command="ssh -v -f -N -R $port:localhost:22 $user@$host_ip"
+  # tunnel_command="unset $TMUX; tmate"
+  echo $tunnel_command
+}
+
+ssh() {
+  ssh_command="ssh $user@$host_ip"
+  echo $ssh_command
+}
+
+info() {
+  printf -- "\n"
+  printf -- '\033[32m  Pairing available at: \033[0m\n'
+  printf -- "$(pair ssh)\n"
+  printf -- "\n"
+  printf -- '\033[32m  The following users are authorized to connect: \033[0m\n'
+  printf -- "$(pair ls)\n"
+
+  # copy our pair address to the clipboard
+  echo "$(pair ssh)" | pbcopy
+  printf -- '\n\033[33m➜ Copied pairing ssh address to clipboard!\033[0m\n'
+}
+
+subcommand=$1
+case $subcommand in
+  '' | '-h' | '--help')
+    help ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

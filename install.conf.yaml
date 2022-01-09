@@ -1,21 +1,3 @@
-# - defaults:
-#     link:
-#       relink: true
-
-# - clean: ['~']
-
-# - link:
-#     ~/.tmux.conf: tmux.conf
-#     ~/.vim: vim
-#     ~/.vimrc: vimrc
-
-# - create:
-#     - ~/downloads
-#     - ~/.vim/undo-history
-
-# - shell:
-#   - [git submodule update --init --recursive, Installing submodules]
-
 # https://github.com/radekmorytko/dotfiles/blob/master/dotbot.conf.yaml
 # https://github.com/duncz/dotfiles
 # https://github.com/tagoro9/dotfiles
@@ -31,48 +13,137 @@
       create: true
       relink: true
     shell:
+      stdout: true
       stderr: true
+    brewfile:
+      stdout: true
+      stderr: true
+      include: ["tap", "brew", "cask", "mas"]
 
 # - create:
 #     - ~/.ssh
 #     - ~/.config
 #     - ~/code
 
-# remove dead symlinks
 - clean:
     ~/:
       force: true
     ~/.config:
       recursive: true
 
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+
 - link:
-    # home
+    # ----- home
     ~/:
       glob: true
       path: home/*
       prefix: "."
-    # # nvim
-    # ~/.config/nvim/init.lua: config/nvim/init.lua
-    # ~/.config/nvim/ftplugin:
-    #   glob: true
-    #   path: config/nvim/ftplugin/*
-    # ~/.config/nvim/lua:
-    #   glob: true
-    #   path: config/nvim/lua/*
-    # # other
-    # ~/.config/fish:
-    #   glob: true
-    #   path: config/fish/*
-    # ~/.config/broot/conf.hjson: config/broot/conf.hjson
+
+    # ----- config
+    ~/.config/bat:
+      force: true
+      path: config/bat
+    ~/.config/broot:
+      force: true
+      path: config/bat
+    ~/.config/espanso:
+      force: true
+      path: config/espanso
+      if: "[ `uname` = Darwin ]"
+    ~/.config/fd:
+      force: true
+      path: config/fd
+    ~/.config/hammerspoon:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/hammerspoon
+    ~/.config/karabiner:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/karabiner
+    ~/.config/kitty:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/kitty
+    ~/.config/nvim:
+      force: true
+      path: config/nvim
+    ~/.config/ripgrep:
+      force: true
+      path: config/ripgrep
+    ~/.config/tmux:
+      force: true
+      path: config/tmux
+    ~/.config/tmuxinator:
+      force: true
+      path: config/tmuxinator
+    ~/.config/weechat:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/weechat
+    ~/.config/zk:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/zk
+    ~/.config/zsh:
+      force: true
+      path: config/zsh
+    ~/.config/starship.toml:
+      force: true
+      path: config/starship.toml
+
+    # ----- git
+    ~/.gitconfig:
+      force: true
+      path: git/gitconfig
+    ~/.gitconfig_macos:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: git/gitconfig_macos
+    ~/.gitconfig_linux:
+      force: true
+      if: "[ `uname` = Linux ]"
+      path: git/gitconfig_linux
+
+    # ----- misc/other
+    ~/.tool-versions: asdf/tool-versions
+    ~/.vimrc: nvim/.vimrc
     # ~/Library/Application Support/lazygit/config.yml:
-    #   if: "[ `uname` = Darwin ]"
-    #   path: .config/lazygit/config.yml
-    # ~/.config/karabiner:
     #   force: true
-    #   path: .config/karabiner
+    #   if: "[ `uname` = Darwin ]"
+    #   path: config/lazygit/config.yml
+
+# - ghe:
+#     - mislav/gh-branch
+#     - dlvhdr/gh-prs
+
+- brewfile:
+    file: brew/Brewfile
+    stdout: true
+    stderr: true
+
+- asdf:
+    - plugin: java
+      global: openjdk-17.0.1
+      versions:
+        - openjdk-17.0.1
+    - plugin: nodejs
+      global: 17.3.0
+      versions:
+        - 17.3.0
+    - plugin: ruby
+      global: 3.1.0
+      versions:
+        - 3.1.0
+    - plugin: rust
+      global: 1.57.0
+      versions:
+        - 1.57.0
 
 - shell:
-    - [git submodule update --init --recursive, Installing submodules]
+    - [~/.dotfiles/bin/gh-login, GitHub Auth]
       # - [cp ./git/config.template ~/.gitconfig.local]
       # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm, Installing TPM]
       # - [

@@ -1,0 +1,24 @@
+{
+  "Markdown front matter": {
+    "prefix": "meta",
+    "body": [
+      "---",
+      "title: $1",
+      "layout: default",
+      "comments: true",
+      "published: true",
+      "---",
+      "",
+      "$1",
+      "=====",
+      "",
+      "$0"
+    ]
+  },
+  "test": {
+    "prefix": "test",
+    "body": [
+      "hi!"
+    ]
+  }
+}

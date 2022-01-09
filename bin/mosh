@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euo pipefail
+
+name="$1"
+shift
+
+exec /usr/local/bin/mosh "$name" --server=/home/linuxbrew/.linuxbrew/bin/mosh-server "$@"

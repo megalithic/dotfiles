@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+
+#
+# What in tarnation?
+#
+# CLI tool to control Hubitat (my devices and stuff)
+# Requires:
+# - Maker API app to be installed in your Hubitat setup
+# - `jq` (auto-installs for you if it's not found)
+# - `spinner` from my dotfiles' `bin` folder
+# - ENV vars setup for hubitat private things:
+#   - $HUBITAT_LAN
+#   - $HUBITAT_APP_ID_MAKER
+#   - $HUBITAT_TOKEN
+#
+
+#
+# REFS:
+# - jq: https://thisdavej.com/consuming-web-api-json-data-using-curl-and-jq/#return-one-attribute-from-each-json-object-in-an-array
+# - jq: https://stedolan.github.io/jq/manual/
+# - hubitat: https://docs.hubitat.com/index.php?title=Join_and_Reset_Instructions
+# - hubitat: https://docs.hubitat.com/index.php?title=List_of_Compatible_Devices
+# - hubitat: https://docs.hubitat.com/index.php?title=Hubitat%E2%84%A2_Maker_API
+#
+
+#
+# Example parsing strings for status (dark sky weather driver) with jq:
+# - is_cloudy: `'.attributes[] | select(.name == "cloud").currentValue | tonumber >= 75'`
+# - is_daytime: `'.attributes[] | select(.name == "is_day").currentValue | tonumber == 1'`
+# - is_nighttime: `'.attributes[] | select(.name == "is_day").currentValue | tonumber == 0'`
+# - switch_state: `'.attributes | unique[] | select(.name == "switch").currentValue'`
+#
+
+if [ ! $(command -v jq) ]; then
+  brew install jq
+fi
+
+base_command="$(basename "$0")"
+
+command=""
+
+help() {
+  printf -- "Usage: "$base_command" <subcommand> <device_id> [<query>]\n"
+  printf -- "\n"
+  printf -- "Subcommands:\n"
+  printf -- "    on               Turn ON specific device\n"
+  printf -- "    off              Turn OFF specific device\n"
+  printf -- "    status           Get the current status of specific device with query\n"
+  printf -- "    devices          Get a list of connected devices and their device_id\n"
+  printf -- "\n"
+  printf -- "Example parsing strings for status (dark sky weather driver) with jq:\n"
+  printf -- "    is_cloudy        '.currently.cloudCover >= 0.5'\n"
+  printf -- "    is_day           '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 1'\n"
+  printf -- "    is_night         '.attributes[] | select(.name == \"is_day\").currentValue | tonumber == 0'\n"
+  printf -- "    switch_state     '.attributes | unique[] | select(.name == \"switch\").currentValue'\n"
+}
+
+hubitat_local_url() {
+  if [[ -n $command ]]; then
+    echo "http://$HUBITAT_LAN/apps/api/$HUBITAT_APP_ID_MAKER/devices/$device_id/$command?access_token=$HUBITAT_TOKEN"
+  else
+    echo "http://$HUBITAT_LAN/apps/api/$HUBITAT_APP_ID_MAKER/devices/$device_id?access_token=$HUBITAT_TOKEN"
+  fi
+}
+
+require_device_id() {
+  if [[ -n $device_id ]]; then
+    return 0
+  else
+    echo "ERROR: command $subcommand requires a device_id"
+    return 1
+  fi
+}
+
+execute_command() {
+  echo $(hubitat_local_url)
+  spinner curl -s "$(hubitat_local_url)" | jq -r -c "$query"
+}
+
+devices() {
+  command="all"
+  query='.[] | "[\(.id)]  \(.label)"'
+  execute_command
+}
+
+on() {
+  require_device_id
+
+  command="on"
+  2>/dev/null 1>&2 execute_command
+}
+
+off() {
+  require_device_id
+
+  command="off"
+  2>/dev/null 1>&2 execute_command
+}
+
+set() {
+  echo "Not implemented yet"
+  return 127
+}
+
+status() {
+  require_device_id
+
+  command=""
+  if [[ -n $query ]]; then
+    execute_command
+  else
+    echo "ERROR: command $subcommand requires a query"
+    return 1
+  fi
+}
+
+subcommand=$1
+device_id=$2
+query=$3
+
+case $subcommand in
+  '' | '-h' | '--help')
+    help ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

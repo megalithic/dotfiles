@@ -1,0 +1,28 @@
+name: public-site
+root: ~/code/outstand
+
+# Runs on project start, always
+on_project_start: gohome && dowork
+
+tmux_options: -2
+windows:
+  - chats:
+    - tmux link-window -s mega:chats -t 0 && exit
+  - code:
+      layout: main-vertical
+      panes:
+        - code:
+          # - ssh seth-dev
+          - cd ~/code/public-site
+          # - eval $(desk load); nvim
+  - services:
+      layout: even-horizontal
+      panes:
+        - logs:
+            # - ssh seth-dev
+            - cd ~/code/public-site
+            # - eval $(desk load)
+        - repl:
+            # - ssh seth-dev
+            - cd ~/code/public-site
+            # - eval $(desk load);

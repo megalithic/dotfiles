@@ -1,0 +1,128 @@
+#!/usr/bin/env zsh
+
+if [ ! $(command -v /usr/local/bin/kitty) ]; then
+  /usr/local/bin/brew install --cask kitty
+fi
+
+if [ ! $(command -v $HOME/.go/bin/zk) ]; then
+  GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD
+fi
+
+_quote () {
+    local quoted=${1//\'/\'\\\'\'};
+    printf "'%s'" "$quoted"
+}
+
+base_command="$(basename "$0")"
+
+command=""
+
+help() {
+  printf -- "Usage: "$base_command" <subcommand>\n"
+  printf -- "\n"
+  printf -- "Subcommands:\n"
+  printf -- "    new               Start a new note\n"
+  printf -- "    wiki              Start a wiki note\n"
+  printf -- "    meeting           Start a meeting note\n"
+  printf -- "\n"
+  # printf -- "Options:\n"
+  # printf -- "    --mode, -m        Set the launch mode to `tmux` or `kitty`\n"
+  # printf -- "\n"
+}
+
+# tmux_command(
+#   $1 - cmd
+#   $2 - notebook
+#   $3 - title
+#   $4 - attendees
+# )
+tmux_command() {
+  cmd=$1
+  notebook=$2
+  title=$3
+  attendees=$4
+
+  /usr/local/bin/tmux neww -n note nvim "+lua require('global').zetty({ cmd = [[$cmd]], title = [[$title]], action = 'e', notebook = [[$notebook]], attendees = [[$attendees]] })"
+}
+
+# # new(
+# #   $1 - title
+# # )
+# new() {
+#   case $1 in
+#     *)
+#       tmux_command "new" $1 "" || echo "there was a problem launching tmux command for new"
+#       # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="New Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('global').zetty({ cmd = 'meeting', title = [[$1]], action = 'e'})\""
+#       ;;
+#   esac
+# }
+
+# # wiki(
+# #   $1 - title
+# # )
+# wiki() {
+#   case $1 in
+#     *)
+#       tmux_command "new" "wiki" $1 "" || echo "there was a problem launching tmux command for wiki"
+#       # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="New Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('global').zetty({ cmd = 'meeting', title = [[$1]], action = 'e'})\""
+#       ;;
+#   esac
+# }
+
+# meeting(
+#   $1 - title
+# )
+meeting() {
+  # get the current meeting info:
+  cal_event_info=("${(@f)$(/usr/local/bin/icalBuddy --limitItems 1 -nc -npn -b '' -ic 'Calendar' -ps '|\n     |' -df '' -eed -iep title,attendees -po 'title,attendees' --includeOnlyEventsFromNowOn --excludeAllDayEvents eventsToday+)}")
+
+  # assign title
+  [ -z "$cal_event_info" ] && title="Meeting Note" || title=$cal_event_info[1]
+
+  # assign attendees
+  if [ -z "$cal_event_info" ];
+  then
+    attendees=""
+  else
+    attendees=$(echo $cal_event_info[2] | awk '{gsub(/^[ \t]+| [ \t]+$/,""); print $0 }')
+  fi
+
+  tmux_command "meeting" "meetings" $title $attendees
+
+  # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('global').zetty({ cmd = 'meeting', title = [[$title]], action = 'e', notebook = 'meetings', attendees = [[$attendees]] })\""
+
+  # case $1 in
+  #   '')
+  #     # REFs:
+  #     # - fun usage for this info, too:
+  #     #   https://andyatkinson.com/blog/2018/03/21/open-zoom-urls-bash
+
+  #     # get the current meeting info:
+  #     cal_event_info=("${(@f)$(/usr/local/bin/icalBuddy --limitItems 1 -nc -npn -b '' -ic 'Calendar,Personal Calendar' -ps '|\n     |' -df '' -eed -iep title,attendees -po 'title,attendees' --includeOnlyEventsFromNowOn --excludeAllDayEvents eventsToday+)}")
+
+  #     # assign title
+  #     [ -z "$cal_event_info" ] && title="Meeting Note" || title=$cal_event_info[1]
+
+  #     # assign attendees
+  #     [ -z "$cal_event_info" ] && attendees="" || attendees="$cal_event_info[2]" | awk '{gsub(/^[ \t]+| [ \t]+$/,""); print $0 }'
+
+  #     tmux_command "meeting" "meetings" $title $attendees
+  #     # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('global').zetty({ cmd = 'meeting', title = [[$title]], action = 'e', notebook = 'meetings', attendees = [[$attendees]] })\""
+  #     ;;
+  #   *)
+  #     tmux_command "meeting" "meetings" $1 ""
+  #     # /usr/local/bin/kitty @ --to unix:/tmp/kitty launch --type=os-window --cwd="$HOME/Documents/_notes" --title="Meeting Note" /usr/local/bin/zsh --interactive -c "exec nvim \"+lua require('global').zetty({ cmd = 'meeting', title = [[$title]], action = 'e', notebook = 'meetings'})\""
+  #     ;;
+  # esac
+}
+
+subcommand=$1
+
+case $subcommand in
+  '' | '-h' | '--help')
+    help ;;
+  *)
+    shift
+    ${subcommand} $@
+    ;;
+esac

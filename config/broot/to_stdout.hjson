@@ -1,0 +1,48 @@
+# https://github.com/jose-elias-alvarez/dotfiles/commit/9fb4188b84a5287e1f6bca9d931b929b58947b16
+{
+  default_flags: "h"
+  show_selection_mark: true
+  true_colors: true
+  skin: {
+    default: "none none"
+  }
+  verbs: [
+    {
+      invocation: "ok",
+      key: enter
+      leave_broot: true,
+      execution: ":print_path"
+      apply_to: file
+    },
+    {
+      invocation: "create {subpath}"
+      execution: "$EDITOR {directory}/{subpath}"
+      leave_broot: false
+    },
+    {
+      invocation: "home"
+      shortcut: "~"
+      execution: ":focus ~"
+    },
+    {
+      key: "ctrl-j"
+      execution: ":line_down"
+    },
+    {
+      key: "ctrl-k"
+      execution: ":line_up"
+    },
+    {
+      key: "alt-h"
+      execution: ":panel_left"
+    },
+    {
+      key: "alt-l"
+      execution: ":panel_right"
+    },
+    {
+      key: "ctrl-u"
+      execution: ":input_clear"
+    }
+  ]
+}

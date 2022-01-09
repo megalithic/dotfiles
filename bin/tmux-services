@@ -1,0 +1,31 @@
+#!/bin/bash
+
+vpp_dir="~/code/enbala/vpp"
+
+
+# create new window called "services"
+tmux new-window -n services
+
+# select the first pane
+tmux selectp -t 1
+# cd to the vpp root dir, and starts elm app
+tmux send-keys "cd $vpp_dir; ui/bin/start;"
+tmux send-keys "C-m;"
+
+# split the previous pane horizontally
+tmux split-window -h
+tmux select-layout even-horizontal
+tmux selectp -t 2
+# cd to the vpp root dir, and starts vpp service
+tmux send-keys "cd $vpp_dir; vpp/bin/interactive;"
+tmux send-keys "C-m;"
+
+# split the previous pane vertically
+tmux split-window -v
+tmux selectp -t 3
+# cd to the vpp root dir, and starts sims service
+tmux send-keys "cd $vpp_dir; sims/bin/interactive;"
+tmux send-keys "C-m;"
+
+# focus the first pane in the window
+tmux selectp -t 0
