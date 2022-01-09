@@ -1,9 +1,9 @@
 ```
 
      ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-     │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: bits & bobs, dots & things. 🛖
+     │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: 🛖 bits & bobs, dots & things. 🏠
      ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
-     @megalithic
+     🗿 @megalithic
 
 ```
 
@@ -48,29 +48,21 @@ Linux. Though, I have tested it decently well on an Ubuntu-based Linode instance
 
 > I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
 
-## ✨ Tree be thy guide
-
-A tree says a thousand words:
-
-_img of tree output goes here.._
-
 ## ✨ Accoutrements
 
-A few of the _must-have_ tools I roll with: - [asdf](https://asdf-vm.com/) [homebrew](https://brew.sh/) see `~/.dotfiles/brew` for all that gets installed
+A few of the _must-have_ tools I roll with:
 
-- [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
-- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements)
-  - see `~/.dotfiles/keyboard` for macOS specific config things
-  - see my [Atreus62 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic) for my custom keyboard setup
-- [tmux](https://github.com/tmux/tmux/wiki)
-- [jetbrains mono](https://www.jetbrains.com/lp/mono/)
-  - patched via [nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher)
 - [kitty](https://github.com/kovidgoyal/kitty)
-- `megaforest/everforest` everything
+- [tmux](https://github.com/tmux/tmux/wiki)
 - [neovim](https://neovim.io/)
-- [zsh](https://www.zsh.org/)
-  - [starship](https://starship.rs)
+- [zsh](https://www.zsh.org/) ([starship](https://starship.rs) prompt)
 - [weechat](https://www.weechat.org/)
+- [asdf](https://asdf-vm.com/)
+- [homebrew](https://brew.sh/)
+- `megaforest` for all the colours/themes
+- [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
+- [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([Atreus62 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
