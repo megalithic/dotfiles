@@ -158,9 +158,9 @@
         - 1.13.0-otp-24
         - 1.12.3-otp-24
     - plugin: erlang
-      global: 24.1.2
+      global: 24.0.5
       versions:
-        - 24.1.2
+        - 24.0.5
     - plugin: nodejs
       global: lts
       versions:
