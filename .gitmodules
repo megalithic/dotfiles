@@ -11,3 +11,6 @@
 [submodule "dotbot-brewfile"]
 	path = dotbot-plugins/dotbot-brewfile
 	url = https://github.com/sobolevn/dotbot-brewfile.git
+[submodule "dotbot-asdf"]
+	path = dotbot-plugins/dotbot-asdf
+	url = https://github.com/sobolevn/dotbot-asdf.git

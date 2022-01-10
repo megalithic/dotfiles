@@ -59,8 +59,4 @@ R("autocmds")
 R("mappings")
 R("statusline")
 
--- TODO:
--- 1. commands - https://github.com/BlakeJC94/.dots/blob/master/.config/nvim/lua/commands.lua
--- 2. mappings - update which-key descriptions
-
 -- vim:foldmethod=marker

@@ -56,6 +56,17 @@ augroup("auto-mkdir", {
   command = mega.auto_mkdir(),
 })
 
+augroup("kitty", {
+  {
+    events= {"BufWritePost"},
+    targets = {"kitty.conf"},
+    command = function()
+      vim.cmd("!kill -SIGUSR1 $(pgrep kitty)")
+    end
+  }
+
+})
+
 augroup("paq", {
   {
     events = { "BufWritePost" },

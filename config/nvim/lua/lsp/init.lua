@@ -111,7 +111,7 @@ local function setup_lsp_handlers()
   }
   lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, opts)
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
-  -- lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, opts)
+  lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, opts)
 end
 
 -- our on_attach function to pass to each language server config..
@@ -186,19 +186,19 @@ local function on_attach(client, bufnr)
   )
 
   --- # autocommands/autocmds
-  -- au([[CursorHold <buffer> lua require('utils').lsp.line_diagnostics()]])
-  autocmd("CursorHold", "<buffer>", function()
-    vim.diagnostic.open_float(nil, {
-      focusable = false,
-      close_events = {
-        "BufLeave",
-        "CursorMoved",
-        "InsertEnter",
-        "FocusLost",
-      },
-      source = "always",
-    })
-  end)
+  au([[CursorHold <buffer> lua require('utils').lsp.line_diagnostics()]])
+  -- autocmd("CursorHold", "<buffer>", function()
+  --   vim.diagnostic.open_float(nil, {
+  --     focusable = false,
+  --     close_events = {
+  --       "BufLeave",
+  --       "CursorMoved",
+  --       "InsertEnter",
+  --       "FocusLost",
+  --     },
+  --     source = "always",
+  --   })
+  -- end)
   au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
   vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
   vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])

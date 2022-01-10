@@ -142,23 +142,38 @@
     file: brew/Brewfile
     stdout: true
     stderr: true
-# - asdf:
-#     - plugin: java
-#       global: openjdk-17.0.1
-#       versions:
-#         - openjdk-17.0.1
-#     - plugin: nodejs
-#       global: 17.3.0
-#       versions:
-#         - 17.3.0
-#     - plugin: ruby
-#       global: 3.1.0
-#       versions:
-#         - 3.1.0
-#     - plugin: rust
-#       global: 1.57.0
-#       versions:
-#         - 1.57.0
+
+- asdf:
+    - plugin: elm
+      global: 0.19.1
+      versions:
+        - 0.19.1
+    - plugin: lua
+      global: 5.1.5
+      versions:
+        - 5.1.5
+    - plugin: elixir
+      global: 1.12.3-otp-24
+      versions:
+        - 1.12.3-otp-24
+    - plugin: nodejs
+      global: lts
+      versions:
+        - lts
+    - plugin: ruby
+      global: 3.1.0
+      versions:
+        - 2.7.4
+        - 3.1.0
+    - plugin: rust
+      global: stable
+      versions:
+        - stable
+    - plugin: golang
+      global: 1.17.1
+      versions:
+        - 1.17.1
+
 - shell:
     # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
     - description: Install from source

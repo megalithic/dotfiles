@@ -215,9 +215,17 @@ M.apps = {
   ["com.apple.finder"] = {
     bundleID = "com.apple.finder",
     name = "Finder",
-    hyper_key = "f",
+    -- hyper_key = "f",
     rules = {
       { "Finder", 1, M.layout.centeredMedium },
+    },
+  },
+  ["com.binarynights.ForkLift-3"] = {
+    bundleID = "com.binarynights.ForkLift-3",
+    name = "ForkLift",
+    hyper_key = "f",
+    rules = {
+      { nil, 1, M.layout.centeredMedium },
     },
   },
   ["us.zoom.xos"] = {
