@@ -5,8 +5,8 @@
 # https://github.com/anishathalye/dotbot#configuration
 # https://github.com/sleekybadger/dotfiles
 # https://github.com/btmccollum/dotfiles/blob/master/install.conf.yaml
-#https://github.com/DmitryOtroshchenko/Dotfiles/blob/master/install/bootstrap-mac.sh
-# tmux conf location -> https://unix.stackexchange.com/a/644824/508489
+# https://github.com/DmitryOtroshchenko/Dotfiles/blob/master/install/bootstrap-mac.sh
+# https://github.com/adamcstephens/dotfiles/blob/main/install.conf.yaml
 
 - defaults:
     link:
