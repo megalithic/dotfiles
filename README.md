@@ -36,6 +36,8 @@ cd ~/.dotfiles && make help
 
 > **_NOTE_**: to execute a `make` command from anywhere; specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
 
+---
+
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot).
 
 I have tried to be platform agnostic, but the majority of scripts that run here
@@ -62,7 +64,7 @@ A few of the _must-have_ tools I roll with:
 - `megaforest` for all the colours/themes
 - [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
-- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([Atreus62 config](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([atreus62 qmk](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
 
 <p align="center" style="margin-top: 20px;">
   <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>

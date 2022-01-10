@@ -10,7 +10,7 @@ help: ## Show this help content
 install: dot ## Runs the default dotbot install script (same as `dot`)
 
 dot: ## Runs the default dotbot install script
-	./install # && zsh -c "compaudit | xargs chmod go-w"
+	./install
 
 macos: ## Runs the macos-specific dotbot install script
 	./macos

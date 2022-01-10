@@ -260,6 +260,7 @@ function brb() {
 }
 
 function lunch() {
+  declare -a lunch_emojis
   lunch_emojis[0]=":pizza:"
   lunch_emojis[1]=":burrito:"
   lunch_emojis[2]=":hamburger:"
@@ -270,6 +271,7 @@ function lunch() {
   __set_chan_text "bbl, lunch ${lunch_emojis[$rand]}"
 	__set_presence "away"
 	__set_status "..lunch.." "${lunch_emojis[$rand]}"
+  unset lunch_emojis
 }
 
 function errand() {
@@ -297,6 +299,7 @@ function dog() {
 }
 
 function gone() {
+  declare -a gone_messages
   gone_messages[0]=":v: catch you all on the flippy flip!"
   gone_messages[1]=":wave: adios frens!!"
   gone_messages[2]=":v: deuces, 'mout!!"
@@ -306,6 +309,7 @@ function gone() {
 	__set_presence "away"
 	__end_status
 	__set_dnd 930
+  unset gone_messages
 }
 
 function pair() {
@@ -324,6 +328,7 @@ function dnd() {
 }
 
 function here() {
+  declare -a here_messages
   here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
   here_messages[1]=":coffee: :croissant: gluten morgen!!"
   here_messages[2]=":coffee: good morning! :tea:"
@@ -334,6 +339,8 @@ function here() {
 	__set_presence "auto"
 	__end_status
 	__end_dnd
+
+  unset here_messages
 }
 
 function back() {

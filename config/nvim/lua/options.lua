@@ -339,7 +339,7 @@ vim.opt.spelloptions = "camel"
 vim.opt.spellcapcheck = "" -- don't check for capital letters at start of sentence
 vim.opt.dictionary = "/usr/share/dict/words"
 
-vim.opt.spellfile = fn.expand("$DOTS/nvim/.config/nvim/spell/en.utf-8.add")
+vim.opt.spellfile = fn.expand("$DOTS/config/nvim/spell/en.utf-8.add")
 vim.opt.spelllang = "en"
 vim.opt.fileformats = { "unix", "mac", "dos" }
 -----------------------------------------------------------------------------//
