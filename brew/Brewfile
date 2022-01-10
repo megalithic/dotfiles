@@ -1,0 +1,276 @@
+#!/usr/bin/env zsh
+
+## --- DOCS
+#
+# How to install older versions:
+# - https://stackoverflow.com/questions/62032757/install-a-previous-version-of-chromedriver-with-brew/62765875#62765875
+# - https://stackoverflow.com/questions/62785290/installing-previous-versions-of-a-formula-with-brew-extract
+
+# -- taps --
+
+tap "homebrew/bundle"
+tap "homebrew/services"
+tap "neovim/neovim"
+tap "caius/jo"
+tap "simeji/jid"
+tap "browsh-org/homebrew-browsh"
+tap "qmk/qmk"
+tap "heroku/brew"
+# NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
+tap "microsoft/git"
+tap "isacikgoz/taps"
+tap "vitorgalvao/tiny-scripts"
+tap "mutagen-io/mutagen"
+tap "bvgastel/clippy"
+tap "olets/tap"
+tap "federico-terzi/espanso"
+tap "mhanberg/zk"
+
+# -- for qmk_toolbox --
+# brew tap osx-cross/avr;
+# brew tap PX4/homebrew-px4;
+# brew install avr-gcc@8;
+# brew link --force avr-gcc@8;
+# brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk;
+# brew cask install qmk-toolbox;
+#
+tap "osx-cross/avr"
+tap "PX4/homebrew-px4"
+# NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
+brew "avr-gcc@8", link: true
+brew "dfu-programmer"
+brew "dfu-util"
+brew "gcc-arm-none-eabi"
+brew "avrdude"
+brew "qmk"
+
+# -- cli --
+
+brew "ansible"
+# brew "asdf"
+brew "asciidoctor"
+brew "autoconf"
+brew "automake"
+brew "awscli"
+brew "bash" # used for tmux-plugin -> extrakto
+brew "bat"
+brew "blueutil"
+brew "broot"
+brew "browsh"
+brew "vitorgalvao/tiny-scripts/calm-notifications"
+brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
+brew "cmake"
+brew "coreutils"
+brew "curl"
+brew "dbus"
+brew "defaultbrowser"
+brew "diff-so-fancy"
+brew "dnsmasq"
+brew "dockutil"
+brew "docker"
+brew "docker-compose"
+brew "docker-credential-helper-ecr"
+brew "docker-machine" # , restart_service: true, link: false
+brew "duck"
+brew "espanso"
+brew "exa"
+brew "exercism"
+brew "fasd"
+brew "fd"
+brew "ffind"
+brew "findutils"
+brew "fontforge"
+brew "fzf" # -> $(brew --prefix)/opt/fzf/install
+brew "fzy"
+brew "gawk"
+brew "gdb"
+brew "gist"
+brew "git"
+brew "isacikgoz/taps/gitin"
+brew "git-delta"
+brew "gh"
+brew "glow"
+brew "gnutls"
+brew "gnupg"
+brew "gnu-sed"
+brew "gpg" # required for asdf-nodejs
+brew "grc"
+brew "heroku"
+brew "hub"
+brew "highlight"
+brew "htop"
+brew "httpie"
+brew "ical-buddy"
+brew "jq"
+brew "lazydocker"
+brew "lazygit"
+brew "llvm" # contains c-lang lsp (the preferred one?)
+brew "lnav"
+brew "lsd"
+brew "luajit", args: ["HEAD"]
+brew "luarocks"
+brew "lua-language-server"
+brew "luv"
+brew "mas"
+brew "mkcert"
+brew "moreutils"
+brew "mosh", args: ["HEAD"]
+brew "mutagen"
+brew "mycli"
+brew "mysql"
+brew "ncurses"
+# brew "neovim", args: ["HEAD"] # building from source now
+brew "ninja" # for lua sumneko lsp
+brew "nmap"
+brew "nss"
+brew "noti"
+brew "olets/tap/zsh-abbr"
+brew "openssl"
+brew "openssl@1.1"
+brew "p7zip"
+brew "perl"
+brew "pgcli"
+brew "pkg-config"
+brew "pinentry-mac"
+brew "postgresql"
+# initdb /usr/local/var/postgres -E utf8
+brew "python@3.7", link: false
+brew "python@3.8", link: false
+brew "python@3.9", link: true
+brew "readline"
+brew "reattach-to-user-namespace"
+brew "ren"
+brew "redis"
+brew "ripgrep"
+# brew "ruby-install"
+# brew "ruby-build"
+brew "rust"
+brew "rustup-init"
+brew "shellcheck"
+brew "shfmt"
+brew "ssh-copy-id"
+brew "stack"
+brew "starship"
+brew "stow"
+brew "switchaudio-osx"
+brew "terminal-notifier"
+brew "the_silver_searcher"
+brew "tidy-html5"
+brew "timg" # for image rendering in kitty
+brew "tldr"
+brew "tmux" # , args: ["HEAD"]
+brew "transcrypt"
+brew "trash"
+brew "tree"
+brew "tree-sitter"
+brew "urlview"
+brew "viu"
+brew "weechat"
+brew "wget"
+brew "wifi-password"
+brew "wxmac" # for erlang
+brew "wxwidgets" # for erlang
+brew "yubico-piv-tool"
+brew "libyubikey"
+brew "pam_yubico"
+brew "yubikey-personalization"
+brew "yj"
+brew "mhanberg/zk/zk", args: ["build-from-source"]
+brew "zoxide"
+brew "zsh"
+brew "zsh-autosuggestions"
+brew "zsh-completions"
+brew "zsh-lovers"
+brew "zsh-syntax-highlighting"
+brew "zsh-history-substring-search"
+
+# -- casks --
+
+cask_args appdir: "/Applications"
+
+tap "homebrew/cask-versions"
+tap "homebrew/cask"
+tap "homebrew/cask-fonts"
+tap "homebrew/cask-drivers"
+
+# - fonts
+cask "font-jetbrains-mono"
+cask "font-jetbrains-mono-nerd-font"
+cask "font-ia-writer-quattro"
+cask "font-victor-mono-nerd-font"
+
+# - gui
+cask "1password"
+cask "1password-cli"
+cask "alfred"
+cask "backblaze"
+cask "balenaetcher"
+cask "bartender"
+cask "bettertouchtool"
+# cask "box-drive"
+cask "brave-browser"
+cask "cameracontroller"
+cask "cloudflare-warp"
+cask "colorsnapper"
+# cask "caldigit-thunderbolt-charging"
+# cask "caldigit-docking-utility"
+cask "contexts"
+cask "controlplane"
+cask "cyberduck"
+cask "dash"
+# cask "docker-edge"
+cask "dropbox"
+# cask "discord"
+# cask "expressvpn"
+cask "figma"
+cask "forklift"
+cask "git-credential-manager-core"
+cask "hazel"
+cask "hammerspoon"
+cask "intel-power-gadget" # requires restart with security allow (intel things)
+cask "insomnia"
+cask "istat-menus"
+cask "itsycal"
+cask "kap"
+cask "karabiner-elements"
+cask "keycastr"
+cask "kitty"
+cask "loom"
+cask "marta"
+cask "micro-snitch"
+cask "microsoft-edge"
+# cask "little-snitch4" # requires kernel extension, see notes from install message
+cask "ngrok"
+cask "obsidian"
+# cask "oracle-jdk"
+cask "postico"
+cask "qmk-toolbox"
+cask "signal"
+cask "slack"
+cask "spotify"
+cask "tableplus"
+cask "thingsmacsandboxhelper"
+# cask "vagrant"
+cask "the-unarchiver"
+# cask "usb-overdrive" # causes issues with QMK keyboards
+# cask "virtualbox" # requires restart with security allow (oracle things)
+# cask "witch" # using contexts in stead
+cask "yubico-authenticator"
+cask "yubico-yubikey-manager"
+cask "yubico-yubikey-piv-manager"
+cask "zoom"
+
+# -- app store (mas) --
+
+mas "Fantastical", id: 975937182
+mas "Mayday", id: 1473168024
+mas "Spark", id: 1176895641
+mas "Canary Mail", id: 1236045954
+# mas "Tweetbot", id: 557168941
+mas "Drafts", id: 1435957248
+mas "Battery Indicator", id: 1206020918
+mas "Brother iPrint&Scan", id: 1193539993
+mas "Things", id: 904280696  # might be bailing from this
+# mas "Xcode", id: 497799835
+mas "Affinity Photo", id: 824183456
+mas "Affinity Designer", id: 824171161

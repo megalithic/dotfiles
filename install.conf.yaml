@@ -109,6 +109,9 @@
     ~/.gitmessage:
       force: true
       path: git/gitmessage
+    ~/.gitignore_global:
+      force: true
+      path: git/gitignore_global
     ~/.gitconfig:
       force: true
       path: git/gitconfig
@@ -135,10 +138,10 @@
 # - ghe:
 #     - mislav/gh-branch
 #     - dlvhdr/gh-prs
-# - brewfile:
-#     file: brew/Brewfile
-#     stdout: true
-#     stderr: true
+- brewfile:
+    file: brew/Brewfile
+    stdout: true
+    stderr: true
 # - asdf:
 #     - plugin: java
 #       global: openjdk-17.0.1
