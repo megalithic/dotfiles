@@ -182,7 +182,7 @@ alias eb="nvim $DOTS/brew/Brewfile"
 alias essh="nvim $PRIVATES/home/ssh/config"
 
 alias ek="nvim $DOTS/config/kitty/kitty.conf"
-alias et="nvim $DOTS/config/tmux/.tmux.conf"
+alias et="nvim $DOTS/config/tmux/tmux.conf"
 
 # ZK/notes/zettelkasten
 # -----------------------------------------------------------------------------

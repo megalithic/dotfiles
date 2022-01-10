@@ -166,7 +166,7 @@
       versions:
         - lts
     - plugin: ruby
-      global: 3.1.0
+      global: 2.7.4
       versions:
         - 2.7.4
         - 3.1.0
