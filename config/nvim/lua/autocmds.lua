@@ -56,15 +56,15 @@ augroup("auto-mkdir", {
   command = mega.auto_mkdir(),
 })
 
+-- auto-reload kitty upon kitty.conf write
 augroup("kitty", {
   {
-    events= {"BufWritePost"},
-    targets = {"kitty.conf"},
+    events = { "BufWritePost" },
+    targets = { "kitty.conf" },
     command = function()
-      vim.cmd("!kill -SIGUSR1 $(pgrep kitty)")
-    end
-  }
-
+      vim.cmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
+    end,
+  },
 })
 
 augroup("paq", {

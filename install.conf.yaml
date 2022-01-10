@@ -155,7 +155,12 @@
     - plugin: elixir
       global: 1.12.3-otp-24
       versions:
+        - 1.13.0-otp-24
         - 1.12.3-otp-24
+    - plugin: erlang
+      global: 24.1.2
+      versions:
+        - 24.1.2
     - plugin: nodejs
       global: lts
       versions:

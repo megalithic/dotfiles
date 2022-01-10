@@ -1,10 +1,10 @@
 nodejs lts
-elixir 1.12.3-otp-24
+elixir 1.12.3-otp-24 1.13.0-otp-24
 elm 0.19.1
 lua 5.1.5
-ruby 2.7.4
-rust stable 1.48.0
+ruby 2.7.4 3.1.0
+rust stable
 # python 3.9.0 2.7.17
 golang 1.17.1
 # perl 5.34.0
-erlang 24.0.5
+erlang 24.1.5
