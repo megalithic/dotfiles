@@ -140,20 +140,39 @@ function setup_surfingkeys({ api: api }) {
     }
   }
 
-  // actions.openAnchor =
-  //   ({ newTab = false, active = true, prop = "href" } = {}) =>
-  //   (a) =>
-  //     actions.openLink(a[prop], { newTab, active })();
+  actions.openAnchor =
+    ({ newTab = false, active = true, prop = "href" } = {}) =>
+    (a) =>
+      actions.openLink(a[prop], { newTab, active })();
 
-  // actions.openLink =
-  //   (url, { newTab = false, active = true } = {}) =>
-  //   () => {
-  //     if (newTab) {
-  //       RUNTIME("openLink", { tab: { tabbed: true, active }, url });
-  //       return;
-  //     }
-  //     window.location.assign(url);
-  //   };
+  actions.openLink =
+    (url, { newTab = false, active = true } = {}) =>
+    () => {
+      if (newTab) {
+        RUNTIME("openLink", { tab: { tabbed: true, active }, url });
+        return;
+      }
+      window.location.assign(url);
+    };
+
+  actions.showSpeedReader = () => {
+    const script = document.createElement("script");
+    script.innerHTML = `(() => {
+    const sq = window.sq || {}
+    window.sq = sq
+    if (sq.script) {
+      sq.again()
+    } else if (sq.context !== "inner") {
+      sq.bookmarkletVersion = "0.3.0"
+      sq.iframeQueryParams = { host: "//squirt.io" }
+      sq.script = document.createElement("script")
+      sq.script.src = \`\${sq.iframeQueryParams.host}/bookmarklet/frame.outer.js\`
+      document.body.appendChild(sq.script)
+    }
+  })()`;
+    document.body.appendChild(script);
+  };
+  mapkey("<Space-s>", "opens squirt", actions.showSpeedReader);
 
   // follow links
   // bind(
