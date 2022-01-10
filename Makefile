@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help
+.PHONY: help dots
 # .PHONY: default dots mac linux help
 .DEFAULT_GOAL := install
 
@@ -10,7 +10,7 @@ help: ## Show this help content
 install: dot ## Runs the default dotbot install script (same as `dot`)
 
 dot: ## Runs the default dotbot install script
-	./install
+	./install # && zsh -c "compaudit | xargs chmod go-w"
 
 macos: ## Runs the macos-specific dotbot install script
 	./macos

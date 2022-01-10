@@ -73,6 +73,7 @@
     ~/.config/nvim:
       force: true
       path: config/nvim
+    ~/.vimrc: config/nvim/vimrc
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep
@@ -95,6 +96,7 @@
     ~/.config/zsh:
       force: true
       path: config/zsh
+    ~/.zshenv: config/zsh/.zshenv
     ~/.config/starship.toml:
       force: true
       path: config/starship.toml
@@ -120,9 +122,11 @@
       path: git/gitconfig_linux
 
     # ----- misc/other
-    # ~/.tool-versions: asdf/tool-versions
-    ~/.vimrc: config/nvim/vimrc
-    ~/.zshenv: config/zsh/.zshenv
+    ~/.asdfrc: asdf/asdfrc
+    ~/.tool-versions: asdf/tool-versions
+    ~/.default-gems: asdf/default-gems
+    ~/.default-npm-packages: asdf/default-npm-packages
+    ~/.default-python-packages: asdf/default-python-packages
     # ~/Library/Application Support/lazygit/config.yml:
     #   force: true
     #   if: "[ `uname` = Darwin ]"
@@ -153,16 +157,22 @@
 #       versions:
 #         - 1.57.0
 - shell:
-    - [compaudit | xargs chmod g-w, Handle compaudit insecure directories "warning"] # https://stackoverflow.com/a/22753363/213904
+    # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
     - description: Install from source
       command: >-
-        cd ~/.local/share/src && echo "-> cd successful";
-        [[ ! -d ~/.local/share/src/neovim ]] && git clone git@github.com:neovim/neovim.git && echo "-> clone successful";
-        cd neovim && echo "-> cd successful";
-        git checkout master && echo "-> checkout master successful";
-        git up && echo "-> git up successful";
-        make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
-        sudo make install || exit 1 && echo "-> make install successful";
+        cd ~/.local/share/src && echo "-> cd ~/.local/share/src successful";
+        [[ ! -d ~/.local/share/src/neovim ]] && git clone git@github.com:neovim/neovim.git && echo "-> git clone neovim successful";
+        cd neovim && echo "-> cd neovim successful";
+        if (git merge-base --is-ancestor origin/master master); then
+          echo "-> already up to date on neovim origin/master; skipping."
+        else
+          git checkout master && echo "-> checkout master successful";
+          git up && echo "-> git up successful";
+          rm -rf ~/.local/share/src/neovim/.deps || exit 1 && echo "-> remove .deps successful";
+          make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
+          sudo make install || exit 1 && echo "-> make install successful";
+        fi
+
     # - description: Download binaries
     #   command: >-
     #     cd ~/.local/share/packages || exit 1;

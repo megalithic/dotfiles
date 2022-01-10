@@ -1,0 +1,19 @@
+bundler
+coderay
+curses
+fastri
+foreman
+github-auth
+# invoker
+neovim
+pry
+rcodetools
+rubocop
+sidekiq
+solargraph
+tmuxinator
+# terminal-notifier
+weechat
+language_server
+nokogiri
+yard
