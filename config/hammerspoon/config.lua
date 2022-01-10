@@ -271,9 +271,6 @@ M.apps = {
     shortcut = "m",
     distraction = true,
     tabjump = "hangouts.google.com",
-    -- rules = {
-    --   {nil, 1, M.layout.leftHalf},
-    -- },
   },
   ["org.whispersystems.signal-desktop"] = {
     bundleID = "org.whispersystems.signal-desktop",
@@ -310,7 +307,6 @@ M.apps = {
     quitGuard = true,
     rules = {
       { "Hammerspoon Console", 2, M.layout.rightHalf },
-      -- {title = 'Hammerspoon Console', action = 'snap', position = M.grid.rightHalf}
     },
   },
   ["com.apple.systempreferences"] = {

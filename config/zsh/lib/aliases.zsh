@@ -96,6 +96,9 @@ alias outa="tmux attach-session -t outstand"
 alias out="tmuxinator start outstand -n outstand"
 alias trw="tmux rename-window"
 alias trs="tmux rename-session"
+alias tpmi="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/install_plugins"
+alias tpmu="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/update_plugins"
+alias tpmc="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/clean_plugins"
 
 alias ssh="kitty +kitten ssh"
 

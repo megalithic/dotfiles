@@ -7,7 +7,10 @@ local wh = require("utils.wm.window-handlers")
 M.apply = function(app, win, event, log)
   ----------------------------------------------------------------------
   -- handle hide-after interval
-  wh.hideAfterHandler(app, 1, event)
+  local hideAfter = Config.apps[app:bundleID()].hideAfter
+  if hideAfter ~= nil then
+    wh.hideAfterHandler(app, hideAfter, event)
+  end
 end
 
 return M
