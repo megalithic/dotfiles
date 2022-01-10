@@ -35,8 +35,8 @@ function mega:load_variables()
 end
 mega:load_variables()
 
-mega.dirs.dots = fn.expand("$HOME/.dotfiles")
-mega.dirs.privates = fn.expand("$HOME/.dotfiles/private")
+mega.dirs.dots = fn.expand("$DOTS")
+mega.dirs.privates = fn.expand("$PRIVATES")
 mega.dirs.code = fn.expand("$HOME/code")
 mega.dirs.icloud = fn.expand("$ICLOUD_DIR")
 mega.dirs.docs = fn.expand("$DOCUMENTS_DIR")
@@ -520,19 +520,46 @@ function mega.bufmap(lhs, rhs, mode, expr)
   mega.bmap(mode, lhs, rhs, opts)
 end
 
-function mega.au(s, override)
-  override = override or false
-  if override then
-    vcmd("au! " .. s)
-  else
-    vcmd("au " .. s)
+function mega.au(name, pattern, cmd)
+  -- bail out if we're using our old way of autocmds (no more `!` either)
+  if pattern == nil and cmd == nil then
+    vcmd("au " .. name)
+    return
   end
+
+  local cmd_type = type(cmd)
+  if cmd_type == "function" then
+    -- local key = "_" .. callback_index
+    -- callback_index = callback_index + 1
+    -- _.g.autocommand_callbacks[key] = cmd
+    -- cmd = "lua _.g.autocommand_callbacks." .. key .. "()"
+    local fn_id = mega._register(cmd)
+    cmd = fmt("lua mega._execute(%s)", fn_id)
+  elseif cmd_type ~= "string" then
+    error("autocmd(): unsupported cmd type: " .. cmd_type)
+  end
+  vim.cmd("autocmd " .. name .. " " .. pattern .. " " .. cmd)
 end
+
+function mega.autocmd(...)
+  mega.au(...)
+end
+
+-- function mega.au(s, override)
+--   override = override or false
+--   if override then
+--     vcmd("au! " .. s)
+--   else
+--     vcmd("au " .. s)
+--   end
+-- end
 
 local function is_valid_target(command)
   local valid_type = command.targets and vim.tbl_islist(command.targets)
   return valid_type or vim.startswith(command.events[1], "User ")
 end
+
+
 function mega.augroup(name, commands)
   vcmd("augroup " .. name)
   vcmd("autocmd!")
