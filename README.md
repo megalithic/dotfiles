@@ -1,9 +1,9 @@
 ```
 
-     ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-     │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: 🛖 bits & bobs, dots & things. 🏠
-     ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
-     🗿 @megalithic
+   ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
+   │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: bits & bobs, dots & things.
+   ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+   @megalithic
 
 ```
 
@@ -44,9 +44,9 @@ handful of Debian/Ubuntu Linux specific platform scripts and provisions. This
 means that certain tools/binaries I rely on may or may not install/configure on
 Linux. Though, I have tested it decently well on an Ubuntu-based Linode instance.
 
-##### ⚠️ Thar be dragons..
+##### 🐉 Thar be dragons..
 
-> I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
+> ⚠️ I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
 
 ## ✨ Accoutrements
 
