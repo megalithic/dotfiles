@@ -88,9 +88,10 @@ renamed = "[](fg:white)"
 untracked = "[?${count}](fg:#7c8377)"
 
 [directory]
-truncation_length = 10
+truncation_length = 2
 truncation_symbol = "…/"
 truncate_to_repo = false
+fish_style_pwd_dir_length = 1
 style = "bold blue"
 
 [aws]
