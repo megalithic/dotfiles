@@ -20,6 +20,11 @@ M.network = {
   currentConnected = hs.wifi.currentNetwork(),
 }
 
+M.dirs = {
+  -- screenshots = os.getenv("HOME") .. "/Library/Mobile Documents/com~apple~CloudDocs/screenshots",
+  screenshots = os.getenv("HOME") .. "/screenshots",
+}
+
 M.preferred = {
   terms = { "kitty", "alacritty", "iTerm" },
   browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
@@ -27,11 +32,9 @@ M.preferred = {
   vpn = { "Cloudflare WARP" },
   -- TODO: hyperGroup
   -- https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L72-L119
-  bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser" },
-  controlplane = { "dock", "office", "screenshots" },
+  bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser", "capture" },
+  controlplane = { "dock", "office" },
   watchers = { "urlevent" },
-  screenshots = os.getenv("HOME") .. "/screenshots",
-  -- screenshots = os.getenv("HOME") .. "/Library/Mobile Documents/com~apple~CloudDocs/screenshots",
 }
 
 M.window = {
@@ -303,10 +306,10 @@ M.apps = {
     name = "Hammerspoon",
     hyper_key = "r",
     context = "hammerspoon",
-    hideAfter = 1,
+    hideAfter = 15,
     quitGuard = true,
     rules = {
-      { "Hammerspoon Console", 2, M.layout.rightHalf },
+      { nil, 2, M.layout.fullScreen },
     },
   },
   ["com.apple.systempreferences"] = {

@@ -76,14 +76,11 @@ ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud
 #   mkdir ~/Desktop/screenshots
 # fi
 
-# defaults write com.apple.screencapture location -string "${HOME}/iCloud/Screenshots"
-defaults write com.apple.screencapture location -string "${HOME}/screenshots"
-# Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)"
-defaults write com.apple.screencapture type -string "png"
-# defaults write com.apple.screencapture name "screeny_$(date '+%y%m%d%H%M%S')"
-defaults write com.apple.screencapture name "screeny"
+defaults write com.apple.screencapture location -string "" # ${HOME}/screenshots" # or "${HOME}/iCloud/Screenshots"
+defaults write com.apple.screencapture type -string ""     # (other options: BMP, GIF, JPG, PDF, TIFF)
+defaults write com.apple.screencapture name ""
 # don't include the datetime stamp
-# defaults write com.apple.screencapture "include-date"-1
+# defaults write com.apple.screencapture "include-date" -1
 
 # Disable shadow in screenshots"
 defaults write com.apple.screencapture disable-shadow -bool true
