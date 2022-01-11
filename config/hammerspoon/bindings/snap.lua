@@ -11,7 +11,7 @@ local M = {}
 
 function movewindows:entered()
   log.i("-> entered snap modal..")
-  hs.window.highlight.start()
+  -- hs.window.highlight.start()
   alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()
 
@@ -33,7 +33,7 @@ function movewindows:entered()
 end
 
 function movewindows:exited()
-  hs.window.highlight.stop()
+  -- hs.window.highlight.stop()
   hs.fnutils.ieach(alertUuids, function(uuid)
     hs.alert.closeSpecific(uuid)
   end)

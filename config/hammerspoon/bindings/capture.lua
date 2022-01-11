@@ -12,62 +12,39 @@ local log = hs.logger.new("[capture]", "debug")
 local M = {}
 local fmt = string.format
 
-local s3_task_runner = function(file)
-  local task = hs.task.new(
-    fmt("/usr/local/bin/zsh -l -c %s/.dotfiles/bin/share_to_s3", os.getenv("HOME")),
-    function() end, -- Fake callback
-    function(task, stdOut, stdErr)
-      local success = string.find(stdOut, "Completed") ~= nil
-      log.df("#-> s3_task execution: \n%s \n%s]", hs.inspect(task), hs.inspect(stdOut))
-
-      if success then
-        hs.alert.show("screenshot captured and placed on clipboard")
-
-        -- copy our screenshot to iCloud for longer-term storage
-        -- hs.execute('cp "' .. file .. '" "$HOME/Library/Mobile Documents/com~apple~CloudDocs/screenshots/"', true)
-      else
-        log.df("#-> s3_task execution error: \n%s]", hs.inspect(stdErr))
-      end
-    end,
-    { fmt([[%s]], file) }
-  )
-  task:start()
-  print(task)
-
-  return task
-end
-
 M.capture = function(type, showPostUI)
   showPostUI = showPostUI or true
   local args = M.parseArgs(type, showPostUI)
-  local filename = fmt("%s/screenshooots_%s.png", Config.dirs.screenshots, os.date("!%Y-%m-%d-%T"))
-  print(hs.inspect(args), hs.inspect(filename))
-  return hs.execute(fmt('/usr/sbin/screencapture %s "%s"', args, filename))
+  local timestamp = string.gsub(os.date("%Y%m%d_%T"), ":", "") -- os.date("!%Y-%m-%d-%T")
+  local filename = fmt("%s/ss_%s.png", Config.dirs.screenshots, timestamp)
 
-  -- hs.task.new("/usr/sbin/screencapture", function(exitCode, stdOut, stdErr)
-  --   log.df(
-  --     "#-> capture_task callback execution results: \n%s \n%s \n%s]",
-  --     hs.inspect(exitCode),
-  --     hs.inspect(stdOut),
-  --     hs.inspect(stdErr)
-  --   )
+  hs.task.new("/usr/sbin/screencapture", function(exitCode, stdOut, stdErr)
+    log.df(
+      "#-> capture_task callback execution results: \n%s \n%s \n%s]",
+      hs.inspect(exitCode),
+      hs.inspect(stdOut),
+      hs.inspect(stdErr)
+    )
 
-  --   -- local s3_task = s3_task_runner(filename)
-  --   -- log.df("#-> resulting s3_task: \n%s", hs.inspect(s3_task))
-  -- end, function(task, stdOut, stdErr)
-  --   log.df(
-  --     "#-> capture_task streamCallback execution results: \n%s \n%s \n%s]",
-  --     hs.inspect(task),
-  --     hs.inspect(stdOut),
-  --     hs.inspect(stdErr)
-  --   )
-
-  --   local s3_task = s3_task_runner(filename)
-  --   log.df("#-> resulting s3_task: \n%s", hs.inspect(s3_task))
-  -- end, {
-  --   args,
-  --   filename,
-  -- }):start()
+    local image = hs.pasteboard.readImage()
+    print(hs.inspect(image))
+    local save_ok = image:saveToFile(filename)
+    if save_ok then
+      log.df("saved image (%s) successfully! %s", filename, hs.inspect(image))
+      local output, s3_ok, t, rc = hs.execute(
+        fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
+        true
+      )
+      if s3_ok then
+        hs.alert.show("screenshot captured and placed on clipboard")
+      else
+        log.df("#-> resulting s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
+      end
+    end
+  end, {
+    args,
+    filename,
+  }):start()
 end
 
 M.parseArgs = function(scType, showPostUI)
@@ -75,10 +52,13 @@ M.parseArgs = function(scType, showPostUI)
 
   if scType == "screen" then
     -- Nothing required here
+  elseif scType == "window" then
+    local windowId = hs.window.frontmostWindow():id()
+    args = "-l" .. windowId
   elseif scType == "screen_clipboard" then
     args = "-c"
   elseif scType == "interactive" then
-    args = "-i"
+    args = "-s"
   elseif scType == "screenUI" then
     args = "-iU"
   elseif scType == "interactive_clipboard" then
@@ -96,12 +76,16 @@ M.start = function()
   log.df("starting..")
 
   hs.hotkey.bind(Config.modifiers.cmdShift, "4", function()
-    log.df("should be capturing interactive")
-    print(M.capture("interactive", true))
+    log.df("should be capturing interactive clipboard")
+    print(M.capture("interactive_clipboard", true))
   end)
   hs.hotkey.bind(Config.modifiers.mashShift, "4", function()
     log.df("should be capturing interactive clipboard")
     print(M.capture("interactive_clipboard", true))
+  end)
+  hs.hotkey.bind(Config.modifiers.cmdShift, "s", function()
+    log.df("should be capturing window")
+    print(M.capture("window", true))
   end)
 end
 
