@@ -44,12 +44,12 @@
       command: >-
         git submodule update --init --recursive;
 
-    - description: Installing Homebrew..
+    - description: Attempting to install Homebrew..
       quiet: true
       command: >-
         type "brew" &>/dev/null && echo "-> brew already installed; skipping." || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)";
 
-    - description: Installing ASDF to ~/.asdf..
+    - description: Attempting to install ASDF..
       quiet: true
       command: >-
         type "asdf" &>/dev/null && echo "-> asdf already installed; skipping."  || git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf;
@@ -198,23 +198,24 @@
         - 1.17.1
 
 - shell:
-    - description: Setting zsh as default shell..
+    - description: Attempting to set zsh as default shell..
+      quiet: true
       command: >-
-        [[ $(echo $SHELL) == $(which zsh) ]] && echo "-> $(which zsh) already the default shell; skipping." || sudo chsh -s `which zsh` `whoami`
+        [[ $(echo $SHELL) == $(which zsh) ]] && echo "-> $(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`
 
     # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
-    - description: Installing neovim from source..
+    - description: Attempting to install neovim from source..
       quiet: true
       command: >-
         cd ~/.local/share/src && echo "-> cd ~/.local/share/src successful";
         [[ ! -d ~/.local/share/src/neovim ]] && git clone git@github.com:neovim/neovim.git && echo "-> git clone neovim successful";
         cd neovim && echo "-> cd neovim successful";
+        git checkout master && echo "-> checkout master successful";
         git fetch;
-        if (git merge-base --is-ancestor origin/master master); then
+        if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
           echo "-> neovim already up to date on origin/master; skipping."
         else
-          if read -q "choice?[?] Build neovim from source (Y/y)?  "; then
-            git checkout master && echo "-> checkout master successful";
+          if read -q "choice?[?] Build neovim from source (Y/y)? "; then
             git up && echo "-> git up successful";
             rm -rf ~/.local/share/src/neovim/.deps || exit 1 && echo "-> remove .deps successful";
             make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
@@ -224,6 +225,7 @@
           fi
         fi
 
+    # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries
     #   command: >-
     #     cd ~/.local/share/packages || exit 1;

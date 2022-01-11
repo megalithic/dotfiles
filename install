@@ -2,43 +2,32 @@
 
 set -euo pipefail
 
-run() {
-  # Check script is being executed appropriatly
-  if [[ -z "${BASH_SOURCE}" ]]; then
-    msg="This file should be executed directly with \`./install\`
-    and not interpreted with \`sh ./install\`"
-    echo "$msg"
-    exit 1
-  fi
+# Check script is being executed appropriatly
+if [[ -z "${BASH_SOURCE}" ]]; then
+  msg="This file should be executed directly with \`./install\`
+  and not interpreted with \`sh ./install\`"
+  echo "$msg"
+  exit 1
+fi
 
-  BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  CONFIG="install.conf.yaml"
-  DOTBOT_DIR="dotbot/core"
-  DOTBOT_BIN="bin/dotbot"
+CONFIG="install.conf.yaml"
+DOTBOT_DIR="dotbot/core"
+DOTBOT_BIN="bin/dotbot"
 
-  cd "${BASEDIR}"
-  git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-  git submodule update --init --recursive "${DOTBOT_DIR}"
-  git submodule update --init --recursive "dotbot/asdf"
-  git submodule update --init --recursive "dotbot/brewfile"
+cd "${BASEDIR}"
+git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
+git submodule update --init --recursive "${DOTBOT_DIR}"
+git submodule update --init --recursive "dotbot/asdf"
+git submodule update --init --recursive "dotbot/brewfile"
 
-  "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
-    --plugin-dir dotbot/brewfile \
-    --plugin-dir dotbot/asdf \
-    -c "${CONFIG}"
-
-    # -c "${CONFIG}" "${@}"
-
-  # echo "                                      "
-  # echo "============== COMPLETE =============="
-  # echo "                                      "
-  # echo "   Please run this in your terminal:  "
-  # echo "   $ source ~/.profile                "
-  # echo "                                      "
-  # echo "======================================"
-  # echo "
-}
+"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
+  --plugin-dir dotbot/brewfile \
+  --plugin-dir dotbot/asdf \
+  -c "${CONFIG}" "${@}"
+  # -c "${CONFIG}"
 
 # run ${@} 2>&1 | tee "makeinstall.log"
-run ${@} 2>&1 | tee "$HOME/$(date +'%Y-%m-%d-%H-%M-%S').log"
+# run ${@} 2>&1 | tee "$HOME/$(date +'%Y-%m-%d-%H-%M-%S').log"
+# run ${@}
