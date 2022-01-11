@@ -88,6 +88,9 @@ export ZSH_AUTOSUGGEST_USE_ASYNC=1
 # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
 export ZSH_AUTOSUGGEST_USE_ASYNC=true
 
+export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
+export _ZO_ECHO=1
+
 export TERM_ITALICS="TRUE"
 
 # HT: https://github.com/nicknisi/dotfiles/blob/master/zsh/zprofile.symlink

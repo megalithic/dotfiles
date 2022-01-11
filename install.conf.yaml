@@ -8,6 +8,9 @@
 # https://github.com/DmitryOtroshchenko/Dotfiles/blob/master/install/bootstrap-mac.sh
 # https://github.com/adamcstephens/dotfiles/blob/main/install.conf.yaml
 
+# REF: https://stackoverflow.com/questions/3258243/check-if-pull-needed-in-git
+# REF: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
+
 - defaults:
     link:
       create: true
@@ -180,20 +183,30 @@
         - 1.17.1
 
 - shell:
+    - description: Make zsh the default shell
+      command: sudo chsh -s `which zsh` `whoami`
     # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
     - description: Install from source
+      quiet: true
       command: >-
         cd ~/.local/share/src && echo "-> cd ~/.local/share/src successful";
         [[ ! -d ~/.local/share/src/neovim ]] && git clone git@github.com:neovim/neovim.git && echo "-> git clone neovim successful";
         cd neovim && echo "-> cd neovim successful";
+        git fetch;
         if (git merge-base --is-ancestor origin/master master); then
           echo "-> already up to date on neovim origin/master; skipping."
         else
-          git checkout master && echo "-> checkout master successful";
-          git up && echo "-> git up successful";
-          rm -rf ~/.local/share/src/neovim/.deps || exit 1 && echo "-> remove .deps successful";
-          make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
-          sudo make install || exit 1 && echo "-> make install successful";
+          read -p "[?] Are you sure? " -n 1 -r;
+          echo;
+          if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
+          else
+            git checkout master && echo "-> checkout master successful";
+            git up && echo "-> git up successful";
+            rm -rf ~/.local/share/src/neovim/.deps || exit 1 && echo "-> remove .deps successful";
+            make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
+            sudo make install || exit 1 && echo "-> make install successful";
+          fi
         fi
 
     # - description: Download binaries
@@ -211,22 +224,8 @@
     #     wget "https://github.com/junegunn/fzf/releases/download/0.29.0/fzf-0.29.0-linux_amd64.tar.gz" -O - | tar -xz fzf;
     #     wget "https://raw.githubusercontent.com/junegunn/fzf/0.29.0/shell/key-bindings.zsh" -O fzf-key-bindings.zsh;
     #     wget "https://git.io/antigen" -O antigen.zsh
-
     # - [~/.dotfiles/bin/gh-login, GitHub Auth]
-  #
-  # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm, Installing TPM]
-  #
-  # - [
-  #     rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim,
-  #     Installing Packer,
-  #   ]
-  #
-  # - [
-  #     git clone https://github.com/savq/paq-nvim.git "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/pack/paqs/opt/paq-nvim,
-  #     Installing paq-nvim
-  #   ],
-  #
-  # - [
-  #     nvim --headless -u NONE -c 'autocmd User PackerComplete quitall' -c 'lua require("plugins")' -c 'lua require("packer").sync()',
-  #     Installing Neovim plugins,
-  #   ]
+    # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm, Installing TPM]
+    # - [rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim, Installing Packer]
+    # - [git clone https://github.com/savq/paq-nvim.git "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/pack/paqs/opt/paq-nvim, Installing paq-nvim],
+    # - [nvim --headless -u NONE -c 'autocmd User PaqDone quitall' -c 'lua mega.sync_plugins()', Installing Neovim plugins]

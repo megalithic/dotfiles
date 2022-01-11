@@ -2,7 +2,7 @@ local api = vim.api
 local vcmd = vim.cmd
 local fn = vim.fn
 
-local C = require("colors")
+-- local C = require("colors")
 
 -- # managed paqs stored here:
 --  ~/.local/share/nvim/site/pack/paqs
@@ -94,8 +94,6 @@ M.list = {
   "ggandor/lightspeed.nvim",
   "voldikss/vim-floaterm",
   "kyazdani42/nvim-tree.lua",
-  "ldelossa/litee.nvim",
-  "ldelossa/litee-filetree.nvim",
 
   "tami5/sqlite.lua",
   "nvim-telescope/telescope.nvim",
@@ -1316,7 +1314,7 @@ M.setup = function()
   do -- package-info.nvim
     require("package-info").setup({
       colors = {
-        up_to_date = C.cs.bg2, -- Text color for up to date package virtual text
+        --up_to_date = C.cs.bg2, -- Text color for up to date package virtual text
         outdated = "#d19a66", -- Text color for outdated package virtual text
       },
       icons = {
@@ -1940,21 +1938,6 @@ M.setup = function()
         },
       },
     })
-  end
-
-  do -- litee.nvim
-    -- configure the litee.nvim library
-    require("litee.lib").setup({
-      tree = {
-        icon_set = "nerd",
-      },
-      panel = {
-        orientation = "left",
-        panel_size = 30,
-      },
-    })
-    -- configure litee-filetree.nvim
-    require("litee.filetree").setup({})
   end
 
   do -- nvim-tree.nvim

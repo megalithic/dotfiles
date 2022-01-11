@@ -172,7 +172,8 @@ function setup_surfingkeys({ api: api }) {
   })()`;
     document.body.appendChild(script);
   };
-  mapkey("<Space-s>", "opens squirt", actions.showSpeedReader);
+  unmap(";s");
+  mapkey(";s", "opens squirt", actions.showSpeedReader);
 
   // follow links
   // bind(
