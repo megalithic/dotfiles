@@ -17,7 +17,7 @@ If you want to kick the tires, you can simply:
 
 ```bash
 git clone git@github.com:megalithic/dotfiles.git ~/.dotfiles \
-  && cd ~/.dotfiles
+  && cd ~/.dotfiles \
   && make
   # defaults to using the `install` goal
 ```
