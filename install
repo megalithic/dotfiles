@@ -3,11 +3,18 @@
 set -euo pipefail
 
 run() {
+  # Check script is being executed appropriatly
+  if [[ -z "${BASH_SOURCE}" ]]; then
+    msg="This file should be executed directly with \`./install\`
+    and not interpreted with \`sh ./install\`"
+    echo "$msg"
+    exit 1
+  fi
+
   BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
   CONFIG="install.conf.yaml"
   DOTBOT_DIR="dotbot/core"
-
   DOTBOT_BIN="bin/dotbot"
 
   cd "${BASEDIR}"
@@ -15,10 +22,8 @@ run() {
   git submodule update --init --recursive "${DOTBOT_DIR}"
   git submodule update --init --recursive "dotbot/asdf"
   git submodule update --init --recursive "dotbot/brewfile"
-  git submodule update --init --recursive "dotbot/gh-extension"
 
   "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
-    --plugin-dir dotbot/gh-extension \
     --plugin-dir dotbot/brewfile \
     --plugin-dir dotbot/asdf \
     -c "${CONFIG}"
