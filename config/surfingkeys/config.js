@@ -86,7 +86,7 @@ function setup_surfingkeys({ api: api }) {
     Hints.characters = "qwertasdfgzxcvb";
     // Hints.characters = "asdfgyuiopqwertnmzxcvb";
     const hintsStyle =
-      "border: solid 2px #4C566A !important; padding: 1px !important; color: #E5E9F0 !important; background: #3B4252 !important; font-size: 16px !important; font-family: 'JetBrains Mono'";
+      "border: solid 2px #4C566A !important; padding: 1px !important; color: #E5E9F0 !important; background: #3B4252 !important; font-size: 12px !important; font-family: 'JetBrains Mono'";
     Hints.style(hintsStyle);
     Hints.style(hintsStyle, "text");
   }
@@ -173,7 +173,17 @@ function setup_surfingkeys({ api: api }) {
     document.body.appendChild(script);
   };
   unmap(";s");
-  mapkey(";s", "opens squirt", actions.showSpeedReader);
+  mapkey(";s", "-> Open Squirt", actions.showSpeedReader);
+
+  actions.sendToInstapaper = () => {
+    const script = document.createElement("script");
+    script.innerHTML = `(() => {
+    var d=document;try{if(!d.body)throw(0);window.location='http://www.instapaper.com/text?u='+encodeURIComponent(d.location.href);}catch(e){alert('Please wait until the page has loaded.');}
+  })()`;
+    document.body.appendChild(script);
+  };
+  unmap(";i");
+  mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
 
   // follow links
   // bind(
