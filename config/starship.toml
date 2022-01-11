@@ -72,8 +72,8 @@ style = "bold fg:245"
 # # https://github.com/fredericrous/dotfiles/blob/main/private_dot_config/starship.toml
 style = "#7c8377"
 format = '([\[$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind\]](fg:$style) )'
-ahead = "[⇡](fg:white)"
-behind = "[⇣](fg:white)"
+ahead = "[](fg:white)" # ⇡
+behind = "[](fg:white)" # ⇣
 diverged = "⇕⇡${ahead_count}⇣${behind_count}"
 modified = "[﯂](fg:purple)" #•﯂
 # modified = "[~${count}](fg:red)"
