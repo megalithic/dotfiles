@@ -7,6 +7,7 @@
 # https://github.com/btmccollum/dotfiles/blob/master/install.conf.yaml
 # https://github.com/DmitryOtroshchenko/Dotfiles/blob/master/install/bootstrap-mac.sh
 # https://github.com/adamcstephens/dotfiles/blob/main/install.conf.yaml
+# https://github.com/jamesstidard/dotfiles/blob/master/install (great!)
 
 # REF: https://stackoverflow.com/questions/3258243/check-if-pull-needed-in-git
 # REF: https://stackoverflow.com/questions/1885525/how-do-i-prompt-a-user-for-confirmation-in-bash-script
@@ -38,7 +39,21 @@
       recursive: true
 
 - shell:
-    - [git submodule update --init --recursive, Installing submodules]
+    - description: Installing Submodules..
+      quiet: true
+      command: >-
+        git submodule update --init --recursive;
+
+    - description: Installing Homebrew..
+      quiet: true
+      command: >-
+        type "brew" &>/dev/null && echo "-> brew already installed; skipping." || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)";
+
+    - description: Installing ASDF to ~/.asdf..
+      quiet: true
+      command: >-
+        type "asdf" &>/dev/null && echo "-> asdf already installed; skipping."  || git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf;
+        source $HOME/.asdf/asdf.sh;
 
 - link:
     # ----- home
@@ -183,10 +198,12 @@
         - 1.17.1
 
 - shell:
-    - description: Make zsh the default shell
-      command: sudo chsh -s `which zsh` `whoami`
+    - description: Setting zsh as default shell..
+      command: >-
+        [[ $(echo $SHELL) == $(which zsh) ]] && echo "-> $(which zsh) already the default shell; skipping." || sudo chsh -s `which zsh` `whoami`
+
     # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
-    - description: Install from source
+    - description: Installing neovim from source..
       quiet: true
       command: >-
         cd ~/.local/share/src && echo "-> cd ~/.local/share/src successful";
@@ -194,18 +211,16 @@
         cd neovim && echo "-> cd neovim successful";
         git fetch;
         if (git merge-base --is-ancestor origin/master master); then
-          echo "-> already up to date on neovim origin/master; skipping."
+          echo "-> neovim already up to date on origin/master; skipping."
         else
-          read -p "[?] Are you sure? " -n 1 -r;
-          echo;
-          if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
-          else
+          if read -q "choice?[?] Build neovim from source (Y/y)?  "; then
             git checkout master && echo "-> checkout master successful";
             git up && echo "-> git up successful";
             rm -rf ~/.local/share/src/neovim/.deps || exit 1 && echo "-> remove .deps successful";
             make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
             sudo make install || exit 1 && echo "-> make install successful";
+          else
+            [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
           fi
         fi
 

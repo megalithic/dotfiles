@@ -23,3 +23,12 @@ command({
   "Copy",
   [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e]],
 })
+
+vim.cmd([[
+function! Syn()
+  for id in synstack(line("."), col("."))
+    echo synIDattr(id, "name")
+  endfor
+endfunction
+command! -nargs=0 Syn call Syn()
+]])

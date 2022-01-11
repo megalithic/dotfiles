@@ -1,19 +1,39 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-CONFIG="install.conf.yaml"
-DOTBOT_DIR="dotbot"
+run() {
+  BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-DOTBOT_BIN="bin/dotbot"
-BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  CONFIG="install.conf.yaml"
+  DOTBOT_DIR="dotbot/core"
 
-cd "${BASEDIR}"
-git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-git submodule update --init --recursive "${DOTBOT_DIR}"
+  DOTBOT_BIN="bin/dotbot"
 
-"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" \
-  --plugin-dir dotbot-plugins/dotbot-gh-extension \
-  --plugin-dir dotbot-plugins/dotbot-brewfile \
-  --plugin-dir dotbot-plugins/dotbot-asdf \
-  -c "${CONFIG}" "${@}"
+  cd "${BASEDIR}"
+  git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
+  git submodule update --init --recursive "${DOTBOT_DIR}"
+  git submodule update --init --recursive "dotbot/asdf"
+  git submodule update --init --recursive "dotbot/brewfile"
+  git submodule update --init --recursive "dotbot/gh-extension"
+
+  "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
+    --plugin-dir dotbot/gh-extension \
+    --plugin-dir dotbot/brewfile \
+    --plugin-dir dotbot/asdf \
+    -c "${CONFIG}"
+
+    # -c "${CONFIG}" "${@}"
+
+  # echo "                                      "
+  # echo "============== COMPLETE =============="
+  # echo "                                      "
+  # echo "   Please run this in your terminal:  "
+  # echo "   $ source ~/.profile                "
+  # echo "                                      "
+  # echo "======================================"
+  # echo "
+}
+
+# run ${@} 2>&1 | tee "makeinstall.log"
+run ${@} 2>&1 | tee "$HOME/$(date +'%Y-%m-%d-%H-%M-%S').log"
