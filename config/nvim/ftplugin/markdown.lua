@@ -24,10 +24,10 @@ vim.cmd([[setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=f
 vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 
 vim.cmd([[
-  setlocal nowrap
+  setlocal wrap
   setlocal spell
   setlocal nolist
-  setlocal colorcolumn=
+  setlocal colorcolumn=81
   setlocal foldexpr=markdown#FoldExpression(v:lnum)
   setlocal foldmethod=expr
   setlocal formatoptions+=t

@@ -298,12 +298,11 @@ function _G.__statusline()
 end
 
 local function setup_autocommands()
-  -- FIXME: which-key fires, but slower file loading and fzf-lua viewing/loading:
   mega.augroup("CustomStatusline", {
     { events = { "FocusGained" }, targets = { "*" }, command = "let g:vim_in_focus = v:true" },
     { events = { "FocusLost" }, targets = { "*" }, command = "let g:vim_in_focus = v:false" },
     {
-      events = { "VimEnter,ColorScheme" },
+      events = { "VimEnter,ColorScheme,BufAdd" },
       targets = { "*" },
       command = colors,
     },
