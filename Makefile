@@ -1,15 +1,12 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help dots
-# .PHONY: default dots mac linux help
+.PHONY: help
 .DEFAULT_GOAL := install
 
 help: ## Show this help content
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-install: dot ## Runs the default dotbot install script (same as `dot`)
-
-dot: ## Runs the default dotbot install script
+install: ## Runs the default dotbot install script
 	./install
 
 macos: ## Runs the macos-specific dotbot install script
@@ -22,6 +19,12 @@ linux: ## Runs the linux-specific dotbot install script
 
 platforms: ## Runs all platform-specific dotbot install scripts
 	macos linux
+
+elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
+		curl -fLO https://github.com/elixir-lsp/elixir-ls/releases/latest/download/elixir-ls.zip
+		unzip elixir-ls.zip -d $(XDG_DATA_HOME)/lsp/elixir-ls
+		chmod +x $(XDG_DATA_HOME)/lsp/elixir-ls/language_server.sh
+		rm elixir-ls.zip
 
 subup: ## Updates git submodules
 	git submodule update --remote --merge

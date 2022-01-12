@@ -225,6 +225,15 @@
           fi
         fi
 
+    - description: Attempting to install elixir-ls..
+      quiet: true
+      command: >-
+        if read -q "choice?[?] Install elixir-ls binary (Y/y)? "; then
+          make -C ~/.dotfiles elixirls && echo "-> elixir-ls installed successfully";
+        else
+          [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
+        fi
+
     # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries
     #   command: >-
