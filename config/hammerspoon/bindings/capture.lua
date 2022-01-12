@@ -1,5 +1,3 @@
-local log = hs.logger.new("[capture]", "debug")
-
 -- REFS:
 -- https://github.com/ecerulm/dotfiles/blob/master/.hammerspoon/init.lua#L296-L317
 -- https://github.com/sarangak/dotfiles/blob/master/dot_hammerspoon/windows.lua#L131-L150 (more detailed impl)
@@ -9,36 +7,56 @@ local log = hs.logger.new("[capture]", "debug")
 -- https://github.com/staticaland/dotfiles/blob/master/hammerspoon/.hammerspoon/init.lua#L57-L80
 -- https://github.com/lowne/hammerspoon-extensions/blob/master/hs/expose/init.lua#L22-L35 (neat checks for ok)
 
-local M = {}
+local log = hs.logger.new("[capture]", "debug")
+local cache = {
+  image = nil,
+  image_contents = nil,
+  image_url = nil,
+  original_clipboard = nil,
+}
+local M = { cache = cache }
 local fmt = string.format
 
-M.capture = function(type, showPostUI)
-  showPostUI = showPostUI or true
-  local args = M.parseArgs(type, showPostUI)
+M.capture = function(type, store_s3)
+  M.cache.original_clipboard = hs.pasteboard.getContents()
+
+  store_s3 = store_s3 or false
+  local args = M.parseArgs(type)
   local timestamp = string.gsub(os.date("%Y%m%d_%T"), ":", "") -- os.date("!%Y-%m-%d-%T")
   local filename = fmt("%s/ss_%s.png", Config.dirs.screenshots, timestamp)
 
-  hs.task.new("/usr/sbin/screencapture", function(exitCode, stdOut, stdErr)
-    log.df(
-      "#-> capture_task callback execution results: \n%s \n%s \n%s]",
-      hs.inspect(exitCode),
-      hs.inspect(stdOut),
-      hs.inspect(stdErr)
-    )
+  hs.task.new("/usr/sbin/screencapture", function()
+    -- get interactive screen capture content that's now in the system clipboard
+    M.cache.image_contents = hs.pasteboard.readAllData()
 
-    local image = hs.pasteboard.readImage()
-    print(hs.inspect(image))
-    local save_ok = image:saveToFile(filename)
-    if save_ok then
-      log.df("saved image (%s) successfully! %s", filename, hs.inspect(image))
-      local output, s3_ok, t, rc = hs.execute(
-        fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
-        true
-      )
-      if s3_ok then
-        hs.alert.show("screenshot captured and placed on clipboard")
-      else
-        log.df("#-> resulting s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
+    -- get an hs.image object from that content
+    M.cache.image = hs.pasteboard.readImage()
+    hs.pasteboard.setContents(M.cache.image, "image")
+
+    if M.cache.image and store_s3 then
+      local save_ok = M.cache.image:saveToFile(filename)
+      if save_ok then
+        log.df("saved image (%s) successfully!", filename)
+        local output, s3_ok, t, rc = hs.execute(
+          fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
+          true
+        )
+        if s3_ok then
+          hs.notify.new({
+            title = "Capture",
+            subTitle = "S3 Upload completed",
+            informativeText = filename,
+          }):setIdImage(M.cache.image):send()
+
+          -- get stored s3 image url that's now in the system clipboard
+          M.cache.image_url = hs.pasteboard.getContents()
+
+          hs.pasteboard.setContents(M.cache.image, "image")
+          hs.pasteboard.setContents(M.cache.image_url, "image_url")
+          hs.pasteboard.setContents(M.cache.image_contents, "image_contents")
+        else
+          log.ef("#-> errored s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
+        end
       end
     end
   end, {
@@ -47,11 +65,11 @@ M.capture = function(type, showPostUI)
   }):start()
 end
 
-M.parseArgs = function(scType, showPostUI)
+M.parseArgs = function(scType)
   local args = ""
 
   if scType == "screen" then
-    -- Nothing required here
+    -- no-op
   elseif scType == "window" then
     local windowId = hs.window.frontmostWindow():id()
     args = "-l" .. windowId
@@ -65,28 +83,59 @@ M.parseArgs = function(scType, showPostUI)
     args = "-ci"
   end
 
-  if showPostUI then
-    args = args .. "u"
-  end
-
-  return args .. "d"
+  return args .. "du"
 end
 
 M.start = function()
   log.df("starting..")
 
   hs.hotkey.bind(Config.modifiers.cmdShift, "4", function()
-    log.df("should be capturing interactive clipboard")
-    print(M.capture("interactive_clipboard", true))
+    M.capture("interactive_clipboard", true)
   end)
+
   hs.hotkey.bind(Config.modifiers.mashShift, "4", function()
-    log.df("should be capturing interactive clipboard")
-    print(M.capture("interactive_clipboard", true))
+    M.capture("interactive_clipboard", false)
   end)
+
   hs.hotkey.bind(Config.modifiers.cmdShift, "s", function()
-    log.df("should be capturing window")
-    print(M.capture("window", true))
+    M.capture("window", true)
   end)
+
+  -- TODO:  http://www.hammerspoon.org/docs/hs.pasteboard.html#writeDataForUTI
+
+  -- hs.hotkey.bind(Config.modifiers.cmd, "v", function()
+  --   -- hs.pasteboard.setContents(image_url)
+  --   log.df("cmd+v -------------- ")
+  --   log.df("cache -------------- %s", hs.inspect(M.cache))
+  --   log.df("image_contents -------------- %s", hs.inspect(hs.pasteboard.getContents("image_contents")))
+  --   log.df("image_url -------------- %s", hs.inspect(hs.pasteboard.getContents("image_url")))
+  --   log.df("image -------------- %s", hs.inspect(hs.pasteboard.getContents("image")))
+
+  --   hs.pasteboard.setContents(M.cache.image_url)
+  --   hs.eventtap.keyStroke({ "cmd" }, "v")
+  -- end)
+
+  -- hs.hotkey.bind(Config.modifiers.cmdShift, "v", function()
+  --   local original_clipboard = hs.pasteboard.getContents()
+
+  --   log.df("cmd+shift+v -------------- ")
+  --   log.df("cache -------------- %s", hs.inspect(M.cache))
+  --   log.df("image_content -------------- %s", hs.inspect(hs.pasteboard.getContents("image_contents")))
+  --   log.df("image_url -------------- %s", hs.inspect(hs.pasteboard.getContents("image_url")))
+  --   log.df("image -------------- %s", hs.inspect(hs.pasteboard.getContents("image")))
+  --   log.df("M.cache.original_clipboard -------------- %s", hs.inspect(M.cache.original_clipboard))
+  --   log.df("original_clipboard -------------- %s", hs.inspect(hs.pasteboard.getContents()))
+
+  --   hs.pasteboard.setContents(M.cache.image_contents["public.png"])
+  --   hs.eventtap.keyStroke({ "cmd" }, "v")
+  --   -- hs.eventtap.keyStrokes(hs.pasteboard.getContent(M.cache.image))
+
+  --   -- Allow some time for the command+v keystroke to fire asynchronously before
+  --   -- we restore the original clipboard
+  --   hs.timer.doAfter(0.2, function()
+  --     hs.pasteboard.setContents(original_clipboard)
+  --   end)
+  -- end)
 end
 
 M.stop = function()

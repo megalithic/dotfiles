@@ -103,6 +103,7 @@ M.list = {
   "nvim-telescope/telescope-media-files.nvim",
   "nvim-telescope/telescope-symbols.nvim",
   "nvim-telescope/telescope-smart-history.nvim",
+  "nvim-telescope/telescope-file-browser.nvim",
 
   ------------------------------------------------------------------------------
   -- (text objects) --
@@ -1340,10 +1341,11 @@ M.setup = function()
     local function get_border(opts)
       return vim.tbl_deep_extend("force", opts or {}, {
         borderchars = {
-          { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-          prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
-          results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
-          preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          -- { " ", " ", " ", " ", " ", " ", " ", " " },
+          -- { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          -- prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
+          -- results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
+          -- preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         },
       })
     end
@@ -1357,6 +1359,7 @@ M.setup = function()
     telescope.setup({
       defaults = {
         set_env = { ["TERM"] = vim.env.TERM },
+        -- borderchars = { " ", " ", " ", " ", " ", " ", " ", " " },
         borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         prompt_prefix = "  ",
         selection_caret = "» ", -- ❯
@@ -1598,6 +1601,7 @@ M.setup = function()
     require("telescope").load_extension("fzf")
     require("telescope").load_extension("tmux")
     require("telescope").load_extension("media_files")
+    require("telescope").load_extension("file_browser")
     -- require("telescope").load_extension("smart_history")
   end
 

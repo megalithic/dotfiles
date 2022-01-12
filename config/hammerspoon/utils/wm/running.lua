@@ -148,64 +148,63 @@ M.onChange = function(fn)
   end
 end
 
-M._watchApp =
-  ---@param app hs.application
-  function(app)
-    if M.apps[app:pid()] ~= nil then
-      return
-    end
-    local ax = hs.axuielement.applicationElement(app)
-    -- when the app just launched, we might have to wait for
-    -- the next event to setup the observers
-    if ax:isValid() then
-      log.f("## watching: " .. app:name())
-      M.apps[app:pid()] = app
-      M._updateAppWindows(app, ax)
-      ---@type hs.axuielement.observer
-      local w = hs.axuielement.observer.new(app:pid())
-      local addWatcher = function(notif)
-        w:addWatcher(ax, notif)
-      end
-      pcall(addWatcher, "AXFocusedWindowChanged")
-      pcall(addWatcher, "AXMainWindowChanged")
-      pcall(addWatcher, "AXWindow")
-      -- pcall(addWatcher, "AXResized")
-      -- pcall(addWatcher, "AXMoved")
-      pcall(addWatcher, "AXUIElementDestroyed")
-
-      -- w:addWatcher(ax, "AXUIElementDestroyed")
-      w:callback(function(_, axel, notif, _notifData)
-        if notif == "AXUIElementDestroyed" then
-          if not app:focusedWindow() then
-            M._updateAppWindows(app, ax)
-          end
-          return
-        end
-
-        if not axel:matchesCriteria("AXWindow") then
-          return
-        end
-
-        if type(notif) == "string" then
-          log.f("- axui:" .. notif)
-        else
-          log.f(hs.inspect(notif))
-        end
-
-        local win = axel:asHSWindow()
-        -- check for all focus changes, or only for the condition below?
-        -- and app:kind() > 0
-        if notif == "AXFocusedWindowChanged" then
-          M._updateAppWindows(app, ax)
-          M.triggerChange(app, win, M.events.focused)
-        elseif notif == "AXResized" or notif == "AXMoved" then
-          M.triggerChange(app, win, M.events.framed)
-        end
-      end)
-      w:start()
-      M.observers[app:pid()] = w
-    end
+---@param app hs.application
+M._watchApp = function(app, force)
+  if M.apps[app:pid()] ~= nil then
+    return
   end
+  local ax = hs.axuielement.applicationElement(app)
+  -- when the app just launched, we might have to wait for
+  -- the next event to setup the observers
+  if ax:isValid() then
+    log.f("## watching: " .. app:name())
+    M.apps[app:pid()] = app
+    M._updateAppWindows(app, ax)
+    ---@type hs.axuielement.observer
+    local w = hs.axuielement.observer.new(app:pid())
+    local addWatcher = function(notif)
+      w:addWatcher(ax, notif)
+    end
+    pcall(addWatcher, "AXFocusedWindowChanged")
+    pcall(addWatcher, "AXMainWindowChanged")
+    pcall(addWatcher, "AXWindow")
+    -- pcall(addWatcher, "AXResized")
+    -- pcall(addWatcher, "AXMoved")
+    pcall(addWatcher, "AXUIElementDestroyed")
+
+    -- w:addWatcher(ax, "AXUIElementDestroyed")
+    w:callback(function(_, axel, notif, _notifData)
+      if notif == "AXUIElementDestroyed" then
+        if not app:focusedWindow() then
+          M._updateAppWindows(app, ax)
+        end
+        return
+      end
+
+      if not axel:matchesCriteria("AXWindow") then
+        return
+      end
+
+      if type(notif) == "string" then
+        log.f("- axui:" .. notif)
+      else
+        log.f(hs.inspect(notif))
+      end
+
+      local win = axel:asHSWindow()
+      -- check for all focus changes, or only for the condition below?
+      -- and app:kind() > 0
+      if notif == "AXFocusedWindowChanged" then
+        M._updateAppWindows(app, ax)
+        M.triggerChange(app, win, M.events.focused)
+      elseif notif == "AXResized" or notif == "AXMoved" then
+        M.triggerChange(app, win, M.events.framed)
+      end
+    end)
+    w:start()
+    M.observers[app:pid()] = w
+  end
+end
 
 M._updateRunning = function()
   for _, app in ipairs(hs.application.runningApplications()) do
@@ -259,7 +258,7 @@ M._appWatcher = appw.new(function(appName, event, app)
     return
   end
 
-  if event == appw.launched then
+  if event == appw.launched or TriggerChangeForced then
     local win = app:focusedWindow() or app:mainWindow()
     M.triggerChange(app, win, M.events.launched)
   end
@@ -280,8 +279,8 @@ M._appWatcher = appw.new(function(appName, event, app)
   end
 end)
 
-M.addToAppWatcher = function(app)
-  M._watchApp(app)
+M.addToAppWatcher = function(app, force)
+  M._watchApp(app, force)
 end
 
 M.start = function()

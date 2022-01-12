@@ -741,9 +741,41 @@ return lush(function()
     ---- :help telescope -------------------------------------------
 
     TelescopeMatching({ Title }),
-    TelescopeBorder({ GreyFloatBorder }),
+    TelescopeBorder({ fg = bg4 }),
+    -- TelescopeBorder({ GreyFloatBorder }),
     TelescopePromptPrefix({ Statement }),
     TelescopeTitle({ Normal, gui = "bold" }),
     TelescopeSelectionCaret({ fg = fg, bg = nil }),
+
+    -- TelescopeMatching({ Title }),
+    -- TelescopeBorder({ GreyFloatBorder }),
+    -- TelescopePromptPrefix({ Statement }),
+    -- TelescopeTitle({ Normal, gui = "bold" }),
+    -- TelescopeSelectionCaret({ fg = fg }),
+    -- TelescopeNormal({ bg = bg1 }),
+    -- TelescopePromptNormal({ bg = bg1 }),
+    -- TelescopePromptBorder({ bg = bg1 }),
+    -- TelescopePreviewBorder({ bg = bg1 }),
+    -- TelescopeResultsBorder({ bg = bg1 }),
+
+    -- { "TelescopeSelection", { bg = palette.dark1 } }, -- gitsigns
+    -- { "TelescopeNormal", { fg = palette.light1, bg = palette.dark0_hard } },
+    -- { "TelescopePromptNormal", { bg = palette.dark1 } }, -- gitsigns
+    -- { "TelescopeResultsBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
+    -- { "TelescopePreviewBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
+    -- { "TelescopePromptBorder", { fg = palette.bright_blue, bg = palette.dark1 } },
+    -- { "TelescopePromptTitle", { fg = palette.dark1, bg = palette.bright_blue } },
+    -- { "TelescopeResultsTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
+    -- { "TelescopePreviewTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
+
+    -- { "TelescopeSelection", { bg = palette.dark1 } }, -- gitsigns
+    -- { "TelescopeNormal", { fg = palette.light1, bg = palette.dark0_hard } },
+    -- { "TelescopePromptNormal", { bg = palette.dark1 } }, -- gitsigns
+    -- { "TelescopeResultsBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
+    -- { "TelescopePreviewBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
+    -- { "TelescopePromptBorder", { fg = palette.bright_blue, bg = palette.dark1 } },
+    -- { "TelescopePromptTitle", { fg = palette.dark1, bg = palette.bright_blue } },
+    -- { "TelescopeResultsTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
+    -- { "TelescopePreviewTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
   }
 end)

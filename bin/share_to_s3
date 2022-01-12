@@ -11,8 +11,9 @@ if [ -n "$2" ]; then
 	defaultExpireTime=$2
 fi
 
-friendlyName=$(echo "$1" | sed -e "s#$HOME/screenshots##g")
+friendlyName=$(echo "$1" | sed -e "s#$HOME/screenshots/##g")
 
-/usr/local/bin/aws s3 --profile "$AWS_PROFILE" cp "$1" s3://kaptures/tmp/
-# TODO: push to url shortener service for better aesthetic once pasted to destination
-/usr/local/bin/aws s3 --profile "$AWS_PROFILE" presign s3://kaptures/tmp/$friendlyName --expires-in $defaultExpireTime | pbcopy
+/usr/local/bin/aws s3 --profile "$AWS_PROFILE" cp "$1" s3://kaptures/tmp/ 2>&1
+# /usr/local/bin/aws s3 --profile "$AWS_PROFILE" presign s3://kaptures/tmp/$friendlyName --expires-in $defaultExpireTime | pbcopy
+
+echo -ne "https://kaptures.s3.amazonaws.com/tmp/$friendlyName" | pbcopy

@@ -73,7 +73,7 @@ function setup_surfingkeys({ api: api }) {
   settings.omnibarSuggestionTimeout = 500;
   settings.richHintsForKeystroke = 1;
   settings.omnibarPosition = "middle";
-  settings.focusFirstCandidate = true;
+  settings.focusFirstCandidate = false;
   settings.scrollStepSize = 100;
   settings.tabsThreshold = 0;
   settings.modeAfterYank = "Normal";
@@ -266,10 +266,13 @@ function setup_surfingkeys({ api: api }) {
     color: var(--accent-fg);
   }
   .sk_theme #sk_omnibarSearchResult ul li:nth-child(odd) {
-    background: var(--bg-dark);
+    background: var(--border);
+  }
+  .sk_theme #sk_omnibarSearchResult ul li:nth-child(even) {
+    background: var(--border);
   }
   .sk_theme #sk_omnibarSearchResult ul li.focused {
-    background: var(--border);
+    background: var(--bg-dark);
   }
   .sk_theme #sk_omnibarSearchArea {
     border-top-color: var(--border);
@@ -277,10 +280,12 @@ function setup_surfingkeys({ api: api }) {
   }
   .sk_theme #sk_omnibarSearchArea input,
   .sk_theme #sk_omnibarSearchArea span {
-    font-size: var(--font-size);
+    font-size: 20px;
+    padding:10px 0;
   }
   .sk_theme .separator {
     color: var(--accent-fg);
+    margin-right: 10px;
   }
   /* ---------- Popup Notification Banner ---------- */
   #sk_banner {
