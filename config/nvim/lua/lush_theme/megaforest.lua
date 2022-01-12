@@ -741,11 +741,11 @@ return lush(function()
     ---- :help telescope -------------------------------------------
 
     TelescopeMatching({ Title }),
-    TelescopeBorder({ fg = bg4 }),
     -- TelescopeBorder({ GreyFloatBorder }),
     TelescopePromptPrefix({ Statement }),
     TelescopeTitle({ Normal, gui = "bold" }),
     TelescopeSelectionCaret({ fg = fg, bg = nil }),
+    TelescopeBorder({ fg = bg4 }),
 
     -- TelescopeMatching({ Title }),
     -- TelescopeBorder({ GreyFloatBorder }),

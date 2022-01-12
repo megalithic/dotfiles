@@ -87,7 +87,7 @@ M.parseArgs = function(scType)
 end
 
 M.start = function()
-  log.df("starting..")
+  log.df("starting.. %s", hs.inspect(hs.pasteboard.allContentTypes()))
 
   hs.hotkey.bind(Config.modifiers.cmdShift, "4", function()
     M.capture("interactive_clipboard", true)
@@ -115,27 +115,39 @@ M.start = function()
   --   hs.eventtap.keyStroke({ "cmd" }, "v")
   -- end)
 
-  -- hs.hotkey.bind(Config.modifiers.cmdShift, "v", function()
-  --   local original_clipboard = hs.pasteboard.getContents()
+  hs.hotkey.bind(Config.modifiers.cmdShift, "v", function()
+    local original_clipboard = hs.pasteboard.getContents()
 
-  --   log.df("cmd+shift+v -------------- ")
-  --   log.df("cache -------------- %s", hs.inspect(M.cache))
-  --   log.df("image_content -------------- %s", hs.inspect(hs.pasteboard.getContents("image_contents")))
-  --   log.df("image_url -------------- %s", hs.inspect(hs.pasteboard.getContents("image_url")))
-  --   log.df("image -------------- %s", hs.inspect(hs.pasteboard.getContents("image")))
-  --   log.df("M.cache.original_clipboard -------------- %s", hs.inspect(M.cache.original_clipboard))
-  --   log.df("original_clipboard -------------- %s", hs.inspect(hs.pasteboard.getContents()))
+    -- NOTE: this is the binary image text here:
+    -- log.df("cache (image_contents) -------------- %s", hs.inspect(M.cache.image_contents["public.png"]))
+    log.df("allContentTypes: %s", hs.inspect(hs.pasteboard.allContentTypes()))
 
-  --   hs.pasteboard.setContents(M.cache.image_contents["public.png"])
-  --   hs.eventtap.keyStroke({ "cmd" }, "v")
-  --   -- hs.eventtap.keyStrokes(hs.pasteboard.getContent(M.cache.image))
+    -- which of this are supposed to do the thing?
+    -- hs.pasteboard.setContents(M.cache.image_contents["public.png"])
+    --
+    -- or
+    --public.utf8-plain-text
+    local written = hs.pasteboard.writeDataForUTI("public.png", M.cache.image_contents["public.png"], true)
 
-  --   -- Allow some time for the command+v keystroke to fire asynchronously before
-  --   -- we restore the original clipboard
-  --   hs.timer.doAfter(0.2, function()
-  --     hs.pasteboard.setContents(original_clipboard)
-  --   end)
-  -- end)
+    log.df("allContentTypes after set: %s", hs.inspect(hs.pasteboard.allContentTypes()))
+    -- log.df("written result: %s", written)
+
+    -- if written then
+    --   -- hs.pasteboard.setContents(M.cache.image_contents["public.png"])
+    --   -- log.df("readString: %s", hs.inspect(hs.pasteboard.readString("image_contents")))
+    --   -- log.df("readAllData: %s", hs.inspect(hs.pasteboard.readAllData("image_contents")))
+    --   -- log.df("readImage: %s", hs.inspect(hs.pasteboard.readImage("image_contents")))
+    --   -- log.df("getContents: %s", hs.inspect(hs.pasteboard.getContents("image_contents")))
+    --   hs.eventtap.keyStroke({ "cmd" }, "v")
+    -- end
+    hs.eventtap.keyStroke({ "cmd" }, "v")
+
+    -- Allow some time for the command+v keystroke to fire asynchronously before
+    -- we restore the original clipboard
+    hs.timer.doAfter(0.2, function()
+      hs.pasteboard.setContents(original_clipboard)
+    end)
+  end)
 end
 
 M.stop = function()

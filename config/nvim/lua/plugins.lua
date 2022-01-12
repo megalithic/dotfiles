@@ -29,7 +29,7 @@ M.list = {
   "kyazdani42/nvim-web-devicons",
   "edluffy/specs.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
-  "karb94/neoscroll.nvim",
+  -- "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
@@ -86,6 +86,7 @@ M.list = {
   "p00f/nvim-ts-rainbow",
   "SmiteshP/nvim-gps",
   "RRethy/nvim-treesitter-textsubjects",
+  "David-Kunz/treesitter-unit",
   -- "primeagen/harpoon",
   -- "romgrk/nvim-treesitter-context",
 
@@ -716,23 +717,25 @@ M.setup = function()
   end
 
   do -- neoscroll
-    local mappings = {}
-    require("neoscroll").setup({
-      -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
-      stop_eof = false,
-      hide_cursor = false,
-      easing_function = "circular",
-    })
-    mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
-    mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
-    mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
-    mappings["<C-f>"] = { "scroll", { "vim.api.nvim_win_get_height(0)", "true", "250" } }
-    mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
-    mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
-    mappings["zt"] = { "zt", { "150" } }
-    mappings["zz"] = { "zz", { "150" } }
-    mappings["zb"] = { "zb", { "150" } }
-    require("neoscroll.config").set_mappings(mappings)
+    if false then
+      local mappings = {}
+      require("neoscroll").setup({
+        -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
+        stop_eof = false,
+        hide_cursor = false,
+        easing_function = "circular",
+      })
+      mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
+      mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
+      mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
+      mappings["<C-f>"] = { "scroll", { "vim.api.nvim_win_get_height(0)", "true", "250" } }
+      mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
+      mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
+      mappings["zt"] = { "zt", { "150" } }
+      mappings["zz"] = { "zz", { "150" } }
+      mappings["zb"] = { "zb", { "150" } }
+      require("neoscroll.config").set_mappings(mappings)
+    end
   end
 
   do -- nvim-web-devicons
@@ -1342,10 +1345,10 @@ M.setup = function()
       return vim.tbl_deep_extend("force", opts or {}, {
         borderchars = {
           -- { " ", " ", " ", " ", " ", " ", " ", " " },
-          -- { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-          -- prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
-          -- results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
-          -- preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
+          results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
+          preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         },
       })
     end
@@ -1360,7 +1363,7 @@ M.setup = function()
       defaults = {
         set_env = { ["TERM"] = vim.env.TERM },
         -- borderchars = { " ", " ", " ", " ", " ", " ", " ", " " },
-        borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+        -- borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         prompt_prefix = "  ",
         selection_caret = "» ", -- ❯
         mappings = {

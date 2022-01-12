@@ -559,8 +559,17 @@ exec(
 -- end
 
 -- # treesitter
+-- ( ts treehopper )
 omap("m", ":<C-U>lua require('tsht').nodes()<CR>")
 vnoremap("m", ":'<'>lua require('tsht').nodes()<CR>")
+
+-- ( ts units )
+xnoremap("iu", ":lua require\"treesitter-unit\".select()<CR>")
+xnoremap("au", ":lua require\"treesitter-unit\".select(true)<CR>")
+onoremap("iu", ":<c-u>lua require\"treesitter-unit\".select()<CR>")
+onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
+
+nnoremap("<space>t", ":TSHighlightCapturesUnderCursor<CR>", "treesitter: highlight under cursor")
 
 -- # easy-align
 -- start interactive EasyAlign in visual mode (e.g. vipga)

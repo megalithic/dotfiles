@@ -231,7 +231,7 @@ function _G.__statusline()
     -----------------------------------------------------------------------------//
     -- Right section
     -----------------------------------------------------------------------------//
-    { item(utils.lsp_status(ctx.bufnum), "StMetadata"), 4 },
+    -- { item(utils.lsp_status(ctx.bufnum), "StMetadata"), 4 },
     {
       item_if(diagnostics.error.count, diagnostics.error, "StError", {
         prefix = diagnostics.error.sign,
