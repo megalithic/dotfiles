@@ -34,33 +34,33 @@ tap "mhanberg/zk"
 # brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk;
 # brew cask install qmk-toolbox;
 #
-tap "osx-cross/avr"
-tap "PX4/homebrew-px4"
+tap "osx-cross/avr" if OS.mac?
+tap "PX4/homebrew-px4" if OS.mac?
 # NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
-brew "avr-gcc@8", link: true
-brew "dfu-programmer"
-brew "dfu-util"
-brew "gcc-arm-none-eabi"
-brew "avrdude"
-brew "qmk"
+brew "avr-gcc@8", link: true if OS.mac?
+brew "dfu-programmer" if OS.mac?
+brew "dfu-util" if OS.mac?
+brew "gcc-arm-none-eabi" if OS.mac?
+brew "avrdude" if OS.mac?
+brew "qmk" if OS.mac?
 
 # -- cli --
 
-brew "ansible"
+brew "ansible" if OS.mac?
 # brew "asdf"
-brew "asciidoctor"
+brew "asciidoctor" if OS.mac?
 brew "autoconf"
 brew "automake"
-brew "awscli"
+brew "awscli" if OS.mac?
 brew "bash" # used for tmux-plugin -> extrakto
 brew "bat"
-brew "blueutil"
+brew "blueutil" if OS.mac?
 brew "broot"
-brew "browsh"
-brew "vitorgalvao/tiny-scripts/calm-notifications"
+brew "browsh" if OS.mac?
+brew "vitorgalvao/tiny-scripts/calm-notifications" if OS.mac?
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
-brew "cmake"
-brew "coreutils"
+brew "cmake" if OS.mac?
+brew "coreutils" if OS.mac?
 brew "curl"
 brew "dbus"
 brew "defaultbrowser"
@@ -68,18 +68,18 @@ brew "diff-so-fancy"
 brew "dnsmasq"
 brew "dockutil"
 brew "docker"
-brew "docker-compose"
-brew "docker-credential-helper-ecr"
-brew "docker-machine" # , restart_service: true, link: false
+brew "docker-compose" if OS.mac?
+brew "docker-credential-helper-ecr" if OS.mac?
+brew "docker-machine" if OS.mac? # , restart_service: true, link: false
 brew "duck"
-brew "espanso"
+brew "espanso" if OS.mac?
 brew "exa"
-brew "exercism"
+brew "exercism" if OS.mac?
 brew "fasd"
 brew "fd"
 brew "ffind"
 brew "findutils"
-brew "fontforge"
+brew "fontforge" if OS.mac?
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"
 brew "gawk"
@@ -89,29 +89,29 @@ brew "git"
 brew "isacikgoz/taps/gitin"
 brew "git-delta"
 brew "gh"
-brew "glow"
+brew "glow" if OS.mac?
 brew "gnutls"
 brew "gnupg"
-brew "gnu-sed"
+brew "gnu-sed" if OS.mac?
 brew "gpg" # required for asdf-nodejs
 brew "grc"
-brew "heroku"
+brew "heroku" if OS.mac?
 brew "hub"
 brew "highlight"
 brew "htop"
 brew "httpie"
-brew "ical-buddy"
+brew "ical-buddy" if OS.mac?
 brew "jq"
 brew "lazydocker"
 brew "lazygit"
-brew "llvm" # contains c-lang lsp (the preferred one?)
+brew "llvm" if OS.mac? # contains c-lang lsp (the preferred one?)
 brew "lnav"
 brew "lsd"
 brew "luajit", args: ["HEAD"]
 brew "luarocks"
 brew "lua-language-server"
 brew "luv"
-brew "mas"
+brew "mas" if OS.mac?
 brew "mkcert"
 brew "moreutils"
 brew "mosh", args: ["HEAD"]
@@ -131,14 +131,15 @@ brew "p7zip"
 brew "perl"
 brew "pgcli"
 brew "pkg-config"
-brew "pinentry-mac"
-brew "postgresql"
+brew "pinentry-mac" if OS.mac?
+brew "postgresql" if OS.mac?
 # initdb /usr/local/var/postgres -E utf8
 brew "python@3.7", link: false
 brew "python@3.8", link: false
 brew "python@3.9", link: true
+brew "python@3.10", link: false
 brew "readline"
-brew "reattach-to-user-namespace"
+brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
 brew "redis"
 brew "ripgrep"
@@ -152,30 +153,30 @@ brew "ssh-copy-id"
 brew "stack"
 brew "starship"
 brew "stow"
-brew "switchaudio-osx"
-brew "terminal-notifier"
+brew "switchaudio-osx" if OS.mac?
+brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"
 brew "tidy-html5"
 brew "timg" # for image rendering in kitty
 brew "tldr"
-brew "tmux" # , args: ["HEAD"]
-brew "transcrypt"
-brew "trash"
+brew "tmux" if OS.mac? # , args: ["HEAD"]
+brew "transcrypt" if OS.mac?
+brew "trash" if OS.mac?
 brew "tree"
 brew "tree-sitter"
 brew "urlview"
 brew "viu"
-brew "weechat"
+brew "weechat" if OS.mac?
 brew "wget"
-brew "wifi-password"
+brew "wifi-password" if OS.mac?
 brew "wxmac" # for erlang
 brew "wxwidgets" # for erlang
-brew "yubico-piv-tool"
-brew "libyubikey"
-brew "pam_yubico"
-brew "yubikey-personalization"
+brew "yubico-piv-tool" if OS.mac?
+brew "libyubikey" if OS.mac?
+brew "pam_yubico" if OS.mac?
+brew "yubikey-personalization" if OS.mac?
 brew "yj"
-brew "mhanberg/zk/zk", args: ["build-from-source"]
+brew "mhanberg/zk/zk", args: ["build-from-source"] if OS.mac?
 brew "zoxide"
 brew "zsh"
 brew "zsh-autosuggestions"

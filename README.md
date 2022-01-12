@@ -16,25 +16,24 @@
 If you want to kick the tires, you can simply:
 
 ```bash
-git clone git@github.com:megalithic/dotfiles.git ~/.dotfiles \
-  && cd ~/.dotfiles \
-  && make
-  # defaults to using the `install` goal
+git clone git@github.com:megalithic/dotfiles.git ~/.dotfiles && cd ~/.dotfiles && make -B
 ```
+
+> **_NOTE_**: defaults to using the `install` goal
 
 _For platform specific installs:_
 
 ```bash
-cd ~/.dotfiles && make macos # or, `linux`
+cd ~/.dotfiles && make -B macos # or, `linux`
 ```
 
 _Get some help:_
 
 ```bash
-cd ~/.dotfiles && make help
+cd ~/.dotfiles && make -B help
 ```
 
-> **_NOTE_**: to execute a `make` command from anywhere; specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
+> **_NOTE_**: to execute a `make` command from anywhere; specifically for your dotfiles: `make -BC ~/.dotfiles <GOAL>`
 
 ---
 
