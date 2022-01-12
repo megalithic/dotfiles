@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -euo pipefail
+
+cd "$XDG_DATA_HOME/src" && echo "-> cd ~/.local/share/src successful";
+
+update() {
+  cd "$XDG_DATA_HOME/src/neovim" && echo "-> cd neovim successful";
+  git checkout master && echo "-> git checkout master successful";
+  git fetch && echo "-> git fetch successful";
+}
+
+clone() {
+  if [[ ! -d "$XDG_DATA_HOME/src/neovim" ]]; then
+    git clone git@github.com:neovim/neovim.git && echo "-> git clone neovim successful";
+    cd neovim && echo "-> cd neovim successful";
+    update;
+    build;
+  fi
+}
+
+build() {
+  if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
+    echo "-> neovim already up to date on origin/master; skipping."
+  else
+    if read -q "choice?[?] Build neovim from source (Y/y)? "; then
+      git up && echo "-> git up successful";
+      [[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && echo "-> remove .deps successful" || exit 1;
+      make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
+      sudo make install || exit 1 && echo "-> make install successful";
+    else
+      [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
+    fi
+  fi
+}
+
+clone && update && build;

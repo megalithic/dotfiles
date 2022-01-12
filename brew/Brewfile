@@ -13,18 +13,18 @@ tap "homebrew/services"
 tap "neovim/neovim"
 tap "caius/jo"
 tap "simeji/jid"
-tap "browsh-org/homebrew-browsh"
-tap "qmk/qmk"
-tap "heroku/brew"
+tap "browsh-org/homebrew-browsh" if OS.mac?
+tap "qmk/qmk" if OS.mac?
+tap "heroku/brew" if OS.mac?
 # NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
 tap "microsoft/git"
 tap "isacikgoz/taps"
-tap "vitorgalvao/tiny-scripts"
+tap "vitorgalvao/tiny-scripts" if OS.mac?
 tap "mutagen-io/mutagen"
 tap "bvgastel/clippy"
 tap "olets/tap"
-tap "federico-terzi/espanso"
-tap "mhanberg/zk"
+tap "federico-terzi/espanso" if OS.mac?
+tap "mhanberg/zk" if OS.mac?
 
 # -- for qmk_toolbox --
 # brew tap osx-cross/avr;
@@ -66,11 +66,11 @@ brew "dbus"
 brew "defaultbrowser"
 brew "diff-so-fancy"
 brew "dnsmasq"
-brew "dockutil"
+brew "dockutil" if OS.mac?
 brew "docker"
-brew "docker-compose" if OS.mac?
-brew "docker-credential-helper-ecr" if OS.mac?
-brew "docker-machine" if OS.mac? # , restart_service: true, link: false
+brew "docker-compose"
+brew "docker-credential-helper-ecr"
+brew "docker-machine" # , restart_service: true, link: false
 brew "duck"
 brew "espanso" if OS.mac?
 brew "exa"
@@ -189,10 +189,10 @@ brew "zsh-history-substring-search"
 
 cask_args appdir: "/Applications"
 
-tap "homebrew/cask-versions"
-tap "homebrew/cask"
-tap "homebrew/cask-fonts"
-tap "homebrew/cask-drivers"
+tap "homebrew/cask-versions" if OS.mac?
+tap "homebrew/cask" if OS.mac?
+tap "homebrew/cask-fonts" if OS.mac?
+tap "homebrew/cask-drivers" if OS.mac?
 
 # - fonts
 cask "font-jetbrains-mono"

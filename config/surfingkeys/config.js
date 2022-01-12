@@ -112,6 +112,7 @@ function setup_surfingkeys({ api: api }) {
 
   // search opened tabs with `gt`
   map("gt", "T");
+  map("<Ctrl-g>", "T");
 
   // history Back/Forward
   map("H", "S");

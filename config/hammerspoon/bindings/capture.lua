@@ -127,10 +127,12 @@ M.start = function()
     --
     -- or
     --public.utf8-plain-text
-    local written = hs.pasteboard.writeDataForUTI("public.png", M.cache.image_contents["public.png"], true)
+    local uti_written = hs.pasteboard.writeDataForUTI("public.png", M.cache.image_contents["public.png"], true)
+    local objects_written = hs.pasteboard.writeObjects(M.cache.image_contents, "image_contents")
 
     log.df("allContentTypes after set: %s", hs.inspect(hs.pasteboard.allContentTypes()))
-    -- log.df("written result: %s", written)
+    log.df("uti written result: %s", uti_written)
+    log.df("objects written result: %s", objects_written)
 
     -- if written then
     --   -- hs.pasteboard.setContents(M.cache.image_contents["public.png"])
