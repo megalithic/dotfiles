@@ -29,7 +29,7 @@ M.list = {
   "kyazdani42/nvim-web-devicons",
   "edluffy/specs.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
-  -- "karb94/neoscroll.nvim",
+  "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
@@ -717,7 +717,7 @@ M.setup = function()
   end
 
   do -- neoscroll
-    if false then
+    if true then
       local mappings = {}
       require("neoscroll").setup({
         -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
@@ -1392,7 +1392,6 @@ M.setup = function()
           "EmmyLua.spoon",
           ".yarn",
           "dotbot/.*",
-          "dotbot-plugins/.*",
           ".git/.*",
         },
         -- :help telescope.defaults.path_display
