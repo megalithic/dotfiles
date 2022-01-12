@@ -19,9 +19,9 @@ local M = {
   cache = cache,
 }
 
-local wh = require("utils.wm.window-handlers")
+local wh = require("wm.handlers")
 local fn = require("hs.fnutils")
-local running = require("utils.wm.running")
+local running = require("wm.running")
 
 -- return true if title matches pattern
 local function match_title(title, pattern)

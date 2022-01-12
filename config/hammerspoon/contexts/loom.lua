@@ -2,7 +2,7 @@ local cache = {}
 local M = { cache = cache }
 
 local running = require("utils.wm.running")
-local wh = require("utils.wm.window-handlers")
+local wh = require("wm.handlers")
 local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
 local init_apply_complete = false

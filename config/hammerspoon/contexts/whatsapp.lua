@@ -1,7 +1,7 @@
 local cache  = {}
 local module = { cache = cache, }
 
-local wh = require('utils.wm.window-handlers')
+local wh = require('wm.handlers')
 
 -- apply(string, hs.window, hs.logger) :: nil
 module.apply = function(event, win, _)

@@ -3,7 +3,7 @@ local module = { cache = cache }
 
 module.start = function()
   hs.fnutils.each(Config.preferred.watchers, function(watchName)
-    cache[watchName] = require("utils.watchers." .. watchName)
+    cache[watchName] = require("watchers." .. watchName)
     cache[watchName]:start()
   end)
 end

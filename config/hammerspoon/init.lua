@@ -22,7 +22,7 @@ hs.application.enableSpotlightForNameSearches(true)
 hs.allowAppleScript(true)
 
 -- spoons to load
-hs.loadSpoon("SpoonInstall")
+-- hs.loadSpoon("SpoonInstall")
 -- hs.loadSpoon("EmmyLua")
 -- hs.loadSpoon("VimMode")
 
@@ -31,10 +31,10 @@ Config = require("config")
 
 -- local requires
 local bindings = require("bindings")
-local controlplane = require("utils.controlplane")
-local watchables = require("utils.watchables")
-local wm = require("utils.wm")
-local watchers = require("utils.watchers")
+local controlplane = require("controlplane")
+local watchables = require("watchables")
+local watchers = require("watchers")
+local wm = require("wm")
 
 -- modules to load/configure
 local modules = { wm, bindings, controlplane, watchables, watchers }

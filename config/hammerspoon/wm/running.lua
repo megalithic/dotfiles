@@ -90,8 +90,8 @@ M._updateAppWindows = function(app, ax)
     -- 2022-01-05 11:09:37: 11:09:37 ERROR:   LuaSkin: hs.axuielement.observer:callback error:attempt to index a nil value
     -- stack traceback:
     --   [C]: in for iterator 'for iterator'
-    --   /Users/seth/.config/hammerspoon/utils/wm/running.lua:89: in function 'utils.wm.running._updateAppWindows'
-    --   /Users/seth/.config/hammerspoon/utils/wm/running.lua:166: in function </Users/seth/.config/hammerspoon/utils/wm/running.lua:163>
+    --   /Users/seth/.config/hammerspoon/wm/running.lua:89: in function 'wm.running._updateAppWindows'
+    --   /Users/seth/.config/hammerspoon/wm/running.lua:166: in function </Users/seth/.config/hammerspoon/wm/running.lua:163>
     -- 2022-01-05 11:09:37:            [wm.run]: ->> focused:Brave Browser -- Name.com - Domain Name Registration - Brave
     -- 2022-01-05 11:09:37:            [wm.run]: ->> hidden:
     -- 2022-01-05 11:09:37:            [wm.run]: ->> terminated:zoom.us

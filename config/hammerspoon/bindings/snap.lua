@@ -2,7 +2,7 @@
 -- https://github.com/dbmrq/dotfiles/blob/master/home/.hammerspoon/winman.lua
 
 local log = hs.logger.new("[bindings.snap]", "info")
-local wh = require("utils.wm.window-handlers")
+local wh = require("wm.handlers")
 local movewindows = hs.hotkey.modal.new()
 local alertUuids = {}
 local alert = require("ext.alert")

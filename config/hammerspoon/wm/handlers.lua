@@ -1,5 +1,5 @@
 local log = hs.logger.new("[window-handlers]", "warning")
-local running = require("utils.wm.running")
+local running = require("wm.running")
 
 local cache = { timers = {} }
 local M = { cache = cache }
