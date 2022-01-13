@@ -1,7 +1,7 @@
 local cache = {}
 local M = { cache = cache }
 
-local running = require("utils.wm.running")
+local running = require("wm.running")
 local wh = require("wm.handlers")
 local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
@@ -22,7 +22,7 @@ M.apply = function(app, win, event, log)
       -- unmute (PTM) by default
       ptt.setState("push-to-mute")
 
-      -- require("utils/controlplane/dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) + 10.0)
+      -- require("controlplane/dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) + 10.0)
     end
 
     init_apply_complete = true
@@ -31,7 +31,7 @@ M.apply = function(app, win, event, log)
   ----------------------------------------------------------------------
   -- mute (PTT) by default
   wh.onAppQuit(app, function()
-    -- require("utils/controlplane/dock").set_kitty_config(Config.docking.docked.fontSize)
+    -- require("controlplane/dock").set_kitty_config(Config.docking.docked.fontSize)
     ptt.setState("push-to-talk")
 
     local keycastr = hs.application.get("KeyCastr")

@@ -7,14 +7,14 @@ on_project_start: gohome && dowork
 tmux_options: -2
 windows:
   - chats:
-    - tmux link-window -s mega:chats -t 0 && exit
+      - tmux link-window -s mega:chats -t 0 && exit
   - code:
       layout: main-vertical
       panes:
         - code:
-          - ssh seth-dev
-          - cd ~/code/atlas
-          - eval $(desk load); ls
+            - ssh seth-dev
+            - cd ~/code/atlas
+            - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
@@ -22,7 +22,8 @@ windows:
             - ssh seth-dev
             - cd ~/code/atlas
             - eval $(desk load)
+            - dev down; dev up -d && dev logs -f
         - repl:
             - ssh seth-dev
             - cd ~/code/atlas
-            - eval $(desk load); iex -S mix
+            - eval $(desk load); sleep 2 & iex -S mix
