@@ -22,7 +22,7 @@ all: ## Runs all platform-specific dotbot install scripts
 
 elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
 		curl -fLO https://github.com/elixir-lsp/elixir-ls/releases/latest/download/elixir-ls.zip
-		unzip -o elixir-ls.zip -d $(XDG_DATA_HOME)/lsp/elixir-ls
+		unzip elixir-ls.zip -d $(XDG_DATA_HOME)/lsp/elixir-ls
 		chmod +x $(XDG_DATA_HOME)/lsp/elixir-ls/language_server.sh
 		rm elixir-ls.zip
 

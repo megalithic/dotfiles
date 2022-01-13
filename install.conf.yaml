@@ -19,6 +19,7 @@
     shell:
       stdout: true
       stderr: true
+      stdin: true
     brewfile:
       stdout: true
       stderr: true

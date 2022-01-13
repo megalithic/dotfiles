@@ -158,16 +158,15 @@ M.start = function()
 
   -- watch for docking status changes..
   cache.dock_watcher = hs.watchable.watch("status.isDocked", function(_, _, _, old, new) -- watcher, path, key, old, new
-    if old ~= new then
-      log.f("___ preparing app layouts and contexts..")
-      TriggerChangeForced = true
-      M.prepare()
-    end
+    log.f("___ preparing app layouts and contexts..")
+    TriggerChangeForced = true
+    M.prepare()
   end)
 end
 
 M.stop = function()
   log.f("stopping..")
+  TriggerChangeForced = false
 
   -- if cache.new_app_watcher then
   --   cache.new_app_watcher:stop()
