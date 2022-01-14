@@ -29,7 +29,7 @@ clone() {
 
 do_build() {
   git up && echo "-> git up successful";
-  [[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && echo "-> remove .deps successful" || exit 1;
+  sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && echo "-> remove .deps successful" || exit 1;
   make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
   sudo make install || exit 1 && echo "-> make install successful";
 }

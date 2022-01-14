@@ -200,7 +200,7 @@
     - description: Attempting to install neovim from source..
       quiet: true
       command: >-
-        make -C ~/.dotfiles neovim && echo "-> neovim updated and built successfully";
+        make -C ~/.dotfiles nvim && echo "-> neovim updated and built successfully";
 
     - description: Attempting to install paq-nvim..
       quiet: true
