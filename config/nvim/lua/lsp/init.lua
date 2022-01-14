@@ -267,7 +267,6 @@ local function on_attach(client, bufnr)
   end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
-  vim.notify(fmt("LSP: %s (%s)", client.name, bufnr))
 
   local b_mappings = {
     ["<leader>"] = {
@@ -306,13 +305,13 @@ local function on_attach(client, bufnr)
         buffer = bufnr,
       },
       ["d"] = { [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]], "LSP definitions", buffer = bufnr },
-      ["s"] = {
+      ["S"] = {
         [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>]],
         "LSP document symbols",
         buffer = bufnr,
       },
       ["a"] = { [[<cmd>lua require('telescope.builtin').lsp_code_actions()<cr>]], "LSP document symbols", buffer = bufnr },
-      ["S"] = {
+      ["SS"] = {
         [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
         "LSP workspace symbols",
         buffer = bufnr,

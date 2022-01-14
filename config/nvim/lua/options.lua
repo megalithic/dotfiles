@@ -423,6 +423,7 @@ vim.opt.statusline = table.concat({
   "r",
   "=",
   "{&spelllang}",
+  "%{get(b:,'gitsigns_status','')}",
   "y", -- filetype
   "8(%l,%c%)", -- line, column
   "8p%% ", -- file percentage

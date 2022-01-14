@@ -722,7 +722,7 @@ return lush(function()
     -- StatusLine({ bg = bg1 }),
     -- StatusLineNC({ bg = bg1, gui = "NONE" }),
     -- StInactive({ bg = bg0, gui = "italic" }),
-    StInactive({ fg = bg2, bg = bg0, gui = "italic" }),
+    StInactive({ fg = bg2.lighten(10), bg = bg0, gui = "italic" }),
 
     -- StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
     -- StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
@@ -741,7 +741,7 @@ return lush(function()
     StModeInsert({ bg = bg1, fg = C.green, gui = "bold" }),
     StModeVisual({ bg = bg1, fg = C.magenta, gui = "bold" }),
     StModeReplace({ bg = bg1, fg = C.dark_red, gui = "bold" }),
-    StModeCommand({ bg = bg1, fg = H.get_hl("Search", "bg"), gui = "bold" }),
+    StModeCommand({ bg = bg1, fg = C.green, gui = "bold" }),
 
     StMetadata({ Comment, bg = bg1 }),
     StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
@@ -760,9 +760,9 @@ return lush(function()
     StIdentifier({ fg = blue, bg = bg1 }),
     StTitle({ bg = bg1, fg = "LightGray", gui = "bold" }),
     StComment({ Comment, bg = bg1 }),
-    StInfo({ fg = C.cyan, bg = bg1, gui = "bold" }),
-    StWarning({ fg = C.dark_orange, bg = bg1 }),
     StError({ fg = C.pale_red, bg = bg1 }),
+    StWarn({ fg = C.dark_orange, bg = bg1 }),
+    StInfo({ fg = C.cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = C.bright_yellow, bg = bg1 }),
 
     ---- :help telescope -------------------------------------------

@@ -30,13 +30,18 @@ api.nvim_exec(
   false
 )
 
+-- Showed diagnostic levels
+U.diagnostic_levels = nil
+U.diagnostic_levels = {
+  { id = vim.diagnostic.severity.ERROR, sign = C.icons.lsp.error },
+  { id = vim.diagnostic.severity.WARN, sign = C.icons.lsp.warn },
+  { id = vim.diagnostic.severity.INFO, sign = C.icons.lsp.info },
+  { id = vim.diagnostic.severity.HINT, sign = C.icons.lsp.hint },
+}
+
 -- local plain = utils.is_plain(ctx)
 -- local file_modified = utils.modified(ctx, "●")
--- local inactive = vim.api.nvim_get_current_win() ~= curwin
--- local focused = vim.g.vim_in_focus or true
--- local minimal = plain or inactive or not focused
-
--- Module functionality =======================================================
+-- local inactive = vim.api.nvim_get_current_win() ~= curwin local focused = vim.g.vim_in_focus or true local minimal = plain or inactive or not focused Module functionality =======================================================
 --- Compute content for active window
 function M.active()
   if U.is_disabled() then
@@ -570,6 +575,37 @@ function M.section_git(args)
   return unpack(U.item(fmt("%s %s", head, signs), "StBlue", { prefix = icon, prefix_color = "StGit" }))
 end
 
+function M.section_gps(args)
+  local ok, gps = mega.safe_require("nvim-gps")
+  if ok and gps and gps.is_available() then
+    return require("nvim-gps").get_location()
+  end
+end
+
+function U.diagnostic_info(ctx)
+  ctx = ctx or U.ctx
+  ---Shim to handle getting diagnostics in nvim 0.5 and nightly
+  ---@param buf number
+  ---@param severity string
+  ---@return number
+  local function get_count(buf, severity)
+    local s = vim.diagnostic.severity[severity:upper()]
+
+    return #vim.diagnostic.get(buf, { severity = s })
+  end
+
+  local buf = ctx.bufnum
+  if vim.tbl_isempty(vim.lsp.buf_get_clients(buf)) then
+    return { error = {}, warn = {}, info = {}, hint = {} }
+  end
+  return {
+    error = { count = get_count(buf, "Error"), sign = C.icons.lsp.error },
+    warn = { count = get_count(buf, "Warn"), sign = C.icons.lsp.warn },
+    info = { count = get_count(buf, "Info"), sign = C.icons.lsp.info },
+    hint = { count = get_count(buf, "Hint"), sign = C.icons.lsp.hint },
+  }
+end
+
 --- Section for Neovim's builtin diagnostics
 ---
 --- Shows nothing if there is no attached LSP clients or for short output.
@@ -606,9 +642,25 @@ function M.section_diagnostics(args)
   return fmt("%s %s", icon, table.concat(t, ""))
 end
 
+-- function M.section_diagnostics()
+--  item(utils.lsp_status(ctx.bufnum), "StMetadata"),
+--   item_if(diagnostics.error.count, diagnostics.error, "StError", {
+--     prefix = diagnostics.error.sign,
+--   }),
+--   item_if(diagnostics.warning.count, diagnostics.warning, "StWarning", {
+--     prefix = diagnostics.warning.sign,
+--   }),
+--   item_if(diagnostics.info.count, diagnostics.info, "StInfo", {
+--     prefix = diagnostics.info.sign,
+--   }),
+--   item_if(diagnostics.hint.count, diagnostics.hint, "StHint", {
+--     prefix = diagnostics.hint.sign,
+--   }),
+-- end
+
 function M.section_modified(args)
   local ctx = U.ctx
-  local minimal = M.is_truncated(args.trunc_width)
+  -- local minimal = M.is_truncated(args.trunc_width)
   if ctx.filetype == "help" then
     return ""
   end
@@ -788,24 +840,6 @@ function M.section_indention()
   }))
 end
 
--- Showed diagnostic levels
-U.diagnostic_levels = nil
-if vim.fn.has("nvim-0.6") == 1 then
-  U.diagnostic_levels = {
-    { id = vim.diagnostic.severity.ERROR, sign = C.icons.lsp.error },
-    { id = vim.diagnostic.severity.WARN, sign = C.icons.lsp.warn },
-    { id = vim.diagnostic.severity.INFO, sign = C.icons.lsp.info },
-    { id = vim.diagnostic.severity.HINT, sign = C.icons.lsp.hint },
-  }
-else
-  U.diagnostic_levels = {
-    { id = "Error", sign = C.icons.lsp.error },
-    { id = "Warning", sign = C.icons.lsp.warn },
-    { id = "Information", sign = C.icons.lsp.info },
-    { id = "Hint", sign = C.icons.lsp.hint },
-  }
-end
-
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 function U.is_disabled()
@@ -819,12 +853,20 @@ function U.statusline_active()
   local mode, mode_hl = M.section_mode({ trunc_width = 120 })
   local git           = M.section_git({ trunc_width = 75 })
   local diagnostics   = M.section_diagnostics({ trunc_width = 75 })
+  -- FIXME: this doesn't bad things!
+  -- local gps           = M.section_gps({ trunc_width = 75 })
+  local diags         = U.diagnostic_info()
   local readonly      = M.section_readonly({ trunc_width = 75 })
   local modified      = M.section_modified({ trunc_width = 140 })
   local filename      = M.section_filename({ trunc_width = 140 })
   local fileinfo      = M.section_fileinfo({ trunc_width = 120 })
   local location      = M.section_location({ trunc_width = 75 })
   local indention   = M.section_indention()
+
+  local diag_error =  unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
+  local diag_warn =  unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
+  local diag_info =  unpack(U.item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
+  local diag_hint =  unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
 
   -- Usage of `M.build()` ensures highlighting and
   -- correct padding with spaces between groups (accounts for 'missing'
@@ -837,7 +879,11 @@ function U.statusline_active()
     { hl = 'StModified',              strings = { modified } },
     { hl = 'StReadonly',              strings = { readonly } },
     '%=', -- End left alignment
-    { hl = 'StatusLine',              strings = { diagnostics } },
+    -- middle section for whatever we want..
+    -- { hl = 'StatusLine',              strings = { gps } },
+    '%=',
+    { hl = 'Statusline', strings = { diag_error, diag_warn, diag_info, diag_hint }},
+    -- { hl = 'StatusLine',              strings = { diagnostics } },
     { hl = 'StatusLine',              strings = { git } },
     { hl = 'StatusLine',              strings = { fileinfo } },
     { hl = mode_hl,                   strings = { location } },
@@ -848,18 +894,18 @@ end
 
 function U.statusline_inactive()
   -- stylua: ignore start
-  local mode, mode_hl = M.section_mode({ trunc_width = 120 })
-  local readonly      = M.section_readonly({ trunc_width = 75 })
-  local modified      = M.section_modified({ trunc_width = 140 })
-  local filename      = M.section_filename({ trunc_width = 140 })
+  -- local mode, mode_hl = M.section_mode({ trunc_width = 120 })
+  -- local readonly      = M.section_readonly({ trunc_width = 75 })
+  -- local modified      = M.section_modified({ trunc_width = 140 })
+  -- local filename      = M.section_filename({ trunc_width = 140 })
 
-  -- return "%#StInactive#%F%="
-  return M.build({
-    { hl = 'StInactive',              strings = { filename } },
-    { hl = 'StInactive',              strings = { modified } },
-    { hl = 'StInactive',              strings = { readonly } },
-    '%=', -- End left alignment
-  })
+  return "%#StInactive#%F%="
+  -- return M.build({
+  --   { hl = 'StInactive',              strings = { filename } },
+  --   { hl = 'StInactive',              strings = { modified } },
+  --   { hl = 'StInactive',              strings = { readonly } },
+  --   '%=', -- End left alignment
+  -- })
 end
 
 -- if minimal then
