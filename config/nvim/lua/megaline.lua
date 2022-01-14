@@ -859,7 +859,7 @@ function U.statusline_active()
   local readonly      = M.section_readonly({ trunc_width = 75 })
   local modified      = M.section_modified({ trunc_width = 140 })
   local filename      = M.section_filename({ trunc_width = 140 })
-  local fileinfo      = M.section_fileinfo({ trunc_width = 120 })
+  -- local fileinfo      = M.section_fileinfo({ trunc_width = 120 })
   local location      = M.section_location({ trunc_width = 75 })
   local indention   = M.section_indention()
 
@@ -885,7 +885,7 @@ function U.statusline_active()
     { hl = 'Statusline', strings = { diag_error, diag_warn, diag_info, diag_hint }},
     -- { hl = 'StatusLine',              strings = { diagnostics } },
     { hl = 'StatusLine',              strings = { git } },
-    { hl = 'StatusLine',              strings = { fileinfo } },
+    -- { hl = 'StatusLine',              strings = { fileinfo } },
     { hl = mode_hl,                   strings = { location } },
     { hl = mode_hl,                   strings = { indention } },
   })

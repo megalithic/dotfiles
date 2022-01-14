@@ -219,6 +219,7 @@
       command: >-
         make -C ~/.dotfiles elixirls && echo "-> elixir-ls installed successfully";
 
+    - [~/.dotfiles/bin/gh-login, GitHub Authentication]
     # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries
     #   command: >-
@@ -235,7 +236,6 @@
     #     wget "https://github.com/junegunn/fzf/releases/download/0.29.0/fzf-0.29.0-linux_amd64.tar.gz" -O - | tar -xz fzf;
     #     wget "https://raw.githubusercontent.com/junegunn/fzf/0.29.0/shell/key-bindings.zsh" -O fzf-key-bindings.zsh;
     #     wget "https://git.io/antigen" -O antigen.zsh
-    # - [~/.dotfiles/bin/gh-login, GitHub Auth]
     # - [rm -rf ~/.tmux && git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm, Installing TPM]
     # - [rm -rf ~/.local/share/nvim/site/pack/packer && git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim, Installing Packer]
     # - [git clone https://github.com/savq/paq-nvim.git "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/pack/paqs/opt/paq-nvim, Installing paq-nvim],

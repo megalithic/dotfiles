@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help
+.PHONY: help install macos linux all elixirls paq subup
 .DEFAULT_GOAL := install
 
 help: ## Show this help content
