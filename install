@@ -33,3 +33,7 @@ git submodule update --init --recursive "dotbot/ifplatform"
 # run ${@} 2>&1 | tee "makeinstall.log"
 # run ${@} 2>&1 | tee "$HOME/$(date +'%Y-%m-%d-%H-%M-%S').log"
 # run ${@}
+
+source ~/.config/zsh/.zshrc
+source ~/.config/zsh/.zshenv
+source ~/.config/zsh/.zprofile

@@ -19,18 +19,28 @@ clone() {
   fi
 }
 
+do_build() {
+  git up && echo "-> git up successful";
+  [[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && echo "-> remove .deps successful" || exit 1;
+  make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
+  sudo make install || exit 1 && echo "-> make install successful";
+}
+
 build() {
   if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
     echo "-> neovim already up to date on origin/master; skipping."
   else
-    if read -q "choice?[?] Build neovim from source (Y/y)? "; then
-      git up && echo "-> git up successful";
-      [[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && echo "-> remove .deps successful" || exit 1;
-      make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
-      sudo make install || exit 1 && echo "-> make install successful";
-    else
-      [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
-    fi
+    read -p "[?] Build neovim from source (Y/n)? " yn
+		case $yn in
+			[Yy]* )
+        do_build
+        ;;
+			"" )
+        do_build # default
+        ;;
+			[Nn]* ) ;;
+			* ) echo "Please answer yes or no.";;
+		esac
   fi
 }
 

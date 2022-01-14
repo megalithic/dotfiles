@@ -64,7 +64,7 @@ brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
 brew "curl"
 brew "dbus"
-brew "defaultbrowser"
+brew "defaultbrowser" if OS.mac?
 brew "diff-so-fancy"
 brew "dnsmasq"
 brew "dockutil" if OS.mac?
@@ -81,6 +81,7 @@ brew "fd"
 brew "ffind"
 brew "findutils"
 brew "fontforge" if OS.mac?
+brew "fx"
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"
 brew "gawk"
