@@ -54,6 +54,7 @@ brew "automake"
 brew "awscli" if OS.mac?
 brew "bash" # used for tmux-plugin -> extrakto
 brew "bat"
+brew "bat-extras"
 brew "blueutil" if OS.mac?
 brew "broot"
 brew "browsh" if OS.mac?

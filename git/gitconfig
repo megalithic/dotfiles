@@ -17,6 +17,10 @@
 [credential "https://dev.azure.com"]
 	useHttpPath = true
 
+[credential "https://github.com"]
+	helper =
+	helper = !$(brew --prefix)/bin/gh auth git-credential
+
 [git]
   user = megalithic
 
@@ -452,8 +456,3 @@ fzf = !"                                                                        
   selected = normal
   separator = red bold
   linenumber = normal
-
-[includeIf "gitdir:/Users"]
-    path = ~/.gitconfig_macos
-[includeIf "gitdir:/home"]
-    path = ~/.gitconfig_linux

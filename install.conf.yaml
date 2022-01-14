@@ -134,14 +134,6 @@
     ~/.gitconfig:
       force: true
       path: git/gitconfig
-    ~/.gitconfig_macos:
-      force: true
-      if: "[ `uname` = Darwin ]"
-      path: git/gitconfig_macos
-    ~/.gitconfig_linux:
-      force: true
-      if: "[ `uname` = Linux ]"
-      path: git/gitconfig_linux
 
     # ----- misc/other
     ~/.asdfrc: asdf/asdfrc
