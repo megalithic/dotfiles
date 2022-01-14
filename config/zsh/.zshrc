@@ -58,5 +58,8 @@ zcomet compinit
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
 
+source /opt/dev-env/ansible/dash_profile
+[ -n "$DESK_ENV" ] && source "$DESK_ENV" || true
+
 # zprof # bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

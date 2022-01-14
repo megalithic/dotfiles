@@ -33,8 +33,8 @@ M.list = {
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
-  "goolord/alpha-nvim",
-  { "zeertzjq/which-key.nvim", branch = "patch-1" },
+  -- "goolord/alpha-nvim",
+  "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
 
   ------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ M.list = {
   "nvim-telescope/telescope-media-files.nvim",
   "nvim-telescope/telescope-symbols.nvim",
   "nvim-telescope/telescope-smart-history.nvim",
-  "nvim-telescope/telescope-file-browser.nvim",
+  -- "nvim-telescope/telescope-file-browser.nvim",
 
   ------------------------------------------------------------------------------
   -- (text objects) --
@@ -176,7 +176,6 @@ M.list = {
   "tpope/vim-repeat",
   "tpope/vim-surround",
   "tpope/vim-unimpaired",
-  "danro/rename.vim",
   "lambdalisue/suda.vim",
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
@@ -1006,11 +1005,11 @@ M.setup = function()
   do -- lightspeed.nvim
     require("lightspeed").setup({
       -- jump_to_first_match = true,
-      jump_on_partial_input_safety_timeout = 400,
+      -- jump_on_partial_input_safety_timeout = 400,
       -- This can get _really_ slow if the window has a lot of content,
       -- turn it on only if your machine can always cope with it.
-      highlight_unique_chars = false,
-      grey_out_search_area = true,
+      jump_to_unique_chars = true,
+      -- grey_out_search_area = true,
       match_only_the_start_of_same_char_seqs = true,
       limit_ft_matches = 5,
       -- full_inclusive_prefix_key = '<c-x>',
@@ -1603,7 +1602,7 @@ M.setup = function()
     require("telescope").load_extension("fzf")
     require("telescope").load_extension("tmux")
     require("telescope").load_extension("media_files")
-    require("telescope").load_extension("file_browser")
+    -- require("telescope").load_extension("file_browser")
     -- require("telescope").load_extension("smart_history")
   end
 
@@ -1774,56 +1773,58 @@ M.setup = function()
   end
 
   do -- alpha.nvim
-    local alpha = require("alpha")
-    local dashboard = require("alpha.themes.dashboard")
+    if false then
+      local alpha = require("alpha")
+      local dashboard = require("alpha.themes.dashboard")
 
-    math.randomseed(os.time())
+      math.randomseed(os.time())
 
-    local function button(sc, txt, keybind, keybind_opts)
-      local b = dashboard.button(sc, txt, keybind, keybind_opts)
-      b.opts.hl = "Function"
-      b.opts.hl_shortcut = "Type"
-      return b
-    end
+      local function button(sc, txt, keybind, keybind_opts)
+        local b = dashboard.button(sc, txt, keybind, keybind_opts)
+        b.opts.hl = "Function"
+        b.opts.hl_shortcut = "Type"
+        return b
+      end
 
-    local function pick_color()
-      local clrs = { "String", "Identifier", "Keyword", "Number" }
-      return clrs[math.random(#clrs)]
-    end
+      local function pick_color()
+        local clrs = { "String", "Identifier", "Keyword", "Number" }
+        return clrs[math.random(#clrs)]
+      end
 
-    local function footer()
-      local datetime = os.date("%d-%m-%Y  %H:%M:%S")
-      return {
-        -- require("colors").icons.git_symbol .. " " .. fn["gitbranch#name"](),
-        vim.loop.cwd(),
-        datetime,
+      local function footer()
+        local datetime = os.date("%d-%m-%Y  %H:%M:%S")
+        return {
+          -- require("colors").icons.git_symbol .. " " .. fn["gitbranch#name"](),
+          vim.loop.cwd(),
+          datetime,
+        }
+      end
+
+      -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
+      dashboard.section.header.val = {
+        "• ▌ ▄ ·. ▄▄▄ . ▄▄ •  ▄▄▄· ▄▄▌  ▪  ▄▄▄▄▄ ▄ .▄▪   ▄▄·",
+        "·██ ▐███▪▀▄.▀·▐█ ▀ ▪▐█ ▀█ ██•  ██ •██  ██▪▐███ ▐█ ▌▪",
+        "▐█ ▌▐▌▐█·▐▀▀▪▄▄█ ▀█▄▄█▀▀█ ██▪  ▐█· ▐█.▪██▀▐█▐█·██ ▄▄",
+        "██ ██▌▐█▌▐█▄▄▌▐█▄▪▐█▐█ ▪▐▌▐█▌▐▌▐█▌ ▐█▌·██▌▐▀▐█▌▐███▌",
+        "▀▀  █▪▀▀▀ ▀▀▀ ·▀▀▀▀  ▀  ▀ .▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ·▀▀▀·▀▀▀",
       }
+
+      dashboard.section.header.opts.hl = pick_color()
+      dashboard.section.buttons.val = {
+        button("m", "  Recently opened files", "<cmd>lua require('telescope').oldfiles()<cr>"),
+        button("f", "  Find file", "<cmd>lua require('telescope').find_files()<cr>"),
+        button("a", "  Find word", "<cmd>lua require('telescope').live_grep()<cr>"),
+        button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
+        button("p", "  Update plugins", "<cmd>lua mega.sync_plugins()<CR>"),
+        button("q", "  Quit", "<cmd>qa<CR>"),
+      }
+
+      dashboard.section.footer.val = footer()
+      dashboard.section.footer.opts.hl = "Constant"
+      dashboard.section.footer.opts.position = "center"
+
+      alpha.setup(dashboard.opts)
     end
-
-    -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
-    dashboard.section.header.val = {
-      "• ▌ ▄ ·. ▄▄▄ . ▄▄ •  ▄▄▄· ▄▄▌  ▪  ▄▄▄▄▄ ▄ .▄▪   ▄▄·",
-      "·██ ▐███▪▀▄.▀·▐█ ▀ ▪▐█ ▀█ ██•  ██ •██  ██▪▐███ ▐█ ▌▪",
-      "▐█ ▌▐▌▐█·▐▀▀▪▄▄█ ▀█▄▄█▀▀█ ██▪  ▐█· ▐█.▪██▀▐█▐█·██ ▄▄",
-      "██ ██▌▐█▌▐█▄▄▌▐█▄▪▐█▐█ ▪▐▌▐█▌▐▌▐█▌ ▐█▌·██▌▐▀▐█▌▐███▌",
-      "▀▀  █▪▀▀▀ ▀▀▀ ·▀▀▀▀  ▀  ▀ .▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ·▀▀▀·▀▀▀",
-    }
-
-    dashboard.section.header.opts.hl = pick_color()
-    dashboard.section.buttons.val = {
-      button("m", "  Recently opened files", "<cmd>lua require('telescope').oldfiles()<cr>"),
-      button("f", "  Find file", "<cmd>lua require('telescope').find_files()<cr>"),
-      button("a", "  Find word", "<cmd>lua require('telescope').live_grep()<cr>"),
-      button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
-      button("p", "  Update plugins", "<cmd>lua mega.sync_plugins()<CR>"),
-      button("q", "  Quit", "<cmd>qa<CR>"),
-    }
-
-    dashboard.section.footer.val = footer()
-    dashboard.section.footer.opts.hl = "Constant"
-    dashboard.section.footer.opts.position = "center"
-
-    alpha.setup(dashboard.opts)
   end
 
   do -- distant.nvim

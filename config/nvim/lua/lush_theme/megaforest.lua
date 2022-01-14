@@ -118,7 +118,7 @@ return lush(function()
     vCursor({ Cursor }),
     CursorIM({ Cursor }), -- like Cursor, but used when in IME mode |CursorIM|
     CursorColumn({ fg = nil, bg = bg1 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
-    CursorLine({ fg = nil, bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR guifg) is not set.
+    CursorLine({ fg = nil, bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
     CursorWord({ fg = nil, bg = nil, gui = "bold,underline" }),
     CursorLineNr({ fg = brown, bg = bg1, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     Directory({ fg = green, bg = nil }), -- directory names (and other special names in listings)
@@ -143,7 +143,7 @@ return lush(function()
     -- MsgSeparator { }, -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = yellow, bg = nil, gui = "bold" }), -- |more-prompt|
     NonText({ fg = bg4, bg = nil }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-    Normal({ fg = fg, bg = nil }), -- normal text
+    Normal({ fg = fg, bg = bg0 }), -- normal text
     NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
     GreyFloat({ bg = grey1 }),
     GreyFloatBorder({ fg = grey1 }),
@@ -724,6 +724,11 @@ return lush(function()
 
     StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    -- StatusLine({ bg = bg1 }),
+    -- StatusLineNC({ bg = bg1, gui = "NONE" }),
+    StInactive({ bg = bg0, gui = "italic" }),
+    -- StInactive({ fg = bg1, bg = C.comment_grey }),
+
     -- StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
     -- StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     -- StItem1({ fg = cs.green, bg = cs.bg1 }),
@@ -736,7 +741,34 @@ return lush(function()
     -- StSep3({ fg = cs.bg1, bg = cs.grey0 }),
     -- StError({ bg = cs.pale_red }),
     -- StWarn({ bg = cs.dark_orange }),
-    StInactive({ bg = C.bg0, gui = "italic" }),
+
+    StModeNormal({ bg = bg1, fg = C.bg5, gui = "NONE" }),
+    StModeInsert({ bg = bg1, fg = C.green, gui = "bold" }),
+    StModeVisual({ bg = bg1, fg = C.magenta, gui = "bold" }),
+    StModeReplace({ bg = bg1, fg = C.dark_red, gui = "bold" }),
+    StModeCommand({ bg = bg1, fg = H.get_hl("Search", "bg"), gui = "bold" }),
+
+    StMetadata({ Comment, bg = bg1 }),
+    StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
+    StIndicator({ bg = bg1, fg = blue }),
+    StModified({ fg = C.pale_red, bg = bg1, gui = "bold,italic" }),
+    StGit({ fg = C.light_red, bg = bg1 }),
+    StGreen({ fg = green, bg = bg1 }),
+    StBlue({ fg = C.dark_blue, bg = bg1, gui = "bold" }),
+    StNumber({ fg = purple, bg = bg1 }),
+    StCount({ fg = bg0, bg = blue, gui = "bold" }),
+    StPrefix({ fg = fg, bg = bg2 }),
+    StDirectory({ bg = bg1, fg = "Gray", gui = "italic" }),
+    StParentDirectory({ bg = bg1, fg = green, gui = "bold" }),
+    StFilename({ bg = bg1, fg = "LightGray", gui = "bold" }),
+    StFilenameInactive({ fg = C.comment_grey, bg = bg1, gui = "italic,bold" }),
+    StIdentifier({ fg = blue, bg = bg1 }),
+    StTitle({ bg = bg1, fg = "LightGray", gui = "bold" }),
+    StComment({ Comment, bg = bg1 }),
+    StInfo({ fg = C.cyan, bg = bg1, gui = "bold" }),
+    StWarning({ fg = C.dark_orange, bg = bg1 }),
+    StError({ fg = C.pale_red, bg = bg1 }),
+    StHint({ fg = C.bright_yellow, bg = bg1 }),
 
     ---- :help telescope -------------------------------------------
 

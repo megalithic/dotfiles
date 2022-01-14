@@ -26,4 +26,4 @@ windows:
         - repl:
             - ssh seth-dev
             - cd ~/code/atlas
-            - eval $(desk load); sleep 2 & iex -S mix
+            - eval $(desk load); iex -S mix
