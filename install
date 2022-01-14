@@ -21,10 +21,12 @@ git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
 git submodule update --init --recursive "${DOTBOT_DIR}"
 git submodule update --init --recursive "dotbot/asdf"
 git submodule update --init --recursive "dotbot/brewfile"
+git submodule update --init --recursive "dotbot/ifplatform"
 
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
   --plugin-dir dotbot/brewfile \
   --plugin-dir dotbot/asdf \
+  --plugin-dir dotbot/ifplatform \
   -c "${CONFIG}" "${@}"
   # -c "${CONFIG}"
 
