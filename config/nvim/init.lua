@@ -57,6 +57,6 @@ R("plugins").setup()
 R("lsp").setup()
 R("autocmds")
 R("mappings")
-R("megaline").setup({})
+R("megaline")
 
 -- vim:foldmethod=marker

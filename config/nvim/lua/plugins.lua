@@ -132,6 +132,7 @@ M.list = {
   "rhysd/git-messenger.vim",
   "sindrets/diffview.nvim",
   "tpope/vim-fugitive",
+  "lewis6991/gitsigns.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
   "pwntester/octo.nvim", -- https://github.com/ryansch/dotfiles/commit/2d0dc63bea2f921de1236c2800605551fb4b3041#diff-45b8a59e398d12063977c5b27e0d065150544908fd4ad8b3e10b2d003c5f4439R119-R246
   -- "gabebw/vim-github-link-opener",
@@ -2021,7 +2022,7 @@ M.setup = function()
         { key = "]c", cb = tree_cb("next_git_item") },
         { key = "-", cb = tree_cb("dir_up") },
         { key = "s", cb = tree_cb("system_open") },
-        { key = "q", cb = tree_cb("close") },
+        { sdfasdfkey = "q", cb = tree_cb("close") },
         { key = "g?", cb = tree_cb("toggle_help") },
       },
     })
@@ -2049,6 +2050,66 @@ M.setup = function()
 
   do -- misc
     vim.g.fzf_gitignore_no_maps = true
+  end
+
+  do -- gitsigns.nvim
+    local gitsigns = require("gitsigns")
+    require("which-key").register({
+      ["<leader>h"] = {
+        name = "+gitsigns hunk",
+        s = "stage",
+        u = "undo stage",
+        r = "reset hunk",
+        p = "preview current hunk",
+        b = "blame current line",
+      },
+      ["<leader>lm"] = "gitsigns: list modified in quickfix",
+      ["<localleader>g"] = {
+        name = "+git",
+        w = "gitsigns: stage entire buffer",
+        r = { name = "+reset", e = "gitsigns: reset entire buffer" },
+        b = {
+          name = "+blame",
+          l = "gitsigns: blame current line",
+          d = "gitsigns: toggle word diff",
+        },
+      },
+      ["[h"] = "go to next git hunk",
+      ["]h"] = "go to previous git hunk",
+    })
+
+    gitsigns.setup({
+      signs = {
+        add = { hl = "GitSignsAdd", text = "▌" },
+        change = { hl = "GitSignsChange", text = "▌" },
+        delete = { hl = "GitSignsDelete", text = "▌" },
+        topdelete = { hl = "GitSignsDelete", text = "▌" },
+        changedelete = { hl = "GitSignsChange", text = "▌" },
+      },
+      word_diff = false,
+      numhl = false,
+      keymaps = {
+        -- Default keymap options
+        noremap = true,
+        buffer = true,
+        ["n [h"] = { expr = true, "&diff ? ']h' : '<cmd>lua require\"gitsigns\".next_hunk()<CR>'" },
+        ["n ]h"] = { expr = true, "&diff ? '[h' : '<cmd>lua require\"gitsigns\".prev_hunk()<CR>'" },
+        ["n <localleader>gw"] = "<cmd>lua require\"gitsigns\".stage_buffer()<CR>",
+        ["n <localleader>gre"] = "<cmd>lua require\"gitsigns\".reset_buffer()<CR>",
+        ["n <localleader>gbl"] = "<cmd>lua require\"gitsigns\".blame_line()<CR>",
+        ["n <localleader>gbd"] = "<cmd>lua require\"gitsigns\".toggle_word_diff()<CR>",
+        ["n <leader>lm"] = "<cmd>lua require\"gitsigns\".setqflist(\"all\")<CR>",
+        -- Text objects
+        ["o ih"] = ":<C-U>lua require\"gitsigns\".select_hunk()<CR>",
+        ["x ih"] = ":<C-U>lua require\"gitsigns\".select_hunk()<CR>",
+        ["n <leader>hs"] = "<cmd>lua require\"gitsigns\".stage_hunk()<CR>",
+        ["v <leader>hs"] = "<cmd>lua require\"gitsigns\".stage_hunk({vim.fn.line(\".\"), vim.fn.line(\"v\")})<CR>",
+        ["n <leader>hu"] = "<cmd>lua require\"gitsigns\".undo_stage_hunk()<CR>",
+        ["n <leader>hr"] = "<cmd>lua require\"gitsigns\".reset_hunk()<CR>",
+        ["v <leader>hr"] = "<cmd>lua require\"gitsigns\".reset_hunk({vim.fn.line(\".\"), vim.fn.line(\"v\")})<CR>",
+        ["n <leader>hp"] = "<cmd>lua require\"gitsigns\".preview_hunk()<CR>",
+      },
+    })
   end
 end
 

@@ -417,7 +417,7 @@ mega.exec([[
 -----------------------------------------------------------------------------//
 -- fallback in the event our statusline plugins fail to load
 vim.opt.statusline = table.concat({
-  "[%2{mode()}] ",
+  "%2{string.upper(mode())} ",
   "f", -- relative path
   "m", -- modified flag
   "r",

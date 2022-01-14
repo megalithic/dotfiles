@@ -41,7 +41,6 @@ local icons = {
       TypeParameter = " type param", -- TypeParameter
     },
   },
-  git_symbol = utf8(0xe725),
   virtual_text = utf8(0xf63d),
   mode_term = utf8(0xfcb5),
   ln_sep = utf8(0xe0a1),
@@ -49,10 +48,11 @@ local icons = {
   perc_sep = utf8(0xf44e),
   right_sep = utf8(0xe0b4),
   left_sep = utf8(0xe0b6),
-  modified_symbol = utf8(0xf085),
-  mode_symbol = utf8(0xf101),
-  vcs_symbol = utf8(0xf418),
-  readonly_symbol = utf8(0xf023),
+  modified_symbol = utf8(0xf085), -- "●"
+  mode = utf8(0xf101),
+  vcs = utf8(0xf418),
+  git = "", -- utf8(0xe725) -- "" ""
+  readonly = utf8(0xf023), -- ""
   prompt = "", -- utf8(0xf460),
 }
 

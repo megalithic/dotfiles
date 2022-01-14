@@ -110,39 +110,39 @@ return lush(function()
 
     ---- :help highlight-default -------------------------------
 
-    ColorColumn({ fg = nil, bg = bg1 }), -- used for the columns set with 'colorcolumn'
-    Conceal({ fg = grey1, bg = nil }), -- placeholder characters substituted for concealed text (see 'conceallevel')
-    Cursor({ fg = nil, bg = nil, gui = "reverse" }), -- character under the cursor
+    ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
+    Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
+    Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
     iCursor({ Cursor }),
     vCursor({ Cursor }),
     CursorIM({ Cursor }), -- like Cursor, but used when in IME mode |CursorIM|
-    CursorColumn({ fg = nil, bg = bg1 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
-    CursorLine({ fg = nil, bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
-    CursorWord({ fg = nil, bg = nil, gui = "bold,underline" }),
+    CursorColumn({ fg = "NONE", bg = bg1 }), -- Screen-column at the cursor, when 'cursorcolumn' is set.
+    CursorLine({ fg = "NONE", bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
+    CursorWord({ fg = "NONE", bg = "NONE", gui = "bold,underline" }),
     CursorLineNr({ fg = brown, bg = bg1, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
-    Directory({ fg = green, bg = nil }), -- directory names (and other special names in listings)
-    DiffAdd({ fg = nil, bg = bg_green }), -- diff mode: Added line |diff.txt|
-    DiffChange({ fg = nil, bg = bg_blue }), -- diff mode: Changed line |diff.txt|
-    DiffDelete({ fg = nil, bg = bg_red }), -- diff mode: Deleted line |diff.txt|
+    Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
+    DiffAdd({ fg = "NONE", bg = bg_green }), -- diff mode: Added line |diff.txt|
+    DiffChange({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed line |diff.txt|
+    DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
     EndOfBuffer({ fg = bg0, bg = bg0 }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
     TermCursor({ Cursor }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
-    ErrorMsg({ fg = red, bg = nil, gui = "bold,underline" }), -- error messages on the command line
-    VertSplit({ fg = bg4, bg = nil }), -- the column separating vertically split windows
+    ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
+    VertSplit({ fg = bg4, bg = "NONE" }), -- the column separating vertically split windows
     Folded({ fg = grey1, bg = bg1 }), -- line used for closed folds
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
     SignColumn({ fg = fg, bg = bg0 }), -- column where |signs| are displayed
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
     Substitute({ fg = bg0, bg = yellow }), -- |:substitute| replacement text highlighting
-    LineNr({ fg = grey0, bg = nil }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
-    MatchParen({ fg = nil, bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
-    ModeMsg({ fg = fg, bg = nil, gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
+    LineNr({ fg = grey0, bg = "NONE" }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
+    MatchParen({ fg = "NONE", bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
+    ModeMsg({ fg = fg, bg = "NONE", gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
     -- MsgArea      { }, -- Area for messages and cmdline
     -- MsgSeparator { }, -- Separator for scrolled messages, `msgsep` flag of 'display'
-    MoreMsg({ fg = yellow, bg = nil, gui = "bold" }), -- |more-prompt|
-    NonText({ fg = bg4, bg = nil }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
+    MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
+    NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
     Normal({ fg = fg, bg = bg0 }), -- normal text
     NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
     GreyFloat({ bg = grey1 }),
@@ -150,24 +150,24 @@ return lush(function()
     -- NormalNC     { }, -- normal text in non-current windows
     Pmenu({ fg = fg, bg = bg2 }), -- Popup menu: normal item.
     PmenuSel({ fg = green, bg = bg3 }), -- Popup menu: selected item.
-    PmenuSbar({ fg = nil, bg = bg2 }), -- Popup menu: scrollbar.
-    PmenuThumb({ fg = nil, bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
-    Question({ fg = yellow, bg = nil }), -- |hit-enter| prompt and yes/no questions
-    QuickFixLine({ fg = purple, bg = nil, gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
+    PmenuSbar({ fg = "NONE", bg = bg2 }), -- Popup menu: scrollbar.
+    PmenuThumb({ fg = "NONE", bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
+    Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
+    QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
     Search({ fg = bg0, bg = green }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
-    SpecialKey({ fg = bg3, bg = nil }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
+    SpecialKey({ fg = bg3, bg = "NONE" }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
 
     ---- :help spell -------------------------------------------
 
-    SpellBad({ fg = red, bg = nil, gui = "undercurl", sp = red }),
-    SpellCap({ fg = blue, bg = nil, gui = "undercurl", sp = blue }),
-    SpellLocal({ fg = cyan, bg = nil, gui = "undercurl", sp = cyan }),
-    SpellRare({ fg = purple, bg = nil, gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
+    SpellBad({ fg = red, bg = "NONE", gui = "undercurl", sp = red }),
+    SpellCap({ fg = blue, bg = "NONE", gui = "undercurl", sp = blue }),
+    SpellLocal({ fg = cyan, bg = "NONE", gui = "undercurl", sp = cyan }),
+    SpellRare({ fg = purple, bg = "NONE", gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
 
-    Visual({ fg = nil, bg = bg_visual }), -- Visual mode selection
-    VisualNOS({ fg = nil, bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
-    WarningMsg({ fg = yellow, bg = nil }), -- warning messages
-    Whitespace({ fg = bg3, bg = nil }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
+    Visual({ fg = "NONE", bg = bg_visual }), -- Visual mode selection
+    VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
+    WarningMsg({ fg = yellow, bg = "NONE" }), -- warning messages
+    Whitespace({ fg = bg3, bg = "NONE" }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
     --
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     -- These groups are not listed as default vim groups,
@@ -175,72 +175,72 @@ return lush(function()
     -- commented out groups should chain up to their "preferred" group by
     -- default,
     -- Uncomment and edit if you want more specific syntax highlighting.
-    Boolean({ fg = purple, bg = nil }),
-    Number({ fg = purple, bg = nil }),
-    Float({ fg = purple, bg = nil }),
-    PreProc({ fg = purple, bg = nil, gui = "italic" }),
-    PreCondit({ fg = purple, bg = nil, gui = "italic" }),
-    Include({ fg = purple, bg = nil, gui = "italic" }),
-    Define({ fg = purple, bg = nil, gui = "italic" }),
-    Conditional({ fg = red, bg = nil, gui = "italic" }),
-    Repeat({ fg = red, bg = nil, gui = "italic" }),
-    Keyword({ fg = red, bg = nil, gui = "italic" }),
-    Typedef({ fg = red, bg = nil, gui = "italic" }),
-    Exception({ fg = red, bg = nil, gui = "italic" }),
-    Statement({ fg = red, bg = nil, gui = "italic" }),
-    Error({ fg = red, bg = nil }),
-    StorageClass({ fg = orange, bg = nil }),
-    Tag({ fg = orange, bg = nil }),
-    Label({ fg = orange, bg = nil }),
-    Structure({ fg = orange, bg = nil }),
-    Operator({ fg = orange, bg = nil }),
-    Title({ fg = orange, bg = nil, gui = "bold" }),
-    Special({ fg = fg.darken(20), bg = nil, gui = "bold" }),
-    SpecialChar({ fg = yellow, bg = nil }),
-    Type({ fg = yellow, bg = nil }),
-    Function({ fg = green, bg = nil }),
-    String({ fg = green, bg = nil }),
-    Character({ fg = green, bg = nil }),
-    Constant({ fg = aqua, bg = nil }),
-    Macro({ fg = aqua, bg = nil }),
-    Identifier({ fg = blue, bg = nil }),
-    Comment({ fg = grey1, bg = nil, gui = "italic" }),
-    SpecialComment({ fg = grey1, bg = nil, gui = "italic" }),
-    Todo({ fg = purple, bg = nil, gui = "italic" }),
-    Delimiter({ fg = fg, bg = nil }),
-    Ignore({ fg = grey1, bg = nil }),
-    Debug({ fg = orange, bg = nil }), --    debugging statements
+    Boolean({ fg = purple, bg = "NONE" }),
+    Number({ fg = purple, bg = "NONE" }),
+    Float({ fg = purple, bg = "NONE" }),
+    PreProc({ fg = purple, bg = "NONE", gui = "italic" }),
+    PreCondit({ fg = purple, bg = "NONE", gui = "italic" }),
+    Include({ fg = purple, bg = "NONE", gui = "italic" }),
+    Define({ fg = purple, bg = "NONE", gui = "italic" }),
+    Conditional({ fg = red, bg = "NONE", gui = "italic" }),
+    Repeat({ fg = red, bg = "NONE", gui = "italic" }),
+    Keyword({ fg = red, bg = "NONE", gui = "italic" }),
+    Typedef({ fg = red, bg = "NONE", gui = "italic" }),
+    Exception({ fg = red, bg = "NONE", gui = "italic" }),
+    Statement({ fg = red, bg = "NONE", gui = "italic" }),
+    Error({ fg = red, bg = "NONE" }),
+    StorageClass({ fg = orange, bg = "NONE" }),
+    Tag({ fg = orange, bg = "NONE" }),
+    Label({ fg = orange, bg = "NONE" }),
+    Structure({ fg = orange, bg = "NONE" }),
+    Operator({ fg = orange, bg = "NONE" }),
+    Title({ fg = orange, bg = "NONE", gui = "bold" }),
+    Special({ fg = fg.darken(20), bg = "NONE", gui = "bold" }),
+    SpecialChar({ fg = yellow, bg = "NONE" }),
+    Type({ fg = yellow, bg = "NONE" }),
+    Function({ fg = green, bg = "NONE" }),
+    String({ fg = green, bg = "NONE" }),
+    Character({ fg = green, bg = "NONE" }),
+    Constant({ fg = aqua, bg = "NONE" }),
+    Macro({ fg = aqua, bg = "NONE" }),
+    Identifier({ fg = blue, bg = "NONE" }),
+    Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
+    SpecialComment({ fg = grey1, bg = "NONE", gui = "italic" }),
+    Todo({ fg = purple, bg = "NONE", gui = "italic" }),
+    Delimiter({ fg = fg, bg = "NONE" }),
+    Ignore({ fg = grey1, bg = "NONE" }),
+    Debug({ fg = orange, bg = "NONE" }), --    debugging statements
     debugPC({ fg = bg0, bg = green }), --    debugging statements
     debugBreakpoint({ fg = bg0, bg = red }), --    debugging statements
     Bold({ gui = "bold" }),
     Italic({ gui = "italic" }),
-    Underlined({ fg = nil, bg = nil, gui = "underline" }),
-    CurrentWord({ fg = nil, bg = nil }),
-    Fg({ fg = fg, bg = nil }),
-    Grey({ fg = grey1, bg = nil }),
-    Red({ fg = red, bg = nil }),
-    Orange({ fg = orange, bg = nil }),
-    Yellow({ fg = yellow, bg = nil }),
-    Green({ fg = green, bg = nil }),
-    Aqua({ fg = aqua, bg = nil }),
-    Blue({ fg = blue, bg = nil }),
-    Purple({ fg = purple, bg = nil }),
-    RedItalic({ fg = red, bg = nil, gui = "italic" }),
-    OrangeItalic({ fg = orange, bg = nil, gui = "italic" }),
-    YellowItalic({ fg = yellow, bg = nil, gui = "italic" }),
-    GreenItalic({ fg = green, bg = nil, gui = "italic" }),
-    AquaItalic({ fg = cyan, bg = nil, gui = "italic" }),
-    BlueItalic({ fg = blue, bg = nil, gui = "italic" }),
-    PurpleItalic({ fg = purple, bg = nil, gui = "italic" }),
-    PurpleBold({ fg = purple, bg = nil, gui = "bold" }),
-    ErrorText({ fg = nil, bg = bg_red, gui = "undercurl", sp = red }),
-    WarningText({ fg = nil, bg = bg_yellow, gui = "undercurl", sp = yellow }),
-    InfoText({ fg = nil, bg = bg_blue, gui = "undercurl", sp = blue }),
-    HintText({ fg = nil, bg = bg_green, gui = "undercurl", sp = green }),
-    ErrorLine({ fg = nil, bg = bg_red }),
-    WarningLine({ fg = nil, bg = bg_yellow }),
-    InfoLine({ fg = nil, bg = bg_blue }),
-    HintLine({ fg = nil, bg = bg_green }),
+    Underlined({ fg = "NONE", bg = "NONE", gui = "underline" }),
+    CurrentWord({ fg = "NONE", bg = "NONE" }),
+    Fg({ fg = fg, bg = "NONE" }),
+    Grey({ fg = grey1, bg = "NONE" }),
+    Red({ fg = red, bg = "NONE" }),
+    Orange({ fg = orange, bg = "NONE" }),
+    Yellow({ fg = yellow, bg = "NONE" }),
+    Green({ fg = green, bg = "NONE" }),
+    Aqua({ fg = aqua, bg = "NONE" }),
+    Blue({ fg = blue, bg = "NONE" }),
+    Purple({ fg = purple, bg = "NONE" }),
+    RedItalic({ fg = red, bg = "NONE", gui = "italic" }),
+    OrangeItalic({ fg = orange, bg = "NONE", gui = "italic" }),
+    YellowItalic({ fg = yellow, bg = "NONE", gui = "italic" }),
+    GreenItalic({ fg = green, bg = "NONE", gui = "italic" }),
+    AquaItalic({ fg = cyan, bg = "NONE", gui = "italic" }),
+    BlueItalic({ fg = blue, bg = "NONE", gui = "italic" }),
+    PurpleItalic({ fg = purple, bg = "NONE", gui = "italic" }),
+    PurpleBold({ fg = purple, bg = "NONE", gui = "bold" }),
+    ErrorText({ fg = "NONE", bg = bg_red, gui = "undercurl", sp = red }),
+    WarningText({ fg = "NONE", bg = bg_yellow, gui = "undercurl", sp = yellow }),
+    InfoText({ fg = "NONE", bg = bg_blue, gui = "undercurl", sp = blue }),
+    HintText({ fg = "NONE", bg = bg_green, gui = "undercurl", sp = green }),
+    ErrorLine({ fg = "NONE", bg = bg_red }),
+    WarningLine({ fg = "NONE", bg = bg_yellow }),
+    InfoLine({ fg = "NONE", bg = bg_blue }),
+    HintLine({ fg = "NONE", bg = bg_green }),
     ErrorFloat({ fg = red, bg = bg2 }),
     WarningFloat({ fg = yellow, bg = bg2 }),
     InfoFloat({ fg = blue, bg = bg2 }),
@@ -339,23 +339,23 @@ return lush(function()
 
     -- # built-in markdown
     markdownH1({ fg = bg0, bg = green, gui = "bold" }),
-    markdownH2({ fg = orange, bg = nil, gui = "bold,italic,underline" }),
-    markdownH3({ fg = purple, bg = nil, gui = "bold,italic" }),
-    markdownH4({ fg = yellow, bg = nil, gui = "italic" }),
-    markdownH5({ fg = cyan, bg = nil, gui = "bold" }),
-    markdownH6({ fg = blue, bg = nil, gui = "NONE" }),
+    markdownH2({ fg = orange, bg = "NONE", gui = "bold,italic,underline" }),
+    markdownH3({ fg = purple, bg = "NONE", gui = "bold,italic" }),
+    markdownH4({ fg = yellow, bg = "NONE", gui = "italic" }),
+    markdownH5({ fg = cyan, bg = "NONE", gui = "bold" }),
+    markdownH6({ fg = blue, bg = "NONE", gui = "NONE" }),
     Headline1({ markdownH1 }),
     Headline2({ markdownH2 }),
     Headline3({ markdownH3 }),
     Headline4({ markdownH4 }),
     Headline5({ markdownH5 }),
     Headline6({ markdownH6 }),
-    markdownUrl({ fg = blue, bg = nil, gui = "underline" }),
-    markdownItalic({ fg = grey1, bg = nil, gui = "italic" }),
-    markdownBold({ fg = grey2, bg = nil, gui = "bold" }),
+    markdownUrl({ fg = blue, bg = "NONE", gui = "underline" }),
+    markdownItalic({ fg = grey1, bg = "NONE", gui = "italic" }),
+    markdownBold({ fg = grey2, bg = "NONE", gui = "bold" }),
     markdownDash({ fg = bg2, gui = "bold" }),
     Dash({ markdownDash }),
-    markdownItalicDelimiter({ fg = grey1, bg = nil, gui = "italic" }),
+    markdownItalicDelimiter({ fg = grey1, bg = "NONE", gui = "italic" }),
     markdownCode({ Green }),
     markdownCodeBlock({ Aqua }),
     markdownCodeDelimiter({ Aqua }),
@@ -438,7 +438,7 @@ return lush(function()
     TSConstMacro({ Purple }),
     TSConstant({ PurpleItalic }),
     TSConstructor({ Fg }),
-    TSEmphasis({ fg = nil, bg = nil, gui = "italic" }),
+    TSEmphasis({ fg = "NONE", bg = "NONE", gui = "italic" }),
     TSError({ ErrorText }),
     TSException({ Red }),
     TSField({ Green }),
@@ -464,14 +464,14 @@ return lush(function()
     TSString({ Yellow }),
     TSStringRegex({ Blue }),
     TSStringEscape({ Purple }),
-    TSStrong({ fg = nil, bg = nil, gui = "bold" }),
+    TSStrong({ fg = "NONE", bg = "NONE", gui = "bold" }),
     TSStructure({ Orange }),
     TSTag({ Orange }),
     TSTagDelimiter({ Green }),
     TSText({ Green }),
     TSType({ Aqua }),
     TSTypeBuiltin({ BlueItalic }),
-    TSUnderline({ fg = nil, bg = nil, gui = "underline" }),
+    TSUnderline({ fg = "NONE", bg = "NONE", gui = "underline" }),
     TSURI({ markdownUrl }),
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
@@ -491,16 +491,11 @@ return lush(function()
     markdownCode({ markdownTSLiteral }),
     markdownLinkText({ markdownTSTextReference }),
 
-    ---- :help git-gutter -------------------------------------------
+    ---- :help git-signs -------------------------------------------
 
-    GitGutterAdd({ GreenSign }),
-    GitGutterChange({ BlueSign }),
-    GitGutterDelete({ RedSign }),
-    GitGutterChangeDelete({ PurpleSign }),
-
-    GitSignsAdd({ GreenSign }),
-    GitSignsDelete({ BlueSign }),
-    GitSignsChange({ RedSign }),
+    GitSignsAdd({ GreenSign, bg = "NONE" }),
+    GitSignsDelete({ RedSign, bg = "NONE" }),
+    GitSignsChange({ BlueSign, bg = "NONE" }),
 
     ---- :help gitcommit -------------------------------------------
 
@@ -682,15 +677,15 @@ return lush(function()
 
     ---- :help indent-blankline -------------------------------------------
 
-    IndentBlanklineChar({ fg = bg2, bg = nil }),
-    IndentBlanklineContextChar({ fg = blue, bg = nil }),
-    IndentBlanklineContextStart({ sp = blue, bg = nil, gui = "underline" }),
+    IndentBlanklineChar({ fg = bg2, bg = "NONE" }),
+    IndentBlanklineContextChar({ fg = blue, bg = "NONE" }),
+    IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
     ---- :help orgmode.nvim -------------------------------------------
 
-    OrgDone({ fg = bright_green, bg = nil }),
-    OrgDONE({ fg = bright_green, bg = nil }),
-    OrgAgendaScheduled({ fg = green, bg = nil }),
+    OrgDone({ fg = bright_green, bg = "NONE" }),
+    OrgDONE({ fg = bright_green, bg = "NONE" }),
+    OrgAgendaScheduled({ fg = green, bg = "NONE" }),
     OrgAgendaDay({ Directory }),
 
     ---- :help lightspeed.nvim -------------------------------------------
@@ -726,8 +721,8 @@ return lush(function()
     StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     -- StatusLine({ bg = bg1 }),
     -- StatusLineNC({ bg = bg1, gui = "NONE" }),
-    StInactive({ bg = bg0, gui = "italic" }),
-    -- StInactive({ fg = bg1, bg = C.comment_grey }),
+    -- StInactive({ bg = bg0, gui = "italic" }),
+    StInactive({ fg = bg2, bg = bg0, gui = "italic" }),
 
     -- StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
     -- StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
@@ -776,7 +771,7 @@ return lush(function()
     -- TelescopeBorder({ GreyFloatBorder }),
     TelescopePromptPrefix({ Statement }),
     TelescopeTitle({ Normal, gui = "bold" }),
-    TelescopeSelectionCaret({ fg = fg, bg = nil }),
+    TelescopeSelectionCaret({ fg = fg, bg = "NONE" }),
     TelescopeBorder({ fg = bg4 }),
 
     -- TelescopeMatching({ Title }),
