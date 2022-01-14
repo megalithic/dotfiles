@@ -200,19 +200,12 @@
     - description: Attempting to install neovim from source..
       quiet: true
       command: >-
-        ~/.dotfiles/bin/nvim-install
+        make -C ~/.dotfiles neovim && echo "-> neovim updated and built successfully";
 
     - description: Attempting to install paq-nvim..
       quiet: true
       command: >-
-        if [[ ! -d "$XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim" ]]; then
-          if read -q "choice?[?] Install paq-nvim (Y/y)? "; then
-            git clone --depth=1 https://github.com/savq/paq-nvim.git $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
-            nvim -c 'lua require("paq")(require("plugins").list):install()' +qall;
-          else
-            [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1;
-          fi
-        fi
+        make -C ~/.dotfiles paq && echo "-> paq-nvim and plugins installed successfully";
 
     - description: Attempting to install elixir-ls..
       quiet: true

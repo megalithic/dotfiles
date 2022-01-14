@@ -2,7 +2,15 @@
 
 set -euo pipefail
 
-cd "$XDG_DATA_HOME/src" && echo "-> cd ~/.local/share/src successful";
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+pushd "$XDG_DATA_HOME/src" && echo "-> cd ~/.local/share/src successful";
 
 update() {
   cd "$XDG_DATA_HOME/src/neovim" && echo "-> cd neovim successful";
@@ -14,8 +22,8 @@ clone() {
   if [[ ! -d "$XDG_DATA_HOME/src/neovim" ]]; then
     git clone git@github.com:neovim/neovim.git && echo "-> git clone neovim successful";
     cd neovim && echo "-> cd neovim successful";
-    update;
-    build;
+    # do it all and then exit cleanly...
+    update && build && popd && exit 0;
   fi
 }
 
@@ -31,17 +39,23 @@ build() {
     echo "-> neovim already up to date on origin/master; skipping."
   else
     read -p "[?] Build neovim from source (Y/n)? " yn
-		case $yn in
-			[Yy]* )
-        do_build
+    case $yn in
+      [Yy]* )
+        do_build || exit 1
         ;;
-			"" )
-        do_build # default
+      "" )
+        do_build || exit 1 # default
         ;;
-			[Nn]* ) ;;
-			* ) echo "Please answer yes or no.";;
-		esac
+      [Nn]* )
+        echo "-> skipping neovim install"
+        ;;
+      * )
+        echo "Please answer [y]es or [n]o."
+        echo ""
+        exec $__invocation
+        ;;
+    esac
   fi
 }
 
-clone && update && build;
+clone && update && build && popd;

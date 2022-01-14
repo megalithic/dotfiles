@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+elixirls_path="$XDG_DATA_HOME/lsp/elixir-ls"
+
+do_install() {
+  echo ""
+  echo "-> Downloading and installing to $elixirls_path"
+  echo ""
+
+  curl -fLO https://github.com/elixir-lsp/elixir-ls/releases/latest/download/elixir-ls.zip \
+    && unzip -o elixir-ls.zip -d "$elixirls_path" \
+    && chmod +x "$elixirls_path/language_server.sh" \
+    && echo "" \
+    && (rm elixir-ls.zip && echo "-> removed $HOME/elixir-ls.zip") \
+    && echo "-> finished downloading and installing elixir-ls to $elixirls_path" \
+    || exit 1
+  }
+
+  read -p "[?] Download and install latest elixir-ls (Y/n)? " yn;
+  case $yn in
+    [Yy]* )
+      do_install || exit 1
+      ;;
+    "" )
+      do_install || exit 1
+      ;;
+    [Nn]* )
+      echo "-> skipping elixir-ls install"
+      ;;
+    * )
+      echo "Please answer [y]es or [n]o."
+      echo ""
+      exec $__invocation
+      ;;
+  esac

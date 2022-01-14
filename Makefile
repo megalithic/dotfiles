@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help install macos linux all elixirls paq subup
+.PHONY: help install macos linux all elixirls paq subup nvim
 .DEFAULT_GOAL := install
 
 help: ## Show this help content
@@ -21,14 +21,13 @@ all: ## Runs all platform-specific dotbot install scripts
 	macos linux
 
 elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
-		curl -fLO https://github.com/elixir-lsp/elixir-ls/releases/latest/download/elixir-ls.zip
-		unzip elixir-ls.zip -d $(XDG_DATA_HOME)/lsp/elixir-ls
-		chmod +x $(XDG_DATA_HOME)/lsp/elixir-ls/language_server.sh
-		rm elixir-ls.zip
+	$(HOME)/.dotfiles/bin/elixirls-install
 
 paq: ## Install paq-nvim to $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
-		git clone --depth=1 https://github.com/savq/paq-nvim.git $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
-		nvim -c 'lua require("paq")(require("plugins").list):install()' +qall;
+	$(HOME)/.dotfiles/bin/paq-install
+
+nvim: ## Update and build neovim from source
+	$(HOME)/.dotfiles/bin/nvim-install
 
 subup: ## Updates git submodules
 	git submodule update --remote --merge

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+paq_path="$XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim"
+
+do_install() {
+  echo ""
+  echo "-> Cloning paq-nvim into $paq_path"
+  echo ""
+
+  git clone --depth=1 https://github.com/savq/paq-nvim.git $paq_path \
+    && nvim -c 'lua require("paq")(require("plugins").list):install()' +qall \
+    && echo "-> completed installing paq-nvim and plugins into $paq_path" \
+    || exit 1
+  }
+
+  if [[ ! -d "$paq_path" ]]; then
+    read -p "[?] Install paq-nvim and plugins (Y/n)? " yn;
+    case $yn in
+      [Yy]* )
+        do_install || exit 1
+        ;;
+      "" )
+        do_install || exit 1
+        ;;
+      [Nn]* )
+        echo "-> skipping paq-nvim install"
+        ;;
+      * )
+        echo "Please answer [y]es or [n]o."
+        echo ""
+        exec $__invocation
+        ;;
+    esac
+  else
+    echo "-> paq-nvim already exists at $paq_path; skipping"
+  fi
