@@ -552,7 +552,7 @@ return lush(function()
     elixirInterpolationDelimiter({ Yellow }),
     elixirSelf({ Purple }),
     elixirPseudoVariable({ Purple }),
-    elixirModuleDefine({ PurpleItalic }),
+    elixirModuleDefine({ Red, gui = "italic,bold" }),
     elixirBlockDefinition({ RedItalic }),
     elixirDefine({ RedItalic }),
     elixirPrivateDefine({ PurpleItalic }),
