@@ -496,7 +496,7 @@ cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 -- [custom mappings] -----------------------------------------------------------
 
 -- Things 3
-nnoremap("<leader>T", "<cmd>!open \"things:///add?show-quick-entry=true&title=%:t&notes=%\"<cr>", { expr = true })
+-- nnoremap("<leader>T", "<cmd>!open \"things:///add?show-quick-entry=true&title=%:t&notes=%\"<cr>", { expr = true })
 
 -- Spelling
 -- map("n", "<leader>s", "z=e") -- Correct current word
@@ -509,9 +509,17 @@ nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 -- # save and execute vim/lua file
 nmap("<leader>x", mega.save_and_exec)
 
--- # open uri under cursor:
-nmap("go", mega.open_uri)
-nnoremap("zS", mega.showCursorHighlights)
+-- # open uri; under cursor:
+nmap("go", mega.open_uri, "open uri under cursor")
+
+-- # show TS and syntax highlights, under cursor
+nnoremap("zS", mega.showCursorHighlights, "show TS/syntax highlights under cursor")
+-- # highlight all usages; under cursor
+nnoremap(
+  "zs",
+  "<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>",
+  "highlight all usages under cursor"
+)
 
 -- [plugin mappings] -----------------------------------------------------------
 
@@ -625,6 +633,7 @@ vmap(
 -- grep
 
 -- # misc
+-- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636
 nnoremap(
   "gx",
   [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]],

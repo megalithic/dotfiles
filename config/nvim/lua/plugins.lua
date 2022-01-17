@@ -80,6 +80,7 @@ M.list = {
     end,
   },
   "nvim-treesitter/playground",
+  "nvim-treesitter/nvim-treesitter-refactor",
   "mfussenegger/nvim-treehopper",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
