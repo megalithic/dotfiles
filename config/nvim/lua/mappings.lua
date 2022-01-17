@@ -598,10 +598,7 @@ nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 -- nmap("<C-t>", "<cmd>NvimTreeToggle<CR>", "nvim-tree: toggle")
 
 -- # dirbuf.nvim
-nmap("<C-t>", "<cmd>Dirbuf<CR>", "filetree: toggle")
-
--- # litee-filetree
--- nmap("<C-t>", "<cmd>LTOpenToFiletree<CR>", "explorer: filetree toggle")
+nmap("<C-t>", "<cmd>vnew|Dirbuf<CR>", "filetree: toggle")
 
 -- # vim-test
 nmap("<leader>tf", "<cmd>TestFile<CR>", "test: file")
