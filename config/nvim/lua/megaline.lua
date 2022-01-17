@@ -135,6 +135,13 @@ end
 
 -- Utilities ------------------------------------------------------------------
 --
+local function printf(format, current, total)
+  if current == 0 and total == 0 then
+    return ""
+  end
+  return fn.printf(format, current, total)
+end
+
 local function get_toggleterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
   return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number"))
@@ -452,6 +459,32 @@ function U.file(ctx, minimal)
   }
 end
 
+function U.search_result()
+  if vim.v.hlsearch == 0 then
+    return ""
+  end
+  local last_search = fn.getreg("/")
+  if not last_search or last_search == "" then
+    return ""
+  end
+  local result = fn.searchcount({ maxcount = 9999 })
+  if vim.tbl_isempty(result) then
+    return ""
+  end
+  -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
+
+  if result.incomplete == 1 then -- timed out
+    return printf("  ?/?? ")
+  elseif result.incomplete == 2 then -- max count exceeded
+    if result.total > result.maxcount and result.current > result.maxcount then
+      return printf("  >%d/>%d ", result.current, result.total)
+    elseif result.total > result.maxcount then
+      return printf("  %d/>%d ", result.current, result.total)
+    end
+  end
+  return printf("  %d/%d ", result.current, result.total)
+end
+
 function U.isnt_normal_buffer()
   -- For more information see ":h buftype"
   return vim.bo.buftype ~= ""
@@ -516,16 +549,6 @@ M.modes = setmetatable({
   end,
 })
 -- stylua: ignore end
-function M.section_prefix(args)
-  -- add({ item_if("▌", not minimal, "StIndicator", { before = "", after = "" }), 0 }, { utils.spacer(1), 0 })
-  -- "זּ"
-  -- "▌"
-  -- "●"
-  -- ""
-  local prefix_item = U.item_if("▌", not M.is_truncated(args.trunc_width), "StIndicator", { before = "", after = "" })
-
-  return fmt("%s", unpack(prefix_item))
-end
 
 --- Section for Vim |mode()|
 ---
@@ -797,37 +820,6 @@ function M.section_location(args)
   })
 end
 
---- Section for current search count
----
---- Show the current status of |searchcount()|. Empty output is returned if
---- window width is lower than `args.trunc_width`, search highlighting is not
---- on (see |v:hlsearch|), or if number of search result is 0.
----
---- `args.options` is forwarded to |searchcount()|.  By default it recomputes
---- data on every call which can be computationally expensive (although still
---- usually same order of magnitude as 0.1 ms). To prevent this, supply
---- `args.options = {recompute = false}`.
----
----@param args table: Section arguments.
----@return string: Section string.
-function M.section_searchcount(args)
-  if vim.v.hlsearch == 0 or M.is_truncated(args.trunc_width) then
-    return ""
-  end
-  local s_count = vim.fn.searchcount((args or {}).options or { recompute = true })
-  if s_count.current == nil or s_count.total == 0 then
-    return ""
-  end
-
-  if s_count.incomplete == 1 then
-    return "?/?"
-  end
-
-  local total_sign = s_count.total > s_count.maxcount and ">" or ""
-  local current_sign = s_count.current > s_count.maxcount and ">" or ""
-  return ("%s%d/%s%d"):format(current_sign, s_count.current, total_sign, s_count.total)
-end
-
 function M.section_indention()
   return unpack(U.item_if(U.ctx.shiftwidth, U.ctx.shiftwidth > 2 or not U.ctx.expandtab, "StTitle", {
     prefix = U.ctx.expandtab and "Ξ" or "⇥",
@@ -844,8 +836,9 @@ end
 -- Default content ------------------------------------------------------------
 function U.statusline_active()
   -- stylua: ignore start
-  local prefix        = M.section_prefix({ trunc_width = 75 })
+  local prefix        = unpack(U.item_if("▌", not M.is_truncated(75), "StIndicator", { before = "", after = "" }))
   local mode, mode_hl = M.section_mode({ trunc_width = 120 })
+  local search        = unpack(U.item(U.search_result(), "StCount"))
   local git           = M.section_git({ trunc_width = 75 })
   local diagnostics   = M.section_diagnostics({ trunc_width = 75 })
   -- FIXME: this doesn't bad things!
@@ -873,6 +866,7 @@ function U.statusline_active()
     { hl = 'StatusLine',              strings = { filename } },
     { hl = 'StModified',              strings = { modified } },
     { hl = 'StReadonly',              strings = { readonly } },
+    { hl = "",                        strings = { search }},
     '%=', -- End left alignment
     -- middle section for whatever we want..
     -- { hl = 'StatusLine',              strings = { gps } },

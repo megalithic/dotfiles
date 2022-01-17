@@ -105,7 +105,7 @@ local style = {
     colors = {
       error = cs.pale_red,
       warn = cs.dark_orange,
-      hint = cs.bright_yellow,
+      hint = cs.blue,
       info = cs.cyan,
     },
     kinds = {
