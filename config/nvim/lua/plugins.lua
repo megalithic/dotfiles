@@ -520,7 +520,7 @@ M.setup = function()
         "css",
         "comment",
         "dockerfile",
-        "elixir",
+        -- "elixir",
         "elm",
         "erlang",
         "fish",
