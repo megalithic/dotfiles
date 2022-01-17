@@ -80,6 +80,7 @@ brew "fasd"
 brew "fd"
 brew "ffind"
 brew "findutils"
+brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
 brew "fx"
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install

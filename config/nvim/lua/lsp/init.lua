@@ -450,7 +450,7 @@ local function setup_lsp_servers()
       handlers = {
         ["tailwindcss/getConfiguration"] = function(_, _, context)
           -- tailwindcss lang server waits for this repsonse before providing hover
-          vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
+          -- vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
         end,
       },
       settings = {

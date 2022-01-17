@@ -180,14 +180,10 @@ local exceptions = {
     ["himalaya-msg-list"] = "",
     mail = "",
     dbui = "",
-    vista = "פּ",
     tsplayground = "侮",
     fugitive = C.icons.git_symbol,
     fugitiveblame = C.icons.git_symbol,
     gitcommit = C.icons.git_symbol,
-    startify = "",
-    defx = "⌨",
-    ctrlsf = "🔍",
     Trouble = "",
     NeogitStatus = "",
     ["vim-plug"] = "⚉",
@@ -210,22 +206,18 @@ local exceptions = {
     minimap = "",
     dbui = "Dadbod UI",
     tsplayground = "Treesitter",
-    vista = "Vista",
     fugitive = "Fugitive",
     fugitiveblame = "Git blame",
     NeogitStatus = "Neogit Status",
     Trouble = "Lsp Trouble",
     gitcommit = "Git commit",
     startify = "Startify",
-    defx = "Defx",
-    ctrlsf = "CtrlSF",
     ["vim-plug"] = "vim plug",
     vimwiki = "vim wiki",
     help = "help",
     fzf = "fzf-lua",
     undotree = "UndoTree",
     octo = "Octo",
-    ["coc-explorer"] = "Coc Explorer",
     NvimTree = "Nvim Tree",
     -- toggleterm = get_toggleterm_name,
     ["dap-repl"] = "Debugger REPL",
@@ -590,7 +582,6 @@ function U.diagnostic_info(ctx)
   ---@return number
   local function get_count(buf, severity)
     local s = vim.diagnostic.severity[severity:upper()]
-
     return #vim.diagnostic.get(buf, { severity = s })
   end
 

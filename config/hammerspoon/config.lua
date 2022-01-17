@@ -264,7 +264,7 @@ M.apps = {
     context = "messages",
     distraction = true,
     rules = {
-      { nil, 2, M.layout.bottomRight40 },
+      { nil, 2, M.layout.leftHalf },
     },
   },
   ["hangouts"] = {
@@ -282,7 +282,7 @@ M.apps = {
     context = "signal",
     distraction = true,
     rules = {
-      { nil, 2, M.layout.bottomRight40 },
+      { nil, 2, M.layout.leftHalf },
     },
   },
   ["com.agilebits.onepassword7"] = {
