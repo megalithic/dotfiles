@@ -85,7 +85,7 @@ M.list = {
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
-  "SmiteshP/nvim-gps",
+  -- "SmiteshP/nvim-gps",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
   -- "primeagen/harpoon",
@@ -520,7 +520,7 @@ M.setup = function()
         "css",
         "comment",
         "dockerfile",
-        -- "elixir",
+        "elixir",
         "elm",
         "erlang",
         "fish",
@@ -2051,12 +2051,14 @@ M.setup = function()
   end
 
   do -- nvim-gps
-    require("nvim-gps").setup({
-      languages = {
-        elixir = false,
-        eelixir = false,
-      },
-    })
+    if false then
+      require("nvim-gps").setup({
+        languages = {
+          elixir = false,
+          eelixir = false,
+        },
+      })
+    end
   end
 
   do -- misc
