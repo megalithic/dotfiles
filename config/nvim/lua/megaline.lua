@@ -518,6 +518,10 @@ M.modes = setmetatable({
 -- stylua: ignore end
 function M.section_prefix(args)
   -- add({ item_if("▌", not minimal, "StIndicator", { before = "", after = "" }), 0 }, { utils.spacer(1), 0 })
+  -- "זּ"
+  -- "▌"
+  -- "●"
+  -- ""
   local prefix_item = U.item_if("▌", not M.is_truncated(args.trunc_width), "StIndicator", { before = "", after = "" })
 
   return fmt("%s", unpack(prefix_item))
