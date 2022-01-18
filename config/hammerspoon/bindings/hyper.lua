@@ -101,6 +101,45 @@ local miscKeyBindings = function(misc)
   end
 end
 
+local hyperGroup = function(key, tag)
+  hyper:bind({}, key, nil, function()
+    hs.application.launchOrFocusByBundleID(hs.settings.get("group." .. tag))
+  end)
+  hyper:bind({ "option" }, key, nil, function()
+    local group = hs.fnutils.filter(Config.apps, function(app)
+      return app.tags and hs.fnutils.contains(app.tags, tag) and app.bundleID ~= hs.settings.get("group." .. tag)
+    end)
+
+    local choices = {}
+    hs.fnutils.each(group, function(app)
+      table.insert(choices, {
+        text = hs.application.nameForBundleID(app.bundleID),
+        image = hs.image.imageFromAppBundle(app.bundleID),
+        bundleID = app.bundleID,
+      })
+    end)
+
+    if #choices == 1 then
+      local app = choices[1]
+
+      hs.notify.new(nil)
+        :title("Switching hyper+" .. key .. " to " .. hs.application.nameForBundleID(app.bundleID))
+        :contentImage(hs.image.imageFromAppBundle(app.bundleID))
+        :send()
+
+      hs.settings.set("group." .. tag, app.bundleID)
+      hs.application.launchOrFocusByBundleID(app.bundleID)
+    else
+      hs.chooser.new(function(app)
+        if app then
+          hs.settings.set("group." .. tag, app.bundleID)
+          hs.application.launchOrFocusByBundleID(app.bundleID)
+        end
+      end):placeholderText("Choose an application for hyper+" .. key .. ":"):choices(choices):show()
+    end
+  end)
+end
+
 module.start = function()
   log.df("starting..")
   hs.hotkey.bind({}, Config.modifiers.hyper, pressed, released)
@@ -121,6 +160,11 @@ module.start = function()
   for _, misc in pairs(Config.utilities) do
     miscKeyBindings(misc)
   end
+
+  -- :: hyper groups
+  -- hyperGroup("m", "personal")
+  -- hyperGroup("j", "browsers")
+  -- hyperGroup("s", "chat")
 
   -- -- :: media (spotify/volume)
   -- for _, m in pairs(Config.media) do

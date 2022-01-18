@@ -125,6 +125,7 @@ M.apps = {
     name = "Brave Browser",
     hyper_key = "j",
     quitGuard = true,
+    tags = { "browsers" },
     rules = {
       { nil, 1, M.layout.fullScreen },
     },
@@ -263,6 +264,7 @@ M.apps = {
     hyper_key = "m",
     context = "messages",
     distraction = true,
+    tags = { "personal" },
     rules = {
       { nil, 2, M.layout.leftHalf },
     },
@@ -281,6 +283,7 @@ M.apps = {
     hyper_key = "w",
     context = "signal",
     distraction = true,
+    tags = { "personal" },
     rules = {
       { nil, 2, M.layout.leftHalf },
     },
