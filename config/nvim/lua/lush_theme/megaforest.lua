@@ -745,9 +745,11 @@ return lush(function()
 
     StMetadata({ Comment, bg = bg1 }),
     StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
-    StIndicator({ bg = bg1, fg = blue }),
+    StIndicator({ fg = C.dark_blue, bg = bg1 }),
     StModified({ fg = C.pale_red, bg = bg1, gui = "bold,italic" }),
-    StGit({ fg = C.light_red, bg = bg1 }),
+    StGitSymbol({ fg = C.light_red, bg = bg1 }),
+    StGitBranch({ fg = C.blue, bg = bg1 }),
+    StGitSigns({ fg = C.dark_blue, bg = bg1 }),
     StGreen({ fg = green, bg = bg1 }),
     StBlue({ fg = C.dark_blue, bg = bg1, gui = "bold" }),
     StNumber({ fg = purple, bg = bg1 }),

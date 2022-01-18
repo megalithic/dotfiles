@@ -101,9 +101,11 @@ function M.build(groups)
     if not s then
       return ""
     end
+
     if type(s) == "string" then
       return s
     end
+
     local t = vim.tbl_filter(function(x)
       return not (x == nil or x == "")
     end, s.strings)
@@ -112,9 +114,11 @@ function M.build(groups)
       return fmt("%%#%s#", s.hl or "")
       -- return fmt("%%#%s#", s.hl or "")
     end
-    return fmt("%%#%s#%s ", s.hl or "", table.concat(t, " "))
+
+    return fmt("%%#%s#%s", s.hl or "", table.concat(t, ""))
     -- return fmt("%%#%s# %s ", s.hl or "", table.concat(t, " "))
   end, groups)
+
   return table.concat(t, "")
 end
 
@@ -232,7 +236,7 @@ local exceptions = {
 }
 
 --- @param hl string
-function U.wrap(hl)
+function U.wrap_hl(hl)
   assert(hl, "A highlight name must be specified")
   return "%#" .. hl .. "#"
 end
@@ -267,7 +271,7 @@ function U.item(component, hl, opts)
   local prefix_size = strwidth(prefix)
 
   local prefix_color = opts.prefix_color or hl
-  prefix = prefix ~= "" and U.wrap(prefix_color) .. prefix .. " " or ""
+  prefix = prefix ~= "" and U.wrap_hl(prefix_color) .. prefix .. " " or ""
 
   --- handle numeric inputs etc.
   if type(component) ~= "string" then
@@ -278,7 +282,7 @@ function U.item(component, hl, opts)
     component = component:sub(1, opts.max_size - 1) .. "…"
   end
 
-  local parts = { before, prefix, U.wrap(hl), component, "%*", after }
+  local parts = { before, prefix, U.wrap_hl(hl), component, "%*", after }
   return { table.concat(parts), #component + #before + #after + prefix_size }
 end
 
@@ -556,12 +560,11 @@ M.modes = setmetatable({
 ---
 ---@param args table: Section arguments.
 ---@return tuple: Section string and mode's highlight group.
-function M.section_mode(args)
+function M.s_mode(args)
   local mode_info = M.modes[vim.fn.mode()]
-
   local mode = M.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
 
-  return string.upper(mode), mode_info.hl
+  return unpack(U.item(string.upper(mode), mode_info.hl, { before = " " }))
 end
 
 --- Section for Git information
@@ -574,7 +577,7 @@ end
 ---
 ---@param args table: Section arguments. Use `args.icon` to supply your own icon.
 ---@return string: Section string.
-function M.section_git(args)
+function M.s_git(args)
   if U.isnt_normal_buffer() then
     return ""
   end
@@ -588,13 +591,18 @@ function M.section_git(args)
       return ""
     end
 
-    return unpack(U.item(head, "StBlue", { prefix = icon, prefix_color = "StGit" }))
+    return unpack(U.item(head, "StGitBranch", { prefix = icon, prefix_color = "StGitSymbol" }))
   end
 
-  return unpack(U.item(fmt("%s %s", head, signs), "StBlue", { prefix = icon, prefix_color = "StGit" }))
+  local branch_str = unpack(
+    U.item(head, "StGitBranch", { before = " ", after = " ", prefix = icon, prefix_color = "StGitSymbol" })
+  )
+  local signs_str = unpack(U.item(signs, "StGitSigns", { before = "", after = " " }))
+
+  return fmt("%s %s", branch_str, signs_str)
 end
 
-function M.section_gps(args)
+function M.s_gps(args)
   local ok, gps = mega.safe_require("nvim-gps")
   if ok and gps and gps.is_available() then
     return require("nvim-gps").get_location()
@@ -634,7 +642,7 @@ end
 ---
 ---@param args table: Section arguments. Use `args.icon` to supply your own icon.
 ---@return string: Section string.
-function M.section_diagnostics(args)
+function M.s_diagnostics(args)
   -- Assumption: there are no attached clients if table
   -- `vim.lsp.buf_get_clients()` is empty
   local no_attached_client = next(vim.lsp.buf_get_clients()) == nil
@@ -660,49 +668,22 @@ function M.section_diagnostics(args)
   return fmt("%s %s", icon, table.concat(t, ""))
 end
 
--- function M.section_diagnostics()
---  item(utils.lsp_status(ctx.bufnum), "StMetadata"),
---   item_if(diagnostics.error.count, diagnostics.error, "StError", {
---     prefix = diagnostics.error.sign,
---   }),
---   item_if(diagnostics.warning.count, diagnostics.warning, "StWarning", {
---     prefix = diagnostics.warning.sign,
---   }),
---   item_if(diagnostics.info.count, diagnostics.info, "StInfo", {
---     prefix = diagnostics.info.sign,
---   }),
---   item_if(diagnostics.hint.count, diagnostics.hint, "StHint", {
---     prefix = diagnostics.hint.sign,
---   }),
--- end
-
-function M.section_modified(args)
-  local ctx = U.ctx
-  -- local minimal = M.is_truncated(args.trunc_width)
-  if ctx.filetype == "help" then
+function M.s_modified(args)
+  local minimal = M.is_truncated(args.trunc_width)
+  if U.ctx.filetype == "help" then
     return ""
   end
-  return unpack(U.item(U.modified(ctx), "StModified"))
+  return unpack(U.item_if(U.modified(U.ctx), minimal, "StModified"))
 end
 
-function M.section_readonly(args)
-  local ctx = U.ctx
+function M.s_readonly(args)
   local minimal = M.is_truncated(args.trunc_width)
-  -- return unpack(U.item_if(U.readonly(ctx), "StError"))
-  return unpack(U.item_if(U.readonly(ctx), minimal, "StReadonly"))
+  return unpack(U.item_if(U.readonly(U.ctx), minimal, "StReadonly"))
 end
-
--- { item_if(file_modified, ctx.modified, "StModified"), 1 },
 
 --- Section for file name
----
---- Show full file name or relative in short output.
----
---- Short output is returned if window width is lower than `args.trunc_width`.
----
----@param args table: Section arguments.
----@return string: Section string.
-function M.section_filename(args)
+--- Displays in smart short format with differing segment fg/gui
+function M.s_filename(args)
   local ctx = U.ctx
   local minimal = M.is_truncated(args.trunc_width)
   local segments = U.file(ctx, minimal)
@@ -711,35 +692,15 @@ function M.section_filename(args)
   local parent_item = U.item(parent.item, parent.hl, parent.opts)
   local file_hl = ctx.modified and "StModified" or file.hl
   local file_item = U.item(file.item, file_hl, file.opts)
-  local readonly_item = U.item(U.readonly(ctx), "StError")
 
   return fmt("%s%s%s", unpack(dir_item), unpack(parent_item), unpack(file_item))
-
-  -- -- In terminal always use plain name
-  -- if vim.bo.buftype == "terminal" then
-  --   return "%t"
-  -- elseif M.is_truncated(args.trunc_width) then
-  --   -- File name with 'truncate', 'modified', 'readonly' flags
-  --   -- Use relative path if truncated
-  --   return "%f%m%r"
-  -- else
-  --   -- Use fullpath if not truncated
-  --   return "%F%m%r"
-  -- end
 end
 
 --- Section for file information
----
---- Short output contains only extension and is returned if window width is
---- lower than `args.trunc_width`.
----
----@param args table: Section arguments.
----@return string: Section string.
-function M.section_fileinfo(args)
+function M.s_fileinfo(args)
   local ft = vim.bo.filetype
+  local minimal = M.is_truncated(args.trunc_width)
 
-  -- Don't show anything if can't detect file type or not inside a "normal
-  -- buffer"
   if (ft == "") or U.isnt_normal_buffer() then
     return ""
   end
@@ -751,7 +712,7 @@ function M.section_fileinfo(args)
   end
 
   -- Construct output string if truncated
-  if M.is_truncated(args.trunc_width) then
+  if minimal then
     return ft
   end
 
@@ -773,7 +734,8 @@ end
 ---
 ---@param args table: Section arguments.
 ---@return string: Section string.
-function M.section_location(args)
+function M.s_lineinfo(args)
+  local minimal = M.is_truncated(args.trunc_width)
   local opts = {
     prefix = "ℓ",
     prefix_color = "StMetadataPrefix",
@@ -792,35 +754,34 @@ function M.section_location(args)
 
   local current_line = "%l"
   local last_line = "%L"
-  local current_col = "%v" -- can pad with `%<pad_n>v`
+  local current_col = "%v" -- pad with `%<pad_n>v`, e.g. `%2v`
   -- local last_col = "%-2{col(\"$\") - 1}"
-
   -- local length = strwidth(prefix .. current .. col .. sep .. last)
 
   -- Use virtual column number to allow update when paste last column
-  if M.is_truncated(args.trunc_width) then
+  if minimal then
     return "%l│%2v"
   end
 
   return table.concat({
     " ",
-    U.wrap(prefix_color),
+    U.wrap_hl(prefix_color),
     prefix,
     " ",
-    U.wrap(current_hl),
+    U.wrap_hl(current_hl),
     current_line,
-    U.wrap(sep_hl),
+    U.wrap_hl(sep_hl),
     sep,
-    U.wrap(total_hl),
+    U.wrap_hl(total_hl),
     last_line,
-    U.wrap(col_hl),
+    U.wrap_hl(col_hl),
     ":",
     current_col,
     " ",
   })
 end
 
-function M.section_indention()
+function M.s_indention()
   return unpack(U.item_if(U.ctx.shiftwidth, U.ctx.shiftwidth > 2 or not U.ctx.expandtab, "StTitle", {
     prefix = U.ctx.expandtab and "Ξ" or "⇥",
     prefix_color = "StatusLine",
@@ -837,64 +798,47 @@ end
 function U.statusline_active()
   -- stylua: ignore start
   local prefix        = unpack(U.item_if("▌", not M.is_truncated(75), "StIndicator", { before = "", after = "" }))
-  local mode, mode_hl = M.section_mode({ trunc_width = 120 })
+  local mode          = M.s_mode({ trunc_width = 120 })
   local search        = unpack(U.item(U.search_result(), "StCount"))
-  local git           = M.section_git({ trunc_width = 75 })
-  local diagnostics   = M.section_diagnostics({ trunc_width = 75 })
-  -- FIXME: this doesn't bad things!
-  -- local gps           = M.section_gps({ trunc_width = 75 })
+  local git           = M.s_git({ trunc_width = 75 })
   local diags         = U.diagnostic_info()
-  local readonly      = M.section_readonly({ trunc_width = 75 })
-  local modified      = M.section_modified({ trunc_width = 140 })
-  local filename      = M.section_filename({ trunc_width = 140 })
-  -- local fileinfo      = M.section_fileinfo({ trunc_width = 120 })
-  local location      = M.section_location({ trunc_width = 75 })
-  local indention   = M.section_indention()
-
-  local diag_error =  unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
-  local diag_warn =  unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
-  local diag_info =  unpack(U.item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
-  local diag_hint =  unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
+  local readonly      = M.s_readonly({ trunc_width = 75 })
+  -- local readonly      = unpack(U.item(U.readonly(ctx), "StError"))
+  local modified      = M.s_modified({ trunc_width = 140 })
+  local filename      = M.s_filename({ trunc_width = 140 })
+  -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
+  local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
+  local indention     = M.s_indention()
+  local diag_error    = unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
+  local diag_warn     = unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
+  local diag_info     = unpack(U.item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
+  local diag_hint     = unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
 
   -- Usage of `M.build()` ensures highlighting and
   -- correct padding with spaces between groups (accounts for 'missing'
   -- sections, etc.)
   return M.build({
-    { hl = mode_hl,                   strings = { prefix } },
-    { hl = mode_hl,                   strings = { mode } },
+    prefix,
+    mode,
     '%<', -- Mark general truncate point
-    { hl = 'StatusLine',              strings = { filename } },
-    { hl = 'StModified',              strings = { modified } },
-    { hl = 'StReadonly',              strings = { readonly } },
-    { hl = "",                        strings = { search }},
+    filename,
+    modified,
+    readonly,
+    search,
     '%=', -- End left alignment
     -- middle section for whatever we want..
-    -- { hl = 'StatusLine',              strings = { gps } },
     '%=',
     { hl = 'Statusline', strings = { diag_error, diag_warn, diag_info, diag_hint }},
-    -- { hl = 'StatusLine',              strings = { diagnostics } },
-    { hl = 'StatusLine',              strings = { git } },
-    -- { hl = 'StatusLine',              strings = { fileinfo } },
-    { hl = mode_hl,                   strings = { location } },
-    { hl = mode_hl,                   strings = { indention } },
+    git,
+    lineinfo,
+    indention,
   })
   -- stylua: ignore end
 end
 
 function U.statusline_inactive()
   -- stylua: ignore start
-  -- local mode, mode_hl = M.section_mode({ trunc_width = 120 })
-  -- local readonly      = M.section_readonly({ trunc_width = 75 })
-  -- local modified      = M.section_modified({ trunc_width = 140 })
-  -- local filename      = M.section_filename({ trunc_width = 140 })
-
   return "%#StInactive#%F%="
-  -- return M.build({
-  --   { hl = 'StInactive',              strings = { filename } },
-  --   { hl = 'StInactive',              strings = { modified } },
-  --   { hl = 'StInactive',              strings = { readonly } },
-  --   '%=', -- End left alignment
-  -- })
 end
 
 -- if minimal then
