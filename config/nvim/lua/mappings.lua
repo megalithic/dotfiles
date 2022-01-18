@@ -22,7 +22,7 @@
 -- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
-local cmd = vim.cmd
+local vcmd = vim.cmd
 local map = mega.map
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns
 local exec = mega.exec
@@ -449,7 +449,7 @@ nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'
 nnoremap("j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
 
 -- Clear highlights
-cmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
+vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
 
 -- Fast previous buffer switching
 nnoremap("<leader><leader>", "<C-^>")
@@ -599,6 +599,7 @@ nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 
 -- # dirbuf.nvim
 nmap("<C-t>", "<cmd>vnew|Dirbuf<CR>", "filetree: toggle")
+nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ft
 
 -- # vim-test
 nmap("<leader>tf", "<cmd>TestFile<CR>", "test: file")

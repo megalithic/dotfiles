@@ -554,12 +554,6 @@ M.modes = setmetatable({
 })
 -- stylua: ignore end
 
---- Section for Vim |mode()|
----
---- Short output is returned if window width is lower than `args.trunc_width`.
----
----@param args table: Section arguments.
----@return tuple: Section string and mode's highlight group.
 function M.s_mode(args)
   local mode_info = M.modes[vim.fn.mode()]
   local mode = M.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
@@ -567,16 +561,6 @@ function M.s_mode(args)
   return unpack(U.item(string.upper(mode), mode_info.hl, { before = " " }))
 end
 
---- Section for Git information
----
---- Normal output contains name of `HEAD` (via |b:gitsigns_head|) and chunk
---- information (via |b:gitsigns_status|). Short output - only name of `HEAD`.
---- Note: requires 'lewis6991/gitsigns' plugin.
----
---- Short output is returned if window width is lower than `args.trunc_width`.
----
----@param args table: Section arguments. Use `args.icon` to supply your own icon.
----@return string: Section string.
 function M.s_git(args)
   if U.isnt_normal_buffer() then
     return ""
@@ -799,7 +783,7 @@ function U.statusline_active()
   -- stylua: ignore start
   local prefix        = unpack(U.item_if("▌", not M.is_truncated(75), "StIndicator", { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
-  local search        = unpack(U.item(U.search_result(), "StCount"))
+  local search        = unpack(U.item(U.search_result(), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 75 })
   local diags         = U.diagnostic_info()
   local readonly      = M.s_readonly({ trunc_width = 75 })
@@ -813,31 +797,31 @@ function U.statusline_active()
   local diag_warn     = unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
   local diag_info     = unpack(U.item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
   local diag_hint     = unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
-
+  -- local status        = require("lsp.lsp_status").init()
+  -- stylua: ignore end
+  --
   -- Usage of `M.build()` ensures highlighting and
   -- correct padding with spaces between groups (accounts for 'missing'
   -- sections, etc.)
   return M.build({
     prefix,
     mode,
-    '%<', -- Mark general truncate point
+    "%<", -- Mark general truncate point
     filename,
     modified,
     readonly,
     search,
-    '%=', -- End left alignment
+    "%=", -- End left alignment
     -- middle section for whatever we want..
-    '%=',
-    { hl = 'Statusline', strings = { diag_error, diag_warn, diag_info, diag_hint }},
+    "%=",
+    { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,
     indention,
   })
-  -- stylua: ignore end
 end
 
 function U.statusline_inactive()
-  -- stylua: ignore start
   return "%#StInactive#%F%="
 end
 
