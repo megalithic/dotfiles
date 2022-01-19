@@ -11,6 +11,7 @@ local M = {}
 
 function movewindows:entered()
   log.i("-> entered snap modal..")
+
   -- hs.window.highlight.start()
   alertUuids = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()
@@ -89,6 +90,7 @@ M.start = function()
 
   hyper:bind({}, "l", nil, function()
     movewindows:enter()
+
     -- set a timeout to kill our modal in case no follow-on keys are pressed
     -- hs.timer.doAfter(
     --   2,

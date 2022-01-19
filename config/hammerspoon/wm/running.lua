@@ -198,7 +198,8 @@ M._watchApp = function(app, force)
         M._updateAppWindows(app, ax)
         M.triggerChange(app, win, M.events.focused)
       elseif notif == "AXResized" or notif == "AXMoved" then
-        M.triggerChange(app, win, M.events.framed)
+        -- PreventLayoutChange = true
+        -- M.triggerChange(app, win, M.events.framed)
       end
     end)
     w:start()
@@ -258,7 +259,9 @@ M._appWatcher = appw.new(function(appName, event, app)
     return
   end
 
-  if event == appw.launched or event == appw.activated or TriggerChangeForced then
+  -- TODO: add window filtering capability to skip triggerChange; sometimes
+  -- I want to be able to resize splits and not have it automatically resize.
+  if event == appw.launched or event == appw.activated and not PreventLayoutChange then
     local win = app:focusedWindow() or app:mainWindow()
     M.triggerChange(app, win, M.events.launched)
   end

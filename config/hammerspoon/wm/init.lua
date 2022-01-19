@@ -139,8 +139,6 @@ M.prepare = function()
       end
     end
   end
-
-  TriggerChangeForced = false
 end
 
 M.prepare_app = function(app_name)
@@ -151,22 +149,21 @@ end
 -- initialize watchers
 M.start = function()
   log.f("starting..")
+  PreventLayoutChange = false
 
   -- monitor all window/app events
   running.start()
-  TriggerChangeForced = true
 
   -- watch for docking status changes..
   cache.dock_watcher = hs.watchable.watch("status.isDocked", function(_, _, _, old, new) -- watcher, path, key, old, new
     log.f("___ preparing app layouts and contexts..")
-    TriggerChangeForced = true
     M.prepare()
   end)
 end
 
 M.stop = function()
   log.f("stopping..")
-  TriggerChangeForced = false
+  PreventLayoutChange = false
 
   -- if cache.new_app_watcher then
   --   cache.new_app_watcher:stop()
