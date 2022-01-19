@@ -130,6 +130,30 @@ M.apps = {
       { nil, 1, M.layout.fullScreen },
     },
   },
+  ["org.mozilla.firefoxdeveloperedition"] = {
+    bundleID = "org.mozilla.firefoxdeveloperedition",
+    name = "Firefox Developer Edition",
+    tags = { "browsers" },
+    rules = {
+      { nil, 1, M.layout.fullScreen },
+    },
+  },
+  ["com.apple.Safari"] = {
+    bundleID = "com.apple.Safari",
+    name = "Safari",
+    tags = { "browsers" },
+    rules = {
+      { nil, 1, M.layout.fullScreen },
+    },
+  },
+  ["com.microsoft.edgemac"] = {
+    bundleID = "com.microsoft.edgemac",
+    name = "Microsoft Edge",
+    tags = { "browsers" },
+    rules = {
+      { nil, 1, M.layout.fullScreen },
+    },
+  },
   ["com.insomnia.app"] = {
     bundleID = "com.insomnia.app",
     name = "Insomnia",

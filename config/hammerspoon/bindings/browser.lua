@@ -81,7 +81,7 @@ end
 --     }
 --   })();
 --   ]])
-- end
+-- end
 
 M.snip = function()
   local app_name = Config.preferred.browsers[1]
