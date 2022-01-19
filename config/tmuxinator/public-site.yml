@@ -7,22 +7,22 @@ on_project_start: gohome && dowork
 tmux_options: -2
 windows:
   - chats:
-    - tmux link-window -s mega:chats -t 0 && exit
+      - tmux link-window -s mega:chats -t 0 && exit
   - code:
       layout: main-vertical
       panes:
         - code:
-          # - ssh seth-dev
-          - cd ~/code/public-site
+            # - ssh seth-dev
+            - cd ~/code/outstand/public-site
           # - eval $(desk load); nvim
   - services:
       layout: even-horizontal
       panes:
         - logs:
             # - ssh seth-dev
-            - cd ~/code/public-site
+            - cd ~/code/outstand/public-site
             # - eval $(desk load)
         - repl:
             # - ssh seth-dev
-            - cd ~/code/public-site
+            - cd ~/code/outstand/public-site
             # - eval $(desk load);
