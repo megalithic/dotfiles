@@ -23,6 +23,7 @@
     brewfile:
       stdout: true
       stderr: true
+      stdin: true
       include: ["tap", "brew", "cask", "mas"]
 
 - create:
@@ -151,8 +152,6 @@
 #     - dlvhdr/gh-prs
 - brewfile:
     file: brew/Brewfile
-    stdout: true
-    stderr: true
 
 - asdf:
     - plugin: elm
