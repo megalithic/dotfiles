@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+
 set -euo pipefail
 
 # -- set some useful vars for executable info:
@@ -10,35 +12,36 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-pushd "$XDG_DATA_HOME/src" && echo "-> cd ~/.local/share/src successful";
+pushd "$XDG_DATA_HOME/src" && log_ok "cd ~/.local/share/src successful";
 
 update() {
-  cd "$XDG_DATA_HOME/src/neovim" && echo "-> cd neovim successful";
-  git checkout master && echo "-> git checkout master successful";
-  git fetch && echo "-> git fetch successful";
+  cd "$XDG_DATA_HOME/src/neovim" && log_ok "cd neovim successful";
+  git checkout master && log_ok "git checkout master successful";
+  git fetch && log_ok "git fetch successful";
+  git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /';
 }
 
 clone() {
   if [[ ! -d "$XDG_DATA_HOME/src/neovim" ]]; then
-    git clone git@github.com:neovim/neovim.git && echo "-> git clone neovim successful";
-    cd neovim && echo "-> cd neovim successful";
+    git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful";
+    cd neovim && log_ok "cd neovim successful";
     # do it all and then exit cleanly...
     update && build && popd && exit 0;
   fi
 }
 
 do_build() {
-  git up && echo "-> git up successful";
-  sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && echo "-> remove .deps successful" || exit 1;
-  make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && echo "-> make successful";
-  sudo make install || exit 1 && echo "-> make install successful";
+  git up && log_ok "git up successful";
+  sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1;
+  make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful";
+  sudo make install || exit 1 && log_ok "make install successful";
 }
 
 build() {
   if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
-    echo "-> neovim already up to date on origin/master; skipping."
+    log_warn "neovim already up to date on origin/master; skipping."
   else
-    read -p "[?] Build neovim from source (Y/n)? " yn
+    read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn;
     case $yn in
       [Yy]* )
         do_build || exit 1
@@ -47,11 +50,10 @@ build() {
         do_build || exit 1 # default
         ;;
       [Nn]* )
-        echo "-> skipping neovim install"
+        log_warn "opted out of neovim install"
         ;;
       * )
-        echo "Please answer [y]es or [n]o."
-        echo ""
+        log_warn "please answer [y]es or [n]o."
         exec $__invocation
         ;;
     esac

@@ -19,39 +19,4 @@ ZDOTDIR=$XDG_CONFIG_HOME/zsh
 #   source "${ZDOTDIR:-$HOME}/.zprofile"
 # fi
 
-# REF: https://gist.github.com/junegunn/f4fca918e937e6bf5bad#gistcomment-3484821
-function valid() {
-	local cmd="${@:-}"
-	$cmd >&/dev/null
-
-	# REF: https://access.redhat.com/solutions/196563
-	if [[ $? -eq 128 ]]; then
-		return
-	fi
-}
-
-function has() {
-	type "$1" &>/dev/null
-}
-
-function log_raw {
-	printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
-}
-
-function log {
-	printf '%s%s\n%s' $(tput setaf 4) "-> $*" $(tput sgr 0)
-}
-
-function log_ok {
-	printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "-> [✓] $*" $(tput sgr 0)
-}
-
-function log_warn {
-	printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "-> [!] $*" $(tput sgr 0)
-}
-
-function log_error {
-	printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "-> [x] $*" $(tput sgr 0)
-}
-
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

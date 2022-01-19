@@ -14,44 +14,6 @@
 ## This runs once when the system starts (at login)
 ## To reload: "exec zsh --login"
 
-# FIXME: this continues to _break_ things when sourced:
-# source "$ZDOTDIR/lib/helpers.zsh"
-
-# REF: https://gist.github.com/junegunn/f4fca918e937e6bf5bad#gistcomment-3484821
-function valid() {
-	local cmd="${@:-}"
-	$cmd >&/dev/null
-
-	# REF: https://access.redhat.com/solutions/196563
-	if [[ $? -eq 128 ]]; then
-		return
-	fi
-}
-
-function has() {
-	type "$1" &>/dev/null
-}
-
-function log_raw {
-	printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
-}
-
-function log {
-	printf '%s%s\n%s' $(tput setaf 4) "-> $*" $(tput sgr 0)
-}
-
-function log_ok {
-	printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "-> [✓] $*" $(tput sgr 0)
-}
-
-function log_warn {
-	printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "-> [!] $*" $(tput sgr 0)
-}
-
-function log_error {
-	printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "-> [x] $*" $(tput sgr 0)
-}
-
 function detect_platform {
 	if [[ -z $PLATFORM ]]; then
 		platform="unknown"

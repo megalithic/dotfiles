@@ -1,16 +1,20 @@
-# hf [[ "$PLATFORM" == "linux" ]]; then
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+#
+# -- make helpers available to all the frens:
+[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+#
+# -- term
+export TERM=${TERM:=xterm-kitty}
+export TERM_ITALICS="TRUE"
+export COLORTERM=${COLORTERM:=truecolor}
+# if [[ "$PLATFORM" == "linux" ]]; then
 #     export TERMINAL="kitty --single-instance --listen-on unix:/tmp/mykitty -o allow_remote_control=yes"
 # else
 #     export TERMINAL="kitty"
 # fi
-
 #
-# term
-export TERM=${TERM:=xterm-kitty}
-export COLORTERM=${COLORTERM:=truecolor}
-
-#
-# editors
+# -- editors
 export EDITOR="nvim"
 export VISUAL="$EDITOR"
 export SUDO_EDITOR="$EDITOR"
@@ -20,17 +24,16 @@ export PAGER="less"
 export MANPAGER="$EDITOR -c Man!"
 export MANWIDTH=999
 export LESS="-F -g -i -M -R -S -w -X -z-4"
-
 #
-# lang
+# -- lang
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export TZ="/usr/share/zoneinfo/US/Central"
-
 #
-# dir locatons
+# -- directories/locations
 export XDG_CONFIG_HOME  # we've set this .zshenv
+export ZDOTDIR          # we've set this .zshenv
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
 export DOTS="$HOME/.dotfiles"
@@ -44,6 +47,8 @@ export PROJECTS="$HOME/code"
 export WORKSPACE="$HOME/code"
 export LINODES="$HOME/code/linodes"
 export GIT_REPO_DIR="$PROJECTS"
+# export TERMINFO="$HOME/.terminfo"
+# export _Z_DATA="$HOME/.z-history"
 #
 # -- qmk
 export QMK_HOME="$HOME/code/qmk_firmware"
@@ -63,24 +68,18 @@ export ASDF_BIN="$ASDF_SHIMS"
 export ASDF_INSTALLS="$ASDF_DIR/installs"
 # [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh" && echo "from env.zsh -- sourced $ZDOTDIR/lib/asdf.zsh.."
 # export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
-
 #
 # -- rg
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/rc"
 #
 # -- weechat
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
-
-# export TERMINFO="$HOME/.terminfo"
-# export _Z_DATA="$HOME/.z-history"
-
 # -- bat
 #
 if ! type "$bat" > /dev/null; then
   export BAT_THEME="Forest%20Night%20Italic"
   export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat"
 fi
-
 # -- zsh plugins
 # export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89"
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"
@@ -88,11 +87,9 @@ export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
 export ZSH_AUTOSUGGEST_USE_ASYNC=true
-
 export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
 export _ZO_ECHO=1
 
-export TERM_ITALICS="TRUE"
 
 # HT: https://github.com/nicknisi/dotfiles/blob/master/zsh/zprofile.symlink
 # if [[ -f /opt/homebrew/bin/brew ]]; then

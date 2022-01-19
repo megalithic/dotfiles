@@ -111,14 +111,14 @@ brew "lazygit"
 brew "llvm" if OS.mac? # contains c-lang lsp (the preferred one?)
 brew "lnav"
 brew "lsd"
-brew "luajit", args: ["HEAD"]
+brew "luajit", args: ["HEAD"] if OS.mac?
 brew "luarocks"
 brew "lua-language-server"
 brew "luv"
 brew "mas" if OS.mac?
 brew "mkcert"
 brew "moreutils"
-brew "mosh", args: ["HEAD"]
+brew "mosh", args: ["HEAD"] if OS.mac?
 brew "mutagen"
 brew "mycli"
 brew "mysql"
@@ -173,7 +173,6 @@ brew "viu"
 brew "weechat" if OS.mac?
 brew "wget"
 brew "wifi-password" if OS.mac?
-brew "wxmac" # for erlang
 brew "wxwidgets" # for erlang
 brew "yubico-piv-tool" if OS.mac?
 brew "libyubikey" if OS.mac?
