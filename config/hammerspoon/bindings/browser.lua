@@ -51,6 +51,38 @@ M.killTabsByDomain = function(domain)
   ]])
 end
 
+-- M.jump = function(url)
+--   hs.osascript.javascript([[
+--   (function() {
+--     var brave = Application('Brave');
+--     brave.activate();
+--     for (win of brave.windows()) {
+--       var tabIndex =
+--         win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
+--       if (tabIndex != -1) {
+--         win.activeTabIndex = (tabIndex + 1);
+--         win.index = 1;
+--       }
+--     }
+--   })();
+--   ]])
+-- end
+
+-- module.killTabsByDomain = function(domain)
+--   hs.osascript.javascript([[
+--   (function() {
+--     var brave = Application('Brave');
+--     for (win of brave.windows()) {
+--       for (tab of win.tabs()) {
+--         if (tab.url().match(/]] .. string.gsub(domain, "/", "\\/") .. [[/)) {
+--           tab.close()
+--         }
+--       }
+--     }
+--   })();
+--   ]])
+- end
+
 M.snip = function()
   local app_name = Config.preferred.browsers[1]
   log.wf("snipping with %s", app_name)

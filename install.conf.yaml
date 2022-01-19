@@ -212,6 +212,7 @@
       command: >-
         make -C ~/.dotfiles elixirls && echo "-> elixir-ls installed successfully";
 
+    - [asdf reshim, Reshimming asdf binaries]
     - [~/.dotfiles/bin/gh-login, GitHub Authentication]
     # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries

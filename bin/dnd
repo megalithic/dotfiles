@@ -7,6 +7,8 @@ set -euo pipefail
 #
 # CLI tool to control macOS/notification center do-not-disturb (DND) mode
 # REQUIRES: `brew install "vitorgalvao/tiny-scripts/calm-notifications"`
+# REF: https://github.com/vitorgalvao/tiny-scripts/blob/master/calm-notifications
+# OLD VERSION: https://github.com/megalithic/dotfiles_bak/blob/b1f03a255678d91b39e87419b44ccf28a4ceb17f/bin/dnd
 #
 
 command=""

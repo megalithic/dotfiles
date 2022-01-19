@@ -258,7 +258,7 @@ M._appWatcher = appw.new(function(appName, event, app)
     return
   end
 
-  if event == appw.launched or TriggerChangeForced then
+  if event == appw.launched or event == appw.activated or TriggerChangeForced then
     local win = app:focusedWindow() or app:mainWindow()
     M.triggerChange(app, win, M.events.launched)
   end
@@ -267,7 +267,7 @@ M._appWatcher = appw.new(function(appName, event, app)
     M._watchApp(app)
   end
 
-  if event == appw.activated or TriggerChangeForced then
+  if event == appw.activated then
     local win = app:focusedWindow()
     if win ~= nil then
       M.triggerChange(app, win, M.events.focused)

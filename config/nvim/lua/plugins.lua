@@ -671,6 +671,7 @@ M.setup = function()
       filetype_exclude = {
         "startify",
         "dashboard",
+        "bufdir",
         "alpha",
         "log",
         "fugitive",
@@ -1415,6 +1416,7 @@ M.setup = function()
         -- history = {
         --   path = fn.stdpath("data") .. "/telescope_history.sqlite3",
         -- },
+        dynamic_preview_title = true,
         vimgrep_arguments = {
           "rg",
           "--hidden",
@@ -1954,6 +1956,13 @@ M.setup = function()
     require("dirbuf").setup({
       hash_padding = 2,
       show_hidden = true,
+      fstate_compare = function(l, r)
+        if l.ftype ~= r.ftype then
+          return l.ftype < r.ftype
+        else
+          return l.fname:lower() < r.fname:lower()
+        end
+      end,
     })
   end
 

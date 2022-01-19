@@ -234,7 +234,7 @@ alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v exten
 alias bravekill="ps ux | grep '[B]rave Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
 alias die='pkill -9 -f'
 alias port='lsof -i :'
-alias sz="source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile && \reset"
+alias sz="source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile" # && \reset"
 alias zz=z
 alias cls="clr && ls"
 alias get="curl -OL"

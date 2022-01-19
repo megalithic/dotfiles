@@ -61,6 +61,7 @@ export ASDF_DIR="$HOME/.asdf"
 export ASDF_SHIMS="$ASDF_DIR/shims"
 export ASDF_BIN="$ASDF_SHIMS"
 export ASDF_INSTALLS="$ASDF_DIR/installs"
+# [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh" && echo "from env.zsh -- sourced $ZDOTDIR/lib/asdf.zsh.."
 # export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 
 #
