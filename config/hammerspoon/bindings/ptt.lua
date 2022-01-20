@@ -40,6 +40,7 @@ end
 
 local showState = function()
   local device = hs.audiodevice.defaultInputDevice()
+  log.df("device to handle: %s", device)
 
   -- starting point:
   local muted = false

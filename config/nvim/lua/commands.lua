@@ -1,6 +1,7 @@
 local command = mega.command
+local vcmd = vim.cmd
 
-vim.cmd([[
+vcmd([[
 command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
 ]])
 
@@ -24,7 +25,7 @@ command({
   [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e]],
 })
 
-vim.cmd([[
+vcmd([[
 function! Syn()
   for id in synstack(line("."), col("."))
     echo synIDattr(id, "name")
@@ -32,3 +33,6 @@ function! Syn()
 endfunction
 command! -nargs=0 Syn call Syn()
 ]])
+
+-- map :W to :w (helps which-key issue)
+vcmd([[ command! W  execute ':w' ]])

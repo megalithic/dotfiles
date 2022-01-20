@@ -278,7 +278,6 @@ local function on_attach(client, bufnr)
         [",s"] = { "select" },
         A = "code actions (range)",
         D = "diagnostics (project)",
-        S = "symbols (project)",
         a = "code actions (cursor)",
         c = "clear diagnostics",
         d = "diagnostics (buffer)",
@@ -297,34 +296,33 @@ local function on_attach(client, bufnr)
         p = "peek definition",
         r = "rename",
         n = "rename",
-        s = "symbols (buffer)",
+        s = {
+          [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>]],
+          "symbols (buffer/document)",
+          buffer = bufnr,
+        },
+        s = {
+          [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
+          "symbols (workspace)",
+        },
       },
     },
     ["g"] = {
+      ["d"] = { [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]], "LSP definitions", buffer = bufnr },
       ["D"] = {
         [[<cmd>lua require('telescope.builtin').lsp_type_definitions()<cr>]],
         "LSP type definitions",
         buffer = bufnr,
       },
-      ["d"] = { [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]], "LSP definitions", buffer = bufnr },
-      ["S"] = {
-        [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>]],
-        "LSP document symbols",
-        buffer = bufnr,
-      },
-      ["a"] = { [[<cmd>lua require('telescope.builtin').lsp_code_actions()<cr>]], "LSP document symbols", buffer = bufnr },
-      ["SS"] = {
-        [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
-        "LSP workspace symbols",
-        buffer = bufnr,
-      },
+      ["a"] = { [[<cmd>lua require('telescope.builtin').lsp_code_actions()<cr>]], "LSP code actions", buffer = bufnr },
       ["i"] = {
         [[<cmd>lua require('telescope.builtin').lsp_implementations()<cr>]],
         "LSP implementations",
         buffer = bufnr,
       },
       ["r"] = { [[<cmd>lua require('telescope.builtin').lsp_references()<cr>]], "LSP references", buffer = bufnr },
-      ["n"] = { [[<cmd>lua require('utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
+      -- ["n"] = { [[<cmd>lua require('utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
+      ["l"] = { [[<cmd>lua require('utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
     },
   }
 
@@ -612,8 +610,6 @@ local function setup_lsp_servers()
             },
           },
           workspace = {
-            preloadFileSize = 500,
-            maxPreload = 500,
             library = vim.api.nvim_get_runtime_file("", true),
           },
           telemetry = {

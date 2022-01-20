@@ -772,6 +772,25 @@ function M.s_indention()
   }))
 end
 
+function M.s_lsp_status()
+  local ok, lsp_status = mega.safe_require("lsp-status")
+  if ok and lsp_status then
+    lsp_status.register_progress()
+    lsp_status.config({
+      indicator_errors = C.icons.lsp.error,
+      indicator_warnings = C.icons.lsp.warn,
+      indicator_info = C.icons.lsp.info,
+      indicator_hint = C.icons.lsp.hint,
+      -- status_symbol = C.icons.lsp.ok,
+    })
+
+    if #vim.lsp.buf_get_clients() > 0 then
+      return unpack(U.item(lsp_status.status_progress(), "StMetadata"))
+    end
+  end
+  return ""
+end
+
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 function U.is_disabled()
@@ -785,24 +804,20 @@ function U.statusline_active()
   local mode          = M.s_mode({ trunc_width = 120 })
   local search        = unpack(U.item(U.search_result(), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 75 })
-  local diags         = U.diagnostic_info()
   local readonly      = M.s_readonly({ trunc_width = 75 })
-  -- local readonly      = unpack(U.item(U.readonly(ctx), "StError"))
   local modified      = M.s_modified({ trunc_width = 140 })
   local filename      = M.s_filename({ trunc_width = 140 })
   -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
   local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
   local indention     = M.s_indention()
+  local lsp_status    = M.s_lsp_status()
+  local diags         = U.diagnostic_info()
   local diag_error    = unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
   local diag_warn     = unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
   local diag_info     = unpack(U.item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
   local diag_hint     = unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
-  -- local status        = require("lsp.lsp_status").init()
   -- stylua: ignore end
-  --
-  -- Usage of `M.build()` ensures highlighting and
-  -- correct padding with spaces between groups (accounts for 'missing'
-  -- sections, etc.)
+
   return M.build({
     prefix,
     mode,
@@ -814,6 +829,7 @@ function U.statusline_active()
     "%=", -- End left alignment
     -- middle section for whatever we want..
     "%=",
+    lsp_status,
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,
@@ -824,16 +840,5 @@ end
 function U.statusline_inactive()
   return "%#StInactive#%F%="
 end
-
--- if minimal then
---   add(
---     { item_if(file_modified, ctx.modified, "StModified"), 1 },
---     { readonly_item, 1 },
---     { dir_item, 3 },
---     { parent_item, 2 },
---     { file_item, 0 }
---   )
---   return display(statusline, available_space)
--- end
 
 return M
