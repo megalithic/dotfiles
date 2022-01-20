@@ -13,3 +13,6 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   EnforcedStyle: comma
 
+Style/NumericLiterals:
+  Description: "Add underscores to large numeric literals to improve their readibility. Makes it totally unreadable, imo"
+  Enabled: false

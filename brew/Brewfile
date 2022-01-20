@@ -233,6 +233,7 @@ cask "hazel"
 cask "hammerspoon"
 cask "intel-power-gadget" # requires restart with security allow (intel things)
 cask "insomnia"
+cask "inkscape"
 cask "istat-menus"
 cask "itsycal"
 cask "kap"
@@ -275,7 +276,7 @@ mas "Spark", id: 1176895641
 mas "Drafts", id: 1435957248
 mas "Battery Indicator", id: 1206020918
 mas "Brother iPrint&Scan", id: 1193539993
-mas "Things", id: 904280696  # might be bailing from this
+mas "Things", id: 904280696 # might be bailing from this
 # mas "Xcode", id: 497799835
 # NOTE: turns out, i _HATE_ these applications. burn them to the ground.
 # mas "Affinity Photo", id: 824183456
