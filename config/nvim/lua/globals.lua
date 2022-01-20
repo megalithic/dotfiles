@@ -350,7 +350,7 @@ end
 ╰────────────────────────────────────────────────────────────────────────────╯
 --]]
 
-local function make_mapper(mode, o)
+local function mapper(mode, o)
   -- copy the opts table as extends will mutate the opts table passed in otherwise
   local parent_opts = vim.deepcopy(o)
   ---Create a mapping
@@ -408,18 +408,18 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s" }) do
   -- }
 
   -- A recursive mapping
-  mega[mode .. "map"] = make_mapper(mode, map_opts)
+  mega[mode .. "map"] = mapper(mode, map_opts)
   _G[mode .. "map"] = mega[mode .. "map"]
   -- A non-recursive mapping
-  mega[mode .. "noremap"] = make_mapper(mode, noremap_opts)
+  mega[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
 
 -- A recursive commandline mapping
-mega.cmap = make_mapper("c", { noremap = false, silent = false })
+mega.cmap = mapper("c", { noremap = false, silent = false })
 _G["cmap"] = mega.cmap
 -- A non-recursive commandline mapping
-mega.cnoremap = make_mapper("c", { noremap = true, silent = false })
+mega.cnoremap = mapper("c", { noremap = true, silent = false })
 _G["cnoremap"] = mega.cnoremap
 
 ---Factory function to create multi mode map functions
@@ -558,7 +558,6 @@ local function is_valid_target(command)
   local valid_type = command.targets and vim.tbl_islist(command.targets)
   return valid_type or vim.startswith(command.events[1], "User ")
 end
-
 
 function mega.augroup(name, commands)
   vcmd("augroup " .. name)
