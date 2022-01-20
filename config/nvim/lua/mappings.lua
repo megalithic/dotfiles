@@ -195,11 +195,6 @@ if has_wk then
         u = "undo last stage hunk",
         y = "copy permalink",
       },
-      l = {
-        name = "LSP",
-        ["'"] = { "<cmd>LspStart<cr>", "LSP start" },
-        i = { "<cmd>LspInfo<cr>", "LSP info" },
-      },
       q = {
         name = "quit/session",
         Q = "quit all",

@@ -26,6 +26,7 @@ if (typeof api !== "undefined") {
     imapkey,
     getClickableElements,
     vmapkey,
+    vmap,
     map,
     cmap,
     addSearchAlias,
@@ -52,6 +53,7 @@ function setup_surfingkeys({ api: api }) {
     imapkey,
     getClickableElements,
     vmapkey,
+    vmap,
     map,
     cmap,
     addSearchAlias,
@@ -77,27 +79,78 @@ function setup_surfingkeys({ api: api }) {
   settings.scrollStepSize = 100;
   settings.tabsThreshold = 0;
   settings.modeAfterYank = "Normal";
-  settings.historyMUOrder = false;
-  settings.tabsMRUOrder = false;
   settings.useNeovim = false;
 
-  // set hints style
-  if (typeof Hints !== "undefined") {
-    Hints.characters = "qwertasdfgzxcvb";
-    // Hints.characters = "asdfgyuiopqwertnmzxcvb";
-    const hintsStyle =
-      "border: solid 2px #4C566A !important; padding: 1px !important; color: #E5E9F0 !important; background: #3B4252 !important; font-size: 12px !important; font-family: 'JetBrains Mono'";
-    Hints.style(hintsStyle);
-    Hints.style(hintsStyle, "text");
-  }
+  // prev/next link
+  // settings.nextLinkRegex = /((>>|next)|>|›|»|→|次へ|次のページ+)/i;
+  // settings.prevLinkRegex = /((<<|prev(ious)?)|<|‹|«|←|前へ|前のページ+)/i;
+  // blocklist
+  settings.blocklistPattern = /mail.google.com/;
+  // order
+  settings.historyMUOrder = false;
+  settings.tabsMRUOrder = false;
+  // Input box trueだとiなどで入力ボックスに切り替えてもリンクキーが表示されたままに 切り替えたリンクキーが最後に入力されることも
+  settings.cursorAtEndOfInput = false;
+
+  Hints.characters = "qwertasdfgzxcvb";
+  // Hints.characters = "asdfgyuiopqwertnmzxcvb";
+
+  // Link Hints
+  Hints.style(`
+    font-family: 'JetBrains Mono';
+    font-size: 12px;
+    font-weight: normal;
+    text-transform: lowercase;
+    color: #E5E9F0 !important;
+    background: #3B4252 !important;
+    border: solid 1px #4C566A !important;
+  `);
+
+  // Text Hints
+  Hints.style(
+    `
+    font-family: 'JetBrains Mono';
+    font-size: 12px;
+    text-transform: lowercase;
+    color: #E5E9F0 !important;
+    background: #6272a4 !important;
+    border: solid 2px #4C566A !important;
+  `,
+    "text"
+  );
 
   // set visual-mode style
-  if (typeof Visual !== "undefined") {
-    Visual.style("marks", "background-color: #A3BE8C; color: red; text-decoration: underline;");
-    // Visual.style("cursor", "background-color: #88C0D0;");
-    // Visual.style("marks", "background-color: #f1fa8c;");
-    Visual.style("cursor", "background-color: #6272a4; color: #f8f8f2");
-  }
+  Visual.style("marks", "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;");
+  Visual.style(
+    "cursor",
+    "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
+  );
+
+  // -----------------------------------------------------------------------------------------------------------------------
+  // Change hints styles
+  // -----------------------------------------------------------------------------------------------------------------------
+  // Hints.characters = "asdfgqwertvbn";
+  // Hints.style(
+  //   'border: solid 1px #ff79c6; color:#44475a; background: #f1fa8c; background-color: #f1fa8c; font-size: 10pt; font-family: "Jetbrains Mono"'
+  // );
+  // Hints.style('border: solid 8px #ff79c6;padding: 1px;background: #f1fa8c; font-family: "Jetbrains Mono"', "text");
+  // // -----------------------------------------------------------------------------------------------------------------------
+  // // Change search marks and cursor
+  // // -----------------------------------------------------------------------------------------------------------------------
+  // Visual.style("marks", "background-color: #f1fa8c;");
+  // Visual.style(
+  //   "cursor",
+  //   "background-color: #6272a4 !important; color: #f8f8f2 !important; border:1px red; font-weight:bold"
+  // );
+
+  mapkey("w", "Move current tab to another window", function () {
+    Front.openOmnibar({ type: "Windows" });
+  });
+
+  vmap("H", "0");
+  vmap("L", "$");
+  // vunmap("gr");
+  // vunmap("q");
 
   // previous/next tab
   map("<Ctrl-l>", "R");

@@ -27,6 +27,8 @@ $status\
 $shell\
 $character"""
 
+command_timeout = 1000
+
 [username]
 style_root = "red"
 style_user = "purple"

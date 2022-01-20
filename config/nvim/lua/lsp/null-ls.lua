@@ -38,7 +38,7 @@ function M.setup(on_attach)
         end,
       }),
       b.formatting.elm_format,
-      -- b.formatting.mix.with({ filetypes = { "elixir", "heex", "eelixir" } }),
+      -- b.formatting.mix.with({ filetypes = { "elixir", "html.heex", "heex", "eelixir" } }),
       -- b.formatting.surface.with({ filetypes = { "elixir", "heex", "eelixir", "surface" } }),
       -- nls.builtins.formatting.rustywind.with({
       --   filetypes = {

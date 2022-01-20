@@ -91,8 +91,8 @@ M.rename_callback = function()
 end
 
 function M.cleanup_rename_callback()
-  vim.api.nvim_win_close(0, true)
-  vim.api.nvim_feedkeys(M.t("<Esc>"), "i", true)
+  api.nvim_win_close(0, true)
+  api.nvim_feedkeys(M.t("<Esc>"), "i", true)
 
   current_name = ""
   rename_prompt = default_rename_prompt
@@ -219,8 +219,8 @@ end
 
 M.lsp.line_diagnostics = function()
   local width = 70
-  local bufnr, lnum = unpack(vim.fn.getcurpos())
-  local diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr, lnum - 1, {})
+  local bufnr, lnum = unpack(fn.getcurpos())
+  local diagnostics = lsp.diagnostic.get_line_diagnostics(bufnr, lnum - 1, {})
   if vim.tbl_isempty(diagnostics) then
     return
   end
@@ -242,14 +242,14 @@ M.lsp.line_diagnostics = function()
     )
   end
 
-  local floating_bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, lines)
-  vim.api.nvim_buf_set_option(floating_bufnr, "filetype", "diagnosticpopup")
+  local floating_bufnr = api.nvim_create_buf(false, true)
+  api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, lines)
+  api.nvim_buf_set_option(floating_bufnr, "filetype", "diagnosticpopup")
 
   for i, diagnostic in ipairs(diagnostics) do
     local message_length = #lines[i] - #source_string(diagnostic.source)
-    vim.api.nvim_buf_add_highlight(floating_bufnr, -1, severity_map[diagnostic.severity], i - 1, 0, message_length)
-    vim.api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
+    api.nvim_buf_add_highlight(floating_bufnr, -1, severity_map[diagnostic.severity], i - 1, 0, message_length)
+    api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
   end
 
   local border_color = ({
@@ -259,7 +259,7 @@ M.lsp.line_diagnostics = function()
     [vim.diagnostic.severity.ERROR] = "DiagnosticErrorBorder",
   })[max_severity]
 
-  local winnr = vim.api.nvim_open_win(floating_bufnr, false, {
+  local winnr = api.nvim_open_win(floating_bufnr, false, {
     relative = "cursor",
     width = width,
     height = #M.wrap_lines(lines, width - 1),
@@ -328,26 +328,28 @@ end
 
 function M.lsp.format()
   if M.lsp.autoformat then
-    vim.lsp.buf.formatting_sync()
+    lsp.buf.formatting_sync()
   end
 end
 
 function M.lsp.format_setup(client, buf)
-  local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+  local ft = api.nvim_buf_get_option(buf, "filetype")
   local nls = mega.load("lsp.null-ls")
 
   local enable = false
   if nls.has_formatter(ft) then
     enable = client.name == "null-ls"
+    P("client is null-ls", ft, client.name, enable)
   else
     enable = not client.name == "null-ls"
+    P("client is NOT null-ls", ft, client.name, enable)
   end
 
-  client.resolved_capabilities.document_formatting = enable
+  -- client.resolved_capabilities.document_formatting = not enable
 
   -- format on save
   if client.resolved_capabilities.document_formatting then
-    vim.cmd([[
+    vcmd([[
       augroup LspFormat
         autocmd! * <buffer>
         autocmd BufWritePre <buffer> lua require("utils").lsp.format()
@@ -385,7 +387,7 @@ function M.lsp.elixirls_cmd(opts)
 
   -- otherwise, just use our globally installed elixir-ls binary
   local fallback_dir = opts.fallback_dir or "$XDG_DATA_HOME"
-  return fn.expand(fmt("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
+  return fn.expand(fmt("%s/lsp/elixir-ls/%s", "$XDG_DATA_HOME", "language_server.sh"))
 end
 
 return M

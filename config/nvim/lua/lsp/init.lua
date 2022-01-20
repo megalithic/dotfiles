@@ -272,6 +272,7 @@ local function on_attach(client, bufnr)
     ["<leader>"] = {
       l = {
         name = "LSP",
+        ["'"] = { "<cmd>LspStart<cr>", "LSP start" },
         [","] = { "LSP stop" },
         [",a"] = { "<cmd>LspStop<cr>", "stop all" },
         [",s"] = { "select" },
@@ -289,9 +290,10 @@ local function on_attach(client, bufnr)
         gr = "references",
         gy = "type definition",
         h = "hover",
-        i = "LSP info",
+        i = { "<cmd>LspInfo<cr>", "LSP info" },
         k = "signature help",
-        l = "line diagnostics",
+        l = { "<cmd>LspLog<cr>", "LSP logs" },
+        -- l = "line diagnostics",
         p = "peek definition",
         r = "rename",
         n = "rename",
@@ -542,16 +544,16 @@ local function setup_lsp_servers()
           suggestSpecs = true,
         },
       },
-      filetypes = { "elixir", "eelixir", "heex" },
+      filetypes = { "elixir", "eelixir", "heex", "html.heex" },
       root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
       commands = {
         ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
         FromPipe = { manipulate_pipes("fromPipe"), "Convert pipe operator to function call" },
       },
-      -- on_init = function(client)
-      --   client.notify("workspace/didChangeConfiguration")
-      --   return true
-      -- end,
+      on_init = function(client)
+        client.notify("workspace/didChangeConfiguration")
+        return true
+      end,
     }))
   end
 
