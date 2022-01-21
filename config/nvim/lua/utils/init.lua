@@ -327,17 +327,21 @@ end
 -- # [ lsp_commands ] ----------------------------------------------------------------
 function M.lsp.elixirls_cmd(opts)
   opts = opts or {}
-  -- for custom linode/docker/elixirls container/image:
-  local local_elixir_ls_bin_exists, local_elixir_ls_bin = M.root_has_file(".bin/elixir_ls.sh")
+  local fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
 
-  -- we have .bin/elixirls.sh
-  if local_elixir_ls_bin_exists then
-    return fn.expand(local_elixir_ls_bin)
+  local locations = {
+    ".bin/elixir_ls.sh",
+    ".elixir_ls/release/language_server.sh",
+  }
+
+  for _, location in ipairs(locations) do
+    local exists, dir = M.root_has_file(location)
+    if exists then
+      return fn.expand(dir)
+    end
   end
 
-  -- otherwise, just use our globally installed elixir-ls binary
-  local fallback_dir = opts.fallback_dir or "$XDG_DATA_HOME"
-  return fn.expand(fmt("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
+  return fn.expand(string.format("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
 end
 
 return M
