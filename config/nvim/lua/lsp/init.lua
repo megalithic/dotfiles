@@ -553,8 +553,8 @@ local function setup_lsp_servers()
       cmd = { utils.lsp.elixirls_cmd() },
       settings = {
         elixirLS = {
-          fetchDeps = true,
-          dialyzerEnabled = true,
+          fetchDeps = false,
+          dialyzerEnabled = false,
           dialyzerFormat = "dialyxir_short",
           enableTestLenses = true,
           suggestSpecs = true,
