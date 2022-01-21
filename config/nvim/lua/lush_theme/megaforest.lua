@@ -135,6 +135,7 @@ return lush(function()
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
     SignColumn({ fg = fg, bg = bg0 }), -- column where |signs| are displayed
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
+    Search({ fg = bg0, bg = green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     Substitute({ fg = bg0, bg = yellow }), -- |:substitute| replacement text highlighting
     LineNr({ fg = grey0, bg = "NONE" }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
     MatchParen({ fg = "NONE", bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
@@ -154,7 +155,6 @@ return lush(function()
     PmenuThumb({ fg = "NONE", bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
     Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
     QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
-    Search({ fg = bg0, bg = green }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     SpecialKey({ fg = bg3, bg = "NONE" }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
 
     ---- :help spell -------------------------------------------

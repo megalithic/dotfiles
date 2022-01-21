@@ -33,7 +33,7 @@ M.list = {
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
-  "stevearc/dressing.nvim",
+  -- "stevearc/dressing.nvim",
   -- "goolord/alpha-nvim",
   "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
@@ -260,15 +260,15 @@ M.setup = function()
     vim.g.startuptime_tries = 10
   end
 
-  do
-    require("dressing").setup({
-      select = {
-        telescope = {
-          theme = "cursor",
-        },
-      },
-    })
-  end
+  -- do
+  --   require("dressing").setup({
+  --     select = {
+  --       telescope = {
+  --         theme = "cursor",
+  --       },
+  --     },
+  --   })
+  -- end
 
   do -- gitlinker.nvim
     require("gitlinker").setup()

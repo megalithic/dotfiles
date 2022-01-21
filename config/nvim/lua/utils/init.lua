@@ -314,50 +314,6 @@ function M.lsp.hover()
   end
 end
 
--- # [ formatting ] ----------------------------------------------------------------
-M.lsp.autoformat = true
-
-function M.lsp.format_toggle()
-  M.lsp.autoformat = not M.lsp.autoformat
-  if M.lsp.autoformat then
-    mega.log("enabled format on save", nil, "Formatting")
-  else
-    mega.warn("disabled format on save", "Formatting")
-  end
-end
-
-function M.lsp.format()
-  if M.lsp.autoformat then
-    lsp.buf.formatting_sync()
-  end
-end
-
-function M.lsp.format_setup(client, buf)
-  local ft = api.nvim_buf_get_option(buf, "filetype")
-  local nls = mega.load("lsp.null-ls")
-
-  local enable = false
-  if nls.has_formatter(ft) then
-    enable = client.name == "null-ls"
-    P("client is null-ls", ft, client.name, enable)
-  else
-    enable = not client.name == "null-ls"
-    P("client is NOT null-ls", ft, client.name, enable)
-  end
-
-  -- client.resolved_capabilities.document_formatting = not enable
-
-  -- format on save
-  if client.resolved_capabilities.document_formatting then
-    vcmd([[
-      augroup LspFormat
-        autocmd! * <buffer>
-        autocmd BufWritePre <buffer> lua require("utils").lsp.format()
-      augroup END
-    ]])
-  end
-end
-
 -- # [ config ] ----------------------------------------------------------------
 function M.lsp.config()
   local cfg = {}
@@ -387,7 +343,7 @@ function M.lsp.elixirls_cmd(opts)
 
   -- otherwise, just use our globally installed elixir-ls binary
   local fallback_dir = opts.fallback_dir or "$XDG_DATA_HOME"
-  return fn.expand(fmt("%s/lsp/elixir-ls/%s", "$XDG_DATA_HOME", "language_server.sh"))
+  return fn.expand(fmt("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
 end
 
 return M

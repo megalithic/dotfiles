@@ -26,24 +26,24 @@ local function setup_diagnostics()
 
   --- This overwrites the diagnostic show/set_signs function to replace it with a custom function
   --- that restricts nvim's diagnostic signs to only the single most severe one per line
-  local ns = api.nvim_create_namespace("lsp-diagnostics")
-  local show = vim.diagnostic.show
-  local function display_signs(bufnr)
-    -- Get all diagnostics from the current buffer
-    local diagnostics = vim.diagnostic.get(bufnr)
-    local filtered = utils.lsp.filter_diagnostics(diagnostics, bufnr)
-    show(ns, bufnr, filtered, {
-      virtual_text = false,
-      underline = false,
-      signs = true,
-    })
-  end
+  -- local ns = api.nvim_create_namespace("lsp-diagnostics")
+  -- local show = vim.diagnostic.show
+  -- local function display_signs(bufnr)
+  --   -- Get all diagnostics from the current buffer
+  --   local diagnostics = vim.diagnostic.get(bufnr)
+  --   local filtered = utils.lsp.filter_diagnostics(diagnostics, bufnr)
+  --   show(ns, bufnr, filtered, {
+  --     virtual_text = false,
+  --     underline = false,
+  --     signs = true,
+  --   })
+  -- end
 
-  -- Monkey-patch vim.diagnostic.show() with our own impl to filter sign severity
-  function vim.diagnostic.show(namespace, bufnr, ...)
-    show(namespace, bufnr, ...)
-    display_signs(bufnr)
-  end
+  -- -- Monkey-patch vim.diagnostic.show() with our own impl to filter sign severity
+  -- function vim.diagnostic.show(namespace, bufnr, ...)
+  --   show(namespace, bufnr, ...)
+  --   display_signs(bufnr)
+  -- end
 
   -- Monkey-patch vim.diagnostic.open_float() with our own impl..
   -- REF: https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
@@ -116,12 +116,28 @@ end
 
 -- our on_attach function to pass to each language server config..
 local function on_attach(client, bufnr)
+  if not client then
+    vim.notify("No LSP client found; aborting on_attach.")
+    return
+  end
+
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
   end
 
   require("lsp-status").on_attach(client)
-  utils.lsp.format_setup(client, bufnr)
+
+  -- hacky solution to redirect formatting to the heex.lua ftplugin's formatter
+  if client.resolved_capabilities.document_formatting and not vim.bo.ft == "heex" then
+    vcmd([[
+      augroup LspFormat
+        autocmd! * <buffer>
+        mkview!
+        autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
+        loadview
+      augroup END
+    ]])
+  end
 
   if client.resolved_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr, { single_column = true })
@@ -217,7 +233,8 @@ local function on_attach(client, bufnr)
   vcmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
   vcmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
 
-  -- disable formatting for the following language-servers:
+  -- disable formatting for the following language-servers (let null-ls takeover):
+  -- tags: #ignored, #disabled, #formatting
   local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
@@ -301,7 +318,7 @@ local function on_attach(client, bufnr)
           "symbols (buffer/document)",
           buffer = bufnr,
         },
-        s = {
+        S = {
           [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
           "symbols (workspace)",
         },
@@ -449,8 +466,8 @@ local function setup_lsp_servers()
       },
       handlers = {
         ["tailwindcss/getConfiguration"] = function(_, _, context)
-          -- tailwindcss lang server waits for this repsonse before providing hover
-          -- vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
+          -- tailwindcss lang server waits for this response before providing hover
+          vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
         end,
       },
       settings = {
@@ -492,6 +509,7 @@ local function setup_lsp_servers()
         "sass",
         "html",
         "heex",
+        "html.heex",
         "leex",
         "html-eex",
         "phoenix-html",
@@ -535,8 +553,8 @@ local function setup_lsp_servers()
       cmd = { utils.lsp.elixirls_cmd() },
       settings = {
         elixirLS = {
-          fetchDeps = false,
-          dialyzerEnabled = false,
+          fetchDeps = true,
+          dialyzerEnabled = true,
           dialyzerFormat = "dialyxir_short",
           enableTestLenses = true,
           suggestSpecs = true,
@@ -611,6 +629,8 @@ local function setup_lsp_servers()
           },
           workspace = {
             library = vim.api.nvim_get_runtime_file("", true),
+            maxPreload = 2000,
+            preloadFileSize = 1000,
           },
           telemetry = {
             enable = false,
@@ -676,9 +696,9 @@ local function setup_lsp_servers()
   do -- html
     lspconfig["html"].setup(lsp_with_defaults({
       cmd = { "vscode-html-language-server", "--stdio" },
-      filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "heex" },
+      filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex" },
       init_options = {
-        configurationSection = { "html", "css", "javascript", "eelixir", "heex" },
+        configurationSection = { "html", "css", "javascript", "eelixir", "heex", "html.heex" },
         embeddedLanguages = {
           css = true,
           javascript = true,
@@ -694,7 +714,18 @@ local function setup_lsp_servers()
     configs.ls_emmet = {
       default_config = {
         cmd = { "ls_emmet", "--stdio" },
-        filetypes = { "html", "css", "eelixir", "eruby", "javascriptreact", "typescriptreact", "heex", "tsx", "jsx" },
+        filetypes = {
+          "html",
+          "css",
+          "eelixir",
+          "eruby",
+          "javascriptreact",
+          "typescriptreact",
+          "heex",
+          "html.heex",
+          "tsx",
+          "jsx",
+        },
         single_file_support = true,
       },
     }
