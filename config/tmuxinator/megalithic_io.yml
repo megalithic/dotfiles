@@ -13,9 +13,6 @@ windows:
   - services:
       layout: even-horizontal
       panes:
-        - logs:
+        - iex server:
             - cd ~/code/megalithic.io
-            - mix phx.server
-        - repl:
-            - cd ~/code/megalithic.io
-            - iex -S mix
+            - iex -S mix phx.server --open
