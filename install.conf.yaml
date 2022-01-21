@@ -164,9 +164,9 @@
       versions:
         - 5.1.5
     - plugin: elixir
-      global: 1.12.3-otp-24
+      global: 1.13.2-otp-24
       versions:
-        - 1.13.0-otp-24
+        - 1.13.2-otp-24
         - 1.12.3-otp-24
     - plugin: erlang
       global: 24.0.5
@@ -213,6 +213,16 @@
         make -C ~/.dotfiles elixirls
 
     - [asdf reshim, Reshimming asdf binaries]
+    - [cargo install selene stylua distant, Installing rust cargos]
+
+    - description: Attemping to install go-lang packages..
+      quiet: true
+      command: >-
+        GO111MODULE=on go get golang.org/x/tools/gopls@latest;
+        GO111MODULE=on go get -u github.com/client9/misspell/cmd/misspell;
+        # @GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD;
+        # GO111MODULE=on go get -u github.com/lemonade-command/lemonade@HEAD;
+
     - [~/.dotfiles/bin/gh-login, GitHub Authentication]
     # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries
