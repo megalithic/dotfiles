@@ -727,6 +727,14 @@ local function setup_lsp_servers()
           "jsx",
         },
         single_file_support = true,
+        settings = {
+          includeLanguages = {
+            ["html-eex"] = "html",
+            ["phoenix-heex"] = "html",
+            heex = "html",
+            eelixir = "html",
+          },
+        }
       },
     }
     lspconfig["ls_emmet"].setup(lsp_with_defaults({}))
