@@ -168,6 +168,7 @@ local function on_attach(client, bufnr)
   -- end
 
   if client.resolved_capabilities.colorProvider then
+    vim.notify(client.name .. " -> we have colorProvider support!")
     require("lsp.document_colors").buf_attach(bufnr, { single_column = true })
   end
 
@@ -373,6 +374,8 @@ local function on_attach(client, bufnr)
 
   local wk = require("which-key")
   wk.register(b_mappings)
+
+  -- P(fmt("LSP client capabilities: %s", vim.inspect(client.resolved_capabilities)))
 end
 
 local function setup_lsp_capabilities()
