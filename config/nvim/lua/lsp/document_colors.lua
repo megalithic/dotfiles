@@ -63,17 +63,17 @@ end
 
 local ATTACHED_BUFFERS = {}
 
-local function buf_set_highlights(bufnr, colors, options)
+local function buf_set_highlights(bufnr, colors, opts)
   vim.api.nvim_buf_clear_namespace(bufnr, NAMESPACE, 0, -1)
 
   for _, color_info in pairs(colors) do
     local rgb_hex = lsp_color_to_hex(color_info.color)
-    local highlight_name = create_highlight(rgb_hex, options)
+    local highlight_name = create_highlight(rgb_hex, opts)
 
     local range = color_info.range
     local line = range.start.line
     local start_col = range.start.character
-    local end_col = options.single_column and start_col + 1 or range["end"].character
+    local end_col = opts.single_column and start_col + opts.col_count or range["end"].character
 
     vim.api.nvim_buf_add_highlight(bufnr, NAMESPACE, highlight_name, line, start_col, end_col)
   end

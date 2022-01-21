@@ -169,7 +169,7 @@ local function on_attach(client, bufnr)
 
   if client.server_capabilities.colorProvider then
     vim.notify(client.name .. " -> we have colorProvider support!")
-    require("lsp.document_colors").buf_attach(bufnr, { single_column = true })
+    require("lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 4 })
   end
 
   -- if client.resolved_capabilities.document_highlight then
