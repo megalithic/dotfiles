@@ -30,11 +30,11 @@ local function setup_luasnip()
     updateevents = "TextChanged,TextChangedI",
     store_selection_keys = "<Tab>",
     ext_opts = {
-      [types.insertNode] = {
-        passive = {
-          hl_group = "Substitute",
-        },
-      },
+      -- [types.insertNode] = {
+      --   passive = {
+      --     hl_group = "Substitute",
+      --   },
+      -- },
       [types.choiceNode] = {
         active = {
           virt_text = { { "choiceNode", "IncSearch" } },
@@ -43,6 +43,8 @@ local function setup_luasnip()
     },
     enable_autosnippets = true,
   })
+
+  luasnip.filetype_extend("ruby", { "rails" })
   require("luasnip/loaders/from_vscode").lazy_load()
 
   --- <tab> to jump to next snippet's placeholder
