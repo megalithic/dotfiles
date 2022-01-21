@@ -327,17 +327,11 @@ end
 -- # [ lsp_commands ] ----------------------------------------------------------------
 function M.lsp.elixirls_cmd(opts)
   opts = opts or {}
-  local local_elixir_ls_dir_exists, local_elixir_ls_dir = M.root_has_file(".elixir_ls/release/language_server.sh")
-
   -- for custom linode/docker/elixirls container/image:
   local local_elixir_ls_bin_exists, local_elixir_ls_bin = M.root_has_file(".bin/elixir_ls.sh")
 
-  -- we have a locally installed .elixir_ls
-  if local_elixir_ls_dir_exists then
-    return fn.expand(local_elixir_ls_dir)
-
-    -- we have .bin/elixirls.sh
-  elseif local_elixir_ls_bin_exists then
+  -- we have .bin/elixirls.sh
+  if local_elixir_ls_bin_exists then
     return fn.expand(local_elixir_ls_bin)
   end
 
