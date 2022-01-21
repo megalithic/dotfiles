@@ -58,7 +58,7 @@ function M.setup(on_attach)
         filetypes = { "sh", "zsh" },
       }),
       b.diagnostics.shellcheck,
-      b.diagnostics.credo,
+      -- b.diagnostics.credo,
       -- b.diagnostics.selene, -- this breaks?
     },
   })
