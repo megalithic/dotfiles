@@ -99,9 +99,11 @@ local function setup_lsp_formatting(client, bufnr)
   else
     nls_enabled = not client.name == "null-ls"
   end
-  client.resolved_capabilities.document_formatting = nls_enabled
 
-  P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
+  -- TODO: ensure this is working as expected for lsp clients that do support
+  -- this and when using null-ls too;
+  client.resolved_capabilities.document_formatting = not nls_enabled
+  -- P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
 
   -- format on save
   if client.resolved_capabilities.document_formatting then
@@ -168,8 +170,7 @@ local function on_attach(client, bufnr)
   -- end
 
   if client.server_capabilities.colorProvider then
-    vim.notify(client.name .. " -> we have colorProvider support!")
-    require("lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 4 })
+    require("lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
   end
 
   -- if client.resolved_capabilities.document_highlight then

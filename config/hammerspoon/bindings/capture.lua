@@ -41,6 +41,12 @@ M.capture = function(type, store_s3)
           fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
           true
         )
+        -- hs.task.new(
+        --   fmt([[%s/.dotfiles/bin/share_to_s3]], os.getenv("HOME")),
+        --   function() end,
+        --   function() end,
+        --   { filename }
+        -- ):start()
         if s3_ok then
           hs.notify.new({
             title = "Capture",
