@@ -630,7 +630,7 @@ local function setup_lsp_servers()
           workspace = {
             library = vim.api.nvim_get_runtime_file("", true),
             maxPreload = 2000,
-            preloadFileSize = 1000,
+            preloadFileSize = 500,
           },
           telemetry = {
             enable = false,

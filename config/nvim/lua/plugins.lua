@@ -1158,8 +1158,8 @@ M.setup = function()
               vim.cmd("stopinsert!")
             end,
             ["<esc>"] = actions.close,
-            ["<cr>"] = actions.select_vertical + actions.center,
-            ["<c-o>"] = actions.select_default + actions.center,
+            ["<cr>"] = actions.select_vertical,
+            ["<c-o>"] = actions.select_default,
             ["<c-s>"] = actions.select_horizontal,
             ["<c-b>"] = actions.preview_scrolling_up,
             ["<c-f>"] = actions.preview_scrolling_down,
