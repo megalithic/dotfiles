@@ -89,6 +89,33 @@ local function setup_diagnostics()
   })
 end
 
+local function setup_lsp_formatting(client, bufnr)
+  local ft = api.nvim_buf_get_option(bufnr, "filetype")
+  local nls = mega.load("lsp.null-ls")
+
+  local nls_enabled = false
+  if nls.has_formatter(ft) then
+    nls_enabled = client.name == "null-ls"
+  else
+    nls_enabled = not client.name == "null-ls"
+  end
+  client.resolved_capabilities.document_formatting = nls_enabled
+
+  P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
+
+  -- format on save
+  if client.resolved_capabilities.document_formatting then
+    vcmd([[
+      augroup LspFormat
+        autocmd! * <buffer>
+        mkview!
+        autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
+        loadview
+      augroup END
+    ]])
+  end
+end
+
 -- some of our custom LSP handlers
 local function setup_lsp_handlers()
   -- hover
@@ -126,18 +153,19 @@ local function on_attach(client, bufnr)
   end
 
   require("lsp-status").on_attach(client)
+  setup_lsp_formatting(client, bufnr)
 
   -- hacky solution to redirect formatting to the heex.lua ftplugin's formatter
-  if client.resolved_capabilities.document_formatting and not vim.bo.ft == "heex" then
-    vcmd([[
-      augroup LspFormat
-        autocmd! * <buffer>
-        mkview!
-        autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
-        loadview
-      augroup END
-    ]])
-  end
+  -- if client.resolved_capabilities.document_formatting and not vim.bo.ft == "heex" then
+  --   vcmd([[
+  --     augroup LspFormat
+  --       autocmd! * <buffer>
+  --       mkview!
+  --       autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
+  --       loadview
+  --     augroup END
+  --   ]])
+  -- end
 
   if client.resolved_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr, { single_column = true })
@@ -727,17 +755,18 @@ local function setup_lsp_servers()
           "jsx",
         },
         single_file_support = true,
-        settings = {
-          includeLanguages = {
-            ["html-eex"] = "html",
-            ["phoenix-heex"] = "html",
-            heex = "html",
-            eelixir = "html",
-          },
-        }
       },
     }
-    lspconfig["ls_emmet"].setup(lsp_with_defaults({}))
+    lspconfig["ls_emmet"].setup(lsp_with_defaults({
+      settings = {
+        includeLanguages = {
+          ["html-eex"] = "html",
+          ["phoenix-heex"] = "html",
+          heex = "html",
+          eelixir = "html",
+        },
+      },
+    }))
   end
 
   do -- typescript/javascript

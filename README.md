@@ -43,6 +43,8 @@ I have tried to be platform agnostic, but the majority of scripts that run here 
 
 ##### 🐉 Thar be dragons..
 
+I am pushing updates _constantly_, so there are NO guarantees of stability with my config!
+
 > ⚠️ I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
 
 ## ✨ Accoutrements
