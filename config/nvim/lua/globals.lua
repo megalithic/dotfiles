@@ -139,10 +139,11 @@ function mega.auto_mkdir()
   local dir = fn.expand("%:p:h")
 
   if fn.isdirectory(dir) == 0 then
-    local create_dir = fn.input(fmt("[?] Parent dir [%s] doesn't exist; create it? (y/n)", dir))
+    local create_dir = fn.input(fmt("[?] Parent dir [%s] doesn't exist; create it? (y/n) ", dir))
     if create_dir == "y" or create_dir == "yes" then
       fn.mkdir(dir, "p")
-      vcmd("redraw")
+      vcmd("bufdo e")
+      -- vcmd("redraw!")
     end
   end
 end
@@ -629,7 +630,6 @@ function mega.exec(c, bool)
 end
 
 function mega.noop()
-  return
 end
 
 ---A terser proxy for `nvim_replace_termcodes`
@@ -909,7 +909,7 @@ mega.nightly = mega.has("nvim-0.7")
 ---call to `fn` within the timeframe. Default: Use arguments of the last call.
 -- @returns (function, timer) Debounced function and timer. Remember to call
 ---`timer:close()` at the end or you will leak memory!
-function mega.debounce_trailing(fn, ms, first)
+function mega.debounce_trailing(func, ms, first)
   local timer = vim.loop.new_timer()
   local wrapped_fn
 
@@ -919,7 +919,7 @@ function mega.debounce_trailing(fn, ms, first)
       local argc = select("#", ...)
 
       timer:start(ms, 0, function()
-        pcall(vim.schedule_wrap(fn), unpack(argv, 1, argc))
+        pcall(vim.schedule_wrap(func), unpack(argv, 1, argc))
       end)
     end
   else
@@ -929,7 +929,7 @@ function mega.debounce_trailing(fn, ms, first)
       argc = argc or select("#", ...)
 
       timer:start(ms, 0, function()
-        pcall(vim.schedule_wrap(fn), unpack(argv, 1, argc))
+        pcall(vim.schedule_wrap(func), unpack(argv, 1, argc))
       end)
     end
   end

@@ -1,6 +1,7 @@
 local api = vim.api
 local vcmd = vim.cmd
 local fn = vim.fn
+local fmt = string.format
 
 -- local C = require("colors")
 
@@ -590,9 +591,9 @@ M.setup = function()
         deadline_warning_reminder_time = { 0 },
         cron_notifier = function(tasks)
           for _, task in ipairs(tasks) do
-            local title = string.format("%s (%s)", task.category, task.humanized_duration)
-            local subtitle = string.format("%s %s %s", string.rep("*", task.level), task.todo, task.title)
-            local date = string.format("%s: %s", task.type, task.time:to_string())
+            local title = fmt("%s (%s)", task.category, task.humanized_duration)
+            local subtitle = fmt("%s %s %s", string.rep("*", task.level), task.todo, task.title)
+            local date = fmt("%s: %s", task.type, task.time:to_string())
 
             -- helpful docs for options: https://github.com/julienXX/terminal-notifier#options
             if fn.executable("terminal-notifier") then
@@ -613,7 +614,7 @@ M.setup = function()
             -- 	vim.loop.spawn("notify-send", {
             -- 		args = {
             -- 			"--icon=~/.local/share/nvim/site/pack/paqs/start/orgmode.nvim/assets/orgmode_nvim.png",
-            -- 			string.format("%s\n%s\n%s", title, subtitle, date),
+            -- 			fmt("%s\n%s\n%s", title, subtitle, date),
             -- 		},
             -- 	})
             -- end
@@ -729,7 +730,7 @@ M.setup = function()
       local function ignore_by_buftype(types)
         local buftype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
         for _, type in pairs(types) do
-          -- mega.log(string.format("type: %s / buftype: %s", type, buftype))
+          -- mega.log(fmt("type: %s / buftype: %s", type, buftype))
 
           if type == buftype then
             return 1
