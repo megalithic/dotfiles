@@ -32,7 +32,6 @@ DEBUG="false"
 
 function __help() {
 	printf -- "Usage: %s [options] [title | FUZZY_PATTERN]\n" "$__base"
-	printf -- "\n"
 	printf -- "   Options:\n"
 	printf -- "     -h                This help text you're presently reading. 😄\n"
   printf -- "     -d                Set debugging to true\n"
@@ -40,17 +39,6 @@ function __help() {
 	printf -- "   Dependencies:\n"
   printf -- "     fzf               (%s)\n" "$FZF_FOUND"
 	printf -- "\n"
-}
-
-function __info() {
-	printf -- "\n"
-	printf -- "%s executation details:\n" "$__base"
-	printf -- "---------------------------------------------------\n"
-	printf -- "cwd:          %s\n" "$__dir"
-	printf -- "filepath:     %s\n" "$__file"
-	printf -- "basename:     %s\n" "$__base"
-	printf -- "root:         %s\n" "$__root"
-	printf -- "invocation:   %s\n" "$__invocation"
 }
 
 # -- halt if we don't have FZF installed
@@ -83,6 +71,26 @@ shift $((OPTIND -1))
 
 title_param="${*:-}"
 
+# bits and pieces to build out the til/post path and markdown file
+current_year="$(date +"%Y")"
+month_day="$(date +"%m-%d")"
+slugged_title="$(echo "$title_param" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
+parent="$HOME/code/megalithic.io"
+posts="$parent/posts"
+current_year_posts="$posts/$current_year"
+
+function __info() {
+	printf -- "\n"
+	printf -- "%s executation details:\n" "$__base"
+	printf -- "---------------------------------------------------\n"
+	printf -- "cwd:          %s\n" "$__dir"
+	printf -- "filepath:     %s\n" "$__file"
+	printf -- "basename:     %s\n" "$__base"
+	printf -- "root:         %s\n" "$__root"
+	printf -- "invocation:   %s\n" "$__invocation"
+  printf -- "posts pwd:    %s\n" "$current_year_posts"
+}
+
 template() {
   title_cased=$(echo "$title_param" | sed 's/.*/\L&/; s/[a-z]*/\u&/g')
   echo "%{"
@@ -96,31 +104,29 @@ template() {
 }
 
 create_til() {
-  current_year="$(date +"%Y")"
-  month_day="$(date +"%m-%d")"
-  slugged_title="$(echo "$title_param" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
-  parent="$HOME/code/megalithic.io"
-
-  if [[ ! -d "$parent/posts/$current_year" ]]; then
-    mkdir -p "$parent/posts/$current_year"
+  if [[ ! -d "$current_year_posts" ]]; then
+    mkdir -p "$current_year_posts"
   fi
 
-  new_til="$parent/posts/$current_year/$month_day-$slugged_title.md"
+  new_post="$current_year_posts/$month_day-$slugged_title.md"
 
   if [[ $DEBUG == "true" ]]; then
     printf -- "title param:  %s\n" "$title_param"
-    printf -- "template:\n   %s\n" "$(template)"
+    printf -- "filename:\n   %s\n" "$(new_post)"
     printf -- "template:\n   %s\n" "$(template)"
   fi
 
-  template > "$new_til"
-  nvim "+cd $parent" "$new_til" "+5" "+startinsert"
+  template > "$new_post"
+  nvim "+cd $parent" "$new_post" "+5" "+startinsert"
 }
 
+[[ $DEBUG == "true" ]] && __info "$title_param"
+
 if [[ $title_param ]]; then
-  [[ $DEBUG == "true" ]] && __info "$title_param"
   create_til "$title_param"
 else
+  printf -- "\n"
   __help
-  # TODO: allow fuzzy finding existing posts to open for editing
+  # TODO: get fzf integration fully working..
+  # fd .md "$current_year_posts" | fzf
 fi
