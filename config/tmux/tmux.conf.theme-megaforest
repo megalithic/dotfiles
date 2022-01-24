@@ -43,7 +43,7 @@ set -g message-style 'fg=magenta bg=default italics,bold'
 # - left -
 # http://manpages.ubuntu.com/manpages/precise/en/man3/strftime.3.html
 # session name and icon
-set -g status-left "#[fg=#fffacd,bg=#3c474d] #S #[fg=colour255,bg=default] ⋮ " #
+set -g status-left "#[fg=#fffacd,bg=#3c474d] \uf490 #S #[fg=colour255,bg=default] ⋮ " #
 set -g status-left-length 100
 
 # - windows - 旅
