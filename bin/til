@@ -35,7 +35,7 @@ function __help() {
 	printf -- "\n"
 	printf -- "   Options:\n"
 	printf -- "     -h                This help text you're presently reading. 😄\n"
-  printf -- "     -d                Set debugging to true (used with curl) \n"
+  printf -- "     -d                Set debugging to true\n"
 	printf -- "\n"
 	printf -- "   Dependencies:\n"
   printf -- "     fzf               (%s)\n" "$FZF_FOUND"
@@ -43,6 +43,9 @@ function __help() {
 }
 
 function __info() {
+  __title="${1:-}"
+
+	printf -- "\n"
 	printf -- "%s executation details:\n" "$__base"
 	printf -- "---------------------------------------------------\n"
 	printf -- "cwd:          %s\n" "$__dir"
@@ -50,7 +53,7 @@ function __info() {
 	printf -- "basename:     %s\n" "$__base"
 	printf -- "root:         %s\n" "$__root"
 	printf -- "invocation:   %s\n" "$__invocation"
-	printf -- "\n"
+  printf -- "title:        %s\n" "$__title"
 }
 
 # -- halt if we don't have FZF installed
@@ -81,36 +84,37 @@ while getopts "hd" OPTION; do
 done
 shift $((OPTIND -1))
 
-
 title="${*:-}"
-printf "title is: %s\n" "$title"
 
 template() {
   echo "%{"
-  printf -- "title: %s\n" "$title"
-  printf -- 'tags: ["til"]\n'
-  printf -- 'description: """\n'
-  printf -- "\n"
-  printf -- '"""\n'
+  printf -- "  title: %s\n" "$title" | sed 's/.*/\L&/; s/[a-z]*/\u&/g'
+  printf -- '  tags: ["til"]\n'
+  printf -- '  description: """\n'
+  printf -- "  \n"
+  printf -- '  """\n'
   printf -- "}\n"
   printf -- "---"
 }
 
 create_til() {
-  # local title="$1"
   current_year="$(date +"%Y")"
   month_day="$(date +"%m-%d")"
   slugged_title="$(echo "$title" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
-  filename="$HOME/code/megalithic.io/posts/$current_year/$month_day-$slugged_title.md"
+  parent="$HOME/code/megalithic.io"
+  new_til="$parent/posts/$current_year/$month_day-$slugged_title.md"
 
-  printf "filename: %s\n" "$filename"
-  printf "template:\n %s\n" "$(template)"
+  if [[ $DEBUG == "true" ]]; then
+    printf -- "filename:     %s\n" "$new_til"
+    printf -- "template:\n   %s\n" "$(template)"
+  fi
 
-  template > "$filename"
+  template > "$new_til"
+  nvim "+cd $parent" "$new_til" "+5" "+startinsert"
 }
 
 if [[ $title ]]; then
-  [[ $DEBUG == "true" ]] && __info
+  [[ $DEBUG == "true" ]] && __info "$title"
   create_til "$title"
 else
   __help
