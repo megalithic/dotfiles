@@ -218,14 +218,25 @@ M.apps = {
       { nil, 2, M.layout.fullScreen },
     },
   },
+  ["com.freron.MailMate"] = {
+    bundleID = "com.freron.MailMate",
+    name = "MailMate",
+    hyper_key = "e",
+    -- context = "mailmate",
+    distraction = true,
+    rules = {
+      { nil, 2, M.layout.centeredMedium },
+      { "Inbox", 2, M.layout.fullScreen },
+    },
+  },
   ["com.readdle.smartemail-Mac"] = {
     bundleID = "com.readdle.smartemail-Mac",
     name = "Spark",
-    hyper_key = "e",
+    -- hyper_key = "e",
     context = "spark",
     distraction = true,
     rules = {
-      { nil, 2, M.layout.centereLarge },
+      { nil, 2, M.layout.centeredMedium },
       { "INBOX", 2, M.layout.fullScreen },
     },
   },

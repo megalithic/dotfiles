@@ -43,8 +43,6 @@ function __help() {
 }
 
 function __info() {
-  __title="${1:-}"
-
 	printf -- "\n"
 	printf -- "%s executation details:\n" "$__base"
 	printf -- "---------------------------------------------------\n"
@@ -53,7 +51,6 @@ function __info() {
 	printf -- "basename:     %s\n" "$__base"
 	printf -- "root:         %s\n" "$__root"
 	printf -- "invocation:   %s\n" "$__invocation"
-  printf -- "title:        %s\n" "$__title"
 }
 
 # -- halt if we don't have FZF installed
@@ -84,11 +81,12 @@ while getopts "hd" OPTION; do
 done
 shift $((OPTIND -1))
 
-title="${*:-}"
+title_param="${*:-}"
 
 template() {
+  title_cased=$(echo "$title_param" | sed 's/.*/\L&/; s/[a-z]*/\u&/g')
   echo "%{"
-  printf -- "  title: %s\n" "$title" | sed 's/.*/\L&/; s/[a-z]*/\u&/g'
+  printf -- "  title: %s\n" "$title_cased"
   printf -- '  tags: ["til"]\n'
   printf -- '  description: """\n'
   printf -- "  \n"
@@ -100,12 +98,18 @@ template() {
 create_til() {
   current_year="$(date +"%Y")"
   month_day="$(date +"%m-%d")"
-  slugged_title="$(echo "$title" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
+  slugged_title="$(echo "$title_param" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
   parent="$HOME/code/megalithic.io"
+
+  if [[ ! -d "$parent/posts/$current_year" ]]; then
+    mkdir -p "$parent/posts/$current_year"
+  fi
+
   new_til="$parent/posts/$current_year/$month_day-$slugged_title.md"
 
   if [[ $DEBUG == "true" ]]; then
-    printf -- "filename:     %s\n" "$new_til"
+    printf -- "title param:  %s\n" "$title_param"
+    printf -- "template:\n   %s\n" "$(template)"
     printf -- "template:\n   %s\n" "$(template)"
   fi
 
@@ -113,9 +117,10 @@ create_til() {
   nvim "+cd $parent" "$new_til" "+5" "+startinsert"
 }
 
-if [[ $title ]]; then
-  [[ $DEBUG == "true" ]] && __info "$title"
-  create_til "$title"
+if [[ $title_param ]]; then
+  [[ $DEBUG == "true" ]] && __info "$title_param"
+  create_til "$title_param"
 else
   __help
+  # TODO: allow fuzzy finding existing posts to open for editing
 fi
