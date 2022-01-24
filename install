@@ -22,7 +22,9 @@ git submodule update --init --recursive "${DOTBOT_DIR}"
 git submodule update --init --recursive "dotbot/asdf"
 git submodule update --init --recursive "dotbot/brewfile"
 git submodule update --init --recursive "dotbot/ifplatform"
+git submodule update --init --recursive "dotbot/ifarch"
 
+# TODO: big cleanup: https://github.com/ryansch/dotfiles/blob/main/install
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
   --plugin-dir dotbot/brewfile \
   --plugin-dir dotbot/asdf \
