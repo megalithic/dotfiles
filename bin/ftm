@@ -155,8 +155,8 @@ function fuzzy_find() {
     # -- provide user with their avaialble tmuxinator configs (assumes certain dir)
     sessions_list="$(get_tmuxinator_configs)"
     tmuxinator_sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
-    [[ $tmuxinator_sessions_count > 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
-    [[ $tmuxinator_sessions_count > 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
+    [[ $tmuxinator_sessions_count -gt 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
+    [[ $tmuxinator_sessions_count -gt 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
   else
     fzf_prompt_text=" select session (or create new)  "
     fzf_header_text="ﯲ running tmux sessions (active: $current_session)"

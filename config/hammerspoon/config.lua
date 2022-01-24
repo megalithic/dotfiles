@@ -387,6 +387,14 @@ M.apps = {
     quitGuard = true,
     local_bindings = { "b" },
   },
+  ["org.inkscape.Inkscape"] = {
+    bundleID = "org.inkscape.Inkscape",
+    name = "Inkscape",
+    -- hyper_key = "f",
+    rules = {
+      { nil, 1, M.layout.fullScreen },
+    },
+  },
 }
 
 M.utilities = {

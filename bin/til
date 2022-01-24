@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+#
+# What in tarnation is this?
+#
+# CLI tool to create TIL posts for my blog.
+#
+# til [options] [title]
+#
+# Running `til` with no argument will let you fuzzy-find an existing til post.
+#
+# Passing an argument to `til` will create a new til post formatted for my blog
+# posts.
+#
+# Dependencies:
+#   Required: `fzf`
+#
+
+set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+
+DEBUG="false"
+(command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
+
+function __help() {
+	printf -- "Usage: %s [options] [title | FUZZY_PATTERN]\n" "$__base"
+	printf -- "\n"
+	printf -- "   Options:\n"
+	printf -- "     -h                This help text you're presently reading. 😄\n"
+  printf -- "     -d                Set debugging to true (used with curl) \n"
+	printf -- "\n"
+	printf -- "   Dependencies:\n"
+  printf -- "     fzf               (%s)\n" "$FZF_FOUND"
+	printf -- "\n"
+}
+
+function __info() {
+	printf -- "%s executation details:\n" "$__base"
+	printf -- "---------------------------------------------------\n"
+	printf -- "cwd:          %s\n" "$__dir"
+	printf -- "filepath:     %s\n" "$__file"
+	printf -- "basename:     %s\n" "$__base"
+	printf -- "root:         %s\n" "$__root"
+	printf -- "invocation:   %s\n" "$__invocation"
+	printf -- "\n"
+}
+
+# -- halt if we don't have FZF installed
+if [[ $FZF_FOUND == "not installed" ]]; then
+	printf -- "ERROR: %s requires FZF to be installed" "$__base"
+	__help
+	exit 1
+fi
+
+while getopts "hd" OPTION; do
+	case $OPTION in
+
+		h)
+			__help
+			exit 0
+			;;
+
+		d)
+			DEBUG="true"
+			;;
+
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+	esac
+done
+shift $((OPTIND -1))
+
+
+title="${*:-}"
+printf "title is: %s\n" "$title"
+
+template() {
+  echo "%{"
+  printf -- "title: %s\n" "$title"
+  printf -- 'tags: ["til"]\n'
+  printf -- 'description: """\n'
+  printf -- "\n"
+  printf -- '"""\n'
+  printf -- "}\n"
+  printf -- "---"
+}
+
+create_til() {
+  # local title="$1"
+  current_year="$(date +"%Y")"
+  month_day="$(date +"%m-%d")"
+  slugged_title="$(echo "$title" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
+  filename="$HOME/code/megalithic.io/posts/$current_year/$month_day-$slugged_title.md"
+
+  printf "filename: %s\n" "$filename"
+  printf "template:\n %s\n" "$(template)"
+
+  template > "$filename"
+}
+
+if [[ $title ]]; then
+  [[ $DEBUG == "true" ]] && __info
+  create_til "$title"
+else
+  __help
+fi
