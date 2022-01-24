@@ -1,4 +1,4 @@
-name: mega
+name: " mega"
 root: ~/.dotfiles
 
 tmux_options: -2
