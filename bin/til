@@ -103,6 +103,14 @@ template() {
   printf -- "---"
 }
 
+nvim_cmd() {
+  local new_post="${1:-}"
+
+  if [[ $new_post ]]; then
+    nvim "+cd $parent" "$new_post" "+5" "+startinsert"
+  fi
+}
+
 create_til() {
   if [[ ! -d "$current_year_posts" ]]; then
     mkdir -p "$current_year_posts"
@@ -117,7 +125,7 @@ create_til() {
   fi
 
   template > "$new_post"
-  nvim "+cd $parent" "$new_post" "+5" "+startinsert"
+  nvim_cmd "$new_post"
 }
 
 [[ $DEBUG == "true" ]] && __info "$title_param"
@@ -125,8 +133,8 @@ create_til() {
 if [[ $title_param ]]; then
   create_til "$title_param"
 else
-  printf -- "\n"
-  __help
-  # TODO: get fzf integration fully working..
-  # fd .md "$current_year_posts" | fzf
+  file=$(fd .md "$current_year_posts" | fzf --reverse --prompt=" select a post to edit  " --header="TIL posts" --bind="enter:replace-query+print-query" --preview="bat {}")
+  if [[ $file ]]; then
+    nvim_cmd "$file"
+  fi
 fi
