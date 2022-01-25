@@ -566,24 +566,23 @@ function M.s_git(args)
     return ""
   end
 
-  local head = vim.b.gitsigns_head or "-"
+  local status = vim.b.gitsigns_status_dict or {}
   local signs = M.is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
-  local icon = args.icon or C.icons.git
+
+  local head_str = unpack(U.item(status.head, "StGitBranch", { prefix = C.icons.git, prefix_color = "StGitSymbol" }))
+  local added_str = unpack(U.item(status.added, "StTitle", { prefix = C.icons.git_added, prefix_color = "StGreen" }))
+  local changed_str = unpack(
+    U.item(status.changed, "StTitle", { prefix = C.icons.git_changed, prefix_color = "StWarning" })
+  )
+  local removed_str = unpack(
+    U.item(status.removed, "StTitle", { prefix = C.icons.git_removed, prefix_color = "StError" })
+  )
 
   if signs == "" then
-    if head == "-" or head == "" then
-      return ""
-    end
-
-    return unpack(U.item(head, "StGitBranch", { prefix = icon, prefix_color = "StGitSymbol" }))
+    return head_str
   end
 
-  local branch_str = unpack(
-    U.item(head, "StGitBranch", { before = " ", after = " ", prefix = icon, prefix_color = "StGitSymbol" })
-  )
-  local signs_str = unpack(U.item(signs, "StGitSigns", { before = "", after = " " }))
-
-  return fmt("%s %s", branch_str, signs_str)
+  return fmt("%s%s%s%s", head_str, added_str, changed_str, removed_str)
 end
 
 function M.s_gps(args)
@@ -614,42 +613,6 @@ function U.diagnostic_info(ctx)
     info = { count = get_count(buf, "Info"), sign = C.icons.lsp.info },
     hint = { count = get_count(buf, "Hint"), sign = C.icons.lsp.hint },
   }
-end
-
---- Section for Neovim's builtin diagnostics
----
---- Shows nothing if there is no attached LSP clients or for short output.
---- Otherwise uses |vim.lsp.diagnostic.get_count()| to show number of errors
---- ('E'), warnings ('W'), information ('I'), and hints ('H').
----
---- Short output is returned if window width is lower than `args.trunc_width`.
----
----@param args table: Section arguments. Use `args.icon` to supply your own icon.
----@return string: Section string.
-function M.s_diagnostics(args)
-  -- Assumption: there are no attached clients if table
-  -- `vim.lsp.buf_get_clients()` is empty
-  local no_attached_client = next(vim.lsp.buf_get_clients()) == nil
-  local dont_show_lsp = M.is_truncated(args.trunc_width) or U.isnt_normal_buffer() or no_attached_client
-  if dont_show_lsp then
-    return ""
-  end
-
-  -- Construct diagnostic info using predefined order
-  local t = {}
-  for _, level in ipairs(U.diagnostic_levels) do
-    local n = U.get_diagnostic_count(level.id)
-    -- Add level info only if diagnostic is present
-    if n > 0 then
-      table.insert(t, fmt(" %s %s", level.sign, n))
-    end
-  end
-
-  local icon = args.icon or "ﯭ"
-  if vim.tbl_count(t) == 0 then
-    return ("%s -"):format(icon)
-  end
-  return fmt("%s %s", icon, table.concat(t, ""))
 end
 
 function M.s_modified(args)

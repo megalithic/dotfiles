@@ -41,12 +41,26 @@ M.capture = function(type, store_s3)
           fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
           true
         )
+
         -- hs.task.new(
         --   fmt([[%s/.dotfiles/bin/share_to_s3]], os.getenv("HOME")),
-        --   function() end,
-        --   function() end,
-        --   { filename }
+        --   function() end, -- Fake callback
+        --   function(task, stdOut, stdErr)
+        --     local success = string.find(stdOut, "Completed") ~= nil
+        --     log.df("#-> s3_task execution: \n%s \n%s]", hs.inspect(task), hs.inspect(stdOut))
+
+        --     if success then
+        --       hs.alert.show("screenshot captured and placed on clipboard")
+
+        --       -- copy our screenshot to iCloud for longer-term storage
+        --       -- hs.execute('cp "' .. file .. '" "$HOME/Library/Mobile Documents/com~apple~CloudDocs/screenshots/"', true)
+        --     else
+        --       log.df("#-> s3_task execution error: \n%s]", hs.inspect(stdErr))
+        --     end
+        --   end,
+        -- { filename }
         -- ):start()
+
         if s3_ok then
           hs.notify.new({
             title = "Capture",
@@ -66,9 +80,9 @@ M.capture = function(type, store_s3)
       end
     end
   end, {
-    args,
-    filename,
-  }):start()
+      args,
+      filename,
+    }):start()
 end
 
 M.parseArgs = function(scType)

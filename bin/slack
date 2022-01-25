@@ -56,6 +56,7 @@ brb
 coffee
 dnd
 dog
+run
 errand
 focus
 gone
@@ -299,6 +300,13 @@ function dog() {
 	__set_presence "away"
 	__set_status "..walking the puppers.." ":doge:"
 }
+
+function run() {
+  __set_chan_text "bbiab, gone for a run"
+	__set_presence "away"
+	__set_status "..gone for a run.." ":runner:"
+}
+
 
 function gone() {
   gone_messages[0]=":v: catch you all on the flippy flip!"

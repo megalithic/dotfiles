@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
-local bufmap, bmap, au, autocmd = mega.bufmap, mega.bmap, mega.au, mega.autocmd
+local bufmap, bmap, au = mega.bufmap, mega.bmap, mega.au
 local fmt = string.format
 local lspconfig = require("lspconfig")
 local utils = require("utils")
@@ -102,8 +102,8 @@ local function setup_lsp_formatting(client, bufnr)
 
   -- TODO: ensure this is working as expected for lsp clients that do support
   -- this and when using null-ls too;
-  client.resolved_capabilities.document_formatting = not nls_enabled
-  -- P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
+  -- client.resolved_capabilities.document_formatting = not nls_enabled
+  P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
 
   -- format on save
   if client.resolved_capabilities.document_formatting then
@@ -584,10 +584,6 @@ local function setup_lsp_servers()
         ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
         FromPipe = { manipulate_pipes("fromPipe"), "Convert pipe operator to function call" },
       },
-      on_init = function(client)
-        client.notify("workspace/didChangeConfiguration")
-        return true
-      end,
     }))
   end
 

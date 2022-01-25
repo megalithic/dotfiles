@@ -438,6 +438,8 @@ M.setup = function()
         "typescriptreact",
         "javascriptreact",
         "vue",
+        "elixir",
+        "heex",
       },
     })
     require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
@@ -1862,15 +1864,27 @@ M.setup = function()
   end
 
   do -- gitsigns.nvim
-    local gitsigns = require("gitsigns")
+    local gs = require("gitsigns")
     require("which-key").register({
       ["<leader>h"] = {
         name = "+gitsigns hunk",
-        s = "stage",
-        u = "undo stage",
-        r = "reset hunk",
-        p = "preview current hunk",
-        b = "blame current line",
+        s = { "stage", gs.stage_hunk },
+        u = { "undo stage", gs.undo_stage_hunk },
+        r = { "reset hunk", gs.reset_hunk },
+        p = { "preview current hunk", gs.preview_hunk },
+        d = { "diff this line", gs.diffthis },
+        D = {
+          "diff this with ~",
+          function()
+            gs.diffthis("~")
+          end,
+        },
+        b = {
+          "blame current line",
+          function()
+            gs.blame_line({ full = true })
+          end,
+        },
       },
       ["<leader>lm"] = "gitsigns: list modified in quickfix",
       ["<localleader>g"] = {
@@ -1887,7 +1901,7 @@ M.setup = function()
       ["]h"] = "go to previous git hunk",
     })
 
-    gitsigns.setup({
+    gs.setup({
       signs = {
         add = { hl = "GitSignsAdd", text = "▎" }, -- ┃, │, ▌, ▎
         change = { hl = "GitSignsChange", text = "▎" },

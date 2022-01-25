@@ -523,8 +523,8 @@ return lush(function()
     ---- :help :diff -------------------------------------------
 
     diffAdded({ Green }),
-    diffRemoved({ Red }),
     diffChanged({ Blue }),
+    diffRemoved({ Red }),
     diffOldFile({ Yellow }),
     diffNewFile({ Orange }),
     diffFile({ Aqua }),

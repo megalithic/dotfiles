@@ -14,6 +14,7 @@ neovim
 lua-fmt
 prettier
 prettier-plugin-eex
+prettier-plugin-tailwindcss
 @fsouza/prettierd
 trash-cli
 tree-sitter-cli

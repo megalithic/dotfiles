@@ -194,26 +194,36 @@
     - description: Attempting to set zsh as default shell..
       quiet: true
       command: >-
-        [[ $(echo $SHELL) == $(which zsh) ]] && printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "➜ [!] $(which zsh) already set as the default shell; skipping." $(tput sgr 0) || sudo chsh -s `which zsh` `whoami`
+        [[ $(echo $SHELL) == $(which zsh) ]] && printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "➜ [!] $(which zsh) already set as the default shell; skipping." $(tput sgr 0) || sudo chsh -s `which zsh` `whoami`;
 
     # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
     - description: Attempting to install neovim from source..
       quiet: true
       command: >-
-        make -C ~/.dotfiles nvim
+        make -C ~/.dotfiles nvim;
 
     - description: Attempting to install paq-nvim..
       quiet: true
       command: >-
-        make -C ~/.dotfiles paq
+        make -C ~/.dotfiles paq;
 
     - description: Attempting to install elixir-ls..
       quiet: true
       command: >-
-        make -C ~/.dotfiles elixirls
+        make -C ~/.dotfiles elixirls;
 
     - [asdf reshim, Reshimming asdf binaries]
-    - [cargo install selene stylua distant, Installing rust cargos]
+
+    - description: Attemping to install luarocks packages..
+      quiet: true
+      command: >-
+        luarocks install luacheck lcf;
+        luarocks install --server=https://luarocks.org/dev luaformatter;
+
+    - description: Attemping to install rust cargo packages..
+      quiet: true
+      command: >-
+        cargo install selene stylua distant;
 
     - description: Attemping to install go-lang packages..
       quiet: true
