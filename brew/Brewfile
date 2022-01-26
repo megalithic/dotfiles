@@ -118,7 +118,7 @@ brew "luv"
 brew "mas" if OS.mac?
 brew "mkcert"
 brew "moreutils"
-brew "mosh", args: ["HEAD"]
+brew "mosh", args: ["HEAD"] if OS.mac?
 brew "mutagen"
 brew "mycli"
 brew "mysql"
