@@ -32,7 +32,19 @@ M.preferred = {
   vpn = { "Cloudflare WARP" },
   -- TODO: hyperGroup
   -- https://github.com/evantravers/hammerspoon-config/blob/master/init.lua#L72-L119
-  bindings = { "ptt", "quitguard", "tabjump", "hyper", "apps", "snap", "media", "airpods", "misc", "browser", "capture" },
+  bindings = {
+    "ptt",
+    "quitguard",
+    "tabjump",
+    "hyper",
+    "apps",
+    "snap",
+    "media",
+    "airpods",
+    "misc",
+    "browser",
+    "capture",
+  },
   controlplane = { "dock", "office" },
   watchers = { "urlevent" },
 }
@@ -224,6 +236,7 @@ M.apps = {
     hyper_key = "e",
     -- context = "mailmate",
     distraction = true,
+    hideAfter = 5,
     rules = {
       { nil, 2, M.layout.centeredMedium },
       { "Inbox", 2, M.layout.fullScreen },

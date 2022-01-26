@@ -221,17 +221,17 @@
     - description: Attemping to install luarocks packages..
       quiet: true
       command: >-
-        . ~/.dotfiles/asdf/lua.sh
+        ~/.dotfiles/asdf/lua.sh
 
     - description: Attemping to install rust cargo packages..
       quiet: true
       command: >-
-        . ~/.dotfiles/asdf/rust.sh
+        ~/.dotfiles/asdf/rust.sh
 
     - description: Attemping to install go-lang packages..
       quiet: true
       command: >-
-        . ~/.dotfiles/asdf/go.sh
+        ~/.dotfiles/asdf/go.sh
 
     - [~/.dotfiles/bin/gh-login, GitHub Authentication]
     # if (git merge-base --is-ancestor origin/master master); then

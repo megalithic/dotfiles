@@ -36,7 +36,7 @@ do_build() {
 	git up && log_ok "git up successful"
 	[[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1
 	sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
-	sudo make install || exit 1 && log_ok "make install successful"
+	sudo make install || exit 1 && log_ok "successfully built and installed neovim"
 }
 
 build() {
