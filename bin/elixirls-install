@@ -68,7 +68,7 @@ do_install() {
 	fi
 }
 
-read -rp "$(tput bold)$(tput setaf 5)[?] download and install ${VERSION} elixir-ls (Y/n)?$(tput sgr 0) " yn
+read -p "$(tput bold)$(tput setaf 5)[?] download and install ${VERSION} elixir-ls (Y/n)?$(tput sgr 0) " yn
 case $yn in
 	[Yy]*)
 		do_install || exit 1

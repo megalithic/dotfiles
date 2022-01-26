@@ -43,7 +43,7 @@ build() {
 	if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
 		log_warn "neovim already up to date on origin/master; skipping."
 	else
-		read -rp "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
+		read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
 		case $yn in
 			[Yy]*)
 				do_build || exit 1
