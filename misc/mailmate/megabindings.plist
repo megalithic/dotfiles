@@ -1,0 +1,13 @@
+{
+	"c"	= "newMessage:";
+	"r"	= "reply:";
+        "R"     = "replyAll:";
+	"f"	= "forwardMessage:";
+	"s"	= "toggleFlag:";
+	"x"	= "deleteMessage:";
+	"e"	= "archive:";
+	"/"	= "searchAllMessages:";
+	"^/"	= "searchAllMessages:";
+	"^u"	= "undo:";
+	"^r"	= "redo:";
+}

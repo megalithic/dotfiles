@@ -142,6 +142,10 @@
     ~/.default-gems: asdf/default-gems
     ~/.default-npm-packages: asdf/default-npm-packages
     ~/.default-python-packages: asdf/default-python-packages
+    ~/Library/Application Support/MailMate/Resources/KeyBindings/Mega.plist:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: misc/mailmate/megabindings.plist
     # ~/Library/Application Support/lazygit/config.yml:
     #   force: true
     #   if: "[ `uname` = Darwin ]"
