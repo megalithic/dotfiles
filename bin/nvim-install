@@ -12,6 +12,8 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
+FORCE_INSTALL="false"
+
 pushd "$XDG_DATA_HOME/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
 
 update() {
@@ -32,16 +34,16 @@ clone() {
 
 do_build() {
 	git up && log_ok "git up successful"
-	sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1
-	make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
+	[[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1
+	sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
 	sudo make install || exit 1 && log_ok "make install successful"
 }
 
 build() {
-	if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
+	if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
 		log_warn "neovim already up to date on origin/master; skipping."
 	else
-		read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
+		read -rp "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
 		case $yn in
 			[Yy]*)
 				do_build || exit 1
@@ -59,5 +61,21 @@ build() {
 		esac
 	fi
 }
+
+while getopts "f" OPTION; do
+	case $OPTION in
+
+		f)
+			FORCE_INSTALL="true"
+			;;
+
+		\?)
+			echo "Invalid Option: -$OPTARG" 1>&2
+			exit 1
+			;;
+
+	esac
+done
+shift $((OPTIND - 1))
 
 clone && update && build && popd >/dev/null
