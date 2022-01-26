@@ -38,7 +38,7 @@ function M.setup(on_attach)
         end,
       }),
       b.formatting.elm_format,
-      -- b.formatting.mix.with({ filetypes = { "html.heex", "heex" } }),
+      b.formatting.mix.with({ filetypes = { "heex" } }),
       -- b.formatting.surface.with({ filetypes = { "elixir", "eelixir", "heex", "html.heex", "surface" } }),
       -- nls.builtins.formatting.rustywind.with({
       --   filetypes = {
@@ -57,7 +57,7 @@ function M.setup(on_attach)
         extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
       }),
-      b.diagnostics.shellcheck,
+      -- b.diagnostics.shellcheck,
       -- b.diagnostics.credo,
       -- b.diagnostics.selene, -- this breaks?
     },

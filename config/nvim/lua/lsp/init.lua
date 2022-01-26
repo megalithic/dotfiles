@@ -90,28 +90,15 @@ local function setup_diagnostics()
 end
 
 local function setup_lsp_formatting(client, bufnr)
-  local ft = api.nvim_buf_get_option(bufnr, "filetype")
-  local nls = mega.load("lsp.null-ls")
-
-  local nls_enabled = false
-  if nls.has_formatter(ft) then
-    nls_enabled = client.name == "null-ls"
-  else
-    nls_enabled = not client.name == "null-ls"
-  end
-
-  -- TODO: ensure this is working as expected for lsp clients that do support
-  -- this and when using null-ls too;
-  -- client.resolved_capabilities.document_formatting = not nls_enabled
-  P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
-
   -- format on save
+  utils.lsp.formatting(bufnr)
   if client.resolved_capabilities.document_formatting then
     vcmd([[
-      augroup LspFormat
+      augroup Format
         autocmd! * <buffer>
         mkview!
         autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
+        " autocmd BufWritePost <buffer> lua require('utils').lsp.formatting().format()
         loadview
       augroup END
     ]])
@@ -141,6 +128,22 @@ local function setup_lsp_handlers()
   lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, opts)
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
   lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, opts)
+  -- REF: https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/handlers.lua#L1-L17
+  -- lsp.handlers["textDocument/formatting"] = function(err, result, ctx)
+  --   if err ~= nil or result == nil then
+  --     return
+  --   end
+  --   if api.nvim_buf_get_var(ctx.bufnr, "init_changedtick") == api.nvim_buf_get_var(ctx.bufnr, "changedtick") then
+  --     local view = fn.winsaveview()
+  --     lsp.util.apply_text_edits(result, ctx.bufnr)
+  --     fn.winrestview(view)
+  --     if ctx.bufnr == api.nvim_get_current_buf() then
+  --       vim.b.saving_format = true
+  --       vcmd([[update]])
+  --       vim.b.saving_format = false
+  --     end
+  --   end
+  -- end
 end
 
 -- our on_attach function to pass to each language server config..
@@ -439,7 +442,20 @@ local function setup_lsp_servers()
   end
 
   -- null-ls setup
-  require("lsp.null-ls").setup(on_attach)
+  -- require("lsp.null-ls").setup(on_attach)
+
+  do -- efm-ls setup
+    local languages = require("lsp.efm-ls").languages()
+    lspconfig["efm"].setup(lsp_with_defaults({
+      init_options = { documentFormatting = true },
+      -- root_dir = root_pattern("Gemfile", ".git"),
+      settings = {
+        rootMarkers = { ".git/" },
+        lintDebounce = 100,
+        languages = languages,
+      },
+    }))
+  end
 
   do -- ruby/solargraph
     lspconfig["solargraph"].setup(lsp_with_defaults({

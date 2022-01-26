@@ -341,7 +341,66 @@ function M.lsp.elixirls_cmd(opts)
     end
   end
 
-  return fn.expand(string.format("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
+  return fn.expand(fmt("%s/lsp/elixir-ls/%s", fallback_dir, "language_server.sh"))
 end
+
+-- REF: https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/formatting.lua
+function M.lsp.formatting(_) -- bufnr
+  local format_options_var = function()
+    return string.format("format_options_%s", vim.bo.filetype)
+  end
+
+  local format_options_prettier = {
+    tabWidth = 2,
+    singleQuote = false,
+    trailingComma = "all",
+    configPrecedence = "prefer-file",
+  }
+  vim.g.format_options_typescript = format_options_prettier
+  vim.g.format_options_javascript = format_options_prettier
+  vim.g.format_options_typescriptreact = format_options_prettier
+  vim.g.format_options_javascriptreact = format_options_prettier
+  vim.g.format_options_json = format_options_prettier
+  vim.g.format_options_css = format_options_prettier
+  vim.g.format_options_scss = format_options_prettier
+  vim.g.format_options_html = format_options_prettier
+  vim.g.format_options_yaml = format_options_prettier
+  vim.g.format_options_yaml = {
+    tabWidth = 2,
+    singleQuote = true,
+    trailingComma = "all",
+    configPrecedence = "prefer-file",
+  }
+  vim.g.format_options_markdown = format_options_prettier
+  vim.g.format_options_sh = {
+    tabWidth = 4,
+  }
+
+  return {
+    format = function()
+      -- if not vim.b.saving_format and not vim.g[format_disabled_var()] then
+      if not vim.b.saving_format then
+        vim.b.init_changedtick = vim.b.changedtick
+        vim.lsp.buf.formatting(vim.g[format_options_var()] or {})
+        -- vim.lsp.buf.formatting_sync(vim.g[format_options_var()] or {}, 500)
+      end
+    end,
+  }
+end
+
+-- local ft = api.nvim_buf_get_option(bufnr, "filetype")
+-- local nls = mega.load("lsp.null-ls")
+
+-- local nls_enabled = false
+-- if nls.has_formatter(ft) then
+--   nls_enabled = client.name == "null-ls"
+-- else
+--   nls_enabled = not client.name == "null-ls"
+-- end
+
+-- TODO: ensure this is working as expected for lsp clients that do support
+-- this and when using null-ls too;
+-- client.resolved_capabilities.document_formatting = not nls_enabled
+-- P(fmt("client: %s, ft: %s, nls_enabled: %s", client.name, ft, nls_enabled))
 
 return M
