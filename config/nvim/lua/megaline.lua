@@ -569,7 +569,9 @@ function M.s_git(args)
   local status = vim.b.gitsigns_status_dict or {}
   local signs = M.is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
 
-  local head_str = unpack(U.item(status.head, "StGitBranch", { prefix = C.icons.git, prefix_color = "StGitSymbol" }))
+  local head_str = unpack(
+    U.item(status.head, "StGitBranch", { before = " ", prefix = C.icons.git, prefix_color = "StGitSymbol" })
+  )
   local added_str = unpack(U.item(status.added, "StTitle", { prefix = C.icons.git_added, prefix_color = "StGreen" }))
   local changed_str = unpack(
     U.item(status.changed, "StTitle", { prefix = C.icons.git_changed, prefix_color = "StWarning" })

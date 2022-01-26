@@ -12,32 +12,75 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-elixirls_path="$XDG_DATA_HOME/lsp/elixir-ls"
+ELIXIRLS_PATH="$XDG_DATA_HOME/lsp/elixir-ls"
+VERSION="${1:-stable}"
+TARGET=""
+BINARY=""
+BUILD_TYPE=""
+
+# REF: https://github.com/outstand/atlas/blob/83345ed348ad0b6fb5a8c413b5202f5cfaf5d547/Dockerfile
+# # Release 0.9.0 is buggered up with 0.8.2 version info
+# ARG ELIXIR_LS_VER=1e7a52ca242bf06942c405aab043a612fcd2a211
+# # RUN wget https://github.com/elixir-lsp/elixir-ls/archive/refs/tags/v$ELIXIR_LS_VER.tar.gz
+# RUN wget https://github.com/elixir-lsp/elixir-ls/archive/$ELIXIR_LS_VER.tar.gz
+# RUN apk add git
+# RUN tar -xf $ELIXIR_LS_VER.tar.gz && \
+#     cd elixir-ls-$ELIXIR_LS_VER && \
+#     mix local.hex --force && mix local.rebar --force && \
+#     mix do deps.get, compile, elixir_ls.release -o /opt/elixir-ls
 
 do_install() {
-  log "downloading and installing to $elixirls_path"
-  curl -fLO https://github.com/elixir-lsp/elixir-ls/releases/latest/download/elixir-ls.zip \
-    && unzip -o elixir-ls.zip -d "$elixirls_path" \
-    && chmod +x "$elixirls_path/language_server.sh" \
-    && echo "" \
-    && (rm elixir-ls.zip && log_ok "removed $HOME/elixir-ls.zip") \
-    && log_ok "finished downloading and installing elixir-ls to $elixirls_path" \
-    || exit 1
-  }
+	case "$VERSION" in
+		'' | 'stable')
+			TARGET="https://github.com/elixir-lsp/elixir-ls/releases/latest/download/"
+			BINARY="elixir-ls.zip"
+			BUILD_TYPE="archive"
+			;;
+		*)
+			TARGET="https://github.com/elixir-lsp/elixir-ls/archive/"
+			BINARY="${VERSION}.tar.gz"
+			BUILD_TYPE="source"
+			;;
+	esac
 
-  read -p "$(tput bold)$(tput setaf 5)[?] download and install latest elixir-ls (Y/n)?$(tput sgr 0) " yn;
-  case $yn in
-    [Yy]* )
-      do_install || exit 1
-      ;;
-    "" )
-      do_install || exit 1
-      ;;
-    [Nn]* )
-      log_warn "opted out of elixir-ls install"
-      ;;
-    * )
-      log_warn "please answer [y]es or [n]o."
-      exec $__invocation
-      ;;
-  esac
+	log "downloading and installing to $ELIXIRLS_PATH"
+	if [[ $BUILD_TYPE == "archive" ]]; then
+		curl -fLO "$TARGET/$BINARY" \
+			&& unzip -o "$BINARY" -d "$ELIXIRLS_PATH" \
+			&& chmod +x "$ELIXIRLS_PATH/language_server.sh" \
+			&& log_ok "unpacked $HOME/$BINARY" \
+			&& (rm "$BINARY" && log_ok "removed $HOME/$BINARY") \
+			&& log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" \
+			|| exit 1
+	elif [[ $BUILD_TYPE == "source" ]]; then
+		curl -fLO "$TARGET/$BINARY" \
+			&& tar -xvzf "$BINARY" -C ~/tmp \
+			&& log_ok "unpacked $HOME/$BINARY" \
+			&& pushd "$HOME/tmp/elixir-ls-$VERSION" >/dev/null \
+			&& mix local.hex --force && mix local.rebar --force \
+			&& mix do deps.get, compile, elixir_ls.release -o "$ELIXIRLS_PATH" \
+			&& log_ok "built elixir-ls" \
+			&& popd >/dev/null \
+			&& (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") \
+			&& (rm "$BINARY" && log_ok "removed $HOME/$BINARY") \
+			&& log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" \
+			|| exit 1
+	fi
+}
+
+read -rp "$(tput bold)$(tput setaf 5)[?] download and install ${VERSION} elixir-ls (Y/n)?$(tput sgr 0) " yn
+case $yn in
+	[Yy]*)
+		do_install || exit 1
+		;;
+	"")
+		do_install || exit 1
+		;;
+	[Nn]*)
+		log_warn "opted out of elixir-ls install"
+		;;
+	*)
+		log_warn "please answer [y]es or [n]o."
+		exec $__invocation
+		;;
+esac

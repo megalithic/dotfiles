@@ -1356,7 +1356,7 @@ M.setup = function()
         b = { builtins.current_buffer_fuzzy_find, "current buffer fuzzy find" },
         d = { dotfiles, "dotfiles" },
         p = { privates, "privates" },
-        f = { project_files, "find/git files" },
+        f = { builtins.find_files, "find/git files" },
         g = {
           name = "+git",
           c = { builtins.git_commits, "commits" },
@@ -1868,22 +1868,22 @@ M.setup = function()
     require("which-key").register({
       ["<leader>h"] = {
         name = "+gitsigns hunk",
-        s = { "stage", gs.stage_hunk },
-        u = { "undo stage", gs.undo_stage_hunk },
-        r = { "reset hunk", gs.reset_hunk },
-        p = { "preview current hunk", gs.preview_hunk },
-        d = { "diff this line", gs.diffthis },
+        s = { gs.stage_hunk, "stage" },
+        u = { gs.undo_stage_hunk, "undo stage" },
+        r = { gs.reset_hunk, "reset hunk" },
+        p = { gs.preview_hunk, "preview current hunk" },
+        d = { gs.diffthis, "diff this line" },
         D = {
-          "diff this with ~",
           function()
             gs.diffthis("~")
           end,
+          "diff this with ~",
         },
         b = {
-          "blame current line",
           function()
             gs.blame_line({ full = true })
           end,
+          "blame current line",
         },
       },
       ["<leader>lm"] = "gitsigns: list modified in quickfix",
