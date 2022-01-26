@@ -23,10 +23,10 @@ case $yn in
 		do_install || exit 1
 		;;
 	[Nn]*)
-		log_warn "asdf: opted out of installing lua addons"
+		log_warn "opted out of installing lua addons"
 		;;
 	*)
-		log_warn "asdf: please answer [y]es or [n]o."
+		log_warn "please answer [y]es or [n]o."
 		exec $__invocation
 		;;
 esac

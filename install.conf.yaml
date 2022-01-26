@@ -218,17 +218,17 @@
 
     - [asdf reshim, Reshimming asdf binaries]
 
-    - description: Attemping to install luarocks packages..
+    - description: Attemping to post-asdf install lua/luarocks packages..
       quiet: true
       command: >-
         ~/.dotfiles/asdf/lua.sh
 
-    - description: Attemping to install rust cargo packages..
+    - description: Attemping to post-asdf install rust/cargo packages..
       quiet: true
       command: >-
         ~/.dotfiles/asdf/rust.sh
 
-    - description: Attemping to install go-lang packages..
+    - description: Attemping to post-asdf install go-lang packages..
       quiet: true
       command: >-
         ~/.dotfiles/asdf/go.sh
