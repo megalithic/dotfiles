@@ -23,6 +23,9 @@ all: ## Runs all platform-specific dotbot install scripts
 elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
 	$(HOME)/.dotfiles/bin/elixirls-install
 
+elixirls-master: ## Install elixir-ls from source to $XDG_DATA_HOME/lsp/elixir-ls
+	$(HOME)/.dotfiles/bin/elixirls-install master
+
 paq: ## Install paq-nvim to $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
 	$(HOME)/.dotfiles/bin/paq-install
 

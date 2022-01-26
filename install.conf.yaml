@@ -214,7 +214,7 @@
     - description: Attempting to install elixir-ls..
       quiet: true
       command: >-
-        make -C ~/.dotfiles elixirls;
+        make -C ~/.dotfiles elixirls-master;
 
     - [asdf reshim, Reshimming asdf binaries]
 
