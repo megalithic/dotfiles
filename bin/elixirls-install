@@ -19,16 +19,6 @@ BINARY=""
 BUILD_TYPE=""
 
 # REF: https://github.com/outstand/atlas/blob/83345ed348ad0b6fb5a8c413b5202f5cfaf5d547/Dockerfile
-# # Release 0.9.0 is buggered up with 0.8.2 version info
-# ARG ELIXIR_LS_VER=1e7a52ca242bf06942c405aab043a612fcd2a211
-# # RUN wget https://github.com/elixir-lsp/elixir-ls/archive/refs/tags/v$ELIXIR_LS_VER.tar.gz
-# RUN wget https://github.com/elixir-lsp/elixir-ls/archive/$ELIXIR_LS_VER.tar.gz
-# RUN apk add git
-# RUN tar -xf $ELIXIR_LS_VER.tar.gz && \
-#     cd elixir-ls-$ELIXIR_LS_VER && \
-#     mix local.hex --force && mix local.rebar --force && \
-#     mix do deps.get, compile, elixir_ls.release -o /opt/elixir-ls
-
 do_install() {
 	case "$VERSION" in
 		'' | 'stable')

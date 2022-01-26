@@ -221,21 +221,17 @@
     - description: Attemping to install luarocks packages..
       quiet: true
       command: >-
-        luarocks install luacheck lcf;
-        luarocks install --server=https://luarocks.org/dev luaformatter;
+        . ~/.dotfiles/asdf/lua.sh
 
     - description: Attemping to install rust cargo packages..
       quiet: true
       command: >-
-        cargo install selene stylua distant;
+        . ~/.dotfiles/asdf/rust.sh
 
     - description: Attemping to install go-lang packages..
       quiet: true
       command: >-
-        GO111MODULE=on go get golang.org/x/tools/gopls@latest;
-        GO111MODULE=on go get -u github.com/client9/misspell/cmd/misspell;
-        # @GO111MODULE=on go get -tags "fts5 icu" -u github.com/mickael-menu/zk@HEAD;
-        # GO111MODULE=on go get -u github.com/lemonade-command/lemonade@HEAD;
+        . ~/.dotfiles/asdf/go.sh
 
     - [~/.dotfiles/bin/gh-login, GitHub Authentication]
     # if (git merge-base --is-ancestor origin/master master); then

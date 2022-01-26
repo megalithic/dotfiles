@@ -1,30 +1,44 @@
-#!/usr/bin/env zsh
-# shellcheck shell=bash
+#!/bin/bash
 
-# super verbose debugging of the running script:
-# set -x
+[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
 
-# -- handling the install of rust with asdf
-# - or -
-# -- handle with direct install via rustup
-# if (command -v rustup &>/dev/null); then
-#   log "installing rustup"
-# 	rustup install stable
-# 	rustup default stable
-# fi
+set -euo pipefail
 
-if (command -v cargo &>/dev/null); then
-
-	# if [[ ! -d $HOME/.cargo ]]; then
-	#   mkdir -p $HOME/.cargo
+do_install() {
+	# -- handling the install of rust with asdf
+	# - or -
+	# -- handle with direct install via rustup
+	# if (has rustup); then
+	#   log "installing rustup"
+	# 	rustup install stable
+	# 	rustup default stable
 	# fi
 
-	log "installing cargo crates"
-	cargo install selene  # https://kampfkarren.github.io/selene/selene.html
-	cargo install stylua  # https://github.com/johnnymorganz/stylua
-	cargo install distant # https://github.com/chipsenkbeil/distant
+	if (has cargo); then
+		# (! has luacheck) && luarocks install luacheck
+		cargo install selene  # https://kampfkarren.github.io/selene/selene.html
+		cargo install stylua  # https://github.com/johnnymorganz/stylua
+		cargo install distant # https://github.com/chipsenkbeil/distant
 
-	if [[ $PLATFORM == "linux" ]]; then
-		cargo install git-delta
+		if [[ $PLATFORM == "linux" ]]; then
+			cargo install git-delta
+		fi
 	fi
-fi
+}
+
+read -p "$(tput bold)$(tput setaf 5)[?] download and install rust addons (Y/n)?$(tput sgr 0) " yn
+case $yn in
+	[Yy]*)
+		do_install || exit 1
+		;;
+	"")
+		do_install || exit 1
+		;;
+	[Nn]*)
+		log_warn "opted out of installing rust addons"
+		;;
+	*)
+		log_warn "please answer [y]es or [n]o."
+		exec $__invocation
+		;;
+esac
