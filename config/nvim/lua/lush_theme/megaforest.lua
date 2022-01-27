@@ -784,21 +784,21 @@ return lush(function()
 
     ---- :help telescope -------------------------------------------
 
-    TelescopeNormal({ bg = C.bg1 }),
-    TelescopeBorder({ fg = C.bg0, bg = C.bg1 }),
+    TelescopeNormal({ bg = C.bg2.darken(20) }),
+    TelescopeBorder({ fg = C.bg0, bg = C.bg2.darken(20) }),
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
 
     TelescopePreviewTitle({ fg = C.bg0, bg = C.green, gui = "italic" }),
 
-    TelescopePrompt({ bg = C.bg1 }),
-    TelescopePromptPrefix({ Statement, bg = "NONE" }),
-    TelescopePromptBorder({ fg = "NONE", bg = "NONE" }),
-    TelescopePromptNormal({ fg = C.fg, bg = C.bg1 }),
+    TelescopePrompt({ bg = C.bg2.darken(10) }),
+    TelescopePromptPrefix({ Statement, bg = C.bg2.darken(10) }),
+    TelescopePromptBorder({ fg = "NONE", bg = C.bg2.darken(10) }),
+    TelescopePromptNormal({ fg = C.fg, bg = C.bg2.darken(10) }),
     TelescopePromptTitle({ fg = C.bg0, bg = C.red }),
 
-    TelescopeSelection({ bg = C.bg2 }),
-    TelescopeSelectionCaret({ fg = C.fg, bg = C.bg2 }),
+    TelescopeSelection({ bg = C.bg2.darken(10) }),
+    TelescopeSelectionCaret({ fg = C.fg, bg = C.bg2.darken(10) }),
     TelescopeResults({ bg = "NONE" }),
     TelescopeResultsTitle({ fg = C.bg0, bg = C.fg, gui = "bold" }),
   }
