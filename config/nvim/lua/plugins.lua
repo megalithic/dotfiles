@@ -434,7 +434,6 @@ M.setup = function()
         "typescriptreact",
         "javascriptreact",
         "vue",
-        "elixir",
         "heex",
       },
     })
@@ -1134,8 +1133,9 @@ M.setup = function()
     local function get_border(opts)
       return vim.tbl_deep_extend("force", opts or {}, {
         borderchars = {
-          -- { " ", " ", " ", " ", " ", " ", " ", " " },
-          { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          { " ", " ", " ", " ", " ", " ", " ", " " },
+          -- { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
+          -- { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
           prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
           results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
           preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
@@ -1151,8 +1151,10 @@ M.setup = function()
 
     telescope.setup({
       defaults = {
-        set_env = { ["TERM"] = vim.env.TERM },
-        -- borderchars = { " ", " ", " ", " ", " ", " ", " ", " " },
+        set_env = { ["TERM"] = vim.env.TERM, ["COLORTERM"] = "truecolor" },
+        border = {},
+        borderchars = { " ", " ", " ", " ", " ", " ", " ", " " },
+        -- borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
         -- borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
         prompt_prefix = "  ",
         selection_caret = "» ", -- ❯

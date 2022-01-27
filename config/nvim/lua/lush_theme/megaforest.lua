@@ -784,42 +784,22 @@ return lush(function()
 
     ---- :help telescope -------------------------------------------
 
+    TelescopeNormal({ bg = C.bg1 }),
+    TelescopeBorder({ fg = C.bg0, bg = C.bg1 }),
     TelescopeMatching({ Title }),
-    -- TelescopeBorder({ GreyFloatBorder }),
-    TelescopePromptPrefix({ Statement }),
     TelescopeTitle({ Normal, gui = "bold" }),
-    TelescopeSelectionCaret({ fg = fg, bg = "NONE" }),
-    TelescopeBorder({ fg = bg4 }),
 
-    -- TelescopeMatching({ Title }),
-    -- TelescopeBorder({ GreyFloatBorder }),
-    -- TelescopePromptPrefix({ Statement }),
-    -- TelescopeTitle({ Normal, gui = "bold" }),
-    -- TelescopeSelectionCaret({ fg = fg }),
-    -- TelescopeNormal({ bg = bg1 }),
-    -- TelescopePromptNormal({ bg = bg1 }),
-    -- TelescopePromptBorder({ bg = bg1 }),
-    -- TelescopePreviewBorder({ bg = bg1 }),
-    -- TelescopeResultsBorder({ bg = bg1 }),
+    TelescopePreviewTitle({ fg = C.bg0, bg = C.green, gui = "italic" }),
 
-    -- { "TelescopeSelection", { bg = palette.dark1 } }, -- gitsigns
-    -- { "TelescopeNormal", { fg = palette.light1, bg = palette.dark0_hard } },
-    -- { "TelescopePromptNormal", { bg = palette.dark1 } }, -- gitsigns
-    -- { "TelescopeResultsBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
-    -- { "TelescopePreviewBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
-    -- { "TelescopePromptBorder", { fg = palette.bright_blue, bg = palette.dark1 } },
-    -- { "TelescopePromptTitle", { fg = palette.dark1, bg = palette.bright_blue } },
-    -- { "TelescopeResultsTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
-    -- { "TelescopePreviewTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
+    TelescopePrompt({ bg = C.bg1 }),
+    TelescopePromptPrefix({ Statement, bg = "NONE" }),
+    TelescopePromptBorder({ fg = "NONE", bg = "NONE" }),
+    TelescopePromptNormal({ fg = C.fg, bg = C.bg1 }),
+    TelescopePromptTitle({ fg = C.bg0, bg = C.red }),
 
-    -- { "TelescopeSelection", { bg = palette.dark1 } }, -- gitsigns
-    -- { "TelescopeNormal", { fg = palette.light1, bg = palette.dark0_hard } },
-    -- { "TelescopePromptNormal", { bg = palette.dark1 } }, -- gitsigns
-    -- { "TelescopeResultsBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
-    -- { "TelescopePreviewBorder", { fg = palette.bright_aqua, bg = palette.dark0_hard } },
-    -- { "TelescopePromptBorder", { fg = palette.bright_blue, bg = palette.dark1 } },
-    -- { "TelescopePromptTitle", { fg = palette.dark1, bg = palette.bright_blue } },
-    -- { "TelescopeResultsTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
-    -- { "TelescopePreviewTitle", { fg = palette.dark1, bg = palette.bright_aqua } },
+    TelescopeSelection({ bg = C.bg2 }),
+    TelescopeSelectionCaret({ fg = C.fg, bg = C.bg2 }),
+    TelescopeResults({ bg = "NONE" }),
+    TelescopeResultsTitle({ fg = C.bg0, bg = C.fg, gui = "bold" }),
   }
 end)
