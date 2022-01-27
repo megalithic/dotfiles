@@ -12,6 +12,8 @@ function M.setup(on_attach)
     on_attach = on_attach,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
+      b.formatting.trim_newlines,
+      b.formatting.isort,
       b.formatting.prettierd.with({
         filetypes = {
           "javascript",

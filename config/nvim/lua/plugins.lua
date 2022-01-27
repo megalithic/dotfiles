@@ -24,6 +24,7 @@ M.list = {
   "rktjmp/lush.nvim",
   "mhanberg/thicc_forest",
   "mjlbach/onedark.nvim",
+  "ethanholz/nightfox.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
@@ -756,11 +757,13 @@ M.setup = function()
   end
 
   do -- lastplace
-    require("nvim-lastplace").setup({
-      lastplace_ignore_buftype = { "quickfix", "nofile", "help", "gitcommit" },
-      lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
-      lastplace_open_folds = true,
-    })
+    if true then
+      require("nvim-lastplace").setup({
+        lastplace_ignore_buftype = { "quickfix", "nofile", "help", ".git/COMMIT_EDITMSG" },
+        lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
+        lastplace_open_folds = true,
+      })
+    end
   end
 
   do -- nvim-autopairs

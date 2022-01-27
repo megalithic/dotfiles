@@ -5,6 +5,7 @@ local bufmap, bmap, au = mega.bufmap, mega.bmap, mega.au
 local lspconfig = require("lspconfig")
 local U = require("utils")
 
+-- TODO: determine if we're keeping efm-ls at all.
 local formatting_lsp = "null-ls" -- or "efm-ls"
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
