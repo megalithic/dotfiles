@@ -14,13 +14,11 @@ local M = {}
 
 M.list = {
   { "savq/paq-nvim" },
-
   ------------------------------------------------------------------------------
   -- (profiling/speed improvements) --
   "dstein64/vim-startuptime",
   "lewis6991/impatient.nvim",
   "nathom/filetype.nvim",
-
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
@@ -38,7 +36,6 @@ M.list = {
   -- "goolord/alpha-nvim",
   "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
-
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -55,7 +52,6 @@ M.list = {
   "hrsh7th/cmp-emoji",
   "f3fora/cmp-spell",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
-
   -- for fuzzy things in nvim-cmp and command:
   "tzachar/fuzzy.nvim",
   "tzachar/cmp-fuzzy-path",
@@ -64,6 +60,7 @@ M.list = {
 
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
+  "ray-x/lsp_signature.nvim",
   "nvim-lua/lsp-status.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
@@ -72,7 +69,7 @@ M.list = {
   "folke/trouble.nvim",
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
-
+  "mhartington/formatter.nvim",
   ------------------------------------------------------------------------------
   -- (treesitter) --
   {
@@ -143,7 +140,6 @@ M.list = {
   "ruifm/gitlinker.nvim",
   "ruanyl/vim-gh-line",
   "rlch/github-notifications.nvim",
-
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
   -- "ahmedkhalf/project.nvim",
@@ -167,7 +163,6 @@ M.list = {
       vim.fn["firenvim#install"](0)
     end,
   },
-
   ------------------------------------------------------------------------------
   -- (the rest...) --
   "nacro90/numb.nvim",
@@ -1413,30 +1408,24 @@ M.setup = function()
       dailies = mega.dirs.zk .. "/" .. "daily",
       weeklies = mega.dirs.zk .. "/" .. "weekly",
       templates = mega.dirs.zk .. "/" .. "templates",
-
       -- image subdir for pasting
       -- subdir name
       -- or nil if pasted images shouldn't go into a special subdir
       image_subdir = nil,
-
       -- markdown file extension
       extension = ".md",
-
       -- following a link to a non-existing note will create it
       follow_creates_nonexisting = true,
       dailies_create_nonexisting = true,
       weeklies_create_nonexisting = true,
-
       -- templates for new notes
       template_new_note = mega.dirs.zk .. "/" .. "templates/new_note.md",
       template_new_daily = mega.dirs.zk .. "/" .. "templates/daily_tk.md",
       template_new_weekly = mega.dirs.zk .. "/" .. "templates/weekly_tk.md",
-
       -- image link style
       -- wiki:     ![[image name]]
       -- markdown: ![](image_subdir/xxxxx.png)
       image_link_style = "markdown",
-
       -- integrate with calendar-vim
       plug_into_calendar = true,
       calendar_opts = {
@@ -1448,16 +1437,12 @@ M.setup = function()
         calendar_mark = "left-fit",
       },
       debug = false,
-
       close_after_yanking = false,
       insert_after_inserting = true,
-
       -- make syntax available to markdown buffers and telescope previewers
       install_syntax = true,
-
       -- tag notation: '#tag', ':tag:', 'yaml-bare'
       tag_notation = "#tag",
-
       -- command palette theme: dropdown (window) or ivy (bottom panel)
       command_palette_theme = "ivy",
     })
@@ -1625,7 +1610,8 @@ M.setup = function()
     local actions = require("distant.nav.actions")
 
     require("distant").setup({
-      ["198.74.55.152"] = { -- 198.74.55.152
+      ["198.74.55.152"] = {
+        -- 198.74.55.152
         max_timeout = 15000,
         poll_interval = 250,
         timeout_interval = 250,
@@ -1653,7 +1639,8 @@ M.setup = function()
           },
         },
       },
-      ["megalithic.io"] = { -- 198.199.91.123
+      ["megalithic.io"] = {
+        -- 198.199.91.123
         launch = {
           distant = "/home/replicant/.cargo/bin/distant",
           username = "replicant",
@@ -1661,7 +1648,6 @@ M.setup = function()
           extra_server_args = "\"--log-file ~/tmp/distant-megalithic_io-server.log --log-level trace --port 8081:8099 --shutdown-after 60\"",
         },
       },
-
       -- Apply these settings to any remote host
       ["*"] = {
         -- max_timeout = 60000,
@@ -1782,9 +1768,7 @@ M.setup = function()
         view = {
           width = "20%",
           auto_resize = true,
-          list = {
-            -- { key = "cd", cb = action("cd") },
-          },
+          list = {},
         },
         nvim_tree_ignore = { ".DS_Store", "fugitive:", ".git" },
         diagnostics = {
@@ -1943,6 +1927,118 @@ M.setup = function()
         ["n <leader>hp"] = "<cmd>lua require\"gitsigns\".preview_hunk()<CR>",
         ["n <leader>hb"] = "<cmd>lua require\"gitsigns\".blame_line()<CR>",
       },
+    })
+  end
+
+  do -- formatter.nvim
+    local formatter = require("formatter")
+    local prettierConfig = function()
+      return {
+        exe = "prettier",
+        args = { "--stdin-filepath", fn.shellescape(api.nvim_buf_get_name(0)), "--single-quote" },
+        stdin = true,
+      }
+    end
+
+    local formatterConfig = {
+      lua = {
+        function()
+          return {
+            -- exe = "stylua -s --stdin-filepath ${INPUT} -",
+            exe = "stylua",
+            args = { "-" },
+            stdin = true,
+          }
+        end,
+      },
+      vue = {
+        function()
+          return {
+            exe = "prettier",
+            args = {
+              "--stdin-filepath",
+              fn.fnameescape(api.nvim_buf_get_name(0)),
+              "--single-quote",
+              "--parser",
+              "vue",
+            },
+            stdin = true,
+          }
+        end,
+      },
+      rust = {
+        -- Rustfmt
+        function()
+          return {
+            exe = "rustfmt",
+            args = { "--emit=stdout" },
+            stdin = true,
+          }
+        end,
+      },
+      swift = {
+        -- Swiftlint
+        function()
+          return {
+            exe = "swift-format",
+            args = { api.nvim_buf_get_name(0) },
+            stdin = true,
+          }
+        end,
+      },
+      sh = {
+        -- Shell Script Formatter
+        function()
+          return {
+            exe = "shfmt",
+            args = { "-i", 2 },
+            stdin = true,
+          }
+        end,
+      },
+      heex = {
+        function()
+          return {
+            exe = "mix",
+            args = { "format", api.nvim_buf_get_name(0) },
+            stdin = false,
+          }
+        end,
+      },
+      ["*"] = {
+        function()
+          return {
+            -- remove trailing whitespace
+            exe = "sed",
+            args = { "-i", "'s/[ \t]*$//'" },
+            stdin = false,
+          }
+        end,
+      },
+    }
+    local commonFT = {
+      "css",
+      "scss",
+      "html",
+      "java",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+      "markdown",
+      "markdown.mdx",
+      "json",
+      "yaml",
+      "xml",
+      "svg",
+    }
+    for _, ft in ipairs(commonFT) do
+      formatterConfig[ft] = { prettierConfig }
+    end
+    -- Setup functions
+    formatter.setup({
+      logging = true,
+      filetype = formatterConfig,
     })
   end
 end

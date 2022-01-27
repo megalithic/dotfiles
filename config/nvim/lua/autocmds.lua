@@ -23,18 +23,19 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 -- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
 
---  Trim Whitespace
-exec(
-  [[
-    fun! TrimWhitespace()
-        let l:save = winsaveview()
-        keeppatterns %s/\s\+$//e
-        call winrestview(l:save)
-    endfun
-    autocmd BufWritePre * :call TrimWhitespace()
-]],
-  false
-)
+-- NOTE: presently handled by null-ls/efm-ls
+-- Trim Whitespace
+-- exec(
+--   [[
+--     fun! TrimWhitespace()
+--         let l:save = winsaveview()
+--         keeppatterns %s/\s\+$//e
+--         call winrestview(l:save)
+--     endfun
+--     autocmd BufWritePre * :call TrimWhitespace()
+-- ]],
+--   false
+-- )
 
 -- augroup("auto-cursor", {
 --   -- When editing a file, always jump to the last known cursor position.

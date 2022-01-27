@@ -2,9 +2,10 @@
 
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
 local bufmap, bmap, au = mega.bufmap, mega.bmap, mega.au
-local fmt = string.format
 local lspconfig = require("lspconfig")
-local utils = require("utils")
+local U = require("utils")
+
+local formatting_lsp = "null-ls" -- or "efm-ls"
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -12,139 +13,8 @@ set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 -- vim.lsp.set_log_level("trace")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
-local function setup_diagnostics()
-  fn.sign_define(vim.tbl_map(function(t)
-    local hl = "DiagnosticSign" .. t[1]
-    return {
-      name = hl,
-      text = t.icon,
-      texthl = hl,
-      numhl = hl,
-      linehl = fmt("%sLine", hl),
-    }
-  end, utils.lsp.diagnostic_types))
-
-  --- This overwrites the diagnostic show/set_signs function to replace it with a custom function
-  --- that restricts nvim's diagnostic signs to only the single most severe one per line
-  -- local ns = api.nvim_create_namespace("lsp-diagnostics")
-  -- local show = vim.diagnostic.show
-  -- local function display_signs(bufnr)
-  --   -- Get all diagnostics from the current buffer
-  --   local diagnostics = vim.diagnostic.get(bufnr)
-  --   local filtered = utils.lsp.filter_diagnostics(diagnostics, bufnr)
-  --   show(ns, bufnr, filtered, {
-  --     virtual_text = false,
-  --     underline = false,
-  --     signs = true,
-  --   })
-  -- end
-
-  -- -- Monkey-patch vim.diagnostic.show() with our own impl to filter sign severity
-  -- function vim.diagnostic.show(namespace, bufnr, ...)
-  --   show(namespace, bufnr, ...)
-  --   display_signs(bufnr)
-  -- end
-
-  -- Monkey-patch vim.diagnostic.open_float() with our own impl..
-  -- REF: https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
-  vim.diagnostic.open_float = (function(orig)
-    return function(bufnr, opts)
-      local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-      opts = opts or {}
-      -- A more robust solution would check the "scope" value in `opts` to
-      -- determine where to get diagnostics from, but if you're only using
-      -- this for your own purposes you can make it as simple as you like
-      local diagnostics = vim.diagnostic.get(opts.bufnr or 0, { lnum = lnum })
-      local max_severity = vim.diagnostic.severity.HINT
-      for _, d in ipairs(diagnostics) do
-        -- Equality is "less than" based on how the severities are encoded
-        if d.severity < max_severity then
-          max_severity = d.severity
-        end
-      end
-      local border_color = ({
-        [vim.diagnostic.severity.HINT] = "DiagnosticHint",
-        [vim.diagnostic.severity.INFO] = "DiagnosticInfo",
-        [vim.diagnostic.severity.WARN] = "DiagnosticWarn",
-        [vim.diagnostic.severity.ERROR] = "DiagnosticError",
-      })[max_severity]
-      opts.border = mega.get_border(border_color)
-      orig(bufnr, opts)
-    end
-  end)(vim.diagnostic.open_float)
-
-  vim.diagnostic.config({
-    underline = true,
-    virtual_text = false,
-    signs = true, -- {severity_limit = "Warning"},
-    update_in_insert = false,
-    severity_sort = true,
-    float = {
-      show_header = true,
-      source = "if_many", -- or "always"
-      border = mega.get_border(),
-      focusable = false,
-      severity_sort = true,
-    },
-  })
-end
-
-local function setup_lsp_formatting(client, bufnr)
-  -- format on save
-  utils.lsp.formatting(bufnr)
-  if client.resolved_capabilities.document_formatting then
-    vcmd([[
-      augroup Format
-        autocmd! * <buffer>
-        mkview!
-        autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
-        " autocmd BufWritePost <buffer> lua require('utils').lsp.formatting().format()
-        loadview
-      augroup END
-    ]])
-  end
-end
-
--- some of our custom LSP handlers
-local function setup_lsp_handlers()
-  -- hover
-  -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
-  local opts = {
-    border = mega.get_border(),
-    max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
-    max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
-    focusable = false,
-    silent = true,
-    severity_sort = true,
-    close_events = {
-      "CursorMoved",
-      "BufHidden",
-      "InsertCharPre",
-      "BufLeave",
-      "InsertEnter",
-      "FocusLost",
-    },
-  }
-  lsp.handlers["textDocument/hover"] = lsp.with(vim.lsp.handlers.hover, opts)
-  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
-  lsp.handlers["textDocument/publishDiagnostics"] = lsp.with(lsp.diagnostic.on_publish_diagnostics, opts)
-  -- REF: https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/handlers.lua#L1-L17
-  -- lsp.handlers["textDocument/formatting"] = function(err, result, ctx)
-  --   if err ~= nil or result == nil then
-  --     return
-  --   end
-  --   if api.nvim_buf_get_var(ctx.bufnr, "init_changedtick") == api.nvim_buf_get_var(ctx.bufnr, "changedtick") then
-  --     local view = fn.winsaveview()
-  --     lsp.util.apply_text_edits(result, ctx.bufnr)
-  --     fn.winrestview(view)
-  --     if ctx.bufnr == api.nvim_get_current_buf() then
-  --       vim.b.saving_format = true
-  --       vcmd([[update]])
-  --       vim.b.saving_format = false
-  --     end
-  --   end
-  -- end
-end
+require("lsp.diagnostics").setup()
+require("lsp.handlers").setup()
 
 -- our on_attach function to pass to each language server config..
 local function on_attach(client, bufnr)
@@ -158,19 +28,15 @@ local function on_attach(client, bufnr)
   end
 
   require("lsp-status").on_attach(client)
-  setup_lsp_formatting(client, bufnr)
+  require("lsp.formatting").setup(client, bufnr, formatting_lsp)
 
-  -- hacky solution to redirect formatting to the heex.lua ftplugin's formatter
-  -- if client.resolved_capabilities.document_formatting and not vim.bo.ft == "heex" then
-  --   vcmd([[
-  --     augroup LspFormat
-  --       autocmd! * <buffer>
-  --       mkview!
-  --       autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
-  --       loadview
-  --     augroup END
-  --   ]])
-  -- end
+  require("lsp_signature").on_attach({
+    hint_enable = false,
+    hi_parameter = "QuickFixLine",
+    handler_opts = {
+      border = vim.g.floating_window_border,
+    },
+  })
 
   if client.server_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
@@ -193,23 +59,12 @@ local function on_attach(client, bufnr)
   --     )
   -- end
 
-  --- # goto mappings
-  -- bmap("n", "gd", "lua vim.lsp.buf.definition()")
-  -- bmap("n", "gD", "lua TroubleToggle lsp_definitions")
-  -- bmap("n", "gr", "lua vim.lsp.buf.references()")
-  -- bmap("n", "gR", "lua TroubleToggle lsp_references")
-  -- bmap("n", "gs", "lua vim.lsp.buf.document_symbol()")
-  -- bmap("n", "gs", "lua vim.lsp.buf.workspace_symbol()")
-  -- bmap("n", "gi", "lua vim.lsp.buf.implementation()")
-  -- bmap("n", "gca", "lua vim.lsp.buf.code_action()")
-  -- bmap("x", "gca", "<esc><cmd>lua vim.lsp.buf.range_code_action()<cr>")
-
   --- # diagnostics navigation mappings
   bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })
   bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
   bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
-  bmap("n", "<leader>ld", "lua require('utils').lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
+  bmap("n", "<leader>ld", "lua require('lsp.diagnostics').line_diagnostics()", { label = "lsp: show line diagnostics" })
   bmap(
     "n",
     "<leader>lD",
@@ -235,7 +90,7 @@ local function on_attach(client, bufnr)
   )
 
   --- # autocommands/autocmds
-  au([[CursorHold <buffer> lua require('utils').lsp.line_diagnostics()]])
+  au([[CursorHold <buffer> lua require('lsp.diagnostics').line_diagnostics()]])
   -- autocmd("CursorHold", "<buffer>", function()
   --   vim.diagnostic.open_float(nil, {
   --     focusable = false,
@@ -262,19 +117,9 @@ local function on_attach(client, bufnr)
     local end_pos = api.nvim_buf_get_mark(0, ">")
     lsp.buf.range_formatting({}, start_pos, end_pos)
   end
-  vcmd([[ command! -range FormatRange execute 'lua FormatRange()' ]])
-  vcmd([[ command! Format execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
+  vcmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
+  vcmd([[ command! LspFormat execute 'lua vim.lsp.buf.formatting_sync(nil, 1000)' ]])
   vcmd([[ command! LspLog lua vim.cmd('vnew'..vim.lsp.get_log_path()) ]])
-
-  -- disable formatting for the following language-servers (let null-ls takeover):
-  -- tags: #ignored, #disabled, #formatting
-  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet" }
-  for i = 1, #disabled_formatting_ls do
-    if disabled_formatting_ls[i] == client.name then
-      client.resolved_capabilities.document_formatting = false
-      client.resolved_capabilities.document_range_formatting = false
-    end
-  end
 
   -- (typescript/tsserver)
   if client.name == "tsserver" then
@@ -327,10 +172,10 @@ local function on_attach(client, bufnr)
         [",a"] = { "<cmd>LspStop<cr>", "stop all" },
         [",s"] = { "select" },
         A = "code actions (range)",
-        D = "diagnostics (project)",
+        -- D = "diagnostics (project)",
         a = "code actions (cursor)",
         c = "clear diagnostics",
-        d = "diagnostics (buffer)",
+        -- d = "diagnostics (buffer)",
         f = "format",
         g = { name = "go to" },
         gD = "declaration",
@@ -339,10 +184,9 @@ local function on_attach(client, bufnr)
         gr = "references",
         gy = "type definition",
         h = "hover",
-        i = { "<cmd>LspInfo<cr>", "LSP info" },
+        i = { "<cmd>LspInfo<cr>", "LSP info", buffer = bufnr },
         k = "signature help",
-        l = { "<cmd>LspLog<cr>", "LSP logs" },
-        -- l = "line diagnostics",
+        l = { "<cmd>LspLog<cr>", "LSP logs", buffer = bufnr },
         p = "peek definition",
         r = "rename",
         n = "rename",
@@ -432,8 +276,8 @@ local function setup_lsp_servers()
     "vimls",
   }
   for _, ls in ipairs(servers) do
-    -- handle language servers not installed/found; TODO: should probably handle
-    -- logging/install them at some point
+    -- handle language servers not installed/found;
+    -- TODO: should probably handle logging/install them at some point
     if ls == nil or lspconfig[ls] == nil then
       mega.inspect("unable to setup ls", { ls })
       return
@@ -441,27 +285,26 @@ local function setup_lsp_servers()
     lspconfig[ls].setup(lsp_with_defaults())
   end
 
-  -- null-ls setup
-  -- require("lsp.null-ls").setup(on_attach)
-
-  do -- efm-ls setup
-    local languages = require("lsp.efm-ls").languages()
-    lspconfig["efm"].setup(lsp_with_defaults({
-      init_options = { documentFormatting = true },
-      -- root_dir = root_pattern("Gemfile", ".git"),
-      settings = {
-        rootMarkers = { ".git/" },
-        lintDebounce = 100,
-        languages = languages,
-      },
-    }))
+  do
+    if formatting_lsp == "null-ls" then
+      require("lsp.null-ls").setup(on_attach)
+    elseif formatting_lsp == "efm-ls" then
+      local languages = require("lsp.efm-ls").languages()
+      lspconfig["efm"].setup(lsp_with_defaults({
+        init_options = { documentFormatting = true },
+        settings = {
+          rootMarkers = { ".git/" },
+          lintDebounce = 100,
+          languages = languages,
+        },
+      }))
+    end
   end
 
   do -- ruby/solargraph
     lspconfig["solargraph"].setup(lsp_with_defaults({
       cmd = { "solargraph", "stdio" },
       filetypes = { "ruby" },
-      -- root_dir = root_pattern("Gemfile", ".git"),
       settings = {
         solargraph = {
           diagnostics = true,
@@ -584,7 +427,7 @@ local function setup_lsp_servers()
     end
 
     lspconfig["elixirls"].setup(lsp_with_defaults({
-      cmd = { utils.lsp.elixirls_cmd() },
+      cmd = { U.lsp.elixirls_cmd() },
       settings = {
         elixirLS = {
           fetchDeps = false,
@@ -594,7 +437,7 @@ local function setup_lsp_servers()
           suggestSpecs = true,
         },
       },
-      filetypes = { "elixir", "eelixir", "heex", "html.heex" },
+      filetypes = { "elixir", "eelixir" },
       root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
       commands = {
         ToPipe = { manipulate_pipes("toPipe"), "Convert function call to pipe operator" },
@@ -801,8 +644,6 @@ end
 
 return {
   setup = function()
-    setup_lsp_handlers()
-    setup_diagnostics()
     require("lsp.completion").setup()
     setup_lsp_servers()
   end,

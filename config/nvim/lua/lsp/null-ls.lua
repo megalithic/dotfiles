@@ -38,9 +38,10 @@ function M.setup(on_attach)
         end,
       }),
       b.formatting.elm_format,
-      b.formatting.mix.with({ filetypes = { "heex" } }),
+      -- FIXME: doesn't work on heex for some reason
+      -- b.formatting.mix.with({ extra_filetypes = { "heex", "phoenix-html" } }),
       -- b.formatting.surface.with({ filetypes = { "elixir", "eelixir", "heex", "html.heex", "surface" } }),
-      -- nls.builtins.formatting.rustywind.with({
+      -- b.formatting.rustywind.with({
       --   filetypes = {
       --     "javascript",
       --     "javascriptreact",
@@ -64,7 +65,7 @@ function M.setup(on_attach)
   })
 end
 
-function M.has_formatter(ft)
+function M.has_nls_formatter(ft)
   local sources = require("null-ls.sources")
   local available = sources.get_available(ft, "NULL_LS_FORMATTING")
   return #available > 0

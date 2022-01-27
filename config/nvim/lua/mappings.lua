@@ -821,7 +821,8 @@ vmap(
   "telescope: grep for visual selection"
 )
 
--- grep
+-- # formatter.nvim
+nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 
 -- # misc
 -- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636
