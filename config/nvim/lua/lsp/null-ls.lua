@@ -12,8 +12,6 @@ function M.setup(on_attach)
     on_attach = on_attach,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-      b.formatting.trim_newlines,
-      b.formatting.isort,
       b.formatting.prettierd.with({
         filetypes = {
           "javascript",
@@ -34,6 +32,7 @@ function M.setup(on_attach)
         end,
       }),
       b.formatting.fixjson.with({ filetypes = { "jsonc" } }),
+      -- b.formatting.isort,
       b.formatting.stylua.with({
         condition = function(util)
           return mega.executable("stylua") and util.root_has_file("stylua.toml")

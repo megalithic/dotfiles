@@ -772,6 +772,16 @@ return lush(function()
     StInfo({ fg = C.cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = C.bright_yellow, bg = bg1 }),
 
+    ---- :help ts-rainbow  -------------------------------------------
+    ---
+    rainbowcol1({ fg = C.red }),
+    rainbowcol2({ fg = C.yellow }),
+    rainbowcol3({ fg = C.green }),
+    rainbowcol4({ fg = C.blue }),
+    rainbowcol5({ fg = C.cyan }),
+    rainbowcol6({ fg = C.magenta }),
+    rainbowcol7({ fg = C.purple }),
+
     ---- :help telescope -------------------------------------------
 
     TelescopeMatching({ Title }),
