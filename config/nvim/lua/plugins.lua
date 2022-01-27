@@ -2005,6 +2005,15 @@ M.setup = function()
           }
         end,
       },
+      elixir = {
+        function()
+          return {
+            exe = "mix",
+            args = { "format", "-" },
+            stdin = true,
+          }
+        end,
+      },
       ["*"] = {
         function()
           return {
