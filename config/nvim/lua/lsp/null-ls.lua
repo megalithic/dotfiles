@@ -55,7 +55,7 @@ function M.setup(on_attach)
       --   },
       -- }),
       b.formatting.shfmt.with({
-        extra_args = { "-ci", "-s", "-bn" }, -- suggested: { "-i", "2", "-ci" }
+        extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
       }),
       -- b.diagnostics.shellcheck,

@@ -72,60 +72,60 @@ zoom
 (command -v curl &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
-[[ -x "$spinner_path" ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
+[[ -x $spinner_path ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
 
 [[ $SPINNER_FOUND == "installed" ]] && spinner="$spinner_path" || spinner="echo '.'"
 
 function __help() {
-	printf -- "Usage: %s [options] [STATUS | FUZZY_PATTERN]\n" "$__base"
-	printf -- "\n"
+  printf -- "Usage: %s [options] [STATUS | FUZZY_PATTERN]\n" "$__base"
+  printf -- "\n"
   printf -- "   Statuses:\n"
-	printf -- "     away              Set presence to away, and profile for being gone\n"
-	printf -- "     lunch             Set presence to away, and profile for lunch\n"
-	printf -- "     coffee            Set presence to away, and profile for coffee\n"
-	printf -- "     tea               Set presence to away, and profile for tea\n"
-	printf -- "     dog               Set presence to away, and profile for dog walking\n"
-	printf -- "     errand            Set presence to away, and profile for running errand\n"
-	printf -- "     pair              Set DND to on, and profile for pairing\n"
-	printf -- "     zoom              Set DND to on, and profile for zoom/meeting\n"
-	printf -- "     dnd               Set DND to on, and profile for DND/focus\n"
-	printf -- "     focus             Set DND to on, and profile for DND/focus\n"
-	printf -- "     back              Set presence to auto, and profile accordingly\n"
-	printf -- "     here              Set presence to auto, and profile accordingly\n"
-	printf -- "\n"
-	printf -- "   Options:\n"
-	printf -- "     -p                Run fzf normally for tmux' popup feature, else fzf-tmux\n"
-	printf -- "     -h                This help text you're presently reading. 😄\n"
+  printf -- "     away              Set presence to away, and profile for being gone\n"
+  printf -- "     lunch             Set presence to away, and profile for lunch\n"
+  printf -- "     coffee            Set presence to away, and profile for coffee\n"
+  printf -- "     tea               Set presence to away, and profile for tea\n"
+  printf -- "     dog               Set presence to away, and profile for dog walking\n"
+  printf -- "     errand            Set presence to away, and profile for running errand\n"
+  printf -- "     pair              Set DND to on, and profile for pairing\n"
+  printf -- "     zoom              Set DND to on, and profile for zoom/meeting\n"
+  printf -- "     dnd               Set DND to on, and profile for DND/focus\n"
+  printf -- "     focus             Set DND to on, and profile for DND/focus\n"
+  printf -- "     back              Set presence to auto, and profile accordingly\n"
+  printf -- "     here              Set presence to auto, and profile accordingly\n"
+  printf -- "\n"
+  printf -- "   Options:\n"
+  printf -- "     -p                Run fzf normally for tmux' popup feature, else fzf-tmux\n"
+  printf -- "     -h                This help text you're presently reading. 😄\n"
   printf -- "     -d                Set debugging to true (used with curl) \n"
   printf -- "     -s                Silent mode; don't message the channel on status change. 😄\n"
-	printf -- "\n"
-	printf -- "   Dependencies:\n"
+  printf -- "\n"
+  printf -- "   Dependencies:\n"
   printf -- "     curl              ($CURL_FOUND)\n"
-	printf -- "     fzf               ($FZF_FOUND)\n"
-	printf -- "     jq                ($JQ_FOUND)\n"
-	printf -- "     spinner           ($SPINNER_FOUND)\n"
-	printf -- "\n"
+  printf -- "     fzf               ($FZF_FOUND)\n"
+  printf -- "     jq                ($JQ_FOUND)\n"
+  printf -- "     spinner           ($SPINNER_FOUND)\n"
+  printf -- "\n"
 }
 
 function __info() {
-	printf -- "%s executation details:\n" "$__base"
-	printf -- "---------------------------------------------------\n"
-	printf -- "fzf:          %s\n" "$fzf_cmd"
-	printf -- "curl:         %s\n" "$curl_cmd"
-	printf -- "status:       %s\n" "$status"
-	printf -- "cwd:          %s\n" "$__dir"
-	printf -- "filepath:     %s\n" "$__file"
-	printf -- "basename:     %s\n" "$__base"
-	printf -- "root:         %s\n" "$__root"
-	printf -- "invocation:   %s\n" "$__invocation"
-	printf -- "\n"
+  printf -- "%s executation details:\n" "$__base"
+  printf -- "---------------------------------------------------\n"
+  printf -- "fzf:          %s\n" "$fzf_cmd"
+  printf -- "curl:         %s\n" "$curl_cmd"
+  printf -- "status:       %s\n" "$status"
+  printf -- "cwd:          %s\n" "$__dir"
+  printf -- "filepath:     %s\n" "$__file"
+  printf -- "basename:     %s\n" "$__base"
+  printf -- "root:         %s\n" "$__root"
+  printf -- "invocation:   %s\n" "$__invocation"
+  printf -- "\n"
 }
 
 # -- halt if we don't have certain dependencies installed
 if [[ $JQ_FOUND == "not installed" ]]; then
-	printf -- "ERROR: %s requires jq to be installed" "$__base"
-	__help
-	exit 1
+  printf -- "ERROR: %s requires jq to be installed" "$__base"
+  __help
+  exit 1
 fi
 
 if [[ $CURL_FOUND == "not installed" ]]; then
@@ -136,37 +136,37 @@ fi
 
 # OPTERR=0
 while getopts "phdvs" OPTION; do
-	case $OPTION in
+  case $OPTION in
 
-		p)
-			POPUP="true"
-			;;
+    p)
+      POPUP="true"
+      ;;
 
     s)
       SILENT="true"
       ;;
 
-		h)
-			__help
+    h)
+      __help
       exit 0
-			;;
+      ;;
 
-		d)
-			DEBUG="true"
-			;;
+    d)
+      DEBUG="true"
+      ;;
 
-		v)
-			VERBOSE="true"
-			;;
+    v)
+      VERBOSE="true"
+      ;;
 
-    \? )
+    \?)
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
 
-	esac
+  esac
 done
-shift $((OPTIND -1))
+shift $((OPTIND - 1))
 
 # -- first param passed in, after options
 status="${1:-}"
@@ -212,39 +212,38 @@ function __set_status() {
   local emoji="$(printf %s "${2:-}" | jq -sRr @uri)"
   local profile="{\"status_text\":\"${text}\",\"status_emoji\":\"${emoji}\"}"
   request_data+=("profile=${profile}")
-	__request "users.profile.set"
+  __request "users.profile.set"
 }
 
 function __end_status() {
-  local profile="{\"status_text\":\"\",\"status_emoji\":\"\"}"
+  local profile='{"status_text":"","status_emoji":""}'
   request_data+=("profile=${profile}")
-	__request "users.profile.set"
+  __request "users.profile.set"
 }
 
 function __set_presence() {
   local presence="$1"
   request_data+=("presence=$presence")
-	__request "users.setPresence"
+  __request "users.setPresence"
 }
 
 function __set_dnd() {
   local dnd_mins="${1:-}"
   request_data+=("num_minutes=$dnd_mins")
-	__request "dnd.setSnooze"
+  __request "dnd.setSnooze"
 }
 
 function __end_dnd() {
   request_data+=("num_minutes=0")
-	__request "dnd.endDnd"
+  __request "dnd.endDnd"
 }
-
 
 function __set_chan_text() {
   if [[ $SILENT == "false" ]]; then
     # HT for `jq`: https://stackoverflow.com/a/34407620/213904
     local text="$(printf %s "${1:-}" | jq -sRr @uri)"
-    request_data+=("channel=$CHANNEL_ID" \
-      "as_user=$SLACK_USER" \
+    request_data+=("channel=$CHANNEL_ID"
+      "as_user=$SLACK_USER"
       "text=$text")
     __request "chat.postMessage"
   fi
@@ -252,15 +251,15 @@ function __set_chan_text() {
 
 # -- PUBLIC
 function away() {
+  __set_presence "away"
+  __set_status "..afk.." ":afk:"
   __set_chan_text "bbl"
-	__set_presence "away"
-	__set_status "..afk.." ":afk:"
 }
 
 function brb() {
+  __set_presence "away"
+  __set_status "..be right back.." ":brb:"
   __set_chan_text "brb"
-	__set_presence "away"
-	__set_status "..be right back.." ":brb:"
 }
 
 function lunch() {
@@ -269,96 +268,95 @@ function lunch() {
   lunch_emojis[2]=":hamburger:"
   lunch_emojis[3]=":green_salad:"
   lunch_emojis[4]=":curry:"
-  local rand=$[$RANDOM % ${#lunch_emojis[@]}]
+  local rand=$((RANDOM % ${#lunch_emojis[@]}))
 
+  __set_presence "away"
+  __set_status "..lunch.." "${lunch_emojis[$rand]}"
   __set_chan_text "bbl, lunch ${lunch_emojis[$rand]}"
-	__set_presence "away"
-	__set_status "..lunch.." "${lunch_emojis[$rand]}"
   unset lunch_emojis
 }
 
 function errand() {
+  __set_presence "away"
+  __set_status "..running an errand.." ":car:"
   __set_chan_text "bbiab, running an errand"
-	__set_presence "away"
-	__set_status "..running an errand.." ":car:"
 }
 
 function coffee() {
+  __set_presence "away"
+  __set_status "..covfefe.." ":coffee:"
   __set_chan_text "brb, coffee"
-	__set_presence "away"
-	__set_status "..covfefe.." ":coffee:"
 }
 
 function tea() {
+  __set_presence "away"
+  __set_status "..tea.." ":tea:"
   __set_chan_text "brb, tea"
-	__set_presence "away"
-	__set_status "..tea.." ":tea:"
 }
 
 function dog() {
+  __set_presence "away"
+  __set_status "..walking the puppers.." ":doge:"
   __set_chan_text "bbiab, walking the puppers"
-	__set_presence "away"
-	__set_status "..walking the puppers.." ":doge:"
 }
 
 function run() {
+  __set_presence "away"
+  __set_status "..gone for a run.." ":runner:"
   __set_chan_text "bbiab, gone for a run"
-	__set_presence "away"
-	__set_status "..gone for a run.." ":runner:"
 }
-
 
 function gone() {
   gone_messages[0]=":v: catch you all on the flippy flip!"
   gone_messages[1]=":wave: adios frens!!"
   gone_messages[2]=":v: deuces, 'mout!!"
-  local rand=$[$RANDOM % ${#gone_messages[@]}]
+  local rand=$((RANDOM % ${#gone_messages[@]}))
 
+  __set_presence "away"
+  __end_status
+  __set_dnd 930
   __set_chan_text "${gone_messages[$rand]}"
-	__set_presence "away"
-	__end_status
-	__set_dnd 930
   unset gone_messages
 }
 
 function pair() {
-	__set_status "..pairing.." ":pear:"
-	__set_dnd 120
+  __set_status "..pairing.." ":pear:"
+  __set_dnd 120
 }
 
 function zoom() {
-	__set_status ":movie_camera: ..on a zoom call.." ":calendar:"
-	__set_dnd 120
+  __set_status ":movie_camera: ..on a zoom call.." ":calendar:"
+  __set_dnd 120
 }
 
 function dnd() {
-	__set_status "..deep work focus time.." ":octagonal_sign:"
-	__set_dnd 120
+  __set_status "..deep work focus time.." ":octagonal_sign:"
+  __set_dnd 120
 }
 
 function here() {
   here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
   here_messages[1]=":coffee: :croissant: gluten morgen!!"
   here_messages[2]=":coffee: good morning! :tea:"
-  local rand=$[$RANDOM % ${#here_messages[@]}]
+  local rand=$((RANDOM % ${#here_messages[@]}))
 
   CHANNEL_ID="$OUTSTAND_GENERAL_CHAN_ID"
+  __set_presence "auto"
+  __end_status
+  __end_dnd
   __set_chan_text "${here_messages[$rand]}"
-	__set_presence "auto"
-	__end_status
-	__end_dnd
 
   unset here_messages
 }
 
 function back() {
+  __set_presence "auto"
+  __end_status
+  __end_dnd
   __set_chan_text "back"
-	__set_presence "auto"
-	__end_status
-	__end_dnd
 }
 
-function log() {
+function log_status() {
   local given_status="$1"
   printf "\n[%s] at %s... \r\n" "$given_status" "$(date)"
 }
@@ -370,12 +368,12 @@ function do_status() {
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
 
   ${given_status} "$@" && {
-      log "$given_status"
-      exit 0
-    } || {
-      echo "Failed to set status"
-      exit 1
-    }
+    log_status "$given_status"
+    exit 0
+  } || {
+    echo "Failed to set status"
+    exit 1
+  }
 }
 
 # if we pass in a status, use it directly
@@ -386,7 +384,7 @@ else
   # otherwise, fuzzy-find based upon our supported statuses; if fzf installed
   if [[ $FZF_FOUND == "installed" ]]; then
     selected_status="$(echo "$statuses" | $fzf_cmd --reverse --prompt="聆select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query" --preview-window="hidden")"
-    [[ -n "$selected_status" ]] && do_status "$selected_status"
+    [[ -n $selected_status ]] && do_status "$selected_status"
   else
     printf -- "ERROR: %s requires FZF to be installed for fuzzy finding statuses" "$__base"
     __help
