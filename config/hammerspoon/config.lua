@@ -238,8 +238,8 @@ M.apps = {
     distraction = true,
     hideAfter = 5,
     rules = {
-      { nil, 2, M.layout.centeredMedium },
       { "Inbox", 2, M.layout.fullScreen },
+      { nil, 1, M.layout.centeredMedium },
     },
   },
   ["com.readdle.smartemail-Mac"] = {

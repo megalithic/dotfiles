@@ -122,7 +122,7 @@ zstyle ':completion:*' cache-path "$ZSH_CACHE_DIR"
 zstyle ':completion:*' group-name ''
 
 # colorful completion
-#zstyle ':completion:*' list-colors ''
+zstyle ':completion:*' list-colors ''
 
 # Updated to respect LS_COLORS
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
@@ -191,7 +191,7 @@ zstyle ':completion:*:*:-redirect-,2>,*:*' file-patterns '*.log'
 # Aloxaf/fzf-tab
 # --------------------------------------------------------------------------
 # disable sort when completing `git checkout`
-zstyle ':completion:*:git-checkout:*' sort false
+zstyle ':completion:*:git-checkout:*' sort true
 # set descriptions format to enable group support
 zstyle ':completion:*:descriptions' format '[%d]'
 # set list-colors to enable filename colorizing
@@ -201,3 +201,10 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
 # switch group using `,` and `.`
 zstyle ':fzf-tab:*' switch-group ',' '.'
 zstyle ':fzf-tab:*' show-group brief # brief, full, none
+# zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+FZF_TAB_GROUP_COLORS=(
+    $'\033[94m' $'\033[32m' $'\033[33m' $'\033[35m' $'\033[31m' $'\033[38;5;27m' $'\033[36m' \
+    $'\033[38;5;100m' $'\033[38;5;98m' $'\033[91m' $'\033[38;5;80m' $'\033[92m' \
+    $'\033[38;5;214m' $'\033[38;5;165m' $'\033[38;5;124m' $'\033[38;5;120m'
+)
+zstyle ':fzf-tab:*' group-colors $FZF_TAB_GROUP_COLORS

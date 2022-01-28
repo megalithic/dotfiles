@@ -15,7 +15,7 @@ bindkey -e # ensures we use emacs/readline keybindings
 # fi
 # source ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh
 if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
-	command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin
+  command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin
 fi
 
 source $HOME/.zcomet/bin/zcomet.zsh
@@ -23,8 +23,8 @@ zstyle ':zcomet:*' home-dir $HOME/.zcomet
 zstyle ':zcomet:*' repos-dir $HOME/.zcomet/repos
 zstyle ':zcomet:*' snippets-dir $HOME/.zcomet/snippets
 
-zcomet load hlissner/zsh-autopair
 zcomet load Aloxaf/fzf-tab
+zcomet load hlissner/zsh-autopair
 zcomet load djui/alias-tips
 zcomet load olets/zsh-abbr
 zcomet load zsh-users/zsh-completions
@@ -36,13 +36,13 @@ zcomet load wfxr/forgit
 zcomet load ohmyzsh plugins/colored-man-pages
 
 if [[ $PLATFORM == "linux" ]]; then
-	[[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  [[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 # NOTE: source order matters!
 for file in $ZDOTDIR/lib/{opts,vimode,fzf,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
-	# shellcheck disable=SC1090
-	[ -r "$file" ] && [ -f "$file" ] && source "$file"
+  # shellcheck disable=SC1090
+  [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
 
