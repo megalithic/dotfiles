@@ -37,30 +37,14 @@ M.capture = function(type, store_s3)
       local save_ok = M.cache.image:saveToFile(filename)
       if save_ok then
         log.df("saved image (%s) successfully!", filename)
+
+        -- os.execute(fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename))
         local output, s3_ok, t, rc = hs.execute(
           fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
           true
         )
 
-        -- hs.task.new(
-        --   fmt([[%s/.dotfiles/bin/share_to_s3]], os.getenv("HOME")),
-        --   function() end, -- Fake callback
-        --   function(task, stdOut, stdErr)
-        --     local success = string.find(stdOut, "Completed") ~= nil
-        --     log.df("#-> s3_task execution: \n%s \n%s]", hs.inspect(task), hs.inspect(stdOut))
-
-        --     if success then
-        --       hs.alert.show("screenshot captured and placed on clipboard")
-
-        --       -- copy our screenshot to iCloud for longer-term storage
-        --       -- hs.execute('cp "' .. file .. '" "$HOME/Library/Mobile Documents/com~apple~CloudDocs/screenshots/"', true)
-        --     else
-        --       log.df("#-> s3_task execution error: \n%s]", hs.inspect(stdErr))
-        --     end
-        --   end,
-        -- { filename }
-        -- ):start()
-
+        -- TODO: make this async pls
         if s3_ok then
           hs.notify.new({
             title = "Capture",
@@ -77,12 +61,97 @@ M.capture = function(type, store_s3)
         else
           log.ef("#-> errored s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
         end
+
+        -- local share_cmd = fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename)
+        -- local share_result, output, raw = hs.osascript.applescript(string.format('do shell script "%s"', share_cmd))
+
+        -- if share_result then
+        --   hs.notify.new({
+        --     title = "Capture",
+        --     subTitle = "S3 Upload Completed",
+        --     informativeText = filename,
+        --   }):setIdImage(M.cache.image):send()
+
+        --   -- get stored s3 image url that's now in the system clipboard
+        --   M.cache.image_url = hs.pasteboard.getContents()
+
+        --   hs.pasteboard.setContents(M.cache.image, "image")
+        --   hs.pasteboard.setContents(M.cache.image_url, "image_url")
+        --   hs.pasteboard.setContents(M.cache.image_contents, "image_contents")
+        -- else
+        --   -- log.ef("#-> errored s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
+        -- end
+
+        -- local capture_task = hs.task.new(
+        --   fmt([[%s/.dotfiles/bin/share_to_s3]], os.getenv("HOME")),
+        --   function() end, -- Fake callback
+        --   function(task, stdOut, stdErr)
+        --     local success = string.find(stdOut, "Completed") ~= nil
+        --     log.df("#-> s3_task execution: \n%s \n%s]", hs.inspect(task), hs.inspect(stdOut))
+
+        --     if success then
+        --       hs.alert.show("screenshot captured and placed on clipboard")
+
+        --       hs.notify.new({
+        --         title = "Capture",
+        --         subTitle = "S3 Upload completed",
+        --         informativeText = filename,
+        --       }):setIdImage(M.cache.image):send()
+
+        --       -- get stored s3 image url that's now in the system clipboard
+        --       M.cache.image_url = hs.pasteboard.getContents()
+
+        --       hs.pasteboard.setContents(M.cache.image, "image")
+        --       hs.pasteboard.setContents(M.cache.image_url, "image_url")
+        --       hs.pasteboard.setContents(M.cache.image_contents, "image_contents")
+
+        --       -- copy our screenshot to iCloud for longer-term storage
+        --       -- hs.execute('cp "' .. file .. '" "$HOME/Library/Mobile Documents/com~apple~CloudDocs/screenshots/"', true)
+        --     else
+        --       log.df("#-> s3_task execution error: \n%s]; \n trying hs.execute instead", hs.inspect(stdErr))
+
+        --       local output, s3_ok, t, rc = hs.execute(
+        --         fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
+        --         true
+        --       )
+        --       if s3_ok then
+        --         hs.notify.new({
+        --           title = "Capture",
+        --           subTitle = "S3 Upload completed",
+        --           informativeText = filename,
+        --         }):setIdImage(M.cache.image):send()
+
+        --         -- get stored s3 image url that's now in the system clipboard
+        --         M.cache.image_url = hs.pasteboard.getContents()
+
+        --         hs.pasteboard.setContents(M.cache.image, "image")
+        --         hs.pasteboard.setContents(M.cache.image_url, "image_url")
+        --         hs.pasteboard.setContents(M.cache.image_contents, "image_contents")
+        --       else
+        --         log.ef("#-> errored s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
+        --       end
+        --     end
+        --   end,
+        --   { filename }
+        -- )
+
+        -- local capture_task_env = capture_task:environment()
+        -- capture_task_env["SETH"] = "me yo!"
+        -- capture_task_env["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID")
+        -- capture_task_env["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY")
+        -- capture_task_env["AWS_PROFILE"] = os.getenv("AWS_PROFILE")
+
+        -- log.df("stufffffffffffffffffffffffffffffff 1: %s", hs.inspect(capture_task_env))
+
+        -- capture_task:setEnvironment(capture_task_env):start()
+
+        -- log.df("stufffffffffffffffffffffffffffffff 2: %s", hs.inspect(capture_task:environment()))
       end
     end
   end, {
-      args,
-      filename,
-    }):start()
+    args,
+    filename,
+  }):start()
 end
 
 M.parseArgs = function(scType)

@@ -474,12 +474,15 @@ return lush(function()
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ Grey, gui = "italic" }),
-    TSError({ ErrorText }),
     -- highlight FIXME comments
     commentTSWarning({ fg = C.orange, gui = "bold" }),
     commentTSNote({ fg = C.blue, gui = "NONE,italic" }),
     commentTSDanger({ fg = C.red, gui = "bold" }),
     TreesitterContext({ bg = C.bg1 }),
+
+    TSWarning({ fg = C.orange, gui = "bold" }),
+    TSNote({ fg = C.blue, gui = "NONE,italic" }),
+    TSError({ fg = C.red, gui = "bold" }),
 
     -- TSNote({ fg = C.bg1, bg = C.blue }),
     -- TSWarning({ fg = C.bg1, bg = C.orange }),
