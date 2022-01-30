@@ -772,6 +772,8 @@ return lush(function()
     StInfo({ fg = C.cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = C.bright_yellow, bg = bg1 }),
 
+    DevIconLua({ fg = fg }),
+
     ---- :help ts-rainbow  -------------------------------------------
     ---
     rainbowcol1({ fg = C.red }),

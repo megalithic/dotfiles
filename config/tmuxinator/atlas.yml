@@ -12,18 +12,18 @@ windows:
       layout: main-vertical
       panes:
         - code:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/atlas
             - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/atlas
             - eval $(desk load)
             - dev down; dev up -d && dev logs -f
         - repl:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/atlas
             - eval $(desk load); iex -S mix

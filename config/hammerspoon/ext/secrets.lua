@@ -1,6 +1,6 @@
-module = {}
+M = {}
 
-module.start = function()
+M.start = function()
   local file = io.open('.secrets')
   io.input(file)
 
@@ -10,4 +10,4 @@ module.start = function()
   end
 end
 
-return module
+return M

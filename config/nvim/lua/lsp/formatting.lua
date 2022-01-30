@@ -27,11 +27,13 @@ function M.null_ls(client, bufnr)
   local ft = api.nvim_buf_get_option(bufnr, "filetype")
   local nls = mega.load("lsp.null-ls")
 
-  -- this SHOULD help prevent from colliding formatters
+  -- P(fmt("client: %s, ft: %s", client.name, ft))
   if client.name == "null-ls" then
     if nls.has_nls_formatter(ft) then
+      -- P("null-ls should format")
       client.resolved_capabilities.document_formatting = true
     else
+      -- P("null-ls should NOT format")
       client.resolved_capabilities.document_formatting = false
     end
   end
@@ -41,7 +43,7 @@ function M.null_ls(client, bufnr)
     augroup Format
       autocmd! * <buffer>
       mkview!
-      autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 500)
+      autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 1500)
       loadview
     augroup END
   ]])

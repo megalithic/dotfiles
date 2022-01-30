@@ -1,4 +1,4 @@
-name: public-site
+name: public_site
 root: ~/code/outstand
 
 # Runs on project start, always

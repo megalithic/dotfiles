@@ -88,6 +88,7 @@ M.list = {
   -- "SmiteshP/nvim-gps",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
+  "nvim-treesitter/nvim-tree-docs",
   -- "primeagen/harpoon",
   -- "romgrk/nvim-treesitter-context",
 
@@ -354,6 +355,14 @@ M.setup = function()
       },
       indent = { enable = true },
       autotag = { enable = true },
+      tree_docs = {
+        enable = false,
+        keymaps = {
+          doc_node_at_cursor = "gdd",
+          doc_all_in_range = "gdd",
+          edit_doc_at_cursor = "gde",
+        },
+      },
       context_commentstring = {
         enable = true,
         enable_autocmd = false,
@@ -477,7 +486,7 @@ M.setup = function()
         "orgagenda",
         "", -- for all buffers without a file type
       },
-      buftype_exclude = { "terminal", "nofile" },
+      buftype_exclude = { "terminal", "nofile", "acwrite" },
       context_patterns = {
         "class",
         "function",

@@ -7,22 +7,22 @@ on_project_start: gohome && dowork
 tmux_options: -2
 windows:
   - chats:
-    - tmux link-window -s mega:chats -t 0 && exit
+      - tmux link-window -s mega:chats -t 0 && exit
   - code:
       layout: main-vertical
       panes:
         - code:
-          - ssh seth-dev
-          - cd ~/code/pages
-          - eval $(desk load); ls
+            - mosh seth-dev
+            - cd ~/code/pages
+            - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/pages
             - eval $(desk load)
         - repl:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/pages
             - eval $(desk load); iex -S mix

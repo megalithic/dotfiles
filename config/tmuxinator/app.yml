@@ -10,22 +10,22 @@ windows:
       layout: main-vertical
       panes:
         - chats:
-          - tmux link-window -s mega:chats -t 0 && exit
+            - tmux link-window -s mega:chats -t 0 && exit
   - code:
       layout: main-vertical
       panes:
         - code:
-          - ssh seth-dev
-          - cd ~/code/app
-          - eval $(desk load); ls
+            - mosh seth-dev
+            - cd ~/code/app
+            - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/app
             - eval $(desk load)
         - repl:
-            - ssh seth-dev
+            - mosh seth-dev
             - cd ~/code/app
             - eval $(desk load); rails console

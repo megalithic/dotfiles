@@ -387,15 +387,16 @@ local function mapper(mode, o)
 
     opts = vim.tbl_extend("keep", opts, parent_opts)
     if buffer and type(buffer) == "number" then
-      return api.nvim_buf_set_keymap(buffer, mode, lhs, rhs, opts)
+      opts = vim.tbl_extend("keep", opts, { buffer = buffer })
+      -- return api.nvim_buf_set_keymap(buffer, mode, lhs, rhs, opts)
     end
 
-    api.nvim_set_keymap(mode, lhs, rhs, opts)
+    vim.keymap.set(mode, lhs, rhs, opts)
   end
 end
 
-local map_opts = { noremap = false, silent = true }
-local noremap_opts = { noremap = true, silent = true }
+local map_opts = { remap = true, silent = true }
+local noremap_opts = { remap = false, silent = true }
 
 for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s" }) do
   -- {
@@ -417,10 +418,10 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s" }) do
 end
 
 -- A recursive commandline mapping
-mega.cmap = mapper("c", { noremap = false, silent = false })
+mega.cmap = mapper("c", { remap = true, silent = false })
 _G["cmap"] = mega.cmap
 -- A non-recursive commandline mapping
-mega.cnoremap = mapper("c", { noremap = true, silent = false })
+mega.cnoremap = mapper("c", { remap = false, silent = false })
 _G["cnoremap"] = mega.cnoremap
 
 ---Factory function to create multi mode map functions
@@ -442,7 +443,7 @@ mega.mnoremap = multimap("noremap")
 -- my original mapper
 mega.map = function(modes, lhs, rhs, opts)
   -- TODO: extract these to a function or a module var
-  local default_opts = { noremap = false, silent = true, expr = false, nowait = false }
+  local default_opts = { remap = true, silent = true, expr = false, nowait = false }
 
   -- assert(lhs ~= mode, fmt("The lhs should not be the same as mode for %s", lhs))
   assert(type(rhs) == "string" or type(rhs) == "function", "\"rhs\" should be a function or string")
@@ -490,17 +491,15 @@ mega.map = function(modes, lhs, rhs, opts)
     opts = vim.tbl_extend("keep", opts, default_opts)
     -- auto switch between buffer mode or not
     if buffer and type(buffer) == "number" then
-      api.nvim_buf_set_keymap(buffer, modes[i], lhs, rhs, opts)
-      -- return api.nvim_buf_set_keymap(buffer, modes[i], lhs, rhs, opts)
-    else
-      vim.api.nvim_set_keymap(modes[i], lhs, rhs, opts)
+      opts = vim.tbl_extend("keep", opts, { buffer = buffer })
     end
-    -- vim.api.nvim_set_keymap(modes[i], lhs, rhs, opts)
+
+    vim.keymap.set(modes[i], lhs, rhs, opts)
   end
 end
 
 function mega.bmap(mode, lhs, rhs, opts)
-  opts = opts or { noremap = true, silent = true, expr = false, buffer = 0 }
+  opts = opts or { remap = false, silent = true, expr = false, buffer = 0 }
   mode = mode or "n"
 
   if mode == "n" then
@@ -517,7 +516,7 @@ function mega.bufmap(lhs, rhs, mode, expr)
     mega.log("`bufmap` is deprecated; please use `bmap` instead.")
   end
 
-  local opts = { noremap = true, silent = true, expr = expr, buffer = 0 }
+  local opts = { remap = false, silent = true, expr = expr, buffer = 0 }
   mega.bmap(mode, lhs, rhs, opts)
 end
 
@@ -629,8 +628,7 @@ function mega.exec(c, bool)
   api.nvim_exec(c, bool)
 end
 
-function mega.noop()
-end
+function mega.noop() end
 
 ---A terser proxy for `nvim_replace_termcodes`
 ---@param str string

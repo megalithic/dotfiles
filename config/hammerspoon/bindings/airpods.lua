@@ -1,7 +1,8 @@
--- Found on: https://gist.githubusercontent.com/daGrevis/79b27b9c156ba828ad52976a118b29e0/raw/0e77383f4eb9301527caac3f0b71350e9499210b/init.lua
--- FIXME: look at using https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
+-- -- Found on: https://gist.githubusercontent.com/daGrevis/79b27b9c156ba828ad52976a118b29e0/raw/0e77383f4eb9301527caac3f0b71350e9499210b/init.lua
+-- -- FIXME: look at using https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
+
 local log = hs.logger.new("[bindings.airpods]", "debug")
-local module = {}
+local M = {}
 
 local alert = require("ext.alert")
 
@@ -10,7 +11,7 @@ local toggle = function(deviceName)
     activate application "SystemUIServer"
     tell application "System Events"
       tell process "SystemUIServer"
-        set btMenu to (menu bar item 1 of menu bar 1 whose description contains "bluetooth")
+        set btMenu to (menu bar item 1 of menu bar 1 whose description contains "Bluetooth")
         tell btMenu
           click
   ]] .. 'tell (menu item "' .. deviceName .. '" of menu 1)\n' .. [[
@@ -31,9 +32,9 @@ local toggle = function(deviceName)
   return hs.osascript.applescript(s)
 end
 
-module.start = function()
+M.start = function()
   hs.hotkey.bind(Config.modifiers.cmdCtrl, "a", function()
-    local ok, output = toggle("replipods")
+    local ok, output = toggle("megapods")
 
     if ok then
       alert.show({ text = output })
@@ -43,8 +44,8 @@ module.start = function()
   end)
 end
 
-module.stop = function()
+M.stop = function()
   -- nil
 end
 
-return module
+return M

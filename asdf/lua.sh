@@ -11,6 +11,7 @@ do_install() {
     # (! has lua-lsp) && luarocks install --server=https://luarocks.org/dev lua-lsp
     (! has lua-format) && luarocks install --server=https://luarocks.org/dev luaformatter
     (! has lua-nuspell) && luarocks install lua-nuspell
+    (! has penlight) && luarocks install penlight
   fi
 }
 
