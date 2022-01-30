@@ -1518,7 +1518,7 @@ M.setup = function()
     " note: we don't do this anymore - maybe it makes sense to limit to markdown
     " mode
     inoremap <leader>[ <ESC>:lua require('telekasten').insert_link({i = true})<CR>
-    " inoremap [[ <ESC>:lua require('telekasten').insert_link({i = true})<CR>
+    " inorfalseemap [[ <ESC>:lua require('telekasten').insert_link({i = true})<CR>
     inoremap <leader>zt <ESC>:lua require('telekasten').toggle_todo({i = true})<CR>
     inoremap <leader># <cmd>lua require('telekasten').show_tags({i = true})<cr>
     --]]

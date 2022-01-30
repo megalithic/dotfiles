@@ -27,7 +27,7 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
+__base="$(basename "${__file}" .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
@@ -37,78 +37,77 @@ POPUP="false"
 DEBUG="false"
 
 # -- check for our dependencies..
-[[ -n "$TMUX" ]] && TMUX_RUNNING="running" || TMUX_RUNNING="not running"
+[[ -n $TMUX ]] && TMUX_RUNNING="running" || TMUX_RUNNING="not running"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v tmuxinator &>/dev/null) && TMUXINATOR_FOUND="installed" || TMUXINATOR_FOUND="not installed"
 [[ -d "$HOME/.config/tmuxinator" ]] && tmuxinator_configs_dir="$HOME/.config/tmuxinator" || tmuxinator_configs_dir=""
 
 # -- friendly help if -h option given
 function __help() {
-	printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "$__base"
-	printf -- "\n"
-	printf -- "   Options:\n"
-	printf -- "     -p              Run fzf normally for tmux' popup feature, else fzf-tmux\n"
-	printf -- "     -h              This help text you're presently reading. 😄\n"
-	printf -- "     -d              Make tmuxinator be extremely loud!11!!1! \n"
-	printf -- "\n"
-	printf -- "   Dependencies:\n"
-	printf -- "     tmux            ($TMUX_RUNNING)\n"
-	printf -- "     fzf             ($FZF_FOUND)\n"
-	printf -- "     tmuxinator      ($TMUXINATOR_FOUND)\n"
-	printf -- "\n"
+  printf -- "Usage: %s [options] [SESSION_NAME | FUZZY_PATTERN]\n" "$__base"
+  printf -- "\n"
+  printf -- "   Options:\n"
+  printf -- "     -p              Run fzf normally for tmux' popup feature, else fzf-tmux\n"
+  printf -- "     -h              This help text you're presently reading. 😄\n"
+  printf -- "     -d              Make tmuxinator be extremely loud!11!!1! \n"
+  printf -- "\n"
+  printf -- "   Dependencies:\n"
+  printf -- "     tmux            (%s)\n" "$TMUX_RUNNING"
+  printf -- "     fzf             (%s)\n" "$FZF_FOUND"
+  printf -- "     tmuxinator      (%s)\n" "$TMUXINATOR_FOUND"
+  printf -- "\n"
 
-	exit 0
+  exit 0
 }
 
 # -- halt if we don't have FZF installed
 if [[ $FZF_FOUND == "not installed" ]]; then
-	printf -- "ERROR: %s requires FZF to be installed" "$__base"
-	__help
-	exit 1
+  printf -- "ERROR: %s requires FZF to be installed" "$__base"
+  __help
+  exit 1
 fi
 
 while getopts "phd" OPTION; do
-	case $OPTION in
+  case $OPTION in
 
-		p)
-			POPUP="true"
-			;;
+    p)
+      POPUP="true"
+      ;;
 
-		h)
-			__help
-			exit 0
-			;;
+    h)
+      __help
+      exit 0
+      ;;
 
-		d)
-			DEBUG="true"
-			;;
+    d)
+      DEBUG="true"
+      ;;
 
-    \? )
+    \?)
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
 
-	esac
+  esac
 done
-shift $((OPTIND -1))
+shift $((OPTIND - 1))
 
 # -- this is our given session_name param, sans options
 session_name="${1:-}"
 
 # -- handle options
-[[ -n "$TMUX" ]] && change="switch-client" || change="attach-session"
-[[ "$POPUP" == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
-[[ "$DEBUG" == "true" ]] && tmuxinator_start_cmd="debug" || tmuxinator_start_cmd="start"
+[[ -n $TMUX ]] && change="switch-client" || change="attach-session"
+[[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
+[[ $DEBUG == "true" ]] && tmuxinator_start_cmd="debug" || tmuxinator_start_cmd="start"
 
 # -- array of available tmuxinator_configs
 declare -a tmuxinator_configs
 
 # -- gets possible tmuxinator configs (naive config dir assumption)
 function get_tmuxinator_configs() {
-  if [[ -n "$tmuxinator_configs_dir" ]]; then
-    for config in "$tmuxinator_configs_dir"/*.yml
-    do
-      config_name="$(basename ${config##*/} .yml)"
+  if [[ -n $tmuxinator_configs_dir ]]; then
+    for config in "$tmuxinator_configs_dir"/*.yml; do
+      config_name="$(basename "${config##*/}" .yml)"
       tmuxinator_configs+=("$config_name")
     done
     printf "%s\n" "${tmuxinator_configs[@]}"
@@ -119,30 +118,32 @@ function get_tmuxinator_configs() {
 
 # -- change to the given existing session
 function to_session() {
-	local session="$1"
-	tmux $change -t "$session"
+  local session="$1"
+  tmux $change -t "$session"
 }
 
 # -- new session with tmuxinator config, OR just new basic tmux session
 function new_session() {
-	local session="$1"
-	(tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
-		&& to_session "$session" \
-		|| tmux new-session -d -s "$session" \
-		&& to_session "$session") && exit
+  local session="$1"
+  (tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
+    && to_session "$session" \
+    || tmux new-session -d -s "$session" \
+    && to_session "$session") && exit
 }
 
 # -- try to change to an existing session; otherwise, create a new one
 function try_session() {
-	local session="$1"
-	to_session "$session" 2>/dev/null || new_session "$session"
+  local session="$1"
+  to_session "$session" 2>/dev/null || new_session "$session"
   # TODO: do we really want this?
   # tmux display-message " $session activated.."
 }
 
 function fuzzy_find() {
   # -- prepare for fuzzy-finding!!
-  sessions_list=$(tmux list-sessions -F "#S")
+  # tmuxinator_sessions_list="$(get_tmuxinator_configs)"
+  current_sessions_list=$(tmux list-sessions -F "#S")
+  sessions_list="$current_sessions_list" #$(printf "%s\n%s" "$tmuxinator_sessions_list" "$current_sessions_list" | sort)
   current_session="$(tmux list-panes -F "#{session_name}")"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
   preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
@@ -158,6 +159,7 @@ function fuzzy_find() {
     [[ $tmuxinator_sessions_count -gt 0 ]] && fzf_header_text="ﯲ possible tmuxinator sessions"
     [[ $tmuxinator_sessions_count -gt 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
   else
+    # sessions_list=$(printf "%s\n%s" "$tmuxinator_sessions_list" "$current_sessions_list" | sort | uniq)
     fzf_prompt_text=" select session (or create new)  "
     fzf_header_text="ﯲ running tmux sessions (active: $current_session)"
   fi
@@ -168,11 +170,16 @@ function fuzzy_find() {
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then
-	try_session "$session_name"
-	return
-elif [[ -z "$TMUX" ]]; then
+  try_session "$session_name"
+  return
+elif [[ -z $TMUX ]]; then
   __help
 fi
 
 # -- if we get this far, let's do our fuzzy-finding
+
+# tmux list-sessions -F "#S"
+# get_tmuxinator_configs
+# sleep 5
+
 fuzzy_find

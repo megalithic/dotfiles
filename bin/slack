@@ -197,7 +197,7 @@ function __request() {
       exit 1
     }
   else
-    exec $request_cmd &>/dev/null | $spinner || {
+    exec $request_cmd &>/dev/null | tee $spinner || {
       echo 'failed to make slack request'
       exit 1
     }

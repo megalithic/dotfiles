@@ -3,18 +3,16 @@
 local cmd, fn = vim.cmd, vim.fn
 local au, exec, augroup = mega.au, mega.exec, mega.augroup
 
-au([[BufWritePre * lua mega.auto_mkdir()]])
 au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
 au([[StdinReadPost * set buftype=nofile]])
 au([[FileType help wincmd L]])
 au([[CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
 au([[VimResized * lua require('golden_size').on_win_enter()]])
 au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
-au([[Syntax * call matchadd('Todo', '\W\zs\(TODO\|CHANGED\)')]])
-au([[Syntax * call matchadd('ErrorMsg', '\W\zs\(FIXME\|BUG\|HACK\)')]])
-au([[Syntax * call matchadd('ErrorMsg', '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$')]])
-au([[Syntax * call matchadd('Debug', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
-au([[Syntax * call matchadd('Directory', '\W\zs\(REF\)')]])
+au([[Syntax * call matchadd('TSNote', '\W\zs\(TODO\|CHANGED\)')]])
+au([[Syntax * call matchadd('TSDanger', '\W\zs\(FIXME\|BUG\|HACK\)')]])
+au([[Syntax * call matchadd('TSDanger', '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$')]])
+au([[Syntax * call matchadd('TSNote', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
@@ -52,7 +50,7 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- })
 
 augroup("auto-mkdir", {
-  events = { "BufNewFile" },
+  events = { "BufNewFile", "BufWritePre" },
   targets = { "*" },
   command = mega.auto_mkdir(),
 })

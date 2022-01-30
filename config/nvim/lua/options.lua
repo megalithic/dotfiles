@@ -213,7 +213,7 @@ vim.opt.listchars = {
 -----------------------------------------------------------------------------//
 -- Indentation
 -----------------------------------------------------------------------------//
-vim.opt.wrap = true
+vim.opt.wrap = false
 vim.opt.wrapmargin = 2
 vim.opt.textwidth = 80
 vim.opt.autoindent = true

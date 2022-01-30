@@ -55,7 +55,7 @@ local function setup_luasnip()
   local function on_s_tab()
     return luasnip.jump(-1) and "" or utils.t("<S-Tab>")
   end
-  local opts = { expr = true, noremap = false }
+  local opts = { expr = true, remap = true }
   imap("<Tab>", on_tab, opts)
   smap("<Tab>", on_tab, opts)
   imap("<S-Tab>", on_s_tab, opts)

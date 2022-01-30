@@ -1,4 +1,4 @@
-name: "megalithic.io"
+name: "megalithic_io"
 root: ~/code/megalithic.io
 
 tmux_options: -2

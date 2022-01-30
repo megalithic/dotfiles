@@ -59,7 +59,7 @@ function M.setup(on_attach)
         extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "zsh" },
       }),
-      -- b.diagnostics.shellcheck,
+      b.diagnostics.shellcheck,
       -- b.diagnostics.credo,
       -- b.diagnostics.selene, -- this breaks?
     },
