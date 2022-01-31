@@ -83,7 +83,7 @@ M.capture = function(type, store_s3)
         -- end
 
         -- local capture_task = hs.task.new(
-        --   fmt([[%s/.dotfiles/bin/share_to_s3]], os.getenv("HOME")),
+        --   fmt([[/usr/local/bin/zsh -ic '%s/.dotfiles/bin/share_to_s3']], os.getenv("HOME")),
         --   function() end, -- Fake callback
         --   function(task, stdOut, stdErr)
         --     local success = string.find(stdOut, "Completed") ~= nil
@@ -110,42 +110,43 @@ M.capture = function(type, store_s3)
         --     else
         --       log.df("#-> s3_task execution error: \n%s]; \n trying hs.execute instead", hs.inspect(stdErr))
 
-        --       local output, s3_ok, t, rc = hs.execute(
-        --         fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
-        --         true
-        --       )
-        --       if s3_ok then
-        --         hs.notify.new({
-        --           title = "Capture",
-        --           subTitle = "S3 Upload completed",
-        --           informativeText = filename,
-        --         }):setIdImage(M.cache.image):send()
+        --       -- local output, s3_ok, t, rc = hs.execute(
+        --       --   fmt([[%s/.dotfiles/bin/share_to_s3 %s]], os.getenv("HOME"), filename),
+        --       --   true
+        --       -- )
+        --       -- if s3_ok then
+        --       --   hs.notify.new({
+        --       --     title = "Capture",
+        --       --     subTitle = "S3 Upload completed",
+        --       --     informativeText = filename,
+        --       --   }):setIdImage(M.cache.image):send()
 
-        --         -- get stored s3 image url that's now in the system clipboard
-        --         M.cache.image_url = hs.pasteboard.getContents()
+        --       --   -- get stored s3 image url that's now in the system clipboard
+        --       --   M.cache.image_url = hs.pasteboard.getContents()
 
-        --         hs.pasteboard.setContents(M.cache.image, "image")
-        --         hs.pasteboard.setContents(M.cache.image_url, "image_url")
-        --         hs.pasteboard.setContents(M.cache.image_contents, "image_contents")
-        --       else
-        --         log.ef("#-> errored s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
-        --       end
+        --       --   hs.pasteboard.setContents(M.cache.image, "image")
+        --       --   hs.pasteboard.setContents(M.cache.image_url, "image_url")
+        --       --   hs.pasteboard.setContents(M.cache.image_contents, "image_contents")
+        --       -- else
+        --       --   log.ef("#-> errored s3 upload: \n[%s]", hs.inspect({ output, s3_ok, t, rc }))
+        --       -- end
         --     end
         --   end,
         --   { filename }
         -- )
 
-        -- local capture_task_env = capture_task:environment()
-        -- capture_task_env["SETH"] = "me yo!"
-        -- capture_task_env["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID")
-        -- capture_task_env["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY")
-        -- capture_task_env["AWS_PROFILE"] = os.getenv("AWS_PROFILE")
+        -- -- local capture_task_env = capture_task:environment()
+        -- -- capture_task_env["SETH"] = "me yo!"
+        -- -- capture_task_env["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID")
+        -- -- capture_task_env["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY")
+        -- -- capture_task_env["AWS_PROFILE"] = os.getenv("AWS_PROFILE")
 
-        -- log.df("stufffffffffffffffffffffffffffffff 1: %s", hs.inspect(capture_task_env))
+        -- -- log.df("stufffffffffffffffffffffffffffffff 1: %s", hs.inspect(capture_task_env))
 
-        -- capture_task:setEnvironment(capture_task_env):start()
+        -- -- capture_task:setEnvironment(capture_task_env)
+        -- capture_task:start()
 
-        -- log.df("stufffffffffffffffffffffffffffffff 2: %s", hs.inspect(capture_task:environment()))
+        -- -- log.df("stufffffffffffffffffffffffffffffff 2: %s", hs.inspect(capture_task:environment()))
       end
     end
   end, {

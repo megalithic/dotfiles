@@ -6,7 +6,8 @@
 --  │ 3. create new app watcher                                               │
 --  │ 4. create running app watcher                                           │
 --  │ 5. apply app layout                                                     │
---  │ 6. apply app context                                                    │
+--  │ 6. set layouts for app                                                  │
+--  │ 7. apply app context (if exists)                                        │
 --  └─────────────────────────────────────────────────────────────────────────┘
 
 local log = hs.logger.new("[wm]", "info")
@@ -109,14 +110,12 @@ M.apply_app_layout = function(app, _, event) -- app, win, event
       local app_config = Config.apps[app:bundleID()]
       log.df("applying layout for %s -> %s", app:name(), hs.inspect(app_config))
 
-      local layouts = M._set_app_layout(app_config)
-      if layouts ~= nil then
-        log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts))
+      local layouts_for_app = M._set_app_layout(app_config)
+      if layouts_for_app ~= nil then
+        log.df("apply_app_layout: app configs to layout: %s", hs.inspect(layouts_for_app))
         log.f("> layout:" .. app:name())
 
-        hs.timer.doAfter(0.5, function()
-          hs.layout.apply(layouts, match_title)
-        end)
+        hs.layout.apply(layouts_for_app, string.match)
       end
     end
   end
@@ -124,7 +123,7 @@ end
 
 -- prepare(...) :: nil
 -- evaluates global config and obeys the rules.
-M.prepare = function()
+M.prepare = function(force_run)
   -- handle running app events
   running.onChange(M.apply_app_layout)
   running.onChange(M.apply_app_context)
@@ -136,6 +135,11 @@ M.prepare = function()
       if app ~= nil then
         log.df("-> adding configured app: %s (%s)", app:name(), app:bundleID())
         running.addToAppWatcher(app)
+
+        if force_run then
+          M.apply_app_layout(app, app:mainWindow(), running.events.launched)
+          M.apply_app_context(app, app:mainWindow(), running.events.launched)
+        end
       end
     end
   end
@@ -156,9 +160,11 @@ M.start = function()
 
   -- watch for docking status changes..
   cache.dock_watcher = hs.watchable.watch("status.isDocked", function(_, _, _, old, new) -- watcher, path, key, old, new
-    log.f("___ preparing app layouts and contexts..")
+    log.f("___ preparing app layouts and contexts.. (o: %s, n: %s)", old, new)
     M.prepare()
   end)
+
+  M.prepare(true)
 end
 
 M.stop = function()
