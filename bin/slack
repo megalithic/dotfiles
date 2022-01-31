@@ -100,10 +100,10 @@ function __help() {
   printf -- "     -s                Silent mode; don't message the channel on status change. 😄\n"
   printf -- "\n"
   printf -- "   Dependencies:\n"
-  printf -- "     curl              ($CURL_FOUND)\n"
-  printf -- "     fzf               ($FZF_FOUND)\n"
-  printf -- "     jq                ($JQ_FOUND)\n"
-  printf -- "     spinner           ($SPINNER_FOUND)\n"
+  printf -- "     curl              (%s)\n" "$CURL_FOUND"
+  printf -- "     fzf               (%s)\n" "$FZF_FOUND"
+  printf -- "     jq                (%s)\n" "$JQ_FOUND"
+  printf -- "     spinner           (%s)\n" "$SPINNER_FOUND"
   printf -- "\n"
 }
 
@@ -197,7 +197,7 @@ function __request() {
       exit 1
     }
   else
-    exec $request_cmd &>/dev/null | tee $spinner || {
+    exec $request_cmd &>/dev/null | $spinner || {
       echo 'failed to make slack request'
       exit 1
     }
@@ -340,7 +340,7 @@ function here() {
   here_messages[2]=":coffee: good morning! :tea:"
   local rand=$((RANDOM % ${#here_messages[@]}))
 
-  CHANNEL_ID="$OUTSTAND_GENERAL_CHAN_ID"
+  CHANNEL_ID="$GENERAL_CHANNEL_ID"
   __set_presence "auto"
   __end_status
   __end_dnd

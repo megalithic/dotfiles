@@ -216,6 +216,7 @@
       command: >-
         make -C ~/.dotfiles elixirls-master;
 
+    - [brew uninstall ruby --ignore-dependencies --force, Uninstall brew ruby]
     - [asdf reshim, Reshimming asdf binaries]
 
     - description: Attemping to post-asdf install lua/luarocks packages..

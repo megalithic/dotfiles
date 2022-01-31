@@ -1,4 +1,4 @@
--- I've taken aspects of my statusline from the following amazing devs:
+-- I've taken various aspects of my statusline from the following amazing devs:
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak
 
 local M = {}
@@ -765,13 +765,13 @@ end
 -- Default content ------------------------------------------------------------
 function U.statusline_active()
   -- stylua: ignore start
-  local prefix        = unpack(U.item_if("▌", not M.is_truncated(75), "StIndicator", { before = "", after = "" }))
+  local prefix        = unpack(U.item_if("▌", not M.is_truncated(100), "StIndicator", { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
-  local search        = unpack(U.item(U.search_result(), "StCount", {before=" "}))
-  local git           = M.s_git({ trunc_width = 75 })
-  local readonly      = M.s_readonly({ trunc_width = 75 })
+  local search        = unpack(U.item_if(U.search_result(), not M.is_truncated(120), "StCount", {before=" "}))
+  local git           = M.s_git({ trunc_width = 120 })
+  local readonly      = M.s_readonly({ trunc_width = 140 })
   local modified      = M.s_modified({ trunc_width = 140 })
-  local filename      = M.s_filename({ trunc_width = 140 })
+  local filename      = M.s_filename({ trunc_width = 120 })
   -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
   local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
   local indention     = M.s_indention()
