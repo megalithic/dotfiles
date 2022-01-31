@@ -194,6 +194,7 @@ M.list = {
   "junegunn/vim-easy-align",
   -- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations
   --     use_with_config("svermeulen/vim-yoink", "yoink") -- improves paste
+  "outstand/logger.nvim",
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
