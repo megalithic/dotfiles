@@ -22,7 +22,7 @@ windows:
             - mosh seth-dev
             - cd ~/code/atlas
             - eval $(desk load)
-            - dev down; dev up -d && dev logs -f
+            - dev down; dev down --remove-orphans; dev up -d && dev logs -f
         - repl:
             - mosh seth-dev
             - cd ~/code/atlas

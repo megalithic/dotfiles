@@ -163,7 +163,7 @@ brew "the_silver_searcher"
 brew "tidy-html5"
 brew "timg" # for image rendering in kitty
 brew "tldr"
-brew "tmux" if OS.mac? # , args: ["HEAD"]
+brew "tmux", args: ["HEAD"] if OS.mac? # , args: ["HEAD"]
 brew "transcrypt" if OS.mac?
 brew "trash" if OS.mac?
 brew "tree"
