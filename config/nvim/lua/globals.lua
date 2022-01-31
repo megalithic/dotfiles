@@ -3,14 +3,6 @@ local fn = vim.fn
 local vcmd = vim.cmd
 local fmt = string.format
 
-_G.logger = require("logger").new({
-  level = "trace",
-})
-
-function _G.put(...)
-  return logger.debug(...)
-end
-
 _G.__mega_global_callbacks = __mega_global_callbacks or {}
 _G.mega = {
   _store = __mega_global_callbacks,
@@ -81,6 +73,14 @@ function _G.dump_text(...)
   local lnum = vim.api.nvim_win_get_cursor(0)[1]
   vim.fn.append(lnum, lines)
   return ...
+end
+
+_G.logger = require("logger").new({
+  level = "trace",
+})
+
+function _G.put(...)
+  return logger.debug(...)
 end
 
 function mega.dump_colors(filter)

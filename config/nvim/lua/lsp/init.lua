@@ -466,13 +466,13 @@ local function setup_lsp_servers()
       for _, location in ipairs(locations) do
         local exists, dir = dir_has_file(root, location)
         if exists then
-          logger.fmt_debug("language_server_cmd: %s", vim.fn.expand(dir))
+          -- logger.fmt_debug("language_server_cmd: %s", vim.fn.expand(dir))
           return vim.fn.expand(dir)
         end
       end
 
       local fallback = vim.fn.expand(fallback_dir)
-      logger.fmt_debug("language_server_cmd: %s", fallback)
+      -- logger.fmt_debug("language_server_cmd: %s", fallback)
       return fallback
     end
 
