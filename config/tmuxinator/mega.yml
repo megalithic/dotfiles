@@ -12,6 +12,6 @@ windows:
   - dots:
       - ls
   - ssh-dots:
-      - mosh seth-dev
+      - ssh seth-dev
       - cd ~/.dotfiles
       - ls

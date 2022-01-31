@@ -155,7 +155,9 @@ function M.setup()
       text = t.icon,
       texthl = hl,
       numhl = hl,
-      linehl = fmt("%sLine", hl),
+      -- numhl = fmt("%sLine", hl),
+      -- linehl = fmt("%sLine", hl),
+      linehl = hl,
     }
   end, M.diagnostic_types))
 

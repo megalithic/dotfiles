@@ -15,17 +15,17 @@ windows:
       layout: main-vertical
       panes:
         - code:
-            - mosh seth-dev
+            - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - mosh seth-dev
+            - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load)
         - repl:
-            - mosh seth-dev
+            - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load); rails console

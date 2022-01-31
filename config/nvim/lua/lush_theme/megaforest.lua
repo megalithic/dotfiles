@@ -307,12 +307,18 @@ return lush(function()
     DiagnosticUnderlineInformation({ InfoText }),
     DiagnosticUnderlineInfo({ InfoText }),
     DiagnosticUnderlineHint({ HintText }),
+
     DiagnosticSignError({ RedSign }),
     DiagnosticSignWarning({ YellowSign }),
     DiagnosticSignWarn({ YellowSign }),
     DiagnosticSignInformation({ BlueSign }),
     DiagnosticSignInfo({ BlueSign }),
     DiagnosticSignHint({ AquaSign }),
+
+    DiagnosticSignErrorLine({ fg = red, gui = "underline", guisp = red }),
+    DiagnosticSignWarnLine({ fg = yellow, gui = "underline", guisp = yellow }),
+    DiagnosticSignInfoLine({ fg = blue, gui = "underline", guisp = blue }),
+    DiagnosticSignHintLine({ fg = aqua, gui = "underline", guisp = aqua }),
 
     DiagnosticError({ RedSign }),
     DiagnosticWarn({ YellowSign }),
