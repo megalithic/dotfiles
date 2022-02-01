@@ -444,6 +444,7 @@ M.setup = function()
         "typescriptreact",
         "javascriptreact",
         "vue",
+        "elixir",
         "heex",
       },
     })
