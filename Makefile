@@ -4,7 +4,11 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := install
 
 help: ## Show this help content
-	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "Usage: make [command]"
+	@echo "Make utility to help with my ~/.dotfiles management."
+	@echo
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@echo
 
 install: ## Runs the default dotbot install script
 	./install

@@ -126,7 +126,7 @@ return lush(function()
     DiffChange({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed line |diff.txt|
     DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
-    EndOfBuffer({ fg = bg0, bg = bg0 }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
+    EndOfBuffer({ fg = bg0, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
     TermCursor({ Cursor }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
@@ -144,7 +144,7 @@ return lush(function()
     -- MsgSeparator { }, -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
     NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-    Normal({ fg = fg, bg = bg0 }), -- normal text
+    Normal({ fg = fg, bg = "NONE" }), -- normal text
     NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
     GreyFloat({ bg = grey1 }),
     GreyFloatBorder({ fg = grey1 }),
