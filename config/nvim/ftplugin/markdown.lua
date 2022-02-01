@@ -13,16 +13,11 @@ vim.cmd([[autocmd FileType markdown nnoremap gO <cmd>Toc<cr>]])
 
 vim.o.equalprg = [[prettier --stdin-filepath '%:p']]
 vim.o.makeprg = [[open %]]
-vim.o.textwidth = 0
-vim.o.wrapmargin = 0
-vim.o.wrap = true
-vim.cmd([[setlocal spell linebreak textwidth=0 wrap conceallevel=2]])
-
-vim.cmd([[setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-]])
 
 -- continuous meeting note datetime entry
 vim.cmd([[iabbrev <expr> mdate "### ".strftime("%Y-%m-%d %H:%M:%S")]])
 
+-- TODO: convert these to vim.opt and vim.opt_local
 vim.cmd([[
   setlocal wrap
   setlocal spell
@@ -32,19 +27,12 @@ vim.cmd([[
   setlocal foldmethod=expr
   setlocal formatoptions+=t
   setlocal nolist
-  ]])
-vim.opt_local.spell = true
-vim.opt_local.list = false
 
--- mega.augroup(
---   "mega.filetypes",
---   {
---     {
---       events = {"BufRead", "BufNewFile"},
---       targets = {"*.md"},
---       command = "setlocal spell linebreak"
---     }
---   })
+  setlocal linebreak
+  setlocal textwidth=0
+  setlocal autoindent tabstop=2 shiftwidth=2 formatoptions-=t comments=fb:>,fb:*,fb:+,fb:-
+  setlocal conceallevel=2
+  ]])
 
 -- ## plasticboy/vim-markdown
 vim.g.markdown_fenced_languages = {

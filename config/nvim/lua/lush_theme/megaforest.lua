@@ -344,7 +344,7 @@ return lush(function()
     -- you explicitly want to support Treesitter's improved syntax awareness.
 
     -- # built-in markdown
-    markdownH1({ fg = bg0, bg = green, gui = "bold" }),
+    markdownH1({ fg = green, bg = "NONE", gui = "bold" }),
     markdownH2({ fg = orange, bg = "NONE", gui = "bold,italic,underline" }),
     markdownH3({ fg = purple, bg = "NONE", gui = "bold,italic" }),
     markdownH4({ fg = yellow, bg = "NONE", gui = "italic" }),
@@ -406,8 +406,11 @@ return lush(function()
     -- mkdCodeDelimiter({}),
     -- mkdListItem({}),
     -- mkdListItemLine({}),
-    -- mkdNonListItemBlock({}),
+    mkdNonListItemBlock({ bg = "NONE" }),
     -- mkdRule({}),
+    -- htmlStrike({ mkdStrike }),
+    -- htmlBoldItalic({}),
+
     htmlH1({ markdownH1 }),
     htmlH2({ markdownH2 }),
     htmlH3({ markdownH3 }),
@@ -416,8 +419,6 @@ return lush(function()
     htmlH6({ markdownH6 }),
     htmlBold({ markdownBold }),
     htmlItalic({ markdownItalic }),
-    -- htmlStrike({ mkdStrike }),
-    -- htmlBoldItalic({}),
 
     -- M.link("Dash", "markdownBold")
     -- M.highlight("CodeBlock", { bg = M.colors.dimm_black })
