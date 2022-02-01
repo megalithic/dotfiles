@@ -64,9 +64,9 @@ style = "bold fg:#614b51"
 when = "sudo -vn &>/dev/null"
 
 [git_branch]
-symbol = " "
+symbol = "[](bold fg:purple) " # 
 format = "[$symbol$branch]($style) "
-style = "bold fg:245"
+style = "bold italic fg:#7c8377" # 245
 
 [git_status]
 # # REF:
