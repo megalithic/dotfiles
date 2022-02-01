@@ -308,7 +308,7 @@ M.setup = function()
     -- }
 
     require("nvim-treesitter.configs").setup({
-      ignore_install = { "elixir" },
+      -- ignore_install = { "elixir" },
       ensure_installed = {
         "bash",
         "c",
@@ -316,7 +316,7 @@ M.setup = function()
         "css",
         "comment",
         "dockerfile",
-        -- "elixir",
+        "elixir",
         "elm",
         "erlang",
         "fish",

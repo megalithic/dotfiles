@@ -64,7 +64,7 @@ style = "bold fg:#614b51"
 when = "sudo -vn &>/dev/null"
 
 [git_branch]
-symbol = "[](bold fg:#614b51) " # 
+symbol = "[](bold fg:#505a60) " # 
 format = "[$symbol$branch]($style) "
 style = "bold fg:#7c8377" # 245
 
