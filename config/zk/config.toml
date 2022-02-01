@@ -99,6 +99,7 @@ todos = "zk list -t 'todo'"
 edlast = "zk edit --limit 1 --sort modified- $@"
 # Edit the notes selected interactively among the notes created the last two weeks.
 recent = "zk edit --sort created- --created-after 'last two weeks' --interactive"
+conf = '$EDITOR "$ZK_CONFIG_DIR/config.toml"'
 
 # LSP INTEGRATION
 [lsp]

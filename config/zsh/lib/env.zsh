@@ -114,6 +114,7 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export ICLOUD_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
   export DOCUMENTS_DIR="$ICLOUD_DIR/Documents"
   export ZK_NOTEBOOK_DIR="$DOCUMENTS_DIR/_notes"
+  export ZK_CONFIG_DIR="$XDG_CONFIG_HOME/zk"
 
   export BROWSER="open"
   export HOMEBREW_NO_ANALYTICS=1
