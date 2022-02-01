@@ -8,6 +8,7 @@ local template = require("ext.template")
 local alert = require("ext.alert")
 
 M.defaultState = "push-to-talk"
+M.mic = hs.audiodevice.defaultInputDevice()
 
 M.state = M.defaultState
 M.defaultInputVolume = 50
@@ -39,42 +40,30 @@ local to_psv = function(tbl)
 end
 
 local showState = function()
-  local device = hs.audiodevice.defaultInputDevice()
-  log.df("device to handle: %s", device)
+  log.df("device to handle: %s", M.mic)
 
   -- starting point:
   local muted = false
-  local inputVolume = M.defaultInputVolume
 
   if M.state == "push-to-talk" then
     if M.pushed then
       M.menubar:setIcon(speakIcon)
-
       muted = false
-      inputVolume = M.defaultInputVolume
     else
       M.menubar:setIcon(mutedIcon)
-
       muted = true
-      inputVolume = 0
     end
   elseif M.state == "push-to-mute" then
     if M.pushed then
       M.menubar:setIcon(mutedIcon)
-
       muted = true
-      inputVolume = 0
     else
       M.menubar:setIcon(speakIcon)
-
       muted = false
-      inputVolume = M.defaultInputVolume
     end
   end
 
-  device:setMuted(muted)
-  device:setInputVolume(inputVolume)
-  hs.applescript("set volume input volume " .. inputVolume)
+  M.mic:setInputMuted(muted)
 end
 
 local buildMenu = function()
@@ -111,7 +100,6 @@ local eventKeysMatchModifiers = function(modifiers)
 end
 
 local eventTapWatcher = function(event)
-  local device = hs.audiodevice.defaultInputDevice()
   local modifiersMatch = eventKeysMatchModifiers(event:getFlags())
 
   if modifiersMatch then
@@ -125,8 +113,8 @@ local eventTapWatcher = function(event)
   if M.pushed then
     log.df(
       "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
-      device:inputMuted(),
-      device:inputVolume(),
+      M.mic:inputMuted(),
+      M.mic:inputVolume(),
       M.state,
       M.pushed
     )
