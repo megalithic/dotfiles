@@ -165,7 +165,7 @@ function fuzzy_find() {
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --border=none --padding="1" --preview-window="border-left" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session

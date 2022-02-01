@@ -340,10 +340,10 @@ function here() {
   here_messages[2]=":coffee: good morning! :tea:"
   local rand=$((RANDOM % ${#here_messages[@]}))
 
-  CHANNEL_ID="$GENERAL_CHANNEL_ID"
   __set_presence "auto"
   __end_status
   __end_dnd
+  CHANNEL_ID="$GENERAL_CHANNEL_ID"
   __set_chan_text "${here_messages[$rand]}"
 
   unset here_messages
@@ -383,7 +383,7 @@ if [[ $status ]]; then
 else
   # otherwise, fuzzy-find based upon our supported statuses; if fzf installed
   if [[ $FZF_FOUND == "installed" ]]; then
-    selected_status="$(echo "$statuses" | $fzf_cmd --reverse --prompt="聆select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query" --preview-window="hidden")"
+    selected_status="$(echo "$statuses" | $fzf_cmd --reverse --border=none --padding="1" --preview-window="border-left" --prompt="聆select slack status  " --header=" supported slack statuses" --bind="enter:replace-query+print-query" --preview-window="hidden")"
     [[ -n $selected_status ]] && do_status "$selected_status"
   else
     printf -- "ERROR: %s requires FZF to be installed for fuzzy finding statuses" "$__base"
