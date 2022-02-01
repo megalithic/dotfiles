@@ -6,16 +6,44 @@
 
 # Matches are the substitution rules, when you type the "trigger" string
 # it gets replaced by the "replace" string.
+secure_input_notification: false
 matches:
-  # Simple text replacement
-  - trigger: ":espanso"
-    replace: "Hi there!"
   - trigger: "Rene"
     replace: "René"
   - trigger: ":rene"
     replace: "René"
   - trigger: ":zoom"
     replace: "https://us02web.zoom.us/j/2264962052?pwd=ZHB1bCszbTliMVl4OWtzYkpYQjE5Zz09"
+  - trigger: ":tm"
+    replace: "™"
+  - trigger: ":shrug"
+    replace: "¯\_(ツ)_/¯"
+  - trigger: ":nope"
+    replace: "ಠ_ಠ"
+  - trigger: ":heart"
+    replace: "❤️"
+  - trigger: ":point"
+    replace: "👆"
+  - trigger: ":fist"
+    replace: "✊"
+  - trigger: ":wave"
+    replace: "👋"
+  - trigger: ":thumb"
+    replace: "👍"
+  # - trigger: ":up"
+  #   replace: "👍"
+  # - trigger: ":down"
+  #   replace: "👎"
+  - trigger: ":+1"
+    replace: "👍"
+  - trigger: ":flex"
+    replace: "💪"
+  - trigger: ":pray"
+    replace: "🙏"
+  - trigger: ":rock"
+    replace: "🤘"
+  - trigger: ":rofl"
+    replace: "🤣"
 
   # Dates
   - trigger: ":date"
