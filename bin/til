@@ -83,6 +83,7 @@ parent="$HOME/code/megalithic.io"
 posts="$parent/posts"
 current_year_posts="$posts/$current_year"
 
+# TODO build up these debugging info items into an array
 function __info() {
   printf -- "\n"
   printf -- "%s executation details:\n" "$__base"
@@ -109,10 +110,15 @@ template() {
 }
 
 nvim_cmd() {
-  local new_post="${1:-}"
+  local post="${1:-}"
+  local nvim_start_opts="${2:-}"
 
-  if [[ $new_post ]]; then
-    nvim "+cd $parent" "$new_post" "+5" "+startinsert"
+  if [[ $post ]]; then
+    if [[ -n $nvim_start_opts ]]; then
+      nvim "+cd $parent" "$post" "$nvim_start_opts"
+    else
+      nvim "+cd $parent" "$post"
+    fi
   fi
 }
 
@@ -130,7 +136,7 @@ create_til() {
   fi
 
   template >"$new_post"
-  nvim_cmd "$new_post"
+  nvim_cmd "$new_post" "+5 +startinsert"
 }
 
 [[ $DEBUG == "true" ]] && __info "$title_param"
@@ -138,7 +144,7 @@ create_til() {
 if [[ $title_param ]]; then
   create_til "$title_param"
 else
-  file=$(fd .md "$current_year_posts" | fzf --reverse --prompt=" select a post to edit  " --header="TIL posts" --bind="enter:replace-query+print-query" --preview="bat {}")
+  file=$(fd .md "$posts" | fzf --reverse --prompt=" select a post to edit  " --header="TIL posts" --bind="enter:replace-query+print-query" --preview="bat {}")
   if [[ $file ]]; then
     nvim_cmd "$file"
   fi
