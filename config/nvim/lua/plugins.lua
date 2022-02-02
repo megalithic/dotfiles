@@ -308,7 +308,6 @@ M.setup = function()
     -- }
 
     require("nvim-treesitter.configs").setup({
-      -- ignore_install = { "elixir" },
       ensure_installed = {
         "bash",
         "c",
@@ -325,7 +324,7 @@ M.setup = function()
         "html",
         "heex",
         "javascript",
-        "markdown",
+        -- "markdown",
         "jsdoc",
         "json",
         "jsonc",

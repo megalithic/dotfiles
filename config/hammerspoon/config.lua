@@ -333,7 +333,7 @@ M.apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      { nil, 2, M.layout.leftHalf },
+      { nil, 2, M.layout.rightHalf },
     },
   },
   ["com.agilebits.onepassword7"] = {

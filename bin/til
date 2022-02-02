@@ -99,8 +99,8 @@ function __info() {
 template() {
   title_cased=$(echo "$title_param" | sed 's/.*/\L&/; s/[a-z]*/\u&/g')
   echo "%{"
-  printf -- "  title: %s\n" "$title_cased"
-  printf -- '  tags: ["til"]\n'
+  printf -- "  title: \"%s\",\n" "$title_cased"
+  printf -- '  tags: ["til"],\n'
   printf -- '  description: """\n'
   printf -- "  \n"
   printf -- '  """\n'
