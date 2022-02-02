@@ -26,48 +26,47 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-
 DEBUG="false"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 
 function __help() {
-	printf -- "Usage: %s [options] [title | FUZZY_PATTERN]\n" "$__base"
-	printf -- "   Options:\n"
-	printf -- "     -h                This help text you're presently reading. 😄\n"
+  printf -- "Usage: %s [options] [title | FUZZY_PATTERN]\n" "$__base"
+  printf -- "   Options:\n"
+  printf -- "     -h                This help text you're presently reading. 😄\n"
   printf -- "     -d                Set debugging to true\n"
-	printf -- "\n"
-	printf -- "   Dependencies:\n"
+  printf -- "\n"
+  printf -- "   Dependencies:\n"
   printf -- "     fzf               (%s)\n" "$FZF_FOUND"
-	printf -- "\n"
+  printf -- "\n"
 }
 
 # -- halt if we don't have FZF installed
 if [[ $FZF_FOUND == "not installed" ]]; then
-	printf -- "ERROR: %s requires FZF to be installed" "$__base"
-	__help
-	exit 1
+  printf -- "ERROR: %s requires FZF to be installed" "$__base"
+  __help
+  exit 1
 fi
 
 while getopts "hd" OPTION; do
-	case $OPTION in
+  case $OPTION in
 
-		h)
-			__help
-			exit 0
-			;;
+    h)
+      __help
+      exit 0
+      ;;
 
-		d)
-			DEBUG="true"
-			;;
+    d)
+      DEBUG="true"
+      ;;
 
-    \? )
+    \?)
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
 
-	esac
+  esac
 done
-shift $((OPTIND -1))
+shift $((OPTIND - 1))
 
 title_param="${*:-}"
 
@@ -80,14 +79,14 @@ posts="$parent/posts"
 current_year_posts="$posts/$current_year"
 
 function __info() {
-	printf -- "\n"
-	printf -- "%s executation details:\n" "$__base"
-	printf -- "---------------------------------------------------\n"
-	printf -- "cwd:          %s\n" "$__dir"
-	printf -- "filepath:     %s\n" "$__file"
-	printf -- "basename:     %s\n" "$__base"
-	printf -- "root:         %s\n" "$__root"
-	printf -- "invocation:   %s\n" "$__invocation"
+  printf -- "\n"
+  printf -- "%s executation details:\n" "$__base"
+  printf -- "---------------------------------------------------\n"
+  printf -- "cwd:          %s\n" "$__dir"
+  printf -- "filepath:     %s\n" "$__file"
+  printf -- "basename:     %s\n" "$__base"
+  printf -- "root:         %s\n" "$__root"
+  printf -- "invocation:   %s\n" "$__invocation"
   printf -- "posts pwd:    %s\n" "$current_year_posts"
 }
 
@@ -112,7 +111,7 @@ nvim_cmd() {
 }
 
 create_til() {
-  if [[ ! -d "$current_year_posts" ]]; then
+  if [[ ! -d $current_year_posts ]]; then
     mkdir -p "$current_year_posts"
   fi
 
@@ -124,7 +123,7 @@ create_til() {
     printf -- "template:\n   %s\n" "$(template)"
   fi
 
-  template > "$new_post"
+  template >"$new_post"
   nvim_cmd "$new_post"
 }
 
