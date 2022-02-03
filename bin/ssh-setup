@@ -3,20 +3,23 @@
 set -e
 
 function log {
-    printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
+  printf '%s%s\n%s' $(tput setaf 4) "$*" $(tput sgr 0)
 }
 
 function log_ok {
-    printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
+  printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "$*" $(tput sgr 0)
 }
 
 function log_warn {
-    printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "-> [!] $*" $(tput sgr 0)
+  printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "-> [!] $*" $(tput sgr 0)
 }
 
+KEY_NAME="${1:-$USER-$HOST}"
+KEY_ID="${1:-$USER@$HOST}"
+
 ssh_path="$HOME/.ssh"
-key_id="$USER@$HOST"
-key_file="$USER-$HOST"
+key_id="$KEY_ID"
+key_file="$KEY_NAME"
 key_type="ed25519"
 key_path="$ssh_path/$key_file"
 key_path_pub="$ssh_path/$key_file.pub"
@@ -35,20 +38,20 @@ log "-> executing command: \"ssh-keygen -t key_type -C '$key_id' -N '' -f '$key_
 ssh-keygen -t "$key_type" -C "$key_id" -N "" -f "$key_path"
 
 sleep 0.5
-log "-> executing command: \"eval "$(ssh-agent -s)"\""
+log '-> executing command: "eval '$(ssh-agent -s)"\""
 eval "$(ssh-agent -s)"
 
 sleep 0.5
-log "-> executing command: \"ssh-add -K "$key_path"\""
-if [[ "$PLATFORM" == "macos" ]]; then
+log '-> executing command: "ssh-add -K '$key_path"\""
+if [[ $PLATFORM == "macos" ]]; then
   ssh-add -K "$key_path"
-elif [[ "$PLATFORM" == "linux" ]]; then
+elif [[ $PLATFORM == "linux" ]]; then
   ssh-add "$key_path"
 fi
 
 sleep 0.5
-log "-> executing command: \"pbcopy < "$key_path_pub"\""
-pbcopy < "$key_path_pub"
+log '-> executing command: "pbcopy < '$key_path_pub"\""
+pbcopy <"$key_path_pub"
 
 log_ok "-> DONE creating ssh key at "$key_path_pub"; copied to clipboard."
 
