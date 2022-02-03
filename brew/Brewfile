@@ -20,7 +20,6 @@ tap "heroku/brew" if OS.mac?
 tap "microsoft/git"
 tap "isacikgoz/taps"
 tap "vitorgalvao/tiny-scripts" if OS.mac?
-tap "bvgastel/clippy"
 tap "olets/tap"
 tap "federico-terzi/espanso" if OS.mac?
 tap "mhanberg/zk" if OS.mac?
