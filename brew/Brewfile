@@ -160,7 +160,7 @@ brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"
 brew "tidy-html5"
-brew "timg" # for image rendering in kitty
+brew "timg" if OS.mac? # for image rendering in kitty
 brew "tldr"
 brew "tmux", args: ["HEAD"] if OS.mac? # , args: ["HEAD"]
 brew "transcrypt" if OS.mac?

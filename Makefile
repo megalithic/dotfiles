@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help install macos linux all elixirls paq subup nvim
+.PHONY: help install macos linux all elixirls paq subup nvim asdf brew
 .DEFAULT_GOAL := install
 
 help: ## Show this help content
@@ -35,6 +35,12 @@ paq: ## Install paq-nvim to $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
 
 nvim: ## Update and build neovim from source
 	$(HOME)/.dotfiles/bin/nvim-install
+
+asdf: ## Install asdf
+	$(HOME)/.dotfiles/bin/asdf-install -f
+
+brew: ## Install homebrew
+	$(HOME)/.dotfiles/bin/brew-install -f
 
 subup: ## Updates git submodules
 	git submodule update --remote --merge

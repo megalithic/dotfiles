@@ -1,6 +1,13 @@
 #!/bin/bash
 
-[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+if [[ -z $XDG_DATA_HOME ]]; then
+  export XDG_DATA_HOME="$HOME/.local/share"
+fi
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  export XDG_CONFIG_HOME="$HOME/.config"
+fi
+
+[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
 
 set -euo pipefail
 
@@ -14,67 +21,67 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-pushd "$XDG_DATA_HOME/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
+pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
 
 update() {
-	cd "$XDG_DATA_HOME/src/neovim" && log_ok "cd neovim successful"
-	git checkout master && log_ok "git checkout master successful"
-	git fetch && log_ok "git fetch successful"
-	git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
+  cd "${XDG_DATA_HOME}/src/neovim" && log_ok "cd neovim successful"
+  git checkout master && log_ok "git checkout master successful"
+  git fetch && log_ok "git fetch successful"
+  git log --color --pretty=oneline --abbrev-commit HEAD@{1}.. | sed 's/^/  /'
 }
 
 clone() {
-	if [[ ! -d "$XDG_DATA_HOME/src/neovim" ]]; then
-		git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful"
-		cd neovim && log_ok "cd neovim successful"
-		# do it all and then exit cleanly...
-		update && build && popd >/dev/null && exit 0
-	fi
+  if [[ ! -d "${XDG_DATA_HOME}/src/neovim" ]]; then
+    git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful"
+    cd neovim && log_ok "cd neovim successful"
+    # do it all and then exit cleanly...
+    update && build && popd >/dev/null && exit 0
+  fi
 }
 
 do_build() {
-	git up && log_ok "git up successful"
-	[[ -d "$XDG_DATA_HOME/src/neovim/.deps" ]] && sudo rm -rf "$XDG_DATA_HOME/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1
-	sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
-	sudo make install || exit 1 && log_ok "successfully built and installed neovim"
+  git up && log_ok "git up successful"
+  [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]] && sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1
+  sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
+  sudo make install || exit 1 && log_ok "successfully built and installed neovim"
 }
 
 build() {
-	if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
-		log_warn "neovim already up to date on origin/master; skipping."
-	else
-		read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
-		case $yn in
-			[Yy]*)
-				do_build || exit 1
-				;;
-			"")
-				do_build || exit 1 # default
-				;;
-			[Nn]*)
-				log_warn "opted out of neovim install"
-				;;
-			*)
-				log_warn "please answer [y]es or [n]o."
-				exec $__invocation
-				;;
-		esac
-	fi
+  if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
+    log_warn "neovim already up to date on origin/master; skipping."
+  else
+    read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
+    case $yn in
+      [Yy]*)
+        do_build || exit 1
+        ;;
+      "")
+        do_build || exit 1 # default
+        ;;
+      [Nn]*)
+        log_warn "opted out of neovim install"
+        ;;
+      *)
+        log_warn "please answer [y]es or [n]o."
+        exec $__invocation
+        ;;
+    esac
+  fi
 }
 
 while getopts "f" OPTION; do
-	case $OPTION in
+  case $OPTION in
 
-		f)
-			FORCE_INSTALL="true"
-			;;
+    f)
+      FORCE_INSTALL="true"
+      ;;
 
-		\?)
-			echo "Invalid Option: -$OPTARG" 1>&2
-			exit 1
-			;;
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
 
-	esac
+  esac
 done
 shift $((OPTIND - 1))
 

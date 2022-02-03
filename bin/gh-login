@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+ln -sfv lemonade xdg-open
+
 if ! gh auth status; then
   gh auth login
 fi

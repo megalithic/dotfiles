@@ -19,18 +19,35 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-paq_path="${XDG_DATA_HOME}/nvim/site/pack/paqs/start/paq-nvim"
+FORCE_INSTALL="false"
+
+while getopts "f" OPTION; do
+  case $OPTION in
+
+    f)
+      FORCE_INSTALL="true"
+      ;;
+
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+  esac
+done
+shift $((OPTIND - 1))
 
 do_install() {
-  log "cloning paq-nvim into $paq_path"
-  git clone --depth=1 https://github.com/savq/paq-nvim.git $paq_path \
-    && nvim -c 'lua require("paq")(require("plugins").list):install()' +qall \
-    && log_ok "completed installing paq-nvim and plugins into $paq_path" \
+  log "installing brew"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
+    && log_ok "completed installing brew" \
     || exit 1
 }
 
-if [[ ! -d $paq_path ]]; then
-  read -p "$(tput bold)$(tput setaf 5)[?] install paq-nvim and plugins (Y/n)?$(tput sgr 0) " yn
+if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
+  log_warn "brew already installed; skipping."
+else
+  read -p "$(tput bold)$(tput setaf 5)[?] install brew (Y/n)?$(tput sgr 0) " yn
   case $yn in
     [Yy]*)
       do_install || exit 1
@@ -39,13 +56,11 @@ if [[ ! -d $paq_path ]]; then
       do_install || exit 1
       ;;
     [Nn]*)
-      log_warn "opted out of paq-nvim install"
+      log_warn "opted out of brew install"
       ;;
     *)
       log_warn "please answer [y]es or [n]o."
       exec $__invocation
       ;;
   esac
-else
-  log_warn "paq-nvim already exists at $paq_path; skipping."
 fi
