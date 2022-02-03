@@ -2,10 +2,12 @@
 
 set -euo pipefail
 
+set -x # turns on tracing! thanks @ryansch
+
 # Check script is being executed appropriatly
-if [[ -z "${BASH_SOURCE}" ]]; then
-  msg="This file should be executed directly with \`./install\`
-  and not interpreted with \`sh ./install\`"
+if [[ -z ${BASH_SOURCE} ]]; then
+  msg='This file should be executed directly with `./install`
+  and not interpreted with `sh ./install`'
   echo "$msg"
   exit 1
 fi
@@ -30,7 +32,7 @@ git submodule update --init --recursive "dotbot/ifarch"
   --plugin-dir dotbot/asdf \
   --plugin-dir dotbot/ifplatform \
   -c "${CONFIG}" "${@}"
-  # -c "${CONFIG}"
+# -c "${CONFIG}"
 
 # run ${@} 2>&1 | tee "makeinstall.log"
 # run ${@} 2>&1 | tee "$HOME/$(date +'%Y-%m-%d-%H-%M-%S').log"
