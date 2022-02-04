@@ -160,7 +160,7 @@ function fuzzy_find() {
     [[ $tmuxinator_sessions_count -gt 0 ]] && preview_cmd="fd {} $tmuxinator_configs_dir | xargs bat"
   else
     # sessions_list=$(printf "%s\n%s" "$tmuxinator_sessions_list" "$current_sessions_list" | sort | uniq)
-    fzf_prompt_text=" select session (or create new)  "
+    fzf_prompt_text=" new or existing session  "
     fzf_header_text="ﯲ running tmux sessions (active: $current_session)"
   fi
 
