@@ -25,7 +25,8 @@ windows:
             - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load)
+            - dev down; dev down --remove-orphans; dev up -d && dev logs -f
         - repl:
             - ssh seth-dev
             - cd ~/code/app
-            - eval $(desk load); rails console
+            - eval $(desk load); \rails console

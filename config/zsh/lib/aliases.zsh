@@ -29,13 +29,13 @@ alias fdd="fd -H -t d -d 10"
 #   Made possible through contributions from generous benefactors like
 #   `brew install coreutils`
 if $(gls &>/dev/null); then
-	alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
-	alias ls="gls -FA"
-	alias lst="gls -FAt"
-	alias l="gls -lAh"
-	alias lt="gls -lAht"
-	alias ll="gls -l"
-	alias la="gls -A"
+  alias gls="tmux select-pane -P bg=default,fg=default &> /dev/null; gls --color=auto --group-directories-first"
+  alias ls="gls -FA"
+  alias lst="gls -FAt"
+  alias l="gls -lAh"
+  alias lt="gls -lAht"
+  alias ll="gls -l"
+  alias la="gls -A"
 fi
 
 alias ls="exa -gahF --group-directories-first"
@@ -99,6 +99,7 @@ alias trs="tmux rename-session"
 alias tpmi="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/install_plugins"
 alias tpmu="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/update_plugins"
 alias tpmc="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/clean_plugins"
+alias mega="ftm mega"
 
 alias ssh="kitty +kitten ssh"
 
@@ -128,33 +129,33 @@ alias b="brew"
 # -----------------------------------------------------------------------------
 
 if type nvim >/dev/null 2>&1; then
-	alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
-	alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
-	alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
-	alias nvimbuild="pushd ~/.local/share/src/neovim && git co master && git up && rm -rf ./.deps && make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install && popd"
-	alias buildnvim=nvimbuild
-	alias nvim="nvim -O" # let's always open multiple files passed in as vsplits
-	alias im="nvim"
-	alias nv="/usr/local/Cellar/neovim/0.6.0/bin/nvim"
-	alias vm="nvim"
-	alias nvm=nv
-	alias vim="nvim"
-	alias v=vim
-	alias vi="/usr/local/bin/vim"
-	alias minvim="nvim -u NONE"
-	alias barevim="nvim -u NONE"
-	alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
-	alias rmpaqs="packs; rm -rf paqs; cd -"
-	# alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
+  alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
+  alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
+  alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
+  alias nvimbuild="pushd ~/.local/share/src/neovim && git co master && git up && rm -rf ./.deps && make CMAKE_BUILD_TYPE=RelWithDebInfo && sudo make install && popd"
+  alias buildnvim=nvimbuild
+  alias nvim="nvim -O" # let's always open multiple files passed in as vsplits
+  alias im="nvim"
+  alias nv="/usr/local/Cellar/neovim/0.6.0/bin/nvim"
+  alias vm="nvim"
+  alias nvm=nv
+  alias vim="nvim"
+  alias v=vim
+  alias vi="/usr/local/bin/vim"
+  alias minvim="nvim -u NONE"
+  alias barevim="nvim -u NONE"
+  alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
+  alias rmpaqs="packs; rm -rf paqs; cd -"
+  # alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
-	# alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
-	# alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
-	# # While in a nvim terminal, open file to current session
-	# if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
-	#   alias nvh='nvr -o'
-	#   alias nvv='nvr -O'
-	#   alias nvt='nvr --remote-tab'
-	# fi
+  # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"
+  # alias nvts="nv +tabe +term +NvimuxVerticalSplit +term +NvimuxHorizontalSplit +term +tabnext"
+  # # While in a nvim terminal, open file to current session
+  # if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
+  #   alias nvh='nvr -o'
+  #   alias nvv='nvr -O'
+  #   alias nvt='nvr --remote-tab'
+  # fi
 fi
 
 # CONFIG EDITS
@@ -342,23 +343,23 @@ alias nf="echo -ne \\u"
 
 # -- linux-specific aliases..
 if [[ $PLATFORM == "linux" ]]; then
-	alias pbcopy="xclip -sel clip"
-	alias pbpaste='xclip -sel clip -o'
-	# TODO: why do we have this luamake entry
-	alias luamake=$HOME/.config/lsp/sumneko_lua/3rd/luamake/luamake
+  alias pbcopy="xclip -sel clip"
+  alias pbpaste='xclip -sel clip -o'
+  # TODO: why do we have this luamake entry
+  alias luamake=$HOME/.config/lsp/sumneko_lua/3rd/luamake/luamake
 
-	if (command -v lemonade &>/dev/null); then
-		# ln -s /path/to/lemonade /usr/bin/xdg-open
-		# xdg-open, pbcopy and pbpaste.
-		alias xdg-open="lemonade open"
-		alias pbcopy="lemonade copy"
-		alias pbpaste="lemonade paste"
-		alias open="lemonade open"
-	fi
-	alias distro="cat /etc/*release"
-	alias ports="netstat -lntu"
-	alias port="sudo netstat -lp | rg"
+  if (command -v lemonade &>/dev/null); then
+    # ln -s /path/to/lemonade /usr/bin/xdg-open
+    # xdg-open, pbcopy and pbpaste.
+    alias xdg-open="lemonade open"
+    alias pbcopy="lemonade copy"
+    alias pbpaste="lemonade paste"
+    alias open="lemonade open"
+  fi
+  alias distro="cat /etc/*release"
+  alias ports="netstat -lntu"
+  alias port="sudo netstat -lp | rg"
 
-	# REF: https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
-	alias rules="sudo iptables -L -nv"
+  # REF: https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
+  alias rules="sudo iptables -L -nv"
 fi

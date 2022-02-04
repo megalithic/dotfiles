@@ -134,6 +134,7 @@ brew "p7zip"
 brew "perl"
 brew "pgcli"
 brew "pkg-config"
+brew "pigz"
 brew "pinentry-mac" if OS.mac?
 brew "postgresql" if OS.mac?
 # initdb /usr/local/var/postgres -E utf8

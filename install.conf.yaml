@@ -232,6 +232,9 @@
         log "Attempting to install golang packages..";
         ~/.dotfiles/asdf/go.sh;
 
+        log "Attempting to final source zsh files..";
+        source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile;
+
         log "Attempting to use gh-login to do GitHub Authentication..";
         ~/.dotfiles/bin/gh-login;
 

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help install macos linux all elixirls paq subup nvim asdf brew
+.PHONY: help install elixirls paq subup nvim asdf brew
 .DEFAULT_GOAL := install
 
 help: ## Show this help content
@@ -12,17 +12,6 @@ help: ## Show this help content
 
 install: ## Runs the default dotbot install script
 	./install
-
-macos: ## Runs the macos-specific dotbot install script
-	./macos
-	# ./install -vv -c install-mac.conf.yaml
-
-linux: ## Runs the linux-specific dotbot install script
-	./linux
-	# ./install -vv -c install-linux.conf.yaml
-
-all: ## Runs all platform-specific dotbot install scripts
-	macos linux
 
 elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
 	$(HOME)/.dotfiles/bin/elixirls-install
@@ -41,6 +30,17 @@ asdf: ## Install asdf
 
 brew: ## Install homebrew
 	$(HOME)/.dotfiles/bin/brew-install -f
+
+macos: ## (WIP) Runs the macos-specific dotbot install script
+	./macos
+	# ./install -vv -c install-mac.conf.yaml
+
+linux: ## (WIP) Runs the linux-specific dotbot install script
+	./linux
+	# ./install -vv -c install-linux.conf.yaml
+
+all: ## (WIP) Runs all platform-specific dotbot install scripts
+	macos linux
 
 subup: ## Updates git submodules
 	git submodule update --remote --merge
