@@ -28,9 +28,9 @@ do_install() {
     cargo install stylua  # https://github.com/johnnymorganz/stylua
     cargo install distant # https://github.com/chipsenkbeil/distant
 
-    if [[ $PLATFORM == "linux" ]]; then
-      cargo install git-delta
-    fi
+    # if [[ $PLATFORM == "linux" ]]; then
+    #   cargo install git-delta
+    # fi
   fi
 }
 
