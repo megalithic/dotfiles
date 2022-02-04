@@ -253,6 +253,7 @@ path=(
     ./vendor/bundle/bin
     $HOME/bin
     $HOME/.bin
+    $HOME/.local/bin
     $DOTS/bin
     $PRIVATES/bin
     $ASDF_DIR
