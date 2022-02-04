@@ -138,7 +138,9 @@
 
     # ----- misc/other
     ~/.asdfrc: asdf/asdfrc
-    ~/.tool-versions: asdf/tool-versions
+    ~/.tool-versions:
+      force: true
+      path: asdf/tool-versions
     ~/.default-gems: asdf/default-gems
     ~/.default-npm-packages: asdf/default-npm-packages
     ~/.default-python-packages: asdf/default-python-packages
@@ -203,14 +205,14 @@
         log "Attempting to source zsh files..";
         source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile;
 
-        log "Attempting to run compaudit..";
-        zsh -c "compaudit | xargs chmod g-w";
-
         log "Attempting to uninstall brew-installed ruby..";
         brew uninstall ruby --ignore-dependencies --force;
 
         log "Attempting to reshim asdf..";
         asdf reshim;
+
+        log "Attempting to run post-fzf install step..";
+        $(brew --prefix)/opt/fzf/install;
 
         log "Attempting to install neovim from source..";
         make -C ~/.dotfiles nvim;

@@ -131,7 +131,7 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export HOMEBREW_CASK_OPTS="--appdir=/Applications"
   export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
   export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=FALSE
-  export HOMEBREW_PREFIX="$(/usr/local/bin/brew --prefix)"
+  export HOMEBREW_PREFIX="$(brew --prefix)"
   export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
   export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
@@ -157,8 +157,8 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
   # export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
 elif [[ "$PLATFORM" == "linux" ]]; then
-  export BREW_PATH="$(/home/linuxbrew/.linuxbrew/bin/brew --prefix)"
-  export HOMEBREW_PREFIX=$BREW_PATH
+  # export HOMEBREW_PREFIX=$BREW_PATH
+  # export BREW_PATH="$(/home/linuxbrew/.linuxbrew/bin/brew --prefix)"
   export BROWSER="xdg-open"
   has lemonade && export BROWSER="lemonade open"
 fi
