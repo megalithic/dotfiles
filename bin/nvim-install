@@ -41,7 +41,19 @@ clone() {
 
 do_build() {
   git up && log_ok "git up successful"
-  [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]] && sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful" || exit 1
+
+  if [[ $PLATFORM == "linux" ]]; then
+    # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
+    sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen
+  elif [[ $PLATFORM == "macos" ]]; then
+    # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
+    brew install ninja libtool automake cmake pkg-config gettext curl
+  fi
+
+  if [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]]; then
+    sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful"
+  fi
+
   sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
   sudo make install || exit 1 && log_ok "successfully built and installed neovim"
 }
