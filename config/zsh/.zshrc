@@ -55,7 +55,7 @@ zcomet compinit
 [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
 
 # work things
-[ -f /opt/dev-env/ansible/dash_profile ] && source /opt/dev-env/ansible/dash_profile
+[ -f "/opt/dev-env/ansible/dash_profile" ] && source /opt/dev-env/ansible/dash_profile
 [ -n "$DESK_ENV" ] && source "$DESK_ENV" || true
 
 # zprof # bottom of .zshrc

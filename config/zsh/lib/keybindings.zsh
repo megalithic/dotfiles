@@ -86,7 +86,7 @@ bindkey "^?" backward-delete-char
 bindkey -M vicmd '/' history-incremental-search-backward
 
 # bindkey "^R" history-search-multi-word
-# bindkey "^R" fzf-history-widget
+bindkey "^R" fzf-history-widget
 
 # REF: https://github.com/jose-elias-alvarez/dotfiles/blob/1b1d725459df1ba1fc62b1bacc510fe8f28b3eaa/home/zshrc#L1-L2
 bindkey "^P" up-line-or-search
