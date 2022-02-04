@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-set -x # turns on tracing! thanks @ryansch
+# set -x # turns on tracing! thanks @ryansch
 
 # Check script is being executed appropriatly
 if [[ -z ${BASH_SOURCE} ]]; then
@@ -46,6 +46,7 @@ git submodule update --init --recursive "dotbot/ifarch"
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
   --plugin-dir dotbot/brewfile \
   --plugin-dir dotbot/asdf \
+  --plugin-dir dotbot/ifarch \
   --plugin-dir dotbot/ifplatform \
   -c "${CONFIG}" "${@}"
 # -c "${CONFIG}"
@@ -53,7 +54,3 @@ git submodule update --init --recursive "dotbot/ifarch"
 # run ${@} 2>&1 | tee "makeinstall.log"
 # run ${@} 2>&1 | tee "$HOME/$(date +'%Y-%m-%d-%H-%M-%S').log"
 # run ${@}
-
-#  source ~/.config/zsh/.zshrc
-#  source ~/.config/zsh/.zshenv
-#  source ~/.config/zsh/.zprofile
