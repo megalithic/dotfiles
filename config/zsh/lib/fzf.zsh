@@ -65,4 +65,6 @@ if has fzf; then
     export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
     export FZF_ALT_C_COMMAND="fd --type d --follow --hidden --exclude 'Library'"
   fi
+else
+  log_error "unable to find fzf in path"
 fi

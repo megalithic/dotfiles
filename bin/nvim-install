@@ -23,6 +23,25 @@ FORCE_INSTALL="false"
 
 pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
 
+remove_brew_nvim() {
+  read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
+  case $yn in
+    [Yy]*)
+      brew uninstall -f neovim || exit 1
+      ;;
+    "")
+      brew uninstall -f neovim || exit 1 # default
+      ;;
+    [Nn]*)
+      log_warn "opted out of homebrew neovim removal"
+      ;;
+    *)
+      log_warn "please answer [y]es or [n]o."
+      exec $__invocation
+      ;;
+  esac
+}
+
 update() {
   cd "${XDG_DATA_HOME}/src/neovim" && log_ok "cd neovim successful"
   git checkout master && log_ok "git checkout master successful"
@@ -35,7 +54,7 @@ clone() {
     git clone git@github.com:neovim/neovim.git && log_ok "git clone neovim successful"
     cd neovim && log_ok "cd neovim successful"
     # do it all and then exit cleanly...
-    update && build && popd >/dev/null && exit 0
+    update && build && remove_brew_nvim && popd >/dev/null && exit 0
   fi
 }
 
@@ -97,4 +116,4 @@ while getopts "f" OPTION; do
 done
 shift $((OPTIND - 1))
 
-clone && update && build && popd >/dev/null
+clone && update && build && remove_brew_nvim popd >/dev/null
