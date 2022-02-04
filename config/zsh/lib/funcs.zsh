@@ -1,6 +1,9 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
+# -- make helpers available to all the frens:
+[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+
 # Shorten Github URL with vanity (url, vanity code) - saves to clipboard!
 ghurl() {
   curl -i -s https://git.io -F "url=$1" -F "code=$2" | rg "Location" | cut -f 2 -d " " | pbcopy

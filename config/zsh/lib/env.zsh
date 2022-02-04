@@ -1,8 +1,18 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
-#
+
 # -- make helpers available to all the frens:
 [[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+
+fpath+=(
+    $ZDOTDIR/prompt
+    $ZDOTDIR/completions
+    $ZDOTDIR/plugins
+    $ZDOTDIR/funcs
+    ${ASDF_DIR}/completions
+    $fpath
+)
+
 #
 # -- term
 export TERM=${TERM:=xterm-kitty}
@@ -301,16 +311,6 @@ for path_file in /etc/paths.d/*(.N); do
     path+=($(<$path_file))
 done
 unset path_file
-
-
-fpath+=(
-    $ZDOTDIR/prompt
-    $ZDOTDIR/completions
-    $ZDOTDIR/plugins
-    $ZDOTDIR/functions
-    ${ASDF_DIR}/completions
-    $fpath
-)
 
 # use .localrc for SUPER SECRET stuff
 if [[ -e $HOME/.localrc ]]; then

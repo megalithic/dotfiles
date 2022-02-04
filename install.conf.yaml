@@ -31,6 +31,7 @@
     - ~/tmp
     - ~/screenshots
     - ~/.config
+    - ~/.cache
     - ~/.local/share/packages
     - ~/.local/share/src
 
@@ -145,10 +146,6 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
-    # ~/Library/Application Support/lazygit/config.yml:
-    #   force: true
-    #   if: "[ `uname` = Darwin ]"
-    #   path: config/lazygit/config.yml
 
 # - ghe:
 #     - mislav/gh-branch
@@ -194,52 +191,94 @@
         - 1.17.1
 
 - shell:
-    - description: Attempting to set zsh as default shell..
+    - description: Attempting post-install commands..
       quiet: true
       command: >-
-        [[ $(echo $SHELL) == $(which zsh) ]] && printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "➜ [!] $(which zsh) already set as the default shell; skipping." $(tput sgr 0) || sudo chsh -s `which zsh` `whoami`;
+        log "Attempting to source helpers.zsh..";
+        source $XDG_CONFIG_HOME/zsh/lib/helpers.zsh;
 
-    - [
-        source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile,
-        Source our zsh files,
-      ]
+        log "Attempting to set zsh as default shell..";
+        [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`;
 
-    - [compaudit | xargs chmod g-w, Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
+        log "Attempting to source zsh files..";
+        source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile;
 
-    - description: Attempting to install neovim from source..
-      quiet: true
-      command: >-
+        log "Attempting to run compaudit..";
+        zsh -c "compaudit | xargs chmod g-w";
+
+        log "Attempting to uninstall brew-installed ruby..";
+        brew uninstall ruby --ignore-dependencies --force;
+
+        log "Attempting to reshim asdf..";
+        asdf reshim;
+
+        log "Attempting to install neovim from source..";
         make -C ~/.dotfiles nvim;
 
-    - description: Attempting to install paq-nvim..
-      quiet: true
-      command: >-
+        log "Attempting to install paq-nvim..";
         make -C ~/.dotfiles paq;
 
-    - description: Attempting to install elixir-ls..
-      quiet: true
-      command: >-
+        log "Attempting to install elixirls-master..";
         make -C ~/.dotfiles elixirls-master;
 
-    - [brew uninstall ruby --ignore-dependencies --force, Uninstall brew ruby]
-    - [asdf reshim, Reshimming asdf binaries]
+        log "Attempting to install lua/luarocks packages..";
+        ~/.dotfiles/asdf/lua.sh;
 
-    - description: Attemping to post-asdf install lua/luarocks packages..
-      quiet: true
-      command: >-
-        ~/.dotfiles/asdf/lua.sh
+        log "Attempting to install rust/cargo packages..";
+        ~/.dotfiles/asdf/rust.sh;
 
-    - description: Attemping to post-asdf install rust/cargo packages..
-      quiet: true
-      command: >-
-        ~/.dotfiles/asdf/rust.sh
+        log "Attempting to install golang packages..";
+        ~/.dotfiles/asdf/go.sh;
 
-    - description: Attemping to post-asdf install go-lang packages..
-      quiet: true
-      command: >-
-        ~/.dotfiles/asdf/go.sh
+        log "Attempting to use `gh-login` to do GitHub Authentication..";
+        ~/.dotfiles/bin/gh-login;
 
-    - [~/.dotfiles/bin/gh-login, GitHub Authentication]
+    # - description: Attempting to set zsh as default shell..
+    #   quiet: true
+    #   command: >-
+    #     [[ $(echo $SHELL) == $(which zsh) ]] && printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 3) "$(date '+%x %X')" "➜ [!] $(which zsh) already set as the default shell; skipping." $(tput sgr 0) || sudo chsh -s `which zsh` `whoami`;
+
+    # - [
+    #     source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile,
+    #     Source our zsh files,
+    #   ]
+
+    # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
+
+    # - [brew uninstall ruby --ignore-dependencies --force, Uninstall brew ruby]
+    # - [asdf reshim, Reshimming asdf binaries]
+
+    # - description: Attempting to install neovim from source..
+    #   quiet: true
+    #   command: >-
+    #     make -C ~/.dotfiles nvim;
+
+    # - description: Attempting to install paq-nvim..
+    #   quiet: true
+    #   command: >-
+    #     make -C ~/.dotfiles paq;
+
+    # - description: Attempting to install elixir-ls..
+    #   quiet: true
+    #   command: >-
+    #     make -C ~/.dotfiles elixirls-master;
+
+    # - description: Attemping to post-asdf install lua/luarocks packages..
+    #   quiet: true
+    #   command: >-
+    #     ~/.dotfiles/asdf/lua.sh
+
+    # - description: Attemping to post-asdf install rust/cargo packages..
+    #   quiet: true
+    #   command: >-
+    #     ~/.dotfiles/asdf/rust.sh
+
+    # - description: Attemping to post-asdf install go-lang packages..
+    #   quiet: true
+    #   command: >-
+    #     ~/.dotfiles/asdf/go.sh
+
+    # - [~/.dotfiles/bin/gh-login, GitHub Authentication]
     # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries
     #   command: >-
