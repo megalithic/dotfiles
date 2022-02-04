@@ -44,23 +44,25 @@ do_install() {
     || exit 1
 }
 
-if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
-  log_warn "brew already installed; skipping."
-else
-  read -p "$(tput bold)$(tput setaf 5)[?] install brew (Y/n)?$(tput sgr 0) " yn
-  case $yn in
-    [Yy]*)
-      do_install || exit 1
-      ;;
-    "")
-      do_install || exit 1
-      ;;
-    [Nn]*)
-      log_warn "opted out of brew install"
-      ;;
-    *)
-      log_warn "please answer [y]es or [n]o."
-      exec $__invocation
-      ;;
-  esac
+if [[ $(type "brew" &>/dev/null) ]]; then
+  log_warn "brew already installed."
+
+  if [[ $FORCE_INSTALL == "false" ]]; then
+    read -p "$(tput bold)$(tput setaf 5)[?] force install brew anyway (y/N)?$(tput sgr 0) " yn
+    case $yn in
+      [Yy]*)
+        do_install || exit 1
+        ;;
+      "")
+        log_warn "skipping; opted out of brew install"
+        ;;
+      [Nn]*)
+        log_warn "skipping; opted out of brew install"
+        ;;
+      *)
+        log_warn "please answer [y]es or [n]o."
+        exec $__invocation
+        ;;
+    esac
+  fi
 fi

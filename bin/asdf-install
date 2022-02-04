@@ -69,16 +69,16 @@ do_install() {
 if [[ $(type "asdf" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
   log_warn "asdf already installed; skipping."
 else
-  read -p "$(tput bold)$(tput setaf 5)[?] install asdf (Y/n)?$(tput sgr 0) " yn
+  read -p "$(tput bold)$(tput setaf 5)[?] install asdf (y/N)?$(tput sgr 0) " yn
   case $yn in
     [Yy]*)
       do_install || exit 1
       ;;
     "")
-      do_install || exit 1
+      log_warn "skipping; opted out of asdf install"
       ;;
     [Nn]*)
-      log_warn "opted out of asdf install"
+      log_warn "skipping; opted out of asdf install"
       ;;
     *)
       log_warn "please answer [y]es or [n]o."
