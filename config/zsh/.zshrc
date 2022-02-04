@@ -10,10 +10,6 @@
 bindkey -e # ensures we use emacs/readline keybindings
 
 # zcomet for plugin install and management
-# if [[ ! -f ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh ]]; then
-# 	command git clone https://github.com/agkozak/zcomet.git ${ZDOTDIR:-${HOME}}/.zcomet/bin
-# fi
-# source ${ZDOTDIR:-${HOME}}/.zcomet/bin/zcomet.zsh
 if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
   command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin
 fi
@@ -58,7 +54,8 @@ zcomet compinit
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
 
-source /opt/dev-env/ansible/dash_profile
+# work things
+[ -f /opt/dev-env/ansible/dash_profile ] && source /opt/dev-env/ansible/dash_profile
 [ -n "$DESK_ENV" ] && source "$DESK_ENV" || true
 
 # zprof # bottom of .zshrc
