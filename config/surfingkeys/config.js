@@ -321,12 +321,16 @@ function setup_surfingkeys({ api: api }) {
   }
   .sk_theme #sk_omnibarSearchResult ul li:nth-child(odd) {
     background: var(--border);
+    padding: 5px;
   }
   .sk_theme #sk_omnibarSearchResult ul li:nth-child(even) {
     background: var(--border);
+    padding: 5px;
   }
   .sk_theme #sk_omnibarSearchResult ul li.focused {
     background: var(--bg-dark);
+    padding: 5px;
+    padding-left: 15px;
   }
   .sk_theme #sk_omnibarSearchArea {
     border-top-color: var(--border);
@@ -337,9 +341,21 @@ function setup_surfingkeys({ api: api }) {
     font-size: 20px;
     padding:10px 0;
   }
+  .sk_theme .prompt {
+    text-transform: uppercase;
+  }
   .sk_theme .separator {
+    color: var(--bg);
+    /* margin-right: 10px;
+    * color: var(--accent-fg);
+    */
+  }
+  .sk_theme .separator:after {
+    content: "\u1405";
+    display: inline-block;
+    margin-left: -5px;
+    margin-right: 5px;
     color: var(--accent-fg);
-    margin-right: 10px;
   }
   /* ---------- Popup Notification Banner ---------- */
   #sk_banner {
