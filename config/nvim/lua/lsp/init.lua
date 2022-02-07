@@ -335,17 +335,15 @@ local function setup_lsp_servers()
       cmd = { "tailwindcss-language-server", "--stdio" },
       init_options = {
         userLanguages = {
-          eelixir = "html-eex",
+          elixir = "phoenix-heex",
           eruby = "erb",
-          ["phoenix-html"] = "html-eex",
-          ["phoenix-heex"] = "html-eex",
-          heex = "html-eex",
+          heex = "phoenix-heex",
         },
       },
       handlers = {
-        ["tailwindcss/getConfiguration"] = function(_, _, context)
-          -- tailwindcss lang server waits for this response before providing hover
-          vim.lsp.buf_notify(context.bufnr, "tailwindcss/getConfigurationResponse", { _id = context.params._id })
+        ["tailwindcss/getConfiguration"] = function(_, _, params, _, bufnr, _)
+          -- TailwindCSS waits for this repsonse before providing hover
+          vim.lsp.buf_notify(bufnr, "tailwindcss/getConfigurationResponse", { _id = params._id })
         end,
       },
       settings = {
@@ -370,10 +368,13 @@ local function setup_lsp_servers()
             recommendedVariantOrder = "warning",
           },
           experimental = {
-            -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
             classRegex = {
-              [[class: "([^"]*)]],
-              [[class= "([^"]*)]],
+              -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
+              -- [[class: "([^"]*)]],
+              -- [[class= "([^"]*)]],
+              -- Configure TailwindCSS to consider all double-quote strings
+              -- as class attributes so we autocomplete
+              "\"([^\"]*)",
             },
           },
           validate = true,
@@ -381,18 +382,11 @@ local function setup_lsp_servers()
       },
       filetypes = {
         "elixir",
-        "eelixir",
         "css",
         "scss",
         "sass",
         "html",
         "heex",
-        "html.heex",
-        "leex",
-        "html-eex",
-        "phoenix-html",
-        "phoenix-eex",
-        "phoenix-heex",
         "javascript",
         "javascriptreact",
         "typescript",
