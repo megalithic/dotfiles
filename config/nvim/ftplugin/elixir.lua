@@ -40,16 +40,14 @@ vim.api.nvim_exec(
   nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite<CR>
   " nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite --only-failures<CR>
 
-  " https://github.com/janko/vim-test/issues/136
-  function! ElixirUmbrellaTransform(cmd) abort
+  function! Transform(cmd) abort
     let sub = ""
     let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
     echom "running test -> " . sub
     return sub
   endfunction
-
-  let g:test#custom_transformations = {'elixir_umbrella': function('ElixirUmbrellaTransform')}
-  let g:test#transformation = 'elixir_umbrella'
+  let g:test#custom_transformations = {'transform': function('Transform')}
+  let g:test#transformation = 'transform'
 
   " REF: https://nts.strzibny.name/elixir-interactive-shell-iex/#inspecting-failing-tests
   " let test#elixir#exunit#executable = "mix test --trace"
