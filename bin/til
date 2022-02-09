@@ -79,7 +79,7 @@ title_param="${*:-}"
 current_year="${YEAR:-$(date +"%Y")}"
 month_day="$(date +"%m-%d")"
 slugged_title="$(echo "$title_param" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr "[:upper:]" "[:lower:]")"
-parent="$HOME/code/megalithic.io"
+parent="$HOME/code/megalithic.io/priv"
 posts="$parent/posts"
 current_year_posts="$posts/$current_year"
 
