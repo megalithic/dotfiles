@@ -26,8 +26,8 @@ vim.api.nvim_exec(
   iabbrev epry  require IEx; IEx.pry
   iabbrev ep    \|>
   " iabbrev ei    IO.inspect
-  iabbrev ei    IO.inspect\(\)
-  " iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
+"  iabbrev ei    IO.inspect\(\)
+  iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
   iabbrev eputs IO.puts
 
   nmap <silent> <leader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile --trace<CR>
@@ -41,7 +41,6 @@ vim.api.nvim_exec(
   " nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite --only-failures<CR>
 
   " https://github.com/janko/vim-test/issues/136
-  " -- modified for my work needs (sims, blech) and handles generic case.
   function! ElixirUmbrellaTransform(cmd) abort
     let sub = ""
     let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')

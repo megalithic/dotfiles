@@ -1,6 +1,6 @@
 -- Derived from the PushToTalk Spoon and then heavily modified for my use cases
 
-local log = hs.logger.new("[bindings.ptt]", "warning")
+local log = hs.logger.new("[bindings.ptt]", "debug")
 
 local M = {}
 
@@ -110,15 +110,13 @@ local eventTapWatcher = function(event)
 
   showState()
 
-  if M.pushed then
-    log.df(
-      "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
-      M.mic:inputMuted(),
-      M.mic:inputVolume(),
-      M.state,
-      M.pushed
-    )
-  end
+  log.df(
+    "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
+    M.mic:inputMuted(),
+    M.mic:inputVolume(),
+    M.state,
+    M.pushed
+  )
 end
 
 M.setState = function(s)

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# NOTE: this is awful; my muscle memory is tied in to using `et` to edit my
+# tmux.conf file; however, `brew info et` needs `et` also, so this is a dirty
+# hack to give me both:
+
+set -euo pipefail
+
+PARAM="${1:-}"
+
+if [[ -z $PARAM ]]; then
+  nvim "$DOTS/config/tmux/tmux.conf"
+else
+  "$HOMEBREW_PREFIX/bin/et" "$PARAM"
+fi
