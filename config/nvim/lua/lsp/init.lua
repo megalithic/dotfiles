@@ -18,6 +18,11 @@ require("fidget").setup({
   text = {
     spinner = "dots_pulse",
   },
+  sources = { -- Sources to configure
+    ["elixirls"] = { -- Name of source
+      ignore = true, -- Ignore notifications from this source
+    },
+  },
 })
 
 require("lsp.diagnostics").setup()
