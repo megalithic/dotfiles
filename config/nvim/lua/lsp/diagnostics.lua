@@ -11,10 +11,10 @@ local severity_map = {
 }
 
 local icon_map = {
-  " ✗ ",
-  "  ",
+  "  ",
+  " 喝", --
   "  ",
-  "  ",
+  "  ",
 }
 
 M.diagnostic_types = {

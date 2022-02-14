@@ -62,8 +62,8 @@ M.list = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  "nvim-lua/lsp-status.nvim",
-  -- "j-hui/fidget.nvim", -- replace lsp-status with this
+  -- "nvim-lua/lsp-status.nvim",
+  "j-hui/fidget.nvim", -- replace lsp-status with this
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",

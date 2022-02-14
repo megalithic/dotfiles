@@ -737,23 +737,13 @@ function M.s_indention()
   }))
 end
 
-function M.s_lsp_status()
-  local ok, lsp_status = mega.safe_require("lsp-status")
-  if ok and lsp_status then
-    lsp_status.register_progress()
-    lsp_status.config({
-      indicator_errors = C.icons.lsp.error,
-      indicator_warnings = C.icons.lsp.warn,
-      indicator_info = C.icons.lsp.info,
-      indicator_hint = C.icons.lsp.hint,
-      -- status_symbol = C.icons.lsp.ok,
-    })
-
-    if #vim.lsp.buf_get_clients() > 0 then
-      return unpack(U.item(lsp_status.status_progress(), "StMetadata"))
+function M.s_lsp_client(args)
+  local minimal = M.is_truncated(args.trunc_width)
+  for _, client in ipairs(vim.lsp.buf_get_clients(0)) do
+    if client.config and client.config.filetypes and vim.tbl_contains(client.config.filetypes, vim.bo.filetype) then
+      return unpack(U.item_if(client.name, minimal, "StMetadata"))
     end
   end
-  return ""
 end
 
 -- Helper functionality =======================================================
@@ -775,7 +765,7 @@ function U.statusline_active()
   -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
   local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
   local indention     = M.s_indention()
-  local lsp_status    = M.s_lsp_status()
+  local lsp_client    = M.s_lsp_client({ trunc_width = 140 })
   local diags         = U.diagnostic_info()
   local diag_error    = unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
   local diag_warn     = unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
@@ -794,7 +784,7 @@ function U.statusline_active()
     "%=", -- End left alignment
     -- middle section for whatever we want..
     "%=",
-    lsp_status,
+    -- lsp_client,
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,

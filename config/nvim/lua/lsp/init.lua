@@ -14,6 +14,12 @@ set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 -- vim.lsp.set_log_level("trace")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
+require("fidget").setup({
+  text = {
+    spinner = "dots_pulse",
+  },
+})
+
 require("lsp.diagnostics").setup()
 require("lsp.handlers").setup()
 
@@ -28,7 +34,7 @@ local function on_attach(client, bufnr)
     client.config.flags.allow_incremental_sync = true
   end
 
-  require("lsp-status").on_attach(client)
+  -- require("lsp-status").on_attach(client)
   require("lsp.formatting").setup(client, bufnr, formatting_lsp)
 
   require("lsp_signature").on_attach({
@@ -230,7 +236,7 @@ end
 local function setup_lsp_capabilities()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
-  capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
+  -- capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
