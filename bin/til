@@ -111,23 +111,23 @@ template() {
 
 nvim_cmd() {
   local post="${1:-}"
-  local nvim_start_opts="${2:-}"
+  local nvim_start_opts="${*:-}"
 
   if [[ $post ]]; then
-    if [[ -n $nvim_start_opts ]]; then
-      nvim "+cd $parent" "$post" "$nvim_start_opts"
-    else
-      nvim "+cd $parent" "$post"
-    fi
+    # if [[ -n $nvim_start_opts ]]; then
+    nvim "+cd $parent" "$post" "$nvim_start_opts"
+    # else
+    #   nvim "+cd $parent" "$post"
+    # fi
   fi
 }
 
-create_til() {
+create() {
   if [[ ! -d $current_year_posts ]]; then
     mkdir -p "$current_year_posts"
   fi
 
-  new_post="$current_year_posts/$month_day-$slugged_title.md"
+  post="$current_year_posts/$month_day-$slugged_title.md"
 
   if [[ $DEBUG == "true" ]]; then
     printf -- "title param:  %s\n" "$title_param"
@@ -135,17 +135,30 @@ create_til() {
     printf -- "template:\n   %s\n" "$(template)"
   fi
 
-  template >"$new_post"
-  nvim_cmd "$new_post" "+5 +startinsert"
+  template >"$post"
+  nvim_cmd "$post" "+5" "+startinsert"
+}
+
+edit() {
+  local post="${1:-}"
+
+  if [[ $DEBUG == "true" ]]; then
+    printf -- "title param:  %s\n" "$title_param"
+    printf -- "filename:\n   %s\n" "$(new_post)"
+    printf -- "template:\n   %s\n" "$(template)"
+  fi
+
+  template >"$post"
+  nvim_cmd "$post"
 }
 
 [[ $DEBUG == "true" ]] && __info "$title_param"
 
 if [[ $title_param ]]; then
-  create_til "$title_param"
+  create "$title_param"
 else
   file=$(fd .md "$posts" | fzf --reverse --prompt=" select a post to edit  " --header="TIL posts" --bind="enter:replace-query+print-query" --preview="bat {}")
   if [[ $file ]]; then
-    nvim_cmd "$file"
+    edit "$file"
   fi
 fi

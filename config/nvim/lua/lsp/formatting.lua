@@ -14,7 +14,7 @@ function M.setup(client, bufnr, formatter_ls)
 
   -- disable formatting for the following language-servers (let null-ls takeover):
   -- tags: #ignored, #disabled, #formatting
-  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet" }
+  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
       client.resolved_capabilities.document_formatting = false

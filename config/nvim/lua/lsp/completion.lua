@@ -51,10 +51,12 @@ local function setup_luasnip()
   local function on_tab()
     return luasnip.jump(1) and "" or utils.t("<Tab>")
   end
+
   --- <s-tab> to jump to next snippet's placeholder
   local function on_s_tab()
     return luasnip.jump(-1) and "" or utils.t("<S-Tab>")
   end
+
   local opts = { expr = true, remap = true }
   imap("<Tab>", on_tab, opts)
   smap("<Tab>", on_tab, opts)
@@ -140,12 +142,15 @@ local function setup_cmp()
   }
 
   cmp.setup({
+    view = {
+      entries = "native",
+    },
     experimental = {
       -- ghost_text = {
       --   hl_group = "LineNr",
       -- },
       ghost_text = false,
-      native_menu = false, -- false == use fancy floaty menu for now
+      -- native_menu = false, -- false == use fancy floaty menu for now
     },
     completion = {
       keyword_length = 1,

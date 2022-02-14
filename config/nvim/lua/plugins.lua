@@ -63,6 +63,7 @@ M.list = {
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
   "nvim-lua/lsp-status.nvim",
+  -- "j-hui/fidget.nvim", -- replace lsp-status with this
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
@@ -744,6 +745,7 @@ M.setup = function()
           end
         end
       end
+
       golden_size.set_ignore_callbacks({
         {
           ignore_by_buftype,
