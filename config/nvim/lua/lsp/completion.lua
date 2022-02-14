@@ -143,7 +143,7 @@ local function setup_cmp()
 
   cmp.setup({
     view = {
-      entries = "native",
+      entries = "custom",
     },
     experimental = {
       -- ghost_text = {
