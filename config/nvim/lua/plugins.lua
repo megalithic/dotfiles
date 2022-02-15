@@ -196,6 +196,7 @@ M.list = {
   -- use_with_config("svermeulen/vim-cutlass", "cutlass") -- separates cut and delete operations
   --     use_with_config("svermeulen/vim-yoink", "yoink") -- improves paste
   "outstand/logger.nvim",
+  "gbprod/cutlass.nvim",
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
@@ -283,6 +284,12 @@ M.setup = function()
       highlight = "Normal",
       border = "shadow",
     }
+  end
+
+  do -- cutlass.nvim
+    require("cutlass").setup({
+      cut_key = "x",
+    })
   end
 
   do -- treesitter-nvim

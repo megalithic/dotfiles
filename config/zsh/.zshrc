@@ -9,6 +9,8 @@
 
 bindkey -e # ensures we use emacs/readline keybindings
 
+[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+
 # zcomet for plugin install and management
 if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
   command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin

@@ -42,6 +42,7 @@ local reload_ok, reload = pcall(require, "plenary.reload")
 RELOAD = reload_ok and reload.reload_module or function(...)
   return ...
 end
+
 function R(name)
   RELOAD(name)
   return require(name)

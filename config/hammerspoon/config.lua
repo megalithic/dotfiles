@@ -40,7 +40,7 @@ M.preferred = {
     "apps",
     "snap",
     "media",
-    "airpods",
+    "headphones",
     "misc",
     "browser",
     "capture",
