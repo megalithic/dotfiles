@@ -2,7 +2,7 @@ name: outstand
 root: ~/code/outstand
 
 # Runs on project start, always
-on_project_start: gohome && dowork
+# on_project_start: gohome && dowork
 
 tmux_options: -2
 windows:

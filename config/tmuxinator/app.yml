@@ -15,18 +15,18 @@ windows:
       layout: main-vertical
       panes:
         - code:
-            - et seth-dev
+            - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - et seth-dev
+            - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load)
             - dev down; dev down --remove-orphans; dev up -d && dev logs -f
         - repl:
-            - et seth-dev
+            - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load); \rails console

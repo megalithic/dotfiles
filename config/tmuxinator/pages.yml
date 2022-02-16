@@ -2,7 +2,7 @@ name: pages
 root: ~/code/outstand
 
 # Runs on project start, always
-on_project_start: gohome && dowork
+# on_project_start: gohome && dowork
 
 tmux_options: -2
 windows:
@@ -12,17 +12,17 @@ windows:
       layout: main-vertical
       panes:
         - code:
-            - et seth-dev
+            - ssh seth-dev
             - cd ~/code/pages
             - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - et seth-dev
+            - ssh seth-dev
             - cd ~/code/pages
             - eval $(desk load)
         - repl:
-            - et seth-dev
+            - ssh seth-dev
             - cd ~/code/pages
             - eval $(desk load); iex -S mix
