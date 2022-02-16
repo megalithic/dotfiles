@@ -147,6 +147,8 @@ function setup_surfingkeys({ api: api }) {
     Front.openOmnibar({ type: "Windows" });
   });
 
+  unmap("w");
+
   vmap("H", "0");
   vmap("L", "$");
   // vunmap("gr");

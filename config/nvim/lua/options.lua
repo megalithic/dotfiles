@@ -213,9 +213,10 @@ vim.opt.listchars = {
 -----------------------------------------------------------------------------//
 -- Indentation
 -----------------------------------------------------------------------------//
-vim.opt.wrap = false
+vim.opt.wrap = true
 -- vim.opt.wrapmargin = 2
 -- vim.opt.textwidth = 80
+vim.opt.textwidth = 0 --  0 disables
 vim.opt.autoindent = true
 vim.opt.shiftround = true
 vim.opt.expandtab = true

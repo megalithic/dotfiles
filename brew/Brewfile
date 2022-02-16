@@ -19,7 +19,6 @@ tap "heroku/brew" if OS.mac?
 # NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
 tap "microsoft/git"
 tap "isacikgoz/taps"
-tap "vitorgalvao/tiny-scripts" if OS.mac?
 tap "olets/tap"
 tap "federico-terzi/espanso" if OS.mac?
 tap "mhanberg/zk" if OS.mac?
@@ -56,7 +55,6 @@ brew "bat-extras"
 brew "blueutil" if OS.mac?
 brew "broot"
 brew "browsh" if OS.mac?
-brew "vitorgalvao/tiny-scripts/calm-notifications" if OS.mac?
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?
