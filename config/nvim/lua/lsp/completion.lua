@@ -204,7 +204,7 @@ local function setup_cmp()
             buffer = "[buf]",
             spell = "[spl]",
             emoji = "[emo]",
-          })[entry.source.name] or entry.soruce.name
+          })[entry.source.name] or entry.source.name
         end
 
         return item
