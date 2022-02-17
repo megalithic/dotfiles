@@ -1,5 +1,7 @@
 #!/Users/seth/.asdf/shims/ruby
 
+# stolen directly from vitorgalvao/tiny-scripts/calm-notifications; thanks!
+
 require "base64"
 require "nokogiri"
 require "open3"
