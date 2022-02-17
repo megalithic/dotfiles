@@ -121,6 +121,7 @@ local function setup_cmp()
     option = {
       keyword_length = 5,
       max_item_count = 5, -- only show up to 5 items.
+      -- keyword_pattern = [=[[^[:blank:]].*]=],
       get_bufnrs = function()
         -- local bufs = {}
         -- for _, win in ipairs(vim.api.nvim_list_wins()) do
@@ -150,6 +151,7 @@ local function setup_cmp()
       --   hl_group = "LineNr",
       -- },
       ghost_text = false,
+      -- horizontal_search = true,
       -- native_menu = false, -- false == use fancy floaty menu for now
     },
     completion = {
@@ -176,6 +178,7 @@ local function setup_cmp()
     sources = cmp.config.sources({
       { name = "luasnip" },
       { name = "nvim_lsp" },
+      { name = "nvim_lsp_signature_help" },
       { name = "path" },
       { name = "emmet_ls" },
     }, {
@@ -187,16 +190,23 @@ local function setup_cmp()
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       format = function(entry, item)
         item.kind = C.icons.lsp.kind[item.kind]
-        item.menu = ({
-          luasnip = "[lsnip]",
-          nvim_lua = "[lua]",
-          nvim_lsp = "[lsp]",
-          orgmode = "[org]",
-          path = "[path]",
-          buffer = "[buf]",
-          spell = "[spl]",
-          emoji = "[emo]",
-        })[entry.source.name]
+
+        if entry.source.name == "nvim_lsp" then
+          item.menu = entry.source.source.client.name
+        else
+          item.menu = ({
+            luasnip = "[lsnip]",
+            nvim_lua = "[lua]",
+            nvim_lsp = "[lsp]",
+            nvim_lsp_signature_help = "[sig]",
+            orgmode = "[org]",
+            path = "[path]",
+            buffer = "[buf]",
+            spell = "[spl]",
+            emoji = "[emo]",
+          })[entry.source.name] or entry.soruce.name
+        end
+
         return item
       end,
     },

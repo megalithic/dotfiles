@@ -194,7 +194,7 @@
 
 - shell:
     - description: Attempting post-install commands..
-      quiet: true
+      quiet: false
       command: >-
         log "Attempting to source helpers.zsh..";
         source $XDG_CONFIG_HOME/zsh/lib/helpers.zsh;
@@ -206,7 +206,7 @@
         source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile;
 
         log "Attempting to uninstall brew-installed ruby..";
-        [[ brew ls --versions neovim >/dev/null ]] && brew uninstall ruby --ignore-dependencies --force;
+        #[[ brew ls --versions neovim >/dev/null ]] && brew uninstall ruby --ignore-dependencies --force;
 
         log "Attempting to reshim asdf..";
         asdf reshim;

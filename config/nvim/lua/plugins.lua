@@ -53,6 +53,7 @@ M.list = {
   "hrsh7th/cmp-emoji",
   "f3fora/cmp-spell",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
+  "hrsh7th/cmp-nvim-lsp-signature-help",
   -- for fuzzy things in nvim-cmp and command:
   "tzachar/fuzzy.nvim",
   "tzachar/cmp-fuzzy-path",

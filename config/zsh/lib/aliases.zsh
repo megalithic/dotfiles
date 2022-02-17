@@ -294,6 +294,7 @@ alias imix="iex -S mix"
 
 # MISC / RANDOM
 # -----------------------------------------------------------------------------
+alias memhog="ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%mem | head"
 
 # http://unix.stackexchange.com/a/174596
 (command -v gdircolors &>/dev/null) && alias dircolors="gdircolors"
