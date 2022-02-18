@@ -46,6 +46,10 @@ matches:
     replace: "🤘"
   - trigger: ":rofl:"
     replace: "🤣"
+  - trigger: ":poop:"
+    replace: "💩"
+  - trigger: ":100:"
+    replace: "💯"
 
   # Dates
   - trigger: ":date"

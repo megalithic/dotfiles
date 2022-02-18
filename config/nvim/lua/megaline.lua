@@ -793,7 +793,7 @@ function U.statusline_active()
 end
 
 function U.statusline_inactive()
-  return "%#StInactive#%F%="
+  return "%#StInactive#%F %m%="
 end
 
 return M
