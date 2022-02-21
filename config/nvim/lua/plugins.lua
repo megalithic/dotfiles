@@ -352,6 +352,7 @@ M.setup = function()
         -- Using this option may slow down your editor, and you may see some duplicate highlights.
         -- Instead of true it can also be a list of languages
         additional_vim_regex_highlighting = { "markdown" },
+        use_languagetree = true,
       },
       indent = { enable = true },
       autotag = { enable = true },
@@ -629,6 +630,7 @@ M.setup = function()
         end,
       },
     })
+    require("orgmode").setup_ts_grammar()
     require("org-bullets").setup()
   end
 

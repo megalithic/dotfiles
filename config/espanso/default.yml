@@ -10,6 +10,8 @@ secure_input_notification: false
 matches:
   - trigger: "Rene"
     replace: "René"
+  - trigger: "Zoe"
+    replace: "Zoë"
   - trigger: ":rene"
     replace: "René"
   - trigger: ":zoom:"
