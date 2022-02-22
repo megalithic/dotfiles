@@ -207,18 +207,12 @@ function __log() {
 function __request() {
   local feature=${1:-}
 
-  # request_data+=("token=$SLACK_TOKEN")
-
   local data
   data=$(printf -- "%s " "${request_data[@]}")
-  # data=$(printf -- "--data %s " "${request_data[@]}")
   # NOTE: `2>&1` -- stderr (2) going to where stdout would go (1)
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "new slack status activity: $status"
-
-  request_cmd="$api_cmd -A bearer -a $SLACK_TOKEN --json --response-charset=utf-8 POST "$api_url/$feature" ${data}"
-  # request_cmd="$curl_cmd --show-error --include ${data} "$api_url/$feature""
-
+  request_cmd="$api_cmd -A bearer -a $SLACK_TOKEN --json --response-charset=utf-8 --print=B POST "$api_url/$feature" ${data}"
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "request_cmd used: $request_cmd"
 
   # if we're using POPUP mode in tmux; let's use our tmux-slack wrapper to send
@@ -244,14 +238,14 @@ function __set_status() {
   local emoji
   text="${1:-}"
   emoji="${2:-}"
-  local profile="{\"status_text\":\"${text}\",\"status_emoji\":\"${emoji}\"}"
-  request_data+=("profile:=\"${profile}\"")
+  local profile="{\"status_text\": \"${text}\", \"status_emoji\": \"${emoji}\"}"
+  request_data+=("profile:='${profile}'")
   __request "users.profile.set"
 }
 
 function __end_status() {
-  local profile='{"status_text":"","status_emoji":""}'
-  request_data+=("profile:=${profile}")
+  local profile="{\"status_text\": \"\", \"status_emoji\": \"\"}"
+  request_data+=("profile:='${profile}'")
   __request "users.profile.set"
 }
 
