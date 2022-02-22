@@ -1,0 +1,24 @@
+name: mobile
+root: ~/code/outstand
+
+# Runs on project start, always
+# on_project_start: gohome && dowork
+
+tmux_options: -2
+windows:
+  - chats:
+      - tmux link-window -s mega:chats -t 0 && exit
+  - code:
+      layout: main-vertical
+      panes:
+        - code:
+            - cd ~/code/outstand/mobile
+  - services:
+      layout: even-horizontal
+      panes:
+        - logs:
+            - cd ~/code/outstand/mobile
+            - yarn
+            - expo start
+        - repl:
+            - cd ~/code/outstand/mobile

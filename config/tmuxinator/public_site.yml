@@ -1,5 +1,5 @@
 name: public_site
-root: ~/code/outstand
+root: ~/code
 
 # Runs on project start, always
 # on_project_start: gohome && dowork
@@ -13,17 +13,17 @@ windows:
       panes:
         - code:
             - ssh seth-dev
-            - cd ~/code/outstand/public-site
+            - cd ~/code/public-site
             - eval $(desk load);
   - services:
       layout: even-horizontal
       panes:
         - logs:
             - ssh seth-dev
-            - cd ~/code/outstand/public-site
+            - cd ~/code/public-site
             - eval $(desk load)
             - dev down; dev down --remove-orphans; dev up -d && dev logs -f
         - repl:
             - ssh seth-dev
-            - cd ~/code/outstand/public-site
+            - cd ~/code/public-site
             - eval $(desk load);

@@ -241,6 +241,7 @@
         log "Attempting to use gh-login to do GitHub Authentication..";
         ~/.dotfiles/bin/gh-login;
 
+    # - [zsh -c "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
     # if (git merge-base --is-ancestor origin/master master); then
     # - description: Download binaries
     #   command: >-

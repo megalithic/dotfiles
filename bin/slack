@@ -31,7 +31,7 @@ set -euo pipefail
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename ${__file} .sh)"
+__base="$(basename "${__file}" .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
@@ -50,6 +50,7 @@ GENERAL_CHANNEL_ID=${OUTSTAND_GENERAL_CHAN_ID:-}
 # -- internal vars
 api_url="https://slack.com/api"
 spinner_path="$HOME/.dotfiles/bin/spinner"
+tmux_slack_path="$HOME/.dotfiles/bin/tmux-slack"
 statuses="away
 back
 brb
@@ -73,8 +74,9 @@ zoom
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
 [[ -x $spinner_path ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
+[[ -x $tmux_slack_path ]] && TMUX_SLACK_FOUND="installed" || TMUX_SLACK_FOUND="not installed"
 
-[[ $SPINNER_FOUND == "installed" ]] && spinner="$spinner_path" || spinner="echo '.'"
+[[ $SPINNER_FOUND == "installed" ]] && spinner="$spinner_path"
 
 function __help() {
   printf -- "Usage: %s [options] [STATUS | FUZZY_PATTERN]\n" "$__base"
@@ -104,6 +106,7 @@ function __help() {
   printf -- "     fzf               (%s)\n" "$FZF_FOUND"
   printf -- "     jq                (%s)\n" "$JQ_FOUND"
   printf -- "     spinner           (%s)\n" "$SPINNER_FOUND"
+  printf -- "     tmux-slack        (%s)\n" "$TMUX_SLACK_FOUND"
   printf -- "\n"
 }
 
@@ -172,7 +175,7 @@ shift $((OPTIND - 1))
 status="${1:-}"
 
 # -- handle options
-[[ $VERBOSE == "true" || $DEBUG == "true" ]] && curl_cmd="curl --verbose" || curl_cmd="curl --silent"
+[[ $VERBOSE == "true" || $DEBUG == "true" ]] && curl_cmd="curl --verbose" || curl_cmd="curl --silent --output /dev/null"
 [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 
 declare -a request_data
@@ -186,19 +189,29 @@ function __request() {
 
   request_data+=("token=$SLACK_TOKEN")
 
-  local data=$(printf -- "--data %s " "${request_data[@]}")
+  local data
+  data=$(printf -- "--data %s " "${request_data[@]}")
   # NOTE: `2>&1` -- stderr (2) going to where stdout would go (1)
-  request_cmd="$curl_cmd --show-error --include "${data}" "$api_url/$feature""
+
+  request_cmd="$curl_cmd --show-error --include ${data} "$api_url/$feature""
+
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && printf -- %s "$request_cmd\n"
 
-  if [[ $DEBUG == "true" ]]; then
-    exec $request_cmd | $spinner || {
-      echo 'failed to make slack request'
+  # if we're using POPUP mode in tmux; let's use our tmux-slack wrapper to send
+  # the slack operations to a detached `slack` tmux session; quazi-async.
+  if [[ $POPUP == "true" ]]; then
+    tmux-slack "${request_cmd}" || {
+      echo 'OOPS! Failed to make slack request'
       exit 1
     }
+    # tmux-slack "${request_cmd}" | $spinner || {
+    #   echo 'OOPS! Failed to make slack request'
+    #   exit 1
+    # }
+    # request_cmd="tmux-slack $curl_cmd --show-error --include ${data} "$api_url/$feature""
   else
-    exec $request_cmd &>/dev/null | $spinner || {
-      echo 'failed to make slack request'
+    exec ${request_cmd} | $spinner || {
+      echo 'OOPS! Failed to make slack request'
       exit 1
     }
   fi
@@ -208,8 +221,10 @@ function __request() {
 }
 
 function __set_status() {
-  local text="$(printf %s "${1:-}" | jq -sRr @uri)"
-  local emoji="$(printf %s "${2:-}" | jq -sRr @uri)"
+  local text
+  local emoji
+  text="$(printf %s "${1:-}" | jq -sRr @uri)"
+  emoji="$(printf %s "${2:-}" | jq -sRr @uri)"
   local profile="{\"status_text\":\"${text}\",\"status_emoji\":\"${emoji}\"}"
   request_data+=("profile=${profile}")
   __request "users.profile.set"
@@ -241,7 +256,8 @@ function __end_dnd() {
 function __set_chan_text() {
   if [[ $SILENT == "false" ]]; then
     # HT for `jq`: https://stackoverflow.com/a/34407620/213904
-    local text="$(printf %s "${1:-}" | jq -sRr @uri)"
+    local text
+    text="$(printf %s "${1:-}" | jq -sRr @uri)"
     request_data+=("channel=$CHANNEL_ID"
       "as_user=$SLACK_USER"
       "text=$text")
@@ -367,13 +383,13 @@ function do_status() {
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
 
-  ${given_status} "$@" && {
+  if (${given_status} "$@"); then
     log_status "$given_status"
     exit 0
-  } || {
+  else
     echo "Failed to set status"
     exit 1
-  }
+  fi
 }
 
 # if we pass in a status, use it directly

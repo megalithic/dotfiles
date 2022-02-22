@@ -97,7 +97,7 @@ M.list = {
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   "ggandor/lightspeed.nvim",
-  "voldikss/vim-floaterm",
+  "akinsho/toggleterm.nvim",
   "elihunter173/dirbuf.nvim",
   -- "kyazdani42/nvim-tree.lua",
 
@@ -901,6 +901,30 @@ M.setup = function()
     vim.g.git_messenger_no_default_mappings = true
     vim.g.git_messenger_max_popup_width = 100
     vim.g.git_messenger_max_popup_height = 100
+  end
+
+  do -- toggleterm.nvim
+    local toggleterm = require("toggleterm")
+
+    toggleterm.setup({
+      size = function(term)
+        if term.direction == "horizontal" then
+          return 20
+        elseif term.direction == "vertical" then
+          return vim.o.columns * 0.4
+        end
+      end,
+      persist_size = false,
+      on_open = function(term)
+        term.opened = term.opened or false
+
+        if not term.opened then
+          term:send("eval $(desk load)")
+        end
+
+        term.opened = true
+      end,
+    })
   end
 
   do -- firenvim
