@@ -10,7 +10,7 @@
 # Running `slack` with no argument will let you fuzzy-find pre-defined statuses
 #
 # Dependencies:
-#   Required: `curl`, `fzf`, `jq`, ENV variables (see source below)
+#   Required: `fzf`, `jq`, `httpie`, ENV variables (see source below)
 #   Optional: `spinner` from my dotfiles' bin dir
 #
 
@@ -68,11 +68,12 @@ pair
 tea
 zoom
 "
+api_cmd="https"
 
 # -- checks for needed dependencies
-(command -v curl &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
+(command -v https &>/dev/null) && HTTPIE_FOUND="installed" || HTTPIE_FOUND="not installed"
 [[ -x $spinner_path ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
 [[ -x $tmux_slack_path ]] && TMUX_SLACK_FOUND="installed" || TMUX_SLACK_FOUND="not installed"
 
@@ -98,13 +99,13 @@ function __help() {
   printf -- "   Options:\n"
   printf -- "     -p                Run fzf normally for tmux' popup feature, else fzf-tmux\n"
   printf -- "     -h                This help text you're presently reading. 😄\n"
-  printf -- "     -d                Set debugging to true (used with curl) \n"
+  printf -- "     -d                Set debugging to true \n"
   printf -- "     -s                Silent mode; don't message the channel on status change. 😄\n"
   printf -- "\n"
   printf -- "   Dependencies:\n"
-  printf -- "     curl              (%s)\n" "$CURL_FOUND"
   printf -- "     fzf               (%s)\n" "$FZF_FOUND"
   printf -- "     jq                (%s)\n" "$JQ_FOUND"
+  printf -- "     httpie            (%s)\n" "$HTTPIE_FOUND"
   printf -- "     spinner           (%s)\n" "$SPINNER_FOUND"
   printf -- "     tmux-slack        (%s)\n" "$TMUX_SLACK_FOUND"
   printf -- "\n"
@@ -114,7 +115,6 @@ function __info() {
   printf -- "%s executation details:\n" "$__base"
   printf -- "---------------------------------------------------\n"
   printf -- "fzf:          %s\n" "$fzf_cmd"
-  printf -- "curl:         %s\n" "$curl_cmd"
   printf -- "status:       %s\n" "$status"
   printf -- "cwd:          %s\n" "$__dir"
   printf -- "filepath:     %s\n" "$__file"
@@ -131,8 +131,8 @@ if [[ $JQ_FOUND == "not installed" ]]; then
   exit 1
 fi
 
-if [[ $CURL_FOUND == "not installed" ]]; then
-  printf -- "ERROR: %s requires curl to be installed" "$__base"
+if [[ $HTTPIE_FOUND == "not installed" ]]; then
+  printf -- "ERROR: %s requires httpie to be installed" "$__base"
   __help
   exit 1
 fi
@@ -175,7 +175,7 @@ shift $((OPTIND - 1))
 status="${1:-}"
 
 # -- handle options
-[[ $VERBOSE == "true" || $DEBUG == "true" ]] && curl_cmd="curl --verbose" || curl_cmd="curl --silent --output /dev/null"
+[[ $VERBOSE == "true" || $DEBUG == "true" ]] && api_cmd="https -vv --all --debug" || api_cmd="https -qq"
 [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 
 declare -a request_data
@@ -184,34 +184,53 @@ declare -a lunch_emojis
 declare -a here_messages
 
 # -- PRIVATE
+function __log() {
+  local log_msg="${1:-slack status updates}"
+  local status_text="${2:-}"
+
+  local reset_color="\e[0m"
+  local status_color
+
+  if [[ $status_text == "ok" ]]; then
+    status_color="\e[1;32m"
+  elif [[ $status_text == "warn" ]]; then
+    status_color="\e[1;33m"
+  elif [[ $status_text == "error" ]]; then
+    status_color="\e[1;31m"
+  else
+    status_color="\e[1;34m"
+  fi
+
+  printf -- "\n${status_color}[%s] ➜ %s ${reset_color}\n" "$(date '+%x %X')" "$log_msg"
+}
+
 function __request() {
   local feature=${1:-}
 
-  request_data+=("token=$SLACK_TOKEN")
+  # request_data+=("token=$SLACK_TOKEN")
 
   local data
-  data=$(printf -- "--data %s " "${request_data[@]}")
+  data=$(printf -- "%s " "${request_data[@]}")
+  # data=$(printf -- "--data %s " "${request_data[@]}")
   # NOTE: `2>&1` -- stderr (2) going to where stdout would go (1)
 
-  request_cmd="$curl_cmd --show-error --include ${data} "$api_url/$feature""
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "new slack status activity: $status"
 
-  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && printf -- %s "$request_cmd\n"
+  request_cmd="$api_cmd -A bearer -a $SLACK_TOKEN --json --response-charset=utf-8 POST "$api_url/$feature" ${data}"
+  # request_cmd="$curl_cmd --show-error --include ${data} "$api_url/$feature""
+
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "request_cmd used: $request_cmd"
 
   # if we're using POPUP mode in tmux; let's use our tmux-slack wrapper to send
   # the slack operations to a detached `slack` tmux session; quazi-async.
   if [[ $POPUP == "true" ]]; then
     tmux-slack "${request_cmd}" || {
-      echo 'OOPS! Failed to make slack request'
+      __log 'OOPS! Failed to make slack request' "error"
       exit 1
     }
-    # tmux-slack "${request_cmd}" | $spinner || {
-    #   echo 'OOPS! Failed to make slack request'
-    #   exit 1
-    # }
-    # request_cmd="tmux-slack $curl_cmd --show-error --include ${data} "$api_url/$feature""
   else
     exec ${request_cmd} | $spinner || {
-      echo 'OOPS! Failed to make slack request'
+      __log 'OOPS! Failed to make slack request' "error"
       exit 1
     }
   fi
@@ -223,16 +242,16 @@ function __request() {
 function __set_status() {
   local text
   local emoji
-  text="$(printf %s "${1:-}" | jq -sRr @uri)"
-  emoji="$(printf %s "${2:-}" | jq -sRr @uri)"
+  text="${1:-}"
+  emoji="${2:-}"
   local profile="{\"status_text\":\"${text}\",\"status_emoji\":\"${emoji}\"}"
-  request_data+=("profile=${profile}")
+  request_data+=("profile:=\"${profile}\"")
   __request "users.profile.set"
 }
 
 function __end_status() {
   local profile='{"status_text":"","status_emoji":""}'
-  request_data+=("profile=${profile}")
+  request_data+=("profile:=${profile}")
   __request "users.profile.set"
 }
 
@@ -257,7 +276,7 @@ function __set_chan_text() {
   if [[ $SILENT == "false" ]]; then
     # HT for `jq`: https://stackoverflow.com/a/34407620/213904
     local text
-    text="$(printf %s "${1:-}" | jq -sRr @uri)"
+    text="$(printf %s "${1:-}"# | jq -sRr @uri)"
     request_data+=("channel=$CHANNEL_ID"
       "as_user=$SLACK_USER"
       "text=$text")
@@ -372,11 +391,6 @@ function back() {
   __set_chan_text "back"
 }
 
-function log_status() {
-  local given_status="$1"
-  printf "\n[%s] at %s... \r\n" "$given_status" "$(date)"
-}
-
 function do_status() {
   local given_status="$1"
   status="$given_status"
@@ -384,10 +398,10 @@ function do_status() {
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
 
   if (${given_status} "$@"); then
-    log_status "$given_status"
+    __log "status updated to $given_status"
     exit 0
   else
-    echo "Failed to set status"
+    __log "failed to set status to $given_status" "error"
     exit 1
   fi
 }
