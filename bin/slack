@@ -411,9 +411,9 @@ function run() {
 }
 
 function gone() {
-  gone_messages[0]=":v: catch you all on the flippy flip!"
-  gone_messages[1]=":wave: adios frens!!"
-  gone_messages[2]=":v: deuces, 'mout!!"
+  gone_messages[0]=":call_me_hand: catch you all on the flippy flip!"
+  gone_messages[1]=":wave: adios frens!"
+  gone_messages[2]=":v: deuces!"
   local rand=$((RANDOM % ${#gone_messages[@]}))
 
   __set_presence "away"
@@ -439,8 +439,8 @@ function dnd() {
 }
 
 function here() {
-  here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top 'o' the mornin!"
-  here_messages[1]=":coffee: :croissant: gluten morgen!!"
+  here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top o the mornin!"
+  here_messages[1]=":coffee: :croissant: gluten morgen!"
   here_messages[2]=":coffee: good morning! :tea:"
   local rand=$((RANDOM % ${#here_messages[@]}))
 
