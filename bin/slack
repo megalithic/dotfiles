@@ -319,7 +319,7 @@ function __set_dnd() {
 }
 
 function __end_dnd() {
-  request_data+=("num_minutes:=0")
+  request_data+=("num_minutes=0")
   # request_format="--form"
   api_cmd="curl"
   __request "dnd.endDnd"

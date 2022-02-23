@@ -40,7 +40,9 @@ local to_psv = function(tbl)
 end
 
 local showState = function()
-  log.df("device to handle: %s", M.mic)
+  if M.pushed then
+    log.df("device to handle: %s", M.mic)
+  end
 
   -- starting point:
   local muted = false
@@ -109,14 +111,15 @@ local eventTapWatcher = function(event)
   end
 
   showState()
-
-  log.df(
-    "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
-    M.mic:inputMuted(),
-    M.mic:inputVolume(),
-    M.state,
-    M.pushed
-  )
+  if M.pushed then
+    log.df(
+      "Input device PTT: { muted: %s, volume: %s, state: %s, pushed: %s }",
+      M.mic:inputMuted(),
+      M.mic:inputVolume(),
+      M.state,
+      M.pushed
+    )
+  end
 end
 
 M.setState = function(s)

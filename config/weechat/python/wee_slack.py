@@ -263,7 +263,8 @@ class WeechatWrapper(object):
     # number of spaces, so it aligns correctly.
     def prnt_date_tags(self, buffer, date, tags, message):
         prefix, _, _ = message.partition("\t")
-        prefix_spaces = " " * len(weechat.string_remove_color(prefix, ""))
+        prefix = weechat.string_remove_color(encode_to_utf8(prefix), "")
+        prefix_spaces = " " * weechat.strlen_screen(prefix)
         message = message.replace("\n", "\n{}\t".format(prefix_spaces))
         return self.wrap_for_utf8(self.wrapped_class.prnt_date_tags)(
             buffer, date, tags, message
@@ -1471,7 +1472,7 @@ class SlackRequest(object):
         return self.tries < self.retries
 
     def retry_ready(self):
-        return (self.start_time + (self.tries ** 2)) < time.time()
+        return (self.start_time + (self.tries**2)) < time.time()
 
 
 class SlackSubteam(object):
@@ -3299,14 +3300,10 @@ class SlackMessage(object):
         if self.message_json.get("mrkdwn", True):
             text = render_formatting(text)
 
-        if (
-            self.message_json.get("subtype")
-            in (
-                "channel_join",
-                "group_join",
-            )
-            and self.message_json.get("inviter")
-        ):
+        if self.message_json.get("subtype") in (
+            "channel_join",
+            "group_join",
+        ) and self.message_json.get("inviter"):
             inviter_id = self.message_json.get("inviter")
             text += " by invitation from <@{}>".format(inviter_id)
 
@@ -4006,14 +4003,15 @@ def process_pong(message_json, eventrouter, team, channel, metadata):
 def process_message(
     message_json, eventrouter, team, channel, metadata, history_message=False
 ):
+    subtype = message_json.get("subtype")
     if (
         not history_message
+        and not subtype
         and "ts" in message_json
         and SlackTS(message_json["ts"]) in channel.messages
     ):
         return
 
-    subtype = message_json.get("subtype")
     subtype_functions = get_functions_with_prefix("subprocess_")
 
     if "thread_ts" in message_json and "reply_count" not in message_json:
@@ -6750,7 +6748,11 @@ if __name__ == "__main__":
             auto_connect = weechat.info_get("auto_connect", "") != "0"
 
             if auto_connect:
-                tokens = [token.strip() for token in config.slack_api_token.split(",")]
+                tokens = [
+                    token.strip()
+                    for token in config.slack_api_token.split(",")
+                    if token
+                ]
                 w.prnt(
                     "",
                     "Connecting to {} slack team{}.".format(

@@ -11,6 +11,7 @@ set -euo pipefail
 # OLD VERSION: https://github.com/megalithic/dotfiles_bak/blob/b1f03a255678d91b39e87419b44ccf28a4ceb17f/bin/dnd
 #
 
+dnd_cmd="$HOME/.dotfiles/bin/dnd.rb"
 command=""
 subcommand=""
 
@@ -31,21 +32,21 @@ help() {
 }
 
 on() {
-  dnd.rb on
+  $dnd_cmd on
 }
 
 off() {
-  dnd.rb off
+  $dnd_cmd off
 }
 
 toggle() {
-  dnd.rb toggle
+  $dnd_cmd toggle
 
   status
 }
 
 status() {
-  echo "$(dnd.rb status)"
+  echo "$($dnd_cmd status)"
 }
 
 subcommand="${1:-}"
