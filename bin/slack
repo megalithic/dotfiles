@@ -10,11 +10,14 @@
 # Running `slack` with no argument will let you fuzzy-find pre-defined statuses
 #
 # Dependencies:
-#   Required: `fzf`, `jq`, `httpie`, ENV variables (see source below)
-#   Optional: `spinner` from my dotfiles' bin dir
+#   Required: `fzf`, `jq`, `curl`, `httpie`, ENV variables (see source below)
+#   Optional: `spinner`, `tmux-slack` from my dotfiles' bin dir
 #
+# FIXME: we've gone way out of control now; get curl or httpie working; don't use
+# both, please. Confirm you only need one or the other and kill the other.
 
 set -euo pipefail
+# set -x
 
 # TODO: figure out how to better use exit trapping
 # ----
@@ -68,10 +71,12 @@ pair
 tea
 zoom
 "
-api_cmd="http"
+api_cmd="http" # or curl
+http_cmd=""
 request_format="--json" # or --form
 
 # -- checks for needed dependencies
+(command -v curl &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
 (command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
 (command -v jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
 (command -v http &>/dev/null) && HTTPIE_FOUND="installed" || HTTPIE_FOUND="not installed"
@@ -106,6 +111,7 @@ function __help() {
   printf -- "   Dependencies:\n"
   printf -- "     fzf               (%s)\n" "$FZF_FOUND"
   printf -- "     jq                (%s)\n" "$JQ_FOUND"
+  printf -- "     curl              (%s)\n" "$CURL_FOUND"
   printf -- "     httpie            (%s)\n" "$HTTPIE_FOUND"
   printf -- "     spinner           (%s)\n" "$SPINNER_FOUND"
   printf -- "     tmux-slack        (%s)\n" "$TMUX_SLACK_FOUND"
@@ -117,6 +123,9 @@ function __info() {
   printf -- "---------------------------------------------------\n"
   printf -- "fzf:          %s\n" "$fzf_cmd"
   printf -- "status:       %s\n" "$status"
+  printf -- "curl:         %s\n" "$curl_cmd"
+  printf -- "api:          %s\n" "$api_cmd"
+  printf -- "httpie:       %s\n" "$http_cmd"
   printf -- "cwd:          %s\n" "$__dir"
   printf -- "filepath:     %s\n" "$__file"
   printf -- "basename:     %s\n" "$__base"
@@ -128,6 +137,12 @@ function __info() {
 # -- halt if we don't have certain dependencies installed
 if [[ $JQ_FOUND == "not installed" ]]; then
   printf -- "ERROR: %s requires jq to be installed" "$__base"
+  __help
+  exit 1
+fi
+
+if [[ $CURL_FOUND == "not installed" ]]; then
+  printf -- "ERROR: %s requires curl to be installed" "$__base"
   __help
   exit 1
 fi
@@ -176,8 +191,15 @@ shift $((OPTIND - 1))
 status="${1:-}"
 
 # -- handle options
-[[ $VERBOSE == "true" || $DEBUG == "true" ]] && api_cmd="http -vv --all --debug" || api_cmd="http -qq"
-[[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
+if [[ $VERBOSE == "true" || $DEBUG == "true" ]]; then
+  curl_cmd="curl --verbose"
+  http_cmd="http -vv --all --debug"
+else
+  curl_cmd="curl --silent --output /dev/null"
+  http_cmd="http -qq"
+fi
+
+[[ $VERBOSE == "true" || $DEBUG == "true" ]] && [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
 
 declare -a request_data
 declare -a gone_messages
@@ -207,13 +229,18 @@ function __log() {
 
 function __request() {
   local feature=${1:-}
-
   local data
-  data=$(printf -- "%s " "${request_data[@]}")
-  # NOTE: `2>&1` -- stderr (2) going to where stdout would go (1)
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "new slack status activity: $status"
-  request_cmd="$api_cmd -A bearer -a $SLACK_TOKEN $request_format --response-charset=utf-8 --print=B POST "$api_url/$feature" ${data}"
+  if [[ $api_cmd == "http" ]]; then
+    data=$(printf -- "%s " "${request_data[@]}")
+    request_cmd="$http_cmd -A bearer -a $SLACK_TOKEN $request_format --response-charset=utf-8 --print=B POST "$api_url/$feature" ${data}"
+  elif [[ $api_cmd == "curl" ]]; then
+    request_data+=("token=$SLACK_TOKEN")
+    data=$(printf -- "--data %s " "${request_data[@]}")
+    request_cmd="$curl_cmd --show-error --include ${data} "$api_url/$feature""
+  fi
+
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "request_cmd used: $request_cmd"
 
   # if we're using POPUP mode in tmux; let's use our tmux-slack wrapper to send
@@ -237,42 +264,64 @@ function __request() {
 function __set_status() {
   local text
   local emoji
-  text="${1:-}"
-  emoji="${2:-}"
-  # local profile="{\"status_text\": \"${text}\", \"status_emoji\": \"${emoji}\"}"
-  # request_data+=("profile='${profile}'")
-  request_data+=("profile[status_text]=\"${text}\"")
-  request_data+=("profile[status_emoji]=\"${emoji}\"")
-  request_format="--json"
+
+  # curl:
+  api_cmd="curl"
+  text="$(printf %s "${1:-}" | jq -sRr @uri)"
+  emoji="$(printf %s "${2:-}" | jq -sRr @uri)"
+  local profile="{\"status_text\":\"${text}\",\"status_emoji\":\"${emoji}\"}"
+  request_data+=("profile=${profile}")
+
+  # httpie:
+  # api_cmd="http"
+  # text="${1:-}"
+  # emoji="${2:-}"
+  # # local profile="{\"status_text\": \"${text}\", \"status_emoji\": \"${emoji}\"}"
+  # # request_data+=("profile='${profile}'")
+  # request_data+=("profile[status_text]=\"${text}\"")
+  # request_data+=("profile[status_emoji]=\"${emoji}\"")
+  # request_format="--json"
+
   __request "users.profile.set"
 }
 
 function __end_status() {
-  # local profile='{"status_text": "", "status_emoji": ""}'
-  # request_data+=("profile='${profile}'")
-  request_data+=('profile[status_text]=""')
-  request_data+=('profile[status_emoji]=""')
-  request_format="--json"
+  # curl:
+  api_cmd="curl"
+  local profile='{"status_text":"","status_emoji":""}'
+  request_data+=("profile=${profile}")
+
+  # httpie:
+  # api_cmd="http"
+  # # local profile='{"status_text": "", "status_emoji": ""}'
+  # # request_data+=("profile='${profile}'")
+  # request_data+=('profile[status_text]=""')
+  # request_data+=('profile[status_emoji]=""')
+  # request_format="--json"
+
   __request "users.profile.set"
 }
 
 function __set_presence() {
   local presence="$1"
   request_data+=("presence=$presence")
-  request_format="--form"
+  # request_format="--form"
+  api_cmd="curl"
   __request "users.setPresence"
 }
 
 function __set_dnd() {
   local dnd_mins="${1:-}"
   request_data+=("num_minutes=$dnd_mins")
-  request_format="--form"
+  # request_format="--form"
+  api_cmd="curl"
   __request "dnd.setSnooze"
 }
 
 function __end_dnd() {
   request_data+=("num_minutes:=0")
-  request_format="--form"
+  # request_format="--form"
+  api_cmd="curl"
   __request "dnd.endDnd"
 }
 
@@ -280,11 +329,22 @@ function __set_chan_text() {
   if [[ $SILENT == "false" ]]; then
     # HT for `jq`: https://stackoverflow.com/a/34407620/213904
     local text
-    text="$(printf %s "${1:-}")"
+
+    # curl:
+    api_cmd="curl"
+    text="$(printf %s "${1:-}" | jq -sRr @uri)"
     request_data+=("channel=$CHANNEL_ID"
       "as_user=$SLACK_USER"
-      "text=\"$text\"")
-    request_format="--form"
+      "text=$text")
+
+    # httpie:
+    # api_cmd="http"
+    # text="$(printf %s "${1:-}")"
+    # request_data+=("channel=$CHANNEL_ID"
+    #   "as_user=$SLACK_USER"
+    #   "text=\"$text\"")
+    # request_format="--form"
+
     __request "chat.postMessage"
   fi
 }
@@ -355,7 +415,7 @@ function gone() {
   __set_presence "away"
   __end_status
   __set_dnd 930
-  # __set_chan_text "${gone_messages[$rand]}"
+  __set_chan_text "${gone_messages[$rand]}"
   unset gone_messages
 }
 

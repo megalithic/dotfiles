@@ -1,4 +1,4 @@
-local log = hs.logger.new("[window-handlers]", "warning")
+local log = hs.logger.new("[window-handlers]", "debug")
 local running = require("wm.running")
 
 local cache = { timers = {} }
@@ -6,9 +6,30 @@ local M = { cache = cache }
 
 local fn = require("hs.fnutils")
 
-local function cmd_updater(cmd)
-  if cmd ~= nil then
-    return hs.execute(cmd, true)
+local split = function(str)
+  local t = {}
+  for token in string.gmatch(str, "[^%s]+") do
+    table.insert(t, token)
+  end
+  return t
+end
+
+local function cmd_updater(args)
+  if args ~= nil then
+    local cmd_args = split(args)
+    table.insert(cmd_args, 1, "-ic")
+
+    -- spews errors, BUT, it seems to work async. yay!
+    local task = hs.task.new("/usr/local/bin/zsh", function(stdTask, stdOut, stdErr)
+      log.df("stdTask: %s, stdOut: %s, stdErr: %s", stdTask, stdOut, stdErr)
+    end, cmd_args):start()
+
+    log.df("task: %s", hs.inspect(task))
+
+    return task
+
+    -- NOTE: keep this in case hs.task fails again
+    -- return hs.execute(args, true)
   end
 
   return nil
@@ -55,37 +76,23 @@ M.dndHandler = function(app, dndConfig, event)
   local mode = dndConfig.mode
 
   if dndConfig.enabled then
-    local slackCmd = os.getenv("HOME") .. "/.dotfiles/bin/slack"
+    local slackCmd = os.getenv("HOME") .. "/.dotfiles/bin/tmux-slack"
     local dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 
     if event == running.events.created or event == running.events.launched then
       log.df("DND Handler: on/" .. mode)
 
       cmd_updater(dndCmd .. " on")
-      cmd_updater(slackCmd .. " " .. mode)
+      cmd_updater(slackCmd .. " -sv " .. mode)
 
       M.onAppQuit(app, function()
         cmd_updater(dndCmd .. " off")
-        local out, status, type, rc = cmd_updater(slackCmd .. " -s back")
-        log.df(
-          "DND Handler (slack): off/back/silent; %s,%s,%s,%s",
-          hs.inspect(out),
-          hs.inspect(status),
-          hs.inspect(type),
-          hs.inspect(rc)
-        )
+        cmd_updater(slackCmd .. " -sv back")
       end)
     elseif event == running.events.closed or event == running.events.terminated then
       M.onAppQuit(app, function()
         cmd_updater(dndCmd .. " off")
-        local out, status, type, rc = cmd_updater(slackCmd .. " gs back")
-        log.df(
-          "DND Handler (slack): off/back/silent; %s,%s,%s,%s",
-          hs.inspect(out),
-          hs.inspect(status),
-          hs.inspect(type),
-          hs.inspect(rc)
-        )
+        cmd_updater(slackCmd .. " -sv back")
       end)
     end
   end

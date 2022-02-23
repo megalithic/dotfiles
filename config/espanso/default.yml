@@ -54,6 +54,8 @@ matches:
     replace: "💯"
   - trigger: ":eyes:"
     replace: "👀"
+  - trigger: ":facepalm:"
+    replace: "🤦"
 
   # Dates
   - trigger: ":date"
