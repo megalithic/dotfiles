@@ -33,8 +33,7 @@ M.list = {
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   "MunifTanjim/nui.nvim",
-  -- "stevearc/dressing.nvim",
-  -- "goolord/alpha-nvim",
+  "stevearc/dressing.nvim",
   "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
   ------------------------------------------------------------------------------
@@ -63,7 +62,6 @@ M.list = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  -- "nvim-lua/lsp-status.nvim",
   "j-hui/fidget.nvim", -- replace lsp-status with this
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
@@ -204,10 +202,11 @@ M.list = {
   -- "rhysd/vim-gfm-syntax",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install" },
   "ellisonleao/glow.nvim",
-  { "harshad1/bullets.vim", branch = "performance_improvements" },
+  -- { "harshad1/bullets.vim", branch = "performance_improvements" },
   "kristijanhusak/orgmode.nvim",
   "akinsho/org-bullets.nvim",
   "lervag/vim-rainbow-lists", -- :RBListToggle
+  "dkarter/bullets.vim",
   "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
   -- https://github.com/preservim/vim-wordy
@@ -259,15 +258,36 @@ M.setup = function()
     vim.g.startuptime_tries = 10
   end
 
-  -- do
-  --   require("dressing").setup({
-  --     select = {
-  --       telescope = {
-  --         theme = "cursor",
-  --       },
-  --     },
-  --   })
-  -- end
+  do -- bullets.vim
+    vim.cmd([[
+      " Disable default bullets.vim mappings, clashes with other mappings
+      let g:bullets_set_mappings = 0
+      " let g:bullets_checkbox_markers = '✗○◐●✓'
+      let g:bullets_checkbox_markers = ' .oOx'
+
+      " Add custom bullets mappings that don't clash with other mappings
+      function! InsertNewBullet()
+        InsertNewBullet
+        return ''
+      endfunction
+
+        " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
+      autocmd FileType markdown,text,gitcommit
+        \ nnoremap <buffer> o :InsertNewBullet<cr>|
+        \ nnoremap cx :ToggleCheckbox<cr>
+        \ nmap <C-x> :ToggleCheckbox<cr>
+    ]])
+  end
+
+  do
+    require("dressing").setup({
+      select = {
+        telescope = {
+          theme = "cursor",
+        },
+      },
+    })
+  end
 
   do -- gitlinker.nvim
     require("gitlinker").setup()

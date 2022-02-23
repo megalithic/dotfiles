@@ -194,9 +194,9 @@
 
 - shell:
     - description: Attempting post-install commands..
-      quiet: false
+      quiet: true
       command: >-
-        log "Attempting to source helpers.zsh..";
+        # log "Attempting to source helpers.zsh..";
         source $XDG_CONFIG_HOME/zsh/lib/helpers.zsh;
 
         log "Attempting to set zsh as default shell..";
