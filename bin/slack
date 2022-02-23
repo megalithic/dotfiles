@@ -375,38 +375,38 @@ function lunch() {
   local rand=$((RANDOM % ${#lunch_emojis[@]}))
 
   __set_presence "away"
-  __set_status "..lunch.." "${lunch_emojis[$rand]}"
+  __set_status "lunch" "${lunch_emojis[$rand]}"
   __set_chan_text "bbl, lunch ${lunch_emojis[$rand]}"
   unset lunch_emojis
 }
 
 function errand() {
   __set_presence "away"
-  __set_status "..running an errand.." ":car:"
+  __set_status "running an errand" ":car:"
   __set_chan_text "bbiab, running an errand"
 }
 
 function coffee() {
   __set_presence "away"
-  __set_status "..covfefe.." ":coffee:"
+  __set_status "covfefe" ":coffee:"
   __set_chan_text "brb, coffee"
 }
 
 function tea() {
   __set_presence "away"
-  __set_status "..tea.." ":tea:"
+  __set_status "tea" ":tea:"
   __set_chan_text "brb, tea"
 }
 
 function dog() {
   __set_presence "away"
-  __set_status "..walking the puppers.." ":doge:"
+  __set_status "walking the puppers" ":doge:"
   __set_chan_text "bbiab, walking the puppers"
 }
 
 function run() {
   __set_presence "away"
-  __set_status "..gone for a run.." ":runner:"
+  __set_status "gone for a run" ":runner:"
   __set_chan_text "bbiab, gone for a run"
 }
 
@@ -424,17 +424,17 @@ function gone() {
 }
 
 function pair() {
-  __set_status "..pairing.." ":pear:"
+  __set_status "pairing" ":pear:"
   __set_dnd 120
 }
 
 function zoom() {
-  __set_status ":movie_camera: ..on a zoom call.." ":calendar:"
+  __set_status ":movie_camera: on a zoom call" ":calendar:"
   __set_dnd 120
 }
 
 function dnd() {
-  __set_status "..deep work focus time.." ":octagonal_sign:"
+  __set_status "deep work focus time" ":octagonal_sign:"
   __set_dnd 120
 }
 
