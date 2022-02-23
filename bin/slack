@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
 
 #
 # What in tarnation is this?
@@ -16,8 +17,8 @@
 # FIXME: we've gone way out of control now; get curl or httpie working; don't use
 # both, please. Confirm you only need one or the other and kill the other.
 
-set -euo pipefail
 # set -x
+set -euo pipefail
 
 # TODO: figure out how to better use exit trapping
 # ----
@@ -35,9 +36,11 @@ set -euo pipefail
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename "${__file}" .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# __base="${(%):-%x}"
+# __base="slack"
+# __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+# __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 POPUP="false"
 VERBOSE="false"
@@ -76,10 +79,10 @@ http_cmd=""
 request_format="--json" # or --form
 
 # -- checks for needed dependencies
-(command -v curl &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
-(command -v fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
-(command -v jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
-(command -v http &>/dev/null) && HTTPIE_FOUND="installed" || HTTPIE_FOUND="not installed"
+(command -v "$(which curl)" &>/dev/null) && CURL_FOUND="installed" || CURL_FOUND="not installed"
+(command -v /usr/local/bin/fzf &>/dev/null) && FZF_FOUND="installed" || FZF_FOUND="not installed"
+(command -v /usr/local/bin/jq &>/dev/null) && JQ_FOUND="installed" || JQ_FOUND="not installed"
+(command -v /usr/local/bin/http &>/dev/null) && HTTPIE_FOUND="installed" || HTTPIE_FOUND="not installed"
 [[ -x $spinner_path ]] && SPINNER_FOUND="installed" || SPINNER_FOUND="not installed"
 [[ -x $tmux_slack_path ]] && TMUX_SLACK_FOUND="installed" || TMUX_SLACK_FOUND="not installed"
 
@@ -122,15 +125,15 @@ function __info() {
   printf -- "%s executation details:\n" "$__base"
   printf -- "---------------------------------------------------\n"
   printf -- "fzf:          %s\n" "$fzf_cmd"
-  printf -- "status:       %s\n" "$status"
+  printf -- "status:       %s\n" "$STATUS_PARAM"
   printf -- "curl:         %s\n" "$curl_cmd"
   printf -- "api:          %s\n" "$api_cmd"
   printf -- "httpie:       %s\n" "$http_cmd"
-  printf -- "cwd:          %s\n" "$__dir"
-  printf -- "filepath:     %s\n" "$__file"
+  # printf -- "cwd:          %s\n" "$__dir"
+  # printf -- "filepath:     %s\n" "$__file"
   printf -- "basename:     %s\n" "$__base"
-  printf -- "root:         %s\n" "$__root"
-  printf -- "invocation:   %s\n" "$__invocation"
+  # printf -- "root:         %s\n" "$__root"
+  # printf -- "invocation:   %s\n" "$__invocation"
   printf -- "\n"
 }
 
@@ -188,15 +191,15 @@ done
 shift $((OPTIND - 1))
 
 # -- first param passed in, after options
-status="${1:-}"
+STATUS_PARAM="${1:-}"
 
 # -- handle options
 if [[ $VERBOSE == "true" || $DEBUG == "true" ]]; then
-  curl_cmd="curl --verbose"
-  http_cmd="http -vv --all --debug"
+  curl_cmd="$(which curl) --verbose"
+  http_cmd="/usr/local/bin/http -vv --all --debug"
 else
-  curl_cmd="curl --silent --output /dev/null"
-  http_cmd="http -qq"
+  curl_cmd="$(which curl) --silent --output /dev/null"
+  http_cmd="/usr/local/bin/http -qq"
 fi
 
 [[ $VERBOSE == "true" || $DEBUG == "true" ]] && [[ $POPUP == "true" ]] && fzf_cmd="fzf" || fzf_cmd="fzf-tmux"
@@ -231,14 +234,14 @@ function __request() {
   local feature=${1:-}
   local data
 
-  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "new slack status activity: $status"
+  [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "new slack status activity: $STATUS_PARAM"
   if [[ $api_cmd == "http" ]]; then
     data=$(printf -- "%s " "${request_data[@]}")
     request_cmd="$http_cmd -A bearer -a $SLACK_TOKEN $request_format --response-charset=utf-8 --print=B POST "$api_url/$feature" ${data}"
   elif [[ $api_cmd == "curl" ]]; then
     request_data+=("token=$SLACK_TOKEN")
     data=$(printf -- "--data %s " "${request_data[@]}")
-    request_cmd="$curl_cmd --show-error --include ${data} "$api_url/$feature""
+    request_cmd="$curl_cmd --show-error --include ${data}"$api_url/$feature""
   fi
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __log "request_cmd used: $request_cmd"
@@ -251,8 +254,9 @@ function __request() {
       exit 1
     }
   else
-    exec ${request_cmd} | $spinner || {
-      __log 'OOPS! Failed to make slack request' "error"
+    __log 'Executing request command' "warn"
+    zsh -ic "${request_cmd}" | $spinner || {
+      __log "OOPS! Failed to make slack request" "error"
       exit 1
     }
   fi
@@ -267,8 +271,8 @@ function __set_status() {
 
   # curl:
   api_cmd="curl"
-  text="$(printf %s "${1:-}" | jq -sRr @uri)"
-  emoji="$(printf %s "${2:-}" | jq -sRr @uri)"
+  text="$(printf %s "${1:-}" | /usr/local/bin/jq -sRr @uri)"
+  emoji="$(printf %s "${2:-}" | /usr/local/bin/jq -sRr @uri)"
   local profile="{\"status_text\":\"${text}\",\"status_emoji\":\"${emoji}\"}"
   request_data+=("profile=${profile}")
 
@@ -306,7 +310,7 @@ function __set_presence() {
   local presence="$1"
   request_data+=("presence=$presence")
   # request_format="--form"
-  api_cmd="curl"
+  api_cmd="http"
   __request "users.setPresence"
 }
 
@@ -332,7 +336,7 @@ function __set_chan_text() {
 
     # curl:
     api_cmd="curl"
-    text="$(printf %s "${1:-}" | jq -sRr @uri)"
+    text="$(printf %s "${1:-}" | /usr/local/bin/jq -sRr @uri)"
     request_data+=("channel=$CHANNEL_ID"
       "as_user=$SLACK_USER"
       "text=$text")
@@ -458,7 +462,7 @@ function back() {
 
 function do_status() {
   local given_status="$1"
-  status="$given_status"
+  STATUS_PARAM="$given_status"
 
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
 
@@ -472,9 +476,9 @@ function do_status() {
 }
 
 # if we pass in a status, use it directly
-if [[ $status ]]; then
+if [[ $STATUS_PARAM ]]; then
   [[ $VERBOSE == "true" || $DEBUG == "true" ]] && __info
-  do_status "$status"
+  do_status "$STATUS_PARAM"
 else
   # otherwise, fuzzy-find based upon our supported statuses; if fzf installed
   if [[ $FZF_FOUND == "installed" ]]; then

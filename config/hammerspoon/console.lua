@@ -20,6 +20,14 @@ module.init = function()
 
   -- reload  = reloadHS
 
+  -- Example:
+  -- hs.task.new("/usr/local/bin/zsh", function(task, out, err) print(hs.inspect(task), hs.inspect(out), hs.inspect(err)) end, {"-c", "echo", "$(which jq)"}):start()
+  task = function(cmd, args)
+    hs.task.new(cmd, function(task, out, err)
+      print(string.format("\r\ntask: %s\r\n out: %s\r\n err: %s", hs.inspect(task), hs.inspect(out), hs.inspect(err)))
+    end, args):start()
+  end
+
   dumpWindows = function(app)
     if type(app) == "string" then
       app = hs.application.get(app)
@@ -27,99 +35,74 @@ module.init = function()
 
     windows = app == nil and hs.window.allWindows() or app:allWindows()
 
-    hs.fnutils.each(
-      windows,
-      function(win)
-        print(
-          hs.inspect(
-            {
-              id = win:id(),
-              title = win:title(),
-              app = win:application():name(),
-              bundleID = win:application():bundleID(),
-              role = win:role(),
-              subrole = win:subrole(),
-              frame = win:frame(),
-              isFullScreen = win:isFullScreen(),
-              isStandard = win:isStandard(),
-              isMinimized = win:isMinimized()
-              -- buttonZoom       = axuiWindowElement(win):attributeValue('AXZoomButton'),
-              -- buttonFullScreen = axuiWindowElement(win):attributeValue('AXFullScreenButton'),
-              -- isResizable      = axuiWindowElement(win):isAttributeSettable('AXSize')
-            }
-          )
-        )
-      end
-    )
+    hs.fnutils.each(windows, function(win)
+      print(hs.inspect({
+        id = win:id(),
+        title = win:title(),
+        app = win:application():name(),
+        bundleID = win:application():bundleID(),
+        role = win:role(),
+        subrole = win:subrole(),
+        frame = win:frame(),
+        isFullScreen = win:isFullScreen(),
+        isStandard = win:isStandard(),
+        isMinimized = win:isMinimized(),
+        -- buttonZoom       = axuiWindowElement(win):attributeValue('AXZoomButton'),
+        -- buttonFullScreen = axuiWindowElement(win):attributeValue('AXFullScreenButton'),
+        -- isResizable      = axuiWindowElement(win):isAttributeSettable('AXSize')
+      }))
+    end)
   end
 
   listWindows = dumpWindows
 
   dumpUsbDevices = function()
-    hs.fnutils.each(
-      hs.usb.attachedDevices(),
-      function(usb)
-        print(hs.inspect(usb))
-        -- print(
-        --   hs.inspect(
-        --     {
-        --       productID = usb:productID(),
-        --       productName = usb:productName(),
-        --       vendorID = usb:vendorID(),
-        --       vendorName = usb:vendorName()
-        --     }
-        --   )
-        -- )
-      end
-    )
+    hs.fnutils.each(hs.usb.attachedDevices(), function(usb)
+      print(hs.inspect(usb))
+      -- print(
+      --   hs.inspect(
+      --     {
+      --       productID = usb:productID(),
+      --       productName = usb:productName(),
+      --       vendorID = usb:vendorID(),
+      --       vendorName = usb:vendorName()
+      --     }
+      --   )
+      -- )
+    end)
   end
 
   dumpCurrentInputAudioDevice = function()
     d = hs.audiodevice.defaultInputDevice()
-    print(
-      hs.inspect(
-        {
-          name = d:name(),
-          uid = d:uid(),
-          muted = d:muted(),
-          volume = d:volume(),
-          device = d
-        }
-      )
-    )
+    print(hs.inspect({
+      name = d:name(),
+      uid = d:uid(),
+      muted = d:muted(),
+      volume = d:volume(),
+      device = d,
+    }))
   end
 
   dumpCurrentOutputAudioDevice = function()
     d = hs.audiodevice.defaultOutputDevice()
-    print(
-      hs.inspect(
-        {
-          name = d:name(),
-          uid = d:uid(),
-          muted = d:muted(),
-          volume = d:volume(),
-          device = d
-        }
-      )
-    )
+    print(hs.inspect({
+      name = d:name(),
+      uid = d:uid(),
+      muted = d:muted(),
+      volume = d:volume(),
+      device = d,
+    }))
   end
 
   dumpScreens = function()
-    hs.fnutils.each(
-      hs.screen.allScreens(),
-      function(s)
-        print(
-          hs.inspect(
-            {
-              name = s:name(),
-              id = s:id(),
-              position = s:position(),
-              frame = s:frame()
-            }
-          )
-        )
-      end
-    )
+    hs.fnutils.each(hs.screen.allScreens(), function(s)
+      print(hs.inspect({
+        name = s:name(),
+        id = s:id(),
+        position = s:position(),
+        frame = s:frame(),
+      }))
+    end)
   end
 
   timestamp = function(date)
@@ -128,7 +111,7 @@ module.init = function()
   end
 
   local darkMode = true
-  local fontStyle = {name = "JetBrainsMono Nerd Font", size = 15}
+  local fontStyle = { name = "JetBrainsMono Nerd Font", size = 15 }
 
   -- console styling
 
@@ -136,31 +119,31 @@ module.init = function()
     red = 26 / 255,
     green = 28 / 255,
     blue = 39 / 255,
-    alpha = 1.0
+    alpha = 1.0,
   }
   local whiteColor = {
     white = 1.0,
-    alpha = 1.0
+    alpha = 1.0,
   }
   local lightGrayColor = {
     white = 1.0,
-    alpha = 0.9
+    alpha = 0.9,
   }
   local purpleColor = {
     red = 171 / 255,
     green = 126 / 255,
     blue = 251 / 255,
-    alpha = 1.0
+    alpha = 1.0,
   }
   local grayColor = {
     red = 24 * 4 / 255,
     green = 24 * 4 / 255,
     blue = 24 * 4 / 255,
-    alpha = 1.0
+    alpha = 1.0,
   }
   local blackColor = {
     white = 0.0,
-    alpha = 1.0
+    alpha = 1.0,
   }
 
   hs.console.darkMode(darkMode)

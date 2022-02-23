@@ -28,12 +28,11 @@ local function cmd_updater(args, use_prefix)
       log.df("not using prefix: %s, %s", cmd, hs.inspect(cmd_args))
     end
 
-    -- spews errors, BUT, it seems to work async. yay!
+    -- spews errors, BUT, it seems to work async! yay?
     local task = hs.task.new(cmd, function(stdTask, stdOut, stdErr)
-      log.df("stdTask: %s, stdOut: %s, stdErr: %s", stdTask, stdOut, stdErr)
+      log.df("\nstdTask: %s\n stdOut: %s\n stdErr: %s\n", stdTask, stdOut, stdErr)
     end, cmd_args):start()
-
-    log.df("task: %s", hs.inspect(task))
+    log.df("running_task: %s", hs.inspect(task))
 
     return task
 
@@ -85,23 +84,25 @@ M.dndHandler = function(app, dndConfig, event)
   local mode = dndConfig.mode
 
   if dndConfig.enabled then
-    local slackCmd = os.getenv("HOME") .. "/.dotfiles/bin/slack"
+    -- FIXME: hs.task.new .. i hate you; i cannot get env variables and such in
+    -- to my script. :/
+    -- local slackCmd = os.getenv("HOME") .. "/.dotfiles/bin/slack"
     local dndCmd = os.getenv("HOME") .. "/.dotfiles/bin/dnd"
 
     if event == running.events.created or event == running.events.launched then
       log.df("DND Handler: on/" .. mode)
 
-      cmd_updater(dndCmd .. " on", true)
-      cmd_updater(slackCmd .. " -sv " .. mode, false)
+      cmd_updater(dndCmd .. " on", false)
+      -- cmd_updater(slackCmd .. " -sv " .. mode, false)
 
       M.onAppQuit(app, function()
-        cmd_updater(dndCmd .. " off", true)
-        cmd_updater(slackCmd .. " -sv back", false)
+        cmd_updater(dndCmd .. " off", false)
+        -- cmd_updater(slackCmd .. " -sv back", false)
       end)
     elseif event == running.events.closed or event == running.events.terminated then
       M.onAppQuit(app, function()
-        cmd_updater(dndCmd .. " off", true)
-        cmd_updater(slackCmd .. " -sv back", false)
+        cmd_updater(dndCmd .. " off", false)
+        -- cmd_updater(slackCmd .. " -sv back", false)
       end)
     end
   end
