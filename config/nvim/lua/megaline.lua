@@ -151,32 +151,33 @@ local function get_toggleterm_name(_, buf)
   return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number"))
 end
 
-local plain_filetypes = {
-  "alpha",
-  "help",
-  "ctrlsf",
-  "minimap",
-  "Trouble",
-  "fzf",
-  "tsplayground",
-  "coc-explorer",
-  "NvimTree",
-  "undotree",
-  "neoterm",
-  "vista",
-  "fugitive",
-  "startify",
-  "vimwiki",
-  "markdown",
-  "NeogitStatus",
-}
+local plain = {
+  filetypes = {
+    "help",
+    "ctrlsf",
+    "minimap",
+    "Trouble",
+    "tsplayground",
+    "coc-explorer",
+    "NvimTree",
+    "undotree",
+    "neoterm",
+    "vista",
+    "fugitive",
+    "startify",
+    "vimwiki",
+    "markdown",
+    "NeogitStatus",
+    "dap-repl",
+  },
 
-local plain_buftypes = {
-  "terminal",
-  "quickfix",
-  "nofile",
-  "nowrite",
-  "acwrite",
+  buftypes = {
+    "terminal",
+    "quickfix",
+    "nofile",
+    "nowrite",
+    "acwrite",
+  },
 }
 
 local exceptions = {
@@ -230,7 +231,7 @@ local exceptions = {
     undotree = "UndoTree",
     octo = "Octo",
     NvimTree = "Nvim Tree",
-    -- toggleterm = get_toggleterm_name,
+    toggleterm = get_toggleterm_name,
     ["dap-repl"] = "Debugger REPL",
   },
 }
@@ -297,9 +298,15 @@ function U.item_if(item, condition, hl, opts)
   return U.item(item, hl, opts)
 end
 
+local function matches(str, list)
+  return #vim.tbl_filter(function(item)
+    return item == str or string.match(str, item)
+  end, list) > 0
+end
+
 --- @param ctx table
 function M.is_plain(ctx)
-  return contains(plain_filetypes, ctx.filetype) or contains(plain_buftypes, ctx.buftype) or ctx.preview
+  return matches(ctx.filetype, plain.filetypes) or matches(ctx.buftype, plain.buftypes) or ctx.preview
 end
 
 --- This function allow me to specify titles for special case buffers

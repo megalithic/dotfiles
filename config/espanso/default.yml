@@ -28,7 +28,7 @@ matches:
     replace: "👆"
   - trigger: ":pointup:"
     replace: "👆"
-  - trigger: ":knuckles"
+  - trigger: ":knuckles:"
     replace: "👊"
   - trigger: ":fist:"
     replace: "✊"

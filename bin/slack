@@ -310,7 +310,7 @@ function __set_presence() {
   local presence="$1"
   request_data+=("presence=$presence")
   # request_format="--form"
-  api_cmd="http"
+  api_cmd="curl"
   __request "users.setPresence"
 }
 
@@ -356,13 +356,13 @@ function __set_chan_text() {
 # -- PUBLIC
 function away() {
   __set_presence "away"
-  __set_status "..afk.." ":afk:"
+  __set_status "afk" ":afk:"
   __set_chan_text "bbl"
 }
 
 function brb() {
   __set_presence "away"
-  __set_status "..be right back.." ":brb:"
+  __set_status "be right back" ":brb:"
   __set_chan_text "brb"
 }
 
@@ -376,7 +376,7 @@ function lunch() {
 
   __set_presence "away"
   __set_status "lunch" "${lunch_emojis[$rand]}"
-  __set_chan_text "bbl, lunch ${lunch_emojis[$rand]}"
+  __set_chan_text "bbl, ${lunch_emojis[$rand]} lunch"
   unset lunch_emojis
 }
 
@@ -441,7 +441,7 @@ function dnd() {
 function here() {
   here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top o the mornin!"
   here_messages[1]=":coffee: :croissant: gluten morgen!"
-  here_messages[2]=":coffee: good morning! :tea:"
+  here_messages[2]=":coffee: :tea: good morning!"
   local rand=$((RANDOM % ${#here_messages[@]}))
 
   __set_presence "auto"

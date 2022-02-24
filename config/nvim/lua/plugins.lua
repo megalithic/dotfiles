@@ -36,6 +36,7 @@ M.list = {
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
+  "rcarriga/nvim-notify",
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -94,7 +95,8 @@ M.list = {
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
-  "ggandor/lightspeed.nvim",
+  -- "ggandor/lightspeed.nvim",
+  "phaazon/hop.nvim",
   "akinsho/toggleterm.nvim",
   "elihunter173/dirbuf.nvim",
   -- "kyazdani42/nvim-tree.lua",
@@ -205,9 +207,8 @@ M.list = {
   -- { "harshad1/bullets.vim", branch = "performance_improvements" },
   "kristijanhusak/orgmode.nvim",
   "akinsho/org-bullets.nvim",
-  "lervag/vim-rainbow-lists", -- :RBListToggle
   "dkarter/bullets.vim",
-  "dhruvasagar/vim-table-mode",
+  -- "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
   -- https://github.com/preservim/vim-wordy
   -- https://github.com/jghauser/follow-md-links.nvim
@@ -281,9 +282,14 @@ M.setup = function()
 
   do
     require("dressing").setup({
+      input = {
+        insert_only = false,
+        winblend = 2,
+      },
       select = {
+        winblend = 2,
         telescope = {
-          theme = "cursor",
+          theme = "dropdown",
         },
       },
     })
@@ -826,22 +832,59 @@ M.setup = function()
   end
 
   do -- lightspeed.nvim
-    require("lightspeed").setup({
-      -- jump_to_first_match = true,
-      -- jump_on_partial_input_safety_timeout = 400,
-      -- This can get _really_ slow if the window has a lot of content,
-      -- turn it on only if your machine can always cope with it.
-      jump_to_unique_chars = true,
-      -- grey_out_search_area = true,
-      match_only_the_start_of_same_char_seqs = true,
-      limit_ft_matches = 5,
-      -- full_inclusive_prefix_key = '<c-x>',
-      -- By default, the values of these will be decided at runtime,
-      -- based on `jump_to_first_match`.
-      -- labels = nil,
-      -- cycle_group_fwd_key = nil,
-      -- cycle_group_bwd_key = nil,
-    })
+    -- require("lightspeed").setup({})
+    -- require("lightspeed").setup({
+    --   -- jump_to_first_match = true,
+    --   -- jump_on_partial_input_safety_timeout = 400,
+    --   -- This can get _really_ slow if the window has a lot of content,
+    --   -- turn it on only if your machine can always cope with it.
+    --   jump_to_unique_chars = true,
+    --   -- grey_out_search_area = true,
+    --   match_only_the_start_of_same_char_seqs = true,
+    --   limit_ft_matches = 5,
+    --   -- full_inclusive_prefix_key = '<c-x>',
+    --   -- By default, the values of these will be decided at runtime,
+    --   -- based on `jump_to_first_match`.
+    --   -- labels = nil,
+    --   -- cycle_group_fwd_key = nil,
+    --   -- cycle_group_bwd_key = nil,
+    -- })
+  end
+
+  do
+    local hop = require("hop")
+    -- remove h,j,k,l from hops list of keys
+    hop.setup({ keys = "etovxqpdygfbzcisuran" })
+    nnoremap("s", hop.hint_char1)
+    -- NOTE: override F/f using hop motions
+    vim.keymap.set({ "x", "n" }, "F", function()
+      hop.hint_char1({
+        direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+        current_line_only = true,
+        inclusive_jump = false,
+      })
+    end)
+    vim.keymap.set({ "x", "n" }, "f", function()
+      hop.hint_char1({
+        direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+        current_line_only = true,
+        inclusive_jump = false,
+      })
+    end)
+    onoremap("F", function()
+      hop.hint_char1({
+        direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+        current_line_only = true,
+        inclusive_jump = true,
+      })
+    end)
+    onoremap("f", function()
+      hop.hint_char1({
+        direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+        current_line_only = true,
+        inclusive_jump = true,
+      })
+    end)
   end
 
   do -- diffview.nvim
@@ -1031,30 +1074,23 @@ M.setup = function()
     -- neat ways to detect jest things
     -- https://github.com/weilbith/vim-blueplanet/blob/master/pack/plugins/start/test_/autoload/test/typescript/jest.vim
     -- https://github.com/roginfarrer/dotfiles/blob/main/nvim/.config/nvim/lua/rf/plugins/vim-test.lua#L19
-    api.nvim_exec(
-      [[
-    function! TerminalSplit(cmd)
-      vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
-    endfunction
+    vim.g["test#strategy"] = "neovim"
+    vim.g["test#javascript#jest#file_pattern"] = "\v(__tests__/.*|(spec|test)).(js|jsx|coffee|ts|tsx)$"
+    vim.g["test#filename_modifier"] = ":."
+    vim.g["test#preserve_screen"] = 0
 
-    let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
-    let g:test#strategy = 'terminal_split'
-    let g:test#filename_modifier = ':.'
-    let g:test#preserve_screen = 0
+    if vim.fn.executable("richgo") == 1 then
+      vim.g["test#go#runner"] = "richgo"
+    end
 
-    " nmap <silent> <leader>tf :TestFile<CR>
-    " nmap <silent> <leader>tt :TestVisit<CR>
-    " nmap <silent> <leader>tn :TestNearest<CR>
-    " nmap <silent> <leader>tl :TestLast<CR>
-    " nmap <silent> <leader>tv :TestVisit<CR>
-    " nmap <silent> <leader>ta :TestSuite<CR>
-    " nmap <silent> <leader>tP :A<CR>
-    " nmap <silent> <leader>tp :AV<CR>
-    " nmap <silent> <leader>to :copen<CR>
-    ]],
-      false
-    )
-    vcmd([[let g:test#javascript#jest#file_pattern = '\v(__tests__/.*|(spec|test))\.(js|jsx|coffee|ts|tsx)$']])
+    vcmd([[
+      function! TerminalSplit(cmd)
+        vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
+      endfunction
+
+      let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
+      let g:test#strategy = 'terminal_split'
+    ]])
   end
 
   do -- vim-projectionist
@@ -1116,15 +1152,17 @@ M.setup = function()
         -- "live" views
         ["lib/**/live/*_live.ex"] = {
           ["type"] = "live",
-          ["alternate"] = {
-            "lib/{dirname}/live/{basename}_live.html.heex",
-            "test/{dirname}/live/{basename}_live_test.exs",
-          },
+          ["alternate"] = "test/{dirname}/live/{basename}_live_test.exs",
+          ["related"] = "lib/{dirname}/live/{basename}_live.html.heex",
           ["template"] = {
             "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live do",
             "  use {dirname|camelcase|capitalize}, :live_view",
             "end",
           },
+        },
+        ["lib/**/live/*_live.heex"] = {
+          ["type"] = "heex",
+          ["related"] = "lib/{dirname}/live/{basename}_live.html.ex",
         },
         ["test/**/live/*_live_test.exs"] = {
           ["type"] = "test",
@@ -1186,6 +1224,7 @@ M.setup = function()
     local telescope = require("telescope")
     local actions = require("telescope.actions")
     local themes = require("telescope.themes")
+    local layout_actions = require("telescope.actions.layout")
 
     local function get_border(opts)
       return vim.tbl_deep_extend("force", opts or {}, {
@@ -1230,6 +1269,8 @@ M.setup = function()
             ["<c-s>"] = actions.select_horizontal,
             ["<c-b>"] = actions.preview_scrolling_up,
             ["<c-f>"] = actions.preview_scrolling_down,
+            ["<c-e>"] = layout_actions.toggle_preview,
+            -- ["<c-l>"] = layout_actions.cycle_layout_next,
           },
           n = {
             ["<C-w>"] = actions.send_selected_to_qflist,
@@ -1255,11 +1296,10 @@ M.setup = function()
           horizontal = {
             preview_width = 0.45,
           },
-          cursor = get_border({
-            layout_config = {
-              cursor = { width = 0.3 },
-            },
-          }),
+          cursor = { -- FIXME: this does not change the size of the cursor layout
+            width = 0.4,
+            height = 0.5,
+          },
         },
         winblend = 3,
         -- history = {
@@ -1409,6 +1449,7 @@ M.setup = function()
       })
     end
 
+    -- telescope-mappings
     require("which-key").register({
       ["<leader>f"] = {
         name = "telescope",
@@ -1781,15 +1822,17 @@ M.setup = function()
   end
 
   do -- filetype.nvim
-    require("filetype").setup({
-      overrides = {
-        literal = {
-          ["kitty.conf"] = "kitty",
-          [".gitignore"] = "conf",
-          [".env"] = "sh",
+    if not vim.filetype then
+      require("filetype").setup({
+        overrides = {
+          literal = {
+            ["kitty.conf"] = "kitty",
+            [".gitignore"] = "conf",
+            [".env"] = "sh",
+          },
         },
-      },
-    })
+      })
+    end
   end
 
   do -- dirbuf.nvim
@@ -1914,42 +1957,6 @@ M.setup = function()
 
   do -- gitsigns.nvim
     local gs = require("gitsigns")
-    require("which-key").register({
-      ["<leader>h"] = {
-        name = "+gitsigns hunk",
-        s = { gs.stage_hunk, "stage" },
-        u = { gs.undo_stage_hunk, "undo stage" },
-        r = { gs.reset_hunk, "reset hunk" },
-        p = { gs.preview_hunk, "preview current hunk" },
-        d = { gs.diffthis, "diff this line" },
-        D = {
-          function()
-            gs.diffthis("~")
-          end,
-          "diff this with ~",
-        },
-        b = {
-          function()
-            gs.blame_line({ full = true })
-          end,
-          "blame current line",
-        },
-      },
-      ["<leader>lm"] = "gitsigns: list modified in quickfix",
-      ["<localleader>g"] = {
-        name = "+git",
-        w = "gitsigns: stage entire buffer",
-        r = { name = "+reset", e = "gitsigns: reset entire buffer" },
-        b = {
-          name = "+blame",
-          l = "gitsigns: blame current line",
-          d = "gitsigns: toggle word diff",
-        },
-      },
-      ["[h"] = "go to next git hunk",
-      ["]h"] = "go to previous git hunk",
-    })
-
     gs.setup({
       signs = {
         add = { hl = "GitSignsAdd", text = "▎" }, -- ┃, │, ▌, ▎
@@ -2114,6 +2121,23 @@ M.setup = function()
       logging = true,
       filetype = formatterConfig,
     })
+  end
+  do -- vim-notify
+    local notify = require("notify")
+    ---@type table<string, fun(bufnr: number, notif: table, highlights: table)>
+    local renderer = require("notify.render")
+    notify.setup({
+      stages = "fade_in_slide_out",
+      timeout = 3000,
+      render = function(bufnr, notif, highlights)
+        if notif.title[1] == "" then
+          return renderer.minimal(bufnr, notif, highlights)
+        end
+        return renderer.default(bufnr, notif, highlights)
+      end,
+    })
+    -- vim.notify = notify
+    -- require("telescope").load_extension("notify")
   end
 end
 

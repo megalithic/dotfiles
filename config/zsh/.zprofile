@@ -43,8 +43,6 @@ function detect_platform {
 detect_platform
 
 # this loads in all of our environment variables, etc.
-if [[ -z $XDG_CONFIG_HOME ]]; then
-  source "$ZDOTDIR/lib/env.zsh"
-fi
+source "$ZDOTDIR/lib/env.zsh"
 
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

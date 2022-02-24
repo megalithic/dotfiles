@@ -213,6 +213,15 @@ function M.setup()
   vim.diagnostic.config({
     underline = true,
     virtual_text = false,
+    --[[virtual_text = {
+      severity = vim.diagnostic.severity.ERROR,
+      prefix = "",
+      -- NOTE: this relies on the ordering of the diagnostic types table above
+      format = function(event)
+        local setting = M.diagnostic_types[event.severity]
+        return (setting and setting.icon .. " " or "") .. event.message
+      end,
+    },]]
     signs = true, -- {severity_limit = "Warning"},
     update_in_insert = false,
     severity_sort = true,

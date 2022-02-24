@@ -115,16 +115,6 @@ augroup("filetypes", {
   },
   {
     events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "Brewfile", "Brewfile.mas", "Brewfile.cask" },
-    command = "set filetype=ruby",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "Deskfile" },
-    command = "set filetype=sh",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
     targets = { ".eslintrc" },
     command = "set filetype=javascript",
   },

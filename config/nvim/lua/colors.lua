@@ -52,9 +52,9 @@ local icons = {
   mode = utf8(0xf101),
   vcs = utf8(0xf418),
   git = "", -- utf8(0xe725) -- "" ""
-  git_added = "",
+  git_added = "", --  
   git_changed = "",
-  git_removed = "",
+  git_removed = "", --  
   readonly = utf8(0xf023), -- ""
   prompt = "", -- utf8(0xf460),
 }

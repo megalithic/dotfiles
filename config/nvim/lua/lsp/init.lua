@@ -17,10 +17,11 @@ require("vim.lsp.log").set_format_func(vim.inspect)
 require("fidget").setup({
   text = {
     spinner = "dots_pulse",
+    done = "",
   },
   sources = { -- Sources to configure
     ["elixirls"] = { -- Name of source
-      ignore = true, -- Ignore notifications from this source
+      ignore = false, -- Ignore notifications from this source
     },
   },
 })
@@ -42,13 +43,13 @@ local function on_attach(client, bufnr)
   -- require("lsp-status").on_attach(client)
   require("lsp.formatting").setup(client, bufnr, formatting_lsp)
 
-  -- require("lsp_signature").on_attach({
-  --   hint_enable = false,
-  --   hi_parameter = "QuickFixLine",
-  --   handler_opts = {
-  --     border = vim.g.floating_window_border,
-  --   },
-  -- })
+  require("lsp_signature").on_attach({
+    hint_enable = false,
+    hi_parameter = "QuickFixLine",
+    handler_opts = {
+      border = vim.g.floating_window_border,
+    },
+  })
 
   if client.server_capabilities.colorProvider then
     require("lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })

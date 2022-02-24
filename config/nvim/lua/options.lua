@@ -1,5 +1,8 @@
 local fn = vim.fn
 
+-- used in conjunction with filetype.lua
+vim.g.did_load_filetypes = 0 -- deactivate vim based filetype detection
+
 -----------------------------------------------------------------------------//
 -- Message output on vim actions {{{1
 -----------------------------------------------------------------------------//
@@ -170,7 +173,8 @@ vim.opt.linebreak = true -- lines wrap at words rather than random characters
 vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
 -- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
 --@see: https://github.com/neovim/neovim/issues?q=set_signs
-vim.opt.signcolumn = "yes"
+-- vim.opt.signcolumn = "yes"
+vim.opt.signcolumn = "auto:2-4"
 vim.opt.ruler = false
 vim.opt.cmdheight = 2 -- Set command line height to two lines
 vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '

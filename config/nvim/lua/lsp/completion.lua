@@ -10,19 +10,6 @@ local M = {
   sources = {},
 }
 
--- Unused for now; maybe later?
-local function setup_copilot()
-  vim.g.copilot_no_tab_map = true
-  vim.g.copilot_assume_mapped = true
-  vim.g.copilot_tab_fallback = ""
-  vim.g.copilot_filetypes = {
-    ["*"] = true,
-    gitcommit = false,
-    NeogitCommitMessage = false,
-  }
-  imap("<C-h>", [[copilot#Accept("\<CR>")]], { expr = true, script = true })
-end
-
 local function setup_luasnip()
   local types = require("luasnip.util.types")
   luasnip.config.set_config({

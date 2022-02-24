@@ -195,15 +195,6 @@ local exec = mega.exec
 --           silent = true,
 --         },
 --       },
---       t = {
---         name = "+test",
---         t = { "<cmd>TestNearest<cr>", "Test Nearest" },
---         n = { "<cmd>TestNearest<cr>", "Test Nearest" },
---         f = { "<cmd>TestFile<cr>", "Test File" },
---         a = { "<cmd>TestSuite<cr>", "Test Suite" },
---         [";"] = { "<cmd>TestLast<cr>", "Rerun Last Test" },
---         ["."] = { "<cmd>TestVisit<cr>", "Visit Test" },
---       },
 --       x = {
 --         name = "+trouble",
 --         x = { "<cmd>TroubleToggle<cr>", "Toggle Trouble" },
@@ -279,6 +270,8 @@ if has_wk then
     triggers = "auto", -- automatically setup triggers
     -- triggers = {"<leader>"} -- or specifiy a list manually
   })
+
+  local gs = require("gitsigns")
 
   -- Normal Mode {{{1
   local n_mappings = {
@@ -357,41 +350,75 @@ if has_wk then
         v = "vertical split",
         w = "cycle through windows",
       },
-      -- f = {
-      --   name = "find",
-      --   C = "command history",
-      --   R = "registers",
-      --   b = "grep buffer",
-      --   c = "commands",
-      --   f = "file",
-      --   g = "grep project",
-      --   l = "loclist",
-      --   n = "nvim dotfiles",
-      --   q = "quickfix",
-      --   r = "recent files",
-      --   s = "search history",
-      -- },
+      -- f = {}, -- see plugins.lua > telescope-mappings
+      ["[h"] = "go to next git hunk",
+      ["]h"] = "go to previous git hunk",
       g = {
         name = "git",
-        ["]"] = "next hunk",
-        ["["] = "previous hunk",
-        B = "blame line",
-        L = "Neogit log",
-        R = "reset buffer",
-        S = "stage buffer",
-        b = "show branches",
-        h = "browse",
-        c = "show commits",
-        d = "diff show",
-        f = "files",
-        g = "Neogit",
-        l = "blame toggle",
-        m = "modified",
-        p = "preview hunk",
-        r = "reset hunk",
-        s = "stage hunk",
-        u = "undo last stage hunk",
-        y = "copy permalink",
+        g = { "<cmd>Git<CR>", "Fugitive" },
+        w = "gitsigns: stage entire buffer",
+        H = "browse",
+        r = {
+          name = "+reset",
+          e = "gitsigns: reset entire buffer",
+        },
+        b = {
+          name = "+blame",
+          l = "gitsigns: blame current line",
+          d = "gitsigns: toggle word diff",
+        },
+        h = {
+          name = "+gitsigns hunk",
+          s = { gs.stage_hunk, "stage" },
+          u = { gs.undo_stage_hunk, "undo stage" },
+          r = { gs.reset_hunk, "reset hunk" },
+          p = { gs.preview_hunk, "preview current hunk" },
+          d = { gs.diffthis, "diff this line" },
+          D = {
+            function()
+              gs.diffthis("~")
+            end,
+            "diff this with ~",
+          },
+          b = {
+            function()
+              gs.blame_line({ full = true })
+            end,
+            "blame current line",
+          },
+        },
+        m = "gitsigns: list modified in quickfix",
+        -- ["<localleader>g"] = {
+        --   name = "+git",
+        --   w = "gitsigns: stage entire buffer",
+        --   r = { name = "+reset", e = "gitsigns: reset entire buffer" },
+        --   b = {
+        --     name = "+blame",
+        --     l = "gitsigns: blame current line",
+        --     d = "gitsigns: toggle word diff",
+        --   },
+        -- },
+        -- ["[h"] = "go to next git hunk",
+        -- ["]h"] = "go to previous git hunk",
+        -- ["]"] = "next hunk",
+        -- ["["] = "previous hunk",
+        -- B = "blame line",
+        -- L = "Neogit log",
+        -- R = "reset buffer",
+        -- S = "stage buffer",
+        -- b = "show branches",
+        -- h = "browse",
+        -- c = "show commits",
+        -- d = "diff show",
+        -- f = "files",
+        -- g = "Neogit",
+        -- l = "blame toggle",
+        -- m = "modified",
+        -- p = "preview hunk",
+        -- r = "reset hunk",
+        -- s = "stage hunk",
+        -- u = "undo last stage hunk",
+        -- y = "copy permalink",
       },
       q = {
         name = "quit/session",
@@ -400,59 +427,70 @@ if has_wk then
         l = "restore last session",
         c = "restore session in current directory",
       },
-      r = {
-        name = "run/open",
-        ["."] = "find current file",
-        J = "append line down",
-        K = "append line up",
-        b = "open file browser",
-        e = "open explorer",
-        f = "format",
-        g = "gitsigns refresh",
-        l = "open loclist window",
-        n = "open neovim config",
-        q = "open quickfix window",
-        r = "repeat last command",
-        s = "save without formatting",
-        t = "open terminal",
-        u = "open undotree",
-        c = {
-          name = "colorizer",
-          a = "attach to buffer",
-          t = "toggle",
-        },
+      p = {
+        name = "project",
+        p = { "<cmd>:A<cr>", "Toggle Alternate (vsplit)" },
+        P = { "<cmd>:AV<cr>", "Open Alternate (vsplit)" },
+        l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
+        L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
       },
-      -- z = {
-      --   name = "zen mode",
-      --   a = "ataraxis",
-      --   c = "centered",
-      --   f = "focus",
-      --   m = "minimalist",
-      --   q = "quit zen mode",
-      -- },
-    },
-    ["g"] = {
-      ["p"] = "select last pasted text",
-      ["c"] = "comment text",
-      ["cc"] = "comment line",
-    },
-    ["c"] = {
-      ["."] = "search & replace word under cursor",
-      ["d"] = "cd into current file",
-    },
-    ["["] = {
-      L = "location first",
-      Q = "quickfix first",
-      l = "location prev",
-      q = "quickfix prev",
-    },
-    ["]"] = {
-      L = "location last",
-      Q = "quickfix last",
-      l = "location next",
-      q = "quickfix next",
+      r = {
+        name = "runner",
+        f = { "<cmd>Format<cr>", "Run _formatter" },
+        r = { "", "Run  _repl" },
+        n = { "<cmd>TestNearest<cr>", "Run _test under cursor" },
+        a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
+        l = { "<cmd>TestLast<cr>", "Run _last test" },
+        v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
+        --   ["."] = "find current file",
+        --   J = "append line down",
+        --   K = "append line up",
+        --   b = "open file browser",
+        --   e = "open explorer",
+        --   f = "format",
+        --   g = "gitsigns refresh",
+        --   l = "open loclist window",
+        --   n = "open neovim config",
+        --   q = "open quickfix window",
+        --   r = "repeat last command",
+        --   s = "save without formatting",
+        --   t = "open terminal",
+        --   u = "open undotree",
+        --   c = {
+        --     name = "colorizer",
+        --     a = "attach to buffer",
+        --     t = "toggle",
+        --   },
+        -- },
+        -- -- z = {
+        -- --   name = "zen mode",
+        -- --   a = "ataraxis",
+        -- --   c = "centered",
+        -- --   f = "focus",
+        -- --   m = "minimalist",
+        -- --   q = "quit zen mode",
+        -- -- },
+      },
+      ["c"] = {
+        ["."] = "search & replace word under cursor",
+        ["d"] = "cd into current file",
+      },
+      ["["] = {
+        L = "location first",
+        Q = "quickfix first",
+        l = "location prev",
+        q = "quickfix prev",
+      },
+      ["]"] = {
+        L = "location last",
+        Q = "quickfix last",
+        l = "location next",
+        q = "quickfix next",
+      },
     },
   }
+  -- }}}
+
   -- Visual Mode {{{1
   local v_mappings = {
     ["<leader>"] = {
@@ -463,6 +501,14 @@ if has_wk then
   }
   -- }}}
 
+  -- Misc {{{1
+  wk.register({
+    ["g"] = {
+      -- ["p"] = "select last pasted text",
+      ["c"] = "comment text",
+      ["cc"] = "comment line",
+    },
+  })
   wk.register(n_mappings, { mode = "n" })
   wk.register(v_mappings, { mode = "v" })
 end
@@ -544,8 +590,8 @@ nnoremap <C-l> <C-w>l
 
 " Better save and quit
 silent! unmap <leader>w
-nnoremap <silent><leader>w :w<CR>
-nnoremap <silent><leader>W :w !sudo -S tee > /dev/null %<CR>
+nnoremap <silent><leader>w :write<CR>
+nnoremap <silent><leader>W :write !sudo -S tee > /dev/null %<CR>
 cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
 
@@ -716,14 +762,11 @@ nnoremap(
 
 -- [plugin mappings] -----------------------------------------------------------
 
--- # golden_size
-nmap("<Leader>r", "<cmd>lua require('golden_size').on_win_enter()<CR>")
-
 -- # git-related (fugitive, et al)
-nmap("<Leader>gB", "<cmd>GitMessenger<CR>", "blame info")
-nmap("<Leader>gh", "<cmd>GBrowse<CR>", "browse repo")
-vmap("<Leader>gh", ":'<,'>GBrowse<CR>", "browse repo (visual)")
-nmap("<Leader>gd", "<cmd>DiffviewOpen<CR>", "diffview")
+-- nmap("<Leader>gB", "<cmd>GitMessenger<CR>", "blame info")
+-- nmap("<Leader>gh", "<cmd>GBrowse<CR>", "browse repo")
+-- vmap("<Leader>gh", ":'<,'>GBrowse<CR>", "browse repo (visual)")
+-- nmap("<Leader>gd", "<cmd>DiffviewOpen<CR>", "diffview")
 
 -- # gist
 -- vim.g.gist_open_url = true
@@ -793,24 +836,6 @@ nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 -- # dirbuf.nvim
 nmap("<C-t>", "<cmd>vnew|Dirbuf<CR>", "filetree: toggle")
 nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ft
-
--- # vim-test
-nmap("<leader>tf", "<cmd>TestFile<CR>", "test: file")
-nmap("<leader>tn", "<cmd>TestNearest<CR>", "test: nearest")
-nmap("<leader>tl", "<cmd>TestLast<CR>", "test: last")
-nmap("<leader>ts", "<cmd>TestSuite<CR>", "test: suite")
-nmap("<leader>ta", "<cmd>TestSuite<CR>", "test: suite")
-nmap("<leader>tp", "<cmd>:AV<CR>", "project: open alternate file")
-
--- nmap <silent> <leader>tf :TestFile<CR>
--- nmap <silent> <leader>tt :TestVisit<CR>
--- nmap <silent> <leader>tn :TestNearest<CR>
--- nmap <silent> <leader>tl :TestLast<CR>
--- nmap <silent> <leader>tv :TestVisit<CR>
--- nmap <silent> <leader>ta :TestSuite<CR>
--- nmap <silent> <leader>tP :A<CR>
--- nmap <silent> <leader>tp :AV<CR>
--- nmap <silent> <leader>to :copen<CR>
 
 -- # telescope
 nmap("<leader>a", "<cmd>lua require('telescope.builtin').live_grep()<cr>", "telescope: live grep for a word")
