@@ -1,8 +1,14 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-# -- make helpers available to all the frens:
-[[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
+fuzzy-xdg-open() {
+  local output
+  output=$(fzf --height 40% --reverse </dev/tty) && xdg-open ${(q-)output}
+  zle reset-prompt
+}
+
+zle -N fuzzy-xdg-open
+bindkey '^o' fuzzy-xdg-open
 
 # Shorten Github URL with vanity (url, vanity code) - saves to clipboard!
 ghurl() {

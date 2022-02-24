@@ -9,8 +9,8 @@
 
 bindkey -e # ensures we use emacs/readline keybindings
 
-[[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
-[[ -f "$ZDOTDIR/lib/env.zsh" ]] && source "$ZDOTDIR/lib/env.zsh"
+[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+[[ -f "$HOME/.config/zsh/lib/env.zsh" ]] && source "$HOME/.config/zsh/lib/env.zsh"
 
 # zcomet for plugin install and management
 if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
@@ -39,7 +39,7 @@ if [[ $PLATFORM == "linux" ]]; then
 fi
 
 # NOTE: source order matters!
-for file in $ZDOTDIR/lib/{opts,vimode,fzf,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
+for file in $ZDOTDIR/lib/{opts,vimode,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
@@ -60,6 +60,10 @@ zcomet compinit
 # work things
 [ -f "/opt/dev-env/ansible/dash_profile" ] && source /opt/dev-env/ansible/dash_profile
 [ -n "$DESK_ENV" ] && source "$DESK_ENV" || true
+
+# fzf just desparately wants this here
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[[ -f "$HOME/.config/zsh/lib/fzf.zsh" ]] && source "$HOME/.config/zsh/lib/fzf.zsh"
 
 # zprof # bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

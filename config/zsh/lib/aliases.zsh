@@ -129,6 +129,14 @@ alias b="brew"
 # -----------------------------------------------------------------------------
 
 if type nvim >/dev/null 2>&1; then
+  function nvim() {
+    if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+      nvr -p "$@"
+    else
+      command nvim "$@"
+    fi
+  }
+
   alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
   alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
   alias nvimupdate="brew update && brew uninstall neovim && brew install neovim --HEAD && brew postinstall neovim && pip3 install --upgrade pynvim && npm install -g neovim --force && gem install neovim && brew outdated"
@@ -237,7 +245,7 @@ alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v exten
 alias bravekill="ps ux | grep '[B]rave Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
 alias die='pkill -9 -f'
 alias port='lsof -i :'
-alias sz="source $HOME/.config/zsh/.zshrc && source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zprofile" # && \reset"
+alias sz="source $HOME/.config/zsh/.zshenv && source $HOME/.config/zsh/.zshrc" # && \reset"
 alias zz=z
 alias cls="clr && ls"
 alias get="curl -OL"
