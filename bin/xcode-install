@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -euo pipefail
+
+[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+FORCE_INSTALL="false"
+
+do_install() {
+  sleep 1
+  log "installing Xcode CLI tools; press any key to continue.."
+  read -k1 -s -r
+  xcode-select --install \
+    && log_ok "installed Xcode CLI tools" \
+    || log_error "failed to install the Xcode CLI tools"
+}
+
+do_post_install() {
+  sudo xcode-select -switch /Library/Developer/CommandLineTools
+  softwareupdate --all --install --force --agree-to-license \
+    && log_ok "finished setting up more things for Xcode CLI tools" \
+    || log_error "failed to setup Xcode CLI tools things.."
+  sudo xcode-select -switch /Applications/Xcode.app
+}
+
+while getopts "f" OPTION; do
+  case $OPTION in
+
+    f)
+      FORCE_INSTALL="true"
+      ;;
+
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+  esac
+done
+shift $((OPTIND - 1))
+
+if [[ -d "/Library/Developer/CommandLineTools" && $FORCE_INSTALL == "false" ]]; then
+  log_warn "Xcode CommandLineTools found; skipping."
+else
+  read -p "$(tput bold)$(tput setaf 5)[?] force install Xcode and CLI tools (y/N)?$(tput sgr 0) " yn
+  case $yn in
+    [Yy]*)
+      do_build && do_post_install || exit 1
+      ;;
+    "")
+      log_warn "opted out of Xcode and CLI tools install"
+      ;;
+    [Nn]*)
+      log_warn "opted out of Xcode and CLI tools install"
+      ;;
+    *)
+      log_warn "please answer [y]es or [n]o."
+      exec $__invocation
+      ;;
+  esac
+fi

@@ -202,7 +202,7 @@
         log "Attempting to set zsh as default shell..";
         [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`;
 
-        log "Attempting to uninstall brew-installed ruby..";
+        #log "Attempting to uninstall brew-installed ruby..";
         #[[ brew ls --versions neovim >/dev/null ]] && brew uninstall ruby --ignore-dependencies --force;
 
         log "Attempting to reshim asdf..";

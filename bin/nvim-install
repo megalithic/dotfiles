@@ -28,10 +28,10 @@ remove_brew_nvim() {
     read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
     case $yn in
       [Yy]*)
-        brew uninstall -f neovim || exit 1
+        brew uninstall -f --ignore-dependencies neovim || exit 1
         ;;
       "")
-        brew uninstall -f neovim || exit 1 # default
+        brew uninstall -f --ignore-dependencies neovim || exit 1 # default
         ;;
       [Nn]*)
         log_warn "opted out of homebrew neovim removal"

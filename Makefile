@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help install elixirls paq subup nvim asdf brew
-.DEFAULT_GOAL := install
+.PHONY: help dots install elixirls paq subup nvim asdf brew xcode
+.DEFAULT_GOAL := dots
 
 help: ## Show this help content
 	@echo "Usage: make [command]"
@@ -9,6 +9,8 @@ help: ## Show this help content
 	@echo
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 	@echo
+
+dots: xcode install
 
 install: ## Runs the default dotbot install script
 	./install
@@ -30,6 +32,9 @@ asdf: ## Install asdf
 
 brew: ## Install homebrew
 	$(HOME)/.dotfiles/bin/brew-install -f
+
+xcode: ## Install Xcode + CLI tools
+	$(HOME)/.dotfiles/bin/xcode-install -f
 
 macos: ## (WIP) Runs the macos-specific dotbot install script
 	./macos

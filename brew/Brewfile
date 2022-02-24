@@ -121,6 +121,7 @@ brew "mycli"
 brew "mysql"
 brew "ncurses"
 # brew "neovim", args: ["HEAD"] # building from source now
+brew "neovim-remote"
 brew "ninja" # for lua sumneko lsp
 brew "nmap"
 brew "nss"
