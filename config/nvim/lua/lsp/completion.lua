@@ -202,8 +202,8 @@ local function setup_cmp()
   cmp.setup.cmdline("?", M.sources.search)
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
-      { name = "fuzzy_path" },
-      -- { name = "path" },
+      -- { name = "fuzzy_path" },
+      { name = "path" },
     }, {
       { name = "cmdline" },
     }),

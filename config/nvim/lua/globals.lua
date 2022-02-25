@@ -744,6 +744,31 @@ function mega.open_uri()
     :sync()
 end
 
+function mega.invalidate(path, recursive)
+  if recursive then
+    for key, value in pairs(package.loaded) do
+      if key ~= "_G" and value and vim.fn.match(key, path) ~= -1 then
+        package.loaded[key] = nil
+        require(key)
+      end
+    end
+  else
+    package.loaded[path] = nil
+    require(path)
+  end
+end
+
+---Source a lua or vimscript file
+---@param path string path relative to the nvim directory
+---@param prefix boolean?
+function mega.source(path, prefix)
+  if not prefix then
+    vim.cmd(fmt("source %s", path))
+  else
+    vim.cmd(fmt("source %s/%s", vim.g.vim_dir, path))
+  end
+end
+
 function mega.save_and_exec()
   if vim.bo.filetype == "vim" then
     vcmd("silent! write")

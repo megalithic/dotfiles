@@ -54,10 +54,11 @@ R("preflight")
 R("options")
 R("colors").setup("megaforest")
 R("commands")
-R("plugins").setup()
+-- R("paqs").setup()
 R("lsp").setup()
 R("autocmds")
 R("mappings")
 R("megaline")
+R("mega.plugins")
 
 -- vim:foldmethod=marker

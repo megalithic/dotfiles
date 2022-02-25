@@ -1,36 +1,36 @@
--- REF: https://github.com/savq/dotfiles/blob/master/install.sh#L12-L14
-local paq_exists = pcall(vim.cmd, [[packadd paq-nvim]])
-local repo_url = "https://github.com/savq/paq-nvim"
-local install_path = string.format("%s/site/pack/paqs/start/", vim.fn.stdpath("data"))
--- resolved to -> ~/.local/share/nvim/site/pack/paqs/start/paq-nvim
---
--- clone paq-nvim and install if it doesn't exist..
-if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-  -- REF: https://github.com/savq/paq-nvim/blob/master/doc/paq-nvim.txt#L374
-  print("should be installing things")
-  if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
-    print("-> skipping paq-nvim install.")
-    return
-  end
+-- -- REF: https://github.com/savq/dotfiles/blob/master/install.sh#L12-L14
+-- local paq_exists = pcall(vim.cmd, [[packadd paq-nvim]])
+-- local repo_url = "https://github.com/savq/paq-nvim"
+-- local install_path = string.format("%s/site/pack/paqs/start/", vim.fn.stdpath("data"))
+-- -- resolved to -> ~/.local/share/nvim/site/pack/paqs/start/paq-nvim
+-- --
+-- -- clone paq-nvim and install if it doesn't exist..
+-- if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+--   -- REF: https://github.com/savq/paq-nvim/blob/master/doc/paq-nvim.txt#L374
+--   print("should be installing things")
+--   if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
+--     print("-> skipping paq-nvim install.")
+--     return
+--   end
 
-  vim.fn.mkdir(install_path, "p")
+--   vim.fn.mkdir(install_path, "p")
 
-  print("-> downloading paq-nvim...")
-  vim.fn.system(string.format("git clone --depth 1 %s %s/%s", repo_url, install_path, "paq-nvim"))
+--   print("-> downloading paq-nvim...")
+--   vim.fn.system(string.format("git clone --depth 1 %s %s/%s", repo_url, install_path, "paq-nvim"))
 
-  vim.cmd([[packadd paq-nvim]])
+--   vim.cmd([[packadd paq-nvim]])
 
-  print("-> paq-nvim downloaded.")
+--   print("-> paq-nvim downloaded.")
 
-  -- quit after installing plugins
-  vim.cmd("autocmd User PaqDoneInstall quit")
+--   -- quit after installing plugins
+--   vim.cmd("autocmd User PaqDoneInstall quit")
 
-  -- install plugins
-  mega.sync_plugins()
-  vim.cmd("bufdo e")
+--   -- install plugins
+--   mega.sync_plugins()
+--   vim.cmd("bufdo e")
 
-  return
-end
+--   return
+-- end
 
 -- setup vim's various config directories
 --

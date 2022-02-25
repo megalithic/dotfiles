@@ -827,8 +827,8 @@ nmap("<leader>d", "<cmd>Dash<CR>", "dash")
 nmap("<leader>D", "<cmd>DashWord<CR>", "dash: current word")
 
 -- # paq
--- map("n", "<F5>", mega.sync_plugins())
-nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
+-- nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
+nmap("<F5>", "[[<Cmd>PackerSync<CR>]]", "packer: sync plugins")
 
 -- # nvim-tree
 -- nmap("<C-t>", "<cmd>NvimTreeToggle<CR>", "nvim-tree: toggle")
