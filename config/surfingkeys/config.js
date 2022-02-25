@@ -148,6 +148,7 @@ function setup_surfingkeys({ api: api }) {
   });
 
   unmap("w");
+  unmap("t");
 
   vmap("H", "0");
   vmap("L", "$");
