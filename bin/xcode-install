@@ -4,6 +4,11 @@ set -euo pipefail
 
 [[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
 
+if [[ $(uname) != "Darwin" ]]; then
+  log_warn "xcode-install requires MacOS (Darwin); skipping."
+  exit 1
+fi
+
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
