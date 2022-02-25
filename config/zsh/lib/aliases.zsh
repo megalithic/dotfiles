@@ -129,13 +129,13 @@ alias b="brew"
 # -----------------------------------------------------------------------------
 
 if type nvim >/dev/null 2>&1; then
-  function nvim() {
-    if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-      nvr -p "$@"
-    else
-      command nvim "$@"
-    fi
-  }
+  # function nvim() {
+  #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+  #     nvr -p "$@"
+  #   else
+  #     command nvim "$@"
+  #   fi
+  # }
 
   alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
   alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"

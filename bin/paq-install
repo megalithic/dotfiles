@@ -19,24 +19,67 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
+FORCE_INSTALL="false"
+
 paq_path="${XDG_DATA_HOME}/nvim/site/pack/paqs/start/paq-nvim"
+
+remove_existing() {
+  read -p "$(tput bold)$(tput setaf 5)[?] remove existing paq-nvim (Y/n)?$(tput sgr 0) " yn
+  case $yn in
+    [Yy]*)
+      rm -rf "${XDG_DATA_HOME}/nvim/site/pack/paqs" || exit 1
+      ;;
+    "")
+      rm -rf "${XDG_DATA_HOME}/nvim/site/pack/paqs" || exit 1
+      ;;
+    [Nn]*)
+      log_warn "opted out of paq-nvim removal"
+      ;;
+    *)
+      log_warn "please answer [y]es or [n]o."
+      exec $__invocation
+      ;;
+  esac
+}
 
 do_install() {
   log "cloning paq-nvim into $paq_path"
-  git clone --depth=1 https://github.com/savq/paq-nvim.git $paq_path \
-    && nvim -c 'lua require("paq")(require("plugins").list):install()' +qall \
+  if [[ -d $paq_path ]]; then
+    log_warn "existing paq-nvim found.."
+    remove_existing
+  fi
+  git clone --depth=1 https://github.com/savq/paq-nvim.git "$paq_path" \
+    && nvim --headless -u NONE -c 'lua require("plugins").bootstrap()' \
     && log_ok "completed installing paq-nvim and plugins into $paq_path" \
     || exit 1
 }
 
-if [[ ! -d $paq_path ]]; then
-  read -p "$(tput bold)$(tput setaf 5)[?] install paq-nvim and plugins (Y/n)?$(tput sgr 0) " yn
+while getopts "f" OPTION; do
+  case $OPTION in
+
+    f)
+      FORCE_INSTALL="true"
+      ;;
+
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+  esac
+done
+shift $((OPTIND - 1))
+
+if [[ -d $paq_path && $FORCE_INSTALL == "false" ]]; then
+  log_warn "paq-nvim already exists at $paq_path; skipping."
+else
+  read -p "$(tput bold)$(tput setaf 5)[?] force install paq-nvim and plugins (y/N)?$(tput sgr 0) " yn
   case $yn in
     [Yy]*)
       do_install || exit 1
       ;;
     "")
-      do_install || exit 1
+      log_warn "opted out of paq-nvim install"
       ;;
     [Nn]*)
       log_warn "opted out of paq-nvim install"
@@ -46,6 +89,4 @@ if [[ ! -d $paq_path ]]; then
       exec $__invocation
       ;;
   esac
-else
-  log_warn "paq-nvim already exists at $paq_path; skipping."
 fi

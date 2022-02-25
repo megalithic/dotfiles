@@ -579,12 +579,12 @@ function M.s_git(args)
   local head_str = unpack(
     U.item(status.head, "StGitBranch", { before = " ", prefix = C.icons.git, prefix_color = "StGitSymbol" })
   )
-  local added_str = unpack(U.item(status.added, "StTitle", { prefix = C.icons.git_added, prefix_color = "StGreen" }))
+  local added_str = unpack(U.item(status.added, "StMetadata", { prefix = C.icons.git_added, prefix_color = "StGreen" }))
   local changed_str = unpack(
-    U.item(status.changed, "StTitle", { prefix = C.icons.git_changed, prefix_color = "StWarning" })
+    U.item(status.changed, "StMetadata", { prefix = C.icons.git_changed, prefix_color = "StWarning" })
   )
   local removed_str = unpack(
-    U.item(status.removed, "StTitle", { prefix = C.icons.git_removed, prefix_color = "StError" })
+    U.item(status.removed, "StMetadata", { prefix = C.icons.git_removed, prefix_color = "StError" })
   )
 
   if signs == "" then
