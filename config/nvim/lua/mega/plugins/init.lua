@@ -7,34 +7,6 @@ local function packer_notify(msg, level)
   vim.notify(msg, level, { title = "Packer" })
 end
 
--- Make sure packer is installed on the current machine and load
--- the dev or upstream version depending on if we are at work or not
--- NOTE: install packer as an opt plugin since it's loaded conditionally on my local machine
--- it needs to be installed as optional so the install dir is consistent across machines
-local function bootstrap_packer()
-  local install_path = fmt("%s/site/pack/packer/opt/packer.nvim", fn.stdpath("data"))
-  -- local install_path = fn.stdpath("data") .. "/site/pack/packer/opt/packer.nvim"
-  if fn.empty(fn.glob(install_path)) > 0 then
-    packer_notify("Downloading packer.nvim...")
-    packer_notify(fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/wbthomason/packer.nvim",
-      install_path,
-    }))
-  vim.cmd("packadd! packer.nvim")
-  require("packer").sync()
-  end
-  -- if fn.empty(fn.glob(install_path)) > 0 then
-  --   packer_notify("Downloading packer.nvim...")
-  --   packer_notify(fn.system({ "git", "clone", "https://github.com/wbthomason/packer.nvim", install_path }))
-  --   vim.cmd("packadd! packer.nvim")
-  --   require("packer").sync()
-  -- end
-end
-
 ---Require a plugin config
 ---@param name string
 ---@return any
@@ -66,7 +38,33 @@ local PACKER_COMPILED_PATH = fn.stdpath("cache") .. "/packer/packer_compiled.lua
 -----------------------------------------------------------------------------//
 -- Bootstrap Packer {{{3
 -----------------------------------------------------------------------------//
-bootstrap_packer()
+local install_path = fmt("%s/site/pack/packer/start/packer.nvim", fn.stdpath("data"))
+if fn.empty(fn.glob(install_path)) > 0 then
+  packer_notify("Downloading packer.nvim...")
+  -- packer_notify(fn.system({
+  --   "git",
+  --   "clone",
+  --   "--depth",
+  --   "1",
+  --   "https://github.com/wbthomason/packer.nvim",
+  --   install_path,
+  -- }))
+  _G.packer_bootstrap = fn.system({
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/wbthomason/packer.nvim",
+    install_path,
+  })
+end
+
+-- vim.cmd([[
+--   augroup packer_user_config
+--     autocmd!
+--     autocmd BufWritePost packer-config.lua source <afile> | PackerCompile
+--   augroup end
+-- ]])
 ----------------------------------------------------------------------------- }}}1
 -- cfilter plugin allows filter down an existing quickfix list
 vim.cmd("packadd! cfilter")
@@ -79,7 +77,7 @@ vim.cmd("packadd! cfilter")
 --- or local variables
 require("packer").startup({
   function(use) -- use, use_rocks
-    -- use("wbthomason/packer.nvim") -- Package manager
+    use("wbthomason/packer.nvim") -- Package manager
 
     -- use_rocks("penlight")
 
@@ -135,7 +133,7 @@ require("packer").startup({
     use({ "b0o/schemastore.nvim" })
     use({ "folke/trouble.nvim" })
     use({ "abecodes/tabout.nvim" })
-    use({ url = "https://gitlab.com/yorickpeterse/nvim-dd.git" })
+    use({ "https://gitlab.com/yorickpeterse/nvim-dd.git" })
     use({ "mhartington/formatter.nvim" })
     ------------------------------------------------------------------------------
     -- (treesitter) --
@@ -369,6 +367,24 @@ require("packer").startup({
               return math.floor(vim.o.columns * 0.4)
             end
           end,
+          --   REF: @ryansch:
+          --   size = function(term)
+          --     if term.direction == "horizontal" then
+          --       return 20
+          --     elseif term.direction == "vertical" then
+          --       return vim.o.columns * 0.4
+          --     end
+          --   end,
+          persist_size = false,
+          on_open = function(term)
+            term.opened = term.opened or false
+
+            if not term.opened then
+              term:send("eval $(desk load)")
+            end
+
+            term.opened = true
+          end,
         })
 
         local float_handler = function(term)
@@ -379,15 +395,6 @@ require("packer").startup({
         end
 
         local Terminal = require("toggleterm.terminal").Terminal
-
-        local lazygit = Terminal:new({
-          cmd = "lazygit",
-          dir = "git_dir",
-          hidden = true,
-          direction = "float",
-          on_open = float_handler,
-        })
-
         local htop = Terminal:new({
           cmd = "htop",
           hidden = "true",
@@ -401,19 +408,13 @@ require("packer").startup({
             htop:toggle()
           end,
         })
-
-        require("which-key").register({
-          ["<leader>lg"] = {
-            function()
-              lazygit:toggle()
-            end,
-            "toggleterm: toggle lazygit",
-          },
-        })
       end,
     })
+
+    -- Automatically set up your configuration after cloning packer.nvim
+    -- Put this at the end after all plugins
     if _G.packer_bootstrap then
-    --  require("packer").sync()
+      require("packer").sync()
     end
   end,
   log = { level = "info" },
