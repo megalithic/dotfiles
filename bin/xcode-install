@@ -16,8 +16,8 @@ FORCE_INSTALL="false"
 
 do_install() {
   sleep 1
-  log "installing Xcode CLI tools; press any key to continue.."
-  read -k1 -s -r
+  log "installing Xcode CLI tools.."
+  read -n 1 -p "press any key to continue..." -s -e -r
   xcode-select --install \
     && log_ok "installed Xcode CLI tools" \
     || log_error "failed to install the Xcode CLI tools"
