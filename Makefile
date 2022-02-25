@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help dots install elixirls paq subup nvim asdf brew xcode
+.PHONY: help dots install elixirls subup nvim asdf brew xcode
 .DEFAULT_GOAL := dots
 
 help: ## Show this help content
@@ -20,9 +20,6 @@ elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
 
 elixirls-master: ## Install elixir-ls from source to $XDG_DATA_HOME/lsp/elixir-ls
 	$(HOME)/.dotfiles/bin/elixirls-install master
-
-paq: ## Install paq-nvim to $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
-	$(HOME)/.dotfiles/bin/paq-install
 
 nvim: ## Update and build neovim from source
 	$(HOME)/.dotfiles/bin/nvim-install

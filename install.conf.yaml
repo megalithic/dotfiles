@@ -214,9 +214,6 @@
         log "Attempting to install neovim from source..";
         make -C ~/.dotfiles nvim;
 
-        log "Attempting to install paq-nvim..";
-        make -C ~/.dotfiles paq;
-
         log "Attempting to install elixirls-master..";
         make -C ~/.dotfiles elixirls-master;
 
