@@ -604,18 +604,15 @@ xmap("ga", "<Plug>(EasyAlign)")
 nmap("ga", "<Plug>(EasyAlign)")
 
 -- # Dash
-nmap("<leader>d", "<cmd>Dash<CR>", "dash")
-nmap("<leader>D", "<cmd>DashWord<CR>", "dash: current word")
-
--- # paq
--- nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
-nmap("<F5>", "[[<Cmd>PackerSync<CR>]]", "packer: sync plugins")
+-- nmap("<leader>d", "<cmd>Dash<CR>", "dash")
+-- nmap("<leader>D", "<cmd>DashWord<CR>", "dash: current word")
 
 -- # nvim-tree
 -- nmap("<C-t>", "<cmd>NvimTreeToggle<CR>", "nvim-tree: toggle")
 
 -- # dirbuf.nvim
-nmap("<C-t>", "<cmd>vnew|Dirbuf<CR>", "filetree: toggle")
+-- <buffer> specific bindings: ~/.config/nvim/ftplugin/dirbuf.lua
+nmap("<C-t>", "<cmd>vertical leftabove split|vertical resize 60|Dirbuf<CR>", "filetree: open dirbuf")
 nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ft
 
 -- # telescope
@@ -626,9 +623,6 @@ vmap(
   [[y:lua require("telescope.builtin").grep_string({ search = '<c-r>"' })<cr>]],
   "telescope: grep for visual selection"
 )
-
--- # formatter.nvim
-nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 
 -- # misc
 -- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636

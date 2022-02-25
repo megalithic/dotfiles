@@ -547,6 +547,7 @@ do -- golden_size.nvim
       {
         ignore_by_buftype,
         {
+          "acwrite",
           "Undotree",
           "quickfix",
           "nerdtree",
@@ -1652,6 +1653,7 @@ do -- dirbuf.nvim
   require("dirbuf").setup({
     hash_padding = 2,
     show_hidden = true,
+    sort_order = "directories_first",
     fstate_compare = function(l, r)
       if l.ftype ~= r.ftype then
         return l.ftype < r.ftype

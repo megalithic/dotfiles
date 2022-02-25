@@ -462,7 +462,7 @@ mega.augroup("PackerSetupInit", {
   },
 })
 
--- nnoremap("<leader>ps", [[<Cmd>PackerSync<CR>]])
--- nnoremap("<leader>pc", [[<Cmd>PackerClean<CR>]])
+nnoremap("<F5>", [[<Cmd>PackerSync<CR>]], "packer: sync plugins")
+nnoremap("<F4>", [[<Cmd>PackerClean<CR>]], "packer: clean plugins")
 
 -- vim:foldmethod=marker

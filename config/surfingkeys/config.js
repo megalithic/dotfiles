@@ -22,6 +22,7 @@ if (typeof api !== "undefined") {
     aceVimMap,
     mapkey,
     unmap,
+    vunmap,
     imap,
     imapkey,
     getClickableElements,
@@ -49,6 +50,7 @@ function setup_surfingkeys({ api: api }) {
     aceVimMap,
     mapkey,
     unmap,
+    vunmap,
     imap,
     imapkey,
     getClickableElements,
@@ -148,7 +150,7 @@ function setup_surfingkeys({ api: api }) {
   });
 
   unmap("w");
-  unmap("t");
+  vunmap("t");
 
   vmap("H", "0");
   vmap("L", "$");
