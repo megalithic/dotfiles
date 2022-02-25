@@ -25,13 +25,13 @@ pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src success
 
 remove_brew_nvim() {
   if brew ls --versions neovim >/dev/null; then
-    read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
+    read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (y/N)?$(tput sgr 0) " yn
     case $yn in
       [Yy]*)
         brew uninstall -f --ignore-dependencies neovim || exit 1
         ;;
       "")
-        brew uninstall -f --ignore-dependencies neovim || exit 1 # default
+        log_warn "opted out of homebrew neovim removal"
         ;;
       [Nn]*)
         log_warn "opted out of homebrew neovim removal"
