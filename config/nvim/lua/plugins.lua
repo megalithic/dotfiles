@@ -53,6 +53,8 @@ M.bootstrap = function()
   paq(M.list):install()
 end
 
+-- NOTE: add local module:
+-- vim.opt.runtimepath:append '~/path/to/your/plugin'
 M.list = {
   { "savq/paq-nvim" },
   ------------------------------------------------------------------------------
@@ -64,8 +66,7 @@ M.list = {
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
   "mhanberg/thicc_forest",
-  "mjlbach/onedark.nvim",
-  "ethanholz/nightfox.nvim",
+  "savq/melange",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
