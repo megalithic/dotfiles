@@ -25,12 +25,21 @@ local function clone_paq()
   end
 end
 
--- local function sync_all()
---     -- package.loaded.paq = nil
---     (require 'paq')(PKGS):sync()
+M.sync_all = function()
+  -- package.loaded.paq = nil
+  (require("paq"))(M.list):sync()
+end
+
+-- https://github.com/savq/paq-nvim/issues/81#issuecomment-987545884
+-- local function conf(plugin)
+--   return function()
+--     if pcall(require, plugin) then
+--       require("mega.plugins." .. plugin)()
+--     end
+--   end
 -- end
 
-local function bootstrap()
+M.bootstrap = function()
   clone_paq()
 
   -- Load Paq
@@ -42,52 +51,6 @@ local function bootstrap()
 
   -- Read and install packages
   paq(M.list):install()
-end
-
-M.bootstrap = bootstrap
-
--- M.bootstrap = function()
---   -- REF: https://github.com/savq/dotfiles/blob/master/install.sh#L12-L14
---   local paq_exists = pcall(vim.cmd, [[packadd paq-nvim]])
---   local repo_url = "https://github.com/savq/paq-nvim"
---   local install_path = string.format("%s/site/pack/paqs/start/", vim.fn.stdpath("data"))
---   -- resolved to -> ~/.local/share/nvim/site/pack/paqs/start/paq-nvim
---   --
---   -- clone paq-nvim and install if it doesn't exist..
---   if not paq_exists or vim.fn.empty(vim.fn.glob(install_path)) > 0 then
---     -- REF: https://github.com/savq/paq-nvim/blob/master/doc/paq-nvim.txt#L374
---     print("should be installing things")
---     if vim.fn.input("-> [?] download paq-nvim? [yn] -> ") ~= "y" then
---       print("")
---       print("-> skipping paq-nvim install.")
---     else
---       vim.fn.mkdir(install_path, "p")
-
---       print("")
---       print("-> downloading paq-nvim...")
---       print("")
---       vim.fn.system(string.format("git clone --depth 1 %s %s/%s", repo_url, install_path, "paq-nvim"))
---     end
-
---     -- Load Paq
---     vim.cmd("packadd paq-nvim")
-
---     -- Exit nvim after installing plugins
---     vim.cmd("autocmd User PaqDoneInstall quit")
-
---     -- Read and install packages
---     local paq = require("paq")
---     paq(require("plugins").list):install()
---   end
--- end
-
--- https://github.com/savq/paq-nvim/issues/81#issuecomment-987545884
-local function conf(plugin)
-  return function()
-    if pcall(require, plugin) then
-      require("mega.plugins." .. plugin)()
-    end
-  end
 end
 
 M.list = {
@@ -221,28 +184,6 @@ M.list = {
   { "ruifm/gitlinker.nvim" },
   {
     "ruanyl/vim-gh-line",
-    run = function()
-      print("vim-gh-line")
-      if mega.has("g:loaded_gh_line") then
-        print("has loaded_gh_line")
-      end
-      -- vim.g["gh_line_map_default"] = 0
-      -- vim.g["gh_line_blame_map_default"] = 0
-      -- if pcall(require, "gitlinker") then
-      -- let g:gh_line_map_default = 0
-      -- let g:gh_line_blame_map_default = 1
-      -- Use your own mappings:
-
-      -- let g:gh_line_map = '<leader>gh'
-      -- let g:gh_line_blame_map = '<leader>gb'
-      -- Use a custom program to open link:
-
-      -- let g:gh_open_command = 'open '
-      -- Copy link to a clipboard instead of opening a browser:
-
-      -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
-      -- end
-    end,
   },
 
   "rlch/github-notifications.nvim",

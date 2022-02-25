@@ -48,7 +48,6 @@ function R(name)
   return require(name)
 end
 
-require("plugins").bootstrap()
 require("globals")
 
 R("preflight")
