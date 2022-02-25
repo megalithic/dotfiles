@@ -182,7 +182,7 @@ M.list = {
   -- "ahmedkhalf/project.nvim",
   "tpope/vim-projectionist",
   -- "tjdevries/edit_alternate.vim",
-  "janko/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
+  "vim-test/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "tpope/vim-ragtag",
   -- { "mrjones2014/dash.nvim", run = "make install", opt = true },
@@ -1016,15 +1016,28 @@ M.setup = function()
 
   do -- toggleterm.nvim
     local toggleterm = require("toggleterm")
-
     toggleterm.setup({
+      open_mapping = [[<c-\>]],
+      shade_filetypes = { "none" },
+      direction = "vertical",
+      insert_mappings = false,
+      start_in_insert = true,
+      float_opts = { border = "curved", winblend = 3 },
       size = function(term)
         if term.direction == "horizontal" then
-          return 20
+          return 15
         elseif term.direction == "vertical" then
-          return vim.o.columns * 0.4
+          return math.floor(vim.o.columns * 0.4)
         end
       end,
+      --   REF: @ryansch:
+      --   size = function(term)
+      --     if term.direction == "horizontal" then
+      --       return 20
+      --     elseif term.direction == "vertical" then
+      --       return vim.o.columns * 0.4
+      --     end
+      --   end,
       persist_size = false,
       on_open = function(term)
         term.opened = term.opened or false
@@ -1034,6 +1047,28 @@ M.setup = function()
         end
 
         term.opened = true
+      end,
+    })
+
+    local float_handler = function(term)
+      if vim.fn.mapcheck("jk", "t") ~= "" then
+        vim.api.nvim_buf_del_keymap(term.bufnr, "t", "jk")
+        vim.api.nvim_buf_del_keymap(term.bufnr, "t", "<esc>")
+      end
+    end
+
+    local Terminal = require("toggleterm.terminal").Terminal
+    local htop = Terminal:new({
+      cmd = "htop",
+      hidden = "true",
+      direction = "float",
+      on_open = float_handler,
+    })
+
+    mega.command({
+      "Htop",
+      function()
+        htop:toggle()
       end,
     })
   end
@@ -1131,14 +1166,22 @@ M.setup = function()
       vim.g["test#go#runner"] = "richgo"
     end
 
-    vcmd([[
-      function! TerminalSplit(cmd)
-        vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
-      endfunction
+    -- vcmd([[
+    --   function! TerminalSplit(cmd)
+    --     vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
+    --   endfunction
 
-      let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
-      let g:test#strategy = 'terminal_split'
+    --   let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
+    --   let g:test#strategy = 'terminal_split'
+    -- ]])
+
+    vcmd([[
+      function! ToggleTermStrategy(cmd) abort
+        call luaeval("require('toggleterm').exec(_A[1])", [a:cmd])
+      endfunction
+      let g:test#custom_strategies = {'toggleterm': function('ToggleTermStrategy')}
     ]])
+    vim.g["test#strategy"] = "toggleterm"
   end
 
   do -- vim-projectionist
