@@ -12,6 +12,15 @@ local fmt = string.format
 
 local M = {}
 
+-- https://github.com/savq/paq-nvim/issues/81#issuecomment-987545884
+local function conf(plugin)
+  return function()
+    if pcall(require, plugin) then
+      -- require("main.plugin_config." .. plugin .. "_config")()
+    end
+  end
+end
+
 M.list = {
   { "savq/paq-nvim" },
   ------------------------------------------------------------------------------
