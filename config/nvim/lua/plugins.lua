@@ -16,7 +16,7 @@ local M = {}
 local function conf(plugin)
   return function()
     if pcall(require, plugin) then
-      -- require("main.plugin_config." .. plugin .. "_config")()
+      require("mega.plugins." .. plugin)()
     end
   end
 end
@@ -25,9 +25,9 @@ M.list = {
   { "savq/paq-nvim" },
   ------------------------------------------------------------------------------
   -- (profiling/speed improvements) --
-  "dstein64/vim-startuptime",
+  { "dstein64/vim-startuptime" },
   "lewis6991/impatient.nvim",
-  "nathom/filetype.nvim",
+  -- "nathom/filetype.nvim",
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
@@ -148,10 +148,34 @@ M.list = {
   "tpope/vim-fugitive",
   "lewis6991/gitsigns.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
-  "pwntester/octo.nvim", -- https://github.com/ryansch/dotfiles/commit/2d0dc63bea2f921de1236c2800605551fb4b3041#diff-45b8a59e398d12063977c5b27e0d065150544908fd4ad8b3e10b2d003c5f4439R119-R246
   -- "gabebw/vim-github-link-opener",
-  "ruifm/gitlinker.nvim",
-  "ruanyl/vim-gh-line",
+  { "ruifm/gitlinker.nvim" },
+  {
+    "ruanyl/vim-gh-line",
+    run = function()
+      print("vim-gh-line")
+      if mega.has("g:loaded_gh_line") then
+        print("has loaded_gh_line")
+      end
+      -- vim.g["gh_line_map_default"] = 0
+      -- vim.g["gh_line_blame_map_default"] = 0
+      -- if pcall(require, "gitlinker") then
+      -- let g:gh_line_map_default = 0
+      -- let g:gh_line_blame_map_default = 1
+      -- Use your own mappings:
+
+      -- let g:gh_line_map = '<leader>gh'
+      -- let g:gh_line_blame_map = '<leader>gb'
+      -- Use a custom program to open link:
+
+      -- let g:gh_open_command = 'open '
+      -- Copy link to a clipboard instead of opening a browser:
+
+      -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
+      -- end
+    end,
+  },
+
   "rlch/github-notifications.nvim",
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
@@ -304,6 +328,21 @@ M.setup = function()
     })
   end
 
+  do -- vim-gh-line_config
+    if fn.exists("g:loaded_gh_line") then
+      vim.g["gh_line_map_default"] = 0
+      vim.g["gh_line_blame_map_default"] = 0
+      vim.g["gh_line_map"] = "<leader>gH"
+      vim.g["gh_line_blame_map"] = "<leader>gB"
+      vim.g["gh_repo_map"] = "<leader>gO"
+
+      -- Use a custom program to open link:
+      -- let g:gh_open_command = 'open '
+      -- Copy link to a clipboard instead of opening a browser:
+      -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
+    end
+  end
+
   do -- gitlinker.nvim
     require("gitlinker").setup()
   end
@@ -415,7 +454,7 @@ M.setup = function()
         enable = true,
         disable = { "json", "html" },
         extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
-        max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
+        max_file_lines = nil, -- Do not enable for files with more than 1000 lines, int
       },
       incremental_selection = {
         enable = true,
@@ -1831,17 +1870,17 @@ M.setup = function()
   end
 
   do -- filetype.nvim
-    if not vim.filetype then
-      require("filetype").setup({
-        overrides = {
-          literal = {
-            ["kitty.conf"] = "kitty",
-            [".gitignore"] = "conf",
-            [".env"] = "sh",
-          },
-        },
-      })
-    end
+    -- if not vim.filetype then
+    --   require("filetype").setup({
+    --     overrides = {
+    --       literal = {
+    --         ["kitty.conf"] = "kitty",
+    --         [".gitignore"] = "conf",
+    --         [".env"] = "sh",
+    --       },
+    --     },
+    --   })
+    -- end
   end
 
   do -- dirbuf.nvim

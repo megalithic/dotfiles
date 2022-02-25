@@ -72,6 +72,7 @@ augroup("paq", {
     targets = { "plugins.lua" },
     command = function()
       vim.cmd("luafile %")
+      -- mega.sync_plugins()
     end,
   },
 })
