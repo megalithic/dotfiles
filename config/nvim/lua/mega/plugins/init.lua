@@ -1,9 +1,6 @@
 local fn = vim.fn
 local fmt = string.format
 
-local is_work = vim.env.WORK ~= nil
-local is_home = not is_work
-
 ---A thin wrapper around vim.notify to add packer details to the message
 ---@param msg string
 local function packer_notify(msg, level)
@@ -15,18 +12,20 @@ end
 -- NOTE: install packer as an opt plugin since it's loaded conditionally on my local machine
 -- it needs to be installed as optional so the install dir is consistent across machines
 local function bootstrap_packer()
-  -- local install_path = fmt("%s/site/pack/packer/opt/packer.nvim", fn.stdpath("data"))
-  local install_path = fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
+  local install_path = fmt("%s/site/pack/packer/opt/packer.nvim", fn.stdpath("data"))
+  -- local install_path = fn.stdpath("data") .. "/site/pack/packer/opt/packer.nvim"
   if fn.empty(fn.glob(install_path)) > 0 then
     packer_notify("Downloading packer.nvim...")
-    _G.packer_bootstrap = fn.system({
+    packer_notify(fn.system({
       "git",
       "clone",
       "--depth",
       "1",
       "https://github.com/wbthomason/packer.nvim",
       install_path,
-    })
+    }))
+  vim.cmd("packadd! packer.nvim")
+  require("packer").sync()
   end
   -- if fn.empty(fn.glob(install_path)) > 0 then
   --   packer_notify("Downloading packer.nvim...")
@@ -166,57 +165,57 @@ require("packer").startup({
     use({ "elihunter173/dirbuf.nvim" })
     -- "kyazdani42/nvim-tree.lua"
 
-    use({
-      "nvim-telescope/telescope.nvim",
-      cmd = "Telescope",
-      module_pattern = "telescope.*",
-      config = conf("telescope"),
-      requires = {
-        {
-          "nvim-telescope/telescope-fzf-native.nvim",
-          run = "make",
-          after = "telescope.nvim",
-          config = function()
-            require("telescope").load_extension("fzf")
-          end,
-        },
-        {
-          "nvim-telescope/telescope-frecency.nvim",
-          after = "telescope.nvim",
-          requires = "tami5/sqlite.lua",
-        },
-        {
-          "camgraff/telescope-tmux.nvim",
-          after = "telescope.nvim",
-          config = function()
-            require("telescope").load_extension("tmux")
-          end,
-        },
-        {
-          "nvim-telescope/telescope-smart-history.nvim",
-          after = "telescope.nvim",
-          config = function()
-            require("telescope").load_extension("smart_history")
-          end,
-        },
-        {
-          "nvim-telescope/telescope-github.nvim",
-          after = "telescope.nvim",
-          config = function()
-            require("telescope").load_extension("gh")
-          end,
-        },
-      },
-    })
+    -- use({
+    --   "nvim-telescope/telescope.nvim",
+    --   cmd = "Telescope",
+    --   module_pattern = "telescope.*",
+    --   config = conf("telescope"),
+    --   requires = {
+    --     {
+    --       "nvim-telescope/telescope-fzf-native.nvim",
+    --       run = "make",
+    --       after = "telescope.nvim",
+    --       config = function()
+    --         require("telescope").load_extension("fzf")
+    --       end,
+    --     },
+    --     {
+    --       "nvim-telescope/telescope-frecency.nvim",
+    --       after = "telescope.nvim",
+    --       requires = "tami5/sqlite.lua",
+    --     },
+    --     {
+    --       "camgraff/telescope-tmux.nvim",
+    --       after = "telescope.nvim",
+    --       config = function()
+    --         require("telescope").load_extension("tmux")
+    --       end,
+    --     },
+    --     {
+    --       "nvim-telescope/telescope-smart-history.nvim",
+    --       after = "telescope.nvim",
+    --       config = function()
+    --         require("telescope").load_extension("smart_history")
+    --       end,
+    --     },
+    --     {
+    --       "nvim-telescope/telescope-github.nvim",
+    --       after = "telescope.nvim",
+    --       config = function()
+    --         require("telescope").load_extension("gh")
+    --       end,
+    --     },
+    --   },
+    -- })
 
-    -- use({ "tami5/sqlite.lua" })
-    -- use({ "nvim-telescope/telescope.nvim" })
-    -- use({ "nvim-telescope/telescope-frecency.nvim" })
-    -- use({ "nvim-telescope/telescope-fzf-native.nvim", run = "make" })
-    -- use({ "camgraff/telescope-tmux.nvim" })
-    -- use({ "nvim-telescope/telescope-media-files.nvim" })
-    -- use({ "nvim-telescope/telescope-symbols.nvim" })
-    -- use({ "nvim-telescope/telescope-smart-history.nvim" })
+    use({ "tami5/sqlite.lua" })
+    use({ "nvim-telescope/telescope.nvim" })
+    use({ "nvim-telescope/telescope-frecency.nvim" })
+    use({ "nvim-telescope/telescope-fzf-native.nvim", run = "make" })
+    use({ "camgraff/telescope-tmux.nvim" })
+    use({ "nvim-telescope/telescope-media-files.nvim" })
+    use({ "nvim-telescope/telescope-symbols.nvim" })
+    use({ "nvim-telescope/telescope-smart-history.nvim" })
     -- -- "nvim-telescope/telescope-file-browser.nvim"
 
     ------------------------------------------------------------------------------
@@ -414,7 +413,7 @@ require("packer").startup({
       end,
     })
     if _G.packer_bootstrap then
-      require("packer").sync()
+    --  require("packer").sync()
     end
   end,
   log = { level = "info" },
@@ -454,7 +453,7 @@ require("packer").startup({
 mega.augroup("PackerSetupInit", {
   {
     events = { "BufWritePost" },
-    targets = { "*/plugins/*.lua" },
+    targets = { "*/mega/plugins/*.lua" },
     command = function()
       mega.invalidate("mega.plugins", true)
       require("packer").compile()
