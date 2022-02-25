@@ -28,10 +28,10 @@ remove_brew_nvim() {
     read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
     case $yn in
       [Yy]*)
-        brew uninstall -f --ignore-dependencies neovim || exit 1
+        brew uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
         ;;
       "")
-        brew uninstall -f --ignore-dependencies neovim || exit 1
+        brew uninstall -f --ignore-dependencies neovim neovim-remote || exit 1
         ;;
       [Nn]*)
         log_warn "opted out of homebrew neovim removal"
@@ -77,6 +77,9 @@ do_build() {
 
   sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
   sudo make install || exit 1 && log_ok "successfully built and installed neovim"
+
+  log "installing neovim-remote via python (pip3).."
+  pip3 install neovim-remote
 }
 
 build() {
