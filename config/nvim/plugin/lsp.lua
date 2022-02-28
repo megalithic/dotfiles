@@ -16,9 +16,6 @@ vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 -- vim.lsp.set_log_level("trace")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
--- Start nvim-cmp and friends
-require("mega.lsp.completion").setup()
-
 -- [ COMMANDS ] ----------------------------------------------------------------
 
 local function setup_commands()
@@ -645,7 +642,7 @@ function mega.lsp.on_attach(client, bufnr)
     vim.bo[bufnr].tagfunc = "v:lua.mega.lsp.tagfunc"
   end
 
-  require("mega.lsp.null-ls").setup()
+  require("mega.plugins.null-ls")
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client)

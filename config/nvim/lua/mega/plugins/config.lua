@@ -2,18 +2,18 @@ local api = vim.api
 local vcmd = vim.cmd
 local fn = vim.fn
 
--- # managed paqs stored here:
---  ~/.local/share/nvim/site/pack/paqs
--- # local/devel paqs stored here:
---  ~/.local/share/nvim/site/pack/local
-
 local function conf(plugin)
   if pcall(require, plugin) then
     require("mega.plugins." .. plugin)
   end
 end
 
+-- [ EXPLICIT ] ----------------------------------------------------------------
+
 conf("telescope")
+conf("cmp")
+
+-- [ MISC ] --------------------------------------------------------------------
 
 do -- vim-startuptime
   vim.g.startuptime_tries = 10

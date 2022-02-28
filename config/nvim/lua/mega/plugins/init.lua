@@ -1,13 +1,7 @@
-local api = vim.api
-local vcmd = vim.cmd
-local fn = vim.fn
-
 -- # managed paqs stored here:
 --  ~/.local/share/nvim/site/pack/paqs
 -- # local/devel paqs stored here:
 --  ~/.local/share/nvim/site/pack/local
-
-local M = {}
 
 -- NOTE: add local module:
 -- vim.opt.runtimepath:append '~/path/to/your/plugin'
@@ -248,6 +242,8 @@ local function clone_paq()
     })
   end
 end
+
+local M = {}
 
 M.sync_all = function()
   -- package.loaded.paq = nil

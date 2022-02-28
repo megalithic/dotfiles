@@ -63,13 +63,8 @@ local function setup_cmp()
   end
 
   local function tab(fallback)
-    -- local copilot_keys = vim.fn["copilot#Accept"]()
     if cmp.visible() then
       cmp.select_next_item()
-      -- elseif copilot_keys ~= "" then -- prioritise copilot over snippets
-      --   -- Copilot keys do not need to be wrapped in termcodes
-      --   print("copilot! <tab>")
-      --   api.nvim_feedkeys(copilot_keys, "i", true)
     elseif luasnip and luasnip.expand_or_locally_jumpable() then
       luasnip.expand_or_jump()
     elseif api.nvim_get_mode().mode == "c" then
@@ -89,13 +84,7 @@ local function setup_cmp()
     elseif api.nvim_get_mode().mode == "c" then
       fallback()
     else
-      -- local copilot_keys = vim.fn["copilot#Accept"]()
-      -- if copilot_keys ~= "" then
-      --   print("copilot! <s-tab>")
-      --   feed(copilot_keys, "i")
-      -- else
       feed("<Plug>(Tabout)")
-      -- end
     end
   end
 
@@ -116,8 +105,8 @@ local function setup_cmp()
     sources = cmp.config.sources({
       { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      -- M.sources.buffer,
+      { name = "fuzzy_buffer" },
     }),
   }
 
@@ -161,8 +150,8 @@ local function setup_cmp()
       { name = "path" },
       { name = "emmet_ls" },
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      -- M.sources.buffer,
+      { name = "fuzzy_buffer" },
     }),
     formatting = {
       deprecated = true,
@@ -206,10 +195,8 @@ local function setup_cmp()
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 end
 
-M.setup = function()
-  -- setup_copilot()
-  setup_luasnip()
-  setup_cmp()
-end
+-- vim.opt.runtimepath:append("~/path/to/your/plugin")
+setup_luasnip()
+setup_cmp()
 
 return M
