@@ -90,6 +90,9 @@ local function setup_cmp()
 
   --cmp source setups
   require("cmp_nvim_lsp").setup()
+  require("cmp_git").setup({
+    filetypes = { "gitcommit", "NeogitCommitMessage" },
+  })
 
   M.sources.buffer = {
     name = "buffer",

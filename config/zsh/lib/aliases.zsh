@@ -25,6 +25,9 @@ alias ....="cd ../../.."
 alias fd="fd --hidden"
 alias fdd="fd -H -t d -d 10"
 
+alias ls="ls --color=auto --hyperlink=auto $@"
+alias l='ls -lFh'     # size,show type,human readable
+
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
 #   `brew install coreutils`
@@ -38,8 +41,11 @@ if $(gls &>/dev/null); then
   alias la="gls -A"
 fi
 
-alias ls="exa -gahF --group-directories-first"
-alias l="exa -lahF --icons --group-directories-first --git"
+if $(exa &>/dev/null); then
+  alias ls="exa -gahF --group-directories-first"
+  alias l="exa -lahF --icons --group-directories-first --git"
+fi
+
 alias s="ls"
 alias last='ls *(.om[1])'
 # alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'

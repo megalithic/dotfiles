@@ -229,7 +229,7 @@ do -- specs.nvim
     show_jumps = true,
     min_jump = 30,
     popup = {
-      delay_ms = 0, -- delay before popup displays
+      delay_ms = 1, -- delay before popup displays
       inc_ms = 1, -- time increments used for fade/resize effects
       blend = 10, -- starting blend, between 0-100 (fully transparent), see :h winblend
       width = 100,
@@ -398,7 +398,9 @@ do
   local hop = require("hop")
   -- remove h,j,k,l from hops list of keys
   hop.setup({ keys = "etovxqpdygfbzcisuran" })
-  nnoremap("s", hop.hint_char1)
+  nnoremap("s", function()
+    hop.hint_char1({ multi_windows = true })
+  end)
   -- NOTE: override F/f using hop motions
   vim.keymap.set({ "x", "n" }, "F", function()
     hop.hint_char1({
