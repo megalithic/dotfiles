@@ -75,13 +75,13 @@ function _G.dump_text(...)
   return ...
 end
 
-_G.logger = require("logger").new({
-  level = "trace",
-})
+-- _G.logger = require("logger").new({
+--   level = "trace",
+-- })
 
-function _G.put(...)
-  return logger.debug(...)
-end
+-- function _G.put(...)
+--   return logger.debug(...)
+-- end
 
 function mega.dump_colors(filter)
   local defs = {}
@@ -835,8 +835,8 @@ end
 
 function mega.sync_plugins()
   mega.log("paq-nvim: syncing plugins..")
-  package.loaded["plugins"] = nil
-  require("plugins").sync_all()
+  package.loaded["mega.plugins"] = nil
+  require("mega.plugins").sync_all()
 end
 
 --- Usage:

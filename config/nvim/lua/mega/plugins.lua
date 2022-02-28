@@ -37,6 +37,7 @@ end
 --   end
 -- end
 
+-- `bin/paq-install` runs this for us in a headless nvim environment
 M.bootstrap = function()
   clone_paq()
 
@@ -109,6 +110,7 @@ M.list = {
   "jose-elias-alvarez/null-ls.nvim",
   "b0o/schemastore.nvim",
   "folke/trouble.nvim",
+  { "kevinhwang91/nvim-bqf", opt = true },
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
@@ -185,7 +187,6 @@ M.list = {
     "ruanyl/vim-gh-line",
   },
 
-  "rlch/github-notifications.nvim",
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
   -- "ahmedkhalf/project.nvim",
@@ -194,12 +195,11 @@ M.list = {
   "vim-test/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "tpope/vim-ragtag",
-  -- { "mrjones2014/dash.nvim", run = "make install", opt = true },
+  { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",
   -- "jamestthompson3/nvim-remote-containers",
-  "chipsenkbeil/distant.nvim",
   "tpope/vim-dadbod",
   "kristijanhusak/vim-dadbod-completion",
   "kristijanhusak/vim-dadbod-ui",
@@ -232,11 +232,12 @@ M.list = {
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
-  "sunaku/tmux-navigate",
+  { "sunaku/tmux-navigate", opt = true },
+  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true }, -- FIXME: this does NOT run with PaqRunHook
   -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "junegunn/vim-easy-align",
-  "outstand/logger.nvim",
+  -- "outstand/logger.nvim",
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
@@ -1349,111 +1350,6 @@ M.setup = function()
     })
   end
 
-  do -- telekasten.nvim
-    require("telekasten").setup({
-      home = mega.dirs.zk,
-      dailies = mega.dirs.zk .. "/" .. "daily",
-      weeklies = mega.dirs.zk .. "/" .. "weekly",
-      templates = mega.dirs.zk .. "/" .. "templates",
-      -- image subdir for pasting
-      -- subdir name
-      -- or nil if pasted images shouldn't go into a special subdir
-      image_subdir = nil,
-      -- markdown file extension
-      extension = ".md",
-      -- following a link to a non-existing note will create it
-      follow_creates_nonexisting = true,
-      dailies_create_nonexisting = true,
-      weeklies_create_nonexisting = true,
-      -- templates for new notes
-      template_new_note = mega.dirs.zk .. "/" .. "templates/new_note.md",
-      template_new_daily = mega.dirs.zk .. "/" .. "templates/daily_tk.md",
-      template_new_weekly = mega.dirs.zk .. "/" .. "templates/weekly_tk.md",
-      -- image link style
-      -- wiki:     ![[image name]]
-      -- markdown: ![](image_subdir/xxxxx.png)
-      image_link_style = "markdown",
-      -- integrate with calendar-vim
-      plug_into_calendar = true,
-      calendar_opts = {
-        -- calendar week display mode: 1 .. 'WK01', 2 .. 'WK 1', 3 .. 'KW01', 4 .. 'KW 1', 5 .. '1'
-        weeknm = 4,
-        -- use monday as first day of week: 1 .. true, 0 .. false
-        calendar_monday = 1,
-        -- calendar mark: where to put mark for marked days: 'left', 'right', 'left-fit'
-        calendar_mark = "left-fit",
-      },
-      debug = false,
-      close_after_yanking = false,
-      insert_after_inserting = true,
-      -- make syntax available to markdown buffers and telescope previewers
-      install_syntax = true,
-      -- tag notation: '#tag', ':tag:', 'yaml-bare'
-      tag_notation = "#tag",
-      -- command palette theme: dropdown (window) or ivy (bottom panel)
-      command_palette_theme = "ivy",
-    })
-
-    -- nnoremap("<leader>zf", "<cmd>lua require('telekasten').find_notes()<cr>", "telekasten: find notes")
-    -- nnoremap("<leader>zn", "<cmd>lua require('telekasten').new_note()<cr>", "telekasten: new note")
-    -- nnoremap("<leader>zN", "<cmd>lua require('telekasten').new_templated_notes()<cr>", "telekasten: new templated note")
-    -- nnoremap("<leader>z", "<cmd>lua require('telekasten').panel()<CR>", "telekasten: show help panel")
-
-    --[[
-    autocmd filetype markdown set tw=120
-    nnoremap <leader>zf :lua require('telekasten').find_notes()<CR>
-    nnoremap <leader>zd :lua require('telekasten').find_daily_notes()<CR>
-    nnoremap <leader>zg :lua require('telekasten').search_notes()<CR>
-    nnoremap <leader>zz :lua require('telekasten').follow_link()<CR>
-    nnoremap <leader>zT :lua require('telekasten').goto_today()<CR>
-    nnoremap <leader>zW :lua require('telekasten').goto_thisweek()<CR>
-    nnoremap <leader>zw :lua require('telekasten').find_weekly_notes()<CR>
-    nnoremap <leader>zn :lua require('telekasten').new_note()<CR>
-    nnoremap <leader>zN :lua require('telekasten').new_templated_note()<CR>
-    nnoremap <leader>zy :lua require('telekasten').yank_notelink()<CR>
-    nnoremap <leader>zc :lua require('telekasten').show_calendar()<CR>
-    nnoremap <leader>zC :CalendarT<CR>
-    nnoremap <leader>zi :lua require('telekasten').paste_img_and_link()<CR>
-    nnoremap <leader>zt :lua require('telekasten').toggle_todo()<CR>
-    nnoremap <leader>zr :lua require('plenary.reload').reload_module('telekasten')<CR>
-    nnoremap <leader>zb :lua require('telekasten').show_backlinks()<CR>
-    nnoremap <leader>zF :lua require('telekasten').find_friends()<CR>
-    nnoremap <leader>zI :lua require('telekasten').insert_img_link({i = true})<CR>
-    nnoremap <leader>zp :lua require('telekasten').preview_img()<CR>
-    nnoremap <leader>zm :lua require('telekasten').browse_media()<CR>
-    nnoremap <leader>z :lua require('telekasten').panel()<CR>
-    nnoremap <leader>za :lua require('telekasten').show_tags()<CR>
-
-    noremap <leader>P :MarkdownPreviewToggle<CR>
-
-    " autocmd FileType markdown set syntax=telekasten
-
-    hi tklink ctermfg=72 guifg=#689d6a cterm=bold,underline gui=bold,underline
-    hi tkBrackets ctermfg=gray guifg=gray
-
-    " real yellow
-    hi tkHighlight ctermbg=yellow ctermfg=darkred cterm=bold guibg=yellow guifg=darkred gui=bold
-    " gruvbox
-    hi tkHighlight ctermbg=214 ctermfg=124 cterm=bold guibg=#fabd2f guifg=#9d0006 gui=bold
-
-    hi link CalNavi CalRuler
-    hi tkTagSep ctermfg=gray guifg=gray
-    hi tkTag ctermfg=175 guifg=#d3869B
-
-    if has('termguicolors')
-      set termguicolors
-    endif
-
-    " note: we define [[ in **insert mode** to call insert link
-    " note: we don't do this anymore - maybe it makes sense to limit to markdown
-    " mode
-    inoremap <leader>[ <ESC>:lua require('telekasten').insert_link({i = true})<CR>
-    " inorfalseemap [[ <ESC>:lua require('telekasten').insert_link({i = true})<CR>
-    inoremap <leader>zt <ESC>:lua require('telekasten').toggle_todo({i = true})<CR>
-    inoremap <leader># <cmd>lua require('telekasten').show_tags({i = true})<cr>
-    --]]
-  end
-
   do -- zk-nvim
     -- REFS:
     -- https://github.com/mbriggs/nvim/blob/main/lua/mb/zk.lua
@@ -1496,133 +1392,6 @@ M.setup = function()
     nnoremap("<Leader>zt", "<cmd>ZkTags<CR>", "zk: find tags")
     nnoremap("<Leader>zo", "<cmd>ZkOrphans<CR>", "zk: find orphans")
     nnoremap("<Leader>zr", "<cmd>ZkRecents<CR>", "zk: find recents")
-  end
-
-  do -- alpha.nvim
-    if false then
-      local alpha = require("alpha")
-      local dashboard = require("alpha.themes.dashboard")
-
-      math.randomseed(os.time())
-
-      local function button(sc, txt, keybind, keybind_opts)
-        local b = dashboard.button(sc, txt, keybind, keybind_opts)
-        b.opts.hl = "Function"
-        b.opts.hl_shortcut = "Type"
-        return b
-      end
-
-      local function pick_color()
-        local clrs = { "String", "Identifier", "Keyword", "Number" }
-        return clrs[math.random(#clrs)]
-      end
-
-      local function footer()
-        local datetime = os.date("%d-%m-%Y  %H:%M:%S")
-        return {
-          -- require("colors").icons.git_symbol .. " " .. fn["gitbranch#name"](),
-          vim.loop.cwd(),
-          datetime,
-        }
-      end
-
-      -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
-      dashboard.section.header.val = {
-        "• ▌ ▄ ·. ▄▄▄ . ▄▄ •  ▄▄▄· ▄▄▌  ▪  ▄▄▄▄▄ ▄ .▄▪   ▄▄·",
-        "·██ ▐███▪▀▄.▀·▐█ ▀ ▪▐█ ▀█ ██•  ██ •██  ██▪▐███ ▐█ ▌▪",
-        "▐█ ▌▐▌▐█·▐▀▀▪▄▄█ ▀█▄▄█▀▀█ ██▪  ▐█· ▐█.▪██▀▐█▐█·██ ▄▄",
-        "██ ██▌▐█▌▐█▄▄▌▐█▄▪▐█▐█ ▪▐▌▐█▌▐▌▐█▌ ▐█▌·██▌▐▀▐█▌▐███▌",
-        "▀▀  █▪▀▀▀ ▀▀▀ ·▀▀▀▀  ▀  ▀ .▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ ·▀▀▀·▀▀▀",
-      }
-
-      dashboard.section.header.opts.hl = pick_color()
-      dashboard.section.buttons.val = {
-        button("m", "  Recently opened files", "<cmd>lua require('telescope').oldfiles()<cr>"),
-        button("f", "  Find file", "<cmd>lua require('telescope').find_files()<cr>"),
-        button("a", "  Find word", "<cmd>lua require('telescope').live_grep()<cr>"),
-        button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
-        button("p", "  Update plugins", "<cmd>lua mega.sync_plugins()<CR>"),
-        button("q", "  Quit", "<cmd>qa<CR>"),
-      }
-
-      dashboard.section.footer.val = footer()
-      dashboard.section.footer.opts.hl = "Constant"
-      dashboard.section.footer.opts.position = "center"
-
-      alpha.setup(dashboard.opts)
-    end
-  end
-
-  do -- distant.nvim
-    local actions = require("distant.nav.actions")
-
-    require("distant").setup({
-      ["198.74.55.152"] = {
-        -- 198.74.55.152
-        max_timeout = 15000,
-        poll_interval = 250,
-        timeout_interval = 250,
-        ssh = {
-          user = "ubuntu",
-          identity_file = "~/.ssh/seth-Seths-MBP.lan",
-        },
-        distant = {
-          bin = "/home/ubuntu/.asdf/installs/rust/stable/bin/distant",
-          username = "ubuntu",
-          args = "\"--log-file ~/tmp/distant-seth_dev-server.log --log-level trace --port 8081:8099 --shutdown-after 60\"",
-        },
-        file = {},
-        dir = {},
-        lsp = {
-          ["outstand/atlas (elixirls)"] = {
-            cmd = { require("mega.utils").lsp.elixirls_cmd({ fallback_dir = "/home/ubuntu/.local/share" }) },
-            root_dir = "/home/ubuntu/code/atlas",
-            filetypes = { "elixir", "eelixir" },
-            on_attach = function(client, bufnr)
-              print(vim.inspect(client), bufnr)
-            end,
-            log_file = "~/tmp/distant-pages-elixirls.log",
-            log_level = "trace",
-          },
-        },
-      },
-      ["megalithic.io"] = {
-        -- 198.199.91.123
-        launch = {
-          distant = "/home/replicant/.cargo/bin/distant",
-          username = "replicant",
-          identity_file = "~/.ssh/seth-Seths-MacBook-Pro.local",
-          extra_server_args = "\"--log-file ~/tmp/distant-megalithic_io-server.log --log-level trace --port 8081:8099 --shutdown-after 60\"",
-        },
-      },
-      -- Apply these settings to any remote host
-      ["*"] = {
-        -- max_timeout = 60000,
-        -- timeout_interval = 200,
-        client = {
-          log_file = "~/tmp/distant-client.log",
-          log_level = "trace",
-        },
-        launch = {
-          extra_server_args = "\"--log-file ~/tmp/distant-all-server.log --log-level trace --port 8081:8999 --shutdown-after 60\"",
-        },
-        file = {
-          mappings = {
-            ["-"] = actions.up,
-          },
-        },
-        dir = {
-          mappings = {
-            ["<Return>"] = actions.edit,
-            ["-"] = actions.up,
-            ["K"] = actions.mkdir,
-            ["N"] = actions.newfile,
-            ["R"] = actions.rename,
-            ["D"] = actions.remove,
-          },
-        },
-      },
-    })
   end
 
   do -- tabout.nvim

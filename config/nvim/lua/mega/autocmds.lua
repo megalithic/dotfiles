@@ -17,8 +17,7 @@ au([[Syntax * syn match extTodo "\<\(NOTE\|HACK\|BAD\|TODO\):\?" containedin=.*C
 au([[VimEnter * ++once lua require('mega.start').start()]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
-au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
-au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
+au([[FileType help,startuptime,qf,lspinfo nnoremap,man <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 -- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
@@ -51,35 +50,36 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 --   end,
 -- })
 
-augroup("auto-mkdir", {
+augroup("AutoMkDir", {
   events = { "BufNewFile", "BufWritePre" },
   targets = { "*" },
   command = mega.auto_mkdir(),
 })
 
--- auto-reload kitty upon kitty.conf write
-augroup("kitty", {
+augroup("Kitty", {
   {
     events = { "BufWritePost" },
     targets = { "kitty.conf" },
     command = function()
+      -- auto-reload kitty upon kitty.conf write
       vim.cmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },
 })
 
-augroup("paq", {
+augroup("Paq", {
   {
     events = { "BufWritePost" },
     targets = { "plugins.lua" },
     command = function()
+      -- auto-source paq-nvim upon plugins.lua write
       vim.cmd("luafile %")
       -- mega.sync_plugins()
     end,
   },
 })
 
-augroup("yank_highlighted_region", {
+augroup("YankHighlightedRegion", {
   {
     events = { "TextYankPost" },
     targets = { "*" },
@@ -87,7 +87,7 @@ augroup("yank_highlighted_region", {
   },
 })
 
-augroup("terminal", {
+augroup("Terminal", {
   {
     events = { "TermClose" },
     targets = { "*" },
@@ -102,5 +102,22 @@ augroup("terminal", {
     events = { "TermOpen" },
     targets = { "*" },
     command = "startinsert",
+  },
+})
+
+augroup("LazyLoads", {
+  {
+    events = { "FileType" },
+    targets = { "qf" },
+    command = [[packadd! nvim-bqf]],
+  },
+  {
+    events = { "BufReadPost" },
+    targets = { "*" },
+    command = function()
+      if mega.is_macos then
+        vim.cmd([[packadd! dash.nvim]])
+      end
+    end,
   },
 })
