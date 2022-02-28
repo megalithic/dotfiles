@@ -8,6 +8,7 @@ _G.mega = {
   _store = __mega_global_callbacks,
   functions = {},
   dirs = {},
+  lsp = {},
 }
 local L = vim.log.levels
 local get_log_level = require("vim.lsp.log").get_level
@@ -43,6 +44,54 @@ mega.dirs.docs = fn.expand("$DOCUMENTS_DIR")
 mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
 mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 mega.dirs.zk = mega.dirs.zettel
+
+--- Check if a directory exists in this path
+function is_dir(path)
+  -- check if file exists
+  local function file_exists(file)
+    local ok, err, code = os.rename(file, file)
+    if not ok then
+      if code == 13 then
+        -- Permission denied, but it exists
+        return true
+      end
+    end
+    return ok, err
+  end
+
+  -- "/" works on both Unix and Windows
+  return file_exists(path .. "/")
+end
+
+-- setup vim's various config directories
+-- # cache_dirs
+local data_dir = {
+  mega.cache_dir .. "backup",
+  mega.cache_dir .. "session",
+  mega.cache_dir .. "swap",
+  mega.cache_dir .. "tags",
+  mega.cache_dir .. "undo",
+}
+if not is_dir(mega.cache_dir) then
+  os.execute("mkdir -p " .. mega.cache_dir)
+end
+for _, v in pairs(data_dir) do
+  if not is_dir(v) then
+    os.execute("mkdir -p " .. v)
+  end
+end
+-- # local_share_dirs
+local local_share_dir = {
+  mega.local_share_dir .. "shada",
+}
+if not is_dir(mega.local_share_dir) then
+  os.execute("mkdir -p " .. mega.local_share_dir)
+end
+for _, v in pairs(local_share_dir) do
+  if not is_dir(v) then
+    os.execute("mkdir -p " .. v)
+  end
+end
 
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
@@ -127,24 +176,6 @@ end
 function mega.plugin_loaded(plugin_name)
   local plugins = package.loaded or {}
   return plugins[plugin_name] ~= nil -- and plugins[plugin_name].loaded
-end
-
---- Check if a directory exists in this path
-function mega.is_dir(path)
-  -- check if file exists
-  local function file_exists(file)
-    local ok, err, code = os.rename(file, file)
-    if not ok then
-      if code == 13 then
-        -- Permission denied, but it exists
-        return true
-      end
-    end
-    return ok, err
-  end
-
-  -- "/" works on both Unix and Windows
-  return file_exists(path .. "/")
 end
 
 -- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`

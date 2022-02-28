@@ -104,7 +104,7 @@ M.list = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  -- "j-hui/fidget.nvim", -- replace lsp-status with this
+  "j-hui/fidget.nvim", -- replace lsp-status with this
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
@@ -340,19 +340,17 @@ M.setup = function()
   end
 
   do
-    if false then
-      require("fidget").setup({
-        text = {
-          spinner = "dots_pulse",
-          done = "",
+    require("fidget").setup({
+      text = {
+        spinner = "dots_pulse",
+        done = "",
+      },
+      sources = { -- Sources to configure
+        ["elixirls"] = { -- Name of source
+          ignore = false, -- Ignore notifications from this source
         },
-        sources = { -- Sources to configure
-          ["elixirls"] = { -- Name of source
-            ignore = false, -- Ignore notifications from this source
-          },
-        },
-      })
-    end
+      },
+    })
   end
 
   do -- gitlinker.nvim
