@@ -827,7 +827,7 @@ end
 
 function mega.get_border(hl)
   local border = {}
-  for _, char in ipairs(require("colors").icons.borderchars) do
+  for _, char in ipairs(require("mega.colors").icons.borderchars) do
     table.insert(border, { char, hl or "FloatBorder" })
   end
   return border

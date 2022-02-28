@@ -48,16 +48,14 @@ function R(name)
   return require(name)
 end
 
-require("globals")
-
-R("preflight")
-R("options")
-R("colors").setup("megaforest")
-R("commands")
-R("lsp").setup()
-R("autocmds")
-R("mappings")
-R("megaline")
-R("plugins").setup()
+R("mega.globals")
+R("mega.preflight")
+R("mega.options")
+R("mega.commands")
+R("mega.lsp").setup()
+R("mega.autocmds")
+R("mega.mappings")
+R("mega.megaline")
+R("mega.plugins").setup()
 
 -- vim:foldmethod=marker

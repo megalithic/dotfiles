@@ -1,12 +1,8 @@
 ---@diagnostic disable-next-line: unused-local
 
 local vcmd, lsp, api, fn, set = vim.cmd, vim.lsp, vim.api, vim.fn, vim.opt
-local bufmap, bmap, au = mega.bufmap, mega.bmap, mega.au
+local bufmap, bmap = mega.bufmap, mega.bmap
 local lspconfig = require("lspconfig")
-local U = require("utils")
-
--- TODO: determine if we're keeping efm-ls at all.
-local formatting_lsp = "null-ls" -- or "efm-ls"
 
 set.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
@@ -14,20 +10,8 @@ set.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 -- vim.lsp.set_log_level("trace")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
-require("fidget").setup({
-  text = {
-    spinner = "dots_pulse",
-    done = "",
-  },
-  sources = { -- Sources to configure
-    ["elixirls"] = { -- Name of source
-      ignore = false, -- Ignore notifications from this source
-    },
-  },
-})
-
-require("lsp.diagnostics").setup()
-require("lsp.handlers").setup()
+require("mega.lsp.diagnostics").setup()
+require("mega.lsp.handlers").setup()
 
 -- our on_attach function to pass to each language server config..
 local function on_attach(client, bufnr)
@@ -41,18 +25,22 @@ local function on_attach(client, bufnr)
   end
 
   -- require("lsp-status").on_attach(client)
-  require("lsp.formatting").setup(client, bufnr, formatting_lsp)
+  require("mega.lsp.formatting").setup(client, bufnr)
 
   require("lsp_signature").on_attach({
+    bind = true,
+    fix_pos = false,
+    auto_close_after = 5, -- close after 15 seconds
     hint_enable = false,
-    hi_parameter = "QuickFixLine",
-    handler_opts = {
-      border = vim.g.floating_window_border,
-    },
+    handler_opts = { border = "rounded" },
+    --   hi_parameter = "QuickFixLine",
+    --   handler_opts = {
+    --     border = vim.g.floating_window_border,
+    --   },
   })
 
   if client.server_capabilities.colorProvider then
-    require("lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+    require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
   end
 
   -- if client.resolved_capabilities.document_highlight then
@@ -77,19 +65,22 @@ local function on_attach(client, bufnr)
   bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
   bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
-  bmap("n", "<leader>ld", "lua require('lsp.diagnostics').line_diagnostics()", { label = "lsp: show line diagnostics" })
+  bmap(
+    "n",
+    "<leader>ld",
+    "lua require('mega.lsp.diagnostics').line_diagnostics()",
+    { label = "lsp: show line diagnostics" }
+  )
   bmap(
     "n",
     "<leader>lD",
     [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" }, source = "always" })]]
   )
-  bmap("n", "<leader>lp", "lua require('utils').lsp.peek_definition()", { label = "lsp: peek definition" })
 
   --- # misc mappings
-  bmap("n", "<leader>ln", "lua require('utils').lsp.rename()", { label = "lsp: rename document symbol" })
+  bmap("n", "<leader>ln", "lua require('mega.utils').lsp.rename()", { label = "lsp: rename document symbol" })
   bufmap("K", "lua vim.lsp.buf.hover()")
   bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
-  bufmap("<leader>lf", "lua require('utils').lsp.format()")
 
   if client.resolved_capabilities.code_lens then
     bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
@@ -103,7 +94,7 @@ local function on_attach(client, bufnr)
   )
 
   --- # autocommands/autocmds
-  au([[CursorHold <buffer> lua require('lsp.diagnostics').line_diagnostics()]])
+  mega.au([[CursorHold <buffer> lua require('mega.lsp.diagnostics').line_diagnostics()]])
   -- autocmd("CursorHold", "<buffer>", function()
   --   vim.diagnostic.open_float(nil, {
   --     focusable = false,
@@ -116,12 +107,12 @@ local function on_attach(client, bufnr)
   --     source = "always",
   --   })
   -- end)
-  au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
-  vcmd([[command! FormatDisable lua require('utils').lsp.formatToggle(true)]])
-  vcmd([[command! FormatEnable lua require('utils').lsp.formatToggle(false)]])
+  mega.au([[CursorMoved,BufLeave <buffer> lua vim.lsp.buf.clear_references()]])
+  vcmd([[command! FormatDisable lua require('mega.utils').lsp.formatToggle(true)]])
+  vcmd([[command! FormatEnable lua require('mega.utils').lsp.formatToggle(false)]])
 
   if client.resolved_capabilities.code_lens then
-    au("CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()")
+    mega.au("CursorHold,CursorHoldI,InsertLeave <buffer> lua vim.lsp.codelens.refresh()")
   end
 
   --- # commands
@@ -228,8 +219,8 @@ local function on_attach(client, bufnr)
         buffer = bufnr,
       },
       ["r"] = { [[<cmd>lua require('telescope.builtin').lsp_references()<cr>]], "LSP references", buffer = bufnr },
-      -- ["n"] = { [[<cmd>lua require('utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
-      ["l"] = { [[<cmd>lua require('utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
+      -- ["n"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
+      ["l"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
     },
   }
 
@@ -241,11 +232,10 @@ end
 
 local function setup_lsp_capabilities()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
-  capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
-  -- capabilities = vim.tbl_extend("keep", capabilities or {}, require("lsp-status").capabilities)
   capabilities.textDocument.codeLens = { dynamicRegistration = false }
   capabilities.textDocument.colorProvider = { dynamicRegistration = false }
   capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+  capabilities = require("cmp_nvim_lsp").update_capabilities(capabilities)
 
   return capabilities
 end
@@ -298,21 +288,7 @@ local function setup_lsp_servers()
     lspconfig[ls].setup(lsp_with_defaults())
   end
 
-  do
-    if formatting_lsp == "null-ls" then
-      require("lsp.null-ls").setup(on_attach)
-    elseif formatting_lsp == "efm-ls" then
-      local languages = require("lsp.efm-ls").languages()
-      lspconfig["efm"].setup(lsp_with_defaults({
-        init_options = { documentFormatting = true },
-        settings = {
-          rootMarkers = { ".git/" },
-          lintDebounce = 100,
-          languages = languages,
-        },
-      }))
-    end
-  end
+  require("mega.lsp.null-ls").setup(on_attach)
 
   do -- ruby/solargraph
     lspconfig["solargraph"].setup(lsp_with_defaults({
@@ -717,7 +693,7 @@ end
 
 return {
   setup = function()
-    require("lsp.completion").setup()
+    require("mega.lsp.completion").setup()
     setup_lsp_servers()
   end,
   on_attach = on_attach,

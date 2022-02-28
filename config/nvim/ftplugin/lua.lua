@@ -133,7 +133,7 @@ require("cmp").setup.buffer({
     { name = "luasnip" },
     { name = "nvim_lua" },
     { name = "nvim_lsp" },
-    require("lsp.completion").sources.buffer,
+    require("mega.lsp.completion").sources.buffer,
     -- { name = "fuzzy_buffer" },
   },
 })

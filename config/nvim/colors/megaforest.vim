@@ -16,8 +16,8 @@ let g:colors_name="megaforest"
 "
 " The performance impact of this call can be measured in the hundreds of
 " *nanoseconds* and such could be considered "production safe".
-lua package.loaded['lush_theme.megaforest'] = nil
+lua package.loaded['mega.lush_theme.megaforest'] = nil
 
 " Lush Notes:
 " include our theme file and pass it to lush to apply
-lua require('lush')(require('lush_theme.megaforest'))
+lua require('lush')(require('mega.lush_theme.megaforest'))

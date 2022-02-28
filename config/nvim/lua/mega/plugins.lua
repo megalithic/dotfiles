@@ -3,8 +3,6 @@ local vcmd = vim.cmd
 local fn = vim.fn
 local fmt = string.format
 
--- local C = require("colors")
-
 -- # managed paqs stored here:
 --  ~/.local/share/nvim/site/pack/paqs
 -- # local/devel paqs stored here:
@@ -105,7 +103,7 @@ M.list = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  "j-hui/fidget.nvim", -- replace lsp-status with this
+  -- "j-hui/fidget.nvim", -- replace lsp-status with this
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
@@ -242,15 +240,11 @@ M.list = {
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
-  -- # markdown/prose
   -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install" },
   "ellisonleao/glow.nvim",
-  -- { "harshad1/bullets.vim", branch = "performance_improvements" },
-  "kristijanhusak/orgmode.nvim",
-  "akinsho/org-bullets.nvim",
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
@@ -258,35 +252,25 @@ M.list = {
   -- https://github.com/jghauser/follow-md-links.nvim
   -- https://github.com/jakewvincent/mkdnflow.nvim
   -- https://github.com/jubnzv/mdeval.nvim
-  -- "NFrid/due.nvim",
   "mickael-menu/zk-nvim",
-  "renerocksai/calendar-vim",
-  "renerocksai/telekasten.nvim",
-  -- # ruby/rails
   "tpope/vim-rails",
-  -- # elixir
   "elixir-editors/vim-elixir",
   "ngscheurich/edeex.nvim",
-  -- # elm
   "antew/vim-elm-analyse",
-  -- # lua
   "tjdevries/nlua.nvim",
   "norcalli/nvim.lua",
   "euclidianace/betterlua.vim",
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   "milisims/nvim-luaref",
-  -- # JS/TS/JSON
   "MaxMEllon/vim-jsx-pretty",
   "heavenshell/vim-jsdoc",
   "jxnblk/vim-mdx-js",
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
-  -- # HTML
   -- "mattn/emmet-vim",
   "skwp/vim-html-escape",
   "pedrohdz/vim-yaml-folds",
-  -- # misc
   "avakhov/vim-yaml",
   "chr4/nginx.vim",
   "nanotee/luv-vimdocs",
@@ -354,6 +338,22 @@ M.setup = function()
     end
   end
 
+  do
+    if false then
+      require("fidget").setup({
+        text = {
+          spinner = "dots_pulse",
+          done = "",
+        },
+        sources = { -- Sources to configure
+          ["elixirls"] = { -- Name of source
+            ignore = false, -- Ignore notifications from this source
+          },
+        },
+      })
+    end
+  end
+
   do -- gitlinker.nvim
     require("gitlinker").setup()
   end
@@ -367,173 +367,6 @@ M.setup = function()
       highlight = "Normal",
       border = "shadow",
     }
-  end
-
-  do -- treesitter-nvim
-    vim.opt.indentexpr = "nvim_treesitter#indent()"
-
-    -- custom treesitter parsers and grammars
-    local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-    parser_config.jsonc.filetype_to_parsername = "json"
-    parser_config.org = {
-      install_info = {
-        url = "https://github.com/milisims/tree-sitter-org",
-        revision = "main",
-        files = { "src/parser.c", "src/scanner.cc" },
-      },
-      filetype = "org",
-    }
-    -- parser_config.embedded_template = {
-    --   install_info = {
-    --     url = "https://github.com/tree-sitter/tree-sitter-embedded-template",
-    --     files = { "src/parser.c" },
-    --     requires_generate_from_grammar = true,
-    --   },
-    --   used_by = { "eex", "leex", "sface", "eelixir", "eruby", "erb" },
-    -- }
-
-    require("nvim-treesitter.configs").setup({
-      ensure_installed = {
-        "bash",
-        "c",
-        "cpp",
-        "css",
-        "comment",
-        "dockerfile",
-        "elixir",
-        "elm",
-        "erlang",
-        "fish",
-        "go",
-        "graphql",
-        "html",
-        "heex",
-        "javascript",
-        -- "markdown",
-        "jsdoc",
-        "json",
-        "jsonc",
-        "lua",
-        "make",
-        "nix",
-        "org",
-        "perl",
-        "python",
-        "query",
-        "regex",
-        "ruby",
-        "rust",
-        "scss",
-        "surface",
-        "toml",
-        "tsx",
-        "typescript",
-        "yaml",
-      },
-      highlight = {
-        enable = true,
-        -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-        -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-        -- Using this option may slow down your editor, and you may see some duplicate highlights.
-        -- Instead of true it can also be a list of languages
-        additional_vim_regex_highlighting = { "markdown" },
-        use_languagetree = true,
-      },
-      indent = { enable = true },
-      autotag = { enable = true },
-      tree_docs = {
-        enable = false,
-        keymaps = {
-          doc_node_at_cursor = "gdd",
-          doc_all_in_range = "gdd",
-          edit_doc_at_cursor = "gde",
-        },
-      },
-      context_commentstring = {
-        enable = true,
-        enable_autocmd = false,
-        config = {
-          lua = "-- %s",
-          fish = "# %s",
-          toml = "# %s",
-          yaml = "# %s",
-          ["eruby.yaml"] = "# %s",
-        },
-      },
-      matchup = { enable = true },
-      rainbow = {
-        enable = true,
-        disable = { "json", "html" },
-        extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
-        max_file_lines = nil, -- Do not enable for files with more than 1000 lines, int
-      },
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = "<cr",
-          scope_incremental = "<cr>",
-          node_incremental = "<tab>",
-          node_decremental = "<s-tab>",
-        },
-      },
-      textsubjects = {
-        enable = true,
-        keymaps = {
-          ["."] = "textsubjects-smart",
-          [";"] = "textsubjects-container-outer",
-        },
-      },
-      textobjects = {
-        select = {
-          enable = true,
-          lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-          keymaps = {
-            -- You can use the capture groups defined in textobjects.scm
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-            ["ac"] = "@class.outer",
-            ["ic"] = "@class.inner",
-          },
-        },
-      },
-      query_linter = {
-        enable = true,
-        use_virtual_text = true,
-        lint_events = { "BufWrite", "CursorHold" },
-      },
-      playground = {
-        enable = true,
-        disable = {},
-        updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
-        persist_queries = true, -- Whether the query persists across vim sessions
-        keybindings = {
-          toggle_query_editor = "o",
-          toggle_hl_groups = "i",
-          toggle_injected_languages = "t",
-          toggle_anonymous_nodes = "a",
-          toggle_language_display = "I",
-          focus_language = "f",
-          unfocus_language = "F",
-          update = "R",
-          goto_node = "<cr>",
-          show_help = "?",
-        },
-      },
-    })
-    -- require("spellsitter").setup()
-    require("nvim-ts-autotag").setup({
-      filetypes = {
-        "html",
-        "xml",
-        "javascript",
-        "typescriptreact",
-        "javascriptreact",
-        "vue",
-        "elixir",
-        "heex",
-      },
-    })
-    require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
   end
 
   do -- indent-blankline
@@ -623,100 +456,6 @@ M.setup = function()
 
   do -- nvim-web-devicons
     require("nvim-web-devicons").setup({ default = true })
-  end
-
-  -- do -- project.nvim
-  --   require("project_nvim").setup({
-  --     manual_mode = true,
-  --     patterns = { ".git", ".hg", ".bzr", ".svn", "Makefile", "package.json", "elm.json", "mix.lock" },
-  --   }) -- REF: https://github.com/ahmedkhalf/project.nvim#%EF%B8%8F-configuration
-  -- end
-
-  do -- orgmode.nvim
-    -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/orgmode.lua
-    -- CHEAT: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/after/ftplugin/org.lua
-    --        https://github.com/huynle/nvim/blob/master/lua/configs/orgmode.lua
-    --        https://github.com/tkmpypy/dotfiles/blob/master/.config/nvim/lua/plugins.lua#L358-L470
-    --        https://github.com/tricktux/dotfiles/blob/master/defaults/.config/nvim/lua/config/plugins/orgmode.lua
-    -- ENABLE TREESITTER: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter#setup
-    require("orgmode").setup({
-      -- org_agenda_files = {"~/Library/Mobile Documents/com~apple~CloudDocs/org/*"},
-      -- org_default_notes_file = "~/Library/Mobile Documents/com~apple~CloudDocs/org/inbox.org"
-      org_agenda_files = { mega.dirs.org .. "/**/*" },
-      org_default_notes_file = mega.dirs.org .. "/refile.org",
-      org_todo_keywords = { "TODO(t)", "WAITING", "NEXT", "|", "DONE", "CANCELLED", "HACK" },
-      org_todo_keyword_faces = {
-        NEXT = ":foreground royalblue :weight bold :slant italic",
-        CANCELLED = ":foreground darkred",
-        HOLD = ":foreground orange :weight bold",
-      },
-      org_hide_emphasis_markers = true,
-      org_hide_leading_stars = true,
-      org_agenda_skip_scheduled_if_done = true,
-      org_agenda_skip_deadline_if_done = true,
-      org_agenda_templates = {
-        t = { description = "Task", template = "* TODO %?\n SCHEDULED: %t" },
-        l = { description = "Link", template = "* %?\n%a" },
-        n = {
-          description = "Note",
-          template = "* NOTE %?\n  %u",
-          target = mega.dirs.org .. "/note.org",
-        },
-        j = {
-          description = "Journal",
-          template = "\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?",
-          target = mega.dirs.org .. "/journal.org",
-        },
-        p = {
-          description = "Project Todo",
-          template = "* TODO %? \nSCHEDULED: %t",
-          target = mega.dirs.org .. "/projects.org",
-        },
-      },
-      mappings = {
-        org = {
-          org_toggle_checkbox = "<leader>x",
-        },
-      },
-      notifications = {
-        reminder_time = { 0, 1, 5, 10 },
-        repeater_reminder_time = { 0, 1, 5, 10 },
-        deadline_warning_reminder_time = { 0 },
-        cron_notifier = function(tasks)
-          for _, task in ipairs(tasks) do
-            local title = fmt("%s (%s)", task.category, task.humanized_duration)
-            local subtitle = fmt("%s %s %s", string.rep("*", task.level), task.todo, task.title)
-            local date = fmt("%s: %s", task.type, task.time:to_string())
-
-            -- helpful docs for options: https://github.com/julienXX/terminal-notifier#options
-            if fn.executable("terminal-notifier") then
-              vim.loop.spawn("terminal-notifier", {
-                args = {
-                  "-title",
-                  title,
-                  "-subtitle",
-                  subtitle,
-                  "-message",
-                  date,
-                  "-appIcon ~/.local/share/nvim/site/pack/paqs/start/orgmode.nvim/assets/orgmode_nvim.png",
-                  "-ignoreDnD",
-                },
-              })
-            end
-            -- if fn.executable("notify-send") then
-            -- 	vim.loop.spawn("notify-send", {
-            -- 		args = {
-            -- 			"--icon=~/.local/share/nvim/site/pack/paqs/start/orgmode.nvim/assets/orgmode_nvim.png",
-            -- 			fmt("%s\n%s\n%s", title, subtitle, date),
-            -- 		},
-            -- 	})
-            -- end
-          end
-        end,
-      },
-    })
-    require("orgmode").setup_ts_grammar()
-    require("org-bullets").setup()
   end
 
   do -- trouble.nvim
@@ -1836,7 +1575,7 @@ M.setup = function()
         dir = {},
         lsp = {
           ["outstand/atlas (elixirls)"] = {
-            cmd = { require("utils").lsp.elixirls_cmd({ fallback_dir = "/home/ubuntu/.local/share" }) },
+            cmd = { require("mega.utils").lsp.elixirls_cmd({ fallback_dir = "/home/ubuntu/.local/share" }) },
             root_dir = "/home/ubuntu/code/atlas",
             filetypes = { "elixir", "eelixir" },
             on_attach = function(client, bufnr)

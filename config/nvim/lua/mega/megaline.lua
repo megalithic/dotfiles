@@ -12,8 +12,8 @@ local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local contains = vim.tbl_contains
 local fmt = string.format
-local C = require("colors")
-local H = require("utils.highlights")
+local C = require("mega.colors")
+local H = require("mega.utils.highlights")
 local U = {}
 
 vim.o.laststatus = 2 -- Always show statusline

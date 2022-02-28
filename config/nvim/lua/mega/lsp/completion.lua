@@ -2,9 +2,9 @@ local api = vim.api
 
 local cmp = require("cmp")
 local luasnip = require("luasnip")
-local utils = require("utils")
+local utils = require("mega.utils")
 local t = mega.replace_termcodes
-local C = require("colors")
+local C = require("mega.colors")
 
 local M = {
   sources = {},
@@ -101,21 +101,13 @@ local function setup_cmp()
 
   --cmp source setups
   require("cmp_nvim_lsp").setup()
-  -- local compare = require("cmp.config.compare")
 
   M.sources.buffer = {
     name = "buffer",
     option = {
       keyword_length = 5,
       max_item_count = 5, -- only show up to 5 items.
-      -- keyword_pattern = [=[[^[:blank:]].*]=],
       get_bufnrs = function()
-        -- local bufs = {}
-        -- for _, win in ipairs(vim.api.nvim_list_wins()) do
-        --   bufs[vim.api.nvim_win_get_buf(win)] = true
-        -- end
-        -- return vim.tbl_keys(bufs)
-
         return vim.api.nvim_list_bufs()
       end,
     },

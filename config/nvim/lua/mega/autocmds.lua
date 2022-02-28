@@ -13,6 +13,8 @@ au([[Syntax * call matchadd('TSNote', '\W\zs\(TODO\|CHANGED\)')]])
 au([[Syntax * call matchadd('TSDanger', '\W\zs\(FIXME\|BUG\|HACK\)')]])
 au([[Syntax * call matchadd('TSDanger', '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$')]])
 au([[Syntax * call matchadd('TSNote', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
+-- au([[VimEnter * ++once lua require('mega.start').start()]])
+au([[Syntax * syn match extTodo "\<\(NOTE\|HACK\|BAD\|TODO\):\?" containedin=.*Comment.* | hi! link extTodo Todo]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
@@ -100,33 +102,5 @@ augroup("terminal", {
     events = { "TermOpen" },
     targets = { "*" },
     command = "startinsert",
-  },
-})
-
-augroup("filetypes", {
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.lexs", "*.exs" },
-    command = "set filetype=elixir",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.eex" },
-    command = "set filetype=eelixir",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { ".eslintrc" },
-    command = "set filetype=javascript",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.jst.eco" },
-    command = "set filetype=jst",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.md" },
-    command = "set filetype=markdown",
   },
 })

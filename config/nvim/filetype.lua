@@ -2,7 +2,8 @@ if not vim.filetype then
   return
 end
 
-vim.g.do_filetype_lua = 1
+vim.g.did_load_filetypes = 0 -- Disable vim-based filetype plugin
+vim.g.do_filetype_lua = 1 -- Enable lua-based filetype plugin
 
 vim.filetype.add({
   filename = {
@@ -17,7 +18,20 @@ vim.filetype.add({
     ["Brewfile.mas"] = "ruby",
     ["Brewfile.cask"] = "ruby",
   },
+  extension = {
+    eslintrc = "json",
+    prettierrc = "json",
+    conf = "conf",
+    mdx = "markdown",
+    md = "markdown",
+    lexs = "elixir",
+    exs = "elixir",
+    eex = "eelixir",
+  },
   pattern = {
-    -- ["*.env.*"] = "env",
+    [".*%.env.*"] = "sh",
+    [".*ignore"] = "conf",
+    ["*.jst.eco"] = "jst",
+    -- ['.*tmux.*conf$'] = 'tmux',
   },
 })

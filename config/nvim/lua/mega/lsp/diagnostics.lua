@@ -1,7 +1,7 @@
 local M = {}
 local lsp, api, fn = vim.lsp, vim.api, vim.fn
 local fmt = string.format
-local C = require("colors")
+local C = require("mega.colors")
 
 local severity_map = {
   "DiagnosticError",
