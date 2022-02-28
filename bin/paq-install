@@ -49,7 +49,7 @@ do_install() {
     remove_existing
   fi
   git clone --depth=1 https://github.com/savq/paq-nvim.git "$paq_path" \
-    && nvim --headless -u NONE -c 'lua require("plugins").bootstrap()' \
+    && nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()' \
     && log_ok "completed installing paq-nvim and plugins into $paq_path" \
     || exit 1
 }

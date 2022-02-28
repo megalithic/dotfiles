@@ -31,6 +31,13 @@
 
 --]]
 
+-- [ speed ] -------------------------------------------------------------------
+
+local impatient_ok, impatient = pcall(require, "impatient")
+if impatient_ok then
+  impatient.enable_profile()
+end
+
 -- [ leader bindings ] ---------------------------------------------------------
 
 vim.g.mapleader = "," -- Remap leader to ,
@@ -48,16 +55,9 @@ function R(name)
   return require(name)
 end
 
-require("globals")
-
-R("preflight")
-R("options")
-R("colors").setup("megaforest")
-R("commands")
-R("lsp").setup()
-R("autocmds")
-R("mappings")
-R("megaline")
-R("plugins").setup()
-
--- vim:foldmethod=marker
+R("mega.globals")
+R("mega.options")
+R("mega.autocmds")
+R("mega.mappings")
+R("mega.megaline")
+R("mega.plugins.config")

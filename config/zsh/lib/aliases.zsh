@@ -25,6 +25,9 @@ alias ....="cd ../../.."
 alias fd="fd --hidden"
 alias fdd="fd -H -t d -d 10"
 
+alias ls="ls --color=auto --hyperlink=auto $@"
+alias l='ls -lFh'     # size,show type,human readable
+
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
 #   `brew install coreutils`
@@ -38,8 +41,11 @@ if $(gls &>/dev/null); then
   alias la="gls -A"
 fi
 
-alias ls="exa -gahF --group-directories-first"
-alias l="exa -lahF --icons --group-directories-first --git"
+if $(exa &>/dev/null); then
+  alias ls="exa -gahF --group-directories-first"
+  alias l="exa -lahF --icons --group-directories-first --git"
+fi
+
 alias s="ls"
 alias last='ls *(.om[1])'
 # alias bat='BAT_CONFIG_PATH="~/.batrc" BAT_THEME="base16" bat'
@@ -179,13 +185,12 @@ alias ezl="nvim $PRIVATES/home/localrc"
 
 alias ev="nvim $DOTS/config/nvim/init.lua"
 alias evv="nvim $DOTS/config/nvim/vimrc"
-alias evp="nvim $DOTS/config/nvim/lua/plugins.lua"
-alias evs="nvim $DOTS/config/nvim/lua/settings.lua"
-alias evo="nvim $DOTS/config/nvim/lua/options.lua"
-alias evl="nvim $DOTS/config/nvim/lua/lsp/init.lua"
-alias evm="nvim $DOTS/config/nvim/lua/mappings.lua"
-alias evc="nvim $DOTS/config/nvim/lua/commands.lua"
-alias evg="nvim $DOTS/config/nvim/lua/globals.lua"
+alias evp="nvim $DOTS/config/nvim/lua/mega/plugins/init.lua"
+alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
+alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
+alias evm="nvim $DOTS/config/nvim/lua/mega/mappings.lua"
+alias evc="nvim $DOTS/config/nvim/lua/mega/commands.lua"
+alias evg="nvim $DOTS/config/nvim/lua/mega/globals.lua"
 
 alias ehs="nvim $DOTS/config/hammerspoon/config.lua"
 alias eh="nvim $DOTS/config/hammerspoon/init.lua"

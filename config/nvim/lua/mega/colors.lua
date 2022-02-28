@@ -7,7 +7,7 @@ local icons = {
   borderchars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
   lsp = {
     error = "",
-    warn = utf8(0xfa36), --喝
+    warn = "", --utf8(0xfa36), --喝卑
     info = "",
     hint = "", -- 
     ok = "",
@@ -213,8 +213,4 @@ return {
   status = status,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   style = style,
-  setup = function(theme)
-    set.termguicolors = true
-    vcmd("colorscheme " .. theme)
-  end,
 }

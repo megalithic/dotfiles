@@ -1,8 +1,5 @@
 local fn = vim.fn
 
--- used in conjunction with filetype.lua
-vim.g.did_load_filetypes = 0 -- deactivate vim based filetype detection
-
 -----------------------------------------------------------------------------//
 -- Message output on vim actions {{{1
 -----------------------------------------------------------------------------//
@@ -173,8 +170,8 @@ vim.opt.linebreak = true -- lines wrap at words rather than random characters
 vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
 -- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
 --@see: https://github.com/neovim/neovim/issues?q=set_signs
--- vim.opt.signcolumn = "yes"
-vim.opt.signcolumn = "auto:2-4"
+vim.opt.signcolumn = "yes"
+-- vim.opt.signcolumn = "auto:2-4"
 vim.opt.ruler = false
 vim.opt.cmdheight = 2 -- Set command line height to two lines
 vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
@@ -217,7 +214,7 @@ vim.opt.listchars = {
 -----------------------------------------------------------------------------//
 -- Indentation
 -----------------------------------------------------------------------------//
-vim.opt.wrap = true
+vim.opt.wrap = false
 -- vim.opt.wrapmargin = 2
 -- vim.opt.textwidth = 80
 vim.opt.textwidth = 0 --  0 disables
@@ -461,4 +458,10 @@ vim.g.registers_tab_symbol = "." -- "'·' by default
 vim.g.registers_space_symbol = " " -- "' ' by default
 vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before closing the window when a register key is pressed
 vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
+
+-----------------------------------------------------------------------------//
+-- Colorscheme
+-----------------------------------------------------------------------------//
+vim.opt.termguicolors = true
+vim.cmd([[colorscheme megaforest]])
 -- vim:foldmethod=marker

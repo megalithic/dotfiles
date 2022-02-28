@@ -1,5 +1,4 @@
 local M = {}
-local lsp = vim.lsp
 
 -----------------------------------------------------------------------------//
 -- LSP Progress notification

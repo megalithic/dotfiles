@@ -13,10 +13,11 @@ au([[Syntax * call matchadd('TSNote', '\W\zs\(TODO\|CHANGED\)')]])
 au([[Syntax * call matchadd('TSDanger', '\W\zs\(FIXME\|BUG\|HACK\)')]])
 au([[Syntax * call matchadd('TSDanger', '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$')]])
 au([[Syntax * call matchadd('TSNote', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
+au([[Syntax * syn match extTodo "\<\(NOTE\|HACK\|BAD\|TODO\):\?" containedin=.*Comment.* | hi! link extTodo Todo]])
+au([[VimEnter * ++once lua require('mega.start').start()]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
-au([[FileType help,startuptime,qf,lspinfo nnoremap <buffer><silent> q :close<CR>]])
-au([[FileType man nnoremap <buffer><silent> q :quit<CR>]])
+au([[FileType help,startuptime,qf,lspinfo nnoremap,man <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 -- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
@@ -49,35 +50,53 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 --   end,
 -- })
 
-augroup("auto-mkdir", {
+augroup("AutoMkDir", {
   events = { "BufNewFile", "BufWritePre" },
   targets = { "*" },
   command = mega.auto_mkdir(),
 })
 
--- auto-reload kitty upon kitty.conf write
-augroup("kitty", {
+augroup("Kitty", {
   {
     events = { "BufWritePost" },
     targets = { "kitty.conf" },
     command = function()
+      -- auto-reload kitty upon kitty.conf write
       vim.cmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },
 })
 
-augroup("paq", {
+augroup("Paq", {
   {
     events = { "BufWritePost" },
-    targets = { "plugins.lua" },
+    targets = { "*/mega/plugins/*.lua" },
     command = function()
+      -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vim.cmd("luafile %")
-      -- mega.sync_plugins()
+    end,
+  },
+  {
+    events = { "User PaqDoneSync" },
+    command = function()
+      vim.notify("Paq sync complete", nil, { title = "Paq" })
+    end,
+  },
+  {
+    events = { "User PaqDoneInstall" },
+    command = function()
+      vim.notify("Paq install complete", nil, { title = "Paq" })
+    end,
+  },
+  {
+    events = { "User PaqUpdateInstall" },
+    command = function()
+      vim.notify("Paq update complete", nil, { title = "Paq" })
     end,
   },
 })
 
-augroup("yank_highlighted_region", {
+augroup("YankHighlightedRegion", {
   {
     events = { "TextYankPost" },
     targets = { "*" },
@@ -85,7 +104,7 @@ augroup("yank_highlighted_region", {
   },
 })
 
-augroup("terminal", {
+augroup("Terminal", {
   {
     events = { "TermClose" },
     targets = { "*" },
@@ -103,30 +122,35 @@ augroup("terminal", {
   },
 })
 
-augroup("filetypes", {
+augroup("LazyLoads", {
   {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.lexs", "*.exs" },
-    command = "set filetype=elixir",
+    -- nvim-bqf
+    events = { "FileType" },
+    targets = { "qf" },
+    command = [[packadd nvim-bqf]],
   },
   {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.eex" },
-    command = "set filetype=eelixir",
+    -- dash.nvim
+    events = { "BufReadPre" },
+    targets = { "*" },
+    command = function()
+      if mega.is_macos then
+        print("should be loading dash.nvim")
+        vim.cmd([[packadd dash.nvim]])
+      end
+    end,
   },
   {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { ".eslintrc" },
-    command = "set filetype=javascript",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.jst.eco" },
-    command = "set filetype=jst",
-  },
-  {
-    events = { "BufEnter", "BufRead", "BufNewFile" },
-    targets = { "*.md" },
-    command = "set filetype=markdown",
+    -- tmux-navigate
+    -- vim-kitty-navigator
+    events = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
+    targets = { "*" },
+    command = function()
+      if vim.env.TMUX ~= nil then
+        vim.cmd([[packadd tmux-navigate]])
+      else
+        vim.cmd([[packadd vim-kitty-navigator]])
+      end
+    end,
   },
 })

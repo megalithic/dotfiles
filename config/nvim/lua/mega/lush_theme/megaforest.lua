@@ -25,9 +25,8 @@
 local set = vim.g
 
 local lush = require("lush")
-local palette = require("colors")
+local palette = require("mega.colors")
 local C = palette.cs
-local H = require("utils/highlights")
 
 local bg_dark = C.bg_dark
 local bg0 = C.bg0

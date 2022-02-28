@@ -8,6 +8,7 @@ _G.mega = {
   _store = __mega_global_callbacks,
   functions = {},
   dirs = {},
+  lsp = {},
 }
 local L = vim.log.levels
 local get_log_level = require("vim.lsp.log").get_level
@@ -44,6 +45,54 @@ mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
 mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 mega.dirs.zk = mega.dirs.zettel
 
+--- Check if a directory exists in this path
+function is_dir(path)
+  -- check if file exists
+  local function file_exists(file)
+    local ok, err, code = os.rename(file, file)
+    if not ok then
+      if code == 13 then
+        -- Permission denied, but it exists
+        return true
+      end
+    end
+    return ok, err
+  end
+
+  -- "/" works on both Unix and Windows
+  return file_exists(path .. "/")
+end
+
+-- setup vim's various config directories
+-- # cache_dirs
+local data_dir = {
+  mega.cache_dir .. "backup",
+  mega.cache_dir .. "session",
+  mega.cache_dir .. "swap",
+  mega.cache_dir .. "tags",
+  mega.cache_dir .. "undo",
+}
+if not is_dir(mega.cache_dir) then
+  os.execute("mkdir -p " .. mega.cache_dir)
+end
+for _, v in pairs(data_dir) do
+  if not is_dir(v) then
+    os.execute("mkdir -p " .. v)
+  end
+end
+-- # local_share_dirs
+local local_share_dir = {
+  mega.local_share_dir .. "shada",
+}
+if not is_dir(mega.local_share_dir) then
+  os.execute("mkdir -p " .. mega.local_share_dir)
+end
+for _, v in pairs(local_share_dir) do
+  if not is_dir(v) then
+    os.execute("mkdir -p " .. v)
+  end
+end
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -75,13 +124,13 @@ function _G.dump_text(...)
   return ...
 end
 
-_G.logger = require("logger").new({
-  level = "trace",
-})
+-- _G.logger = require("logger").new({
+--   level = "trace",
+-- })
 
-function _G.put(...)
-  return logger.debug(...)
-end
+-- function _G.put(...)
+--   return logger.debug(...)
+-- end
 
 function mega.dump_colors(filter)
   local defs = {}
@@ -109,7 +158,7 @@ function mega.dump_colors(filter)
 end
 
 local installed
----Check if a plugin is on the system not whether or not it is loaded
+---Check if a plugin is on the system; whether or not it is loaded
 ---@param plugin_name string
 ---@return boolean
 function mega.plugin_installed(plugin_name)
@@ -124,22 +173,9 @@ function mega.plugin_installed(plugin_name)
   return vim.tbl_contains(installed, plugin_name)
 end
 
---- Check if a directory exists in this path
-function mega.isdir(path)
-  -- check if file exists
-  local function file_exists(file)
-    local ok, err, code = os.rename(file, file)
-    if not ok then
-      if code == 13 then
-        -- Permission denied, but it exists
-        return true
-      end
-    end
-    return ok, err
-  end
-
-  -- "/" works on both Unix and Windows
-  return file_exists(path .. "/")
+function mega.plugin_loaded(plugin_name)
+  local plugins = package.loaded or {}
+  return plugins[plugin_name] ~= nil -- and plugins[plugin_name].loaded
 end
 
 -- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`
@@ -827,7 +863,7 @@ end
 
 function mega.get_border(hl)
   local border = {}
-  for _, char in ipairs(require("colors").icons.borderchars) do
+  for _, char in ipairs(require("mega.colors").icons.borderchars) do
     table.insert(border, { char, hl or "FloatBorder" })
   end
   return border
@@ -835,8 +871,8 @@ end
 
 function mega.sync_plugins()
   mega.log("paq-nvim: syncing plugins..")
-  package.loaded["plugins"] = nil
-  require("plugins").sync_all()
+  package.loaded["mega.plugins"] = nil
+  require("mega.plugins").sync_all()
 end
 
 --- Usage:
@@ -937,6 +973,24 @@ function mega.debounce_trailing(func, ms, first)
     end
   end
   return wrapped_fn, timer
+end
+
+-- [ commands ] ----------------------------------------------------------------
+do
+  local command = mega.command
+  vcmd([[
+    command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
+  ]])
+
+  command({ "Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]] })
+  command({
+    "Duplicate",
+    [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]],
+  })
+  command({
+    "Copy",
+    [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e]],
+  })
 end
 
 return mega

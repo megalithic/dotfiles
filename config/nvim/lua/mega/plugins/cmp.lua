@@ -2,9 +2,9 @@ local api = vim.api
 
 local cmp = require("cmp")
 local luasnip = require("luasnip")
-local utils = require("utils")
+local utils = require("mega.utils")
 local t = mega.replace_termcodes
-local C = require("colors")
+local C = require("mega.colors")
 
 local M = {
   sources = {},
@@ -63,13 +63,8 @@ local function setup_cmp()
   end
 
   local function tab(fallback)
-    -- local copilot_keys = vim.fn["copilot#Accept"]()
     if cmp.visible() then
       cmp.select_next_item()
-      -- elseif copilot_keys ~= "" then -- prioritise copilot over snippets
-      --   -- Copilot keys do not need to be wrapped in termcodes
-      --   print("copilot! <tab>")
-      --   api.nvim_feedkeys(copilot_keys, "i", true)
     elseif luasnip and luasnip.expand_or_locally_jumpable() then
       luasnip.expand_or_jump()
     elseif api.nvim_get_mode().mode == "c" then
@@ -89,33 +84,22 @@ local function setup_cmp()
     elseif api.nvim_get_mode().mode == "c" then
       fallback()
     else
-      -- local copilot_keys = vim.fn["copilot#Accept"]()
-      -- if copilot_keys ~= "" then
-      --   print("copilot! <s-tab>")
-      --   feed(copilot_keys, "i")
-      -- else
       feed("<Plug>(Tabout)")
-      -- end
     end
   end
 
   --cmp source setups
   require("cmp_nvim_lsp").setup()
-  -- local compare = require("cmp.config.compare")
+  require("cmp_git").setup({
+    filetypes = { "gitcommit", "NeogitCommitMessage" },
+  })
 
   M.sources.buffer = {
     name = "buffer",
     option = {
       keyword_length = 5,
       max_item_count = 5, -- only show up to 5 items.
-      -- keyword_pattern = [=[[^[:blank:]].*]=],
       get_bufnrs = function()
-        -- local bufs = {}
-        -- for _, win in ipairs(vim.api.nvim_list_wins()) do
-        --   bufs[vim.api.nvim_win_get_buf(win)] = true
-        -- end
-        -- return vim.tbl_keys(bufs)
-
         return vim.api.nvim_list_bufs()
       end,
     },
@@ -124,8 +108,8 @@ local function setup_cmp()
     sources = cmp.config.sources({
       { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      -- M.sources.buffer,
+      { name = "fuzzy_buffer" },
     }),
   }
 
@@ -169,8 +153,8 @@ local function setup_cmp()
       { name = "path" },
       { name = "emmet_ls" },
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      -- M.sources.buffer,
+      { name = "fuzzy_buffer" },
     }),
     formatting = {
       deprecated = true,
@@ -214,10 +198,8 @@ local function setup_cmp()
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 end
 
-M.setup = function()
-  -- setup_copilot()
-  setup_luasnip()
-  setup_cmp()
-end
+-- vim.opt.runtimepath:append("~/path/to/your/plugin")
+setup_luasnip()
+setup_cmp()
 
 return M

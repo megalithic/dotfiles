@@ -141,9 +141,11 @@ function try_session() {
 
 function fuzzy_find() {
   # -- prepare for fuzzy-finding!!
-  # tmuxinator_sessions_list="$(get_tmuxinator_configs)"
+  tmuxinator_sessions_list="$(get_tmuxinator_configs)"
   current_sessions_list=$(tmux list-sessions -F "#S")
-  sessions_list="$current_sessions_list" #$(printf "%s\n%s" "$tmuxinator_sessions_list" "$current_sessions_list" | sort)
+  sessions_list="$current_sessions_list"
+  # combine our tmuxinator configs AND open sessions (no more preview if we do this)
+  sessions_list=$(printf "%s\n%s" "$tmuxinator_sessions_list" "$current_sessions_list" | sort -u)
   current_session="$(tmux display-message -p '#S')"
   sessions_count=$(echo "$sessions_list" | wc -l | sed -e 's/^[[:space:]]*//')
   preview_cmd="echo {} | sed 's/:.*$//' | xargs -I{} tmux capture-pane -ep -t {}"
@@ -165,7 +167,7 @@ function fuzzy_find() {
   fi
 
   # -- get our session from fzf (grabs the the active pane from each session as preview, too!)
-  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --border=none --padding="1" --preview-window="border-left" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
+  try_session "$(echo "$sessions_list" | grep -v "^$(tmux display-message -p '#S')\$" | $fzf_cmd --reverse --border=none --padding="1" --preview-window="hidden" --prompt="$fzf_prompt_text" --header="$fzf_header_text" --bind="enter:replace-query+print-query" --preview="$preview_cmd")"
 }
 
 # -- if we pass in a session_name: attach/switch to it or, create new session
