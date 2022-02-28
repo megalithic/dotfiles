@@ -3,13 +3,13 @@ local b = nls.builtins
 
 local M = {}
 
-function M.setup(on_attach)
+function M.setup()
   nls.setup({
     debug = false,
     debounce = 150,
     autostart = true,
     save_after_format = false,
-    on_attach = on_attach,
+    on_attach = mega.lsp.on_attach,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
       b.formatting.prettierd.with({

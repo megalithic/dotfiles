@@ -106,6 +106,7 @@ local function setup_autocommands(client)
       end,
     },
   })
+
   if client and client.resolved_capabilities.document_formatting then
     -- format on save
     augroup("LspFormat", {
@@ -301,10 +302,8 @@ local function setup_formatting(cl, bn)
     return #available > 0
   end
 
-  local ftype = api.nvim_buf_get_option(bn, "filetype")
-
   if cl.name == "null-ls" then
-    if has_nls_formatter(ftype) then
+    if has_nls_formatter(api.nvim_buf_get_option(bn, "filetype")) then
       cl.resolved_capabilities.document_formatting = true
     else
       cl.resolved_capabilities.document_formatting = false
@@ -313,13 +312,14 @@ local function setup_formatting(cl, bn)
 
   -- if cl.resolved_capabilities.document_formatting then
   --   vcmd([[
-  --   augroup Format
+  --   augroup LspFormat
   --     autocmd! * <buffer>
   --     mkview!
   --     autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 1500)
   --     loadview
   --   augroup END
   -- ]])
+  -- end
 end
 
 -- [ TAGS ] --------------------------------------------------------------------
@@ -645,6 +645,7 @@ function mega.lsp.on_attach(client, bufnr)
     vim.bo[bufnr].tagfunc = "v:lua.mega.lsp.tagfunc"
   end
 
+  require("mega.lsp.null-ls").setup()
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client)

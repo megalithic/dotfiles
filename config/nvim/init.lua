@@ -60,4 +60,4 @@ R("mega.options")
 R("mega.autocmds")
 R("mega.mappings")
 R("mega.megaline")
-R("mega.plugins").setup() -- FIXME: finish moving to mega.plugins.config
+R("mega.plugins.config")
