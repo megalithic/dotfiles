@@ -339,7 +339,7 @@ M.setup = function()
     end
   end
 
-  do
+  do -- fidget.nvim
     require("fidget").setup({
       text = {
         spinner = "dots_pulse",
@@ -350,6 +350,20 @@ M.setup = function()
           ignore = false, -- Ignore notifications from this source
         },
       },
+    })
+  end
+
+  do -- lsp_signature.nvim
+    require("lsp_signature").setup({
+      bind = true,
+      fix_pos = false,
+      auto_close_after = 5,
+      hint_enable = false,
+      handler_opts = { border = "rounded" },
+      --   hi_parameter = "QuickFixLine",
+      --   handler_opts = {
+      --     border = vim.g.floating_window_border,
+      --   },
     })
   end
 

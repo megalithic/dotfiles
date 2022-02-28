@@ -69,9 +69,9 @@ M.lsp.rename = function()
   api.nvim_win_set_option(winnr, "relativenumber", false)
   api.nvim_win_set_option(winnr, "number", false)
 
-  bmap("i", "<CR>", "<cmd>lua require('utils').rename_callback()<CR>")
-  bmap("i", "<esc>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>")
-  bmap("i", "<c-c>", "<cmd>lua require('utils').cleanup_rename_callback()<cr>")
+  bmap("i", "<CR>", "<cmd>lua require('mega.utils').rename_callback()<CR>")
+  bmap("i", "<esc>", "<cmd>lua require('mega.utils').cleanup_rename_callback()<cr>")
+  bmap("i", "<c-c>", "<cmd>lua require('mega.utils').cleanup_rename_callback()<cr>")
 
   vcmd("startinsert")
 end
@@ -99,7 +99,7 @@ end
 
 -- # [ preview ] ---------------------------------------------------------------
 local function set_auto_close()
-  au([[ CursorMoved * ++once lua require('utils').remove_wins() ]])
+  au([[ CursorMoved * ++once lua require('mega.utils').remove_wins() ]])
 end
 
 local function fit_to_node(window)
