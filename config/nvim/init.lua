@@ -51,11 +51,10 @@ end
 R("mega.globals")
 R("mega.preflight")
 R("mega.options")
-R("mega.commands")
-R("mega.lsp").setup()
+R("mega.lsp").setup() -- FIXME: finish moving to nvim/plugin/lsp.lua
 R("mega.autocmds")
 R("mega.mappings")
 R("mega.megaline")
-R("mega.plugins").setup()
+R("mega.plugins").setup() -- FIXME: finish moving to mega.plugins.config
 
 -- vim:foldmethod=marker

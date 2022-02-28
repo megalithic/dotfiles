@@ -944,4 +944,22 @@ function mega.debounce_trailing(func, ms, first)
   return wrapped_fn, timer
 end
 
+-- [ commands ] ----------------------------------------------------------------
+do
+  local command = mega.command
+  vcmd([[
+    command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
+  ]])
+
+  command({ "Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]] })
+  command({
+    "Duplicate",
+    [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]],
+  })
+  command({
+    "Copy",
+    [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e]],
+  })
+end
+
 return mega
