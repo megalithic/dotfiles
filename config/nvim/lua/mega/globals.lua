@@ -109,7 +109,7 @@ function mega.dump_colors(filter)
 end
 
 local installed
----Check if a plugin is on the system not whether or not it is loaded
+---Check if a plugin is on the system; whether or not it is loaded
 ---@param plugin_name string
 ---@return boolean
 function mega.plugin_installed(plugin_name)
@@ -124,8 +124,13 @@ function mega.plugin_installed(plugin_name)
   return vim.tbl_contains(installed, plugin_name)
 end
 
+function mega.plugin_loaded(plugin_name)
+  local plugins = package.loaded or {}
+  return plugins[plugin_name] ~= nil -- and plugins[plugin_name].loaded
+end
+
 --- Check if a directory exists in this path
-function mega.isdir(path)
+function mega.is_dir(path)
   -- check if file exists
   local function file_exists(file)
     local ok, err, code = os.rename(file, file)

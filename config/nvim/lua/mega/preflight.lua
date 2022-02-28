@@ -8,11 +8,11 @@ local data_dir = {
   mega.cache_dir .. "tags",
   mega.cache_dir .. "undo",
 }
-if not mega.isdir(mega.cache_dir) then
+if not mega.is_dir(mega.cache_dir) then
   os.execute("mkdir -p " .. mega.cache_dir)
 end
 for _, v in pairs(data_dir) do
-  if not mega.isdir(v) then
+  if not mega.is_dir(v) then
     os.execute("mkdir -p " .. v)
   end
 end
@@ -21,11 +21,11 @@ end
 local local_share_dir = {
   mega.local_share_dir .. "shada",
 }
-if not mega.isdir(mega.local_share_dir) then
+if not mega.is_dir(mega.local_share_dir) then
   os.execute("mkdir -p " .. mega.local_share_dir)
 end
 for _, v in pairs(local_share_dir) do
-  if not mega.isdir(v) then
+  if not mega.is_dir(v) then
     os.execute("mkdir -p " .. v)
   end
 end

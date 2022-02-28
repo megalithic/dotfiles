@@ -22,6 +22,7 @@ if (typeof api !== "undefined") {
     aceVimMap,
     mapkey,
     unmap,
+    vunmap,
     imap,
     imapkey,
     getClickableElements,
@@ -49,6 +50,7 @@ function setup_surfingkeys({ api: api }) {
     aceVimMap,
     mapkey,
     unmap,
+    vunmap,
     imap,
     imapkey,
     getClickableElements,
@@ -147,6 +149,7 @@ function setup_surfingkeys({ api: api }) {
     Front.openOmnibar({ type: "Windows" });
   });
 
+  vunmap("t");
   unmap("w");
 
   vmap("H", "0");
