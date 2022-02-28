@@ -5,3 +5,4 @@ vim.bo.bufhidden = "wipe"
 vim.cmd([[nnoremap <buffer> q :q<CR>]])
 -- only go up a dir (-) in the dirbuf buffer
 vim.cmd([[nmap <buffer> - <Plug>(dirbuf_up)]])
+vim.cmd([[nmap <buffer> <BS> <Plug>(dirbuf_up)]])

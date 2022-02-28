@@ -70,11 +70,10 @@ augroup("Kitty", {
 augroup("Paq", {
   {
     events = { "BufWritePost" },
-    targets = { "plugins.lua" },
+    targets = { "*/mega/plugins/*.lua" },
     command = function()
-      -- auto-source paq-nvim upon plugins.lua write
+      -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vim.cmd("luafile %")
-      -- mega.sync_plugins()
     end,
   },
 })
@@ -107,16 +106,32 @@ augroup("Terminal", {
 
 augroup("LazyLoads", {
   {
+    -- nvim-bqf
     events = { "FileType" },
     targets = { "qf" },
-    command = [[packadd! nvim-bqf]],
+    command = [[packadd nvim-bqf]],
   },
   {
-    events = { "BufReadPost" },
+    -- dash.nvim
+    events = { "BufReadPre" },
     targets = { "*" },
     command = function()
       if mega.is_macos then
-        vim.cmd([[packadd! dash.nvim]])
+        print("should be loading dash.nvim")
+        vim.cmd([[packadd dash.nvim]])
+      end
+    end,
+  },
+  {
+    -- tmux-navigate
+    -- vim-kitty-navigator
+    events = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
+    targets = { "*" },
+    command = function()
+      if vim.env.TMUX ~= nil then
+        vim.cmd([[packadd tmux-navigate]])
+      else
+        vim.cmd([[packadd vim-kitty-navigator]])
       end
     end,
   },

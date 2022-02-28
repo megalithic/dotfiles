@@ -29,13 +29,13 @@ M.sync_all = function()
 end
 
 -- https://github.com/savq/paq-nvim/issues/81#issuecomment-987545884
--- local function conf(plugin)
---   return function()
---     if pcall(require, plugin) then
---       require("mega.plugins." .. plugin)()
---     end
---   end
--- end
+local function conf(plugin)
+  return function()
+    if pcall(require, plugin) then
+      require("mega.plugins." .. plugin)()
+    end
+  end
+end
 
 -- `bin/paq-install` runs this for us in a headless nvim environment
 M.bootstrap = function()
@@ -1732,6 +1732,11 @@ M.setup = function()
       filetype = formatterConfig,
     })
   end
+
+  do -- telescope-nvim
+    conf("telescope")
+  end
+
   do -- vim-notify
     local notify = require("notify")
     ---@type table<string, fun(bufnr: number, notif: table, highlights: table)>
