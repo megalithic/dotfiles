@@ -65,6 +65,7 @@ telescope.setup({
       ".yarn",
       "dotbot/.*",
       ".git/.*",
+      "%.DS_Store",
     },
     -- :help telescope.defaults.path_display
     -- path_display = { "smart", "absolute", "truncate" },

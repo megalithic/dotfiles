@@ -633,6 +633,47 @@ function mega.augroup(name, commands)
   vcmd("augroup END")
 end
 
+-- TODO: convert to new vim.api.nvim_create_augroup/autocmd API
+-- REFS:
+-- - https://github.com/dstanberry/dotfiles/blob/main/nvim/plugin/autocmds.lua
+-- - https://github.com/oncomouse/dotfiles/blob/master/conf/vim/init.lua#L279-L307
+-- - https://github.com/mrjones2014/dotfiles/blob/master/.config/nvim/lua/autocmds.lua
+function mega.augroup(name, commands)
+  -- vim.api.nvim_create_augroup("LspDiagnostic")
+  -- vim.api.nvim_create_autocmd("CursorHold", {
+  --   -- pattern = { "yaml", "toml" },
+  --   buffer = bufnr,
+  --   callback = function()
+  --     mega.lsp.line_diagnostics()
+  --   end,
+  -- })
+
+  vcmd("augroup " .. name)
+  vcmd("autocmd!")
+  for _, c in ipairs(commands) do
+    if c.command and c.events and is_valid_target(c) then
+      local command = c.command
+      if type(command) == "function" then
+        local fn_id = mega._register(command)
+        command = fmt("lua mega._execute(%s)", fn_id)
+      end
+      c.events = type(c.events) == "string" and { c.events } or c.events
+      vcmd(
+        fmt(
+          "autocmd %s %s %s %s",
+          table.concat(c.events, ","),
+          table.concat(c.targets or {}, ","),
+          table.concat(c.modifiers or {}, " "),
+          command
+        )
+      )
+    else
+      vim.notify(fmt("An autocommand in %s is specified incorrectly: %s", name, vim.inspect(name)), L.ERROR)
+    end
+  end
+  vcmd("augroup END")
+end
+
 --- TODO eventually move to using `nvim_set_hl`
 --- however for the time being that expects colors
 --- to be specified as rgb not hex

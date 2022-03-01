@@ -43,7 +43,7 @@ end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
 
-local function setup_autocommands(client)
+local function setup_autocommands(client, bufnr)
   if client and client.resolved_capabilities.code_lens then
     augroup("LspCodeLens", {
       {
@@ -75,29 +75,40 @@ local function setup_autocommands(client)
       },
     })
   end
-  augroup("LspDiagnostics", {
-    {
-      events = { "CursorHold" },
-      targets = { "<buffer>" },
-      command = function()
-        -- mega.lsp.line_diagnostics()
-        -- if false then
-        diagnostic.open_float(nil, {
-          focusable = false,
-          close_events = {
-            "CursorMoved",
-            "BufHidden",
-            "InsertCharPre",
-            "BufLeave",
-            "InsertEnter",
-            "FocusLost",
-          },
-          source = "always",
-        })
-        -- end
-      end,
-    },
+
+  vim.api.nvim_create_augroup("LspDiagnostics", { clear = true })
+  vim.api.nvim_create_autocmd("CursorHold", {
+    -- pattern = { "yaml", "toml" },
+    buffer = bufnr,
+    callback = function()
+      mega.lsp.line_diagnostics()
+    end,
+    group = "LspDiagnostics",
   })
+
+  -- augroup("LspDiagnostics", {
+  --   {
+  --     events = { "CursorHold" },
+  --     targets = { "<buffer>" },
+  --     command = function()
+  --       -- mega.lsp.line_diagnostics()
+  --       -- if false then
+  --       diagnostic.open_float(nil, {
+  --         focusable = false,
+  --         close_events = {
+  --           "CursorMoved",
+  --           "BufHidden",
+  --           "InsertCharPre",
+  --           "BufLeave",
+  --           "InsertEnter",
+  --           "FocusLost",
+  --         },
+  --         source = "always",
+  --       })
+  --       -- end
+  --     end,
+  --   },
+  -- })
 
   if client and client.resolved_capabilities.document_formatting then
     -- format on save
@@ -635,7 +646,7 @@ function mega.lsp.on_attach(client, bufnr)
   require("mega.plugins.null-ls")
   setup_formatting(client, bufnr)
   setup_commands()
-  setup_autocommands(client)
+  setup_autocommands(client, bufnr)
   setup_diagnostics()
   setup_handlers()
   setup_mappings(client, bufnr)
@@ -643,47 +654,47 @@ function mega.lsp.on_attach(client, bufnr)
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
-local function setup_tsserver(client)
-  -- (typescript/tsserver)
-  if client.name == "tsserver" then
-    local ts = require("nvim-lsp-ts-utils")
-    -- REF: https://github.com/Iamafnan/my-nvimrc/blob/main/lua/afnan/lsp/language-servers.lua#L65
-    ts.setup({
-      debug = false,
-      disable_commands = false,
-      enable_import_on_completion = false,
-      import_on_completion_timeout = 5000,
+-- local function setup_tsserver(client)
+--   -- (typescript/tsserver)
+--   if client.name == "tsserver" then
+--     local ts = require("nvim-lsp-ts-utils")
+--     -- REF: https://github.com/Iamafnan/my-nvimrc/blob/main/lua/afnan/lsp/language-servers.lua#L65
+--     ts.setup({
+--       debug = false,
+--       disable_commands = false,
+--       enable_import_on_completion = false,
+--       import_on_completion_timeout = 5000,
 
-      -- linting
-      eslint_enable_code_actions = true,
-      eslint_enable_disable_comments = true,
-      eslint_bin = "eslint_d",
-      eslint_enable_diagnostics = true,
-      eslint_opts = {},
+--       -- linting
+--       eslint_enable_code_actions = true,
+--       eslint_enable_disable_comments = true,
+--       eslint_bin = "eslint_d",
+--       eslint_enable_diagnostics = true,
+--       eslint_opts = {},
 
-      -- formatting
-      enable_formatting = false,
-      formatter = "prettierd",
-      formatter_opts = {},
+--       -- formatting
+--       enable_formatting = false,
+--       formatter = "prettierd",
+--       formatter_opts = {},
 
-      -- filter diagnostics
-      -- {
-      --    80001 - require modules
-      --    6133 - import is declared but never used
-      --    2582 - cannot find name {describe, test}
-      --    2304 - cannot find name {expect, beforeEach, afterEach}
-      --    2503 - cannot find name {jest}
-      -- }
-      -- filter_out_diagnostics_by_code = { 80001, 2582, 2304, 2503 },
+--       -- filter diagnostics
+--       -- {
+--       --    80001 - require modules
+--       --    6133 - import is declared but never used
+--       --    2582 - cannot find name {describe, test}
+--       --    2304 - cannot find name {expect, beforeEach, afterEach}
+--       --    2503 - cannot find name {jest}
+--       -- }
+--       -- filter_out_diagnostics_by_code = { 80001, 2582, 2304, 2503 },
 
-      -- inlay hints
-      auto_inlay_hints = true,
-      inlay_hints_highlight = "Comment",
-    })
+--       -- inlay hints
+--       auto_inlay_hints = true,
+--       inlay_hints_highlight = "Comment",
+--     })
 
-    ts.setup_client(client)
-  end
-end
+--     ts.setup_client(client)
+--   end
+-- end
 
 -- [ SERVERS ] -----------------------------------------------------------------
 

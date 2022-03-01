@@ -49,7 +49,14 @@ do
     select = {
       winblend = 2,
       telescope = {
-        theme = "dropdown",
+        theme = require("telescope.themes").get_cursor({
+          layout_config = {
+            height = function(self, _, max_lines)
+              local results = #self.finder.results
+              return (results <= max_lines and results or max_lines - 10) + 4 -- 4 is the size of the window
+            end,
+          },
+        }),
       },
     },
   })
@@ -121,6 +128,7 @@ do -- indent-blankline
     show_foldtext = false,
     show_current_context = true,
     show_current_context_start = true,
+    show_current_context_start_on_current_line = false,
     show_first_indent_level = true,
     show_end_of_line = true,
     indent_blankline_use_treesitter = true,
