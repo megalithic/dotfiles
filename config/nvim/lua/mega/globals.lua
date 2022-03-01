@@ -13,6 +13,9 @@ _G.mega = {
 local L = vim.log.levels
 local get_log_level = require("vim.lsp.log").get_level
 
+-- [ runtimepath (rtp) ] -------------------------------------------------------
+vim.opt.runtimepath:remove("~/.cache")
+
 -- Global namespace
 --- Inspired by @tjdevries' astraunauta.nvim/ @TimUntersberger's config
 --- store all callbacks in one global table so they are able to survive re-requiring this file
@@ -46,7 +49,7 @@ mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 mega.dirs.zk = mega.dirs.zettel
 
 --- Check if a directory exists in this path
-function is_dir(path)
+local function is_dir(path)
   -- check if file exists
   local function file_exists(file)
     local ok, err, code = os.rename(file, file)
@@ -908,15 +911,18 @@ local function fileicon()
 end
 
 function mega.title_string()
-  -- if not hl_ok then
-  --   return
-  -- end
+  local hl_ok, H = mega.safe_require("mega.utils.highlights", { silent = true })
+  if not hl_ok then
+    return
+  end
   local dir = fn.fnamemodify(fn.getcwd(), ":t")
-  local icon, _ = fileicon()
-  -- if not hl then
-  --   return (icon or "") .. " "
-  -- end
-  return fmt("%s %s ", dir, icon)
+  local icon, hl = fileicon()
+  if not hl then
+    return (icon or "") .. " "
+  end
+  -- return fmt("%s %s ", dir, icon)
+  local has_tmux = os.getenv("TMUX")
+  return has_tmux and fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon) or dir .. " " .. icon
   -- return fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon)
 end
 

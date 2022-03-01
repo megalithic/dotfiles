@@ -111,6 +111,16 @@ augroup("Terminal", {
     command = "noremap <buffer><silent><ESC> :bd!<CR>",
   },
   {
+    events = { "TermClose" },
+    targets = { "*" },
+    command = function()
+      --- automatically close a terminal if the job was successful
+      if not vim.v.event.status == 0 then
+        vim.cmd("bdelete! " .. fn.expand("<abuf>"))
+      end
+    end,
+  },
+  {
     events = { "TermOpen" },
     targets = { "*" },
     command = [[setlocal nonumber norelativenumber conceallevel=0]],

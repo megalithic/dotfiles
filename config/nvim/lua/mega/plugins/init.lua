@@ -185,7 +185,7 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   { "sunaku/tmux-navigate", opt = true },
-  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true }, -- FIXME: this does NOT run with PaqRunHook
+  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true },
   -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "junegunn/vim-easy-align",

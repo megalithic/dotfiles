@@ -1,1 +1,2 @@
---listen-on unix:/tmp/kitty
+--single-instance
+--listen-on unix:/tmp/mykitty

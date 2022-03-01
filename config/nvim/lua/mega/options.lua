@@ -25,8 +25,6 @@ vim.opt.ttimeoutlen = 10
 -----------------------------------------------------------------------------//
 -- Window splitting and buffers {{{1
 -----------------------------------------------------------------------------//
---- NOTE: remove this once 0.6 lands as it is now default
-vim.opt.hidden = true
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.eadirection = "hor"
@@ -224,8 +222,6 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 -----------------------------------------------------------------------------//
 -- vim.o.debug = "msg"
---- NOTE: remove this once 0.6 lands, it is now default
-vim.opt.joinspaces = false
 vim.opt.gdefault = true
 vim.opt.confirm = true -- make vim prompt me to save before doing destructive things
 vim.opt.completeopt = { "menuone", "noselect" }
@@ -241,9 +237,6 @@ vim.opt.termguicolors = true
 -- which breaks rendering so we turn this off.
 -- CREDIT: https://www.youtube.com/watch?v=F91VWOelFNE
 vim.opt.emoji = false
------------------------------------------------------------------------------//
---- NOTE: remove this once 0.6 lands, it is now default
-vim.opt.inccommand = "nosplit"
 -----------------------------------------------------------------------------//
 -- Cursor {{{1
 -----------------------------------------------------------------------------//

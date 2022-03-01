@@ -89,6 +89,10 @@ if [[ "$(uname)" == "Darwin" ]]; then
   fi
 fi
 
+if type brew &>/dev/null; then
+  FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
+fi
+
 # Completion for teamocil autocompletion definitions: http://www.teamocil.com/#zsh-autocompletion
 compctl -g '~/.teamocil/*(:t:r)' teamocil
 

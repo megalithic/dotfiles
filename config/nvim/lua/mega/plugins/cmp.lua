@@ -198,7 +198,6 @@ local function setup_cmp()
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 end
 
--- vim.opt.runtimepath:append("~/path/to/your/plugin")
 setup_luasnip()
 setup_cmp()
 

@@ -26,7 +26,7 @@ alias fd="fd --hidden"
 alias fdd="fd -H -t d -d 10"
 
 alias ls="ls --color=auto --hyperlink=auto $@"
-alias l='ls -lFh'     # size,show type,human readable
+alias l='ls -lFh' # size,show type,human readable
 
 # grc overides for ls
 #   Made possible through contributions from generous benefactors like
@@ -135,13 +135,6 @@ alias b="brew"
 # -----------------------------------------------------------------------------
 
 if type nvim >/dev/null 2>&1; then
-  # function nvim() {
-  #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-  #     nvr -p "$@"
-  #   else
-  #     command nvim "$@"
-  #   fi
-  # }
 
   alias slownvim="nvim --startuptime /dev/stdout slow_to_open_file.ex +q | less"
   alias profilenvim="f() {nvim --startuptime /dev/stderr "$1" +q} && f $1"
@@ -160,6 +153,19 @@ if type nvim >/dev/null 2>&1; then
   alias barevim="nvim -u NONE"
   alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
   alias rmpaqs="packs; rm -rf paqs; cd -"
+
+  # function nvim() {
+  #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+  #     nvr -p "$@"
+  #   else
+  #     command nvim "$@"
+  #   fi
+  # }
+  #
+  # This allow using neovim remote when nvim is called from inside a running vim instance
+  if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+    alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
+  fi
   # alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
   # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"

@@ -1,5 +1,21 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
+# vim:ft=zsh
+#-------------------------------------------------------------------------------
+#       ENV VARIABLES
+#-------------------------------------------------------------------------------
+# PATH.
+# (N-/): do not register if the directory does not exists
+# (Nn[-1]-/)
+#
+#  N   : NULL_GLOB option (ignore path if the path does not match the glob)
+#  n   : Sort the output
+#  [-1]: Select the last item in the array
+#  -   : follow the symbol links
+#  /   : ignore files
+#  t   : tail of the path
+# CREDIT: @ahmedelgabri
+#--------------------------------------------------------------------------------
 
 # -- make helpers available to all the frens:
 [[ -f "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh" ]] && source "$XDG_CONFIG_HOME/zsh/lib/helpers.zsh"
@@ -25,8 +41,14 @@ export COLORTERM=${COLORTERM:=truecolor}
 # fi
 #
 # -- editors
-export EDITOR="nvim"
-export VISUAL="$EDITOR"
+if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+  export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+else
+  export EDITOR="nvim"
+  export VISUAL="nvim"
+fi
+
 export SUDO_EDITOR="$EDITOR"
 export GIT_EDITOR="$EDITOR"
 export ALTERNATE_EDITOR="vim"
@@ -80,7 +102,10 @@ export ASDF_INSTALLS="$ASDF_DIR/installs"
 # export ASDF_LUAROCKS="$ASDF_INSTALLS/lua/5.3.5/luarocks/bin"
 #
 # -- rg
-export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/rc"
+# @see: https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md#configuration-file
+if which rg >/dev/null; then
+  export RIPGREP_CONFIG_PATH=${DOTFILES}/config/ripgrep/rc
+fi
 #
 # -- weechat
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
@@ -238,6 +263,7 @@ manpath=(
     /usr/local/share/man
     /usr/share/man
     ${HOMEBREW_PREFIX}/opt/*/libexec/gnuman(N-/)
+    "$(brew --prefix)/opt/coreutils/libexec/gnuman"
     $manpath
 )
 for man_file in /etc/manpaths.d/*(.N); do
@@ -295,6 +321,8 @@ path=(
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
+    # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
+    "$(brew --prefix)/opt/coreutils/libexec/gnubin"
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
     ${CARGO_HOME}/bin(N-/)
