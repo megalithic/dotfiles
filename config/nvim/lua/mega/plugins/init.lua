@@ -266,4 +266,25 @@ M.bootstrap = function()
   paq(PKGS):install()
 end
 
+require("mega.globals").augroup("Paq", {
+  {
+    events = { "User PaqDoneSync" },
+    command = function()
+      vim.notify("Plugin sync complete", nil, { title = "Paq" })
+    end,
+  },
+  {
+    events = { "User PaqDoneInstall" },
+    command = function()
+      vim.notify("Plugin install complete", nil, { title = "Paq" })
+    end,
+  },
+  {
+    events = { "User PaqUpdateInstall" },
+    command = function()
+      vim.notify("Plugin update complete", nil, { title = "Paq" })
+    end,
+  },
+})
+
 return M

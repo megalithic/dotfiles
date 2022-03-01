@@ -42,23 +42,43 @@ remove_existing() {
   esac
 }
 
+do_clone() {
+  git clone --depth=1 https://github.com/savq/paq-nvim.git "$paq_path"
+}
+
+install_plugins() {
+  nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()' -c 'quit'
+}
+
+sync_plugins() {
+  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()' -c ':quit'
+}
+
 do_install() {
   log "cloning paq-nvim into $paq_path"
   if [[ -d $paq_path ]]; then
     log_warn "existing paq-nvim found.."
     remove_existing
   fi
-  git clone --depth=1 https://github.com/savq/paq-nvim.git "$paq_path" \
-    && nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()' \
+  do_clone \
+    && install_plugins \
     && log_ok "completed installing paq-nvim and plugins into $paq_path" \
     || exit 1
 }
 
-while getopts "f" OPTION; do
+while getopts "fu" OPTION; do
   case $OPTION in
 
     f)
       FORCE_INSTALL="true"
+      ;;
+
+    u)
+      log "updating paq plugins.."
+      sync_plugins \
+        && (echo "" && log_ok "finished updating paq plugins.") \
+        || (echo "" && log_error "something went wrong while updating paq plugins; exiting.")
+      exit 1
       ;;
 
     \?)

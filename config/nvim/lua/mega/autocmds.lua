@@ -84,24 +84,6 @@ augroup("Paq", {
       vim.cmd("luafile %")
     end,
   },
-  {
-    events = { "User PaqDoneSync" },
-    command = function()
-      vim.notify("Paq sync complete", nil, { title = "Paq" })
-    end,
-  },
-  {
-    events = { "User PaqDoneInstall" },
-    command = function()
-      vim.notify("Paq install complete", nil, { title = "Paq" })
-    end,
-  },
-  {
-    events = { "User PaqUpdateInstall" },
-    command = function()
-      vim.notify("Paq update complete", nil, { title = "Paq" })
-    end,
-  },
 })
 
 augroup("YankHighlightedRegion", {
