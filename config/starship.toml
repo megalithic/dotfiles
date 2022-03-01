@@ -22,12 +22,22 @@ $cmd_duration\
 $line_break\
 $jobs\
 $battery\
-$time\
 $status\
 $shell\
 $character"""
 
 command_timeout = 1000
+
+# move the rest of the prompt to the right
+right_format = """$time"""
+
+[time]
+disabled = false
+style = "yellow dimmed"
+format = '[$time]($style) '
+time_format = "%T"
+# utc_time_offset = "-5"
+# time_range = "10:00:00-14:00:00"
 
 [username]
 style_root = "red"
