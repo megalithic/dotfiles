@@ -399,7 +399,7 @@ do
   -- remove h,j,k,l from hops list of keys
   hop.setup({ keys = "etovxqpdygfbzcisuran" })
   nnoremap("s", function()
-    hop.hint_char1({ multi_windows = true })
+    hop.hint_char1({ multi_windows = false })
   end)
   -- NOTE: override F/f using hop motions
   vim.keymap.set({ "x", "n" }, "F", function()

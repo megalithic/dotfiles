@@ -195,7 +195,7 @@ alias evp="nvim $DOTS/config/nvim/lua/mega/plugins/init.lua"
 alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
 alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
 alias evm="nvim $DOTS/config/nvim/lua/mega/mappings.lua"
-alias evc="nvim $DOTS/config/nvim/lua/mega/commands.lua"
+alias evc="nvim $DOTS/config/nvim/lua/mega/plugins/config.lua"
 alias evg="nvim $DOTS/config/nvim/lua/mega/globals.lua"
 
 alias ehs="nvim $DOTS/config/hammerspoon/config.lua"

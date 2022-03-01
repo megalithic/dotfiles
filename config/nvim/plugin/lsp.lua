@@ -80,26 +80,21 @@ local function setup_autocommands(client)
       events = { "CursorHold" },
       targets = { "<buffer>" },
       command = function()
-        mega.lsp.line_diagnostics()
-      end,
-    },
-    {
-      events = { "CursorHold" },
-      targets = { "<buffer>" },
-      command = function()
-        -- disabled for now; we'll use our custom line_diagnostics above
-        if false then
-          diagnostic.open_float(nil, {
-            focusable = false,
-            close_events = {
-              "BufLeave",
-              "CursorMoved",
-              "InsertEnter",
-              "FocusLost",
-            },
-            source = "always",
-          })
-        end
+        -- mega.lsp.line_diagnostics()
+        -- if false then
+        diagnostic.open_float(nil, {
+          focusable = false,
+          close_events = {
+            "CursorMoved",
+            "BufHidden",
+            "InsertCharPre",
+            "BufLeave",
+            "InsertEnter",
+            "FocusLost",
+          },
+          source = "always",
+        })
+        -- end
       end,
     },
   })
@@ -134,16 +129,11 @@ local function setup_mappings(client, bufnr)
   bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
   bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
   bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
-  bmap(
-    "n",
-    "<leader>ld",
-    "lua require('mega.lsp.diagnostics').line_diagnostics()",
-    { label = "lsp: show line diagnostics" }
-  )
+  bmap("n", "<leader>ld", "lua mega.lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
   bmap(
     "n",
     "<leader>lD",
-    [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" }, source = "always" })]]
+    [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "CursorMoved", "BufHidden", "InsertCharPre", "BufLeave", "InsertEnter", "FocusLost" }, source = "always" })]]
   )
 
   --- # misc mappings
