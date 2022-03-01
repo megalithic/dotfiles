@@ -7,7 +7,9 @@ local module = { cache = cache }
 local alert = require("ext.alert")
 
 -- Press Cmd+Q twice to actually quit
-local quitAlertText = function(name)
+local quitAlertText = function(app)
+  local name = app:name()
+
   if name ~= nil then
     return string.format("Press <⌘-q> again to quit %s", name)
   else
@@ -44,7 +46,8 @@ function cache.modal:entered()
     log.df("quitguard::%s -> configured; waiting..", app:bundleID())
 
     if appConfig.quitGuard then
-      alert.show({ text = quitAlertText(app:name()), duration = 1 })
+      local image = hs.image.imageFromAppBundle(app:bundleID())
+      alert.show({ text = quitAlertText(app), image = image, duration = 1 })
       hs.timer.doAfter(1, function()
         cache.modal:exit()
       end)

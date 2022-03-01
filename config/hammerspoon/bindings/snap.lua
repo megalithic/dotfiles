@@ -2,7 +2,6 @@
 -- https://github.com/dbmrq/dotfiles/blob/master/home/.hammerspoon/winman.lua
 
 local log = hs.logger.new("[bindings.snap]", "info")
-local wh = require("wm.handlers")
 local movewindows = hs.hotkey.modal.new()
 local alertUuids = {}
 local alert = require("ext.alert")
@@ -19,10 +18,12 @@ function movewindows:entered()
     if win ~= nil then
       if screen == hs.screen.mainScreen() then
         local app_title = win:application():title()
+        local image = hs.image.imageFromAppBundle(win:application():bundleID())
         local prompt = string.format("◱ : %s", app_title)
-
-        alert.showOnly({ text = prompt, screen = screen })
-        -- return hs.alert.show(prompt, hs.alert.defaultStyle, screen, true)
+        if image ~= nil then
+          prompt = string.format(": %s", app_title)
+        end
+        alert.showOnly({ text = prompt, image = image, screen = screen })
       end
     else
       -- unable to move a specific window. ¯\_(ツ)_/¯
@@ -44,10 +45,6 @@ function movewindows:exited()
 end
 
 M.windowSplitter = function()
-  -- local windows =
-  --   hs.fnutils.map(
-  --   wh.validWindows(),
-  --   function(win)
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
     if win ~= hs.window.focusedWindow() then
       return {
