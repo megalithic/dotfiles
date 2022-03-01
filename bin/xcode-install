@@ -6,7 +6,7 @@ set -euo pipefail
 
 if [[ $(uname) != "Darwin" ]]; then
   log_warn "xcode-install requires MacOS (Darwin); skipping."
-  exit 1
+  exit 0
 fi
 
 # -- set some useful vars for executable info:
