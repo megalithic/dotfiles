@@ -12,7 +12,7 @@ local blueUtil = "/usr/local/bin/blueutil"
 
 local function disconnectHeadphones()
   hs.task.new(blueUtil, function()
-    hs.alert("Disconnected headphones")
+    alert.show("Disconnected Headphones")
   end, {
     "--disconnect",
     headphoneDeviceId,
@@ -21,7 +21,7 @@ end
 
 local function connectHeadphones()
   hs.task.new(blueUtil, function()
-    hs.alert("Connected headphones")
+    alert.show("Connected Headphones")
   end, {
     "--connect",
     headphoneDeviceId,
@@ -55,7 +55,7 @@ M.start = function()
   local hyper = require("bindings.hyper")
   hyper:bind({ "shift" }, "H", nil, function()
     toggleHeadphones()
-    alert.show({ text = "Toggle 🎧 connection" })
+    alert.show("Toggle 🎧 connection")
     -- local ok, output = toggle("megapods")
 
     -- if ok then
