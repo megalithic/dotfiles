@@ -248,8 +248,8 @@ local M = {}
 
 M.sync_all = function()
   -- package.loaded.paq = nil
+  -- vim.cmd("autocmd User PaqDoneSync quit")
   (require("paq"))(PKGS):sync()
-  vim.cmd("autocmd User PaqDoneSync quit")
 end
 
 -- `bin/paq-install` runs this for us in a headless nvim environment
@@ -266,44 +266,5 @@ M.bootstrap = function()
   -- Read and install packages
   paq(PKGS):install()
 end
-
-mega.augroup("PluginViewer", {
-  events = { "BufEnter" },
-  targets = { "<buffer>" },
-  --- Open a repository from an "authorname/repository" string
-  command = function()
-    nnoremap("gf", function()
-      local repo = vim.fn.expand("<cfile>")
-      print("hi", repo)
-      if not repo or #vim.split(repo, "/") ~= 2 then
-        return vim.cmd("norm! gf")
-      end
-      local url = string.format("https://www.github.com/%s", repo)
-      vim.fn.jobstart("open " .. url)
-      vim.notify(string.format("Opening %s at %s", repo, url))
-    end)
-  end,
-})
-
-require("mega.globals").augroup("Paq", {
-  {
-    events = { "User PaqDoneSync" },
-    command = function()
-      vim.notify("Paq sync complete!", nil, { title = "Paq" })
-    end,
-  },
-  {
-    events = { "User PaqDoneInstall" },
-    command = function()
-      vim.notify("Paq install complete!", nil, { title = "Paq" })
-    end,
-  },
-  {
-    events = { "User PaqDoneUpdate" },
-    command = function()
-      vim.notify("Paq update complete!", nil, { title = "Paq" })
-    end,
-  },
-})
 
 return M

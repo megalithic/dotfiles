@@ -51,7 +51,7 @@ install_plugins() {
 }
 
 sync_plugins() {
-  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()'
+  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()' -c ':quit'
 }
 
 do_install() {

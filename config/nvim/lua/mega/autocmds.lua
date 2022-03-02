@@ -75,13 +75,29 @@ augroup("Kitty", {
   },
 })
 
-augroup("Paq", {
+augroup("Plugins/Paq", {
   {
     events = { "BufWritePost" },
     targets = { "*/mega/plugins/*.lua" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vim.cmd("luafile %")
+    end,
+  },
+  {
+    events = { "BufEnter" },
+    targets = { "<buffer>" },
+    command = function()
+      --- Open a repository from an "authorname/repository" string
+      nnoremap("gf", function()
+        local repo = vim.fn.expand("<cfile>")
+        if not repo or #vim.split(repo, "/") ~= 2 then
+          return vim.cmd("norm! gf")
+        end
+        local url = string.format("https://www.github.com/%s", repo)
+        vim.fn.jobstart("open " .. url)
+        vim.notify(string.format("Opening %s at %s", repo, url))
+      end)
     end,
   },
 })
