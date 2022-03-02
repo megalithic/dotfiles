@@ -14,6 +14,18 @@ module.start = function()
     end
   end
 
+  -- bind mouse side buttons to forward/back
+  hs.eventtap.new({ hs.eventtap.event.types.otherMouseUp }, function(event)
+    local button = event:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
+      log.df("pressed other button: %s", button)
+    if button == 3 then
+      hs.eventtap.keyStroke({ "cmd" }, "[")
+    end
+    if button == 4 then
+      hs.eventtap.keyStroke({ "cmd" }, "]")
+    end
+  end):start()
+
   -- hs.hotkey.bind(Config.modifiers.mashShift, 'w', function()
   --   alert.show({text="Relayout of all apps"})
 

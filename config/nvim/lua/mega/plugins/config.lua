@@ -806,23 +806,6 @@ do -- vim-projectionist
   }
 end
 
-do -- package-info.nvim
-  require("package-info").setup({
-    colors = {
-      --up_to_date = C.cs.bg2, -- Text color for up to date package virtual text
-      outdated = "#d19a66", -- Text color for outdated package virtual text
-    },
-    icons = {
-      enable = true, -- Whether to display icons
-      style = {
-        up_to_date = "|  ", -- Icon for up to date packages
-        outdated = "|  ", -- Icon for outdated packages
-      },
-    },
-    autostart = true, -- Whether to autostart when `package.json` is opened
-  })
-end
-
 do -- numb.nvim
   require("numb").setup()
 end

@@ -153,8 +153,6 @@ local PKGS = {
   { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
-  "vuki656/package-info.nvim",
-  -- "jamestthompson3/nvim-remote-containers",
   "tpope/vim-dadbod",
   "kristijanhusak/vim-dadbod-completion",
   "kristijanhusak/vim-dadbod-ui",
@@ -199,7 +197,7 @@ local PKGS = {
   -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  { "iamcco/markdown-preview.nvim", run = "cd app && yarn install" },
+  { "iamcco/markdown-preview.nvim", run = "cd app && npm install", opt = true },
   "ellisonleao/glow.nvim",
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
