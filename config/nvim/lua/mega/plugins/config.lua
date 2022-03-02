@@ -19,6 +19,17 @@ do -- vim-startuptime
   vim.g.startuptime_tries = 10
 end
 
+do
+  require("scrollbar").setup({
+    handle = {
+      color = require("mega.utils.highlights").get_hl("PmenuSbar", "bg"),
+    },
+    -- NOTE: If telescope is not explicitly excluded this garbles input into its prompt buffer
+    excluded_filetypes = { "packer", "TelescopePrompt" },
+    excluded_buftypes = { "terminal", "prompt" },
+  })
+end
+
 do -- bullets.vim
   vim.cmd([[
       " Disable default bullets.vim mappings, clashes with other mappings

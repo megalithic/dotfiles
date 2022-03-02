@@ -12,6 +12,7 @@ local PKGS = {
   { "dstein64/vim-startuptime" },
   "lewis6991/impatient.nvim",
   -- "nathom/filetype.nvim",
+
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
@@ -29,6 +30,8 @@ local PKGS = {
   "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
   "rcarriga/nvim-notify",
+  "petertriho/nvim-scrollbar",
+
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -98,7 +101,7 @@ local PKGS = {
   "tami5/sqlite.lua",
   "nvim-telescope/telescope.nvim",
   "nvim-telescope/telescope-frecency.nvim",
-  { "nvim-telescope/telescope-fzf-native.nvim", run = "!make" },
+  { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-media-files.nvim",
   "nvim-telescope/telescope-symbols.nvim",
@@ -124,7 +127,7 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (GIT, vcs, et al) --
-  -- {"keith/gist.vim", run = "!chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
+  -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
   "mattn/webapi-vim",
   "rhysd/conflict-marker.vim",
   "itchyny/vim-gitbranch",
@@ -147,7 +150,7 @@ local PKGS = {
   "vim-test/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "tpope/vim-ragtag",
-  { "mrjones2014/dash.nvim", run = "!make install", opt = true },
+  { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "vuki656/package-info.nvim",
@@ -185,7 +188,7 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   { "sunaku/tmux-navigate", opt = true },
-  { "knubie/vim-kitty-navigator", run = "!cp -L ./*.py ~/.dotfiles/config/kitty", opt = true },
+  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true },
   -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "junegunn/vim-easy-align",
@@ -196,7 +199,7 @@ local PKGS = {
   -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  { "iamcco/markdown-preview.nvim", run = "!cd app && yarn install" },
+  { "iamcco/markdown-preview.nvim", run = "cd app && yarn install" },
   "ellisonleao/glow.nvim",
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
