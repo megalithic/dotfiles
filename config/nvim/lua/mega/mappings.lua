@@ -603,10 +603,6 @@ xmap("ga", "<Plug>(EasyAlign)")
 -- start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap("ga", "<Plug>(EasyAlign)")
 
--- # Dash
-nmap("<leader>d", "<cmd>Dash<CR>", "dash")
-nmap("<leader>D", "<cmd>DashWord<CR>", "dash: current word")
-
 -- # paq
 -- map("n", "<F5>", mega.sync_plugins())
 nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")

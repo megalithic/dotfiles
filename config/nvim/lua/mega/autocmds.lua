@@ -159,6 +159,11 @@ augroup("LazyLoads", {
             name = "telescope",
             D = { require("dash").search, "dash" },
           },
+          ["<leader>"] = {
+            name = "dash",
+            d = { [[<cmd>Dash<CR>]], "dash" },
+            D = { [[<cmd>DashWord<CR>]], "dash" },
+          },
         })
       end
     end,

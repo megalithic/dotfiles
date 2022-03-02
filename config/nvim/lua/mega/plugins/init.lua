@@ -231,6 +231,14 @@ local PKGS = {
   "SirJson/fzf-gitignore",
 }
 
+local M = {}
+
+M.sync_all = function()
+  -- package.loaded.paq = nil
+  -- vim.cmd("autocmd User PaqDoneSync quit")
+  (require("paq"))(PKGS):sync()
+end
+
 local function clone_paq()
   local path = vim.fn.stdpath("data") .. "/site/pack/paqs/start/paq-nvim"
   if vim.fn.empty(vim.fn.glob(path)) > 0 then
@@ -242,14 +250,6 @@ local function clone_paq()
       path,
     })
   end
-end
-
-local M = {}
-
-M.sync_all = function()
-  -- package.loaded.paq = nil
-  -- vim.cmd("autocmd User PaqDoneSync quit")
-  (require("paq"))(PKGS):sync()
 end
 
 -- `bin/paq-install` runs this for us in a headless nvim environment
