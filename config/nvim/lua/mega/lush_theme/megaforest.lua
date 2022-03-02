@@ -484,15 +484,11 @@ return lush(function()
     TSNote({ fg = C.blue, gui = "NONE,italic" }),
     TSDanger({ fg = C.red, gui = "bold" }),
     TSError({ gui = "undercurl", guisp = C.red }), -- ErrorText
-    -- highlight FIXME comments
-    commentTSWarning({ fg = C.orange, gui = "bold" }),
-    commentTSNote({ fg = C.blue, gui = "NONE,italic" }),
-    commentTSDanger({ fg = C.red, gui = "bold" }),
+    -- highlight FIXME/TODO/REF: comments
+    commentTSWarning({ bg = C.orange, fg = bg0, gui = "bold" }),
+    commentTSNote({ bg = C.blue, fg = bg0, gui = "NONE,italic" }),
+    commentTSDanger({ bg = C.dark_red, fg = fg, gui = "bold" }),
     TreesitterContext({ bg = C.bg1 }),
-
-    -- TSNote({ fg = C.bg1, bg = C.blue }),
-    -- TSWarning({ fg = C.bg1, bg = C.orange }),
-    -- TSDanger({ fg = C.bg1, bg = C.red }),
 
     -- TS: Markdown
     markdownTSPunctSpecial({ Special }),
@@ -647,7 +643,7 @@ return lush(function()
     CmpItemKindSnippet({ fg = C.green }),
     -- CmpItemKindVColor({}),
     -- CmpItemKindFile({ Dictionary }),
-    -- CmpItemKindReference({ Preproc }),
+    -- CmpItemKindReference({ PreProc }),
     -- CmpItemKindFolder({}),
     -- CmpItemKindEnumMember({}),
     CmpItemKindConstant({ fg = C.green }),

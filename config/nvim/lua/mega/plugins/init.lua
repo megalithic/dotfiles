@@ -267,6 +267,24 @@ M.bootstrap = function()
   paq(PKGS):install()
 end
 
+mega.augroup("PluginViewer", {
+  events = { "BufEnter" },
+  targets = { "<buffer>" },
+  --- Open a repository from an "authorname/repository" string
+  command = function()
+    nnoremap("gf", function()
+      local repo = vim.fn.expand("<cfile>")
+      print("hi", repo)
+      if not repo or #vim.split(repo, "/") ~= 2 then
+        return vim.cmd("norm! gf")
+      end
+      local url = string.format("https://www.github.com/%s", repo)
+      vim.fn.jobstart("open " .. url)
+      vim.notify(string.format("Opening %s at %s", repo, url))
+    end)
+  end,
+})
+
 require("mega.globals").augroup("Paq", {
   {
     events = { "User PaqDoneSync" },

@@ -261,11 +261,13 @@ require("which-key").register({
     h = { builtins.help_tags, "help" },
   },
   ["<leader>c"] = {
+    name = "+actions",
     d = { builtins.diagnostics, "telescope: diagnostics" },
     s = { builtins.lsp_document_symbols, "telescope: document symbols" },
     w = { builtins.lsp_dynamic_workspace_symbols, "telescope: search workspace symbols" },
   },
   ["<leader>l"] = {
+    name = "+lsp",
     d = { builtins.lsp_definitions, "telescope: definitions" },
     D = { builtins.lsp_type_definitions, "telescope: type definitions" },
     r = { builtins.lsp_references, "telescope: references" },

@@ -137,6 +137,13 @@ augroup("LazyLoads", {
       if mega.is_macos then
         print("should be loading dash.nvim")
         vim.cmd([[packadd dash.nvim]])
+
+        require("which-key").register({
+          ["<leader>f"] = {
+            name = "telescope",
+            D = { require("dash").search, "dash" },
+          },
+        })
       end
     end,
   },
