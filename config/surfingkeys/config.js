@@ -25,6 +25,7 @@ if (typeof api !== "undefined") {
     vunmap,
     imap,
     imapkey,
+    iunmap,
     getClickableElements,
     vmapkey,
     vmap,
@@ -51,6 +52,7 @@ function setup_surfingkeys({ api: api }) {
     mapkey,
     unmap,
     vunmap,
+    iunmap,
     imap,
     imapkey,
     getClickableElements,
@@ -149,7 +151,13 @@ function setup_surfingkeys({ api: api }) {
     Front.openOmnibar({ type: "Windows" });
   });
 
+  // disable emoji completion
+  iunmap(":");
+
+  // disable google translate of visually selected
   vunmap("t");
+
+  // disable window splitting (i use hammerspoon for that)
   unmap("w");
 
   vmap("H", "0");
