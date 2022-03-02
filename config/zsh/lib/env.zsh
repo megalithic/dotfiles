@@ -263,7 +263,6 @@ manpath=(
     /usr/local/share/man
     /usr/share/man
     ${HOMEBREW_PREFIX}/opt/*/libexec/gnuman(N-/)
-    "$(brew --prefix)/opt/coreutils/libexec/gnuman"
     $manpath
 )
 for man_file in /etc/manpaths.d/*(.N); do
@@ -322,7 +321,6 @@ path=(
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
     # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
-    "$(brew --prefix)/opt/coreutils/libexec/gnubin"
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
     ${CARGO_HOME}/bin(N-/)
