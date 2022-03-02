@@ -89,6 +89,11 @@ if has_wk then
       -- f = {}, -- see plugins.lua > telescope-mappings
       ["[h"] = "go to next git hunk",
       ["]h"] = "go to previous git hunk",
+      e = {
+        name = "edit files",
+        c = { [[:Copy<cr>]], "save as <input>" },
+        d = { [[:Duplicate<cr>]], "duplicate current file" },
+      },
       g = {
         name = "git",
         g = { "<cmd>Git<CR>", "Fugitive" },
@@ -134,6 +139,11 @@ if has_wk then
         l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
         L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
       },
+      m = {
+        name = "markdown",
+        p = { [[<cmd>MarkdownPreview<CR>]], "open preview" },
+        g = { [[<cmd>Glow<CR>]], "open glow" },
+      },
       r = {
         name = "runner",
         f = { "<cmd>Format<cr>", "Run _formatter" },
@@ -152,6 +162,15 @@ if has_wk then
         l = { "<cmd>TestLast<cr>", "Run _last test" },
         t = { "<cmd>TestLast<cr>", "Run _last test" },
         v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
+      },
+    },
+    z = {
+      name = "highlight",
+      t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
+      s = { mega.showCursorHighlights, "show syntax highlights under cursor" },
+      S = {
+        [[<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>]],
+        "all usages under cursor",
       },
     },
   }
@@ -595,15 +614,6 @@ nmap("<leader>x", mega.save_and_exec)
 -- # open uri; under cursor:
 nmap("go", mega.open_uri, "open uri under cursor")
 
--- # show TS and syntax highlights, under cursor
-nnoremap("zS", mega.showCursorHighlights, "show TS/syntax highlights under cursor")
--- # highlight all usages; under cursor
-nnoremap(
-  "zs",
-  "<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>",
-  "highlight all usages under cursor"
-)
-
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # git-related (fugitive, et al)
@@ -618,7 +628,6 @@ nnoremap(
 -- map("v", "<Leader>gG", ":Gist -po<CR>")
 
 -- # markdown-related
-nnoremap("<Leader>mp", "<cmd>MarkdownPreview<CR>", "open markdown preview")
 
 -- # slash
 exec(
@@ -657,8 +666,6 @@ xnoremap("au", ":lua require\"treesitter-unit\".select(true)<CR>")
 onoremap("iu", ":<c-u>lua require\"treesitter-unit\".select()<CR>")
 onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 
-nnoremap("<space>t", ":TSHighlightCapturesUnderCursor<CR>", "treesitter: highlight under cursor")
-
 -- # easy-align
 -- start interactive EasyAlign in visual mode (e.g. vipga)
 vmap("ga", "<Plug>(EasyAlign)")
@@ -696,7 +703,3 @@ nnoremap(
   [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]],
   "go-to: open link under cursor"
 )
-
--- # file
-nnoremap("<leader>ec", [[:Copy<cr>]], "file: save as (input)")
-nnoremap("<leader>ed", [[:Duplicate<cr>]], "file: duplicate current file")
