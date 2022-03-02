@@ -667,9 +667,9 @@ do -- vim-test
   vim.g["test#filename_modifier"] = ":."
   vim.g["test#preserve_screen"] = 0
 
-  if vim.fn.executable("richgo") == 1 then
-    vim.g["test#go#runner"] = "richgo"
-  end
+  -- if vim.fn.executable("richgo") == 1 then
+  --   vim.g["test#go#runner"] = "richgo"
+  -- end
 
   -- vcmd([[
   --   function! TerminalSplit(cmd)

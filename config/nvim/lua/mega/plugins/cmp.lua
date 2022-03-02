@@ -108,8 +108,8 @@ local function setup_cmp()
     sources = cmp.config.sources({
       { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {
-      -- M.sources.buffer,
-      { name = "fuzzy_buffer" },
+      M.sources.buffer,
+      -- { name = "fuzzy_buffer" },
     }),
   }
 
@@ -153,8 +153,8 @@ local function setup_cmp()
       { name = "path" },
       { name = "emmet_ls" },
     }, {
-      -- M.sources.buffer,
-      { name = "fuzzy_buffer" },
+      M.sources.buffer,
+      -- { name = "fuzzy_buffer" },
     }),
     formatting = {
       deprecated = true,

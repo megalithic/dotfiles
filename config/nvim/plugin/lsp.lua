@@ -223,10 +223,12 @@ local function setup_mappings(client, bufnr)
   local wk = require("which-key")
   wk.register(b_mappings)
 
+  local ok, lsp_format = pcall(require, "lsp-format")
+  local do_format = ok and lsp_format.format or vim.lsp.buf.formatting
   -- P(fmt("LSP client capabilities: %s", vim.inspect(client.resolved_capabilities)))
   local maps = {
     n = {
-      ["<leader>rf"] = { vim.lsp.buf.formatting, "lsp: format buffer" },
+      ["<leader>rf"] = { do_format, "lsp: format buffer" },
       ["gi"] = "lsp: implementation",
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
       ["gr"] = { vim.lsp.buf.references, "lsp: references" },
@@ -645,6 +647,12 @@ function mega.lsp.on_attach(client, bufnr)
 
   require("mega.plugins.null-ls")
   setup_formatting(client, bufnr)
+
+  local ok, lsp_format = pcall(require, "lsp-format")
+  if ok then
+    lsp_format.on_attach(client)
+  end
+
   setup_commands()
   setup_autocommands(client, bufnr)
   setup_diagnostics()

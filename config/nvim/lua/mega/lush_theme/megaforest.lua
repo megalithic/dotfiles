@@ -485,8 +485,8 @@ return lush(function()
     TSDanger({ fg = C.red, gui = "bold" }),
     TSError({ gui = "undercurl", guisp = C.red }), -- ErrorText
     -- highlight FIXME/TODO/REF: comments
-    commentTSWarning({ bg = C.orange, fg = bg0, gui = "bold" }),
-    commentTSNote({ bg = C.blue, fg = bg0, gui = "NONE,italic" }),
+    commentTSWarning({ fg = C.orange, gui = "bold" }),
+    commentTSNote({ fg = C.blue, gui = "NONE,italic" }),
     commentTSDanger({ bg = C.dark_red, fg = fg, gui = "bold" }),
     TreesitterContext({ bg = C.bg1 }),
 
