@@ -66,7 +66,6 @@ local PKGS = {
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
-  "lukas-reineke/lsp-format.nvim",
   ------------------------------------------------------------------------------
   -- (treesitter) --
   {

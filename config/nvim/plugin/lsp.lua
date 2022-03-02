@@ -86,30 +86,6 @@ local function setup_autocommands(client, bufnr)
     group = "LspDiagnostics",
   })
 
-  -- augroup("LspDiagnostics", {
-  --   {
-  --     events = { "CursorHold" },
-  --     targets = { "<buffer>" },
-  --     command = function()
-  --       -- mega.lsp.line_diagnostics()
-  --       -- if false then
-  --       diagnostic.open_float(nil, {
-  --         focusable = false,
-  --         close_events = {
-  --           "CursorMoved",
-  --           "BufHidden",
-  --           "InsertCharPre",
-  --           "BufLeave",
-  --           "InsertEnter",
-  --           "FocusLost",
-  --         },
-  --         source = "always",
-  --       })
-  --       -- end
-  --     end,
-  --   },
-  -- })
-
   if client and client.resolved_capabilities.document_formatting then
     -- format on save
     augroup("LspFormat", {
@@ -223,12 +199,9 @@ local function setup_mappings(client, bufnr)
   local wk = require("which-key")
   wk.register(b_mappings)
 
-  local ok, lsp_format = pcall(require, "lsp-format")
-  local do_format = ok and lsp_format.format or vim.lsp.buf.formatting
-  -- P(fmt("LSP client capabilities: %s", vim.inspect(client.resolved_capabilities)))
   local maps = {
     n = {
-      ["<leader>rf"] = { do_format, "lsp: format buffer" },
+      ["<leader>rf"] = { vim.lsp.buf.formatting, "lsp: format buffer" },
       ["gi"] = "lsp: implementation",
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
       ["gr"] = { vim.lsp.buf.references, "lsp: references" },
@@ -309,17 +282,6 @@ local function setup_formatting(cl, bn)
       cl.resolved_capabilities.document_formatting = false
     end
   end
-
-  -- if cl.resolved_capabilities.document_formatting then
-  --   vcmd([[
-  --   augroup LspFormat
-  --     autocmd! * <buffer>
-  --     mkview!
-  --     autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync(nil, 1500)
-  --     loadview
-  --   augroup END
-  -- ]])
-  -- end
 end
 
 -- [ TAGS ] --------------------------------------------------------------------
@@ -645,13 +607,7 @@ function mega.lsp.on_attach(client, bufnr)
     vim.bo[bufnr].tagfunc = "v:lua.mega.lsp.tagfunc"
   end
 
-  require("mega.plugins.null-ls")
   setup_formatting(client, bufnr)
-
-  local ok, lsp_format = pcall(require, "lsp-format")
-  if ok then
-    lsp_format.on_attach(client)
-  end
 
   setup_commands()
   setup_autocommands(client, bufnr)
@@ -1132,4 +1088,5 @@ for server, _ in pairs(mega.lsp.servers) do
 
   local config = mega.lsp.get_server_config(server)
   lspconfig[server].setup(config)
+  require("mega.plugins.null-ls")
 end

@@ -22,7 +22,7 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 -- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
 -- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
 
--- NOTE: presently handled by null-ls/efm-ls
+-- NOTE: presently handled by null-ls
 -- Trim Whitespace
 -- exec(
 --   [[
