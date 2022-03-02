@@ -249,6 +249,7 @@ local M = {}
 M.sync_all = function()
   -- package.loaded.paq = nil
   (require("paq"))(PKGS):sync()
+  vim.cmd("autocmd User PaqDoneSync quit")
 end
 
 -- `bin/paq-install` runs this for us in a headless nvim environment
@@ -270,19 +271,19 @@ require("mega.globals").augroup("Paq", {
   {
     events = { "User PaqDoneSync" },
     command = function()
-      vim.notify("Paq sync complete", nil, { title = "Paq" })
+      vim.notify("Paq sync complete!", nil, { title = "Paq" })
     end,
   },
   {
     events = { "User PaqDoneInstall" },
     command = function()
-      vim.notify("Paq install complete", nil, { title = "Paq" })
+      vim.notify("Paq install complete!", nil, { title = "Paq" })
     end,
   },
   {
-    events = { "User PaqUpdateInstall" },
+    events = { "User PaqDoneUpdate" },
     command = function()
-      vim.notify("Paq update complete", nil, { title = "Paq" })
+      vim.notify("Paq update complete!", nil, { title = "Paq" })
     end,
   },
 })

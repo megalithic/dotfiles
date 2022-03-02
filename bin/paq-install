@@ -47,11 +47,11 @@ do_clone() {
 }
 
 install_plugins() {
-  nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()' -c 'quit'
+  nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()'
 }
 
 sync_plugins() {
-  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()' -c ':quit'
+  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()'
 }
 
 do_install() {
