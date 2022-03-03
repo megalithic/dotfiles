@@ -182,12 +182,12 @@ augroup("YankHighlightedRegion", {
 augroup("Terminal", {
   {
     events = { "TermClose" },
-    targets = { "*" },
+    targets = { "term://*" },
     command = "noremap <buffer><silent><ESC> :bd!<CR>",
   },
   {
     events = { "TermClose" },
-    targets = { "*" },
+    targets = { "term://*" },
     command = function()
       --- automatically close a terminal if the job was successful
       if not vim.v.event.status == 0 then
@@ -199,21 +199,16 @@ augroup("Terminal", {
     events = { "TermOpen" },
     targets = { "term://*" },
     command = function()
-      vim.opt_local.winhighlight = table.concat({
-        "Normal:DarkenedPanel",
-        "EndOfBuffer:DarkenedPanel",
-        "VertSplit:DarkenedPanel",
-        "StatusLine:DarkenedStatusline",
-        "StatusLineNC:DarkenedStatuslineNC",
-        "SignColumn:DarkenedPanel",
-      }, ",")
+      -- vim.opt_local.winhighlight = table.concat({
+      --   "Normal:DarkenedPanel",
+      --   "EndOfBuffer:DarkenedPanel",
+      --   "VertSplit:DarkenedPanel",
+      --   "StatusLine:DarkenedStatusline",
+      --   "StatusLineNC:DarkenedStatuslineNC",
+      --   "SignColumn:DarkenedPanel",
+      -- }, ",")
+      print("termopen!")
       vim.cmd([[setlocal nonumber norelativenumber conceallevel=0 | startinsert]])
-      local opts = { noremap = true }
-      vim.api.nvim_buf_set_keymap(0, "t", "<esc>", [[<C-\><C-n>]], opts)
-      vim.api.nvim_buf_set_keymap(0, "t", "<C-h>", [[<C-\><C-n><C-W>h]], opts)
-      vim.api.nvim_buf_set_keymap(0, "t", "<C-j>", [[<C-\><C-n><C-W>j]], opts)
-      vim.api.nvim_buf_set_keymap(0, "t", "<C-k>", [[<C-\><C-n><C-W>k]], opts)
-      vim.api.nvim_buf_set_keymap(0, "t", "<C-l>", [[<C-\><C-n><C-W>l]], opts)
     end,
   },
 })

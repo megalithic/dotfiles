@@ -333,9 +333,24 @@ do -- golden_size.nvim
         end
       end
     end
+    local function ignore_by_filetype(types)
+      local filetype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
+      for _, type in pairs(types) do
+        -- mega.log(fmt("type: %s / filetype: %s", type, filetype))
+
+        if type == filetype then
+          return 1
+        end
+      end
+    end
 
     golden_size.set_ignore_callbacks({
       {
+        ignore_by_filetype,
+        {
+          "toggleterm",
+          "dirbuf",
+        },
         ignore_by_buftype,
         {
           "acwrite",
@@ -346,6 +361,7 @@ do -- golden_size.nvim
           "Vista",
           "LuaTree",
           "NvimTree",
+          "terminal",
           "nofile",
           "tsplayground",
         },

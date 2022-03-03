@@ -27,6 +27,28 @@ local vcmd = vim.cmd
 local exec = mega.exec
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
+mega.augroup("AddTerminalMappings", {
+  {
+    events = { "TermOpen" },
+    targets = { "term://*" },
+    command = function()
+      if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" then
+        local opts = { silent = false, buffer = 0 }
+        tnoremap("<esc>", [[<C-\><C-n>]], opts)
+        tnoremap("jk", [[<C-\><C-n>]], opts)
+        tnoremap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+        tnoremap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+        tnoremap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+        tnoremap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+        tnoremap("]t", [[<C-\><C-n>:tablast<CR>]])
+        tnoremap("[t", [[<C-\><C-n>:tabnext<CR>]])
+        tnoremap("<S-Tab>", [[<C-\><C-n>:bprev<CR>]])
+        tnoremap("<leader><Tab>", [[<C-\><C-n>:close \| :bnext<cr>]])
+      end
+    end,
+  },
+})
+
 local has_wk, wk = mega.safe_require("which-key")
 if has_wk then
   wk.setup({
