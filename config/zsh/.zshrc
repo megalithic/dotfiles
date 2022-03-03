@@ -39,7 +39,7 @@ if [[ $PLATFORM == "linux" ]]; then
 fi
 
 # NOTE: source order matters!
-for file in $ZDOTDIR/lib/{opts,vimode,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
+for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done

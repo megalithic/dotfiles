@@ -226,7 +226,7 @@ vim.opt.gdefault = true
 vim.opt.confirm = true -- make vim prompt me to save before doing destructive things
 vim.opt.completeopt = { "menuone", "noselect" }
 vim.opt.hlsearch = false
-vim.opt.autowriteall = true -- automatically :write before running commands and changing files
+vim.opt.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
 vim.opt.laststatus = 2 -- 2 = always show status line (filename, etc)
 vim.opt.termguicolors = true
@@ -453,8 +453,9 @@ vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before 
 vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
 
 -----------------------------------------------------------------------------//
--- Colorscheme
+-- Abbreviations/Cabbreviations
 -----------------------------------------------------------------------------//
-vim.opt.termguicolors = true
-vim.cmd([[colorscheme megaforest]])
+-- REF: https://github.com/lukas-reineke/lsp-format.nvim#wq-will-not-format
+vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.formatting_sync()" <bar> wq]])
+
 -- vim:foldmethod=marker

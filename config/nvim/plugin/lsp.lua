@@ -43,7 +43,7 @@ end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
 
-local function setup_autocommands(client, bufnr)
+local function setup_autocommands(client, _)
   if client and client.resolved_capabilities.code_lens then
     augroup("LspCodeLens", {
       {
@@ -81,20 +81,20 @@ local function setup_autocommands(client, bufnr)
       events = { "CursorHold" },
       targets = { "<buffer>" },
       command = function()
-        -- mega.lsp.line_diagnostics()
+        mega.lsp.line_diagnostics()
         -- if false then
-        diagnostic.open_float(nil, {
-          focusable = false,
-          close_events = {
-            "CursorMoved",
-            "BufHidden",
-            "InsertCharPre",
-            "BufLeave",
-            "InsertEnter",
-            "FocusLost",
-          },
-          source = "always",
-        })
+        -- diagnostic.open_float(nil, {
+        --   focusable = false,
+        --   close_events = {
+        --     "CursorMoved",
+        --     "BufHidden",
+        --     "InsertCharPre",
+        --     "BufLeave",
+        --     "InsertEnter",
+        --     "FocusLost",
+        --   },
+        --   source = "always",
+        -- })
         -- end
       end,
     },
@@ -273,7 +273,7 @@ local function setup_mappings(client, bufnr)
 
   if client.supports_method("textDocument/rename") then
     maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
-    -- maps.n["gl"] = { vim.lsp.buf.rename, "lsp: rename" }
+    maps.n["<leader>ln"] = { require("mega.utils").lsp.rename, "lsp: rename" }
   end
 
   for mode, value in pairs(maps) do
@@ -283,13 +283,13 @@ end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
 
-local function setup_formatting(cl, bn)
+local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (let null-ls takeover):
   local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua" }
   for i = 1, #disabled_formatting_ls do
-    if disabled_formatting_ls[i] == cl.name then
-      cl.resolved_capabilities.document_formatting = false
-      cl.resolved_capabilities.document_range_formatting = false
+    if disabled_formatting_ls[i] == client.name then
+      client.resolved_capabilities.document_formatting = false
+      client.resolved_capabilities.document_range_formatting = false
     end
   end
 
@@ -299,11 +299,11 @@ local function setup_formatting(cl, bn)
   --   return #available > 0
   -- end
 
-  -- if cl.name == "null-ls" then
-  --   if has_nls_formatter(api.nvim_buf_get_option(bn, "filetype")) then
-  --     cl.resolved_capabilities.document_formatting = true
+  -- if client.name == "null-ls" then
+  --   if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
+  --     client.resolved_capabilities.document_formatting = true
   --   else
-  --     cl.resolved_capabilities.document_formatting = false
+  --     client.resolved_capabilities.document_formatting = false
   --   end
   -- end
 end

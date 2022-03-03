@@ -429,8 +429,12 @@ do -- lightspeed.nvim or hop.nvim
     })
   else
     local hop = require("hop")
-    -- remove h,j,k,l from hops list of keys
-    hop.setup({ keys = "etovxqpdygfbzcisuran", jump_on_sole_occurrence = true })
+    hop.setup({
+      -- remove h,j,k,l from hops list of keys
+      keys = "etovxqpdygfbzcisuran",
+      jump_on_sole_occurrence = true,
+      uppercase_labels = false,
+    })
     nnoremap("s", function()
       hop.hint_char1({ multi_windows = false })
     end)
@@ -551,9 +555,17 @@ do -- toggleterm.nvim
     open_mapping = [[<c-\>]],
     shade_filetypes = { "none" },
     direction = "horizontal",
-    insert_mappings = true,
+    insert_mappings = false,
     start_in_insert = true,
-    float_opts = { border = "curved", winblend = 3 },
+    close_on_exit = true,
+    float_opts = {
+      border = "curved",
+      winblend = 3,
+      highlights = {
+        border = "Normal",
+        background = "Normal",
+      },
+    },
     size = function(term)
       if term.direction == "horizontal" then
         return 15

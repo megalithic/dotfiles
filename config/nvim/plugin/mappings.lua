@@ -52,6 +52,7 @@ mega.augroup("AddTerminalMappings", {
 
 local has_wk, wk = mega.safe_require("which-key")
 if has_wk then
+  -- REF: predefine groups: https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/plugins/which-key/init.lua#L76-L90
   wk.setup({
     plugins = {
       marks = true, -- shows a list of your marks on ' and `
@@ -102,6 +103,13 @@ if has_wk then
     show_help = true, -- show help message on the command line when the popup is visible
     triggers = "auto", -- automatically setup triggers
     -- triggers = {"<leader>"} -- or specifiy a list manually
+    --triggers_blacklist = {
+    -- list of mode / prefixes that should never be hooked by WhichKey
+    -- this is mostly relevant for key maps that start with a native binding
+    -- most people should not need to change this
+    -- 	i = { "j", "k" },
+    -- 	v = { "j", "k" },
+    -- },
   })
 
   local gs = require("gitsigns")
@@ -115,6 +123,7 @@ if has_wk then
       e = {
         name = "edit files",
         c = { [[:Copy<cr>]], "save as <input>" },
+        cp = { [[:let @+ = expand("%")<CR>]], "copy path to clipboard" },
         d = { [[:Duplicate<cr>]], "duplicate current file" },
       },
       g = {
@@ -195,8 +204,9 @@ if has_wk then
       },
     },
     z = {
-      name = "highlight",
-      t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
+      name = "highlight/folds/paging",
+      -- t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
+      -- TODO: ensure that we can get to these
       s = { mega.showCursorHighlights, "show syntax highlights under cursor" },
       S = {
         [[<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>]],

@@ -3,6 +3,9 @@ vim.bo.bufhidden = "wipe"
 
 -- easy quit
 vim.cmd([[nnoremap <buffer> q :q<CR>]])
+-- go up a dir
 vim.cmd([[nmap <buffer> - <Plug>(dirbuf_up)]])
+-- go up a dir
 vim.cmd([[nmap <buffer> <BS> <Plug>(dirbuf_up)]])
-vim.cmd([[nmap <buffer> <C-t> <Nop>]])
+-- acts like toggle-off
+vim.cmd([[nmap <buffer> <C-t> :q<CR>]])

@@ -57,7 +57,6 @@ end
 
 R("mega.globals")
 R("mega.options")
-R("mega.autocmds")
-R("mega.mappings")
 R("mega.megaline")
 R("mega.plugins.config")
+R("mega.colors").setup()

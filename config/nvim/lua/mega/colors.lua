@@ -213,4 +213,60 @@ return {
   status = status,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   style = style,
+  setup = function()
+    -- local H = require("mega.utils.highlights")
+    -- local function set_sidebar_highlight()
+    --   local normal_bg = H.get_hl("Normal", "bg")
+    --   local split_color = H.get_hl("VertSplit", "fg")
+    --   local bg_color = H.alter_color(normal_bg, -8)
+    --   local st_color = H.alter_color(H.get_hl("Visual", "bg"), -20)
+    --   local hls = {
+    --     { "PanelBackground", { background = bg_color } },
+    --     { "PanelHeading", { background = bg_color, bold = true } },
+    --     { "PanelVertSplit", { foreground = split_color, background = bg_color } },
+    --     { "PanelStNC", { background = bg_color, foreground = split_color } },
+    --     { "PanelSt", { background = st_color } },
+    --   }
+    --   for _, grp in ipairs(hls) do
+    --     H.set_hl(unpack(grp))
+    --   end
+    -- end
+
+    local sidebar_fts = {
+      "packer",
+      "dap-repl",
+      "flutterToolsOutline",
+      "undotree",
+      "dirbuf",
+      "dapui_*",
+    }
+
+    local function on_sidebar_enter()
+      vim.wo.winhighlight = table.concat({
+        "Normal:PanelBackground",
+        "EndOfBuffer:PanelBackground",
+        "StatusLine:PanelSt",
+        "StatusLineNC:PanelStNC",
+        "SignColumn:PanelBackground",
+        "VertSplit:PanelVertSplit",
+      }, ",")
+    end
+
+    mega.augroup("UserHighlights", {
+      -- {
+      --   events = { "ColorScheme" },
+      --   targets = { "*" },
+      --   command = set_sidebar_highlight,
+      -- },
+      {
+        events = { "FileType" },
+        targets = sidebar_fts,
+        command = on_sidebar_enter,
+      },
+    })
+
+    -- [ colorscheme ] ---------------------------------------------------------
+    vim.opt.termguicolors = true
+    vim.cmd([[colorscheme megaforest]])
+  end,
 }

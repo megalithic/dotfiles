@@ -144,7 +144,7 @@ return lush(function()
     MsgSeparator({ bg = bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
     NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-    Normal({ fg = fg, bg = "NONE" }), -- normal text
+    Normal({ fg = fg, bg = bg0 }), -- normal text
     NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
     GreyFloat({ bg = grey1 }),
     GreyFloatBorder({ fg = grey1 }),
@@ -169,6 +169,20 @@ return lush(function()
     DarkenedPanel({ bg = bg_dark }),
     DarkenedStatusline({ bg = bg_dark }),
     DarkenedStatuslineNC({ cterm = "italic", bg = bg_dark }),
+
+    ---- sidebar  -----------------------------------------------------
+
+    PanelBackground({ bg = bg0.darken(8) }),
+    PanelHeading({ PanelBackground, gui = "bold" }),
+    PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
+    PanelStNC({ PanelVertSplit }),
+    PanelSt({ bg = bg_visual.darken(20) }),
+
+    -- { "PanelBackground", { background = bg_color } },
+    -- { "PanelHeading", { background = bg_color, bold = true } },
+    -- { "PanelVertSplit", { foreground = split_color, background = bg_color } },
+    -- { "PanelStNC", { background = bg_color, foreground = split_color } },
+    -- { "PanelSt", { background = st_color } },
 
     Visual({ fg = "NONE", bg = bg_visual }), -- Visual mode selection
     VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".

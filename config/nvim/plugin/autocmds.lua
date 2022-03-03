@@ -3,6 +3,15 @@
 local cmd, fn = vim.cmd, vim.fn
 local au, exec, augroup = mega.au, mega.exec, mega.augroup
 
+-- vim.api.nvim_exec(
+--   [[
+--    augroup vimrc -- Ensure all autocommands are cleared
+--    autocmd!
+--    augroup END
+--   ]],
+--   ''
+-- )
+
 au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
 au([[StdinReadPost * set buftype=nofile]])
 au([[FileType help wincmd L]])
@@ -19,8 +28,6 @@ au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
 au([[FileType help,startuptime,qf,lspinfo nnoremap,man <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
--- au([[TextYankPost * if v:event.operator is 'y' && v:event.regname is '+' | OSCYankReg + | endif]]) -- https://github.com/ojroques/vim-oscyank#configuration
--- vim.cmd([[if !exists("b:undo_ftplugin") | let b:undo_ftplugin .= '' | endif]])
 
 -- NOTE: presently handled by null-ls
 -- Trim Whitespace
@@ -144,6 +151,7 @@ augroup("Plugins/Paq", {
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vim.cmd("luafile %")
+      vim.notify(string.format("sourced %s", vim.fn.expand("%")))
     end,
   },
   {
@@ -174,7 +182,6 @@ augroup("YankHighlightedRegion", {
         on_visual = false,
         higroup = "Visual",
       })
-      -- "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 150, on_macro = true, on_visual=false })"),
     end,
   },
 })
@@ -197,32 +204,32 @@ augroup("Terminal", {
   },
 })
 
--- augroup("UpdateVim", {
---   {
---     -- TODO: not clear what effect this has in the post vimscript world
---     -- it correctly sources $MYVIMRC but all the other files that it
---     -- requires will need to be resourced or reloaded themselves
---     events = "BufWritePost",
---     targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
---     modifiers = { "++nested" },
---     command = function()
---       local ok, msg = pcall(vim.cmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
---       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
---       vim.notify(msg)
---     end,
---   },
---   {
---     events = { "FocusLost" },
---     targets = { "*" },
---     command = "silent! wall",
---   },
---   -- Make windows equal size when vim resizes
---   {
---     events = { "VimResized" },
---     targets = { "*" },
---     command = "wincmd =",
---   },
--- })
+augroup("UpdateVim", {
+  --   {
+  --     -- TODO: not clear what effect this has in the post vimscript world
+  --     -- it correctly sources $MYVIMRC but all the other files that it
+  --     -- requires will need to be resourced or reloaded themselves
+  --     events = "BufWritePost",
+  --     targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
+  --     modifiers = { "++nested" },
+  --     command = function()
+  --       local ok, msg = pcall(vim.cmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
+  --       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
+  --       vim.notify(msg)
+  --     end,
+  --   },
+  {
+    events = { "FocusLost" },
+    targets = { "*" },
+    command = "silent! wall",
+  },
+  --   -- Make windows equal size when vim resizes
+  --   {
+  --     events = { "VimResized" },
+  --     targets = { "*" },
+  --     command = "wincmd =",
+  --   },
+})
 
 augroup("LazyLoads", {
   {
@@ -243,7 +250,6 @@ augroup("LazyLoads", {
     targets = { "*" },
     command = function()
       if mega.is_macos then
-        print("should be loading dash.nvim")
         vim.cmd([[packadd dash.nvim]])
 
         require("which-key").register({
