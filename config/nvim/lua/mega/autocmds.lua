@@ -198,12 +198,17 @@ augroup("Terminal", {
   {
     events = { "TermOpen" },
     targets = { "*" },
-    command = [[setlocal nonumber norelativenumber conceallevel=0]],
-  },
-  {
-    events = { "TermOpen" },
-    targets = { "*" },
-    command = "startinsert",
+    command = function()
+      vim.opt_local.winhighlight = table.concat({
+        "Normal:DarkenedPanel",
+        "EndOfBuffer:DarkenedPanel",
+        "VertSplit:DarkenedPanel",
+        "StatusLine:DarkenedStatusline",
+        "StatusLineNC:DarkenedStatuslineNC",
+        "SignColumn:DarkenedPanel",
+      }, ",")
+      vim.cmd([[setlocal nonumber norelativenumber conceallevel=0 | startinsert]])
+    end,
   },
 })
 

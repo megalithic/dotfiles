@@ -293,19 +293,19 @@ local function setup_formatting(cl, bn)
     end
   end
 
-  local function has_nls_formatter(ft)
-    local sources = require("null-ls.sources")
-    local available = sources.get_available(ft, "NULL_LS_FORMATTING")
-    return #available > 0
-  end
+  -- local function has_nls_formatter(ft)
+  --   local sources = require("null-ls.sources")
+  --   local available = sources.get_available(ft, "NULL_LS_FORMATTING")
+  --   return #available > 0
+  -- end
 
-  if cl.name == "null-ls" then
-    if has_nls_formatter(api.nvim_buf_get_option(bn, "filetype")) then
-      cl.resolved_capabilities.document_formatting = true
-    else
-      cl.resolved_capabilities.document_formatting = false
-    end
-  end
+  -- if cl.name == "null-ls" then
+  --   if has_nls_formatter(api.nvim_buf_get_option(bn, "filetype")) then
+  --     cl.resolved_capabilities.document_formatting = true
+  --   else
+  --     cl.resolved_capabilities.document_formatting = false
+  --   end
+  -- end
 end
 
 -- [ TAGS ] --------------------------------------------------------------------
@@ -631,13 +631,13 @@ function mega.lsp.on_attach(client, bufnr)
     vim.bo[bufnr].tagfunc = "v:lua.mega.lsp.tagfunc"
   end
 
-  -- setup_formatting(client, bufnr)
-
+  setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)
   setup_diagnostics()
   setup_handlers()
   setup_mappings(client, bufnr)
+
   local ok, lsp_format = pcall(require, "lsp-format")
   if ok then
     lsp_format.on_attach(client)

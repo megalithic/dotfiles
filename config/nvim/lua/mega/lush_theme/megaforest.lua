@@ -164,6 +164,12 @@ return lush(function()
     SpellLocal({ fg = cyan, bg = "NONE", gui = "undercurl", sp = cyan }),
     SpellRare({ fg = purple, bg = "NONE", gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.
 
+    ---- :help toggleterm  -----------------------------------------------------
+
+    DarkenedPanel({ bg = bg_dark }),
+    DarkenedStatusline({ bg = bg_dark }),
+    DarkenedStatuslineNC({ cterm = "italic", bg = bg_dark }),
+
     Visual({ fg = "NONE", bg = bg_visual }), -- Visual mode selection
     VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
     WarningMsg({ fg = yellow, bg = "NONE" }), -- warning messages
@@ -780,8 +786,7 @@ return lush(function()
 
     DevIconLua({ fg = fg }),
 
-    ---- :help ts-rainbow  -------------------------------------------
-    ---
+    ---- :help ts-rainbow  -----------------------------------------------------
     rainbowcol1({ fg = C.red }),
     rainbowcol2({ fg = C.yellow }),
     rainbowcol3({ fg = C.green }),
@@ -790,7 +795,7 @@ return lush(function()
     rainbowcol6({ fg = C.magenta }),
     rainbowcol7({ fg = C.purple }),
 
-    ---- :help telescope -------------------------------------------
+    ---- :help telescope -------------------------------------------------------
 
     TelescopeNormal({ bg = C.bg2.darken(20) }),
     TelescopeBorder({ fg = C.bg0, bg = C.bg2.darken(20) }),
