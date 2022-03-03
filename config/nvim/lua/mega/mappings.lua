@@ -153,6 +153,13 @@ if has_wk then
         l = { "<cmd>TestLast<cr>", "Run _last test" },
         v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
       },
+      t = {
+        name = "terminal",
+        t = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
+        f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
+        h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
+        v = { "<cmd>ToggleTerm direction=vertical<cr>", "Vertical" },
+      },
     },
     ["<localleader>"] = {
       t = {

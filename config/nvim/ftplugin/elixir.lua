@@ -30,11 +30,12 @@ vim.api.nvim_exec(
   iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
   iabbrev eputs IO.puts
 
-  nmap <silent> <leader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile --trace<CR>
-  nmap <silent> <leader>tt :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
-  nmap <silent> <leader>tn :let g:elixir_test_nearest=1<CR>\|:TestNearest<CR>
-  nmap <silent> <leader>tl :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
-  nmap <silent> <leader>tv :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
+  nmap <silent> <localleader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile --trace<CR>
+  nmap <silent> <localleader>ta :let g:elixir_test_nearest=0<CR>\|:TestFile --trace<CR>
+  nmap <silent> <localleader>tt :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
+  nmap <silent> <localleader>tn :let g:elixir_test_nearest=1<CR>\|:TestNearest<CR>
+  nmap <silent> <localleader>tl :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
+  nmap <silent> <localleader>tv :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
 
   " not quite working with elixir in vim-test
   nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite<CR>
