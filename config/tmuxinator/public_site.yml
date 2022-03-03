@@ -22,7 +22,7 @@ windows:
             - ssh seth-dev
             - cd ~/code/public-site
             - eval $(desk load)
-            - dev down; dev down --remove-orphans; dev up -d && dev logs -f
+            - dev down -v --remove-orphans; dev up -d && dev logs -f
         - repl:
             - ssh seth-dev
             - cd ~/code/public-site

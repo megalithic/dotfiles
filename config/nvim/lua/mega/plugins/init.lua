@@ -20,6 +20,7 @@ local PKGS = {
   "savq/melange",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
+  -- @trial: https://github.com/beauwilliams/focus.nvim
   "kyazdani42/nvim-web-devicons",
   "edluffy/specs.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
@@ -35,7 +36,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
-  -- "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
+  -- @trial: https://github.com/williamboman/nvim-lsp-installer, -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   "lukas-reineke/lsp-format.nvim",
@@ -60,7 +61,7 @@ local PKGS = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  "j-hui/fidget.nvim", -- replace lsp-status with this
+  "j-hui/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
