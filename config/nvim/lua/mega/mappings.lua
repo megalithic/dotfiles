@@ -33,6 +33,7 @@ mega.augroup("AddTerminalMappings", {
     targets = { "term://*" },
     command = function()
       if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" then
+        vim.notify("yes, toggleterm we are")
         local opts = { silent = false, buffer = 0 }
         tnoremap("<esc>", [[<C-\><C-n>]], opts)
         tnoremap("jk", [[<C-\><C-n>]], opts)
@@ -710,8 +711,8 @@ nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 -- nmap("<C-t>", "<cmd>NvimTreeToggle<CR>", "nvim-tree: toggle")
 
 -- # dirbuf.nvim
-nmap("<C-t>", "<cmd>vertical leftabove split|vertical resize 60|Dirbuf<CR>", "filetree: open dirbuf")
-nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ft
+nmap("<C-t>", "<cmd>vertical topleft split|vertical resize 60|Dirbuf<CR>", "filetree: open dirbuf")
+nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
 -- # telescope
 nmap("<leader>a", "<cmd>lua require('telescope.builtin').live_grep()<cr>", "telescope: live grep for a word")

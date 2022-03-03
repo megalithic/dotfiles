@@ -549,10 +549,9 @@ do -- toggleterm.nvim
   local toggleterm = require("toggleterm")
   toggleterm.setup({
     open_mapping = [[<c-\>]],
-    -- shade_terminals = true,
     shade_filetypes = { "none" },
     direction = "horizontal",
-    insert_mappings = false,
+    insert_mappings = true,
     start_in_insert = true,
     float_opts = { border = "curved", winblend = 3 },
     size = function(term)

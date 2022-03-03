@@ -195,22 +195,6 @@ augroup("Terminal", {
       end
     end,
   },
-  {
-    events = { "TermOpen" },
-    targets = { "term://*" },
-    command = function()
-      -- vim.opt_local.winhighlight = table.concat({
-      --   "Normal:DarkenedPanel",
-      --   "EndOfBuffer:DarkenedPanel",
-      --   "VertSplit:DarkenedPanel",
-      --   "StatusLine:DarkenedStatusline",
-      --   "StatusLineNC:DarkenedStatuslineNC",
-      --   "SignColumn:DarkenedPanel",
-      -- }, ",")
-      print("termopen!")
-      vim.cmd([[setlocal nonumber norelativenumber conceallevel=0]])
-    end,
-  },
 })
 
 -- augroup("UpdateVim", {

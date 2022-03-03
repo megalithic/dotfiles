@@ -58,7 +58,7 @@ bindkey '^[[6~' history-beginning-search-forward
 bindkey '^[[Z' reverse-menu-complete
 
 # for autosuggestions phrase accept
-bindkey '^j' vi-forward-blank-word
+# bindkey '^j' vi-forward-blank-word
 
 # Add Some Emacs Keybindings
 bindkey '^p' up-history
@@ -106,3 +106,12 @@ bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
 bindkey '^P' history-substring-search-up
 bindkey '^N' history-substring-search-down
+
+# REF: https://jdhao.github.io/2019/06/13/zsh_bind_keys/#bind-key-to-run-a-custom-command
+# bindkey -s '^o' 'nvim $(fzf)^M'
+
+# unbind my pane/window/buffer/split navigation keys that zsh steals
+bindkey -r '^J'
+bindkey -r '^K'
+bindkey -r '^L'
+bindkey -r '^H'
