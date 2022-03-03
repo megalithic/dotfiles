@@ -86,122 +86,124 @@ local function setup_autocommands(client, bufnr)
     group = "LspDiagnostics",
   })
 
-  if client and client.resolved_capabilities.document_formatting then
-    -- format on save
-    augroup("LspFormat", {
-      {
-        events = { "BufWritePre" },
-        targets = { "<buffer>" },
-        command = function()
-          -- BUG: folds are are removed when formatting is done, so we save the current state of the
-          -- view and re-apply it manually after formatting the buffer
-          -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
-          vim.cmd("mkview!")
-          local ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
-          if not ok then
-            vim.notify(fmt("Error formatting file: %s", msg))
-          end
-          vim.cmd("loadview")
-        end,
-      },
-    })
-  end
+  -- if client and client.resolved_capabilities.document_formatting then
+  --   -- format on save
+  --   augroup("LspFormat", {
+  --     {
+  --       events = { "BufWritePre" },
+  --       targets = { "<buffer>" },
+  --       command = function()
+  --         -- BUG: folds are are removed when formatting is done, so we save the current state of the
+  --         -- view and re-apply it manually after formatting the buffer
+  --         -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
+  --         vim.cmd("mkview!")
+  --         local ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
+  --         if not ok then
+  --           vim.notify(fmt("Error formatting file: %s", msg))
+  --         end
+  --         vim.cmd("loadview")
+  --       end,
+  --     },
+  --   })
+  -- end
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
   --- # diagnostics navigation mappings
-  bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })
-  bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
-  bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
-  bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
-  bmap("n", "<leader>ld", "lua mega.lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
-  bmap(
-    "n",
-    "<leader>lD",
-    [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "CursorMoved", "BufHidden", "InsertCharPre", "BufLeave", "InsertEnter", "FocusLost" }, source = "always" })]]
-  )
+  -- bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })
+  -- bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
+  -- bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
+  -- bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
+  -- bmap("n", "<leader>ld", "lua mega.lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
+  -- bmap(
+  --   "n",
+  --   "<leader>lD",
+  --   [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "CursorMoved", "BufHidden", "InsertCharPre", "BufLeave", "InsertEnter", "FocusLost" }, source = "always" })]]
+  -- )
 
-  --- # misc mappings
-  bmap("n", "<leader>ln", "lua require('mega.utils').lsp.rename()", { label = "lsp: rename document symbol" })
-  bufmap("K", "lua vim.lsp.buf.hover()")
-  bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
+  -- --- # misc mappings
+  -- bmap("n", "<leader>ln", "lua require('mega.utils').lsp.rename()", { label = "lsp: rename document symbol" })
+  -- bufmap("K", "lua vim.lsp.buf.hover()")
+  -- bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
 
-  if client.resolved_capabilities.code_lens then
-    bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
-  end
+  -- if client.resolved_capabilities.code_lens then
+  --   bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
+  -- end
 
-  --- # trouble mappings
-  nmap(
-    "<leader>lt",
-    "<cmd>TroubleToggle document_diagnostics<cr>",
-    { label = "lsp: toggle Trouble for document diagnostics" }
-  )
+  -- --- # trouble mappings
+  -- nmap(
+  --   "<leader>lt",
+  --   "<cmd>TroubleToggle document_diagnostics<cr>",
+  --   { label = "lsp: toggle Trouble for document diagnostics" }
+  -- )
 
-  local b_mappings = {
-    ["<leader>"] = {
-      l = {
-        name = "LSP",
-        ["'"] = { "<cmd>LspStart<cr>", "LSP start" },
-        [","] = { "LSP stop" },
-        [",a"] = { "<cmd>LspStop<cr>", "stop all" },
-        [",s"] = { "select" },
-        A = "code actions (range)",
-        -- D = "diagnostics (project)",
-        a = "code actions (cursor)",
-        c = "clear diagnostics",
-        -- d = "diagnostics (buffer)",
-        f = "format",
-        g = { name = "go to" },
-        gD = "declaration",
-        gd = "definition",
-        gi = "implementation",
-        gr = "references",
-        gy = "type definition",
-        h = "hover",
-        i = { "<cmd>LspInfo<cr>", "LSP info", buffer = bufnr },
-        k = "signature help",
-        l = { "<cmd>LspLog<cr>", "LSP logs", buffer = bufnr },
-        p = "peek definition",
-        r = "rename",
-        n = "rename",
-        s = {
-          [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>]],
-          "symbols (buffer/document)",
-          buffer = bufnr,
-        },
-        S = {
-          [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
-          "symbols (workspace)",
-        },
-      },
-    },
-    ["g"] = {
-      ["d"] = { [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]], "LSP definitions", buffer = bufnr },
-      ["D"] = {
-        [[<cmd>lua require('telescope.builtin').lsp_type_definitions()<cr>]],
-        "LSP type definitions",
-        buffer = bufnr,
-      },
-      ["a"] = { [[<cmd>lua require('telescope.builtin').lsp_code_actions()<cr>]], "LSP code actions", buffer = bufnr },
-      ["i"] = {
-        [[<cmd>lua require('telescope.builtin').lsp_implementations()<cr>]],
-        "LSP implementations",
-        buffer = bufnr,
-      },
-      ["r"] = { [[<cmd>lua require('telescope.builtin').lsp_references()<cr>]], "LSP references", buffer = bufnr },
-      -- ["n"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
-      ["l"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
-    },
-  }
+  -- local b_mappings = {
+  --   ["<leader>"] = {
+  --     l = {
+  --       name = "LSP",
+  --       ["'"] = { "<cmd>LspStart<cr>", "LSP start" },
+  --       [","] = { "LSP stop" },
+  --       [",a"] = { "<cmd>LspStop<cr>", "stop all" },
+  --       [",s"] = { "select" },
+  --       A = "code actions (range)",
+  --       -- D = "diagnostics (project)",
+  --       a = "code actions (cursor)",
+  --       c = "clear diagnostics",
+  --       -- d = "diagnostics (buffer)",
+  --       f = "format",
+  --       g = { name = "go to" },
+  --       gD = "declaration",
+  --       gd = "definition",
+  --       gi = "implementation",
+  --       gr = "references",
+  --       gy = "type definition",
+  --       h = "hover",
+  --       i = { "<cmd>LspInfo<cr>", "LSP info", buffer = bufnr },
+  --       k = "signature help",
+  --       l = { "<cmd>LspLog<cr>", "LSP logs", buffer = bufnr },
+  --       p = "peek definition",
+  --       r = "rename",
+  --       n = "rename",
+  --       s = {
+  --         [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>]],
+  --         "symbols (buffer/document)",
+  --         buffer = bufnr,
+  --       },
+  --       S = {
+  --         [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
+  --         "symbols (workspace)",
+  --       },
+  --     },
+  --   },
+  --   ["g"] = {
+  --     ["d"] = { [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]], "LSP definitions", buffer = bufnr },
+  --     ["D"] = {
+  --       [[<cmd>lua require('telescope.builtin').lsp_type_definitions()<cr>]],
+  --       "LSP type definitions",
+  --       buffer = bufnr,
+  --     },
+  --     ["a"] = { [[<cmd>lua require('telescope.builtin').lsp_code_actions()<cr>]], "LSP code actions", buffer = bufnr },
+  --     ["i"] = {
+  --       [[<cmd>lua require('telescope.builtin').lsp_implementations()<cr>]],
+  --       "LSP implementations",
+  --       buffer = bufnr,
+  --     },
+  --     ["r"] = { [[<cmd>lua require('telescope.builtin').lsp_references()<cr>]], "LSP references", buffer = bufnr },
+  --     -- ["n"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
+  --     ["l"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
+  --   },
+  -- }
 
-  local wk = require("which-key")
-  wk.register(b_mappings)
+  -- local wk = require("which-key")
+  -- wk.register(b_mappings)
 
+  local ok, lsp_format = pcall(require, "lsp-format")
+  local do_format = ok and lsp_format.format or vim.lsp.buf.formatting
   local maps = {
     n = {
-      ["<leader>rf"] = { vim.lsp.buf.formatting, "lsp: format buffer" },
+      ["<leader>rf"] = { do_format, "lsp: format buffer" },
       ["gi"] = "lsp: implementation",
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
       ["gr"] = { vim.lsp.buf.references, "lsp: references" },
@@ -607,13 +609,17 @@ function mega.lsp.on_attach(client, bufnr)
     vim.bo[bufnr].tagfunc = "v:lua.mega.lsp.tagfunc"
   end
 
-  setup_formatting(client, bufnr)
+  -- setup_formatting(client, bufnr)
 
   setup_commands()
   setup_autocommands(client, bufnr)
   setup_diagnostics()
   setup_handlers()
   setup_mappings(client, bufnr)
+  local ok, lsp_format = pcall(require, "lsp-format")
+  if ok then
+    lsp_format.on_attach(client)
+  end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end

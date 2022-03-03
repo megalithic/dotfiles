@@ -38,6 +38,7 @@ local PKGS = {
   -- "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
+  "lukas-reineke/lsp-format.nvim",
   "hrsh7th/nvim-cmp",
   "hrsh7th/cmp-nvim-lsp",
   "hrsh7th/cmp-nvim-lua",
@@ -92,8 +93,8 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
-  -- "ggandor/lightspeed.nvim",
-  "phaazon/hop.nvim",
+  "ggandor/lightspeed.nvim",
+  -- "phaazon/hop.nvim",
   "akinsho/toggleterm.nvim",
   "elihunter173/dirbuf.nvim",
   -- "kyazdani42/nvim-tree.lua",
@@ -197,7 +198,7 @@ local PKGS = {
   -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  { "iamcco/markdown-preview.nvim", run = "cd app && npm install", opt = true },
+  { "iamcco/markdown-preview.nvim", run = "yarn install", opt = true },
   "ellisonleao/glow.nvim",
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",

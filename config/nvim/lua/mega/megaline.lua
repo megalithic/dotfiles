@@ -2,33 +2,49 @@
 -- @akinsho, @echasnovski, @lukas-reineke, @kristijanhusak
 
 local M = {}
--- Export module
-_G.Megaline = M
 
 local fn = vim.fn
 local api = vim.api
 local expand = fn.expand
 local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
-local contains = vim.tbl_contains
 local fmt = string.format
 local C = require("mega.colors")
 local H = require("mega.utils.highlights")
 local U = {}
 
-vim.o.laststatus = 2 -- Always show statusline
-
--- Module behavior
-api.nvim_exec(
-  [[augroup Megaline
-        au!
-        au WinEnter,BufEnter * setlocal statusline=%!v:lua.Megaline.active()
-        " au FocusGained * setlocal let g:vim_in_focus = v:true
-        au WinLeave,BufLeave * setlocal statusline=%!v:lua.Megaline.inactive()
-        " au FocusLost * setlocal let g:vim_in_focus = v:false
-      augroup END]],
-  false
-)
+mega.augroup("statusline", {
+  {
+    events = { "WinEnter", "BufEnter" },
+    targets = { "*" },
+    command = function()
+      vim.wo.statusline = "%!v:lua.__activate_statusline()"
+    end,
+  },
+  {
+    events = { "WinLeave", "BufLeave" },
+    targets = { "*" },
+    command = function()
+      -- -- :h qf.vim, disable qf statusline
+      -- vim.g.qf_disable_statusline = 1
+      vim.wo.statusline = "%!v:lua.__deactivate_statusline()"
+    end,
+  },
+  {
+    events = { "FocusGained" },
+    targets = { "*" },
+    command = function()
+      vim.g.vim_in_focus = true
+    end,
+  },
+  {
+    events = { "FocusLost" },
+    targets = { "*" },
+    command = function()
+      vim.g.vim_in_focus = false
+    end,
+  },
+})
 
 -- Showed diagnostic levels
 U.diagnostic_levels = nil
@@ -39,89 +55,6 @@ U.diagnostic_levels = {
   { id = vim.diagnostic.severity.HINT, sign = C.icons.lsp.hint },
 }
 
--- local plain = utils.is_plain(ctx)
--- local file_modified = utils.modified(ctx, "●")
--- local inactive = vim.api.nvim_get_current_win() ~= curwin local focused = vim.g.vim_in_focus or true local minimal = plain or inactive or not focused Module functionality =======================================================
---- Compute content for active window
-function M.active()
-  if U.is_disabled() then
-    return ""
-  end
-
-  -- use the statusline global variable which is set inside of statusline
-  -- functions to the window for *that* statusline
-  local curwin = vim.g.megaline_winid or 0
-  local curbuf = vim.api.nvim_win_get_buf(curwin)
-
-  -- TODO: reduce the available space whenever we add
-  -- a component so we can use it to determine what to add
-  -- local available_space = vim.api.nvim_win_get_width(curwin)
-
-  U.ctx = {
-    bufnum = curbuf,
-    winid = curwin,
-    bufname = vim.fn.bufname(curbuf),
-    preview = vim.wo[curwin].previewwindow,
-    readonly = vim.bo[curbuf].readonly,
-    filetype = vim.bo[curbuf].ft,
-    buftype = vim.bo[curbuf].bt,
-    modified = vim.bo[curbuf].modified,
-    fileformat = vim.bo[curbuf].fileformat,
-    shiftwidth = vim.bo[curbuf].shiftwidth,
-    expandtab = vim.bo[curbuf].expandtab,
-  }
-
-  return U.statusline_active()
-end
-
---- Compute content for inactive window
-function M.inactive()
-  if U.is_disabled() then
-    return ""
-  end
-
-  return U.statusline_inactive()
-end
-
---- Combine groups of sections
----
---- Each group can be either a string or a table with fields `hl` (group's
---- highlight group) and `strings` (strings representing sections).
----
---- General idea of this function is as follows. String group is used as is
---- (useful for special strings like `%<` or `%=`). Each group defined by table
---- has own highlighting (if not supplied explicitly, the previous one is
---- used). Non-empty strings inside group are separated by one space. Non-empty
---- groups are separated by two spaces (one for each highlighting).
----
----@param groups table: Array of groups
----@return string: String suitable for 'statusline'.
-function M.build(groups)
-  local t = vim.tbl_map(function(s)
-    if not s then
-      return ""
-    end
-
-    if type(s) == "string" then
-      return s
-    end
-
-    local t = vim.tbl_filter(function(x)
-      return not (x == nil or x == "")
-    end, s.strings)
-    -- Return highlight group to allow inheritance from later sections
-    if vim.tbl_count(t) == 0 then
-      return fmt("%%#%s#", s.hl or "")
-      -- return fmt("%%#%s#", s.hl or "")
-    end
-
-    return fmt("%%#%s#%s", s.hl or "", table.concat(t, ""))
-    -- return fmt("%%#%s# %s ", s.hl or "", table.concat(t, " "))
-  end, groups)
-
-  return table.concat(t, "")
-end
-
 --- Decide whether to truncate
 ---
 --- This basically computes window width and compares it to `trunc_width`: if
@@ -130,12 +63,18 @@ end
 ---
 --- Use this to manually decide if section needs truncation or not.
 ---
----@param trunc_width number: Truncation width. If `nil`, output is `false`.
+---@param trunc number: Truncation width. If `nil`, output is `false`.
 ---@return boolean: Whether to truncate.
-function M.is_truncated(trunc_width)
+local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
-  return vim.api.nvim_win_get_width(0) < (trunc_width or -1)
+  return vim.api.nvim_win_get_width(0) < (trunc or -1)
 end
+
+-- local plain = U.is_plain(ctx)
+-- local file_modified = U.modified(ctx, "●")
+-- local inactive = vim.api.nvim_get_current_win() ~= curwin
+-- local focused = vim.g.vim_in_focus or true
+-- local minimal = plain or inactive or not focused
 
 -- Utilities ------------------------------------------------------------------
 --
@@ -309,6 +248,45 @@ function M.is_plain(ctx)
   return matches(ctx.filetype, plain.filetypes) or matches(ctx.buftype, plain.buftypes) or ctx.preview
 end
 
+--- Combine groups of sections
+---
+--- Each group can be either a string or a table with fields `hl` (group's
+--- highlight group) and `strings` (strings representing sections).
+---
+--- General idea of this function is as follows. String group is used as is
+--- (useful for special strings like `%<` or `%=`). Each group defined by table
+--- has own highlighting (if not supplied explicitly, the previous one is
+--- used). Non-empty strings inside group are separated by one space. Non-empty
+--- groups are separated by two spaces (one for each highlighting).
+---
+---@param groups table: Array of groups
+---@return string: String suitable for 'statusline'.
+function U.build(groups)
+  local t = vim.tbl_map(function(s)
+    if not s then
+      return ""
+    end
+
+    if type(s) == "string" then
+      return s
+    end
+
+    local t = vim.tbl_filter(function(x)
+      return not (x == nil or x == "")
+    end, s.strings)
+    -- Return highlight group to allow inheritance from later sections
+    if vim.tbl_count(t) == 0 then
+      return fmt("%%#%s#", s.hl or "")
+      -- return fmt("%%#%s#", s.hl or "")
+    end
+
+    return fmt("%%#%s#%s", s.hl or "", table.concat(t, ""))
+    -- return fmt("%%#%s# %s ", s.hl or "", table.concat(t, " "))
+  end, groups)
+
+  return table.concat(t, "")
+end
+
 --- This function allow me to specify titles for special case buffers
 --- like the preview window or a quickfix window
 --- CREDIT: https://vi.stackexchange.com/a/18090
@@ -337,11 +315,11 @@ end
 --- @param ctx table
 --- @param icon string | nil
 function U.modified(ctx, icon)
-  icon = icon or C.icons.modified
   if ctx.filetype == "help" then
     return ""
   end
-  return ctx.modified and icon or ""
+  icon = icon or C.icons.modified
+  return ctx.modified and icon
 end
 
 --- @param ctx table
@@ -439,12 +417,13 @@ function U.filetype(ctx, opts)
   return icon, hl
 end
 
-function U.file(ctx, minimal)
+function U.file(ctx, trunc)
+  local is_minimal = is_truncated(trunc)
   local curwin = ctx.winid
   -- highlight the filename components separately
-  local filename_hl = minimal and "StFilenameInactive" or "StFilename"
-  local directory_hl = minimal and "StInactiveSep" or "StDirectory"
-  local parent_hl = minimal and directory_hl or "StParentDirectory"
+  local filename_hl = is_minimal and "StFilenameInactive" or "StFilename"
+  local directory_hl = is_minimal and "StInactiveSep" or "StDirectory"
+  local parent_hl = is_minimal and directory_hl or "StParentDirectory"
 
   if H.has_win_highlight(curwin, "Normal", "StatusLine") then
     directory_hl = H.adopt_winhighlight(curwin, "StatusLine", "StCustomDirectory", "StTitle")
@@ -462,7 +441,7 @@ function U.file(ctx, minimal)
   local to_update = dir_empty and parent_empty and file_opts or dir_empty and parent_opts or dir_opts
 
   to_update.prefix = ft_icon
-  to_update.prefix_color = not minimal and icon_highlight or nil
+  to_update.prefix_color = not is_minimal and icon_highlight or nil
   return {
     file = { item = file, hl = filename_hl, opts = file_opts },
     dir = { item = directory, hl = directory_hl, opts = dir_opts },
@@ -563,7 +542,7 @@ M.modes = setmetatable({
 
 function M.s_mode(args)
   local mode_info = M.modes[vim.fn.mode()]
-  local mode = M.is_truncated(args.trunc_width) and mode_info.short or mode_info.long
+  local mode = is_truncated(args.trunc_width) and mode_info.short or mode_info.long
 
   return unpack(U.item(string.upper(mode), mode_info.hl, { before = " " }))
 end
@@ -574,31 +553,30 @@ function M.s_git(args)
   end
 
   local status = vim.b.gitsigns_status_dict or {}
-  local signs = M.is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
+  local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
 
   local head_str = unpack(
-    U.item(status.head, "StGitBranch", { before = " ", prefix = C.icons.git, prefix_color = "StGitSymbol" })
+    U.item(
+      status.head,
+      "StGitBranch",
+      { before = " ", after = " ", prefix = C.icons.git, prefix_color = "StGitSymbol" }
+    )
   )
-  local added_str = unpack(U.item(status.added, "StMetadata", { prefix = C.icons.git_added, prefix_color = "StGreen" }))
+  local added_str = unpack(
+    U.item(status.added, "StMetadataPrefix", { prefix = C.icons.git_added, prefix_color = "StGreen" })
+  )
   local changed_str = unpack(
-    U.item(status.changed, "StMetadata", { prefix = C.icons.git_changed, prefix_color = "StWarning" })
+    U.item(status.changed, "StMetadataPrefix", { prefix = C.icons.git_changed, prefix_color = "StWarning" })
   )
   local removed_str = unpack(
-    U.item(status.removed, "StMetadata", { prefix = C.icons.git_removed, prefix_color = "StError" })
+    U.item(status.removed, "StMetadataPrefix", { prefix = C.icons.git_removed, prefix_color = "StError" })
   )
 
   if signs == "" then
     return head_str
   end
 
-  return fmt("%s%s%s%s", head_str, added_str, changed_str, removed_str)
-end
-
-function M.s_gps(args)
-  local ok, gps = mega.safe_require("nvim-gps")
-  if ok and gps and gps.is_available() then
-    return require("nvim-gps").get_location()
-  end
+  return fmt("%s %s%s%s", head_str, added_str, changed_str, removed_str)
 end
 
 function U.diagnostic_info(ctx)
@@ -625,24 +603,21 @@ function U.diagnostic_info(ctx)
 end
 
 function M.s_modified(args)
-  local minimal = M.is_truncated(args.trunc_width)
   if U.ctx.filetype == "help" then
     return ""
   end
-  return unpack(U.item_if(U.modified(U.ctx), minimal, "StModified"))
+  return unpack(U.item_if(U.modified(U.ctx), is_truncated(args.trunc_width), "StModified"))
 end
 
 function M.s_readonly(args)
-  local minimal = M.is_truncated(args.trunc_width)
-  return unpack(U.item_if(U.readonly(U.ctx), minimal, "StReadonly"))
+  return unpack(U.item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), "StReadonly"))
 end
 
 --- Section for file name
 --- Displays in smart short format with differing segment fg/gui
 function M.s_filename(args)
   local ctx = U.ctx
-  local minimal = M.is_truncated(args.trunc_width)
-  local segments = U.file(ctx, minimal)
+  local segments = U.file(ctx, args.trunc_width)
   local dir, parent, file = segments.dir, segments.parent, segments.file
   local dir_item = U.item(dir.item, dir.hl, dir.opts)
   local parent_item = U.item(parent.item, parent.hl, parent.opts)
@@ -655,7 +630,6 @@ end
 --- Section for file information
 function M.s_fileinfo(args)
   local ft = vim.bo.filetype
-  local minimal = M.is_truncated(args.trunc_width)
 
   if (ft == "") or U.isnt_normal_buffer() then
     return ""
@@ -668,7 +642,7 @@ function M.s_fileinfo(args)
   end
 
   -- Construct output string if truncated
-  if minimal then
+  if is_truncated(args.trunc_width) then
     return ft
   end
 
@@ -691,7 +665,6 @@ end
 ---@param args table: Section arguments.
 ---@return string: Section string.
 function M.s_lineinfo(args)
-  local minimal = M.is_truncated(args.trunc_width)
   local opts = {
     prefix = "ℓ",
     prefix_color = "StMetadataPrefix",
@@ -715,7 +688,7 @@ function M.s_lineinfo(args)
   -- local length = strwidth(prefix .. current .. col .. sep .. last)
 
   -- Use virtual column number to allow update when paste last column
-  if minimal then
+  if is_truncated(args.trunc_width) then
     return "%l│%2v"
   end
 
@@ -745,10 +718,9 @@ function M.s_indention()
 end
 
 function M.s_lsp_client(args)
-  local minimal = M.is_truncated(args.trunc_width)
   for _, client in ipairs(vim.lsp.buf_get_clients(0)) do
     if client.config and client.config.filetypes and vim.tbl_contains(client.config.filetypes, vim.bo.filetype) then
-      return unpack(U.item_if(client.name, minimal, "StMetadata"))
+      return unpack(U.item_if(client.name, is_truncated(args.trunc_width), "StMetadata"))
     end
   end
 end
@@ -762,17 +734,16 @@ end
 -- Default content ------------------------------------------------------------
 function U.statusline_active()
   -- stylua: ignore start
-  local prefix        = unpack(U.item_if("▌", not M.is_truncated(100), "StIndicator", { before = "", after = "" }))
+  local prefix        = unpack(U.item_if("▌", not is_truncated(100), "StIndicator", { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
-  local search        = unpack(U.item_if(U.search_result(), not M.is_truncated(120), "StCount", {before=" "}))
+  local search        = unpack(U.item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 120 })
-  local readonly      = M.s_readonly({ trunc_width = 140 })
-  local modified      = M.s_modified({ trunc_width = 140 })
+  local readonly      = M.s_readonly({ trunc_width = 120 })
+  local modified      = M.s_modified({ trunc_width = 100 })
   local filename      = M.s_filename({ trunc_width = 120 })
   -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
   local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
   local indention     = M.s_indention()
-  local lsp_client    = M.s_lsp_client({ trunc_width = 140 })
   local diags         = U.diagnostic_info()
   local diag_error    = unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
   local diag_warn     = unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
@@ -780,7 +751,7 @@ function U.statusline_active()
   local diag_hint     = unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
   -- stylua: ignore end
 
-  return M.build({
+  return U.build({
     prefix,
     mode,
     "%<", -- Mark general truncate point
@@ -799,7 +770,44 @@ function U.statusline_active()
   })
 end
 
-function U.statusline_inactive()
+-- do the statusline things for the activate window
+function _G.__activate_statusline()
+  if U.is_disabled() then
+    return ""
+  end
+
+  -- use the statusline global variable which is set inside of statusline
+  -- functions to the window for *that* statusline
+  local curwin = vim.g.megaline_winid or 0
+  local curbuf = vim.api.nvim_win_get_buf(curwin)
+
+  -- TODO: reduce the available space whenever we add
+  -- a component so we can use it to determine what to add
+  -- local available_space = vim.api.nvim_win_get_width(curwin)
+
+  U.ctx = {
+    bufnum = curbuf,
+    winid = curwin,
+    bufname = vim.fn.bufname(curbuf),
+    preview = vim.wo[curwin].previewwindow,
+    readonly = vim.bo[curbuf].readonly,
+    filetype = vim.bo[curbuf].ft,
+    buftype = vim.bo[curbuf].bt,
+    modified = vim.bo[curbuf].modified,
+    fileformat = vim.bo[curbuf].fileformat,
+    shiftwidth = vim.bo[curbuf].shiftwidth,
+    expandtab = vim.bo[curbuf].expandtab,
+  }
+
+  return U.statusline_active()
+end
+
+-- do the statusline things for the inactive window
+function _G.__deactivate_statusline()
+  if U.is_disabled() then
+    return ""
+  end
+
   return "%#StInactive#%F %m%="
 end
 
