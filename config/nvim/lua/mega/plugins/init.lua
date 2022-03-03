@@ -94,7 +94,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   "ggandor/lightspeed.nvim",
-  -- "phaazon/hop.nvim",
+  "phaazon/hop.nvim",
   "akinsho/toggleterm.nvim",
   "elihunter173/dirbuf.nvim",
   -- "kyazdani42/nvim-tree.lua",

@@ -394,7 +394,7 @@ do -- nvim-autopairs
 end
 
 do -- lightspeed.nvim or hop.nvim
-  if true then
+  if false then
     require("lightspeed").setup({
       -- jump_to_first_match = true,
       -- jump_on_partial_input_safety_timeout = 400,
@@ -414,7 +414,7 @@ do -- lightspeed.nvim or hop.nvim
   else
     local hop = require("hop")
     -- remove h,j,k,l from hops list of keys
-    hop.setup({ keys = "etovxqpdygfbzcisuran" })
+    hop.setup({ keys = "etovxqpdygfbzcisuran", jump_on_sole_occurrence = false })
     nnoremap("s", function()
       hop.hint_char1({ multi_windows = false })
     end)
