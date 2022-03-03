@@ -208,7 +208,7 @@ augroup("Terminal", {
       --   "SignColumn:DarkenedPanel",
       -- }, ",")
       print("termopen!")
-      vim.cmd([[setlocal nonumber norelativenumber conceallevel=0 | startinsert]])
+      vim.cmd([[setlocal nonumber norelativenumber conceallevel=0]])
     end,
   },
 })
