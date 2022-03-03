@@ -4,11 +4,11 @@ local fmt = string.format
 local hl_ok, H = mega.safe_require("mega.utils.highlights", { silent = true })
 
 local M = {
-  lsp = {},
   ext = {
     tmux = {},
     kitty = {},
   },
+  lsp = {},
 }
 local windows = {}
 
@@ -87,25 +87,12 @@ function M.root_has_file(name)
   return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
 end
 
--- # [ peak_definition ] ----------------------------------------------------------------
-M.lsp.peek_definition = function()
-  local function preview_location_callback(_, result)
-    if result == nil or vim.tbl_isempty(result) then
-      return nil
-    end
-    lsp.util.preview_location(result[1], { border = "single" })
-  end
-
-  local params = lsp.util.make_position_params()
-  return lsp.buf_request(0, "textDocument/definition", params, preview_location_callback)
-end
-
 -- # [ rename ] ----------------------------------------------------------------
 -- REF:
 -- * https://github.com/saadparwaiz1/dotfiles/blob/macOS/nvim/plugin/lsp.lua#L29-L74
 -- * https://github.com/lukas-reineke/dotfiles/blob/master/vim/lua/lsp/rename.lua (simpler impl to investigate)
 -- * https://github.com/kristijanhusak/neovim-config/blob/master/nvim/lua/partials/lsp.lua#L197-L217
--- * AKINSHO: https://github.com/akinsho/dotfiles/commit/59b5011d9533de0427fc34e687c9f1a566d6020c#diff-cc18199cc4302869fa6d36870b7950eef0b03021e5e93c64e17153b234ad6800R160
+-- * akinsho: https://github.com/akinsho/dotfiles/commit/59b5011d9533de0427fc34e687c9f1a566d6020c#diff-cc18199cc4302869fa6d36870b7950eef0b03021e5e93c64e17153b234ad6800R160
 local rename_prompt = ""
 local default_rename_prompt = " -> "
 local current_name = ""

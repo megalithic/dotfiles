@@ -27,6 +27,7 @@ local set = vim.g
 local lush = require("lush")
 local palette = require("mega.colors")
 local C = palette.cs
+local H = require("mega.utils.highlights")
 
 local bg_dark = C.bg_dark
 local bg0 = C.bg0
@@ -139,8 +140,8 @@ return lush(function()
     LineNr({ fg = grey0, bg = "NONE" }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
     MatchParen({ fg = "NONE", bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
     ModeMsg({ fg = fg, bg = "NONE", gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
-    -- MsgArea      { }, -- Area for messages and cmdline
-    -- MsgSeparator { }, -- Separator for scrolled messages, `msgsep` flag of 'display'
+    MsgArea({ bg = bg0 }), -- Area for messages and cmdline
+    MsgSeparator({ bg = bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
     NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
     Normal({ fg = fg, bg = "NONE" }), -- normal text

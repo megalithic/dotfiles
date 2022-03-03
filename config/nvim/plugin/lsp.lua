@@ -2,7 +2,7 @@ local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
 local vcmd = vim.cmd
-local bufmap, bmap = mega.bufmap, mega.bmap
+-- local bufmap, bmap = mega.bufmap, mega.bmap
 local lspconfig = require("lspconfig")
 local command = mega.command
 local augroup = mega.augroup
@@ -76,15 +76,37 @@ local function setup_autocommands(client, bufnr)
     })
   end
 
-  vim.api.nvim_create_augroup("LspDiagnostics", { clear = true })
-  vim.api.nvim_create_autocmd("CursorHold", {
-    -- pattern = { "yaml", "toml" },
-    buffer = bufnr,
-    callback = function()
-      mega.lsp.line_diagnostics()
-    end,
-    group = "LspDiagnostics",
+  augroup("LspDiagnostics", {
+    {
+      events = { "CursorHold" },
+      targets = { "<buffer>" },
+      command = function()
+        -- mega.lsp.line_diagnostics()
+        -- if false then
+        diagnostic.open_float(nil, {
+          focusable = false,
+          close_events = {
+            "CursorMoved",
+            "BufHidden",
+            "InsertCharPre",
+            "BufLeave",
+            "InsertEnter",
+            "FocusLost",
+          },
+          source = "always",
+        })
+        -- end
+      end,
+    },
   })
+
+  -- vim.api.nvim_create_augroup("LspDiagnostics", { clear = true })
+  -- vim.api.nvim_create_autocmd("CursorHold", {
+  --   -- pattern = { "yaml", "toml" },
+  --   buffer = bufnr,
+  --   callback = function() end,
+  --   group = "LspDiagnostics",
+  -- })
 
   -- if client and client.resolved_capabilities.document_formatting then
   --   -- format on save

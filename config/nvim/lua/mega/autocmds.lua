@@ -64,14 +64,14 @@ if vim.env.TMUX ~= nil then
       events = { "BufEnter" },
       targets = { "*" },
       command = function()
-        vim.o.titlestring = require("mega.utils.ext").title_string()
+        vim.o.titlestring = require("mega.utils").ext.title_string()
       end,
     },
     {
       events = { "VimLeavePre" },
       targets = { "*" },
       command = function()
-        require("mega.utils.ext").tmux.set_statusline(true)
+        require("mega.utils").ext.tmux.set_statusline(true)
       end,
     },
     {
@@ -82,7 +82,7 @@ if vim.env.TMUX ~= nil then
         -- for kitty to re-use need to be set AFTER the rest of the colorscheme
         -- overrides
         vim.defer_fn(function()
-          require("mega.utils.ext").tmux.set_statusline()
+          require("mega.utils").ext.tmux.set_statusline()
         end, 1)
       end,
     },
@@ -207,32 +207,32 @@ augroup("Terminal", {
   },
 })
 
-augroup("UpdateVim", {
-  {
-    -- TODO: not clear what effect this has in the post vimscript world
-    -- it correctly sources $MYVIMRC but all the other files that it
-    -- requires will need to be resourced or reloaded themselves
-    events = "BufWritePost",
-    targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
-    modifiers = { "++nested" },
-    command = function()
-      local ok, msg = pcall(vim.cmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
-      msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
-      vim.notify(msg)
-    end,
-  },
-  {
-    events = { "FocusLost" },
-    targets = { "*" },
-    command = "silent! wall",
-  },
-  -- Make windows equal size when vim resizes
-  {
-    events = { "VimResized" },
-    targets = { "*" },
-    command = "wincmd =",
-  },
-})
+-- augroup("UpdateVim", {
+--   {
+--     -- TODO: not clear what effect this has in the post vimscript world
+--     -- it correctly sources $MYVIMRC but all the other files that it
+--     -- requires will need to be resourced or reloaded themselves
+--     events = "BufWritePost",
+--     targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
+--     modifiers = { "++nested" },
+--     command = function()
+--       local ok, msg = pcall(vim.cmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
+--       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
+--       vim.notify(msg)
+--     end,
+--   },
+--   {
+--     events = { "FocusLost" },
+--     targets = { "*" },
+--     command = "silent! wall",
+--   },
+--   -- Make windows equal size when vim resizes
+--   {
+--     events = { "VimResized" },
+--     targets = { "*" },
+--     command = "wincmd =",
+--   },
+-- })
 
 augroup("LazyLoads", {
   {
