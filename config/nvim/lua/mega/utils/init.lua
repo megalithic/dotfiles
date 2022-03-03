@@ -1,11 +1,75 @@
 local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
 local bmap, au = mega.bmap, mega.au
 local fmt = string.format
+local hl_ok, H = mega.safe_require("mega.utils.highlights", { silent = true })
 
 local M = {
   lsp = {},
+  ext = {
+    tmux = {},
+    kitty = {},
+  },
 }
 local windows = {}
+
+local function fileicon()
+  local name = fn.bufname()
+  local icon, hl
+  local loaded, devicons = mega.load("nvim-web-devicons", { safe = true })
+  if loaded then
+    icon, hl = devicons.get_icon(name, fn.fnamemodify(name, ":e"), { default = true })
+  end
+  return icon, hl
+end
+
+function M.ext.title_string()
+  if not hl_ok then
+    return
+  end
+  local dir = fn.fnamemodify(fn.getcwd(), ":t")
+  local icon, hl = fileicon()
+  if not hl then
+    return (icon or "") .. " "
+  end
+  -- return fmt("%s %s ", dir, icon)
+  local has_tmux = os.getenv("TMUX")
+  return has_tmux and fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon) or dir .. " " .. icon
+  -- return fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon)
+end
+
+--- Get the color of the current vim background and update tmux accordingly
+---@param reset boolean?
+function M.ext.tmux.set_statusline(reset)
+  if not hl_ok then
+    return
+  end
+  local hl = reset and "Normal" or "MsgArea"
+  local bg = H.get_hl(hl, "bg")
+  -- TODO: we should correctly derive the previous bg value
+  fn.jobstart(fmt("tmux set-option -g status-style bg=%s", bg))
+end
+
+function M.ext.kitty.set_background()
+  if not hl_ok then
+    return
+  end
+  if vim.env.KITTY_LISTEN_ON then
+    local bg = H.get_hl("MsgArea", "bg")
+    fn.jobstart(fmt("kitty @ --to %s set-colors background=%s", vim.env.KITTY_LISTEN_ON, bg))
+  end
+end
+
+---Reset the kitty terminal colors
+function M.ext.kitty.clear_background()
+  if not hl_ok then
+    return
+  end
+  if vim.env.KITTY_LISTEN_ON then
+    local bg = H.get_hl("Normal", "bg")
+    -- this is intentionally synchronous so it has time to execute fully
+    fn.system(fmt("kitty @ --to %s set-colors background=%s", vim.env.KITTY_LISTEN_ON, bg))
+  end
+end
 
 function M.t(cmd_str)
   -- return api.nvim_replace_termcodes(cmd, true, true, true) -- TODO: why 3rd param false?

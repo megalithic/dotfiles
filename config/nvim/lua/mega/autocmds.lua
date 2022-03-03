@@ -58,10 +58,71 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 --   end,
 -- })
 
-augroup("AutoMkDir", {
-  events = { "BufNewFile", "BufWritePre" },
-  targets = { "*" },
-  command = mega.auto_mkdir(),
+if vim.env.TMUX ~= nil then
+  augroup("External", {
+    {
+      events = { "BufEnter" },
+      targets = { "*" },
+      command = function()
+        vim.o.titlestring = require("mega.utils.ext").title_string()
+      end,
+    },
+    {
+      events = { "VimLeavePre" },
+      targets = { "*" },
+      command = function()
+        require("mega.utils.ext").tmux.set_statusline(true)
+      end,
+    },
+    {
+      events = { "ColorScheme", "FocusGained" },
+      targets = { "*" },
+      command = function()
+        -- NOTE: there is a race condition here as the colors
+        -- for kitty to re-use need to be set AFTER the rest of the colorscheme
+        -- overrides
+        vim.defer_fn(function()
+          require("mega.utils.ext").tmux.set_statusline()
+        end, 1)
+      end,
+    },
+  })
+end
+
+augroup("Utilities", {
+  {
+    events = { "BufNewFile", "BufWritePre" },
+    targets = { "*" },
+    command = mega.auto_mkdir,
+    -- BUG: this causes the cursor to jump to the top on VimEnter
+    -- {
+    --   -- When editing a file, always jump to the last known cursor position.
+    --   -- Don't do it for commit messages, when the position is invalid, or when
+    --   -- inside an event handler (happens when dropping a file on gvim).
+    --   events = { "BufWinEnter" },
+    --   targets = { "*" },
+    --   command = function()
+    --     local pos = fn.line([['"]])
+    --     if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
+    --       vim.cmd("keepjumps normal g`\"")
+    --     end
+    --   end,
+    -- },
+  },
+  -- BUG: this causes the cursor to jump to the top on VimEnter
+  {
+    -- When editing a file, always jump to the last known cursor position.
+    -- Don't do it for commit messages, when the position is invalid, or when
+    -- inside an event handler (happens when dropping a file on gvim).
+    events = { "BufWinEnter" },
+    targets = { "*" },
+    command = function()
+      local pos = fn.line([['"]])
+      if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
+        vim.cmd("keepjumps normal g`\"")
+      end
+    end,
+  },
 })
 
 augroup("Kitty", {
@@ -70,6 +131,7 @@ augroup("Kitty", {
     targets = { "kitty.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
+      print("saved kitty")
       vim.cmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },
@@ -106,7 +168,14 @@ augroup("YankHighlightedRegion", {
   {
     events = { "TextYankPost" },
     targets = { "*" },
-    command = "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 150, on_macro = true })",
+    command = function()
+      vim.highlight.on_yank({
+        timeout = 500,
+        on_visual = false,
+        higroup = "Visual",
+      })
+      -- "lua vim.highlight.on_yank({ higroup = 'Substitute', timeout = 150, on_macro = true, on_visual=false })"),
+    end,
   },
 })
 
@@ -135,6 +204,33 @@ augroup("Terminal", {
     events = { "TermOpen" },
     targets = { "*" },
     command = "startinsert",
+  },
+})
+
+augroup("UpdateVim", {
+  {
+    -- TODO: not clear what effect this has in the post vimscript world
+    -- it correctly sources $MYVIMRC but all the other files that it
+    -- requires will need to be resourced or reloaded themselves
+    events = "BufWritePost",
+    targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
+    modifiers = { "++nested" },
+    command = function()
+      local ok, msg = pcall(vim.cmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
+      msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
+      vim.notify(msg)
+    end,
+  },
+  {
+    events = { "FocusLost" },
+    targets = { "*" },
+    command = "silent! wall",
+  },
+  -- Make windows equal size when vim resizes
+  {
+    events = { "VimResized" },
+    targets = { "*" },
+    command = "wincmd =",
   },
 })
 

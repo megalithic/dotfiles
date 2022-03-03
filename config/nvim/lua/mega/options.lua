@@ -252,7 +252,7 @@ vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
 -----------------------------------------------------------------------------//
 -- Title {{{1
 -----------------------------------------------------------------------------//
-vim.opt.titlestring = mega.title_string() or " ❐ %t %r %m"
+vim.opt.titlestring = require("mega.utils").ext.title_string() or " ❐ %t %r %m"
 vim.opt.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
 vim.opt.title = true
 vim.opt.titlelen = 70

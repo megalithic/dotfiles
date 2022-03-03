@@ -357,7 +357,7 @@ do -- golden_size.nvim
 end
 
 do -- lastplace
-  if true then
+  if false then
     require("nvim-lastplace").setup({
       lastplace_ignore_buftype = { "quickfix", "nofile", "help", ".git/COMMIT_EDITMSG" },
       lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
@@ -414,7 +414,7 @@ do -- lightspeed.nvim or hop.nvim
   else
     local hop = require("hop")
     -- remove h,j,k,l from hops list of keys
-    hop.setup({ keys = "etovxqpdygfbzcisuran", jump_on_sole_occurrence = false })
+    hop.setup({ keys = "etovxqpdygfbzcisuran", jump_on_sole_occurrence = true })
     nnoremap("s", function()
       hop.hint_char1({ multi_windows = false })
     end)

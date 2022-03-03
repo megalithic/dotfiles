@@ -941,32 +941,6 @@ function mega.profile(filename)
   end
 end
 
-local function fileicon()
-  local name = fn.bufname()
-  local icon, hl
-  local loaded, devicons = mega.load("nvim-web-devicons", { safe = true })
-  if loaded then
-    icon, hl = devicons.get_icon(name, fn.fnamemodify(name, ":e"), { default = true })
-  end
-  return icon, hl
-end
-
-function mega.title_string()
-  local hl_ok, H = mega.safe_require("mega.utils.highlights", { silent = true })
-  if not hl_ok then
-    return
-  end
-  local dir = fn.fnamemodify(fn.getcwd(), ":t")
-  local icon, hl = fileicon()
-  if not hl then
-    return (icon or "") .. " "
-  end
-  -- return fmt("%s %s ", dir, icon)
-  local has_tmux = os.getenv("TMUX")
-  return has_tmux and fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon) or dir .. " " .. icon
-  -- return fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon)
-end
-
 function mega.showCursorHighlights()
   local ft = vim.bo.filetype
   local ts_ft = ft
