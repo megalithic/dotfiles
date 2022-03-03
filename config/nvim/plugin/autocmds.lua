@@ -138,7 +138,7 @@ augroup("Kitty", {
     targets = { "kitty.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
-      print("saved kitty")
+      vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
       vim.cmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },
@@ -151,7 +151,7 @@ augroup("Plugins/Paq", {
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vim.cmd("luafile %")
-      vim.notify(string.format("sourced %s", vim.fn.expand("%")))
+      vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
     end,
   },
   {
