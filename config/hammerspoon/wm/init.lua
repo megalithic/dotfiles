@@ -66,9 +66,7 @@ M._set_app_layout = function(app_config)
         title_pattern, -- window title
         -- hs.window.get(title_pattern), -- window title NOTE: this doesn't
         -- handle `nil` window title instances
-        function()
-          wh.targetDisplay(screen)
-        end, -- screen #
+        wh.targetDisplay(screen), -- screen #
         position, -- layout/postion
         nil,
         nil,
