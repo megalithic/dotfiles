@@ -59,49 +59,86 @@ local icons = {
   prompt = "", -- utf8(0xf460),
 }
 
+-- local M = {}
+-- M.red = hsl("#e68183")
+-- M.orange = hsl("#e39b7b")
+-- M.yellow = hsl("#d9bb80")
+-- M.green = hsl("#a7c080")
+-- M.cyan = hsl("#87c095")
+-- M.aqua = M.cyan
+-- M.blue = hsl("#83b6af")
+-- M.purple = hsl("#d39bb6")
+
+-- M.bg0 = hsl("#273433")
+-- M.bg1 = M.bg0.lighten(10)
+-- M.bg2 = M.bg0.lighten(15)
+-- M.bg3 = M.bg0.lighten(20)
+-- M.bg4 = M.bg0.lighten(25)
+
+-- M.bg_visual = hsl("#5d4251")
+-- M.bg_red = hsl("#614b51")
+-- M.bg_green = hsl("#4e6053")
+-- M.bg_blue = hsl("#415c6d")
+-- M.bg_yellow = hsl("#5d5c50")
+-- M.bg_purple = hsl("#402F37")
+-- M.bg_cyan = hsl("#54816B")
+
+-- M.fg = hsl("#d8caac")
+
+-- M.grey0 = hsl("#7c8377")
+-- M.grey1 = hsl("#868d80")
+-- M.grey2 = hsl("#999f93")
+
 local cs = {}
-cs.bg_dark = hsl("#273433")
+
 cs.bg0 = hsl("#323d43")
-cs.bg1 = hsl("#3c474d")
-cs.bg2 = hsl("#465258")
-cs.bg3 = hsl("#505a60")
-cs.bg4 = hsl("#576268")
-cs.bg5 = hsl("#626262")
+cs.bg1 = cs.bg0.lighten(5) -- #3c474d
+cs.bg2 = cs.bg0.lighten(10) -- #465258
+cs.bg3 = cs.bg0.lighten(15) -- #505a60
+cs.bg4 = cs.bg0.lighten(20) -- #576268
+cs.bg5 = cs.bg0.lighten(25) -- #626262
+
+cs.bg_dark = hsl("#273433")
 cs.bg_visual = hsl("#4e6053")
--- theme.bg_visual = "#5d4251"
 cs.bg_red = hsl("#614b51")
 cs.bg_green = hsl("#4e6053")
 cs.bg_blue = hsl("#415c6d")
 cs.bg_yellow = hsl("#5d5c50")
+cs.bg_purple = hsl("#402F37")
+cs.bg_cyan = hsl("#54816B")
+
+cs.fg = hsl("#d8caac")
+
+cs.dark_grey = "#3E4556"
+cs.light_grey = "#5c6370"
 cs.grey0 = hsl("#7c8377")
 cs.grey1 = hsl("#868d80")
 cs.grey2 = hsl("#999f93")
-cs.fg = hsl("#d8caac")
+
 cs.red = hsl("#e68183")
 cs.orange = hsl("#e39b7b")
 cs.yellow = hsl("#d9bb80")
 cs.green = hsl("#a7c080")
-cs.bright_green = hsl("#6bc46d")
 cs.cyan = hsl("#87c095").darken(5)
 cs.blue = hsl("#83b6af")
-cs.bright_blue = cs.blue.lighten(5)
-cs.dark_blue = cs.blue.darken(25)
-cs.aqua = cs.blue
+cs.aqua = cs.cyan
 cs.purple = hsl("#d39bb6")
 cs.brown = hsl("#db9c5e")
--- fiddling with these colours:
-cs.magenta = "#c678dd"
-cs.comment_grey = "#5c6370"
-cs.grey = "#3E4556"
+cs.magenta = cs.purple.darken(15) -- #c678dd
 cs.teal = "#15AABF"
-cs.bright_yellow = "#FAB005"
-cs.light_yellow = "#e5c07b"
-cs.dark_orange = "#FF922B"
+
 cs.pale_red = "#E06C75"
-cs.dark_red = "#be5046"
+
+cs.bright_blue = cs.blue.lighten(5) -- #51afef
+cs.bright_green = hsl("#6bc46d")
+cs.bright_yellow = "#FAB005"
+
+cs.light_yellow = "#e5c07b"
 cs.light_red = "#c43e1f"
--- cs.dark_blue = "#4e88ff"
--- cs.bright_blue = "#51afef"
+
+cs.dark_blue = cs.blue.darken(25) -- #4e88ff
+cs.dark_orange = "#FF922B"
+cs.dark_red = "#be5046"
 
 local style = {
   lsp = {

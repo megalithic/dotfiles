@@ -789,7 +789,7 @@ return lush(function()
     StDirectory({ bg = bg1, fg = "Gray", gui = "italic" }),
     StParentDirectory({ bg = bg1, fg = C.blue, gui = "bold" }),
     StFilename({ bg = bg1, fg = "LightGray", gui = "bold" }),
-    StFilenameInactive({ fg = C.comment_grey, bg = bg1, gui = "italic,bold" }),
+    StFilenameInactive({ fg = C.light_grey, bg = bg1, gui = "italic,bold" }),
     StIdentifier({ fg = blue, bg = bg1 }),
     StTitle({ bg = bg1, fg = "LightGray", gui = "bold" }),
     StComment({ Comment, bg = bg1 }),

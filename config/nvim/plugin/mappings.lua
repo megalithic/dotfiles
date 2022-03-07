@@ -207,11 +207,18 @@ if has_wk then
       name = "highlight/folds/paging",
       -- t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
       -- TODO: ensure that we can get to these
-      s = { mega.showCursorHighlights, "show syntax highlights under cursor" },
-      S = {
-        [[<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>]],
-        "all usages under cursor",
-      },
+      S = { mega.showCursorHighlights, "show syntax highlights under cursor" },
+      -- j = { mega.showCursorHighlights, "show syntax highlights under cursor" },
+      -- S = {
+      --   [[<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>]],
+      --   "all usages under cursor",
+      -- },
+    },
+    g = {
+      name = "go-to",
+      -- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636
+      x = { mega.open_uri, "open uri under cursor" },
+      R = { "show reg-explainer" },
     },
   }
   -- local n_mappings = {
@@ -651,9 +658,6 @@ nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 -- # save and execute vim/lua file
 nmap("<leader>x", mega.save_and_exec)
 
--- # open uri; under cursor:
-nmap("go", mega.open_uri, "open uri under cursor")
-
 -- [plugin mappings] -----------------------------------------------------------
 
 -- # git-related (fugitive, et al)
@@ -706,13 +710,6 @@ xnoremap("au", ":lua require\"treesitter-unit\".select(true)<CR>")
 onoremap("iu", ":<c-u>lua require\"treesitter-unit\".select()<CR>")
 onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 
--- # easy-align
--- start interactive EasyAlign in visual mode (e.g. vipga)
-vmap("ga", "<Plug>(EasyAlign)")
-xmap("ga", "<Plug>(EasyAlign)")
--- start interactive EasyAlign for a motion/text object (e.g. gaip)
-nmap("ga", "<Plug>(EasyAlign)")
-
 -- # paq
 -- map("n", "<F5>", mega.sync_plugins())
 nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
@@ -735,11 +732,3 @@ vmap(
 
 -- # formatter.nvim
 nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
-
--- # misc
--- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636
-nnoremap(
-  "gx",
-  [[:silent execute '!$BROWSER ' . shellescape(expand('<cfile>'), 1)<CR>]],
-  "go-to: open link under cursor"
-)

@@ -1148,3 +1148,7 @@ do -- vim-notify
   -- vim.notify = notify
   -- require("telescope").load_extension("notify")
 end
+
+do -- nvim-regexplainer
+  require("regexplainer").setup()
+end

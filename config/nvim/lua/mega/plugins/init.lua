@@ -147,6 +147,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
   -- "ahmedkhalf/project.nvim",
+  "bennypowers/nvim-regexplainer",
   "tpope/vim-projectionist",
   -- "tjdevries/edit_alternate.vim",
   "vim-test/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
@@ -191,7 +192,6 @@ local PKGS = {
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true },
   -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
-  "junegunn/vim-easy-align",
   -- "outstand/logger.nvim",
 
   ------------------------------------------------------------------------------
