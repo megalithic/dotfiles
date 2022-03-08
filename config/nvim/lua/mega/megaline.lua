@@ -733,9 +733,7 @@ end
 -- Default content ------------------------------------------------------------
 function U.statusline_active()
   -- stylua: ignore start
-  local mode_info = M.modes[vim.fn.mode()]
-
-  local prefix        = unpack(U.item_if("▌", not is_truncated(100), mode_info.hl, { before = "", after = "" }))
+  local prefix        = unpack(U.item_if("▌", not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
   local search        = unpack(U.item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 120 })

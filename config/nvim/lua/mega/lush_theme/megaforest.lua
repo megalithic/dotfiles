@@ -199,7 +199,7 @@ return lush(function()
     SignColumn({ fg = fg, bg = bg0 }), -- column where |signs| are displayed
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
     Search({ fg = bg0, bg = green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
-    Substitute({ fg = bg0, bg = yellow }), -- |:substitute| replacement text highlighting
+    Substitute({ fg = bg0, bg = yellow, guid = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
     LineNr({ fg = grey0, bg = "NONE" }), -- Line number for ":number" and ":#" commands, and when 'number' or 'relativenumber' option is set.
     MatchParen({ fg = "NONE", bg = bg4 }), -- The character under the cursor or just before it, if it is a paired bracket, and its match. |pi_paren.txt|
     ModeMsg({ fg = fg, bg = "NONE", gui = "bold" }), -- 'showmode' message (e.g., "-- INSERT -- ")
