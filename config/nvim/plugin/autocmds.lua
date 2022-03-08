@@ -231,6 +231,36 @@ augroup("UpdateVim", {
   --   },
 })
 
+do
+  local sidebar_fts = {
+    "packer",
+    "dap-repl",
+    "flutterToolsOutline",
+    "undotree",
+    "dirbuf",
+    "dapui_*",
+  }
+
+  local function on_sidebar_enter()
+    vim.wo.winhighlight = table.concat({
+      "Normal:PanelBackground",
+      "EndOfBuffer:PanelBackground",
+      "StatusLine:PanelSt",
+      "StatusLineNC:PanelStNC",
+      "SignColumn:PanelBackground",
+      "VertSplit:PanelVertSplit",
+    }, ",")
+  end
+
+  mega.augroup("UserHighlights", {
+    {
+      events = { "FileType" },
+      targets = sidebar_fts,
+      command = on_sidebar_enter,
+    },
+  })
+end
+
 augroup("LazyLoads", {
   {
     -- nvim-bqf

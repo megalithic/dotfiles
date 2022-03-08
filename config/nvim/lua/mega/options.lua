@@ -212,7 +212,7 @@ vim.opt.listchars = {
 -----------------------------------------------------------------------------//
 -- Indentation
 -----------------------------------------------------------------------------//
-vim.opt.wrap = false
+vim.opt.wrap = true
 -- vim.opt.wrapmargin = 2
 -- vim.opt.textwidth = 80
 vim.opt.textwidth = 0 --  0 disables
@@ -457,5 +457,9 @@ vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line wi
 -----------------------------------------------------------------------------//
 -- REF: https://github.com/lukas-reineke/lsp-format.nvim#wq-will-not-format
 vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.formatting_sync()" <bar> wq]])
+
+-- [ colorscheme ] -------------------------------------------------------------
+vim.opt.termguicolors = true
+vim.cmd([[colorscheme megaforest]])
 
 -- vim:foldmethod=marker

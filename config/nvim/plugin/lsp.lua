@@ -7,7 +7,6 @@ local lspconfig = require("lspconfig")
 local command = mega.command
 local augroup = mega.augroup
 local fmt = string.format
-local C = require("mega.colors")
 local diagnostic = vim.diagnostic
 
 vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" }
@@ -343,10 +342,10 @@ local function setup_diagnostics()
   }
 
   local diagnostic_types = {
-    { "Error", icon = C.icons.lsp.error },
-    { "Warn", icon = C.icons.lsp.warn },
-    { "Info", icon = C.icons.lsp.info },
-    { "Hint", icon = C.icons.lsp.hint },
+    { "Error", icon = mega.icons.lsp.error },
+    { "Warn", icon = mega.icons.lsp.warn },
+    { "Info", icon = mega.icons.lsp.info },
+    { "Hint", icon = mega.icons.lsp.hint },
   }
 
   fn.sign_define(vim.tbl_map(function(t)

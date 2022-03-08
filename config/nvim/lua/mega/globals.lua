@@ -9,6 +9,59 @@ _G.mega = {
   functions = {},
   dirs = {},
   lsp = {},
+  icons = {
+    borderchars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+    lsp = {
+      error = "",
+      warn = "", -- 喝卑
+      info = "",
+      hint = "", -- 
+      ok = "",
+      -- spinner_frames = { "▪", "■", "□", "▫" },
+      -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+      kind = {
+        Text = " text", -- Text
+        Method = " method", -- Method
+        Function = " function", -- Function
+        Constructor = " constructor", -- Constructor
+        Field = "ﰠ field", -- Field
+        Variable = " variable", -- Variable
+        Class = " class", -- Class
+        Interface = "ﰮ interface", -- Interface
+        Module = " module", -- Module
+        Property = " property", -- Property
+        Unit = " unit", -- Unit
+        Value = " value", -- Value
+        Enum = "了enum", -- Enum 
+        Keyword = " keyword", -- Keyword
+        Snippet = " snippet", -- Snippet
+        Color = " color", -- Color
+        File = " file", -- File
+        Reference = " ref", -- Reference
+        Folder = " folder", -- Folder
+        EnumMember = " enum member", -- EnumMember
+        Constant = " const", -- Constant
+        Struct = "פּ struct", -- Struct
+        Event = "鬒event", -- Event
+        Operator = "\u{03a8} operator", -- Operator
+        TypeParameter = " type param", -- TypeParameter
+      },
+    },
+    virtual_text = "",
+    mode_term = "ﲵ",
+    ln_sep = "",
+    col_sep = "",
+    perc_sep = "",
+    modified = "●",
+    mode = "",
+    vcs = "",
+    git = "", -- "" ""
+    git_added = "", --  
+    git_changed = "",
+    git_removed = "", --  
+    readonly = "",
+    prompt = "",
+  },
 }
 local L = vim.log.levels
 local get_log_level = require("vim.lsp.log").get_level
@@ -603,6 +656,7 @@ local function is_valid_target(command)
   return valid_type or vim.startswith(command.events[1], "User ")
 end
 
+-- REF: https://github.com/neovim/neovim/blob/master/runtime/doc/api.txt#L3112
 function mega.augroup(name, commands)
   vim.api.nvim_create_augroup(name, { clear = true })
 
@@ -881,7 +935,7 @@ end
 
 function mega.get_border(hl)
   local border = {}
-  for _, char in ipairs(require("mega.colors").icons.borderchars) do
+  for _, char in ipairs(mega.icons.borderchars) do
     table.insert(border, { char, hl or "FloatBorder" })
   end
   return border

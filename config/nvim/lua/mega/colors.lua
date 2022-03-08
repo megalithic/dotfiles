@@ -1,63 +1,11 @@
 local vcmd, api, g, set = vim.cmd, vim.api, vim.g, vim.opt
 local hi, link, utf8 = mega.hi, mega.hi_link, mega.utf8
 
-local hsl = require("lush").hsl
+-- local hsl = require("lush").hsl
 
-local icons = {
-  borderchars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-  lsp = {
-    error = "",
-    warn = "", --utf8(0xfa36), --喝卑
-    info = "",
-    hint = "", -- 
-    ok = "",
-    -- spinner_frames = { "▪", "■", "□", "▫" },
-    -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
-    kind = {
-      Text = " text", -- Text
-      Method = " method", -- Method
-      Function = " function", -- Function
-      Constructor = " constructor", -- Constructor
-      Field = "ﰠ field", -- Field
-      Variable = " variable", -- Variable
-      Class = " class", -- Class
-      Interface = "ﰮ interface", -- Interface
-      Module = " module", -- Module
-      Property = " property", -- Property
-      Unit = " unit", -- Unit
-      Value = " value", -- Value
-      Enum = "了enum", -- Enum 
-      Keyword = " keyword", -- Keyword
-      Snippet = " snippet", -- Snippet
-      Color = " color", -- Color
-      File = " file", -- File
-      Reference = " ref", -- Reference
-      Folder = " folder", -- Folder
-      EnumMember = " enum member", -- EnumMember
-      Constant = " const", -- Constant
-      Struct = "פּ struct", -- Struct
-      Event = "鬒event", -- Event
-      Operator = "\u{03a8} operator", -- Operator
-      TypeParameter = " type param", -- TypeParameter
-    },
-  },
-  virtual_text = utf8(0xf63d),
-  mode_term = utf8(0xfcb5),
-  ln_sep = utf8(0xe0a1),
-  col_sep = utf8(0xf6da),
-  perc_sep = utf8(0xf44e),
-  right_sep = utf8(0xe0b4),
-  left_sep = utf8(0xe0b6),
-  modified = "●", -- utf8(0xf085), -- "●"
-  mode = utf8(0xf101),
-  vcs = utf8(0xf418),
-  git = "", -- utf8(0xe725) -- "" ""
-  git_added = "", --  
-  git_changed = "",
-  git_removed = "", --  
-  readonly = utf8(0xf023), -- ""
-  prompt = "", -- utf8(0xf460),
-}
+local lush = require("lush")
+-- local hsluv = lush.hsluv
+local hsluv = lush.hsl
 
 -- local M = {}
 -- M.red = hsl("#e68183")
@@ -91,46 +39,46 @@ local icons = {
 
 local cs = {}
 
-cs.bg0 = hsl("#323d43")
+cs.bg0 = hsluv("#323d43")
 cs.bg1 = cs.bg0.lighten(5) -- #3c474d
 cs.bg2 = cs.bg0.lighten(10) -- #465258
 cs.bg3 = cs.bg0.lighten(15) -- #505a60
 cs.bg4 = cs.bg0.lighten(20) -- #576268
 cs.bg5 = cs.bg0.lighten(25) -- #626262
 
-cs.bg_dark = hsl("#273433")
-cs.bg_visual = hsl("#4e6053")
-cs.bg_red = hsl("#614b51")
-cs.bg_green = hsl("#4e6053")
-cs.bg_blue = hsl("#415c6d")
-cs.bg_yellow = hsl("#5d5c50")
-cs.bg_purple = hsl("#402F37")
-cs.bg_cyan = hsl("#54816B")
+cs.bg_dark = hsluv("#273433")
+cs.bg_visual = hsluv("#4e6053")
+cs.bg_red = hsluv("#614b51")
+cs.bg_green = hsluv("#4e6053")
+cs.bg_blue = hsluv("#415c6d")
+cs.bg_yellow = hsluv("#5d5c50")
+cs.bg_purple = hsluv("#402F37")
+cs.bg_cyan = hsluv("#54816B")
 
-cs.fg = hsl("#d8caac")
+cs.fg = hsluv("#d8caac")
 
 cs.dark_grey = "#3E4556"
 cs.light_grey = "#5c6370"
-cs.grey0 = hsl("#7c8377")
-cs.grey1 = hsl("#868d80")
-cs.grey2 = hsl("#999f93")
+cs.grey0 = hsluv("#7c8377")
+cs.grey1 = hsluv("#868d80")
+cs.grey2 = hsluv("#999f93")
 
-cs.red = hsl("#e68183")
-cs.orange = hsl("#e39b7b")
-cs.yellow = hsl("#d9bb80")
-cs.green = hsl("#a7c080")
-cs.cyan = hsl("#87c095").darken(5)
-cs.blue = hsl("#83b6af")
+cs.red = hsluv("#e68183")
+cs.orange = hsluv("#e39b7b")
+cs.yellow = hsluv("#d9bb80")
+cs.green = hsluv("#a7c080")
+cs.cyan = hsluv("#87c095").darken(5)
+cs.blue = hsluv("#83b6af")
 cs.aqua = cs.cyan
-cs.purple = hsl("#d39bb6")
-cs.brown = hsl("#db9c5e")
+cs.purple = hsluv("#d39bb6")
+cs.brown = hsluv("#db9c5e")
 cs.magenta = cs.purple.darken(15) -- #c678dd
 cs.teal = "#15AABF"
 
 cs.pale_red = "#E06C75"
 
 cs.bright_blue = cs.blue.lighten(5) -- #51afef
-cs.bright_green = hsl("#6bc46d")
+cs.bright_green = hsluv("#6bc46d")
 cs.bright_yellow = "#FAB005"
 
 cs.light_yellow = "#e5c07b"
@@ -244,66 +192,9 @@ local status = {
 }
 
 return {
-  icons = icons,
   cs = cs,
   base = base,
   status = status,
   colors = mega.table_merge(mega.table_merge(base, status), cs),
   style = style,
-  setup = function()
-    -- local H = require("mega.utils.highlights")
-    -- local function set_sidebar_highlight()
-    --   local normal_bg = H.get_hl("Normal", "bg")
-    --   local split_color = H.get_hl("VertSplit", "fg")
-    --   local bg_color = H.alter_color(normal_bg, -8)
-    --   local st_color = H.alter_color(H.get_hl("Visual", "bg"), -20)
-    --   local hls = {
-    --     { "PanelBackground", { background = bg_color } },
-    --     { "PanelHeading", { background = bg_color, bold = true } },
-    --     { "PanelVertSplit", { foreground = split_color, background = bg_color } },
-    --     { "PanelStNC", { background = bg_color, foreground = split_color } },
-    --     { "PanelSt", { background = st_color } },
-    --   }
-    --   for _, grp in ipairs(hls) do
-    --     H.set_hl(unpack(grp))
-    --   end
-    -- end
-
-    local sidebar_fts = {
-      "packer",
-      "dap-repl",
-      "flutterToolsOutline",
-      "undotree",
-      "dirbuf",
-      "dapui_*",
-    }
-
-    local function on_sidebar_enter()
-      vim.wo.winhighlight = table.concat({
-        "Normal:PanelBackground",
-        "EndOfBuffer:PanelBackground",
-        "StatusLine:PanelSt",
-        "StatusLineNC:PanelStNC",
-        "SignColumn:PanelBackground",
-        "VertSplit:PanelVertSplit",
-      }, ",")
-    end
-
-    mega.augroup("UserHighlights", {
-      -- {
-      --   events = { "ColorScheme" },
-      --   targets = { "*" },
-      --   command = set_sidebar_highlight,
-      -- },
-      {
-        events = { "FileType" },
-        targets = sidebar_fts,
-        command = on_sidebar_enter,
-      },
-    })
-
-    -- [ colorscheme ] ---------------------------------------------------------
-    vim.opt.termguicolors = true
-    vim.cmd([[colorscheme megaforest]])
-  end,
 }

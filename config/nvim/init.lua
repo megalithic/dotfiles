@@ -59,4 +59,5 @@ R("mega.globals")
 R("mega.options")
 R("mega.megaline")
 R("mega.plugins.config")
-R("mega.colors").setup()
+
+P(require("mega.lush_theme.megaforest").Megaforest["palette"])

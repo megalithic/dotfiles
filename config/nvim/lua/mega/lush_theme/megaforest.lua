@@ -25,9 +25,62 @@
 local set = vim.g
 
 local lush = require("lush")
-local palette = require("mega.colors")
-local C = palette.cs
-local H = require("mega.utils.highlights")
+local hsluv = lush.hsl
+
+-- local palette = require("mega.colors")
+-- local C = palette.cs
+-- local H = require("mega.utils.highlights")
+
+local C = {}
+
+C.bg0 = hsluv("#323d43")
+C.bg1 = C.bg0.lighten(5) -- #3c474d
+C.bg2 = C.bg0.lighten(10) -- #465258
+C.bg3 = C.bg0.lighten(15) -- #505a60
+C.bg4 = C.bg0.lighten(20) -- #576268
+C.bg5 = C.bg0.lighten(25) -- #626262
+
+C.bg_dark = hsluv("#273433")
+C.bg_visual = hsluv("#4e6053")
+C.bg_red = hsluv("#614b51")
+C.bg_green = hsluv("#4e6053")
+C.bg_blue = hsluv("#415c6d")
+C.bg_yellow = hsluv("#5d5c50")
+C.bg_purple = hsluv("#402F37")
+C.bg_cyan = hsluv("#54816B")
+
+C.fg = hsluv("#d8caac")
+
+C.dark_grey = hsluv("#3E4556")
+C.light_grey = hsluv("#5c6370")
+C.grey0 = hsluv("#7c8377")
+C.grey1 = hsluv("#868d80")
+C.grey2 = hsluv("#999f93")
+
+C.red = hsluv("#e68183")
+C.orange = hsluv("#e39b7b")
+C.yellow = hsluv("#d9bb80")
+C.green = hsluv("#a7c080")
+C.cyan = hsluv("#87c095").darken(5)
+C.blue = hsluv("#83b6af")
+C.aqua = C.cyan
+C.purple = hsluv("#d39bb6")
+C.brown = hsluv("#db9c5e")
+C.magenta = C.purple.darken(15) -- #c678dd
+C.teal = hsluv("#15AABF")
+
+C.pale_red = hsluv("#E06C75")
+
+C.bright_blue = C.blue.lighten(5) -- #51afef
+C.bright_green = hsluv("#6bc46d")
+C.bright_yellow = hsluv("#FAB005")
+
+C.light_yellow = hsluv("#e5c07b")
+C.light_red = hsluv("#c43e1f")
+
+C.dark_blue = C.blue.darken(25) -- #4e88ff
+C.dark_orange = hsluv("#FF922B")
+C.dark_red = hsluv("#be5046")
 
 local bg_dark = C.bg_dark
 local bg0 = C.bg0
@@ -35,17 +88,26 @@ local bg1 = C.bg1
 local bg2 = C.bg2
 local bg3 = C.bg3
 local bg4 = C.bg4
+local bg5 = C.bg5
 local bg_visual = C.bg_visual
 local bg_red = C.bg_red
 local bg_green = C.bg_green
 local bg_blue = C.bg_blue
 local bg_yellow = C.bg_yellow
+local dark_grey = C.dark_grey
+local light_grey = C.light_grey
 local grey0 = C.grey0
 local grey1 = C.grey1
 local grey2 = C.grey2
 local fg = C.fg
 local red = C.red
+local dark_red = C.dark_red
+local dark_blue = C.dark_blue
+local pale_red = C.pale_red
+local light_red = C.light_red
 local orange = C.orange
+local dark_orange = C.dark_orange
+local bright_yellow = C.bright_yellow
 local yellow = C.yellow
 local green = C.green
 local bright_green = C.bright_green
@@ -54,6 +116,7 @@ local aqua = C.aqua
 local blue = C.blue
 local purple = C.purple
 local brown = C.brown
+local magenta = C.magenta
 
 local tc = {
   black = bg0,
@@ -501,15 +564,15 @@ return lush(function()
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ Grey, gui = "italic" }),
-    TSWarning({ fg = C.orange, gui = "bold" }),
-    TSNote({ fg = C.blue, gui = "NONE,italic" }),
-    TSDanger({ fg = C.red, gui = "bold" }),
-    TSError({ gui = "undercurl", guisp = C.red }), -- ErrorText
+    TSWarning({ fg = orange, gui = "bold" }),
+    TSNote({ fg = blue, gui = "NONE,italic" }),
+    TSDanger({ fg = red, gui = "bold" }),
+    TSError({ gui = "undercurl", guisp = red }), -- ErrorText
     -- highlight FIXME/TODO/REF: comments
-    commentTSWarning({ fg = C.orange, gui = "bold" }),
-    commentTSNote({ fg = C.blue, gui = "NONE,italic" }),
-    commentTSDanger({ bg = C.dark_red, fg = fg, gui = "bold" }),
-    TreesitterContext({ bg = C.bg1 }),
+    commentTSWarning({ fg = orange, gui = "bold" }),
+    commentTSNote({ fg = blue, gui = "NONE,italic" }),
+    commentTSDanger({ bg = dark_red, fg = fg, gui = "bold" }),
+    TreesitterContext({ bg = bg1 }),
 
     -- TS: Markdown
     markdownTSPunctSpecial({ Special }),
@@ -638,36 +701,36 @@ return lush(function()
     -- CmpItemAbbrMatchFuzzy({ fg = fg, gui = "italic" }),
     CmpItemAbbrDeprecated({ fg = grey1, gui = "strikethrough" }),
 
-    CmpDocumentation({ fg = C.fg, bg = C.bg1 }),
-    CmpDocumentationBorder({ fg = C.fg, bg = C.bg1 }),
+    CmpDocumentation({ fg = fg, bg = bg1 }),
+    CmpDocumentationBorder({ fg = fg, bg = bg1 }),
 
-    CmpItemAbbr({ fg = C.fg }),
-    CmpItemAbbrMatch({ fg = C.cyan, gui = "bold,italic" }),
-    CmpItemAbbrMatchFuzzy({ fg = C.yellow }),
-    CmpItemMenu({ fg = C.fg }),
+    CmpItemAbbr({ fg = fg }),
+    CmpItemAbbrMatch({ fg = cyan, gui = "bold,italic" }),
+    CmpItemAbbrMatchFuzzy({ fg = yellow }),
+    CmpItemMenu({ fg = fg }),
 
-    CmpItemKind({ fg = C.blue }),
-    CmpItemKindText({ fg = C.fg }),
-    CmpItemKindMethod({ fg = C.blue }),
+    CmpItemKind({ fg = blue }),
+    CmpItemKindText({ fg = fg }),
+    CmpItemKindMethod({ fg = blue }),
     CmpItemKindFunction({ CmpItemKindMethod }),
-    CmpItemKindConstructor({ fg = C.cyan }),
-    CmpItemKindField({ fg = C.fg }),
-    CmpItemKindVariable({ fg = C.red }),
-    CmpItemKindClass({ fg = C.yellow }),
+    CmpItemKindConstructor({ fg = cyan }),
+    CmpItemKindField({ fg = fg }),
+    CmpItemKindVariable({ fg = red }),
+    CmpItemKindClass({ fg = yellow }),
     CmpItemKindInterface({ CmpItemKindClass }),
     -- CmpItemKindModule({ Include }),
-    CmpItemKindProperty({ fg = C.red }),
+    CmpItemKindProperty({ fg = red }),
     -- CmpItemKindUnit({ Constant }),
-    CmpItemKindValue({ fg = C.orange }),
+    CmpItemKindValue({ fg = orange }),
     -- CmpItemKindEnum({ Type }),
-    CmpItemKindKeyword({ fg = C.purple }),
-    CmpItemKindSnippet({ fg = C.green }),
+    CmpItemKindKeyword({ fg = purple }),
+    CmpItemKindSnippet({ fg = green }),
     -- CmpItemKindVColor({}),
     -- CmpItemKindFile({ Dictionary }),
     -- CmpItemKindReference({ PreProc }),
     -- CmpItemKindFolder({}),
     -- CmpItemKindEnumMember({}),
-    CmpItemKindConstant({ fg = C.green }),
+    CmpItemKindConstant({ fg = green }),
     -- CmpItemKindStruct({ Type }),
     -- CmpItemKindEvent({ Variable }),
     -- CmpItemKindOperator({ Operator }),
@@ -748,8 +811,8 @@ return lush(function()
 
     ---- :help statusline -------------------------------------------
 
-    StatusLine({ fg = C.grey1, bg = C.bg1 }), -- status line of current window
-    StatusLineNC({ fg = C.grey1, bg = C.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
+    StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
+    StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
     -- StatusLine({ bg = bg1 }),
     -- StatusLineNC({ bg = bg1, gui = "NONE" }),
     -- StInactive({ bg = bg0, gui = "italic" }),
@@ -768,65 +831,68 @@ return lush(function()
     -- StError({ bg = cs.pale_red }),
     -- StWarn({ bg = cs.dark_orange }),
 
-    StModeNormal({ bg = bg1, fg = C.bg5, gui = "NONE" }),
-    StModeInsert({ bg = bg1, fg = C.green, gui = "bold" }),
-    StModeVisual({ bg = bg1, fg = C.magenta, gui = "bold" }),
-    StModeReplace({ bg = bg1, fg = C.dark_red, gui = "bold" }),
-    StModeCommand({ bg = bg1, fg = C.green, gui = "bold" }),
+    StModeNormal({ bg = bg1, fg = bg5, gui = "NONE" }),
+    StModeInsert({ bg = bg1, fg = green, gui = "bold" }),
+    StModeVisual({ bg = bg1, fg = magenta, gui = "bold" }),
+    StModeReplace({ bg = bg1, fg = dark_red, gui = "bold" }),
+    StModeCommand({ bg = bg1, fg = green, gui = "bold" }),
 
     StMetadata({ Comment, bg = bg1 }),
     StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
-    StIndicator({ fg = C.dark_blue, bg = bg1 }),
-    StModified({ fg = C.pale_red, bg = bg1, gui = "bold,italic" }),
-    StGitSymbol({ fg = C.light_red, bg = bg1 }),
-    StGitBranch({ fg = C.blue, bg = bg1 }),
-    StGitSigns({ fg = C.dark_blue, bg = bg1 }),
+    StIndicator({ fg = dark_blue, bg = bg1 }),
+    StModified({ fg = pale_red, bg = bg1, gui = "bold,italic" }),
+    StGitSymbol({ fg = light_red, bg = bg1 }),
+    StGitBranch({ fg = blue, bg = bg1 }),
+    StGitSigns({ fg = dark_blue, bg = bg1 }),
     StGreen({ fg = green, bg = bg1 }),
-    StBlue({ fg = C.dark_blue, bg = bg1, gui = "bold" }),
+    StBlue({ fg = dark_blue, bg = bg1, gui = "bold" }),
     StNumber({ fg = purple, bg = bg1 }),
     StCount({ fg = bg0, bg = blue, gui = "bold" }),
     StPrefix({ fg = fg, bg = bg2 }),
     StDirectory({ bg = bg1, fg = "Gray", gui = "italic" }),
-    StParentDirectory({ bg = bg1, fg = C.blue, gui = "bold" }),
+    StParentDirectory({ bg = bg1, fg = blue, gui = "bold" }),
     StFilename({ bg = bg1, fg = "LightGray", gui = "bold" }),
-    StFilenameInactive({ fg = C.light_grey, bg = bg1, gui = "italic,bold" }),
+    StFilenameInactive({ fg = light_grey, bg = bg1, gui = "italic,bold" }),
     StIdentifier({ fg = blue, bg = bg1 }),
     StTitle({ bg = bg1, fg = "LightGray", gui = "bold" }),
     StComment({ Comment, bg = bg1 }),
-    StError({ fg = C.pale_red, bg = bg1 }),
-    StWarn({ fg = C.dark_orange, bg = bg1 }),
-    StInfo({ fg = C.cyan, bg = bg1, gui = "bold" }),
-    StHint({ fg = C.bright_yellow, bg = bg1 }),
+    StError({ fg = pale_red, bg = bg1 }),
+    StWarn({ fg = dark_orange, bg = bg1 }),
+    StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
+    StHint({ fg = bright_yellow, bg = bg1 }),
 
     DevIconLua({ fg = fg }),
+    DevIconDefault({ fg = fg }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
-    rainbowcol1({ fg = C.red }),
-    rainbowcol2({ fg = C.yellow }),
-    rainbowcol3({ fg = C.green }),
-    rainbowcol4({ fg = C.blue }),
-    rainbowcol5({ fg = C.cyan }),
-    rainbowcol6({ fg = C.magenta }),
-    rainbowcol7({ fg = C.purple }),
+    rainbowcol1({ fg = red }),
+    rainbowcol2({ fg = yellow }),
+    rainbowcol3({ fg = green }),
+    rainbowcol4({ fg = blue }),
+    rainbowcol5({ fg = cyan }),
+    rainbowcol6({ fg = magenta }),
+    rainbowcol7({ fg = purple }),
 
     ---- :help telescope -------------------------------------------------------
 
     TelescopeNormal({ bg = C.bg2.darken(20) }),
-    TelescopeBorder({ fg = C.bg0, bg = C.bg2.darken(20) }),
+    TelescopeBorder({ fg = bg0, bg = C.bg2.darken(20) }),
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
 
-    TelescopePreviewTitle({ fg = C.bg0, bg = C.green, gui = "italic" }),
+    TelescopePreviewTitle({ fg = bg0, bg = green, gui = "italic" }),
 
     TelescopePrompt({ bg = C.bg2.darken(10) }),
     TelescopePromptPrefix({ Statement, bg = C.bg2.darken(10) }),
     TelescopePromptBorder({ fg = "NONE", bg = C.bg2.darken(10) }),
-    TelescopePromptNormal({ fg = C.fg, bg = C.bg2.darken(10) }),
-    TelescopePromptTitle({ fg = C.bg0, bg = C.red }),
+    TelescopePromptNormal({ fg = fg, bg = C.bg2.darken(10) }),
+    TelescopePromptTitle({ fg = bg0, bg = red }),
 
     TelescopeSelection({ bg = C.bg2.darken(10) }),
-    TelescopeSelectionCaret({ fg = C.fg, bg = C.bg2.darken(10) }),
+    TelescopeSelectionCaret({ fg = fg, bg = C.bg2.darken(10) }),
     TelescopeResults({ bg = "NONE" }),
-    TelescopeResultsTitle({ fg = C.bg0, bg = C.fg, gui = "bold" }),
+    TelescopeResultsTitle({ fg = bg0, bg = fg, gui = "bold" }),
+
+    Megaforest({ palette = C }),
   }
 end)

@@ -9,7 +9,6 @@ local expand = fn.expand
 local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
-local C = require("mega.colors")
 local H = require("mega.utils.highlights")
 local U = {}
 
@@ -49,10 +48,10 @@ mega.augroup("statusline", {
 -- Showed diagnostic levels
 U.diagnostic_levels = nil
 U.diagnostic_levels = {
-  { id = vim.diagnostic.severity.ERROR, sign = C.icons.lsp.error },
-  { id = vim.diagnostic.severity.WARN, sign = C.icons.lsp.warn },
-  { id = vim.diagnostic.severity.INFO, sign = C.icons.lsp.info },
-  { id = vim.diagnostic.severity.HINT, sign = C.icons.lsp.hint },
+  { id = vim.diagnostic.severity.ERROR, sign = mega.icons.lsp.error },
+  { id = vim.diagnostic.severity.WARN, sign = mega.icons.lsp.warn },
+  { id = vim.diagnostic.severity.INFO, sign = mega.icons.lsp.info },
+  { id = vim.diagnostic.severity.HINT, sign = mega.icons.lsp.hint },
 }
 
 --- Decide whether to truncate
@@ -132,9 +131,9 @@ local exceptions = {
     mail = "",
     dbui = "",
     tsplayground = "侮",
-    fugitive = C.icons.git_symbol,
-    fugitiveblame = C.icons.git_symbol,
-    gitcommit = C.icons.git_symbol,
+    fugitive = mega.icons.git_symbol,
+    fugitiveblame = mega.icons.git_symbol,
+    gitcommit = mega.icons.git_symbol,
     Trouble = "",
     NeogitStatus = "",
     ["vim-plug"] = "⚉",
@@ -318,14 +317,14 @@ function U.modified(ctx, icon)
   if ctx.filetype == "help" then
     return ""
   end
-  icon = icon or C.icons.modified
+  icon = icon or mega.icons.modified
   return ctx.modified and icon
 end
 
 --- @param ctx table
 --- @param icon string | nil
 function U.readonly(ctx, icon)
-  icon = icon or C.icons.readonly
+  icon = icon or mega.icons.readonly
   if ctx.readonly then
     return " " .. icon
   else
@@ -559,17 +558,17 @@ function M.s_git(args)
     U.item(
       status.head,
       "StGitBranch",
-      { before = " ", after = " ", prefix = C.icons.git, prefix_color = "StGitSymbol" }
+      { before = " ", after = " ", prefix = mega.icons.git, prefix_color = "StGitSymbol" }
     )
   )
   local added_str = unpack(
-    U.item(status.added, "StMetadataPrefix", { prefix = C.icons.git_added, prefix_color = "StGreen" })
+    U.item(status.added, "StMetadataPrefix", { prefix = mega.icons.git_added, prefix_color = "StGreen" })
   )
   local changed_str = unpack(
-    U.item(status.changed, "StMetadataPrefix", { prefix = C.icons.git_changed, prefix_color = "StWarning" })
+    U.item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git_changed, prefix_color = "StWarning" })
   )
   local removed_str = unpack(
-    U.item(status.removed, "StMetadataPrefix", { prefix = C.icons.git_removed, prefix_color = "StError" })
+    U.item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git_removed, prefix_color = "StError" })
   )
 
   if signs == "" then
@@ -595,10 +594,10 @@ function U.diagnostic_info(ctx)
     return { error = {}, warn = {}, info = {}, hint = {} }
   end
   return {
-    error = { count = get_count(buf, "Error"), sign = C.icons.lsp.error },
-    warn = { count = get_count(buf, "Warn"), sign = C.icons.lsp.warn },
-    info = { count = get_count(buf, "Info"), sign = C.icons.lsp.info },
-    hint = { count = get_count(buf, "Hint"), sign = C.icons.lsp.hint },
+    error = { count = get_count(buf, "Error"), sign = mega.icons.lsp.error },
+    warn = { count = get_count(buf, "Warn"), sign = mega.icons.lsp.warn },
+    info = { count = get_count(buf, "Info"), sign = mega.icons.lsp.info },
+    hint = { count = get_count(buf, "Hint"), sign = mega.icons.lsp.hint },
   }
 end
 

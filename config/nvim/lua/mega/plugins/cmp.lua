@@ -4,7 +4,6 @@ local cmp = require("cmp")
 local luasnip = require("luasnip")
 local utils = require("mega.utils")
 local t = mega.replace_termcodes
-local C = require("mega.colors")
 
 local M = {
   sources = {},
@@ -160,7 +159,7 @@ local function setup_cmp()
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       format = function(entry, item)
-        item.kind = C.icons.lsp.kind[item.kind]
+        item.kind = mega.icons.lsp.kind[item.kind]
 
         if entry.source.name == "nvim_lsp" then
           item.menu = entry.source.source.client.name
