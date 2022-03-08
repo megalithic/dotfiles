@@ -61,14 +61,16 @@ def _draw_left_status(
     return end
 
 
+# more handy kitty tab_bar things:
+# REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-2183440
 def _draw_right_status(screen: Screen, is_last: bool) -> int:
     if not is_last:
         return 0
 
-    date = datetime.datetime.now().strftime(" %H:%M ")
-    utc_date = datetime.datetime.now(datetime.timezone.utc).strftime(" UTC%H:%M ")
+    date = datetime.datetime.now().strftime(" %H:%M")
+    utc_date = datetime.datetime.now(datetime.timezone.utc).strftime(" (UTC %H:%M)")
 
-    right_status_length = calc_draw_spaces(date + " " + utc_date)
+    right_status_length = calc_draw_spaces(date + " " + utc_date + " ")
 
     draw_spaces = screen.columns - screen.cursor.x - right_status_length
     if draw_spaces > 0:
@@ -76,7 +78,7 @@ def _draw_right_status(screen: Screen, is_last: bool) -> int:
 
     cells = [
         (Color(135, 192, 149), date),
-        (Color(135, 192, 149), utc_date),
+        (Color(113, 115, 116), utc_date),
     ]
 
     screen.cursor.fg = 0
@@ -91,6 +93,13 @@ def _draw_right_status(screen: Screen, is_last: bool) -> int:
     return screen.cursor.x
 
 
+
+# REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-1940795
+# def redraw_tab_bar():
+#     tm = get_boss().active_tab_manager
+#     if tm is not None:
+#         tm.mark_tab_bar_dirty()
+
 def draw_tab(
     draw_data: DrawData,
     screen: Screen,
@@ -101,7 +110,7 @@ def draw_tab(
     is_last: bool,
     extra_data: ExtraData,
 ) -> int:
-    _draw_icon(screen, index, symbol=" \uf490 ")
+    _draw_icon(screen, index, symbol="  \uf490  ")
     _draw_left_status(
         draw_data,
         screen,
