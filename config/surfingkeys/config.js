@@ -14,93 +14,60 @@
 // - https://github.com/glacambre/firenvim
 
 const actions = {};
+const {
+  aceVimMap,
+  mapkey,
+  unmap,
+  vunmap,
+  iunmap,
+  imap,
+  imapkey,
+  getClickableElements,
+  vmapkey,
+  vmap,
+  map,
+  cmap,
+  addSearchAlias,
+  removeSearchAlias,
+  tabOpenLink,
+  readText,
+  Clipboard,
+  Front,
+  Hints,
+  Visual,
+  RUNTIME,
+} = api;
 
-if (typeof api !== "undefined") {
-  setup_surfingkeys({ api: api });
-} else {
-  const api = {
-    aceVimMap,
-    mapkey,
-    unmap,
-    vunmap,
-    imap,
-    imapkey,
-    iunmap,
-    getClickableElements,
-    vmapkey,
-    vmap,
-    map,
-    cmap,
-    addSearchAlias,
-    removeSearchAlias,
-    tabOpenLink,
-    readText,
-    Clipboard,
-    Front,
-    Hints,
-    Visual,
-    RUNTIME,
-  };
+// settings
+settings.defaultSearchEngine = "d"; // duck duck go
+settings.focusAfterClosed = "right";
+settings.hintAlign = "left";
+settings.smoothScroll = false;
+settings.omnibarSuggestionTimeout = 500;
+settings.richHintsForKeystroke = 1;
+settings.omnibarPosition = "middle";
+settings.focusFirstCandidate = false;
+settings.scrollStepSize = 100;
+settings.tabsThreshold = 0;
+settings.modeAfterYank = "Normal";
+settings.useNeovim = false;
 
-  setup_surfingkeys({ api: api });
-}
+// prev/next link
+// settings.nextLinkRegex = /((>>|next)|>|›|»|→|次へ|次のページ+)/i;
+// settings.prevLinkRegex = /((<<|prev(ious)?)|<|‹|«|←|前へ|前のページ+)/i;
+// blocklist
+settings.blocklistPattern = /mail.google.com/;
+// order
+settings.historyMUOrder = false;
+settings.tabsMRUOrder = false;
+// Input box trueだとiなどで入力ボックスに切り替えてもリンクキーが表示されたままに 切り替えたリンクキーが最後に入力されることも
+settings.cursorAtEndOfInput = false;
 
-function setup_surfingkeys({ api: api }) {
-  // console.log(Object.keys(api));
-  const {
-    aceVimMap,
-    mapkey,
-    unmap,
-    vunmap,
-    iunmap,
-    imap,
-    imapkey,
-    getClickableElements,
-    vmapkey,
-    vmap,
-    map,
-    cmap,
-    addSearchAlias,
-    removeSearchAlias,
-    tabOpenLink,
-    readText,
-    Clipboard,
-    Front,
-    Hints,
-    Visual,
-    RUNTIME,
-  } = api;
+Hints.characters = "qwertasdfgzxcvb";
+// Hints.characters = "asdfgyuiopqwertnmzxcvb";
 
-  // settings
-  settings.defaultSearchEngine = "d"; // duck duck go
-  settings.focusAfterClosed = "right";
-  settings.hintAlign = "left";
-  settings.smoothScroll = false;
-  settings.omnibarSuggestionTimeout = 500;
-  settings.richHintsForKeystroke = 1;
-  settings.omnibarPosition = "middle";
-  settings.focusFirstCandidate = false;
-  settings.scrollStepSize = 100;
-  settings.tabsThreshold = 0;
-  settings.modeAfterYank = "Normal";
-  settings.useNeovim = false;
-
-  // prev/next link
-  // settings.nextLinkRegex = /((>>|next)|>|›|»|→|次へ|次のページ+)/i;
-  // settings.prevLinkRegex = /((<<|prev(ious)?)|<|‹|«|←|前へ|前のページ+)/i;
-  // blocklist
-  settings.blocklistPattern = /mail.google.com/;
-  // order
-  settings.historyMUOrder = false;
-  settings.tabsMRUOrder = false;
-  // Input box trueだとiなどで入力ボックスに切り替えてもリンクキーが表示されたままに 切り替えたリンクキーが最後に入力されることも
-  settings.cursorAtEndOfInput = false;
-
-  Hints.characters = "qwertasdfgzxcvb";
-  // Hints.characters = "asdfgyuiopqwertnmzxcvb";
-
-  // Link Hints
-  Hints.style(`
+// Link Hints
+Hints.style(`
     font-family: 'JetBrains Mono';
     font-size: 12px;
     font-weight: normal;
@@ -110,9 +77,9 @@ function setup_surfingkeys({ api: api }) {
     border: solid 1px #4C566A !important;
   `);
 
-  // Text Hints
-  Hints.style(
-    `
+// Text Hints
+Hints.style(
+  `
     font-family: 'JetBrains Mono';
     font-size: 12px;
     text-transform: lowercase;
@@ -120,100 +87,100 @@ function setup_surfingkeys({ api: api }) {
     background: #6272a4 !important;
     border: solid 2px #4C566A !important;
   `,
-    "text"
-  );
+  "text"
+);
 
-  // set visual-mode style
-  Visual.style("marks", "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;");
-  Visual.style(
-    "cursor",
-    "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
-  );
+// set visual-mode style
+Visual.style("marks", "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;");
+Visual.style(
+  "cursor",
+  "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
+);
 
-  // -----------------------------------------------------------------------------------------------------------------------
-  // Change hints styles
-  // -----------------------------------------------------------------------------------------------------------------------
-  // Hints.characters = "asdfgqwertvbn";
-  // Hints.style(
-  //   'border: solid 1px #ff79c6; color:#44475a; background: #f1fa8c; background-color: #f1fa8c; font-size: 10pt; font-family: "Jetbrains Mono"'
-  // );
-  // Hints.style('border: solid 8px #ff79c6;padding: 1px;background: #f1fa8c; font-family: "Jetbrains Mono"', "text");
-  // // -----------------------------------------------------------------------------------------------------------------------
-  // // Change search marks and cursor
-  // // -----------------------------------------------------------------------------------------------------------------------
-  // Visual.style("marks", "background-color: #f1fa8c;");
-  // Visual.style(
-  //   "cursor",
-  //   "background-color: #6272a4 !important; color: #f8f8f2 !important; border:1px red; font-weight:bold"
-  // );
+// -----------------------------------------------------------------------------------------------------------------------
+// Change hints styles
+// -----------------------------------------------------------------------------------------------------------------------
+// Hints.characters = "asdfgqwertvbn";
+// Hints.style(
+//   'border: solid 1px #ff79c6; color:#44475a; background: #f1fa8c; background-color: #f1fa8c; font-size: 10pt; font-family: "Jetbrains Mono"'
+// );
+// Hints.style('border: solid 8px #ff79c6;padding: 1px;background: #f1fa8c; font-family: "Jetbrains Mono"', "text");
+// // -----------------------------------------------------------------------------------------------------------------------
+// // Change search marks and cursor
+// // -----------------------------------------------------------------------------------------------------------------------
+// Visual.style("marks", "background-color: #f1fa8c;");
+// Visual.style(
+//   "cursor",
+//   "background-color: #6272a4 !important; color: #f8f8f2 !important; border:1px red; font-weight:bold"
+// );
 
-  mapkey("w", "Move current tab to another window", function () {
-    Front.openOmnibar({ type: "Windows" });
-  });
+mapkey("w", "Move current tab to another window", function () {
+  Front.openOmnibar({ type: "Windows" });
+});
 
-  // disable emoji completion
-  iunmap(":");
+// disable emoji completion
+iunmap(":");
 
-  // disable google translate of visually selected
-  vunmap("t");
+// disable google translate of visually selected
+vunmap("t");
 
-  // disable window splitting (i use hammerspoon for that)
-  unmap("w");
+// disable window splitting (i use hammerspoon for that)
+unmap("w");
 
-  vmap("H", "0");
-  vmap("L", "$");
-  // vunmap("gr");
-  // vunmap("q");
+vmap("H", "0");
+vmap("L", "$");
+// vunmap("gr");
+// vunmap("q");
 
-  // previous/next tab
-  map("<Ctrl-l>", "R");
-  map("<Ctrl-h>", "E");
+// previous/next tab
+map("<Ctrl-l>", "R");
+map("<Ctrl-h>", "E");
 
-  // close current tab
-  map("<Ctrl-w>", "x");
+// close current tab
+map("<Ctrl-w>", "x");
 
-  // page up/down
-  map("<Ctrl-f>", "d");
-  map("<Ctrl-b>", "e");
+// page up/down
+map("<Ctrl-f>", "d");
+map("<Ctrl-b>", "e");
 
-  // search opened tabs with `gt`
-  map("gt", "T");
-  map("<Ctrl-g>", "T");
+// search opened tabs with `gt`
+map("gt", "T");
+map("<Ctrl-g>", "T");
 
-  // history Back/Forward
-  map("H", "S");
-  map("L", "D");
-  // api.mapkey("K", "#1Click on the previous link on current page", previousPage);
-  // api.mapkey("J", "#1Click on the next link on current page", nextPage);
+// history Back/Forward
+map("H", "S");
+map("L", "D");
+// api.mapkey("K", "#1Click on the previous link on current page", previousPage);
+// api.mapkey("J", "#1Click on the next link on current page", nextPage);
 
-  // first tab/last tab
-  map("gH", "g0");
-  map("gL", "g$");
+// first tab/last tab
+map("gH", "g0");
+map("gL", "g$");
 
-  // open link in new tab
-  map("F", "gf");
+// open link in new tab
+map("F", "gf");
 
-  aceVimMap(",w", ":w", "normal");
-  aceVimMap(",q", ":q", "normal");
+aceVimMap(",w", ":w", "normal");
+aceVimMap(",q", ":q", "normal");
 
-  // set quick-tab-opening for `<C-1>`-`<C-0>` for tabs 1-10
-  for (let i = 0; i <= 9; i++) {
-    // unmap(`<Ctrl-${i}>`);
-    console.log(`<Ctrl-${i}> -> ${i}T`);
+// set quick-tab-opening for `<C-1>`-`<C-0>` for tabs 1-10
+for (let i = 0; i <= 9; i++) {
+  // unmap(`<Ctrl-${i}>`);
+  console.log(`<Ctrl-${i}> -> ${i}T`);
 
-    if (i === 0) {
-      map("<Ctrl-0>", "10T");
-      map("0t", "10T");
-    } else {
-      map(`<Ctrl-${i}>`, `${i}T`);
-      map(`${i}t`, `${i}T`);
-    }
+  if (i === 0) {
+    map("<Ctrl-0>", "10T");
+    map("0t", "10T");
+  } else {
+    map(`<Ctrl-${i}>`, `${i}T`);
+    map(`${i}t`, `${i}T`);
   }
+}
 
-  // custom actions
-  actions.showSpeedReader = () => {
-    const script = document.createElement("script");
-    script.innerHTML = `(() => {
+// custom actions
+actions.showSpeedReader = () => {
+  const script = document.createElement("script");
+  script.innerHTML = `(() => {
     const sq = window.sq || {}
     window.sq = sq
     if (sq.script) {
@@ -226,23 +193,23 @@ function setup_surfingkeys({ api: api }) {
       document.body.appendChild(sq.script)
     }
   })()`;
-    document.body.appendChild(script);
-  };
-  unmap(";s");
-  mapkey(";s", "-> Open Squirt", actions.showSpeedReader);
+  document.body.appendChild(script);
+};
+unmap(";s");
+mapkey(";s", "-> Open Squirt", actions.showSpeedReader);
 
-  actions.sendToInstapaper = () => {
-    const script = document.createElement("script");
-    script.innerHTML = `(() => {
+actions.sendToInstapaper = () => {
+  const script = document.createElement("script");
+  script.innerHTML = `(() => {
     var d=document;try{if(!d.body)throw(0);window.location='http://www.instapaper.com/text?u='+encodeURIComponent(d.location.href);}catch(e){alert('Please wait until the page has loaded.');}
   })()`;
-    document.body.appendChild(script);
-  };
-  unmap(";i");
-  mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
+  document.body.appendChild(script);
+};
+unmap(";i");
+mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
 
-  // set theme
-  settings.theme = `
+// set theme
+settings.theme = `
   :root {
     --font: "JetBrains Mono", Arial, sans-serif;
     --font-size: 16;
@@ -471,4 +438,3 @@ function setup_surfingkeys({ api: api }) {
       animation: 0s ease-in-out 1 forwards collapseRichHints;
   }
   `;
-}
