@@ -135,7 +135,7 @@ augroup("Utilities", {
 augroup("Kitty", {
   {
     events = { "BufWritePost" },
-    targets = { "kitty.conf" },
+    targets = { "*/kitty/*.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
       vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
