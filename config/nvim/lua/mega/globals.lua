@@ -639,39 +639,47 @@ end
 -- - https://github.com/oncomouse/dotfiles/blob/master/conf/vim/init.lua#L279-L307
 -- - https://github.com/mrjones2014/dotfiles/blob/master/.config/nvim/lua/autocmds.lua
 function mega.augroup(name, commands)
-  -- vim.api.nvim_create_augroup("LspDiagnostic")
-  -- vim.api.nvim_create_autocmd("CursorHold", {
-  --   -- pattern = { "yaml", "toml" },
-  --   buffer = bufnr,
-  --   callback = function()
-  --     mega.lsp.line_diagnostics()
-  --   end,
-  -- })
+  vim.api.nvim_create_augroup(name, { clear = true })
 
-  vcmd("augroup " .. name)
-  vcmd("autocmd!")
   for _, c in ipairs(commands) do
     if c.command and c.events and is_valid_target(c) then
       local command = c.command
+      local autocmd_opts = {
+        group = name,
+      }
+
       if type(command) == "function" then
-        local fn_id = mega._register(command)
-        command = fmt("lua mega._execute(%s)", fn_id)
+        autocmd_opts["callback"] = command
+      else -- this however, might not be right, since vim func calls are strings too
+        autocmd_opts["command"] = command
       end
+
+      if c.buffer ~= nil then
+        autocmd_opts["buffer"] = c.buffer
+      end
+
+      if c.targets ~= nil then
+        autocmd_opts["pattern"] = c.targets
+      end
+
+      if c.once ~= nil then
+        autocmd_opts["once"] = c.once
+      end
+
+      if c.nested ~= nil then
+        autocmd_opts["nested"] = c.nested
+      end
+
+      if c.desc ~= nil then
+        autocmd_opts["desc"] = c.desc
+      end
+
       c.events = type(c.events) == "string" and { c.events } or c.events
-      vcmd(
-        fmt(
-          "autocmd %s %s %s %s",
-          table.concat(c.events, ","),
-          table.concat(c.targets or {}, ","),
-          table.concat(c.modifiers or {}, " "),
-          command
-        )
-      )
+      vim.api.nvim_create_autocmd(c.events, autocmd_opts)
     else
       vim.notify(fmt("An autocommand in %s is specified incorrectly: %s", name, vim.inspect(name)), L.ERROR)
     end
   end
-  vcmd("augroup END")
 end
 
 --- TODO eventually move to using `nvim_set_hl`

@@ -100,14 +100,6 @@ local function setup_autocommands(client, _)
     },
   })
 
-  -- vim.api.nvim_create_augroup("LspDiagnostics", { clear = true })
-  -- vim.api.nvim_create_autocmd("CursorHold", {
-  --   -- pattern = { "yaml", "toml" },
-  --   buffer = bufnr,
-  --   callback = function() end,
-  --   group = "LspDiagnostics",
-  -- })
-
   -- if client and client.resolved_capabilities.document_formatting then
   --   -- format on save
   --   augroup("LspFormat", {
@@ -283,7 +275,7 @@ end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
 
-local function setup_formatting(client, bufnr)
+local function setup_formatting(client, _)
   -- disable formatting for the following language-servers (let null-ls takeover):
   local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua" }
   for i = 1, #disabled_formatting_ls do

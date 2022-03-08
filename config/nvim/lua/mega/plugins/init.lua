@@ -17,6 +17,7 @@ local PKGS = {
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
   "mhanberg/thicc_forest",
+  "mcchrish/zenbones.nvim",
   "savq/melange",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
@@ -31,7 +32,6 @@ local PKGS = {
   "folke/which-key.nvim",
   "ojroques/nvim-bufdel",
   "rcarriga/nvim-notify",
-  "petertriho/nvim-scrollbar",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
