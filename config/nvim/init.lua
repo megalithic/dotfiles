@@ -59,5 +59,3 @@ R("mega.globals")
 R("mega.options")
 R("mega.megaline")
 R("mega.plugins.config")
-
-P(require("mega.lush_theme.megaforest").Megaforest["palette"])
