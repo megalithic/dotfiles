@@ -1,7 +1,7 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
-local cmd, fn = vim.cmd, vim.fn
-local au, exec, augroup = mega.au, mega.exec, mega.augroup
+local vcmd, fn = vim.cmd, vim.fn
+local au, augroup = mega.au, mega.augroup
 
 -- vim.api.nvim_exec(
 --   [[
@@ -52,7 +52,7 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 --   command = function()
 --     local pos = fn.line([['"]])
 --     if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
---       vim.cmd("keepjumps normal g`\"")
+--       vcmd("keepjumps normal g`\"")
 --     end
 --   end,
 -- })
@@ -111,7 +111,7 @@ augroup("Utilities", {
     --   command = function()
     --     local pos = fn.line([['"]])
     --     if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
-    --       vim.cmd("keepjumps normal g`\"")
+    --       vcmd("keepjumps normal g`\"")
     --     end
     --   end,
     -- },
@@ -126,7 +126,7 @@ augroup("Utilities", {
     command = function()
       local pos = fn.line([['"]])
       if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
-        vim.cmd("keepjumps normal g`\"")
+        vcmd("keepjumps normal g`\"")
       end
     end,
   },
@@ -139,7 +139,7 @@ augroup("Kitty", {
     command = function()
       -- auto-reload kitty upon kitty.conf write
       vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
-      vim.cmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
+      vcmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },
 })
@@ -150,7 +150,7 @@ augroup("Plugins/Paq", {
     targets = { "*/mega/plugins/*.lua" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
-      vim.cmd("luafile %")
+      vcmd("luafile %")
       vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
     end,
   },
@@ -162,7 +162,7 @@ augroup("Plugins/Paq", {
       nnoremap("gf", function()
         local repo = vim.fn.expand("<cfile>")
         if not repo or #vim.split(repo, "/") ~= 2 then
-          return vim.cmd("norm! gf")
+          return vcmd("norm! gf")
         end
         local url = string.format("https://www.github.com/%s", repo)
         vim.fn.jobstart("open " .. url)
@@ -198,7 +198,7 @@ augroup("Terminal", {
     command = function()
       --- automatically close a terminal if the job was successful
       if not vim.v.event.status == 0 then
-        vim.cmd("bdelete! " .. fn.expand("<abuf>"))
+        vcmd("bdelete! " .. fn.expand("<abuf>"))
       end
     end,
   },
@@ -213,7 +213,7 @@ augroup("UpdateVim", {
   --     targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
   --     modifiers = { "++nested" },
   --     command = function()
-  --       local ok, msg = pcall(vim.cmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
+  --       local ok, msg = pcall(vcmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
   --       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
   --       vim.notify(msg)
   --     end,
@@ -250,7 +250,7 @@ augroup("LazyLoads", {
     targets = { "*" },
     command = function()
       if mega.is_macos then
-        vim.cmd([[packadd dash.nvim]])
+        vcmd([[packadd dash.nvim]])
 
         require("which-key").register({
           ["<leader>f"] = {
@@ -273,9 +273,9 @@ augroup("LazyLoads", {
     targets = { "*" },
     command = function()
       if vim.env.TMUX ~= nil then
-        vim.cmd([[packadd tmux-navigate]])
+        vcmd([[packadd tmux-navigate]])
       else
-        vim.cmd([[packadd vim-kitty-navigator]])
+        vcmd([[packadd vim-kitty-navigator]])
       end
     end,
   },
