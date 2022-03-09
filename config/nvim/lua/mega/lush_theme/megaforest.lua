@@ -867,6 +867,7 @@ return lush(function()
     DevIconConf({ fg = fg }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
+
     rainbowcol1({ fg = red }),
     rainbowcol2({ fg = yellow }),
     rainbowcol3({ fg = green }),
@@ -894,6 +895,13 @@ return lush(function()
     TelescopeSelectionCaret({ fg = fg, bg = C.bg2.darken(10) }),
     TelescopeResults({ bg = "NONE" }),
     TelescopeResultsTitle({ fg = bg0, bg = fg, gui = "bold" }),
+
+    ---- :help: fidget.txt -----------------------------------------------------
+
+    FidgetTitle({ fg = orange }),
+    FidgetTask({ fg = grey2 }),
+
+    ---- :hackkkks -------------------------------------------------------------
 
     Megaforest({ palette = C }),
   }

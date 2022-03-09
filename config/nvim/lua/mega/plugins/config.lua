@@ -83,6 +83,9 @@ do -- fidget.nvim
       spinner = "dots_pulse",
       done = "",
     },
+    window = {
+      blend = 5,
+    },
     sources = { -- Sources to configure
       ["elixirls"] = { -- Name of source
         ignore = false, -- Ignore notifications from this source
