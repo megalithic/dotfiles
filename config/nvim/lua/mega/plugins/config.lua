@@ -84,7 +84,7 @@ do -- fidget.nvim
       done = "",
     },
     window = {
-      blend = 5,
+      blend = 2,
     },
     sources = { -- Sources to configure
       ["elixirls"] = { -- Name of source

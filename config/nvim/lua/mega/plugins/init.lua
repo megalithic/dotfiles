@@ -101,7 +101,7 @@ local PKGS = {
   "ggandor/lightspeed.nvim",
   "phaazon/hop.nvim",
   "akinsho/toggleterm.nvim",
-  "elihunter173/dirbuf.nvim",
+  "megalithic/dirbuf.nvim",
   -- "kyazdani42/nvim-tree.lua",
 
   "tami5/sqlite.lua",

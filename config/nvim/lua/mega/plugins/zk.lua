@@ -25,6 +25,10 @@ return function(config)
     end
   end
 
+  -- REF:
+  -- https://github.com/elihunter173/dotfiles/blob/main/.config/nvim/init.lua#L429
+  -- https://github.com/kabouzeid/dotfiles/blob/main/config/nvim/lua/lsp-settings.lua#L192
+
   commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "Zk Orphans" }))
   commands.add("ZkRecents", make_edit_fn({ createdAfter = "1 weeks ago" }, { title = "Zk Recents" }))
   commands.add("ZkLiveGrep", function(options)

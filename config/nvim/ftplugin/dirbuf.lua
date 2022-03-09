@@ -9,3 +9,5 @@ vim.cmd([[nmap <buffer> - <Plug>(dirbuf_up)]])
 vim.cmd([[nmap <buffer> <BS> <Plug>(dirbuf_up)]])
 -- acts like toggle-off
 vim.cmd([[nmap <buffer> <C-t> :q<CR>]])
+
+nnoremap("<C-v>", [[<cmd>lua require('dirbuf').enter('vsplit')<cr>]], "dirbuf: open in vsplit")
