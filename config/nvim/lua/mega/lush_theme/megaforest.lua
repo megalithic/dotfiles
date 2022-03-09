@@ -490,7 +490,7 @@ return lush(function()
     -- mkdCodeDelimiter({}),
     -- mkdListItem({}),
     -- mkdListItemLine({}),
-    mkdNonListItemBlock({ bg = "NONE" }),
+    -- mkdNonListItemBlock({ bg = "NONE" }),
     -- mkdRule({}),
     -- htmlStrike({ mkdStrike }),
     -- htmlBoldItalic({}),

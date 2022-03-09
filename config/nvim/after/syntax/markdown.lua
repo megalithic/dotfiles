@@ -68,5 +68,3 @@ syn region markdownLinkText matchgroup=markdownLinkTextDelimiter start="!\=\[\%(
 " markdownLink is copied from runtime files with 'conceal' appended
 syn region markdownLink matchgroup=markdownLinkDelimiter start="(" end=")" contains=markdownUrl keepend contained conceal
 ]])
-
-mega.highlight("Conceal", { guibg = "NONE" })

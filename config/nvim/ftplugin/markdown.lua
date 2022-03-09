@@ -22,7 +22,6 @@ vim.cmd([[
   setlocal wrap
   setlocal spell
   setlocal nolist
-  setlocal colorcolumn=81
   setlocal foldexpr=markdown#FoldExpression(v:lnum)
   setlocal foldmethod=expr
   setlocal formatoptions+=t
@@ -78,17 +77,3 @@ vim.g.vim_markdown_auto_insert_bullets = 0
 vim.g.vim_markdown_no_extensions_in_markdown = 1
 vim.g.vim_markdown_math = 1
 vim.g.vim_markdown_strikethrough = 1
-
-local mappings = {
-  ["<leader>"] = {
-    m = {
-      name = "markdown",
-      p = { "<cmd>MarkdownPreviewToggle<cr>", "preview" },
-      s = { "<cmd>MarkdownPreviewStop<cr>", "preview stop" },
-    },
-  },
-}
-
-vim.cmd("packadd which-key.nvim")
-local wk = require("which-key")
-wk.register(mappings)

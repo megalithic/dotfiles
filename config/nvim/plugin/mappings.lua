@@ -172,7 +172,7 @@ if has_wk then
       },
       m = {
         name = "markdown",
-        p = { [[<cmd>MarkdownPreview<CR>]], "open preview" },
+        p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
         g = { [[<cmd>Glow<CR>]], "open glow" },
       },
       r = {

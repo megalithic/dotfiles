@@ -26,7 +26,7 @@ local PKGS = {
   "edluffy/specs.nvim",
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
-  "lukas-reineke/virt-column.nvim",
+  -- "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
