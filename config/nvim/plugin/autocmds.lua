@@ -1,7 +1,12 @@
 -- [ autocmds.. ] --------------------------------------------------------------
 
-local vcmd, fn = vim.cmd, vim.fn
-local au, augroup = mega.au, mega.augroup
+local vcmd = vim.cmd
+local fn = vim.fn
+local api = vim.api
+local au = mega.au
+local augroup = mega.augroup
+-- local fmt = string.format
+local contains = vim.tbl_contains
 
 -- vim.api.nvim_exec(
 --   [[
@@ -26,7 +31,6 @@ au([[Syntax * syn match extTodo "\<\(NOTE\|HACK\|BAD\|TODO\):\?" containedin=.*C
 au([[VimEnter * ++once lua require('mega.start').start()]])
 au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
 au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
-au([[FileType help,startuptime,qf,lspinfo nnoremap,man <buffer><silent> q :quit<CR>]])
 au([[BufWritePre * %s/\n\+\%$//e]])
 
 -- NOTE: presently handled by null-ls
@@ -65,6 +69,74 @@ au([[BufWritePre * %s/\n\+\%$//e]])
 --   end,
 -- })
 
+local smart_close_filetypes = {
+  "help",
+  "git-status",
+  "git-log",
+  "gitcommit",
+  "dbui",
+  "fugitive",
+  "fugitiveblame",
+  "LuaTree",
+  "log",
+  "tsplayground",
+  "qf",
+  "man",
+}
+
+local function smart_close()
+  if fn.winnr("$") ~= 1 then
+    api.nvim_win_close(0, true)
+  end
+end
+
+augroup("SmartClose", {
+  {
+    -- Auto open grep quickfix window
+    events = { "QuickFixCmdPost" },
+    targets = { "*grep*" },
+    command = "cwindow",
+  },
+  {
+    -- Close certain filetypes by pressing q.
+    events = { "FileType" },
+    targets = { "*" },
+    command = function()
+      local is_readonly = (vim.bo.readonly or not vim.bo.modifiable) and fn.hasmapto("q", "n") == 0
+
+      local is_eligible = vim.bo.buftype ~= ""
+        or is_readonly
+        or vim.wo.previewwindow
+        or contains(smart_close_filetypes, vim.bo.filetype)
+
+      if is_eligible then
+        nnoremap("q", smart_close, { buffer = 0, nowait = true })
+      end
+    end,
+  },
+  {
+    -- Close quick fix window if the file containing it was closed
+    events = { "BufEnter" },
+    targets = { "*" },
+    command = function()
+      if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then
+        api.nvim_buf_delete(0, { force = true })
+      end
+    end,
+  },
+  {
+    -- automatically close corresponding loclist when quitting a window
+    events = { "QuitPre" },
+    targets = { "*" },
+    modifiers = { "nested" },
+    command = function()
+      if vim.bo.filetype ~= "qf" then
+        vim.cmd("silent! lclose")
+      end
+    end,
+  },
+})
+
 if vim.env.TMUX ~= nil then
   augroup("External", {
     {
@@ -96,25 +168,70 @@ if vim.env.TMUX ~= nil then
   })
 end
 
+local column_exclude = { "gitcommit" }
+local column_clear = {
+  "startify",
+  "vimwiki",
+  "vim-plug",
+  "help",
+  "fugitive",
+  "mail",
+  "org",
+  "orgagenda",
+  "NeogitStatus",
+}
+
+--- Set or unset the color column depending on the filetype of the buffer and its eligibility
+---@param leaving boolean indicates if the function was called on window leave
+local function check_color_column(leaving)
+  if contains(column_exclude, vim.bo.filetype) then
+    return
+  end
+
+  local not_eligible = not vim.bo.modifiable or vim.wo.previewwindow or vim.bo.buftype ~= "" or not vim.bo.buflisted
+
+  local small_window = api.nvim_win_get_width(0) <= vim.bo.textwidth + 1
+  local is_last_win = #api.nvim_list_wins() == 1
+
+  if contains(column_clear, vim.bo.filetype) or not_eligible or (leaving and not is_last_win) or small_window then
+    vim.wo.colorcolumn = ""
+    return
+  end
+  if vim.wo.colorcolumn == "" then
+    vim.wo.colorcolumn = "+1"
+  end
+end
+
+augroup("CustomColorColumn", {
+  {
+    -- Update the cursor column to match current window size
+    events = { "WinEnter", "BufEnter", "VimResized", "FileType" },
+    targets = { "*" },
+    command = function()
+      check_color_column()
+    end,
+  },
+  {
+    events = { "WinLeave" },
+    targets = { "*" },
+    command = function()
+      check_color_column(true)
+    end,
+  },
+})
+
+local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage" }
+local function can_save()
+  return mega.empty(vim.bo.buftype)
+    and not mega.empty(vim.bo.filetype)
+    and vim.bo.modifiable
+    and not vim.tbl_contains(save_excluded, vim.bo.filetype)
+end
 augroup("Utilities", {
   {
     events = { "BufNewFile", "BufWritePre" },
     targets = { "*" },
     command = mega.auto_mkdir,
-    -- BUG: this causes the cursor to jump to the top on VimEnter
-    -- {
-    --   -- When editing a file, always jump to the last known cursor position.
-    --   -- Don't do it for commit messages, when the position is invalid, or when
-    --   -- inside an event handler (happens when dropping a file on gvim).
-    --   events = { "BufWinEnter" },
-    --   targets = { "*" },
-    --   command = function()
-    --     local pos = fn.line([['"]])
-    --     if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
-    --       vcmd("keepjumps normal g`\"")
-    --     end
-    --   end,
-    -- },
   },
   -- BUG: this causes the cursor to jump to the top on VimEnter
   {
@@ -127,6 +244,15 @@ augroup("Utilities", {
       local pos = fn.line([['"]])
       if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
         vcmd("keepjumps normal g`\"")
+      end
+    end,
+  },
+  {
+    events = { "BufLeave" },
+    targets = { "*" },
+    command = function()
+      if can_save() then
+        vim.cmd("silent! update")
       end
     end,
   },
@@ -266,7 +392,10 @@ augroup("LazyLoads", {
     -- nvim-bqf
     events = { "FileType" },
     targets = { "qf" },
-    command = [[packadd nvim-bqf]],
+    command = function()
+      vim.cmd([[packadd nvim-bqf]])
+      require("bqf").setup({ auto_enable = true })
+    end,
   },
   {
     -- nvim-bqf
@@ -275,10 +404,10 @@ augroup("LazyLoads", {
     command = [[packadd markdown-preview]],
   },
   {
-    -- dash.nvim
     events = { "BufReadPre" },
     targets = { "*" },
     command = function()
+      -- dash.nvim
       if mega.is_macos then
         vcmd([[packadd dash.nvim]])
 
@@ -287,13 +416,17 @@ augroup("LazyLoads", {
             name = "telescope",
             D = { require("dash").search, "dash" },
           },
-          ["<leader>"] = {
+          ["<localleader>"] = {
             name = "dash",
             d = { [[<cmd>Dash<CR>]], "dash" },
             D = { [[<cmd>DashWord<CR>]], "dash" },
           },
         })
       end
+
+      -- nvim-pqf
+      vim.cmd([[packadd nvim-pqf]])
+      require("pqf").setup({})
     end,
   },
   {

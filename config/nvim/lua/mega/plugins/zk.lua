@@ -7,6 +7,7 @@ return function(config)
     picker = "telescope",
     lsp = {
       -- config = vim.tbl_extend("force", mega.lsp.get_server_config("zk"), config or {}),
+      autostart = true,
     },
   })
 

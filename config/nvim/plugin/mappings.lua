@@ -33,7 +33,6 @@ mega.augroup("AddTerminalMappings", {
     targets = { "term://*" },
     command = function()
       if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" then
-        vim.notify("yes, toggleterm we are")
         local opts = { silent = false, buffer = 0 }
         tnoremap("<esc>", [[<C-\><C-n>]], opts)
         tnoremap("jk", [[<C-\><C-n>]], opts)
@@ -219,6 +218,8 @@ if has_wk then
       -- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636
       x = { mega.open_uri, "open uri under cursor" },
       R = { "show reg-explainer" },
+      j = { "mzJ`z", "join lines" },
+      s = { "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line" },
     },
   }
   -- local n_mappings = {
@@ -588,10 +589,6 @@ nnoremap("<leader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1)
 -- map("n", "<leader>C", '"_C', { noremap = true })
 -- map("v", "<leader>c", '"_c', { noremap = true })
 -- map("v", "d", '"_d', { noremap = true })
-
--- Join / Split Lines
-nnoremap("gJ", "mzJ`z", "Join Lines") -- Join lines and keep our cursor stabilized
-nnoremap("gS", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "Split Lines") -- Split line
 
 -- Jumplist mutations and dealing with word wrapped lines
 nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })

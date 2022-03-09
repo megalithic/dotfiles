@@ -84,7 +84,7 @@ telescope.setup({
         end,
       },
     },
-    winblend = 3,
+    winblend = 1,
     -- history = {
     --   path = fn.stdpath("data") .. "/telescope_history.sqlite3",
     -- },

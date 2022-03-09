@@ -60,17 +60,23 @@ local function setup_autocommands(client, _)
       {
         events = { "CursorHold" },
         targets = { "<buffer>" },
-        command = vim.lsp.buf.document_highlight,
+        command = function()
+          vim.lsp.buf.document_highlight()
+        end,
       },
       {
         events = { "CursorHoldI" },
         targets = { "<buffer>" },
-        command = vim.lsp.buf.document_highlight,
+        command = function()
+          vim.lsp.buf.document_highlight()
+        end,
       },
       {
         events = { "CursorMoved", "BufLeave" },
         targets = { "<buffer>" },
-        command = vim.lsp.buf.clear_references,
+        command = function()
+          vim.lsp.buf.clear_references()
+        end,
       },
     })
   end

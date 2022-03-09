@@ -420,9 +420,13 @@ function U.file(ctx, trunc)
   local is_minimal = is_truncated(trunc)
   local curwin = ctx.winid
   -- highlight the filename components separately
-  local filename_hl = is_minimal and "StFilenameInactive" or "StFilename"
-  local directory_hl = is_minimal and "StInactiveSep" or "StDirectory"
-  local parent_hl = is_minimal and directory_hl or "StParentDirectory"
+  -- local filename_hl = is_minimal and "StFilenameInactive" or "StFilename"
+  -- local directory_hl = is_minimal and "StInactiveSep" or "StDirectory"
+  -- local parent_hl = is_minimal and directory_hl or "StParentDirectory"
+
+  local filename_hl = "StFilename"
+  local directory_hl = "StDirectory"
+  local parent_hl = "StParentDirectory"
 
   if H.has_win_highlight(curwin, "Normal", "StatusLine") then
     directory_hl = H.adopt_winhighlight(curwin, "StatusLine", "StCustomDirectory", "StTitle")

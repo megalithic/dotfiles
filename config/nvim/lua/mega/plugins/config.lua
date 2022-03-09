@@ -95,7 +95,7 @@ do -- lsp_signature.nvim
   require("lsp_signature").setup({
     bind = true,
     fix_pos = false,
-    auto_close_after = 5,
+    auto_close_after = 3,
     hint_enable = false,
     handler_opts = { border = "rounded" },
     --   hi_parameter = "QuickFixLine",
@@ -341,6 +341,7 @@ do -- golden_size.nvim
           "toggleterm",
           "dirbuf",
           "Trouble",
+          "qf",
         },
         ignore_by_buftype,
         {
@@ -546,14 +547,14 @@ do -- toggleterm.nvim
   local toggleterm = require("toggleterm")
   toggleterm.setup({
     open_mapping = [[<c-\>]],
-    shade_filetypes = { "none" },
+    -- shade_filetypes = { "none" },
     direction = "horizontal",
     insert_mappings = false,
     start_in_insert = true,
     close_on_exit = true,
     float_opts = {
       border = "curved",
-      winblend = 3,
+      winblend = 0,
       highlights = {
         border = "Normal",
         background = "Normal",

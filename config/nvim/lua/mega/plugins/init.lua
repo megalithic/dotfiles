@@ -68,6 +68,7 @@ local PKGS = {
   "b0o/schemastore.nvim",
   "folke/trouble.nvim",
   { "kevinhwang91/nvim-bqf", opt = true },
+  { url = "https://gitlab.com/yorickpeterse/nvim-pqf", opt = true },
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
@@ -179,6 +180,7 @@ local PKGS = {
   "tpope/vim-repeat",
   "tpope/vim-surround",
   "tpope/vim-unimpaired",
+  "tpope/vim-apathy",
   "lambdalisue/suda.vim",
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
