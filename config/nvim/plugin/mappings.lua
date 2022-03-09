@@ -191,6 +191,9 @@ if has_wk then
         h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
         v = { "<cmd>ToggleTerm direction=vertical<cr>", "Vertical" },
       },
+      z = {
+        name = "zk",
+      }
     },
     ["<localleader>"] = {
       t = {

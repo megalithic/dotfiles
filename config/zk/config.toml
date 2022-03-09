@@ -96,8 +96,8 @@ editor = "nvim"
 # Pager used to scroll through long output.
 pager = "bat"
 # Command used to preview a note during interactive fzf mode.
-# fzf-preview = "zk list --quiet --format full --limit 1 {-1}"
 fzf-preview = "bat -p --color always {-1}"
+fzf-binding = "ctrl-n:down" #--bind="enter:replace-query+print-query"
 
 [filters]
 today = "--sort created- --created 'today'"

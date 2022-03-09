@@ -1,6 +1,10 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
+function mixx() {
+  mix $(mix help --names | fzf --delimiter=' ' --preview 'mix help {}' --reverse)
+}
+
 function zknew() {
   vared -p "$(tput bold)$(tput setaf 5) new note title:$(tput sgr 0) " -c note_title
   if [[ -z "$note_title" ]]; then

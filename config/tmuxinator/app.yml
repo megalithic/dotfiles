@@ -25,7 +25,7 @@ windows:
             - ssh seth-dev
             - cd ~/code/app
             - eval $(desk load)
-            - dev down -v --remove-orphans; dev up -d && dev logs -f
+            - dev down --remove-orphans; dev up -d && dev logs -f
         - repl:
             - ssh seth-dev
             - cd ~/code/app
