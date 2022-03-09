@@ -1,6 +1,5 @@
 local fmt = string.format
 local api = vim.api
-local C = require("mega.colors")
 local levels = vim.log.levels
 
 local M = {}
