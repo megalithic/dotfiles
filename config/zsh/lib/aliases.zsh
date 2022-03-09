@@ -215,7 +215,7 @@ alias ek="nvim $DOTS/config/kitty/kitty.conf"
 alias zkn='zk new --title "$*"'
 alias zknc='zk new --print-path --title "$*" | pbcopy'
 alias zkl="zk list $@"
-alias ezk='$EDITOR "$ZK_NOTEBOOK_DIR/.zk/config.toml"'
+alias ezk='$EDITOR "$HOME/.dotfiles/config/zk/config.toml"'
 
 # FOLDERS
 # -----------------------------------------------------------------------------
