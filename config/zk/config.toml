@@ -1,3 +1,11 @@
+# ░█▀▀░█░░░█▀█░█▀▄░█▀█░█░░░░░▀▀█░█░█░░░█▀▀░█▀█░█▀█░█▀▀░▀█▀░█▀▀
+# ░█░█░█░░░█░█░█▀▄░█▀█░█░░░░░▄▀░░█▀▄░░░█░░░█░█░█░█░█▀▀░░█░░█░█
+# ░▀▀▀░▀▀▀░▀▀▀░▀▀░░▀░▀░▀▀▀░░░▀▀▀░▀░▀░░░▀▀▀░▀▀▀░▀░▀░▀░░░▀▀▀░▀▀▀
+# Configuration shared across all zk notebooks
+
+# REF:
+# neat ideas for journalling: https://github.com/skbolton/titan/tree/main/zk
+
 # NOTE SETTINGS
 [note]
 

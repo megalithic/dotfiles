@@ -6,7 +6,7 @@ return function(config)
   zk.setup({
     picker = "telescope",
     lsp = {
-      config = vim.tbl_extend("force", mega.lsp.get_server_config("zk"), config or {}),
+      -- config = vim.tbl_extend("force", mega.lsp.get_server_config("zk"), config or {}),
     },
   })
 
@@ -37,14 +37,14 @@ return function(config)
     end
   end)
   commands.add("ZkNewDaily", make_new_fn({ dir = "journal/daily" }))
-  -- commands.add("ZkNewHealth", make_new_fn({ dir = "journal/health" }))
   commands.add("ZkDaily", make_edit_fn({ hrefs = { "journal/daily" }, sort = { "created" } }, { title = "Zk Daily" }))
+  -- commands.add("ZkNewHealth", make_new_fn({ dir = "journal/health" }))
   -- commands.add(
   --   "ZkHealth",
   --   make_edit_fn({ hrefs = { "journal/health" }, sort = { "created" } }, { title = "Zk Health" })
   -- )
 
-  nnoremap("<leader>zn", "<cmd>ZkNew<CR>", "zk: new note")
+  nnoremap("<leader>zn", "<cmd>ZkNew { title = vim.fn.input('Title: ') }<CR>", "zk: new note")
   xnoremap("<leader>zn", ":'<,'>ZkNewFromTitleSelection<CR>", "zk: new note from title")
   xnoremap("<leader>zN", ":'<,'>ZkNewFromContentSelection<CR>", "zk: new note from content")
   nnoremap("<leader>fz", "<cmd>ZkNotes { sort = { 'modified' } }<CR>", "zk: find notes")
