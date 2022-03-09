@@ -174,6 +174,7 @@ return lush(function()
     ---- :help highlight-default -------------------------------
 
     ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
+    VirtColumn({ fg = bg1 }), -- used for the columns set with 'colorcolumn'
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')

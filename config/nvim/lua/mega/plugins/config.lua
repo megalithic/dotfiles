@@ -120,6 +120,10 @@ do -- vim-matchup
   }
 end
 
+do --virt-column.nvim
+  require("virt-column").setup()
+end
+
 do -- indent-blankline
   require("indent_blankline").setup({
     char = "│", -- ┆ ┊ 

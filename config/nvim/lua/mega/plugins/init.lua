@@ -24,13 +24,12 @@ local PKGS = {
   -- @trial: https://github.com/beauwilliams/focus.nvim
   "kyazdani42/nvim-web-devicons",
   "edluffy/specs.nvim",
-  "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
+  "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
-  "ojroques/nvim-bufdel",
   "rcarriga/nvim-notify",
 
   ------------------------------------------------------------------------------
@@ -72,6 +71,10 @@ local PKGS = {
   "abecodes/tabout.nvim",
   { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
+  "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
+  "ojroques/nvim-bufdel",
+  "mhartington/formatter.nvim",
+
   ------------------------------------------------------------------------------
   -- (treesitter) --
   {

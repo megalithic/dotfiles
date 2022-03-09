@@ -11,6 +11,7 @@
    indent [all]
    plugin [all | ran at startup or packadd]
    syntax [all]
+   * after?
 
 --[ debugging ] ----------------------------------------------------------------
 
@@ -40,8 +41,8 @@ end
 
 -- [ leader bindings ] ---------------------------------------------------------
 
-vim.g.mapleader = "," -- Remap leader to ,
-vim.g.maplocalleader = " " -- Remap localleader to <Space>
+vim.g.mapleader = "," -- remap leader to `,`
+vim.g.maplocalleader = " " -- remap localleader to `<Space>`
 
 -- [ loaders ] -----------------------------------------------------------------
 
