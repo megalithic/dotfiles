@@ -272,6 +272,8 @@ require("which-key").register({
     D = { builtins.lsp_type_definitions, "telescope: type definitions" },
     r = { builtins.lsp_references, "telescope: references" },
     i = { builtins.lsp_implementations, "telescope: implementations" },
+    s = { builtins.lsp_document_symbols, "telescope: document symbols" },
+    S = { builtins.lsp_workspace_symbols, "telescope: workspace symbols" },
   },
 })
 require("telescope").load_extension("fzf")

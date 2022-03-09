@@ -340,6 +340,7 @@ do -- golden_size.nvim
           "help",
           "toggleterm",
           "dirbuf",
+          "Trouble",
         },
         ignore_by_buftype,
         {
@@ -350,6 +351,7 @@ do -- golden_size.nvim
           "nerdtree",
           "current",
           "Vista",
+          "Trouble",
           "LuaTree",
           "NvimTree",
           "terminal",

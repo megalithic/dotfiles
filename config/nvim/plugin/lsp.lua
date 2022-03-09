@@ -124,11 +124,6 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  --- # diagnostics navigation mappings
-  -- bmap("n", "[d", "lua vim.diagnostic.goto_prev()", { label = "lsp: jump to prev diagnostic" })
-  -- bmap("n", "]d", "lua vim.diagnostic.goto_next()", { label = "lsp: jump to next diagnostic" })
-  -- bmap("n", "[e", "lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.ERROR})")
-  -- bmap("n", "]e", "lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.ERROR})")
   -- bmap("n", "<leader>ld", "lua mega.lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
   -- bmap(
   --   "n",
@@ -179,33 +174,7 @@ local function setup_mappings(client, bufnr)
   --       p = "peek definition",
   --       r = "rename",
   --       n = "rename",
-  --       s = {
-  --         [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>]],
-  --         "symbols (buffer/document)",
-  --         buffer = bufnr,
-  --       },
-  --       S = {
-  --         [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>]],
-  --         "symbols (workspace)",
-  --       },
   --     },
-  --   },
-  --   ["g"] = {
-  --     ["d"] = { [[<cmd>lua require('telescope.builtin').lsp_definitions()<cr>]], "LSP definitions", buffer = bufnr },
-  --     ["D"] = {
-  --       [[<cmd>lua require('telescope.builtin').lsp_type_definitions()<cr>]],
-  --       "LSP type definitions",
-  --       buffer = bufnr,
-  --     },
-  --     ["a"] = { [[<cmd>lua require('telescope.builtin').lsp_code_actions()<cr>]], "LSP code actions", buffer = bufnr },
-  --     ["i"] = {
-  --       [[<cmd>lua require('telescope.builtin').lsp_implementations()<cr>]],
-  --       "LSP implementations",
-  --       buffer = bufnr,
-  --     },
-  --     ["r"] = { [[<cmd>lua require('telescope.builtin').lsp_references()<cr>]], "LSP references", buffer = bufnr },
-  --     -- ["n"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
-  --     ["l"] = { [[<cmd>lua require('mega.utils').lsp.rename()<cr>]], "LSP rename", buffer = bufnr },
   --   },
   -- }
 
@@ -217,7 +186,10 @@ local function setup_mappings(client, bufnr)
   local maps = {
     n = {
       ["<leader>rf"] = { do_format, "lsp: format buffer" },
-      ["gi"] = "lsp: implementation",
+      ["<leader>li"] = { [[<cmd>LspInfo<CR>]], "lsp: show client info" },
+      ["<leader>ll"] = { [[<cmd>LspLogs<CR>]], "lsp: show logs" },
+      ["<leader>lc"] = { [[<cmd>LspCapabilities<CR>]], "lsp: show client capabilities" },
+      ["<leader>lt"] = { [[<cmd>ToggleTrouble document_diagnostics<CR>]], "lsp: toggle trouble" },
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
       ["gr"] = { vim.lsp.buf.references, "lsp: references" },
       ["gI"] = { vim.lsp.buf.incoming_calls, "lsp: incoming calls" },
@@ -226,7 +198,7 @@ local function setup_mappings(client, bufnr)
     x = {},
   }
 
-  maps.n["]d"] = {
+  maps.n["[d"] = {
     function()
       diagnostic.goto_prev({
         float = {
@@ -238,7 +210,7 @@ local function setup_mappings(client, bufnr)
     end,
     "lsp: go to prev diagnostic",
   }
-  maps.n["[d"] = {
+  maps.n["]d"] = {
     function()
       diagnostic.goto_next({
         float = {
@@ -251,16 +223,43 @@ local function setup_mappings(client, bufnr)
     "lsp: go to next diagnostic",
   }
 
+  maps.n["[e"] = {
+    function()
+      diagnostic.goto_next({
+        float = {
+          border = "rounded",
+          focusable = false,
+          source = "always",
+          severity = vim.diagnostic.severity.ERROR,
+        },
+      })
+    end,
+    "lsp: go to prev error",
+  }
+  maps.n["]e"] = {
+    function()
+      diagnostic.goto_next({
+        float = {
+          border = "rounded",
+          focusable = false,
+          source = "always",
+          severity = vim.diagnostic.severity.ERROR,
+        },
+      })
+    end,
+    "lsp: go to next error",
+  }
+
   if client.resolved_capabilities.implementation then
     maps.n["gi"] = { vim.lsp.buf.implementation, "lsp: implementation" }
   end
 
   if client.resolved_capabilities.type_definition then
-    maps.n["<leader>gd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
+    maps.n["<leader>ltd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
   end
 
-  maps.n["<leader>ca"] = { vim.lsp.buf.code_action, "lsp: code action" }
-  maps.x["<leader>ca"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
+  maps.n["<leader>la"] = { vim.lsp.buf.code_action, "lsp: code action" }
+  maps.x["<leader>la"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
 
   if client.supports_method("textDocument/rename") then
     maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
@@ -615,6 +614,8 @@ function mega.lsp.on_attach(client, bufnr)
   end
 
   if client.server_capabilities.colorProvider then
+    -- Live color highlighting; handy for tailwindcss
+    -- HT: kabouzeid
     require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
   end
 
@@ -704,6 +705,7 @@ mega.lsp.servers = {
   clangd = true,
   rust_analyzer = true,
   vimls = true,
+  zk = true,
   jsonls = function()
     return {
       commands = {
@@ -1098,6 +1100,10 @@ function mega.lsp.get_server_config(server)
   return config
 end
 
+-- Provides an `LspInfo`-esque interface for a client's capabilities
+-- HT: kabouzeid
+require("mega.lsp.capabilities")
+
 -- Load lspconfig servers with their configs
 for server, _ in pairs(mega.lsp.servers) do
   if server == nil or lspconfig[server] == nil then
@@ -1108,4 +1114,5 @@ for server, _ in pairs(mega.lsp.servers) do
   local config = mega.lsp.get_server_config(server)
   lspconfig[server].setup(config)
   require("mega.plugins.null-ls")
+  require("mega.plugins.zk")(config)
 end
