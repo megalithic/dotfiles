@@ -193,7 +193,7 @@ if has_wk then
       },
       z = {
         name = "zk",
-      }
+      },
     },
     ["<localleader>"] = {
       t = {

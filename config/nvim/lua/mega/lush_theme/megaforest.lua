@@ -208,7 +208,7 @@ return lush(function()
     MsgSeparator({ bg = bg0 }), -- Separator for scrolled messages, `msgsep` flag of 'display'
     MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
     NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
-    Normal({ fg = fg, bg = nil }), -- normal text
+    Normal({ fg = fg, bg = "NONE" }), -- normal text
     NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
     GreyFloat({ bg = grey1 }),
     GreyFloatBorder({ fg = grey1 }),
