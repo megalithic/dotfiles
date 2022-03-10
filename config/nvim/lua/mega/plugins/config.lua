@@ -95,17 +95,19 @@ do -- fidget.nvim
 end
 
 do -- lsp_signature.nvim
-  require("lsp_signature").setup({
-    bind = true,
-    fix_pos = false,
-    auto_close_after = 3,
-    hint_enable = false,
-    handler_opts = { border = "rounded" },
-    --   hi_parameter = "QuickFixLine",
-    --   handler_opts = {
-    --     border = vim.g.floating_window_border,
-    --   },
-  })
+  if false then
+    require("lsp_signature").setup({
+      bind = true,
+      fix_pos = false,
+      auto_close_after = 3,
+      hint_enable = false,
+      handler_opts = { border = "rounded" },
+      --   hi_parameter = "QuickFixLine",
+      --   handler_opts = {
+      --     border = vim.g.floating_window_border,
+      --   },
+    })
+  end
 end
 
 do -- gitlinker.nvim

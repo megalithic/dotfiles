@@ -193,11 +193,12 @@ local function setup_mappings(client, bufnr)
     n = {
       ["<leader>rf"] = { do_format, "lsp: format buffer" },
       ["<leader>li"] = { [[<cmd>LspInfo<CR>]], "lsp: show client info" },
-      ["<leader>ll"] = { [[<cmd>LspLogs<CR>]], "lsp: show logs" },
+      ["<leader>ll"] = { [[<cmd>LspLog<CR>]], "lsp: show log" },
       ["<leader>lc"] = { [[<cmd>LspCapabilities<CR>]], "lsp: show client capabilities" },
       ["<leader>lt"] = { [[<cmd>ToggleTrouble document_diagnostics<CR>]], "lsp: toggle trouble" },
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
       ["gr"] = { vim.lsp.buf.references, "lsp: references" },
+      ["gR"] = { [[<cmd>TroubleToggle lsp_references<cr>]], "lsp: references" },
       ["gI"] = { vim.lsp.buf.incoming_calls, "lsp: incoming calls" },
       ["K"] = { vim.lsp.buf.hover, "lsp: hover" },
     },
@@ -281,7 +282,7 @@ end
 
 local function setup_formatting(client, _)
   -- disable formatting for the following language-servers (let null-ls takeover):
-  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua" }
+  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
       client.resolved_capabilities.document_formatting = false
