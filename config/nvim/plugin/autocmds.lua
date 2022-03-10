@@ -117,7 +117,6 @@ augroup("SmartClose", {
   {
     -- Close quick fix window if the file containing it was closed
     events = { "BufEnter" },
-    targets = { "*" },
     command = function()
       if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then
         api.nvim_buf_delete(0, { force = true })
@@ -127,8 +126,7 @@ augroup("SmartClose", {
   {
     -- automatically close corresponding loclist when quitting a window
     events = { "QuitPre" },
-    targets = { "*" },
-    modifiers = { "nested" },
+    nested = true,
     command = function()
       if vim.bo.filetype ~= "qf" then
         vim.cmd("silent! lclose")
@@ -141,21 +139,18 @@ if vim.env.TMUX ~= nil then
   augroup("External", {
     {
       events = { "BufEnter" },
-      targets = { "*" },
       command = function()
         vim.o.titlestring = require("mega.utils").ext.title_string()
       end,
     },
     {
       events = { "VimLeavePre" },
-      targets = { "*" },
       command = function()
         require("mega.utils").ext.tmux.set_statusline(true)
       end,
     },
     {
       events = { "ColorScheme", "FocusGained" },
-      targets = { "*" },
       command = function()
         -- NOTE: there is a race condition here as the colors
         -- for kitty to re-use need to be set AFTER the rest of the colorscheme
@@ -207,14 +202,12 @@ augroup("CustomColorColumn", {
   {
     -- Update the cursor column to match current window size
     events = { "WinEnter", "BufEnter", "VimResized", "FileType" },
-    targets = { "*" },
     command = function()
       check_color_column()
     end,
   },
   {
     events = { "WinLeave" },
-    targets = { "*" },
     command = function()
       check_color_column(true)
     end,
@@ -231,8 +224,9 @@ end
 augroup("Utilities", {
   {
     events = { "BufNewFile", "BufWritePre" },
-    targets = { "*" },
-    command = mega.auto_mkdir,
+    command = function()
+      mega.auto_mkdir()
+    end,
   },
   -- BUG: this causes the cursor to jump to the top on VimEnter
   {
@@ -240,7 +234,6 @@ augroup("Utilities", {
     -- Don't do it for commit messages, when the position is invalid, or when
     -- inside an event handler (happens when dropping a file on gvim).
     events = { "BufWinEnter" },
-    targets = { "*" },
     command = function()
       local pos = fn.line([['"]])
       if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" and pos > 0 and pos <= fn.line("$") then
@@ -250,7 +243,6 @@ augroup("Utilities", {
   },
   {
     events = { "BufLeave" },
-    targets = { "*" },
     command = function()
       if can_save() then
         vim.cmd("silent! update")
@@ -280,10 +272,11 @@ augroup("Plugins/Paq", {
       vcmd("luafile %")
       vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
     end,
+    description = "Paq reload",
   },
   {
     events = { "BufEnter" },
-    targets = { "<buffer>" },
+    buffer = 0,
     command = function()
       --- Open a repository from an "authorname/repository" string
       nnoremap("gf", function()
@@ -302,7 +295,6 @@ augroup("Plugins/Paq", {
 augroup("YankHighlightedRegion", {
   {
     events = { "TextYankPost" },
-    targets = { "*" },
     command = function()
       vim.highlight.on_yank({
         timeout = 500,
@@ -338,7 +330,7 @@ augroup("UpdateVim", {
   --     -- requires will need to be resourced or reloaded themselves
   --     events = "BufWritePost",
   --     targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
-  --     modifiers = { "++nested" },
+  --     nested = true,
   --     command = function()
   --       local ok, msg = pcall(vcmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
   --       msg = ok and "sourced " .. vim.fn.fnamemodify(vim.env.MYVIMRC, ":t") or msg
@@ -347,13 +339,11 @@ augroup("UpdateVim", {
   --   },
   {
     events = { "FocusLost" },
-    targets = { "*" },
     command = "silent! wall",
   },
   --   -- Make windows equal size when vim resizes
   --   {
   --     events = { "VimResized" },
-  --     targets = { "*" },
   --     command = "wincmd =",
   --   },
 })
@@ -383,7 +373,9 @@ do
     {
       events = { "FileType" },
       targets = sidebar_fts,
-      command = on_sidebar_enter,
+      command = function()
+        on_sidebar_enter()
+      end,
     },
   })
 end
@@ -406,7 +398,6 @@ augroup("LazyLoads", {
   },
   {
     events = { "BufReadPre" },
-    targets = { "*" },
     command = function()
       -- dash.nvim
       if mega.is_macos then
@@ -434,7 +425,6 @@ augroup("LazyLoads", {
     -- tmux-navigate
     -- vim-kitty-navigator
     events = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
-    targets = { "*" },
     command = function()
       if vim.env.TMUX ~= nil then
         vcmd([[packadd tmux-navigate]])

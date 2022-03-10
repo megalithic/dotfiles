@@ -651,55 +651,25 @@ function mega.au(s, override)
   end
 end
 
-local function is_valid_target(command)
-  local valid_type = command.targets and vim.tbl_islist(command.targets)
-  return valid_type or vim.startswith(command.events[1], "User ")
-end
-
 -- REF: https://github.com/neovim/neovim/blob/master/runtime/doc/api.txt#L3112
 function mega.augroup(name, commands)
-  vim.api.nvim_create_augroup(name, { clear = true })
+  local id = vim.api.nvim_create_augroup(name, { clear = true })
 
-  for _, c in ipairs(commands) do
-    if c.command and c.events and is_valid_target(c) then
-      local command = c.command
-      local autocmd_opts = {
-        group = name,
-      }
-
-      if type(command) == "function" then
-        autocmd_opts["callback"] = command
-      else -- this however, might not be right, since vim func calls are strings too
-        autocmd_opts["command"] = command
-      end
-
-      if c.buffer ~= nil then
-        autocmd_opts["buffer"] = c.buffer
-      end
-
-      -- can't mix pattern and buffer (one or the other)
-      if c.targets ~= nil and c.buffer == nil then
-        autocmd_opts["pattern"] = c.targets
-      end
-
-      if c.once ~= nil then
-        autocmd_opts["once"] = c.once
-      end
-
-      if c.nested ~= nil then
-        autocmd_opts["nested"] = c.nested
-      end
-
-      if c.desc ~= nil then
-        autocmd_opts["desc"] = c.desc
-      end
-
-      c.events = type(c.events) == "string" and { c.events } or c.events
-      vim.api.nvim_create_autocmd(c.events, autocmd_opts)
-    else
-      vim.notify(fmt("An autocommand in %s is specified incorrectly: %s", name, vim.inspect(name)), L.ERROR)
-    end
+  for _, autocmd in ipairs(commands) do
+    local is_callback = type(autocmd.command) == "function"
+    api.nvim_create_autocmd(autocmd.events, {
+      group = name,
+      pattern = autocmd.targets,
+      desc = autocmd.description,
+      callback = is_callback and autocmd.command or nil,
+      command = not is_callback and autocmd.command or nil,
+      once = autocmd.once,
+      nested = autocmd.nested,
+      buffer = autocmd.buffer,
+    })
   end
+
+  return id
 end
 
 --- TODO eventually move to using `nvim_set_hl`

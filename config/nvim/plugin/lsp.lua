@@ -47,7 +47,7 @@ local function setup_autocommands(client, _)
     augroup("LspCodeLens", {
       {
         events = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
-        targets = { "<buffer>" },
+        buffer = 0,
         command = vim.lsp.codelens.refresh,
       },
     })
@@ -59,21 +59,21 @@ local function setup_autocommands(client, _)
     augroup("LspCursorCommands", {
       {
         events = { "CursorHold" },
-        targets = { "<buffer>" },
+        buffer = 0,
         command = function()
           vim.lsp.buf.document_highlight()
         end,
       },
       {
         events = { "CursorHoldI" },
-        targets = { "<buffer>" },
+        buffer = 0,
         command = function()
           vim.lsp.buf.document_highlight()
         end,
       },
       {
         events = { "CursorMoved", "BufLeave" },
-        targets = { "<buffer>" },
+        buffer = 0,
         command = function()
           vim.lsp.buf.clear_references()
         end,
@@ -84,7 +84,7 @@ local function setup_autocommands(client, _)
   augroup("LspDiagnostics", {
     {
       events = { "CursorHold" },
-      targets = { "<buffer>" },
+      buffer = 0,
       command = function()
         mega.lsp.line_diagnostics()
         -- if false then
@@ -110,7 +110,7 @@ local function setup_autocommands(client, _)
   --   augroup("LspFormat", {
   --     {
   --       events = { "BufWritePre" },
-  --       targets = { "<buffer>" },
+  --       buffer = 0,
   --       command = function()
   --         -- BUG: folds are are removed when formatting is done, so we save the current state of the
   --         -- view and re-apply it manually after formatting the buffer
