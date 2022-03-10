@@ -901,6 +901,12 @@ return lush(function()
     FidgetTitle({ fg = orange }),
     FidgetTask({ fg = grey2 }),
 
+    ---- :help: bqf.txt -----------------------------------------------------
+
+    BqfPreviewBorder({ fg = grey0 }),
+    -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
+    -- hi link BqfPreviewRange Search
+
     ---- :hackkkks -------------------------------------------------------------
 
     Megaforest({ palette = C }),
