@@ -203,6 +203,9 @@ if has_wk then
         t = { "<cmd>TestLast<cr>", "Run _last test" },
         v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
       },
+      g = {
+        name = "gitsigns",
+      },
     },
     z = {
       name = "highlight/folds/paging",

@@ -125,6 +125,12 @@ do -- vim-matchup
   }
 end
 
+do
+  -- require('virt-column').setup_buffer({
+  --   "md" = {}
+  -- })
+end
+
 do -- indent-blankline
   require("indent_blankline").setup({
     char = "│", -- ┆ ┊ 
@@ -213,7 +219,6 @@ end
 
 do -- nvim-web-devicons
   require("nvim-web-devicons").setup({ default = true })
-  -- require("nvim-web-devicons").setup({ default = true, get_icons = require("nvim-nonicons") })
 end
 
 do -- trouble.nvim
