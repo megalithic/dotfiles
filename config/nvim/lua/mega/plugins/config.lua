@@ -964,8 +964,27 @@ do -- misc
 end
 
 do
-  vim.g.cursorline_disabled_buftypes = { "acwrite", "quickfix", "terminal", "telescope", "nofile" }
-  vim.g.cursorline_disabled_filetypes = { "Telescope", "fzf", "NvimTree", "alpha", "Toggleterm", "qf" }
+  vim.g.cursorline_disabled_buftypes = {
+    "acwrite",
+    "quickfix",
+    "terminal",
+    "nofile",
+    "help",
+    ".git/COMMIT_EDITMSG",
+    "startify",
+    "nofile",
+  }
+  vim.g.cursorline_disabled_filetypes = {
+    "Telescope",
+    "fzf",
+    "NvimTree",
+    "gitcommit",
+    "startify",
+    "alpha",
+    "dashboard",
+    "Toggleterm",
+    "qf",
+  }
 end
 
 do -- gitsigns.nvim
