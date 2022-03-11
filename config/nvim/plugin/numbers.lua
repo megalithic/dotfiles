@@ -26,11 +26,13 @@ vim.g.number_filetype_exclusions = {
   "startify",
   "help",
   "orgagenda",
+  "DirBuf",
   "org",
   "Trouble",
 }
 
 vim.g.number_buftype_exclusions = {
+  "prompt",
   "terminal",
   "help",
   "nofile",

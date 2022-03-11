@@ -136,9 +136,10 @@ if has_wk then
           e = "gitsigns: reset entire buffer",
         },
         b = {
-          name = "+blame",
-          l = "gitsigns: blame current line",
-          d = "gitsigns: toggle word diff",
+          function()
+            gs.blame_line({ full = true })
+          end,
+          "gitsigns: blame current line",
         },
         h = {
           name = "+gitsigns hunk",
@@ -154,10 +155,15 @@ if has_wk then
             "diff this with ~",
           },
           b = {
-            function()
-              gs.blame_line({ full = true })
-            end,
-            "blame current line",
+            name = "+blame",
+            l = "gitsigns: blame current line",
+            d = "gitsigns: toggle word diff",
+            b = {
+              function()
+                gs.blame_line({ full = true })
+              end,
+              "blame current line",
+            },
           },
         },
         w = "gitsigns: stage entire buffer",
@@ -183,13 +189,6 @@ if has_wk then
         a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
         l = { "<cmd>TestLast<cr>", "Run _last test" },
         v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
-      },
-      t = {
-        name = "terminal",
-        t = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
-        f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
-        h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
-        v = { "<cmd>ToggleTerm direction=vertical<cr>", "Vertical" },
       },
       z = {
         name = "zk",
@@ -659,12 +658,6 @@ nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 nmap("<leader>x", mega.save_and_exec)
 
 -- [plugin mappings] -----------------------------------------------------------
-
--- # git-related (fugitive, et al)
--- nmap("<Leader>gB", "<cmd>GitMessenger<CR>", "blame info")
--- nmap("<Leader>gh", "<cmd>GBrowse<CR>", "browse repo")
--- vmap("<Leader>gh", ":'<,'>GBrowse<CR>", "browse repo (visual)")
--- nmap("<Leader>gd", "<cmd>DiffviewOpen<CR>", "diffview")
 
 -- # gist
 -- vim.g.gist_open_url = true

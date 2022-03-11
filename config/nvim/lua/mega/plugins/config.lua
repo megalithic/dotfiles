@@ -411,6 +411,7 @@ end
 
 do -- lightspeed.nvim or hop.nvim
   if false then
+    vim.cmd("packadd lightspeed.nvim")
     require("lightspeed").setup({
       -- jump_to_first_match = true,
       -- jump_on_partial_input_safety_timeout = 400,
@@ -428,6 +429,7 @@ do -- lightspeed.nvim or hop.nvim
       -- cycle_group_bwd_key = nil,
     })
   else
+    vim.cmd("packadd hop.nvim")
     local hop = require("hop")
     hop.setup({
       -- remove h,j,k,l from hops list of keys
@@ -608,11 +610,48 @@ do -- toggleterm.nvim
     on_open = float_handler,
   })
 
+  local node = Terminal:new({ cmd = "node", hidden = true })
+  function _NODE_TOGGLE()
+    node:toggle()
+  end
+
+  local elixir = Terminal:new({ cmd = "iex -S mix", hidden = true })
+  function _ELIXIR_TOGGLE()
+    elixir:toggle()
+  end
+
+  local rails = Terminal:new({ cmd = "rails c", hidden = true })
+  function _RAILS_TOGGLE()
+    rails:toggle()
+  end
+
+  local python = Terminal:new({ cmd = "python", hidden = true })
+  function _PYTHON_TOGGLE()
+    python:toggle()
+  end
+
   mega.command({
     "Htop",
     function()
       htop:toggle()
     end,
+  })
+
+  local wk = require("which-key")
+  wk.register({
+    t = {
+      name = "terminal",
+      t = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
+      f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
+      h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
+      v = { "<cmd>ToggleTerm size=80 direction=vertical<cr>", "Vertical" },
+      n = { "<cmd>lua _NODE_TOGGLE()<cr>", "Node" },
+      p = { "<cmd>lua _PYTHON_TOGGLE()<cr>", "Python" },
+      e = { "<cmd>lua _ELIXIR_TOGGLE()<cr>", "Elixir" },
+      r = { "<cmd>lua _RAILS_TOGGLE()<cr>", "Rails" },
+    },
+  }, {
+    prefix = "<leader>",
   })
 end
 
@@ -973,10 +1012,12 @@ do
     ".git/COMMIT_EDITMSG",
     "startify",
     "nofile",
+    "prompt",
   }
   local filetype_ignores = {
 
     "Telescope",
+    "TelescopePrompt",
     "fzf",
     "NvimTree",
     "gitcommit",
