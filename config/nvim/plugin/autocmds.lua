@@ -387,7 +387,7 @@ augroup("LazyLoads", {
     targets = { "qf" },
     command = function()
       vim.cmd([[packadd nvim-bqf]])
-      require("bqf").setup({ auto_enable = true })
+      require("bqf").setup({ auto_enable = true, preview = { auto_preview = true } })
     end,
   },
   {

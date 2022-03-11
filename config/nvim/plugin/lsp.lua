@@ -42,13 +42,15 @@ end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
 
-local function setup_autocommands(client, _)
+local function setup_autocommands(client, bufnr)
   if client and client.resolved_capabilities.code_lens then
     augroup("LspCodeLens", {
       {
         events = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
         buffer = 0,
-        command = vim.lsp.codelens.refresh,
+        command = function()
+          vim.lsp.codelens.refresh()
+        end,
       },
     })
   end
@@ -59,21 +61,21 @@ local function setup_autocommands(client, _)
     augroup("LspCursorCommands", {
       {
         events = { "CursorHold" },
-        buffer = 0,
+        buffer = bufnr,
         command = function()
           vim.lsp.buf.document_highlight()
         end,
       },
       {
         events = { "CursorHoldI" },
-        buffer = 0,
+        buffer = bufnr,
         command = function()
           vim.lsp.buf.document_highlight()
         end,
       },
       {
         events = { "CursorMoved", "BufLeave" },
-        buffer = 0,
+        buffer = bufnr,
         command = function()
           vim.lsp.buf.clear_references()
         end,
@@ -84,59 +86,59 @@ local function setup_autocommands(client, _)
   augroup("LspDiagnostics", {
     {
       events = { "CursorHold" },
-      buffer = 0,
+      buffer = bufnr,
       command = function()
-        mega.lsp.line_diagnostics()
-        -- if false then
-        -- diagnostic.open_float(nil, {
-        --   focusable = false,
-        --   close_events = {
-        --     "CursorMoved",
-        --     "BufHidden",
-        --     "InsertCharPre",
-        --     "BufLeave",
-        --     "InsertEnter",
-        --     "FocusLost",
-        --   },
-        --   source = "always",
-        -- })
-        -- end
+        if true then
+          mega.lsp.line_diagnostics()
+        else
+          diagnostic.open_float(nil, {
+            focusable = false,
+            close_events = {
+              "CursorMoved",
+              "BufHidden",
+              "InsertCharPre",
+              "BufLeave",
+              "InsertEnter",
+              "FocusLost",
+            },
+            source = "always",
+          })
+        end
       end,
     },
   })
 
-  if client and client.resolved_capabilities.document_formatting then
-    -- format on save
-    augroup("LspFormat", {
-      {
-        events = { "BufWritePre" },
-        buffer = 0,
-        command = function()
-          -- BUG: folds are are removed when formatting is done, so we save the current state of the
-          -- view and re-apply it manually after formatting the buffer
-          -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
-          vim.cmd("mkview!")
-          local ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
-          if not ok then
-            vim.notify(fmt("Error formatting file: %s", msg))
-          end
-          vim.cmd("loadview")
-        end,
-      },
-    })
+  local ok, lsp_format = pcall(require, "lsp-format")
+  if ok then
+    lsp_format.on_attach(client)
+  else
+    if client and client.resolved_capabilities.document_formatting then
+      -- format on save
+      augroup("LspFormat", {
+        {
+          events = { "BufWritePre" },
+          buffer = bufnr,
+          command = function()
+            P("should be formatting with my own LspFormat augroup")
+            -- BUG: folds are are removed when formatting is done, so we save the current state of the
+            -- view and re-apply it manually after formatting the buffer
+            -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
+            vim.cmd("mkview!")
+            local format_sync_ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
+            if not format_sync_ok then
+              vim.notify(fmt("Error formatting file: %s", msg))
+            end
+            vim.cmd("loadview")
+          end,
+        },
+      })
+    end
   end
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  -- bmap("n", "<leader>ld", "lua mega.lsp.line_diagnostics()", { label = "lsp: show line diagnostics" })
-  -- bmap(
-  --   "n",
-  --   "<leader>lD",
-  --   [[lua vim.diagnostic.open_float(nil, { focusable = false,  close_events = { "CursorMoved", "BufHidden", "InsertCharPre", "BufLeave", "InsertEnter", "FocusLost" }, source = "always" })]]
-  -- )
-
   -- --- # misc mappings
   -- bmap("n", "<leader>ln", "lua require('mega.utils').lsp.rename()", { label = "lsp: rename document symbol" })
   -- bufmap("K", "lua vim.lsp.buf.hover()")
@@ -146,47 +148,6 @@ local function setup_mappings(client, bufnr)
   --   bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
   -- end
 
-  -- --- # trouble mappings
-  -- nmap(
-  --   "<leader>lt",
-  --   "<cmd>TroubleToggle document_diagnostics<cr>",
-  --   { label = "lsp: toggle Trouble for document diagnostics" }
-  -- )
-
-  -- local b_mappings = {
-  --   ["<leader>"] = {
-  --     l = {
-  --       name = "LSP",
-  --       ["'"] = { "<cmd>LspStart<cr>", "LSP start" },
-  --       [","] = { "LSP stop" },
-  --       [",a"] = { "<cmd>LspStop<cr>", "stop all" },
-  --       [",s"] = { "select" },
-  --       A = "code actions (range)",
-  --       -- D = "diagnostics (project)",
-  --       a = "code actions (cursor)",
-  --       c = "clear diagnostics",
-  --       -- d = "diagnostics (buffer)",
-  --       f = "format",
-  --       g = { name = "go to" },
-  --       gD = "declaration",
-  --       gd = "definition",
-  --       gi = "implementation",
-  --       gr = "references",
-  --       gy = "type definition",
-  --       h = "hover",
-  --       i = { "<cmd>LspInfo<cr>", "LSP info", buffer = bufnr },
-  --       k = "signature help",
-  --       l = { "<cmd>LspLog<cr>", "LSP logs", buffer = bufnr },
-  --       p = "peek definition",
-  --       r = "rename",
-  --       n = "rename",
-  --     },
-  --   },
-  -- }
-
-  -- local wk = require("which-key")
-  -- wk.register(b_mappings)
-
   local ok, lsp_format = pcall(require, "lsp-format")
   local do_format = ok and lsp_format.format or vim.lsp.buf.formatting
   local maps = {
@@ -195,10 +156,11 @@ local function setup_mappings(client, bufnr)
       ["<leader>li"] = { [[<cmd>LspInfo<CR>]], "lsp: show client info" },
       ["<leader>ll"] = { [[<cmd>LspLog<CR>]], "lsp: show log" },
       ["<leader>lc"] = { [[<cmd>LspCapabilities<CR>]], "lsp: show client capabilities" },
-      ["<leader>lt"] = { [[<cmd>ToggleTrouble document_diagnostics<CR>]], "lsp: toggle trouble" },
+      ["<leader>lt"] = { [[<cmd>ToggleTrouble document_diagnostics<CR>]], "lsp: trouble diagnostics" },
+      ["gD"] = { [[<cmd>ToggleTrouble document_diagnostics<CR>]], "lsp: trouble diagnostics" },
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
       ["gr"] = { vim.lsp.buf.references, "lsp: references" },
-      ["gR"] = { [[<cmd>TroubleToggle lsp_references<cr>]], "lsp: references" },
+      ["gR"] = { [[<cmd>TroubleToggle lsp_references<cr>]], "lsp: trouble references" },
       ["gI"] = { vim.lsp.buf.incoming_calls, "lsp: incoming calls" },
       ["K"] = { vim.lsp.buf.hover, "lsp: hover" },
     },
@@ -298,10 +260,10 @@ local function setup_formatting(client, bufnr)
 
   if client.name == "null-ls" then
     if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
-      P("should format with null")
+      -- P("should format with null")
       client.resolved_capabilities.document_formatting = true
     else
-      P("should NOT format with null")
+      -- P("should NOT format with null")
       client.resolved_capabilities.document_formatting = false
     end
   end
@@ -626,12 +588,6 @@ function mega.lsp.on_attach(client, bufnr)
   setup_diagnostics()
   setup_handlers()
   setup_mappings(client, bufnr)
-
-  -- TODO: determine if we're ok with formatting on BufWritePost:
-  -- local ok, lsp_format = pcall(require, "lsp-format")
-  -- if ok then
-  --   lsp_format.on_attach(client)
-  -- end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end

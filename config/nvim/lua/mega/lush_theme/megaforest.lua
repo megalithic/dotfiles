@@ -65,7 +65,7 @@ C.cyan = hsluv("#87c095").darken(5)
 C.blue = hsluv("#83b6af")
 C.aqua = C.cyan
 C.purple = hsluv("#d39bb6")
-C.brown = hsluv("#db9c5e")
+C.brown = hsluv("#db9c5e").darken(20)
 C.magenta = C.purple.darken(15) -- #c678dd
 C.teal = hsluv("#15AABF")
 
@@ -303,7 +303,7 @@ return lush(function()
     Fg({ fg = fg, bg = "NONE" }),
     Grey({ fg = grey1, bg = "NONE" }),
     Red({ fg = red, bg = "NONE" }),
-    Orange({ fg = orange, bg = "NONE" }),
+    Orange({ fg = dark_orange, bg = "NONE" }),
     Yellow({ fg = yellow, bg = "NONE" }),
     Green({ fg = green, bg = "NONE" }),
     Aqua({ fg = aqua, bg = "NONE" }),
@@ -330,7 +330,7 @@ return lush(function()
     InfoFloat({ fg = blue, bg = bg2 }),
     HintFloat({ fg = green, bg = bg2 }),
     RedSign({ fg = red, bg = bg1 }),
-    OrangeSign({ fg = orange, bg = bg1 }),
+    OrangeSign({ fg = dark_orange, bg = bg1 }),
     YellowSign({ fg = yellow, bg = bg1 }),
     GreenSign({ fg = green, bg = bg1 }),
     AquaSign({ fg = cyan, bg = bg1 }),
@@ -365,7 +365,7 @@ return lush(function()
     DiagnosticUnderlineHint({ HintText }),
 
     DiagnosticSignError({ RedSign }),
-    DiagnosticSignWarn({ YellowSign }),
+    DiagnosticSignWarn({ OrangeSign }),
     DiagnosticSignInfo({ BlueSign }),
     DiagnosticSignHint({ AquaSign }),
 
@@ -374,15 +374,15 @@ return lush(function()
     DiagnosticSignInfoLine({ fg = blue, gui = "underline", guisp = blue }),
     DiagnosticSignHintLine({ fg = aqua, gui = "underline", guisp = aqua }),
 
-    DiagnosticError({ RedSign }),
-    DiagnosticWarn({ YellowSign }),
-    DiagnosticInfo({ BlueSign }),
-    DiagnosticHint({ AquaSign }),
+    DiagnosticError({ Red }),
+    DiagnosticWarn({ Orange }),
+    DiagnosticInfo({ Blue }),
+    DiagnosticHint({ Aqua }),
 
-    DiagnosticErrorBorder({ RedSign, bg = bg0 }),
-    DiagnosticWarnBorder({ YellowSign, bg = bg0 }),
-    DiagnosticInfoBorder({ BlueSign, bg = bg0 }),
-    DiagnosticHintBorder({ AquaSign, bg = bg0 }),
+    DiagnosticErrorBorder({ Red }),
+    DiagnosticWarnBorder({ Orange }),
+    DiagnosticInfoBorder({ Blue }),
+    DiagnosticHintBorder({ Aqua }),
 
     TermCursor({ Cursor }),
 
@@ -391,6 +391,7 @@ return lush(function()
     healthError({ Red }),
     healthSuccess({ Green }),
     healthWarning({ Yellow }),
+
     -- These groups are for the neovim tree-sitter highlights.
     -- As of writing, tree-sitter support is a WIP, group names may change.
     -- By default, most of these groups link to an appropriate Vim group,
