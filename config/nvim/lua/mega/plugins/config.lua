@@ -126,9 +126,10 @@ do -- vim-matchup
 end
 
 do
-  -- require('virt-column').setup_buffer({
-  --   "md" = {}
-  -- })
+  if vim.bo.filetype ~= "md" then
+    -- vim.cmd([[packadd virt-column.nvim]])
+    -- require("virt-column").setup({ char = "│" }) -- │║
+  end
 end
 
 do -- indent-blankline

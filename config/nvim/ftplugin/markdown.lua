@@ -77,3 +77,10 @@ vim.g.vim_markdown_auto_insert_bullets = 0
 vim.g.vim_markdown_no_extensions_in_markdown = 1
 vim.g.vim_markdown_math = 1
 vim.g.vim_markdown_strikethrough = 1
+
+-- FIXME: this still breaks ALLLLL my markdown highlights :sadpanda:
+-- vim.cmd([[packadd virt-column.nvim]])
+-- vim.cmd([[highlight clear VirtColumn]])
+-- vim.cmd([[highlight clear ColorColumn]])
+-- require("virt-column").setup_buffer({ virtcolumn = "", char = "" })
+-- vim.opt_local.colorcolumn = ""
