@@ -189,7 +189,7 @@ local PKGS = {
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
   "ConradIrwin/vim-bracketed-paste", -- FIXME: delete?
-  -- "kevinhwang91/nvim-hclipboard",
+  "kevinhwang91/nvim-hclipboard",
   -- :Messages <- view messages in quickfix list
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.

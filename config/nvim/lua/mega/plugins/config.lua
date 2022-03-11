@@ -195,6 +195,10 @@ do -- indent-blankline
   })
 end
 
+do -- nvim-hclipboard
+  require("hclipboard").start()
+end
+
 do -- neoscroll
   if true then
     local mappings = {}

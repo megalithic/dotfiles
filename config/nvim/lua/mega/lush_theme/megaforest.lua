@@ -874,12 +874,19 @@ return lush(function()
     TelescopeResults({ bg = "NONE" }),
     TelescopeResultsTitle({ fg = bg0, bg = fg, gui = "bold" }),
 
+    ---- :help: trouble.txt ----------------------------------------------------
+
+    TroubleNormal({ PanelBackground }),
+    TroubleText({ PanelBackground }),
+    TroubleIndent({ PanelVertSplit }),
+    TroubleFoldIcon({ fg = yellow, gui = "bold" }),
+    TroubleLocation({ fg = Comment.fg }),
     ---- :help: fidget.txt -----------------------------------------------------
 
     FidgetTitle({ fg = orange }),
     FidgetTask({ fg = grey2 }),
 
-    ---- :help: bqf.txt -----------------------------------------------------
+    ---- :help: bqf.txt --------------------------------------------------------
 
     BqfPreviewBorder({ fg = grey0 }),
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
