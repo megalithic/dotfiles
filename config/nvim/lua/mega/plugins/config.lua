@@ -127,8 +127,8 @@ end
 
 do
   if vim.bo.filetype ~= "md" then
-    -- vim.cmd([[packadd virt-column.nvim]])
-    -- require("virt-column").setup({ char = "│" }) -- │║
+    vim.cmd([[packadd virt-column.nvim]])
+    require("virt-column").setup({ char = "│" }) -- │║
   end
 end
 

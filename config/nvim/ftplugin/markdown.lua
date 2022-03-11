@@ -84,3 +84,24 @@ vim.g.vim_markdown_strikethrough = 1
 -- vim.cmd([[highlight clear ColorColumn]])
 -- require("virt-column").setup_buffer({ virtcolumn = "", char = "" })
 -- vim.opt_local.colorcolumn = ""
+--
+
+-- local lush = require("lush")
+-- local megaforest = require("lush_theme.megaforest")
+
+-- -- we can apply modifications ontop of the existing colorscheme
+-- local spec = lush.extends({ megaforest }).with(function()
+--   return {
+--     -- Use the existing Comment group in harbour, but adjust the gui attribute
+--     -- Comment { fg = megaforest.Comment.fg, bg = megaforest.Comment.bg, gui = "italic" },
+--     -- While we're here, we might decide that the default Function group is too bright
+--     ColorColumn({ megaforest.ColorColumn }),
+--   }
+-- end)
+
+-- You may prefer to put this in its own module, shown on _G for brevity.
+_G.customise_colorscheme = function()
+  local H = require("mega.utils.highlights")
+  H.set_hl("ColorColumn", { guibg = "#3c474d", guifg = "NONE" })
+end
+vim.cmd([[autocmd VimEnter,ColorScheme * lua customise_colorscheme()]])
