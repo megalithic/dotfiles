@@ -105,26 +105,26 @@ local function setup_autocommands(client, _)
     },
   })
 
-  -- if client and client.resolved_capabilities.document_formatting then
-  --   -- format on save
-  --   augroup("LspFormat", {
-  --     {
-  --       events = { "BufWritePre" },
-  --       buffer = 0,
-  --       command = function()
-  --         -- BUG: folds are are removed when formatting is done, so we save the current state of the
-  --         -- view and re-apply it manually after formatting the buffer
-  --         -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
-  --         vim.cmd("mkview!")
-  --         local ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
-  --         if not ok then
-  --           vim.notify(fmt("Error formatting file: %s", msg))
-  --         end
-  --         vim.cmd("loadview")
-  --       end,
-  --     },
-  --   })
-  -- end
+  if client and client.resolved_capabilities.document_formatting then
+    -- format on save
+    augroup("LspFormat", {
+      {
+        events = { "BufWritePre" },
+        buffer = 0,
+        command = function()
+          -- BUG: folds are are removed when formatting is done, so we save the current state of the
+          -- view and re-apply it manually after formatting the buffer
+          -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
+          vim.cmd("mkview!")
+          local ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
+          if not ok then
+            vim.notify(fmt("Error formatting file: %s", msg))
+          end
+          vim.cmd("loadview")
+        end,
+      },
+    })
+  end
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
@@ -280,7 +280,7 @@ end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
 
-local function setup_formatting(client, _)
+local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (let null-ls takeover):
   local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
   for i = 1, #disabled_formatting_ls do
@@ -290,19 +290,21 @@ local function setup_formatting(client, _)
     end
   end
 
-  -- local function has_nls_formatter(ft)
-  --   local sources = require("null-ls.sources")
-  --   local available = sources.get_available(ft, "NULL_LS_FORMATTING")
-  --   return #available > 0
-  -- end
+  local function has_nls_formatter(ft)
+    local sources = require("null-ls.sources")
+    local available = sources.get_available(ft, "NULL_LS_FORMATTING")
+    return #available > 0
+  end
 
-  -- if client.name == "null-ls" then
-  --   if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
-  --     client.resolved_capabilities.document_formatting = true
-  --   else
-  --     client.resolved_capabilities.document_formatting = false
-  --   end
-  -- end
+  if client.name == "null-ls" then
+    if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
+      P("should format with null")
+      client.resolved_capabilities.document_formatting = true
+    else
+      P("should NOT format with null")
+      client.resolved_capabilities.document_formatting = false
+    end
+  end
 end
 
 -- [ TAGS ] --------------------------------------------------------------------
@@ -536,15 +538,6 @@ local function setup_diagnostics()
     display_signs(bufnr)
   end
 
-  -- ( config ) --
-  -- diagnostic.config({
-  --   underline = true,
-  --   signs = false,
-  --   update_in_insert = false,
-  --   severity_sort = true,
-  --   virtual_text = false,
-  -- })
-
   diagnostic.config({
     underline = true,
     virtual_text = false,
@@ -588,9 +581,6 @@ local function setup_handlers()
       "FocusLost",
     },
   }
-
-  -- NOTE: presently andled by fidget.nvim
-  -- lsp.handlers["$/progress"] = lsp_progress_notification
 
   -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
   lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
@@ -637,10 +627,11 @@ function mega.lsp.on_attach(client, bufnr)
   setup_handlers()
   setup_mappings(client, bufnr)
 
-  local ok, lsp_format = pcall(require, "lsp-format")
-  if ok then
-    lsp_format.on_attach(client)
-  end
+  -- TODO: determine if we're ok with formatting on BufWritePost:
+  -- local ok, lsp_format = pcall(require, "lsp-format")
+  -- if ok then
+  --   lsp_format.on_attach(client)
+  -- end
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end

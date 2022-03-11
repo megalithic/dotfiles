@@ -1041,6 +1041,7 @@ do
   vim.g.cursorword_disabled_buftypes = buftype_ignores
   vim.g.cursorline_disabled_filetypes = filetype_ignores
   vim.g.cursorword_disabled_filetypes = filetype_ignores
+  vim.g.cursorline_timeout = 200 -- 1000 is default
 end
 
 do -- gitsigns.nvim
