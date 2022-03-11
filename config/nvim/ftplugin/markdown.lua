@@ -87,9 +87,10 @@ vim.g.vim_markdown_strikethrough = 1
 --
 
 -- local lush = require("lush")
--- local megaforest = require("lush_theme.megaforest")
+-- local megaforest = require("mega.lush_theme.megaforest")
+-- print(megaforest)
 
--- -- we can apply modifications ontop of the existing colorscheme
+-- we can apply modifications ontop of the existing colorscheme
 -- local spec = lush.extends({ megaforest }).with(function()
 --   return {
 --     -- Use the existing Comment group in harbour, but adjust the gui attribute
@@ -103,5 +104,6 @@ vim.g.vim_markdown_strikethrough = 1
 _G.customise_colorscheme = function()
   local H = require("mega.utils.highlights")
   H.set_hl("ColorColumn", { guibg = "#3c474d", guifg = "NONE" })
+  -- lush(spec)
 end
 vim.cmd([[autocmd VimEnter,ColorScheme * lua customise_colorscheme()]])
