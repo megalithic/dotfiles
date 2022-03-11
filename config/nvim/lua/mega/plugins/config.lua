@@ -556,7 +556,7 @@ do -- toggleterm.nvim
   local toggleterm = require("toggleterm")
   toggleterm.setup({
     open_mapping = [[<c-\>]],
-    -- shade_filetypes = { "none" },
+    shade_filetypes = { "none" },
     direction = "horizontal",
     insert_mappings = false,
     start_in_insert = true,

@@ -163,7 +163,10 @@ vim.opt.pumheight = 20 -- completion menu height
 -- Display {{{1
 -----------------------------------------------------------------------------//
 vim.opt.conceallevel = 2
-vim.opt.breakindentopt = "sbr"
+vim.opt.wrap = false
+-- vim.opt.wrapmargin = 2
+vim.opt.textwidth = 79
+vim.opt.textwidth = 0 --  0 disables
 vim.opt.linebreak = true -- lines wrap at words rather than random characters
 vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
 -- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
@@ -212,10 +215,7 @@ vim.opt.listchars = {
 -----------------------------------------------------------------------------//
 -- Indentation
 -----------------------------------------------------------------------------//
-vim.opt.wrap = true
--- vim.opt.wrapmargin = 2
--- vim.opt.textwidth = 80
-vim.opt.textwidth = 0 --  0 disables
+vim.opt.breakindentopt = "sbr"
 vim.opt.autoindent = true
 vim.opt.shiftround = true
 vim.opt.expandtab = true

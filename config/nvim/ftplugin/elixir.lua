@@ -4,62 +4,15 @@
 
 vim.cmd([[setlocal iskeyword+=!,?]])
 
-vim.api.nvim_exec(
-  [[
-      set filetype=elixir
-  nnoremap <silent> <buffer> <leader>ed orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>
-  nnoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-  nnoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-  nnoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
-  inoremap <silent> <buffer> <leader>ep o\|> <ESC>a
-  inoremap <silent> <buffer> <leader>ei o\|> IO.inspect()<ESC>i
-  inoremap <silent> <buffer> <leader>eil o\|> IO.inspect(label: "")<ESC>hi
+nnoremap("<leader>ed", [[orequire IEx; IEx.pry; #respawn() to leave pry<ESC>:w<CR>]])
+nnoremap("<leader>ep", [[<leader>ep o\|> <ESC>a]])
+nnoremap("<leader>ei", [[o\|> IO.inspect()<ESC>i]])
+nnoremap("<leader>eil", [[o\|> IO.inspect(label: "")<ESC>hi]])
+inoremap("<leader>eil", [[o\|> <ESC>a]])
+inoremap("<leader>ei", [[o\|> IO.inspect()<ESC>i]])
+inoremap("<leader>eil", [[o\|> IO.inspect(label: "")<ESC>hi]])
 
-"au FileType elixir nnoremap io o\|> IO.inspect(printable_limit: :infinity)<Esc>
-"au FileType elixir nnoremap IO o\|> IO.inspect(label: "<C-r>=line(".")<C-M>: ", printable_limit: :infinity)<Esc>F"i
-"au FileType elixir nnoremap ii a \|> IO.inspect(printable_limit: :infinity)<Esc>i
-"au FileType elixir nnoremap II a \|> IO.inspect(label: "<C-r>=line(".")<C-M>: ", printable_limit: :infinity)<Esc>F"i
-"au FileType elixir nnoremap <leader>r orequire IEx; IEx.pry<esc>
-
-  " NOTE: use ctrl-] to complete without adding the space, otherwise just use
-  " space to complete the `iabbrev` expansions.
-  iabbrev epry  require IEx; IEx.pry
-  iabbrev ep    \|>
-  " iabbrev ei    IO.inspect
-"  iabbrev ei    IO.inspect\(\)
-  iabbrev ei    IO.inspect<c-o>:call getchar()<CR>
-  iabbrev eputs IO.puts
-
-  nmap <silent> <localleader>tf :let g:elixir_test_nearest=0<CR>\|:TestFile --trace<CR>
-  nmap <silent> <localleader>ta :let g:elixir_test_nearest=0<CR>\|:TestFile --trace<CR>
-  nmap <silent> <localleader>tt :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
-  nmap <silent> <localleader>tn :let g:elixir_test_nearest=1<CR>\|:TestNearest<CR>
-  nmap <silent> <localleader>tl :let g:elixir_test_nearest=0<CR>\|:TestLast<CR>
-  nmap <silent> <localleader>tv :let g:elixir_test_nearest=0<CR>\|:TestVisit<CR>
-
-  " not quite working with elixir in vim-test
-  nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite<CR>
-  " nmap <silent> <leader>ta :let g:elixir_test_nearest=0<CR>\|:TestSuite --only-failures<CR>
-
-  function! Transform(cmd) abort
-    let sub = ""
-    let sub = substitute(a:cmd, 'mix test', 'mix test --color', '')
-    echom "running test -> " . sub
-    return sub
-  endfunction
-  let g:test#custom_transformations = {'transform': function('Transform')}
-  let g:test#transformation = 'transform'
-
-  " REF: https://nts.strzibny.name/elixir-interactive-shell-iex/#inspecting-failing-tests
-  " let test#elixir#exunit#executable = "mix test --trace"
-  " let test#elixir#exunit#executable = "MIX_ENV=test mix test"
-
-  let test#elixir#exunit#executable = "mix test"
-  " let test#elixir#exunit#options = '--trace'
-  " let test#elixir#exunit#options = {
-  "       \ 'suite':   '--stale',
-  "       \}
-      ]],
-
-  true
-)
+vim.cmd([[iabbrev ep    \|>]])
+vim.cmd([[iabbrev epry  require IEx; IEx.pry]])
+vim.cmd([[iabbrev ei    IO.inspect]])
+vim.cmd([[iabbrev eputs IO.puts]])
