@@ -23,14 +23,15 @@ local PKGS = {
   "dm1try/golden_size",
   -- @trial: https://github.com/beauwilliams/focus.nvim
   "kyazdani42/nvim-web-devicons",
+  "yamatsum/nvim-nonicons",
   "edluffy/specs.nvim",
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
-  "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
+  { "hrle97/nvim-cursorline", branch = "feature/disable-conditionally" },
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --

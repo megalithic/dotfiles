@@ -125,10 +125,6 @@ do -- vim-matchup
   }
 end
 
-do --virt-column.nvim
-  -- require("virt-column").setup({ char = "║" }) -- │║
-end
-
 do -- indent-blankline
   require("indent_blankline").setup({
     char = "│", -- ┆ ┊ 
@@ -217,6 +213,7 @@ end
 
 do -- nvim-web-devicons
   require("nvim-web-devicons").setup({ default = true })
+  -- require("nvim-web-devicons").setup({ default = true, get_icons = require("nvim-nonicons") })
 end
 
 do -- trouble.nvim
@@ -966,12 +963,17 @@ do -- misc
   vim.g.fzf_gitignore_no_maps = true
 end
 
+do
+  vim.g.cursorline_disabled_buftypes = { "acwrite", "quickfix", "terminal", "telescope", "nofile" }
+  vim.g.cursorline_disabled_filetypes = { "Telescope", "fzf", "NvimTree", "alpha", "Toggleterm", "qf" }
+end
+
 do -- gitsigns.nvim
   local gs = require("gitsigns")
   gs.setup({
     signs = {
       add = { hl = "GitSignsAdd", text = "▎" }, -- ┃, │, ▌, ▎
-      change = { hl = "GitSignsChange", text = "▎" },
+      change = { hl = "GitSignsChange", text = "▎" }, -- ║▎
       delete = { hl = "GitSignsDelete", text = "▎" },
       topdelete = { hl = "GitSignsDelete", text = "▌" },
       changedelete = { hl = "GitSignsChange", text = "▌" },
