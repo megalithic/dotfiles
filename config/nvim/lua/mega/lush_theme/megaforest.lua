@@ -57,12 +57,12 @@ C.grey0 = hsluv("#7c8377")
 C.grey1 = hsluv("#868d80")
 C.grey2 = hsluv("#999f93")
 
-C.red = hsluv("#e68183")
+C.red = hsluv("#e67e80")
 C.orange = hsluv("#e39b7b")
 C.yellow = hsluv("#d9bb80")
 C.green = hsluv("#a7c080")
 C.cyan = hsluv("#87c095").darken(5)
-C.blue = hsluv("#83b6af")
+C.blue = hsluv("#7fbbb3")
 C.aqua = C.cyan
 C.purple = hsluv("#d39bb6")
 C.brown = hsluv("#db9c5e").darken(20)
@@ -303,7 +303,7 @@ return lush(function()
     Fg({ fg = fg, bg = "NONE" }),
     Grey({ fg = grey1, bg = "NONE" }),
     Red({ fg = red, bg = "NONE" }),
-    Orange({ fg = dark_orange, bg = "NONE" }),
+    Orange({ fg = orange, bg = "NONE" }),
     Yellow({ fg = yellow, bg = "NONE" }),
     Green({ fg = green, bg = "NONE" }),
     Aqua({ fg = aqua, bg = "NONE" }),
@@ -330,7 +330,7 @@ return lush(function()
     InfoFloat({ fg = blue, bg = bg2 }),
     HintFloat({ fg = green, bg = bg2 }),
     RedSign({ fg = red, bg = bg1 }),
-    OrangeSign({ fg = dark_orange, bg = bg1 }),
+    OrangeSign({ fg = orange, bg = bg1 }),
     YellowSign({ fg = yellow, bg = bg1 }),
     GreenSign({ fg = green, bg = bg1 }),
     AquaSign({ fg = cyan, bg = bg1 }),
@@ -535,15 +535,15 @@ return lush(function()
     TSURI({ markdownUrl }),
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
-    TSComment({ Grey, gui = "italic" }),
-    TSWarning({ fg = orange, gui = "bold" }),
-    -- TSNote({ fg = blue, gui = "NONE,italic" }),
-    -- TSDanger({ fg = red, gui = "bold" }),
+    TSComment({ fg = light_grey, gui = "italic" }),
     TSError({ gui = "undercurl", guisp = red }), -- ErrorText
     -- highlight FIXME/TODO/REF: comments
+    TSWarning({}),
+    TSDanger({}),
+    TSNote({}),
     commentTSWarning({ fg = orange, gui = "bold" }),
-    commentTSDanger({ bg = dark_red, fg = "#ffffff", gui = "bold" }),
-    commentTSNote({ fg = blue, gui = "NONE,italic" }),
+    commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
+    commentTSNote({ fg = cyan, gui = "italic" }),
     TreesitterContext({ bg = bg1 }),
 
     -- { 'TSKeywordReturn', { italic = true, foreground = keyword_fg } },
@@ -837,7 +837,7 @@ return lush(function()
     StTitle({ bg = bg1, fg = grey2, gui = "bold" }),
     StComment({ Comment, bg = bg1 }),
     StError({ fg = pale_red, bg = bg1 }),
-    StWarn({ fg = dark_orange, bg = bg1 }),
+    StWarn({ fg = orange, bg = bg1 }),
     StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = bright_yellow, bg = bg1 }),
 

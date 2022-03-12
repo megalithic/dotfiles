@@ -212,6 +212,7 @@ if has_wk then
       -- t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
       -- TODO: ensure that we can get to these
       S = { mega.showCursorHighlights, "show syntax highlights under cursor" },
+      s = { mega.showCursorHighlights, "show syntax highlights under cursor" },
       -- j = { mega.showCursorHighlights, "show syntax highlights under cursor" },
       -- S = {
       --   [[<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>]],

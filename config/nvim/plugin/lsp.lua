@@ -110,6 +110,7 @@ local function setup_autocommands(client, bufnr)
 
   local ok, lsp_format = pcall(require, "lsp-format")
   if ok then
+    -- P("should lsp format")
     lsp_format.on_attach(client)
   else
     if client and client.resolved_capabilities.document_formatting then
@@ -119,7 +120,7 @@ local function setup_autocommands(client, bufnr)
           events = { "BufWritePre" },
           buffer = bufnr,
           command = function()
-            P("should be formatting with my own LspFormat augroup")
+            -- P("should be formatting with my own LspFormat augroup")
             -- BUG: folds are are removed when formatting is done, so we save the current state of the
             -- view and re-apply it manually after formatting the buffer
             -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
@@ -564,7 +565,7 @@ end
 
 function mega.lsp.on_attach(client, bufnr)
   if not client then
-    vim.notify("No LSP client found; aborting on_attach.")
+    -- vim.notify("No LSP client found; aborting on_attach.")
     return
   end
 

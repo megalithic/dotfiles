@@ -1025,7 +1025,6 @@ do
     "prompt",
   }
   local filetype_ignores = {
-
     "Telescope",
     "TelescopePrompt",
     "fzf",
