@@ -20,6 +20,7 @@ require("nvim-treesitter.configs").setup({
     "graphql",
     "html",
     "heex",
+    -- "iex",
     "javascript",
     -- "markdown",
     "jsdoc",

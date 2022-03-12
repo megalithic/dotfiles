@@ -247,7 +247,7 @@ vim.opt.guicursor = {
   [[sm:block-blinkwait175-blinkoff150-blinkon175]],
 }
 
-vim.opt.cursorline = true -- Show a line where the current cursor is
+vim.opt.cursorline = false -- Show a line where the current cursor is
 vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
 -----------------------------------------------------------------------------//
 -- Title {{{1

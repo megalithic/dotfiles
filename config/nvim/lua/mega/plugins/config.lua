@@ -1026,6 +1026,7 @@ do
   }
   local filetype_ignores = {
     "Telescope",
+    "markdown",
     "TelescopePrompt",
     "fzf",
     "NvimTree",
@@ -1037,9 +1038,8 @@ do
     "qf",
   }
   vim.g.cursorline_disabled_buftypes = buftype_ignores
-  vim.g.cursorword_disabled_buftypes = buftype_ignores
   vim.g.cursorline_disabled_filetypes = filetype_ignores
-  vim.g.cursorword_disabled_filetypes = filetype_ignores
+  vim.g.cursorword_highlight = false -- 1000 is default
   vim.g.cursorline_timeout = 200 -- 1000 is default
 end
 

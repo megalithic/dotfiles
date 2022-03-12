@@ -232,6 +232,7 @@ local function should_show_cursorline()
     "TelescopePrompt",
     "fzf",
     "NvimTree",
+    "markdown",
     "gitcommit",
     "startify",
     "alpha",
@@ -241,10 +242,10 @@ local function should_show_cursorline()
   }
 
   return not vim.tbl_contains(excluded_buftypes, vim.bo.buftype)
+    and not vim.tbl_contains(excluded_filetypes, vim.bo.filetype)
     and not vim.wo.previewwindow
     and vim.wo.winhighlight == ""
     and vim.bo.filetype ~= ""
-    and not vim.tbl_contains(excluded_filetypes, vim.bo.filetype)
 end
 
 augroup("Cursorline", {
