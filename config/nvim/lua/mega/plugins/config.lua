@@ -110,6 +110,12 @@ do -- lsp_signature.nvim
   end
 end
 
+do -- git-conflict.nvim
+  require("git-conflict").setup({
+    disable_diagnostics = true,
+  })
+end
+
 do -- gitlinker.nvim
   require("gitlinker").setup()
 end
@@ -139,7 +145,7 @@ do -- indent-blankline
     space_char_blankline = " ",
     show_foldtext = false,
     show_current_context = true,
-    show_current_context_start = true,
+    show_current_context_start = false,
     show_current_context_start_on_current_line = false,
     show_first_indent_level = true,
     show_end_of_line = true,

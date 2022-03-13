@@ -106,4 +106,4 @@ _G.customise_colorscheme = function()
   H.set_hl("ColorColumn", { guibg = "#3c474d", guifg = "NONE" })
   -- lush(spec)
 end
-vim.cmd([[autocmd VimEnter,ColorScheme * lua customise_colorscheme()]])
+vim.cmd([[autocmd VimEnter,ColorScheme,BufEnter * lua customise_colorscheme()]])

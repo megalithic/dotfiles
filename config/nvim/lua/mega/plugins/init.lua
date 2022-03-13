@@ -136,7 +136,7 @@ local PKGS = {
   -- (GIT, vcs, et al) --
   -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
   "mattn/webapi-vim",
-  "rhysd/conflict-marker.vim",
+  "akinsho/git-conflict.nvim",
   "itchyny/vim-gitbranch",
   "rhysd/git-messenger.vim",
   "sindrets/diffview.nvim",
@@ -205,7 +205,7 @@ local PKGS = {
   -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  { "iamcco/markdown-preview.nvim", run = "yarn install", opt = true },
+  { "iamcco/markdown-preview.nvim", run = "cd app && yarn install", opt = true },
   "ellisonleao/glow.nvim",
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
