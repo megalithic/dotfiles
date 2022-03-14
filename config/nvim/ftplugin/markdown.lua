@@ -101,6 +101,8 @@ vim.g.vim_markdown_strikethrough = 1
 -- end)
 
 vim.cmd([[packadd markdown-preview.nvim]])
+vim.g.mkdp_auto_start = 0
+vim.g.mkdp_auto_close = 1
 
 -- You may prefer to put this in its own module, shown on _G for brevity.
 _G.customise_colorscheme = function()

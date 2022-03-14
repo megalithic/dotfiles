@@ -443,12 +443,6 @@ augroup("LazyLoads", {
     end,
   },
   {
-    -- nvim-bqf
-    events = { "FileType" },
-    targets = { "markdown" },
-    command = [[packadd markdown-preview]],
-  },
-  {
     events = { "BufReadPre" },
     command = function()
       -- dash.nvim
