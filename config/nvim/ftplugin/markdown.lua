@@ -100,6 +100,8 @@ vim.g.vim_markdown_strikethrough = 1
 --   }
 -- end)
 
+vim.cmd([[packadd markdown-preview.nvim]])
+
 -- You may prefer to put this in its own module, shown on _G for brevity.
 _G.customise_colorscheme = function()
   local H = require("mega.utils.highlights")

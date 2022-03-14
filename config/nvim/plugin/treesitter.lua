@@ -22,7 +22,7 @@ require("nvim-treesitter.configs").setup({
     "heex",
     -- "iex",
     "javascript",
-    -- "markdown",
+    "markdown",
     "jsdoc",
     "json",
     "jsonc",
