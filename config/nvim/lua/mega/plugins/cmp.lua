@@ -132,8 +132,13 @@ local function setup_cmp()
         luasnip.lsp_expand(args.body)
       end,
     },
-    documentation = {
-      border = "rounded",
+    window = {
+      completion = {
+        border = "",
+      },
+      documentation = {
+        border = "rounded",
+      },
     },
     mapping = {
       ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),

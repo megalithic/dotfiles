@@ -245,11 +245,12 @@ local function should_show_cursorline()
     and not vim.wo.previewwindow
     and vim.wo.winhighlight == ""
     and vim.bo.filetype ~= ""
+    and not require("cmp").visible()
 end
 
 augroup("Cursorline", {
   {
-    events = { "BufEnter" },
+    events = { "BufEnter", "CursorHoldI" },
     command = function()
       if should_show_cursorline() then
         vim.wo.cursorline = true
@@ -257,7 +258,7 @@ augroup("Cursorline", {
     end,
   },
   {
-    events = { "BufLeave" },
+    events = { "BufLeave", "CursorHoldI" },
     command = function()
       vim.wo.cursorline = false
     end,
@@ -442,6 +443,13 @@ augroup("LazyLoads", {
     command = function()
       vim.cmd([[packadd nvim-bqf]])
       require("bqf").setup({ auto_enable = true, preview = { auto_preview = true } })
+    end,
+  },
+  {
+    events = { "FileType" },
+    targets = { "help" },
+    command = function()
+      vim.cmd([[wincmd J | resize 40]])
     end,
   },
   {

@@ -1,1 +1,1 @@
-vim.cmd([[nnoremap <buffer> q :q<CR>]])
+vim.o.splitbelow = true -- Prefer windows splitting in the bottom

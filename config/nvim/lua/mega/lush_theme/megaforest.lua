@@ -542,7 +542,7 @@ return lush(function()
     commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
     commentTSNote({ fg = cyan, gui = "italic" }),
-    TSWarning({}),
+    TSWarning({ fg = commentTSWarning.fg }),
     TSDanger({}),
     TSNote({ fg = commentTSNote.fg }),
     TreesitterContext({ bg = bg1 }),
@@ -717,13 +717,16 @@ return lush(function()
     -- CmpItemKindOperator({ Operator }),
     -- CmpItemKindTypeParameter({ Type }),
 
+    CmpBorderedWindow_Normal({ Normal, bg = bg1 }),
+    CmpBorderedWindow_FloatBorder({ Normal, fg = bg1, bg = bg1 }),
+    CmpBorderedWindow_CursorLine({ Visual }),
+
     -- nvim-dap
     -- DebugBreakpoint({ fg = cs.red }),
     -- DebugBreakpointLine({ fg = cs.red, gui = "underline" }),
     -- DebugHighlight({ fg = cs.blue }),
     -- DebugHighlightLine({ fg = cs.purple, gui = "italic" }),
     -- NvimDapVirtualText({ fg = cs.cyan, gui = "italic" }),
-
     -- nvim-dap-ui
     -- DapUIScope({ bg = cs.blue, fg = cs.bg }),
     -- DapUIType({ fg = cs.blue }),
@@ -739,12 +742,6 @@ return lush(function()
     -- DapUIWatchesEmpty({ bg = cs.red, fg = cs.bg }),
     -- DapUIWatchesValue({ fg = cs.red }),
     -- DapUIWatchesError({ fg = cs.red }),
-
-    -- nvim-hlslens
-    -- HlSearchNear({ bg = "#e2be7d", fg = cs.bg }),
-    -- HlSearchLens({ bg = cs.grey1 }),
-    -- HlSearchLensNear({ HlSearchNear }),
-    -- HlSearchFloat({ HlSearchNear }),
 
     ---- :help luasnip -------------------------------------------
 
