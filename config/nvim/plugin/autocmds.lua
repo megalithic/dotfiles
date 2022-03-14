@@ -21,7 +21,6 @@ au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' 
 au([[StdinReadPost * set buftype=nofile]])
 au([[FileType help wincmd L]])
 au([[CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
-au([[VimResized * lua require('golden_size').on_win_enter()]])
 au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
 au([[Syntax * call matchadd('TSNote', '\W\zs\(TODO\|CHANGED\)')]])
 au([[Syntax * call matchadd('TSDanger', '\W\zs\(FIXME\|BUG\|HACK\)')]])
@@ -393,11 +392,14 @@ augroup("UpdateVim", {
     events = { "FocusLost" },
     command = "silent! wall",
   },
-  --   -- Make windows equal size when vim resizes
-  --   {
-  --     events = { "VimResized" },
-  --     command = "wincmd =",
-  --   },
+  {
+    events = { "VimResized" },
+    command = function()
+      -- vim.cmd([["wincmd ="]])
+      require("golden_size").on_win_enter()
+      require("virt-column").refresh()
+    end,
+  },
 })
 
 do
