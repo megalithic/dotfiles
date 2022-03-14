@@ -8,6 +8,7 @@ _G.mega = {
   _store = __mega_global_callbacks,
   functions = {},
   dirs = {},
+  mappings = {},
   lsp = {},
   icons = {
     borderchars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },

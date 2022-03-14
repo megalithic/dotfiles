@@ -539,12 +539,12 @@ return lush(function()
     TSComment({ fg = light_grey, gui = "italic" }),
     TSError({ gui = "undercurl", guisp = red }), -- ErrorText
     -- highlight FIXME/TODO/REF: comments
-    TSWarning({}),
-    TSDanger({}),
-    TSNote({}),
     commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
     commentTSNote({ fg = cyan, gui = "italic" }),
+    TSWarning({}),
+    TSDanger({}),
+    TSNote({ fg = commentTSNote.fg }),
     TreesitterContext({ bg = bg1 }),
 
     -- { 'TSKeywordReturn', { italic = true, foreground = keyword_fg } },
