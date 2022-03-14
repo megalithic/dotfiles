@@ -1019,34 +1019,34 @@ do -- misc
 end
 
 do
-  local buftype_ignores = {
-    "acwrite",
-    "quickfix",
-    "terminal",
-    "nofile",
-    "help",
-    ".git/COMMIT_EDITMSG",
-    "startify",
-    "nofile",
-    "prompt",
-  }
-  local filetype_ignores = {
-    "Telescope",
-    "markdown",
-    "TelescopePrompt",
-    "fzf",
-    "NvimTree",
-    "gitcommit",
-    "startify",
-    "alpha",
-    "dashboard",
-    "Toggleterm",
-    "qf",
-  }
-  vim.g.cursorline_disabled_buftypes = buftype_ignores
-  vim.g.cursorline_disabled_filetypes = filetype_ignores
-  vim.g.cursorword_highlight = false -- 1000 is default
-  vim.g.cursorline_timeout = 200 -- 1000 is default
+  -- local buftype_ignores = {
+  --   "acwrite",
+  --   "quickfix",
+  --   "terminal",
+  --   "nofile",
+  --   "help",
+  --   ".git/COMMIT_EDITMSG",
+  --   "startify",
+  --   "nofile",
+  --   "prompt",
+  -- }
+  -- local filetype_ignores = {
+  --   "Telescope",
+  --   "markdown",
+  --   "TelescopePrompt",
+  --   "fzf",
+  --   "NvimTree",
+  --   "gitcommit",
+  --   "startify",
+  --   "alpha",
+  --   "dashboard",
+  --   "Toggleterm",
+  --   "qf",
+  -- }
+  -- vim.g.cursorline_disabled_buftypes = buftype_ignores
+  -- vim.g.cursorline_disabled_filetypes = filetype_ignores
+  -- vim.g.cursorword_highlight = false -- 1000 is default
+  -- vim.g.cursorline_timeout = 200 -- 1000 is default
 end
 
 do -- gitsigns.nvim

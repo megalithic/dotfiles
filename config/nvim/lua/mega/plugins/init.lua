@@ -31,7 +31,6 @@ local PKGS = {
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
-  { "hrle97/nvim-cursorline", branch = "feature/disable-conditionally" },
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
