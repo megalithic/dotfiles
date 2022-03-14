@@ -38,7 +38,7 @@ local PKGS = {
   -- @trial: https://github.com/williamboman/nvim-lsp-installer, -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
-  -- "lukas-reineke/lsp-format.nvim",
+  "lukas-reineke/lsp-format.nvim",
   { "hrsh7th/nvim-cmp", branch = "dev" },
   "hrsh7th/cmp-nvim-lsp",
   "hrsh7th/cmp-nvim-lua",
