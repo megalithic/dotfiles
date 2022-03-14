@@ -2,6 +2,14 @@
 
 set -euo pipefail
 
+[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
+
+if [[ $(uname) != "Darwin" ]]; then
+  log_warn "this script requires MacOS (darwin); skipping."
+  exit 0
+fi
+
+
 function __debug_info() {
   # -- set some useful vars for executable info:
   __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

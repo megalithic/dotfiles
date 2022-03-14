@@ -5,7 +5,7 @@ set -euo pipefail
 [[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
 
 if [[ $(uname) != "Darwin" ]]; then
-  log_warn "xcode-install requires MacOS (Darwin); skipping."
+  log_warn "xcode-install requires MacOS (darwin); skipping."
   exit 0
 fi
 
@@ -23,16 +23,16 @@ do_install() {
   sleep 1
   log "installing Xcode CLI tools.."
   read -n 1 -p "press any key to continue..." -s -e -r
-  xcode-select --install \
-    && log_ok "installed Xcode CLI tools" \
-    || log_error "failed to install the Xcode CLI tools"
+  xcode-select --install &&
+    log_ok "installed Xcode CLI tools" ||
+    log_error "failed to install the Xcode CLI tools"
 }
 
 do_post_install() {
   sudo xcode-select -switch /Library/Developer/CommandLineTools
-  softwareupdate --all --install --force --agree-to-license \
-    && log_ok "finished setting up more things for Xcode CLI tools" \
-    || log_error "failed to setup Xcode CLI tools things.."
+  softwareupdate --all --install --force --agree-to-license &&
+    log_ok "finished setting up more things for Xcode CLI tools" ||
+    log_error "failed to setup Xcode CLI tools things.."
   sudo xcode-select -switch /Applications/Xcode.app
 }
 
