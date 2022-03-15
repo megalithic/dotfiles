@@ -1006,7 +1006,7 @@ do
   })
   command({
     "Copy",
-    [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e | :bufdo %]],
+    [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]],
   })
 end
 

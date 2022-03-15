@@ -30,8 +30,8 @@ local function setup_luasnip()
     enable_autosnippets = true,
   })
 
-  luasnip.filetype_extend("ruby", { "rails" })
-  require("luasnip/loaders/from_vscode").lazy_load()
+  -- TODO: we want to do our own luasnippets .. se this link for more details of
+  -- how we might want to do this: https://youtu.be/Dn800rlPIho
 
   --- <tab> to jump to next snippet's placeholder
   local function on_tab()
