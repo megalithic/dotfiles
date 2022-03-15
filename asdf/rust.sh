@@ -24,9 +24,10 @@ do_install() {
 
   if (has cargo); then
     # (! has luacheck) && luarocks install luacheck
-    cargo install selene  # https://kampfkarren.github.io/selene/selene.html
-    cargo install stylua  # https://github.com/johnnymorganz/stylua
-    cargo install distant # https://github.com/chipsenkbeil/distant
+    cargo install selene    # https://kampfkarren.github.io/selene/selene.html
+    cargo install stylua    # https://github.com/johnnymorganz/stylua
+    cargo install distant   # https://github.com/chipsenkbeil/distant
+    cargo install taplo-lsp # https://taplo.tamasfe.dev/lsp/
 
     # if [[ $PLATFORM == "linux" ]]; then
     #   cargo install git-delta

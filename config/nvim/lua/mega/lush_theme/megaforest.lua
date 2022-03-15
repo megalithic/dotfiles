@@ -688,7 +688,7 @@ return lush(function()
     CmpItemAbbr({ fg = fg }),
     CmpItemAbbrMatch({ fg = cyan, gui = "bold,italic" }),
     CmpItemAbbrMatchFuzzy({ fg = yellow }),
-    CmpItemMenu({ fg = fg }),
+    CmpItemMenu({ NonText, gui = "italic" }),
 
     CmpItemKind({ fg = blue }),
     CmpItemKindText({ fg = fg }),

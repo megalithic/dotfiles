@@ -306,9 +306,9 @@ augroup("UpdateVim", {
   {
     events = { "VimResized" },
     command = function()
-      -- vim.cmd([["wincmd ="]])
+      vim.cmd([["wincmd ="]])
       require("golden_size").on_win_enter()
-      require("virt-column").refresh()
+      -- require("virt-column").refresh()
     end,
   },
 })

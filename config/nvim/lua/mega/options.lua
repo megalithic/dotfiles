@@ -79,6 +79,7 @@ vim.opt.diffopt = vim.opt.diffopt
 -- + "j" -- Auto-remove comments if possible.
 -- - "2" -- I'm not in gradeschool anymore
 
+-- original; FIXME: are these right?
 vim.opt.formatoptions = {
   ["1"] = true,
   ["2"] = true, -- Use indent from 2nd line of a paragraph
@@ -94,6 +95,19 @@ vim.opt.formatoptions = {
   l = true,
   v = true,
 }
+
+-- from tj: FIXME: validate these!
+vim.opt.formatoptions = vim.opt.formatoptions
+  - "a" -- Auto formatting is BAD.
+  - "t" -- Don't auto format my code. I got linters for that.
+  + "c" -- In general, I like it when comments respect textwidth
+  + "q" -- Allow formatting comments w/ gq
+  - "o" -- O and o, don't continue comments
+  + "r" -- But do continue when pressing enter.
+  + "n" -- Indent past the formatlistpat, not underneath it.
+  + "j" -- Auto-remove comments if possible.
+  - "2" -- I'm not in gradeschool anymore
+
 -----------------------------------------------------------------------------//
 -- Folds {{{1
 -----------------------------------------------------------------------------//
@@ -163,7 +177,7 @@ vim.opt.pumheight = 20 -- completion menu height
 -- Display {{{1
 -----------------------------------------------------------------------------//
 vim.opt.conceallevel = 2
-vim.opt.wrap = false
+vim.opt.wrap = true
 -- vim.opt.wrapmargin = 2
 vim.opt.textwidth = 79
 vim.opt.textwidth = 0 --  0 disables
@@ -176,6 +190,7 @@ vim.opt.signcolumn = "yes"
 vim.opt.ruler = false
 vim.opt.cmdheight = 2 -- Set command line height to two lines
 vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
+vim.opt.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
 vim.opt.lazyredraw = true -- should make scrolling faster
 vim.opt.ttyfast = true -- more faster scrolling (thanks @morganick!)
 vim.g.colorcolumn = 81 -- global var, mark column 81
@@ -260,6 +275,7 @@ vim.opt.titlelen = 70
 -- Utilities {{{1
 -----------------------------------------------------------------------------//
 vim.opt.showmode = false -- show current mode (insert, etc) under the cmdline
+vim.opt.showcmd = true -- show current mode (insert, etc) under the cmdline
 vim.opt.sessionoptions = {
   "blank",
   "globals",

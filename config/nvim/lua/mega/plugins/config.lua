@@ -959,30 +959,34 @@ do -- tabout.nvim
 end
 
 do -- headlines.nvim
-  fn.sign_define("Headline1", { linehl = "Headline1" })
-  fn.sign_define("Headline2", { linehl = "Headline2" })
-  fn.sign_define("Headline3", { linehl = "Headline3" })
-  fn.sign_define("Headline4", { linehl = "Headline4" })
-  fn.sign_define("Headline5", { linehl = "Headline5" })
-  fn.sign_define("Headline6", { linehl = "Headline6" })
+  -- fn.sign_define("Headline1", { linehl = "Headline1" })
+  -- fn.sign_define("Headline2", { linehl = "Headline2" })
+  -- fn.sign_define("Headline3", { linehl = "Headline3" })
+  -- fn.sign_define("Headline4", { linehl = "Headline4" })
+  -- fn.sign_define("Headline5", { linehl = "Headline5" })
+  -- fn.sign_define("Headline6", { linehl = "Headline6" })
 
   require("headlines").setup({
     markdown = {
       source_pattern_start = "^```",
       source_pattern_end = "^```$",
       dash_pattern = "^---+$",
-      headline_pattern = "^#+",
-      headline_signs = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
-      codeblock_sign = "CodeBlock",
       dash_highlight = "Dash",
+      headline_pattern = "^#+",
+      headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+      codeblock_highlight = "CodeBlock",
     },
     org = {
       source_pattern_start = "#%+[bB][eE][gG][iI][nN]_[sS][rR][cC]",
       source_pattern_end = "#%+[eE][nN][dD]_[sS][rR][cC]",
       dash_pattern = "^-----+$",
+      dash_highlight = "Dash",
       headline_pattern = "^%*+",
-      headline_signs = { "Headline" },
-      codeblock_sign = "CodeBlock",
+      headline_highlights = { "Headline" },
+      codeblock_highlight = "CodeBlock",
+    },
+    yaml = {
+      dash_pattern = "^---+$",
       dash_highlight = "Dash",
     },
   })
