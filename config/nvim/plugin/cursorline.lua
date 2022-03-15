@@ -138,7 +138,7 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
   {
-    events = { "BufLeave" },
+    events = { "BufLeave", "WinLeave" },
     targets = { "*" },
     command = function()
       disable_cursorline()

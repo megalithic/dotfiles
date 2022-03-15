@@ -180,7 +180,6 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
 
   export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
-  # export KERL_CONFIGURE_OPTIONS="--with-ssl=/usr/local/opt/openssl@1.1"
 elif [[ "$PLATFORM" == "linux" ]]; then
   # export HOMEBREW_PREFIX=$BREW_PATH
   # export BREW_PATH="$(/home/linuxbrew/.linuxbrew/bin/brew --prefix)"
@@ -189,7 +188,7 @@ elif [[ "$PLATFORM" == "linux" ]]; then
 fi
 
 # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
-export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
+export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix openssl@1.1)"
 
 export NVIMRUNTIME='/usr/local/share/nvim/runtime'
 export NVIM_TUI_ENABLE_TRUE_COLOR=1
@@ -320,7 +319,6 @@ path=(
     ${HOMEBREW_PREFIX}/opt/curl/bin(N-/)
     ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
     ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
-    # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
     ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
     ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
     ${CARGO_HOME}/bin(N-/)
@@ -332,7 +330,6 @@ path=(
     $path
 )
 
-# ${HOMEBREW_PREFIX}/opt/ruby/bin(N-/)
 
 for path_file in /etc/paths.d/*(.N); do
     path+=($(<$path_file))

@@ -449,7 +449,7 @@ augroup("LazyLoads", {
     events = { "FileType" },
     targets = { "help" },
     command = function()
-      vim.cmd([[wincmd J | resize 40]])
+      vim.cmd([[wincmd J | :resize 40]])
     end,
   },
   {

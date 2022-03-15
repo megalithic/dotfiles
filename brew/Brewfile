@@ -79,6 +79,7 @@ brew "ffind"
 brew "findutils"
 brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
+brew "fop" # used for asdf erlang
 brew "fx"
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"
