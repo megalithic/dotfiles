@@ -8,65 +8,26 @@ local augroup = mega.augroup
 -- local fmt = string.format
 local contains = vim.tbl_contains
 
--- vim.api.nvim_exec(
---   [[
---    augroup vimrc -- Ensure all autocommands are cleared
---    autocmd!
---    augroup END
---   ]],
---   ''
--- )
+augroup("Startup", {
+  {
+    events = { "VimEnter" },
+    targets = "*",
+    once = true,
+    command = function()
+      -- our basic dashboard/startify/alpha:
+      require("mega.start").start()
+    end,
+  },
+})
 
-au([[FocusGained,BufEnter,CursorHold,CursorHoldI,BufWinEnter * if mode() != 'c' | checktime | endif]])
-au([[StdinReadPost * set buftype=nofile]])
-au([[FileType help wincmd L]])
-au([[CmdwinEnter * nnoremap <buffer> <CR> <CR>]])
-au([[InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif]])
-au([[Syntax * call matchadd('TSNote', '\W\zs\(TODO\|CHANGED\)')]])
-au([[Syntax * call matchadd('TSDanger', '\W\zs\(FIXME\|BUG\|HACK\)')]])
-au([[Syntax * call matchadd('TSDanger', '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$')]])
-au([[Syntax * call matchadd('TSNote', '\W\zs\(NOTE\|INFO\|IDEA\|REF\)')]])
-au([[Syntax * syn match extTodo "\<\(NOTE\|HACK\|BAD\|TODO\):\?" containedin=.*Comment.* | hi! link extTodo Todo]])
-au([[VimEnter * ++once lua require('mega.start').start()]])
-au([[WinEnter * if &previewwindow | setlocal wrap | endif]])
-au([[FileType fzf :tnoremap <buffer> <esc> <C-c>]])
-au([[BufWritePre * %s/\n\+\%$//e]])
-
--- NOTE: presently handled by null-ls
--- Trim Whitespace
--- exec(
---   [[
---     fun! TrimWhitespace()
---         let l:save = winsaveview()
---         keeppatterns %s/\s\+$//e
---         call winrestview(l:save)
---     endfun
---     autocmd BufWritePre * :call TrimWhitespace()
--- ]],
---   false
--- )
-
--- augroup("auto-cursor", {
---   -- When editing a file, always jump to the last known cursor position.
---   -- Don't do it for commit messages, when the position is invalid, or when
---   -- inside an event handler (happens when dropping a file on gvim).
---   events = { "BufReadPost" },
---   targets = { "*" },
---   command = function()
---     local pos = fn.line([['"]])
---     if vim.bo.ft ~= "gitcommit" and pos > 0 and pos <= fn.line("$") then
---       vcmd("keepjumps normal g`\"")
---     end
---   end,
--- })
-
--- EXAMPLE of new nvim lua autocmd API:
--- vim.api.nvim_create_autocmd("FileType", {
---   pattern = { "yaml", "toml" },
---   callback = function()
---     map("n", "<C-a>", require("dial.map").inc_normal("dep_files"), { remap = true })
---   end,
--- })
+augroup("CheckOutsideTime", {
+  {
+    -- automatically check for changed files outside vim
+    events = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
+    targets = "*",
+    command = "silent! checktime",
+  },
+})
 
 local smart_close_filetypes = {
   "help",
@@ -437,5 +398,33 @@ augroup("LazyLoads", {
         vcmd([[packadd vim-kitty-navigator]])
       end
     end,
+  },
+})
+
+--- automatically clear commandline messages after a few seconds delay
+--- source: http://unix.stackexchange.com/a/613645
+---@return function
+local function clear_commandline()
+  --- Track the timer object and stop any previous timers before setting
+  --- a new one so that each change waits for 10secs and that 10secs is
+  --- deferred each time
+  local timer
+  return function()
+    if timer then
+      timer:stop()
+    end
+    timer = vim.defer_fn(function()
+      if fn.mode() == "n" then
+        vim.cmd([[echon '']])
+      end
+    end, 10000)
+  end
+end
+
+augroup("ClearCommandMessages", {
+  {
+    events = { "CmdlineLeave", "CmdlineChanged" },
+    targets = { ":" },
+    command = clear_commandline(),
   },
 })

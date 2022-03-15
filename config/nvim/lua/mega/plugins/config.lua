@@ -250,25 +250,36 @@ do -- cursorhold
   vim.g.cursorhold_updatetime = 100
 end
 
+do -- beacon.nvim
+  -- TODO: replace with specs
+  vim.g.beacon_size = 90
+  vim.g.beacon_minimal_jump = 10
+  -- vim.g.beacon_shrink = 0
+  -- vim.g.beacon_fade = 0
+  vim.g.beacon_ignore_filetypes = { "fzf", "NvimTree", "dirbuf", "Telescope", "toggleterm" }
+end
+
 do -- specs.nvim
-  local specs = require("specs")
-  specs.setup({
-    show_jumps = true,
-    min_jump = 30,
-    popup = {
-      delay_ms = 1, -- delay before popup displays
-      inc_ms = 1, -- time increments used for fade/resize effects
-      blend = 10, -- starting blend, between 0-100 (fully transparent), see :h winblend
-      width = 100,
-      winhl = "PMenu",
-      fader = specs.linear_fader,
-      resizer = specs.slide_resizer,
-    },
-    ignore_filetypes = { "Telescope", "fzf", "NvimTree", "alpha" },
-    ignore_buftypes = {
-      nofile = true,
-    },
-  })
+  local has_specs, specs = pcall(require, "specs")
+  if has_specs then
+    specs.setup({
+      show_jumps = true,
+      min_jump = 30,
+      popup = {
+        delay_ms = 1, -- delay before popup displays
+        inc_ms = 1, -- time increments used for fade/resize effects
+        blend = 10, -- starting blend, between 0-100 (fully transparent), see :h winblend
+        width = 100,
+        winhl = "PMenu",
+        fader = specs.linear_fader,
+        resizer = specs.slide_resizer,
+      },
+      ignore_filetypes = { "Telescope", "fzf", "NvimTree", "alpha" },
+      ignore_buftypes = {
+        nofile = true,
+      },
+    })
+  end
 end
 
 do -- comment.nvim

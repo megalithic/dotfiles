@@ -23,7 +23,8 @@ local PKGS = {
   "dm1try/golden_size",
   -- @trial: https://github.com/beauwilliams/focus.nvim
   "kyazdani42/nvim-web-devicons",
-  "edluffy/specs.nvim",
+  -- "edluffy/specs.nvim",
+  "danilamihailov/beacon.nvim",
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   -- { "lukas-reineke/virt-column.nvim" },

@@ -69,6 +69,7 @@ local get_log_level = require("vim.lsp.log").get_level
 
 -- [ runtimepath (rtp) ] -------------------------------------------------------
 vim.opt.runtimepath:remove("~/.cache")
+vim.opt.runtimepath:remove("~/.local/share/src")
 
 -- Global namespace
 --- Inspired by @tjdevries' astraunauta.nvim/ @TimUntersberger's config
