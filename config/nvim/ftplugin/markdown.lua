@@ -104,10 +104,10 @@ vim.cmd([[packadd markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 
--- You may prefer to put this in its own module, shown on _G for brevity.
-_G.customise_colorscheme = function()
-  local H = require("mega.utils.highlights")
-  H.set_hl("ColorColumn", { guibg = "#3c474d", guifg = "NONE" })
-  -- lush(spec)
-end
-vim.cmd([[autocmd VimEnter,ColorScheme,BufEnter * lua customise_colorscheme()]])
+-- -- You may prefer to put this in its own module, shown on _G for brevity.
+-- _G.customise_colorscheme = function()
+--   local H = require("mega.utils.highlights")
+--   H.set_hl("ColorColumn", { guibg = "#3c474d", guifg = "NONE" })
+--   -- lush(spec)
+-- end
+-- vim.cmd([[autocmd VimEnter,ColorScheme,BufEnter * lua customise_colorscheme()]])

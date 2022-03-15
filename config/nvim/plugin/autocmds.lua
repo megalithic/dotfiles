@@ -169,6 +169,7 @@ local column_clear = {
   "vim-plug",
   "help",
   "fugitive",
+  "gitcommit",
   "mail",
   "org",
   "orgagenda",
@@ -212,58 +213,6 @@ augroup("CustomColorColumn", {
     end,
   },
 })
-
--- local function should_show_cursorline()
---   local excluded_buftypes = {
---     "acwrite",
---     "quickfix",
---     "terminal",
---     "nofile",
---     "help",
---     ".git/COMMIT_EDITMSG",
---     "startify",
---     "nofile",
---     "prompt",
---   }
-
---   local excluded_filetypes = {
---     "Telescope",
---     "TelescopePrompt",
---     "fzf",
---     "NvimTree",
---     "markdown",
---     "gitcommit",
---     "startify",
---     "alpha",
---     "dashboard",
---     "Toggleterm",
---     "qf",
---   }
-
---   return not vim.tbl_contains(excluded_buftypes, vim.bo.buftype)
---     and not vim.tbl_contains(excluded_filetypes, vim.bo.filetype)
---     and not vim.wo.previewwindow
---     and vim.wo.winhighlight == ""
---     and vim.bo.filetype ~= ""
---     and not require("cmp").visible()
--- end
-
--- augroup("Cursorline", {
---   {
---     events = { "BufEnter", "CursorHoldI" },
---     command = function()
---       if should_show_cursorline() then
---         vim.wo.cursorline = true
---       end
---     end,
---   },
---   {
---     events = { "BufLeave", "CursorHoldI" },
---     command = function()
---       vim.wo.cursorline = false
---     end,
---   },
--- })
 
 local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage" }
 local function can_save()
