@@ -407,8 +407,8 @@ do
   local sidebar_fts = {
     "packer",
     "dap-repl",
-    "flutterToolsOutline",
     "undotree",
+    "NvimTree",
     "dirbuf",
     "dapui_*",
   }
