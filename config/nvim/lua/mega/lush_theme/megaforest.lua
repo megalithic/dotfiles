@@ -891,6 +891,54 @@ return lush(function()
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
 
+    ---- :yaml -------------------------------------------------------------
+
+    yamlTodo({ Todo }),
+    yamlComment({ Comment }),
+
+    yamlDocumentStart({ PreProc }),
+    yamlDocumentEnd({ PreProc }),
+
+    yamlDirectiveName({ Keyword }),
+
+    yamlTAGDirective({ yamlDirectiveName }),
+    yamlTagHandle({ String }),
+    yamlTagPrefix({ String }),
+
+    yamlYAMLDirective({ yamlDirectiveName }),
+    yamlReservedDirective({ Error }),
+    yamlYAMLVersion({ Number }),
+
+    yamlString({ String }),
+    yamlFlowString({ yamlString }),
+    yamlFlowStringDelimiter({ yamlString }),
+    yamlEscape({ SpecialChar }),
+    yamlSingleEscape({ SpecialChar }),
+
+    yamlBlockCollectionItemStart({ Label }),
+    yamlBlockMappingKey({ Identifier }),
+    yamlBlockMappingMerge({ Special }),
+
+    yamlFlowMappingKey({ Identifier }),
+    yamlFlowMappingMerge({ Special }),
+
+    yamlMappingKeyStart({ Special }),
+    yamlFlowIndicator({ Special }),
+    yamlKeyValueDelimiter({ Special }),
+
+    yamlConstant({ Constant }),
+
+    yamlNull({ yamlConstant }),
+    yamlBool({ yamlConstant }),
+
+    yamlAnchor({ Type }),
+    yamlAlias({ Type }),
+    yamlNodeTag({ Type }),
+
+    yamlInteger({ Number }),
+    yamlFloat({ Float }),
+    yamlTimestamp({ Number }),
+
     ---- :hackkkks -------------------------------------------------------------
 
     Megaforest({ palette = C }),
