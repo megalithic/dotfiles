@@ -24,7 +24,7 @@ vim.g.cursorline_filetype_exclusions = {
   "startify",
   "help",
   "orgagenda",
-  "DirBuf",
+  "dirbuf",
   "org",
   "Trouble",
   "Telescope",
@@ -33,7 +33,6 @@ vim.g.cursorline_filetype_exclusions = {
   "NvimTree",
   "markdown",
   "dashboard",
-  "Toggleterm",
   "qf",
 }
 

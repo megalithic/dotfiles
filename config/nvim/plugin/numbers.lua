@@ -26,7 +26,7 @@ vim.g.number_filetype_exclusions = {
   "startify",
   "help",
   "orgagenda",
-  "DirBuf",
+  "dirbuf",
   "org",
   "Trouble",
 }
