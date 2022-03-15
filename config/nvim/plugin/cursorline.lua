@@ -76,18 +76,21 @@ local function set_cursorline()
   end
 end
 
-local function return_highlight_term(group, term)
-  local output = api.nvim_exec("highlight " .. group, true)
-  local hi = fn.matchstr(output, term .. [[=\zs\S*]])
-  if hi == nil or hi == "" then
-    return "None"
-  else
-    return hi
-  end
-end
+-- local function return_highlight_term(group, term)
+--   local output = api.nvim_exec("highlight " .. group, true)
+--   local hi = fn.matchstr(output, term .. [[=\zs\S*]])
+--   if hi == nil or hi == "" then
+--     return "None"
+--   else
+--     return hi
+--   end
+-- end
 
-local normal_bg = return_highlight_term("Normal", "guibg")
-local cursorline_bg = return_highlight_term("CursorLine", "guibg")
+-- local normal_bg = return_highlight_term("Normal", "guibg") or mega.colors().Background.bg
+-- local cursorline_bg = return_highlight_term("CursorLine", "guibg")
+
+local normal_bg = mega.colors().Background.bg
+local cursorline_bg = mega.colors().CursorLine.bg
 
 local function timer_start()
   timer:start(

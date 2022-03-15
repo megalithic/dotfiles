@@ -88,7 +88,7 @@ local function setup_autocommands(client, bufnr)
       events = { "CursorHold" },
       buffer = bufnr,
       command = function()
-        if true then
+        if true and pcall(require, "mega") then
           mega.lsp.line_diagnostics()
         else
           diagnostic.open_float(nil, {

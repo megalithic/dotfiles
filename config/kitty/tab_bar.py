@@ -1,11 +1,18 @@
 # pyright: reportMissingImports=false
 
 import datetime
+import json
+import subprocess
+from collections import defaultdict
 
-from kitty.fast_data_types import Screen
+from kitty.boss import get_boss
+from kitty.fast_data_types import Screen, add_timer
 from kitty.rgb import Color
-from kitty.tab_bar import DrawData, ExtraData, TabBarData, as_rgb, draw_title
+from kitty.tab_bar import DrawData, ExtraData, TabBarData, Formatter, as_rgb, draw_title, draw_attributed_string
+
 from kitty.utils import color_as_int
+
+timer_id = None
 
 
 def calc_draw_spaces(*args) -> int:
@@ -40,6 +47,7 @@ def _draw_left_status(
     is_last: bool,
     extra_data: ExtraData,
 ) -> int:
+    print(extra_data)
     if draw_data.leading_spaces:
         screen.draw(" " * draw_data.leading_spaces)
     draw_title(draw_data, screen, tab, index)
@@ -67,6 +75,7 @@ def _draw_right_status(screen: Screen, is_last: bool) -> int:
     if not is_last:
         return 0
 
+    draw_attributed_string(Formatter.reset, screen)
     date = datetime.datetime.now().strftime(" %H:%M")
     utc_date = datetime.datetime.now(datetime.timezone.utc).strftime(" (UTC %H:%M)")
 
@@ -95,10 +104,10 @@ def _draw_right_status(screen: Screen, is_last: bool) -> int:
 
 
 # REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-1940795
-# def redraw_tab_bar():
-#     tm = get_boss().active_tab_manager
-#     if tm is not None:
-#         tm.mark_tab_bar_dirty()
+def redraw_tab_bar():
+    tm = get_boss().active_tab_manager
+    if tm is not None:
+        tm.mark_tab_bar_dirty()
 
 def draw_tab(
     draw_data: DrawData,

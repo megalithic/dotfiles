@@ -180,15 +180,15 @@ if [[ "$PLATFORM" == "macos" ]]; then
   export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
 
   export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
+
+  # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
+  export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix openssl@1.1)"
 elif [[ "$PLATFORM" == "linux" ]]; then
   # export HOMEBREW_PREFIX=$BREW_PATH
   # export BREW_PATH="$(/home/linuxbrew/.linuxbrew/bin/brew --prefix)"
   export BROWSER="xdg-open"
   has lemonade && export BROWSER="lemonade open"
 fi
-
-# REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
-export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix openssl@1.1)"
 
 export NVIMRUNTIME='/usr/local/share/nvim/runtime'
 export NVIM_TUI_ENABLE_TRUE_COLOR=1

@@ -576,6 +576,8 @@ do -- git-messenger.nvim
 end
 
 do -- toggleterm.nvim
+  -- TODO: send visual lines to toggleterm:
+  --      https://github.com/akinsho/toggleterm.nvim/issues/172
   local toggleterm = require("toggleterm")
   toggleterm.setup({
     open_mapping = [[<c-\>]],
