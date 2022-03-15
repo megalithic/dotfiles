@@ -30,7 +30,7 @@ local PKGS = {
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
-  "rcarriga/nvim-notify",
+  -- "rcarriga/nvim-notify",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -51,11 +51,11 @@ local PKGS = {
   "hrsh7th/cmp-nvim-lsp-document-symbol",
   "hrsh7th/cmp-nvim-lsp-signature-help",
   "petertriho/cmp-git",
+
   -- for fuzzy things in nvim-cmp and command:
-  "tzachar/fuzzy.nvim",
-  "tzachar/cmp-fuzzy-path",
-  "tzachar/cmp-fuzzy-buffer",
-  --
+  -- "tzachar/fuzzy.nvim",
+  -- "tzachar/cmp-fuzzy-path",
+  -- "tzachar/cmp-fuzzy-buffer",
 
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
@@ -73,7 +73,6 @@ local PKGS = {
   "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
-  "mhartington/formatter.nvim",
 
   ------------------------------------------------------------------------------
   -- (treesitter) --
@@ -160,15 +159,15 @@ local PKGS = {
   { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
-  "tpope/vim-dadbod",
-  "kristijanhusak/vim-dadbod-completion",
-  "kristijanhusak/vim-dadbod-ui",
-  {
-    "glacambre/firenvim",
-    run = function()
-      vim.fn["firenvim#install"](0)
-    end,
-  },
+  -- "tpope/vim-dadbod",
+  -- "kristijanhusak/vim-dadbod-completion",
+  -- "kristijanhusak/vim-dadbod-ui",
+  -- {
+  --   "glacambre/firenvim",
+  --   run = function()
+  --     vim.fn["firenvim#install"](0)
+  --   end,
+  -- },
   ------------------------------------------------------------------------------
   -- (the rest...) --
   "nacro90/numb.nvim",

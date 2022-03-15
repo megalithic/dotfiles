@@ -1218,19 +1218,21 @@ do -- formatter.nvim
 end
 
 do -- vim-notify
-  local notify = require("notify")
+  local has_notify, notify = pcall(require, "notify")
   ---@type table<string, fun(bufnr: number, notif: table, highlights: table)>
-  local renderer = require("notify.render")
-  notify.setup({
-    stages = "fade_in_slide_out",
-    timeout = 3000,
-    render = function(bufnr, notif, highlights)
-      if notif.title[1] == "" then
-        return renderer.minimal(bufnr, notif, highlights)
-      end
-      return renderer.default(bufnr, notif, highlights)
-    end,
-  })
+  if has_notify then
+    local renderer = require("notify.render")
+    notify.setup({
+      stages = "fade_in_slide_out",
+      timeout = 3000,
+      render = function(bufnr, notif, highlights)
+        if notif.title[1] == "" then
+          return renderer.minimal(bufnr, notif, highlights)
+        end
+        return renderer.default(bufnr, notif, highlights)
+      end,
+    })
+  end
   -- vim.notify = notify
   -- require("telescope").load_extension("notify")
 end
