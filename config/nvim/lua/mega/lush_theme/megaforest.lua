@@ -400,12 +400,12 @@ return lush(function()
     -- you explicitly want to support Treesitter's improved syntax awareness.
 
     -- # built-in markdown
-    markdownH1({ fg = bg1, bg = green, gui = "bold" }),
-    markdownH2({ fg = orange, bg = bg1, gui = "bold,italic,underline" }),
-    markdownH3({ fg = purple, bg = bg1, gui = "bold,italic" }),
-    markdownH4({ fg = yellow, bg = bg1, gui = "italic" }),
-    markdownH5({ fg = cyan, bg = bg1, gui = "bold" }),
-    markdownH6({ fg = blue, bg = bg1, gui = "NONE" }),
+    markdownH1({ fg = green, bg = bg_green, gui = "bold,italic,underline" }),
+    markdownH2({ fg = yellow, bg = bg_yellow, gui = "bold,italic" }),
+    markdownH3({ fg = red, bg = bg_red, gui = "bold" }),
+    markdownH4({ fg = purple, bg = bg1, gui = "bold" }),
+    markdownH5({ fg = blue, bg = bg0, gui = "italic" }),
+    markdownH6({ fg = orange, bg = bg0, gui = "NONE" }),
     Headline1({ markdownH1 }),
     Headline2({ markdownH2 }),
     Headline3({ markdownH3 }),
@@ -451,7 +451,7 @@ return lush(function()
     -- mkdLinkDefTarget({}),
     -- mkdLinkTitle({}),
     -- mkdCodeDelimiter({}),
-    mkdHeading({ bg = bg1 }),
+    mkdHeading({ bg = bg0 }),
     -- mkdListItem({}),
     -- mkdRule({}),
     -- mkdDelimiter({}),

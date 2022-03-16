@@ -33,7 +33,9 @@ function M.ext.title_string()
   end
   -- return fmt("%s %s ", dir, icon)
   local has_tmux = os.getenv("TMUX")
-  return has_tmux and fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon) or dir .. " " .. icon
+  return has_tmux and fmt("%s %s ", dir, icon) or dir .. " " .. icon
+  -- return has_tmux and fmt("%s #[fg=%s]%s ", dir, mega.colors().Normal.fg.hex, icon) or dir .. " " .. icon
+  -- return has_tmux and fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon) or dir .. " " .. icon
   -- return fmt("%s #[fg=%s]%s ", dir, H.get_hl(hl, "fg"), icon)
 end
 
