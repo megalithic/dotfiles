@@ -104,10 +104,10 @@ def _draw_right_status(screen: Screen, is_last: bool) -> int:
 
 
 # REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-1940795
-def redraw_tab_bar():
-    tm = get_boss().active_tab_manager
-    if tm is not None:
-        tm.mark_tab_bar_dirty()
+# def redraw_tab_bar():
+#     tm = get_boss().active_tab_manager
+#     if tm is not None:
+#         tm.mark_tab_bar_dirty()
 
 def draw_tab(
     draw_data: DrawData,
