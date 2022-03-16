@@ -84,7 +84,7 @@ do -- fidget.nvim
       done = "",
     },
     window = {
-      blend = 2,
+      blend = 10,
     },
     sources = { -- Sources to configure
       ["elixirls"] = { -- Name of source
@@ -256,7 +256,17 @@ do -- beacon.nvim
   vim.g.beacon_minimal_jump = 10
   -- vim.g.beacon_shrink = 0
   -- vim.g.beacon_fade = 0
-  vim.g.beacon_ignore_filetypes = { "fzf", "NvimTree", "dirbuf", "Telescope", "toggleterm" }
+  vim.g.beacon_ignore_filetypes = {
+    "fzf",
+    "NvimTree",
+    "dirbuf",
+    "Telescope",
+    "toggleterm",
+    "TelescopePrompt",
+    "NeogitStatus",
+    "NeogitPopup",
+  }
+  vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
 end
 
 do -- specs.nvim
