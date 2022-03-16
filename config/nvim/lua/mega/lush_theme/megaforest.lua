@@ -459,7 +459,7 @@ return lush(function()
     -- mkdLineBreak({}),
     -- mkdBlockquote({}),
     -- mkdFootnote({}),
-    mkdCode({ markdownCode }),
+    mkdCode({}),
     -- mkdCodeDelimiter({}),
     -- mkdListItem({}),
     -- mkdListItemLine({}),
@@ -476,19 +476,6 @@ return lush(function()
     htmlH6({ markdownH6 }),
     htmlBold({ markdownBold }),
     htmlItalic({ markdownItalic }),
-
-    -- M.link("Dash", "markdownBold")
-    -- M.highlight("CodeBlock", { bg = M.colors.dimm_black })
-    -- M.highlight("HeadlineGreen", { bg = M.colors.diff_green })
-    -- M.highlight("HeadlineYellow", { bg = M.colors.diff_yellow })
-    -- M.highlight("HeadlineBlue", { bg = M.colors.dark_cursor_grey })
-    -- M.highlight("HeadlineRed", { bg = M.colors.diff_red })
-    -- M.highlight("HeadlinePurple", { bg = M.colors.diff_purple })
-    -- vim.fn.sign_define("HeadlineGreen", { linehl = "HeadlineGreen" })
-    -- vim.fn.sign_define("HeadlineYellow", { linehl = "HeadlineYellow" })
-    -- vim.fn.sign_define("HeadlineBlue", { linehl = "HeadlineBlue" })
-    -- vim.fn.sign_define("HeadlineRed", { linehl = "HeadlineRed" })
-    -- vim.fn.sign_define("HeadlinePurple", { linehl = "HeadlinePurple" })
 
     ---- :help nvim-treesitter-highlights (external plugin) ----
 
@@ -564,7 +551,7 @@ return lush(function()
     markdownTSTitle({ Statement, bg = bg1 }),
     markdownTSLiteral({ Type }),
     markdownTSURI({ markdownUrl }),
-    markdownCode({ markdownTSLiteral }),
+    markdownCode({ fg = grey1, bg = bg1 }),
     markdownLinkText({ markdownTSTextReference }),
 
     ---- :help git-signs -------------------------------------------
