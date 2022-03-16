@@ -89,8 +89,8 @@ end
 -- local normal_bg = return_highlight_term("Normal", "guibg") or mega.colors().Background.bg
 -- local cursorline_bg = return_highlight_term("CursorLine", "guibg")
 
-local normal_bg = mega.colors().Background.bg
-local cursorline_bg = mega.colors().CursorLine.bg
+local normal_bg = mega.colors().Background.bg.hex
+local cursorline_bg = mega.colors().CursorLine.bg.hex
 
 local function timer_start()
   timer:start(
