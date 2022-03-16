@@ -100,13 +100,13 @@ if vim.env.TMUX ~= nil then
     {
       events = { "BufEnter" },
       command = function()
-        vim.o.titlestring = require("mega.utils").ext.title_string()
+        -- vim.o.titlestring = require("mega.utils").ext.title_string()
       end,
     },
     {
       events = { "VimLeavePre" },
       command = function()
-        require("mega.utils").ext.tmux.set_statusline(true)
+        -- require("mega.utils").ext.tmux.set_statusline(true)
       end,
     },
     {
@@ -116,7 +116,7 @@ if vim.env.TMUX ~= nil then
         -- for kitty to re-use need to be set AFTER the rest of the colorscheme
         -- overrides
         vim.defer_fn(function()
-          require("mega.utils").ext.tmux.set_statusline()
+          -- require("mega.utils").ext.tmux.set_statusline()
         end, 1)
       end,
     },
@@ -366,21 +366,21 @@ augroup("LazyLoads", {
     events = { "BufReadPre" },
     command = function()
       -- dash.nvim
-      if mega.is_macos then
-        vcmd([[packadd dash.nvim]])
+      -- if mega.is_macos then
+      --   vcmd([[packadd dash.nvim]])
 
-        require("which-key").register({
-          ["<leader>f"] = {
-            name = "telescope",
-            D = { require("dash").search, "dash" },
-          },
-          ["<localleader>"] = {
-            name = "dash",
-            d = { [[<cmd>Dash<CR>]], "dash" },
-            D = { [[<cmd>DashWord<CR>]], "dash" },
-          },
-        })
-      end
+      --   require("which-key").register({
+      --     ["<leader>f"] = {
+      --       name = "telescope",
+      --       D = { require("dash").search, "dash" },
+      --     },
+      --     ["<localleader>"] = {
+      --       name = "dash",
+      --       d = { [[<cmd>Dash<CR>]], "dash" },
+      --       D = { [[<cmd>DashWord<CR>]], "dash" },
+      --     },
+      --   })
+      -- end
 
       -- nvim-pqf
       vim.cmd([[packadd nvim-pqf]])
