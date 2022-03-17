@@ -600,8 +600,8 @@ do -- toggleterm.nvim
       border = "curved",
       winblend = 0,
       highlights = {
-        border = "Normal",
-        background = "Background",
+        border = "TelescopePromptBorder",
+        background = "TelescopePrompt",
       },
     },
     size = function(term)
@@ -624,7 +624,9 @@ do -- toggleterm.nvim
       term.opened = term.opened or false
 
       if not term.opened then
-        term:send("eval $(desk load)")
+        if require("mega.utils").root_has_file("Deskfile") then
+          term:send("eval $(desk load)")
+        end
       end
 
       term.opened = true

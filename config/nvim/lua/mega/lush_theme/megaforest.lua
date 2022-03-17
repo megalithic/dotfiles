@@ -174,6 +174,7 @@ return lush(function()
     ---- :help highlight-default -------------------------------
 
     Background({ bg = bg0 }),
+    BackgroundLight({ bg = bg1 }),
     ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
     VirtColumn({ fg = bg1 }), -- used for the columns set with 'colorcolumn'
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
@@ -848,7 +849,7 @@ return lush(function()
 
     TelescopePrompt({ bg = bg2.darken(10) }),
     TelescopePromptPrefix({ Statement, bg = bg2.darken(10) }),
-    TelescopePromptBorder({ fg = "NONE", bg = bg2.darken(10) }),
+    TelescopePromptBorder({ fg = bg2.darken(10), bg = bg2.darken(10) }),
     TelescopePromptNormal({ fg = fg, bg = bg2.darken(10) }),
     TelescopePromptTitle({ fg = bg0, bg = red }),
 
@@ -925,6 +926,6 @@ return lush(function()
 
     ---- :hackkkks -------------------------------------------------------------
 
-    -- Megaforest({ C }),
+    Megaforest({ lush = C }),
   }
 end)
