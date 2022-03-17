@@ -199,6 +199,7 @@ if has_wk then
         name = "test",
         n = { "<cmd>TestNearest<cr>", "Run _test under cursor" },
         a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
+        f = { "<cmd>TestFile<cr>", "Run _all tests in file" },
         l = { "<cmd>TestLast<cr>", "Run _last test" },
         t = { "<cmd>TestLast<cr>", "Run _last test" },
         v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },

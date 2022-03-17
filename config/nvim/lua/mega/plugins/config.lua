@@ -1,6 +1,7 @@
 local api = vim.api
 local vcmd = vim.cmd
 local fn = vim.fn
+local fmt = string.format
 
 local function conf(plugin)
   if pcall(require, plugin) then
@@ -784,33 +785,27 @@ do -- vim-test
   vim.g["test#filename_modifier"] = ":."
   vim.g["test#preserve_screen"] = 0
 
-  -- if vim.fn.executable("richgo") == 1 then
-  --   vim.g["test#go#runner"] = "richgo"
-  -- end
-
-  -- vcmd([[
-  --   function! TermSplit(cmd) abort
-  --     vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
-  --   endfunction
-
-  --   let g:test#custom_strategies = {'termsplit': function('TermSplit')}
-  -- ]])
-  -- vim.g["test#strategy"] = "termsplit"
-
-  -- vcmd([[
-  --   function! ToggleTermStrategy(cmd) abort
-  --     call luaeval("require('toggleterm').exec(_A[1])", [a:cmd])
-  --     " call luaeval("require('toggleterm').exec(_A[1], _A[2])", [a:cmd, 0])
-  --     " execute "lua require('toggleterm').exec('" . a:cmd . "', 1)"
-  --   endfunction
-  --   let g:test#custom_strategies = {'toggleterm': function('ToggleTermStrategy')}
-  -- ]])
   vim.g["test#custom_strategies"] = {
     toggleterm = function(cmd)
+      P(fmt("cmd: %s", cmd))
       require("toggleterm").exec(cmd)
     end,
+    toggleterm_f = function(cmd)
+      P(fmt("f_cmd: %s", cmd))
+      require("toggleterm").exec_command(fmt([[cmd="%s" direction=float]], cmd))
+    end,
+    toggleterm_h = function(cmd)
+      P(fmt("h_cmd: %s", cmd))
+      require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
+    end,
   }
-  vim.g["test#strategy"] = "toggleterm"
+
+  vim.g["test#strategy"] = {
+    nearest  = "toggleterm",
+    file  = "toggleterm_f",
+    suite  = "toggleterm_f",
+    last  = "toggleterm",
+  }
 end
 
 do -- vim-projectionist
