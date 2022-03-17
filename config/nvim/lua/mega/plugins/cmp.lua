@@ -13,7 +13,7 @@ local function setup_luasnip()
   local types = require("luasnip.util.types")
   luasnip.config.set_config({
     history = true,
-    updateevents = "TextChanged,TextChangedI",
+    updateevents = "TextChangedI",
     store_selection_keys = "<Tab>",
     ext_opts = {
       -- [types.insertNode] = {

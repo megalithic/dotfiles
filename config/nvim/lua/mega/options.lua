@@ -244,7 +244,6 @@ vim.opt.hlsearch = false
 vim.opt.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
 vim.opt.laststatus = 2 -- 2 = always show status line (filename, etc)
-vim.opt.termguicolors = true
 -----------------------------------------------------------------------------//
 -- Emoji {{{1
 -----------------------------------------------------------------------------//

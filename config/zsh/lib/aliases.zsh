@@ -153,6 +153,7 @@ if type nvim >/dev/null 2>&1; then
   alias barevim="nvim -u NONE"
   alias packs="cd \"${XDG_DATA_HOME:-$HOME/.local/share}\"/nvim/site/pack/"
   alias rmpaqs="packs; rm -rf paqs; cd -"
+  [ -n "$NVIM_LISTEN_ADDRESS" ] && alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
 
   # function nvim() {
   #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
@@ -163,9 +164,6 @@ if type nvim >/dev/null 2>&1; then
   # }
   #
   # This allow using neovim remote when nvim is called from inside a running vim instance
-  if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-    alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
-  fi
   # alias darkMode="2>/dev/null defaults read -g AppleInterfaceStyle"
 
   # alias nvt="nv +tabe +term +NvimuxVerticalSplit +term +tabnext"

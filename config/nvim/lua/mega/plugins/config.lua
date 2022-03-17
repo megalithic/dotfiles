@@ -48,16 +48,15 @@ do
     },
     select = {
       winblend = 2,
-      telescope = {
-        theme = require("telescope.themes").get_cursor({
-          layout_config = {
-            height = function(self, _, max_lines)
-              local results = #self.finder.results
-              return (results <= max_lines and results or max_lines - 10) + 4 -- 4 is the size of the window
-            end,
-          },
-        }),
-      },
+      -- FIXME: still complains with deprecation warning; no bueno..
+      -- telescope = require("telescope.themes").get_cursor({
+      --   layout_config = {
+      --     height = function(self, _, max_lines)
+      --       local results = #self.finder.results
+      --       return (results <= max_lines and results or max_lines - 10) + 4 -- 4 is the size of the window
+      --     end,
+      --   },
+      -- }),
     },
   })
 end
@@ -250,26 +249,7 @@ do -- cursorhold
   vim.g.cursorhold_updatetime = 100
 end
 
-do -- beacon.nvim
-  -- TODO: replace with specs
-  vim.g.beacon_size = 90
-  vim.g.beacon_minimal_jump = 10
-  -- vim.g.beacon_shrink = 0
-  -- vim.g.beacon_fade = 0
-  vim.g.beacon_ignore_filetypes = {
-    "fzf",
-    "NvimTree",
-    "dirbuf",
-    "Telescope",
-    "toggleterm",
-    "TelescopePrompt",
-    "NeogitStatus",
-    "NeogitPopup",
-  }
-  vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
-end
-
-do -- specs.nvim
+do -- specs.nvim / beacon.nvim
   local has_specs, specs = pcall(require, "specs")
   if has_specs then
     specs.setup({
@@ -289,6 +269,23 @@ do -- specs.nvim
         nofile = true,
       },
     })
+  else
+    vim.cmd("packadd beacon.nvim")
+    vim.g.beacon_size = 90
+    vim.g.beacon_minimal_jump = 10
+    -- vim.g.beacon_shrink = 0
+    -- vim.g.beacon_fade = 0
+    vim.g.beacon_ignore_filetypes = {
+      "fzf",
+      "NvimTree",
+      "dirbuf",
+      "Telescope",
+      "toggleterm",
+      "TelescopePrompt",
+      "NeogitStatus",
+      "NeogitPopup",
+    }
+    vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
   end
 end
 
@@ -444,7 +441,7 @@ do -- nvim-autopairs
 end
 
 do -- lightspeed.nvim or hop.nvim; testing them both out
-  if false then
+  if true then
     vim.cmd("packadd lightspeed.nvim")
     require("lightspeed").setup({
       -- jump_to_first_match = true,
@@ -455,8 +452,8 @@ do -- lightspeed.nvim or hop.nvim; testing them both out
       jump_to_unique_chars = false,
       safe_labels = {},
       -- grey_out_search_area = true,
-      match_only_the_start_of_same_char_seqs = true,
-      limit_ft_matches = 5,
+      -- match_only_the_start_of_same_char_seqs = true,
+      -- limit_ft_matches = 5,
       -- full_inclusive_prefix_key = '<c-x>',
       -- By default, the values of these will be decided at runtime,
       -- based on `jump_to_first_match`.
