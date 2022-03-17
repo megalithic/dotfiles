@@ -521,6 +521,9 @@ local CTRL_V = vim.api.nvim_replace_termcodes("<C-V>", true, true, true)
 -- stylua: ignore start
 M.modes = setmetatable({
   ['n']    = { long = 'Normal',   short = 'N',   hl = 'StModeNormal' },
+  ['no']   = { long = 'N-OPERATOR PENDING',   short = 'N-OP',   hl = 'StModeNormal' },
+  ['nov']   = { long = 'N-OPERATOR BLOCK',   short = 'N-OPv',   hl = 'StModeNormal' },
+  ['noV']   = { long = 'N-OPERATOR LINE',   short = 'N-OPV',   hl = 'StModeNormal' },
   ['v']    = { long = 'Visual',   short = 'V',   hl = 'StModeVisual' },
   ['V']    = { long = 'V-Line',   short = 'V-L', hl = 'StModeVisual' },
   [CTRL_V] = { long = 'V-Block',  short = 'V-B', hl = 'StModeVisual' },
@@ -542,7 +545,7 @@ M.modes = setmetatable({
 -- stylua: ignore end
 
 function M.s_mode(args)
-  local mode_info = M.modes[vim.fn.mode()]
+  local mode_info = M.modes[api.nvim_get_mode().mode]
   local mode = is_truncated(args.trunc_width) and mode_info.short or mode_info.long
 
   return unpack(U.item(string.upper(mode), mode_info.hl, { before = " " }))

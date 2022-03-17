@@ -231,9 +231,9 @@ return lush(function()
 
     ---- :help toggleterm  -----------------------------------------------------
 
-    DarkenedPanel({ bg = bg_dark }),
-    DarkenedStatusline({ bg = bg_dark }),
-    DarkenedStatuslineNC({ cterm = "italic", bg = bg_dark }),
+    DarkenedPanel({ bg = bg1 }),
+    DarkenedStatusline({ bg = bg1 }),
+    DarkenedStatuslineNC({ gui = "italic", bg = bg1 }),
 
     ---- sidebar  -----------------------------------------------------
 
@@ -826,10 +826,6 @@ return lush(function()
     StWarn({ fg = orange, bg = bg1 }),
     StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = bright_yellow, bg = bg1 }),
-
-    DevIconLua({ fg = fg }),
-    DevIconDefault({ fg = fg }),
-    DevIconConf({ fg = fg }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
 

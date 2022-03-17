@@ -2,6 +2,7 @@
 
 # REF: https://github.com/imwally/battstat
 # REF: also (https://github.com/mykey/macscripts/blob/master/charge_remaining.sh)
+# REF: https://apple.stackexchange.com/questions/116429/using-bash-terminal-to-get-number-of-battery-recharge-cycles
 
 charging_icon="⚡"    #  U+26A1 - Thunderbolt
 discharging_icon="🔋" # U+1F50B - Battery

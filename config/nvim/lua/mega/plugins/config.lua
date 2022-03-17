@@ -590,7 +590,8 @@ do -- toggleterm.nvim
   local toggleterm = require("toggleterm")
   toggleterm.setup({
     open_mapping = [[<c-\>]],
-    shade_filetypes = { "none" },
+    shade_filetypes = {},
+    shade_terminals = true,
     direction = "horizontal",
     insert_mappings = false,
     start_in_insert = true,
@@ -600,7 +601,7 @@ do -- toggleterm.nvim
       winblend = 0,
       highlights = {
         border = "Normal",
-        background = "Normal",
+        background = "Background",
       },
     },
     size = function(term)
@@ -784,13 +785,13 @@ do -- vim-test
   -- end
 
   -- vcmd([[
-  --   function! TerminalSplit(cmd)
+  --   function! TermSplit(cmd)
   --     vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
   --   endfunction
 
-  --   let g:test#custom_strategies = {'terminal_split': function('TerminalSplit')}
-  --   let g:test#strategy = 'terminal_split'
+  --   let g:test#custom_strategies = {'termsplit': function('TermSplit')}
   -- ]])
+  -- vim.g["test#strategy"] = "termsplit"
 
   vcmd([[
       function! ToggleTermStrategy(cmd) abort
