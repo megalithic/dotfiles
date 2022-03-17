@@ -25,12 +25,16 @@ _For platform specific installs:_
 
 ```bash
 cd ~/.dotfiles && make macos # or, `linux`
+# or, for easier use:
+make -C ~/.dotfiles macos
 ```
 
 _Get some help:_
 
 ```bash
 cd ~/.dotfiles && make help
+# or, for easier use:
+make -C ~/.dotfiles help
 ```
 
 > **_NOTE_**: to execute a `make` command from anywhere; specifically for your dotfiles: `make -C ~/.dotfiles <GOAL>`
@@ -39,13 +43,13 @@ cd ~/.dotfiles && make help
 
 This dotfiles repo is managed by [dotbot](https://github.com/anishathalye/dotbot); not near as over-the-top configurable as _Ansible_, but way more advanced than just _GNU Stow_.
 
-I have tried to be platform agnostic, but the majority of scripts that run here are for MacOS (specifically MacOS Big Sur, _non-M1_, at the time of this commit), with a handful of Debian/Ubuntu Linux specific platform scripts and provisions. This means that certain tools/binaries I rely on may or may not install/configure on Linux. Though, I have tested it decently well on an Ubuntu-based Linode instance.
+I have tried to be platform agnostic, but the majority of scripts that run here are for MacOS (specifically MacOS Big Sur, _non-M1_, at the time of this commit -- I'll update here when we move to ARM), with a handful of Debian/Ubuntu Linux specific platform scripts and provisions. This means that certain tools/binaries I rely on may or may not install/configure on Linux. Though, I have tested it reasonably well on Ubuntu-based Linode and DigitalOcean instances.
 
 #### 🐉 Thar be dragons..
 
-I am pushing updates _constantly_, so there are NO guarantees of stability with my config!
+I am pushing updates _constantly_, so there are **NO** guarantees of stability with my config!
 
-> ⚠️ I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throwing caution to the wind -- install a stranger's shell scripts. 🤣
+> ⚠️ I highly recommend you dig into the scripts and configs to see what all is going on (because it does a lot more than what I'm describing in this README) before you -- all willy-nilly, throw caution to the wind -- install a stranger's shell scripts. 🤣
 
 ---
 
@@ -66,5 +70,5 @@ A few of the _must-have_ tools I roll with:
 - [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([atreus62 qmk](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
 
 <p align="center" style="margin-top: 20px;">
-  <img src="megadotfiles.png" alt="megadotfiles" height="150px"/>
+  <a href="https://megalithic.io" target="_blank"><img src="megadotfiles.png" alt="megadotfiles" height="150px"/></a>
 </p>
