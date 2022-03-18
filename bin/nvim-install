@@ -63,6 +63,7 @@ clone() {
 do_build() {
   git up && log_ok "git up successful"
 
+  # TODO: do we need to reinstall these each time??
   if [[ $PLATFORM == "linux" ]]; then
     # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
     sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen

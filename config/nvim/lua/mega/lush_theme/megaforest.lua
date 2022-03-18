@@ -2,6 +2,7 @@
 
 -- # REFS:
 -- - https://github.com/svitax/fennec-gruvbox.nvim/blob/master/lua/lush_theme/fennec-gruvbox.lua
+-- - https://github.com/mcchrish/zenbones.nvim/blob/main/lua/zenbones/specs/dark.lua
 
 -- `megaforest` built with,
 --
