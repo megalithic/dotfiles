@@ -232,16 +232,16 @@ function U.item_if(item, condition, hl, opts)
   return U.item(item, hl, opts)
 end
 
-local function matches(str, list)
-  return #vim.tbl_filter(function(item)
-    return item == str or string.match(str, item)
-  end, list) > 0
-end
+-- local function matches(str, list)
+--   return #vim.tbl_filter(function(item)
+--     return item == str or string.match(str, item)
+--   end, list) > 0
+-- end
 
 --- @param ctx table
-function M.is_plain(ctx)
-  return matches(ctx.filetype, plain.filetypes) or matches(ctx.buftype, plain.buftypes) or ctx.preview
-end
+-- function M.is_plain(ctx)
+--   return matches(ctx.filetype, plain.filetypes) or matches(ctx.buftype, plain.buftypes) or ctx.preview
+-- end
 
 --- Combine groups of sections
 ---

@@ -197,6 +197,7 @@ return lush(function()
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
     VertSplit({ fg = bg4, bg = "NONE" }), -- the column separating vertically split windows
+    WinSeparator({ bg = "NONE" }),
     Folded({ fg = grey1, bg = bg1 }), -- line used for closed folds
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
     SignColumn({ fg = fg, bg = bg0 }), -- column where |signs| are displayed

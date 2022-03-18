@@ -31,7 +31,7 @@ local PKGS = {
   "MunifTanjim/nui.nvim",
   "stevearc/dressing.nvim",
   "folke/which-key.nvim",
-  -- "rcarriga/nvim-notify",
+  "rcarriga/nvim-notify",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --

@@ -33,6 +33,13 @@ vim.opt.eadirection = "hor"
 vim.o.switchbuf = "useopen,uselast"
 vim.opt.fillchars = {
   vert = "▕", -- alternatives │
+--   horiz     = '━',
+--   horizup   = '┻',
+--   horizdown = '┳',
+--   vert      = '┃',
+--   vertleft  = '┫',
+--   vertright = '┣',
+--   verthoriz = '╋',
   fold = " ",
   eob = " ", -- suppress ~ at EndOfBuffer
   diff = "╱", -- alternatives = ⣿ ░ ─
@@ -41,6 +48,7 @@ vim.opt.fillchars = {
   foldsep = "│",
   foldclose = "▸",
 }
+
 -----------------------------------------------------------------------------//
 -- Diff {{{1
 -----------------------------------------------------------------------------//
@@ -243,7 +251,7 @@ vim.opt.completeopt = { "menuone", "noselect" }
 vim.opt.hlsearch = false
 vim.opt.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
-vim.opt.laststatus = 2 -- 2 = always show status line (filename, etc)
+vim.opt.laststatus = 3 -- 2 = always show status line (filename, etc); 3 = global
 -----------------------------------------------------------------------------//
 -- Emoji {{{1
 -----------------------------------------------------------------------------//

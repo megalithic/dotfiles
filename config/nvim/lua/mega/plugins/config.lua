@@ -271,22 +271,22 @@ do -- specs.nvim / beacon.nvim
       },
     })
   else
-    vim.cmd("packadd beacon.nvim")
-    vim.g.beacon_size = 90
-    vim.g.beacon_minimal_jump = 10
-    -- vim.g.beacon_shrink = 0
-    -- vim.g.beacon_fade = 0
-    vim.g.beacon_ignore_filetypes = {
-      "fzf",
-      "NvimTree",
-      "dirbuf",
-      "Telescope",
-      "toggleterm",
-      "TelescopePrompt",
-      "NeogitStatus",
-      "NeogitPopup",
-    }
-    vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
+    -- vim.cmd("packadd beacon.nvim")
+    -- vim.g.beacon_size = 90
+    -- vim.g.beacon_minimal_jump = 10
+    -- -- vim.g.beacon_shrink = 0
+    -- -- vim.g.beacon_fade = 0
+    -- vim.g.beacon_ignore_filetypes = {
+    --   "fzf",
+    --   "NvimTree",
+    --   "dirbuf",
+    --   "Telescope",
+    --   "toggleterm",
+    --   "TelescopePrompt",
+    --   "NeogitStatus",
+    --   "NeogitPopup",
+    -- }
+    -- vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
   end
 end
 
@@ -801,10 +801,10 @@ do -- vim-test
   }
 
   vim.g["test#strategy"] = {
-    nearest  = "toggleterm",
-    file  = "toggleterm_f",
-    suite  = "toggleterm_f",
-    last  = "toggleterm",
+    nearest = "toggleterm",
+    file = "toggleterm_f",
+    suite = "toggleterm_f",
+    last = "toggleterm",
   }
 end
 
