@@ -757,24 +757,18 @@ return lush(function()
 
     ---- :help lightspeed.nvim -------------------------------------------
 
-    -- LightspeedCursor({ fg = cs.bg, bg = cs.blue, gui = "bold, underline" }),
-    -- LightspeedLabel({ fg = cs.red, gui = "bold, underline" }),
-    -- -- LightspeedLabelOverlapped {fg = cs.green_2, gui = "bold"},
-    -- LightspeedLabelDistant({ fg = cs.orange, gui = "bold, underline" }),
-    -- -- LightspeedLabelDistantOverlapped {fg = cs.orange, gui = "bold"},
-    -- LightspeedShortcut({
-    --   fg = cs.bg,
-    --   bg = cs.yellow_2,
-    --   gui = "bold",
-    -- }),
-    -- -- LightspeedShortcutOverlapped {fg = cs.bg, bg = cs.green_2, gui = "bold"},
-    -- LightspeedMaskedChar({ fg = cs.fg, gui = "bold" }),
-    -- LightspeedGreyWash({ fg = cs.bg3 }),
-    -- LightspeedUnlabeledMatch({ fg = cs.fg, gui = "italic, bold" }),
-    -- LightspeedOneCharMatch({ fg = cs.bg, bg = cs.yellow_2, gui = "bold" }),
-    -- -- LightspeedUniqueChar {fg = cs.white, gui = "bold"},
-    -- -- LightspeedPendingOpArea {fg = cs.fg, bg = cs.lightspeed.primary},
-    -- -- LightspeedPendingChangeOpArea {fg = cs.lightspeed.primary, gui = "italic, strikethrough"},
+    LightspeedCursor({ fg = bg0, bg = blue, gui = "bold, underline" }),
+    LightspeedLabel({ fg = red, gui = "bold, underline" }),
+    LightspeedLabelDistant({ fg = orange, gui = "bold, underline" }),
+    LightspeedShortcut({
+      fg = bg0,
+      bg = yellow,
+      gui = "bold",
+    }),
+    LightspeedMaskedChar({ fg = fg, gui = "bold" }),
+    LightspeedGreyWash({ fg = bg3 }),
+    LightspeedUnlabeledMatch({ fg = fg, gui = "italic, bold" }),
+    LightspeedOneCharMatch({ fg = bg0, bg = yellow, gui = "bold" }),
 
     ---- :help tabline -------------------------------------------
 
@@ -786,30 +780,12 @@ return lush(function()
 
     StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
     StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    -- StatusLine({ bg = bg1 }),
-    -- StatusLineNC({ bg = bg1, gui = "NONE" }),
-    -- StInactive({ bg = bg0, gui = "italic" }),
     StInactive({ fg = bg2.lighten(10), bg = bg0, gui = "italic" }),
-
-    -- StatusLineTerm({ fg = cs.grey1, bg = cs.bg1 }), -- status line of current window
-    -- StatusLineTermNC({ fg = cs.grey1, bg = cs.bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    -- StItem1({ fg = cs.green, bg = cs.bg1 }),
-    -- StItem2({ fg = cs.grey2, bg = cs.bg1 }),
-    -- StItem3({ fg = cs.grey0, bg = cs.bg1 }),
-    -- StItemInfo({ fg = cs.blue, bg = cs.bg1 }),
-    -- StItemSearch({ fg = cs.bg0, bg = cs.blue }),
-    -- StSep1({ fg = cs.bg1, bg = cs.green }),
-    -- StSep2({ fg = cs.bg1, bg = cs.grey2 }),
-    -- StSep3({ fg = cs.bg1, bg = cs.grey0 }),
-    -- StError({ bg = cs.pale_red }),
-    -- StWarn({ bg = cs.dark_orange }),
-
     StModeNormal({ bg = bg1, fg = bg5, gui = "NONE" }),
     StModeInsert({ bg = bg1, fg = green, gui = "bold" }),
     StModeVisual({ bg = bg1, fg = magenta, gui = "bold" }),
     StModeReplace({ bg = bg1, fg = dark_red, gui = "bold" }),
     StModeCommand({ bg = bg1, fg = green, gui = "bold" }),
-
     StMetadata({ Comment, bg = bg1 }),
     StMetadataPrefix({ Comment, bg = bg1, gui = "NONE" }),
     StIndicator({ fg = dark_blue, bg = bg1 }),

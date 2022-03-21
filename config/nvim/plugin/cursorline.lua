@@ -72,7 +72,7 @@ end
 
 local function set_cursorline()
   if not is_ignored() then
-    vim.wo.cursorline = true
+    vim.opt_local.cursorline = true
   end
 end
 
@@ -127,7 +127,7 @@ local function enable_cursorline()
 end
 
 local function disable_cursorline()
-  vim.o.cursorline = false
+  vim.opt_local.cursorline = false
   status = WINDOW
 end
 

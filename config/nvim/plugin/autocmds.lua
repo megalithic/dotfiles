@@ -190,7 +190,6 @@ augroup("Utilities", {
       mega.auto_mkdir()
     end,
   },
-  -- BUG: this causes the cursor to jump to the top on VimEnter
   {
     -- When editing a file, always jump to the last known cursor position.
     -- Don't do it for commit messages, when the position is invalid, or when
