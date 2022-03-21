@@ -89,6 +89,7 @@ telescope.setup({
     --   path = fn.stdpath("data") .. "/telescope_history.sqlite3",
     -- },
     dynamic_preview_title = true,
+    color_devicons = true,
     vimgrep_arguments = {
       "rg",
       "--hidden",

@@ -19,9 +19,9 @@ local PKGS = {
   "mhanberg/thicc_forest",
   "mcchrish/zenbones.nvim",
   "savq/melange",
+  "rebelot/kanagawa.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
-  -- @trial: https://github.com/beauwilliams/focus.nvim
   "kyazdani42/nvim-web-devicons",
   -- { "xiyaowong/specs.nvim", branch = "feat/show-on-win-enter" },
   -- { "danilamihailov/beacon.nvim", opt = true },

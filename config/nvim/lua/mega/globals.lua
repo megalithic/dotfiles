@@ -149,6 +149,14 @@ for _, v in pairs(local_share_dir) do
   end
 end
 
+-- _G.logger = require("logger").new({
+--   level = "trace",
+-- })
+
+-- function _G.put(...)
+--   return logger.debug(...)
+-- end
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -179,14 +187,6 @@ function _G.dump_text(...)
   vim.fn.append(lnum, lines)
   return ...
 end
-
--- _G.logger = require("logger").new({
---   level = "trace",
--- })
-
--- function _G.put(...)
---   return logger.debug(...)
--- end
 
 function mega.dump_colors(filter)
   local defs = {}
@@ -851,6 +851,16 @@ function mega.auto_resize()
   end
 end
 
+function mega.flash_cursorline()
+  -- local cursorline_state = vim.opt.cursorline:get()
+  vim.opt.cursorline = true
+  vim.cmd([[hi CursorLine guifg=#FFFFFF guibg=#FF9509]])
+  vim.fn.timer_start(200, function()
+    vim.cmd([[hi CursorLine guifg=NONE guibg=NONE]])
+    vim.opt.cursorline = false
+  end)
+end
+
 -- [ commands ] ----------------------------------------------------------------
 do
   local command = mega.command
@@ -865,6 +875,7 @@ do
     [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]
   )
   command("Copy", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
+  command("Flash", function() mega.flash_cursorline() end)
 end
 
 return mega

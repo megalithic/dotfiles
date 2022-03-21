@@ -9,7 +9,7 @@ local function conf(plugin)
   end
 end
 
--- [ EXPLICIT ] ----------------------------------------------------------------
+-- [ EXPLICIT PLUGIN CONFIGS ] -------------------------------------------------
 
 conf("telescope")
 conf("cmp")
