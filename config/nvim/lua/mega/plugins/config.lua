@@ -260,6 +260,7 @@ do -- specs.nvim / beacon.nvim
   if has_specs then
     specs.setup({
       show_jumps = true,
+      show_on_win_enter = true,
       min_jump = 30,
       popup = {
         delay_ms = 1, -- delay before popup displays
@@ -270,16 +271,24 @@ do -- specs.nvim / beacon.nvim
         fader = specs.linear_fader,
         resizer = specs.slide_resizer,
       },
-      ignore_filetypes = { "Telescope", "fzf", "NvimTree", "alpha" },
+      ignore_filetypes = {
+        Telescope = true,
+        fzf = true,
+        NvimTree = true,
+        alpha = true,
+        TelescopePrompt = true,
+        Dirbuf = true,
+      },
       ignore_buftypes = {
         nofile = true,
+        prompt = true,
       },
     })
   else
     vim.cmd("packadd beacon.nvim")
     vim.g.beacon_size = 90
     vim.g.beacon_minimal_jump = 10
-    -- vim.g.beacon_shrink = 0
+    vim.g.beacon_shrink = 0
     -- vim.g.beacon_fade = 0
     vim.g.beacon_ignore_filetypes = {
       "fzf",

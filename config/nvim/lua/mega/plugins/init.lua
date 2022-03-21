@@ -23,7 +23,7 @@ local PKGS = {
   "dm1try/golden_size",
   -- @trial: https://github.com/beauwilliams/focus.nvim
   "kyazdani42/nvim-web-devicons",
-  { "edluffy/specs.nvim", opt = false },
+  { "xiyaowong/specs.nvim", branch = "feat/show-on-win-enter" },
   { "danilamihailov/beacon.nvim", opt = true },
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
