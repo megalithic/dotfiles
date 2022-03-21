@@ -737,7 +737,7 @@ mega.lsp.servers = {
       cmd = { "tailwindcss-language-server", "--stdio" },
       init_options = {
         userLanguages = {
-          -- elixir = "phoenix-heex",
+          elixir = "phoenix-heex",
           eruby = "erb",
           heex = "phoenix-heex",
         },
@@ -755,7 +755,7 @@ mega.lsp.servers = {
           ["html-eex"] = "html",
           ["phoenix-heex"] = "html",
           heex = "html",
-          -- eelixir = "html",
+          eelixir = "html",
           elm = "html",
           erb = "html",
         },
@@ -788,6 +788,7 @@ mega.lsp.servers = {
         "sass",
         "html",
         "heex",
+        "elixir",
         "javascript",
         "javascriptreact",
         "typescript",

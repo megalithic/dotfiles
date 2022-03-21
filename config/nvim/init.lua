@@ -26,7 +26,7 @@
     `tail -n150 -f $HOME/.cache/nvim/lsp.log`
     `tail -n150 -f $HOME/.cache/nvim/efm-lsp.log`
     -or-
-    :lua vim.cmd('vnew'..vim.lsp.get_log_path())
+    :lua vim.cmd('vnew '..vim.lsp.get_log_path())
     -or-
     :LspLog
 
