@@ -70,7 +70,7 @@ local PKGS = {
   { "kevinhwang91/nvim-bqf", opt = true },
   { url = "https://gitlab.com/yorickpeterse/nvim-pqf", opt = true },
   "abecodes/tabout.nvim",
-  { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
+  -- { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
@@ -101,7 +101,7 @@ local PKGS = {
   { "ggandor/lightspeed.nvim", opt = true },
   { "phaazon/hop.nvim", opt = true },
   "akinsho/toggleterm.nvim",
-  "megalithic/dirbuf.nvim",
+  "elihunter173/dirbuf.nvim",
   -- "kyazdani42/nvim-tree.lua",
 
   "tami5/sqlite.lua",

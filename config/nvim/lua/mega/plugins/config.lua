@@ -50,14 +50,19 @@ do
     select = {
       winblend = 2,
       -- FIXME: still complains with deprecation warning; no bueno..
-      -- telescope = require("telescope.themes").get_cursor({
-      --   layout_config = {
-      --     height = function(self, _, max_lines)
-      --       local results = #self.finder.results
-      --       return (results <= max_lines and results or max_lines - 10) + 4 -- 4 is the size of the window
-      --     end,
-      --   },
-      -- }),
+telescope = require('telescope.themes').get_cursor({
+              layout_config = {
+                -- NOTE: the limit is half the max lines because this is the cursor theme so
+                -- unless the cursor is at the top or bottom it realistically most often will
+                -- only have half the screen available
+                height = function(self, _, max_lines)
+                  local results = #self.finder.results
+                  local PADDING = 4 -- this represents the size of the telescope window
+                  local LIMIT = math.floor(max_lines / 2)
+                  return (results <= (LIMIT - PADDING) and results + PADDING or LIMIT)
+                end,
+              },
+      })
     },
   })
 end
@@ -1030,18 +1035,7 @@ do -- dirbuf.nvim
 end
 
 do -- dd.nvim
-  require("dd").setup({ timeout = 500 })
-end
-
-do -- nvim-gps
-  if false then
-    require("nvim-gps").setup({
-      languages = {
-        elixir = false,
-        eelixir = false,
-      },
-    })
-  end
+  -- require("dd").setup({ timeout = 500 })
 end
 
 do -- misc
@@ -1197,7 +1191,7 @@ do -- formatter.nvim
         return {
           exe = "mix",
           args = { "format", api.nvim_buf_get_name(0) },
-          stdin = false,
+          stdin = true,
         }
       end,
     },
