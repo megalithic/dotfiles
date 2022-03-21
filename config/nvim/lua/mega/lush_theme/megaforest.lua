@@ -177,7 +177,7 @@ return lush(function()
     Background({ bg = bg0 }),
     BackgroundLight({ bg = bg1 }),
     ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
-    VirtColumn({ fg = bg1 }), -- used for the columns set with 'colorcolumn'
+    VirtColumn({ fg = bg1 }), -- used with virt-column.nvim
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
@@ -744,12 +744,15 @@ return lush(function()
     IndentBlanklineContextChar({ fg = blue, bg = "NONE" }),
     IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
-    ---- :help orgmode.nvim -------------------------------------------
+    ---- :help hop-highlights -------------------------------------------
 
-    OrgDone({ fg = bright_green, bg = "NONE" }),
-    OrgDONE({ fg = bright_green, bg = "NONE" }),
-    OrgAgendaScheduled({ fg = green, bg = "NONE" }),
-    OrgAgendaDay({ Directory }),
+    -- vim.api.nvim_command('highlight default HopNextKey  guifg=#ff007c gui=bold ctermfg=198 cterm=bold')
+    HopNextKey({ fg = magenta, gui = "bold" }),
+    -- vim.api.nvim_command('highlight default HopNextKey1 guifg=#00dfff gui=bold ctermfg=45 cterm=bold')
+    -- vim.api.nvim_command('highlight default HopNextKey2 guifg=#2b8db3 ctermfg=33')
+    -- vim.api.nvim_command('highlight default HopUnmatched guifg=#666666 guibg="NONE" guisp=#666666 ctermfg=242')
+    HopUnmatched({ fg = bg5, guisp = bg5 }),
+    -- vim.api.nvim_command('highlight default link HopCursor Cursor')
 
     ---- :help lightspeed.nvim -------------------------------------------
 

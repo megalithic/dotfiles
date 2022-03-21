@@ -276,22 +276,22 @@ do -- specs.nvim / beacon.nvim
       },
     })
   else
-    -- vim.cmd("packadd beacon.nvim")
-    -- vim.g.beacon_size = 90
-    -- vim.g.beacon_minimal_jump = 10
-    -- -- vim.g.beacon_shrink = 0
-    -- -- vim.g.beacon_fade = 0
-    -- vim.g.beacon_ignore_filetypes = {
-    --   "fzf",
-    --   "NvimTree",
-    --   "dirbuf",
-    --   "Telescope",
-    --   "toggleterm",
-    --   "TelescopePrompt",
-    --   "NeogitStatus",
-    --   "NeogitPopup",
-    -- }
-    -- vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
+    vim.cmd("packadd beacon.nvim")
+    vim.g.beacon_size = 90
+    vim.g.beacon_minimal_jump = 10
+    -- vim.g.beacon_shrink = 0
+    -- vim.g.beacon_fade = 0
+    vim.g.beacon_ignore_filetypes = {
+      "fzf",
+      "NvimTree",
+      "dirbuf",
+      "Telescope",
+      "toggleterm",
+      "TelescopePrompt",
+      "NeogitStatus",
+      "NeogitPopup",
+    }
+    vim.g.beacon_ignore_buffers = { [[\w*git*\w]], "nofile" }
   end
 end
 
@@ -447,7 +447,7 @@ do -- nvim-autopairs
 end
 
 do -- lightspeed.nvim or hop.nvim; testing them both out
-  if true then
+  if false then
     vim.cmd("packadd lightspeed.nvim")
     require("lightspeed").setup({
       -- jump_to_first_match = true,
@@ -455,8 +455,10 @@ do -- lightspeed.nvim or hop.nvim; testing them both out
       -- This can get _really_ slow if the window has a lot of content,
       -- turn it on only if your machine can always cope with it.
       -- jump_to_unique_chars = true,
-      jump_to_unique_chars = false,
-      safe_labels = {},
+      -- jump_to_unique_chars = false,
+      -- safe_labels = {},
+      -- jump_to_unique_chars = true,
+      -- limit_ft_matches = 7,
       -- grey_out_search_area = true,
       -- match_only_the_start_of_same_char_seqs = true,
       -- limit_ft_matches = 5,
@@ -466,7 +468,29 @@ do -- lightspeed.nvim or hop.nvim; testing them both out
       -- labels = nil,
       -- cycle_group_fwd_key = nil,
       -- cycle_group_bwd_key = nil,
+      --
+      ignore_case = false,
+      exit_after_idle_msecs = { unlabeled = 1000, labeled = nil },
+      --- s/x ---
+      jump_to_unique_chars = { safety_timeout = 400 },
+      match_only_the_start_of_same_char_seqs = true,
+      force_beacons_into_match_width = false,
+      -- Display characters in a custom way in the highlighted matches.
+      substitute_chars = { ["\r"] = "¬" },
+      -- Leaving the appropriate list empty effectively disables "smart" mode,
+      -- and forces auto-jump to be on or off.
+      --safe_labels = { . . . },
+      --labels = { . . . },
+      -- These keys are captured directly by the plugin at runtime.
+      special_keys = {
+        next_match_group = "<space>",
+        prev_match_group = "<tab>",
+      },
+      --- f/t ---
+      limit_ft_matches = 4,
+      repeat_ft_with_target_char = false,
     })
+    -- autocmd ColorScheme * lua require'lightspeed'.init_highlight(true)
   else
     vim.cmd("packadd hop.nvim")
     local hop = require("hop")
