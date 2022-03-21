@@ -1025,7 +1025,7 @@ do -- headlines.nvim
       source_pattern_end = "^```$",
       dash_pattern = "^---+$",
       dash_highlight = "Dash",
-      dash_string = "-",
+      dash_string = "―",
       headline_pattern = "^#+",
       headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
       codeblock_highlight = "CodeBlock",
