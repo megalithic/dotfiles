@@ -710,7 +710,7 @@ return lush(function()
 
     CmpBorderedWindow_Normal({ Normal, bg = bg1 }),
     CmpBorderedWindow_FloatBorder({ Normal, fg = bg1, bg = bg1 }),
-    CmpBorderedWindow_CursorLine({ Visual }),
+    CmpBorderedWindow_CursorLine({ Visual, bg = bg1 }),
 
     -- nvim-dap
     -- DebugBreakpoint({ fg = cs.red }),

@@ -675,6 +675,9 @@
 --     end
 
 --     local config = {
+--library = {
+--   plugins = { 'plenary.nvim' },
+--},
 --       lspconfig = {
 --         settings = {
 --           Lua = {
