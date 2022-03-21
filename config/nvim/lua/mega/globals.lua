@@ -3,9 +3,7 @@ local fn = vim.fn
 local vcmd = vim.cmd
 local fmt = string.format
 
-_G.__mega_global_callbacks = __mega_global_callbacks or {}
 _G.mega = {
-  _store = __mega_global_callbacks,
   functions = {},
   dirs = {},
   mappings = {},
@@ -386,20 +384,6 @@ function mega.safe_require(module, opts)
   return mega.load(module, opts)
 end
 
-function mega._register(f)
-  table.insert(mega._store, f)
-  return #mega._store
-end
-
-function mega._execute(id, args)
-  local func = mega._store[id]
-  if not func then
-    mega.error("function for id doesn't exist: " .. id)
-  end
-
-  mega._store[id](args)
-end
-
 ---Create an nvim command
 ---@param name any
 ---@param rhs string|fun(args: string, fargs: table, bang: boolean)
@@ -439,7 +423,7 @@ end
 ---create a mapping function factory
 ---@param mode string
 ---@param o table
----@return fun(lhs: string, rhs: string, opts: table|nil) 'create a mapping'
+---@return fun(lhs: string, rhs: string|function, opts: table|nil) 'create a mapping'
 local function mapper(mode, o)
   -- copy the opts table as extends will mutate the opts table passed in otherwise
   local parent_opts = vim.deepcopy(o)
@@ -448,24 +432,8 @@ local function mapper(mode, o)
   ---@param rhs string|function
   ---@param opts table
   return function(lhs, rhs, opts)
-    assert(type(rhs) == "string" or type(rhs) == "function", "\"rhs\" should be a function or string")
     -- If the label is all that was passed in, set the opts automagically
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
-
-    local force = opts.force or false
-    opts.force = nil
-
-    if not force then
-      assert(not force and lhs ~= mode, fmt("The lhs should not be the same as mode for %s", lhs))
-    end
-
-    local buffer = opts.buffer
-    opts.buffer = nil
-    if type(rhs) == "function" then
-      local fn_id = mega._register(rhs)
-      rhs = fmt("<cmd>lua mega._execute(%s)<CR>", fn_id)
-    end
-
     if opts.label then
       local ok, wk = mega.safe_require("which-key", { silent = true })
       if ok then
@@ -473,21 +441,14 @@ local function mapper(mode, o)
       end
       opts.label = nil
     end
-
-    opts = vim.tbl_extend("keep", opts, parent_opts)
-    if buffer and type(buffer) == "number" then
-      opts = vim.tbl_extend("keep", opts, { buffer = buffer })
-      -- return api.nvim_buf_set_keymap(buffer, mode, lhs, rhs, opts)
-    end
-
-    vim.keymap.set(mode, lhs, rhs, opts)
+    vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("keep", opts, parent_opts))
   end
 end
 
 local map_opts = { remap = true, silent = true }
 local noremap_opts = { remap = false, silent = true }
 
-for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s" }) do
+for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   -- {
   -- n = "normal",
   -- v = "visual",
@@ -496,139 +457,16 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s" }) do
   -- i = "insert",
   -- o = "operator",
   -- t = "terminal",
+  -- c = "command",
   -- }
 
-  -- A recursive mapping
+  -- recursive global mappings
   mega[mode .. "map"] = mapper(mode, map_opts)
   _G[mode .. "map"] = mega[mode .. "map"]
-  -- A non-recursive mapping
+  -- non-recursive global mappings
   mega[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
-
--- A recursive commandline mapping
-mega.cmap = mapper("c", { remap = true, silent = false })
-_G["cmap"] = mega.cmap
--- A non-recursive commandline mapping
-mega.cnoremap = mapper("c", { remap = false, silent = false })
-_G["cnoremap"] = mega.cnoremap
-
----Factory function to create multi mode map functions
----e.g. `mega.map({"n", "s"}, lhs, rhs, opts)`
----@param target string
----@return fun(modes: string[], lhs: string, rhs: string, opts: table)
-local function multimap(target)
-  return function(modes, lhs, rhs, opts)
-    for _, m in ipairs(modes) do
-      mega[m .. target](lhs, rhs, opts)
-    end
-  end
-end
--- FIXME: these here and above might not work with dynamically gen'd *map and
--- *noremap functions:
-mega.mmap = multimap("map")
-mega.mnoremap = multimap("noremap")
-
--- my original mapper
-mega.map = function(modes, lhs, rhs, opts)
-  -- TODO: extract these to a function or a module var
-  local default_opts = { remap = true, silent = true, expr = false, nowait = false }
-
-  -- assert(lhs ~= mode, fmt("The lhs should not be the same as mode for %s", lhs))
-  assert(type(rhs) == "string" or type(rhs) == "function", "\"rhs\" should be a function or string")
-  -- If the label is all that was passed in, set the opts automagically
-  opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
-
-  -- local buffer = opts.buffer
-  -- opts.buffer = nil
-  -- local label = opts.label
-  -- opts.label = nil
-
-  -- -- this let's us pass in local lua functions without having to shove them on
-  -- -- the global first!
-  -- if type(rhs) == "function" then
-  --   local fn_id = mega._register(rhs)
-  --   if opts.expr then
-  --     rhs = ([[luaeval('mega._execute(%d)')]]):format(fn_id)
-  --   else
-  --     rhs = ("<cmd>lua mega._execute(%d)<cr>"):format(fn_id)
-  --   end
-  -- end
-
-  local buffer = opts.buffer
-  opts.buffer = nil
-  if type(rhs) == "function" then
-    local fn_id = mega._register(rhs)
-    rhs = fmt("<cmd>lua mega._execute(%s)<CR>", fn_id)
-  end
-
-  -- handle single mode being given
-  if type(modes) ~= "table" then
-    modes = { modes }
-  end
-
-  for i = 1, #modes do
-    -- auto-register which-key entry
-    if opts.label then
-      local ok, wk = mega.safe_require("which-key", { silent = true })
-      if ok then
-        wk.register({ [lhs] = opts.label }, { mode = modes[i] })
-      end
-      opts.label = nil
-    end
-
-    opts = vim.tbl_extend("keep", opts, default_opts)
-    -- auto switch between buffer mode or not
-    if buffer and type(buffer) == "number" then
-      opts = vim.tbl_extend("keep", opts, { buffer = buffer })
-    end
-
-    vim.keymap.set(modes[i], lhs, rhs, opts)
-  end
-end
-
-function mega.bmap(mode, lhs, rhs, opts)
-  opts = opts or { remap = false, silent = true, expr = false, buffer = 0 }
-  mode = mode or "n"
-
-  if mode == "n" then
-    rhs = "<cmd>" .. rhs .. "<cr>"
-  end
-
-  mega.map(mode, lhs, rhs, opts)
-end
-
--- this assumes the first buffer (0); refactor to accept a buffer
--- TODO: _deprecate_ this immediately
-function mega.bufmap(lhs, rhs, mode, expr)
-  if 0 == vim.api.nvim_get_current_buf() then
-    mega.log("`bufmap` is deprecated; please use `bmap` instead.")
-  end
-
-  local opts = { remap = false, silent = true, expr = expr, buffer = 0 }
-  mega.bmap(mode, lhs, rhs, opts)
-end
-
--- function mega.au(name, pattern, cmd)
---   -- bail out if we're using our old way of autocmds (no more `!` either)
---   if pattern == nil and cmd == nil then
---     vcmd("au " .. name)
---     return
---   end
-
---   local cmd_type = type(cmd)
---   if cmd_type == "function" then
---     -- local key = "_" .. callback_index
---     -- callback_index = callback_index + 1
---     -- _.g.autocommand_callbacks[key] = cmd
---     -- cmd = "lua _.g.autocommand_callbacks." .. key .. "()"
---     local fn_id = mega._register(cmd)
---     cmd = fmt("lua mega._execute(%s)", fn_id)
---   elseif cmd_type ~= "string" then
---     error("autocmd(): unsupported cmd type: " .. cmd_type)
---   end
---   vim.cmd("autocmd " .. name .. " " .. pattern .. " " .. cmd)
--- end
 
 -- FIXME: this needs to be better; using new autocmd api
 function mega.au(s, override)

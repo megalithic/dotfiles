@@ -123,9 +123,9 @@ M.lsp.rename = function()
   api.nvim_win_set_option(winnr, "relativenumber", false)
   api.nvim_win_set_option(winnr, "number", false)
 
-  bmap("i", "<CR>", "<cmd>lua require('mega.utils').rename_callback()<CR>")
-  bmap("i", "<esc>", "<cmd>lua require('mega.utils').cleanup_rename_callback()<cr>")
-  bmap("i", "<c-c>", "<cmd>lua require('mega.utils').cleanup_rename_callback()<cr>")
+  imap("<CR>", "<cmd>lua require('mega.utils').rename_callback()<CR>", { buffer = 0 })
+  imap("<esc>", "<cmd>lua require('mega.utils').cleanup_rename_callback()<cr>", { buffer = 0 })
+  imap("<c-c>", "<cmd>lua require('mega.utils').cleanup_rename_callback()<cr>", { buffer = 0 })
 
   vcmd("startinsert")
 end

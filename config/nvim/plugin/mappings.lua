@@ -608,8 +608,8 @@ vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawst
 nnoremap("<leader><leader>", "<C-^>")
 
 -- Keep line in middle of buffer when searching
-nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true, force = true })
-nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true, force = true })
+nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true })
+nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
 
 -- Readline bindings (command)
 local rl_bindings = {
@@ -635,12 +635,12 @@ imap("?", "?<C-g>u")
 -- It's quicker than searching or replacing. It's pure magic.
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-nnoremap("n", "'Nn'[v:searchforward]", { expr = true, force = true })
-xnoremap("n", "'Nn'[v:searchforward]", { expr = true, force = true })
-onoremap("n", "'Nn'[v:searchforward]", { expr = true, force = true })
-nnoremap("N", "'nN'[v:searchforward]", { expr = true, force = true })
-xnoremap("N", "'nN'[v:searchforward]", { expr = true, force = true })
-onoremap("N", "'nN'[v:searchforward]", { expr = true, force = true })
+nnoremap("n", "'Nn'[v:searchforward]", { expr = true })
+xnoremap("n", "'Nn'[v:searchforward]", { expr = true })
+onoremap("n", "'Nn'[v:searchforward]", { expr = true })
+nnoremap("N", "'nN'[v:searchforward]", { expr = true })
+xnoremap("N", "'nN'[v:searchforward]", { expr = true })
+onoremap("N", "'nN'[v:searchforward]", { expr = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
