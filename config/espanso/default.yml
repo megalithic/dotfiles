@@ -60,6 +60,8 @@ matches:
     replace: "👀"
   - trigger: ":facepalm:"
     replace: "🤦"
+  - trigger: ":hands:"
+    replace: "🙌🏼"
 
   # Dates
   - trigger: ":date"
