@@ -50,19 +50,19 @@ do
     select = {
       winblend = 2,
       -- FIXME: still complains with deprecation warning; no bueno..
-telescope = require('telescope.themes').get_cursor({
-              layout_config = {
-                -- NOTE: the limit is half the max lines because this is the cursor theme so
-                -- unless the cursor is at the top or bottom it realistically most often will
-                -- only have half the screen available
-                height = function(self, _, max_lines)
-                  local results = #self.finder.results
-                  local PADDING = 4 -- this represents the size of the telescope window
-                  local LIMIT = math.floor(max_lines / 2)
-                  return (results <= (LIMIT - PADDING) and results + PADDING or LIMIT)
-                end,
-              },
-      })
+      telescope = require("telescope.themes").get_cursor({
+        layout_config = {
+          -- NOTE: the limit is half the max lines because this is the cursor theme so
+          -- unless the cursor is at the top or bottom it realistically most often will
+          -- only have half the screen available
+          height = function(self, _, max_lines)
+            local results = #self.finder.results
+            local PADDING = 4 -- this represents the size of the telescope window
+            local LIMIT = math.floor(max_lines / 2)
+            return (results <= (LIMIT - PADDING) and results + PADDING or LIMIT)
+          end,
+        },
+      }),
     },
   })
 end
@@ -674,12 +674,9 @@ do -- toggleterm.nvim
     python:toggle()
   end
 
-  mega.command({
-    "Htop",
-    function()
-      htop:toggle()
-    end,
-  })
+  mega.command("Htop", function()
+    htop:toggle()
+  end)
 
   local wk = require("which-key")
   wk.register({
@@ -995,17 +992,9 @@ do -- headlines.nvim
       source_pattern_end = "^```$",
       dash_pattern = "^---+$",
       dash_highlight = "Dash",
+      dash_string = "-",
       headline_pattern = "^#+",
       headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
-      codeblock_highlight = "CodeBlock",
-    },
-    org = {
-      source_pattern_start = "#%+[bB][eE][gG][iI][nN]_[sS][rR][cC]",
-      source_pattern_end = "#%+[eE][nN][dD]_[sS][rR][cC]",
-      dash_pattern = "^-----+$",
-      dash_highlight = "Dash",
-      headline_pattern = "^%*+",
-      headline_highlights = { "Headline" },
       codeblock_highlight = "CodeBlock",
     },
     yaml = {

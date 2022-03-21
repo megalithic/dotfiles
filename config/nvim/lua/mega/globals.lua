@@ -400,25 +400,13 @@ function mega._execute(id, args)
   mega._store[id](args)
 end
 
-function mega.command(args)
-  local nargs = args.nargs or 0
-  local name = args[1]
-  local rhs = args[2]
-  local types = (args.types and type(args.types) == "table") and table.concat(args.types, " ") or ""
-
-  if type(rhs) == "function" then
-    local fn_id = mega._register(rhs)
-    rhs = fmt("lua mega._execute(%d%s)", fn_id, nargs > 0 and ", <f-args>" or "")
-  end
-  vcmd(fmt("command! -nargs=%s %s %s %s", nargs, types, name, rhs))
-end
-
-mega.comm = function(name, fun)
-  vim.cmd(fmt("command! %s %s", name, fun))
-end
-
-mega.lua_comm = function(name, fun)
-  mega.comm(name, "lua " .. fun)
+---Create an nvim command
+---@param name any
+---@param rhs string|fun(args: string, fargs: table, bang: boolean)
+---@param opts table
+function mega.command(name, rhs, opts)
+  opts = opts or {}
+  api.nvim_add_user_command(name, rhs, opts)
 end
 
 ---check if a mapping already exists
@@ -429,11 +417,6 @@ function mega.has_map(lhs, mode)
   mode = mode or "n"
   return vim.fn.maparg(lhs, mode) ~= ""
 end
-
----create a mapping function factory
----@param mode string
----@param o table
----@return fun(lhs: string, rhs: string, opts: table|nil) 'create a mapping'
 
 --[[
 ╭────────────────────────────────────────────────────────────────────────────╮
@@ -453,6 +436,10 @@ end
 ╰────────────────────────────────────────────────────────────────────────────╯
 --]]
 
+---create a mapping function factory
+---@param mode string
+---@param o table
+---@return fun(lhs: string, rhs: string, opts: table|nil) 'create a mapping'
 local function mapper(mode, o)
   -- copy the opts table as extends will mutate the opts table passed in otherwise
   local parent_opts = vim.deepcopy(o)
@@ -1005,15 +992,12 @@ do
     command! -nargs=1 Rg lua require("telescope.builtin").grep_string({ search = vim.api.nvim_eval('"<args>"') })
   ]])
 
-  command({ "Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]] })
-  command({
+  command("Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]])
+  command(
     "Duplicate",
-    [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]],
-  })
-  command({
-    "Copy",
-    [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]],
-  })
+    [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]
+  )
+  command("Copy", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
 end
 
 return mega

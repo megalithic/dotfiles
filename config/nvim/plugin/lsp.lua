@@ -25,19 +25,13 @@ local function setup_commands()
   end
   vcmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
 
-  command({
-    "LspLog",
-    function()
-      vim.cmd("vnew " .. vim.lsp.get_log_path())
-    end,
-  })
+  command("LspLog", function()
+    vim.cmd("vnew " .. vim.lsp.get_log_path())
+  end)
 
-  command({
-    "LspFormat",
-    function()
-      vim.lsp.buf.formatting_sync(nil, 2000)
-    end,
-  })
+  command("LspFormat", function()
+    vim.lsp.buf.formatting_sync(nil, 2000)
+  end)
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
