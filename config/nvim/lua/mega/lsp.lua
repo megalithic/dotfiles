@@ -82,6 +82,8 @@ local function setup_autocommands(client, bufnr)
       events = { "CursorHold" },
       buffer = bufnr,
       command = function()
+        P(string.format("in LspDiagnostics CursorHold.. %s", mega.lsp))
+
         if true and pcall(require, "mega") then
           mega.lsp.line_diagnostics()
         else
@@ -773,7 +775,7 @@ mega.lsp.servers = {
             classRegex = {
               -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
               -- [[class: "([^"]*)]],
-              -- [[class= "([^"]*)]],
+              [[class= "([^"]*)]],
               -- Configure TailwindCSS to consider all double-quote strings
               -- as class attributes so we autocomplete
               "\"([^\"]*)",
@@ -788,7 +790,6 @@ mega.lsp.servers = {
         "sass",
         "html",
         "heex",
-        "elixir",
         "javascript",
         "javascriptreact",
         "typescript",
