@@ -100,13 +100,13 @@ do -- fidget.nvim
 end
 
 do -- lsp_signature.nvim
-  if false then
+  if true then
     require("lsp_signature").setup({
       bind = true,
       fix_pos = false,
       auto_close_after = 3,
       hint_enable = false,
-      handler_opts = { border = "rounded" },
+      handler_opts = { border = mega.get_border() },
       --   hi_parameter = "QuickFixLine",
       --   handler_opts = {
       --     border = vim.g.floating_window_border,

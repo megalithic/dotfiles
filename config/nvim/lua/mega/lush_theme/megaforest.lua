@@ -193,7 +193,7 @@ return lush(function()
     DiffChange({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed line |diff.txt|
     DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
-    EndOfBuffer({ fg = bg0, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
+    EndOfBuffer({ fg = bg2, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
     TermCursor({ Cursor }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
@@ -214,14 +214,13 @@ return lush(function()
     MoreMsg({ fg = yellow, bg = "NONE", gui = "bold" }), -- |more-prompt|
     NonText({ fg = bg4, bg = "NONE" }), -- '@' at the end of the window, characters from 'showbreak' and other characters that do not really exist in the text (e.g., ">" displayed when a double-wide character doesn't fit at the end of the line). See also |hl-EndOfBuffer|.
     Normal({ fg = fg, bg = "NONE" }), -- normal text
-    NormalFloat({ fg = fg, bg = bg2 }), -- Normal text in floating windows.
-    GreyFloat({ bg = grey1 }),
-    GreyFloatBorder({ fg = grey1 }),
     -- NormalNC     { }, -- normal text in non-current windows
     Pmenu({ fg = fg, bg = bg2 }), -- Popup menu: normal item.
     PmenuSel({ fg = green, bg = bg3 }), -- Popup menu: selected item.
     PmenuSbar({ fg = "NONE", bg = bg2 }), -- Popup menu: scrollbar.
     PmenuThumb({ fg = "NONE", bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
+    NormalFloat({ Pmenu }), -- Normal text in floating windows.
+    FloatBorder({ Pmenu }),
     Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
     QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
     SpecialKey({ fg = bg3, bg = "NONE" }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
@@ -379,10 +378,11 @@ return lush(function()
     DiagnosticSignInfoLine({ fg = blue, gui = "underline", guisp = blue }),
     DiagnosticSignHintLine({ fg = aqua, gui = "underline", guisp = aqua }),
 
-    DiagnosticError({ Red }),
-    DiagnosticWarn({ Orange }),
-    DiagnosticInfo({ Blue }),
-    DiagnosticHint({ Aqua }),
+    -- DiagnosticSource({ fg = bg2, bg = bg1 }),
+    DiagnosticError({ Red, bg = bg2 }),
+    DiagnosticWarn({ Orange, bg = bg2 }),
+    DiagnosticInfo({ Blue, bg = bg2 }),
+    DiagnosticHint({ Aqua, bg = bg2 }),
 
     DiagnosticErrorBorder({ Red }),
     DiagnosticWarnBorder({ Orange }),
@@ -416,13 +416,13 @@ return lush(function()
     Headline4({ markdownH4 }),
     Headline5({ markdownH5 }),
     Headline6({ markdownH6 }),
-    CodeBlock({ bg = bg1 }),
     markdownUrl({ fg = blue, bg = "NONE", gui = "underline" }),
     markdownItalic({ fg = grey1, bg = "NONE", gui = "italic" }),
     markdownBold({ fg = grey2, bg = "NONE", gui = "bold" }),
     markdownDash({ fg = bg2, gui = "bold" }),
     Dash({ markdownDash }),
     markdownItalicDelimiter({ fg = grey1, bg = "NONE", gui = "italic" }),
+    CodeBlock({ bg = bg1 }),
     markdownCode({ Green }),
     markdownCodeBlock({ Aqua }),
     markdownCodeDelimiter({ Aqua }),

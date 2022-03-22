@@ -59,7 +59,7 @@ local PKGS = {
 
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  -- "ray-x/lsp_signature.nvim",
+  "ray-x/lsp_signature.nvim",
   "j-hui/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",

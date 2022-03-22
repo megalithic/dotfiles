@@ -9,7 +9,11 @@ _G.mega = {
   mappings = {},
   lsp = {},
   icons = {
-    borderchars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+    border = {
+      rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+      squared = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
+      blank = { " ", " ", " ", " ", " ", " ", " ", " " },
+    },
     lsp = {
       error = "",
       warn = "", -- 喝卑
@@ -732,9 +736,10 @@ end
 
 function mega.get_border(hl)
   local border = {}
-  for _, char in ipairs(mega.icons.borderchars) do
+  for _, char in ipairs(mega.icons.border.squared) do
     table.insert(border, { char, hl or "FloatBorder" })
   end
+
   return border
 end
 
@@ -875,7 +880,9 @@ do
     [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]
   )
   command("Copy", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
-  command("Flash", function() mega.flash_cursorline() end)
+  command("Flash", function()
+    mega.flash_cursorline()
+  end)
 end
 
 return mega

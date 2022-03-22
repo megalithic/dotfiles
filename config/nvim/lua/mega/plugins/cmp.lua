@@ -126,12 +126,15 @@ local function setup_cmp()
     },
     -- window = {
     --   completion = {
-    --     border = "",
+    -- border = mega.get_border(),
     --   },
     --   documentation = {
-    --     border = "rounded",
+    -- border = mega.get_border(),
     --   },
     -- },
+    documentation = {
+      border = mega.get_border(),
+    },
     mapping = {
       ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
       ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
@@ -145,7 +148,7 @@ local function setup_cmp()
     sources = cmp.config.sources({
       { name = "luasnip" },
       { name = "nvim_lsp" },
-      { name = "nvim_lsp_signature_help" },
+      -- { name = "nvim_lsp_signature_help" },
       { name = "path" },
       { name = "emmet_ls" },
     }, {
@@ -165,7 +168,7 @@ local function setup_cmp()
             luasnip = "[lsnip]",
             nvim_lua = "[lua]",
             nvim_lsp = "[lsp]",
-            nvim_lsp_signature_help = "[sig]",
+            -- nvim_lsp_signature_help = "[sig]",
             orgmode = "[org]",
             path = "[path]",
             buffer = "[buf]",

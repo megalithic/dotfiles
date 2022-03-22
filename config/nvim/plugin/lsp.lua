@@ -166,7 +166,7 @@ local function setup_mappings(client, bufnr)
     function()
       diagnostic.goto_prev({
         float = {
-          border = "rounded",
+          border = mega.get_border(),
           focusable = false,
           source = "always",
         },
@@ -178,7 +178,7 @@ local function setup_mappings(client, bufnr)
     function()
       diagnostic.goto_next({
         float = {
-          border = "rounded",
+          border = mega.get_border(),
           focusable = false,
           source = "always",
         },
@@ -191,7 +191,7 @@ local function setup_mappings(client, bufnr)
     function()
       diagnostic.goto_next({
         float = {
-          border = "rounded",
+          border = mega.get_border(),
           focusable = false,
           source = "always",
           severity = vim.diagnostic.severity.ERROR,
@@ -204,7 +204,7 @@ local function setup_mappings(client, bufnr)
     function()
       diagnostic.goto_next({
         float = {
-          border = "rounded",
+          border = mega.get_border(),
           focusable = false,
           source = "always",
           severity = vim.diagnostic.severity.ERROR,
@@ -410,10 +410,52 @@ local function setup_diagnostics()
       border = mega.get_border(border_color),
     })
 
+    augroup("DiagnosticPopup", {
+      events = { "FileType" },
+      targets = { "diagnosticpopup" },
+      command = function()
+        P("diagnosticpopup things")
+        local highlights = {
+          "NormalFloat:BackgroundLight",
+          "FloatBorder:BackgroundLight",
+          "Normal:BackgroundLight",
+          "EndOfBuffer:BackgroundLight",
+          "VertSplit:BackgroundLight",
+          "StatusLine:BackgroundLight",
+          "StatusLineNC:BackgroundLight",
+          "SignColumn:BackgroundLight",
+        }
+        vim.cmd("setlocal winhighlight=" .. table.concat(highlights, ","))
+      end,
+    })
+
     mega.lsp.close_preview_autocmd(
       { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "BufWritePost", "InsertCharPre" },
       winnr
     )
+  end
+
+  -- REF: https://github.com/nvim-lua/kickstart.nvim/pull/26/commits/c3dd3bdc3d973ef9421aac838b9807496b7ba573
+  function mega.lsp.print_diagnostics(opts, bufnr, line_nr, client_id)
+    opts = opts or {}
+
+    bufnr = bufnr or 0
+    line_nr = line_nr or (vim.api.nvim_win_get_cursor(0)[1] - 1)
+
+    local line_diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr, line_nr, opts, client_id)
+    if vim.tbl_isempty(line_diagnostics) then
+      return
+    end
+
+    local diagnostic_message = ""
+    for i, diag in ipairs(line_diagnostics) do
+      diagnostic_message = diagnostic_message .. string.format("%d: %s", i, diag.message or "")
+      if i ~= #line_diagnostics then
+        diagnostic_message = diagnostic_message .. "\n"
+      end
+    end
+    --print only shows a single line, echo blocks requiring enter, pick your poison
+    print(diagnostic_message)
   end
 
   -- Monkey-patch vim.diagnostic.open_float() with our own impl..
@@ -1042,7 +1084,7 @@ for server, _ in pairs(mega.lsp.servers) do
 
   local config = mega.lsp.get_server_config(server)
   lspconfig[server].setup(config)
-  -- require("mega.plugins.zk")(config)
+  require("mega.plugins.zk")(config)
 end
 
 require("mega.lsp.null_ls")(mega.lsp.on_attach)
