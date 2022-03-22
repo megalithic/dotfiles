@@ -808,7 +808,7 @@ return lush(function()
     StError({ fg = pale_red, bg = bg1 }),
     StWarn({ fg = orange, bg = bg1 }),
     StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
-    StHint({ fg = bright_yellow, bg = bg1 }),
+    StHint({ fg = bg5, bg = bg1 }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
 

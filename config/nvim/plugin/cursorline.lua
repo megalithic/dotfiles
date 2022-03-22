@@ -1,52 +1,57 @@
 -- Inspiration
 -- 1. nvim-cursorline
 
-vim.g.cursorline_filetype_exclusions = {
-  "alpha",
-  "prompt",
-  "fzf",
-  "netrw",
-  "undotree",
-  "log",
-  "man",
-  "dap-repl",
-  "markdown",
-  "vimwiki",
-  "vim-plug",
-  "gitcommit",
-  "toggleterm",
-  "fugitive",
-  "list",
-  "NvimTree",
-  "startify",
-  "help",
-  "orgagenda",
-  "dirbuf",
-  "org",
-  "Trouble",
-  "Telescope",
-  "TelescopePrompt",
-  "fzf",
-  "NvimTree",
-  "markdown",
-  "dashboard",
-  "qf",
+local M = {
+  cursorline_delay = 250,
+  blink_delay = 400,
+  filetype_exclusions = {
+    "alpha",
+    "prompt",
+    "fzf",
+    "netrw",
+    "undotree",
+    "log",
+    "man",
+    "dap-repl",
+    "markdown",
+    "vimwiki",
+    "vim-plug",
+    "gitcommit",
+    "toggleterm",
+    "fugitive",
+    "list",
+    "NvimTree",
+    "startify",
+    "help",
+    "orgagenda",
+    "dirbuf",
+    "org",
+    "Trouble",
+    "Telescope",
+    "TelescopePrompt",
+    "fzf",
+    "NvimTree",
+    "markdown",
+    "dashboard",
+    "qf",
+  },
+  buftype_exclusions = {
+    "acwrite",
+    "quickfix",
+    "terminal",
+    "nofile",
+    "help",
+    ".git/COMMIT_EDITMSG",
+    "startify",
+    "prompt",
+  },
+  orig_cursorlineopts = {},
 }
 
-vim.g.cursorline_buftype_exclusions = {
-  "acwrite",
-  "quickfix",
-  "terminal",
-  "nofile",
-  "help",
-  ".git/COMMIT_EDITMSG",
-  "startify",
-  "prompt",
-}
-local cursorline_timeout = 250
 local DISABLED = 0
 local CURSOR = 1
 local WINDOW = 2
+
 local status = CURSOR
 
 local timer = vim.loop.new_timer()
@@ -58,8 +63,8 @@ end
 ---Determines whether or not a buffer/window should be ignored by this plugin
 ---@return boolean
 local function is_ignored()
-  return vim.tbl_contains(vim.g.cursorline_buftype_exclusions, vim.bo.buftype)
-    or vim.tbl_contains(vim.g.cursorline_filetype_exclusions, vim.bo.filetype)
+  return vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
+    or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
   --   or vim.wo.previewwindow
   --   or vim.wo.winhighlight == ""
@@ -71,8 +76,7 @@ local normal_bg = mega.colors().Background.bg.hex
 local cursorline_bg = mega.colors().CursorLine.bg.hex
 
 local function highlight_blinking_cursorline()
-  vim.cmd("highlight! CursorLine guibg=" .. mega.colors().Megaforest.lush.orange)
-  vim.cmd("highlight! CursorLineNr guibg=" .. mega.colors().Megaforest.lush.orange)
+  vim.cmd("highlight! CursorLine guibg=" .. mega.colors().Megaforest.lush.orange.hex)
   -- vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
 end
 
@@ -88,7 +92,7 @@ end
 
 local function timer_start()
   timer:start(
-    cursorline_timeout,
+    M.cursorline_delay,
     0,
     vim.schedule_wrap(function()
       highlight_cursorline()
@@ -103,19 +107,21 @@ local function cursor_moved()
     return
   end
 
+  vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
   if not is_ignored() then
     timer_start()
   end
 
-  if status == CURSOR and cursorline_timeout ~= 0 then
+  if status == CURSOR and M.cursorline_delay ~= 0 then
     unhighlight_cursorline()
     status = DISABLED
   end
 end
 
-local function set_cursorline()
+local function set_cursorline(cursorlineopts)
   if not is_ignored() then
-    vim.opt_local.cursorline = true
+    vim.opt.cursorline = true
+    -- vim.opt.cursorlineopt = table.concat(cursorlineopts, ",")
     highlight_cursorline()
   end
 end
@@ -127,11 +133,13 @@ local function blink_cursorline()
   local blink_timer = vim.loop.new_timer()
   vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
   highlight_blinking_cursorline()
+
   blink_timer:start(
-    cursorline_timeout * 2,
+    M.blink_delay,
     0,
     vim.schedule_wrap(function()
       unhighlight_cursorline()
+      set_cursorline(M.orig_cursorlineopts)
       vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
       blink_timer:stop()
       blink_timer:close()
@@ -140,27 +148,30 @@ local function blink_cursorline()
 end
 
 local function disable_cursorline()
-  vim.opt_local.cursorline = false
+  vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
+  vim.opt.cursorline = false
   status = WINDOW
 end
 
 local function enable_cursorline()
+  -- M.orig_cursorlineopts = vim.opt.cursorlineopt:get()
+  vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
   blink_cursorline()
-  set_cursorline()
+  set_cursorline(M.orig_cursorlineopts)
   highlight_cursorline()
   status = WINDOW
 end
 
 mega.augroup("ToggleCursorLine", {
   {
-    events = { "BufEnter" },
+    events = { "BufEnter", "WinEnter" },
     targets = { "*" },
     command = function()
       enable_cursorline()
     end,
   },
   {
-    events = { "BufLeave" },
+    events = { "BufLeave", "WinLeave" },
     targets = { "*" },
     command = function()
       disable_cursorline()
@@ -174,3 +185,4 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
 })
+blink_cursorline()

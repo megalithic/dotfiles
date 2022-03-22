@@ -58,6 +58,5 @@ end
 
 R("mega.globals")
 R("mega.options")
-R("mega.lsp")
 R("mega.megaline")
 R("mega.plugins.config")
