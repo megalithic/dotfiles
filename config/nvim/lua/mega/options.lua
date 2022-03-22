@@ -269,12 +269,13 @@ vim.opt.guicursor = {
   [[sm:block-blinkwait175-blinkoff150-blinkon175]],
 }
 
+-- NOTE: plugin/cursorline.lua has more...
 vim.opt.cursorline = true -- Show a line where the current cursor is
 vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
 -----------------------------------------------------------------------------//
 -- Title {{{1
 -----------------------------------------------------------------------------//
-vim.opt.titlestring = require("mega.utils").ext.title_string() or " ❐ %t %m"
+vim.opt.titlestring = require("mega.utils").ext.title_string() or " ❐ %{fnamemodify(getcwd(), \":t\")} %m"
 vim.opt.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
 vim.opt.title = true
 vim.opt.titlelen = 70

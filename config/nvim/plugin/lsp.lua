@@ -1045,4 +1045,4 @@ for server, _ in pairs(mega.lsp.servers) do
   -- require("mega.plugins.zk")(config)
 end
 
-require("mega.lsp.null-ls")(mega.lsp.on_attach)
+require("mega.lsp.null_ls")(mega.lsp.on_attach)
