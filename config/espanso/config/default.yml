@@ -2,4 +2,4 @@
 # Original file: default.yml
 
 secure_input_notification: false
-backend: Clipboard
+# backend: Inject # Clipboard, Auto

@@ -1,0 +1,3 @@
+matches:
+  - trigger: ":backaway:"
+    image_path: "$HOME/.dotfiles/config/espanso/gifs/backaway.gif"
