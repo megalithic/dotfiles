@@ -23,8 +23,6 @@ local PKGS = {
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  -- { "xiyaowong/specs.nvim", branch = "feat/show-on-win-enter" },
-  -- { "danilamihailov/beacon.nvim", opt = true },
   "karb94/neoscroll.nvim",
   "lukas-reineke/indent-blankline.nvim",
   -- { "lukas-reineke/virt-column.nvim" },
@@ -61,7 +59,7 @@ local PKGS = {
 
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  "ray-x/lsp_signature.nvim",
+  -- "ray-x/lsp_signature.nvim",
   "j-hui/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",

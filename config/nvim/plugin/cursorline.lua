@@ -50,7 +50,6 @@ local WINDOW = 2
 local status = CURSOR
 
 local timer = vim.loop.new_timer()
-local blink_timer = vim.loop.new_timer()
 
 local function is_floating_win()
   return vim.fn.win_gettype() == "popup"
@@ -70,7 +69,12 @@ end
 
 local normal_bg = mega.colors().Background.bg.hex
 local cursorline_bg = mega.colors().CursorLine.bg.hex
--- local cursorline_bg = mega.colors().Megaforest.lush.orange.hex
+
+local function highlight_blinking_cursorline()
+  vim.cmd("highlight! CursorLine guibg=" .. mega.colors().Megaforest.lush.orange)
+  vim.cmd("highlight! CursorLineNr guibg=" .. mega.colors().Megaforest.lush.orange)
+  -- vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
+end
 
 local function highlight_cursorline()
   vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
@@ -87,7 +91,6 @@ local function timer_start()
     cursorline_timeout,
     0,
     vim.schedule_wrap(function()
-      -- enable cursorline
       highlight_cursorline()
       status = CURSOR
     end)
@@ -105,7 +108,6 @@ local function cursor_moved()
   end
 
   if status == CURSOR and cursorline_timeout ~= 0 then
-    -- disable cursorline
     unhighlight_cursorline()
     status = DISABLED
   end
@@ -118,36 +120,21 @@ local function set_cursorline()
   end
 end
 
--- REF: https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
+-- REF:
+-- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
+-- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
 local function blink_cursorline()
-  local i = 0
+  local blink_timer = vim.loop.new_timer()
   vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
-  highlight_cursorline()
+  highlight_blinking_cursorline()
   blink_timer:start(
     cursorline_timeout * 2,
-    500,
+    0,
     vim.schedule_wrap(function()
       unhighlight_cursorline()
-      print("timer invoked! i=" .. tostring(i))
       vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
-      if i >= 1 then
-        blink_timer:close() -- Always close handles to avoid leaks.
-      end
-
-      -- -- Create a timer handle (implementation detail: uv_timer_t).
-      -- local timer = vim.loop.new_timer()
-      -- local i = 0
-      -- -- Waits 1000ms, then repeats every 750ms until timer:close().
-      -- timer:start(1000, 750, function()
-      --   print('timer invoked! i='..tostring(i))
-      --   if i > 4 then
-      --     timer:close()  -- Always close handles to avoid leaks.
-      --   end
-      --   i = i + 1
-      -- end)
-      -- print('sleeping');
-      i = i + 1
-      -- highlight_cursorline()
+      blink_timer:stop()
+      blink_timer:close()
     end)
   )
 end
@@ -158,26 +145,25 @@ local function disable_cursorline()
 end
 
 local function enable_cursorline()
-  -- disable_cursorline()
-  -- blink_cursorline()
+  blink_cursorline()
   set_cursorline()
+  highlight_cursorline()
   status = WINDOW
 end
 
 mega.augroup("ToggleCursorLine", {
   {
-    events = { "BufEnter", "WinEnter" },
+    events = { "BufEnter" },
     targets = { "*" },
     command = function()
       enable_cursorline()
     end,
   },
   {
-    events = { "BufLeave", "WinLeave" },
+    events = { "BufLeave" },
     targets = { "*" },
     command = function()
       disable_cursorline()
-      -- blink_timer:close() -- Always close handles to avoid leaks.
     end,
   },
   {
@@ -188,5 +174,3 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
 })
-
--- blink_cursorline()
