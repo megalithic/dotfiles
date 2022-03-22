@@ -1,6 +1,9 @@
+print("loading null_ls")
+
 local nls = require("null-ls")
 local b = nls.builtins
 return function(on_attach)
+  print("setting up null_ls with custom on_attach")
   nls.setup({
     debug = false,
     debounce = 150,

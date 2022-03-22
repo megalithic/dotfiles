@@ -61,5 +61,6 @@ return function()
   local configs_pattern = [[\%(]] .. table.concat(buf_client_names, [[\|]]) .. [[\)]]
   vim.cmd([[syntax match Title /\%(Client\):.*\zs]] .. configs_pattern .. "/")
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<esc>", "<cmd>bd<CR>", { noremap = true })
-  vim.lsp.util.close_preview_autocmd({ "BufHidden", "BufLeave" }, win_id)
+  -- vim.lsp.util.close_preview_autocmd({ "BufHidden", "BufLeave" }, win_id)
+  mega.lsp.close_preview_autocmd({ "BufHidden", "BufLeave" }, win_id)
 end

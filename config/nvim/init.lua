@@ -1,3 +1,4 @@
+print("loading nvim/init.lua")
 --[[ lua runtime ] -------------------------------------------------------------
 
    REF: https://github.com/neovim/neovim/pull/14686#issue-907487329

@@ -1,3 +1,5 @@
+print("loading nvim/plugin/lsp.lua")
+
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
@@ -577,6 +579,7 @@ end
 -- [ ON_ATTACH ] ---------------------------------------------------------------
 
 function mega.lsp.on_attach(client, bufnr)
+  print("in mega.lsp.on_attach -- " .. client.name)
   if not client then
     -- vim.notify("No LSP client found; aborting on_attach.")
     return
