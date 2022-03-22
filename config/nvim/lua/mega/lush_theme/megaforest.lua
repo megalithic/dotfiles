@@ -176,6 +176,7 @@ return lush(function()
 
     Background({ bg = bg0 }),
     BackgroundLight({ bg = bg1 }),
+    BackgroundExtraLight({ bg = bg2 }),
     ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
     VirtColumn({ fg = bg1 }), -- used with virt-column.nvim
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')

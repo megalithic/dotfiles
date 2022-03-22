@@ -1,5 +1,3 @@
-print("loading nvim/lua/mega/globals.lua")
-
 local api = vim.api
 local fn = vim.fn
 local vcmd = vim.cmd

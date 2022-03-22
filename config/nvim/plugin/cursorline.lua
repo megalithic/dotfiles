@@ -53,6 +53,7 @@ local CURSOR = 1
 local WINDOW = 2
 
 local status = CURSOR
+local blink_active = true
 
 local timer = vim.loop.new_timer()
 
@@ -75,13 +76,12 @@ end
 local normal_bg = mega.colors().Background.bg.hex
 local cursorline_bg = mega.colors().CursorLine.bg.hex
 
-local function highlight_blinking_cursorline()
-  vim.cmd("highlight! CursorLine guibg=" .. mega.colors().Megaforest.lush.orange.hex)
-  -- vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
-end
-
 local function highlight_cursorline()
-  vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
+  if blink_active then
+    vim.cmd("highlight! CursorLine guibg=" .. mega.colors().Megaforest.lush.bg_blue.hex)
+  else
+    vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
+  end
   vim.cmd("highlight! CursorLineNr guibg=" .. cursorline_bg)
 end
 
@@ -118,7 +118,7 @@ local function cursor_moved()
   end
 end
 
-local function set_cursorline(cursorlineopts)
+local function set_cursorline()
   if not is_ignored() then
     vim.opt.cursorline = true
     -- vim.opt.cursorlineopt = table.concat(cursorlineopts, ",")
@@ -131,18 +131,20 @@ end
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
 local function blink_cursorline()
   local blink_timer = vim.loop.new_timer()
+  blink_active = true
   vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
-  highlight_blinking_cursorline()
+  highlight_cursorline()
 
   blink_timer:start(
     M.blink_delay,
     0,
     vim.schedule_wrap(function()
       unhighlight_cursorline()
-      set_cursorline(M.orig_cursorlineopts)
+      set_cursorline()
       vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
       blink_timer:stop()
       blink_timer:close()
+      blink_active = false
     end)
   )
 end
@@ -151,28 +153,27 @@ local function disable_cursorline()
   vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
   vim.opt.cursorline = false
   status = WINDOW
+  blink_active = false
 end
 
 local function enable_cursorline()
   -- M.orig_cursorlineopts = vim.opt.cursorlineopt:get()
   vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
   blink_cursorline()
-  set_cursorline(M.orig_cursorlineopts)
+  set_cursorline()
   highlight_cursorline()
   status = WINDOW
 end
 
 mega.augroup("ToggleCursorLine", {
   {
-    events = { "BufEnter", "WinEnter" },
-    targets = { "*" },
+    events = { "BufEnter" },
     command = function()
       enable_cursorline()
     end,
   },
   {
     events = { "BufLeave", "WinLeave" },
-    targets = { "*" },
     command = function()
       disable_cursorline()
     end,
@@ -185,4 +186,3 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
 })
-blink_cursorline()

@@ -1,5 +1,3 @@
-print("loading nvim/plugin/lsp.lua")
-
 local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
@@ -366,7 +364,17 @@ local function setup_diagnostics()
   mega.lsp.line_diagnostics = function()
     local width = 70
     local bufnr, lnum = unpack(fn.getcurpos())
-    local diagnostics = lsp.diagnostic.get_line_diagnostics(bufnr, lnum - 1, {})
+    -- local diagnostics = lsp.diagnostic.get_line_diagnostics(bufnr, lnum - 1, {})
+
+    local diagnostics = vim.diagnostic.get(bufnr, { lnum = lnum - 1 })
+    -- Find the "worst" diagnostic per line
+    -- local max_severity_per_line = {}
+    -- for _, d in pairs(diagnostics) do
+    --   local m = max_severity_per_line[d.lnum]
+    --   if not m or d.severity < m.severity then
+    --     max_severity_per_line[d.lnum] = d
+    --   end
+    -- end
     if vim.tbl_isempty(diagnostics) then
       return
     end
@@ -412,24 +420,35 @@ local function setup_diagnostics()
       border = mega.get_border(border_color),
     })
 
-    augroup("DiagnosticPopup", {
-      events = { "FileType" },
-      targets = { "diagnosticpopup" },
-      command = function()
-        P("diagnosticpopup things")
-        local highlights = {
-          "NormalFloat:BackgroundLight",
-          "FloatBorder:BackgroundLight",
-          "Normal:BackgroundLight",
-          "EndOfBuffer:BackgroundLight",
-          "VertSplit:BackgroundLight",
-          "StatusLine:BackgroundLight",
-          "StatusLineNC:BackgroundLight",
-          "SignColumn:BackgroundLight",
-        }
-        vim.cmd("setlocal winhighlight=" .. table.concat(highlights, ","))
-      end,
-    })
+    local highlights = {
+      "NormalFloat:BackgroundExtraLight",
+      "FloatBorder:BackgroundExtraLight",
+      "Normal:BackgroundExtraLight",
+      "EndOfBuffer:BackgroundExtraLight",
+      "VertSplit:BackgroundExtraLight",
+      "StatusLine:BackgroundExtraLight",
+      "StatusLineNC:BackgroundExtraLight",
+      "SignColumn:BackgroundExtraLight",
+    }
+    -- augroup("DiagnosticPopup", {
+    --   events = { "FileType" },
+    --   targets = { "diagnosticpopup" },
+    --   command = function()
+    --     P("diagnosticpopup things")
+    --     local highlights = {
+    --       "NormalFloat:BackgroundExtraLight",
+    --       "FloatBorder:BackgroundExtraLight",
+    --       "Normal:BackgroundExtraLight",
+    --       "EndOfBuffer:BackgroundExtraLight",
+    --       "VertSplit:BackgroundExtraLight",
+    --       "StatusLine:BackgroundExtraLight",
+    --       "StatusLineNC:BackgroundExtraLight",
+    --       "SignColumn:BackgroundExtraLight",
+    --     }
+    --     vim.cmd("setlocal winhighlight=" .. table.concat(highlights, ","))
+    --   end,
+    -- })
+    vim.api.nvim_win_set_option(winnr, "winhl", table.concat(highlights, ","))
 
     mega.lsp.close_preview_autocmd(
       { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "BufWritePost", "InsertCharPre" },
@@ -579,9 +598,8 @@ end
 -- [ ON_ATTACH ] ---------------------------------------------------------------
 
 function mega.lsp.on_attach(client, bufnr)
-  print("in mega.lsp.on_attach -- " .. client.name)
   if not client then
-    -- vim.notify("No LSP client found; aborting on_attach.")
+    vim.notify("No LSP client found; aborting on_attach.")
     return
   end
 
@@ -929,7 +947,7 @@ mega.lsp.servers = {
           suggestSpecs = true,
         },
       },
-      filetypes = { "elixir", "eelixir" },
+      filetypes = { "elixir", "eelixir", "heex" },
       root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
     }
   end,
