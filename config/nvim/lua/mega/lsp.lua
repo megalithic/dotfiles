@@ -778,7 +778,7 @@ mega.lsp.servers = {
               [[class= "([^"]*)]],
               -- Configure TailwindCSS to consider all double-quote strings
               -- as class attributes so we autocomplete
-              "\"([^\"]*)",
+              -- "\"([^\"]*)",
             },
           },
           validate = true,
