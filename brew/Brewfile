@@ -20,7 +20,7 @@ tap "heroku/brew" if OS.mac?
 tap "microsoft/git"
 tap "isacikgoz/taps"
 tap "olets/tap"
-tap "federico-terzi/espanso" if OS.mac?
+tap "espanso/espanso"
 tap "mhanberg/zk" if OS.mac?
 
 # -- for qmk_toolbox --
@@ -70,7 +70,7 @@ brew "docker-credential-helper-ecr"
 brew "docker-machine" # , restart_service: true, link: false
 brew "duck"
 # brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
-brew "espanso" if OS.mac?
+brew "espanso"
 brew "exa"
 brew "exercism" if OS.mac?
 brew "fasd"
