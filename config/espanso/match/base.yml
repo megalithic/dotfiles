@@ -6,8 +6,6 @@ matches:
     replace: René
   - trigger: Zoe
     replace: Zoë
-  - trigger: ":rene"
-    replace: René
   - trigger: ":zoom:"
     replace: "https://us02web.zoom.us/j/2264962052?pwd=ZHB1bCszbTliMVl4OWtzYkpYQjE5Zz09"
   - trigger: ":tm:"
@@ -56,14 +54,14 @@ matches:
     replace: 🤦
   - trigger: ":hands:"
     replace: 🙌🏼
-  - trigger: ":date"
+  - trigger: ":date:"
     replace: "{{mydate}}"
     vars:
       - name: mydate
         type: date
         params:
           format: "%m/%d/%Y"
-  - trigger: ":shell"
+  - trigger: ":shell:"
     replace: "{{output}}"
     vars:
       - name: output
