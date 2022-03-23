@@ -82,7 +82,7 @@ local function setup_autocommands(client, bufnr)
       events = { "CursorHold" },
       buffer = bufnr,
       command = function()
-        if true then
+        if false then
           mega.lsp.line_diagnostics()
         else
           diagnostic.open_float(nil, {
@@ -364,17 +364,7 @@ local function setup_diagnostics()
   mega.lsp.line_diagnostics = function()
     local width = 70
     local bufnr, lnum = unpack(fn.getcurpos())
-    -- local diagnostics = lsp.diagnostic.get_line_diagnostics(bufnr, lnum - 1, {})
-
     local diagnostics = vim.diagnostic.get(bufnr, { lnum = lnum - 1 })
-    -- Find the "worst" diagnostic per line
-    -- local max_severity_per_line = {}
-    -- for _, d in pairs(diagnostics) do
-    --   local m = max_severity_per_line[d.lnum]
-    --   if not m or d.severity < m.severity then
-    --     max_severity_per_line[d.lnum] = d
-    --   end
-    -- end
     if vim.tbl_isempty(diagnostics) then
       return
     end
@@ -449,6 +439,7 @@ local function setup_diagnostics()
     --   end,
     -- })
     vim.api.nvim_win_set_option(winnr, "winhl", table.concat(highlights, ","))
+    vim.api.nvim_win_set_option(winnr, "winblend", 0)
 
     mega.lsp.close_preview_autocmd(
       { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "BufWritePost", "InsertCharPre" },

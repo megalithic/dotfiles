@@ -26,7 +26,7 @@
 local set = vim.g
 
 local lush = require("lush")
-local hsluv = lush.hsl
+local hsluv = lush.hsluv
 
 -- local palette = require("mega.colors")
 -- local C = palette.cs
@@ -823,8 +823,8 @@ return lush(function()
 
     ---- :help telescope -------------------------------------------------------
 
-    TelescopeNormal({ bg = bg2.darken(20) }),
-    TelescopeBorder({ fg = bg0, bg = bg2.darken(20) }),
+    TelescopeNormal({ bg = bg3.darken(25) }),
+    TelescopeBorder({ fg = bg0, bg = bg3.darken(25) }),
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
 
