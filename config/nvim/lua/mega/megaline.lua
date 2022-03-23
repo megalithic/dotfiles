@@ -381,14 +381,16 @@ function U.highlight_ft_icon(hl, bg_hl)
   -- TODO: find a mechanism to cache this so it isn't repeated constantly
   local fg_color = nil
   local bg_color = nil
-  -- local fg_color = H.get_hl(hl, "fg")
-  -- local bg_color = H.get_hl(bg_hl, "bg")
+  fg_color = H.get_hl(hl, "foreground")
+  bg_color = H.get_hl(bg_hl, "background")
+
   if bg_color and fg_color then
-    local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
+    local cmd = { "highlight! ", name, " guibg=", bg_color, " guifg=", fg_color }
     local str = table.concat(cmd)
-    mega.augroup(name, { { events = { "ColorScheme" }, targets = { "*" }, command = str } })
+    mega.augroup(name, { events = "ColorScheme", command = str })
     vim.cmd(fmt("silent execute '%s'", str))
   end
+
   return name
 end
 
@@ -404,13 +406,16 @@ function U.filetype(ctx, opts)
   if bt_exception then
     return bt_exception, opts.default
   end
-  local icon, hl
-  local extension = fnamemodify(ctx.bufname, ":e")
+  local icon, icon_hl, hl
+  local f_name, f_extension = vim.fn.expand("%:t") or ctx.bufname, vim.fn.expand("%:e")
+  f_extension = f_extension ~= "" and f_extension or vim.bo.filetype
+
   local icons_loaded, devicons = mega.safe_require("nvim-web-devicons")
   if icons_loaded then
-    icon, hl = devicons.get_icon(ctx.bufname, extension, { default = true })
-    hl = U.highlight_ft_icon(hl, opts.icon_bg)
+    icon, icon_hl = devicons.get_icon(f_name, f_extension, { default = true })
+    hl = U.highlight_ft_icon(icon_hl, opts.icon_bg)
   end
+
   return icon, hl
 end
 
@@ -492,18 +497,17 @@ function U.get_filesize()
   end
 end
 
-function U.get_filetype_icon()
-  -- Have this `require()` here to not depend on plugin initialization order
-  local has_devicons, devicons = pcall(require, "nvim-web-devicons")
-  if not has_devicons then
-    return ""
-  end
+-- function U.get_filetype_icon()
+--   -- Have this `require()` here to not depend on plugin initialization order
+--   local has_devicons, devicons = pcall(require, "nvim-web-devicons")
+--   if not has_devicons then
+--     return ""
+--   end
 
-  local file_name, file_ext = vim.fn.expand("%:t"), vim.fn.expand("%:e")
-  return devicons.get_icon(file_name, file_ext, { default = true })
-end
+--   local file_name, file_ext = vim.fn.expand("%:t"), vim.fn.expand("%:e")
+--   return devicons.get_icon(file_name, file_ext, { default = true })
+-- end
 
-U.get_diagnostic_count = nil
 U.get_diagnostic_count = function(id)
   return #vim.diagnostic.get(0, { severity = id })
 end
@@ -536,11 +540,11 @@ M.modes = setmetatable({
   ['r']    = { long = 'Prompt',   short = 'P',   hl = 'StModeOther' },
   ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'StModeOther' },
   ['t']    = { long = 'Terminal', short = 'T',   hl = 'StModeOther' },
-  ['nt']    = { long = 'N-Terminal', short = 'T',   hl = 'StModeOther' },
+  ['nt']    = { long = 'N-Terminal', short = 'T',   hl = 'StModeNormal' },
 }, {
   -- By default return 'Unknown' but this shouldn't be needed
   __index = function()
-    return   { long = 'Unknown',  short = 'U',   hl = '%#StModeOther#' }
+    return   { long = 'Unknown',  short = 'U',   hl = 'StModeOther' }
   end,
 })
 -- stylua: ignore end
@@ -633,31 +637,30 @@ function M.s_filename(args)
 end
 
 --- Section for file information
-function M.s_fileinfo(args)
-  local ft = vim.bo.filetype
+-- function M.s_fileinfo(args)
+--   local ft = vim.bo.filetype
 
-  if (ft == "") or U.isnt_normal_buffer() then
-    return ""
-  end
+--   if (ft == "") or U.isnt_normal_buffer() then
+--     return ""
+--   end
 
-  -- Add filetype icon
-  local icon = U.get_filetype_icon()
-  if icon ~= "" then
-    ft = fmt("%s %s", icon, ft)
-  end
+--   local icon = U.get_filetype_icon()
+--   if icon ~= "" then
+--     ft = fmt("%s %s", icon, ft)
+--   end
 
-  -- Construct output string if truncated
-  if is_truncated(args.trunc_width) then
-    return ft
-  end
+--   -- Construct output string if truncated
+--   if is_truncated(args.trunc_width) then
+--     return ft
+--   end
 
-  -- Construct output string with extra file info
-  local encoding = vim.bo.fileencoding or vim.bo.encoding
-  local format = vim.bo.fileformat
-  local size = U.get_filesize()
+--   -- Construct output string with extra file info
+--   local encoding = vim.bo.fileencoding or vim.bo.encoding
+--   local format = vim.bo.fileformat
+--   local size = U.get_filesize()
 
-  return fmt("%s %s[%s] %s", ft, encoding, format, size)
-end
+--   return fmt("%s %s[%s] %s", ft, encoding, format, size)
+-- end
 
 --- Section for location (#lineinfo, #line_info) inside buffer
 ---

@@ -52,9 +52,13 @@ end
 local function get_hl(group_name)
   local ok, hl = pcall(api.nvim_get_hl_by_name, group_name, true)
   if ok then
+    -- handles a weird situation where the hl returns with a hl_id; so we need to get then get the hl rgb using the hl_id
+    if hl[true] ~= nil then
+      hl = api.nvim_get_hl_by_id(hl[true], true)
+    end
+
     hl.foreground = hl.foreground and "#" .. bit.tohex(hl.foreground, 6)
     hl.background = hl.background and "#" .. bit.tohex(hl.background, 6)
-    hl[true] = nil -- BUG: API returns a true key which errors during the merge
     return hl
   end
   return {}

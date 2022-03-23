@@ -574,7 +574,7 @@ local function setup_handlers()
   lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
   lsp.handlers["window/showMessage"] = function(_, result, ctx)
-    local cl = vim.lsp.get_client_by_id(ctx.client_id)
+    local cl = lsp.get_client_by_id(ctx.client_id)
     local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG" })[result.type]
     vim.notify(result.message, lvl, {
       title = "LSP | " .. cl.name,
@@ -584,6 +584,12 @@ local function setup_handlers()
       end,
     })
   end
+  -- lsp.handlers["window/logMessage"] = require("lspconfig.util").add_before_hook(
+  --   lsp.handlers["window/logMessage"],
+  --   function(...)
+  --     P(...)
+  --   end
+  -- )
 end
 
 -- [ ON_ATTACH ] ---------------------------------------------------------------
