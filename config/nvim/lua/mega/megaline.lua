@@ -536,6 +536,7 @@ M.modes = setmetatable({
   ['r']    = { long = 'Prompt',   short = 'P',   hl = 'StModeOther' },
   ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'StModeOther' },
   ['t']    = { long = 'Terminal', short = 'T',   hl = 'StModeOther' },
+  ['nt']    = { long = 'N-Terminal', short = 'T',   hl = 'StModeOther' },
 }, {
   -- By default return 'Unknown' but this shouldn't be needed
   __index = function()

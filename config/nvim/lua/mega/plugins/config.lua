@@ -139,7 +139,7 @@ end
 do
   require("mini.indentscope").setup({
     symbol = "│",
-    delay = "10",
+    delay = "50",
   })
 end
 

@@ -262,12 +262,37 @@ vim.opt.emoji = false
 -----------------------------------------------------------------------------//
 -- Cursor {{{1
 -----------------------------------------------------------------------------//
--- This is from the help docs, it enables mode shapes, "Cursor" highlight, and blinking
+-- This is from the help docs, it enables mode shapes, "Cursor" highlight, and blinking :h guicursor
 vim.opt.guicursor = {
   [[n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50]],
   [[a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor]],
   [[sm:block-blinkwait175-blinkoff150-blinkon175]],
 }
+
+-- vim.cmd([[
+-- if &term == "xterm-kitty"
+--     " Kitty has support for changing cursor shape through the following escape codes:
+--     " '<Esc>[<N> q' where <N> is one of 1 (block), 3 (underline) and 5 (block)
+--     " This may also be controlling the blinking (even/odd?)
+--     " https://github.com/kovidgoyal/kitty/blob/cd1ba334c1ccbbb621f460bd52c41ebc6c45ff7c/kitty_tests/parser.py#L157
+--     " https://github.com/kovidgoyal/kitty/blob/4dc6918b13f8acdf50d13de5c903407f67b7d5cd/kitty/control-codes.h#L247
+--     " https://github.com/kovidgoyal/kitty/blob/4dc6918b13f8acdf50d13de5c903407f67b7d5cd/kitty/screen.c#L1126
+--   if empty($TMUX)
+--       let &t_SI = "\<Esc>]50;CursorShape=1\x7"
+--       let &t_EI = "\<Esc>]50;CursorShape=0\x7"
+--       let &t_SR = "\<Esc>]50;CursorShape=2\x7"
+
+--     let &t_SI = "\<Esc>[5 q"
+--     let &t_SR = "\<Esc>[1 q"
+--     let &t_EI = "\<Esc>[1 q"
+--   else
+--       let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
+--       let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+--       let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
+--   endif
+-- endif
+
+-- ]])
 
 -- NOTE: plugin/cursorline.lua has more...
 vim.opt.cursorline = true -- Show a line where the current cursor is
