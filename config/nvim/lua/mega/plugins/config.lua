@@ -137,71 +137,80 @@ do -- vim-matchup
 end
 
 do
+  require("mini.indentscope").setup({
+    symbol = "│",
+    delay = "10",
+  })
+end
+
+do
   -- require("virt-column").setup({ char = "│" }) -- │║
 end
 
 do -- indent-blankline
-  require("indent_blankline").setup({
-    char = "│", -- ┆ ┊ 
-    -- char_list = { "│", "|", "¦", "┆", "┊" },
-    space_char_blankline = " ",
-    show_foldtext = false,
-    show_current_context = true,
-    show_current_context_start = false,
-    show_current_context_start_on_current_line = false,
-    show_first_indent_level = true,
-    show_end_of_line = true,
-    indent_blankline_use_treesitter = true,
-    indent_blankline_show_trailing_blankline_indent = false,
-    filetype_exclude = {
-      "startify",
-      "dashboard",
-      "bufdir",
-      "alpha",
-      "log",
-      "fugitive",
-      "gitcommit",
-      "packer",
-      "vimwiki",
-      "markdown",
-      "json",
-      "txt",
-      "vista",
-      "help",
-      "NvimTree",
-      "git",
-      "fzf",
-      "TelescopePrompt",
-      "undotree",
-      "norg",
-      "org",
-      "orgagenda",
-      "", -- for all buffers without a file type
-    },
-    buftype_exclude = { "terminal", "nofile", "acwrite" },
-    context_patterns = {
-      "class",
-      "function",
-      "method",
-      "block",
-      "list_literal",
-      "selector",
-      "^if",
-      "^table",
-      "if_statement",
-      "while",
-      "for",
-      "^object",
-      "arguments",
-      "else_clause",
-      "jsx_element",
-      "jsx_self_closing_element",
-      "try_statement",
-      "catch_clause",
-      "import_statement",
-      "operation_type",
-    },
-  })
+  if false then
+    require("indent_blankline").setup({
+      char = "│", -- ┆ ┊ 
+      -- char_list = { "│", "|", "¦", "┆", "┊" },
+      space_char_blankline = " ",
+      show_foldtext = false,
+      show_current_context = true,
+      show_current_context_start = false,
+      show_current_context_start_on_current_line = false,
+      show_first_indent_level = true,
+      show_end_of_line = true,
+      indent_blankline_use_treesitter = true,
+      indent_blankline_show_trailing_blankline_indent = false,
+      filetype_exclude = {
+        "startify",
+        "dashboard",
+        "bufdir",
+        "alpha",
+        "log",
+        "fugitive",
+        "gitcommit",
+        "packer",
+        "vimwiki",
+        "markdown",
+        "json",
+        "txt",
+        "vista",
+        "help",
+        "NvimTree",
+        "git",
+        "fzf",
+        "TelescopePrompt",
+        "undotree",
+        "norg",
+        "org",
+        "orgagenda",
+        "", -- for all buffers without a file type
+      },
+      buftype_exclude = { "terminal", "nofile", "acwrite" },
+      context_patterns = {
+        "class",
+        "function",
+        "method",
+        "block",
+        "list_literal",
+        "selector",
+        "^if",
+        "^table",
+        "if_statement",
+        "while",
+        "for",
+        "^object",
+        "arguments",
+        "else_clause",
+        "jsx_element",
+        "jsx_self_closing_element",
+        "try_statement",
+        "catch_clause",
+        "import_statement",
+        "operation_type",
+      },
+    })
+  end
 end
 
 do -- nvim-hclipboard

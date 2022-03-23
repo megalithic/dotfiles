@@ -746,6 +746,9 @@ return lush(function()
     IndentBlanklineContextChar({ fg = blue, bg = "NONE" }),
     IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
+    ---- :help indent-blankline -------------------------------------------
+    MiniIndentscopeSymbol({ fg = blue, bg = "NONE" }),
+
     ---- :help hop-highlights -------------------------------------------
 
     -- vim.api.nvim_command('highlight default HopNextKey  guifg=#ff007c gui=bold ctermfg=198 cterm=bold')
