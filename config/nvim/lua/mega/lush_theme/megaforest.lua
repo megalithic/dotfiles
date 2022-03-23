@@ -746,8 +746,8 @@ return lush(function()
     IndentBlanklineContextChar({ fg = blue, bg = "NONE" }),
     IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
-    ---- :help indent-blankline -------------------------------------------
-    MiniIndentscopeSymbol({ fg = blue, bg = "NONE" }),
+    ---- :help mini.indentscope -------------------------------------------
+    MiniIndentscopeSymbol({ fg = bg_blue, bg = "NONE" }),
 
     ---- :help hop-highlights -------------------------------------------
 
