@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash
 
-set -euo pipefail
+# set -euo pipefail
 
 function detect_platform {
   if [[ -z $PLATFORM ]]; then
