@@ -413,7 +413,6 @@ function U.filetype(ctx, opts)
     _, icon_hl = devicons.get_icon(f_name, f_extension)
     -- to get color rendering working propertly, we have to use the get_icon_color/3 fn
     icon, icon_color = devicons.get_icon_color(f_name, f_extension, { default = true })
-    P({ icon, icon_color, icon_hl })
     hl = U.highlight_ft_icon(icon_color, icon_hl, opts.icon_bg)
   end
 
