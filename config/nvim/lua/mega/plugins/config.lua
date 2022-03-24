@@ -658,6 +658,11 @@ do -- toggleterm.nvim
     elixir:toggle()
   end
 
+  local lua = Terminal:new({ cmd = "lua", hidden = true })
+  function _LUA_TOGGLE()
+    lua:toggle()
+  end
+
   local rails = Terminal:new({ cmd = "rails c", hidden = true })
   function _RAILS_TOGGLE()
     rails:toggle()
@@ -680,10 +685,11 @@ do -- toggleterm.nvim
       f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
       h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
       v = { "<cmd>ToggleTerm size=80 direction=vertical<cr>", "Vertical" },
-      n = { "<cmd>lua _NODE_TOGGLE()<cr>", "Node" },
-      p = { "<cmd>lua _PYTHON_TOGGLE()<cr>", "Python" },
-      e = { "<cmd>lua _ELIXIR_TOGGLE()<cr>", "Elixir" },
-      r = { "<cmd>lua _RAILS_TOGGLE()<cr>", "Rails" },
+      l = { "<cmd>lua _LUA_TOGGLE()<cr>", "repl > lua" },
+      n = { "<cmd>lua _NODE_TOGGLE()<cr>", "repl > node" },
+      p = { "<cmd>lua _PYTHON_TOGGLE()<cr>", "repl > python" },
+      e = { "<cmd>lua _ELIXIR_TOGGLE()<cr>", "repl > elixir" },
+      r = { "<cmd>lua _RAILS_TOGGLE()<cr>", "repl > rails" },
     },
   }, {
     prefix = "<leader>",
