@@ -104,7 +104,7 @@ do -- fidget.nvim
 end
 
 do -- lsp_signature.nvim
-  if true then
+  if false then
     require("lsp_signature").setup({
       bind = true,
       fix_pos = false,
