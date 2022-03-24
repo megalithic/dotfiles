@@ -1007,13 +1007,6 @@ do -- dirbuf.nvim
     hash_padding = 2,
     show_hidden = true,
     sort_order = "directories_first",
-    fstate_compare = function(l, r)
-      if l.ftype ~= r.ftype then
-        return l.ftype < r.ftype
-      else
-        return l.fname:lower() < r.fname:lower()
-      end
-    end,
   })
 end
 
