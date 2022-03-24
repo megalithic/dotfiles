@@ -379,16 +379,15 @@ function U.highlight_ft_icon(hl, bg_hl)
   end
   local name = hl .. "Statusline"
   -- TODO: find a mechanism to cache this so it isn't repeated constantly
-  local fg_color = nil
-  local bg_color = nil
-  fg_color = H.get_hl(hl, "foreground")
-  bg_color = H.get_hl(bg_hl, "background")
+  local fg_color = H.get_hl(hl, "fg")
+  local bg_color = H.get_hl(bg_hl, "bg")
 
   if bg_color and fg_color then
-    local cmd = { "highlight! ", name, " guibg=", bg_color, " guifg=", fg_color }
+    local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
+    -- P(cmd)
     local str = table.concat(cmd)
     mega.augroup(name, { events = "ColorScheme", command = str })
-    vim.cmd(fmt("silent execute '%s'", str))
+    vim.cmd(fmt("execute '%s'", str))
   end
 
   return name
@@ -412,7 +411,7 @@ function U.filetype(ctx, opts)
 
   local icons_loaded, devicons = mega.safe_require("nvim-web-devicons")
   if icons_loaded then
-    icon, icon_hl = devicons.get_icon(f_name, f_extension, { default = true })
+    icon, icon_hl = devicons.get_icon(f_name, f_extension)
     hl = U.highlight_ft_icon(icon_hl, opts.icon_bg)
   end
 

@@ -586,6 +586,7 @@ end
 do -- toggleterm.nvim
   -- TODO: send visual lines to toggleterm:
   --      https://github.com/akinsho/toggleterm.nvim/issues/172
+  --      https://github.com/rikuma-t/dotfiles/blob/main/.config/nvim/lua/rc/toggleterm.lua#L29-L56 (dynamic resize/toggling)
   local toggleterm = require("toggleterm")
   toggleterm.setup({
     open_mapping = [[<c-\>]],
