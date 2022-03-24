@@ -148,7 +148,7 @@ local function setup_cmp()
     sources = cmp.config.sources({
       { name = "luasnip" },
       { name = "nvim_lsp" },
-      -- { name = "nvim_lsp_signature_help" },
+      { name = "nvim_lsp_signature_help" },
       { name = "path" },
       { name = "emmet_ls" },
     }, {
@@ -168,7 +168,7 @@ local function setup_cmp()
             luasnip = "[lsnip]",
             nvim_lua = "[lua]",
             nvim_lsp = "[lsp]",
-            -- nvim_lsp_signature_help = "[sig]",
+            nvim_lsp_signature_help = "[sig]",
             orgmode = "[org]",
             path = "[path]",
             buffer = "[buf]",
