@@ -177,6 +177,10 @@ return lush(function()
     Background({ bg = bg0 }),
     BackgroundLight({ bg = bg1 }),
     BackgroundExtraLight({ bg = bg2 }),
+    Visual({ fg = "NONE", bg = bg_visual }), -- Visual mode selection
+    VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
+    WarningMsg({ fg = yellow, bg = "NONE" }), -- warning messages
+    Whitespace({ fg = bg3, bg = "NONE" }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
     ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
     VirtColumn({ fg = bg1 }), -- used with virt-column.nvim
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
@@ -220,8 +224,10 @@ return lush(function()
     PmenuSel({ fg = green, bg = bg3 }), -- Popup menu: selected item.
     PmenuSbar({ fg = "NONE", bg = bg2 }), -- Popup menu: scrollbar.
     PmenuThumb({ fg = "NONE", bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
+    WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
     FloatBorder({ Pmenu }),
+    FloatTitle({ Visual }),
     Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
     QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
     SpecialKey({ fg = bg3, bg = "NONE" }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
@@ -253,12 +259,6 @@ return lush(function()
     -- { "PanelStNC", { background = bg_color, foreground = split_color } },
     -- { "PanelSt", { background = st_color } },
 
-    Visual({ fg = "NONE", bg = bg_visual }), -- Visual mode selection
-    VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
-    WarningMsg({ fg = yellow, bg = "NONE" }), -- warning messages
-    Whitespace({ fg = bg3, bg = "NONE" }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
-    --
-    WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     -- These groups are not listed as default vim groups,
     -- but they are defacto standard group names for syntax highlighting.
     -- commented out groups should chain up to their "preferred" group by

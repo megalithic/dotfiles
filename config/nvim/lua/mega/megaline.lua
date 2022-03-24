@@ -133,7 +133,7 @@ local exceptions = {
     fugitiveblame = mega.icons.vcs,
     gitcommit = mega.icons.vcs,
     Trouble = "",
-    NeogitStatus = mega.icons.git,
+    NeogitStatus = mega.icons.git.symbol,
     ["vim-plug"] = "⚉",
     vimwiki = "ﴬ",
     help = "",
@@ -373,21 +373,20 @@ end
 
 --- @param hl string
 --- @param bg_hl string
-function U.highlight_ft_icon(hl, bg_hl)
+function U.highlight_ft_icon(color, hl, bg_hl)
   if not hl or not bg_hl then
     return
   end
   local name = hl .. "Statusline"
   -- TODO: find a mechanism to cache this so it isn't repeated constantly
-  local fg_color = H.get_hl(hl, "fg")
+  local fg_color = color -- H.get_hl(hl, "fg")
   local bg_color = H.get_hl(bg_hl, "bg")
 
   if bg_color and fg_color then
     local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
-    -- P(cmd)
     local str = table.concat(cmd)
     mega.augroup(name, { events = "ColorScheme", command = str })
-    vim.cmd(fmt("execute '%s'", str))
+    vim.cmd(fmt("silent execute '%s'", str))
   end
 
   return name
@@ -405,14 +404,17 @@ function U.filetype(ctx, opts)
   if bt_exception then
     return bt_exception, opts.default
   end
-  local icon, icon_hl, hl
+  local icon, icon_hl, icon_color, hl
   local f_name, f_extension = vim.fn.expand("%:t") or ctx.bufname, vim.fn.expand("%:e")
   f_extension = f_extension ~= "" and f_extension or vim.bo.filetype
 
   local icons_loaded, devicons = mega.safe_require("nvim-web-devicons")
   if icons_loaded then
-    icon, icon_hl = devicons.get_icon(f_name, f_extension)
-    hl = U.highlight_ft_icon(icon_hl, opts.icon_bg)
+    _, icon_hl = devicons.get_icon(f_name, f_extension)
+    -- to get color rendering working propertly, we have to use the get_icon_color/3 fn
+    icon, icon_color = devicons.get_icon_color(f_name, f_extension, { default = true })
+    P({ icon, icon_color, icon_hl })
+    hl = U.highlight_ft_icon(icon_color, icon_hl, opts.icon_bg)
   end
 
   return icon, hl
@@ -567,17 +569,17 @@ function M.s_git(args)
     U.item(
       status.head,
       "StGitBranch",
-      { before = " ", after = " ", prefix = mega.icons.git, prefix_color = "StGitSymbol" }
+      { before = " ", after = " ", prefix = mega.icons.git.symbol, prefix_color = "StGitSymbol" }
     )
   )
   local added_str = unpack(
-    U.item(status.added, "StMetadataPrefix", { prefix = mega.icons.git_added, prefix_color = "StGreen" })
+    U.item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGreen" })
   )
   local changed_str = unpack(
-    U.item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git_changed, prefix_color = "StWarning" })
+    U.item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StWarning" })
   )
   local removed_str = unpack(
-    U.item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git_removed, prefix_color = "StError" })
+    U.item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StError" })
   )
 
   if signs == "" then

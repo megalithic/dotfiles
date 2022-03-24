@@ -41,11 +41,11 @@ of the macOS core libraries and APIs.
     arbitrary things when that app is created, destroyed, focused or unfocused;
     for example, custom keybinding that override the app's defaults; or..
 
-    * apps can toggle DND and Slack status modes
-    * apps can auto-pause Spotify
-    * apps can enable/disable QuitGuard™
-    * apps can auto-hide after (n)-minute interval
-    * apps can auto-quit after (n)-minute interval
+    - apps can toggle DND and Slack status modes
+    - apps can auto-pause Spotify
+    - apps can enable/disable QuitGuard™
+    - apps can auto-hide after (n)-minute interval
+    - apps can auto-quit after (n)-minute interval
 
 - **Window Management**:
 
@@ -78,8 +78,7 @@ of the macOS core libraries and APIs.
 
 - [ ] thieve @evantravers pomodoro module (https://github.com/evantravers/hammerspoon/blob/master/pomodoro.lua)
 - [ ] use urlevents to enable/disable distraction URLS, especially when in a
-  focus session via pomodoro
-
+      focus session via pomodoro
 
 #### References
 
@@ -90,3 +89,4 @@ of the macOS core libraries and APIs.
 - [More pomodoro](https://github.com/jacks808/hammerspoon-config/blob/master/pomodoor/pomodoor.lua)
 - https://github.com/AdamWagner/stackline
 - https://github.com/folke/dot/blob/master/hammerspoon/running.lua
+- https://github.com/smithbm2316/dotfiles/tree/main/hammerspoon

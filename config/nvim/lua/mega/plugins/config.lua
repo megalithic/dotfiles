@@ -9,8 +9,11 @@ local function conf(plugin)
   end
 end
 
+-- NOTE: source order matters! =================================================
+
 -- [ EXPLICIT PLUGIN CONFIGS ] -------------------------------------------------
 
+require("nvim-web-devicons").setup({ default = true })
 conf("telescope")
 conf("cmp")
 
@@ -46,6 +49,7 @@ do
     input = {
       insert_only = false,
       winblend = 2,
+      border = mega.get_border(),
     },
     select = {
       winblend = 2,
@@ -237,10 +241,6 @@ do -- neoscroll
     mappings["zb"] = { "zb", { "150" } }
     require("neoscroll.config").set_mappings(mappings)
   end
-end
-
-do -- nvim-web-devicons
-  require("nvim-web-devicons").setup({ default = true })
 end
 
 do -- trouble.nvim

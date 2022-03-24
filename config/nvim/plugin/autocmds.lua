@@ -1,4 +1,9 @@
 -- [ autocmds.. ] --------------------------------------------------------------
+--
+-- REFS:
+-- https://github.com/oncomouse/dotfiles/blob/master/conf/vim/init.lua#L279
+-- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/autocommands.lua
+--
 
 local vcmd = vim.cmd
 local fn = vim.fn
