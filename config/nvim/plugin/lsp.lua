@@ -584,6 +584,9 @@ local function setup_handlers()
       end,
     })
   end
+  -- lsp.handlers["window/logMessage"] = function(first, result, ctx)
+  --   P({ first, result, ctx })
+  -- end
   -- lsp.handlers["window/logMessage"] = require("lspconfig.util").add_before_hook(
   --   lsp.handlers["window/logMessage"],
   --   function(...)
@@ -1102,7 +1105,7 @@ for server, _ in pairs(mega.lsp.servers) do
 
   local config = mega.lsp.get_server_config(server)
   lspconfig[server].setup(config)
-  require("mega.plugins.zk")(config)
+  require("mega/plugins/zk")(config)
 end
 
 require("mega.lsp.null_ls")(mega.lsp.on_attach)
