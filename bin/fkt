@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/local/bin/zsh
+# shellcheck shell=bash
 
 #
 # What in tarnation is this?
@@ -16,17 +17,32 @@
 #   Required: `fzf`
 #
 
-set -euo pipefail
+# set -euo pipefail
 
-# -- set some useful vars for executable info:
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename "${__file}" .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)"
-# shellcheck disable=SC2034,SC2015
-__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+# # -- set some useful vars for executable info:
+# __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+# __base="$(basename "${__file}" .sh)"
+# __root="$(cd "$(dirname "${__dir}")" && pwd)"
+# # shellcheck disable=SC2034,SC2015
+# __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
+sessions_path="$DOTS/config/kitty/sessions"
+# selected_dir=$(fd "$sessions_path/*.conf" -maxdepth 1 -mindepth 1 -type d |
+#   \ sed "s~$sessions_path/~~" |
+#   \ fzf-tmux -p --cycle --layout=reverse --prompt 't> ' |
+#   \ sed "s~^~$sessions_path/~")
 
+# echo "$selected_dir"
+selected_conf=$(fd conf "$sessions_path" | sed "s~$sessions_path/~~" | fzf-tmux -p --cycle --layout=reverse --prompt 't> ' | sed "s~^~$sessions_path/~")
+if [[ $selected_conf ]]; then
+  echo "$selected_conf"
+  tab_name=$(echo $selected_conf | sed "s~$path/~~" | sed "s/\./_/g")
+  echo "$tab_name"
+  # kitty @ focus-tab --match title:$tab_name 2>/dev/null || kitty @ new-window --new-tab --tab-title $tab_name --cwd $selected_conf
+fi
+# echo "$(fd conf "$sessions_path" | sed "s~$sessions_path/~~")"
+# echo "$(fd conf "$sessions_path" | fzf-tmux)"
 
 # function kt -d "kitty tab from ~/Dev/*"
 #   set -l path $HOME/Dev
