@@ -213,7 +213,7 @@ local PKGS = {
   -- https://github.com/jghauser/follow-md-links.nvim
   -- https://github.com/jakewvincent/mkdnflow.nvim
   -- https://github.com/jubnzv/mdeval.nvim
-  "mickael-menu/zk-nvim",
+  { "mickael-menu/zk-nvim" },
   "tpope/vim-rails",
   "elixir-editors/vim-elixir",
   "ngscheurich/edeex.nvim",

@@ -1105,7 +1105,6 @@ for server, _ in pairs(mega.lsp.servers) do
 
   local config = mega.lsp.get_server_config(server)
   lspconfig[server].setup(config)
-  require("mega/plugins/zk")(config)
 end
 
 require("mega.lsp.null_ls")(mega.lsp.on_attach)

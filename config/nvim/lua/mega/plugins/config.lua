@@ -16,6 +16,7 @@ end
 require("nvim-web-devicons").setup({ default = true })
 conf("telescope")
 conf("cmp")
+conf("zk")
 
 -- [ THE REST ] ----------------------------------------------------------------
 
@@ -1245,4 +1246,10 @@ end
 
 do -- nvim-regexplainer
   require("regexplainer").setup()
+end
+
+do
+  if vim.g.vscode ~= nil then
+    require("mega.plugins.vscode")
+  end
 end
