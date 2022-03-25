@@ -1250,3 +1250,11 @@ end
 do -- nvim-regexplainer
   require("regexplainer").setup()
 end
+
+do -- quickfix list things
+  -- nvim-bqf
+  require("bqf").setup({ auto_enable = true, preview = { auto_preview = true } })
+
+  -- nvim-pqf
+  require("pqf").setup({})
+end

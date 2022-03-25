@@ -351,15 +351,6 @@ end
 
 augroup("LazyLoads", {
   {
-    -- nvim-bqf
-    events = { "FileType" },
-    targets = { "qf" },
-    command = function()
-      vim.cmd([[packadd nvim-bqf]])
-      require("bqf").setup({ auto_enable = true, preview = { auto_preview = true } })
-    end,
-  },
-  {
     events = { "FileType" },
     targets = { "help" },
     command = function()
@@ -385,10 +376,6 @@ augroup("LazyLoads", {
       --     },
       --   })
       -- end
-
-      -- nvim-pqf
-      vim.cmd([[packadd nvim-pqf]])
-      require("pqf").setup({})
     end,
   },
   {
