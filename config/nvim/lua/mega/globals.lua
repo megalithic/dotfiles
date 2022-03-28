@@ -124,6 +124,7 @@ _G.mega = {
       object = "",
     },
     misc = {
+      block = "▌",
       bug = "",
       question = "",
       lock = "",

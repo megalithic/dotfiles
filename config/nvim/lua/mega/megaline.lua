@@ -622,7 +622,8 @@ function M.s_modified(args)
 end
 
 function M.s_readonly(args)
-  return unpack(U.item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), "StReadonly"))
+  local readonly_hl = H.adopt_winhighlight(U.ctx.winid, 'StatusLine', 'StCustomError', 'StError')
+  return unpack(U.item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), readonly_hl))
 end
 
 --- Section for file name
@@ -745,7 +746,7 @@ end
 -- Default content ------------------------------------------------------------
 function U.statusline_active()
   -- stylua: ignore start
-  local prefix        = unpack(U.item_if("▌", not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local prefix        = unpack(U.item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
   local search        = unpack(U.item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 120 })
