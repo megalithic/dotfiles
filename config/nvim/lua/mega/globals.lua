@@ -484,9 +484,14 @@ function mega.safe_require(module, opts)
   return mega.load(module, opts)
 end
 
+--- @class CommandArgs
+--- @field args string
+--- @field fargs table
+--- @field bang boolean,
+
 ---Create an nvim command
 ---@param name any
----@param rhs string|fun(args: string, fargs: table, bang: boolean)
+---@param rhs string|fun(args: CommandArgs)
 ---@param opts table
 function mega.command(name, rhs, opts)
   opts = opts or {}
@@ -971,6 +976,11 @@ do
 
   command("AutoResize", mega.auto_resize(), { nargs = "?" })
   command("Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]])
+  command("ReloadModule", function(tbl)
+    require("plenary.reload").reload_module(tbl.args)
+  end, {
+    nargs = 1,
+  })
   command(
     "Duplicate",
     [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]

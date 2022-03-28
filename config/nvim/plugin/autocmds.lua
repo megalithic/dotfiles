@@ -354,6 +354,7 @@ do
     "NvimTree",
     "dirbuf",
     "dapui_*",
+    "qf",
   }
 
   local function on_sidebar_enter()
@@ -364,6 +365,7 @@ do
       "StatusLineNC:PanelStNC",
       "SignColumn:PanelBackground",
       "VertSplit:PanelVertSplit",
+      "WinSeparator:PanelWinSeparator",
     }, ",")
   end
 

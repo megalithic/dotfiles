@@ -104,6 +104,8 @@ vim.cmd([[packadd markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 
+vim.opt.signcolumn = "no"
+
 -- -- You may prefer to put this in its own module, shown on _G for brevity.
 -- _G.customise_colorscheme = function()
 --   local H = require("mega.utils.highlights")

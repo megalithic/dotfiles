@@ -38,7 +38,8 @@ end
 --- which includes the specific target highlight
 --- @param win_id integer
 --- @vararg string
-function M.has_win_highlight(win_id, ...)
+--- @return boolean, string
+function M.winhighlight_exists(win_id, ...)
   local win_hl = vim.wo[win_id].winhighlight
   for _, target in ipairs({ ... }) do
     if win_hl:match(target) ~= nil then
@@ -65,23 +66,25 @@ end
 ---@param win_id number
 ---@param target string
 ---@param name string
----@param default string
-function M.adopt_winhighlight(win_id, target, name, default)
-  name = name .. win_id
-  local _, win_hl = M.has_win_highlight(win_id, target)
-  local hl_exists = vim.fn.hlexists(name) > 0
-  if not hl_exists then
-    local parts = vim.split(win_hl, ",")
-    local found = mega.find(parts, function(part)
-      return part:match(target)
-    end)
-    if found then
-      local hl_group = vim.split(found, ":")[2]
-      local bg = M.get_hl(hl_group, "bg")
-      M.set_hl(name, { background = bg, inherit = default })
-    end
+---@param fallback string
+function M.adopt_winhighlight(win_id, target, name, fallback)
+  local win_hl_name = name .. win_id
+  local _, win_hl = M.winhighlight_exists(win_id, target)
+  local hl_exists = vim.fn.hlexists(win_hl_name) > 0
+  if hl_exists then
+    return win_hl_name
   end
-  return name
+  local parts = vim.split(win_hl, ",")
+  local found = mega.find(parts, function(part)
+    return part:match(target)
+  end)
+  if not found then
+    return fallback
+  end
+  local hl_group = vim.split(found, ":")[2]
+  local bg = M.get_hl(hl_group, "bg")
+  M.set_hl(win_hl_name, { background = bg, inherit = fallback })
+  return win_hl_name
 end
 
 ---@param name string

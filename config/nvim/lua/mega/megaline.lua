@@ -431,7 +431,7 @@ function U.file(ctx, trunc)
   local directory_hl = "StDirectory"
   local parent_hl = "StParentDirectory"
 
-  if H.has_win_highlight(curwin, "Normal", "StatusLine") then
+  if H.winhighlight_exists(curwin, "Normal", "StatusLine") then
     directory_hl = H.adopt_winhighlight(curwin, "StatusLine", "StCustomDirectory", "StTitle")
     filename_hl = H.adopt_winhighlight(curwin, "StatusLine", "StCustomFilename", "StTitle")
     parent_hl = H.adopt_winhighlight(curwin, "StatusLine", "StCustomParentDir", "StTitle")
@@ -799,7 +799,7 @@ function _G.__activate_statusline()
   U.ctx = {
     bufnum = curbuf,
     winid = curwin,
-    bufname = vim.fn.bufname(curbuf),
+    bufname = vim.api.nvim_buf_get_name(curbuf),
     preview = vim.wo[curwin].previewwindow,
     readonly = vim.bo[curbuf].readonly,
     filetype = vim.bo[curbuf].ft,
