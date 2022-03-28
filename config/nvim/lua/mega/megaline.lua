@@ -446,8 +446,11 @@ function U.file(ctx, trunc)
   local dir_empty, parent_empty = mega.empty(directory), mega.empty(parent)
   local to_update = dir_empty and parent_empty and file_opts or dir_empty and parent_opts or dir_opts
 
-  to_update.prefix = ft_icon
-  to_update.prefix_color = not is_minimal and icon_highlight or nil
+  if not is_minimal then
+    to_update.prefix = ft_icon
+    to_update.prefix_color = icon_highlight or nil
+  end
+
   return {
     file = { item = file, hl = filename_hl, opts = file_opts },
     dir = { item = directory, hl = directory_hl, opts = dir_opts },

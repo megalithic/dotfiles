@@ -784,7 +784,7 @@ return lush(function()
 
     StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
     StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
-    StInactive({ fg = bg_dark.lighten(15), bg = bg_dark, gui = "italic" }),
+    StInactive({ fg = bg_dark.lighten(20), bg = bg_dark, gui = "italic" }),
     StModeNormal({ bg = bg1, fg = bg5, gui = "NONE" }),
     StModeInsert({ bg = bg1, fg = green, gui = "bold" }),
     StModeVisual({ bg = bg1, fg = magenta, gui = "bold" }),

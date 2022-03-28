@@ -500,7 +500,7 @@ local function setup_diagnostics()
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
-  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local ns = api.nvim_create_namespace("severe_diagnostics")
   --- Get a reference to the original signs handler
   local signs_handler = vim.diagnostic.handlers.signs
   --- Override the built-in signs handler

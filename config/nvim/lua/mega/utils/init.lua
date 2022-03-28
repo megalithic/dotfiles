@@ -51,6 +51,13 @@ function M.ext.tmux.set_statusline(reset)
   fn.jobstart(fmt("tmux set-option -g status-style bg=%s", bg))
 end
 
+function M.ext.tmux.set_popup_colorscheme()
+  if not hl_ok then
+    return
+  end
+  local bg = H.get_hl("Background", "bg")
+end
+
 function M.ext.kitty.set_background()
   if not hl_ok then
     return
