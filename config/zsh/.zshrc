@@ -15,6 +15,7 @@ bindkey -e # ensures we use emacs/readline keybindings
 # zcomet for plugin install and management
 if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
   command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin
+  # TODO: remember to run `zcomet self-update` and `zcomet update` periodically
 fi
 
 source $HOME/.zcomet/bin/zcomet.zsh

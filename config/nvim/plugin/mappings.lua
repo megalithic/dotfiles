@@ -24,6 +24,7 @@
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
 local vcmd = vim.cmd
+local fn = vim.fn
 local exec = mega.exec
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
@@ -582,3 +583,37 @@ xnoremap(
   [[":\<C-u>call v:lua.mega.mappings.setup_CR()<CR>gv" . substitute(g:mc, '/', '?', 'g') . "``qz"]],
   { expr = true }
 )
+
+---------------------------------------------------------------------------------
+-- Toggle list
+---------------------------------------------------------------------------------
+--- Utility function to toggle the location or the quickfix list
+---@param list_type '"quickfix"' | '"location"'
+---@return nil
+function mega.toggle_list(list_type)
+  local is_location_target = list_type == "location"
+  local prefix = is_location_target and "l" or "c"
+  local L = vim.log.levels
+  local is_open = mega.is_vim_list_open()
+  if is_open then
+    return fn.execute(prefix .. "close")
+  end
+  local list = is_location_target and fn.getloclist(0) or fn.getqflist()
+  if vim.tbl_isempty(list) then
+    local msg_prefix = (is_location_target and "Location" or "QuickFix")
+    return vim.notify(msg_prefix .. " List is Empty.", L.WARN)
+  end
+
+  local winnr = fn.winnr()
+  fn.execute(prefix .. "open")
+  if fn.winnr() ~= winnr then
+    vim.cmd("wincmd p")
+  end
+end
+
+nnoremap("<leader>lq", function()
+  mega.toggle_list("quickfix")
+end, "lists: toggle quickfix")
+nnoremap("<leader>ll", function()
+  mega.toggle_list("location")
+end, "lists: toggle location")

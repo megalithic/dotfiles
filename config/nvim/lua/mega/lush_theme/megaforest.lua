@@ -349,7 +349,7 @@ return lush(function()
     LspReferenceText({ CurrentWord }),
     LspReferenceRead({ CurrentWord }),
     LspReferenceWrite({ CurrentWord }),
-    LspCodeLens({ InfoFloat }), -- Used to color the virtual text of the codelens,
+    LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
 
     ---- :help diagnostic-highlight ----------------------------
 
@@ -375,11 +375,14 @@ return lush(function()
     DiagnosticSignWarn({ OrangeSign }),
     DiagnosticSignInfo({ BlueSign }),
     DiagnosticSignHint({ AquaSign }),
-
-    DiagnosticSignErrorLine({ fg = red, gui = "underline", guisp = red }),
-    DiagnosticSignWarnLine({ fg = yellow, gui = "underline", guisp = yellow }),
-    DiagnosticSignInfoLine({ fg = blue, gui = "underline", guisp = blue }),
-    DiagnosticSignHintLine({ fg = aqua, gui = "underline", guisp = aqua }),
+    DiagnosticSignErrorLine({ fg = red, gui = "", guisp = red }),
+    DiagnosticSignWarnLine({ fg = yellow, gui = "", guisp = yellow }),
+    DiagnosticSignInfoLine({ fg = blue, gui = "", guisp = blue }),
+    DiagnosticSignHintLine({ fg = aqua, gui = "", guisp = aqua }),
+    DiagnosticSignErrorNumLine({ fg = red, gui = "", guisp = red }),
+    DiagnosticSignWarnNumLine({ fg = yellow, gui = "", guisp = yellow }),
+    DiagnosticSignInfoNumLine({ fg = blue, gui = "", guisp = blue }),
+    DiagnosticSignHintNumLine({ fg = aqua, gui = "", guisp = aqua }),
 
     -- DiagnosticSource({ fg = bg2, bg = bg1 }),
     DiagnosticError({ Red, bg = bg2 }),

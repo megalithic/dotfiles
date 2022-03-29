@@ -66,6 +66,7 @@ U.diagnostic_levels = {
 ---@return boolean: Whether to truncate.
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
+  -- P({ cols = vim.o.columns, old_cols = vim.api.nvim_win_get_width(0), target_trunc = trunc, is_truncated = vim.o.columns < (trunc or -1) })
   return vim.o.columns < (trunc or -1)
 end
 
@@ -750,7 +751,7 @@ function U.statusline_active()
   local mode          = M.s_mode({ trunc_width = 120 })
   local search        = unpack(U.item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 120 })
-  local readonly      = M.s_readonly({ trunc_width = 120 })
+  local readonly      = M.s_readonly({ trunc_width = 100 })
   local modified      = M.s_modified({ trunc_width = 100 })
   local filename      = M.s_filename({ trunc_width = 120 })
   -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })

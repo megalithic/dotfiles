@@ -32,6 +32,27 @@ local function setup_commands()
   command("LspFormat", function()
     vim.lsp.buf.formatting_sync(nil, 2000)
   end)
+
+  -- command('LspDiagnostics', function()
+  --   vim.diagnostic.setqflist { open = false }
+  --   as.toggle_list 'quickfix'
+  --   if as.is_vim_list_open() then
+  --     as.augroup('LspDiagnosticUpdate', {
+  --       {
+  --         event = { 'DiagnosticChanged' },
+  --         pattern = { '*' },
+  --         command = function()
+  --           if as.is_vim_list_open() then
+  --             as.toggle_list 'quickfix'
+  --           end
+  --         end,
+  --       },
+  --     })
+  --   elseif fn.exists '#LspDiagnosticUpdate' > 0 then
+  --     vim.cmd 'autocmd! LspDiagnosticUpdate'
+  --   end
+  -- end)
+  -- as.nnoremap('<leader>ll', '<Cmd>LspDiagnostics<CR>', 'toggle quickfix diagnostics')
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
@@ -276,10 +297,8 @@ local function setup_diagnostics()
       name = hl,
       text = t.icon,
       texthl = hl,
-      numhl = hl,
-      -- numhl = fmt("%sLine", hl),
-      -- linehl = fmt("%sLine", hl),
-      linehl = hl,
+      numhl = fmt("%sNumLine", hl),
+      linehl = fmt("%sLine", hl),
     }
   end, diagnostic_types))
 
