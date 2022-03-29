@@ -39,8 +39,7 @@ local function setup_commands()
     if mega.is_vim_list_open() then
       augroup("LspDiagnosticUpdate", {
         {
-          event = { "DiagnosticChanged" },
-          pattern = { "*" },
+          events = { "DiagnosticChanged" },
           command = function()
             if mega.is_vim_list_open() then
               mega.toggle_list("quickfix")
@@ -265,20 +264,6 @@ end
 
 local function setup_diagnostics()
   -- ( signs ) --
-  local severity_map = {
-    "DiagnosticError",
-    "DiagnosticWarn",
-    "DiagnosticInfo",
-    "DiagnosticHint",
-  }
-
-  local icon_map = {
-    "  ",
-    " 喝", --
-    "  ",
-    "  ",
-  }
-
   local diagnostic_types = {
     { "Error", icon = mega.icons.lsp.error },
     { "Warn", icon = mega.icons.lsp.warn },

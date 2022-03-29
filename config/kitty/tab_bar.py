@@ -50,6 +50,15 @@ def _draw_left_status(
     print(extra_data)
     if draw_data.leading_spaces:
         screen.draw(" " * draw_data.leading_spaces)
+
+    # TODO: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-2463083
+    # tm = get_boss().active_tab_manager
+    #     if tm is not None:
+    #         w = tm.active_window
+    #         if w is not None:
+    #             cwd = w.cwd_of_child or ''
+    #             log_error(cwd)
+
     draw_title(draw_data, screen, tab, index)
     trailing_spaces = min(max_title_length - 1, draw_data.trailing_spaces)
     max_title_length -= trailing_spaces
