@@ -543,7 +543,7 @@ local function mapper(mode, o)
     if opts.label then
       local ok, wk = mega.safe_require("which-key", { silent = true })
       if ok then
-        wk.register({ [lhs] = opts.label }, { mode = mode })
+        wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode })
       end
       opts.label = nil
     end
