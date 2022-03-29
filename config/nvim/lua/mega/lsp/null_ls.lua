@@ -37,6 +37,7 @@ return function(on_attach)
           return mega.executable("stylua") and util.root_has_file("stylua.toml")
         end,
       }),
+      b.formatting.isort,
       b.formatting.elm_format,
       -- FIXME: doesn't work on heex for some reason
       -- b.formatting.mix.with({ extra_filetypes = { "heex", "phoenix-html" } }),

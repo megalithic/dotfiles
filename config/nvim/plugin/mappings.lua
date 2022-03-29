@@ -614,6 +614,6 @@ end
 nnoremap("<leader>lq", function()
   mega.toggle_list("quickfix")
 end, "lists: toggle quickfix")
-nnoremap("<leader>ll", function()
+nnoremap("<leader>lc", function()
   mega.toggle_list("location")
 end, "lists: toggle location")

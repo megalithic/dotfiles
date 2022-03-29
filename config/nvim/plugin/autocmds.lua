@@ -440,7 +440,7 @@ local function clear_commandline()
       if fn.mode() == "n" then
         vim.cmd([[echon '']])
       end
-    end, 10000)
+    end, 5000)
   end
 end
 
@@ -449,5 +449,28 @@ augroup("ClearCommandMessages", {
     events = { "CmdlineLeave", "CmdlineChanged" },
     targets = { ":" },
     command = clear_commandline(),
+  },
+})
+
+augroup("GitConflicts", {
+  {
+    events = { "User" },
+    targets = "GitConflictDetected",
+    command = function()
+      vim.notify("Conflict detected in " .. vim.fn.expand("<afile>"))
+      -- vim.keymap.set("n", "cww", function()
+      --   engage.conflict_buster()
+      -- end)
+    end,
+  },
+  {
+    events = { "User" },
+    targets = "GitConflictResolved",
+    command = function()
+      vim.notify("Conflict resolved in " .. vim.fn.expand("<afile>"))
+      -- vim.keymap.set("n", "cww", function()
+      --   engage.conflict_buster()
+      -- end)
+    end,
   },
 })

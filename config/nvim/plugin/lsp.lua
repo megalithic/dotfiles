@@ -33,26 +33,26 @@ local function setup_commands()
     vim.lsp.buf.formatting_sync(nil, 2000)
   end)
 
-  -- command('LspDiagnostics', function()
-  --   vim.diagnostic.setqflist { open = false }
-  --   as.toggle_list 'quickfix'
-  --   if as.is_vim_list_open() then
-  --     as.augroup('LspDiagnosticUpdate', {
-  --       {
-  --         event = { 'DiagnosticChanged' },
-  --         pattern = { '*' },
-  --         command = function()
-  --           if as.is_vim_list_open() then
-  --             as.toggle_list 'quickfix'
-  --           end
-  --         end,
-  --       },
-  --     })
-  --   elseif fn.exists '#LspDiagnosticUpdate' > 0 then
-  --     vim.cmd 'autocmd! LspDiagnosticUpdate'
-  --   end
-  -- end)
-  -- as.nnoremap('<leader>ll', '<Cmd>LspDiagnostics<CR>', 'toggle quickfix diagnostics')
+  command("LspDiagnostics", function()
+    vim.diagnostic.setqflist({ open = false })
+    mega.toggle_list("quickfix")
+    if mega.is_vim_list_open() then
+      augroup("LspDiagnosticUpdate", {
+        {
+          event = { "DiagnosticChanged" },
+          pattern = { "*" },
+          command = function()
+            if mega.is_vim_list_open() then
+              mega.toggle_list("quickfix")
+            end
+          end,
+        },
+      })
+    elseif fn.exists("#LspDiagnosticUpdate") > 0 then
+      vim.cmd("autocmd! LspDiagnosticUpdate")
+    end
+  end)
+  -- nnoremap("<leader>ll", "<Cmd>LspDiagnostics<CR>", "toggle quickfix diagnostics")
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
@@ -121,7 +121,6 @@ local function setup_autocommands(client, bufnr)
 
   local ok, lsp_format = pcall(require, "lsp-format")
   if ok then
-    -- P("should lsp format")
     lsp_format.on_attach(client)
   else
     if client and client.resolved_capabilities.document_formatting then
@@ -131,7 +130,6 @@ local function setup_autocommands(client, bufnr)
           events = { "BufWritePre" },
           buffer = bufnr,
           command = function()
-            -- P("should be formatting with my own LspFormat augroup")
             -- BUG: folds are are removed when formatting is done, so we save the current state of the
             -- view and re-apply it manually after formatting the buffer
             -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
@@ -167,7 +165,6 @@ local function setup_mappings(client, bufnr)
       ["<leader>rf"] = { do_format, "lsp: format buffer" },
       ["<leader>li"] = { [[<cmd>LspInfo<CR>]], "lsp: show client info" },
       ["<leader>ll"] = { [[<cmd>LspLog<CR>]], "lsp: show log" },
-      ["<leader>lc"] = { [[<cmd>LspCapabilities<CR>]], "lsp: show client capabilities" },
       ["<leader>lt"] = { [[<cmd>TroubleToggle document_diagnostics<CR>]], "lsp: trouble diagnostics" },
       ["gD"] = { [[<cmd>TroubleToggle document_diagnostics<CR>]], "lsp: trouble diagnostics" },
       ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
@@ -217,9 +214,9 @@ end
 
 local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (let null-ls takeover):
-  local disabled_formatting_ls = { "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
-  for i = 1, #disabled_formatting_ls do
-    if disabled_formatting_ls[i] == client.name then
+  local disabled_lsp_formatting = { "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
+  for i = 1, #disabled_lsp_formatting do
+    if disabled_lsp_formatting[i] == client.name then
       client.resolved_capabilities.document_formatting = false
       client.resolved_capabilities.document_range_formatting = false
     end
@@ -233,10 +230,8 @@ local function setup_formatting(client, bufnr)
 
   if client.name == "null-ls" then
     if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
-      -- P("should format with null")
       client.resolved_capabilities.document_formatting = true
     else
-      -- P("should NOT format with null")
       client.resolved_capabilities.document_formatting = false
     end
   end
@@ -914,6 +909,8 @@ mega.lsp.servers = {
   end,
 }
 
+require("mega.lsp.null_ls")(mega.lsp.on_attach)
+
 function mega.lsp.get_server_config(server)
   local function server_capabilities()
     local nvim_lsp_ok, cmp_nvim_lsp = mega.safe_require("cmp_nvim_lsp")
@@ -935,25 +932,27 @@ function mega.lsp.get_server_config(server)
   local config = conf_type == "table" and conf or conf_type == "function" and conf() or {}
 
   config.flags = { debounce_text_changes = 200 }
-  config.on_attach = mega.lsp.on_attach
+  config.on_attach = config.on_attach or mega.lsp.on_attach
   config.capabilities = server_capabilities()
 
   return config
 end
 
--- Provides an `LspInfo`-esque interface for a client's capabilities
--- HT: kabouzeid
-require("mega.lsp.capabilities")
+if false then
+  -- TODO: try nvim-lsp-installer
+  local lsp_installer = require("nvim-lsp-installer")
+  lsp_installer.on_server_ready(function(server)
+    server:setup(mega.lsp.get_server_config(server))
+  end)
+else
+  -- Load lspconfig servers with their configs
+  for server, _ in pairs(mega.lsp.servers) do
+    if server == nil or lspconfig[server] == nil then
+      vim.notify("unable to setup ls for " .. server)
+      return
+    end
 
--- Load lspconfig servers with their configs
-for server, _ in pairs(mega.lsp.servers) do
-  if server == nil or lspconfig[server] == nil then
-    vim.notify("unable to setup ls for " .. server)
-    return
+    local config = mega.lsp.get_server_config(server)
+    lspconfig[server].setup(config)
   end
-
-  local config = mega.lsp.get_server_config(server)
-  lspconfig[server].setup(config)
 end
-
-require("mega.lsp.null_ls")(mega.lsp.on_attach)
