@@ -82,22 +82,18 @@ local function setup_autocommands(client, bufnr)
       events = { "CursorHold" },
       buffer = bufnr,
       command = function()
-        if false then
-          mega.lsp.line_diagnostics()
-        else
-          diagnostic.open_float(nil, {
-            focusable = false,
-            close_events = {
-              "CursorMoved",
-              "BufHidden",
-              "InsertCharPre",
-              "BufLeave",
-              "InsertEnter",
-              "FocusLost",
-            },
-            source = "always",
-          })
-        end
+        diagnostic.open_float(nil, {
+          focusable = false,
+          close_events = {
+            "CursorMoved",
+            "BufHidden",
+            "InsertCharPre",
+            "BufLeave",
+            "InsertEnter",
+            "FocusLost",
+          },
+          source = "if_many",
+        })
       end,
     },
   })
@@ -287,109 +283,6 @@ local function setup_diagnostics()
     }
   end, diagnostic_types))
 
-  local function source_string(source)
-    return fmt("  [%s]", source)
-  end
-
-  local function wrap_lines(input, width)
-    local output = {}
-    for _, line in ipairs(input) do
-      line = line:gsub("\r", "")
-      while #line > width + 2 do
-        local trimmed_line = string.sub(line, 1, width)
-        local index = trimmed_line:reverse():find(" ")
-        if index == nil or index > #trimmed_line / 2 then
-          break
-        end
-        table.insert(output, string.sub(line, 1, width - index))
-        line = vim.o.showbreak .. string.sub(line, width - index + 2, #line)
-      end
-      table.insert(output, line)
-    end
-
-    return output
-  end
-
-  function mega.lsp.close_preview_autocmd(events, winnr)
-    if #events > 0 then
-      api.nvim_command(
-        "autocmd "
-          .. table.concat(events, ",")
-          .. " <buffer> ++once lua pcall(vim.api.nvim_win_close, "
-          .. winnr
-          .. ", true)"
-      )
-    end
-  end
-
-  mega.lsp.line_diagnostics = function()
-    local width = 70
-    local bufnr, lnum = unpack(fn.getcurpos())
-    local diagnostics = vim.diagnostic.get(bufnr, { lnum = lnum - 1 })
-    if vim.tbl_isempty(diagnostics) then
-      return
-    end
-
-    local max_severity = diagnostic.severity.INFO
-    for _, d in ipairs(diagnostics) do
-      -- Equality is "less than" based on how the severities are encoded
-      if d.severity < max_severity then
-        max_severity = d.severity
-      end
-    end
-
-    local lines = {}
-
-    for _, diag in ipairs(diagnostics) do
-      table.insert(lines, icon_map[diag.severity] .. " " .. diag.message:gsub("\n", " ") .. source_string(diag.source))
-    end
-
-    local floating_bufnr = api.nvim_create_buf(false, true)
-    api.nvim_buf_set_lines(floating_bufnr, 0, -1, false, lines)
-    api.nvim_buf_set_option(floating_bufnr, "filetype", "diagnosticpopup")
-
-    for i, diag in ipairs(diagnostics) do
-      local message_length = #lines[i] - #source_string(diag.source)
-      api.nvim_buf_add_highlight(floating_bufnr, -1, severity_map[diag.severity], i - 1, 0, message_length)
-      api.nvim_buf_add_highlight(floating_bufnr, -1, "DiagnosticSource", i - 1, message_length, -1)
-    end
-
-    local border_color = ({
-      [diagnostic.severity.HINT] = "DiagnosticHintBorder",
-      [diagnostic.severity.INFO] = "DiagnosticInfoBorder",
-      [diagnostic.severity.WARN] = "DiagnosticWarnBorder",
-      [diagnostic.severity.ERROR] = "DiagnosticErrorBorder",
-    })[max_severity]
-
-    local winnr = api.nvim_open_win(floating_bufnr, false, {
-      relative = "cursor",
-      width = width,
-      height = #wrap_lines(lines, width - 1),
-      row = 1,
-      col = 1,
-      style = "minimal",
-      border = mega.get_border(border_color),
-    })
-
-    local highlights = {
-      "NormalFloat:BackgroundExtraLight",
-      "FloatBorder:BackgroundExtraLight",
-      "Normal:BackgroundExtraLight",
-      "EndOfBuffer:BackgroundExtraLight",
-      "VertSplit:BackgroundExtraLight",
-      "StatusLine:BackgroundExtraLight",
-      "StatusLineNC:BackgroundExtraLight",
-      "SignColumn:BackgroundExtraLight",
-    }
-    vim.api.nvim_win_set_option(winnr, "winhl", table.concat(highlights, ","))
-    vim.api.nvim_win_set_option(winnr, "winblend", 0)
-
-    mega.lsp.close_preview_autocmd(
-      { "CursorMoved", "CursorMovedI", "BufHidden", "BufLeave", "WinScrolled", "BufWritePost", "InsertCharPre" },
-      winnr
-    )
-  end
-
   -- REF: https://github.com/nvim-lua/kickstart.nvim/pull/26/commits/c3dd3bdc3d973ef9421aac838b9807496b7ba573
   function mega.lsp.print_diagnostics(opts, bufnr, line_nr, client_id)
     opts = opts or {}
@@ -413,8 +306,10 @@ local function setup_diagnostics()
     print(diagnostic_message)
   end
 
-  -- Monkey-patch vim.diagnostic.open_float() with our own impl..
-  -- REF: https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
+  -- Monkey-patch vim.diagnostic.open_float() with our own implentation
+  -- REF:
+  -- https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
+  -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/diagnostic.lua#L1171-L1212
   diagnostic.open_float = (function(orig)
     return function(bufnr, opts)
       local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
@@ -437,6 +332,7 @@ local function setup_diagnostics()
         [diagnostic.severity.ERROR] = "DiagnosticError",
       })[max_severity]
       opts.border = mega.get_border(border_color)
+
       orig(bufnr, opts)
     end
   end)(diagnostic.open_float)
@@ -477,7 +373,7 @@ local function setup_diagnostics()
     severity_sort = true,
     float = {
       show_header = true,
-      source = "always", -- or "always"
+      source = "if_many", -- or "always", "if_many" (for more than one source)
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,

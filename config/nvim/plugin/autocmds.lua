@@ -181,7 +181,7 @@ local function check_color_column(leaving)
 
   local not_eligible = not vim.bo.modifiable or vim.wo.previewwindow or vim.bo.buftype ~= "" or not vim.bo.buflisted
 
-  local small_window = api.nvim_win_get_width(0) <= vim.bo.textwidth + 1
+  local small_window = vim.o.columns <= vim.bo.textwidth + 1
   local is_last_win = #api.nvim_list_wins() == 1
 
   if contains(column_clear, vim.bo.filetype) or not_eligible or (leaving and not is_last_win) or small_window then
