@@ -9,6 +9,7 @@ eslint
 eslint-plugin-cypress
 eslint_d
 @typescript-eslint/typescript-estree
+fixjson
 markdownlint
 neovim
 lua-fmt
