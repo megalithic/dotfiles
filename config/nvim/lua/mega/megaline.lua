@@ -372,6 +372,15 @@ function U.filename(ctx, modifier)
   return dir, parent, fname
 end
 
+---@param name string
+---@param fg string
+---@param bg string
+local function create_hl(name, fg, bg)
+  if fg and bg then
+    api.nvim_set_hl(0, name, { foreground = fg, background = bg })
+  end
+end
+
 --- @param hl string
 --- @param bg_hl string
 function U.highlight_ft_icon(color, hl, bg_hl)
@@ -384,10 +393,19 @@ function U.highlight_ft_icon(color, hl, bg_hl)
   local bg_color = H.get_hl(bg_hl, "bg")
 
   if bg_color and fg_color then
-    local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
-    local str = table.concat(cmd)
-    mega.augroup(name, { events = "ColorScheme", command = str })
-    vim.cmd(fmt("silent execute '%s'", str))
+    -- local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
+    -- local str = table.concat(cmd)
+    -- mega.augroup(name, { events = "ColorScheme", command = str })
+    -- vim.cmd(fmt("silent execute '%s'", str))
+    mega.augroup(name, {
+      {
+        events = "ColorScheme",
+        command = function()
+          create_hl(name, fg_color, bg_color)
+        end,
+      },
+    })
+    create_hl(name, fg_color, bg_color)
   end
 
   return name
@@ -401,10 +419,12 @@ function U.filetype(ctx, opts)
   if ft_exception then
     return ft_exception, opts.default
   end
+
   local bt_exception = exceptions.buftypes[ctx.buftype]
   if bt_exception then
     return bt_exception, opts.default
   end
+
   local icon, icon_hl, icon_color, hl
   local f_name, f_extension = vim.fn.expand("%:t") or ctx.bufname, vim.fn.expand("%:e")
   f_extension = f_extension ~= "" and f_extension or vim.bo.filetype
