@@ -330,7 +330,7 @@ local function setup_diagnostics()
       return
     end
 
-    local max_severity = diagnostic.severity.HINT
+    local max_severity = diagnostic.severity.INFO
     for _, d in ipairs(diagnostics) do
       -- Equality is "less than" based on how the severities are encoded
       if d.severity < max_severity then
