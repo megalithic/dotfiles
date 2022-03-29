@@ -66,7 +66,7 @@ U.diagnostic_levels = {
 ---@return boolean: Whether to truncate.
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
-  return vim.api.nvim_win_get_width(0) < (trunc or -1)
+  return vim.o.columns < (trunc or -1)
 end
 
 -- local plain = U.is_plain(ctx)
@@ -622,7 +622,7 @@ function M.s_modified(args)
 end
 
 function M.s_readonly(args)
-  local readonly_hl = H.adopt_winhighlight(U.ctx.winid, 'StatusLine', 'StCustomError', 'StError')
+  local readonly_hl = H.adopt_winhighlight(U.ctx.winid, "StatusLine", "StCustomError", "StError")
   return unpack(U.item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), readonly_hl))
 end
 
@@ -795,7 +795,7 @@ function _G.__activate_statusline()
 
   -- TODO: reduce the available space whenever we add
   -- a component so we can use it to determine what to add
-  -- local available_space = vim.api.nvim_win_get_width(curwin)
+  -- local available_space = vim.o.columns
 
   U.ctx = {
     bufnum = curbuf,

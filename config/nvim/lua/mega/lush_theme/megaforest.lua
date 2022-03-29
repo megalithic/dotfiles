@@ -95,6 +95,7 @@ local bg_red = C.bg_red
 local bg_green = C.bg_green
 local bg_blue = C.bg_blue
 local bg_yellow = C.bg_yellow
+local bg_purple = C.bg_purple
 local dark_grey = C.dark_grey
 local light_grey = C.light_grey
 local grey0 = C.grey0
@@ -229,7 +230,8 @@ return lush(function()
     FloatBorder({ Pmenu, fg = bg_dark }),
     FloatTitle({ Visual }),
     Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
-    QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
+    QuickFixLine({ fg = "NONE", bg = bg_visual.darken(20), gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
+    -- QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
     SpecialKey({ fg = bg3, bg = "NONE" }), -- Unprintable characters: text displayed differently from what it really is.  But not 'listchars' whitespace. |hl-Whitespace| SpellBad  Word that is not recognized by the spellchecker. |spell| Combined with the highlighting used otherwise.  SpellCap  Word that should start with a capital. |spell| Combined with the highlighting used otherwise.  SpellLocal  Word that is recognized by the spellchecker as one that is used in another region. |spell| Combined with the highlighting used otherwise.
 
     ---- :help spell -------------------------------------------
@@ -251,7 +253,7 @@ return lush(function()
     PanelHeading({ PanelBackground, gui = "bold" }),
     PanelVertSplit({ VertSplit, bg = bg0.darken(8) }),
     PanelStNC({ PanelVertSplit }),
-    PanelSt({ bg = bg_visual.darken(20) }),
+    PanelSt({ bg = bg_blue.darken(20) }),
 
     -- { "PanelBackground", { background = bg_color } },
     -- { "PanelHeading", { background = bg_color, bold = true } },
