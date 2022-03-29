@@ -82,18 +82,18 @@ local function setup_autocommands(client, bufnr)
       events = { "CursorHold" },
       buffer = bufnr,
       command = function()
-        diagnostic.open_float(nil, {
-          focusable = false,
-          close_events = {
-            "CursorMoved",
-            "BufHidden",
-            "InsertCharPre",
-            "BufLeave",
-            "InsertEnter",
-            "FocusLost",
-          },
-          source = "if_many",
-        })
+        diagnostic.open_float(nil)
+        -- diagnostic.open_float(nil, {
+        --   focusable = false,
+        --   close_events = {
+        --     "CursorMoved",
+        --     "BufHidden",
+        --     "InsertCharPre",
+        --     "BufLeave",
+        --     "InsertEnter",
+        --     "FocusLost",
+        --   },
+        -- })
       end,
     },
   })
@@ -373,7 +373,7 @@ local function setup_diagnostics()
     severity_sort = true,
     float = {
       show_header = true,
-      source = "if_many", -- or "always", "if_many" (for more than one source)
+      source = "always", -- or "always", "if_many" (for more than one source)
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
