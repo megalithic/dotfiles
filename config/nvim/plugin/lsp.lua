@@ -164,54 +164,15 @@ local function setup_mappings(client, bufnr)
 
   maps.n["[d"] = {
     function()
-      diagnostic.goto_prev({
-        float = {
-          border = mega.get_border(),
-          focusable = false,
-          source = "always",
-        },
-      })
+      diagnostic.goto_prev()
     end,
     "lsp: go to prev diagnostic",
   }
   maps.n["]d"] = {
     function()
-      diagnostic.goto_next({
-        float = {
-          border = mega.get_border(),
-          focusable = false,
-          source = "always",
-        },
-      })
+      diagnostic.goto_next()
     end,
     "lsp: go to next diagnostic",
-  }
-
-  maps.n["[e"] = {
-    function()
-      diagnostic.goto_next({
-        float = {
-          border = mega.get_border(),
-          focusable = false,
-          source = "always",
-          severity = vim.diagnostic.severity.ERROR,
-        },
-      })
-    end,
-    "lsp: go to prev error",
-  }
-  maps.n["]e"] = {
-    function()
-      diagnostic.goto_next({
-        float = {
-          border = mega.get_border(),
-          focusable = false,
-          source = "always",
-          severity = vim.diagnostic.severity.ERROR,
-        },
-      })
-    end,
-    "lsp: go to next error",
   }
 
   if client.resolved_capabilities.implementation then
@@ -239,7 +200,7 @@ end
 
 local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (let null-ls takeover):
-  local disabled_formatting_ls = { "jsonls", "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
+  local disabled_formatting_ls = { "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
   for i = 1, #disabled_formatting_ls do
     if disabled_formatting_ls[i] == client.name then
       client.resolved_capabilities.document_formatting = false
@@ -420,24 +381,6 @@ local function setup_diagnostics()
       "StatusLineNC:BackgroundExtraLight",
       "SignColumn:BackgroundExtraLight",
     }
-    -- augroup("DiagnosticPopup", {
-    --   events = { "FileType" },
-    --   targets = { "diagnosticpopup" },
-    --   command = function()
-    --     P("diagnosticpopup things")
-    --     local highlights = {
-    --       "NormalFloat:BackgroundExtraLight",
-    --       "FloatBorder:BackgroundExtraLight",
-    --       "Normal:BackgroundExtraLight",
-    --       "EndOfBuffer:BackgroundExtraLight",
-    --       "VertSplit:BackgroundExtraLight",
-    --       "StatusLine:BackgroundExtraLight",
-    --       "StatusLineNC:BackgroundExtraLight",
-    --       "SignColumn:BackgroundExtraLight",
-    --     }
-    --     vim.cmd("setlocal winhighlight=" .. table.concat(highlights, ","))
-    --   end,
-    -- })
     vim.api.nvim_win_set_option(winnr, "winhl", table.concat(highlights, ","))
     vim.api.nvim_win_set_option(winnr, "winblend", 0)
 
@@ -530,20 +473,11 @@ local function setup_diagnostics()
     signs = true, -- {severity_limit = "Warning"},
     underline = true,
     virtual_text = false,
-    --[[virtual_text = {
-      severity = diagnostic.severity.ERROR,
-      prefix = "",
-      -- NOTE: this relies on the ordering of the diagnostic types table above
-      format = function(event)
-        local setting = M.diagnostic_types[event.severity]
-        return (setting and setting.icon .. " " or "") .. event.message
-      end,
-    },]]
     update_in_insert = false,
     severity_sort = true,
     float = {
       show_header = true,
-      source = "if_many", -- or "always"
+      source = "always", -- or "always"
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
@@ -704,7 +638,7 @@ mega.lsp.servers = {
           end,
         },
       },
-      init_options = { provideFormatter = true },
+      init_options = { provideFormatter = false },
       single_file_support = true,
       settings = {
         json = {

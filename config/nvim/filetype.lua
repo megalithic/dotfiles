@@ -19,8 +19,9 @@ vim.filetype.add({
     ["Brewfile.cask"] = "ruby",
   },
   extension = {
-    eslintrc = "json",
-    prettierrc = "json",
+    json = "jsonc",
+    eslintrc = "jsonc",
+    prettierrc = "jsonc",
     conf = "conf",
     mdx = "markdown",
     md = "markdown",

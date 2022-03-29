@@ -226,7 +226,7 @@ return lush(function()
     PmenuThumb({ fg = "NONE", bg = grey1 }), -- Popup menu: Thumb of the scrollbar.
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
-    FloatBorder({ Pmenu }),
+    FloatBorder({ Pmenu, fg = bg_dark }),
     FloatTitle({ Visual }),
     Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
     QuickFixLine({ fg = purple, bg = "NONE", gui = "bold" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.

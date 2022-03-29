@@ -20,6 +20,8 @@ return function(on_attach)
           "css",
           "scss",
           "html",
+          "json",
+          "jsonc",
           "yaml",
           "markdown",
           "markdown.mdx",
@@ -28,7 +30,7 @@ return function(on_attach)
           return mega.executable("prettierd")
         end,
       }),
-      b.formatting.fixjson.with({ filetypes = { "jsonc" } }),
+      b.formatting.fixjson.with({ filetypes = { "jsonc", "json" } }),
       -- b.formatting.isort,
       b.formatting.stylua.with({ -- sumneko now formats!
         condition = function(util)
