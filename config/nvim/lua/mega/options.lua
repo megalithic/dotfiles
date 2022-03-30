@@ -481,17 +481,7 @@ vim.opt.statusline = table.concat({
 vim.g.no_man_maps = true
 vim.g.vim_json_syntax_conceal = false
 vim.g.vim_json_conceal = false
-vim.g.floating_window_border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
-vim.g.floating_window_border_dark = {
-  { "╭", "FloatBorderDark" },
-  { "─", "FloatBorderDark" },
-  { "╮", "FloatBorderDark" },
-  { "│", "FloatBorderDark" },
-  { "╯", "FloatBorderDark" },
-  { "─", "FloatBorderDark" },
-  { "╰", "FloatBorderDark" },
-  { "│", "FloatBorderDark" },
-}
+
 -- vim.opt.shell = "/usr/local/bin/zsh --login" -- fix this for cross-platform
 -- vim.opt.concealcursor = "n" -- Hide * markup for bold and italic
 -- # git editor
