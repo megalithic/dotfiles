@@ -357,6 +357,12 @@ local function setup_diagnostics()
       end
       -- Pass the filtered diagnostics (with our custom namespace) to
       -- the original handler
+      -- vim.notify(
+      --   fmt(
+      --     "handed to original signs_handler.show: %s",
+      --     vim.inspect({ ns, bufnr, vim.tbl_values(max_severity_per_line), opts })
+      --   )
+      -- )
       signs_handler.show(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
     end,
     hide = function(_, bufnr)

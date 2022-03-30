@@ -197,7 +197,7 @@ local PKGS = {
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true },
   -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
-  -- "outstand/logger.nvim",
+  "outstand/logger.nvim",
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
