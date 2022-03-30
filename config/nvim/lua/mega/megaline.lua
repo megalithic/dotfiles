@@ -12,35 +12,44 @@ local fmt = string.format
 local H = require("mega.utils.highlights")
 local U = {}
 
+-- FIXME: presently focus variable setting isn't being used right
 mega.augroup("statusline", {
   {
-    events = { "WinEnter", "BufEnter" },
-    targets = { "*" },
-    command = function()
-      vim.wo.statusline = "%!v:lua.__activate_statusline()"
-    end,
-  },
-  {
-    events = { "WinLeave", "BufLeave" },
-    targets = { "*" },
-    command = function()
-      -- -- :h qf.vim, disable qf statusline
-      -- vim.g.qf_disable_statusline = 1
-      vim.wo.statusline = "%!v:lua.__deactivate_statusline()"
-    end,
-  },
-  {
     events = { "FocusGained" },
-    targets = { "*" },
     command = function()
       vim.g.vim_in_focus = true
     end,
   },
   {
     events = { "FocusLost" },
-    targets = { "*" },
     command = function()
       vim.g.vim_in_focus = false
+    end,
+  },
+  {
+    events = { "WinEnter", "BufEnter" },
+    command = function()
+      -- :h qf.vim, disable qf statusline
+      -- NOTE: this allows for our custom statusline exception-based naming to work
+      vim.g.qf_disable_statusline = 1
+      vim.wo.statusline = "%!v:lua.__activate_statusline()"
+    end,
+  },
+  {
+    events = { "WinLeave", "BufLeave" },
+    command = function()
+      vim.wo.statusline = "%!v:lua.__deactivate_statusline()"
+    end,
+  },
+  {
+    events = { "BufWritePre" },
+    command = function()
+      if not vim.g.is_saving and vim.bo.modified then
+        vim.g.is_saving = true
+        vim.defer_fn(function()
+          vim.g.is_saving = false
+        end, 1000)
+      end
     end,
   },
 })
@@ -70,10 +79,7 @@ local function is_truncated(trunc)
   return vim.o.columns < (trunc or -1)
 end
 
--- local plain = U.is_plain(ctx)
--- local file_modified = U.modified(ctx, "●")
 -- local inactive = vim.api.nvim_get_current_win() ~= curwin
--- local focused = vim.g.vim_in_focus or true
 -- local minimal = plain or inactive or not focused
 
 -- Utilities ------------------------------------------------------------------
@@ -90,7 +96,7 @@ local function get_toggleterm_name(_, buf)
   return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number"))
 end
 
-local plain = {
+local plain_types = {
   filetypes = {
     "help",
     "ctrlsf",
@@ -119,7 +125,7 @@ local plain = {
   },
 }
 
-local exceptions = {
+local exception_types = {
   buftypes = {
     terminal = " ",
     quickfix = "",
@@ -171,8 +177,14 @@ local exceptions = {
   },
 }
 
+local function matches(str, list)
+  return #vim.tbl_filter(function(item)
+    return item == str or string.match(str, item)
+  end, list) > 0
+end
+
 --- @param hl string
-function U.wrap_hl(hl)
+local function wrap_hl(hl)
   assert(hl, "A highlight name must be specified")
   return "%#" .. hl .. "#"
 end
@@ -181,7 +193,7 @@ end
 --- or to represent an empty component
 --- @param size number
 --- @param filler string | nil
-function U.spacer(size, filler)
+local function spacer(size, filler)
   filler = filler or " "
   if size and size >= 1 then
     local spacer = string.rep(filler, size)
@@ -194,11 +206,11 @@ end
 --- @param component string
 --- @param hl string
 --- @param opts table
-function U.item(component, hl, opts)
+local function item(component, hl, opts)
   -- do not allow empty values to be shown note 0 is considered empty
   -- since if there is nothing of something I don't need to see it
   if not component or component == "" or component == 0 then
-    return U.spacer()
+    return spacer()
   end
   opts = opts or {}
   local before = opts.before or ""
@@ -207,7 +219,7 @@ function U.item(component, hl, opts)
   local prefix_size = strwidth(prefix)
 
   local prefix_color = opts.prefix_color or hl
-  prefix = prefix ~= "" and U.wrap_hl(prefix_color) .. prefix .. " " or ""
+  prefix = prefix ~= "" and wrap_hl(prefix_color) .. prefix .. " " or ""
 
   --- handle numeric inputs etc.
   if type(component) ~= "string" then
@@ -218,19 +230,19 @@ function U.item(component, hl, opts)
     component = component:sub(1, opts.max_size - 1) .. "…"
   end
 
-  local parts = { before, prefix, U.wrap_hl(hl), component, "%*", after }
+  local parts = { before, prefix, wrap_hl(hl), component, "%*", after }
   return { table.concat(parts), #component + #before + #after + prefix_size }
 end
 
---- @param item string
+--- @param sl_item string
 --- @param condition boolean
 --- @param hl string
 --- @param opts table
-function U.item_if(item, condition, hl, opts)
+local function item_if(sl_item, condition, hl, opts)
   if not condition then
-    return U.spacer()
+    return spacer()
   end
-  return U.item(item, hl, opts)
+  return item(sl_item, hl, opts)
 end
 
 -- local function matches(str, list)
@@ -240,9 +252,9 @@ end
 -- end
 
 --- @param ctx table
--- function M.is_plain(ctx)
---   return matches(ctx.filetype, plain.filetypes) or matches(ctx.buftype, plain.buftypes) or ctx.preview
--- end
+function U.is_plain(ctx)
+  return matches(ctx.filetype, plain_types.filetypes) or matches(ctx.buftype, plain_types.buftypes) or ctx.preview
+end
 
 --- Combine groups of sections
 ---
@@ -257,7 +269,7 @@ end
 ---
 ---@param groups table: Array of groups
 ---@return string: String suitable for 'statusline'.
-function U.build(groups)
+local function build(groups)
   local t = vim.tbl_map(function(s)
     if not s then
       return ""
@@ -350,7 +362,7 @@ function U.filename(ctx, modifier)
 
   local fname = U.buf_expand(ctx.bufnum, modifier)
 
-  local name = exceptions.names[ctx.filetype]
+  local name = exception_types.names[ctx.filetype]
   if type(name) == "function" then
     return "", "", name(fname, ctx.bufnum)
   end
@@ -415,12 +427,12 @@ end
 --- @param opts table
 --- @return string, string?
 function U.filetype(ctx, opts)
-  local ft_exception = exceptions.filetypes[ctx.filetype]
+  local ft_exception = exception_types.filetypes[ctx.filetype]
   if ft_exception then
     return ft_exception, opts.default
   end
 
-  local bt_exception = exceptions.buftypes[ctx.buftype]
+  local bt_exception = exception_types.buftypes[ctx.buftype]
   if bt_exception then
     return bt_exception, opts.default
   end
@@ -577,7 +589,7 @@ function M.s_mode(args)
   local mode_info = M.modes[api.nvim_get_mode().mode]
   local mode = is_truncated(args.trunc_width) and mode_info.short or mode_info.long
 
-  return unpack(U.item(string.upper(mode), mode_info.hl, { before = " " }))
+  return unpack(item(string.upper(mode), mode_info.hl, { before = " " }))
 end
 
 function M.s_git(args)
@@ -589,20 +601,20 @@ function M.s_git(args)
   local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
 
   local head_str = unpack(
-    U.item(
+    item(
       status.head,
       "StGitBranch",
       { before = " ", after = " ", prefix = mega.icons.git.symbol, prefix_color = "StGitSymbol" }
     )
   )
   local added_str = unpack(
-    U.item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGreen" })
+    item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGreen" })
   )
   local changed_str = unpack(
-    U.item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StWarning" })
+    item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StWarning" })
   )
   local removed_str = unpack(
-    U.item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StError" })
+    item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StError" })
   )
 
   if signs == "" then
@@ -639,12 +651,12 @@ function M.s_modified(args)
   if U.ctx.filetype == "help" then
     return ""
   end
-  return unpack(U.item_if(U.modified(U.ctx), is_truncated(args.trunc_width), "StModified"))
+  return unpack(item_if(U.modified(U.ctx), is_truncated(args.trunc_width), "StModified"))
 end
 
 function M.s_readonly(args)
   local readonly_hl = H.adopt_winhighlight(U.ctx.winid, "StatusLine", "StCustomError", "StError")
-  return unpack(U.item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), readonly_hl))
+  return unpack(item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), readonly_hl))
 end
 
 --- Section for file name
@@ -653,10 +665,10 @@ function M.s_filename(args)
   local ctx = U.ctx
   local segments = U.file(ctx, args.trunc_width)
   local dir, parent, file = segments.dir, segments.parent, segments.file
-  local dir_item = U.item(dir.item, dir.hl, dir.opts)
-  local parent_item = U.item(parent.item, parent.hl, parent.opts)
+  local dir_item = item(dir.item, dir.hl, dir.opts)
+  local parent_item = item(parent.item, parent.hl, parent.opts)
   local file_hl = ctx.modified and "StModified" or file.hl
-  local file_item = U.item(file.item, file_hl, file.opts)
+  local file_item = item(file.item, file_hl, file.opts)
 
   return fmt("%s%s%s", unpack(dir_item), unpack(parent_item), unpack(file_item))
 end
@@ -727,16 +739,16 @@ function M.s_lineinfo(args)
 
   return table.concat({
     " ",
-    U.wrap_hl(prefix_color),
+    wrap_hl(prefix_color),
     prefix,
     " ",
-    U.wrap_hl(current_hl),
+    wrap_hl(current_hl),
     current_line,
-    U.wrap_hl(sep_hl),
+    wrap_hl(sep_hl),
     sep,
-    U.wrap_hl(total_hl),
+    wrap_hl(total_hl),
     last_line,
-    U.wrap_hl(col_hl),
+    wrap_hl(col_hl),
     ":",
     current_col,
     " ",
@@ -744,7 +756,7 @@ function M.s_lineinfo(args)
 end
 
 function M.s_indention()
-  return unpack(U.item_if(U.ctx.shiftwidth, U.ctx.shiftwidth > 2 or not U.ctx.expandtab, "StTitle", {
+  return unpack(item_if(U.ctx.shiftwidth, U.ctx.shiftwidth > 2 or not U.ctx.expandtab, "StTitle", {
     prefix = U.ctx.expandtab and "Ξ" or "⇥",
     prefix_color = "StatusLine",
   }))
@@ -753,7 +765,7 @@ end
 function M.s_lsp_client(args)
   for _, client in ipairs(vim.lsp.buf_get_clients(0)) do
     if client.config and client.config.filetypes and vim.tbl_contains(client.config.filetypes, vim.bo.filetype) then
-      return unpack(U.item_if(client.name, is_truncated(args.trunc_width), "StMetadata"))
+      return unpack(item_if(client.name, is_truncated(args.trunc_width), "StMetadata"))
     end
   end
 end
@@ -765,32 +777,48 @@ function U.is_disabled()
 end
 
 -- Default content ------------------------------------------------------------
-function U.statusline_active()
+local function statusline_active(ctx) -- _ctx
   -- stylua: ignore start
-  local prefix        = unpack(U.item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local prefix        = unpack(item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
-  local search        = unpack(U.item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
+  local search        = unpack(item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 120 })
   local readonly      = M.s_readonly({ trunc_width = 100 })
   local modified      = M.s_modified({ trunc_width = 100 })
   local filename      = M.s_filename({ trunc_width = 120 })
+  local saving        = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
   -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
   local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
   local indention     = M.s_indention()
   local diags         = U.diagnostic_info()
-  local diag_error    = unpack(U.item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
-  local diag_warn     = unpack(U.item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
-  local diag_info     = unpack(U.item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
-  local diag_hint     = unpack(U.item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
+  local diag_error    = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
+  local diag_warn     = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
+  local diag_info     = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
+  local diag_hint     = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
   -- stylua: ignore end
 
-  return U.build({
+  local plain = U.is_plain(ctx)
+  -- local file_modified = U.modified(ctx, mega.icons.misc.circle)
+  local focused = vim.g.vim_in_focus or true
+
+  if plain or not focused then
+    -- add({ readonly_item, 1 }, { dir_item, 3 }, { parent_item, 2 }, { file_item, 0 })
+    -- return display(statusline, available_space)
+    return build({
+      filename,
+      modified,
+      readonly,
+    })
+  end
+
+  return build({
     prefix,
     mode,
     "%<", -- Mark general truncate point
     filename,
     modified,
     readonly,
+    saving,
     search,
     "%=", -- End left alignment
     -- middle section for whatever we want..
@@ -811,17 +839,14 @@ function _G.__activate_statusline()
 
   -- use the statusline global variable which is set inside of statusline
   -- functions to the window for *that* statusline
-  local curwin = vim.g.megaline_winid or 0
-  local curbuf = vim.api.nvim_win_get_buf(curwin)
-
-  -- TODO: reduce the available space whenever we add
-  -- a component so we can use it to determine what to add
+  local curwin = vim.g.statusline_winid or 0
+  local curbuf = api.nvim_win_get_buf(curwin)
   -- local available_space = vim.o.columns
 
-  U.ctx = {
+  local ctx = {
     bufnum = curbuf,
     winid = curwin,
-    bufname = vim.api.nvim_buf_get_name(curbuf),
+    bufname = api.nvim_buf_get_name(curbuf),
     preview = vim.wo[curwin].previewwindow,
     readonly = vim.bo[curbuf].readonly,
     filetype = vim.bo[curbuf].ft,
@@ -832,15 +857,13 @@ function _G.__activate_statusline()
     expandtab = vim.bo[curbuf].expandtab,
   }
 
-  return U.statusline_active()
+  U.ctx = ctx
+
+  return statusline_active(ctx)
 end
 
 -- do the statusline things for the inactive window
 function _G.__deactivate_statusline()
-  if U.is_disabled() then
-    return ""
-  end
-
   return "%#StInactive#%F %m%="
 end
 
