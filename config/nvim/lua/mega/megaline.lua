@@ -517,7 +517,7 @@ function U.search_result()
   return printf("  %d/%d ", result.current, result.total)
 end
 
-function U.isnt_normal_buffer()
+function U.abnormal_buffer()
   -- For more information see ":h buftype"
   return vim.bo.buftype ~= ""
 end
@@ -593,7 +593,7 @@ function M.s_mode(args)
 end
 
 function M.s_git(args)
-  if U.isnt_normal_buffer() then
+  if U.abnormal_buffer() then
     return ""
   end
 
@@ -782,7 +782,7 @@ local function statusline_active(ctx) -- _ctx
   local prefix        = unpack(item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
   local search        = unpack(item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
-  local git           = M.s_git({ trunc_width = 120 })
+  local git           = M.s_git({ trunc_width = 175 })
   local readonly      = M.s_readonly({ trunc_width = 100 })
   local modified      = M.s_modified({ trunc_width = 100 })
   local filename      = M.s_filename({ trunc_width = 120 })
