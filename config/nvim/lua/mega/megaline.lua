@@ -196,8 +196,8 @@ end
 local function spacer(size, filler)
   filler = filler or " "
   if size and size >= 1 then
-    local spacer = string.rep(filler, size)
-    return { spacer, #spacer }
+    local space = string.rep(filler, size)
+    return { space, #space }
   else
     return { "", 0 }
   end
