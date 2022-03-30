@@ -413,15 +413,15 @@ local function setup_handlers()
       end,
     })
   end
-  -- lsp.handlers["window/logMessage"] = function(first, result, ctx)
-  --   P({ first, result, ctx })
-  -- end
-  -- lsp.handlers["window/logMessage"] = require("lspconfig.util").add_before_hook(
-  --   lsp.handlers["window/logMessage"],
-  --   function(...)
-  --     P(...)
+
+  -- local old_handler = vim.lsp.handlers["window/logMessage"]
+  -- lsp.handlers["window/logMessage"] = function(err, result, ...)
+  --   if result.type == 3 or result.type == 4 then
+  --     print(result.message)
   --   end
-  -- )
+
+  --   old_handler(err, result, ...)
+  -- end
 end
 
 -- [ ON_ATTACH ] ---------------------------------------------------------------
@@ -924,8 +924,15 @@ function mega.lsp.get_server_config(server)
 end
 
 if false then
-  -- TODO: try nvim-lsp-installer
   local lsp_installer = require("nvim-lsp-installer")
+  for server_name, _ in pairs(mega.lsp.servers) do
+    local server_is_found, server = lsp_installer.get_server(server_name)
+    if server_is_found and not server:is_installed() then
+      vim.notify("Installing " .. server_name)
+      -- server:install()
+    end
+  end
+
   lsp_installer.on_server_ready(function(server)
     server:setup(mega.lsp.get_server_config(server))
   end)
