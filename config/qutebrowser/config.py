@@ -63,7 +63,7 @@ c.auto_save.interval = 15000
 # Always restore open sites when qutebrowser is reopened. Type: Bool
 c.auto_save.session = True
 
-c.editor.command = ["alacritty", "-e", "nvim", "{file}", "-c", "normal {line}G{column0}l"]
+c.editor.command = ["kitty", "nvim", "-f", "{file}", "-c", "normal {line}G{column0}l"]
 
 c.content.pdfjs = False
 c.content.autoplay = False
