@@ -93,10 +93,6 @@
     ~/.config/nvim:
       force: true
       path: config/nvim
-    ~/.config/qutebrowser:
-      force: true
-      path: config/qutebrowser
-      if: "[ `uname` = Darwin ]"
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep
@@ -126,6 +122,12 @@
     ~/.config/zsh:
       force: true
       path: config/zsh
+
+    # ~/.qutebrowser:
+    #   force: true
+    #   path: home/qutebrowser
+    #   if: "[ `uname` = Darwin ]"
+
     ~/.vimrc: config/nvim/vimrc
     ~/.zshenv: config/zsh/.zshenv
 

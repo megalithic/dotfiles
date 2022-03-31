@@ -12,12 +12,10 @@
 import os
 import platform
 
-import dracula.draw
-
 # Load existing settings made via :set
 config.load_autoconfig()
 
-config.source('themes/material-darker.py')
+# config.source('themes/material-darker.py')
 
 # dracula.draw.blood(c, {
 #     'spacing': {
@@ -39,10 +37,10 @@ os.environ['PATH'] = '/usr/local/bin' + os.pathsep + os.environ['PATH']
 
 ### Custom Userscripts {{{
 
-USERSCRIPT_PATH = os.path.join(config.configdir, 'userscripts')
+# USERSCRIPT_PATH = os.path.join(config.configdir, 'userscripts')
 
-def userscript(script_name):
-    return os.path.join(USERSCRIPT_PATH, script_name)
+# def userscript(script_name):
+#     return os.path.join(USERSCRIPT_PATH, script_name)
 
 ###### code_select ######
 # https://github.com/LaurenceWarne/qute-code-hint
@@ -79,6 +77,8 @@ c.tabs.width = '10%'
 c.tabs.mousewheel_switching = False
 
 c.zoom.mouse_divider = 0
+
+c.fonts.default_size = '14px'
 
 padding = {
     'top': 6,

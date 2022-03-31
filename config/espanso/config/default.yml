@@ -3,3 +3,4 @@
 
 secure_input_notification: false
 backend: Auto # Clipboard # Inject, Clipboard, Auto
+undo_backspace: false
