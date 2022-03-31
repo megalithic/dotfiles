@@ -194,6 +194,7 @@ return lush(function()
     CursorLine({ fg = "NONE", bg = bg1 }), -- Screen-line at the cursor, when 'cursorline' is set.  Low-priority if foreground (ctermfg OR fg) is not set.
     CursorWord({ fg = "NONE", bg = "NONE", gui = "bold,underline" }),
     CursorLineNr({ fg = brown, bg = bg1, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
     DiffAdd({ fg = "NONE", bg = bg_green }), -- diff mode: Added line |diff.txt|
     DiffChange({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed line |diff.txt|
