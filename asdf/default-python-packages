@@ -33,3 +33,6 @@ isort
 reorder_python_imports
 md-tangle
 ueberzug
+pyqt5
+qutebrowser
+pyqtwebengine

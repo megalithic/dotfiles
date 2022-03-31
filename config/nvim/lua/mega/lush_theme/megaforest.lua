@@ -860,7 +860,7 @@ return lush(function()
     ---- :help: fidget.txt -----------------------------------------------------
 
     FidgetTitle({ fg = orange }),
-    FidgetTask({ fg = grey2 }),
+    FidgetTask({ fg = grey2, bg = bg1.darken(10) }),
 
     ---- :help: bqf.txt --------------------------------------------------------
 

@@ -93,10 +93,20 @@
     ~/.config/nvim:
       force: true
       path: config/nvim
-    ~/.vimrc: config/nvim/vimrc
+    ~/.config/qutebrowser:
+      force: true
+      path: config/qutebrowser
+      if: "[ `uname` = Darwin ]"
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep
+    ~/.config/starship.toml:
+      force: true
+      path: config/starship.toml
+    ~/.config/surfingkeys:
+      force: true
+      path: config/surfingkeys
+      if: "[ `uname` = Darwin ]"
     ~/.config/tmux:
       force: true
       path: config/tmux
@@ -116,14 +126,8 @@
     ~/.config/zsh:
       force: true
       path: config/zsh
+    ~/.vimrc: config/nvim/vimrc
     ~/.zshenv: config/zsh/.zshenv
-    ~/.config/starship.toml:
-      force: true
-      path: config/starship.toml
-    ~/.config/surfingkeys:
-      force: true
-      path: config/surfingkeys
-      if: "[ `uname` = Darwin ]"
 
     # ----- git
     ~/.gitmessage:
