@@ -258,6 +258,14 @@ end
 --   return logger.debug(...)
 -- end
 
+-- _G.logger = require("logger").new({
+--   level = "info",
+-- })
+
+-- function _G.put(...)
+--   return logger.debug(...)
+-- end
+
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:
 -- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
@@ -272,7 +280,14 @@ function _G.P(...)
     table.insert(objects, vim.inspect(v))
   end
 
-  print(table.concat(objects, "\n"))
+  local has_logger, logger = pcall(require, "logger")
+  if has_logger then
+    logger = logger.new({ level = "info" })
+    logger.info(table.concat(objects, "\n"))
+  else
+    print(table.concat(objects, "\n"))
+  end
+
   return ...
 end
 

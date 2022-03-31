@@ -7,7 +7,7 @@
 // - https://github.com/b0o/surfingkeys-conf
 // - https://github.com/mindgitrwx/personal_configures/blob/master/Surfingkeys-config-ko-dev.js
 // - https://github.com/loyalpartner/surfingkeys-config/blob/master/surfingkeys.js
-//
+// - https://github.com/j-hui/pokerus/blob/main/surfingkeys.config/surfingkeys/surfingkeys.js
 // TODO:
 // - https://brookhong.github.io/2018/11/18/bring-focus-back-to-page-content-from-address-bar.html
 // - https://github.com/brookhong/Surfingkeys/wiki/FAQ#how-to-go-to-nth-tab
@@ -38,10 +38,18 @@ const {
   RUNTIME,
 } = api;
 
-// settings
+function dbg(s) {
+  console.log("[megakeys]: " + s);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------
+// -- [ SETTINGS ]
+// -----------------------------------------------------------------------------------------------------------------------
 settings.defaultSearchEngine = "d"; // duck duck go
 settings.focusAfterClosed = "right";
 settings.hintAlign = "left";
+settings.hintExplicit = true;
+settings.hintShiftNonActive = true;
 settings.smoothScroll = false;
 settings.omnibarSuggestionTimeout = 500;
 settings.richHintsForKeystroke = 1;
@@ -63,9 +71,14 @@ settings.tabsMRUOrder = false;
 // Input box trueだとiなどで入力ボックスに切り替えてもリンクキーが表示されたままに 切り替えたリンクキーが最後に入力されることも
 settings.cursorAtEndOfInput = false;
 
+
+
+// -----------------------------------------------------------------------------------------------------------------------
+// -- [ HINTS ]
+// -----------------------------------------------------------------------------------------------------------------------
+
 Hints.characters = "qwertasdfgzxcvb";
 // Hints.characters = "asdfgyuiopqwertnmzxcvb";
-
 // Link Hints
 Hints.style(`
     font-family: 'JetBrains Mono';
@@ -90,78 +103,134 @@ Hints.style(
   "text"
 );
 
+// -- Change hints styles
+// Hints.characters = "asdfgqwertvbn";
+// Hints.style(
+//   'border: solid 1px #ff79c6; color:#44475a; background: #f1fa8c; background-color: #f1fa8c; font-size: 10pt; font-family: "Jetbrains Mono"'
+// );
+// Hints.style('border: solid 8px #ff79c6;padding: 1px;background: #f1fa8c; font-family: "Jetbrains Mono"', "text");
+
+// -----------------------------------------------------------------------------------------------------------------------
+// -- [ VISUAL ]
+// -----------------------------------------------------------------------------------------------------------------------
 // set visual-mode style
 Visual.style("marks", "background-color: #A3BE8C; border: 1px solid #3B4252 !important; text-decoration: underline;");
 Visual.style(
   "cursor",
   "background-color: #E5E9F0 !important; border: 1px solid #6272a4 !important; border-bottom: 2px solid green !important; padding: 2px !important; outline: 1px solid rgba(255,255,255,.75) !important;"
 );
-
-// -----------------------------------------------------------------------------------------------------------------------
-// Change hints styles
-// -----------------------------------------------------------------------------------------------------------------------
-// Hints.characters = "asdfgqwertvbn";
-// Hints.style(
-//   'border: solid 1px #ff79c6; color:#44475a; background: #f1fa8c; background-color: #f1fa8c; font-size: 10pt; font-family: "Jetbrains Mono"'
-// );
-// Hints.style('border: solid 8px #ff79c6;padding: 1px;background: #f1fa8c; font-family: "Jetbrains Mono"', "text");
-// // -----------------------------------------------------------------------------------------------------------------------
-// // Change search marks and cursor
-// // -----------------------------------------------------------------------------------------------------------------------
+// -- Change search marks and cursor
 // Visual.style("marks", "background-color: #f1fa8c;");
 // Visual.style(
 //   "cursor",
 //   "background-color: #6272a4 !important; color: #f8f8f2 !important; border:1px red; font-weight:bold"
 // );
 
+// -----------------------------------------------------------------------------------------------------------------------
+// -- [ MAPPINGS ]
+// -----------------------------------------------------------------------------------------------------------------------
+
+/* Chord prefix mnemonics:
+ *
+ *   (r)eload: related to current page
+ *   (z)oom: related to page resolution
+ *   (:): related to omnibar
+ *   (g)oto: links, input, and other graphical interaction
+ *   (s)croll: select scroll elements
+ *   (y)ank: pull to clipboard
+ *
+ */
+
+// -- UNMAPS
+// (Unused; unmap these first so they can be mapped to other things)
 mapkey("w", "Move current tab to another window", function () {
   Front.openOmnibar({ type: "Windows" });
 });
 
-// disable emoji completion
-iunmap(":");
+unmap(':'); // Lets me map chords beginning with ':'
+iunmap(":");  // disable emoji completion
+vunmap("t");  // disable google translate of visually selected
+unmap("w");   // disable window splitting (i use hammerspoon for that)
+unmap(';w');  // Focus top window
+unmap('%');   // Scroll to percentage of current page
+unmap(';m');  // Mouse out last element
+unmap('B');   // Go on tab history back
+unmap('gT');  // Go to first activated tab
+unmap(';i');  // Insert jquery library on current page
+unmap(';t');  // Translate selected text with google
+unmap('gr');  // Read selected text or text from clipboard
+unmap(';dh'); // Delete history older than 30 days
 
-// disable google translate of visually selected
-vunmap("t");
+unmap('<Alt-p>'); // pin/unpin current tab
+unmap('<Alt-m>'); // mute/unmute current tab
 
-// disable window splitting (i use hammerspoon for that)
-unmap("w");
+// Search selection
+unmap('sg');
+unmap('sd');
+unmap('sb');
+unmap('sw');
+unmap('ss');
+unmap('sh');
+unmap('sy');
 
+/* (Search selection doesn't make sense for normal mode) */
+unmap('sg');
+unmap('sd');
+unmap('sb');
+unmap('sw');
+unmap('ss');
+unmap('sh');
+unmap('sy');
+
+// -- VISUAL
 vmap("H", "0");
 vmap("L", "$");
 // vunmap("gr");
 // vunmap("q");
 
+// -- Tab navigation
 // previous/next tab
 map("<Ctrl-l>", "R");
 map("<Ctrl-h>", "E");
-
 // close current tab
 map("<Ctrl-w>", "x");
-
 // page up/down
 map("<Ctrl-f>", "d");
 map("<Ctrl-b>", "e");
-
 // search opened tabs with `gt`
 map("gt", "T");
 map("<Ctrl-g>", "T");
-
 // history Back/Forward
 map("H", "S");
 map("L", "D");
-// api.mapkey("K", "#1Click on the previous link on current page", previousPage);
-// api.mapkey("J", "#1Click on the next link on current page", nextPage);
-
 // first tab/last tab
 map("gH", "g0");
 map("gL", "g$");
-
 // open link in new tab
 map("F", "gf");
 
-aceVimMap(",w", ":w", "normal");
-aceVimMap(",q", ":q", "normal");
+// -- ESC hatch
+imap('<Ctrl-[>', '<Esc>');
+imap('<Ctrl-c>', '<Esc>');
+cmap('<Ctrl-[>', '<Esc>');
+cmap('<Ctrl-c>', '<Esc>');
+
+vmapkey('<Ctrl-[>', '#9Exit visual mode', function () {
+  if (Visual.state > 1) {
+      Visual.hideCursor();
+      Visual.selection.collapse(selection.anchorNode, selection.anchorOffset);
+      Visual.showCursor();
+  } else {
+      Visual.visualClear();
+      Visual.exit();
+  }
+  Visual.state--;
+  Visual._onStateChange();
+});
+
+vmapkey('<Ctrl-c>', '#9Exit visual mode', function () {
+  Visual.exit();
+});
 
 // set quick-tab-opening for `<C-1>`-`<C-0>` for tabs 1-10
 for (let i = 0; i <= 9; i++) {
@@ -177,8 +246,15 @@ for (let i = 0; i <= 9; i++) {
   }
 }
 
+// -- EDITOR/ACE
+aceVimMap(",w", ":w", "normal");
+aceVimMap(",q", ":q", "normal");
+aceVimMap('kj', '<Esc>', 'insert');
+aceVimMap('<C-c>', '<Esc>', 'insert');
+
+
 // custom actions
-actions.showSpeedReader = () => {
+actions.showSquirt = () => {
   const script = document.createElement("script");
   script.innerHTML = `(() => {
     const sq = window.sq || {}
@@ -196,7 +272,7 @@ actions.showSpeedReader = () => {
   document.body.appendChild(script);
 };
 unmap(";s");
-mapkey(";s", "-> Open Squirt", actions.showSpeedReader);
+mapkey(";s", "-> Open Squirt", actions.showSquirt);
 
 actions.sendToInstapaper = () => {
   const script = document.createElement("script");
