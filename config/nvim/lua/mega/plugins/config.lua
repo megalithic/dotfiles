@@ -892,6 +892,7 @@ do -- vim-projectionist
           "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}LiveTest do",
           -- "  use ExUnit.Case, async: true",
           "  use {dirname|camelcase|capitalize}.ConnCase",
+          "  import Phoenix.LiveViewTest",
           -- "",
           -- "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live",
           "end",
