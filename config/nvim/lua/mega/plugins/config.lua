@@ -883,7 +883,7 @@ do -- vim-projectionist
       },
       ["lib/**/live/*_live.heex"] = {
         ["type"] = "heex",
-        ["related"] = "lib/{dirname}/live/{basename}_live.html.ex",
+        ["related"] = "lib/{dirname}/live/{basename}_live.html.heex",
       },
       ["test/**/live/*_live_test.exs"] = {
         ["type"] = "test",
