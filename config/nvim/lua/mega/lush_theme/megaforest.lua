@@ -200,7 +200,6 @@ return lush(function()
     DiffChange({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed line |diff.txt|
     DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
     DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
-    EndOfBuffer({ fg = bg2, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
     TermCursor({ Cursor }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
@@ -208,7 +207,11 @@ return lush(function()
     WinSeparator({ VertSplit, gui = "bold" }),
     Folded({ fg = grey1, bg = bg1 }), -- line used for closed folds
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
-    SignColumn({ fg = fg, bg = bg0 }), -- column where |signs| are displayed
+    -- Neither the sign column or end of buffer highlights require an explicit background
+    -- they should both just use the background that is in the window they are in.
+    -- if either are specified this can lead to issues when a winhighlight is set
+    SignColumn({ fg = fg, bg = "NONE" }), -- column where |signs| are displayed
+    EndOfBuffer({ fg = bg2, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
     Search({ fg = bg0, bg = green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     Substitute({ fg = bg0, bg = yellow, guid = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
