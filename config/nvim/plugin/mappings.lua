@@ -172,8 +172,8 @@ if has_wk then
       },
       p = {
         name = "project",
-        p = { "<cmd>:A<cr>", "Toggle Alternate (vsplit)" },
-        P = { "<cmd>:AV<cr>", "Open Alternate (vsplit)" },
+        p = { "<cmd>:AV<cr>", "Toggle Alternate (vsplit)" },
+        P = { "<cmd>:A<cr>", "Open Alternate (edit)" },
         l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
         L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
       },
@@ -189,7 +189,7 @@ if has_wk then
         n = { "<cmd>TestNearest<cr>", "Run _test under cursor" },
         a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
         l = { "<cmd>TestLast<cr>", "Run _last test" },
-        v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
+        v = { "<cmd>TestVisit<cr>", "Run test file _visit" },
       },
       z = {
         name = "zk",
@@ -203,7 +203,9 @@ if has_wk then
         f = { "<cmd>TestFile<cr>", "Run _all tests in file" },
         l = { "<cmd>TestLast<cr>", "Run _last test" },
         t = { "<cmd>TestLast<cr>", "Run _last test" },
-        v = { "<cmd>TestVisit<cr>", "Run test file _visitation" },
+        v = { "<cmd>TestVisit<cr>", "Run test file _visit" },
+        p = { "<cmd>:A<cr>", "Toggle Alternate (edit)" },
+        P = { "<cmd>:AV<cr>", "Open Alternate (vsplit)" },
       },
       g = {
         name = "gitsigns",
