@@ -112,6 +112,7 @@ local function setup_autocommands(client, bufnr)
         --     "BufLeave",
         --     "InsertEnter",
         --     "FocusLost",
+        --     "BufWritePre"
         --   },
         -- })
       end,
@@ -402,6 +403,7 @@ local function setup_handlers()
       "BufLeave",
       "InsertEnter",
       "FocusLost",
+      "BufWritePre",
     },
   }
 
@@ -529,20 +531,20 @@ mega.lsp.servers = {
   rust_analyzer = true,
   vimls = true,
   zk = true,
-  pyright = function()
-    return {
-      single_file_support = true,
-      settings = {
-        python = {
-          analysis = {
-            autoSearchPaths = true,
-            diagnosticMode = "workspace",
-            useLibraryCodeForTypes = true,
-          },
-        },
-      },
-    }
-  end,
+  -- pyright = function()
+  --   return {
+  --     single_file_support = false,
+  --     settings = {
+  --       python = {
+  --         analysis = {
+  --           autoSearchPaths = true,
+  --           diagnosticMode = "workspace",
+  --           useLibraryCodeForTypes = true,
+  --         },
+  --       },
+  --     },
+  --   }
+  -- end,
   jsonls = function()
     return {
       commands = {

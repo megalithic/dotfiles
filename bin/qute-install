@@ -1,0 +1,99 @@
+#!/bin/bash
+
+if [[ -z $XDG_DATA_HOME ]]; then
+  export XDG_DATA_HOME="$HOME/.local/share"
+fi
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  export XDG_CONFIG_HOME="$HOME/.config"
+fi
+
+[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+
+set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+ELIXIRLS_PATH="${XDG_DATA_HOME}/lsp/elixir-ls"
+VERSION="${1:-stable}"
+TARGET=""
+BINARY=""
+BUILD_TYPE=""
+
+# REF: https://github.com/outstand/atlas/blob/83345ed348ad0b6fb5a8c413b5202f5cfaf5d547/Dockerfile
+do_install() {
+  case "$VERSION" in
+    '' | 'stable')
+      TARGET="https://github.com/qutebrowser/qutebrowser/releases/latest/download/qutebrowser.dmg"
+      BINARY="elixir-ls.zip"
+      BUILD_TYPE="archive"
+      ;;
+    *)
+      TARGET="https://github.com/elixir-lsp/elixir-ls/archive/"
+      BINARY="${VERSION}.tar.gz"
+      BUILD_TYPE="source"
+      ;;
+  esac
+
+  log "downloading and installing to $ELIXIRLS_PATH"
+  if [[ $BUILD_TYPE == "archive" ]]; then
+    curl -fLO "$TARGET/$BINARY" \
+      && unzip -o "$BINARY" -d "$ELIXIRLS_PATH" \
+      && chmod +x "$ELIXIRLS_PATH/language_server.sh" \
+      && log_ok "unpacked $HOME/$BINARY" \
+      && (rm "$BINARY" && log_ok "removed $HOME/$BINARY") \
+      && log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" \
+      || exit 1
+  elif [[ $BUILD_TYPE == "source" ]]; then
+    curl -fLO "$TARGET/$BINARY" \
+      && tar -xvzf "$BINARY" -C ~/tmp \
+      && log_ok "unpacked $HOME/$BINARY" \
+      && pushd "$HOME/tmp/elixir-ls-$VERSION" >/dev/null \
+      && mix local.hex --force && mix local.rebar --force \
+      && mix do deps.get, compile, elixir_ls.release -o "$ELIXIRLS_PATH" \
+      && log_ok "built elixir-ls" \
+      && popd >/dev/null \
+      && (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") \
+      && (rm "$BINARY" && log_ok "removed $HOME/$BINARY") \
+      && log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" \
+      || exit 1
+  fi
+}
+
+while getopts "sn" OPTION; do
+  case $OPTION in
+
+    s)
+      FORCE_INSTALL="true"
+      ;;
+
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+  esac
+done
+shift $((OPTIND - 1))
+
+read -p "$(tput bold)$(tput setaf 5)[?] download and install ${VERSION} elixir-ls (Y/n)?$(tput sgr 0) " yn
+case $yn in
+  [Yy]*)
+    do_install || exit 1
+    ;;
+  "")
+    do_install || exit 1
+    ;;
+  [Nn]*)
+    log_warn "opted out of elixir-ls install"
+    ;;
+  *)
+    log_warn "please answer [y]es or [n]o."
+    exec $__invocation
+    ;;
+esac
