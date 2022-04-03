@@ -205,6 +205,8 @@ alias essh="nvim $PRIVATES/home/ssh/config"
 
 alias ek="nvim $DOTS/config/kitty/kitty.conf"
 
+alias eq="nvim $DOTS/home/qutebrowser/config.py"
+
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"
 

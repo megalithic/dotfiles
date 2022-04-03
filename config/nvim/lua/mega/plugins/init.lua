@@ -198,6 +198,7 @@ local PKGS = {
   -- "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "outstand/logger.nvim",
+  "RRethy/nvim-align",
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
