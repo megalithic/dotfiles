@@ -811,6 +811,8 @@ do -- vim-test
 end
 
 do -- vim-projectionist
+  -- TODO: use vim.json.decode([[]])
+  -- REF: https://github.com/mhanberg/.dotfiles/blob/2ae15a001ed8fffbe0305512676ff7aed1586436/config/nvim/init.lua#L97
   vim.g.projectionist_heuristics = {
     ["&package.json"] = {
       ["package.json"] = {

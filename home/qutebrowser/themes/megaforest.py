@@ -14,7 +14,8 @@ blue = "#7fbbb3"
 magenta = "#d699b6"
 cyan = "#83c092"
 white = "#d8cacc"
-brightblack = "#273433"
+brightblack = "#2e383e"
+darkblack = "#273433"
 brightred = "#c43e1f"
 brightgreen = "#6bc46d"
 brightyellow = "#FAB005"
@@ -132,7 +133,7 @@ c.colors.prompts.selected.bg = brightblack
 # STATUSBAR # STATUSBAR # STATUSBAR # STATUSBAR # STATUSBAR # STATUSBAR #
 
 # statusbar in normal mode
-c.colors.statusbar.normal.bg = black
+c.colors.statusbar.normal.bg = darkblack
 c.colors.statusbar.normal.fg = brightwhite
 
 # statusbar in caret mode
@@ -179,7 +180,7 @@ c.colors.statusbar.progress.bg = brightwhite
 # TABS # TABS # TABS # TABS # TABS # TABS # TABS # TABS # TABS # TABS #
 
 # tab bar
-c.colors.tabs.bar.bg = black
+c.colors.tabs.bar.bg = brightblack
 
 # tab indicator
 c.colors.tabs.indicator.start = blue
@@ -201,15 +202,15 @@ c.colors.tabs.pinned.odd.bg = black
 c.colors.tabs.pinned.odd.fg = cyan
 
 # selected tabs
-c.colors.tabs.selected.even.bg = brightblack
+c.colors.tabs.selected.even.bg = darkblack
 c.colors.tabs.selected.even.fg = brightwhite
-c.colors.tabs.selected.odd.bg = brightblack
+c.colors.tabs.selected.odd.bg = darkblack
 c.colors.tabs.selected.odd.fg = brightwhite
 
 # pinned selected tabs
-c.colors.tabs.pinned.selected.even.bg = brightblack
+c.colors.tabs.pinned.selected.even.bg = darkblack
 c.colors.tabs.pinned.selected.even.fg = brightcyan
-c.colors.tabs.pinned.selected.odd.bg = brightblack
+c.colors.tabs.pinned.selected.odd.bg = darkblack
 c.colors.tabs.pinned.selected.odd.fg = brightcyan
 
 

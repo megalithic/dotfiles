@@ -411,16 +411,46 @@ local function setup_handlers()
   -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
   lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
-  lsp.handlers["window/showMessage"] = function(_, result, ctx)
-    local cl = lsp.get_client_by_id(ctx.client_id)
-    local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG" })[result.type]
-    vim.notify(result.message, lvl, {
-      title = "LSP | " .. cl.name,
-      timeout = 10000,
-      keep = function()
-        return lvl == "ERROR" or lvl == "WARN"
-      end,
-    })
+  do
+    vim.lsp.set_log_level(2)
+    local convert_lsp_log_level_to_neovim_log_level = function(lsp_log_level)
+      if lsp_log_level == 1 then
+        return 4
+      elseif lsp_log_level == 2 then
+        return 3
+      elseif lsp_log_level == 3 then
+        return 2
+      elseif lsp_log_level == 4 then
+        return 1
+      end
+    end
+    local levels = {
+      "ERROR",
+      "WARN",
+      "INFO",
+      "DEBUG",
+      [0] = "TRACE",
+    }
+    -- lsp.handlers["window/showMessage"] = function(_, result, ...)
+    --   if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
+    --     vim.notify(result.message, levels[result.type])
+    --   end
+    -- end
+    lsp.handlers["window/showMessage"] = function(_, result, ctx)
+      if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
+        local cl = lsp.get_client_by_id(ctx.client_id)
+        -- local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG" })[result.type]
+        local lvl = levels[result.type]
+        -- vim.notify(result.message, levels[result.type])
+        vim.notify(result.message, lvl, {
+          title = "LSP | " .. cl.name,
+          timeout = 10000,
+          keep = function()
+            return lvl == "ERROR" or lvl == "WARN"
+          end,
+        })
+      end
+    end
   end
 
   -- local old_handler = vim.lsp.handlers["window/logMessage"]
@@ -783,6 +813,35 @@ mega.lsp.servers = {
       opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, "language_server.sh")
 
       return language_server_cmd(opts)
+    end
+
+    local get_cursor_position = function()
+      local rowcol = vim.api.nvim_win_get_cursor(0)
+      local row = rowcol[1] - 1
+      local col = rowcol[2]
+
+      return row, col
+    end
+
+    local manipulate_pipes = function(direction, client)
+      local row, col = get_cursor_position()
+
+      client.request_sync("workspace/executeCommand", {
+        command = "manipulatePipes:serverid",
+        arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
+      }, nil, 0)
+    end
+
+    local function from_pipe(client)
+      return function()
+        manipulate_pipes("fromPipe", client)
+      end
+    end
+
+    local function to_pipe(client)
+      return function()
+        manipulate_pipes("toPipe", client)
+      end
     end
 
     return {
