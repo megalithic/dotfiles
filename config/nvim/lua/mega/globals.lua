@@ -282,7 +282,7 @@ function _G.P(...)
 
   local has_logger, logger = pcall(require, "logger")
   if has_logger then
-    logger = logger.new({ level = "info" })
+    logger = logger.new({ level = "debug" })
     logger.info(table.concat(objects, "\n"))
   else
     print(table.concat(objects, "\n"))
@@ -362,24 +362,6 @@ function mega.auto_mkdir()
       -- vcmd("redraw!")
     end
   end
-end
-
--- inspect the contents of an object very quickly
--- in your code or from the command-line:
--- @see: https://www.reddit.com/r/neovim/comments/p84iu2/useful_functions_to_explore_lua_objects/
--- USAGE:
--- in lua: P({1, 2, 3})
--- in commandline: :lua P(vim.loop)
----@vararg any
-function mega.P(...)
-  local objects, v = {}, nil
-  for i = 1, select("#", ...) do
-    v = select(i, ...)
-    table.insert(objects, vim.inspect(v))
-  end
-
-  print(table.concat(objects, "\n"))
-  return ...
 end
 
 function _G.dump(...)

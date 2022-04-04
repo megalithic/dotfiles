@@ -17,6 +17,7 @@
 import os
 import platform
 
+from qutebrowser.api import interceptor
 
 # --> PRE:
 # Start directly with python configuration; skip ones created with :set
@@ -24,9 +25,14 @@ config.load_autoconfig(False)
 
 
 # --> LOADERS:
-USERSCRIPT_PATH = os.path.join(config.configdir, 'userscripts')
+USERSCRIPT_PATH = os.path.join(config.configdir, "userscripts")
+
+
 def userscript(script_name):
-  return os.path.join(USERSCRIPT_PATH, script_name)
+    return os.path.join(USERSCRIPT_PATH, script_name)
+
+
+config.source("themes/material-darker.py")
 # Apply splitted configuration
 # for source in [
 #   # 'aliases',
@@ -44,67 +50,68 @@ def userscript(script_name):
 
 # --> SETTINGS:
 commands = {
-  'edit': "kitty nvim -f {file} -c 'normal {line}G{column0}l'".split(),
-  # 'edit':       'foot -T float vim {file}'.split(),
-  # 'pick_dir':   'foot -T float ranger --choosedir={}'.split(),
-  # 'pick_files': 'foot -T float ranger --choosefiles={}'.split(),
-  # 'pick_file':  'foot -T float ranger --choosefile={}'.split()
+    "edit": "kitty --launch nvim -f {file} -c 'normal {line}G{column0}l'".split(),
+    # c.editor.command = ['nvim', '-f', '{file}', '-c', 'normal {line}G{column0}l']
+    # 'edit':       'foot -T float vim {file}'.split(),
+    # 'pick_dir':   'foot -T float ranger --choosedir={}'.split(),
+    # 'pick_files': 'foot -T float ranger --choosefiles={}'.split(),
+    # 'pick_file':  'foot -T float ranger --choosefile={}'.split()
 }
 
 
 # --> CONFIG:
-c.auto_save.interval                    = 15000
-c.auto_save.session                     = True
-c.completion.open_categories            = ['quickmarks','history','searchengines']
-c.completion.quick                      = False
-c.completion.scrollbar.padding          = 0
-c.completion.scrollbar.width            = 8
-c.confirm_quit                          = ['multiple-tabs','downloads']
-c.downloads.location.remember           = False
-c.downloads.location.suggestion         = 'both'
-c.downloads.position                    = 'bottom'
-c.downloads.location.directory          = '$HOME/Downloads'
+c.auto_save.interval = 15000
+c.auto_save.session = True
+c.completion.open_categories = ["searchengines", "quickmarks", "bookmarks", "history"]
+c.completion.quick = False
+c.completion.scrollbar.padding = 0
+c.completion.scrollbar.width = 8
+c.confirm_quit = ["multiple-tabs", "downloads"]
+c.downloads.location.remember = False
+c.downloads.location.suggestion = "both"
+c.downloads.position = "bottom"
+c.downloads.location.directory = "$HOME/Downloads"
 # c.downloads.remove_finished           = 696969
-c.editor.command                        = commands["edit"]
+c.editor.command = commands["edit"]
 # c.fileselect.folder.command           = commands["pick_dir"]
 # c.fileselect.handler                  = 'external'
 # c.fileselect.multiple_files.command   = commands["pick_files"]
 # c.fileselect.single_file.command      = commands["pick_file"]
-c.fonts.contextmenu                     = 'default_size default_family'
-c.fonts.default_family                  = 'JetBrains Mono'
-c.fonts.default_size                    = '14px'
-c.fonts.prompts                         = 'default_size default_family'
-c.hints.chars                           = 'ctsrvdlgh'
-c.history_gap_interval                  = 240
-c.input.escape_quits_reporter           = True
-c.input.mouse.rocker_gestures           = True
-c.input.partial_timeout                 = 10000
-c.keyhint.delay                         = 250
-c.messages.timeout                      = 5000
-c.new_instance_open_target              = 'tab-bg'
-c.tabs.last_close                       = 'blank'
-c.tabs.position                         = 'top'
-c.tabs.show                             = 'multiple'
-c.tabs.undo_stack_size                  = 20
-c.tabs.width                            = "10%" # 60
-c.tabs.close_mouse_button               = 'right'
-c.url.open_base_url                     = True
-c.url.default_page                      = 'about:blank'
-c.url.start_pages                       = 'about:blank'
+c.fonts.contextmenu = "default_size default_family"
+c.fonts.default_family = "JetBrains Mono"
+c.fonts.default_size = "14px"
+c.fonts.prompts = "default_size default_family"
+c.hints.chars = "ctsrvdlgh"  # get the keys from our vim config hop/lightspeed/etc; or from surfingkeys
+c.history_gap_interval = 240
+c.input.escape_quits_reporter = True
+c.input.mouse.rocker_gestures = True
+c.input.partial_timeout = 10000
+c.keyhint.delay = 250
+c.messages.timeout = 5000
+c.new_instance_open_target = "tab-bg"
+c.tabs.last_close = "blank"
+c.tabs.position = "top"
+c.tabs.show = "multiple"
+c.tabs.undo_stack_size = 20
+c.tabs.width = "10%"  # 60
+c.tabs.close_mouse_button = "right"
+c.url.open_base_url = True
+c.url.default_page = "about:blank"
+c.url.start_pages = "about:blank"
 
-padding                                 = {
-  'top': 6,
-  'bottom': 6,
-  'right': 8,
-  'left': 8,
+padding = {
+    "top": 8,
+    "bottom": 8,
+    "right": 8,
+    "left": 8,
 }
-c.statusbar.padding                     = padding
-c.tabs.padding                          = padding
-c.tabs.indicator.width                  = 1
-c.tabs.favicons.scale                   = 1
+c.statusbar.padding = padding
+c.tabs.padding = padding
+c.tabs.indicator.width = 1
+c.tabs.favicons.scale = 1
 
 # Minimizing fingerprinting and annoying things
-u_agent                                 = 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0'
+u_agent = "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
 
 # User agent to send. (domain/pattern based)..
 # The following placeholders are defined:
@@ -124,88 +131,116 @@ u_agent                                 = 'Mozilla/5.0 (Windows NT 10.0; rv:91.0
 # config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99 Safari/537.36', 'https://*.slack.com/*')
 # config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}; rv:71.0) Gecko/20100101 Firefox/71.0', 'https://docs.google.com/*')
 
-c.content.autoplay                      = False
-c.content.images                        = True
-c.content.javascript.enabled            = True
-c.content.canvas_reading                = True
-c.content.cookies.accept                = 'no-unknown-3rdparty'
-c.content.geolocation                   = False
-c.content.headers.user_agent            = u_agent
-c.content.notifications.enabled         = False
-c.content.pdfjs                         = True
-c.content.register_protocol_handler     = False
-c.content.webgl                         = True
-c.content.webrtc_ip_handling_policy     = 'default-public-interface-only'
+c.content.autoplay = False
+c.content.images = True
+c.content.javascript.enabled = True
+c.content.canvas_reading = True
+c.content.cookies.accept = "no-unknown-3rdparty"
+c.content.geolocation = False
+c.content.headers.user_agent = u_agent
+c.content.notifications.enabled = False
+c.content.pdfjs = True
+c.content.register_protocol_handler = False
+c.content.webgl = True
+c.content.webrtc_ip_handling_policy = "default-public-interface-only"
+c.content.blocking.adblock.lists = [
+    "https://easylist.to/easylist/easylist.txt",
+    "https://easylist.to/easylist/easyprivacy.txt",
+    "https://easylist-downloads.adblockplus.org/easylistdutch.txt",
+    "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt",
+    "https://www.i-dont-care-about-cookies.eu/abp/",
+    "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt",
+]
 
-c.colors.webpage.darkmode.enabled       = True
-c.colors.webpage.darkmode.policy.images = 'smart'
-c.colors.webpage.preferred_color_scheme = 'dark'
-c.colors.webpage.bg                     = "#000000"
+c.input.forward_unbound_keys = "all"
+c.input.insert_mode.auto_leave = False
+c.input.insert_mode.plugins = False
+
+c.colors.webpage.darkmode.enabled = True
+c.colors.webpage.darkmode.policy.images = "smart"
+c.colors.webpage.preferred_color_scheme = "dark"
+bg_color = "#000000"
+c.colors.webpage.bg = bg_color
+
+# TODO: https://github.com/qutebrowser/qutebrowser/blob/master/scripts/dictcli.py
+# c.spellcheck.languages = ["en-US"]
 
 
 # --> MISC:
 # # Put kitty, gvim, etc. in Qutebrowser's PATH, at least on macOS
-os.environ['PATH'] = '/usr/local/bin' + os.pathsep + os.environ['PATH']
+os.environ["PATH"] = "/usr/local/bin" + os.pathsep + os.environ["PATH"]
 # https://github.com/LaurenceWarne/qute-code-hint
 c.hints.selectors["code"] = [
-  # Selects all code tags whose direct parent is not a pre tag
-  ":not(pre) > code",
-  "pre",
+    # Selects all code tags whose direct parent is not a pre tag
+    ":not(pre) > code",
+    "pre",
 ]
 # Add a specific selectors (tries to select any frame)
-c.hints.selectors['frame'] = [
-  'div',
-  'header',
-  'section',
-  'nav'
-]
+c.hints.selectors["frame"] = ["div", "header", "section", "nav"]
+
+# os.environ['PATH'] = os.pathsep + '/usr/local/bin'
+# os.environ['NODE_PATH'] = os.pathsep + '/usr/local/lib/node_modules'
+
+# ================== Youtube Add Blocking ======================= {{{
+def filter_yt(info: interceptor.Request):
+    """Block the given request if necessary."""
+    url = info.request_url
+    if (
+        url.host() == "www.youtube.com"
+        and url.path() == "/get_video_info"
+        and "&adformat=" in url.query()
+    ):
+        info.block()
+
+
+interceptor.register(filter_yt)
 
 
 # --> PATTERNS-EXCEPTIONS:
 clipboard_allowed = [
-  'https://github.com/*',
-  'https://stackoverflow.com/*',
-  'https://*.stackexchange.com/*',
-  'https://*.google.com/*',
+    "https://github.com/*",
+    "https://stackoverflow.com/*",
+    "https://*.stackexchange.com/*",
+    "https://*.google.com/*",
 ]
 for domain in clipboard_allowed:
-  with config.pattern(domain) as p:
-    p.content.javascript.can_access_clipboard = True
-    # config.set('content.javascript.can_access_clipboard', True, site)
+    with config.pattern(domain) as p:
+        p.content.javascript.can_access_clipboard = True
+        # config.set('content.javascript.can_access_clipboard', True, site)
 
 javascript_allowed = [
-  'https://*.duckduckgo.com/*',
-  'https://*.gitlab.com/*',
-  'https://*.github.com/*/*/issues',
-  'https://*.troupl.in/*',
-  'chrome-devtools://*',
-  'devtools://*',
-  'chrome://*',
-  'qute://*',
+    "https://*.duckduckgo.com/*",
+    "https://*.gitlab.com/*",
+    "https://*.github.com/*/*/issues",
+    "https://*.troupl.in/*",
+    "chrome-devtools://*",
+    "devtools://*",
+    "chrome://*",
+    "qute://*",
 ]
 for domain in javascript_allowed:
-  with config.pattern(domain) as p:
-    p.content.javascript.enabled = True
+    with config.pattern(domain) as p:
+        p.content.javascript.enabled = True
 
 images_allowed = [
-  'file://*',
-  'chrome-devtools://*',
-  'devtools://*',
-  'qute://*',
-  'https://*.troupl.in/*'
+    "file://*",
+    "chrome-devtools://*",
+    "devtools://*",
+    "qute://*",
+    "https://*.troupl.in/*",
 ]
 for domain in images_allowed:
-  with config.pattern(domain) as p:
-    p.content.images = True
+    with config.pattern(domain) as p:
+        p.content.images = True
 
 
 # --> EXTERNAL:
 # # Open external applications
 for site in [
-  'zoommtg://*.zoom.us',
-  'https://*.slack.com',
+    "zoommtg://*.zoom.us",
+    "https://*.slack.com",
 ]:
-  config.set('content.unknown_url_scheme_policy', 'allow-all', site)
+    config.set("content.unknown_url_scheme_policy", "allow-all", site)
 
 
 # --> SEARCHENGINES:
@@ -237,64 +272,64 @@ ss   : https://github.com/koalaman/shellcheck/wiki/SC{}
 """
 
 # Clean the searchengines list
-#c.url.searchengines = {}
+# c.url.searchengines = {}
 
 # Fill the searchengines list (DEFAULT is the first in the list)
 for se in searchengines.splitlines():
-  if se:
-    bang, url = se.split(':', 1)
-    if not c.url.searchengines:
-      c.url.searchengines['DEFAULT'] = url.strip()
-      c.url.searchengines['!' + bang] = url.strip()
+    if se:
+        bang, url = se.split(":", 1)
+        if not c.url.searchengines:
+            c.url.searchengines["DEFAULT"] = url.strip()
+            c.url.searchengines["!" + bang] = url.strip()
 
 
 # --> ALIASES:
 # - https://github.com/qutebrowser/qutebrowser/blob/master/doc/help/commands.asciidoc
 c.aliases = {
-  'q'    : 'close',
-  'qa'   : 'quit',
-  'w'    : 'session-save',
-  'wq'   : 'quit --save',
-  'qr'   : 'spawn -u -- qr',
-  'clone': 'spawn -u -- gitclone',
-  'sz'   : 'config-source',
-  'o'    : 'open',
-  'O'    : 'open --tab',
-  'L'    : 'open --background',
-  'h'    : 'help',
-  '?'    : 'help',
-  'noh'    : 'search',
-  'clr'    : 'clear-messages',
-  'q'    : 'close',
-  'qa'    : 'quite',
-  'w'    : 'session-save',
-  'wq'    : 'quit --save',
-  'wqa'    : 'quit --save',
-  'pin'    : 'tab-pin',
-  'priv'    : 'open --private',
-  'bm'    : 'open -t qute://bookmarks/',
-  'mpv'    : 'spawn mpv --autofit=100%x100% --force-window=immediate --keep-open=yes {url}',
-  'ompv' : 'hint links spawn mpv --autofit=100%x100% --force-window=immediate {hint-url}',
-  'dl': 'spawn --userscript open_download',
+    "q": "close",
+    "qa": "quit",
+    "w": "session-save",
+    "wq": "quit --save",
+    "qr": "spawn -u -- qr",
+    "clone": "spawn -u -- gitclone",
+    "sz": "config-source",
+    "o": "open",
+    "O": "open --tab",
+    "L": "open --background",
+    "h": "help",
+    "?": "help",
+    "noh": "search",
+    "clr": "clear-messages",
+    "q": "close",
+    "qa": "quite",
+    "w": "session-save",
+    "wq": "quit --save",
+    "wqa": "quit --save",
+    "pin": "tab-pin",
+    "priv": "open --private",
+    "bm": "open -t qute://bookmarks/",
+    "mpv": "spawn mpv --autofit=100%x100% --force-window=immediate --keep-open=yes {url}",
+    "ompv": "hint links spawn mpv --autofit=100%x100% --force-window=immediate {hint-url}",
+    "dl": "spawn --userscript open_download",
 }
 
-c.aliases['b'] = 'tab-focus'
+c.aliases["b"] = "tab-focus"
 for i in range(1, 20):
-  c.aliases['b'+str(i)] = 'tab-focus ' + str(i)
+    c.aliases["b" + str(i)] = "tab-focus " + str(i)
 
-c.aliases['chrome'] = 'spawn open -a "Google Chrome" {url}'
-c.aliases['ochrome'] = 'hint all spawn open -a "Google Chrome" {hint-url}'
+c.aliases["chrome"] = 'spawn open -a "Google Chrome" {url}'
+c.aliases["ochrome"] = 'hint all spawn open -a "Google Chrome" {hint-url}'
 
-c.aliases['user'] = 'spawn --userscript'
-c.aliases['pass'] = 'spawn --userscript qute-pass'
-c.aliases['readability'] = 'spawn --userscript readability'
-c.aliases['reader'] = 'spawn --userscript readability'
-c.aliases['bib'] = 'spawn --userscript getbib'
-c.aliases['pocket'] = 'spawn --userscript qutepocket'
+c.aliases["user"] = "spawn --userscript"
+c.aliases["pass"] = "spawn --userscript qute-pass"
+c.aliases["readability"] = "spawn --userscript readability"
+c.aliases["reader"] = "spawn --userscript readability"
+c.aliases["bib"] = "spawn --userscript getbib"
+c.aliases["pocket"] = "spawn --userscript qutepocket"
 
-c.aliases['bg-norm'] = 'set colors.webpage.bg #ffffff'
-c.aliases['bg-dark'] = 'set colors.webpage.bg ' + bg_color
-c.aliases['dg-toggle'] = 'jseval --quiet --world main DarkReader.toggle()'
+c.aliases["bg-norm"] = "set colors.webpage.bg #ffffff"
+c.aliases["bg-dark"] = "set colors.webpage.bg " + bg_color
+c.aliases["dg-toggle"] = "jseval --quiet --world main DarkReader.toggle()"
 
 
 # --> BINDINGS:
@@ -303,243 +338,297 @@ c.bindings.default = {}
 
 # Convenience helpers
 def nmap(key, cmd):
-  config.bind(key, cmd, mode='normal')
+    config.bind(key, cmd, mode="normal")
+
+
 def vmap(key, cmd):
-  config.bind(key, cmd, mode='caret')
+    config.bind(key, cmd, mode="caret")
+
+
 def imap(key, cmd):
-  config.bind(key, cmd, mode='insert')
+    config.bind(key, cmd, mode="insert")
+
+
 def cmap(key, cmd):
-  config.bind(key, cmd, mode='command')
+    config.bind(key, cmd, mode="command")
 
-nmap('h', 'scroll left')
-nmap('j', 'scroll down')
-nmap('k', 'scroll up')
-nmap('l', 'scroll right')
 
-nmap('<Ctrl+d>', 'scroll-page 0 0.5')
-nmap('<Ctrl+u>', 'scroll-page 0 -0.5')
-nmap('<Ctrl+f>', 'scroll-page 0 0.5')
-nmap('<Ctrl+b>', 'scroll-page 0 -0.5')
+nmap("h", "scroll left")
+nmap("j", "scroll down")
+nmap("k", "scroll up")
+nmap("l", "scroll right")
 
-nmap('gg', 'scroll-to-perc 0')
-nmap('G', 'scroll-to-perc')
+nmap("<Ctrl+d>", "scroll-page 0 0.5")
+nmap("<Ctrl+u>", "scroll-page 0 -0.5")
+nmap("<Ctrl+f>", "scroll-page 0 0.5")
+nmap("<Ctrl+b>", "scroll-page 0 -0.5")
 
-nmap('-', 'zoom-out')
-nmap('+', 'zoom-in')
-nmap('=', 'zoom')
+nmap("gg", "scroll-to-perc 0")
+nmap("G", "scroll-to-perc")
 
-nmap('x', 'tab-close')
-nmap('<Meta+w>', 'tab-close')
-nmap('u', 'undo')
+nmap("-", "zoom-out")
+nmap("+", "zoom-in")
+nmap("=", "zoom")
 
-nmap('r', 'reload')
-nmap('R', 'reload --force')
+nmap("x", "tab-close")
+nmap("<Meta+w>", "tab-close")
+nmap("u", "undo")
 
-nmap('J', 'tab-next')
-nmap('K', 'tab-prev')
-nmap('<Ctrl+l>', 'tab-next')
-nmap('<Ctrl+h>', 'tab-prev')
+nmap("r", "reload")
+nmap("R", "reload --force")
 
-nmap('H', 'back')
-nmap('L', 'forward')
-nmap('<Back>', 'back')
-nmap('<Forward>', 'forward')
+nmap("J", "tab-next")
+nmap("K", "tab-prev")
+nmap("<Ctrl+l>", "tab-next")
+nmap("<Ctrl+h>", "tab-prev")
 
-nmap('n', 'search-next')
-nmap('N', 'search-prev')
+nmap("H", "back")
+nmap("L", "forward")
+nmap("<Back>", "back")
+nmap("<Forward>", "forward")
 
-nmap('[[', 'navigate prev')
-nmap(']]', 'navigate next')
+nmap("n", "search-next")
+nmap("N", "search-prev")
 
-nmap('f', 'hint')
-nmap('F', 'hint all tab')
+nmap("[[", "navigate prev")
+nmap("]]", "navigate next")
 
-nmap('i', 'mode-enter insert')
-nmap('v', 'mode-enter caret')
-nmap('V', 'mode-enter caret ;; selection-toggle --line')
+nmap("f", "hint")
+nmap("F", "hint all tab")
+
+nmap("i", "mode-enter insert")
+nmap("v", "mode-enter caret")
+nmap("V", "mode-enter caret ;; selection-toggle --line")
 
 ## (yank)
-nmap('yy', 'yank') # url
-nmap('yt', 'yank title')
-nmap('yd', 'yank domain')
-nmap('yp', 'yank pretty-url')
-nmap('ym', 'yank inline [{title}]({url})') # markdown style
-nmap('ygh', 'yank inline {url:path}') # markdown style
+nmap("yy", "yank")  # url
+nmap("yt", "yank title")
+nmap("yd", "yank domain")
+nmap("yp", "yank pretty-url")
+nmap("ym", "yank inline [{title}]({url})")  # markdown style
+nmap("ygh", "yank inline {url:path}")  # markdown style
 
-nmap('pp', 'open -- {clipboard}')
+nmap("pp", "open -- {clipboard}")
 
-nmap(':', 'set-cmd-text :')
-nmap(';', 'set-cmd-text :')
-nmap('/', 'set-cmd-text /')
-nmap('?', 'set-cmd-text ?')
+nmap(":", "set-cmd-text :")
+nmap(";", "set-cmd-text :")
+nmap("/", "set-cmd-text /")
+nmap("?", "set-cmd-text ?")
 
-nmap('o', 'set-cmd-text -s :open')
-nmap('O', 'set-cmd-text -s :open --tab')
+nmap("o", "set-cmd-text -s :open")
+nmap("O", "set-cmd-text -s :open --tab")
 
-nmap('m', 'quickmark-save')
-nmap('b', 'set-cmd-text -s :quickmark-load')
-nmap('B', 'set-cmd-text -s :quickmark-load --tab')
+nmap("m", "quickmark-save")
+nmap("b", "set-cmd-text -s :quickmark-load")
+nmap("B", "set-cmd-text -s :quickmark-load --tab")
 
 ## hints (t*)
-nmap('T',  'hint --first inputs')
-nmap('tt', 'hint inputs')
-nmap('tf', 'hint --rapid links tab-bg')
-nmap('ty', 'hint links yank')
-nmap('td', 'hint links download')
-nmap('tD', 'hint --rapid links download')
-nmap('to', 'hint links fill :open {hint-url}')
-nmap('tO', 'hint links fill :open --tab --related {hint-url}')
-nmap('th', 'hint all hover')
-nmap('ti', 'hint images')
-nmap('tI', 'hint images tab')
+nmap("T", "hint --first inputs")
+nmap("tt", "hint inputs")
+nmap("tf", "hint --rapid links tab-bg")
+nmap("ty", "hint links yank")
+nmap("td", "hint links download")
+nmap("tD", "hint --rapid links download")
+nmap("to", "hint links fill :open {hint-url}")
+nmap("tO", "hint links fill :open --tab --related {hint-url}")
+nmap("th", "hint all hover")
+nmap("ti", "hint images")
+nmap("tI", "hint images tab")
 
 ## goto: (g*)
-nmap('gp', 'open -- {clipboard}')
-nmap('gP', 'open --tab -- {clipboard}')
-nmap('gc', 'tab-clone')
-nmap('gC', 'tab-clone --tab')
-nmap('gK', 'tab-move -')
-nmap('gJ', 'tab-move +')
-nmap('gL', 'forward --tab')
-nmap('gH', 'back --tab')
-nmap('gi', 'hint --first inputs')
-nmap('go', 'set-cmd-text -s :open --bg')
-nmap('gt', 'set-cmd-text -s :open --tab')
+nmap("gp", "open -- {clipboard}")
+nmap("gP", "open --tab -- {clipboard}")
+nmap("gc", "tab-clone")
+nmap("gC", "tab-clone --tab")
+nmap("gK", "tab-move -")
+nmap("gJ", "tab-move +")
+nmap("gL", "forward --tab")
+nmap("gH", "back --tab")
+nmap("gi", "hint --first inputs")
+nmap("go", "set-cmd-text -s :open --bg")
+nmap("gt", "set-cmd-text -s :open --tab")
 
 ## current page: (c*)
-nmap('co', 'set-cmd-text :open {url:pretty}')
-nmap('cO', 'set-cmd-text :open --tab {url:pretty}')
-nmap('cs', 'navigate strip')
-nmap('cS', 'navigate --tab strip')
+nmap("co", "set-cmd-text :open {url:pretty}")
+nmap("cO", "set-cmd-text :open --tab {url:pretty}")
+nmap("cs", "navigate strip")
+nmap("cS", "navigate --tab strip")
 
 ## (visual)
-vmap('v', 'toggle-selection')
-vmap('V', 'toggle-selection --line')
-vmap('h', 'move-to-prev-char')
-vmap('j', 'move-to-next-line')
-vmap('k', 'move-to-prev-line')
-vmap('l', 'move-to-next-char')
-vmap('e', 'move-to-end-of-word')
-vmap('w', 'move-to-next-word')
-vmap('b', 'move-to-prev-word')
-vmap('0', 'move-to-start-of-line')
-vmap('$', 'move-to-end-of-line')
-vmap('gg', 'move-to-start-of-document')
-vmap('G', 'move-to-end-of-document')
-vmap('y', 'yank selection')
-vmap('[', 'move-to-start-of-prev-block')
-vmap(']', 'move-to-start-of-next-block')
-vmap('{', 'move-to-end-of-prev-block')
-vmap('}', 'move-to-end-of-next-block')
+vmap("v", "toggle-selection")
+vmap("V", "toggle-selection --line")
+vmap("h", "move-to-prev-char")
+vmap("j", "move-to-next-line")
+vmap("k", "move-to-prev-line")
+vmap("l", "move-to-next-char")
+vmap("e", "move-to-end-of-word")
+vmap("w", "move-to-next-word")
+vmap("b", "move-to-prev-word")
+vmap("0", "move-to-start-of-line")
+vmap("$", "move-to-end-of-line")
+vmap("gg", "move-to-start-of-document")
+vmap("G", "move-to-end-of-document")
+vmap("y", "yank selection")
+vmap("[", "move-to-start-of-prev-block")
+vmap("]", "move-to-start-of-next-block")
+vmap("{", "move-to-end-of-prev-block")
+vmap("}", "move-to-end-of-next-block")
 
-for mode in ['prompt', 'register', 'hint', 'yesno', 'caret', 'insert', 'command']:
-  config.bind('<Escape>', 'mode-leave', mode=mode)
+for mode in ["prompt", "register", "hint", "yesno", "caret", "insert", "command"]:
+    config.bind("<Escape>", "mode-leave", mode=mode)
 
-config.bind('<Return>', 'command-accept', mode='command')
+config.bind("<Return>", "command-accept", mode="command")
 
-config.bind('<Shift+Escape>', 'mode-leave', mode='passthrough')
+config.bind("<Shift+Escape>", "mode-leave", mode="passthrough")
 
-config.bind('<Return>', 'hint-follow', mode='hint')
+config.bind("<Return>", "hint-follow", mode="hint")
 
-config.bind('<Return>', 'prompt-accept', mode='prompt')
-config.bind('<Up>', 'prompt-item-focus prev', mode='prompt')
-config.bind('<Down>', 'prompt-item-focus next', mode='prompt')
-config.bind('<Shift+Tab>', 'prompt-item-focus prev', mode='prompt')
-config.bind('<Tab>', 'prompt-item-focus next', mode='prompt')
+config.bind("<Return>", "prompt-accept", mode="prompt")
+config.bind("<Up>", "prompt-item-focus prev", mode="prompt")
+config.bind("<Down>", "prompt-item-focus next", mode="prompt")
+config.bind("<Shift+Tab>", "prompt-item-focus prev", mode="prompt")
+config.bind("<Tab>", "prompt-item-focus next", mode="prompt")
 
-config.bind('<Return>', 'prompt-accept', mode='yesno')
-config.bind('y', 'prompt-accept yes', mode='yesno')
-config.bind('n', 'prompt-accept no', mode='yesno')
-config.bind('Y', 'prompt-accept --save yes', mode='yesno')
-config.bind('N', 'prompt-accept --save no', mode='yesno')
+config.bind("<Return>", "prompt-accept", mode="yesno")
+config.bind("y", "prompt-accept yes", mode="yesno")
+config.bind("n", "prompt-accept no", mode="yesno")
+config.bind("Y", "prompt-accept --save yes", mode="yesno")
+config.bind("N", "prompt-accept --save no", mode="yesno")
 
 ## muscle memory from days of yore..
-nmap('<Meta+n>', 'open --tab')
-nmap('<Meta+Shift+n>', 'open --private')
-nmap('<Meta+t>', 'open --tab')
-nmap('<Meta+Shift+t>', 'open --tab')
-nmap('<F5>', 'reload')
+nmap("<Meta+n>", "open --tab")
+nmap("<Meta+Shift+n>", "open --private")
+nmap("<Meta+t>", "open --tab")
+nmap("<Meta+Shift+t>", "open --tab")
+nmap("<F5>", "reload")
 for i in range(9):
-  nmap('<Ctrl+{}>'.format(i), 'tab-focus {}'.format(i))
+    nmap("<Ctrl+{}>".format(i), "tab-focus {}".format(i))
 # }}}
 
 ## misc..
-nmap('<Esc>', 'fake-key <Esc>')
-nmap('<Ctrl+[>', 'clear-messages')
-imap('<Ctrl+o>', 'open-editor')
+nmap("<Esc>", "fake-key <Esc>")
+nmap("<Ctrl+[>", "clear-messages")
+imap("<Ctrl+o>", "open-editor")
 
 ## userscript/externally-dependent bindings..
-nmap('<Ctrl+Shift+l>', 'spawn --userscript qute-pass')
-imap('<Ctrl+Shift+l>', 'spawn --userscript qute-pass')
-nmap('yc', 'hint code userscript ' + userscript('code_select'))
-nmap('<Ctrl+g>',       c.aliases['dg-toggle'])
+nmap("yc", "hint code userscript " + userscript("code_select"))
+nmap("<Ctrl+g>", c.aliases["dg-toggle"])
+nmap(",ce", "config-edit")
+nmap(",p", "config-cycle -p content.plugins ;; reload")
+nmap(
+    ",pk",
+    "jseval (function () { "
+    + '  var i, elements = document.querySelectorAll("body *");'
+    + ""
+    + "  for (i = 0; i < elements.length; i++) {"
+    + "    var pos = getComputedStyle(elements[i]).position;"
+    + '    if (pos === "fixed" || pos == "sticky") {'
+    + "      elements[i].parentNode.removeChild(elements[i]);"
+    + "    }"
+    + "  }"
+    + "})();",
+)
+nmap(",1p", "spawn --userscript 1p")
+nmap(",bs", "spawn --userscript safari")
+nmap(",bb", "spawn --userscript brave")
+nmap(",bc", "spawn --userscript chrome")
+nmap(",bf", "spawn --userscript firefox")
+nmap(",be", "spawn --userscript edge")
+# nmap(",s", "spawn --userscript safari")
+# nmap(",b", "spawn --userscript buku-add")
+# nmap(",f", "spawn --userscript buku-add favourites")
+# nmap(",c", "spawn --userscript clipper")
+# nmap(",r", "spawn --userscript readability/readability-js")
+
 
 ## macos-style/readline..
-config.bind('<Ctrl+n>', 'prompt-item-focus next', mode='prompt')
-config.bind('<Ctrl+p>', 'prompt-item-focus prev', mode='prompt')
+config.bind("<Ctrl+n>", "prompt-item-focus next", mode="prompt")
+config.bind("<Ctrl+p>", "prompt-item-focus prev", mode="prompt")
 
-config.bind('<Ctrl+n>', 'completion-item-focus --history next', mode='command')
-config.bind('<Ctrl+p>', 'completion-item-focus --history prev', mode='command')
+config.bind("<Ctrl+n>", "completion-item-focus --history next", mode="command")
+config.bind("<Ctrl+p>", "completion-item-focus --history prev", mode="command")
 
-config.bind('<Ctrl+n>', 'command-history-next', mode='command')
-config.bind('<Ctrl+p>', 'command-history-prev', mode='command')
+config.bind("<Ctrl+n>", "command-history-next", mode="command")
+config.bind("<Ctrl+p>", "command-history-prev", mode="command")
 
-for mode in ['command', 'prompt']:
-  # Readline-style mode
-  config.bind('<Ctrl+d>'          , 'rl-delete-char'              , mode=mode)
-  config.bind('<Alt+d>'           , 'rl-kill-word'                , mode=mode)
-  config.bind('<Ctrl+k>'          , 'rl-kill-line'                , mode=mode)
-  config.bind('<Ctrl+y>'          , 'rl-yank'                     , mode=mode)
+for mode in ["command", "prompt"]:
+    # Readline-style mode
+    config.bind("<Ctrl+d>", "rl-delete-char", mode=mode)
+    config.bind("<Alt+d>", "rl-kill-word", mode=mode)
+    config.bind("<Ctrl+k>", "rl-kill-line", mode=mode)
+    config.bind("<Ctrl+y>", "rl-yank", mode=mode)
 
-  config.bind('<Ctrl+h>'          , 'rl-backward-delete-char'     , mode=mode)
-  config.bind('<Alt+Backspace>'   , 'rl-backward-kill-word'       , mode=mode)
-  config.bind('<Ctrl+Alt+h>'      , 'rl-backward-kill-word'       , mode=mode)
-  config.bind('<Ctrl+w>'          , 'rl-backward-kill-word'       , mode=mode)
-  config.bind('<Ctrl+u>'          , 'rl-unix-line-discard'        , mode=mode)
+    config.bind("<Ctrl+h>", "rl-backward-delete-char", mode=mode)
+    config.bind("<Alt+Backspace>", "rl-backward-kill-word", mode=mode)
+    config.bind("<Ctrl+Alt+h>", "rl-backward-kill-word", mode=mode)
+    config.bind("<Ctrl+w>", "rl-backward-kill-word", mode=mode)
+    config.bind("<Ctrl+u>", "rl-unix-line-discard", mode=mode)
 
-  config.bind('<Ctrl+b>'          , 'rl-backward-char'            , mode=mode)
-  config.bind('<Ctrl+f>'          , 'rl-forward-char'             , mode=mode)
-  config.bind('<Alt+b>'           , 'rl-backward-word'            , mode=mode)
-  config.bind('<Alt+f>'           , 'rl-forward-word'             , mode=mode)
-  config.bind('<Ctrl+a>'          , 'rl-beginning-of-line'        , mode=mode)
-  config.bind('<Ctrl+e>'          , 'rl-end-of-line'              , mode=mode)
+    config.bind("<Ctrl+b>", "rl-backward-char", mode=mode)
+    config.bind("<Ctrl+f>", "rl-forward-char", mode=mode)
+    config.bind("<Alt+b>", "rl-backward-word", mode=mode)
+    config.bind("<Alt+f>", "rl-forward-word", mode=mode)
+    config.bind("<Ctrl+a>", "rl-beginning-of-line", mode=mode)
+    config.bind("<Ctrl+e>", "rl-end-of-line", mode=mode)
 
-if platform.system() == 'Linux':
-  # Readline-style insert mode
-  config.bind('<Ctrl+f>'          , 'fake-key <Right>'            , mode='insert')
-  config.bind('<Ctrl+b>'          , 'fake-key <Left>'             , mode='insert')
-  config.bind('<Ctrl+a>'          , 'fake-key <Home>'             , mode='insert')
-  config.bind('<Ctrl+e>'          , 'fake-key <End>'              , mode='insert')
-  config.bind('<Ctrl+n>'          , 'fake-key <Down>'             , mode='insert')
-  config.bind('<Ctrl+p>'          , 'fake-key <Up>'               , mode='insert')
-  config.bind('<Alt+f>'           , 'fake-key <Ctrl+Right>'       , mode='insert')
-  config.bind('<Alt+b>'           , 'fake-key <Ctrl+Left>'        , mode='insert')
-  config.bind('<Ctrl+d>'          , 'fake-key <Delete>'           , mode='insert')
-  config.bind('<Alt+d>'           , 'fake-key <Ctrl+Delete>'      , mode='insert')
-  config.bind('<Alt+Backspace>'   , 'fake-key <Ctrl+Backspace>'   , mode='insert')
-  config.bind('<Ctrl+w>'          , 'fake-key <Ctrl+Backspace>'   , mode='insert')
-  config.bind('<Ctrl+y>'          , 'insert-text {primary}'       , mode='insert')
-  config.bind('<Ctrl+h>'          , 'fake-key <Backspace>'        , mode='insert')
+if platform.system() == "Linux":
+    # Readline-style insert mode
+    config.bind("<Ctrl+f>", "fake-key <Right>", mode="insert")
+    config.bind("<Ctrl+b>", "fake-key <Left>", mode="insert")
+    config.bind("<Ctrl+a>", "fake-key <Home>", mode="insert")
+    config.bind("<Ctrl+e>", "fake-key <End>", mode="insert")
+    config.bind("<Ctrl+n>", "fake-key <Down>", mode="insert")
+    config.bind("<Ctrl+p>", "fake-key <Up>", mode="insert")
+    config.bind("<Alt+f>", "fake-key <Ctrl+Right>", mode="insert")
+    config.bind("<Alt+b>", "fake-key <Ctrl+Left>", mode="insert")
+    config.bind("<Ctrl+d>", "fake-key <Delete>", mode="insert")
+    config.bind("<Alt+d>", "fake-key <Ctrl+Delete>", mode="insert")
+    config.bind("<Alt+Backspace>", "fake-key <Ctrl+Backspace>", mode="insert")
+    config.bind("<Ctrl+w>", "fake-key <Ctrl+Backspace>", mode="insert")
+    config.bind("<Ctrl+y>", "insert-text {primary}", mode="insert")
+    config.bind("<Ctrl+h>", "fake-key <Backspace>", mode="insert")
 
-  # macOS-like cut/copy/paste/select-all
-  config.bind('<Meta+c>', 'fake-key <Ctrl+c>;;message-info "copied to clipboard"', mode='normal')
-  config.bind('<Meta+v>', 'fake-key <Ctrl+v>;;message-info "pasted from clipboard"', mode='normal')
-  config.bind('<Meta+x>', 'fake-key <Ctrl+x>;;message-info "cut to clipboard"', mode='normal')
-  config.bind('<Meta+a>', 'fake-key <Ctrl+a>', mode='normal')
+    # macOS-like cut/copy/paste/select-all
+    config.bind(
+        "<Meta+c>",
+        'fake-key <Ctrl+c>;;message-info "copied to clipboard"',
+        mode="normal",
+    )
+    config.bind(
+        "<Meta+v>",
+        'fake-key <Ctrl+v>;;message-info "pasted from clipboard"',
+        mode="normal",
+    )
+    config.bind(
+        "<Meta+x>", 'fake-key <Ctrl+x>;;message-info "cut to clipboard"', mode="normal"
+    )
+    config.bind("<Meta+a>", "fake-key <Ctrl+a>", mode="normal")
 
-  config.bind('<Meta+a>', 'fake-key <Ctrl+a>', mode='insert')
+    config.bind("<Meta+a>", "fake-key <Ctrl+a>", mode="insert")
 
-  for mode in ['insert', 'command', 'prompt']:
-    config.bind('<Meta+x>', 'fake-key -g <Ctrl+x>;;message-info "cut to clipboard"', mode=mode)
-    config.bind('<Meta+c>', 'fake-key -g <Ctrl+c>;;message-info "copied to clipboard"', mode=mode)
-    config.bind('<Meta+v>', 'fake-key -g <Ctrl+v>;;message-info "pasted from clipboard"', mode=mode)
+    for mode in ["insert", "command", "prompt"]:
+        config.bind(
+            "<Meta+x>",
+            'fake-key -g <Ctrl+x>;;message-info "cut to clipboard"',
+            mode=mode,
+        )
+        config.bind(
+            "<Meta+c>",
+            'fake-key -g <Ctrl+c>;;message-info "copied to clipboard"',
+            mode=mode,
+        )
+        config.bind(
+            "<Meta+v>",
+            'fake-key -g <Ctrl+v>;;message-info "pasted from clipboard"',
+            mode=mode,
+        )
 
 
-if platform.system() == 'Darwin':
-  # Readline-style insert mode
-  config.bind('<Ctrl+n>'          , 'fake-key <Down>'             , mode='insert')
-  config.bind('<Ctrl+p>'          , 'fake-key <Up>'               , mode='insert')
-  config.bind('<Ctrl+w>'          , 'fake-key <Alt+Backspace>'    , mode='insert')
+if platform.system() == "Darwin":
+    # Readline-style insert mode
+    config.bind("<Ctrl+n>", "fake-key <Down>", mode="insert")
+    config.bind("<Ctrl+p>", "fake-key <Up>", mode="insert")
+    config.bind("<Ctrl+w>", "fake-key <Alt+Backspace>", mode="insert")
 
 
 # TODO: FIND A MAP FOR:

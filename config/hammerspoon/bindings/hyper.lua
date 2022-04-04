@@ -1,7 +1,7 @@
 -- TODO: can now use this module in other modules, so extract out these bindings
 -- again
 
-local log = hs.logger.new("[bindings.hyper]", "info")
+local log = hs.logger.new("[bindings.hyper]", "warning")
 
 local module = {}
 -- local forceLaunchOrFocus = require('ext.application').forceLaunchOrFocus
@@ -102,8 +102,21 @@ local miscKeyBindings = function(misc)
 end
 
 local hyperGroup = function(key, tag)
+  log.df("getting hyperGroup setting for group.%s and key (%s): ", tag, key, hs.settings.get("group" .. tag))
+  if hs.settings.get("group" .. tag) == nil then
+    log.df("no app set for group.%s", tag)
+    local defaultAppForTag = hs.application.get(Config.preferred[tag][1])
+    log.df(
+      "attempted to set default app for group.%s: %s from %s",
+      tag,
+      defaultAppForTag:bundleID(),
+      Config.preferred[tag][1]
+    )
+    hs.settings.set("group" .. tag, defaultAppForTag:bundleID())
+  end
+
   hyper:bind({}, key, nil, function()
-    hs.application.launchOrFocusByBundleID(hs.settings.get("group." .. tag))
+    toggle(hs.settings.get("group." .. tag), false)
   end)
   hyper:bind({ "option" }, key, nil, function()
     local group = hs.fnutils.filter(Config.apps, function(app)
@@ -128,12 +141,13 @@ local hyperGroup = function(key, tag)
         :send()
 
       hs.settings.set("group." .. tag, app.bundleID)
-      hs.application.launchOrFocusByBundleID(app.bundleID)
+
+      toggle(app.bundleID, false)
     else
       hs.chooser.new(function(app)
         if app then
           hs.settings.set("group." .. tag, app.bundleID)
-          hs.application.launchOrFocusByBundleID(app.bundleID)
+          toggle(app.bundleID, false)
         end
       end):placeholderText("Choose an application for hyper+" .. key .. ":"):choices(choices):show()
     end
@@ -143,6 +157,11 @@ end
 module.start = function()
   log.df("starting..")
   hs.hotkey.bind({}, Config.modifiers.hyper, pressed, released)
+
+  -- :: hyper groups
+  -- hyperGroup("m", "personal")
+  -- hyperGroup("j", "browsers")
+  -- hyperGroup("s", "chat")
 
   for _, app in pairs(Config.apps) do
     -- :: apps
@@ -160,11 +179,6 @@ module.start = function()
   for _, misc in pairs(Config.utilities) do
     miscKeyBindings(misc)
   end
-
-  -- :: hyper groups
-  -- hyperGroup("m", "personal")
-  -- hyperGroup("j", "browsers")
-  -- hyperGroup("s", "chat")
 
   -- -- :: media (spotify/volume)
   -- for _, m in pairs(Config.media) do

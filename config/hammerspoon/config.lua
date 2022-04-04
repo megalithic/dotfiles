@@ -27,7 +27,9 @@ M.dirs = {
 
 M.preferred = {
   terms = { "kitty", "alacritty", "iTerm" },
-  browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
+  browsers = { "qutebrowser", "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
+  personal = { "Messages", "Signal" },
+  chat = { "Slack" },
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
   -- TODO: hyperGroup
@@ -37,7 +39,6 @@ M.preferred = {
     "quitguard",
     "tabjump",
     "hyper",
-    "apps",
     "snap",
     "media",
     "headphones",
@@ -135,7 +136,17 @@ M.apps = {
   ["com.brave.Browser"] = {
     bundleID = "com.brave.Browser",
     name = "Brave Browser",
-    hyper_key = "j",
+    quitGuard = true,
+    hyper_key = "j", -- FIXME: move these to hyperGroups in hyper.lua
+    tags = { "browsers" },
+    rules = {
+      { nil, 1, M.layout.fullScreen },
+    },
+  },
+  ["org.qt-project.Qt.QtWebEngineCore"] = {
+    bundleID = "org.qt-project.Qt.QtWebEngineCore",
+    name = "qutebrowser",
+    -- hyper_key = "j", -- FIXME: move these to hyperGroups in hyper.lua
     quitGuard = true,
     tags = { "browsers" },
     rules = {
@@ -303,7 +314,7 @@ M.apps = {
     modifier = M.modifiers.shift,
     hideAfter = 1,
     rules = {
-      { nil, 1, M.layout.rightHalf },
+      { nil, 2, M.layout.rightHalf },
     },
   },
   ["com.apple.MobileSMS"] = {

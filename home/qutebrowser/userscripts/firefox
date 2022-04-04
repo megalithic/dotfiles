@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -e
+
+open -a firefox ${QUTE_URL}

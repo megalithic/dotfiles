@@ -1,57 +1,59 @@
-local log             = hs.logger.new('[ext.application]', 'warning')
+local log = hs.logger.new("[ext.application]", "debug")
 
-local forceFocus      = require('ext.window').forceFocus
-local highlightWindow = require('ext.drawing').highlightWindow
-local template        = require('ext.template')
+local forceFocus = require("ext.window").forceFocus
+local highlightWindow = require("ext.drawing").highlightWindow
+local template = require("ext.template")
 
-local cache  = { launchTimer = nil }
+local cache = { launchTimer = nil }
 local module = { cache = cache }
 
 -- activate frontmost window if exists
 module.activateFrontmost = function()
   local frontmostWindow = hs.window.frontmostWindow()
-  if frontmostWindow then frontmostWindow:raise():focus() end
-end
-
-module.focusOnly = function(appIdentifier)
-  local app = hs.application.find(appIdentifier)
-  local appBundleID = app and (app:bundleID() or appIdentifier)
-
-  if app~= nil and appIdentifier ~= nil then
-    log.df('focusing (%s)', appIdentifier)
-    app:activate()
-  else
-    log.wf('appIdentifier (%s) is nil -- likely not running', appIdentifier, appBundleID)
+  if frontmostWindow then
+    frontmostWindow:raise():focus()
   end
 end
 
+module.focusOnly = function(appIdentifier)
+  log.df("focusOnly for %s", appIdentifier)
+  local app = hs.application.find(appIdentifier)
+  local appBundleID = app and (app:bundleID() or appIdentifier)
+
+  if app ~= nil and appIdentifier ~= nil then
+    log.df("focusing (%s)", appIdentifier)
+    app:activate()
+  else
+    log.wf("appIdentifier (%s) is nil -- likely not running", appIdentifier, appBundleID)
+  end
+end
 
 -- REF: https://github.com/octplane/hammerspoon-config/blob/master/init.lua#L105
 -- +--- possibly more robust app toggler
-module.toggle = function (appIdentifier, shouldHide)
+module.toggle = function(appIdentifier, shouldHide)
   -- accepts app name (lowercased), pid, or bundleID; but we ALWAYS use bundleID
   local app = hs.application.find(appIdentifier)
   local appBundleID = app and (app:bundleID() or appIdentifier)
 
   if not app then
     if appIdentifier ~= nil then
-      log.df('calling launchOrFocusByBundleID(%s) -- non PID-managed app?', appIdentifier)
+      log.df("calling launchOrFocusByBundleID(%s) -- non PID-managed app?", appIdentifier)
       hs.application.launchOrFocusByBundleID(appIdentifier)
     else
-      log.wf('appIdentifier (%s) or app (%s) is nil!', appIdentifier, appBundleID)
+      log.wf("appIdentifier (%s) or app (%s) is nil!", appIdentifier, appBundleID)
     end
   else
     local mainWin = app:mainWindow()
 
     if mainWin then
-      if (mainWin == hs.window.focusedWindow()) then
+      if mainWin == hs.window.focusedWindow() then
         if shouldHide then
-          log.df('Hiding %s..', appBundleID)
+          log.df("Hiding %s..", appBundleID)
 
           mainWin:application():hide()
         end
       else
-        log.df('Showing %s..', appBundleID)
+        log.df("Showing %s..", appBundleID)
 
         mainWin:application():activate(true)
         mainWin:application():unhide()
@@ -59,15 +61,15 @@ module.toggle = function (appIdentifier, shouldHide)
       end
     else
       -- assumes there is no "mainWindow" for the application in question, probably iTerm2
-      log.df('launchOrFocusByBundleID(%s)', appBundleID)
+      log.df("launchOrFocusByBundleID(%s)", appBundleID)
 
-      if (app:focusedWindow() == hs.window.focusedWindow()) then
+      if app:focusedWindow() == hs.window.focusedWindow() then
         if shouldHide then
-          log.df('Hiding %s..', appBundleID)
+          log.df("Hiding %s..", appBundleID)
           app:hide()
         end
       else
-        log.df('Showing %s..', appBundleID)
+        log.df("Showing %s..", appBundleID)
         app:unhide()
         hs.application.launchOrFocusByBundleID(appBundleID)
       end
@@ -77,38 +79,42 @@ end
 
 -- force application launch or focus
 module.forceLaunchOrFocus = function(appName)
-  local appInstance  = hs.application.get(appName)
-  local isRunning    = appInstance and appInstance:isRunning()
+  local appInstance = hs.application.get(appName)
+  local isRunning = appInstance and appInstance:isRunning()
   local focusTimeout = isRunning and 0.05 or 1.5
 
   -- first focus/launch with hammerspoon
   hs.application.launchOrFocus(appName)
 
   -- clear timer if exists
-  if cache.launchTimer then cache.launchTimer:stop() end
+  if cache.launchTimer then
+    cache.launchTimer:stop()
+  end
 
   -- wait for window to appear and try hard to show the window
   cache.launchTimer = hs.timer.doAfter(focusTimeout, function()
-    local frontmostApp     = hs.application.frontmostApplication()
-    local frontmostWindows = hs.fnutils.filter(frontmostApp:allWindows(), function(win) return win:isStandard() end)
+    local frontmostApp = hs.application.frontmostApplication()
+    local frontmostWindows = hs.fnutils.filter(frontmostApp:allWindows(), function(win)
+      return win:isStandard()
+    end)
 
     -- break if this app is not frontmost (when/why?)
     if frontmostApp:title() ~= appName then
-      log.d('Expected app in front: ' .. appName .. ' got: ' .. frontmostApp:title())
+      log.d("Expected app in front: " .. appName .. " got: " .. frontmostApp:title())
       return
     end
 
     if #frontmostWindows == 0 then
-      if appName == 'Hyper' then
+      if appName == "Hyper" then
         -- otherwise some other Hyper window gets focused
-        hs.eventtap.keyStroke({ 'cmd' }, 'n')
-      elseif frontmostApp:findMenuItem({ 'Window', appName }) then
+        hs.eventtap.keyStroke({ "cmd" }, "n")
+      elseif frontmostApp:findMenuItem({ "Window", appName }) then
         -- check if there's app name in window menu (Calendar, Messages, etc...)
         -- select it, usually moves to space with this window
-        frontmostApp:selectMenuItem({ 'Window', appName })
+        frontmostApp:selectMenuItem({ "Window", appName })
       else
         -- otherwise send cmd-n to create new window
-        hs.eventtap.keyStroke({ 'cmd' }, 'n')
+        hs.eventtap.keyStroke({ "cmd" }, "n")
       end
     end
   end)
@@ -117,9 +123,9 @@ end
 -- smart app launch or focus or cycle windows
 module.smartLaunchOrFocus = function(launchApps)
   local frontmostWindow = hs.window.frontmostWindow()
-  local runningWindows  = {}
+  local runningWindows = {}
 
-  launchApps = type(launchApps) == 'table' and launchApps or { launchApps }
+  launchApps = type(launchApps) == "table" and launchApps or { launchApps }
 
   -- filter running applications by apps array
   local runningApps = hs.fnutils.map(launchApps, function(launchApp)
@@ -133,10 +139,12 @@ module.smartLaunchOrFocus = function(launchApps)
     end)
 
     -- sort by id, so windows don't jump randomly every time
-    table.sort(standardWindows, function(a, b) return a:id() > b:id() end)
+    table.sort(standardWindows, function(a, b)
+      return a:id() > b:id()
+    end)
 
     -- concat with all running windows
-    hs.fnutils.concat(runningWindows, standardWindows);
+    hs.fnutils.concat(runningWindows, standardWindows)
   end)
 
   if #runningApps == 0 then
@@ -155,7 +163,9 @@ module.smartLaunchOrFocus = function(launchApps)
     else
       -- otherwise cycle through all the windows
       local newIndex = currentIndex + 1
-      if newIndex > #runningWindows then newIndex = 1 end
+      if newIndex > #runningWindows then
+        newIndex = 1
+      end
 
       forceFocus(runningWindows[newIndex])
     end
@@ -166,11 +176,14 @@ end
 
 -- count all windows on all spaces
 module.allWindowsCount = function(appName)
-  local _, result = hs.applescript.applescript(template([[
+  local _, result = hs.applescript.applescript(template(
+    [[
     tell application "{APP_NAME}"
       count every window where visible is true
     end tell
-  ]], { APP_NAME = appName }))
+  ]],
+    { APP_NAME = appName }
+  ))
 
   return tonumber(result) or 0
 end

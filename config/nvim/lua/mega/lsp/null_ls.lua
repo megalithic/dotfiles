@@ -38,6 +38,7 @@ return function(on_attach)
         end,
       }),
       b.formatting.isort,
+      b.formatting.black,
       b.formatting.elm_format,
       -- FIXME: doesn't work on heex for some reason
       -- b.formatting.mix.with({ extra_filetypes = { "heex", "phoenix-html" } }),

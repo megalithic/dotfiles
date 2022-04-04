@@ -128,8 +128,9 @@ local function setup_autocommands(client, bufnr)
       augroup("LspFormat", {
         {
           events = { "BufWritePre" },
-          buffer = bufnr,
+          -- buffer = bufnr,
           command = function()
+            -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))
             -- BUG: folds are are removed when formatting is done, so we save the current state of the
             -- view and re-apply it manually after formatting the buffer
             -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
