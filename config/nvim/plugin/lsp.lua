@@ -685,12 +685,9 @@ mega.lsp.servers = {
           },
           experimental = {
             classRegex = {
-              -- https://github.com/tailwindlabs/tailwindcss-intellisense/issues/129
-              -- [[class: "([^"]*)]],
               [[class= "([^"]*)]],
-              -- Configure TailwindCSS to consider all double-quote strings
-              -- as class attributes so we autocomplete
-              -- "\"([^\"]*)",
+              [[class: "([^"]*)]],
+              "~H\"\"\".*class=\"([^\"]*)\".*\"\"\"",
             },
           },
           validate = true,
@@ -702,6 +699,7 @@ mega.lsp.servers = {
         "sass",
         "html",
         "heex",
+        "elixir",
         "javascript",
         "javascriptreact",
         "typescript",

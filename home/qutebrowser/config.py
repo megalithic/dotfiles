@@ -66,7 +66,7 @@ c.completion.open_categories = ["searchengines", "quickmarks", "bookmarks", "his
 c.completion.quick = False
 c.completion.scrollbar.padding = 0
 c.completion.scrollbar.width = 8
-c.confirm_quit = ["multiple-tabs", "downloads"]
+c.confirm_quit = ["downloads"]  # ["multiple-tabs", "downloads"]
 c.downloads.location.remember = False
 c.downloads.location.suggestion = "both"
 c.downloads.position = "bottom"
@@ -89,31 +89,31 @@ c.input.mouse.rocker_gestures = True
 c.input.partial_timeout = 10000
 c.keyhint.delay = 250
 c.messages.timeout = 5000
-c.new_instance_open_target = "tab-bg"
+c.new_instance_open_target = "tab"  # or perhaps, tab-bg
+
 c.tabs.last_close = "blank"
 c.tabs.position = "top"
-c.tabs.show = "multiple"
-c.tabs.undo_stack_size = 20
 c.tabs.width = "10%"  # 60
+c.tabs.show = "always"  # only shows tab_bar when > 1 tab with "multiple"
+c.tabs.undo_stack_size = 20
 c.tabs.close_mouse_button = "right"
-c.window.title_format = "{perc}{current_title}{title_sep} browser"
-
-
-c.url.open_base_url = True
-c.url.default_page = "about:blank"
-c.url.start_pages = "about:blank"
-
+c.tabs.indicator.width = 2
+c.tabs.favicons.scale = 1
+c.tabs.title.format_pinned = "{index} {current_title} {audio}"
 padding = {
     "top": 8,
     "bottom": 8,
     "right": 8,
     "left": 8,
 }
-c.statusbar.padding = padding
 c.tabs.padding = padding
-c.tabs.indicator.width = 2
-c.tabs.favicons.scale = 1
-c.tabs.title.format_pinned = "{index} {audio}"
+
+c.statusbar.padding = padding
+c.window.title_format = "{perc}{current_title}{title_sep} browser"
+
+c.url.open_base_url = True
+c.url.default_page = "about:blank"
+c.url.start_pages = "about:blank"
 
 
 # Minimizing fingerprinting and annoying things
@@ -154,9 +154,9 @@ c.input.forward_unbound_keys = "all"
 c.input.insert_mode.auto_leave = False
 c.input.insert_mode.plugins = False
 
-c.colors.webpage.darkmode.enabled = True
+# c.colors.webpage.darkmode.enabled = True
 c.colors.webpage.darkmode.policy.images = "smart"
-c.colors.webpage.preferred_color_scheme = "dark"
+# c.colors.webpage.preferred_color_scheme = "dark"
 bg_color = "#000000"
 c.colors.webpage.bg = bg_color
 
@@ -199,6 +199,7 @@ def filter_yt(info: interceptor.Request):
 
 interceptor.register(filter_yt)
 
+c.content.blocking.enabled = False
 c.content.blocking.method = "adblock"
 c.content.blocking.adblock.lists = [
     "https://easylist.to/easylist/easylist.txt",
@@ -407,6 +408,7 @@ nmap("=", "zoom")
 
 nmap("x", "tab-close")
 nmap("<Meta+w>", "tab-close")
+nmap("<Ctrl+w>", "tab-close")
 nmap("u", "undo")
 
 nmap("r", "reload")
@@ -536,6 +538,7 @@ nmap("<Meta+Shift+n>", "open --private")
 nmap("<Meta+t>", "open --tab")
 nmap("<Meta+Shift+t>", "open --tab")
 nmap("<F5>", "reload")
+nmap("<Meta+r>", "reload")
 for i in range(9):
     nmap("<Ctrl+{}>".format(i), "tab-focus {}".format(i))
 # }}}
@@ -574,6 +577,9 @@ nmap(",hbs", "hsafari")
 nmap(",hbb", "hbrave")
 nmap(",hbc", "hchrome")
 nmap(",hbf", "hfirefox")
+
+nmap(",df", "devtools-focus")
+nmap(",dt", "devtools")
 # nmap(",be", "oedge")
 # nmap(",b", "spawn --userscript buku-add")
 # nmap(",f", "spawn --userscript buku-add favourites")
