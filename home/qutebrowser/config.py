@@ -50,7 +50,7 @@ config.source("themes/material-darker.py")
 
 # --> SETTINGS:
 commands = {
-    "edit": "kitty --launch nvim -f {file} -c 'normal {line}G{column0}l'".split(),
+    "edit": "kitty launch --cwd=current --type=tab nvim -f {file} -c 'normal {line}G{column0}l'".split(),
     # c.editor.command = ['nvim', '-f', '{file}', '-c', 'normal {line}G{column0}l']
     # 'edit':       'foot -T float vim {file}'.split(),
     # 'pick_dir':   'foot -T float ranger --choosedir={}'.split(),
@@ -77,10 +77,11 @@ c.editor.command = commands["edit"]
 # c.fileselect.handler                  = 'external'
 # c.fileselect.multiple_files.command   = commands["pick_files"]
 # c.fileselect.single_file.command      = commands["pick_file"]
-c.fonts.contextmenu = "default_size default_family"
 c.fonts.default_family = "JetBrains Mono"
 c.fonts.default_size = "14px"
+c.fonts.contextmenu = "default_size default_family"
 c.fonts.prompts = "default_size default_family"
+c.fonts.statusbar = "default_size default_family"
 c.hints.chars = "ctsrvdlgh"  # get the keys from our vim config hop/lightspeed/etc; or from surfingkeys
 c.history_gap_interval = 240
 c.input.escape_quits_reporter = True
@@ -95,6 +96,9 @@ c.tabs.show = "multiple"
 c.tabs.undo_stack_size = 20
 c.tabs.width = "10%"  # 60
 c.tabs.close_mouse_button = "right"
+c.window.title_format = "{perc}{current_title}{title_sep} browser"
+
+
 c.url.open_base_url = True
 c.url.default_page = "about:blank"
 c.url.start_pages = "about:blank"
@@ -107,8 +111,10 @@ padding = {
 }
 c.statusbar.padding = padding
 c.tabs.padding = padding
-c.tabs.indicator.width = 1
+c.tabs.indicator.width = 2
 c.tabs.favicons.scale = 1
+c.tabs.title.format_pinned = "{index} {audio}"
+
 
 # Minimizing fingerprinting and annoying things
 u_agent = "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
@@ -143,14 +149,6 @@ c.content.pdfjs = True
 c.content.register_protocol_handler = False
 c.content.webgl = True
 c.content.webrtc_ip_handling_policy = "default-public-interface-only"
-c.content.blocking.adblock.lists = [
-    "https://easylist.to/easylist/easylist.txt",
-    "https://easylist.to/easylist/easyprivacy.txt",
-    "https://easylist-downloads.adblockplus.org/easylistdutch.txt",
-    "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt",
-    "https://www.i-dont-care-about-cookies.eu/abp/",
-    "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt",
-]
 
 c.input.forward_unbound_keys = "all"
 c.input.insert_mode.auto_leave = False
@@ -162,13 +160,12 @@ c.colors.webpage.preferred_color_scheme = "dark"
 bg_color = "#000000"
 c.colors.webpage.bg = bg_color
 
-# TODO: https://github.com/qutebrowser/qutebrowser/blob/master/scripts/dictcli.py
-# c.spellcheck.languages = ["en-US"]
+c.qt.args = [
+    "enable-gpu-rasterization",
+    "ignore-gpu-blocklist",
+    "enable-accelerated-video-decode",
+]
 
-
-# --> MISC:
-# # Put kitty, gvim, etc. in Qutebrowser's PATH, at least on macOS
-os.environ["PATH"] = "/usr/local/bin" + os.pathsep + os.environ["PATH"]
 # https://github.com/LaurenceWarne/qute-code-hint
 c.hints.selectors["code"] = [
     # Selects all code tags whose direct parent is not a pre tag
@@ -178,10 +175,17 @@ c.hints.selectors["code"] = [
 # Add a specific selectors (tries to select any frame)
 c.hints.selectors["frame"] = ["div", "header", "section", "nav"]
 
+# TODO: https://github.com/qutebrowser/qutebrowser/blob/master/scripts/dictcli.py
+# c.spellcheck.languages = ["en-US"]
+
+
+# --> MISC:
+# # Put kitty, gvim, etc. in Qutebrowser's PATH, at least on macOS
+os.environ["PATH"] = "/usr/local/bin" + os.pathsep + os.environ["PATH"]
 # os.environ['PATH'] = os.pathsep + '/usr/local/bin'
 # os.environ['NODE_PATH'] = os.pathsep + '/usr/local/lib/node_modules'
 
-# ================== Youtube Add Blocking ======================= {{{
+# -> ADBLOCK:
 def filter_yt(info: interceptor.Request):
     """Block the given request if necessary."""
     url = info.request_url
@@ -194,6 +198,30 @@ def filter_yt(info: interceptor.Request):
 
 
 interceptor.register(filter_yt)
+
+c.content.blocking.method = "adblock"
+c.content.blocking.adblock.lists = [
+    "https://easylist.to/easylist/easylist.txt",
+    "https://easylist.to/easylist/easyprivacy.txt",
+    "https://easylist.to/easylist/fanboy-social.txt",
+    "https://secure.fanboy.co.nz/fanboy-annoyance.txt",
+    "https://easylist-downloads.adblockplus.org/easylistdutch.txt",
+    "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt",
+    # "https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt",
+    "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt",
+    "https://www.i-dont-care-about-cookies.eu/abp/",
+    "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt",
+    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt",
+]
 
 
 # --> PATTERNS-EXCEPTIONS:
@@ -251,9 +279,7 @@ rsub : https://reddit.com/r/{}
 rs   : https://reddit.com/r/{}
 r    : https://www.reddit.com/search?q={}
 amz  : https://www.amazon.com/s/?tag=duc0a-21&url=search-alias%3Daps&field-keywords={}
-w    : https://fr.wikipedia.org/wiki/Special:Search?search={}&go=GO
-wfr  : https://fr.wikipedia.org/wiki/Special:Search?search={}&go=GO
-wen  : https://en.wikipedia.org/wiki/Special:Search?search={}
+w  : https://en.wikipedia.org/wiki/Special:Search?search={}
 gh   : https://github.com/search?utf8=%E2%9C%93&q={}
 dh   : https://hub.docker.com/search/?q={}&page=1&isAutomated=0&isOfficial=0&starCount=0&pullCount=0
 rtfd : https://{}.rtfd.io
@@ -275,11 +301,12 @@ ss   : https://github.com/koalaman/shellcheck/wiki/SC{}
 # c.url.searchengines = {}
 
 # Fill the searchengines list (DEFAULT is the first in the list)
+# c.url.searchengines["DEFAULT"] = "https://duckduckgo.com/?q={}"
 for se in searchengines.splitlines():
     if se:
         bang, url = se.split(":", 1)
         if not c.url.searchengines:
-            c.url.searchengines["DEFAULT"] = url.strip()
+            c.url.searchengines[bang] = url.strip()
             c.url.searchengines["!" + bang] = url.strip()
 
 
@@ -290,8 +317,6 @@ c.aliases = {
     "qa": "quit",
     "w": "session-save",
     "wq": "quit --save",
-    "qr": "spawn -u -- qr",
-    "clone": "spawn -u -- gitclone",
     "sz": "config-source",
     "o": "open",
     "O": "open --tab",
@@ -310,6 +335,7 @@ c.aliases = {
     "bm": "open -t qute://bookmarks/",
     "mpv": "spawn mpv --autofit=100%x100% --force-window=immediate --keep-open=yes {url}",
     "ompv": "hint links spawn mpv --autofit=100%x100% --force-window=immediate {hint-url}",
+    "hmpv": 'hint links spawn nohup mpv --cache=yes --demuxer-max-bytes=500M --demuxer-max-back-bytes=500M -ytdl-format="bv[ext=mp4]+ba/b" --force-window=immediate {hint-url}',
     "dl": "spawn --userscript open_download",
 }
 
@@ -317,11 +343,20 @@ c.aliases["b"] = "tab-focus"
 for i in range(1, 20):
     c.aliases["b" + str(i)] = "tab-focus " + str(i)
 
+
+## open in alternate browsers:
 c.aliases["chrome"] = 'spawn open -a "Google Chrome" {url}'
-c.aliases["ochrome"] = 'hint all spawn open -a "Google Chrome" {hint-url}'
+c.aliases["hchrome"] = 'hint all spawn open -a "Google Chrome" {hint-url}'
+c.aliases["brave"] = 'spawn open -a "Brave Browser" {url}'
+c.aliases["hbrave"] = 'hint all spawn open -a "Brave Browser" {hint-url}'
+c.aliases["safari"] = 'spawn open -a "Safari" {url}'
+c.aliases["hsafari"] = 'hint all spawn open -a "Safari" {hint-url}'
+c.aliases["firefox"] = 'spawn open -a "Firefox Developer Edition" {url}'
+c.aliases["hfirefox"] = 'hint all spawn open -a "Firefox Developer Edition" {hint-url}'
+# TODO: add ms edge
 
 c.aliases["user"] = "spawn --userscript"
-c.aliases["pass"] = "spawn --userscript qute-pass"
+c.aliases["pass"] = "spawn --userscript 1password"
 c.aliases["readability"] = "spawn --userscript readability"
 c.aliases["reader"] = "spawn --userscript readability"
 c.aliases["bib"] = "spawn --userscript getbib"
@@ -509,11 +544,12 @@ for i in range(9):
 nmap("<Esc>", "fake-key <Esc>")
 nmap("<Ctrl+[>", "clear-messages")
 imap("<Ctrl+o>", "open-editor")
+nmap(",sz", "sz")
 
 ## userscript/externally-dependent bindings..
 nmap("yc", "hint code userscript " + userscript("code_select"))
 nmap("<Ctrl+g>", c.aliases["dg-toggle"])
-nmap(",ce", "config-edit")
+nmap(",eq", "config-edit")
 nmap(",p", "config-cycle -p content.plugins ;; reload")
 nmap(
     ",pk",
@@ -529,12 +565,16 @@ nmap(
     + "})();",
 )
 nmap(",1p", "spawn --userscript 1p")
-nmap(",bs", "spawn --userscript safari")
-nmap(",bb", "spawn --userscript brave")
-nmap(",bc", "spawn --userscript chrome")
-nmap(",bf", "spawn --userscript firefox")
-nmap(",be", "spawn --userscript edge")
-# nmap(",s", "spawn --userscript safari")
+
+nmap(",bs", "safari")
+nmap(",bb", "brave")
+nmap(",bc", "chrome")
+nmap(",bf", "firefox")
+nmap(",hbs", "hsafari")
+nmap(",hbb", "hbrave")
+nmap(",hbc", "hchrome")
+nmap(",hbf", "hfirefox")
+# nmap(",be", "oedge")
 # nmap(",b", "spawn --userscript buku-add")
 # nmap(",f", "spawn --userscript buku-add favourites")
 # nmap(",c", "spawn --userscript clipper")
@@ -542,14 +582,14 @@ nmap(",be", "spawn --userscript edge")
 
 
 ## macos-style/readline..
-config.bind("<Ctrl+n>", "prompt-item-focus next", mode="prompt")
-config.bind("<Ctrl+p>", "prompt-item-focus prev", mode="prompt")
+# config.bind("<Ctrl+n>", "prompt-item-focus next", mode="prompt")
+# config.bind("<Ctrl+p>", "prompt-item-focus prev", mode="prompt")
 
-config.bind("<Ctrl+n>", "completion-item-focus --history next", mode="command")
-config.bind("<Ctrl+p>", "completion-item-focus --history prev", mode="command")
+# config.bind("<Ctrl+n>", "completion-item-focus --history next", mode="command")
+# config.bind("<Ctrl+p>", "completion-item-focus --history prev", mode="command")
 
-config.bind("<Ctrl+n>", "command-history-next", mode="command")
-config.bind("<Ctrl+p>", "command-history-prev", mode="command")
+# config.bind("<Ctrl+n>", "command-history-next", mode="command")
+# config.bind("<Ctrl+p>", "command-history-prev", mode="command")
 
 for mode in ["command", "prompt"]:
     # Readline-style mode
