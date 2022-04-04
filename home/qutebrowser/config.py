@@ -25,14 +25,14 @@ config.load_autoconfig(False)
 
 
 # --> LOADERS:
-USERSCRIPT_PATH = os.path.join(config.configdir, "userscripts")
-
-
+## userscripts:
 def userscript(script_name):
-    return os.path.join(USERSCRIPT_PATH, script_name)
+    return os.path.join(os.path.join(config.configdir, "userscripts"), script_name)
 
 
-config.source("themes/material-darker.py")
+## theme:
+config.source("themes/megaforest.py")
+
 # Apply splitted configuration
 # for source in [
 #   # 'aliases',
@@ -144,11 +144,12 @@ c.content.canvas_reading = True
 c.content.cookies.accept = "no-unknown-3rdparty"
 c.content.geolocation = False
 c.content.headers.user_agent = u_agent
-c.content.notifications.enabled = False
+c.content.notifications.enabled = True
 c.content.pdfjs = True
 c.content.register_protocol_handler = False
 c.content.webgl = True
 c.content.webrtc_ip_handling_policy = "default-public-interface-only"
+c.content.default_encoding = "utf-8"
 
 c.input.forward_unbound_keys = "all"
 c.input.insert_mode.auto_leave = False
@@ -370,7 +371,7 @@ c.aliases["dg-toggle"] = "jseval --quiet --world main DarkReader.toggle()"
 
 # --> BINDINGS:
 # Remove all default keys
-c.bindings.default = {}
+# c.bindings.default = {}
 
 # Convenience helpers
 def nmap(key, cmd):
@@ -588,11 +589,11 @@ nmap(",dt", "devtools")
 
 
 ## macos-style/readline..
-# config.bind("<Ctrl+n>", "prompt-item-focus next", mode="prompt")
-# config.bind("<Ctrl+p>", "prompt-item-focus prev", mode="prompt")
+config.bind("<Ctrl+n>", "prompt-item-focus next", mode="prompt")
+config.bind("<Ctrl+p>", "prompt-item-focus prev", mode="prompt")
 
-# config.bind("<Ctrl+n>", "completion-item-focus --history next", mode="command")
-# config.bind("<Ctrl+p>", "completion-item-focus --history prev", mode="command")
+config.bind("<Ctrl+n>", "completion-item-focus --history next", mode="command")
+config.bind("<Ctrl+p>", "completion-item-focus --history prev", mode="command")
 
 # config.bind("<Ctrl+n>", "command-history-next", mode="command")
 # config.bind("<Ctrl+p>", "command-history-prev", mode="command")
