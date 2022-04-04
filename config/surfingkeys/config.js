@@ -71,8 +71,6 @@ settings.tabsMRUOrder = false;
 // Input box trueだとiなどで入力ボックスに切り替えてもリンクキーが表示されたままに 切り替えたリンクキーが最後に入力されることも
 settings.cursorAtEndOfInput = false;
 
-
-
 // -----------------------------------------------------------------------------------------------------------------------
 // -- [ HINTS ]
 // -----------------------------------------------------------------------------------------------------------------------
@@ -143,44 +141,47 @@ Visual.style(
 
 // -- UNMAPS
 // (Unused; unmap these first so they can be mapped to other things)
+//
+// could use this: `unmapAllExcept([])`
+// https://github.com/brookhong/Surfingkeys/discussions/1679#discussioncomment-2285766
 mapkey("w", "Move current tab to another window", function () {
   Front.openOmnibar({ type: "Windows" });
 });
 
-unmap(':'); // Lets me map chords beginning with ':'
-iunmap(":");  // disable emoji completion
-vunmap("t");  // disable google translate of visually selected
-unmap("w");   // disable window splitting (i use hammerspoon for that)
-unmap(';w');  // Focus top window
-unmap('%');   // Scroll to percentage of current page
-unmap(';m');  // Mouse out last element
-unmap('B');   // Go on tab history back
-unmap('gT');  // Go to first activated tab
-unmap(';i');  // Insert jquery library on current page
-unmap(';t');  // Translate selected text with google
-unmap('gr');  // Read selected text or text from clipboard
-unmap(';dh'); // Delete history older than 30 days
+unmap(":"); // Lets me map chords beginning with ':'
+iunmap(":"); // disable emoji completion
+vunmap("t"); // disable google translate of visually selected
+unmap("w"); // disable window splitting (i use hammerspoon for that)
+unmap(";w"); // Focus top window
+unmap("%"); // Scroll to percentage of current page
+unmap(";m"); // Mouse out last element
+unmap("B"); // Go on tab history back
+unmap("gT"); // Go to first activated tab
+unmap(";i"); // Insert jquery library on current page
+unmap(";t"); // Translate selected text with google
+unmap("gr"); // Read selected text or text from clipboard
+unmap(";dh"); // Delete history older than 30 days
 
-unmap('<Alt-p>'); // pin/unpin current tab
-unmap('<Alt-m>'); // mute/unmute current tab
+unmap("<Alt-p>"); // pin/unpin current tab
+unmap("<Alt-m>"); // mute/unmute current tab
 
 // Search selection
-unmap('sg');
-unmap('sd');
-unmap('sb');
-unmap('sw');
-unmap('ss');
-unmap('sh');
-unmap('sy');
+unmap("sg");
+unmap("sd");
+unmap("sb");
+unmap("sw");
+unmap("ss");
+unmap("sh");
+unmap("sy");
 
 /* (Search selection doesn't make sense for normal mode) */
-unmap('sg');
-unmap('sd');
-unmap('sb');
-unmap('sw');
-unmap('ss');
-unmap('sh');
-unmap('sy');
+unmap("sg");
+unmap("sd");
+unmap("sb");
+unmap("sw");
+unmap("ss");
+unmap("sh");
+unmap("sy");
 
 // -- VISUAL
 vmap("H", "0");
@@ -210,25 +211,25 @@ map("gL", "g$");
 map("F", "gf");
 
 // -- ESC hatch
-imap('<Ctrl-[>', '<Esc>');
-imap('<Ctrl-c>', '<Esc>');
-cmap('<Ctrl-[>', '<Esc>');
-cmap('<Ctrl-c>', '<Esc>');
+imap("<Ctrl-[>", "<Esc>");
+imap("<Ctrl-c>", "<Esc>");
+cmap("<Ctrl-[>", "<Esc>");
+cmap("<Ctrl-c>", "<Esc>");
 
-vmapkey('<Ctrl-[>', '#9Exit visual mode', function () {
+vmapkey("<Ctrl-[>", "#9Exit visual mode", function () {
   if (Visual.state > 1) {
-      Visual.hideCursor();
-      Visual.selection.collapse(selection.anchorNode, selection.anchorOffset);
-      Visual.showCursor();
+    Visual.hideCursor();
+    Visual.selection.collapse(selection.anchorNode, selection.anchorOffset);
+    Visual.showCursor();
   } else {
-      Visual.visualClear();
-      Visual.exit();
+    Visual.visualClear();
+    Visual.exit();
   }
   Visual.state--;
   Visual._onStateChange();
 });
 
-vmapkey('<Ctrl-c>', '#9Exit visual mode', function () {
+vmapkey("<Ctrl-c>", "#9Exit visual mode", function () {
   Visual.exit();
 });
 
@@ -249,9 +250,8 @@ for (let i = 0; i <= 9; i++) {
 // -- EDITOR/ACE
 aceVimMap(",w", ":w", "normal");
 aceVimMap(",q", ":q", "normal");
-aceVimMap('kj', '<Esc>', 'insert');
-aceVimMap('<C-c>', '<Esc>', 'insert');
-
+aceVimMap("kj", "<Esc>", "insert");
+aceVimMap("<C-c>", "<Esc>", "insert");
 
 // custom actions
 actions.showSquirt = () => {

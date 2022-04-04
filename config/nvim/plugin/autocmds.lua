@@ -230,6 +230,7 @@ do
       end,
     },
     {
+      -- Last cursor position.
       -- When editing a file, always jump to the last known cursor position.
       -- Don't do it for commit messages, when the position is invalid.
       events = { "BufWinEnter" },
@@ -239,7 +240,7 @@ do
           if { row, col } ~= { 0, 0 } then
             local ok, msg = pcall(api.nvim_win_set_cursor, 0, { row, 0 })
             if not ok then
-              vim.notify(msg, "error")
+              vim.notify(msg, "error", { title = "Last cursor position" })
             end
           end
         end

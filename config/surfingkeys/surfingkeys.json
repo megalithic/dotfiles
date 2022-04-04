@@ -1,0 +1,12 @@
+{
+  "allowed_origins": [
+    "chrome-extension://aajlcoiaogpknhgninhopncaldipjdnp/",
+    "chrome-extension://gfbliohnnapiefjpjlpjnehglfpaknnc/",
+    "extension://gfbliohnnapiefjpjlpjnehglfpaknnc/",
+    "extension://aajlcoiaogpknhgninhopncaldipjdnp/"
+  ],
+  "description": "Neovim UI client from Surfingkeys",
+  "name": "surfingkeys",
+  "type": "stdio",
+  "path": "/Users/seth/.config/surfingkeys/server_start.sh"
+}

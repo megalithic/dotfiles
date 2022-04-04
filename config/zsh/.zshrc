@@ -34,6 +34,7 @@ zcomet load zdharma-zmirror/fast-syntax-highlighting
 zcomet load wfxr/emoji-cli
 zcomet load wfxr/forgit
 zcomet load ohmyzsh plugins/colored-man-pages
+# zcomet load b0o/zfzf
 
 if [[ $PLATFORM == "linux" ]]; then
   [[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

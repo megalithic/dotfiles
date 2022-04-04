@@ -122,12 +122,6 @@
     ~/.config/zsh:
       force: true
       path: config/zsh
-
-    # ~/.qutebrowser:
-    #   force: true
-    #   path: home/qutebrowser
-    #   if: "[ `uname` = Darwin ]"
-
     ~/.vimrc: config/nvim/vimrc
     ~/.zshenv: config/zsh/.zshenv
 
@@ -154,6 +148,18 @@
       force: true
       if: "[ `uname` = Darwin ]"
       path: misc/mailmate/megabindings.plist
+    ~/Library/Application Support/Google/Chrome/NativeMessagingHosts/surfingkeys.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/surfingkeys.json
+    ~/Library/Application Support/Chromium/NativeMessagingHosts/surfingkeys.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/surfingkeys.json
+    ~/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/surfingkeys.json:
+      force: true
+      if: "[ `uname` = Darwin ]"
+      path: config/surfingkeys/surfingkeys.json
 
 # - ghe:
 #     - mislav/gh-branch
