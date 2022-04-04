@@ -36,9 +36,7 @@ config.source("themes/megaforest.py")
 
 # --> SETTINGS:
 commands = {
-    "edit": "kitty launch --cwd=current --type=tab nvim -f {file} -c 'normal {line}G{column0}l'".split(),
-    # c.editor.command = ['nvim', '-f', '{file}', '-c', 'normal {line}G{column0}l']
-    # 'edit':       'foot -T float vim {file}'.split(),
+    "edit": "kitty @ --to unix:/tmp/mykitty launch --type=primary tmux attach -t mega; new-window nvim -f {file} -c 'normal {line}G{column0}l'".split()
     # 'pick_dir':   'foot -T float ranger --choosedir={}'.split(),
     # 'pick_files': 'foot -T float ranger --choosefiles={}'.split(),
     # 'pick_file':  'foot -T float ranger --choosefile={}'.split()
@@ -96,6 +94,7 @@ padding = {
 c.tabs.padding = padding
 
 c.statusbar.padding = padding
+c.window.hide_decoration = False
 c.window.title_format = "{perc}{current_title}{title_sep} browser"
 
 c.url.open_base_url = True
