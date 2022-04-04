@@ -1,3 +1,6 @@
+# taken from:
+# https://github.com/nebulaeandstars/dotfiles/blob/master/qutebrowser/.config/qutebrowser/config.py#L73
+
 # color variables
 cream = "#ffffd8"
 mauve = "#ffd8ff"

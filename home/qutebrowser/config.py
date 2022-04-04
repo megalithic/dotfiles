@@ -97,7 +97,7 @@ c.tabs.width = "10%"  # 60
 c.tabs.show = "always"  # only shows tab_bar when > 1 tab with "multiple"
 c.tabs.undo_stack_size = 20
 c.tabs.close_mouse_button = "right"
-c.tabs.indicator.width = 2
+c.tabs.indicator.width = 0
 c.tabs.favicons.scale = 1
 c.tabs.title.format_pinned = "{index} {current_title} {audio}"
 padding = {
@@ -200,8 +200,9 @@ def filter_yt(info: interceptor.Request):
 
 interceptor.register(filter_yt)
 
-c.content.blocking.enabled = False
+c.content.blocking.enabled = True
 c.content.blocking.method = "adblock"
+c.content.blocking.whitelist = ["https://atlas.test/*"]
 c.content.blocking.adblock.lists = [
     "https://easylist.to/easylist/easylist.txt",
     "https://easylist.to/easylist/easyprivacy.txt",
