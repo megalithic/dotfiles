@@ -1,5 +1,6 @@
 # --> REFS:
 # - https://git.sr.ht/~palb91/dotfiles/tree/main/item/qutebrowser/config.py
+# - https://github.com/neeasade/dotfiles/blob/master/qutebrowser/.config/qutebrowser/config.py
 # - https://github.com/j-hui/pokerus/tree/main/qutebrowser/.qutebrowser
 # - https://github.com/The-Compiler/dotfiles/blob/master/qutebrowser/gruvbox.py
 # - https://github.com/dracula/qutebrowser
@@ -537,13 +538,10 @@ for i in range(9):
 nmap("<Esc>", "fake-key <Esc>")
 nmap("<Ctrl+[>", "clear-messages")
 imap("<Ctrl+o>", "open-editor")
-nmap(",sz", "sz")
 
 ## userscript/externally-dependent bindings..
-nmap("yc", "hint code userscript " + userscript("code_select"))
 nmap("<Ctrl+g>", c.aliases["dg-toggle"])
-nmap(",eq", "config-edit")
-nmap(",p", "config-cycle -p content.plugins ;; reload")
+nmap("yc", "hint code userscript " + userscript("code_select"))
 nmap(
     ",pk",
     "jseval (function () { "
@@ -557,6 +555,10 @@ nmap(
     + "  }"
     + "})();",
 )
+
+## leader-key bindings..
+nmap(",eq", "config-edit")
+nmap(",p", "config-cycle -p content.plugins ;; reload")
 nmap(",1p", "spawn --userscript 1p")
 nmap(",tp", "tab-pin")
 nmap(",bs", "safari")
@@ -567,9 +569,10 @@ nmap(",hbs", "hsafari")
 nmap(",hbb", "hbrave")
 nmap(",hbc", "hchrome")
 nmap(",hbf", "hfirefox")
-
+nmap(",sz", "sz")
 nmap(",df", "devtools-focus")
 nmap(",dt", "devtools")
+nmap(",gt", "set-cmd-text --space :tab-select")
 # nmap(",be", "oedge")
 # nmap(",b", "spawn --userscript buku-add")
 # nmap(",f", "spawn --userscript buku-add favourites")
