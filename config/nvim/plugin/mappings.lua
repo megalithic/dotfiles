@@ -123,6 +123,7 @@ if has_wk then
       e = {
         name = "edit files",
         c = { [[:Copy<cr>]], "save as <input>" },
+        s = { [[:Copy<cr>]], "save as <input>" },
         cp = { [[:let @+ = expand("%")<CR>]], "copy path to clipboard" },
         d = { [[:Duplicate<cr>]], "duplicate current file" },
       },

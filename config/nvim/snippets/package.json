@@ -1,0 +1,32 @@
+{
+  "contributes": {
+    "snippets": [
+      {
+        "language": [
+          "global"
+        ],
+        "path": "./global.json"
+      },
+      {
+        "language": "elixir",
+        "path": "./elixir.json"
+      },
+      {
+        "language": "eelixir",
+        "path": "./eelixir.json"
+      },
+      {
+        "language": "lua",
+        "path": "./lua.json"
+      },
+      {
+        "language": "elm",
+        "path": "./elm.json"
+      },
+      {
+        "language": "markdown",
+        "path": "./markdown.json"
+      }
+    ]
+  }
+}

@@ -205,7 +205,7 @@ return lush(function()
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
     VertSplit({ fg = bg4, bg = "NONE" }), -- the column separating vertically split windows
     WinSeparator({ VertSplit, gui = "bold" }),
-    Folded({ fg = grey1, bg = bg1 }), -- line used for closed folds
+    Folded({ fg = grey1, bg = bg1, gui = "bold,italic" }), -- line used for closed folds
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
     -- Neither the sign column or end of buffer highlights require an explicit background
     -- they should both just use the background that is in the window they are in.

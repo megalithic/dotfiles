@@ -236,14 +236,17 @@ vmapkey("<Ctrl-c>", "#9Exit visual mode", function () {
 // set quick-tab-opening for `<C-1>`-`<C-0>` for tabs 1-10
 for (let i = 0; i <= 9; i++) {
   // unmap(`<Ctrl-${i}>`);
-  console.log(`<Ctrl-${i}> -> ${i}T`);
+  // console.log(`<Ctrl-${i}> -> ${i}T`);
 
   if (i === 0) {
-    map("<Ctrl-0>", "10T");
-    map("0t", "10T");
+    map("<Ctrl-0>", "<Meta-0");
+    // map("0t", "10T");
   } else {
-    map(`<Ctrl-${i}>`, `${i}T`);
-    map(`${i}t`, `${i}T`);
+    mapkey(`<Ctrl-${i}`, `Jump to tab #${i}`, function () {
+      Normal.feedkeys(`<Meta-${i}>`);
+    });
+    map(`<Ctrl-${i}>`, `<Meta-${i}>`);
+    // map(`${i}t`, `${i}T`);
   }
 }
 

@@ -1,7 +1,7 @@
 local api = vim.api
 
 local cmp = require("cmp")
-local luasnip = require("luasnip")
+local ls = require("luasnip")
 local utils = require("mega.utils")
 local t = mega.replace_termcodes
 
@@ -11,36 +11,70 @@ local M = {
 
 local function setup_luasnip()
   local types = require("luasnip.util.types")
-  luasnip.config.set_config({
-    history = true,
-    updateevents = "TextChangedI",
-    store_selection_keys = "<Tab>",
+  local extras = require("luasnip.extras")
+  local fmt = require("luasnip.extras.fmt").fmt
+
+  ls.config.set_config({
+    history = false,
+    region_check_events = "CursorMoved,CursorHold,InsertEnter",
+    delete_check_events = "InsertLeave",
     ext_opts = {
-      -- [types.insertNode] = {
-      --   passive = {
-      --     hl_group = "Substitute",
-      --   },
-      -- },
       [types.choiceNode] = {
         active = {
-          virt_text = { { "choiceNode", "IncSearch" } },
+          hl_mode = "combine",
+          virt_text = { { "●", "Operator" } },
+        },
+      },
+      [types.insertNode] = {
+        active = {
+          hl_mode = "combine",
+          virt_text = { { "●", "Type" } },
         },
       },
     },
     enable_autosnippets = true,
+    snip_env = {
+      fmt = fmt,
+      m = extras.match,
+      t = ls.text_node,
+      f = ls.function_node,
+      c = ls.choice_node,
+      d = ls.dynamic_node,
+      i = ls.insert_node,
+      l = extras.lamda,
+      snippet = ls.snippet,
+    },
   })
+  -- luasnip.config.set_config({
+  --   history = true,
+  --   updateevents = "TextChangedI",
+  --   store_selection_keys = "<Tab>",
+  --   ext_opts = {
+  --     -- [types.insertNode] = {
+  --     --   passive = {
+  --     --     hl_group = "Substitute",
+  --     --   },
+  --     -- },
+  --     [types.choiceNode] = {
+  --       active = {
+  --         virt_text = { { "choiceNode", "IncSearch" } },
+  --       },
+  --     },
+  --   },
+  --   enable_autosnippets = true,
+  -- })
 
   -- TODO: we want to do our own luasnippets .. se this link for more details of
   -- how we might want to do this: https://youtu.be/Dn800rlPIho
 
   --- <tab> to jump to next snippet's placeholder
   local function on_tab()
-    return luasnip.jump(1) and "" or utils.t("<Tab>")
+    return ls.jump(1) and "" or utils.t("<Tab>")
   end
 
   --- <s-tab> to jump to next snippet's placeholder
   local function on_s_tab()
-    return luasnip.jump(-1) and "" or utils.t("<S-Tab>")
+    return ls.jump(-1) and "" or utils.t("<S-Tab>")
   end
 
   local opts = { expr = true, remap = true }
@@ -48,6 +82,9 @@ local function setup_luasnip()
   smap("<Tab>", on_tab, opts)
   imap("<S-Tab>", on_s_tab, opts)
   smap("<S-Tab>", on_s_tab, opts)
+
+  require("luasnip.loaders.from_lua").lazy_load()
+  require("luasnip.loaders.from_vscode").lazy_load({ paths = "./snippets" })
 end
 
 local function setup_cmp()
@@ -60,8 +97,8 @@ local function setup_cmp()
   local function tab(fallback)
     if cmp.visible() then
       cmp.select_next_item()
-    elseif luasnip and luasnip.expand_or_locally_jumpable() then
-      luasnip.expand_or_jump()
+    elseif ls and ls.expand_or_locally_jumpable() then
+      ls.expand_or_jump()
     elseif has_words_before() then
       cmp.complete()
     else
@@ -72,8 +109,8 @@ local function setup_cmp()
   local function shift_tab(fallback)
     if cmp.visible() then
       cmp.select_prev_item()
-    elseif luasnip and luasnip.jumpable(-1) then
-      luasnip.jump(-1)
+    elseif ls and ls.jumpable(-1) then
+      ls.jump(-1)
     else
       fallback()
     end
@@ -121,7 +158,7 @@ local function setup_cmp()
     },
     snippet = {
       expand = function(args)
-        luasnip.lsp_expand(args.body)
+        ls.lsp_expand(args.body)
       end,
     },
     -- window = {
