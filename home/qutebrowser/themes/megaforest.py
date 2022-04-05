@@ -15,7 +15,6 @@ magenta = "#d699b6"
 cyan = "#83c092"
 white = "#d8cacc"
 brightblack = "#2e383e"
-darkblack = "#273433"  # 283534
 brightred = "#c43e1f"
 brightgreen = "#6bc46d"
 brightyellow = "#FAB005"
@@ -23,6 +22,9 @@ brightblue = "#51afef"
 brightmagenta = "#c678dd"
 brightcyan = "#15AABF"
 brightwhite = "#ffffff"
+darkblack = "#273433"  # 283534
+darkblue = "#415c6d"
+darkyellow = "#5d5c50"
 
 
 # COMPLETION WIDGET # COMPLETION WIDGET # COMPLETION WIDGET #
@@ -196,21 +198,21 @@ c.colors.tabs.odd.bg = black
 c.colors.tabs.odd.fg = white
 
 # pinned unselected tabs
-c.colors.tabs.pinned.even.bg = black
+c.colors.tabs.pinned.even.bg = darkblack
 c.colors.tabs.pinned.even.fg = cyan
-c.colors.tabs.pinned.odd.bg = black
+c.colors.tabs.pinned.odd.bg = darkblack
 c.colors.tabs.pinned.odd.fg = cyan
 
 # selected tabs
-c.colors.tabs.selected.even.bg = darkblack
+c.colors.tabs.selected.even.bg = darkblue
 c.colors.tabs.selected.even.fg = brightwhite
-c.colors.tabs.selected.odd.bg = darkblack
+c.colors.tabs.selected.odd.bg = darkblue
 c.colors.tabs.selected.odd.fg = brightwhite
 
 # pinned selected tabs
-c.colors.tabs.pinned.selected.even.bg = darkblack
+c.colors.tabs.pinned.selected.even.bg = darkblue
 c.colors.tabs.pinned.selected.even.fg = brightcyan
-c.colors.tabs.pinned.selected.odd.bg = darkblack
+c.colors.tabs.pinned.selected.odd.bg = darkblue
 c.colors.tabs.pinned.selected.odd.fg = brightcyan
 
 

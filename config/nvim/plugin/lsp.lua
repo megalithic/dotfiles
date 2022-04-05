@@ -562,20 +562,20 @@ mega.lsp.servers = {
   rust_analyzer = true,
   vimls = true,
   zk = true,
-  -- pyright = function()
-  --   return {
-  --     single_file_support = false,
-  --     settings = {
-  --       python = {
-  --         analysis = {
-  --           autoSearchPaths = true,
-  --           diagnosticMode = "workspace",
-  --           useLibraryCodeForTypes = true,
-  --         },
-  --       },
-  --     },
-  --   }
-  -- end,
+  pyright = function()
+    return {
+      single_file_support = false,
+      settings = {
+        python = {
+          analysis = {
+            autoSearchPaths = true,
+            diagnosticMode = "workspace",
+            useLibraryCodeForTypes = true,
+          },
+        },
+      },
+    }
+  end,
   jsonls = function()
     return {
       commands = {

@@ -13,7 +13,7 @@ end
 
 -- [ EXPLICIT PLUGIN CONFIGS ] -------------------------------------------------
 
-require("nvim-web-devicons").setup({ default = true })
+require("nvim-web-devicons").setup()
 conf("telescope")
 conf("cmp")
 conf("zk")
