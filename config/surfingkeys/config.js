@@ -35,6 +35,7 @@ const {
   Front,
   Hints,
   Visual,
+  Normal,
   RUNTIME,
 } = api;
 
@@ -234,20 +235,23 @@ vmapkey("<Ctrl-c>", "#9Exit visual mode", function () {
 });
 
 // set quick-tab-opening for `<C-1>`-`<C-0>` for tabs 1-10
-for (let i = 0; i <= 9; i++) {
+for (let i = 1; i <= 9; i++) {
   // unmap(`<Ctrl-${i}>`);
   // console.log(`<Ctrl-${i}> -> ${i}T`);
-
-  if (i === 0) {
-    map("<Ctrl-0>", "<Meta-0");
-    // map("0t", "10T");
-  } else {
-    mapkey(`<Ctrl-${i}`, `Jump to tab #${i}`, function () {
-      Normal.feedkeys(`<Meta-${i}>`);
-    });
-    map(`<Ctrl-${i}>`, `<Meta-${i}>`);
-    // map(`${i}t`, `${i}T`);
-  }
+  // if (i === 0) {
+  //   map("<Ctrl-0>", Normal.feedkeys("10T"));
+  //   // map("0t", "10T");
+  // } else {
+  //   // mapkey(`<Ctrl-${i}`, `Jump to tab #${i}`, function () {
+  //   //   Normal.feedkeys(`${i}T`);
+  //   // });
+  //   map(`<Ctrl-${i}>`, Normal.feedkeys(`${i}T`));
+  // }
+  // map(`<Ctrl-${i}>`, `<Meta-${i}>`);
+  // map("<Ctrl-2>", "<Meta-2>");
+  // mapkey(`<Ctrl-${i}`, `Jump to tab #${i}`, function () {
+  //   Normal.feedkeys(`<Meta-${i}>`);
+  // });
 }
 
 // -- EDITOR/ACE

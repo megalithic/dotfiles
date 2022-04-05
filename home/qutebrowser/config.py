@@ -138,6 +138,7 @@ c.tabs.padding = padding
 
 c.completion.scrollbar.width = 10
 
+c.scrolling.smooth = False
 
 c.statusbar.padding = padding
 c.statusbar.widgets = ["progress", "keypress", "url", "history"]
