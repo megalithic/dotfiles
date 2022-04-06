@@ -69,7 +69,7 @@ brew "docker"
 brew "docker-compose"
 brew "docker-credential-helper-ecr"
 brew "docker-machine" # , restart_service: true, link: false
-brew "duck"
+# brew "duck" # FIXME: do we need this?
 # brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
 brew "exa"
 brew "exercism" if OS.mac?
@@ -152,7 +152,7 @@ brew "ripgrep"
 # brew "ruby-build"
 brew "rust"
 brew "rustup-init"
-brew "qt"
+brew "qt" if OS.mac?
 brew "shellcheck"
 brew "shfmt"
 brew "ssh-copy-id"
