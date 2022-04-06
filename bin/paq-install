@@ -60,10 +60,10 @@ do_install() {
     log_warn "existing paq-nvim found.."
     remove_existing
   fi
-  do_clone \
-    && install_plugins \
-    && log_ok "completed installing paq-nvim and plugins into $paq_path" \
-    || exit 1
+  do_clone &&
+    install_plugins &&
+    log_ok "completed installing paq-nvim and plugins into $paq_path" ||
+    exit 1
 }
 
 while getopts "fu" OPTION; do
@@ -75,9 +75,9 @@ while getopts "fu" OPTION; do
 
     u)
       log "updating paq plugins.."
-      sync_plugins \
-        && (echo "" && log_ok "finished updating paq plugins.") \
-        || (echo "" && log_error "something went wrong while updating paq plugins; exiting.")
+      sync_plugins &&
+        (echo "" && log_ok "finished updating paq plugins.") ||
+        (echo "" && log_error "something went wrong while updating paq plugins; exiting.")
       exit 1
       ;;
 
@@ -92,6 +92,7 @@ shift $((OPTIND - 1))
 
 if [[ -d $paq_path && $FORCE_INSTALL == "false" ]]; then
   log_warn "paq-nvim already exists at $paq_path; skipping."
+  sync_plugins
 else
   read -p "$(tput bold)$(tput setaf 5)[?] install paq-nvim and plugins (y/N)?$(tput sgr 0) " yn
   case $yn in
