@@ -52,7 +52,8 @@ config.source("themes/megaforest.py")
 # --> SETTINGS:
 editor = [
     "kitty",
-    "@ --to unix:/tmp/mykitty --type=tab launch nvim -f{file}",
+    "@ --to unix:/tmp/mykitty --type=tab launch nvim",
+    "-f {file}",
     # "tmux attach -t mega;",
     # "new-window nvim",
     # "-f{file}",
@@ -60,7 +61,7 @@ editor = [
 
 commands = {
     # "edit": "kitty @ --to unix:/tmp/mykitty --type=tab launch nvim -f {file}".split(),
-    "edit": "kitty @ --to unix:/tmp/mykitty launch --type=tab /usr/local/bin/nvim -f {file}".split()
+    "edit": "kitty @ --to unix:/tmp/mykitty launch --type=tab nvim -f {file}".split()
     # "edit": "kitty @ --to unix:/tmp/mykitty launch --type=overlay tmux attach -t mega ; new-window nvim -f {file}".split()
     # "edit": editor
     # [which("qutebrowser-edit"), '-l{line}', '-c{column}', '-f{file}']
@@ -97,7 +98,7 @@ c.fonts.completion.entry = "default_size default_family"
 c.fonts.debug_console = "default_size default_family"
 c.fonts.default_family = "Source Code Pro Medium"
 c.fonts.downloads = "default_size default_family"
-c.fonts.hints = "bold default_size default_family"
+c.fonts.hints = "bold 13px default_family"
 c.fonts.keyhint = "default_size default_family"
 c.fonts.messages.error = "default_size default_family"
 c.fonts.messages.info = "default_size default_family"
@@ -106,7 +107,7 @@ c.fonts.prompts = "default_size default_family"
 c.fonts.statusbar = "default_size default_family"
 c.fonts.tabs.selected = "12px default_family"
 c.fonts.tabs.unselected = "12px default_family"
-c.hints.chars = "ctsrvdlgh"  # get the keys from our vim config hop/lightspeed/etc; or from surfingkeys
+c.hints.chars = "etovxqpdygfbzcisuran"  # get the keys from our vim config hop/lightspeed/etc; or from surfingkeys
 c.history_gap_interval = 240
 c.input.escape_quits_reporter = True
 c.input.mouse.rocker_gestures = True
@@ -332,36 +333,36 @@ for site in [
 
 # --> SEARCHENGINES:
 searchengines = """
-?    : https://start.duckduckgo.com/?kae=t&q={}
-ddg  : https://start.duckduckgo.com/?kae=t&q={}
-gtr  : https://translate.google.com/#auto/en/{}
-rsub : https://reddit.com/r/{}
-rs   : https://reddit.com/r/{}
-r    : https://www.reddit.com/search?q={}
-amz  : https://www.amazon.com/s/?tag=duc0a-21&url=search-alias%3Daps&field-keywords={}
-w    : https://en.wikipedia.org/wiki/Special:Search?search={}
-gh   : https://github.com/search?utf8=%E2%9C%93&q={}
-dh   : https://hub.docker.com/search/?q={}&page=1&isAutomated=0&isOfficial=0&starCount=0&pullCount=0
-rtfd : https://{}.rtfd.io
-rtfm : https://{}.rtfd.io
-g    : https://www.google.com/search?q={}
-yt   : https://www.youtube.com/results?search_query={}
-cmd  : https://www.reddit.com/r/commandline/search?q={}&restrict_sr=on&sort=relevance&t=all
-srht : https://sr.ht/projects?search={}&sort=recently-updated
-st   : https://sr.ht/projects?search={}&sort=recently-updated
-gm   : https://maps.google.com/maps?q={}
-gmaps: https://maps.google.com/maps?q={}
-osm  : https://www.openstreetmap.org/search?query={}
-gi   : https://www.google.com/search?tbm=isch&q={}
-i    : https://duckduckgo.com/?ia=images&iax=images&q={}
-ss   : https://github.com/koalaman/shellcheck/wiki/SC{}
+DEFAULT    : https://search.brave.com/search?q={}
+ddg        : https://start.duckduckgo.com/?kae=t&q={}
+gtr        : https://translate.google.com/#auto/en/{}
+rsub       : https://reddit.com/r/{}
+rs         : https://reddit.com/r/{}
+r          : https://www.reddit.com/search?q={}
+amz        : https://www.amazon.com/s/?tag=duc0a-21&url=search-alias%3Daps&field-keywords={}
+w          : https://en.wikipedia.org/wiki/Special:Search?search={}
+gh         : https://github.com/search?utf8=%E2%9C%93&q={}
+dh         : https://hub.docker.com/search/?q={}&page=1&isAutomated=0&isOfficial=0&starCount=0&pullCount=0
+rtfd       : https://{}.rtfd.io
+rtfm       : https://{}.rtfd.io
+g          : https://www.google.com/search?q={}
+yt         : https://www.youtube.com/results?search_query={}
+cmd        : https://www.reddit.com/r/commandline/search?q={}&restrict_sr=on&sort=relevance&t=all
+srht       : https://sr.ht/projects?search={}&sort=recently-updated
+st         : https://sr.ht/projects?search={}&sort=recently-updated
+gm         : https://maps.google.com/maps?q={}
+gmaps      : https://maps.google.com/maps?q={}
+osm        : https://www.openstreetmap.org/search?query={}
+gi         : https://www.google.com/search?tbm=isch&q={}
+i          : https://duckduckgo.com/?ia=images&iax=images&q={}
+ss         : https://github.com/koalaman/shellcheck/wiki/SC{}
 """
 
 # Clean the searchengines list
 # c.url.searchengines = {}
 
 # Fill the searchengines list (DEFAULT is the first in the list)
-# c.url.searchengines["DEFAULT"] = "https://duckduckgo.com/?q={}"
+# c.url.searchengines["DEFAULT"] = "https://search.brave.com/search?q={}"
 for se in searchengines.splitlines():
     if se:
         bang, url = se.split(":", 1)

@@ -8,8 +8,15 @@ from collections import defaultdict
 from kitty.boss import get_boss
 from kitty.fast_data_types import Screen, add_timer
 from kitty.rgb import Color
-from kitty.tab_bar import DrawData, ExtraData, TabBarData, Formatter, as_rgb, draw_title, draw_attributed_string
-
+from kitty.tab_bar import (
+    DrawData,
+    ExtraData,
+    Formatter,
+    TabBarData,
+    as_rgb,
+    draw_attributed_string,
+    draw_title,
+)
 from kitty.utils import color_as_int
 
 timer_id = None
@@ -111,12 +118,12 @@ def _draw_right_status(screen: Screen, is_last: bool) -> int:
     return screen.cursor.x
 
 
-
 # REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-1940795
 # def redraw_tab_bar():
 #     tm = get_boss().active_tab_manager
 #     if tm is not None:
 #         tm.mark_tab_bar_dirty()
+
 
 def draw_tab(
     draw_data: DrawData,

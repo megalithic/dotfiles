@@ -14,6 +14,7 @@ blue = "#7fbbb3"
 magenta = "#d699b6"
 cyan = "#83c092"
 white = "#d8cacc"
+
 brightblack = "#2e383e"
 brightred = "#c43e1f"
 brightgreen = "#6bc46d"
@@ -22,7 +23,9 @@ brightblue = "#51afef"
 brightmagenta = "#c678dd"
 brightcyan = "#15AABF"
 brightwhite = "#ffffff"
+
 darkblack = "#273433"  # 283534
+darkgreen = "#4e6053"
 darkblue = "#415c6d"
 darkyellow = "#5d5c50"
 
@@ -30,8 +33,8 @@ darkyellow = "#5d5c50"
 # COMPLETION WIDGET # COMPLETION WIDGET # COMPLETION WIDGET #
 
 ## completion widget category headers
-c.colors.completion.category.bg = black
-c.colors.completion.category.border.bottom = brightblue
+c.colors.completion.category.bg = darkblue
+c.colors.completion.category.border.bottom = blue
 c.colors.completion.category.border.top = black
 c.colors.completion.category.fg = brightwhite
 
@@ -43,8 +46,8 @@ c.colors.completion.odd.bg = black
 c.colors.completion.fg = [brightwhite, brightwhite, brightwhite]
 
 # selected completion item
-c.colors.completion.item.selected.bg = black
-c.colors.completion.item.selected.border.bottom = brightgreen
+c.colors.completion.item.selected.bg = darkyellow
+c.colors.completion.item.selected.border.bottom = black
 c.colors.completion.item.selected.border.top = black
 c.colors.completion.item.selected.fg = brightwhite
 
@@ -93,7 +96,7 @@ c.colors.downloads.error.fg = brightwhite
 # hints
 c.colors.hints.bg = cyan
 c.colors.hints.fg = black
-c.hints.border = "2px solid " + blue
+c.hints.border = "2px solid " + black
 c.colors.hints.match.fg = brightblack
 
 ## keyhint widget
