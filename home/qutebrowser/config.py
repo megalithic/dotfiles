@@ -519,6 +519,7 @@ nmap("-", "zoom-out")
 nmap("+", "zoom-in")
 nmap("=", "zoom")
 
+nmap("x", "tab-close")
 nmap(",q", "tab-close")
 nmap("<Meta+w>", "tab-close")
 nmap("<Ctrl+w>", "tab-close")

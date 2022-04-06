@@ -328,18 +328,7 @@ return lush(function()
     BlueItalic({ fg = blue, bg = "NONE", gui = "italic" }),
     PurpleItalic({ fg = purple, bg = "NONE", gui = "italic" }),
     PurpleBold({ fg = purple, bg = "NONE", gui = "bold" }),
-    ErrorText({ fg = "NONE", bg = bg_red, gui = "undercurl", sp = red }),
-    WarningText({ fg = "NONE", bg = bg_yellow, gui = "undercurl", sp = yellow }),
-    InfoText({ fg = "NONE", bg = bg_blue, gui = "underline", sp = blue }),
-    HintText({ fg = "NONE", bg = bg_green, gui = "underline", sp = green }),
-    ErrorLine({ fg = "NONE", bg = bg_red }),
-    WarningLine({ fg = "NONE", bg = bg_yellow }),
-    InfoLine({ fg = "NONE", bg = bg_blue }),
-    HintLine({ fg = "NONE", bg = bg_green }),
-    ErrorFloat({ fg = red, bg = bg2 }),
-    WarningFloat({ fg = yellow, bg = bg2 }),
-    InfoFloat({ fg = blue, bg = bg2 }),
-    HintFloat({ fg = green, bg = bg2 }),
+
     RedSign({ fg = red, bg = bg1 }),
     OrangeSign({ fg = orange, bg = bg1 }),
     YellowSign({ fg = yellow, bg = bg1 }),
@@ -348,14 +337,20 @@ return lush(function()
     BlueSign({ fg = blue, bg = bg1 }),
     PurpleSign({ fg = purple, bg = bg1 }),
 
-    ---- :help lsp-highlight -----------------------------------
-
-    LspReferenceText({ CurrentWord }),
-    LspReferenceRead({ CurrentWord }),
-    LspReferenceWrite({ CurrentWord }),
-    LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
-
     ---- :help diagnostic-highlight ----------------------------
+
+    ErrorText({ fg = "NONE", bg = bg_red, gui = "undercurl", guisp = red }),
+    WarningText({ fg = "NONE", bg = bg_yellow, gui = "undercurl", guisp = yellow }),
+    InfoText({ fg = "NONE", bg = bg_blue, gui = "underline", guisp = blue }),
+    HintText({ fg = "NONE", bg = bg_green, gui = "underline", guisp = green }),
+    ErrorLine({ fg = "NONE", bg = bg_red }),
+    WarningLine({ fg = "NONE", bg = bg_yellow }),
+    InfoLine({ fg = "NONE", bg = bg_blue }),
+    HintLine({ fg = "NONE", bg = bg_green }),
+    ErrorFloat({ fg = red, bg = bg2 }),
+    WarningFloat({ fg = yellow, bg = bg2 }),
+    InfoFloat({ fg = blue, bg = bg2 }),
+    HintFloat({ fg = green, bg = bg2 }),
 
     -- REF: https://github.com/neovim/neovim/pull/15585
     DiagnosticFloatingError({ ErrorFloat }),
@@ -399,7 +394,12 @@ return lush(function()
     DiagnosticInfoBorder({ Blue }),
     DiagnosticHintBorder({ Aqua }),
 
-    TermCursor({ Cursor }),
+    ---- :help lsp-highlight -----------------------------------
+
+    LspReferenceText({ CurrentWord }),
+    LspReferenceRead({ CurrentWord }),
+    LspReferenceWrite({ CurrentWord }),
+    LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
 
     ---- :help health ----------------------------
 
@@ -860,6 +860,8 @@ return lush(function()
     TroubleIndent({ PanelVertSplit }),
     TroubleFoldIcon({ fg = yellow, gui = "bold" }),
     TroubleLocation({ fg = Comment.fg }),
+    TroublePreview({ bg = fg, fg = bg0, gui = "bold,italic" }),
+
     ---- :help: fidget.txt -----------------------------------------------------
 
     FidgetTitle({ fg = orange }),
