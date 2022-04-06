@@ -311,32 +311,32 @@ local function setup_diagnostics()
   -- REF:
   -- https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
   -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/diagnostic.lua#L1171-L1212
-  diagnostic.open_float = (function(orig)
-    return function(bufnr, opts)
-      local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-      opts = opts or {}
-      -- A more robust solution would check the "scope" value in `opts` to
-      -- determine where to get diagnostics from, but if you're only using
-      -- this for your own purposes you can make it as simple as you like
-      local diagnostics = diagnostic.get(opts.bufnr or 0, { lnum = lnum })
-      local max_severity = diagnostic.severity.HINT
-      for _, d in ipairs(diagnostics) do
-        -- Equality is "less than" based on how the severities are encoded
-        if d.severity < max_severity then
-          max_severity = d.severity
-        end
-      end
-      local border_color = ({
-        [diagnostic.severity.HINT] = "DiagnosticHint",
-        [diagnostic.severity.INFO] = "DiagnosticInfo",
-        [diagnostic.severity.WARN] = "DiagnosticWarn",
-        [diagnostic.severity.ERROR] = "DiagnosticError",
-      })[max_severity]
-      opts.border = mega.get_border(border_color)
+  -- diagnostic.open_float = (function(orig)
+  --   return function(bufnr, opts)
+  --     local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+  --     opts = opts or {}
+  --     -- A more robust solution would check the "scope" value in `opts` to
+  --     -- determine where to get diagnostics from, but if you're only using
+  --     -- this for your own purposes you can make it as simple as you like
+  --     local diagnostics = diagnostic.get(opts.bufnr or 0, { lnum = lnum })
+  --     local max_severity = diagnostic.severity.HINT
+  --     for _, d in ipairs(diagnostics) do
+  --       -- Equality is "less than" based on how the severities are encoded
+  --       if d.severity < max_severity then
+  --         max_severity = d.severity
+  --       end
+  --     end
+  --     local border_color = ({
+  --       [diagnostic.severity.HINT] = "DiagnosticHint",
+  --       [diagnostic.severity.INFO] = "DiagnosticInfo",
+  --       [diagnostic.severity.WARN] = "DiagnosticWarn",
+  --       [diagnostic.severity.ERROR] = "DiagnosticError",
+  --     })[max_severity]
+  --     opts.border = mega.get_border(border_color)
 
-      orig(bufnr, opts)
-    end
-  end)(diagnostic.open_float)
+  --     orig(bufnr, opts)
+  --   end
+  -- end)(diagnostic.open_float)
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
@@ -463,6 +463,24 @@ local function setup_handlers()
   -- end
 end
 
+-- [ HANDLERS ] ----------------------------------------------------------------
+local function setup_highlights(client, bufnr)
+  -- :h lsp-events
+  -- autocmd User LspProgressUpdate redrawstatus
+  -- autocmd User LspRequest redrawstatus
+  if client then
+    mega.augroup(fmt("LspHighlights%s", client.name), {
+      events = { "ColorScheme" },
+      targets = bufnr,
+      command = function()
+        if client.name == "tailwindcss" then
+          P(fmt("current client connected is %s; ready for highlights.", client.name))
+        end
+      end,
+    })
+  end
+end
+
 -- [ ON_ATTACH ] ---------------------------------------------------------------
 
 function mega.lsp.on_attach(client, bufnr)
@@ -491,6 +509,7 @@ function mega.lsp.on_attach(client, bufnr)
   setup_diagnostics()
   setup_handlers()
   setup_mappings(client, bufnr)
+  setup_highlights(client, bufnr)
 
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
