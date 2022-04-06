@@ -102,6 +102,7 @@ local PKGS = {
   { "phaazon/hop.nvim", opt = true },
   "akinsho/toggleterm.nvim",
   "elihunter173/dirbuf.nvim",
+  -- "nvim-neo-tree/neo-tree.nvim",
   -- "kyazdani42/nvim-tree.lua",
 
   "tami5/sqlite.lua",
