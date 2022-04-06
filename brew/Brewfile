@@ -226,7 +226,7 @@ cask "cyberduck"
 cask "dash"
 # cask "docker-edge"
 cask "dropbox"
-brew "espanso" if OS.mac?
+cask "espanso" if OS.mac?
 # cask "discord"
 # cask "expressvpn"
 cask "figma"
