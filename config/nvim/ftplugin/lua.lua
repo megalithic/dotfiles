@@ -1,4 +1,8 @@
+-- FIXME: does this need to be moved to after/ftplugin/lua.lua instead?
+-- REF: https://github.com/akinsho/dotfiles/commit/2b552db145205d66acf6e8eac56c2130496f5e60
+
 local fmt = string.format
+local fn = vim.fn
 
 if not mega then
   return
@@ -22,7 +26,7 @@ local function keyword(word, callback)
   local original_iskeyword = vim.bo.iskeyword
 
   vim.bo.iskeyword = vim.bo.iskeyword .. ",."
-  word = word or vim.fn.expand("<cword>")
+  word = word or fn.expand("<cword>")
 
   vim.bo.iskeyword = original_iskeyword
 
@@ -64,7 +68,7 @@ local function dir_separator()
   -- Look at package.config for directory separator string (it's the first line)
   if package.config then
     return string.match(package.config, "^[^\n]")
-  elseif vim.fn.has("win32") == 1 then
+  elseif fn.has("win32") == 1 then
     return "\\"
   else
     return "/"
@@ -78,7 +82,7 @@ local function include_paths(fname, ext)
   local sep = dir_separator()
   local paths = string.gsub(package.path, "%?", fname)
   for path in split(paths, "%;") do
-    if vim.fn.filereadable(path) == 1 then
+    if fn.filereadable(path) == 1 then
       return path
     end
   end
@@ -93,12 +97,12 @@ local function include_rtpaths(fname, ext)
   for _, path in ipairs(rtpaths) do
     -- Look on runtime path for 'lua/*.lua' files
     local path1 = table.concat({ path, ext, modfile }, sep)
-    if vim.fn.filereadable(path1) == 1 then
+    if fn.filereadable(path1) == 1 then
       return path1
     end
     -- Look on runtime path for 'lua/*/init.lua' files
     local path2 = table.concat({ path, ext, fname, initfile }, sep)
-    if vim.fn.filereadable(path2) == 1 then
+    if fn.filereadable(path2) == 1 then
       return path2
     end
   end
@@ -109,7 +113,7 @@ function Find_required_path(module)
   -- Look at package.config for directory separator string (it's the first line)
   local sep = string.match(package.config, "^[^\n]")
   -- Properly change '.' to separator (probably '/' on *nix and '\' on Windows)
-  local fname = vim.fn.substitute(module, "\\.", sep, "g")
+  local fname = fn.substitute(module, "\\.", sep, "g")
   local f
   ---- First search for lua modules
   f = include_paths(fname, "lua")
@@ -140,3 +144,10 @@ vim.opt_local.includeexpr = "v:lua.Find_required_path(v:fname)"
 -- })
 
 nnoremap("gK", keyword, { buffer = 0 })
+
+-- This allows tpope's vim.surround to surround a text object with a function or conditional
+vim.b[fmt("surround_%s", fn.char2nr("F"))] = "function \1function: \1() \r end"
+vim.b[fmt("surround_%s", fn.char2nr("i"))] = "if \1if: \1 then \r end"
+
+-- vim.opt_local.textwidth = 100
+-- vim.opt_local.formatoptions:remove("o")

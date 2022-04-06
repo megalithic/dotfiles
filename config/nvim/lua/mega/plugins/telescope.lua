@@ -66,6 +66,9 @@ telescope.setup({
       "dotbot/.*",
       ".git/.*",
       "%.DS_Store",
+      "%yarn.lock",
+      "%package-lock.json",
+      "node_modules/.*",
     },
     -- :help telescope.defaults.path_display
     -- path_display = { "smart", "absolute", "truncate" },
