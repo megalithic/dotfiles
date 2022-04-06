@@ -106,16 +106,6 @@ function M.lsp.hover()
   end
 end
 
--- # [ config ] ----------------------------------------------------------------
-function M.lsp.config()
-  local cfg = {}
-  for _, client in pairs(lsp.get_active_clients()) do
-    cfg[client.name] = { root_dir = client.config.root_dir, settings = client.config.settings }
-  end
-
-  mega.log(vim.inspect(cfg))
-end
-
 -- # [ lsp_commands ] ----------------------------------------------------------------
 function M.lsp.elixirls_cmd(opts)
   opts = opts or {}

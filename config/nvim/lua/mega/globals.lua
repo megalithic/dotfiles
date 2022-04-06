@@ -164,7 +164,6 @@ _G.mega = {
   },
 }
 local L = vim.log.levels
-local get_log_level = require("vim.lsp.log").get_level
 
 -- [ runtimepath (rtp) ] -------------------------------------------------------
 vim.opt.runtimepath:remove("~/.cache")
@@ -291,19 +290,6 @@ function _G.P(...)
   return ...
 end
 
-function _G.dump_text(...)
-  local objects, v = {}, nil
-  for i = 1, select("#", ...) do
-    v = select(i, ...)
-    table.insert(objects, vim.inspect(v))
-  end
-
-  local lines = vim.split(table.concat(objects, "\n"), "\n")
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
-  vim.fn.append(lnum, lines)
-  return ...
-end
-
 function mega.dump_colors(filter)
   local defs = {}
   for hl_name, hl in pairs(vim.api.nvim__get_hl_defs(0)) do
@@ -364,47 +350,6 @@ function mega.auto_mkdir()
   end
 end
 
-function _G.dump(...)
-  local objects = vim.tbl_map(vim.inspect, { ... })
-  print(unpack(objects))
-end
-mega.dump = dump
-
-function mega.dump_text(...)
-  local objects, v = {}, nil
-  for i = 1, select("#", ...) do
-    v = select(i, ...)
-    table.insert(objects, vim.inspect(v))
-  end
-
-  local lines = vim.split(table.concat(objects, "\n"), "\n")
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
-  vim.fn.append(lnum, lines)
-  return ...
-end
-
-function mega.log(msg, hl, reason)
-  if hl == nil and reason == nil then
-    api.nvim_echo({ { msg } }, true, {})
-  else
-    local name = "megavim"
-    local prefix = name .. " -> "
-    if reason ~= nil then
-      prefix = name .. " -> " .. reason .. "\n"
-    end
-    hl = hl or "DiagnosticDefaultInformation"
-    api.nvim_echo({ { prefix, hl }, { msg } }, true, {})
-  end
-end
-
-function mega.warn(msg, reason)
-  mega.log(msg, "DiagnosticDefaultWarning", reason)
-end
-
-function mega.error(msg, reason)
-  mega.log(msg, "DiagnosticDefaultError", reason)
-end
-
 function mega.get_log_string(label, level)
   local display_level = "[DEBUG]"
   local hl = "Todo"
@@ -422,27 +367,6 @@ function mega.get_log_string(label, level)
   local str = fmt("%s %s", display_level, label)
 
   return str, hl
-end
-
-function mega.inspect(label, v, opts)
-  opts = opts or {}
-  opts = vim.tbl_deep_extend("keep", opts, { data_before = true, level = L.INFO })
-
-  local log_str, hl = mega.get_log_string(label, opts.level)
-
-  -- presently no better API to get the current lsp log level
-  -- L.DEBUG == 3
-  if opts.level == L.DEBUG and (get_log_level() == L.DEBUG or get_log_level() == 3) then
-    if opts.data_before then
-      mega.P(v)
-      mega.log(log_str, hl)
-    else
-      mega.log(log_str, hl)
-      mega.P(v)
-    end
-  end
-
-  return v
 end
 
 function mega.opt(o, v, scopes)
@@ -857,7 +781,7 @@ function mega.get_border(hl)
 end
 
 function mega.sync_plugins()
-  mega.log("paq-nvim: syncing plugins..")
+  P("paq-nvim: syncing plugins..")
   package.loaded["mega.plugins"] = nil
   require("mega.plugins").sync_all()
 end
