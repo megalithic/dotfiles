@@ -52,16 +52,17 @@ config.source("themes/megaforest.py")
 # --> SETTINGS:
 editor = [
     "kitty",
-    "@ --to unix:/tmp/mykitty",
-    "Launch",
-    "--type=primary",
-    "tmux attach -t mega;",
-    "new-window nvim",
-    "-f {file}",
+    "@ --to unix:/tmp/mykitty --type=tab launch nvim -f{file}",
+    # "tmux attach -t mega;",
+    # "new-window nvim",
+    # "-f{file}",
 ]
 
 commands = {
-    "edit": editor
+    # "edit": "kitty @ --to unix:/tmp/mykitty --type=tab launch nvim -f {file}".split(),
+    "edit": "kitty @ --to unix:/tmp/mykitty launch --type=tab /usr/local/bin/nvim -f {file}".split()
+    # "edit": "kitty @ --to unix:/tmp/mykitty launch --type=overlay tmux attach -t mega ; new-window nvim -f {file}".split()
+    # "edit": editor
     # [which("qutebrowser-edit"), '-l{line}', '-c{column}', '-f{file}']
     # 'pick_dir':   'foot -T float ranger --choosedir={}'.split(),
     # 'pick_files': 'foot -T float ranger --choosefiles={}'.split(),
@@ -103,8 +104,8 @@ c.fonts.messages.info = "default_size default_family"
 c.fonts.messages.warning = "default_size default_family"
 c.fonts.prompts = "default_size default_family"
 c.fonts.statusbar = "default_size default_family"
-c.fonts.tabs.selected = "default_size default_family"
-c.fonts.tabs.unselected = "default_size default_family"
+c.fonts.tabs.selected = "12px default_family"
+c.fonts.tabs.unselected = "12px default_family"
 c.hints.chars = "ctsrvdlgh"  # get the keys from our vim config hop/lightspeed/etc; or from surfingkeys
 c.history_gap_interval = 240
 c.input.escape_quits_reporter = True
@@ -122,7 +123,13 @@ c.tabs.last_close = "blank"
 c.tabs.show = "always"  # only shows tab_bar when > 1 tab with "multiple"
 c.tabs.undo_stack_size = 20
 c.tabs.close_mouse_button = "right"
-c.tabs.indicator.width = 0
+c.tabs.indicator.width = 1
+# c.tabs.indicator.padding = {
+#     "top": 5,
+#     "bottom": 5,
+#     "right": 5,
+#     "left": 5,
+# }
 c.tabs.favicons.scale = 1
 c.tabs.favicons.show = "always"
 # c.tabs.title.alignment = "center"
@@ -424,8 +431,8 @@ c.aliases = {
     "pin": "tab-pin",
     "priv": "open --private",
     "bm": "open -t qute://bookmarks/",
-    "proc": "open -t qute://process/",
-    "mess": "open -t qute://messages/",
+    "proc": "open -t ;; process",
+    "mess": "open -t qute://log/",
     "mpv": "spawn mpv --autofit=100%x100% --force-window=immediate --keep-open=yes {url}",
     # "ompv": "hint links spawn mpv --autofit=100%x100% --force-window=immediate {hint-url}",
     "hmpv": 'hint links spawn nohup mpv --cache=yes --demuxer-max-bytes=500M --demuxer-max-back-bytes=500M -ytdl-format="bv[ext=mp4]+ba/b" --force-window=immediate {hint-url}',
@@ -590,7 +597,8 @@ nmap("gJ", "tab-move +")
 nmap("gL", "forward --tab")
 nmap("gH", "back --tab")
 nmap("gi", "hint --first inputs")
-nmap("go", "set-cmd-text -s :open --bg")
+nmap("go", "set-cmd-text -s :open {url}")
+# nmap("go", "set-cmd-text -s :open --bg")
 nmap("gt", "set-cmd-text -s :open --tab")
 
 ## current page: (c*)
