@@ -239,6 +239,11 @@ local PKGS = {
   "nanotee/luv-vimdocs",
   "fladson/vim-kitty",
   "SirJson/fzf-gitignore",
+
+  -- TODO: work tings; also get packer.nvim going
+  -- "outstand/titan.nvim",
+  -- "outstand/logger.nvim",
+  -- "ryansch/habitats.nvim",
 }
 
 local M = {}

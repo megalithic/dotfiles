@@ -696,7 +696,6 @@ mega.lsp.servers = {
 
   tailwindcss = function()
     return {
-      -- TODO: https://github.com/sethlowie/dotfiles/blob/master/vim/lua/sethlowie/tailwind.lua
       cmd = { "tailwindcss-language-server", "--stdio" },
       init_options = {
         userLanguages = {
@@ -707,7 +706,6 @@ mega.lsp.servers = {
       },
       handlers = {
         ["tailwindcss/getConfiguration"] = function(_, _, params, _, bufnr, _)
-          -- TailwindCSS waits for this repsonse before providing hover
           vim.lsp.buf_notify(bufnr, "tailwindcss/getConfigurationResponse", { _id = params._id })
         end,
       },
