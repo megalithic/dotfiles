@@ -56,6 +56,7 @@ brew "bat-extras"
 brew "blueutil" if OS.mac?
 brew "broot"
 brew "browsh" if OS.mac?
+brew "btop"
 brew "ccls" # c-lang lsp vs., c-lang lsp in llvm
 brew "cmake" if OS.mac?
 brew "coreutils" if OS.mac?

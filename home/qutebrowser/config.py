@@ -467,6 +467,9 @@ c.aliases["pocket"] = "spawn --userscript qutepocket"
 # c.aliases["bg-norm"] = "set colors.webpage.bg #ffffff"
 # c.aliases["bg-dark"] = "set colors.webpage.bg " + bg_color
 # c.aliases["dg-toggle"] = "jseval --quiet --world main DarkReader.toggle()"
+# c.aliases[
+#     "insta"
+# ] = "jseval const script = document.createElement('script'); script.innerHTML = `(() => { var d=document;try{if(!d.body)throw(0);window.location='http://www.instapaper.com/text?u='+encodeURIComponent(d.location.href);}catch(e){alert('Please wait until the page has loaded.');} })()`; document.body.appendChild(script);"
 
 
 # --> BINDINGS:
