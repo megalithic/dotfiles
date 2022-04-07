@@ -7,7 +7,8 @@ root: ~/code/outstand
 tmux_options: -2
 windows:
   - chats:
-      - tmux link-window -s mega:chats -t 0 && exit
+      - ls
+        # - tmux link-window -s mega:chats -t 0 && exit
   - code:
       layout: main-vertical
       panes:

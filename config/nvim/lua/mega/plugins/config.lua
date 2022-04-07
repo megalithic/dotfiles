@@ -298,27 +298,34 @@ do -- conflict-marker.nvim
 end
 
 do -- colorizer.nvim
-  require("colorizer").setup({
-    "*",
-    css = { rgb_fn = true },
-    scss = { rgb_fn = true },
-    sass = { rgb_fn = true },
-    stylus = { rgb_fn = true },
-    vim = { names = false },
-    tmux = { names = true },
-    "toml",
-    "eelixir",
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-    "zsh",
-    "fish",
-    "sh",
-    "conf",
-    "lua",
-    "python",
+  -- require("colorizer").setup({
+  --   "*",
+  --   css = { rgb_fn = true },
+  --   scss = { rgb_fn = true },
+  --   sass = { rgb_fn = true },
+  --   stylus = { rgb_fn = true },
+  --   vim = { names = false },
+  --   tmux = { names = true },
+  --   "toml",
+  --   "eelixir",
+  --   "javascript",
+  --   "javascriptreact",
+  --   "typescript",
+  --   "typescriptreact",
+  --   "zsh",
+  --   "fish",
+  --   "sh",
+  --   "conf",
+  --   "lua",
+  --   "python",
+  -- })
+
+  -- require("colorizer").setup()
+  require("colorizer").setup({ "*" }, {
+    mode = "background",
   })
+
+  -- vim.g["Hexokinase_highlighters"] = { "virtual" }
 end
 
 do -- golden_size.nvim

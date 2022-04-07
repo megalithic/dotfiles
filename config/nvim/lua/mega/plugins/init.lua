@@ -21,6 +21,7 @@ local PKGS = {
   "savq/melange",
   "rebelot/kanagawa.nvim",
   "norcalli/nvim-colorizer.lua",
+  -- { "rrethy/vim-hexokinase", run = "make hexokinase" },
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
   "karb94/neoscroll.nvim",

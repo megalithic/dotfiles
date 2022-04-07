@@ -73,12 +73,13 @@ local function is_ignored()
   --   or require("cmp").visible()
 end
 
-local normal_bg = mega.colors().Background.bg.hex
-local cursorline_bg = mega.colors().CursorLine.bg.hex
+local normal_bg = require("mega.lush_theme.colors").bg0
+local cursorline_bg = require("mega.lush_theme.colors").bg1
+local blink_bg = require("mega.lush_theme.colors").bg_blue
 
 local function highlight_cursorline()
   if blink_active then
-    vim.cmd("highlight! CursorLine guibg=" .. mega.colors().Megaforest.lush.bg_blue.hex)
+    vim.cmd("highlight! CursorLine guibg=" .. blink_bg)
   else
     vim.cmd("highlight! CursorLine guibg=" .. cursorline_bg)
   end

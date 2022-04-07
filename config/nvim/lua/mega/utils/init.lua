@@ -74,7 +74,7 @@ function M.ext.kitty.clear_background()
     return
   end
   if vim.env.KITTY_LISTEN_ON then
-    local bg = mega.colors().Background.bg.hex
+    local bg = require("mega.lush_theme.colors").bg0
     -- local bg = H.get_hl("Normal", "bg")
     -- this is intentionally synchronous so it has time to execute fully
     fn.system(fmt("kitty @ --to %s set-colors background=%s", vim.env.KITTY_LISTEN_ON, bg))

@@ -859,12 +859,6 @@ function mega.debounce_trailing(func, ms, first)
   return wrapped_fn, timer
 end
 
-function mega.colors()
-  local lush = require("lush")
-  local spec = require("mega.lush_theme.megaforest")
-  return lush(spec)
-end
-
 -----------------------------------------------------------------------------//
 -- Autoresize
 -----------------------------------------------------------------------------//
