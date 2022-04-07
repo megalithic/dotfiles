@@ -15,8 +15,10 @@ end
 
 require("nvim-web-devicons").setup()
 conf("telescope")
+conf("toggleterm")
 conf("cmp")
 conf("zk")
+conf("projectionist")
 if vim.g.vscode ~= nil then
   conf("vscode")
 end
@@ -590,119 +592,6 @@ do -- git-messenger.nvim
   vim.g.git_messenger_max_popup_height = 100
 end
 
-do -- toggleterm.nvim
-  -- TODO: send visual lines to toggleterm:
-  --      https://github.com/akinsho/toggleterm.nvim/issues/172
-  --      https://github.com/rikuma-t/dotfiles/blob/main/.config/nvim/lua/rc/toggleterm.lua#L29-L56 (dynamic resize/toggling)
-  local toggleterm = require("toggleterm")
-  toggleterm.setup({
-    open_mapping = [[<c-\>]],
-    shade_filetypes = {},
-    shade_terminals = true,
-    direction = "horizontal",
-    insert_mappings = false,
-    start_in_insert = true,
-    close_on_exit = true,
-    float_opts = {
-      border = "curved",
-      winblend = 0,
-      highlights = {
-        border = "TelescopePromptBorder",
-        background = "TelescopePrompt",
-      },
-    },
-    size = function(term)
-      if term.direction == "horizontal" then
-        return 15
-      elseif term.direction == "vertical" then
-        return math.floor(vim.o.columns * 0.4)
-      end
-    end,
-    --   REF: @ryansch:
-    --   size = function(term)
-    --     if term.direction == "horizontal" then
-    --       return 20
-    --     elseif term.direction == "vertical" then
-    --       return vim.o.columns * 0.4
-    --     end
-    --   end,
-    persist_size = false,
-    on_open = function(term)
-      term.opened = term.opened or false
-
-      if not term.opened then
-        if require("mega.utils").root_has_file("Deskfile") then
-          term:send("eval $(desk load)")
-        end
-      end
-
-      term.opened = true
-    end,
-  })
-
-  local float_handler = function(term)
-    if vim.fn.mapcheck("jk", "t") ~= "" then
-      vim.api.nvim_buf_del_keymap(term.bufnr, "t", "jk")
-      vim.api.nvim_buf_del_keymap(term.bufnr, "t", "<esc>")
-    end
-  end
-
-  local Terminal = require("toggleterm.terminal").Terminal
-  local htop = Terminal:new({
-    cmd = "htop",
-    hidden = "true",
-    direction = "float",
-    on_open = float_handler,
-  })
-
-  local node = Terminal:new({ cmd = "node", hidden = true })
-  function _NODE_TOGGLE()
-    node:toggle()
-  end
-
-  local elixir = Terminal:new({ cmd = "iex -S mix", hidden = true })
-  function _ELIXIR_TOGGLE()
-    elixir:toggle()
-  end
-
-  local lua = Terminal:new({ cmd = "lua", hidden = true })
-  function _LUA_TOGGLE()
-    lua:toggle()
-  end
-
-  local rails = Terminal:new({ cmd = "rails c", hidden = true })
-  function _RAILS_TOGGLE()
-    rails:toggle()
-  end
-
-  local python = Terminal:new({ cmd = "python", hidden = true })
-  function _PYTHON_TOGGLE()
-    python:toggle()
-  end
-
-  mega.command("Htop", function()
-    htop:toggle()
-  end)
-
-  local wk = require("which-key")
-  wk.register({
-    t = {
-      name = "terminal",
-      t = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
-      f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
-      h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
-      v = { "<cmd>ToggleTerm size=80 direction=vertical<cr>", "Vertical" },
-      l = { "<cmd>lua _LUA_TOGGLE()<cr>", "repl > lua" },
-      n = { "<cmd>lua _NODE_TOGGLE()<cr>", "repl > node" },
-      p = { "<cmd>lua _PYTHON_TOGGLE()<cr>", "repl > python" },
-      e = { "<cmd>lua _ELIXIR_TOGGLE()<cr>", "repl > elixir" },
-      r = { "<cmd>lua _RAILS_TOGGLE()<cr>", "repl > rails" },
-    },
-  }, {
-    prefix = "<leader>",
-  })
-end
-
 do -- firenvim
   -- REFS:
   -- * https://github.com/cgardner/dotfiles-bare/blob/master/.config/nvim/lua/plugins/firenvim.lua#L3-L9
@@ -817,116 +706,6 @@ do -- vim-test
   }
 end
 
-do -- vim-projectionist
-  -- TODO: use vim.json.decode([[]])
-  -- REF: https://github.com/mhanberg/.dotfiles/blob/2ae15a001ed8fffbe0305512676ff7aed1586436/config/nvim/init.lua#L97
-  vim.g.projectionist_heuristics = {
-    ["&package.json"] = {
-      ["package.json"] = {
-        type = "package",
-        alternate = { "yarn.lock", "package-lock.json" },
-      },
-      ["package-lock.json"] = {
-        alternate = "package.json",
-      },
-      ["yarn.lock"] = {
-        alternate = "package.json",
-      },
-    },
-    ["package.json"] = {
-      -- outstand'ing (ts/tsx)
-      ["spec/javascript/*.test.tsx"] = {
-        ["alternate"] = "app/webpacker/src/javascript/{}.tsx",
-        ["type"] = "test",
-      },
-      ["app/webpacker/src/javascript/*.tsx"] = {
-        ["alternate"] = "spec/javascript/{}.test.tsx",
-        ["type"] = "source",
-      },
-      ["spec/javascript/*.test.ts"] = {
-        ["alternate"] = "app/webpacker/src/javascript/{}.ts",
-        ["type"] = "test",
-      },
-      ["app/webpacker/src/javascript/*.ts"] = {
-        ["alternate"] = "spec/javascript/{}.test.ts",
-        ["type"] = "source",
-      },
-    },
-    -- https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/after/ftplugin/elixir.vim
-    ["mix.exs"] = {
-      -- "dead" views
-      ["lib/**/views/*_view.ex"] = {
-        ["type"] = "view",
-        ["alternate"] = "test/{dirname}/views/{basename}_view_test.exs",
-        ["template"] = {
-          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View do",
-          "  use {dirname|camelcase|capitalize}, :view",
-          "end",
-        },
-      },
-      ["test/**/views/*_view_test.exs"] = {
-        ["type"] = "test",
-        ["alternate"] = "lib/{dirname}/views/{basename}_view.ex",
-        ["template"] = {
-          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}ViewTest do",
-          "  use ExUnit.Case, async: true",
-          "",
-          "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}View",
-          "end",
-        },
-      },
-      -- "live" views
-      ["lib/**/live/*_live.ex"] = {
-        ["type"] = "live",
-        ["alternate"] = "test/{dirname}/live/{basename}_live_test.exs",
-        ["related"] = "lib/{dirname}/live/{basename}_live.html.heex",
-        ["template"] = {
-          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live do",
-          "  use {dirname|camelcase|capitalize}, :live_view",
-          "end",
-        },
-      },
-      ["lib/**/live/*_live.heex"] = {
-        ["type"] = "heex",
-        ["related"] = "lib/{dirname}/live/{basename}_live.html.heex",
-      },
-      ["test/**/live/*_live_test.exs"] = {
-        ["type"] = "test",
-        ["alternate"] = "lib/{dirname}/live/{basename}_live.ex",
-        ["template"] = {
-          "defmodule {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}LiveTest do",
-          -- "  use ExUnit.Case, async: true",
-          "  use {dirname|camelcase|capitalize}.ConnCase",
-          "  import Phoenix.LiveViewTest",
-          -- "",
-          -- "  alias {dirname|camelcase|capitalize}.{basename|camelcase|capitalize}Live",
-          "end",
-        },
-      },
-      ["lib/*.ex"] = {
-        ["type"] = "source",
-        ["alternate"] = "test/{}_test.exs",
-        ["template"] = {
-          "defmodule {camelcase|capitalize|dot} do",
-          "",
-          "end",
-        },
-      },
-      ["test/*_test.exs"] = {
-        ["type"] = "test",
-        ["alternate"] = "lib/{}.ex",
-        ["template"] = {
-          "defmodule {camelcase|capitalize|dot}Test do",
-          "  use ExUnit.Case, async: true",
-          "",
-          "  alias {camelcase|capitalize|dot}",
-          "end",
-        },
-      },
-    },
-  }
-end
-
 do -- numb.nvim
   require("numb").setup()
 end
@@ -936,50 +715,6 @@ do -- nvim-bufdel
     next = "cycle", -- or 'alternate'
     quit = true,
   })
-end
-
-do -- zk-nvim
-  -- REFS:
-  -- https://github.com/mbriggs/nvim/blob/main/lua/mb/zk.lua
-  -- https://github.com/pwntester/dotfiles/blob/master/config/nvim/lua/pwntester/zk.lua
-  -- https://github.com/kabouzeid/dotfiles/blob/main/config/nvim/lua/lsp-settings.lua#L160-L198
-  local zk = require("zk")
-  local commands = require("zk.commands")
-
-  zk.setup({
-    picker = "telescope",
-    create_user_commands = true,
-    lsp = {
-      cmd = { "zk", "lsp" },
-      name = "zk",
-      on_attach = function(client, bufnr)
-        require("lsp").on_attach(client, bufnr)
-      end,
-    },
-    auto_attach = {
-      enabled = true,
-      filetypes = { "markdown", "liquid" },
-    },
-  })
-
-  local function make_edit_fn(defaults, picker_options)
-    return function(options)
-      options = vim.tbl_extend("force", defaults, options or {})
-      zk.edit(options, picker_options)
-    end
-  end
-
-  commands.add("ZkOrphans", make_edit_fn({ orphan = true }, { title = "Zk Orphans" }))
-  commands.add("ZkRecents", make_edit_fn({ createdAfter = "2 weeks ago" }, { title = "Zk Recents" }))
-
-  nnoremap("<Leader>zc", "<cmd>ZkNew<CR>", "zk: new note")
-  xnoremap("<Leader>zc", ":'<'>ZkNewFromTitleSelection<CR>", "zk: new note from selection")
-  nnoremap("<Leader>zn", "<cmd>ZkNotes<CR>", "zk: find notes")
-  nnoremap("<Leader>zb", "<cmd>ZkBacklinks<CR>", "zk: find backlinks")
-  nnoremap("<Leader>zl", "<cmd>ZkLinks<CR>", "zk: find links")
-  nnoremap("<Leader>zt", "<cmd>ZkTags<CR>", "zk: find tags")
-  nnoremap("<Leader>zo", "<cmd>ZkOrphans<CR>", "zk: find orphans")
-  nnoremap("<Leader>zr", "<cmd>ZkRecents<CR>", "zk: find recents")
 end
 
 do -- tabout.nvim
@@ -1033,37 +768,6 @@ end
 
 do -- misc
   vim.g.fzf_gitignore_no_maps = true
-end
-
-do
-  -- local buftype_ignores = {
-  --   "acwrite",
-  --   "quickfix",
-  --   "terminal",
-  --   "nofile",
-  --   "help",
-  --   ".git/COMMIT_EDITMSG",
-  --   "startify",
-  --   "nofile",
-  --   "prompt",
-  -- }
-  -- local filetype_ignores = {
-  --   "Telescope",
-  --   "markdown",
-  --   "TelescopePrompt",
-  --   "fzf",
-  --   "NvimTree",
-  --   "gitcommit",
-  --   "startify",
-  --   "alpha",
-  --   "dashboard",
-  --   "Toggleterm",
-  --   "qf",
-  -- }
-  -- vim.g.cursorline_disabled_buftypes = buftype_ignores
-  -- vim.g.cursorline_disabled_filetypes = filetype_ignores
-  -- vim.g.cursorword_highlight = false -- 1000 is default
-  -- vim.g.cursorline_timeout = 200 -- 1000 is default
 end
 
 do -- gitsigns.nvim
