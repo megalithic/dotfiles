@@ -255,7 +255,7 @@ return lush(function()
     Bold({ gui = "bold" }),
     Italic({ gui = "italic" }),
     Underlined({ fg = "NONE", bg = "NONE", gui = "underline" }),
-    CurrentWord({ fg = "NONE", bg = "NONE" }),
+    CurrentWord({ bg = fg, fg = bg0 }),
     Fg({ fg = fg, bg = "NONE" }),
     Grey({ fg = grey1, bg = "NONE" }),
     Red({ fg = red, bg = "NONE" }),
@@ -341,9 +341,9 @@ return lush(function()
 
     ---- :help lsp-highlight -----------------------------------
 
-    LspReferenceText({ CurrentWord }),
-    LspReferenceRead({ CurrentWord }),
-    LspReferenceWrite({ CurrentWord }),
+    LspReferenceText({ CurrentWord, gui = "underline" }),
+    LspReferenceRead({ CurrentWord, gui = "underline" }),
+    LspReferenceWrite({ CurrentWord, gui = "underline,bold,italic" }),
     LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
 
     ---- :help health ----------------------------
@@ -805,7 +805,7 @@ return lush(function()
     TroubleIndent({ PanelVertSplit }),
     TroubleFoldIcon({ fg = yellow, gui = "bold" }),
     TroubleLocation({ fg = Comment.fg }),
-    TroublePreview({ bg = fg, fg = bg0, gui = "bold,italic" }),
+    TroublePreview({ CurrentWord, gui = "bold,italic,underline" }),
 
     ---- :help: fidget.txt -----------------------------------------------------
 

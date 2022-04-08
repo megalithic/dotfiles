@@ -6,8 +6,9 @@ toggleterm.setup({
   open_mapping = [[<c-\>]],
   shade_filetypes = {},
   shade_terminals = true,
+  shade_factor = 2,
   direction = "horizontal",
-  insert_mappings = false,
+  insert_mappings = true,
   start_in_insert = true,
   close_on_exit = true,
   float_opts = {
