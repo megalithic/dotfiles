@@ -806,7 +806,7 @@ return lush(function()
     TroubleIndent({ PanelVertSplit }),
     TroubleFoldIcon({ fg = yellow, gui = "bold" }),
     TroubleLocation({ fg = Comment.fg }),
-    TroublePreview({ CurrentWord, gui = "bold,italic,underline" }),
+    TroublePreview({ bg = bg_visual, gui = "bold,italic,underline" }),
 
     ---- :help: fidget.txt -----------------------------------------------------
 
