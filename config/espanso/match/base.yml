@@ -4,58 +4,85 @@
 matches:
   - trigger: Rene
     replace: René
+    word: true
   - trigger: Zoe
     replace: Zoë
+    word: true
   - trigger: ":zoom:"
     replace: "https://us02web.zoom.us/j/2264962052?pwd=ZHB1bCszbTliMVl4OWtzYkpYQjE5Zz09"
+    word: true
   - trigger: ":tm:"
     replace: ™
+    word: true
   - trigger: ":shrug:"
     replace: "¯\\_(ツ)_/¯"
+    word: true
   - trigger: ":nope"
     replace: ಠ_ಠ
+    word: true
   - trigger: ":heart:"
     replace: ❤️
+    word: true
   - trigger: ":point:"
     replace: 👆
+    word: true
   - trigger: ":pointup:"
     replace: 👆
+    word: true
   - trigger: ":knuckles:"
     replace: 👊
+    word: true
   - trigger: ":fist:"
     replace: ✊
+    word: true
   - trigger: ":wave:"
     replace: 👋
+    word: true
   - trigger: ":thumb:"
     replace: 👍
+    word: true
   - trigger: ":+1:"
     replace: 👍
+    word: true
   - trigger: ":thumbsup:"
     replace: 👍
+    word: true
   - trigger: ":-1:"
     replace: 👎
+    word: true
   - trigger: ":thumbsdown:"
     replace: 👎
+    word: true
   - trigger: ":flex:"
     replace: 💪
+    word: true
   - trigger: ":pray:"
     replace: 🙏
+    word: true
   - trigger: ":rock:"
     replace: 🤘
+    word: true
   - trigger: ":rofl:"
     replace: 🤣
+    word: true
   - trigger: ":poop:"
     replace: 💩
+    word: true
   - trigger: ":100:"
     replace: 💯
+    word: true
   - trigger: ":eyes:"
     replace: 👀
+    word: true
   - trigger: ":facepalm:"
     replace: 🤦
+    word: true
   - trigger: ":hands:"
     replace: 🙌🏼
+    word: true
   - trigger: ":date:"
     replace: "{{mydate}}"
+    word: true
     vars:
       - name: mydate
         type: date
@@ -63,6 +90,7 @@ matches:
           format: "%m/%d/%Y"
   - trigger: ":shell:"
     replace: "{{output}}"
+    word: true
     vars:
       - name: output
         type: shell
