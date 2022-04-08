@@ -20,7 +20,7 @@ matches:
     replace: "™"
   - trigger: ":shrug:"
     replace: "¯\\_(ツ)_/¯"
-  - trigger: ":nope"
+  - trigger: ":nope:"
     replace: "ಠ_ಠ"
   - trigger: ":heart:"
     replace: "❤️"
