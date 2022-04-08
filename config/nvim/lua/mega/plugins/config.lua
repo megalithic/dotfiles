@@ -969,7 +969,3 @@ do -- quickfix list things
   -- nvim-pqf
   require("pqf").setup({})
 end
-
-do
-  require("octo").setup()
-end
