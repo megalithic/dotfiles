@@ -17,6 +17,7 @@ local PKGS = {
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
   "mhanberg/thicc_forest",
+  "sainnhe/everforest",
   "mcchrish/zenbones.nvim",
   "savq/melange",
   "rebelot/kanagawa.nvim",

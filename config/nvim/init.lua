@@ -44,6 +44,10 @@ end
 vim.g.mapleader = "," -- remap leader to `,`
 vim.g.maplocalleader = " " -- remap localleader to `<Space>`
 
+-- [ preferred colorscheme ] ---------------------------------------------------------
+
+vim.g.colorscheme = "megaforest"
+
 -- [ loaders ] -----------------------------------------------------------------
 
 local reload_ok, reload = pcall(require, "plenary.reload")

@@ -1,4 +1,5 @@
 local fn = vim.fn
+local fmt = string.format
 
 -----------------------------------------------------------------------------//
 -- Message output on vim actions {{{1
@@ -503,7 +504,9 @@ vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line wi
 vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.formatting_sync()" <bar> wq]])
 
 -- [ colorscheme ] -------------------------------------------------------------
-vim.opt.termguicolors = true
-vim.cmd([[colorscheme megaforest]])
+do
+  vim.opt.termguicolors = true
+  pcall(vim.cmd, fmt("colorscheme %s", vim.g.colorscheme))
+end
 
 -- vim:foldmethod=marker
