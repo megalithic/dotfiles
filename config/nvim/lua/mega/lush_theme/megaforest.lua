@@ -517,7 +517,7 @@ return lush(function()
 
     GitSignsAdd({ GreenSign, bg = "NONE" }),
     GitSignsDelete({ RedSign, bg = "NONE" }),
-    GitSignsChange({ BlueSign, bg = "NONE" }),
+    GitSignsChange({ OrangeSign, bg = "NONE" }),
 
     ---- :help gitcommit -------------------------------------------
 
