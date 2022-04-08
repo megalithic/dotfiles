@@ -609,13 +609,13 @@ function M.s_git(args)
     )
   )
   local added_str = unpack(
-    item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGreen" })
+    item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "GitSignsAdd" })
   )
   local changed_str = unpack(
-    item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StWarning" })
+    item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "GitSignsChange" })
   )
   local removed_str = unpack(
-    item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StError" })
+    item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "GitSignsDelete" })
   )
 
   if signs == "" then
