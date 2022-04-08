@@ -141,10 +141,6 @@ return lush(function()
     CursorLineNr({ fg = brown, bg = bg1, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
-    DiffAdd({ fg = "NONE", bg = bg_green }), -- diff mode: Added line |diff.txt|
-    DiffChange({ fg = "NONE", bg = bg_blue }), -- diff mode: Changed line |diff.txt|
-    DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
-    DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
     TermCursor({ Cursor }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
@@ -552,6 +548,11 @@ return lush(function()
     diffFile({ Aqua }),
     diffLine({ Grey }),
     diffIndexLine({ Purple }),
+
+    DiffAdd({ fg = "NONE", bg = bg_green }), -- diff mode: Added line |diff.txt|
+    DiffChange({ fg = "NONE", bg = bg_yellow }), -- diff mode: Changed line |diff.txt|
+    DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
+    DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
 
     --- netrw: there's no comprehensive list of highlights... --
 
