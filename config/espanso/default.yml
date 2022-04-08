@@ -64,7 +64,7 @@ matches:
     replace: "🙌🏼"
 
   # Dates
-  - trigger: ":date"
+  - trigger: ":date:"
     replace: "{{mydate}}"
     vars:
       - name: mydate
@@ -73,7 +73,7 @@ matches:
           format: "%m/%d/%Y"
 
   # Shell commands
-  - trigger: ":shell"
+  - trigger: ":shell:"
     replace: "{{output}}"
     vars:
       - name: output
