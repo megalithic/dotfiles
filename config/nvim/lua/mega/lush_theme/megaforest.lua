@@ -341,9 +341,9 @@ return lush(function()
 
     ---- :help lsp-highlight -----------------------------------
 
-    LspReferenceText({ CurrentWord, gui = "underline" }),
-    LspReferenceRead({ CurrentWord, gui = "underline" }),
-    LspReferenceWrite({ CurrentWord, gui = "underline,bold,italic" }),
+    LspReferenceText({ bg = "NONE", gui = "underline" }),
+    LspReferenceRead({ bg = "NONE", gui = "underline" }),
+    LspReferenceWrite({ InfoFloat, gui = "underline,bold,italic" }),
     LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
 
     ---- :help health ----------------------------

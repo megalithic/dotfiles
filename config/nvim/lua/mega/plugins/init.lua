@@ -146,9 +146,8 @@ local PKGS = {
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
   -- "gabebw/vim-github-link-opener",
   { "ruifm/gitlinker.nvim" },
-  {
-    "ruanyl/vim-gh-line",
-  },
+  { "ruanyl/vim-gh-line" },
+  "pwntester/octo.nvim",
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
