@@ -250,7 +250,7 @@ vim.opt.shiftwidth = 2
 vim.opt.gdefault = true
 vim.opt.confirm = true -- make vim prompt me to save before doing destructive things
 vim.opt.completeopt = { "menuone", "noselect" }
-vim.opt.hlsearch = false
+vim.opt.hlsearch = true
 vim.opt.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
 vim.opt.laststatus = 2 -- 2 = always show status line (filename, etc); 3 = global

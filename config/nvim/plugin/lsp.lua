@@ -77,11 +77,24 @@ local function setup_autocommands(client, bufnr)
         events = { "CursorHold" },
         buffer = bufnr,
         command = function()
-          vim.lsp.buf.document_highlight()
+          diagnostic.open_float(nil, {
+            focusable = false,
+            focus = false,
+            close_events = {
+              "CursorMoved",
+              "BufHidden",
+              "InsertCharPre",
+              "BufLeave",
+              "InsertEnter",
+              "FocusLost",
+              "BufWritePre",
+              "BufWritePost",
+            },
+          })
         end,
       },
       {
-        events = { "CursorHoldI" },
+        events = { "CursorHold", "CursorHoldI" },
         buffer = bufnr,
         command = function()
           vim.lsp.buf.document_highlight()
@@ -96,28 +109,6 @@ local function setup_autocommands(client, bufnr)
       },
     })
   end
-
-  augroup("LspDiagnostics", {
-    {
-      events = { "CursorHold" },
-      -- buffer = bufnr,
-      command = function()
-        diagnostic.open_float()
-        -- diagnostic.open_float(nil, {
-        --   focusable = false,
-        --   close_events = {
-        --     "CursorMoved",
-        --     "BufHidden",
-        --     "InsertCharPre",
-        --     "BufLeave",
-        --     "InsertEnter",
-        --     "FocusLost",
-        --     "BufWritePre"
-        --   },
-        -- })
-      end,
-    },
-  })
 
   local ok, lsp_format = pcall(require, "lsp-format")
   if ok then
@@ -395,6 +386,7 @@ local function setup_handlers()
     max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
     max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
     focusable = false,
+    focus = false,
     silent = true,
     severity_sort = true,
     close_events = {
@@ -405,6 +397,7 @@ local function setup_handlers()
       "InsertEnter",
       "FocusLost",
       "BufWritePre",
+      "BufWritePost",
     },
   }
 

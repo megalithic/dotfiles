@@ -12,6 +12,21 @@ local fmt = string.format
 local H = require("mega.utils.highlights")
 local U = {}
 
+local search_count_timer
+--- Timer to update the search count as the file is travelled
+---@return function
+function U.update_search_count(timer)
+  search_count_timer = timer
+  timer:start(0, 200, function()
+    vim.schedule(function()
+      if timer == search_count_timer then
+        fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+        vim.cmd("redrawstatus")
+      end
+    end)
+  end)
+end
+
 -- FIXME: presently focus variable setting isn't being used right
 mega.augroup("statusline", {
   {
@@ -49,6 +64,14 @@ mega.augroup("statusline", {
         vim.defer_fn(function()
           vim.g.is_saving = false
         end, 1000)
+      end
+    end,
+  },
+  {
+    events = { "CursorMoved" },
+    command = function()
+      if vim.o.hlsearch then
+        U.update_search_count(vim.loop.new_timer())
       end
     end,
   },
@@ -782,7 +805,7 @@ local function statusline_active(ctx) -- _ctx
   -- stylua: ignore start
   local prefix        = unpack(item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local mode          = M.s_mode({ trunc_width = 120 })
-  local search        = unpack(item_if(U.search_result(), not is_truncated(120), "StCount", {before=" "}))
+  local search        = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
   local git           = M.s_git({ trunc_width = 120 })
   local readonly      = M.s_readonly({ trunc_width = 100 })
   local modified      = M.s_modified({ trunc_width = 100 })
