@@ -76,7 +76,7 @@ do_build() {
     sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful"
   fi
 
-  make distclean
+  sudo make distclean || exit 1 && log_ok "distclean successful"
   sudo make CMAKE_BUILD_TYPE=RelWithDebInfo || exit 1 && log_ok "make successful"
   sudo make install || exit 1 && log_ok "successfully built and installed neovim"
 
