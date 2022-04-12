@@ -141,7 +141,6 @@ local PKGS = {
   "akinsho/git-conflict.nvim",
   "itchyny/vim-gitbranch",
   "rhysd/git-messenger.vim",
-  "sindrets/diffview.nvim",
   "tpope/vim-fugitive",
   "lewis6991/gitsigns.nvim",
   -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage

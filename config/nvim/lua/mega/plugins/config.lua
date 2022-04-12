@@ -136,6 +136,7 @@ do -- git-conflict.nvim
 end
 
 do -- gitlinker.nvim
+  -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
   require("gitlinker").setup()
 end
 
@@ -161,96 +162,28 @@ do
   -- require("virt-column").setup({ char = "│" }) -- │║
 end
 
-do -- indent-blankline
-  if false then
-    require("indent_blankline").setup({
-      char = "│", -- ┆ ┊ 
-      -- char_list = { "│", "|", "¦", "┆", "┊" },
-      space_char_blankline = " ",
-      show_foldtext = false,
-      show_current_context = true,
-      show_current_context_start = false,
-      show_current_context_start_on_current_line = false,
-      show_first_indent_level = true,
-      show_end_of_line = true,
-      indent_blankline_use_treesitter = true,
-      indent_blankline_show_trailing_blankline_indent = false,
-      filetype_exclude = {
-        "startify",
-        "dashboard",
-        "bufdir",
-        "alpha",
-        "log",
-        "fugitive",
-        "gitcommit",
-        "packer",
-        "vimwiki",
-        "markdown",
-        "json",
-        "txt",
-        "vista",
-        "help",
-        "NvimTree",
-        "git",
-        "fzf",
-        "TelescopePrompt",
-        "undotree",
-        "norg",
-        "org",
-        "orgagenda",
-        "", -- for all buffers without a file type
-      },
-      buftype_exclude = { "terminal", "nofile", "acwrite" },
-      context_patterns = {
-        "class",
-        "function",
-        "method",
-        "block",
-        "list_literal",
-        "selector",
-        "^if",
-        "^table",
-        "if_statement",
-        "while",
-        "for",
-        "^object",
-        "arguments",
-        "else_clause",
-        "jsx_element",
-        "jsx_self_closing_element",
-        "try_statement",
-        "catch_clause",
-        "import_statement",
-        "operation_type",
-      },
-    })
-  end
-end
-
 do -- nvim-hclipboard
   require("hclipboard").start()
 end
 
 do -- neoscroll
-  if true then
-    local mappings = {}
-    require("neoscroll").setup({
-      -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
-      stop_eof = false,
-      hide_cursor = false,
-      easing_function = "circular",
-    })
-    mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
-    mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
-    mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
-    mappings["<C-f>"] = { "scroll", { "vim.api.nvim_win_get_height(0)", "true", "250" } }
-    mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
-    mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
-    mappings["zt"] = { "zt", { "150" } }
-    mappings["zz"] = { "zz", { "150" } }
-    mappings["zb"] = { "zb", { "150" } }
-    require("neoscroll.config").set_mappings(mappings)
-  end
+  local mappings = {}
+  require("neoscroll").setup({
+    -- mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "zt", "zz", "zb" },
+    stop_eof = false,
+    hide_cursor = false,
+    easing_function = "circular",
+  })
+  mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
+  mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
+  mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
+  mappings["<C-f>"] = { "scroll", { "vim.api.nvim_win_get_height(0)", "true", "250" } }
+  mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
+  mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
+  mappings["zt"] = { "zt", { "150" } }
+  mappings["zz"] = { "zz", { "150" } }
+  mappings["zb"] = { "zb", { "150" } }
+  require("neoscroll.config").set_mappings(mappings)
 end
 
 do -- trouble.nvim
@@ -295,43 +228,10 @@ do -- comment.nvim
   })
 end
 
-do -- conflict-marker.nvim
-  -- disable the default highlight group
-  vim.g.conflict_marker_highlight_group = "Error"
-  -- Include text after begin and end markers
-  vim.g.conflict_marker_begin = "^<<<<<<< .*$"
-  vim.g.conflict_marker_end = "^>>>>>>> .*$"
-end
-
 do -- colorizer.nvim
-  -- require("colorizer").setup({
-  --   "*",
-  --   css = { rgb_fn = true },
-  --   scss = { rgb_fn = true },
-  --   sass = { rgb_fn = true },
-  --   stylus = { rgb_fn = true },
-  --   vim = { names = false },
-  --   tmux = { names = true },
-  --   "toml",
-  --   "eelixir",
-  --   "javascript",
-  --   "javascriptreact",
-  --   "typescript",
-  --   "typescriptreact",
-  --   "zsh",
-  --   "fish",
-  --   "sh",
-  --   "conf",
-  --   "lua",
-  --   "python",
-  -- })
-
-  -- require("colorizer").setup()
   require("colorizer").setup({ "*" }, {
     mode = "background",
   })
-
-  -- vim.g["Hexokinase_highlighters"] = { "virtual" }
 end
 
 do -- golden_size.nvim
@@ -387,16 +287,6 @@ do -- golden_size.nvim
       },
       { golden_size.ignore_float_windows }, -- default one, ignore float windows
       { golden_size.ignore_by_window_flag }, -- default one, ignore windows with w:ignore_gold_size=1
-    })
-  end
-end
-
-do -- lastplace
-  if false then
-    require("nvim-lastplace").setup({
-      lastplace_ignore_buftype = { "quickfix", "nofile", "help", ".git/COMMIT_EDITMSG" },
-      lastplace_ignore_filetype = { "gitcommit", "gitrebase", "svn", "hgcommit" },
-      lastplace_open_folds = true,
     })
   end
 end
@@ -514,78 +404,6 @@ do -- lightspeed.nvim or hop.nvim; testing them both out
         inclusive_jump = true,
       })
     end)
-  end
-end
-
-do -- diffview.nvim
-  local cb = require("diffview.config").diffview_callback
-
-  require("diffview").setup({
-    diff_binaries = false, -- Show diffs for binaries
-    use_icons = true, -- Requires nvim-web-devicons
-    file_panel = {
-      width = 50,
-    },
-    enhanced_diff_hl = true,
-    key_bindings = {
-      disable_defaults = false, -- Disable the default key bindings
-      -- The `view` bindings are active in the diff buffers, only when the current
-      -- tabpage is a Diffview.
-      view = {
-        ["<tab>"] = cb("select_next_entry"), -- Open the diff for the next file
-        ["<s-tab>"] = cb("select_prev_entry"), -- Open the diff for the previous file
-        ["<leader>e"] = cb("focus_files"), -- Bring focus to the files panel
-        ["<leader>b"] = cb("toggle_files"), -- Toggle the files panel.
-      },
-      file_panel = {
-        ["j"] = cb("next_entry"), -- Bring the cursor to the next file entry
-        ["<down>"] = cb("next_entry"),
-        ["k"] = cb("prev_entry"), -- Bring the cursor to the previous file entry.
-        ["<up>"] = cb("prev_entry"),
-        ["<cr>"] = cb("select_entry"), -- Open the diff for the selected entry.
-        ["o"] = cb("select_entry"),
-        ["<2-LeftMouse>"] = cb("select_entry"),
-        ["-"] = cb("toggle_stage_entry"), -- Stage / unstage the selected entry.
-        ["S"] = cb("stage_all"), -- Stage all entries.
-        ["U"] = cb("unstage_all"), -- Unstage all entries.
-        ["R"] = cb("refresh_files"), -- Update stats and entries in the file list.
-        ["<tab>"] = cb("select_next_entry"),
-        ["<s-tab>"] = cb("select_prev_entry"),
-        ["<leader>e"] = cb("focus_files"),
-        ["<leader>b"] = cb("toggle_files"),
-      },
-    },
-  })
-end
-
-do -- git.nvim
-  if false then
-    require("git").setup({
-      keymaps = {
-        -- Open blame window
-        blame = "<Leader>gb",
-        -- Close blame window
-        quit_blame = "q",
-        -- Open blame commit
-        blame_commit = "<CR>",
-        -- Open file/folder in git repository
-        browse = "<Leader>gh",
-        -- Open pull request of the current branch
-        open_pull_request = "<Leader>gp",
-        -- Create a pull request with the target branch is set in the `target_branch` option
-        create_pull_request = "<Leader>gn",
-        -- Opens a new diff that compares against the current index
-        diff = "<Leader>gd",
-        -- Close git diff
-        diff_close = "<Leader>gD",
-        -- Revert to the specific commit
-        revert = "<Leader>gr",
-        -- Revert the current file to the specific commit
-        revert_file = "<Leader>gR",
-      },
-      -- Default target branch when create a pull request
-      target_branch = "main",
-    })
   end
 end
 
@@ -752,10 +570,6 @@ do -- headlines.nvim
       dash_highlight = "Dash",
     },
   })
-end
-
-do -- telescope-nvim
-  conf("telescope")
 end
 
 do -- dirbuf.nvim
