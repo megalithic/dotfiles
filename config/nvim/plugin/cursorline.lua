@@ -183,7 +183,7 @@ mega.augroup("ToggleCursorLine", {
     events = { "CursorMoved", "CursorMovedI" },
     targets = { "*" },
     command = function()
-      cursor_moved()
+      -- cursor_moved()
     end,
   },
 })
