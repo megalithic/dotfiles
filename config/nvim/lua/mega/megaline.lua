@@ -632,13 +632,13 @@ function M.s_git(args)
     )
   )
   local added_str = unpack(
-    item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "GitSignsAdd" })
+    item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGitSignsAdd" })
   )
   local changed_str = unpack(
-    item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "GitSignsChange" })
+    item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StGitSignsChange" })
   )
   local removed_str = unpack(
-    item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "GitSignsDelete" })
+    item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StGitSignsDelete" })
   )
 
   if signs == "" then
@@ -752,9 +752,7 @@ function M.s_lineinfo(args)
 
   local current_line = "%l"
   local last_line = "%L"
-  local current_col = "%v" -- pad with `%<pad_n>v`, e.g. `%2v`
-  -- local last_col = "%-2{col(\"$\") - 1}"
-  -- local length = strwidth(prefix .. current .. col .. sep .. last)
+  local current_col = "%-3c"
 
   -- Use virtual column number to allow update when paste last column
   if is_truncated(args.trunc_width) then
@@ -775,7 +773,6 @@ function M.s_lineinfo(args)
     wrap_hl(col_hl),
     ":",
     current_col,
-    " ",
   })
 end
 

@@ -735,7 +735,7 @@ return lush(function()
     -- TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
     -- TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
 
-    ---- :help statusline -------------------------------------------
+    ---- megaline -- :help statusline -------------------------------------------
 
     StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
     StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
@@ -752,8 +752,9 @@ return lush(function()
     StGitSymbol({ fg = light_red, bg = bg1 }),
     StGitBranch({ fg = blue, bg = bg1 }),
     StGitSigns({ fg = dark_blue, bg = bg1 }),
-    StGreen({ fg = green, bg = bg1 }),
-    StBlue({ fg = dark_blue, bg = bg1, gui = "bold" }),
+    StGitSignsAdd({ GreenSign, bg = bg1 }),
+    StGitSignsDelete({ RedSign, bg = bg1 }),
+    StGitSignsChange({ OrangeSign, bg = bg1 }),
     StNumber({ fg = purple, bg = bg1 }),
     StCount({ fg = bg0, bg = blue, gui = "bold" }),
     StPrefix({ fg = fg, bg = bg2 }),
