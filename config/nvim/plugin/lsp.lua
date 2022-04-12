@@ -72,11 +72,30 @@ local function setup_autocommands(client, bufnr)
     -- hi LspReferenceRead cterm=bold ctermbg=red guibg=#464646
     -- hi LspReferenceText cterm=bold ctermbg=red guibg=#464646
     -- hi LspReferenceWrite cterm=bold ctermbg=red guibg=#464646
-    augroup("LspCursorCommands", {
+    augroup("LspDocumentHighlight", {
+      {
+        events = { "CursorHold", "CursorHoldI" },
+        buffer = bufnr,
+        command = function()
+          vim.lsp.buf.document_highlight()
+        end,
+      },
+      {
+        events = { "CursorMoved", "BufLeave" },
+        buffer = bufnr,
+        command = function()
+          vim.lsp.buf.clear_references()
+        end,
+      },
+    })
+  end
+
+  if client then
+    augroup("LspDiagnostics", {
       {
         events = { "CursorHold" },
+        buffer = bufnr,
         command = function()
-          -- diagnostic.open_float()
           diagnostic.open_float(nil, {
             focusable = false,
             focus = false,
@@ -91,20 +110,6 @@ local function setup_autocommands(client, bufnr)
               "BufWritePost",
             },
           })
-        end,
-      },
-      {
-        events = { "CursorHold", "CursorHoldI" },
-        buffer = bufnr,
-        command = function()
-          vim.lsp.buf.document_highlight()
-        end,
-      },
-      {
-        events = { "CursorMoved", "BufLeave" },
-        buffer = bufnr,
-        command = function()
-          vim.lsp.buf.clear_references()
         end,
       },
     })
