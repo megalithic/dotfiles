@@ -552,7 +552,7 @@ return lush(function()
     DiffAdd({ fg = "NONE", bg = bg_green }), -- diff mode: Added line |diff.txt|
     DiffChange({ fg = "NONE", bg = bg_yellow }), -- diff mode: Changed line |diff.txt|
     DiffDelete({ fg = "NONE", bg = bg_red }), -- diff mode: Deleted line |diff.txt|
-    DiffText({ fg = bg0, bg = fg }), -- diff mode: Changed text within a changed line |diff.txt|
+    DiffText({ fg = "NONE", bg = bg_dark }), -- diff mode: Changed text within a changed line |diff.txt|
 
     --- netrw: there's no comprehensive list of highlights... --
 

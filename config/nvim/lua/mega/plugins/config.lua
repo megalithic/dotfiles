@@ -133,11 +133,6 @@ do -- git-conflict.nvim
       current = "DiffAdd",
     },
   })
-
-  -- DiffAdd = { background = '#26332c', foreground = 'NONE' },
-  -- DiffDelete = { background = '#572E33', foreground = '#5c6370' },
-  -- DiffChange = { background = '#273842', foreground = 'NONE' },
-  -- DiffText = { background = '#314753', foreground = 'NONE' },
 end
 
 do -- gitlinker.nvim
