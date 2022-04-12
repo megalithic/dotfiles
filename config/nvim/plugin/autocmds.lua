@@ -541,9 +541,16 @@ augroup("GitConflicts", {
     targets = "GitConflictDetected",
     command = function()
       vim.notify("Conflict detected in " .. vim.fn.expand("<afile>"))
-      -- vim.keymap.set("n", "cww", function()
-      --   engage.conflict_buster()
-      -- end)
+      require("which-key").register({
+        c = {
+          name = "git-conflicts",
+          t = "Resolve with _Theirs",
+          o = "Resolve with _Ours",
+          b = "Resolve with _Both",
+          q = { "<cmd>GitConflictListQf<CR>", "Send conflicts to _Quickfix" },
+          ["0"] = "Resolve with None",
+        },
+      })
     end,
   },
   {
