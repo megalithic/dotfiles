@@ -708,10 +708,10 @@ do -- vim-test
   }
 
   vim.g["test#strategy"] = {
-    nearest = "toggleterm",
+    nearest = "toggleterm_f",
     file = "toggleterm_f",
     suite = "toggleterm_f",
-    last = "toggleterm",
+    last = "toggleterm_f",
   }
 end
 
