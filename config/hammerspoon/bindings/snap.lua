@@ -87,25 +87,13 @@ M.start = function()
 
   hyper:bind({}, "l", nil, function()
     movewindows:enter()
-
-    -- set a timeout to kill our modal in case no follow-on keys are pressed
-    -- hs.timer.doAfter(
-    --   2,
-    --   function()
-    --     movewindows:exit()
-    --   end
-    -- )
   end)
 
   -- :: window-manipulation (manual window snapping)
   for _, c in pairs(Config.snap) do
     movewindows:bind("", c.shortcut, function()
       require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-      -- hs.hotkey.bind(c.modifier, c.shortcut, chain(c.locations))
-      -- hs.window.focusedWindow():moveToUnit(c.position)
-      hs.timer.doAfter(0.5, function()
-        movewindows:exit()
-      end)
+      movewindows:exit()
     end)
   end
 
