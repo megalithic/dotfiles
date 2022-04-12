@@ -94,7 +94,6 @@ local function setup_autocommands(client, bufnr)
     augroup("LspDiagnostics", {
       {
         events = { "CursorHold" },
-        buffer = bufnr,
         command = function()
           diagnostic.open_float(nil, {
             focusable = false,
