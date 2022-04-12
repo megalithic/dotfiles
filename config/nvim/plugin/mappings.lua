@@ -230,6 +230,7 @@ if has_wk then
       x = { mega.open_uri, "open uri under cursor" },
       R = { "show reg-explainer" },
       j = { "mzJ`z", "join lines" },
+      b = { "<cmd>ls<CR>:b<space><space>", "go-to buffer" },
       s = { "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line" },
     },
   }
