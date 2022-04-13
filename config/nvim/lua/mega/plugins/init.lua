@@ -87,6 +87,7 @@ local PKGS = {
   },
   "nvim-treesitter/playground",
   "nvim-treesitter/nvim-treesitter-refactor",
+  -- @trial ziontee113/syntax-tree-surfer
   "mfussenegger/nvim-treehopper",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
@@ -95,7 +96,7 @@ local PKGS = {
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
   "nvim-treesitter/nvim-tree-docs",
-  -- "primeagen/harpoon",
+  -- @trial "primeagen/harpoon",
   -- "romgrk/nvim-treesitter-context",
 
   ------------------------------------------------------------------------------
@@ -104,8 +105,7 @@ local PKGS = {
   { "phaazon/hop.nvim", opt = true },
   "akinsho/toggleterm.nvim",
   "elihunter173/dirbuf.nvim",
-  -- "nvim-neo-tree/neo-tree.nvim",
-  -- "kyazdani42/nvim-tree.lua",
+  -- @trial "nvim-neo-tree/neo-tree.nvim",
 
   "tami5/sqlite.lua",
   "nvim-telescope/telescope.nvim",
@@ -115,7 +115,7 @@ local PKGS = {
   "nvim-telescope/telescope-media-files.nvim",
   "nvim-telescope/telescope-symbols.nvim",
   "nvim-telescope/telescope-smart-history.nvim",
-  -- "nvim-telescope/telescope-file-browser.nvim",
+  -- @trial "nvim-telescope/telescope-file-browser.nvim",
 
   ------------------------------------------------------------------------------
   -- (text objects) --
@@ -130,7 +130,7 @@ local PKGS = {
   "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
   "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
-  -- "chaoren/vim-wordmotion", -- to move across cases and words and such
+  -- @trial "chaoren/vim-wordmotion", -- to move across cases and words and such
   "wellle/targets.vim",
   -- research: windwp/nvim-spectre
 
@@ -150,7 +150,6 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
-  -- "ahmedkhalf/project.nvim",
   "bennypowers/nvim-regexplainer",
   "tpope/vim-projectionist",
   -- "tjdevries/edit_alternate.vim",
@@ -194,8 +193,8 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   { "sunaku/tmux-navigate", opt = true },
-  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty", opt = true },
-  -- "tmux-plugins/vim-tmux-focus-events",
+  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
+  "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "outstand/logger.nvim",
   "RRethy/nvim-align",

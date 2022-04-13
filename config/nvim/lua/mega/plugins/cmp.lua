@@ -2,7 +2,6 @@ local api = vim.api
 
 local cmp = require("cmp")
 local ls = require("luasnip")
-local utils = require("mega.utils")
 local t = mega.replace_termcodes
 
 local M = {
@@ -69,12 +68,12 @@ local function setup_luasnip()
 
   --- <tab> to jump to next snippet's placeholder
   local function on_tab()
-    return ls.jump(1) and "" or utils.t("<Tab>")
+    return ls.jump(1) and "" or t("<Tab>")
   end
 
   --- <s-tab> to jump to next snippet's placeholder
   local function on_s_tab()
-    return ls.jump(-1) and "" or utils.t("<S-Tab>")
+    return ls.jump(-1) and "" or t("<S-Tab>")
   end
 
   local opts = { expr = true, remap = true }
@@ -87,7 +86,7 @@ local function setup_luasnip()
   -- NOTE: the loader is called twice so it picks up the defaults first then my
   -- snippets. @see: https://github.com/L3MON4D3/LuaSnip/issues/364
   require("luasnip.loaders.from_vscode").lazy_load()
-  require("luasnip.loaders.from_vscode").lazy_load({ paths = "./snippets" })
+  -- require("luasnip.loaders.from_vscode").lazy_load({ paths = "./snippets" })
 end
 
 local function setup_cmp()

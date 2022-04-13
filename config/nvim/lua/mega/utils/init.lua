@@ -81,11 +81,6 @@ function M.ext.kitty.clear_background()
   end
 end
 
-function M.t(cmd_str)
-  -- return api.nvim_replace_termcodes(cmd, true, true, true) -- TODO: why 3rd param false?
-  return api.nvim_replace_termcodes(cmd_str, true, false, true)
-end
-
 function M.check_back_space()
   local col = fn.col(".") - 1
   return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
