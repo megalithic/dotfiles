@@ -199,6 +199,7 @@ local function setup_mappings(client, bufnr)
   if client.supports_method("textDocument/rename") then
     maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
     maps.n["<leader>ln"] = { vim.lsp.buf.rename, "lsp: rename" }
+    maps.n["<leader>ln"] = { require("mega.lsp.rename").rename, "lsp: rename document symbol" }
   end
 
   for mode, value in pairs(maps) do

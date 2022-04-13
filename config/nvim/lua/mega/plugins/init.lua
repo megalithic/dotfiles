@@ -29,7 +29,7 @@ local PKGS = {
   -- "lukas-reineke/indent-blankline.nvim",
   -- { "lukas-reineke/virt-column.nvim" },
   "MunifTanjim/nui.nvim",
-  "stevearc/dressing.nvim",
+  -- "stevearc/dressing.nvim",
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
