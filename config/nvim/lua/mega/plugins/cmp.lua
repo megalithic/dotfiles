@@ -142,18 +142,18 @@ local function setup_cmp()
       -- { name = "fuzzy_buffer" },
     }),
   }
-
+  local cmp_window = {
+    border = mega.get_border(),
+    winhighlight = table.concat({
+      "Normal:NormalFloat",
+      "FloatBorder:FloatBorder",
+      "CursorLine:Visual",
+      "Search:None",
+    }, ","),
+  }
   cmp.setup({
     view = {
       entries = "custom",
-    },
-    experimental = {
-      -- ghost_text = {
-      --   hl_group = "LineNr",
-      -- },
-      ghost_text = false,
-      -- horizontal_search = true,
-      -- native_menu = false, -- false == use fancy floaty menu for now
     },
     completion = {
       keyword_length = 1,
@@ -163,20 +163,13 @@ local function setup_cmp()
         ls.lsp_expand(args.body)
       end,
     },
-    -- window = {
-    --   completion = {
-    -- border = mega.get_border(),
-    --   },
-    --   documentation = {
-    -- border = mega.get_border(),
-    --   },
-    -- },
-    documentation = {
-      border = mega.get_border(),
+    window = {
+      completion = cmp.config.window.bordered(cmp_window),
+      documentation = cmp.config.window.bordered(cmp_window),
     },
     mapping = {
-      ["<Tab>"] = cmp.mapping(tab, { "i", "s" }),
-      ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s" }),
+      ["<Tab>"] = cmp.mapping(tab, { "i", "s", "c" }),
+      ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
       ["<C-b>"] = cmp.mapping.scroll_docs(-4),
       ["<C-f>"] = cmp.mapping.scroll_docs(4),
       ["<C-Space>"] = cmp.mapping.complete(),

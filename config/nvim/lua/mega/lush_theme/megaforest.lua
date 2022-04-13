@@ -55,6 +55,7 @@ local light_red = C.light_red
 local orange = C.orange
 local dark_orange = C.dark_orange
 local bright_yellow = C.bright_yellow
+local bright_blue = C.bright_blue
 local yellow = C.yellow
 local green = C.green
 local bright_green = C.bright_green
@@ -455,7 +456,7 @@ return lush(function()
     TSKeywordFunction({ Red }),
     TSLabel({ Orange }),
     TSMethod({ Green }),
-    TSNamespace({ BlueItalic }),
+    TSNamespace({ BlueItalic, fg = bright_blue }),
     TSNumber({ Purple }),
     TSOperator({ Orange }),
     TSParameter({ Fg }),
