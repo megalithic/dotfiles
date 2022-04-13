@@ -1,5 +1,4 @@
 local api = vim.api
-local vcmd = vim.cmd
 local fn = vim.fn
 local fmt = string.format
 
@@ -19,9 +18,6 @@ conf("toggleterm")
 conf("cmp")
 conf("zk")
 conf("projectionist")
-if vim.g.vscode ~= nil then
-  conf("vscode")
-end
 
 -- [ THE REST ] ----------------------------------------------------------------
 
@@ -156,10 +152,6 @@ do
     symbol = "│",
     delay = "100",
   })
-end
-
-do
-  -- require("virt-column").setup({ char = "│" }) -- │║
 end
 
 do -- nvim-hclipboard
@@ -786,4 +778,8 @@ do -- quickfix list things
 
   -- nvim-pqf
   require("pqf").setup({})
+end
+
+if vim.g.vscode ~= nil then
+  conf("vscode")
 end
