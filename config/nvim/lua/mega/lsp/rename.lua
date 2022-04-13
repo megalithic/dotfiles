@@ -16,8 +16,8 @@ function M.rename()
   local default_rename_prompt = " -> "
   local current_name = ""
 
-  local function cleanup_rename_callback()
-    api.nvim_win_close(0, true)
+  local function cleanup_rename_callback(winnr)
+    api.nvim_win_close(winnr, true)
     api.nvim_feedkeys(mega.replace_termcodes("<Esc>"), "i", true)
 
     current_name = ""
@@ -72,13 +72,13 @@ function M.rename()
 
     imap("<CR>", function()
       rename_callback()
-    end)
+    end, { buffer = bufnr })
     imap("<esc>", function()
-      cleanup_rename_callback()
-    end)
+      cleanup_rename_callback(winnr)
+    end, { buffer = bufnr })
     imap("<c-c>", function()
-      cleanup_rename_callback()
-    end)
+      cleanup_rename_callback(winnr)
+    end, { buffer = bufnr })
 
     vim.cmd("startinsert")
   end

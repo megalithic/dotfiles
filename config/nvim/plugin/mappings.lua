@@ -453,14 +453,6 @@ imap(".", ".<C-g>u")
 imap("!", "!<C-g>u")
 imap("?", "?<C-g>u")
 
--- nnoremap cn *``cgn
--- nnoremap cN *``cgN
--- - Go on top of a word you want to change
--- - Press cn or cN
--- - Type the new word you want to replace it with
--- - Smash that dot '.' multiple times to change all the other occurrences of the word
--- It's quicker than searching or replacing. It's pure magic.
-
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
 nnoremap("n", "'Nn'[v:searchforward]", { expr = true })
 xnoremap("n", "'Nn'[v:searchforward]", { expr = true })
@@ -568,6 +560,12 @@ nnoremap("Q", "@q")
 -- https://github.com/akinsho/dotfiles/issues/10#issuecomment-1098265323
 -- https://github.com/akinsho/dotfiles/issues/9
 -- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/core/mappings.lua#L70-L130
+
+-- - Go on top of a word you want to change
+-- - Press cn or cN
+-- - Type the new word you want to replace it with
+-- - Smash that dot '.' multiple times to change all the other occurrences of the word
+-- It's quicker than searching or replacing. It's pure magic.
 -----------------------------------------------------------------------------//
 nnoremap("cn", "*``cgn", "multi-cursors forward")
 nnoremap("cN", "*``cgN", "multi-cursors backward")
