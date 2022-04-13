@@ -561,6 +561,41 @@ nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 -- Map Q to replay q register
 nnoremap("Q", "@q")
 
+-----------------------------------------------------------------------------//
+-- Multiple Cursor Replacement
+-- http://www.kevinli.co/posts/2017-01-19-multiple-cursors-in-500-bytes-of-vimscript/
+-- REF:
+-- https://github.com/akinsho/dotfiles/issues/10#issuecomment-1098265323
+-- https://github.com/akinsho/dotfiles/issues/9
+-- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/core/mappings.lua#L70-L130
+-----------------------------------------------------------------------------//
+nnoremap("cn", "*``cgn", "multi-cursors forward")
+nnoremap("cN", "*``cgN", "multi-cursors backward")
+
+-- 1. Position the cursor over a word; alternatively, make a selection.
+-- 2. Hit cq to start recording the macro.
+-- 3. Once you are done with the macro, go back to normal mode.
+-- 4. Hit Enter to repeat the macro over search matches.
+function mega.mappings.setup_CR()
+  nmap("<Enter>", [[:nnoremap <lt>Enter> n@z<CR>q:<C-u>let @z=strpart(@z,0,strlen(@z)-1)<CR>n@z]])
+end
+
+vim.g.mc = mega.replace_termcodes([[y/\V<C-r>=escape(@", '/')<CR><CR>]])
+xnoremap("cn", [[g:mc . "``cgn"]], { expr = true, silent = true, desc = "multi-cursor forward" })
+xnoremap("cN", [[g:mc . "``cgN"]], { expr = true, silent = true, desc = "multi-cursor backward" })
+nnoremap("cq", [[:\<C-u>call v:lua.mega.mappings.setup_CR()<CR>*``qz]], "multi-cursor macro forward")
+nnoremap("cQ", [[:\<C-u>call v:lua.mega.mappings.setup_CR()<CR>#``qz]], "multi-cursor macro backward")
+xnoremap(
+  "cq",
+  [[":\<C-u>call v:lua.mega.mappings.setup_CR()<CR>gv" . g:mc . "``qz"]],
+  { expr = true, desc = "multi cursor macro forward" }
+)
+xnoremap(
+  "cQ",
+  [[":\<C-u>call v:lua.mega.mappings.setup_CR()<CR>gv" . substitute(g:mc, '/', '?', 'g') . "``qz"]],
+  { expr = true, desc = "multi cursor macro forward" }
+)
+
 ---------------------------------------------------------------------------------
 -- Toggle list
 ---------------------------------------------------------------------------------

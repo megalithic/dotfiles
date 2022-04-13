@@ -97,7 +97,6 @@ local PKGS = {
   "David-Kunz/treesitter-unit",
   "nvim-treesitter/nvim-tree-docs",
   -- @trial "primeagen/harpoon",
-  -- "romgrk/nvim-treesitter-context",
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
@@ -132,7 +131,7 @@ local PKGS = {
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
   -- @trial "chaoren/vim-wordmotion", -- to move across cases and words and such
   "wellle/targets.vim",
-  -- research: windwp/nvim-spectre
+  -- @trial: windwp/nvim-spectre
 
   ------------------------------------------------------------------------------
   -- (GIT, vcs, et al) --
@@ -143,8 +142,8 @@ local PKGS = {
   "rhysd/git-messenger.vim",
   "tpope/vim-fugitive",
   "lewis6991/gitsigns.nvim",
-  -- "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
-  -- "gabebw/vim-github-link-opener",
+  -- @trial "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
+  -- @trial "gabebw/vim-github-link-opener",
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
 
@@ -152,17 +151,17 @@ local PKGS = {
   -- (DEV, development, et al) --
   "bennypowers/nvim-regexplainer",
   "tpope/vim-projectionist",
-  -- "tjdevries/edit_alternate.vim",
+  -- @trial "tjdevries/edit_alternate.vim",
   "vim-test/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "tpope/vim-ragtag",
-  -- { "mrjones2014/dash.nvim", run = "make install", opt = true },
+  -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
-  -- "tpope/vim-dadbod",
-  -- "kristijanhusak/vim-dadbod-completion",
-  -- "kristijanhusak/vim-dadbod-ui",
-  -- {
+  -- @trial "tpope/vim-dadbod",
+  -- @trial "kristijanhusak/vim-dadbod-completion",
+  -- @trial "kristijanhusak/vim-dadbod-ui",
+  -- @trial {
   --   "glacambre/firenvim",
   --   run = function()
   --     vim.fn["firenvim#install"](0)
@@ -209,10 +208,10 @@ local PKGS = {
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
-  -- https://github.com/preservim/vim-wordy
-  -- https://github.com/jghauser/follow-md-links.nvim
-  -- https://github.com/jakewvincent/mkdnflow.nvim
-  -- https://github.com/jubnzv/mdeval.nvim
+  -- @trial https://github.com/preservim/vim-wordy
+  -- @trial https://github.com/jghauser/follow-md-links.nvim
+  -- @trial https://github.com/jakewvincent/mkdnflow.nvim
+  -- @trial https://github.com/jubnzv/mdeval.nvim
   { "mickael-menu/zk-nvim" },
   "tpope/vim-rails",
   "elixir-editors/vim-elixir",
@@ -229,7 +228,7 @@ local PKGS = {
   "jxnblk/vim-mdx-js",
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
-  -- "mattn/emmet-vim",
+  -- @trial "mattn/emmet-vim",
   "skwp/vim-html-escape",
   "pedrohdz/vim-yaml-folds",
   "avakhov/vim-yaml",
@@ -239,9 +238,9 @@ local PKGS = {
   "SirJson/fzf-gitignore",
 
   -- TODO: work tings; also get packer.nvim going
-  -- "outstand/titan.nvim",
-  -- "outstand/logger.nvim",
-  -- "ryansch/habitats.nvim",
+  -- @trial "outstand/titan.nvim",
+  -- @trial "outstand/logger.nvim",
+  -- @trial "ryansch/habitats.nvim",
 }
 
 local M = {}
