@@ -9,6 +9,7 @@ vim.opt.relativenumber = false
 vim.opt.wrap = true
 vim.opt.linebreak = true
 vim.opt.foldenable = false
+vim.opt.signcolumn = "no"
 vim.b.EditorConfig_disable = 1
 
 vim.cmd([[setlocal comments+=fb:*]])
