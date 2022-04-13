@@ -300,39 +300,8 @@ local function setup_diagnostics()
       end
     end
     --print only shows a single line, echo blocks requiring enter, pick your poison
-    print(diagnostic_message)
+    P(diagnostic_message)
   end
-
-  -- Monkey-patch vim.diagnostic.open_float() with our own implentation
-  -- REF:
-  -- https://neovim.discourse.group/t/lsp-diagnostics-how-and-where-to-retrieve-severity-level-to-customise-border-color/1679
-  -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/diagnostic.lua#L1171-L1212
-  -- diagnostic.open_float = (function(orig)
-  --   return function(bufnr, opts)
-  --     local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
-  --     opts = opts or {}
-  --     -- A more robust solution would check the "scope" value in `opts` to
-  --     -- determine where to get diagnostics from, but if you're only using
-  --     -- this for your own purposes you can make it as simple as you like
-  --     local diagnostics = diagnostic.get(opts.bufnr or 0, { lnum = lnum })
-  --     local max_severity = diagnostic.severity.HINT
-  --     for _, d in ipairs(diagnostics) do
-  --       -- Equality is "less than" based on how the severities are encoded
-  --       if d.severity < max_severity then
-  --         max_severity = d.severity
-  --       end
-  --     end
-  --     local border_color = ({
-  --       [diagnostic.severity.HINT] = "DiagnosticHint",
-  --       [diagnostic.severity.INFO] = "DiagnosticInfo",
-  --       [diagnostic.severity.WARN] = "DiagnosticWarn",
-  --       [diagnostic.severity.ERROR] = "DiagnosticError",
-  --     })[max_severity]
-  --     opts.border = mega.get_border(border_color)
-
-  --     orig(bufnr, opts)
-  --   end
-  -- end)(diagnostic.open_float)
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
@@ -349,18 +318,19 @@ local function setup_diagnostics()
       local max_severity_per_line = {}
       for _, d in pairs(diagnostics) do
         local m = max_severity_per_line[d.lnum]
+
+        -- FIXME; this only seems to be the case for elixir-ls when there are compilation errors;
+        -- d.lnum ends up being -1 which crashes the call to show/4 down below.
+        if d.lnum == -1 then
+          d.lnum = 0
+        end
+
         if not m or d.severity < m.severity then
           max_severity_per_line[d.lnum] = d
         end
       end
       -- Pass the filtered diagnostics (with our custom namespace) to
       -- the original handler
-      -- vim.notify(
-      --   fmt(
-      --     "handed to original signs_handler.show: %s",
-      --     vim.inspect({ ns, bufnr, vim.tbl_values(max_severity_per_line), opts })
-      --   )
-      -- )
       signs_handler.show(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
     end,
     hide = function(_, bufnr)

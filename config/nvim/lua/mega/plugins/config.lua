@@ -75,6 +75,11 @@ do
   end
 end
 
+do -- gitlinker.nvim
+  -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
+  require("gitlinker").setup()
+end
+
 do -- vim-gh-line_config
   if fn.exists("g:loaded_gh_line") then
     vim.g["gh_line_map_default"] = 0
@@ -131,11 +136,6 @@ do -- git-conflict.nvim
       current = "DiffAdd",
     },
   })
-end
-
-do -- gitlinker.nvim
-  -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
-  require("gitlinker").setup()
 end
 
 do -- vim-matchup
@@ -313,7 +313,7 @@ do -- nvim-autopairs
 end
 
 do -- lightspeed.nvim or hop.nvim; testing them both out
-  if true then
+  if false then
     vim.cmd("packadd lightspeed.nvim")
     require("lightspeed").setup({
       -- jump_to_first_match = true,
