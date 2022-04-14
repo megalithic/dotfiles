@@ -118,8 +118,8 @@ if has_wk then
   local n_mappings = {
     ["<leader>"] = {
       -- f = {}, -- see plugins.lua > telescope-mappings
-      ["[h"] = "go to next git hunk",
-      ["]h"] = "go to previous git hunk",
+      ["[h"] = "go to prev git hunk",
+      ["]h"] = "go to next git hunk",
       e = {
         name = "edit files",
         c = { [[:Copy<cr>]], "save as <input>" },

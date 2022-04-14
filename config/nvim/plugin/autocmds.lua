@@ -301,7 +301,7 @@ augroup("UpdateVim", {
   {
     events = { "VimResized" },
     command = function()
-      vim.cmd([["wincmd ="]])
+      vim.cmd([[wincmd =]])
       require("golden_size").on_win_enter()
       -- require("virt-column").refresh()
     end,
@@ -489,13 +489,15 @@ augroup("GitConflicts", {
       vim.notify("Conflict detected in " .. vim.fn.expand("<afile>"))
       require("which-key").register({
         c = {
-          name = "git-conflicts",
+          name = "git-conflict",
           t = "Resolve with _Theirs",
           o = "Resolve with _Ours",
           b = "Resolve with _Both",
           q = { "<cmd>GitConflictListQf<CR>", "Send conflicts to _Quickfix" },
           ["0"] = "Resolve with None",
         },
+        ["[c"] = { "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict" },
+        ["]c"] = { "<cmd>GitConflictNextConflict<CR>", "go to next conflict" },
       })
     end,
   },

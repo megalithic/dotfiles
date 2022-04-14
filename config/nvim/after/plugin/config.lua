@@ -2,6 +2,7 @@ local api = vim.api
 local fn = vim.fn
 local fmt = string.format
 
+-- TODO: make this something that can do local config loading with safe require
 local function conf(plugin)
   if pcall(require, plugin) then
     require("mega.plugins." .. plugin)
