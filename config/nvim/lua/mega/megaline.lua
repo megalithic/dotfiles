@@ -626,7 +626,7 @@ function M.s_git(args)
   local branch = status.head
 
   if is_truncated(args.trunc_width) then
-    branch = mega.truncate(branch, 12, false)
+    branch = mega.truncate(branch or "", 12, false)
   end
 
   local head_str = unpack(
