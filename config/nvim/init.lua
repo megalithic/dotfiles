@@ -16,6 +16,8 @@
    after/indent ?
    after/syntax ?
 
+   NOTE: paq management and installer are in nvim/lua/mega/plugins.lua
+
 --[ debugging ] ----------------------------------------------------------------
 
    Discover runtime files (change path) ->
