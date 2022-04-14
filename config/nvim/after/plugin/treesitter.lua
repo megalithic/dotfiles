@@ -54,7 +54,7 @@ require("nvim-treesitter.configs").setup({
   indent = { enable = true },
   autotag = { enable = true },
   tree_docs = {
-    enable = false,
+    enable = true,
     keymaps = {
       doc_node_at_cursor = "gdd",
       doc_all_in_range = "gdd",
@@ -82,14 +82,14 @@ require("nvim-treesitter.configs").setup({
   incremental_selection = {
     enable = true,
     keymaps = {
-      init_selection = "<cr",
+      init_selection = "<cr>",
       scope_incremental = "<cr>",
       node_incremental = "<tab>",
       node_decremental = "<s-tab>",
     },
   },
   textsubjects = {
-    enable = true,
+    enable = false,
     keymaps = {
       ["."] = "textsubjects-smart",
       [";"] = "textsubjects-container-outer",
