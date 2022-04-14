@@ -28,7 +28,7 @@ function U.update_search_count(timer)
 end
 
 -- FIXME: presently focus variable setting isn't being used right
-mega.augroup("statusline", {
+mega.augroup("megaline", {
   {
     events = { "FocusGained" },
     command = function()
@@ -98,8 +98,6 @@ U.diagnostic_levels = {
 ---@return boolean: Whether to truncate.
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
-  -- P({ cols = vim.o.columns, old_cols = vim.api.nvim_win_get_width(0), target_trunc = trunc, is_truncated = vim.o.columns < (trunc or -1) })
-  -- TODO: we need to get the buffer width, not just the whole window width
   return api.nvim_win_get_width(0) < (trunc or -1)
 end
 
@@ -653,7 +651,16 @@ function M.s_git(args)
   return fmt("%s %s%s%s", head_str, added_str, changed_str, removed_str)
 end
 
-function U.diagnostic_info(ctx)
+function M.s_gps(args)
+  local gps = require("nvim-gps")
+  if gps.is_available() then
+    return unpack(item_if(gps.get_location(), is_truncated(args.trunc_width), "StMetaDataPrefix"))
+  end
+
+  return ""
+end
+
+local function diagnostic_info(ctx)
   ctx = ctx or U.ctx
   ---Shim to handle getting diagnostics in nvim 0.5 and nightly
   ---@param buf number
@@ -788,14 +795,6 @@ function M.s_indention()
   }))
 end
 
-function M.s_lsp_client(args)
-  for _, client in ipairs(vim.lsp.buf_get_clients(0)) do
-    if client.config and client.config.filetypes and vim.tbl_contains(client.config.filetypes, vim.bo.filetype) then
-      return unpack(item_if(client.name, is_truncated(args.trunc_width), "StMetadata"))
-    end
-  end
-end
-
 -- Helper functionality =======================================================
 -- Settings -------------------------------------------------------------------
 function U.is_disabled()
@@ -805,22 +804,23 @@ end
 -- Default content ------------------------------------------------------------
 local function statusline_active(ctx) -- _ctx
   -- stylua: ignore start
-  local prefix        = unpack(item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
-  local mode          = M.s_mode({ trunc_width = 120 })
-  local search        = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
-  local git           = M.s_git({ trunc_width = 120 })
-  local readonly      = M.s_readonly({ trunc_width = 100 })
-  local modified      = M.s_modified({ trunc_width = 100 })
-  local filename      = M.s_filename({ trunc_width = 120 })
-  local saving        = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
-  -- local fileinfo      = M.s_fileinfo({ trunc_width = 120 })
-  local lineinfo      = M.s_lineinfo({ trunc_width = 75 })
-  local indention     = M.s_indention()
-  local diags         = U.diagnostic_info()
-  local diag_error    = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
-  local diag_warn     = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
-  local diag_info     = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
-  local diag_hint     = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
+  local prefix                     = unpack(item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local mode                       = M.s_mode({ trunc_width = 120 })
+  local search                     = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
+  local git                        = M.s_git({ trunc_width = 120 })
+  local readonly                   = M.s_readonly({ trunc_width = 100 })
+  local modified                   = M.s_modified({ trunc_width = 100 })
+  local filename                   = M.s_filename({ trunc_width = 120 })
+  local saving                     = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
+  local lineinfo                   = M.s_lineinfo({ trunc_width = 75 })
+  local indention                  = M.s_indention()
+  local diags                      = diagnostic_info()
+  local diag_error                 = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
+  local diag_warn                  = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
+  local diag_info                  = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
+  local diag_hint                  = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
+  local current_function           = M.s_gps({ trunc_width = 120 })
+  -- local fileinfo                = M.s_fileinfo({ trunc_width = 120 })
   -- stylua: ignore end
 
   local plain = U.is_plain(ctx)
@@ -828,8 +828,6 @@ local function statusline_active(ctx) -- _ctx
   local focused = vim.g.vim_in_focus or true
 
   if plain or not focused then
-    -- add({ readonly_item, 1 }, { dir_item, 3 }, { parent_item, 2 }, { file_item, 0 })
-    -- return display(statusline, available_space)
     return build({
       filename,
       modified,
@@ -847,9 +845,9 @@ local function statusline_active(ctx) -- _ctx
     saving,
     search,
     "%=", -- End left alignment
+    current_function,
     -- middle section for whatever we want..
     "%=",
-    -- lsp_client,
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,

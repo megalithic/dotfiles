@@ -96,8 +96,8 @@ local PKGS = {
   "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
+  "SmiteshP/nvim-gps",
   -- @trial ziontee113/syntax-tree-surfer
-  -- "SmiteshP/nvim-gps",
   -- @trial "primeagen/harpoon",
 
   ------------------------------------------------------------------------------

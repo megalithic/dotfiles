@@ -17,7 +17,7 @@ function M.rename()
   local current_name = ""
 
   local function cleanup_rename_callback(winnr)
-    api.nvim_win_close(winnr, true)
+    api.nvim_win_close(winnr or 0, true)
     api.nvim_feedkeys(mega.replace_termcodes("<Esc>"), "i", true)
 
     current_name = ""

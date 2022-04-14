@@ -781,6 +781,12 @@ do -- quickfix list things
   require("pqf").setup({})
 end
 
-if vim.g.vscode ~= nil then
-  conf("vscode")
+do
+  require("nvim-gps").setup({
+    languages = {
+      heex = false,
+      elixir = false,
+      eelixir = false,
+    },
+  })
 end

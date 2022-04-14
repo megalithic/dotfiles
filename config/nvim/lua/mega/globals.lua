@@ -381,34 +381,13 @@ function mega.opt(o, v, scopes)
   end
 end
 
--- a safe module loader
-function mega.load(module, opts)
-  opts = opts or { silent = false, safe = false }
-
-  if opts.key == nil then
-    opts.key = "loader"
-  end
-
-  local ok, result = pcall(require, module)
-
-  if not ok and (opts.silent ~= nil and not opts.silent) then
-    -- REF: https://github.com/neovim/neovim/blob/master/src/nvim/lua/vim.lua#L421
-    local level = L.ERROR
-    local reason = mega.get_log_string("loading failed", level)
-
-    mega.error(result, reason)
-  end
-
-  if opts.safe ~= nil and opts.safe == true then
-    return ok, result
-  else
-    return result
-  end
-end
-
 function mega.safe_require(module, opts)
-  opts = vim.tbl_extend("keep", { safe = true }, opts or {})
-  return mega.load(module, opts)
+  opts = opts or { silent = false }
+  local ok, result = pcall(require, module)
+  if not ok and not opts.silent then
+    vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
+  end
+  return ok, result
 end
 
 --- @class CommandArgs

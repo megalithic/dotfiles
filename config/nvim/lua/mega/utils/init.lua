@@ -15,7 +15,7 @@ local windows = {}
 local function fileicon()
   local name = fn.bufname()
   local icon, hl
-  local loaded, devicons = mega.load("nvim-web-devicons", { safe = true })
+  local loaded, devicons = mega.safe_require("nvim-web-devicons")
   if loaded then
     icon, hl = devicons.get_icon(name, fn.fnamemodify(name, ":e"), { default = true })
   end
