@@ -8,9 +8,8 @@
 local vcmd = vim.cmd
 local fn = vim.fn
 local api = vim.api
-local au = mega.au
 local augroup = mega.augroup
--- local fmt = string.format
+local fmt = string.format
 local contains = vim.tbl_contains
 
 augroup("Startup", {
@@ -145,7 +144,7 @@ if vim.env.TMUX ~= nil then
       {
         events = { "ColorScheme", "FocusGained" },
         command = function()
-          -- vim.notify(string.format("ENV.TMUX: %s / ENV.TMUX_POPUP: %s", vim.env.TMUX, vim.env.TMUX_POPUP))
+          -- vim.notify(fmt("ENV.TMUX: %s / ENV.TMUX_POPUP: %s", vim.env.TMUX, vim.env.TMUX_POPUP))
 
           -- NOTE: there is a race condition here as the colors
           -- for kitty to re-use need to be set AFTER the rest of the colorscheme
@@ -157,60 +156,6 @@ if vim.env.TMUX ~= nil then
       },
     })
   end
-end
-
-do
-  local column_exclude = { "gitcommit" }
-  local column_clear = {
-    "startify",
-    "vimwiki",
-    "vim-plug",
-    "help",
-    "fugitive",
-    "gitcommit",
-    "mail",
-    "org",
-    "orgagenda",
-    "NeogitStatus",
-    "markdown",
-  }
-
-  --- Set or unset the color column depending on the filetype of the buffer and its eligibility
-  ---@param leaving boolean indicates if the function was called on window leave
-  local function check_color_column(leaving)
-    if contains(column_exclude, vim.bo.filetype) then
-      return
-    end
-
-    local not_eligible = not vim.bo.modifiable or vim.wo.previewwindow or vim.bo.buftype ~= "" or not vim.bo.buflisted
-
-    local small_window = api.nvim_win_get_width(0) <= vim.bo.textwidth + 1
-    local is_last_win = #api.nvim_list_wins() == 1
-
-    if contains(column_clear, vim.bo.filetype) or not_eligible or (leaving and not is_last_win) or small_window then
-      vim.wo.colorcolumn = ""
-      return
-    end
-    if vim.wo.colorcolumn == "" then
-      vim.wo.colorcolumn = "+1"
-    end
-  end
-
-  augroup("CustomColorColumn", {
-    {
-      -- Update the cursor column to match current window size
-      events = { "WinEnter", "BufEnter", "VimResized", "FileType" },
-      command = function()
-        -- check_color_column()
-      end,
-    },
-    {
-      events = { "WinLeave" },
-      command = function()
-        -- check_color_column(true)
-      end,
-    },
-  })
 end
 
 do
@@ -270,7 +215,7 @@ augroup("Kitty", {
     targets = { "*/kitty/*.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
-      vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
+      vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
       vcmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },
@@ -283,7 +228,7 @@ augroup("Plugins/Paq", {
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vcmd("luafile %")
-      vim.notify(string.format(" sourced %s", vim.fn.expand("%")))
+      vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
     end,
     description = "Paq reload",
   },
@@ -297,9 +242,9 @@ augroup("Plugins/Paq", {
         if not repo or #vim.split(repo, "/") ~= 2 then
           return vcmd("norm! gf")
         end
-        local url = string.format("https://www.github.com/%s", repo)
+        local url = fmt("https://www.github.com/%s", repo)
         vim.fn.jobstart("open " .. url)
-        vim.notify(string.format("Opening %s at %s", repo, url))
+        vim.notify(fmt("Opening %s at %s", repo, url))
       end)
     end,
   },

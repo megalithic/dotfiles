@@ -145,11 +145,6 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  -- --- # misc mappings
-  -- bmap("n", "<leader>ln", "lua require('mega.utils').lsp.rename()", { label = "lsp: rename document symbol" })
-  -- bufmap("K", "lua vim.lsp.buf.hover()")
-  -- bufmap("<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", "i")
-
   -- if client.resolved_capabilities.code_lens then
   --   bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
   -- end

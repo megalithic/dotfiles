@@ -113,7 +113,7 @@ do -- fidget.nvim
 end
 
 do -- lsp_signature.nvim
-  if false then
+  if true then
     require("lsp_signature").setup({
       bind = true,
       fix_pos = false,
@@ -226,6 +226,10 @@ do -- colorizer.nvim
   require("colorizer").setup({ "*" }, {
     mode = "background",
   })
+end
+
+do -- virt-column.nvim
+  require("virt-column").setup({ char = "│", virtcolumn = tostring(vim.g.default_colorcolumn) }) -- │║
 end
 
 do -- golden_size.nvim
