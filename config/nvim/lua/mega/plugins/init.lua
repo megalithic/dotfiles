@@ -87,7 +87,7 @@ local PKGS = {
     end,
   },
   "nvim-treesitter/playground",
-  "nvim-treesitter/nvim-treesitter-refactor",
+  -- "nvim-treesitter/nvim-treesitter-refactor",
   "nvim-treesitter/nvim-treesitter-textobjects",
   "nvim-treesitter/nvim-tree-docs",
   "JoosepAlviste/nvim-ts-context-commentstring",

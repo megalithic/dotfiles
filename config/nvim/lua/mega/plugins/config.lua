@@ -161,6 +161,7 @@ do -- neoscroll
     hide_cursor = false,
     easing_function = "circular",
   })
+
   mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
   mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
   mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
@@ -168,8 +169,9 @@ do -- neoscroll
   mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
   mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
   mappings["zt"] = { "zt", { "150" } }
-  mappings["zz"] = { "zz", { "150" } }
+  mappings["zz"] = { "zz", { "50" } }
   mappings["zb"] = { "zb", { "150" } }
+
   require("neoscroll.config").set_mappings(mappings)
 end
 

@@ -190,9 +190,8 @@ do
             local ok, msg = pcall(api.nvim_win_set_cursor, 0, { row, 0 })
             if not ok then
               vim.notify(msg, "error", { title = "Last cursor position" })
-              -- else
-              --  TODO: don't use smooth scrollin gfor this if possible
-              --  vim.cmd("normal zz")
+            else
+              vim.cmd("normal zz")
             end
           end
         end
