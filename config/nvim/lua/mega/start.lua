@@ -96,16 +96,12 @@ local function header()
 end
 
 local commands = {
+  { key = "n", disp = " New file", cmd = "ene <BAR> startinsert" },
+  { key = "f", disp = " Find files", cmd = "lua require('telescope.builtin').find_files()" },
   { key = "s", disp = " Sync plugins", cmd = "lua mega.sync_plugins()" },
-  { key = "u", disp = "Update plugins", cmd = "PaqUpdate" },
-  { key = "c", disp = "Clean plugins", cmd = "PaqClean" },
-  { key = "t", disp = "Time startup", cmd = "StartupTime" },
+  { key = "c", disp = " Clean plugins", cmd = "PaqClean" },
+  { key = "t", disp = " Time startup", cmd = "StartupTime" },
   { key = "q", disp = " Quit", cmd = "q!" },
-
-  -- button("m", "  Recently opened files", "<cmd>lua require('telescope').oldfiles()<cr>"),
-  -- button("f", "  Find file", "<cmd>lua require('telescope').find_files()<cr>"),
-  -- button("a", "  Find word", "<cmd>lua require('telescope').live_grep()<cr>"),
-  -- button("e", "  New file", "<cmd>ene <BAR> startinsert <CR>"),
 }
 
 local cur_dir = relativize(vim.fn.expand(vim.fn.getcwd()))

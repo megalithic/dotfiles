@@ -351,6 +351,13 @@ augroup("LazyLoads", {
     end,
   },
   {
+    events = { "FileType" },
+    targets = { "startuptime" },
+    command = function()
+      vim.cmd([[wincmd H | :resize 40]])
+    end,
+  },
+  {
     events = { "BufReadPre" },
     command = function()
       -- dash.nvim

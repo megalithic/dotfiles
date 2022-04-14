@@ -311,7 +311,7 @@ do -- nvim-autopairs
 end
 
 do -- lightspeed.nvim or hop.nvim; testing them both out
-  if false then
+  if true then
     vim.cmd("packadd lightspeed.nvim")
     require("lightspeed").setup({
       -- jump_to_first_match = true,
