@@ -623,10 +623,15 @@ function M.s_git(args)
 
   local status = vim.b.gitsigns_status_dict or {}
   local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
+  local branch = status.head
+
+  if is_truncated(args.trunc_width) then
+    branch = mega.truncate(branch, 12, false)
+  end
 
   local head_str = unpack(
     item(
-      status.head,
+      branch,
       "StGitBranch",
       { before = " ", after = " ", prefix = mega.icons.git.symbol, prefix_color = "StGitSymbol" }
     )
