@@ -55,4 +55,3 @@ vim.g.colorscheme = "megaforest"
 
 require("mega.globals")
 require("mega.options")
-require("mega.megaline")
