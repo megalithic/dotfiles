@@ -135,6 +135,9 @@ local function setup_cmp()
     },
   }
   M.sources.search = {
+    view = {
+      entries = { name = "custom", direction = "bottom_up" },
+    },
     sources = cmp.config.sources({
       { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
     }, {

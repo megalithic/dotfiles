@@ -9,10 +9,10 @@ local expand = fn.expand
 local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
+local search_count_timer
 local H = require("mega.utils.highlights")
 local U = {}
 
-local search_count_timer
 --- Timer to update the search count as the file is travelled
 ---@return function
 function U.update_search_count(timer)

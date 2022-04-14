@@ -390,6 +390,38 @@ function mega.safe_require(module, opts)
   return ok, result
 end
 
+---Wraps common "setup" functionality in a nice package
+---@param plugin string
+---@param config table|function
+---@param opts table|nil
+function mega.conf(plugin, config, opts)
+  opts = opts or {}
+  local enabled = (opts.enabled == nil) and true or opts.enabled
+  local silent = (opts.silent == nil) and true or opts.silent
+  -- local safe = (opts.safe == nil) and true or opts.safe
+  if enabled then
+    local ok, loader = mega.safe_require(plugin, { silent = true })
+    if ok then
+      if vim.fn.has_key(loader, "setup") and type(config) == "table" then
+        if not silent then
+          P(fmt("%s configuring with `setup(config)`", plugin))
+        end
+
+        loader.setup(config)
+      elseif type(config) == "function" then
+        -- passes the loaded plugin back to the caller so they can do more config
+        config(loader)
+      end
+    else
+      if type(config) == "function" then
+        config()
+      else
+        -- P(fmt("nothing to do with %s", plugin))
+      end
+    end
+  end
+end
+
 --- @class CommandArgs
 --- @field args string
 --- @field fargs table

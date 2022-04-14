@@ -1,31 +1,7 @@
 local api = vim.api
 local fn = vim.fn
 local fmt = string.format
-
----Wraps common "setup" functionality in a nice package
----@param plugin string
----@param config table|function
----@param is_enabled boolean|nil
-local function conf(plugin, config, is_enabled)
-  is_enabled = (is_enabled == nil) and true or is_enabled
-  if is_enabled then
-    local ok, loader = mega.safe_require(plugin, { silent = true })
-    if ok then
-      if vim.fn.has_key(loader, "setup") and type(config) == "table" then
-        loader.setup(config)
-      elseif type(config) == "function" then
-        -- passes the loaded plugin back to the caller so they can do more config
-        config(loader)
-      end
-    else
-      if type(config) == "function" then
-        config()
-      else
-        -- P(fmt("nothing to do with %s", plugin))
-      end
-    end
-  end
-end
+local conf = mega.conf
 
 conf("nvim-web-devicons", {})
 
@@ -87,7 +63,7 @@ conf("dressing", {
       },
     }),
   },
-}, false)
+}, { enabled = false })
 
 -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
 conf("gitlinker", {})
@@ -382,7 +358,7 @@ conf("hop", function(hop)
       inclusive_jump = true,
     })
   end)
-end, false)
+end, { enabled = false })
 
 conf("git-messenger", function()
   vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }
@@ -550,7 +526,7 @@ conf("nvim-gps", {
     elixir = false,
     eelixir = false,
   },
-})
+}, { enabled = false })
 
 conf("pqf", {})
 
@@ -558,7 +534,7 @@ conf("regexplainer", {})
 
 conf("dd", {
   timeout = 500,
-}, false)
+}, { enabled = false })
 
 conf("fzf_gitignore", function()
   vim.g.fzf_gitignore_no_maps = true
