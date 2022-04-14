@@ -191,7 +191,7 @@ do
             if not ok then
               vim.notify(msg, "error", { title = "Last cursor position" })
             else
-              vim.cmd("normal zz")
+              vim.cmd("normal! zz")
             end
           end
         end
