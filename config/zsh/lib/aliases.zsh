@@ -189,7 +189,7 @@ alias ezl="nvim $PRIVATES/home/localrc"
 
 alias ev="nvim $DOTS/config/nvim/init.lua"
 alias evv="nvim $DOTS/config/nvim/vimrc"
-alias evp="nvim $DOTS/config/nvim/lua/mega/plugins/init.lua"
+alias evp="nvim $DOTS/config/nvim/lua/mega/plugins.lua"
 alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
 alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
 alias evm="nvim $DOTS/config/nvim/plugin/mappings.lua"

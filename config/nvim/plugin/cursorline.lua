@@ -45,7 +45,6 @@ local M = {
     "startify",
     "prompt",
   },
-  orig_cursorlineopts = {},
 }
 
 local DISABLED = 0
@@ -158,7 +157,6 @@ local function disable_cursorline()
 end
 
 local function enable_cursorline()
-  -- M.orig_cursorlineopts = vim.opt.cursorlineopt:get()
   vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
   blink_cursorline()
   set_cursorline()
@@ -181,7 +179,6 @@ mega.augroup("ToggleCursorLine", {
   },
   {
     events = { "CursorMoved", "CursorMovedI" },
-    targets = { "*" },
     command = function()
       -- cursor_moved()
     end,

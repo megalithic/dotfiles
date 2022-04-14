@@ -11,7 +11,10 @@
    indent [all]
    plugin [all | ran at startup or packadd]
    syntax [all]
-   * after?
+   after/plugin ?
+   after/ftplugin ?
+   after/indent ?
+   after/syntax ?
 
 --[ debugging ] ----------------------------------------------------------------
 
@@ -50,16 +53,6 @@ vim.g.colorscheme = "megaforest"
 
 -- [ loaders ] -----------------------------------------------------------------
 
-local reload_ok, reload = pcall(require, "plenary.reload")
-RELOAD = reload_ok and reload.reload_module or function(...)
-  return ...
-end
-
-function R(name)
-  RELOAD(name)
-  return require(name)
-end
-
-R("mega.globals")
-R("mega.options")
-R("mega.megaline")
+require("mega.globals")
+require("mega.options")
+require("mega.megaline")

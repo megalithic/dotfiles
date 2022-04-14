@@ -1,5 +1,5 @@
 -- # managed paqs stored here:
---  ~/.local/share/nvim/site/pack/paqs
+--  ~/.local/share/nvim/site/pack/paqs/(opt/start)
 -- # local/devel paqs stored here:
 --  ~/.local/share/nvim/site/pack/local
 
