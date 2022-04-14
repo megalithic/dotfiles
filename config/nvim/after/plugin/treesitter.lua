@@ -96,15 +96,70 @@ require("nvim-treesitter.configs").setup({
     },
   },
   textobjects = {
+    move = {
+      enable = true,
+      set_jumps = true,
+
+      goto_next_start = {
+        ["]p"] = "@parameter.inner",
+        ["]m"] = "@function.outer",
+        ["]]"] = "@class.outer",
+      },
+      goto_next_end = {
+        ["]M"] = "@function.outer",
+        ["]["] = "@class.outer",
+      },
+      goto_previous_start = {
+        ["[p"] = "@parameter.inner",
+        ["[m"] = "@function.outer",
+        ["[["] = "@class.outer",
+      },
+      goto_previous_end = {
+        ["[M"] = "@function.outer",
+        ["[]"] = "@class.outer",
+      },
+    },
+
     select = {
       enable = true,
-      lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
       keymaps = {
-        -- You can use the capture groups defined in textobjects.scm
         ["af"] = "@function.outer",
         ["if"] = "@function.inner",
-        ["ac"] = "@class.outer",
-        ["ic"] = "@class.inner",
+
+        ["ac"] = "@conditional.outer",
+        ["ic"] = "@conditional.inner",
+
+        ["aa"] = "@parameter.outer",
+        ["ia"] = "@parameter.inner",
+
+        ["av"] = "@variable.outer",
+        ["iv"] = "@variable.inner",
+      },
+    },
+
+    -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/after/plugin/treesitter.lua#L31-L54
+    -- swap = {
+    --   enable = true,
+    --   swap_next = swap_next,
+    --   swap_previous = swap_prev,
+    -- },
+  },
+  refactor = {
+    highlight_definitions = { enable = true },
+    highlight_current_scope = { enable = false },
+
+    smart_rename = {
+      enable = false,
+      keymaps = {
+        -- mapping to rename reference under cursor
+        smart_rename = "grr",
+      },
+    },
+    navigation = {
+      enable = false,
+      keymaps = {
+        goto_definition = "gnd", -- mapping to go to definition of symbol under cursor
+        list_definitions = "gnD", -- mapping to list all definitions in current file
       },
     },
   },

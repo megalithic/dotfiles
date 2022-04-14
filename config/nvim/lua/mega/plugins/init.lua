@@ -88,15 +88,16 @@ local PKGS = {
   },
   "nvim-treesitter/playground",
   "nvim-treesitter/nvim-treesitter-refactor",
-  -- @trial ziontee113/syntax-tree-surfer
-  "mfussenegger/nvim-treehopper",
+  "nvim-treesitter/nvim-treesitter-textobjects",
+  "nvim-treesitter/nvim-tree-docs",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
   "p00f/nvim-ts-rainbow",
-  -- "SmiteshP/nvim-gps",
+  "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
-  "nvim-treesitter/nvim-tree-docs",
+  -- @trial ziontee113/syntax-tree-surfer
+  -- "SmiteshP/nvim-gps",
   -- @trial "primeagen/harpoon",
 
   ------------------------------------------------------------------------------
