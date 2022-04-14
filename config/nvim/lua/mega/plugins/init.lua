@@ -153,8 +153,8 @@ local PKGS = {
   -- (DEV, development, et al) --
   "bennypowers/nvim-regexplainer",
   "tpope/vim-projectionist",
-  -- @trial "tjdevries/edit_alternate.vim",
-  "vim-test/vim-test", -- research to supplement vim-test: rcarriga/vim-ultest, for JS testing: David-Kunz/jester
+  -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
+  "vim-test/vim-test",
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "tpope/vim-ragtag",
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },

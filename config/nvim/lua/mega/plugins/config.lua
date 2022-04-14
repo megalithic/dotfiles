@@ -10,14 +10,7 @@ end
 
 -- NOTE: source order matters! =================================================
 
--- [ EXPLICIT PLUGIN CONFIGS ] -------------------------------------------------
-
 require("nvim-web-devicons").setup()
-conf("telescope")
-conf("toggleterm")
-conf("cmp")
-conf("zk")
-conf("projectionist")
 
 -- [ THE REST ] ----------------------------------------------------------------
 

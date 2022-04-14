@@ -144,25 +144,25 @@ require("nvim-treesitter.configs").setup({
     --   swap_previous = swap_prev,
     -- },
   },
-  refactor = {
-    highlight_definitions = { enable = true },
-    highlight_current_scope = { enable = false },
+  -- refactor = {
+  --   highlight_definitions = { enable = true },
+  --   highlight_current_scope = { enable = false },
 
-    smart_rename = {
-      enable = false,
-      keymaps = {
-        -- mapping to rename reference under cursor
-        smart_rename = "grr",
-      },
-    },
-    navigation = {
-      enable = false,
-      keymaps = {
-        goto_definition = "gnd", -- mapping to go to definition of symbol under cursor
-        list_definitions = "gnD", -- mapping to list all definitions in current file
-      },
-    },
-  },
+  --   smart_rename = {
+  --     enable = false,
+  --     keymaps = {
+  --       -- mapping to rename reference under cursor
+  --       smart_rename = "grr",
+  --     },
+  --   },
+  --   navigation = {
+  --     enable = false,
+  --     keymaps = {
+  --       goto_definition = "gnd", -- mapping to go to definition of symbol under cursor
+  --       list_definitions = "gnD", -- mapping to list all definitions in current file
+  --     },
+  --   },
+  -- },
   query_linter = {
     enable = true,
     use_virtual_text = true,

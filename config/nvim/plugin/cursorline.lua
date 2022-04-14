@@ -3,7 +3,7 @@
 
 local M = {
   cursorline_delay = 250,
-  blink_delay = 400,
+  blink_delay = 50,
   filetype_exclusions = {
     "alpha",
     "prompt",
