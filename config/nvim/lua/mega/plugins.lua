@@ -195,7 +195,6 @@ local PKGS = {
   "tpope/vim-scriptease",
   { "sunaku/tmux-navigate", opt = true },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
-  "tmux-plugins/vim-tmux-focus-events",
   "junegunn/vim-slash",
   "outstand/logger.nvim",
   "RRethy/nvim-align",
