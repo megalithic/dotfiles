@@ -118,13 +118,7 @@ local function setup_cmp()
     end
   end
 
-  --cmp source setups
-  require("cmp_nvim_lsp").setup()
-  -- require("cmp_git").setup({
-  --   filetypes = { "gitcommit", "NeogitCommitMessage" },
-  -- })
-
-  M.sources.buffer = {
+  local buffer_source = {
     name = "buffer",
     option = {
       keyword_length = 5,
@@ -134,17 +128,17 @@ local function setup_cmp()
       end,
     },
   }
-  M.sources.search = {
+  local search_sources = {
     view = {
       entries = { name = "custom", direction = "bottom_up" },
     },
     sources = cmp.config.sources({
-      { name = "nvim_lsp_document_symbol" }, -- initiate with `@`
+      { name = "nvim_lsp_document_symbol" },
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      buffer_source,
     }),
   }
+
   local cmp_window = {
     border = mega.get_border(),
     winhighlight = table.concat({
@@ -155,9 +149,6 @@ local function setup_cmp()
     }, ","),
   }
   cmp.setup({
-    view = {
-      entries = "custom",
-    },
     completion = {
       keyword_length = 1,
     },
@@ -189,8 +180,7 @@ local function setup_cmp()
       { name = "path" },
       { name = "emmet_ls" },
     }, {
-      M.sources.buffer,
-      -- { name = "fuzzy_buffer" },
+      buffer_source,
     }),
     formatting = {
       deprecated = true,
@@ -218,35 +208,27 @@ local function setup_cmp()
       end,
     },
   })
-  cmp.setup.cmdline("/", M.sources.search)
-  cmp.setup.cmdline("?", M.sources.search)
+
+  cmp.setup.cmdline("/", search_sources)
+  cmp.setup.cmdline("?", search_sources)
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
-      -- { name = "fuzzy_path" },
-      { name = "path" },
-    }, {
-      -- { name = "cmdline" },
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
     }),
+  })
+
+  cmp.setup.filetype("gitcommit", {
+    sources = {
+      { name = "cmp_git" },
+      buffer_source,
+      { name = "spell" },
+      { name = "emoji" },
+    },
   })
 
   -- If you want insert `(` after select function or method item
   local cmp_autopairs = require("nvim-autopairs.completion.cmp")
   cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-
-  cmp.setup.filetype("gitcommit", {
-    sources = {
-      { name = "cmp_git" },
-      M.sources.buffer,
-      { name = "spell" },
-      { name = "emoji" },
-    },
-    -- sources = cmp.config.sources({
-    --   { name = "cmp_git" },
-    -- }, {
-    --   { name = "buffer" },
-    -- }),
-  })
 end
 
 setup_luasnip()

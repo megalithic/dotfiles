@@ -13,6 +13,14 @@ local search_count_timer
 local H = require("mega.utils.highlights")
 local U = {}
 
+require("nvim-gps").setup({
+  languages = {
+    heex = false,
+    elixir = false,
+    eelixir = false,
+  },
+})
+
 --- Timer to update the search count as the file is travelled
 ---@return function
 function U.update_search_count(timer)

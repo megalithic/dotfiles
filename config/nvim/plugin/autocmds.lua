@@ -223,7 +223,7 @@ augroup("Kitty", {
 augroup("Plugins/Paq", {
   {
     events = { "BufWritePost" },
-    targets = { "*/mega/plugins/*.lua" },
+    targets = { "*/mega/plugins/*.lua", "*/plugin/*.lua" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vcmd("luafile %")

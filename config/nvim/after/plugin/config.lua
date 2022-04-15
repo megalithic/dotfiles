@@ -526,7 +526,7 @@ conf("nvim-gps", {
     elixir = false,
     eelixir = false,
   },
-}, { enabled = false })
+}, { enabled = true })
 
 conf("pqf", {})
 
