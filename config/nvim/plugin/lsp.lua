@@ -539,7 +539,20 @@ mega.lsp.servers = {
   -- gopls = true,
   bashls = true,
   -- REF: https://github.com/rcjsuen/dockerfile-language-server-nodejs#language-server-settings
-  dockerls = true,
+  dockerls = function()
+    return {
+      single_file_support = true,
+      settings = {
+        docker = {
+          languageserver = {
+            formatter = {
+              ignoreMultilineInstructions = true,
+            },
+          },
+        },
+      },
+    }
+  end,
   elmls = true,
   clangd = true,
   rust_analyzer = true,
