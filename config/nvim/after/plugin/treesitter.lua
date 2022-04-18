@@ -20,7 +20,6 @@ require("nvim-treesitter.configs").setup({
     "graphql",
     "html",
     "heex",
-    -- "iex",
     "javascript",
     "markdown",
     "jsdoc",
@@ -48,7 +47,7 @@ require("nvim-treesitter.configs").setup({
     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
     -- Using this option may slow down your editor, and you may see some duplicate highlights.
     -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = { "markdown" },
+    additional_vim_regex_highlighting = {},
     use_languagetree = true,
   },
   indent = { enable = true },
@@ -202,8 +201,3 @@ require("nvim-ts-autotag").setup({
 })
 -- nvim-treehopper
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
-
--- TEMP: 0.7
--- REF: https://github.com/axieax/dotconfig/commit/03cfa84d1e5a627e2d3debc3f4bc773006eef719#diff-d9420ee3e27648e187f57e155d9533d10027ba8963ef11f7ecc2cc4445170f2aR180-R183
-local ts_utils = require("nvim-treesitter.ts_utils")
-ts_utils.get_node_text = vim.treesitter.query.get_node_text

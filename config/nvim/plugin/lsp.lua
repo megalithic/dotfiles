@@ -69,9 +69,6 @@ local function setup_autocommands(client, bufnr)
     })
   end
   if client and client.resolved_capabilities.document_highlight then
-    -- hi LspReferenceRead cterm=bold ctermbg=red guibg=#464646
-    -- hi LspReferenceText cterm=bold ctermbg=red guibg=#464646
-    -- hi LspReferenceWrite cterm=bold ctermbg=red guibg=#464646
     augroup("LspDocumentHighlight", {
       {
         events = { "CursorHold", "CursorHoldI" },

@@ -586,4 +586,4 @@ conf("notify", function(plug)
   })
 end)
 
-conf("treesitter-context", {})
+conf("treesitter-context", {}, { enabled = false })
