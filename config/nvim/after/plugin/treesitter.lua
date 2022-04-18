@@ -72,7 +72,7 @@ require("nvim-treesitter.configs").setup({
       ["eruby.yaml"] = "# %s",
     },
   },
-  matchup = { enable = true }, -- FIXME: https://github.com/andymass/vim-matchup/pull/216
+  matchup = { enable = false }, -- FIXME: https://github.com/andymass/vim-matchup/pull/216
   rainbow = {
     enable = true,
     disable = { "json", "jsonc", "html" },

@@ -483,6 +483,7 @@ conf("vim-test", function()
   vim.g["test#filename_modifier"] = ":."
   vim.g["test#preserve_screen"] = 0
 
+  -- TODO: https://github.com/mhanberg/.dotfiles/commit/2224888932cb1b9fe08317114383156a2c886cca
   vim.g["test#custom_strategies"] = {
     toggleterm = function(cmd)
       P(fmt("cmd: %s", cmd))
