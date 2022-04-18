@@ -149,6 +149,7 @@ local function setup_cmp()
     }, ","),
   }
   cmp.setup({
+    view = { entries = "custom" },
     completion = {
       keyword_length = 1,
     },

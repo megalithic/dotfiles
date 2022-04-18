@@ -518,3 +518,14 @@ augroup("GitConflicts", {
     end,
   },
 })
+
+augroup("mini", {
+  {
+    events = { "FileType" },
+    command = function()
+      vim.cmd(
+        "if index(['help', 'startify', 'dashboard', 'packer', 'neogitstatus', 'NvimTree', 'neo-tree', 'Trouble', 'DirBuf', 'markdown'], &ft) != -1 || index(['nofile', 'terminal', 'lsp-installer', 'lspinfo', 'markdown'], &bt) != -1 | let b:miniindentscope_disable=v:true | endif"
+      )
+    end,
+  },
+})

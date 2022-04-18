@@ -174,7 +174,7 @@ local PKGS = {
   -- (the rest...) --
   "nacro90/numb.nvim",
   "ethanholz/nvim-lastplace",
-  "mehalter/vim-matchup", -- https://github.com/andymass/vim-matchup#tree-sitter-integration
+  "andymass/vim-matchup",
   "windwp/nvim-autopairs",
   "alvan/vim-closetag",
   "numToStr/Comment.nvim",
