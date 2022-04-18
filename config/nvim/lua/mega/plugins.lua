@@ -26,7 +26,7 @@ local PKGS = {
   -- { "rrethy/vim-hexokinase", run = "make hexokinase" },
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  "karb94/neoscroll.nvim",
+  "declancm/cinnamon.nvim", -- NOTE: alternative: 'karb94/neoscroll.nvim'
   -- "lukas-reineke/indent-blankline.nvim",
   { "lukas-reineke/virt-column.nvim" },
   "MunifTanjim/nui.nvim",
@@ -96,6 +96,7 @@ local PKGS = {
   "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
+  "lewis6991/nvim-treesitter-context",
   "SmiteshP/nvim-gps",
   -- @trial ziontee113/syntax-tree-surfer
   -- @trial "primeagen/harpoon",

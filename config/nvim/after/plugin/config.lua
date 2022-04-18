@@ -135,10 +135,22 @@ conf("mini.indentscope", {
 })
 
 conf("hclipboard", function(plug)
+  if plug == nil then
+    return
+  end
+
   plug.start()
 end)
 
+conf("cinnamon", {
+  extra_keymaps = true,
+})
+
 conf("neoscroll", function(plug)
+  if plug == nil then
+    return
+  end
+
   local mappings = {}
   plug.setup({
     stop_eof = true,
@@ -194,6 +206,10 @@ conf("colorizer", { "*" }, {
 conf("virt-column", { char = "│", virtcolumn = tostring(vim.g.default_colorcolumn) })
 
 conf("golden_size", function(plug)
+  if plug == nil then
+    return
+  end
+
   local function ignore_by_buftype(types)
     local buftype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
     for _, type in pairs(types) do
@@ -247,8 +263,12 @@ conf("golden_size", function(plug)
   })
 end)
 
-conf("nvim-autopairs", function(npairs)
-  npairs.setup({
+conf("nvim-autopairs", function(plug)
+  if plug == nil then
+    return
+  end
+
+  plug.setup({
     disable_filetype = { "TelescopePrompt" },
     -- enable_afterquote = true, -- To use bracket pairs inside quotes
     enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
@@ -261,9 +281,9 @@ conf("nvim-autopairs", function(npairs)
       java = false,
     },
   })
-  npairs.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+  plug.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
   local endwise = require("nvim-autopairs.ts-rule").endwise
-  npairs.add_rules({
+  plug.add_rules({
     endwise("then$", "end", "lua", nil),
     endwise("do$", "end", "lua", nil),
     endwise("function%(.*%)$", "end", "lua", nil),
@@ -274,6 +294,10 @@ conf("nvim-autopairs", function(npairs)
 end)
 
 conf("lightspeed", function(plug)
+  if plug == nil then
+    return
+  end
+
   vim.cmd("packadd lightspeed.nvim")
   plug.setup({
     -- jump_to_first_match = true,
@@ -296,63 +320,61 @@ conf("lightspeed", function(plug)
     -- cycle_group_bwd_key = nil,
     --
     ignore_case = false,
-    exit_after_idle_msecs = { unlabeled = 1000, labeled = nil },
+    exit_after_idle_msecs = { unlabeled = 1000, labeled = 1500 },
     --- s/x ---
-    jump_to_unique_chars = { safety_timeout = 400 },
-    match_only_the_start_of_same_char_seqs = true,
-    force_beacons_into_match_width = false,
-    -- Display characters in a custom way in the highlighted matches.
-    substitute_chars = { ["\r"] = "¬" },
-    -- Leaving the appropriate list empty effectively disables "smart" mode,
-    -- and forces auto-jump to be on or off.
-    --safe_labels = { . . . },
-    --labels = { . . . },
-    -- These keys are captured directly by the plugin at runtime.
-    special_keys = {
+    jump_to_unique_chars = { safety_timeout = 400 }, -- jump right after the first input, if the target character is unique in the search direction
+    match_only_the_start_of_same_char_seqs = true, -- separator line will not snatch up all the available labels for `==` or `--`
+    substitute_chars = { ["\r"] = "¬" }, -- highlighted matches by the given characters
+    special_keys = { -- switch to the next/previous group of matches, when there are more matches than labels available
       next_match_group = "<space>",
       prev_match_group = "<tab>",
     },
+    force_beacons_into_match_width = false,
     --- f/t ---
-    limit_ft_matches = 4,
-    repeat_ft_with_target_char = false,
+    limit_ft_matches = 4, -- For 1-character search, the next 'n' matches will be highlighted after [count]
+    repeat_ft_with_target_char = false, -- repeat f/t motions by pressing the target character repeatedly
   })
 end)
 
-conf("hop", function(hop)
+conf("hop", function(plug)
+  if plug == nil then
+    return
+  end
+
   vim.cmd("packadd hop.nvim")
-  hop.setup({
+  plug.setup({
     -- remove h,j,k,l from hops list of keys
     keys = "etovxqpdygfbzcisuran",
     jump_on_sole_occurrence = true,
     uppercase_labels = false,
   })
   nnoremap("s", function()
-    hop.hint_char1({ multi_windows = false })
+    plug.hint_char1({ multi_windows = false })
   end)
   -- NOTE: override F/f using hop motions
   vim.keymap.set({ "x", "n" }, "F", function()
-    hop.hint_char1({
+    plug.hint_char1({
       direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
       current_line_only = true,
       inclusive_jump = false,
     })
   end)
   vim.keymap.set({ "x", "n" }, "f", function()
-    hop.hint_char1({
+    plug.hint_char1({
       direction = require("hop.hint").HintDirection.AFTER_CURSOR,
       current_line_only = true,
       inclusive_jump = false,
     })
   end)
   onoremap("F", function()
-    hop.hint_char1({
+    plug.hint_char1({
       direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
       current_line_only = true,
       inclusive_jump = true,
     })
   end)
   onoremap("f", function()
-    hop.hint_char1({
+    plug.hint_char1({
       direction = require("hop.hint").HintDirection.AFTER_CURSOR,
       current_line_only = true,
       inclusive_jump = true,
@@ -423,6 +445,10 @@ do -- firenvim
 end
 
 conf("dap", function(plug)
+  if plug == nil then
+    return
+  end
+
   plug.adapters.mix_task = {
     type = "executable",
     command = fn.stdpath("data") .. "/elixir-ls/debugger.sh",
@@ -520,13 +546,14 @@ conf("bqf", {
   preview = { auto_preview = true },
 })
 
+-- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89
 conf("nvim-gps", {
   languages = {
     heex = false,
     elixir = false,
     eelixir = false,
   },
-}, { enabled = true })
+}, { enabled = false })
 
 conf("pqf", {})
 
@@ -541,6 +568,10 @@ conf("fzf_gitignore", function()
 end)
 
 conf("notify", function(plug)
+  if plug == nil then
+    return
+  end
+
   local renderer = require("notify.render")
   plug.setup({
     stages = "fade_in_slide_out",
@@ -553,3 +584,5 @@ conf("notify", function(plug)
     end,
   })
 end)
+
+conf("treesitter-context", {})

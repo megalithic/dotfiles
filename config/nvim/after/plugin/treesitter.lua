@@ -72,7 +72,7 @@ require("nvim-treesitter.configs").setup({
       ["eruby.yaml"] = "# %s",
     },
   },
-  matchup = { enable = true },
+  matchup = { enable = true }, -- FIXME: https://github.com/andymass/vim-matchup/pull/216
   rainbow = {
     enable = true,
     disable = { "json", "jsonc", "html" },
@@ -202,3 +202,8 @@ require("nvim-ts-autotag").setup({
 })
 -- nvim-treehopper
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
+
+-- TEMP: 0.7
+-- REF: https://github.com/axieax/dotconfig/commit/03cfa84d1e5a627e2d3debc3f4bc773006eef719#diff-d9420ee3e27648e187f57e155d9533d10027ba8963ef11f7ecc2cc4445170f2aR180-R183
+local ts_utils = require("nvim-treesitter.ts_utils")
+ts_utils.get_node_text = vim.treesitter.query.get_node_text

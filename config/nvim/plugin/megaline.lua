@@ -13,13 +13,14 @@ local search_count_timer
 local H = require("mega.utils.highlights")
 local U = {}
 
-require("nvim-gps").setup({
-  languages = {
-    heex = false,
-    elixir = false,
-    eelixir = false,
-  },
-})
+-- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89
+-- require("nvim-gps").setup({
+--   languages = {
+--     heex = false,
+--     elixir = false,
+--     eelixir = false,
+--   },
+-- })
 
 --- Timer to update the search count as the file is travelled
 ---@return function
@@ -827,7 +828,7 @@ local function statusline_active(ctx) -- _ctx
   local diag_warn                  = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
   local diag_info                  = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
   local diag_hint                  = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
-  local current_function           = M.s_gps({ trunc_width = 120 })
+  -- local current_function           = M.s_gps({ trunc_width = 120 }) -- FIXME/related: https://github.com/andymass/vim-matchup/pull/216 and https://github.com/nvim-treesitter/nvim-treesitter/commit/c3848e713a8272e524a7eabe9eb0897cf2d6932e
   -- local fileinfo                = M.s_fileinfo({ trunc_width = 120 })
   -- stylua: ignore end
 
@@ -853,7 +854,7 @@ local function statusline_active(ctx) -- _ctx
     saving,
     search,
     "%=", -- End left alignment
-    current_function,
+    -- current_function,
     -- middle section for whatever we want..
     "%=",
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },

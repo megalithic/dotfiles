@@ -107,7 +107,8 @@ alias tpmu="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/update_plugins"
 alias tpmc="$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/clean_plugins"
 alias mega="ftm mega"
 
-alias ssh="kitty +kitten ssh"
+alias s="kitty +kitten ssh"
+alias kssh="kitty +kitten ssh"
 
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents

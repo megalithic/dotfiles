@@ -223,7 +223,7 @@ augroup("Kitty", {
 augroup("Plugins/Paq", {
   {
     events = { "BufWritePost" },
-    targets = { "*/mega/plugins/*.lua", "*/plugin/*.lua" },
+    targets = { "nvim/lua/mega/plugins/*.lua", "nvim/lua/plugin/*" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vcmd("luafile %")
@@ -421,7 +421,11 @@ do
   local function start_hl_search()
     local col = api.nvim_win_get_cursor(0)[2]
     local curr_line = api.nvim_get_current_line()
-    local _, p_start, p_end = unpack(fn.matchstrpos(curr_line, fn.getreg("/"), 0))
+    local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
+    if not ok then
+      return vim.notify(match, "error", { title = "HL SEARCH" })
+    end
+    local _, p_start, p_end = unpack(match)
     -- if the cursor is in a search result, leave highlighting on
     if col < p_start or col > p_end then
       stop_hl_search()
@@ -445,7 +449,9 @@ do
       events = { "OptionSet" },
       targets = { "hlsearch" },
       command = function()
-        vim.cmd("redrawstatus")
+        vim.schedule(function()
+          vim.cmd("redrawstatus")
+        end)
       end,
     },
   })

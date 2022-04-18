@@ -73,6 +73,9 @@
   ; m = merge --no-ff
   ; ff = merge --no-ff
 
+  # REF: https://evantravers.com/articles/2022/04/14/git-jump-to-vim-quickfix/#git-jump
+  jump = "!$(brew --prefix git)/share/git-core/contrib/git-jump/git-jump"
+
   # open rebase/merge conflicted files
 	fix = !sh -c "'vim `git diff --name-only --diff-filter=U`'"
 	# add unmerged files (when conflicts are resolved)
