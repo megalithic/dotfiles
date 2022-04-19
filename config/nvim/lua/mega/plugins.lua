@@ -9,9 +9,8 @@ local PKGS = {
   { "savq/paq-nvim" },
   ------------------------------------------------------------------------------
   -- (profiling/speed improvements) --
-  { "dstein64/vim-startuptime" },
+  "dstein64/vim-startuptime",
   "lewis6991/impatient.nvim",
-  -- "nathom/filetype.nvim",
 
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
@@ -23,14 +22,12 @@ local PKGS = {
   "rebelot/kanagawa.nvim",
 
   "norcalli/nvim-colorizer.lua",
-  -- { "rrethy/vim-hexokinase", run = "make hexokinase" },
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  "declancm/cinnamon.nvim", -- NOTE: alternative: 'karb94/neoscroll.nvim'
-  -- "lukas-reineke/indent-blankline.nvim",
-  { "lukas-reineke/virt-column.nvim" },
+  -- "declancm/cinnamon.nvim",
+  "karb94/neoscroll.nvim",
+  "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
-  -- "stevearc/dressing.nvim",
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
