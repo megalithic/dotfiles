@@ -875,7 +875,7 @@ mega.lsp.servers = {
           fetchDeps = false,
           dialyzerEnabled = true,
           dialyzerFormat = "dialyxir_short",
-          enableTestLenses = true,
+          enableTestLenses = false,
           suggestSpecs = true,
         },
       },
