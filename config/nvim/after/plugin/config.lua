@@ -508,10 +508,12 @@ conf("vim-test", function()
       local terminal_notifier_notifier = function(c, exit)
         if exit == 0 then
           print("Success!")
-          system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success!"]], c))
+          system(
+            string.format([[/usr/local/bin/terminal-notifier -title "Neovim" -subtitle "%s" -message "Success!"]], c)
+          )
         else
           print("Failure!")
-          system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Fail!"]], c))
+          system(string.format([[/usr/local/bin/terminal-notifier -title "Neovim" -subtitle "%s" -message "Fail!"]], c))
         end
       end
 
@@ -531,6 +533,10 @@ conf("vim-test", function()
         vim.opt_local.filetype = "terminal"
         vim.opt_local.number = false
         vim.opt_local.cursorline = false
+        nmap("q", function()
+          vim.api.nvim_buf_delete(term_buf_id, { force = true })
+          term_buf_id = nil_buf_id
+        end, { buffer = term_buf_id })
 
         vim.fn.termopen(c, {
           on_exit = function(_jobid, exit_code, _event)
