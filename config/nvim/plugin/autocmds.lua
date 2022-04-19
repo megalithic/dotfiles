@@ -39,6 +39,7 @@ do
     "git-status",
     "git-log",
     "gitcommit",
+    "dirbuf",
     "dbui",
     "fugitive",
     "fugitiveblame",
