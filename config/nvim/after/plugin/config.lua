@@ -535,6 +535,18 @@ conf("vim-test", function()
         vim.opt_local.cursorline = false
 
         vim.fn.termopen(c, {
+          --   on_enter = function(_jobid, exit_code, _event)
+          --     if n then
+          --       n(c, exit_code)
+          --     end
+
+          --     if exit_code == 0 then
+          --       vim.api.nvim_buf_delete(term_buf_id, { force = true })
+          --       term_buf_id = nil_buf_id
+          --     end
+          --   end,
+          -- }),
+
           on_exit = function(_jobid, exit_code, _event)
             if n then
               n(c, exit_code)
@@ -558,7 +570,7 @@ conf("vim-test", function()
   }
 
   vim.g["test#strategy"] = {
-    nearest = "trial",
+    nearest = "toggleterm_f",
     file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",

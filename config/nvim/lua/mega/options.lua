@@ -195,7 +195,6 @@ vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
 -- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
 --@see: https://github.com/neovim/neovim/issues?q=set_signs
 vim.opt.signcolumn = "auto:2-5"
-
 -- vim.opt.signcolumn = "auto:2-4"
 vim.opt.ruler = false
 vim.opt.cmdheight = 2 -- Set command line height to two lines
