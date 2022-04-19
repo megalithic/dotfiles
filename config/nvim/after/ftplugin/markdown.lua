@@ -78,38 +78,12 @@ vim.g.vim_markdown_no_extensions_in_markdown = 1
 vim.g.vim_markdown_math = 1
 vim.g.vim_markdown_strikethrough = 1
 
--- FIXME: this still breaks ALLLLL my markdown highlights :sadpanda:
--- vim.cmd([[packadd virt-column.nvim]])
--- vim.cmd([[highlight clear VirtColumn]])
--- vim.cmd([[highlight clear ColorColumn]])
--- require("virt-column").setup_buffer({ virtcolumn = "", char = "" })
--- vim.opt_local.colorcolumn = ""
---
-
--- local lush = require("lush")
--- local megaforest = require("mega.lush_theme.megaforest")
--- print(megaforest)
-
--- we can apply modifications ontop of the existing colorscheme
--- local spec = lush.extends({ megaforest }).with(function()
---   return {
---     -- Use the existing Comment group in harbour, but adjust the gui attribute
---     -- Comment { fg = megaforest.Comment.fg, bg = megaforest.Comment.bg, gui = "italic" },
---     -- While we're here, we might decide that the default Function group is too bright
---     ColorColumn({ megaforest.ColorColumn }),
---   }
--- end)
-
 vim.cmd([[packadd markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 
 vim.opt.signcolumn = "no"
 
--- -- You may prefer to put this in its own module, shown on _G for brevity.
--- _G.customise_colorscheme = function()
---   local H = require("mega.utils.highlights")
---   H.set_hl("ColorColumn", { guibg = "#3c474d", guifg = "NONE" })
---   -- lush(spec)
--- end
--- vim.cmd([[autocmd VimEnter,ColorScheme,BufEnter * lua customise_colorscheme()]])
+-- match and highlight hyperlinks
+vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
+vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").dark_blue_alt))

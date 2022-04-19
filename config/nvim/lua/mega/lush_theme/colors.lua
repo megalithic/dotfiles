@@ -45,14 +45,16 @@ C.teal = hsluv("#15AABF")
 
 C.pale_red = hsluv("#E06C75")
 
-C.bright_blue = C.blue.lighten(5) -- #51afef
+C.bright_blue = C.blue.lighten(5)
+C.bright_blue_alt = "#51afef"
 C.bright_green = hsluv("#6bc46d")
 C.bright_yellow = hsluv("#FAB005")
 
 C.light_yellow = hsluv("#e5c07b")
 C.light_red = hsluv("#c43e1f")
 
-C.dark_blue = C.blue.darken(25) -- #4e88ff
+C.dark_blue = C.blue.darken(25)
+C.dark_blue_alt = "#4e88ff"
 C.dark_orange = hsluv("#FF922B")
 C.dark_red = hsluv("#be5046")
 

@@ -342,6 +342,26 @@ local function setup_diagnostics()
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
+      scope = "cursor",
+      header = { "Diagnostics:", "DiagnosticHeader" },
+      pos = 1,
+      prefix = function(diag, i, total)
+        local icon, highlight
+        if diag.severity == 1 then
+          icon = "E"
+          highlight = "DiagnosticError"
+        elseif diag.severity == 2 then
+          icon = "W"
+          highlight = "DiagnosticWarn"
+        elseif diag.severity == 3 then
+          icon = "I"
+          highlight = "DiagnosticInfo"
+        elseif diag.severity == 4 then
+          icon = "H"
+          highlight = "DiagnosticHint"
+        end
+        return i .. "/" .. total .. " " .. icon .. "  ", highlight
+      end,
     },
   })
 end
@@ -971,9 +991,27 @@ function mega.lsp.get_server_config(server)
     local nvim_lsp_ok, cmp_nvim_lsp = mega.safe_require("cmp_nvim_lsp")
 
     local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.offsetEncoding = { "utf-16" }
     capabilities.textDocument.codeLens = { dynamicRegistration = false }
     capabilities.textDocument.colorProvider = { dynamicRegistration = false }
     capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+    capabilities.textDocument.codeAction = {
+      dynamicRegistration = false,
+      codeActionLiteralSupport = {
+        codeActionKind = {
+          valueSet = {
+            "",
+            "quickfix",
+            "refactor",
+            "refactor.extract",
+            "refactor.inline",
+            "refactor.rewrite",
+            "source",
+            "source.organizeImports",
+          },
+        },
+      },
+    }
 
     if nvim_lsp_ok then
       capabilities = cmp_nvim_lsp.update_capabilities(capabilities)
