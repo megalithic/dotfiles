@@ -33,25 +33,38 @@ local function setup_commands()
     vim.lsp.buf.formatting_sync(nil, 2000)
   end)
 
-  command("LspDiagnostics", function()
-    vim.diagnostic.setqflist({ open = false })
-    mega.toggle_list("quickfix")
-    if mega.is_vim_list_open() then
-      augroup("LspDiagnosticUpdate", {
-        {
-          event = { "DiagnosticChanged" },
-          command = function()
-            if mega.is_vim_list_open() then
+  -- A helper function to auto-update the quickfix list when new diagnostics come
+  -- in and close it once everything is resolved. This functionality only runs while
+  -- the list is open.
+  -- REF:
+  -- * https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/lsp.lua#L28-L58
+  -- * https://github.com/onsails/diaglist.nvim
+  local function make_diagnostic_qf_updater()
+    local cmd_id = nil
+    return function()
+      vim.diagnostic.setqflist({ open = false })
+      mega.toggle_list("quickfix")
+      if not mega.is_vim_list_open() and cmd_id then
+        api.nvim_del_autocmd(cmd_id)
+        cmd_id = nil
+      end
+      if cmd_id then
+        return
+      end
+      cmd_id = api.nvim_create_autocmd("DiagnosticChanged", {
+        callback = function()
+          if mega.is_vim_list_open() then
+            vim.diagnostic.setqflist({ open = false })
+            if #vim.fn.getqflist() == 0 then
               mega.toggle_list("quickfix")
             end
-          end,
-        },
+          end
+        end,
       })
-    elseif fn.exists("#LspDiagnosticUpdate") > 0 then
-      vim.cmd("autocmd! LspDiagnosticUpdate")
     end
-  end)
-  -- nnoremap("<leader>ll", "<Cmd>LspDiagnostics<CR>", "toggle quickfix diagnostics")
+  end
+
+  command("LspDiagnostics", make_diagnostic_qf_updater())
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
@@ -92,20 +105,7 @@ local function setup_autocommands(client, bufnr)
       {
         event = { "CursorHold" },
         command = function()
-          diagnostic.open_float(nil, {
-            focusable = false,
-            focus = false,
-            close_events = {
-              "CursorMoved",
-              "BufHidden",
-              "InsertCharPre",
-              "BufLeave",
-              "InsertEnter",
-              "FocusLost",
-              "BufWritePre",
-              "BufWritePost",
-            },
-          })
+          diagnostic.open_float()
         end,
       },
     })
@@ -345,6 +345,18 @@ local function setup_diagnostics()
       scope = "cursor",
       header = { "Diagnostics:", "DiagnosticHeader" },
       pos = 1,
+      max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
+      max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
+      close_events = {
+        "CursorMoved",
+        "BufHidden",
+        "InsertCharPre",
+        "BufLeave",
+        "InsertEnter",
+        "FocusLost",
+        "BufWritePre",
+        "BufWritePost",
+      },
       prefix = function(diag, i, total)
         local icon, highlight
         if diag.severity == 1 then
