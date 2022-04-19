@@ -497,10 +497,68 @@ conf("vim-test", function()
       P(fmt("h_cmd: %s", cmd))
       require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
     end,
+    trial = function(cmd)
+      local system = vim.fn.system
+
+      -- local vim_notify_notfier = function(exit)
+      --   if exit == 0 then
+      --     vim.notify("Success: " .. cmd, vim.log.levels.INFO)
+      --   else
+      --     vim.notify("Fail: " .. cmd, vim.log.levels.ERROR)
+      --   end
+      -- end
+
+      local terminal_notifier_notifier = function(c, exit)
+        if exit == 0 then
+          print("Success!")
+          system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success!"]], c))
+        else
+          print("Failure!")
+          system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Fail!"]], c))
+        end
+      end
+
+      local winnr = vim.fn.winnr()
+      local nil_buf_id = 999999
+      local term_buf_id = nil_buf_id
+
+      local function open(c, w, n)
+        -- delete the current buffer if it's still open
+        if vim.api.nvim_buf_is_valid(term_buf_id) then
+          vim.api.nvim_buf_delete(term_buf_id, { force = true })
+          term_buf_id = nil_buf_id
+        end
+
+        vim.cmd("botright new | lua vim.api.nvim_win_set_height(0, 15)")
+        term_buf_id = vim.api.nvim_get_current_buf()
+        vim.opt_local.number = false
+        vim.opt_local.cursorline = false
+
+        vim.fn.termopen(c, {
+          on_exit = function(_jobid, exit_code, _event)
+            if n then
+              n(c, exit_code)
+            end
+
+            if exit_code == 0 then
+              vim.api.nvim_buf_delete(term_buf_id, { force = true })
+              term_buf_id = nil_buf_id
+            end
+          end,
+        })
+
+        print(c)
+
+        vim.cmd([[normal! G]])
+        vim.cmd(w .. [[wincmd w]])
+      end
+
+      open(cmd, winnr, terminal_notifier_notifier)
+    end,
   }
 
   vim.g["test#strategy"] = {
-    nearest = "toggleterm_f",
+    nearest = "trial",
     file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",

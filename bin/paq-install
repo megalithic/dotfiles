@@ -91,7 +91,7 @@ done
 shift $((OPTIND - 1))
 
 if [[ -d $paq_path && $FORCE_INSTALL == "false" ]]; then
-  log_warn "paq-nvim already exists at $paq_path; skipping."
+  log_warn "paq-nvim already exists at $paq_path; syncing installed plugins instead."
   sync_plugins
 else
   read -p "$(tput bold)$(tput setaf 5)[?] install paq-nvim and plugins (y/N)?$(tput sgr 0) " yn
