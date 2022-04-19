@@ -485,6 +485,20 @@ conf("vim-test", function()
 
   -- TODO: https://github.com/mhanberg/.dotfiles/commit/2224888932cb1b9fe08317114383156a2c886cca
   vim.g["test#custom_strategies"] = {
+    termsplit = function(cmd)
+      vim.cmd(
+        fmt("vert new | set filetype=test | call termopen(['zsh', '-ci', 'eval $(desk load); %s'], {'curwin':1})", cmd)
+      )
+
+      -- vcmd([[
+      --   function! TermSplit(cmd) abort
+      --     vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
+      --   endfunction
+
+      --   let g:test#custom_strategies = {'termsplit': function('TermSplit')}
+      -- ]])
+      -- vim.g["test#strategy"] = "termsplit"
+    end,
     toggleterm = function(cmd)
       P(fmt("cmd: %s", cmd))
       require("toggleterm").exec(cmd)
@@ -570,7 +584,7 @@ conf("vim-test", function()
   }
 
   vim.g["test#strategy"] = {
-    nearest = "toggleterm_f",
+    nearest = "termsplit",
     file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",
