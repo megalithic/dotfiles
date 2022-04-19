@@ -463,8 +463,8 @@ local function setup_highlights(client, bufnr)
   -- autocmd User LspRequest redrawstatus
   if client then
     mega.augroup(fmt("LspHighlights%s", client.name), {
-      events = { "ColorScheme" },
-      targets = bufnr,
+      event = { "ColorScheme" },
+      pattern = bufnr,
       command = function()
         if client.name == "tailwindcss" then
           P(fmt("current client connected is %s; ready for highlights.", client.name))

@@ -150,7 +150,7 @@ function M.plugin(name, ...)
   M.all(hls)
   mega.augroup(fmt("%sHighlightOverrides", name), {
     {
-      events = "ColorScheme",
+      event = "ColorScheme",
       command = function()
         M.all(hls)
       end,
