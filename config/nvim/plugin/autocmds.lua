@@ -48,6 +48,8 @@ do
     "tsplayground",
     "qf",
     "man",
+    "terminal",
+    "dirbuf",
   }
 
   local function smart_close()
@@ -263,23 +265,23 @@ augroup("YankHighlightedRegion", {
   },
 })
 
-augroup("Terminal", {
-  {
-    event = { "TermClose" },
-    pattern = { "term://*" },
-    command = "noremap <buffer><silent><ESC> :bd!<CR>",
-  },
-  {
-    event = { "TermClose" },
-    pattern = { "term://*" },
-    command = function()
-      --- automatically close a terminal if the job was successful
-      if not vim.v.event.status == 0 then
-        vcmd("bdelete! " .. fn.expand("<abuf>"))
-      end
-    end,
-  },
-})
+-- augroup("Terminal", {
+--   {
+--     event = { "TermClose" },
+--     pattern = { "term://*" },
+--     command = "noremap <buffer><silent><ESC> :bd!<CR>",
+--   },
+--   {
+--     event = { "TermClose" },
+--     pattern = { "term://*" },
+--     command = function()
+--       --- automatically close a terminal if the job was successful
+--       if not vim.v.event.status == 0 then
+--         vcmd("bdelete! " .. fn.expand("<abuf>"))
+--       end
+--     end,
+--   },
+-- })
 
 augroup("UpdateVim", {
   --   {
@@ -304,7 +306,7 @@ augroup("UpdateVim", {
     command = function()
       vim.cmd([[wincmd =]])
       require("golden_size").on_win_enter()
-      -- require("virt-column").refresh()
+      require("virt-column").refresh()
     end,
   },
 })
