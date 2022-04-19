@@ -318,6 +318,7 @@ do
     "packer",
     "qf",
     "undotree",
+    "terminal",
   }
 
   local function on_sidebar_enter()
