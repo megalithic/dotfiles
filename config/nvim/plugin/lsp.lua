@@ -342,9 +342,6 @@ local function setup_diagnostics()
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
-      scope = "cursor",
-      header = { "Diagnostics:", "DiagnosticHeader" },
-      pos = 1,
       max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
       max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
       close_events = {
@@ -357,22 +354,26 @@ local function setup_diagnostics()
         "BufWritePre",
         "BufWritePost",
       },
+      header = { "Diagnostics:", "DiagnosticHeader" },
+      -- scope = "cursor",
+      -- pos = 1,
       prefix = function(diag, i, total)
         local icon, highlight
         if diag.severity == 1 then
-          icon = "E"
+          icon = mega.icons.lsp.error
           highlight = "DiagnosticError"
         elseif diag.severity == 2 then
-          icon = "W"
+          icon = mega.icons.lsp.warn
           highlight = "DiagnosticWarn"
         elseif diag.severity == 3 then
-          icon = "I"
+          icon = mega.icons.lsp.info
           highlight = "DiagnosticInfo"
         elseif diag.severity == 4 then
-          icon = "H"
+          icon = mega.icons.lsp.hint
           highlight = "DiagnosticHint"
         end
-        return i .. "/" .. total .. " " .. icon .. "  ", highlight
+        -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
+        return fmt("%s ", icon), highlight
       end,
     },
   })
