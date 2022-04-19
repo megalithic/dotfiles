@@ -237,6 +237,7 @@ conf("golden_size", function(plug)
       {
         "help",
         "toggleterm",
+        "terminal",
         "dirbuf",
         "Trouble",
         "qf",
@@ -527,6 +528,7 @@ conf("vim-test", function()
 
         vim.cmd("botright new | lua vim.api.nvim_win_set_height(0, 15)")
         term_buf_id = vim.api.nvim_get_current_buf()
+        vim.opt_local.filetype = "terminal"
         vim.opt_local.number = false
         vim.opt_local.cursorline = false
 
