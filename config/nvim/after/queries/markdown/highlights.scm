@@ -21,3 +21,7 @@
 ;     (set! "priority" 2050)
 ; )
 ; (inline_link (link_text) @MDTSLinkText) @MDTSLink
+
+
+((shortcut_link) @conceal (#set! conceal "") (eq? @conceal "[ ]")) ; 
+((shortcut_link) @conceal (#set! conceal "") (eq? @conceal "[x]")) ; ☒
