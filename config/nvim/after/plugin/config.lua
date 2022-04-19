@@ -483,21 +483,11 @@ conf("vim-test", function()
   vim.g["test#filename_modifier"] = ":."
   vim.g["test#preserve_screen"] = 0
 
-  -- TODO: https://github.com/mhanberg/.dotfiles/commit/2224888932cb1b9fe08317114383156a2c886cca
   vim.g["test#custom_strategies"] = {
     termsplit = function(cmd)
       vim.cmd(
         fmt("vert new | set filetype=test | call termopen(['zsh', '-ci', 'eval $(desk load); %s'], {'curwin':1})", cmd)
       )
-
-      -- vcmd([[
-      --   function! TermSplit(cmd) abort
-      --     vert new | set filetype=test | call termopen(['zsh', '-ci', a:cmd], {'curwin':1})
-      --   endfunction
-
-      --   let g:test#custom_strategies = {'termsplit': function('TermSplit')}
-      -- ]])
-      -- vim.g["test#strategy"] = "termsplit"
     end,
     toggleterm = function(cmd)
       P(fmt("cmd: %s", cmd))
@@ -513,14 +503,6 @@ conf("vim-test", function()
     end,
     trial = function(cmd)
       local system = vim.fn.system
-
-      -- local vim_notify_notfier = function(exit)
-      --   if exit == 0 then
-      --     vim.notify("Success: " .. cmd, vim.log.levels.INFO)
-      --   else
-      --     vim.notify("Fail: " .. cmd, vim.log.levels.ERROR)
-      --   end
-      -- end
 
       local terminal_notifier_notifier = function(c, exit)
         if exit == 0 then
@@ -579,12 +561,12 @@ conf("vim-test", function()
         vim.cmd(w .. [[wincmd w]])
       end
 
-      open(cmd, winnr, terminal_notifier_notifier)
+      open(fmt("eval $(desk load); %s", cmd), winnr, terminal_notifier_notifier)
     end,
   }
 
   vim.g["test#strategy"] = {
-    nearest = "termsplit",
+    nearest = "trial",
     file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",

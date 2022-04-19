@@ -17,6 +17,8 @@ local M = {
     "markdown",
     "Telescope",
     "DirBuf",
+    "terminal",
+    "toggleterm",
   },
 }
 
