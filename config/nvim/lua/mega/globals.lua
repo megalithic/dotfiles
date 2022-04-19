@@ -527,9 +527,9 @@ function mega.augroup(name, commands)
 
   for _, autocmd in ipairs(commands) do
     local is_callback = type(autocmd.command) == "function"
-    api.nvim_create_autocmd(autocmd.events, {
+    api.nvim_create_autocmd(autocmd.event, {
       group = id,
-      pattern = autocmd.targets,
+      pattern = autocmd.pattern,
       desc = autocmd.description,
       callback = is_callback and autocmd.command or nil,
       command = not is_callback and autocmd.command or nil,

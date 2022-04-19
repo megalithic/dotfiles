@@ -14,8 +14,8 @@ local contains = vim.tbl_contains
 
 augroup("Startup", {
   {
-    events = { "VimEnter" },
-    targets = "*",
+    event = { "VimEnter" },
+    pattern = "*",
     once = true,
     command = function()
       -- our basic dashboard/startify/alpha:
@@ -27,8 +27,8 @@ augroup("Startup", {
 augroup("CheckOutsideTime", {
   {
     -- automatically check for changed files outside vim
-    events = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
-    targets = "*",
+    event = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
+    pattern = "*",
     command = "silent! checktime",
   },
 })
@@ -58,14 +58,14 @@ do
   augroup("SmartClose", {
     {
       -- Auto open grep quickfix window
-      events = { "QuickFixCmdPost" },
-      targets = { "*grep*" },
+      event = { "QuickFixCmdPost" },
+      pattern = { "*grep*" },
       command = "cwindow",
     },
     {
       -- Close certain filetypes by pressing q.
-      events = { "FileType" },
-      targets = { "*" },
+      event = { "FileType" },
+      pattern = { "*" },
       command = function()
         local is_readonly = (vim.bo.readonly or not vim.bo.modifiable) and fn.hasmapto("q", "n") == 0
 
@@ -81,7 +81,7 @@ do
     },
     {
       -- Close quick fix window if the file containing it was closed
-      events = { "BufEnter" },
+      event = { "BufEnter" },
       command = function()
         if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then
           api.nvim_buf_delete(0, { force = true })
@@ -90,7 +90,7 @@ do
     },
     {
       -- automatically close corresponding loclist when quitting a window
-      events = { "QuitPre" },
+      event = { "QuitPre" },
       nested = true,
       command = function()
         if vim.bo.filetype ~= "qf" then
@@ -104,11 +104,11 @@ end
 if vim.env.TMUX ~= nil then
   augroup("External", {
     {
-      events = { "BufEnter" },
+      event = { "BufEnter" },
       command = function()
         vim.o.titlestring = require("mega.utils").ext.title_string()
         -- {
-        --   events = { "ColorScheme", "FocusGained" },
+        --   event = { "ColorScheme", "FocusGained" },
         --   command = function()
         --     -- NOTE: there is a race condition here as the colors
         --     -- for kitty to re-use need to be set AFTER the rest of the colorscheme
@@ -121,13 +121,13 @@ if vim.env.TMUX ~= nil then
       end,
     },
     -- {
-    --   events = { "VimLeavePre" },
+    --   event = { "VimLeavePre" },
     --   command = function()
     --     require("mega.utils").ext.tmux.set_statusline(true)
     --   end,
     -- },
     -- {
-    --   events = { "ColorScheme", "FocusGained" },
+    --   event = { "ColorScheme", "FocusGained" },
     --   command = function()
     --     -- NOTE: there is a race condition here as the colors
     --     -- for kitty to re-use need to be set AFTER the rest of the colorscheme
@@ -142,7 +142,7 @@ if vim.env.TMUX ~= nil then
   if vim.env.TMUX_POPUP ~= nil and vim.env.TMUX_POPUP == 1 then
     augroup("External_Colorscheme", {
       {
-        events = { "ColorScheme", "FocusGained" },
+        event = { "ColorScheme", "FocusGained" },
         command = function()
           -- vim.notify(fmt("ENV.TMUX: %s / ENV.TMUX_POPUP: %s", vim.env.TMUX, vim.env.TMUX_POPUP))
 
@@ -169,7 +169,7 @@ do
 
   augroup("Utilities", {
     {
-      events = { "BufNewFile", "BufWritePre" },
+      event = { "BufNewFile", "BufWritePre" },
       command = function()
         mega.auto_mkdir()
       end,
@@ -178,7 +178,7 @@ do
       -- Last place of cursor position.
       -- When editing a file, always jump to the last known cursor position.
       -- Don't do it for commit messages, when the position is invalid.
-      events = { "BufWinEnter" },
+      event = { "BufWinEnter" },
       command = function()
         -- REF:
         -- https://github.com/novasenco/nvim.config/blob/main/autoload/autocmd.vim#L34
@@ -198,7 +198,7 @@ do
       end,
     },
     {
-      events = { "BufLeave" },
+      event = { "BufLeave" },
       command = function()
         if can_save() then
           vim.cmd("silent! update")
@@ -210,8 +210,8 @@ end
 
 augroup("Kitty", {
   {
-    events = { "BufWritePost" },
-    targets = { "*/kitty/*.conf" },
+    event = { "BufWritePost" },
+    pattern = { "*/kitty/*.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
       vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
@@ -222,8 +222,8 @@ augroup("Kitty", {
 
 augroup("Plugins/Paq", {
   {
-    events = { "BufWritePost" },
-    targets = { "nvim/lua/mega/plugins/*.lua", "nvim/lua/plugin/*" },
+    event = { "BufWritePost" },
+    pattern = { "nvim/lua/mega/plugins/*.lua", "nvim/lua/plugin/*" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vcmd("luafile %")
@@ -232,7 +232,7 @@ augroup("Plugins/Paq", {
     description = "Paq reload",
   },
   {
-    events = { "BufEnter" },
+    event = { "BufEnter" },
     buffer = 0,
     command = function()
       --- Open a repository from an "authorname/repository" string
@@ -251,7 +251,7 @@ augroup("Plugins/Paq", {
 
 augroup("YankHighlightedRegion", {
   {
-    events = { "TextYankPost" },
+    event = { "TextYankPost" },
     command = function()
       vim.highlight.on_yank({
         timeout = 500,
@@ -264,13 +264,13 @@ augroup("YankHighlightedRegion", {
 
 augroup("Terminal", {
   {
-    events = { "TermClose" },
-    targets = { "term://*" },
+    event = { "TermClose" },
+    pattern = { "term://*" },
     command = "noremap <buffer><silent><ESC> :bd!<CR>",
   },
   {
-    events = { "TermClose" },
-    targets = { "term://*" },
+    event = { "TermClose" },
+    pattern = { "term://*" },
     command = function()
       --- automatically close a terminal if the job was successful
       if not vim.v.event.status == 0 then
@@ -285,8 +285,8 @@ augroup("UpdateVim", {
   --     -- TODO: not clear what effect this has in the post vimscript world
   --     -- it correctly sources $MYVIMRC but all the other files that it
   --     -- requires will need to be resourced or reloaded themselves
-  --     events = "BufWritePost",
-  --     targets = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
+  --     event = "BufWritePost",
+  --     pattern = { "$DOTFILES/**/nvim/plugin/*.{lua,vim}", "$MYVIMRC" },
   --     nested = true,
   --     command = function()
   --       local ok, msg = pcall(vcmd, "source $MYVIMRC | redraw | silent doautocmd ColorScheme")
@@ -295,11 +295,11 @@ augroup("UpdateVim", {
   --     end,
   --   },
   {
-    events = { "FocusLost" },
+    event = { "FocusLost" },
     command = "silent! wall",
   },
   {
-    events = { "VimResized" },
+    event = { "VimResized" },
     command = function()
       vim.cmd([[wincmd =]])
       require("golden_size").on_win_enter()
@@ -333,8 +333,8 @@ do
 
   mega.augroup("UserHighlights", {
     {
-      events = { "FileType" },
-      targets = sidebar_fts,
+      event = { "FileType" },
+      pattern = sidebar_fts,
       command = function()
         on_sidebar_enter()
       end,
@@ -344,21 +344,21 @@ end
 
 augroup("LazyLoads", {
   {
-    events = { "FileType" },
-    targets = { "help" },
+    event = { "FileType" },
+    pattern = { "help" },
     command = function()
       vim.cmd([[wincmd J | :resize 40]])
     end,
   },
   {
-    events = { "FileType" },
-    targets = { "startuptime" },
+    event = { "FileType" },
+    pattern = { "startuptime" },
     command = function()
       vim.cmd([[wincmd H | :resize 40]])
     end,
   },
   {
-    events = { "BufReadPre" },
+    event = { "BufReadPre" },
     command = function()
       -- dash.nvim
       -- if mega.is_macos then
@@ -381,7 +381,7 @@ augroup("LazyLoads", {
   {
     -- tmux-navigate
     -- vim-kitty-navigator
-    events = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
+    event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
     command = function()
       if vim.env.TMUX ~= nil then
         vcmd([[packadd tmux-navigate]])
@@ -434,20 +434,20 @@ do
 
   augroup("IncSearchHighlight", {
     {
-      events = { "CursorMoved" },
+      event = { "CursorMoved" },
       command = function()
         start_hl_search()
       end,
     },
     {
-      events = { "InsertEnter" },
+      event = { "InsertEnter" },
       command = function()
         stop_hl_search()
       end,
     },
     {
-      events = { "OptionSet" },
-      targets = { "hlsearch" },
+      event = { "OptionSet" },
+      pattern = { "hlsearch" },
       command = function()
         vim.schedule(function()
           vim.cmd("redrawstatus")
@@ -480,8 +480,8 @@ do
 
   augroup("ClearCommandMessages", {
     {
-      events = { "CmdlineLeave", "CmdlineChanged" },
-      targets = { ":" },
+      event = { "CmdlineLeave", "CmdlineChanged" },
+      pattern = { ":" },
       command = clear_commandline(),
     },
   })
@@ -489,8 +489,8 @@ end
 
 augroup("GitConflicts", {
   {
-    events = { "User" },
-    targets = "GitConflictDetected",
+    event = { "User" },
+    pattern = "GitConflictDetected",
     command = function()
       vim.notify("Conflict detected in " .. vim.fn.expand("<afile>"))
       require("which-key").register({
@@ -508,8 +508,8 @@ augroup("GitConflicts", {
     end,
   },
   {
-    events = { "User" },
-    targets = "GitConflictResolved",
+    event = { "User" },
+    pattern = "GitConflictResolved",
     command = function()
       vim.notify("Conflict resolved in " .. vim.fn.expand("<afile>"))
       -- vim.keymap.set("n", "cww", function()
@@ -521,7 +521,7 @@ augroup("GitConflicts", {
 
 augroup("mini", {
   {
-    events = { "FileType" },
+    event = { "FileType" },
     command = function()
       vim.cmd(
         "if index(['help', 'startify', 'dashboard', 'packer', 'neogitstatus', 'NvimTree', 'neo-tree', 'Trouble', 'DirBuf', 'markdown'], &ft) != -1 || index(['nofile', 'terminal', 'lsp-installer', 'lspinfo', 'markdown'], &bt) != -1 | let b:miniindentscope_disable=v:true | endif"

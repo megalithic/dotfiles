@@ -166,19 +166,19 @@ end
 
 mega.augroup("ToggleCursorLine", {
   {
-    events = { "BufEnter" },
+    event = { "BufEnter" },
     command = function()
       enable_cursorline()
     end,
   },
   {
-    events = { "BufLeave", "WinLeave" },
+    event = { "BufLeave", "WinLeave" },
     command = function()
       disable_cursorline()
     end,
   },
   {
-    events = { "CursorMoved", "CursorMovedI" },
+    event = { "CursorMoved", "CursorMovedI" },
     command = function()
       -- cursor_moved()
     end,

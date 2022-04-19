@@ -47,7 +47,7 @@ require("nvim-treesitter.configs").setup({
     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
     -- Using this option may slow down your editor, and you may see some duplicate highlights.
     -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = { "markdown" },
+    additional_vim_regex_highlighting = {},
     use_languagetree = true,
   },
   indent = { enable = true },
@@ -201,3 +201,7 @@ require("nvim-ts-autotag").setup({
 })
 -- nvim-treehopper
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
+
+-- TEMP (attempted) fix at shimming treesitter for 0.7 breaking changes for TS plugins
+local ts_utils = require("nvim-treesitter.ts_utils")
+ts_utils.get_node_text = vim.treesitter.query.get_node_text

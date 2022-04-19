@@ -60,13 +60,13 @@ end
 mega.augroup("ToggleColorColumn", {
   {
     -- Update the cursor column to match current window size
-    events = { "WinEnter", "BufEnter", "VimResized", "FileType" },
+    event = { "WinEnter", "BufEnter", "VimResized", "FileType" },
     command = function()
       enable_colorcolumn()
     end,
   },
   {
-    events = { "WinLeave", "BufLeave" },
+    event = { "WinLeave", "BufLeave" },
     command = function()
       disable_colorcolumn(true)
     end,

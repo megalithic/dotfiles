@@ -39,7 +39,7 @@ local function setup_commands()
     if mega.is_vim_list_open() then
       augroup("LspDiagnosticUpdate", {
         {
-          events = { "DiagnosticChanged" },
+          event = { "DiagnosticChanged" },
           command = function()
             if mega.is_vim_list_open() then
               mega.toggle_list("quickfix")
@@ -60,7 +60,7 @@ local function setup_autocommands(client, bufnr)
   if client and client.resolved_capabilities.code_lens then
     augroup("LspCodeLens", {
       {
-        events = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
+        event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
         buffer = 0,
         command = function()
           vim.lsp.codelens.refresh()
@@ -71,14 +71,14 @@ local function setup_autocommands(client, bufnr)
   if client and client.resolved_capabilities.document_highlight then
     augroup("LspDocumentHighlight", {
       {
-        events = { "CursorHold", "CursorHoldI" },
+        event = { "CursorHold", "CursorHoldI" },
         buffer = bufnr,
         command = function()
           vim.lsp.buf.document_highlight()
         end,
       },
       {
-        events = { "CursorMoved", "BufLeave" },
+        event = { "CursorMoved", "BufLeave" },
         buffer = bufnr,
         command = function()
           vim.lsp.buf.clear_references()
@@ -90,7 +90,7 @@ local function setup_autocommands(client, bufnr)
   if client then
     augroup("LspDiagnostics", {
       {
-        events = { "CursorHold" },
+        event = { "CursorHold" },
         command = function()
           diagnostic.open_float(nil, {
             focusable = false,
@@ -119,7 +119,7 @@ local function setup_autocommands(client, bufnr)
       -- format on save
       augroup("LspFormat", {
         {
-          events = { "BufWritePre" },
+          event = { "BufWritePre" },
           -- buffer = bufnr,
           command = function()
             -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))

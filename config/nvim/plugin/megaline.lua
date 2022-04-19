@@ -39,19 +39,19 @@ end
 -- FIXME: presently focus variable setting isn't being used right
 mega.augroup("megaline", {
   {
-    events = { "FocusGained" },
+    event = { "FocusGained" },
     command = function()
       vim.g.vim_in_focus = true
     end,
   },
   {
-    events = { "FocusLost" },
+    event = { "FocusLost" },
     command = function()
       vim.g.vim_in_focus = false
     end,
   },
   {
-    events = { "WinEnter", "BufEnter" },
+    event = { "WinEnter", "BufEnter" },
     command = function()
       -- :h qf.vim, disable qf statusline
       -- NOTE: this allows for our custom statusline exception-based naming to work
@@ -60,13 +60,13 @@ mega.augroup("megaline", {
     end,
   },
   {
-    events = { "WinLeave", "BufLeave" },
+    event = { "WinLeave", "BufLeave" },
     command = function()
       vim.wo.statusline = "%!v:lua.__deactivate_statusline()"
     end,
   },
   {
-    events = { "BufWritePre" },
+    event = { "BufWritePre" },
     command = function()
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
@@ -77,7 +77,7 @@ mega.augroup("megaline", {
     end,
   },
   {
-    events = { "CursorMoved" },
+    event = { "CursorMoved" },
     command = function()
       if vim.o.hlsearch then
         U.update_search_count(vim.loop.new_timer())
@@ -438,11 +438,11 @@ function U.highlight_ft_icon(color, hl, bg_hl)
   if bg_color and fg_color then
     -- local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
     -- local str = table.concat(cmd)
-    -- mega.augroup(name, { events = "ColorScheme", command = str })
+    -- mega.augroup(name, { event = "ColorScheme", command = str })
     -- vim.cmd(fmt("silent execute '%s'", str))
     mega.augroup(name, {
       {
-        events = "ColorScheme",
+        event = "ColorScheme",
         command = function()
           create_hl(name, fg_color, bg_color)
         end,

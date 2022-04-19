@@ -116,15 +116,13 @@ end
 
 mega.augroup("ToggleRelativeLineNumbers", {
   {
-    events = { "BufEnter", "FileType", "FocusGained", "InsertLeave" },
-    targets = { "*" },
+    event = { "BufEnter", "FileType", "FocusGained", "InsertLeave" },
     command = function()
       enable_relative_number()
     end,
   },
   {
-    events = { "FocusLost", "BufLeave", "InsertEnter", "TermOpen" },
-    targets = { "*" },
+    event = { "FocusLost", "BufLeave", "InsertEnter", "TermOpen" },
     command = function()
       disable_relative_number()
     end,
