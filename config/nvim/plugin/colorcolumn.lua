@@ -20,6 +20,7 @@ local M = {
     "Telescope",
     "DirBuf",
     "terminal",
+    "megaterm",
     "toggleterm",
   },
 }

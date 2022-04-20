@@ -126,6 +126,10 @@ local function get_toggleterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
   return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number"))
 end
+local function get_megaterm_name(_, buf)
+  local shell = fnamemodify(vim.env.SHELL, ":t")
+  return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
+end
 
 local plain_types = {
   filetypes = {
@@ -145,6 +149,7 @@ local plain_types = {
     "markdown",
     "NeogitStatus",
     "dap-repl",
+    "megaterm",
   },
 
   buftypes = {
@@ -179,6 +184,7 @@ local exception_types = {
     NvimTree = "פּ",
     dirbuf = "פּ",
     toggleterm = " ",
+    megaterm = " ",
     calendar = "",
     minimap = "",
     octo = "",
@@ -204,6 +210,7 @@ local exception_types = {
     NvimTree = "Nvim Tree",
     dirbuf = "DirBuf",
     toggleterm = get_toggleterm_name,
+    megaterm = get_megaterm_name,
     ["dap-repl"] = "Debugger REPL",
   },
 }

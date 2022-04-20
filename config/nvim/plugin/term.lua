@@ -59,7 +59,7 @@ function mega.term_open(opts)
   end
 
   term_buf_id = vim.api.nvim_get_current_buf()
-  vim.opt_local.filetype = "terminal"
+  vim.opt_local.filetype = "megaterm"
 
   set_keymaps(term_buf_id, winnr)
 
@@ -89,7 +89,7 @@ function mega.term_open(opts)
   P(cmd)
 
   if on_after_open ~= nil and type(on_after_open) == "function" then
-    on_after_open()
+    on_after_open(term_buf_id, winnr)
   else
     vim.cmd([[normal! G]])
     vim.cmd(winnr .. [[wincmd w]])
@@ -117,7 +117,9 @@ mega.command("TermElixir", function()
     cmd = cmd,
     precmd = precmd,
     on_exit = function() end,
-    on_after_open = function()
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })
@@ -140,7 +142,9 @@ mega.command("TermRuby", function()
     cmd = cmd,
     precmd = precmd,
     on_exit = function() end,
-    on_after_open = function()
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })

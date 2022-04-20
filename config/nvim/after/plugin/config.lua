@@ -249,6 +249,7 @@ conf("golden_size", function(plug)
         "help",
         "toggleterm",
         "terminal",
+        "megaterm",
         "dirbuf",
         "Trouble",
         "qf",

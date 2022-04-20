@@ -18,6 +18,7 @@ local M = {
     "vim-plug",
     "gitcommit",
     "toggleterm",
+    "megaterm",
     "fugitive",
     "list",
     "NvimTree",
