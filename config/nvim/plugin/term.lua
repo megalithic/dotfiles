@@ -13,15 +13,33 @@ local terminal_notifier_notifier = function(c, exit)
     system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], c))
   end
 end
+--- @class Direction
+--- @field horiz string,
+--- @field vert string,
 
-function mega.term_open(opts) -- cmd, winnr, notifier, precmd, on_exit, direction, postcmd
+--- @class TermOpts
+--- @field cmd string,
+--- @field precmd string,
+--- @field direction Direction,
+--- @field on_after_open function,
+--- @field on_exit function,
+--- @field winnr number,
+--- @field notifier function,
+--- @field height integer,
+--- @field width integer,
+
+---Opens a custom terminal
+---@param opts TermOpts
+function mega.term_open(opts)
   local cmd = opts.cmd
   local custom_on_exit = opts.on_exit or nil
   local precmd = opts.precmd or nil
-  local postcmd = opts.postcmd or nil
+  local on_after_open = opts.on_after_open or nil
   local winnr = opts.winnr
   local direction = opts.direction or "horiz"
   local notifier = opts.notifier or terminal_notifier_notifier
+  local height = opts.height or 25
+  local width = opts.width or 80
 
   -- delete the current buffer if it's still open
   if vim.api.nvim_buf_is_valid(term_buf_id) then
@@ -29,12 +47,12 @@ function mega.term_open(opts) -- cmd, winnr, notifier, precmd, on_exit, directio
     term_buf_id = nil_buf_id
   end
 
-  local horiz_direction_cmd = [[botright new | lua vim.api.nvim_win_set_height(0, 30)]]
+  local horiz_direction_cmd = fmt("botright new | lua vim.api.nvim_win_set_height(0, %s)", height)
 
   if direction == "horiz" then
     vim.cmd(horiz_direction_cmd)
   elseif direction == "vert" then
-    vim.cmd("vnew | lua vim.api.nvim_win_set_width(0, 80)")
+    vim.cmd("vnew | lua vim.api.nvim_win_set_width(0, %s)", width)
   else
     vim.cmd(horiz_direction_cmd)
   end
@@ -75,8 +93,8 @@ function mega.term_open(opts) -- cmd, winnr, notifier, precmd, on_exit, directio
 
   P(cmd)
 
-  if postcmd ~= nil and type(postcmd) == "function" then
-    postcmd()
+  if on_after_open ~= nil and type(on_after_open) == "function" then
+    on_after_open()
   else
     vim.cmd([[normal! G]])
     vim.cmd(winnr .. [[wincmd w]])
