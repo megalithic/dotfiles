@@ -214,7 +214,7 @@ conf("colorizer", { "*" }, {
   mode = "background",
 })
 
-conf("virt-column", { char = "│", virtcolumn = tostring(vim.g.default_colorcolumn) })
+conf("virt-column", { char = "│" })
 
 conf("golden_size", function(plug)
   if plug == nil then
