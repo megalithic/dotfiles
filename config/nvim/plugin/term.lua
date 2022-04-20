@@ -66,6 +66,9 @@ function mega.term_open(opts)
   nmap("q", function()
     vim.api.nvim_buf_delete(term_buf_id, { force = true })
     term_buf_id = nil_buf_id
+
+    -- jump back to our last window
+    vim.cmd(winnr .. [[wincmd w]])
   end, { buffer = term_buf_id })
 
   if precmd ~= nil then
