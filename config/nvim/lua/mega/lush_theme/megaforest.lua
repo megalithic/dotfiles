@@ -128,8 +128,8 @@ return lush(function()
     VisualNOS({ fg = "NONE", bg = bg_visual }), -- Visual mode selection when vim is "Not Owning the Selection".
     WarningMsg({ fg = yellow, bg = "NONE" }), -- warning messages
     Whitespace({ fg = bg3, bg = "NONE" }), -- "nbsp", "space", "tab" and "trail" in 'listchars'
-    ColorColumn({ fg = "NONE", bg = bg1 }), -- used for the columns set with 'colorcolumn'
-    VirtColumn({ fg = bg1 }), -- used with virt-column.nvim
+    ColorColumn({ fg = "NONE", bg = bg2 }), -- used for the columns set with 'colorcolumn'
+    VirtColumn({ fg = bg2 }), -- used with virt-column.nvim
     Conceal({ fg = grey1, bg = "NONE" }), -- placeholder characters substituted for concealed text (see 'conceallevel')
     Cursor({ fg = "NONE", bg = "NONE", gui = "reverse" }), -- character under the cursor
     lCursor({ Cursor }), -- the character under the cursor when |language-mapping| is used (see 'guicursor')
@@ -703,7 +703,7 @@ return lush(function()
     IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
     ---- :help mini.indentscope -------------------------------------------
-    MiniIndentscopeSymbol({ fg = bg_blue, bg = "NONE" }),
+    MiniIndentscopeSymbol({ fg = bg_red, bg = "NONE" }),
 
     ---- :help hop-highlights -------------------------------------------
 
