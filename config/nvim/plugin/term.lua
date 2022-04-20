@@ -58,7 +58,6 @@ function mega.term_open(opts)
     vim.cmd(horiz_direction_cmd)
   end
 
-  -- FIXME: be able to re-use the term_buf_id so we can refire a test run to an already open term; instead of opening a new one on top
   term_buf_id = vim.api.nvim_get_current_buf()
   vim.opt_local.filetype = "terminal"
 
@@ -106,3 +105,66 @@ end
 
 -- Convience; because i'm bad about remembering which it is
 mega.open_term = mega.term_open
+
+mega.command("TermIex", function()
+  local precmd = ""
+  local cmd = ""
+  if require("mega.utils").root_has_file("Deskfile") then
+    precmd = "eval $(desk load)"
+  end
+  if require("mega.utils").root_has_file("mix.exs") then
+    cmd = "iex -S mix"
+  else
+    cmd = "iex"
+  end
+
+  mega.open_term({
+    winnr = vim.fn.winnr(),
+    cmd = cmd,
+    precmd = precmd,
+    on_exit = function() end,
+    on_after_open = function()
+      -- FIXME: should i add the ability to just startinsert via bool?
+      vim.cmd("startinsert")
+      -- table.insert(commands, {
+      --   "BufEnter",
+      --   fmt("<buffer=%d>", term.bufnr),
+      --   "startinsert",
+      -- })
+    end,
+  })
+end)
+
+mega.command("TermRails", function()
+  local precmd = ""
+  local cmd = "rails c"
+  if require("mega.utils").root_has_file("Deskfile") then
+    precmd = "eval $(desk load)"
+  end
+
+  mega.open_term({
+    winnr = vim.fn.winnr(),
+    cmd = cmd,
+    precmd = precmd,
+    on_exit = function() end,
+    on_after_open = function()
+      -- FIXME: should i add the ability to just startinsert via bool?
+      vim.cmd("startinsert")
+      -- table.insert(commands, {
+      --   "BufEnter",
+      --   fmt("<buffer=%d>", term.bufnr),
+      --   "startinsert",
+      -- })
+    end,
+  })
+end)
+
+require("which-key").register({
+  t = {
+    name = "terminal",
+    e = { "<cmd>TermIex<cr>", "repl > elixir" },
+    r = { "<cmd>TermRails<cr>", "repl > rails" },
+  },
+}, {
+  prefix = "<leader>",
+})

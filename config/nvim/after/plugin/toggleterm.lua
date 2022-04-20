@@ -95,8 +95,6 @@ wk.register({
     l = { "<cmd>lua _LUA_TOGGLE()<cr>", "repl > lua" },
     n = { "<cmd>lua _NODE_TOGGLE()<cr>", "repl > node" },
     p = { "<cmd>lua _PYTHON_TOGGLE()<cr>", "repl > python" },
-    e = { "<cmd>lua _ELIXIR_TOGGLE()<cr>", "repl > elixir" },
-    r = { "<cmd>lua _RAILS_TOGGLE()<cr>", "repl > rails" },
   },
 }, {
   prefix = "<leader>",

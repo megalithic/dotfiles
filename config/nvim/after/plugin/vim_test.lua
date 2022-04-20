@@ -13,11 +13,6 @@ mega.conf("vim-test", function()
   vim.g["test#preserve_screen"] = 0
 
   vim.g["test#custom_strategies"] = {
-    vtermsplit = function(cmd)
-      vim.cmd(
-        fmt("vert new | set filetype=test | call termopen(['zsh', '-ci', 'eval $(desk load); %s'], {'curwin':1})", cmd)
-      )
-    end,
     toggleterm = function(cmd)
       P(fmt("cmd: %s", cmd))
       require("toggleterm").exec(cmd)
@@ -31,19 +26,15 @@ mega.conf("vim-test", function()
       require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
     end,
     termsplit = function(cmd)
-      --FIXME: should I get the bufnr instead??
-      local winnr = vim.fn.winnr()
       mega.term_open({
-        winnr = winnr,
+        winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",
       })
     end,
     termvsplit = function(cmd)
-      --FIXME: should I get the bufnr instead??
-      local winnr = vim.fn.winnr()
       mega.term_open({
-        winnr = winnr,
+        winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",
         direction = "vert",
