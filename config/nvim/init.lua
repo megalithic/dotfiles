@@ -44,15 +44,6 @@ if impatient_ok then
   impatient.enable_profile()
 end
 
--- [ leader bindings ] ---------------------------------------------------------
-
-vim.g.mapleader = "," -- remap leader to `,`
-vim.g.maplocalleader = " " -- remap localleader to `<Space>`
-
--- [ preferred colorscheme ] ---------------------------------------------------------
-
-vim.g.colorscheme = "megaforest"
-
 -- [ loaders ] -----------------------------------------------------------------
 
 require("mega.globals")

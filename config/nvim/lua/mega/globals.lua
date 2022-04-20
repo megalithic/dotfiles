@@ -2,6 +2,7 @@ local api = vim.api
 local fn = vim.fn
 local vcmd = vim.cmd
 local fmt = string.format
+local L = vim.log.levels
 
 _G.mega = {
   functions = {},
@@ -181,19 +182,22 @@ _G.mega = {
     prompt = "",
   },
 }
-local L = vim.log.levels
 
 -- [ global variables ] --------------------------------------------------------
 
+vim.g.mapleader = "," -- remap leader to `,`
+vim.g.maplocalleader = " " -- remap localleader to `<Space>`
+vim.g.colorscheme = "megaforest"
 vim.g.default_colorcolumn = "81" -- global var, mark column 81
+
 vim.g.os = vim.loop.os_uname().sysname
 vim.g.is_macos = vim.g.os == "Darwin"
 vim.g.is_linux = vim.g.os == "Linux"
 vim.g.is_windows = vim.g.os == "Windows"
 
-vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
+vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
