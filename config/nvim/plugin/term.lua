@@ -106,7 +106,7 @@ end
 -- Convience; because i'm bad about remembering which it is
 mega.open_term = mega.term_open
 
-mega.command("TermIex", function()
+mega.command("TermElixir", function()
   local precmd = ""
   local cmd = ""
   if require("mega.utils").root_has_file("Deskfile") then
@@ -126,20 +126,20 @@ mega.command("TermIex", function()
     on_after_open = function()
       -- FIXME: should i add the ability to just startinsert via bool?
       vim.cmd("startinsert")
-      -- table.insert(commands, {
-      --   "BufEnter",
-      --   fmt("<buffer=%d>", term.bufnr),
-      --   "startinsert",
-      -- })
     end,
   })
 end)
 
-mega.command("TermRails", function()
+mega.command("TermRuby", function()
   local precmd = ""
-  local cmd = "rails c"
+  local cmd = ""
   if require("mega.utils").root_has_file("Deskfile") then
     precmd = "eval $(desk load)"
+  end
+  if require("mega.utils").root_has_file("Gemfile") then
+    cmd = "rails c"
+  else
+    cmd = "irb"
   end
 
   mega.open_term({
@@ -150,11 +150,6 @@ mega.command("TermRails", function()
     on_after_open = function()
       -- FIXME: should i add the ability to just startinsert via bool?
       vim.cmd("startinsert")
-      -- table.insert(commands, {
-      --   "BufEnter",
-      --   fmt("<buffer=%d>", term.bufnr),
-      --   "startinsert",
-      -- })
     end,
   })
 end)
@@ -162,8 +157,8 @@ end)
 require("which-key").register({
   t = {
     name = "terminal",
-    e = { "<cmd>TermIex<cr>", "repl > elixir" },
-    r = { "<cmd>TermRails<cr>", "repl > rails" },
+    e = { "<cmd>TermElixir<cr>", "repl > elixir" },
+    r = { "<cmd>TermRuby<cr>", "repl > ruby" },
   },
 }, {
   prefix = "<leader>",
