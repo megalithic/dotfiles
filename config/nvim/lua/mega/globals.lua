@@ -183,10 +183,9 @@ _G.mega = {
 }
 local L = vim.log.levels
 
--- [ runtimepath (rtp) ] -------------------------------------------------------
-vim.opt.runtimepath:remove("~/.cache")
-vim.opt.runtimepath:remove("~/.local/share/src")
+-- [ global variables ] --------------------------------------------------------
 
+vim.g.default_colorcolumn = "81" -- global var, mark column 81
 vim.g.os = vim.loop.os_uname().sysname
 vim.g.is_macos = vim.g.os == "Darwin"
 vim.g.is_linux = vim.g.os == "Linux"
@@ -258,21 +257,12 @@ for _, p in pairs(local_share_paths) do
   end
 end
 
--- _G.logger = require("logger").new({
---   level = "trace",
--- })
+-- [ runtimepath (rtp) ] -------------------------------------------------------
 
--- function _G.put(...)
---   return logger.debug(...)
--- end
+vim.opt.runtimepath:remove("~/.cache")
+vim.opt.runtimepath:remove("~/.local/share/src")
 
--- _G.logger = require("logger").new({
---   level = "info",
--- })
-
--- function _G.put(...)
---   return logger.debug(...)
--- end
+-- [ utils ] -------------------------------------------------------------------
 
 -- inspect the contents of an object very quickly
 -- in your code or from the command-line:

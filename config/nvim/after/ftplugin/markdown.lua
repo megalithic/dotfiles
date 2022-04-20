@@ -82,7 +82,7 @@ vim.cmd([[packadd markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 
-vim.opt.signcolumn = "no"
+vim.opt_local.signcolumn = "no"
 
 -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])

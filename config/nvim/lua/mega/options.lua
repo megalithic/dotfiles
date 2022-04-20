@@ -202,8 +202,6 @@ vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.opt.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
 vim.opt.lazyredraw = true -- should make scrolling faster
 vim.opt.ttyfast = true -- more faster scrolling (thanks @morganick!)
-vim.g.default_colorcolumn = "81" -- global var, mark column 81
-vim.wo.colorcolumn = tostring(vim.g.default_colorcolumn)
 --- This is used to handle markdown code blocks where the language might
 --- be set to a value that isn't equivalent to a vim filetype
 vim.g.markdown_fenced_languages = {
