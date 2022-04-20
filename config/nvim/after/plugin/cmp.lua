@@ -149,6 +149,7 @@ local function setup_cmp()
     }, ","),
   }
   cmp.setup({
+    preselect = cmp.PreselectMode.None,
     view = { entries = "custom" },
     completion = {
       keyword_length = 1,

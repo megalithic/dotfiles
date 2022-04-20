@@ -447,6 +447,9 @@ for _, binding in ipairs(rl_bindings) do
   cnoremap(binding.lhs, binding.rhs, binding.opts or {})
 end
 
+-- paste over currently selected text without yanking it
+vmap("p", "\"_dP")
+
 -- Undo breakpoints
 imap(",", ",<C-g>u")
 imap(".", ".<C-g>u")

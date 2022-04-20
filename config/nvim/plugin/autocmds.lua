@@ -237,18 +237,7 @@ augroup("Plugins/Paq", {
   {
     event = { "BufEnter" },
     buffer = 0,
-    command = function()
-      --- Open a repository from an "authorname/repository" string
-      nnoremap("gf", function()
-        local repo = vim.fn.expand("<cfile>")
-        if not repo or #vim.split(repo, "/") ~= 2 then
-          return vcmd("norm! gf")
-        end
-        local url = fmt("https://www.github.com/%s", repo)
-        vim.fn.jobstart("open " .. url)
-        vim.notify(fmt("Opening %s at %s", repo, url))
-      end)
-    end,
+    command = mega.open_plugin_url,
   },
 })
 
