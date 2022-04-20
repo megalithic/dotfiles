@@ -1,27 +1,26 @@
 local fmt = string.format
-local system = vim.fn.system
 
 local nil_buf_id = 999999
 local term_buf_id = nil_buf_id
 
-local terminal_notifier_notifier = function(c, exit)
-  if exit == 0 then
-    print("Success!")
-    system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], c))
-  else
-    print("Failure!")
-    system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], c))
-  end
-end
+local function set_keymaps(bufnr, winnr)
+  -- quit terminal and go back to last window
+  nmap("q", function()
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+    bufnr = nil_buf_id
 
---- @class Direction
---- @field horiz string,
---- @field vert string,
+    -- jump back to our last window
+    vim.cmd(winnr .. [[wincmd w]])
+  end, { buffer = bufnr })
+
+  -- get back to normal mode
+  tmap("<esc>", [[<C-\><C-n>]], { buffer = bufnr })
+end
 
 --- @class TermOpts
 --- @field cmd string,
 --- @field precmd string,
---- @field direction Direction,
+--- @field direction "horizontal"|"vertical",
 --- @field on_after_open function,
 --- @field on_exit function,
 --- @field winnr number,
@@ -37,8 +36,8 @@ function mega.term_open(opts)
   local precmd = opts.precmd or nil
   local on_after_open = opts.on_after_open or nil
   local winnr = opts.winnr
-  local direction = opts.direction or "horiz"
-  local notifier = opts.notifier or terminal_notifier_notifier
+  local direction = opts.direction or "horizontal"
+  local notifier = opts.notifier
   local height = opts.height or 25
   local width = opts.width or 80
 
@@ -48,27 +47,21 @@ function mega.term_open(opts)
     term_buf_id = nil_buf_id
   end
 
-  local horiz_direction_cmd = fmt("botright new | lua vim.api.nvim_win_set_height(0, %s)", height)
+  local h_direction_cmd = fmt("botright new | lua vim.api.nvim_win_set_height(0, %s)", height)
 
-  if direction == "horiz" then
-    vim.cmd(horiz_direction_cmd)
-  elseif direction == "vert" then
+  if direction == "horizontal" then
+    vim.cmd(h_direction_cmd)
+  elseif direction == "vertical" then
     vim.cmd("vnew | lua vim.api.nvim_win_set_width(0, %s)", width)
   else
-    vim.cmd(horiz_direction_cmd)
+    vim.notify("[megaterm] direction must either be `horizontal` or `vertical`.", "WARN")
+    vim.cmd(h_direction_cmd)
   end
 
   term_buf_id = vim.api.nvim_get_current_buf()
   vim.opt_local.filetype = "terminal"
 
-  -- make sure we can close/exit this thing
-  nmap("q", function()
-    vim.api.nvim_buf_delete(term_buf_id, { force = true })
-    term_buf_id = nil_buf_id
-
-    -- jump back to our last window
-    vim.cmd(winnr .. [[wincmd w]])
-  end, { buffer = term_buf_id })
+  set_keymaps(term_buf_id, winnr)
 
   if precmd ~= nil then
     cmd = fmt("%s; %s", precmd, cmd)
@@ -79,9 +72,9 @@ function mega.term_open(opts)
     on_exit = function(jobid, exit_code, event)
       -- if we get a custom on_exit, run it instead...
       if custom_on_exit ~= nil and type(custom_on_exit) == "function" then
-        custom_on_exit(jobid, exit_code, event, cmd)
+        custom_on_exit(jobid, exit_code, event, cmd, winnr, term_buf_id)
       else
-        if notifier then
+        if notifier ~= nil and type(notifier) == "function" then
           notifier(cmd, exit_code)
         end
 
@@ -103,9 +96,10 @@ function mega.term_open(opts)
   end
 end
 
--- Convience; because i'm bad about remembering which it is
+-- Convenience
 mega.open_term = mega.term_open
 
+-- Commands that wrap open_term:
 mega.command("TermElixir", function()
   local precmd = ""
   local cmd = ""
@@ -124,7 +118,6 @@ mega.command("TermElixir", function()
     precmd = precmd,
     on_exit = function() end,
     on_after_open = function()
-      -- FIXME: should i add the ability to just startinsert via bool?
       vim.cmd("startinsert")
     end,
   })
@@ -148,7 +141,6 @@ mega.command("TermRuby", function()
     precmd = precmd,
     on_exit = function() end,
     on_after_open = function()
-      -- FIXME: should i add the ability to just startinsert via bool?
       vim.cmd("startinsert")
     end,
   })

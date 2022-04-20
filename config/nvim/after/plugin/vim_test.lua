@@ -1,4 +1,15 @@
 local fmt = string.format
+local system = vim.fn.system
+
+local function terminal_notifier(cmd, exit)
+  if exit == 0 then
+    print("Success!")
+    system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], cmd))
+  else
+    print("Failure!")
+    system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], cmd))
+  end
+end
 
 mega.conf("vim-test", function()
   -- REF:
@@ -30,6 +41,7 @@ mega.conf("vim-test", function()
         winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",
+        notifier = terminal_notifier,
       })
     end,
     termvsplit = function(cmd)
@@ -37,7 +49,8 @@ mega.conf("vim-test", function()
         winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",
-        direction = "vert",
+        direction = "horizontal",
+        notifier = terminal_notifier,
       })
     end,
   }
