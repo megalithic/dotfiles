@@ -938,7 +938,7 @@ function mega.flash_cursorline()
 end
 
 function mega.truncate(str, width, at_tail)
-  local ellipsis = "..."
+  local ellipsis = "…"
   local n_ellipsis = #ellipsis
 
   -- HT: https://github.com/lunarmodules/Penlight/blob/master/lua/pl/stringx.lua#L771-L796
