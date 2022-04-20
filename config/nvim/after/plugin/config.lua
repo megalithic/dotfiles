@@ -130,8 +130,19 @@ conf("vim-matchup", function()
 end)
 
 conf("mini.indentscope", {
-  symbol = "│",
-  delay = "100",
+  symbol = "▏", -- │ ▏
+  draw = {
+    delay = 50,
+  },
+
+  -- draw = {
+  --   delay = 50,
+  --   animation = require("mini.indentscope").gen_animation("none"),
+  -- },
+  -- options = {
+  --   indent_at_cursor = false,
+  -- },
+  -- symbol = "▏",
 })
 
 conf("hclipboard", function(plug)
