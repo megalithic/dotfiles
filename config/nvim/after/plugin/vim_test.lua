@@ -50,7 +50,7 @@ mega.conf("vim-test", function()
   }
 
   vim.g["test#strategy"] = {
-    nearest = "termvsplit",
+    nearest = "termsplit",
     file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",

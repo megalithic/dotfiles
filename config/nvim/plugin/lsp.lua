@@ -507,48 +507,6 @@ function mega.lsp.on_attach(client, bufnr)
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
--- local function setup_tsserver(client)
---   -- (typescript/tsserver)
---   if client.name == "tsserver" then
---     local ts = require("nvim-lsp-ts-utils")
---     -- REF: https://github.com/Iamafnan/my-nvimrc/blob/main/lua/afnan/lsp/language-servers.lua#L65
---     ts.setup({
---       debug = false,
---       disable_commands = false,
---       enable_import_on_completion = false,
---       import_on_completion_timeout = 5000,
-
---       -- linting
---       eslint_enable_code_actions = true,
---       eslint_enable_disable_comments = true,
---       eslint_bin = "eslint_d",
---       eslint_enable_diagnostics = true,
---       eslint_opts = {},
-
---       -- formatting
---       enable_formatting = false,
---       formatter = "prettierd",
---       formatter_opts = {},
-
---       -- filter diagnostics
---       -- {
---       --    80001 - require modules
---       --    6133 - import is declared but never used
---       --    2582 - cannot find name {describe, test}
---       --    2304 - cannot find name {expect, beforeEach, afterEach}
---       --    2503 - cannot find name {jest}
---       -- }
---       -- filter_out_diagnostics_by_code = { 80001, 2582, 2304, 2503 },
-
---       -- inlay hints
---       auto_inlay_hints = true,
---       inlay_hints_highlight = "Comment",
---     })
-
---     ts.setup_client(client)
---   end
--- end
-
 -- [ SERVERS ] -----------------------------------------------------------------
 
 local function root_pattern(...)
@@ -566,9 +524,7 @@ local function root_pattern(...)
 end
 
 mega.lsp.servers = {
-  -- gopls = true,
   bashls = true,
-  -- REF: https://github.com/rcjsuen/dockerfile-language-server-nodejs#language-server-settings
   dockerls = function()
     return {
       single_file_support = true,
