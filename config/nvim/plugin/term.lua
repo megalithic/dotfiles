@@ -29,12 +29,14 @@ function mega.term_open(opts) -- cmd, winnr, notifier, precmd, on_exit, directio
     term_buf_id = nil_buf_id
   end
 
+  local horiz_direction_cmd = [[botright new | lua vim.api.nvim_win_set_height(0, 25)]]
+
   if direction == "horiz" then
-    vim.cmd("botright new | lua vim.api.nvim_win_set_height(0, 20)")
+    vim.cmd(horiz_direction_cmd)
   elseif direction == "vert" then
-    vim.cmd("vnew | lua vim.api.nvim_win_set_width(0, 35)")
+    vim.cmd("vnew | lua vim.api.nvim_win_set_width(0, 80)")
   else
-    vim.cmd("botright new | lua vim.api.nvim_win_set_height(0, 20)")
+    vim.cmd(horiz_direction_cmd)
   end
 
   term_buf_id = vim.api.nvim_get_current_buf()

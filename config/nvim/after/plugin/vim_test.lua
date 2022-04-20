@@ -38,10 +38,19 @@ mega.conf("vim-test", function()
         precmd = "eval $(desk load)",
       })
     end,
+    termvsplit = function(cmd)
+      local winnr = vim.fn.winnr()
+      mega.term_open({
+        winnr = winnr,
+        cmd = cmd,
+        precmd = "eval $(desk load)",
+        direction = "vert",
+      })
+    end,
   }
 
   vim.g["test#strategy"] = {
-    nearest = "termsplit",
+    nearest = "termvsplit",
     file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",
