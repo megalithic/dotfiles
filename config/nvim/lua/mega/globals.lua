@@ -187,30 +187,20 @@ local L = vim.log.levels
 vim.opt.runtimepath:remove("~/.cache")
 vim.opt.runtimepath:remove("~/.local/share/src")
 
--- Global namespace
---- Inspired by @tjdevries' astraunauta.nvim/ @TimUntersberger's config
---- store all callbacks in one global table so they are able to survive re-requiring this file
+vim.g.os = vim.loop.os_uname().sysname
+vim.g.is_macos = vim.g.os == "Darwin"
+vim.g.is_linux = vim.g.os == "Linux"
+vim.g.is_windows = vim.g.os == "Windows"
 
-function mega:load_variables()
-  local home = os.getenv("HOME")
-  local path_sep = mega.is_windows and "\\" or "/"
-  local os_name = vim.loop.os_uname().sysname
+vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
+vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
-  self.is_macos = os_name == "Darwin"
-  self.is_linux = os_name == "Linux"
-  self.is_windows = os_name == "Windows"
-  self.vim_path = home .. path_sep .. ".config" .. path_sep .. "nvim"
-  self.cache_dir = home .. path_sep .. ".cache" .. path_sep .. "nvim" .. path_sep
-  self.local_share_dir = home .. path_sep .. ".local" .. path_sep .. "share" .. path_sep .. "nvim" .. path_sep
-  self.modules_dir = self.vim_path .. path_sep .. "modules"
-  self.path_sep = path_sep
-  self.home = home
+vim.g.home = os.getenv("HOME")
+vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
+vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
+vim.g.local_share_path = fmt("%s/.local/share/nvim", vim.g.home)
 
-  return self
-end
-mega:load_variables()
-
-mega.dirs.dots = fn.expand("$DOTS")
+mega.dirs.dots = vim.g.dotfiles
 mega.dirs.privates = fn.expand("$PRIVATES")
 mega.dirs.code = fn.expand("$HOME/code")
 mega.dirs.icloud = fn.expand("$ICLOUD_DIR")
@@ -238,32 +228,33 @@ local function is_dir(path)
 end
 
 -- setup vim's various config directories
--- # cache_dirs
-local data_dir = {
-  mega.cache_dir .. "backup",
-  mega.cache_dir .. "session",
-  mega.cache_dir .. "swap",
-  mega.cache_dir .. "tags",
-  mega.cache_dir .. "undo",
+-- # cache_paths
+local cache_paths = {
+  fmt("%s/backup", vim.g.cache_path),
+  fmt("%s/session", vim.g.cache_path),
+  fmt("%s/swap", vim.g.cache_path),
+  fmt("%s/tags", vim.g.cache_path),
+  fmt("%s/undo", vim.g.cache_path),
 }
-if not is_dir(mega.cache_dir) then
-  os.execute("mkdir -p " .. mega.cache_dir)
+if not is_dir(vim.g.cache_path) then
+  os.execute("mkdir -p " .. vim.g.cache_path)
 end
-for _, v in pairs(data_dir) do
-  if not is_dir(v) then
-    os.execute("mkdir -p " .. v)
+for _, p in pairs(cache_paths) do
+  if not is_dir(p) then
+    os.execute("mkdir -p " .. p)
   end
 end
--- # local_share_dirs
-local local_share_dir = {
-  mega.local_share_dir .. "shada",
+
+-- # local_share_paths
+local local_share_paths = {
+  fmt("%s/shada", vim.g.local_share_path),
 }
-if not is_dir(mega.local_share_dir) then
-  os.execute("mkdir -p " .. mega.local_share_dir)
+if not is_dir(vim.g.local_share_path) then
+  os.execute("mkdir -p " .. vim.g.local_share_path)
 end
-for _, v in pairs(local_share_dir) do
-  if not is_dir(v) then
-    os.execute("mkdir -p " .. v)
+for _, p in pairs(local_share_paths) do
+  if not is_dir(p) then
+    os.execute("mkdir -p " .. p)
   end
 end
 
