@@ -31,6 +31,7 @@ mega.conf("vim-test", function()
       require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
     end,
     termsplit = function(cmd)
+      --FIXME: should I get the bufnr instead??
       local winnr = vim.fn.winnr()
       mega.term_open({
         winnr = winnr,
@@ -39,6 +40,7 @@ mega.conf("vim-test", function()
       })
     end,
     termvsplit = function(cmd)
+      --FIXME: should I get the bufnr instead??
       local winnr = vim.fn.winnr()
       mega.term_open({
         winnr = winnr,
