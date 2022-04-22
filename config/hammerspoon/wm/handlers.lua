@@ -43,20 +43,34 @@ local function cmd_updater(args, use_prefix)
   return nil
 end
 
--- onAppQuit(hs.application, function) :: nil
--- evaluates and returns valid/usable windows for an app
-M.onAppQuit = function(app, callback, providedInterval)
+-- onAppQuit(hs.application, function, number) :: nil
+---@diagnostic disable-next-line: unused-local
+M.onAppQuit = function(app, callback, _providedInterval)
   log.df("onAppQuit -> %s", app:name())
+  local app_quit_event
 
-  local interval = providedInterval or 0.2
+  local newAppWatcher = hs.application.watcher.new(function(appName, event, appObj)
+    if event == hs.application.watcher.terminated then
+      callback(appName, event, appObj)
+      app_quit_event = event
+    end
+  end):start()
 
-  hs.timer.waitUntil(function()
-    local success = app == nil or #app:allWindows() == 0
-    -- log.wf("success for onAppQuit -> %s", success)
+  if app_quit_event == hs.application.watcher.terminated then
+    hs.timer.doAfter(2, function()
+      newAppWatcher:stop()
+      newAppWatcher = nil
+    end)
+  end
 
-    return success
-    -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
-  end, callback, interval)
+  -- FIXME: old way .. don't really want this loop running forever while the app is open
+  -- local interval = providedInterval or 0.2
+  --   hs.timer.waitUntil(function()
+  --     local success = app == nil or #app:allWindows() == 0
+  --     -- log.wf("success for onAppQuit -> %s", success)
+  --     return success
+  --     -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
+  --   end, callback, interval)
 end
 
 M.killApp = function(app)

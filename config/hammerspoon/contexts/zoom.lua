@@ -63,8 +63,8 @@ M.apply = function(app, win, event, log)
   end
 
   ----------------------------------------------------------------------
-  -- things to do on app exit
-  wh.onAppQuit(app, function()
+  ---@diagnostic disable-next-line: unused-local
+  wh.onAppQuit(app, function(_appName, _incoming_event, _appPid)
     local kitty = hs.application.get("kitty")
     local browser = hs.application.get(Config.preferred.browsers[1])
 
