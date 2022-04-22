@@ -1,7 +1,7 @@
 local log = hs.logger.new("[window-handlers]", "debug")
 local running = require("wm.running")
 
-local cache = { timers = {} }
+local cache = { timers = {}, watchers = {} }
 local M = { cache = cache }
 
 local fn = require("hs.fnutils")
@@ -30,9 +30,9 @@ local function cmd_updater(args, use_prefix)
 
     -- spews errors, BUT, it seems to work async! yay?
     local task = hs.task.new(cmd, function(stdTask, stdOut, stdErr)
-      log.df("\nstdTask: %s\n stdOut: %s\n stdErr: %s\n", stdTask, stdOut, stdErr)
+      -- log.df("\nstdTask: %s\n stdOut: %s\n stdErr: %s\n", stdTask, stdOut, stdErr)
     end, cmd_args):start()
-    log.df("running_task: %s", hs.inspect(task))
+    -- log.df("running_task: %s", hs.inspect(task))
 
     return task
 
@@ -43,34 +43,43 @@ local function cmd_updater(args, use_prefix)
   return nil
 end
 
+-- FIXME: need to be able to app-watch for the dndHandler too; not just for the context
 -- onAppQuit(hs.application, function, number) :: nil
 ---@diagnostic disable-next-line: unused-local
-M.onAppQuit = function(app, callback, _providedInterval)
-  log.df("onAppQuit -> %s", app:name())
-  local app_quit_event
+M.onAppQuit = function(app, callback, providedInterval)
+  -- local bundleID = app:bundleID()
 
-  local newAppWatcher = hs.application.watcher.new(function(appName, event, appObj)
-    if event == hs.application.watcher.terminated then
-      callback(appName, event, appObj)
-      app_quit_event = event
-    end
-  end):start()
+  -- log.df("onAppQuit starting for %s; current app watchers: %s", bundleID, hs.inspect(cache.watchers))
 
-  if app_quit_event == hs.application.watcher.terminated then
-    hs.timer.doAfter(2, function()
-      newAppWatcher:stop()
-      newAppWatcher = nil
-    end)
-  end
+  -- if cache.watchers[bundleID] ~= nil then
+  --   log.df("found existing watcher for %s; killing it..", bundleID)
+  --   -- kill the original watcher if there is one
+  --   cache.watchers[bundleID] = nil
+  -- end
+
+  -- log.df("creating watcher for %s..", bundleID)
+  -- cache.watchers[bundleID] = hs.application.watcher.new(function(appName, event, appObj)
+  --   if event == hs.application.watcher.terminated then
+  --     log.df("executing watcher callback for %s (%s)..", bundleID, appObj)
+  --     callback(appName, event, appObj)
+
+  --     if cache.watchers[bundleID] then
+  --       log.df("stopping watcher for %s (%s)..", bundleID, appObj)
+
+  --       cache.watchers[bundleID]:stop()
+  --       cache.watchers[bundleID] = nil
+
+  --       log.df("watcher stopped for %s: %s", bundleID, cache.watchers[bundleID])
+  --     end
+  --   end
+  -- end):start()
 
   -- FIXME: old way .. don't really want this loop running forever while the app is open
-  -- local interval = providedInterval or 0.2
-  --   hs.timer.waitUntil(function()
-  --     local success = app == nil or #app:allWindows() == 0
-  --     -- log.wf("success for onAppQuit -> %s", success)
-  --     return success
-  --     -- return app == nil or (not hs.application.get(app:name()) and #app:allWindows() == 0)
-  --   end, callback, interval)
+  local interval = providedInterval or 2.0
+  hs.timer.waitUntil(function()
+    local success = app == nil or #app:allWindows() == 0
+    return success
+  end, callback, interval)
 end
 
 M.killApp = function(app)
@@ -113,11 +122,13 @@ M.dndHandler = function(app, dndConfig, event)
         cmd_updater(dndCmd .. " off", false)
         -- cmd_updater(slackCmd .. " -sv back", false)
       end)
-    elseif event == running.events.closed or event == running.events.terminated then
+    elseif event == event == running.events.terminated then
       M.onAppQuit(app, function()
         cmd_updater(dndCmd .. " off", false)
         -- cmd_updater(slackCmd .. " -sv back", false)
       end)
+    elseif type(event) == "table" and event.which ~= nil then
+      cmd_updater(string.format("%s %s", dndCmd, event.which)) -- which: on | off
     end
   end
 end

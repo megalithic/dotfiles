@@ -5,6 +5,7 @@ local cache = {}
 
 local M = { cache = cache }
 local wh = require("wm.handlers")
+local running = require("wm.running")
 
 local function _find()
   local module = {}
@@ -213,8 +214,8 @@ local function _focus()
   return module
 end
 
--- apply(hs.application, hs.window, running.events, hs.logger) :: nil
-M.apply = function(app, _, _, _)
+---@diagnostic disable-next-line: unused-local
+M.apply = function(app, _win, event, _log)
   local focus = _focus()
   local function messageUp()
     hs.eventtap.keyStroke({}, "up", app)
@@ -314,10 +315,10 @@ M.apply = function(app, _, _, _)
 
   slackWatcher:start()
 
-  wh.onAppQuit(app, function()
+  if event == running.events.terminated then
     slackModal:exit()
     slackWatcher:stop()
-  end)
+  end
 end
 
 return M

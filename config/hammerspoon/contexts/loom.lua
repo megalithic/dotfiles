@@ -7,8 +7,11 @@ local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
 local init_apply_complete = false
 
-M.apply = function(app, win, event, log)
+---@diagnostic disable-next-line: unused-local
+M.apply = function(app, _win, event, log)
   local font_size_factor = 8.0
+
+  log.df("context %s app event %s happening..", app:bundleID(), event)
 
   if not init_apply_complete then
     if event == running.events.launched or app:isRunning() and #app:allWindows() > 0 then
@@ -34,9 +37,9 @@ M.apply = function(app, win, event, log)
     init_apply_complete = true
   end
 
-  ----------------------------------------------------------------------
-  ---@diagnostic disable-next-line: unused-local
-  wh.onAppQuit(app, function(_appName, _incoming_event, _appPid)
+  if event == running.events.terminated then
+    log.wf("executing onAppQuit (event: %s) for: %s", event, app:bundleID())
+    ---@diagnostic disable-next-line: unused-local
     -- reenable PTT (mute by default)
     ptt.setState("push-to-talk")
 
@@ -50,7 +53,7 @@ M.apply = function(app, win, event, log)
     require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize))
 
     init_apply_complete = false
-  end)
+  end
 end
 
 return M

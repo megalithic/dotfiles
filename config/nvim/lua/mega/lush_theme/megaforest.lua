@@ -282,10 +282,10 @@ return lush(function()
 
     ---- :help diagnostic-highlight ----------------------------
 
-    ErrorText({ fg = "NONE", bg = bg_red, gui = "undercurl", guisp = red }),
-    WarningText({ fg = "NONE", bg = bg_yellow, gui = "undercurl", guisp = yellow }),
-    InfoText({ fg = "NONE", bg = bg_blue, gui = "underline", guisp = blue }),
-    HintText({ fg = "NONE", bg = bg_green, gui = "underline", guisp = green }),
+    ErrorText({ bg = bg_red, gui = "undercurl", guisp = red }),
+    WarningText({ bg = bg_yellow, gui = "undercurl", guisp = yellow }),
+    InfoText({ bg = bg_blue, gui = "underline", guisp = blue }),
+    HintText({ bg = bg_green.darken(20), gui = "underline", guisp = green }),
     ErrorLine({ fg = "NONE", bg = bg_red }),
     WarningLine({ fg = "NONE", bg = bg_yellow }),
     InfoLine({ fg = "NONE", bg = bg_blue }),

@@ -110,12 +110,11 @@ cmp.setup({
     { name = "nvim_lsp" },
     -- { name = "nvim_lsp_signature_help" },
     { name = "treesitter" },
-
-    { name = "buffer", keyword_length = 5 },
+    -- { name = "buffer", keyword_length = 3 },
     { name = "path" },
     -- { name = "emmet_ls" },
   }, {
-    { name = "buffer" },
+    { name = "buffer", keyword_length = 3 },
   }),
   formatting = {
     deprecated = true,

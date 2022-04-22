@@ -10,6 +10,7 @@ local ptt = require("bindings.ptt")
 local init_apply_complete = false
 
 -- apply(hs.application, hs.window, running.events, hs.logger) :: nil
+---@diagnostic disable-next-line: unused-local
 M.apply = function(app, win, event, log)
   -- prevents excessive actions on multiple window creations
   if not init_apply_complete then
@@ -62,9 +63,9 @@ M.apply = function(app, win, event, log)
     init_apply_complete = true
   end
 
-  ----------------------------------------------------------------------
-  ---@diagnostic disable-next-line: unused-local
-  wh.onAppQuit(app, function(_appName, _incoming_event, _appPid)
+  if event == running.events.terminated then
+    log.wf("executing onAppQuit (event: %s) for: %s", event, app:bundleID())
+    ---@diagnostic disable-next-line: unused-local
     local kitty = hs.application.get("kitty")
     local browser = hs.application.get(Config.preferred.browsers[1])
 
@@ -84,7 +85,7 @@ M.apply = function(app, win, event, log)
 
     ptt.setState("push-to-talk")
     init_apply_complete = false
-  end)
+  end
 end
 
 return M
