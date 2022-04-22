@@ -27,13 +27,3 @@ vim.cmd([[setlocal spell]])
 
 vim.cmd([[startinsert]])
 vim.bo.formatoptions = vim.bo.formatoptions .. "t"
-
--- set specific sources for nvim-cmp for specific filetype
--- require("cmp").setup.buffer({ enabled = false })
--- require("cmp").setup.buffer({
---   sources = {
---     require("mega.plugins.cmp").sources.buffer,
---     { name = "spell" },
---     { name = "emoji" },
---   },
--- })

@@ -52,6 +52,7 @@ local PKGS = {
   "hrsh7th/cmp-nvim-lsp-document-symbol",
   "hrsh7th/cmp-nvim-lsp-signature-help",
   "petertriho/cmp-git",
+  "ray-x/cmp-treesitter",
 
   -- for fuzzy things in nvim-cmp and command:
   -- "tzachar/fuzzy.nvim",

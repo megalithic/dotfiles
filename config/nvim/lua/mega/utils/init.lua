@@ -1,5 +1,4 @@
-local vcmd, lsp, api, fn, g = vim.cmd, vim.lsp, vim.api, vim.fn, vim.g
-local bmap, au = mega.bmap, mega.au
+local vcmd, lsp, fn = vim.cmd, vim.lsp, vim.fn
 local fmt = string.format
 local hl_ok, H = mega.safe_require("mega.utils.highlights", { silent = true })
 

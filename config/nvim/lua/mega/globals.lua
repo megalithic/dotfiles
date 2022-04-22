@@ -494,6 +494,8 @@ end
 local map_opts = { remap = true, silent = true }
 local noremap_opts = { remap = false, silent = true }
 
+-- TODO: https://github.com/b0o/nvim-conf/blob/main/lua/user/mappings.lua#L19-L37
+
 for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   -- {
   -- n = "normal",
@@ -512,16 +514,6 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   -- non-recursive global mappings
   mega[mode .. "noremap"] = mapper(mode, noremap_opts)
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
-end
-
--- FIXME: this needs to be better; using new autocmd api
-function mega.au(s, override)
-  override = override or false
-  if override then
-    vcmd("au! " .. s)
-  else
-    vcmd("au " .. s)
-  end
 end
 
 -- REF: https://github.com/neovim/neovim/blob/master/runtime/doc/api.txt#L3112
