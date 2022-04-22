@@ -30,7 +30,7 @@ local function setup_commands()
   end)
 
   command("LspFormat", function()
-    vim.lsp.buf.formatting_sync(nil, 2000)
+    vim.lsp.buf.formatting_sync(nil, 3000)
   end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
@@ -127,7 +127,7 @@ local function setup_autocommands(client, bufnr)
             -- view and re-apply it manually after formatting the buffer
             -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
             vim.cmd("mkview!")
-            local format_sync_ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 2000)
+            local format_sync_ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 3000)
             if not format_sync_ok then
               vim.notify(fmt("Error formatting file: %s", msg))
             end

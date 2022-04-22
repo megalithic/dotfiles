@@ -131,18 +131,6 @@ end
 vim.opt_local.include = [[\v<((do|load)file|require)\s*\(?['"]\zs[^'"]+\ze['"]]
 vim.opt_local.includeexpr = "v:lua.Find_required_path(v:fname)"
 
--- set specific sources for nvim-cmp for specific filetype
--- require("cmp").setup.buffer({
---   sources = {
---     { name = "luasnip" },
---     { name = "nvim_lua" },
---     { name = "nvim_lsp" },
---     { name = "path" },
---     require("mega.lsp.completion").sources.buffer,
---     -- { name = "fuzzy_buffer" },
---   },
--- })
-
 nnoremap("gK", keyword, { buffer = 0 })
 
 -- This allows tpope's vim.surround to surround a text object with a function or conditional

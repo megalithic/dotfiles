@@ -152,7 +152,7 @@ local function setup_cmp()
     preselect = cmp.PreselectMode.None,
     view = { entries = "custom" },
     completion = {
-      keyword_length = 1,
+      keyword_length = 2,
     },
     snippet = {
       expand = function(args)
@@ -180,7 +180,7 @@ local function setup_cmp()
       { name = "nvim_lsp" },
       -- { name = "nvim_lsp_signature_help" },
       { name = "path" },
-      { name = "emmet_ls" },
+      -- { name = "emmet_ls" },
     }, {
       buffer_source,
     }),
@@ -197,12 +197,11 @@ local function setup_cmp()
             luasnip = "[lsnip]",
             nvim_lua = "[lua]",
             nvim_lsp = "[lsp]",
-            nvim_lsp_signature_help = "[sig]",
-            orgmode = "[org]",
+            -- nvim_lsp_signature_help = "[sig]",
             path = "[path]",
             buffer = "[buf]",
             spell = "[spl]",
-            emoji = "[emo]",
+            -- emoji = "[emo]",
           })[entry.source.name] or entry.source.name
         end
 
@@ -222,10 +221,22 @@ local function setup_cmp()
   cmp.setup.filetype("gitcommit", {
     sources = {
       { name = "cmp_git" },
-      buffer_source,
       { name = "spell" },
       { name = "emoji" },
     },
+    {
+      buffer_source,
+    },
+  })
+
+  cmp.setup.filetype("lua", {
+    sources = {
+      { name = "luasnip" },
+      { name = "nvim_lua" },
+      { name = "nvim_lsp" },
+      { name = "path" },
+    },
+    { buffer_source },
   })
 
   -- If you want insert `(` after select function or method item
