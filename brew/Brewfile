@@ -268,7 +268,7 @@ cask "the-unarchiver"
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead
-cask "yubico-authenticator"
+# cask "yubico-authenticator"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"

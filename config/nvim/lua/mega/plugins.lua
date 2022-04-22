@@ -69,7 +69,7 @@ local PKGS = {
   "folke/trouble.nvim",
   { "kevinhwang91/nvim-bqf" },
   { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
-  "abecodes/tabout.nvim",
+  -- "abecodes/tabout.nvim",
   -- { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
@@ -83,7 +83,7 @@ local PKGS = {
       vim.cmd("TSUpdate")
     end,
   },
-  "nvim-treesitter/playground",
+  { "nvim-treesitter/playground" },
   -- "nvim-treesitter/nvim-treesitter-refactor",
   "nvim-treesitter/nvim-treesitter-textobjects",
   "nvim-treesitter/nvim-tree-docs",

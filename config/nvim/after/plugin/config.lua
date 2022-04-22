@@ -494,7 +494,7 @@ conf("bufdel", {
 conf("tabout", {
   completion = false,
   ignore_beginning = false,
-})
+}, { enable = false })
 
 conf("headlines", {
   markdown = {

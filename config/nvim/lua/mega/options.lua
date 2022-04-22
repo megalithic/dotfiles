@@ -44,7 +44,7 @@ vim.opt.fillchars = {
   fold = " ",
   eob = " ", -- suppress ~ at EndOfBuffer
   diff = "╱", -- alternatives = ⣿ ░ ─
-  msgsep = "‾",
+  msgsep = " ", -- alternatives: ‾ ─
   foldopen = "▾",
   foldsep = "│",
   foldclose = "▸",
