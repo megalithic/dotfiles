@@ -94,7 +94,15 @@ cmp.setup({
     ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<CR>"] = cmp.mapping.confirm({ select = false }),
-    ["<C-e>"] = cmp.mapping.close(),
+    -- ["<C-e>"] = cmp.mapping.close(),
+    ["<C-e>"] = function(fallback)
+      if cmp.visible() then
+        cmp.confirm({ select = true })
+        cmp.complete()
+      else
+        fallback()
+      end
+    end,
   },
   -- see more configured sources in ftplugins/<filetype>.lua
   sources = cmp.config.sources({
