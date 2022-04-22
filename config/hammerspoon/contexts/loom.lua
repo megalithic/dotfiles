@@ -7,37 +7,40 @@ local spotify = require("bindings.media").media_control
 local ptt = require("bindings.ptt")
 local init_apply_complete = false
 
--- apply(hs.application, hs.window, running.events, hs.logger) :: nil
 M.apply = function(app, win, event, log)
-  if not init_apply_complete then
-    log.f("app: %s", hs.inspect(app))
-    log.f("win: %s", hs.inspect(win))
-    log.f("event: %s", hs.inspect(event))
+  local font_size_factor = 8.0
 
+  if not init_apply_complete then
     if event == running.events.launched or app:isRunning() then
-      ----------------------------------------------------------------------
+      -- handle DND toggling
+      wh.dndHandler(app, { enabled = true, mode = "zoom" }, event)
+
       -- naively handle spotify pause (always pause it, no matter the event)
       spotify("pause")
 
       -- unmute (PTM) by default
       ptt.setState("push-to-mute")
 
-      -- require("controlplane/dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) + 10.0)
+      -- increase font-size of kitty instance
+      require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) + font_size_factor)
     end
 
     init_apply_complete = true
   end
 
   ----------------------------------------------------------------------
-  -- mute (PTT) by default
   wh.onAppQuit(app, function()
-    -- require("controlplane/dock").set_kitty_config(Config.docking.docked.fontSize)
+    -- reenable PTT (mute by default)
     ptt.setState("push-to-talk")
 
+    -- kill keycastr, if it's running
     local keycastr = hs.application.get("KeyCastr")
     if keycastr ~= nil then
       keycastr:kill()
     end
+
+    -- return to previous font-size of kitty instance
+    require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) - font_size_factor)
 
     init_apply_complete = false
   end)
