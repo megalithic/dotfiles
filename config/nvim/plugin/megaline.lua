@@ -789,21 +789,11 @@ function M.s_lineinfo(args)
   })
 end
 
-function M.s_indention()
-  return unpack(item_if(U.ctx.shiftwidth, U.ctx.shiftwidth > 2 or not U.ctx.expandtab, "StTitle", {
-    prefix = U.ctx.expandtab and "Ξ" or "⇥",
-    prefix_color = "StatusLine",
-  }))
-end
-
--- Helper functionality =======================================================
--- Settings -------------------------------------------------------------------
 function U.is_disabled()
   return vim.g.megaline_disable == true or vim.b.megaline_disable == true
 end
 
--- Default content ------------------------------------------------------------
-local function statusline_active(ctx) -- _ctx
+local function statusline_active(ctx)
   -- stylua: ignore start
   local prefix                      = unpack(item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local suffix                      = unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
@@ -815,7 +805,6 @@ local function statusline_active(ctx) -- _ctx
   local filename                    = M.s_filename({ trunc_width = 120 })
   local saving                      = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
   local lineinfo                    = M.s_lineinfo({ trunc_width = 75 })
-  local indention                   = M.s_indention()
   local diags                       = diagnostic_info()
   local diag_error                  = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
   local diag_warn                   = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
@@ -851,7 +840,6 @@ local function statusline_active(ctx) -- _ctx
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,
-    indention,
     suffix,
   })
 end
