@@ -143,7 +143,8 @@ _G.mega = {
       object = "",
     },
     misc = {
-      block = "▌",
+      lblock = "▌",
+      rblock = "▐",
       bug = "",
       question = "",
       lock = "",

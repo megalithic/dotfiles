@@ -13,15 +13,6 @@ local search_count_timer
 local H = require("mega.utils.highlights")
 local U = {}
 
--- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89
--- require("nvim-gps").setup({
---   languages = {
---     heex = false,
---     elixir = false,
---     eelixir = false,
---   },
--- })
-
 --- Timer to update the search count as the file is travelled
 ---@return function
 function U.update_search_count(timer)
@@ -323,11 +314,9 @@ local function build(groups)
     -- Return highlight group to allow inheritance from later sections
     if vim.tbl_count(t) == 0 then
       return fmt("%%#%s#", s.hl or "")
-      -- return fmt("%%#%s#", s.hl or "")
     end
 
     return fmt("%%#%s#%s", s.hl or "", table.concat(t, ""))
-    -- return fmt("%%#%s# %s ", s.hl or "", table.concat(t, " "))
   end, groups)
 
   return table.concat(t, "")
@@ -373,7 +362,7 @@ end
 function U.readonly(ctx, icon)
   icon = icon or mega.icons.readonly
   if ctx.readonly then
-    return " " .. icon
+    return icon
   else
     return ""
   end
@@ -443,10 +432,6 @@ function U.highlight_ft_icon(color, hl, bg_hl)
   local bg_color = H.get_hl(bg_hl, "bg")
 
   if bg_color and fg_color then
-    -- local cmd = { "highlight ", name, " guibg=", bg_color, " guifg=", fg_color }
-    -- local str = table.concat(cmd)
-    -- mega.augroup(name, { event = "ColorScheme", command = str })
-    -- vim.cmd(fmt("silent execute '%s'", str))
     mega.augroup(name, {
       {
         event = "ColorScheme",
@@ -820,23 +805,23 @@ end
 -- Default content ------------------------------------------------------------
 local function statusline_active(ctx) -- _ctx
   -- stylua: ignore start
-  local prefix                     = unpack(item_if(mega.icons.misc.block, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
-  local mode                       = M.s_mode({ trunc_width = 120 })
-  local search                     = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
-  local git                        = M.s_git({ trunc_width = 120 })
-  local readonly                   = M.s_readonly({ trunc_width = 100 })
-  local modified                   = M.s_modified({ trunc_width = 100 })
-  local filename                   = M.s_filename({ trunc_width = 120 })
-  local saving                     = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
-  local lineinfo                   = M.s_lineinfo({ trunc_width = 75 })
-  local indention                  = M.s_indention()
-  local diags                      = diagnostic_info()
-  local diag_error                 = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
-  local diag_warn                  = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
-  local diag_info                  = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
-  local diag_hint                  = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
-  -- local current_function           = M.s_gps({ trunc_width = 120 }) -- FIXME/related: https://github.com/andymass/vim-matchup/pull/216 and https://github.com/nvim-treesitter/nvim-treesitter/commit/c3848e713a8272e524a7eabe9eb0897cf2d6932e
-  -- local fileinfo                = M.s_fileinfo({ trunc_width = 120 })
+  local lprefix                     = unpack(item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local rprefix                     = unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local mode                        = M.s_mode({ trunc_width = 120 })
+  local search                      = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
+  local git                         = M.s_git({ trunc_width = 120 })
+  local readonly                    = M.s_readonly({ trunc_width = 100 })
+  local modified                    = M.s_modified({ trunc_width = 100 })
+  local filename                    = M.s_filename({ trunc_width = 120 })
+  local saving                      = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
+  local lineinfo                    = M.s_lineinfo({ trunc_width = 75 })
+  local indention                   = M.s_indention()
+  local diags                       = diagnostic_info()
+  local diag_error                  = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
+  local diag_warn                   = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
+  local diag_info                   = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
+  local diag_hint                   = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
+  -- local fileinfo                    = M.s_fileinfo({ trunc_width = 120 })
   -- stylua: ignore end
 
   local plain = U.is_plain(ctx)
@@ -852,7 +837,7 @@ local function statusline_active(ctx) -- _ctx
   end
 
   return build({
-    prefix,
+    lprefix,
     mode,
     "%<", -- Mark general truncate point
     filename,
@@ -861,13 +846,13 @@ local function statusline_active(ctx) -- _ctx
     saving,
     search,
     "%=", -- End left alignment
-    -- current_function,
     -- middle section for whatever we want..
     "%=",
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,
     indention,
+    rprefix,
   })
 end
 
