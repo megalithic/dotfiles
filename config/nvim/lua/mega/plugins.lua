@@ -51,14 +51,7 @@ local PKGS = {
   "f3fora/cmp-spell",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
   "hrsh7th/cmp-nvim-lsp-signature-help",
-  "petertriho/cmp-git",
   "ray-x/cmp-treesitter",
-
-  -- for fuzzy things in nvim-cmp and command:
-  -- "tzachar/fuzzy.nvim",
-  -- "tzachar/cmp-fuzzy-path",
-  -- "tzachar/cmp-fuzzy-buffer",
-
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
@@ -70,8 +63,6 @@ local PKGS = {
   "folke/trouble.nvim",
   { "kevinhwang91/nvim-bqf" },
   { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
-  -- "abecodes/tabout.nvim",
-  -- { url = "https://gitlab.com/yorickpeterse/nvim-dd.git" },
   "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",

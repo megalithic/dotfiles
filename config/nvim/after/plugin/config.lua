@@ -145,12 +145,12 @@ conf("mini.indentscope", {
   -- symbol = "▏",
 })
 
-conf("hclipboard", function(plug)
-  if plug == nil then
+conf("hclipboard", function(p)
+  if p == nil then
     return
   end
 
-  plug.start()
+  p.start()
 end)
 
 conf("cinnamon", {
@@ -166,7 +166,7 @@ conf("neoscroll", function(plug)
   plug.setup({
     stop_eof = true,
     hide_cursor = true,
-    -- easing_function = "circular",
+    easing_function = "circular",
   })
 
   mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
@@ -222,21 +222,17 @@ conf("golden_size", function(plug)
   end
 
   local function ignore_by_buftype(types)
-    local buftype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
+    local bt = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
     for _, type in pairs(types) do
-      -- mega.log(fmt("type: %s / buftype: %s", type, buftype))
-
-      if type == buftype then
+      if type == bt then
         return 1
       end
     end
   end
   local function ignore_by_filetype(types)
-    local filetype = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
+    local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
     for _, type in pairs(types) do
-      -- mega.log(fmt("type: %s / filetype: %s", type, filetype))
-
-      if type == filetype then
+      if type == ft then
         return 1
       end
     end
@@ -250,7 +246,7 @@ conf("golden_size", function(plug)
         "toggleterm",
         "terminal",
         "megaterm",
-        "dirbuf",
+        "DirBuf",
         "Trouble",
         "qf",
       },
@@ -267,7 +263,7 @@ conf("golden_size", function(plug)
         "LuaTree",
         "NvimTree",
         "terminal",
-        "nofile",
+        "DirBuf",
         "tsplayground",
       },
     },
@@ -276,12 +272,12 @@ conf("golden_size", function(plug)
   })
 end)
 
-conf("nvim-autopairs", function(plug)
-  if plug == nil then
+conf("nvim-autopairs", function(p)
+  if p == nil then
     return
   end
 
-  plug.setup({
+  p.setup({
     disable_filetype = { "TelescopePrompt" },
     -- enable_afterquote = true, -- To use bracket pairs inside quotes
     enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
@@ -294,9 +290,9 @@ conf("nvim-autopairs", function(plug)
       java = false,
     },
   })
-  plug.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+  p.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
   local endwise = require("nvim-autopairs.ts-rule").endwise
-  plug.add_rules({
+  p.add_rules({
     endwise("then$", "end", "lua", nil),
     endwise("do$", "end", "lua", nil),
     endwise("function%(.*%)$", "end", "lua", nil),
@@ -306,13 +302,13 @@ conf("nvim-autopairs", function(plug)
   -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
 end)
 
-conf("lightspeed", function(plug)
-  if plug == nil then
+conf("lightspeed", function(p)
+  if p == nil then
     return
   end
 
   vim.cmd("packadd lightspeed.nvim")
-  plug.setup({
+  p.setup({
     -- jump_to_first_match = true,
     -- jump_on_partial_input_safety_timeout = 400,
     -- This can get _really_ slow if the window has a lot of content,
@@ -349,45 +345,45 @@ conf("lightspeed", function(plug)
   })
 end)
 
-conf("hop", function(plug)
-  if plug == nil then
+conf("hop", function(p)
+  if p == nil then
     return
   end
 
   vim.cmd("packadd hop.nvim")
-  plug.setup({
+  p.setup({
     -- remove h,j,k,l from hops list of keys
     keys = "etovxqpdygfbzcisuran",
     jump_on_sole_occurrence = true,
     uppercase_labels = false,
   })
   nnoremap("s", function()
-    plug.hint_char1({ multi_windows = false })
+    p.hint_char1({ multi_windows = false })
   end)
   -- NOTE: override F/f using hop motions
   vim.keymap.set({ "x", "n" }, "F", function()
-    plug.hint_char1({
+    p.hint_char1({
       direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
       current_line_only = true,
       inclusive_jump = false,
     })
   end)
   vim.keymap.set({ "x", "n" }, "f", function()
-    plug.hint_char1({
+    p.hint_char1({
       direction = require("hop.hint").HintDirection.AFTER_CURSOR,
       current_line_only = true,
       inclusive_jump = false,
     })
   end)
   onoremap("F", function()
-    plug.hint_char1({
+    p.hint_char1({
       direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
       current_line_only = true,
       inclusive_jump = true,
     })
   end)
   onoremap("f", function()
-    plug.hint_char1({
+    p.hint_char1({
       direction = require("hop.hint").HintDirection.AFTER_CURSOR,
       current_line_only = true,
       inclusive_jump = true,
@@ -457,17 +453,17 @@ do -- firenvim
   end
 end
 
-conf("dap", function(plug)
-  if plug == nil then
+conf("dap", function(p)
+  if p == nil then
     return
   end
 
-  plug.adapters.mix_task = {
+  p.adapters.mix_task = {
     type = "executable",
     command = fn.stdpath("data") .. "/elixir-ls/debugger.sh",
     args = {},
   }
-  plug.configurations.elixir = {
+  p.configurations.elixir = {
     {
       type = "mix_task",
       name = "mix test",
@@ -545,13 +541,13 @@ conf("fzf_gitignore", function()
   vim.g.fzf_gitignore_no_maps = true
 end)
 
-conf("notify", function(plug)
-  if plug == nil then
+conf("notify", function(p)
+  if p == nil then
     return
   end
 
   local renderer = require("notify.render")
-  plug.setup({
+  p.setup({
     stages = "fade_in_slide_out",
     timeout = 3000,
     render = function(bufnr, notif, highlights)
