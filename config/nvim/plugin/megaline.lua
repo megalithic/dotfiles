@@ -98,7 +98,11 @@ U.diagnostic_levels = {
 ---@return boolean: Whether to truncate.
 local function is_truncated(trunc)
   -- Use -1 to default to 'not truncated'
-  return api.nvim_win_get_width(0) < (trunc or -1)
+  if vim.api.nvim_get_option("laststatus") == 3 then
+    return vim.o.columns < (trunc or -1)
+  else
+    return api.nvim_win_get_width(0) < (trunc or -1)
+  end
 end
 
 -- local inactive = vim.api.nvim_get_current_win() ~= curwin
