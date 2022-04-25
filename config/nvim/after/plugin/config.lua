@@ -570,4 +570,4 @@ conf("incline", {
       winhighlight = "Normal:StInactive",
     },
   },
-})
+}, { enabled = vim.api.nvim_get_option("laststatus") == 3 })

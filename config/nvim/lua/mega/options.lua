@@ -250,7 +250,11 @@ vim.opt.completeopt = { "menuone", "noselect" }
 vim.opt.hlsearch = true
 vim.opt.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
-vim.opt.laststatus = 3 -- 2 = statusline in each window; 3 = global statusline
+
+-- statusline:
+-- 2 = statusline in each window;
+-- 3 = global statusline
+vim.opt.laststatus = 2
 -----------------------------------------------------------------------------//
 -- Emoji {{{1
 -----------------------------------------------------------------------------//
