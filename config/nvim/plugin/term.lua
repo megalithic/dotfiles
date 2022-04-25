@@ -3,8 +3,9 @@ local fmt = string.format
 local nil_buf_id = 999999
 local term_buf_id = nil_buf_id
 
+-- REF: https://github.com/outstand/titan.nvim/blob/main/lua/titan/plugins/toggleterm.lua
 local function set_keymaps(bufnr, winnr)
-  local opts = { buffer = bufnr }
+  local opts = { buffer = bufnr, silent = false }
   -- quit terminal and go back to last window
   nmap("q", function()
     vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -18,10 +19,17 @@ local function set_keymaps(bufnr, winnr)
   tmap("<esc>", [[<C-\><C-n>]], opts)
 
   -- move around splits
-  tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
-  tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
-  tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
-  tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+  -- tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+  -- tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+  -- tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+  -- tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+
+  tmap("<C-h>", function()
+    vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]])
+  end, opts)
+  tmap("<C-k>", function()
+    vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]])
+  end, opts)
 end
 
 --- @class TermOpts
@@ -59,7 +67,7 @@ function mega.term_open(opts)
   if direction == "horizontal" then
     vim.cmd(h_direction_cmd)
   elseif direction == "vertical" then
-    vim.cmd("vnew | lua vim.api.nvim_win_set_width(0, %s)", width)
+    vim.cmd(fmt("vnew | lua vim.api.nvim_win_set_width(0, %s)", width))
   else
     vim.notify("[megaterm] direction must either be `horizontal` or `vertical`.", "WARN")
     vim.cmd(h_direction_cmd)

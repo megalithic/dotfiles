@@ -636,7 +636,7 @@ function M.s_git(args)
   local head_str = unpack(item(branch, "StGitBranch", {
     before = " ",
     after = " ",
-    prefix = is_truncated(args.trunc_width) and "" or mega.icons.git.symbol,
+    prefix = is_truncated(80) and "" or mega.icons.git.symbol,
     prefix_color = "StGitSymbol",
   }))
   local added_str = unpack(

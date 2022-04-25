@@ -30,27 +30,25 @@ local exec = mega.exec
 
 -- FIXME: i'm not so sure these are doing the right things...
 -- at all.
-mega.augroup("AddTerminalMappings", {
-  {
-    event = { "TermOpen" },
-    pattern = { "term://*" },
-    command = function()
-      if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" or vim.bo.filetype == "megaterm" then
-        local opts = { silent = false, buffer = 0 }
-        tnoremap("<esc>", [[<C-\><C-n>]], opts)
-        tnoremap("jk", [[<C-\><C-n>]], opts)
-        tnoremap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
-        tnoremap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
-        tnoremap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
-        tnoremap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
-        tnoremap("]t", [[<C-\><C-n>:tablast<CR>]])
-        tnoremap("[t", [[<C-\><C-n>:tabnext<CR>]])
-        tnoremap("<S-Tab>", [[<C-\><C-n>:bprev<CR>]])
-        tnoremap("<leader><Tab>", [[<C-\><C-n>:close \| :bnext<cr>]])
-      end
-    end,
-  },
-})
+-- mega.augroup("AddTerminalMappings", {
+--   {
+--     event = { "TermOpen" },
+--     pattern = { "term://*" },
+--     command = function()
+--       local opts = { silent = false, buffer = 0 }
+--       tnoremap("<esc>", [[<C-\><C-n>]], opts)
+--       tnoremap("jk", [[<C-\><C-n>]], opts)
+--       tnoremap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+--       tnoremap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+--       tnoremap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+--       tnoremap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+--       tnoremap("]t", [[<C-\><C-n>:tablast<CR>]])
+--       tnoremap("[t", [[<C-\><C-n>:tabnext<CR>]])
+--       tnoremap("<S-Tab>", [[<C-\><C-n>:bprev<CR>]])
+--       tnoremap("<leader><Tab>", [[<C-\><C-n>:close \| :bnext<cr>]])
+--     end,
+--   },
+-- })
 
 local has_wk, wk = mega.safe_require("which-key")
 if has_wk then

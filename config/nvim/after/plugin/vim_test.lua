@@ -53,7 +53,7 @@ mega.conf("vim-test", function()
         winnr = vim.fn.winnr(),
         cmd = cmd,
         precmd = "eval $(desk load)",
-        direction = "horizontal",
+        direction = "vertical",
         notifier = terminal_notifier,
       })
     end,
