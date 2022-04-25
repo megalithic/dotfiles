@@ -1,5 +1,6 @@
 -- REF: https://github.com/elihunter173/dirbuf.nvim/issues/8
 vim.bo.bufhidden = "wipe"
+vim.wo.signcolumn = "no"
 
 -- easy quit
 vim.cmd([[nnoremap <buffer> q :q<CR>]])

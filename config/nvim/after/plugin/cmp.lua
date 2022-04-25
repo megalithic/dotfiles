@@ -66,7 +66,7 @@ cmp.setup({
   preselect = cmp.PreselectMode.None,
   view = { entries = "custom" },
   completion = {
-    keyword_length = 1,
+    keyword_length = 2,
     get_trigger_characters = function(trigger_characters)
       return vim.tbl_filter(function(char)
         return char ~= " "
@@ -74,7 +74,7 @@ cmp.setup({
     end,
   },
   experimental = {
-    ghost_text = true,
+    ghost_text = false,
   },
   snippet = {
     expand = function(args)
@@ -90,8 +90,10 @@ cmp.setup({
     ["<S-Tab>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
     ["<C-n>"] = cmp.mapping(tab, { "i", "s", "c" }),
     ["<C-p>"] = cmp.mapping(shift_tab, { "i", "s", "c" }),
-    ["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
-    ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+    -- ["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
+    -- ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+    ["<C-f>"] = cmp.mapping.scroll_docs(4),
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<CR>"] = cmp.mapping.confirm({ select = false }),
     -- ["<C-e>"] = cmp.mapping.close(),
