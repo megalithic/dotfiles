@@ -560,3 +560,14 @@ conf("notify", function(p)
 end)
 
 conf("treesitter-context", {})
+
+conf("incline", {
+  hide = {
+    focused_win = true,
+  },
+  window = {
+    options = {
+      winhighlight = "Normal:Search",
+    },
+  },
+})

@@ -31,6 +31,7 @@ local PKGS = {
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
+  "b0o/incline.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
