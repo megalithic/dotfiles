@@ -805,8 +805,8 @@ end
 -- Default content ------------------------------------------------------------
 local function statusline_active(ctx) -- _ctx
   -- stylua: ignore start
-  local lprefix                     = unpack(item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
-  local rprefix                     = unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local prefix                      = unpack(item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
+  local suffix                      = unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
   local mode                        = M.s_mode({ trunc_width = 120 })
   local search                      = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
   local git                         = M.s_git({ trunc_width = 120 })
@@ -837,7 +837,7 @@ local function statusline_active(ctx) -- _ctx
   end
 
   return build({
-    lprefix,
+    prefix,
     mode,
     "%<", -- Mark general truncate point
     filename,
@@ -852,7 +852,7 @@ local function statusline_active(ctx) -- _ctx
     git,
     lineinfo,
     indention,
-    rprefix,
+    suffix,
   })
 end
 
