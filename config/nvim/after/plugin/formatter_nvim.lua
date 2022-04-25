@@ -1,3 +1,6 @@
+local fn = vim.fn
+local api = vim.api
+
 local formatter = require("formatter")
 local prettierConfig = function()
   return {
