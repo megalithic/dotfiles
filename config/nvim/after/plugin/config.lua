@@ -567,7 +567,7 @@ conf("incline", {
   },
   window = {
     options = {
-      winhighlight = "Normal:Search",
+      winhighlight = "Normal:Headline2",
     },
   },
 })
