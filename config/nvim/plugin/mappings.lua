@@ -538,7 +538,11 @@ nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 -- nmap("<C-t>", "<cmd>NvimTreeToggle<CR>", "nvim-tree: toggle")
 
 -- # dirbuf.nvim
-nmap("<C-t>", "<cmd>vertical topleft split|vertical resize 60|Dirbuf<CR>", "filetree: open dirbuf")
+nmap("<C-t>", function()
+  local buf = vim.api.nvim_buf_get_name(0)
+  vim.cmd([[vertical topleft split|vertical resize 60]])
+  require("dirbuf").open(buf)
+end)
 nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
 -- # telescope
