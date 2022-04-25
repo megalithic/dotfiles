@@ -28,12 +28,14 @@ local fn = vim.fn
 local exec = mega.exec
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
+-- FIXME: i'm not so sure these are doing the right things...
+-- at all.
 mega.augroup("AddTerminalMappings", {
   {
     event = { "TermOpen" },
     pattern = { "term://*" },
     command = function()
-      if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" then
+      if vim.bo.filetype == "" or vim.bo.filetype == "toggleterm" or vim.bo.filetype == "megaterm" then
         local opts = { silent = false, buffer = 0 }
         tnoremap("<esc>", [[<C-\><C-n>]], opts)
         tnoremap("jk", [[<C-\><C-n>]], opts)

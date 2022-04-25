@@ -4,6 +4,7 @@ local nil_buf_id = 999999
 local term_buf_id = nil_buf_id
 
 local function set_keymaps(bufnr, winnr)
+  local opts = { buffer = bufnr }
   -- quit terminal and go back to last window
   nmap("q", function()
     vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -11,10 +12,16 @@ local function set_keymaps(bufnr, winnr)
 
     -- jump back to our last window
     vim.cmd(winnr .. [[wincmd w]])
-  end, { buffer = bufnr })
+  end, opts)
 
   -- get back to normal mode
-  tmap("<esc>", [[<C-\><C-n>]], { buffer = bufnr })
+  tmap("<esc>", [[<C-\><C-n>]], opts)
+
+  -- move around splits
+  tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+  tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+  tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+  tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
 end
 
 --- @class TermOpts
