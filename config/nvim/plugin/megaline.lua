@@ -632,13 +632,12 @@ function M.s_git(args)
     branch = mega.truncate(branch or "", 11, false)
   end
 
-  local head_str = unpack(
-    item(
-      branch,
-      "StGitBranch",
-      { before = " ", after = " ", prefix = mega.icons.git.symbol, prefix_color = "StGitSymbol" }
-    )
-  )
+  local head_str = unpack(item(branch, "StGitBranch", {
+    before = " ",
+    after = " ",
+    prefix = is_truncated(args.trunc_width) and "" or mega.icons.git.symbol,
+    prefix_color = "StGitSymbol",
+  }))
   local added_str = unpack(
     item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGitSignsAdd" })
   )
@@ -773,7 +772,7 @@ function M.s_lineinfo(args)
 
   -- Use virtual column number to allow update when paste last column
   if is_truncated(args.trunc_width) then
-    return "%l│%2v"
+    return "%l/%L:%v"
   end
 
   return table.concat({
@@ -810,11 +809,10 @@ local function statusline_active(ctx)
   local saving                      = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
   local lineinfo                    = M.s_lineinfo({ trunc_width = 75 })
   local diags                       = diagnostic_info()
-  local diag_error                  = unpack(item_if(diags.error.count, diags.error, "StError", { prefix = diags.error.sign }))
-  local diag_warn                   = unpack(item_if(diags.warn.count, diags.warn, "StWarn", { prefix = diags.warn.sign }))
-  local diag_info                   = unpack(item_if(diags.info.count, diags.info, "StInfo", { prefix = diags.info.sign }))
-  local diag_hint                   = unpack(item_if(diags.hint.count, diags.hint, "StHint", { prefix = diags.hint.sign }))
-  -- local fileinfo                    = M.s_fileinfo({ trunc_width = 120 })
+  local diag_error                  = unpack(item_if(diags.error.count, not is_truncated(100) and diags.error, "StError", { prefix = diags.error.sign }))
+  local diag_warn                   = unpack(item_if(diags.warn.count, not is_truncated(100) and diags.warn, "StWarn", { prefix = diags.warn.sign }))
+  local diag_info                   = unpack(item_if(diags.info.count, not is_truncated(100) and diags.info, "StInfo", { prefix = diags.info.sign }))
+  local diag_hint                   = unpack(item_if(diags.hint.count, not is_truncated(100) and diags.hint, "StHint", { prefix = diags.hint.sign }))
   -- stylua: ignore end
 
   local plain = U.is_plain(ctx)
