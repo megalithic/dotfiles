@@ -567,7 +567,7 @@ conf("incline", {
   },
   window = {
     options = {
-      winhighlight = "Normal:Headline2",
+      winhighlight = "Normal:StInactive",
     },
   },
 })
