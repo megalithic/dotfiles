@@ -123,7 +123,8 @@ local function get_toggleterm_name(_, buf)
 end
 local function get_megaterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
-  return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
+  return fmt("Terminal(%s)[%s]", shell, buf)
+  -- return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
 end
 
 local plain_types = {
