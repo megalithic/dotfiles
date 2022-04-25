@@ -2,11 +2,15 @@ local fmt = string.format
 local system = vim.fn.system
 
 local function terminal_notifier(cmd, exit)
+  local tmux_display_message = require("mega.utils").ext.tmux.display_message
+
   if exit == 0 then
     print("Success!")
+    tmux_display_message("Success!")
     system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], cmd))
   else
     print("Failure!")
+    tmux_display_message("Failure!")
     system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], cmd))
   end
 end

@@ -50,6 +50,15 @@ function M.ext.tmux.set_statusline(reset)
   fn.jobstart(fmt("tmux set-option -g status-style bg=%s", bg))
 end
 
+--- Displays a message in the tmux status-line
+---@param msg string?
+function M.ext.tmux.display_message(msg)
+  if not msg then
+    return
+  end
+  fn.jobstart(fmt("tmux display-message '%s'", msg))
+end
+
 function M.ext.tmux.set_popup_colorscheme()
   if not hl_ok then
     return
