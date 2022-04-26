@@ -342,8 +342,8 @@ local function setup_diagnostics()
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
-      max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
-      max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
+      max_width = math.min(math.floor(vim.o.columns * 0.7), 100),
+      max_height = math.min(math.floor(vim.o.lines * 0.3), 30),
       close_events = {
         "CursorMoved",
         "BufHidden",
@@ -355,9 +355,8 @@ local function setup_diagnostics()
         "BufWritePost",
       },
       header = { "Diagnostics:", "DiagnosticHeader" },
-      -- scope = "cursor",
-      -- pos = 1,
-      prefix = function(diag, i, total)
+      ---@diagnostic disable-next-line: unused-local
+      prefix = function(diag, _i, _total)
         local icon, highlight
         if diag.severity == 1 then
           icon = mega.icons.lsp.error
@@ -383,8 +382,8 @@ end
 local function setup_handlers()
   local opts = {
     border = mega.get_border(),
-    max_width = math.max(math.floor(vim.o.columns * 0.7), 100),
-    max_height = math.max(math.floor(vim.o.lines * 0.3), 30),
+    max_width = math.min(math.floor(vim.o.columns * 0.7), 100),
+    max_height = math.min(math.floor(vim.o.lines * 0.3), 30),
     focusable = false,
     focus = false,
     silent = true,

@@ -47,6 +47,8 @@ local function is_floating_win()
   return vim.fn.win_gettype() == "popup"
 end
 
+local is_enabled = true
+
 ---Determines whether or not a window should be ignored by this plugin
 ---@return boolean
 local function is_ignored()
@@ -86,6 +88,9 @@ local function is_blocked()
 end
 
 local function enable_relative_number()
+  if not is_enabled then
+    return
+  end
   if is_ignored() then
     return
   end
@@ -114,6 +119,15 @@ local function disable_relative_number()
     vim.wo.relativenumber = false
   end
 end
+
+mega.command("ToggleRelativeNumber", function()
+  is_enabled = not is_enabled
+  if is_enabled then
+    enable_relative_number()
+  else
+    disable_relative_number()
+  end
+end)
 
 mega.augroup("ToggleRelativeLineNumbers", {
   {

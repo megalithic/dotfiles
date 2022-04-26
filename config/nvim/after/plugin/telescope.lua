@@ -38,7 +38,8 @@ telescope.setup({
     selection_caret = "» ", -- ❯
     mappings = {
       i = {
-        ["<c-w>"] = actions.send_selected_to_qflist,
+        ["<c-q>"] = actions.send_selected_to_qflist,
+        ["<c-l>"] = actions.send_to_qflist,
         ["<c-c>"] = function()
           vim.cmd("stopinsert!")
         end,
@@ -52,7 +53,8 @@ telescope.setup({
         -- ["<c-l>"] = layout_actions.cycle_layout_next,
       },
       n = {
-        ["<C-w>"] = actions.send_selected_to_qflist,
+        ["<c-q>"] = actions.send_selected_to_qflist,
+        ["<c-l>"] = actions.send_to_qflist,
       },
     },
     file_ignore_patterns = {

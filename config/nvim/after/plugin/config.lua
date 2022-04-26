@@ -180,7 +180,7 @@ conf("neoscroll", function(plug)
   mappings["zb"] = { "zb", { "150" } }
 
   require("neoscroll.config").set_mappings(mappings)
-end)
+end, { enabled = true })
 
 conf("trouble", {
   auto_close = true,
@@ -517,7 +517,28 @@ conf("dirbuf", {
 
 conf("bqf", {
   auto_enable = true,
-  preview = { auto_preview = true },
+  auto_resize_height = true,
+  preview = {
+    auto_preview = true,
+    win_height = 12,
+    win_vheight = 12,
+    delay_syntax = 80,
+    border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
+    ---@diagnostic disable-next-line: unused-local
+    should_preview_cb = function(bufnr, _qwinid)
+      local ret = true
+      local bufname = vim.api.nvim_buf_get_name(bufnr)
+      local fsize = vim.fn.getfsize(bufname)
+      if fsize > 100 * 1024 then
+        -- skip file size greater than 100k
+        ret = false
+      elseif bufname:match("^fugitive://") then
+        -- skip fugitive buffer
+        ret = false
+      end
+      return ret
+    end,
+  },
 })
 
 -- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89

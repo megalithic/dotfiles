@@ -46,7 +46,7 @@ function dbg(s) {
 // -----------------------------------------------------------------------------------------------------------------------
 // -- [ SETTINGS ]
 // -----------------------------------------------------------------------------------------------------------------------
-settings.defaultSearchEngine = "d"; // duck duck go
+settings.defaultSearchEngine = "b"; // duck duck go
 settings.focusAfterClosed = "right";
 settings.hintAlign = "left";
 settings.hintExplicit = true;
@@ -276,6 +276,23 @@ actions.sendToInstapaper = () => {
 };
 unmap(";i");
 mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
+
+// add search engines
+// REF: https://gist.github.com/chixing/82767d49380294ad7b298554e2c0e59b
+removeSearchAlias("b");
+addSearchAlias(
+  "b",
+  "brave",
+  "https://search.brave.com/search?q=",
+  "s",
+  "https://search.brave.com/search?q=",
+  function (response) {
+    var res = JSON.parse(response.text);
+    return res.map(function (r) {
+      return r.phrase;
+    });
+  }
+);
 
 // set theme
 settings.theme = `

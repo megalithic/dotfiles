@@ -12,17 +12,17 @@ windows:
       layout: main-vertical
       panes:
         - code:
-            - ssh seth-dev
+            - et seth-dev
             - cd ~/code/pages
             - eval $(desk load); ls
   - services:
       layout: even-horizontal
       panes:
         - logs:
-            - ssh seth-dev
+            - et seth-dev
             - cd ~/code/pages
             - eval $(desk load)
         - repl:
-            - ssh seth-dev
+            - et seth-dev
             - cd ~/code/pages
             - eval $(desk load); iex -S mix

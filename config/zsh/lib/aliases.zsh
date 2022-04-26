@@ -388,3 +388,8 @@ if [[ $PLATFORM == "linux" ]]; then
   # REF: https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
   alias rules="sudo iptables -L -nv"
 fi
+
+# macos / signing apps
+# -- REF: https://github.com/Jelmerro/Vieb/blob/master/FAQ.md#mac
+alias sign="sudo codesign --force --deep --sign -"
+# https://github.com/Jelmerro/Vieb/releases/download/7.2.0/Vieb-7.2.0-mac.zip
