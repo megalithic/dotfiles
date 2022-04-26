@@ -66,7 +66,7 @@ vim.g.projectionist_heuristics = {
         "end",
       },
     },
-    ["lib/**/live/*_live.heex"] = {
+    ["lib/**/live/*_live.html.heex"] = {
       ["type"] = "heex",
       ["related"] = "lib/{dirname}/live/{basename}_live.html.heex",
     },
@@ -83,25 +83,25 @@ vim.g.projectionist_heuristics = {
         "end",
       },
     },
-    ["lib/*.ex"] = {
-      ["type"] = "source",
-      ["alternate"] = "test/{}_test.exs",
-      ["template"] = {
-        "defmodule {camelcase|capitalize|dot} do",
-        "",
-        "end",
-      },
-    },
-    ["test/*_test.exs"] = {
-      ["type"] = "test",
-      ["alternate"] = "lib/{}.ex",
-      ["template"] = {
-        "defmodule {camelcase|capitalize|dot}Test do",
-        "  use ExUnit.Case, async: true",
-        "",
-        "  alias {camelcase|capitalize|dot}",
-        "end",
-      },
-    },
+    -- ["lib/*.ex"] = {
+    --   ["type"] = "source",
+    --   ["alternate"] = "test/{}_test.exs",
+    --   ["template"] = {
+    --     "defmodule {camelcase|capitalize|dot} do",
+    --     "",
+    --     "end",
+    --   },
+    -- },
+    -- ["test/*_test.exs"] = {
+    --   ["type"] = "test",
+    --   ["alternate"] = "lib/{}.ex",
+    --   ["template"] = {
+    --     "defmodule {camelcase|capitalize|dot}Test do",
+    --     "  use ExUnit.Case, async: true",
+    --     "",
+    --     "  alias {camelcase|capitalize|dot}",
+    --     "end",
+    --   },
+    -- },
   },
 }

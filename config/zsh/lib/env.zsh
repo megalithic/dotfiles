@@ -42,6 +42,8 @@ export COLORTERM=${COLORTERM:=truecolor}
 #
 # -- editors
 if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+  # FIXME: move to the latest nvim-remote api:
+  # https://github.com/ahmedelgabri/dotfiles/commit/b5d0824c60f19ab52a391e0c33930ddad9767910
   export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
   export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
 else

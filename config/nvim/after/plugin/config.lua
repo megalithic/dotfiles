@@ -592,3 +592,31 @@ conf("incline", {
     },
   },
 }, { enabled = vim.api.nvim_get_option("laststatus") == 3 })
+
+conf("other-nvim", {
+  mappings = {
+    {
+      pattern = "/(.*)/live/*.ex$",
+      target = "/%1/live/%2.html.heex",
+    },
+    {
+      pattern = "/(.*)/live/*.html.heex$",
+      target = "/%1/live/%2.ex",
+    },
+
+    -- {
+    --   pattern = "/src/app/(.*)/.*.ts$",
+    --   target = "/src/app/%1/%1.component.html",
+    -- },
+    -- {
+    --   pattern = "/src/app/(.*)/.*.html$",
+    --   target = "/src/app/%1/%1.component.ts",
+    -- },
+  },
+  -- transformers = {
+  --   -- defining a custom transformer
+  --   lowercase = function(inputString)
+  --     return inputString:lower()
+  --   end,
+  -- },
+}, { enabled = false })

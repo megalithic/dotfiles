@@ -143,6 +143,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
   "bennypowers/nvim-regexplainer",
+  "rgroli/other.nvim",
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
