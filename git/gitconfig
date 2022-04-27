@@ -295,6 +295,7 @@ fzf = !"                                                                        
 
 [merge]
   tool = nvimdiff
+  conflictstyle = diff3
 
 [mergetool "nvimdiff"]
   keepBackup = false
@@ -401,6 +402,8 @@ fzf = !"                                                                        
 [diff]
 	compactionHeuristic = true
 	indentHeuristic = true
+  colorMoved = default
+  navigate = true  # use n and N to move between diff sections
 
 [color "diff-highlight"]
 	oldNormal = red bold

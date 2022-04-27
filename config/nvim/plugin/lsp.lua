@@ -12,7 +12,7 @@ local diagnostic = vim.diagnostic
 vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
--- vim.lsp.set_log_level("trace")
+vim.lsp.set_log_level("ERROR")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
 -- [ COMMANDS ] ----------------------------------------------------------------
@@ -185,8 +185,9 @@ local function setup_mappings(client, bufnr)
     maps.n["<leader>ltd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
   end
 
-  maps.n["<leader>la"] = { vim.lsp.buf.code_action, "lsp: code action" }
-  maps.x["<leader>la"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
+  maps.n["<leader>ca"] = { vim.lsp.buf.code_action, "lsp: code action" }
+  maps.x["<leader>ca"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
+  maps.n["<leader>cl"] = { vim.lsp.codelens.run, "lsp: run code lens" }
 
   if client.supports_method("textDocument/rename") then
     maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
@@ -224,30 +225,6 @@ local function setup_formatting(client, bufnr)
       client.resolved_capabilities.document_formatting = false
     end
   end
-end
-
--- [ TAGS ] --------------------------------------------------------------------
-
-function mega.lsp.tagfunc(pattern, flags)
-  if flags ~= "c" then
-    return vim.NIL
-  end
-  local params = vim.lsp.util.make_position_params()
-  local client_id_to_results, err = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 500)
-  assert(not err, vim.inspect(err))
-
-  local results = {}
-  for _, lsp_results in ipairs(client_id_to_results) do
-    for _, location in ipairs(lsp_results.result or {}) do
-      local start = location.range.start
-      table.insert(results, {
-        name = pattern,
-        filename = vim.uri_to_fname(location.uri),
-        cmd = string.format("call cursor(%d, %d)", start.line + 1, start.character + 1),
-      })
-    end
-  end
-  return results
 end
 
 -- [ DIAGNOSTICS ] -------------------------------------------------------------
@@ -491,10 +468,13 @@ function mega.lsp.on_attach(client, bufnr)
     require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
   end
 
-  if client.resolved_capabilities.goto_definition then
-    vim.bo[bufnr].tagfunc = "v:lua.mega.lsp.tagfunc"
+  if client.resolved_capabilities.goto_definition == true then
+    vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
   end
 
+  if client.resolved_capabilities.document_formatting == true then
+    vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
+  end
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)
