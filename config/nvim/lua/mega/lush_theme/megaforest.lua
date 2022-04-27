@@ -797,8 +797,8 @@ return lush(function()
     TelescopePromptNormal({ fg = fg, bg = bg2.darken(10) }),
     TelescopePromptTitle({ fg = bg0, bg = red }),
 
-    TelescopeSelection({ bg = bg2.darken(10) }),
-    TelescopeSelectionCaret({ fg = fg, bg = bg2.darken(10) }),
+    TelescopeSelection({ bg = bg3, gui = "bold,italic" }),
+    TelescopeSelectionCaret({ fg = fg, bg = bg3 }),
     TelescopeResults({ bg = "NONE" }),
     TelescopeResultsTitle({ fg = bg0, bg = fg, gui = "bold" }),
 
