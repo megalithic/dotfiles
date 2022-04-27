@@ -400,10 +400,26 @@ end
 ---@param opts table|nil
 function mega.conf(plugin, config, opts)
   opts = opts or {}
-  local paqs_path = vim.fn.stdpath("data") .. "/site/pack/paqs/"
+  -- local paqs_path = vim.fn.stdpath("data") .. "/site/pack/paqs/"
+  -- local dir = paqs_path .. (args.opt and "opt/" or "start/") .. name
+
+  local paq_plugin = vim.tbl_filter(function(pkg)
+    if type(pkg) == "table" and type(pkg[1]) == "string" then
+      -- P({ "table and pkg[1]", plugin, pkg[1] })
+      return false
+      -- return pkg[1]:match(plugin)
+    else
+      -- return type(pkg) == "string" and pkg:match(plugin)
+      -- P({ "string and pkg", plugin, pkg })
+      return false
+    end
+  end, require("mega.plugins").packages)
+
+  -- P(paq_plugin)
+
   local enabled = (opts.enabled == nil) and true or opts.enabled
   local silent = (opts.silent == nil) and true or opts.silent
-  local event = (opts.event == nil) and {} or opts.event
+  -- local event = (opts.event == nil) and {} or opts.event
   -- local safe = (opts.safe == nil) and true or opts.safe
   if enabled then
     local ok, loader = mega.safe_require(plugin, { silent = true })

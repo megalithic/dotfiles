@@ -155,9 +155,8 @@ cmp.setup.cmdline(":", {
 -- FT specific cmp configs
 cmp.setup.filetype("gitcommit", {
   sources = {
-    { name = "cmp_git" },
     { name = "spell" },
-    { name = "emoji" },
+    { name = "path" },
   },
   { name = "buffer" },
 })

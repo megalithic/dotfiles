@@ -6,7 +6,7 @@
 -- NOTE: add local module:
 -- vim.opt.runtimepath:append '~/path/to/your/plugin'
 local PKGS = {
-  { "savq/paq-nvim" },
+  "savq/paq-nvim",
   ------------------------------------------------------------------------------
   -- (profiling/speed improvements) --
   "dstein64/vim-startuptime",
@@ -236,7 +236,9 @@ local PKGS = {
   -- @trial "ryansch/habitats.nvim",
 }
 
-local M = {}
+local M = {
+  packages = PKGS,
+}
 
 M.sync_all = function()
   -- package.loaded.paq = nil
