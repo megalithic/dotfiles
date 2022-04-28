@@ -85,6 +85,8 @@ function mega.term_open(opts)
   vim.fn.termopen(cmd, {
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(jobid, exit_code, event)
+      set_keymaps(term_buf_id, winnr)
+
       -- if we get a custom on_exit, run it instead...
       if custom_on_exit ~= nil and type(custom_on_exit) == "function" then
         custom_on_exit(jobid, exit_code, event, cmd, winnr, term_buf_id)

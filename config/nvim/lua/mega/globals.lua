@@ -394,39 +394,115 @@ function mega.safe_require(module, opts)
   return ok, result
 end
 
+local function build_plugin_config(plugin_conf_name)
+  local str_match = function(str, matcher)
+    return string.find(str, matcher, 0, true)
+  end
+
+  local function parse_name(args)
+    if args.as then
+      return args.as
+    elseif args.url then
+      return args.url:gsub("%.git$", ""):match("/([%w-_.]+)$"), args.url
+    else
+      if type(args) == "table" then
+        return args[1]:match("^[%w-]+/([%w-_.]+)$"), args[1]
+      elseif type(args) == "string" then
+        return args:match("^[%w-]+/([%w-_.]+)$"), args
+      end
+    end
+  end
+
+  local plugins = {}
+  local paqs_path = vim.fn.stdpath("data") .. "/site/pack/paqs/"
+
+  for _, pkg in pairs(require("mega.plugins").packages) do
+    local found = nil
+    local repo = ""
+    local opt = false
+    local name = parse_name(pkg)
+    local dir = ""
+
+    -- if vim.fn.empty(vim.fn.glob(paqs_path .. "start/" .. match)) > 0 then
+    --   table.insert(found, { plugin = pkg, opt = false, dir = paqs_path .. "start/" .. match })
+    -- elseif vim.fn.empty(vim.fn.glob(paqs_path .. "opt/" .. match)) > 0 then
+    --   table.insert(found, { plugin = pkg, opt = true, dir = paqs_path .. "opt/" .. match })
+    -- end
+
+    if type(pkg) == "table" then
+      if pkg["url"] ~= nil then
+        repo = pkg["url"]
+      else
+        repo = pkg[1]
+      end
+
+      if pkg["opt"] ~= nil then
+        opt = pkg["opt"]
+      end
+
+      local match = str_match(repo, plugin_conf_name)
+
+      if match then
+        dir = paqs_path .. (opt and "opt/" or "start/") .. name
+
+        found = {
+          name = name,
+          conf_name = plugin_conf_name,
+          spec = pkg,
+          repo = repo,
+          dir = dir,
+          type = "table",
+          opt = opt,
+        }
+      end
+    elseif type(pkg) == "string" then
+      repo = pkg
+      local match = str_match(repo, plugin_conf_name)
+
+      if match then
+        dir = paqs_path .. "start/" .. name
+
+        found = {
+          name = name,
+          conf_name = plugin_conf_name,
+          spec = pkg,
+          repo = repo,
+          dir = dir,
+          type = "string",
+          opt = opt,
+        }
+      end
+    end
+
+    if found and not vim.tbl_isempty(found) then
+      table.insert(plugins, found)
+    end
+  end
+
+  return plugins
+end
+
 ---Wraps common "setup" functionality in a nice package
----@param plugin string
+---@param plugin_conf_name string
 ---@param config table|function
 ---@param opts table|nil
-function mega.conf(plugin, config, opts)
+function mega.conf(plugin_conf_name, config, opts)
   opts = opts or {}
-  -- local paqs_path = vim.fn.stdpath("data") .. "/site/pack/paqs/"
-  -- local dir = paqs_path .. (args.opt and "opt/" or "start/") .. name
-
-  local paq_plugin = vim.tbl_filter(function(pkg)
-    if type(pkg) == "table" and type(pkg[1]) == "string" then
-      -- P({ "table and pkg[1]", plugin, pkg[1] })
-      return false
-      -- return pkg[1]:match(plugin)
-    else
-      -- return type(pkg) == "string" and pkg:match(plugin)
-      -- P({ "string and pkg", plugin, pkg })
-      return false
-    end
-  end, require("mega.plugins").packages)
-
-  -- P(paq_plugin)
-
   local enabled = (opts.enabled == nil) and true or opts.enabled
   local silent = (opts.silent == nil) and true or opts.silent
   -- local event = (opts.event == nil) and {} or opts.event
   -- local safe = (opts.safe == nil) and true or opts.safe
   if enabled then
-    local ok, loader = mega.safe_require(plugin, { silent = true })
+    -- FIXME: broke and needs to be fixed to:
+    -- * handle finding if given plugin name/config is optional from mega.plugins.packages
+    -- * if optional, allow for lazy-loading based on an event/events/autocmd
+    local plugin_conf = build_plugin_config(plugin_conf_name)
+
+    local ok, loader = mega.safe_require(plugin_conf_name, { silent = true })
     if ok then
       if vim.fn.has_key(loader, "setup") and type(config) == "table" then
         if not silent then
-          P(fmt("%s configuring with `setup(config)`", plugin))
+          P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
         end
 
         loader.setup(config)
@@ -832,6 +908,11 @@ function mega.sync_plugins()
   P("paq-nvim: syncing plugins..")
   package.loaded["mega.plugins"] = nil
   require("mega.plugins").sync_all()
+end
+
+function mega.list_plugins()
+  package.loaded["mega.plugins"] = nil
+  require("mega.plugins").list()
 end
 
 --- Usage:

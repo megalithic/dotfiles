@@ -28,7 +28,7 @@
     require("vim.lsp.log").set_format_func(vim.inspect)
 
    LSP/efm log locations ->
-    `tail -n150 -f $HOME/.cache/nvim/lsp.log`
+    htail -n150 -f $HOME/.cache/nvim/lsp.log`
     `tail -n150 -f $HOME/.cache/nvim/efm-lsp.log`
     -or-
     :lua vim.cmd('vnew '..vim.lsp.get_log_path())

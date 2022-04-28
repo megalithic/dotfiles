@@ -86,7 +86,7 @@ local PKGS = {
   "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
-  "lewis6991/nvim-treesitter-context",
+  { "lewis6991/nvim-treesitter-context" },
   "SmiteshP/nvim-gps",
   -- @trial ziontee113/syntax-tree-surfer
   -- @trial "primeagen/harpoon",
@@ -241,9 +241,11 @@ local M = {
 }
 
 M.sync_all = function()
-  -- package.loaded.paq = nil
-  -- vim.cmd("autocmd User PaqDoneSync quit")
   (require("paq"))(PKGS):sync()
+end
+
+M.list = function()
+  (require("paq"))(PKGS).list()
 end
 
 local function clone_paq()

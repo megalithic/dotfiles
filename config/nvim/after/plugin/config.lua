@@ -580,7 +580,7 @@ conf("notify", function(p)
   })
 end)
 
-conf("treesitter-context", {})
+conf("treesitter-context", {}, { test = true })
 
 conf("incline", {
   hide = {
