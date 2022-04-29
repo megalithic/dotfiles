@@ -66,7 +66,7 @@ cmp.setup({
   preselect = cmp.PreselectMode.None,
   view = { entries = "custom" },
   completion = {
-    keyword_length = 2,
+    keyword_length = 1,
     get_trigger_characters = function(trigger_characters)
       return vim.tbl_filter(function(char)
         return char ~= " "
@@ -111,12 +111,12 @@ cmp.setup({
     { name = "luasnip" },
     { name = "nvim_lsp" },
     -- { name = "nvim_lsp_signature_help" },
-    { name = "treesitter" },
+    -- { name = "treesitter" },
     -- { name = "buffer", keyword_length = 3 },
     { name = "path" },
     -- { name = "emmet_ls" },
   }, {
-    { name = "buffer", keyword_length = 3 },
+    { name = "buffer", keyword_length = 2 },
   }),
   formatting = {
     deprecated = true,
