@@ -394,6 +394,7 @@ function mega.safe_require(module, opts)
   return ok, result
 end
 
+---Handles retrieval of plugin configuration for given plugin name (used with `mega.conf/3`)
 local function build_plugin_config(plugin_conf_name)
   local str_match = function(str, matcher)
     return string.find(str, matcher, 0, true)
@@ -413,21 +414,15 @@ local function build_plugin_config(plugin_conf_name)
     end
   end
 
-  local plugins = {}
+  local found = nil
   local paqs_path = vim.fn.stdpath("data") .. "/site/pack/paqs/"
+  local match = false
 
-  for _, pkg in pairs(require("mega.plugins").packages) do
-    local found = nil
+  local found_filtered_plugin = vim.tbl_filter(function(pkg)
     local repo = ""
     local opt = false
     local name = parse_name(pkg)
     local dir = ""
-
-    -- if vim.fn.empty(vim.fn.glob(paqs_path .. "start/" .. match)) > 0 then
-    --   table.insert(found, { plugin = pkg, opt = false, dir = paqs_path .. "start/" .. match })
-    -- elseif vim.fn.empty(vim.fn.glob(paqs_path .. "opt/" .. match)) > 0 then
-    --   table.insert(found, { plugin = pkg, opt = true, dir = paqs_path .. "opt/" .. match })
-    -- end
 
     if type(pkg) == "table" then
       if pkg["url"] ~= nil then
@@ -440,7 +435,7 @@ local function build_plugin_config(plugin_conf_name)
         opt = pkg["opt"]
       end
 
-      local match = str_match(repo, plugin_conf_name)
+      match = str_match(repo, plugin_conf_name)
 
       if match then
         dir = paqs_path .. (opt and "opt/" or "start/") .. name
@@ -455,9 +450,11 @@ local function build_plugin_config(plugin_conf_name)
           opt = opt,
         }
       end
+
+      return match
     elseif type(pkg) == "string" then
       repo = pkg
-      local match = str_match(repo, plugin_conf_name)
+      match = str_match(repo, plugin_conf_name)
 
       if match then
         dir = paqs_path .. "start/" .. name
@@ -472,33 +469,64 @@ local function build_plugin_config(plugin_conf_name)
           opt = opt,
         }
       end
+
+      return match
     end
 
-    if found and not vim.tbl_isempty(found) then
-      table.insert(plugins, found)
-    end
-  end
+    return match
+  end, require("mega.plugins").packages)
 
-  return plugins
+  return found_filtered_plugin and found or nil
 end
 
----Wraps common "setup" functionality in a nice package
----@param plugin_conf_name string
----@param config table|function
----@param opts table|nil
-function mega.conf(plugin_conf_name, config, opts)
-  opts = opts or {}
-  local enabled = (opts.enabled == nil) and true or opts.enabled
-  local silent = (opts.silent == nil) and true or opts.silent
-  -- local event = (opts.event == nil) and {} or opts.event
-  -- local safe = (opts.safe == nil) and true or opts.safe
-  if enabled then
-    -- FIXME: broke and needs to be fixed to:
-    -- * handle finding if given plugin name/config is optional from mega.plugins.packages
-    -- * if optional, allow for lazy-loading based on an event/events/autocmd
-    local plugin_conf = build_plugin_config(plugin_conf_name)
+--- @class ConfigOpts
+--- @field config table|function
+--- @field enabled? boolean
+--- @field silent? boolean
+--- @field test? boolean
+--- @field event? table
 
-    local ok, loader = mega.safe_require(plugin_conf_name, { silent = true })
+---Wraps common plugin `setup` functionality; primarily for use with paq-nvim.
+---@param plugin_conf_name string
+---@param opts ConfigOpts
+function mega.conf(plugin_conf_name, opts)
+  opts = opts or {}
+  local config
+  local enabled
+  local silent
+  ---@diagnostic disable-next-line: unused-local
+  local test
+  ---@diagnostic disable-next-line: unused-local
+  local event
+
+  if type(opts) == "table" then
+    config = (opts.config == nil) and {} or opts.config
+    enabled = (opts.enabled == nil) and true or opts.enabled
+    silent = (opts.silent == nil) and true or opts.silent
+    ---@diagnostic disable-next-line: unused-local
+    test = (opts.test == nil) and false or opts.test
+    ---@diagnostic disable-next-line: unused-local
+    event = (opts.event == nil) and {} or opts.event
+  elseif type(opts) == "function" then
+    config = opts
+    enabled = true
+    silent = true
+    ---@diagnostic disable-next-line: unused-local
+    test = false
+    ---@diagnostic disable-next-line: unused-local
+    event = {}
+  end
+
+  if enabled then
+    -- NOTE:
+    -- If plugin is `opt` and `enabled`, we'll packadd the plugin (lazyload),
+    -- then we'll go forth with setup of plugin or running of optional callback fn.
+    local plugin_config = build_plugin_config(plugin_conf_name)
+    if plugin_config and plugin_config.opt then
+      vim.cmd("packadd " .. plugin_config.name)
+    end
+
+    local ok, loader = mega.safe_require(plugin_conf_name, { silent = silent })
     if ok then
       if vim.fn.has_key(loader, "setup") and type(config) == "table" then
         if not silent then
@@ -514,7 +542,7 @@ function mega.conf(plugin_conf_name, config, opts)
       if type(config) == "function" then
         config()
       else
-        -- P(fmt("nothing to do with %s", plugin))
+        -- no-op
       end
     end
   end
