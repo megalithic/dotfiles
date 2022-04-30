@@ -30,7 +30,7 @@ local function setup_commands()
   end)
 
   command("LspFormat", function()
-    vim.lsp.buf.formatting_sync(nil, 3000)
+    vim.lsp.buf.format(nil, 3000)
   end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
@@ -70,79 +70,71 @@ end
 -- [ AUTOCMDS ] ----------------------------------------------------------------
 
 local function setup_autocommands(client, bufnr)
-  if client and client.resolved_capabilities.code_lens then
-    augroup("LspCodeLens", {
-      {
-        event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
-        buffer = 0,
-        command = function()
-          vim.lsp.codelens.refresh()
-        end,
-      },
-    })
-  end
-  if client and client.resolved_capabilities.document_highlight then
-    augroup("LspDocumentHighlight", {
-      {
-        event = { "CursorHold", "CursorHoldI" },
-        buffer = bufnr,
-        command = function()
-          vim.lsp.buf.document_highlight()
-        end,
-      },
-      {
-        event = { "CursorMoved", "BufLeave" },
-        buffer = bufnr,
-        command = function()
-          vim.lsp.buf.clear_references()
-        end,
-      },
-    })
-  end
+  augroup("LspCodeLens", {
+    {
+      event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
+      buffer = 0,
+      command = function()
+        vim.lsp.codelens.refresh()
+      end,
+    },
+  })
 
-  if client then
-    augroup("LspDiagnostics", {
-      {
-        event = { "CursorHold" },
-        command = function()
-          diagnostic.open_float()
-        end,
-      },
-    })
-  end
+  augroup("LspDocumentHighlight", {
+    {
+      event = { "CursorHold", "CursorHoldI" },
+      buffer = bufnr,
+      command = function()
+        vim.lsp.buf.document_highlight()
+      end,
+    },
+    {
+      event = { "CursorMoved", "BufLeave" },
+      buffer = bufnr,
+      command = function()
+        vim.lsp.buf.clear_references()
+      end,
+    },
+  })
+  augroup("LspDiagnostics", {
+    {
+      event = { "CursorHold" },
+      command = function()
+        diagnostic.open_float()
+      end,
+    },
+  })
 
   local ok, lsp_format = pcall(require, "lsp-format")
   if ok then
     lsp_format.on_attach(client)
   else
-    if client and client.resolved_capabilities.document_formatting then
-      -- format on save
-      augroup("LspFormat", {
-        {
-          event = { "BufWritePre" },
-          -- buffer = bufnr,
-          command = function()
-            -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))
-            -- BUG: folds are are removed when formatting is done, so we save the current state of the
-            -- view and re-apply it manually after formatting the buffer
-            -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
-            vim.cmd("mkview!")
-            local format_sync_ok, msg = pcall(vim.lsp.buf.formatting_sync, nil, 3000)
-            if not format_sync_ok then
-              vim.notify(fmt("Error formatting file: %s", msg))
-            end
-            vim.cmd("loadview")
-          end,
-        },
-      })
-    end
+    -- format on save
+    augroup("LspFormat", {
+      {
+        event = { "BufWritePre" },
+        -- buffer = bufnr,
+        command = function()
+          -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))
+          -- BUG: folds are are removed when formatting is done, so we save the current state of the
+          -- view and re-apply it manually after formatting the buffer
+          -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
+          vim.cmd("mkview!")
+          local format_sync_ok, msg = pcall(vim.lsp.buf.format, nil, 3000)
+          if not format_sync_ok then
+            vim.notify(fmt("Error formatting file: %s", msg))
+          end
+          vim.cmd("loadview")
+        end,
+      },
+    })
   end
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  -- if client.resolved_capabilities.code_lens then
+  -- if client.server_capabilities.code_lens then
   --   bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
   -- end
 
@@ -177,23 +169,17 @@ local function setup_mappings(client, bufnr)
     "lsp: go to next diagnostic",
   }
 
-  if client.resolved_capabilities.implementation then
-    maps.n["gi"] = { vim.lsp.buf.implementation, "lsp: implementation" }
-  end
+  maps.n["gi"] = { vim.lsp.buf.implementation, "lsp: implementation" }
 
-  if client.resolved_capabilities.type_definition then
-    maps.n["<leader>ltd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
-  end
+  maps.n["<leader>ltd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
 
   maps.n["<leader>ca"] = { vim.lsp.buf.code_action, "lsp: code action" }
   maps.x["<leader>ca"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
   maps.n["<leader>cl"] = { vim.lsp.codelens.run, "lsp: run code lens" }
 
-  if client.supports_method("textDocument/rename") then
-    maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
-    maps.n["<leader>ln"] = { vim.lsp.buf.rename, "lsp: rename" }
-    maps.n["<leader>ln"] = { require("mega.lsp.rename").rename, "lsp: rename document symbol" }
-  end
+  maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
+  maps.n["<leader>ln"] = { vim.lsp.buf.rename, "lsp: rename" }
+  maps.n["<leader>ln"] = { require("mega.lsp.rename").rename, "lsp: rename document symbol" }
 
   for mode, value in pairs(maps) do
     require("which-key").register(value, { buffer = bufnr, mode = mode })
@@ -204,11 +190,11 @@ end
 
 local function setup_formatting(client, bufnr)
   -- disable formatting for the following language-servers (let null-ls takeover):
-  local disabled_lsp_formatting = { "tailwindcss", "html", "tsserver", "ls_emmet", "sumneko_lua", "zk" }
+  local disabled_lsp_formatting = { "tailwindcss", "html", "tsserver", "ls_emmet", "zk", "sumneko_lua" }
   for i = 1, #disabled_lsp_formatting do
     if disabled_lsp_formatting[i] == client.name then
-      client.resolved_capabilities.document_formatting = false
-      client.resolved_capabilities.document_range_formatting = false
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
     end
   end
 
@@ -220,9 +206,9 @@ local function setup_formatting(client, bufnr)
 
   if client.name == "null-ls" then
     if has_nls_formatter(api.nvim_buf_get_option(bufnr, "filetype")) then
-      client.resolved_capabilities.document_formatting = true
+      client.server_capabilities.documentFormattingProvider = true
     else
-      client.resolved_capabilities.document_formatting = false
+      client.server_capabilities.documentFormattingProvider = false
     end
   end
 end
@@ -238,16 +224,19 @@ local function setup_diagnostics()
     { "Hint", icon = mega.icons.lsp.hint },
   }
 
-  fn.sign_define(vim.tbl_map(function(t)
-    local hl = "DiagnosticSign" .. t[1]
-    return {
-      name = hl,
-      text = t.icon,
-      texthl = hl,
-      numhl = fmt("%sNumLine", hl),
-      linehl = fmt("%sLine", hl),
-    }
-  end, diagnostic_types))
+  fn.sign_define(
+    "",
+    vim.tbl_map(function(t)
+      local hl = "DiagnosticSign" .. t[1]
+      return {
+        name = hl,
+        text = t.icon,
+        texthl = hl,
+        numhl = fmt("%sNumLine", hl),
+        linehl = fmt("%sLine", hl),
+      }
+    end, diagnostic_types)
+  )
 
   -- REF: https://github.com/nvim-lua/kickstart.nvim/pull/26/commits/c3dd3bdc3d973ef9421aac838b9807496b7ba573
   function mega.lsp.print_diagnostics(opts, bufnr, line_nr, client_id)
@@ -458,23 +447,19 @@ function mega.lsp.on_attach(client, bufnr)
     return
   end
 
+  -- P(client.server_capabilities)
+
   if client.config.flags then
     client.config.flags.allow_incremental_sync = true
   end
 
-  if client.server_capabilities.colorProvider then
-    -- Live color highlighting; handy for tailwindcss
-    -- HT: kabouzeid
-    require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
-  end
+  -- Live color highlighting; handy for tailwindcss
+  -- HT: kabouzeid
+  require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
 
-  if client.resolved_capabilities.goto_definition == true then
-    vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
-  end
+  vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
 
-  if client.resolved_capabilities.document_formatting == true then
-    vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
-  end
+  vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)
@@ -586,6 +571,9 @@ mega.lsp.servers = {
       lspconfig = {
         settings = {
           Lua = {
+            formatting = {
+              enabled = false,
+            },
             diagnostics = {
               globals = {
                 "vim",

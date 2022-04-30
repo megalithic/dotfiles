@@ -634,8 +634,8 @@ conf("notify", {
 })
 
 conf("treesitter-context", {})
-conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil })
-conf("tmux-navigate", { enabled = vim.env.TMUX ~= nil })
+-- conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil })
+-- conf("tmux-navigate", { enabled = vim.env.TMUX ~= nil })
 
 conf("incline", {
   enabled = vim.api.nvim_get_option("laststatus") == 3,
