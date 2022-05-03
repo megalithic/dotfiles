@@ -173,6 +173,14 @@ do
 
   augroup("Utilities", {
     {
+      event = { "WinNew", "WinLeave" },
+      command = [[setlocal winhl=CursorLine:CursorLineNC,CursorLineNr:CursorLineNrNC,Normal:PanelBackground syntax=off | TSBufDisable &ft]],
+    },
+    {
+      event = { "WinEnter" },
+      command = [[setlocal winhl= syntax=on | TSBufEnable &ft]],
+    },
+    {
       event = { "BufNewFile", "BufWritePre" },
       command = function()
         mega.auto_mkdir()
@@ -371,18 +379,6 @@ augroup("LazyLoads", {
       --     },
       --   })
       -- end
-    end,
-  },
-  {
-    -- tmux-navigate
-    -- vim-kitty-navigator
-    event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
-    command = function()
-      if vim.env.TMUX ~= nil then
-        vcmd([[packadd tmux-navigate]])
-      else
-        vcmd([[packadd vim-kitty-navigator]])
-      end
     end,
   },
 })

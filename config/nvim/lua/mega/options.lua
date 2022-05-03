@@ -132,9 +132,8 @@ vim.opt.foldmethod = "indent" -- fold based on indent level
 -----------------------------------------------------------------------------//
 -- Quickfix {{{1
 -----------------------------------------------------------------------------//
---- FIXME: Need to use a lambda rather than a lua function directly
---- @see https://github.com/neovim/neovim/pull/14886
--- vim.o.quickfixtextfunc = '{i -> v:lua.mega.qftf(i)}'
+--- @see config/nvim/plugin/quickfix.lua
+-- vim.o.qftf (quickfixtextfunc) is set there 👆
 -----------------------------------------------------------------------------//
 -- Grepprg {{{1
 -----------------------------------------------------------------------------//

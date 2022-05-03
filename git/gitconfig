@@ -367,6 +367,12 @@ fzf = !"                                                                        
   ; plus-color = "#012800"
   ; minus-color = "#340001"
   theme = 'Nord'
+  features = line-numbers decorations
+  hyperlinks = true
+
+[delta "decorations"]
+  commit-decoration-style = bold yellow box ul
+  file-style = bold yellow ul
 
 [interactive]
   diffFilter = delta --color-only --theme='Nord'

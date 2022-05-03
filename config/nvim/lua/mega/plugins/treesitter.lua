@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-return function(plug)
+return function(_plug)
   vim.opt.indentexpr = "nvim_treesitter#indent()"
 
   -- custom treesitter parsers and grammars

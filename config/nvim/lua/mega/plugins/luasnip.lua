@@ -9,6 +9,27 @@ return function(plug)
   local extras = require("luasnip.extras")
   local fmt = require("luasnip.extras.fmt").fmt
 
+  mega.augroup("LuasnipDiagnostics", {
+    {
+      event = "ModeChanged",
+      pattern = "[is]:n",
+      command = function()
+        if ls.in_snippet() then
+          return vim.diagnostic.enable()
+        end
+      end,
+    },
+    {
+      event = "ModeChanged",
+      pattern = "*:s",
+      command = function()
+        if ls.in_snippet() then
+          return vim.diagnostic.disable()
+        end
+      end,
+    },
+  })
+
   ls.config.set_config({
     history = false,
     region_check_events = "CursorMoved,CursorHold,InsertEnter",

@@ -1,7 +1,7 @@
 return function(plug)
   local telescope = plug
   if plug == nil then
-    telescope = require("telescope")
+    return
   end
 
   local fn = vim.fn

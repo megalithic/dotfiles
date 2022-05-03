@@ -337,39 +337,11 @@ M.config = function()
     end,
   })
 
-  conf("dressing", {
-    config = {
-      input = {
-        insert_only = false,
-        winblend = 2,
-        border = mega.get_border(),
-      },
-      select = {
-        winblend = 2,
-        -- FIXME: still complains with deprecation warning; no bueno..
-        telescope = require("telescope.themes").get_cursor({
-          layout_config = {
-            -- NOTE: the limit is half the max lines because this is the cursor theme so
-            -- unless the cursor is at the top or bottom it realistically most often will
-            -- only have half the screen available
-            height = function(self, _, max_lines)
-              local results = #self.finder.results
-              local PADDING = 4 -- this represents the size of the telescope window
-              local LIMIT = math.floor(max_lines / 2)
-              return (results <= (LIMIT - PADDING) and results + PADDING or LIMIT)
-            end,
-          },
-        }),
-      },
-    },
-    enabled = false,
-  })
-
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
   conf("gitlinker", {})
 
   conf("vim-gh-line", {
-    enabled = function()
+    config = function()
       if fn.exists("g:loaded_gh_line") then
         vim.g["gh_line_map_default"] = 0
         vim.g["gh_line_blame_map_default"] = 0
@@ -468,9 +440,11 @@ M.config = function()
     end,
   })
 
-  conf("cinnamon", { config = {
-    extra_keymaps = true,
-  } })
+  conf("cinnamon", {
+    config = {
+      extra_keymaps = true,
+    },
+  })
 
   conf("neoscroll", {
     config = function(plug)
@@ -500,9 +474,11 @@ M.config = function()
     enabled = true,
   })
 
-  conf("trouble", { config = {
-    auto_close = true,
-  } })
+  conf("trouble", {
+    config = {
+      auto_close = true,
+    },
+  })
 
   conf("FixCursorHold", {
     config = function()
@@ -851,31 +827,61 @@ M.config = function()
   })
 
   conf("bqf", {
-    config = {
-      auto_enable = true,
-      auto_resize_height = true,
-      preview = {
-        auto_preview = true,
-        win_height = 12,
-        win_vheight = 12,
-        delay_syntax = 80,
-        border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
-        ---@diagnostic disable-next-line: unused-local
-        should_preview_cb = function(bufnr, _qwinid)
-          local ret = true
-          local bufname = vim.api.nvim_buf_get_name(bufnr)
-          local fsize = vim.fn.getfsize(bufname)
-          if fsize > 100 * 1024 then
-            -- skip file size greater than 100k
-            ret = false
-          elseif bufname:match("^fugitive://") then
-            -- skip fugitive buffer
-            ret = false
+    config = function(plug)
+      if plug == nil then
+        return
+      end
+
+      local fugitive_pv_timer
+      local preview_fugitive = function(bufnr, qwinid, bufname)
+        local is_loaded = vim.api.nvim_buf_is_loaded(bufnr)
+        if fugitive_pv_timer and fugitive_pv_timer:get_due_in() > 0 then
+          fugitive_pv_timer:stop()
+          fugitive_pv_timer = nil
+        end
+        fugitive_pv_timer = vim.defer_fn(function()
+          if not is_loaded then
+            vim.api.nvim_buf_call(bufnr, function()
+              vim.cmd(("do fugitive BufReadCmd %s"):format(bufname))
+            end)
           end
-          return ret
-        end,
-      },
-    },
+          require("bqf.preview.handler").open(qwinid, nil, true)
+          vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
+        end, is_loaded and 0 or 60)
+        return true
+      end
+
+      plug.setup({
+        auto_enable = true,
+        auto_resize_height = true,
+        preview = {
+          auto_preview = true,
+          win_height = 12,
+          win_vheight = 12,
+          delay_syntax = 80,
+          border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
+          ---@diagnostic disable-next-line: unused-local
+          should_preview_cb = function(bufnr, qwinid)
+            local ret = true
+            local bufname = vim.api.nvim_buf_get_name(bufnr)
+            local fsize = vim.fn.getfsize(bufname)
+            if fsize > 100 * 1024 then
+              -- skip file size greater than 100k
+              return false
+            elseif bufname:match("^fugitive://") then
+              return preview_fugitive(bufnr, qwinid, bufname)
+            end
+
+            return true
+          end,
+        },
+        filter = {
+          fzf = {
+            extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
+          },
+        },
+      })
+    end,
   })
 
   -- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89

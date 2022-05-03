@@ -15,6 +15,10 @@ vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 vim.lsp.set_log_level("ERROR")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
+-- TODO: all references to `resolved_capabilities.capability_name` will need to be changed to
+-- `server_capabilities.camelCaseCapabilityName`
+-- https://github.com/neovim/neovim/issues/14090#issuecomment-1113956767
+
 -- [ COMMANDS ] ----------------------------------------------------------------
 
 local function setup_commands()

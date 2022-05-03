@@ -538,6 +538,15 @@ function mega.conf(plugin_conf_name, opts)
       -- P(plugin_config)
       if plugin_config.opt then
         vim.cmd("packadd " .. plugin_config.name)
+
+        mega.augroup("PluginConfLoader" .. plugin_conf_name, {
+          {
+            event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
+            command = function()
+              vim.cmd("packadd " .. plugin_config.name)
+            end,
+          },
+        })
       end
     end
 
