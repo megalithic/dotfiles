@@ -75,27 +75,29 @@ local function setup_autocommands(client, bufnr)
       event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
       buffer = 0,
       command = function()
-        vim.lsp.codelens.refresh()
+        if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then
+          vim.lsp.codelens.refresh()
+        end
       end,
     },
   })
 
-  augroup("LspDocumentHighlight", {
-    {
-      event = { "CursorHold", "CursorHoldI" },
-      buffer = bufnr,
-      command = function()
-        vim.lsp.buf.document_highlight()
-      end,
-    },
-    {
-      event = { "CursorMoved", "BufLeave" },
-      buffer = bufnr,
-      command = function()
-        vim.lsp.buf.clear_references()
-      end,
-    },
-  })
+  -- augroup("LspDocumentHighlight", {
+  --   {
+  --     event = { "CursorHold", "CursorHoldI" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       vim.lsp.buf.document_highlight()
+  --     end,
+  --   },
+  --   {
+  --     event = { "CursorMoved", "BufLeave" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       vim.lsp.buf.clear_references()
+  --     end,
+  --   },
+  -- })
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
@@ -134,56 +136,36 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  -- if client.server_capabilities.code_lens then
-  --   bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
-  -- end
-
   local ok, lsp_format = pcall(require, "lsp-format")
-  local do_format = ok and lsp_format.format or vim.lsp.buf.formatting
-  local maps = {
-    n = {
-      ["<leader>rf"] = { do_format, "lsp: format buffer" },
-      ["<leader>li"] = { [[<cmd>LspInfo<CR>]], "lsp: show client info" },
-      ["<leader>ll"] = { [[<cmd>LspLog<CR>]], "lsp: show log" },
-      ["<leader>lt"] = { [[<cmd>TroubleToggle document_diagnostics<CR>]], "lsp: trouble diagnostics" },
-      ["gD"] = { [[<cmd>TroubleToggle document_diagnostics<CR>]], "lsp: trouble diagnostics" },
-      ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
-      ["gr"] = { vim.lsp.buf.references, "lsp: references" },
-      ["gR"] = { [[<cmd>TroubleToggle lsp_references<cr>]], "lsp: trouble references" },
-      ["gI"] = { vim.lsp.buf.incoming_calls, "lsp: incoming calls" },
-      ["K"] = { vim.lsp.buf.hover, "lsp: hover" },
-    },
-    x = {},
-  }
+  local do_format = ok and lsp_format.format or vim.lsp.buf.format
 
-  maps.n["[d"] = {
-    function()
-      diagnostic.goto_prev()
-    end,
-    "lsp: go to prev diagnostic",
-  }
-  maps.n["]d"] = {
-    function()
-      diagnostic.goto_next()
-    end,
-    "lsp: go to next diagnostic",
-  }
+  nmap("[d", function()
+    diagnostic.goto_prev()
+  end, { desc = "lsp: prev diagnostic", buffer = bufnr })
+  nmap("]d", function()
+    diagnostic.next_prev()
+  end, { desc = "lsp: next diagnostic", buffer = bufnr })
+  nmap(
+    "gD",
+    [[<cmd>TroubleToggle document_diagnostics<CR>]],
+    { desc = "trouble: document diagnostics", buffer = bufnr }
+  )
 
-  maps.n["gi"] = { vim.lsp.buf.implementation, "lsp: implementation" }
+  nmap("gd", vim.lsp.buf.definition, { desc = "lsp: definition", buffer = bufnr })
+  nmap("gr", vim.lsp.buf.references, { desc = "lsp: references", buffer = bufnr })
+  nmap("gt", vim.lsp.buf.type_definition, { desc = "lsp: type definition", buffer = bufnr })
+  nmap("gi", vim.lsp.buf.implementation, { desc = "lsp: implementation", buffer = bufnr })
+  nmap("gI", vim.lsp.buf.incoming_calls, { desc = "lsp: incoming calls", buffer = bufnr })
+  nmap("gc", vim.lsp.buf.code_action, { desc = "lsp: code action", buffer = bufnr })
+  xmap("gc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", { desc = "lsp: code action", buffer = bufnr })
+  nmap("gl", vim.lsp.codelens.run, { desc = "lsp: code lens", buffer = bufnr })
+  nmap("gn", require("mega.lsp.rename").rename, { desc = "lsp: rename", buffer = bufnr })
 
-  maps.n["<leader>ltd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
+  nmap("K", vim.lsp.buf.hover, { desc = "lsp: hover", buffer = bufnr })
 
-  maps.n["<leader>ca"] = { vim.lsp.buf.code_action, "lsp: code action" }
-  maps.x["<leader>ca"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
-  maps.n["<leader>cl"] = { vim.lsp.codelens.run, "lsp: run code lens" }
-
-  maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
-  maps.n["<leader>ln"] = { vim.lsp.buf.rename, "lsp: rename" }
-  maps.n["<leader>ln"] = { require("mega.lsp.rename").rename, "lsp: rename document symbol" }
-
-  for mode, value in pairs(maps) do
-    require("which-key").register(value, { buffer = bufnr, mode = mode })
-  end
+  nmap("<leader>li", [[<cmd>LspInfo<CR>]], { desc = "lsp: show client info", buffer = bufnr })
+  nmap("<leader>ll", [[<cmd>LspLog<CR>]], { desc = "lsp: show log", buffer = bufnr })
+  nmap("<leader>rf", do_format, { desc = "lsp: format buffer", buffer = bufnr })
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
@@ -224,19 +206,16 @@ local function setup_diagnostics()
     { "Hint", icon = mega.icons.lsp.hint },
   }
 
-  fn.sign_define(
-    "",
-    vim.tbl_map(function(t)
-      local hl = "DiagnosticSign" .. t[1]
-      return {
-        name = hl,
-        text = t.icon,
-        texthl = hl,
-        numhl = fmt("%sNumLine", hl),
-        linehl = fmt("%sLine", hl),
-      }
-    end, diagnostic_types)
-  )
+  fn.sign_define(vim.tbl_map(function(t)
+    local hl = "DiagnosticSign" .. t[1]
+    return {
+      name = hl,
+      text = t.icon,
+      texthl = hl,
+      numhl = fmt("%sNumLine", hl),
+      linehl = fmt("%sLine", hl),
+    }
+  end, diagnostic_types))
 
   -- REF: https://github.com/nvim-lua/kickstart.nvim/pull/26/commits/c3dd3bdc3d973ef9421aac838b9807496b7ba573
   function mega.lsp.print_diagnostics(opts, bufnr, line_nr, client_id)
@@ -411,6 +390,28 @@ local function setup_handlers()
     end
   end
 
+  lsp.handlers["textDocument/definition"] = function(_, result)
+    if result == nil or vim.tbl_isempty(result) then
+      print("Definition not found")
+      return nil
+    end
+    local function jumpto(loc)
+      local split_cmd = vim.uri_from_bufnr(0) == loc.targetUri and "split" or "tabnew"
+      vim.cmd(split_cmd)
+      lsp.util.jump_to_location(loc)
+    end
+    if vim.tbl_islist(result) then
+      jumpto(result[1])
+      if #result > 1 then
+        fn.setqflist(lsp.util.locations_to_items(result))
+        api.nvim_command("copen")
+        api.nvim_command("wincmd p")
+      end
+    else
+      jumpto(result)
+    end
+  end
+
   -- local old_handler = vim.lsp.handlers["window/logMessage"]
   -- lsp.handlers["window/logMessage"] = function(err, result, ...)
   --   if result.type == 3 or result.type == 4 then
@@ -455,7 +456,9 @@ function mega.lsp.on_attach(client, bufnr)
 
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
-  require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+  if client.server_capabilities.colorProvider then
+    require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+  end
 
   vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
 

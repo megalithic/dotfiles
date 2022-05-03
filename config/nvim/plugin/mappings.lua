@@ -67,7 +67,7 @@ if has_wk then
         operators = false, -- adds help for operators like d, y, ... and registers them for motion / text object completion
         motions = true, -- adds help for motions
         text_objects = true, -- help for text objects triggered after entering an operator
-        windows = true, -- default bindings on <c-w>
+        windows = false, -- default bindings on <c-w>
         nav = true, -- misc bindings to work with windows
         z = true, -- bindings for folds, spelling and others prefixed with z
         g = true, -- bindings for prefixed with g
@@ -116,152 +116,190 @@ if has_wk then
 
   -- Normal Mode {{{1
   local n_mappings = {
-    ["<leader>"] = {
-      -- f = {}, -- see plugins.lua > telescope-mappings
-      ["[h"] = "go to prev git hunk",
-      ["]h"] = "go to next git hunk",
-      e = {
-        name = "edit files",
-        c = { [[:Copy<cr>]], "save as <input>" },
-        s = { [[:Copy<cr>]], "save as <input>" },
-        cp = { [[:let @+ = expand("%")<CR>]], "copy path to clipboard" },
-        d = { [[:Duplicate<cr>]], "duplicate current file" },
-      },
+    ["[h"] = "go to prev git hunk",
+    ["]h"] = "go to next git hunk",
+    ["[d"] = "lsp: go to prev diagnostic",
+    ["]d"] = "lsp: go to next diagnostic",
+    -- f = {}, -- see plugins.lua > telescope-mappings
+    ["<leader>c"] = {
+      name = "+actions",
+      d = { "telescope: diagnostics" },
+      s = { "telescope: document symbols" },
+      w = { "telescope: search workspace symbols" },
+    },
+    ["<leader>e"] = {
+      name = "edit files",
+      c = { [[:Copy<cr>]], "save as <input>" },
+      s = { [[:Copy<cr>]], "save as <input>" },
+      cp = { [[:let @+ = expand("%")<CR>]], "copy path to clipboard" },
+      d = { [[:Duplicate<cr>]], "duplicate current file" },
+    },
+    ["<leader>f"] = {
+      name = "telescope",
+      a = { "builtins" },
+      b = { "current buffer fuzzy find" },
+      d = { "dotfiles" },
+      p = { "privates" },
+      f = { "find/git files" },
       g = {
-        name = "git",
-        g = { "<cmd>Git<CR>", "Fugitive" },
-        H = "browse at line",
-        O = "browse repo",
-        B = "browse blame at line",
-        r = {
-          name = "+reset",
-          e = "gitsigns: reset entire buffer",
+        name = "+git",
+        c = { "commits" },
+        b = { "branches" },
+      },
+      M = { "man pages" },
+      m = { "oldfiles (mru)" },
+      k = { "keymaps" },
+      P = { "plugins" },
+      o = { "buffers" },
+      O = { "org files" },
+      R = { "module reloader" },
+      r = { "resume last picker" },
+      s = { "grep string" },
+      t = {
+        name = "+tmux",
+        s = { "sessions" },
+        w = { "windows" },
+      },
+      ["?"] = { "help" },
+      h = { "help" },
+    },
+    ["<leader>g"] = {
+      name = "git",
+      g = { "<cmd>Git<CR>", "Fugitive" },
+      H = "browse at line",
+      O = "browse repo",
+      B = "browse blame at line",
+      r = {
+        name = "+reset",
+        e = "gitsigns: reset entire buffer",
+      },
+      b = {
+        function()
+          gs.blame_line({ full = true })
+        end,
+        "gitsigns: blame current line",
+      },
+      h = {
+        name = "+gitsigns hunk",
+        s = { gs.stage_hunk, "stage" },
+        u = { gs.undo_stage_hunk, "undo stage" },
+        r = { gs.reset_hunk, "reset hunk" },
+        p = { gs.preview_hunk, "preview current hunk" },
+        d = { gs.diffthis, "diff this line" },
+        D = {
+          function()
+            gs.diffthis("~")
+          end,
+          "diff this with ~",
         },
         b = {
-          function()
-            gs.blame_line({ full = true })
-          end,
-          "gitsigns: blame current line",
-        },
-        h = {
-          name = "+gitsigns hunk",
-          s = { gs.stage_hunk, "stage" },
-          u = { gs.undo_stage_hunk, "undo stage" },
-          r = { gs.reset_hunk, "reset hunk" },
-          p = { gs.preview_hunk, "preview current hunk" },
-          d = { gs.diffthis, "diff this line" },
-          D = {
-            function()
-              gs.diffthis("~")
-            end,
-            "diff this with ~",
-          },
+          name = "+blame",
+          l = "gitsigns: blame current line",
+          d = "gitsigns: toggle word diff",
           b = {
-            name = "+blame",
-            l = "gitsigns: blame current line",
-            d = "gitsigns: toggle word diff",
-            b = {
-              function()
-                gs.blame_line({ full = true })
-              end,
-              "blame current line",
-            },
+            function()
+              gs.blame_line({ full = true })
+            end,
+            "blame current line",
           },
         },
-        w = "gitsigns: stage entire buffer",
-        m = "gitsigns: list modified in quickfix",
       },
-      p = {
-        name = "project",
-        p = { "<cmd>:AV<cr>", "Toggle Alternate (vsplit)" },
-        P = { "<cmd>:A<cr>", "Open Alternate (edit)" },
-        l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
-        L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
-      },
-      m = {
-        name = "markdown",
-        p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
-        g = { [[<cmd>Glow<CR>]], "open glow" },
-      },
-      r = {
-        name = "runner",
-        f = { "<cmd>Format<cr>", "Run _formatter" },
-        r = { "", "Run  _repl" },
-        n = { "<cmd>TestNearest<cr>", "Run _test under cursor" },
-        a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
-        l = { "<cmd>TestLast<cr>", "Run _last test" },
-        v = { "<cmd>TestVisit<cr>", "Run test file _visit" },
-      },
-      z = {
-        name = "zk",
-      },
+      w = "gitsigns: stage entire buffer",
+      m = "gitsigns: list modified in quickfix",
     },
-    ["<localleader>"] = {
-      t = {
-        name = "test",
-        n = { "<cmd>TestNearest<cr>", "Run _test under cursor" },
-        a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
-        f = { "<cmd>TestFile<cr>", "Run _all tests in file" },
-        l = { "<cmd>TestLast<cr>", "Run _last test" },
-        t = { "<cmd>TestLast<cr>", "Run _last test" },
-        v = { "<cmd>TestVisit<cr>", "Run test file _visit" },
-        p = { "<cmd>:A<cr>", "Toggle Alternate (edit)" },
-        P = { "<cmd>:AV<cr>", "Open Alternate (vsplit)" },
-      },
-      g = {
-        name = "gitsigns",
-      },
+    ["<leader>l"] = {
+      name = "+lsp",
+      d = { "telescope: definitions" },
+      D = { "telescope: diagnostics" },
+      t = { "telescope: type definitions" },
+      r = { "telescope: references" },
+      i = { "telescope: implementations" },
+      s = { "telescope: document symbols" },
+      S = { "telescope: workspace symbols" },
+      w = { "telescope: dynamic workspace symbols" },
+      n = { "lsp: rename" },
     },
+    ["<leader>m"] = {
+      name = "markdown",
+      p = { [[<cmd>MarkdownPreviewToggle<CR>]], "open preview" },
+      g = { [[<cmd>Glow<CR>]], "open glow" },
+    },
+    ["<leader>p"] = {
+      name = "project",
+      p = { "<cmd>:AV<cr>", "Toggle Alternate (vsplit)" },
+      P = { "<cmd>:A<cr>", "Open Alternate (edit)" },
+      l = { "<cmd>:Vheex<cr>", "Open Heex for LiveView (vsplit)" },
+      L = { "<cmd>:Vlive<cr>", "Open Live for LiveView (vsplit)" },
+    },
+    ["<leader>r"] = {
+      name = "runner",
+      f = { "<cmd>Format<cr>", "Run _formatter" },
+      r = { "", "Run  _repl" },
+      n = { "<cmd>TestNearest<cr>", "Run _test under cursor" },
+      a = { "<cmd>TestFile<cr>", "Run _all tests in file" },
+      l = { "<cmd>TestLast<cr>", "Run _last test" },
+      v = { "<cmd>TestVisit<cr>", "Run test file _visit" },
+    },
+    ["<leader>z"] = {
+      name = "zk",
+    },
+    ["<localleader>t"] = {
+      name = "test",
+    },
+    ["<localleader>g"] = {
+      name = "gitsigns",
+    },
+    g = {
+      name = "go-to",
+      c = "comment text",
+      ["cc"] = "comment line",
+    },
+    K = { "lsp: hover" },
     z = {
       name = "highlight/folds/paging",
       -- t = { [[<cmd>TSHighlightCapturesUnderCursor<CR>]], "show TS highlights under cursor" },
       -- TODO: ensure that we can get to these
-      S = { mega.showCursorHighlights, "show syntax highlights under cursor" },
-      s = { mega.showCursorHighlights, "show syntax highlights under cursor" },
+      S = { "show syntax highlights under cursor" },
+      s = { "show syntax highlights under cursor" },
       -- j = { mega.showCursorHighlights, "show syntax highlights under cursor" },
       -- S = {
       --   [[<cmd>lua require'nvim-treesitter-refactor.highlight_definitions'.highlight_usages(vim.fn.bufnr())<cr>]],
       --   "all usages under cursor",
       -- },
     },
-    g = {
-      name = "go-to",
-      -- TODO: https://github.com/dkarter/dotfiles/blob/59e7e27b41761ece3bf2213de2977b9d5c53c3cd/vimrc#L1580-L1636
-      x = { mega.open_uri, "open uri under cursor" },
-      R = { "show reg-explainer" },
-      j = { "mzJ`z", "join lines" },
-      b = {
-        string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")),
-        "go-to buffer",
-      },
-      s = { "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line" },
-    },
   }
   -- }}}
 
   -- Visual Mode {{{1
   local v_mappings = {
-    ["<leader>"] = {
-      ["b"] = { name = "buffers", s = "save buffer" },
-      ["f"] = { "format selection" },
-      ["g"] = { name = "git link", y = "copy permalink selection" },
-    },
+    ["<leader>b"] = { name = "buffers", s = "save buffer" },
+    ["<leader>f"] = { "format selection" },
+    ["<leader>g"] = { name = "git link", y = "copy permalink selection" },
   }
   -- }}}
 
-  -- Misc {{{1
-  wk.register({
-    ["g"] = {
-      -- ["p"] = "select last pasted text",
-      ["c"] = "comment text",
-      ["cc"] = "comment line",
-    },
-  })
   wk.register(n_mappings, { mode = "n" })
   wk.register(v_mappings, { mode = "v" })
 end
 
 -- [convenience mappings] ------------------------------------------------------
+
+nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
+nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
+nmap("gj", "mzJ`z", "join lines")
+nmap("gx", mega.open_uri, "open uri under cursor")
+
+nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
+nmap("zS", mega.showCursorHighlights, "show syntax highlights under cursor")
+
+nmap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
+nmap("<localleader>ta", "<cmd>TestFile<cr>", "run _all tests in file")
+nmap("<localleader>tf", "<cmd>TestFile<cr>", "run _all tests in file")
+nmap("<localleader>tl", "<cmd>TestLast<cr>", "run _last test")
+nmap("<localleader>tt", "<cmd>TestLast<cr>", "run _last test")
+nmap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
+nmap("<localleader>tp", "<cmd>:A<cr>", "open alt (edit)")
+nmap("<localleader>tP", "<cmd>:AV<cr>", "open alt (vsplit)")
 
 -- make the tab key match bracket pairs
 exec("silent! unmap [%", true)
@@ -331,10 +369,10 @@ xnoremap p "_c<c-r>"<esc>
 xmap P p
 
 " Better window navigation
-nnoremap <C-h> <C-w>h
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-l> <C-w>l
+" nnoremap <C-h> <C-w>h
+" nnoremap <C-j> <C-w>j
+" nnoremap <C-k> <C-w>k
+" nnoremap <C-l> <C-w>l
 
 " Better save and quit
 silent! unmap <leader>w

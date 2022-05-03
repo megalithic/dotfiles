@@ -88,7 +88,7 @@ function M.adopt_winhighlight(win_id, target, name, fallback)
 end
 
 ---@param name string
----@param opts table
+---@param opts? table
 function M.set_hl(name, opts)
   assert(name and opts, "Both 'name' and 'opts' must be specified")
   local hl = get_hl(opts.inherit or name)
@@ -103,7 +103,7 @@ end
 ---in the right format
 ---@param grp string
 ---@param attr string
----@param fallback string
+---@param fallback? string
 ---@return string
 function M.get_hl(grp, attr, fallback)
   if not grp then
