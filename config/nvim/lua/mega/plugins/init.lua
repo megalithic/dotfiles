@@ -934,6 +934,8 @@ M.config = function()
   conf("treesitter-context", {})
 
   conf("tmux", {
+    enabled = false,
+    -- enabled = vim.env.TMUX ~= nil,
     config = function(plug)
       if plug == nil then
         return
@@ -944,67 +946,45 @@ M.config = function()
           -- enables copy sync and overwrites all register actions to
           -- sync registers *, +, unnamed, and 0 till 9 from tmux in advance
           enable = false,
-
           -- TMUX >= 3.2: yanks (and deletes) will get redirected to system
           -- clipboard by tmux
           redirect_to_clipboard = false,
-
           -- offset controls where register sync starts
           -- e.g. offset 2 lets registers 0 and 1 untouched
           register_offset = 0,
-
           -- sync clipboard overwrites vim.g.clipboard to handle * and +
           -- registers. If you sync your system clipboard without tmux, disable
           -- this option!
           sync_clipboard = false,
-
           -- syncs deletes with tmux clipboard as well, it is adviced to
           -- do so. Nvim does not allow syncing registers 0 and 1 without
           -- overwriting the unnamed register. Thus, ddp would not be possible.
           sync_deletes = false,
-
           -- syncs the unnamed register with the first buffer entry from tmux.
           sync_unnamed = false,
         },
         navigation = {
           -- cycles to opposite pane while navigating into the border
           cycle_navigation = true,
-
           -- enables default keybindings (C-hjkl) for normal mode
           enable_default_keybindings = true,
-
           -- prevents unzoom tmux when navigating beyond vim border
           persist_zoom = true,
         },
         resize = {
           -- enables default keybindings (A-hjkl) for normal mode
           enable_default_keybindings = false,
-
           -- sets resize steps for x axis
           resize_step_x = 1,
-
           -- sets resize steps for y axis
           resize_step_y = 1,
         },
       })
-      -- nmap("<C-h>", p.move_left, "goto window/tmux pane left")
-      -- nmap("<C-j>", p.move_down, "goto window/tmux pane down")
-      -- nmap("<C-k>", p.move_up, "goto window/tmux pane up")
-      -- nmap("<C-l>", p.move_right, "goto window/tmux pane right")
-
-      -- local tmux = fn.require_on_exported_call 'tmux'
-      -- nmap     ([[<M-h>]], ithunk(tmux.move_left),   silent, "Goto window/tmux pane left")
-      -- nmap     ([[<M-j>]], ithunk(tmux.move_bottom), silent, "Goto window/tmux pane down")
-      -- nmap     ([[<M-k>]], ithunk(tmux.move_top),    silent, "Goto window/tmux pane up")
-      -- nmap     ([[<M-l>]], ithunk(tmux.move_right),  silent, "Goto window/tmux pane right")
     end,
-    enabled = false,
-    -- enabled = vim.env.TMUX ~= nil,
   })
 
-  -- conf("tmux-navigate", { enabled = vim.env.TMUX ~= nil })
-
-  -- conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil, silent = false })
+  conf("tmux-navigate", { enabled = vim.env.TMUX ~= nil })
+  conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil, silent = false })
 
   conf("incline", {
     enabled = vim.api.nvim_get_option("laststatus") == 3,
@@ -1044,6 +1024,7 @@ M.config = function()
   })
 
   conf("other-nvim", {
+    enabled = false,
     config = {
       mappings = {
         {
@@ -1071,7 +1052,6 @@ M.config = function()
       --   end,
       -- },
     },
-    enabled = false,
   })
 end
 

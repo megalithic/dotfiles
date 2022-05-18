@@ -174,11 +174,11 @@ do
   augroup("Utilities", {
     -- {
     --   event = { "WinNew", "WinLeave" },
-    --   command = [[setlocal winhl=CursorLine:CursorLineNC,CursorLineNr:CursorLineNrNC,Normal:PanelBackground syntax=off | TSBufDisable &filetype]],
+    --   command = [[setlocal winhl=CursorLine:CursorLineNC,CursorLineNr:CursorLineNrNC,Normal:PanelBackground syntax=disable | TSBufDisable &filetype]],
     -- },
     -- {
     --   event = { "WinEnter" },
-    --   command = [[setlocal winhl= syntax= | TSBufEnable &filetype]],
+    --   command = [[setlocal winhl= syntax=enable | TSBufEnable &filetype]],
     -- },
     {
       event = { "BufNewFile", "BufWritePre" },

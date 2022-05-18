@@ -311,6 +311,22 @@ vmap("<Tab>", "%")
 xmap("<Tab>", "%")
 omap("<Tab>", "%")
 
+-- window navigation across nvim/vim/tmux
+exec([[
+  nnoremap <C-h> <C-w>h
+  nnoremap <C-j> <C-w>j
+  nnoremap <C-k> <C-w>k
+  nnoremap <C-l> <C-w>l
+]])
+-- nmap("<C-h>", [[execute wincmd h]], "goto window/tmux pane left")
+-- nmap("<C-j>", [[execute wincmd j]], "goto window/tmux pane down")
+-- nmap("<C-k>", [[execute wincmd k]], "goto window/tmux pane up")
+-- nmap("<C-l>", [[execute wincmd l]], "goto window/tmux pane right")
+-- nmap("<C-h>", "<C-w>h", "goto window/tmux pane left")
+-- nmap("<C-j>", "<C-w>j", "goto window/tmux pane down")
+-- nmap("<C-k>", "<C-w>k", "goto window/tmux pane up")
+-- nmap("<C-l>", "<C-w>l", "goto window/tmux pane right")
+
 -- [overrides/remaps mappings] ---------------------------------------------------------
 --
 exec([[
@@ -368,22 +384,12 @@ nnoremap =- V`]=
 xnoremap p "_c<c-r>"<esc>
 xmap P p
 
-" Better window navigation
-" nnoremap <C-h> <C-w>h
-" nnoremap <C-j> <C-w>j
-" nnoremap <C-k> <C-w>k
-" nnoremap <C-l> <C-w>l
-
 " Better save and quit
 silent! unmap <leader>w
 nnoremap <silent><leader>w :write<CR>
 nnoremap <silent><leader>W :write !sudo -S tee > /dev/null %<CR>
 cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
-
-" open a (new)file in a new vsplit
-" nnoremap <silent><leader>o :vnew<CR>:e<space><C-d>
-" nnoremap <leader>o :vnew<CR>:e<space>
 
 " Background (n)vim
 vnoremap <C-z> <ESC>zv`<ztgv

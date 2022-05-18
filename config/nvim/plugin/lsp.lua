@@ -394,27 +394,27 @@ local function setup_handlers()
     end
   end
 
-  lsp.handlers["textDocument/definition"] = function(_, result)
-    if result == nil or vim.tbl_isempty(result) then
-      print("Definition not found")
-      return nil
-    end
-    local function jumpto(loc)
-      local split_cmd = vim.uri_from_bufnr(0) == loc.targetUri and "split" or "tabnew"
-      vim.cmd(split_cmd)
-      lsp.util.jump_to_location(loc)
-    end
-    if vim.tbl_islist(result) then
-      jumpto(result[1])
-      if #result > 1 then
-        fn.setqflist(lsp.util.locations_to_items(result))
-        api.nvim_command("copen")
-        api.nvim_command("wincmd p")
-      end
-    else
-      jumpto(result)
-    end
-  end
+  -- lsp.handlers["textDocument/definition"] = function(_, result)
+  --   if result == nil or vim.tbl_isempty(result) then
+  --     print("Definition not found")
+  --     return nil
+  --   end
+  --   local function jumpto(loc)
+  --     local split_cmd = vim.uri_from_bufnr(0) == loc.targetUri and "split" or "tabnew"
+  --     vim.cmd(split_cmd)
+  --     lsp.util.jump_to_location(loc)
+  --   end
+  --   if vim.tbl_islist(result) then
+  --     jumpto(result[1])
+  --     if #result > 1 then
+  --       fn.setqflist(lsp.util.locations_to_items(result))
+  --       api.nvim_command("copen")
+  --       api.nvim_command("wincmd p")
+  --     end
+  --   else
+  --     jumpto(result)
+  --   end
+  -- end
 
   -- local old_handler = vim.lsp.handlers["window/logMessage"]
   -- lsp.handlers["window/logMessage"] = function(err, result, ...)

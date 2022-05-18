@@ -290,7 +290,6 @@ function _G.P(...)
   else
     print(table.concat(objects, "\n"))
   end
-
   return ...
 end
 
@@ -535,15 +534,16 @@ function mega.conf(plugin_conf_name, opts)
     -- then we'll go forth with setup of plugin or running of optional callback fn.
     local plugin_config = build_plugin_config(plugin_conf_name)
     if plugin_config then
-      -- P(plugin_config)
       if plugin_config.opt then
         vim.cmd("packadd " .. plugin_config.name)
+        P(plugin_config.name .. " packadd as opt.")
 
         -- mega.augroup("PluginConfLoader" .. plugin_conf_name, {
         --   {
-        --     event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
+        --     event = { "VimEnter" },
+        --     once = true,
         --     command = function()
-        --       P("")
+        --       P("lazy loading " .. plugin_config.name)
         --       vim.cmd("packadd " .. plugin_config.name)
         --     end,
         --   },

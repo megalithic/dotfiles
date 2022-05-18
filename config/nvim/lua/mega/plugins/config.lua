@@ -689,10 +689,6 @@ conf("tmux", {
         resize_step_y = 1,
       },
     })
-    -- nmap("<C-h>", p.move_left, "goto window/tmux pane left")
-    -- nmap("<C-j>", p.move_down, "goto window/tmux pane down")
-    -- nmap("<C-k>", p.move_up, "goto window/tmux pane up")
-    -- nmap("<C-l>", p.move_right, "goto window/tmux pane right")
 
     -- local tmux = fn.require_on_exported_call 'tmux'
     -- nmap     ([[<M-h>]], ithunk(tmux.move_left),   silent, "Goto window/tmux pane left")

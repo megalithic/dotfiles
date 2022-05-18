@@ -67,14 +67,14 @@ mega.augroup("megaline", {
       end
     end,
   },
-  {
-    event = { "CursorMoved" },
-    command = function()
-      if vim.o.hlsearch then
-        U.update_search_count(vim.loop.new_timer())
-      end
-    end,
-  },
+  --{
+  --  event = { "CursorMoved" },
+  --  command = function()
+  --    if vim.o.hlsearch then
+  --      U.update_search_count(vim.loop.new_timer())
+  --    end
+  --  end,
+  --},
 })
 
 -- Showed diagnostic levels
