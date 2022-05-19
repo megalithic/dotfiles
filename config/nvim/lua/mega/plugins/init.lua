@@ -607,6 +607,7 @@ M.config = function()
   })
 
   conf("lightspeed", {
+    enabled = false,
     config = {
       -- jump_to_first_match = true,
       -- jump_on_partial_input_safety_timeout = 400,
@@ -645,6 +646,7 @@ M.config = function()
   })
 
   conf("hop", {
+    enabled = true,
     config = function(p)
       if p == nil then
         return
@@ -690,7 +692,6 @@ M.config = function()
         })
       end)
     end,
-    enabled = false,
   })
 
   conf("git-messenger", function()

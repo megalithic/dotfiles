@@ -536,8 +536,12 @@ function mega.conf(plugin_conf_name, opts)
     if plugin_config then
       if plugin_config.opt then
         vim.cmd("packadd " .. plugin_config.name)
-        P(plugin_config.name .. " packadd as opt.")
+        if not silent then
+          P(plugin_config.name .. " packadd as opt.")
+        end
 
+        -- For implementing this sort of thing:
+        -- REF: https://github.com/akinsho/dotfiles/commit/33138f7bc7ad4b836b6c5c0f4ad54ea006f812be#diff-234774bd94026ade0e5765bc362576a2b0e1052dc0ed9bdea777e86a4a66c098R818
         -- mega.augroup("PluginConfLoader" .. plugin_conf_name, {
         --   {
         --     event = { "VimEnter" },
@@ -836,16 +840,40 @@ function mega.executable(e)
   return fn.executable(e) > 0
 end
 
+local function open(path)
+  fn.jobstart({ vim.g.open_command, path }, { detach = true })
+  vim.notify(fmt("Opening %s", path))
+end
+
 -- open URI under cursor
 function mega.open_uri()
-  local Job = require("plenary.job")
-  local uri = vim.fn.expand("<cWORD>")
-  Job
-    :new({
-      "open",
-      uri,
-    })
-    :sync()
+  local file = fn.expand("<cfile>")
+  if fn.isdirectory(file) > 0 then
+    return vim.cmd("edit " .. file)
+  end
+  if file:match("https://") then
+    return open(file)
+  end
+  -- Any URI with a protocol segment
+  local protocol_uri_regex = "%a*:%/%/[%a%d%#%[%]%-%%+:;!$@/?&=_.,~*()]*"
+  if file:match(protocol_uri_regex) then
+    return vim.cmd("norm! gf")
+  end
+
+  -- consider anything that looks like string/string a github link
+  local plugin_url_regex = "[%a%d%-%.%_]*%/[%a%d%-%.%_]*"
+  local link = string.match(file, plugin_url_regex)
+  if link then
+    return open(fmt("https://www.github.com/%s", link))
+  end
+  -- local Job = require("plenary.job")
+  -- local uri = vim.fn.expand("<cWORD>")
+  -- Job
+  --   :new({
+  --     "open",
+  --     uri,
+  --   })
+  --   :sync()
 end
 
 function mega.open_plugin_url()

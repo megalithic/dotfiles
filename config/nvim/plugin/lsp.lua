@@ -72,7 +72,8 @@ local function setup_commands()
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
-
+---@param client table<string, any>
+---@param bufnr number
 local function setup_autocommands(client, bufnr)
   augroup("LspCodeLens", {
     {
@@ -102,11 +103,21 @@ local function setup_autocommands(client, bufnr)
   --     end,
   --   },
   -- })
+  --
+  -- Show the popup diagnostics window, but only once for the current cursor location
+  -- by checking whether the word under the cursor has changed.
+  local function diagnostic_popup()
+    local cword = vim.fn.expand("<cword>")
+    if cword ~= vim.w.lsp_diagnostics_cword then
+      vim.w.lsp_diagnostics_cword = cword
+      vim.diagnostic.open_float(0, { scope = "cursor", focus = false })
+    end
+  end
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
       command = function()
-        diagnostic.open_float()
+        diagnostic_popup()
       end,
     },
   })
@@ -147,7 +158,7 @@ local function setup_mappings(client, bufnr)
     diagnostic.goto_prev()
   end, { desc = "lsp: prev diagnostic", buffer = bufnr })
   nmap("]d", function()
-    diagnostic.next_prev()
+    diagnostic.goto_next()
   end, { desc = "lsp: next diagnostic", buffer = bufnr })
   nmap(
     "gD",
@@ -221,37 +232,11 @@ local function setup_diagnostics()
     }
   end, diagnostic_types))
 
-  -- REF: https://github.com/nvim-lua/kickstart.nvim/pull/26/commits/c3dd3bdc3d973ef9421aac838b9807496b7ba573
-  function mega.lsp.print_diagnostics(opts, bufnr, line_nr, client_id)
-    opts = opts or {}
-
-    bufnr = bufnr or 0
-    line_nr = line_nr or (vim.api.nvim_win_get_cursor(0)[1] - 1)
-
-    local line_diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr, line_nr, opts, client_id)
-    if vim.tbl_isempty(line_diagnostics) then
-      return
-    end
-
-    local diagnostic_message = ""
-    for i, diag in ipairs(line_diagnostics) do
-      diagnostic_message = diagnostic_message .. string.format("%d: %s", i, diag.message or "")
-      if i ~= #line_diagnostics then
-        diagnostic_message = diagnostic_message .. "\n"
-      end
-    end
-    --print only shows a single line, echo blocks requiring enter, pick your poison
-    P(diagnostic_message)
-  end
-
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
-  local ns = api.nvim_create_namespace("severe_diagnostics")
-  --- Get a reference to the original signs handler
-  local signs_handler = vim.diagnostic.handlers.signs
-  --- Override the built-in signs handler
-  vim.diagnostic.handlers.signs = {
-    show = function(_, bufnr, _, opts)
+  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local function max_diagnostic(callback)
+    return function(_, bufnr, _, opts)
       -- Get all diagnostics from the whole buffer rather than just the
       -- diagnostics passed to the handler
       local diagnostics = vim.diagnostic.get(bufnr)
@@ -259,23 +244,29 @@ local function setup_diagnostics()
       local max_severity_per_line = {}
       for _, d in pairs(diagnostics) do
         local m = max_severity_per_line[d.lnum]
-
-        -- FIXME; this only seems to be the case for elixir-ls when there are compilation errors;
-        -- d.lnum ends up being -1 which crashes the call to show/4 down below.
-        if d.lnum == -1 then
-          d.lnum = 0
-        end
-
         if not m or d.severity < m.severity then
           max_severity_per_line[d.lnum] = d
         end
       end
       -- Pass the filtered diagnostics (with our custom namespace) to
       -- the original handler
-      signs_handler.show(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
-    end,
+      callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
+    end
+  end
+
+  local signs_handler = vim.diagnostic.handlers.signs
+  vim.diagnostic.handlers.signs = {
+    show = max_diagnostic(signs_handler.show),
     hide = function(_, bufnr)
       signs_handler.hide(ns, bufnr)
+    end,
+  }
+
+  local virt_text_handler = vim.diagnostic.handlers.virtual_text
+  vim.diagnostic.handlers.virtual_text = {
+    show = max_diagnostic(virt_text_handler.show),
+    hide = function(_, bufnr)
+      virt_text_handler.hide(ns, bufnr)
     end,
   }
 
@@ -305,23 +296,26 @@ local function setup_diagnostics()
       },
       header = { "Diagnostics:", "DiagnosticHeader" },
       ---@diagnostic disable-next-line: unused-local
-      prefix = function(diag, _i, _total)
-        local icon, highlight
-        if diag.severity == 1 then
-          icon = mega.icons.lsp.error
-          highlight = "DiagnosticError"
-        elseif diag.severity == 2 then
-          icon = mega.icons.lsp.warn
-          highlight = "DiagnosticWarn"
-        elseif diag.severity == 3 then
-          icon = mega.icons.lsp.info
-          highlight = "DiagnosticInfo"
-        elseif diag.severity == 4 then
-          icon = mega.icons.lsp.hint
-          highlight = "DiagnosticHint"
-        end
-        -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
-        return fmt("%s ", icon), highlight
+      prefix = function(diag, i, _total)
+        -- local icon, highlight
+        -- if diag.severity == 1 then
+        --   icon = mega.icons.lsp.error
+        --   highlight = "DiagnosticError"
+        -- elseif diag.severity == 2 then
+        --   icon = mega.icons.lsp.warn
+        --   highlight = "DiagnosticWarn"
+        -- elseif diag.severity == 3 then
+        --   icon = mega.icons.lsp.info
+        --   highlight = "DiagnosticInfo"
+        -- elseif diag.severity == 4 then
+        --   icon = mega.icons.lsp.hint
+        --   highlight = "DiagnosticHint"
+        -- end
+        -- -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
+        -- return fmt("%s ", icon), highlight
+        local level = diagnostic_types[diag.severity]
+        local prefix = fmt("%d. %s ", i, level.icon)
+        return prefix, "Diagnostic" .. level[1]
       end,
     },
   })
@@ -578,7 +572,7 @@ mega.lsp.servers = {
       lspconfig = {
         settings = {
           Lua = {
-            formatting = {
+            format = {
               enabled = false,
             },
             diagnostics = {

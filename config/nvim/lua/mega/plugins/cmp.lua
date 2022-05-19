@@ -154,6 +154,7 @@ return function(plug)
   cmp.setup.cmdline(":", {
     sources = cmp.config.sources({
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
+      { name = "path" },
     }),
   })
 

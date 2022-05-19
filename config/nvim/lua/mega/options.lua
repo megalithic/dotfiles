@@ -315,13 +315,14 @@ vim.opt.titlelen = 70
 -----------------------------------------------------------------------------//
 vim.opt.showmode = false -- show current mode (insert, etc) under the cmdline
 vim.opt.showcmd = true -- show current mode (insert, etc) under the cmdline
+-- NOTE: Don't remember help files since that will error if they are from a lazy loaded plugin
 vim.opt.sessionoptions = {
   "blank",
   "globals",
   "buffers",
   "curdir",
   "folds",
-  "help",
+  -- "help",
   "winpos",
   "winsize",
   -- "tabpages",

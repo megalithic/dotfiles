@@ -156,6 +156,9 @@ if type nvim >/dev/null 2>&1; then
   alias rmpaqs="packs; rm -rf paqs; cd -"
   [ -n "$NVIM_LISTEN_ADDRESS" ] && alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
 
+  # suffix aliases set the program type to use to open a particular file with an extension
+  alias -s {js,html,js,ts,css,md}=nvim
+
   # function nvim() {
   #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
   #     nvr -p "$@"

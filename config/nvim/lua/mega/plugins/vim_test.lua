@@ -31,18 +31,25 @@ return function(plug)
   vim.g["test#filename_modifier"] = ":."
   vim.g["test#preserve_screen"] = 0
 
+  local tt = require("toggleterm")
+  local tterms = require("toggleterm.terminal")
   vim.g["test#custom_strategies"] = {
     toggleterm = function(cmd)
       P(fmt("cmd: %s", cmd))
-      require("toggleterm").exec(cmd)
+      tt.exec(cmd, nil, nil, nil, "vertical")
     end,
     toggleterm_f = function(cmd)
       P(fmt("f_cmd: %s", cmd))
-      require("toggleterm").exec_command(fmt([[cmd="%s" direction=float]], cmd))
+      tt.exec(cmd, nil, nil, nil, "float")
     end,
     toggleterm_h = function(cmd)
       P(fmt("h_cmd: %s", cmd))
-      require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
+      tt.exec(cmd, nil, nil, nil, "horizontal")
+    end,
+    toggleterm_close = function(cmd)
+      local term_id = 0
+      tt.exec(cmd, term_id)
+      tterms.get_or_create_term(term_id):close()
     end,
     termsplit = function(cmd)
       mega.term_open({

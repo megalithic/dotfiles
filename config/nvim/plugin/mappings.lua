@@ -498,7 +498,7 @@ for _, binding in ipairs(rl_bindings) do
 end
 
 -- paste over currently selected text without yanking it
-vmap("p", "\"_dP")
+-- vmap("p", "\"_dP")
 
 -- Undo breakpoints
 imap(",", ",<C-g>u")

@@ -843,7 +843,7 @@ local function statusline_active(ctx)
     { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
     git,
     lineinfo,
-    suffix,
+    -- suffix,
   })
 end
 
