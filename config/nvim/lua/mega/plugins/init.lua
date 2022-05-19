@@ -190,8 +190,8 @@ local PKGS = {
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
-  { "sunaku/tmux-navigate", opt = false },
-  -- { "aserowy/tmux.nvim", opt = false },
+  -- { "sunaku/tmux-navigate", opt = false },
+  { "aserowy/tmux.nvim", opt = false },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
   "junegunn/vim-slash",
   "outstand/logger.nvim",
@@ -934,8 +934,7 @@ M.config = function()
   conf("treesitter-context", {})
 
   conf("tmux", {
-    enabled = false,
-    -- enabled = vim.env.TMUX ~= nil,
+    enabled = vim.env.TMUX ~= nil,
     config = function(plug)
       if plug == nil then
         return
@@ -983,7 +982,6 @@ M.config = function()
     end,
   })
 
-  conf("tmux-navigate", { enabled = vim.env.TMUX ~= nil })
   conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil, silent = false })
 
   conf("incline", {
