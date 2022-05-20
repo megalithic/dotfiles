@@ -154,33 +154,50 @@ local function setup_mappings(client, bufnr)
   local ok, lsp_format = pcall(require, "lsp-format")
   local do_format = ok and lsp_format.format or vim.lsp.buf.format
 
+  local desc = function(desc)
+    return { desc = desc, buffer = bufnr }
+  end
+
   nmap("[d", function()
     diagnostic.goto_prev()
-  end, { desc = "lsp: prev diagnostic", buffer = bufnr })
+  end, desc("lsp: prev diagnostic"))
   nmap("]d", function()
     diagnostic.goto_next()
-  end, { desc = "lsp: next diagnostic", buffer = bufnr })
-  nmap(
-    "gD",
-    [[<cmd>TroubleToggle document_diagnostics<CR>]],
-    { desc = "trouble: document diagnostics", buffer = bufnr }
-  )
+  end, desc("lsp: next diagnostic"))
+  nmap("gD", [[<cmd>TroubleToggle document_diagnostics<CR>]], desc("trouble: document diagnostics"))
 
-  nmap("gd", vim.lsp.buf.definition, { desc = "lsp: definition", buffer = bufnr })
-  nmap("gr", vim.lsp.buf.references, { desc = "lsp: references", buffer = bufnr })
-  nmap("gt", vim.lsp.buf.type_definition, { desc = "lsp: type definition", buffer = bufnr })
-  nmap("gi", vim.lsp.buf.implementation, { desc = "lsp: implementation", buffer = bufnr })
-  nmap("gI", vim.lsp.buf.incoming_calls, { desc = "lsp: incoming calls", buffer = bufnr })
-  nmap("<leader>lc", vim.lsp.buf.code_action, { desc = "lsp: code action", buffer = bufnr })
-  xmap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", { desc = "lsp: code action", buffer = bufnr })
-  nmap("gl", vim.lsp.codelens.run, { desc = "lsp: code lens", buffer = bufnr })
-  nmap("gn", require("mega.lsp.rename").rename, { desc = "lsp: rename", buffer = bufnr })
+  if client.server_capabilities.definitionProvider then
+    nmap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
+  end
+  if client.server_capabilities.referencesProvider then
+    nmap("gr", vim.lsp.buf.references, desc("lsp: references"))
+  end
+  if client.server_capabilities.typeDefinitionProvider then
+    nmap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
+  end
+  if client.server_capabilities.implementationProvider then
+    nmap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
+  end
+  if client.supports_method("textDocument/prepareCallHierarchy") then
+    nmap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
+  end
+  if client.server_capabilities.codeActionProvider then
+    nmap("<leader>lc", vim.lsp.buf.code_action, desc("lsp: code action"))
+    xmap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("lsp: code action"))
+  end
+  if client.server_capabilities.codeLensProvider then
+    nmap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
+  end
+  if client.server_capabilities.renameProvider then
+    nmap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
+  end
+  if client.server_capabilities.hoverProvider then
+    nmap("K", vim.lsp.buf.hover, desc("lsp: hover"))
+  end
 
-  nmap("K", vim.lsp.buf.hover, { desc = "lsp: hover", buffer = bufnr })
-
-  nmap("<leader>li", [[<cmd>LspInfo<CR>]], { desc = "lsp: show client info", buffer = bufnr })
-  nmap("<leader>ll", [[<cmd>LspLog<CR>]], { desc = "lsp: show log", buffer = bufnr })
-  nmap("<leader>rf", do_format, { desc = "lsp: format buffer", buffer = bufnr })
+  nmap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
+  nmap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
+  nmap("<leader>rf", do_format, desc("lsp: format buffer"))
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
@@ -458,9 +475,14 @@ function mega.lsp.on_attach(client, bufnr)
     require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
   end
 
-  vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
+  if client.server_capabilities.definitionProvider then
+    vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
+  end
 
-  vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
+  if client.server_capabilities.documentFormattingProvider then
+    vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
+  end
+
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)

@@ -932,7 +932,7 @@ M.config = function()
     end,
   })
 
-  conf("treesitter-context", {})
+  conf("treesitter-context", { enabled = false })
 
   conf("tmux", {
     enabled = vim.env.TMUX ~= nil,
@@ -983,7 +983,7 @@ M.config = function()
     end,
   })
 
-  conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil, silent = false })
+  conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil })
 
   conf("incline", {
     enabled = vim.api.nvim_get_option("laststatus") == 3,

@@ -528,6 +528,10 @@ function mega.conf(plugin_conf_name, opts)
   --   -- P(plugin_conf_name .. " currently disabled.")
   -- end
 
+  if not enabled and not silent then
+    P(plugin_conf_name .. " is disabled.")
+  end
+
   if enabled then
     -- NOTE:
     -- If plugin is `opt` and `enabled`, we'll packadd the plugin (lazyload),
