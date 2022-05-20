@@ -51,7 +51,9 @@ do
     "terminal",
     "megaterm",
     "dirbuf",
+    "lspinfo",
   }
+  local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
   local function smart_close()
     if fn.winnr("$") ~= 1 then
@@ -71,13 +73,11 @@ do
       event = { "FileType" },
       pattern = { "*" },
       command = function()
-        local is_readonly = (vim.bo.readonly or not vim.bo.modifiable) and fn.hasmapto("q", "n") == 0
-
-        local is_eligible = vim.bo.buftype ~= ""
-          or is_readonly
+        local is_unmapped = fn.hasmapto("q", "n") == 0
+        local is_eligible = is_unmapped
           or vim.wo.previewwindow
+          or contains(smart_close_buftypes, vim.bo.buftype)
           or contains(smart_close_filetypes, vim.bo.filetype)
-
         if is_eligible then
           nnoremap("q", smart_close, { buffer = 0, nowait = true })
         end
@@ -163,7 +163,7 @@ if vim.env.TMUX ~= nil then
 end
 
 do
-  local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage" }
+  local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage", "dirbuf" }
   local function can_save()
     return mega.empty(vim.bo.buftype)
       and not mega.empty(vim.bo.filetype)
@@ -172,6 +172,14 @@ do
   end
 
   augroup("Utilities", {
+    -- {
+    --   event = { "WinNew", "WinLeave" },
+    --   command = [[setlocal winhl=CursorLine:CursorLineNC,CursorLineNr:CursorLineNrNC,Normal:PanelBackground syntax=disable | TSBufDisable &filetype]],
+    -- },
+    -- {
+    --   event = { "WinEnter" },
+    --   command = [[setlocal winhl= syntax=enable | TSBufEnable &filetype]],
+    -- },
     {
       event = { "BufNewFile", "BufWritePre" },
       command = function()
@@ -188,16 +196,23 @@ do
         -- https://github.com/novasenco/nvim.config/blob/main/autoload/autocmd.vim#L34
         -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/plugin/autocommands.lua#L401-L419
         if vim.bo.ft ~= "gitcommit" and vim.fn.win_gettype() ~= "popup" then
-          local row, col = unpack(api.nvim_buf_get_mark(0, "\""))
-          if { row, col } ~= { 0, 0 } then
-            -- TODO: exact column instead?
-            local ok, msg = pcall(api.nvim_win_set_cursor, 0, { row, 0 })
-            if not ok then
-              vim.notify(msg, "error", { title = "Last cursor position" })
-            else
-              vim.cmd("normal! zz")
-            end
+          local last_place_mark = vim.api.nvim_buf_get_mark(0, "\"")
+          local line_nr = last_place_mark[1]
+          local last_line = vim.api.nvim_buf_line_count(0)
+
+          if line_nr > 0 and line_nr <= last_line then
+            vim.api.nvim_win_set_cursor(0, last_place_mark)
           end
+          -- local row, col = unpack(api.nvim_buf_get_mark(0, "\""))
+          -- if { row, col } ~= { 0, 0 } then
+          --   -- TODO: exact column instead?
+          --   local ok, msg = pcall(api.nvim_win_set_cursor, 0, { row, 0 })
+          --   if not ok then
+          --     vim.notify(msg, "error", { title = "Last cursor position" })
+          --   else
+          --     vim.cmd("normal! zz")
+          --   end
+          -- end
         end
       end,
     },
@@ -371,18 +386,6 @@ augroup("LazyLoads", {
       --     },
       --   })
       -- end
-    end,
-  },
-  {
-    -- tmux-navigate
-    -- vim-kitty-navigator
-    event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
-    command = function()
-      if vim.env.TMUX ~= nil then
-        vcmd([[packadd tmux-navigate]])
-      else
-        vcmd([[packadd vim-kitty-navigator]])
-      end
     end,
   },
 })

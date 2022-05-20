@@ -76,6 +76,7 @@ M.apply = function(app, win, event, log)
         browser_win:moveToUnit(hs.layout.maximized)
       end
     end
+
     if kitty ~= nil then
       local kitty_win = kitty:mainWindow()
       if kitty_win ~= nil then

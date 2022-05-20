@@ -156,6 +156,9 @@ if type nvim >/dev/null 2>&1; then
   alias rmpaqs="packs; rm -rf paqs; cd -"
   [ -n "$NVIM_LISTEN_ADDRESS" ] && alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
 
+  # suffix aliases set the program type to use to open a particular file with an extension
+  alias -s {js,html,js,ts,css,md}=nvim
+
   # function nvim() {
   #   if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
   #     nvr -p "$@"
@@ -190,7 +193,7 @@ alias ezl="nvim $PRIVATES/home/localrc"
 
 alias ev="nvim $DOTS/config/nvim/init.lua"
 alias evv="nvim $DOTS/config/nvim/vimrc"
-alias evp="nvim $DOTS/config/nvim/lua/mega/plugins.lua"
+alias evp="nvim $DOTS/config/nvim/lua/mega/plugins/init.lua"
 alias evo="nvim $DOTS/config/nvim/lua/mega/options.lua"
 alias evl="nvim $DOTS/config/nvim/plugin/lsp.lua"
 alias evm="nvim $DOTS/config/nvim/plugin/mappings.lua"
@@ -306,6 +309,7 @@ alias gp="git push -u"
 alias gcv="git cv"
 alias gcm="git cm"
 alias gaa="git aa"
+alias gcp="git branch --show-current | tr -d '[:space:]' | pbcopy"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"

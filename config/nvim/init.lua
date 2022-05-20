@@ -48,3 +48,4 @@ end
 
 require("mega.globals")
 require("mega.options")
+require("mega.plugins").config()

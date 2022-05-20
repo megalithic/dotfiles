@@ -202,6 +202,7 @@ vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
+vim.g.local_state_path = fmt("%s/.local/state/nvim", vim.g.home)
 vim.g.local_share_path = fmt("%s/.local/share/nvim", vim.g.home)
 
 mega.dirs.dots = vim.g.dotfiles
@@ -233,30 +234,18 @@ end
 
 -- setup vim's various config directories
 -- # cache_paths
-local cache_paths = {
-  fmt("%s/backup", vim.g.cache_path),
-  fmt("%s/session", vim.g.cache_path),
-  fmt("%s/swap", vim.g.cache_path),
-  fmt("%s/tags", vim.g.cache_path),
-  fmt("%s/undo", vim.g.cache_path),
+local local_state_paths = {
+  fmt("%s/backup", vim.g.local_state_path),
+  fmt("%s/session", vim.g.local_state_path),
+  fmt("%s/swap", vim.g.local_state_path),
+  fmt("%s/shada", vim.g.local_state_path),
+  fmt("%s/tags", vim.g.local_state_path),
+  fmt("%s/undo", vim.g.local_state_path),
 }
-if not is_dir(vim.g.cache_path) then
-  os.execute("mkdir -p " .. vim.g.cache_path)
+if not is_dir(vim.g.local_state_path) then
+  os.execute("mkdir -p " .. vim.g.local_state_path)
 end
-for _, p in pairs(cache_paths) do
-  if not is_dir(p) then
-    os.execute("mkdir -p " .. p)
-  end
-end
-
--- # local_share_paths
-local local_share_paths = {
-  fmt("%s/shada", vim.g.local_share_path),
-}
-if not is_dir(vim.g.local_share_path) then
-  os.execute("mkdir -p " .. vim.g.local_share_path)
-end
-for _, p in pairs(local_share_paths) do
+for _, p in pairs(local_state_paths) do
   if not is_dir(p) then
     os.execute("mkdir -p " .. p)
   end
@@ -290,7 +279,6 @@ function _G.P(...)
   else
     print(table.concat(objects, "\n"))
   end
-
   return ...
 end
 
@@ -386,7 +374,7 @@ function mega.opt(o, v, scopes)
 end
 
 function mega.safe_require(module, opts)
-  opts = opts or { silent = false }
+  opts = opts or { silent = true }
   local ok, result = pcall(require, module)
   if not ok and not opts.silent then
     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
@@ -507,6 +495,14 @@ function mega.conf(plugin_conf_name, opts)
     test = (opts.test == nil) and false or opts.test
     ---@diagnostic disable-next-line: unused-local
     event = (opts.event == nil) and {} or opts.event
+
+    -- handle what to do when opts.config is simply a string "name" to use for loading external config
+    if type(opts.config) == "string" then
+      local has_external_config, found_external_config = mega.safe_require(fmt("mega.plugins.%s", plugin_conf_name))
+      if has_external_config then
+        config = found_external_config
+      end
+    end
   elseif type(opts) == "function" then
     config = opts
     enabled = true
@@ -517,23 +513,54 @@ function mega.conf(plugin_conf_name, opts)
     event = {}
   end
 
+  -- if not enabled then
+  --   -- P(plugin_conf_name .. " currently disabled.")
+  -- end
+
+  if not enabled and not silent then
+    P(plugin_conf_name .. " is disabled.")
+  end
+
   if enabled then
     -- NOTE:
     -- If plugin is `opt` and `enabled`, we'll packadd the plugin (lazyload),
     -- then we'll go forth with setup of plugin or running of optional callback fn.
     local plugin_config = build_plugin_config(plugin_conf_name)
-    if plugin_config and plugin_config.opt then
-      vim.cmd("packadd " .. plugin_config.name)
+    if plugin_config then
+      if plugin_config.opt then
+        vim.cmd("packadd " .. plugin_config.name)
+        if not silent then
+          P(plugin_config.name .. " packadd as opt.")
+        end
+
+        -- For implementing this sort of thing:
+        -- REF: https://github.com/akinsho/dotfiles/commit/33138f7bc7ad4b836b6c5c0f4ad54ea006f812be#diff-234774bd94026ade0e5765bc362576a2b0e1052dc0ed9bdea777e86a4a66c098R818
+        -- mega.augroup("PluginConfLoader" .. plugin_conf_name, {
+        --   {
+        --     event = { "VimEnter" },
+        --     once = true,
+        --     command = function()
+        --       P("lazy loading " .. plugin_config.name)
+        --       vim.cmd("packadd " .. plugin_config.name)
+        --     end,
+        --   },
+        -- })
+      end
     end
 
     local ok, loader = mega.safe_require(plugin_conf_name, { silent = silent })
+    -- plugin is installed, we found it, let's try and execute auto-config things on it, like auto-invoking its `setup` fn
     if ok then
-      if vim.fn.has_key(loader, "setup") and type(config) == "table" then
-        if not silent then
-          P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
-        end
+      if type(config) == "table" then
+        -- does it have a setup key to execute?
+        if vim.fn.has_key(loader, "setup") then
+          if not silent then
+            P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
+          end
 
-        loader.setup(config)
+          loader.setup(config)
+        end
+        -- config was passed a function, so we're assuming we want to bypass the plugin auto-invoking, and invoke our own fn
       elseif type(config) == "function" then
         -- passes the loaded plugin back to the caller so they can do more config
         config(loader)
@@ -613,6 +640,11 @@ local function mapper(mode, o)
       end
       opts.label = nil
     end
+
+    if rhs == nil then
+      P(mode, lhs, rhs, opts, parent_opts)
+    end
+
     vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("keep", opts, parent_opts))
   end
 end
@@ -801,16 +833,40 @@ function mega.executable(e)
   return fn.executable(e) > 0
 end
 
+local function open(path)
+  fn.jobstart({ vim.g.open_command, path }, { detach = true })
+  vim.notify(fmt("Opening %s", path))
+end
+
 -- open URI under cursor
 function mega.open_uri()
-  local Job = require("plenary.job")
-  local uri = vim.fn.expand("<cWORD>")
-  Job
-    :new({
-      "open",
-      uri,
-    })
-    :sync()
+  local file = fn.expand("<cfile>")
+  if fn.isdirectory(file) > 0 then
+    return vim.cmd("edit " .. file)
+  end
+  if file:match("https://") then
+    return open(file)
+  end
+  -- Any URI with a protocol segment
+  local protocol_uri_regex = "%a*:%/%/[%a%d%#%[%]%-%%+:;!$@/?&=_.,~*()]*"
+  if file:match(protocol_uri_regex) then
+    return vim.cmd("norm! gf")
+  end
+
+  -- consider anything that looks like string/string a github link
+  local plugin_url_regex = "[%a%d%-%.%_]*%/[%a%d%-%.%_]*"
+  local link = string.match(file, plugin_url_regex)
+  if link then
+    return open(fmt("https://www.github.com/%s", link))
+  end
+  -- local Job = require("plenary.job")
+  -- local uri = vim.fn.expand("<cWORD>")
+  -- Job
+  --   :new({
+  --     "open",
+  --     uri,
+  --   })
+  --   :sync()
 end
 
 function mega.open_plugin_url()

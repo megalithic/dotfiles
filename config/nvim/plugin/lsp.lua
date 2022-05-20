@@ -15,6 +15,10 @@ vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 vim.lsp.set_log_level("ERROR")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
+-- TODO: all references to `resolved_capabilities.capability_name` will need to be changed to
+-- `server_capabilities.camelCaseCapabilityName`
+-- https://github.com/neovim/neovim/issues/14090#issuecomment-1113956767
+
 -- [ COMMANDS ] ----------------------------------------------------------------
 
 local function setup_commands()
@@ -68,39 +72,52 @@ local function setup_commands()
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
-
+---@param client table<string, any>
+---@param bufnr number
 local function setup_autocommands(client, bufnr)
   augroup("LspCodeLens", {
     {
       event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
       buffer = 0,
       command = function()
-        vim.lsp.codelens.refresh()
+        if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then
+          vim.lsp.codelens.refresh()
+        end
       end,
     },
   })
 
-  augroup("LspDocumentHighlight", {
-    {
-      event = { "CursorHold", "CursorHoldI" },
-      buffer = bufnr,
-      command = function()
-        vim.lsp.buf.document_highlight()
-      end,
-    },
-    {
-      event = { "CursorMoved", "BufLeave" },
-      buffer = bufnr,
-      command = function()
-        vim.lsp.buf.clear_references()
-      end,
-    },
-  })
+  -- augroup("LspDocumentHighlight", {
+  --   {
+  --     event = { "CursorHold", "CursorHoldI" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       vim.lsp.buf.document_highlight()
+  --     end,
+  --   },
+  --   {
+  --     event = { "CursorMoved", "BufLeave" },
+  --     buffer = bufnr,
+  --     command = function()
+  --       vim.lsp.buf.clear_references()
+  --     end,
+  --   },
+  -- })
+  --
+  -- Show the popup diagnostics window, but only once for the current cursor location
+  -- by checking whether the word under the cursor has changed.
+  local function diagnostic_popup()
+    local cword = vim.fn.expand("<cword>")
+    if cword ~= vim.w.lsp_diagnostics_cword then
+      vim.w.lsp_diagnostics_cword = cword
+      vim.diagnostic.open_float(0, { scope = "cursor", focus = false })
+    end
+  end
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
       command = function()
-        diagnostic.open_float()
+        diagnostic_popup()
       end,
     },
   })
@@ -134,56 +151,53 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  -- if client.server_capabilities.code_lens then
-  --   bufmap("<leader>ll", "lua vim.lsp.codelens.run()")
-  -- end
-
   local ok, lsp_format = pcall(require, "lsp-format")
-  local do_format = ok and lsp_format.format or vim.lsp.buf.formatting
-  local maps = {
-    n = {
-      ["<leader>rf"] = { do_format, "lsp: format buffer" },
-      ["<leader>li"] = { [[<cmd>LspInfo<CR>]], "lsp: show client info" },
-      ["<leader>ll"] = { [[<cmd>LspLog<CR>]], "lsp: show log" },
-      ["<leader>lt"] = { [[<cmd>TroubleToggle document_diagnostics<CR>]], "lsp: trouble diagnostics" },
-      ["gD"] = { [[<cmd>TroubleToggle document_diagnostics<CR>]], "lsp: trouble diagnostics" },
-      ["gd"] = { vim.lsp.buf.definition, "lsp: definition" },
-      ["gr"] = { vim.lsp.buf.references, "lsp: references" },
-      ["gR"] = { [[<cmd>TroubleToggle lsp_references<cr>]], "lsp: trouble references" },
-      ["gI"] = { vim.lsp.buf.incoming_calls, "lsp: incoming calls" },
-      ["K"] = { vim.lsp.buf.hover, "lsp: hover" },
-    },
-    x = {},
-  }
+  local do_format = ok and lsp_format.format or vim.lsp.buf.format
 
-  maps.n["[d"] = {
-    function()
-      diagnostic.goto_prev()
-    end,
-    "lsp: go to prev diagnostic",
-  }
-  maps.n["]d"] = {
-    function()
-      diagnostic.goto_next()
-    end,
-    "lsp: go to next diagnostic",
-  }
-
-  maps.n["gi"] = { vim.lsp.buf.implementation, "lsp: implementation" }
-
-  maps.n["<leader>ltd"] = { vim.lsp.buf.type_definition, "lsp: go to type definition" }
-
-  maps.n["<leader>ca"] = { vim.lsp.buf.code_action, "lsp: code action" }
-  maps.x["<leader>ca"] = { "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", "lsp: code action" }
-  maps.n["<leader>cl"] = { vim.lsp.codelens.run, "lsp: run code lens" }
-
-  maps.n["<leader>rn"] = { vim.lsp.buf.rename, "lsp: rename" }
-  maps.n["<leader>ln"] = { vim.lsp.buf.rename, "lsp: rename" }
-  maps.n["<leader>ln"] = { require("mega.lsp.rename").rename, "lsp: rename document symbol" }
-
-  for mode, value in pairs(maps) do
-    require("which-key").register(value, { buffer = bufnr, mode = mode })
+  local desc = function(desc)
+    return { desc = desc, buffer = bufnr }
   end
+
+  nmap("[d", function()
+    diagnostic.goto_prev()
+  end, desc("lsp: prev diagnostic"))
+  nmap("]d", function()
+    diagnostic.goto_next()
+  end, desc("lsp: next diagnostic"))
+  nmap("gD", [[<cmd>TroubleToggle document_diagnostics<CR>]], desc("trouble: document diagnostics"))
+
+  if client.server_capabilities.definitionProvider then
+    nmap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
+  end
+  if client.server_capabilities.referencesProvider then
+    nmap("gr", vim.lsp.buf.references, desc("lsp: references"))
+  end
+  if client.server_capabilities.typeDefinitionProvider then
+    nmap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
+  end
+  if client.server_capabilities.implementationProvider then
+    nmap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
+  end
+  if client.supports_method("textDocument/prepareCallHierarchy") then
+    nmap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
+  end
+  if client.server_capabilities.codeActionProvider then
+    nmap("<leader>lc", vim.lsp.buf.code_action, desc("lsp: code action"))
+    xmap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("lsp: code action"))
+  end
+  if client.server_capabilities.codeLensProvider then
+    nmap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
+  end
+  if client.server_capabilities.renameProvider then
+    nmap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
+  end
+  if client.server_capabilities.hoverProvider then
+    nmap("K", vim.lsp.buf.hover, desc("lsp: hover"))
+  end
+
+  nmap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
+  nmap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
+  nmap("<leader>rf", do_format, desc("lsp: format buffer"))
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
@@ -224,51 +238,22 @@ local function setup_diagnostics()
     { "Hint", icon = mega.icons.lsp.hint },
   }
 
-  fn.sign_define(
-    "",
-    vim.tbl_map(function(t)
-      local hl = "DiagnosticSign" .. t[1]
-      return {
-        name = hl,
-        text = t.icon,
-        texthl = hl,
-        numhl = fmt("%sNumLine", hl),
-        linehl = fmt("%sLine", hl),
-      }
-    end, diagnostic_types)
-  )
-
-  -- REF: https://github.com/nvim-lua/kickstart.nvim/pull/26/commits/c3dd3bdc3d973ef9421aac838b9807496b7ba573
-  function mega.lsp.print_diagnostics(opts, bufnr, line_nr, client_id)
-    opts = opts or {}
-
-    bufnr = bufnr or 0
-    line_nr = line_nr or (vim.api.nvim_win_get_cursor(0)[1] - 1)
-
-    local line_diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr, line_nr, opts, client_id)
-    if vim.tbl_isempty(line_diagnostics) then
-      return
-    end
-
-    local diagnostic_message = ""
-    for i, diag in ipairs(line_diagnostics) do
-      diagnostic_message = diagnostic_message .. string.format("%d: %s", i, diag.message or "")
-      if i ~= #line_diagnostics then
-        diagnostic_message = diagnostic_message .. "\n"
-      end
-    end
-    --print only shows a single line, echo blocks requiring enter, pick your poison
-    P(diagnostic_message)
-  end
+  fn.sign_define(vim.tbl_map(function(t)
+    local hl = "DiagnosticSign" .. t[1]
+    return {
+      name = hl,
+      text = t.icon,
+      texthl = hl,
+      numhl = fmt("%sNumLine", hl),
+      linehl = fmt("%sLine", hl),
+    }
+  end, diagnostic_types))
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
-  local ns = api.nvim_create_namespace("severe_diagnostics")
-  --- Get a reference to the original signs handler
-  local signs_handler = vim.diagnostic.handlers.signs
-  --- Override the built-in signs handler
-  vim.diagnostic.handlers.signs = {
-    show = function(_, bufnr, _, opts)
+  local ns = api.nvim_create_namespace("severe-diagnostics")
+  local function max_diagnostic(callback)
+    return function(_, bufnr, _, opts)
       -- Get all diagnostics from the whole buffer rather than just the
       -- diagnostics passed to the handler
       local diagnostics = vim.diagnostic.get(bufnr)
@@ -276,23 +261,29 @@ local function setup_diagnostics()
       local max_severity_per_line = {}
       for _, d in pairs(diagnostics) do
         local m = max_severity_per_line[d.lnum]
-
-        -- FIXME; this only seems to be the case for elixir-ls when there are compilation errors;
-        -- d.lnum ends up being -1 which crashes the call to show/4 down below.
-        if d.lnum == -1 then
-          d.lnum = 0
-        end
-
         if not m or d.severity < m.severity then
           max_severity_per_line[d.lnum] = d
         end
       end
       -- Pass the filtered diagnostics (with our custom namespace) to
       -- the original handler
-      signs_handler.show(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
-    end,
+      callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
+    end
+  end
+
+  local signs_handler = vim.diagnostic.handlers.signs
+  vim.diagnostic.handlers.signs = {
+    show = max_diagnostic(signs_handler.show),
     hide = function(_, bufnr)
       signs_handler.hide(ns, bufnr)
+    end,
+  }
+
+  local virt_text_handler = vim.diagnostic.handlers.virtual_text
+  vim.diagnostic.handlers.virtual_text = {
+    show = max_diagnostic(virt_text_handler.show),
+    hide = function(_, bufnr)
+      virt_text_handler.hide(ns, bufnr)
     end,
   }
 
@@ -322,23 +313,26 @@ local function setup_diagnostics()
       },
       header = { "Diagnostics:", "DiagnosticHeader" },
       ---@diagnostic disable-next-line: unused-local
-      prefix = function(diag, _i, _total)
-        local icon, highlight
-        if diag.severity == 1 then
-          icon = mega.icons.lsp.error
-          highlight = "DiagnosticError"
-        elseif diag.severity == 2 then
-          icon = mega.icons.lsp.warn
-          highlight = "DiagnosticWarn"
-        elseif diag.severity == 3 then
-          icon = mega.icons.lsp.info
-          highlight = "DiagnosticInfo"
-        elseif diag.severity == 4 then
-          icon = mega.icons.lsp.hint
-          highlight = "DiagnosticHint"
-        end
-        -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
-        return fmt("%s ", icon), highlight
+      prefix = function(diag, i, _total)
+        -- local icon, highlight
+        -- if diag.severity == 1 then
+        --   icon = mega.icons.lsp.error
+        --   highlight = "DiagnosticError"
+        -- elseif diag.severity == 2 then
+        --   icon = mega.icons.lsp.warn
+        --   highlight = "DiagnosticWarn"
+        -- elseif diag.severity == 3 then
+        --   icon = mega.icons.lsp.info
+        --   highlight = "DiagnosticInfo"
+        -- elseif diag.severity == 4 then
+        --   icon = mega.icons.lsp.hint
+        --   highlight = "DiagnosticHint"
+        -- end
+        -- -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
+        -- return fmt("%s ", icon), highlight
+        local level = diagnostic_types[diag.severity]
+        local prefix = fmt("%d. %s ", i, level.icon)
+        return prefix, "Diagnostic" .. level[1]
       end,
     },
   })
@@ -411,6 +405,28 @@ local function setup_handlers()
     end
   end
 
+  -- lsp.handlers["textDocument/definition"] = function(_, result)
+  --   if result == nil or vim.tbl_isempty(result) then
+  --     print("Definition not found")
+  --     return nil
+  --   end
+  --   local function jumpto(loc)
+  --     local split_cmd = vim.uri_from_bufnr(0) == loc.targetUri and "split" or "tabnew"
+  --     vim.cmd(split_cmd)
+  --     lsp.util.jump_to_location(loc)
+  --   end
+  --   if vim.tbl_islist(result) then
+  --     jumpto(result[1])
+  --     if #result > 1 then
+  --       fn.setqflist(lsp.util.locations_to_items(result))
+  --       api.nvim_command("copen")
+  --       api.nvim_command("wincmd p")
+  --     end
+  --   else
+  --     jumpto(result)
+  --   end
+  -- end
+
   -- local old_handler = vim.lsp.handlers["window/logMessage"]
   -- lsp.handlers["window/logMessage"] = function(err, result, ...)
   --   if result.type == 3 or result.type == 4 then
@@ -455,11 +471,18 @@ function mega.lsp.on_attach(client, bufnr)
 
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
-  require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+  if client.server_capabilities.colorProvider then
+    require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
+  end
 
-  vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
+  if client.server_capabilities.definitionProvider then
+    vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
+  end
 
-  vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
+  if client.server_capabilities.documentFormattingProvider then
+    vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
+  end
+
   setup_formatting(client, bufnr)
   setup_commands()
   setup_autocommands(client, bufnr)
@@ -571,10 +594,16 @@ mega.lsp.servers = {
       lspconfig = {
         settings = {
           Lua = {
-            formatting = {
+            format = {
               enabled = false,
             },
             diagnostics = {
+              -- @see https://github.com/sumneko/lua-language-server/tree/master/script/core/diagnostics
+              disable = {
+                "lowercase-global",
+                "unused-vararg",
+                "missing-parameter",
+              },
               globals = {
                 "vim",
                 "Color",
@@ -777,18 +806,6 @@ mega.lsp.servers = {
         command = "manipulatePipes:serverid",
         arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
       }, nil, 0)
-    end
-
-    local function from_pipe(client)
-      return function()
-        manipulate_pipes("fromPipe", client)
-      end
-    end
-
-    local function to_pipe(client)
-      return function()
-        manipulate_pipes("toPipe", client)
-      end
     end
 
     return {

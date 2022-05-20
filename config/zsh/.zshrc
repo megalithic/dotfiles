@@ -7,6 +7,15 @@
 # Fix zprofile things: https://spin.atomicobject.com/2021/08/02/zprofile-on-macos/
 #   (👆describes some of macos' annoying zprofile handling.)
 
+# TERMS:
+# exec - replaces the current shell. This means no subshell is
+# created and the current process is replaced with this new command.
+# fd/FD - file descriptor
+# &- closes a FD e.g. "exec 3<&-" closes FD 3
+# file descriptor 0 is stdin (the standard input),
+# 1 is stdout (the standard output),
+# 2 is stderr (the standard error).
+
 bindkey -e # ensures we use emacs/readline keybindings
 
 [[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"

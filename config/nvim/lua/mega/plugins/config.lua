@@ -634,8 +634,74 @@ conf("notify", {
 })
 
 conf("treesitter-context", {})
--- conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil })
+
+conf("tmux", {
+  config = function(p)
+    if p == nil then
+      return
+    end
+
+    p.setup({
+      copy_sync = {
+        -- enables copy sync and overwrites all register actions to
+        -- sync registers *, +, unnamed, and 0 till 9 from tmux in advance
+        enable = false,
+
+        -- TMUX >= 3.2: yanks (and deletes) will get redirected to system
+        -- clipboard by tmux
+        redirect_to_clipboard = false,
+
+        -- offset controls where register sync starts
+        -- e.g. offset 2 lets registers 0 and 1 untouched
+        register_offset = 0,
+
+        -- sync clipboard overwrites vim.g.clipboard to handle * and +
+        -- registers. If you sync your system clipboard without tmux, disable
+        -- this option!
+        sync_clipboard = false,
+
+        -- syncs deletes with tmux clipboard as well, it is adviced to
+        -- do so. Nvim does not allow syncing registers 0 and 1 without
+        -- overwriting the unnamed register. Thus, ddp would not be possible.
+        sync_deletes = false,
+
+        -- syncs the unnamed register with the first buffer entry from tmux.
+        sync_unnamed = false,
+      },
+      navigation = {
+        -- cycles to opposite pane while navigating into the border
+        cycle_navigation = true,
+
+        -- enables default keybindings (C-hjkl) for normal mode
+        enable_default_keybindings = true,
+
+        -- prevents unzoom tmux when navigating beyond vim border
+        persist_zoom = true,
+      },
+      resize = {
+        -- enables default keybindings (A-hjkl) for normal mode
+        enable_default_keybindings = false,
+
+        -- sets resize steps for x axis
+        resize_step_x = 1,
+
+        -- sets resize steps for y axis
+        resize_step_y = 1,
+      },
+    })
+
+    -- local tmux = fn.require_on_exported_call 'tmux'
+    -- nmap     ([[<M-h>]], ithunk(tmux.move_left),   silent, "Goto window/tmux pane left")
+    -- nmap     ([[<M-j>]], ithunk(tmux.move_bottom), silent, "Goto window/tmux pane down")
+    -- nmap     ([[<M-k>]], ithunk(tmux.move_top),    silent, "Goto window/tmux pane up")
+    -- nmap     ([[<M-l>]], ithunk(tmux.move_right),  silent, "Goto window/tmux pane right")
+  end,
+  -- enabled = vim.env.TMUX ~= nil,
+})
+
 -- conf("tmux-navigate", { enabled = vim.env.TMUX ~= nil })
+
+-- conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil, silent = false })
 
 conf("incline", {
   enabled = vim.api.nvim_get_option("laststatus") == 3,
@@ -643,6 +709,29 @@ conf("incline", {
     hide = {
       focused_win = true,
     },
+    render = function(props)
+      local fmt, icons = string.format, mega.icons.misc
+      local bufname = vim.api.nvim_buf_get_name(props.buf)
+      if bufname == "" then
+        return "[No name]"
+      end
+      local directory_color = require("mega.utils.highlights").get_hl("Directory", "fg")
+      local parts = vim.split(vim.fn.fnamemodify(bufname, ":."), "/")
+      local icon, color = require("nvim-web-devicons").get_icon_color(bufname, nil, {
+        default = true,
+      })
+      local result = {}
+      for idx, part in ipairs(parts) do
+        if next(parts, idx) then
+          table.insert(result, { part })
+          table.insert(result, { fmt(" %s ", icons.chevron_right), guifg = directory_color })
+        else
+          table.insert(result, { part, gui = "underline,bold" })
+        end
+      end
+      table.insert(result, #result, { icon .. " ", guifg = color })
+      return result
+    end,
     window = {
       options = {
         winhighlight = "Normal:StInactive",

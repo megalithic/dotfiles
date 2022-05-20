@@ -81,6 +81,7 @@ do_build() {
   sudo make install || exit 1 && log_ok "successfully built and installed neovim"
 
   log "installing neovim-remote via python (pip3).."
+  /usr/local/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
   pip3 install neovim-remote
 }
 

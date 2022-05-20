@@ -27,7 +27,7 @@ M.dirs = {
 
 M.preferred = {
   terms = { "kitty", "alacritty", "iTerm" },
-  browsers = { "qutebrowser", "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
+  browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
   personal = { "Messages", "Signal" },
   chat = { "Slack" },
   media = { "Spotify" },

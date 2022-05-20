@@ -167,12 +167,15 @@ mega.command("TermRuby", function()
   })
 end)
 
-require("which-key").register({
-  t = {
-    name = "terminal",
-    e = { "<cmd>TermElixir<cr>", "repl > elixir" },
-    r = { "<cmd>TermRuby<cr>", "repl > ruby" },
-  },
-}, {
-  prefix = "<leader>",
-})
+local has_wk, wk = mega.safe_require("which-key")
+if has_wk then
+  wk.register({
+    t = {
+      name = "terminal",
+      e = { "<cmd>TermElixir<cr>", "repl > elixir" },
+      r = { "<cmd>TermRuby<cr>", "repl > ruby" },
+    },
+  }, {
+    prefix = "<leader>",
+  })
+end
