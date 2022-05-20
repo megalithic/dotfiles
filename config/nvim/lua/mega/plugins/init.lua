@@ -91,7 +91,7 @@ local PKGS = {
   "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
-  { "lewis6991/nvim-treesitter-context" },
+  -- { "lewis6991/nvim-treesitter-context" },
   "SmiteshP/nvim-gps",
   -- @trial ziontee113/syntax-tree-surfer
   -- @trial "primeagen/harpoon",
@@ -300,7 +300,7 @@ M.config = function()
 
   conf("startuptime", {
     config = function()
-      vim.g.startuptime_tries = 10
+      vim.g.startuptime_tries = 15
     end,
   })
 

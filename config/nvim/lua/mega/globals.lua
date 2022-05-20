@@ -202,6 +202,7 @@ vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)
+vim.g.local_state_path = fmt("%s/.local/state/nvim", vim.g.home)
 vim.g.local_share_path = fmt("%s/.local/share/nvim", vim.g.home)
 
 mega.dirs.dots = vim.g.dotfiles
@@ -233,30 +234,18 @@ end
 
 -- setup vim's various config directories
 -- # cache_paths
-local cache_paths = {
-  fmt("%s/backup", vim.g.cache_path),
-  fmt("%s/session", vim.g.cache_path),
-  fmt("%s/swap", vim.g.cache_path),
-  fmt("%s/tags", vim.g.cache_path),
-  fmt("%s/undo", vim.g.cache_path),
+local local_state_paths = {
+  fmt("%s/backup", vim.g.local_state_path),
+  fmt("%s/session", vim.g.local_state_path),
+  fmt("%s/swap", vim.g.local_state_path),
+  fmt("%s/shada", vim.g.local_state_path),
+  fmt("%s/tags", vim.g.local_state_path),
+  fmt("%s/undo", vim.g.local_state_path),
 }
-if not is_dir(vim.g.cache_path) then
-  os.execute("mkdir -p " .. vim.g.cache_path)
+if not is_dir(vim.g.local_state_path) then
+  os.execute("mkdir -p " .. vim.g.local_state_path)
 end
-for _, p in pairs(cache_paths) do
-  if not is_dir(p) then
-    os.execute("mkdir -p " .. p)
-  end
-end
-
--- # local_share_paths
-local local_share_paths = {
-  fmt("%s/shada", vim.g.local_share_path),
-}
-if not is_dir(vim.g.local_share_path) then
-  os.execute("mkdir -p " .. vim.g.local_share_path)
-end
-for _, p in pairs(local_share_paths) do
+for _, p in pairs(local_state_paths) do
   if not is_dir(p) then
     os.execute("mkdir -p " .. p)
   end

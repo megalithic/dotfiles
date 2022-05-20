@@ -598,6 +598,12 @@ mega.lsp.servers = {
               enabled = false,
             },
             diagnostics = {
+              -- @see https://github.com/sumneko/lua-language-server/tree/master/script/core/diagnostics
+              disable = {
+                "lowercase-global",
+                "unused-vararg",
+                "missing-parameter",
+              },
               globals = {
                 "vim",
                 "Color",
@@ -800,18 +806,6 @@ mega.lsp.servers = {
         command = "manipulatePipes:serverid",
         arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
       }, nil, 0)
-    end
-
-    local function from_pipe(client)
-      return function()
-        manipulate_pipes("fromPipe", client)
-      end
-    end
-
-    local function to_pipe(client)
-      return function()
-        manipulate_pipes("toPipe", client)
-      end
     end
 
     return {
