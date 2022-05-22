@@ -1,11 +1,7 @@
 local lush = require("lush")
 local hsluv = lush.hsluv
 
--- local palette = require("mega.colors")
--- local C = palette.cs
--- local H = require("mega.utils.highlights")
-
-local C = {}
+local C = { lsp = {} }
 
 C.bg0 = hsluv("#323d43")
 C.bg1 = C.bg0.lighten(5) -- #3c474d
@@ -27,6 +23,7 @@ C.fg = hsluv("#d8caac")
 
 C.dark_grey = hsluv("#3E4556")
 C.light_grey = hsluv("#5c6370")
+-- C.grey = '#3E4556'
 C.grey0 = hsluv("#7c8377")
 C.grey1 = hsluv("#868d80")
 C.grey2 = hsluv("#999f93")
@@ -57,5 +54,10 @@ C.dark_blue = C.blue.darken(25)
 C.dark_blue_alt = "#4e88ff"
 C.dark_orange = hsluv("#FF922B")
 C.dark_red = hsluv("#be5046")
+
+C.lsp.error = C.pale_red
+C.lsp.warn = C.dark_orange
+C.lsp.hint = C.bright_blue
+C.lsp.info = C.teal
 
 return C

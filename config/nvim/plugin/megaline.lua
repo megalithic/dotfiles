@@ -499,7 +499,6 @@ function U.file(ctx, trunc)
   end
 
   local ft_icon, icon_highlight = U.filetype(ctx, { icon_bg = "StatusLine", default = "StComment" })
-
   local file_opts, parent_opts, dir_opts = U.empty_opts(), U.empty_opts(), U.empty_opts()
   local directory, parent, file = U.filename(ctx)
 
@@ -656,15 +655,6 @@ function M.s_git(args)
   return fmt("%s %s%s%s", head_str, added_str, changed_str, removed_str)
 end
 
-function M.s_gps(args)
-  local gps = require("nvim-gps")
-  if gps.is_available() then
-    return unpack(item_if(gps.get_location(), is_truncated(args.trunc_width), "StMetaDataPrefix"))
-  end
-
-  return ""
-end
-
 local function diagnostic_info(ctx)
   ctx = ctx or U.ctx
   ---Shim to handle getting diagnostics in nvim 0.5 and nightly
@@ -676,15 +666,16 @@ local function diagnostic_info(ctx)
     return #vim.diagnostic.get(buf, { severity = s })
   end
 
-  local buf = ctx.bufnum
-  if vim.tbl_isempty(vim.lsp.buf_get_clients(buf)) then
+  local bufnr = ctx.bufnum
+  if vim.tbl_isempty(vim.lsp.get_active_clients({ bufnr = bufnr })) then
     return { error = {}, warn = {}, info = {}, hint = {} }
   end
+
   return {
-    error = { count = get_count(buf, "Error"), sign = mega.icons.lsp.error },
-    warn = { count = get_count(buf, "Warn"), sign = mega.icons.lsp.warn },
-    info = { count = get_count(buf, "Info"), sign = mega.icons.lsp.info },
-    hint = { count = get_count(buf, "Hint"), sign = mega.icons.lsp.hint },
+    error = { count = get_count(bufnr, "Error"), sign = mega.icons.lsp.error },
+    warn = { count = get_count(bufnr, "Warn"), sign = mega.icons.lsp.warn },
+    info = { count = get_count(bufnr, "Info"), sign = mega.icons.lsp.info },
+    hint = { count = get_count(bufnr, "Hint"), sign = mega.icons.lsp.hint },
   }
 end
 

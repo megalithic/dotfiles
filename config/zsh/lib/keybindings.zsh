@@ -117,3 +117,4 @@ bindkey -r '^L'
 bindkey -r '^H'
 
 bindkey '^]' clear-screen
+

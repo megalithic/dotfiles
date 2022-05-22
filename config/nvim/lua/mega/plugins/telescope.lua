@@ -16,8 +16,6 @@ return function(plug)
         prompt = { " ", " ", " ", " ", " ", " ", " ", " " },
         results = { " ", " ", " ", " ", " ", " ", " ", " " },
         preview = { " ", " ", " ", " ", " ", " ", " ", " " },
-        -- { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-        -- { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
         -- prompt = { "─", "│", " ", "│", "┌", "┐", "│", "│" },
         -- results = { "─", "│", "─", "│", "├", "┤", "┘", "└" },
         -- preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
@@ -36,7 +34,6 @@ return function(plug)
       set_env = { ["TERM"] = vim.env.TERM, ["COLORTERM"] = "truecolor" },
       border = {},
       borderchars = { " ", " ", " ", " ", " ", " ", " ", " " },
-      -- borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
       -- borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
       prompt_prefix = "  ",
       selection_caret = "» ", -- ❯
@@ -145,7 +142,11 @@ return function(plug)
       }),
       oldfiles = dropdown(),
       live_grep = {
-        file_ignore_patterns = { ".git/" },
+        file_ignore_patterns = { ".git/", "%.lock" },
+        on_input_filter_cb = function(prompt)
+          -- AND operator for live_grep like how fzf handles spaces with wildcards in rg
+          return { prompt = prompt:gsub("%s", ".*") }
+        end,
       },
       current_buffer_fuzzy_find = dropdown({
         previewer = false,

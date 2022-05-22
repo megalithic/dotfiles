@@ -25,7 +25,7 @@ local PKGS = {
   "mcchrish/zenbones.nvim",
   "savq/melange",
   "rebelot/kanagawa.nvim",
-
+  -- "NTBBloodbath/doom-one.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
@@ -44,7 +44,6 @@ local PKGS = {
   "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
-  -- "lukas-reineke/lsp-format.nvim",
   { "hrsh7th/nvim-cmp" },
   -- { "hrsh7th/nvim-cmp", branch = "dev" },
   "hrsh7th/cmp-nvim-lsp",
@@ -295,6 +294,13 @@ M.config = function()
   conf("vim-test", { config = "vim_test" })
   conf("zk", { config = "zk" })
   conf("vscode", { config = "vscode" })
+
+  -- conf("doom-one", { config = {
+  --   pumblend = {
+  --     enable = true,
+  --     transparency_amount = 3,
+  --   },
+  -- } })
 
   conf("nvim-web-devicons", {})
 
@@ -607,7 +613,7 @@ M.config = function()
   })
 
   conf("lightspeed", {
-    enabled = false,
+    enabled = true,
     config = {
       -- jump_to_first_match = true,
       -- jump_on_partial_input_safety_timeout = 400,
@@ -646,7 +652,7 @@ M.config = function()
   })
 
   conf("hop", {
-    enabled = true,
+    enabled = false,
     config = function(p)
       if p == nil then
         return
@@ -887,14 +893,39 @@ M.config = function()
 
   -- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89
   conf("nvim-gps", {
-    config = {
-      languages = {
-        heex = false,
-        elixir = false,
-        eelixir = false,
-      },
-      enabled = false,
-    },
+    config = function(plug)
+      if plug == nil then
+        return
+      end
+
+      local icons = mega.icons.codicons
+      local types = mega.icons.type
+      plug.setup({
+        languages = {
+          heex = false,
+          elixir = false,
+          eelixir = false,
+        },
+        enabled = true,
+        icons = {
+          ["class-name"] = icons.Class,
+          ["function-name"] = icons.Function,
+          ["method-name"] = icons.Method,
+          ["container-name"] = icons.Module,
+          ["tag-name"] = icons.Field,
+          ["array-name"] = icons.Value,
+          ["object-name"] = icons.Value,
+          ["null-name"] = icons.Null,
+          ["boolean-name"] = icons.Keyword,
+          ["number-name"] = icons.Value,
+          ["string-name"] = icons.Text,
+          ["mapping-name"] = types.object,
+          ["sequence-name"] = types.array,
+          ["integer-name"] = types.number,
+          ["float-name"] = types.float,
+        },
+      })
+    end,
   })
 
   conf("pqf", {})

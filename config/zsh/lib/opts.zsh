@@ -10,7 +10,7 @@
 # https://github.com/pjg/dotfiles/blob/master/.zshrc#L24
 umask 022
 
-HISTFILE="$HOME/.zsh_history"
+HISTFILE=$ZSH_CACHE_DIR/.zsh_history
 HISTSIZE=100000
 SAVEHIST=100000
 COMPLETION_WAITING_DOTS="true"

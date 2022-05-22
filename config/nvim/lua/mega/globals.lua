@@ -121,6 +121,33 @@ _G.mega = {
       Key = "Key",
       Null = "Null",
     },
+    codicons = {
+      Text = "",
+      Method = "",
+      Function = "",
+      Constructor = "",
+      Field = "",
+      Variable = "",
+      Class = "",
+      Interface = "",
+      Module = "",
+      Property = "",
+      Unit = "",
+      Value = "",
+      Enum = "",
+      Keyword = "",
+      Snippet = "", --
+      Color = "",
+      File = "",
+      Reference = "",
+      Folder = "",
+      EnumMember = "",
+      Constant = "",
+      Struct = "",
+      Event = "",
+      Operator = "",
+      TypeParameter = "",
+    },
     git = {
       add = "", -- 
       change = "",
@@ -141,6 +168,8 @@ _G.mega = {
       array = "",
       number = "",
       object = "",
+      null = "[]",
+      float = "",
     },
     misc = {
       lblock = "▌",
@@ -1139,6 +1168,21 @@ function mega.truncate(str, width, at_tail)
   end
 
   return shorten(str, width, at_tail)
+end
+
+--- Convert a list or map of items into a value by iterating all it's fields and transforming
+--- them with a callback
+---@generic T : table
+---@param callback fun(T, T, key: string | number): T
+---@param list T[]
+---@param accum T
+---@return T
+function mega.fold(callback, list, accum)
+  for k, v in pairs(list) do
+    accum = callback(accum, v, k)
+    assert(accum, "The accumulator must be return on each iteration")
+  end
+  return accum
 end
 
 -- [ commands ] ----------------------------------------------------------------

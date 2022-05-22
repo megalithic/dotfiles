@@ -1,4 +1,5 @@
 return function(plug)
+  local fmt = string.format
   local cmp = plug
   if plug == nil then
     cmp = require("cmp")
@@ -127,7 +128,8 @@ return function(plug)
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
       format = function(entry, item)
-        item.kind = mega.icons.lsp.kind[item.kind]
+        -- item.kind = mega.icons.lsp.kind[item.kind]
+        item.kind = fmt("%s %s", mega.icons.codicons[item.kind], item.kind)
 
         if entry.source.name == "nvim_lsp" then
           item.menu = entry.source.source.client.name

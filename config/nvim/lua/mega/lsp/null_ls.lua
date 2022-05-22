@@ -59,7 +59,7 @@ return function(on_attach)
       b.formatting.shfmt.with({
         extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
         -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
-        filetypes = { "sh", "zsh" },
+        filetypes = { "sh", "bash" },
       }),
       b.diagnostics.shellcheck.with({
         filetypes = { "sh", "bash" },

@@ -56,14 +56,21 @@ for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,ssh,t
 done
 unset file
 
-eval "$(zoxide init zsh)"
-eval "$(starship init zsh)"
+# if exists zoxide; then
+#   eval "$(zoxide init zsh)"
+# fi
+# if exists starship; then
+#   eval "$(starship init zsh)"
+# fi
+  eval "$(zoxide init zsh)"
+  eval "$(starship init zsh)"
 
 ## adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv
 
 # Run compinit and compile its cache
 zcomet compinit
+# FIXME: compaudit | xargs chmod g-w
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
