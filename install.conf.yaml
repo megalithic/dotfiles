@@ -115,6 +115,10 @@
       force: true
       path: config/weechat
       if: "[ `uname` = Darwin ]"
+    ~/.config/wezterm:
+      force: true
+      path: config/wezterm
+      if: "[ `uname` = Darwin ]"
     ~/.config/zk:
       force: true
       path: config/zk

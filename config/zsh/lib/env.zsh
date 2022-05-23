@@ -111,8 +111,11 @@ fi
 #
 # -- weechat
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
-# -- bat
 #
+# -- wezterm
+export WEZTERM_CONFIG_FILE="$XDG_CONFIG_HOME/wezterm/init.lua"
+#
+# -- bat
 if ! type "$bat" > /dev/null; then
   export BAT_THEME="Forest%20Night%20Italic"
   export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat"
