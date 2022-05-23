@@ -11,6 +11,7 @@ config/karabiner/automatic_backups/*
 **/*.zwc
 **/.zcomp*
 **/.zsh_sessions
+**/.zsh_history
 *.lock.json
 .elixir_ls
 cache

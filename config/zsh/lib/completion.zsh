@@ -33,8 +33,11 @@ zstyle ':vcs_info:*' formats '%F{5}(%f%s%F{5})%F{3}-%F{5}[%F{2}%b%F{5}]%f '
 zstyle ':vcs_info:*' enable git #svn cvs
 
 # Enable completion caching, use rehash to clear
-zstyle ':completion::complete:*' use-cache on
-zstyle ':completion::complete:*' cache-path ~/.zsh/cache/$HOST
+# zstyle ':completion::complete:*' use-cache on
+# zstyle ':completion::complete:*' cache-path ~/.zsh/cache/$HOST
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "$ZSH_CACHE_DIR/zcompcache"
+
 
 # Make the list prompt friendly
 zstyle ':completion:*' list-prompt '%SAt %p: Hit TAB for more, or the character to insert%s'
@@ -52,9 +55,6 @@ zstyle ':completion:*' menu select=1 _complete _ignored _approximate
 
 # insert all expansions for expand completer
 # zstyle ':completion:*:expand:*' tag-order all-expansions
-
-# match uppercase from lowercase
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 
 # offer indexes before parameters in subscripts
 zstyle ':completion:*:*:-subscript-:*' tag-order indexes parameters
@@ -148,9 +148,17 @@ zstyle ':completion:*:descriptions' format '%F{black}%B%d%b%f'
 # Completion: Matching
 # --------------------------------------------------------------------------
 
-# use case-insensitive completion if case-sensitive generated no hits
-zstyle ':completion:*' matcher-list \
-  'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
+# Make completion:
+# (stolen from akinsho -> Wincent)
+# - Try exact (case-sensitive) match first.
+# - Then fall back to case-insensitive.
+# - Accept abbreviations after . or _ or - (ie. f.b -> foo.bar).
+# - Substring complete (ie. bar -> foobar).
+zstyle ':completion:*' matcher-list '' \
+  '+m:{[:lower:]}={[:upper:]}' \
+  '+m:{[:upper:]}={[:lower:]}' \
+  '+m:{_-}={-_}' \
+  'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
 # don't complete usernames
 zstyle ':completion:*' users ''

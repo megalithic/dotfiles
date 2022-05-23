@@ -43,8 +43,7 @@ local PKGS = {
   "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
-  { "hrsh7th/nvim-cmp" },
-  -- { "hrsh7th/nvim-cmp", branch = "dev" },
+  { "hrsh7th/nvim-cmp", branch = "main" },
   "hrsh7th/cmp-nvim-lsp",
   "hrsh7th/cmp-nvim-lua",
   "saadparwaiz1/cmp_luasnip",
@@ -958,7 +957,7 @@ M.config = function()
   conf("treesitter-context", { enabled = false })
 
   conf("tmux", {
-    enabled = vim.env.TMUX ~= nil,
+    enabled = false, -- vim.env.TMUX ~= nil,
     config = function(plug)
       if plug == nil then
         return

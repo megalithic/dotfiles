@@ -529,6 +529,25 @@ augroup("GitConflicts", {
   },
 })
 
+augroup("WindowThings", {
+  {
+    event = { "WinEnter" },
+    command = function(args)
+      if vim.wo.diff then
+        vim.diagnostic.disable(args.buf)
+      end
+    end,
+  },
+  {
+    event = { "WinLeave" },
+    command = function(args)
+      if vim.wo.diff then
+        vim.diagnostic.enable(args.buf)
+      end
+    end,
+  },
+})
+
 augroup("mini", {
   {
     event = { "FileType" },

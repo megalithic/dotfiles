@@ -1,5 +1,11 @@
 -- @ht: akinsho and many of the other plugins coming out with winbar support
 
+-- FIX: presently not loving this; i still use laststatus=2,
+-- and nvim-gps doesn't work in elixir; aka, my main squeeze.
+if true then
+  return
+end
+
 local gps = require("nvim-gps")
 local devicons = require("nvim-web-devicons")
 local highlights = require("mega.utils.highlights")

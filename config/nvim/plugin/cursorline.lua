@@ -2,7 +2,8 @@
 -- 1. nvim-cursorline
 
 local M = {
-  cursorline_delay = 200,
+  -- FIXME: presently, i believe LSP things are delaying exceedingly longer than defined here:
+  cursorline_delay = 50,
   blink_delay = 50,
   filetype_exclusions = {
     "alpha",
