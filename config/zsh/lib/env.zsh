@@ -113,7 +113,7 @@ fi
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
 #
 # -- wezterm
-export WEZTERM_CONFIG_FILE="$XDG_CONFIG_HOME/wezterm/init.lua"
+export WEZTERM_CONFIG_FILE="$XDG_CONFIG_HOME/wezterm/wezterm.lua"
 #
 # -- bat
 if ! type "$bat" > /dev/null; then

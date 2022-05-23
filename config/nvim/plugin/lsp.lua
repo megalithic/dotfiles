@@ -135,7 +135,7 @@ local function setup_autocommands(client, bufnr)
           if vim.fn.bufloaded(bufnr) then
             vim.lsp.buf.format({
               bufnr = bufnr,
-              async = true,
+              async = false,
             })
           end
           -- -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))

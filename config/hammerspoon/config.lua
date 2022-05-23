@@ -26,7 +26,7 @@ M.dirs = {
 }
 
 M.preferred = {
-  terms = { "kitty", "alacritty", "iTerm" },
+  terms = { "kitty", "wezterm", "alacritty", "iTerm" },
   browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
   personal = { "Messages", "Signal" },
   chat = { "Slack" },
@@ -128,6 +128,15 @@ M.apps = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
     hyper_key = "k",
+    quitGuard = true,
+    rules = {
+      { nil, 1, M.layout.fullScreen },
+    },
+  },
+  ["com.github.wez.wezterm"] = {
+    bundleID = "com.github.wez.wezterm",
+    name = "wezterm",
+    -- hyper_key = "w",
     quitGuard = true,
     rules = {
       { nil, 1, M.layout.fullScreen },
