@@ -23,6 +23,7 @@ tap "olets/tap"
 tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x)
 # tap "espanso/espanso" if OS.mac?
 tap "mhanberg/zk" if OS.mac?
+tap "wez/wezterm" if OS.mac?
 
 # -- for qmk_toolbox --
 # brew tap osx-cross/avr;
@@ -269,6 +270,7 @@ cask "the-unarchiver"
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead
 # cask "yubico-authenticator"
+cask "wez/wezterm/wezterm-nightly"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"
