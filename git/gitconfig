@@ -368,7 +368,7 @@ fzf = !"                                                                        
   ; minus-color = "#340001"
   theme = 'Nord'
   features = line-numbers decorations
-  hyperlinks = true
+  hyperlinks = false
 
 [delta "decorations"]
   commit-decoration-style = bold yellow box ul

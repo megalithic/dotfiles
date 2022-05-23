@@ -2,7 +2,7 @@
 -- 1. nvim-cursorline
 
 local M = {
-  cursorline_delay = 250,
+  cursorline_delay = 200,
   blink_delay = 50,
   filetype_exclusions = {
     "alpha",

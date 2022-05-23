@@ -360,13 +360,13 @@ augroup("LazyLoads", {
       vim.cmd([[wincmd J | :resize 40]])
     end,
   },
-  {
-    event = { "FileType" },
-    pattern = { "startuptime" },
-    command = function()
-      vim.cmd([[wincmd H | :resize 40]])
-    end,
-  },
+  -- {
+  --   event = { "FileType" },
+  --   pattern = { "startuptime" },
+  --   command = function()
+  --     vim.cmd([[wincmd H | :resize 40]])
+  --   end,
+  -- },
   {
     event = { "BufReadPre" },
     command = function()
@@ -386,6 +386,18 @@ augroup("LazyLoads", {
       --     },
       --   })
       -- end
+    end,
+  },
+  {
+    -- tmux-navigate
+    -- vim-kitty-navigator
+    event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
+    command = function()
+      if vim.env.TMUX ~= nil then
+        vcmd([[packadd tmux-navigate]])
+      else
+        vcmd([[packadd vim-kitty-navigator]])
+      end
     end,
   },
 })

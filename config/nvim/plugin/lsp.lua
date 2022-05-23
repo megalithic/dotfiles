@@ -180,9 +180,7 @@ local function setup_mappings(client, bufnr)
   nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
   nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
-  nnoremap("<leader>rf", function()
-    vim.lsp.format({ async = true })
-  end, desc("lsp: format buffer"))
+  nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------

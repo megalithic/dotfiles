@@ -25,7 +25,6 @@ local PKGS = {
   "mcchrish/zenbones.nvim",
   "savq/melange",
   "rebelot/kanagawa.nvim",
-  -- "NTBBloodbath/doom-one.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
@@ -189,7 +188,7 @@ local PKGS = {
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
-  -- { "sunaku/tmux-navigate", opt = false },
+  { "sunaku/tmux-navigate", opt = true },
   { "aserowy/tmux.nvim", opt = false },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
   "junegunn/vim-slash",
@@ -294,13 +293,6 @@ M.config = function()
   conf("vim-test", { config = "vim_test" })
   conf("zk", { config = "zk" })
   conf("vscode", { config = "vscode" })
-
-  -- conf("doom-one", { config = {
-  --   pumblend = {
-  --     enable = true,
-  --     transparency_amount = 3,
-  --   },
-  -- } })
 
   conf("nvim-web-devicons", {})
 
