@@ -130,24 +130,23 @@ local function setup_autocommands(client, bufnr)
     augroup("LspFormat", {
       {
         event = { "BufWritePre" },
-        buffer = bufnr,
+        -- buffer = bufnr,
         command = function()
-          if vim.fn.bufloaded(bufnr) then
-            vim.lsp.buf.format({
-              bufnr = bufnr,
-              async = false,
-            })
-          end
-          -- -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))
-          -- -- BUG: folds are are removed when formatting is done, so we save the current state of the
-          -- -- view and re-apply it manually after formatting the buffer
-          -- -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
-          -- vim.cmd("mkview!")
-          -- local format_sync_ok, msg = pcall(vim.lsp.buf.format, nil, 3000)
-          -- if not format_sync_ok then
-          --   vim.notify(fmt("Error formatting file: %s", msg))
+          -- if vim.fn.bufloaded(bufnr) then
+          --   vim.lsp.buf.format({
+          --     async = false,
+          --   })
           -- end
-          -- vim.cmd("loadview")
+          -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))
+          -- BUG: folds are are removed when formatting is done, so we save the current state of the
+          -- view and re-apply it manually after formatting the buffer
+          -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
+          vim.cmd("mkview!")
+          local format_sync_ok, msg = pcall(vim.lsp.buf.format, nil, 3000)
+          if not format_sync_ok then
+            vim.notify(fmt("Error formatting file: %s", msg))
+          end
+          vim.cmd("loadview")
         end,
       },
     })

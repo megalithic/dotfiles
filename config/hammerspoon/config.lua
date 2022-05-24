@@ -137,7 +137,7 @@ M.apps = {
     bundleID = "com.github.wez.wezterm",
     name = "wezterm",
     -- hyper_key = "w",
-    quitGuard = true,
+    quitGuard = false,
     rules = {
       { nil, 1, M.layout.fullScreen },
     },

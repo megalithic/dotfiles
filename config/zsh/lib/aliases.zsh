@@ -211,6 +211,8 @@ alias ek="nvim $DOTS/config/kitty/kitty.conf"
 
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
+alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
+
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"
 
