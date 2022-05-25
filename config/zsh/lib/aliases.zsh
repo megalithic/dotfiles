@@ -212,6 +212,7 @@ alias ek="nvim $DOTS/config/kitty/kitty.conf"
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
 alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
+alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest"
 
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"

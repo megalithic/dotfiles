@@ -128,7 +128,7 @@ M.apps = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
     hyper_key = "k",
-    quitGuard = true,
+    quitGuard = false,
     rules = {
       { nil, 1, M.layout.fullScreen },
     },
@@ -136,7 +136,8 @@ M.apps = {
   ["com.github.wez.wezterm"] = {
     bundleID = "com.github.wez.wezterm",
     name = "wezterm",
-    -- hyper_key = "w",
+    hyper_key = "k",
+    modifier = M.modifiers.shift,
     quitGuard = false,
     rules = {
       { nil, 1, M.layout.fullScreen },

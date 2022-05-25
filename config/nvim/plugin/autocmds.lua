@@ -529,7 +529,7 @@ augroup("GitConflicts", {
   },
 })
 
-augroup("WindowThings", {
+augroup("Windows", {
   {
     event = { "WinEnter" },
     command = function(args)
@@ -548,7 +548,7 @@ augroup("WindowThings", {
   },
 })
 
-augroup("mini", {
+augroup("Mini", {
   {
     event = { "FileType" },
     command = function()

@@ -882,7 +882,7 @@ M.config = function()
     end,
   })
 
-  -- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89
+  -- using this primarily with the winbar
   conf("nvim-gps", {
     config = function(plug)
       if plug == nil then

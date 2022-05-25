@@ -1,6 +1,3 @@
--- local progname = vim.fn.substitute(vim.fn.expand("$VIM"), ".*[/\\]", "", "")
--- P("progname: " .. progname)
-
 -- vim.cmd([[
 -- "
 -- " Intelligently navigate tmux panes and Vim splits using the same keys.
@@ -21,14 +18,14 @@
 --   let can_go_left  = x > 1
 --   let can_go_right = x + w < &columns
 
+--   echo can_go_right
+
 --   return
 --         \ (can_go_up    ? 'U' : '') .
 --         \ (can_go_down  ? 'D' : '') .
 --         \ (can_go_left  ? 'L' : '') .
 --         \ (can_go_right ? 'R' : '')
 -- endfunction
-
--- echo "%{TmuxNavigateDirections()}"
 
 -- " enable support for setting the window title in regular Vim under tmux
 -- if &term =~ '^screen' && !has('nvim')
