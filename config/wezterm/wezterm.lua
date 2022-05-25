@@ -285,6 +285,10 @@ colors.tab_bar = {
 local function font_with_fallback(font, params)
   local names = {
     font,
+    { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = true },
+    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold", italic = false },
+    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold", italic = true },
+    "Symbols Nerd Font Mono",
     "codicon",
   }
   return wezterm.font_with_fallback(names, params)
@@ -292,29 +296,7 @@ end
 
 --- [ FONTS ] ------------------------------------------------------------------
 local fonts = {
-  font = font_with_fallback("JetBrainsMonoMedium Nerd Font Mono", {}),
-  font_rules = {
-    {
-      italic = false,
-      intensity = "Normal",
-      font = font_with_fallback("JetBrainsMonoMedium Nerd Font Mono"),
-    },
-    {
-      italic = true,
-      intensity = "Normal",
-      font = font_with_fallback("JetBrainsMonoMedium Nerd Font Mono"),
-    },
-    {
-      italic = true,
-      intensity = "Bold",
-      font = font_with_fallback("JetBrainsMonoExtraBold Nerd Font Mono"),
-    },
-    {
-      italic = false,
-      intensity = "Bold",
-      font = font_with_fallback("JetBrainsMonoExtraBold Nerd Font Mono"),
-    },
-  },
+  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = false }, {}),
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace", -- "Always"
   custom_block_glyphs = false,
   freetype_load_target = "Light",
