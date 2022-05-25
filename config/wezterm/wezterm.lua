@@ -281,7 +281,7 @@ colors.tab_bar = {
   },
 }
 
--- A helper function for my fallback fonts
+--- [ FONTS ] ------------------------------------------------------------------
 local function font_with_fallback(font, params)
   local names = {
     font,
@@ -294,7 +294,6 @@ local function font_with_fallback(font, params)
   return wezterm.font_with_fallback(names, params)
 end
 
---- [ FONTS ] ------------------------------------------------------------------
 local fonts = {
   font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = false }, {}),
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace", -- "Always"
