@@ -403,7 +403,7 @@ function U.filename(ctx, modifier)
     return "", "", name
   end
 
-  if not fname then
+  if not fname or mega.empty(fname) then
     return "", "", "No Name"
   end
 

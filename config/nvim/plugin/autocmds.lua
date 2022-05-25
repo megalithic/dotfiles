@@ -393,7 +393,7 @@ augroup("LazyLoads", {
     -- vim-kitty-navigator
     event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
     command = function()
-      if vim.env.TMUX ~= nil then
+      if vim.env.TMUX then
         vcmd([[packadd tmux-navigate]])
       else
         vcmd([[packadd vim-kitty-navigator]])

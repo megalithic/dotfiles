@@ -518,6 +518,9 @@ onoremap("N", "'nN'[v:searchforward]", { expr = true })
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
 cnoremap("<C-p>", [[wildmenumode() ? "\<c-p>" : "\<up>"]], { expr = true })
 
+nnoremap("<leader>yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+nnoremap("yf", [[:let @*=expand("%:p")<CR>]], "yank file path into the clipboard")
+
 -- [custom mappings] -----------------------------------------------------------
 
 -- Things 3

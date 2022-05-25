@@ -957,7 +957,7 @@ M.config = function()
   conf("treesitter-context", { enabled = false })
 
   conf("tmux", {
-    enabled = false, -- vim.env.TMUX ~= nil,
+    enabled = vim.env.TMUX,
     config = function(plug)
       if plug == nil then
         return
@@ -1005,7 +1005,7 @@ M.config = function()
     end,
   })
 
-  conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil })
+  conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
   conf("incline", {
     enabled = vim.api.nvim_get_option("laststatus") == 3,

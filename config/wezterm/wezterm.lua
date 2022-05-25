@@ -444,20 +444,27 @@ local mouse = {}
 --- [ MISC ] -------------------------------------------------------------------
 local misc = {
   default_cwd = homedir .. "/.dotfiles",
+  default_prog = { "/usr/local/bin/zsh", "-l" },
+  -- TODO: figure out why we need this?
+  -- @ht: kitten
+  mux_env_remove = {
+    "SSH_AUTH_SOCK",
+    "SSH_CLIENT",
+    "SSH_CONNECTION",
+    "GPG_TTY",
+  },
+  set_environment_variables = {
+    PATH = fmt("%s:/usr/local/bin:%s/.bin:%s/bin:%s/bin", os.getenv("PATH"), homedir, homedir, os.getenv("DOTS")),
+  },
   scrollback_lines = 5000,
   enable_scroll_bar = false,
   audible_bell = "Disabled",
   check_for_updates = false,
   native_macos_fullscreen_mode = true,
-  default_prog = { "/usr/local/bin/zsh" },
   enable_kitty_graphics = true,
   debug_key_events = true,
   use_ime = true,
   status_update_interval = 10000,
-  set_environment_variables = {
-    -- This fails to find wezterm.nvim.navigator
-    PATH = os.getenv("PATH") .. ":/usr/local/bin" .. ":" .. homedir .. "/.bin" .. ":" .. homedir .. "/bin",
-  },
 
   quick_select_patterns = {
     "[A-Za-z0-9-_.]{6,100}",
