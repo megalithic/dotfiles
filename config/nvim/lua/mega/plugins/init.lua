@@ -190,6 +190,7 @@ local PKGS = {
   { "sunaku/tmux-navigate", opt = true },
   { "aserowy/tmux.nvim", opt = false },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
+  -- "aca/wezterm.nvim",
   "junegunn/vim-slash",
   "outstand/logger.nvim",
   "RRethy/nvim-align",

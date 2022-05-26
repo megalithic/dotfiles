@@ -105,62 +105,62 @@ do
   })
 end
 
-if vim.env.TMUX ~= nil then
-  augroup("External", {
-    {
-      event = { "BufEnter" },
-      command = function()
-        vim.o.titlestring = require("mega.utils").ext.title_string()
-        -- {
-        --   event = { "ColorScheme", "FocusGained" },
-        --   command = function()
-        --     -- NOTE: there is a race condition here as the colors
-        --     -- for kitty to re-use need to be set AFTER the rest of the colorscheme
-        --     -- overrides
-        --     vim.defer_fn(function()
-        --       require("mega.utils").ext.tmux.set_statusline()
-        --     end, 1)
-        --   end,
-        -- },
-      end,
-    },
-    -- {
-    --   event = { "VimLeavePre" },
-    --   command = function()
-    --     require("mega.utils").ext.tmux.set_statusline(true)
-    --   end,
-    -- },
-    -- {
-    --   event = { "ColorScheme", "FocusGained" },
-    --   command = function()
-    --     -- NOTE: there is a race condition here as the colors
-    --     -- for kitty to re-use need to be set AFTER the rest of the colorscheme
-    --     -- overrides
-    --     vim.defer_fn(function()
-    --       require("mega.utils").ext.tmux.set_statusline()
-    --     end, 1)
-    --   end,
-    -- },
-  })
+-- if vim.env.TMUX ~= nil then
+--   augroup("External", {
+--     {
+--       event = { "BufEnter" },
+--       command = function()
+--         vim.o.titlestring = require("mega.utils").ext.title_string()
+--         -- {
+--         --   event = { "ColorScheme", "FocusGained" },
+--         --   command = function()
+--         --     -- NOTE: there is a race condition here as the colors
+--         --     -- for kitty to re-use need to be set AFTER the rest of the colorscheme
+--         --     -- overrides
+--         --     vim.defer_fn(function()
+--         --       require("mega.utils").ext.tmux.set_statusline()
+--         --     end, 1)
+--         --   end,
+--         -- },
+--       end,
+--     },
+--     -- {
+--     --   event = { "VimLeavePre" },
+--     --   command = function()
+--     --     require("mega.utils").ext.tmux.set_statusline(true)
+--     --   end,
+--     -- },
+--     -- {
+--     --   event = { "ColorScheme", "FocusGained" },
+--     --   command = function()
+--     --     -- NOTE: there is a race condition here as the colors
+--     --     -- for kitty to re-use need to be set AFTER the rest of the colorscheme
+--     --     -- overrides
+--     --     vim.defer_fn(function()
+--     --       require("mega.utils").ext.tmux.set_statusline()
+--     --     end, 1)
+--     --   end,
+--     -- },
+--   })
 
-  if vim.env.TMUX_POPUP ~= nil and vim.env.TMUX_POPUP == 1 then
-    augroup("External_Colorscheme", {
-      {
-        event = { "ColorScheme", "FocusGained" },
-        command = function()
-          -- vim.notify(fmt("ENV.TMUX: %s / ENV.TMUX_POPUP: %s", vim.env.TMUX, vim.env.TMUX_POPUP))
+--   if vim.env.TMUX_POPUP ~= nil and vim.env.TMUX_POPUP == 1 then
+--     augroup("External_Colorscheme", {
+--       {
+--         event = { "ColorScheme", "FocusGained" },
+--         command = function()
+--           -- vim.notify(fmt("ENV.TMUX: %s / ENV.TMUX_POPUP: %s", vim.env.TMUX, vim.env.TMUX_POPUP))
 
-          -- NOTE: there is a race condition here as the colors
-          -- for kitty to re-use need to be set AFTER the rest of the colorscheme
-          -- overrides
-          -- vim.defer_fn(function()
-          --   require("mega.utils").ext.tmux.set_popup_colorscheme()
-          -- end, 1)
-        end,
-      },
-    })
-  end
-end
+--           -- NOTE: there is a race condition here as the colors
+--           -- for kitty to re-use need to be set AFTER the rest of the colorscheme
+--           -- overrides
+--           -- vim.defer_fn(function()
+--           --   require("mega.utils").ext.tmux.set_popup_colorscheme()
+--           -- end, 1)
+--         end,
+--       },
+--     })
+--   end
+-- end
 
 do
   local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage", "dirbuf" }

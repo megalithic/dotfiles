@@ -184,6 +184,7 @@ brew "libyubikey" if OS.mac?
 brew "pam_yubico" if OS.mac?
 brew "yubikey-personalization" if OS.mac?
 brew "yj"
+brew "zellij"
 brew "mhanberg/zk/zk", args: ["build-from-source"] if OS.mac?
 brew "zoxide"
 brew "zsh"

@@ -302,14 +302,14 @@ vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
 -----------------------------------------------------------------------------//
 -- Title {{{1
 -----------------------------------------------------------------------------//
-function mega.modified_icon()
-  return vim.bo.modified and mega.icons.misc.circle or ""
-end
-vim.opt.titlestring = " ❐ %{fnamemodify(getcwd(), \":t\")} %{v:lua.mega.modified_icon()}"
+-- function mega.modified_icon()
+--   return vim.bo.modified and mega.icons.misc.circle or ""
+-- end
+-- vim.opt.titlestring = " ❐ %{fnamemodify(getcwd(), \":t\")} %{v:lua.mega.modified_icon()}"
 -- vim.opt.titlestring = require("mega.utils").ext.title_string() or " ❐ %{fnamemodify(getcwd(), \":t\")} %m"
-vim.opt.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
-vim.opt.title = true
-vim.opt.titlelen = 70
+-- vim.opt.titleold = fn.fnamemodify(vim.loop.os_getenv("SHELL"), ":t")
+-- vim.opt.title = true
+-- vim.opt.titlelen = 70
 -----------------------------------------------------------------------------//
 -- Utilities {{{1
 -----------------------------------------------------------------------------//
