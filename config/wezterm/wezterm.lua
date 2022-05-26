@@ -371,6 +371,8 @@ local fonts = {
 }
 
 --- [ MAPPINGS ] ---------------------------------------------------------------
+-- local tmux_map = function() end
+
 local mappings = {
   -- tmux-style leader prefix <C-space>
   leader = { key = " ", mods = "CTRL", timeout_milliseconds = 1000 },
