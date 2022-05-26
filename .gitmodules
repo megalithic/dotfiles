@@ -1,3 +1,6 @@
+# ------------------------------------------------------------------------------
+# dotbot and plugins
+# ------------------------------------------------------------------------------
 [submodule "dotbot/core"]
 	path = dotbot/core
 	url = https://github.com/anishathalye/dotbot.git
@@ -14,3 +17,24 @@
 [submodule "dotbot/ifplatform"]
 	path = dotbot/ifplatform
 	url = https://github.com/megalithic/dotbot-ifplatform.git
+# ------------------------------------------------------------------------------
+# zsh plugins
+# ------------------------------------------------------------------------------
+[submodule "config/zsh/plugins/alias-tips"]
+	path = config/zsh/plugins/alias-tips
+	url = https://github.com/djui/alias-tips
+[submodule "config/zsh/plugins/zsh-syntax-highlighting"]
+	path = config/zsh/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting
+[submodule "config/zsh/plugins/zsh-autosuggestions"]
+	path = config/zsh/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "config/zsh/plugins/zsh-completions"]
+	path = config/zsh/plugins/zsh-completions
+	url = https://github.com/zsh-users/zsh-completions
+[submodule "config/zsh/plugins/zsh-auto-notify"]
+	path = config/zsh/plugins/zsh-auto-notify
+	url = https://github.com/MichaelAquilina/zsh-auto-notify
+[submodule "config/zsh/plugins/zsh-autopair"]
+	path = config/zsh/plugins/zsh-autopair
+	url = https://github.com/hlissner/zsh-autopair
