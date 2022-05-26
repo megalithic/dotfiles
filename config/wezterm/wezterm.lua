@@ -87,20 +87,72 @@ local function format_tab_title(tab, tabs, panes, config, hover, max_width)
   if dir == basename(wezterm.home_dir) then
     title = "~"
   end
+  local SUP_IDX = {
+    "¹",
+    "²",
+    "³",
+    "⁴",
+    "⁵",
+    "⁶",
+    "⁷",
+    "⁸",
+    "⁹",
+    "¹⁰",
+    "¹¹",
+    "¹²",
+    "¹³",
+    "¹⁴",
+    "¹⁵",
+    "¹⁶",
+    "¹⁷",
+    "¹⁸",
+    "¹⁹",
+    "²⁰",
+  }
+
+  local NUM_IDX_ACTIVE = {
+    "0xf8a3",
+    "0xf8a6",
+    "0xf8a9",
+    "0xf8ac",
+    "0xf8af",
+    "0xf8b2",
+    "0xf8b5",
+    "0xf8b8",
+    "0xf8bb",
+  }
+  local NUM_IDX_INACTIVE = {
+    "0xf8a5",
+    "0xf8a8",
+    "0xf8ab",
+    "0xf8ae",
+    "0xf8b1",
+    "0xf8b4",
+    "0xf8b7",
+    "0xf8ba",
+    "0xf8bd",
+  }
+  local tab_prefix = tab.tab_index == 0 and "  " or " "
+  local tab_index = tab.tab_index + 1
 
   if tab.is_active then
     icon = tab.active_pane.is_zoomed and " " or "綠"
+    tab_index = utf8.char(NUM_IDX_ACTIVE[tab.tab_index + 1])
+
+    -- utf8.char(0xf490)
     return {
-      { Text = "" },
-      { Text = fmt(" %s %d:%s ", icon, tab.tab_index + 1, title) },
+      { Text = tab_prefix },
+      -- { Text = fmt("%s%s:%s ", icon, tab_index, title) },
+      { Text = fmt("%s %s ", tab_index, title) },
       { Text = "" },
     }
   else
     icon = tab.active_pane.is_zoomed and " " or "○"
+    tab_index = utf8.char(NUM_IDX_INACTIVE[tab.tab_index + 1])
     return {
-      { Text = "" },
-      { Attribute = { Intensity = "Bold" } },
-      { Text = fmt(" %s %d:%s ", icon, tab.tab_index + 1, title) },
+      { Text = tab_prefix },
+      { Text = fmt("%s %s ", tab_index, title) },
+      -- { Text = fmt("%s %s:%s ", icon, tab_index, title) },
       { Text = "" },
     }
   end
@@ -263,8 +315,8 @@ colors.tab_bar = {
     fg_color = palette.blue,
     bg_color = palette.bright_background,
     intensity = "Bold",
+    weight = "ExtraBold",
     italic = true,
-    underline = "Single",
   },
   inactive_tab_edge = palette.bright_background,
   inactive_tab = {
@@ -286,8 +338,8 @@ local function font_with_fallback(font, params)
   local names = {
     font,
     { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = true },
-    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold", italic = false },
-    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold", italic = true },
+    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false },
+    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true },
     "Symbols Nerd Font Mono",
     "codicon",
   }
@@ -295,7 +347,7 @@ local function font_with_fallback(font, params)
 end
 
 local fonts = {
-  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = false }, {}),
+  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Medium" }, {}),
   allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace", -- "Always"
   custom_block_glyphs = false,
   freetype_load_target = "Light",
@@ -363,8 +415,8 @@ local mappings = {
 
 --- [ TABS ] -------------------------------------------------------------------
 local tabs = {
-  use_fancy_tab_bar = true,
-  hide_tab_bar_if_only_one_tab = false,
+  use_fancy_tab_bar = false,
+  hide_tab_bar_if_only_one_tab = true,
   tab_max_width = 300,
   tab_bar_at_bottom = false,
   tab_bar_style = {},
@@ -376,14 +428,6 @@ local windows = {
   initial_cols = 100,
   initial_rows = 20,
   window_background_opacity = 1.0,
-  window_frame = {
-    font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Medium" }),
-    font_size = 15.0,
-    active_titlebar_bg = palette.bright_background,
-    inactive_titlebar_bg = palette.bright_background,
-    inactive_titlebar_border_bottom = palette.blue,
-    active_titlebar_border_bottom = palette.blue,
-  },
   window_padding = {
     left = "15px",
     right = "10px",
@@ -435,7 +479,8 @@ local misc = {
     "GPG_TTY",
   },
   set_environment_variables = {
-    PATH = fmt("%s:/usr/local/bin:%s/.bin:%s/bin:%s/bin", os.getenv("PATH"), homedir, homedir, os.getenv("DOTS")),
+    LANG = "en_US.UTF-8",
+    PATH = wezterm.executable_dir .. ";" .. os.getenv("PATH"),
   },
   scrollback_lines = 5000,
   enable_scroll_bar = false,
