@@ -119,6 +119,10 @@
       force: true
       path: config/wezterm
       if: "[ `uname` = Darwin ]"
+    ~/.config/zellij:
+      force: true
+      path: config/zellij
+      if: "[ `uname` = Darwin ]"
     ~/.config/zk:
       force: true
       path: config/zk
