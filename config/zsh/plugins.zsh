@@ -18,8 +18,6 @@ function zsh_add_plugin() {
     zsh_add_file "$PLUGIN_DIR/$PLUGIN_NAME/$PLUGIN_NAME.zsh" || \
     zsh_add_file "$PLUGIN_DIR/$PLUGIN_NAME/$2.zsh"
   else
-    echo "1: $1"
-    echo "$PLUGIN_DIR/$PLUGIN_NAME"
     git submodule add "https://github.com/$1" "$PLUGIN_DIR/$PLUGIN_NAME"
   fi
 }
