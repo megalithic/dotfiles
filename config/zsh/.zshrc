@@ -1,13 +1,8 @@
 #!/usr/bin/env zsh
-# shellcheck shell=bash
 
 # zmodload zsh/zprof # top of your .zshrc file
 
-# REF:
-# Fix zprofile things: https://spin.atomicobject.com/2021/08/02/zprofile-on-macos/
-#   (👆describes some of macos' annoying zprofile handling.)
-
-# TERMS:
+# REFS:
 # exec - replaces the current shell. This means no subshell is
 # created and the current process is replaced with this new command.
 # fd/FD - file descriptor
@@ -38,7 +33,7 @@ zsh_add_plugin    "hlissner/zsh-autopair"
 autoload -U zmv # builtin zsh rename command
 
 # -- scripts/libs
-for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
+for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,kitty,ssh,tmux}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
@@ -47,10 +42,6 @@ unset file
 if exists zoxide; then
   eval "$(zoxide init zsh)"
 fi
-
-# if exists starship; then
-#   eval "$(starship init zsh)"
-# fi
 
 source "$ZDOTDIR/prompt/megaprompt"
 
