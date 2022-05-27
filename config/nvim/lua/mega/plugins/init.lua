@@ -204,6 +204,7 @@ local PKGS = {
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
+  -- @trial https://github.com/ekickx/clipboard-image.nvim
   -- @trial https://github.com/preservim/vim-wordy
   -- @trial https://github.com/jghauser/follow-md-links.nvim
   -- @trial https://github.com/jakewvincent/mkdnflow.nvim

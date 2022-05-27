@@ -12,6 +12,8 @@ typeset -A __DOTS
 __DOTS[ITALIC_ON]=$'\e[3m'
 __DOTS[ITALIC_OFF]=$'\e[23m'
 
+source "$ZDOTDIR/plugins/last-working-dir/last-working-dir.zsh"
+
 #-------------------------------------------------------------------------------
 #               VI-MODE
 #-------------------------------------------------------------------------------

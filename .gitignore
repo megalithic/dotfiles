@@ -12,8 +12,10 @@ config/karabiner/automatic_backups/*
 **/.zcomp*
 **/.zsh_sessions
 **/.zsh_history
+.chpwd-recent-dirs
 *.lock.json
 .elixir_ls
 cache
 config/tmux/plugins
+config/zsh/plugins
 *~

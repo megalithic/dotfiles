@@ -62,8 +62,10 @@ unset file
 # if exists starship; then
 #   eval "$(starship init zsh)"
 # fi
-  eval "$(zoxide init zsh)"
-  eval "$(starship init zsh)"
+
+eval "$(zoxide init zsh)"
+# eval "$(starship init zsh)"
+source "$ZDOTDIR/prompt/megaprompt"
 
 ## adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv

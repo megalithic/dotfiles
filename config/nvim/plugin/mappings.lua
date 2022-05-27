@@ -311,28 +311,6 @@ vmap("<Tab>", "%")
 xmap("<Tab>", "%")
 omap("<Tab>", "%")
 
--- window navigation across nvim/vim/tmux
--- exec([[
---   nnoremap <C-h> <C-w>h
---   nnoremap <C-j> <C-w>j
---   nnoremap <C-k> <C-w>k
---   nnoremap <C-l> <C-w>l
--- ]])
--- nmap("<C-h>", [[execute wincmd h]], "goto window/tmux pane left")
--- nmap("<C-j>", [[execute wincmd j]], "goto window/tmux pane down")
--- nmap("<C-k>", [[execute wincmd k]], "goto window/tmux pane up")
--- nmap("<C-l>", [[execute wincmd l]], "goto window/tmux pane right")
--- nmap("<C-h>", "<C-w>h", "goto window/tmux pane left")
--- nmap("<C-j>", "<C-w>j", "goto window/tmux pane down")
--- nmap("<C-k>", "<C-w>k", "goto window/tmux pane up")
--- nmap("<C-l>", "<C-w>l", "goto window/tmux pane right")
-
--- nmap("<C-l>", "<C-w>l", "goto window/tmux pane right")
--- noremap <silent> <m-h> :TmuxNavigateLeft<cr>
--- noremap <silent> <m-j> :TmuxNavigateDown<cr>
--- noremap <silent> <m-k> :TmuxNavigateUp<cr>
--- noremap <silent> <m-l> :TmuxNavigateRight<cr>
-
 -- [overrides/remaps mappings] ---------------------------------------------------------
 --
 exec([[

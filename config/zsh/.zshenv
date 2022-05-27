@@ -12,14 +12,10 @@
 # set our working zsh directory
 XDG_CONFIG_HOME="$HOME/.config"
 XDG_CACHE_HOME="$HOME/.cache"
+XDG_DATA_HOME="$HOME/.local/share"
 
 ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
-# export XDG_CONFIG_HOME="$HOME/.config"
-# export XDG_CACHE_HOME="$HOME/.cache"
-
-# export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
-# export ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
 
 # TODO from https://github.com/dbernheisel/dotfiles/blob/master/.zshenv#L9-L11
 # Ensure that a non-login, non-interactive shell has a defined environment.

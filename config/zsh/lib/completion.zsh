@@ -221,3 +221,16 @@ FZF_TAB_GROUP_COLORS=(
     $'\033[38;5;214m' $'\033[38;5;165m' $'\033[38;5;124m' $'\033[38;5;120m'
 )
 zstyle ':fzf-tab:*' group-colors $FZF_TAB_GROUP_COLORS
+
+#-------------------------------------------------------------------------------
+#  CDR
+#-------------------------------------------------------------------------------
+# https://github.com/zsh-users/zsh/blob/master/Functions/Chpwd/cdr
+
+zstyle ':completion:*:*:cdr:*:*' menu selection
+# $WINDOWID is an environment variable set by kitty representing the window ID
+# of the OS window (NOTE this is not the same as the $KITTY_WINDOW_ID)
+# @see: https://github.com/kovidgoyal/kitty/pull/2877
+zstyle ':chpwd:*' recent-dirs-file $ZSH_CACHE_DIR/.chpwd-recent-dirs-${WINDOWID##*/} +
+zstyle ':completion:*' recent-dirs-insert always
+zstyle ':chpwd:*' recent-dirs-default yes
