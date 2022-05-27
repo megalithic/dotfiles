@@ -386,6 +386,11 @@ add-zsh-hook preexec () {
   __timings_preexec
 }
 
+# Edit line in vim with v whilst in normal mod in vi mode
+autoload -Uz edit-command-line;
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
+
 # TODO:
 # prompt_pure_state_setup() {
 # 	setopt localoptions noshwordsplit
