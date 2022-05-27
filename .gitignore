@@ -17,5 +17,4 @@ config/karabiner/automatic_backups/*
 .elixir_ls
 cache
 config/tmux/plugins
-config/zsh/plugins
 *~

@@ -67,6 +67,7 @@ return function(plug)
         "EmmyLua.spoon",
         ".yarn",
         "dotbot/.*",
+        "config/zsh/plugins/.*",
         ".git/.*",
         "%.DS_Store",
         "%yarn.lock",

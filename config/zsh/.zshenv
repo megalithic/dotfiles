@@ -17,6 +17,10 @@ XDG_DATA_HOME="$HOME/.local/share"
 ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
 
+if [ ! -d "$ZSH_CACHE_DIR" ]; then
+	mkdir -p "$ZSH_CACHE_DIR"
+fi
+
 # TODO from https://github.com/dbernheisel/dotfiles/blob/master/.zshenv#L9-L11
 # Ensure that a non-login, non-interactive shell has a defined environment.
 # if [[ "$SHLVL" -eq 1 && ! -o LOGIN && -s "${ZDOTDIR:-$HOME}/.zprofile" ]]; then

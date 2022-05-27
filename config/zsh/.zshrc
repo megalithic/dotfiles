@@ -18,60 +18,43 @@
 
 bindkey -e # ensures we use emacs/readline keybindings
 
-[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
-[[ -f "$HOME/.config/zsh/lib/env.zsh" ]] && source "$HOME/.config/zsh/lib/env.zsh"
+# -- required helpers and our env variables
+[ -f "$HOME/.config/zsh/lib/helpers.zsh" ] && source "$HOME/.config/zsh/lib/helpers.zsh"
+[ -f "$HOME/.config/zsh/lib/env.zsh" ] && source "$HOME/.config/zsh/lib/env.zsh"
+[ -f "$HOME/.config/zsh/plugins.zsh" ] && source "$HOME/.config/zsh/plugins.zsh"
 
-# zcomet for plugin install and management
-if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
-  command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin
-  # TODO: remember to run `zcomet self-update` and `zcomet update` periodically
-fi
+# -- plugins
+zsh_add_plugin    "Aloxaf/fzf-tab"
+zsh_add_plugin    "zsh-users/zsh-history-substring-search"
+zsh_add_plugin    "zdharma-zmirror/fast-syntax-highlighting"
+# zsh_add_plugin    "zsh-users/zsh-syntax-highlighting"
+zsh_add_plugin    "zsh-users/zsh-autosuggestions"
+zsh_add_plugin    "zsh-users/zsh-completions"
+zsh_add_plugin    "djui/alias-tips"
+zsh_add_plugin    "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
+zsh_add_plugin    "hlissner/zsh-autopair"
 
-source $HOME/.zcomet/bin/zcomet.zsh
-zstyle ':zcomet:*' home-dir $HOME/.zcomet
-zstyle ':zcomet:*' repos-dir $HOME/.zcomet/repos
-zstyle ':zcomet:*' snippets-dir $HOME/.zcomet/snippets
+# adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
+autoload -U zmv # builtin zsh rename command
 
-zcomet load Aloxaf/fzf-tab
-zcomet load hlissner/zsh-autopair
-zcomet load djui/alias-tips
-zcomet load olets/zsh-abbr
-zcomet load zsh-users/zsh-completions
-zcomet load zsh-users/zsh-history-substring-search
-zcomet load zsh-users/zsh-autosuggestions
-zcomet load zdharma-zmirror/fast-syntax-highlighting
-zcomet load wfxr/emoji-cli
-zcomet load wfxr/forgit
-zcomet load ohmyzsh plugins/colored-man-pages
-# zcomet load b0o/zfzf
-
-if [[ $PLATFORM == "linux" ]]; then
-  [[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
-
-# NOTE: source order matters!
+# -- scripts/libs
 for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
   # shellcheck disable=SC1090
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
 
-# if exists zoxide; then
-#   eval "$(zoxide init zsh)"
-# fi
+if exists zoxide; then
+  eval "$(zoxide init zsh)"
+fi
+
 # if exists starship; then
 #   eval "$(starship init zsh)"
 # fi
 
-eval "$(zoxide init zsh)"
-# eval "$(starship init zsh)"
 source "$ZDOTDIR/prompt/megaprompt"
 
-## adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
-autoload -U zmv
-
 # Run compinit and compile its cache
-zcomet compinit
 # FIXME: compaudit | xargs chmod g-w
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims

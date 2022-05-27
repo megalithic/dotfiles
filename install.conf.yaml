@@ -32,6 +32,7 @@
     - ~/screenshots
     - ~/.config
     - ~/.cache
+    - ~/.cache/zsh
     - ~/.local/state
     - ~/.local/share/packages
     - ~/.local/share/src
