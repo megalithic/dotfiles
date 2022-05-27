@@ -1,12 +1,12 @@
-local nls = require("null-ls")
-local b = nls.builtins
-return function(on_attach)
+return function()
+  local nls = require("null-ls")
+  local b = nls.builtins
+
   nls.setup({
     debug = false,
     debounce = 150,
     autostart = true,
     save_after_format = false,
-    on_attach = on_attach or mega.lsp.on_attach,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
       b.formatting.prettierd.with({
