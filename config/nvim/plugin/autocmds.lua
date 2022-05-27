@@ -360,46 +360,6 @@ augroup("LazyLoads", {
       vim.cmd([[wincmd J | :resize 40]])
     end,
   },
-  -- {
-  --   event = { "FileType" },
-  --   pattern = { "startuptime" },
-  --   command = function()
-  --     vim.cmd([[wincmd H | :resize 40]])
-  --   end,
-  -- },
-  {
-    event = { "BufReadPre" },
-    command = function()
-      -- dash.nvim
-      -- if mega.is_macos then
-      --   vcmd([[packadd dash.nvim]])
-
-      --   require("which-key").register({
-      --     ["<leader>f"] = {
-      --       name = "telescope",
-      --       D = { require("dash").search, "dash" },
-      --     },
-      --     ["<localleader>"] = {
-      --       name = "dash",
-      --       d = { [[<cmd>Dash<CR>]], "dash" },
-      --       D = { [[<cmd>DashWord<CR>]], "dash" },
-      --     },
-      --   })
-      -- end
-    end,
-  },
-  {
-    -- tmux-navigate
-    -- vim-kitty-navigator
-    event = { "FocusGained", "BufEnter", "VimEnter", "BufWinEnter" },
-    command = function()
-      if vim.env.TMUX then
-        vcmd([[packadd tmux-navigate]])
-      else
-        vcmd([[packadd vim-kitty-navigator]])
-      end
-    end,
-  },
 })
 
 do
