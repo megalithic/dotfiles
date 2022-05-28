@@ -46,6 +46,7 @@ git_behind_icon="⇣"       # 
 git_renamed_icon=""
 deskfile_icon="🚀"
 background_job_icon=""
+root_icon=""
 
 
 
@@ -281,7 +282,7 @@ function _prompt_ssh() {
 	# [[ -n $ssh_connection ]] && username='%F{242}%n%f'"$hostname"
 
   # Show `username@host` if root, with username in default color.
-	[[ $UID -eq 0 ]] && username='%F{red}#%n%f'"$hostname"
+	[[ $UID -eq 0 ]] && username='%F{red}$root_icon%n%f'"$hostname"
 
   echo "$username "
 }
@@ -307,10 +308,9 @@ function __prompt_eval() {
   local dots_prompt_icon="%F{green}$prompt_icon %f"
   local dots_prompt_failure_icon="%F{red}$prompt_failure_icon %f"
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
-  local top="$ssh$(_prompt_path)${_git_status_prompt:-$placeholder}$(_prompt_deskfile_loaded)"
+  local top="$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}$(_prompt_deskfile_loaded)"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
-  local ssh="$(_prompt_ssh)"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$vim_mode" || echo "$character")
   local newline=$'\n'
   echo "$newline$top$newline$bottom"
