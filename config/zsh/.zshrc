@@ -35,7 +35,6 @@ autoload -U zmv # builtin zsh rename command
 [[ -f "$ZDOTDIR/lib/completion.zsh" ]] && source "$ZDOTDIR/lib/completion.zsh"
 
 # -- prompt
-# [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" && "$(uname)" == "Darwin" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
 # -- scripts/libs

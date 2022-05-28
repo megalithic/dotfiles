@@ -4,7 +4,7 @@
 local M = {
   -- FIXME: presently, i believe LSP things are delaying exceedingly longer than defined here:
   cursorline_delay = 50,
-  blink_delay = 50,
+  blink_delay = 150,
   filetype_exclusions = {
     "alpha",
     "prompt",
@@ -143,10 +143,10 @@ local function blink_cursorline()
     vim.schedule_wrap(function()
       unhighlight_cursorline()
       set_cursorline()
-      vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
       blink_timer:stop()
       blink_timer:close()
       blink_active = false
+      highlight_cursorline()
     end)
   )
 end
@@ -160,7 +160,7 @@ end
 
 local function enable_cursorline()
   vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
-  -- blink_cursorline()
+  blink_cursorline()
   set_cursorline()
   highlight_cursorline()
   status = WINDOW
@@ -168,7 +168,7 @@ end
 
 mega.augroup("ToggleCursorLine", {
   {
-    event = { "BufEnter" },
+    event = { "BufEnter", "InsertLeave" },
     command = function()
       enable_cursorline()
     end,
@@ -180,7 +180,14 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
   {
-    event = { "CursorMoved", "CursorMovedI" },
+    event = { "InsertEnter" },
+    command = function()
+      vim.opt.cursorlineopt = "number"
+      vim.opt.cursorline = true
+    end,
+  },
+  {
+    event = { "CursorMoved" },
     command = function()
       cursor_moved()
     end,

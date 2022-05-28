@@ -961,6 +961,7 @@ M.config = function()
 
   conf("beacon", {
     config = {
+      enable = false,
       minimal_jump = 20,
       ignore_buffers = { "terminal", "nofile" },
       focus_gained = true,
