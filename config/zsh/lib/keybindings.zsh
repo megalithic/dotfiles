@@ -95,7 +95,8 @@ bindkey "^N" down-line-or-search
 # zsh-autosuggestions
 # REF: https://github.com/jose-elias-alvarez/dotfiles/blob/1b1d725459df1ba1fc62b1bacc510fe8f28b3eaa/home/zshrc#L13-L17
 # bindkey '^ ' autosuggest-accept
-# bindkey '^Y' autosuggest-execute
+bindkey '^E' autosuggest-accept
+bindkey '^Y' autosuggest-execute
 #
 
 # zsh-users/zsh-history-substring-search

@@ -1,3 +1,10 @@
+# Create a hash table for globally stashing variables without polluting main
+# scope with a bunch of identifiers.
+typeset -A __DOTS
+
+__DOTS[ITALIC_ON]=$'\e[3m'
+__DOTS[ITALIC_OFF]=$'\e[23m'
+
 # -- dirs
 # export XDG_CONFIG_HOME="$HOME/config"
 # export XDG_CACHE_HOME="$HOME/.cache"
@@ -100,6 +107,8 @@ fi
 
 case `uname` in
   Darwin)
+    PLATFORM="macos"
+    export PLATFORM="macos"
     export ANDROID_SDK_ROOT="${HOME}/Library/Android/sdk/"
     # export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 
@@ -151,6 +160,8 @@ case `uname` in
     fi
   ;;
   Linux)
+    PLATFORM="linux"
+    export PLATFORM="linux"
     # Java -----------------------------------------------------------------------
     # Use Java 8 because -> https://stackoverflow.com/a/49759126
     # ------------------------------------------------------------------------

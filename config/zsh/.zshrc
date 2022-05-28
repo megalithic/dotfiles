@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-# zmodload zsh/zprof # top of your .zshrc file
+# zmodload zsh/zprof # -> top of your .zshrc file
 
 # REFS:
 # exec - replaces the current shell. This means no subshell is
@@ -14,9 +14,9 @@
 bindkey -e # ensures we use emacs/readline keybindings
 
 # -- required helpers and our env variables
-[ -f "$HOME/.config/zsh/lib/helpers.zsh" ] && source "$HOME/.config/zsh/lib/helpers.zsh"
-[ -f "$HOME/.config/zsh/lib/env.zsh" ] && source "$HOME/.config/zsh/lib/env.zsh"
-[ -f "$HOME/.config/zsh/plugins.zsh" ] && source "$HOME/.config/zsh/plugins.zsh"
+[ -f "$ZDOTDIR/lib/env.zsh" ] && source "$ZDOTDIR/lib/env.zsh"
+[ -f "$ZDOTDIR/lib/helpers.zsh" ] && source "$ZDOTDIR/lib/helpers.zsh"
+[ -f "$ZDOTDIR/plugins.zsh" ] && source "$ZDOTDIR/plugins.zsh"
 
 # -- plugins
 zsh_add_plugin    "Aloxaf/fzf-tab"
@@ -32,9 +32,14 @@ zsh_add_plugin    "hlissner/zsh-autopair"
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command
 
+# -- completions
+[ -f "$ZDOTDIR/lib/completion.zsh" ] && source "$ZDOTDIR/lib/completion.zsh"
+
+# -- prompt
+[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ] && source "$ZDOTDIR/prompt/megaprompt.zsh"
+
 # -- scripts/libs
-for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,kitty,ssh,tmux}.zsh; do
-  # shellcheck disable=SC1090
+for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,kitty,ssh,tmux,keybindings}.zsh; do
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
@@ -43,10 +48,9 @@ if exists zoxide; then
   eval "$(zoxide init zsh)"
 fi
 
-source "$ZDOTDIR/prompt/megaprompt"
-
-# Run compinit and compile its cache
-# FIXME: compaudit | xargs chmod g-w
+# if exists starship; then
+#   eval "$(starship init zsh)"
+# fi
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
@@ -57,7 +61,7 @@ source "$ZDOTDIR/prompt/megaprompt"
 
 # fzf just desparately wants this here
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-[[ -f "$HOME/.config/zsh/lib/fzf.zsh" ]] && source "$HOME/.config/zsh/lib/fzf.zsh"
+[[ -f "$ZDOTDIR/lib/fzf.zsh" ]] && source "$ZDOTDIR/lib/fzf.zsh"
 
-# zprof # bottom of .zshrc
+# zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

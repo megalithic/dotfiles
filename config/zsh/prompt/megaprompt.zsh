@@ -1,8 +1,7 @@
 #!/usr/bin/env zsh
-# shellcheck shell=bash
-#
-# REF: https://github.com/akinsho/dotfiles/blob/main/.config/zsh/.zshrc
-#
+
+# HT: @akinsho / @sindresorhus/pure
+
 # NOTES:
 # git:
 # %b => current branch
@@ -26,19 +25,24 @@
 # \e[2K   => clear everything on the current line
 # \e[25l  => will hide the text cursor
 # \e[25h  => will show the text cursor
+#
 
-zmodload zsh/datetime
+autoload -U colors && colors # Enable colors in prompt
 
-# Create a hash table for globally stashing variables without polluting main
-# scope with a bunch of identifiers.
-typeset -A __DOTS
+# -- ICONS ---------------------------------------------------------------------
+prompt_icon=""         #  ❯    ➜
+prompt_failure_icon="" # 
+placeholder_icon="…"
+vimode_insert_icon=""
+git_staged_icon=""
+git_unstaged_icon="﯂"
+git_stash_icon=""
+git_untracked_icon="?"
+git_ahead_icon="⇡"
+git_behind_icon="⇣"
 
-__DOTS[ITALIC_ON]=$'\e[3m'
-__DOTS[ITALIC_OFF]=$'\e[23m'
 
-#-------------------------------------------------------------------------------
-#               VI-MODE
-#-------------------------------------------------------------------------------
+# -- VI-MODE -------------------------------------------------------------------
 # @see: https://thevaluable.dev/zsh-install-configure-mouseless/
 bindkey -v # enables vi mode, using -e = emacs
 export KEYTIMEOUT=1
@@ -69,7 +73,7 @@ bindkey -M visual S add-surround
 # https://superuser.com/questions/151803/how-do-i-customize-zshs-vim-mode
 # http://pawelgoscicki.com/archives/2012/09/vi-mode-indicator-in-zsh-prompt/
 vim_insert_mode=""
-vim_normal_mode="%F{green} %f"
+vim_normal_mode="%F{green}$vimode_insert_icon %f"
 vim_mode=$vim_insert_mode
 
 function zle-line-finish {
@@ -115,9 +119,8 @@ cursor_mode() {
 }
 
 cursor_mode
-#-------------------------------------------------------------------------------
-#               Version control
-#-------------------------------------------------------------------------------
+
+# -- GIT -----------------------------------------------------------------------
 # vcs_info is a zsh native module for getting git info into your
 # prompt. It's not as fast as using git directly in some cases
 # but easy and well documented.
@@ -132,17 +135,13 @@ cursor_mode
 # %b - git branch
 # %r - git repo
 autoload -Uz vcs_info
-staged_icon=""
-unstaged_icon="﯂"
-stash_icon=""
-untracked_icon="?"
 
 # Using named colors means that the prompt automatically adapts to how these
 # are set by the current terminal theme
 zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:*' check-for-changes true
-zstyle ':vcs_info:*' stagedstr "%F{green} $staged_icon%f"
-zstyle ':vcs_info:*' unstagedstr "%F{red} $unstaged_icon%f"
+zstyle ':vcs_info:*' stagedstr "%F{green} $git_staged_icon%f"
+zstyle ':vcs_info:*' unstagedstr "%F{red} $git_unstaged_icon%f"
 zstyle ':vcs_info:*' use-simple true
 zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-compare git-remotebranch
 zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
@@ -159,7 +158,7 @@ function +vi-git-untracked() {
   emulate -L zsh
   if __in_git; then
     if [[ -n $(git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
-      hook_com[unstaged]+="%F{blue} $untracked_icon%f"
+      hook_com[unstaged]+="%F{blue} $git_untracked_icon%f"
     fi
   fi
 }
@@ -168,7 +167,7 @@ function +vi-git-stash() {
   emulate -L zsh
   if __in_git; then
     if [[ -n $(git rev-list --walk-reflogs --count refs/stash 2> /dev/null) ]]; then
-      hook_com[unstaged]+=" %F{yellow}$stash_icon%f "
+      hook_com[unstaged]+=" %F{yellow}$git_stash_icon%f "
     fi
   fi
 }
@@ -189,8 +188,8 @@ function +vi-git-compare() {
   ahead=${ahead_and_behind[1]}
   behind=${ahead_and_behind[2]}
 
-  local ahead_symbol="%{$fg[red]%}⇡%{$reset_color%}${ahead}"
-  local behind_symbol="%{$fg[cyan]%}⇣%{$reset_color%}${behind}"
+  local ahead_symbol="%{$fg[red]%}$git_ahead_icon%{$reset_color%}${ahead}"
+  local behind_symbol="%{$fg[cyan]%}$git_behind_icon%{$reset_color%}${behind}"
   (( $ahead )) && gitstatus+=( "${ahead_symbol}" )
   (( $behind )) && gitstatus+=( "${behind_symbol}" )
   hook_com[misc]+=${(j:/:)gitstatus}
@@ -212,9 +211,8 @@ function +vi-git-remotebranch() {
         hook_com[branch]="${hook_com[branch]}→[${remote}]"
     fi
 }
-#-------------------------------------------------------------------------------
-#               Prompt
-#-------------------------------------------------------------------------------
+
+# -- PROMPT --------------------------------------------------------------------
 setopt PROMPT_SUBST
 # %F...%f - - foreground color
 # toggle color based on success %F{%(?.green.red)}
@@ -223,10 +221,12 @@ setopt PROMPT_SUBST
 # %* - reset highlight
 # %j - background jobs
 #
-# directory(branch) ● ●
-# ❯  █                                  10:51
-#
-# icon options =  ❯    ➜
+# CURRENT PROMPT OUTPUT:
+# ╭────────────────────────────────────────────────────────────────────────────╮
+# │                                                                            │
+# │ ~/.dotfiles(branch) ﯂  ?                                                 │
+# │  █                                                           28s 10:51:04 │
+# ╰────────────────────────────────────────────────────────────────────────────╯
 
 # truncate our path to something like ~/.d/c/zsh for ~/.dotfiles/config/zsh
 function _prompt_path() {
@@ -242,9 +242,9 @@ function _prompt_path() {
 }
 
 function __prompt_eval() {
-  local dots_prompt_icon="%F{green} %f"
-  local dots_prompt_failure_icon="%F{red} %f" # 
-  local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}…%{$__DOTS[ITALIC_OFF]%}%f)"
+  local dots_prompt_icon="%F{green}$prompt_icon %f"
+  local dots_prompt_failure_icon="%F{red}$prompt_failure_icon %f"
+  local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
   local top="$(_prompt_path)${_git_status_prompt:-$placeholder}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
@@ -258,9 +258,8 @@ export PROMPT='$(__prompt_eval)'
 export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC_OFF]%}%f %F{240}%*%f'
 # Correction prompt
 export SPROMPT="correct %F{red}'%R'%f to %F{red}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]? "
-#-------------------------------------------------------------------------------
-#           Execution time
-#-------------------------------------------------------------------------------
+
+# -- EXECUTION TIME ------------------------------------------------------------
 # Inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47
 #
 # Turns seconds into human readable time.
@@ -301,9 +300,8 @@ __timings_precmd() {
   __check_cmd_exec_time
   unset cmd_timestamp
 }
-#-------------------------------------------------------------------------------
-#           HOOKS
-#-------------------------------------------------------------------------------
+
+# -- HOOKS ---------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 # Async prompt in Zsh
 # Rather than using zpty (a pseudo terminal) under the hood
@@ -391,7 +389,7 @@ autoload -Uz edit-command-line;
 zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
-# TODO:
+# -- TODO: ---------------------------------------------------------------------
 # prompt_pure_state_setup() {
 # 	setopt localoptions noshwordsplit
 
