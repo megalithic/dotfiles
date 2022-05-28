@@ -12,9 +12,9 @@
 # 2 is stderr (the standard error).
 
 # -- required helpers and our env variables
-[ -f "$ZDOTDIR/lib/env.zsh" ] && source "$ZDOTDIR/lib/env.zsh"
-[ -f "$ZDOTDIR/lib/helpers.zsh" ] && source "$ZDOTDIR/lib/helpers.zsh"
-[ -f "$ZDOTDIR/plugins.zsh" ] && source "$ZDOTDIR/plugins.zsh"
+[[ -f "$ZDOTDIR/lib/env.zsh" ]] && source "$ZDOTDIR/lib/env.zsh"
+[[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
+[[ -f "$ZDOTDIR/plugins.zsh" ]] && source "$ZDOTDIR/plugins.zsh"
 
 # -- plugins
 zsh_add_plugin "Aloxaf/fzf-tab"
@@ -22,7 +22,7 @@ zsh_add_plugin "zsh-users/zsh-history-substring-search"
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-completions"
 zsh_add_plugin "djui/alias-tips"
-zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
+[[ "$(uname)" == "Darwin" ]] && zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
 zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 
@@ -30,14 +30,14 @@ zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 autoload -U zmv # builtin zsh rename command
 
 # -- completions
-[ -f "$ZDOTDIR/lib/completion.zsh" ] && source "$ZDOTDIR/lib/completion.zsh"
+[[ -f "$ZDOTDIR/lib/completion.zsh" ]] && source "$ZDOTDIR/lib/completion.zsh"
 
 # -- prompt
 [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" && "$(uname)" == "Darwin" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
 # -- scripts/libs
 for file in $ZDOTDIR/lib/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux}.zsh; do
-  [ -r "$file" ] && [ -f "$file" ] && source "$file"
+  [[ -r "$file" && -f "$file" ]] && source "$file"
 done
 unset file
 
@@ -50,14 +50,14 @@ if [[ "$(uname)" == "Linux" ]]; then
 fi
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
-[ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
+[[ -f "$ZDOTDIR/lib/asdf.zsh" ]] && source "$ZDOTDIR/lib/asdf.zsh"
 
 # work things
-[ -f "/opt/dev-env/ansible/dash_profile" ] && source /opt/dev-env/ansible/dash_profile
-[ -n "$DESK_ENV" ] && source "$DESK_ENV" || true
+[[ -f "/opt/dev-env/ansible/dash_profile" ]] && source /opt/dev-env/ansible/dash_profile
+[[ -n "$DESK_ENV" ]] && source "$DESK_ENV" || true
 
 # fzf just desparately wants this here
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 [[ -f "$ZDOTDIR/lib/fzf.zsh" ]] && source "$ZDOTDIR/lib/fzf.zsh"
 
 # zprof # -> bottom of .zshrc
