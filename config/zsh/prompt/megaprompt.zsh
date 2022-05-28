@@ -45,7 +45,7 @@ git_untracked_icon="?"
 git_ahead_icon="⇡"        # 
 git_behind_icon="⇣"       # 
 git_renamed_icon=""
-deskfile_icon="🚀"
+deskfile_icon="◲"         # ◲ 🚀
 background_job_icon=""
 root_icon=""
 
@@ -279,12 +279,12 @@ function _prompt_ssh() {
 
 	hostname='%F{yellow}@%m%f'
 	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username='%F{magenta}%n%f'"$hostname"
+	[[ -n $ssh_connection ]] && username='%F{magenta}%n%f'"$hostname "
 
   # Show `username@host` if root, with username in default color.
-	[[ $UID -eq 0 ]] && username='%F{red}$root_icon%n%f'"$hostname"
+	[[ $UID -eq 0 ]] && username='%F{red}$root_icon%n%f'"$hostname "
 
-  echo "$username "
+  echo "$username"
 }
 
 # truncate our path to something like ~/.d/c/zsh for ~/.dotfiles/config/zsh
@@ -309,10 +309,10 @@ function __prompt_eval() {
   local dots_prompt_icon="%F{green}$prompt_icon %f"
   local dots_prompt_failure_icon="%F{red}$prompt_failure_icon %f"
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
-  local top="$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}$(_prompt_deskfile_loaded)"
+  local top="$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
-  local bottom=$([[ -n "$vim_mode" ]] && echo "$vim_mode" || echo "$character")
+  local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_deskfile_loaded)$vim_mode" || echo "$(_prompt_deskfile_loaded)$character")
   local newline=$'\n'
   echo "$newline$top$newline$bottom"
 }
