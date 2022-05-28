@@ -64,13 +64,16 @@ do_build() {
   git up && log_ok "git up successful"
 
   # TODO: do we need to reinstall these each time??
-  if [[ $PLATFORM == "linux" ]]; then
-    # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
-    sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen
-  elif [[ $PLATFORM == "macos" ]]; then
-    # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
-    brew install ninja libtool automake cmake pkg-config gettext curl
-  fi
+  case "$(uname)" in
+    Linux)
+      # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#ubuntu--debian
+      sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen
+    ;;
+    Darwin)
+      # REF: https://github.com/neovim/neovim/wiki/Building-Neovim#macos--homebrew
+      brew install ninja libtool automake cmake pkg-config gettext curl
+    ;;
+  esac
 
   if [[ -d "${XDG_DATA_HOME}/src/neovim/.deps" ]]; then
     sudo rm -rf "${XDG_DATA_HOME}/src/neovim/.deps" && log_ok "remove .deps successful"

@@ -26,7 +26,7 @@ key_path_pub="$ssh_path/$key_file.pub"
 skip_message="-> skipping; be sure to visit https://github.com/settings/keys to add your new key!"
 
 log "-> generating an ssh public/private key with params:"
-echo "- platform      = $PLATFORM"
+echo "- platform      = $(uname)"
 echo "- key_id        = $key_id"
 echo "- key_type      = $key_type"
 echo "- key_file      = $key_file"
@@ -43,11 +43,14 @@ eval "$(ssh-agent -s)"
 
 sleep 0.5
 log '-> executing command: "ssh-add -K '$key_path"\""
-if [[ $PLATFORM == "macos" ]]; then
-  ssh-add -K "$key_path"
-elif [[ $PLATFORM == "linux" ]]; then
-  ssh-add "$key_path"
-fi
+case "$(uname)" in
+  Darwin)
+    ssh-add -K "$key_path"
+  ;;
+  Linux)
+    ssh-add "$key_path"
+  ;;
+esac
 
 sleep 0.5
 log '-> executing command: "pbcopy < '$key_path_pub"\""
