@@ -17,7 +17,7 @@ compinit -C
 # compaudit | xargs chmod g-w
 
 # Kitty completions
-if [[ "$TERM" == "xterm-kitty" ]]; then
+if [[ "$TERM" == "xterm-kitty" && "$(uname)" == "Darwin" ]]; then
   kitty + complete setup zsh | source /dev/stdin
 fi
 
