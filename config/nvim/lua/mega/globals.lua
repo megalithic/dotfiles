@@ -202,7 +202,7 @@ _G.mega = {
     },
     virtual_text = "",
     mode_term = "ﲵ",
-    ln_sep = "",
+    ln_sep = "ℓ", -- ℓ 
     col_sep = "",
     perc_sep = "",
     modified = "●",

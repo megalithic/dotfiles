@@ -35,9 +35,9 @@ prompt_failure_icon=""   # 
 placeholder_icon="…"
 vimode_insert_icon=""    # 
 git_staged_icon=""
-git_unstaged_icon="﯂"     # •﯂
+git_unstaged_icon="﯂"     # • ﯂
 git_conflicted_icon=""   # 
-git_stash_icon=""        # ≡
+git_stash_icon=""        #  ≡
 # TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71
 git_deleted_icon=""
 git_diverged_icon="⇕"
@@ -45,9 +45,9 @@ git_untracked_icon="?"
 git_ahead_icon="⇡"        # 
 git_behind_icon="⇣"       # 
 git_renamed_icon=""
-deskfile_icon="◲"         # ◲ 🚀
+deskfile_icon=""         #   ◲ 🚀
 background_job_icon=""
-root_icon=""
+root_icon=""
 
 
 

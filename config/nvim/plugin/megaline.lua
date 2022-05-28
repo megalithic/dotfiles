@@ -743,7 +743,7 @@ end
 ---@return string: Section string.
 function M.s_lineinfo(args)
   local opts = {
-    prefix = "ℓ",
+    prefix = mega.icons.ln_sep,
     prefix_color = "StMetadataPrefix",
     current_hl = "StTitle",
     total_hl = "StComment",
