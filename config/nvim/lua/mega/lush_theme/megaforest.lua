@@ -825,7 +825,11 @@ return lush(function()
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
 
-    ---- :yaml -------------------------------------------------------------
+    ---- :help beacon.txt ------------------------------------------------------
+
+    -- Beacon({ bg = bg_purple }),
+
+    ---- :yaml -----------------------------------------------------------------
 
     yamlTodo({ Todo }),
     yamlComment({ Comment }),

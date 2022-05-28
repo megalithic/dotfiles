@@ -28,14 +28,14 @@ local PKGS = {
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  -- "declancm/cinnamon.nvim",
   "karb94/neoscroll.nvim",
+  -- "declancm/cinnamon.nvim",
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
-  "b0o/incline.nvim",
+  "rainbowhxch/beacon.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -959,39 +959,20 @@ M.config = function()
 
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
-  conf("incline", {
-    enabled = vim.api.nvim_get_option("laststatus") == 3,
+  conf("beacon", {
     config = {
-      hide = {
-        focused_win = true,
-      },
-      render = function(props)
-        local fmt, icons = string.format, mega.icons.misc
-        local bufname = vim.api.nvim_buf_get_name(props.buf)
-        if bufname == "" then
-          return "[No name]"
-        end
-        local directory_color = require("mega.utils.highlights").get_hl("Directory", "fg")
-        local parts = vim.split(vim.fn.fnamemodify(bufname, ":."), "/")
-        local icon, color = require("nvim-web-devicons").get_icon_color(bufname, nil, {
-          default = true,
-        })
-        local result = {}
-        for idx, part in ipairs(parts) do
-          if next(parts, idx) then
-            table.insert(result, { part })
-            table.insert(result, { fmt(" %s ", icons.chevron_right), guifg = directory_color })
-          else
-            table.insert(result, { part, gui = "underline,bold" })
-          end
-        end
-        table.insert(result, #result, { icon .. " ", guifg = color })
-        return result
-      end,
-      window = {
-        options = {
-          winhighlight = "Normal:StInactive",
-        },
+      minimal_jump = 20,
+      ignore_buffers = { "terminal", "nofile" },
+      focus_gained = true,
+      ignore_filetypes = {
+        "dirbuf",
+        "neo-tree",
+        "qf",
+        "NeogitCommitMessage",
+        "NeogitPopup",
+        "NeogitStatus",
+        "packer",
+        "trouble",
       },
     },
   })

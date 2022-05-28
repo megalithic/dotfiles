@@ -54,7 +54,7 @@ local CURSOR = 1
 local WINDOW = 2
 
 local status = CURSOR
-local blink_active = true
+local blink_active = false
 
 local timer = vim.loop.new_timer()
 
@@ -109,7 +109,7 @@ local function cursor_moved()
     return
   end
 
-  vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
+  vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
   if not is_ignored() then
     timer_start()
   end
@@ -160,7 +160,7 @@ end
 
 local function enable_cursorline()
   vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
-  blink_cursorline()
+  -- blink_cursorline()
   set_cursorline()
   highlight_cursorline()
   status = WINDOW
@@ -182,7 +182,7 @@ mega.augroup("ToggleCursorLine", {
   {
     event = { "CursorMoved", "CursorMovedI" },
     command = function()
-      -- cursor_moved()
+      cursor_moved()
     end,
   },
 })

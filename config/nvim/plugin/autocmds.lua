@@ -165,7 +165,8 @@ end
 do
   local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage", "dirbuf" }
   local function can_save()
-    return mega.empty(vim.bo.buftype)
+    return mega.empty(fn.win_gettype())
+      and mega.empty(vim.bo.buftype)
       and not mega.empty(vim.bo.filetype)
       and vim.bo.modifiable
       and not vim.tbl_contains(save_excluded, vim.bo.filetype)
