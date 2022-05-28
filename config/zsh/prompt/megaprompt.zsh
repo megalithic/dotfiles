@@ -45,7 +45,7 @@ git_untracked_icon="?"
 git_ahead_icon="⇡"        # 
 git_behind_icon="⇣"       # 
 git_renamed_icon=""
-deskfile_icon=""         #   ◲ 🚀
+deskfile_icon=""         #    ◲ 🚀
 background_job_icon=""
 root_icon=""
 
