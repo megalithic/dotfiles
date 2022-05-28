@@ -301,8 +301,8 @@ function _prompt_path() {
 }
 
 function _prompt_deskfile_loaded() {
-  # taken from my implementation for starship: https://github.com/megalithic/dotfiles/blob/main/config/starship.toml#L66
-  (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
+  # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
+  [[ -n $DESK_NAME ]] && print -n "$deskfile_icon"
 }
 
 function __prompt_eval() {
