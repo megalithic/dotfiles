@@ -14,3 +14,30 @@
 [submodule "dotbot/ifplatform"]
 	path = dotbot/ifplatform
 	url = https://github.com/megalithic/dotbot-ifplatform.git
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/fzf-tab"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/fzf-tab
+	url = https://github.com/Aloxaf/fzf-tab
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-history-substring-search"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-history-substring-search
+	url = https://github.com/zsh-users/zsh-history-substring-search
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/fast-syntax-highlighting"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/fast-syntax-highlighting
+	url = https://github.com/zdharma-zmirror/fast-syntax-highlighting
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-autosuggestions"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-completions"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-completions
+	url = https://github.com/zsh-users/zsh-completions
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/alias-tips"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/alias-tips
+	url = https://github.com/djui/alias-tips
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-auto-notify"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-auto-notify
+	url = https://github.com/MichaelAquilina/zsh-auto-notify
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-autopair"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-autopair
+	url = https://github.com/hlissner/zsh-autopair
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-syntax-highlighting"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting

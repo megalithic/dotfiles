@@ -10,8 +10,16 @@
 # Also, you can set $ZDOTDIR in .zshenv to specify an alternative location for the rest of your zsh configuration.
 
 # set our working zsh directory
-XDG_CONFIG_HOME=~/.config
-ZDOTDIR=$XDG_CONFIG_HOME/zsh
+XDG_CONFIG_HOME="$HOME/.config"
+XDG_CACHE_HOME="$HOME/.cache"
+XDG_DATA_HOME="$HOME/.local/share"
+
+ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
+
+if [ ! -d "$ZSH_CACHE_DIR" ]; then
+	mkdir -p "$ZSH_CACHE_DIR"
+fi
 
 # TODO from https://github.com/dbernheisel/dotfiles/blob/master/.zshenv#L9-L11
 # Ensure that a non-login, non-interactive shell has a defined environment.

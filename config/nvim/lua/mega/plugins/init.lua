@@ -25,7 +25,6 @@ local PKGS = {
   "mcchrish/zenbones.nvim",
   "savq/melange",
   "rebelot/kanagawa.nvim",
-
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
@@ -44,9 +43,7 @@ local PKGS = {
   "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
-  -- "lukas-reineke/lsp-format.nvim",
-  { "hrsh7th/nvim-cmp" },
-  -- { "hrsh7th/nvim-cmp", branch = "dev" },
+  { "hrsh7th/nvim-cmp", branch = "main" },
   "hrsh7th/cmp-nvim-lsp",
   "hrsh7th/cmp-nvim-lua",
   "saadparwaiz1/cmp_luasnip",
@@ -190,9 +187,9 @@ local PKGS = {
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
-  -- { "sunaku/tmux-navigate", opt = false },
-  { "aserowy/tmux.nvim", opt = false },
+  { "sunaku/tmux-navigate", opt = true },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
+  -- "aca/wezterm.nvim",
   "junegunn/vim-slash",
   "outstand/logger.nvim",
   "RRethy/nvim-align",
@@ -207,6 +204,7 @@ local PKGS = {
   "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
+  -- @trial https://github.com/ekickx/clipboard-image.nvim
   -- @trial https://github.com/preservim/vim-wordy
   -- @trial https://github.com/jghauser/follow-md-links.nvim
   -- @trial https://github.com/jakewvincent/mkdnflow.nvim
@@ -607,7 +605,7 @@ M.config = function()
   })
 
   conf("lightspeed", {
-    enabled = false,
+    enabled = true,
     config = {
       -- jump_to_first_match = true,
       -- jump_on_partial_input_safety_timeout = 400,
@@ -646,7 +644,7 @@ M.config = function()
   })
 
   conf("hop", {
-    enabled = true,
+    enabled = false,
     config = function(p)
       if p == nil then
         return
@@ -885,16 +883,41 @@ M.config = function()
     end,
   })
 
-  -- FIXME: https://github.com/SmiteshP/nvim-gps/issues/89
+  -- using this primarily with the winbar
   conf("nvim-gps", {
-    config = {
-      languages = {
-        heex = false,
-        elixir = false,
-        eelixir = false,
-      },
-      enabled = false,
-    },
+    config = function(plug)
+      if plug == nil then
+        return
+      end
+
+      local icons = mega.icons.codicons
+      local types = mega.icons.type
+      plug.setup({
+        languages = {
+          heex = false,
+          elixir = false,
+          eelixir = false,
+        },
+        enabled = true,
+        icons = {
+          ["class-name"] = icons.Class,
+          ["function-name"] = icons.Function,
+          ["method-name"] = icons.Method,
+          ["container-name"] = icons.Module,
+          ["tag-name"] = icons.Field,
+          ["array-name"] = icons.Value,
+          ["object-name"] = icons.Value,
+          ["null-name"] = icons.Null,
+          ["boolean-name"] = icons.Keyword,
+          ["number-name"] = icons.Value,
+          ["string-name"] = icons.Text,
+          ["mapping-name"] = types.object,
+          ["sequence-name"] = types.array,
+          ["integer-name"] = types.number,
+          ["float-name"] = types.float,
+        },
+      })
+    end,
   })
 
   conf("pqf", {})
@@ -934,56 +957,7 @@ M.config = function()
 
   conf("treesitter-context", { enabled = false })
 
-  conf("tmux", {
-    enabled = vim.env.TMUX ~= nil,
-    config = function(plug)
-      if plug == nil then
-        return
-      end
-
-      plug.setup({
-        copy_sync = {
-          -- enables copy sync and overwrites all register actions to
-          -- sync registers *, +, unnamed, and 0 till 9 from tmux in advance
-          enable = false,
-          -- TMUX >= 3.2: yanks (and deletes) will get redirected to system
-          -- clipboard by tmux
-          redirect_to_clipboard = false,
-          -- offset controls where register sync starts
-          -- e.g. offset 2 lets registers 0 and 1 untouched
-          register_offset = 0,
-          -- sync clipboard overwrites vim.g.clipboard to handle * and +
-          -- registers. If you sync your system clipboard without tmux, disable
-          -- this option!
-          sync_clipboard = false,
-          -- syncs deletes with tmux clipboard as well, it is adviced to
-          -- do so. Nvim does not allow syncing registers 0 and 1 without
-          -- overwriting the unnamed register. Thus, ddp would not be possible.
-          sync_deletes = false,
-          -- syncs the unnamed register with the first buffer entry from tmux.
-          sync_unnamed = false,
-        },
-        navigation = {
-          -- cycles to opposite pane while navigating into the border
-          cycle_navigation = true,
-          -- enables default keybindings (C-hjkl) for normal mode
-          enable_default_keybindings = true,
-          -- prevents unzoom tmux when navigating beyond vim border
-          persist_zoom = true,
-        },
-        resize = {
-          -- enables default keybindings (A-hjkl) for normal mode
-          enable_default_keybindings = false,
-          -- sets resize steps for x axis
-          resize_step_x = 1,
-          -- sets resize steps for y axis
-          resize_step_y = 1,
-        },
-      })
-    end,
-  })
-
-  conf("vim-kitty-navigator", { enabled = vim.env.TMUX == nil })
+  conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
   conf("incline", {
     enabled = vim.api.nvim_get_option("laststatus") == 3,

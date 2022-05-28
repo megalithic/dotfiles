@@ -48,7 +48,7 @@ rails:include:ruby,rabl,erb
 --glob=!*.cache
 --glob=!.Trash
 --glob=!.licenses
---glob=!.zsh/plugins/*
+--glob=!zsh/plugins/*
 --glob=!dotbot/*
 
 # vim:ft=conf

@@ -32,8 +32,11 @@
     - ~/screenshots
     - ~/.config
     - ~/.cache
+    - ~/.cache/zsh
+    - ~/.local/state
     - ~/.local/share/packages
     - ~/.local/share/src
+    - ~/.ssh
 
 - clean:
     ~/:
@@ -115,6 +118,14 @@
       force: true
       path: config/weechat
       if: "[ `uname` = Darwin ]"
+    ~/.config/wezterm:
+      force: true
+      path: config/wezterm
+      if: "[ `uname` = Darwin ]"
+    # ~/.config/zellij:
+    #   force: true
+    #   path: config/zellij
+    #   if: "[ `uname` = Darwin ]"
     ~/.config/zk:
       force: true
       path: config/zk
@@ -211,6 +222,9 @@
         echo "Attempting to source helpers.zsh..";
         source $HOME/.config/zsh/lib/helpers.zsh;
 
+        log "Attempting to install all git submodules..";
+        git submodule update --init --recursive
+
         log "Attempting to set zsh as default shell..";
         [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`;
 
@@ -247,4 +261,4 @@
         log "Attempting to use gh-login to do GitHub Authentication..";
         ~/.dotfiles/bin/gh-login;
 
-        # [zsh -ic "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
+        # [/usr/local/bin/zsh -ic "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904

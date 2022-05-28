@@ -34,7 +34,7 @@ local function setup_commands()
   end)
 
   command("LspFormat", function()
-    vim.lsp.buf.format(nil, 3000)
+    vim.lsp.buf.format()
   end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
@@ -126,22 +126,16 @@ local function setup_autocommands(client, bufnr)
   if ok then
     lsp_format.on_attach(client)
   else
-    -- format on save
+    -- format on savelsp
     augroup("LspFormat", {
       {
         event = { "BufWritePre" },
-        -- buffer = bufnr,
         command = function()
-          -- P(fmt("should be formatting here on bufwritepre for buffer: %s", bufnr))
-          -- BUG: folds are are removed when formatting is done, so we save the current state of the
-          -- view and re-apply it manually after formatting the buffer
-          -- @see: https://github.com/nvim-treesitter/nvim-treesitter/issues/1424#issuecomment-909181939
-          vim.cmd("mkview!")
-          local format_sync_ok, msg = pcall(vim.lsp.buf.format, nil, 3000)
-          if not format_sync_ok then
-            vim.notify(fmt("Error formatting file: %s", msg))
+          if vim.fn.bufloaded(bufnr) then
+            vim.lsp.buf.format({
+              async = false,
+            })
           end
-          vim.cmd("loadview")
         end,
       },
     })
@@ -151,53 +145,30 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  local ok, lsp_format = pcall(require, "lsp-format")
-  local do_format = ok and lsp_format.format or vim.lsp.buf.format
-
   local desc = function(desc)
     return { desc = desc, buffer = bufnr }
   end
 
-  nmap("[d", function()
+  nnoremap("[d", function()
     diagnostic.goto_prev()
   end, desc("lsp: prev diagnostic"))
-  nmap("]d", function()
+  nnoremap("]d", function()
     diagnostic.goto_next()
   end, desc("lsp: next diagnostic"))
-  nmap("gD", [[<cmd>TroubleToggle document_diagnostics<CR>]], desc("trouble: document diagnostics"))
-
-  if client.server_capabilities.definitionProvider then
-    nmap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
-  end
-  if client.server_capabilities.referencesProvider then
-    nmap("gr", vim.lsp.buf.references, desc("lsp: references"))
-  end
-  if client.server_capabilities.typeDefinitionProvider then
-    nmap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
-  end
-  if client.server_capabilities.implementationProvider then
-    nmap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
-  end
-  if client.supports_method("textDocument/prepareCallHierarchy") then
-    nmap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
-  end
-  if client.server_capabilities.codeActionProvider then
-    nmap("<leader>lc", vim.lsp.buf.code_action, desc("lsp: code action"))
-    xmap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("lsp: code action"))
-  end
-  if client.server_capabilities.codeLensProvider then
-    nmap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
-  end
-  if client.server_capabilities.renameProvider then
-    nmap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
-  end
-  if client.server_capabilities.hoverProvider then
-    nmap("K", vim.lsp.buf.hover, desc("lsp: hover"))
-  end
-
-  nmap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
-  nmap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
-  nmap("<leader>rf", do_format, desc("lsp: format buffer"))
+  nnoremap("gD", [[<cmd>TroubleToggle document_diagnostics<CR>]], desc("trouble: document diagnostics"))
+  nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
+  nnoremap("gr", vim.lsp.buf.references, desc("lsp: references"))
+  nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
+  nnoremap("gi", vim.lsp.buf.implementation, desc("lsp: implementation"))
+  nnoremap("gI", vim.lsp.buf.incoming_calls, desc("lsp: incoming calls"))
+  nnoremap("<leader>lc", vim.lsp.buf.code_action, desc("lsp: code action"))
+  xnoremap("<leader>lc", "<esc><Cmd>lua vim.lsp.buf.range_code_action()<CR>", desc("lsp: code action"))
+  nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
+  nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
+  nnoremap("K", vim.lsp.buf.hover, desc("lsp: hover"))
+  nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
+  nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
+  nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
@@ -457,6 +428,9 @@ end
 
 -- [ ON_ATTACH ] ---------------------------------------------------------------
 
+---Add buffer local mappings, autocommands, tagfunc etc for attaching servers
+---@param client table lsp client
+---@param bufnr number
 function mega.lsp.on_attach(client, bufnr)
   if not client then
     vim.notify("No LSP client found; aborting on_attach.")
@@ -937,7 +911,7 @@ mega.lsp.servers = {
   end,
 }
 
-require("mega.lsp.null_ls")(mega.lsp.on_attach)
+require("mega.lsp.null_ls")()
 
 function mega.lsp.get_server_config(server)
   local function server_capabilities()
@@ -978,7 +952,6 @@ function mega.lsp.get_server_config(server)
   local config = conf_type == "table" and conf or conf_type == "function" and conf() or {}
 
   config.flags = { debounce_text_changes = 200 }
-  config.on_attach = config.on_attach or mega.lsp.on_attach
   config.capabilities = server_capabilities()
 
   return config
@@ -1008,4 +981,27 @@ else
     local config = mega.lsp.get_server_config(server)
     lspconfig[server].setup(config)
   end
+
+  --- A set of custom overrides for specific lsp clients
+  --- This is a way of adding functionality for specific lsps
+  --- without putting all this logic in the general on_attach function
+  local client_overrides = {
+    -- ["sumneko_lua"] = function(client, bufnr) end,
+  }
+
+  mega.augroup("LspSetupCommands", {
+    {
+      event = "LspAttach",
+      desc = "Setup LS things on the buffer when the client attaches",
+      command = function(args)
+        local bufnr = args.buf
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        mega.lsp.on_attach(client, bufnr)
+
+        if client_overrides[client.name] then
+          client_overrides[client.name](client, bufnr)
+        end
+      end,
+    },
+  })
 end

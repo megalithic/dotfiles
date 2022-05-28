@@ -1,13 +1,8 @@
 #!/usr/bin/env zsh
-# shellcheck shell=bash
 
-# zmodload zsh/zprof # top of your .zshrc file
+# zmodload zsh/zprof # -> top of your .zshrc file
 
-# REF:
-# Fix zprofile things: https://spin.atomicobject.com/2021/08/02/zprofile-on-macos/
-#   (👆describes some of macos' annoying zprofile handling.)
-
-# TERMS:
+# REFS:
 # exec - replaces the current shell. This means no subshell is
 # created and the current process is replaced with this new command.
 # fd/FD - file descriptor
@@ -16,54 +11,43 @@
 # 1 is stdout (the standard output),
 # 2 is stderr (the standard error).
 
-bindkey -e # ensures we use emacs/readline keybindings
+# -- required helpers and our env variables
+[ -f "$ZDOTDIR/lib/env.zsh" ] && source "$ZDOTDIR/lib/env.zsh"
+[ -f "$ZDOTDIR/lib/helpers.zsh" ] && source "$ZDOTDIR/lib/helpers.zsh"
+[ -f "$ZDOTDIR/plugins.zsh" ] && source "$ZDOTDIR/plugins.zsh"
 
-[[ -f "$HOME/.config/zsh/lib/helpers.zsh" ]] && source "$HOME/.config/zsh/lib/helpers.zsh"
-[[ -f "$HOME/.config/zsh/lib/env.zsh" ]] && source "$HOME/.config/zsh/lib/env.zsh"
+# -- plugins
+zsh_add_plugin "Aloxaf/fzf-tab"
+zsh_add_plugin "zsh-users/zsh-history-substring-search"
+zsh_add_plugin "zsh-users/zsh-autosuggestions"
+zsh_add_plugin "zsh-users/zsh-completions"
+zsh_add_plugin "djui/alias-tips"
+zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
+zsh_add_plugin "hlissner/zsh-autopair"
+zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 
-# zcomet for plugin install and management
-if [[ ! -f $HOME/.zcomet/bin/zcomet.zsh ]]; then
-  command git clone https://github.com/agkozak/zcomet.git $HOME/.zcomet/bin
-  # TODO: remember to run `zcomet self-update` and `zcomet update` periodically
-fi
+# adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
+autoload -U zmv # builtin zsh rename command
 
-source $HOME/.zcomet/bin/zcomet.zsh
-zstyle ':zcomet:*' home-dir $HOME/.zcomet
-zstyle ':zcomet:*' repos-dir $HOME/.zcomet/repos
-zstyle ':zcomet:*' snippets-dir $HOME/.zcomet/snippets
+# -- completions
+[ -f "$ZDOTDIR/lib/completion.zsh" ] && source "$ZDOTDIR/lib/completion.zsh"
 
-zcomet load Aloxaf/fzf-tab
-zcomet load hlissner/zsh-autopair
-zcomet load djui/alias-tips
-zcomet load olets/zsh-abbr
-zcomet load zsh-users/zsh-completions
-zcomet load zsh-users/zsh-history-substring-search
-zcomet load zsh-users/zsh-autosuggestions
-zcomet load zdharma-zmirror/fast-syntax-highlighting
-zcomet load wfxr/emoji-cli
-zcomet load wfxr/forgit
-zcomet load ohmyzsh plugins/colored-man-pages
-# zcomet load b0o/zfzf
+# -- prompt
+[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
-if [[ $PLATFORM == "linux" ]]; then
-  [[ -d "/home/linuxbrew/.linuxbrew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
-
-# NOTE: source order matters!
-for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,keybindings,completion,ssh,tmux}.zsh; do
-  # shellcheck disable=SC1090
+# -- scripts/libs
+for file in $ZDOTDIR/lib/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux}.zsh; do
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file
 
-eval "$(zoxide init zsh)"
-eval "$(starship init zsh)"
+if exists zoxide; then
+  eval "$(zoxide init zsh)"
+fi
 
-## adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
-autoload -U zmv
-
-# Run compinit and compile its cache
-zcomet compinit
+# if exists starship; then
+#   eval "$(starship init zsh)"
+# fi
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 [ -f "$ZDOTDIR/lib/asdf.zsh" ] && source "$ZDOTDIR/lib/asdf.zsh"
@@ -74,7 +58,7 @@ zcomet compinit
 
 # fzf just desparately wants this here
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-[[ -f "$HOME/.config/zsh/lib/fzf.zsh" ]] && source "$HOME/.config/zsh/lib/fzf.zsh"
+[[ -f "$ZDOTDIR/lib/fzf.zsh" ]] && source "$ZDOTDIR/lib/fzf.zsh"
 
-# zprof # bottom of .zshrc
+# zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

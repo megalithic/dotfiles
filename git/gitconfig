@@ -368,14 +368,14 @@ fzf = !"                                                                        
   ; minus-color = "#340001"
   theme = 'Nord'
   features = line-numbers decorations
-  hyperlinks = true
+  hyperlinks = false
 
 [delta "decorations"]
   commit-decoration-style = bold yellow box ul
   file-style = bold yellow ul
 
 [interactive]
-  diffFilter = delta --color-only --theme='Nord'
+  diffFilter = delta --color-only
 
 [ghq]
   root = ~/code

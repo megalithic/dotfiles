@@ -1,0 +1,5 @@
+.git/*
+config/zsh/plugins/*
+dotbot/*
+node_modules/*
+.yarn

@@ -18,3 +18,4 @@ public
 .licenses
 dotbot
 dotbot-plugins
+config/zsh/plugins

@@ -17,7 +17,18 @@
 #-------------------------------------------------------------------------------
 # Homebrew
 #-------------------------------------------------------------------------------
-# eval "$(/opt/homebrew/bin/brew shellenv)"
+
+case `uname` in
+  Darwin)
+    # -- intel mac:
+    [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
+    # -- M1 mac:
+    [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+  ;;
+  Linux)
+    [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  ;;
+esac
 
 #-------------------------------------------------------------------------------
 #               $PATH Updates
@@ -29,42 +40,18 @@
 # system rather than ARM i.e. for M1+. So replace the system ruby with an
 # updated one from Homebrew and ensure it is before /usr/bin/ruby
 # Prepend to PATH
-# path=(
-  # "$(brew --prefix)/opt/ruby/bin"
-  # "$(brew --prefix)/lib/ruby/gems/3.0.0/bin"
+export BREW_PREFIX="$(brew --prefix)"
+export HOMEBREW_PREFIX="$BREW_PREFIX"
+
+path=(
+  "$BREW_PREFIX/opt/ruby/bin"
+  "$BREW_PREFIX/lib/ruby/gems/3.0.0/bin"
   # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
-  # "$(brew --prefix)/opt/coreutils/libexec/gnubin"
-  # $path
-# )
-# export MANPATH="$(brew --prefix)/opt/coreutils/libexec/gnuman:${MANPATH}"
+  "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
+  $path
+)
 
-function detect_platform {
-  if [[ -z $PLATFORM ]]; then
-    platform="unknown"
-    derived_platform=$(uname | tr "[:upper:]" "[:lower:]")
-
-    if [[ $derived_platform == "darwin" ]]; then
-      platform="macos"
-    elif [[ $derived_platform == "linux" ]]; then
-      platform="linux"
-    fi
-
-    export PLATFORM=$platform
-
-    # if [[ "$PLATFORM" == "linux" ]]; then
-    #     # If available, use LSB to identify distribution
-    #     if [ -f /etc/lsb-release -o -d /etc/lsb-release.d ]; then
-    #         export DISTRO=$(lsb_release -i | cut -d: -f2 | sed s/'^\t'//)
-    #         # Otherwise, use release info file
-    #     else
-    #         export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
-    #     fi
-    # fi
-    unset platform
-    unset derived_platform
-  fi
-}
-detect_platform
+export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
 
 # this loads in all of our environment variables, etc.
 source "$ZDOTDIR/lib/env.zsh"

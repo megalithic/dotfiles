@@ -1,12 +1,12 @@
-local nls = require("null-ls")
-local b = nls.builtins
-return function(on_attach)
+return function()
+  local nls = require("null-ls")
+  local b = nls.builtins
+
   nls.setup({
     debug = false,
     debounce = 150,
     autostart = true,
     save_after_format = false,
-    on_attach = on_attach or mega.lsp.on_attach,
     sources = {
       b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
       b.formatting.prettierd.with({
@@ -59,7 +59,7 @@ return function(on_attach)
       b.formatting.shfmt.with({
         extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
         -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
-        filetypes = { "sh", "zsh" },
+        filetypes = { "sh", "bash" },
       }),
       b.diagnostics.shellcheck.with({
         filetypes = { "sh", "bash" },
