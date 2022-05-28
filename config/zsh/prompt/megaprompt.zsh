@@ -190,8 +190,8 @@ function +vi-git-compare() {
 
   local ahead_symbol="%{$fg[red]%}$git_ahead_icon%{$reset_color%}${ahead}"
   local behind_symbol="%{$fg[cyan]%}$git_behind_icon%{$reset_color%}${behind}"
-  (( $ahead )) && gitstatus+=( "${ahead_symbol}" )
-  (( $behind )) && gitstatus+=( "${behind_symbol}" )
+  (( $ahead )) && gitstatus+=( " ${ahead_symbol}" )
+  (( $behind )) && gitstatus+=( " ${behind_symbol}" )
   hook_com[misc]+=${(j:/:)gitstatus}
 }
 
