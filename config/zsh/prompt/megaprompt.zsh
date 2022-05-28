@@ -152,7 +152,7 @@ zstyle ':vcs_info:*' unstagedstr "%F{red} $git_unstaged_icon%f"
 zstyle ':vcs_info:*' use-simple true
 zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-compare git-remotebranch
 zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
-zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{242}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
+zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
 
 __in_git() {
   [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == "true" ]]
@@ -277,12 +277,13 @@ function _prompt_ssh() {
 
 	hostname='%F{242}@%m%f'
 	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username='%F{242}%n%f'"$hostname"
+	[[ -n $ssh_connection ]] && username="$hostname"
+	# [[ -n $ssh_connection ]] && username='%F{242}%n%f'"$hostname"
 
   # Show `username@host` if root, with username in default color.
-	[[ $UID -eq 0 ]] && username='%F{red}%n%f'"$hostname"
+	[[ $UID -eq 0 ]] && username='%F{red}#%n%f'"$hostname"
 
-  echo "$username"
+  echo "$username "
 }
 
 # truncate our path to something like ~/.d/c/zsh for ~/.dotfiles/config/zsh
@@ -306,13 +307,13 @@ function __prompt_eval() {
   local dots_prompt_icon="%F{green}$prompt_icon %f"
   local dots_prompt_failure_icon="%F{red}$prompt_failure_icon %f"
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
-  local top="$(_prompt_path)${_git_status_prompt:-$placeholder}$(_prompt_deskfile_loaded)"
+  local top="$ssh$(_prompt_path)${_git_status_prompt:-$placeholder}$(_prompt_deskfile_loaded)"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
   local ssh="$(_prompt_ssh)"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$vim_mode" || echo "$character")
   local newline=$'\n'
-  echo "$newline$top$newline$ssh$bottom"
+  echo "$newline$top$newline$bottom"
 }
 # NOTE: VERY IMPORTANT: the type of quotes used matters greatly. Single quotes MUST be used for these variables
 export PROMPT='$(__prompt_eval)'
