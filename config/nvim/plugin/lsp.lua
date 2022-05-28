@@ -19,6 +19,35 @@ require("vim.lsp.log").set_format_func(vim.inspect)
 -- `server_capabilities.camelCaseCapabilityName`
 -- https://github.com/neovim/neovim/issues/14090#issuecomment-1113956767
 
+-- [ HELPERS ] -----------------------------------------------------------------
+
+-- Show the popup diagnostics window, but only once for the current cursor location
+-- by checking whether the word under the cursor has changed.
+local function diagnostic_popup()
+  local cword = vim.fn.expand("<cword>")
+  if cword ~= vim.w.lsp_diagnostics_cword then
+    vim.w.lsp_diagnostics_cword = cword
+    vim.diagnostic.open_float(0, { scope = "cursor", focus = false })
+  end
+end
+
+local format_exclusions = {}
+local function formatting_filter(client)
+  return not vim.tbl_contains(format_exclusions, client.name)
+end
+
+---@param opts table<string, any>
+local format = function(opts)
+  opts = opts or {}
+  -- if vim.fn.bufloaded(bufnr) then
+  vim.lsp.buf.format({
+    bufnr = opts.bufnr,
+    async = opts.async, -- NOTE: this is super dangerous
+    filter = formatting_filter,
+  })
+  -- end
+end
+
 -- [ COMMANDS ] ----------------------------------------------------------------
 
 local function setup_commands()
@@ -34,7 +63,7 @@ local function setup_commands()
   end)
 
   command("LspFormat", function()
-    vim.lsp.buf.format()
+    format({ bufnr = 0, async = false })
   end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
@@ -104,15 +133,6 @@ local function setup_autocommands(client, bufnr)
   --   },
   -- })
   --
-  -- Show the popup diagnostics window, but only once for the current cursor location
-  -- by checking whether the word under the cursor has changed.
-  local function diagnostic_popup()
-    local cword = vim.fn.expand("<cword>")
-    if cword ~= vim.w.lsp_diagnostics_cword then
-      vim.w.lsp_diagnostics_cword = cword
-      vim.diagnostic.open_float(0, { scope = "cursor", focus = false })
-    end
-  end
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
@@ -122,24 +142,15 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  local ok, lsp_format = pcall(require, "lsp-format")
-  if ok then
-    lsp_format.on_attach(client)
-  else
-    -- format on savelsp
-    augroup("LspFormat", {
-      {
-        event = { "BufWritePre" },
-        command = function()
-          if vim.fn.bufloaded(bufnr) then
-            vim.lsp.buf.format({
-              async = false,
-            })
-          end
-        end,
-      },
-    })
-  end
+  -- format on save
+  augroup("LspFormat", {
+    {
+      event = { "BufWritePre" },
+      command = function()
+        format({ async = false, bufnr = bufnr }) -- prefer `false` here
+      end,
+    },
+  })
 end
 
 -- [ MAPPINGS ] ----------------------------------------------------------------
@@ -763,23 +774,6 @@ mega.lsp.servers = {
       opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, "language_server.sh")
 
       return language_server_cmd(opts)
-    end
-
-    local get_cursor_position = function()
-      local rowcol = vim.api.nvim_win_get_cursor(0)
-      local row = rowcol[1] - 1
-      local col = rowcol[2]
-
-      return row, col
-    end
-
-    local manipulate_pipes = function(direction, client)
-      local row, col = get_cursor_position()
-
-      client.request_sync("workspace/executeCommand", {
-        command = "manipulatePipes:serverid",
-        arguments = { direction, "file://" .. vim.api.nvim_buf_get_name(0), row, col },
-      }, nil, 0)
     end
 
     return {

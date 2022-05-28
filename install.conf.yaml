@@ -261,4 +261,6 @@
         log "Attempting to use gh-login to do GitHub Authentication..";
         ~/.dotfiles/bin/gh-login;
 
+        # @see: https://github.com/ahmedelgabri/dotfiles#notes
+
         # [/usr/local/bin/zsh -ic "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
