@@ -62,7 +62,6 @@ local PKGS = {
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
   "b0o/schemastore.nvim",
-  "folke/trouble.nvim",
   { "kevinhwang91/nvim-bqf" },
   { url = "https://gitlab.com/yorickpeterse/nvim-pqf" },
   "mhartington/formatter.nvim",
@@ -210,7 +209,7 @@ local PKGS = {
   -- @trial https://github.com/jubnzv/mdeval.nvim
   { "mickael-menu/zk-nvim" },
   "tpope/vim-rails",
-  "elixir-editors/vim-elixir",
+  -- "elixir-editors/vim-elixir",
   "ngscheurich/edeex.nvim",
   "antew/vim-elm-analyse",
   "tjdevries/nlua.nvim",
@@ -469,12 +468,6 @@ M.config = function()
       require("neoscroll.config").set_mappings(mappings)
     end,
     enabled = true,
-  })
-
-  conf("trouble", {
-    config = {
-      auto_close = true,
-    },
   })
 
   conf("FixCursorHold", {
