@@ -1,3 +1,5 @@
+zmodload zsh/datetime
+
 # Create a hash table for globally stashing variables without polluting main
 # scope with a bunch of identifiers.
 typeset -A __DOTS
@@ -317,6 +319,7 @@ done
 unset path_file
 
 fpath+=(
+  $HOMEBREW_PREFIX/share/zsh/site-functions
   $ZDOTDIR/prompt
   $ZDOTDIR/completions
   $ZDOTDIR/plugins
