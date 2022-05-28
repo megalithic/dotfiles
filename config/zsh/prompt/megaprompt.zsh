@@ -276,10 +276,10 @@ function _prompt_ssh() {
 		unset MATCH MBEGIN MEND
 	fi
 
-	hostname='%F{242}@%m%f'
+	hostname='%F{yellow}@%m%f'
 	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username="$hostname"
-	# [[ -n $ssh_connection ]] && username='%F{242}%n%f'"$hostname"
+	# [[ -n $ssh_connection ]] && username="$hostname"
+	[[ -n $ssh_connection ]] && username='%F{magenta}%n%f'"$hostname"
 
   # Show `username@host` if root, with username in default color.
 	[[ $UID -eq 0 ]] && username='%F{red}$root_icon%n%f'"$hostname"
