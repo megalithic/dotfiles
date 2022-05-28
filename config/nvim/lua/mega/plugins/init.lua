@@ -35,7 +35,6 @@ local PKGS = {
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
-  "rainbowhxch/beacon.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -935,48 +934,9 @@ M.config = function()
     end,
   })
 
-  conf("notify", {
-    config = function(p)
-      if p == nil then
-        return
-      end
-
-      local renderer = require("notify.render")
-      p.setup({
-        stages = "fade_in_slide_out",
-        timeout = 3000,
-        render = function(bufnr, notif, highlights)
-          if notif.title[1] == "" then
-            return renderer.minimal(bufnr, notif, highlights)
-          end
-          return renderer.default(bufnr, notif, highlights)
-        end,
-      })
-    end,
-  })
-
   conf("treesitter-context", { enabled = false })
 
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
-
-  conf("beacon", {
-    config = {
-      enable = false,
-      minimal_jump = 20,
-      ignore_buffers = { "terminal", "nofile" },
-      focus_gained = true,
-      ignore_filetypes = {
-        "dirbuf",
-        "neo-tree",
-        "qf",
-        "NeogitCommitMessage",
-        "NeogitPopup",
-        "NeogitStatus",
-        "packer",
-        "trouble",
-      },
-    },
-  })
 
   conf("other-nvim", {
     enabled = false,
