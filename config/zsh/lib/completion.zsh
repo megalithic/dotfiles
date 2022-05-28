@@ -1,3 +1,6 @@
+# REFS:
+# https://github.com/ahmedelgabri/dotfiles/blob/main/config/zsh.d/zsh/config/completion.zsh#L54
+
 setopt always_to_end
 setopt auto_menu
 setopt list_packed

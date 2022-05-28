@@ -302,7 +302,7 @@ function _prompt_path() {
 
 function _prompt_deskfile_loaded() {
   # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
-  [[ -n $DESK_NAME ]] && print -n "$deskfile_icon"
+  [[ -n $DESK_NAME ]] && echo "%F{green}$deskfile_icon%f"
 }
 
 function __prompt_eval() {
