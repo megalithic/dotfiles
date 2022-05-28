@@ -108,6 +108,7 @@ brew "ical-buddy" if OS.mac?
 brew "jq"
 brew "lazydocker"
 brew "lazygit"
+brew "libnotify" if OS.linux?
 brew "llvm" if OS.mac? # contains c-lang lsp (the preferred one?)
 brew "lnav"
 brew "lsd"

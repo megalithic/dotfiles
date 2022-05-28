@@ -22,9 +22,11 @@ zsh_add_plugin "zsh-users/zsh-history-substring-search"
 zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-completions"
 zsh_add_plugin "djui/alias-tips"
-[[ "$(uname)" == "Darwin" ]] && zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
+zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
 zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
+# @trial:
+# zsh_add_plugin "marlonrichert/zsh-autocomplete"
 
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command
