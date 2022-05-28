@@ -37,7 +37,8 @@ vimode_insert_icon=""    # 
 git_staged_icon=""
 git_unstaged_icon="﯂"     # •﯂
 git_conflicted_icon=""   # 
-git_stash_icon=""        # 
+git_stash_icon=""        # ≡
+# TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71
 git_deleted_icon=""
 git_diverged_icon="⇕"
 git_untracked_icon="?"
@@ -278,7 +279,6 @@ function _prompt_ssh() {
 
 	hostname='%F{yellow}@%m%f'
 	# Show `username@host` if logged in through SSH.
-	# [[ -n $ssh_connection ]] && username="$hostname"
 	[[ -n $ssh_connection ]] && username='%F{magenta}%n%f'"$hostname"
 
   # Show `username@host` if root, with username in default color.
@@ -301,6 +301,7 @@ function _prompt_path() {
 }
 
 function _prompt_deskfile_loaded() {
+  # taken from my implementation for starship: https://github.com/megalithic/dotfiles/blob/main/config/starship.toml#L66
   (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
 }
 
@@ -313,7 +314,7 @@ function __prompt_eval() {
   local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$vim_mode" || echo "$character")
   local newline=$'\n'
-  echo "$newline$top$newline$(_prompt_deskfile_loaded)$bottom"
+  echo "$newline$top$newline$bottom"
 }
 # NOTE: VERY IMPORTANT: the type of quotes used matters greatly. Single quotes MUST be used for these variables
 export PROMPT='$(__prompt_eval)'
@@ -344,12 +345,12 @@ __human_time_to_var() {
 }
 
 # Stores (into cmd_exec_time) the execution
-# time of the last command if set threshold was exceeded.
+# time of the last command if set threshold was exceeded (5 seconds).
 __check_cmd_exec_time() {
   integer elapsed
   (( elapsed = EPOCHSECONDS - ${cmd_timestamp:-$EPOCHSECONDS} ))
   typeset -g cmd_exec_time=
-  (( elapsed > 1 )) && {
+  (( elapsed > 5 )) && {
     __human_time_to_var $elapsed "cmd_exec_time"
   }
 }
