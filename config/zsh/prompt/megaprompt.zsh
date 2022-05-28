@@ -30,16 +30,23 @@
 autoload -U colors && colors # Enable colors in prompt
 
 # -- ICONS ---------------------------------------------------------------------
-prompt_icon=""         #  ❯    ➜
-prompt_failure_icon="" # 
+prompt_icon=""           #  ❯    ➜
+prompt_failure_icon=""   # 
 placeholder_icon="…"
-vimode_insert_icon=""
+vimode_insert_icon=""    # 
 git_staged_icon=""
-git_unstaged_icon="﯂"
-git_stash_icon=""
+git_unstaged_icon="﯂"     # •﯂
+git_conflicted_icon=""   # 
+git_stash_icon=""        # 
+git_deleted_icon=""
+git_diverged_icon="⇕"
 git_untracked_icon="?"
-git_ahead_icon="⇡"
-git_behind_icon="⇣"
+git_ahead_icon="⇡"        # 
+git_behind_icon="⇣"       # 
+git_renamed_icon=""
+deskfile_icon="🚀"
+background_job_icon=""
+
 
 
 # -- VI-MODE -------------------------------------------------------------------
@@ -229,6 +236,55 @@ setopt PROMPT_SUBST
 # ╰────────────────────────────────────────────────────────────────────────────╯
 # NOTE: there are other modes and features not represented in this illustration.
 
+function _prompt_ssh() {
+  # inspired by https://github.com/sindresorhus/pure/blob/main/pure.zsh#L660-L714
+	# setopt localoptions noshwordsplit
+
+	# Check SSH_CONNECTION and the current state.
+	local ssh_connection=${SSH_CONNECTION:-$PROMPT_MEGA_SSH_CONNECTION}
+	local username hostname
+	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
+		# When changing user on a remote system, the $SSH_CONNECTION
+		# environment variable can be lost. Attempt detection via `who`.
+		local who_out
+		who_out=$(who -m 2>/dev/null)
+		if (( $? )); then
+			# Who am I not supported, fallback to plain who.
+			local -a who_in
+			who_in=( ${(f)"$(who 2>/dev/null)"} )
+			who_out="${(M)who_in:#*[[:space:]]${TTY#/dev/}[[:space:]]*}"
+		fi
+
+		local reIPv6='(([0-9a-fA-F]+:)|:){2,}[0-9a-fA-F]+'  # Simplified, only checks partial pattern.
+		local reIPv4='([0-9]{1,3}\.){3}[0-9]+'   # Simplified, allows invalid ranges.
+		# Here we assume two non-consecutive periods represents a
+		# hostname. This matches `foo.bar.baz`, but not `foo.bar`.
+		local reHostname='([.][^. ]+){2}'
+
+		# Usually the remote address is surrounded by parenthesis, but
+		# not on all systems (e.g. busybox).
+		local -H MATCH MBEGIN MEND
+		if [[ $who_out =~ "\(?($reIPv4|$reIPv6|$reHostname)\)?\$" ]]; then
+			ssh_connection=$MATCH
+
+			# Export variable to allow detection propagation inside
+			# shells spawned by this one (e.g. tmux does not always
+			# inherit the same tty, which breaks detection).
+			export PROMPT_MEGA_SSH_CONNECTION=$ssh_connection
+		fi
+		unset MATCH MBEGIN MEND
+	fi
+
+	hostname='%F{242}@%m%f'
+	# Show `username@host` if logged in through SSH.
+	[[ -n $ssh_connection ]] && username='%F{242}%n%f'"$hostname"
+
+  # Show `username@host` if root, with username in default color.
+	[[ $UID -eq 0 ]] && username='%F{red}%n%f'"$hostname"
+
+  echo "$username"
+}
+
 # truncate our path to something like ~/.d/c/zsh for ~/.dotfiles/config/zsh
 function _prompt_path() {
   local prompt_path=''
@@ -242,16 +298,21 @@ function _prompt_path() {
   echo "$prompt_path"
 }
 
+function _prompt_deskfile_loaded() {
+  (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
+}
+
 function __prompt_eval() {
   local dots_prompt_icon="%F{green}$prompt_icon %f"
   local dots_prompt_failure_icon="%F{red}$prompt_failure_icon %f"
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
-  local top="$(_prompt_path)${_git_status_prompt:-$placeholder}"
+  local top="$(_prompt_path)${_git_status_prompt:-$placeholder}$(_prompt_deskfile_loaded)"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
+  local ssh="$(_prompt_ssh)"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$vim_mode" || echo "$character")
   local newline=$'\n'
-  echo "$newline$top$newline$bottom"
+  echo "$newline$top$newline$ssh$bottom"
 }
 # NOTE: VERY IMPORTANT: the type of quotes used matters greatly. Single quotes MUST be used for these variables
 export PROMPT='$(__prompt_eval)'
@@ -261,7 +322,7 @@ export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC
 export SPROMPT="correct %F{red}'%R'%f to %F{red}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]? "
 
 # -- EXECUTION TIME ------------------------------------------------------------
-# Inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47
+# inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47
 #
 # Turns seconds into human readable time.
 # 165392 => 1d 21h 56m 32s
@@ -391,62 +452,6 @@ zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
 # -- TODO: ---------------------------------------------------------------------
-# prompt_pure_state_setup() {
-# 	setopt localoptions noshwordsplit
-
-# 	# Check SSH_CONNECTION and the current state.
-# 	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
-# 	local username hostname
-# 	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
-# 		# When changing user on a remote system, the $SSH_CONNECTION
-# 		# environment variable can be lost. Attempt detection via `who`.
-# 		local who_out
-# 		who_out=$(who -m 2>/dev/null)
-# 		if (( $? )); then
-# 			# Who am I not supported, fallback to plain who.
-# 			local -a who_in
-# 			who_in=( ${(f)"$(who 2>/dev/null)"} )
-# 			who_out="${(M)who_in:#*[[:space:]]${TTY#/dev/}[[:space:]]*}"
-# 		fi
-
-# 		local reIPv6='(([0-9a-fA-F]+:)|:){2,}[0-9a-fA-F]+'  # Simplified, only checks partial pattern.
-# 		local reIPv4='([0-9]{1,3}\.){3}[0-9]+'   # Simplified, allows invalid ranges.
-# 		# Here we assume two non-consecutive periods represents a
-# 		# hostname. This matches `foo.bar.baz`, but not `foo.bar`.
-# 		local reHostname='([.][^. ]+){2}'
-
-# 		# Usually the remote address is surrounded by parenthesis, but
-# 		# not on all systems (e.g. busybox).
-# 		local -H MATCH MBEGIN MEND
-# 		if [[ $who_out =~ "\(?($reIPv4|$reIPv6|$reHostname)\)?\$" ]]; then
-# 			ssh_connection=$MATCH
-
-# 			# Export variable to allow detection propagation inside
-# 			# shells spawned by this one (e.g. tmux does not always
-# 			# inherit the same tty, which breaks detection).
-# 			export PROMPT_PURE_SSH_CONNECTION=$ssh_connection
-# 		fi
-# 		unset MATCH MBEGIN MEND
-# 	fi
-
-# 	hostname='%F{$prompt_pure_colors[host]}@%m%f'
-# 	# Show `username@host` if logged in through SSH.
-# 	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
-
-# 	# Show `username@host` if inside a container and not in GitHub Codespaces.
-# 	[[ -z "${CODESPACES}" ]] && prompt_pure_is_inside_container && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
-
-# 	# Show `username@host` if root, with username in default color.
-# 	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
-
-# 	typeset -gA prompt_pure_state
-# 	prompt_pure_state[version]="1.20.1"
-# 	prompt_pure_state+=(
-# 		username "$username"
-# 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
-# 	)
-# }
-
 # # Return true if executing inside a Docker, LXC or systemd-nspawn container.
 # prompt_pure_is_inside_container() {
 # 	local -r cgroup_file='/proc/1/cgroup'
