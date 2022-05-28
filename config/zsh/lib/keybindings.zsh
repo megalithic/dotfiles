@@ -1,10 +1,14 @@
 # see all zle widgets to be keybound: zle -al
-# see all keybindings: bindkey
+# see all keybindings:                bindkey
+# see keycodes in realtime:           \cat -v
 
 typeset -g -A key # TODO: need to figure out what this is doing
 
-# bindkey -e # use emacs key bindings # potentially breaking? first char gobbled on focus in zsh? remove to fix it, but lose the below bindings
-# bindkey -v # use vi key bindings # potentially breaking? first char gobbled on focus in zsh? remove to fix it, but lose the below bindings
+# unbind my pane/window/buffer/split navigation keys that zsh steals
+bindkey -r '^J'
+bindkey -r '^K'
+bindkey -r '^L'
+bindkey -r '^H'
 
 bindkey '^H' delete-word    # iterm
 bindkey '^[[3~' delete-char # tmux
@@ -101,21 +105,21 @@ bindkey '^Y' autosuggest-execute
 
 # zsh-users/zsh-history-substring-search
 # REF: https://github.com/agkozak/dotfiles/blob/master/.zshrc#L550-L556
+# up and down arrows:
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
+
 bindkey -M vicmd 'k' history-substring-search-up
 bindkey -M vicmd 'j' history-substring-search-down
+
+bindkey "^k" history-substring-search-up
+bindkey "^j" history-substring-search-down
+
 bindkey '^P' history-substring-search-up
 bindkey '^N' history-substring-search-down
 
 # REF: https://jdhao.github.io/2019/06/13/zsh_bind_keys/#bind-key-to-run-a-custom-command
 # bindkey -s '^o' 'nvim $(fzf)^M'
-
-# unbind my pane/window/buffer/split navigation keys that zsh steals
-bindkey -r '^J'
-bindkey -r '^K'
-bindkey -r '^L'
-bindkey -r '^H'
 
 bindkey '^]' clear-screen
 

@@ -221,12 +221,13 @@ setopt PROMPT_SUBST
 # %* - reset highlight
 # %j - background jobs
 #
-# CURRENT PROMPT OUTPUT:
+# Approximate prompt output:
 # ╭────────────────────────────────────────────────────────────────────────────╮
 # │                                                                            │
-# │ ~/.dotfiles(branch) ﯂  ?                                                 │
+# │ ~/.dotfiles(branch)  ﯂ ?                                                 │
 # │  █                                                           28s 10:51:04 │
 # ╰────────────────────────────────────────────────────────────────────────────╯
+# NOTE: there are other modes and features not represented in this illustration.
 
 # truncate our path to something like ~/.d/c/zsh for ~/.dotfiles/config/zsh
 function _prompt_path() {

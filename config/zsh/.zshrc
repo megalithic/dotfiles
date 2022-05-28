@@ -11,23 +11,20 @@
 # 1 is stdout (the standard output),
 # 2 is stderr (the standard error).
 
-bindkey -e # ensures we use emacs/readline keybindings
-
 # -- required helpers and our env variables
 [ -f "$ZDOTDIR/lib/env.zsh" ] && source "$ZDOTDIR/lib/env.zsh"
 [ -f "$ZDOTDIR/lib/helpers.zsh" ] && source "$ZDOTDIR/lib/helpers.zsh"
 [ -f "$ZDOTDIR/plugins.zsh" ] && source "$ZDOTDIR/plugins.zsh"
 
 # -- plugins
-zsh_add_plugin    "Aloxaf/fzf-tab"
-zsh_add_plugin    "zsh-users/zsh-history-substring-search"
-zsh_add_plugin    "zdharma-zmirror/fast-syntax-highlighting"
-# zsh_add_plugin    "zsh-users/zsh-syntax-highlighting"
-zsh_add_plugin    "zsh-users/zsh-autosuggestions"
-zsh_add_plugin    "zsh-users/zsh-completions"
-zsh_add_plugin    "djui/alias-tips"
-zsh_add_plugin    "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
-zsh_add_plugin    "hlissner/zsh-autopair"
+zsh_add_plugin "Aloxaf/fzf-tab"
+zsh_add_plugin "zsh-users/zsh-history-substring-search"
+zsh_add_plugin "zsh-users/zsh-autosuggestions"
+zsh_add_plugin "zsh-users/zsh-completions"
+zsh_add_plugin "djui/alias-tips"
+zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
+zsh_add_plugin "hlissner/zsh-autopair"
+zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command
@@ -39,7 +36,7 @@ autoload -U zmv # builtin zsh rename command
 [ -f "$ZDOTDIR/prompt/megaprompt.zsh" ] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
 # -- scripts/libs
-for file in $ZDOTDIR/lib/{opts,aliases,funcs,colors,kitty,ssh,tmux,keybindings}.zsh; do
+for file in $ZDOTDIR/lib/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux}.zsh; do
   [ -r "$file" ] && [ -f "$file" ] && source "$file"
 done
 unset file

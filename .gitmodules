@@ -38,3 +38,6 @@
 [submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-autopair"]
 	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-autopair
 	url = https://github.com/hlissner/zsh-autopair
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-syntax-highlighting"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting
