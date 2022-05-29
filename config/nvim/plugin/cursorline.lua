@@ -2,9 +2,11 @@
 -- 1. nvim-cursorline
 
 local M = {
-  -- FIXME: presently, i believe LSP things are delaying exceedingly longer than defined here:
-  cursorline_delay = 50,
+  -- FIXME: presently, i believe LSP things are delaying the blink
+  -- exceedingly longer than defined here:
   blink_delay = 150,
+  minimal_jump = 20,
+  cursorline_delay = 50,
   filetype_exclusions = {
     "alpha",
     "prompt",
@@ -55,6 +57,8 @@ local WINDOW = 2
 
 local status = CURSOR
 local blink_active = false
+local prev_col = 0
+local prev_row = 0
 
 local timer = vim.loop.new_timer()
 
@@ -68,10 +72,6 @@ local function is_ignored()
   return vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
-  --   or vim.wo.previewwindow
-  --   or vim.wo.winhighlight == ""
-  --   or vim.bo.filetype == ""
-  --   or require("cmp").visible()
 end
 
 local normal_bg = require("mega.lush_theme.colors").bg0
@@ -103,27 +103,9 @@ local function timer_start()
   )
 end
 
-local function cursor_moved()
-  if status == WINDOW then
-    status = CURSOR
-    return
-  end
-
-  vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
-  if not is_ignored() then
-    timer_start()
-  end
-
-  if status == CURSOR and M.cursorline_delay ~= 0 then
-    unhighlight_cursorline()
-    status = DISABLED
-  end
-end
-
 local function set_cursorline()
   if not is_ignored() then
     vim.opt.cursorline = true
-    -- vim.opt.cursorlineopt = table.concat(cursorlineopts, ",")
     highlight_cursorline()
   end
 end
@@ -134,7 +116,7 @@ end
 local function blink_cursorline()
   local blink_timer = vim.loop.new_timer()
   blink_active = true
-  vim.opt.cursorlineopt = "screenline,number" -- optionally -> "screenline,number"
+  vim.opt.cursorlineopt = "screenline,number"
   highlight_cursorline()
 
   blink_timer:start(
@@ -158,19 +140,83 @@ local function disable_cursorline()
   blink_active = false
 end
 
-local function enable_cursorline()
-  vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
-  blink_cursorline()
+local function enable_cursorline(should_blink)
+  vim.opt.cursorlineopt = "screenline,number"
+
+  if should_blink then
+    blink_cursorline()
+  end
+
   set_cursorline()
   highlight_cursorline()
   status = WINDOW
 end
 
+local function should_change_cursorline()
+  local should_blink = false
+  local should_change = false
+
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row = cursor[1]
+  local col = cursor[2]
+  -- local cur_cursor = vim.fn.winline()
+  -- local cur_abs = vim.fn.line(".")
+
+  local col_diff = math.abs(col - prev_col)
+  local row_diff = math.abs(row - prev_row)
+
+  if row_diff >= M.minimal_jump then
+    should_blink = true
+  end
+
+  if row ~= prev_row then
+    should_change = true
+  end
+
+  prev_col = col
+  prev_row = row
+
+  return should_change, should_blink
+end
+
+local function cursor_moved()
+  local should_change, should_blink = should_change_cursorline()
+
+  if not should_change then
+    return
+  end
+
+  if status == WINDOW then
+    status = CURSOR
+    return
+  end
+
+  vim.opt.cursorlineopt = "screenline,number"
+  if not is_ignored() then
+    timer_start()
+
+    if should_blink then
+      blink_cursorline()
+    end
+  end
+
+  if status == CURSOR and M.cursorline_delay ~= 0 then
+    unhighlight_cursorline()
+    status = DISABLED
+  end
+end
+
 mega.augroup("ToggleCursorLine", {
   {
-    event = { "BufEnter", "InsertLeave" },
+    event = { "BufEnter", "WinEnter" },
     command = function()
-      enable_cursorline()
+      enable_cursorline(true)
+    end,
+  },
+  {
+    event = { "InsertLeave" },
+    command = function()
+      enable_cursorline(false)
     end,
   },
   {
@@ -180,7 +226,7 @@ mega.augroup("ToggleCursorLine", {
     end,
   },
   {
-    event = { "InsertEnter" },
+    event = { "InsertEnter", "CursorMovedI" },
     command = function()
       vim.opt.cursorlineopt = "number"
       vim.opt.cursorline = true

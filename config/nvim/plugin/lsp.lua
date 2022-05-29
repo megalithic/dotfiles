@@ -147,7 +147,7 @@ local function setup_autocommands(client, bufnr)
     {
       event = { "BufWritePre" },
       command = function()
-        format({ async = false, bufnr = bufnr }) -- prefer `false` here
+        format({ async = false, bufnr = 0 }) -- prefer `false` here
       end,
     },
   })

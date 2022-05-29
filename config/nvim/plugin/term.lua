@@ -167,6 +167,51 @@ mega.command("TermRuby", function()
   })
 end)
 
+mega.command("TermLua", function()
+  local cmd = "lua"
+
+  mega.open_term({
+    winnr = vim.fn.winnr(),
+    cmd = cmd,
+    on_exit = function() end,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      vim.cmd("startinsert")
+    end,
+  })
+end)
+
+mega.command("TermPython", function()
+  local cmd = "python"
+
+  mega.open_term({
+    winnr = vim.fn.winnr(),
+    cmd = cmd,
+    on_exit = function() end,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      vim.cmd("startinsert")
+    end,
+  })
+end)
+
+mega.command("TermNode", function()
+  local cmd = "node"
+
+  mega.open_term({
+    winnr = vim.fn.winnr(),
+    cmd = cmd,
+    on_exit = function() end,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr)
+      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      vim.cmd("startinsert")
+    end,
+  })
+end)
+
 local has_wk, wk = mega.safe_require("which-key")
 if has_wk then
   wk.register({
@@ -174,6 +219,9 @@ if has_wk then
       name = "terminal",
       e = { "<cmd>TermElixir<cr>", "repl > elixir" },
       r = { "<cmd>TermRuby<cr>", "repl > ruby" },
+      l = { "<cmd>TermLua<cr>", "repl > lua" },
+      n = { "<cmd>TermNode<cr>", "repl > node" },
+      p = { "<cmd>TermPython<cr>", "repl > python" },
     },
   }, {
     prefix = "<leader>",

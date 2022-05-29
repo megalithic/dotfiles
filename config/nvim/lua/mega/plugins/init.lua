@@ -189,7 +189,6 @@ local PKGS = {
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
   -- "aca/wezterm.nvim",
   "junegunn/vim-slash",
-  "outstand/logger.nvim",
   "RRethy/nvim-align",
 
   ------------------------------------------------------------------------------
@@ -209,7 +208,6 @@ local PKGS = {
   -- @trial https://github.com/jubnzv/mdeval.nvim
   { "mickael-menu/zk-nvim" },
   "tpope/vim-rails",
-  -- "elixir-editors/vim-elixir",
   "ngscheurich/edeex.nvim",
   "antew/vim-elm-analyse",
   "tjdevries/nlua.nvim",
@@ -223,7 +221,6 @@ local PKGS = {
   "jxnblk/vim-mdx-js",
   "kchmck/vim-coffee-script",
   "briancollins/vim-jst",
-  -- @trial "mattn/emmet-vim",
   "skwp/vim-html-escape",
   "pedrohdz/vim-yaml-folds",
   "avakhov/vim-yaml",
@@ -232,9 +229,9 @@ local PKGS = {
   "fladson/vim-kitty",
   "SirJson/fzf-gitignore",
 
-  -- TODO: work tings; also get packer.nvim going
+  -- TODO: work tings;
+  "outstand/logger.nvim",
   -- @trial "outstand/titan.nvim",
-  -- @trial "outstand/logger.nvim",
   -- @trial "ryansch/habitats.nvim",
 }
 

@@ -98,9 +98,6 @@ return function(plug)
         f = { "<cmd>ToggleTerm direction=float<cr>", "Float" },
         h = { "<cmd>ToggleTerm direction=horizontal<cr>", "Horizontal" },
         v = { "<cmd>ToggleTerm size=80 direction=vertical<cr>", "Vertical" },
-        l = { "<cmd>lua _LUA_TOGGLE()<cr>", "repl > lua" },
-        n = { "<cmd>lua _NODE_TOGGLE()<cr>", "repl > node" },
-        p = { "<cmd>lua _PYTHON_TOGGLE()<cr>", "repl > python" },
       },
     }, {
       prefix = "<leader>",
