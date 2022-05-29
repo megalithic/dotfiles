@@ -103,8 +103,13 @@ local function timer_start()
   )
 end
 
-local function set_cursorline()
+local function set_cursorline(is_long_format)
   if not is_ignored() then
+    if is_long_format then
+      vim.opt.cursorlineopt = "screenline,number"
+    else
+      vim.opt.cursorlineopt = "number"
+    end
     vim.opt.cursorline = true
     highlight_cursorline()
   end
@@ -116,15 +121,14 @@ end
 local function blink_cursorline()
   local blink_timer = vim.loop.new_timer()
   blink_active = true
-  vim.opt.cursorlineopt = "screenline,number"
-  highlight_cursorline()
+  set_cursorline(true)
 
   blink_timer:start(
     M.blink_delay,
     0,
     vim.schedule_wrap(function()
       unhighlight_cursorline()
-      set_cursorline()
+      set_cursorline(true)
       blink_timer:stop()
       blink_timer:close()
       blink_active = false
@@ -134,20 +138,17 @@ local function blink_cursorline()
 end
 
 local function disable_cursorline()
-  vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
   vim.opt.cursorline = false
-  status = WINDOW
   blink_active = false
+  status = WINDOW
 end
 
 local function enable_cursorline(should_blink)
-  vim.opt.cursorlineopt = "screenline,number"
-
   if should_blink then
     blink_cursorline()
   end
 
-  set_cursorline()
+  set_cursorline(true)
   highlight_cursorline()
   status = WINDOW
 end
@@ -191,7 +192,7 @@ local function cursor_moved()
     return
   end
 
-  vim.opt.cursorlineopt = "screenline,number"
+  set_cursorline(true)
   if not is_ignored() then
     timer_start()
 
@@ -228,8 +229,7 @@ mega.augroup("ToggleCursorLine", {
   {
     event = { "InsertEnter", "CursorMovedI" },
     command = function()
-      vim.opt.cursorlineopt = "number"
-      vim.opt.cursorline = true
+      set_cursorline(false)
     end,
   },
   {
