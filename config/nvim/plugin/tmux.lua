@@ -9,8 +9,8 @@ function tmux_navigate_directions()
   local h = vim.api.nvim_win_get_height(0)
   local w = vim.api.nvim_win_get_width(0)
 
-  local can_go_up = row > 2 and "U" or "" -- +1 if we use the tabline/winbar
-  local can_go_down = row + h < vim.o.lines - vim.o.laststatus and "D" or ""
+  local can_go_up = row + h < vim.o.lines - vim.o.laststatus and "U" or ""
+  local can_go_down = row > 2 and "D" or "" -- +1 if we use the tabline/winbar
   local can_go_left = col > 1 and "L" or ""
   local can_go_right = col + w < vim.o.columns and "R" or ""
 

@@ -152,7 +152,7 @@ zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:*' stagedstr "%F{green} $git_staged_icon%f"
 zstyle ':vcs_info:*' unstagedstr "%F{red} $git_unstaged_icon%f"
 zstyle ':vcs_info:*' use-simple true
-zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-compare git-remotebranch
+zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-deleted git-compare git-remotebranch
 zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
 zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
 
@@ -168,6 +168,15 @@ function +vi-git-untracked() {
   if __in_git; then
     if [[ -n $(git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
       hook_com[unstaged]+="%F{blue} $git_untracked_icon%f"
+    fi
+  fi
+}
+
+function +vi-git-deleted() {
+  emulate -L zsh
+  if __in_git; then
+    if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
+      hook_com[unstaged]+="%F{red} $git_deleted_icon%f"
     fi
   fi
 }
