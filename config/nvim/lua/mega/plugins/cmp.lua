@@ -103,6 +103,13 @@ return function(plug)
       ["<C-Space>"] = cmp.mapping.complete(),
       ["<CR>"] = cmp.mapping.confirm({ select = false }),
       ["<C-e>"] = cmp.mapping.close(),
+      ["<C-k>"] = cmp.mapping(function(fallback)
+        if cmp.open_docs_preview() then
+          cmp.close()
+        else
+          fallback()
+        end
+      end),
       -- ["<C-e>"] = function(fallback)
       --   if cmp.visible() then
       --     cmp.confirm({ select = true })
@@ -130,7 +137,7 @@ return function(plug)
       fields = { "abbr", "kind", "menu" },
       format = function(entry, item)
         -- item.kind = mega.icons.lsp.kind[item.kind]
-        item.kind = fmt("%s %s", mega.icons.codicons[item.kind], item.kind)
+        item.kind = fmt("%s %s", mega.icons.lsp.kind[item.kind], item.kind)
 
         local max_length = 20
         item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. mega.icons.misc.ellipsis

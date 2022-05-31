@@ -462,6 +462,10 @@ vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawst
 -- Fast previous buffer switching
 nnoremap("<leader><leader>", "<C-^>")
 
+-- Use the text that has already been typed as the prefix for searching through commands
+cnoremap("<C-p>", "<Up>", { desc = "Line Up (command-mode)" })
+cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
+
 -- Keep line in middle of buffer when searching
 nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true })
 nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
