@@ -30,7 +30,7 @@
 autoload -U colors && colors # Enable colors in prompt
 
 # -- ICONS ---------------------------------------------------------------------
-prompt_icon=""           #  ❯    ➜
+prompt_icon=""           #  ❯    ➜ 
 prompt_failure_icon=""   # 
 placeholder_icon="…"
 vimode_insert_icon=""    # 
@@ -45,7 +45,7 @@ git_untracked_icon="?"
 git_ahead_icon="⇡"        # 
 git_behind_icon="⇣"       # 
 git_renamed_icon=""
-deskfile_icon=""         #    ◲ 🚀
+deskfile_icon=""         #    ◲  🚀
 background_job_icon=""
 root_icon=""
 
@@ -310,8 +310,8 @@ function _prompt_path() {
 }
 
 function _prompt_deskfile_loaded() {
-  # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
-  [[ -n $DESK_NAME ]] && echo "%F{magenta}$deskfile_icon%f"
+  # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "%F{243}[%f%F{magenta}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f ")) || echo ''
+  [[ -n $DESK_NAME ]] && echo "%F{243}[%f%F{magenta}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f "
 }
 
 function __prompt_eval() {

@@ -185,6 +185,7 @@ fi
 alias ez="nvim $DOTS/config/zsh/.zshrc"
 alias ezz="nvim $DOTS/config/zsh/.zshenv"
 alias eza="nvim $DOTS/config/zsh/**/aliases.zsh"
+alias ezp="nvim $DOTS/config/zsh/**/megaprompt.zsh"
 alias ezf="nvim $DOTS/config/zsh/**/funcs.zsh"
 alias ezo="nvim $DOTS/config/zsh/**/opts.zsh"
 alias eze="nvim $DOTS/config/zsh/**/env.zsh"
