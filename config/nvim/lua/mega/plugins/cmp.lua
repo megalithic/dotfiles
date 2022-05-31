@@ -127,9 +127,14 @@ return function(plug)
     formatting = {
       deprecated = true,
       -- fields = { "kind", "abbr", "menu" }, -- determines order of menu items
+      fields = { "abbr", "kind", "menu" },
       format = function(entry, item)
         -- item.kind = mega.icons.lsp.kind[item.kind]
         item.kind = fmt("%s %s", mega.icons.codicons[item.kind], item.kind)
+
+        local max_length = 20
+        item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. mega.icons.misc.ellipsis
+          or item.abbr
 
         if entry.source.name == "nvim_lsp" then
           item.menu = entry.source.source.client.name

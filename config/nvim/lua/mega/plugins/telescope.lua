@@ -115,7 +115,6 @@ return function(plug)
       --     project = mega.dirs.code,
       --     notes = mega.dirs.zettel,
       --     icloud = mega.dirs.icloud,
-      --     org = mega.dirs.org,
       --     docs = mega.dirs.docs,
       --   },
       -- },
@@ -185,6 +184,31 @@ return function(plug)
   --- otherwise the result will be cached without the updates
   --- from the setup call
   local builtins = require("telescope.builtin")
+  local previewers = require("telescope.previewers")
+
+  local delta = previewers.new_termopen_previewer({
+    get_command = function(entry)
+      return {
+        "git",
+        "-c",
+        "core.pager=delta",
+        "-c",
+        "delta.side-by-side=false",
+        "diff",
+        entry.value .. "^!",
+      }
+    end,
+  })
+
+  local function delta_git_bcommits(opts)
+    opts = opts or {}
+    opts.previewer = {
+      delta,
+      previewers.git_commit_message.new(opts),
+    }
+
+    builtins.git_commits(opts)
+  end
 
   local function project_files(opts)
     if not pcall(builtins.git_files, opts) then
@@ -219,14 +243,8 @@ return function(plug)
 
   local function installed_plugins()
     require("telescope.builtin").find_files({
+      prompt_title = "~ installed plugins ~",
       cwd = fn.stdpath("data") .. "/site/pack/paqs",
-    })
-  end
-
-  local function orgfiles()
-    builtins.find_files({
-      prompt_title = "Org",
-      cwd = mega.dirs.org,
     })
   end
 
@@ -247,7 +265,7 @@ return function(plug)
   nmap("<leader>fp", privates, "privates")
   nmap("<leader>ff", builtins.find_files, "find/git files")
 
-  nmap("<leader>fgc", builtins.git_commits, "commits")
+  nmap("<leader>fgc", delta_git_bcommits, "commits")
   nmap("<leader>fgb", builtins.git_branches, "branches")
 
   nmap("<leader>fM", builtins.man_pages, "man pages")

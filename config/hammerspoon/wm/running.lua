@@ -81,29 +81,28 @@ M._updateAppWindows = function(app, ax)
   if M.windows[app:pid()] == nil then
     M.windows[app:pid()] = {}
   end
-  if ax.AXChildren then
-    if ax == nil or ax.AXChildren == nil then
-      return
-    end
 
-    -- 2022-01-05 11:09:35:          [ctx.zoom]: > context:zoom.us (focused)
-    -- 2022-01-05 11:09:37: 11:09:37 ERROR:   LuaSkin: hs.axuielement.observer:callback error:attempt to index a nil value
-    -- stack traceback:
-    --   [C]: in for iterator 'for iterator'
-    --   /Users/seth/.config/hammerspoon/wm/running.lua:89: in function 'wm.running._updateAppWindows'
-    --   /Users/seth/.config/hammerspoon/wm/running.lua:166: in function </Users/seth/.config/hammerspoon/wm/running.lua:163>
-    -- 2022-01-05 11:09:37:            [wm.run]: ->> focused:Brave Browser -- Name.com - Domain Name Registration - Brave
-    -- 2022-01-05 11:09:37:            [wm.run]: ->> hidden:
-    -- 2022-01-05 11:09:37:            [wm.run]: ->> terminated:zoom.us
-    -- 2022-01-05 11:09:37:          [ctx.zoom]: > context:zoom.us (terminated)
+  if ax == nil or ax.AXChildren == nil then
+    return
+  end
 
-    for _, child in ipairs(ax.AXChildren) do
-      -- log.f("app is %s", hs.inspect(app))
-      -- log.f("child is %s", hs.inspect(child))
+  -- 2022-01-05 11:09:35:          [ctx.zoom]: > context:zoom.us (focused)
+  -- 2022-01-05 11:09:37: 11:09:37 ERROR:   LuaSkin: hs.axuielement.observer:callback error:attempt to index a nil value
+  -- stack traceback:
+  --   [C]: in for iterator 'for iterator'
+  --   /Users/seth/.config/hammerspoon/wm/running.lua:89: in function 'wm.running._updateAppWindows'
+  --   /Users/seth/.config/hammerspoon/wm/running.lua:166: in function </Users/seth/.config/hammerspoon/wm/running.lua:163>
+  -- 2022-01-05 11:09:37:            [wm.run]: ->> focused:Brave Browser -- Name.com - Domain Name Registration - Brave
+  -- 2022-01-05 11:09:37:            [wm.run]: ->> hidden:
+  -- 2022-01-05 11:09:37:            [wm.run]: ->> terminated:zoom.us
+  -- 2022-01-05 11:09:37:          [ctx.zoom]: > context:zoom.us (terminated)
 
-      if child ~= nil and child:matchesCriteria("AXWindow") then
-        M._addAppWindow(app, child)
-      end
+  for _, child in ipairs(ax.AXChildren) do
+    -- log.f("app is %s", hs.inspect(app))
+    -- log.f("child is %s", hs.inspect(child))
+
+    if child ~= nil and child:matchesCriteria("AXWindow") then
+      M._addAppWindow(app, child)
     end
   end
 

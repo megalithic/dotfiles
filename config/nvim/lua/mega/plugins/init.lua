@@ -117,7 +117,7 @@ local PKGS = {
   -- "mattn/vim-textobj-url", -- au/iu for url; FIXME: not working presently
   "jceb/vim-textobj-uri", -- au/iu for url
   "whatyouhide/vim-textobj-xmlattr",
-  "amiralies/vim-textobj-elixir",
+  -- "amiralies/vim-textobj-elixir",
   "kana/vim-textobj-entire", -- ae/ie for entire buffer
   "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
   "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation

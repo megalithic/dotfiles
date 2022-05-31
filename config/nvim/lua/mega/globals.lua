@@ -172,6 +172,7 @@ _G.mega = {
       float = "",
     },
     misc = {
+      ellipsis = "…",
       lblock = "▌",
       rblock = "▐",
       bug = "",
@@ -703,16 +704,50 @@ for _, mode in ipairs({ "n", "x", "i", "v", "o", "t", "s", "c" }) do
   _G[mode .. "noremap"] = mega[mode .. "noremap"]
 end
 
--- REF: https://github.com/neovim/neovim/blob/master/runtime/doc/api.txt#L3112
+--- Validate the keys passed to as.augroup are valid
+---@param name string
+---@param cmd Autocommand
+local function validate_autocmd(name, cmd)
+  local keys = { "event", "buffer", "pattern", "desc", "command", "group", "once", "nested" }
+  local incorrect = mega.fold(function(accum, _, key)
+    if not vim.tbl_contains(keys, key) then
+      table.insert(accum, key)
+    end
+    return accum
+  end, cmd, {})
+  if #incorrect == 0 then
+    return
+  end
+  vim.schedule(function()
+    vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), "error", {
+      title = fmt("Autocmd: %s", name),
+    })
+  end)
+end
+
+---@class Autocommand
+---@field desc string
+---@field event  string[] list of autocommand events
+---@field pattern string[] list of autocommand patterns
+---@field command string | function
+---@field nested  boolean
+---@field once    boolean
+---@field buffer  number
+---Create an autocommand
+---returns the group ID so that it can be cleared or manipulated.
+---@param name string
+---@param commands Autocommand[]
+---@return number
 function mega.augroup(name, commands)
   local id = vim.api.nvim_create_augroup(name, { clear = true })
 
   for _, autocmd in ipairs(commands) do
+    validate_autocmd(name, autocmd)
     local is_callback = type(autocmd.command) == "function"
     api.nvim_create_autocmd(autocmd.event, {
       group = id,
       pattern = autocmd.pattern,
-      desc = autocmd.description,
+      desc = autocmd.desc,
       callback = is_callback and autocmd.command or nil,
       command = not is_callback and autocmd.command or nil,
       once = autocmd.once,

@@ -6,7 +6,7 @@ local M = {
   -- exceedingly longer than defined here:
   blink_delay = 150,
   minimal_jump = 20,
-  cursorline_delay = 50,
+  cursorline_delay = 100,
   filetype_exclusions = {
     "alpha",
     "prompt",
@@ -208,7 +208,7 @@ end
 
 mega.augroup("ToggleCursorLine", {
   {
-    event = { "BufEnter", "WinEnter" },
+    event = { "BufEnter", "WinEnter" }, -- BufWinEnter instead?
     command = function()
       enable_cursorline(true)
     end,

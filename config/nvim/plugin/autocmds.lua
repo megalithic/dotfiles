@@ -192,7 +192,7 @@ augroup("Plugins/Paq", {
       vcmd("luafile %")
       vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
     end,
-    description = "Paq reload",
+    desc = "Paq reload",
   },
   {
     event = { "BufEnter" },
