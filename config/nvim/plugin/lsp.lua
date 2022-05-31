@@ -342,7 +342,41 @@ local function setup_handlers()
   }
 
   -- NOTE: the hover handler returns the bufnr,winnr so can be used for mappings
-  lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
+  -- WIP: colorize color things in a hover buffer
+  local function hover_handler(_, result, ctx, config)
+    config = config or {}
+    config.focus_id = ctx.method
+    if not (result and result.contents) then
+      vim.notify("No information available")
+      return
+    end
+
+    local util = require("vim.lsp.util")
+
+    local markdown_lines = util.convert_input_to_markdown_lines(result.contents)
+    markdown_lines = util.trim_empty_lines(markdown_lines)
+    if vim.tbl_isempty(markdown_lines) then
+      vim.notify("No information available")
+      return
+    end
+
+    -- local lines = vim.split(result.contents.value, "\n")
+    -- local bufnr = vim.lsp.util.open_floating_preview(lines, "markdown", { border = mega.get_border() })
+    local buf_win = util.open_floating_preview(markdown_lines, "markdown", config)
+
+    require("colorizer").highlight_buffer(
+      buf_win,
+      nil,
+      vim.list_slice(markdown_lines, 2, #markdown_lines),
+      0,
+      require("colorizer").get_buffer_options(0)
+    )
+
+    return buf_win
+  end
+
+  lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+  -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
   do
     vim.lsp.set_log_level(2)

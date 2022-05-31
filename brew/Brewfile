@@ -91,6 +91,7 @@ brew "gdb"
 brew "gist"
 brew "git"
 brew "isacikgoz/taps/gitin"
+brew "git-crypt"
 brew "git-delta"
 brew "gh"
 brew "glow" if OS.mac?
