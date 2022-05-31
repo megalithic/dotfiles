@@ -37,7 +37,7 @@ vimode_insert_icon=""    # 
 git_staged_icon=""
 git_unstaged_icon="﯂"     # • ﯂
 git_conflicted_icon=""   # 
-git_stash_icon=""        #  ≡
+git_stash_icon=""        #   ≡
 # TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71
 git_deleted_icon=""
 git_diverged_icon="⇕"
@@ -167,7 +167,7 @@ function +vi-git-untracked() {
   emulate -L zsh
   if __in_git; then
     if [[ -n $(git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
-      hook_com[unstaged]+="%F{blue} $git_untracked_icon%f"
+      hook_com[unstaged]+="%F{white} $git_untracked_icon%f"
     fi
   fi
 }
@@ -311,7 +311,7 @@ function _prompt_path() {
 
 function _prompt_deskfile_loaded() {
   # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "$deskfile_icon")) || echo ''
-  [[ -n $DESK_NAME ]] && echo "%F{green}$deskfile_icon%f"
+  [[ -n $DESK_NAME ]] && echo "%F{magenta}$deskfile_icon%f"
 }
 
 function __prompt_eval() {
