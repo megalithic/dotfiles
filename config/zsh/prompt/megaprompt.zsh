@@ -238,14 +238,20 @@ setopt PROMPT_SUBST
 # %B..%b - bold
 # %* - reset highlight
 # %j - background jobs
-#
-# Approximate prompt output:
+
+
+# Approximate prompt output: ---------------------------------------------------
 # ╭────────────────────────────────────────────────────────────────────────────╮
 # │                                                                            │
-# │ ~/.dotfiles(branch)  ﯂ ?                                                 │
+# │ ~/.dotfiles(branch)  ﯂ ?                                                │
 # │  █                                                           28s 10:51:04 │
 # ╰────────────────────────────────────────────────────────────────────────────╯
-# NOTE: there are other modes and features not represented in this illustration.
+# NOTE:
+# There are other modes and features not represented in this illustration...
+#
+# For instance, Deskfile mode (loaded $DESK_FILE and indicator), vimode indicator,
+# and much more.
+# ------------------------------------------------------------------------------
 
 function _prompt_ssh() {
   # inspired by https://github.com/sindresorhus/pure/blob/main/pure.zsh#L660-L714
