@@ -68,7 +68,7 @@ end
 
 ---Determines whether or not a buffer/window should be ignored by this plugin
 ---@return boolean
-local function blinking_is_ignored()
+local function is_ignored()
   return vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
@@ -104,7 +104,7 @@ local function timer_start()
 end
 
 local function set_cursorline()
-  if not blinking_is_ignored() then
+  if not is_ignored() then
     vim.opt_local.cursorline = true
     highlight_cursorline()
   end
@@ -114,6 +114,10 @@ end
 -- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
 function mega.blink_cursorline()
+  if is_ignored() then
+    return
+  end
+
   local blink_timer = vim.loop.new_timer()
   blink_active = true
   vim.opt_local.cursorlineopt = "screenline,number"
@@ -134,6 +138,10 @@ function mega.blink_cursorline()
 end
 
 local function disable_cursorline()
+  if is_ignored() then
+    return
+  end
+
   vim.opt_local.cursorlineopt = "number" -- optionally -> "screenline,number"
   vim.opt_local.cursorline = false
   status = WINDOW
@@ -141,6 +149,10 @@ local function disable_cursorline()
 end
 
 local function enable_cursorline(should_blink)
+  if is_ignored() then
+    return
+  end
+
   vim.opt_local.cursorlineopt = "screenline,number"
 
   if should_blink then
@@ -163,13 +175,8 @@ local function should_change_cursorline()
   local col_diff = math.abs(current_col - M.prev_col)
   local row_diff = math.abs(current_row - M.prev_row)
 
-  if row_diff >= M.minimal_jump then
-    should_blink = true
-  end
-
-  if current_row ~= M.prev_row then
-    should_change = true
-  end
+  should_blink = row_diff >= M.minimal_jump
+  should_change = current_row ~= M.prev_row
 
   M.prev_col = current_col
   M.prev_row = current_row
@@ -180,7 +187,7 @@ end
 local function cursor_moved()
   local should_change, should_blink = should_change_cursorline()
 
-  if not should_change then
+  if is_ignored() or not should_change then
     return
   end
 
@@ -190,12 +197,10 @@ local function cursor_moved()
   end
 
   vim.opt_local.cursorlineopt = "screenline,number"
-  if not blinking_is_ignored() then
-    timer_start()
+  timer_start()
 
-    if should_blink then
-      mega.blink_cursorline()
-    end
+  if should_blink then
+    mega.blink_cursorline()
   end
 
   if status == CURSOR and M.cursorline_delay ~= 0 then
