@@ -46,6 +46,7 @@ do
     "LuaTree",
     "log",
     "tsplayground",
+    "startuptime",
     "qf",
     "man",
     "terminal",
