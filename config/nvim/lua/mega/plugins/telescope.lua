@@ -9,6 +9,14 @@ return function(plug)
   local themes = require("telescope.themes")
   local layout_actions = require("telescope.actions.layout")
 
+  mega.augroup("TelescopePreviews", {
+    {
+      event = "User",
+      pattern = "TelescopePreviewerLoaded",
+      command = "setlocal number",
+    },
+  })
+
   local function get_border(opts)
     return vim.tbl_deep_extend("force", opts or {}, {
       borderchars = {
@@ -50,8 +58,11 @@ return function(plug)
           ["<c-s>"] = actions.select_horizontal,
           ["<c-b>"] = actions.preview_scrolling_up,
           ["<c-f>"] = actions.preview_scrolling_down,
+          ["<c-u>"] = actions.preview_scrolling_up,
+          ["<c-d>"] = actions.preview_scrolling_down,
           ["<c-e>"] = layout_actions.toggle_preview,
-          -- ["<c-l>"] = layout_actions.cycle_layout_next,
+          ["<c-/>"] = actions.which_key,
+          ["<Tab>"] = actions.toggle_selection,
         },
         n = {
           ["<c-q>"] = actions.send_selected_to_qflist,
@@ -143,6 +154,7 @@ return function(plug)
       }),
       oldfiles = dropdown(),
       live_grep = {
+        max_results = 500,
         file_ignore_patterns = { ".git/", "%.lock" },
         on_input_filter_cb = function(prompt)
           -- AND operator for live_grep like how fzf handles spaces with wildcards in rg

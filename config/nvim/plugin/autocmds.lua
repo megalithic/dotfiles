@@ -189,7 +189,7 @@ augroup("Plugins/Paq", {
     pattern = { "nvim/lua/mega/plugins/*.lua", "nvim/lua/plugin/*" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
-      vcmd("luafile %")
+      vim.cmd("luafile %")
       vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
     end,
     desc = "Paq reload",
@@ -198,6 +198,13 @@ augroup("Plugins/Paq", {
     event = { "BufEnter" },
     buffer = 0,
     command = mega.open_plugin_url,
+  },
+  {
+    event = { "User" },
+    pattern = "PaqDoneSync",
+    command = function()
+      vim.cmd("Messages | wincmd k")
+    end,
   },
 })
 

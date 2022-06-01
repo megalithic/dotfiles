@@ -59,8 +59,6 @@ local WINDOW = 2
 
 local status = CURSOR
 local blink_active = false
-local prev_col = 0
-local prev_row = 0
 
 local timer = vim.loop.new_timer()
 

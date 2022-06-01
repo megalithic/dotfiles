@@ -528,7 +528,7 @@ function mega.conf(plugin_conf_name, opts)
 
     -- handle what to do when opts.config is simply a string "name" to use for loading external config
     if type(opts.config) == "string" then
-      local has_external_config, found_external_config = mega.safe_require(fmt("mega.plugins.%s", plugin_conf_name))
+      local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", plugin_conf_name))
       if has_external_config then
         config = found_external_config
       end
@@ -555,30 +555,30 @@ function mega.conf(plugin_conf_name, opts)
     -- NOTE:
     -- If plugin is `opt` and `enabled`, we'll packadd the plugin (lazyload),
     -- then we'll go forth with setup of plugin or running of optional callback fn.
-    local plugin_config = build_plugin_config(plugin_conf_name)
-    if plugin_config then
-      if plugin_config.opt then
-        vim.cmd("packadd " .. plugin_config.name)
-        if not silent then
-          P(plugin_config.name .. " packadd as opt.")
-        end
+    -- local plugin_config = build_plugin_config(plugin_conf_name)
+    -- if plugin_config then
+    --   if plugin_config.opt then
+    --     vim.cmd("packadd " .. plugin_config.name)
+    --     if not silent then
+    --       P(plugin_config.name .. " packadd as opt.")
+    --     end
 
-        -- For implementing this sort of thing:
-        -- REF: https://github.com/akinsho/dotfiles/commit/33138f7bc7ad4b836b6c5c0f4ad54ea006f812be#diff-234774bd94026ade0e5765bc362576a2b0e1052dc0ed9bdea777e86a4a66c098R818
-        -- mega.augroup("PluginConfLoader" .. plugin_conf_name, {
-        --   {
-        --     event = { "VimEnter" },
-        --     once = true,
-        --     command = function()
-        --       P("lazy loading " .. plugin_config.name)
-        --       vim.cmd("packadd " .. plugin_config.name)
-        --     end,
-        --   },
-        -- })
-      end
-    end
+    --     -- For implementing this sort of thing:
+    --     -- REF: https://github.com/akinsho/dotfiles/commit/33138f7bc7ad4b836b6c5c0f4ad54ea006f812be#diff-234774bd94026ade0e5765bc362576a2b0e1052dc0ed9bdea777e86a4a66c098R818
+    --     -- mega.augroup("PluginConfLoader" .. plugin_conf_name, {
+    --     --   {
+    --     --     event = { "VimEnter" },
+    --     --     once = true,
+    --     --     command = function()
+    --     --       P("lazy loading " .. plugin_config.name)
+    --     --       vim.cmd("packadd " .. plugin_config.name)
+    --     --     end,
+    --     --   },
+    --     -- })
+    --   end
+    -- end
 
-    local ok, loader = mega.safe_require(plugin_conf_name, { silent = silent })
+    local ok, loader = pcall(require, plugin_conf_name, { silent = silent })
     -- plugin is installed, we found it, let's try and execute auto-config things on it, like auto-invoking its `setup` fn
     if ok then
       if type(config) == "table" then
