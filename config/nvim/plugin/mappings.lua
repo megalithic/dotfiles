@@ -472,6 +472,16 @@ nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
 nnoremap("<C-f>", "<C-f>zz")
 nnoremap("<C-b>", "<C-b>zz")
 
+vnoremap([[J]], [[5j]], "Jump down")
+vnoremap([[K]], [[5k]], "Jump up")
+
+-- quickly enter command mode with substitution commands prefilled
+-- TODO: need to force redraw
+-- nnoremap ([[<leader>/]], [[:%s/]], "Substitute")
+-- nnoremap ([[<leader>?]], [[:%S/]], "Substitute (rev)")
+-- vnoremap ([[<leader>/]], [[:s/]],  "Substitute")
+-- vnoremap ([[<leader>?]], [[:S/]],  "Substitute (rev)")
+
 -- Readline bindings (command)
 local rl_bindings = {
   { lhs = "<c-a>", rhs = "<home>" },

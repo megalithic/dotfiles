@@ -20,15 +20,10 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
-  "mhanberg/thicc_forest",
-  "sainnhe/everforest",
-  "mcchrish/zenbones.nvim",
-  "savq/melange",
-  "rebelot/kanagawa.nvim",
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  "karb94/neoscroll.nvim",
+  -- "karb94/neoscroll.nvim",
   -- "declancm/cinnamon.nvim",
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
@@ -115,12 +110,12 @@ local PKGS = {
   "kana/vim-textobj-user",
   "kana/vim-operator-user",
   -- "mattn/vim-textobj-url", -- au/iu for url; FIXME: not working presently
-  "jceb/vim-textobj-uri", -- au/iu for url
-  "whatyouhide/vim-textobj-xmlattr",
+  -- "jceb/vim-textobj-uri", -- au/iu for url
+  -- "whatyouhide/vim-textobj-xmlattr",
   -- "amiralies/vim-textobj-elixir",
   "kana/vim-textobj-entire", -- ae/ie for entire buffer
   "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
-  "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
+  -- "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
   -- @trial "chaoren/vim-wordmotion", -- to move across cases and words and such
   "wellle/targets.vim",
@@ -466,7 +461,7 @@ M.config = function()
 
       require("neoscroll.config").set_mappings(mappings)
     end,
-    enabled = true,
+    enabled = false,
   })
 
   conf("FixCursorHold", {
