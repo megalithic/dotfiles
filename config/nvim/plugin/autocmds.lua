@@ -27,9 +27,9 @@ augroup("Startup", {
 augroup("CheckOutsideTime", {
   {
     -- automatically check for changed files outside vim
-    event = { "WinEnter", "BufWinEnter", "BufWinLeave", "BufRead", "BufEnter", "FocusGained" },
+    event = { "WinEnter", "FocusGained" },
     pattern = "*",
-    command = "silent! checktime",
+    command = "checktime",
   },
 })
 
@@ -116,6 +116,17 @@ do
   end
 
   augroup("Utilities", {
+    {
+      event = { "BufWritePost" },
+      command = function()
+        if vim.fn.getline(1) == "^#!" then
+          if vim.fn.getline(1) == "/bin/" then
+            vim.cmd([[chmod a+x <afile>]])
+          end
+        end
+      end,
+    },
+
     -- {
     --   event = { "WinNew", "WinLeave" },
     --   command = [[setlocal winhl=CursorLine:CursorLineNC,CursorLineNr:CursorLineNrNC,Normal:PanelBackground syntax=disable | TSBufDisable &filetype]],
@@ -127,6 +138,7 @@ do
     {
       event = { "BufNewFile", "BufWritePre" },
       command = function()
+        -- @see https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/autocmd.lua#L113-L140
         mega.auto_mkdir()
       end,
     },
@@ -203,7 +215,7 @@ augroup("Plugins/Paq", {
     event = { "User" },
     pattern = "PaqDoneSync",
     command = function()
-      vim.cmd("Messages | wincmd k")
+      vim.cmd("Messages")
     end,
   },
 })

@@ -23,7 +23,7 @@ zsh_add_plugin "zsh-users/zsh-autosuggestions"
 zsh_add_plugin "zsh-users/zsh-completions"
 zsh_add_plugin "djui/alias-tips"
 zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
-zsh_add_plugin "hlissner/zsh-autopair"
+# zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 # @trial:
 # zsh_add_plugin "marlonrichert/zsh-autocomplete"
