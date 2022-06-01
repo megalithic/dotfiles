@@ -278,6 +278,8 @@ end
 -- [ plugin config ] -----------------------------------------------------------
 
 M.config = function()
+  vim.cmd("packadd cfilter")
+
   conf("treesitter", { config = "treesitter" })
   conf("telescope", { config = "telescope" })
   conf("cmp", { config = "cmp" })

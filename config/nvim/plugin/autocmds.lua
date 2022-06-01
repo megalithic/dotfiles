@@ -215,7 +215,7 @@ augroup("Plugins/Paq", {
     event = { "User" },
     pattern = "PaqDoneSync",
     command = function()
-      vim.cmd("Messages")
+      vim.cmd("Messages | Cfilter Paq")
     end,
   },
 })
