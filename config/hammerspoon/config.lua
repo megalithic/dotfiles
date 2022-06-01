@@ -259,7 +259,7 @@ M.apps = {
     distraction = true,
     hideAfter = 5,
     rules = {
-      { nil, 1, M.layout.centeredMedium },
+      { nil, 2, M.layout.leftHalf },
       { "Inbox", 2, M.layout.fullScreen },
     },
   },
