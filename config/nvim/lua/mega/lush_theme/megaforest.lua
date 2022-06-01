@@ -880,6 +880,9 @@ return lush(function()
     yamlFloat({ Float }),
     yamlTimestamp({ Number }),
 
+    ---- tmux-popup ------------------------------------------------------------
+    TmuxPopupNormal({ bg = "#3d494f" }),
+
     ---- :hackkkks -------------------------------------------------------------
 
     Megaforest({ lush = C }),

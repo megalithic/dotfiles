@@ -134,6 +134,7 @@ local PKGS = {
   -- @trial "gabebw/vim-github-link-opener",
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
+  "folke/zen-mode.nvim",
   -- @trial "ldelossa/gh.nvim"
 
   ------------------------------------------------------------------------------
@@ -329,6 +330,10 @@ M.config = function()
 
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
   conf("gitlinker", {})
+
+  conf("zen-mode", {
+    config = {},
+  })
 
   conf("vim-gh-line", {
     config = function()

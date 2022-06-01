@@ -85,6 +85,30 @@ vim.g.mkdp_auto_close = 1
 vim.opt_local.signcolumn = "no"
 vim.opt_local.cursorline = true
 
+if vim.env.TMUX_POPUP then
+  vim.opt.laststatus = 1
+  vim.api.nvim_win_set_option(
+    0,
+    "winhl",
+    table.concat({
+      "Normal:TmuxPopupNormal",
+      "FloatBorder:TmuxPopupNormal",
+      "MsgArea:TmuxPopupNormal",
+      "ModeMsg:TmuxPopupNormal",
+      "NonText:TmuxPopupNormal",
+    }, ",")
+  )
+
+  -- local ok, zm = pcall(require, "zen-mode")
+  -- if ok then
+  --   zm.open({
+  --     window = {
+  --       width = 0.85,
+  --     },
+  --   })
+  -- end
+end
+
 -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
-vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").dark_blue_alt))
+vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
