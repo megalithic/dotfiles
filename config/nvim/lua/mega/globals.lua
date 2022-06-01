@@ -948,6 +948,61 @@ function mega.open_plugin_url()
   end)
 end
 
+-- Open one or more man pages
+-- Accepts a string representing how to open the man pages, one of:
+--   - ''        - current window
+--   - 'split'   - new horizontal split
+--   - 'vsplit'  - new vertical split
+--   - 'tab'     - new tab
+-- Varargs should be strings of the format
+--   <manpage>
+-- or
+--   <section> <manpage>
+mega.man = function(dest, ...)
+  if dest == "tab" then
+    dest = "tabnew"
+  end
+  if dest ~= "" then
+    dest = dest .. " | "
+  end
+  for _, page in ipairs({ ... }) do
+    if vim.regex("^\\d\\+p\\? \\w\\+$"):match_str(page) ~= nil then
+      local s = vim.split(page, " ")
+      page = ("%s(%s)"):format(s[2], s[1])
+    end
+    local prefix = dest
+    if vim.fn.bufname(0) == "" and vim.fn.line("$") == 1 and vim.fn.getline(1) == "" then
+      prefix = ""
+    end
+    vim.cmd(prefix .. "file " .. page .. " | call man#read_page(\"" .. page .. "\")")
+  end
+end
+
+-- https://www.reddit.com/r/neovim/comments/nrz9hp/can_i_close_all_floating_windows_without_closing/h0lg5m1/
+mega.close_float_wins = function()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local config = vim.api.nvim_win_get_config(win)
+    if config.relative ~= "" then
+      vim.api.nvim_win_close(win, false)
+    end
+  end
+end
+
+-- Open a Help topic
+--  - If a blank buffer is focused, open it there
+--  - Otherwise, open in a new tab
+mega.help = function(...)
+  for _, topic in ipairs({ ... }) do
+    if vim.fn.bufname() == "" and vim.api.nvim_buf_line_count(0) == 1 and vim.fn.getline(1) == "" then
+      local win = vim.api.nvim_get_current_win()
+      vim.cmd("help")
+      vim.api.nvim_win_close(win, false)
+    else
+      vim.cmd("tab help " .. topic)
+    end
+  end
+end
+
 function mega.save_and_exec()
   if vim.bo.filetype == "vim" then
     vcmd("silent! write")

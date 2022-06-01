@@ -330,12 +330,10 @@ fpath+=(
 
 # -- zsh plugins
 # ------------------------------------------------------------------------------
-# export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89"
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#6A7D89,bg=#3c4c55"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#323d43,bg=#7c8377,bold,underline"
 export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
 # export ZSH_AUTOSUGGEST_STRATEGY=(history completion) # or match_prev_cmd
-export ZSH_AUTOSUGGEST_USE_ASYNC=true
 export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
 export _ZO_ECHO=1
 

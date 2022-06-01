@@ -134,6 +134,7 @@ local PKGS = {
   -- @trial "gabebw/vim-github-link-opener",
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
+  -- @trial "ldelossa/gh.nvim"
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --

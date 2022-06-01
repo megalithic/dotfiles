@@ -397,13 +397,22 @@ vmap <expr> <leader>P Show_position()
 
 vnoremap <C-r> "hy:%Subvert/<C-r>h//gc<left><left><left>
 
-" clear incsearch term
-nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC>
-
 " REF: https://github.com/savq/dotfiles/blob/master/nvim/init.lua#L90-L101
 "      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
 " nnoremap z= :setlocal spell<CR>z=
 ]])
+
+-- Clear UI state:
+-- - Clear search highlight
+-- - Clear command-line
+-- - Close floating windows
+nmap([[<Esc>]], [[<Nop>]])
+nnoremap([[<Esc>]], function()
+  -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
+  vim.cmd("nohlsearch")
+  mega.close_float_wins()
+  vim.cmd("echo ''")
+end, { silent = true, desc = "Clear UI" })
 
 -- useful remaps from theprimeagen:
 -- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
@@ -455,9 +464,6 @@ nnoremap("<leader>O", ":<C-u>call append(line(\".\")-1, repeat([\"\"], v:count1)
 -- Jumplist mutations and dealing with word wrapped lines
 nnoremap("k", "v:count == 0 ? 'gk' : (v:count > 5 ? \"m'\" . v:count : '') . 'k'", { expr = true })
 nnoremap("j", "v:count == 0 ? 'gj' : (v:count > 5 ? \"m'\" . v:count : '') . 'j'", { expr = true })
-
--- Clear highlights
-vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
 
 -- Fast previous buffer switching
 nnoremap("<leader><leader>", "<C-^>")
