@@ -469,6 +469,8 @@ cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
 -- Keep line in middle of buffer when searching
 nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true })
 nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
+nnoremap("<C-f>", "<C-f>zz")
+nnoremap("<C-b>", "<C-b>zz")
 
 -- Readline bindings (command)
 local rl_bindings = {
