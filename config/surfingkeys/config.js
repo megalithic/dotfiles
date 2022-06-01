@@ -14,6 +14,7 @@
 // - https://github.com/glacambre/firenvim
 
 const actions = {};
+const util = {};
 const {
   aceVimMap,
   mapkey,
@@ -211,6 +212,17 @@ map("gL", "g$");
 // open link in new tab
 map("F", "gf");
 
+mapkey("::", "#8Open commands", function () {
+  Front.openOmnibar({ type: "Commands" });
+});
+
+// -- Clipboard
+unmap("yg");
+unmap("ygh");
+mapkey("ygh", "Copy GitHub repo base", function () {
+  Clipboard.write(actions.parseRepo(window.location.href).repoPluginPath);
+});
+
 // -- ESC hatch
 imap("<Ctrl-[>", "<Esc>");
 imap("<Ctrl-c>", "<Esc>");
@@ -276,6 +288,43 @@ actions.sendToInstapaper = () => {
 };
 unmap(";i");
 mapkey(";i", "-> Send to Instapaper", actions.sendToInstapaper);
+
+util.getCurrentLocation = (prop = "href") => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return window.location[prop];
+};
+
+actions.parseRepo = (url = util.getCurrentLocation(), rootOnly = false) => {
+  const u = url instanceof URL ? url : new URL(url);
+  const [user, repo, ...rest] = u.pathname.split("/").filter((s) => s !== "");
+  const isRoot = rest.length === 0;
+  const cond =
+    u.origin === util.getCurrentLocation("origin") &&
+    typeof user === "string" &&
+    user.length > 0 &&
+    typeof repo === "string" &&
+    repo.length > 0 &&
+    (isRoot || rootOnly === false) &&
+    /^([a-zA-Z0-9]+-?)+$/.test(user);
+  // && !ghReservedNames.check(user);
+  return cond
+    ? {
+        type: "repo",
+        user,
+        repo,
+        owner: user,
+        name: repo,
+        href: url,
+        url: u,
+        repoBase: `/${user}/${repo}`,
+        repoPluginPath: `${user}/${repo}`,
+        repoRoot: isRoot,
+        repoPath: rest,
+      }
+    : null;
+};
 
 // add search engines
 // REF: https://gist.github.com/chixing/82767d49380294ad7b298554e2c0e59b
