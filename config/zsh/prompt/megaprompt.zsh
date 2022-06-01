@@ -150,7 +150,7 @@ autoload -Uz vcs_info
 zstyle ':vcs_info:*' enable git
 zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:*' stagedstr "%F{green} $git_staged_icon%f"
-zstyle ':vcs_info:*' unstagedstr "%F{red} $git_unstaged_icon%f"
+zstyle ':vcs_info:*' unstagedstr "%F{#db9c5e} $git_unstaged_icon%f"
 zstyle ':vcs_info:*' use-simple true
 zstyle ':vcs_info:git+set-message:*' hooks git-untracked git-stash git-deleted git-compare git-remotebranch
 zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
@@ -309,7 +309,8 @@ function _prompt_path() {
   if [[ "$pwd" == (#m)[~] ]]; then # also, if you want both `/` and `~`, then [/~]
     prompt_path="~"
   else
-    prompt_path="%B%{$fg[blue]%}${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}%{$reset_color%}%b"
+    prompt_path="%B%F{blue}${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}%{$reset_color%}%b"
+    # prompt_path="%B%{$fg[blue]%}${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}%{$reset_color%}%b"
   fi
 
   echo "$prompt_path"
