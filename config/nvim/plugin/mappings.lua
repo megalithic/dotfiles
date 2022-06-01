@@ -504,38 +504,12 @@ imap("!", "!<C-g>u")
 imap("?", "?<C-g>u")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-nnoremap("n", "'Nn'[v:searchforward].'zzzv'", { expr = true })
-xnoremap("n", "'Nn'[v:searchforward].'zzzv'", { expr = true })
-onoremap("n", "'Nn'[v:searchforward].'zzzv'", { expr = true })
-nnoremap("N", "'nN'[v:searchforward].'zzzv'", { expr = true })
-xnoremap("N", "'nN'[v:searchforward].'zzzv'", { expr = true })
-onoremap("N", "'nN'[v:searchforward].'zzzv'", { expr = true })
-
--- # slash
-exec(
-  [[
-  noremap <plug>(slash-after) zz
-  if has('timers')
-    " blink 2 times with 50ms interval
-    noremap <expr> <plug>(slash-after) 'zz'.slash#blink(2, 50)
-  endif
-  ]],
-  true
-)
-
--- Keep line in middle of buffer when searching
--- nnoremap("n", function()
---   vim.cmd("(v:searchforward ? 'n' : 'N') . 'zzzv'")
---   mega.blink_cursorline()
--- end, { expr = true })
-
--- nnoremap("N", function()
---   vim.cmd("(v:searchforward ? 'N' : 'n') . 'zzzv'")
---   mega.blink_cursorline()
--- end, { expr = true })
-
--- nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true })
--- nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
+nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
+xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
+onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
+nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
+xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
+onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })

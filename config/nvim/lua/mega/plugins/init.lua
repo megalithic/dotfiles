@@ -181,10 +181,9 @@ local PKGS = {
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
+  -- "aca/wezterm.nvim",
   { "sunaku/tmux-navigate", opt = true },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
-  -- "aca/wezterm.nvim",
-  "junegunn/vim-slash",
   "RRethy/nvim-align",
 
   ------------------------------------------------------------------------------
