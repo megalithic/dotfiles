@@ -87,6 +87,7 @@ vim.opt_local.cursorline = true
 
 if vim.env.TMUX_POPUP then
   vim.opt.laststatus = 1
+  vim.opt.cmdheight = 1
   vim.api.nvim_win_set_option(
     0,
     "winhl",
@@ -112,3 +113,4 @@ end
 -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
+vim.cmd("hi MsgArea guibg=#3d494f")
