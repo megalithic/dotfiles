@@ -557,37 +557,35 @@ M.config = function()
   })
 
   conf("nvim-autopairs", {
-    config = {
-      function(p)
-        if p == nil then
-          return
-        end
+    config = function(p)
+      if p == nil then
+        return
+      end
 
-        p.setup({
-          disable_filetype = { "TelescopePrompt" },
-          -- enable_afterquote = true, -- To use bracket pairs inside quotes
-          enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
-          disable_in_macro = false,
-          close_triple_quotes = true,
-          check_ts = true,
-          ts_config = {
-            lua = { "string", "source" },
-            javascript = { "string", "template_string" },
-            java = false,
-          },
-        })
-        p.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
-        local endwise = require("nvim-autopairs.ts-rule").endwise
-        p.add_rules({
-          endwise("then$", "end", "lua", nil),
-          endwise("do$", "end", "lua", nil),
-          endwise("function%(.*%)$", "end", "lua", nil),
-          endwise(" do$", "end", "elixir", nil),
-        })
-        -- REF: neat stuff:
-        -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
-      end,
-    },
+      p.setup({
+        disable_filetype = { "TelescopePrompt" },
+        -- enable_afterquote = true, -- To use bracket pairs inside quotes
+        enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
+        disable_in_macro = false,
+        close_triple_quotes = true,
+        check_ts = true,
+        ts_config = {
+          lua = { "string", "source" },
+          javascript = { "string", "template_string" },
+          java = false,
+        },
+      })
+      p.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+      local endwise = require("nvim-autopairs.ts-rule").endwise
+      p.add_rules({
+        endwise("then$", "end", "lua", nil),
+        endwise("do$", "end", "lua", nil),
+        endwise("function%(.*%)$", "end", "lua", nil),
+        endwise(" do$", "end", "elixir", nil),
+      })
+      -- REF: neat stuff:
+      -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
+    end,
   })
 
   conf("lightspeed", {
