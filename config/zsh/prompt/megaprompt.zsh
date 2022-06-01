@@ -46,7 +46,7 @@ git_ahead_icon="⇡"        # 
 git_behind_icon="⇣"       # 
 git_renamed_icon=""
 deskfile_icon=""         #    ◲  🚀
-background_job_icon=""
+background_job_icon=""   # ✦
 root_icon=""
 
 
@@ -326,7 +326,7 @@ function __prompt_eval() {
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
   local top="$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
-  local character="%(1j.%F{cyan}%j✦%f .)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
+  local character="%(1j.%F{cyan}%j$background_job_icon%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_deskfile_loaded)$vim_mode" || echo "$(_prompt_deskfile_loaded)$character")
   local newline=$'\n'
   echo $newline$top$newline$bottom

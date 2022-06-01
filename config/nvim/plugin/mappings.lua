@@ -321,13 +321,6 @@ noremap <C-]> K
 " Copy to system clipboard
 noremap Y y$
 
-" Better buffer navigation
-"noremap J }
-"noremap K {
-noremap H ^
-noremap L $
-vnoremap L g_
-
 " Start search on current word under the cursor
 nnoremap <leader>/ /<CR>
 
@@ -423,6 +416,7 @@ end, { silent = true, desc = "Clear UI" })
 nmap("H", "^")
 nmap("L", "$")
 vmap("L", "g_")
+
 -- TODO: no longer needed; nightly adds these things?
 -- map("n", "Y", '"+y$')
 -- map("n", "Y", "yg_") -- copy to last non-blank char of the line
