@@ -35,13 +35,13 @@ prompt_failure_icon=""   # 
 placeholder_icon="…"
 vimode_insert_icon=""    # 
 git_staged_icon=""
-git_unstaged_icon="﯂"     # • ﯂
+git_unstaged_icon="﯂"     # • ﯂ ●
 git_conflicted_icon=""   # 
 git_stash_icon=""        #   ≡
 # TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71
 git_deleted_icon=""
 git_diverged_icon="⇕"
-git_untracked_icon="?"
+git_untracked_icon="?"    # 
 git_ahead_icon="⇡"        # 
 git_behind_icon="⇣"       # 
 git_renamed_icon=""
@@ -208,9 +208,9 @@ function +vi-git-compare() {
 
   local ahead_symbol="%{$fg[red]%}$git_ahead_icon%{$reset_color%}${ahead}"
   local behind_symbol="%{$fg[cyan]%}$git_behind_icon%{$reset_color%}${behind}"
-  (( $ahead )) && gitstatus+=( " ${ahead_symbol}" )
-  (( $behind )) && gitstatus+=( " ${behind_symbol}" )
-  hook_com[misc]+=${(j:/:)gitstatus}
+  (( $ahead )) && gitstatus+=( "${ahead_symbol}" )
+  (( $behind )) && gitstatus+=( "${behind_symbol}" )
+  hook_com[misc]+=" ${(j:/:)gitstatus}"
 }
 
 ## git: Show remote branch name for remote-tracking branches
