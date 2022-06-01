@@ -272,8 +272,21 @@ local function setup_diagnostics()
           max_severity_per_line[d.lnum] = d
         end
       end
-      -- Pass the filtered diagnostics (with our custom namespace) to
-      -- the original handler
+
+      -- FIXME: this still throws errors in ElixirLS land:
+      -- stack traceback:
+      -- 	[C]: in function 'sign_place'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:876: in function 'callback'
+      -- 	/home/ubuntu/.dotfiles/config/nvim/plugin/lsp.lua:277: in function 'callback'
+      -- 	/home/ubuntu/.dotfiles/config/nvim/plugin/lsp.lua:277: in function 'callback'
+      -- 	/home/ubuntu/.dotfiles/config/nvim/plugin/lsp.lua:277: in function 'show'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1172: in function 'show'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:690: in function 'set'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/lsp/diagnostic.lua:217: in function 'handler'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/lsp.lua:824: in function ''
+      -- 	vim/_editor.lua: in function <vim/_editor.lua:0>
+
+      -- Pass the filtered diagnostics (with our custom namespace) to the original handler
       callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
     end
   end

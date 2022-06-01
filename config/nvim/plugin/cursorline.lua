@@ -113,7 +113,7 @@ end
 -- REF:
 -- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
-local function blink_cursorline()
+function mega.blink_cursorline()
   local blink_timer = vim.loop.new_timer()
   blink_active = true
   vim.opt.cursorlineopt = "screenline,number"
@@ -144,7 +144,7 @@ local function enable_cursorline(should_blink)
   vim.opt.cursorlineopt = "screenline,number"
 
   if should_blink then
-    blink_cursorline()
+    mega.blink_cursorline()
   end
 
   set_cursorline()
@@ -194,7 +194,7 @@ local function cursor_moved()
     timer_start()
 
     if should_blink then
-      blink_cursorline()
+      mega.blink_cursorline()
     end
   end
 

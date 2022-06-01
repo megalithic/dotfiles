@@ -466,9 +466,6 @@ nnoremap("<leader><leader>", "<C-^>")
 cnoremap("<C-p>", "<Up>", { desc = "Line Up (command-mode)" })
 cnoremap("<C-n>", "<Down>", { desc = "Line Down (command-mode)" })
 
--- Keep line in middle of buffer when searching
-nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true })
-nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
 nnoremap("<C-f>", "<C-f>zz")
 nnoremap("<C-b>", "<C-b>zz")
 
@@ -501,12 +498,38 @@ imap("!", "!<C-g>u")
 imap("?", "?<C-g>u")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-nnoremap("n", "'Nn'[v:searchforward]", { expr = true })
-xnoremap("n", "'Nn'[v:searchforward]", { expr = true })
-onoremap("n", "'Nn'[v:searchforward]", { expr = true })
-nnoremap("N", "'nN'[v:searchforward]", { expr = true })
-xnoremap("N", "'nN'[v:searchforward]", { expr = true })
-onoremap("N", "'nN'[v:searchforward]", { expr = true })
+nnoremap("n", "'Nn'[v:searchforward].'zzzv'", { expr = true })
+xnoremap("n", "'Nn'[v:searchforward].'zzzv'", { expr = true })
+onoremap("n", "'Nn'[v:searchforward].'zzzv'", { expr = true })
+nnoremap("N", "'nN'[v:searchforward].'zzzv'", { expr = true })
+xnoremap("N", "'nN'[v:searchforward].'zzzv'", { expr = true })
+onoremap("N", "'nN'[v:searchforward].'zzzv'", { expr = true })
+
+-- # slash
+exec(
+  [[
+  noremap <plug>(slash-after) zz
+  if has('timers')
+    " blink 2 times with 50ms interval
+    noremap <expr> <plug>(slash-after) 'zz'.slash#blink(2, 50)
+  endif
+  ]],
+  true
+)
+
+-- Keep line in middle of buffer when searching
+-- nnoremap("n", function()
+--   vim.cmd("(v:searchforward ? 'n' : 'N') . 'zzzv'")
+--   mega.blink_cursorline()
+-- end, { expr = true })
+
+-- nnoremap("N", function()
+--   vim.cmd("(v:searchforward ? 'N' : 'n') . 'zzzv'")
+--   mega.blink_cursorline()
+-- end, { expr = true })
+
+-- nnoremap("n", "(v:searchforward ? 'n' : 'N') . 'zzzv'", { expr = true })
+-- nnoremap("N", "(v:searchforward ? 'N' : 'n') . 'zzzv'", { expr = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
@@ -539,18 +562,6 @@ nmap("<leader>x", mega.save_and_exec)
 -- map("v", "<Leader>gG", ":Gist -po<CR>")
 
 -- # markdown-related
-
--- # slash
-exec(
-  [[
-  noremap <plug>(slash-after) zz
-  if has('timers')
-    " blink 2 times with 50ms interval
-    noremap <expr> <plug>(slash-after) 'zz'.slash#blink(2, 50)
-  endif
-  ]],
-  true
-)
 
 -- # lightspeed
 -- do -- this continues to break my f/t movements :(
