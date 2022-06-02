@@ -175,6 +175,7 @@ brew "transcrypt" if OS.mac?
 brew "trash" if OS.mac?
 brew "tree"
 brew "tree-sitter"
+brew "ugit" # undo several git scenarios
 brew "urlview"
 brew "viu"
 brew "weechat" if OS.mac?
