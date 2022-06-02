@@ -455,7 +455,7 @@ augroup("GitConflicts", {
 
 augroup("Windows", {
   {
-    event = { "WinEnter" },
+    event = { "BufWinEnter" },
     command = function(args)
       if vim.wo.diff then
         vim.diagnostic.disable(args.buf)
@@ -463,7 +463,7 @@ augroup("Windows", {
     end,
   },
   {
-    event = { "WinLeave" },
+    event = { "BufWinLeave" },
     command = function(args)
       if vim.wo.diff then
         vim.diagnostic.enable(args.buf)
