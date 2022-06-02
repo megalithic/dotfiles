@@ -20,8 +20,8 @@ return function(plug)
       border = mega.get_border(),
       winblend = 0,
       highlights = {
-        border = "TelescopePromptBorder",
-        background = "TelescopePrompt",
+        border = "TmuxPopupNormal",
+        background = "TmuxPopupNormal",
       },
     },
     size = function(term)
