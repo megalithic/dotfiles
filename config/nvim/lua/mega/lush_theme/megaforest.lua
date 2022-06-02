@@ -457,7 +457,7 @@ return lush(function()
     TSFunction({ Green }),
     TSInclude({ PurpleItalic }),
     TSKeyword({ Red }),
-    TSKeywordFunction({ Red }),
+    TSKeywordFunction({ Red, gui = "bold" }),
     TSLabel({ Orange }),
     TSMethod({ Green }),
     TSNamespace({ BlueItalic, fg = bright_blue }),
