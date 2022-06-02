@@ -1,13 +1,13 @@
 return function(plug)
-  local toggleterm = plug
+  local tt = plug
   if plug == nil then
-    toggleterm = require("toggleterm")
+    tt = require("toggleterm")
   end
 
   -- TODO: send visual lines to toggleterm:
   --      https://github.com/akinsho/toggleterm.nvim/issues/172
   --      https://github.com/rikuma-t/dotfiles/blob/main/.config/nvim/lua/rc/toggleterm.lua#L29-L56 (dynamic resize/toggling)
-  toggleterm.setup({
+  tt.setup({
     open_mapping = [[<c-\>]],
     shade_filetypes = {},
     shade_terminals = true,
@@ -17,7 +17,7 @@ return function(plug)
     start_in_insert = true,
     close_on_exit = true,
     float_opts = {
-      border = "rounded",
+      border = mega.get_border(),
       winblend = 0,
       highlights = {
         border = "TelescopePromptBorder",
@@ -59,31 +59,6 @@ return function(plug)
     direction = "float",
     on_open = float_handler,
   })
-
-  local node = Terminal:new({ cmd = "node", hidden = true })
-  function _NODE_TOGGLE()
-    node:toggle()
-  end
-
-  local elixir = Terminal:new({ cmd = "iex -S mix", hidden = true })
-  function _ELIXIR_TOGGLE()
-    elixir:toggle()
-  end
-
-  local lua = Terminal:new({ cmd = "lua", hidden = true })
-  function _LUA_TOGGLE()
-    lua:toggle()
-  end
-
-  local rails = Terminal:new({ cmd = "rails c", hidden = true })
-  function _RAILS_TOGGLE()
-    rails:toggle()
-  end
-
-  local python = Terminal:new({ cmd = "python", hidden = true })
-  function _PYTHON_TOGGLE()
-    python:toggle()
-  end
 
   mega.command("Htop", function()
     htop:toggle()

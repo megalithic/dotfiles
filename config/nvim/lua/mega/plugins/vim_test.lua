@@ -35,25 +35,27 @@ return function(plug)
   local tterms = require("toggleterm.terminal")
   vim.g["test#custom_strategies"] = {
     toggleterm = function(cmd)
-      P(fmt("cmd: %s", cmd))
+      -- P(fmt("cmd: %s", cmd))
       tt.exec(cmd, nil, nil, nil, "vertical")
+      P(fmt("cmd: %s", cmd))
+      -- tt.exec(cmd)
     end,
-    -- toggleterm_f = function(cmd)
-    --   P(fmt("f_cmd: %s", cmd))
-    --   tt.exec(cmd, nil, nil, nil, "float")
-    -- end,
-    -- toggleterm_h = function(cmd)
-    --   P(fmt("h_cmd: %s", cmd))
-    --   tt.exec(cmd, nil, nil, nil, "horizontal")
-    -- end,
     toggleterm_f = function(cmd)
       P(fmt("f_cmd: %s", cmd))
-      require("toggleterm").exec_command(fmt([[cmd="%s" direction=float]], cmd))
+      tt.exec(cmd, nil, nil, nil, "float")
     end,
     toggleterm_h = function(cmd)
       P(fmt("h_cmd: %s", cmd))
-      require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
+      tt.exec(cmd, nil, nil, nil, "horizontal")
     end,
+    -- toggleterm_f = function(cmd)
+    --   P(fmt("f_cmd: %s", cmd))
+    --   tt.exec_command(fmt([[cmd="%s" direction=float]], cmd))
+    -- end,
+    -- toggleterm_h = function(cmd)
+    --   P(fmt("h_cmd: %s", cmd))
+    --   tt.exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
+    -- end,
     toggleterm_close = function(cmd)
       local term_id = 0
       tt.exec(cmd, term_id)

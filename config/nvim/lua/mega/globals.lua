@@ -531,6 +531,9 @@ function mega.conf(plugin_conf_name, opts)
       local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", plugin_conf_name))
       if has_external_config then
         config = found_external_config
+        if not silent then
+          P(fmt("%s: %s", plugin_conf_name, vim.inspect(config)))
+        end
       end
     end
   elseif type(opts) == "function" then
