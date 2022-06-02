@@ -1,8 +1,4 @@
-return function(plug)
-  if plug == nil then
-    return
-  end
-
+return function()
   local fmt = string.format
   local system = vim.fn.system
 

@@ -596,13 +596,22 @@ function mega.conf(plugin_conf_name, opts)
         -- config was passed a function, so we're assuming we want to bypass the plugin auto-invoking, and invoke our own fn
       elseif type(config) == "function" then
         -- passes the loaded plugin back to the caller so they can do more config
+        if not silent then
+          P(fmt("%s configuring with `config(loader)`", plugin_conf_name))
+        end
         config(loader)
       end
     else
       if type(config) == "function" then
+        if not silent then
+          P(fmt("%s configuring with `config()`", plugin_conf_name))
+        end
         config()
       else
         -- no-op
+        if not silent then
+          P(fmt("%s no-op", plugin_conf_name))
+        end
       end
     end
   end

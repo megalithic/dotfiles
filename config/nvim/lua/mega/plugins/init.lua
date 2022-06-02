@@ -283,7 +283,7 @@ M.config = function()
   conf("gitsigns", { config = "gitsigns" })
   conf("projectionist", { config = "projectionist" })
   conf("toggleterm", { config = "toggleterm" })
-  conf("vim_test", { config = "vim_test" })
+  conf("vim_test", { config = "vim_test", silent = true })
   conf("zk", { config = "zk" })
   conf("vscode", { config = "vscode" })
 
