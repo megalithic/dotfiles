@@ -38,13 +38,21 @@ return function(plug)
       P(fmt("cmd: %s", cmd))
       tt.exec(cmd, nil, nil, nil, "vertical")
     end,
+    -- toggleterm_f = function(cmd)
+    --   P(fmt("f_cmd: %s", cmd))
+    --   tt.exec(cmd, nil, nil, nil, "float")
+    -- end,
+    -- toggleterm_h = function(cmd)
+    --   P(fmt("h_cmd: %s", cmd))
+    --   tt.exec(cmd, nil, nil, nil, "horizontal")
+    -- end,
     toggleterm_f = function(cmd)
       P(fmt("f_cmd: %s", cmd))
-      tt.exec(cmd, nil, nil, nil, "float")
+      require("toggleterm").exec_command(fmt([[cmd="%s" direction=float]], cmd))
     end,
     toggleterm_h = function(cmd)
       P(fmt("h_cmd: %s", cmd))
-      tt.exec(cmd, nil, nil, nil, "horizontal")
+      require("toggleterm").exec_command(fmt([[cmd="%s" direction=horizontal]], cmd))
     end,
     toggleterm_close = function(cmd)
       local term_id = 0
