@@ -96,7 +96,6 @@ local PKGS = {
 
   "tami5/sqlite.lua",
   { "nvim-telescope/telescope.nvim" },
-  "nvim-telescope/telescope-frecency.nvim",
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-media-files.nvim",
@@ -134,12 +133,10 @@ local PKGS = {
   -- @trial "gabebw/vim-github-link-opener",
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
-  "folke/zen-mode.nvim",
   -- @trial "ldelossa/gh.nvim"
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
-  "bennypowers/nvim-regexplainer",
   "rgroli/other.nvim",
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
@@ -161,7 +158,6 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (the rest...) --
   "nacro90/numb.nvim",
-  "ethanholz/nvim-lastplace",
   "andymass/vim-matchup",
   "windwp/nvim-autopairs",
   "alvan/vim-closetag",
@@ -330,10 +326,6 @@ M.config = function()
 
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
   conf("gitlinker", {})
-
-  conf("zen-mode", {
-    config = {},
-  })
 
   conf("vim-gh-line", {
     config = function()
