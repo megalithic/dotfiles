@@ -270,6 +270,7 @@ cask "tableplus"
 cask "thingsmacsandboxhelper"
 # cask "vagrant"
 cask "the-unarchiver"
+cask "utm" # similar parallels
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead

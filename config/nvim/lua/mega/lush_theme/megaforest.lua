@@ -155,6 +155,7 @@ return lush(function()
     SignColumn({ fg = fg, bg = "NONE" }), -- column where |signs| are displayed
     EndOfBuffer({ fg = bg2, bg = "NONE" }), -- filler lines (~) after the end of the buffer.  By default, this is highlighted like |hl-NonText|.
     IncSearch({ fg = bg0, bg = red }), -- 'incsearch' highlighting; also used for the text replaced with ":s///c"
+    CurSearch({ IncSearch }),
     Search({ fg = bg0, bg = green, gui = "italic,bold" }), -- Last search pattern highlighting (see 'hlsearch').  Also used for similar items that need to stand out.
     Substitute({ fg = bg0, bg = yellow, guid = "strikethrough,bold" }), -- |:substitute| replacement text highlighting
     Beacon({ bg = blue }),
@@ -324,10 +325,10 @@ return lush(function()
     DiagnosticSignWarnLine({ fg = yellow, gui = "", guisp = yellow }),
     DiagnosticSignInfoLine({ fg = blue, gui = "", guisp = blue }),
     DiagnosticSignHintLine({ fg = aqua, gui = "", guisp = aqua }),
-    DiagnosticSignErrorNumLine({ fg = red, gui = "", guisp = red }),
-    DiagnosticSignWarnNumLine({ fg = yellow, gui = "", guisp = yellow }),
-    DiagnosticSignInfoNumLine({ fg = blue, gui = "", guisp = blue }),
-    DiagnosticSignHintNumLine({ fg = aqua, gui = "", guisp = aqua }),
+    DiagnosticSignErrorNumLine({ fg = red, gui = "italic", guisp = red }),
+    DiagnosticSignWarnNumLine({ fg = yellow, gui = "italic", guisp = yellow }),
+    DiagnosticSignInfoNumLine({ fg = blue, gui = "italic", guisp = blue }),
+    DiagnosticSignHintNumLine({ fg = aqua, gui = "italic", guisp = aqua }),
 
     -- DiagnosticSource({ fg = bg2, bg = bg1 }),
     DiagnosticError({ Red, bg = bg2 }),

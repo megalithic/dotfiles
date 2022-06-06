@@ -41,6 +41,6 @@
 [submodule "config/zsh/plugins/zsh-syntax-highlighting"]
 	path = config/zsh/plugins/zsh-syntax-highlighting
 	url = https://github.com/zsh-users/zsh-syntax-highlighting
-[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-autocomplete"]
-	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-autocomplete
+[submodule "config/zsh/plugins/zsh-autocomplete"]
+	path = config/zsh/plugins/zsh-autocomplete
 	url = https://github.com/marlonrichert/zsh-autocomplete.git
