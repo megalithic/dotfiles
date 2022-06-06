@@ -81,7 +81,7 @@ local PKGS = {
   "mfussenegger/nvim-treehopper",
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
-  -- { "lewis6991/nvim-treesitter-context" },
+  { "nvim-treesitter/nvim-treesitter-context" },
   "SmiteshP/nvim-gps",
   -- @trial ziontee113/syntax-tree-surfer
   -- @trial "primeagen/harpoon",
@@ -101,6 +101,7 @@ local PKGS = {
   "nvim-telescope/telescope-media-files.nvim",
   "nvim-telescope/telescope-symbols.nvim",
   "nvim-telescope/telescope-smart-history.nvim",
+  -- @trial "AckslD/nvim-neoclip.lua", -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/init.lua#L351-L367
   -- @trial "nvim-telescope/telescope-file-browser.nvim",
 
   ------------------------------------------------------------------------------
@@ -141,6 +142,7 @@ local PKGS = {
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
+  -- @trial "rcarriga/neotest",
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "tpope/vim-ragtag",
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
@@ -916,7 +918,11 @@ M.config = function()
     end,
   })
 
-  conf("treesitter-context", { enabled = false })
+  conf("treesitter-context", {
+    config = {
+      multiline_threshold = 4,
+    },
+  })
 
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 

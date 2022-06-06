@@ -347,6 +347,7 @@ return lush(function()
     LspReferenceRead({ bg = "NONE", gui = "underline" }),
     LspReferenceWrite({ InfoFloat, gui = "underline,bold,italic" }),
     LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
+    LspCodeLensSeparator({ HintText }),
 
     ---- :help health ----------------------------
 
@@ -775,6 +776,11 @@ return lush(function()
     StWarn({ fg = orange, bg = bg1 }),
     StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = bg5, bg = bg1 }),
+
+    ---- :help winbar  ---------------------------------------------------------
+
+    WinBar({ fg = bg0, bg = yellow, gui = "italic" }),
+    WinBarNC({ fg = fg, bg = bg_yellow, gui = "italic" }),
 
     ---- :help ts-rainbow  -----------------------------------------------------
 

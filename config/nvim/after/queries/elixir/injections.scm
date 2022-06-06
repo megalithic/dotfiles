@@ -6,7 +6,6 @@
     right: (string (quoted_content) @html))
   (#eq? @_comment "# html"))
 
-
 ; HEEx string blocks
 ((comment) @_comment
   .
@@ -22,3 +21,17 @@
     left: (_)
     right: (string (quoted_content) @json))
   (#eq? @_comment "# json"))
+
+; JavaScript string blocks
+((comment) @_comment
+  .
+  (binary_operator
+    left: (_)
+    right: (string (quoted_content) @javascript))
+  (#eq? @_comment "# javascript"))
+
+; JavaScript string blocks
+((comment) @_comment
+  .
+  (string (quoted_content) @javascript)
+  (#eq? @_comment "# javascript"))

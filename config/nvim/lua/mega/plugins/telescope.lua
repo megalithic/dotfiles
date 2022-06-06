@@ -46,6 +46,7 @@ return function(plug)
       -- borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
       prompt_prefix = "  ",
       selection_caret = "» ", -- ❯
+      cycle_layout_list = { "flex", "horizontal", "vertical", "bottom_pane", "center" },
       mappings = {
         i = {
           ["<c-q>"] = actions.send_selected_to_qflist,
@@ -175,6 +176,12 @@ return function(plug)
       find_files = {
         hidden = true,
       },
+      keymaps = dropdown({
+        layout_config = {
+          height = 18,
+          width = 0.5,
+        },
+      }),
       git_branches = dropdown(),
       git_bcommits = {
         layout_config = {
@@ -197,7 +204,11 @@ return function(plug)
   --- NOTE: this must be required after setting up telescope
   --- otherwise the result will be cached without the updates
   --- from the setup call
-  local builtins = require("telescope.builtin")
+  local builtin = require("telescope.builtin")
+
+  local function builtins()
+    builtin.builtin({ include_extensions = true })
+  end
 
   local function delta_opts(opts, is_buf)
     local previewers = require("telescope.previewers")
@@ -227,28 +238,28 @@ return function(plug)
   end
 
   local function delta_git_commits(opts)
-    require("telescope.builtin").git_commits(delta_opts(opts))
+    builtin.git_commits(delta_opts(opts))
   end
 
   local function delta_git_bcommits(opts)
-    require("telescope.builtin").git_bcommits(delta_opts(opts, true))
+    builtin.git_bcommits(delta_opts(opts, true))
   end
 
   local function project_files(opts)
-    if not pcall(builtins.git_files, opts) then
-      builtins.find_files(opts)
+    if not pcall(builtin.git_files, opts) then
+      builtin.find_files(opts)
     end
   end
 
   local function dotfiles()
-    builtins.find_files({
+    builtin.find_files({
       prompt_title = "~ dotfiles ~",
       cwd = mega.dirs.dots,
     })
   end
 
   local function privates()
-    builtins.find_files({
+    builtin.find_files({
       prompt_title = "~ privates ~",
       cwd = mega.dirs.privates,
     })
@@ -266,7 +277,7 @@ return function(plug)
   -- end
 
   local function installed_plugins()
-    require("telescope.builtin").find_files({
+    builtin.find_files({
       prompt_title = "~ installed plugins ~",
       cwd = fn.stdpath("data") .. "/site/pack/paqs",
     })
@@ -283,40 +294,39 @@ return function(plug)
   end
 
   -- telescope-mappings
-  nmap("<leader>fa", builtins.builtin, "builtins")
-  nmap("<leader>fb", builtins.current_buffer_fuzzy_find, "fuzzy find current buffer")
+  nmap("<leader>fB", builtins, "builtins")
+  nmap("<leader>fb", builtin.current_buffer_fuzzy_find, "fuzzy find current buffer")
   nmap("<leader>fd", dotfiles, "dotfiles")
   nmap("<leader>fp", privates, "privates")
   nmap("<leader>ff", project_files, "find/git files")
-  -- nmap("<leader>ff", builtins.find_files, "find/git files")
 
   nmap("<leader>fgc", delta_git_commits, "commits")
   nmap("<leader>fgb", delta_git_bcommits, "buffer commits")
-  nmap("<leader>fgB", builtins.git_branches, "branches")
+  nmap("<leader>fgB", builtin.git_branches, "branches")
 
-  nmap("<leader>fM", builtins.man_pages, "man pages")
-  nmap("<leader>fm", builtins.man_pages, "oldfiles (mru)")
-  nmap("<leader>fk", builtins.keymaps, "keymaps")
+  nmap("<leader>fM", builtin.man_pages, "man pages")
+  nmap("<leader>fm", builtin.man_pages, "oldfiles (mru)")
+  nmap("<leader>fk", builtin.keymaps, "keymaps")
   nmap("<leader>fP", installed_plugins, "installed plugins")
-  nmap("<leader>fo", builtins.buffers, "opened buffers")
-  nmap("<leader>fr", builtins.resume, "resume last picker")
-  nmap("<leader>fa", builtins.live_grep, "live grep string")
-  nmap("<leader>fs", builtins.live_grep, "live grep string")
+  nmap("<leader>fo", builtin.buffers, "opened buffers")
+  nmap("<leader>fr", builtin.resume, "resume last picker")
+  nmap("<leader>fa", builtin.live_grep, "live grep string")
+  nmap("<leader>fs", builtin.live_grep, "live grep string")
 
   nmap("<leader>fts", tmux_sessions, "sessions")
   nmap("<leader>ftw", tmux_windows, "windows")
 
-  nmap("<leader>f?", builtins.help_tags, "help")
-  nmap("<leader>fh", builtins.help_tags, "help")
+  nmap("<leader>f?", builtin.help_tags, "help")
+  nmap("<leader>fh", builtin.help_tags, "help")
 
-  nmap("<leader>ld", builtins.lsp_definitions, "telescope: definitions")
-  nmap("<leader>lD", builtins.lsp_type_definitions, "telescope: type definitions")
-  nmap("<leader>lt", builtins.diagnostics, "telescope: diagnostics")
-  nmap("<leader>lr", builtins.lsp_references, "telescope: references")
-  nmap("<leader>li", builtins.lsp_implementations, "telescope: implementations")
-  nmap("<leader>ls", builtins.lsp_document_symbols, "telescope: document symbols")
-  nmap("<leader>lS", builtins.lsp_workspace_symbols, "telescope: workspace symbols")
-  nmap("<leader>lw", builtins.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
+  nmap("<leader>ld", builtin.lsp_definitions, "telescope: definitions")
+  nmap("<leader>lD", builtin.lsp_type_definitions, "telescope: type definitions")
+  nmap("<leader>lt", builtin.diagnostics, "telescope: diagnostics")
+  nmap("<leader>lr", builtin.lsp_references, "telescope: references")
+  nmap("<leader>li", builtin.lsp_implementations, "telescope: implementations")
+  nmap("<leader>ls", builtin.lsp_document_symbols, "telescope: document symbols")
+  nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
+  nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
   require("telescope").load_extension("fzf")
   require("telescope").load_extension("tmux")
