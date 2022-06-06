@@ -621,7 +621,7 @@ M.docking = {
     profile = "internal",
     input = "MacBook Pro Microphone",
     output = "MacBook Pro Speakers",
-    fontSize = 15.0,
+    fontSize = 17.0,
   },
 }
 
