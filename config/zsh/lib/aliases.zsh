@@ -113,7 +113,9 @@ alias kssh="kitty +kitten ssh"
 ## - ag/ack/grep/fzf/rg/ripgrep --------------------------------------
 # https://github.com/junegunn/fzf/wiki/Examples#searching-file-contents
 # alias ag="ag --nobreak --nonumbers --noheading . | fzf"
-alias g="rg"
+# alias g="rg"
+# alias g="grep -r -i --color='auto'"
+# alias g="rg -F"
 
 # DOCKER
 # -----------------------------------------------------------------------------
@@ -271,8 +273,6 @@ alias zz=z
 alias cls="clr && ls"
 alias get="curl -OL"
 alias get="http --download"
-# alias g="grep -r -i --color='auto'"
-alias g="rg -F"
 alias nvm='n'
 # alias irc="LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 weechat-curses"
 # alias irc="PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib; eval \"$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)\"; weechat-curses"
@@ -301,6 +301,7 @@ alias map="xargs -n1"
 # alias hub -> git
 (command -v hub &>/dev/null) && alias git="hub"
 
+alias gt=g
 alias dangled="git fsck --no-reflog | awk '/dangling commit/ {print $3}'" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
 alias conflicted="git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR"
 alias conflicts="git ls-files -u | cut -f 2 | sort -u"
@@ -318,9 +319,42 @@ alias gcp="git branch --show-current | tr -d '[:space:]' | pbcopy"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"
 
+# GH
+# -----------------------------------------------------------------------------
+alias ghc='gh repo clone'
+alias ghv='gh repo view -w'
+pr() {
+  get_pr="$(gh pr list | fzf | awk '{ print $1 }')"
+
+  echo "$get_pr"
+
+  [[ -z $get_pr ]] && gh pr view -w "$get_pr"
+}
+
 # elixir
 # -----------------------------------------------------------------------------
 alias imix="iex -S mix"
+
+function mt() {
+  if [ -z $1 ]; then
+    mix test \
+      && terminal-notifier -title "mix test" -subtitle "Test Suite" -message "Success!" \
+      || terminal-notifier -title "mix test" -subtitle "Test Suite" -message "Failure!"
+  else
+    mix test "$1" \
+      && terminal-notifier -title "mix test" -subtitle "$1" -message "Success!" \
+      || terminal-notifier -title "mix test" -subtitle "$1" -message "Failure!"
+  fi
+}
+
+function mix-test-watch() {
+  fswatch -o . | mix test --stale --listen-on-stdin
+}
+
+alias mtw="mix-test-watch"
+# wallaby
+alias mtc="WALLABY_DRIVER=chrome mix test"
+alias mts="WALLABY_DRIVER=selenium mix test"
 
 # MISC / RANDOM
 # -----------------------------------------------------------------------------

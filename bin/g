@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+case $1 in
+  co)
+    if [ ! "$2" ]; then
+      git branch --format '%(refname:short)' | fzf | xargs git checkout
+    else
+      git checkout "$2"
+    fi
+    ;;
+  *)
+    if [[ $# -gt 0 ]]; then
+      git "$@"
+    else
+      git status
+    fi
+    ;;
+esac

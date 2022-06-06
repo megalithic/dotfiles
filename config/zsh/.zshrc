@@ -12,8 +12,9 @@
 # 2 is stderr (the standard error).
 
 # -- required helpers and our env variables
-[[ -f "$ZDOTDIR/lib/env.zsh" ]] && source "$ZDOTDIR/lib/env.zsh"
-[[ -f "$ZDOTDIR/lib/helpers.zsh" ]] && source "$ZDOTDIR/lib/helpers.zsh"
+ZLIB="$ZDOTDIR/lib"
+[[ -f "$ZLIB/env.zsh" ]] && source "$ZLIB/env.zsh"
+[[ -f "$ZLIB/helpers.zsh" ]] && source "$ZLIB/helpers.zsh"
 [[ -f "$ZDOTDIR/plugins.zsh" ]] && source "$ZDOTDIR/plugins.zsh"
 
 # -- plugins
@@ -32,13 +33,13 @@ zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
 autoload -U zmv # builtin zsh rename command
 
 # -- completions
-[[ -f "$ZDOTDIR/lib/completion.zsh" ]] && source "$ZDOTDIR/lib/completion.zsh"
+[[ -f "$ZLIB/completion.zsh" ]] && source "$ZLIB/completion.zsh"
 
 # -- prompt
 [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
 # -- scripts/libs
-for file in $ZDOTDIR/lib/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux}.zsh; do
+for file in $ZLIB/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux}.zsh; do
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done
 unset file
@@ -52,7 +53,7 @@ fi
 # fi
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
-[[ -f "$ZDOTDIR/lib/asdf.zsh" ]] && source "$ZDOTDIR/lib/asdf.zsh"
+[[ -f "$ZLIB/asdf.zsh" ]] && source "$ZLIB/asdf.zsh"
 
 # work things
 [[ -f "/opt/dev-env/ansible/dash_profile" ]] && source /opt/dev-env/ansible/dash_profile
@@ -60,7 +61,7 @@ fi
 
 # fzf just desparately wants this here
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
-[[ -f "$ZDOTDIR/lib/fzf.zsh" ]] && source "$ZDOTDIR/lib/fzf.zsh"
+[[ -f "$ZLIB/fzf.zsh" ]] && source "$ZLIB/fzf.zsh"
 
 # zprof # -> bottom of .zshrc
 # vim:ft=zsh:foldenable:foldmethod=marker:ts=2:sts=2:sw=2

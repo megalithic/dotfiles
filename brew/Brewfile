@@ -80,6 +80,7 @@ brew "fasd"
 brew "fd"
 brew "ffind"
 brew "findutils"
+brew "fswatch"
 brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
 brew "fop" # used for asdf erlang

@@ -9,11 +9,17 @@ setopt extended_glob
 _comp_options+=(globdots) # Include hidden files.
 
 # zsh speedsup: https://carlosbecker.com/posts/speeding-up-zsh/
-autoload -Uz compinit
+autoload -Uz +X compinit
 for dump in ~/.zcompdump(N.mh+24); do
   compinit
 done
 compinit -C
+
+
+# REF:
+# https://github.com/mhanberg/.dotfiles/blob/main/zsh/funcs#L3
+# https://github.com/mhanberg/.dotfiles/blob/main/zsh/git.zsh
+compdef g=git
 
 # FIXME: fixes insecure directory warnings
 # TODO: should we run this on every sourcing?
