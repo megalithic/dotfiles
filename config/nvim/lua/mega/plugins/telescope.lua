@@ -197,30 +197,40 @@ return function(plug)
   --- otherwise the result will be cached without the updates
   --- from the setup call
   local builtins = require("telescope.builtin")
-  local previewers = require("telescope.previewers")
 
-  local delta = previewers.new_termopen_previewer({
-    get_command = function(entry)
-      return {
-        "git",
-        "-c",
-        "core.pager=delta",
-        "-c",
-        "delta.side-by-side=false",
-        "diff",
-        entry.value .. "^!",
-      }
-    end,
-  })
-
-  local function delta_git_bcommits(opts)
+  local function delta_opts(opts, is_buf)
+    local previewers = require("telescope.previewers")
+    local delta = previewers.new_termopen_previewer({
+      get_command = function(entry)
+        local args = {
+          "git",
+          "-c",
+          "core.pager=delta",
+          "-c",
+          "delta.side-by-side=false",
+          "diff",
+          entry.value .. "^!",
+        }
+        if is_buf then
+          vim.list_extend(args, { "--", entry.current_file })
+        end
+        return args
+      end,
+    })
     opts = opts or {}
     opts.previewer = {
       delta,
       previewers.git_commit_message.new(opts),
     }
+    return opts
+  end
 
-    builtins.git_commits(opts)
+  local function delta_git_commits(opts)
+    require("telescope.builtin").git_commits(delta_opts(opts))
+  end
+
+  local function delta_git_bcommits(opts)
+    require("telescope.builtin").git_bcommits(delta_opts(opts, true))
   end
 
   local function project_files(opts)
@@ -276,10 +286,12 @@ return function(plug)
   nmap("<leader>fb", builtins.current_buffer_fuzzy_find, "fuzzy find current buffer")
   nmap("<leader>fd", dotfiles, "dotfiles")
   nmap("<leader>fp", privates, "privates")
-  nmap("<leader>ff", builtins.find_files, "find/git files")
+  nmap("<leader>ff", project_files, "find/git files")
+  -- nmap("<leader>ff", builtins.find_files, "find/git files")
 
-  nmap("<leader>fgc", delta_git_bcommits, "commits")
-  nmap("<leader>fgb", builtins.git_branches, "branches")
+  nmap("<leader>fgc", delta_git_commits, "commits")
+  nmap("<leader>fgb", delta_git_bcommits, "buffer commits")
+  nmap("<leader>fgB", builtins.git_branches, "branches")
 
   nmap("<leader>fM", builtins.man_pages, "man pages")
   nmap("<leader>fm", builtins.man_pages, "oldfiles (mru)")

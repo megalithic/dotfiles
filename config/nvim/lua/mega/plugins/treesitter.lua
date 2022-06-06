@@ -78,7 +78,7 @@ return function(_plug)
         ["eruby.yaml"] = "# %s",
       },
     },
-    matchup = { enable = true }, -- FIXME: https://github.com/andymass/vim-matchup/pull/216
+    matchup = { enable = true },
     rainbow = {
       enable = true,
       disable = { "json", "jsonc", "html" },

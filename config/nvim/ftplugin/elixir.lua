@@ -16,3 +16,19 @@ vim.cmd([[iabbrev ep    \|>]])
 vim.cmd([[iabbrev epry  require IEx; IEx.pry]])
 vim.cmd([[iabbrev ei    IO.inspect]])
 vim.cmd([[iabbrev eputs IO.puts]])
+
+-- get back matchit things for elixir (from elixir.vim)
+-- https://github.com/elixir-editors/vim-elixir/blob/master/ftplugin/elixir.vim#L6-L16
+vim.cmd([[
+  " Matchit support
+  if exists('loaded_matchit') && !exists('b:match_words')
+    let b:match_ignorecase = 0
+
+    let b:match_words = '\:\@<!\<\%(do\|fn\)\:\@!\>' .
+          \ ':' .
+          \ '\<\%(else\|elsif\|catch\|after\|rescue\)\:\@!\>' .
+          \ ':' .
+          \ '\:\@<!\<end\>' .
+          \ ',{:},\[:\],(:)'
+  endif
+]])
