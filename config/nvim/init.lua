@@ -39,10 +39,35 @@
 
 -- [ speed ] -------------------------------------------------------------------
 
+-- _G.__luacache_config = {
+--   chunks = {
+--     enable = true,
+--     path = vim.fn.stdpath("cache") .. "/luacache_chunks",
+--   },
+--   modpaths = {
+--     enable = true,
+--     path = vim.fn.stdpath("cache") .. "/luacache_modpaths",
+--   },
+-- }
+
 pcall(require, "impatient")
+
+-- local impatient_ok, impatient = pcall(require, "impatient")
+-- if impatient_ok then
+--   impatient.enable_profile()
+-- end
 
 -- [ loaders ] -----------------------------------------------------------------
 
-require("mega.globals")
-require("mega.options")
-require("mega.plugins").config()
+local ok, reload = pcall(require, "plenary.reload")
+RELOAD = ok and reload.reload_module or function(...)
+  return ...
+end
+function R(name)
+  RELOAD(name)
+  return require(name)
+end
+
+R("mega.globals")
+R("mega.options")
+R("mega.plugins").config()
