@@ -13,7 +13,8 @@ return function(plug)
     {
       event = "User",
       pattern = "TelescopePreviewerLoaded",
-      command = "setlocal number",
+      -- FIXME: https://github.com/nvim-telescope/telescope.nvim/issues/1661
+      command = "setlocal number wrap",
     },
   })
 
