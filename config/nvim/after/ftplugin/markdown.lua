@@ -108,9 +108,9 @@ if vim.env.TMUX_POPUP then
   --     },
   --   })
   -- end
+  vim.cmd("hi MsgArea guibg=#3d494f")
 end
 
 -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
-vim.cmd("hi MsgArea guibg=#3d494f")
