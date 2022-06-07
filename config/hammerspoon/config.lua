@@ -296,6 +296,14 @@ M.apps = {
   ["com.binarynights.ForkLift-3"] = {
     bundleID = "com.binarynights.ForkLift-3",
     name = "ForkLift",
+    -- hyper_key = "f",
+    rules = {
+      { nil, 1, M.layout.centeredMedium },
+    },
+  },
+  ["org.yanex.marta"] = {
+    bundleID = "org.yanex.marta",
+    name = "Marta",
     hyper_key = "f",
     rules = {
       { nil, 1, M.layout.centeredMedium },

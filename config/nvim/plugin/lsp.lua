@@ -833,17 +833,26 @@ mega.lsp.servers = {
     --- Build the elixir-ls command.
     -- @param opts options
     -- @param opts.fallback_dir string Path to use if locations don't contain the binary
+    -- @param opts.is_debug boolean Whether this is a debug elixirls_cmd binary or not
     local function elixirls_cmd(opts)
       opts = opts or {}
+
+      local cmd = "language_server.sh"
+      local is_debug = opts.is_debug or false
+
+      if is_debug then
+        cmd = "debugger.sh"
+      end
+
       opts = vim.tbl_deep_extend("force", opts, {
         locations = {
-          ".elixir-ls-release/language_server.sh",
-          ".elixir_ls/release/language_server.sh",
+          ".elixir-ls-release/" .. cmd,
+          ".elixir_ls/release/" .. cmd,
         },
       })
 
       opts.fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
-      opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, "language_server.sh")
+      opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, cmd)
 
       return language_server_cmd(opts)
     end
