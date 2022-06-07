@@ -21,7 +21,6 @@ return function(plug)
     plug.run.run(vim.fn.expand("%"))
   end
 
-  P("loading neotest bindings")
   nnoremap("<localleader>ts", plug.summary.toggle, "neotest: run suite")
   nnoremap("<localleader>to", open, "neotest: output")
   nnoremap("<localleader>tn", plug.run.run, "neotest: run")
