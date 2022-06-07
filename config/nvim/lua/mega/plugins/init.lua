@@ -94,7 +94,6 @@ local PKGS = {
   "elihunter173/dirbuf.nvim",
   -- @trial "nvim-neo-tree/neo-tree.nvim",
 
-  "tami5/sqlite.lua",
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "camgraff/telescope-tmux.nvim",
@@ -276,6 +275,10 @@ end
 -- [ plugin config ] -----------------------------------------------------------
 
 M.config = function()
+  -- if true then
+  --   return
+  -- end
+
   vim.cmd("packadd cfilter")
 
   conf("gitsigns", { config = "gitsigns" })

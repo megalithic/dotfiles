@@ -70,8 +70,4 @@ end
 
 R("mega.globals")
 R("mega.options")
-
--- This emulates after/plugin; e.g., config plugins after everything else
-vim.schedule(function()
-  R("mega.plugins").config()
-end)
+R("mega.plugins").config()

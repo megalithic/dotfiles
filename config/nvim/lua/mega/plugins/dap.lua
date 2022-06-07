@@ -82,7 +82,7 @@ return function(plug)
   local cmd = string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "debugger.sh")
 
   if mega.lsp.elixirls_cmd ~= nil then
-    cmd = mega.lsp.elixirls_cmd({ is_debug = true })
+    cmd = require("mega.utils").lsp.elixirls_cmd({ is_debug = true })
   end
 
   plug.adapters.mix_task = {
