@@ -491,8 +491,23 @@ for _, binding in ipairs(rl_bindings) do
   cnoremap(binding.lhs, binding.rhs, binding.opts or {})
 end
 
--- paste over currently selected text without yanking it
--- vmap("p", "\"_dP")
+-- don't yank the currently pasted text
+vnoremap("p", "\"_Pp")
+vnoremap("P", "\"_PP")
+
+-- yank to empty register for D, c, etc.
+nnoremap("x", "\"_x")
+nnoremap("X", "\"_X")
+nnoremap("D", "\"_D")
+nnoremap("c", "\"_c")
+nnoremap("C", "\"_C")
+nnoremap("cc", "\"_S")
+
+xnoremap("x", "\"_x")
+xnoremap("X", "\"_X")
+xnoremap("D", "\"_D")
+xnoremap("c", "\"_c")
+xnoremap("C", "\"_C")
 
 -- Undo breakpoints
 imap(",", ",<C-g>u")
