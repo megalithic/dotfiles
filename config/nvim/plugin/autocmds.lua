@@ -291,6 +291,7 @@ do
     "undotree",
     "megaterm",
     "terminal",
+    "neotest-summary",
   }
 
   local function on_sidebar_enter()

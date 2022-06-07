@@ -142,8 +142,13 @@ local PKGS = {
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
-  -- @trial "rcarriga/neotest",
+  "rcarriga/neotest",
+  "rcarriga/neotest-plenary",
+  "rcarriga/neotest-vim-test",
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
+  "rcarriga/nvim-dap-ui",
+  "theHamsta/nvim-dap-virtual-text",
+  "jbyuki/one-small-step-for-vimkind",
   "tpope/vim-ragtag",
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
@@ -181,7 +186,6 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   -- "aca/wezterm.nvim",
-  { "sunaku/tmux-navigate", opt = true },
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
   "RRethy/nvim-align",
 
@@ -281,7 +285,8 @@ M.config = function()
   conf("gitsigns", { config = "gitsigns" })
   conf("projectionist", { config = "projectionist" })
   conf("toggleterm", { config = "toggleterm" })
-  conf("vim_test", { config = "vim_test", silent = true })
+  conf("vim_test", { config = "vim_test" })
+  conf("neotest", { config = "neotest" })
   conf("zk", { config = "zk" })
   conf("vscode", { config = "vscode" })
 
@@ -738,6 +743,9 @@ M.config = function()
   end
 
   conf("dap", {
+    -- REF:
+    -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/dap.lua
+    -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/dapui.lua
     config = function(p)
       if p == nil then
         return
