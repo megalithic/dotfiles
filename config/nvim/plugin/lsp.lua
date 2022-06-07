@@ -834,7 +834,7 @@ mega.lsp.servers = {
     -- @param opts options
     -- @param opts.fallback_dir string Path to use if locations don't contain the binary
     -- @param opts.is_debug boolean Whether this is a debug elixirls_cmd binary or not
-    local function elixirls_cmd(opts)
+    function mega.lsp.elixirls_cmd(opts)
       opts = opts or {}
 
       local cmd = "language_server.sh"
@@ -858,7 +858,7 @@ mega.lsp.servers = {
     end
 
     return {
-      cmd = { elixirls_cmd() },
+      cmd = { mega.lsp.elixirls_cmd() },
       settings = {
         elixirLS = {
           fetchDeps = false,

@@ -287,6 +287,7 @@ M.config = function()
   conf("toggleterm", { config = "toggleterm" })
   conf("vim_test", { config = "vim_test" })
   conf("neotest", { config = "neotest" })
+  conf("dap", { config = "dap" })
   conf("zk", { config = "zk" })
   conf("vscode", { config = "vscode" })
 
@@ -499,8 +500,6 @@ M.config = function()
   conf("colorizer", { config = { "*" }, {
     mode = "background",
   } })
-
-  conf("virt-column", { config = { char = "│" } })
 
   conf("golden_size", {
     config = function(plug)
@@ -741,38 +740,6 @@ M.config = function()
         ]])
     end
   end
-
-  conf("dap", {
-    -- REF:
-    -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/dap.lua
-    -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/dapui.lua
-    config = function(p)
-      if p == nil then
-        return
-      end
-
-      p.adapters.mix_task = {
-        type = "executable",
-        command = fn.stdpath("data") .. "/elixir-ls/debugger.sh",
-        args = {},
-      }
-      p.configurations.elixir = {
-        {
-          type = "mix_task",
-          name = "mix test",
-          task = "test",
-          taskArgs = { "--trace" },
-          request = "launch",
-          startApps = true, -- for Phoenix projects
-          projectDir = "${workspaceFolder}",
-          requireFiles = {
-            "test/**/test_helper.exs",
-            "test/**/*_test.exs",
-          },
-        },
-      }
-    end,
-  })
 
   conf("numb", {})
 

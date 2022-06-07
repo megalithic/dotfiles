@@ -824,6 +824,11 @@ return lush(function()
     TroubleLocation({ fg = Comment.fg }),
     TroublePreview({ bg = bg_visual, gui = "bold,italic,underline" }),
 
+    ---- :help: dap ------------------------------------------------------------
+
+    DapBreakpoint({ fg = light_red }),
+    DapStopped({ fg = green }),
+
     ---- :help: fidget.txt -----------------------------------------------------
 
     FidgetTitle({ fg = orange }),

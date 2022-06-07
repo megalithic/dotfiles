@@ -62,6 +62,9 @@ local function enable_colorcolumn()
   set_colorcolumn()
 end
 
+-- initial setup of virt-column; required for this plugin
+mega.conf("virt-column", { config = { char = "│" } })
+
 mega.augroup("ToggleColorColumn", {
   {
     -- Update the cursor column to match current window size

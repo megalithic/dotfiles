@@ -246,6 +246,9 @@ if has_wk then
     ["<localleader>t"] = {
       name = "test",
     },
+    ["<localleader>d"] = {
+      name = "debugger",
+    },
     ["<localleader>g"] = {
       name = "gitsigns",
     },
