@@ -278,18 +278,17 @@ end
 M.config = function()
   vim.cmd("packadd cfilter")
 
+  conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("cmp", { config = "cmp" })
   conf("luasnip", { config = "luasnip" })
-  conf("gitsigns", { config = "gitsigns" })
   conf("projectionist", { config = "projectionist" })
   conf("toggleterm", { config = "toggleterm" })
   conf("vim_test", { config = "vim_test" })
   conf("neotest", { config = "neotest" })
   conf("dap", { config = "dap" })
   conf("zk", { config = "zk" })
-  conf("vscode", { config = "vscode" })
-
+  -- conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
   conf("startuptime", {
