@@ -278,7 +278,6 @@ end
 M.config = function()
   vim.cmd("packadd cfilter")
 
-  conf("treesitter", { config = "treesitter" })
   conf("telescope", { config = "telescope" })
   conf("cmp", { config = "cmp" })
   conf("luasnip", { config = "luasnip" })
@@ -433,40 +432,6 @@ M.config = function()
 
       p.start()
     end,
-  })
-
-  conf("cinnamon", {
-    config = {
-      extra_keymaps = true,
-    },
-  })
-
-  conf("neoscroll", {
-    config = function(plug)
-      if plug == nil then
-        return
-      end
-
-      local mappings = {}
-      plug.setup({
-        stop_eof = true,
-        hide_cursor = true,
-        easing_function = "circular",
-      })
-
-      mappings["<C-u>"] = { "scroll", { "-vim.wo.scroll", "true", "80" } }
-      mappings["<C-d>"] = { "scroll", { "vim.wo.scroll", "true", "80" } }
-      mappings["<C-b>"] = { "scroll", { "-vim.api.nvim_win_get_height(0)", "true", "250" } }
-      mappings["<C-f>"] = { "scroll", { "vim.api.nvim_win_get_height(0)", "true", "250" } }
-      mappings["<C-y>"] = { "scroll", { "-0.10", "false", "80" } }
-      mappings["<C-e>"] = { "scroll", { "0.10", "false", "80" } }
-      mappings["zt"] = { "zt", { "150" } }
-      -- mappings["zz"] = { "zz", { "0" } }
-      mappings["zb"] = { "zb", { "150" } }
-
-      require("neoscroll.config").set_mappings(mappings)
-    end,
-    enabled = false,
   })
 
   conf("FixCursorHold", {
@@ -891,12 +856,6 @@ M.config = function()
     config = function()
       vim.g.fzf_gitignore_no_maps = true
     end,
-  })
-
-  conf("treesitter-context", {
-    config = {
-      multiline_threshold = 4,
-    },
   })
 
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
