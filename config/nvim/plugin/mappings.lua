@@ -492,8 +492,9 @@ for _, binding in ipairs(rl_bindings) do
 end
 
 -- don't yank the currently pasted text
-vnoremap("p", "\"_Pp")
-vnoremap("P", "\"_PP")
+-- xnoremap("p", "\"_Pp")
+xnoremap("p", "\"_c<c-r>\"<esc>")
+xnoremap("P", "\"_PP")
 
 -- yank to empty register for D, c, etc.
 nnoremap("x", "\"_x")

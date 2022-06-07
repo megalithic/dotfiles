@@ -3,14 +3,18 @@ local hsluv = lush.hsluv
 
 local C = { lsp = {} }
 
-C.bg0 = hsluv("#323d43")
+local bg_hard = "#2b3339"
+local bg_medium = "#2b3339"
+local bg_soft = "#323d43"
+
+C.bg0 = hsluv(bg_soft)
 C.bg1 = C.bg0.lighten(5) -- #3c474d
 C.bg2 = C.bg0.lighten(10) -- #465258
 C.bg3 = C.bg0.lighten(15) -- #505a60
 C.bg4 = C.bg0.lighten(20) -- #576268
 C.bg5 = C.bg0.lighten(25) -- #626262
 
-C.bg_dark = hsluv("#273433")
+C.bg_dark = hsluv(bg_hard)
 C.bg_visual = hsluv("#4e6053")
 C.bg_red = hsluv("#614b51")
 C.bg_green = hsluv("#4e6053")
