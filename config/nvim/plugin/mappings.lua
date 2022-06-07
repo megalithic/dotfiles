@@ -295,9 +295,9 @@ nmap("gx", mega.open_uri, "open uri under cursor")
 nmap("zs", mega.showCursorHighlights, "show syntax highlights under cursor")
 nmap("zS", mega.showCursorHighlights, "show syntax highlights under cursor")
 
--- nmap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
+nmap("<localleader>tn", "<cmd>TestNearest<cr>", "run _test under cursor")
 nmap("<localleader>ta", "<cmd>TestFile<cr>", "run _all tests in file")
--- nmap("<localleader>tf", "<cmd>TestFile<cr>", "run _all tests in file")
+nmap("<localleader>tf", "<cmd>TestFile<cr>", "run _all tests in file")
 nmap("<localleader>tl", "<cmd>TestLast<cr>", "run _last test")
 nmap("<localleader>tt", "<cmd>TestLast<cr>", "run _last test")
 nmap("<localleader>tv", "<cmd>TestVisit<cr>", "run test file _visit")
@@ -359,11 +359,6 @@ nnoremap <lt>> V`]<
 nnoremap ><lt> V`]>
 nnoremap =- V`]=
 
-" Don't overwrite blackhole register with selection
-" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
-xnoremap p "_c<c-r>"<esc>
-xmap P p
-
 " Better save and quit
 silent! unmap <leader>w
 nnoremap <silent><leader>w :write<CR>
@@ -371,31 +366,7 @@ nnoremap <silent><leader>W :write !sudo -S tee > /dev/null %<CR>
 cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
 
-" Background (n)vim
-vnoremap <C-z> <ESC>zv`<ztgv
-
-" always paste from 0 register to avoid pasting deleted text (from r/vim)
-xnoremap <silent> p p:let @"=@0<CR>
-
-
-function! Show_position()
-  return ":\<c-u>echo 'start=" . string(getpos("v")) . " end=" . string(getpos(".")) . "'\<cr>gv"
-endfunction
-vmap <expr> <leader>P Show_position()
-
-" flip between two last edited files/alternate/buffer
-" nnoremap <Leader><Leader> <C-^>
-
-" Don't overwrite blackhole register with selection
-" https://www.reddit.com/r/vim/comments/clccy4/pasting_when_selection_touches_eol/
-" xnoremap p "_c<c-r>"<esc>
-" xmap P p
-
 vnoremap <C-r> "hy:%Subvert/<C-r>h//gc<left><left><left>
-
-" REF: https://github.com/savq/dotfiles/blob/master/nvim/init.lua#L90-L101
-"      https://github.com/neovim/neovim/issues/4495#issuecomment-207825278
-" nnoremap z= :setlocal spell<CR>z=
 ]])
 
 -- Clear UI state:
