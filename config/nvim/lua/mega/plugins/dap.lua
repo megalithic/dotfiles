@@ -107,6 +107,13 @@ return function(plug)
         "apps/**/test/**/*_test.exs",
       },
     },
+    {
+      type = "mix_task",
+      name = "phx.server",
+      request = "launch",
+      task = "phx.server",
+      projectDir = ".",
+    },
   }
 
   -- DAP VIRTUAL TEXT ----------------------------------------------------------

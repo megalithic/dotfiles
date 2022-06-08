@@ -464,8 +464,8 @@ end
 
 -- don't yank the currently pasted text
 -- xnoremap("p", "\"_Pp")
-xnoremap("p", "\"_c<c-r>\"<esc>")
-xnoremap("P", "\"_PP")
+-- xnoremap("p", "\"_c<c-r>\"<esc>")
+-- xnoremap("P", "\"_PP")
 
 -- yank to empty register for D, c, etc.
 nnoremap("x", "\"_x")

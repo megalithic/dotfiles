@@ -361,6 +361,7 @@ M.config = function()
       },
       window = {
         blend = 10,
+        relative = "editor",
       },
       sources = { -- Sources to configure
         ["elixirls"] = { -- Name of source
