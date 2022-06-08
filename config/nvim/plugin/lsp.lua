@@ -652,7 +652,7 @@ mega.lsp.servers = {
 
     local config = {
       library = {
-        plugins = { "plenary.nvim" },
+        plugins = { "plenary.nvim", "neotest" },
       },
       lspconfig = {
         settings = {
@@ -962,51 +962,36 @@ function mega.lsp.get_server_config(server)
   return config
 end
 
-if false then
-  local lsp_installer = require("nvim-lsp-installer")
-  for server_name, _ in pairs(mega.lsp.servers) do
-    local server_is_found, server = lsp_installer.get_server(server_name)
-    if server_is_found and not server:is_installed() then
-      vim.notify("Installing " .. server_name)
-      -- server:install()
-    end
+-- Load lspconfig servers with their configs
+for server, _ in pairs(mega.lsp.servers) do
+  if server == nil or lspconfig[server] == nil then
+    vim.notify("unable to setup ls for " .. server)
+    return
   end
 
-  lsp_installer.on_server_ready(function(server)
-    server:setup(mega.lsp.get_server_config(server))
-  end)
-else
-  -- Load lspconfig servers with their configs
-  for server, _ in pairs(mega.lsp.servers) do
-    if server == nil or lspconfig[server] == nil then
-      vim.notify("unable to setup ls for " .. server)
-      return
-    end
-
-    local config = mega.lsp.get_server_config(server)
-    lspconfig[server].setup(config)
-  end
-
-  --- A set of custom overrides for specific lsp clients
-  --- This is a way of adding functionality for specific lsps
-  --- without putting all this logic in the general on_attach function
-  local client_overrides = {
-    -- ["sumneko_lua"] = function(client, bufnr) end,
-  }
-
-  mega.augroup("LspSetupCommands", {
-    {
-      event = "LspAttach",
-      desc = "Setup LS things on the buffer when the client attaches",
-      command = function(args)
-        local bufnr = args.buf
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
-        mega.lsp.on_attach(client, bufnr)
-
-        if client_overrides[client.name] then
-          client_overrides[client.name](client, bufnr)
-        end
-      end,
-    },
-  })
+  local config = mega.lsp.get_server_config(server)
+  lspconfig[server].setup(config)
 end
+
+--- A set of custom overrides for specific lsp clients
+--- This is a way of adding functionality for specific lsps
+--- without putting all this logic in the general on_attach function
+local client_overrides = {
+  -- ["sumneko_lua"] = function(client, bufnr) end,
+}
+
+mega.augroup("LspSetupCommands", {
+  {
+    event = "LspAttach",
+    desc = "Setup LS things on the buffer when the client attaches",
+    command = function(args)
+      local bufnr = args.buf
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      mega.lsp.on_attach(client, bufnr)
+
+      if client_overrides[client.name] then
+        client_overrides[client.name](client, bufnr)
+      end
+    end,
+  },
+})

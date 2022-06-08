@@ -173,6 +173,7 @@ _G.mega = mega
         float = "",
       },
       misc = {
+        clock = "",
         ellipsis = "…",
         lblock = "▌",
         rblock = "▐",

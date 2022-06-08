@@ -81,11 +81,11 @@ return function(plug)
         ".yarn",
         "dotbot/.*",
         "config/zsh/plugins/.*",
-        ".git/.*",
+        "^.git/.*",
         "%.DS_Store",
         "%yarn.lock",
         "%package-lock.json",
-        "node_modules/.*",
+        "^node_modules/.*",
       },
       -- :help telescope.defaults.path_display
       -- path_display = { "smart", "absolute", "truncate" },
@@ -255,6 +255,11 @@ return function(plug)
     builtin.find_files({
       prompt_title = "~ dotfiles ~",
       cwd = mega.dirs.dots,
+      file_ignore_patterns = {
+        ".git/.*",
+        "dotbot/.*",
+        "config/zsh/plugins/.*",
+      },
     })
   end
 

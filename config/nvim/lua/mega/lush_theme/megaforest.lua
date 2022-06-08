@@ -495,7 +495,6 @@ return lush(function()
     TSWarning({ fg = commentTSWarning.fg }),
     TSDanger({}),
     TSNote({ fg = commentTSNote.fg }),
-    TreesitterContext({ bg = bg1 }),
 
     -- { 'TSKeywordReturn', { italic = true, foreground = keyword_fg } },
     -- { 'TSParameter', { italic = true, bold = true, foreground = 'NONE' } },
@@ -504,6 +503,14 @@ return lush(function()
     -- { 'commentTSWarning', { background = P.light_red, foreground = 'fg', bold = true } },
     -- { 'commentTSDanger', { background = L.hint, foreground = '#1B2229', bold = true } },
     -- { 'commentTSNote', { background = L.info, foreground = '#1B2229', bold = true } },
+
+    ---- :help treesitter-context ----------------------------------------------
+
+    TreesitterContext({ bg = bg1 }),
+    -- ContextBorder = { foreground = dim, background = dimmer },
+    -- TreesitterContext = { inherit = 'Normal', background = dimmer },
+    TreesitterContextLineNumber({ CursorLineNr, bg = TreesitterContext.bg }),
+    TreesitterContextBorder({ fg = bg_dark, bg = TreesitterContext.bg }),
 
     -- TS: Markdown
     markdownTSPunctSpecial({ Special }),

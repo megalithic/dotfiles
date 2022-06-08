@@ -4,6 +4,9 @@ return function(plug)
   end
 
   plug.setup({
+    icons = {
+      running = mega.icons.misc.clock,
+    },
     adapters = {
       require("neotest-plenary"),
       require("neotest-vim-test")({ ignore_filetypes = { "python", "lua" } }),

@@ -34,7 +34,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
-  "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
+  -- "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   { "hrsh7th/nvim-cmp", branch = "main" },
@@ -168,6 +168,7 @@ local PKGS = {
   "windwp/nvim-autopairs",
   "alvan/vim-closetag",
   "numToStr/Comment.nvim",
+  "johmsalas/text-case.nvim",
   "tpope/vim-eunuch",
   "tpope/vim-abolish",
   "tpope/vim-rhubarb",
@@ -384,6 +385,19 @@ M.config = function()
       --     border = vim.g.floating_window_border,
       --   },
     },
+  })
+
+  conf("text-case", {
+    config = function(plug)
+      if plug == nil then
+        return
+      end
+
+      plug.setup({})
+      mega.nnoremap("<localleader>[", ":Subs/<C-R><C-W>//<LEFT>", { silent = false })
+      mega.nnoremap("<localleader>]", ":%Subs/<C-r><C-w>//c<left><left>", { silent = false })
+      mega.xnoremap("<localleader>[", [["zy:%Subs/<C-r><C-o>"//c<left><left>]], { silent = false })
+    end,
   })
 
   conf("git-conflict", {

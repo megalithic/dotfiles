@@ -217,5 +217,6 @@ require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a"
 mega.conf("treesitter-context", {
   config = {
     multiline_threshold = 4,
+    separator = { "▁", "TreesitterContextBorder" }, -- ─▁
   },
 })
