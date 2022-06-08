@@ -1,0 +1,83 @@
+#!/bin/bash
+
+if [[ -z $XDG_DATA_HOME ]]; then
+  export XDG_DATA_HOME="$HOME/.local/share"
+fi
+if [[ -z $XDG_CONFIG_HOME ]]; then
+  export XDG_CONFIG_HOME="$HOME/.config"
+fi
+
+[[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
+
+set -euo pipefail
+
+# -- set some useful vars for executable info:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+# shellcheck disable=SC2034,SC2015
+__invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
+
+FORCE_INSTALL="false"
+
+packer_path="${XDG_DATA_HOME}/nvim/site/pack/packer/start/packer.nvim"
+
+remove_existing() {
+  rm -rf "${XDG_DATA_HOME}/nvim/site/pack/packer" || exit 1
+}
+
+do_clone() {
+  git clone https://github.com/wbthomason/packer.nvim.git "$packer_path"
+}
+
+install_plugins() {
+  nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()'
+}
+
+sync_plugins() {
+  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()' -c ':quit'
+}
+
+do_install() {
+  log "cloning packer.nvim into $packer_path"
+  if [[ -d $packer_path ]]; then
+    log_warn "existing packer.nvim found.."
+    remove_existing
+  fi
+  do_clone &&
+    install_plugins &&
+    log_ok "completed installing packer.nvim and plugins into $packer_path" ||
+    exit 1
+}
+
+while getopts "fu" OPTION; do
+  case $OPTION in
+
+    f)
+      FORCE_INSTALL="true"
+      ;;
+
+    u)
+      log "updating packer plugins.."
+      sync_plugins &&
+        (echo "" && log_ok "finished updating packer plugins.") ||
+        (echo "" && log_error "something went wrong while updating packer plugins; exiting.")
+      exit 1
+      ;;
+
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+
+  esac
+done
+shift $((OPTIND - 1))
+
+if [[ -d $packer_path && $FORCE_INSTALL == "false" ]]; then
+  log_warn "packer.nvim already exists at $packer_path; syncing installed plugins instead."
+  sync_plugins
+else
+  do_install || exit 1
+fi

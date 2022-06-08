@@ -414,91 +414,6 @@ function mega.safe_require(module, opts)
   return ok, result
 end
 
----Handles retrieval of plugin configuration for given plugin name (used with `mega.conf/3`)
-local function build_plugin_config(plugin_conf_name)
-  local str_match = function(str, matcher)
-    return string.find(str, matcher, 0, true)
-  end
-
-  local function parse_name(args)
-    if args.as then
-      return args.as
-    elseif args.url then
-      return args.url:gsub("%.git$", ""):match("/([%w-_.]+)$"), args.url
-    else
-      if type(args) == "table" then
-        return args[1]:match("^[%w-]+/([%w-_.]+)$"), args[1]
-      elseif type(args) == "string" then
-        return args:match("^[%w-]+/([%w-_.]+)$"), args
-      end
-    end
-  end
-
-  local found = nil
-  local paqs_path = vim.fn.stdpath("data") .. "/site/pack/paqs/"
-  local match = false
-
-  local found_filtered_plugin = vim.tbl_filter(function(pkg)
-    local repo = ""
-    local opt = false
-    local name = parse_name(pkg)
-    local dir = ""
-
-    if type(pkg) == "table" then
-      if pkg["url"] ~= nil then
-        repo = pkg["url"]
-      else
-        repo = pkg[1]
-      end
-
-      if pkg["opt"] ~= nil then
-        opt = pkg["opt"]
-      end
-
-      match = str_match(repo, plugin_conf_name)
-
-      if match then
-        dir = paqs_path .. (opt and "opt/" or "start/") .. name
-
-        found = {
-          name = name,
-          conf_name = plugin_conf_name,
-          spec = pkg,
-          repo = repo,
-          dir = dir,
-          type = "table",
-          opt = opt,
-        }
-      end
-
-      return match
-    elseif type(pkg) == "string" then
-      repo = pkg
-      match = str_match(repo, plugin_conf_name)
-
-      if match then
-        dir = paqs_path .. "start/" .. name
-
-        found = {
-          name = name,
-          conf_name = plugin_conf_name,
-          spec = pkg,
-          repo = repo,
-          dir = dir,
-          type = "string",
-          opt = opt,
-        }
-      end
-
-      return match
-    end
-
-    return match
-  end, require("mega.plugins").packages)
-
-  return found_filtered_plugin and found or nil
-end
-
 --- @class ConfigOpts
 --- @field config table|function
 --- @field enabled? boolean
@@ -855,11 +770,11 @@ function mega.table_merge(t1, t2, opts)
   return t1
 end
 
-mega.deep_merge = function(...)
+function mega.deep_merge(...)
   mega.table_merge(..., { strategy = "deep" })
 end
 
-mega.shallow_merge = function(...)
+function mega.shallow_merge(...)
   mega.table_merge(..., { strategy = "shallow" })
 end
 
@@ -972,7 +887,7 @@ end
 --   <manpage>
 -- or
 --   <section> <manpage>
-mega.man = function(dest, ...)
+function mega.man(dest, ...)
   if dest == "tab" then
     dest = "tabnew"
   end
@@ -993,7 +908,7 @@ mega.man = function(dest, ...)
 end
 
 -- https://www.reddit.com/r/neovim/comments/nrz9hp/can_i_close_all_floating_windows_without_closing/h0lg5m1/
-mega.close_float_wins = function()
+function mega.close_float_wins()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local config = vim.api.nvim_win_get_config(win)
     if config.relative ~= "" then
@@ -1005,7 +920,7 @@ end
 -- Open a Help topic
 --  - If a blank buffer is focused, open it there
 --  - Otherwise, open in a new tab
-mega.help = function(...)
+function mega.help(...)
   for _, topic in ipairs({ ... }) do
     if vim.fn.bufname() == "" and vim.api.nvim_buf_line_count(0) == 1 and vim.fn.getline(1) == "" then
       local win = vim.api.nvim_get_current_win()
@@ -1014,6 +929,34 @@ mega.help = function(...)
     else
       vim.cmd("tab help " .. topic)
     end
+  end
+end
+
+---Source a lua or vimscript file
+---@param path string path relative to the nvim directory
+---@param prefix boolean?
+function mega.source(path, prefix)
+  if not prefix then
+    vim.cmd(fmt("source %s", path))
+  else
+    vim.cmd(fmt("source %s/%s", vim.g.vim_dir, path))
+  end
+end
+
+---Reload lua modules
+---@param path string
+---@param recursive string
+function mega.invalidate(path, recursive)
+  if recursive then
+    for key, value in pairs(package.loaded) do
+      if key ~= "_G" and value and fn.match(key, path) ~= -1 then
+        package.loaded[key] = nil
+        require(key)
+      end
+    end
+  else
+    package.loaded[path] = nil
+    require(path)
   end
 end
 

@@ -237,14 +237,6 @@ local M = {
   packages = PKGS,
 }
 
-M.sync_all = function()
-  (require("paq"))(PKGS):sync()
-end
-
-M.list = function()
-  (require("paq"))(PKGS).list()
-end
-
 local function clone_paq()
   local path = vim.fn.stdpath("data") .. "/site/pack/paqs/start/paq-nvim"
   if vim.fn.empty(vim.fn.glob(path)) > 0 then
@@ -258,8 +250,16 @@ local function clone_paq()
   end
 end
 
+function M.sync_all()
+  (require("paq"))(PKGS):sync()
+end
+
+function M.list()
+  (require("paq"))(PKGS).list()
+end
+
 -- `bin/paq-install` runs this for us in a headless nvim environment
-M.bootstrap = function()
+function M.bootstrap()
   clone_paq()
 
   -- Load Paq
@@ -275,7 +275,7 @@ end
 
 -- [ plugin config ] -----------------------------------------------------------
 
-M.config = function()
+function M.config()
   -- if true then
   --   return
   -- end
@@ -290,7 +290,6 @@ M.config = function()
   conf("toggleterm", { config = "toggleterm" })
   conf("vim_test", { config = "vim_test" })
   conf("neotest", { config = "neotest" })
-  conf("dap", { config = "dap" })
   conf("zk", { config = "zk" })
   -- conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})

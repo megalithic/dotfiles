@@ -343,13 +343,17 @@ map 0 ^
 " ## Selections
 " reselect pasted content:
 nnoremap gV `[v`]
+
 " select all text in the file
-nnoremap <leader>v ggVG
+" nnoremap <leader>v ggVG
+
 " Easier linewise reselection of what you just pasted.
-nnoremap <leader>V V`]
+" nnoremap <leader>V V`]
+
 " gi already moves to 'last place you exited insert mode', so we'll map gI to
 " something similar: move to last change
 nnoremap gI `.
+
 " reselect visually selected content:
 xnoremap > >gv
 
