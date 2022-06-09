@@ -130,7 +130,7 @@ require("nvim-treesitter.configs").setup({
       init_selection = "<leader>v", -- maps in normal mode to init the node/scope selection
       node_incremental = "<leader>v", -- increment to the upper named parent
       node_decremental = "<leader>V", -- decrement to the previous node
-      scope_incremental = "grc", -- increment to the upper scope (as defined in locals.scm)
+      scope_incremental = "gv", -- (grc) increment to the upper scope (as defined in locals.scm)
     },
   },
   textobjects = {

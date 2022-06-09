@@ -429,19 +429,13 @@ function mega.conf(plugin_conf_name, opts)
   local config
   local enabled
   local silent
-  ---@diagnostic disable-next-line: unused-local
-  local test
-  ---@diagnostic disable-next-line: unused-local
-  local event
 
   if type(opts) == "table" then
+    -- config props go straigh to the plugin setup
     config = (opts.config == nil) and {} or opts.config
+    -- enabled and silent props are taken raw from the opts table and used for plugin setup things
     enabled = (opts.enabled == nil) and true or opts.enabled
     silent = (opts.silent == nil) and true or opts.silent
-    ---@diagnostic disable-next-line: unused-local
-    test = (opts.test == nil) and false or opts.test
-    ---@diagnostic disable-next-line: unused-local
-    event = (opts.event == nil) and {} or opts.event
 
     -- handle what to do when opts.config is simply a string "name" to use for loading external config
     if type(opts.config) == "string" then
@@ -449,7 +443,7 @@ function mega.conf(plugin_conf_name, opts)
       if has_external_config then
         config = found_external_config
         if not silent then
-          P(fmt("%s: %s", plugin_conf_name, vim.inspect(config)))
+          P(fmt("%s external config: %s", plugin_conf_name, vim.inspect(config)))
         end
       end
     end
@@ -457,15 +451,8 @@ function mega.conf(plugin_conf_name, opts)
     config = opts
     enabled = true
     silent = true
-    ---@diagnostic disable-next-line: unused-local
-    test = false
-    ---@diagnostic disable-next-line: unused-local
     event = {}
   end
-
-  -- if not enabled then
-  --   -- P(plugin_conf_name .. " currently disabled.")
-  -- end
 
   if not enabled and not silent then
     P(plugin_conf_name .. " is disabled.")
@@ -498,38 +485,27 @@ function mega.conf(plugin_conf_name, opts)
     --   end
     -- end
 
-    local ok, loader = pcall(require, plugin_conf_name, { silent = silent })
-    -- plugin is installed, we found it, let's try and execute auto-config things on it, like auto-invoking its `setup` fn
-    if ok then
-      if type(config) == "table" then
-        -- does it have a setup key to execute?
-        if vim.fn.has_key(loader, "setup") then
-          if not silent then
-            P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
-          end
+    if type(config) == "table" then
+      local ok, loader = pcall(require, plugin_conf_name)
+      if not ok then
+        return
+      end
 
-          loader.setup(config)
-        end
-        -- config was passed a function, so we're assuming we want to bypass the plugin auto-invoking, and invoke our own fn
-      elseif type(config) == "function" then
-        -- passes the loaded plugin back to the caller so they can do more config
+      -- does it have a setup key to execute?
+      if vim.fn.has_key(loader, "setup") then
         if not silent then
-          P(fmt("%s configuring with `config(loader)`", plugin_conf_name))
+          P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
         end
-        config(loader)
+
+        loader.setup(config)
       end
-    else
-      if type(config) == "function" then
-        if not silent then
-          P(fmt("%s configuring with `config()`", plugin_conf_name))
-        end
-        config()
-      else
-        -- no-op
-        if not silent then
-          P(fmt("%s no-op", plugin_conf_name))
-        end
+      -- config was passed a function, so we're assuming we want to bypass the plugin auto-invoking, and invoke our own fn
+    elseif type(config) == "function" then
+      -- passes the loaded plugin back to the caller so they can do more config
+      if not silent then
+        P(fmt("%s configuring with `config(loader)`", plugin_conf_name))
       end
+      config()
     end
   end
 end

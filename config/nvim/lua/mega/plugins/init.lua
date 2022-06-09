@@ -462,9 +462,11 @@ function M.config()
     },
   })
 
-  conf("colorizer", { config = { "*" }, {
-    mode = "background",
-  } })
+  conf("colorizer", function()
+    require("colorizer").setup({ "*" }, {
+      mode = "background",
+    })
+  end)
 
   conf("golden_size", {
     config = function(plug)
@@ -715,12 +717,6 @@ function M.config()
     },
   })
 
-  conf("tabout", { config = {
-    completion = false,
-    ignore_beginning = false,
-    enabled = false,
-  } })
-
   conf("headlines", {
     config = {
       markdown = {
@@ -844,8 +840,6 @@ function M.config()
   })
 
   conf("pqf", {})
-
-  conf("regexplainer", {})
 
   conf("dd", { config = {
     enabled = false,
