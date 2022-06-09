@@ -291,6 +291,7 @@ function M.config()
   conf("toggleterm", { config = "toggleterm" })
   conf("vim-test", { config = "vim-test" })
   conf("neotest", { config = "neotest" })
+  conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
   -- conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
@@ -421,24 +422,6 @@ function M.config()
         border = "shadow",
       }
     end,
-  })
-
-  conf("mini.indentscope", {
-    config = {
-      symbol = "▏", -- │ ▏
-      draw = {
-        delay = 50,
-      },
-
-      -- draw = {
-      --   delay = 50,
-      --   animation = require("mini.indentscope").gen_animation("none"),
-      -- },
-      -- options = {
-      --   indent_at_cursor = false,
-      -- },
-      -- symbol = "▏",
-    },
   })
 
   conf("hclipboard", {
