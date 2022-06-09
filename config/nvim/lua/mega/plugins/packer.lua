@@ -10,7 +10,7 @@ local function packer_notify(msg, level)
 end
 
 local function conf(name)
-  return require(fmt("mega.plugins.%s", name))
+  require(fmt("mega.plugins.%s", name))
 end
 
 local function clone()
@@ -108,7 +108,6 @@ packer.startup({
       -- end,
     },
   },
-
   function(use, use_rocks)
     use_rocks("penlight")
 

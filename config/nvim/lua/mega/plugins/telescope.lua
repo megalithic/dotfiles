@@ -2,6 +2,9 @@ return function(plug)
   local telescope = plug
   if plug == nil then
     telescope = require("telescope")
+    if telescope == nil then
+      return
+    end
   end
 
   local fn = vim.fn
@@ -89,7 +92,8 @@ return function(plug)
       },
       -- :help telescope.defaults.path_display
       -- path_display = { "smart", "absolute", "truncate" },
-      layout_strategy = "flex",
+      -- layout_strategy = "flex",
+      layout_strategy = "bottom_pane",
       layout_config = {
         width = 0.65,
         height = 0.6,
@@ -103,12 +107,22 @@ return function(plug)
             return (results <= max_lines and results or max_lines - 10) + 4
           end,
         },
+        bottom_pane = {
+          height = 0.5,
+          preview_cutoff = 1,
+          preview_width = 0.65,
+          prompt_position = "top",
+        },
       },
       winblend = 0,
       -- history = {
       --   path = fn.stdpath("data") .. "/telescope_history.sqlite3",
       -- },
       dynamic_preview_title = true,
+      results_title = false,
+      selection_strategy = "reset",
+      sorting_strategy = "ascending",
+      use_less = true,
       color_devicons = true,
       vimgrep_arguments = {
         "rg",
