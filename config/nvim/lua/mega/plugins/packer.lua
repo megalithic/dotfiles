@@ -531,7 +531,7 @@ packer.startup({
     use({ "itchyny/vim-gitbranch" })
     use({ "rhysd/git-messenger.vim" })
     use({ "tpope/vim-fugitive" })
-    use({ "lewis6991/gitsigns.nvim", event = "CursorHold", config = conf("gitsigns") })
+    use({ "lewis6991/gitsigns.nvim", config = conf("gitsigns") })
     -- @trial "drzel/vim-repo-edit" -- https://github.com/drzel/vim-repo-edit#usage
     -- @trial "gabebw/vim-github-link-opener"
     use({

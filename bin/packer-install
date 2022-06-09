@@ -24,7 +24,7 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-packer_rtp_type="opt" # "opt" or "start"
+packer_rtp_type="start" # "opt" or "start"
 packer_path="${XDG_DATA_HOME}/nvim/site/pack/packer/$packer_rtp_type/packer.nvim"
 
 remove_existing() {
