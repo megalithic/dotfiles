@@ -1,11 +1,5 @@
-return function(plug)
-  local telescope = plug
-  if plug == nil then
-    telescope = require("telescope")
-    if telescope == nil then
-      return
-    end
-  end
+return function()
+  local telescope = require("telescope")
 
   local fn = vim.fn
   local actions = require("telescope.actions")
@@ -111,7 +105,7 @@ return function(plug)
           height = 0.5,
           preview_cutoff = 1,
           preview_width = 0.65,
-          prompt_position = "top",
+          prompt_position = "bottom",
         },
       },
       winblend = 0,
@@ -121,7 +115,7 @@ return function(plug)
       dynamic_preview_title = true,
       results_title = false,
       selection_strategy = "reset",
-      sorting_strategy = "ascending",
+      sorting_strategy = "descending",
       use_less = true,
       color_devicons = true,
       vimgrep_arguments = {
@@ -260,9 +254,10 @@ return function(plug)
   end
 
   local function project_files(opts)
-    if not pcall(builtin.git_files, opts) then
-      builtin.find_files(opts)
-    end
+    -- if not pcall(builtin.git_files, opts) then
+    --   builtin.find_files(opts)
+    -- end
+    builtin.find_files(opts)
   end
 
   local function dotfiles()
@@ -348,8 +343,7 @@ return function(plug)
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
   require("telescope").load_extension("fzf")
-  require("telescope").load_extension("tmux")
-  require("telescope").load_extension("media_files")
+  -- require("telescope").load_extension("tmux")
+  -- require("telescope").load_extension("media_files")
   -- require("telescope").load_extension("file_browser")
-  -- require("telescope").load_extension("smart_history")
 end

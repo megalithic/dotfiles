@@ -1,8 +1,10 @@
 local fn = vim.fn
-local api = vim.api
 local fmt = string.format
-local mega = require("mega.globals")
 local M = {}
+
+if pcall(require, "packer") then
+  vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/paqs")
+end
 
 ---A thin wrapper around vim.notify to add packer details to the message
 ---@param msg string
@@ -11,7 +13,7 @@ local function packer_notify(msg, level)
 end
 
 local function conf(name)
-  require(fmt("mega.plugins.%s", name))
+  return require(fmt("mega.plugins.%s", name))
 end
 
 local function clone()
@@ -102,15 +104,15 @@ packer.startup({
     },
     display = {
       non_interactive = vim.env.PACKER_NON_INTERACTIVE or false,
-      prompt_border = mega.get_border(),
+      prompt_border = require("mega.globals").get_border(),
       open_cmd = "silent topleft 65vnew",
       -- open_cmd = function()
       --   return require("packer.util").float({ border = mega.get_border() })
       -- end,
     },
   },
-  function(use, use_rocks)
-    use_rocks("penlight")
+  function(use)
+    -- use_rocks("penlight")
 
     use({ "wbthomason/packer.nvim" })
 
@@ -118,7 +120,6 @@ packer.startup({
     -- (profiling/speed improvements) --
     use({
       "dstein64/vim-startuptime",
-      cmd = "StartupTime",
       config = function()
         vim.g.startuptime_tries = 15
       end,
@@ -158,7 +159,7 @@ packer.startup({
         local gs = require("golden_size")
 
         local function ignore_by_buftype(types)
-          local bt = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
+          local bt = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
           for _, type in pairs(types) do
             if type == bt then
               return 1
@@ -166,7 +167,7 @@ packer.startup({
           end
         end
         local function ignore_by_filetype(types)
-          local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
+          local ft = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "filetype")
           for _, type in pairs(types) do
             if type == ft then
               return 1
@@ -217,7 +218,7 @@ packer.startup({
       end,
     })
     use({ "MunifTanjim/nui.nvim" })
-    use({ "folke/which-key.nvim", config = conf("whichkey") })
+    use({ "folke/which-key.nvim" })
     use({ "rcarriga/nvim-notify" })
     use({ "echasnovski/mini.nvim", config = conf("mini") })
 
@@ -459,8 +460,8 @@ packer.startup({
     -- (telescope/file navigation/mru) --
     use({
       "nvim-telescope/telescope.nvim",
-      cmd = "Telescope",
-      module_pattern = "telescope.*",
+      -- cmd = "Telescope",
+      -- module_pattern = "telescope.*",
       -- setup = conf("telescope").setup,
       -- config = conf("telescope").config,
       config = conf("telescope"),
@@ -473,11 +474,11 @@ packer.startup({
             require("telescope").load_extension("fzf")
           end,
         },
-        {
-          "nvim-telescope/telescope-frecency.nvim",
-          after = "telescope.nvim",
-          requires = "tami5/sqlite.lua",
-        },
+        -- {
+        --   "nvim-telescope/telescope-frecency.nvim",
+        --   after = "telescope.nvim",
+        --   requires = "tami5/sqlite.lua",
+        -- },
         {
           "nvim-telescope/telescope-smart-history.nvim",
           after = "telescope.nvim",
@@ -642,7 +643,7 @@ packer.startup({
     use({
       "ruanyl/vim-gh-line",
       config = function()
-        if fn.exists("g:loaded_gh_line") then
+        if vim.fn.exists("g:loaded_gh_line") then
           vim.g["gh_line_map_default"] = 0
           vim.g["gh_line_blame_map_default"] = 0
           vim.g["gh_line_map"] = "<leader>gH"
@@ -828,9 +829,6 @@ packer.startup({
     use({
       "aca/wezterm.nvim",
       cond = false,
-      -- cond = function()
-      --   return not vim.env.TMUX
-      -- end,
     })
     use({
       "knubie/vim-kitty-navigator",
@@ -895,7 +893,7 @@ packer.startup({
     -- (langs, syntax, et al) --
     use({ "tjdevries/nlua.nvim", ft = "lua" })
     use({ "norcalli/nvim.lua", ft = "lua" })
-    use({ "euclidianace/betterlua.vim", ft = "lua" })
+    -- use({ "euclidianace/betterlua.vim" })
     use({ "folke/lua-dev.nvim", ft = "lua" })
     use({ "andrejlevkovitch/vim-lua-format", ft = "lua" })
     use({ "milisims/nvim-luaref", ft = "lua" })
@@ -954,7 +952,7 @@ mega.augroup("PackerSetupInit", {
     desc = "Packer setup and reload",
     command = function()
       mega.invalidate("mega.plugins", true)
-      packer.compile()
+      require("packer").compile()
     end,
   },
 })

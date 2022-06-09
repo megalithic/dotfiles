@@ -9,6 +9,41 @@ vim.opt.indentexpr = "nvim_treesitter#indent()"
 local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
 parser_config.jsonc.filetype_to_parsername = "json"
 
+mega.treesitter = mega.treesitter or {
+  install_attempted = {},
+}
+
+-- When visiting a file with a type we don't have a parser for, ask me if I want to install it.
+function mega.treesitter.ensure_parser_installed()
+  local WAIT_TIME = 6000
+  local parsers = require("nvim-treesitter.parsers")
+  local lang = parsers.get_buf_lang()
+  local fmt = string.format
+  if
+    parsers.get_parser_configs()[lang]
+    and not parsers.has_parser(lang)
+    and not mega.treesitter.install_attempted[lang]
+  then
+    vim.schedule(function()
+      vim.cmd("TSInstall " .. lang)
+      mega.treesitter.install_attempted[lang] = true
+      vim.notify(fmt("Installing Treesitter parser for %s", lang), "info", {
+        title = "Nvim Treesitter",
+        icon = mega.icons.misc.down,
+        timeout = WAIT_TIME,
+      })
+    end)
+  end
+end
+
+mega.augroup("TSParserCheck", {
+  {
+    event = "FileType",
+    desc = "Treesitter: install missing parsers",
+    command = mega.treesitter.ensure_parser_installed,
+  },
+})
+
 require("nvim-treesitter.configs").setup({
   ensure_installed = {
     "bash",
@@ -91,68 +126,108 @@ require("nvim-treesitter.configs").setup({
   incremental_selection = {
     enable = true,
     keymaps = {
-      init_selection = "<cr>",
-      scope_incremental = "<cr>",
-      node_incremental = "<tab>",
-      node_decremental = "<s-tab>",
-    },
-  },
-  textsubjects = {
-    enable = false,
-    keymaps = {
-      ["."] = "textsubjects-smart",
-      [";"] = "textsubjects-container-outer",
+      -- mappings for incremental selection (visual mappings)
+      init_selection = "<leader>v", -- maps in normal mode to init the node/scope selection
+      node_incremental = "<leader>v", -- increment to the upper named parent
+      node_decremental = "<leader>V", -- decrement to the previous node
+      scope_incremental = "grc", -- increment to the upper scope (as defined in locals.scm)
     },
   },
   textobjects = {
-    move = {
-      enable = true,
-      set_jumps = true,
-
-      goto_next_start = {
-        ["]p"] = "@parameter.inner",
-        ["]m"] = "@function.outer",
-        ["]]"] = "@class.outer",
-      },
-      goto_next_end = {
-        ["]M"] = "@function.outer",
-        ["]["] = "@class.outer",
-      },
-      goto_previous_start = {
-        ["[p"] = "@parameter.inner",
-        ["[m"] = "@function.outer",
-        ["[["] = "@class.outer",
-      },
-      goto_previous_end = {
-        ["[M"] = "@function.outer",
-        ["[]"] = "@class.outer",
-      },
-    },
-
+    lookahead = true,
     select = {
       enable = true,
       keymaps = {
         ["af"] = "@function.outer",
         ["if"] = "@function.inner",
-
-        ["ac"] = "@conditional.outer",
-        ["ic"] = "@conditional.inner",
-
-        ["aa"] = "@parameter.outer",
-        ["ia"] = "@parameter.inner",
-
-        ["av"] = "@variable.outer",
-        ["iv"] = "@variable.inner",
+        ["ac"] = "@class.outer",
+        ["ic"] = "@class.inner",
+        ["aC"] = "@conditional.outer",
+        ["iC"] = "@conditional.inner",
+        -- FIXME: this is unusable
+        -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects/issues/133 is resolved
+        -- ['ax'] = '@comment.outer',
       },
     },
-
-    -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/after/plugin/treesitter.lua#L31-L54
-    -- swap = {
-    --   enable = true,
-    --   swap_next = swap_next,
-    --   swap_previous = swap_prev,
-    -- },
+    swap = {
+      enable = true,
+      swap_next = {
+        ["[w"] = "@parameter.inner",
+      },
+      swap_previous = {
+        ["]w"] = "@parameter.inner",
+      },
+    },
+    move = {
+      enable = true,
+      set_jumps = true, -- whether to set jumps in the jumplist
+      goto_next_start = {
+        ["]m"] = "@function.outer",
+        ["]]"] = "@class.outer",
+      },
+      goto_previous_start = {
+        ["[m"] = "@function.outer",
+        ["[["] = "@class.outer",
+      },
+    },
+    lsp_interop = {
+      enable = true,
+      border = mega.get_border(),
+      peek_definition_code = {
+        ["<leader>df"] = "@function.outer",
+        ["<leader>dF"] = "@class.outer",
+      },
+    },
   },
+  -- textobjects = {
+  --   move = {
+  --     enable = true,
+  --     set_jumps = true,
+
+  --     goto_next_start = {
+  --       ["]p"] = "@parameter.inner",
+  --       ["]m"] = "@function.outer",
+  --       ["]]"] = "@class.outer",
+  --     },
+  --     goto_next_end = {
+  --       ["]M"] = "@function.outer",
+  --       ["]["] = "@class.outer",
+  --     },
+  --     goto_previous_start = {
+  --       ["[p"] = "@parameter.inner",
+  --       ["[m"] = "@function.outer",
+  --       ["[["] = "@class.outer",
+  --     },
+  --     goto_previous_end = {
+  --       ["[M"] = "@function.outer",
+  --       ["[]"] = "@class.outer",
+  --     },
+  --   },
+
+  --   select = {
+  --     enable = true,
+  --     keymaps = {
+  --       ["af"] = "@function.outer",
+  --       ["if"] = "@function.inner",
+
+  --       ["ac"] = "@conditional.outer",
+  --       ["ic"] = "@conditional.inner",
+
+  --       ["aa"] = "@parameter.outer",
+  --       ["ia"] = "@parameter.inner",
+
+  --       ["av"] = "@variable.outer",
+  --       ["iv"] = "@variable.inner",
+  --     },
+  --   },
+
+  --   -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/after/plugin/treesitter.lua#L31-L54
+  --   -- swap = {
+  --   --   enable = true,
+  --   --   swap_next = swap_next,
+  --   --   swap_previous = swap_prev,
+  --   -- },
+  -- },
   -- refactor = {
   --   highlight_definitions = { enable = true },
   --   highlight_current_scope = { enable = false },

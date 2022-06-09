@@ -1,11 +1,5 @@
-return function(plug)
-  local gs = plug
-  if plug == nil then
-    gs = require("gitsigns")
-    if gs == nil then
-      return
-    end
-  end
+return function()
+  local gs = require("gitsigns")
 
   gs.setup({
     signs = {

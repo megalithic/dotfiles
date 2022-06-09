@@ -1,11 +1,5 @@
-return function(plug)
-  local ls = plug
-  if plug == nil then
-    ls = require("luasnip")
-    if ls == nil then
-      return
-    end
-  end
+return function()
+  local ls = require("luasnip")
 
   local t = mega.replace_termcodes
   local types = require("luasnip.util.types")

@@ -1,5 +1,5 @@
 return function()
-  require("mini").setup({
+  require("mini.indentscope").setup({
     symbol = "▏", -- │ ▏
     draw = {
       delay = 50,

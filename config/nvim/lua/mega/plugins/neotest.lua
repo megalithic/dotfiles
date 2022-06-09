@@ -1,11 +1,5 @@
-return function(plug)
-  local neotest = plug
-  if plug == nil then
-    neotest = require("neotest")
-    if neotest == nil then
-      return
-    end
-  end
+return function()
+  local neotest = require("neotest")
 
   neotest.setup({
     icons = {

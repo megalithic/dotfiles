@@ -276,9 +276,9 @@ end
 -- [ plugin config ] -----------------------------------------------------------
 
 function M.config()
-  -- if true then
-  --   return
-  -- end
+  if pcall(require, "paq") then
+    vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer")
+  end
 
   vim.cmd("packadd cfilter")
 
@@ -289,7 +289,7 @@ function M.config()
   conf("luasnip", { config = "luasnip" })
   conf("projectionist", { config = "projectionist" })
   conf("toggleterm", { config = "toggleterm" })
-  conf("vim_test", { config = "vim_test" })
+  conf("vim-test", { config = "vim-test" })
   conf("neotest", { config = "neotest" })
   conf("zk", { config = "zk" })
   -- conf("vscode", { config = "vscode" })

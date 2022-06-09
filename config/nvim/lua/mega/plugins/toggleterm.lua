@@ -1,12 +1,5 @@
-return function(plug)
-  local tt = plug
-  if plug == nil then
-    tt = require("toggleterm")
-    if tt == nil then
-      return
-    end
-  end
-
+return function()
+  local tt = require("toggleterm")
   -- TODO: send visual lines to toggleterm:
   --      https://github.com/akinsho/toggleterm.nvim/issues/172
   --      https://github.com/rikuma-t/dotfiles/blob/main/.config/nvim/lua/rc/toggleterm.lua#L29-L56 (dynamic resize/toggling)

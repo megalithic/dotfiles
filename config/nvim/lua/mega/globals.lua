@@ -288,12 +288,6 @@ end
 vim.opt.runtimepath:remove("~/.cache")
 vim.opt.runtimepath:remove("~/.local/share/src")
 
--- if pcall(require, "packer") then
---   vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/paqs")
--- elseif pcall(require, "paq") then
---   vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer")
--- end
-
 -- [ utils ] -------------------------------------------------------------------
 
 -- inspect the contents of an object very quickly

@@ -1,11 +1,5 @@
-return function(plug)
-  local cmp = plug
-  if plug == nil then
-    cmp = require("cmp")
-    if cmp == nil then
-      return
-    end
-  end
+return function()
+  local cmp = require("cmp")
 
   local fmt = string.format
   local api = vim.api

@@ -28,7 +28,7 @@ packer_rtp_type="start" # "opt" or "start"
 packer_path="${XDG_DATA_HOME}/nvim/site/pack/packer/$packer_rtp_type/packer.nvim"
 
 remove_existing() {
-  (rm -rf "${XDG_DATA_HOME}/nvim/site/pack/packer" && rm "${XDG_CACHE_HOME}/nvim/packer/packer_compiled.lua") || exit 1
+  (rm -rf "${XDG_DATA_HOME}/nvim/site/pack/packer" && rm -f "${XDG_CACHE_HOME}/nvim/packer/packer_compiled.lua" && rm -rf "${XDG_CACHE_HOME}/nvim/packer_hererocks") || exit 1
 }
 
 do_clone() {
@@ -36,7 +36,7 @@ do_clone() {
 }
 
 install_plugins() {
-  nvim --headless -u NONE -c 'lua require("mega.plugins.packer").bootstrap(true)'
+  nvim --headless -u NONE -c 'lua require("mega.plugins.packer").bootstrap(true)' -c ':quit'
 }
 
 sync_plugins() {
@@ -55,18 +55,26 @@ do_install() {
     exit 1
 }
 
-while getopts "fu" OPTION; do
+while getopts "ufc" OPTION; do
   case $OPTION in
-
-    f)
-      FORCE_INSTALL="true"
-      ;;
 
     u)
       log "updating packer plugins.."
       sync_plugins &&
         (echo "" && log_ok "finished updating packer plugins.") ||
         (echo "" && log_error "something went wrong while updating packer plugins; exiting.")
+      exit 1
+      ;;
+
+    f)
+      FORCE_INSTALL="true"
+      ;;
+
+    c)
+      log "cleaning previous packer.nvim install.."
+      remove_existing &&
+        (echo "" && log_ok "finished cleaning previous packer.nvim install.") ||
+        (echo "" && log_error "something went wrong while cleaning previous packer.nvim install; exiting.")
       exit 1
       ;;
 

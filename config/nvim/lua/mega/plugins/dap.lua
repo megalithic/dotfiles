@@ -1,12 +1,5 @@
-return function(plug)
-  local dap = plug
-  if plug == nil then
-    dap = require("dap")
-    if dap == nil then
-      return
-    end
-  end
-
+return function()
+  local dap = require("dap")
   local fn = vim.fn
 
   local function repl_toggle()

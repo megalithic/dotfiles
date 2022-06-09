@@ -958,6 +958,7 @@ function mega.lsp.get_server_config(server)
 
   config.flags = { debounce_text_changes = 200 }
   config.capabilities = server_capabilities()
+  config.on_attach = mega.lsp.on_attach
 
   return config
 end
@@ -973,25 +974,28 @@ for server, _ in pairs(mega.lsp.servers) do
   lspconfig[server].setup(config)
 end
 
+-- FIXME: doing an lsp attach via an autocmd makes for SUPER slow initial
+-- loading of the file into the buffer
+
 --- A set of custom overrides for specific lsp clients
 --- This is a way of adding functionality for specific lsps
 --- without putting all this logic in the general on_attach function
-local client_overrides = {
-  -- ["sumneko_lua"] = function(client, bufnr) end,
-}
+-- local client_overrides = {
+--   -- ["sumneko_lua"] = function(client, bufnr) end,
+-- }
 
-mega.augroup("LspSetupCommands", {
-  {
-    event = "LspAttach",
-    desc = "Setup LS things on the buffer when the client attaches",
-    command = function(args)
-      local bufnr = args.buf
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      mega.lsp.on_attach(client, bufnr)
+-- mega.augroup("LspSetupCommands", {
+--   {
+--     event = "LspAttach",
+--     desc = "Setup LS things on the buffer when the client attaches",
+--     command = function(args)
+--       local bufnr = args.buf
+--       local client = vim.lsp.get_client_by_id(args.data.client_id)
+--       mega.lsp.on_attach(client, bufnr)
 
-      if client_overrides[client.name] then
-        client_overrides[client.name](client, bufnr)
-      end
-    end,
-  },
-})
+--       if client_overrides[client.name] then
+--         client_overrides[client.name](client, bufnr)
+--       end
+--     end,
+--   },
+-- })
