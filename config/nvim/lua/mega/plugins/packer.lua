@@ -1,4 +1,5 @@
 local fn = vim.fn
+local api = vim.api
 local fmt = string.format
 local mega = require("mega.globals")
 local M = {}
@@ -130,15 +131,83 @@ packer.startup({
     -- TODO: this fixes a bug in neovim core that prevents "CursorHold" from working
     -- hopefully one day when this issue is fixed this can be removed
     -- @see: https://github.com/neovim/neovim/issues/12587
-    use({ "antoinemadec/FixCursorHold.nvim" })
+    use({
+      "antoinemadec/FixCursorHold.nvim",
+      config = function()
+        -- https://github.com/antoinemadec/FixCursorHold.nvim#configuration
+        vim.g.cursorhold_updatetime = 100
+      end,
+    })
     use({ "nvim-lua/plenary.nvim" })
     use({ "nvim-lua/popup.nvim" })
 
     ------------------------------------------------------------------------------
     -- (ui/appearance/colors) --
     use({ "rktjmp/lush.nvim" })
-    use({ "norcalli/nvim-colorizer.lua" })
-    use({ "dm1try/golden_size" })
+    use({
+      "norcalli/nvim-colorizer.lua",
+      config = function()
+        require("colorizer").setup({ "*" }, {
+          mode = "background",
+        })
+      end,
+    })
+    use({
+      "dm1try/golden_size",
+      config = function()
+        local gs = require("golden_size")
+
+        local function ignore_by_buftype(types)
+          local bt = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
+          for _, type in pairs(types) do
+            if type == bt then
+              return 1
+            end
+          end
+        end
+        local function ignore_by_filetype(types)
+          local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
+          for _, type in pairs(types) do
+            if type == ft then
+              return 1
+            end
+          end
+        end
+
+        gs.set_ignore_callbacks({
+          {
+            ignore_by_filetype,
+            {
+              "help",
+              "toggleterm",
+              "terminal",
+              "megaterm",
+              "DirBuf",
+              "Trouble",
+              "qf",
+            },
+            ignore_by_buftype,
+            {
+              "help",
+              "acwrite",
+              "Undotree",
+              "quickfix",
+              "nerdtree",
+              "current",
+              "Vista",
+              "Trouble",
+              "LuaTree",
+              "NvimTree",
+              "terminal",
+              "DirBuf",
+              "tsplayground",
+            },
+          },
+          { gs.ignore_float_windows }, -- default one, ignore float windows
+          { gs.ignore_by_window_flag }, -- default one, ignore windows with w:ignore_gold_size=1
+        })
+      end,
+    })
     use({ "kyazdani42/nvim-web-devicons" })
     use({
       "lukas-reineke/virt-column.nvim",
@@ -150,7 +219,7 @@ packer.startup({
     use({ "MunifTanjim/nui.nvim" })
     use({ "folke/which-key.nvim", config = conf("whichkey") })
     use({ "rcarriga/nvim-notify" })
-    use({ "echasnovski/mini.nvim" })
+    use({ "echasnovski/mini.nvim", config = conf("mini") })
 
     ------------------------------------------------------------------------------
     -- (qf/quickfixlist) --
@@ -526,9 +595,28 @@ packer.startup({
     ------------------------------------------------------------------------------
     -- (git, gh, vcs, et al) --
     use({ "mattn/webapi-vim" })
-    use({ "akinsho/git-conflict.nvim" })
+    use({
+      "akinsho/git-conflict.nvim",
+      config = function()
+        require("git-conflict").setup({
+          disable_diagnostics = true,
+          highlights = {
+            incoming = "DiffText",
+            current = "DiffAdd",
+          },
+        })
+      end,
+    })
     use({ "itchyny/vim-gitbranch" })
-    use({ "rhysd/git-messenger.vim" })
+    use({
+      "rhysd/git-messenger.vim",
+      config = function()
+        vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }
+        vim.g.git_messenger_no_default_mappings = true
+        vim.g.git_messenger_max_popup_width = 100
+        vim.g.git_messenger_max_popup_height = 100
+      end,
+    })
     use({ "tpope/vim-fugitive" })
     use({ "lewis6991/gitsigns.nvim", config = conf("gitsigns") })
     -- @trial "drzel/vim-repo-edit" -- https://github.com/drzel/vim-repo-edit#usage
@@ -551,7 +639,23 @@ packer.startup({
         end, "gitlinker: open in browser")
       end,
     })
-    use({ "ruanyl/vim-gh-line" })
+    use({
+      "ruanyl/vim-gh-line",
+      config = function()
+        if fn.exists("g:loaded_gh_line") then
+          vim.g["gh_line_map_default"] = 0
+          vim.g["gh_line_blame_map_default"] = 0
+          vim.g["gh_line_map"] = "<leader>gH"
+          vim.g["gh_line_blame_map"] = "<leader>gB"
+          vim.g["gh_repo_map"] = "<leader>gO"
+
+          -- Use a custom program to open link:
+          -- let g:gh_open_command = 'open '
+          -- Copy link to a clipboard instead of opening a browser:
+          -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
+        end
+      end,
+    })
     -- @trial "ldelossa/gh.nvim"
 
     ------------------------------------------------------------------------------
@@ -601,10 +705,72 @@ packer.startup({
     ------------------------------------------------------------------------------
     -- (the rest...) --
     use({ "nacro90/numb.nvim" })
-    use({ "andymass/vim-matchup" })
-    use({ "windwp/nvim-autopairs" })
+    use({
+      "andymass/vim-matchup",
+      config = function()
+        vim.g.matchup_surround_enabled = true
+        vim.g.matchup_matchparen_deferred = true
+        vim.g.matchup_matchparen_offscreen = {
+          method = "popup",
+          fullwidth = true,
+          highlight = "Normal",
+          border = "shadow",
+        }
+      end,
+    })
+    use({
+      "windwp/nvim-autopairs",
+      config = function()
+        local p = require("nvim-autopairs")
+        p.setup({
+          disable_filetype = { "TelescopePrompt" },
+          -- enable_afterquote = true, -- To use bracket pairs inside quotes
+          enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
+          disable_in_macro = false,
+          close_triple_quotes = true,
+          check_ts = true,
+          ts_config = {
+            lua = { "string", "source" },
+            javascript = { "string", "template_string" },
+            java = false,
+          },
+        })
+        p.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+        local endwise = require("nvim-autopairs.ts-rule").endwise
+        p.add_rules({
+          endwise("then$", "end", "lua", nil),
+          endwise("do$", "end", "lua", nil),
+          endwise("function%(.*%)$", "end", "lua", nil),
+          endwise(" do$", "end", "elixir", nil),
+        })
+        -- REF: neat stuff:
+        -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
+      end,
+    })
     use({ "alvan/vim-closetag" })
-    use({ "numToStr/Comment.nvim" })
+    use({
+      "numToStr/Comment.nvim",
+      config = function()
+        require("Comment").setup({
+          ignore = "^$",
+          pre_hook = function(ctx)
+            local U = require("Comment.utils")
+
+            local location = nil
+            if ctx.ctype == U.ctype.block then
+              location = require("ts_context_commentstring.utils").get_cursor_location()
+            elseif ctx.cmotion == U.cmotion.v or ctx.cmotion == U.cmotion.V then
+              location = require("ts_context_commentstring.utils").get_visual_start_location()
+            end
+
+            return require("ts_context_commentstring.internal").calculate_commentstring({
+              key = ctx.ctype == U.ctype.line and "__default" or "__multiline",
+              location = location,
+            })
+          end,
+        })
+      end,
+    })
     use("wellle/targets.vim")
     use({
       "kana/vim-textobj-user",
@@ -693,7 +859,28 @@ packer.startup({
     })
     use({ "ellisonleao/glow.nvim", ft = "markdown" })
     use({ "dkarter/bullets.vim", ft = "markdown" })
-    use({ "lukas-reineke/headlines.nvim", ft = "markdown" })
+    use({
+      "lukas-reineke/headlines.nvim",
+      ft = "markdown",
+      config = function()
+        require("headlines").setup({
+          markdown = {
+            source_pattern_start = "^```",
+            source_pattern_end = "^```$",
+            dash_pattern = "^---+$",
+            dash_highlight = "Dash",
+            dash_string = "―",
+            headline_pattern = "^#+",
+            headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+            codeblock_highlight = "CodeBlock",
+          },
+          yaml = {
+            dash_pattern = "^---+$",
+            dash_highlight = "Dash",
+          },
+        })
+      end,
+    })
     use({ "mickael-menu/zk-nvim", config = conf("zk") })
 
     -- @trial https://github.com/artempyanykh/marksman
@@ -729,7 +916,12 @@ packer.startup({
     use({ "avakhov/vim-yaml" })
     use({ "chr4/nginx.vim" })
     use({ "fladson/vim-kitty" })
-    use({ "SirJson/fzf-gitignore" })
+    use({
+      "SirJson/fzf-gitignore",
+      config = function()
+        vim.g.fzf_gitignore_no_maps = true
+      end,
+    })
 
     ------------------------------------------------------------------------------
     -- (work) --
