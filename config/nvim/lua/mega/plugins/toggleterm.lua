@@ -2,6 +2,9 @@ return function(plug)
   local tt = plug
   if plug == nil then
     tt = require("toggleterm")
+    if tt == nil then
+      return
+    end
   end
 
   -- TODO: send visual lines to toggleterm:

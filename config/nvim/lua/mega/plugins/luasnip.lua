@@ -1,7 +1,10 @@
 return function(plug)
   local ls = plug
   if plug == nil then
-    ls = require("ls")
+    ls = require("luasnip")
+    if ls == nil then
+      return
+    end
   end
 
   local t = mega.replace_termcodes

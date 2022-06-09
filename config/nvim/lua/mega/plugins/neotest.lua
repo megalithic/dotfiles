@@ -1,9 +1,13 @@
 return function(plug)
+  local neotest = plug
   if plug == nil then
-    return
+    neotest = require("neotest")
+    if neotest == nil then
+      return
+    end
   end
 
-  plug.setup({
+  neotest.setup({
     icons = {
       running = mega.icons.misc.clock,
     },
@@ -17,15 +21,15 @@ return function(plug)
   })
 
   local function open()
-    plug.output.open({ enter = false })
+    neotest.output.open({ enter = false })
   end
 
   local function run_file()
-    plug.run.run(vim.fn.expand("%"))
+    neotest.run.run(vim.fn.expand("%"))
   end
 
-  nnoremap("<localleader>ts", plug.summary.toggle, "neotest: run suite")
+  nnoremap("<localleader>ts", neotest.summary.toggle, "neotest: run suite")
   nnoremap("<localleader>to", open, "neotest: output")
-  nnoremap("<localleader>tn", plug.run.run, "neotest: run")
+  nnoremap("<localleader>tn", neotest.run.run, "neotest: run")
   nnoremap("<localleader>tf", run_file, "neotest: run file")
 end

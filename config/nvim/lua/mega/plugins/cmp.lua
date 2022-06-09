@@ -1,10 +1,13 @@
 return function(plug)
-  local fmt = string.format
   local cmp = plug
   if plug == nil then
     cmp = require("cmp")
+    if cmp == nil then
+      return
+    end
   end
 
+  local fmt = string.format
   local api = vim.api
 
   local ls = require("luasnip")

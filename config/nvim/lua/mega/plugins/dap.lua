@@ -1,6 +1,10 @@
 return function(plug)
+  local dap = plug
   if plug == nil then
-    return
+    dap = require("dap")
+    if dap == nil then
+      return
+    end
   end
 
   local fn = vim.fn
@@ -58,7 +62,7 @@ return function(plug)
     },
   })
 
-  plug.configurations.lua = {
+  dap.configurations.lua = {
     {
       type = "nlua",
       request = "attach",
@@ -75,7 +79,7 @@ return function(plug)
     },
   }
 
-  plug.adapters.nlua = function(callback, config)
+  dap.adapters.nlua = function(callback, config)
     callback({ type = "server", host = config.host, port = config.port })
   end
 
@@ -85,13 +89,13 @@ return function(plug)
     cmd = require("mega.utils").lsp.elixirls_cmd({ is_debug = true })
   end
 
-  plug.adapters.mix_task = {
+  dap.adapters.mix_task = {
     type = "executable",
     command = cmd,
     args = {},
   }
 
-  plug.configurations.elixir = {
+  dap.configurations.elixir = {
     {
       type = "mix_task",
       name = "mix test",
@@ -115,33 +119,4 @@ return function(plug)
       projectDir = ".",
     },
   }
-
-  -- DAP VIRTUAL TEXT ----------------------------------------------------------
-
-  mega.conf("nvim-dap-virtual-text", { config = { all_frames = true } })
-
-  -- DAP UI --------------------------------------------------------------------
-
-  mega.conf("dapi", {})
-  nnoremap("<localleader>duc", function()
-    require("dapui").close()
-  end, "dap-ui: close")
-  nnoremap("<localleader>dut", function()
-    require("dapui").toggle()
-  end, "dap-ui: toggle")
-
-  -- NOTE: this opens dap UI automatically when dap starts
-  -- dap.listeners.after.event_initialized['dapui_config'] = function()
-  --   dapui.open()
-  -- end
-  plug.listeners.before.event_terminated["dapui_config"] = function()
-    require("dapui").close()
-  end
-  plug.listeners.before.event_exited["dapui_config"] = function()
-    require("dapui").close()
-  end
-
-  -- DON'T automatically stop at exceptions
-  -- dap.defaults.fallback.exception_breakpoints = {}
-  -- NOTE: the window options can be set directly in this function
 end

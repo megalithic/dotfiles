@@ -1,5 +1,6 @@
 local fn = vim.fn
 local fmt = string.format
+local mega = require("mega.globals")
 local M = {}
 
 ---A thin wrapper around vim.notify to add packer details to the message
@@ -14,30 +15,49 @@ end
 
 local function clone()
   local repo = "https://github.com/wbthomason/packer.nvim"
-  local rtp_type = "start" -- or "start"
+  local rtp_type = "start" -- "opt" or "start"
   local install_path = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_type)
 
   if fn.empty(fn.glob(install_path)) > 0 then
-    packer_notify(fn.system({
+    packer_notify("Downloading packer.nvim...")
+    local packer_clone = fn.system({
       "git",
       "clone",
+      "--depth",
+      "1",
       repo,
       install_path,
-    }))
+    })
+    packer_notify(packer_clone)
+
+    if packer_clone then
+      vim.schedule(function()
+        packer_notify("Syncing plugins...")
+        vim.cmd("packadd! packer.nvim")
+        require("packer").sync()
+      end)
+    end
+  else
+    -- FIXME: currently development versions of packer do not work
+    -- local name = vim.env.DEVELOPING and 'local-packer.nvim' or 'packer.nvim'
+    vim.cmd("packadd! packer.nvim")
   end
 end
 
 function M.sync_all()
   -- Load packer.nvim
   vim.cmd("packadd! packer.nvim")
-
+  packer_notify("Syncing plugins...")
   require("packer").sync()
 end
 
 -- `bin/packer-install` runs this for us in a headless nvim environment
-function M.bootstrap()
+function M.bootstrap(with_sync)
   clone()
-  M.sync_all()
+
+  if with_sync then
+    M.sync_all()
+  end
 end
 
 -- HACK: Big Sur and Luarocks support
@@ -49,15 +69,17 @@ local PACKER_COMPILED_PATH = fn.stdpath("cache") .. "/packer/packer_compiled.lua
 ---Some plugins are not safe to be reloaded because their setup functions
 ---and are not idempotent. This wraps the setup calls of such plugins
 ---@param func fun()
-function mega.block_reload(func)
-  if vim.g.packer_compiled_loaded then
-    return
-  end
-  func()
-end
+-- function mega.block_reload(func)
+--   if vim.g.packer_compiled_loaded then
+--     return
+--   end
+--   func()
+-- end
 
 -- `cfilter` plugin allows filtering down an existing quickfix list
 vim.cmd("packadd! cfilter")
+
+M.bootstrap()
 
 local packer = require("packer")
 packer.startup({
@@ -127,7 +149,7 @@ packer.startup({
       end,
     })
     use({ "MunifTanjim/nui.nvim" })
-    use({ "folke/which-key.nvim" })
+    use({ "folke/which-key.nvim", config = conf("whichkey") })
     use({ "rcarriga/nvim-notify" })
     use({ "echasnovski/mini.nvim" })
 
@@ -371,8 +393,9 @@ packer.startup({
       "nvim-telescope/telescope.nvim",
       cmd = "Telescope",
       module_pattern = "telescope.*",
-      setup = conf("telescope").setup,
-      config = conf("telescope").config,
+      -- setup = conf("telescope").setup,
+      -- config = conf("telescope").config,
+      config = conf("telescope"),
       requires = {
         {
           "nvim-telescope/telescope-fzf-native.nvim",
@@ -535,7 +558,7 @@ packer.startup({
     ------------------------------------------------------------------------------
     -- (dev, testing, debugging) --
     use({ "rgroli/other.nvim" })
-    use({ "tpope/vim-projectionist", config = conf("projectiontist") })
+    use({ "tpope/vim-projectionist", config = conf("projectionist") })
     -- @trial "tjdevries/edit_alternate.vim"
     use({ "vim-test/vim-test", config = conf("vim-test") })
     use({
@@ -552,8 +575,9 @@ packer.startup({
     use({
       "mfussenegger/nvim-dap",
       module = "dap",
-      setup = conf("dap").setup,
-      config = conf("dap").config,
+      -- setup = conf("dap").setup,
+      -- config = conf("dap").config,
+      config = conf("dap"),
       requires = {
         {
           "rcarriga/nvim-dap-ui",
@@ -672,6 +696,8 @@ packer.startup({
     use({ "dkarter/bullets.vim", ft = "markdown" })
     use({ "lukas-reineke/headlines.nvim", ft = "markdown" })
     use({ "mickael-menu/zk-nvim", config = conf("zk") })
+
+    -- @trial https://github.com/artempyanykh/marksman
     -- @trial  "dhruvasagar/vim-table-mode",
     -- @trial https://github.com/ekickx/clipboard-image.nvim
     -- @trial https://github.com/preservim/vim-wordy

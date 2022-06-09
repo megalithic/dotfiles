@@ -1,7 +1,6 @@
 import re
 
 from kittens.tui.handler import result_handler
-from kitty.fast_data_types import encode_key_for_tty
 from kitty.key_encoding import KeyEvent, parse_shortcut
 
 
@@ -24,9 +23,6 @@ def encode_key_mapping(window, key_mapping):
     ).as_window_system_event()
 
     return window.encoded_key(event)
-    # return encode_key_for_tty(
-    #     event.key, event.shifted_key, event.alternate_key, event.mods, event.action
-    # )
 
 
 def main():

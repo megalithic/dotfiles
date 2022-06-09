@@ -56,3 +56,4 @@ end
 R("mega.globals")
 R("mega.options")
 R("mega.plugins").config()
+-- R("mega.plugins.packer")

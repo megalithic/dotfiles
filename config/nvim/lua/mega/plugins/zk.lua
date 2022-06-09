@@ -2,6 +2,9 @@ return function(plug)
   local zk = plug
   if plug == nil then
     zk = require("zk")
+    if zk == nil then
+      return
+    end
   end
 
   local util = require("zk.util")

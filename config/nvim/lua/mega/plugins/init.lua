@@ -282,6 +282,7 @@ function M.config()
 
   vim.cmd("packadd cfilter")
 
+  conf("whichkey", { config = "whichkey" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("cmp", { config = "cmp" })

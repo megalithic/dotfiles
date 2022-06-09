@@ -1,5 +1,5 @@
 return function()
-  require("dapui")
+  require("dapui").setup()
 
   nnoremap("<localleader>duc", function()
     require("dapui").close()

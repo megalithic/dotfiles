@@ -6,6 +6,9 @@ fi
 if [[ -z $XDG_CONFIG_HOME ]]; then
   export XDG_CONFIG_HOME="$HOME/.config"
 fi
+if [[ -z $XDG_CACHE_HOME ]]; then
+  export XDG_CACHE_HOME="$HOME/.cache"
+fi
 
 [[ -f "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh" ]] && source "${XDG_CONFIG_HOME}/zsh/lib/helpers.zsh"
 
@@ -21,10 +24,11 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-packer_path="${XDG_DATA_HOME}/nvim/site/pack/packer/start/packer.nvim"
+packer_rtp_type="opt" # "opt" or "start"
+packer_path="${XDG_DATA_HOME}/nvim/site/pack/packer/$packer_rtp_type/packer.nvim"
 
 remove_existing() {
-  rm -rf "${XDG_DATA_HOME}/nvim/site/pack/packer" || exit 1
+  (rm -rf "${XDG_DATA_HOME}/nvim/site/pack/packer" && rm "${XDG_CACHE_HOME}/nvim/packer/packer_compiled.lua") || exit 1
 }
 
 do_clone() {
@@ -32,11 +36,11 @@ do_clone() {
 }
 
 install_plugins() {
-  nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()'
+  nvim --headless -u NONE -c 'lua require("mega.plugins.packer").bootstrap(true)'
 }
 
 sync_plugins() {
-  nvim --headless -u NONE -c 'lua require("mega.plugins").sync_all()' -c ':quit'
+  nvim --headless -u NONE -c 'lua require("mega.plugins.packer").sync_all()' -c ':quit'
 }
 
 do_install() {
