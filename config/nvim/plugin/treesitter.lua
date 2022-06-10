@@ -8,6 +8,7 @@ vim.opt.indentexpr = "nvim_treesitter#indent()"
 -- custom treesitter parsers and grammars
 local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
 parser_config.jsonc.filetype_to_parsername = "json"
+parser_config.devicetree.filetype_to_parsername = "keymap"
 
 mega.treesitter = mega.treesitter or {
   install_attempted = {},
@@ -51,6 +52,7 @@ require("nvim-treesitter.configs").setup({
     "cpp",
     "css",
     "comment",
+    "devicetree",
     "dockerfile",
     "eex",
     "elixir",
