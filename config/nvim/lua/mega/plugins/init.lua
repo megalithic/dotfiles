@@ -371,7 +371,7 @@ function M.config()
           ignore = false, -- Ignore notifications from this source
         },
         ["markdown"] = { -- Name of source
-          ignore = false, -- Ignore notifications from this source
+          ignore = true, -- Ignore notifications from this source
         },
       },
     },
