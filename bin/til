@@ -114,11 +114,7 @@ nvim_cmd() {
   local nvim_start_opts="${*:-}"
 
   if [[ $post ]]; then
-    # if [[ -n $nvim_start_opts ]]; then
-    nvim "+cd $parent" "$post" "$nvim_start_opts"
-    # else
-    #   nvim "+cd $parent" "$post"
-    # fi
+    nvim "$post" "+cd $parent" "$nvim_start_opts"
   fi
 }
 

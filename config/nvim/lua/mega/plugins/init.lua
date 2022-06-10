@@ -152,15 +152,7 @@ local PKGS = {
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
-  -- @trial "tpope/vim-dadbod",
-  -- @trial "kristijanhusak/vim-dadbod-completion",
-  -- @trial "kristijanhusak/vim-dadbod-ui",
-  -- @trial {
-  --   "glacambre/firenvim",
-  --   run = function()
-  --     vim.fn["firenvim#install"](0)
-  --   end,
-  -- },
+  "mbbill/undotree",
   ------------------------------------------------------------------------------
   -- (the rest...) --
   "nacro90/numb.nvim",
@@ -887,6 +879,12 @@ function M.config()
       -- },
     },
   })
+
+  conf("undotree", function()
+    mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
+    vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'
+    vim.g.undotree_SetFocusWhenToggle = 1
+  end)
 end
 
 return M

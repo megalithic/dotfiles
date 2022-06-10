@@ -432,7 +432,7 @@ function mega.conf(plugin_conf_name, opts)
   local silent
 
   if type(opts) == "table" then
-    -- config props go straigh to the plugin setup
+    -- config props go straight to the plugin setup
     config = (opts.config == nil) and {} or opts.config
     -- enabled and silent props are taken raw from the opts table and used for plugin setup things
     enabled = (opts.enabled == nil) and true or opts.enabled
