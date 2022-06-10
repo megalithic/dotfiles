@@ -129,10 +129,9 @@ if has_wk then
     },
     ["<leader>e"] = {
       name = "edit files",
-      c = { [[:Copy<cr>]], "save as <input>" },
-      s = { [[:Copy<cr>]], "save as <input>" },
-      cp = { [[:let @+ = expand("%")<CR>]], "copy path to clipboard" },
-      d = { [[:Duplicate<cr>]], "duplicate current file" },
+      s = { [[<cmd>SaveAsFile<cr>]], "save as file <input>" },
+      yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
+      d = { [[:DuplicateFile<cr>]], "duplicate current file" },
     },
     ["<leader>f"] = {
       name = "telescope",
@@ -373,7 +372,7 @@ nnoremap <leader>q :q<CR>
 vnoremap <C-r> "hy:%Subvert/<C-r>h//gc<left><left><left>
 ]])
 
--- Clear UI state:
+-- Clear UI state via escape:
 -- - Clear search highlight
 -- - Clear command-line
 -- - Close floating windows
@@ -383,6 +382,7 @@ nnoremap([[<Esc>]], function()
   vim.cmd("nohlsearch")
   mega.close_float_wins()
   vim.cmd("echo ''")
+  mega.blink_cursorline()
 end, { silent = true, desc = "Clear UI" })
 
 -- useful remaps from theprimeagen:

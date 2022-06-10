@@ -1225,12 +1225,12 @@ do
     nargs = 1,
   })
   command(
-    "Duplicate",
+    "DuplicateFile",
     [[noautocmd clear | silent! execute "!cp '%:p' '%:p:h/%:t:r-copy.%:e'"<bar>redraw<bar>echo "Copied " . expand('%:t') . ' to ' . expand('%:t:r') . '-copy.' . expand('%:e')]]
   )
-  command("Copy", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
+  command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
   command("Flash", function()
-    mega.flash_cursorline()
+    mega.blink_cursorline()
   end)
 end
 
