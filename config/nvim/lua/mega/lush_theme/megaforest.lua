@@ -885,7 +885,7 @@ return lush(function()
 
     ---- :help: bqf.txt --------------------------------------------------------
 
-    BqfPreviewBorder({ fg = grey0 }),
+    BqfPreviewBorder({ fg = bg_blue }),
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
 
@@ -895,7 +895,7 @@ return lush(function()
     NeoTreeNormal({ PanelBackground }),
     NeoTreeNormalNC({ PanelBackground }),
     NeoTreeRootName({ fg = purple, gui = "bold,italic" }),
-    NeoTreeCursorLine({ CursorLine }),
+    NeoTreeFileNameOpened({ bg = fg, fg = fg, gui = "underline,bold" }),
 
     ---- :help git-signs.txt -------------------------------------------
 

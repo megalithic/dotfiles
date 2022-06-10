@@ -66,6 +66,7 @@ return function()
         n = {
           ["<c-q>"] = actions.send_selected_to_qflist,
           ["<c-l>"] = actions.send_to_qflist,
+          ["<C-c>"] = actions.close,
         },
       },
       file_ignore_patterns = {

@@ -133,6 +133,7 @@ if has_wk then
       D = { [[<cmd>Delete!<cr>]], "delete file" },
       yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
       d = { [[:DuplicateFile<cr>]], "duplicate current file" },
+      t = { [[:Neotree toggle reveal<cr>]], "toggle neo-tree" },
     },
     ["<leader>f"] = {
       name = "telescope",

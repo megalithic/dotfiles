@@ -21,7 +21,6 @@ return function()
   -- end,
   vim.g.neo_tree_remove_legacy_commands = 1
   local icons = mega.icons
-  mega.nnoremap("<c-n>", "<Cmd>Neotree toggle reveal<CR>")
   mega.nnoremap("<c-t>", "<Cmd>Neotree toggle reveal<CR>")
   require("neo-tree").setup({
     enable_git_status = true,
