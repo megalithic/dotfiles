@@ -86,8 +86,7 @@ return function()
       },
       -- :help telescope.defaults.path_display
       -- path_display = { "smart", "absolute", "truncate" },
-      -- layout_strategy = "flex",
-      layout_strategy = "bottom_pane",
+      layout_strategy = "flex",
       layout_config = {
         width = 0.65,
         height = 0.6,

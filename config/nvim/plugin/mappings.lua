@@ -130,6 +130,7 @@ if has_wk then
     ["<leader>e"] = {
       name = "edit files",
       s = { [[<cmd>SaveAsFile<cr>]], "save as file <input>" },
+      D = { [[<cmd>Delete!<cr>]], "delete file" },
       yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
       d = { [[:DuplicateFile<cr>]], "duplicate current file" },
     },

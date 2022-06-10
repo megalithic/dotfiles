@@ -880,6 +880,17 @@ function M.config()
     },
   })
 
+      -- 'danymat/neogen',
+      -- keys = { '<localleader>nc' },
+      -- requires = 'nvim-treesitter/nvim-treesitter',
+      -- module = 'neogen',
+      -- setup = function()
+      --   as.nnoremap('<localleader>nc', require('neogen').generate, 'comment: generate')
+      -- end,
+      -- config = function()
+      --   require('neogen').setup({ snippet_engine = 'luasnip' })
+      -- end,
+
   conf("undotree", function()
     mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
     vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'

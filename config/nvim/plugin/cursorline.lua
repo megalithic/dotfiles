@@ -38,13 +38,11 @@ local M = {
     "markdown",
     "dashboard",
     "qf",
-    "neo-tree",
   },
   buftype_exclusions = {
     "acwrite",
     "quickfix",
     "terminal",
-    "nofile",
     "help",
     ".git/COMMIT_EDITMSG",
     "startify",
@@ -70,9 +68,14 @@ end
 ---Determines whether or not a buffer/window should be ignored by this plugin
 ---@return boolean
 local function is_ignored()
-  return vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
+  should_ignore = vim.bo.filetype == ""
+    or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
+
+  -- P(string.format("vim.bo.filetype: %s, should ignore? %s", vim.bo.filetype, should_ignore))
+
+  return should_ignore
 end
 
 local normal_bg = require("mega.lush_theme.colors").bg0
@@ -94,14 +97,16 @@ local function unhighlight_cursorline()
 end
 
 local function timer_start()
-  timer:start(
-    M.cursorline_delay,
-    0,
-    vim.schedule_wrap(function()
-      highlight_cursorline()
-      status = CURSOR
-    end)
-  )
+  if not is_ignored() then
+    timer:start(
+      M.cursorline_delay,
+      0,
+      vim.schedule_wrap(function()
+        highlight_cursorline()
+        status = CURSOR
+      end)
+    )
+  end
 end
 
 local function set_cursorline()
