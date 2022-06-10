@@ -38,6 +38,7 @@ local M = {
     "markdown",
     "dashboard",
     "qf",
+    "neo-tree",
   },
   buftype_exclusions = {
     "acwrite",

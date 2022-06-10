@@ -152,6 +152,7 @@ _G.mega = mega
       git = {
         add = "", -- 
         change = "",
+        mod = "",
         remove = "", -- 
         ignore = "",
         rename = "",

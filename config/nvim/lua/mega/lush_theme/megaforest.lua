@@ -523,12 +523,6 @@ return lush(function()
     markdownCode({ fg = grey1, bg = bg1 }),
     markdownLinkText({ markdownTSTextReference }),
 
-    ---- :help git-signs -------------------------------------------
-
-    GitSignsAdd({ GreenSign, bg = "NONE" }),
-    GitSignsDelete({ RedSign, bg = "NONE" }),
-    GitSignsChange({ OrangeSign, bg = "NONE" }),
-
     ---- :help gitcommit -------------------------------------------
 
     -- M.highlight("gitcommitComment", { fg = M.colors.gutter_fg_grey, gui = "italic,bold" })
@@ -551,6 +545,54 @@ return lush(function()
     -- M.link("gitcommitDiscardedArrow", "gitcommitDiscardedFile")
     -- M.link("gitcommitSelectedArrow", "gitcommitSelectedFile")
     -- M.link("gitcommitUnmergedArrow", "gitcommitUnmergedFile")
+
+    ---- :yaml -----------------------------------------------------------------
+
+    yamlTodo({ Todo }),
+    yamlComment({ Comment }),
+
+    yamlDocumentStart({ PreProc }),
+    yamlDocumentEnd({ PreProc }),
+
+    yamlDirectiveName({ Keyword }),
+
+    yamlTAGDirective({ yamlDirectiveName }),
+    yamlTagHandle({ String }),
+    yamlTagPrefix({ String }),
+
+    yamlYAMLDirective({ yamlDirectiveName }),
+    yamlReservedDirective({ Error }),
+    yamlYAMLVersion({ Number }),
+
+    yamlString({ String }),
+    yamlFlowString({ yamlString }),
+    yamlFlowStringDelimiter({ yamlString }),
+    yamlEscape({ SpecialChar }),
+    yamlSingleEscape({ SpecialChar }),
+
+    yamlBlockCollectionItemStart({ Label }),
+    yamlBlockMappingKey({ Identifier }),
+    yamlBlockMappingMerge({ Special }),
+
+    yamlFlowMappingKey({ Identifier }),
+    yamlFlowMappingMerge({ Special }),
+
+    yamlMappingKeyStart({ Special }),
+    yamlFlowIndicator({ Special }),
+    yamlKeyValueDelimiter({ Special }),
+
+    yamlConstant({ Constant }),
+
+    yamlNull({ yamlConstant }),
+    yamlBool({ yamlConstant }),
+
+    yamlAnchor({ Type }),
+    yamlAlias({ Type }),
+    yamlNodeTag({ Type }),
+
+    yamlInteger({ Number }),
+    yamlFloat({ Float }),
+    yamlTimestamp({ Number }),
 
     ---- :help :diff -------------------------------------------
 
@@ -847,59 +889,22 @@ return lush(function()
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
 
-    ---- :help beacon.txt ------------------------------------------------------
+    ---- :help neo-tree.txt -------------------------------------------
 
-    -- Beacon({ bg = bg_purple }),
+    NeoTreeIndentMarker({ Comment }),
+    NeoTreeNormal({ PanelBackground }),
+    NeoTreeNormalNC({ PanelBackground }),
+    NeoTreeRootName({ fg = purple, gui = "bold,italic" }),
+    NeoTreeCursorLine({ CursorLine }),
 
-    ---- :yaml -----------------------------------------------------------------
+    ---- :help git-signs.txt -------------------------------------------
 
-    yamlTodo({ Todo }),
-    yamlComment({ Comment }),
-
-    yamlDocumentStart({ PreProc }),
-    yamlDocumentEnd({ PreProc }),
-
-    yamlDirectiveName({ Keyword }),
-
-    yamlTAGDirective({ yamlDirectiveName }),
-    yamlTagHandle({ String }),
-    yamlTagPrefix({ String }),
-
-    yamlYAMLDirective({ yamlDirectiveName }),
-    yamlReservedDirective({ Error }),
-    yamlYAMLVersion({ Number }),
-
-    yamlString({ String }),
-    yamlFlowString({ yamlString }),
-    yamlFlowStringDelimiter({ yamlString }),
-    yamlEscape({ SpecialChar }),
-    yamlSingleEscape({ SpecialChar }),
-
-    yamlBlockCollectionItemStart({ Label }),
-    yamlBlockMappingKey({ Identifier }),
-    yamlBlockMappingMerge({ Special }),
-
-    yamlFlowMappingKey({ Identifier }),
-    yamlFlowMappingMerge({ Special }),
-
-    yamlMappingKeyStart({ Special }),
-    yamlFlowIndicator({ Special }),
-    yamlKeyValueDelimiter({ Special }),
-
-    yamlConstant({ Constant }),
-
-    yamlNull({ yamlConstant }),
-    yamlBool({ yamlConstant }),
-
-    yamlAnchor({ Type }),
-    yamlAlias({ Type }),
-    yamlNodeTag({ Type }),
-
-    yamlInteger({ Number }),
-    yamlFloat({ Float }),
-    yamlTimestamp({ Number }),
+    GitSignsAdd({ GreenSign, bg = "NONE" }),
+    GitSignsDelete({ RedSign, bg = "NONE" }),
+    GitSignsChange({ OrangeSign, bg = "NONE" }),
 
     ---- tmux-popup ------------------------------------------------------------
+    ---
     TmuxPopupNormal({ bg = "#3d494f" }),
 
     ---- :hackkkks -------------------------------------------------------------

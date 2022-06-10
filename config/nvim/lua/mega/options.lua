@@ -277,8 +277,8 @@ vim.opt.guicursor = {
 -- ]])
 
 -- NOTE: plugin/cursorline.lua has more...
-vim.opt.cursorline = true -- Show a line where the current cursor is
-vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
+-- vim.opt.cursorline = true -- Show a line where the current cursor is
+-- vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
 -----------------------------------------------------------------------------//
 -- Utilities {{{1
 -----------------------------------------------------------------------------//
@@ -335,10 +335,7 @@ if fn.isdirectory(vim.o.undodir) == 0 then
 end
 vim.opt.undofile = true
 vim.opt.swapfile = false
--- The // at the end tells Vim to use the absolute path to the file to create the swap file.
--- This will ensure that swap file name is unique, so there are no collisions between files
--- with the same name from different directories.
-vim.opt.directory = fn.stdpath("data") .. "/swap//"
+vim.opt.directory = fn.stdpath("state") .. "/swap//"
 if fn.isdirectory(vim.o.directory) == 0 then
   fn.mkdir(vim.o.directory, "p")
 end

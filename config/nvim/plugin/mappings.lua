@@ -535,16 +535,13 @@ onoremap("au", ":<c-u>lua require\"treesitter-unit\".select(true)<CR>")
 -- map("n", "<F5>", mega.sync_plugins())
 nmap("<F5>", "<cmd>lua mega.sync_plugins()<cr>", "paq: sync plugins")
 
--- # nvim-tree
--- nmap("<C-t>", "<cmd>NvimTreeToggle<CR>", "nvim-tree: toggle")
-
--- # dirbuf.nvim
-nmap("<C-t>", function()
-  local buf = vim.api.nvim_buf_get_name(0)
-  vim.cmd([[vertical topleft split|vertical resize 60]])
-  require("dirbuf").open(buf)
-end)
-nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
+-- -- # dirbuf.nvim
+-- nmap("<C-t>", function()
+--   local buf = vim.api.nvim_buf_get_name(0)
+--   vim.cmd([[vertical topleft split|vertical resize 60]])
+--   require("dirbuf").open(buf)
+-- end)
+-- nmap("-", "<Nop>") -- disable this mapping globally, only map in dirbuf ftplugin
 
 -- # telescope
 nmap("<leader>a", "<cmd>lua require('telescope.builtin').live_grep()<cr>", "telescope: live grep for a word")

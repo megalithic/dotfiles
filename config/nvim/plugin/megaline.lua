@@ -126,6 +126,11 @@ local function get_megaterm_name(_, buf)
   return fmt("Terminal(%s)[%s]", shell, buf)
   -- return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
 end
+-- Capture the type of the neo tree buffer opened
+local function get_neotree_name(fname, _)
+  local parts = vim.split(fname, " ")
+  return fmt("Neo Tree(%s)", parts[2])
+end
 
 local plain_types = {
   filetypes = {
@@ -137,6 +142,8 @@ local plain_types = {
     "coc-explorer",
     "NvimTree",
     "undotree",
+    "neo-tree",
+    "dirbuf",
     "neoterm",
     "vista",
     "fugitive",
@@ -179,6 +186,7 @@ local exception_types = {
     undotree = "פּ",
     NvimTree = "פּ",
     dirbuf = "פּ",
+    ["neo-tree"] = "פּ",
     toggleterm = " ",
     megaterm = " ",
     calendar = "",
@@ -204,6 +212,7 @@ local exception_types = {
     undotree = "UndoTree",
     octo = "Octo",
     NvimTree = "Nvim Tree",
+    ["neo-tree"] = get_neotree_name,
     dirbuf = "DirBuf",
     toggleterm = get_toggleterm_name,
     megaterm = get_megaterm_name,

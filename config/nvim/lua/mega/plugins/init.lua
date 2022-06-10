@@ -91,8 +91,8 @@ local PKGS = {
   { "ggandor/lightspeed.nvim", opt = true },
   { "phaazon/hop.nvim", opt = true },
   "akinsho/toggleterm.nvim",
-  "elihunter173/dirbuf.nvim",
-  -- @trial "nvim-neo-tree/neo-tree.nvim",
+  -- "elihunter173/dirbuf.nvim",
+  "nvim-neo-tree/neo-tree.nvim",
 
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
@@ -168,7 +168,7 @@ local PKGS = {
   "windwp/nvim-autopairs",
   "alvan/vim-closetag",
   "numToStr/Comment.nvim",
-  "johmsalas/text-case.nvim",
+  -- "tpope/vim-abolish",
   "tpope/vim-eunuch",
   "tpope/vim-abolish",
   "tpope/vim-rhubarb",
@@ -285,6 +285,7 @@ function M.config()
   conf("whichkey", { config = "whichkey" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
+  conf("neo-tree", { config = "neo-tree" })
   conf("cmp", { config = "cmp" })
   conf("luasnip", { config = "luasnip" })
   conf("projectionist", { config = "projectionist" })
@@ -363,10 +364,13 @@ function M.config()
       },
       window = {
         blend = 10,
-        relative = "editor",
+        -- relative = "editor",
       },
       sources = { -- Sources to configure
         ["elixirls"] = { -- Name of source
+          ignore = false, -- Ignore notifications from this source
+        },
+        ["markdown"] = { -- Name of source
           ignore = false, -- Ignore notifications from this source
         },
       },
@@ -386,19 +390,6 @@ function M.config()
       --     border = vim.g.floating_window_border,
       --   },
     },
-  })
-
-  conf("text-case", {
-    config = function(plug)
-      if plug == nil then
-        return
-      end
-
-      plug.setup({})
-      mega.nnoremap("<localleader>[", ":Subs/<C-R><C-W>//<LEFT>", { silent = false })
-      mega.nnoremap("<localleader>]", ":%Subs/<C-r><C-w>//c<left><left>", { silent = false })
-      mega.xnoremap("<localleader>[", [["zy:%Subs/<C-r><C-o>"//c<left><left>]], { silent = false })
-    end,
   })
 
   conf("git-conflict", {
@@ -425,12 +416,8 @@ function M.config()
   })
 
   conf("hclipboard", {
-    config = function(p)
-      if p == nil then
-        return
-      end
-
-      p.start()
+    config = function()
+      require("hclipboard").start()
     end,
   })
 
@@ -469,9 +456,16 @@ function M.config()
   end)
 
   conf("golden_size", {
-    config = function(plug)
-      if plug == nil then
-        return
+    config = function()
+      local gs = require("golden_size")
+
+      local function ignore_by(type, types)
+        local t = api.nvim_buf_get_option(api.nvim_get_current_buf(), type)
+        for _, type in pairs(types) do
+          if type == t then
+            return 1
+          end
+        end
       end
 
       local function ignore_by_buftype(types)
@@ -482,6 +476,7 @@ function M.config()
           end
         end
       end
+
       local function ignore_by_filetype(types)
         local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
         for _, type in pairs(types) do
@@ -491,7 +486,21 @@ function M.config()
         end
       end
 
-      plug.set_ignore_callbacks({
+      gs.set_ignore_callbacks({
+        -- {
+        --   ignore_by,
+        --   "filetype",
+        --   {
+        --     "help",
+        --     "toggleterm",
+        --     "terminal",
+        --     "megaterm",
+        --     "dirbuf",
+        --     "Trouble",
+        --     "qf",
+        --     "neo-tree",
+        --   },
+        -- },
         {
           ignore_by_filetype,
           {
@@ -499,10 +508,13 @@ function M.config()
             "toggleterm",
             "terminal",
             "megaterm",
-            "DirBuf",
+            "dirbuf",
             "Trouble",
             "qf",
+            "neo-tree",
           },
+        },
+        {
           ignore_by_buftype,
           {
             "help",
@@ -516,23 +528,20 @@ function M.config()
             "LuaTree",
             "NvimTree",
             "terminal",
-            "DirBuf",
+            "dirbuf",
             "tsplayground",
+            "neo-tree",
           },
         },
-        { plug.ignore_float_windows }, -- default one, ignore float windows
-        { plug.ignore_by_window_flag }, -- default one, ignore windows with w:ignore_gold_size=1
+        { gs.ignore_float_windows }, -- default one, ignore float windows
+        { gs.ignore_by_window_flag }, -- default one, ignore windows with w:ignore_gold_size=1
       })
     end,
   })
 
   conf("nvim-autopairs", {
-    config = function(p)
-      if p == nil then
-        return
-      end
-
-      p.setup({
+    config = function()
+      require("nvim-autopairs").setup({
         disable_filetype = { "TelescopePrompt" },
         -- enable_afterquote = true, -- To use bracket pairs inside quotes
         enable_check_bracket_line = true, -- Check for closing brace so it will not add a close pair
@@ -545,9 +554,9 @@ function M.config()
           java = false,
         },
       })
-      p.add_rules(require("nvim-autopairs.rules.endwise-ruby"))
+      require("nvim-autopairs").add_rules(require("nvim-autopairs.rules.endwise-ruby"))
       local endwise = require("nvim-autopairs.ts-rule").endwise
-      p.add_rules({
+      require("nvim-autopairs").add_rules({
         endwise("then$", "end", "lua", nil),
         endwise("do$", "end", "lua", nil),
         endwise("function%(.*%)$", "end", "lua", nil),
@@ -599,10 +608,8 @@ function M.config()
 
   conf("hop", {
     enabled = false,
-    config = function(p)
-      if p == nil then
-        return
-      end
+    config = function()
+      local p = require("hop")
 
       p.setup({
         -- remove h,j,k,l from hops list of keys
@@ -745,10 +752,8 @@ function M.config()
   })
 
   conf("bqf", {
-    config = function(plug)
-      if plug == nil then
-        return
-      end
+    config = function()
+      local plug = require("bqf")
 
       local fugitive_pv_timer
       local preview_fugitive = function(bufnr, qwinid, bufname)
@@ -804,10 +809,8 @@ function M.config()
 
   -- using this primarily with the winbar
   conf("nvim-gps", {
-    config = function(plug)
-      if plug == nil then
-        return
-      end
+    config = function()
+      local plug = require("nvim-gps")
 
       local icons = mega.icons.codicons
       local types = mega.icons.type

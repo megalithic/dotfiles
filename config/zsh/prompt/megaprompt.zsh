@@ -181,6 +181,15 @@ function +vi-git-deleted() {
   fi
 }
 
+# function +vi-git-renamed() {
+#   emulate -L zsh
+#   if __in_git; then
+#     if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
+#       hook_com[unstaged]+="%F{red} $git_deleted_icon%f"
+#     fi
+#   fi
+# }
+
 function +vi-git-stash() {
   emulate -L zsh
   if __in_git; then

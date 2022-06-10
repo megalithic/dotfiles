@@ -286,6 +286,7 @@ do
     "dap-repl",
     "dapui_*",
     "dirbuf",
+    "neo-tree",
     "packer",
     "qf",
     "undotree",
