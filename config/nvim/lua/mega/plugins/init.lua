@@ -745,7 +745,7 @@ function M.config()
 
   conf("bqf", {
     config = function()
-      local plug = require("bqf")
+      local bqf = require("bqf")
 
       local fugitive_pv_timer
       local preview_fugitive = function(bufnr, qwinid, bufname)
@@ -766,18 +766,17 @@ function M.config()
         return true
       end
 
-      plug.setup({
+      bqf.setup({
         auto_enable = true,
         auto_resize_height = true,
         preview = {
           auto_preview = true,
-          win_height = 12,
-          win_vheight = 12,
+          win_height = 15,
+          win_vheight = 15,
           delay_syntax = 80,
           border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
           ---@diagnostic disable-next-line: unused-local
           should_preview_cb = function(bufnr, qwinid)
-            local ret = true
             local bufname = vim.api.nvim_buf_get_name(bufnr)
             local fsize = vim.fn.getfsize(bufname)
             if fsize > 100 * 1024 then
@@ -880,16 +879,16 @@ function M.config()
     },
   })
 
-      -- 'danymat/neogen',
-      -- keys = { '<localleader>nc' },
-      -- requires = 'nvim-treesitter/nvim-treesitter',
-      -- module = 'neogen',
-      -- setup = function()
-      --   as.nnoremap('<localleader>nc', require('neogen').generate, 'comment: generate')
-      -- end,
-      -- config = function()
-      --   require('neogen').setup({ snippet_engine = 'luasnip' })
-      -- end,
+  -- 'danymat/neogen',
+  -- keys = { '<localleader>nc' },
+  -- requires = 'nvim-treesitter/nvim-treesitter',
+  -- module = 'neogen',
+  -- setup = function()
+  --   as.nnoremap('<localleader>nc', require('neogen').generate, 'comment: generate')
+  -- end,
+  -- config = function()
+  --   require('neogen').setup({ snippet_engine = 'luasnip' })
+  -- end,
 
   conf("undotree", function()
     mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")

@@ -119,7 +119,7 @@ end
 -- REF:
 -- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
-function mega.blink_cursorline()
+function mega.blink_cursorline(delay)
   if is_ignored() then
     return
   end
@@ -130,7 +130,7 @@ function mega.blink_cursorline()
   highlight_cursorline()
 
   blink_timer:start(
-    M.blink_delay,
+    delay or M.blink_delay,
     0,
     vim.schedule_wrap(function()
       unhighlight_cursorline()

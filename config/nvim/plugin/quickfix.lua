@@ -51,4 +51,4 @@ mega.qftf = function(info)
   return ret
 end
 
-vim.o.qftf = [[{info -> luaeval("mega.qftf(_A)", info)}]]
+-- vim.o.qftf = [[{info -> luaeval("mega.qftf(_A)", info)}]]

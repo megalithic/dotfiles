@@ -129,10 +129,11 @@ if has_wk then
     },
     ["<leader>e"] = {
       name = "edit files",
-      s = { [[<cmd>SaveAsFile<cr>]], "save as file <input>" },
+      r = { [[<cmd>RenameFile<cr>]], "rename file to <input>" },
+      s = { [[<cmd>SaveAsFile<cr>]], "save file as <input>" },
+      d = { [[:DuplicateFile<cr>]], "duplicate current file" },
       D = { [[<cmd>Delete!<cr>]], "delete file" },
       yp = { [[:let @+ = expand("%")<CR>]], "yank path to clipboard" },
-      d = { [[:DuplicateFile<cr>]], "duplicate current file" },
       t = { [[:Neotree toggle reveal<cr>]], "toggle neo-tree" },
     },
     ["<leader>f"] = {
@@ -469,12 +470,12 @@ imap("!", "!<C-g>u")
 imap("?", "?<C-g>u")
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-behavior-of-n-and-n
-nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
-xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
-onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
-nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
-xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
-onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline()<CR>'", { expr = true })
+nnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+xnoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+onoremap("n", "'Nn'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+nnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+xnoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
+onoremap("N", "'nN'[v:searchforward].'zzzv'.'<Esc><Cmd>lua mega.blink_cursorline(150)<CR>'", { expr = true })
 
 -- REF: https://github.com/mhinz/vim-galore/blob/master/README.md#saner-command-line-history
 cnoremap("<C-n>", [[wildmenumode() ? "\<c-n>" : "\<down>"]], { expr = true })
@@ -500,27 +501,6 @@ nnoremap("<leader>R", "<cmd>cfdo %s/<C-r>s//g<bar>update<cr>")
 nmap("<leader>x", mega.save_and_exec)
 
 -- [plugin mappings] -----------------------------------------------------------
-
--- # gist
--- vim.g.gist_open_url = true
--- vim.g.gist_default_private = true
--- map("v", "<Leader>gG", ":Gist -po<CR>")
-
--- # markdown-related
-
--- # lightspeed
--- do -- this continues to break my f/t movements :(
--- 	function repeat_ft(reverse)
--- 		local ls = require("lightspeed")
--- 		ls.ft["instant-repeat?"] = true
--- 		ls.ft:to(reverse, ls.ft["prev-t-like?"])
--- 	end
-
--- 	-- map({ "n", "x" }, ";", repeat_ft(false))
--- 	-- map({ "n", "x" }, ",", repeat_ft(true))
--- 	map({ "n", "x" }, ";", "<cmd>lua repeat_ft(false)<cr>")
--- 	map({ "n", "x" }, ",", "<cmd>lua repeat_ft(true)<cr>")
--- end
 
 -- # treesitter
 -- ( ts treehopper )
