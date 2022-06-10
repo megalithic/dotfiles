@@ -28,6 +28,7 @@ vim.filetype.add({
     lexs = "elixir",
     exs = "elixir",
     eex = "eelixir",
+    keymap = "keymap",
   },
   pattern = {
     [".*%.env.*"] = "sh",
