@@ -50,9 +50,9 @@ log "update git submodules.." &&
 log "create missing folders and symlinks.." &&
   ./install --only create link
 log "asdf.." &&
-  ./bin/asdf-install -u
+  ./bin/asdf-install
 log "homebrew.." &&
-  ./bin/brew-install -u
+  ./bin/brew-install
 log "post-homebrew (remove ruby).." &&
   brew uninstall --ignore-dependencies --force ruby
 log "neovim.." &&
