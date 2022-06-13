@@ -42,7 +42,7 @@ while getopts "fc" OPTION; do
 done
 shift $((OPTIND - 1))
 
-asdf_path="${HOME}/.asdf"
+asdf_path="$HOME/.asdf"
 
 install_plugins() {
   log "adding asdf plugins.."
@@ -77,9 +77,9 @@ install_versions() {
 }
 
 do_install() {
-  if [[ ! $(type "asdf" &>/dev/null) || "$CLEAN_FIRST" == "true" ]]; then
+  if [[ -d "$asdf_path" || $CLEAN_FIRST == "true" ]]; then
     log_warn "cleaning existing asdf install from $asdf_path"
-    rm -rf "$asdf_path" || exit 1
+    rm -rf "$asdf_path"
   fi
 
   log "cloning asdf into $asdf_path"
@@ -92,9 +92,15 @@ do_install() {
     exit 1
 }
 
-if [[ $(type "asdf" &>/dev/null) && "$FORCE_INSTALL" == "false" ]]; then
+if [[ $FORCE_INSTALL == "true" ]]; then
+  log_warn "force installing asdf.."
+  do_install && exit 0 || exit 1
+fi
+
+if type "asdf" &>/dev/null; then
   log_warn "asdf already installed; updating instead."
   asdf update && asdf plugin update --all && asdf reshim
-elif [[ ! $(type "asdf" &>/dev/null) || "$FORCE_INSTALL" == "true" ]]; then
-  do_install || exit 1
+else
+  log_warn "asdf not installed; installing fresh."
+  do_install
 fi

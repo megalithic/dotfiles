@@ -1,9 +1,10 @@
-return function()
+return function(on_attach)
   local nls = require("null-ls")
   local b = nls.builtins
 
   nls.setup({
     debug = false,
+    on_attach = on_attach,
     debounce = 150,
     autostart = true,
     save_after_format = false,

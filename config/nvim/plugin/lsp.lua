@@ -916,7 +916,7 @@ mega.lsp.servers = {
   end,
 }
 
-require("mega.lsp.null_ls")()
+require("mega.lsp.null_ls")(mega.lsp.on_attach)
 
 function mega.lsp.get_server_config(server)
   local function server_capabilities()
