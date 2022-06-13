@@ -24,17 +24,8 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-while getopts "uf" OPTION; do
+while getopts "f" OPTION; do
   case $OPTION in
-
-    u)
-      # (brew update && brew outdated && brew upgrade) && exit 0 || exit 1
-      export NONINTERACTIVE=1
-      brew update
-      brew outdated
-      brew upgrade
-      exit 0
-      ;;
 
     f)
       FORCE_INSTALL="true"
@@ -65,26 +56,3 @@ if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
 elif [[ ! $(type "brew" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
   do_install
 fi
-
-# if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
-#   # if [[ $(type "brew" &>/dev/null) ]]; then
-#   log_warn "brew already installed; skipping"
-# else
-#   #   if [[ $FORCE_INSTALL == "false" ]]; then
-#   read -p "$(tput bold)$(tput setaf 5)[?] force install brew anyway (y/N)?$(tput sgr 0) " yn
-#   case $yn in
-#     [Yy]*)
-#       do_install || exit 1
-#       ;;
-#     "")
-#       log_warn "skipping; opted out of brew install"
-#       ;;
-#     [Nn]*)
-#       log_warn "skipping; opted out of brew install"
-#       ;;
-#     *)
-#       log_warn "please answer [y]es or [n]o."
-#       exec $__invocation
-#       ;;
-#   esac
-# fi

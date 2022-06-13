@@ -22,7 +22,7 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 pushd "$DOTS"
 
 # gather sudo privileges:
-log_warn "Some setup methods require the administrator password. Please grant sudo access:"
+log_warn "needs sudo for things:"
 sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until setup has finished

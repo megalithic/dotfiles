@@ -22,12 +22,8 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 FORCE_INSTALL="false"
 CLEAN_FIRST="false"
 
-while getopts "ufc" OPTION; do
+while getopts "fc" OPTION; do
   case $OPTION in
-
-    u)
-      (asdf update && asdf plugin update --all && asdf reshim) && exit 0 || exit 1
-      ;;
 
     f)
       FORCE_INSTALL="true"
