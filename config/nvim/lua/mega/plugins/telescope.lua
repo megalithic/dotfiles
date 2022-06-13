@@ -35,6 +35,14 @@ return function()
     return themes.get_dropdown(get_border(opts))
   end
 
+  -- local function ivy(opts)
+  --   return themes.get_ivy(vim.tbl_deep_extend('keep', opts or {}, {
+  --     borderchars = {
+  --       preview = { '▔', '▕', '▁', '▏', '🭽', '🭾', '🭿', '🭼' },
+  --     },
+  --   }))
+  -- end
+
   telescope.setup({
     defaults = {
       set_env = { ["TERM"] = vim.env.TERM, ["COLORTERM"] = "truecolor" },
@@ -109,9 +117,6 @@ return function()
         },
       },
       winblend = 0,
-      -- history = {
-      --   path = fn.stdpath("data") .. "/telescope_history.sqlite3",
-      -- },
       dynamic_preview_title = true,
       results_title = false,
       selection_strategy = "reset",
@@ -334,6 +339,10 @@ return function()
   nmap("<leader>fr", builtin.resume, "resume last picker")
   nmap("<leader>fa", builtin.live_grep, "live grep string")
   nmap("<leader>fs", builtin.live_grep, "live grep string")
+
+  nmap("<leader>fvh", builtin.highlights, "highlights")
+  nmap("<leader>fva", builtin.autocommands, "autoccommands")
+  nmap("<leader>fvo", builtin.vim_options, "options")
 
   nmap("<leader>fts", tmux_sessions, "sessions")
   nmap("<leader>ftw", tmux_windows, "windows")

@@ -217,6 +217,8 @@ alias eq="nvim $DOTS/home/qutebrowser/config.py"
 alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
 alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest"
 
+alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
+
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"
 

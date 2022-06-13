@@ -474,18 +474,6 @@ packer.startup({
             require("telescope").load_extension("fzf")
           end,
         },
-        -- {
-        --   "nvim-telescope/telescope-frecency.nvim",
-        --   after = "telescope.nvim",
-        --   requires = "tami5/sqlite.lua",
-        -- },
-        {
-          "nvim-telescope/telescope-smart-history.nvim",
-          after = "telescope.nvim",
-          config = function()
-            require("telescope").load_extension("smart_history")
-          end,
-        },
       },
     })
 

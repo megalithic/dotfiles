@@ -19,6 +19,8 @@ function zsh_add_plugin() {
     zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh" || \
     zsh_add_file "plugins/$PLUGIN_NAME/$2.zsh"
   else
+    popd $DOTFILES
     git submodule add "https://github.com/$1.git" "$PLUGIN_DIR/$PLUGIN_NAME"
+    pushd
   fi
 }

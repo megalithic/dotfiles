@@ -294,5 +294,6 @@ mega.conf("treesitter-context", {
   config = {
     multiline_threshold = 4,
     separator = { "▁", "TreesitterContextBorder" }, -- ─▁
+    mode = "topline",
   },
 })

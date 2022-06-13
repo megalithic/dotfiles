@@ -373,10 +373,11 @@ function M.config()
     config = {
       bind = true,
       fix_pos = false,
-      auto_close_after = 3,
+      auto_close_after = 5,
       hint_enable = false,
       handler_opts = { border = mega.get_border() },
       zindex = 99, -- Keep signature popup below the completion PUM
+      toggle_key = "<C-K>",
       --   hi_parameter = "QuickFixLine",
       --   handler_opts = {
       --     border = vim.g.floating_window_border,

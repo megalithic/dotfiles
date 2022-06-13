@@ -157,6 +157,12 @@ if has_wk then
       R = { "module reloader" },
       r = { "resume last picker" },
       s = { "grep string" },
+      v = {
+        name = "+vim",
+        h = { "highlights" },
+        a = { "autocommands" },
+        o = { "options" },
+      },
       t = {
         name = "+tmux",
         s = { "sessions" },

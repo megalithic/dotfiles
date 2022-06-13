@@ -49,15 +49,15 @@ return function()
   end
 
   local Terminal = require("toggleterm.terminal").Terminal
-  local htop = Terminal:new({
-    cmd = "htop",
+  local btop = Terminal:new({
+    cmd = "btop",
     hidden = "true",
     direction = "float",
     on_open = float_handler,
   })
 
-  mega.command("Htop", function()
-    htop:toggle()
+  mega.command("Btop", function()
+    btop:toggle()
   end)
 
   local has_wk, wk = mega.safe_require("which-key")

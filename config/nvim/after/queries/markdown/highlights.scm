@@ -23,5 +23,8 @@
 ; (inline_link (link_text) @MDTSLinkText) @MDTSLink
 
 
-((shortcut_link) @conceal (#set! conceal "") (eq? @conceal "[ ]")) ; 
-((shortcut_link) @conceal (#set! conceal "") (eq? @conceal "[x]")) ; ☒
+; ((shortcut_link) @conceal (#set! conceal "") (eq? @conceal "[ ]")) ; 
+; ((shortcut_link) @conceal (#set! conceal "") (eq? @conceal "[x]")) ; ☒
+
+((shortcut_link) @conceal (#set! conceal "") (#eq? @conceal "[ ]")) ; 
+((shortcut_link) @conceal (#set! conceal "") (#eq? @conceal "[x]")) ; ☒
