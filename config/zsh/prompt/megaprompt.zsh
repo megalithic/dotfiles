@@ -53,7 +53,7 @@ root_icon=""
 
 # -- VI-MODE -------------------------------------------------------------------
 # @see: https://thevaluable.dev/zsh-install-configure-mouseless/
-bindkey -v # enables vi mode, using -e = emacs
+bindkey -e # enables vi mode, using -e = emacs
 export KEYTIMEOUT=1
 
 # Add vi-mode text objects e.g. da" ca(
