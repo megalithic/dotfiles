@@ -62,11 +62,16 @@ install_plugins() {
 }
 
 install_versions() {
-  # Disable linuxbrew as it breaks ruby-build and possibly others
-  # Save so we can revert
+  # Disable linuxbrew as it breaks ruby-build and possibly others Save so we can revert
   [[ "$(uname)" == "Linux" ]] && OLD_PATH="$PATH"
+
   # Remove linuxbrew from the path
   [[ "$(uname)" == "Linux" ]] && export PATH="$(echo $PATH | tr : '\n' | grep -v linuxbrew | paste -s -d:)"
+
+  # Certain necessary requirements for erlang
+  if [[ "$(uname)" == "Linux" ]]; then
+    sudo apt-get -y install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libwxgtk-webview3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk
+  fi
 
   asdf list all nodejs >/dev/null
   asdf list all ruby >/dev/null

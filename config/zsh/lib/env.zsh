@@ -107,6 +107,16 @@ if which bat >/dev/null; then
   export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat"
 fi
 
+# NOTE: erlang doesn't support openssl@3 yet (as of 2022-06-13)
+export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
+export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
+export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
+export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
+# export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
+# export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@3"
+
 case "$(uname)" in
   Darwin)
     PLATFORM="macos"
@@ -135,31 +145,18 @@ case "$(uname)" in
     export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
     export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
+    # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
+    if which brew >/dev/null; then
+      # REF: https://github.com/asdf-vm/asdf-erlang#osx
+      export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix openssl@1.1)"
+    fi
+
     # FIXME:
     # THIS IS A MAJOR SLOWDOWN
     # export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
 
     export LIBARCHIVE=/usr/local/opt/libarchive/lib/libarchive.dylib
     export LIBCRYPTO=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib
-
-    # for libffi and ruby things
-    export LDFLAGS="$LDFLAGS -L/usr/local/opt/libffi/lib"
-    export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl/lib"
-    export LDFLAGS="$LDFLAGS -L/usr/local/opt/openssl@1.1/lib"
-    export LDFLAGS="$LDFLAGS -I/usr/local/opt/openssl/include"
-
-    export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/libffi/include"
-    export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/openssl@1.1/include"
-
-    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/libffi/lib/pkgconfig"
-    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH /usr/local/opt/openssl@1.1/lib/pkgconfig"
-
-    export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
-
-    # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
-    if which brew >/dev/null; then
-      export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix openssl@1.1)"
-    fi
   ;;
   Linux)
     PLATFORM="linux"
@@ -171,7 +168,10 @@ case "$(uname)" in
     path+=(
       ${JAVA_HOME}/bin(N-/)
     )
+    export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac"
+    export PATH="/home/linuxbrew/.linuxbrew/opt/openssl@1.1/bin:$PATH"
     export BROWSER="xdg-open"
+
 
     if which lemonade >/dev/null; then
       export BROWSER="lemonade open"

@@ -112,9 +112,4 @@ while getopts "f" OPTION; do
 done
 shift $((OPTIND - 1))
 
-if [[ "$(uname)" == "Linux" ]]; then
-  log_warn "needs sudo for things:"
-  sudo -v
-fi
-
 clone && update && build && remove_brew_nvim popd >/dev/null
