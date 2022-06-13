@@ -41,15 +41,26 @@ done
 shift $((OPTIND - 1))
 
 do_install() {
-  log "installing homebrew.."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
+  log "installing homebrew ($(uname)).."
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
     log_ok "completed installing brew." ||
     exit 1
 }
 
 if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
   log_warn "brew already installed; updating instead."
-  NONINTERACTIVE=1 brew update && NONINTERACTIVE=1 brew outdated && NONINTERACTIVE=1 brew upgrade
+
+  if [[ "$(uname)" == "Darwin" ]]; then
+    export NONINTERACTIVE=1
+    brew update
+    brew outdated
+    brew upgrade
+  elif [[ "$(uname)" == "Linux" ]]; then
+    sudo -u "$SUDO_USER" brew update
+    sudo -u "$SUDO_USER" brew outdated
+    sudo -u "$SUDO_USER" brew upgrade
+  fi
+
 elif [[ ! $(type "brew" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
   do_install
 fi
