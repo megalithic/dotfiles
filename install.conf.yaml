@@ -191,16 +191,6 @@
         # log "Attempting to uninstall brew-installed ruby..";
         # [[ brew ls --versions neovim >/dev/null ]] && brew uninstall ruby --ignore-dependencies --force;
 
-        # log "Attempting to update outdated formulae..";
-        brew outdated;
-        brew upgrade;
-
-        # log "Attempting to reshim asdf..";
-        # asdf reshim;
-
-        log "Attempting to run post-fzf install step..";
-        $(brew --prefix)/opt/fzf/install;
-
         log "Attempting to install neovim from source..";
         ~/.dotfiles/bin/nvim-install -f;
 
@@ -218,6 +208,9 @@
 
         log "Attempting to install golang packages..";
         ~/.dotfiles/asdf/go.sh;
+
+        log "Attempting to run post-fzf install step..";
+        yes | $(brew --prefix)/opt/fzf/install;
 
         log "Attempting to update kitty app icon..";
         ~/.dotfiles/config/kitty/update_icon.sh;
