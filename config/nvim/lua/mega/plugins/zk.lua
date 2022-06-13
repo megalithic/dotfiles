@@ -53,7 +53,6 @@ return function()
   nnoremap("<leader>zn", "<cmd>ZkNew { title = vim.fn.input('Title: ') }<CR>", "zk: new note")
   xnoremap("<leader>zn", ":'<,'>ZkNewFromTitleSelection<CR>", "zk: new note from title")
   xnoremap("<leader>zN", ":'<,'>ZkNewFromContentSelection<CR>", "zk: new note from content")
-  nnoremap("<leader>fz", "<cmd>ZkNotes { sort = { 'modified' } }<CR>", "zk: find notes")
   nnoremap("<leader>zf", "<cmd>ZkNotes { sort = { 'modified' } }<CR>", "zk: find notes")
   nnoremap("<leader>za", "<cmd>ZkLiveGrep<CR>", "zk: live grep notes")
   nnoremap(

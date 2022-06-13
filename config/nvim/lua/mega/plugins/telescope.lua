@@ -272,6 +272,13 @@ return function()
     })
   end
 
+  local function zmk_config()
+    builtin.find_files({
+      prompt_title = "~ zmk-config ~",
+      cwd = vim.fn.expand("~/code/zmk-config"),
+    })
+  end
+
   local function privates()
     builtin.find_files({
       prompt_title = "~ privates ~",
@@ -312,6 +319,7 @@ return function()
   nmap("<leader>fb", builtin.current_buffer_fuzzy_find, "fuzzy find current buffer")
   nmap("<leader>fd", dotfiles, "dotfiles")
   nmap("<leader>fp", privates, "privates")
+  nmap("<leader>fz", zmk_config, "zmk-config")
   nmap("<leader>ff", project_files, "find/git files")
 
   nmap("<leader>fgc", delta_git_commits, "commits")
