@@ -42,42 +42,27 @@ do_install() {
 
   log "downloading and installing to $ELIXIRLS_PATH"
   if [[ $BUILD_TYPE == "archive" ]]; then
-    curl -fLO "$TARGET/$BINARY" \
-      && unzip -o "$BINARY" -d "$ELIXIRLS_PATH" \
-      && chmod +x "$ELIXIRLS_PATH/language_server.sh" \
-      && log_ok "unpacked $HOME/$BINARY" \
-      && (rm "$BINARY" && log_ok "removed $HOME/$BINARY") \
-      && log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" \
-      || exit 1
+    curl -fLO "$TARGET/$BINARY" &&
+      unzip -o "$BINARY" -d "$ELIXIRLS_PATH" &&
+      chmod +x "$ELIXIRLS_PATH/language_server.sh" &&
+      log_ok "unpacked $HOME/$BINARY" &&
+      (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+      log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   elif [[ $BUILD_TYPE == "source" ]]; then
-    curl -fLO "$TARGET/$BINARY" \
-      && tar -xvzf "$BINARY" -C ~/tmp \
-      && log_ok "unpacked $HOME/$BINARY" \
-      && pushd "$HOME/tmp/elixir-ls-$VERSION" >/dev/null \
-      && mix local.hex --force && mix local.rebar --force \
-      && mix do deps.get, compile, elixir_ls.release -o "$ELIXIRLS_PATH" \
-      && log_ok "built elixir-ls" \
-      && popd >/dev/null \
-      && (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") \
-      && (rm "$BINARY" && log_ok "removed $HOME/$BINARY") \
-      && log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" \
-      || exit 1
+    curl -fLO "$TARGET/$BINARY" &&
+      tar -xvzf "$BINARY" -C ~/tmp &&
+      log_ok "unpacked $HOME/$BINARY" &&
+      pushd "$HOME/tmp/elixir-ls-$VERSION" >/dev/null &&
+      mix local.hex --force && mix local.rebar --force &&
+      mix do deps.get, compile, elixir_ls.release -o "$ELIXIRLS_PATH" &&
+      log_ok "built elixir-ls" &&
+      popd >/dev/null &&
+      (rm -rf "$HOME/tmp/elixir-ls-$VERSION" && log_ok "removed $HOME/tmp/elixir-ls-$VERSION") &&
+      (rm "$BINARY" && log_ok "removed $HOME/$BINARY") &&
+      log_ok "finished downloading and installing $VERSION elixir-ls to $ELIXIRLS_PATH" ||
+      exit 1
   fi
 }
 
-read -p "$(tput bold)$(tput setaf 5)[?] download and install ${VERSION} elixir-ls (Y/n)?$(tput sgr 0) " yn
-case $yn in
-  [Yy]*)
-    do_install || exit 1
-    ;;
-  "")
-    do_install || exit 1
-    ;;
-  [Nn]*)
-    log_warn "opted out of elixir-ls install"
-    ;;
-  *)
-    log_warn "please answer [y]es or [n]o."
-    exec $__invocation
-    ;;
-esac
+do_install || exit 1

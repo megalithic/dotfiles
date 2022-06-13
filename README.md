@@ -16,10 +16,14 @@
 If you want to kick the tires, you can simply:
 
 ```bash
-git clone https://github.com/megalithic/dotfiles.git ~/.dotfiles && cd ~/.dotfiles && make
+git clone https://github.com/megalithic/dotfiles.git ~/.dotfiles && cd ~/.dotfiles && make install
 ```
 
-> **_NOTE_**: defaults to using the `install` goal
+If you want to update an existing install:
+
+```bash
+make -C ~/.dotfiles up
+```
 
 _For platform specific installs:_
 

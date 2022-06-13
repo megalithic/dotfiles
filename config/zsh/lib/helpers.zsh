@@ -83,4 +83,11 @@ function log_error {
   printf '%s%s[%s] %s\n%s' $(tput bold) $(tput setaf 1) "$(date '+%x %X')" "➜ [x] $*" $(tput sgr 0)
 }
 
+function clean_exit {
+    set +x
+    if [[ "$1" != "0" ]]; then
+        log_error "Fatal error code \"${1}\" occurred on line \"${2}\""
+    fi
+}
+
 set +eu

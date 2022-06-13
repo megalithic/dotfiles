@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .POSIX:
-.PHONY: help dots install elixirls paq subup nvim asdf brew xcode
-.DEFAULT_GOAL := dots
+.PHONY: help dots up install subup xcode macos linux
+.DEFAULT_GOAL := up
 
 help: ## Show this help content
 	@echo "Usage: make [command]"
@@ -12,26 +12,11 @@ help: ## Show this help content
 
 dots: xcode install
 
+up:
+	$(HOME)/.dotfiles/bin/dotup
+
 install: ## Runs the default dotbot install script
 	./install
-
-elixirls: ## Install elixir-ls binary to $XDG_DATA_HOME/lsp/elixir-ls
-	$(HOME)/.dotfiles/bin/elixirls-install
-
-elixirls-master: ## Install elixir-ls from source to $XDG_DATA_HOME/lsp/elixir-ls
-	$(HOME)/.dotfiles/bin/elixirls-install master
-
-paq: ## Install paq-nvim to $XDG_DATA_HOME/nvim/site/pack/paqs/start/paq-nvim
-	$(HOME)/.dotfiles/bin/paq-install
-
-nvim: ## Update and build neovim from source
-	$(HOME)/.dotfiles/bin/nvim-install
-
-asdf: ## Install asdf
-	$(HOME)/.dotfiles/bin/asdf-install -f
-
-brew: ## Install homebrew
-	$(HOME)/.dotfiles/bin/brew-install -f
 
 xcode: ## Install Xcode + CLI tools
 	$(HOME)/.dotfiles/bin/xcode-install -f

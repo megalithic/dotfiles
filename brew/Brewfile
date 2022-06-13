@@ -241,7 +241,7 @@ cask "figma"
 cask "forklift"
 cask "git-credential-manager-core"
 cask "hazel"
-cask "hammerspoon"
+cask "hammerspoon", greedy: true
 cask "intel-power-gadget" # requires restart with security allow (intel things)
 cask "insomnia"
 cask "inkscape"
@@ -250,7 +250,7 @@ cask "itsycal"
 cask "kap"
 cask "karabiner-elements"
 cask "keycastr"
-cask "kitty"
+cask "kitty", greedy: true
 cask "loom"
 cask "marta"
 cask "micro-snitch"
@@ -265,7 +265,7 @@ cask "qmk-toolbox"
 cask "qutebrowser" # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "signal"
 cask "slack"
-cask "soundsource"
+cask "soundsource", greedy: true
 cask "spotify"
 cask "tableplus"
 cask "thingsmacsandboxhelper"

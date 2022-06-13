@@ -19,7 +19,7 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-FORCE_INSTALL="false"
+# FORCE_INSTALL="false"
 
 pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
 
@@ -89,42 +89,43 @@ do_build() {
 }
 
 build() {
-  if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
-    log_warn "neovim already up to date on origin/master; skipping."
-  else
-    read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
-    case $yn in
-      [Yy]*)
-        do_build || exit 1
-        ;;
-      "")
-        do_build || exit 1 # default
-        ;;
-      [Nn]*)
-        log_warn "opted out of neovim install"
-        ;;
-      *)
-        log_warn "please answer [y]es or [n]o."
-        exec $__invocation
-        ;;
-    esac
-  fi
+  do_build || exit 1
+  # if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) && $FORCE_INSTALL == "false" ]]; then
+  #   log_warn "neovim already up to date on origin/master; skipping."
+  # else
+  #   read -p "$(tput bold)$(tput setaf 5)[?] build neovim from source (Y/n)?$(tput sgr 0) " yn
+  #   case $yn in
+  #     [Yy]*)
+  #       do_build || exit 1
+  #       ;;
+  #     "")
+  #       do_build || exit 1 # default
+  #       ;;
+  #     [Nn]*)
+  #       log_warn "opted out of neovim install"
+  #       ;;
+  #     *)
+  #       log_warn "please answer [y]es or [n]o."
+  #       exec $__invocation
+  #       ;;
+  #   esac
+  # fi
 }
 
-while getopts "f" OPTION; do
-  case $OPTION in
+# while getopts "f" OPTION; do
+#   case $OPTION in
 
-    f)
-      FORCE_INSTALL="true"
-      ;;
+#     f)
+#       FORCE_INSTALL="true"
+#       ;;
 
-    \?)
-      echo "Invalid Option: -$OPTARG" 1>&2
-      exit 1
-      ;;
+#     \?)
+#       echo "Invalid Option: -$OPTARG" 1>&2
+#       exit 1
+#       ;;
 
-  esac
-done
-shift $((OPTIND - 1))
+#   esac
+# done
+# shift $((OPTIND - 1))
 
 clone && update && build && remove_brew_nvim popd >/dev/null

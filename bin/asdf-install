@@ -20,12 +20,21 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
+CLEAN_FIRST="false"
 
-while getopts "f" OPTION; do
+while getopts "ufc" OPTION; do
   case $OPTION in
+
+    u)
+      (asdf update && asdf plugin update --all && asdf reshim) && exit 0 || exit 1
+      ;;
 
     f)
       FORCE_INSTALL="true"
+      ;;
+
+    c)
+      CLEAN_FIRST="true"
       ;;
 
     \?)
@@ -40,49 +49,22 @@ shift $((OPTIND - 1))
 asdf_path="${HOME}/.asdf"
 
 do_install() {
-  if [[ -d $asdf_path ]]; then
-    read -p "$(tput bold)$(tput setaf 5)[?] $asdf_path already exists, remove? (Y/n)?$(tput sgr 0) " yn
-    case $yn in
-      [Yy]*)
-        rm -rf "$HOME/.asdf" || exit 1
-        ;;
-      "")
-        rm -rf "$HOME/.asdf" || exit 1
-        ;;
-      [Nn]*)
-        log_warn "skipping removal; will likely fail install."
-        ;;
-      *)
-        log_warn "please answer [y]es or [n]o."
-        exec $__invocation
-        ;;
-    esac
+  if [[ $CLEAN_FIRST == "true" ]]; then
+    log_warn "cleaning existing asdf install from $asdf_path"
+    rm -rf "$HOME/.asdf" || exit 1
   fi
 
   log "cloning asdf into $asdf_path"
-  git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" \
-    && source "$HOME/.asdf/asdf.sh" \
-    && log_ok "completed installing asdf-nvim into $asdf_path" \
-    || exit 1
+  (git clone https://github.com/asdf-vm/asdf.git "$asdf_path" &&
+    source "$asdf_path/asdf.sh" &&
+    asdf reshim &&
+    log_ok "completed installing asdf-nvim into $asdf_path") ||
+    exit 1
 }
 
 if [[ $(type "asdf" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
-  log_warn "asdf already installed; skipping."
-else
-  read -p "$(tput bold)$(tput setaf 5)[?] install asdf (y/N)?$(tput sgr 0) " yn
-  case $yn in
-    [Yy]*)
-      do_install || exit 1
-      ;;
-    "")
-      log_warn "skipping; opted out of asdf install"
-      ;;
-    [Nn]*)
-      log_warn "skipping; opted out of asdf install"
-      ;;
-    *)
-      log_warn "please answer [y]es or [n]o."
-      exec $__invocation
-      ;;
-  esac
+  log_warn "asdf already installed; updating instead."
+  asdf update && asdf plugin update --all && asdf reshim
+elif [[ ! $(type "asdf" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
+  do_install || exit 1
 fi

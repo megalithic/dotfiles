@@ -11,6 +11,9 @@ fi
 
 set -euo pipefail
 
+# clean_exit defined in helpers.zsh
+# trap 'clean_exit $? $LINENO' EXIT
+
 # -- set some useful vars for executable info:
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
@@ -21,15 +24,22 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-while getopts "f" OPTION; do
+while getopts "uf" OPTION; do
   case $OPTION in
+
+    u)
+      # (brew update && brew outdated && brew upgrade) && exit 0 || exit 1
+      brew update
+      brew outdated
+      brew upgrade
+      ;;
 
     f)
       FORCE_INSTALL="true"
       ;;
 
     \?)
-      echo "Invalid Option: -$OPTARG" 1>&2
+      echo "invalid option: -$OPTARG" 1>&2
       exit 1
       ;;
 
@@ -38,32 +48,40 @@ done
 shift $((OPTIND - 1))
 
 do_install() {
-  log "installing brew"
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-    && log_ok "completed installing brew" \
-    || exit 1
+  log "installing homebrew.."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
+    log_ok "completed installing brew." ||
+    exit 1
 }
 
 if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
-  # if [[ $(type "brew" &>/dev/null) ]]; then
-  log_warn "brew already installed; skipping"
-else
-
-  #   if [[ $FORCE_INSTALL == "false" ]]; then
-  read -p "$(tput bold)$(tput setaf 5)[?] force install brew anyway (y/N)?$(tput sgr 0) " yn
-  case $yn in
-    [Yy]*)
-      do_install || exit 1
-      ;;
-    "")
-      log_warn "skipping; opted out of brew install"
-      ;;
-    [Nn]*)
-      log_warn "skipping; opted out of brew install"
-      ;;
-    *)
-      log_warn "please answer [y]es or [n]o."
-      exec $__invocation
-      ;;
-  esac
+  log_warn "brew already installed; updating instead."
+  brew update
+  brew outdated
+  brew upgrade
+elif [[ ! $(type "brew" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
+  do_install
 fi
+
+# if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
+#   # if [[ $(type "brew" &>/dev/null) ]]; then
+#   log_warn "brew already installed; skipping"
+# else
+#   #   if [[ $FORCE_INSTALL == "false" ]]; then
+#   read -p "$(tput bold)$(tput setaf 5)[?] force install brew anyway (y/N)?$(tput sgr 0) " yn
+#   case $yn in
+#     [Yy]*)
+#       do_install || exit 1
+#       ;;
+#     "")
+#       log_warn "skipping; opted out of brew install"
+#       ;;
+#     [Nn]*)
+#       log_warn "skipping; opted out of brew install"
+#       ;;
+#     *)
+#       log_warn "please answer [y]es or [n]o."
+#       exec $__invocation
+#       ;;
+#   esac
+# fi

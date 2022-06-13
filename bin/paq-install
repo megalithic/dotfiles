@@ -46,7 +46,7 @@ do_clone() {
   git clone --depth=1 https://github.com/savq/paq-nvim.git "$paq_path"
 }
 
-install_plugins() {
+install_paq() {
   nvim --headless -u NONE -c 'lua require("mega.plugins").bootstrap()'
 }
 
@@ -61,7 +61,7 @@ do_install() {
     remove_existing
   fi
   do_clone &&
-    install_plugins &&
+    install_paq &&
     log_ok "completed installing paq-nvim and plugins into $paq_path" ||
     exit 1
 }
@@ -93,21 +93,6 @@ shift $((OPTIND - 1))
 if [[ -d $paq_path && $FORCE_INSTALL == "false" ]]; then
   log_warn "paq-nvim already exists at $paq_path; syncing installed plugins instead."
   sync_plugins
-else
-  read -p "$(tput bold)$(tput setaf 5)[?] install paq-nvim and plugins (y/N)?$(tput sgr 0) " yn
-  case $yn in
-    [Yy]*)
-      do_install || exit 1
-      ;;
-    "")
-      log_warn "opted out of paq-nvim install"
-      ;;
-    [Nn]*)
-      log_warn "opted out of paq-nvim install"
-      ;;
-    *)
-      log_warn "please answer [y]es or [n]o."
-      exec $__invocation
-      ;;
-  esac
+elif [[ ! -d $paq_path || $FORCE_INSTALL == "true" ]]; then
+  do_install || exit 1
 fi

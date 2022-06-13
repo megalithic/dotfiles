@@ -55,19 +55,20 @@ do_install() {
   fi
 }
 
-read -p "$(tput bold)$(tput setaf 5)[?] download and install golang addons (y/N)?$(tput sgr 0) " yn
-case $yn in
-  [Yy]*)
-    do_install || exit 1
-    ;;
-  [Nn]*)
-    log_warn "opted out of installing golang addons"
-    ;;
-  "")
-    log_warn "opted out of installing golang addons"
-    ;;
-  *)
-    log_warn "please answer [y]es or [n]o."
-    exec $__invocation
-    ;;
-esac
+do_install || exit 1
+# read -p "$(tput bold)$(tput setaf 5)[?] download and install golang addons (y/N)?$(tput sgr 0) " yn
+# case $yn in
+#   [Yy]*)
+#     do_install || exit 1
+#     ;;
+#   [Nn]*)
+#     log_warn "opted out of installing golang addons"
+#     ;;
+#   "")
+#     log_warn "opted out of installing golang addons"
+#     ;;
+#   *)
+#     log_warn "please answer [y]es or [n]o."
+#     exec $__invocation
+#     ;;
+# esac
