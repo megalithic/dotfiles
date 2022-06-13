@@ -56,7 +56,7 @@ log "homebrew.." &&
 log "post-homebrew (remove ruby).." &&
   brew uninstall --ignore-dependencies --force ruby
 log "neovim.." &&
-  ./bin/nvim-install -u
+  ./bin/nvim-install
 log "paq-nvim.." &&
   ./bin/paq-install -u
 log "elixir-ls.." &&
