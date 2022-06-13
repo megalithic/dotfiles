@@ -53,12 +53,14 @@ log "asdf.." &&
   ./bin/asdf-install -u
 log "homebrew.." &&
   ./bin/brew-install -u
+log "post-homebrew (remove ruby).." &&
+  brew uninstall --ignore-dependencies --force ruby
 log "neovim.." &&
   ./bin/nvim-install -u
 log "paq-nvim.." &&
   ./bin/paq-install -u
 log "elixir-ls.." &&
-  ./bin/elixirls-install
+  ./bin/elixirls-install master
 log "kitty icon update.." &&
   ./config/kitty/update_icon.sh
 log "github login.." &&

@@ -172,48 +172,8 @@
       if: "[ `uname` = Darwin ]"
       path: config/surfingkeys/surfingkeys.json
 
-# - ghe:
-#     - mislav/gh-branch
-#     - dlvhdr/gh-prs
-
-# - brewfile:
-#     file: brew/Brewfile
-
-# - asdf:
-#     - plugin: elm
-#       global: 0.19.1
-#       versions:
-#         - 0.19.1
-#     - plugin: lua
-#       global: 5.1.5
-#       versions:
-#         - 5.1.5
-#     - plugin: elixir
-#       global: 1.13.2-otp-24
-#       versions:
-#         - 1.13.2-otp-24
-#         - 1.12.3-otp-24
-#     - plugin: erlang
-#       global: 24.0.5
-#       versions:
-#         - 24.0.5
-#     - plugin: nodejs
-#       global: lts
-#       versions:
-#         - lts
-#     - plugin: ruby
-#       global: 2.7.4
-#       versions:
-#         - 2.7.4
-#         # - 3.1.0
-#     - plugin: rust
-#       global: stable
-#       versions:
-#         - stable
-#     - plugin: golang
-#       global: 1.17.1
-#       versions:
-#         - 1.17.1
+- brewfile:
+    file: brew/Brewfile
 
 - shell:
     - description: Attempting post-install commands..
@@ -228,12 +188,12 @@
         log "Attempting to set zsh as default shell..";
         [[ $(echo $SHELL) == $(which zsh) ]] && log_warn "$(which zsh) already set as the default shell; skipping." || sudo chsh -s `which zsh` `whoami`;
 
-        #log "Attempting to uninstall brew-installed ruby..";
-        #[[ brew ls --versions neovim >/dev/null ]] && brew uninstall ruby --ignore-dependencies --force;
+        # log "Attempting to uninstall brew-installed ruby..";
+        # [[ brew ls --versions neovim >/dev/null ]] && brew uninstall ruby --ignore-dependencies --force;
 
         # log "Attempting to update outdated formulae..";
-        # brew outdated;
-        # brew upgrade;
+        brew outdated;
+        brew upgrade;
 
         # log "Attempting to reshim asdf..";
         # asdf reshim;
@@ -248,7 +208,7 @@
         ~/.dotfiles/bin/paq-install -f;
 
         log "Attempting to install elixirls-master..";
-        ~/.dotfiles/bin/elixirls-install;
+        ~/.dotfiles/bin/elixirls-install master;
 
         log "Attempting to install lua/luarocks packages..";
         ~/.dotfiles/asdf/lua.sh;
