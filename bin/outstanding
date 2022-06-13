@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ "$(uname)" == "Linux" && "$(hostname)" == "seth-dev" ]]; then
+  dev update
+fi
