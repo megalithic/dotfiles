@@ -99,6 +99,7 @@ fi
 
 if type "asdf" &>/dev/null; then
   log_warn "asdf already installed; updating instead."
+  install_plugins && install_versions
   asdf update && asdf plugin update --all && asdf reshim
 else
   log_warn "asdf not installed; installing fresh."

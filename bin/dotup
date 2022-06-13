@@ -21,9 +21,11 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 pushd "$DOTS"
 
-# gather sudo privileges:
-log_warn "needs sudo for things:"
-sudo -v
+if [[ "$(uname)" == "Darwin" ]]; then
+  # gather sudo privileges:
+  log_warn "needs sudo for things:"
+  sudo -v
+fi
 
 # Keep-alive: update existing `sudo` time stamp until setup has finished
 while true; do
