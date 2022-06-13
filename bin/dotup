@@ -57,7 +57,8 @@ log "asdf install.." &&
   ./bin/asdf-install
 
 log "homebrew install.." &&
-  ./bin/brew-install
+  ./bin/brew-install &&
+  ./install --only brewfile
 
 if [[ "$(uname)" == "Darwin" ]]; then
   log "post-homebrew (remove ruby).." &&

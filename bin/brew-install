@@ -22,13 +22,12 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-FORCE_INSTALL="false"
-
 while getopts "f" OPTION; do
   case $OPTION in
 
     f)
-      FORCE_INSTALL="true"
+      do_install && do_update
+      exit 0
       ;;
 
     \?)
@@ -40,6 +39,13 @@ while getopts "f" OPTION; do
 done
 shift $((OPTIND - 1))
 
+do_update() {
+  export NONINTERACTIVE=1
+  brew update
+  brew outdated
+  brew upgrade
+}
+
 do_install() {
   log "installing homebrew ($(uname)).."
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &&
@@ -47,20 +53,9 @@ do_install() {
     exit 1
 }
 
-if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
+if type "brew" &>/dev/null; then
   log_warn "brew already installed; updating instead."
-
-  if [[ "$(uname)" == "Darwin" ]]; then
-    export NONINTERACTIVE=1
-    brew update
-    brew outdated
-    brew upgrade
-  elif [[ "$(uname)" == "Linux" ]]; then
-    sudo -u "$SUDO_USER" brew update
-    sudo -u "$SUDO_USER" brew outdated
-    sudo -u "$SUDO_USER" brew upgrade
-  fi
-
-elif [[ ! $(type "brew" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
-  do_install
+  do_update
+else
+  do_install && do_update
 fi
