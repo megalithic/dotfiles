@@ -45,22 +45,23 @@ shift $((OPTIND - 1))
 asdf_path="${HOME}/.asdf"
 
 do_install() {
-  if [[ $CLEAN_FIRST == "true" ]]; then
+  if [[ "$CLEAN_FIRST" == "true" ]]; then
     log_warn "cleaning existing asdf install from $asdf_path"
-    rm -rf "$HOME/.asdf" || exit 1
+    rm -rf "$asdf_path" || exit 1
   fi
 
   log "cloning asdf into $asdf_path"
   (git clone https://github.com/asdf-vm/asdf.git "$asdf_path" &&
     source "$asdf_path/asdf.sh" &&
+    asdf install &&
     asdf reshim &&
     log_ok "completed installing asdf-nvim into $asdf_path") ||
     exit 1
 }
 
-if [[ $(type "asdf" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
+if [[ $(type "asdf" &>/dev/null) && "$FORCE_INSTALL" == "false" ]]; then
   log_warn "asdf already installed; updating instead."
   asdf update && asdf plugin update --all && asdf reshim
-elif [[ ! $(type "asdf" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
+elif [[ ! $(type "asdf" &>/dev/null) || "$FORCE_INSTALL" == "true" ]]; then
   do_install || exit 1
 fi

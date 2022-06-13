@@ -49,10 +49,7 @@ do_install() {
 
 if [[ $(type "brew" &>/dev/null) && $FORCE_INSTALL == "false" ]]; then
   log_warn "brew already installed; updating instead."
-  export NONINTERACTIVE=1
-  brew update
-  brew outdated
-  brew upgrade
+  NONINTERACTIVE=1 brew update && NONINTERACTIVE=1 brew outdated && NONINTERACTIVE=1 brew upgrade
 elif [[ ! $(type "brew" &>/dev/null) || $FORCE_INSTALL == "true" ]]; then
   do_install
 fi
