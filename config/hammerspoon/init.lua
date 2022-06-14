@@ -23,7 +23,7 @@ hs.allowAppleScript(true)
 
 -- spoons to load
 hs.loadSpoon("SpoonInstall")
--- hs.loadSpoon("EmmyLua")
+hs.loadSpoon("EmmyLua")
 -- hs.loadSpoon("VimMode")
 
 -- global requires
