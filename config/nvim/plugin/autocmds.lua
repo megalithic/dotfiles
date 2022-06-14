@@ -428,15 +428,17 @@ augroup("GitConflicts", {
     event = { "User" },
     pattern = "GitConflictDetected",
     command = function()
-      vim.notify("Conflict detected in " .. vim.fn.expand("<afile>"))
+      vim.notify("Conflicts detected.")
+      vim.diagnostic.disable(0)
+      vim.cmd("LspStop")
       require("which-key").register({
         c = {
           name = "git-conflict",
+          ["0"] = "Resolve with _None",
           t = "Resolve with _Theirs",
           o = "Resolve with _Ours",
           b = "Resolve with _Both",
           q = { "<cmd>GitConflictListQf<CR>", "Send conflicts to _Quickfix" },
-          ["0"] = "Resolve with None",
         },
         ["[c"] = { "<cmd>GitConflictPrevConflict<CR>", "go to prev conflict" },
         ["]c"] = { "<cmd>GitConflictNextConflict<CR>", "go to next conflict" },
@@ -447,7 +449,9 @@ augroup("GitConflicts", {
     event = { "User" },
     pattern = "GitConflictResolved",
     command = function()
-      vim.notify("Conflict resolved in " .. vim.fn.expand("<afile>"))
+      vim.notify("Conflicts resolved.")
+      vim.diagnostic.enable(0)
+      vim.cmd("LspStart")
       -- vim.keymap.set("n", "cww", function()
       --   engage.conflict_buster()
       -- end)
