@@ -47,7 +47,7 @@ done 2>/dev/null &
 # - (linux/seth-dev) remote-dev update
 # - (linux/seth-dev) dev update
 
-log "update git submodules.." &&
+log "update git submodules (recursively).." &&
   git submodule update --init --recursive
 
 log "create missing folders and symlinks.." &&
