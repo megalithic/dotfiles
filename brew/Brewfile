@@ -154,8 +154,7 @@ brew "reattach-to-user-namespace" if OS.mac?
 brew "ren"
 brew "redis"
 brew "ripgrep"
-# brew "ruby-install"
-# brew "ruby-build"
+brew "ruby-build" # needed for asdf/ruby
 brew "rust"
 brew "rustup-init"
 brew "qt" if OS.mac?
