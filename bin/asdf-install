@@ -82,7 +82,7 @@ install_versions() {
   # Disable linuxbrew as it breaks ruby-build and possibly others Save so we can revert
   if [[ "$(uname)" == "Linux" ]]; then
     log "installing linux dependencies for erlang and more.."
-    sudo apt-get -y install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libwxgtk-webview3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk
+    sudo apt-get -y install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libwxgtk-webview3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk libssl-dev
 
     log_warn "linuxbrew workaround: set PATH to OLD_PATH.."
     OLD_PATH="$PATH"
