@@ -53,12 +53,12 @@ log "update git submodules (recursively).." &&
 log "create missing folders and symlinks.." &&
   ./install --only create link
 
-log "asdf install.." &&
-  ./bin/asdf-install
-
 log "homebrew install.." &&
   ./bin/brew-install &&
   ./install --only brewfile
+
+log "asdf install.." &&
+  ./bin/asdf-install
 
 if [[ "$(uname)" == "Darwin" ]]; then
   log "post-homebrew (remove ruby).." &&
