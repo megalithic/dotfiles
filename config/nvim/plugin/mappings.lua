@@ -360,7 +360,7 @@ nnoremap gV `[v`]
 
 " gi already moves to 'last place you exited insert mode', so we'll map gI to
 " something similar: move to last change
-nnoremap gI `.
+" nnoremap gI `.
 
 " reselect visually selected content:
 xnoremap > >gv
@@ -414,6 +414,13 @@ nmap("0", "^")
 nmap("q", "<Nop>")
 nmap("Q", "@q")
 vnoremap("Q", ":norm @q<CR>")
+
+
+-- selections
+nnoremap("gV", "`[v`]", "reselect pasted content")
+nnoremap("<leader>V", "V`]", "reselect pasted content")
+nnoremap("gv", "ggVG", "select whole buffer")
+nnoremap("<leader>v", "ggVG", "select whole buffer")
 
 -- Map <leader>o & <leader>O to newline without insert mode
 nnoremap("<leader>o", ":<C-u>call append(line(\".\"), repeat([\"\"], v:count1))<CR>")

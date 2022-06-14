@@ -218,6 +218,7 @@ alias ew="nvim $DOTS/config/wezterm/wezterm.lua"
 alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest"
 
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
+alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"
 
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"

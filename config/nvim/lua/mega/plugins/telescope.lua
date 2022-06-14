@@ -284,6 +284,13 @@ return function()
     })
   end
 
+  local function qmk_config()
+    builtin.find_files({
+      prompt_title = "~ qmk-config ~",
+      cwd = vim.fn.expand("~/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/"),
+    })
+  end
+
   local function privates()
     builtin.find_files({
       prompt_title = "~ privates ~",
@@ -325,6 +332,7 @@ return function()
   nmap("<leader>fd", dotfiles, "dotfiles")
   nmap("<leader>fp", privates, "privates")
   nmap("<leader>fz", zmk_config, "zmk-config")
+  nmap("<leader>fq", qmk_config, "qmk-config")
   nmap("<leader>ff", project_files, "find/git files")
 
   nmap("<leader>fgc", delta_git_commits, "commits")
