@@ -27,7 +27,7 @@ railsmigrations:*/migrate/*
 rails:include:ruby,rabl,erb
 
 # ignores, etc
---glob=!EmmyLua.spoon
+--glob=!config/hammerspoon/Spoons/*
 --glob=!.git
 --glob=!.elixir_ls
 --glob=!node_modules
@@ -48,7 +48,7 @@ rails:include:ruby,rabl,erb
 --glob=!*.cache
 --glob=!.Trash
 --glob=!.licenses
---glob=!zsh/plugins/*
+--glob=!config/zsh/plugins/*
 --glob=!dotbot/*
 
 # vim:ft=conf

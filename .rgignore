@@ -1,5 +1,6 @@
 .git/*
 config/zsh/plugins/*
+config/hammerspoon/Spoons/*
 dotbot/*
 node_modules/*
 .yarn

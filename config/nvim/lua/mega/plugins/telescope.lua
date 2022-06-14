@@ -83,7 +83,7 @@ return function()
         "%.png",
         "%.otf",
         "%.ttf",
-        "EmmyLua.spoon",
+        "config/hammerspoon/Spoons/.*",
         ".yarn",
         "dotbot/.*",
         "config/zsh/plugins/.*",
