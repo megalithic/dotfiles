@@ -1,7 +1,21 @@
 local fmt = string.format
+local api = vim.api
 
 local nil_buf_id = 999999
 local term_buf_id = nil_buf_id
+
+local function send_buf_to_qf(bufnr)
+  local lines = {}
+  for i = 1, 3 do
+    table.insert(lines, ("%d | %s"):format(i, vim.fn.strftime("%F")))
+  end
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.fn.setqflist({
+    { bufnr = bufnr, lnum = 1, col = 5 },
+    { bufnr = bufnr, lnum = 2, col = 10 },
+    { bufnr = bufnr, lnum = 3, col = 13 },
+  })
+end
 
 -- REF: https://github.com/outstand/titan.nvim/blob/main/lua/titan/plugins/toggleterm.lua
 local function set_keymaps(bufnr, winnr)
@@ -95,9 +109,13 @@ function mega.term_open(opts)
           notifier(cmd, exit_code)
         end
 
+        -- test passed/process ended with an "ok" exit code, so let's close it.
         if exit_code == 0 then
+          send_buf_to_qf(term_buf_id)
+
           vim.api.nvim_buf_delete(term_buf_id, { force = true })
           term_buf_id = nil_buf_id
+          -- TODO: send results to quickfixlist
         end
       end
     end,
