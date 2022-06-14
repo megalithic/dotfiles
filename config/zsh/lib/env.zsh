@@ -107,26 +107,6 @@ if which bat >/dev/null; then
   export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat"
 fi
 
-# REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
-if which brew >/dev/null; then
-  # NOTE: erlang doesn't support openssl@3 yet (as of 2022-06-13)
-  export LDFLAGS="-L$(brew --prefix)/opt/openssl@1.1/lib"
-  export CPPFLAGS="-I$(brew --prefix)/opt/openssl@1.1/include"
-  export LDFLAGS="$LDFLAGS -L$(brew --prefix)/opt/libffi/lib"
-  export CPPFLAGS="$CPPFLAGS -I$(brew --prefix)/opt/libffi/include"
-  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
-  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
-  # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
-  # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@3"
-
-  # FIXME:
-  # THIS IS A MAJOR SLOWDOWN
-  # export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
-
-  export LIBARCHIVE="$(brew --prefix)/opt/libarchive/lib/libarchive.dylib"
-  export LIBCRYPTO="$(brew --prefix)/opt/openssl@1.1/lib/libcrypto.dylib"
-fi
-
 case "$(uname)" in
   Darwin)
     PLATFORM="macos"
@@ -155,7 +135,25 @@ case "$(uname)" in
     export BREW_PATH="$HOMEBREW_PREFIX/Homebrew"
     export BREW_CASK_PATH="/opt/homebrew-cask/Caskroom"
 
+    # REF: https://coletiv.com/blog/how-to-correctly-install-erlang-and-elixir
     if which brew >/dev/null; then
+      # NOTE: erlang doesn't support openssl@3 yet (as of 2022-06-13)
+      # export LDFLAGS="-L$(brew --prefix)/opt/openssl@1.1/lib"
+      # export CPPFLAGS="-I$(brew --prefix)/opt/openssl@1.1/include"
+      # export LDFLAGS="$LDFLAGS -L$(brew --prefix)/opt/libffi/lib"
+      # export CPPFLAGS="$CPPFLAGS -I$(brew --prefix)/opt/libffi/include"
+      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/libffi/lib/pkgconfig"
+      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH $(brew --prefix)/opt/openssl@1.1/lib/pkgconfig"
+      # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@1.1"
+      # export ERLANG_OPENSSL_PATH="/usr/local/opt/openssl@3"
+
+      # FIXME:
+      # THIS IS A MAJOR SLOWDOWN
+      # export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1) --with-readline-dir=$(brew --prefix readline)"
+
+      # export LIBARCHIVE="$(brew --prefix)/opt/libarchive/lib/libarchive.dylib"
+      # export LIBCRYPTO="$(brew --prefix)/opt/openssl@1.1/lib/libcrypto.dylib"
+
       # REF: https://github.com/asdf-vm/asdf-erlang#osx
       export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix) openssl@1.1)"
     fi
@@ -344,3 +342,4 @@ export _ZO_ECHO=1
 if [ -f "$HOME/.localrc" ]; then
   source "$HOME/.localrc"
 fi
+
