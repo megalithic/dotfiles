@@ -237,7 +237,7 @@ cask "dropbox"
 # cask "discord"
 # cask "expressvpn"
 cask "figma"
-cask "forklift"
+# cask "forklift" # replaced with marta for now
 cask "git-credential-manager-core"
 cask "hazel"
 cask "hammerspoon", greedy: true
