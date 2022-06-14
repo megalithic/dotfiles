@@ -330,7 +330,7 @@ fpath+=(
 
 # -- zsh plugins
 # ------------------------------------------------------------------------------
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#7c8377,bold,underline"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#323d43,bg=#7c8377,bold,underline"
 # export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#323d43,bg=#7c8377,bold,underline"
 export ZSH_AUTOSUGGEST_MANUAL_REBIND=1  # make prompt faster
 export ZSH_AUTOSUGGEST_USE_ASYNC=1

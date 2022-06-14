@@ -74,6 +74,7 @@ bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
 bindkey -M vicmd '^a' beginning-of-line
 bindkey -M vicmd '^e' end-of-line
+bindkey -M viins '^e' end-of-line
 # bindkey -M vicmd '^[[1~' beginning-of-line
 # bindkey -M vicmd '^[[4~' end-of-line
 
@@ -100,14 +101,14 @@ bindkey "^R" fzf-history-widget
 bindkey "^P" up-line-or-search
 bindkey "^N" down-line-or-search
 
-# zsh-autosuggestions
+# -- zsh-autosuggestions
 # REF: https://github.com/jose-elias-alvarez/dotfiles/blob/1b1d725459df1ba1fc62b1bacc510fe8f28b3eaa/home/zshrc#L13-L17
 # bindkey '^ ' autosuggest-accept
-bindkey '^E' autosuggest-accept
-bindkey '^Y' autosuggest-execute
+# bindkey '^E' autosuggest-accept
+# bindkey '^Y' autosuggest-execute
 #
 
-# zsh-users/zsh-history-substring-search
+# -- zsh-users/zsh-history-substring-search
 # REF: https://github.com/agkozak/dotfiles/blob/master/.zshrc#L550-L556
 # up and down arrows:
 bindkey '^[[A' history-substring-search-up
@@ -127,3 +128,19 @@ bindkey '^N' history-substring-search-down
 
 bindkey '^]' clear-screen
 
+
+# -- edit command in vim
+# REF:
+# - https://nuclearsquid.com/writings/edit-long-commands/
+# - https://twitter.com/citizen428/status/13260131377
+# - https://unix.stackexchange.com/questions/6620/how-to-edit-command-line-in-full-screen-editor-in-zsh
+
+# Emacs style
+# Enable Ctrl-x-e to edit command line
+# zle -N edit-command-line
+# bindkey '^xe' edit-command-line
+# bindkey '^x^e' edit-command-line
+
+autoload -U edit-command-line
+bindkey -M vicmd "^V" edit-command-line
+bindkey "^V" edit-command-line
