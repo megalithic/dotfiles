@@ -391,6 +391,7 @@ function M.config()
       highlights = {
         incoming = "DiffText",
         current = "DiffAdd",
+        ancestor = "DiffBase",
       },
     },
   })
