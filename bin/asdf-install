@@ -71,24 +71,32 @@ install_plugins() {
 }
 
 install_versions() {
-  # Disable linuxbrew as it breaks ruby-build and possibly others Save so we can revert
-  [[ "$(uname)" == "Linux" ]] && OLD_PATH="$PATH"
+  log "installing asdf versions ($(uname)).."
 
-  # Remove linuxbrew from the path
-  [[ "$(uname)" == "Linux" ]] && export PATH="$(echo $PATH | tr : '\n' | grep -v linuxbrew | paste -s -d:)"
-
-  # Certain necessary requirements for erlang
-  if [[ "$(uname)" == "Linux" ]]; then
-    sudo apt-get -y install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libwxgtk-webview3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk
-  fi
-
-  log "installing asdf versions.."
+  # reset the cache for the available versions for these plugins:
   asdf list all nodejs >/dev/null
   asdf list all ruby >/dev/null
-  asdf install
 
-  # revert path
-  [[ "$(uname)" == "Linux" ]] && export PATH=$OLD_PATH
+  # REF: https://www.notion.so/Droplet-Ubuntu-Upgrade-0bacdb0df2344225b243362982d0c861
+  # - having to do some interesting trickery to get around Linuxbrew/ruby-build issues..
+  # Disable linuxbrew as it breaks ruby-build and possibly others Save so we can revert
+  if [[ "$(uname)" == "Linux" ]]; then
+    log "installing linux dependencies for erlang and more.."
+    sudo apt-get -y install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-gtk3-dev libwxgtk-webview3.0-gtk3-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev unixodbc-dev xsltproc fop libxml2-utils libncurses-dev openjdk-11-jdk
+
+    log_warn "linuxbrew workaround: set PATH to OLD_PATH.."
+    OLD_PATH="$PATH"
+
+    log_warn "linuxbrew workaround: remove linuxbrew from the path.."
+    export PATH="$(echo $PATH | tr : '\n' | grep -v linuxbrew | paste -s -d:)"
+
+    asdf install
+
+    log_warn "linuxbrew workaround: revert OLD_PATH back to PATH.."
+    export PATH=$OLD_PATH
+  else
+    asdf install
+  fi
 
   asdf reshim
 }
