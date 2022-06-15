@@ -12,10 +12,10 @@ help: ## Show this help content
 
 dots: xcode install
 
-up:
+up: ## Runs the main update script (idempotent); use after `make install`
 	$(HOME)/.dotfiles/bin/dotup
 
-install: ## Runs the default dotbot install script
+install: ## Runs the main dotbot install script (not for updating)
 	./install
 
 xcode: ## Install Xcode + CLI tools
