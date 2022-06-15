@@ -713,7 +713,7 @@ function M.config()
 
   conf("bufdel", {
     config = {
-      next = "cycle", -- or 'alternate'
+      next = "cycle", -- alts: 'alternate'
       quit = true,
     },
   })
@@ -725,7 +725,7 @@ function M.config()
         source_pattern_end = "^```$",
         dash_pattern = "^---+$",
         dash_highlight = "Dash",
-        dash_string = "―",
+        dash_string = "", -- alts:  靖並   ﮆ 
         headline_pattern = "^#+",
         headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
         codeblock_highlight = "CodeBlock",
@@ -894,7 +894,7 @@ function M.config()
 
   conf("undotree", function()
     mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
-    vim.g.undotree_TreeNodeShape = "◦" -- Alternative: '◉'
+    vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
     vim.g.undotree_SetFocusWhenToggle = 1
   end)
 end

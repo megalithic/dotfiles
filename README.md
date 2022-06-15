@@ -13,13 +13,13 @@
 
 ## 🚀 Installation
 
-If you want to kick the tires, you can simply:
+_If you want to kick the tires, you can simply:_
 
 ```bash
 git clone https://github.com/megalithic/dotfiles.git ~/.dotfiles && cd ~/.dotfiles && make install
 ```
 
-If you want to update an existing install:
+_If you want to update an existing install:_
 
 ```bash
 make -C ~/.dotfiles up
