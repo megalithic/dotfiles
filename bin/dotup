@@ -19,7 +19,8 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-pushd "$DOTS"
+log "cd'ing to $DOTS.."
+pushd "$DOTS" >/dev/null
 
 if [[ "$(uname)" == "Darwin" ]]; then
   # gather sudo privileges:
@@ -66,8 +67,7 @@ update() {
       brew uninstall --ignore-dependencies --force ruby
   fi
 
-  log "neovim install.." &&
-    ./bin/nvim-install
+  log "neovim install.." && ./bin/nvim-install
 
   log "paq-nvim install.." &&
     ./bin/paq-install -u
@@ -87,30 +87,32 @@ update() {
 yay() {
   echo
   log_ok "dotfiles update complete."
-  echo
-  dotsay "🗿 @b@yellow[[donesies!]]"
-  # echo
-  # dotsay "- be sure to open any new apps"
-  echo
+  echo "░ "
+  dotsay "░ 🗿 @b@yellow[[donesies!]]"
+  echo "░ "
 
   if [[ "$(hostname)" == "seth-dev" ]]; then
-    dotsay "- since you're on $(hostname), you might want to.."
-    printf "  "
-    dotsay "  + run @b@blue[[dev update]]"
-    echo
+    dotsay "░  - since you're on $(hostname), you might want to:"
+    echo "░ "
+    printf "░   "
+    dotsay "   + run @b@blue[[dev update]]"
+    echo "░ "
+  else
+    echo "░ "
+    dotsay "░  - nothing more to do."
   fi
 }
 
 oops() {
   echo
   log_error "dotfiles update failed!"
-  echo
-  dotsay "💣💥 @b@yellow[[oh snap, we done blowed up!]]"
-  echo
-  dotsay "- be sure to check back through the output above.. 👆"
-  echo
+  echo "░ "
+  dotsay "░ 💣💥 @b@yellow[[oh snap, we done blowed up!]]"
+  echo "░ "
+  dotsay "░  - be sure to check back through the output above.. 👆"
+  echo "░ "
 }
 
 update && yay || oops
 
-popd
+popd >/dev/null
