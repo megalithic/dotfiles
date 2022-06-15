@@ -42,7 +42,7 @@ mega.augroup("megaline", {
     end,
   },
   {
-    event = { "WinEnter", "BufEnter" },
+    event = { "VimEnter", "WinEnter", "BufEnter" },
     command = function()
       -- :h qf.vim, disable qf statusline
       -- NOTE: this allows for our custom statusline exception-based naming to work

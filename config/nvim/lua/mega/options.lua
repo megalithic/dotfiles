@@ -196,7 +196,7 @@ vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
 vim.opt.signcolumn = "auto:2-5"
 -- vim.opt.signcolumn = "auto:2-4"
 vim.opt.ruler = false
-vim.opt.cmdheight = 2 -- Set command line height to two lines
+vim.opt.cmdheight = 1 -- Set command line height to two lines
 vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
 vim.opt.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
 vim.opt.lazyredraw = true -- should make scrolling faster
@@ -435,18 +435,18 @@ mega.exec([[
 -- Random Other Things
 -----------------------------------------------------------------------------//
 -- fallback in the event our statusline plugins fail to load
-vim.opt.statusline = table.concat({
-  "%2{string.upper(mode())} ",
-  "f", -- relative path
-  "m", -- modified flag
-  "r",
-  "=",
-  "{&spelllang}",
-  "%{get(b:,'gitsigns_status','')}",
-  "y", -- filetype
-  "8(%l,%c%)", -- line, column
-  "8p%% ", -- file percentage
-}, " %")
+-- vim.opt.statusline = table.concat({
+--   "%2{toupper(mode())} ",
+--   "f", -- relative path
+--   "m", -- modified flag
+--   "r",
+--   "=",
+--   "{&spelllang}",
+--   "%{get(b:,'gitsigns_status','')}",
+--   "y", -- filetype
+--   "8(%l,%c%)", -- line, column
+--   "8p%% ", -- file percentage
+-- }, " %")
 -- vim.opt.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 vim.g.no_man_maps = true
 vim.g.vim_json_syntax_conceal = false

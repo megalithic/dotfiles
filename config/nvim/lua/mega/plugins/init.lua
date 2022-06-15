@@ -51,7 +51,7 @@ local PKGS = {
   "ray-x/cmp-treesitter",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  "ray-x/lsp_signature.nvim",
+  -- "ray-x/lsp_signature.nvim",
   "j-hui/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
@@ -372,18 +372,18 @@ function M.config()
     },
   })
 
-  conf("lsp_signature", {
-    config = {
-      bind = true,
-      fix_pos = false,
-      auto_close_after = 5,
-      hint_enable = false,
-      handler_opts = { border = mega.get_border() },
-      zindex = 99, -- Keep signature popup below the completion PUM
-      toggle_key = "<C-K>",
-      --   hi_parameter = "QuickFixLine",
-    },
-  })
+  -- conf("lsp_signature", {
+  --   config = {
+  --     bind = true,
+  --     fix_pos = false,
+  --     auto_close_after = 5,
+  --     hint_enable = false,
+  --     handler_opts = { border = mega.get_border() },
+  --     zindex = 99, -- Keep signature popup below the completion PUM
+  --     toggle_key = "<C-K>",
+  --     --   hi_parameter = "QuickFixLine",
+  --   },
+  -- })
 
   conf("git-conflict", {
     config = {
