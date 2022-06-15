@@ -30,23 +30,23 @@
 autoload -U colors && colors # Enable colors in prompt
 
 # -- ICONS ---------------------------------------------------------------------
-prompt_icon=""           #  ❯    ➜ 
-prompt_failure_icon=""   # 
+prompt_icon=""           # alts:  ❯    ➜ 
+prompt_failure_icon=""   # alts: 
 placeholder_icon="…"
-vimode_insert_icon=""    # 
+vimode_insert_icon=""    # alts: 
 git_staged_icon=""
-git_unstaged_icon="﯂"     # • ﯂ ●
-git_conflicted_icon=""   # 
-git_stash_icon=""        #   ≡
+git_unstaged_icon="﯂"     # alts: • ﯂ ●
+git_conflicted_icon=""   # alts: 
+git_stash_icon=""        # alts:   ≡
 # TODO: check for deleted: https://github.com/spaceship-prompt/spaceship-prompt/blob/master/sections/git_status.zsh#L66-L71
 git_deleted_icon=""
 git_diverged_icon="⇕"
-git_untracked_icon="?"    # 
-git_ahead_icon="⇡"        # 
-git_behind_icon="⇣"       # 
+git_untracked_icon="?"    # alts: 
+git_ahead_icon="⇡"        # alts: 
+git_behind_icon="⇣"       # alts: 
 git_renamed_icon=""
-deskfile_icon=""         #    ◲  🚀
-background_job_icon=""   # ✦
+deskfile_icon=""         # alts:    ◲  🚀
+background_job_icon=""   # alts: ✦
 root_icon=""
 
 
@@ -327,7 +327,7 @@ function _prompt_path() {
 
 function _prompt_deskfile_loaded() {
   # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "%F{243}[%f%F{magenta}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f ")) || echo ''
-  [[ -n $DESK_NAME ]] && echo "%F{243}[%f%F{magenta}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
+  [[ -n $DESK_NAME ]] && echo "%F{243}[%f%F{#ffffff}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
 }
 
 function __prompt_eval() {
@@ -487,3 +487,4 @@ bindkey -M vicmd v edit-command-line
 # 		|| [[ "$container" == "lxc" ]] \
 # 		|| [[ -r "$nspawn_file" ]]
 # }
+

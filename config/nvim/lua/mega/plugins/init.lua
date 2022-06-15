@@ -379,9 +379,6 @@ function M.config()
       zindex = 99, -- Keep signature popup below the completion PUM
       toggle_key = "<C-K>",
       --   hi_parameter = "QuickFixLine",
-      --   handler_opts = {
-      --     border = vim.g.floating_window_border,
-      --   },
     },
   })
 

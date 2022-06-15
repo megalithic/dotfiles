@@ -422,7 +422,14 @@ local function setup_handlers()
 
   lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
   -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
-  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, opts)
+  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(
+  --   lsp.handlers.signature_help,
+  --   mega.table_merge(opts, {
+  --     nchor = "SW",
+  --     relative = "cursor",
+  --     row = -1,
+  --   })
+  -- )
 
   do
     vim.lsp.set_log_level(2)
@@ -449,6 +456,17 @@ local function setup_handlers()
     --     vim.notify(result.message, levels[result.type])
     --   end
     -- end
+    --
+
+    -- local old_handler = vim.lsp.handlers["window/logMessage"]
+    -- lsp.handlers["window/logMessage"] = function(err, result, ...)
+    --   if result.type == 3 or result.type == 4 then
+    --     print(result.message)
+    --   end
+
+    --   old_handler(err, result, ...)
+    -- end
+
     lsp.handlers["window/showMessage"] = function(_, result, ctx)
       if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
         local cl = lsp.get_client_by_id(ctx.client_id)
@@ -530,15 +548,6 @@ local function setup_handlers()
   --   else
   --     jumpto(result)
   --   end
-  -- end
-
-  -- local old_handler = vim.lsp.handlers["window/logMessage"]
-  -- lsp.handlers["window/logMessage"] = function(err, result, ...)
-  --   if result.type == 3 or result.type == 4 then
-  --     print(result.message)
-  --   end
-
-  --   old_handler(err, result, ...)
   -- end
 end
 
