@@ -3,8 +3,8 @@ return function()
 
   gs.setup({
     signs = {
-      add = { hl = "GitSignsAdd", text = "▎" }, -- ┃, │, ▌, ▎
-      change = { hl = "GitSignsChange", text = "▎" }, -- ║▎
+      add = { hl = "GitSignsAdd", text = "▎" }, -- alts: ┃, │, ▌, ▎
+      change = { hl = "GitSignsChange", text = "▎" }, -- alts: ║▎
       delete = { hl = "GitSignsDelete", text = "▎" },
       topdelete = { hl = "GitSignsDelete", text = "▌" },
       changedelete = { hl = "GitSignsChange", text = "▌" },
@@ -15,7 +15,7 @@ return function()
     current_line_blame_formatter = " <author> • <author_time:%R> • <summary>",
     current_line_blame_opts = {
       virt_text = true,
-      virt_text_pos = "right_align", -- 'eol' | 'overlay' | 'right_align'
+      virt_text_pos = "eol", -- 'eol' | 'overlay' | 'right_align'
       delay = 1,
       ignore_whitespace = false,
     },
