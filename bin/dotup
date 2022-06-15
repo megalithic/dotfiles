@@ -47,39 +47,70 @@ done 2>/dev/null &
 # - (linux/seth-dev) remote-dev update
 # - (linux/seth-dev) dev update
 
-log "update git submodules (recursively).." &&
-  git submodule update --init --recursive
+update() {
+  log "update git submodules (recursively).." &&
+    git submodule update --init --recursive
 
-log "create missing folders and symlinks.." &&
-  ./install --only create link
+  log "create missing folders and symlinks.." &&
+    ./install --only create link
 
-log "homebrew install.." &&
-  ./bin/brew-install &&
-  ./install --only brewfile
+  log "homebrew install.." &&
+    ./bin/brew-install &&
+    ./install --only brewfile
 
-log "asdf install.." &&
-  ./bin/asdf-install
+  log "asdf install.." &&
+    ./bin/asdf-install
 
-if [[ "$(uname)" == "Darwin" ]]; then
-  log "post-homebrew (remove ruby).." &&
-    brew uninstall --ignore-dependencies --force ruby
-fi
+  if [[ "$(uname)" == "Darwin" ]]; then
+    log "post-homebrew (remove ruby).." &&
+      brew uninstall --ignore-dependencies --force ruby
+  fi
 
-log "neovim install.." &&
-  ./bin/nvim-install
+  log "neovim install.." &&
+    ./bin/nvim-install
 
-log "paq-nvim install.." &&
-  ./bin/paq-install -u
+  log "paq-nvim install.." &&
+    ./bin/paq-install -u
 
-if [[ "$(uname)" == "Darwin" ]]; then
-  log "elixir-ls install.." &&
-    ./bin/elixirls-install master
+  if [[ "$(uname)" == "Darwin" ]]; then
+    log "elixir-ls install.." &&
+      ./bin/elixirls-install master
 
-  log "kitty icon update.." &&
-    ./config/kitty/update_icon.sh
-fi
+    log "kitty icon update.." &&
+      ./config/kitty/update_icon.sh
+  fi
 
-log "github login.." &&
-  ./bin/gh-login
+  log "github auth login.." &&
+    ./bin/gh-login
+}
+
+yay() {
+  echo
+  log_ok "dotfiles update complete."
+  echo
+  dotsay "🗿 @b@yellow[[donesies!]]"
+  # echo
+  # dotsay "- be sure to open any new apps"
+  echo
+
+  if [[ "$(hostname)" == "seth-dev" ]]; then
+    dotsay "- since you're on $(hostname), you might want to.."
+    printf "  "
+    dotsay "  + run @b@blue[[dev update]]"
+    echo
+  fi
+}
+
+oops() {
+  echo
+  log_error "dotfiles update failed!"
+  echo
+  dotsay "💣💥 @b@yellow[[oh snap, we done blowed up!]]"
+  echo
+  dotsay "- be sure to check back through the output above.. 👆"
+  echo
+}
+
+update && yay || oops
 
 popd

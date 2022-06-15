@@ -83,7 +83,8 @@ local PKGS = {
   "David-Kunz/treesitter-unit",
   { "nvim-treesitter/nvim-treesitter-context" },
   "SmiteshP/nvim-gps",
-  -- @trial ziontee113/syntax-tree-surfer
+  -- @trial "m-demare/hlargs.nvim"
+  -- @trial "ziontee113/syntax-tree-surfer"
   -- @trial "primeagen/harpoon",
 
   ------------------------------------------------------------------------------
@@ -153,6 +154,8 @@ local PKGS = {
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "mbbill/undotree",
+  "danymat/neogen",
+
   ------------------------------------------------------------------------------
   -- (the rest...) --
   "nacro90/numb.nvim",
@@ -878,16 +881,10 @@ function M.config()
     },
   })
 
-  -- 'danymat/neogen',
-  -- keys = { '<localleader>nc' },
-  -- requires = 'nvim-treesitter/nvim-treesitter',
-  -- module = 'neogen',
-  -- setup = function()
-  --   as.nnoremap('<localleader>nc', require('neogen').generate, 'comment: generate')
-  -- end,
-  -- config = function()
-  --   require('neogen').setup({ snippet_engine = 'luasnip' })
-  -- end,
+  conf("neogen", function()
+    require("neogen").setup({ snippet_engine = "luasnip" })
+    mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
+  end)
 
   conf("undotree", function()
     mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")

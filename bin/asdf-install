@@ -76,6 +76,7 @@ install_versions() {
   # reset the cache for the available versions for these plugins:
   asdf list all nodejs >/dev/null
   asdf list all ruby >/dev/null
+  asdf list all elixir >/dev/null
 
   # REF: https://www.notion.so/Droplet-Ubuntu-Upgrade-0bacdb0df2344225b243362982d0c861
   # - having to do some interesting trickery to get around Linuxbrew/ruby-build issues..
@@ -98,6 +99,7 @@ install_versions() {
     asdf install
   fi
 
+  log "reshimming asdf versions"
   asdf reshim
 }
 
