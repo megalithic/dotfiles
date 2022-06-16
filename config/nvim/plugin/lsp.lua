@@ -146,6 +146,13 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
+  augroup("LspSignatureHelp", {
+    {
+      event = { "CursorHoldI" },
+      buffer = 0,
+      command = "lua vim.lsp.buf.signature_help()",
+    },
+  })
   -- augroup("LspDocumentHighlight", {
   --   {
   --     event = { "CursorHold", "CursorHoldI" },
@@ -206,6 +213,7 @@ local function setup_mappings(client, bufnr)
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
+  inoremap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
   nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
   nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
@@ -420,68 +428,27 @@ local function setup_handlers()
     return buf_win
   end
 
-  lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
-  -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
-  -- lsp.handlers["textDocument/signatureHelp"] = lsp.with(
-  --   lsp.handlers.signature_help,
-  --   mega.table_merge(opts, {
-  --     nchor = "SW",
-  --     relative = "cursor",
-  --     row = -1,
-  --   })
-  -- )
+  -- lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+  lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
+  lsp.handlers["textDocument/signatureHelp"] = lsp.with(
+    lsp.handlers.signature_help,
+    mega.table_merge(opts, {
+      anchor = "SW",
+      relative = "cursor",
+      row = -1,
+    })
+  )
 
-  do
-    vim.lsp.set_log_level(2)
-    local convert_lsp_log_level_to_neovim_log_level = function(lsp_log_level)
-      if lsp_log_level == 1 then
-        return 4
-      elseif lsp_log_level == 2 then
-        return 3
-      elseif lsp_log_level == 3 then
-        return 2
-      elseif lsp_log_level == 4 then
-        return 1
-      end
-    end
-    local levels = {
-      "ERROR",
-      "WARN",
-      "INFO",
-      "DEBUG",
-      [0] = "TRACE",
-    }
-    -- lsp.handlers["window/showMessage"] = function(_, result, ...)
-    --   if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
-    --     vim.notify(result.message, levels[result.type])
-    --   end
-    -- end
-    --
-
-    -- local old_handler = vim.lsp.handlers["window/logMessage"]
-    -- lsp.handlers["window/logMessage"] = function(err, result, ...)
-    --   if result.type == 3 or result.type == 4 then
-    --     print(result.message)
-    --   end
-
-    --   old_handler(err, result, ...)
-    -- end
-
-    lsp.handlers["window/showMessage"] = function(_, result, ctx)
-      if require("vim.lsp.log").should_log(convert_lsp_log_level_to_neovim_log_level(result.type)) then
-        local cl = lsp.get_client_by_id(ctx.client_id)
-        -- local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG" })[result.type]
-        local lvl = levels[result.type]
-        -- vim.notify(result.message, levels[result.type])
-        vim.notify(result.message, lvl, {
-          title = "LSP | " .. cl.name,
-          timeout = 10000,
-          keep = function()
-            return lvl == "ERROR" or lvl == "WARN"
-          end,
-        })
-      end
-    end
+  lsp.handlers["window/showMessage"] = function(_, result, ctx)
+    local client = lsp.get_client_by_id(ctx.client_id)
+    local lvl = ({ "ERROR", "WARN", "INFO", "DEBUG" })[result.type]
+    vim.notify(result.message, lvl, {
+      title = "LSP | " .. client.name,
+      timeout = 8000,
+      keep = function()
+        return lvl == "ERROR" or lvl == "WARN"
+      end,
+    })
   end
 
   do
@@ -528,27 +495,28 @@ local function setup_handlers()
     end
   end
 
-  -- lsp.handlers["textDocument/definition"] = function(_, result)
-  --   if result == nil or vim.tbl_isempty(result) then
-  --     print("Definition not found")
-  --     return nil
-  --   end
-  --   local function jumpto(loc)
-  --     local split_cmd = vim.uri_from_bufnr(0) == loc.targetUri and "split" or "tabnew"
-  --     vim.cmd(split_cmd)
-  --     lsp.util.jump_to_location(loc)
-  --   end
-  --   if vim.tbl_islist(result) then
-  --     jumpto(result[1])
-  --     if #result > 1 then
-  --       fn.setqflist(lsp.util.locations_to_items(result))
-  --       api.nvim_command("copen")
-  --       api.nvim_command("wincmd p")
-  --     end
-  --   else
-  --     jumpto(result)
-  --   end
-  -- end
+  lsp.handlers["textDocument/definition"] = function(_, result)
+    if result == nil or vim.tbl_isempty(result) then
+      print("Definition not found")
+      return nil
+    end
+    local function jumpto(loc)
+      local split_cmd = vim.uri_from_bufnr(0) == loc.targetUri and "edit" or "vnew"
+      vim.cmd(split_cmd)
+      lsp.util.jump_to_location(loc)
+    end
+    if vim.tbl_islist(result) then
+      jumpto(result[1])
+
+      if #result > 1 then
+        fn.setqflist(lsp.util.locations_to_items(result))
+        api.nvim_command("copen")
+        api.nvim_command("wincmd p")
+      end
+    else
+      jumpto(result)
+    end
+  end
 end
 
 -- [ HANDLERS ] ----------------------------------------------------------------

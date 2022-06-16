@@ -322,6 +322,26 @@ vmap("<Tab>", "%")
 xmap("<Tab>", "%")
 omap("<Tab>", "%")
 
+-- https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
+-- c-a / c-e everywhere - RSI.vim provides these
+cnoremap("<C-n>", "<Down>")
+cnoremap("<C-p>", "<Up>")
+-- <C-A> allows you to insert all matches on the command line e.g. bd *.js <c-a>
+-- will insert all matching files e.g. :bd a.js b.js c.js
+cnoremap("<c-x><c-a>", "<c-a>")
+cnoremap("<C-a>", "<Home>")
+cnoremap("<C-e>", "<End>")
+cnoremap("<C-b>", "<Left>")
+cnoremap("<C-d>", "<Del>")
+cnoremap("<C-k>", [[<C-\>e getcmdpos() == 1 ? '' : getcmdline()[:getcmdpos() - 2]<CR>]])
+-- move cursor one character backwards unless at the end of the command line
+cnoremap("<C-f>", [[getcmdpos() > strlen(getcmdline())? &cedit: "\<Lt>Right>"]], { expr = true })
+-- see :h cmdline-editing
+cnoremap("<Esc>b", [[<S-Left>]])
+cnoremap("<Esc>f", [[<S-Right>]])
+-- Insert escaped '/' while inputting a search pattern
+cnoremap("/", [[getcmdtype() == "/" ? "\/" : "/"]], { expr = true })
+
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
 exec([[
@@ -414,7 +434,6 @@ nmap("0", "^")
 nmap("q", "<Nop>")
 nmap("Q", "@q")
 vnoremap("Q", ":norm @q<CR>")
-
 
 -- selections
 nnoremap("gV", "`[v`]", "reselect pasted content")
