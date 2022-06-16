@@ -15,9 +15,10 @@ vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 vim.lsp.set_log_level("ERROR")
 require("vim.lsp.log").set_format_func(vim.inspect)
 
--- TODO: all references to `resolved_capabilities.capability_name` will need to be changed to
--- `server_capabilities.camelCaseCapabilityName`
--- https://github.com/neovim/neovim/issues/14090#issuecomment-1113956767
+-- NOTE:
+-- To learn what capabilities are available you can run the following command in
+-- a buffer with a started [LSP](https://neovim.io/doc/user/lsp.html#LSP) client:
+-- :lua =vim.lsp.get_active_clients()[1].server_capabilities
 
 -- [ HELPERS ] -----------------------------------------------------------------
 
@@ -149,12 +150,18 @@ local function setup_autocommands(client, bufnr)
   -- augroup("LspSignatureHelp", {
   --   {
   --     event = { "CursorHoldI" },
-  --     buffer = 0,
   --     command = function()
-  --         vim.lsp.buf.signature_help()
-  --     end
+  --       if
+  --         client.server_capabilities.signatureHelpProvider ~= nil
+  --         and not vim.tbl_isempty(client.server_capabilities.signatureHelpProvider)
+  --       then
+  --         P("should show thing")
+  --         -- vim.lsp.buf.signature_help()
+  --       end
+  --     end,
   --   },
   -- })
+
   -- augroup("LspDocumentHighlight", {
   --   {
   --     event = { "CursorHold", "CursorHoldI" },
@@ -215,9 +222,13 @@ local function setup_mappings(client, bufnr)
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
-  inoremap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
-  nnoremap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  inoremap("<C-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
+  nnoremap(
+    "<leader>lic",
+    [[<cmd>lua =vim.lsp.get_active_clients()[1].server_capabilities<CR>]],
+    desc("lsp: show server capabilities")
+  )
   nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
   nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
 end
@@ -433,14 +444,13 @@ local function setup_handlers()
 
   -- lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
   lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
-  lsp.handlers["textDocument/signatureHelp"] = lsp.with(
-    lsp.handlers.signature_help,
-    mega.table_merge(opts, {
-      anchor = "SW",
-      relative = "cursor",
-      row = -1,
-    })
-  )
+  local signature_help_opts = mega.table_merge(opts, {
+    anchor = "SW",
+    relative = "cursor",
+    row = -1,
+  })
+
+  lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
 
   lsp.handlers["window/showMessage"] = function(_, result, ctx)
     local client = lsp.get_client_by_id(ctx.client_id)

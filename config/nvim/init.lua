@@ -35,6 +35,9 @@
     -or-
     :LspLog
 
+   LSP current client server_capabilities ->
+    `:lua =vim.lsp.get_active_clients()[1].server_capabilities`
+
 --]]
 
 -- [ speed ] -------------------------------------------------------------------
