@@ -146,13 +146,15 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  augroup("LspSignatureHelp", {
-    {
-      event = { "CursorHoldI" },
-      buffer = 0,
-      command = "lua vim.lsp.buf.signature_help()",
-    },
-  })
+  -- augroup("LspSignatureHelp", {
+  --   {
+  --     event = { "CursorHoldI" },
+  --     buffer = 0,
+  --     command = function()
+  --         vim.lsp.buf.signature_help()
+  --     end
+  --   },
+  -- })
   -- augroup("LspDocumentHighlight", {
   --   {
   --     event = { "CursorHold", "CursorHoldI" },
@@ -214,6 +216,7 @@ local function setup_mappings(client, bufnr)
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
   inoremap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  nnoremap("<C-K>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
   nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
   nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))

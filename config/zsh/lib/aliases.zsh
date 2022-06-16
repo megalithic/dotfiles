@@ -318,6 +318,7 @@ alias gcv="git cv"
 alias gcm="git cm"
 alias gaa="git aa"
 alias gcp="git branch --show-current | tr -d '[:space:]' | pbcopy"
+alias gup="git up"
 # alias rebase="git pull --rebase origin master"
 # alias grm="git status | grep deleted | awk '{\$1=\$2=\"\"; print \$0}' | \
 #            perl -pe 's/^[ \t]*//' | sed 's/ /\\\\ /g' | xargs git rm"
