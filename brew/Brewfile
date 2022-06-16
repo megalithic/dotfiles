@@ -216,6 +216,7 @@ cask "font-victor-mono-nerd-font"
 cask "1password"
 cask "1password-cli"
 cask "alfred"
+cask "android-studio" if OS.mac?
 cask "backblaze"
 cask "balenaetcher"
 cask "bartender"

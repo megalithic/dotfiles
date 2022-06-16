@@ -8,6 +8,8 @@ elm-test
 eslint
 eslint-plugin-cypress
 eslint_d
+eas-cli
+expo-cli
 @typescript-eslint/typescript-estree
 fixjson
 markdownlint

@@ -190,7 +190,6 @@ export KEYTIMEOUT=1
 
 # so I can run USPTO/jboss stuff sensibly
 export JAVA_OPTS="$JAVA_OPTS -Xms2048M -Xmx4096M -XX:MaxPermSize=512M -Djboss.vfs.forceCopy=false"
-export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 
 # This resolves issues install the mysql, postgres, and other gems with native non universal binary extensions
 export ARCHFLAGS='-arch x86_64'
