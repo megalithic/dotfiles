@@ -247,43 +247,6 @@ mega.dirs.org = fn.expand(mega.dirs.docs .. "/_org")
 mega.dirs.zettel = fn.expand("$ZK_NOTEBOOK_DIR")
 mega.dirs.zk = mega.dirs.zettel
 
---- Check if a directory exists in this path
-local function is_dir(path)
-  -- check if file exists
-  local function file_exists(file)
-    local ok, err, code = os.rename(file, file)
-    if not ok then
-      if code == 13 then
-        -- Permission denied, but it exists
-        return true
-      end
-    end
-    return ok, err
-  end
-
-  -- "/" works on both Unix and Windows
-  return file_exists(path .. "/")
-end
-
--- setup vim's various config directories
--- # cache_paths
-local local_state_paths = {
-  fmt("%s/backup", vim.g.local_state_path),
-  fmt("%s/session", vim.g.local_state_path),
-  fmt("%s/swap", vim.g.local_state_path),
-  fmt("%s/shada", vim.g.local_state_path),
-  fmt("%s/tags", vim.g.local_state_path),
-  fmt("%s/undo", vim.g.local_state_path),
-}
-if not is_dir(vim.g.local_state_path) then
-  os.execute("mkdir -p " .. vim.g.local_state_path)
-end
-for _, p in pairs(local_state_paths) do
-  if not is_dir(p) then
-    os.execute("mkdir -p " .. p)
-  end
-end
-
 -- [ runtimepath (rtp) ] -------------------------------------------------------
 
 vim.opt.runtimepath:remove("~/.cache")

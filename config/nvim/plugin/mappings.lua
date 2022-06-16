@@ -368,16 +368,6 @@ noremap <leader>; :<Up>
 " Remap VIM 0 to first non-blank character
 map 0 ^
 
-" ## Selections
-" reselect pasted content:
-nnoremap gV `[v`]
-
-" select all text in the file
-" nnoremap <leader>v ggVG
-
-" Easier linewise reselection of what you just pasted.
-" nnoremap <leader>V V`]
-
 " gi already moves to 'last place you exited insert mode', so we'll map gI to
 " something similar: move to last change
 " nnoremap gI `.
@@ -436,9 +426,9 @@ nmap("Q", "@q")
 vnoremap("Q", ":norm @q<CR>")
 
 -- selections
-nnoremap("gV", "`[v`]", "reselect pasted content")
+nnoremap("gv", "`[v`]", "reselect pasted content")
 nnoremap("<leader>V", "V`]", "reselect pasted content")
-nnoremap("gv", "ggVG", "select whole buffer")
+nnoremap("gV", "ggVG", "select whole buffer")
 nnoremap("<leader>v", "ggVG", "select whole buffer")
 
 -- Map <leader>o & <leader>O to newline without insert mode

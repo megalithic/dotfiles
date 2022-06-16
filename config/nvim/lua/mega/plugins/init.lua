@@ -266,6 +266,45 @@ function M.bootstrap()
 
   -- Read and install packages
   paq(PKGS):install()
+
+  --- Check if a directory exists in this path
+  local function is_dir(path)
+    -- check if file exists
+    local function file_exists(file)
+      local ok, err, code = os.rename(file, file)
+      if not ok then
+        if code == 13 then
+          -- Permission denied, but it exists
+          return true
+        end
+      end
+      return ok, err
+    end
+
+    -- "/" works on both Unix and Windows
+    return file_exists(path .. "/")
+  end
+
+  -- setup vim's various config directories
+  -- # cache_paths
+  if vim.g.local_state_path ~= nil then
+    local local_state_paths = {
+      fmt("%s/backup", vim.g.local_state_path),
+      fmt("%s/session", vim.g.local_state_path),
+      fmt("%s/swap", vim.g.local_state_path),
+      fmt("%s/shada", vim.g.local_state_path),
+      fmt("%s/tags", vim.g.local_state_path),
+      fmt("%s/undo", vim.g.local_state_path),
+    }
+    if not is_dir(vim.g.local_state_path) then
+      os.execute("mkdir -p " .. vim.g.local_state_path)
+    end
+    for _, p in pairs(local_state_paths) do
+      if not is_dir(p) then
+        os.execute("mkdir -p " .. p)
+      end
+    end
+  end
 end
 
 -- [ plugin config ] -----------------------------------------------------------
