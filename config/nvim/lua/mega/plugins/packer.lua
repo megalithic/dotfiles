@@ -1,3 +1,5 @@
+-- REF: https://github.com/rstacruz/vimfiles
+
 local fn = vim.fn
 local fmt = string.format
 local M = {}
