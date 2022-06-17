@@ -87,7 +87,7 @@ vim.opt_local.cursorline = true
 
 if vim.env.TMUX_POPUP then
   vim.opt.laststatus = 1
-  vim.opt.cmdheight = 1
+  vim.opt.cmdheight = 0
   vim.api.nvim_win_set_option(
     0,
     "winhl",
