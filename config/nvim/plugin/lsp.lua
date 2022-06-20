@@ -336,6 +336,7 @@ local function setup_diagnostics()
   diagnostic.config({
     signs = true, -- {severity_limit = "Warning"},
     underline = true,
+    -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
     virtual_text = false,
     update_in_insert = false,
     severity_sort = true,

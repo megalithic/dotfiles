@@ -31,9 +31,12 @@ vim.filetype.add({
     keymap = "keymap",
   },
   pattern = {
-    [".*%.env.*"] = "sh",
+    [".*%.conf"] = "conf",
+    [".*%.theme"] = "conf",
     [".*ignore"] = "conf",
-    ["*.jst.eco"] = "jst",
-    -- ['.*tmux.*conf$'] = 'tmux',
+    [".*%.gradle"] = "groovy",
+    [".*%.env%..*"] = "env",
+    [".*%.jst.eco"] = "jst",
   },
+  -- ['.*tmux.*conf$'] = 'tmux',
 })

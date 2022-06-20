@@ -136,7 +136,8 @@ return function()
         -- item.kind = mega.icons.lsp.kind[item.kind]
         item.kind = fmt("%s %s", mega.icons.lsp.kind[item.kind], item.kind)
 
-        local max_length = 20
+        -- local max_length = 20
+        local max_length = math.floor(vim.o.columns * 0.5)
         item.abbr = #item.abbr >= max_length and string.sub(item.abbr, 1, max_length) .. mega.icons.misc.ellipsis
           or item.abbr
 

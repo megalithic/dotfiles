@@ -17,7 +17,7 @@ _G.mega = mega
         blank = { " ", " ", " ", " ", " ", " ", " ", " " },
       },
       lsp = {
-        error = "",
+        error = "", -- alts: 
         warn = "", -- alts: 喝卑
         info = "",
         hint = "", -- alts: 
