@@ -127,15 +127,6 @@ do
         end
       end,
     },
-
-    -- {
-    --   event = { "WinNew", "WinLeave" },
-    --   command = [[setlocal winhl=CursorLine:CursorLineNC,CursorLineNr:CursorLineNrNC,Normal:PanelBackground syntax=disable | TSBufDisable &filetype]],
-    -- },
-    -- {
-    --   event = { "WinEnter" },
-    --   command = [[setlocal winhl= syntax=enable | TSBufEnable &filetype]],
-    -- },
     {
       event = { "BufNewFile", "BufWritePre" },
       command = function()
@@ -160,16 +151,6 @@ do
           if line_nr > 0 and line_nr <= last_line then
             vim.api.nvim_win_set_cursor(0, last_place_mark)
           end
-          -- local row, col = unpack(api.nvim_buf_get_mark(0, "\""))
-          -- if { row, col } ~= { 0, 0 } then
-          --   -- TODO: exact column instead?
-          --   local ok, msg = pcall(api.nvim_win_set_cursor, 0, { row, 0 })
-          --   if not ok then
-          --     vim.notify(msg, "error", { title = "Last cursor position" })
-          --   else
-          --     vim.cmd("normal! zz")
-          --   end
-          -- end
         end
       end,
     },
@@ -199,7 +180,7 @@ augroup("Kitty", {
 augroup("Plugins/Paq", {
   {
     event = { "BufWritePost" },
-    pattern = { "nvim/lua/mega/plugins/*.lua", "nvim/lua/plugin/*" },
+    pattern = { "*/nvim/lua/mega/plugins/*.lua", "*/nvim/lua/plugin/*" },
     command = function()
       -- auto-source paq-nvim upon plugins/*.lua buffer writes
       vim.cmd("luafile %")
@@ -233,24 +214,6 @@ augroup("YankHighlightedRegion", {
     end,
   },
 })
-
--- augroup("Terminal", {
---   {
---     event = { "TermClose" },
---     pattern = { "term://*" },
---     command = "noremap <buffer><silent><ESC> :bd!<CR>",
---   },
---   {
---     event = { "TermClose" },
---     pattern = { "term://*" },
---     command = function()
---       --- automatically close a terminal if the job was successful
---       if not vim.v.event.status == 0 then
---         vcmd("bdelete! " .. fn.expand("<abuf>"))
---       end
---     end,
---   },
--- })
 
 augroup("UpdateVim", {
   --   {
@@ -328,70 +291,70 @@ augroup("LazyLoads", {
   },
 })
 
-do
-  -- hlsearch things
-  --[[
-    NOTE: all of this graciously thieved from akinsho; big up to him.
+-- do
+--   -- hlsearch things
+--   --[[
+--     NOTE: all of this graciously thieved from akinsho; big up to him.
 
-    In order to get hlsearch working the way I like i.e. on when using /,?,N,n,*,#, etc. and off when
-    When I'm not using them, I need to set the following:
-    The mappings below are essentially faked user input this is because in order to automatically turn off
-    the search highlight just changing the value of 'hlsearch' inside a function does not work
-    read `:h nohlsearch`. So to have this work I check that the current mouse position is not a search
-    result, if it is we leave highlighting on, otherwise I turn it off on cursor moved by faking my input
-    using the expr mappings below.
+--     In order to get hlsearch working the way I like i.e. on when using /,?,N,n,*,#, etc. and off when
+--     When I'm not using them, I need to set the following:
+--     The mappings below are essentially faked user input this is because in order to automatically turn off
+--     the search highlight just changing the value of 'hlsearch' inside a function does not work
+--     read `:h nohlsearch`. So to have this work I check that the current mouse position is not a search
+--     result, if it is we leave highlighting on, otherwise I turn it off on cursor moved by faking my input
+--     using the expr mappings below.
 
-    This is based on the implementation discussed here:
-    https://github.com/neovim/neovim/issues/5581
-  --]]
+--     This is based on the implementation discussed here:
+--     https://github.com/neovim/neovim/issues/5581
+--   --]]
 
-  vim.keymap.set({ "n", "v", "o", "i", "c" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
+--   vim.keymap.set({ "n", "v", "o", "i", "c" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
 
-  local function stop_hl_search()
-    if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then
-      return
-    end
-    api.nvim_feedkeys(mega.replace_termcodes("<Plug>(StopHL)"), "m", false)
-  end
+--   local function stop_hl_search()
+--     if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then
+--       return
+--     end
+--     api.nvim_feedkeys(mega.replace_termcodes("<Plug>(StopHL)"), "m", false)
+--   end
 
-  local function start_hl_search()
-    local col = api.nvim_win_get_cursor(0)[2]
-    local curr_line = api.nvim_get_current_line()
-    local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
-    if not ok then
-      return vim.notify(match, "error", { title = "HL SEARCH" })
-    end
-    local _, p_start, p_end = unpack(match)
-    -- if the cursor is in a search result, leave highlighting on
-    if col < p_start or col > p_end then
-      stop_hl_search()
-    end
-  end
+--   local function start_hl_search()
+--     local col = api.nvim_win_get_cursor(0)[2]
+--     local curr_line = api.nvim_get_current_line()
+--     local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
+--     if not ok then
+--       return vim.notify(match, "error", { title = "HL SEARCH" })
+--     end
+--     local _, p_start, p_end = unpack(match)
+--     -- if the cursor is in a search result, leave highlighting on
+--     if col < p_start or col > p_end then
+--       stop_hl_search()
+--     end
+--   end
 
-  augroup("IncSearchHighlight", {
-    {
-      event = { "CursorMoved" },
-      command = function()
-        start_hl_search()
-      end,
-    },
-    {
-      event = { "InsertEnter" },
-      command = function()
-        stop_hl_search()
-      end,
-    },
-    {
-      event = { "OptionSet" },
-      pattern = { "hlsearch" },
-      command = function()
-        vim.schedule(function()
-          vim.cmd("redrawstatus")
-        end)
-      end,
-    },
-  })
-end
+--   augroup("IncSearchHighlight", {
+--     {
+--       event = { "CursorMoved" },
+--       command = function()
+--         start_hl_search()
+--       end,
+--     },
+--     {
+--       event = { "InsertEnter" },
+--       command = function()
+--         stop_hl_search()
+--       end,
+--     },
+--     {
+--       event = { "OptionSet" },
+--       pattern = { "hlsearch" },
+--       command = function()
+--         vim.schedule(function()
+--           vim.cmd("redrawstatus")
+--         end)
+--       end,
+--     },
+--   })
+-- end
 
 do
   --- automatically clear commandline messages after a few seconds delay

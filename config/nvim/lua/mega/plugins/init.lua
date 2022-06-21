@@ -26,6 +26,8 @@ local PKGS = {
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
+  "anuvyklack/keymap-layer.nvim",
+  "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
   "kevinhwang91/promise-async",
@@ -314,7 +316,8 @@ function M.config()
 
   vim.cmd("packadd cfilter")
 
-  conf("whichkey", { config = "whichkey" })
+  -- conf("whichkey", { config = "whichkey" })
+  conf("hydra", { config = "hydra" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })
@@ -437,7 +440,7 @@ function M.config()
       },
       sources = { -- Sources to configure
         ["elixirls"] = { -- Name of source
-          ignore = false, -- Ignore notifications from this source
+          ignore = true, -- Ignore notifications from this source
         },
         ["markdown"] = { -- Name of source
           ignore = true, -- Ignore notifications from this source

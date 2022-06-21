@@ -15,17 +15,17 @@ local U = {}
 
 --- Timer to update the search count as the file is travelled
 ---@return function
-function U.update_search_count(timer)
-  search_count_timer = timer
-  timer:start(0, 200, function()
-    vim.schedule(function()
-      if timer == search_count_timer then
-        fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
-        vim.cmd("redrawstatus")
-      end
-    end)
-  end)
-end
+-- function U.update_search_count(timer)
+--   search_count_timer = timer
+--   timer:start(0, 200, function()
+--     vim.schedule(function()
+--       if timer == search_count_timer then
+--         fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
+--         vim.cmd("redrawstatus")
+--       end
+--     end)
+--   end)
+-- end
 
 -- FIXME: presently focus variable setting isn't being used right
 mega.augroup("megaline", {
@@ -476,7 +476,7 @@ function U.filetype(ctx, opts)
   local f_name, f_extension = vim.fn.expand("%:t") or ctx.bufname, vim.fn.expand("%:e")
   f_extension = f_extension ~= "" and f_extension or vim.bo.filetype
 
-  local icons_loaded, devicons = mega.safe_require("nvim-web-devicons")
+  local icons_loaded, devicons = pcall(require, "nvim-web-devicons")
   if icons_loaded then
     _, icon_hl = devicons.get_icon(f_name, f_extension)
     -- to get color rendering working propertly, we have to use the get_icon_color/3 fn
@@ -566,17 +566,6 @@ function U.get_filesize()
     return fmt("%.2fMiB", size / 1048576)
   end
 end
-
--- function U.get_filetype_icon()
---   -- Have this `require()` here to not depend on plugin initialization order
---   local has_devicons, devicons = pcall(require, "nvim-web-devicons")
---   if not has_devicons then
---     return ""
---   end
-
---   local file_name, file_ext = vim.fn.expand("%:t"), vim.fn.expand("%:e")
---   return devicons.get_icon(file_name, file_ext, { default = true })
--- end
 
 U.get_diagnostic_count = function(id)
   return #vim.diagnostic.get(0, { severity = id })
