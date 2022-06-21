@@ -142,12 +142,14 @@ return lush(function()
     CursorLineNr({ fg = brown, bg = bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
+
+    Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
     TermCursor({ Cursor }), -- cursor in a focused terminal
     TermCursorNC({ Cursor }), -- cursor in an unfocused terminal
     ErrorMsg({ fg = red, bg = "NONE", gui = "bold,underline" }), -- error messages on the command line
     VertSplit({ fg = bg4, bg = "NONE" }), -- the column separating vertically split windows
     WinSeparator({ VertSplit, fg = bg2, gui = "bold" }),
-    Folded({ fg = grey1, bg = bg1, gui = "bold,italic" }), -- line used for closed folds
+    Folded({ Comment, gui = "bold,italic" }), -- line used for closed folds
     FoldColumn({ fg = grey1, bg = bg1 }), -- 'foldcolumn'
     -- Neither the sign column or end of buffer highlights require an explicit background
     -- they should both just use the background that is in the window they are in.
@@ -246,7 +248,6 @@ return lush(function()
     Constant({ fg = aqua, bg = "NONE" }),
     Macro({ fg = aqua, bg = "NONE" }),
     Identifier({ fg = blue, bg = "NONE" }),
-    Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
     SpecialComment({ fg = grey1, bg = "NONE", gui = "italic" }),
     Todo({ fg = purple, bg = "NONE", gui = "italic" }),
     Delimiter({ fg = fg, bg = "NONE" }),
