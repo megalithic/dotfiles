@@ -41,6 +41,13 @@ mega.augroup("megaline", {
       vim.g.vim_in_focus = false
     end,
   },
+
+  {
+    event = { "VimEnter" },
+    command = function()
+      vim.go.statusline = "%{%v:lua.__statusline()%}"
+    end,
+  },
   {
     event = { "VimResized" },
     command = function()
@@ -518,7 +525,7 @@ function U.file(ctx, trunc)
   }
 end
 
-function U.search_result()
+function M.s_search_result()
   if vim.v.hlsearch == 0 then
     return ""
   end
@@ -788,62 +795,12 @@ function U.is_disabled()
   return vim.g.megaline_disable == true or vim.b.megaline_disable == true
 end
 
-local function statusline_active(ctx)
-  -- stylua: ignore start
-  local prefix                      = unpack(item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
-  local suffix                      = unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" }))
-  local mode                        = M.s_mode({ trunc_width = 120 })
-  local search                      = unpack(item_if(U.search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", {before=" "}))
-  local git                         = M.s_git({ trunc_width = 120 })
-  local readonly                    = M.s_readonly({ trunc_width = 100 })
-  local modified                    = M.s_modified({ trunc_width = 100 })
-  local filename                    = M.s_filename({ trunc_width = 120 })
-  local saving                      = unpack(item_if('Saving…', vim.g.is_saving, 'StComment', { before = ' ' }))
-  local lineinfo                    = M.s_lineinfo({ trunc_width = 75 })
-  local diags                       = diagnostic_info()
-  local diag_error                  = unpack(item_if(diags.error.count, not is_truncated(100) and diags.error, "StError", { prefix = diags.error.sign }))
-  local diag_warn                   = unpack(item_if(diags.warn.count, not is_truncated(100) and diags.warn, "StWarn", { prefix = diags.warn.sign }))
-  local diag_info                   = unpack(item_if(diags.info.count, not is_truncated(100) and diags.info, "StInfo", { prefix = diags.info.sign }))
-  local diag_hint                   = unpack(item_if(diags.hint.count, not is_truncated(100) and diags.hint, "StHint", { prefix = diags.hint.sign }))
-  -- stylua: ignore end
-
-  local plain = U.is_plain(ctx)
-  -- local file_modified = U.modified(ctx, mega.icons.misc.circle)
-  local focused = vim.g.vim_in_focus or true
-
-  if plain or not focused then
-    return build({
-      filename,
-      modified,
-      readonly,
-    })
-  end
-
-  return build({
-    prefix,
-    mode,
-    "%<", -- Mark general truncate point
-    filename,
-    modified,
-    readonly,
-    saving,
-    search,
-    "%=", -- End left alignment
-    -- middle section for whatever we want..
-    "%=",
-    { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
-    git,
-    lineinfo,
-    -- suffix,
-  })
-end
-
 function M.is_focused()
   return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win()
 end
 
 -- do the statusline things for the activate window
-function _G.__activate_statusline()
+function _G.__statusline()
   -- use the statusline global variable which is set inside of statusline
   -- functions to the window for *that* statusline
   local curwin = vim.g.statusline_winid or 0
@@ -866,22 +823,53 @@ function _G.__activate_statusline()
 
   U.ctx = ctx
 
-  return statusline_active(ctx)
-end
+  local plain = U.is_plain(ctx)
+  local focused = vim.g.vim_in_focus and M.is_focused()
+  local disabled = U.is_disabled()
 
--- do the statusline things for the inactive window
-function _G.__deactivate_statusline()
+  if not plain and focused and not disabled then
+    -- stylua: ignore start
+    local diags                       = diagnostic_info()
+    local diag_error                  = unpack(item_if(diags.error.count, not is_truncated(100) and diags.error, "StError", { prefix = diags.error.sign }))
+    local diag_warn                   = unpack(item_if(diags.warn.count, not is_truncated(100) and diags.warn, "StWarn", { prefix = diags.warn.sign }))
+    local diag_info                   = unpack(item_if(diags.info.count, not is_truncated(100) and diags.info, "StInfo", { prefix = diags.info.sign }))
+    local diag_hint                   = unpack(item_if(diags.hint.count, not is_truncated(100) and diags.hint, "StHint", { prefix = diags.hint.sign }))
+    -- stylua: ignore end
+
+    return build({
+      -- prefix
+      unpack(
+        item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })
+      ),
+      -- mode
+      M.s_mode({ trunc_width = 120 }),
+      "%<", -- mark general truncate point
+      -- filename parts
+      M.s_filename({ trunc_width = 120 }),
+      -- modified indicator
+      M.s_modified({ trunc_width = 100 }),
+      -- readonly indicator
+      M.s_readonly({ trunc_width = 100 }),
+      -- saving indicator
+      unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
+      -- search results
+      unpack(item_if(M.s_search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", { before = " " })),
+      "%=", -- end left alignment
+      -- middle section for whatever we want..
+      "%=",
+      -- diagnostics
+      { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
+      -- git status/branch
+      M.s_git({ trunc_width = 120 }),
+      -- line information
+      M.s_lineinfo({ trunc_width = 75 }),
+      -- suffix
+      -- unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
+    })
+  end
+
+  -- barebones inactive mode
   return "%#StInactive#%F %m%="
 end
-
-function _G.__statusline()
-  if M.is_focused() and not U.is_disabled() then
-    return __activate_statusline()
-  else
-    return __deactivate_statusline()
-  end
-end
-
-vim.go.statusline = "%{%v:lua.__statusline()%}"
 
 return M
