@@ -127,7 +127,7 @@ vim.opt.foldlevelstart = 6 -- open most folds by default
 vim.opt.foldnestmax = 10 -- 10 nested fold max
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldmethod = "expr"
-vim.wo.foldcolumndigits = false -- if disabled, 'foldsep' from 'fillchars' used.
+-- vim.wo.foldcolumndigits = false -- if disabled, 'foldsep' from 'fillchars' used.
 -- or --
 vim.opt.foldmethod = "indent" -- fold based on indent level
 -----------------------------------------------------------------------------//
@@ -259,6 +259,20 @@ vim.opt.clipboard = { "unnamedplus" }
 -- 2 = statusline in each window;
 -- 3 = global statusline
 vim.opt.laststatus = 2
+vim.opt.statusline = ""
+-- fallback in the event our statusline plugins fail to load
+-- vim.opt.statusline = table.concat({
+--   "%2{toupper(mode())} ",
+--   "f", -- relative path
+--   "m", -- modified flag
+--   "r",
+--   "=",
+--   "{&spelllang}",
+--   "%{get(b:,'gitsigns_status','')}",
+--   "y", -- filetype
+--   "8(%l,%c%)", -- line, column
+--   "8p%% ", -- file percentage
+-- }, " %")
 -----------------------------------------------------------------------------//
 -- Emoji {{{1
 -----------------------------------------------------------------------------//
@@ -435,19 +449,6 @@ mega.exec([[
 -----------------------------------------------------------------------------//
 -- Random Other Things
 -----------------------------------------------------------------------------//
--- fallback in the event our statusline plugins fail to load
--- vim.opt.statusline = table.concat({
---   "%2{toupper(mode())} ",
---   "f", -- relative path
---   "m", -- modified flag
---   "r",
---   "=",
---   "{&spelllang}",
---   "%{get(b:,'gitsigns_status','')}",
---   "y", -- filetype
---   "8(%l,%c%)", -- line, column
---   "8p%% ", -- file percentage
--- }, " %")
 -- vim.opt.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 vim.g.no_man_maps = true
 vim.g.vim_json_syntax_conceal = false

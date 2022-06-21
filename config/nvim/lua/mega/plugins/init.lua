@@ -398,7 +398,7 @@ function M.config()
         end
         curWidth = curWidth + chunkWidth
       end
-      table.insert(newVirtText, { suffix, "MoreMsg" })
+      table.insert(newVirtText, { suffix, "FoldMoreMsg" })
       return newVirtText
     end
 
