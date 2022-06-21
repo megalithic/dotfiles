@@ -317,7 +317,7 @@ function M.config()
   vim.cmd("packadd cfilter")
 
   -- conf("whichkey", { config = "whichkey" })
-  conf("hydra", { config = "hydra" })
+  -- conf("hydra", { config = "hydra" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })

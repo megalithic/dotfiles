@@ -858,7 +858,9 @@ function _G.__statusline()
   end
 
   -- barebones inactive mode
-  return "%#StInactive#%F %m%="
+  if not focused then
+    return "%#StInactive#%F %m%="
+  end
 end
 
 return M
