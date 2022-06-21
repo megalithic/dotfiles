@@ -11,7 +11,8 @@ set -euo pipefail
 # OLD VERSION: https://github.com/megalithic/dotfiles_bak/blob/b1f03a255678d91b39e87419b44ccf28a4ceb17f/bin/dnd
 #
 
-dnd_cmd="$HOME/.dotfiles/bin/dnd.rb"
+shortcut_cmd="macos-focus-mode"
+dnd_cmd="shortcuts run '$shortcut_cmd'"
 command=""
 subcommand=""
 
@@ -25,28 +26,31 @@ command="$(basename "$0")"
 help() {
   printf -- "Usage: "$command" <subcommand> [options]\n"
   printf -- "Subcommands:\n"
-  printf -- "    on       Turn ON do-not-disturb (DND) mode\n"
-  printf -- "    off      Turn OFF do-not-disturb (DND) mode\n"
-  printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
+  printf -- "    on        Turn ON do-not-disturb (DND) mode\n"
+  printf -- "    off       Turn OFF do-not-disturb (DND) mode\n"
+  printf -- "    install   Install macos-focus-mode shortcut\n"
+  # printf -- "    toggle   Toggle do-not-disturb (DND) mode ON and OFF\n"
   printf -- "    status   Get the current status of do-not-disturb (DND) mode\n"
 }
 
+install() {
+  open "$DOTS/bin/macos-focus-mode.shortcut"
+}
+
 on() {
-  $dnd_cmd on
+  shortcuts run "$shortcut_cmd" <<< "on"
 }
 
 off() {
-  $dnd_cmd off
-}
-
-toggle() {
-  $dnd_cmd toggle
-
-  status
+  shortcuts run "$shortcut_cmd" <<< "off"
 }
 
 status() {
-  echo "$($dnd_cmd status)"
+  if [[ "$(defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes")" == 1 ]]; then
+    echo "on"
+  else
+    echo "off"
+  fi
 }
 
 subcommand="${1:-}"

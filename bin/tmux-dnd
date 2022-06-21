@@ -1,14 +1,10 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+dnd_status=$(dnd status)
 
-while true
-do
-  # dnd_status=$(defaults -currentHost read ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb)
-  dnd_status=$(calm-notifications status)
-  echo $dnd_status
-  # dnd_label=$([[ "$dnd_status" -eq "on" ]] && echo "DND ⋮" || echo "")
-  # tmux_status_interval=$(tmux show-option -gqv "status-interval")
-  # echo "$dnd_label"
-  # sleep $tmux_status_interval
-done
+echo
 
-# add to your tmux.conf status bar as `#(tmux-dnd)` assuming you have this script in your $PATH
+if [[ "$dnd_status" == "on" ]]; then
+  printf "\uf59f DND#[fg=colour255] ⋮ "
+elif [[ "$dnd_status" == "off" ]]; then
+  printf ""
+fi
