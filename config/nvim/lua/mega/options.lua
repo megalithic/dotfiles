@@ -43,11 +43,11 @@ vim.opt.fillchars = {
   --   verthoriz = '╋',
   fold = " ",
   eob = " ", -- suppress ~ at EndOfBuffer
-  diff = "╱", -- alternatives = ⣿ ░ ─
-  msgsep = " ", -- alternatives: ‾ ─
-  foldopen = "▾",
+  diff = "╱", -- alts: = ⣿ ░ ─
+  msgsep = " ", -- alts: ‾ ─
+  foldopen = mega.icons.misc.fold_open, -- alts: ▾
   foldsep = "│",
-  foldclose = "▸",
+  foldclose = mega.icons.misc.fold_close, -- alts: ▸
 }
 
 -----------------------------------------------------------------------------//

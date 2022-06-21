@@ -203,6 +203,8 @@ _G.mega = mega
         chevron_right = "",
         table = "",
         calendar = "",
+        fold_open = "",
+        fold_close = "",
       },
       virtual_text = "",
       mode_term = "ﲵ",
