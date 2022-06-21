@@ -963,6 +963,10 @@ function mega.lsp.get_server_config(server)
     capabilities.textDocument.codeLens = { dynamicRegistration = false }
     capabilities.textDocument.colorProvider = { dynamicRegistration = false }
     capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+    capabilities.textDocument.foldingRange = {
+      dynamicRegistration = false,
+      lineFoldingOnly = true,
+    }
     capabilities.textDocument.codeAction = {
       dynamicRegistration = false,
       codeActionLiteralSupport = {
