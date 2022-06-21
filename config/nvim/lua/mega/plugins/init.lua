@@ -23,18 +23,17 @@ local PKGS = {
   "norcalli/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
-  -- "karb94/neoscroll.nvim",
-  -- "declancm/cinnamon.nvim",
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
+  "kevinhwang91/promise-async",
+  "kevinhwang91/nvim-ufo",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
-  -- "williamboman/nvim-lsp-installer", -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L229-L244
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   { "hrsh7th/nvim-cmp", branch = "main" },
@@ -85,7 +84,6 @@ local PKGS = {
   "SmiteshP/nvim-gps",
   -- @trial "m-demare/hlargs.nvim"
   -- @trial "ziontee113/syntax-tree-surfer"
-  -- @trial "primeagen/harpoon",
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
@@ -369,6 +367,46 @@ function M.config()
       ]])
     end,
   })
+
+  conf("ufo", function()
+    vim.o.foldlevel = 99
+    vim.o.foldenable = true
+
+    local handler = function(virtText, lnum, endLnum, width, truncate)
+      local newVirtText = {}
+      local suffix = (" %s  %d "):format(mega.icons.misc.ellipsis, endLnum - lnum)
+      local sufWidth = vim.fn.strdisplaywidth(suffix)
+      local targetWidth = width - sufWidth
+      local curWidth = 0
+      for _, chunk in ipairs(virtText) do
+        local chunkText = chunk[1]
+        local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+        if targetWidth > curWidth + chunkWidth then
+          table.insert(newVirtText, chunk)
+        else
+          chunkText = truncate(chunkText, targetWidth - curWidth)
+          local hlGroup = chunk[2]
+          table.insert(newVirtText, { chunkText, hlGroup })
+          chunkWidth = vim.fn.strdisplaywidth(chunkText)
+          -- str width returned from truncate() may less than 2rd argument, need padding
+          if curWidth + chunkWidth < targetWidth then
+            suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+          end
+          break
+        end
+        curWidth = curWidth + chunkWidth
+      end
+      table.insert(newVirtText, { suffix, "MoreMsg" })
+      return newVirtText
+    end
+
+    require("ufo").setup({
+      fold_virt_text_handler = handler,
+    })
+
+    -- map("n", "[z", require("ufo.action").goPreviousClosedFold)
+    -- map("n", "]z", require("ufo.action").goNextClosedFold)
+  end)
 
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
   conf("gitlinker", {})
