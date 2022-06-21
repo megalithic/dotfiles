@@ -55,7 +55,7 @@ shift $((OPTIND - 1))
 if [[ -d "/Library/Developer/CommandLineTools" && $FORCE_INSTALL == "false" ]]; then
   log_warn "Xcode CommandLineTools found; skipping."
 else
-  (do_install && do_post_install) & #run command1 in background
-  PID=$!                            #catch the last PID, here from command1
-  wait $PID                         #wait for command1, in background, to end
+  (do_install && do_post_install) & # run in background
+  PID=$!                            # catch the last PID
+  wait $PID                         # wait for installers in the background to end
 fi

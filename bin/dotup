@@ -57,11 +57,7 @@ update() {
 
   if [[ "$(uname)" == "Darwin" ]]; then
     log "update xcode cli tools.."
-    # read -n 1 -p "press any key to continue..." -s -e -r
-    xcode-select --install & #run command1 in background
-    local PID=$!             #catch the last PID, here from command1
-    wait $PID                #wait for command1, in background, to end
-    # ./bin/xcode-install -f
+    ./bin/xcode-install -f
   fi
 
   log "homebrew install.." &&
