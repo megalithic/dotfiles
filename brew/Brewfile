@@ -14,7 +14,6 @@ tap "neovim/neovim"
 tap "caius/jo"
 tap "simeji/jid"
 tap "browsh-org/homebrew-browsh" if OS.mac?
-tap "qmk/qmk" if OS.mac?
 tap "heroku/brew" if OS.mac?
 # NOTE/REF: https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/#macos
 tap "microsoft/git"
@@ -33,15 +32,16 @@ tap "wez/wezterm" if OS.mac?
 # brew install dfu-programmer dfu-util gcc-arm-none-eabi avrdude qmk;
 # brew cask install qmk-toolbox;
 #
-tap "osx-cross/avr" if OS.mac?
-tap "PX4/homebrew-px4" if OS.mac?
-# NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
-brew "avr-gcc@8", link: true if OS.mac?
-brew "dfu-programmer" if OS.mac?
-brew "dfu-util" if OS.mac?
-brew "gcc-arm-none-eabi" if OS.mac?
-brew "avrdude" if OS.mac?
-brew "qmk" if OS.mac?
+# tap "qmk/qmk" if OS.mac?
+# tap "osx-cross/avr" if OS.mac?
+# tap "PX4/homebrew-px4" if OS.mac?
+# # NOTE: at present, 20200327, qmk doesn't support >=avr-gcc@9
+# brew "avr-gcc@8", link: true if OS.mac?
+# brew "dfu-programmer" if OS.mac?
+# brew "dfu-util" if OS.mac?
+# brew "gcc-arm-none-eabi" if OS.mac?
+# brew "avrdude" if OS.mac?
+# brew "qmk" if OS.mac?
 
 # -- cli --
 

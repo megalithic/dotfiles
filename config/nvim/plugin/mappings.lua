@@ -403,11 +403,11 @@ nnoremap([[<Esc>]], function()
   vim.cmd("echo ''")
   mega.blink_cursorline()
 
-  local n_ok, n = require("notify")
-  if n_ok then
-    vim.notify = n
-    vim.notify.dismiss()
-  end
+  -- local n_ok, n = require("notify")
+  -- if n_ok then
+  --   vim.notify = n
+  --   vim.notify.dismiss()
+  -- end
 end, { silent = true, desc = "Clear UI" })
 
 -- useful remaps from theprimeagen:
