@@ -42,21 +42,9 @@ mega.augroup("megaline", {
     end,
   },
   {
-    event = { "VimEnter", "WinEnter", "BufEnter" },
+    event = { "VimResized" },
     command = function()
-      -- :h qf.vim, disable qf statusline
-      -- NOTE: this allows for our custom statusline exception-based naming to work
-      vim.g.qf_disable_statusline = 1
-      -- vim.go.statusline = "%!v:lua.__activate_statusline()"
-      -- vim.go.statusline = "%{%v:lua.require'lualine'.statusline()%}"
-      vim.go.statusline = "%{%v:lua.__activate_statusline()%}"
-    end,
-  },
-  {
-    event = { "WinLeave", "BufLeave" },
-    command = function()
-      -- vim.go.statusline = "%!v:lua.__deactivate_statusline()"
-      vim.go.statusline = ""
+      vim.cmd("redrawstatus")
     end,
   },
   {
@@ -850,12 +838,12 @@ local function statusline_active(ctx)
   })
 end
 
+function M.is_focused()
+  return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win()
+end
+
 -- do the statusline things for the activate window
 function _G.__activate_statusline()
-  if U.is_disabled() then
-    return ""
-  end
-
   -- use the statusline global variable which is set inside of statusline
   -- functions to the window for *that* statusline
   local curwin = vim.g.statusline_winid or 0
@@ -883,16 +871,17 @@ end
 
 -- do the statusline things for the inactive window
 function _G.__deactivate_statusline()
-  return "" --%#StInactive#%F %m%="
+  return "%#StInactive#%F %m%="
 end
 
--- FIXME: use one assigment to statusline; so we can set minimal SL things
+function _G.__statusline()
+  if M.is_focused() and not U.is_disabled() then
+    return __activate_statusline()
+  else
+    return __deactivate_statusline()
+  end
+end
 
--- function M.is_focused()
---   return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win()
--- end
---   vim.g.actual_curwin = tostring(vim.api.nvim_get_current_win())
-
--- https://github.com/nvim-lualine/lualine.nvim/blob/60b1d5dce9e0662f5c6ab140cf9dedd8bd50c7b2/lua/lualine.lua#L268-L277
+vim.go.statusline = "%{%v:lua.__statusline()%}"
 
 return M

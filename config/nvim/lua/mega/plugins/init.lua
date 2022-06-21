@@ -371,7 +371,7 @@ function M.config()
   conf("ufo", function()
     vim.wo.foldcolumn = "0"
     vim.wo.foldlevel = 99 -- feel free to decrease the value
-    vim.wo.foldcolumndigits = false
+    -- vim.wo.foldcolumndigits = false
     vim.wo.foldenable = true
 
     local handler = function(virtText, lnum, endLnum, width, truncate)
