@@ -121,9 +121,12 @@ vim.opt.formatoptions = vim.opt.formatoptions
 -- Folds {{{1
 -----------------------------------------------------------------------------//
 vim.opt.foldenable = false -- enable folding
+vim.opt.foldcolumn = "0" -- presently disabled until we can use foldcolumndigits
+-- vim.wo.foldcolumndigits = false
 -- vim.opt.foldtext = "v:lua.mega.folds()"
 vim.opt.foldopen = vim.opt.foldopen + "search"
-vim.opt.foldlevelstart = 6 -- open most folds by default
+vim.opt.foldlevel = 99 -- feel free to decrease the value
+vim.opt.foldlevelstart = 10 -- open most folds by default
 vim.opt.foldnestmax = 10 -- 10 nested fold max
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 vim.opt.foldmethod = "expr"
