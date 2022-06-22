@@ -332,9 +332,11 @@ function M.config()
   -- conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
-  conf("startuptime", function()
-    vim.g.startuptime_tries = 15
-  end)
+  conf("startuptime", {
+    function()
+      vim.g.startuptime_tries = 15
+    end,
+  })
 
   conf("bullets.vim", function()
     vim.g.bullets_enabled_file_types = {

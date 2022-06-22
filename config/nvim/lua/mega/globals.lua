@@ -393,8 +393,10 @@ end
 function mega.conf(plugin_conf_name, opts)
   opts = opts or {}
   local config
-  local enabled
-  local silent
+  local enabled = false
+  local silent = true
+  local defer = false
+  local fn_at_index = nil
 
   local function string_loader(str)
     local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
@@ -416,9 +418,21 @@ function mega.conf(plugin_conf_name, opts)
       config = opts
     end
 
+    for index, value in ipairs(opts) do
+      if type(value) == "function" then
+        fn_at_index = index
+
+        if not silent then
+          P(fmt("function found at index %d!", index))
+        end
+        config = opts[fn_at_index]
+      end
+    end
+
     -- enabled and silent props are taken raw from the opts table and used for plugin setup things
     enabled = (opts.enabled == nil) and true or opts.enabled
     silent = (opts.silent == nil) and true or opts.silent
+    defer = (opts.defer == nil) and false or opts.defer
 
     if not silent then
       P(fmt("%s (config table): %s", plugin_conf_name, vim.inspect(config)))
@@ -432,6 +446,11 @@ function mega.conf(plugin_conf_name, opts)
     string_loader(opts)
   elseif type(opts) == "function" then
     config = opts
+    enabled = true
+    silent = true
+    event = {}
+  elseif fn_at_index ~= nil then
+    config = opts[fn_at_index]
     enabled = true
     silent = true
     event = {}
@@ -454,7 +473,13 @@ function mega.conf(plugin_conf_name, opts)
           P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
         end
 
-        loader.setup(config)
+        if defer then
+          vim.defer_fn(function()
+            loader.setup(config)
+          end, 1000)
+        else
+          loader.setup(config)
+        end
       end
       -- config was passed a function, so we're assuming we want to bypass the plugin auto-invoking, and invoke our own fn
     elseif type(config) == "function" then
@@ -462,8 +487,17 @@ function mega.conf(plugin_conf_name, opts)
       if not silent then
         P(fmt("%s configuring with `config(loader)`", plugin_conf_name))
       end
-      config()
+
+      if defer then
+        vim.defer_fn(function()
+          config()
+        end, 1000)
+      else
+        config()
+      end
     end
+
+    fn_at_index = nil
   end
 end
 
