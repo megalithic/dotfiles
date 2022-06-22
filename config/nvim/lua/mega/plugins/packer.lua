@@ -2,52 +2,49 @@
 
 local fn = vim.fn
 local fmt = string.format
+local utils = require("mega.plugins.utils")
+--local conf = utils.conf
+local packer_notify = utils.packer_notify
 local M = {}
 
 if pcall(require, "packer") then
   vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/paqs")
 end
 
----A thin wrapper around vim.notify to add packer details to the message
----@param msg string
-local function packer_notify(msg, level)
-  vim.notify(msg, level, { title = "Packer" })
-end
-
 local function conf(name)
   return require(fmt("mega.plugins.%s", name))
 end
 
-local function clone()
-  local repo = "https://github.com/wbthomason/packer.nvim"
-  local rtp_type = "start" -- "opt" or "start"
-  local install_path = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_type)
+-- local function clone()
+--   local repo = "https://github.com/wbthomason/packer.nvim"
+--   local rtp_type = "start" -- "opt" or "start"
+--   local install_path = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_type)
 
-  if fn.empty(fn.glob(install_path)) > 0 then
-    packer_notify("Downloading packer.nvim...")
-    local packer_clone = fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      repo,
-      install_path,
-    })
-    packer_notify(packer_clone)
+--   if fn.empty(fn.glob(install_path)) > 0 then
+--     packer_notify("Downloading packer.nvim...")
+--     local packer_clone = fn.system({
+--       "git",
+--       "clone",
+--       "--depth",
+--       "1",
+--       repo,
+--       install_path,
+--     })
+--     packer_notify(packer_clone)
 
-    if packer_clone then
-      vim.schedule(function()
-        packer_notify("Syncing plugins...")
-        vim.cmd("packadd! packer.nvim")
-        require("packer").sync()
-      end)
-    end
-  else
-    -- FIXME: currently development versions of packer do not work
-    -- local name = vim.env.DEVELOPING and 'local-packer.nvim' or 'packer.nvim'
-    vim.cmd("packadd! packer.nvim")
-  end
-end
+--     if packer_clone then
+--       vim.schedule(function()
+--         packer_notify("Syncing plugins...")
+--         vim.cmd("packadd! packer.nvim")
+--         require("packer").sync()
+--       end)
+--     end
+--   else
+--     -- FIXME: currently development versions of packer do not work
+--     -- local name = vim.env.DEVELOPING and 'local-packer.nvim' or 'packer.nvim'
+--     vim.cmd("packadd! packer.nvim")
+--   end
+-- end
 
 function M.sync_all()
   -- Load packer.nvim
@@ -59,28 +56,50 @@ end
 -- `bin/packer-install` runs this for us in a headless nvim environment
 function M.bootstrap(with_sync)
   -- clone()
+  -- local packer_path = vim.fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
+  -- if vim.fn.empty(vim.fn.glob(packer_path)) > 0 then
+  -- vim.fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", packer_path })
 
-  local packer_path = vim.fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
-  if vim.fn.empty(vim.fn.glob(packer_path)) > 0 then
-    vim.cmd([[echo "Installing packer..."]])
+  local repo = "https://github.com/wbthomason/packer.nvim"
+  local rtp_type = "start" -- "opt" or "start"
+  local install_path = fmt("%s/site/pack/packer/%s/packer.nvim", fn.stdpath("data"), rtp_type)
 
-    vim.fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", packer_path })
+  if fn.empty(fn.glob(install_path)) > 0 then
+    packer_notify("Attempting to download packer.nvim...")
+    local packer_clone = fn.system({
+      "git",
+      "clone",
+      "--depth",
+      "1",
+      repo,
+      install_path,
+    })
+
+    packer_notify(packer_clone)
     vim.cmd("autocmd User PackerCompileDone luafile " .. vim.env.MYVIMRC)
-
     require("packer").startup(M.PKGS, M.OPTS)
-    require("packer").sync()
+
+    if packer_clone then
+      vim.schedule(function()
+        packer_notify("Syncing plugins...")
+        vim.cmd("packadd! packer.nvim")
+        require("packer").sync()
+      end)
+    end
+
     return
   end
 
   if with_sync then
     M.sync_all()
+
+    return
   end
 end
 
 -- HACK: Big Sur and Luarocks support
 -- @see https://github.com/wbthomason/packer.nvim/issues/180
 fn.setenv("MACOSX_DEPLOYMENT_TARGET", "10.15")
-
 local PACKER_COMPILED_PATH = fn.stdpath("cache") .. "/packer/packer_compiled.lua"
 
 ---Some plugins are not safe to be reloaded because their setup functions
@@ -361,7 +380,7 @@ M.PKGS = function(use)
   use({
     "nvim-treesitter/nvim-treesitter",
     run = ":TSUpdate",
-    config = conf("treesitter"),
+    --config = conf("treesitter"),
     requires = {
       {
         "nvim-treesitter/nvim-treesitter-textobjects",
@@ -1221,7 +1240,7 @@ packer.startup({
     use({
       "nvim-treesitter/nvim-treesitter",
       run = ":TSUpdate",
-      config = conf("treesitter"),
+      --config = conf("treesitter"),
       requires = {
         {
           "nvim-treesitter/nvim-treesitter-textobjects",

@@ -396,23 +396,40 @@ function mega.conf(plugin_conf_name, opts)
   local enabled
   local silent
 
+  local function string_loader(str)
+    local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
+    if has_external_config then
+      config = found_external_config
+      if not silent then
+        P(fmt("%s external config: %s", str, vim.inspect(config)))
+      end
+    end
+  end
+
   if type(opts) == "table" then
     -- config props go straight to the plugin setup
-    config = (opts.config == nil) and {} or opts.config
+    if vim.tbl_isempty(opts) then
+      config = {}
+    elseif opts.config ~= nil then
+      config = opts.config
+    else
+      config = opts
+    end
+
     -- enabled and silent props are taken raw from the opts table and used for plugin setup things
     enabled = (opts.enabled == nil) and true or opts.enabled
     silent = (opts.silent == nil) and true or opts.silent
 
+    if not silent then
+      P(fmt("%s (config table): %s", plugin_conf_name, vim.inspect(config)))
+    end
+
     -- handle what to do when opts.config is simply a string "name" to use for loading external config
     if type(opts.config) == "string" then
-      local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", plugin_conf_name))
-      if has_external_config then
-        config = found_external_config
-        if not silent then
-          P(fmt("%s external config: %s", plugin_conf_name, vim.inspect(config)))
-        end
-      end
+      string_loader(opts.config)
     end
+  elseif type(opts) == "string" then
+    string_loader(opts)
   elseif type(opts) == "function" then
     config = opts
     enabled = true
@@ -425,32 +442,6 @@ function mega.conf(plugin_conf_name, opts)
   end
 
   if enabled then
-    -- NOTE:
-    -- If plugin is `opt` and `enabled`, we'll packadd the plugin (lazyload),
-    -- then we'll go forth with setup of plugin or running of optional callback fn.
-    -- local plugin_config = build_plugin_config(plugin_conf_name)
-    -- if plugin_config then
-    --   if plugin_config.opt then
-    --     vim.cmd("packadd " .. plugin_config.name)
-    --     if not silent then
-    --       P(plugin_config.name .. " packadd as opt.")
-    --     end
-
-    --     -- For implementing this sort of thing:
-    --     -- REF: https://github.com/akinsho/dotfiles/commit/33138f7bc7ad4b836b6c5c0f4ad54ea006f812be#diff-234774bd94026ade0e5765bc362576a2b0e1052dc0ed9bdea777e86a4a66c098R818
-    --     -- mega.augroup("PluginConfLoader" .. plugin_conf_name, {
-    --     --   {
-    --     --     event = { "VimEnter" },
-    --     --     once = true,
-    --     --     command = function()
-    --     --       P("lazy loading " .. plugin_config.name)
-    --     --       vim.cmd("packadd " .. plugin_config.name)
-    --     --     end,
-    --     --   },
-    --     -- })
-    --   end
-    -- end
-
     if type(config) == "table" then
       local ok, loader = pcall(require, plugin_conf_name)
       if not ok then

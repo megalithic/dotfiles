@@ -178,16 +178,16 @@ augroup("Kitty", {
 })
 
 augroup("Plugins/Paq", {
-  {
-    event = { "BufWritePost" },
-    pattern = { "*/nvim/lua/mega/plugins/*.lua", "*/nvim/lua/plugin/*" },
-    command = function()
-      -- auto-source paq-nvim upon plugins/*.lua buffer writes
-      vim.cmd("luafile %")
-      vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
-    end,
-    desc = "Paq reload",
-  },
+  -- {
+  --   event = { "BufWritePost" },
+  --   pattern = { "*/nvim/lua/mega/plugins/*.lua", "*/nvim/lua/plugin/*" },
+  --   command = function()
+  --     -- auto-source paq-nvim upon plugins/*.lua buffer writes
+  --     vim.cmd("luafile %")
+  --     vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
+  --   end,
+  --   desc = "Paq reload",
+  -- },
   {
     event = { "BufEnter" },
     buffer = 0,

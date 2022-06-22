@@ -128,3 +128,58 @@ FZF_TAB_GROUP_COLORS=(
     $'\033[38;5;214m' $'\033[38;5;165m' $'\033[38;5;124m' $'\033[38;5;120m'
 )
 zstyle ':fzf-tab:*' group-colors $FZF_TAB_GROUP_COLORS
+
+# SOME STUFF:
+# https://github.com/j-hui/pokerus/blob/main/zsh.config/zsh/plugins/fzf-tab.zsh
+# # Bindings
+# zstyle ':fzf-tab:*' fzf-bindings 'ctrl-u:cancel' 'ctrl-c:cancel' 'ctrl-a:cancel' 'ctrl-e:accept' 'ctrl-l:accept'
+
+# # Automatically accept with enter for cd
+# zstyle ':fzf-tab:*:cd:*' accept-line enter
+
+# # Use typed query instead of selected entry
+# zstyle ':fzf-tab:*' print-query ctrl-j
+
+# # Colors
+# zstyle ':fzf-tab:*' default-color $'\033[34m'
+
+# # Previewing
+
+# ## Directories
+# if command -v exa &> /dev/null ; then
+#     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+# else
+#     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1 --color=always $realpath'
+# fi
+
+# ## ps and kill
+# zstyle ':completion:*:*:*:*:processes' command "ps -u $USER -o pid,user,comm -w -w"
+# zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview \
+#   '[[ $group == "[process ID]" ]] && ps --pid=$word -o cmd --no-headers -w -w'
+# zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-flags --preview-window=down:3:wrap
+
+# ## systemd
+# zstyle ':fzf-tab:complete:systemctl-*:*' fzf-preview 'SYSTEMD_COLORS=1 systemctl status $word'
+
+# ## Variables
+# zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
+#     fzf-preview 'echo ${(P)word}'
+
+# ## Git
+# zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview \
+#     'git diff $word | delta'
+# zstyle ':fzf-tab:complete:git-log:*' fzf-preview \
+#     'git log --color=always $word'
+# zstyle ':fzf-tab:complete:git-help:*' fzf-preview \
+#     'git help $word | bat -plman --color=always'
+# zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
+#     'case "$" in
+#     "commit tag") git show --color=always $word ;;
+#     *) git show --color=always $word | delta ;;
+#     esac'
+# zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview \
+#     'case "$" in
+#     "modified file") git diff $word | delta ;;
+#     "recent commit object name") git show --color=always $word | delta ;;
+#     *) git log --color=always $word ;;
+#     esac'

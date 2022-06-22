@@ -14,6 +14,7 @@ end
 function M.conf(module_name, callback, opts)
   -- first try to load an external config...
   if opts == nil then
+    P("no opts")
     return pcall(require, fmt("mega.plugins.%s", module_name))
   else
     -- else, pass in custom function
@@ -36,7 +37,7 @@ end
 
 ---A thin wrapper around vim.notify to add packer details to the message
 ---@param msg string
-local function packer_notify(msg, level)
+function M.packer_notify(msg, level)
   vim.notify(msg, level, { title = "Packer" })
 end
 

@@ -816,7 +816,8 @@ function _G.__statusline()
   local focused = vim.g.vim_in_focus and M.is_focused()
   local disabled = U.is_disabled()
 
-  if not plain and focused and not disabled then
+  -- if not plain and focused and not disabled then
+  if focused and not disabled then
     -- stylua: ignore start
     local diags                       = diagnostic_info()
     local diag_error                  = unpack(item_if(diags.error.count, not is_truncated(100) and diags.error, "StError", { prefix = diags.error.sign }))
@@ -855,10 +856,21 @@ function _G.__statusline()
       -- suffix
       -- unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
     })
-  end
-
-  -- barebones inactive mode
-  if not focused then
+    -- elseif plain and focused and not disabled then
+    --   return build({
+    --     "%<", -- mark general truncate point
+    --     -- filename parts
+    --     M.s_filename({ trunc_width = 120 }),
+    --     -- modified indicator
+    --     M.s_modified({ trunc_width = 100 }),
+    --     -- readonly indicator
+    --     M.s_readonly({ trunc_width = 100 }),
+    --     "%=", -- end left alignment
+    --     -- middle section for whatever we want..
+    --     "%=",
+    --   })
+  else
+    -- barebones inactive mode
     return "%#StInactive#%F %m%="
   end
 end
