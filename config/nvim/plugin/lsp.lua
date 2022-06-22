@@ -429,6 +429,15 @@ local function setup_handlers()
     -- local lines = vim.split(result.contents.value, "\n")
     -- local bufnr = vim.lsp.util.open_floating_preview(lines, "markdown", { border = mega.get_border() })
     local buf_win = util.open_floating_preview(markdown_lines, "markdown", config)
+    local lines = vim.split(result.contents.value, "\n")
+
+    require("colorizer").highlight_buffer(
+      buf_win,
+      nil,
+      vim.list_slice(lines, 2, #lines),
+      0,
+      require("colorizer").get_buffer_options(0)
+    )
 
     -- nvim-colorize floats/hovers/etc:
     -- FIXME: currently very broke

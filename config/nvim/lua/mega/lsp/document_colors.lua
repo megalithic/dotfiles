@@ -56,6 +56,7 @@ local function create_highlight(rgb_hex, options)
     end
     vim.cmd(string.format("highlight %s guifg=%s guibg=#%s", highlight_name, fg_color, rgb_hex))
   end
+
   HIGHLIGHT_CACHE[cache_key] = highlight_name
 
   return highlight_name
@@ -102,6 +103,7 @@ end
 --- Should be called `on_attach` when the LSP client attaches
 function M.buf_attach(bufnr, options)
   bufnr = expand_bufnr(bufnr)
+
   if ATTACHED_BUFFERS[bufnr] then
     return
   end
