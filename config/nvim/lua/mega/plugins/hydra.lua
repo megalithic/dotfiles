@@ -16,7 +16,7 @@ return function()
       invoke_on_body = true,
       hint = {
         position = "bottom",
-        border = "rounded",
+        border = mega.get_border(),
       },
       on_enter = function()
         vim.bo.modifiable = false
@@ -76,7 +76,9 @@ return function()
       { "q", nil, { exit = true, nowait = true } },
       { "<Esc>", nil, { exit = true, nowait = true } },
     },
-  }, {
+  })
+
+  Hydra({
     name = "Window Management",
     hint = [[
  ^^^^^^     Move     ^^^^^^   ^^     Split         ^^^^    Size
@@ -90,7 +92,7 @@ return function()
     config = {
       hint = {
         position = "bottom",
-        border = "rounded",
+        border = mega.get_border(),
       },
       color = "blue",
     },

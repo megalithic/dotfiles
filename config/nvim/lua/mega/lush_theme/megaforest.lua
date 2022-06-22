@@ -141,6 +141,7 @@ return lush(function()
     CursorWord({ fg = "NONE", bg = "NONE", gui = "bold,underline" }),
     CursorLineNr({ fg = brown, bg = bg2, gui = "bold,italic" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
     CursorLineNrNC({ fg = "NONE", bg = bg1, gui = "" }), -- Like LineNr when 'cursorline' or 'relativenumber' is set for the cursor line.
+    CursorLineSign({ CursorLineNr }),
     Directory({ fg = green, bg = "NONE" }), -- directory names (and other special names in listings)
 
     Comment({ fg = grey1, bg = "NONE", gui = "italic" }),
