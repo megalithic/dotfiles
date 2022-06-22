@@ -338,6 +338,14 @@ local function setup_diagnostics()
     underline = true,
     -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
     virtual_text = false,
+    -- {
+    --   spacing = 1,
+    --   prefix = "",
+    --   format = function(d)
+    --     local level = diagnostic.severity[d.severity]
+    --     return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
+    --   end,
+    -- },
     update_in_insert = false,
     severity_sort = true,
     float = {
