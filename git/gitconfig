@@ -93,6 +93,9 @@
   # git submodules
 	subpull = submodule foreach git pull
 
+
+  pick = cherry-pick
+
   ; sha = name-rev --name-only --refs=refs/heads/*
   ; g = grep --break --heading --line-number
   ; gi = grep --break --heading --line-number -i
