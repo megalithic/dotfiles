@@ -21,7 +21,8 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-paq_path="${XDG_DATA_HOME}/nvim/site/pack/paqs/start/paq-nvim"
+PAQS_PATH="${XDG_DATA_HOME}/nvim/site/pack/paqs"
+PAQ_PATH="${PAQS_PATH}/start/paq-nvim"
 
 remove_existing() {
   read -p "$(tput bold)$(tput setaf 5)[?] remove existing paq-nvim (Y/n)?$(tput sgr 0) " yn
@@ -43,7 +44,7 @@ remove_existing() {
 }
 
 do_clone() {
-  git clone --depth=1 https://github.com/savq/paq-nvim.git "$paq_path"
+  git clone --depth=1 https://github.com/savq/paq-nvim.git "$PAQ_PATH"
 }
 
 install_paq() {
@@ -55,22 +56,27 @@ sync_plugins() {
 }
 
 do_install() {
-  log "cloning paq-nvim into $paq_path"
-  if [[ -d $paq_path ]]; then
+  log "cloning paq-nvim into $PAQ_PATH"
+  if [[ -d $PAQ_PATH ]]; then
     log_warn "existing paq-nvim found.."
     remove_existing
   fi
   do_clone &&
     install_paq &&
-    log_ok "completed installing paq-nvim and plugins into $paq_path" ||
+    log_ok "completed installing paq-nvim and plugins into $PAQ_PATH" ||
     exit 1
 }
 
-while getopts "fu" OPTION; do
+while getopts "ufc" OPTION; do
   case $OPTION in
 
     f)
       FORCE_INSTALL="true"
+      ;;
+
+    c)
+      log "cleaning paqs.."
+      rm -rf "$PAQS_PATH"
       ;;
 
     u)
@@ -90,9 +96,9 @@ while getopts "fu" OPTION; do
 done
 shift $((OPTIND - 1))
 
-if [[ -d $paq_path && $FORCE_INSTALL == "false" ]]; then
-  log_warn "paq-nvim already exists at $paq_path; syncing installed plugins instead."
+if [[ -d $PAQ_PATH && $FORCE_INSTALL == "false" ]]; then
+  log_warn "paq-nvim already exists at $PAQ_PATH; syncing installed plugins instead."
   sync_plugins
-elif [[ ! -d $paq_path || $FORCE_INSTALL == "true" ]]; then
+elif [[ ! -d $PAQ_PATH || $FORCE_INSTALL == "true" ]]; then
   do_install || exit 1
 fi
