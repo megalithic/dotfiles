@@ -1,0 +1,38 @@
+#!/usr/bin/env zsh
+
+_preview() {
+  local file="$1"
+  autoload -Uz has exe
+  if [[ -d "${file}" ]] || [[ -h "${file}" ]]; then
+    local cmd
+    cmd="$(exe exa lsd ls)"
+    [[ -x "${cmd}" ]] && "${cmd}" -lh --color=always "${file}"
+  elif [[ -f "${file}" ]]; then
+    local conf="${XDG_CONFIG_HOME:-"${HOME}/.config"}"
+    local scope="${RANGER_CFG:-"${conf}/ranger"}/scope.sh"
+    if [[ -f "${scope}" ]]; then
+      : "${file##*/}"
+      : "${_##*.}"
+      local cache
+      cache="$(mktemp -u /tmp/Scope.sh.XXXXXXXX.$_)"
+      local columns="${FZF_PREVIEW_COLUMNS:-${COLUMNS}}"
+      local lines="${FZF_PREVIEW_LINES:-${Lines}}"
+      bash "${scope}" "${file}" "${columns}" "${lines}" "${cache}" "False"
+      return 0
+    fi
+    info="$(file "${file}")"
+    if [[ "${info}" == *text* ]]; then
+      if has bat; then
+        bat --color=always "${file}"
+      else
+        head -n 50 "${file}"
+      fi
+    else
+      echo "${info}"
+    fi
+  else
+    echo "${file}"
+  fi
+}
+
+_preview "$@"

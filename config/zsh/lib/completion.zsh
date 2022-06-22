@@ -110,6 +110,13 @@ zstyle ':chpwd:*' recent-dirs-default yes
 
 
 # -- FZF-TAB -----------------------------------------------------------------------
+#
+# REFS:
+# https://github.com/flaviusbuffon/dotfiles/blob/main/private_dot_config/zsh/zshrc.zsh#L163-L177
+# https://github.com/j-hui/pokerus/blob/main/zsh.config/zsh/plugins/fzf-tab.zsh
+# https://github.com/epoweripione/dotfiles/blob/main/fzf_config.sh
+#
+zstyle -d ':completion:*' format
 # disable sort when completing `git checkout`
 zstyle ':completion:*:git-checkout:*' sort false
 # set descriptions format to enable group support
@@ -117,69 +124,77 @@ zstyle ':completion:*:descriptions' format '[%d]'
 # set list-colors to enable filename colorizing
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 # preview directory's content with exa when completing cd
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+if command -v exa &> /dev/null ; then
+  zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+else
+  zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1 --color=always $realpath'
+fi
+
 # switch group using `,` and `.`
 zstyle ':fzf-tab:*' switch-group ',' '.'
 zstyle ':fzf-tab:*' show-group brief # brief, full, none
 # zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+# zstyle ':fzf-tab:complete:cd:*' popup-pad 30 0
 FZF_TAB_GROUP_COLORS=(
     $'\033[94m' $'\033[32m' $'\033[33m' $'\033[35m' $'\033[31m' $'\033[38;5;27m' $'\033[36m' \
     $'\033[38;5;100m' $'\033[38;5;98m' $'\033[91m' $'\033[38;5;80m' $'\033[92m' \
     $'\033[38;5;214m' $'\033[38;5;165m' $'\033[38;5;124m' $'\033[38;5;120m'
 )
 zstyle ':fzf-tab:*' group-colors $FZF_TAB_GROUP_COLORS
+# use tmux fzf wrapper; https://github.com/Aloxaf/fzf-tab/wiki/Configuration#fzf-command
+# zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 
-# SOME STUFF:
-# https://github.com/j-hui/pokerus/blob/main/zsh.config/zsh/plugins/fzf-tab.zsh
-# # Bindings
-# zstyle ':fzf-tab:*' fzf-bindings 'ctrl-u:cancel' 'ctrl-c:cancel' 'ctrl-a:cancel' 'ctrl-e:accept' 'ctrl-l:accept'
+# REF: https://github.com/mmqmzk/dotfiles/blob/master/zshrc#L355-L358
+export __FZF_TAB_OPTS=(-1 --cycle --color=hl:4:bold:underline,hl+:4:bold:underline --inline-info --ansi --height 50% \
+  --border --layout=default  --expect=/)
+zstyle ':fzf-tab:*' fzf-flags "${__FZF_TAB_OPTS[@]}"
 
-# # Automatically accept with enter for cd
-# zstyle ':fzf-tab:*:cd:*' accept-line enter
+#REF: https://github.com/Aloxaf/fzf-tab/issues/77
+export PREVIEW="$DOTS/bin/preview"
+zstyle ':fzf-tab:complete:*:*' fzf-preview "${PREVIEW}"' $realpath'
 
-# # Use typed query instead of selected entry
-# zstyle ':fzf-tab:*' print-query ctrl-j
+# Bindings
+zstyle ':fzf-tab:*' fzf-bindings 'ctrl-u:cancel' 'ctrl-c:cancel' 'ctrl-a:cancel' 'ctrl-e:accept' 'ctrl-l:accept'
 
-# # Colors
-# zstyle ':fzf-tab:*' default-color $'\033[34m'
+# Automatically accept with enter for cd
+zstyle ':fzf-tab:*:cd:*' accept-line enter
 
-# # Previewing
+# Use typed query instead of selected entry
+zstyle ':fzf-tab:*' print-query ctrl-j
 
-# ## Directories
-# if command -v exa &> /dev/null ; then
-#     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
-# else
-#     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -1 --color=always $realpath'
-# fi
+# Colors
+zstyle ':fzf-tab:*' default-color $'\033[34m'
 
-# ## ps and kill
-# zstyle ':completion:*:*:*:*:processes' command "ps -u $USER -o pid,user,comm -w -w"
-# zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview \
-#   '[[ $group == "[process ID]" ]] && ps --pid=$word -o cmd --no-headers -w -w'
-# zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-flags --preview-window=down:3:wrap
+## ps and kill
+zstyle ':completion:*:*:*:*:processes' command "ps -u $USER -o pid,user,comm -w -w"
+zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview \
+  '[[ $group == "[process ID]" ]] && ps --pid=$word -o cmd --no-headers -w -w'
+zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-flags --preview-window=down:3:wrap
 
-# ## systemd
-# zstyle ':fzf-tab:complete:systemctl-*:*' fzf-preview 'SYSTEMD_COLORS=1 systemctl status $word'
+## systemd
+zstyle ':fzf-tab:complete:systemctl-*:*' fzf-preview 'SYSTEMD_COLORS=1 systemctl status $word'
 
-# ## Variables
-# zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
-#     fzf-preview 'echo ${(P)word}'
+## Variables
+zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
+    fzf-preview 'echo ${(P)word}'
 
-# ## Git
-# zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview \
-#     'git diff $word | delta'
-# zstyle ':fzf-tab:complete:git-log:*' fzf-preview \
-#     'git log --color=always $word'
-# zstyle ':fzf-tab:complete:git-help:*' fzf-preview \
-#     'git help $word | bat -plman --color=always'
-# zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
-#     'case "$" in
-#     "commit tag") git show --color=always $word ;;
-#     *) git show --color=always $word | delta ;;
-#     esac'
-# zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview \
-#     'case "$" in
-#     "modified file") git diff $word | delta ;;
-#     "recent commit object name") git show --color=always $word | delta ;;
-#     *) git log --color=always $word ;;
-#     esac'
+## Git
+zstyle ':fzf-tab:complete:git-(add|diff|restore):*' fzf-preview \
+    'git diff $word | delta'
+zstyle ':fzf-tab:complete:git-log:*' fzf-preview \
+    'git log --color=always $word'
+zstyle ':fzf-tab:complete:git-help:*' fzf-preview \
+    'git help $word | bat -plman --color=always'
+zstyle ':fzf-tab:complete:git-show:*' fzf-preview \
+    'case "$" in
+    "commit tag") git show --color=always $word ;;
+    *) git show --color=always $word | delta ;;
+    esac'
+zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview \
+    'case "$" in
+    "modified file") git diff $word | delta ;;
+    "recent commit object name") git show --color=always $word | delta ;;
+    *) git log --color=always $word ;;
+    esac'
+
+

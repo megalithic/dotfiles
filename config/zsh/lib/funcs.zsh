@@ -428,20 +428,37 @@ fzstash() {
     git stash list --pretty="%C(yellow)%h %>(14)%Cgreen%cr %C(blue)%gs" |
       fzf --ansi --no-sort --query="$q" --print-query \
       --expect=ctrl-d,ctrl-b);
-        do
-          mapfile -t out <<< "$out"
-          q="${out[0]}"
-          k="${out[1]}"
-          sha="${out[-1]}"
-          sha="${sha%% *}"
-          [[ -z "$sha" ]] && continue
-          if [[ "$k" == 'ctrl-d' ]]; then
-            git diff $sha
-          elif [[ "$k" == 'ctrl-b' ]]; then
-            git stash branch "stash-$sha" $sha
-            break;
-          else
-            git stash show -p $sha
-          fi
-        done
-      }
+  do
+    mapfile -t out <<< "$out"
+    q="${out[0]}"
+    k="${out[1]}"
+    sha="${out[-1]}"
+    sha="${sha%% *}"
+    [[ -z "$sha" ]] && continue
+    if [[ "$k" == 'ctrl-d' ]]; then
+      git diff $sha
+    elif [[ "$k" == 'ctrl-b' ]]; then
+      git stash branch "stash-$sha" $sha
+      break;
+    else
+      git stash show -p $sha
+    fi
+  done
+}
+
+# fzf-tab https://github.com/Aloxaf/fzf-tab/wiki/Configuration#group-colors
+#
+# Usage: palette
+palette() {
+    local -a colors
+    for i in {000..255}; do
+        colors+=("%F{$i}$i%f")
+    done
+    print -cP $colors
+}
+
+# Usage: printc COLOR_CODE
+printc() {
+    local color="%F{$1}"
+    echo -E ${(qqqq)${(%)color}}
+}

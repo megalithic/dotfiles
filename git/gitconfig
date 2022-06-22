@@ -49,6 +49,7 @@
 	; bd = branch -d
 	; bbd = branch -D $1 && push origin --delete $1
 
+  c = commit
   cv = commit -v
   cm = commit -m
   ca = commit --amend
@@ -94,6 +95,8 @@
 	subpull = submodule foreach git pull
 
 
+  r = restore
+  rs = restore --staged
   pick = cherry-pick
 
   ; sha = name-rev --name-only --refs=refs/heads/*

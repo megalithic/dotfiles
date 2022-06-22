@@ -1,0 +1,9 @@
+#!/usr/bin/env zsh
+
+_has() {
+  for name in "$@"; do
+    command -v "${name}" &>/dev/null && return
+  done
+  return 1
+}
+_has "$@"

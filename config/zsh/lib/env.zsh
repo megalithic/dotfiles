@@ -311,6 +311,7 @@ path=(
   /usr/local/{bin,sbin}
   $path
 )
+export PATH
 
 for path_file in /etc/paths.d/*(.N); do
   path+=($(<$path_file))
@@ -318,14 +319,17 @@ done
 unset path_file
 
 fpath+=(
-  $HOMEBREW_PREFIX/share/zsh/site-functions
-  $ZDOTDIR/prompt
-  $ZDOTDIR/completions
-  $ZDOTDIR/plugins
-  $ZDOTDIR/funcs
-  ${ASDF_DIR}/completions
-  $fpath
+  "$HOMEBREW_PREFIX/share/zsh/site-functions"
+  "$ZDOTDIR/prompt"
+  "$ZDOTDIR/completions"
+  "$ZDOTDIR/plugins"
+  "$ZDOTDIR/funcs"
+  "$DOTS/bin"
+  "${ASDF_DIR}/completions"
+  "${fpath[@]}"
+  # "$fpath"
 )
+export FPATH
 
 # -- zsh plugins
 # ------------------------------------------------------------------------------
