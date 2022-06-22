@@ -426,33 +426,21 @@ local function setup_handlers()
       return
     end
 
+    local bufnr = util.open_floating_preview(markdown_lines, "markdown", config)
     -- local lines = vim.split(result.contents.value, "\n")
-    -- local bufnr = vim.lsp.util.open_floating_preview(lines, "markdown", { border = mega.get_border() })
-    local buf_win = util.open_floating_preview(markdown_lines, "markdown", config)
-    local lines = vim.split(result.contents.value, "\n")
 
     require("colorizer").highlight_buffer(
-      buf_win,
+      bufnr,
       nil,
-      vim.list_slice(lines, 2, #lines),
+      vim.list_slice(markdown_lines, 2, #markdown_lines),
       0,
       require("colorizer").get_buffer_options(0)
     )
 
-    -- nvim-colorize floats/hovers/etc:
-    -- FIXME: currently very broke
-    -- local ok_c, c = pcall(require, "colorizer")
-    -- if ok_c then
-    --   local c_buffer_opts = c.get_buffer_options(buf_win)
-    --   if c_buffer_opts ~= nil then
-    --     c.highlight_buffer(buf_win, nil, vim.list_slice(markdown_lines, 2, #markdown_lines), 0, c_buffer_opts)
-    --   end
-    -- end
-
-    return buf_win
+    return bufnr
   end
 
-  -- lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+  lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
   lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   local signature_help_opts = mega.table_merge(opts, {
     anchor = "SW",
