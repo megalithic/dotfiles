@@ -4,222 +4,22 @@ local vcmd = vim.cmd
 local fmt = string.format
 local L = vim.log.levels
 
-_G.mega = mega
-  or {
-    functions = {},
-    dirs = {},
-    mappings = {},
-    lsp = {},
-    icons = {
-      border = {
-        rounded = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
-        squared = { "🭽", "▔", "🭾", "▕", "🭿", "▁", "🭼", "▏" },
-        blank = { " ", " ", " ", " ", " ", " ", " ", " " },
-      },
-      lsp = {
-        error = "", -- alts: 
-        warn = "", -- alts: 喝卑
-        info = "",
-        hint = "", -- alts: 
-        ok = "",
-        -- spinner_frames = { "▪", "■", "□", "▫" },
-        -- spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
-        -- TODO: evaluate
-        -- kinds = {
-        --   Text = "",
-        --   Method = "",
-        --   Function = "",
-        --   Constructor = "",
-        --   Field = "", -- '',
-        --   Variable = "", -- '',
-        --   Class = "", -- '',
-        --   Interface = "",
-        --   Module = "",
-        --   Property = "ﰠ",
-        --   Unit = "塞",
-        --   Value = "",
-        --   Enum = "",
-        --   Keyword = "", -- '',
-        --   Snippet = "", -- '', '',
-        --   Color = "",
-        --   File = "",
-        --   Reference = "", -- '',
-        --   Folder = "",
-        --   EnumMember = "",
-        --   Constant = "", -- '',
-        --   Struct = "", -- 'פּ',
-        --   Event = "",
-        --   Operator = "",
-        --   TypeParameter = "",
-        -- },
-        kind = {
-          Text = " text", -- Text
-          Method = " method", -- Method
-          Function = " function", -- Function
-          Constructor = " constructor", -- Constructor
-          Field = "ﰠ field", -- Field
-          Variable = " variable", -- Variable
-          Class = " class", -- Class
-          Interface = "ﰮ interface", -- Interface
-          Module = " module", -- Module
-          Property = " property", -- Property
-          Unit = " unit", -- Unit
-          Value = " value", -- Value
-          Enum = "了enum", -- Enum -- alts: 
-          Keyword = " keyword", -- Keyword
-          Snippet = " snippet", -- Snippet
-          Color = " color", -- Color
-          File = " file", -- File
-          Reference = " ref", -- Reference
-          Folder = " folder", -- Folder
-          EnumMember = " enum member", -- EnumMember
-          Constant = " const", -- Constant
-          Struct = "פּ struct", -- Struct
-          Event = "鬒event", -- Event
-          Operator = "\u{03a8} operator", -- Operator
-          TypeParameter = " type param", -- TypeParameter
-          Namespace = " namespace",
-          Package = " package",
-          String = " string",
-          Number = " number",
-          Boolean = " boolean",
-          Array = " array",
-          Object = " object",
-          Key = " key",
-          Null = "ﳠ null",
-        },
-      },
-      kind_highlights = {
-        Text = "String",
-        Method = "Method",
-        Function = "Function",
-        Constructor = "TSConstructor",
-        Field = "Field",
-        Variable = "Variable",
-        Class = "Class",
-        Interface = "Constant",
-        Module = "Include",
-        Property = "Property",
-        Unit = "Constant",
-        Value = "Variable",
-        Enum = "Type",
-        Keyword = "Keyword",
-        File = "Directory",
-        Reference = "PreProc",
-        Constant = "Constant",
-        Struct = "Type",
-        Snippet = "Label",
-        Event = "Variable",
-        Operator = "Operator",
-        TypeParameter = "Type",
-        Namespace = "TSNamespace",
-        Package = "Package",
-        String = "String",
-        Number = "Number",
-        Boolean = "Boolean",
-        Array = "Array",
-        Object = "Object",
-        Key = "Key",
-        Null = "Null",
-      },
-      codicons = {
-        Text = "",
-        Method = "",
-        Function = "",
-        Constructor = "",
-        Field = "",
-        Variable = "",
-        Class = "",
-        Interface = "",
-        Module = "",
-        Property = "",
-        Unit = "",
-        Value = "",
-        Enum = "",
-        Keyword = "",
-        Snippet = "", -- alts: 
-        Color = "",
-        File = "",
-        Reference = "",
-        Folder = "",
-        EnumMember = "",
-        Constant = "",
-        Struct = "",
-        Event = "",
-        Operator = "",
-        TypeParameter = "",
-      },
-      git = {
-        add = "", -- alts: 
-        change = "",
-        mod = "",
-        remove = "", -- alts: 
-        ignore = "",
-        rename = "",
-        diff = "",
-        repo = "",
-        symbol = "", -- alts:  
-      },
-      documents = {
-        file = "",
-        files = "",
-        folder = "",
-        open_folder = "",
-      },
-      type = {
-        array = "",
-        number = "",
-        object = "",
-        null = "[]",
-        float = "",
-      },
-      misc = {
-        clock = "",
-        ellipsis = "…",
-        lblock = "▌",
-        rblock = "▐",
-        bug = "",
-        question = "",
-        lock = "",
-        circle = "",
-        project = "",
-        dashboard = "",
-        history = "",
-        comment = "",
-        robot = "ﮧ",
-        lightbulb = "",
-        search = "",
-        code = "",
-        telescope = "",
-        gear = "",
-        package = "",
-        list = "",
-        sign_in = "",
-        check = "",
-        fire = "",
-        note = "",
-        bookmark = "",
-        pencil = "",
-        chevron_right = "",
-        table = "",
-        calendar = "",
-        fold_open = "",
-        fold_close = "",
-      },
-      virtual_text = "",
-      mode_term = "ﲵ",
-      ln_sep = "ℓ", -- ℓ 
-      col_sep = "",
-      perc_sep = "",
-      modified = "●",
-      mode = "",
-      vcs = "",
-      readonly = "",
-      prompt = "",
-    },
-  }
+_G.mega = mega or {
+  functions = {},
+  dirs = {},
+  mappings = {},
+  lsp = {},
+  icons = require("mega.icons"),
+}
 
 -- [ global variables ] --------------------------------------------------------
+
+local function get_hostname()
+  local handle = io.popen("hostname")
+  local hostname = handle:read("*l")
+  handle:close()
+  return hostname
+end
 
 vim.g.mapleader = "," -- remap leader to `,`
 vim.g.maplocalleader = " " -- remap localleader to `<Space>`
@@ -230,10 +30,11 @@ vim.g.os = vim.loop.os_uname().sysname
 vim.g.is_macos = vim.g.os == "Darwin"
 vim.g.is_linux = vim.g.os == "Linux"
 vim.g.is_windows = vim.g.os == "Windows"
+vim.g.is_work = get_hostname() == "seth-dev"
 
 vim.g.open_command = vim.g.is_macos and "open" or "xdg-open"
 
-vim.g.dotfiles = vim.env.DOTS or vim.fn.expand("~/.dotfiles")
+vim.g.dotfiles = vim.env.DOTS or fn.expand("~/.dotfiles")
 vim.g.home = os.getenv("HOME")
 vim.g.vim_path = fmt("%s/.config/nvim", vim.g.home)
 vim.g.cache_path = fmt("%s/.cache/nvim", vim.g.home)

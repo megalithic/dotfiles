@@ -22,11 +22,9 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 log "cd'ing to $DOTS.."
 pushd "$DOTS" >/dev/null
 
-if [[ "$(uname)" == "Darwin" ]]; then
-  # gather sudo privileges:
-  log_warn "needs sudo for things:"
-  sudo -v
-fi
+# gather sudo privileges:
+log_warn "needs sudo for things:"
+sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until setup has finished
 while true; do
