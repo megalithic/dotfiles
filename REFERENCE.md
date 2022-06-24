@@ -114,5 +114,6 @@
 # ╰────────────────────────────────────────────────────────────────────────────╯
 # NOTE: !! can be replaced with any valid expansion i.e. !cat, !-2, !42, etc.
 #
-
 ```
+
+https://linux.die.net/abs-guide/exitcodes.html
