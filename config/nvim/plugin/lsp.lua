@@ -64,7 +64,7 @@ end
 
 local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
-  if next(lsp.buf_get_clients()) == nil then
+  if next(vim.lsp.get_active_clients()) == nil then
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
   else
     if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
@@ -455,7 +455,6 @@ local function setup_handlers()
     relative = "cursor",
     row = -1,
   })
-
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
 
   lsp.handlers["window/showMessage"] = function(_, result, ctx)
