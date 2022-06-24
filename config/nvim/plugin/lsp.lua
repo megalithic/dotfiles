@@ -427,20 +427,20 @@ local function setup_handlers()
 
     local util = require("vim.lsp.util")
 
-    local markdown_lines = util.convert_input_to_markdown_lines(result.contents)
-    markdown_lines = util.trim_empty_lines(markdown_lines)
-    if vim.tbl_isempty(markdown_lines) then
+    local lines = util.convert_input_to_markdown_lines(result.contents)
+    lines = util.trim_empty_lines(lines)
+    if vim.tbl_isempty(lines) then
       vim.notify("No information available")
       return
     end
 
-    local bufnr = util.open_floating_preview(markdown_lines, "markdown", config)
+    local bufnr = util.open_floating_preview(lines, "markdown", config)
     -- local lines = vim.split(result.contents.value, "\n")
 
     require("colorizer").highlight_buffer(
       bufnr,
       nil,
-      vim.list_slice(markdown_lines, 2, #markdown_lines),
+      vim.list_slice(lines, 2, #lines),
       0,
       require("colorizer").get_buffer_options(0)
     )
@@ -448,7 +448,7 @@ local function setup_handlers()
     return bufnr
   end
 
-  lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+  -- lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
   lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   local signature_help_opts = mega.table_merge(opts, {
     anchor = "SW",
