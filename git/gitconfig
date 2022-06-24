@@ -59,6 +59,10 @@
 
   cl = clone
 
+  cons = !git ls-files -u | cut -f 2 | sort -u
+  econs = !git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR
+  dangled = !git fsck --no-reflog | awk '/dangling commit/ {print $3}'
+
   ; pr = !$HOME/.dotfiles/bin/git-bin/git-pr
 
   # stash
@@ -107,7 +111,7 @@
   # Reset previous commit, but keep all the associated changes. Useful for avoiding nasty git merge commits.
   uncommit = reset --soft HEAD^
 	unamend = reset --soft HEAD@{1}
-  ; reset = reset --hard HEAD^
+  abort = reset --hard HEAD^
 
   # Divergence (commits we added and commits remote added)
   div = divergence
