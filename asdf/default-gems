@@ -11,7 +11,7 @@ rcodetools
 rubocop
 sidekiq
 solargraph
-tmuxinator
+# tmuxinator
 # terminal-notifier
 weechat
 language_server

@@ -28,6 +28,7 @@ if &term =~ '^screen' && !has('nvim')
 endif
 ]])
 
+-- FIXME: ensure this vim.cmd is no longer needed and kill it
 -- Original vimscript implementation from tmux-navigate
 vim.cmd([[
 "
@@ -35,8 +36,6 @@ vim.cmd([[
 " This also supports SSH tunnels where Vim is running on a remote host.
 "
 " See https://sunaku.github.io/tmux-select-pane.html for documentation.
-
-" FIXME: ensure this vim.cmd is no longer needed and kill it
 " let progname = substitute($VIM, '.*[/\\]', '', '')
 " set title titlestring=%{progname}\ %f\ #%{TmuxNavigateDirections()}
 

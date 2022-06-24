@@ -77,6 +77,7 @@ while getopts "ufc" OPTION; do
     c)
       log "cleaning paqs.."
       rm -rf "$PAQS_PATH"
+      exit 0
       ;;
 
     u)

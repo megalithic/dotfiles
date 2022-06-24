@@ -97,6 +97,7 @@ alias mmv='noglob zmv -W'
 # TMUX / SSH
 # -----------------------------------------------------------------------------
 # alias mux="tmux" #-> see function for tmux in tmux.zsh
+# alias tmuxinator="tmuxinator $1 --suppress-tmux-version-warning=SUPPRESS-TMUX-VERSION-WARNING"
 alias takeover="tmux detach -a"
 alias outa="tmux attach-session -t outstand"
 alias out="tmuxinator start outstand -n outstand"

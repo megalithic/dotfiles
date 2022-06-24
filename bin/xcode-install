@@ -22,10 +22,15 @@ FORCE_INSTALL="false"
 do_install() {
   sleep 1
   log "installing Xcode CLI tools.."
-  # read -n 1 -p "press any key to continue..." -s -e -r
-  xcode-select --install &&
-    log_ok "installed Xcode CLI tools" ||
-    log_error "failed to install the Xcode CLI tools"
+
+  xcode-select --install
+  if [[ $? == 1 ]]; then
+    log_warn "Xcode CLI tools installation failed for some reason (see output above).."
+  elif [[ $? -gt 1 ]]; then
+    log_error "failed to install the Xcode CLI tools.."
+  elif [[ $? == 1 ]]; then
+    log_ok "installed Xcode CLI tools"
+  fi
 }
 
 do_post_install() {

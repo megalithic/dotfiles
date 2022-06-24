@@ -97,14 +97,19 @@ build() {
   fi
 }
 
-while getopts "f" OPTION; do
+while getopts "fp" OPTION; do
   case $OPTION in
+
+    p)
+      nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
+      exit 0
+      ;;
 
     f)
       FORCE_INSTALL="true"
       ;;
 
-    \?)
+    ?)
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;

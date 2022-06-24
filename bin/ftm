@@ -125,10 +125,10 @@ function to_session() {
 # -- new session with tmuxinator config, OR just new basic tmux session
 function new_session() {
   local session="$1"
-  (tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach 2>/dev/null \
-    && to_session "$session" \
-    || tmux new-session -d -s "$session" \
-    && to_session "$session") && exit
+  (tmuxinator "$tmuxinator_start_cmd" "$session" --no-attach --suppress-tmux-version-warning=SUPPRESS-TMUX-VERSION-WARNING 2>/dev/null &&
+    to_session "$session" ||
+    tmux new-session -d -s "$session" &&
+    to_session "$session") && exit
 }
 
 # -- try to change to an existing session; otherwise, create a new one
@@ -173,7 +173,7 @@ function fuzzy_find() {
 # -- if we pass in a session_name: attach/switch to it or, create new session
 if [[ $session_name ]]; then
   try_session "$session_name"
-  return
+  exit 0
 elif [[ -z $TMUX ]]; then
   __help
 fi
