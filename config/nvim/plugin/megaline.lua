@@ -813,7 +813,7 @@ function _G.__statusline()
   U.ctx = ctx
 
   local plain = U.is_plain(ctx)
-  local focused = vim.g.vim_in_focus and M.is_focused()
+  local focused = vim.g.vim_in_focus or M.is_focused()
   local disabled = U.is_disabled()
 
   -- if not plain and focused and not disabled then
