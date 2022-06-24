@@ -72,9 +72,7 @@ local function is_ignored()
     or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
-    or vim.g.is_work
-
-  -- P(string.format("vim.bo.filetype: %s, should ignore? %s", vim.bo.filetype, should_ignore))
+  -- or vim.g.is_work
 
   return should_ignore
 end
