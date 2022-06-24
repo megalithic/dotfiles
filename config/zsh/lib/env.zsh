@@ -23,10 +23,11 @@ export ZSH_CACHE_DIR
 export DOTS="${HOME}/.dotfiles"
 export DOTFILES="$DOTS"
 export PRIVATES="${DOTS}/private"
-export PROJECTS_DIR="${HOME}/code"
-export PROJECTS="$PROJECTS_DIR"
-export PERSONAL_PROJECTS_DIR="${PROJECTS_DIR}/personal"
-export GIT_REPO_DIR="$PROJECTS_DIR"
+export CODE="${HOME}/code"
+export PROJECTS="$CODE"
+export PROJECTS_DIR="$CODE"
+export PERSONAL_PROJECTS_DIR="${CODE}/personal"
+export GIT_REPO_DIR="$CODE"
 
 # -- term
 export TERM=${TERM:=xterm-kitty}

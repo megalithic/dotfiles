@@ -17,11 +17,11 @@ cd $DOTS
 # Create the session and the first window. Manually switch to root
 # directory if required to support tmux < 1.9
 TMUX= tmux -2 new-session -d -s mega -n chats
-tmux -2 send-keys -t mega:1 cd\ $DOTS C-m
+tmux -2 send-keys -t mega:1 cd\ "$DOTS" C-m
 
 # Create other windows.
-tmux -2 new-window -c $DOTS -t mega:2 -n dots
-tmux -2 new-window -c $DOTS -t mega:3 -n ssh-dots
+tmux -2 new-window -c "$DOTS" -t mega:2 -n dots
+tmux -2 new-window -c "$DOTS" -t mega:3 -n ssh-dots
 
 # Window "chats"
 tmux -2 send-keys -t mega:1 weechat C-m

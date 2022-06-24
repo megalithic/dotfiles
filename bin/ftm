@@ -115,7 +115,8 @@ function to_session() {
 # -- new session with pre-defined layout, OR just new basic tmux session
 function new_session() {
   local session="$1"
-  (source "$layouts_dir/$session.zsh" 2>/dev/null &&
+
+  (sh "$layouts_dir/$session.zsh" &&
     to_session "$session" ||
     tmux new-session -d -s "$session" &&
     to_session "$session") && exit
