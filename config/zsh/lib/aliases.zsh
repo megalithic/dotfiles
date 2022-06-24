@@ -302,11 +302,12 @@ alias map="xargs -n1"
 
 # alias hub -> git
 (command -v hub &>/dev/null) && alias git="hub"
+(command -v git-crypt &>/dev/null) && alias gc="git-crypt"
 
 alias gt=g
-alias dangled="git fsck --no-reflog | awk '/dangling commit/ {print $3}'" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
-alias conflicted="git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR"
-alias conflicts="git ls-files -u | cut -f 2 | sort -u"
+alias dangled="git dangled" #gitk --all $( git fsck --no-reflog | awk '/dangling commit/ {print $3}' )
+alias conflicted="git econs"
+alias conflicts="git cons"
 alias uncommit="git reset --soft 'HEAD^'"  # re-commit with `git commit -c ORIG_HEAD`
 alias gex="git archive master | tar -x -C" # update this to support more than the master branch
 alias resolve="git mergetool --tool=nvimdiff"

@@ -63,6 +63,8 @@
   econs = !git diff --name-only --diff-filter=U | uniq  | xargs $EDITOR -O
   dangled = !git fsck --no-reflog | awk '/dangling commit/ {print $3}'
 
+  cr = !git-crypt
+
   ; pr = !$HOME/.dotfiles/bin/git-bin/git-pr
 
   # stash
