@@ -28,8 +28,9 @@ tmux -2 send-keys -t atlas:1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exi
 
 # Window "code"
 tmux -2 send-keys -t atlas:2.1 et\ seth-dev C-m
-sleep 1 && tmux -2 send-keys -t atlas:2.1 cd\ \~/code/atlas C-m
-sleep 1 && tmux -2 send-keys -t atlas:2.1 eval\ \$\(desk\ load\)\;\ ls C-m
+sleep 1
+tmux -2 send-keys -t atlas:2.1 cd\ \~/code/atlas C-m
+tmux -2 send-keys -t atlas:2.1 eval\ \$\(desk\ load\)\;\ ls C-m
 
 tmux -2 select-layout -t atlas:2 tiled
 
@@ -38,15 +39,18 @@ tmux -2 select-pane -t atlas:2.1
 
 # Window "services"
 tmux -2 send-keys -t atlas:3.1 et\ seth-dev C-m
-sleep 1 && tmux -2 send-keys -t atlas:3.1 cd\ \~/code/atlas C-m
-sleep 1 && tmux -2 send-keys -t atlas:3.1 eval\ \$\(desk\ load\) C-m
-sleep 1 && tmux -2 send-keys -t atlas:3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
+sleep 1
+tmux -2 send-keys -t atlas:3.1 cd\ \~/code/atlas C-m
+tmux -2 send-keys -t atlas:3.1 eval\ \$\(desk\ load\) C-m
+tmux -2 send-keys -t atlas:3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
 
 tmux -2 splitw -c $CODE/outstand -t atlas:3
 tmux -2 select-layout -t atlas:3 tiled
+
 tmux -2 send-keys -t atlas:3.2 et\ seth-dev C-m
-sleep 1 && tmux -2 send-keys -t atlas:3.2 cd\ \~/code/atlas C-m
-sleep 1 && tmux -2 send-keys -t atlas:3.2 eval\ \$\(desk\ load\)\;\ iex\ -S\ mix C-m
+sleep 1
+tmux -2 send-keys -t atlas:3.2 cd\ \~/code/atlas C-m
+tmux -2 send-keys -t atlas:3.2 eval\ \$\(desk\ load\)\;\ iex\ -S\ mix C-m
 
 tmux -2 select-layout -t atlas:3 tiled
 
