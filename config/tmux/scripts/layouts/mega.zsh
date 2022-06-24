@@ -31,8 +31,8 @@ tmux -2 send-keys -t mega:2 ls C-m
 
 # Window "ssh-dots"
 tmux -2 send-keys -t mega:3 et\ seth-dev C-m
-tmux -2 send-keys -t mega:3 cd\ \~/.dotfiles C-m
-tmux -2 send-keys -t mega:3 ls C-m
+sleep 1 && tmux -2 send-keys -t mega:3 cd\ \~/.dotfiles C-m
+sleep 1 && tmux -2 send-keys -t mega:3 ls C-m
 
 # focus
 

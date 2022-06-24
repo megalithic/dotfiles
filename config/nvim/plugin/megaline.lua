@@ -45,6 +45,7 @@ mega.augroup("megaline", {
   {
     event = { "VimEnter" },
     command = function()
+      vim.g.vim_in_focus = true
       vim.go.statusline = "%{%v:lua.__statusline()%}"
     end,
   },
@@ -147,7 +148,6 @@ local plain_types = {
     "fugitive",
     "startify",
     "vimwiki",
-    "markdown",
     "NeogitStatus",
     "dap-repl",
     "megaterm",
@@ -780,11 +780,11 @@ function M.s_lineinfo(args)
   })
 end
 
-function U.is_disabled()
+local function is_disabled()
   return vim.g.megaline_disable == true or vim.b.megaline_disable == true
 end
 
-function M.is_focused()
+local function is_focused()
   return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win()
 end
 
@@ -813,8 +813,9 @@ function _G.__statusline()
   U.ctx = ctx
 
   local plain = U.is_plain(ctx)
-  local focused = vim.g.vim_in_focus or M.is_focused()
-  local disabled = U.is_disabled()
+  local focused = vim.g.vim_in_focus and is_focused()
+  -- local focused = vim.g.vim_in_focus or is_focused()
+  local disabled = is_disabled()
 
   -- if not plain and focused and not disabled then
   if focused and not disabled then
@@ -825,6 +826,20 @@ function _G.__statusline()
     local diag_info                   = unpack(item_if(diags.info.count, not is_truncated(100) and diags.info, "StInfo", { prefix = diags.info.sign }))
     local diag_hint                   = unpack(item_if(diags.hint.count, not is_truncated(100) and diags.hint, "StHint", { prefix = diags.hint.sign }))
     -- stylua: ignore end
+
+    if plain then
+      return build({
+        -- filename parts
+        M.s_filename({ trunc_width = 120 }),
+        -- modified indicator
+        M.s_modified({ trunc_width = 100 }),
+        -- readonly indicator
+        M.s_readonly({ trunc_width = 100 }),
+        -- saving indicator
+        unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
+        "%=", -- end left alignment
+      })
+    end
 
     return build({
       -- prefix
