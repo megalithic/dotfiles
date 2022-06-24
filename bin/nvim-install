@@ -101,7 +101,8 @@ while getopts "fp" OPTION; do
   case $OPTION in
 
     p)
-      nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
+      nvim "+StartupTime"
+      # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
       exit 0
       ;;
 

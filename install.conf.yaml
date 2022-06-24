@@ -110,10 +110,6 @@
       force: true
       path: config/tmux
       if: "[ `uname` = Darwin ]"
-    ~/.config/tmuxinator:
-      force: true
-      path: config/tmuxinator
-      if: "[ `uname` = Darwin ]"
     ~/.config/weechat:
       force: true
       path: config/weechat
