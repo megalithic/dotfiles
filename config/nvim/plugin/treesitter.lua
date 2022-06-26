@@ -16,6 +16,7 @@ mega.treesitter = mega.treesitter or {
 -- When visiting a file with a type we don't have a parser for, ask me if I want to install it.
 function mega.treesitter.ensure_parser_installed()
   local WAIT_TIME = 6000
+  local ignored_langs = { "markdown", "markdown_inline" }
   local parsers = require("nvim-treesitter.parsers")
   local lang = parsers.get_buf_lang()
   local fmt = string.format
@@ -25,6 +26,9 @@ function mega.treesitter.ensure_parser_installed()
     and not mega.treesitter.install_attempted[lang]
   then
     vim.schedule(function()
+      if vim.tbl_contains(ignored_langs, lang) then
+        return
+      end
       vim.cmd("TSInstall " .. lang)
       mega.treesitter.install_attempted[lang] = true
       vim.notify(fmt("Installing Treesitter parser for %s", lang), "info", {
@@ -64,7 +68,8 @@ require("nvim-treesitter.configs").setup({
     "heex",
     "help",
     "javascript",
-    "markdown",
+    -- "markdown",
+    -- "markdown_inline",
     "jsdoc",
     "json",
     "jsonc",
