@@ -200,6 +200,7 @@ local PKGS = {
   -- @trial https://github.com/jakewvincent/mkdnflow.nvim
   -- @trial https://github.com/jubnzv/mdeval.nvim
   { "mickael-menu/zk-nvim" },
+  "renerocksai/telekasten.nvim",
   "tpope/vim-rails",
   "ngscheurich/edeex.nvim",
   "antew/vim-elm-analyse",
@@ -329,7 +330,8 @@ function M.config()
   conf("neotest", { config = "neotest" })
   conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
-  -- conf("vscode", { config = "vscode" })
+  conf("telekasten", { config = "telekasten" })
+  conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
   conf("startuptime", {
@@ -626,6 +628,8 @@ function M.config()
       endwise("function%(.*%)$", "end", "lua", nil),
       endwise(" do$", "end", "elixir", nil),
     })
+
+    require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
     -- REF: neat stuff:
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)

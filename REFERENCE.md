@@ -1,5 +1,16 @@
 # Reference
 
+## GPG/Yubikey
+
+- https://hackernoon.com/things-you-must-know-about-git-crypt-to-successfully-protect-your-secret-data-kyi3wi6
+- https://chipsenkbeil.com/posts/applying-gpg-and-yubikey-part-1-overview/
+- https://chipsenkbeil.com/posts/applying-gpg-and-yubikey-part-6-setting-up-yubikeys/
+- https://www.instapaper.com/text?u=https%3A%2F%2Fzach.codes%2Fultimate-yubikey-setup-guide%2F
+- https://github.com/drduh/YubiKey-Guide
+- https://ocramius.github.io/blog/yubikey-for-ssh-gpg-git-and-local-login/
+- https://www.guyrutenberg.com/tag/gpg/
+- https://buddy.works/guides/git-crypt
+
 ## NVIM
 
 ```lua

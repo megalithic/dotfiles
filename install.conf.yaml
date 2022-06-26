@@ -142,6 +142,9 @@
     ~/.gitconfig:
       force: true
       path: git/gitconfig
+    ~/.config/gh:
+      force: true
+      path: gh/config.yml
 
     # ----- misc/other
     ~/.asdfrc: asdf/asdfrc

@@ -65,6 +65,15 @@ return function()
         notifier = terminal_notifier,
       })
     end,
+    termfloat = function(cmd)
+      mega.term_open({
+        winnr = vim.fn.winnr(),
+        cmd = cmd,
+        direction = "float",
+        precmd = "eval $(desk load)",
+        notifier = terminal_notifier,
+      })
+    end,
     termvsplit = function(cmd)
       mega.term_open({
         winnr = vim.fn.winnr(),
@@ -78,7 +87,8 @@ return function()
 
   vim.g["test#strategy"] = {
     nearest = "termsplit",
-    file = "toggleterm_f",
+    file = "termfloat",
+    -- file = "toggleterm_f",
     suite = "toggleterm_f",
     last = "toggleterm_f",
   }

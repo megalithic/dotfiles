@@ -839,7 +839,7 @@ return lush(function()
     TmuxPopupNormal({ bg = "#3d494f" }),
 
     MiniJump({ LightspeedLabel }),
-    MiniJump2dSpot({ LightspeedLabelDistant }),
+    -- MiniJump2dSpot({ LightspeedLabelDistant }),
 
     ---- :hackkkks -------------------------------------------------------------
 

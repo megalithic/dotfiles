@@ -9,7 +9,7 @@ local function set_keymaps(bufnr, winnr)
   local opts = { buffer = bufnr, silent = false }
   -- quit terminal and go back to last window
   nmap("q", function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+    api.nvim_buf_delete(bufnr, { force = true })
     bufnr = nil_buf_id
 
     -- jump back to our last window
@@ -58,8 +58,8 @@ function mega.term_open(opts)
   local width = opts.width or 80
 
   -- delete the current buffer if it's still open
-  if vim.api.nvim_buf_is_valid(term_buf_id) then
-    vim.api.nvim_buf_delete(term_buf_id, { force = true })
+  if api.nvim_buf_is_valid(term_buf_id) then
+    api.nvim_buf_delete(term_buf_id, { force = true })
     term_buf_id = nil_buf_id
   end
 
@@ -67,15 +67,44 @@ function mega.term_open(opts)
 
   if direction == "horizontal" then
     vim.cmd(h_direction_cmd)
+    term_buf_id = api.nvim_get_current_buf()
+    vim.opt_local.filetype = "megaterm"
   elseif direction == "vertical" then
     vim.cmd(fmt("vnew | lua vim.api.nvim_win_set_width(0, %s)", width))
+    vim.opt_local.filetype = "megaterm"
+  elseif direction == "float" then
+    local buf_id = api.nvim_create_buf(true, true)
+    local win_id = api.nvim_open_win(buf_id, true, {
+      relative = "editor",
+      style = "minimal",
+      border = mega.get_border(),
+      width = math.floor(0.8 * vim.o.columns),
+      height = math.floor(0.8 * vim.o.lines),
+      row = math.floor(0.1 * vim.o.lines),
+      col = math.floor(0.1 * vim.o.columns),
+      zindex = 99,
+    })
+    api.nvim_win_set_option(win_id, "number", false)
+    api.nvim_win_set_option(win_id, "relativenumber", false)
+    api.nvim_buf_set_option(buf_id, "filetype", "megaterm")
+    api.nvim_win_set_option(
+      win_id,
+      "winhl",
+      table.concat({
+        "Normal:NormalFloat",
+        "FloatBorder:FloatBorder",
+        "CursorLine:Visual",
+        "Search:None",
+      }, ",")
+    )
+
+    vim.cmd("setlocal bufhidden=wipe")
+
+    term_buf_id = buf_id
   else
     vim.notify("[megaterm] direction must either be `horizontal` or `vertical`.", "WARN")
     vim.cmd(h_direction_cmd)
   end
-
-  term_buf_id = vim.api.nvim_get_current_buf()
-  vim.opt_local.filetype = "megaterm"
 
   set_keymaps(term_buf_id, winnr)
 
@@ -99,7 +128,7 @@ function mega.term_open(opts)
         -- test passed/process ended with an "ok" exit code, so let's close it.
         if exit_code == 0 then
           -- TODO: send results to quickfixlist
-          vim.api.nvim_buf_delete(term_buf_id, { force = true })
+          api.nvim_buf_delete(term_buf_id, { force = true })
           term_buf_id = nil_buf_id
         end
       end
@@ -139,7 +168,7 @@ mega.command("TermElixir", function()
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
-      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })
@@ -164,7 +193,7 @@ mega.command("TermRuby", function()
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
-      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })
@@ -176,10 +205,11 @@ mega.command("TermLua", function()
   mega.open_term({
     winnr = vim.fn.winnr(),
     cmd = cmd,
+    direction = "float",
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
-      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })
@@ -194,7 +224,7 @@ mega.command("TermPython", function()
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
-      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })
@@ -209,7 +239,7 @@ mega.command("TermNode", function()
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
-      vim.api.nvim_buf_set_var(bufnr, "cmd", cmd)
+      api.nvim_buf_set_var(bufnr, "cmd", cmd)
       vim.cmd("startinsert")
     end,
   })

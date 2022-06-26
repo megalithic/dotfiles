@@ -4,6 +4,7 @@
   name = Seth Messer
   email = seth.messer@gmail.com
   color = auto
+	signingkey = 0BAA512341528C9778DA635F5271D3F206302842
 
 [hub]
   protocol = https
@@ -431,6 +432,7 @@ fzf = !"                                                                        
 
 [commit]
   template = ~/.gitmessage
+	gpgsign = true
 
 [filter "lfs"]
   clean = git-lfs clean -- %f

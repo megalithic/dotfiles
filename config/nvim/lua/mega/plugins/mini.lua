@@ -34,6 +34,14 @@ return function()
       -- Delay between jump and automatic stop if idle (no jump is done)
       idle_stop = 10000000,
     },
+
+    -- Functions to be executed at certain events
+    hooks = {
+      before_start = nil, -- Before jump start
+      after_jump = function()
+        mega.blink_cursorline()
+      end, -- After jump was actually done
+    },
   })
 
   require("mini.jump2d").setup({
@@ -64,7 +72,9 @@ return function()
     -- Functions to be executed at certain events
     hooks = {
       before_start = nil, -- Before jump start
-      after_jump = nil, -- After jump was actually done
+      after_jump = function()
+        mega.blink_cursorline()
+      end, -- After jump was actually done
     },
 
     -- Module mappings. Use `''` (empty string) to disable one.

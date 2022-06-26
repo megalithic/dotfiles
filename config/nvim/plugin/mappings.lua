@@ -23,7 +23,6 @@
 -- https://github.com/mbriggs/nvim/blob/main/lua/mb/which-key.lua
 -- https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/whichkey.lua
 
-local vcmd = vim.cmd
 local fn = vim.fn
 local exec = mega.exec
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
@@ -403,12 +402,24 @@ nnoremap([[<Esc>]], function()
   vim.cmd("echo ''")
   mega.blink_cursorline()
 
+  do
+    local ok, minijump = pcall(require, "mini.jump")
+    if ok then
+      minijump.stop_jumping()
+    end
+  end
+
   -- local n_ok, n = require("notify")
   -- if n_ok then
   --   vim.notify = n
   --   vim.notify.dismiss()
   -- end
 end, { silent = true, desc = "Clear UI" })
+
+-- Use operator pending mode to visually select the whole buffer
+-- e.g. dA = delete buffer ALL, yA = copy whole buffer ALL
+omap("A", ":<C-U>normal! mzggVG<CR>`z")
+xmap("A", ":<C-U>normal! ggVG<CR>")
 
 -- useful remaps from theprimeagen:
 -- - ref: https://www.youtube.com/watch?v=hSHATqh8svM
