@@ -81,6 +81,9 @@
     ~/.config/fd:
       force: true
       path: config/fd
+    ~/.config/gh:
+      force: true
+      path: config/gh
     ~/.config/hammerspoon:
       force: true
       path: config/hammerspoon
@@ -142,9 +145,6 @@
     ~/.gitconfig:
       force: true
       path: git/gitconfig
-    ~/.config/gh:
-      force: true
-      path: gh/config.yml
 
     # ----- misc/other
     ~/.asdfrc: asdf/asdfrc
