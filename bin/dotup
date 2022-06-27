@@ -109,6 +109,7 @@ yay() {
     echo "░ "
   else
     dotsay "░  - nothing more to do."
+    echo "░ "
   fi
 }
 

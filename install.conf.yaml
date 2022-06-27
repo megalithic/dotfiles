@@ -84,6 +84,9 @@
     ~/.config/gh:
       force: true
       path: config/gh
+    ~/.config/gnupg:
+      force: true
+      path: config/gnupg
     ~/.config/hammerspoon:
       force: true
       path: config/hammerspoon

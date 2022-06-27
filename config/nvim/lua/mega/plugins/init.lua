@@ -26,8 +26,6 @@ local PKGS = {
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
-  "anuvyklack/keymap-layer.nvim",
-  "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
   "kevinhwang91/promise-async",

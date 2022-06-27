@@ -330,11 +330,15 @@ function _prompt_deskfile_loaded() {
   [[ -n $DESK_NAME ]] && echo "%F{243}[%f%F{#ffffff}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
 }
 
+function _prompt_sudo() {
+  sudo -vn &>/dev/null && echo -n "%F{#e67e80}$root_icon%f " || echo ''
+}
+
 function __prompt_eval() {
   local dots_prompt_icon="%F{green}$prompt_icon %f"
   local dots_prompt_failure_icon="%F{red}$prompt_failure_icon %f"
   local placeholder="(%F{blue}%{$__DOTS[ITALIC_ON]%}$placeholder_icon%{$__DOTS[ITALIC_OFF]%}%f)"
-  local top="$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}"
+  local top="$(_prompt_sudo)$(_prompt_ssh)$(_prompt_path)${_git_status_prompt:-$placeholder}"
   # local top="%B%F{magenta}%1~%f%b${_git_status_prompt:-$placeholder}"
   local character="%(1j.%F{cyan}%j$background_job_icon%f.)%(?.${dots_prompt_icon}.${dots_prompt_failure_icon})"
   local bottom=$([[ -n "$vim_mode" ]] && echo "$(_prompt_deskfile_loaded)$vim_mode" || echo "$(_prompt_deskfile_loaded)$character")

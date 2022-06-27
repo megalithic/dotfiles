@@ -1,10 +1,9 @@
 # vim:foldenable:foldmethod=marker:ft=gitconfig
-#
+
 [user]
   name = Seth Messer
-  email = seth.messer@gmail.com
+  email = seth@megalithic.io
   color = auto
-	signingkey = 0BAA512341528C9778DA635F5271D3F206302842
 
 [hub]
   protocol = https
@@ -432,7 +431,6 @@ fzf = !"                                                                        
 
 [commit]
   template = ~/.gitmessage
-	gpgsign = true
 
 [filter "lfs"]
   clean = git-lfs clean -- %f
@@ -493,3 +491,8 @@ fzf = !"                                                                        
   selected = normal
   separator = red bold
   linenumber = normal
+
+[include]
+  # A local gitconfig, outside of version control.
+  # If the file doesn't exist it is silently ignored
+  path = ~/.gitconfig_local

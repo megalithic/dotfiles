@@ -30,7 +30,7 @@ autoload -U zmv # builtin zsh rename command
 [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
 # -- scripts/libs
-for file in $ZLIB/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux}.zsh; do
+for file in $ZLIB/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux,gpg}.zsh; do
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done
 unset file
