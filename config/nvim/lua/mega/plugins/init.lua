@@ -186,7 +186,6 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
-  -- "plasticboy/vim-markdown", -- replacing with the below:
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install", opt = true },

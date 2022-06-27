@@ -34,32 +34,32 @@ vim.cmd([[
   ]])
 
 -- ## plasticboy/vim-markdown
-vim.g.markdown_fenced_languages = {
-  "diff",
-  "javascript",
-  "js=javascript",
-  "json=javascript",
-  "typescript",
-  "css",
-  "scss",
-  "sass",
-  "ruby",
-  "erb=eruby",
-  "python",
-  "haml",
-  "html",
-  "bash=sh",
-  "zsh=sh",
-  "shell=sh",
-  "console=sh",
-  "sh",
-  "elm",
-  "elixir",
-  "eelixir",
-  "lua",
-  "vim",
-  "viml",
-}
+-- vim.g.markdown_fenced_languages = {
+--   "diff",
+--   "javascript",
+--   "js=javascript",
+--   "json=javascript",
+--   "typescript",
+--   "css",
+--   "scss",
+--   "sass",
+--   "ruby",
+--   "erb=eruby",
+--   "python",
+--   "haml",
+--   "html",
+--   "bash=sh",
+--   "zsh=sh",
+--   "shell=sh",
+--   "console=sh",
+--   "sh",
+--   "elm",
+--   -- "elixir",
+--   -- "eelixir",
+--   "lua",
+--   "vim",
+--   "viml",
+-- }
 
 vim.g.markdown_enable_conceal = 1
 vim.g.vim_markdown_folding_level = 10
@@ -80,6 +80,7 @@ vim.g.vim_markdown_strikethrough = 1
 
 -- ## ixru/nvim-markdown
 vim.g.vim_markdown_no_default_key_mappings = 1
+vim.cmd([[map <Plug> <Plug>Markdown_FollowLink]])
 
 -- ## iamcco/markdown-preview.nvim
 vim.cmd([[packadd! markdown-preview.nvim]])

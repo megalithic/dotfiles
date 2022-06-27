@@ -8,6 +8,7 @@ syntax match MarkdownDQuote /\\\"/ conceal cchar="
 syntax match MarkdownBackslash /\\\// conceal cchar=/
 syntax match todoCheckbox "\v.*\[\ \]"hs=e-2 conceal cchar=
 syntax match todoCheckbox "\v.*\[x\]"hs=e-2 conceal cchar=
+syntax match todoCheckbox "\v.*\[X\]"hs=e-2 conceal cchar=
 syntax match NoSpellAcronym '\<\(\u\|\d\)\{3,}s\?\>' contains=@NoSpell
 ]])
 
