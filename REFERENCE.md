@@ -15,6 +15,8 @@
 - https://stackoverflow.com/questions/39494631/gpg-failed-to-sign-the-data-fatal-failed-to-write-commit-object-git-2-10-0
 - https://superuser.com/a/1183544
 - https://stackoverflow.com/a/70484849/213904
+- https://scatteredcode.net/signing-git-commits-using-yubikey-on-windows
+- https://wiki.gnupg.org/AgentForwarding
 
 ## NVIM
 
