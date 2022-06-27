@@ -65,7 +65,7 @@ export LESS="-F -g -i -M -R -S -w -X -z-4"
 export MANPATH="/usr/local/man:$MANPATH"
 
 # -- gnupg/gpg
-export GNUPGHOME = "$XDG_CONFIG_HOME/gnupg"
+export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 
 # -- lang
 export LANG="en_US.UTF-8"

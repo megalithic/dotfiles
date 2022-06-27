@@ -18,3 +18,9 @@ config/karabiner/automatic_backups/*
 cache
 config/tmux/plugins
 *~
+
+# gnupg/gpg
+config/gnupg/**/*
+!config/gnupg/gpg-agent.conf
+!config/gnupg/gpg.conf
+

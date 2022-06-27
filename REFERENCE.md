@@ -13,6 +13,8 @@
 - https://dev.to/paulmicheli/using-your-yubikey-for-signed-git-commits-4l73
 - https://www.gnupg.org/documentation/manuals/gnupg/GPG-Configuration.html
 - https://stackoverflow.com/questions/39494631/gpg-failed-to-sign-the-data-fatal-failed-to-write-commit-object-git-2-10-0
+- https://superuser.com/a/1183544
+- https://stackoverflow.com/a/70484849/213904
 
 ## NVIM
 
