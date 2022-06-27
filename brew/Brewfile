@@ -102,10 +102,11 @@ brew "gnu-sed" if OS.mac?
 brew "gpg" # required for asdf-nodejs
 brew "grc"
 brew "heroku" if OS.mac?
-brew "hub"
 brew "highlight"
+brew "hopenpgp-tools"
 brew "htop"
 brew "httpie"
+brew "hub"
 brew "ical-buddy" if OS.mac?
 brew "jq"
 brew "lazydocker"
