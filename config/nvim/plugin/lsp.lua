@@ -1004,6 +1004,10 @@ function mega.lsp.get_server_config(server)
   config.capabilities = server_capabilities()
   config.on_attach = mega.lsp.on_attach
 
+  -- TODO: json loaded lsp config; also @akinsho is a beast.
+  -- https://github.com/akinsho/dotfiles/commit/c087fd471f0d80b8bf41502799aeb612222333ff
+  -- config.on_init = mega.lsp.on_init
+
   return config
 end
 
