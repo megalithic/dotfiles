@@ -197,7 +197,7 @@ local PKGS = {
   -- @trial https://github.com/jakewvincent/mkdnflow.nvim
   -- @trial https://github.com/jubnzv/mdeval.nvim
   { "mickael-menu/zk-nvim" },
-  "renerocksai/telekasten.nvim",
+  -- "renerocksai/telekasten.nvim",
   "tpope/vim-rails",
   "ngscheurich/edeex.nvim",
   "antew/vim-elm-analyse",
@@ -327,7 +327,7 @@ function M.config()
   conf("neotest", { config = "neotest" })
   conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
-  conf("telekasten", { config = "telekasten" })
+  -- conf("telekasten", { config = "telekasten" })
   conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
