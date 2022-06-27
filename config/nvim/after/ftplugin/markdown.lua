@@ -54,8 +54,8 @@ vim.g.markdown_fenced_languages = {
   "console=sh",
   "sh",
   "elm",
-  -- "elixir",
-  -- "eelixir",
+  "elixir",
+  "eelixir",
   "lua",
   "vim",
   "viml",
@@ -78,13 +78,18 @@ vim.g.vim_markdown_no_extensions_in_markdown = 1
 vim.g.vim_markdown_math = 1
 vim.g.vim_markdown_strikethrough = 1
 
-vim.cmd([[packadd markdown-preview.nvim]])
+-- ## ixru/nvim-markdown
+vim.g.vim_markdown_no_default_key_mappings = 1
+
+-- ## iamcco/markdown-preview.nvim
+vim.cmd([[packadd! markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 
 vim.opt_local.signcolumn = "no"
 vim.opt_local.cursorline = true
 
+-- ## used with my zk popups in tmux
 if vim.env.TMUX_POPUP then
   vim.opt.laststatus = 1
   vim.opt.cmdheight = 0
