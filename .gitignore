@@ -18,6 +18,7 @@ config/karabiner/automatic_backups/*
 cache
 config/tmux/plugins
 *~
+config/gh/hosts.yml
 
 # gnupg/gpg
 config/gnupg/**/*
