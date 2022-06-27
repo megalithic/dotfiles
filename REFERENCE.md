@@ -17,6 +17,7 @@
 - https://stackoverflow.com/a/70484849/213904
 - https://scatteredcode.net/signing-git-commits-using-yubikey-on-windows
 - https://wiki.gnupg.org/AgentForwarding
+- https://www.youtube.com/watch?v=4166ExAnxmo (gpg signingkey as email)
 
 ## NVIM
 
