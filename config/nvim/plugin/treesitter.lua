@@ -16,7 +16,7 @@ mega.treesitter = mega.treesitter or {
 -- When visiting a file with a type we don't have a parser for, ask me if I want to install it.
 function mega.treesitter.ensure_parser_installed()
   local WAIT_TIME = 6000
-  local ignored_langs = { "markdown", "markdown_inline" }
+  local ignored_langs = {}
   local parsers = require("nvim-treesitter.parsers")
   local lang = parsers.get_buf_lang()
   local fmt = string.format
