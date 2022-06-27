@@ -179,6 +179,7 @@
       quiet: true
       command: >-
         chmod -R 0700 ~/.config/gnupg;
+        chmod -R 0700 ~/.config/gnupg/*;
 
 - brewfile:
     file: brew/Brewfile
