@@ -4,6 +4,17 @@
   name = Seth Messer
   email = seth@megalithic.io
   color = auto
+	signingkey = seth@megalithic.io
+
+[commit]
+  template = ~/.gitmessage
+	gpgsign = true
+
+[tag]
+	gpgSign = true
+
+[gpg]
+	program = /usr/local/bin/gpg
 
 [hub]
   protocol = https
@@ -428,9 +439,6 @@ fzf = !"                                                                        
 	oldHighlight = red bold 52
 	newNormal = green bold
 	newHighlight = green bold 22
-
-[commit]
-  template = ~/.gitmessage
 
 [filter "lfs"]
   clean = git-lfs clean -- %f
