@@ -205,7 +205,7 @@ mega.command("TermLua", function()
   mega.open_term({
     winnr = vim.fn.winnr(),
     cmd = cmd,
-    direction = "float",
+    direction = "horizontal",
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr)
