@@ -30,7 +30,7 @@ autoload -U zmv # builtin zsh rename command
 [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
 # -- scripts/libs
-for file in $ZLIB/{keybindings,opts,aliases,funcs,colors,kitty,ssh,tmux,gpg}.zsh; do
+for file in $ZLIB/{keybindings,opts,aliases,funcs,colors,ssh,tmux,kitty,gpg}.zsh; do
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done
 unset file
@@ -38,10 +38,6 @@ unset file
 if exists zoxide; then
   eval "$(zoxide init zsh)"
 fi
-
-# if [[ "$(uname)" == "Linux" ]]; then
-#   exists starship && eval "$(starship init zsh)"
-# fi
 
 # NOTE: http://asdf-vm.com/learn-more/faq.html#shell-not-detecting-newly-installed-shims
 [[ -f "$ZLIB/asdf.zsh" ]] && source "$ZLIB/asdf.zsh"

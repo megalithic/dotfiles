@@ -67,10 +67,12 @@
   ; sshow = "!f() { git stash show stash^{/$*} -p; }; f"
   ; sapply = "!f() { git stash apply stash^{/$*}; }; f"
 
+  d = diff
+  ds = diff --staged
   di = diff
   dc = diff --cached
   df = diff
-  ds = diff --stat=160,120
+  ; ds = diff --stat=160,120
 
   ; mf = merge --ff-only
   ; m = merge --no-ff

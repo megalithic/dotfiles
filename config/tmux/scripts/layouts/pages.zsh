@@ -27,7 +27,7 @@ tmux -2 new-window -c $CODE/outstand -t pages:3 -n services
 tmux -2 send-keys -t pages:1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exit C-m
 
 # Window "code"
-tmux -2 send-keys -t pages:2.1 kssh\ seth-dev C-m
+tmux -2 send-keys -t pages:2.1 ssh\ seth-dev C-m
 tmux -2 send-keys -t pages:2.1 cd\ \~/code/pages C-m
 tmux -2 send-keys -t pages:2.1 eval\ \$\(desk\ load\)\;\ ls C-m
 
@@ -37,14 +37,14 @@ tmux -2 select-layout -t pages:2 main-vertical
 tmux -2 select-pane -t pages:2.1
 
 # Window "services"
-tmux -2 send-keys -t pages:3.1 kssh\ seth-dev C-m
+tmux -2 send-keys -t pages:3.1 ssh\ seth-dev C-m
 tmux -2 send-keys -t pages:3.1 cd\ \~/code/pages C-m
 tmux -2 send-keys -t pages:3.1 eval\ \$\(desk\ load\) C-m
 
 tmux -2 splitw -c $CODE/outstand -t pages:3
 tmux -2 select-layout -t pages:3 tiled
 
-tmux -2 send-keys -t pages:3.2 kssh\ seth-dev C-m
+tmux -2 send-keys -t pages:3.2 ssh\ seth-dev C-m
 tmux -2 send-keys -t pages:3.2 cd\ \~/code/pages C-m
 tmux -2 send-keys -t pages:3.2 eval\ \$\(desk\ load\)\;\ iex\ -S\ mix C-m
 

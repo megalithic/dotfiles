@@ -437,19 +437,22 @@ local function setup_handlers()
     local bufnr = util.open_floating_preview(lines, "markdown", config)
     -- local lines = vim.split(result.contents.value, "\n")
 
-    require("colorizer").highlight_buffer(
-      bufnr,
-      nil,
-      vim.list_slice(lines, 2, #lines),
-      0,
-      require("colorizer").get_buffer_options(0)
-    )
+    ok, mod = pcall(require, "colorizer")
+    if ok then
+      require("colorizer").highlight_buffer(
+        bufnr,
+        nil,
+        vim.list_slice(lines, 2, #lines),
+        0,
+        require("colorizer").get_buffer_options(0)
+      )
+    end
 
     return bufnr
   end
 
-  -- lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
-  lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
+  lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
+  -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   local signature_help_opts = mega.table_merge(opts, {
     anchor = "SW",
     relative = "cursor",

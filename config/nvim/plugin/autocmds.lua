@@ -171,7 +171,7 @@ augroup("Kitty", {
     pattern = { "*/kitty/*.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
-      vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
+      -- vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
       vcmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
     end,
   },

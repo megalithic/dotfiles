@@ -10,6 +10,7 @@ eslint-plugin-cypress
 eslint_d
 eas-cli
 expo-cli
+@guysherman/kittymux
 @typescript-eslint/typescript-estree
 fixjson
 markdownlint
