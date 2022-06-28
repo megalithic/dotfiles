@@ -26,5 +26,5 @@
 ; handle these conceals with regex matches instead:
 ((list_marker_star) @conceal (#set! conceal "✸  ") (#eq? @conceal "* "))
 ((list_marker_plus) @conceal (#set! conceal "✿  ") (#eq? @conceal "+ "))
-((list_marker_minus) @conceal (#set! conceal "•  ") (#eq? @conceal "- "))
-((list_marker_dot) @conceal (#set! conceal "•  ") (#eq? @conceal ". "))
+((list_marker_minus) @conceal (#set! conceal "  ") (#eq? @conceal "- "))
+((list_marker_dot) @conceal (#set! conceal " •  ") (#eq? @conceal ". "))
