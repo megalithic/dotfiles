@@ -18,6 +18,8 @@
 - https://scatteredcode.net/signing-git-commits-using-yubikey-on-windows
 - https://wiki.gnupg.org/AgentForwarding
 - https://www.youtube.com/watch?v=4166ExAnxmo (gpg signingkey as email)
+- https://github.com/a-dma/yubitouch
+- https://github.com/ahmedelgabri/dotfiles/blob/ba3774d38b2288ee5468cb26aa82098aaefcd139/install#L152-L163 (transcrypt instead of git-crypt thanks [@ahmed](https://twitter.com/ahmedelgabri/status/1541682417442127872?s=20&t=M-02HMWvusc5Fkb5PE8IYw))!
 
 ## NVIM
 
