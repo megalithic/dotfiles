@@ -390,7 +390,7 @@ local mappings = {
     { key = "f", mods = "LEADER|CTRL", action = "QuickSelect" },
 
     -- tabs
-    { key = "t", mods = "CTRL", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
+    { key = "t", mods = "SUPER", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
     { key = "w", mods = "CTRL", action = wezterm.action({ CloseCurrentTab = { confirm = false } }) },
 
     -- panes
