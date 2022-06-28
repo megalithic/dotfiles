@@ -178,8 +178,7 @@
     - description: GnuPG (gpg) setup..
       quiet: true
       command: >-
-        chmod -R 0700 ~/.config/gnupg;
-        chmod -R 0700 ~/.config/gnupg/*;
+        chmod 0700 ~/.config/gnupg;
 
 - brewfile:
     file: brew/Brewfile
