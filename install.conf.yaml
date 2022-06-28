@@ -223,6 +223,12 @@
         log "Attempting to update kitty app icon..";
         ~/.dotfiles/config/kitty/update_icon.sh;
 
+        log "Attempting to symlink gitconfig_macos..";
+        [[ $(uname) == "Darwin" ]] && ln -sfv "$DOTS/git/gitconfig_macos" ~/.gitconfig_macos;
+
+        log "Attempting to symlink gitconfig_linux..";
+        [[ $(uname) == "Linux" ]] && ln -sfv "$DOTS/git/gitconfig_linux" ~/.gitconfig_linux;
+
         log "Attempting to use gh-login to do GitHub Authentication..";
         ~/.dotfiles/bin/gh-login;
 

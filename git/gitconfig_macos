@@ -1,5 +1,18 @@
 # vim:foldenable:foldmethod=marker:ft=gitconfig
 
+[user]
+	signingkey = seth@megalithic.io
+
+[commit]
+  template = ~/.gitmessage
+	gpgsign = true
+
+[tag]
+	gpgSign = true
+
+[gpg]
+	program = /usr/local/bin/gpg
+
 [credential]
 	helper = osxkeychain
   ; helper =
@@ -7,4 +20,5 @@
   ; helper = pass
 
 [credential "https://github.com"]
-  helper = osxkeychain
+	helper =
+	helper = !$(brew --prefix)/bin/gh auth git-credential

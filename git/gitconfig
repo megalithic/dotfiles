@@ -4,17 +4,6 @@
   name = Seth Messer
   email = seth@megalithic.io
   color = auto
-	; signingkey = seth@megalithic.io
-
-[commit]
-  template = ~/.gitmessage
-	; gpgsign = true
-
-[tag]
-	; gpgSign = true
-
-[gpg]
-	; program = /usr/local/bin/gpg
 
 [hub]
   protocol = https
@@ -27,10 +16,6 @@
 
 [credential "https://dev.azure.com"]
 	useHttpPath = true
-
-[credential "https://github.com"]
-	helper =
-	helper = !$(brew --prefix)/bin/gh auth git-credential
 
 [git]
   user = megalithic
@@ -503,9 +488,19 @@ fzf = !"                                                                        
 [include]
   # A local gitconfig, outside of version control.
   # If the file doesn't exist it is silently ignored
-  path = ~/.gitconfig_linux
+  path = ~/.gitconfig_macos
 
-; [include]
+[include]
   # A local gitconfig, outside of version control.
   # If the file doesn't exist it is silently ignored
-  ; path = ~/.gitconfig_local
+  path = ~/.gitconfig_linux
+
+[include]
+  # A local gitconfig, outside of version control.
+  # If the file doesn't exist it is silently ignored
+  path = ~/.gitconfig_work
+
+[include]
+  # A local gitconfig, outside of version control.
+  # If the file doesn't exist it is silently ignored
+  path = ~/.gitconfig_local

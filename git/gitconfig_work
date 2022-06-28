@@ -1,5 +1,9 @@
 # vim:foldenable:foldmethod=marker:ft=gitconfig
 
+[user]
+  name = Seth Messer
+  email = seth@outstand.com
+
 # linux-specific config things (presumably on my work instance):
 [credential "https://github.com"]
   helper =
