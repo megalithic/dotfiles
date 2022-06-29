@@ -237,3 +237,8 @@
 
         # @see: https://github.com/ahmedelgabri/dotfiles#notes
         # [/usr/local/bin/zsh -ic "compaudit | xargs chmod g-w", Handle compaudit insecure directories] # https://stackoverflow.com/a/22753363/213904
+
+- ghe:
+    - mislav/gh-branch
+    - dlvhdr/gh-prs
+    - yusukebe/gh-markdown-preview

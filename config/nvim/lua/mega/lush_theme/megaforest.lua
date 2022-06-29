@@ -816,9 +816,11 @@ return lush(function()
 
     ---- :help: bqf.txt --------------------------------------------------------
 
-    BqfPreviewBorder({ fg = bg_blue }),
+    BqfPreviewBorder({ fg = bg_blue }), -- or WinSeparator
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
+
+    qfPosition({ Todo }),
 
     ---- :help neo-tree.txt -------------------------------------------
 

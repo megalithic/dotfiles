@@ -1,17 +1,17 @@
 # vim:foldenable:foldmethod=marker:ft=gitconfig
 
 [user]
-	signingkey = seth@megalithic.io
+	; signingkey = seth@megalithic.io
 
 [commit]
   template = ~/.gitmessage
-	gpgsign = true
+	; gpgsign = true
 
 [tag]
-	gpgSign = true
+	; gpgSign = true
 
 [gpg]
-	program = /usr/local/bin/gpg
+	; program = /usr/local/bin/gpg
 
 [credential]
 	helper = osxkeychain

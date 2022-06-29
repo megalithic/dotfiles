@@ -41,12 +41,14 @@ git submodule update --init --recursive "${DOTBOT_DIR}"
 git submodule update --init --recursive "dotbot/brewfile"
 git submodule update --init --recursive "dotbot/ifplatform"
 git submodule update --init --recursive "dotbot/ifarch"
+git submodule update --init --recursive "dotbot/gh-extension"
 
 # TODO: big cleanup: https://github.com/ryansch/dotfiles/blob/main/install
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -v -d "${BASEDIR}" \
   --plugin-dir dotbot/brewfile \
   --plugin-dir dotbot/ifarch \
   --plugin-dir dotbot/ifplatform \
+  --plugin-dir dotbot/gh-extension \
   -c "${CONFIG}" "${@}"
 # --plugin-dir dotbot/asdf \
 # -c "${CONFIG}"

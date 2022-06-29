@@ -14,6 +14,9 @@
 [submodule "dotbot/ifplatform"]
 	path = dotbot/ifplatform
 	url = https://github.com/megalithic/dotbot-ifplatform.git
+[submodule "dotbot/gh-extension"]
+	path = dotbot/gh-extension
+	url = https://github.com/fundor333/dotbot-gh-extension.git
 [submodule "config/zsh/plugins/fzf-tab"]
 	path = config/zsh/plugins/fzf-tab
 	url = https://github.com/Aloxaf/fzf-tab
