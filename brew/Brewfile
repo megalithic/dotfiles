@@ -163,7 +163,7 @@ brew "shellcheck"
 brew "shfmt"
 brew "ssh-copy-id"
 brew "stack"
-brew "starship"
+# brew "starship"
 brew "stow"
 brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?

@@ -6,10 +6,10 @@ set -Eueo pipefail
 cd "$DOTS"
 
 echo "decrypting dotfiles..."
-echo -n "transcrypt cipher: "
+echo -n "transcrypt cipher (aes-256-cbc): "
 read -r cipher
 echo -n "transcrypt password: "
 read -sr password
 echo
 
-transcrypt -c "$cipher" -p "$password"
+transcrypt -c "${cipher:-aes-256-cbc}" -p "$password"
