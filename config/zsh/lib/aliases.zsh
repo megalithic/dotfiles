@@ -52,7 +52,6 @@ alias last='ls *(.om[1])'
 alias cat='bat'
 alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias help='tldr'
-alias dotup='_dotup'
 
 alias utc="date -u"
 # alias s='ssh $(grep -iE "^host[[:space:]]+[^*]" ~/.ssh/config | fzf | awk "{print \$2}")'

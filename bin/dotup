@@ -19,19 +19,18 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 # shellcheck disable=SC2034,SC2015
 __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
-log "cd'ing to $DOTS.."
-pushd "$DOTS" >/dev/null
+auth() {
+  # gather sudo privileges:
+  log_warn "needs sudo for things:"
+  sudo -v || exit 1
 
-# gather sudo privileges:
-log_warn "needs sudo for things:"
-sudo -v
-
-# Keep-alive: update existing `sudo` time stamp until setup has finished
-while true; do
-  sudo -n true
-  sleep 60
-  kill -0 "$$" || exit
-done 2>/dev/null &
+  # Keep-alive: update existing `sudo` time stamp until setup has finished
+  while true; do
+    sudo -n true
+    sleep 60
+    kill -0 "$$" || exit
+  done 2>/dev/null &
+}
 
 # update steps:
 # - submodules
@@ -46,7 +45,33 @@ done 2>/dev/null &
 # - (linux/seth-dev) remote-dev update
 # - (linux/seth-dev) dev update
 
+banner() {
+  command cat <<EOF
+${green}
+░
+░  ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
+░  │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: bits & bobs, dots & things.
+░  ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
+░  @megalithic 🗿
+░${reset}
+EOF
+  if [ -d "$DOTS/.git" ]; then
+    command cat <<EOF
+${blue}░  
+░
+░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(yellow)commit:  %h')
+░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(red)date:    %ad' --date=short)
+░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(cyan)author:  %an')
+░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(green)message: %s')
+░
+${reset}
+EOF
+  fi
+}
+
 update() {
+  log "cd'ing to $DOTS.." && pushd "$DOTS" >/dev/null
+
   log "update git submodules (recursively).." &&
     git submodule update --init --recursive
 
@@ -124,6 +149,6 @@ oops() {
   echo "░ "
 }
 
-update && yay || oops
+banner && auth && update && yay || oops
 
 popd >/dev/null

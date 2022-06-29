@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -Eueo pipefail
+
+cd "$DOTS"
+
+echo "decrypting dotfiles..."
+echo -n "transcrypt cipher: "
+read -r cipher
+echo -n "transcrypt password: "
+read -sr password
+echo
+
+transcrypt -c "$cipher" -p "$password"
