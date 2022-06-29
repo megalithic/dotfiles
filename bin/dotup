@@ -45,33 +45,7 @@ auth() {
 # - (linux/seth-dev) remote-dev update
 # - (linux/seth-dev) dev update
 
-banner() {
-  command cat <<EOF
-${green}
-░
-░  ┌┬┐┌─┐┌─┐┌─┐┬  ┬┌┬┐┬ ┬┬┌─┐
-░  │││├┤ │ ┬├─┤│  │ │ ├─┤││   :: bits & bobs, dots & things.
-░  ┴ ┴└─┘└─┘┴ ┴┴─┘┴ ┴ ┴ ┴┴└─┘
-░  @megalithic 🗿
-░${reset}
-EOF
-  if [ -d "$DOTS/.git" ]; then
-    command cat <<EOF
-${blue}░  
-░
-░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(yellow)commit:  %h')
-░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(red)date:    %ad' --date=short)
-░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(cyan)author:  %an')
-░  $(git --git-dir "$DOTS/.git" --work-tree "$DOTS" log -n 1 --pretty=format:'%C(green)message: %s')
-░
-${reset}
-EOF
-  fi
-}
-
 update() {
-  log "cd'ing to $DOTS.." && pushd "$DOTS" >/dev/null
-
   log "update git submodules (recursively).." &&
     git submodule update --init --recursive
 
@@ -119,36 +93,58 @@ update() {
 }
 
 yay() {
-  echo
-  log_ok "dotfiles update complete."
-  echo "  "
-  echo "░ "
-  dotsay "░ 🗿 @b@yellow[[donesies!]]"
-  echo "░ "
+  log_ok "dotfiles update complete!"
+  command cat <<EOF
+
+░
+░ $(dotsay "👍 @b@yellow[[donesies!]]")
+░ $(dotsay "@b@green[[]]")
+EOF
 
   if [[ "$(hostname)" == "seth-dev" ]]; then
-    dotsay "░  - since you're on $(hostname), you might want to:"
-    echo "░ "
-    printf "░   "
-    dotsay "   + run @b@blue[[dev update]]"
-    echo "░ "
+    command cat <<EOF
+░
+░  $(dotsay "✸ since you're on $(hostname), you might want to:")
+░
+░   $(dotsay "• run \`@b@blue[[dev update]]\`")
+░
+EOF
   else
-    dotsay "░  - nothing more to do."
-    echo "░ "
+    command cat <<EOF
+░
+░  $(dotsay "✸ since you're on $(hostname), you might want to:")
+░
+░   $(dotsay "• nothing more to do.")
+░
+
+EOF
   fi
 }
 
 oops() {
-  echo
   log_error "dotfiles update failed!"
-  echo "  "
-  echo "░ "
-  dotsay "░ 💣💥 @b@yellow[[oh snap, we done blowed up!]]"
-  echo "░ "
-  dotsay "░  - be sure to check back through the output above.. 👆"
-  echo "░ "
+  command cat <<EOF
+
+░
+░ $(dotsay "💣💥 @b@yellow[[oh snap, something blew up!1!]]")
+░ $(dotsay "@b@red[[]]")
+░
+░  $(dotsay "✸ be sure to check back through the script's output above 👆")
+░
+░   $(dotsay "• there's gotta be something useful back there..")
+░
+
+EOF
 }
 
-banner && auth && update && yay || oops
+# change to $DOTS dir
+pushd "$DOTS" >/dev/null
 
+# show banner with useful info
+"$DOTS/bin/dotbanner"
+
+# require sudo and then update
+(auth && update) && yay || oops
+
+# back to previous dir
 popd >/dev/null

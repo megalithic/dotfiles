@@ -26,6 +26,12 @@
       stdin: true
       include: ["tap", "brew", "cask", "mas"]
 
+- shell:
+    - description:
+      quiet: true
+      command: >-
+        ~/.dotfiles/bin/dotbanner;
+
 - create:
     - ~/code
     - ~/tmp
