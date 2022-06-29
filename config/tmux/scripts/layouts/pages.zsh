@@ -36,7 +36,7 @@ tmux -2 send-keys -t pages:3.1 et\ seth-dev C-m
 sleep 3
 tmux -2 send-keys -t pages:3.1 cd\ \~/code/pages C-m
 tmux -2 send-keys -t pages:3.1 eval\ \$\(desk\ load\) C-m
-tmux -2 send-keys -t atlas:3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
+tmux -2 send-keys -t pages:3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
 
 tmux -2 splitw -c $CODE/outstand -t pages:3
 tmux -2 select-layout -t pages:3 tiled
