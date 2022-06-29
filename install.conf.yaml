@@ -45,7 +45,12 @@
       recursive: true
 
 - shell:
-    - description: Installing Submodules..
+    - description: Decrypting repo..
+      quiet: true
+      command: >-
+        ~/.dotfiles/bin/transdec;
+
+    - description: Installing submodules..
       quiet: true
       command: >-
         git submodule update --init --recursive;
