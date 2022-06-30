@@ -85,6 +85,9 @@
     ~/.config/broot:
       force: true
       path: config/broot
+    ~/.config/btop:
+      force: true
+      path: config/btop
     ~/.config/espanso:
       force: true
       path: config/espanso
@@ -116,9 +119,9 @@
     ~/.config/ripgrep:
       force: true
       path: config/ripgrep
-    ~/.config/starship.toml:
-      force: true
-      path: config/starship.toml
+    # ~/.config/starship.toml:
+    #   force: true
+    #   path: config/starship.toml
     ~/.config/surfingkeys:
       force: true
       path: config/surfingkeys
