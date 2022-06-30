@@ -417,6 +417,8 @@ augroup("GitConflicts", {
       vim.notify("Conflicts resolved.")
       vim.diagnostic.enable(0)
       vim.cmd("LspStart")
+      vim.cmd("cclose")
+
       -- vim.keymap.set("n", "cww", function()
       --   engage.conflict_buster()
       -- end)
