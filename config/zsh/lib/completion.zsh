@@ -197,4 +197,9 @@ zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview \
     *) git log --color=always $word ;;
     esac'
 
+# ignore useless commands and functions
+zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec)|prompt_*)'
 
+# ignore multiple entries.
+zstyle ':completion:*:(rm|kill|diff):*' ignore-line other
+zstyle ':completion:*:rm:*' file-patterns '*:all-files'
