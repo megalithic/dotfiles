@@ -190,7 +190,7 @@ end
 
 ---Wraps common plugin `setup` functionality; primarily for use with paq-nvim.
 ---@param plugin_conf_name string
----@param opts ConfigOpts
+---@param opts ConfigOpts|function
 function mega.conf(plugin_conf_name, opts)
   opts = opts or {}
   local config

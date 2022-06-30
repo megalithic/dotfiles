@@ -159,7 +159,7 @@ case "$(uname)" in
       # export LIBCRYPTO="$(brew --prefix)/opt/openssl@1.1/lib/libcrypto.dylib"
 
       # REF: https://github.com/asdf-vm/asdf-erlang#osx
-      export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix) openssl@1.1)"
+      export KERL_CONFIGURE_OPTIONS="--disable-debug --without-javac --with-ssl=$(brew --prefix)/opt/openssl@1.1)"
     fi
   ;;
   Linux)

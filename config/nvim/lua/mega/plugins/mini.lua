@@ -44,44 +44,45 @@ return function()
     },
   })
 
-  require("mini.jump2d").setup({
-    -- Function producing jump spots (byte indexed) for a particular line.
-    -- For more information see |MiniJump2d.start|.
-    -- If `nil` (default) - use |MiniJump2d.default_spotter|
-    spotter = nil,
+  -- require("mini.jump2d").setup({
+  --   enable = false,
+  --   -- Function producing jump spots (byte indexed) for a particular line.
+  --   -- For more information see |MiniJump2d.start|.
+  --   -- If `nil` (default) - use |MiniJump2d.default_spotter|
+  --   spotter = nil,
 
-    -- Characters used for labels of jump spots (in supplied order)
-    -- labels = "abcdefghijklmnopqrstuvwxyz",
-    labels = "etovxqpdygfbzcisuran",
+  --   -- Characters used for labels of jump spots (in supplied order)
+  --   -- labels = "abcdefghijklmnopqrstuvwxyz",
+  --   labels = "etovxqpdygfbzcisuran",
 
-    -- Which lines are used for computing spots
-    allowed_lines = {
-      blank = true, -- Blank line (not sent to spotter even if `true`)
-      cursor_before = true, -- Lines before cursor line
-      cursor_at = true, -- Cursor line
-      cursor_after = true, -- Lines after cursor line
-      fold = true, -- Start of fold (not sent to spotter even if `true`)
-    },
+  --   -- Which lines are used for computing spots
+  --   allowed_lines = {
+  --     blank = true, -- Blank line (not sent to spotter even if `true`)
+  --     cursor_before = true, -- Lines before cursor line
+  --     cursor_at = true, -- Cursor line
+  --     cursor_after = true, -- Lines after cursor line
+  --     fold = true, -- Start of fold (not sent to spotter even if `true`)
+  --   },
 
-    -- Which windows from current tabpage are used for visible lines
-    allowed_windows = {
-      current = true,
-      not_current = false,
-    },
+  --   -- Which windows from current tabpage are used for visible lines
+  --   allowed_windows = {
+  --     current = true,
+  --     not_current = false,
+  --   },
 
-    -- Functions to be executed at certain events
-    hooks = {
-      before_start = nil, -- Before jump start
-      after_jump = function()
-        mega.blink_cursorline()
-      end, -- After jump was actually done
-    },
+  --   -- Functions to be executed at certain events
+  --   hooks = {
+  --     before_start = nil, -- Before jump start
+  --     after_jump = function()
+  --       mega.blink_cursorline()
+  --     end, -- After jump was actually done
+  --   },
 
-    -- Module mappings. Use `''` (empty string) to disable one.
-    mappings = {
-      start_jumping = "<CR>",
-    },
-  })
+  --   -- Module mappings. Use `''` (empty string) to disable one.
+  --   mappings = {
+  --     start_jumping = "<CR>",
+  --   },
+  -- })
 
   -- require("mini.surround").setup({
   --   -- Number of lines within which surrounding is searched

@@ -82,15 +82,14 @@ local PKGS = {
   "David-Kunz/treesitter-unit",
   { "nvim-treesitter/nvim-treesitter-context" },
   "SmiteshP/nvim-gps",
+  "lewis6991/spellsitter.nvim",
   -- @trial "m-demare/hlargs.nvim"
   -- @trial "ziontee113/syntax-tree-surfer"
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
-  { "ggandor/lightspeed.nvim", opt = true },
   { "phaazon/hop.nvim", opt = true },
   "akinsho/toggleterm.nvim",
-  -- "elihunter173/dirbuf.nvim",
   "nvim-neo-tree/neo-tree.nvim",
 
   { "nvim-telescope/telescope.nvim" },
@@ -631,89 +630,24 @@ function M.config()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
 
-  conf("lightspeed", {
-    enabled = false,
-    -- jump_to_first_match = true,
-    -- jump_on_partial_input_safety_timeout = 400,
-    -- This can get _really_ slow if the window has a lot of content,
-    -- turn it on only if your machine can always cope with it.
-    -- jump_to_unique_chars = true,
-    -- jump_to_unique_chars = false,
-    -- safe_labels = {},
-    -- jump_to_unique_chars = true,
-    -- limit_ft_matches = 7,
-    -- grey_out_search_area = true,
-    -- match_only_the_start_of_same_char_seqs = true,
-    -- limit_ft_matches = 5,
-    -- full_inclusive_prefix_key = '<c-x>',
-    -- By default, the values of these will be decided at runtime,
-    -- based on `jump_to_first_match`.
-    -- labels = nil,
-    -- cycle_group_fwd_key = nil,
-    -- cycle_group_bwd_key = nil,
-    --
-    ignore_case = false,
-    exit_after_idle_msecs = { unlabeled = 1000, labeled = 1500 },
-    --- s/x ---
-    jump_to_unique_chars = { safety_timeout = 400 }, -- jump right after the first input, if the target character is unique in the search direction
-    match_only_the_start_of_same_char_seqs = true, -- separator line will not snatch up all the available labels for `==` or `--`
-    substitute_chars = { ["\r"] = "¬" }, -- highlighted matches by the given characters
-    special_keys = { -- switch to the next/previous group of matches, when there are more matches than labels available
-      next_match_group = "<space>",
-      prev_match_group = "<tab>",
-    },
-    force_beacons_into_match_width = false,
-    --- f/t ---
-    limit_ft_matches = 4, -- For 1-character search, the next 'n' matches will be highlighted after [count]
-    repeat_ft_with_target_char = false, -- repeat f/t motions by pressing the target character repeatedly
-  })
+  conf("hop", function()
+    vim.cmd([[packadd! hop.nvim]])
 
-  conf("hop", {
-    enabled = false,
-    config = function()
-      local p = require("hop")
+    local p = require("hop")
 
-      p.setup({
-        -- remove h,j,k,l from hops list of keys
-        keys = "etovxqpdygfbzcisuran",
-        jump_on_sole_occurrence = true,
-        uppercase_labels = false,
-      })
+    p.setup({
+      -- remove h,j,k,l from hops list of keys
+      keys = "etovxqpdygfbzcisuran",
+      jump_on_sole_occurrence = true,
+      uppercase_labels = false,
+    })
 
-      nnoremap("s", function()
-        p.hint_char1({ multi_windows = false })
-      end)
-      -- NOTE: override F/f using hop motions
-      vim.keymap.set({ "x", "n" }, "F", function()
-        p.hint_char1({
-          direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-          current_line_only = true,
-          inclusive_jump = false,
-        })
-      end)
-      vim.keymap.set({ "x", "n" }, "f", function()
-        p.hint_char1({
-          direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-          current_line_only = true,
-          inclusive_jump = false,
-        })
-      end)
-      onoremap("F", function()
-        p.hint_char1({
-          direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-          current_line_only = true,
-          inclusive_jump = true,
-        })
-      end)
-      onoremap("f", function()
-        p.hint_char1({
-          direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-          current_line_only = true,
-          inclusive_jump = true,
-        })
-      end)
-    end,
-  })
+    nnoremap("s", function()
+      p.hint_char2({ multi_windows = false })
+      vim.cmd("norm zz")
+      mega.blink_cursorline()
+    end)
+  end)
 
   conf("git-messenger", function()
     vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }
