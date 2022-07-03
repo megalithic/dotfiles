@@ -34,6 +34,7 @@ export TERM=${TERM:=xterm-kitty}
 export TERM_ITALICS="TRUE"
 export COLORTERM=${COLORTERM:=truecolor}
 export TERMINAL="kitty"
+export SHELL="$(which zsh)"
 
 export LS_COLORS="$(vivid generate nord)"
 

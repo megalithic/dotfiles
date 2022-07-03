@@ -30,6 +30,9 @@ local PKGS = {
   "echasnovski/mini.nvim",
   "kevinhwang91/promise-async",
   "kevinhwang91/nvim-ufo",
+  "jghauser/fold-cycle.nvim",
+  "anuvyklack/keymap-layer.nvim",
+  "anuvyklack/hydra.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -335,6 +338,8 @@ function M.config()
       vim.g.startuptime_tries = 15
     end,
   })
+
+  conf("fold-cycle", {})
 
   conf("bullets.vim", function()
     vim.g.bullets_enabled_file_types = {

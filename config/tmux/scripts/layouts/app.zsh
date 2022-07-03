@@ -21,10 +21,10 @@ tmux -2 new-window -c $CODE/outstand -t app:3 -n services
 tmux -2 send-keys -t app:1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exit C-m
 
 # Window "code"
-tmux -2 send-keys -t app:2.1 et\ seth-dev C-m
-sleep 3
-tmux -2 send-keys -t app:2.1 cd\ \~/code/app C-m
-tmux -2 send-keys -t app:2.1 eval\ \$\(desk\ load\)\;\ ls C-m
+tmux -2 send-keys -t app:2.1 et\ -c\ \""cd ~/code/app && ls && eval \$\(desk load\); exec \$SHELL"\"\ seth-dev C-m
+# tmux -2 send-keys -t app:2.1 et\ seth-dev C-m
+# tmux -2 send-keys -t app:2.1 cd\ \~/code/app C-m
+# tmux -2 send-keys -t app:2.1 eval\ \$\(desk\ load\)\;\ ls C-m
 
 tmux -2 select-layout -t app:2 tiled
 
@@ -32,18 +32,21 @@ tmux -2 select-layout -t app:2 main-vertical
 tmux -2 select-pane -t app:2.1
 
 # Window "services"
-tmux -2 send-keys -t app:3.1 et\ seth-dev C-m
-sleep 3
-tmux -2 send-keys -t app:3.1 cd\ \~/code/app C-m
-tmux -2 send-keys -t app:3.1 eval\ \$\(desk\ load\) C-m
-tmux -2 send-keys -t app:3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
+tmux -2 send-keys -t app:3.1 et\ -c\ \""cd ~/code/app && ls && eval \$\(desk load\) && dev down --remove-orphans; dev up -d && dev logs -f; exec \$SHELL"\"\ seth-dev C-m
+# tmux -2 send-keys -t app:3.1 et\ seth-dev C-m
+# sleep 3
+# tmux -2 send-keys -t app:3.1 cd\ \~/code/app C-m
+# tmux -2 send-keys -t app:3.1 eval\ \$\(desk\ load\) C-m
+# tmux -2 send-keys -t app:3.1 dev\ down\ --remove-orphans\;\ dev\ up\ -d\ \&\&\ dev\ logs\ -f C-m
 
 tmux -2 splitw -c $CODE/outstand -t app:3
 tmux -2 select-layout -t app:3 tiled
-tmux -2 send-keys -t app:3.2 et\ seth-dev C-m
-sleep 3
-tmux -2 send-keys -t app:3.2 cd\ \~/code/app C-m
-tmux -2 send-keys -t app:3.2 eval\ \$\(desk\ load\)\;\ \\rails\ console C-m
+
+tmux -2 send-keys -t app:3.2 et\ -c\ \""cd ~/code/app && ls && eval \$\(desk load\) && rails c; exec \$SHELL"\"\ seth-dev C-m
+# tmux -2 send-keys -t app:3.2 et\ seth-dev C-m
+# sleep 3
+# tmux -2 send-keys -t app:3.2 cd\ \~/code/app C-m
+# tmux -2 send-keys -t app:3.2 eval\ \$\(desk\ load\)\;\ \\rails\ console C-m
 
 tmux -2 select-layout -t app:3 tiled
 

@@ -24,10 +24,7 @@ tmux -2 send-keys -t mega:1 weechat C-m
 tmux -2 send-keys -t mega:2 ls C-m
 
 # Window "ssh-dots"
-tmux -2 send-keys -t mega:3 et\ seth-dev C-m
-sleep 3
-tmux -2 send-keys -t mega:3 cd\ \~/.dotfiles C-m
-tmux -2 send-keys -t mega:3 ls C-m
+tmux -2 send-keys -t mega:3 et\ -c\ \""cd ~/.dotfiles && ls; exec \$SHELL"\"\ seth-dev C-m
 
 # focus
 

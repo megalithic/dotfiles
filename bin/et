@@ -8,8 +8,10 @@ set -euo pipefail
 
 PARAM="${1:-}"
 
-if [[ -z $PARAM ]]; then
+if [[ -z "$PARAM" ]]; then
   nvim "$DOTS/config/tmux/tmux.conf"
 else
-  "$HOMEBREW_PREFIX/bin/et" "$PARAM"
+  "$HOMEBREW_PREFIX/bin/et" "$@"
 fi
+
+# "$HOMEBREW_PREFIX/bin/et" "$@"
