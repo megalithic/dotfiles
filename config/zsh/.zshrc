@@ -17,8 +17,6 @@ zsh_add_plugin "djui/alias-tips"
 zsh_add_plugin "MichaelAquilina/zsh-auto-notify" "auto-notify.plugin"
 # zsh_add_plugin "hlissner/zsh-autopair"
 zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
-# @trial:
-# zsh_add_plugin "marlonrichert/zsh-autocomplete"
 
 # adds `zmv` tool (https://twitter.com/wesbos/status/1443570300529086467)
 autoload -U zmv # builtin zsh rename command
@@ -29,7 +27,7 @@ autoload -U zmv # builtin zsh rename command
 # -- prompt
 [[ -f "$ZDOTDIR/prompt/megaprompt.zsh" ]] && source "$ZDOTDIR/prompt/megaprompt.zsh"
 
-# -- scripts/libs
+# -- scripts/libs/etc
 for file in $ZLIB/{keybindings,opts,aliases,funcs,ssh,tmux,kitty}.zsh; do
   [[ -r "$file" && -f "$file" ]] && source "$file"
 done

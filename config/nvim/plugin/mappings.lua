@@ -144,8 +144,6 @@ if has_wk then
       f = { "find/git files" },
       g = {
         name = "+git",
-        c = { "commits" },
-        b = { "branches" },
       },
       M = { "man pages" },
       m = { "oldfiles (mru)" },

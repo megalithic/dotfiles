@@ -101,6 +101,7 @@ local PKGS = {
   "nvim-telescope/telescope-media-files.nvim",
   "nvim-telescope/telescope-symbols.nvim",
   "nvim-telescope/telescope-smart-history.nvim",
+  "nvim-telescope/telescope-live-grep-args.nvim",
   -- @trial "AckslD/nvim-neoclip.lua", -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/init.lua#L351-L367
   -- @trial "nvim-telescope/telescope-file-browser.nvim",
 
@@ -372,42 +373,92 @@ function M.config()
       ]])
   end)
 
-  conf("ufo", function()
-    local handler = function(virtText, lnum, endLnum, width, truncate)
-      local newVirtText = {}
-      local suffix = (" %s  %d "):format(mega.icons.misc.ellipsis, endLnum - lnum)
-      local sufWidth = vim.fn.strdisplaywidth(suffix)
-      local targetWidth = width - sufWidth
-      local curWidth = 0
-      for _, chunk in ipairs(virtText) do
-        local chunkText = chunk[1]
-        local chunkWidth = vim.fn.strdisplaywidth(chunkText)
-        if targetWidth > curWidth + chunkWidth then
-          table.insert(newVirtText, chunk)
-        else
-          chunkText = truncate(chunkText, targetWidth - curWidth)
-          local hlGroup = chunk[2]
-          table.insert(newVirtText, { chunkText, hlGroup })
-          chunkWidth = vim.fn.strdisplaywidth(chunkText)
-          -- str width returned from truncate() may less than 2rd argument, need padding
-          if curWidth + chunkWidth < targetWidth then
-            suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
-          end
-          break
-        end
-        curWidth = curWidth + chunkWidth
-      end
-      table.insert(newVirtText, { suffix, "FoldMoreMsg" })
-      return newVirtText
-    end
-
-    require("ufo").setup({
-      fold_virt_text_handler = handler,
-    })
-
-    -- map("n", "[z", require("ufo.action").goPreviousClosedFold)
-    -- map("n", "]z", require("ufo.action").goNextClosedFold)
-  end)
+  --   conf("ufo", function()
+  --     local ufo = require("ufo")
+  --     local hl = require("mega.utils.highlights")
+  --
+  --     local function handler(virt_text, lnum, end_lnum, width, truncate)
+  --       local result = {}
+  --       local _end = end_lnum - 1
+  --       local final_text = vim.trim(api.nvim_buf_get_text(0, _end, 0, _end, -1, {})[1])
+  --       local suffix = final_text:format(end_lnum - lnum)
+  --       local suffix_width = fn.strdisplaywidth(suffix)
+  --       local target_width = width - suffix_width
+  --       local cur_width = 0
+  --       for _, chunk in ipairs(virt_text) do
+  --         local chunk_text = chunk[1]
+  --         local chunk_width = fn.strdisplaywidth(chunk_text)
+  --         if target_width > cur_width + chunk_width then
+  --           table.insert(result, chunk)
+  --         else
+  --           chunk_text = truncate(chunk_text, target_width - cur_width)
+  --           local hl_group = chunk[2]
+  --           table.insert(result, { chunk_text, hl_group })
+  --           chunk_width = fn.strdisplaywidth(chunk_text)
+  --           -- str width returned from truncate() may less than 2nd argument, need padding
+  --           if cur_width + chunk_width < target_width then
+  --             suffix = suffix .. (" "):rep(target_width - cur_width - chunk_width)
+  --           end
+  --           break
+  --         end
+  --         cur_width = cur_width + chunk_width
+  --       end
+  --       table.insert(result, { " ⋯ ", "NonText" })
+  --       table.insert(result, { suffix, "TSPunctBracket" })
+  --       return result
+  --     end
+  --
+  --     vim.opt.foldlevelstart = 99
+  --     vim.opt.sessionoptions:append("folds")
+  --
+  --     local bg = hl.alter_color(hl.get("Normal", "bg"), -7)
+  --     hl.plugin("ufo", { Folded = { bold = false, italic = false, bg = bg } })
+  --
+  --     local ft_map = {}
+  --     ufo.setup({
+  --       open_fold_hl_timeout = 0,
+  --       fold_virt_text_handler = handler,
+  --       provider_selector = function(_, filetype)
+  --         return ft_map[filetype] or { "treesitter", "indent" }
+  --       end,
+  --     })
+  --     mega.nnoremap("zR", ufo.openAllFolds, "open all folds")
+  --     mega.nnoremap("zM", ufo.closeAllFolds, "close all folds")
+  --     -- local handler = function(virtText, lnum, endLnum, width, truncate)
+  --     --   local newVirtText = {}
+  --     --   local suffix = (" %s  %d "):format(mega.icons.misc.ellipsis, endLnum - lnum)
+  --     --   local sufWidth = vim.fn.strdisplaywidth(suffix)
+  --     --   local targetWidth = width - sufWidth
+  --     --   local curWidth = 0
+  --     --   for _, chunk in ipairs(virtText) do
+  --     --     local chunkText = chunk[1]
+  --     --     local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+  --     --     if targetWidth > curWidth + chunkWidth then
+  --     --       table.insert(newVirtText, chunk)
+  --     --     else
+  --     --       chunkText = truncate(chunkText, targetWidth - curWidth)
+  --     --       local hlGroup = chunk[2]
+  --     --       table.insert(newVirtText, { chunkText, hlGroup })
+  --     --       chunkWidth = vim.fn.strdisplaywidth(chunkText)
+  --     --       -- str width returned from truncate() may less than 2rd argument, need padding
+  --     --       if curWidth + chunkWidth < targetWidth then
+  --     --         suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+  --     --       end
+  --     --       break
+  --     --     end
+  --     --     curWidth = curWidth + chunkWidth
+  --     --   end
+  --     --   table.insert(newVirtText, { suffix, "FoldMoreMsg" })
+  --     --   return newVirtText
+  --     -- end
+  --
+  --     -- require("ufo").setup({
+  --     --   fold_virt_text_handler = handler,
+  --     -- })
+  --
+  --     -- map("n", "[z", require("ufo.action").goPreviousClosedFold)
+  --     -- map("n", "]z", require("ufo.action").goNextClosedFold)
+  --   end)
 
   -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
   conf("gitlinker", {})

@@ -3,8 +3,8 @@ return function()
 
   local fn = vim.fn
   local actions = require("telescope.actions")
+  local lga_actions = require("telescope-live-grep-args.actions")
   local themes = require("telescope.themes")
-  local layout_actions = require("telescope.actions.layout")
 
   mega.augroup("TelescopePreviews", {
     {
@@ -67,7 +67,7 @@ return function()
           ["<c-f>"] = actions.preview_scrolling_down,
           ["<c-u>"] = actions.preview_scrolling_up,
           ["<c-d>"] = actions.preview_scrolling_down,
-          ["<c-e>"] = layout_actions.toggle_preview,
+          -- ["<c-e>"] = layout_actions.toggle_preview,
           ["<c-/>"] = actions.which_key,
           ["<Tab>"] = actions.toggle_selection,
         },
@@ -146,6 +146,17 @@ return function()
       -- },
       media_files = {
         find_cmd = "rg",
+      },
+      live_grep_args = {
+        auto_quoting = true, -- enable/disable auto-quoting
+        mappings = {
+          i = {
+            ["<C-k>"] = lga_actions.quote_prompt(),
+            ["<C-l>g"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+            ["<C-l>t"] = lga_actions.quote_prompt({ postfix = " -t" }),
+            ["<C-l>n"] = lga_actions.quote_prompt({ postfix = " --no-ignore " }),
+          },
+        },
       },
       fzf = {
         fuzzy = true, -- false will only do exact matching
@@ -336,8 +347,8 @@ return function()
   nmap("<leader>ff", project_files, "find/git files")
 
   nmap("<leader>fgc", delta_git_commits, "commits")
-  nmap("<leader>fgb", delta_git_bcommits, "buffer commits")
-  nmap("<leader>fgB", builtin.git_branches, "branches")
+  nmap("<leader>fgC", delta_git_bcommits, "buffer commits")
+  nmap("<leader>fgb", builtin.git_branches, "branches")
 
   nmap("<leader>fM", builtin.man_pages, "man pages")
   nmap("<leader>fm", builtin.man_pages, "oldfiles (mru)")
@@ -345,8 +356,9 @@ return function()
   nmap("<leader>fP", installed_plugins, "installed plugins")
   nmap("<leader>fo", builtin.buffers, "opened buffers")
   nmap("<leader>fr", builtin.resume, "resume last picker")
-  nmap("<leader>fa", builtin.live_grep, "live grep string")
-  nmap("<leader>fs", builtin.live_grep, "live grep string")
+  -- nmap("<leader>fa", builtin.live_grep, "live grep string")
+  -- nmap("<leader>fs", builtin.live_grep, "live grep string")
+  nmap("<leader>fa", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "live grep args")
 
   nmap("<leader>fvh", builtin.highlights, "highlights")
   nmap("<leader>fva", builtin.autocommands, "autoccommands")
@@ -368,6 +380,8 @@ return function()
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
   require("telescope").load_extension("fzf")
+  require("telescope").load_extension("live_grep_args")
+
   -- require("telescope").load_extension("tmux")
   -- require("telescope").load_extension("media_files")
   -- require("telescope").load_extension("file_browser")

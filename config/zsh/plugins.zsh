@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 #  PLUGIN MANAGEMENT
 #-------------------------------------------------------------------------------
-PLUGIN_DIR="$DOTFILES/config/zsh/plugins"
+PLUGIN_DIR="$DOTS/config/zsh/plugins"
 
 function zsh_add_file() {
   [ -f "$ZDOTDIR/$1" ] && source "$ZDOTDIR/$1"
@@ -19,8 +19,8 @@ function zsh_add_plugin() {
     zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh" || \
     zsh_add_file "plugins/$PLUGIN_NAME/$2.zsh"
   else
-    popd $DOTFILES
+    pushd $DOTS
     git submodule add "https://github.com/$1.git" "$PLUGIN_DIR/$PLUGIN_NAME"
-    pushd
+    popd
   fi
 }
