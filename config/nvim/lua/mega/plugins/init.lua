@@ -86,8 +86,6 @@ local PKGS = {
   { "nvim-treesitter/nvim-treesitter-context" },
   "SmiteshP/nvim-gps",
   "lewis6991/spellsitter.nvim",
-  -- @trial "m-demare/hlargs.nvim"
-  -- @trial "ziontee113/syntax-tree-surfer"
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
@@ -98,12 +96,7 @@ local PKGS = {
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "camgraff/telescope-tmux.nvim",
-  "nvim-telescope/telescope-media-files.nvim",
-  "nvim-telescope/telescope-symbols.nvim",
-  "nvim-telescope/telescope-smart-history.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
-  -- @trial "AckslD/nvim-neoclip.lua", -- https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/init.lua#L351-L367
-  -- @trial "nvim-telescope/telescope-file-browser.nvim",
 
   ------------------------------------------------------------------------------
   -- (text objects) --
@@ -131,11 +124,8 @@ local PKGS = {
   "rhysd/git-messenger.vim",
   "tpope/vim-fugitive",
   "lewis6991/gitsigns.nvim",
-  -- @trial "drzel/vim-repo-edit", -- https://github.com/drzel/vim-repo-edit#usage
-  -- @trial "gabebw/vim-github-link-opener",
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
-  -- @trial "ldelossa/gh.nvim"
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --

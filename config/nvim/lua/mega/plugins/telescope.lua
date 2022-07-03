@@ -134,19 +134,6 @@ return function()
       },
     },
     extensions = {
-      -- frecency = {
-      --   workspaces = {
-      --     conf = mega.dirs.dots,
-      --     privates = mega.dirs.privates,
-      --     project = mega.dirs.code,
-      --     notes = mega.dirs.zettel,
-      --     icloud = mega.dirs.icloud,
-      --     docs = mega.dirs.docs,
-      --   },
-      -- },
-      media_files = {
-        find_cmd = "rg",
-      },
       live_grep_args = {
         auto_quoting = true, -- enable/disable auto-quoting
         mappings = {
@@ -381,8 +368,4 @@ return function()
 
   require("telescope").load_extension("fzf")
   require("telescope").load_extension("live_grep_args")
-
-  -- require("telescope").load_extension("tmux")
-  -- require("telescope").load_extension("media_files")
-  -- require("telescope").load_extension("file_browser")
 end
