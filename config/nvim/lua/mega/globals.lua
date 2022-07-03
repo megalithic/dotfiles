@@ -436,6 +436,8 @@ end
 ---@param commands Autocommand[]
 ---@return number
 function mega.augroup(name, commands)
+  assert(name ~= "User", "The name of an augroup CANNOT be User")
+
   local id = vim.api.nvim_create_augroup(name, { clear = true })
 
   for _, autocmd in ipairs(commands) do

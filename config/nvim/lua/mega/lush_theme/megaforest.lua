@@ -829,6 +829,8 @@ return lush(function()
     NeoTreeNormalNC({ PanelBackground }),
     NeoTreeRootName({ fg = purple, gui = "bold,italic" }),
     NeoTreeFileNameOpened({ bg = fg, fg = fg, gui = "underline,bold" }),
+    NeoTreeCursorLine({ Visual }),
+    NeoTreeStatusLine({ PanelSt }),
 
     ---- :help git-signs.txt -------------------------------------------
 

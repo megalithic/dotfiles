@@ -4,6 +4,16 @@
 # delete symlinks (remove evertyhing after '*' to just search for symlinks): find /home -maxdepth 1 -lname '*' -exec rm {} \;
 # create the target folder and move the source to the new destination: mkdir -p ~/.dotfiles/git/bak && mv git* "$_"
 
+# Useful
+alias cp="${aliases[cp]:-cp} -iv"
+alias ln="${aliases[ln]:-ln} -iv"
+alias mv="${aliases[mv]:-mv} -iv"
+alias rm="${aliases[rm]:-rm} -i"
+alias mkdir="${aliases[mkdir]:-mkdir} -p"
+alias sudo="sudo "
+alias type='type -a'
+alias which='which -a'
+
 # Auto-correction exceptions
 # -----------------------------------------------------------------------------
 alias man='nocorrect man'

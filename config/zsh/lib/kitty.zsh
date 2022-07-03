@@ -6,3 +6,10 @@ if [[ -n $KITTY_INSTALLATION_DIR ]]; then
   kitty-integration
   unfunction kitty-integration
 fi
+
+if [[ ! -z "${KITTY_WINDOW_ID}" ]]; then
+  kitty + complete setup zsh | source /dev/stdin
+fi
+
+export KITTY_LISTEN_ON="unix:/tmp/kitty"
+

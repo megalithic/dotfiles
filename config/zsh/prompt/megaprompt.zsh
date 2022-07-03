@@ -49,6 +49,8 @@ deskfile_icon=""         # alts:    ◲  🚀
 background_job_icon=""   # alts: ✦
 root_icon=""
 
+# -- assorted icons:
+# ("λ" "ϟ" "▲" "∴" "→" "»" "৸" "◗")
 
 
 # -- VI-MODE -------------------------------------------------------------------
@@ -349,8 +351,8 @@ function __prompt_eval() {
 export PROMPT='$(__prompt_eval)'
 # Right prompt
 export RPROMPT='%F{yellow}%{$__DOTS[ITALIC_ON]%}${cmd_exec_time}%{$__DOTS[ITALIC_OFF]%}%f %F{240}%*%f'
-# Correction prompt
-export SPROMPT="correct %F{red}'%R'%f to %F{red}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]? "
+# Spell checking & auto correction prompt
+export SPROMPT="zsh: correct %F{red}'%R'%f to %F{blue}'%r'%f [%B%Uy%u%bes, %B%Un%u%bo, %B%Ue%u%bdit, %B%Ua%u%bbort]?"
 
 # -- EXECUTION TIME ------------------------------------------------------------
 # inspired by https://github.com/sindresorhus/pure/blob/81dd496eb380aa051494f93fd99322ec796ec4c2/pure.zsh#L47

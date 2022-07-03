@@ -36,3 +36,6 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 
 # https://github.com/xPMo/zsh-ls-colors#customizing-colors-with-styles
 zstyle -e '*' list-colors 'reply=(${(s[:])LS_COLORS})'
+
+export LS_COLORS="$(vivid generate nord)"
+

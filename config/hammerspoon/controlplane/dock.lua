@@ -20,7 +20,7 @@ M.set_karabiner_profile = function(state)
 end
 
 M.set_kitty_config = function(state)
-  hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. state, true)
+  hs.execute("kitty @ --to unix:/tmp/kitty set-font-size " .. state, true)
 
   log.f("toggling kitty font-size -> %s", state)
 end
