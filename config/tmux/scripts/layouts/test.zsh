@@ -26,7 +26,8 @@ tmux -2 new-window -c $DOTS -t test:2 -n code
 tmux -2 send-keys -t test:1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exit C-m
 
 # Window "code"
-tmux -2 send-keys -t test:2.1 et\ -c\ \""cd ~/.dotfiles && ls; exec \$SHELL"\"\ seth-dev C-m
+# tmux -2 send-keys -t test:2.1 et\ -c\ \""cd ~/.dotfiles && ls; exec \$SHELL"\"\ seth-dev C-m
+tmux -2 send-keys -t test:2.1 et\ -c\ \""cd ~/code/atlas && ls && desk go; exec /usr/bin/zsh"\"\ seth-dev C-m
 
 tmux -2 select-layout -t test:2 tiled
 
