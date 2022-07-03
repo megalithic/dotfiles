@@ -1,3 +1,5 @@
 .gitattributes !filter !diff !merge
-# config/weechat/*.conf filter=crypt diff=crypt merge=crypt
-
+config/weechat/bitlbee.irc.conf filter=crypt diff=crypt merge=crypt
+config/weechat/weechat.conf filter=crypt diff=crypt merge=crypt
+config/weechat/irc.conf filter=crypt diff=crypt merge=crypt
+config/weechat/plugins.conf filter=crypt diff=crypt merge=crypt
