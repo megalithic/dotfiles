@@ -6,7 +6,6 @@ localrc
 **/*.log
 **/logs
 **/*.weechatlog
-**/sec.conf
 config/karabiner/automatic_backups/*
 **/*.zwc
 **/.zcomp*
