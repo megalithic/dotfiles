@@ -192,6 +192,7 @@ local PKGS = {
   -- @trial https://github.com/jubnzv/mdeval.nvim
   { "mickael-menu/zk-nvim" },
   -- "renerocksai/telekasten.nvim",
+  "elixir-editors/vim-elixir",
   "tpope/vim-rails",
   "ngscheurich/edeex.nvim",
   "antew/vim-elm-analyse",

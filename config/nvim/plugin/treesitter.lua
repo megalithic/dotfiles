@@ -16,7 +16,7 @@ mega.treesitter = mega.treesitter or {
 -- When visiting a file with a type we don't have a parser for, ask me if I want to install it.
 function mega.treesitter.ensure_parser_installed()
   local WAIT_TIME = 6000
-  local ignored_langs = {}
+  local ignored_langs = { "elixir", "heex" }
   local parsers = require("nvim-treesitter.parsers")
   local lang = parsers.get_buf_lang()
   local fmt = string.format
@@ -58,14 +58,14 @@ require("nvim-treesitter.configs").setup({
     "devicetree",
     "dockerfile",
     "eex",
-    "elixir",
+    -- "elixir",
     "elm",
     "erlang",
     "fish",
     "go",
     "graphql",
     "html",
-    "heex",
+    -- "heex",
     "help",
     "javascript",
     "markdown",
@@ -98,7 +98,7 @@ require("nvim-treesitter.configs").setup({
     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
     -- Using this option may slow down your editor, and you may see some duplicate highlights.
     -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = {},
+    additional_vim_regex_highlighting = { "elixir", "heex" },
     use_languagetree = true,
   },
   indent = { enable = true },
