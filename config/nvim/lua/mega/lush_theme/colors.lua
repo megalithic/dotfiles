@@ -3,6 +3,7 @@ local hsluv = lush.hsluv
 
 local C = { lsp = {} }
 
+local bg_thicc = "#273433"
 local bg_hard = "#2b3339"
 local bg_medium = "#2b3339"
 local bg_soft = "#323d43"
