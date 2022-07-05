@@ -118,6 +118,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (GIT, vcs, et al) --
   -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
+  "TimUntersberger/neogit",
   "mattn/webapi-vim",
   "akinsho/git-conflict.nvim",
   "itchyny/vim-gitbranch",
@@ -308,7 +309,7 @@ function M.config()
   vim.cmd("packadd cfilter")
 
   -- conf("whichkey", { config = "whichkey" })
-  -- conf("hydra", { config = "hydra" })
+  conf("hydra", { config = "hydra" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })
@@ -324,11 +325,45 @@ function M.config()
   conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
-  conf("startuptime", {
-    function()
-      vim.g.startuptime_tries = 15
-    end,
-  })
+  conf("startuptime", function()
+    vim.g.startuptime_tries = 15
+  end)
+
+  conf("neogit", function()
+    local neogit = require("neogit")
+    neogit.setup({
+      disable_signs = false,
+      disable_hint = true,
+      disable_commit_confirmation = true,
+      disable_builtin_notifications = true,
+      disable_insert_on_commit = false,
+      signs = {
+        section = { "", "" }, -- "", ""
+        item = { "▸", "▾" },
+        hunk = { "樂", "" },
+      },
+      integrations = {
+        diffview = true,
+      },
+    })
+    mega.nnoremap("<localleader>gs", function()
+      neogit.open()
+    end)
+    mega.nnoremap("<localleader>gc", function()
+      neogit.open({ "commit" })
+    end)
+    mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
+    mega.nnoremap("<localleader>gp", neogit.popups.push.create)
+
+    require("which-key").register({
+      ["<localleader>g"] = {
+        s = "neogit: open status buffer",
+        c = "neogit: open commit buffer",
+        l = "neogit: open pull popup",
+        p = "neogit: open push popup",
+      },
+    })
+  end)
 
   conf("fold-cycle", {})
 

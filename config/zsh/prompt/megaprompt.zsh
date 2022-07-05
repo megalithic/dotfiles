@@ -328,8 +328,8 @@ function _prompt_path() {
 }
 
 function _prompt_deskfile_loaded() {
-  # (command desk -v &>/dev/null && (desk | grep -q 'No desk activated.' && echo '' || echo "%F{243}[%f%F{magenta}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f ")) || echo ''
-  [[ -n $DESK_NAME ]] && echo "%F{243}[%f%F{#ffffff}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
+  [[ $+commands[desk] && -f "./Deskfile" ]] && eval $(desk load)
+  [[ $+commands[desk] && -f "./Deskfile" && -n $DESK_NAME ]] && echo "%F{243}[%f%F{#ffffff}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
 }
 
 function _prompt_sudo() {

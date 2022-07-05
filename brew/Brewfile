@@ -242,7 +242,6 @@ cask "dropbox"
 # cask "expressvpn"
 cask "figma"
 # cask "forklift" # replaced with marta for now
-cask "git-credential-manager-core"
 cask "hazel"
 cask "hammerspoon", greedy: true
 cask "intel-power-gadget" # requires restart with security allow (intel things)

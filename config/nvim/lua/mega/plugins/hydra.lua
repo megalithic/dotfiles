@@ -1,5 +1,6 @@
 return function()
   local Hydra = require("hydra")
+
   local border = mega.get_border()
 
   Hydra({
@@ -10,12 +11,8 @@ return function()
     config = {
       invoke_on_body = true,
       hint = { border = border },
-      on_enter = function()
-        vim.cmd("BeaconOff")
-      end,
-      on_exit = function()
-        vim.cmd("BeaconOn")
-      end,
+      on_enter = function() end,
+      on_exit = function() end,
     },
     heads = {
       { "j", "zj", { desc = "next fold" } },
@@ -34,12 +31,8 @@ return function()
     config = {
       hint = { border = border },
       invoke_on_body = true,
-      on_enter = function()
-        vim.cmd("BeaconOff")
-      end,
-      on_exit = function()
-        vim.cmd("BeaconOn")
-      end,
+      on_enter = function() end,
+      on_exit = function() end,
     },
     heads = {
       { "l", "<Cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" } },
@@ -64,30 +57,30 @@ return function()
     },
   })
 
-  Hydra({
-    name = "Window management",
-    config = {
-      hint = {
-        border = border,
-      },
-    },
-    mode = "n",
-    body = "<C-w>",
-    heads = {
-      -- Split
-      { "s", "<C-w>s", { desc = "split horizontally" } },
-      { "v", "<C-w>v", { desc = "split vertically" } },
-      { "q", "<Cmd>Bwipeout<CR>", { desc = "close window" } },
-      -- Size
-      { "j", "2<C-w>+", { desc = "increase height" } },
-      { "k", "2<C-w>-", { desc = "decrease height" } },
-      { "h", "5<C-w>>", { desc = "increase width" } },
-      { "l", "5<C-w><", { desc = "decrease width" } },
-      { "=", "<C-w>=", { desc = "equalize" } },
-      --
-      { "<Esc>", nil, { exit = true } },
-    },
-  })
+  -- Hydra({
+  --   name = "Window management",
+  --   config = {
+  --     hint = {
+  --       border = border,
+  --     },
+  --   },
+  --   mode = "n",
+  --   body = "<C-w>",
+  --   heads = {
+  --     -- Split
+  --     { "s", "<C-w>s", { desc = "split horizontally" } },
+  --     { "v", "<C-w>v", { desc = "split vertically" } },
+  --     { "q", "<Cmd>Bwipeout<CR>", { desc = "close window" } },
+  --     -- Size
+  --     { "j", "2<C-w>+", { desc = "increase height" } },
+  --     { "k", "2<C-w>-", { desc = "decrease height" } },
+  --     { "h", "5<C-w>>", { desc = "increase width" } },
+  --     { "l", "5<C-w><", { desc = "decrease width" } },
+  --     { "=", "<C-w>=", { desc = "equalize" } },
+  --     --
+  --     { "<Esc>", nil, { exit = true } },
+  --   },
+  -- })
 
   local ok, gitsigns = pcall(require, "gitsigns")
   if ok then
