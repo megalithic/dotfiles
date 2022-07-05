@@ -16,7 +16,7 @@ mega.treesitter = mega.treesitter or {
 -- When visiting a file with a type we don't have a parser for, ask me if I want to install it.
 function mega.treesitter.ensure_parser_installed()
   local WAIT_TIME = 6000
-  local ignored_langs = { "elixir", "heex" }
+  local ignored_langs = { "elixir" }
   local parsers = require("nvim-treesitter.parsers")
   local lang = parsers.get_buf_lang()
   local fmt = string.format
@@ -65,7 +65,7 @@ require("nvim-treesitter.configs").setup({
     "go",
     "graphql",
     "html",
-    -- "heex",
+    "heex",
     "help",
     "javascript",
     "markdown",
@@ -281,17 +281,15 @@ require("nvim-treesitter.configs").setup({
   },
 })
 mega.conf("nvim-ts-autotag", {
-  config = {
-    filetypes = {
-      "html",
-      "xml",
-      "javascript",
-      "typescriptreact",
-      "javascriptreact",
-      "vue",
-      "elixir",
-      "heex",
-    },
+  filetypes = {
+    "html",
+    "xml",
+    "javascript",
+    "typescriptreact",
+    "javascriptreact",
+    "vue",
+    "elixir",
+    "heex",
   },
 })
 
@@ -299,9 +297,8 @@ mega.conf("nvim-ts-autotag", {
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
 
 mega.conf("treesitter-context", {
-  config = {
-    multiline_threshold = 4,
-    separator = { "▁", "TreesitterContextBorder" }, -- ─▁
-    mode = "topline",
-  },
+  enable = false,
+  multiline_threshold = 4,
+  separator = { "▁", "TreesitterContextBorder" }, -- ─▁
+  mode = "topline",
 })
