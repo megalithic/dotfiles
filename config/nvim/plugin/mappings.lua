@@ -385,8 +385,21 @@ nnoremap <silent><leader>W :write !sudo -S tee > /dev/null %<CR>
 cmap w!! w !sudo tee > /dev/null %
 nnoremap <leader>q :q<CR>
 
-vnoremap <C-r> "hy:%Subvert/<C-r>h//gc<left><left><left>
 ]])
+
+-- map <leader>s <cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("Replace \"" .. expand("<cword>") .. "\" by? ") .. "/g"<cr>
+
+-- nnoremap(
+--   "<C-r>",
+--   [[<cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("replace \"" .. expand("<cword>") .. "\" with -> ") .. "/g"<cr>]],
+--   "replace "
+-- )
+-- vnoremap(
+--   "<C-r>",
+--   [[<cmd>exe "%s/\\v\<" .. expand("<cword>") .. ">/" .. input("replace \"" .. expand("<cword>") .. "\" with -> ") .. "/g"<cr>]],
+--   "replace "
+-- )
+vmap("<C-r>", [["hy:%Subvert/<C-r>h//gc<left><left><left>]])
 
 -- Clear UI state via escape:
 -- - Clear search highlight
