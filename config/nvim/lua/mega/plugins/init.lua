@@ -33,6 +33,7 @@ local PKGS = {
   "jghauser/fold-cycle.nvim",
   "anuvyklack/keymap-layer.nvim",
   "anuvyklack/hydra.nvim",
+  "akinsho/bufferline.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -300,7 +301,7 @@ function M.bootstrap()
   end
 end
 
--- [ plugin config ] -----------------------------------------------------------
+-- [ plugin configs ] -----------------------------------------------------------
 
 function M.config()
   if pcall(require, "paq") then
@@ -310,6 +311,7 @@ function M.config()
   vim.cmd("packadd cfilter")
 
   -- conf("whichkey", { config = "whichkey" })
+  -- conf("bufferline", { config = "bufferline" })
   conf("hydra", { config = "hydra" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })

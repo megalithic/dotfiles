@@ -64,6 +64,7 @@ return function()
   --       border = border,
   --     },
   --   },
+  --   invoke_on_body = true,
   --   mode = "n",
   --   body = "<C-w>",
   --   heads = {
