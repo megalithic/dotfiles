@@ -328,7 +328,7 @@ function _prompt_path() {
 }
 
 function _prompt_deskfile_loaded() {
-  [[ $+commands[desk] && -f "./Deskfile" ]] && eval $(desk load)
+  # [[ $+commands[desk] && -f "./Deskfile" ]] && eval $(desk load)
   [[ $+commands[desk] && -f "./Deskfile" && -n $DESK_NAME ]] && echo "%F{243}[%f%F{#ffffff}$deskfile_icon%f %F{245}$DESK_NAME%f%F{243}]%f"
 }
 

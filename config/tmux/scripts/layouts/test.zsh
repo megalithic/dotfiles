@@ -27,7 +27,10 @@ tmux -2 send-keys -t test:1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exit
 
 # Window "code"
 # tmux -2 send-keys -t test:2.1 et\ -c\ \""cd ~/.dotfiles && ls; exec \$SHELL"\"\ seth-dev C-m
-tmux -2 send-keys -t test:2.1 et\ -c\ \""cd ~/code/atlas && ls && source \$ZDOTDIR/.zshrc; exec /usr/bin/zsh"\"\ seth-dev C-m
+# tmux -2 send-keys -t test:2.1 et\ -c\ \""cd ~/code/atlas && ls && source \$ZDOTDIR/.zshrc; exec /usr/bin/zsh"\"\ seth-dev C-m
+tmux -2 send-keys -t test:2 ssh\ seth-dev C-m
+tmux -2 send-keys -t test:2 cd\ \~/.dotfiles C-m
+tmux -2 send-keys -t test:2 ls C-m
 
 tmux -2 select-layout -t test:2 tiled
 
