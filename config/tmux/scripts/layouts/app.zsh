@@ -21,7 +21,7 @@ tmux -2 new-window -c $CODE/outstand -t app:3 -n services
 tmux -2 send-keys -t app:1 tmux\ link-window\ -s\ mega:chats\ -t\ 0\ \&\&\ exit C-m
 
 # Window "code"
-tmux -2 send-keys -t app:2.1 et\ -c\ \""cd ~/code/app && ls; exec /usr/bin/zsh"\"\ seth-dev C-m
+tmux -2 send-keys -t app:2.1 et\ -c\ \""cd ~/code/app && ls && source ~/.config/zsh/.zshrc; exec /usr/bin/zsh"\"\ seth-dev C-m
 
 tmux -2 select-layout -t app:2 tiled
 
@@ -29,12 +29,12 @@ tmux -2 select-layout -t app:2 main-vertical
 tmux -2 select-pane -t app:2.1
 
 # Window "services"
-tmux -2 send-keys -t app:3.1 et\ -c\ \""cd ~/code/app && ls && dev down --remove-orphans; dev up -d && dev logs -f; exec /usr/bin/zsh"\"\ seth-dev C-m
+tmux -2 send-keys -t app:3.1 et\ -c\ \""cd ~/code/app && ls && source ~/.config/zsh/.zshrc && dev down --remove-orphans; dev up -d && dev logs -f; exec /usr/bin/zsh"\"\ seth-dev C-m
 
 tmux -2 splitw -c $CODE/outstand -t app:3
 tmux -2 select-layout -t app:3 tiled
 
-tmux -2 send-keys -t app:3.2 et\ -c\ \""cd ~/code/app && ls; exec /usr/bin/zsh"\"\ seth-dev C-m
+tmux -2 send-keys -t app:3.2 et\ -c\ \""cd ~/code/app && ls && source ~/.config/zsh/.zshrc; exec /usr/bin/zsh"\"\ seth-dev C-m
 
 tmux -2 select-layout -t app:3 tiled
 
