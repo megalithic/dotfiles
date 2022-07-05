@@ -269,7 +269,7 @@ function mega.conf(plugin_conf_name, opts)
       end
 
       -- does it have a setup key to execute?
-      if vim.fn.has_key(loader, "setup") then
+      if vim.tbl_get(loader, "setup") ~= nil then
         if not silent then
           P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
         end
