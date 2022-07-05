@@ -394,7 +394,7 @@ augroup("GitConflicts", {
       vim.notify("Conflicts detected.")
       vim.diagnostic.disable(0)
       vim.cmd("LspStop")
-      vim.cmd("GitConflictListQf")
+      -- vim.cmd("GitConflictListQf")
 
       require("which-key").register({
         c = {
