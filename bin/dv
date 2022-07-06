@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename "${__file}" .sh)"
+
+function __help() {
+  printf -- "Usage: %s [options] [command]\n" "$__base"
+  printf -- "\n"
+  printf -- "   Commands:\n"
+  printf -- "     up              runs dev down, up and logs\n"
+  printf -- "     down            runs dev down\n"
+  printf -- "     logs            runs dev logs\n"
+  printf -- "     desk            runs desk load\n"
+  printf -- "\n"
+  printf -- "     no argument runs all of the above\n"
+  printf -- "\n"
+  printf -- "   Options:\n"
+  printf -- "     -h              This help text you're presently reading. 😄\n"
+}
+
+while getopts "h" OPTION; do
+  case $OPTION in
+
+    h)
+      __help
+      exit 0
+      ;;
+
+    \?)
+      echo "Invalid Option: -$OPTARG" 1>&2
+      __help
+      exit 1
+      ;;
+
+  esac
+done
+shift $((OPTIND - 1))
+
+if [[ "$(uname)" != "Linux" ]]; then
+  echo "Linux is required."
+  exit 1
+fi
+
+if ! type "dev" &>/dev/null; then
+  echo "dev is a required executable."
+  exit 1
+fi
+
+if ! type "desk" &>/dev/null; then
+  echo "desk is a required executable."
+  exit 1
+fi
+
+PARAM="${1:-}"
+
+# if we pass in a status, use it directly
+if [[ $PARAM == "up" ]]; then
+  dev down --remove-orphans
+  dev up -d && dev logs -f
+elif [[ $PARAM == "down" ]]; then
+  dev down --remove-orphans
+elif [[ $PARAM == "desk" ]]; then
+  eval "$(desk load)"
+elif [[ $PARAM == "logs" ]]; then
+  dev logs -f
+else
+  desk load | eval
+  dev down --remove-orphans
+  dev up -d && dev logs -f
+fi
