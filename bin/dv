@@ -68,7 +68,7 @@ elif [[ $PARAM == "desk" ]]; then
 elif [[ $PARAM == "logs" ]]; then
   dev logs -f
 else
-  eval $(desk load)
+  # eval $(desk load)
   dev down --remove-orphans
   dev up -d
   dev logs -f
