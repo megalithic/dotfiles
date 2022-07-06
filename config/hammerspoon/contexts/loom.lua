@@ -20,6 +20,9 @@ M.apply = function(app, _win, event, log)
       hs.timer.waitUntil(function()
         return loom:getWindow("Loom Camera")
       end, function()
+        -- launch keycastr
+        hs.application.launchOrFocus("KeyCastr")
+
         -- handle DND toggling
         wh.dndHandler(app, { enabled = true, mode = "zoom" }, event)
 
@@ -31,9 +34,6 @@ M.apply = function(app, _win, event, log)
 
         -- increase font-size of kitty instance
         require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) + font_size_factor)
-
-        -- launch keycastr
-        hs.application.launchOrFocus("KeyCastr")
       end)
     end
 

@@ -126,6 +126,10 @@
       force: true
       path: config/surfingkeys
       if: "[ `uname` = Darwin ]"
+    ~/.config/svim:
+      force: true
+      path: config/svim
+      if: "[ `uname` = Darwin ]"
     ~/.config/tmux:
       force: true
       path: config/tmux

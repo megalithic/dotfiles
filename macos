@@ -572,6 +572,9 @@ done
 # Set brave as default browser!
 defaults write "com.brave.Browser" ExternalProtocolDialogShowAlwaysOpenCheckbox -bool true
 
+# Set sketchyvim's visual highlight to green (https://github.com/FelixKratz/SketchyVim#installation)
+defaults write NSGlobalDomain AppleHighlightColor -string "0.615686 0.823529 0.454902"
+
 log_ok "DONE please note that some of these changes require a full logout/restart to take effect."
 
 # TODO:

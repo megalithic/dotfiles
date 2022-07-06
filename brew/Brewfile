@@ -23,6 +23,7 @@ tap "federico-terzi/espanso" if OS.mac? # legacy version (pre 2.x)
 # tap "espanso/espanso" if OS.mac?
 tap "mhanberg/zk" if OS.mac?
 tap "wez/wezterm" if OS.mac?
+tap "FelixKratz/formulae" if OS.mac? # sketchyvim
 
 # -- for qmk_toolbox --
 # brew tap osx-cross/avr;
@@ -165,6 +166,7 @@ brew "ssh-copy-id"
 brew "stack"
 # brew "starship"
 brew "stow"
+brew "svim", restart_service: true if OS.mac? # sketchvim
 brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"

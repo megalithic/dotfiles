@@ -1,5 +1,10 @@
 # Reference
 
+## MacOS apps
+
+- https://github.com/FelixKratz/SketchyVim
+- https://github.com/FelixKratz/SketchyBar
+
 ## GPG/Yubikey
 
 - https://hackernoon.com/things-you-must-know-about-git-crypt-to-successfully-protect-your-secret-data-kyi3wi6
