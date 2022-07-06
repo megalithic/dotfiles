@@ -35,7 +35,6 @@ local M = {
     "TelescopePrompt",
     "fzf",
     "NvimTree",
-    "markdown",
     "dashboard",
     "qf",
   },

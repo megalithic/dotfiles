@@ -87,11 +87,11 @@ vim.cmd([[packadd! markdown-preview.nvim]])
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 
-vim.opt_local.signcolumn = "no"
-vim.opt_local.cursorline = true
-
 -- ## used with my zk popups in tmux
 if vim.env.TMUX_POPUP then
+  vim.opt_local.signcolumn = "no"
+  vim.opt_local.cursorline = true
+
   vim.opt.laststatus = 1
   vim.opt.cmdheight = 0
   vim.api.nvim_win_set_option(

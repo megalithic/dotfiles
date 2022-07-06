@@ -288,7 +288,7 @@ M.apps = {
   ["com.apple.finder"] = {
     bundleID = "com.apple.finder",
     name = "Finder",
-    -- hyper_key = "f",
+    hyper_key = "f",
     rules = {
       { "Finder", 1, M.layout.centeredMedium },
     },
@@ -304,7 +304,7 @@ M.apps = {
   ["org.yanex.marta"] = {
     bundleID = "org.yanex.marta",
     name = "Marta",
-    hyper_key = "f",
+    -- hyper_key = "f",
     rules = {
       { nil, 1, M.layout.centeredMedium },
     },

@@ -4,6 +4,8 @@
 
 - https://github.com/FelixKratz/SketchyVim
 - https://github.com/FelixKratz/SketchyBar
+- https://github.com/dexterleng/vimac
+- https://www.trankynam.com/xtrafinder/
 
 ## GPG/Yubikey
 

@@ -71,8 +71,12 @@ A few of the _must-have_ tools I roll with:
 - `megaforest` for all the colours/themes
 - [jetbrains mono](https://www.jetbrains.com/lp/mono/) font ([nerd-fonts](https://github.com/ryanoasis/nerd-fonts#font-patcher) patched)
 - [hammerspoon](https://github.com/megalithic/dotfiles/tree/master/hammerspoon)
-- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([atreus62 qmk](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic)/[leeloo zmk](https://github.com/megalithic/zmk-config))
+- [karabiner-elements](https://github.com/tekezo/Karabiner-Elements) ([leeloo zmk](https://github.com/megalithic/zmk-config)/[atreus62 qmk](https://github.com/megalithic/qmk_firmware/tree/master/keyboards/atreus62/keymaps/megalithic))
 - [gpg/yubikey/encryption](https://github.com/drduh/YubiKey-Guide)
+- additional `vim`-binding controls:
+  - [surfingkeys](https://github.com/brookhong/Surfingkeys)
+  - [vimac](https://vimacapp.com)
+  - [sketchyvim](https://github.com/FelixKratz/SketchyVim)
 
 <p align="center" style="margin-top: 20px;">
   <a href="https://megalithic.io" target="_blank"><img src="megadotfiles.png" alt="megadotfiles" height="150px"/></a>

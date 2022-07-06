@@ -15,7 +15,6 @@ vim.g.number_filetype_exclusions = {
   "log",
   "man",
   "dap-repl",
-  "markdown",
   "vimwiki",
   "vim-plug",
   "gitcommit",
