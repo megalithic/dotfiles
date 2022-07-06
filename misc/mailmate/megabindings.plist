@@ -9,6 +9,7 @@
 	"/"	  = "searchAllMessages:";
 	"^/"	= "searchAllMessages:";
 	"^u"	= "undo:";
+	"u"	  = "undo:";
 	"^r"	= "redo:";
 	"^f"	= "scrollPageDown:";
 	"^b"	= "scrollPageUp:";
