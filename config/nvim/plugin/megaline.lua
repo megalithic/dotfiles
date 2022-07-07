@@ -615,6 +615,23 @@ function M.s_mode(args)
   return unpack(item(string.upper(mode), mode_info.hl, { before = " " }))
 end
 
+function M.s_hydra(args)
+  local ok, _ = pcall(require, "hydra")
+
+  if is_truncated(args.trunc_width) then
+    return ""
+  end
+
+  if ok then
+    hydra_statusline = require("hydra.statusline")
+    return unpack(
+      item_if(hydra_statusline.get_name(), hydra_statusline.is_active(), "StMetadata", { before = "", after = " " })
+    )
+  end
+
+  return ""
+end
+
 function M.s_git(args)
   if U.abnormal_buffer() then
     return ""
@@ -848,6 +865,7 @@ function _G.__statusline()
       ),
       -- mode
       M.s_mode({ trunc_width = 120 }),
+      M.s_hydra({ trunc_width = 75 }),
       "%<", -- mark general truncate point
       -- filename parts
       M.s_filename({ trunc_width = 120 }),
