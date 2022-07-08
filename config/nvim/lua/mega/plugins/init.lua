@@ -65,14 +65,13 @@ local PKGS = {
   "mhartington/formatter.nvim",
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
+  "abecodes/tabout.nvim",
 
   ------------------------------------------------------------------------------
   -- (treesitter) --
   {
     "nvim-treesitter/nvim-treesitter",
-    run = function()
-      vim.cmd("TSUpdate")
-    end,
+    run = function() vim.cmd("TSUpdate") end,
   },
   { "nvim-treesitter/playground" },
   -- "nvim-treesitter/nvim-treesitter-refactor",
@@ -240,13 +239,9 @@ local function clone_paq()
   end
 end
 
-function M.sync_all()
-  (require("paq"))(PKGS):sync()
-end
+function M.sync_all() (require("paq"))(PKGS):sync() end
 
-function M.list()
-  (require("paq"))(PKGS).list()
-end
+function M.list() (require("paq"))(PKGS).list() end
 
 -- `bin/paq-install` runs this for us in a headless nvim environment
 function M.bootstrap()
@@ -291,13 +286,9 @@ function M.bootstrap()
       fmt("%s/tags", vim.g.local_state_path),
       fmt("%s/undo", vim.g.local_state_path),
     }
-    if not is_dir(vim.g.local_state_path) then
-      os.execute("mkdir -p " .. vim.g.local_state_path)
-    end
+    if not is_dir(vim.g.local_state_path) then os.execute("mkdir -p " .. vim.g.local_state_path) end
     for _, p in pairs(local_state_paths) do
-      if not is_dir(p) then
-        os.execute("mkdir -p " .. p)
-      end
+      if not is_dir(p) then os.execute("mkdir -p " .. p) end
     end
   end
 end
@@ -305,9 +296,7 @@ end
 -- [ plugin configs ] -----------------------------------------------------------
 
 function M.config()
-  if pcall(require, "paq") then
-    vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer")
-  end
+  if pcall(require, "paq") then vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer") end
 
   vim.cmd("packadd cfilter")
 
@@ -329,9 +318,12 @@ function M.config()
   conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
-  conf("startuptime", function()
-    vim.g.startuptime_tries = 15
-  end)
+  conf("startuptime", function() vim.g.startuptime_tries = 15 end)
+
+  conf("tabout", {
+    ignore_beginning = false,
+    completion = false,
+  })
 
   conf("neogit", function()
     local neogit = require("neogit")
@@ -350,12 +342,8 @@ function M.config()
         diffview = true,
       },
     })
-    mega.nnoremap("<localleader>gs", function()
-      neogit.open()
-    end)
-    mega.nnoremap("<localleader>gc", function()
-      neogit.open({ "commit" })
-    end)
+    mega.nnoremap("<localleader>gs", function() neogit.open() end)
+    mega.nnoremap("<localleader>gc", function() neogit.open({ "commit" }) end)
     mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
     mega.nnoremap("<localleader>gp", neogit.popups.push.create)
 
@@ -563,9 +551,7 @@ function M.config()
     }
   end)
 
-  conf("hclipboard", function()
-    require("hclipboard").start()
-  end)
+  conf("hclipboard", function() require("hclipboard").start() end)
 
   conf("FixCursorHold", function()
     -- https://github.com/antoinemadec/FixCursorHold.nvim#configuration
@@ -620,18 +606,14 @@ function M.config()
     local function ignore_by_buftype(types)
       local bt = api.nvim_buf_get_option(api.nvim_get_current_buf(), "buftype")
       for _, type in pairs(types) do
-        if type == bt then
-          return 1
-        end
+        if type == bt then return 1 end
       end
     end
 
     local function ignore_by_filetype(types)
       local ft = api.nvim_buf_get_option(api.nvim_get_current_buf(), "filetype")
       for _, type in pairs(types) do
-        if type == ft then
-          return 1
-        end
+        if type == ft then return 1 end
       end
     end
 
@@ -728,7 +710,7 @@ function M.config()
     })
 
     nnoremap("s", function()
-      p.hint_char2({ multi_windows = false })
+      p.hint_char2({ multi_windows = true })
       vim.cmd("norm zz")
       mega.blink_cursorline()
     end)
@@ -783,9 +765,7 @@ function M.config()
       end
       fugitive_pv_timer = vim.defer_fn(function()
         if not is_loaded then
-          vim.api.nvim_buf_call(bufnr, function()
-            vim.cmd(("do fugitive BufReadCmd %s"):format(bufname))
-          end)
+          vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end)
         end
         require("bqf.preview.handler").open(qwinid, nil, true)
         vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
@@ -864,9 +844,7 @@ function M.config()
     timeout = 500,
   })
 
-  conf("fzf_gitignore", function()
-    vim.g.fzf_gitignore_no_maps = true
-  end)
+  conf("fzf_gitignore", function() vim.g.fzf_gitignore_no_maps = true end)
 
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 

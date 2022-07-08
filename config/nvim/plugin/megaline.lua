@@ -31,15 +31,11 @@ local U = {}
 mega.augroup("megaline", {
   {
     event = { "FocusGained" },
-    command = function()
-      vim.g.vim_in_focus = true
-    end,
+    command = function() vim.g.vim_in_focus = true end,
   },
   {
     event = { "FocusLost" },
-    command = function()
-      vim.g.vim_in_focus = false
-    end,
+    command = function() vim.g.vim_in_focus = false end,
   },
 
   {
@@ -51,18 +47,14 @@ mega.augroup("megaline", {
   },
   {
     event = { "VimResized" },
-    command = function()
-      vim.cmd("redrawstatus")
-    end,
+    command = function() vim.cmd("redrawstatus") end,
   },
   {
     event = { "BufWritePre" },
     command = function()
       if not vim.g.is_saving and vim.bo.modified then
         vim.g.is_saving = true
-        vim.defer_fn(function()
-          vim.g.is_saving = false
-        end, 1000)
+        vim.defer_fn(function() vim.g.is_saving = false end, 1000)
       end
     end,
   },
@@ -110,9 +102,7 @@ end
 -- Utilities ------------------------------------------------------------------
 --
 local function printf(format, current, total)
-  if current == 0 and total == 0 then
-    return ""
-  end
+  if current == 0 and total == 0 then return "" end
   return fn.printf(format, current, total)
 end
 
@@ -219,9 +209,7 @@ local exception_types = {
 }
 
 local function matches(str, list)
-  return #vim.tbl_filter(function(item)
-    return item == str or string.match(str, item)
-  end, list) > 0
+  return #vim.tbl_filter(function(item) return item == str or string.match(str, item) end, list) > 0
 end
 
 --- @param hl string
@@ -250,9 +238,7 @@ end
 local function item(component, hl, opts)
   -- do not allow empty values to be shown note 0 is considered empty
   -- since if there is nothing of something I don't need to see it
-  if not component or component == "" or component == 0 then
-    return spacer()
-  end
+  if not component or component == "" or component == 0 then return spacer() end
   opts = opts or {}
   local before = opts.before or ""
   local after = opts.after or " "
@@ -263,9 +249,7 @@ local function item(component, hl, opts)
   prefix = prefix ~= "" and wrap_hl(prefix_color) .. prefix .. " " or ""
 
   --- handle numeric inputs etc.
-  if type(component) ~= "string" then
-    component = tostring(component)
-  end
+  if type(component) ~= "string" then component = tostring(component) end
 
   if opts.max_size and component and #component >= opts.max_size then
     component = component:sub(1, opts.max_size - 1) .. "…"
@@ -280,9 +264,7 @@ end
 --- @param hl string
 --- @param opts table
 local function item_if(sl_item, condition, hl, opts)
-  if not condition then
-    return spacer()
-  end
+  if not condition then return spacer() end
   return item(sl_item, hl, opts)
 end
 
@@ -312,21 +294,13 @@ end
 ---@return string: String suitable for 'statusline'.
 local function build(groups)
   local t = vim.tbl_map(function(s)
-    if not s then
-      return ""
-    end
+    if not s then return "" end
 
-    if type(s) == "string" then
-      return s
-    end
+    if type(s) == "string" then return s end
 
-    local t = vim.tbl_filter(function(x)
-      return not (x == nil or x == "")
-    end, s.strings)
+    local t = vim.tbl_filter(function(x) return not (x == nil or x == "") end, s.strings)
     -- Return highlight group to allow inheritance from later sections
-    if vim.tbl_count(t) == 0 then
-      return fmt("%%#%s#", s.hl or "")
-    end
+    if vim.tbl_count(t) == 0 then return fmt("%%#%s#", s.hl or "") end
 
     return fmt("%%#%s#%s", s.hl or "", table.concat(t, ""))
   end, groups)
@@ -343,18 +317,10 @@ function U.special_buffers(ctx)
   local is_loc_list = location_list.filewinid > 0
   local normal_term = ctx.buftype == "terminal" and ctx.filetype == ""
 
-  if is_loc_list then
-    return "Location List"
-  end
-  if ctx.buftype == "quickfix" then
-    return "Quickfix List"
-  end
-  if normal_term then
-    return "Terminal(" .. fnamemodify(vim.env.SHELL, ":t") .. ")"
-  end
-  if ctx.preview then
-    return "preview"
-  end
+  if is_loc_list then return "Location List" end
+  if ctx.buftype == "quickfix" then return "Quickfix List" end
+  if normal_term then return "Terminal(" .. fnamemodify(vim.env.SHELL, ":t") .. ")" end
+  if ctx.preview then return "preview" end
 
   return nil
 end
@@ -362,9 +328,7 @@ end
 --- @param ctx table
 --- @param icon string | nil
 function U.modified(ctx, icon)
-  if ctx.filetype == "help" then
-    return ""
-  end
+  if ctx.filetype == "help" then return "" end
   icon = icon or mega.icons.modified
   return ctx.modified and icon
 end
@@ -382,37 +346,25 @@ end
 
 --- @param bufnum number
 --- @param mod string
-function U.buf_expand(bufnum, mod)
-  return expand("#" .. bufnum .. mod)
-end
+function U.buf_expand(bufnum, mod) return expand("#" .. bufnum .. mod) end
 
-function U.empty_opts()
-  return { before = "", after = "" }
-end
+function U.empty_opts() return { before = "", after = "" } end
 
 --- @param ctx table
 --- @param modifier string
 function U.filename(ctx, modifier)
   modifier = modifier or ":t"
   local special_buf = U.special_buffers(ctx)
-  if special_buf then
-    return "", "", special_buf
-  end
+  if special_buf then return "", "", special_buf end
 
   local fname = U.buf_expand(ctx.bufnum, modifier)
 
   local name = exception_types.names[ctx.filetype]
-  if type(name) == "function" then
-    return "", "", name(fname, ctx.bufnum)
-  end
+  if type(name) == "function" then return "", "", name(fname, ctx.bufnum) end
 
-  if name then
-    return "", "", name
-  end
+  if name then return "", "", name end
 
-  if not fname or mega.empty(fname) then
-    return "", "", "No Name"
-  end
+  if not fname or mega.empty(fname) then return "", "", "No Name" end
 
   local path = (ctx.buftype == "" and not ctx.preview) and U.buf_expand(ctx.bufnum, ":~:.:h") or nil
   local is_root = path and #path == 1 -- "~" or "."
@@ -427,17 +379,13 @@ end
 ---@param fg string
 ---@param bg string
 local function create_hl(name, fg, bg)
-  if fg and bg then
-    api.nvim_set_hl(0, name, { foreground = fg, background = bg })
-  end
+  if fg and bg then api.nvim_set_hl(0, name, { foreground = fg, background = bg }) end
 end
 
 --- @param hl string
 --- @param bg_hl string
 function U.highlight_ft_icon(color, hl, bg_hl)
-  if not hl or not bg_hl then
-    return
-  end
+  if not hl or not bg_hl then return end
   local name = hl .. "Statusline"
   -- TODO: find a mechanism to cache this so it isn't repeated constantly
   local fg_color = color -- H.get_hl(hl, "fg")
@@ -447,9 +395,7 @@ function U.highlight_ft_icon(color, hl, bg_hl)
     mega.augroup(name, {
       {
         event = "ColorScheme",
-        command = function()
-          create_hl(name, fg_color, bg_color)
-        end,
+        command = function() create_hl(name, fg_color, bg_color) end,
       },
     })
     create_hl(name, fg_color, bg_color)
@@ -463,14 +409,10 @@ end
 --- @return string, string?
 function U.filetype(ctx, opts)
   local ft_exception = exception_types.filetypes[ctx.filetype]
-  if ft_exception then
-    return ft_exception, opts.default
-  end
+  if ft_exception then return ft_exception, opts.default end
 
   local bt_exception = exception_types.buftypes[ctx.buftype]
-  if bt_exception then
-    return bt_exception, opts.default
-  end
+  if bt_exception then return bt_exception, opts.default end
 
   local icon, icon_hl, icon_color, hl
   local f_name, f_extension = vim.fn.expand("%:t") or ctx.bufname, vim.fn.expand("%:e")
@@ -526,17 +468,11 @@ function U.file(ctx, trunc)
 end
 
 function M.s_search_result()
-  if vim.v.hlsearch == 0 then
-    return ""
-  end
+  if vim.v.hlsearch == 0 then return "" end
   local last_search = fn.getreg("/")
-  if not last_search or last_search == "" then
-    return ""
-  end
+  if not last_search or last_search == "" then return "" end
   local result = fn.searchcount({ maxcount = 9999 })
-  if vim.tbl_isempty(result) then
-    return ""
-  end
+  if vim.tbl_isempty(result) then return "" end
   -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
 
   if result.incomplete == 1 then -- timed out
@@ -567,9 +503,7 @@ function U.get_filesize()
   end
 end
 
-U.get_diagnostic_count = function(id)
-  return #vim.diagnostic.get(0, { severity = id })
-end
+U.get_diagnostic_count = function(id) return #vim.diagnostic.get(0, { severity = id }) end
 
 -- Sections ===================================================================
 -- Functions should return output text without whitespace on sides or empty
@@ -618,9 +552,7 @@ end
 function M.s_hydra(args)
   local ok, _ = pcall(require, "hydra")
 
-  if is_truncated(args.trunc_width) then
-    return ""
-  end
+  if is_truncated(args.trunc_width) then return "" end
 
   if ok then
     hydra_statusline = require("hydra.statusline")
@@ -633,17 +565,13 @@ function M.s_hydra(args)
 end
 
 function M.s_git(args)
-  if U.abnormal_buffer() then
-    return ""
-  end
+  if U.abnormal_buffer() then return "" end
 
   local status = vim.b.gitsigns_status_dict or {}
   local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
   local branch = status.head
 
-  if is_truncated(args.trunc_width) then
-    branch = mega.truncate(branch or "", 11, false)
-  end
+  if is_truncated(args.trunc_width) then branch = mega.truncate(branch or "", 11, false) end
 
   local head_str = unpack(item(branch, "StGitBranch", {
     before = " ",
@@ -651,9 +579,8 @@ function M.s_git(args)
     prefix = is_truncated(80) and "" or mega.icons.git.symbol,
     prefix_color = "StGitSymbol",
   }))
-  local added_str = unpack(
-    item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGitSignsAdd" })
-  )
+  local added_str =
+    unpack(item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGitSignsAdd" }))
   local changed_str = unpack(
     item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StGitSignsChange" })
   )
@@ -661,9 +588,7 @@ function M.s_git(args)
     item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StGitSignsDelete" })
   )
 
-  if signs == "" then
-    return head_str
-  end
+  if signs == "" then return head_str end
 
   return fmt("%s %s%s%s", head_str, added_str, changed_str, removed_str)
 end
@@ -693,9 +618,7 @@ local function diagnostic_info(ctx)
 end
 
 function M.s_modified(args)
-  if U.ctx.filetype == "help" then
-    return ""
-  end
+  if U.ctx.filetype == "help" then return "" end
   return unpack(item_if(U.modified(U.ctx), is_truncated(args.trunc_width), "StModified"))
 end
 
@@ -776,9 +699,7 @@ function M.s_lineinfo(args)
   local current_col = "%-3c"
 
   -- Use virtual column number to allow update when paste last column
-  if is_truncated(args.trunc_width) then
-    return "%l/%L:%v"
-  end
+  if is_truncated(args.trunc_width) then return "%l/%L:%v" end
 
   return table.concat({
     " ",
@@ -797,13 +718,9 @@ function M.s_lineinfo(args)
   })
 end
 
-local function is_disabled()
-  return vim.g.megaline_disable == true or vim.b.megaline_disable == true
-end
+local function is_disabled() return vim.g.megaline_disable == true or vim.b.megaline_disable == true end
 
-local function is_focused()
-  return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win()
-end
+local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
 
 -- do the statusline things for the activate window
 function _G.__statusline()

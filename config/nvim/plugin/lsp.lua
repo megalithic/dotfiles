@@ -33,9 +33,7 @@ local function diagnostic_popup()
 end
 
 local format_exclusions = {}
-local function formatting_filter(client)
-  return not vim.tbl_contains(format_exclusions, client.name)
-end
+local function formatting_filter(client) return not vim.tbl_contains(format_exclusions, client.name) end
 
 ---@param opts table<string, any>
 local function format(opts)
@@ -51,9 +49,7 @@ end
 
 local function get_preview_window()
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(vim.api.nvim_get_current_tabpage())) do
-    if vim.api.nvim_win_get_option(win, "previewwindow") then
-      return win
-    end
+    if vim.api.nvim_win_get_option(win, "previewwindow") then return win end
   end
   vim.cmd([[new]])
   local pwin = vim.api.nvim_get_current_win()
@@ -89,13 +85,9 @@ local function setup_commands()
   end
   vcmd([[ command! -range LspFormatRange execute 'lua FormatRange()' ]])
 
-  command("LspLog", function()
-    vim.cmd("vnew " .. vim.lsp.get_log_path())
-  end)
+  command("LspLog", function() vim.cmd("vnew " .. vim.lsp.get_log_path()) end)
 
-  command("LspFormat", function()
-    format({ bufnr = 0, async = false })
-  end)
+  command("LspFormat", function() format({ bufnr = 0, async = false }) end)
 
   -- A helper function to auto-update the quickfix list when new diagnostics come
   -- in and close it once everything is resolved. This functionality only runs while
@@ -112,16 +104,12 @@ local function setup_commands()
         api.nvim_del_autocmd(cmd_id)
         cmd_id = nil
       end
-      if cmd_id then
-        return
-      end
+      if cmd_id then return end
       cmd_id = api.nvim_create_autocmd("DiagnosticChanged", {
         callback = function()
           if mega.is_vim_list_open() then
             vim.diagnostic.setqflist({ open = false })
-            if #vim.fn.getqflist() == 0 then
-              mega.toggle_list("quickfix")
-            end
+            if #vim.fn.getqflist() == 0 then mega.toggle_list("quickfix") end
           end
         end,
       })
@@ -140,9 +128,7 @@ local function setup_autocommands(client, bufnr)
       event = { "BufEnter", "CursorHold", "InsertLeave" }, -- CursorHoldI
       buffer = 0,
       command = function()
-        if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then
-          vim.lsp.codelens.refresh()
-        end
+        if not vim.tbl_isempty(vim.lsp.codelens.get(bufnr)) then vim.lsp.codelens.refresh() end
       end,
     },
   })
@@ -182,9 +168,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
-      command = function()
-        diagnostic_popup()
-      end,
+      command = function() diagnostic_popup() end,
     },
   })
 
@@ -202,16 +186,10 @@ end
 -- [ MAPPINGS ] ----------------------------------------------------------------
 
 local function setup_mappings(client, bufnr)
-  local desc = function(desc)
-    return { desc = desc, buffer = bufnr }
-  end
+  local desc = function(desc) return { desc = desc, buffer = bufnr } end
 
-  nnoremap("[d", function()
-    diagnostic.goto_prev()
-  end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function()
-    diagnostic.goto_next()
-  end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function() diagnostic.goto_prev() end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function() diagnostic.goto_next() end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
   nnoremap("gr", vim.lsp.buf.references, desc("lsp: references"))
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
@@ -294,9 +272,7 @@ local function setup_diagnostics()
       local max_severity_per_line = {}
       for _, d in pairs(diagnostics) do
         local m = max_severity_per_line[d.lnum]
-        if not m or d.severity < m.severity then
-          max_severity_per_line[d.lnum] = d
-        end
+        if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
       end
 
       -- FIXME: this still throws errors in ElixirLS land:
@@ -320,17 +296,13 @@ local function setup_diagnostics()
   local signs_handler = vim.diagnostic.handlers.signs
   vim.diagnostic.handlers.signs = {
     show = max_diagnostic(signs_handler.show),
-    hide = function(_, bufnr)
-      signs_handler.hide(ns, bufnr)
-    end,
+    hide = function(_, bufnr) signs_handler.hide(ns, bufnr) end,
   }
 
   local virt_text_handler = vim.diagnostic.handlers.virtual_text
   vim.diagnostic.handlers.virtual_text = {
     show = max_diagnostic(virt_text_handler.show),
-    hide = function(_, bufnr)
-      virt_text_handler.hide(ns, bufnr)
-    end,
+    hide = function(_, bufnr) virt_text_handler.hide(ns, bufnr) end,
   }
 
   diagnostic.config({
@@ -466,9 +438,7 @@ local function setup_handlers()
     vim.notify(result.message, lvl, {
       title = "LSP | " .. client.name,
       timeout = 8000,
-      keep = function()
-        return lvl == "ERROR" or lvl == "WARN"
-      end,
+      keep = function() return lvl == "ERROR" or lvl == "WARN" end,
     })
   end
 
@@ -491,9 +461,7 @@ local function setup_handlers()
     -- Populates the quickfix list with all rename locations.
     lsp.handlers["textDocument/rename"] = function(err, result, ...)
       rename_handler(err, result, ...)
-      if err then
-        return
-      end
+      if err then return end
 
       local entries = {}
       if result.changes then
@@ -571,9 +539,7 @@ function mega.lsp.on_attach(client, bufnr)
 
   -- P(client.server_capabilities)
 
-  if client.config.flags then
-    client.config.flags.allow_incremental_sync = true
-  end
+  if client.config.flags then client.config.flags.allow_incremental_sync = true end
 
   -- Live color highlighting; handy for tailwindcss
   -- HT: kabouzeid
@@ -581,9 +547,7 @@ function mega.lsp.on_attach(client, bufnr)
     require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
   end
 
-  if client.server_capabilities.definitionProvider then
-    vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc"
-  end
+  if client.server_capabilities.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end
 
   if client.server_capabilities.documentFormattingProvider then
     vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
@@ -608,9 +572,7 @@ local function root_pattern(...)
   return function(startpath)
     for _, pattern in ipairs(patterns) do
       return lspconfig.util.search_ancestors(startpath, function(path)
-        if lspconfig.util.path.exists(fn.glob(lspconfig.util.path.join(path, pattern))) then
-          return path
-        end
+        if lspconfig.util.path.exists(fn.glob(lspconfig.util.path.join(path, pattern))) then return path end
       end)
     end
   end
@@ -655,9 +617,7 @@ mega.lsp.servers = {
     return {
       commands = {
         Format = {
-          function()
-            lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 })
-          end,
+          function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
         },
       },
       init_options = { provideFormatter = false },
@@ -689,9 +649,7 @@ mega.lsp.servers = {
   -- required until the setup function is called.
   sumneko_lua = function()
     local ok, lua_dev = mega.safe_require("lua-dev")
-    if not ok then
-      return {}
-    end
+    if not ok then return {} end
 
     local config = {
       library = {
@@ -992,9 +950,7 @@ function mega.lsp.get_server_config(server)
       },
     }
 
-    if nvim_lsp_ok then
-      capabilities = cmp_nvim_lsp.update_capabilities(capabilities)
-    end
+    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.update_capabilities(capabilities) end
 
     return capabilities
   end

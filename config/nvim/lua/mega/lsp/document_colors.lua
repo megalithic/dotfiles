@@ -2,9 +2,7 @@
 local bit = require("bit")
 
 local function lsp_color_to_hex(color)
-  local function to256(c)
-    return math.floor(c * color.alpha * 255)
-  end
+  local function to256(c) return math.floor(c * color.alpha * 255) end
   return bit.tohex(bit.bor(bit.lshift(to256(color.red), 16), bit.lshift(to256(color.green), 8), to256(color.blue)), 6)
 end
 
@@ -37,9 +35,7 @@ local function create_highlight(rgb_hex, options)
   local cache_key = table.concat({ HIGHLIGHT_MODE_NAMES[mode], rgb_hex }, "_")
   local highlight_name = HIGHLIGHT_CACHE[cache_key]
 
-  if highlight_name then
-    return highlight_name
-  end
+  if highlight_name then return highlight_name end
 
   -- Create the highlight
   highlight_name = make_highlight_name(rgb_hex, mode)
@@ -94,9 +90,7 @@ end
 function M.update_highlight(bufnr, options)
   local params = { textDocument = vim.lsp.util.make_text_document_params() }
   vim.lsp.buf_request(bufnr, "textDocument/documentColor", params, function(err, result, _, _)
-    if err == nil and result ~= nil then
-      buf_set_highlights(bufnr, result, options)
-    end
+    if err == nil and result ~= nil then buf_set_highlights(bufnr, result, options) end
   end)
 end
 
@@ -104,9 +98,7 @@ end
 function M.buf_attach(bufnr, options)
   bufnr = expand_bufnr(bufnr)
 
-  if ATTACHED_BUFFERS[bufnr] then
-    return
-  end
+  if ATTACHED_BUFFERS[bufnr] then return end
   ATTACHED_BUFFERS[bufnr] = true
 
   options = options or {}
@@ -122,9 +114,7 @@ function M.buf_attach(bufnr, options)
   -- react to changes
   vim.api.nvim_buf_attach(bufnr, false, {
     on_lines = function()
-      if not ATTACHED_BUFFERS[bufnr] then
-        return true
-      end
+      if not ATTACHED_BUFFERS[bufnr] then return true end
       trigger_update_highlight(bufnr, options)
     end,
     on_detach = function()

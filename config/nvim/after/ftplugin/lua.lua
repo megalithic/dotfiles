@@ -4,16 +4,12 @@
 local fmt = string.format
 local fn = vim.fn
 
-if not mega then
-  return
-end
+if not mega then return end
 
 local function find(word, ...)
   for _, str in ipairs({ ... }) do
     local match_start, match_end = string.find(word, str)
-    if match_start then
-      return str, match_start, match_end
-    end
+    if match_start then return str, match_start, match_end end
   end
 end
 
@@ -42,9 +38,7 @@ local function keyword(word, callback)
     return
   elseif fn_match then
     local _, finish = string.find(word, fn_match .. ".")
-    if not finish then
-      return
-    end
+    if not finish then return end
     local api_function = string.sub(word, finish + 1) .. "()"
 
     vim.cmd(string.format("help %s", api_function))
@@ -82,9 +76,7 @@ local function include_paths(fname, ext)
   local sep = dir_separator()
   local paths = string.gsub(package.path, "%?", fname)
   for path in split(paths, "%;") do
-    if fn.filereadable(path) == 1 then
-      return path
-    end
+    if fn.filereadable(path) == 1 then return path end
   end
 end
 
@@ -97,14 +89,10 @@ local function include_rtpaths(fname, ext)
   for _, path in ipairs(rtpaths) do
     -- Look on runtime path for 'lua/*.lua' files
     local path1 = table.concat({ path, ext, modfile }, sep)
-    if fn.filereadable(path1) == 1 then
-      return path1
-    end
+    if fn.filereadable(path1) == 1 then return path1 end
     -- Look on runtime path for 'lua/*/init.lua' files
     local path2 = table.concat({ path, ext, fname, initfile }, sep)
-    if fn.filereadable(path2) == 1 then
-      return path2
-    end
+    if fn.filereadable(path2) == 1 then return path2 end
   end
 end
 
@@ -117,14 +105,10 @@ function Find_required_path(module)
   local f
   ---- First search for lua modules
   f = include_paths(fname, "lua")
-  if f then
-    return f
-  end
+  if f then return f end
   -- This part is just for nvim modules
   f = include_rtpaths(fname, "lua")
-  if f then
-    return f
-  end
+  if f then return f end
 end
 
 -- Set options to open require with gf

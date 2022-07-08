@@ -14,13 +14,9 @@ return function()
     },
   })
 
-  local function open()
-    neotest.output.open({ enter = false })
-  end
+  local function open() neotest.output.open({ enter = false }) end
 
-  local function run_file()
-    neotest.run.run(vim.fn.expand("%"))
-  end
+  local function run_file() neotest.run.run(vim.fn.expand("%")) end
 
   nnoremap("<localleader>ts", neotest.summary.toggle, "neotest: run suite")
   nnoremap("<localleader>to", open, "neotest: output")

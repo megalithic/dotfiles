@@ -26,8 +26,6 @@ vim.cmd([[setlocal formatoptions+=q]])
 vim.cmd([[setlocal spell]])
 
 vim.cmd([[exec 'norm gg']])
-if vim.api.nvim_get_current_line() == "" then
-  vim.cmd([[startinsert]])
-end
+if vim.api.nvim_get_current_line() == "" then vim.cmd([[startinsert]]) end
 
 vim.bo.formatoptions = vim.bo.formatoptions .. "t"

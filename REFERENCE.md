@@ -145,3 +145,7 @@
 ```
 
 https://linux.die.net/abs-guide/exitcodes.html
+
+## SurfingKeys
+
+- https://github.com/eugercek/dotfiles/blob/master/surfingkeys.js

@@ -1,9 +1,4 @@
-if not vim.filetype then
-  return
-end
-
-vim.g.did_load_filetypes = 0 -- Disable vim-based filetype plugin
-vim.g.do_filetype_lua = 1 -- Enable lua-based filetype plugin
+if not vim.filetype then return end
 
 vim.filetype.add({
   filename = {
@@ -17,6 +12,7 @@ vim.filetype.add({
     ["Brewfile"] = "ruby",
     ["Brewfile.mas"] = "ruby",
     ["Brewfile.cask"] = "ruby",
+    ["NEOGIT_COMMIT_EDITMSG"] = "NeogitCommitMessage",
   },
   extension = {
     json = "jsonc",

@@ -31,9 +31,7 @@ return function()
 
   ---@param opts table
   ---@return table
-  local function dropdown(opts)
-    return themes.get_dropdown(get_border(opts))
-  end
+  local function dropdown(opts) return themes.get_dropdown(get_border(opts)) end
 
   -- local function ivy(opts)
   --   return themes.get_ivy(vim.tbl_deep_extend('keep', opts or {}, {
@@ -56,9 +54,7 @@ return function()
         i = {
           ["<c-q>"] = actions.send_selected_to_qflist,
           ["<c-l>"] = actions.send_to_qflist,
-          ["<c-c>"] = function()
-            vim.cmd("stopinsert!")
-          end,
+          ["<c-c>"] = function() vim.cmd("stopinsert!") end,
           ["<esc>"] = actions.close,
           ["<cr>"] = actions.select_vertical,
           ["<c-o>"] = actions.select_default,
@@ -217,9 +213,7 @@ return function()
   --- from the setup call
   local builtin = require("telescope.builtin")
 
-  local function builtins()
-    builtin.builtin({ include_extensions = true })
-  end
+  local function builtins() builtin.builtin({ include_extensions = true }) end
 
   local function delta_opts(opts, is_buf)
     local previewers = require("telescope.previewers")
@@ -234,9 +228,7 @@ return function()
           "diff",
           entry.value .. "^!",
         }
-        if is_buf then
-          vim.list_extend(args, { "--", entry.current_file })
-        end
+        if is_buf then vim.list_extend(args, { "--", entry.current_file }) end
         return args
       end,
     })
@@ -248,13 +240,9 @@ return function()
     return opts
   end
 
-  local function delta_git_commits(opts)
-    builtin.git_commits(delta_opts(opts))
-  end
+  local function delta_git_commits(opts) builtin.git_commits(delta_opts(opts)) end
 
-  local function delta_git_bcommits(opts)
-    builtin.git_bcommits(delta_opts(opts, true))
-  end
+  local function delta_git_bcommits(opts) builtin.git_bcommits(delta_opts(opts, true)) end
 
   local function project_files(opts)
     -- if not pcall(builtin.git_files, opts) then
@@ -314,9 +302,7 @@ return function()
     })
   end
 
-  local function tmux_sessions()
-    telescope.extensions.tmux.sessions({})
-  end
+  local function tmux_sessions() telescope.extensions.tmux.sessions({}) end
 
   local function tmux_windows()
     telescope.extensions.tmux.windows({

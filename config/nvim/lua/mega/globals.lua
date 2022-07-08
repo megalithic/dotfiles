@@ -91,9 +91,7 @@ function mega.dump_colors(filter)
   for hl_name, hl in pairs(vim.api.nvim__get_hl_defs(0)) do
     if hl_name:find(filter) then
       local def = {}
-      if hl.link then
-        def.link = hl.link
-      end
+      if hl.link then def.link = hl.link end
       for key, def_key in pairs({ foreground = "fg", background = "bg", special = "sp" }) do
         if type(hl[key]) == "number" then
           local hex = fmt("#%06x", hl[key])
@@ -101,9 +99,7 @@ function mega.dump_colors(filter)
         end
       end
       for _, style in pairs({ "bold", "italic", "underline", "undercurl", "reverse" }) do
-        if hl[style] then
-          def.style = (def.style and (def.style .. ",") or "") .. style
-        end
+        if hl[style] then def.style = (def.style and (def.style .. ",") or "") .. style end
       end
       defs[hl_name] = def
     end
@@ -120,9 +116,7 @@ function mega.plugin_installed(plugin_name)
     local dirs = fn.expand(fn.stdpath("data") .. "/site/pack/paqs/start/*", true, true)
     local opt = fn.expand(fn.stdpath("data") .. "/site/pack/paqs/opt/*", true, true)
     vim.list_extend(dirs, opt)
-    installed = vim.tbl_map(function(path)
-      return fn.fnamemodify(path, ":t")
-    end, dirs)
+    installed = vim.tbl_map(function(path) return fn.fnamemodify(path, ":t") end, dirs)
   end
   return vim.tbl_contains(installed, plugin_name)
 end
@@ -203,9 +197,7 @@ function mega.conf(plugin_conf_name, opts)
     local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
     if has_external_config then
       config = found_external_config
-      if not silent then
-        P(fmt("%s external config: %s", str, vim.inspect(config)))
-      end
+      if not silent then P(fmt("%s external config: %s", str, vim.inspect(config))) end
     end
   end
 
@@ -223,9 +215,7 @@ function mega.conf(plugin_conf_name, opts)
       if type(value) == "function" then
         fn_at_index = index
 
-        if not silent then
-          P(fmt("function found at index %d!", index))
-        end
+        if not silent then P(fmt("function found at index %d!", index)) end
         config = opts[fn_at_index]
       end
     end
@@ -235,14 +225,10 @@ function mega.conf(plugin_conf_name, opts)
     silent = (opts.silent == nil) and true or opts.silent
     defer = (opts.defer == nil) and false or opts.defer
 
-    if not silent then
-      P(fmt("%s (config table): %s", plugin_conf_name, vim.inspect(config)))
-    end
+    if not silent then P(fmt("%s (config table): %s", plugin_conf_name, vim.inspect(config))) end
 
     -- handle what to do when opts.config is simply a string "name" to use for loading external config
-    if type(opts.config) == "string" then
-      string_loader(opts.config)
-    end
+    if type(opts.config) == "string" then string_loader(opts.config) end
   elseif type(opts) == "string" then
     string_loader(opts)
   elseif type(opts) == "function" then
@@ -257,27 +243,19 @@ function mega.conf(plugin_conf_name, opts)
     event = {}
   end
 
-  if not enabled and not silent then
-    P(plugin_conf_name .. " is disabled.")
-  end
+  if not enabled and not silent then P(plugin_conf_name .. " is disabled.") end
 
   if enabled then
     if type(config) == "table" then
       local ok, loader = pcall(require, plugin_conf_name)
-      if not ok then
-        return
-      end
+      if not ok then return end
 
       -- does it have a setup key to execute?
       if vim.tbl_get(loader, "setup") ~= nil then
-        if not silent then
-          P(fmt("%s configuring with `setup(config)`", plugin_conf_name))
-        end
+        if not silent then P(fmt("%s configuring with `setup(config)`", plugin_conf_name)) end
 
         if defer then
-          vim.defer_fn(function()
-            loader.setup(config)
-          end, 1000)
+          vim.defer_fn(function() loader.setup(config) end, 1000)
         else
           loader.setup(config)
         end
@@ -285,14 +263,10 @@ function mega.conf(plugin_conf_name, opts)
       -- config was passed a function, so we're assuming we want to bypass the plugin auto-invoking, and invoke our own fn
     elseif type(config) == "function" then
       -- passes the loaded plugin back to the caller so they can do more config
-      if not silent then
-        P(fmt("%s configuring with `config(loader)`", plugin_conf_name))
-      end
+      if not silent then P(fmt("%s configuring with `config(loader)`", plugin_conf_name)) end
 
       if defer then
-        vim.defer_fn(function()
-          config()
-        end, 1000)
+        vim.defer_fn(function() config() end, 1000)
       else
         config()
       end
@@ -359,18 +333,12 @@ local function mapper(mode, o)
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
     if opts.label or opts.desc then
       local ok, wk = mega.safe_require("which-key", { silent = true })
-      if ok then
-        wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode })
-      end
-      if opts.label and not opts.desc then
-        opts.desc = opts.label
-      end
+      if ok then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
+      if opts.label and not opts.desc then opts.desc = opts.label end
       opts.label = nil
     end
 
-    if rhs == nil then
-      P(mode, lhs, rhs, opts, parent_opts)
-    end
+    if rhs == nil then P(mode, lhs, rhs, opts, parent_opts) end
 
     vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("keep", opts, parent_opts))
   end
@@ -407,19 +375,17 @@ end
 local function validate_autocmd(name, cmd)
   local keys = { "event", "buffer", "pattern", "desc", "command", "group", "once", "nested" }
   local incorrect = mega.fold(function(accum, _, key)
-    if not vim.tbl_contains(keys, key) then
-      table.insert(accum, key)
-    end
+    if not vim.tbl_contains(keys, key) then table.insert(accum, key) end
     return accum
   end, cmd, {})
-  if #incorrect == 0 then
-    return
-  end
-  vim.schedule(function()
-    vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), "error", {
-      title = fmt("Autocmd: %s", name),
-    })
-  end)
+  if #incorrect == 0 then return end
+  vim.schedule(
+    function()
+      vim.notify("Incorrect keys: " .. table.concat(incorrect, ", "), "error", {
+        title = fmt("Autocmd: %s", name),
+      })
+    end
+  )
 end
 
 ---@class Autocommand
@@ -470,30 +436,18 @@ function mega.highlight(name, opts)
       vcmd("highlight" .. (force and "!" or "") .. " link " .. name .. " " .. opts.link)
     else
       local hi_opt = { "highlight", name }
-      if opts.guifg and opts.guifg ~= "" then
-        table.insert(hi_opt, "guifg=" .. opts.guifg)
-      end
-      if opts.guibg and opts.guibg ~= "" then
-        table.insert(hi_opt, "guibg=" .. opts.guibg)
-      end
-      if opts.gui and opts.gui ~= "" then
-        table.insert(hi_opt, "gui=" .. opts.gui)
-      end
-      if opts.guisp and opts.guisp ~= "" then
-        table.insert(hi_opt, "guisp=" .. opts.guisp)
-      end
-      if opts.cterm and opts.cterm ~= "" then
-        table.insert(hi_opt, "cterm=" .. opts.cterm)
-      end
+      if opts.guifg and opts.guifg ~= "" then table.insert(hi_opt, "guifg=" .. opts.guifg) end
+      if opts.guibg and opts.guibg ~= "" then table.insert(hi_opt, "guibg=" .. opts.guibg) end
+      if opts.gui and opts.gui ~= "" then table.insert(hi_opt, "gui=" .. opts.gui) end
+      if opts.guisp and opts.guisp ~= "" then table.insert(hi_opt, "guisp=" .. opts.guisp) end
+      if opts.cterm and opts.cterm ~= "" then table.insert(hi_opt, "cterm=" .. opts.cterm) end
       vcmd(table.concat(hi_opt, " "))
     end
   end
 end
 mega.hi = mega.highlight
 
-function mega.hi_link(src, dest)
-  vcmd("hi! link " .. src .. " " .. dest)
-end
+function mega.hi_link(src, dest) vcmd("hi! link " .. src .. " " .. dest) end
 
 function mega.exec(c, bool)
   bool = bool or true
@@ -505,9 +459,7 @@ function mega.noop() end
 ---A terser proxy for `nvim_replace_termcodes`
 ---@param str string
 ---@return any
-function mega.replace_termcodes(str)
-  return api.nvim_replace_termcodes(str, true, true, true)
-end
+function mega.replace_termcodes(str) return api.nvim_replace_termcodes(str, true, true, true) end
 
 -- essentially allows for a ternary operator of sorts
 function mega._if(bool, a, b)
@@ -540,18 +492,12 @@ function mega.table_merge(t1, t2, opts)
   return t1
 end
 
-function mega.deep_merge(...)
-  mega.table_merge(..., { strategy = "deep" })
-end
+function mega.deep_merge(...) mega.table_merge(..., { strategy = "deep" }) end
 
-function mega.shallow_merge(...)
-  mega.table_merge(..., { strategy = "shallow" })
-end
+function mega.shallow_merge(...) mega.table_merge(..., { strategy = "shallow" }) end
 
 function mega.iter(list_or_iter)
-  if type(list_or_iter) == "function" then
-    return list_or_iter
-  end
+  if type(list_or_iter) == "function" then return list_or_iter end
 
   return coroutine.wrap(function()
     for i = 1, #list_or_iter do
@@ -570,9 +516,7 @@ end
 -- helps with nerdfonts usages
 local bytemarkers = { { 0x7FF, 192 }, { 0xFFFF, 224 }, { 0x1FFFFF, 240 } }
 function mega.utf8(decimal)
-  if decimal < 128 then
-    return string.char(decimal)
-  end
+  if decimal < 128 then return string.char(decimal) end
   local charbytes = {}
   for bytes, vals in ipairs(bytemarkers) do
     if decimal <= vals[1] then
@@ -588,13 +532,9 @@ function mega.utf8(decimal)
   return table.concat(charbytes)
 end
 
-function mega.has(feature)
-  return fn.has(feature) > 0
-end
+function mega.has(feature) return fn.has(feature) > 0 end
 
-function mega.executable(e)
-  return fn.executable(e) > 0
-end
+function mega.executable(e) return fn.executable(e) > 0 end
 
 local function open(path)
   fn.jobstart({ vim.g.open_command, path }, { detach = true })
@@ -604,24 +544,16 @@ end
 -- open URI under cursor
 function mega.open_uri()
   local file = fn.expand("<cfile>")
-  if fn.isdirectory(file) > 0 then
-    return vim.cmd("edit " .. file)
-  end
-  if file:match("https://") then
-    return open(file)
-  end
+  if fn.isdirectory(file) > 0 then return vim.cmd("edit " .. file) end
+  if file:match("https://") then return open(file) end
   -- Any URI with a protocol segment
   local protocol_uri_regex = "%a*:%/%/[%a%d%#%[%]%-%%+:;!$@/?&=_.,~*()]*"
-  if file:match(protocol_uri_regex) then
-    return vim.cmd("norm! gf")
-  end
+  if file:match(protocol_uri_regex) then return vim.cmd("norm! gf") end
 
   -- consider anything that looks like string/string a github link
   local plugin_url_regex = "[%a%d%-%.%_]*%/[%a%d%-%.%_]*"
   local link = string.match(file, plugin_url_regex)
-  if link then
-    return open(fmt("https://www.github.com/%s", link))
-  end
+  if link then return open(fmt("https://www.github.com/%s", link)) end
   -- local Job = require("plenary.job")
   -- local uri = vim.fn.expand("<cWORD>")
   -- Job
@@ -635,12 +567,8 @@ end
 function mega.open_plugin_url()
   mega.nnoremap("gf", function()
     local repo = fn.expand("<cfile>")
-    if repo:match("https://") then
-      return vim.cmd("norm gx")
-    end
-    if not repo or #vim.split(repo, "/") ~= 2 then
-      return vim.cmd("norm! gf")
-    end
+    if repo:match("https://") then return vim.cmd("norm gx") end
+    if not repo or #vim.split(repo, "/") ~= 2 then return vim.cmd("norm! gf") end
     local url = fmt("https://www.github.com/%s", repo)
     fn.jobstart(fmt("%s %s", vim.g.open_command, url))
     vim.notify(fmt("Opening %s at %s", repo, url))
@@ -658,21 +586,15 @@ end
 -- or
 --   <section> <manpage>
 function mega.man(dest, ...)
-  if dest == "tab" then
-    dest = "tabnew"
-  end
-  if dest ~= "" then
-    dest = dest .. " | "
-  end
+  if dest == "tab" then dest = "tabnew" end
+  if dest ~= "" then dest = dest .. " | " end
   for _, page in ipairs({ ... }) do
     if vim.regex("^\\d\\+p\\? \\w\\+$"):match_str(page) ~= nil then
       local s = vim.split(page, " ")
       page = ("%s(%s)"):format(s[2], s[1])
     end
     local prefix = dest
-    if vim.fn.bufname(0) == "" and vim.fn.line("$") == 1 and vim.fn.getline(1) == "" then
-      prefix = ""
-    end
+    if vim.fn.bufname(0) == "" and vim.fn.line("$") == 1 and vim.fn.getline(1) == "" then prefix = "" end
     vim.cmd(prefix .. "file " .. page .. " | call man#read_page(\"" .. page .. "\")")
   end
 end
@@ -681,9 +603,7 @@ end
 function mega.close_float_wins()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local config = vim.api.nvim_win_get_config(win)
-    if config.relative ~= "" then
-      vim.api.nvim_win_close(win, false)
-    end
+    if config.relative ~= "" then vim.api.nvim_win_close(win, false) end
   end
 end
 
@@ -763,9 +683,7 @@ function mega.is_vim_list_open()
     local buf = api.nvim_win_get_buf(win)
     local location_list = fn.getloclist(0, { filewinid = 0 })
     local is_loc_list = location_list.filewinid > 0
-    if vim.bo[buf].filetype == "qf" or is_loc_list then
-      return true
-    end
+    if vim.bo[buf].filetype == "qf" or is_loc_list then return true end
   end
   return false
 end
@@ -774,9 +692,7 @@ end
 ---@param item any
 ---@return boolean
 function mega.empty(item)
-  if not item then
-    return true
-  end
+  if not item then return true end
   local item_type = type(item)
   if item_type == "string" then
     return item == ""
@@ -803,14 +719,10 @@ function mega.zetty(args)
 
   local content = ""
 
-  if opts.attendees ~= nil and opts.attendees ~= "" then
-    content = fmt("Attendees:\n%s\n\n---\n", opts.attendees)
-  end
+  if opts.attendees ~= nil and opts.attendees ~= "" then content = fmt("Attendees:\n%s\n\n---\n", opts.attendees) end
 
   local changed_title = fn.input(fmt("[?] Change title from [%s] to: ", title))
-  if changed_title ~= "" then
-    title = changed_title
-  end
+  if changed_title ~= "" then title = changed_title end
 
   if opts.cmd == "meeting" then
     require("zk.command").new({ title = title, action = "edit", notebook = "meetings", content = content })
@@ -855,17 +767,13 @@ function mega.profile(filename)
   local base = "/tmp/config/profile/"
   fn.mkdir(base, "p")
   local success, profile = pcall(require, "plenary.profile.lua_profiler")
-  if not success then
-    vim.api.nvim_echo({ "Plenary is not installed.", "Title" }, true, {})
-  end
+  if not success then vim.api.nvim_echo({ "Plenary is not installed.", "Title" }, true, {}) end
   profile.start()
   return function()
     profile.stop()
     local logfile = base .. filename .. ".log"
     profile.report(logfile)
-    vim.defer_fn(function()
-      vcmd("tabedit " .. logfile)
-    end, 1000)
+    vim.defer_fn(function() vcmd("tabedit " .. logfile) end, 1000)
   end
 end
 
@@ -902,9 +810,7 @@ function mega.debounce_trailing(func, ms, first)
       local argv = { ... }
       local argc = select("#", ...)
 
-      timer:start(ms, 0, function()
-        pcall(vim.schedule_wrap(func), unpack(argv, 1, argc))
-      end)
+      timer:start(ms, 0, function() pcall(vim.schedule_wrap(func), unpack(argv, 1, argc)) end)
     end
   else
     local argv, argc
@@ -912,9 +818,7 @@ function mega.debounce_trailing(func, ms, first)
       argv = argv or { ... }
       argc = argc or select("#", ...)
 
-      timer:start(ms, 0, function()
-        pcall(vim.schedule_wrap(func), unpack(argv, 1, argc))
-      end)
+      timer:start(ms, 0, function() pcall(vim.schedule_wrap(func), unpack(argv, 1, argc)) end)
     end
   end
   return wrapped_fn, timer
@@ -973,9 +877,7 @@ function mega.truncate(str, width, at_tail)
   -- @usage ('1234567890'):shorten(20) == '1234567890'
   local function shorten(s, w, tail)
     if #s > w then
-      if w < n_ellipsis then
-        return ellipsis:sub(1, w)
-      end
+      if w < n_ellipsis then return ellipsis:sub(1, w) end
       if tail then
         local i = #s - w + 1 + n_ellipsis
         return ellipsis .. s:sub(i)
@@ -1013,9 +915,7 @@ do
 
   command("AutoResize", mega.auto_resize(), { nargs = "?" })
   command("Todo", [[noautocmd silent! grep! 'TODO\|FIXME\|BUG\|HACK' | copen]])
-  command("ReloadModule", function(tbl)
-    require("plenary.reload").reload_module(tbl.args)
-  end, {
+  command("ReloadModule", function(tbl) require("plenary.reload").reload_module(tbl.args) end, {
     nargs = 1,
   })
   command(
@@ -1024,9 +924,7 @@ do
   )
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
-  command("Flash", function()
-    mega.blink_cursorline()
-  end)
+  command("Flash", function() mega.blink_cursorline() end)
 end
 
 return mega

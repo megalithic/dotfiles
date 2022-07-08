@@ -32,9 +32,7 @@ return function()
       term.opened = term.opened or false
 
       if not term.opened then
-        if require("mega.utils").root_has_file("Deskfile") then
-          term:send("eval $(desk load)")
-        end
+        if require("mega.utils").root_has_file("Deskfile") then term:send("eval $(desk load)") end
       end
 
       term.opened = true
@@ -56,9 +54,7 @@ return function()
     on_open = float_handler,
   })
 
-  mega.command("Btop", function()
-    btop:toggle()
-  end)
+  mega.command("Btop", function() btop:toggle() end)
 
   local has_wk, wk = mega.safe_require("which-key")
   if has_wk then

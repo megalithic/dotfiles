@@ -71,18 +71,14 @@ return function()
     completion = {
       keyword_length = 1,
       get_trigger_characters = function(trigger_characters)
-        return vim.tbl_filter(function(char)
-          return char ~= " "
-        end, trigger_characters)
+        return vim.tbl_filter(function(char) return char ~= " " end, trigger_characters)
       end,
     },
     experimental = {
       ghost_text = false,
     },
     snippet = {
-      expand = function(args)
-        ls.lsp_expand(args.body)
-      end,
+      expand = function(args) ls.lsp_expand(args.body) end,
     },
     window = {
       completion = cmp.config.window.bordered(cmp_window),

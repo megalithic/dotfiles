@@ -22,6 +22,10 @@ do_install() {
   # 	rustup default stable
   # fi
 
+  # NOTE: you might have to run `rustup update stable` from time to time!
+  # - e.g. remember that issue with edition2021 and updating stylua?
+  # - REF: https://stackoverflow.com/questions/69848319/unable-to-specify-edition2021-in-order-to-use-unstable-packages-in-rust
+
   if (has cargo); then
     # (! has luacheck) && luarocks install luacheck
     cargo install selene    # https://kampfkarren.github.io/selene/selene.html

@@ -1,8 +1,6 @@
 return function(plug)
   local formatter = plug
-  if plug == nil then
-    formatter = require("formatter")
-  end
+  if plug == nil then formatter = require("formatter") end
 
   local fn = vim.fn
   local api = vim.api

@@ -11,18 +11,14 @@ return function()
       event = "ModeChanged",
       pattern = "[is]:n",
       command = function()
-        if ls.in_snippet() then
-          return vim.diagnostic.enable()
-        end
+        if ls.in_snippet() then return vim.diagnostic.enable() end
       end,
     },
     {
       event = "ModeChanged",
       pattern = "*:s",
       command = function()
-        if ls.in_snippet() then
-          return vim.diagnostic.disable()
-        end
+        if ls.in_snippet() then return vim.diagnostic.disable() end
       end,
     },
   })
@@ -81,14 +77,10 @@ return function()
   -- how we might want to do this: https://youtu.be/Dn800rlPIho
 
   --- <tab> to jump to next snippet's placeholder
-  local function on_tab()
-    return ls.jump(1) and "" or t("<Tab>")
-  end
+  local function on_tab() return ls.jump(1) and "" or t("<Tab>") end
 
   --- <s-tab> to jump to next snippet's placeholder
-  local function on_s_tab()
-    return ls.jump(-1) and "" or t("<S-Tab>")
-  end
+  local function on_s_tab() return ls.jump(-1) and "" or t("<S-Tab>") end
 
   local opts = { expr = true, remap = true }
   imap("<Tab>", on_tab, opts)

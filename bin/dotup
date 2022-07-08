@@ -112,9 +112,7 @@ EOF
   else
     command cat <<EOF
 ░
-░  $(dotsay "✸ since you're on $(hostname), you might want to:")
-░
-░   $(dotsay "• nothing more to do.")
+░  $(dotsay "• nothing more to do.")
 ░
 
 EOF

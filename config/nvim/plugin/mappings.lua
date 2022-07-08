@@ -179,9 +179,7 @@ if has_wk then
         e = "gitsigns: reset entire buffer",
       },
       b = {
-        function()
-          gs.blame_line({ full = true })
-        end,
+        function() gs.blame_line({ full = true }) end,
         "gitsigns: blame current line",
       },
       h = {
@@ -192,9 +190,7 @@ if has_wk then
         p = { gs.preview_hunk, "preview current hunk" },
         d = { gs.diffthis, "diff this line" },
         D = {
-          function()
-            gs.diffthis("~")
-          end,
+          function() gs.diffthis("~") end,
           "diff this with ~",
         },
         b = {
@@ -202,9 +198,7 @@ if has_wk then
           l = "gitsigns: blame current line",
           d = "gitsigns: toggle word diff",
           b = {
-            function()
-              gs.blame_line({ full = true })
-            end,
+            function() gs.blame_line({ full = true }) end,
             "blame current line",
           },
         },
@@ -415,9 +409,7 @@ nnoremap([[<Esc>]], function()
 
   do
     local ok, minijump = pcall(require, "mini.jump")
-    if ok then
-      minijump.stop_jumping()
-    end
+    if ok then minijump.stop_jumping() end
   end
 
   -- local n_ok, n = require("notify")
@@ -590,6 +582,9 @@ nmap("<leader>F", [[<cmd>FormatWrite<cr>]], "format file")
 -- Map Q to replay q register
 nnoremap("Q", "@q")
 
+cnoremap("%%", "<C-r>=fnameescape(expand('%'))<cr>")
+cnoremap("::", "<C-r>=fnameescape(expand('%:p:h'))<cr>/")
+
 -----------------------------------------------------------------------------//
 -- Multiple Cursor Replacement
 -- http://www.kevinli.co/posts/2017-01-19-multiple-cursors-in-500-bytes-of-vimscript/
@@ -642,9 +637,7 @@ function mega.toggle_list(list_type)
   local prefix = is_location_target and "l" or "c"
   local L = vim.log.levels
   local is_open = mega.is_vim_list_open()
-  if is_open then
-    return fn.execute(prefix .. "close")
-  end
+  if is_open then return fn.execute(prefix .. "close") end
   local list = is_location_target and fn.getloclist(0) or fn.getqflist()
   if vim.tbl_isempty(list) then
     local msg_prefix = (is_location_target and "Location" or "QuickFix")
@@ -653,14 +646,8 @@ function mega.toggle_list(list_type)
 
   local winnr = fn.winnr()
   fn.execute(prefix .. "open")
-  if fn.winnr() ~= winnr then
-    vim.cmd("wincmd p")
-  end
+  if fn.winnr() ~= winnr then vim.cmd("wincmd p") end
 end
 
-nnoremap("<leader>lq", function()
-  mega.toggle_list("quickfix")
-end, "lists: toggle quickfix")
-nnoremap("<leader>lc", function()
-  mega.toggle_list("location")
-end, "lists: toggle location")
+nnoremap("<leader>lq", function() mega.toggle_list("quickfix") end, "lists: toggle quickfix")
+nnoremap("<leader>lc", function() mega.toggle_list("location") end, "lists: toggle location")

@@ -21,9 +21,7 @@ function M.conf(module_name, callback, opts)
     local status, mod = pcall(require, module_name)
     if status then
       if opts and opts["defer"] then
-        vim.defer_fn(function()
-          callback(mod)
-        end, 1000)
+        vim.defer_fn(function() callback(mod) end, 1000)
       else
         callback(mod)
       end
@@ -31,14 +29,10 @@ function M.conf(module_name, callback, opts)
   end
 end
 
-function M.which(bin)
-  return vim.fn.executable(bin) == 1
-end
+function M.which(bin) return vim.fn.executable(bin) == 1 end
 
 ---A thin wrapper around vim.notify to add packer details to the message
 ---@param msg string
-function M.packer_notify(msg, level)
-  vim.notify(msg, level, { title = "Packer" })
-end
+function M.packer_notify(msg, level) vim.notify(msg, level, { title = "Packer" }) end
 
 return M

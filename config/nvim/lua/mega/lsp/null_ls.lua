@@ -27,16 +27,12 @@ return function(on_attach)
           "markdown",
           "markdown.mdx",
         },
-        condition = function()
-          return mega.executable("prettierd")
-        end,
+        condition = function() return mega.executable("prettierd") end,
       }),
       b.formatting.fixjson.with({ filetypes = { "jsonc", "json" } }),
       -- b.formatting.isort,
       b.formatting.stylua.with({ -- sumneko now formats!
-        condition = function(util)
-          return mega.executable("stylua") and util.root_has_file("stylua.toml")
-        end,
+        condition = function(util) return mega.executable("stylua") and util.root_has_file("stylua.toml") end,
       }),
       b.formatting.isort,
       b.formatting.black,

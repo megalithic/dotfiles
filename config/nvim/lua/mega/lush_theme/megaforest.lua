@@ -188,7 +188,7 @@ return lush(function()
 
     ---- :help spell -------------------------------------------
 
-    SpellBad({ fg = red, bg = "NONE", gui = "undercurl", sp = red }),
+    SpellBad({ fg = red, bg = "NONE", gui = "underdouble", sp = red }),
     SpellCap({ fg = blue, bg = "NONE", gui = "undercurl", sp = blue }),
     SpellLocal({ fg = cyan, bg = "NONE", gui = "undercurl", sp = cyan }),
     SpellRare({ fg = purple, bg = "NONE", gui = "undercurl", sp = purple }), -- Word that is recognized by the spellchecker as one that is hardly ever used.  |spell| Combined with the highlighting used otherwise.

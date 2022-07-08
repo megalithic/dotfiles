@@ -7,13 +7,9 @@ local utils = require("mega.plugins.utils")
 local packer_notify = utils.packer_notify
 local M = {}
 
-if pcall(require, "packer") then
-  vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/paqs")
-end
+if pcall(require, "packer") then vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/paqs") end
 
-local function conf(name)
-  return require(fmt("mega.plugins.%s", name))
-end
+local function conf(name) return require(fmt("mega.plugins.%s", name)) end
 
 -- local function clone()
 --   local repo = "https://github.com/wbthomason/packer.nvim"
@@ -126,9 +122,7 @@ M.PKGS = function(use)
   -- (profiling/speed improvements) --
   use({
     "dstein64/vim-startuptime",
-    config = function()
-      vim.g.startuptime_tries = 15
-    end,
+    config = function() vim.g.startuptime_tries = 15 end,
   })
   -- HACK: redundant once https://github.com/neovim/neovim/pull/15436 is merged
   use({ "lewis6991/impatient.nvim" })
@@ -167,17 +161,13 @@ M.PKGS = function(use)
       local function ignore_by_buftype(types)
         local bt = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
         for _, type in pairs(types) do
-          if type == bt then
-            return 1
-          end
+          if type == bt then return 1 end
         end
       end
       local function ignore_by_filetype(types)
         local ft = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "filetype")
         for _, type in pairs(types) do
-          if type == ft then
-            return 1
-          end
+          if type == ft then return 1 end
         end
       end
 
@@ -243,9 +233,7 @@ M.PKGS = function(use)
         end
         fugitive_pv_timer = vim.defer_fn(function()
           if not is_loaded then
-            vim.api.nvim_buf_call(bufnr, function()
-              vim.cmd(("do fugitive BufReadCmd %s"):format(bufname))
-            end)
+            vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end)
           end
           require("bqf.preview.handler").open(qwinid, nil, true)
           vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
@@ -287,9 +275,7 @@ M.PKGS = function(use)
   use({
     "https://gitlab.com/yorickpeterse/nvim-pqf",
     event = "BufReadPre",
-    config = function()
-      require("pqf").setup({})
-    end,
+    config = function() require("pqf").setup({}) end,
   })
 
   ------------------------------------------------------------------------------
@@ -457,9 +443,7 @@ M.PKGS = function(use)
       mega.nnoremap("<localleader>nc", require("neogen").generate, "comment: generate")
       mega.nnoremap("gdd", require("neogen").generate, "comment: generate")
     end,
-    config = function()
-      require("neogen").setup({ snippet_engine = "luasnip" })
-    end,
+    config = function() require("neogen").setup({ snippet_engine = "luasnip" }) end,
   })
 
   ------------------------------------------------------------------------------
@@ -476,9 +460,7 @@ M.PKGS = function(use)
         "nvim-telescope/telescope-fzf-native.nvim",
         run = "make",
         after = "telescope.nvim",
-        config = function()
-          require("telescope").load_extension("fzf")
-        end,
+        config = function() require("telescope").load_extension("fzf") end,
       },
     },
   })
@@ -497,38 +479,50 @@ M.PKGS = function(use)
         uppercase_labels = false,
       })
 
-      nnoremap("s", function()
-        hop.hint_char1({ multi_windows = false })
-      end)
+      nnoremap("s", function() hop.hint_char1({ multi_windows = false }) end)
       -- NOTE: override F/f using hop motions
-      vim.keymap.set({ "x", "n" }, "F", function()
-        hop.hint_char1({
-          direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-          current_line_only = true,
-          inclusive_jump = false,
-        })
-      end)
-      vim.keymap.set({ "x", "n" }, "f", function()
-        hop.hint_char1({
-          direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-          current_line_only = true,
-          inclusive_jump = false,
-        })
-      end)
-      onoremap("F", function()
-        hop.hint_char1({
-          direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-          current_line_only = true,
-          inclusive_jump = true,
-        })
-      end)
-      onoremap("f", function()
-        hop.hint_char1({
-          direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-          current_line_only = true,
-          inclusive_jump = true,
-        })
-      end)
+      vim.keymap.set(
+        { "x", "n" },
+        "F",
+        function()
+          hop.hint_char1({
+            direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+            current_line_only = true,
+            inclusive_jump = false,
+          })
+        end
+      )
+      vim.keymap.set(
+        { "x", "n" },
+        "f",
+        function()
+          hop.hint_char1({
+            direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+            current_line_only = true,
+            inclusive_jump = false,
+          })
+        end
+      )
+      onoremap(
+        "F",
+        function()
+          hop.hint_char1({
+            direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+            current_line_only = true,
+            inclusive_jump = true,
+          })
+        end
+      )
+      onoremap(
+        "f",
+        function()
+          hop.hint_char1({
+            direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+            current_line_only = true,
+            inclusive_jump = true,
+          })
+        end
+      )
     end,
   })
   use({
@@ -629,9 +623,11 @@ M.PKGS = function(use)
     config = function()
       local linker = require("gitlinker")
       linker.setup({ mappings = "<localleader>gu" })
-      mega.nnoremap("<localleader>go", function()
-        linker.get_repo_url({ action_callback = require("gitlinker.actions").open_in_browser })
-      end, "gitlinker: open in browser")
+      mega.nnoremap(
+        "<localleader>go",
+        function() linker.get_repo_url({ action_callback = require("gitlinker.actions").open_in_browser }) end,
+        "gitlinker: open in browser"
+      )
     end,
   })
   use({
@@ -685,9 +681,7 @@ M.PKGS = function(use)
       {
         "theHamsta/nvim-dap-virtual-text",
         after = "nvim-dap",
-        config = function()
-          require("nvim-dap-virtual-text").setup({ all_frames = true })
-        end,
+        config = function() require("nvim-dap-virtual-text").setup({ all_frames = true }) end,
       },
     },
   })
@@ -812,9 +806,7 @@ M.PKGS = function(use)
   use({
     "kevinhwang91/nvim-hclipboard",
     event = "InsertCharPre",
-    config = function()
-      require("hclipboard").start()
-    end,
+    config = function() require("hclipboard").start() end,
   })
   -- :Messages <- view messages in quickfix list
   -- :Verbose  <- view verbose output in preview window.
@@ -827,9 +819,7 @@ M.PKGS = function(use)
   use({
     "knubie/vim-kitty-navigator",
     run = "cp ./*.py ~/.config/kitty/",
-    cond = function()
-      return not vim.env.TMUX
-    end,
+    cond = function() return not vim.env.TMUX end,
   })
   use({ "RRethy/nvim-align" })
 
@@ -840,9 +830,7 @@ M.PKGS = function(use)
   -- "rhysd/vim-gfm-syntax",
   use({
     "iamcco/markdown-preview.nvim",
-    run = function()
-      vim.fn["mkdp#util#install"]()
-    end,
+    run = function() vim.fn["mkdp#util#install"]() end,
     ft = { "markdown" },
     config = function()
       vim.g.mkdp_auto_start = 0
@@ -910,9 +898,7 @@ M.PKGS = function(use)
   use({ "fladson/vim-kitty" })
   use({
     "SirJson/fzf-gitignore",
-    config = function()
-      vim.g.fzf_gitignore_no_maps = true
-    end,
+    config = function() vim.g.fzf_gitignore_no_maps = true end,
   })
 
   ------------------------------------------------------------------------------
@@ -986,9 +972,7 @@ packer.startup({
     -- (profiling/speed improvements) --
     use({
       "dstein64/vim-startuptime",
-      config = function()
-        vim.g.startuptime_tries = 15
-      end,
+      config = function() vim.g.startuptime_tries = 15 end,
     })
     -- HACK: redundant once https://github.com/neovim/neovim/pull/15436 is merged
     use({ "lewis6991/impatient.nvim" })
@@ -1027,17 +1011,13 @@ packer.startup({
         local function ignore_by_buftype(types)
           local bt = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "buftype")
           for _, type in pairs(types) do
-            if type == bt then
-              return 1
-            end
+            if type == bt then return 1 end
           end
         end
         local function ignore_by_filetype(types)
           local ft = vim.api.nvim_buf_get_option(vim.api.nvim_get_current_buf(), "filetype")
           for _, type in pairs(types) do
-            if type == ft then
-              return 1
-            end
+            if type == ft then return 1 end
           end
         end
 
@@ -1103,9 +1083,7 @@ packer.startup({
           end
           fugitive_pv_timer = vim.defer_fn(function()
             if not is_loaded then
-              vim.api.nvim_buf_call(bufnr, function()
-                vim.cmd(("do fugitive BufReadCmd %s"):format(bufname))
-              end)
+              vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end)
             end
             require("bqf.preview.handler").open(qwinid, nil, true)
             vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
@@ -1147,9 +1125,7 @@ packer.startup({
     use({
       "https://gitlab.com/yorickpeterse/nvim-pqf",
       event = "BufReadPre",
-      config = function()
-        require("pqf").setup({})
-      end,
+      config = function() require("pqf").setup({}) end,
     })
 
     ------------------------------------------------------------------------------
@@ -1317,9 +1293,7 @@ packer.startup({
         mega.nnoremap("<localleader>nc", require("neogen").generate, "comment: generate")
         mega.nnoremap("gdd", require("neogen").generate, "comment: generate")
       end,
-      config = function()
-        require("neogen").setup({ snippet_engine = "luasnip" })
-      end,
+      config = function() require("neogen").setup({ snippet_engine = "luasnip" }) end,
     })
 
     ------------------------------------------------------------------------------
@@ -1336,9 +1310,7 @@ packer.startup({
           "nvim-telescope/telescope-fzf-native.nvim",
           run = "make",
           after = "telescope.nvim",
-          config = function()
-            require("telescope").load_extension("fzf")
-          end,
+          config = function() require("telescope").load_extension("fzf") end,
         },
       },
     })
@@ -1357,38 +1329,50 @@ packer.startup({
           uppercase_labels = false,
         })
 
-        nnoremap("s", function()
-          hop.hint_char1({ multi_windows = false })
-        end)
+        nnoremap("s", function() hop.hint_char1({ multi_windows = false }) end)
         -- NOTE: override F/f using hop motions
-        vim.keymap.set({ "x", "n" }, "F", function()
-          hop.hint_char1({
-            direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-            current_line_only = true,
-            inclusive_jump = false,
-          })
-        end)
-        vim.keymap.set({ "x", "n" }, "f", function()
-          hop.hint_char1({
-            direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-            current_line_only = true,
-            inclusive_jump = false,
-          })
-        end)
-        onoremap("F", function()
-          hop.hint_char1({
-            direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-            current_line_only = true,
-            inclusive_jump = true,
-          })
-        end)
-        onoremap("f", function()
-          hop.hint_char1({
-            direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-            current_line_only = true,
-            inclusive_jump = true,
-          })
-        end)
+        vim.keymap.set(
+          { "x", "n" },
+          "F",
+          function()
+            hop.hint_char1({
+              direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+              current_line_only = true,
+              inclusive_jump = false,
+            })
+          end
+        )
+        vim.keymap.set(
+          { "x", "n" },
+          "f",
+          function()
+            hop.hint_char1({
+              direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+              current_line_only = true,
+              inclusive_jump = false,
+            })
+          end
+        )
+        onoremap(
+          "F",
+          function()
+            hop.hint_char1({
+              direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+              current_line_only = true,
+              inclusive_jump = true,
+            })
+          end
+        )
+        onoremap(
+          "f",
+          function()
+            hop.hint_char1({
+              direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+              current_line_only = true,
+              inclusive_jump = true,
+            })
+          end
+        )
       end,
     })
     use({
@@ -1489,9 +1473,11 @@ packer.startup({
       config = function()
         local linker = require("gitlinker")
         linker.setup({ mappings = "<localleader>gu" })
-        mega.nnoremap("<localleader>go", function()
-          linker.get_repo_url({ action_callback = require("gitlinker.actions").open_in_browser })
-        end, "gitlinker: open in browser")
+        mega.nnoremap(
+          "<localleader>go",
+          function() linker.get_repo_url({ action_callback = require("gitlinker.actions").open_in_browser }) end,
+          "gitlinker: open in browser"
+        )
       end,
     })
     use({
@@ -1545,9 +1531,7 @@ packer.startup({
         {
           "theHamsta/nvim-dap-virtual-text",
           after = "nvim-dap",
-          config = function()
-            require("nvim-dap-virtual-text").setup({ all_frames = true })
-          end,
+          config = function() require("nvim-dap-virtual-text").setup({ all_frames = true }) end,
         },
       },
     })
@@ -1672,9 +1656,7 @@ packer.startup({
     use({
       "kevinhwang91/nvim-hclipboard",
       event = "InsertCharPre",
-      config = function()
-        require("hclipboard").start()
-      end,
+      config = function() require("hclipboard").start() end,
     })
     -- :Messages <- view messages in quickfix list
     -- :Verbose  <- view verbose output in preview window.
@@ -1687,9 +1669,7 @@ packer.startup({
     use({
       "knubie/vim-kitty-navigator",
       run = "cp ./*.py ~/.config/kitty/",
-      cond = function()
-        return not vim.env.TMUX
-      end,
+      cond = function() return not vim.env.TMUX end,
     })
     use({ "RRethy/nvim-align" })
 
@@ -1700,9 +1680,7 @@ packer.startup({
     -- "rhysd/vim-gfm-syntax",
     use({
       "iamcco/markdown-preview.nvim",
-      run = function()
-        vim.fn["mkdp#util#install"]()
-      end,
+      run = function() vim.fn["mkdp#util#install"]() end,
       ft = { "markdown" },
       config = function()
         vim.g.mkdp_auto_start = 0
@@ -1770,9 +1748,7 @@ packer.startup({
     use({ "fladson/vim-kitty" })
     use({
       "SirJson/fzf-gitignore",
-      config = function()
-        vim.g.fzf_gitignore_no_maps = true
-      end,
+      config = function() vim.g.fzf_gitignore_no_maps = true end,
     })
 
     ------------------------------------------------------------------------------
@@ -1783,9 +1759,7 @@ packer.startup({
   end,
 })
 
-mega.command("PackerCompiledEdit", function()
-  vim.cmd(fmt("edit %s", PACKER_COMPILED_PATH))
-end)
+mega.command("PackerCompiledEdit", function() vim.cmd(fmt("edit %s", PACKER_COMPILED_PATH)) end)
 
 mega.command("PackerCompiledDelete", function()
   vim.fn.delete(PACKER_COMPILED_PATH)

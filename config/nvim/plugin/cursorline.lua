@@ -60,9 +60,7 @@ local blink_active = false
 
 local timer = vim.loop.new_timer()
 
-local function is_floating_win()
-  return vim.fn.win_gettype() == "popup"
-end
+local function is_floating_win() return vim.fn.win_gettype() == "popup" end
 
 ---Determines whether or not a buffer/window should be ignored by this plugin
 ---@return boolean
@@ -118,9 +116,7 @@ end
 -- https://neovim.discourse.group/t/how-to-use-repeat-on-timer-start-in-a-lua-function/1645
 -- https://vi.stackexchange.com/questions/33056/how-to-use-vim-loop-interactively-in-neovim
 function mega.blink_cursorline(delay)
-  if is_ignored() then
-    return
-  end
+  if is_ignored() then return end
 
   local blink_timer = vim.loop.new_timer()
   blink_active = true
@@ -142,9 +138,7 @@ function mega.blink_cursorline(delay)
 end
 
 local function disable_cursorline()
-  if is_ignored() then
-    return
-  end
+  if is_ignored() then return end
 
   vim.opt_local.cursorlineopt = "number" -- optionally -> "screenline,number"
   vim.opt_local.cursorline = false
@@ -153,15 +147,11 @@ local function disable_cursorline()
 end
 
 local function enable_cursorline(should_blink)
-  if is_ignored() then
-    return
-  end
+  if is_ignored() then return end
 
   vim.opt_local.cursorlineopt = "screenline,number"
 
-  if should_blink then
-    mega.blink_cursorline()
-  end
+  if should_blink then mega.blink_cursorline() end
 
   set_cursorline()
   highlight_cursorline()
@@ -191,9 +181,7 @@ end
 local function cursor_moved()
   local should_change, should_blink = should_change_cursorline()
 
-  if is_ignored() or not should_change then
-    return
-  end
+  if is_ignored() or not should_change then return end
 
   if status == WINDOW then
     status = CURSOR
@@ -203,9 +191,7 @@ local function cursor_moved()
   vim.opt_local.cursorlineopt = "screenline,number"
   timer_start()
 
-  if should_blink then
-    mega.blink_cursorline()
-  end
+  if should_blink then mega.blink_cursorline() end
 
   if status == CURSOR and M.cursorline_delay ~= 0 then
     unhighlight_cursorline()
@@ -216,21 +202,15 @@ end
 mega.augroup("ToggleCursorLine", {
   {
     event = { "BufEnter", "WinEnter", "FocusGained" },
-    command = function()
-      enable_cursorline(true)
-    end,
+    command = function() enable_cursorline(true) end,
   },
   {
     event = { "InsertLeave" },
-    command = function()
-      enable_cursorline(false)
-    end,
+    command = function() enable_cursorline(false) end,
   },
   {
     event = { "BufLeave", "WinLeave" },
-    command = function()
-      disable_cursorline()
-    end,
+    command = function() disable_cursorline() end,
   },
   {
     event = { "InsertEnter", "CursorMovedI" },
@@ -241,8 +221,6 @@ mega.augroup("ToggleCursorLine", {
   },
   {
     event = { "CursorMoved" },
-    command = function()
-      cursor_moved()
-    end,
+    command = function() cursor_moved() end,
   },
 })

@@ -1,7 +1,5 @@
 local ts_ok, _ = pcall(require, "nvim-treesitter")
-if not ts_ok then
-  return
-end
+if not ts_ok then return end
 
 vim.opt.indentexpr = "nvim_treesitter#indent()"
 
@@ -26,9 +24,7 @@ function mega.treesitter.ensure_parser_installed()
     and not mega.treesitter.install_attempted[lang]
   then
     vim.schedule(function()
-      if vim.tbl_contains(ignored_langs, lang) then
-        return
-      end
+      if vim.tbl_contains(ignored_langs, lang) then return end
       vim.cmd("TSInstall " .. lang)
       mega.treesitter.install_attempted[lang] = true
       vim.notify(fmt("Installing missing Treesitter parser for %s", lang), "info", {
@@ -49,6 +45,7 @@ mega.augroup("TSParserCheck", {
 })
 
 require("nvim-treesitter.configs").setup({
+  -- auto_install = true,
   ensure_installed = {
     "bash",
     "c",
@@ -102,7 +99,7 @@ require("nvim-treesitter.configs").setup({
     use_languagetree = true,
   },
   indent = { enable = true },
-  autotag = { enable = true },
+  autotag = { enable = true, filetype = { "html", "xml", "heex" } },
   tree_docs = {
     enable = true,
     keymaps = {

@@ -8,15 +8,11 @@ local use_vcs_root = true
 local files = {}
 
 local function cap_path_length(path)
-  if string.len(path) > 70 then
-    path = vim.fn.pathshorten(path)
-  end
+  if string.len(path) > 70 then path = vim.fn.pathshorten(path) end
   return path
 end
 
-local function relativize(path)
-  return cap_path_length(vim.fn.fnamemodify(path, [[:~:.]]))
-end
+local function relativize(path) return cap_path_length(vim.fn.fnamemodify(path, [[:~:.]])) end
 local regex = vim.regex
 local path_skip_list = {
   regex("runtime/doc/.*\\.txt"),
@@ -30,9 +26,7 @@ local path_skip_list = {
 local function skip(path)
   local n = #path_skip_list
   for i = 1, n do
-    if path_skip_list[i]:match_str(path) then
-      return true
-    end
+    if path_skip_list[i]:match_str(path) then return true end
   end
   return false
 end
@@ -42,9 +36,7 @@ local function filter_oldfiles(prefix, fmt)
   local is_dir = vim.fn.escape("/", "\\") .. "$"
   local oldfiles = {}
   for _, file in ipairs(vim.v.oldfiles) do
-    if counter <= 0 then
-      break
-    end
+    if counter <= 0 then break end
     local absolute_path = vim.fn.glob(vim.fn.fnamemodify(file, ":p"))
     if
       absolute_path
@@ -71,18 +63,14 @@ local function current_dir_files()
   if use_vcs_root then
     local path = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h")
     local root = vim.fn.finddir(".git", path .. ";")
-    if root ~= "" then
-      vim.cmd("lcd " .. vim.fn.fnameescape(vim.fn.fnamemodify(root, ":h")))
-    end
+    if root ~= "" then vim.cmd("lcd " .. vim.fn.fnameescape(vim.fn.fnamemodify(root, ":h"))) end
   end
 
   local dir = vim.fn.expand(vim.fn.getcwd())
   return filter_oldfiles(dir, ":~:.")
 end
 
-local function recent_files()
-  return filter_oldfiles("", ":p:~")
-end
+local function recent_files() return filter_oldfiles("", ":p:~") end
 
 -- REF: https://patorjk.com/software/taag/#p=display&f=Elite&t=MEGALITHIC
 local function header()
@@ -162,13 +150,9 @@ local function move_cursor(d)
   for idx, range in ipairs(boundaries) do
     if range[1] <= curr_line and range[2] >= curr_line then
       if range[1] >= curr_line + d then
-        if idx > 1 then
-          vim.fn.cursor(boundaries[idx - 1][2], offset)
-        end
+        if idx > 1 then vim.fn.cursor(boundaries[idx - 1][2], offset) end
       elseif range[2] < curr_line + d then
-        if idx < #boundaries then
-          vim.fn.cursor(boundaries[idx + 1][1] + 1, offset)
-        end
+        if idx < #boundaries then vim.fn.cursor(boundaries[idx + 1][1] + 1, offset) end
       else
         vim.fn.cursor(curr_line + d, offset)
       end
@@ -178,13 +162,9 @@ local function move_cursor(d)
   end
 end
 
-local function handle_j()
-  move_cursor(1)
-end
+local function handle_j() move_cursor(1) end
 
-local function handle_k()
-  move_cursor(-1)
-end
+local function handle_k() move_cursor(-1) end
 
 local function handle_cr()
   local line_num = vim.fn.line(".")

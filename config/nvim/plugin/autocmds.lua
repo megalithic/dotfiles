@@ -57,9 +57,7 @@ do
   local smart_close_buftypes = {} -- Don't include no file buffers as diff buffers are nofile
 
   local function smart_close()
-    if fn.winnr("$") ~= 1 then
-      api.nvim_win_close(0, true)
-    end
+    if fn.winnr("$") ~= 1 then api.nvim_win_close(0, true) end
   end
 
   augroup("SmartClose", {
@@ -79,18 +77,14 @@ do
           or vim.wo.previewwindow
           or contains(smart_close_buftypes, vim.bo.buftype)
           or contains(smart_close_filetypes, vim.bo.filetype)
-        if is_eligible then
-          nnoremap("q", smart_close, { buffer = 0, nowait = true })
-        end
+        if is_eligible then nnoremap("q", smart_close, { buffer = 0, nowait = true }) end
       end,
     },
     {
       -- Close quick fix window if the file containing it was closed
       event = { "BufEnter" },
       command = function()
-        if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then
-          api.nvim_buf_delete(0, { force = true })
-        end
+        if fn.winnr("$") == 1 and vim.bo.buftype == "quickfix" then api.nvim_buf_delete(0, { force = true }) end
       end,
     },
     {
@@ -98,9 +92,7 @@ do
       event = { "QuitPre" },
       nested = true,
       command = function()
-        if vim.bo.filetype ~= "qf" then
-          vim.cmd("silent! lclose")
-        end
+        if vim.bo.filetype ~= "qf" then vim.cmd("silent! lclose") end
       end,
     },
   })
@@ -121,9 +113,7 @@ do
       event = { "BufWritePost" },
       command = function()
         if string.match(vim.fn.getline(1), "^#!") ~= nil then
-          if string.match(vim.fn.getline(1), "/bin/") ~= nil then
-            vim.cmd([[silent !chmod a+x <afile>]])
-          end
+          if string.match(vim.fn.getline(1), "/bin/") ~= nil then vim.cmd([[silent !chmod a+x <afile>]]) end
         end
       end,
     },
@@ -148,18 +138,14 @@ do
           local line_nr = last_place_mark[1]
           local last_line = vim.api.nvim_buf_line_count(0)
 
-          if line_nr > 0 and line_nr <= last_line then
-            vim.api.nvim_win_set_cursor(0, last_place_mark)
-          end
+          if line_nr > 0 and line_nr <= last_line then vim.api.nvim_win_set_cursor(0, last_place_mark) end
         end
       end,
     },
     {
       event = { "BufLeave" },
       command = function()
-        if can_save() then
-          vim.cmd("silent! update")
-        end
+        if can_save() then vim.cmd("silent! update") end
       end,
     },
   })
@@ -196,9 +182,7 @@ augroup("Plugins/Paq", {
   {
     event = { "User" },
     pattern = "PaqDoneSync",
-    command = function()
-      vim.cmd("Messages | Cfilter Paq")
-    end,
+    command = function() vim.cmd("Messages | Cfilter Paq") end,
   },
 })
 
@@ -274,9 +258,7 @@ do
     {
       event = { "FileType" },
       pattern = sidebar_fts,
-      command = function()
-        on_sidebar_enter()
-      end,
+      command = function() on_sidebar_enter() end,
     },
   })
 end
@@ -285,9 +267,7 @@ augroup("LazyLoads", {
   {
     event = { "FileType" },
     pattern = { "help" },
-    command = function()
-      vim.cmd([[wincmd J | :resize 40]])
-    end,
+    command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
 })
 
@@ -366,13 +346,9 @@ do
     --- deferred each time
     local timer
     return function()
-      if timer then
-        timer:stop()
-      end
+      if timer then timer:stop() end
       timer = vim.defer_fn(function()
-        if fn.mode() == "n" then
-          vim.cmd([[echon '']])
-        end
+        if fn.mode() == "n" then vim.cmd([[echon '']]) end
       end, 5000)
     end
   end
@@ -430,17 +406,13 @@ augroup("Windows", {
   {
     event = { "BufWinEnter" },
     command = function(args)
-      if vim.wo.diff then
-        vim.diagnostic.disable(args.buf)
-      end
+      if vim.wo.diff then vim.diagnostic.disable(args.buf) end
     end,
   },
   {
     event = { "BufWinLeave" },
     command = function(args)
-      if vim.wo.diff then
-        vim.diagnostic.enable(args.buf)
-      end
+      if vim.wo.diff then vim.diagnostic.enable(args.buf) end
     end,
   },
 })

@@ -70,15 +70,9 @@ function M.rename()
     api.nvim_win_set_option(winnr, "relativenumber", false)
     api.nvim_win_set_option(winnr, "number", false)
 
-    imap("<CR>", function()
-      rename_callback()
-    end, { buffer = bufnr })
-    imap("<esc>", function()
-      cleanup_rename_callback(winnr)
-    end, { buffer = bufnr })
-    imap("<c-c>", function()
-      cleanup_rename_callback(winnr)
-    end, { buffer = bufnr })
+    imap("<CR>", function() rename_callback() end, { buffer = bufnr })
+    imap("<esc>", function() cleanup_rename_callback(winnr) end, { buffer = bufnr })
+    imap("<c-c>", function() cleanup_rename_callback(winnr) end, { buffer = bufnr })
 
     vim.cmd("startinsert")
   end

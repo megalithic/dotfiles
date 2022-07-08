@@ -22,14 +22,10 @@ local function fileicon()
 end
 
 function M.ext.title_string()
-  if not hl_ok then
-    return
-  end
+  if not hl_ok then return end
   local dir = fn.fnamemodify(fn.getcwd(), ":t")
   local icon, hl = fileicon()
-  if not hl then
-    return (icon or "") .. " "
-  end
+  if not hl then return (icon or "") .. " " end
   -- return fmt("%s %s ", dir, icon)
   local has_tmux = vim.env.TMUX ~= nil
   return has_tmux and fmt("%s %s ", dir, icon) or dir .. " " .. icon
@@ -41,9 +37,7 @@ end
 --- Get the color of the current vim background and update tmux accordingly
 ---@param reset boolean?
 function M.ext.tmux.set_statusline(reset)
-  if not hl_ok then
-    return
-  end
+  if not hl_ok then return end
   local hl = reset and "Normal" or "MsgArea"
   local bg = H.get_hl(hl, "bg")
   -- TODO: we should correctly derive the previous bg value
@@ -53,23 +47,17 @@ end
 --- Displays a message in the tmux status-line
 ---@param msg string?
 function M.ext.tmux.display_message(msg)
-  if not msg then
-    return
-  end
+  if not msg then return end
   fn.jobstart(fmt("tmux display-message '%s'", msg))
 end
 
 function M.ext.tmux.set_popup_colorscheme()
-  if not hl_ok then
-    return
-  end
+  if not hl_ok then return end
   local bg = H.get_hl("Background", "bg")
 end
 
 function M.ext.kitty.set_background()
-  if not hl_ok then
-    return
-  end
+  if not hl_ok then return end
   if vim.env.KITTY_LISTEN_ON then
     local bg = H.get_hl("MsgArea", "bg")
     fn.jobstart(fmt("kitty @ --to %s set-colors background=%s", vim.env.KITTY_LISTEN_ON, bg))
@@ -78,9 +66,7 @@ end
 
 ---Reset the kitty terminal colors
 function M.ext.kitty.clear_background()
-  if not hl_ok then
-    return
-  end
+  if not hl_ok then return end
   if vim.env.KITTY_LISTEN_ON then
     local bg = require("mega.lush_theme.colors").bg0
     -- local bg = H.get_hl("Normal", "bg")
@@ -110,13 +96,9 @@ end
 local function workspace_root()
   local cwd = vim.loop.cwd()
 
-  if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then
-    return cwd
-  end
+  if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then return cwd end
 
-  local function cb(dir, _)
-    return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml")
-  end
+  local function cb(dir, _) return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml") end
 
   local root, _ = lsputil.path.traverse_parents(cwd, cb)
   return root
@@ -133,9 +115,7 @@ local function language_server_cmd(opts)
   local locations = opts.locations or {}
 
   local root = workspace_root()
-  if not root then
-    root = vim.loop.cwd()
-  end
+  if not root then root = vim.loop.cwd() end
 
   for _, location in ipairs(locations) do
     local exists, dir = dir_has_file(root, location)
@@ -160,9 +140,7 @@ function M.lsp.elixirls_cmd(opts)
   local cmd = "language_server.sh"
   local is_debug = opts.is_debug or false
 
-  if is_debug then
-    cmd = "debugger.sh"
-  end
+  if is_debug then cmd = "debugger.sh" end
 
   opts = vim.tbl_deep_extend("force", opts, {
     locations = {

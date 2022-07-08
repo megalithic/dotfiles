@@ -212,6 +212,10 @@ map("gL", "g$");
 // open link in new tab
 map("F", "gf");
 
+mapkey("gl", "#4Go to last used tab", function () {
+  RUNTIME("goToLastTab");
+});
+
 mapkey("::", "#8Open commands", function () {
   Front.openOmnibar({ type: "Commands" });
 });
@@ -221,6 +225,12 @@ unmap("yg");
 unmap("ygh");
 mapkey("ygh", "Copy GitHub repo base", function () {
   Clipboard.write(actions.parseRepo(window.location.href).repoPluginPath);
+});
+
+api.mapkey("ye", "Copy src URL of an image", function () {
+  Hints.create("img[src]", (element, _evt) => {
+    api.Clipboard.write(element.src);
+  });
 });
 
 // -- ESC hatch

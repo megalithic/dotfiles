@@ -1,6 +1,11 @@
 #-------------------------------------------------------------------------------
 #  PLUGIN MANAGEMENT
 #-------------------------------------------------------------------------------
+
+# TODO:
+# - add zsh-defer: https://github.com/romkatv/zsh-defer
+# - handle -d for defering in zsh_add_plugin/2
+
 PLUGIN_DIR="$DOTS/config/zsh/plugins"
 
 function zsh_add_file() {

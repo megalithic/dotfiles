@@ -25,12 +25,8 @@ local function set_keymaps(bufnr, winnr)
   -- tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
   -- tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
 
-  tmap("<C-h>", function()
-    vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]])
-  end, opts)
-  tmap("<C-k>", function()
-    vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]])
-  end, opts)
+  tmap("<C-h>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
+  tmap("<C-k>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
 end
 
 --- @class TermOpts
@@ -108,9 +104,7 @@ function mega.term_open(opts)
 
   set_keymaps(term_buf_id, winnr)
 
-  if precmd ~= nil then
-    cmd = fmt("%s; %s", precmd, cmd)
-  end
+  if precmd ~= nil then cmd = fmt("%s; %s", precmd, cmd) end
 
   vim.fn.termopen(cmd, {
     ---@diagnostic disable-next-line: unused-local
@@ -121,9 +115,7 @@ function mega.term_open(opts)
       if custom_on_exit ~= nil and type(custom_on_exit) == "function" then
         custom_on_exit(jobid, exit_code, event, cmd, winnr, term_buf_id)
       else
-        if notifier ~= nil and type(notifier) == "function" then
-          notifier(cmd, exit_code)
-        end
+        if notifier ~= nil and type(notifier) == "function" then notifier(cmd, exit_code) end
 
         -- test passed/process ended with an "ok" exit code, so let's close it.
         if exit_code == 0 then
@@ -152,9 +144,7 @@ mega.open_term = mega.term_open
 mega.command("TermElixir", function()
   local precmd = ""
   local cmd = ""
-  if require("mega.utils").root_has_file("Deskfile") then
-    precmd = "eval $(desk load)"
-  end
+  if require("mega.utils").root_has_file("Deskfile") then precmd = "eval $(desk load)" end
   if require("mega.utils").root_has_file("mix.exs") then
     cmd = "iex -S mix"
   else
@@ -177,9 +167,7 @@ end)
 mega.command("TermRuby", function()
   local precmd = ""
   local cmd = ""
-  if require("mega.utils").root_has_file("Deskfile") then
-    precmd = "eval $(desk load)"
-  end
+  if require("mega.utils").root_has_file("Deskfile") then precmd = "eval $(desk load)" end
   if require("mega.utils").root_has_file("Gemfile") then
     cmd = "rails c"
   else

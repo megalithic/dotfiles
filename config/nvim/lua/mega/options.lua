@@ -229,7 +229,7 @@ vim.opt.winminwidth = 20
 -----------------------------------------------------------------------------//
 -- Jumplist
 -----------------------------------------------------------------------------//
--- TODO: vim.opt.jumpoptions = { 'stack' } -- make the jumplist behave like a browser stack
+vim.opt.jumpoptions = { "stack", "view" } -- make the jumplist behave like a browser stack
 -----------------------------------------------------------------------------//
 -- List chars {{{1
 -----------------------------------------------------------------------------//
@@ -350,15 +350,11 @@ vim.opt.shada = [[!,'100,<0,s100,h]]
 -------------------------------------------------------------------------------
 vim.opt.backup = false
 vim.opt.writebackup = false
-if fn.isdirectory(vim.o.undodir) == 0 then
-  fn.mkdir(vim.o.undodir, "p")
-end
+if fn.isdirectory(vim.o.undodir) == 0 then fn.mkdir(vim.o.undodir, "p") end
 vim.opt.undofile = true
 vim.opt.swapfile = false
 vim.opt.directory = fn.stdpath("state") .. "/swap//"
-if fn.isdirectory(vim.o.directory) == 0 then
-  fn.mkdir(vim.o.directory, "p")
-end
+if fn.isdirectory(vim.o.directory) == 0 then fn.mkdir(vim.o.directory, "p") end
 --}}}
 -----------------------------------------------------------------------------//
 -- Match and search {{{1
