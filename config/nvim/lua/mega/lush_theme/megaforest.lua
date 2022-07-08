@@ -418,10 +418,16 @@ return lush(function()
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ fg = light_grey, gui = "italic" }),
     TSError({ gui = "undercurl", guisp = red }), -- ErrorText
-    -- highlight FIXME/TODO/REF: comments
+    -- highlight FIXME/TODO/NOTE/REF: comments
     commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
     commentTSNote({ fg = cyan, gui = "italic" }),
+    commentTSRef({ fg = bright_blue }),
+    CommentTasksTodo({ commentTSWarning }),
+    CommentTasksFixme({ commentTSDanger }),
+    CommentTasksNote({ commentTSNote }),
+    CommentTasksRef({ commentTSRef }),
+
     TSWarning({ fg = commentTSWarning.fg }),
     TSDanger({}),
     TSNote({ fg = commentTSNote.fg }),

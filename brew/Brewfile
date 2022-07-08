@@ -221,6 +221,7 @@ cask "font-victor-mono-nerd-font"
 # - gui
 cask "1password"
 cask "1password-cli"
+cask "acorn" # image editor
 cask "alfred"
 cask "android-studio" if OS.mac?
 cask "backblaze"
@@ -266,22 +267,24 @@ cask "notion"
 cask "obsidian"
 # cask "oracle-jdk"
 cask "postico"
-cask "qmk-toolbox"
-cask "qutebrowser" # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
+# cask "qmk-toolbox"
+# cask "qutebrowser" # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "signal"
+cask "sizzy"
 cask "slack"
 cask "soundsource", greedy: true
 cask "spotify"
 cask "tableplus"
 cask "thingsmacsandboxhelper"
 # cask "vagrant"
+# cask "vimac"  # FIXME: this requires a click-based install (https://install.appcenter.ms/users/dexterleng/apps/vimac/distribution_groups/sparkle)
 cask "the-unarchiver"
 cask "utm" # similar parallels
 # cask "usb-overdrive" # causes issues with QMK keyboards
 # cask "virtualbox" # requires restart with security allow (oracle things)
 # cask "witch" # using contexts in stead
 # cask "yubico-authenticator"
-cask "wez/wezterm/wezterm-nightly"
+# cask "wez/wezterm/wezterm-nightly"
 cask "yubico-yubikey-manager"
 cask "yubico-yubikey-piv-manager"
 cask "zoom"
@@ -290,13 +293,13 @@ cask "zoom"
 
 mas "Fantastical", id: 975937182
 # mas "Mayday", id: 1473168024
-mas "Spark", id: 1176895641
+# mas "Spark", id: 1176895641
 # mas "Canary Mail", id: 1236045954
 # mas "Tweetbot", id: 557168941
-mas "Drafts", id: 1435957248
+# mas "Drafts", id: 1435957248
 mas "Battery Indicator", id: 1206020918
 mas "Brother iPrint&Scan", id: 1193539993
-mas "Things", id: 904280696 # might be bailing from this
+# mas "Things", id: 904280696 # might be bailing from this
 # mas "Xcode", id: 497799835
 # NOTE: turns out, i _HATE_ these applications. burn them to the ground.
 # mas "Affinity Photo", id: 824183456

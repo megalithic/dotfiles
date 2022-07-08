@@ -33,8 +33,8 @@
     (task_list_marker_unchecked)
 ](#set! conceal ""))
 
-((task_list_marker_checked) @conceal (#set! conceal ""))
-((task_list_marker_unchecked) @conceal (#set! conceal ""))
+((task_list_marker_checked) @conceal (#set! conceal ""))
+((task_list_marker_unchecked) @conceal (#set! conceal ""))
 
 ; TODO: https://github.com/akinsho/org-bullets.nvim/blob/main/lua/org-bullets.lua#L167-L188
 ; handle these conceals with regex matches instead:

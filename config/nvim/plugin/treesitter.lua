@@ -6,6 +6,7 @@ vim.opt.indentexpr = "nvim_treesitter#indent()"
 local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
 ft_to_parser.json = "jsonc"
 ft_to_parser.keymap = "devicetree"
+ft_to_parser.zsh = "bash"
 
 mega.treesitter = mega.treesitter or {
   install_attempted = {},
@@ -14,7 +15,7 @@ mega.treesitter = mega.treesitter or {
 -- When visiting a file with a type we don't have a parser for, ask me if I want to install it.
 function mega.treesitter.ensure_parser_installed()
   local WAIT_TIME = 6000
-  local ignored_langs = { "elixir" }
+  local ignored_langs = {}
   local parsers = require("nvim-treesitter.parsers")
   local lang = parsers.get_buf_lang()
   local fmt = string.format
@@ -36,16 +37,16 @@ function mega.treesitter.ensure_parser_installed()
   end
 end
 
-mega.augroup("TSParserCheck", {
-  {
-    event = "FileType",
-    desc = "Treesitter: install missing parsers",
-    command = mega.treesitter.ensure_parser_installed,
-  },
-})
+-- mega.augroup("TSParserCheck", {
+--   {
+--     event = "FileType",
+--     desc = "Treesitter: install missing parsers",
+--     command = mega.treesitter.ensure_parser_installed,
+--   },
+-- })
 
 require("nvim-treesitter.configs").setup({
-  -- auto_install = true,
+  auto_install = true,
   ensure_installed = {
     "bash",
     "c",
@@ -55,7 +56,7 @@ require("nvim-treesitter.configs").setup({
     "devicetree",
     "dockerfile",
     "eex",
-    -- "elixir",
+    "elixir",
     "elm",
     "erlang",
     "fish",
