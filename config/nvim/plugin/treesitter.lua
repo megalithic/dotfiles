@@ -3,7 +3,8 @@ if not ts_ok then return end
 
 vim.opt.indentexpr = "nvim_treesitter#indent()"
 
-local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
+local treesitter_parsers = require("nvim-treesitter.parsers")
+local ft_to_parser = treesitter_parsers.filetype_to_parsername
 ft_to_parser.json = "jsonc"
 ft_to_parser.keymap = "devicetree"
 ft_to_parser.zsh = "bash"
@@ -149,74 +150,6 @@ require("nvim-treesitter.configs").setup({
       },
     },
   },
-  -- textobjects = {
-  --   move = {
-  --     enable = true,
-  --     set_jumps = true,
-
-  --     goto_next_start = {
-  --       ["]p"] = "@parameter.inner",
-  --       ["]m"] = "@function.outer",
-  --       ["]]"] = "@class.outer",
-  --     },
-  --     goto_next_end = {
-  --       ["]M"] = "@function.outer",
-  --       ["]["] = "@class.outer",
-  --     },
-  --     goto_previous_start = {
-  --       ["[p"] = "@parameter.inner",
-  --       ["[m"] = "@function.outer",
-  --       ["[["] = "@class.outer",
-  --     },
-  --     goto_previous_end = {
-  --       ["[M"] = "@function.outer",
-  --       ["[]"] = "@class.outer",
-  --     },
-  --   },
-
-  --   select = {
-  --     enable = true,
-  --     keymaps = {
-  --       ["af"] = "@function.outer",
-  --       ["if"] = "@function.inner",
-
-  --       ["ac"] = "@conditional.outer",
-  --       ["ic"] = "@conditional.inner",
-
-  --       ["aa"] = "@parameter.outer",
-  --       ["ia"] = "@parameter.inner",
-
-  --       ["av"] = "@variable.outer",
-  --       ["iv"] = "@variable.inner",
-  --     },
-  --   },
-
-  --   -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/after/plugin/treesitter.lua#L31-L54
-  --   -- swap = {
-  --   --   enable = true,
-  --   --   swap_next = swap_next,
-  --   --   swap_previous = swap_prev,
-  --   -- },
-  -- },
-  -- refactor = {
-  --   highlight_definitions = { enable = true },
-  --   highlight_current_scope = { enable = false },
-
-  --   smart_rename = {
-  --     enable = false,
-  --     keymaps = {
-  --       -- mapping to rename reference under cursor
-  --       smart_rename = "grr",
-  --     },
-  --   },
-  --   navigation = {
-  --     enable = false,
-  --     keymaps = {
-  --       goto_definition = "gnd", -- mapping to go to definition of symbol under cursor
-  --       list_definitions = "gnD", -- mapping to list all definitions in current file
-  --     },
-  --   },
-  -- },
   query_linter = {
     enable = true,
     use_virtual_text = true,
@@ -250,6 +183,7 @@ mega.conf("nvim-ts-autotag", {
     "javascriptreact",
     "vue",
     "elixir",
+    "eelixir",
     "heex",
   },
 })

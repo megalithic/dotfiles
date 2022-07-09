@@ -8,6 +8,7 @@
 # it gets replaced by the "replace" string.
 secure_input_notification: false
 enable_passive: false
+toggle_key: OFF
 matches:
   - trigger: "Rene"
     replace: "René"
