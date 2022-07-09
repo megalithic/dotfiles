@@ -1,4 +1,6 @@
 #!/usr/bin/env zsh
+#
+# REF: https://github.com/akinsho/dotfiles/commit/f7e40d7bf018488d49e5f83f3ceef9e4b0d41d48
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change

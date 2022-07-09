@@ -697,6 +697,11 @@ function M.config()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
 
+  conf("template", function()
+    local temp = require("template")
+    temp.temp_dir = ("%s/templates/"):format(vim.g.vim_dir)
+  end)
+
   conf("hop", function()
     vim.cmd([[packadd! hop.nvim]])
 
@@ -710,7 +715,7 @@ function M.config()
     })
 
     nnoremap("s", function()
-      p.hint_char2({ multi_windows = true })
+      p.hint_char2({ multi_windows = false })
       vim.cmd("norm zz")
       mega.blink_cursorline()
     end)

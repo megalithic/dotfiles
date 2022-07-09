@@ -50,3 +50,6 @@
 [submodule "config/hammerspoon/Spoons/VimMode.spoon"]
 	path = config/hammerspoon/Spoons/VimMode.spoon
 	url = https://github.com/dbalatero/VimMode.spoon
+[submodule "/Users/seth/.dotfiles/config/zsh/plugins/zsh-defer"]
+	path = /Users/seth/.dotfiles/config/zsh/plugins/zsh-defer
+	url = https://github.com/romkatv/zsh-defer

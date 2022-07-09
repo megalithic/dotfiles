@@ -33,13 +33,13 @@ return function()
   ---@return table
   local function dropdown(opts) return themes.get_dropdown(get_border(opts)) end
 
-  -- local function ivy(opts)
-  --   return themes.get_ivy(vim.tbl_deep_extend('keep', opts or {}, {
-  --     borderchars = {
-  --       preview = { '▔', '▕', '▁', '▏', '🭽', '🭾', '🭿', '🭼' },
-  --     },
-  --   }))
-  -- end
+  local function ivy(opts)
+    return themes.get_ivy(vim.tbl_deep_extend("keep", opts or {}, {
+      borderchars = {
+        preview = { "▔", "▕", "▁", "▏", "🭽", "🭾", "🭿", "🭼" },
+      },
+    }))
+  end
 
   telescope.setup({
     defaults = {

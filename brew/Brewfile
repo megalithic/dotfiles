@@ -245,6 +245,7 @@ cask "dropbox"
 # cask "discord"
 # cask "expressvpn"
 cask "figma"
+cask "flux"
 # cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true
@@ -270,7 +271,6 @@ cask "postico"
 # cask "qmk-toolbox"
 # cask "qutebrowser" # sudo xattr -dr com.apple.quarantine /Applications/qutebrowser.app
 cask "signal"
-cask "sizzy"
 cask "slack"
 cask "soundsource", greedy: true
 cask "spotify"

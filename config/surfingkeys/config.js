@@ -197,6 +197,7 @@ map("<Ctrl-l>", "R");
 map("<Ctrl-h>", "E");
 // close current tab
 map("<Ctrl-w>", "x");
+map("<Ctrl-u>", "X");
 // page up/down
 map("<Ctrl-f>", "d");
 map("<Ctrl-b>", "e");
