@@ -70,9 +70,9 @@ update() {
       brew uninstall --ignore-dependencies --force ruby
 
     # FIXME: find a better way to ensure i'm leaving 3.3, and only removing newer versions.
-    log "remove latest weechat and relink to 3.3" &&
-      # NOTE: presently weechat 3.3 is the only one that works for my setup. ¯\_(ツ)_/¯
-      brew uninstall weechat && brew link weechat
+    # log "remove latest weechat and relink to 3.3" &&
+    #   # NOTE: presently weechat 3.3 is the only one that works for my setup. ¯\_(ツ)_/¯
+    #   brew uninstall weechat && brew link weechat
   fi
 
   log "neovim install.." && ./bin/nvim-install

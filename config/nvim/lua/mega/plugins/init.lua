@@ -132,8 +132,8 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
-  "rgroli/other.nvim",
-  "glepnir/template.nvim",
+  -- "rgroli/other.nvim",
+  -- "glepnir/template.nvim",
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
@@ -304,7 +304,7 @@ function M.config()
 
   -- conf("whichkey", { config = "whichkey" })
   -- conf("bufferline", { config = "bufferline" })
-  conf("hydra", { config = "hydra" })
+  -- conf("hydra", { config = "hydra" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })
@@ -313,11 +313,11 @@ function M.config()
   conf("projectionist", { config = "projectionist" })
   conf("toggleterm", { config = "toggleterm" })
   conf("vim-test", { config = "vim-test" })
-  conf("neotest", { config = "neotest" })
+  -- conf("neotest", { config = "neotest" })
   conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
   -- conf("telekasten", { config = "telekasten" })
-  conf("vscode", { config = "vscode" })
+  -- conf("vscode", { config = "vscode" })
   conf("nvim-web-devicons", {})
 
   conf("startuptime", function() vim.g.startuptime_tries = 15 end)
@@ -699,10 +699,10 @@ function M.config()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
 
-  conf("template", function()
-    local temp = require("template")
-    temp.temp_dir = ("%s/templates/"):format(vim.g.vim_dir)
-  end)
+  -- conf("template", function()
+  --   local temp = require("template")
+  --   temp.temp_dir = ("%s/templates/"):format(vim.g.vim_dir)
+  -- end)
 
   conf("hop", function()
     vim.cmd([[packadd! hop.nvim]])
@@ -855,47 +855,47 @@ function M.config()
 
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
-  conf("other-nvim", {
-    enabled = false,
-    config = {
-      mappings = {
-        {
-          pattern = "/(.*)/live/*.ex$",
-          target = "/%1/live/%2.html.heex",
-        },
-        {
-          pattern = "/(.*)/live/*.html.heex$",
-          target = "/%1/live/%2.ex",
-        },
+  -- conf("other-nvim", {
+  --   enabled = false,
+  --   config = {
+  --     mappings = {
+  --       {
+  --         pattern = "/(.*)/live/*.ex$",
+  --         target = "/%1/live/%2.html.heex",
+  --       },
+  --       {
+  --         pattern = "/(.*)/live/*.html.heex$",
+  --         target = "/%1/live/%2.ex",
+  --       },
 
-        -- {
-        --   pattern = "/src/app/(.*)/.*.ts$",
-        --   target = "/src/app/%1/%1.component.html",
-        -- },
-        -- {
-        --   pattern = "/src/app/(.*)/.*.html$",
-        --   target = "/src/app/%1/%1.component.ts",
-        -- },
-      },
-      -- transformers = {
-      --   -- defining a custom transformer
-      --   lowercase = function(inputString)
-      --     return inputString:lower()
-      --   end,
-      -- },
-    },
-  })
+  --       -- {
+  --       --   pattern = "/src/app/(.*)/.*.ts$",
+  --       --   target = "/src/app/%1/%1.component.html",
+  --       -- },
+  --       -- {
+  --       --   pattern = "/src/app/(.*)/.*.html$",
+  --       --   target = "/src/app/%1/%1.component.ts",
+  --       -- },
+  --     },
+  --     -- transformers = {
+  --     --   -- defining a custom transformer
+  --     --   lowercase = function(inputString)
+  --     --     return inputString:lower()
+  --     --   end,
+  --     -- },
+  --   },
+  -- })
 
   conf("neogen", function()
     require("neogen").setup({ snippet_engine = "luasnip" })
     mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
   end)
 
-  conf("undotree", function()
-    mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
-    vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
-    vim.g.undotree_SetFocusWhenToggle = 1
-  end)
+  -- conf("undotree", function()
+  --   mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
+  --   vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
+  --   vim.g.undotree_SetFocusWhenToggle = 1
+  -- end)
 end
 
 return M
