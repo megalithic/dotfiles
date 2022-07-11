@@ -1,18 +1,18 @@
+# invoker
+# terminal-notifier
 bundler
 coderay
 curses
 fastri
 foreman
 github-auth
-# invoker
+language_server
 neovim
+nokogiri
 pry
 rcodetools
 rubocop
 sidekiq
 solargraph
-# terminal-notifier
 weechat
-language_server
-nokogiri
 yard

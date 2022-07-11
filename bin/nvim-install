@@ -86,7 +86,7 @@ do_build() {
   log "installing neovim-remote via python (pip3).."
   # $(brew --prefix)/opt/python@3.9/bin/python3.9 -m pip install --upgrade pip
   python3 -m pip install --upgrade pip
-  pip3 install neovim-remote
+  pip install neovim-remote
 }
 
 build() {

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+log "installing python packages.."
+cat "$DOTS/asdf/default-python-packages" | xargs pip install

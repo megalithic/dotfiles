@@ -137,7 +137,6 @@ alias b="brew"
 
 # PYTHON
 # -----------------------------------------------------------------------------
-alias pyinstall="cat $DOTS/asdf/default-python-packages | xargs pip3 install"
 # alias py="python"
 # alias python=/usr/local/bin/python3
 # alias python=python3.8
