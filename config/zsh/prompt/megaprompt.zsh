@@ -159,7 +159,7 @@ zstyle ':vcs_info:git*:*' actionformats '(%B%F{red}%b|%a%c%u%%b%f) '
 zstyle ':vcs_info:git:*' formats "%F{249}(%f%F{245}%{$__DOTS[ITALIC_ON]%}%b%{$__DOTS[ITALIC_OFF]%}%f%F{249})%f%c%u%m"
 
 __in_git() {
-  [[ $(zsh-defer -c git rev-parse --is-inside-work-tree 2> /dev/null) == "true" ]]
+  [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == "true" ]]
 }
 
 # on the output of the git command adds an indicator to the the vcs info
@@ -168,7 +168,7 @@ __in_git() {
 function +vi-git-untracked() {
   emulate -L zsh
   if __in_git; then
-    if [[ -n $(zsh-defer -c git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
+    if [[ -n $(git ls-files --directory --no-empty-directory --exclude-standard --others 2> /dev/null) ]]; then
       hook_com[unstaged]+="%F{white} $git_untracked_icon%f"
     fi
   fi
@@ -177,7 +177,7 @@ function +vi-git-untracked() {
 function +vi-git-deleted() {
   emulate -L zsh
   if __in_git; then
-    if [[ -n $(zsh-defer -c git ls-files --deleted 2> /dev/null) ]]; then
+    if [[ -n $(git ls-files --deleted 2> /dev/null) ]]; then
       hook_com[unstaged]+="%F{red} $git_deleted_icon%f"
     fi
   fi
@@ -195,7 +195,7 @@ function +vi-git-deleted() {
 function +vi-git-stash() {
   emulate -L zsh
   if __in_git; then
-    if [[ -n $(zsh-defer -c git rev-list --walk-reflogs --count refs/stash 2> /dev/null) ]]; then
+    if [[ -n $(git rev-list --walk-reflogs --count refs/stash 2> /dev/null) ]]; then
       hook_com[unstaged]+="%F{yellow} $git_stash_icon%f"
     fi
   fi
@@ -208,10 +208,10 @@ function +vi-git-compare() {
   local -a gitstatus
 
   # Exit early in case the worktree is on a detached HEAD
-  zsh-defer -c git rev-parse ${hook_com[branch]}@{upstream} >/dev/null 2>&1 || return 0
+  git rev-parse ${hook_com[branch]}@{upstream} >/dev/null 2>&1 || return 0
 
   local -a ahead_and_behind=(
-    $(zsh-defer -c git rev-list --left-right --count HEAD...${hook_com[branch]}@{upstream} 2>/dev/null)
+    $(git rev-list --left-right --count HEAD...${hook_com[branch]}@{upstream} 2>/dev/null)
   )
 
   ahead=${ahead_and_behind[1]}
@@ -229,7 +229,7 @@ function +vi-git-remotebranch() {
     local remote
 
     # Are we on a remote-tracking branch?
-    remote=${$(zsh-defer -c git rev-parse --verify ${hook_com[branch]}@{upstream} \
+    remote=${$(git rev-parse --verify ${hook_com[branch]}@{upstream} \
         --symbolic-full-name 2>/dev/null)/refs\/remotes\/}
 
     # The first test will show a tracking branch whenever there is one. The
