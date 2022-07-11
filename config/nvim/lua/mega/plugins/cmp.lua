@@ -122,7 +122,19 @@ return function()
       { name = "path" },
       -- { name = "emmet_ls" },
     }, {
-      { name = "buffer", keyword_length = 2 },
+      {
+        name = "buffer",
+        keyword_length = 2,
+        options = {
+          get_bufnrs = function()
+            local bufs = {}
+            for _, win in ipairs(api.nvim_list_wins()) do
+              bufs[api.nvim_win_get_buf(win)] = true
+            end
+            return vim.tbl_keys(bufs)
+          end,
+        },
+      },
     }),
     formatting = {
       deprecated = true,
@@ -149,6 +161,8 @@ return function()
             buffer = "[buf]",
             spell = "[spl]",
             emoji = "[emo]",
+            cmdline = "[cmd]",
+            cmdline_history = "[hist]",
           })[entry.source.name] or entry.source.name
         end
 
@@ -163,6 +177,7 @@ return function()
     sources = cmp.config.sources({
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
       { name = "path" },
+      { name = "cmdline_history" },
     }),
   })
 
@@ -184,4 +199,12 @@ return function()
     },
     { name = "buffer" },
   })
+
+  require("cmp_dictionary").setup({
+    async = true,
+    dic = {
+      ["*"] = { "/usr/share/dict/words" },
+    },
+  })
+  require("cmp_dictionary").update()
 end
