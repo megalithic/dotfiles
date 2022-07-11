@@ -102,13 +102,6 @@ bindkey "^D" fzf-cd-widget
 bindkey "^P" up-line-or-search
 bindkey "^N" down-line-or-search
 
-# -- zsh-autosuggestions
-# REF: https://github.com/jose-elias-alvarez/dotfiles/blob/1b1d725459df1ba1fc62b1bacc510fe8f28b3eaa/home/zshrc#L13-L17
-# bindkey '^ ' autosuggest-accept
-# bindkey '^E' autosuggest-accept
-# bindkey '^Y' autosuggest-execute
-#
-
 # -- zsh-users/zsh-history-substring-search
 # REF: https://github.com/agkozak/dotfiles/blob/master/.zshrc#L550-L556
 # up and down arrows:
@@ -123,6 +116,9 @@ bindkey "^j" history-substring-search-down
 
 bindkey '^P' history-substring-search-up
 bindkey '^N' history-substring-search-down
+
+bindkey "$terminfo[kcuu1]" history-substring-search-up
+bindkey "$terminfo[kcud1]" history-substring-search-down
 
 # REF: https://jdhao.github.io/2019/06/13/zsh_bind_keys/#bind-key-to-run-a-custom-command
 # bindkey -s '^o' 'nvim $(fzf)^M'

@@ -6,6 +6,8 @@ vim.filetype.add({
     ["kitty.conf"] = "kitty",
     [".env"] = "sh",
     ["Deskfile"] = "sh",
+    ["tool-versions"] = "conf",
+    [".tool-versions"] = "conf",
     ["tsconfig.json"] = "jsonc",
     [".prettierrc"] = "jsonc",
     [".eslintrc"] = "jsonc",

@@ -298,7 +298,7 @@ path=(
   ${HOMEBREW_PREFIX}/opt/openssl@*/bin(Nn[-1]-/)
   ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
   ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
-  ${HOMEBREW_PREFIX}/opt/python@3.*/libexec/bin(Nn[-1]-/)
+  ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
   ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
 
   ${CARGO_HOME}/bin(N-/)
@@ -306,10 +306,10 @@ path=(
 
   ${GOBIN}(N-/)
 
-  ${HOME}/Library/Python/3.*/bin(Nn[-1]-/)
+  ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
   ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-  /usr/local/lib/python3.*/bin(Nn[-1]-/)
-  /usr/local/lib/python3.*/site-packages(N-/)
+  /usr/local/lib/python3.10/bin(Nn[-1]-/)
+  /usr/local/lib/python3.10/site-packages(N-/)
   /usr/local/lib/python2.*/bin(Nn[-1]-/)
   /usr/local/lib/python2.*/site-packages(N-/)
   /usr/local/opt/python@3.*/bin(Nn[-1]-/)
@@ -346,6 +346,12 @@ export ZSH_AUTOSUGGEST_USE_ASYNC=1
   export ZSH_AUTOSUGGEST_STRATEGY=("match_prev_cmd" "completion")
 export _ZO_DATA_DIR="$XDG_DATA_HOME/zoxide"
 export _ZO_ECHO=1
+
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=red,bold'
+HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=black,bold'
+# HISTORY_SUBSTRING_SEARCH_GLOBBING_FLAGS='i'
+# HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=''
+# HISTORY_SUBSTRING_SEARCH_FUZZY=''
 
 # use .localrc for SUPER SECRET stuff
 if [ -f "$HOME/.localrc" ]; then
