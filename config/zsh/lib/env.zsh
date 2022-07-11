@@ -14,6 +14,9 @@ __DOTS[ITALIC_OFF]=$'\e[23m'
 # export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 # export ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
 
+PLATFORM=$(uname -s)
+export PLATFORM="$PLATFORM"
+
 export XDG_CONFIG_HOME
 export XDG_CACHE_HOME
 export XDG_DATA_HOME
@@ -103,6 +106,9 @@ fi
 
 # -- weechat
 export WEECHAT_HOME="$XDG_CONFIG_HOME/weechat"
+# REF:
+# https://github.com/ansible/ansible/issues/76322#issuecomment-974147955
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 # -- wezterm
 export WEZTERM_CONFIG_FILE="$XDG_CONFIG_HOME/wezterm/wezterm.lua"
@@ -115,8 +121,6 @@ fi
 
 case "$(uname)" in
   Darwin)
-    PLATFORM="macos"
-    export PLATFORM="macos"
     export ANDROID_SDK_ROOT="${HOME}/Library/Android/sdk/"
     # export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 
@@ -165,8 +169,6 @@ case "$(uname)" in
     fi
   ;;
   Linux)
-    PLATFORM="linux"
-    export PLATFORM="linux"
     # Java -----------------------------------------------------------------------
     # Use Java 8 because -> https://stackoverflow.com/a/49759126
     # ------------------------------------------------------------------------
@@ -352,6 +354,9 @@ HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=black,bold'
 # HISTORY_SUBSTRING_SEARCH_GLOBBING_FLAGS='i'
 # HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=''
 # HISTORY_SUBSTRING_SEARCH_FUZZY=''
+
+##Remove % at end of print when not using \n
+PROMPT_EOL_MARK=""
 
 # use .localrc for SUPER SECRET stuff
 if [ -f "$HOME/.localrc" ]; then
