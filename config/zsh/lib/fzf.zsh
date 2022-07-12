@@ -45,9 +45,9 @@ _fzf_megaforest() {
 
   # --color=bg+:$color01,bg:$color00,spinner:$color0C,hl:$color0D
   export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
-  --color=bg+:$color01,spinner:$color0C,hl:$color0D
+  --color=bg+:$color01,spinner:$color0C,hl:$color0A
   --color=fg:$color04,header:$color0D,info:$color0A,pointer:$color0C
-  --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0D
+  --color=marker:$color0C,fg+:$color06,prompt:$color0A,hl+:$color0F
   "
 }
 
