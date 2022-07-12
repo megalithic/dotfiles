@@ -72,7 +72,7 @@ brew "docker"
 brew "docker-compose"
 brew "docker-credential-helper-ecr"
 brew "docker-machine" # , restart_service: true, link: false
-# brew "duck" # FIXME: do we need this?
+brew "duck" # cli for cyberduck
 # brew "elixir-ls" # disabled for now, as we're manually installing via dotbot
 brew "espanso" if OS.mac?
 brew "exa"

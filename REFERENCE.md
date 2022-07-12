@@ -7,6 +7,30 @@
 - https://github.com/dexterleng/vimac
 - https://www.trankynam.com/xtrafinder/
 
+#### System Intergrity Protection (SIP)
+
+1. Disable System Integrity Protection.
+
+   - How to turn off System Integrity Protection in macOS
+
+   - Here's how to turn off System Integrity Protection on Mac
+
+   - Restart your Mac
+   - Hold down Command+R to reboot into Recovery Mode.
+   - Click Utilities.
+   - Select Terminal.
+   - Type the following command: csrutil disable.
+   - Press Enter on your keyboard.
+   - Click Restart…
+   - Restart your Mac and your new System Integrity Protection setting will take effect.
+
+2. Launch Terminal and enter the following command:
+   - `sudo defaults write /Library/Preferences/com.apple.security.libraryvalidation.plist DisableLibraryValidation -bool true`
+   - This command allows Finder (and all applications) to load arbitrary library.
+   - By default, Finder can load libraries signed by Apple only.
+3. Copy XtraFinderInjector.osax to directory /Library/ScriptingAdditions.
+4. Copy XtraFinder.app to directory /Applications.
+
 ## GPG/Yubikey
 
 - https://hackernoon.com/things-you-must-know-about-git-crypt-to-successfully-protect-your-secret-data-kyi3wi6

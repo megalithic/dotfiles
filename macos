@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 #
 # REF: https://github.com/akinsho/dotfiles/commit/f7e40d7bf018488d49e5f83f3ceef9e4b0d41d48
+# TODO: https://www.youtube.com/watch?v=psPgSN1bPLY&t=349s
 
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change
@@ -533,7 +534,7 @@ apps_to_launch=(
 	"BetterTouchTool"
 	"Brave Browser"
 	"Contexts"
-	# "Docker"
+	"Docker"
 	# "Dropbox"
 	# "ExpressVPN"
 	"Fantastical"
@@ -556,7 +557,7 @@ apps_to_startup=(
 	"Bartender 4"
 	"BetterTouchTool"
 	"Contexts"
-	# "Docker"
+	"Docker"
 	# "Dropbox"
 	"Fantastical"
 	"Hammerspoon"
