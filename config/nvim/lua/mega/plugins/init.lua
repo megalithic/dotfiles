@@ -86,7 +86,6 @@ local PKGS = {
   "RRethy/nvim-treesitter-textsubjects",
   "David-Kunz/treesitter-unit",
   { "nvim-treesitter/nvim-treesitter-context" },
-  "SmiteshP/nvim-gps",
   "lewis6991/spellsitter.nvim",
 
   ------------------------------------------------------------------------------
@@ -179,6 +178,7 @@ local PKGS = {
   -- "aca/wezterm.nvim",
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
   "RRethy/nvim-align",
+  "junegunn/vim-easy-align",
 
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
@@ -319,6 +319,14 @@ function M.config()
   conf("zk", { config = "zk" })
   -- conf("telekasten", { config = "telekasten" })
   -- conf("vscode", { config = "vscode" })
+
+  conf("vim-easy-align", function()
+    -- n : interactive EasyAlign for a motion/text object (e.g. gaip)
+    -- x : interactive EasyAlign in visual mode (e.g. vipga)
+    nmap("<leader>ga", "<Plug>(EasyAlign)", "align things")
+    xmap("<leader>ga", "<Plug>(EasyAlign)", "align things")
+  end)
+
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
     highlight_motion = { -- Highlight before inserting/changing surrounds
@@ -724,7 +732,7 @@ function M.config()
 
     nnoremap("s", function()
       p.hint_char2({ multi_windows = false })
-      vim.cmd("norm zz")
+      -- vim.cmd("norm zz")
       mega.blink_cursorline()
     end)
   end)
@@ -813,39 +821,6 @@ function M.config()
         fzf = {
           extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
         },
-      },
-    })
-  end)
-
-  -- using this primarily with the winbar
-  conf("nvim-gps", function()
-    local plug = require("nvim-gps")
-
-    local icons = mega.icons.codicons
-    local types = mega.icons.type
-    plug.setup({
-      languages = {
-        heex = false,
-        elixir = false,
-        eelixir = false,
-      },
-      enabled = true,
-      icons = {
-        ["class-name"] = icons.Class,
-        ["function-name"] = icons.Function,
-        ["method-name"] = icons.Method,
-        ["container-name"] = icons.Module,
-        ["tag-name"] = icons.Field,
-        ["array-name"] = icons.Value,
-        ["object-name"] = icons.Value,
-        ["null-name"] = icons.Null,
-        ["boolean-name"] = icons.Keyword,
-        ["number-name"] = icons.Value,
-        ["string-name"] = icons.Text,
-        ["mapping-name"] = types.object,
-        ["sequence-name"] = types.array,
-        ["integer-name"] = types.number,
-        ["float-name"] = types.float,
       },
     })
   end)

@@ -32,7 +32,7 @@ return function(on_attach)
       b.formatting.fixjson.with({ filetypes = { "jsonc", "json" } }),
       -- b.formatting.isort,
       b.formatting.stylua.with({ -- sumneko now formats!
-        condition = function(util) return mega.executable("stylua") and util.root_has_file("stylua.toml") end,
+        condition = function() return mega.executable("stylua") end,
       }),
       b.formatting.isort,
       b.formatting.black,

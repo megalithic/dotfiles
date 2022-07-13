@@ -38,6 +38,9 @@
 
 ; TODO: https://github.com/akinsho/org-bullets.nvim/blob/main/lua/org-bullets.lua#L167-L188
 ; handle these conceals with regex matches instead:
+
+; alts: ▪ ●
+
 ((list_marker_star) @conceal (#set! conceal "✸ ") (#eq? @conceal "* "))
 ((list_marker_plus) @conceal (#set! conceal "✿ ") (#eq? @conceal "+ "))
 ((list_marker_minus) @conceal (#set! conceal " ") (#eq? @conceal "- "))

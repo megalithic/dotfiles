@@ -8,10 +8,13 @@
 // - https://github.com/mindgitrwx/personal_configures/blob/master/Surfingkeys-config-ko-dev.js
 // - https://github.com/loyalpartner/surfingkeys-config/blob/master/surfingkeys.js
 // - https://github.com/j-hui/pokerus/blob/main/surfingkeys.config/surfingkeys/surfingkeys.js
+//
 // TODO:
 // - https://brookhong.github.io/2018/11/18/bring-focus-back-to-page-content-from-address-bar.html
 // - https://github.com/brookhong/Surfingkeys/wiki/FAQ#how-to-go-to-nth-tab
 // - https://github.com/glacambre/firenvim
+//
+// - vivaldi support: https://gist.github.com/coramuirgen/94ba1d587cb2093c71f6ef4f0b371069
 
 const actions = {};
 const util = {};
@@ -61,16 +64,12 @@ settings.scrollStepSize = 100;
 settings.tabsThreshold = 0;
 settings.modeAfterYank = "Normal";
 settings.useNeovim = false;
-
-// prev/next link
-// settings.nextLinkRegex = /((>>|next)|>|›|»|→|次へ|次のページ+)/i;
-// settings.prevLinkRegex = /((<<|prev(ious)?)|<|‹|«|←|前へ|前のページ+)/i;
 // blocklist
 settings.blocklistPattern = /mail.google.com/;
 // order
 settings.historyMUOrder = false;
 settings.tabsMRUOrder = false;
-// Input box trueだとiなどで入力ボックスに切り替えてもリンクキーが表示されたままに 切り替えたリンクキーが最後に入力されることも
+// Input box true
 settings.cursorAtEndOfInput = false;
 
 // -----------------------------------------------------------------------------------------------------------------------

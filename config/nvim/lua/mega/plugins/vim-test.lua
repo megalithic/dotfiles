@@ -6,11 +6,11 @@ return function()
     local tmux_display_message = require("mega.utils").ext.tmux.display_message
 
     if exit == 0 then
-      print("Success!")
+      vim.notify("Test(s) passed.", "info")
       tmux_display_message("Success!")
       system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Success\!"]], cmd))
     else
-      print("Failure!")
+      vim.notify("Test(s) failed.", "error")
       tmux_display_message("Failure!")
       system(string.format([[terminal-notifier -title "Neovim" -subtitle "%s" -message "Failure\!"]], cmd))
     end
