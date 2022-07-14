@@ -199,12 +199,4 @@ return function()
     },
     { name = "buffer" },
   })
-
-  require("cmp_dictionary").setup({
-    async = true,
-    dic = {
-      ["*"] = { "/usr/share/dict/words" },
-    },
-  })
-  require("cmp_dictionary").update()
 end

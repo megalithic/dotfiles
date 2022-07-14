@@ -85,6 +85,7 @@ ln -sfv ~/Library/Mobile\ Documents/com\~apple\~CloudDocs/ ~/iCloud
 defaults write com.apple.screencapture location -string "" # ${HOME}/screenshots" # or "${HOME}/iCloud/Screenshots"
 defaults write com.apple.screencapture type -string ""     # (other options: BMP, GIF, JPG, PDF, TIFF)
 defaults write com.apple.screencapture name ""
+defaults write com.apple.screencapture type jpg
 # don't include the datetime stamp
 # defaults write com.apple.screencapture "include-date" -1
 
@@ -93,9 +94,6 @@ defaults write com.apple.screencapture disable-shadow -bool true
 
 # no .DS_Store on network
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
-
-# Don’t automatically rearrange Spaces based on most recent use
-defaults write com.apple.dock mru-spaces -bool false
 
 # Increase sound quality for Bluetooth headphones/headsets
 # defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
@@ -141,8 +139,15 @@ defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -
 defaults write /Library/Preferences/com.apple.security GKAutoRearm -bool NO
 
 # dock size & autohidden dock
+defaults write com.apple.Dock showhidden -bool true
+
 defaults write com.apple.dock tilesize -int 48
 defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock autohide-time-modifier -int 0
+
+# Don’t automatically rearrange Spaces based on most recent use
+defaults write com.apple.dock mru-spaces -bool false
 
 # autohide menubar (true autohide, false -- don't autohide)
 defaults write NSGlobalDomain _HIHideMenuBar -bool false
@@ -580,6 +585,10 @@ defaults write "com.brave.Browser" ExternalProtocolDialogShowAlwaysOpenCheckbox 
 
 # Set sketchyvim's visual highlight to green (https://github.com/FelixKratz/SketchyVim#installation)
 defaults write NSGlobalDomain AppleHighlightColor -string "0.615686 0.823529 0.454902"
+
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.DiskArbitration.diskarbitrationd.plist DADisableEjectNotification -bool YES
+sudo pkill diskarbitrationd
+# alt: https://ejectify.app/
 
 log_ok "DONE please note that some of these changes require a full logout/restart to take effect."
 

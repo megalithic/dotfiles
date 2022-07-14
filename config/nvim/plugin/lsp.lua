@@ -98,7 +98,8 @@ local function setup_commands()
   local function make_diagnostic_qf_updater()
     local cmd_id = nil
     return function()
-      vim.diagnostic.setqflist({ open = false })
+      if not api.nvim_buf_is_valid(0) then return end
+      pcall(vim.diagnostic.setqflist, { open = false })
       mega.toggle_list("quickfix")
       if not mega.is_vim_list_open() and cmd_id then
         api.nvim_del_autocmd(cmd_id)
@@ -108,8 +109,8 @@ local function setup_commands()
       cmd_id = api.nvim_create_autocmd("DiagnosticChanged", {
         callback = function()
           if mega.is_vim_list_open() then
-            vim.diagnostic.setqflist({ open = false })
-            if #vim.fn.getqflist() == 0 then mega.toggle_list("quickfix") end
+            pcall(vim.diagnostic.setqflist, { open = false })
+            if #fn.getqflist() == 0 then mega.toggle_list("quickfix") end
           end
         end,
       })
@@ -168,6 +169,7 @@ local function setup_autocommands(client, bufnr)
   augroup("LspDiagnostics", {
     {
       event = { "CursorHold" },
+      desc = "Show diagnostics",
       command = function() diagnostic_popup() end,
     },
   })
@@ -188,8 +190,8 @@ end
 local function setup_mappings(client, bufnr)
   local desc = function(desc) return { desc = desc, buffer = bufnr } end
 
-  nnoremap("[d", function() diagnostic.goto_prev() end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function() diagnostic.goto_next() end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function() diagnostic.goto_prev({ float = false }) end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function() diagnostic.goto_next({ float = false }) end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
   nnoremap("gr", vim.lsp.buf.references, desc("lsp: references"))
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))

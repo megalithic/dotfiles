@@ -21,8 +21,6 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 FORCE_INSTALL="false"
 
-pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
-
 remove_brew_nvim() {
   if brew ls --versions neovim >/dev/null; then
     read -p "$(tput bold)$(tput setaf 5)[?] remove homebrew version of neovim (Y/n)?$(tput sgr 0) " yn
@@ -101,7 +99,7 @@ while getopts "fp" OPTION; do
   case $OPTION in
 
     p)
-      nvim "+StartupTime"
+      nvim "+StartupTime" && log_ok "nvim startup profiling completed successfully"
       # nvim --startuptime /tmp/startuptime.txt "+e /tmp/startuptime.txt"
       exit 0
       ;;
@@ -119,4 +117,5 @@ while getopts "fp" OPTION; do
 done
 shift $((OPTIND - 1))
 
+pushd "${XDG_DATA_HOME}/src" >/dev/null && log_ok "cd ~/.local/share/src successful"
 clone && update && build && remove_brew_nvim popd >/dev/null

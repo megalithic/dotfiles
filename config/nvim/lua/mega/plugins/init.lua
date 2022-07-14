@@ -26,14 +26,10 @@ local PKGS = {
   "lukas-reineke/virt-column.nvim",
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
-  "rcarriga/nvim-notify",
   "echasnovski/mini.nvim",
-  "kevinhwang91/promise-async",
-  "kevinhwang91/nvim-ufo",
+  -- "kevinhwang91/promise-async",
+  -- "kevinhwang91/nvim-ufo",
   "jghauser/fold-cycle.nvim",
-  "anuvyklack/keymap-layer.nvim",
-  "anuvyklack/hydra.nvim",
-  "akinsho/bufferline.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -50,7 +46,6 @@ local PKGS = {
   "hrsh7th/cmp-path",
   "hrsh7th/cmp-emoji",
   "f3fora/cmp-spell",
-  "uga-rosa/cmp-dictionary",
   "hrsh7th/cmp-nvim-lsp-document-symbol",
   "hrsh7th/cmp-nvim-lsp-signature-help",
   "ray-x/cmp-treesitter",
@@ -91,9 +86,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   { "phaazon/hop.nvim", opt = true },
-  "akinsho/toggleterm.nvim",
   "nvim-neo-tree/neo-tree.nvim",
-
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "camgraff/telescope-tmux.nvim",
@@ -303,22 +296,16 @@ function M.config()
 
   vim.cmd("packadd cfilter")
 
-  -- conf("whichkey", { config = "whichkey" })
-  -- conf("bufferline", { config = "bufferline" })
-  -- conf("hydra", { config = "hydra" })
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })
   conf("cmp", { config = "cmp" })
   conf("luasnip", { config = "luasnip" })
   conf("projectionist", { config = "projectionist" })
-  conf("toggleterm", { config = "toggleterm" })
   conf("vim-test", { config = "vim-test" })
-  -- conf("neotest", { config = "neotest" })
   conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
-  -- conf("telekasten", { config = "telekasten" })
-  -- conf("vscode", { config = "vscode" })
+  conf("vscode", { config = "vscode" })
 
   conf("vim-easy-align", function()
     -- n : interactive EasyAlign for a motion/text object (e.g. gaip)
@@ -639,7 +626,6 @@ function M.config()
       --   "filetype",
       --   {
       --     "help",
-      --     "toggleterm",
       --     "terminal",
       --     "megaterm",
       --     "dirbuf",
@@ -652,7 +638,6 @@ function M.config()
         ignore_by_filetype,
         {
           "help",
-          "toggleterm",
           "terminal",
           "megaterm",
           "dirbuf",
@@ -702,8 +687,8 @@ function M.config()
     require("nvim-autopairs").add_rules(require("nvim-autopairs.rules.endwise-ruby"))
     local endwise = require("nvim-autopairs.ts-rule").endwise
     require("nvim-autopairs").add_rules({
-      endwise("then$", "end", "lua", nil),
       endwise("do$", "end", "lua", nil),
+      endwise("then$", "end", "lua", "if_statement"),
       endwise("function%(.*%)$", "end", "lua", nil),
       endwise(" do$", "end", "elixir", nil),
     })
@@ -833,7 +818,6 @@ function M.config()
   })
 
   conf("fzf_gitignore", function() vim.g.fzf_gitignore_no_maps = true end)
-
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
   -- conf("other-nvim", {
@@ -872,11 +856,11 @@ function M.config()
     mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
   end)
 
-  -- conf("undotree", function()
-  --   mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
-  --   vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
-  --   vim.g.undotree_SetFocusWhenToggle = 1
-  -- end)
+  conf("undotree", function()
+    mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
+    vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
+    vim.g.undotree_SetFocusWhenToggle = 1
+  end)
 end
 
 return M
