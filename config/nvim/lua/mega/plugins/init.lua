@@ -362,37 +362,6 @@ function M.config()
 
   conf("fold-cycle", {})
 
-  conf("bullets.vim", function()
-    vim.g.bullets_enabled_file_types = {
-      "markdown",
-      "text",
-      "gitcommit",
-      "scratch",
-    }
-    vim.g.bullets_checkbox_markers = " ○◐✗"
-    vim.g.bullets_set_mappings = 0
-    -- vim.g.bullets_outline_levels = { "num" }
-
-    vim.cmd([[
-        " Disable default bullets.vim mappings, clashes with other mappings
-        let g:bullets_set_mappings = 0
-        " let g:bullets_checkbox_markers = '✗○◐●✓'
-        let g:bullets_checkbox_markers = ' .oOx'
-
-        " Add custom bullets mappings that don't clash with other mappings
-        function! InsertNewBullet()
-          InsertNewBullet
-          return ''
-        endfunction
-
-          " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
-        autocmd FileType markdown,text,gitcommit
-          \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
-          \ nnoremap cx :ToggleCheckbox<cr>
-          \ nmap <C-x> :ToggleCheckbox<cr>
-      ]])
-  end)
-
   --   conf("ufo", function()
   --     local ufo = require("ufo")
   --     local hl = require("mega.utils.highlights")
@@ -621,19 +590,6 @@ function M.config()
     end
 
     gs.set_ignore_callbacks({
-      -- {
-      --   ignore_by,
-      --   "filetype",
-      --   {
-      --     "help",
-      --     "terminal",
-      --     "megaterm",
-      --     "dirbuf",
-      --     "Trouble",
-      --     "qf",
-      --     "neo-tree",
-      --   },
-      -- },
       {
         ignore_by_filetype,
         {
@@ -698,11 +654,6 @@ function M.config()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
 
-  -- conf("template", function()
-  --   local temp = require("template")
-  --   temp.temp_dir = ("%s/templates/"):format(vim.g.vim_dir)
-  -- end)
-
   conf("hop", function()
     vim.cmd([[packadd! hop.nvim]])
 
@@ -735,80 +686,6 @@ function M.config()
     next = "cycle", -- alts: 'alternate'
     quit = true,
   })
-
-  conf("headlines", {
-    markdown = {
-      source_pattern_start = "^```",
-      source_pattern_end = "^```$",
-      dash_pattern = "^---+$",
-      dash_highlight = "Dash",
-      dash_string = "", -- alts:  靖並   ﮆ 
-      headline_pattern = "^#+",
-      headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
-      codeblock_highlight = "CodeBlock",
-    },
-    yaml = {
-      dash_pattern = "^---+$",
-      dash_highlight = "Dash",
-    },
-  })
-
-  conf("dirbuf", {
-    hash_padding = 2,
-    show_hidden = true,
-    sort_order = "directories_first",
-  })
-
-  conf("bqf", function()
-    local bqf = require("bqf")
-
-    local fugitive_pv_timer
-    local preview_fugitive = function(bufnr, qwinid, bufname)
-      local is_loaded = vim.api.nvim_buf_is_loaded(bufnr)
-      if fugitive_pv_timer and fugitive_pv_timer:get_due_in() > 0 then
-        fugitive_pv_timer:stop()
-        fugitive_pv_timer = nil
-      end
-      fugitive_pv_timer = vim.defer_fn(function()
-        if not is_loaded then
-          vim.api.nvim_buf_call(bufnr, function() vim.cmd(("do fugitive BufReadCmd %s"):format(bufname)) end)
-        end
-        require("bqf.preview.handler").open(qwinid, nil, true)
-        vim.api.nvim_buf_set_option(require("bqf.preview.session").float_bufnr(), "filetype", "git")
-      end, is_loaded and 0 or 60)
-      return true
-    end
-
-    bqf.setup({
-      auto_enable = true,
-      auto_resize_height = true,
-      preview = {
-        auto_preview = true,
-        win_height = 15,
-        win_vheight = 15,
-        delay_syntax = 80,
-        border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
-        ---@diagnostic disable-next-line: unused-local
-        should_preview_cb = function(bufnr, qwinid)
-          local bufname = vim.api.nvim_buf_get_name(bufnr)
-          local fsize = vim.fn.getfsize(bufname)
-          if fsize > 100 * 1024 then
-            -- skip file size greater than 100k
-            return false
-          elseif bufname:match("^fugitive://") then
-            return preview_fugitive(bufnr, qwinid, bufname)
-          end
-
-          return true
-        end,
-      },
-      filter = {
-        fzf = {
-          extra_opts = { "--bind", "ctrl-o:toggle-all", "--delimiter", "│" },
-        },
-      },
-    })
-  end)
 
   conf("pqf", {})
 
@@ -850,6 +727,11 @@ function M.config()
   --     -- },
   --   },
   -- })
+
+  -- conf("template", function()
+  --   local temp = require("template")
+  --   temp.temp_dir = ("%s/templates/"):format(vim.g.vim_dir)
+  -- end)
 
   conf("neogen", function()
     require("neogen").setup({ snippet_engine = "luasnip" })

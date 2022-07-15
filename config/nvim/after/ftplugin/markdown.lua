@@ -89,8 +89,11 @@ vim.g.mkdp_auto_close = 1
 
 -- ## used with my zk popups in tmux
 if vim.env.TMUX_POPUP then
+  P("popup true")
   vim.opt_local.signcolumn = "no"
-  vim.opt_local.cursorline = true
+  vim.opt_local.cursorline = false
+  vim.opt_local.number = false
+  vim.opt_local.relativenumber = false
 
   vim.opt.laststatus = 1
   vim.opt.cmdheight = 0
@@ -120,3 +123,51 @@ end
 -- match and highlight hyperlinks
 vim.fn.matchadd("matchURL", [[http[s]\?:\/\/[[:alnum:]%\/_#.-]*]])
 vim.cmd(string.format("hi matchURL guifg=%s", require("mega.lush_theme.colors").bright_blue))
+
+mega.conf("bullets.vim", function()
+  vim.g.bullets_enabled_file_types = {
+    "markdown",
+    "text",
+    "gitcommit",
+    "scratch",
+  }
+  vim.g.bullets_checkbox_markers = " ○◐✗"
+  vim.g.bullets_set_mappings = 0
+  -- vim.g.bullets_outline_levels = { "num" }
+
+  vim.cmd([[
+        " Disable default bullets.vim mappings, clashes with other mappings
+        let g:bullets_set_mappings = 0
+        " let g:bullets_checkbox_markers = '✗○◐●✓'
+        let g:bullets_checkbox_markers = ' .oOx'
+
+        " Add custom bullets mappings that don't clash with other mappings
+        function! InsertNewBullet()
+          InsertNewBullet
+          return ''
+        endfunction
+
+          " \ inoremap <buffer><expr> <cr> (pumvisible() ? '<C-y>' : '<C-]><C-R>=InsertNewBullet()<cr>')|
+        autocmd FileType markdown,text,gitcommit
+          \ nnoremap <silent><buffer> o :InsertNewBullet<cr>|
+          \ nnoremap cx :ToggleCheckbox<cr>
+          \ nmap <C-x> :ToggleCheckbox<cr>
+      ]])
+end)
+
+mega.conf("headlines", {
+  markdown = {
+    source_pattern_start = "^```",
+    source_pattern_end = "^```$",
+    dash_pattern = "^---+$",
+    dash_highlight = "Dash",
+    dash_string = "", -- alts:  靖並   ﮆ 
+    headline_pattern = "^#+",
+    headline_highlights = { "Headline1", "Headline2", "Headline3", "Headline4", "Headline5", "Headline6" },
+    codeblock_highlight = "CodeBlock",
+  },
+  yaml = {
+    dash_pattern = "^---+$",
+    dash_highlight = "Dash",
+  },
+})
