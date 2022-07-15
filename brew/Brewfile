@@ -166,7 +166,8 @@ brew "ssh-copy-id"
 brew "stack"
 # brew "starship"
 brew "stow"
-brew "svim", restart_service: true if OS.mac? # sketchvim
+brew "sketchybar", restart_service: true if OS.mac? # sketchybar
+brew "svim", restart_service: true if OS.mac? # sketchyvim
 brew "switchaudio-osx" if OS.mac?
 brew "terminal-notifier" if OS.mac?
 brew "the_silver_searcher"
@@ -217,6 +218,8 @@ cask "font-jetbrains-mono"
 cask "font-jetbrains-mono-nerd-font"
 cask "font-ia-writer-quattro"
 cask "font-victor-mono-nerd-font"
+cask "font-hack-nerd-font"
+cask "sf-symbols"
 
 # - gui
 cask "1password"

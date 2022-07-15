@@ -130,6 +130,10 @@
       force: true
       path: config/svim
       if: "[ `uname` = Darwin ]"
+    ~/.config/sketchybar:
+      force: true
+      path: config/sketchybar
+      if: "[ `uname` = Darwin ]"
     ~/.config/tmux:
       force: true
       path: config/tmux

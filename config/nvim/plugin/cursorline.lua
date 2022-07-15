@@ -201,7 +201,7 @@ end
 
 mega.augroup("ToggleCursorLine", {
   {
-    event = { "BufEnter", "WinEnter", "FocusGained" },
+    event = { "BufEnter", "FocusGained" },
     command = function() enable_cursorline(true) end,
   },
   {
