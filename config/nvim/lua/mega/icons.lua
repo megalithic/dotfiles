@@ -176,7 +176,7 @@ return {
     comment = "",
     robot = "ﮧ",
     lightbulb = "",
-    search = "",
+    search = "", -- alts: 
     code = "",
     telescope = "",
     gear = "",
@@ -198,6 +198,7 @@ return {
   mode_term = "ﲵ",
   ln_sep = "ℓ", -- ℓ 
   col_sep = "",
+  sep = "⋮",
   perc_sep = "",
   modified = "●",
   mode = "",

@@ -9,25 +9,10 @@ local expand = fn.expand
 local strwidth = fn.strwidth
 local fnamemodify = fn.fnamemodify
 local fmt = string.format
-local search_count_timer
+local icons = mega.icons
 local H = require("mega.utils.highlights")
 local U = {}
 
---- Timer to update the search count as the file is travelled
----@return function
--- function U.update_search_count(timer)
---   search_count_timer = timer
---   timer:start(0, 200, function()
---     vim.schedule(function()
---       if timer == search_count_timer then
---         fn.searchcount({ recompute = 1, maxcount = 0, timeout = 100 })
---         vim.cmd("redrawstatus")
---       end
---     end)
---   end)
--- end
-
--- FIXME: presently focus variable setting isn't being used right
 mega.augroup("megaline", {
   {
     event = { "FocusGained" },
@@ -58,23 +43,15 @@ mega.augroup("megaline", {
       end
     end,
   },
-  --{
-  --  event = { "CursorMoved" },
-  --  command = function()
-  --    if vim.o.hlsearch then
-  --      U.update_search_count(vim.loop.new_timer())
-  --    end
-  --  end,
-  --},
 })
 
 -- Showed diagnostic levels
 U.diagnostic_levels = nil
 U.diagnostic_levels = {
-  { id = vim.diagnostic.severity.ERROR, sign = mega.icons.lsp.error },
-  { id = vim.diagnostic.severity.WARN, sign = mega.icons.lsp.warn },
-  { id = vim.diagnostic.severity.INFO, sign = mega.icons.lsp.info },
-  { id = vim.diagnostic.severity.HINT, sign = mega.icons.lsp.hint },
+  { id = vim.diagnostic.severity.ERROR, sign = icons.lsp.error },
+  { id = vim.diagnostic.severity.WARN, sign = icons.lsp.warn },
+  { id = vim.diagnostic.severity.INFO, sign = icons.lsp.info },
+  { id = vim.diagnostic.severity.HINT, sign = icons.lsp.hint },
 }
 
 --- Decide whether to truncate
@@ -163,11 +140,11 @@ local exception_types = {
     orgagenda = "",
     dbui = "",
     tsplayground = "侮",
-    fugitive = mega.icons.vcs,
-    fugitiveblame = mega.icons.vcs,
-    gitcommit = mega.icons.vcs,
+    fugitive = icons.vcs,
+    fugitiveblame = icons.vcs,
+    gitcommit = icons.vcs,
     Trouble = "",
-    NeogitStatus = mega.icons.git.symbol,
+    NeogitStatus = icons.git.symbol,
     ["vim-plug"] = "⚉",
     vimwiki = "ﴬ",
     help = "",
@@ -220,7 +197,7 @@ end
 
 --- Creates a spacer statusline component i.e. for padding
 --- or to represent an empty component
---- @param size number
+--- @param size integer
 --- @param filler string | nil
 local function spacer(size, filler)
   filler = filler or " "
@@ -244,9 +221,14 @@ local function item(component, hl, opts)
   local after = opts.after or " "
   local prefix = opts.prefix or ""
   local prefix_size = strwidth(prefix)
+  local suffix = opts.suffix or ""
+  local suffix_size = strwidth(suffix)
 
   local prefix_color = opts.prefix_color or hl
   prefix = prefix ~= "" and wrap_hl(prefix_color) .. prefix .. " " or ""
+
+  local suffix_color = opts.suffix_color or hl
+  suffix = suffix ~= "" and wrap_hl(suffix_color) .. suffix .. " " or ""
 
   --- handle numeric inputs etc.
   if type(component) ~= "string" then component = tostring(component) end
@@ -255,8 +237,8 @@ local function item(component, hl, opts)
     component = component:sub(1, opts.max_size - 1) .. "…"
   end
 
-  local parts = { before, prefix, wrap_hl(hl), component, "%*", after }
-  return { table.concat(parts), #component + #before + #after + prefix_size }
+  local parts = { before, prefix, wrap_hl(hl), component, suffix, "%*", after }
+  return { table.concat(parts), #component + #before + #after + prefix_size + suffix_size }
 end
 
 --- @param sl_item string
@@ -329,14 +311,14 @@ end
 --- @param icon string | nil
 function U.modified(ctx, icon)
   if ctx.filetype == "help" then return "" end
-  icon = icon or mega.icons.modified
+  icon = icon or icons.modified
   return ctx.modified and icon
 end
 
 --- @param ctx table
 --- @param icon string | nil
 function U.readonly(ctx, icon)
-  icon = icon or mega.icons.readonly
+  icon = icon or icons.readonly
   if ctx.readonly then
     return icon
   else
@@ -476,15 +458,15 @@ function M.s_search_result()
   -- return " " .. last_search:gsub("\\v", "") .. " " .. result.current .. "/" .. result.total .. ""
 
   if result.incomplete == 1 then -- timed out
-    return printf("  ?/?? ")
+    return fmt("%s ?/??", icons.misc.search)
   elseif result.incomplete == 2 then -- max count exceeded
     if result.total > result.maxcount and result.current > result.maxcount then
-      return printf("  >%d/>%d ", result.current, result.total)
+      return fmt("%s >%d/>%d", icons.misc.search, result.current, result.total)
     elseif result.total > result.maxcount then
-      return printf("  %d/>%d ", result.current, result.total)
+      return fmt("%s %d/>%d", icons.misc.search, result.current, result.total)
     end
   end
-  return printf("  %d/%d ", result.current, result.total)
+  return fmt("%s %d/%d", icons.misc.search, result.current, result.total)
 end
 
 function U.abnormal_buffer()
@@ -574,19 +556,17 @@ function M.s_git(args)
   if is_truncated(args.trunc_width) then branch = mega.truncate(branch or "", 11, false) end
 
   local head_str = unpack(item(branch, "StGitBranch", {
-    before = " ",
-    after = " ",
-    prefix = is_truncated(80) and "" or mega.icons.git.symbol,
+    before = "  ",
+    after = "",
+    prefix = is_truncated(80) and "" or icons.git.symbol,
     prefix_color = "StGitSymbol",
   }))
   local added_str =
-    unpack(item(status.added, "StMetadataPrefix", { prefix = mega.icons.git.add, prefix_color = "StGitSignsAdd" }))
-  local changed_str = unpack(
-    item(status.changed, "StMetadataPrefix", { prefix = mega.icons.git.change, prefix_color = "StGitSignsChange" })
-  )
-  local removed_str = unpack(
-    item(status.removed, "StMetadataPrefix", { prefix = mega.icons.git.remove, prefix_color = "StGitSignsDelete" })
-  )
+    unpack(item(status.added, "StMetadataPrefix", { prefix = icons.git.add, prefix_color = "StGitSignsAdd" }))
+  local changed_str =
+    unpack(item(status.changed, "StMetadataPrefix", { prefix = icons.git.change, prefix_color = "StGitSignsChange" }))
+  local removed_str =
+    unpack(item(status.removed, "StMetadataPrefix", { prefix = icons.git.remove, prefix_color = "StGitSignsDelete" }))
 
   if signs == "" then return head_str end
 
@@ -610,10 +590,10 @@ local function diagnostic_info(ctx)
   end
 
   return {
-    error = { count = get_count(bufnr, "Error"), sign = mega.icons.lsp.error },
-    warn = { count = get_count(bufnr, "Warn"), sign = mega.icons.lsp.warn },
-    info = { count = get_count(bufnr, "Info"), sign = mega.icons.lsp.info },
-    hint = { count = get_count(bufnr, "Hint"), sign = mega.icons.lsp.hint },
+    error = { count = get_count(bufnr, "Error"), sign = icons.lsp.error },
+    warn = { count = get_count(bufnr, "Warn"), sign = icons.lsp.warn },
+    info = { count = get_count(bufnr, "Info"), sign = icons.lsp.info },
+    hint = { count = get_count(bufnr, "Hint"), sign = icons.lsp.hint },
   }
 end
 
@@ -679,7 +659,7 @@ end
 ---@return string: Section string.
 function M.s_lineinfo(args)
   local opts = {
-    prefix = mega.icons.ln_sep,
+    prefix = icons.ln_sep,
     prefix_color = "StMetadataPrefix",
     current_hl = "StTitle",
     total_hl = "StComment",
@@ -702,7 +682,7 @@ function M.s_lineinfo(args)
   if is_truncated(args.trunc_width) then return "%l/%L:%v" end
 
   return table.concat({
-    " ",
+    "  ",
     wrap_hl(prefix_color),
     prefix,
     " ",
@@ -777,9 +757,7 @@ function _G.__statusline()
 
     return build({
       -- prefix
-      unpack(
-        item_if(mega.icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })
-      ),
+      unpack(item_if(icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
       -- mode
       M.s_mode({ trunc_width = 120 }),
       M.s_hydra({ trunc_width = 75 }),
@@ -793,7 +771,14 @@ function _G.__statusline()
       -- saving indicator
       unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
       -- search results
-      unpack(item_if(M.s_search_result(), not is_truncated(120) and vim.v.hlsearch > 0, "StCount", { before = " " })),
+      unpack(
+        item_if(
+          M.s_search_result(),
+          not is_truncated(120) and vim.v.hlsearch > 0,
+          "StCount",
+          { before = " ", after = " ", prefix = " ", suffix = " " }
+        )
+      ),
       "%=", -- end left alignment
       -- middle section for whatever we want..
       "%=",
@@ -804,7 +789,7 @@ function _G.__statusline()
       -- line information
       M.s_lineinfo({ trunc_width = 75 }),
       -- suffix
-      -- unpack(item_if(mega.icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
+      -- unpack(item_if(icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
     })
     -- elseif plain and focused and not disabled then
     --   return build({
