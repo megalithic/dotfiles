@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+[[ -f "$DOTS/config/zsh/lib/helpers.zsh" ]] && source "$DOTS/config/zsh/lib/helpers.zsh"
+
+set -euo pipefail
+
+MODE="${1:-on}"
+CONFIG=""
+
+function app_is_running {
+  osascript -so -e "application \"$1\" is running"
+}
+
+if [[ "$MODE" == "on" ]]; then
+  log_info "Hammerspoon switching to dev version.."
+  CONFIG="$XDG_CONFIG_HOME/hammerspoon/init.lua"
+else
+  log_info "Hammerspoon switching to legacy/stable version.."
+  CONFIG="$DOTS/config/hammerspoon_legacy/init.lua"
+fi
+
+if [[ "$(defaults read org.hammerspoon.Hammerspoon MJConfigFile)" == "$CONFIG" ]]; then
+  log_warn "Config already set to this config ($CONFIG); skipping."
+else
+  defaults write org.hammerspoon.Hammerspoon MJConfigFile "$CONFIG"
+
+  if [[ "$(app_is_running "Hammerspoon")" == "true" ]]; then
+    log_info "Hammerspoon needs to be restarted; proceeding to quit.."
+
+    killall "Hammerspoon" &>/dev/null && log_ok "killed successfully."
+    open /Applications/Hammerspoon.app && log_ok "opened successfully."
+  fi
+
+  log_ok "Hammerspoon loading from $CONFIG."
+fi
+
