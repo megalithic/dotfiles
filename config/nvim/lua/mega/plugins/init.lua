@@ -131,7 +131,7 @@ local PKGS = {
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
-  "mbbill/undotree",
+  -- "mbbill/undotree",
   "danymat/neogen",
 
   ------------------------------------------------------------------------------
@@ -146,10 +146,10 @@ local PKGS = {
   "tpope/vim-abolish",
   "tpope/vim-rhubarb",
   "tpope/vim-repeat",
-  "tpope/vim-surround",
+  -- "tpope/vim-surround",
   "tpope/vim-unimpaired",
   "tpope/vim-apathy",
-  -- "kylechui/nvim-surround",
+  "kylechui/nvim-surround",
   "lambdalisue/suda.vim",
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
@@ -306,11 +306,11 @@ function M.config()
   end)
 
   conf("nvim-web-devicons", {})
-  -- conf("nvim-surround", {
-  --   highlight_motion = { -- Highlight before inserting/changing surrounds
-  --     duration = 1,
-  --   },
-  -- })
+  conf("nvim-surround", {
+    highlight_motion = { -- Highlight before inserting/changing surrounds
+      duration = 1,
+    },
+  })
 
   conf("startuptime", function() vim.g.startuptime_tries = 15 end)
 
@@ -729,11 +729,11 @@ function M.config()
     mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
   end)
 
-  conf("undotree", function()
-    mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
-    vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
-    vim.g.undotree_SetFocusWhenToggle = 1
-  end)
+  -- conf("undotree", function()
+  --   mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
+  --   vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
+  --   vim.g.undotree_SetFocusWhenToggle = 1
+  -- end)
 end
 
 return M
