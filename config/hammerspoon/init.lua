@@ -1,56 +1,72 @@
--- logging configuration
--- require("hs.logger").idLength(24)
+local Window = require("hs.window")
+local ipc = require("hs.ipc")
+local load = require("utils.loader").load
+local unload = require("utils.loader").unload
+local FNUtils = require("hs.fnutils")
+local hs = hs
 
-local log = hs.logger.new("[init]", "warning")
+-- [ HAMMERSPOON SETTINGS ] ----------------------------------------------------
 
--- global stuff for console things
-require("console").init()
+hs.allowAppleScript(true)
+hs.application.enableSpotlightForNameSearches(true)
+hs.autoLaunch(true)
+hs.automaticallyCheckForUpdates(true)
+hs.menuIcon(true)
+hs.dockIcon(true)
+hs.hotkey.setLogLevel("error")
+hs.keycodes.log.setLogLevel("error")
+hs.logger.defaultLogLevel = "error"
 
--- ensure IPC is there
-if not hs.ipc.cliStatus() then
-  hs.ipc.cliInstall()
+Window.animationDuration = 0
+Window.highlight.ui.overlay = true
+Window.setShadows(false)
+
+ipc.cliUninstall()
+ipc.cliInstall()
+
+-- [ CONSOLE SETTINGS ] ---------------------------------------------------------
+
+hs.console.darkMode(true)
+hs.console.consoleFont({ name = "JetBrainsMono Nerd Font", size = 16 })
+hs.console.alpha(0.985)
+
+-- [ LOADERS ] ------------------------------------------------------------------
+
+load("config")
+load("lib/watchers/")
+
+hs.shutdownCallback = function()
+  unload("config")
+  unload("lib/watchers/")
 end
 
--- lower logging level for hotkeys
-require("hs.hotkey").setLogLevel("warning")
+-- [ SPOONS ] ------------------------------------------------------------------
 
--- misc configuration
-hs.window.animationDuration = 0.0
-hs.window.setShadows(false)
-hs.window.highlight.ui.overlay = true
-hs.application.enableSpotlightForNameSearches(true)
-hs.allowAppleScript(true)
-
--- spoons to load
 hs.loadSpoon("SpoonInstall")
 hs.loadSpoon("EmmyLua")
--- hs.loadSpoon("VimMode")
 
--- global requires
-Config = require("config")
+-- local iterFn, dirObj = FS.dir("Spoons/")
+-- if iterFn then
+--   for file in iterFn, dirObj do
+--     if string.sub(file, -5) == "spoon" then
+--       local spoonName = string.sub(file, 1, -7)
+--       hs.loadSpoon(spoonName)
+--     end
+--   end
+-- end
 
--- local requires
-local bindings = require("bindings")
-local controlplane = require("controlplane")
-local watchables = require("watchables")
-local watchers = require("watchers")
-local wm = require("wm")
+-- -- TODO: figure out why we need to re-assign?
+-- -- must appear only after loadSpoon was called at least once?
+-- local spoon = spoon
 
--- modules to load/configure
-local modules = { wm, bindings, controlplane, watchables, watchers }
-
--- start modules
-hs.fnutils.each(modules, function(module)
-  if module then
-    module.start()
-  end
-end)
-
--- stop modules on hs shutdown
-hs.shutdownCallback = function()
-  hs.fnutils.each(modules, function(module)
-    if module then
-      module.stop()
-    end
-  end)
-end
+-- -- start (ORDER MATTERS!)
+-- spoon.AppQuitter:start(appQuitterConfig)
+-- spoon.AppShortcuts:start(transientApps)
+-- spoon.ConfigWatcher:start()
+-- spoon.DownloadsWatcher:start()
+-- spoon.WifiWatcher:start(knownNetworks)
+-- spoon.StatusBar:start()
+-- spoon.KeyboardLayoutManager:start(layoutSwitcherIgnored, "ABC")
+-- spoon.GlobalShortcuts:bindHotKeys(globalShortcuts.globals)
+-- spoon.WindowManager:bindHotKeys(globalShortcuts.windowManager)
+-- spoon.NotificationCenter:bindHotKeys(globalShortcuts.notificationCenter)
