@@ -40,10 +40,12 @@ hs.shutdownCallback = function()
   unload("lib/watchers/")
 end
 
+-- [ LEGACY ] ------------------------------------------------------------------
+
 -- [ SPOONS ] ------------------------------------------------------------------
 
-hs.loadSpoon("SpoonInstall")
-hs.loadSpoon("EmmyLua")
+-- hs.loadSpoon("SpoonInstall")
+-- hs.loadSpoon("EmmyLua")
 
 -- local iterFn, dirObj = FS.dir("Spoons/")
 -- if iterFn then
