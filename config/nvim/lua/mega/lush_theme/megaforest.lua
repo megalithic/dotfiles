@@ -722,6 +722,11 @@ return lush(function()
     LightspeedUnlabeledMatch({ fg = fg, gui = "italic, bold" }),
     LightspeedOneCharMatch({ fg = bg0, bg = yellow, gui = "bold" }),
 
+    ---- :help mini.jump.txt ---------------------------------------------------
+
+    MiniJump({ LightspeedLabel, gui = "bold,underline" }),
+    -- MiniJump2dSpot({ LightspeedLabelDistant }),
+
     ---- :help tabline -------------------------------------------
 
     -- TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
@@ -828,7 +833,7 @@ return lush(function()
 
     qfPosition({ Todo }),
 
-    ---- :help neo-tree.txt -------------------------------------------
+    ---- :help neo-tree.txt ----------------------------------------------------
 
     NeoTreeIndentMarker({ Comment }),
     NeoTreeNormal({ PanelBackground }),
@@ -838,23 +843,15 @@ return lush(function()
     NeoTreeCursorLine({ Visual }),
     NeoTreeStatusLine({ PanelSt }),
 
-    ---- :help git-signs.txt -------------------------------------------
+    ---- :help git-signs.txt ---------------------------------------------------
 
     GitSignsAdd({ GreenSign, bg = "NONE" }),
     GitSignsDelete({ RedSign, bg = "NONE" }),
     GitSignsChange({ OrangeSign, bg = "NONE" }),
 
     ---- tmux-popup ------------------------------------------------------------
-    ---
-    TmuxPopupNormal({ bg = "#3d494f" }),
 
-    -- vim.api.nvim_set_hl(0, 'EyelinerPrimary', { bold = true, underline = true })
-    -- vim.api.nvim_set_hl(0, 'EyelinerSecondary', { underline = true })
-    --
-    EyelinerPrimary({ gui = "bold,underline" }),
-    EyelinerSecondary({ gui = "underline" }),
-    MiniJump({ LightspeedLabel }),
-    -- MiniJump2dSpot({ LightspeedLabelDistant }),
+    TmuxPopupNormal({ bg = "#3d494f" }),
 
     ---- :hackkkks -------------------------------------------------------------
 
