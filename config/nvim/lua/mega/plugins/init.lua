@@ -27,9 +27,8 @@ local PKGS = {
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
   "echasnovski/mini.nvim",
-  -- "kevinhwang91/promise-async",
-  -- "kevinhwang91/nvim-ufo",
   "jghauser/fold-cycle.nvim",
+  "anuvyklack/hydra.nvim",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -97,17 +96,9 @@ local PKGS = {
   "tpope/vim-rsi",
   "kana/vim-textobj-user",
   "kana/vim-operator-user",
-  -- "mattn/vim-textobj-url", -- au/iu for url; FIXME: not working presently
-  -- "jceb/vim-textobj-uri", -- au/iu for url
-  -- "whatyouhide/vim-textobj-xmlattr",
-  -- "amiralies/vim-textobj-elixir",
   "kana/vim-textobj-entire", -- ae/ie for entire buffer
-  -- "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
-  -- "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
-  -- @trial "chaoren/vim-wordmotion", -- to move across cases and words and such
   "wellle/targets.vim",
-  -- @trial: windwp/nvim-spectre
 
   ------------------------------------------------------------------------------
   -- (GIT, vcs, et al) --

@@ -698,8 +698,6 @@ function M.s_lineinfo(args)
   })
 end
 
-local function is_disabled() return vim.g.megaline_disable == true or vim.b.megaline_disable == true end
-
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
 
 -- do the statusline things for the activate window
@@ -729,10 +727,9 @@ function _G.__statusline()
   local plain = U.is_plain(ctx)
   local focused = vim.g.vim_in_focus and is_focused()
   -- local focused = vim.g.vim_in_focus or is_focused()
-  local disabled = is_disabled()
-
   -- if not plain and focused and not disabled then
-  if focused and not disabled then
+
+  if focused then
     -- stylua: ignore start
     local diags                       = diagnostic_info()
     local diag_error                  = unpack(item_if(diags.error.count, not is_truncated(100) and diags.error, "StError", { prefix = diags.error.sign }))
@@ -771,14 +768,14 @@ function _G.__statusline()
       -- saving indicator
       unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
       -- search results
-      unpack(
-        item_if(
-          M.s_search_result(),
-          not is_truncated(120) and vim.v.hlsearch > 0,
-          "StCount",
-          { before = " ", after = " ", prefix = " ", suffix = " " }
-        )
-      ),
+      -- unpack(
+      --   item_if(
+      --     M.s_search_result(),
+      --     not is_truncated(120) and vim.v.hlsearch > 0,
+      --     "StCount",
+      --     { before = " ", after = " ", prefix = " ", suffix = " " }
+      --   )
+      -- ),
       "%=", -- end left alignment
       -- middle section for whatever we want..
       "%=",
