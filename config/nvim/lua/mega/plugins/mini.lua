@@ -36,10 +36,10 @@ return function()
     },
 
     -- Functions to be executed at certain events
-    hooks = {
-      before_start = nil, -- Before jump start
-      after_jump = function() mega.blink_cursorline() end, -- After jump was actually done
-    },
+    -- hooks = {
+    --   before_start = nil, -- Before jump start
+    --   after_jump = function() mega.blink_cursorline() end, -- After jump was actually done
+    -- },
   })
 
   -- require("mini.jump2d").setup({
