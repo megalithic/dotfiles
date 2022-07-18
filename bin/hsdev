@@ -14,12 +14,18 @@ if [[ "$MODE" == "on" ]]; then
   log_info "Hammerspoon switching to dev version.."
   CONFIG="$XDG_CONFIG_HOME/hammerspoon/init.lua"
 else
-  log_info "Hammerspoon switching to legacy/stable version.."
-  CONFIG="$DOTS/config/hammerspoon_legacy/init.lua"
+
+  if [[ -d "$DOTS/config/hammerspoon_legacy/init.lua" ]]; then
+    log_info "Hammerspoon switching to legacy/stable version.."
+    CONFIG="$DOTS/config/hammerspoon_legacy/init.lua"
+  else
+    log_warn "Unable to locate legacy/stable version; using original location instead."
+    CONFIG="$XDG_CONFIG_HOME/hammerspoon/init.lua"
+  fi
 fi
 
 if [[ "$(defaults read org.hammerspoon.Hammerspoon MJConfigFile)" == "$CONFIG" ]]; then
-  log_warn "Config already set to this config ($CONFIG); skipping."
+  log_warn "Config already set to $CONFIG; skipping."
 else
   defaults write org.hammerspoon.Hammerspoon MJConfigFile "$CONFIG"
 
