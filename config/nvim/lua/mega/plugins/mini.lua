@@ -15,6 +15,8 @@ return function()
     -- symbol = "▏",
   })
 
+  require("mini.jump").setup()
+
   -- require("mini.jump").setup({
   --   -- Module mappings. Use `''` (empty string) to disable one.
   --   mappings = {
