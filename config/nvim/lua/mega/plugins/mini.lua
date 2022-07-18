@@ -15,8 +15,11 @@ return function()
     -- symbol = "▏",
   })
 
-  require("mini.jump").setup()
+  -- FIXME: this breaks my statusline and causes other very strange behaviour;
+  -- can replicate with editing main nvim init.lua, `df)` on a line, or just `df`, then <esc>
+  require("mini.jump").setup({})
 
+  --
   -- require("mini.jump").setup({
   --   -- Module mappings. Use `''` (empty string) to disable one.
   --   mappings = {
