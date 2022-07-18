@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-MODE="${1:-off}"
+MODE="${1:-on}"
 CONFIG=""
 
 function app_is_running {
