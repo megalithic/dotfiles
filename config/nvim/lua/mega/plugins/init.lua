@@ -102,7 +102,7 @@ local PKGS = {
   -- "whatyouhide/vim-textobj-xmlattr",
   -- "amiralies/vim-textobj-elixir",
   "kana/vim-textobj-entire", -- ae/ie for entire buffer
-  "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
+  -- "Julian/vim-textobj-variable-segment", -- av/iv for variable segment
   -- "beloglazov/vim-textobj-punctuation", -- au/iu for punctuation
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
   -- @trial "chaoren/vim-wordmotion", -- to move across cases and words and such
@@ -155,10 +155,10 @@ local PKGS = {
   "tpope/vim-abolish",
   "tpope/vim-rhubarb",
   "tpope/vim-repeat",
-  -- "tpope/vim-surround",
+  "tpope/vim-surround",
   "tpope/vim-unimpaired",
   "tpope/vim-apathy",
-  "kylechui/nvim-surround",
+  -- "kylechui/nvim-surround",
   "lambdalisue/suda.vim",
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
@@ -315,11 +315,11 @@ function M.config()
   end)
 
   conf("nvim-web-devicons", {})
-  conf("nvim-surround", {
-    highlight_motion = { -- Highlight before inserting/changing surrounds
-      duration = 1,
-    },
-  })
+  -- conf("nvim-surround", {
+  --   highlight_motion = { -- Highlight before inserting/changing surrounds
+  --     duration = 1,
+  --   },
+  -- })
 
   conf("startuptime", function() vim.g.startuptime_tries = 15 end)
 

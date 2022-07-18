@@ -17,8 +17,9 @@ obj.settings.preferred = {
   chat = { "Slack" },
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
-  watchers = { "dock", "bluetooth", "audio", "wifi", "url" },
 }
+
+obj.settings.watchers = { "dock", "bluetooth", "audio", "wifi", "url" }
 
 obj.settings.apps = {}
 
@@ -42,11 +43,22 @@ obj.settings.dirs = {
   screenshots = os.getenv("HOME") .. "/screenshots",
 }
 
-obj.quitter = {
+obj.settings.quitter = {
   launchdRunInterval = 600, --- 10 minutes
   -- rules = require("appquitter_rules"),
   defaultQuitInterval = 14400, -- 4 hours
   defaultHideInterval = 1800, -- 30 minutes
+}
+
+obj.settings.keys = {
+  wm = {
+    pushLeft = { hyper, "h" },
+    pushRight = { hyper, "l" },
+    pushUp = { hyper, "k" },
+    pushDown = { hyper, "j" },
+    maximize = { hyper, "return" },
+    center = { hyper, "space" },
+  },
 }
 
 -- local globalShortcuts = {
@@ -78,6 +90,13 @@ function obj:init(opts)
   print(string.format("config:init(opts: %s) loaded.", hs.inspect(opts)))
 
   Settings.set(obj.configKey, obj.settings)
+
+  return obj.settings
+end
+
+function obj:stop()
+  print(string.format("config:stop() executed."))
+  Settings.clear(obj.configKey)
 end
 
 return obj

@@ -14,21 +14,13 @@ local hyper = hs.hotkey.modal.new({}, nil)
 
 -- Set the key you want to be HYPER to F19 in karabiner or keyboard
 
-local pressed = function()
-  hyper:enter()
-end
+local pressed = function() hyper:enter() end
 
-local released = function()
-  hyper:exit()
-end
+local released = function() hyper:exit() end
 
-local hyperLocalBindingsTap = function(key)
-  return hs.eventtap.keyStroke(Config.modifiers.ultra, key)
-end
+local hyperLocalBindingsTap = function(key) return hs.eventtap.keyStroke(Config.modifiers.ultra, key) end
 
-local hyperArrowBindingsTap = function(key)
-  return hs.eventtap.keyStroke({}, key)
-end
+local hyperArrowBindingsTap = function(key) return hs.eventtap.keyStroke({}, key) end
 
 local appLaunchOrFocus = function(app)
   if app.hyper_key then
@@ -60,11 +52,10 @@ local localBindingLaunchOrFocus = function(app)
           hyperLocalBindingsTap(key)
         else
           toggle(app.bundleID, false)
-          hs.timer.waitWhile(function()
-            return hs.application.find(app.bundleID) == nil
-          end, function()
-            hyperLocalBindingsTap(key)
-          end)
+          hs.timer.waitWhile(
+            function() return hs.application.find(app.bundleID) == nil end,
+            function() hyperLocalBindingsTap(key) end
+          )
         end
       end)
     end
@@ -72,26 +63,34 @@ local localBindingLaunchOrFocus = function(app)
 end
 
 local vimNavigationKeyBindings = function()
-  hyper:bind({ "shift" }, "h", nil, function()
-    hyperArrowBindingsTap("left")
-  end, function()
-    hyperArrowBindingsTap("left")
-  end)
-  hyper:bind({ "shift" }, "j", nil, function()
-    hyperArrowBindingsTap("down")
-  end, function()
-    hyperArrowBindingsTap("down")
-  end)
-  hyper:bind({ "shift" }, "k", nil, function()
-    hyperArrowBindingsTap("up")
-  end, function()
-    hyperArrowBindingsTap("up")
-  end)
-  hyper:bind({ "shift" }, "l", nil, function()
-    hyperArrowBindingsTap("right")
-  end, function()
-    hyperArrowBindingsTap("right")
-  end)
+  hyper:bind(
+    { "shift" },
+    "h",
+    nil,
+    function() hyperArrowBindingsTap("left") end,
+    function() hyperArrowBindingsTap("left") end
+  )
+  hyper:bind(
+    { "shift" },
+    "j",
+    nil,
+    function() hyperArrowBindingsTap("down") end,
+    function() hyperArrowBindingsTap("down") end
+  )
+  hyper:bind(
+    { "shift" },
+    "k",
+    nil,
+    function() hyperArrowBindingsTap("up") end,
+    function() hyperArrowBindingsTap("up") end
+  )
+  hyper:bind(
+    { "shift" },
+    "l",
+    nil,
+    function() hyperArrowBindingsTap("right") end,
+    function() hyperArrowBindingsTap("right") end
+  )
 end
 
 local miscKeyBindings = function(misc)
@@ -115,27 +114,30 @@ local hyperGroup = function(key, tag)
     hs.settings.set("group" .. tag, defaultAppForTag:bundleID())
   end
 
-  hyper:bind({}, key, nil, function()
-    toggle(hs.settings.get("group." .. tag), false)
-  end)
+  hyper:bind({}, key, nil, function() toggle(hs.settings.get("group." .. tag), false) end)
   hyper:bind({ "option" }, key, nil, function()
-    local group = hs.fnutils.filter(Config.apps, function(app)
-      return app.tags and hs.fnutils.contains(app.tags, tag) and app.bundleID ~= hs.settings.get("group." .. tag)
-    end)
+    local group = hs.fnutils.filter(
+      Config.apps,
+      function(app) return app.tags and hs.fnutils.contains(app.tags, tag) and app.bundleID ~= hs.settings.get("group." .. tag) end
+    )
 
     local choices = {}
-    hs.fnutils.each(group, function(app)
-      table.insert(choices, {
-        text = hs.application.nameForBundleID(app.bundleID),
-        image = hs.image.imageFromAppBundle(app.bundleID),
-        bundleID = app.bundleID,
-      })
-    end)
+    hs.fnutils.each(
+      group,
+      function(app)
+        table.insert(choices, {
+          text = hs.application.nameForBundleID(app.bundleID),
+          image = hs.image.imageFromAppBundle(app.bundleID),
+          bundleID = app.bundleID,
+        })
+      end
+    )
 
     if #choices == 1 then
       local app = choices[1]
 
-      hs.notify.new(nil)
+      hs.notify
+        .new(nil)
         :title("Switching hyper+" .. key .. " to " .. hs.application.nameForBundleID(app.bundleID))
         :contentImage(hs.image.imageFromAppBundle(app.bundleID))
         :send()
@@ -144,12 +146,16 @@ local hyperGroup = function(key, tag)
 
       toggle(app.bundleID, false)
     else
-      hs.chooser.new(function(app)
-        if app then
-          hs.settings.set("group." .. tag, app.bundleID)
-          toggle(app.bundleID, false)
-        end
-      end):placeholderText("Choose an application for hyper+" .. key .. ":"):choices(choices):show()
+      hs.chooser
+        .new(function(app)
+          if app then
+            hs.settings.set("group." .. tag, app.bundleID)
+            toggle(app.bundleID, false)
+          end
+        end)
+        :placeholderText("Choose an application for hyper+" .. key .. ":")
+        :choices(choices)
+        :show()
     end
   end)
 end
@@ -203,9 +209,7 @@ module.start = function()
   -- end
 end
 
-module.stop = function()
-  log.df("stopping..")
-end
+module.stop = function() log.df("stopping..") end
 
 function module:bind(mod, key, pressedFn, releasedFn)
   -- can omit mod; but it breaks if no mod and no pressedFn
@@ -217,13 +221,9 @@ function module:bind(mod, key, pressedFn, releasedFn)
   end
 
   hyper:bind(mod, key, function()
-    if pressedFn then
-      pressedFn()
-    end
+    if pressedFn then pressedFn() end
   end, function()
-    if releasedFn then
-      releasedFn()
-    end
+    if releasedFn then releasedFn() end
   end)
 end
 

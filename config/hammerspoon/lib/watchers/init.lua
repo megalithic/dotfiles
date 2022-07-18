@@ -7,12 +7,11 @@ obj.__index = obj
 obj.watchers = {}
 obj.watched = {}
 
-
 function obj:init(opts)
   opts = opts or {}
   print(string.format("watchers:init(opts: %s) loaded.", hs.inspect(opts)))
 
-  obj.watchers = Settings.get("_mega_config").preferred.watchers
+  obj.watchers = Settings.get("_mega_config").watchers
 
   if not opts["lazy"] then obj:start() end
 end

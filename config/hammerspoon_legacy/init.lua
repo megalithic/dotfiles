@@ -7,9 +7,7 @@ local log = hs.logger.new("[init]", "warning")
 require("console").init()
 
 -- ensure IPC is there
-if not hs.ipc.cliStatus() then
-  hs.ipc.cliInstall()
-end
+if not hs.ipc.cliStatus() then hs.ipc.cliInstall() end
 
 -- lower logging level for hotkeys
 require("hs.hotkey").setLogLevel("warning")
@@ -41,16 +39,12 @@ local modules = { wm, bindings, controlplane, watchables, watchers }
 
 -- start modules
 hs.fnutils.each(modules, function(module)
-  if module then
-    module.start()
-  end
+  if module then module.start() end
 end)
 
 -- stop modules on hs shutdown
 hs.shutdownCallback = function()
   hs.fnutils.each(modules, function(module)
-    if module then
-      module.stop()
-    end
+    if module then module.stop() end
   end)
 end

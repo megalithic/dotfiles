@@ -32,20 +32,18 @@ hs.console.alpha(0.985)
 
 -- [ LOADERS ] ------------------------------------------------------------------
 
-load("config")
-load("lib/watchers/")
+local loaders = { "config", "lib/watchers/", "lib/wm/" }
+
+FNUtils.each(loaders, function(l) load(l) end)
 
 hs.shutdownCallback = function()
-  unload("config")
-  unload("lib/watchers/")
+  FNUtils.each(loaders, function(l) unload(l) end)
 end
-
--- [ LEGACY ] ------------------------------------------------------------------
 
 -- [ SPOONS ] ------------------------------------------------------------------
 
--- hs.loadSpoon("SpoonInstall")
--- hs.loadSpoon("EmmyLua")
+hs.loadSpoon("SpoonInstall")
+hs.loadSpoon("EmmyLua")
 
 -- local iterFn, dirObj = FS.dir("Spoons/")
 -- if iterFn then
