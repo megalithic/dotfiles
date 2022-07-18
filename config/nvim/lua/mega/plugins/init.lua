@@ -2,6 +2,7 @@ local api = vim.api
 local fn = vim.fn
 local fmt = string.format
 local conf = require("mega.globals").conf
+local map = vim.keymap.set
 
 -- # managed paqs stored here:
 --  ~/.local/share/nvim/site/pack/paqs/(opt/start)
@@ -84,7 +85,7 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
-  { "phaazon/hop.nvim", opt = true },
+  { "phaazon/hop.nvim" },
   "nvim-neo-tree/neo-tree.nvim",
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
@@ -307,6 +308,7 @@ function M.config()
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
+    move_cursor = false,
     highlight_motion = { -- Highlight before inserting/changing surrounds
       duration = 1,
     },
@@ -646,11 +648,9 @@ function M.config()
   end)
 
   conf("hop", function()
-    vim.cmd([[packadd! hop.nvim]])
+    local hop = require("hop")
 
-    local p = require("hop")
-
-    p.setup({
+    hop.setup({
       -- remove h,j,k,l from hops list of keys
       keys = "etovxqpdygfbzcisuran",
       jump_on_sole_occurrence = true,
@@ -658,10 +658,56 @@ function M.config()
     })
 
     nnoremap("s", function()
-      p.hint_char2({ multi_windows = false })
+      hop.hint_char1({ multi_windows = false })
       -- vim.cmd("norm zz")
       mega.blink_cursorline()
     end)
+
+    map(
+      { "x", "n" },
+      "F",
+      function()
+        hop.hint_char1({
+          direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+          current_line_only = true,
+          inclusive_jump = false,
+        })
+      end
+    )
+
+    map(
+      { "x", "n" },
+      "f",
+      function()
+        hop.hint_char1({
+          direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+          current_line_only = true,
+          inclusive_jump = false,
+        })
+      end
+    )
+
+    mega.onoremap(
+      "F",
+      function()
+        hop.hint_char1({
+          direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
+          current_line_only = true,
+          inclusive_jump = true,
+        })
+      end
+    )
+
+    mega.onoremap(
+      "f",
+      function()
+        hop.hint_char1({
+          direction = require("hop.hint").HintDirection.AFTER_CURSOR,
+          current_line_only = true,
+          inclusive_jump = true,
+        })
+      end
+    )
   end)
 
   conf("git-messenger", function()

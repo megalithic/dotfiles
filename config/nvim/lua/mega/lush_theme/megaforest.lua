@@ -848,6 +848,11 @@ return lush(function()
     ---
     TmuxPopupNormal({ bg = "#3d494f" }),
 
+    -- vim.api.nvim_set_hl(0, 'EyelinerPrimary', { bold = true, underline = true })
+    -- vim.api.nvim_set_hl(0, 'EyelinerSecondary', { underline = true })
+    --
+    EyelinerPrimary({ gui = "bold,underline" }),
+    EyelinerSecondary({ gui = "underline" }),
     MiniJump({ LightspeedLabel }),
     -- MiniJump2dSpot({ LightspeedLabelDistant }),
 

@@ -768,14 +768,14 @@ function _G.__statusline()
       -- saving indicator
       unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
       -- search results
-      -- unpack(
-      --   item_if(
-      --     M.s_search_result(),
-      --     not is_truncated(120) and vim.v.hlsearch > 0,
-      --     "StCount",
-      --     { before = " ", after = " ", prefix = " ", suffix = " " }
-      --   )
-      -- ),
+      unpack(
+        item_if(
+          M.s_search_result(),
+          not is_truncated(120) and vim.v.hlsearch > 0,
+          "StCount",
+          { before = " ", after = " ", prefix = " ", suffix = " " }
+        )
+      ),
       "%=", -- end left alignment
       -- middle section for whatever we want..
       "%=",
