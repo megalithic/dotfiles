@@ -71,6 +71,10 @@ function log {
   printf '%s[%s] %s\n%s' $(tput setaf 4) "$(date '+%x %X')" "➜ $*" $(tput sgr 0)
 }
 
+function log_info {
+  printf '%s[%s] %s\n%s' $(tput setaf 4) "$(date '+%x %X')" "➜ $*" $(tput sgr 0)
+}
+
 function log_ok {
   printf '%s[%s] %s\n%s' $(tput setaf 2) "$(date '+%x %X')" "➜ [✓] $*" $(tput sgr 0)
 }

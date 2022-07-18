@@ -1,4 +1,4 @@
 -o allow_remote_control=yes
 --single-instance
---listen-on unix:/tmp/kitty-{kitty_pid}
+--listen-on unix:/tmp/kitty
 --start-as=fullscreen
