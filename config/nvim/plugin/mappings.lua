@@ -445,6 +445,14 @@ nmap("q", "<Nop>")
 nmap("Q", "@q")
 vnoremap("Q", ":norm @q<CR>")
 
+nnoremap("dd", function()
+  if vim.fn.prevnonblank(".") ~= vim.fn.line(".") then
+    return "\"_dd"
+  else
+    return "dd"
+  end
+end, { expr = true, desc = "Special Line Delete" })
+
 -- selections
 nnoremap("gv", "`[v`]", "reselect pasted content")
 nnoremap("<leader>V", "V`]", "reselect pasted content")
