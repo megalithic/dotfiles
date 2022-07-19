@@ -9,14 +9,17 @@ obj.watched = {}
 
 function obj:init(opts)
   opts = opts or {}
-  print(string.format("watchers:init(opts: %s) loaded.", hs.inspect(opts)))
+  P(fmt("watchers:init(%s) loaded.", hs.inspect(opts)))
 
   obj.watchers = Settings.get("_mega_config").watchers
 
-  if not opts["lazy"] then obj:start() end
+  return obj
 end
 
 function obj:start()
+  P(fmt("watchers:start() executed."))
+  -- start each of our watchers
+  -- TODO: add ability for a watcher to refuse auto-starting
   FNUtils.each(obj.watchers, function(modTarget)
     local ok, mod = pcall(require, "lib.watchers." .. modTarget)
     if ok and type(mod) == "table" then
@@ -24,9 +27,12 @@ function obj:start()
       if type(mod.start) == "function" then obj.watched[modTarget]:start() end
     end
   end)
+
+  return obj
 end
 
 function obj:stop()
+  P(fmt("watchers:stop() executed."))
   FNUtils.each(obj.watched, function(mod) mod:stop() end)
 end
 

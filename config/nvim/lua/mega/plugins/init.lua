@@ -98,7 +98,7 @@ local PKGS = {
   "kana/vim-operator-user",
   "kana/vim-textobj-entire", -- ae/ie for entire buffer
   "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
-  "wellle/targets.vim",
+  -- "wellle/targets.vim",
 
   ------------------------------------------------------------------------------
   -- (GIT, vcs, et al) --
@@ -307,7 +307,7 @@ function M.config()
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
-    move_cursor = false,
+    -- move_cursor = false,
     highlight_motion = { -- Highlight before inserting/changing surrounds
       duration = 1,
     },

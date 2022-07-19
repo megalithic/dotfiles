@@ -55,4 +55,15 @@ end
 ---  * Absolute path of the file. Note: no existence or other checks are done on the path.
 function obj.resourcePath(partial) return (obj.scriptPath(3) .. partial) end
 
+--- obj.bundleIDForApp(app) -> bundleID
+function obj.bundleIDForApp(app)
+  return (
+    hs.execute(
+      [[mdls -name kMDItemCFBundleIdentifier -r "$(mdfind 'kMDItemKind==Application' | grep /]]
+        .. app
+        .. [[.app | head -1)"]]
+    )
+  )
+end
+
 return obj

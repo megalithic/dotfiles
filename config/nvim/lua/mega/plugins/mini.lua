@@ -17,7 +17,7 @@ return function()
 
   -- FIXME: this breaks my statusline and causes other very strange behaviour;
   -- can replicate with editing main nvim init.lua, `df)` on a line, or just `df`, then <esc>
-  require("mini.jump").setup({})
+  -- require("mini.jump").setup({})
 
   --
   -- require("mini.jump").setup({
