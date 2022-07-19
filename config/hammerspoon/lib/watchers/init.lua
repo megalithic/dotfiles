@@ -9,7 +9,7 @@ obj.watched = {}
 
 function obj:init(opts)
   opts = opts or {}
-  P(fmt("watchers:init(%s) loaded.", hs.inspect(opts)))
+  P(fmt("watchers:init(%s) loaded.", I(opts)))
 
   obj.watchers = Settings.get("_mega_config").watchers
 

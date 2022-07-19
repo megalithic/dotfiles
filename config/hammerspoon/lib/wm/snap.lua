@@ -1,24 +1,16 @@
---- === WindowManager ===
----
---- Moves and resizes windows.
---- Features:
----   * Every window can be resized to be a quarter, half or the whole of the screen.
----   * Every window can be positioned anywhere on the screen, WITHIN the constraints of a grid. The grids are 1x1, 2x2 and 4x4 for maximized, half-sized and quarter-sized windows, respectively.
----   * Any given window can be cycled through all sizes and locations with just 4 keys. For example: northwest quarter → northeast quarter → right half ↓ southeast quarter ↓ bottom half ↓ full-screen.
-local Window = require("hs.window")
-local Screen = require("hs.screen")
-local Geometry = require("hs.geometry")
-local Spoons = require("hs.spoons")
-local Settings = require("hs.settings")
+-- local Window = require("hs.window")
+-- local Screen = require("hs.screen")
+-- local Geometry = require("hs.geometry")
+-- local Spoons = require("hs.spoons")
+-- local Settings = require("hs.settings")
 local alert = require("hs.alert")
 
 local load = require("utils.loader").load
-local Hyper = nil
+local Hyper = {}
 
 local obj = {}
 
 obj.__index = obj
-obj.modal = {}
 obj.alerts = {}
 
 -- second window resize suggestion a-la Windows
@@ -158,7 +150,7 @@ obj.alerts = {}
 
 -- local function center() Window.frontmostWindow():centerOnScreen() end
 
-function obj.modal:entered()
+function Hyper:entered()
   obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()
 
@@ -172,14 +164,14 @@ function obj.modal:entered()
       end
     else
       -- unable to move a specific window. ¯\_(ツ)_/¯
-      obj.modal:exit()
+      Hyper:exit()
     end
 
     return nil
   end)
 end
 
-function obj.modal:exited()
+function Hyper:exited()
   hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
 
   alert.close()
@@ -269,13 +261,11 @@ function obj.maximize() obj.set_frame("Full Screen", obj.screen()) end
 
 function obj:init(opts)
   opts = opts or {}
-  P(fmt("snap:init(%s) loaded.", hs.inspect(opts)))
+  P(fmt("snap:init(%s) loaded.", I(opts)))
 
-  -- FIXME: why is Hyper calling start twice?
   Hyper = load("lib.hyper"):start()
-  P(fmt("Hyper: %s", I(Hyper)))
-  obj.modal = Hyper.modal
-  P(fmt("obj.modal: %s", I(obj.modal)))
+
+  -- Hyper = load("lib.hyper", { bust = true })
 
   return self
 end
@@ -283,48 +273,47 @@ end
 function obj:start()
   P(fmt("snap:start() executed."))
 
-  P(fmt("Hyper: %s", I(Hyper)))
-  Hyper:bind({}, "l", nil, function() obj.modal:enter() end)
+  Hyper:bind({}, "l", nil, function() Hyper.modal:enter() end)
 
   -- :: window-manipulation (manual window snapping)
-  obj.modal:bind("", "return", function()
+  Hyper.modal:bind("", "return", function()
     P("-- should be binding here")
     obj.maximize()
     -- require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-    obj.modal:exit()
+    Hyper.modal:exit()
   end)
   -- for _, c in pairs(Config.snap) do
-  --   obj.modal:bind("", c.shortcut, function()
+  --   Hyper.modal:bind("", c.shortcut, function()
   --     P("-- should be binding here")
   --     -- require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-  --     obj.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
   -- end
 
-  -- obj.modal
+  -- Hyper.modal
   --   :bind("", "v", function()
   --     M.windowSplitter()
-  --     obj.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
-  --   :bind("ctrl", "[", function() obj.modal:exit() end)
+  --   :bind("ctrl", "[", function() Hyper.modal:exit() end)
   --   :bind("", "s", function()
   --     if hs.window.focusedWindow():application():name() == Config.preferred.browsers[1] then
   --       require("bindings.browser").split()
   --     end
-  --     obj.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
-  --   :bind("", "escape", function() obj.modal:exit() end)
+  --   :bind("", "escape", function() Hyper.modal:exit() end)
   --   :bind("shift", "h", function()
   --     hs.window.focusedWindow():moveOneScreenWest()
-  --     obj.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
   --   :bind("shift", "l", function()
   --     hs.window.focusedWindow():moveOneScreenEast()
-  --     obj.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
   --   :bind("", "tab", function()
   --     hs.window.focusedWindow():centerOnScreen()
-  --     obj.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
 
   return self
@@ -332,7 +321,7 @@ end
 
 function obj:stop()
   P(fmt("snap:stop() executed."))
-  obj.modal:exit()
+  Hyper.modal:exit()
   obj.alerts = nil
   return self
 end

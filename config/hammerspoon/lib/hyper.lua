@@ -40,7 +40,6 @@ function obj:bind(mod, key, pressedFn, releasedFn)
   end, function()
     if releasedFn ~= nil and type(releasedFn) == "function" then releasedFn() end
   end, function()
-    return
     -- if repeatedFn ~= nil and type(repeatedFn) == "function" then repeatedFn() end
   end)
 end
