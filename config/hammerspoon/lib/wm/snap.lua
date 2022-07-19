@@ -13,38 +13,7 @@ obj.__index = obj
 obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
-obj.hyper = { modal = {} }
-
-function obj.hyper.modal:entered()
-  info("snap:hyper: entered")
-
-  obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-    local win = hs.window.focusedWindow()
-
-    if win ~= nil then
-      if screen == hs.screen.mainScreen() then
-        local app_title = win:application():title()
-        local image = hs.image.imageFromAppBundle(win:application():bundleID())
-        local prompt = string.format("◱ : %s", app_title)
-        if image ~= nil then prompt = string.format(": %s", app_title) end
-        alert.showOnly({ text = prompt, image = image, screen = screen })
-      end
-    else
-      -- unable to move a specific window. ¯\_(ツ)_/¯
-      obj.hyper:exit()
-    end
-
-    return nil
-  end)
-end
-
-function obj.hyper.modal:exited()
-  info("snap:hyper: exited")
-
-  hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
-
-  alert.close()
-end
+local Hyper
 
 -- obj.tile = function()
 --   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -189,7 +158,6 @@ function obj.send_window_lower_left()
     h = (s.h * (1 - qsp.y)) - g.y,
   })
 end
-
 function obj.send_window_lower_right()
   local s = obj.screen()
   local qsp = obj.quarter_screen_partitions
@@ -304,66 +272,101 @@ function hs.window:moveToScreen(nextScreen)
   })
 end
 
+local function setupEvents()
+  function Hyper.modal:entered()
+    info("snap:hyper: entered")
+
+    obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
+      local win = hs.window.focusedWindow()
+
+      if win ~= nil then
+        if screen == hs.screen.mainScreen() then
+          local app_title = win:application():title()
+          local image = hs.image.imageFromAppBundle(win:application():bundleID())
+          local prompt = string.format("◱ : %s", app_title)
+          if image ~= nil then prompt = string.format(": %s", app_title) end
+          alert.showOnly({ text = prompt, image = image, screen = screen })
+        end
+      else
+        -- unable to move a specific window. ¯\_(ツ)_/¯
+        Hyper:exit()
+      end
+
+      return nil
+    end)
+  end
+
+  function Hyper.modal:exited()
+    info("snap:hyper: exited")
+
+    hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
+
+    alert.close()
+  end
+end
+
 function obj:init(opts)
   opts = opts or {}
-  obj.hyper = load("lib.hyper", { opt = true })
+  Hyper = load("lib.hyper", { opt = true })
 
   return self
 end
 
 function obj:start()
-  obj.hyper = load("lib.hyper"):start()
+  Hyper = load("lib.hyper"):start()
 
-  dbg(fmt("snap:start -> %s", I(obj.hyper)))
+  setupEvents()
 
-  obj.hyper:bind({}, "l", nil, function()
+  dbg(fmt("snap:start -> %s", I(Hyper)))
+
+  Hyper:bind({}, "l", nil, function()
     warn("snap: entering hyper modal")
-    dbg(fmt("hyper:bind(l): %s", I(obj.hyper)))
-    obj.hyper.modal:enter()
+    dbg(fmt("hyper:bind(l): %s", I(Hyper)))
+    Hyper.modal:enter()
   end)
 
   -- :: window-manipulation (manual window snapping)
-  obj.hyper:bind("", "return", function() obj.maximize() end)
-  obj.hyper:bind("", "j", function() obj.move_to_center_absolute({ w = 1440, h = 900 }) end)
+  Hyper:bind("", "return", function() obj.maximize() end)
+  Hyper:bind("", "j", function() obj.move_to_center_absolute({ w = 1440, h = 900 }) end)
   -- for _, c in pairs(Config.snap) do
-  --   obj.hyper.modal:bind("", c.shortcut, function()
+  --   Hyper.modal:bind("", c.shortcut, function()
   --     P("-- should be binding here")
   --     -- require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-  --     obj.hyper.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
   -- end
 
-  -- obj.hyper.modal
+  -- Hyper.modal
   --   :bind("", "v", function()
   --     M.windowSplitter()
-  --     obj.hyper.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
-  --   :bind("ctrl", "[", function() obj.hyper.modal:exit() end)
+  --   :bind("ctrl", "[", function() Hyper.modal:exit() end)
   --   :bind("", "s", function()
   --     if hs.window.focusedWindow():application():name() == Config.preferred.browsers[1] then
   --       require("bindings.browser").split()
   --     end
-  --     obj.hyper.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
-  --   :bind("", "escape", function() obj.hyper.modal:exit() end)
+  --   :bind("", "escape", function() Hyper.modal:exit() end)
   --   :bind("shift", "h", function()
   --     hs.window.focusedWindow():moveOneScreenWest()
-  --     obj.hyper.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
   --   :bind("shift", "l", function()
   --     hs.window.focusedWindow():moveOneScreenEast()
-  --     obj.hyper.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
   --   :bind("", "tab", function()
   --     hs.window.focusedWindow():centerOnScreen()
-  --     obj.hyper.modal:exit()
+  --     Hyper.modal:exit()
   --   end)
 
   return self
 end
 
 function obj:stop()
-  obj.hyper:stop()
+  Hyper:stop()
   obj.alerts = {}
   obj.snapback_window_state = {}
   return self
