@@ -657,7 +657,7 @@ function M.config()
     })
 
     nnoremap("s", function()
-      hop.hint_char1({ multi_windows = false })
+      hop.hint_char2({ multi_windows = false })
       -- vim.cmd("norm zz")
       mega.blink_cursorline()
     end)
