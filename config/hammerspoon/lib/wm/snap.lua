@@ -6,151 +6,18 @@
 local alert = require("hs.alert")
 
 local load = require("utils.loader").load
-local Hyper = {}
 
 local obj = {}
 
 obj.__index = obj
+obj.name = "snap"
 obj.alerts = {}
+obj.snapback_window_state = {}
+obj.hyper = { modal = {} }
 
--- second window resize suggestion a-la Windows
--- TODO
--- obj.overlay = {
---   fill = Drawing.rectangle({0, 0, 0, 0}):setLevel(Drawing.windowLevels["_MaximumWindowLevelKey"]):setFill(true):setFillColor(
---     getSystemBlueColor()
---   ):setAlpha(0.2):setRoundedRectRadii(3, 3),
---   stroke = Drawing.rectangle({0, 0, 0, 0}):setLevel(Drawing.windowLevels["_MaximumWindowLevelKey"]):setFill(false):setStrokeWidth(
---     15
---   ):setStrokeColor(getSystemBlueColor()):setStroke(true):setRoundedRectRadii(3, 3),
---   show = function(dimensions)
---     for _, v in ipairs({obj.overlay.fill, obj.overlay.stroke}) do
---       if v and v.hide then
---         v:setFrame(dimensions):show(0.2)
---       end
---     end
---   end,
---   hide = function()
---     for _, v in ipairs({obj.overlay.fill, obj.overlay.stroke}) do
---       if v and v.hide then
---         v:setFrame({0, 0, 0, 0}):hide(0.2)
---       end
---     end
---   end
--- }
--- local function getSystemBlueColor()
---   return Drawing.color.lists()["System"]["systemBlueColor"]
--- end
--- hs.timer.doAfter(0.5, function() tabBind:disable() end)
--- end
+function obj.hyper.modal:entered()
+  info("snap:hyper: entered")
 
--- local mainScreen = Screen.mainScreen()
--- local usableFrame = mainScreen:frame()
--- local menuBarHeight = mainScreen:fullFrame().h - usableFrame.h
--- local minX = 0
--- local midX = usableFrame.w / 2
--- local maxX = usableFrame.w
--- local minY = usableFrame.y -- not a simple zero because of the menu bar
--- local midY = usableFrame.h / 2
--- local maxY = usableFrame.h
-
--- local possibleCells = {
---   northWest = {
---     rect = Geometry.rect({ minX, minY, midX, midY }),
---     onLeft = "west",
---     onRight = "northEast",
---     onUp = "north",
---     onDown = "southWest",
---   },
---   northEast = {
---     rect = Geometry.rect({ midX, minY, midX, midY }),
---     onLeft = "northWest",
---     onRight = "east",
---     onUp = "north",
---     onDown = "southEast",
---   },
---   southWest = {
---     rect = Geometry.rect({ minX, midY, midX, midY + menuBarHeight }),
---     onLeft = "west",
---     onRight = "southEast",
---     onUp = "northWest",
---     onDown = "south",
---   },
---   southEast = {
---     rect = Geometry.rect({ midX, midY, midX, midY + menuBarHeight }),
---     onLeft = "southWest",
---     onRight = "east",
---     onUp = "northEast",
---     onDown = "south",
---   },
---   west = {
---     rect = Geometry.rect({ minX, minY, midX, maxY }),
---     onLeft = "fullScreen",
---     onRight = "east",
---     onUp = "northWest",
---     onDown = "southWest",
---   },
---   east = {
---     rect = Geometry.rect({ midX, minY, midX, maxY }),
---     onLeft = "west",
---     onRight = "fullScreen",
---     onUp = "northEast",
---     onDown = "southEast",
---   },
---   south = {
---     rect = Geometry.rect({ minX, midY, maxX, midY + menuBarHeight }),
---     onLeft = "southWest",
---     onRight = "southEast",
---     onUp = "north",
---     onDown = "fullScreen",
---   },
---   north = {
---     rect = Geometry.rect({ minX, minY, maxX, midY }),
---     onLeft = "northWest",
---     onRight = "northEast",
---     onUp = "fullScreen",
---     onDown = "south",
---   },
---   fullScreen = {
---     rect = Geometry.rect({ minX, minY, maxX, maxY }),
---     onLeft = "west",
---     onRight = "east",
---     onUp = "north",
---     onDown = "south",
---   },
--- }
-
--- local fallbacks = { Up = "north", Down = "south", Right = "east", Left = "west" }
-
--- local function pushToCell(direction)
---   local frontWindow = Window.frontmostWindow()
---   local frontWindowFrame = frontWindow:frame()
---   for _, cellProperties in pairs(possibleCells) do
---     if frontWindowFrame:equals(cellProperties.rect) then
---       local targetCellName = cellProperties["on" .. direction]
---       local targetCell = possibleCells[targetCellName].rect
---       frontWindow:setFrame(targetCell)
---       return
---     end
---   end
---   local targetCellName = fallbacks[direction]
---   frontWindow:setFrame(possibleCells[targetCellName].rect)
--- end
-
--- local function maximize()
---   P("in snap.lua maximize")
---   local frontWindow = Window.frontmostWindow()
---   local frontWindowFrame = frontWindow:frame()
---   if frontWindowFrame:equals(possibleCells.fullScreen.rect) then
---     frontWindow:setFrame(possibleCells.northWest.rect)
---     frontWindow:centerOnScreen()
---   else
---     frontWindow:setFrame(possibleCells.fullScreen.rect)
---   end
--- end
-
--- local function center() Window.frontmostWindow():centerOnScreen() end
-
-function Hyper:entered()
   obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
     local win = hs.window.focusedWindow()
 
@@ -164,14 +31,16 @@ function Hyper:entered()
       end
     else
       -- unable to move a specific window. ¯\_(ツ)_/¯
-      Hyper:exit()
+      obj.hyper:exit()
     end
 
     return nil
   end)
 end
 
-function Hyper:exited()
+function obj.hyper.modal:exited()
+  info("snap:hyper: exited")
+
   hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
 
   alert.close()
@@ -237,6 +106,159 @@ obj.quarter_screen_partitions = {
   y = 0.5,
 }
 
+function obj.send_window_left()
+  local s = obj.screen()
+  local ssp = obj.split_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Left", {
+    x = s.x,
+    y = s.y,
+    w = (s.w * ssp.x) - obj.gutter().x,
+    h = s.h,
+  })
+end
+
+function obj.send_window_right()
+  local s = obj.screen()
+  local ssp = obj.split_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Right", {
+    x = s.x + (s.w * ssp.x) + g.x,
+    y = s.y,
+    w = (s.w * (1 - ssp.x)) - g.x,
+    h = s.h,
+  })
+end
+
+function obj.send_window_up()
+  local s = obj.screen()
+  local ssp = obj.split_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Up", {
+    x = s.x,
+    y = s.y,
+    w = s.w,
+    h = (s.h * ssp.y) - g.y,
+  })
+end
+
+function obj.send_window_down()
+  local s = obj.screen()
+  local ssp = obj.split_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Down", {
+    x = s.x,
+    y = s.y + (s.h * ssp.y) + g.y,
+    w = s.w,
+    h = (s.h * (1 - ssp.y)) - g.y,
+  })
+end
+
+function obj.send_window_upper_left()
+  local s = obj.screen()
+  local qsp = obj.quarter_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Upper Left", {
+    x = s.x,
+    y = s.y,
+    w = (s.w * qsp.x) - g.x,
+    h = (s.h * qsp.y) - g.y,
+  })
+end
+
+function obj.send_window_upper_right()
+  local s = obj.screen()
+  local qsp = obj.quarter_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Upper Right", {
+    x = s.x + (s.w * qsp.x) + g.x,
+    y = s.y,
+    w = (s.w * (1 - qsp.x)) - g.x,
+    h = (s.h * qsp.y) - g.y,
+  })
+end
+
+function obj.send_window_lower_left()
+  local s = obj.screen()
+  local qsp = obj.quarter_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Lower Left", {
+    x = s.x,
+    y = s.y + (s.h * qsp.y) + g.y,
+    w = (s.w * qsp.x) - g.x,
+    h = (s.h * (1 - qsp.y)) - g.y,
+  })
+end
+
+function obj.send_window_lower_right()
+  local s = obj.screen()
+  local qsp = obj.quarter_screen_partitions
+  local g = obj.gutter()
+  obj.set_frame("Lower Right", {
+    x = s.x + (s.w * qsp.x) + g.x,
+    y = s.y + (s.h * qsp.y) + g.y,
+    w = (s.w * (1 - qsp.x)) - g.x,
+    h = (s.h * (1 - qsp.y)) - g.y,
+  })
+end
+
+function obj.send_window_prev_monitor()
+  hs.alert.show("Prev Monitor")
+  local win = hs.window.focusedWindow()
+  local nextScreen = win:screen():previous()
+  win:moveToScreen(nextScreen)
+end
+
+function obj.send_window_next_monitor()
+  hs.alert.show("Next Monitor")
+  local win = hs.window.focusedWindow()
+  local nextScreen = win:screen():next()
+  win:moveToScreen(nextScreen)
+end
+
+-- snapback return the window to its last position. calling snapback twice returns the window to its original position.
+-- snapback holds state for each window, and will remember previous state even when focus is changed to another window.
+function obj.snapback()
+  local win = obj.win()
+  local id = win:id()
+  local state = win:frame()
+  local prev_state = obj.snapback_window_state[id]
+  if prev_state then win:setFrame(prev_state) end
+  obj.snapback_window_state[id] = state
+end
+
+function obj.maximize() obj.set_frame("Full Screen", obj.screen()) end
+
+--- move_to_center_relative(size)
+--- Method
+--- Centers and resizes the window to the the fit on the given portion of the screen.
+--- The argument is a size with each key being between 0.0 and 1.0.
+--- Example: win:move_to_center_relative(w=0.5, h=0.5) -- window is now centered and is half the width and half the height of screen
+function obj.move_to_center_relative(unit)
+  local s = obj.screen()
+  obj.set_frame("Center", {
+    x = s.x + (s.w * ((1 - unit.w) / 2)),
+    y = s.y + (s.h * ((1 - unit.h) / 2)),
+    w = s.w * unit.w,
+    h = s.h * unit.h,
+  })
+end
+
+--- move_to_center_absolute(size)
+--- Method
+--- Centers and resizes the window to the the fit on the given portion of the screen given in pixels.
+--- Example: win:move_to_center_relative(w=800, h=600) -- window is now centered and is 800px wide and 600px high
+function obj.move_to_center_absolute(unit)
+  local s = obj.screen()
+  obj.set_frame("Center", {
+    x = (s.w - unit.w) / 2,
+    y = (s.h - unit.h) / 2,
+    w = unit.w,
+    h = unit.h,
+  })
+end
+
+-- return currently focused window
 function obj.win() return hs.window.focusedWindow() end
 -- display title, save state and move win to unit
 function obj.set_frame(title, unit)
@@ -256,73 +278,94 @@ function obj.screen()
     h = screen.h - (sem.top + sem.bottom),
   }
 end
+-- gutter is the adjustment required to accomidate partition
+-- margins between windows
+function obj.gutter()
+  local pm = obj.partition_margins
+  return {
+    x = pm.x / 2,
+    y = pm.y / 2,
+  }
+end
 
-function obj.maximize() obj.set_frame("Full Screen", obj.screen()) end
+--- hs.window:moveToScreen(screen)
+--- Method
+--- move window to the the given screen, keeping the relative proportion and position window to the original screen.
+--- Example: win:moveToScreen(win:screen():next()) -- move window to next screen
+function hs.window:moveToScreen(nextScreen)
+  local currentFrame = self:frame()
+  local screenFrame = self:screen():frame()
+  local nextScreenFrame = nextScreen:frame()
+  self:setFrame({
+    x = ((((currentFrame.x - screenFrame.x) / screenFrame.w) * nextScreenFrame.w) + nextScreenFrame.x),
+    y = ((((currentFrame.y - screenFrame.y) / screenFrame.h) * nextScreenFrame.h) + nextScreenFrame.y),
+    h = ((currentFrame.h / screenFrame.h) * nextScreenFrame.h),
+    w = ((currentFrame.w / screenFrame.w) * nextScreenFrame.w),
+  })
+end
 
 function obj:init(opts)
   opts = opts or {}
-  P(fmt("snap:init(%s) loaded.", I(opts)))
-
-  Hyper = load("lib.hyper"):start()
-
-  -- Hyper = load("lib.hyper", { bust = true })
+  obj.hyper = load("lib.hyper", { opt = true })
 
   return self
 end
 
 function obj:start()
-  P(fmt("snap:start() executed."))
+  obj.hyper = load("lib.hyper"):start()
 
-  Hyper:bind({}, "l", nil, function() Hyper.modal:enter() end)
+  dbg(fmt("snap:start -> %s", I(obj.hyper)))
+
+  obj.hyper:bind({}, "l", nil, function()
+    warn("snap: entering hyper modal")
+    dbg(fmt("hyper:bind(l): %s", I(obj.hyper)))
+    obj.hyper.modal:enter()
+  end)
 
   -- :: window-manipulation (manual window snapping)
-  Hyper.modal:bind("", "return", function()
-    P("-- should be binding here")
-    obj.maximize()
-    -- require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-    Hyper.modal:exit()
-  end)
+  obj.hyper:bind("", "return", function() obj.maximize() end)
+  obj.hyper:bind("", "j", function() obj.move_to_center_absolute({ w = 1440, h = 900 }) end)
   -- for _, c in pairs(Config.snap) do
-  --   Hyper.modal:bind("", c.shortcut, function()
+  --   obj.hyper.modal:bind("", c.shortcut, function()
   --     P("-- should be binding here")
   --     -- require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-  --     Hyper.modal:exit()
+  --     obj.hyper.modal:exit()
   --   end)
   -- end
 
-  -- Hyper.modal
+  -- obj.hyper.modal
   --   :bind("", "v", function()
   --     M.windowSplitter()
-  --     Hyper.modal:exit()
+  --     obj.hyper.modal:exit()
   --   end)
-  --   :bind("ctrl", "[", function() Hyper.modal:exit() end)
+  --   :bind("ctrl", "[", function() obj.hyper.modal:exit() end)
   --   :bind("", "s", function()
   --     if hs.window.focusedWindow():application():name() == Config.preferred.browsers[1] then
   --       require("bindings.browser").split()
   --     end
-  --     Hyper.modal:exit()
+  --     obj.hyper.modal:exit()
   --   end)
-  --   :bind("", "escape", function() Hyper.modal:exit() end)
+  --   :bind("", "escape", function() obj.hyper.modal:exit() end)
   --   :bind("shift", "h", function()
   --     hs.window.focusedWindow():moveOneScreenWest()
-  --     Hyper.modal:exit()
+  --     obj.hyper.modal:exit()
   --   end)
   --   :bind("shift", "l", function()
   --     hs.window.focusedWindow():moveOneScreenEast()
-  --     Hyper.modal:exit()
+  --     obj.hyper.modal:exit()
   --   end)
   --   :bind("", "tab", function()
   --     hs.window.focusedWindow():centerOnScreen()
-  --     Hyper.modal:exit()
+  --     obj.hyper.modal:exit()
   --   end)
 
   return self
 end
 
 function obj:stop()
-  P(fmt("snap:stop() executed."))
-  Hyper.modal:exit()
-  obj.alerts = nil
+  obj.hyper:stop()
+  obj.alerts = {}
+  obj.snapback_window_state = {}
   return self
 end
 

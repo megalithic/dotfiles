@@ -11,6 +11,7 @@ local obj = {}
 local appModals = {}
 
 obj.__index = obj
+obj.name = "wm"
 obj.settingsKey = "_mega_wm"
 obj.watcher = nil
 
@@ -72,7 +73,6 @@ end
 
 function obj:init(opts)
   opts = opts or {}
-  P(fmt("wm:init(%s) loaded.", hs.inspect(opts)))
 
   load("lib.wm.snap")
   obj.watcher = load("lib.contexts", { opt = true })
@@ -82,15 +82,12 @@ end
 
 function obj:start(opts)
   opts = opts or {}
-  P(fmt("wm:start() executed."))
 
   -- Watcher:start(transientApps, function(bundleId, appObj, isWinFilterEvent) enterAppEnvironment(appObj, bundleId) end)
   return self
 end
 
 function obj:stop()
-  P(fmt("wm:stop() executed."))
-
   unload("lib.wm.snap")
   unload("lib.contexts")
 

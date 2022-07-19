@@ -3,6 +3,7 @@ local Settings = require("hs.settings")
 local obj = {}
 
 obj.__index = obj
+obj.name = "config"
 
 obj.settings = {}
 obj.settingsKey = "_mega_config"
@@ -16,7 +17,7 @@ local preferred = {
   vpn = { "Cloudflare WARP" },
 }
 
-local watchers = { "dock", "bluetooth", "audio", "wifi", "url" }
+local watchers = { "dock", "bluetooth", "audio", "wifi", "url", "downloads" }
 
 local transientApps = {
   ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
@@ -116,7 +117,6 @@ local apps = {
 
 function obj:init(opts)
   opts = opts or {}
-  P(fmt("config:init(%s) loaded.", hs.inspect(opts)))
 
   obj.settings = {
     ["apps"] = apps,
@@ -141,8 +141,6 @@ function obj:init(opts)
 end
 
 function obj:stop()
-  P(fmt("config:stop() executed."))
-
   Settings.clear(obj.settingsKey)
   obj.settings = {}
 

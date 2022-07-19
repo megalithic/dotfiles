@@ -4,9 +4,10 @@ local FNUtils = require("hs.fnutils")
 local obj = {}
 
 obj.__index = obj
+obj.name = "watcher.audio"
 
-function obj:start() print(string.format("audio:start() executed.")) end
+function obj:start() return self end
 
-function obj:stop() print(string.format("audio:stop() executed.")) end
+function obj:stop() return self end
 
 return obj

@@ -4,10 +4,11 @@ local FNUtils = require("hs.fnutils")
 local obj = {}
 
 obj.__index = obj
+obj.name = "watcher.dock"
 
-function obj:start() print(string.format("dock:start() executed.")) end
+function obj:start() return self end
 
-function obj:stop() print(string.format("dock:stop() executed.")) end
+function obj:stop() return self end
 
 return obj
 --

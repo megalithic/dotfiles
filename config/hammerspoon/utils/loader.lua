@@ -4,29 +4,40 @@ local FS = require("hs.fs")
 local obj = {}
 
 obj.__index = obj
+obj.name = "loader"
+
+local I = function(msg, debug)
+  if debug then
+    return hs.inspect(msg)
+  else
+    return tostring(msg)
+  end
+end
 
 function obj.init(loadTarget, opts)
   opts = opts or {}
-  local shouldLazyLoad = opts["opt"] ~= nil and opts["opt"] or false
-  local shouldBustCache = opts["bust"] ~= nil and opts["bust"] or false
+  opts["opt"] = opts["opt"] ~= nil and opts["opt"] or false
+  opts["bust"] = opts["bust"] ~= nil and opts["bust"] or false
+
+  local shouldLazyLoad = opts["opt"]
+  local shouldBustCache = opts["bust"]
 
   local ok, mod = pcall(require, loadTarget)
   if not ok then
-    error(fmt("[ERROR.init] %s -> %s", loadTarget, mod))
+    error(fmt("[ERROR.init] %s (%s) -> %s", loadTarget, I(opts), mod))
     return
   end
 
   if ok and mod ~= nil and type(mod) == "table" then
     local loaded = nil
 
+    local target = mod.name or loadTarget
+
     if
       type(mod.init) == "function"
-      and (
-        mega.__loaded_modules[loadTarget] == nil
-        or mega.__loaded_modules[loadTarget].mod ~= loaded and not shouldBustCache
-      )
+      and (mega.__loaded_modules[target] == nil or mega.__loaded_modules[target].mod ~= mod and not shouldBustCache)
     then
-      info(fmt("[INIT] %s (bust: %s, lazy: %s)", loadTarget, shouldBustCache, shouldLazyLoad))
+      info(fmt("[INIT] %s (%s)", target, I(opts)))
 
       -- NOTE:
       -- this requires modules to return `self` on :init() to keep track of this;
@@ -35,18 +46,21 @@ function obj.init(loadTarget, opts)
       loaded = mod:init(opts)
 
       -- store our cache of loaded modules so we don't re-init a bajillion times
-      mega.__loaded_modules[loadTarget] = { mod = loaded, lazy = shouldLazyLoad }
+      mega.__loaded_modules[target] = { mod = loaded, opt = shouldLazyLoad, loadTarget = loadTarget }
     end
 
     -- should we auto-run :start() for this module?
-    if type(mod.start) == "function" and not shouldLazyLoad then
-      success(fmt("[AUTOSTART] %s (bust: %s, lazy: %s)", loadTarget, shouldBustCache, shouldLazyLoad))
-
-      loaded = obj.start(loadTarget)
+    if not shouldLazyLoad and (mega.__loaded_modules[target] and not mega.__loaded_modules[target]["opt"]) then
+      success(fmt("[AUTOSTART] %s (%s)", target, I(opts)))
+      loaded = obj.start(loadTarget, { log = false })
     end
 
     if loaded == nil then
-      warn(fmt("[WARN.init] %s not loaded (bust: %s, lazy: %s)", loadTarget, shouldBustCache, shouldLazyLoad))
+      if mega.__loaded_modules[target] == nil then
+        warn(fmt("[WARN.init] %s (%s) has no loaded/stored module", target, I(opts)))
+      else
+        note(fmt("[NOTE.init] %s (%s) skipping init", target, I(opts)))
+      end
       return mod
     end
 
@@ -111,13 +125,13 @@ function obj.start(loadTarget, opts)
   opts = opts or {}
   local ok, mod = pcall(require, loadTarget)
   if not ok then
-    error(fmt("[ERROR.start] %s -> %s", loadTarget, mod))
+    error(fmt("[ERROR.start] %s (%s) -> %s", loadTarget, I(opts), mod))
     return
   end
 
   if ok and mod ~= nil and type(mod) == "table" then
     if type(mod.start) == "function" then
-      success(fmt("[START] %s (%s)", loadTarget, I(opts)))
+      if opts["log"] then success(fmt("[START] %s (%s)", loadTarget, I(opts))) end
       return mod:start()
     end
   end
@@ -127,7 +141,7 @@ function obj.stop(loadTarget, opts)
   opts = opts or {}
   local ok, mod = pcall(require, loadTarget)
   if not ok then
-    error(fmt("[ERROR.stop] %s -> %s", loadTarget, mod))
+    error(fmt("[ERROR.stop] %s (%s) -> %s", loadTarget, I(opts), mod))
     return
   end
 

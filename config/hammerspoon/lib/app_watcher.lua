@@ -3,11 +3,14 @@
 local Application = require("hs.application")
 local Window = require("hs.window")
 
-local obj = {}
 local appWatcher
 local windowFilter
 local frontAppBundleID
 local callback
+
+local obj = {}
+obj.__index = obj
+obj.name = "appwatcher"
 
 local function appWatcherCallback(_, event, appObj)
   local newBundleID = appObj:bundleID()

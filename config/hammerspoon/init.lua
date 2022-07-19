@@ -3,6 +3,7 @@
 _G.mega = _G.mega or {
   __loaded_modules = {},
 }
+_G.L = require("utils.loader")
 _G.ts = function(date)
   date = date or hs.timer.secondsSinceEpoch()
   -- return os.date("%Y-%m-%d %H:%M:%S " .. ((tostring(date):match("(%.%d+)$")) or ""), math.floor(date))
@@ -10,38 +11,72 @@ _G.ts = function(date)
 end
 _G.fmt = string.format
 _G.P = function(...)
-  local rest = ...
-  if rest == nil then rest = "" end
-  hs.rawprint(rest)
-  hs.console.printStyledtext(ts() .. " -> " .. fmt(rest))
+  if ... == nil then
+    hs.rawprint("")
+    print("")
+    return
+  end
+
+  local contents = ...
+
+  if type(...) == "table" then
+    contents = tostring(...)
+  else
+    contents = fmt(...)
+  end
+
+  hs.rawprint(...)
+  hs.console.printStyledtext(ts() .. " -> " .. contents)
 end
 _G.I = hs.inspect
 _G.defaultFont = { name = "JetBrainsMono Nerd Font", size = 16 }
+
 local stext = require("hs.styledtext").new
-function _G.info(msg)
-  hs.console.printStyledtext(stext(ts() .. " -> " .. msg, {
-    color = { hex = "#51afef", alpha = 0.7 },
+function _G.info(msg, tag)
+  tag = tag and "[INFO] " or ""
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
+    color = { hex = "#51afef", alpha = 0.65 },
     font = defaultFont,
   }))
 end
 
-function _G.success(msg)
-  hs.console.printStyledtext(stext(ts() .. " -> " .. msg, {
+function _G.success(msg, tag)
+  tag = tag and "[OK] " or ""
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#a7c080", alpha = 1 },
     font = defaultFont,
   }))
 end
 
-function _G.error(msg)
-  hs.console.printStyledtext(stext(ts() .. " -> " .. msg, {
+function _G.error(msg, tag)
+  tag = tag and "[ERROR] " or ""
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#c43e1f", alpha = 1 },
     font = defaultFont,
   }))
 end
 
-function _G.warn(msg)
-  hs.console.printStyledtext(stext(ts() .. " -> " .. msg, {
+function _G.warn(msg, tag)
+  tag = tag and "[WARN] " or ""
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#FF922B", alpha = 1 },
+    font = defaultFont,
+  }))
+end
+
+function _G.dbg(msg, tag)
+  tag = tag and "[DEBUG] " or ""
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
+    color = { hex = "#dddddd", alpha = 1 },
+    backgroundColor = { hex = "#222222", alpha = 1 },
+    font = defaultFont,
+  }))
+end
+
+function _G.note(msg, tag)
+  tag = tag and "[NOTE] " or ""
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
+    color = { hex = "#444444", alpha = 1 },
     font = defaultFont,
   }))
 end
@@ -50,7 +85,7 @@ end
 
 local con = require("hs.console")
 con.darkMode(true)
-con.consoleFont({ name = "JetBrainsMono Nerd Font", size = 16 })
+con.consoleFont(defaultFont)
 con.alpha(0.985)
 local darkGrayColor = { red = 26 / 255, green = 28 / 255, blue = 39 / 255, alpha = 1.0 }
 local whiteColor = { white = 1.0, alpha = 1.0 }
@@ -60,29 +95,6 @@ con.outputBackgroundColor(darkGrayColor)
 con.consoleCommandColor(whiteColor)
 con.consoleResultColor(lightGrayColor)
 con.consolePrintColor(grayColor)
-
--- [ BANNER ] ------------------------------------------------------------------
-
-P("")
-P("--------------------------------------------------")
-P("++ Application Path: " .. hs.processInfo.bundlePath)
-P("++    Accessibility: " .. tostring(hs.accessibilityState()))
-if hs.processInfo.debugBuild then
-  local gitbranchfile = hs.processInfo.resourcePath .. "/gitbranch"
-  local gfile = io.open(gitbranchfile, "r")
-  if gfile then
-    GITBRANCH = gfile:read("l")
-    gfile:close()
-  else
-    GITBRANCH = "<" .. gitbranchfile .. " missing>"
-  end
-  P("++    Debug Version: " .. hs.processInfo.version .. ", " .. hs.processInfo.buildTime)
-  P("++            Build: " .. GITBRANCH)
-else
-  P("++  Release Version: " .. hs.processInfo.version)
-end
-P("--------------------------------------------------")
-P("")
 
 -- [ LOCALS ] ------------------------------------------------------------------
 
@@ -121,15 +133,38 @@ hs.loadSpoon("EmmyLua")
 -- [ LOADERS ] -----------------------------------------------------------------
 
 --  NOTE: order matters
-Config = load("config")
-load("lib.hyper", { opt = true })
+load("config")
+-- load("lib.hyper", { opt = true })
 load("lib.watchers")
 load("lib.wm")
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 
 hs.shutdownCallback = function()
-  local loaders = { "config", "lib.watchers", "lib.wm", "lib.hyper" }
+  local loaders = { "config", "lib.watchers", "lib.wm" }
   FNUtils.each(loaders, function(l) unload(l) end)
   _G.mega = nil
 end
+
+-- [ BANNER ] ------------------------------------------------------------------
+
+P()
+info("----------------------------------------------------")
+info("░  Application Path: " .. hs.processInfo.bundlePath)
+info("░  Accessibility: " .. tostring(hs.accessibilityState()))
+if hs.processInfo.debugBuild then
+  local gitbranchfile = hs.processInfo.resourcePath .. "/gitbranch"
+  local gfile = io.open(gitbranchfile, "r")
+  if gfile then
+    GITBRANCH = gfile:read("l")
+    gfile:close()
+  else
+    GITBRANCH = "<" .. gitbranchfile .. " missing>"
+  end
+  success("░  Debug Version: " .. hs.processInfo.version .. ", " .. hs.processInfo.buildTime)
+  success("░  Build: " .. GITBRANCH)
+else
+  info("░  Release Version: " .. hs.processInfo.version)
+end
+info("----------------------------------------------------")
+P()

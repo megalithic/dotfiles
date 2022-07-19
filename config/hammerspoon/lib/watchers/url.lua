@@ -4,9 +4,10 @@ local FNUtils = require("hs.fnutils")
 local obj = {}
 
 obj.__index = obj
+obj.name = "watcher.url"
 
-function obj:start() print(string.format("url:start() executed.")) end
+function obj:start() return self end
 
-function obj:stop() print(string.format("url:stop() executed.")) end
+function obj:stop() return self end
 
 return obj

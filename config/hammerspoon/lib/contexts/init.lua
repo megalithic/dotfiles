@@ -33,7 +33,6 @@ end
 
 function obj:init(opts)
   opts = opts or {}
-  P(fmt("contexts:init(%s) loaded.", hs.inspect(opts)))
 
   windowFilter = Window.filter.new(false)
   appWatcher = Application.watcher.new(appWatcherCallback)
@@ -42,8 +41,6 @@ function obj:init(opts)
 end
 
 function obj:start(apps, transientApps, _callback)
-  P(fmt("contexts:start() executed."))
-
   callback = _callback or function() end
 
   local allowedWindowFilterEvents = {
@@ -63,7 +60,6 @@ function obj:start(apps, transientApps, _callback)
 end
 
 function obj:stop()
-  P(fmt("contexts:stop() executed."))
   windowFilter:unsubscribeAll()
   appWatcher:stop()
 
