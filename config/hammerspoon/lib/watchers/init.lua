@@ -21,7 +21,7 @@ function obj:start()
   -- TODO: add ability for a watcher to refuse auto-starting
   FNUtils.each(obj.watchers, function(modTarget)
     local modPath = "lib.watchers." .. modTarget
-    local mod = L.load(modPath)
+    local mod = L.load(modPath):start()
 
     obj.watched[modPath] = mod
   end)

@@ -62,10 +62,10 @@ local function resize(resizeKind)
 end
 
 local modalHotkeys = {
-	{shortcut = {modifiers = {}, key = "up"}, pressedfn = move, repeatfn = move, arg = "up", txt = "Move Up"},
-	{shortcut = {modifiers = {}, key = "down"}, pressedfn = move, repeatfn = move, arg = "down", txt = "Move Down"},
-	{shortcut = {modifiers = {}, key = "left"}, pressedfn = move, repeatfn = move, arg = "left", txt = "Move Left"},
-	{shortcut = {modifiers = {}, key = "right"}, pressedfn = move, repeatfn = move, arg = "right", txt = "Move Right"},
+	{shortcut = {modifiers = {}, key = "k"}, pressedfn = move, repeatfn = move, arg = "up", txt = "Move Up"},
+	{shortcut = {modifiers = {}, key = "j"}, pressedfn = move, repeatfn = move, arg = "down", txt = "Move Down"},
+	{shortcut = {modifiers = {}, key = "h"}, pressedfn = move, repeatfn = move, arg = "left", txt = "Move Left"},
+	{shortcut = {modifiers = {}, key = "l"}, pressedfn = move, repeatfn = move, arg = "right", txt = "Move Right"},
 	{
 		shortcut = {modifiers = {"alt"}, key = "left"},
 		pressedfn = resize,

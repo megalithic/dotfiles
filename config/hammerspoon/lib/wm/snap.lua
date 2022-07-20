@@ -1,58 +1,53 @@
--- local Window = require("hs.window")
--- local Screen = require("hs.screen")
--- local Geometry = require("hs.geometry")
--- local Spoons = require("hs.spoons")
--- local Settings = require("hs.settings")
 local alert = require("utils.alert")
 
 local load = require("utils.loader").load
-local Hyper = load("lib.hyper", { bust = true })
+local Hyper
 
-local obj = {}
+local obj = hs.hotkey.modal.new({}, nil)
 
 obj.__index = obj
 obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
--- local Hyper
+obj.isOpen = false
 
--- obj.tile = function()
---   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
---     if win ~= hs.window.focusedWindow() then
---       return {
---         text = win:title(),
---         subText = win:application():title(),
---         image = hs.image.imageFromAppBundle(win:application():bundleID()),
---         id = win:id(),
---       }
---     end
---   end)
+obj.tile = function()
+  local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
+    if win ~= hs.window.focusedWindow() then
+      return {
+        text = win:title(),
+        subText = win:application():title(),
+        image = hs.image.imageFromAppBundle(win:application():bundleID()),
+        id = win:id(),
+      }
+    end
+  end)
 
---   local chooser = hs.chooser.new(function(choice)
---     if choice ~= nil then
---       local focused = hs.window.focusedWindow()
---       local toRead = hs.window.find(choice.id)
---       if hs.eventtap.checkKeyboardModifiers()["alt"] then
---         hs.layout.apply({
---           { nil, focused, focused:screen(), hs.layout.left70, 0, 0 },
---           { nil, toRead, focused:screen(), hs.layout.right30, 0, 0 },
---         })
---       else
---         hs.layout.apply({
---           { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
---           { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
---         })
---       end
---       toRead:raise()
---     end
---   end)
+  local chooser = hs.chooser.new(function(choice)
+    if choice ~= nil then
+      local focused = hs.window.focusedWindow()
+      local toRead = hs.window.find(choice.id)
+      if hs.eventtap.checkKeyboardModifiers()["alt"] then
+        hs.layout.apply({
+          { nil, focused, focused:screen(), hs.layout.left70, 0, 0 },
+          { nil, toRead, focused:screen(), hs.layout.right30, 0, 0 },
+        })
+      else
+        hs.layout.apply({
+          { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
+          { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
+        })
+      end
+      toRead:raise()
+    end
+  end)
 
---   chooser
---     :placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30.")
---     :searchSubText(true)
---     :choices(windows)
---     :show()
--- end
+  chooser
+    :placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30.")
+    :searchSubText(true)
+    :choices(windows)
+    :show()
+end
 
 -- Margins --
 obj.screen_edge_margins = {
@@ -65,7 +60,7 @@ obj.partition_margins = {
   x = 0, -- px
   y = 0,
 }
-
+--
 -- Partitions --
 obj.split_screen_partitions = {
   x = 0.5, -- %
@@ -193,7 +188,7 @@ function obj.snapback()
   local state = win:frame()
   local prev_state = obj.snapback_window_state[id]
   if prev_state then win:setFrame(prev_state) end
-  obj.snapback_window_state[id] = state
+  if id ~= nil then obj.snapback_window_state[id] = state end
 end
 
 function obj.maximize() obj.set_frame("Full Screen", obj.screen()) end
@@ -273,54 +268,43 @@ function hs.window:moveToScreen(nextScreen)
   })
 end
 
-local function setupEvents()
-  hs.window.highlight.ui.overlay = true
+function obj:entered()
+  obj.isOpen = true
+  hs.window.highlight.start()
 
-  function Hyper:entered()
-    info("snap:hyper: entered")
-    obj.isOpen = true
-    hs.window.highlight.start()
+  obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
+    local win = hs.window.focusedWindow()
 
-    obj.alerts = hs.fnutils.map(hs.screen.allScreens(), function(screen)
-      local win = hs.window.focusedWindow()
-
-      if win ~= nil then
-        if screen == hs.screen.mainScreen() then
-          local app_title = win:application():title()
-          local image = hs.image.imageFromAppBundle(win:application():bundleID())
-          local prompt = string.format("◱ : %s", app_title)
-          if image ~= nil then prompt = string.format(": %s", app_title) end
-          alert.showOnly({ text = prompt, image = image, screen = screen })
-        end
-      else
-        -- unable to move a specific window. ¯\_(ツ)_/¯
-        Hyper:exit()
+    if win ~= nil then
+      if screen == hs.screen.mainScreen() then
+        local app_title = win:application():title()
+        local image = hs.image.imageFromAppBundle(win:application():bundleID())
+        local prompt = string.format("◱ : %s", app_title)
+        if image ~= nil then prompt = string.format(": %s", app_title) end
+        alert.showOnly({ text = prompt, image = image, screen = screen })
       end
+    else
+      obj:exit()
+    end
 
-      return nil
-    end)
+    return nil
+  end)
+end
 
-    return self
-  end
+function obj:exited()
+  obj.isOpen = false
+  hs.window.highlight.stop()
 
-  function Hyper:exited()
-    info("snap:hyper: exited")
-    obj.isOpen = false
-    hs.window.highlight.stop()
+  hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
 
-    hs.fnutils.ieach(obj.alerts, function(id) alert.closeSpecific(id) end)
-
-    alert.close()
-
-    return self
-  end
+  alert.close()
 end
 
 function obj:toggle()
   if obj.isOpen then
-    Hyper:exit()
+    obj:exit()
   else
-    Hyper:enter()
+    obj:enter()
   end
 
   return self
@@ -328,64 +312,51 @@ end
 
 function obj:init(opts)
   opts = opts or {}
-  setupEvents()
+  Hyper = load("lib.hyper"):start()
+
+  hs.window.highlight.ui.overlay = true
 
   return self
 end
 
 function obj:start()
-  Hyper:bind("", "l", function()
-    warn("snap: entering Hyper")
-    obj:enter()
-  end)
+  Hyper:bind("", "l", function() obj:toggle() end)
 
-  -- :: window-manipulation (manual window snapping)
-  Hyper:bind("", "return", nil, function() obj.maximize() end)
-    :bind("", "k", nil, function() obj.maximize() end)
-    :bind("", "j", nil, function() obj.move_to_center_absolute({ w = 1440, h = 900 }) end)
-    :bind("", "escape", function() Hyper:exit() end)
-
-  -- for _, c in pairs(Config.snap) do
-  --   Hyper:bind("", c.shortcut, function()
-  --     P("-- should be binding here")
-  --     -- require("ext.window").chain(c.locations)(string.format("shortcut: %s", c.shortcut))
-  --     Hyper:exit()
-  --   end)
-  -- end
-
-  -- Hyper
-  --   :bind("", "v", function()
-  --     M.windowSplitter()
-  --     Hyper:exit()
-  --   end)
-  --   :bind("ctrl", "[", function() Hyper:exit() end)
-  --   :bind("", "s", function()
-  --     if hs.window.focusedWindow():application():name() == Config.preferred.browsers[1] then
-  --       require("bindings.browser").split()
-  --     end
-  --     Hyper:exit()
-  --   end)
-  --   :bind("", "escape", function() Hyper:exit() end)
-  --   :bind("shift", "h", function()
-  --     hs.window.focusedWindow():moveOneScreenWest()
-  --     Hyper:exit()
-  --   end)
-  --   :bind("shift", "l", function()
-  --     hs.window.focusedWindow():moveOneScreenEast()
-  --     Hyper:exit()
-  --   end)
-  --   :bind("", "tab", function()
-  --     hs.window.focusedWindow():centerOnScreen()
-  --     Hyper:exit()
-  --   end)
+  obj
+    :bind("", "escape", function() obj:exit() end)
+    :bind("", "return", function()
+      obj.maximize()
+      obj:exit()
+    end)
+    :bind("", "k", function()
+      obj.maximize()
+      obj:exit()
+    end)
+    :bind("", "l", function()
+      obj.send_window_right()
+      obj:exit()
+    end)
+    :bind("", "h", function()
+      obj.send_window_left()
+      obj:exit()
+    end)
+    :bind("", "j", function()
+      obj.move_to_center_absolute({ w = 2880, h = 1200 })
+      obj:exit()
+    end)
+    :bind("", "v", function()
+      obj.tile()
+      obj:exit()
+    end)
 
   return self
 end
 
 function obj:stop()
-  Hyper:stop()
+  obj:delete()
   obj.alerts = {}
   obj.snapback_window_state = {}
+
   return self
 end
 

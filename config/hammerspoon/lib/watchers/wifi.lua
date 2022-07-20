@@ -9,3 +9,5 @@ obj.name = "watcher.wifi"
 function obj:start() return self end
 
 function obj:stop() return self end
+
+return obj

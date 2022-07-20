@@ -65,7 +65,7 @@ function _G.warn(msg, tag)
 end
 
 function _G.dbg(msg, tag)
-  tag = tag and "[DEBUG] " or ""
+  tag = tag and "[DEBUG] " or "[DEBUG] "
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#dddddd", alpha = 1 },
     backgroundColor = { hex = "#222222", alpha = 1 },
@@ -134,9 +134,8 @@ hs.loadSpoon("EmmyLua")
 
 --  NOTE: order matters
 load("config")
-load("lib.hyper", { bust = true })
-load("lib.watchers")
-load("lib.wm")
+load("lib.watchers"):start()
+load("lib.wm"):start()
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 

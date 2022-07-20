@@ -74,8 +74,8 @@ end
 function obj:init(opts)
   opts = opts or {}
 
-  load("lib.wm.snap")
-  obj.watcher = load("lib.contexts", { opt = true })
+  load("lib.wm.snap"):start()
+  obj.watcher = load("lib.contexts")
 
   return self
 end
