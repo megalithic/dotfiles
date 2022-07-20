@@ -23,7 +23,12 @@ function mixx() {
 }
 
 function zknew() {
-  vared -p "$(tput bold)$(tput setaf 5) new note title:$(tput sgr 0) " -c note_title
+  local note_title="${*:-}"
+
+  if [[ -z "$note_title" ]]; then
+    vared -p "$(tput bold)$(tput setaf 5) new note title:$(tput sgr 0) " -c note_title
+  fi
+
   if [[ -z "$note_title" ]]; then
     zk new
   else
