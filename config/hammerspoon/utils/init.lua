@@ -17,12 +17,12 @@ obj.__index = obj
 --- Returns:
 ---  * None
 function obj.bindHotkeysToSpec(def, map)
-  local spoonpath = module.scriptPath(3)
+  local spoonpath = obj.scriptPath(3)
   for name, key in pairs(map) do
     if def[name] ~= nil then
       local keypath = spoonpath .. name
-      if module._keys[keypath] then module._keys[keypath]:delete() end
-      module._keys[keypath] = hotkey.bindSpec(key, key["message"], def[name])
+      if obj._keys[keypath] then obj._keys[keypath]:delete() end
+      obj._keys[keypath] = hotkey.bindSpec(key, key["message"], def[name])
     else
       log.ef("Error: Hotkey requested for undefined action '%s'", name)
     end
@@ -65,5 +65,31 @@ function obj.bundleIDForApp(app)
     )
   )
 end
+
+function obj.table_merge(t1, t2, opts)
+  opts = opts or { strategy = "deep" }
+
+  if opts.strategy == "deep" then
+    -- # deep_merge:
+    for k, v in pairs(t2) do
+      if (type(v) == "table") and (type(t1[k] or false) == "table") then
+        obj.table_merge(t1[k], t2[k])
+      else
+        t1[k] = v
+      end
+    end
+  else
+    -- # shallow_merge:
+    for k, v in pairs(t2) do
+      t1[k] = v
+    end
+  end
+
+  return t1
+end
+
+function obj.deep_merge(...) obj.table_merge(..., { strategy = "deep" }) end
+
+function obj.shallow_merge(...) obj.table_merge(..., { strategy = "shallow" }) end
 
 return obj

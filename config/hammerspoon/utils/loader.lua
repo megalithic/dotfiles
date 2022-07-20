@@ -32,21 +32,27 @@ function obj.init(loadTarget, opts)
     local loaded = nil
 
     local target = mod.name or loadTarget
+    dbg(fmt("%s should bust cache? %s", target, shouldBustCache))
+    if mega.__loaded_modules[target] == nil or mega.__loaded_modules[target].mod ~= mod or shouldBustCache then
+      -- not loaded, nor should bust the cache..
+      if type(mod.init) == "function" then
+        info(fmt("[INIT] %s (%s)", target, I(opts)))
 
-    if
-      type(mod.init) == "function"
-      and (mega.__loaded_modules[target] == nil or mega.__loaded_modules[target].mod ~= mod and not shouldBustCache)
-    then
-      info(fmt("[INIT] %s (%s)", target, I(opts)))
+        -- NOTE:
+        -- this requires modules to return `self` on :init() to keep track of this;
+        -- non-conforming modules just return themselves on load if there is no
+        -- :init() fn.
+        loaded = mod:init(opts)
 
-      -- NOTE:
-      -- this requires modules to return `self` on :init() to keep track of this;
-      -- non-conforming modules just return themselves on load if there is no
-      -- :init() fn.
-      loaded = mod:init(opts)
-
-      -- store our cache of loaded modules so we don't re-init a bajillion times
-      mega.__loaded_modules[target] = { mod = loaded, opt = shouldLazyLoad, loadTarget = loadTarget }
+        -- store our cache of loaded modules so we don't re-init a bajillion times
+        mega.__loaded_modules[target] = { mod = loaded, opt = shouldLazyLoad, loadTarget = loadTarget }
+      end
+    elseif mega.__loaded_modules[target] ~= nil then
+      -- is loaded or cache wasn't busted
+      return mega.__loaded_modules[target].mod
+    else
+      -- something else; just return the module
+      return mod
     end
 
     -- should we auto-run :start() for this module?

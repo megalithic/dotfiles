@@ -134,7 +134,7 @@ hs.loadSpoon("EmmyLua")
 
 --  NOTE: order matters
 load("config")
--- load("lib.hyper", { opt = true })
+load("lib.hyper", { bust = true })
 load("lib.watchers")
 load("lib.wm")
 
