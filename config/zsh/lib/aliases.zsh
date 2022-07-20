@@ -233,7 +233,7 @@ alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic
 
 # ZK/notes/zettelkasten
 # -----------------------------------------------------------------------------
-alias zkn='zk new --title "$*"'
+alias zkn="zknew"
 alias zknc='zk new --print-path --title "$*" | pbcopy'
 alias zkl="zk list $@"
 alias zke="zk edit --interactive"
