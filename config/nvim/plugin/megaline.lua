@@ -757,7 +757,7 @@ function _G.__statusline()
       unpack(item_if(icons.misc.lblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
       -- mode
       M.s_mode({ trunc_width = 120 }),
-      M.s_hydra({ trunc_width = 75 }),
+      -- M.s_hydra({ trunc_width = 75 }),
       "%<", -- mark general truncate point
       -- filename parts
       M.s_filename({ trunc_width = 120 }),

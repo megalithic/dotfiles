@@ -131,7 +131,7 @@ local PKGS = {
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
-  "mbbill/undotree",
+  -- "mbbill/undotree",
   "danymat/neogen",
 
   ------------------------------------------------------------------------------
@@ -307,7 +307,7 @@ function M.config()
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
-    move_cursor = false,
+    -- move_cursor = false,
     highlight_motion = { -- Highlight before inserting/changing surrounds
       duration = 1,
     },
@@ -774,11 +774,11 @@ function M.config()
     mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
   end)
 
-  conf("undotree", function()
-    mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
-    vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
-    vim.g.undotree_SetFocusWhenToggle = 1
-  end)
+  -- conf("undotree", function()
+  --   mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
+  --   vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
+  --   vim.g.undotree_SetFocusWhenToggle = 1
+  -- end)
 end
 
 return M

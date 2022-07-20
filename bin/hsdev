@@ -43,4 +43,3 @@ else
 
   log_ok "Hammerspoon loading from $CONFIG."
 fi
-
