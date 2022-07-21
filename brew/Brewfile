@@ -302,7 +302,7 @@ mas "Fantastical", id: 975937182
 # mas "Drafts", id: 1435957248
 mas "Battery Indicator", id: 1206020918
 mas "Brother iPrint&Scan", id: 1193539993
-mas "Vimari", id: 1480933944
+# mas "Vimari", id: 1480933944
 
 # mas "Things", id: 904280696 # might be bailing from this
 # mas "Xcode", id: 497799835

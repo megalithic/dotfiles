@@ -36,12 +36,14 @@ obj.tile = function()
           { nil, toRead, focused:screen(), hs.layout.right30, 0, 0 },
         })
       else
-        hs.layout.apply({
-          { nil, focused, focused:screen(), obj.send_window_left(), 0, 0 },
-          { nil, toRead, focused:screen(), obj.send_window_right(), 0, 0 },
-          -- { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
-          -- { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
-        })
+        obj.send_window_left(focused, fmt("<- %s", focused:title()))
+        obj.send_window_right(toRead, fmt("%s ->", toRead:title()))
+        -- hs.layout.apply({
+        --   -- { nil, focused, focused:screen(), obj.send_window_left(), 0, 0 },
+        --   -- { nil, toRead, focused:screen(), obj.send_window_right(), 0, 0 },
+        --   { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
+        --   { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
+        -- })
       end
       toRead:raise()
     end
@@ -59,7 +61,8 @@ obj.partition_margins = obj.grid.partition_margins
 obj.split_screen_partitions = obj.grid.split_screen_partitions
 obj.quarter_screen_partitions = obj.grid.quarter_screen_partitions
 
-function obj.send_window_left()
+function obj.send_window_left(win, msg)
+  msg = msg or "Left"
   local s = obj.screen()
   local ssp = obj.split_screen_partitions
   local g = obj.gutter()
@@ -69,12 +72,11 @@ function obj.send_window_left()
     w = (s.w * ssp.x) - g.x,
     h = s.h,
   }
-  obj.set_frame("Left", geom)
-
-  return hs.geometry.new(geom)
+  obj.set_frame(msg, geom, win)
 end
 
-function obj.send_window_right()
+function obj.send_window_right(win, msg)
+  msg = msg or "Right"
   local s = obj.screen()
   local ssp = obj.split_screen_partitions
   local g = obj.gutter()
@@ -84,9 +86,7 @@ function obj.send_window_right()
     w = (s.w * (1 - ssp.x)) - g.x,
     h = s.h,
   }
-  obj.set_frame("Right", geom)
-
-  return hs.geometry.new(geom)
+  obj.set_frame(msg, geom, win)
 end
 
 function obj.send_window_up()
@@ -218,11 +218,13 @@ end
 
 -- return currently focused window
 function obj.win() return hs.window.focusedWindow() end
+
 -- display title, save state and move win to unit
-function obj.set_frame(title, unit)
+function obj.set_frame(title, unit, win)
   hs.alert.show(title)
-  local win = obj.win()
+  win = win or obj.win()
   obj.snapback_window_state[win:id()] = win:frame()
+
   return win:setFrame(unit)
 end
 -- screen is the available rect inside the screen edge margins
@@ -330,8 +332,16 @@ function obj:start()
       obj.send_window_right()
       obj:exit()
     end)
+    :bind({ "shift" }, "l", function()
+      obj.send_window_next_monitor()
+      obj:exit()
+    end)
     :bind("", "h", function()
       obj.send_window_left()
+      obj:exit()
+    end)
+    :bind({ "shift" }, "h", function()
+      obj.send_window_prev_monitor()
       obj:exit()
     end)
     :bind("", "j", function()
