@@ -139,6 +139,7 @@ load("config")
 load("lib.watchers"):start()
 load("lib.wm"):start()
 load("lib.bindings"):start()
+load("lib.ptt"):start()
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 

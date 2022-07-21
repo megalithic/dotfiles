@@ -30,6 +30,13 @@ function obj:bindPassThrough(key, app)
   return self
 end
 
+-- function obj:new(enteredFn, exitedFn)
+--   local subModal = hs.hotkey.modal.new({}, nil)
+--   local sub = obj:init({})
+--   if enteredFn then enteredFn() end
+--   if exitedFn then exitedFn() end
+-- end
+
 function obj:init(opts)
   opts = opts or {}
   local hyperKey = opts["hyperKey"] or Settings.get(CONFIG_KEY).keys.hyper

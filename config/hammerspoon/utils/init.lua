@@ -92,4 +92,6 @@ function obj.deep_merge(...) obj.table_merge(..., { strategy = "deep" }) end
 
 function obj.shallow_merge(...) obj.table_merge(..., { strategy = "shallow" }) end
 
+function obj.template(template, replacements) return string.gsub(template, "{(.-)}", replacements) end
+
 return obj

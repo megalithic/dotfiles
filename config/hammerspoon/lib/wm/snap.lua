@@ -63,24 +63,30 @@ function obj.send_window_left()
   local s = obj.screen()
   local ssp = obj.split_screen_partitions
   local g = obj.gutter()
-  return obj.set_frame("Left", {
+  local geom = {
     x = s.x,
     y = s.y,
     w = (s.w * ssp.x) - g.x,
     h = s.h,
-  })
+  }
+  obj.set_frame("Left", geom)
+
+  return hs.geometry.new(geom)
 end
 
 function obj.send_window_right()
   local s = obj.screen()
   local ssp = obj.split_screen_partitions
   local g = obj.gutter()
-  return obj.set_frame("Right", {
+  local geom = {
     x = s.x + (s.w * ssp.x) + g.x,
     y = s.y,
     w = (s.w * (1 - ssp.x)) - g.x,
     h = s.h,
-  })
+  }
+  obj.set_frame("Right", geom)
+
+  return hs.geometry.new(geom)
 end
 
 function obj.send_window_up()

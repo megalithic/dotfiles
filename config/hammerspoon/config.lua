@@ -68,8 +68,6 @@ local grid = {
   },
 }
 
-local hyper = "F19"
-
 -- stylua: ignore start
 --- REF: https://github.com/asmagill/hammerspoon_asm/blob/master/extras/init.lua
 local mods = {
@@ -84,6 +82,9 @@ local mods = {
 }
 -- stylua: ignore end
 
+local hyper = "F19"
+local ptt = mods.CAsc
+
 local wm = {
   pushLeft = { hyper, "h" },
   pushRight = { hyper, "l" },
@@ -94,6 +95,12 @@ local wm = {
 }
 
 local apps = {
+  ["com.runningwithcrayons.Alfred"] = {
+    name = "Alfred",
+    bundleID = "com.runningwithcrayons.Alfred",
+    key = "space",
+    quitGuard = true,
+  },
   ["net.kovidgoyal.kitty"] = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
@@ -261,6 +268,7 @@ function obj:init(opts)
     ["grid"] = grid,
     ["keys"] = {
       ["hyper"] = hyper,
+      ["ptt"] = ptt,
       ["mods"] = mods,
       ["wm"] = wm,
     },
