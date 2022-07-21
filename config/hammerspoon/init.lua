@@ -81,6 +81,8 @@ function _G.note(msg, tag)
   }))
 end
 
+_G.CONFIG_KEY = "_mega_config"
+
 -- [ CONSOLE SETTINGS ] ---------------------------------------------------------
 
 local con = require("hs.console")
@@ -136,6 +138,7 @@ hs.loadSpoon("EmmyLua")
 load("config")
 load("lib.watchers"):start()
 load("lib.wm"):start()
+load("lib.bindings"):start()
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 

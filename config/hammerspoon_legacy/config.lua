@@ -225,19 +225,19 @@ M.apps = {
       { nil, 1, M.layout.centeredMedium },
     },
   },
+  ["com.brettterpstra.marked2"] = {
+    bundleID = "com.brettterpstra.marked2",
+    name = "Marked",
+    rules = {
+      { nil, 1, M.layout.leftHalf },
+    },
+  },
   ["com.kapeli.dashdoc"] = {
     bundleID = "com.kapeli.dashdoc",
     name = "Dash",
     hyper_key = "d",
     rules = {
       { nil, 1, M.layout.centeredLarge },
-    },
-  },
-  ["com.brettterpstra.marked2"] = {
-    bundleID = "com.brettterpstra.marked2",
-    name = "Marked",
-    rules = {
-      { nil, 1, M.layout.leftHalf },
     },
   },
   ["com.tinyspeck.slackmacgap"] = {

@@ -4,6 +4,11 @@ local Application = require("hs.application")
 local Window = require("hs.window")
 
 local obj = {}
+
+obj.__index = obj
+obj.name = "contexts"
+obj.debug = false
+
 local appWatcher
 local windowFilter
 local frontAppBundleID

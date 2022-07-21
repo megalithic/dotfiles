@@ -11,7 +11,7 @@ obj.watched = {}
 function obj:init(opts)
   opts = opts or {}
 
-  obj.watchers = Settings.get("_mega_config").watchers
+  obj.watchers = Settings.get(CONFIG_KEY).watchers
 
   return self
 end
@@ -30,7 +30,7 @@ function obj:start()
 end
 
 function obj:stop()
-  FNUtils.each(obj.watched, function(mod) L.stop("lib." .. mod.name:gsub("watcher", "watchers")) end)
+  FNUtils.each(obj.watched, function(mod) L.unload("lib." .. mod.name:gsub("watcher", "watchers")) end)
   obj.watchers = {}
   obj.watched = {}
 

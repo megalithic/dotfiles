@@ -6,7 +6,7 @@ obj.__index = obj
 obj.name = "config"
 
 obj.settings = {}
-obj.settingsKey = "_mega_config"
+obj.settingsKey = CONFIG_KEY
 
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
@@ -97,7 +97,8 @@ local apps = {
   ["net.kovidgoyal.kitty"] = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
-    hyper_key = "k",
+    key = "k",
+    localBindings = {},
     quitGuard = false,
     rules = {
       -- { nil, 1, M.layout.fullScreen },
@@ -107,11 +108,146 @@ local apps = {
     bundleID = "com.brave.Browser",
     name = "Brave Browser",
     quitGuard = true,
-    hyper_key = "j", -- FIXME: move these to hyperGroups in hyper.lua
+    key = "j",
+    localBindings = {},
     tags = { "browsers" },
     rules = {
       -- { nil, 1, M.layout.fullScreen },
     },
+  },
+  ["com.kapeli.dashdoc"] = {
+    bundleID = "com.kapeli.dashdoc",
+    name = "Dash",
+    key = "d",
+    rules = {
+      -- { nil, 1, M.layout.centeredLarge },
+    },
+  },
+  ["com.tinyspeck.slackmacgap"] = {
+    bundleID = "com.tinyspeck.slackmacgap",
+    name = "Slack",
+    key = "s",
+    context = "slack",
+    distraction = true,
+    quitGuard = false,
+    rules = {
+      -- { nil, 2, M.layout.fullScreen },
+    },
+  },
+  ["com.freron.MailMate"] = {
+    bundleID = "com.freron.MailMate",
+    name = "MailMate",
+    key = "e",
+    -- context = "mailmate",
+    distraction = true,
+    hideAfter = 5,
+    rules = {
+      -- { nil, 2, M.layout.leftHalf },
+      -- { "Inbox", 2, M.layout.fullScreen },
+    },
+  },
+  ["com.apple.finder"] = {
+    bundleID = "com.apple.finder",
+    name = "Finder",
+    key = "f",
+    rules = {
+      -- { "Finder", 1, M.layout.centeredMedium },
+    },
+  },
+  ["us.zoom.xos"] = {
+    bundleID = "us.zoom.xos",
+    name = "zoom.us",
+    context = "zoom",
+    key = "z",
+    launchMode = "focus",
+    rules = {
+      -- { nil, 1, M.layout.centeredMedium },
+      -- { "Zoom Meeting", 1, M.layout.fullScreen },
+    },
+  },
+  ["com.loom.desktop"] = {
+    bundleID = "com.loom.desktop",
+    name = "Loom",
+    context = "loom",
+  },
+  ["com.spotify.client"] = {
+    bundleID = "com.spotify.client",
+    name = "Spotify",
+    key = "p",
+    -- mods = M.modifiers.shift,
+    hideAfter = 1,
+    rules = {
+      -- { nil, 2, M.layout.rightHalf },
+    },
+  },
+  ["com.apple.MobileSMS"] = {
+    bundleID = "com.apple.MobileSMS",
+    name = "Messages",
+    key = "m",
+    context = "messages",
+    distraction = true,
+    tags = { "personal" },
+    rules = {
+      -- { nil, 2, M.layout.rightHalf },
+    },
+  },
+  ["org.whispersystems.signal-desktop"] = {
+    bundleID = "org.whispersystems.signal-desktop",
+    name = "Signal",
+    key = "w",
+    context = "signal",
+    distraction = true,
+    tags = { "personal" },
+    rules = {
+      -- { nil, 2, M.layout.rightHalf },
+    },
+  },
+  ["com.agilebits.onepassword7"] = {
+    bundleID = "com.agilebits.onepassword7",
+    name = "1Password",
+    key = "1",
+    hideAfter = 1,
+    rules = {
+      -- { nil, 1, M.layout.centeredMedium },
+    },
+  },
+  ["org.hammerspoon.Hammerspoon"] = {
+    bundleID = "org.hammerspoon.Hammerspoon",
+    name = "Hammerspoon",
+    key = "r",
+    context = "hammerspoon",
+    hideAfter = 15,
+    quitGuard = true,
+    rules = {
+      -- { nil, 2, M.layout.fullScreen },
+    },
+  },
+  ["com.flexibits.fantastical2.mac"] = {
+    bundleID = "com.flexibits.fantastical2.mac",
+    name = "Fantastical",
+    key = "y",
+    localBindings = { "'" },
+    quitGuard = true,
+    hideAfter = 2,
+    rules = {
+      -- { nil, 1, M.layout.centeredLarge },
+    },
+  },
+  ["com.figma.Desktop"] = {
+    bundleID = "com.figma.Desktop",
+    name = "Figma",
+    key = "f",
+    -- mods = M.modifiers.shift,
+    quitGuard = true,
+    rules = {
+      -- { nil, 1, M.layout.fullScreen },
+    },
+  },
+  ["com.surteesstudios.Bartender"] = {
+    bundleID = "com.surteesstudios.Bartender",
+    name = "Bartender 4",
+    quitGuard = true,
+    localBindings = { "b" },
   },
 }
 

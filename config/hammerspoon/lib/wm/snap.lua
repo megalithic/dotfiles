@@ -1,6 +1,8 @@
+-- REF: https://github.com/Hammerspoon/hammerspoon/issues/154
+
 local alert = require("utils.alert")
 
-local load = require("utils.loader").load
+local Settings = require("hs.settings")
 local Hyper
 
 local obj = hs.hotkey.modal.new({}, nil)
@@ -10,6 +12,7 @@ obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
+obj.grid = Settings.get(CONFIG_KEY).grid
 
 obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -34,8 +37,10 @@ obj.tile = function()
         })
       else
         hs.layout.apply({
-          { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
-          { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
+          { nil, focused, focused:screen(), obj.send_window_left(), 0, 0 },
+          { nil, toRead, focused:screen(), obj.send_window_right(), 0, 0 },
+          -- { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
+          -- { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
         })
       end
       toRead:raise()
@@ -49,36 +54,19 @@ obj.tile = function()
     :show()
 end
 
--- Margins --
-obj.screen_edge_margins = {
-  top = 32, -- px
-  left = 0,
-  right = 0,
-  bottom = 0,
-}
-obj.partition_margins = {
-  x = 0, -- px
-  y = 0,
-}
---
--- Partitions --
-obj.split_screen_partitions = {
-  x = 0.5, -- %
-  y = 0.5,
-}
-obj.quarter_screen_partitions = {
-  x = 0.5, -- %
-  y = 0.5,
-}
+obj.screen_edge_margins = obj.grid.screen_edge_margins
+obj.partition_margins = obj.grid.partition_margins
+obj.split_screen_partitions = obj.grid.split_screen_partitions
+obj.quarter_screen_partitions = obj.grid.quarter_screen_partitions
 
 function obj.send_window_left()
   local s = obj.screen()
   local ssp = obj.split_screen_partitions
   local g = obj.gutter()
-  obj.set_frame("Left", {
+  return obj.set_frame("Left", {
     x = s.x,
     y = s.y,
-    w = (s.w * ssp.x) - obj.gutter().x,
+    w = (s.w * ssp.x) - g.x,
     h = s.h,
   })
 end
@@ -87,7 +75,7 @@ function obj.send_window_right()
   local s = obj.screen()
   local ssp = obj.split_screen_partitions
   local g = obj.gutter()
-  obj.set_frame("Right", {
+  return obj.set_frame("Right", {
     x = s.x + (s.w * ssp.x) + g.x,
     y = s.y,
     w = (s.w * (1 - ssp.x)) - g.x,
@@ -312,7 +300,7 @@ end
 
 function obj:init(opts)
   opts = opts or {}
-  Hyper = load("lib.hyper"):start()
+  Hyper = L.load("lib.hyper", { id = obj.name }):start()
 
   hs.window.highlight.ui.overlay = true
 
@@ -356,6 +344,7 @@ function obj:stop()
   obj:delete()
   obj.alerts = {}
   obj.snapback_window_state = {}
+  L.unload("lib.hyper", obj.name)
 
   return self
 end
