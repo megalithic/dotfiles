@@ -6,7 +6,6 @@ obj.__index = obj
 obj.name = "config"
 
 obj.settings = {}
-obj.settingsKey = CONFIG_KEY
 
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
@@ -244,7 +243,7 @@ local apps = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
     key = "f",
-    -- mods = M.modifiers.shift,
+    mods = { "shift" },
     quitGuard = true,
     rules = {
       -- { nil, 1, M.layout.fullScreen },
@@ -258,11 +257,23 @@ local apps = {
   },
 }
 
+local utils = {
+  {
+    name = "Hammerspoon",
+    key = "r",
+    mods = { "shift" },
+    fn = { { "hs.reload" }, { "hs.notify.show", "Hammerspoon", "Config reloaded.." } },
+  },
+}
+
 function obj:init(opts)
   opts = opts or {}
 
   obj.settings = {
-    ["apps"] = apps,
+    ["bindings"] = {
+      ["apps"] = apps,
+      ["utils"] = utils,
+    },
     ["dirs"] = dirs,
     ["displays"] = displays,
     ["grid"] = grid,
@@ -279,13 +290,13 @@ function obj:init(opts)
     ["watchers"] = watchers,
   }
 
-  Settings.set(obj.settingsKey, obj.settings)
+  Settings.set(CONFIG_KEY, obj.settings)
 
   return self
 end
 
 function obj:stop()
-  Settings.clear(obj.settingsKey)
+  Settings.clear(CONFIG_KEY)
   obj.settings = {}
 
   return self

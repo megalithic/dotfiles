@@ -94,4 +94,30 @@ function obj.shallow_merge(...) obj.table_merge(..., { strategy = "shallow" }) e
 
 function obj.template(template, replacements) return string.gsub(template, "{(.-)}", replacements) end
 
+function obj.tlen(t)
+  local len = 0
+  for _ in pairs(t) do
+    len = len + 1
+  end
+  return len
+end
+
+-- WIP: BROKE
+function obj.tfn(t)
+  local fnstr = table.remove(t, 1)
+  -- THIS conversion doesn't do it..
+  local fn = _G[fnstr]
+
+  local args = t
+  dbg(fmt("[TFN] (%s, %s, %s, %s)", t, fnstr, fn, args))
+
+  if not fn and not type(fn) == "function" then return end
+
+  if args then
+    fn(args)
+  else
+    fn()
+  end
+end
+
 return obj

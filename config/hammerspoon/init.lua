@@ -4,6 +4,7 @@ _G.mega = _G.mega or {
   __loaded_modules = {},
 }
 _G.L = require("utils.loader")
+_G.U = require("utils")
 _G.ts = function(date)
   date = date or hs.timer.secondsSinceEpoch()
   -- return os.date("%Y-%m-%d %H:%M:%S " .. ((tostring(date):match("(%.%d+)$")) or ""), math.floor(date))
@@ -32,6 +33,11 @@ _G.I = hs.inspect
 _G.defaultFont = { name = "JetBrainsMono Nerd Font", size = 16 }
 
 local stext = require("hs.styledtext").new
+local getInfo = function()
+  local info = debug.getinfo(2, "Sl")
+  local lineinfo = fmt("%s:%s: ", info.short_src, info.currentline)
+  return lineinfo
+end
 function _G.info(msg, tag)
   tag = tag and "[INFO] " or ""
   hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
@@ -50,7 +56,8 @@ end
 
 function _G.error(msg, tag)
   tag = tag and "[ERROR] " or ""
-  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
+
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
     color = { hex = "#c43e1f", alpha = 1 },
     font = defaultFont,
   }))
@@ -66,7 +73,9 @@ end
 
 function _G.dbg(msg, tag)
   tag = tag and "[DEBUG] " or "[DEBUG] "
-  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
+  msg = type(msg) == "table" and I(msg) or msg
+
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
     color = { hex = "#dddddd", alpha = 1 },
     backgroundColor = { hex = "#222222", alpha = 1 },
     font = defaultFont,
@@ -105,8 +114,8 @@ local Settings = require("hs.settings")
 local FNUtils = require("hs.fnutils")
 local ipc = require("hs.ipc")
 local hs = hs
-local load = require("utils.loader").load
-local unload = require("utils.loader").unload
+local load = L.load
+local unload = L.unload
 
 -- [ HAMMERSPOON SETTINGS ] ----------------------------------------------------
 
@@ -136,10 +145,10 @@ hs.loadSpoon("EmmyLua")
 
 --  NOTE: order matters
 load("config")
-load("lib.watchers"):start()
-load("lib.wm"):start()
 load("lib.bindings"):start()
 load("lib.ptt"):start()
+load("lib.watchers"):start()
+load("lib.wm"):start()
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 
