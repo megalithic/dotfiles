@@ -1,0 +1,121 @@
+#!/bin/sh
+set -eu
+
+name=$(basename "$0")
+
+usage() {
+	printf "usage: %s [-o path] url\n" "$name" >&2
+	exit 2
+}
+
+out=
+
+while getopts :o: opt; do
+	case $opt in
+	o) out=$OPTARG; if [ -z "$out" ]; then usage; fi ;;
+	?) usage
+	esac
+done
+shift $(($OPTIND - 1))
+
+ver() {
+	printf "%s\n" "$1" | awk -F. '{ print $1*1e6 + $2*1e3 + $3 }'
+}
+
+curl=$(curl -V | awk 'NR == 1 { print $2 }')
+parallel=
+if [ "$(ver "$curl")" -ge "$(ver 7.66.0)" ]; then
+	parallel=-Z
+fi
+
+awk -F '>' -v RS='<' -v OFS='\t' '
+function get_path(url, parts, n, path, i) {
+	n = split(url, parts, "/")
+	path = ""
+	for (i=4; i<=n; i++) if (i != 6) path = path "/" parts[i]
+	return path
+}
+function get_type(url, parts) {
+	split(url, parts, "/")
+	return parts[6]
+}
+function get_raw_url(path) {
+	return "https://raw.githubusercontent.com" path
+}
+function get_file(path, output, root) {
+	path = substr(path, length(root)+2)
+	return path ? output "/" path : output
+}
+function error(msg) {
+	printf "%s: %s\n", ARGV[0], msg > "/dev/stderr"
+	print "ignore" # trigger curl error
+	exit 1
+}
+function print_links(\
+	url, output, root, \
+	type, path, file, parts, n, i, start_path, cmd, s, ret \
+) {
+	if (!output) {
+		match(url, /\/[^\/]+$/)
+		output = substr(url, RSTART+1)
+	}
+	type = get_type(url)
+	path = get_path(url)
+	if (!root) root = path
+	file = get_file(path, output, root)
+	if (type == "blob") {
+		++total
+		url = get_raw_url(path)
+		printf "%s:\t\t\t %d files\r", ARGV[0], total > "/dev/stderr"
+		printf "-o \"%s\" \"%s\" " \
+			"-w \"%%{stderr}\t\bdownloaded %4d /\\n\"\n", \
+			file, url, total
+		return
+	}
+	n = split(url, parts, "/")
+	url = parts[1]
+	for (i=2; i<=n; i++) url = url "/" (i == 6 ? "file-list" : parts[i])
+	# if downloading the root repo
+	if (n < 6) root = ""
+	start_path = path
+	cmd = "curl -fsSL \"" url "\""
+	i = 0
+	while (ret = cmd | getline) {
+		if (ret == -1) error("getline error")
+		if (!match($1, /href="\/[^"]+"/)) continue
+		path = substr($1, RSTART+6, RLENGTH-7)
+		url = "https://github.com" path
+		type = get_type(url)
+		if (type != "blob" && type != "tree") continue
+		path = get_path(url)
+		s = substr(path, length(start_path)+1)
+		if (!s || (start_path s) != path) continue
+		if (!root) {
+			n = split(url, parts, "/")
+			if (n != 7) continue
+			root = get_path(url)
+			start_path = root
+		}
+		++i
+		print_links(url, output, root)
+	}
+	close(cmd)
+	if (!i) error("failed to get file list")
+}
+BEGIN {
+	for (i=0; i<ARGC; i++) ARGV[i] = ARGV[i+1]; --ARGC
+	sub(/\/$/, "", ARGV[1])
+	print_links(ARGV[1], ARGV[2])
+}
+' "$name" "$1" "$out" | {
+	xargs -L4 curl --create-dirs --fail-early $parallel -fsSLC - \
+		2>&1 1>&3 3>&- |
+	awk '
+		/error: 416/ { next }
+		/ignore/ { exit 1 }
+		/curl/ { print; exit 1 }
+		{ system("printf \"%s\r\" \"" $0 "\"") }
+	'
+	echo
+} 3>&1 1>&2
+
