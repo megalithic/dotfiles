@@ -43,7 +43,7 @@ function obj:start()
 
   Hyper:bind({ "shift" }, "r", function()
     hs.reload()
-    hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration reloaded" }):send()
+    hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
 
   -- bind(bindings.utils, "utils", function(t)

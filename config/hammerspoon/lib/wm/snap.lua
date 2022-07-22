@@ -35,15 +35,11 @@ obj.tile = function()
           { nil, focused, focused:screen(), hs.layout.left70, 0, 0 },
           { nil, toRead, focused:screen(), hs.layout.right30, 0, 0 },
         })
+        alert.show("  70 ◱ 30  ")
       else
-        obj.send_window_left(focused, fmt("<- %s", focused:title()))
-        obj.send_window_right(toRead, fmt("%s ->", toRead:title()))
-        -- hs.layout.apply({
-        --   -- { nil, focused, focused:screen(), obj.send_window_left(), 0, 0 },
-        --   -- { nil, toRead, focused:screen(), obj.send_window_right(), 0, 0 },
-        --   { nil, focused, focused:screen(), hs.layout.left50, 0, 0 },
-        --   { nil, toRead, focused:screen(), hs.layout.right50, 0, 0 },
-        -- })
+        obj.send_window_left(focused, fmt("", focused:title()))
+        obj.send_window_right(toRead, fmt("", toRead:title()))
+        alert.show("  50 ◱ 50  ")
       end
       toRead:raise()
     end
@@ -161,14 +157,14 @@ function obj.send_window_lower_right()
 end
 
 function obj.send_window_prev_monitor()
-  hs.alert.show("Prev Monitor")
+  alert.show("Prev Monitor")
   local win = hs.window.focusedWindow()
   local nextScreen = win:screen():previous()
   win:moveToScreen(nextScreen)
 end
 
 function obj.send_window_next_monitor()
-  hs.alert.show("Next Monitor")
+  alert.show("Next Monitor")
   local win = hs.window.focusedWindow()
   local nextScreen = win:screen():next()
   win:moveToScreen(nextScreen)
@@ -221,7 +217,7 @@ function obj.win() return hs.window.focusedWindow() end
 
 -- display title, save state and move win to unit
 function obj.set_frame(title, unit, win)
-  hs.alert.show(title)
+  if title and not title == "" then alert.show(title) end
   win = win or obj.win()
   obj.snapback_window_state[win:id()] = win:frame()
 
