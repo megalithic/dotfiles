@@ -43,7 +43,7 @@ end
 ---Opens a custom terminal
 ---@param opts TermOpts
 function mega.term_open(opts)
-  local cmd = opts.cmd
+  local cmd = opts.cmd or "zsh -i"
   local custom_on_exit = opts.on_exit or nil
   local precmd = opts.precmd or nil
   local on_after_open = opts.on_after_open or nil
@@ -233,6 +233,15 @@ mega.command("TermNode", function()
   })
 end)
 
+mega.command("Term", function()
+  mega.open_term({
+    winnr = vim.fn.winnr(),
+    on_exit = function() end,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
+  })
+end)
+
 local has_wk, wk = mega.safe_require("which-key")
 if has_wk then
   wk.register({
@@ -243,6 +252,7 @@ if has_wk then
       l = { "<cmd>TermLua<cr>", "repl > lua" },
       n = { "<cmd>TermNode<cr>", "repl > node" },
       p = { "<cmd>TermPython<cr>", "repl > python" },
+      t = { "<cmd>Term<cr>", "term" },
     },
   }, {
     prefix = "<leader>",

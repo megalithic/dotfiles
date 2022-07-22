@@ -12,7 +12,30 @@ obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
-obj.grid = Settings.get(CONFIG_KEY).grid
+obj.grid = function()
+  local sketchybarRunning = hs.application.get("sketchybar")
+  return {
+    screen_edge_margins = {
+      top = sketchybarRunning ~= nil and 32 or 0,
+      left = 0,
+      right = 0,
+      bottom = 0,
+    },
+    partition_margins = {
+      x = 0, -- px
+      y = 0,
+    },
+    -- Partitions --
+    split_screen_partitions = {
+      x = 0.5, -- %
+      y = 0.5,
+    },
+    quarter_screen_partitions = {
+      x = 0.5, -- %
+      y = 0.5,
+    },
+  }
+end
 
 obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -52,10 +75,10 @@ obj.tile = function()
     :show()
 end
 
-obj.screen_edge_margins = obj.grid.screen_edge_margins
-obj.partition_margins = obj.grid.partition_margins
-obj.split_screen_partitions = obj.grid.split_screen_partitions
-obj.quarter_screen_partitions = obj.grid.quarter_screen_partitions
+obj.screen_edge_margins = obj.grid().screen_edge_margins
+obj.partition_margins = obj.grid().partition_margins
+obj.split_screen_partitions = obj.grid().split_screen_partitions
+obj.quarter_screen_partitions = obj.grid().quarter_screen_partitions
 
 function obj.send_window_left(win, msg)
   msg = msg or "Left"

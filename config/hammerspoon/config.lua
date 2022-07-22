@@ -53,28 +53,6 @@ local quitter = {
   defaultHideInterval = 1800, -- 30 minutes
 }
 
-local sketchybarRunning = hs.application.get("sketchybar")
-local grid = {
-  screen_edge_margins = {
-    top = sketchybarRunning ~= nil and 32 or 0,
-    left = 0,
-    right = 0,
-    bottom = 0,
-  },
-  partition_margins = {
-    x = 0, -- px
-    y = 0,
-  },
-  -- Partitions --
-  split_screen_partitions = {
-    x = 0.5, -- %
-    y = 0.5,
-  },
-  quarter_screen_partitions = {
-    x = 0.5, -- %
-    y = 0.5,
-  },
-}
 
 -- stylua: ignore start
 --- REF: https://github.com/asmagill/hammerspoon_asm/blob/master/extras/init.lua
@@ -319,7 +297,6 @@ function obj:init(opts)
     },
     ["dirs"] = dirs,
     ["displays"] = displays,
-    ["grid"] = grid,
     ["keys"] = {
       ["hyper"] = hyper,
       ["ptt"] = ptt,

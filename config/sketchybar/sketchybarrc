@@ -1,95 +1,230 @@
-# This is a demo config to show some of the most important commands more easily.
-# This is meant to be changed and configured, as it is intentionally kept
-# sparse.
-# For a more advanced configuration example see my dotfiles:
-# https://github.com/FelixKratz/SketchyBar/discussions/47#discussioncomment-2027233
+#!/usr/bin/env sh
 
-PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+############## BAR ##############
+sketchybar -m --bar \
+  height=32 \
+  position=top \
+  padding_left=0 \
+  padding_right=0 \
+  color=0xff3b4252 \
+  shadow=off \
+  topmost=off
 
-##### Bar Appearance #####
-# Configuring the general appearance of the bar, these are only some of the
-# options available. For all options see:
-# https://felixkratz.github.io/SketchyBar/config/bar
-# If you are looking for other colors, see the color picker:
-# https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
+############## GLOBAL DEFAULTS ##############
+sketchybar -m --default \
+  updates=when_shown \
+  drawing=on \
+  cache_scripts=on \
+  icon.font="JetBrainsMono Nerd Font Mono:Bold:18.0" \
+  icon.color=0xffffffff \
+  label.font="JetBrainsMono Nerd Font Mono:Bold:12.0" \
+  label.color=0xffeceff4 \
+  label.highlight_color=0xff8CABC8
 
-sketchybar --bar height=32        \
-                 blur_radius=50   \
-                 y_offset=0       \
-                 position=top     \
-                 padding_left=10  \
-                 padding_right=10 \
-                 color=0x15ffffff
+############## SPACE DEFAULTS ##############
+sketchybar -m --default \
+  label.padding_left=5 \
+  label.padding_right=2 \
+  icon.padding_left=8 \
+  label.padding_right=8
 
+############## PRIMARY DISPLAY SPACES ##############
+# SPACE 1: CODE ICON
+sketchybar -m --add space code left \
+  --set code icon= \
+  --set code associated_display=1 \
+  --set code associated_space=1 \
+  --set code icon.padding_left=5 \
+  --set code icon.padding_right=5 \
+  --set code label.padding_right=0 \
+  --set code label.padding_left=0 \
+  --set code label.color=0xffeceff4 \
+  --set code background.color=0xff57627A \
+  --set code background.height=21 \
+  --set code background.padding_left=12 \
+  --set code click_script="yabai -m space --focus 1" \
+  --set code script="~/.config/sketchybar/plugins/space.sh"
 
-##### Changing Defaults #####
-# We now change some default values that are applied to all further items
-# For a full list of all available item properties see:
-# https://felixkratz.github.io/SketchyBar/config/items
+# SPACE 2: WEB ICON
+sketchybar -m --add space web left \
+  --set web icon= \
+  --set web icon.highlight_color=0xff8CABC8 \
+  --set web associated_display=1 \
+  --set web associated_space=2 \
+  --set web icon.padding_left=5 \
+  --set web icon.padding_right=5 \
+  --set web label.padding_right=0 \
+  --set web label.padding_left=0 \
+  --set web label.color=0xffeceff4 \
+  --set web background.color=0xff57627A \
+  --set web background.height=21 \
+  --set web background.padding_left=7 \
+  --set web click_script="yabai -m space --focus 2" \
+  --set web script="~/.config/sketchybar/plugins/space.sh"
 
-sketchybar --default updates=when_shown                    \
-                     drawing=on                            \
-                     icon.font="Hack Nerd Font:Bold:17.0"  \
-                     icon.color=0xffffffff                 \
-                     label.font="Hack Nerd Font:Bold:14.0" \
-                     label.color=0xffffffff                \
-                     label.padding_left=4                  \
-                     label.padding_right=4                 \
-                     icon.padding_left=4                   \
-                     icon.padding_right=4
+# SPACE 3: HOME ICON
+sketchybar -m --add space home left \
+  --set home icon= \
+  --set home icon.highlight_color=0xff8CABC8 \
+  --set home associated_display=1 \
+  --set home associated_space=3 \
+  --set home icon.padding_left=5 \
+  --set home icon.padding_right=5 \
+  --set home label.padding_right=0 \
+  --set home label.padding_left=0 \
+  --set home label.color=0xffeceff4 \
+  --set home background.color=0xff57627A \
+  --set home background.height=21 \
+  --set home background.padding_left=7 \
+  --set home click_script="yabai -m space --focus 3" \
+  --set home script="~/.config/sketchybar/plugins/space.sh"
 
-##### Adding Mission Control Space Indicators #####
-# Now we add some mission control spaces:
-# https://felixkratz.github.io/SketchyBar/config/components#space----associate-mission-control-spaces-with-an-item
-# to indicate active and available mission control spaces
+# SPACE 4: CHAT ICON
+sketchybar -m --add space chat left \
+  --set chat icon= \
+  --set chat icon.highlight_color=0xff8CABC8 \
+  --set chat associated_display=1 \
+  --set chat associated_space=4 \
+  --set chat icon.padding_left=5 \
+  --set chat icon.padding_right=5 \
+  --set chat label.padding_right=0 \
+  --set chat label.padding_left=0 \
+  --set chat label.color=0xffeceff4 \
+  --set chat background.color=0xff57627A \
+  --set chat background.height=21 \
+  --set chat background.padding_left=7 \
+  --set chat click_script="yabai -m space --focus 4" \
+  --set chat script="~/.config/sketchybar/plugins/space.sh"
 
-SPACE_ICONS=("1" "2" "3" "4" "5" "6" "7" "8")
+# SPACE 5: MUSIC ICON
+sketchybar -m --add space music left \
+  --set music icon= \
+  --set music icon.highlight_color=0xff8CABC8 \
+  --set music associated_display=1 \
+  --set music associated_space=5 \
+  --set music icon.padding_left=5 \
+  --set music icon.padding_right=5 \
+  --set music label.padding_right=0 \
+  --set music label.padding_left=0 \
+  --set music label.color=0xffeceff4 \
+  --set music background.color=0xff57627A \
+  --set music background.height=21 \
+  --set music background.padding_left=7 \
+  --set music click_script="yabai -m space --focus 5" \
+  --set music script="~/.config/sketchybar/plugins/space.sh"
 
-for i in "${!SPACE_ICONS[@]}"
-do
-  sketchybar --add space space.$i left                                     \
-             --set space.$i associated_space=$(($i+1))                     \
-                            icon=${SPACE_ICONS[i]}                         \
-                            icon.highlight_color=0xff48aa2a                \
-                            icon.padding_left=8                            \
-                            icon.padding_right=8                           \
-                            background.padding_left=5                      \
-                            background.padding_right=5                     \
-                            background.color=0x44ffffff                    \
-                            background.corner_radius=5                     \
-                            background.height=20                           \
-                            label.drawing=off                              \
-                            script="$PLUGIN_DIR/space.sh"                  \
-                            click_script="yabai -m space --focus $(($i+1))"
+# SPACE 6: OTHER ICON
+sketchybar -m --add space other left \
+  --set other icon= \
+  --set other icon.highlight_color=0xff8CABC8 \
+  --set other associated_display=1 \
+  --set other associated_space=6 \
+  --set other icon.padding_left=5 \
+  --set other icon.padding_right=5 \
+  --set other label.padding_right=0 \
+  --set other label.padding_left=0 \
+  --set other label.color=0xffeceff4 \
+  --set other background.color=0xff57627A \
+  --set other background.height=21 \
+  --set other background.padding_left=7 \
+  --set other click_script="yabai -m space --focus 6" \
+  --set other script="~/.config/sketchybar/plugins/space.sh"
 
-                            # hs -c "hs.application.get('kitty'):mainWindow():title()"
-done
+# WINDOW TITLE
+sketchybar -m --add item title left \
+  --set title icon= \
+  --set title label.padding_left=9 \
+  --set title background.color=0xff57627A \
+  --set title background.height=21 \
+  --set title background.padding_left=7 \
+  --set title script="~/.config/sketchybar/plugins/window_title.sh" \
+  --set title update_freq=0 \
+  --subscribe title window_focus front_app_switched space_change title_change
 
-##### Adding Left Items #####
-# We add some regular items to the left side of the bar
-# only the properties deviating from the current defaults need to be set
+############## ITEM DEFAULTS ###############
+sketchybar -m --default \
+  label.padding_left=2 \
+  icon.padding_right=2 \
+  icon.padding_left=6 \
+  label.padding_right=6
 
-sketchybar --add item space_separator left                            \
-           --set space_separator icon=                               \
-                                 background.padding_left=15           \
-                                 background.padding_right=15          \
-                                 label.drawing=off                    \
-                                                                      \
-           --add item window_title left                               \
-           --set window_title    script="$PLUGIN_DIR/window_title.sh" \
-                                 icon.drawing=off                     \
-           --subscribe window_title front_app_switched
+############## RIGHT ITEMS ##############
+# DATE TIME
+sketchybar -m --add item date_time right \
+  --set date_time icon= \
+  --set date_time icon.padding_left=8 \
+  --set date_time icon.padding_right=0 \
+  --set date_time label.padding_right=9 \
+  --set date_time label.padding_left=6 \
+  --set date_time label.color=0xffeceff4 \
+  --set date_time update_freq=20 \
+  --set date_time background.color=0xff57627A \
+  --set date_time background.height=21 \
+  --set date_time background.padding_right=12 \
+  --set date_time script="~/.config/sketchybar/plugins/date_time.sh"
 
-##### Adding Right Items #####
-sketchybar --add item clock right                        \
-           --set clock   update_freq=10                  \
-                         script="$PLUGIN_DIR/clock.sh"   \
-           --add item battery right                      \
-           --set battery script="$PLUGIN_DIR/battery.sh" \
-                         update_freq=10                  \
-           --subscribe battery system_woke
+# RAM USAGE
+sketchybar -m --add item topmem right \
+  --set topmem icon= \
+  --set topmem icon.padding_left=8 \
+  --set topmem icon.padding_right=0 \
+  --set topmem label.padding_right=8 \
+  --set topmem label.padding_left=6 \
+  --set topmem label.color=0xffeceff4 \
+  --set topmem background.color=0xff57627A \
+  --set topmem background.height=21 \
+  --set topmem background.padding_right=7 \
+  --set topmem update_freq=2 \
+  --set topmem script="~/.config/sketchybar/plugins/topmem.sh"
 
-##### Finalizing Setup #####
-sketchybar --update
+# CPU USAGE
+sketchybar -m --add item cpu_percent right \
+  --set cpu_percent icon= \
+  --set cpu_percent icon.padding_left=8 \
+  --set cpu_percent icon.padding_right=0 \
+  --set cpu_percent label.padding_right=8 \
+  --set cpu_percent label.padding_left=6 \
+  --set cpu_percent label.color=0xffeceff4 \
+  --set cpu_percent background.color=0xff57627A \
+  --set cpu_percent background.height=21 \
+  --set cpu_percent background.padding_right=7 \
+  --set cpu_percent update_freq=2 \
+  --set cpu_percent script="~/.config/sketchybar/plugins/cpu.sh"
+
+# MIC STATUS
+sketchybar -m --add item mic right \
+  --set mic icon.padding_left=8 \
+  --set mic icon.padding_right=8 \
+  --set mic label.padding_right=0 \
+  --set mic label.padding_left=0 \
+  --set mic label.color=0xffeceff4 \
+  --set mic background.color=0xff57627A \
+  --set mic background.height=21 \
+  --set mic background.padding_right=7 \
+  --set mic update_freq=3 \
+  --set mic script="~/.config/sketchybar/plugins/mic.sh" \
+  --set mic click_script="~/.config/sketchybar/plugins/mic_click.sh"
+
+# TOP PROCESS
+sketchybar -m --add item topproc right \
+  --set topproc drawing=off \
+  --set topproc label.padding_right=10 \
+  --set topproc update_freq=15 \
+  --set topproc script="~/.config/sketchybar/plugins/topproc.sh"
+
+###################### CENTER ITEMS ###################
+# CURRENT SPOTIFY SONG
+# Adding custom events which can listen on distributed notifications from other running processes
+sketchybar -m --add event spotify_change "com.spotify.client.PlaybackStateChanged" \
+  --add item spotifyIndicator left \
+  --set spotifyIndicator background.color=0xff57627A \
+  --set spotifyIndicator background.height=21 \
+  --set spotifyIndicator background.padding_left=7 \
+  --set spotifyIndicator script="~/.config/sketchybar/plugins/spotify_indicator.sh" \
+  --set spotifyIndicator click_script="osascript -e 'tell application \"Spotify\" to pause'" \
+  --subscribe spotifyIndicator spotify_change
+
+############## FINALIZING THE SETUP ##############
+sketchybar -m --update
 
 echo "sketchybar configuration loaded.."
