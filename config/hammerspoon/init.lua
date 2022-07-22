@@ -90,6 +90,31 @@ function _G.note(msg, tag)
   }))
 end
 
+function _G.windows()
+  local app
+  if type(app) == "string" then app = hs.application.get(app) end
+  local windows = app == nil and hs.window.allWindows() or app:allWindows()
+
+  hs.fnutils.each(windows, function(win)
+    info(fmt("[WIN] %s (%s)", win:title(), win:application():bundleID()))
+    note(I({
+      id = win:id(),
+      title = win:title(),
+      app = win:application():name(),
+      bundleID = win:application():bundleID(),
+      role = win:role(),
+      subrole = win:subrole(),
+      frame = win:frame(),
+      isFullScreen = win:isFullScreen(),
+      isStandard = win:isStandard(),
+      isMinimized = win:isMinimized(),
+      -- buttonZoom       = axuiWindowElement(win):attributeValue('AXZoomButton'),
+      -- buttonFullScreen = axuiWindowElement(win):attributeValue('AXFullScreenButton'),
+      -- isResizable      = axuiWindowElement(win):isAttributeSettable('AXSize')
+    }))
+  end)
+end
+
 _G.CONFIG_KEY = "_mega_config"
 
 -- [ CONSOLE SETTINGS ] ---------------------------------------------------------

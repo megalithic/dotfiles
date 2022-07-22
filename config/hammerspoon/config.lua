@@ -9,7 +9,15 @@ obj.settings = {}
 
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
-  browsers = { "Brave Browser", "Brave Browser Dev", "Firefox", "Google Chrome", "Safari" },
+  browsers = {
+    "Vivaldi",
+    "Brave Browser",
+    "Brave Browser Dev",
+    "Brave Browser Beta",
+    "Firefox",
+    "Google Chrome",
+    "Safari",
+  },
   personal = { "Messages", "Signal" },
   chat = { "Slack" },
   media = { "Spotify" },
@@ -110,11 +118,22 @@ local apps = {
       -- { nil, 1, M.layout.fullScreen },
     },
   },
+  ["com.vivaldi.Vivaldi"] = {
+    bundleID = "com.vivaldi.Vivaldi",
+    name = "Vivaldi",
+    quitGuard = true,
+    key = "j",
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      -- { nil, 1, M.layout.fullScreen },
+    },
+  },
   ["com.brave.Browser"] = {
     bundleID = "com.brave.Browser",
     name = "Brave Browser",
     quitGuard = true,
-    key = "j",
+    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {

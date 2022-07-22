@@ -204,8 +204,9 @@ map("<Ctrl-b>", "e");
 map("gt", "T");
 map("<Ctrl-g>", "T");
 map("<Ctrl-t>", "t");
-unmap("t"); // we'll use Ctrl-t instead
-unmap("T"); // we'll use Ctrl-g instead
+// unmap("t"); // we'll use Ctrl-t instead
+// unmap("T"); // we'll use Ctrl-g instead
+
 // history Back/Forward
 map("H", "S");
 map("L", "D");
@@ -216,7 +217,7 @@ map("gL", "g$");
 map("F", "gf");
 
 mapkey("gl", "#4Go to last used tab", function () {
-  RUNTIME("goToLastTab");
+  RUNTIME("goToLastTab")
 });
 
 mapkey("::", "#8Open commands", function () {
