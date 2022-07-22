@@ -27,7 +27,8 @@ end
 function obj:start()
   local bindings = Settings.get(CONFIG_KEY).bindings
 
-  -- [ application bindings ] ----------------------------------------------------------
+  -- [ application bindings ] --------------------------------------------------
+
   bind(bindings.apps, "apps", function(t)
     hs.fnutils.each(t, function(cfg)
       local mods = cfg.mods or {}
@@ -38,17 +39,23 @@ function obj:start()
     end)
   end)
 
-  -- [ utility bindings ] ----------------------------------------------------------
-  bind(bindings.utils, "utils", function(t)
-    hs.fnutils.each(t, function(cfg)
-      local mods = cfg.mods or {}
-      if cfg.key and cfg.fn then
-        hs.fnutils.each(cfg.fn, function(fn)
-          Hyper:bind(mods, cfg.key, function() U.tfn(fn) end)
-        end)
-      end
-    end)
+  -- [ utility bindings ] ------------------------------------------------------
+
+  Hyper:bind({ "shift" }, "r", function()
+    hs.reload()
+    hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration reloaded" }):send()
   end)
+
+  -- bind(bindings.utils, "utils", function(t)
+  --   hs.fnutils.each(t, function(cfg)
+  --     local mods = cfg.mods or {}
+  --     if cfg.key and cfg.fn then
+  --       hs.fnutils.each(cfg.fn, function(fn)
+  --         Hyper:bind(mods, cfg.key, function() U.tfn(fn) end)
+  --       end)
+  --     end
+  --   end)
+  -- end)
 
   return self
 end

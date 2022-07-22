@@ -180,3 +180,5 @@ else
 end
 info("----------------------------------------------------")
 P()
+
+hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration successfully loaded" }):send()
