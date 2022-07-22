@@ -10,11 +10,11 @@ obj.settings = {}
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
+    "Firefox Developer Edition",
+    "Brave Browser Dev",
     "Vivaldi",
     "Brave Browser",
-    "Brave Browser Dev",
     "Brave Browser Beta",
-    "Firefox",
     "Google Chrome",
     "Safari",
   },
@@ -53,9 +53,10 @@ local quitter = {
   defaultHideInterval = 1800, -- 30 minutes
 }
 
+local sketchybarRunning = hs.application.get("sketchybar")
 local grid = {
   screen_edge_margins = {
-    top = 32, -- px
+    top = sketchybarRunning ~= nil and 32 or 0,
     left = 0,
     right = 0,
     bottom = 0,
@@ -118,11 +119,33 @@ local apps = {
       -- { nil, 1, M.layout.fullScreen },
     },
   },
+  ["org.mozilla.firefoxdeveloperedition"] = {
+    bundleID = "org.mozilla.firefoxdeveloperedition",
+    name = "Firefox Developer Edition",
+    quitGuard = true,
+    key = "j",
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      -- { nil, 1, M.layout.fullScreen },
+    },
+  },
   ["com.vivaldi.Vivaldi"] = {
     bundleID = "com.vivaldi.Vivaldi",
     name = "Vivaldi",
     quitGuard = true,
-    key = "j",
+    -- key = "j",
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      -- { nil, 1, M.layout.fullScreen },
+    },
+  },
+  ["com.brave.Browser.dev"] = {
+    bundleID = "com.brave.Browser.dev",
+    name = "Brave Browser Dev",
+    quitGuard = true,
+    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
