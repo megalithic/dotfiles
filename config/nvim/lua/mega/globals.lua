@@ -176,7 +176,7 @@ function mega.safe_require(module, opts)
 end
 
 --- @class ConfigOpts
---- @field config table|function
+--- @field config table|function|string
 --- @field enabled? boolean
 --- @field silent? boolean
 --- @field test? boolean

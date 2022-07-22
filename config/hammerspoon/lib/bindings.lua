@@ -6,6 +6,63 @@ local obj = {}
 obj.__index = obj
 obj.name = "bindings"
 
+local function chooseAppFromGroup(apps, key, tag, groupKey)
+  local group = hs.fnutils.filter(
+    apps,
+    function(app) return app.tags and hs.fnutils.contains(app.tags, tag) and app.bundleID ~= Settings.get(groupKey) end
+  )
+
+  local choices = {}
+  hs.fnutils.each(
+    group,
+    function(app)
+      table.insert(choices, {
+        text = hs.application.nameForBundleID(app.bundleID),
+        image = hs.image.imageFromAppBundle(app.bundleID),
+        bundleID = app.bundleID,
+      })
+    end
+  )
+
+  if #choices == 1 then
+    local app = choices[1]
+
+    hs.notify
+      .new(nil)
+      :title("Switching hyper+" .. key .. " to " .. hs.application.nameForBundleID(app.bundleID))
+      :contentImage(hs.image.imageFromAppBundle(app.bundleID))
+      :send()
+
+    Settings.set(groupKey, app.bundleID)
+    hs.application.launchOrFocusByBundleID(app.bundleID)
+  else
+    hs.chooser
+      .new(function(app)
+        if app then
+          Settings.set(groupKey, app.bundleID)
+          hs.application.launchOrFocusByBundleID(app.bundleID)
+        end
+      end)
+      :placeholderText("Choose an application for hyper+" .. key .. ":")
+      :choices(choices)
+      :show()
+  end
+end
+
+local function group(apps, key, tag)
+  local groupKey = "group." .. tag
+
+  Hyper:bind({}, key, nil, function()
+    if Settings.get(groupKey) == nil then
+      chooseAppFromGroup(apps, key, tag, groupKey)
+    else
+      hs.application.launchOrFocusByBundleID(Settings.get(groupKey))
+    end
+  end)
+
+  Hyper:bind({ "option" }, key, nil, function() chooseAppFromGroup(apps, key, tag, groupKey) end)
+end
+
 local function bind(t, id, bindFn)
   if not t or U.tlen(t) == 0 then
     error(fmt("unable to bind %s (%d); none found", id, U.tlen(t)))
@@ -38,6 +95,12 @@ function obj:start()
       end
     end)
   end)
+
+  -- [ group bindings ] --------------------------------------------------------
+
+  group(bindings.apps, "m", "personal") -- e.g., Messages, Signal, etd
+  group(bindings.apps, "j", "browsers") -- e.g., brave, vivaldi, safari, firefox, etc
+  group(bindings.apps, "s", "chat") -- e.g., slack, discord, etc
 
   -- [ utility bindings ] ------------------------------------------------------
 

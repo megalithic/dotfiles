@@ -10,9 +10,9 @@ obj.settings = {}
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
+    "Vivaldi",
     "Firefox Developer Edition",
     "Brave Browser Dev",
-    "Vivaldi",
     "Brave Browser",
     "Brave Browser Beta",
     "Google Chrome",
@@ -123,7 +123,7 @@ local apps = {
     bundleID = "org.mozilla.firefoxdeveloperedition",
     name = "Firefox Developer Edition",
     quitGuard = true,
-    key = "j",
+    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -134,7 +134,7 @@ local apps = {
     bundleID = "com.vivaldi.Vivaldi",
     name = "Vivaldi",
     quitGuard = true,
-    -- key = "j",
+    key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -175,6 +175,7 @@ local apps = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
     key = "s",
+    tag = { "chat" },
     context = "slack",
     distraction = true,
     quitGuard = false,
