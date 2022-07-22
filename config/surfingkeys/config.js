@@ -203,6 +203,9 @@ map("<Ctrl-b>", "e");
 // search opened tabs with `gt`
 map("gt", "T");
 map("<Ctrl-g>", "T");
+map("<Ctrl-t>", "t");
+unmap("t"); // we'll use Ctrl-t instead
+unmap("T"); // we'll use Ctrl-g instead
 // history Back/Forward
 map("H", "S");
 map("L", "D");
