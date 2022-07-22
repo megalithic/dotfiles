@@ -88,6 +88,7 @@ local PKGS = {
   "nvim-neo-tree/neo-tree.nvim",
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  "natecraddock/telescope-zf-native.nvim",
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
 

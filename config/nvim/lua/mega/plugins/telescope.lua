@@ -352,6 +352,7 @@ return function()
   nmap("<leader>lS", builtin.lsp_workspace_symbols, "telescope: workspace symbols")
   nmap("<leader>lw", builtin.lsp_dynamic_workspace_symbols, "telescope: dynamic workspace symbols")
 
-  require("telescope").load_extension("fzf")
+  -- require("telescope").load_extension("fzf")
+  require("telescope").load_extension("zf-native")
   require("telescope").load_extension("live_grep_args")
 end
