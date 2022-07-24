@@ -8,3 +8,5 @@ if [ $MEM -gt 1024 ]; then
 else
   sketchybar --set $NAME drawing=off
 fi
+
+sketchybar -m --set $NAME label="$TOPMEM"

@@ -19,15 +19,11 @@ module.adjustVolume = function(vol)
     if playing then
       log.df("Adjusting Spotify volume: %s", vol.action)
       if vol.action == "up" then
-        if not hs.spotify.isRunning() then
-          return
-        end
+        if not hs.spotify.isRunning() then return end
         hs.spotify.volumeUp()
         alert.showOnly({ text = "↑ " .. hs.spotify.getVolume() .. "% ♬" })
       else
-        if not hs.spotify.isRunning() then
-          return
-        end
+        if not hs.spotify.isRunning() then return end
         hs.spotify.volumeDown()
         alert.showOnly({ text = "↓ " .. hs.spotify.getVolume() .. "% ♬" })
       end
@@ -42,11 +38,14 @@ end
 module.notify = function(n)
   log.df("Spotify notification: %s", hs.inspect(n))
 
-  hs.notify.new({
-    title = n.artist .. " (" .. n.state .. ")",
-    subTitle = n.track,
-    informativeText = n.album,
-  }):setIdImage(n.image):send()
+  hs.notify
+    .new({
+      title = n.artist .. " (" .. n.state .. ")",
+      subTitle = n.track,
+      informativeText = n.album,
+    })
+    :setIdImage(n.image)
+    :send()
 
   alert.show({ image = n.image, text = "♬ " .. n.state .. " " .. n.icon })
 end
@@ -95,16 +94,12 @@ end
 module.start = function()
   -- :: media (spotify)
   for _, media in pairs(config.media) do
-    hs.hotkey.bind(media.modifier, media.shortcut, function()
-      module.spotify(media.action, media.label)
-    end)
+    hs.hotkey.bind(media.modifier, media.shortcut, function() module.spotify(media.action, media.label) end)
   end
 
   -- :: volume control
   for _, vol in pairs(config.volume) do
-    hs.hotkey.bind(vol.modifier, vol.shortcut, function()
-      module.adjustVolume(vol)
-    end)
+    hs.hotkey.bind(vol.modifier, vol.shortcut, function() module.adjustVolume(vol) end)
   end
 end
 

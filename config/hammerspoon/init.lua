@@ -171,7 +171,8 @@ hs.loadSpoon("EmmyLua")
 --  NOTE: order matters
 load("config")
 load("lib.bindings"):start()
-load("lib.ptt"):start()
+load("lib.menubar.ptt"):start()
+load("lib.menubar.spotify"):start()
 load("lib.watchers"):start()
 load("lib.wm"):start()
 
