@@ -1,12 +1,9 @@
+local Application = require("hs.application")
 local Settings = require("hs.settings")
-local load = require("utils.loader").load
-local unload = require("utils.loader").unload
-local utils = require("utils")
-local fn = require("hs.fnutils")
+local fnutils = require("hs.fnutils")
 -- local contextsDir = utils.resourcePath("contexts/")
 
 local obj = {}
--- local appModals = {}
 local Snap = nil
 
 obj.__index = obj
@@ -17,7 +14,7 @@ obj.layoutWatcher = nil
 -- targetDisplay(int) :: hs.screen
 -- detect the current number of monitors and return target screen
 function obj.targetDisplay(num)
-  local displays = hs.screen.allScreens()
+  local displays = hs.screen.allScreens() or {}
   if displays[num] ~= nil then
     return displays[num]
   else
@@ -25,36 +22,56 @@ function obj.targetDisplay(num)
   end
 end
 
-function obj._set_app_layout(cfg)
-  if cfg == nil then return end
+function obj.setLayout(appConfig)
+  if appConfig == nil then return end
 
-  local bundleID = cfg["bundleID"]
-  local layouts = {}
+  local bundleID = appConfig["bundleID"]
+  local appLayout = {}
 
-  if cfg.rules and #cfg.rules > 0 then
-    fn.map(cfg.rules, function(rule)
-      local title_pattern, screen, position = rule[1], rule[2], rule[3]
+  if appConfig.rules and #appConfig.rules > 0 then
+    fnutils.map(appConfig.rules, function(rule)
+      local title_pattern, screen, positionStr = table.unpack(rule)
+      local position = Snap.grid[positionStr] or hs.layout.maximized
+      title_pattern = (title_pattern and title_pattern ~= "") and title_pattern or nil
+
+      dbg(fmt("!! wm.setLayout: %s (%s) -> %s (%s)", title_pattern or "no title", screen, positionStr, position))
 
       local layout = {
         hs.application.get(bundleID), -- application name
         title_pattern, -- window title
-        -- hs.window.get(title_pattern), -- window title NOTE: this doesn't
-        -- handle `nil` window title instances
         obj.targetDisplay(screen), -- screen #
         position, -- layout/postion
         nil,
         nil,
       }
 
-      table.insert(layouts, layout)
+      table.insert(appLayout, layout)
     end)
   end
 
-  return layouts
+  return appLayout
 end
 
-local function enterLayoutContext(appObj, bundleID)
-  dbg(fmt("wm.enterLayoutContextCallback: %s %s", appObj, bundleID))
+function obj.applyLayout(appLayout)
+  if appLayout then hs.layout.apply(appLayout, string.match) end
+end
+
+local function handleLayout(bundleID, appObj, event, fromWindowFilter)
+  -- info(fmt(
+  --   ":: wm - %s (%s)",
+  --   -- "wm.handleLayoutContext: %s(%s/%s) -- %s",
+  --   bundleID,
+  --   obj.layoutWatcher.eventName(event),
+  --   fromWindowFilter,
+  --   appObj
+  -- ))
+
+  if event == Application.watcher.launched and bundleID then
+    note(fmt("[LAUNCHED] %s", bundleID))
+    local appConfig = obj.apps[bundleID]
+    local appLayout = obj.setLayout(appConfig)
+    obj.applyLayout(appLayout)
+  end
 
   -- for key, value in pairs(appModals) do
   --   if key == bundleID then
@@ -68,9 +85,11 @@ end
 function obj:init(opts)
   opts = opts or {}
 
-  obj.apps = Settings.get(CONFIG_KEY).apps
-  Snap = load("lib.wm.snap"):start()
-  obj.layoutWatcher = load("lib.contexts")
+  local config = Settings.get(CONFIG_KEY)
+  obj.apps = config.bindings.apps
+
+  Snap = L.load("lib.wm.snap"):start()
+  obj.layoutWatcher = L.load("lib.contexts")
 
   return self
 end
@@ -79,17 +98,16 @@ function obj:start(opts)
   opts = opts or {}
 
   -- app layouts
-  obj.layoutWatcher:start(obj.apps, function(bundleId, appObj, isWinFilterEvent)
-    -- dbg(fmt("wm.layoutWatcher: %s %s (%s)", bundleId, appObj, isWinFilterEvent))
-    enterLayoutContext(appObj, bundleId)
-  end)
+  obj.layoutWatcher:start(obj.apps, handleLayout)
+  -- app-specific contexts
+  -- obj.contextWatcher:start(obj.apps, handleContext)
 
   return self
 end
 
 function obj:stop()
-  unload("lib.wm.snap")
-  unload("lib.contexts")
+  L.unload("lib.wm.snap")
+  L.unload("lib.contexts")
 
   return self
 end

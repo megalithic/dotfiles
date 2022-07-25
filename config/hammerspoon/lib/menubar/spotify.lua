@@ -129,8 +129,7 @@ end
 
 function obj:init()
   obj.menubar = hs.menubar.new()
-
-  if obj.menubar then obj.menubar:setTitle(updateTitle()) end
+  obj.menubar:setTitle(updateTitle())
 
   return self
 end

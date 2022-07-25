@@ -71,15 +71,6 @@ local mods = {
 local hyper = "F19"
 local ptt = mods.CAsc
 
-local wm = {
-  pushLeft = { {}, hyper, "h" },
-  pushRight = { {}, hyper, "l" },
-  pushUp = { {}, hyper, "k" },
-  pushDown = { {}, hyper, "j" },
-  maximize = { {}, hyper, "return" },
-  center = { {}, hyper, "space" },
-}
-
 local apps = {
   ["com.runningwithcrayons.Alfred"] = {
     name = "Alfred",
@@ -94,7 +85,7 @@ local apps = {
     localBindings = {},
     quitGuard = false,
     rules = {
-      { "", 1, "maximize" },
+      { "", 1, "maximized" },
     },
   },
   ["org.mozilla.firefoxdeveloperedition"] = {
@@ -105,7 +96,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      { "", 1, "maximize" },
+      { "", 1, "maximized" },
     },
   },
   ["com.vivaldi.Vivaldi"] = {
@@ -116,7 +107,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      { "", 1, "maximize" },
+      { "", 1, "maximized" },
     },
   },
   ["com.brave.Browser.dev"] = {
@@ -127,7 +118,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      { "", 1, "maximize" },
+      { "", 1, "maximized" },
     },
   },
   ["com.brave.Browser"] = {
@@ -138,7 +129,18 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      { "", 1, "maximize" },
+      { "", 1, "maximized" },
+    },
+  },
+  ["com.app.Safari"] = {
+    bundleID = "com.app.Safari",
+    name = "Safari",
+    quitGuard = true,
+    -- key = "j",
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
     },
   },
   ["com.kapeli.dashdoc"] = {
@@ -146,19 +148,19 @@ local apps = {
     name = "Dash",
     key = "d",
     rules = {
-      -- { "", 1, M.layout.centeredLarge },
+      { "", 1, "centeredLarge" },
     },
   },
   ["com.tinyspeck.slackmacgap"] = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
     key = "s",
-    tag = { "chat" },
+    tags = { "chat" },
     context = "slack",
     distraction = true,
     quitGuard = false,
     rules = {
-      { "", 2, "maximize" },
+      { "", 2, "maximized" },
     },
   },
   ["com.freron.MailMate"] = {
@@ -169,8 +171,8 @@ local apps = {
     distraction = true,
     hideAfter = 5,
     rules = {
-      -- { "", 2, M.layout.leftHalf },
-      { "Inbox", 2, "maximize" },
+      { "", 2, "leftHalf" },
+      { "Inbox", 2, "maximized" },
     },
   },
   ["com.apple.finder"] = {
@@ -178,7 +180,7 @@ local apps = {
     name = "Finder",
     key = "f",
     rules = {
-      -- { "Finder", 1, M.layout.centeredMedium },
+      { "Finder", 1, "centeredMedium" },
     },
   },
   ["us.zoom.xos"] = {
@@ -188,8 +190,8 @@ local apps = {
     key = "z",
     launchMode = "focus",
     rules = {
-      -- { "", 1, M.layout.centeredMedium },
-      { "Zoom Meeting", 1, "maximize" },
+      { "", 1, "centeredMedium" },
+      { "Zoom Meeting", 1, "maximized" },
     },
   },
   ["com.loom.desktop"] = {
@@ -201,10 +203,9 @@ local apps = {
     bundleID = "com.spotify.client",
     name = "Spotify",
     key = "p",
-    -- mods = M.modifiers.shift,
     hideAfter = 1,
     rules = {
-      -- { "", 2, M.layout.rightHalf },
+      { "", 2, "right50" },
     },
   },
   ["com.apple.MobileSMS"] = {
@@ -215,7 +216,7 @@ local apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      -- { "", 2, M.layout.rightHalf },
+      { "", 2, "rightHalf" },
     },
   },
   ["org.whispersystems.signal-desktop"] = {
@@ -226,7 +227,7 @@ local apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      -- { "", 2, M.layout.rightHalf },
+      { "", 2, "rightHalf" },
     },
   },
   ["com.agilebits.onepassword7"] = {
@@ -235,7 +236,7 @@ local apps = {
     key = "1",
     hideAfter = 1,
     rules = {
-      -- { "", 1, M.layout.centeredMedium },
+      { "", 1, "centeredMedium" },
     },
   },
   ["org.hammerspoon.Hammerspoon"] = {
@@ -246,7 +247,7 @@ local apps = {
     hideAfter = 15,
     quitGuard = true,
     rules = {
-      { "", 2, "maximize" },
+      { "", 2, "maximized" },
     },
   },
   ["com.flexibits.fantastical2.mac"] = {
@@ -257,17 +258,17 @@ local apps = {
     quitGuard = true,
     hideAfter = 2,
     rules = {
-      -- { "", 1, M.layout.centeredLarge },
+      { "", 1, "centeredLarge" },
     },
   },
   ["com.figma.Desktop"] = {
     bundleID = "com.figma.Desktop",
     name = "Figma",
     key = "f",
-    mods = { "shift" },
+    mods = mods.caSc,
     quitGuard = true,
     rules = {
-      { "", 1, "maximize" },
+      { "", 1, "maximized" },
     },
   },
   ["com.surteesstudios.Bartender"] = {
@@ -282,7 +283,7 @@ local utils = {
   {
     name = "Hammerspoon",
     key = "r",
-    mods = { "shift" },
+    mods = mods.caSc,
     fn = { { "hs.reload" }, { "hs.notify.show", "Hammerspoon", "Config reloaded.." } },
   },
 }
@@ -301,7 +302,6 @@ function obj:init(opts)
       ["hyper"] = hyper,
       ["ptt"] = ptt,
       ["mods"] = mods,
-      ["wm"] = wm,
     },
     ["networks"] = networks,
     ["preferred"] = preferred,

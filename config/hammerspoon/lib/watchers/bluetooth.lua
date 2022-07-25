@@ -5,10 +5,14 @@ local alert = require("utils.alert")
 local obj = {}
 local Hyper
 
+-- REF:
+-- https://github.com/wangshub/hammerspoon-config/blob/master/headphone/headphone.lua
+
 obj.__index = obj
 obj.name = "watcher.bluetooth"
 obj.btDeviceId = { name = "R-Phonak hearing aid", id = "70-66-1b-c8-cc-b5", icon = "🎧" }
 obj.btUtil = "/usr/local/bin/blueutil"
+obj.refreshInterval = 1
 
 -- local function disconnectDevice()
 --   hs.task.new(blueUtil, function()
@@ -37,7 +41,7 @@ local function connectDevice()
     :start()
 end
 
-local function checkDevice(fn)
+function obj.checkDevice(fn)
   hs.task
     .new(obj.btUtil, function(_, stdout)
       stdout = string.gsub(stdout, "\n$", "")
@@ -46,21 +50,36 @@ local function checkDevice(fn)
       fn(isConnected)
     end, {
       "--is-connected",
-      obj.btDeviceId,
+      obj.btDeviceId.id,
     })
     :start()
 end
 
 local function toggleDevice()
   connectDevice()
-  checkDevice(function(isConnected)
+  obj.checkDevice(function(isConnected)
     if not isConnected then connectDevice() end
   end)
 end
 
+local function updateTitle()
+  obj.checkDevice(function(isConnected)
+    if isConnected then
+      obj.menubar:setTitle("on")
+    else
+      obj.menubar:setTitle(nil)
+    end
+  end)
+end
+
 function obj:start()
+  obj.menubar = hs.menubar.new()
+  -- obj.menubar:setTitle(nil)
+
   Hyper = L.load("lib.hyper", { id = "bluetooth" })
   Hyper:bind({ "shift" }, "H", nil, function() toggleDevice() end)
+
+  -- hs.timer.doEvery(obj.refreshInterval, updateTitle)
 
   return self
 end

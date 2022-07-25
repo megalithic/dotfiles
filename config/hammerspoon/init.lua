@@ -30,13 +30,13 @@ _G.P = function(...)
   hs.console.printStyledtext(ts() .. " -> " .. contents)
 end
 _G.I = hs.inspect
-_G.defaultFont = { name = "JetBrainsMono Nerd Font", size = 16 }
+_G.defaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
 
 local stext = require("hs.styledtext").new
 local getInfo = function()
   local info = debug.getinfo(2, "Sl")
   local lineinfo = fmt("%s:%s: ", info.short_src, info.currentline)
-  return lineinfo
+  return ""
 end
 function _G.info(msg, tag)
   tag = tag and "[INFO] " or ""
@@ -75,7 +75,8 @@ function _G.dbg(msg, tag)
   tag = tag and "[DEBUG] " or "[DEBUG] "
   msg = type(msg) == "table" and I(msg) or msg
 
-  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
+  -- hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. getInfo() .. msg, {
+  hs.console.printStyledtext(stext(ts() .. " -> " .. tag .. msg, {
     color = { hex = "#dddddd", alpha = 1 },
     backgroundColor = { hex = "#222222", alpha = 1 },
     font = defaultFont,

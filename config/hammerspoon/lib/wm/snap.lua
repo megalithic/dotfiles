@@ -12,30 +12,37 @@ obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
-obj.grid = function()
-  local sketchybarRunning = hs.application.get("sketchybar")
-  return {
-    screen_edge_margins = {
-      top = sketchybarRunning ~= nil and 32 or 0,
-      left = 0,
-      right = 0,
-      bottom = 0,
-    },
-    partition_margins = {
-      x = 0, -- px
-      y = 0,
-    },
-    -- Partitions --
-    split_screen_partitions = {
-      x = 0.5, -- %
-      y = 0.5,
-    },
-    quarter_screen_partitions = {
-      x = 0.5, -- %
-      y = 0.5,
-    },
-  }
-end
+obj.grid = {
+  screen_edge_margins = {
+    top = 0,
+    left = 0,
+    right = 0,
+    bottom = 0,
+  },
+  partition_margins = {
+    x = 0, -- px
+    y = 0,
+  },
+  -- Partitions --
+  split_screen_partitions = {
+    x = 0.5, -- %
+    y = 0.5,
+  },
+  quarter_screen_partitions = {
+    x = 0.5, -- %
+    y = 0.5,
+  },
+  maximized = hs.layout.maximized,
+  left70 = hs.layout.left70,
+  left50 = hs.layout.left50,
+  left30 = hs.layout.left30,
+  right70 = hs.layout.right70,
+  right50 = hs.layout.right50,
+  right30 = hs.layout.right30,
+  centeredLarge = { x = 0.10, y = 0.10, w = 0.80, h = 0.80 },
+  centeredMedium = { x = 0.25, y = 0.25, w = 0.50, h = 0.50 },
+  centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
+}
 
 obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -55,13 +62,17 @@ obj.tile = function()
       local toRead = hs.window.find(choice.id)
       if hs.eventtap.checkKeyboardModifiers()["alt"] then
         hs.layout.apply({
-          { nil, focused, focused:screen(), hs.layout.left70, 0, 0 },
-          { nil, toRead, focused:screen(), hs.layout.right30, 0, 0 },
+          { nil, focused, focused:screen(), obj.grid.left70, 0, 0 },
+          { nil, toRead, focused:screen(), obj.grid.right30, 0, 0 },
         })
         alert.show("  70 ◱ 30  ")
       else
-        obj.send_window_left(focused, fmt("", focused:title()))
-        obj.send_window_right(toRead, fmt("", toRead:title()))
+        -- obj.send_window_left(focused, fmt("", focused:title()))
+        -- obj.send_window_right(toRead, fmt("", toRead:title()))
+        hs.layout.apply({
+          { nil, focused, focused:screen(), obj.grid.left50, 0, 0 },
+          { nil, toRead, focused:screen(), obj.grid.right50, 0, 0 },
+        })
         alert.show("  50 ◱ 50  ")
       end
       toRead:raise()
@@ -75,15 +86,10 @@ obj.tile = function()
     :show()
 end
 
-obj.screen_edge_margins = obj.grid().screen_edge_margins
-obj.partition_margins = obj.grid().partition_margins
-obj.split_screen_partitions = obj.grid().split_screen_partitions
-obj.quarter_screen_partitions = obj.grid().quarter_screen_partitions
-
 function obj.send_window_left(win, msg)
   msg = msg or "Left"
   local s = obj.screen()
-  local ssp = obj.split_screen_partitions
+  local ssp = obj.grid.split_screen_partitions
   local g = obj.gutter()
   local geom = {
     x = s.x,
@@ -97,7 +103,7 @@ end
 function obj.send_window_right(win, msg)
   msg = msg or "Right"
   local s = obj.screen()
-  local ssp = obj.split_screen_partitions
+  local ssp = obj.grid.split_screen_partitions
   local g = obj.gutter()
   local geom = {
     x = s.x + (s.w * ssp.x) + g.x,
@@ -110,7 +116,7 @@ end
 
 function obj.send_window_up()
   local s = obj.screen()
-  local ssp = obj.split_screen_partitions
+  local ssp = obj.grid.split_screen_partitions
   local g = obj.gutter()
   obj.set_frame("Up", {
     x = s.x,
@@ -122,7 +128,7 @@ end
 
 function obj.send_window_down()
   local s = obj.screen()
-  local ssp = obj.split_screen_partitions
+  local ssp = obj.grid.split_screen_partitions
   local g = obj.gutter()
   obj.set_frame("Down", {
     x = s.x,
@@ -134,7 +140,7 @@ end
 
 function obj.send_window_upper_left()
   local s = obj.screen()
-  local qsp = obj.quarter_screen_partitions
+  local qsp = obj.grid.quarter_screen_partitions
   local g = obj.gutter()
   obj.set_frame("Upper Left", {
     x = s.x,
@@ -146,7 +152,7 @@ end
 
 function obj.send_window_upper_right()
   local s = obj.screen()
-  local qsp = obj.quarter_screen_partitions
+  local qsp = obj.grid.quarter_screen_partitions
   local g = obj.gutter()
   obj.set_frame("Upper Right", {
     x = s.x + (s.w * qsp.x) + g.x,
@@ -158,7 +164,7 @@ end
 
 function obj.send_window_lower_left()
   local s = obj.screen()
-  local qsp = obj.quarter_screen_partitions
+  local qsp = obj.grid.quarter_screen_partitions
   local g = obj.gutter()
   obj.set_frame("Lower Left", {
     x = s.x,
@@ -169,7 +175,7 @@ function obj.send_window_lower_left()
 end
 function obj.send_window_lower_right()
   local s = obj.screen()
-  local qsp = obj.quarter_screen_partitions
+  local qsp = obj.grid.quarter_screen_partitions
   local g = obj.gutter()
   obj.set_frame("Lower Right", {
     x = s.x + (s.w * qsp.x) + g.x,
@@ -250,7 +256,7 @@ end
 -- screen is the available rect inside the screen edge margins
 function obj.screen()
   local screen = obj.win():screen():frame()
-  local sem = obj.screen_edge_margins
+  local sem = obj.grid.screen_edge_margins
   return {
     x = screen.x + sem.left,
     y = screen.y + sem.top,
@@ -262,7 +268,7 @@ end
 -- gutter is the adjustment required to accomidate partition
 -- margins between windows
 function obj.gutter()
-  local pm = obj.partition_margins
+  local pm = obj.grid.partition_margins
   return {
     x = pm.x / 2,
     y = pm.y / 2,
@@ -362,12 +368,15 @@ function obj:start()
       obj:exit()
     end)
     :bind("", "k", function()
-      -- obj.move_to_center_absolute({ w = 3100, h = 1600 })
-      obj:snapback()
+      obj.move_to_center_absolute({ w = 3100, h = 1600 })
       obj:exit()
     end)
     :bind("", "j", function()
       obj.move_to_center_absolute({ w = 2160, h = 1200 })
+      obj:exit()
+    end)
+    :bind("", "space", function()
+      obj:snapback()
       obj:exit()
     end)
     :bind("", "v", function()

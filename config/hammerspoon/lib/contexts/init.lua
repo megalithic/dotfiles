@@ -2,6 +2,7 @@
 
 local Application = require("hs.application")
 local Window = require("hs.window")
+local fnutils = require("hs.fnutils")
 
 local obj = {}
 
@@ -14,28 +15,42 @@ local windowFilter
 local frontAppBundleID
 local callback
 
-local function eventName(evtId)
+function obj.eventName(evtId)
   -- REF: https://github.com/Hammerspoon/hammerspoon/blob/master/extensions/application/libapplication_watcher.m#L29
   local events = {
-    "launching",
-    "launched",
-    "terminated",
-    "hidden",
-    "unhidden",
-    "activated",
-    "deactivated",
+    [0] = "launching",
+    [1] = "launched",
+    [2] = "terminated",
+    [3] = "hidden",
+    [4] = "unhidden",
+    [5] = "activated",
+    [6] = "deactivated",
   }
-  return evtId
-  -- return events[(evtId - 1)] -- hs.application.watcher[evtId]
+  local event = events[0]
+
+  for i, value in ipairs(events) do
+    if evtId == i then
+      event = value
+      break
+    end
+  end
+
+  return event
 end
 
+-- _ -> appName
 local function appWatcherCallback(_, event, appObj)
-  info(fmt("appWatcherCallback() for %s executed: %s", eventName(event), I(appObj)))
   local newBundleID = appObj:bundleID()
   if event == Application.watcher.activated or event == "FROM_WINDOW_WATCHER" then
     if newBundleID == frontAppBundleID then return end
     frontAppBundleID = newBundleID
-    callback(frontAppBundleID, appObj, event == "FROM_WINDOW_WATCHER")
+
+    -- info(fmt("[%s] appWatcherCallback %s executed for %s", string.upper(eventName(event)), frontAppBundleID, I(appObj)))
+
+    callback(frontAppBundleID, appObj, event, event == "FROM_WINDOW_WATCHER")
+  else
+    -- info(fmt("[%s] appWatcherCallback %s executed for %s", string.upper(eventName(event)), newBundleID, I(appObj)))
+    callback(newBundleID, appObj, event, event == "FROM_WINDOW_WATCHER")
   end
 end
 
@@ -56,6 +71,7 @@ function obj:init(opts)
   opts = opts or {}
 
   windowFilter = Window.filter.new(false)
+  -- info(fmt("contexts.init (%s)", I(opts)))
   appWatcher = Application.watcher.new(appWatcherCallback)
 
   return self
@@ -72,9 +88,12 @@ function obj:start(apps, _callback)
 
   -- on reload, enter modal (if any) for the front app (saves an redundant cmd+tab)
   local frontApp = Application.frontmostApplication()
-  if frontApp then appWatcherCallback(nil, Application.watcher.activated, frontApp) end
+  if frontApp then
+    -- info(fmt("contexts.start frontApp (%s): %s", Application.watcher.activated, frontApp))
+    appWatcherCallback(nil, Application.watcher.activated, frontApp)
+  end
   appWatcher:start()
-  windowFilter:setFilters(apps or {})
+  -- windowFilter:setFilters(apps or {})
   windowFilter:subscribe(allowedWindowFilterEvents, windowFilterCallback)
 
   return self
