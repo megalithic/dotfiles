@@ -3,7 +3,7 @@ local obj = {}
 obj.__index = obj
 obj.name = "spotify"
 obj.debug = true
-obj.refreshInterval = 1
+obj.refreshInterval = 0.5
 local stext = require("hs.styledtext").new
 
 local dbg = function(...)
@@ -136,12 +136,14 @@ end
 
 function obj:start()
   obj.menubar:setTitle(updateTitle())
-  hs.timer.doEvery(obj.refreshInterval, function() obj.menubar:setTitle(updateTitle()) end)
+  obj.updateTimer = hs.timer.new(obj.refreshInterval, function() obj.menubar:setTitle(updateTitle()) end):start()
+
   return self
 end
 
 function obj:stop()
   if obj.menubar then obj.menubar:delete() end
+  if obj.updateTimer then obj.updateTimer:stop() end
 
   return self
 end

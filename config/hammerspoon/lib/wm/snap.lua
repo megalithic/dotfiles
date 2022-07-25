@@ -9,6 +9,7 @@ local obj = hs.hotkey.modal.new({}, nil)
 
 obj.__index = obj
 obj.name = "snap"
+obj.debug = true
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
@@ -343,44 +344,74 @@ function obj:init(opts)
 end
 
 function obj:start()
-  Hyper:bind("", "l", function() obj:toggle() end)
+  local config = Settings.get(CONFIG_KEY)
+  local keys = config.keys
+  local browsers = config.preferred.browsers
+
+  Hyper:bind(keys.mods.casc, "l", function() obj:toggle() end)
 
   obj
-    :bind("", "escape", function() obj:exit() end)
-    :bind("", "return", function()
+    :bind(keys.mods.casc, "escape", function() obj:exit() end)
+    :bind({}, "return", function()
       obj.maximize()
       obj:exit()
     end)
-    :bind("", "l", function()
+    :bind({ "shift" }, "return", function()
+      obj.send_window_next_monitor()
+      obj.maximize()
+      obj:exit()
+    end)
+    :bind(keys.mods.casc, "l", function()
       obj.send_window_right()
       obj:exit()
     end)
-    :bind({ "shift" }, "l", function()
+    :bind(keys.mods.caSc, "l", function()
       obj.send_window_next_monitor()
+      obj.send_window_right()
       obj:exit()
     end)
-    :bind("", "h", function()
+    :bind(keys.mods.casc, "h", function()
       obj.send_window_left()
       obj:exit()
     end)
     :bind({ "shift" }, "h", function()
       obj.send_window_prev_monitor()
+      obj.send_window_left()
       obj:exit()
     end)
-    :bind("", "k", function()
+    :bind(keys.mods.casc, "k", function()
       obj.move_to_center_absolute({ w = 3100, h = 1600 })
       obj:exit()
     end)
-    :bind("", "j", function()
+    :bind({ "shift" }, "k", function()
+      obj.send_window_next_monitor()
+      obj.move_to_center_absolute({ w = 3100, h = 1600 })
+      obj:exit()
+    end)
+    :bind(keys.mods.casc, "j", function()
       obj.move_to_center_absolute({ w = 2160, h = 1200 })
       obj:exit()
     end)
-    :bind("", "space", function()
+    :bind({ "shift" }, "j", function()
+      obj.send_window_next_monitor()
+      obj.move_to_center_absolute({ w = 2160, h = 1200 })
+      obj:exit()
+    end)
+    :bind(keys.mods.casc, "space", function()
       obj:snapback()
       obj:exit()
     end)
-    :bind("", "v", function()
+    :bind(keys.mods.casc, "v", function()
       obj.tile()
+      obj:exit(-- FIXME: DEPRECATE
+)
+    end)
+    :bind(keys.mods.casc, "s", function()
+      if hs.window.focusedWindow():application():name() == browsers[1] then
+        local supportedBrowsers = { "Brave Browser", "Brave Browser Dev", "Brave Browser Beta" }
+        if hs.fnutils.contains(supportedBrowsers, browsers[1]) then L.load("lib.browser").splitTab() end
+      end
+
       obj:exit()
     end)
 

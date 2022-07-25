@@ -180,7 +180,7 @@ load("lib.wm"):start()
 -- [ UNLOADERS ] ---------------------------------------------------------------
 
 hs.shutdownCallback = function()
-  local loaders = { "config", "lib.watchers", "lib.wm" }
+  local loaders = { "config", "lib.watchers", "lib.wm", "lib.menubar.ptt", "lib.menubar.spotify" }
   FNUtils.each(loaders, function(l) unload(l) end)
   _G.mega = nil
 end

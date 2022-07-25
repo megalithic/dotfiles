@@ -82,14 +82,31 @@ function obj:init(opts)
 end
 
 function obj:start()
-  local bindings = Settings.get(CONFIG_KEY).bindings
+  local config = Settings.get(CONFIG_KEY)
+  local bindings = config.bindings
+  local keys = config.keys
 
   -- [ application bindings ] --------------------------------------------------
 
   bind(bindings.apps, "apps", function(t)
+    local launcher = L.load("lib.launcher") or {}
+
     hs.fnutils.each(t, function(cfg)
       local mods = cfg.mods or {}
-      if cfg.key then Hyper:bind(mods, cfg.key, function() hs.application.launchOrFocusByBundleID(cfg.bundleID) end) end
+      if cfg.key then
+        Hyper:bind(mods, cfg.key, function()
+          -- hs.application.launchOrFocusByBundleID(cfg.bundleID)
+          if cfg.launchMode ~= nil then
+            if cfg.launchMode == "focus" then
+              launcher.focusOnly(cfg.bundleID)
+            else
+              launcher.toggle(cfg.bundleID, false)
+            end
+          else
+            launcher.toggle(cfg.bundleID, false)
+          end
+        end)
+      end
       if cfg.localBindings and #cfg.localBindings > 0 then
         hs.fnutils.each(cfg.localBindings, function(key) Hyper:bindPassThrough(key, cfg.bundleID) end)
       end
@@ -104,7 +121,7 @@ function obj:start()
 
   -- [ utility bindings ] ------------------------------------------------------
 
-  Hyper:bind({ "shift" }, "r", function()
+  Hyper:bind(keys.mods.caSc, "r", function()
     hs.reload()
     hs.notify.new({ title = "Hammerspoon", subTitle = "Reloading configuration.." }):send()
   end)
