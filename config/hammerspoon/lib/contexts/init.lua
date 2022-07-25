@@ -14,7 +14,23 @@ local windowFilter
 local frontAppBundleID
 local callback
 
+local function eventName(evtId)
+  -- REF: https://github.com/Hammerspoon/hammerspoon/blob/master/extensions/application/libapplication_watcher.m#L29
+  local events = {
+    "launching",
+    "launched",
+    "terminated",
+    "hidden",
+    "unhidden",
+    "activated",
+    "deactivated",
+  }
+  return evtId
+  -- return events[(evtId - 1)] -- hs.application.watcher[evtId]
+end
+
 local function appWatcherCallback(_, event, appObj)
+  info(fmt("appWatcherCallback() for %s executed: %s", eventName(event), I(appObj)))
   local newBundleID = appObj:bundleID()
   if event == Application.watcher.activated or event == "FROM_WINDOW_WATCHER" then
     if newBundleID == frontAppBundleID then return end
@@ -24,7 +40,7 @@ local function appWatcherCallback(_, event, appObj)
 end
 
 local function windowFilterCallback(hsWindow, appName, event)
-  print(fmt("windowFilterCallback(%s) executed.", appName))
+  info(fmt("windowFilterCallback(%s) executed for %s", appName, event))
   local appObj = hsWindow:application()
   if not appObj then return end
   local bundleID = appObj:bundleID()
@@ -45,7 +61,7 @@ function obj:init(opts)
   return self
 end
 
-function obj:start(apps, transientApps, _callback)
+function obj:start(apps, _callback)
   callback = _callback or function() end
 
   local allowedWindowFilterEvents = {
@@ -58,7 +74,7 @@ function obj:start(apps, transientApps, _callback)
   local frontApp = Application.frontmostApplication()
   if frontApp then appWatcherCallback(nil, Application.watcher.activated, frontApp) end
   appWatcher:start()
-  windowFilter:setFilters(transientApps or {})
+  windowFilter:setFilters(apps or {})
   windowFilter:subscribe(allowedWindowFilterEvents, windowFilterCallback)
 
   return self

@@ -72,12 +72,12 @@ local hyper = "F19"
 local ptt = mods.CAsc
 
 local wm = {
-  pushLeft = { hyper, "h" },
-  pushRight = { hyper, "l" },
-  pushUp = { hyper, "k" },
-  pushDown = { hyper, "j" },
-  maximize = { hyper, "return" },
-  center = { hyper, "space" },
+  pushLeft = { {}, hyper, "h" },
+  pushRight = { {}, hyper, "l" },
+  pushUp = { {}, hyper, "k" },
+  pushDown = { {}, hyper, "j" },
+  maximize = { {}, hyper, "return" },
+  center = { {}, hyper, "space" },
 }
 
 local apps = {
@@ -94,7 +94,7 @@ local apps = {
     localBindings = {},
     quitGuard = false,
     rules = {
-      -- { nil, 1, M.layout.fullScreen },
+      { "", 1, "maximize" },
     },
   },
   ["org.mozilla.firefoxdeveloperedition"] = {
@@ -105,7 +105,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      -- { nil, 1, M.layout.fullScreen },
+      { "", 1, "maximize" },
     },
   },
   ["com.vivaldi.Vivaldi"] = {
@@ -116,7 +116,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      -- { nil, 1, M.layout.fullScreen },
+      { "", 1, "maximize" },
     },
   },
   ["com.brave.Browser.dev"] = {
@@ -127,7 +127,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      -- { nil, 1, M.layout.fullScreen },
+      { "", 1, "maximize" },
     },
   },
   ["com.brave.Browser"] = {
@@ -138,7 +138,7 @@ local apps = {
     localBindings = {},
     tags = { "browsers" },
     rules = {
-      -- { nil, 1, M.layout.fullScreen },
+      { "", 1, "maximize" },
     },
   },
   ["com.kapeli.dashdoc"] = {
@@ -146,7 +146,7 @@ local apps = {
     name = "Dash",
     key = "d",
     rules = {
-      -- { nil, 1, M.layout.centeredLarge },
+      -- { "", 1, M.layout.centeredLarge },
     },
   },
   ["com.tinyspeck.slackmacgap"] = {
@@ -158,7 +158,7 @@ local apps = {
     distraction = true,
     quitGuard = false,
     rules = {
-      -- { nil, 2, M.layout.fullScreen },
+      { "", 2, "maximize" },
     },
   },
   ["com.freron.MailMate"] = {
@@ -169,8 +169,8 @@ local apps = {
     distraction = true,
     hideAfter = 5,
     rules = {
-      -- { nil, 2, M.layout.leftHalf },
-      -- { "Inbox", 2, M.layout.fullScreen },
+      -- { "", 2, M.layout.leftHalf },
+      { "Inbox", 2, "maximize" },
     },
   },
   ["com.apple.finder"] = {
@@ -188,8 +188,8 @@ local apps = {
     key = "z",
     launchMode = "focus",
     rules = {
-      -- { nil, 1, M.layout.centeredMedium },
-      -- { "Zoom Meeting", 1, M.layout.fullScreen },
+      -- { "", 1, M.layout.centeredMedium },
+      { "Zoom Meeting", 1, "maximize" },
     },
   },
   ["com.loom.desktop"] = {
@@ -204,7 +204,7 @@ local apps = {
     -- mods = M.modifiers.shift,
     hideAfter = 1,
     rules = {
-      -- { nil, 2, M.layout.rightHalf },
+      -- { "", 2, M.layout.rightHalf },
     },
   },
   ["com.apple.MobileSMS"] = {
@@ -215,7 +215,7 @@ local apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      -- { nil, 2, M.layout.rightHalf },
+      -- { "", 2, M.layout.rightHalf },
     },
   },
   ["org.whispersystems.signal-desktop"] = {
@@ -226,7 +226,7 @@ local apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      -- { nil, 2, M.layout.rightHalf },
+      -- { "", 2, M.layout.rightHalf },
     },
   },
   ["com.agilebits.onepassword7"] = {
@@ -235,7 +235,7 @@ local apps = {
     key = "1",
     hideAfter = 1,
     rules = {
-      -- { nil, 1, M.layout.centeredMedium },
+      -- { "", 1, M.layout.centeredMedium },
     },
   },
   ["org.hammerspoon.Hammerspoon"] = {
@@ -246,7 +246,7 @@ local apps = {
     hideAfter = 15,
     quitGuard = true,
     rules = {
-      -- { nil, 2, M.layout.fullScreen },
+      { "", 2, "maximize" },
     },
   },
   ["com.flexibits.fantastical2.mac"] = {
@@ -257,7 +257,7 @@ local apps = {
     quitGuard = true,
     hideAfter = 2,
     rules = {
-      -- { nil, 1, M.layout.centeredLarge },
+      -- { "", 1, M.layout.centeredLarge },
     },
   },
   ["com.figma.Desktop"] = {
@@ -267,7 +267,7 @@ local apps = {
     mods = { "shift" },
     quitGuard = true,
     rules = {
-      -- { nil, 1, M.layout.fullScreen },
+      { "", 1, "maximize" },
     },
   },
   ["com.surteesstudios.Bartender"] = {

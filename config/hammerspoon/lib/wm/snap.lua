@@ -227,7 +227,7 @@ end
 --- Example: win:move_to_center_relative(w=800, h=600) -- window is now centered and is 800px wide and 600px high
 function obj.move_to_center_absolute(unit)
   local s = obj.screen()
-  obj.set_frame("Center", {
+  return obj.set_frame("Center", {
     x = (s.w - unit.w) / 2,
     y = (s.h - unit.h) / 2,
     w = unit.w,
@@ -246,6 +246,7 @@ function obj.set_frame(title, unit, win)
 
   return win:setFrame(unit)
 end
+
 -- screen is the available rect inside the screen edge margins
 function obj.screen()
   local screen = obj.win():screen():frame()
@@ -257,6 +258,7 @@ function obj.screen()
     h = screen.h - (sem.top + sem.bottom),
   }
 end
+
 -- gutter is the adjustment required to accomidate partition
 -- margins between windows
 function obj.gutter()
