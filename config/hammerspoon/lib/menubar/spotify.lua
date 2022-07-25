@@ -3,7 +3,8 @@ local obj = {}
 obj.__index = obj
 obj.name = "spotify"
 obj.debug = true
-obj.refreshInterval = 2
+obj.refreshInterval = 1
+local stext = require("hs.styledtext").new
 
 local dbg = function(...)
   if obj.debug then
@@ -110,30 +111,32 @@ end
 
 local function updateTitle()
   local artist, album, track = getCurrent()
+  local titleInfo = ""
   if artist ~= nil then
-    -- 契
-    if obj.isPaused() then return "Paused" end
-    local titleInfo = fmt("%s - %s", artist, track)
+    local icon = ""
+    if obj.isPaused() then
+      icon = "" -- alts:  
+    else
+      icon = "" -- alts:  
+    end
 
-    return titleInfo
+    icon = stext(icon, { font = { name = defaultFont.name, size = 13 } })
+    titleInfo = icon .. fmt(" %s - %s", artist, track)
   end
-  return ""
+
+  return titleInfo
 end
 
 function obj:init()
   obj.menubar = hs.menubar.new()
 
-  -- menubar config
-  if obj.menubar then
-    obj.menubar:setIcon("assets/spotify.png")
-    obj.menubar:setTitle(updateTitle())
-    -- obj.menubar:setMenu(updateData())
-  end
+  if obj.menubar then obj.menubar:setTitle(updateTitle()) end
 
   return self
 end
 
 function obj:start()
+  obj.menubar:setTitle(updateTitle())
   hs.timer.doEvery(obj.refreshInterval, function() obj.menubar:setTitle(updateTitle()) end)
   return self
 end
