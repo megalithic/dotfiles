@@ -7,6 +7,7 @@ obj.debug = false
 
 local I = function(msg, debug)
   if not obj.debug then return "" end
+
   if debug then
     return hs.inspect(msg)
   else
@@ -28,6 +29,8 @@ function obj.load(loadTarget, opts)
   opts = opts or {}
 
   local ok, mod = pcall(require, loadTarget)
+
+  dbg(fmt(":: [load] %s -- ok: %s, mod: %s", loadTarget, ok, I(mod, true)))
 
   if not ok or mod == nil then
     error(fmt("[ERROR] %s (%s) -> %s", loadTarget, I(opts), mod))
@@ -60,7 +63,7 @@ function obj.load(loadTarget, opts)
 
         return loaded
       else
-        note(fmt("[INIT] %s (%s) no init fn; returning uncached module", target, I(opts, false)))
+        note(fmt("[INIT] %s (%s) no init/1; returning uncached module", target, I(opts, false)))
         return mod
       end
     end

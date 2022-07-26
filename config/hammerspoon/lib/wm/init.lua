@@ -2,10 +2,9 @@ local Application = require("hs.application")
 local Window = require("hs.window")
 local Settings = require("hs.settings")
 local fnutils = require("hs.fnutils")
-local contextsDir = U.resourcePath("contexts/")
+local contextsDir = U.resourcePath("../contexts/")
 
 local obj = {}
-local appModals = {}
 local Snap = nil
 
 obj.__index = obj
@@ -14,6 +13,7 @@ obj.settingsKey = "_mega_wm"
 obj.layoutWatcher = nil
 obj.contextWatcher = nil
 obj.debug = true
+obj.contextModals = {}
 
 local function info(...)
   if obj.debug then
@@ -46,46 +46,6 @@ function obj.targetDisplay(num)
   else
     return hs.screen.primaryScreen()
   end
-end
-
--- FIXME: deprecated; calling fns directly for each window
-function obj.setLayout(appConfig)
-  if appConfig == nil then return end
-
-  local bundleID = appConfig["bundleID"]
-  local appLayout = {}
-
-  if appConfig.rules and #appConfig.rules > 0 then
-    fnutils.map(appConfig.rules, function(rule)
-      local title_pattern, screen, positionStr = table.unpack(rule)
-      local position = Snap.grid[positionStr] or hs.layout.maximized
-      title_pattern = (title_pattern and title_pattern ~= "") and title_pattern or nil
-
-      dbg(
-        fmt(
-          "!! wm.setLayout: %s -> %s (%s) / %s (%s)",
-          title_pattern or "no title",
-          obj.targetDisplay(screen),
-          screen,
-          positionStr,
-          position
-        )
-      )
-
-      local layout = {
-        hs.application.get(bundleID),
-        title_pattern,
-        obj.targetDisplay(screen),
-        position,
-        nil,
-        nil,
-      }
-
-      table.insert(appLayout, layout)
-    end)
-  end
-
-  return appLayout
 end
 
 function obj.applyLayout(appConfig)
@@ -123,33 +83,48 @@ local function handleLayout(bundleID, appObj, event, fromWindowFilter)
   end
 end
 
+-- presently only handles (de)activated events to enter/exit the context modal.
 local function handleContext(bundleID, appObj, event, fromWindowFilter)
-  local appConfig = obj.apps[bundleID]
-  if not appConfig.context then return end
-
-  local modContext = "contexts." .. appConfig.context
-
-  -- FIXME: better to do a filesystem check?
-  local ok, mod = pcall(require, modContext)
-  if not ok or mod == nil then return end
-
-  local context = L.load(modContext)
-
-  note(fmt("[CONTEXT] %s for %s", bundleID, event))
-  if context ~= nil then context:start({ app = appObj, event = event }) end
-  -- for key, value in pairs(appModals) do
-  --   if key == bundleID then
-  --     value:start(appObj)
-  --   else
-  --     value:stop()
-  --   end
-  -- end
+  for key, modal in pairs(obj.contextModals) do
+    local appConfig = obj.apps[bundleID]
+    if key == bundleID and event == Application.watcher.activated then
+      modal:start({ bundleID = bundleID, appObj = appObj, event = event, appConfig = appConfig })
+    elseif key == bundleID and event == Application.watcher.deactivated then
+      modal:stop()
+    end
+  end
 end
 
 local function generateAppFilters(apps)
   local filters = {}
   fnutils.map(apps, function(app) filters[app.name] = true end)
   return filters
+end
+
+local function prepareContextScripts()
+  local iterFn, dirObj = hs.fs.dir(contextsDir)
+  if iterFn then
+    for file in iterFn, dirObj do
+      if string.sub(file, -3) == "lua" then
+        local basenameAndBundleID = string.sub(file, 1, -5)
+        local script = dofile(contextsDir .. file)
+        if basenameAndBundleID ~= "init" then
+          note(fmt("[wm.prepareContextScripts] %s", basenameAndBundleID))
+          if script.modal ~= nil and script.actions ~= nil then
+            script.modal = hs.hotkey.modal.new()
+            for _, value in pairs(script.actions) do
+              local hotkey = value.hotkey
+              if hotkey then
+                local mods, key = table.unpack(hotkey)
+                script.modal:bind(mods, key, value.action)
+              end
+            end
+          end
+          obj.contextModals[basenameAndBundleID] = script
+        end
+      end
+    end
+  end
 end
 
 function obj:init(opts)
@@ -161,6 +136,8 @@ function obj:init(opts)
   Snap = L.load("lib.wm.snap"):start()
   obj.layoutWatcher = L.load("lib.contexts", { id = "wm.layout" })
   obj.contextWatcher = L.load("lib.contexts", { id = "wm.context" })
+
+  prepareContextScripts()
 
   return self
 end

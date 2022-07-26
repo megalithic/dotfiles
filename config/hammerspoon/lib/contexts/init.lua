@@ -2,7 +2,6 @@
 
 local Application = require("hs.application")
 local Window = require("hs.window")
-local fnutils = require("hs.fnutils")
 
 local obj = {}
 
@@ -37,29 +36,6 @@ local windowFilter
 local frontAppBundleID
 local callback
 
-function obj.eventName(evtId)
-  -- REF: https://github.com/Hammerspoon/hammerspoon/blob/master/extensions/application/libapplication_watcher.m#L29
-  local events = {
-    [0] = "launching",
-    [1] = "launched",
-    [2] = "terminated",
-    [3] = "hidden",
-    [4] = "unhidden",
-    [5] = "activated",
-    [6] = "deactivated",
-  }
-  local event = events[0]
-
-  for i, value in ipairs(events) do
-    if evtId == i then
-      event = value
-      break
-    end
-  end
-
-  return event
-end
-
 -- _ -> appName
 local function appWatcherCallback(_, event, appObj)
   local newBundleID = appObj:bundleID()
@@ -67,11 +43,11 @@ local function appWatcherCallback(_, event, appObj)
     if newBundleID == frontAppBundleID then return end
     frontAppBundleID = newBundleID
 
-    -- info(fmt("[%s] appWatcherCallback %s executed for %s", string.upper(eventName(event)), frontAppBundleID, I(appObj)))
+    -- info(fmt("[%s] appWatcherCallback %s executed for %s", string.upper(U.eventName(event)), frontAppBundleID, I(appObj)))
 
     callback(frontAppBundleID, appObj, event, event == "FROM_WINDOW_WATCHER")
   else
-    -- info(fmt("[%s] appWatcherCallback %s executed for %s", string.upper(eventName(event)), newBundleID, I(appObj)))
+    -- info(fmt("[%s] appWatcherCallback %s executed for %s", string.upper(U.eventName(event)), newBundleID, I(appObj)))
     callback(newBundleID, appObj, event, event == "FROM_WINDOW_WATCHER")
   end
 end

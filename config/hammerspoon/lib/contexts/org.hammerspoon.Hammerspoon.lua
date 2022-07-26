@@ -1,8 +1,12 @@
 local obj = {}
+local _appObj = nil
 
 obj.__index = obj
-obj.name = "context.zoom"
+obj.name = "context.hammerspoon"
 obj.debug = true
+
+obj.modal = nil
+obj.actions = {}
 
 local function info(...)
   if obj.debug then
@@ -25,19 +29,30 @@ local function note(...)
     return print("")
   end
 end
-
-function obj:init(opts)
-  opts = opts or {}
-
-  dbg(fmt("%s: %s", obj.name, I(opts)))
-
-  return self
+local function success(...)
+  if obj.debug then
+    return _G.success(...)
+  else
+    return print("")
+  end
 end
 
 function obj:start(opts)
   opts = opts or {}
 
+  _appObj = opts["appObj"]
+  obj.modal:enter()
+
+  note(fmt("[START]: %s", I(opts)))
+
   return self
 end
 
-function obj:stop() return self end
+function obj:stop(opts)
+  opts = opts or {}
+  obj.modal:exit()
+  note(fmt("[STOP]: %s", I(self)))
+  return self
+end
+
+return obj

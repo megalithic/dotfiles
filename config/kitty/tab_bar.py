@@ -1,5 +1,7 @@
 # pyright: reportMissingImports=false
 
+# REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-3240635
+
 import datetime
 import json
 import subprocess

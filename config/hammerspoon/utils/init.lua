@@ -120,4 +120,27 @@ function obj.tfn(t)
   end
 end
 
+function obj.eventName(evtId)
+  -- REF: https://github.com/Hammerspoon/hammerspoon/blob/master/extensions/application/libapplication_watcher.m#L29
+  local events = {
+    [0] = "launching",
+    [1] = "launched",
+    [2] = "terminated",
+    [3] = "hidden",
+    [4] = "unhidden",
+    [5] = "activated",
+    [6] = "deactivated",
+  }
+  local event = events[0]
+
+  for i, value in ipairs(events) do
+    if evtId == i then
+      event = value
+      break
+    end
+  end
+
+  return event
+end
+
 return obj

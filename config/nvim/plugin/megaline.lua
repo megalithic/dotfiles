@@ -312,18 +312,14 @@ end
 function U.modified(ctx, icon)
   if ctx.filetype == "help" then return "" end
   icon = icon or icons.modified
-  return ctx.modified and icon
+  return ctx.modified and " " .. icon
 end
 
 --- @param ctx table
 --- @param icon string | nil
 function U.readonly(ctx, icon)
   icon = icon or icons.readonly
-  if ctx.readonly then
-    return " " .. icon
-  else
-    return ""
-  end
+  return ctx.readonly and " " .. icon
 end
 
 --- @param bufnum number
