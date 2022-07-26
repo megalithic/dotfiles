@@ -320,7 +320,7 @@ end
 function U.readonly(ctx, icon)
   icon = icon or icons.readonly
   if ctx.readonly then
-    return icon
+    return " " .. icon
   else
     return ""
   end
@@ -599,12 +599,12 @@ end
 
 function M.s_modified(args)
   if U.ctx.filetype == "help" then return "" end
-  return unpack(item_if(U.modified(U.ctx), is_truncated(args.trunc_width), "StModified"))
+  return unpack(item_if(U.modified(U.ctx), not is_truncated(args.trunc_width), "StModified"))
 end
 
 function M.s_readonly(args)
   local readonly_hl = H.adopt_winhighlight(U.ctx.winid, "StatusLine", "StCustomError", "StError")
-  return unpack(item_if(U.readonly(U.ctx), is_truncated(args.trunc_width), readonly_hl))
+  return unpack(item_if(U.readonly(U.ctx), not is_truncated(args.trunc_width), readonly_hl))
 end
 
 --- Section for file name

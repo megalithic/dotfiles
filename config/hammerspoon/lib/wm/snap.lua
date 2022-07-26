@@ -9,7 +9,6 @@ local obj = hs.hotkey.modal.new({}, nil)
 
 obj.__index = obj
 obj.name = "snap"
-obj.debug = true
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
@@ -44,6 +43,29 @@ obj.grid = {
   centeredMedium = { x = 0.25, y = 0.25, w = 0.50, h = 0.50 },
   centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
 }
+obj.debug = true
+
+local function info(...)
+  if obj.debug then
+    return _G.info(...)
+  else
+    return print("")
+  end
+end
+local function dbg(...)
+  if obj.debug then
+    return _G.dbg(...)
+  else
+    return print("")
+  end
+end
+local function note(...)
+  if obj.debug then
+    return _G.note(...)
+  else
+    return print("")
+  end
+end
 
 obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -87,9 +109,9 @@ obj.tile = function()
     :show()
 end
 
-function obj.send_window_left(win, msg)
+function obj.send_window_left(win, msg, screenAsUnit)
   msg = msg or "Left"
-  local s = obj.screen()
+  local s = screenAsUnit or obj.screen()
   local ssp = obj.grid.split_screen_partitions
   local g = obj.gutter()
   local geom = {
@@ -101,9 +123,9 @@ function obj.send_window_left(win, msg)
   obj.set_frame(msg, geom, win)
 end
 
-function obj.send_window_right(win, msg)
+function obj.send_window_right(win, msg, screenAsUnit)
   msg = msg or "Right"
-  local s = obj.screen()
+  local s = screenAsUnit or obj.screen()
   local ssp = obj.grid.split_screen_partitions
   local g = obj.gutter()
   local geom = {
@@ -242,6 +264,22 @@ function obj.move_to_center_absolute(unit)
   })
 end
 
+--- hs.window:moveToScreen(screen)
+--- Method
+--- move window to the the given screen, keeping the relative proportion and position window to the original screen.
+--- Example: win:moveToScreen(win:screen():next()) -- move window to next screen
+function hs.window:moveToScreen(nextScreen)
+  local currentFrame = self:frame()
+  local screenFrame = self:screen():frame()
+  local nextScreenFrame = nextScreen:frame()
+  self:setFrame({
+    x = ((((currentFrame.x - screenFrame.x) / screenFrame.w) * nextScreenFrame.w) + nextScreenFrame.x),
+    y = ((((currentFrame.y - screenFrame.y) / screenFrame.h) * nextScreenFrame.h) + nextScreenFrame.y),
+    h = ((currentFrame.h / screenFrame.h) * nextScreenFrame.h),
+    w = ((currentFrame.w / screenFrame.w) * nextScreenFrame.w),
+  })
+end
+
 -- return currently focused window
 function obj.win() return hs.window.focusedWindow() end
 
@@ -255,8 +293,9 @@ function obj.set_frame(title, unit, win)
 end
 
 -- screen is the available rect inside the screen edge margins
-function obj.screen()
-  local screen = obj.win():screen():frame()
+function obj.screen(screen, win)
+  win = win or obj.win()
+  screen = screen and screen:frame() or win:screen():frame()
   local sem = obj.grid.screen_edge_margins
   return {
     x = screen.x + sem.left,
@@ -276,20 +315,17 @@ function obj.gutter()
   }
 end
 
---- hs.window:moveToScreen(screen)
---- Method
---- move window to the the given screen, keeping the relative proportion and position window to the original screen.
---- Example: win:moveToScreen(win:screen():next()) -- move window to next screen
-function hs.window:moveToScreen(nextScreen)
-  local currentFrame = self:frame()
-  local screenFrame = self:screen():frame()
-  local nextScreenFrame = nextScreen:frame()
-  self:setFrame({
-    x = ((((currentFrame.x - screenFrame.x) / screenFrame.w) * nextScreenFrame.w) + nextScreenFrame.x),
-    y = ((((currentFrame.y - screenFrame.y) / screenFrame.h) * nextScreenFrame.h) + nextScreenFrame.y),
-    h = ((currentFrame.h / screenFrame.h) * nextScreenFrame.h),
-    w = ((currentFrame.w / screenFrame.w) * nextScreenFrame.w),
-  })
+-- PUBLIC API to for autolayout
+function obj.maximized(win, screenAsUnit) obj.set_frame("Full Screen", screenAsUnit, win) end
+function obj.left50(win, screenAsUnit) obj.send_window_left(win, nil, screenAsUnit) end
+function obj.right50(win, screenAsUnit) obj.send_window_right(win, nil, screenAsUnit) end
+function obj.snapper(win, position, screen)
+  local fn = obj[position]
+
+  screen = obj.screen(screen, win)
+  dbg(screen)
+
+  if fn and type(fn) == "function" then fn(win, screen) end
 end
 
 function obj:entered()
@@ -403,8 +439,7 @@ function obj:start()
     end)
     :bind(keys.mods.casc, "v", function()
       obj.tile()
-      obj:exit(-- FIXME: DEPRECATE
-)
+      obj:exit()
     end)
     :bind(keys.mods.casc, "s", function()
       if hs.window.focusedWindow():application():name() == browsers[1] then

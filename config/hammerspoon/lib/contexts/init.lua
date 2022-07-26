@@ -8,7 +8,29 @@ local obj = {}
 
 obj.__index = obj
 obj.name = "contexts"
-obj.debug = false
+obj.debug = true
+
+local function info(...)
+  if obj.debug then
+    return _G.info(...)
+  else
+    return print("")
+  end
+end
+local function dbg(...)
+  if obj.debug then
+    return _G.dbg(...)
+  else
+    return print("")
+  end
+end
+local function note(...)
+  if obj.debug then
+    return _G.note(...)
+  else
+    return print("")
+  end
+end
 
 local appWatcher
 local windowFilter
@@ -77,7 +99,7 @@ function obj:init(opts)
   return self
 end
 
-function obj:start(apps, _callback)
+function obj:start(apps, appFilters, _callback)
   callback = _callback or function() end
 
   local allowedWindowFilterEvents = {
@@ -93,7 +115,7 @@ function obj:start(apps, _callback)
     appWatcherCallback(nil, Application.watcher.activated, frontApp)
   end
   appWatcher:start()
-  -- windowFilter:setFilters(apps or {})
+  windowFilter:setFilters(appFilters or {})
   windowFilter:subscribe(allowedWindowFilterEvents, windowFilterCallback)
 
   return self

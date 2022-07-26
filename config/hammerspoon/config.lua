@@ -171,7 +171,7 @@ local apps = {
     distraction = true,
     hideAfter = 5,
     rules = {
-      { "", 2, "leftHalf" },
+      { "", 2, "left50" },
       { "Inbox", 2, "maximized" },
     },
   },
@@ -216,7 +216,7 @@ local apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      { "", 2, "rightHalf" },
+      { "", 2, "right50" },
     },
   },
   ["org.whispersystems.signal-desktop"] = {
@@ -227,7 +227,7 @@ local apps = {
     distraction = true,
     tags = { "personal" },
     rules = {
-      { "", 2, "rightHalf" },
+      { "", 2, "right50" },
     },
   },
   ["com.agilebits.onepassword7"] = {
