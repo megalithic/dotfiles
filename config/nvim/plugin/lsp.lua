@@ -651,7 +651,75 @@ mega.lsp.servers = {
   -- required until the setup function is called.
   sumneko_lua = function()
     local ok, lua_dev = mega.safe_require("lua-dev")
-    if not ok then return {} end
+    if not ok then
+      local path = vim.split(package.path, ";")
+      table.insert(path, "lua/?.lua")
+      table.insert(path, "lua/?/init.lua")
+
+      local lib = vim.tbl_filter(function(p)
+        if p:match("emmy") then return true end
+        return not vim.startswith(p, fn.stdpath("data") .. "/site/")
+      end, api.nvim_get_runtime_file("", true))
+
+      return {
+        settings = {
+          Lua = {
+            runtime = {
+              path = path,
+              version = "LuaJIT",
+            },
+            format = { enable = false },
+            diagnostics = {
+              globals = {
+                "vim",
+                "Color",
+                "c",
+                "Group",
+                "g",
+                "s",
+                "describe",
+                "it",
+                "before_each",
+                "after_each",
+                "hs",
+                "spoon",
+                "config",
+                "watchers",
+                "mega",
+                "map",
+                "nmap",
+                "vmap",
+                "xmap",
+                "smap",
+                "omap",
+                "imap",
+                "lmap",
+                "cmap",
+                "tmap",
+                "noremap",
+                "nnoremap",
+                "vnoremap",
+                "xnoremap",
+                "snoremap",
+                "onoremap",
+                "inoremap",
+                "lnoremap",
+                "cnoremap",
+                "tnoremap",
+              },
+            },
+            completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
+            workspace = {
+              -- TODO: Find a way to speed this up by using only items from vim's runtime
+              library = lib,
+            },
+            telemetry = {
+              enable = false,
+            },
+          },
+        },
+      }
+    end
 
     local config = {
       library = {

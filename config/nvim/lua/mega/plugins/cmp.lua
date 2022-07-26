@@ -154,7 +154,7 @@ return function()
         else
           item.menu = ({
             luasnip = "[lsnip]",
-            nvim_lua = "[nlua]",
+            -- nvim_lua = "[nlua]",
             nvim_lsp = "[lsp]",
             nvim_lsp_signature_help = "[sig]",
             path = "[path]",
