@@ -286,10 +286,13 @@ function obj.win() return hs.window.focusedWindow() end
 -- display title, save state and move win to unit
 function obj.set_frame(title, unit, win)
   if title and not title == "" then alert.show(title) end
-  win = win or obj.win()
-  obj.snapback_window_state[win:id()] = win:frame()
+  win = win and win or obj.win()
+  if win then
+    obj.snapback_window_state[win:id()] = win:frame()
+    return win:setFrame(unit)
+  end
 
-  return win:setFrame(unit)
+  return {}
 end
 
 -- screen is the available rect inside the screen edge margins

@@ -97,9 +97,15 @@ function obj.applyLayout(appConfig)
       winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
 
       local app = Application.get(bundleID)
-      local win = Window.find(winTitlePattern) or app:focusedWindow()
-      local screen = obj.targetDisplay(screenNum)
 
+      local win = winTitlePattern
+      if winTitlePattern ~= nil then
+        win = Window.find(winTitlePattern)
+      else
+        win = app:mainWindow()
+      end
+
+      local screen = obj.targetDisplay(screenNum)
       Snap.snapper(win, positionStr, screen)
     end)
   end
@@ -109,8 +115,9 @@ local function handleLayout(bundleID, appObj, event, fromWindowFilter)
   if event == Application.watcher.launched and bundleID then
     note(fmt("[LAUNCHED] %s", bundleID))
     local appConfig = obj.apps[bundleID]
-    -- local appLayout = obj.setLayout(appConfig)
     obj.applyLayout(appConfig)
+  else
+    if event == Application.watcher.terminated and bundleID then note(fmt("[TERMINATED] %s", bundleID)) end
   end
 end
 
