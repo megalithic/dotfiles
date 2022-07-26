@@ -2,15 +2,17 @@ local Application = require("hs.application")
 local Window = require("hs.window")
 local Settings = require("hs.settings")
 local fnutils = require("hs.fnutils")
--- local contextsDir = utils.resourcePath("contexts/")
+local contextsDir = U.resourcePath("contexts/")
 
 local obj = {}
+local appModals = {}
 local Snap = nil
 
 obj.__index = obj
 obj.name = "wm"
 obj.settingsKey = "_mega_wm"
 obj.layoutWatcher = nil
+obj.contextWatcher = nil
 obj.debug = true
 
 local function info(...)
@@ -122,6 +124,19 @@ local function handleLayout(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function handleContext(bundleID, appObj, event, fromWindowFilter)
+  local appConfig = obj.apps[bundleID]
+  if not appConfig.context then return end
+
+  local modContext = "contexts." .. appConfig.context
+
+  -- FIXME: better to do a filesystem check?
+  local ok, mod = pcall(require, modContext)
+  if not ok or mod == nil then return end
+
+  local context = L.load(modContext)
+
+  note(fmt("[CONTEXT] %s for %s", bundleID, event))
+  if context ~= nil then context:start({ app = appObj, event = event }) end
   -- for key, value in pairs(appModals) do
   --   if key == bundleID then
   --     value:start(appObj)
@@ -144,7 +159,8 @@ function obj:init(opts)
   obj.apps = config.bindings.apps
 
   Snap = L.load("lib.wm.snap"):start()
-  obj.layoutWatcher = L.load("lib.contexts")
+  obj.layoutWatcher = L.load("lib.contexts", { id = "wm.layout" })
+  obj.contextWatcher = L.load("lib.contexts", { id = "wm.context" })
 
   return self
 end
@@ -152,10 +168,13 @@ end
 function obj:start(opts)
   opts = opts or {}
 
+  local filters = generateAppFilters(obj.apps)
+
   -- app layouts
-  obj.layoutWatcher:start(obj.apps, generateAppFilters(obj.apps), handleLayout)
+  obj.layoutWatcher:start(obj.apps, filters, handleLayout)
+
   -- app-specific contexts
-  -- obj.contextWatcher:start(obj.apps, handleContext)
+  obj.contextWatcher:start(obj.apps, filters, handleContext)
 
   return self
 end

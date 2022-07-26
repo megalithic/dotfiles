@@ -254,14 +254,14 @@ end
 --- Method
 --- Centers and resizes the window to the the fit on the given portion of the screen given in pixels.
 --- Example: win:move_to_center_relative(w=800, h=600) -- window is now centered and is 800px wide and 600px high
-function obj.move_to_center_absolute(unit)
+function obj.move_to_center_absolute(unit, win)
   local s = obj.screen()
   return obj.set_frame("Center", {
     x = (s.w - unit.w) / 2,
     y = (s.h - unit.h) / 2,
     w = unit.w,
     h = unit.h,
-  })
+  }, win)
 end
 
 --- hs.window:moveToScreen(screen)
@@ -322,6 +322,9 @@ end
 function obj.maximized(win, screenAsUnit) obj.set_frame("Full Screen", screenAsUnit, win) end
 function obj.left50(win, screenAsUnit) obj.send_window_left(win, nil, screenAsUnit) end
 function obj.right50(win, screenAsUnit) obj.send_window_right(win, nil, screenAsUnit) end
+function obj.centeredLarge(win, _) obj.move_to_center_absolute({ w = 3100, h = 1600 }, win) end
+function obj.centeredMedium(win, _) obj.move_to_center_absolute({ w = 2160, h = 1200 }, win) end
+-- function obj.centeredSmall(win, _) obj.move_to_center_absolute({ w = 2160, h = 1200 }, win) end
 function obj.snapper(win, position, screen)
   local fn = obj[position]
 
