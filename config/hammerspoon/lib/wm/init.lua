@@ -10,10 +10,10 @@ local Snap = nil
 obj.__index = obj
 obj.name = "wm"
 obj.settingsKey = "_mega_wm"
-obj.layoutWatcher = nil
-obj.contextWatcher = nil
+obj.watcher = nil
 obj.debug = true
 obj.contextModals = {}
+obj.layoutComplete = false
 
 local function info(...)
   if obj.debug then
@@ -36,6 +36,13 @@ local function note(...)
     return print("")
   end
 end
+local function success(...)
+  if obj.debug then
+    return _G.success(...)
+  else
+    return print("")
+  end
+end
 
 -- targetDisplay(int) :: hs.screen
 -- detect the current number of monitors and return target screen
@@ -51,6 +58,19 @@ end
 function obj.applyLayout(appConfig)
   if appConfig == nil then return end
 
+  local function getWindow(winTitlePattern, bundleID)
+    local win = winTitlePattern
+
+    local app = Application.get(bundleID)
+    if winTitlePattern ~= nil then
+      win = Window.find(winTitlePattern)
+    else
+      win = app:mainWindow()
+    end
+
+    return win
+  end
+
   local bundleID = appConfig["bundleID"]
 
   if appConfig.rules and #appConfig.rules > 0 then
@@ -58,22 +78,41 @@ function obj.applyLayout(appConfig)
       local winTitlePattern, screenNum, positionStr = table.unpack(rule)
       winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
 
-      local app = Application.get(bundleID)
-
-      local win = winTitlePattern
-      if winTitlePattern ~= nil then
-        win = Window.find(winTitlePattern)
-      else
-        win = app:mainWindow()
-      end
-
-      local screen = obj.targetDisplay(screenNum)
-      Snap.snapper(win, positionStr, screen)
+      hs.timer.waitUntil(function() return getWindow(winTitlePattern, bundleID) ~= nil end, function()
+        Snap.snapper(getWindow(winTitlePattern, bundleID), positionStr, obj.targetDisplay(screenNum))
+        obj.layoutComplete = true
+      end)
     end)
   end
 end
 
-local function handleLayout(bundleID, appObj, event, fromWindowFilter)
+-- presently only handles (de)activated events to enter/exit the context modal.
+function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
+  for key, modal in pairs(obj.contextModals) do
+    if key == bundleID then
+      local appConfig = obj.apps[bundleID]
+      note(
+        fmt(
+          "[context_%s] (%s%s)",
+          bundleID,
+          U.eventName(event) or event,
+          fromWindowFilter and "/fromWindowFilter" or ""
+        )
+      )
+      if event == Application.watcher.activated or event == Application.watcher.launched then
+        hs.timer.waitUntil(
+          function() return obj.layoutComplete end,
+          function() modal:start({ bundleID = bundleID, appObj = appObj, event = event, appConfig = appConfig }) end
+        )
+      elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
+        modal:stop({ event = event })
+      end
+    end
+  end
+end
+
+local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
+  -- auto-layout events: [launched]
   if event == Application.watcher.launched and bundleID then
     note(fmt("[LAUNCHED] %s", bundleID))
     local appConfig = obj.apps[bundleID]
@@ -81,18 +120,8 @@ local function handleLayout(bundleID, appObj, event, fromWindowFilter)
   else
     if event == Application.watcher.terminated and bundleID then note(fmt("[TERMINATED] %s", bundleID)) end
   end
-end
 
--- presently only handles (de)activated events to enter/exit the context modal.
-local function handleContext(bundleID, appObj, event, fromWindowFilter)
-  for key, modal in pairs(obj.contextModals) do
-    local appConfig = obj.apps[bundleID]
-    if key == bundleID and event == Application.watcher.activated then
-      modal:start({ bundleID = bundleID, appObj = appObj, event = event, appConfig = appConfig })
-    elseif key == bundleID and event == Application.watcher.deactivated then
-      modal:stop()
-    end
-  end
+  obj.applyContext(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function generateAppFilters(apps)
@@ -109,7 +138,6 @@ local function prepareContextScripts()
         local basenameAndBundleID = string.sub(file, 1, -5)
         local script = dofile(contextsDir .. file)
         if basenameAndBundleID ~= "init" then
-          note(fmt("[wm.prepareContextScripts] %s", basenameAndBundleID))
           if script.modal ~= nil and script.actions ~= nil then
             script.modal = hs.hotkey.modal.new()
             for _, value in pairs(script.actions) do
@@ -134,8 +162,7 @@ function obj:init(opts)
   obj.apps = config.bindings.apps
 
   Snap = L.load("lib.wm.snap"):start()
-  obj.layoutWatcher = L.load("lib.contexts", { id = "wm.layout" })
-  obj.contextWatcher = L.load("lib.contexts", { id = "wm.context" })
+  obj.watcher = L.load("lib.contexts", { id = "wm.watcher" })
 
   prepareContextScripts()
 
@@ -147,11 +174,7 @@ function obj:start(opts)
 
   local filters = generateAppFilters(obj.apps)
 
-  -- app layouts
-  obj.layoutWatcher:start(obj.apps, filters, handleLayout)
-
-  -- app-specific contexts
-  obj.contextWatcher:start(obj.apps, filters, handleContext)
+  obj.watcher:start(obj.apps, filters, handleWatcher)
 
   return self
 end

@@ -12,6 +12,30 @@ obj.name = "snap"
 obj.alerts = {}
 obj.snapback_window_state = {}
 obj.isOpen = false
+obj.debug = true
+
+local function info(...)
+  if obj.debug then
+    return _G.info(...)
+  else
+    return print("")
+  end
+end
+local function dbg(...)
+  if obj.debug then
+    return _G.dbg(...)
+  else
+    return print("")
+  end
+end
+local function note(...)
+  if obj.debug then
+    return _G.note(...)
+  else
+    return print("")
+  end
+end
+
 obj.grid = {
   screen_edge_margins = {
     top = 0,
@@ -43,29 +67,6 @@ obj.grid = {
   centeredMedium = { x = 0.25, y = 0.25, w = 0.50, h = 0.50 },
   centeredSmall = { x = 0.35, y = 0.35, w = 0.30, h = 0.30 },
 }
-obj.debug = true
-
-local function info(...)
-  if obj.debug then
-    return _G.info(...)
-  else
-    return print("")
-  end
-end
-local function dbg(...)
-  if obj.debug then
-    return _G.dbg(...)
-  else
-    return print("")
-  end
-end
-local function note(...)
-  if obj.debug then
-    return _G.note(...)
-  else
-    return print("")
-  end
-end
 
 obj.tile = function()
   local windows = hs.fnutils.map(hs.window.filter.new():getWindows(), function(win)
@@ -84,19 +85,19 @@ obj.tile = function()
       local focused = hs.window.focusedWindow()
       local toRead = hs.window.find(choice.id)
       if hs.eventtap.checkKeyboardModifiers()["alt"] then
+        alert.show("  70 ◱ 30  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left70, 0, 0 },
           { nil, toRead, focused:screen(), obj.grid.right30, 0, 0 },
         })
-        alert.show("  70 ◱ 30  ")
       else
         -- obj.send_window_left(focused, fmt("", focused:title()))
         -- obj.send_window_right(toRead, fmt("", toRead:title()))
+        alert.show("  50 ◱ 50  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left50, 0, 0 },
           { nil, toRead, focused:screen(), obj.grid.right50, 0, 0 },
         })
-        alert.show("  50 ◱ 50  ")
       end
       toRead:raise()
     end
@@ -324,12 +325,10 @@ function obj.left50(win, screenAsUnit) obj.send_window_left(win, nil, screenAsUn
 function obj.right50(win, screenAsUnit) obj.send_window_right(win, nil, screenAsUnit) end
 function obj.centeredLarge(win, _) obj.move_to_center_absolute({ w = 3100, h = 1600 }, win) end
 function obj.centeredMedium(win, _) obj.move_to_center_absolute({ w = 2160, h = 1200 }, win) end
--- function obj.centeredSmall(win, _) obj.move_to_center_absolute({ w = 2160, h = 1200 }, win) end
 function obj.snapper(win, position, screen)
   local fn = obj[position]
 
   screen = obj.screen(screen, win)
-  dbg(screen)
 
   if fn and type(fn) == "function" then fn(win, screen) end
 end
@@ -448,11 +447,7 @@ function obj:start()
       obj:exit()
     end)
     :bind(keys.mods.casc, "s", function()
-      if hs.window.focusedWindow():application():name() == browsers[1] then
-        local supportedBrowsers = { "Brave Browser", "Brave Browser Dev", "Brave Browser Beta" }
-        if hs.fnutils.contains(supportedBrowsers, browsers[1]) then L.load("lib.browser").splitTab() end
-      end
-
+      L.load("lib.browser").splitTab()
       obj:exit()
     end)
 

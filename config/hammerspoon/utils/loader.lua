@@ -30,8 +30,6 @@ function obj.load(loadTarget, opts)
 
   local ok, mod = pcall(require, loadTarget)
 
-  dbg(fmt(":: [load] %s -- ok: %s, mod: %s", loadTarget, ok, I(mod, true)))
-
   if not ok or mod == nil then
     error(fmt("[ERROR] %s (%s) -> %s", loadTarget, I(opts), mod))
     return
@@ -40,8 +38,12 @@ function obj.load(loadTarget, opts)
   if ok and mod ~= nil and type(mod) == "table" then
     local target = mod.name or loadTarget
     local id = opts.id or nil
+    local bust = opts.bust or false
 
-    if opts["unload"] then
+    if opts["raw"] then
+      note(fmt("[REQ] %s (%s)", target, I(opts, false)))
+      return mod
+    elseif opts["unload"] then
       if type(mod.stop) == "function" then
         info(fmt("[STOP] %s (%s)", target, I(opts, false)))
         return mod:stop(opts)
@@ -49,21 +51,27 @@ function obj.load(loadTarget, opts)
     else
       if type(mod.init) == "function" then
         local loaded = mod:init(opts) or mod
-        local cache_key = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
-        local cache_mod = loaded
 
-        mega.__loaded_modules[cache_key] = { name = target, id = id, mod = cache_mod }
+        if not bust then
+          local cache_key = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
+          local cache_mod = loaded
 
-        if id then mega.__loaded_modules[cache_key]["id"] = id end
+          mega.__loaded_modules[cache_key] = { name = target, id = id, mod = cache_mod }
 
-        dbg(fmt("[cache] cache_key: %s, cached_mod: %s", cache_key, mega.__loaded_modules[cache_key]))
+          if id then mega.__loaded_modules[cache_key]["id"] = id end
 
-        local tag = mega.__loaded_modules[cache_key]["id"] and fmt("%s_%s", target, id) or fmt("%s", target)
-        info(fmt("[INIT] %s (%s)", tag, I(opts, false)))
+          dbg(fmt("[cache] cache_key: %s, cached_mod: %s", cache_key, mega.__loaded_modules[cache_key]))
+
+          local tag = mega.__loaded_modules[cache_key]["id"] and fmt("%s_%s", target, id) or fmt("%s", target)
+          info(fmt("[INIT] %s (%s)", tag, I(opts, false)))
+        else
+          local tag = id and fmt("%s_%s", target, id) or fmt("%s", target)
+          note(fmt("[INIT] %s (%s) busted -- uncached", tag, I(opts, false)))
+        end
 
         return loaded
       else
-        note(fmt("[INIT] %s (%s) no init/1; returning uncached module", target, I(opts, false)))
+        note(fmt("[INIT] %s (%s) no init/1 -- uncached", target, I(opts, false)))
         return mod
       end
     end
@@ -72,9 +80,17 @@ end
 
 function obj.unload(loadTarget, id)
   if id then
-    obj.load(loadTarget, { unload = true, id = id })
+    return obj.load(loadTarget, { unload = true, id = id })
   else
-    obj.load(loadTarget, { unload = true })
+    return obj.load(loadTarget, { unload = true })
+  end
+end
+
+function obj.req(loadTarget, id)
+  if id then
+    return obj.load(loadTarget, { raw = true, id = id })
+  else
+    return obj.load(loadTarget, { raw = true })
   end
 end
 

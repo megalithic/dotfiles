@@ -39,19 +39,18 @@ end
 
 function obj:start(opts)
   opts = opts or {}
-
   _appObj = opts["appObj"]
-  obj.modal:enter()
-
-  note(fmt("[START]: %s", I(opts)))
+  if obj.modal then obj.modal:enter() end
+  note(fmt("[START] %s: %s", obj.name, opts))
 
   return self
 end
 
 function obj:stop(opts)
   opts = opts or {}
-  obj.modal:exit()
-  note(fmt("[STOP]: %s", I(self)))
+  if obj.modal then obj.modal:exit() end
+  note(fmt("[STOP] %s: %s", obj.name, self))
+
   return self
 end
 
