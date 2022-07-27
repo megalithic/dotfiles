@@ -358,8 +358,12 @@ HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=red,fg=black,bold'
 ##Remove % at end of print when not using \n
 PROMPT_EOL_MARK=""
 
-# use .localrc for SUPER SECRET stuff
+# use .localrc/local.zsh for SUPER SECRET stuff
+if [ -f "$ZDOTDIR/lib/local.zsh" ]; then
+  source "$ZDOTDIR/lib/local.zsh"
+fi
 if [ -f "$HOME/.localrc" ]; then
   source "$HOME/.localrc"
 fi
+
 
