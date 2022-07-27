@@ -248,6 +248,7 @@ cask "dropbox"
 # cask "discord"
 # cask "expressvpn"
 cask "figma"
+cask "firefox"
 cask "flux"
 # cask "forklift" # replaced with marta for now
 cask "hazel"

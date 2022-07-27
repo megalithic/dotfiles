@@ -13,16 +13,14 @@ local function chooseAppFromGroup(apps, key, tag, groupKey)
   )
 
   local choices = {}
-  hs.fnutils.each(
-    group,
-    function(app)
-      table.insert(choices, {
-        text = hs.application.nameForBundleID(app.bundleID),
-        image = hs.image.imageFromAppBundle(app.bundleID),
-        bundleID = app.bundleID,
-      })
-    end
-  )
+  hs.fnutils.each(group, function(app)
+    local text = hs.application.nameForBundleID(app.bundleID) or app.bundleID
+    table.insert(choices, {
+      text = text,
+      image = hs.image.imageFromAppBundle(app.bundleID),
+      bundleID = app.bundleID,
+    })
+  end)
 
   if #choices == 1 then
     local app = choices[1]
@@ -95,7 +93,6 @@ function obj:start()
       local mods = cfg.mods or {}
       if cfg.key then
         Hyper:bind(mods, cfg.key, function()
-          -- hs.application.launchOrFocusByBundleID(cfg.bundleID)
           if cfg.launchMode ~= nil then
             if cfg.launchMode == "focus" then
               launcher.focusOnly(cfg.bundleID)

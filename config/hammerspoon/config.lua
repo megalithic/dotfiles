@@ -10,6 +10,7 @@ obj.settings = {}
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
+    "Firefox",
     "Vivaldi",
     "Firefox Developer Edition",
     "Brave Browser Dev",
@@ -88,11 +89,20 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
+  ["org.mozilla.firefox"] = {
+    bundleID = "org.mozilla.firefox",
+    name = "Firefox",
+    quitGuard = true,
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
   ["org.mozilla.firefoxdeveloperedition"] = {
     bundleID = "org.mozilla.firefoxdeveloperedition",
     name = "Firefox Developer Edition",
     quitGuard = true,
-    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -103,7 +113,6 @@ local apps = {
     bundleID = "com.vivaldi.Vivaldi",
     name = "Vivaldi",
     quitGuard = true,
-    key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -113,8 +122,8 @@ local apps = {
   ["com.brave.Browser.dev"] = {
     bundleID = "com.brave.Browser.dev",
     name = "Brave Browser Dev",
+    key = "j",
     quitGuard = true,
-    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -125,18 +134,16 @@ local apps = {
     bundleID = "com.brave.Browser",
     name = "Brave Browser",
     quitGuard = true,
-    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
       { "", 1, "maximized" },
     },
   },
-  ["com.app.Safari"] = {
-    bundleID = "com.app.Safari",
+  ["com.apple.Safari"] = {
+    bundleID = "com.apple.Safari",
     name = "Safari",
     quitGuard = true,
-    -- key = "j",
     localBindings = {},
     tags = { "browsers" },
     rules = {
@@ -154,7 +161,6 @@ local apps = {
   ["com.tinyspeck.slackmacgap"] = {
     bundleID = "com.tinyspeck.slackmacgap",
     name = "Slack",
-    key = "s",
     tags = { "chat" },
     distraction = true,
     quitGuard = false,
