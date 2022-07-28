@@ -192,10 +192,6 @@ local apps = {
     name = "zoom.us",
     key = "z",
     launchMode = "focus",
-    rules = {
-      { "", 1, "centeredMedium" },
-      { "Zoom Meeting", 1, "maximized" },
-    },
   },
   ["com.loom.desktop"] = {
     bundleID = "com.loom.desktop",

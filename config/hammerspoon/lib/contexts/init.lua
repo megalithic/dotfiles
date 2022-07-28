@@ -1,4 +1,6 @@
---- An enchanced app watcher: a `hs.application.watcher` bolstered by a `hs.window.filter` to catch activations of "transient" apps, such as Spotlight.
+--- An enchanced app watcher: a `hs.application.watcher` bolstered by a
+-- `hs.window.filter` to catch activations of "transient" apps, such as Spotlight.
+--- TODO: deal with non-transient apps to see if we want to act on window filter events.
 
 local Application = require("hs.application")
 local Window = require("hs.window")
@@ -14,25 +16,16 @@ obj.windowFilter = nil
 obj.callback = nil
 
 local function info(...)
-  if obj.debug then
-    return _G.info(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.info(...) end
 end
 local function dbg(...)
-  if obj.debug then
-    return _G.dbg(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.dbg(...) end
 end
 local function note(...)
-  if obj.debug then
-    return _G.note(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.note(...) end
+end
+local function success(...)
+  if obj.debug then return _G.success(...) end
 end
 
 -- _ -> appName
@@ -48,11 +41,11 @@ local function appWatcherCallback(_, event, appObj)
 end
 
 local function windowFilterCallback(hsWindow, appName, event)
-  info(fmt("windowFilterCallback(%s) executed for %s", appName, event))
   local appObj = hsWindow:application()
   if not appObj then return end
   local bundleID = appObj:bundleID()
   if event == "windowFocused" or event == "windowCreated" then
+    -- info(fmt("windowFilterCallback(%s) executed for given: %s/front: %s", event, bundleID, frontAppBundleID))
     if bundleID == frontAppBundleID then return end
     appWatcherCallback(nil, "FROM_WINDOW_WATCHER", appObj)
   elseif event == "windowDestroyed" then

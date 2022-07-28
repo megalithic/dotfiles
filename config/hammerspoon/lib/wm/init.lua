@@ -11,37 +11,21 @@ obj.__index = obj
 obj.name = "wm"
 obj.settingsKey = "_mega_wm"
 obj.watcher = nil
-obj.debug = true
+obj.debug = false
 obj.contextModals = {}
-obj.layoutComplete = false
+obj.layoutComplete = true
 
 local function info(...)
-  if obj.debug then
-    return _G.info(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.info(...) end
 end
 local function dbg(...)
-  if obj.debug then
-    return _G.dbg(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.dbg(...) end
 end
 local function note(...)
-  if obj.debug then
-    return _G.note(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.note(...) end
 end
 local function success(...)
-  if obj.debug then
-    return _G.success(...)
-  else
-    return print("")
-  end
+  if obj.debug then return _G.success(...) end
 end
 
 -- targetDisplay(int) :: hs.screen
@@ -74,6 +58,8 @@ function obj.applyLayout(appConfig)
   local bundleID = appConfig["bundleID"]
 
   if appConfig.rules and #appConfig.rules > 0 then
+    obj.layoutComplete = false
+
     fnutils.each(appConfig.rules, function(rule)
       local winTitlePattern, screenNum, positionStr = table.unpack(rule)
       winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
@@ -138,8 +124,9 @@ local function prepareContextScripts()
         local basenameAndBundleID = string.sub(file, 1, -5)
         local script = dofile(contextsDir .. file)
         if basenameAndBundleID ~= "init" then
-          if script.modal ~= nil and script.actions ~= nil then
-            script.modal = hs.hotkey.modal.new()
+          if script.modal then script.modal = hs.hotkey.modal.new() end
+
+          if script.actions ~= nil then
             for _, value in pairs(script.actions) do
               local hotkey = value.hotkey
               if hotkey then
