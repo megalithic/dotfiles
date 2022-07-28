@@ -6,6 +6,12 @@ obj.__index = obj
 obj.name = "hyper"
 obj.hyperBind = nil
 
+-- TODO:
+-- Discover a way to generate a new modal each time we init; so we can either:
+-- a.) reuse the initial one, or
+-- b.) we can have it generate a new modal:
+-- https://github.com/fahadbr/dotfiles/blob/master/macos/hammerspoon/init.lua#L23-L36
+
 --- Hyper:bindPassThrough(key, bundleId) -> hs.hotkey.modal
 --- Method
 --- Ensures the bundleId's application is running, then sends the "hyper-chord"
@@ -13,7 +19,6 @@ obj.hyperBind = nil
 ---
 --- Returns:
 ---  * self
-
 function obj:bindPassThrough(key, app)
   obj:bind({}, key, nil, function()
     if hs.application.get(app) then

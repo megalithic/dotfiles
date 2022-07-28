@@ -39,6 +39,7 @@ function obj.targetDisplay(num)
   end
 end
 
+-- handles auto-layout of launched apps; using lib.snap
 function obj.applyLayout(appConfig)
   if appConfig == nil then return end
 
@@ -72,7 +73,8 @@ function obj.applyLayout(appConfig)
   end
 end
 
--- presently only handles (de)activated events to enter/exit the context modal.
+-- full-scale customization of an app; auto spins up a context-based modal, binding defined actions to keys for that modal;
+-- also allows for total customization of what should happen for certain app events (see below for supported watcher events).
 function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   for key, modal in pairs(obj.contextModals) do
     if key == bundleID then
@@ -85,14 +87,29 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
           fromWindowFilter and "/fromWindowFilter" or ""
         )
       )
-      if event == Application.watcher.activated or event == Application.watcher.launched then
-        hs.timer.waitUntil(
-          function() return obj.layoutComplete end,
-          function() modal:start({ bundleID = bundleID, appObj = appObj, event = event, appConfig = appConfig }) end
-        )
-      elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
-        modal:stop({ event = event })
+      if appConfig then
+        if event == Application.watcher.activated or event == Application.watcher.launched then
+          hs.timer.waitUntil(
+            function() return obj.layoutComplete end,
+            function() modal:start({ bundleID = bundleID, appObj = appObj, event = event, appConfig = appConfig }) end
+          )
+        elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
+          modal:stop({ event = event })
+        end
       end
+    end
+  end
+end
+
+-- general handlers like quit-guard, delayed hiding or quitting/closing, etc.
+function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
+  local appConfig = obj.apps[bundleID]
+
+  if appConfig then
+    if event == Application.watcher.activated or event == Application.watcher.launched then
+      if appConfig.quitGuard then L.load("lib.quitter", { pressMode = "double", id = bundleID }):start(bundleID) end
+    elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
+      if appConfig.quitGuard then L.unload("lib.quitter", bundleID) end
     end
   end
 end
@@ -108,6 +125,7 @@ local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
   end
 
   obj.applyContext(bundleID, appObj, event, fromWindowFilter)
+  -- obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function generateAppFilters(apps)

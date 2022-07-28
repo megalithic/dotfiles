@@ -16,11 +16,7 @@ local I = function(msg, debug)
 end
 
 local dbg = function(msg)
-  if obj.debug then
-    return _G.dbg(msg)
-  else
-    return ""
-  end
+  if obj.debug then return _G.dbg(msg) end
 end
 
 function obj.load(loadTarget, opts)
@@ -39,39 +35,49 @@ function obj.load(loadTarget, opts)
     local target = mod.name or loadTarget
     local id = opts.id or nil
     local bust = opts.bust or false
+    local cache_key = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
 
     if opts["raw"] then
       note(fmt("[REQ] %s (%s)", target, I(opts, false)))
       return mod
     elseif opts["unload"] then
       if type(mod.stop) == "function" then
-        info(fmt("[STOP] %s (%s)", target, I(opts, false)))
+        if mega.__loaded_modules[cache_key] then
+          info(fmt("[STOP] %s (%s)", cache_key, I(opts, false)))
+          return mega.__loaded_modules[cache_key].mod:stop()
+        end
+        info(fmt("[STOP] %s (%s)", loadTarget, I(opts, false)))
         return mod:stop(opts)
       end
     else
       if type(mod.init) == "function" then
-        local loaded = mod:init(opts) or mod
+        local loaded = mod
 
-        if not bust then
-          local cache_key = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
-          local cache_mod = loaded
+        if bust then
+          if mega.__loaded_modules[cache_key]["mod"] then mega.__loaded_modules[cache_key] = nil end
 
-          mega.__loaded_modules[cache_key] = { name = target, id = id, mod = cache_mod }
+          local tag = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
+          note(fmt("[INIT] %s (%s) busted -- uncached", tag, I(opts, false)))
+        else
+          loaded = mod:init(opts)
+
+          if mega.__loaded_modules[cache_key] then
+            loaded = mega.__loaded_modules[cache_key]["mod"]
+          else
+            mega.__loaded_modules[cache_key] = { name = target, id = id, mod = loaded }
+          end
+
+          dbg(fmt("[cache] cache_key: %s, cached_mod: %s", cache_key, I(mega.__loaded_modules[cache_key]["mod"], true)))
 
           if id then mega.__loaded_modules[cache_key]["id"] = id end
 
-          dbg(fmt("[cache] cache_key: %s, cached_mod: %s", cache_key, mega.__loaded_modules[cache_key]))
-
-          local tag = mega.__loaded_modules[cache_key]["id"] and fmt("%s_%s", target, id) or fmt("%s", target)
+          local tag = mega.__loaded_modules[cache_key]["id"] and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
           info(fmt("[INIT] %s (%s)", tag, I(opts, false)))
-        else
-          local tag = id and fmt("%s_%s", target, id) or fmt("%s", target)
-          note(fmt("[INIT] %s (%s) busted -- uncached", tag, I(opts, false)))
         end
 
         return loaded
       else
-        note(fmt("[INIT] %s (%s) no init/1 -- uncached", target, I(opts, false)))
+        note(fmt("[INIT] %s (%s) no init/1 -- uncached", loadTarget, I(opts, false)))
         return mod
       end
     end

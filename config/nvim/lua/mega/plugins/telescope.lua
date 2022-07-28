@@ -90,7 +90,7 @@ return function()
         "^node_modules/.*",
       },
       -- :help telescope.defaults.path_display
-      -- path_display = { "smart", "absolute", "truncate" },
+      path_display = { "absolute", "truncate" },
       layout_strategy = "flex",
       layout_config = {
         width = 0.65,

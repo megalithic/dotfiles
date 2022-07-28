@@ -32,7 +32,7 @@ end
 --- @class TermOpts
 --- @field cmd string,
 --- @field precmd string,
---- @field direction "horizontal"|"vertical",
+--- @field direction "horizontal"|"vertical"|"float",
 --- @field on_after_open function,
 --- @field on_exit function,
 --- @field winnr number,
@@ -133,7 +133,7 @@ function mega.term_open(opts)
     on_after_open(term_buf_id, winnr)
   else
     vim.cmd([[normal! G]])
-    vim.cmd(winnr .. [[wincmd w]])
+    if direction ~= "float" then vim.cmd(winnr .. [[wincmd w]]) end
   end
 end
 
