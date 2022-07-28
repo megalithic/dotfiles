@@ -176,11 +176,12 @@ load("lib.menubar.ptt"):start()
 load("lib.menubar.spotify"):start()
 load("lib.watchers"):start()
 load("lib.wm"):start()
+load("lib.quitter"):start({ mode = "long" })
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 
 hs.shutdownCallback = function()
-  local loaders = { "config", "lib.watchers", "lib.wm", "lib.menubar.ptt", "lib.menubar.spotify" }
+  local loaders = { "config", "lib.watchers", "lib.wm", "lib.menubar.ptt", "lib.menubar.spotify", "lib.quitter" }
   FNUtils.each(loaders, function(l) unload(l) end)
   _G.mega = nil
 end

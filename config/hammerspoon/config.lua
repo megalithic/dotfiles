@@ -270,7 +270,7 @@ local apps = {
     bundleID = "com.surteesstudios.Bartender",
     name = "Bartender 4",
     quitGuard = true,
-    localBindings = { "b" },
+    localBindings = { "\\" },
   },
 }
 
