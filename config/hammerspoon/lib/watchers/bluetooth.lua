@@ -4,44 +4,50 @@ local alert = require("utils.alert")
 
 local obj = {}
 local Hyper
+local lowBatteryTimer
 
 -- REF:
+-- https://github.com/jasonrudolph/dotfiles/commit/8bc3e6c55bd9c95eb83e4cfa265cc32d9da6edc3
 -- https://github.com/wangshub/hammerspoon-config/blob/master/headphone/headphone.lua
 
 obj.__index = obj
 obj.name = "watcher.bluetooth"
-obj.btDeviceId = { name = "R-Phonak hearing aid", id = "70-66-1b-c8-cc-b5", icon = "🎧" }
+obj.devices = {
+  ["phonak"] = {
+    name = "R-Phonak hearing aid",
+    id = "70-66-1b-c8-cc-b5",
+    icon = "🎧",
+  },
+  ["leeloo"] = {
+    name = "Leeloo",
+    id = "F3-D9-8D-01-16-54",
+    icon = "⌨️",
+  },
+}
 obj.btUtil = "/usr/local/bin/blueutil"
-obj.refreshInterval = 1
+obj.lowBatteryInterval = (5 * 60)
 
--- local function disconnectDevice()
---   hs.task.new(blueUtil, function()
---     alert.show(fmt("%s %s Disconnected", obj.btDeviceId.name, obj.btDeviceId.icon))
---   end, {
---     "--disconnect",
---     headphoneDeviceId,
---   }):start()
--- end
+local function connectDevice(deviceStr)
+  local device = obj.devices[deviceStr]
+  if not device then return end
 
-local function connectDevice()
-  alert.show(fmt("Connecting %s %s", obj.btDeviceId.name, obj.btDeviceId.icon))
+  alert.show(fmt("Connecting %s %s", device.name, device.icon))
   hs.task
     .new(
       obj.btUtil,
-      function()
-        hs.notify
-          .new({ title = obj.name, subTitle = fmt("%s %s Connected", obj.btDeviceId.name, obj.btDeviceId.icon) })
-          :send()
-      end,
+      function() hs.notify.new({ title = obj.name, subTitle = fmt("%s %s Connected", device.name, device.icon) }):send() end,
       {
         "--connect",
-        obj.btDeviceId.id,
+        device.id,
       }
     )
     :start()
 end
 
-function obj.checkDevice(fn)
+local function checkDevice(deviceStr, fn)
+  local device = obj.devices[deviceStr]
+  if not device then return end
+
   hs.task
     .new(obj.btUtil, function(_, stdout)
       stdout = string.gsub(stdout, "\n$", "")
@@ -50,20 +56,20 @@ function obj.checkDevice(fn)
       fn(isConnected)
     end, {
       "--is-connected",
-      obj.btDeviceId.id,
+      device.id,
     })
     :start()
 end
 
-local function toggleDevice()
-  connectDevice()
-  obj.checkDevice(function(isConnected)
-    if not isConnected then connectDevice() end
+local function toggleDevice(deviceStr)
+  connectDevice(deviceStr)
+  checkDevice(deviceStr, function(isConnected)
+    if not isConnected then connectDevice(deviceStr) end
   end)
 end
 
 local function updateTitle()
-  obj.checkDevice(function(isConnected)
+  checkDevice(function(isConnected)
     if isConnected then
       obj.menubar:setTitle("on")
     else
@@ -72,18 +78,33 @@ local function updateTitle()
   end)
 end
 
+local function checkAndAlertLowBattery()
+  local batteryInfoForConnectedDevices = hs.battery.privateBluetoothBatteryInfo()
+
+  local phonakBattery = {}
+  hs.fnutils.each(batteryInfoForConnectedDevices, function(device)
+    if device["address"] == obj.devices["phonak"].id then
+      phonakBattery = device
+      note(fmt("[bluetooth] leeloo: %s%%", phonakBattery["batteryPercentSingle"]))
+    end
+  end)
+end
+
 function obj:start()
   obj.menubar = hs.menubar.new()
-  -- obj.menubar:setTitle(nil)
 
   Hyper = L.load("lib.hyper", { id = "bluetooth" })
-  Hyper:bind({ "shift" }, "H", nil, function() toggleDevice() end)
+  Hyper:bind({ "shift" }, "H", nil, function() toggleDevice("phonak") end)
 
-  -- hs.timer.doEvery(obj.refreshInterval, updateTitle)
+  lowBatteryTimer = hs.timer.doEvery(obj.lowBatteryInterval, checkAndAlertLowBattery)
+  checkAndAlertLowBattery()
 
   return self
 end
 
-function obj:stop() return self end
+function obj:stop()
+  lowBatteryTimer:stop()
+  return self
+end
 
 return obj
