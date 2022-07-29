@@ -3,6 +3,7 @@ local Window = require("hs.window")
 local Settings = require("hs.settings")
 local fnutils = require("hs.fnutils")
 local contextsDir = U.resourcePath("../contexts/")
+local lollygagger = L.load("lib.lollygagger")
 
 local obj = {}
 local Snap = nil
@@ -10,43 +11,35 @@ local Snap = nil
 obj.__index = obj
 obj.name = "wm"
 obj.settingsKey = "_mega_wm"
+obj.mode = "layout" -- "layout"|"snap"
 obj.watcher = nil
 obj.debug = false
+obj.log = true
 obj.contextModals = {}
 obj.layoutComplete = true
 
 local function info(...)
-  if obj.debug then return _G.info(...) end
+  if obj.log then return _G.info(...) end
 end
 local function dbg(...)
   if obj.debug then return _G.dbg(...) end
 end
 local function note(...)
-  if obj.debug then return _G.note(...) end
+  if obj.log then return _G.note(...) end
 end
 local function success(...)
-  if obj.debug then return _G.success(...) end
-end
-
--- targetDisplay(int) :: hs.screen
--- detect the current number of monitors and return target screen
-function obj.targetDisplay(num)
-  local displays = hs.screen.allScreens() or {}
-  if displays[num] ~= nil then
-    return displays[num]
-  else
-    return hs.screen.primaryScreen()
-  end
+  if obj.log then return _G.success(...) end
 end
 
 -- handles auto-layout of launched apps; using lib.snap
 function obj.applyLayout(appConfig)
   if appConfig == nil then return end
+  local bundleID = appConfig["bundleID"]
 
-  local function getWindow(winTitlePattern, bundleID)
+  local function getWindow(winTitlePattern, _bundleID)
     local win = winTitlePattern
 
-    local app = Application.get(bundleID)
+    local app = Application.get(_bundleID)
     if winTitlePattern ~= nil then
       win = Window.find(winTitlePattern)
     else
@@ -56,20 +49,47 @@ function obj.applyLayout(appConfig)
     return win
   end
 
-  local bundleID = appConfig["bundleID"]
+  local function targetDisplay(num)
+    local displays = hs.screen.allScreens() or {}
+    if displays[num] ~= nil then
+      return displays[num]
+    else
+      return hs.screen.primaryScreen()
+    end
+  end
 
   if appConfig.rules and #appConfig.rules > 0 then
     obj.layoutComplete = false
 
-    fnutils.each(appConfig.rules, function(rule)
-      local winTitlePattern, screenNum, positionStr = table.unpack(rule)
-      winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
+    if obj.mode == "snap" then
+      fnutils.each(appConfig.rules, function(rule)
+        local winTitlePattern, screenNum, positionStr = table.unpack(rule)
+        winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
 
-      hs.timer.waitUntil(function() return getWindow(winTitlePattern, bundleID) ~= nil end, function()
-        Snap.snapper(getWindow(winTitlePattern, bundleID), positionStr, obj.targetDisplay(screenNum))
-        obj.layoutComplete = true
+        hs.timer.waitUntil(function() return getWindow(winTitlePattern, bundleID) ~= nil end, function()
+          Snap.snapper(getWindow(winTitlePattern, bundleID), positionStr, targetDisplay(screenNum))
+          obj.layoutComplete = true
+        end)
       end)
-    end)
+    elseif obj.mode == "layout" then
+      local layouts = {}
+
+      fnutils.map(appConfig.rules, function(rule)
+        local winTitlePattern, screenNum, positionStr = table.unpack(rule)
+        winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
+
+        table.insert(layouts, {
+          hs.application.get(bundleID), -- application name
+          winTitlePattern, -- window title
+          targetDisplay(screenNum), -- screen #
+          Snap.grid[positionStr], -- layout/postion
+          nil,
+          nil,
+        })
+      end)
+
+      hs.layout.apply(layouts, string.match)
+    end
   end
 end
 
@@ -106,11 +126,8 @@ function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
   local appConfig = obj.apps[bundleID]
 
   if appConfig then
-    if event == Application.watcher.activated or event == Application.watcher.launched then
-      if appConfig.quitGuard then L.load("lib.quitter", { pressMode = "double", id = bundleID }):start(bundleID) end
-    elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
-      if appConfig.quitGuard then L.unload("lib.quitter", bundleID) end
-    end
+    if appConfig.hideAfter then lollygagger.hideAfter(appObj, appConfig.hideAfter, event) end
+    if appConfig.quitAfter then lollygagger.quitAfter(appObj, appConfig.quitAfter, event) end
   end
 end
 
@@ -160,6 +177,15 @@ local function prepareContextScripts()
   end
 end
 
+local function layoutRunningApps(apps)
+  local runningApps = Application.runningApplications()
+
+  fnutils.each(runningApps, function(app)
+    local appConfig = apps[app:bundleID()]
+    if appConfig then obj.applyLayout(appConfig) end
+  end)
+end
+
 function obj:init(opts)
   opts = opts or {}
 
@@ -180,6 +206,10 @@ function obj:start(opts)
   local filters = generateAppFilters(obj.apps)
 
   obj.watcher:start(obj.apps, filters, handleWatcher)
+
+  layoutRunningApps(obj.apps)
+
+  note(fmt("[START] %s (%s)", obj.name, obj.mode))
 
   return self
 end
