@@ -30,10 +30,9 @@ obj.state = obj.defaultState
 obj.defaultInputVolume = 50
 obj.pushed = false
 
-local iconPath = hs.configdir .. "/assets/"
-local speakIcon = hs.image.imageFromPath(iconPath .. "microphone.pdf"):setSize({ w = 16, h = 16 })
-local mutedIcon = hs.image.imageFromPath(iconPath .. "microphone-slash.pdf"):setSize({ w = 16, h = 16 })
-obj.icons = { ["push-to-mute"] = speakIcon, ["push-to-talk"] = mutedIcon }
+local talkIcon = require("hs.styledtext").new("", { font = { name = defaultFont.name, size = 13 } })
+local muteIcon = require("hs.styledtext").new("", { font = { name = defaultFont.name, size = 13 } })
+obj.icons = { ["push-to-mute"] = talkIcon, ["push-to-talk"] = muteIcon }
 
 obj.states = function()
   log.df("current module.state from module.states(): %s", obj.state)
@@ -63,18 +62,18 @@ local showState = function()
 
   if obj.state == "push-to-talk" then
     if obj.pushed then
-      obj.menubar:setIcon(speakIcon)
+      obj.menubar:setTitle(obj.icons["push-to-mute"])
       muted = false
     else
-      obj.menubar:setIcon(mutedIcon)
+      obj.menubar:setTitle(obj.icons["push-to-talk"])
       muted = true
     end
   elseif obj.state == "push-to-mute" then
     if obj.pushed then
-      obj.menubar:setIcon(mutedIcon)
+      obj.menubar:setTitle(obj.icons["push-to-talk"])
       muted = true
     else
-      obj.menubar:setIcon(speakIcon)
+      obj.menubar:setTitle(obj.icons["push-to-mute"])
       muted = false
     end
   end
@@ -137,10 +136,8 @@ obj.setState = function(s)
   log.df("Setting PTT state to %s", s)
 
   if obj.menubar ~= nil then
-    -- M.menubar:delete()
-    -- M.menubar = hs.menubar.new()
     obj.menubar:setMenu(buildMenu())
-    obj.menubar:setIcon(obj.icons[obj.state])
+    obj.menubar:setTitle(obj.icons[obj.state])
 
     showState()
   end
