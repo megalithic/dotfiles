@@ -30,32 +30,32 @@ local function success(...)
   if obj.log then return _G.success(...) end
 end
 
+local function getWindow(winTitlePattern, bundleID)
+  local win = winTitlePattern
+
+  local app = Application.get(bundleID)
+  if winTitlePattern ~= nil then
+    win = Window.find(winTitlePattern)
+  else
+    win = app:mainWindow()
+  end
+
+  return win
+end
+
+local function targetDisplay(num)
+  local displays = hs.screen.allScreens() or {}
+  if displays[num] ~= nil then
+    return displays[num]
+  else
+    return hs.screen.primaryScreen()
+  end
+end
+
 -- handles auto-layout of launched apps; using lib.snap
 function obj.applyLayout(appConfig)
   if appConfig == nil then return end
   local bundleID = appConfig["bundleID"]
-
-  local function getWindow(winTitlePattern, _bundleID)
-    local win = winTitlePattern
-
-    local app = Application.get(_bundleID)
-    if winTitlePattern ~= nil then
-      win = Window.find(winTitlePattern)
-    else
-      win = app:mainWindow()
-    end
-
-    return win
-  end
-
-  local function targetDisplay(num)
-    local displays = hs.screen.allScreens() or {}
-    if displays[num] ~= nil then
-      return displays[num]
-    else
-      return hs.screen.primaryScreen()
-    end
-  end
 
   if appConfig.rules and #appConfig.rules > 0 then
     obj.layoutComplete = false
@@ -65,8 +65,8 @@ function obj.applyLayout(appConfig)
         local winTitlePattern, screenNum, positionStr = table.unpack(rule)
         winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
 
-        hs.timer.waitUntil(function() return getWindow(winTitlePattern, bundleID) ~= nil end, function()
-          Snap.snapper(getWindow(winTitlePattern, bundleID), positionStr, targetDisplay(screenNum))
+        hs.timer.waitUntil(function() return getWindow(winTitlePattern, appConfig.bundleID) ~= nil end, function()
+          Snap.snapper(getWindow(winTitlePattern, appConfig.bundleID), positionStr, targetDisplay(screenNum))
           obj.layoutComplete = true
         end)
       end)

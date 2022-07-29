@@ -1,7 +1,7 @@
 local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
-local preferred_browsers = Settings.get(CONFIG_KEY).preferred.browsers
+local browser = hs.application.get(Settings.get(CONFIG_KEY).preferred.browser)
 
 obj.__index = obj
 obj.name = "context.zoom"
@@ -59,7 +59,6 @@ function obj:start(opts)
     do
       local zoom = hs.application.get("zoom.us")
       local kitty = hs.application.get("kitty")
-      local browser = hs.application.get(preferred_browsers[1])
 
       hs.timer.waitUntil(function() return zoom:getWindow("Zoom Meeting") end, function()
         local target_close_window = zoom:getWindow("Zoom")
@@ -99,11 +98,8 @@ function obj:stop(opts)
     L.req("lib.dnd").off()
 
     do
-      ---@diagnostic disable-next-line: unused-local
       local kitty = hs.application.get("kitty")
-      local browser = hs.application.get(preferred_browsers[1])
 
-      -- FIXME: do i really need all the error checking here?
       if browser ~= nil then
         local browser_win = browser:mainWindow()
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end

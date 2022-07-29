@@ -1,6 +1,7 @@
 local Settings = require("hs.settings")
 
 local obj = {}
+local browser = hs.application.get(Settings.get(CONFIG_KEY).preferred.browser)
 
 obj.__index = obj
 obj.name = "browser"
@@ -38,8 +39,6 @@ function obj.splitTab()
 end
 
 function obj.killTabsByDomain(domain)
-  local browser = hs.window.focusedWindow():application()
-
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     hs.osascript.javascript([[
     (function() {

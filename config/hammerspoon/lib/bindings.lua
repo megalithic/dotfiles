@@ -1,3 +1,8 @@
+-- REF:
+-- https://github.com/elliotwaite/hammerspoon-config
+-- https://github.com/elliotwaite/my-setup/blob/master/scripts/karabiner/update_karabiner_config.py
+-- https://github.com/elliotwaite/hammerspoon-config/tree/scroll-events-only
+
 local Settings = require("hs.settings")
 local Hyper
 

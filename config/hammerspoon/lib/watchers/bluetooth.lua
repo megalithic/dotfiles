@@ -1,5 +1,3 @@
-local Settings = require("hs.settings")
-local FNUtils = require("hs.fnutils")
 local alert = require("utils.alert")
 
 local obj = {}
@@ -25,12 +23,13 @@ obj.devices = {
   },
 }
 obj.btUtil = "/usr/local/bin/blueutil"
-obj.lowBatteryInterval = (5 * 60)
+obj.interval = (5 * 60)
 
 local function connectDevice(deviceStr)
   local device = obj.devices[deviceStr]
   if not device then return end
 
+  alert.close()
   alert.show(fmt("Connecting %s %s", device.name, device.icon))
   hs.task
     .new(
@@ -81,12 +80,19 @@ end
 local function checkAndAlertLowBattery()
   local batteryInfoForConnectedDevices = hs.battery.privateBluetoothBatteryInfo()
 
-  local phonakBattery = {}
+  -- local phonakBattery = {}
   hs.fnutils.each(batteryInfoForConnectedDevices, function(device)
-    if device["address"] == obj.devices["phonak"].id then
-      phonakBattery = device
-      note(fmt("[bluetooth] leeloo: %s%%", phonakBattery["batteryPercentSingle"]))
+    -- if device["address"] == obj.devices["phonak"].id then
+    local percentage = device["batteryPercentSingle"]
+    local name = device["name"]
+    if tonumber(percentage) < 10 then
+      error(fmt("[bluetooth] %s: %s%%", name, percentage))
+    elseif tonumber(percentage) < 25 then
+      warn(fmt("[bluetooth] %s: %s%%", name, percentage))
+    else
+      note(fmt("[bluetooth] %s: %s%%", name, percentage))
     end
+    -- end
   end)
 end
 
@@ -96,7 +102,7 @@ function obj:start()
   Hyper = L.load("lib.hyper", { id = "bluetooth" })
   Hyper:bind({ "shift" }, "H", nil, function() toggleDevice("phonak") end)
 
-  lowBatteryTimer = hs.timer.doEvery(obj.lowBatteryInterval, checkAndAlertLowBattery)
+  lowBatteryTimer = hs.timer.doEvery(obj.interval, checkAndAlertLowBattery)
   checkAndAlertLowBattery()
 
   return self

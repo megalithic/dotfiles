@@ -10,10 +10,11 @@ obj.settings = {}
 local preferred = {
   terms = { "kitty", "wezterm", "alacritty", "iTerm", "Terminal.app" },
   browsers = {
+    hs.urlevent.getDefaultHandler("https"),
+    "Brave Browser Dev",
     "Firefox",
     "Vivaldi",
     "Firefox Developer Edition",
-    "Brave Browser Dev",
     "Brave Browser",
     "Brave Browser Beta",
     "Google Chrome",
@@ -24,6 +25,7 @@ local preferred = {
   media = { "Spotify" },
   vpn = { "Cloudflare WARP" },
 }
+preferred["browser"] = hs.urlevent.getDefaultHandler("https")
 
 local watchers = { "dock", "bluetooth", "audio", "wifi", "url", "downloads" }
 
@@ -45,13 +47,6 @@ local displays = {
 
 local dirs = {
   screenshots = os.getenv("HOME") .. "/screenshots",
-}
-
-local quitter = {
-  launchdRunInterval = 600, --- 10 minutes
-  -- rules = require("appquitter_rules"),
-  defaultQuitInterval = 14400, -- 4 hours
-  defaultHideInterval = 1800, -- 30 minutes
 }
 
 
@@ -297,7 +292,6 @@ function obj:init(opts)
     },
     ["networks"] = networks,
     ["preferred"] = preferred,
-    ["quitter"] = quitter,
     ["transientApps"] = transientApps,
     ["watchers"] = watchers,
   }
