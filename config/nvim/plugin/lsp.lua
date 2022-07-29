@@ -651,15 +651,16 @@ mega.lsp.servers = {
   -- required until the setup function is called.
   sumneko_lua = function()
     local ok, lua_dev = mega.safe_require("lua-dev")
-    if not ok then
+    -- reverse this to use lua_dev
+    if ok then
       local path = vim.split(package.path, ";")
       table.insert(path, "lua/?.lua")
       table.insert(path, "lua/?/init.lua")
 
-      local lib = vim.tbl_filter(function(p)
-        if p:match("emmy") then return true end
-        return not vim.startswith(p, fn.stdpath("data") .. "/site/")
-      end, api.nvim_get_runtime_file("", true))
+      local plugins = ("%s/site/pack/paq"):format(fn.stdpath("data"))
+      local emmy = ("%s/start/emmylua-nvim"):format(plugins)
+      local plenary = ("%s/start/plenary.nvim"):format(plugins)
+      -- local paq = ('%s/opt/paq-nvim'):format(plugins)
 
       return {
         settings = {
@@ -710,8 +711,7 @@ mega.lsp.servers = {
             },
             completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
             workspace = {
-              -- TODO: Find a way to speed this up by using only items from vim's runtime
-              library = lib,
+              library = { vim.env.VIMRUNTIME, emmy, plenary },
             },
             telemetry = {
               enable = false,

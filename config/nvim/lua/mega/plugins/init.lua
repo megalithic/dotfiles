@@ -191,6 +191,7 @@ local PKGS = {
   "folke/lua-dev.nvim",
   "andrejlevkovitch/vim-lua-format",
   "milisims/nvim-luaref",
+  "ii14/emmylua-nvim",
   "MaxMEllon/vim-jsx-pretty",
   "heavenshell/vim-jsdoc",
   "jxnblk/vim-mdx-js",
