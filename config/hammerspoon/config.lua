@@ -84,7 +84,6 @@ local apps = {
     name = "kitty",
     key = "k",
     localBindings = {},
-    quitGuard = false,
     rules = {
       { "", 1, "maximized" },
     },
@@ -163,7 +162,6 @@ local apps = {
     name = "Slack",
     tags = { "chat" },
     distraction = true,
-    quitGuard = false,
     rules = {
       { "", 2, "maximized" },
     },
@@ -269,7 +267,6 @@ local apps = {
   ["com.surteesstudios.Bartender"] = {
     bundleID = "com.surteesstudios.Bartender",
     name = "Bartender 4",
-    quitGuard = true,
     localBindings = { "\\" },
   },
 }

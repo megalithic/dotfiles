@@ -176,7 +176,7 @@ load("lib.menubar.ptt"):start()
 load("lib.menubar.spotify"):start()
 load("lib.watchers"):start()
 load("lib.wm"):start()
-load("lib.quitter"):start({ mode = "long" })
+load("lib.quitter"):start({ mode = "double" })
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 

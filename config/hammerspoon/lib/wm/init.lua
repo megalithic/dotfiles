@@ -3,7 +3,6 @@ local Window = require("hs.window")
 local Settings = require("hs.settings")
 local fnutils = require("hs.fnutils")
 local contextsDir = U.resourcePath("../contexts/")
-local lollygagger = L.load("lib.lollygagger")
 
 local obj = {}
 local Snap = nil
@@ -11,7 +10,7 @@ local Snap = nil
 obj.__index = obj
 obj.name = "wm"
 obj.settingsKey = "_mega_wm"
-obj.mode = "layout" -- "layout"|"snap"
+obj.mode = "snap" -- "layout"|"snap"
 obj.watcher = nil
 obj.debug = false
 obj.log = true
@@ -76,7 +75,6 @@ function obj.applyLayout(appConfig)
 
       fnutils.map(appConfig.rules, function(rule)
         local winTitlePattern, screenNum, positionStr = table.unpack(rule)
-        winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
 
         table.insert(layouts, {
           hs.application.get(bundleID), -- application name
@@ -89,6 +87,7 @@ function obj.applyLayout(appConfig)
       end)
 
       hs.layout.apply(layouts, string.match)
+      obj.layoutComplete = true
     end
   end
 end
@@ -124,10 +123,13 @@ end
 -- general handlers like quit-guard, delayed hiding or quitting/closing, etc.
 function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
   local appConfig = obj.apps[bundleID]
+  local lollygagger = L.load("lib.lollygagger")
 
   if appConfig then
-    if appConfig.hideAfter then lollygagger.hideAfter(appObj, appConfig.hideAfter, event) end
-    if appConfig.quitAfter then lollygagger.quitAfter(appObj, appConfig.quitAfter, event) end
+    if lollygagger then
+      if appConfig.hideAfter then lollygagger.hideAfter(appObj, appConfig.hideAfter, event) end
+      if appConfig.quitAfter then lollygagger.quitAfter(appObj, appConfig.quitAfter, event) end
+    end
   end
 end
 
