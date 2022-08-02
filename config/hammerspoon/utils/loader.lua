@@ -36,6 +36,13 @@ function obj.load(loadTarget, opts)
     local id = opts.id or nil
     local bust = opts.bust or false
     local cache_key = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
+    local silent = opts["silent"] or false
+
+    if silent then
+      local function note() end
+      local function dbg() end
+      local function info() end
+    end
 
     if opts["raw"] then
       note(fmt("[REQ] %s (%s)", target, I(opts, false)))
@@ -44,7 +51,7 @@ function obj.load(loadTarget, opts)
       if type(mod.stop) == "function" then
         if mega.__loaded_modules[cache_key] then
           info(fmt("[STOP] %s (%s)", cache_key, I(opts, false)))
-          return mega.__loaded_modules[cache_key].mod:stop()
+          return kega.__loaded_modules[cache_key].mod:stop()
         end
         info(fmt("[STOP] %s (%s)", loadTarget, I(opts, false)))
         return mod:stop(opts)
@@ -77,7 +84,8 @@ function obj.load(loadTarget, opts)
 
         return loaded
       else
-        note(fmt("[INIT] %s (%s) no init/1 -- uncached", loadTarget, I(opts, false)))
+        local tag = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
+        note(fmt("[INIT] %s (%s) no init/1 -- uncached", tag, I(opts, false)))
         return mod
       end
     end

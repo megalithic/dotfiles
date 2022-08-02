@@ -232,7 +232,7 @@ local apps = {
     bundleID = "org.hammerspoon.Hammerspoon",
     name = "Hammerspoon",
     key = "r",
-    hideAfter = 15,
+    hideAfter = 1,
     quitGuard = true,
     rules = {
       { "", 2, "maximized" },

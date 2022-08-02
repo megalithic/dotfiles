@@ -344,6 +344,52 @@ return lush(function()
     DiagnosticInfoBorder({ Blue }),
     DiagnosticHintBorder({ Aqua }),
 
+    -- REF: from @akinsho: https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/highlights.lua#L267-L313
+    -- LspCodeLens = { link = 'NonText' },
+    -- LspReferenceText = { underline = true, background = 'NONE', sp = P.comment_grey },
+    -- LspReferenceRead = { underline = true, background = 'NONE', sp = P.comment_grey },
+    -- -- This represents when a reference is assigned which is more interesting than regular
+    -- -- occurrences so should be highlighted more distinctly
+    -- LspReferenceWrite = {
+    --   underline = true,
+    --   bold = true,
+    --   italic = true,
+    --   background = 'NONE',
+    --   sp = P.whitesmoke,
+    -- },
+    -- DiagnosticHint = { foreground = L.hint },
+    -- DiagnosticError = { foreground = L.error },
+    -- DiagnosticWarning = { foreground = L.warn },
+    -- DiagnosticInfo = { foreground = L.info },
+    -- DiagnosticUnderlineError = { undercurl = true, sp = L.error, foreground = 'none' },
+    -- DiagnosticUnderlineHint = { undercurl = true, sp = L.hint, foreground = 'none' },
+    -- DiagnosticUnderlineWarn = { undercurl = true, sp = L.warn, foreground = 'none' },
+    -- DiagnosticUnderlineInfo = { undercurl = true, sp = L.info, foreground = 'none' },
+    -- DiagnosticVirtualTextInfo = {
+    --   background = { from = 'DiagnosticInfo', attr = 'fg', alter = -70 },
+    -- },
+    -- DiagnosticVirtualTextHint = {
+    --   background = { from = 'DiagnosticHint', attr = 'fg', alter = -70 },
+    -- },
+    -- DiagnosticVirtualTextError = {
+    --   background = { from = 'DiagnosticError', attr = 'fg', alter = -80 },
+    -- },
+    -- DiagnosticVirtualTextWarn = {
+    --   background = { from = 'DiagnosticWarn', attr = 'fg', alter = -80 },
+    -- },
+    -- DiagnosticSignWarn = { link = 'DiagnosticWarn' },
+    -- DiagnosticSignInfo = { link = 'DiagnosticInfo' },
+    -- DiagnosticSignHint = { link = 'DiagnosticHint' },
+    -- DiagnosticSignError = { link = 'DiagnosticError' },
+    -- DiagnosticSignWarnLine = { inherit = 'DiagnosticWarn', bg = { from = 'CursorLine' } },
+    -- DiagnosticSignInfoLine = { inherit = 'DiagnosticInfo', bg = { from = 'CursorLine' } },
+    -- DiagnosticSignHintLine = { inherit = 'DiagnosticHint', bg = { from = 'CursorLine' } },
+    -- DiagnosticSignErrorLine = { inherit = 'DiagnosticError', bg = { from = 'CursorLine' } },
+    -- DiagnosticFloatingWarn = { link = 'DiagnosticWarn' },
+    -- DiagnosticFloatingInfo = { link = 'DiagnosticInfo' },
+    -- DiagnosticFloatingHint = { link = 'DiagnosticHint' },
+    -- DiagnosticFloatingError = { link = 'DiagnosticError' },
+
     ---- :help lsp-highlight -----------------------------------
 
     LspReferenceText({ bg = "NONE", gui = "underline" }),

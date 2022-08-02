@@ -123,7 +123,7 @@ end
 -- general handlers like quit-guard, delayed hiding or quitting/closing, etc.
 function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
   local appConfig = obj.apps[bundleID]
-  local lollygagger = L.load("lib.lollygagger")
+  local lollygagger = L.load("lib.lollygagger", { id = bundleID, silent = true })
 
   if appConfig then
     if lollygagger then
@@ -144,7 +144,7 @@ local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
   end
 
   obj.applyContext(bundleID, appObj, event, fromWindowFilter)
-  -- obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
+  obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function generateAppFilters(apps)

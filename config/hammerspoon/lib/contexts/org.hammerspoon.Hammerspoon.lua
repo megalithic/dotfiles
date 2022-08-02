@@ -1,12 +1,19 @@
+local Settings = require("hs.settings")
+local mods = Settings.get(CONFIG_KEY).keys.mods
+
 local obj = {}
 local _appObj = nil
-
 obj.__index = obj
 obj.name = "context.hammerspoon"
 obj.debug = true
 
-obj.modal = nil
-obj.actions = {}
+obj.modal = true
+obj.actions = {
+  reload = {
+    action = function() hs.reload() end,
+    hotkey = { mods.Casc, "r" },
+  },
+}
 
 local function info(...)
   if obj.debug then
