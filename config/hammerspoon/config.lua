@@ -166,7 +166,6 @@ local apps = {
     name = "MailMate",
     key = "e",
     distraction = true,
-    hideAfter = 5,
     rules = {
       { "", 2, "left50" },
       { "Inbox", 2, "maximized" },

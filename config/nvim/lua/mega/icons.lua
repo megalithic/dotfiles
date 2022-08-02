@@ -196,11 +196,11 @@ return {
   },
   virtual_text = "",
   mode_term = "ﲵ",
-  ln_sep = "ℓ", -- ℓ 
+  ln_sep = "ℓ", -- alts: ℓ 
   col_sep = "",
   sep = "⋮",
   perc_sep = "",
-  modified = "●",
+  modified = "○", -- alts: ○●綠
   mode = "",
   vcs = "",
   readonly = "",

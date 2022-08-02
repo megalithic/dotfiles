@@ -50,12 +50,25 @@ obj.actions = {
 function obj:start(opts)
   opts = opts or {}
   _appObj = opts["appObj"]
-  if obj.modal then obj.modal:enter() end
+  if obj.modal then
+    -- bind cmd-1 bindings to ctrl-1 (my preferred)
+    -- for i = 1, 10 do
+    --   obj.modal:bind(mods.casC, i, function() hs.eventtap.keyStroke(mods.Casc, i, _appObj) end)
+    -- end
+
+    obj.modal:enter()
+  end
+
+  note(fmt("[START] %s: %s", obj.name, opts))
+
   return self
 end
 
 function obj:stop()
   if obj.modal then obj.modal:exit() end
+
+  note(fmt("[STOP] %s: %s", obj.name, self))
+
   return self
 end
 
