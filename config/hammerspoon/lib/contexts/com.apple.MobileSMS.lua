@@ -5,6 +5,8 @@ local mods = Settings.get(CONFIG_KEY).keys.mods
 
 local obj = {}
 local _appObj = nil
+local _appModal = nil
+
 obj.__index = obj
 obj.name = "context.messages"
 obj.debug = true
@@ -26,38 +28,48 @@ local function getChatMessageLinks(appObj)
   fuzzyChooser:start(chooserCallback, choices, { "text" })
 end
 
-obj.modal = true
-
-obj.actions = {
-  getMessageLinks = {
-    action = function() getChatMessageLinks(_appObj) end,
-    hotkey = { "alt", "o" },
-  },
-  deleteConversation = {
-    action = function() _appObj:selectMenuItem({ "File", "Delete Conversation…" }) end,
-    hotkey = { "cmd", "delete" },
-  },
-  nextConversation = {
-    action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
-    hotkey = { mods.casC, "n" },
-  },
-  prevConversation = {
-    action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
-    hotkey = { mods.casC, "p" },
-  },
-}
+obj.modal = nil
+-- obj.actions = {
+--   getMessageLinks = {
+--     action = function() getChatMessageLinks(_appObj) end,
+--     hotkey = { "alt", "o" },
+--   },
+--   deleteConversation = {
+--     action = function() _appObj:selectMenuItem({ "File", "Delete Conversation…" }) end,
+--     hotkey = { "cmd", "delete" },
+--   },
+--   nextConversation = {
+--     action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
+--     hotkey = { mods.casC, "n" },
+--   },
+--   prevConversation = {
+--     action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
+--     hotkey = { mods.casC, "p" },
+--   },
+--   -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?!
+--   gotoConversation1 = {
+--     action = function() hs.eventtap.keyStroke({ "cmd" }, "1") end,
+--     hotkey = { { "ctrl" }, "h" },
+--   },
+--   gotoConversation2 = {
+--     action = function() hs.eventtap.keyStroke({ "cmd" }, "2") end,
+--     hotkey = { { "ctrl" }, "j" },
+--   },
+--   gotoConversation3 = {
+--     action = function() hs.eventtap.keyStroke({ "cmd" }, "3") end,
+--     hotkey = { { "ctrl" }, "k" },
+--   },
+--   gotoConversation4 = {
+--     action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
+--     hotkey = { { "ctrl" }, "l" },
+--   },
+-- }
 
 function obj:start(opts)
   opts = opts or {}
   _appObj = opts["appObj"]
-  if obj.modal then
-    -- bind cmd-1 bindings to ctrl-1 (my preferred)
-    -- for i = 1, 10 do
-    --   obj.modal:bind(mods.casC, i, function() hs.eventtap.keyStroke(mods.Casc, i, _appObj) end)
-    -- end
 
-    obj.modal:enter()
-  end
+  if _appModal and obj.modal then obj.modal:enter() end
 
   note(fmt("[START] %s: %s", obj.name, opts))
 

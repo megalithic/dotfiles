@@ -289,60 +289,75 @@ return lush(function()
 
     ---- :help diagnostic-highlight ----------------------------
 
-    ErrorText({ bg = bg_red, gui = "undercurl", guisp = red }),
-    WarningText({ bg = bg_yellow, gui = "undercurl", guisp = yellow }),
-    InfoText({ bg = bg_blue, gui = "underline", guisp = blue }),
-    HintText({ bg = bg_green.darken(20), gui = "underline", guisp = green }),
-    ErrorLine({ fg = "NONE", bg = bg_red }),
-    WarningLine({ fg = "NONE", bg = bg_yellow }),
-    InfoLine({ fg = "NONE", bg = bg_blue }),
-    HintLine({ fg = "NONE", bg = bg_green }),
-    ErrorFloat({ fg = red, bg = bg2 }),
-    WarningFloat({ fg = yellow, bg = bg2 }),
-    InfoFloat({ fg = blue, bg = bg2 }),
-    HintFloat({ fg = green, bg = bg2 }),
+    DiagnosticError({ fg = red, bg = "NONE" }),
+    DiagnosticWarn({ fg = orange, bg = "NONE" }),
+    DiagnosticInfo({ fg = cyan, bg = "NONE" }),
+    DiagnosticHint({ fg = bg5, bg = "NONE" }),
+
+    -- ErrorText({ bg = bg_red, gui = "undercurl", guisp = red }),
+    -- WarningText({ bg = bg_yellow, gui = "undercurl", guisp = orange }),
+    -- InfoText({ bg = bg_blue, gui = "underline", guisp = cyan }),
+    -- HintText({ bg = bg4.darken(20), gui = "underline", guisp = bg5 }),
+
+    -- ErrorLine({ fg = "NONE", bg = bg_red }),
+    -- WarningLine({ fg = "NONE", bg = bg_yellow }),
+    -- InfoLine({ fg = "NONE", bg = bg_blue }),
+    -- HintLine({ fg = "NONE", bg = bg_green }),
+
+    -- ErrorFloat({ fg = red, bg = bg2 }),
+    -- WarningFloat({ fg = orange, bg = bg2 }),
+    -- InfoFloat({ fg = blue, bg = bg2 }),
+    -- HintFloat({ fg = green, bg = bg2 }),
 
     -- REF: https://github.com/neovim/neovim/pull/15585
-    DiagnosticFloatingError({ ErrorFloat }),
-    DiagnosticFloatingWarn({ WarningFloat }),
-    DiagnosticFloatingInfo({ InfoFloat }),
-    DiagnosticFloatingHint({ HintFloat }),
-    DiagnosticDefaultError({ ErrorText }),
-    DiagnosticDefaultWarn({ WarningText }),
-    DiagnosticDefaultInfo({ InfoText }),
-    DiagnosticDefaultHint({ HintText }),
-    DiagnosticVirtualTextError({ ErrorFloat }),
-    DiagnosticVirtualTextWarn({ WarningFloat }),
-    DiagnosticVirtualTextInfo({ InfoFloat }),
-    DiagnosticVirtualTextHint({ HintFloat }),
-    DiagnosticUnderlineError({ ErrorText }),
-    DiagnosticUnderlineWarn({ WarningText }),
-    DiagnosticUnderlineInfo({ InfoText }),
-    DiagnosticUnderlineHint({ HintText }),
+    DiagnosticFloatingError({ DiagnosticError }),
+    DiagnosticFloatingWarn({ DiagnosticWarn }),
+    DiagnosticFloatingInfo({ DiagnosticInfo }),
+    DiagnosticFloatingHint({ DiagnosticHint }),
 
-    DiagnosticSignError({ RedSign }),
-    DiagnosticSignWarn({ OrangeSign }),
-    DiagnosticSignInfo({ BlueSign }),
-    DiagnosticSignHint({ AquaSign }),
-    DiagnosticSignErrorLine({ fg = red, gui = "", guisp = red }),
-    DiagnosticSignWarnLine({ fg = yellow, gui = "", guisp = yellow }),
-    DiagnosticSignInfoLine({ fg = blue, gui = "", guisp = blue }),
-    DiagnosticSignHintLine({ fg = aqua, gui = "", guisp = aqua }),
-    DiagnosticSignErrorNumLine({ fg = red, gui = "italic", guisp = red }),
-    DiagnosticSignWarnNumLine({ fg = yellow, gui = "italic", guisp = yellow }),
-    DiagnosticSignInfoNumLine({ fg = blue, gui = "italic", guisp = blue }),
-    DiagnosticSignHintNumLine({ fg = aqua, gui = "italic", guisp = aqua }),
+    DiagnosticDefaultError({ DiagnosticError }),
+    DiagnosticDefaultWarn({ DiagnosticWarn }),
+    DiagnosticDefaultInfo({ DiagnosticInfo }),
+    DiagnosticDefaultHint({ DiagnosticHint }),
 
-    -- DiagnosticSource({ fg = bg2, bg = bg1 }),
-    DiagnosticError({ Red, bg = bg2 }),
-    DiagnosticWarn({ Orange, bg = bg2 }),
-    DiagnosticInfo({ Blue, bg = bg2 }),
-    DiagnosticHint({ Aqua, bg = bg2 }),
+    DiagnosticVirtualTextError({ DiagnosticError }),
+    DiagnosticVirtualTextWarn({ DiagnosticWarn }),
+    DiagnosticVirtualTextInfo({ DiagnosticInfo }),
+    DiagnosticVirtualTextHint({ DiagnosticHint }),
 
-    DiagnosticErrorBorder({ Red }),
-    DiagnosticWarnBorder({ Orange }),
-    DiagnosticInfoBorder({ Blue }),
-    DiagnosticHintBorder({ Aqua }),
+    DiagnosticSignError({ DiagnosticError }),
+    DiagnosticSignWarn({ DiagnosticWarn }),
+    DiagnosticSignInfo({ DiagnosticInfo }),
+    DiagnosticSignHint({ DiagnosticHint }),
+
+    DiagnosticSignErrorLine({ DiagnosticError }),
+    DiagnosticSignWarnLine({ DiagnosticWarn }),
+    DiagnosticSignInfoLine({ DiagnosticInfo }),
+    DiagnosticSignHintLine({ DiagnosticHint }),
+
+    DiagnosticSignErrorNumLine({ bg = DiagnosticError.fg }),
+    DiagnosticSignWarnNumLine({ bg = DiagnosticWarn.fg }),
+    DiagnosticSignInfoNumLine({ bg = DiagnosticInfo.fg }),
+    DiagnosticSignHintNumLine({ bg = DiagnosticHint.fg }),
+
+    DiagnosticErrorBorder({ DiagnosticError }),
+    DiagnosticWarnBorder({ DiagnosticWarn }),
+    DiagnosticInfoBorder({ DiagnosticInfo }),
+    DiagnosticHintBorder({ DiagnosticHint }),
+
+    -- affects individual bits of code that are errored:
+    DiagnosticUnderlineError({ fg = "NONE", bg = bg_dark, guisp = DiagnosticError.fg, gui = "undercurl" }),
+    DiagnosticUnderlineWarn({ fg = "NONE", bg = bg_dark, guisp = DiagnosticWarn.fg, gui = "undercurl" }),
+    DiagnosticUnderlineInfo({ fg = "NONE", bg = bg_dark, guisp = DiagnosticInfo.fg, gui = "undercurl" }),
+    DiagnosticUnderlineHint({ fg = "NONE", bg = bg_dark, guisp = DiagnosticHint.fg, gui = "undercurl" }),
+
+    ---- :help lsp-highlight -----------------------------------
+
+    LspReferenceText({ bg = "NONE", gui = "underline" }),
+    LspReferenceRead({ bg = "NONE", gui = "underline" }),
+    LspReferenceWrite({ DiagnosticInfo, gui = "underline,bold,italic" }),
+    LspCodeLens({ DiagnosticInfo, fg = bg_dark }), -- Used to color the virtual text of the codelens,
+    LspCodeLensSeparator({ DiagnosticHint }),
 
     -- REF: from @akinsho: https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/highlights.lua#L267-L313
     -- LspCodeLens = { link = 'NonText' },
@@ -389,14 +404,6 @@ return lush(function()
     -- DiagnosticFloatingInfo = { link = 'DiagnosticInfo' },
     -- DiagnosticFloatingHint = { link = 'DiagnosticHint' },
     -- DiagnosticFloatingError = { link = 'DiagnosticError' },
-
-    ---- :help lsp-highlight -----------------------------------
-
-    LspReferenceText({ bg = "NONE", gui = "underline" }),
-    LspReferenceRead({ bg = "NONE", gui = "underline" }),
-    LspReferenceWrite({ InfoFloat, gui = "underline,bold,italic" }),
-    LspCodeLens({ InfoFloat, fg = bg_dark }), -- Used to color the virtual text of the codelens,
-    LspCodeLensSeparator({ HintText }),
 
     ---- :help health ----------------------------
 

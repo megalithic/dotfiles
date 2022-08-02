@@ -251,16 +251,29 @@ local function setup_diagnostics()
     { "Hint", icon = mega.icons.lsp.hint },
   }
 
-  fn.sign_define(vim.tbl_map(function(t)
-    local hl = "DiagnosticSign" .. t[1]
-    return {
-      name = hl,
-      text = t.icon,
-      texthl = hl,
-      numhl = fmt("%sNumLine", hl),
-      linehl = fmt("%sLine", hl),
-    }
-  end, diagnostic_types))
+  -- fn.sign_define(vim.tbl_map(function(t)
+  --   local hl = "DiagnosticSign" .. t[1]
+  --   return {
+  --     name = hl,
+  --     text = t.icon,
+  --     texthl = hl,
+  --     numhl = fmt("%sNumLine", hl),
+  --     linehl = fmt("%sLine", hl),
+  --   }
+  -- end, diagnostic_types))
+
+  local function sign(opts)
+    fn.sign_define(opts.hl, {
+      text = opts.icon,
+      texthl = opts.hl,
+      culhl = opts.hl .. "Line",
+    })
+  end
+
+  sign({ hl = "DiagnosticSignError", icon = mega.icons.lsp.error })
+  sign({ hl = "DiagnosticSignWarn", icon = mega.icons.lsp.warn })
+  sign({ hl = "DiagnosticSignInfo", icon = mega.icons.lsp.info })
+  sign({ hl = "DiagnosticSignHint", icon = mega.icons.lsp.hint })
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
@@ -311,17 +324,16 @@ local function setup_diagnostics()
     signs = true, -- {severity_limit = "Warning"},
     underline = true,
     -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
-    virtual_text = false,
-    -- {
-    --   spacing = 1,
-    --   prefix = "",
-    --   format = function(d)
-    --     local level = diagnostic.severity[d.severity]
-    --     return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
-    --   end,
-    -- },
-    update_in_insert = false,
     severity_sort = true,
+    virtual_text = {
+      spacing = 1,
+      prefix = "",
+      format = function(d)
+        local level = diagnostic.severity[d.severity]
+        return "" --fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
+      end,
+    },
+    update_in_insert = false,
     float = {
       show_header = true,
       source = "always", -- or "always", "if_many" (for more than one source)
@@ -411,7 +423,7 @@ local function setup_handlers()
     local bufnr = util.open_floating_preview(lines, "markdown", config)
     -- local lines = vim.split(result.contents.value, "\n")
 
-    ok, mod = pcall(require, "colorizer")
+    local ok, mod = pcall(require, "colorizer")
     if ok then
       require("colorizer").highlight_buffer(
         bufnr,
@@ -711,7 +723,7 @@ mega.lsp.servers = {
             },
             completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
             workspace = {
-              library = { vim.env.VIMRUNTIME, emmy, plenary },
+              library = { vim.fn.expand("$VIMRUNTIME/lua"), emmy, plenary },
             },
             telemetry = {
               enable = false,

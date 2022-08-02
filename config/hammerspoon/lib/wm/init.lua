@@ -111,7 +111,15 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
         if event == Application.watcher.activated or event == Application.watcher.launched then
           hs.timer.waitUntil(
             function() return obj.layoutComplete end,
-            function() modal:start({ bundleID = bundleID, appObj = appObj, event = event, appConfig = appConfig }) end
+            function()
+              modal:start({
+                bundleID = bundleID,
+                appObj = appObj,
+                event = event,
+                appConfig = appConfig,
+                appModal = modal,
+              })
+            end
           )
         elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
           modal:stop({ event = event })
