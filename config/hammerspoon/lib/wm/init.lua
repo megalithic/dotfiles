@@ -37,6 +37,7 @@ local function getWindow(winTitlePattern, bundleID)
   if winTitlePattern ~= nil then
     win = Window.find(winTitlePattern)
   else
+    -- app is nil here sometimes
     win = app:mainWindow()
   end
 

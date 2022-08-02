@@ -22,7 +22,6 @@ function obj.splitTab()
   if snap then snap.send_window_left() end
 
   hs.timer.doAfter(100 / 1000, function()
-    local browser = hs.window.focusedWindow():application()
     local supportedBrowsers = { "Brave Browser", "Brave Browser Dev", "Brave Browser Beta", "Safari" }
 
     if browser and hs.fnutils.contains(supportedBrowsers, browser:name()) then
@@ -42,7 +41,7 @@ function obj.killTabsByDomain(domain)
   if browser and hs.fnutils.contains(obj.browsers, browser:name()) then
     hs.osascript.javascript([[
     (function() {
-      var browser = Application(']] .. browser .. [[');
+      var browser = Application(']] .. browser:name() .. [[');
       browser.activate();
       for (win of browser.windows()) {
         for (tab of win.tabs()) {
