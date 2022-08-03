@@ -28,7 +28,7 @@ local function diagnostic_popup()
   local cword = vim.fn.expand("<cword>")
   if cword ~= vim.w.lsp_diagnostics_cword then
     vim.w.lsp_diagnostics_cword = cword
-    vim.diagnostic.open_float(0, { scope = "cursor", focus = false })
+    vim.diagnostic.open_float(0, { scope = "line", focus = false }) -- alts: "cursor", "line"
   end
 end
 
@@ -251,29 +251,16 @@ local function setup_diagnostics()
     { "Hint", icon = mega.icons.lsp.hint },
   }
 
-  -- fn.sign_define(vim.tbl_map(function(t)
-  --   local hl = "DiagnosticSign" .. t[1]
-  --   return {
-  --     name = hl,
-  --     text = t.icon,
-  --     texthl = hl,
-  --     numhl = fmt("%sNumLine", hl),
-  --     linehl = fmt("%sLine", hl),
-  --   }
-  -- end, diagnostic_types))
-
-  local function sign(opts)
-    fn.sign_define(opts.hl, {
-      text = opts.icon,
-      texthl = opts.hl,
-      culhl = opts.hl .. "Line",
-    })
-  end
-
-  sign({ hl = "DiagnosticSignError", icon = mega.icons.lsp.error })
-  sign({ hl = "DiagnosticSignWarn", icon = mega.icons.lsp.warn })
-  sign({ hl = "DiagnosticSignInfo", icon = mega.icons.lsp.info })
-  sign({ hl = "DiagnosticSignHint", icon = mega.icons.lsp.hint })
+  fn.sign_define(vim.tbl_map(function(t)
+    local hl = "DiagnosticSign" .. t[1]
+    return {
+      text = t.icon,
+      texthl = hl,
+      culhl = hl .. "Line",
+      --     numhl = fmt("%sNumLine", hl),
+      --     linehl = fmt("%sLine", hl),
+    }
+  end, diagnostic_types))
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
@@ -329,8 +316,10 @@ local function setup_diagnostics()
       spacing = 1,
       prefix = "",
       format = function(d)
+        -- return ""
         local level = diagnostic.severity[d.severity]
-        return "" --fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
+        return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
+        -- return fmt("%s", mega.icons.lsp[level:lower()])
       end,
     },
     update_in_insert = false,

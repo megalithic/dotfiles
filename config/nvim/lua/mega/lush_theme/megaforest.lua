@@ -292,22 +292,7 @@ return lush(function()
     DiagnosticError({ fg = red, bg = "NONE" }),
     DiagnosticWarn({ fg = orange, bg = "NONE" }),
     DiagnosticInfo({ fg = cyan, bg = "NONE" }),
-    DiagnosticHint({ fg = bg5, bg = "NONE" }),
-
-    -- ErrorText({ bg = bg_red, gui = "undercurl", guisp = red }),
-    -- WarningText({ bg = bg_yellow, gui = "undercurl", guisp = orange }),
-    -- InfoText({ bg = bg_blue, gui = "underline", guisp = cyan }),
-    -- HintText({ bg = bg4.darken(20), gui = "underline", guisp = bg5 }),
-
-    -- ErrorLine({ fg = "NONE", bg = bg_red }),
-    -- WarningLine({ fg = "NONE", bg = bg_yellow }),
-    -- InfoLine({ fg = "NONE", bg = bg_blue }),
-    -- HintLine({ fg = "NONE", bg = bg_green }),
-
-    -- ErrorFloat({ fg = red, bg = bg2 }),
-    -- WarningFloat({ fg = orange, bg = bg2 }),
-    -- InfoFloat({ fg = blue, bg = bg2 }),
-    -- HintFloat({ fg = green, bg = bg2 }),
+    DiagnosticHint({ fg = grey2, bg = "NONE" }),
 
     -- REF: https://github.com/neovim/neovim/pull/15585
     DiagnosticFloatingError({ DiagnosticError }),
@@ -320,10 +305,10 @@ return lush(function()
     DiagnosticDefaultInfo({ DiagnosticInfo }),
     DiagnosticDefaultHint({ DiagnosticHint }),
 
-    DiagnosticVirtualTextError({ DiagnosticError }),
-    DiagnosticVirtualTextWarn({ DiagnosticWarn }),
-    DiagnosticVirtualTextInfo({ DiagnosticInfo }),
-    DiagnosticVirtualTextHint({ DiagnosticHint }),
+    DiagnosticVirtualTextError({ DiagnosticError, fg = DiagnosticError.fg.darken(40) }),
+    DiagnosticVirtualTextWarn({ DiagnosticWarn, fg = DiagnosticWarn.fg.darken(40) }),
+    DiagnosticVirtualTextInfo({ DiagnosticInfo, fg = DiagnosticInfo.fg.darken(40) }),
+    DiagnosticVirtualTextHint({ DiagnosticHint, fg = DiagnosticHint.fg.darken(40) }),
 
     DiagnosticSignError({ DiagnosticError }),
     DiagnosticSignWarn({ DiagnosticWarn }),
@@ -346,16 +331,22 @@ return lush(function()
     DiagnosticHintBorder({ DiagnosticHint }),
 
     -- affects individual bits of code that are errored:
-    DiagnosticUnderlineError({ fg = "NONE", bg = bg_dark, guisp = DiagnosticError.fg, gui = "undercurl" }),
-    DiagnosticUnderlineWarn({ fg = "NONE", bg = bg_dark, guisp = DiagnosticWarn.fg, gui = "undercurl" }),
-    DiagnosticUnderlineInfo({ fg = "NONE", bg = bg_dark, guisp = DiagnosticInfo.fg, gui = "undercurl" }),
-    DiagnosticUnderlineHint({ fg = "NONE", bg = bg_dark, guisp = DiagnosticHint.fg, gui = "undercurl" }),
+    DiagnosticUnderlineError({
+      fg = "NONE",
+      bg = bg_dark,
+      sp = DiagnosticError.fg,
+      gui = "undercurl,bold",
+    }),
+    DiagnosticUnderlineWarn({ fg = "NONE", bg = bg_dark, sp = DiagnosticWarn.fg, gui = "undercurl" }),
+    DiagnosticUnderlineInfo({ fg = "NONE", bg = bg_dark, sp = DiagnosticInfo.fg, gui = "underline" }),
+    DiagnosticUnderlineHint({ fg = "NONE", bg = bg_dark, sp = DiagnosticHint.fg, gui = "underline" }),
 
     ---- :help lsp-highlight -----------------------------------
 
     LspReferenceText({ bg = "NONE", gui = "underline" }),
     LspReferenceRead({ bg = "NONE", gui = "underline" }),
     LspReferenceWrite({ DiagnosticInfo, gui = "underline,bold,italic" }),
+
     LspCodeLens({ DiagnosticInfo, fg = bg_dark }), -- Used to color the virtual text of the codelens,
     LspCodeLensSeparator({ DiagnosticHint }),
 
@@ -470,7 +461,7 @@ return lush(function()
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ fg = light_grey, gui = "italic" }),
-    TSError({ gui = "undercurl", guisp = red }), -- ErrorText
+    TSError({ gui = "undercurl", sp = red }), -- ErrorText
     -- highlight FIXME/TODO/NOTE/REF: comments
     commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
@@ -756,8 +747,8 @@ return lush(function()
     HopNextKey({ fg = magenta, gui = "bold,underline" }),
     -- vim.api.nvim_command('highlight default HopNextKey1 guifg=#00dfff gui=bold ctermfg=45 cterm=bold')
     -- vim.api.nvim_command('highlight default HopNextKey2 guifg=#2b8db3 ctermfg=33')
-    -- vim.api.nvim_command('highlight default HopUnmatched guifg=#666666 guibg="NONE" guisp=#666666 ctermfg=242')
-    HopUnmatched({ fg = bg5, guisp = bg5 }),
+    -- vim.api.nvim_command('highlight default HopUnmatched guifg=#666666 guibg="NONE" sp=#666666 ctermfg=242')
+    HopUnmatched({ fg = bg5, sp = bg5 }),
     -- vim.api.nvim_command('highlight default link HopCursor Cursor')
 
     ---- :help lightspeed.nvim -------------------------------------------
