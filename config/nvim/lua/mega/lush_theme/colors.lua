@@ -25,6 +25,7 @@ C.bg_purple = hsluv("#402F37")
 C.bg_cyan = hsluv("#54816B")
 
 C.fg = hsluv("#d8caac")
+C.white = hsluv("#ffffff")
 
 C.dark_grey = hsluv("#3E4556")
 C.light_grey = hsluv("#5c6370")

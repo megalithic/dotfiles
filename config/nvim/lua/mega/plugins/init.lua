@@ -85,8 +85,6 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
-  { "phaazon/hop.nvim" },
-  "jinh0/eyeliner.nvim",
   "nvim-neo-tree/neo-tree.nvim",
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
@@ -96,11 +94,12 @@ local PKGS = {
 
   ------------------------------------------------------------------------------
   -- (text objects) --
-  "tpope/vim-rsi",
-  "kana/vim-textobj-user",
-  "kana/vim-operator-user",
-  "kana/vim-textobj-entire", -- ae/ie for entire buffer
-  "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
+
+  -- "tpope/vim-rsi",
+  -- "kana/vim-textobj-user",
+  -- "kana/vim-operator-user",
+  -- "kana/vim-textobj-entire", -- ae/ie for entire buffer
+  -- "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
   -- "wellle/targets.vim",
 
   ------------------------------------------------------------------------------
@@ -656,98 +655,6 @@ function M.config()
     require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
     -- REF: neat stuff:
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
-  end)
-
-  conf("eyeliner", {
-    highlight_on_key = true,
-  })
-
-  conf("hop", function()
-    local hop = require("hop")
-
-    hop.setup({
-      -- remove h,j,k,l from hops list of keys
-      keys = "etovxqpdygfbzcisuran",
-      jump_on_sole_occurrence = true,
-      uppercase_labels = false,
-    })
-
-    nnoremap("s", function()
-      hop.hint_char2({ multi_windows = false })
-      -- vim.cmd("norm zz")
-      mega.blink_cursorline()
-    end)
-
-    -- map(
-    --   { "n", "x", "o" },
-    --   "f",
-    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = true })<cr>",
-    --   "[HOP] Jump to symbol"
-    -- )
-    -- map(
-    --   { "n", "x", "o" },
-    --   "F",
-    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = true })<cr>",
-    --   "[HOP] Jump back to symbol"
-    -- )
-    -- map(
-    --   { "n", "x", "o" },
-    --   "t",
-    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = true })<cr>",
-    --   "[HOP] Jump before symbol"
-    -- )
-    -- map(
-    --   { "n", "x", "o" },
-    --   "T",
-    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = true })<cr>",
-    --   "[HOP] Jump back before symbol"
-    -- )
-
-    -- map(
-    --   { "x", "n" },
-    --   "F",
-    --   function()
-    --     hop.hint_char1({
-    --       direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-    --       current_line_only = true,
-    --       inclusive_jump = false,
-    --     })
-    --   end
-    -- )
-
-    -- map(
-    --   { "x", "n" },
-    --   "f",
-    --   function()
-    --     hop.hint_char1({
-    --       direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-    --       current_line_only = true,
-    --       inclusive_jump = false,
-    --     })
-    --   end
-    -- )
-
-    -- mega.onoremap(
-    --   "F",
-    --   function()
-    --     hop.hint_char1({
-    --       direction = require("hop.hint").HintDirection.BEFORE_CURSOR,
-    --       current_line_only = true,
-    --       inclusive_jump = true,
-    --     })
-    --   end
-    -- )
-
-    -- mega.onoremap(
-    --   "f",
-    --   function()
-    --     hop.hint_char1({
-    --       direction = require("hop.hint").HintDirection.AFTER_CURSOR,
-    --       current_line_only = true,
-    --       inclusive_jump = true,
-    --     })
-    --   end
-    -- )
   end)
 
   conf("git-messenger", function()

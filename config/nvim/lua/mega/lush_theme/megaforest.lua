@@ -65,6 +65,7 @@ local blue = C.blue
 local purple = C.purple
 local brown = C.brown
 local magenta = C.magenta
+local white = C.white
 
 local tc = {
   black = bg0,
@@ -728,59 +729,31 @@ return lush(function()
     -- DapUIWatchesValue({ fg = cs.red }),
     -- DapUIWatchesError({ fg = cs.red }),
 
-    ---- :help luasnip -------------------------------------------
+    ---- :help luasnip ---------------------------------------------------------
 
     -- Luasnip*Node{Active,Passive,SnippetPassive}
 
-    ---- :help indent-blankline -------------------------------------------
+    ---- :help indent-blankline ------------------------------------------------
 
     IndentBlanklineChar({ fg = bg2, bg = "NONE" }),
     IndentBlanklineContextChar({ fg = blue, bg = "NONE" }),
     IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
-    ---- :help mini.indentscope -------------------------------------------
+    ---- :help mini.indentscope ------------------------------------------------
     MiniIndentscopeSymbol({ fg = bg_red, bg = "NONE" }),
 
-    ---- :help hop-highlights -------------------------------------------
+    ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
-    -- vim.api.nvim_command('highlight default HopNextKey  guifg=#ff007c gui=bold ctermfg=198 cterm=bold')
-    HopNextKey({ fg = magenta, gui = "bold,underline" }),
-    -- vim.api.nvim_command('highlight default HopNextKey1 guifg=#00dfff gui=bold ctermfg=45 cterm=bold')
-    -- vim.api.nvim_command('highlight default HopNextKey2 guifg=#2b8db3 ctermfg=33')
-    -- vim.api.nvim_command('highlight default HopUnmatched guifg=#666666 guibg="NONE" sp=#666666 ctermfg=242')
-    HopUnmatched({ fg = bg5, sp = bg5 }),
-    -- vim.api.nvim_command('highlight default link HopCursor Cursor')
+    MiniJump({ fg = magenta, bg = bg_dark, gui = "bold,underline" }),
+    MiniJump2dSpot({ fg = white, bg = bg_dark, gui = "bold,underline" }),
 
-    EyelinerPrimary({ fg = magenta, gui = "bold,underline" }),
-    EyelinerSecondary({ gui = "underline" }),
-
-    ---- :help lightspeed.nvim -------------------------------------------
-
-    LightspeedCursor({ fg = bg0, bg = blue, gui = "bold, underline" }),
-    LightspeedLabel({ fg = red, gui = "bold, underline" }),
-    LightspeedLabelDistant({ fg = orange, gui = "bold, underline" }),
-    LightspeedShortcut({
-      fg = bg0,
-      bg = yellow,
-      gui = "bold",
-    }),
-    LightspeedMaskedChar({ fg = fg, gui = "bold" }),
-    LightspeedGreyWash({ fg = bg3 }),
-    LightspeedUnlabeledMatch({ fg = fg, gui = "italic, bold" }),
-    LightspeedOneCharMatch({ fg = bg0, bg = yellow, gui = "bold" }),
-
-    ---- :help mini.jump.txt ---------------------------------------------------
-
-    MiniJump({ LightspeedLabel, gui = "bold,underline" }),
-    -- MiniJump2dSpot({ LightspeedLabelDistant }),
-
-    ---- :help tabline -------------------------------------------
+    ---- :help tabline ---------------------------------------------------------
 
     -- TabLine({ fg = grey2, bg = bg3 }), -- tab pages line, not active tab page label
     -- TabLineFill({ fg = grey1, bg = bg1 }), -- tab pages line, where there are no labels
     -- TabLineSel({ fg = bg0, bg = green }), -- tab pages line, active tab page label
 
-    ---- megaline -- :help statusline -------------------------------------------
+    ---- megaline -- :help statusline ------------------------------------------
 
     StatusLine({ fg = grey1, bg = bg1 }), -- status line of current window
     StatusLineNC({ fg = grey1, bg = bg0 }), -- status lines of not-current windows Note: if this is equal to "StatusLine" Vim will use "^^^" in the status line of the current window.
