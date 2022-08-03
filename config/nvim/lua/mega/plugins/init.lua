@@ -122,9 +122,9 @@ local PKGS = {
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
-  "rcarriga/neotest",
-  "rcarriga/neotest-plenary",
-  "rcarriga/neotest-vim-test",
+  -- "rcarriga/neotest",
+  -- "rcarriga/neotest-plenary",
+  -- "rcarriga/neotest-vim-test",
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "rcarriga/nvim-dap-ui",
   "theHamsta/nvim-dap-virtual-text",
@@ -301,13 +301,6 @@ function M.config()
   conf("zk", { config = "zk" })
   conf("vscode", { config = "vscode" })
 
-  conf("vim-easy-align", function()
-    -- n : interactive EasyAlign for a motion/text object (e.g. gaip)
-    -- x : interactive EasyAlign in visual mode (e.g. vipga)
-    nmap("<leader>ga", "<Plug>(EasyAlign)", "align things")
-    xmap("<leader>ga", "<Plug>(EasyAlign)", "align things")
-  end)
-
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
     -- move_cursor = false,
@@ -317,213 +310,6 @@ function M.config()
   })
 
   conf("startuptime", function() vim.g.startuptime_tries = 15 end)
-
-  conf("tabout", {
-    ignore_beginning = false,
-    completion = false,
-  })
-
-  conf("neogit", function()
-    local neogit = require("neogit")
-    neogit.setup({
-      disable_signs = false,
-      disable_hint = true,
-      disable_commit_confirmation = true,
-      disable_builtin_notifications = true,
-      disable_insert_on_commit = false,
-      signs = {
-        section = { "", "" }, -- "", ""
-        item = { "▸", "▾" },
-        hunk = { "樂", "" },
-      },
-      integrations = {
-        diffview = true,
-      },
-    })
-    mega.nnoremap("<localleader>gs", function() neogit.open() end)
-    mega.nnoremap("<localleader>gc", function() neogit.open({ "commit" }) end)
-    mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
-    mega.nnoremap("<localleader>gp", neogit.popups.push.create)
-
-    require("which-key").register({
-      ["<localleader>g"] = {
-        s = "neogit: open status buffer",
-        c = "neogit: open commit buffer",
-        l = "neogit: open pull popup",
-        p = "neogit: open push popup",
-      },
-    })
-  end)
-
-  conf("fold-cycle", {})
-
-  --   conf("ufo", function()
-  --     local ufo = require("ufo")
-  --     local hl = require("mega.utils.highlights")
-  --
-  --     local function handler(virt_text, lnum, end_lnum, width, truncate)
-  --       local result = {}
-  --       local _end = end_lnum - 1
-  --       local final_text = vim.trim(api.nvim_buf_get_text(0, _end, 0, _end, -1, {})[1])
-  --       local suffix = final_text:format(end_lnum - lnum)
-  --       local suffix_width = fn.strdisplaywidth(suffix)
-  --       local target_width = width - suffix_width
-  --       local cur_width = 0
-  --       for _, chunk in ipairs(virt_text) do
-  --         local chunk_text = chunk[1]
-  --         local chunk_width = fn.strdisplaywidth(chunk_text)
-  --         if target_width > cur_width + chunk_width then
-  --           table.insert(result, chunk)
-  --         else
-  --           chunk_text = truncate(chunk_text, target_width - cur_width)
-  --           local hl_group = chunk[2]
-  --           table.insert(result, { chunk_text, hl_group })
-  --           chunk_width = fn.strdisplaywidth(chunk_text)
-  --           -- str width returned from truncate() may less than 2nd argument, need padding
-  --           if cur_width + chunk_width < target_width then
-  --             suffix = suffix .. (" "):rep(target_width - cur_width - chunk_width)
-  --           end
-  --           break
-  --         end
-  --         cur_width = cur_width + chunk_width
-  --       end
-  --       table.insert(result, { " ⋯ ", "NonText" })
-  --       table.insert(result, { suffix, "TSPunctBracket" })
-  --       return result
-  --     end
-  --
-  --     vim.opt.foldlevelstart = 99
-  --     vim.opt.sessionoptions:append("folds")
-  --
-  --     local bg = hl.alter_color(hl.get("Normal", "bg"), -7)
-  --     hl.plugin("ufo", { Folded = { bold = false, italic = false, bg = bg } })
-  --
-  --     local ft_map = {}
-  --     ufo.setup({
-  --       open_fold_hl_timeout = 0,
-  --       fold_virt_text_handler = handler,
-  --       provider_selector = function(_, filetype)
-  --         return ft_map[filetype] or { "treesitter", "indent" }
-  --       end,
-  --     })
-  --     mega.nnoremap("zR", ufo.openAllFolds, "open all folds")
-  --     mega.nnoremap("zM", ufo.closeAllFolds, "close all folds")
-  --     -- local handler = function(virtText, lnum, endLnum, width, truncate)
-  --     --   local newVirtText = {}
-  --     --   local suffix = (" %s  %d "):format(mega.icons.misc.ellipsis, endLnum - lnum)
-  --     --   local sufWidth = vim.fn.strdisplaywidth(suffix)
-  --     --   local targetWidth = width - sufWidth
-  --     --   local curWidth = 0
-  --     --   for _, chunk in ipairs(virtText) do
-  --     --     local chunkText = chunk[1]
-  --     --     local chunkWidth = vim.fn.strdisplaywidth(chunkText)
-  --     --     if targetWidth > curWidth + chunkWidth then
-  --     --       table.insert(newVirtText, chunk)
-  --     --     else
-  --     --       chunkText = truncate(chunkText, targetWidth - curWidth)
-  --     --       local hlGroup = chunk[2]
-  --     --       table.insert(newVirtText, { chunkText, hlGroup })
-  --     --       chunkWidth = vim.fn.strdisplaywidth(chunkText)
-  --     --       -- str width returned from truncate() may less than 2rd argument, need padding
-  --     --       if curWidth + chunkWidth < targetWidth then
-  --     --         suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
-  --     --       end
-  --     --       break
-  --     --     end
-  --     --     curWidth = curWidth + chunkWidth
-  --     --   end
-  --     --   table.insert(newVirtText, { suffix, "FoldMoreMsg" })
-  --     --   return newVirtText
-  --     -- end
-  --
-  --     -- require("ufo").setup({
-  --     --   fold_virt_text_handler = handler,
-  --     -- })
-  --
-  --     -- map("n", "[z", require("ufo.action").goPreviousClosedFold)
-  --     -- map("n", "]z", require("ufo.action").goNextClosedFold)
-  --   end)
-
-  -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
-  conf("gitlinker", {})
-
-  conf("vim-gh-line", function()
-    if fn.exists("g:loaded_gh_line") then
-      vim.g["gh_line_map_default"] = 0
-      vim.g["gh_line_blame_map_default"] = 0
-      vim.g["gh_line_map"] = "<leader>gH"
-      vim.g["gh_line_blame_map"] = "<leader>gB"
-      vim.g["gh_repo_map"] = "<leader>gO"
-
-      -- Use a custom program to open link:
-      -- let g:gh_open_command = 'open '
-      -- Copy link to a clipboard instead of opening a browser:
-      -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
-    end
-  end)
-
-  conf("fidget", {
-    text = {
-      spinner = "dots_pulse",
-      done = "",
-    },
-    window = {
-      blend = 10,
-      -- relative = "editor",
-    },
-    sources = { -- Sources to configure
-      ["elixirls"] = { -- Name of source
-        ignore = true, -- Ignore notifications from this source
-      },
-      ["markdown"] = { -- Name of source
-        ignore = true, -- Ignore notifications from this source
-      },
-    },
-  })
-
-  conf("lsp_signature", {
-    bind = true,
-    fix_pos = false,
-    auto_close_after = 5,
-    hint_enable = false,
-    handler_opts = {
-      anchor = "SW",
-      relative = "cursor",
-      row = -1,
-      focus = false,
-      border = mega.get_border(),
-    },
-    zindex = 99, -- Keep signature popup below the completion PUM
-    toggle_key = "<C-k>",
-    --   hi_parameter = "QuickFixLine",
-  })
-
-  conf("git-conflict", {
-    disable_diagnostics = true,
-    highlights = {
-      incoming = "DiffText",
-      current = "DiffAdd",
-      ancestor = "DiffBase",
-    },
-  })
-
-  conf("vim-matchup", function()
-    vim.g.matchup_surround_enabled = true
-    vim.g.matchup_matchparen_deferred = true
-    vim.g.matchup_matchparen_offscreen = {
-      method = "popup",
-      fullwidth = true,
-      highlight = "Normal",
-      border = "shadow",
-    }
-  end)
-
-  conf("hclipboard", function() require("hclipboard").start() end)
-
-  conf("FixCursorHold", function()
-    -- https://github.com/antoinemadec/FixCursorHold.nvim#configuration
-    vim.g.cursorhold_updatetime = 100
-  end)
 
   conf("Comment", {
     ignore = "^$", -- ignores empty lines
@@ -657,6 +443,136 @@ function M.config()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
 
+  conf("vim-gh-line", function()
+    if fn.exists("g:loaded_gh_line") then
+      vim.g["gh_line_map_default"] = 0
+      vim.g["gh_line_blame_map_default"] = 0
+      vim.g["gh_line_map"] = "<leader>gH"
+      vim.g["gh_line_blame_map"] = "<leader>gB"
+      vim.g["gh_repo_map"] = "<leader>gO"
+
+      -- Use a custom program to open link:
+      -- let g:gh_open_command = 'open '
+      -- Copy link to a clipboard instead of opening a browser:
+      -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
+    end
+  end)
+
+  -- FIXME: breaks mini.nvim#jump
+  -- conf("fidget", {
+  --   text = {
+  --     spinner = "dots_pulse",
+  --     done = "",
+  --   },
+  --   window = {
+  --     blend = 10,
+  --     -- relative = "editor",
+  --   },
+  --   sources = { -- Sources to configure
+  --     ["elixirls"] = { -- Name of source
+  --       ignore = true, -- Ignore notifications from this source
+  --     },
+  --     ["markdown"] = { -- Name of source
+  --       ignore = true, -- Ignore notifications from this source
+  --     },
+  --   },
+  -- })
+
+  conf("lsp_signature", {
+    bind = true,
+    fix_pos = false,
+    auto_close_after = 5,
+    hint_enable = false,
+    handler_opts = {
+      anchor = "SW",
+      relative = "cursor",
+      row = -1,
+      focus = false,
+      border = mega.get_border(),
+    },
+    zindex = 99, -- Keep signature popup below the completion PUM
+    toggle_key = "<C-k>",
+    --   hi_parameter = "QuickFixLine",
+  })
+
+  conf("vim-matchup", function()
+    vim.g.matchup_surround_enabled = true
+    vim.g.matchup_matchparen_deferred = true
+    vim.g.matchup_matchparen_offscreen = {
+      method = "popup",
+      fullwidth = true,
+      highlight = "Normal",
+      border = "shadow",
+    }
+  end)
+
+  conf("git-conflict", {
+    disable_diagnostics = true,
+    highlights = {
+      incoming = "DiffText",
+      current = "DiffAdd",
+      ancestor = "DiffBase",
+    },
+  })
+
+  conf("FixCursorHold", function()
+    -- https://github.com/antoinemadec/FixCursorHold.nvim#configuration
+    vim.g.cursorhold_updatetime = 100
+  end)
+
+  -- REF: https://github.com/akinsho/dotfiles/blob/main/.config/nvim/lua/as/plugins/init.lua#L815-L832
+  conf("gitlinker", {})
+
+  conf("vim-easy-align", function()
+    -- n : interactive EasyAlign for a motion/text object (e.g. gaip)
+    -- x : interactive EasyAlign in visual mode (e.g. vipga)
+    nmap("<leader>ga", "<Plug>(EasyAlign)", "align things")
+    xmap("<leader>ga", "<Plug>(EasyAlign)", "align things")
+  end)
+
+  conf("tabout", {
+    ignore_beginning = false,
+    completion = false,
+  })
+
+  conf("neogit", function()
+    local neogit = require("neogit")
+    neogit.setup({
+      disable_signs = false,
+      disable_hint = true,
+      disable_commit_confirmation = true,
+      disable_builtin_notifications = true,
+      disable_insert_on_commit = false,
+      signs = {
+        section = { "", "" }, -- "", ""
+        item = { "▸", "▾" },
+        hunk = { "樂", "" },
+      },
+      integrations = {
+        diffview = true,
+      },
+    })
+    mega.nnoremap("<localleader>gs", function() neogit.open() end)
+    mega.nnoremap("<localleader>gc", function() neogit.open({ "commit" }) end)
+    mega.nnoremap("<localleader>gl", neogit.popups.pull.create)
+    mega.nnoremap("<localleader>gp", neogit.popups.push.create)
+
+    require("which-key").register({
+      ["<localleader>g"] = {
+        s = "neogit: open status buffer",
+        c = "neogit: open commit buffer",
+        l = "neogit: open pull popup",
+        p = "neogit: open push popup",
+      },
+    })
+  end)
+
+  conf("fold-cycle", {})
+
+  conf("pqf", {})
+
+  conf("hclipboard", function() require("hclipboard").start() end)
+
   conf("git-messenger", function()
     vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }
     vim.g.git_messenger_no_default_mappings = true
@@ -671,62 +587,13 @@ function M.config()
     quit = true,
   })
 
-  conf("pqf", {})
-
-  conf("dd", {
-    enabled = false,
-    timeout = 500,
-  })
-
   conf("fzf_gitignore", function() vim.g.fzf_gitignore_no_maps = true end)
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
-
-  -- conf("other-nvim", {
-  --   enabled = false,
-  --   config = {
-  --     mappings = {
-  --       {
-  --         pattern = "/(.*)/live/*.ex$",
-  --         target = "/%1/live/%2.html.heex",
-  --       },
-  --       {
-  --         pattern = "/(.*)/live/*.html.heex$",
-  --         target = "/%1/live/%2.ex",
-  --       },
-
-  --       -- {
-  --       --   pattern = "/src/app/(.*)/.*.ts$",
-  --       --   target = "/src/app/%1/%1.component.html",
-  --       -- },
-  --       -- {
-  --       --   pattern = "/src/app/(.*)/.*.html$",
-  --       --   target = "/src/app/%1/%1.component.ts",
-  --       -- },
-  --     },
-  --     -- transformers = {
-  --     --   -- defining a custom transformer
-  --     --   lowercase = function(inputString)
-  --     --     return inputString:lower()
-  --     --   end,
-  --     -- },
-  --   },
-  -- })
-
-  -- conf("template", function()
-  --   local temp = require("template")
-  --   temp.temp_dir = ("%s/templates/"):format(vim.g.vim_dir)
-  -- end)
 
   conf("neogen", function()
     require("neogen").setup({ snippet_engine = "luasnip" })
     mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
   end)
-
-  -- conf("undotree", function()
-  --   mega.nnoremap("<leader>u", "<cmd>UndotreeToggle<CR>", "undotree: toggle")
-  --   vim.g.undotree_TreeNodeShape = "◦" -- alts: '◉'
-  --   vim.g.undotree_SetFocusWhenToggle = 1
-  -- end)
 end
 
 return M

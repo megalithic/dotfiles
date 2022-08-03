@@ -339,8 +339,8 @@ return lush(function()
       gui = "undercurl,bold",
     }),
     DiagnosticUnderlineWarn({ fg = "NONE", bg = bg_dark, sp = DiagnosticWarn.fg, gui = "undercurl" }),
-    DiagnosticUnderlineInfo({ fg = "NONE", bg = bg_dark, sp = DiagnosticInfo.fg, gui = "underline" }),
-    DiagnosticUnderlineHint({ fg = "NONE", bg = bg_dark, sp = DiagnosticHint.fg, gui = "underline" }),
+    DiagnosticUnderlineInfo({ fg = "NONE", bg = bg_dark, sp = DiagnosticInfo.fg, gui = "undercurl" }),
+    DiagnosticUnderlineHint({ fg = "NONE", bg = bg_dark, sp = DiagnosticHint.fg, gui = "undercurl" }),
 
     ---- :help lsp-highlight -----------------------------------
 

@@ -321,17 +321,18 @@ local function setup_diagnostics()
     underline = true,
     -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
     severity_sort = true,
-    virtual_text = {
-      spacing = 1,
-      prefix = "",
-      format = function(d)
-        -- return ""
-        local level = diagnostic.severity[d.severity]
-        -- if level ~= "ERROR" then return "" end
-        return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
-        -- return fmt("%s", mega.icons.lsp[level:lower()])
-      end,
-    },
+    virtual_text = false,
+    -- {
+    --   spacing = 1,
+    --   prefix = "",
+    --   format = function(d)
+    --     -- return ""
+    --     local level = diagnostic.severity[d.severity]
+    --     -- if level ~= "ERROR" then return "" end
+    --     return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
+    --     -- return fmt("%s", mega.icons.lsp[level:lower()])
+    --   end,
+    -- },
     update_in_insert = false,
     float = {
       show_header = true,
