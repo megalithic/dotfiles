@@ -161,7 +161,7 @@ return function()
           n = { ["<c-x>"] = "delete_buffer" },
         },
       }),
-      oldfiles = dropdown(),
+      oldfiles = dropdown({}),
       live_grep = {
         max_results = 500,
         file_ignore_patterns = { ".git/", "%.lock" },
@@ -182,6 +182,7 @@ return function()
       },
       find_files = {
         hidden = true,
+        find_command = { "fd", "--type", "f", "--no-ignore-vcs" },
       },
       keymaps = dropdown({
         layout_config = {
@@ -189,7 +190,7 @@ return function()
           width = 0.5,
         },
       }),
-      git_branches = dropdown(),
+      git_branches = dropdown({}),
       git_bcommits = {
         layout_config = {
           horizontal = {
@@ -204,7 +205,7 @@ return function()
           },
         },
       },
-      reloader = dropdown(),
+      reloader = dropdown({}),
     },
   })
 

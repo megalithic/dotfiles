@@ -176,6 +176,9 @@
     ~/.tool-versions:
       force: true
       path: asdf/tool-versions
+    ~/.ignore:
+      force: true
+      path: misc/tool-ignores
     ~/.default-gems: asdf/default-gems
     ~/.default-npm-packages: asdf/default-npm-packages
     ~/.default-python-packages: asdf/default-python-packages

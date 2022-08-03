@@ -86,7 +86,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   { "phaazon/hop.nvim" },
-  "jinh0/eyeliner.nvim",
+  -- "jinh0/eyeliner.nvim",
   "nvim-neo-tree/neo-tree.nvim",
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
@@ -658,9 +658,9 @@ function M.config()
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
 
-  conf("eyeliner", {
-    highlight_on_key = true,
-  })
+  -- conf("eyeliner", {
+  --   highlight_on_key = true,
+  -- })
 
   conf("hop", function()
     local hop = require("hop")
@@ -677,6 +677,31 @@ function M.config()
       -- vim.cmd("norm zz")
       mega.blink_cursorline()
     end)
+
+    -- map(
+    --   { "n", "x", "o" },
+    --   "f",
+    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = true })<cr>",
+    --   "[HOP] Jump to symbol"
+    -- )
+    -- map(
+    --   { "n", "x", "o" },
+    --   "F",
+    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = true })<cr>",
+    --   "[HOP] Jump back to symbol"
+    -- )
+    -- map(
+    --   { "n", "x", "o" },
+    --   "t",
+    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = true })<cr>",
+    --   "[HOP] Jump before symbol"
+    -- )
+    -- map(
+    --   { "n", "x", "o" },
+    --   "T",
+    --   "<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = true })<cr>",
+    --   "[HOP] Jump back before symbol"
+    -- )
 
     -- map(
     --   { "x", "n" },

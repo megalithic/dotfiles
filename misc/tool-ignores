@@ -1,0 +1,24 @@
+.yarn
+.git
+.elixir_ls
+node_modules
+_build
+tags
+bower_components
+storage
+tmp
+coverage
+deps
+.hg
+.svn
+.sass-cache
+public
+.cache
+.Trash
+.licenses
+dotbot
+dotbot-plugins
+config/zsh/plugins
+config/hammerspoon/Spoons
+
+# vim:ft=gitignore:tw=0
