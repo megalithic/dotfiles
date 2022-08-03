@@ -16,9 +16,24 @@ public
 .cache
 .Trash
 .licenses
-dotbot
-dotbot-plugins
-config/zsh/plugins
-config/hammerspoon/Spoons
+**/dotbot
+**/dotbot-plugins
+**/config/zsh/plugins
+**/config/hammerspoon/Spoons
+**/config/tmux/plugins
+**/config/karabiner/automatic_backups
+.DS_Store
+localrc
+.localrc
+**/*.swp
+**/*.log
+**/logs
+**/*.weechatlog
+**/*.zwc
+**/.zcomp*
+**/.zsh_sessions
+.chpwd-recent-dirs
+cache
+*~
 
 # vim:ft=gitignore:tw=0
