@@ -86,6 +86,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   { "phaazon/hop.nvim" },
+  "jinh0/eyeliner.nvim",
   "nvim-neo-tree/neo-tree.nvim",
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
@@ -656,6 +657,10 @@ function M.config()
     -- REF: neat stuff:
     -- https://github.com/rafamadriz/NeoCode/blob/main/lua/modules/plugins/completion.lua#L130-L192
   end)
+
+  conf("eyeliner", {
+    highlight_on_key = true,
+  })
 
   conf("hop", function()
     local hop = require("hop")

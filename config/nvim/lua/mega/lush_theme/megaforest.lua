@@ -751,6 +751,9 @@ return lush(function()
     HopUnmatched({ fg = bg5, sp = bg5 }),
     -- vim.api.nvim_command('highlight default link HopCursor Cursor')
 
+    EyelinerPrimary({ fg = magenta, gui = "bold,underline" }),
+    EyelinerSecondary({ gui = "underline" }),
+
     ---- :help lightspeed.nvim -------------------------------------------
 
     LightspeedCursor({ fg = bg0, bg = blue, gui = "bold, underline" }),

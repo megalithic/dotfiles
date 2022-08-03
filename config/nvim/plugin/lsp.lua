@@ -244,23 +244,20 @@ end
 
 local function setup_diagnostics()
   -- ( signs ) --
-  local diagnostic_types = {
-    { "Error", icon = mega.icons.lsp.error },
-    { "Warn", icon = mega.icons.lsp.warn },
-    { "Info", icon = mega.icons.lsp.info },
-    { "Hint", icon = mega.icons.lsp.hint },
-  }
-
-  fn.sign_define(vim.tbl_map(function(t)
-    local hl = "DiagnosticSign" .. t[1]
-    return {
-      text = t.icon,
-      texthl = hl,
-      culhl = hl .. "Line",
+  local function sign(opts)
+    fn.sign_define(opts.hl, {
+      text = opts.icon,
+      texthl = opts.hl,
+      culhl = opts.hl .. "Line",
       --     numhl = fmt("%sNumLine", hl),
       --     linehl = fmt("%sLine", hl),
-    }
-  end, diagnostic_types))
+    })
+  end
+
+  sign({ hl = "DiagnosticSignError", icon = mega.icons.lsp.error })
+  sign({ hl = "DiagnosticSignWarn", icon = mega.icons.lsp.warn })
+  sign({ hl = "DiagnosticSignInfo", icon = mega.icons.lsp.info })
+  sign({ hl = "DiagnosticSignHint", icon = mega.icons.lsp.hint })
 
   --- Restricts nvim's diagnostic signs to only the single most severe one per line
   --- @see `:help vim.diagnostic`
@@ -289,6 +286,18 @@ local function setup_diagnostics()
       -- 	/usr/local/share/nvim/runtime/lua/vim/lsp/diagnostic.lua:217: in function 'handler'
       -- 	/usr/local/share/nvim/runtime/lua/vim/lsp.lua:824: in function ''
       -- 	vim/_editor.lua: in function <vim/_editor.lua:0>
+      -- and
+      --
+      -- Error executing lua callback: /usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1018: line value outside range
+      -- stack traceback:
+      -- 	[C]: in function 'nvim_buf_set_extmark'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1018: in function 'callback'
+      -- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:307: in function 'callback'
+      -- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:307: in function 'show'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1183: in function 'show'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1139: in function 'show'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1133: in function 'show'
+      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1513: in function </usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1491>
 
       -- Pass the filtered diagnostics (with our custom namespace) to the original handler
       callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
@@ -318,6 +327,7 @@ local function setup_diagnostics()
       format = function(d)
         -- return ""
         local level = diagnostic.severity[d.severity]
+        -- if level ~= "ERROR" then return "" end
         return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
         -- return fmt("%s", mega.icons.lsp[level:lower()])
       end,
@@ -360,9 +370,13 @@ local function setup_diagnostics()
         -- end
         -- -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
         -- return fmt("%s ", icon), highlight
-        local level = diagnostic_types[diag.severity]
-        local prefix = fmt("%d. %s ", i, level.icon)
-        return prefix, "Diagnostic" .. level[1]
+        local level = diagnostic.severity[diag.severity]
+        local prefix = fmt("%d. %s ", i, mega.icons.lsp[level:lower()])
+        return prefix, "Diagnostic" .. level:gsub("^%l", string.upper)
+
+        -- local level = diagnostic_types[diag.severity]
+        -- local prefix = fmt("%d. %s ", i, level.icon)
+        -- return prefix, "Diagnostic" .. level[1]
       end,
     },
   })
