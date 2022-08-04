@@ -15,7 +15,7 @@ local contains = vim.tbl_contains
 augroup("Startup", {
   {
     event = { "VimEnter" },
-    pattern = "*",
+    pattern = { "*" },
     once = true,
     command = function()
       -- our basic dashboard/startify/alpha:
@@ -28,7 +28,7 @@ augroup("CheckOutsideTime", {
   {
     -- automatically check for changed files outside vim
     event = { "WinEnter", "FocusGained" },
-    pattern = "*",
+    pattern = { "*" },
     command = "checktime",
   },
 })
@@ -181,7 +181,7 @@ augroup("Plugins/Paq", {
   },
   {
     event = { "User" },
-    pattern = "PaqDoneSync",
+    pattern = { "PaqDoneSync" },
     command = function() vim.cmd("Messages | Cfilter Paq") end,
   },
 })
@@ -365,7 +365,7 @@ end
 augroup("GitConflicts", {
   {
     event = { "User" },
-    pattern = "GitConflictDetected",
+    pattern = { "GitConflictDetected" },
     command = function()
       vim.notify("Conflicts detected.")
       vim.diagnostic.disable(0)
@@ -388,7 +388,7 @@ augroup("GitConflicts", {
   },
   {
     event = { "User" },
-    pattern = "GitConflictResolved",
+    pattern = { "GitConflictResolved" },
     command = function()
       vim.notify("Conflicts resolved.")
       vim.diagnostic.enable(0)

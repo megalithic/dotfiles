@@ -52,7 +52,8 @@ local PKGS = {
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   "ray-x/lsp_signature.nvim",
-  "j-hui/fidget.nvim",
+  -- "j-hui/fidget.nvim",
+  "ZenLian/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
@@ -299,7 +300,6 @@ function M.config()
   conf("vim-test", { config = "vim-test" })
   conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
-  conf("vscode", { config = "vscode" })
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
