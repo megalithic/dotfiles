@@ -408,15 +408,14 @@ nnoremap([[<Esc>]], function()
   mega.blink_cursorline()
 
   do
-    local ok, minijump = pcall(require, "mini.jump")
-    if ok then minijump.stop_jumping() end
+    local ok, mj = pcall(require, "mini.jump")
+    if ok then mj.stop_jumping() end
   end
 
-  -- local n_ok, n = require("notify")
-  -- if n_ok then
-  --   vim.notify = n
-  --   vim.notify.dismiss()
-  -- end
+  do
+    local ok, n = require("notify")
+    if ok and n then n.dismiss() end
+  end
 end, { silent = true, desc = "Clear UI" })
 
 -- Use operator pending mode to visually select the whole buffer

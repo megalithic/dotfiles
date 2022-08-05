@@ -180,6 +180,7 @@ return lush(function()
     WildMenu({ PmenuSel }), -- current match in 'wildmenu' completion
     NormalFloat({ Pmenu }), -- Normal text in floating windows.
     FloatBorder({ Pmenu, fg = bg_dark }),
+    NotifyFloat({ bg = bg2.darken(10), fg = bg2.darken(10) }),
     FloatTitle({ Visual }),
     Question({ fg = yellow, bg = "NONE" }), -- |hit-enter| prompt and yes/no questions
     -- QuickFixLine({ fg = "NONE", bg = PmenuSbar.bg, gui = "bold,italic" }), -- Current |quickfix| item in the quickfix window. Combined with |hl-CursorLine| when the cursor is there.
@@ -353,10 +354,14 @@ return lush(function()
 
     ---- :help notify ----------------------------------------------------------
 
-    NotifyERRORBorder({ fg = red }),
-    NotifyWARNBorder({ fg = orange }),
-    NotifyINFOBorder({ fg = green }),
-    NotifyDEBUGBorder({ fg = grey2 }),
+    NotifyERRORBorder({ NotifyFloat }),
+    NotifyWARNBorder({ NotifyFloat }),
+    NotifyINFOBorder({ NotifyFloat }),
+    NotifyDEBUGBorder({ NotifyFloat }),
+    NotifyERRORBody({ NotifyFloat, fg = grey2 }),
+    NotifyWARNBody({ NotifyFloat, fg = grey2 }),
+    NotifyINFOBody({ NotifyFloat, fg = grey2 }),
+    NotifyDEBUGBody({ NotifyFloat, fg = grey2 }),
     NotifyERRORIcon({ fg = red }),
     NotifyWARNIcon({ fg = orange }),
     NotifyINFOIcon({ fg = green }),

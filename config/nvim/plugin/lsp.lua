@@ -549,7 +549,14 @@ local function setup_handlers()
       vim.lsp.handlers["$/progress"] = function(_, result, ctx)
         local client_id = ctx.client_id
         local client = vim.lsp.get_client_by_id(client_id)
-        if client.name == "sumneko_lua" or client.name == "rust_analyzer" or client.name == "clangd" then return end
+        if
+          client.name == "elixirls"
+          or client.name == "sumneko_lua"
+          or client.name == "rust_analyzer"
+          or client.name == "clangd"
+        then
+          return
+        end
         local val = result.value
 
         if not val.kind then return end

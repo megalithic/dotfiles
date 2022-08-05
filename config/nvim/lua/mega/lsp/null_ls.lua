@@ -16,23 +16,30 @@ return function(on_attach)
           "javascriptreact",
           "typescript",
           "typescriptreact",
-          "vue",
-          "svelte",
           "css",
           "scss",
           "html",
           "json",
           "jsonc",
           "yaml",
+          "graphql",
           "markdown",
-          "markdown.mdx",
         },
         condition = function() return mega.executable("prettierd") end,
       }),
       b.formatting.fixjson.with({ filetypes = { "jsonc", "json" } }),
       -- b.formatting.isort,
+      b.formatting.cbfmt:with({
+        condition = function() return mega.executable("cbfmt") end,
+      }),
       b.formatting.stylua.with({ -- sumneko now formats!
-        condition = function() return mega.executable("stylua") end,
+        condition = function()
+          return mega.executable("stylua")
+            and not vim.tbl_isempty(vim.fs.find({ ".stylua.toml", "stylua.toml" }, {
+              path = vim.fn.expand("%:p"),
+              upward = true,
+            }))
+        end,
       }),
       b.formatting.isort,
       b.formatting.black,
@@ -65,7 +72,6 @@ return function(on_attach)
         filetypes = { "zsh" },
       }),
       -- b.diagnostics.credo,
-      -- b.diagnostics.selene, -- this breaks?
     },
   })
 end
