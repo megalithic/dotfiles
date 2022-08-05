@@ -1,8 +1,9 @@
 local api = vim.api
 local fn = vim.fn
 local vcmd = vim.cmd
-local fmt = string.format
 local L = vim.log.levels
+
+_G.fmt = string.format
 
 _G.mega = mega or {
   functions = {},

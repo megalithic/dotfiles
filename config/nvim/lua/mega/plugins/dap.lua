@@ -63,6 +63,8 @@ return function()
 
   if mega.lsp.elixirls_cmd ~= nil then cmd = require("mega.utils").lsp.elixirls_cmd({ is_debug = true }) end
 
+  P(fmt("elixir-ls-dap cmd: %s", cmd))
+
   dap.adapters.mix_task = {
     type = "executable",
     command = cmd,

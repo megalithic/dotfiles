@@ -301,6 +301,8 @@ function M.config()
   conf("vim-test", { config = "vim-test" })
   conf("mini", { config = "mini" })
   conf("zk", { config = "zk" })
+  conf("dap", { config = "dap" })
+  conf("dapui", { config = "dapui" })
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
