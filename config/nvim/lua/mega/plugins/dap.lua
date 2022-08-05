@@ -1,5 +1,7 @@
 return function()
-  local dap = require("dap")
+  local dap_ok, dap = pcall(require, "dap")
+  if not dap_ok then return end
+
   local fn = vim.fn
 
   local function repl_toggle() require("dap").repl.toggle(nil, "botright split") end
@@ -59,15 +61,9 @@ return function()
   dap.adapters.nlua =
     function(callback, config) callback({ type = "server", host = config.host, port = config.port }) end
 
-  local cmd = string.format("%s/lsp/elixir-ls/%s", vim.env.XDG_DATA_HOME, "debugger.sh")
-
-  if mega.lsp.elixirls_cmd ~= nil then cmd = require("mega.utils").lsp.elixirls_cmd({ is_debug = true }) end
-
-  P(fmt("elixir-ls-dap cmd: %s", cmd))
-
   dap.adapters.mix_task = {
     type = "executable",
-    command = cmd,
+    command = require("mega.utils").lsp.elixirls_cmd({ debugger = true }),
     args = {},
   }
 

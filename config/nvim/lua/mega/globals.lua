@@ -3,6 +3,7 @@ local fn = vim.fn
 local vcmd = vim.cmd
 local L = vim.log.levels
 
+_G.I = vim.inspect
 _G.fmt = string.format
 
 _G.mega = mega or {

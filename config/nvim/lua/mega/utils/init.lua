@@ -113,34 +113,35 @@ local function language_server_cmd(opts)
   opts = opts or {}
   local fallback_dir = opts.fallback_dir
   local locations = opts.locations or {}
+  local cmd = vim.fn.expand(fallback_dir)
 
   local root = workspace_root()
   if not root then root = vim.loop.cwd() end
+  P(fmt("root: %s", root))
 
   for _, location in ipairs(locations) do
     local exists, dir = dir_has_file(root, location)
     if exists then
       -- logger.fmt_debug("language_server_cmd: %s", vim.fn.expand(dir))
-      return vim.fn.expand(dir)
+      cmd = vim.fn.expand(dir)
     end
   end
 
-  local fallback = vim.fn.expand(fallback_dir)
-  -- logger.fmt_debug("language_server_cmd: %s", fallback)
-  return fallback
+  P(fmt("cmd: %s", cmd))
+  return cmd
 end
 
 --- Build the elixir-ls command.
 -- @param opts options
 -- @param opts.fallback_dir string Path to use if locations don't contain the binary
--- @param opts.is_debug boolean Whether this is a debug elixirls_cmd binary or not
+-- @param opts.debugger boolean Whether this is a debug elixirls_cmd binary or not
 function M.lsp.elixirls_cmd(opts)
   opts = opts or {}
 
   local cmd = "language_server.sh"
-  local is_debug = opts.is_debug or false
+  local debugger = opts["debugger"] or false
 
-  if is_debug then cmd = "debugger.sh" end
+  if debugger then cmd = "debugger.sh" end
 
   opts = vim.tbl_deep_extend("force", opts, {
     locations = {
@@ -151,6 +152,8 @@ function M.lsp.elixirls_cmd(opts)
 
   opts.fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
   opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, cmd)
+
+  P(fmt("opts: %s", I(opts)))
 
   return language_server_cmd(opts)
 end
