@@ -22,6 +22,10 @@ return function()
   nnoremap("<localleader>dl", run_last, "dap REPL: run last")
   nnoremap("<localleader>dt", repl_toggle, "dap REPL: toggle")
 
+  mega.conf("nvim-dap-virtual-text", {
+    commented = true,
+  })
+
   local icons = mega.icons
 
   fn.sign_define({

@@ -117,7 +117,7 @@ local function language_server_cmd(opts)
 
   local root = workspace_root()
   if not root then root = vim.loop.cwd() end
-  P(fmt("root: %s", root))
+  -- P(fmt("root: %s", root))
 
   for _, location in ipairs(locations) do
     local exists, dir = dir_has_file(root, location)
@@ -127,7 +127,7 @@ local function language_server_cmd(opts)
     end
   end
 
-  P(fmt("cmd: %s", cmd))
+  -- P(fmt("cmd: %s", cmd))
   return cmd
 end
 
@@ -153,7 +153,7 @@ function M.lsp.elixirls_cmd(opts)
   opts.fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
   opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, cmd)
 
-  P(fmt("opts: %s", I(opts)))
+  -- P(fmt("opts: %s", I(opts)))
 
   return language_server_cmd(opts)
 end
