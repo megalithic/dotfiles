@@ -117,7 +117,7 @@ require("nvim-treesitter.configs").setup({
         ["iC"] = "@conditional.inner",
         -- FIXME: this is unusable
         -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects/issues/133 is resolved
-        -- ['ax'] = '@comment.outer',
+        ["ax"] = "@comment.outer",
       },
     },
     swap = {

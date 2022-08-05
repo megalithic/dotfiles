@@ -250,6 +250,7 @@ cask "dropbox"
 cask "figma"
 cask "firefox"
 cask "flux"
+cask "google-chrome"
 # cask "forklift" # replaced with marta for now
 cask "hazel"
 cask "hammerspoon", greedy: true

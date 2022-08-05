@@ -18,6 +18,7 @@ return function(on_attach)
           "typescriptreact",
           "css",
           "scss",
+          "eruby",
           "html",
           "json",
           "jsonc",
