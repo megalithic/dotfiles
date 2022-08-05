@@ -12,17 +12,17 @@ local augroup = mega.augroup
 local fmt = string.format
 local contains = vim.tbl_contains
 
-augroup("Startup", {
-  {
-    event = { "VimEnter" },
-    pattern = { "*" },
-    once = true,
-    command = function()
-      -- our basic dashboard/startify/alpha:
-      require("mega.start").start()
-    end,
-  },
-})
+-- augroup("Startup", {
+--   {
+--     event = { "VimEnter" },
+--     pattern = { "*" },
+--     once = true,
+--     command = function()
+--       -- our basic dashboard/startify/alpha:
+--       require("mega.start").start()
+--     end,
+--   },
+-- })
 
 augroup("CheckOutsideTime", {
   {
@@ -213,10 +213,10 @@ augroup("UpdateVim", {
   --       vim.notify(msg)
   --     end,
   --   },
-  {
-    event = { "FocusLost" },
-    command = "silent! wall",
-  },
+  -- {
+  --   event = { "FocusLost" },
+  --   command = "silent! wall",
+  -- },
   {
     event = { "VimResized" },
     command = function()
@@ -270,71 +270,6 @@ augroup("LazyLoads", {
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
 })
-
--- do
---   -- hlsearch things
---   --[[
---     NOTE: all of this graciously thieved from akinsho; big up to him.
-
---     In order to get hlsearch working the way I like i.e. on when using /,?,N,n,*,#, etc. and off when
---     When I'm not using them, I need to set the following:
---     The mappings below are essentially faked user input this is because in order to automatically turn off
---     the search highlight just changing the value of 'hlsearch' inside a function does not work
---     read `:h nohlsearch`. So to have this work I check that the current mouse position is not a search
---     result, if it is we leave highlighting on, otherwise I turn it off on cursor moved by faking my input
---     using the expr mappings below.
-
---     This is based on the implementation discussed here:
---     https://github.com/neovim/neovim/issues/5581
---   --]]
-
---   vim.keymap.set({ "n", "v", "o", "i", "c" }, "<Plug>(StopHL)", "execute(\"nohlsearch\")[-1]", { expr = true })
-
---   local function stop_hl_search()
---     if vim.v.hlsearch == 0 or api.nvim_get_mode().mode ~= "n" then
---       return
---     end
---     api.nvim_feedkeys(mega.replace_termcodes("<Plug>(StopHL)"), "m", false)
---   end
-
---   local function start_hl_search()
---     local col = api.nvim_win_get_cursor(0)[2]
---     local curr_line = api.nvim_get_current_line()
---     local ok, match = pcall(fn.matchstrpos, curr_line, fn.getreg("/"), 0)
---     if not ok then
---       return vim.notify(match, "error", { title = "HL SEARCH" })
---     end
---     local _, p_start, p_end = unpack(match)
---     -- if the cursor is in a search result, leave highlighting on
---     if col < p_start or col > p_end then
---       stop_hl_search()
---     end
---   end
-
---   augroup("IncSearchHighlight", {
---     {
---       event = { "CursorMoved" },
---       command = function()
---         start_hl_search()
---       end,
---     },
---     {
---       event = { "InsertEnter" },
---       command = function()
---         stop_hl_search()
---       end,
---     },
---     {
---       event = { "OptionSet" },
---       pattern = { "hlsearch" },
---       command = function()
---         vim.schedule(function()
---           vim.cmd("redrawstatus")
---         end)
---       end,
---     },
---   })
--- end
 
 do
   --- automatically clear commandline messages after a few seconds delay

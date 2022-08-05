@@ -317,11 +317,17 @@ local function setup_diagnostics()
   }
 
   diagnostic.config({
-    signs = true, -- {severity_limit = "Warning"},
+    signs = {
+      -- With highest priority
+      priority = 9999,
+      -- Only for warnings and errors
+      severity = { min = "HINT", max = "ERROR" },
+    },
     underline = true,
     -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
     severity_sort = true,
-    virtual_text = false,
+    -- Show virtual text only for errors
+    virtual_text = { severity = { min = "ERROR", max = "ERROR" } },
     -- {
     --   spacing = 1,
     --   prefix = "",
@@ -502,6 +508,84 @@ local function setup_handlers()
     end
   end
 
+  do
+    local nnotify_ok, nnotify = pcall(require, "notify")
+
+    if nnotify_ok and nnotify then
+      local client_notifs = {}
+
+      local function get_notif_data(client_id, token)
+        if not client_notifs[client_id] then client_notifs[client_id] = {} end
+
+        if not client_notifs[client_id][token] then client_notifs[client_id][token] = {} end
+
+        return client_notifs[client_id][token]
+      end
+
+      local spinner_frames = { "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷" }
+
+      local function update_spinner(client_id, token)
+        local notif_data = get_notif_data(client_id, token)
+
+        if notif_data.spinner then
+          local new_spinner = (notif_data.spinner + 1) % #spinner_frames
+          notif_data.spinner = new_spinner
+          notif_data.notification = nnotify(nil, nil, {
+            hide_from_history = true,
+            icon = spinner_frames[new_spinner],
+            replace = notif_data.notification,
+          })
+
+          vim.defer_fn(function() update_spinner(client_id, token) end, 100)
+        end
+      end
+
+      local function format_title(title, client_name) return client_name .. (#title > 0 and ": " .. title or "") end
+
+      local function format_message(message, percentage)
+        return (percentage and percentage .. "%\t" or "") .. (message or "")
+      end
+
+      vim.lsp.handlers["$/progress"] = function(_, result, ctx)
+        local client_id = ctx.client_id
+        local client = vim.lsp.get_client_by_id(client_id)
+        if client.name == "sumneko_lua" or client.name == "rust_analyzer" or client.name == "clangd" then return end
+        local val = result.value
+
+        if not val.kind then return end
+
+        local notif_data = get_notif_data(client_id, result.token)
+
+        if val.kind == "begin" then
+          local message = format_message(val.message, val.percentage)
+
+          notif_data.notification = nnotify(message, "info", {
+            title = format_title(val.title, vim.lsp.get_client_by_id(client_id).name),
+            icon = spinner_frames[1],
+            timeout = false,
+            hide_from_history = false,
+          })
+
+          notif_data.spinner = 1
+          update_spinner(client_id, result.token)
+        elseif val.kind == "report" and notif_data then
+          notif_data.notification = nnotify(format_message(val.message, val.percentage), "info", {
+            replace = notif_data.notification,
+            hide_from_history = false,
+          })
+        elseif val.kind == "end" and notif_data then
+          notif_data.notification = nnotify(val.message and format_message(val.message) or "Complete", "info", {
+            icon = "",
+            replace = notif_data.notification,
+            timeout = 3000,
+          })
+
+          notif_data.spinner = nil
+        end
+      end
+    end
+  end
+
   -- lsp.handlers["textDocument/definition"] = function(_, result)
   --   if result == nil or vim.tbl_isempty(result) then
   --     print("Definition not found")
@@ -666,141 +750,88 @@ mega.lsp.servers = {
   -- NOTE: we return a function here so that the lua dev dependency is not
   -- required until the setup function is called.
   sumneko_lua = function()
-    local ok, lua_dev = mega.safe_require("lua-dev")
-    -- reverse this to use lua_dev
-    if ok then
-      local path = vim.split(package.path, ";")
-      table.insert(path, "lua/?.lua")
-      table.insert(path, "lua/?/init.lua")
+    local path = vim.split(package.path, ";")
+    table.insert(path, "lua/?.lua")
+    table.insert(path, "lua/?/init.lua")
 
-      local plugins = ("%s/site/pack/paq"):format(fn.stdpath("data"))
-      local emmy = ("%s/start/emmylua-nvim"):format(plugins)
-      local plenary = ("%s/start/plenary.nvim"):format(plugins)
-      -- local paq = ('%s/opt/paq-nvim'):format(plugins)
+    local plugins = ("%s/site/pack/paq"):format(fn.stdpath("data"))
+    local emmy = ("%s/start/emmylua-nvim"):format(plugins)
+    local plenary = ("%s/start/plenary.nvim"):format(plugins)
+    -- local paq = ('%s/opt/paq-nvim'):format(plugins)
 
-      return {
-        settings = {
-          Lua = {
-            runtime = {
-              path = path,
-              version = "LuaJIT",
-            },
-            format = { enable = false },
-            diagnostics = {
-              globals = {
-                "vim",
-                "Color",
-                "c",
-                "Group",
-                "g",
-                "s",
-                "describe",
-                "it",
-                "before_each",
-                "after_each",
-                "hs",
-                "spoon",
-                "config",
-                "watchers",
-                "mega",
-                "map",
-                "nmap",
-                "vmap",
-                "xmap",
-                "smap",
-                "omap",
-                "imap",
-                "lmap",
-                "cmap",
-                "tmap",
-                "noremap",
-                "nnoremap",
-                "vnoremap",
-                "xnoremap",
-                "snoremap",
-                "onoremap",
-                "inoremap",
-                "lnoremap",
-                "cnoremap",
-                "tnoremap",
-              },
-            },
-            completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
-            workspace = {
-              library = { vim.fn.expand("$VIMRUNTIME/lua"), emmy, plenary },
-            },
-            telemetry = {
-              enable = false,
+    return {
+      handlers = {
+        -- Don't open quickfix list in case of multiple definitions. At the
+        -- moment, this conflicts the `a = function()` code style because
+        -- sumneko_lua treats both `a` and `function()` to be definitions of `a`.
+        ["textDocument/definition"] = function(_, result, ctx, _)
+          -- Adapted from source:
+          -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/handlers.lua#L341-L366
+          if result == nil or vim.tbl_isempty(result) then return nil end
+          local client = vim.lsp.get_client_by_id(ctx.client_id)
+
+          local res = vim.tbl_islist(result) and result[1] or result
+          vim.lsp.util.jump_to_location(res, client.offset_encoding)
+        end,
+      },
+      settings = {
+        Lua = {
+          runtime = {
+            path = path,
+            version = "LuaJIT",
+          },
+          format = { enable = false },
+          diagnostics = {
+            globals = {
+              "vim",
+              "Color",
+              "c",
+              "Group",
+              "g",
+              "s",
+              "describe",
+              "it",
+              "before_each",
+              "after_each",
+              "hs",
+              "spoon",
+              "config",
+              "watchers",
+              "mega",
+              "map",
+              "nmap",
+              "vmap",
+              "xmap",
+              "smap",
+              "omap",
+              "imap",
+              "lmap",
+              "cmap",
+              "tmap",
+              "noremap",
+              "nnoremap",
+              "vnoremap",
+              "xnoremap",
+              "snoremap",
+              "onoremap",
+              "inoremap",
+              "lnoremap",
+              "cnoremap",
+              "tnoremap",
             },
           },
-        },
-      }
-    end
-
-    local config = {
-      library = {
-        plugins = { "plenary.nvim", "neotest" },
-      },
-      lspconfig = {
-        settings = {
-          Lua = {
-            format = {
-              enabled = false,
-            },
-            diagnostics = {
-              -- @see https://github.com/sumneko/lua-language-server/tree/master/script/core/diagnostics
-              disable = {
-                "lowercase-global",
-                "unused-vararg",
-                "missing-parameter",
-              },
-              globals = {
-                "vim",
-                "Color",
-                "c",
-                "Group",
-                "g",
-                "s",
-                "describe",
-                "it",
-                "before_each",
-                "after_each",
-                "hs",
-                "spoon",
-                "config",
-                "watchers",
-                "mega",
-                "map",
-                "nmap",
-                "vmap",
-                "xmap",
-                "smap",
-                "omap",
-                "imap",
-                "lmap",
-                "cmap",
-                "tmap",
-                "noremap",
-                "nnoremap",
-                "vnoremap",
-                "xnoremap",
-                "snoremap",
-                "onoremap",
-                "inoremap",
-                "lnoremap",
-                "cnoremap",
-                "tnoremap",
-                "mapbang",
-                "noremapbang",
-                "packer_plugins",
-              },
-            },
-            completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
+          completion = { keywordSnippet = "Replace", callSnippet = "Replace" },
+          workspace = {
+            -- Don't analyze code from submodules
+            ignoreSubmodules = true,
+            library = { vim.fn.expand("$VIMRUNTIME/lua"), emmy, plenary },
+          },
+          telemetry = {
+            enable = false,
           },
         },
       },
     }
-    return lua_dev.setup(config)
   end,
 
   tailwindcss = function()

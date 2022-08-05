@@ -30,6 +30,7 @@ local PKGS = {
   { "echasnovski/mini.nvim" },
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
+  "rcarriga/nvim-notify",
 
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -342,7 +343,7 @@ function M.config()
     require("colorizer").setup({ "*" }, {
       RGB = true, -- #RGB hex codes
       RRGGBB = true, -- #RRGGBB hex codes
-      names = true, -- "Name" codes like Blue
+      names = false, -- "Name" codes like Blue
       RRGGBBAA = true, -- #RRGGBBAA hex codes
       rgb_fn = true, -- CSS rgb() and rgba() functions
       hsl_fn = true, -- CSS hsl() and hsla() functions
@@ -594,6 +595,10 @@ function M.config()
     require("neogen").setup({ snippet_engine = "luasnip" })
     mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
   end)
+
+  conf("notify", {
+    background_colour = "CursorColumn",
+  })
 end
 
 return M
