@@ -303,6 +303,7 @@ function M.config()
   conf("zk", { config = "zk" })
   conf("dap", { config = "dap" })
   conf("dapui", { config = "dapui" })
+  conf("hydra", { config = "hydra" })
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {

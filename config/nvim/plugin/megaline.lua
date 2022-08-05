@@ -694,6 +694,24 @@ function M.s_lineinfo(args)
   })
 end
 
+function M.hydra(args)
+  local ok, hydra = pcall(require, "hydra.statusline")
+  if not ok then return false, {} end
+  local colors = {
+    red = "HydraRedSt",
+    blue = "HydraBlueSt",
+    amaranth = "HydraAmaranthSt",
+    teal = "HydraTealSt",
+    pink = "HydraPinkSt",
+  }
+  local data = {
+    name = hydra.get_name() or "UNKNOWN",
+    hint = hydra.get_hint(),
+    color = colors[hydra.get_color()],
+  }
+  return hydra.is_active(), data
+end
+
 local function is_focused() return tonumber(vim.g.actual_curwin) == vim.api.nvim_get_current_win() end
 
 -- do the statusline things for the activate window
@@ -732,6 +750,8 @@ function _G.__statusline()
     local diag_warn                   = unpack(item_if(diags.warn.count, not is_truncated(100) and diags.warn, "StWarn", { prefix = diags.warn.sign }))
     local diag_info                   = unpack(item_if(diags.info.count, not is_truncated(100) and diags.info, "StInfo", { prefix = diags.info.sign }))
     local diag_hint                   = unpack(item_if(diags.hint.count, not is_truncated(100) and diags.hint, "StHint", { prefix = diags.hint.sign }))
+    local hydra_active, hydra         = M.hydra()
+
     -- stylua: ignore end
 
     if plain then
@@ -772,9 +792,14 @@ function _G.__statusline()
           { before = " ", after = " ", prefix = " ", suffix = " " }
         )
       ),
-      "%=", -- end left alignment
-      -- middle section for whatever we want..
-      "%=",
+      "%=", -- end left alignment/begin middle section
+      -- hydra
+      unpack(item_if(hydra.name:upper(), hydra_active, hydra.color, {
+        prefix = string.rep(" ", 5) .. "🐙",
+        suffix = string.rep(" ", 5),
+        priority = 5,
+      })),
+      "%=", -- end middle seciond/begin right alignment
       -- diagnostics
       { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
       -- git status/branch

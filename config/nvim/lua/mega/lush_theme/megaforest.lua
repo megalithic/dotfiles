@@ -761,6 +761,12 @@ return lush(function()
     StWarn({ fg = orange, bg = bg1 }),
     StInfo({ fg = cyan, bg = bg1, gui = "bold" }),
     StHint({ fg = bg5, bg = bg1 }),
+    ---- hydra
+    --HydraRedSt({ HydraRed, gui = "reverse" }),
+    --HydraBlueSt({ HydraBlue, gui = "reverse" }),
+    --HydraAmaranthSt({ HydraAmaranth, gui = "reverse" }),
+    --HydraTealSt({ HydraTeal, gui = "reverse" }),
+    --HydraPinkSt({ HydraPink, gui = "reverse" }),
 
     ---- :help winbar  ---------------------------------------------------------
 
