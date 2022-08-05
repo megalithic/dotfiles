@@ -416,11 +416,6 @@ nnoremap([[<Esc>]], function()
     local ok, n = require("notify")
     if ok and n then n.dismiss() end
   end
-
-  do
-    local ok, h = require("hydra")
-    if ok and h then h:exit() end
-  end
 end, { silent = true, desc = "Clear UI" })
 
 -- Use operator pending mode to visually select the whole buffer

@@ -10,8 +10,8 @@ return function()
     config = {
       invoke_on_body = true,
       hint = { border = border },
-      on_enter = function() vim.cmd("BeaconOff") end,
-      on_exit = function() vim.cmd("BeaconOn") end,
+      -- on_enter = function() vim.cmd("BeaconOff") end,
+      -- on_exit = function() vim.cmd("BeaconOn") end,
     },
     heads = {
       { "j", "zj", { desc = "next fold" } },
@@ -30,8 +30,8 @@ return function()
     config = {
       hint = { border = border },
       invoke_on_body = true,
-      on_enter = function() vim.cmd("BeaconOff") end,
-      on_exit = function() vim.cmd("BeaconOn") end,
+      -- on_enter = function() vim.cmd("BeaconOff") end,
+      -- on_exit = function() vim.cmd("BeaconOn") end,
     },
     heads = {
       { "l", "<Cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" } },
@@ -44,43 +44,43 @@ return function()
     },
   })
 
-  Hydra({
-    name = "Side scroll",
-    mode = "n",
-    body = "z",
-    heads = {
-      { "h", "5zh" },
-      { "l", "5zl", { desc = "←/→" } },
-      { "H", "zH" },
-      { "L", "zL", { desc = "half screen ←/→" } },
-    },
-  })
+  -- Hydra({
+  --   name = "Side scroll",
+  --   mode = "n",
+  --   body = "z",
+  --   heads = {
+  --     { "h", "5zh" },
+  --     { "l", "5zl", { desc = "←/→" } },
+  --     { "H", "zH" },
+  --     { "L", "zL", { desc = "half screen ←/→" } },
+  --   },
+  -- })
 
-  Hydra({
-    name = "Window management",
-    config = {
-      invoke_on_body = false,
-      hint = {
-        border = border,
-      },
-    },
-    mode = "n",
-    body = "<C-w>",
-    heads = {
-      -- Split
-      { "s", "<C-w>s", { desc = "split horizontally" } },
-      { "v", "<C-w>v", { desc = "split vertically" } },
-      { "q", "<C-w>c", { desc = "close window" } },
-      -- Size
-      { "j", "2<C-w>+", { desc = "increase height" } },
-      { "k", "2<C-w>-", { desc = "decrease height" } },
-      { "h", "5<C-w>>", { desc = "increase width" } },
-      { "l", "5<C-w><", { desc = "decrease width" } },
-      { "=", "<C-w>=", { desc = "equalize" } },
-      --
-      { "<Esc>", nil, { exit = true } },
-    },
-  })
+  -- Hydra({
+  --   name = "Window management",
+  --   config = {
+  --     invoke_on_body = false,
+  --     hint = {
+  --       border = border,
+  --     },
+  --   },
+  --   mode = "n",
+  --   body = "<C-w>",
+  --   heads = {
+  --     -- Split
+  --     { "s", "<C-w>s", { desc = "split horizontally" } },
+  --     { "v", "<C-w>v", { desc = "split vertically" } },
+  --     { "q", "<C-w>c", { desc = "close window" } },
+  --     -- Size
+  --     { "j", "2<C-w>+", { desc = "increase height" } },
+  --     { "k", "2<C-w>-", { desc = "decrease height" } },
+  --     { "h", "5<C-w>>", { desc = "increase width" } },
+  --     { "l", "5<C-w><", { desc = "decrease width" } },
+  --     { "=", "<C-w>=", { desc = "equalize" } },
+  --     --
+  --     { "<Esc>", nil, { exit = true } },
+  --   },
+  -- })
 
   local ok, gitsigns = pcall(require, "gitsigns")
   if ok then
