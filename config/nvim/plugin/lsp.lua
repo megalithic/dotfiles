@@ -767,20 +767,20 @@ mega.lsp.servers = {
     -- local paq = ('%s/opt/paq-nvim'):format(plugins)
 
     return {
-      -- handlers = {
-      --   -- Don't open quickfix list in case of multiple definitions. At the
-      --   -- moment, this conflicts the `a = function()` code style because
-      --   -- sumneko_lua treats both `a` and `function()` to be definitions of `a`.
-      --   ["textDocument/definition"] = function(_, result, ctx, _)
-      --     -- Adapted from source:
-      --     -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/handlers.lua#L341-L366
-      --     if result == nil or vim.tbl_isempty(result) then return nil end
-      --     local client = vim.lsp.get_client_by_id(ctx.client_id)
+      handlers = {
+        -- Don't open quickfix list in case of multiple definitions. At the
+        -- moment, this conflicts the `a = function()` code style because
+        -- sumneko_lua treats both `a` and `function()` to be definitions of `a`.
+        ["textDocument/definition"] = function(_, result, ctx, _)
+          -- Adapted from source:
+          -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/handlers.lua#L341-L366
+          if result == nil or vim.tbl_isempty(result) then return nil end
+          local client = vim.lsp.get_client_by_id(ctx.client_id)
 
-      --     local res = vim.tbl_islist(result) and result[1] or result
-      --     vim.lsp.util.jump_to_location(res, client.offset_encoding)
-      --   end,
-      -- },
+          local res = vim.tbl_islist(result) and result[1] or result
+          vim.lsp.util.jump_to_location(res, client.offset_encoding)
+        end,
+      },
       settings = {
         Lua = {
           runtime = {
@@ -832,6 +832,7 @@ mega.lsp.servers = {
             -- Don't analyze code from submodules
             ignoreSubmodules = true,
             library = { vim.fn.expand("$VIMRUNTIME/lua"), emmy, plenary },
+            checkThirdParty = false,
           },
           telemetry = {
             enable = false,

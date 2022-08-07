@@ -307,8 +307,7 @@ function M.config()
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {
-    -- move_cursor = false,
-    highlight_motion = { -- Highlight before inserting/changing surrounds
+    highlight = { -- Highlight before inserting/changing surrounds
       duration = 1,
     },
   })
@@ -496,7 +495,6 @@ function M.config()
     },
     zindex = 99, -- Keep signature popup below the completion PUM
     toggle_key = "<C-k>",
-    --   hi_parameter = "QuickFixLine",
   })
 
   conf("vim-matchup", function()
