@@ -28,56 +28,60 @@ local function getChatMessageLinks(appObj)
   fuzzyChooser:start(chooserCallback, choices, { "text" })
 end
 
-obj.modal = nil
--- obj.actions = {
---   getMessageLinks = {
---     action = function() getChatMessageLinks(_appObj) end,
---     hotkey = { "alt", "o" },
---   },
---   deleteConversation = {
---     action = function() _appObj:selectMenuItem({ "File", "Delete Conversation…" }) end,
---     hotkey = { "cmd", "delete" },
---   },
---   nextConversation = {
---     action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
---     hotkey = { mods.casC, "n" },
---   },
---   prevConversation = {
---     action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
---     hotkey = { mods.casC, "p" },
---   },
---   -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?!
---   gotoConversation1 = {
---     action = function() hs.eventtap.keyStroke({ "cmd" }, "1") end,
---     hotkey = { { "ctrl" }, "h" },
---   },
---   gotoConversation2 = {
---     action = function() hs.eventtap.keyStroke({ "cmd" }, "2") end,
---     hotkey = { { "ctrl" }, "j" },
---   },
---   gotoConversation3 = {
---     action = function() hs.eventtap.keyStroke({ "cmd" }, "3") end,
---     hotkey = { { "ctrl" }, "k" },
---   },
---   gotoConversation4 = {
---     action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
---     hotkey = { { "ctrl" }, "l" },
---   },
--- }
+obj.modal = true
+obj.actions = {
+  getMessageLinks = {
+    action = function() getChatMessageLinks(_appObj) end,
+    hotkey = { "alt", "o" },
+  },
+  nextConversation = {
+    action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
+    hotkey = { mods.casC, "n" },
+  },
+  prevConversation = {
+    action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
+    hotkey = { mods.casC, "p" },
+  },
+  -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?! sooo, we use ctrl-h,j,k,l instead.
+  gotoConversation1 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "1") end,
+    hotkey = { { "ctrl" }, "h" },
+  },
+  gotoConversation2 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "2") end,
+    hotkey = { { "ctrl" }, "j" },
+  },
+  gotoConversation3 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "3") end,
+    hotkey = { { "ctrl" }, "k" },
+  },
+  gotoConversation4 = {
+    action = function() hs.eventtap.keyStroke({ "cmd" }, "4") end,
+    hotkey = { { "ctrl" }, "l" },
+  },
+}
 
 function obj:start(opts)
   opts = opts or {}
   _appObj = opts["appObj"]
+  local event = opts["event"]
 
-  if _appModal and obj.modal then obj.modal:enter() end
+  if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
+    if obj.modal then obj.modal:enter() end
+  end
 
   note(fmt("[START] %s: %s", obj.name, opts))
 
   return self
 end
 
-function obj:stop()
-  if obj.modal then obj.modal:exit() end
+function obj:stop(opts)
+  opts = opts or {}
+  local event = opts["event"]
+
+  if event == hs.application.watcher.deactivated or event == hs.application.watcher.terminated then
+    if obj.modal then obj.modal:exit() end
+  end
 
   note(fmt("[STOP] %s: %s", obj.name, self))
 
