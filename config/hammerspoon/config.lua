@@ -27,7 +27,7 @@ local preferred = {
 }
 preferred["browser"] = hs.urlevent.getDefaultHandler("https")
 
-local watchers = { "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
+local watchers = { "status", "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
 
 local transientApps = {
   ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
