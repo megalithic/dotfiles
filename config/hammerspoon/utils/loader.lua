@@ -51,7 +51,7 @@ function obj.load(loadTarget, opts)
       if type(mod.stop) == "function" then
         if mega.__loaded_modules[cache_key] then
           info(fmt("[STOP] %s (%s)", cache_key, I(opts, false)))
-          return kega.__loaded_modules[cache_key].mod:stop()
+          return mega.__loaded_modules[cache_key].mod:stop()
         end
         info(fmt("[STOP] %s (%s)", loadTarget, I(opts, false)))
         return mod:stop(opts)

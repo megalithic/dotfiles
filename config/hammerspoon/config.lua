@@ -27,7 +27,7 @@ local preferred = {
 }
 preferred["browser"] = hs.urlevent.getDefaultHandler("https")
 
-local watchers = { "dock", "bluetooth", "audio", "wifi", "url", "downloads" }
+local watchers = { "bluetooth", "dock", "audio", "wifi", "url", "downloads" }
 
 local transientApps = {
   ["LaunchBar"] = { allowRoles = "AXSystemDialog" },
@@ -274,6 +274,36 @@ local utils = {
   },
 }
 
+local dock = {
+  ["target"] = {
+    productID = 25907,
+    productName = "CalDigit Thunderbolt 3 Audio",
+    vendorID = 8584,
+    vendorName = "CalDigit, Inc.",
+  },
+  ["keyboard"] = {
+    productID = 24674,
+    productName = "Atreus62",
+    vendorID = 65261,
+    vendorName = "Profet",
+  },
+  ["docked"] = {
+    wifi = "off", -- wifi status
+    profile = "atreus62", -- Karabiner-Elements profile name
+    input = "Samson GoMic", -- microphone source
+    -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
+    output = "megapods", -- speaker source
+    fontSize = 15.0,
+  },
+  ["undocked"] = {
+    wifi = "on",
+    profile = "internal",
+    input = "MacBook Pro Microphone",
+    output = "MacBook Pro Speakers",
+    fontSize = 17.0,
+  },
+}
+
 function obj:init(opts)
   opts = opts or {}
 
@@ -293,6 +323,7 @@ function obj:init(opts)
     ["preferred"] = preferred,
     ["transientApps"] = transientApps,
     ["watchers"] = watchers,
+    ["dock"] = dock,
   }
 
   Settings.set(CONFIG_KEY, obj.settings)

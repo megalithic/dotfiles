@@ -103,12 +103,12 @@ end
 -- end
 
 function obj.on()
-  local task = hs.task.new(obj.cmd, function(stdTask, stdOut, stdErr) dbg("dnd on") end, { "on" })
+  local task = hs.task.new(obj.cmd, function(stdTask, stdOut, stdErr) info("dnd on") end, { "on" })
   task:start()
 end
 
 function obj.off()
-  local task = hs.task.new(obj.cmd, function(stdTask, stdOut, stdErr) dbg("dnd off") end, { "off" })
+  local task = hs.task.new(obj.cmd, function(stdTask, stdOut, stdErr) info("dnd off") end, { "off" })
   task:start()
 end
 

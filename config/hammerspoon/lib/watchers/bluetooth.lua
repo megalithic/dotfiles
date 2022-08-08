@@ -80,11 +80,13 @@ end
 local function checkAndAlertLowBattery()
   local batteryInfoForConnectedDevices = hs.battery.privateBluetoothBatteryInfo()
 
-  -- local phonakBattery = {}
   hs.fnutils.each(batteryInfoForConnectedDevices, function(device)
-    -- if device["address"] == obj.devices["phonak"].id then
     local percentage = device["batteryPercentSingle"]
     local name = device["name"]
+
+    -- TODO: add a watcheable watch for bluetooth
+    -- watching
+
     if tonumber(percentage) < 10 then
       error(fmt("[bluetooth] %s: %s%%", name, percentage))
     elseif tonumber(percentage) < 25 then
@@ -92,7 +94,6 @@ local function checkAndAlertLowBattery()
     else
       note(fmt("[bluetooth] %s: %s%%", name, percentage))
     end
-    -- end
   end)
 end
 

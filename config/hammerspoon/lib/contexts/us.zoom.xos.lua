@@ -71,11 +71,6 @@ function obj:start(opts)
         }
         hs.layout.apply(layouts)
         kitty:setFrontmost(true)
-
-        -- TODO: disabling zetty notes for now
-        -- hs.timer.doAfter(0.5, function()
-        -- 	hs.execute(os.getenv("HOME") .. "/.dotfiles/bin/zetty meeting", true)
-        -- end)
       end)
     end
   end

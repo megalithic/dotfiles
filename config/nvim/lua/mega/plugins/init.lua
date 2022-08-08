@@ -351,7 +351,7 @@ function M.config()
       hsl_fn = true, -- CSS hsl() and hsla() functions
       css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
       css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-      mode = "background",
+      mode = "virtualtext",
     })
   end)
 
@@ -481,7 +481,16 @@ function M.config()
   --   },
   -- })
 
+  -- FIXME:
+  --Error executing vim.schedule lua callback: /usr/local/share/nvim/runtime/lua/vim/lsp/util.lua:1569: Window was closed immediately
+  -- stack traceback:
+  --         [C]: in function 'nvim_open_win'
+  --         /usr/local/share/nvim/runtime/lua/vim/lsp/util.lua:1569: in function 'open_floating_preview'
+  --         ...paqs/start/lsp_signature.nvim/lua/lsp_signature/init.lua:471: in function 'handler'
+  --         /usr/local/share/nvim/runtime/lua/vim/lsp.lua:1241: in function ''
+  --         vim/_editor.lua: in function <vim/_editor.lua:0>
   conf("lsp_signature", {
+    enable = false,
     bind = true,
     fix_pos = false,
     auto_close_after = 5,
