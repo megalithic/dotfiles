@@ -52,7 +52,7 @@ local PKGS = {
   "ray-x/cmp-treesitter",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  "ray-x/lsp_signature.nvim",
+  -- "ray-x/lsp_signature.nvim",
   -- "j-hui/fidget.nvim",
   "ZenLian/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
@@ -489,22 +489,22 @@ function M.config()
   --         ...paqs/start/lsp_signature.nvim/lua/lsp_signature/init.lua:471: in function 'handler'
   --         /usr/local/share/nvim/runtime/lua/vim/lsp.lua:1241: in function ''
   --         vim/_editor.lua: in function <vim/_editor.lua:0>
-  conf("lsp_signature", {
-    enable = false,
-    bind = false,
-    fix_pos = false,
-    auto_close_after = 5,
-    hint_enable = false,
-    handler_opts = {
-      anchor = "SW",
-      relative = "cursor",
-      row = -1,
-      focus = false,
-      border = mega.get_border(),
-    },
-    zindex = 99, -- Keep signature popup below the completion PUM
-    toggle_key = "<C-k>",
-  })
+  -- conf("lsp_signature", {
+  --   bind = true,
+  --   always_trigger = false,
+  --   fix_pos = false,
+  --   auto_close_after = 5,
+  --   hint_enable = false,
+  --   handler_opts = {
+  --     anchor = "SW",
+  --     relative = "cursor",
+  --     row = -1,
+  --     focus = false,
+  --     border = mega.get_border(),
+  --   },
+  --   zindex = 99, -- Keep signature popup below the completion PUM
+  --   toggle_key = "<C-k>",
+  -- })
 
   conf("vim-matchup", function()
     vim.g.matchup_surround_enabled = true

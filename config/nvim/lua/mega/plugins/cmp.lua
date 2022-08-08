@@ -120,7 +120,6 @@ return function()
       -- { name = "treesitter" },
       -- { name = "buffer", keyword_length = 3 },
       { name = "path" },
-      -- { name = "emmet_ls" },
     }, {
       {
         name = "buffer",
