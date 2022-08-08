@@ -491,7 +491,7 @@ function M.config()
   --         vim/_editor.lua: in function <vim/_editor.lua:0>
   conf("lsp_signature", {
     enable = false,
-    bind = true,
+    bind = false,
     fix_pos = false,
     auto_close_after = 5,
     hint_enable = false,
