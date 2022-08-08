@@ -9,6 +9,9 @@ local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
 
+local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
+local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
+
 vim.opt.completeopt = { "menu", "menuone", "noselect", "noinsert" }
 vim.opt.shortmess:append("c") -- Don't pass messages to |ins-completion-menu|
 
@@ -134,20 +137,13 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  -- augroup("LspSignatureHelp", {
-  --   {
-  --     event = { "CursorHoldI" },
-  --     command = function()
-  --       if
-  --         client.server_capabilities.signatureHelpProvider ~= nil
-  --         and not vim.tbl_isempty(client.server_capabilities.signatureHelpProvider)
-  --       then
-  --         P("should show thing")
-  --         -- vim.lsp.buf.signature_help()
-  --       end
-  --     end,
-  --   },
-  -- })
+  augroup("LspSignatureHelp", {
+    {
+      event = { "CursorHoldI" },
+      buffer = 0,
+      command = function() vim.lsp.buf.signature_help() end,
+    },
+  })
 
   -- augroup("LspDocumentHighlight", {
   --   {
@@ -202,7 +198,8 @@ local function setup_mappings(client, bufnr)
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
-  inoremap("<C-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
+  imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
   nnoremap(
     "<leader>lic",
@@ -346,8 +343,8 @@ local function setup_diagnostics()
       border = mega.get_border(),
       focusable = false,
       severity_sort = true,
-      max_width = math.min(math.floor(vim.o.columns * 0.7), 100),
-      max_height = math.min(math.floor(vim.o.lines * 0.3), 30),
+      max_width = max_width,
+      max_height = max_height,
       close_events = {
         "CursorMoved",
         "BufHidden",
@@ -393,8 +390,8 @@ end
 local function setup_handlers()
   local opts = {
     border = mega.get_border(),
-    max_width = math.min(math.floor(vim.o.columns * 0.7), 100),
-    max_height = math.min(math.floor(vim.o.lines * 0.3), 30),
+    max_width = max_width,
+    max_height = max_height,
     focusable = false,
     focus = false,
     silent = true,
@@ -450,9 +447,12 @@ local function setup_handlers()
   lsp.handlers["textDocument/hover"] = lsp.with(hover_handler, opts)
   -- lsp.handlers["textDocument/hover"] = lsp.with(lsp.handlers.hover, opts)
   local signature_help_opts = mega.table_merge(opts, {
-    anchor = "SW",
-    relative = "cursor",
-    row = -1,
+    -- anchor = "SW",
+    -- relative = "cursor",
+    -- row = -1,
+    border = mega.get_border(),
+    max_width = max_width,
+    max_height = max_height,
   })
   lsp.handlers["textDocument/signatureHelp"] = lsp.with(lsp.handlers.signature_help, signature_help_opts)
 

@@ -52,7 +52,7 @@ local PKGS = {
   "ray-x/cmp-treesitter",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  -- "ray-x/lsp_signature.nvim",
+  "ray-x/lsp_signature.nvim",
   -- "j-hui/fidget.nvim",
   "ZenLian/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
@@ -351,7 +351,7 @@ function M.config()
       hsl_fn = true, -- CSS hsl() and hsla() functions
       css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
       css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-      mode = "virtualtext",
+      mode = "background",
     })
   end)
 
@@ -489,22 +489,27 @@ function M.config()
   --         ...paqs/start/lsp_signature.nvim/lua/lsp_signature/init.lua:471: in function 'handler'
   --         /usr/local/share/nvim/runtime/lua/vim/lsp.lua:1241: in function ''
   --         vim/_editor.lua: in function <vim/_editor.lua:0>
-  -- conf("lsp_signature", {
-  --   bind = true,
-  --   always_trigger = false,
-  --   fix_pos = false,
-  --   auto_close_after = 5,
-  --   hint_enable = false,
-  --   handler_opts = {
-  --     anchor = "SW",
-  --     relative = "cursor",
-  --     row = -1,
-  --     focus = false,
-  --     border = mega.get_border(),
-  --   },
-  --   zindex = 99, -- Keep signature popup below the completion PUM
-  --   toggle_key = "<C-k>",
-  -- })
+  conf("lsp_signature", {
+    bind = true,
+    fix_pos = false,
+    auto_close_after = 15, -- close after 15 seconds
+    hint_enable = false,
+    handler_opts = { border = mega.get_border() },
+    -- bind = true,
+    -- always_trigger = false,
+    -- fix_pos = false,
+    -- auto_close_after = 5,
+    -- hint_enable = false,
+    -- handler_opts = {
+    --   anchor = "SW",
+    --   relative = "cursor",
+    --   row = -1,
+    --   focus = false,
+    --   border = mega.get_border(),
+    -- },
+    -- zindex = 99, -- Keep signature popup below the completion PUM
+    -- toggle_key = "<C-k>",
+  })
 
   conf("vim-matchup", function()
     vim.g.matchup_surround_enabled = true
