@@ -21,7 +21,7 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
-  "norcalli/nvim-colorizer.lua",
+  "NvChad/nvim-colorizer.lua",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
   "lukas-reineke/virt-column.nvim",
