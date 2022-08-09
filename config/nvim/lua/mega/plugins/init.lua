@@ -21,7 +21,9 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (appearance/UI/visuals) --
   "rktjmp/lush.nvim",
-  "NvChad/nvim-colorizer.lua",
+  -- "NvChad/nvim-colorizer.lua",
+  -- @trial brenoprata10/nvim-highlight-colors
+  "brenoprata10/nvim-highlight-colors",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
   "lukas-reineke/virt-column.nvim",
@@ -75,7 +77,7 @@ local PKGS = {
   },
   { "nvim-treesitter/playground" },
   -- "nvim-treesitter/nvim-treesitter-refactor",
-  "nvim-treesitter/nvim-treesitter-textobjects",
+  -- "nvim-treesitter/nvim-treesitter-textobjects",
   "nvim-treesitter/nvim-tree-docs",
   "JoosepAlviste/nvim-ts-context-commentstring",
   "windwp/nvim-ts-autotag",
@@ -342,19 +344,21 @@ function M.config()
     end,
   })
 
-  conf("colorizer", function()
-    require("colorizer").setup({ "*" }, {
-      RGB = true, -- #RGB hex codes
-      RRGGBB = true, -- #RRGGBB hex codes
-      names = false, -- "Name" codes like Blue
-      RRGGBBAA = true, -- #RRGGBBAA hex codes
-      rgb_fn = true, -- CSS rgb() and rgba() functions
-      hsl_fn = true, -- CSS hsl() and hsla() functions
-      css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
-      css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-      mode = "background",
-    })
-  end)
+  conf("nvim-highlight-colors", { render = "background" })
+
+  -- conf("colorizer", function()
+  --   require("colorizer").setup({ "*" }, {
+  --     RGB = true, -- #RGB hex codes
+  --     RRGGBB = true, -- #RRGGBB hex codes
+  --     names = false, -- "Name" codes like Blue
+  --     RRGGBBAA = true, -- #RRGGBBAA hex codes
+  --     rgb_fn = true, -- CSS rgb() and rgba() functions
+  --     hsl_fn = true, -- CSS hsl() and hsla() functions
+  --     css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
+  --     css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
+  --     mode = "background",
+  --   })
+  -- end)
 
   conf("golden_size", function()
     local gs = require("golden_size")

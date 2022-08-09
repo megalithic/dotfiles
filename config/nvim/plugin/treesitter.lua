@@ -104,53 +104,6 @@ require("nvim-treesitter.configs").setup({
       node_decremental = "<BS>", -- decrement to the previous node
     },
   },
-  textobjects = {
-    enable = false,
-    -- select = {
-    --   enable = true,
-    --   lookahead = true,
-    --   keymaps = {
-    --     ["af"] = "@function.outer",
-    --     ["if"] = "@function.inner",
-    --     ["ac"] = "@class.outer",
-    --     ["ic"] = "@class.inner",
-    --     ["aC"] = "@conditional.outer",
-    --     ["iC"] = "@conditional.inner",
-    --     -- FIXME: this is unusable
-    --     -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects/issues/133 is resolved
-    --     ["ax"] = "@comment.outer",
-    --   },
-    -- },
-    -- swap = {
-    --   enable = true,
-    --   swap_next = {
-    --     ["[w"] = "@parameter.inner",
-    --   },
-    --   swap_previous = {
-    --     ["]w"] = "@parameter.inner",
-    --   },
-    -- },
-    -- move = {
-    --   enable = true,
-    --   set_jumps = true, -- whether to set jumps in the jumplist
-    --   goto_next_start = {
-    --     ["]m"] = "@function.outer",
-    --     ["]]"] = "@class.outer",
-    --   },
-    --   goto_previous_start = {
-    --     ["[m"] = "@function.outer",
-    --     ["[["] = "@class.outer",
-    --   },
-    -- },
-    -- lsp_interop = {
-    --   enable = true,
-    --   border = mega.get_border(),
-    --   peek_definition_code = {
-    --     ["<leader>df"] = "@function.outer",
-    --     ["<leader>dF"] = "@class.outer",
-    --   },
-    -- },
-  },
   query_linter = {
     enable = true,
     use_virtual_text = true,

@@ -66,6 +66,14 @@ function obj:start(opts)
   _appObj = opts["appObj"]
   local event = opts["event"]
 
+  for _, value in pairs(obj.actions) do
+    local hotkey = value.hotkey
+    if hotkey then
+      local lmods, key = table.unpack(hotkey)
+      obj.modal:bind(lmods, key, value.action)
+    end
+  end
+
   if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
     if obj.modal then obj.modal:enter() end
   end
