@@ -125,7 +125,7 @@ end
 
 function mega.plugin_loaded(plugin_name)
   local plugins = package.loaded or {}
-  return plugins[plugin_name] ~= nil -- and plugins[plugin_name].loaded
+  return plugins[plugin_name] ~= nil and package.preload[plugin_name] ~= nil
 end
 
 -- TODO: would like to add ability to gather input for continuing; ala `jordwalke/VimAutoMakeDirectory`
@@ -168,13 +168,55 @@ function mega.opt(o, v, scopes)
   end
 end
 
-function mega.safe_require(module, opts)
+---Require a module using `pcall` and report any errors
+---@param module string
+---@param opts table?
+---@return boolean, any
+-- function mega.require(module, opts)
+--   opts = opts or { silent = true }
+--   local ok, result = pcall(require, module)
+--   if not ok and not opts.silent then
+--     if opts.message then result = opts.message .. "\n" .. result end
+--     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
+--   end
+--   return ok, result
+-- end
+
+---Require a module using `pcall` and report any errors
+---@param module string
+---@param opts table?
+---@return boolean, any
+function mega.require(module, opts)
   opts = opts or { silent = true }
   local ok, result = pcall(require, module)
   if not ok and not opts.silent then
+    if opts.message then result = opts.message .. "\n" .. result end
     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
   end
   return ok, result
+end
+
+-- ---@alias Plug table<(string | number), string>
+
+--- A convenience wrapper that calls the ftplugin config for a plugin if it exists
+--- and warns me if the plugin is not installed
+--- TODO: find out if it's possible to annotate the plugin as a module
+---@param name string
+-- ---@param name string | Plug
+---@param callback fun(module: table) | fun()
+function mega.ftplugin_conf(name, callback)
+  local plugin_name = type(name) == "table" and name.plugin or nil
+  if plugin_name and not mega.plugin_loaded(plugin_name) then return end
+
+  local module = type(name) == "table" and name[1] or name
+  local info = debug.getinfo(1, "S")
+  local ok, plugin = mega.require(module, { message = fmt("In file: %s", info.source) })
+
+  if ok then
+    callback(plugin)
+  else
+    callback()
+  end
 end
 
 --- @class ConfigOpts
@@ -198,8 +240,8 @@ function mega.conf(plugin_conf_name, opts)
   local function string_loader(str)
     local has_external_config, found_external_config = pcall(require, fmt("mega.plugins.%s", str))
     if has_external_config then
-      config = found_external_config
       if not silent then P(fmt("%s external config: %s", str, vim.inspect(config))) end
+      return found_external_config
     end
   end
 
@@ -230,19 +272,17 @@ function mega.conf(plugin_conf_name, opts)
     if not silent then P(fmt("%s (config table): %s", plugin_conf_name, vim.inspect(config))) end
 
     -- handle what to do when opts.config is simply a string "name" to use for loading external config
-    if type(opts.config) == "string" then string_loader(opts.config) end
+    if type(opts.config) == "string" then config = string_loader(opts.config) end
   elseif type(opts) == "string" then
-    string_loader(opts)
+    config = string_loader(opts)
   elseif type(opts) == "function" then
     config = opts
     enabled = true
     silent = true
-    event = {}
   elseif fn_at_index ~= nil then
     config = opts[fn_at_index]
     enabled = true
     silent = true
-    event = {}
   end
 
   if not enabled and not silent then P(plugin_conf_name .. " is disabled.") end
@@ -257,7 +297,7 @@ function mega.conf(plugin_conf_name, opts)
         if not silent then P(fmt("%s configuring with `setup(config)`", plugin_conf_name)) end
 
         if defer then
-          vim.defer_fn(function() loader.setup(config) end, 1000)
+          vim.defer_fn(function() loader.setup(config) end, 0)
         else
           loader.setup(config)
         end
@@ -268,9 +308,11 @@ function mega.conf(plugin_conf_name, opts)
       if not silent then P(fmt("%s configuring with `config(loader)`", plugin_conf_name)) end
 
       if defer then
-        vim.defer_fn(function() config() end, 1000)
+        vim.defer_fn(function() config() end, 0)
+        -- vim.defer_fn(function() mega.ftplugin_conf(plugin_conf_name, config) end, 0)
       else
         config()
+        -- mega.ftplugin_conf(plugin_conf_name, config)
       end
     end
 
@@ -334,7 +376,7 @@ local function mapper(mode, o)
     -- If the label is all that was passed in, set the opts automagically
     opts = type(opts) == "string" and { label = opts } or opts and vim.deepcopy(opts) or {}
     if opts.label or opts.desc then
-      local ok, wk = mega.safe_require("which-key", { silent = true })
+      local ok, wk = mega.require("which-key", { silent = true })
       if ok then wk.register({ [lhs] = opts.label or opts.desc }, { mode = mode }) end
       if opts.label and not opts.desc then opts.desc = opts.label end
       opts.label = nil

@@ -1016,7 +1016,7 @@ require("mega.lsp.null_ls")(mega.lsp.on_attach)
 
 function mega.lsp.get_server_config(server)
   local function server_capabilities()
-    local nvim_lsp_ok, cmp_nvim_lsp = mega.safe_require("cmp_nvim_lsp")
+    local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
 
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities.offsetEncoding = { "utf-16" }

@@ -117,33 +117,34 @@ vim.opt_local.includeexpr = "v:lua.Find_required_path(v:fname)"
 
 nnoremap("gK", keyword, { buffer = 0 })
 
--- This allows tpope's vim.surround to surround a text object with a function or conditional
--- vim.b[fmt("surround_%s", fn.char2nr("F"))] = "function \1function: \1() \r end"
--- vim.b[fmt("surround_%s", fn.char2nr("i"))] = "if \1if: \1 then \r end"
-
--- local ok_surround, surround = pcall(require, "nvim-surround")
--- if ok_surround then
---   local utils = require("nvim-surround.utils")
---   surround.buffer_setup({
---     delimiters = {
---       pairs = {
---         l = { "function () ", " end" },
---         F = function()
---           return {
---             fmt("local function %s() ", utils.get_input("Enter a function name: ")),
---             " end",
---           }
---         end,
---         i = function()
---           return {
---             fmt("if %s then ", utils.get_input("Enter a condition:")),
---             " end",
---           }
---         end,
---       },
---     },
---   })
--- end
+mega.ftplugin_conf("nvim-surround", function(surround)
+  local get_input = function(prompt)
+    local ok, input = pcall(vim.fn.input, prompt)
+    if not ok then return end
+    return input
+  end
+  surround.buffer_setup({
+    surrounds = {
+      l = { add = { "function () ", " end" } },
+      F = {
+        add = function()
+          return {
+            { fmt("local function %s() ", get_input("Enter a function name: ")) },
+            { " end" },
+          }
+        end,
+      },
+      i = {
+        add = function()
+          return {
+            { fmt("if %s then ", get_input("Enter a condition:")) },
+            { " end" },
+          }
+        end,
+      },
+    },
+  })
+end)
 
 -- vim.opt_local.textwidth = 100
 -- vim.opt_local.formatoptions:remove("o")

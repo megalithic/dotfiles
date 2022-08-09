@@ -242,7 +242,7 @@ mega.command("Term", function()
   })
 end)
 
-local has_wk, wk = mega.safe_require("which-key")
+local has_wk, wk = mega.require("which-key")
 if has_wk then
   wk.register({
     t = {

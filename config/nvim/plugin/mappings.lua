@@ -49,7 +49,7 @@ local exec = mega.exec
 --   },
 -- })
 
-local has_wk, wk = mega.safe_require("which-key")
+local has_wk, wk = mega.require("which-key")
 if has_wk then
   -- REF: predefine groups: https://github.com/lucax88x/configs/blob/master/dotfiles/.config/nvim/lua/lt/plugins/which-key/init.lua#L76-L90
   wk.setup({

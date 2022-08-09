@@ -220,6 +220,10 @@ cask "font-ia-writer-quattro"
 cask "font-victor-mono-nerd-font"
 cask "font-hack-nerd-font"
 cask "sf-symbols"
+cask "font-cascadia-code"
+cask "font-cascadia-code-pl"
+cask "font-cascadia-mono"
+cask "font-cascadia-mono-pl"
 
 # - gui
 cask "1password"

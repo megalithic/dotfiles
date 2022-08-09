@@ -56,7 +56,7 @@ return function()
 
   mega.command("Btop", function() btop:toggle() end)
 
-  local has_wk, wk = mega.safe_require("which-key")
+  local has_wk, wk = mega.require("which-key")
   if has_wk then
     wk.register({
       t = {

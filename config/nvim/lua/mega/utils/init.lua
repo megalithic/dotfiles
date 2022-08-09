@@ -1,6 +1,6 @@
 local vcmd, lsp, fn = vim.cmd, vim.lsp, vim.fn
 local fmt = string.format
-local hl_ok, H = mega.safe_require("mega.utils.highlights", { silent = true })
+local hl_ok, H = mega.require("mega.utils.highlights", { silent = true })
 
 local M = {
   ext = {
@@ -14,7 +14,7 @@ local windows = {}
 local function fileicon()
   local name = fn.bufname()
   local icon, hl
-  local loaded, devicons = mega.safe_require("nvim-web-devicons")
+  local loaded, devicons = mega.require("nvim-web-devicons")
   if loaded then
     icon, hl = devicons.get_icon(name, fn.fnamemodify(name, ":e"), { default = true })
   end
