@@ -22,7 +22,6 @@ mega.augroup("megaline", {
     event = { "FocusLost" },
     command = function() vim.g.vim_in_focus = false end,
   },
-
   {
     event = { "VimEnter" },
     command = function()
@@ -78,11 +77,6 @@ end
 
 -- Utilities ------------------------------------------------------------------
 --
-local function printf(format, current, total)
-  if current == 0 and total == 0 then return "" end
-  return fn.printf(format, current, total)
-end
-
 local function get_toggleterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
   return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "toggle_number"))
@@ -694,7 +688,7 @@ function M.s_lineinfo(args)
   })
 end
 
-function M.hydra(args)
+function M.hydra()
   local ok, hydra = pcall(require, "hydra.statusline")
   if not ok then return false, {} end
   local colors = {

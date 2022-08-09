@@ -112,7 +112,7 @@ return function()
         end,
       },
       mode = { "n", "x" },
-      body = "<localleader>G",
+      body = "<leader>G",
       heads = {
         {
           "J",

@@ -29,7 +29,7 @@ _G.P = function(...)
   hs.rawprint(...)
   hs.console.printStyledtext(ts() .. " -> " .. contents)
 end
-_G.I = hs.inspect
+_G.I = hs.inspect.inspect
 _G.defaultFont = { name = "JetBrainsMono Nerd Font", size = 18 }
 
 local stext = require("hs.styledtext").new
@@ -171,6 +171,7 @@ hs.loadSpoon("EmmyLua")
 
 --  NOTE: order matters
 load("config")
+-- load("lib.vim")
 load("lib.bindings"):start()
 load("lib.menubar.ptt"):start()
 load("lib.menubar.spotify"):start()
