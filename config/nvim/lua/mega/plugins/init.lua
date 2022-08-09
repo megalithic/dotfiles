@@ -52,6 +52,7 @@ local PKGS = {
   "ray-x/cmp-treesitter",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
+  -- @trial: Issafalcon/lsp-overloads.nvim
   "ray-x/lsp_signature.nvim",
   -- "j-hui/fidget.nvim",
   "ZenLian/fidget.nvim",
@@ -460,26 +461,6 @@ function M.config()
       -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
     end
   end)
-
-  -- FIXME: breaks mini.nvim#jump
-  -- conf("fidget", {
-  --   text = {
-  --     spinner = "dots_pulse",
-  --     done = "",
-  --   },
-  --   window = {
-  --     blend = 10,
-  --     -- relative = "editor",
-  --   },
-  --   sources = { -- Sources to configure
-  --     ["elixirls"] = { -- Name of source
-  --       ignore = true, -- Ignore notifications from this source
-  --     },
-  --     ["markdown"] = { -- Name of source
-  --       ignore = true, -- Ignore notifications from this source
-  --     },
-  --   },
-  -- })
 
   -- FIXME:
   --Error executing vim.schedule lua callback: /usr/local/share/nvim/runtime/lua/vim/lsp/util.lua:1569: Window was closed immediately

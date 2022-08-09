@@ -77,11 +77,13 @@ end
 
 function obj:stop(opts)
   opts = opts or {}
-  local event = opts["event"]
+  -- local event = opts["event"]
 
-  if event == hs.application.watcher.deactivated or event == hs.application.watcher.terminated then
-    if obj.modal then obj.modal:exit() end
-  end
+  -- if event == hs.application.watcher.deactivated or event == hs.application.watcher.terminated then
+  --   if obj.modal then obj.modal:exit() end
+  -- end
+
+  obj.modal:exit()
 
   note(fmt("[STOP] %s: %s", obj.name, self))
 

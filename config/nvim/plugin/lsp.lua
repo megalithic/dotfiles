@@ -137,13 +137,13 @@ local function setup_autocommands(client, bufnr)
     },
   })
 
-  augroup("LspSignatureHelp", {
-    {
-      event = { "CursorHoldI" },
-      buffer = 0,
-      command = function() vim.lsp.buf.signature_help() end,
-    },
-  })
+  -- augroup("LspSignatureHelp", {
+  --   {
+  --     event = { "CursorHoldI" },
+  --     buffer = 0,
+  --     command = function() vim.lsp.buf.signature_help() end,
+  --   },
+  -- })
 
   -- augroup("LspDocumentHighlight", {
   --   {
@@ -554,6 +554,7 @@ local function setup_handlers()
           or client.name == "sumneko_lua"
           or client.name == "rust_analyzer"
           or client.name == "clangd"
+          or client.name == "shellcheck"
         then
           return
         end

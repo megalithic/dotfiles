@@ -1,5 +1,7 @@
 #!/usr/local/bin/zsh
 
+# REF: https://www.jakeworth.com/tmux-application-startup-script/
+
 cd $DOTS
 
 # Run on_project_start command.

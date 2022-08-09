@@ -23,7 +23,7 @@ obj.devices = {
   },
 }
 obj.btUtil = "/usr/local/bin/blueutil"
-obj.interval = (5 * 60)
+obj.interval = (10 * 60)
 
 local function connectDevice(deviceStr)
   local device = obj.devices[deviceStr]

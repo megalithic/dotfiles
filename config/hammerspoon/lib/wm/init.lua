@@ -97,7 +97,9 @@ end
 -- also allows for total customization of what should happen for certain app events (see below for supported watcher events).
 function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   for key, modal in pairs(obj.contextModals) do
+    -- note(fmt(":: MATCHING CONTEXT? %s, %s", key, bundleID))
     if key == bundleID then
+      dbg(fmt(":: MATCHING CONTEXT? %s == %s", key, bundleID))
       local appConfig = obj.apps[bundleID]
       note(
         fmt(
@@ -109,20 +111,19 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
       )
       if appConfig then
         if event == Application.watcher.activated or event == Application.watcher.launched then
-          hs.timer.waitUntil(
-            function() return obj.layoutComplete end,
-            function()
-              modal:start({
-                bundleID = bundleID,
-                appObj = appObj,
-                event = event,
-                appConfig = appConfig,
-                appModal = modal,
-              })
-            end
-          )
+          hs.timer.waitUntil(function() return obj.layoutComplete end, function()
+            modal:start({
+              bundleID = bundleID,
+              appObj = appObj,
+              event = event,
+              appConfig = appConfig,
+              appModal = modal,
+            })
+            success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
+          end)
         elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
           modal:stop({ event = event })
+          success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
         end
       end
     end
