@@ -1,24 +1,4 @@
 return function()
-  -- only needed if you want to use the commands with "_with_window_picker" suffix
-  -- 's1n7ax/nvim-window-picker',
-  -- tag = "1.*",
-  -- config = function()
-  --   require'window-picker'.setup({
-  --     autoselect_one = true,
-  --     include_current = false,
-  --     filter_rules = {
-  --       -- filter using buffer options
-  --       bo = {
-  --         -- if the file type is one of following, the window will be ignored
-  --         filetype = { 'neo-tree', "neo-tree-popup", "notify", "quickfix" },
-
-  --         -- if the buffer type is one of following, the window will be ignored
-  --         buftype = { 'terminal' },
-  --       },
-  --     },
-  --     other_win_hl_color = '#e35e4f',
-  --   })
-  -- end,
   vim.g.neo_tree_remove_legacy_commands = 1
 
   local icons = mega.icons
@@ -90,10 +70,6 @@ return function()
       width = 80,
       mappings = {
         o = "toggle_node",
-        -- TODO: https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/window-picker.lua
-        -- ["<CR>"] = "open_with_window_picker",
-        -- ["<c-s>"] = "split_with_window_picker",
-        -- ["<c-v>"] = "vsplit_with_window_picker",
         -- ["<c-o>"] = "open",
         -- ["<c-s>"] = "open_split",
         -- ["<CR>"] = "open_vsplit",
@@ -113,6 +89,6 @@ return function()
         buftype = { "terminal", "quickfix", "nofile" },
       },
     },
-    other_win_hl_color = mega.colors.bg_visual,
+    other_win_hl_color = mega.colors.purple,
   })
 end

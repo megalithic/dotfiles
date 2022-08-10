@@ -837,13 +837,17 @@ return lush(function()
     NeoTreeIndentMarker({ Comment }),
     NeoTreeNormal({ PanelBackground }),
     NeoTreeNormalNC({ PanelBackground }),
-    NeoTreeRootName({ fg = purple, gui = "bold,italic,underline" }),
+    NeoTreeRootName({ fg = cyan, gui = "bold,italic,underline" }),
     NeoTreeFileNameOpened({ bg = fg, fg = fg, gui = "underline,bold" }),
     NeoTreeCursorLine({ Visual }),
     NeoTreeStatusLine({ PanelSt }),
     NeoTreeTitleBar({ fg = red, bg = bg_dark }),
     NeoTreeFloatBorder({ PanelBackground, fg = bg0 }),
     NeoTreeFloatTitle({ fg = Comment.fg, bg = bg2 }),
+    NeoTreeTabActive({ bg = PanelBackground.bg, gui = "bold" }),
+    NeoTreeTabInactive({ bg = PanelBackground.bg.darken(15), fg = Comment.fg }),
+    NeoTreeTabSeparatorInactive({ bg = PanelBackground.bg.darken(15), fg = PanelBackground.bg }),
+    NeoTreeTabSeparatorActive({ PanelBackground, fg = Comment.fg }),
 
     ---- :help git-signs.txt ---------------------------------------------------
 
