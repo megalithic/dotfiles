@@ -5,6 +5,7 @@ local L = vim.log.levels
 
 _G.I = vim.inspect
 _G.fmt = string.format
+_G.logger = require("mega.logger")
 
 _G.mega = mega
   or {
@@ -75,13 +76,8 @@ function _G.P(...)
     table.insert(objects, vim.inspect(v))
   end
 
-  local has_logger, logger = pcall(require, "logger")
-  if has_logger then
-    logger = logger.new({ level = "debug" })
-    logger.info(table.concat(objects, "\n"))
-  else
-    print(table.concat(objects, "\n"))
-  end
+  local p_logger = logger.new({ level = "debug" })
+  p_logger.info(table.concat(objects, "\n"))
   return ...
 end
 

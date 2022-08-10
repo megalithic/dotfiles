@@ -1,6 +1,7 @@
 local vcmd, lsp, fn = vim.cmd, vim.lsp, vim.fn
 local fmt = string.format
 local hl_ok, H = mega.require("mega.utils.highlights", { silent = true })
+local lsputil = require("lspconfig.util")
 
 local M = {
   ext = {
@@ -80,82 +81,104 @@ function M.check_back_space()
   return col == 0 or fn.getline("."):sub(col, col):match("%s") ~= nil
 end
 
-function M.root_has_file(name)
-  local cwd = vim.loop.cwd()
-  local lsputil = require("lspconfig.util")
-  return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
-end
-
--- # [ lsp_commands ] ----------------------------------------------------------------
-local lsputil = require("lspconfig.util")
-
-local function dir_has_file(dir, name)
+function M.dir_has_file(dir, name)
   return lsputil.path.exists(lsputil.path.join(dir, name)), lsputil.path.join(dir, name)
 end
 
-local function workspace_root()
+function M.workspace_root()
   local cwd = vim.loop.cwd()
 
-  if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then return cwd end
+  if M.dir_has_file(cwd, "compose.yml") or M.dir_has_file(cwd, "docker-compose.yml") then return cwd end
 
-  local function cb(dir, _) return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml") end
+  local function cb(dir, _) return M.dir_has_file(dir, "compose.yml") or M.dir_has_file(dir, "docker-compose.yml") end
 
   local root, _ = lsputil.path.traverse_parents(cwd, cb)
   return root
 end
 
---- Build the language server command.
--- @param opts options
--- @param opts.locations table Locations to search relative to the workspace root
--- @param opts.fallback_dir string Path to use if locations don't contain the binary
--- @return a string containing the command
-local function language_server_cmd(opts)
-  opts = opts or {}
-  local fallback_dir = opts.fallback_dir
-  local locations = opts.locations or {}
-  local cmd = vim.fn.expand(fallback_dir)
-
-  local root = workspace_root()
+function M.workspace_has_file(name)
+  local root = M.workspace_root()
   if not root then root = vim.loop.cwd() end
-  -- P(fmt("root: %s", root))
 
-  for _, location in ipairs(locations) do
-    local exists, dir = dir_has_file(root, location)
-    if exists then
-      -- logger.fmt_debug("language_server_cmd: %s", vim.fn.expand(dir))
-      cmd = vim.fn.expand(dir)
-    end
-  end
-
-  -- P(fmt("cmd: %s", cmd))
-  return cmd
+  return M.dir_has_file(root, name)
 end
 
---- Build the elixir-ls command.
--- @param opts options
--- @param opts.fallback_dir string Path to use if locations don't contain the binary
--- @param opts.debugger boolean Whether this is a debug elixirls_cmd binary or not
-function M.lsp.elixirls_cmd(opts)
-  opts = opts or {}
+-- function M.root_has_file(name)
+--   local cwd = vim.loop.cwd()
+--   local lsputil = require("lspconfig.util")
+--   return lsputil.path.exists(lsputil.path.join(cwd, name)), lsputil.path.join(cwd, name)
+-- end
 
-  local cmd = "language_server.sh"
-  local debugger = opts["debugger"] or false
+-- -- # [ lsp_commands ] ----------------------------------------------------------------
+-- local lsputil = require("lspconfig.util")
 
-  if debugger then cmd = "debugger.sh" end
+-- local function dir_has_file(dir, name)
+--   return lsputil.path.exists(lsputil.path.join(dir, name)), lsputil.path.join(dir, name)
+-- end
 
-  opts = vim.tbl_deep_extend("force", opts, {
-    locations = {
-      ".elixir-ls-release/" .. cmd,
-      ".elixir_ls/release/" .. cmd,
-    },
-  })
+-- local function workspace_root()
+--   local cwd = vim.loop.cwd()
 
-  opts.fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
-  opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, cmd)
+--   if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then return cwd end
 
-  -- P(fmt("opts: %s", I(opts)))
+--   local function cb(dir, _) return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml") end
 
-  return language_server_cmd(opts)
-end
+--   local root, _ = lsputil.path.traverse_parents(cwd, cb)
+--   return root
+-- end
+
+-- --- Build the language server command.
+-- -- @param opts options
+-- -- @param opts.locations table Locations to search relative to the workspace root
+-- -- @param opts.fallback_dir string Path to use if locations don't contain the binary
+-- -- @return a string containing the command
+-- local function language_server_cmd(opts)
+--   opts = opts or {}
+--   local fallback_dir = opts.fallback_dir
+--   local locations = opts.locations or {}
+--   local cmd = vim.fn.expand(fallback_dir)
+
+--   local root = workspace_root()
+--   if not root then root = vim.loop.cwd() end
+--   -- P(fmt("root: %s", root))
+
+--   for _, location in ipairs(locations) do
+--     local exists, dir = dir_has_file(root, location)
+--     if exists then
+--       -- logger.fmt_debug("language_server_cmd: %s", vim.fn.expand(dir))
+--       cmd = vim.fn.expand(dir)
+--     end
+--   end
+
+--   -- P(fmt("cmd: %s", cmd))
+--   return cmd
+-- end
+
+-- --- Build the elixir-ls command.
+-- -- @param opts options
+-- -- @param opts.fallback_dir string Path to use if locations don't contain the binary
+-- -- @param opts.debugger boolean Whether this is a debug elixirls_cmd binary or not
+-- function M.lsp.elixirls_cmd(opts)
+--   opts = opts or {}
+
+--   local cmd = "language_server.sh"
+--   local debugger = opts["debugger"] or false
+
+--   if debugger then cmd = "debugger.sh" end
+
+--   opts = vim.tbl_deep_extend("force", opts, {
+--     locations = {
+--       ".elixir-ls-release/" .. cmd,
+--       ".elixir_ls/release/" .. cmd,
+--     },
+--   })
+
+--   opts.fallback_dir = opts.fallback_dir or vim.env.XDG_DATA_HOME or "~/.local/share"
+--   opts.fallback_dir = string.format("%s/lsp/elixir-ls/%s", opts.fallback_dir, cmd)
+
+--   -- P(fmt("opts: %s", I(opts)))
+
+--   return language_server_cmd(opts)
+-- end
 
 return M

@@ -8,6 +8,7 @@ local command = mega.command
 local augroup = mega.augroup
 local fmt = string.format
 local diagnostic = vim.diagnostic
+local U = require("mega.utils")
 
 local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
 local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
@@ -678,6 +679,37 @@ end
 
 -- [ SERVERS ] -----------------------------------------------------------------
 
+local function lsp_setup(server_name, opts)
+  logger.debug("Adding", server_name, "to lspconfig")
+  lspconfig[server_name].setup(opts)
+end
+
+local function build_command(server_name, path, args)
+  args = args or {}
+
+  local exists, dir = U.workspace_has_file(path)
+  logger.debug("workspace_has_file", exists, dir)
+  if exists then
+    dir = vim.fn.expand(dir)
+    logger.fmt_debug("%s: %s %s", server_name, dir, args)
+    return vim.list_extend({ dir }, args)
+  else
+    return nil
+  end
+end
+
+local function lsp_cmd_override(server_name, opts, cmd_path, args)
+  args = args or {}
+
+  local cmd = build_command(server_name, cmd_path, args)
+  if cmd ~= nil then opts.cmd = cmd end
+
+  opts.on_new_config = function(new_config, _)
+    local new_cmd = build_command(server_name, cmd_path, args)
+    if new_cmd ~= nil then new_config.cmd = new_cmd end
+  end
+end
+
 local function root_pattern(...)
   local patterns = vim.tbl_flatten({ ... })
 
@@ -1080,29 +1112,3 @@ for server, _ in pairs(mega.lsp.servers) do
   local config = mega.lsp.get_server_config(server)
   lspconfig[server].setup(config)
 end
-
--- FIXME: doing an lsp attach via an autocmd makes for SUPER slow initial
--- loading of the file into the buffer
-
---- A set of custom overrides for specific lsp clients
---- This is a way of adding functionality for specific lsps
---- without putting all this logic in the general on_attach function
--- local client_overrides = {
---   -- ["sumneko_lua"] = function(client, bufnr) end,
--- }
-
--- mega.augroup("LspSetupCommands", {
---   {
---     event = "LspAttach",
---     desc = "Setup LS things on the buffer when the client attaches",
---     command = function(args)
---       local bufnr = args.buf
---       local client = vim.lsp.get_client_by_id(args.data.client_id)
---       mega.lsp.on_attach(client, bufnr)
-
---       if client_overrides[client.name] then
---         client_overrides[client.name](client, bufnr)
---       end
---     end,
---   },
--- })
