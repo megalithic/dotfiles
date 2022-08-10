@@ -21,14 +21,18 @@ return function()
   -- end,
   vim.g.neo_tree_remove_legacy_commands = 1
   local icons = mega.icons
-  mega.nnoremap("<c-t>", "<Cmd>Neotree toggle reveal<CR>")
+  mega.nnoremap("<c-t>", "<Cmd>Neotree toggle reveal position=left<CR>")
   require("neo-tree").setup({
+    close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
     enable_git_status = true,
     git_status_async = true,
     event_handlers = {
       {
         event = "neo_tree_buffer_enter",
-        handler = function() vim.cmd("highlight! Cursor blend=100") end,
+        handler = function()
+          vim.cmd("highlight! Cursor blend=100")
+          vim.api.nvim_win_set_width(0, 50)
+        end,
       },
       {
         event = "neo_tree_buffer_leave",
@@ -68,6 +72,8 @@ return function()
       },
     },
     window = {
+      position = "left",
+      width = 80,
       mappings = {
         o = "toggle_node",
         -- ["<CR>"] = "open_with_window_picker",
