@@ -563,7 +563,14 @@ function M.config()
 
   conf("fold-cycle", {})
 
-  conf("pqf", {})
+  conf("pqf", {
+    signs = {
+      error = mega.icons.lsp.error,
+      warning = mega.icons.lsp.warn,
+      info = mega.icons.lsp.info,
+      hint = mega.icons.lsp.hint,
+    },
+  })
 
   conf("hclipboard", function() require("hclipboard").start() end)
 

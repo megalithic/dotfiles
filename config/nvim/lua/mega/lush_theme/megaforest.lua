@@ -826,7 +826,8 @@ return lush(function()
 
     ---- :help: bqf.txt --------------------------------------------------------
 
-    BqfPreviewBorder({ fg = bg_blue }), -- or WinSeparator
+    BqfPreviewFloat({ PanelBackground }), -- or WinSeparator
+    BqfPreviewBorder({ PanelBackground, fg = bg_blue }), -- or WinSeparator
     -- hi BqfPreviewBorder guifg=#50a14f ctermfg=71
     -- hi link BqfPreviewRange Search
 

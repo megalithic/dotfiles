@@ -121,6 +121,7 @@ local function setup_commands()
   end
 
   command("LspDiagnostics", make_diagnostic_qf_updater())
+  nnoremap("<leader>ll", "<Cmd>LspDiagnostics<CR>", "lsp: toggle quickfix diagnostics")
 end
 
 -- [ AUTOCMDS ] ----------------------------------------------------------------
@@ -206,7 +207,7 @@ local function setup_mappings(client, bufnr)
     [[<cmd>lua =vim.lsp.get_active_clients()[1].server_capabilities<CR>]],
     desc("lsp: show server capabilities")
   )
-  nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
+  -- nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
   nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
 end
 
@@ -750,6 +751,9 @@ mega.lsp.servers = {
           hover = true,
           completion = true,
           schemas = require("schemastore").json.schemas(),
+          customTags = {
+            "!reference sequence", -- necessary for gitlab-ci.yaml files
+          },
         },
       },
     }

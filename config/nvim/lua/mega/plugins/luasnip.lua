@@ -8,15 +8,15 @@ return function()
 
   mega.augroup("LuasnipDiagnostics", {
     {
-      event = "ModeChanged",
-      pattern = "[is]:n",
+      event = { "ModeChanged" },
+      pattern = { "[is]:n" },
       command = function()
         if ls.in_snippet() then return vim.diagnostic.enable() end
       end,
     },
     {
-      event = "ModeChanged",
-      pattern = "*:s",
+      event = { "ModeChanged" },
+      pattern = { "*:s" },
       command = function()
         if ls.in_snippet() then return vim.diagnostic.disable() end
       end,
@@ -75,6 +75,8 @@ return function()
 
   -- TODO: we want to do our own luasnippets .. se this link for more details of
   -- how we might want to do this: https://youtu.be/Dn800rlPIho
+
+  mega.command("LuaSnipEdit", function() require("luasnip.loaders.from_lua").edit_snippet_files() end)
 
   --- <tab> to jump to next snippet's placeholder
   local function on_tab() return ls.jump(1) and "" or t("<Tab>") end
