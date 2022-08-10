@@ -297,6 +297,7 @@ local function setup_diagnostics()
       -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1513: in function </usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1491>
 
       -- Pass the filtered diagnostics (with our custom namespace) to the original handler
+      -- P(I(vim.tbl_values(max_severity_per_line)))
       callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
     end
   end

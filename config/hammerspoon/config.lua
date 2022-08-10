@@ -289,7 +289,7 @@ local dock = {
   },
   ["docked"] = {
     wifi = "off", -- wifi status
-    profile = "atreus62", -- Karabiner-Elements profile name
+    profile = "leeloo", -- Karabiner-Elements profile name
     input = "Samson GoMic", -- microphone source
     -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
     output = "megapods", -- speaker source

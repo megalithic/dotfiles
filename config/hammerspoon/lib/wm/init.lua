@@ -10,7 +10,7 @@ local Snap = nil
 obj.__index = obj
 obj.name = "wm"
 obj.settingsKey = "_mega_wm"
-obj.mode = "snap" -- "layout"|"snap"
+obj.mode = "layout" -- "layout"|"snap"
 obj.watcher = nil
 obj.debug = false
 obj.log = true
@@ -111,16 +111,16 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
       )
       if appConfig then
         if event == Application.watcher.activated or event == Application.watcher.launched then
-          hs.timer.waitUntil(function() return obj.layoutComplete end, function()
-            modal:start({
-              bundleID = bundleID,
-              appObj = appObj,
-              event = event,
-              appConfig = appConfig,
-              appModal = modal,
-            })
-            success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
-          end)
+          -- hs.timer.waitUntil(function() return obj.layoutComplete end, function()
+          modal:start({
+            bundleID = bundleID,
+            appObj = appObj,
+            event = event,
+            appConfig = appConfig,
+            appModal = modal,
+          })
+          success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
+          -- end)
         elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
           modal:stop({ event = event })
           success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
@@ -192,7 +192,7 @@ local function prepareContextScripts()
   end
 end
 
-local function layoutRunningApps(apps)
+function obj.layoutRunningApps(apps)
   local runningApps = Application.runningApplications()
 
   fnutils.each(runningApps, function(app)
@@ -204,8 +204,7 @@ end
 function obj:init(opts)
   opts = opts or {}
 
-  local config = Settings.get(CONFIG_KEY)
-  obj.apps = config.bindings.apps
+  obj.apps = Settings.get(CONFIG_KEY).bindings.apps
 
   Snap = L.load("lib.wm.snap"):start()
   obj.watcher = L.load("lib.contexts", { id = "wm.watcher" })
@@ -222,7 +221,7 @@ function obj:start(opts)
 
   obj.watcher:start(obj.apps, filters, handleWatcher)
 
-  layoutRunningApps(obj.apps)
+  obj.layoutRunningApps(obj.apps)
 
   note(fmt("[START] %s (%s)", obj.name, obj.mode))
 

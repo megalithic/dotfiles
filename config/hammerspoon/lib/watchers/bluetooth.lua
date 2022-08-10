@@ -7,6 +7,9 @@ local lowBatteryTimer
 -- REF:
 -- https://github.com/jasonrudolph/dotfiles/commit/8bc3e6c55bd9c95eb83e4cfa265cc32d9da6edc3
 -- https://github.com/wangshub/hammerspoon-config/blob/master/headphone/headphone.lua
+-- https://gist.github.com/ysimonson/fea48ee8a68ed2cbac12473e87134f58
+-- https://github.com/drn/dots/blob/master/bin/hd1
+-- https://github.com/drn/dots/blob/master/hammerspoon/bluetooth.lua
 
 obj.__index = obj
 obj.name = "watcher.bluetooth"

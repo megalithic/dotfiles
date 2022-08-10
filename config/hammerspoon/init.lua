@@ -170,14 +170,15 @@ hs.loadSpoon("EmmyLua")
 -- [ LOADERS ] -----------------------------------------------------------------
 
 --  NOTE: order matters
-load("config")
--- load("lib.vim")
-load("lib.bindings"):start()
-load("lib.menubar.ptt"):start()
-load("lib.menubar.spotify"):start()
-load("lib.watchers"):start()
-load("lib.wm"):start()
-load("lib.quitter"):start({ mode = "double" })
+L.load("config")
+-- L.load("lib.vim")
+L.load("lib.bindings"):start()
+L.load("lib.menubar.ptt"):start()
+L.load("lib.menubar.spotify"):start()
+L.load("lib.watchers"):start()
+L.load("lib.wm"):start()
+L.load("lib.quitter"):start({ mode = "double" })
+L.req("_scratch")
 
 -- [ UNLOADERS ] ---------------------------------------------------------------
 

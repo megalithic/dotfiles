@@ -62,9 +62,8 @@ function obj.load(loadTarget, opts)
 
         if bust then
           if mega.__loaded_modules[cache_key]["mod"] then mega.__loaded_modules[cache_key] = nil end
-
           local tag = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
-          -- note(fmt("[INIT] %s (%s) busted -- uncached", tag, I(opts, false)))
+          if not silent then note(fmt("[INIT] %s (%s)", tag, I(opts, false))) end
         else
           loaded = mod:init(opts)
 
@@ -85,7 +84,8 @@ function obj.load(loadTarget, opts)
         return loaded
       else
         local tag = id and fmt("%s_%s", loadTarget, id) or fmt("%s", loadTarget)
-        -- note(fmt("[INIT] %s (%s) no init/1 -- uncached", tag, I(opts, false)))
+        if not silent then note(fmt("[INIT] %s (%s)", tag, I(opts, false))) end
+
         return mod
       end
     end

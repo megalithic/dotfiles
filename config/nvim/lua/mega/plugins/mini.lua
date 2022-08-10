@@ -1,4 +1,15 @@
 return function()
+  -- FIXME for mini.
+  -- E5108: Error executing lua (mini.ai) Could not get query for buffer 32 and filetype "lua".
+  -- stack traceback:
+  -- 	[C]: in function 'error'
+  -- 	...hare/nvim/site/pack/paqs/start/mini.nvim/lua/mini/ai.lua:1777: in function 'error'
+  -- 	...hare/nvim/site/pack/paqs/start/mini.nvim/lua/mini/ai.lua:815: in function 'spec'
+  -- 	...hare/nvim/site/pack/paqs/start/mini.nvim/lua/mini/ai.lua:1167: in function 'get_textobject_spec'
+  -- 	...hare/nvim/site/pack/paqs/start/mini.nvim/lua/mini/ai.lua:527: in function 'find_textobject'
+  -- 	...hare/nvim/site/pack/paqs/start/mini.nvim/lua/mini/ai.lua:859: in function 'select_textobject'
+  -- 	[string ":lua"]:1: in main chunk
+
   vim.defer_fn(function()
     local miniAiDiagnostics = function()
       local diagnostics = vim.diagnostic.get(0)

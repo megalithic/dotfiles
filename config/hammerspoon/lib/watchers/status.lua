@@ -1,6 +1,7 @@
 local Settings = require("hs.settings")
-local DockConfig = Settings.get(CONFIG_KEY).dock
-local DisplaysConfig = Settings.get(CONFIG_KEY).displays
+local Config = Settings.get(CONFIG_KEY)
+local DockConfig = Config.dock
+local DisplaysConfig = Config.displays
 
 local obj = {}
 
@@ -10,25 +11,25 @@ obj.debug = true
 obj.statusMonitor = {}
 obj.usbWatcher = {}
 obj.screenWatcher = {}
-obj.hasExternal = false
+
+local function checkLeelooConnection()
+  local connectedDevices = hs.battery.privateBluetoothBatteryInfo()
+  local leeloo = hs.fnutils.find(connectedDevices, function(device) return device.name == "Leeloo" end)
+  dbg(fmt(":: [status] leeloo: %s", I(leeloo)))
+  return leeloo
+end
 
 local function usbHandler(device)
-  dbg(fmt(":: usb device: %s", I(device)))
-
-  if device.eventType == "added" then
-    if device.productName == DockConfig.target.productName then obj.statusMonitor.docked = true end
-  elseif device.eventType == "removed" then
-    if device.productName == DockConfig.target.productName then obj.statusMonitor.docked = false end
+  if device.productName == DockConfig.target.productName then
+    obj.statusMonitor.dock = (device.eventType == "added")
+    obj.statusMonitor.leeloo = checkLeelooConnection()
   end
 end
 
-local function screenHandler()
-  obj.statusMonitor.externalDisplay = hs.screen.find(DisplaysConfig.external) ~= nil
-  info(fmt("[dock] external screen connected: %s", obj.hasExternal))
-end
+local function screenHandler() obj.statusMonitor.display = hs.screen.find(DisplaysConfig.external) ~= nil end
 
 function obj:start()
-  obj.statusMonitor = hs.watchable.new("status")
+  obj.statusMonitor = hs.watchable.new("status", false) -- don't allow bi-directional status updates
   obj.usbWatcher = hs.usb.watcher.new(usbHandler):start()
   obj.screenWatcher = hs.screen.watcher.new(screenHandler):start()
 
@@ -36,6 +37,7 @@ function obj:start()
 end
 
 function obj:stop()
+  if obj.statusMonitor then obj.statusMonitor = nil end
   if obj.usbWatcher then obj.usbWatcher:stop() end
   if obj.screenWatcher then obj.screenWatcher:stop() end
 
