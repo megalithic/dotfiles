@@ -24,9 +24,8 @@
 --  * @mhanberg for thicc_forest
 
 local lush = require("lush")
-local colors = require("mega.lush_theme.colors")
 
-local C = colors
+local C = mega.colors
 
 local bg_dark = C.bg_dark
 local bg0 = C.bg0

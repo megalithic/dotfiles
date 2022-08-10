@@ -20,9 +20,23 @@ return function()
   --   })
   -- end,
   vim.g.neo_tree_remove_legacy_commands = 1
+
   local icons = mega.icons
+
   mega.nnoremap("<c-t>", "<Cmd>Neotree toggle reveal position=left<CR>")
+
   require("neo-tree").setup({
+    sources = {
+      "filesystem",
+      "buffers",
+      "git_status",
+      "diagnostics",
+    },
+    source_selector = {
+      winbar = true,
+      -- statusbar = true,
+      separator_active = " ",
+    },
     close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
     enable_git_status = true,
     git_status_async = true,
@@ -76,13 +90,29 @@ return function()
       width = 80,
       mappings = {
         o = "toggle_node",
+        -- TODO: https://github.com/akinsho/dotfiles/blob/nightly/.config/nvim/lua/as/plugins/window-picker.lua
         -- ["<CR>"] = "open_with_window_picker",
         -- ["<c-s>"] = "split_with_window_picker",
         -- ["<c-v>"] = "vsplit_with_window_picker",
-        ["<c-o>"] = "open",
-        ["<c-s>"] = "open_split",
-        ["<CR>"] = "open_vsplit",
+        -- ["<c-o>"] = "open",
+        -- ["<c-s>"] = "open_split",
+        -- ["<CR>"] = "open_vsplit",
+        ["<c-o>"] = "open_with_window_picker",
+        ["<c-s>"] = "split_with_window_picker",
+        ["<CR>"] = "vsplit_with_window_picker",
       },
     },
+  })
+
+  mega.conf("window-picker", {
+    autoselect_one = true,
+    include_current = false,
+    filter_rules = {
+      bo = {
+        filetype = { "neo-tree-popup", "quickfix", "incline" },
+        buftype = { "terminal", "quickfix", "nofile" },
+      },
+    },
+    other_win_hl_color = mega.colors.bg_visual,
   })
 end

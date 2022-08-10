@@ -87,6 +87,8 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   "nvim-neo-tree/neo-tree.nvim",
+  { "mrbjarksen/neo-tree-diagnostics.nvim" },
+  { "s1n7ax/nvim-window-picker" },
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
   "natecraddock/telescope-zf-native.nvim",

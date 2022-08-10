@@ -476,7 +476,10 @@ vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.formatting_sync()" <bar> wq]])
 -- [ colorscheme ] -------------------------------------------------------------
 do
   vim.opt.termguicolors = true
-  pcall(vim.cmd, fmt("colorscheme %s", vim.g.colorscheme))
+  local ok, msg = pcall(vim.cmd.colorscheme, vim.g.colorscheme)
+  if not ok then
+    vim.schedule(function() vim.notify(fmt("Colorscheme failed to load because: %s", msg), "error") end)
+  end
 end
 
 -- vim:foldmethod=marker

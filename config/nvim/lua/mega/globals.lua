@@ -6,13 +6,15 @@ local L = vim.log.levels
 _G.I = vim.inspect
 _G.fmt = string.format
 
-_G.mega = mega or {
-  functions = {},
-  dirs = {},
-  mappings = {},
-  lsp = {},
-  icons = require("mega.icons"),
-}
+_G.mega = mega
+  or {
+    functions = {},
+    dirs = {},
+    mappings = {},
+    lsp = {},
+    colors = require("mega.lush_theme.colors"),
+    icons = require("mega.icons"),
+  }
 
 -- [ global variables ] --------------------------------------------------------
 
