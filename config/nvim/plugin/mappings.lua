@@ -333,6 +333,9 @@ cnoremap("<Esc>f", [[<S-Right>]])
 -- Insert escaped '/' while inputting a search pattern
 cnoremap("/", [[getcmdtype() == "/" ? "\/" : "/"]], { expr = true })
 
+inoremap("<C-a>", "<Home>")
+inoremap("<C-e>", "<End>")
+
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
 exec([[
