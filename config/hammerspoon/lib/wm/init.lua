@@ -64,7 +64,7 @@ function obj.applyLayout(appConfig)
     if obj.mode == "snap" then
       fnutils.each(appConfig.rules, function(rule)
         local winTitlePattern, screenNum, positionStr = table.unpack(rule)
-        winTitlePattern = (winTitlePattern and winTitlePattern ~= "") and winTitlePattern or nil
+        winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
 
         hs.timer.waitUntil(function() return getWindow(winTitlePattern, appConfig.bundleID) ~= nil end, function()
           Snap.snapper(getWindow(winTitlePattern, appConfig.bundleID), positionStr, targetDisplay(screenNum))
@@ -76,19 +76,23 @@ function obj.applyLayout(appConfig)
 
       fnutils.map(appConfig.rules, function(rule)
         local winTitlePattern, screenNum, positionStr = table.unpack(rule)
+        winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
 
-        table.insert(layouts, {
+        local layout = {
           hs.application.get(bundleID), -- application name
           winTitlePattern, -- window title
           targetDisplay(screenNum), -- screen #
           Snap.grid[positionStr], -- layout/postion
           nil,
           nil,
-        })
+        }
+        table.insert(layouts, layout)
       end)
 
-      hs.layout.apply(layouts, string.match)
-      obj.layoutComplete = true
+      hs.timer.waitUntil(function() return Application.get(appConfig.bundleID) ~= nil end, function()
+        hs.layout.apply(layouts, string.match)
+        obj.layoutComplete = true
+      end)
     end
   end
 end
@@ -111,16 +115,16 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
       )
       if appConfig then
         if event == Application.watcher.activated or event == Application.watcher.launched then
-          -- hs.timer.waitUntil(function() return obj.layoutComplete end, function()
-          modal:start({
-            bundleID = bundleID,
-            appObj = appObj,
-            event = event,
-            appConfig = appConfig,
-            appModal = modal,
-          })
-          success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
-          -- end)
+          hs.timer.waitUntil(function() return obj.layoutComplete end, function()
+            modal:start({
+              bundleID = bundleID,
+              appObj = appObj,
+              event = event,
+              appConfig = appConfig,
+              appModal = modal,
+            })
+            success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
+          end)
         elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
           modal:stop({ event = event })
           success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
@@ -148,7 +152,7 @@ local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
   if event == Application.watcher.launched and bundleID then
     note(fmt("[LAUNCHED] %s", bundleID))
     local appConfig = obj.apps[bundleID]
-    obj.applyLayout(appConfig)
+    if appConfig then obj.applyLayout(appConfig) end
   else
     if event == Application.watcher.terminated and bundleID then note(fmt("[TERMINATED] %s", bundleID)) end
   end
