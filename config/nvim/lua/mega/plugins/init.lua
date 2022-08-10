@@ -17,12 +17,10 @@ local PKGS = {
   -- (profiling/speed improvements) --
   "dstein64/vim-startuptime",
   "lewis6991/impatient.nvim",
-
   ------------------------------------------------------------------------------
-  -- (appearance/UI/visuals) --
+  -- (UI/appearance/visuals) --
   "rktjmp/lush.nvim",
   -- "NvChad/nvim-colorizer.lua",
-  -- @trial brenoprata10/nvim-highlight-colors
   "brenoprata10/nvim-highlight-colors",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
@@ -33,7 +31,6 @@ local PKGS = {
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
-
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -68,9 +65,8 @@ local PKGS = {
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
   "abecodes/tabout.nvim",
-
   ------------------------------------------------------------------------------
-  -- (treesitter) --
+  -- (TS/treesitter) --
   {
     "nvim-treesitter/nvim-treesitter",
     run = function() vim.cmd("TSUpdate") end,
@@ -87,7 +83,6 @@ local PKGS = {
   "David-Kunz/treesitter-unit",
   { "nvim-treesitter/nvim-treesitter-context" },
   "lewis6991/spellsitter.nvim",
-
   ------------------------------------------------------------------------------
   -- (FZF/telescope/file/document navigation) --
   "nvim-neo-tree/neo-tree.nvim",
@@ -96,19 +91,16 @@ local PKGS = {
   "natecraddock/telescope-zf-native.nvim",
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
-
   ------------------------------------------------------------------------------
-  -- (text objects) --
-
+  -- (text OBJECTS) --
   -- "tpope/vim-rsi",
   -- "kana/vim-textobj-user",
   -- "kana/vim-operator-user",
   -- "kana/vim-textobj-entire", -- ae/ie for entire buffer
   -- "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
   -- "wellle/targets.vim",
-
   ------------------------------------------------------------------------------
-  -- (GIT, vcs, et al) --
+  -- (GIT) --
   -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
   "TimUntersberger/neogit",
   "mattn/webapi-vim",
@@ -119,7 +111,6 @@ local PKGS = {
   "lewis6991/gitsigns.nvim",
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
-
   ------------------------------------------------------------------------------
   -- (DEV, development, et al) --
   -- "rgroli/other.nvim",
@@ -140,9 +131,8 @@ local PKGS = {
   { "zenbro/mirror.vim", opt = true },
   -- "mbbill/undotree",
   "danymat/neogen",
-
   ------------------------------------------------------------------------------
-  -- (the rest...) --
+  -- (REST) --
   "nacro90/numb.nvim",
   "andymass/vim-matchup",
   "windwp/nvim-autopairs",
@@ -170,7 +160,6 @@ local PKGS = {
   { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
   "RRethy/nvim-align",
   "junegunn/vim-easy-align",
-
   ------------------------------------------------------------------------------
   -- (LANGS, syntax, et al) --
   "ixru/nvim-markdown",
@@ -210,7 +199,8 @@ local PKGS = {
   "nanotee/luv-vimdocs",
   "fladson/vim-kitty",
   "SirJson/fzf-gitignore",
-
+  ------------------------------------------------------------------------------
+  -- (WORK) --
   -- TODO: work tings;
   "outstand/logger.nvim",
   -- @trial "outstand/titan.nvim",
