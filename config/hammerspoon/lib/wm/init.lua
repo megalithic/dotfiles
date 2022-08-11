@@ -100,9 +100,9 @@ end
 -- full-scale customization of an app; auto spins up a context-based modal, binding defined actions to keys for that modal;
 -- also allows for total customization of what should happen for certain app events (see below for supported watcher events).
 function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
-  for key, modal in pairs(obj.contextModals) do
+  for key, context in pairs(obj.contextModals) do
     -- note(fmt(":: MATCHING CONTEXT? %s, %s", key, bundleID))
-    if key == bundleID then
+    if key == bundleID and Application.get(bundleID) then
       dbg(fmt(":: MATCHING CONTEXT? %s == %s", key, bundleID))
       local appConfig = obj.apps[bundleID]
       note(
@@ -114,22 +114,32 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
         )
       )
       if appConfig then
+        context:start({
+          bundleID = bundleID,
+          appObj = appObj,
+          event = event,
+          appConfig = appConfig,
+          appModal = context,
+        })
         if event == Application.watcher.activated or event == Application.watcher.launched then
           hs.timer.waitUntil(function() return obj.layoutComplete end, function()
-            modal:start({
+            context:start({
               bundleID = bundleID,
               appObj = appObj,
               event = event,
               appConfig = appConfig,
-              appModal = modal,
+              appModal = context,
             })
             success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
           end)
         elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
-          modal:stop({ event = event })
+          context:stop({ event = event })
           success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
         end
       end
+    else
+      context:stop({ event = event })
+      -- success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
     end
   end
 end

@@ -85,15 +85,17 @@ function obj:stop(opts)
   end
 
   local loom = hs.application.get("Loom")
-  if event == hs.application.watcher.terminated or not loom:getWindow("Loom Control Menu") then
-    L.req("lib.menubar.ptt").setState("push-to-talk")
-    L.req("lib.dnd").off()
+  if loom then
+    if event == hs.application.watcher.terminated or not loom:getWindow("Loom Control Menu") then
+      L.req("lib.menubar.ptt").setState("push-to-talk")
+      L.req("lib.dnd").off()
 
-    local keycastr = hs.application.get("KeyCastr")
-    if keycastr ~= nil then keycastr:kill() end
+      local keycastr = hs.application.get("KeyCastr")
+      if keycastr ~= nil then keycastr:kill() end
 
-    -- return to default kitty fontSize
-    -- require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize))
+      -- return to default kitty fontSize
+      -- require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize))
+    end
   end
 
   return self
