@@ -750,7 +750,7 @@ return lush(function()
     StCount({ fg = bg0, bg = blue, gui = "bold" }),
     StPrefix({ fg = fg, bg = bg2 }),
     StDirectory({ bg = bg1, fg = grey0, gui = "italic" }),
-    StParentDirectory({ bg = bg1, fg = blue, gui = "bold" }),
+    StParentDirectory({ bg = bg1, fg = blue, gui = "" }),
     StFilename({ bg = bg1, fg = fg, gui = "bold" }),
     StFilenameInactive({ fg = light_grey, bg = bg1, gui = "italic,bold" }),
     StIdentifier({ fg = blue, bg = bg1 }),

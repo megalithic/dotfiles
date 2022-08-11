@@ -11,7 +11,6 @@ local fnamemodify = fn.fnamemodify
 local fmt = string.format
 local icons = mega.icons
 local H = require("mega.utils.highlights")
-local U = {}
 
 mega.augroup("megaline", {
   {
@@ -45,8 +44,8 @@ mega.augroup("megaline", {
 })
 
 -- Showed diagnostic levels
-U.diagnostic_levels = nil
-U.diagnostic_levels = {
+M.diagnostic_levels = nil
+M.diagnostic_levels = {
   { id = vim.diagnostic.severity.ERROR, sign = icons.lsp.error },
   { id = vim.diagnostic.severity.WARN, sign = icons.lsp.warn },
   { id = vim.diagnostic.severity.INFO, sign = icons.lsp.info },
@@ -89,7 +88,7 @@ end
 -- Capture the type of the neo tree buffer opened
 local function get_neotree_name(fname, _)
   local parts = vim.split(fname, " ")
-  return fmt("Neo Tree(%s)", parts[2])
+  return fmt("Neo-Tree(%s)", parts[2])
 end
 
 local plain_types = {
@@ -251,7 +250,7 @@ end
 -- end
 
 --- @param ctx table
-function U.is_plain(ctx)
+function M.is_plain(ctx)
   return matches(ctx.filetype, plain_types.filetypes) or matches(ctx.buftype, plain_types.buftypes) or ctx.preview
 end
 
@@ -288,7 +287,7 @@ end
 --- like the preview window or a quickfix window
 --- CREDIT: https://vi.stackexchange.com/a/18090
 --- @param ctx table
-function U.special_buffers(ctx)
+function M.special_buffers(ctx)
   local location_list = fn.getloclist(0, { filewinid = 0 })
   local is_loc_list = location_list.filewinid > 0
   local normal_term = ctx.buftype == "terminal" and ctx.filetype == ""
@@ -303,7 +302,7 @@ end
 
 --- @param ctx table
 --- @param icon string | nil
-function U.modified(ctx, icon)
+function M.modified(ctx, icon)
   if ctx.filetype == "help" then return "" end
   icon = icon or icons.modified
   return ctx.modified and " " .. icon
@@ -311,25 +310,25 @@ end
 
 --- @param ctx table
 --- @param icon string | nil
-function U.readonly(ctx, icon)
+function M.readonly(ctx, icon)
   icon = icon or icons.readonly
   return ctx.readonly and " " .. icon
 end
 
 --- @param bufnum number
 --- @param mod string
-function U.buf_expand(bufnum, mod) return expand("#" .. bufnum .. mod) end
+function M.buf_expand(bufnum, mod) return expand("#" .. bufnum .. mod) end
 
-function U.empty_opts() return { before = "", after = "" } end
+function M.empty_opts() return { before = "", after = "" } end
 
 --- @param ctx table
---- @param modifier string
-function U.filename(ctx, modifier)
+--- @param modifier string | nil
+function M.filename(ctx, modifier)
   modifier = modifier or ":t"
-  local special_buf = U.special_buffers(ctx)
+  local special_buf = M.special_buffers(ctx)
   if special_buf then return "", "", special_buf end
 
-  local fname = U.buf_expand(ctx.bufnum, modifier)
+  local fname = M.buf_expand(ctx.bufnum, modifier)
 
   local name = exception_types.names[ctx.filetype]
   if type(name) == "function" then return "", "", name(fname, ctx.bufnum) end
@@ -338,7 +337,7 @@ function U.filename(ctx, modifier)
 
   if not fname or mega.empty(fname) then return "", "", "No Name" end
 
-  local path = (ctx.buftype == "" and not ctx.preview) and U.buf_expand(ctx.bufnum, ":~:.:h") or nil
+  local path = (ctx.buftype == "" and not ctx.preview) and M.buf_expand(ctx.bufnum, ":~:.:h") or nil
   local is_root = path and #path == 1 -- "~" or "."
   local dir = path and not is_root and fn.pathshorten(fnamemodify(path, ":h")) .. "/" or ""
   local parent = path and (is_root and path or fnamemodify(path, ":t")) or ""
@@ -356,7 +355,7 @@ end
 
 --- @param hl string
 --- @param bg_hl string
-function U.highlight_ft_icon(color, hl, bg_hl)
+function M.highlight_ft_icon(color, hl, bg_hl)
   if not hl or not bg_hl then return end
   local name = hl .. "Statusline"
   -- TODO: find a mechanism to cache this so it isn't repeated constantly
@@ -379,7 +378,7 @@ end
 --- @param ctx table
 --- @param opts table
 --- @return string, string?
-function U.filetype(ctx, opts)
+function M.filetype(ctx, opts)
   local ft_exception = exception_types.filetypes[ctx.filetype]
   if ft_exception then return ft_exception, opts.default end
 
@@ -395,13 +394,13 @@ function U.filetype(ctx, opts)
     _, icon_hl = devicons.get_icon(f_name, f_extension)
     -- to get color rendering working propertly, we have to use the get_icon_color/3 fn
     icon, icon_color = devicons.get_icon_color(f_name, f_extension, { default = true })
-    hl = U.highlight_ft_icon(icon_color, icon_hl, opts.icon_bg)
+    hl = M.highlight_ft_icon(icon_color, icon_hl, opts.icon_bg)
   end
 
   return icon, hl
 end
 
-function U.file(ctx, trunc)
+function M.file(ctx, trunc)
   local is_minimal = is_truncated(trunc)
   local curwin = ctx.winid
   -- highlight the filename components separately
@@ -419,9 +418,9 @@ function U.file(ctx, trunc)
     parent_hl = H.adopt_winhighlight(curwin, "StatusLine", "StCustomParentDir", "StTitle")
   end
 
-  local ft_icon, icon_highlight = U.filetype(ctx, { icon_bg = "StatusLine", default = "StComment" })
-  local file_opts, parent_opts, dir_opts = U.empty_opts(), U.empty_opts(), U.empty_opts()
-  local directory, parent, file = U.filename(ctx)
+  local ft_icon, icon_highlight = M.filetype(ctx, { icon_bg = "StatusLine", default = "StComment" })
+  local file_opts, parent_opts, dir_opts = M.empty_opts(), M.empty_opts(), M.empty_opts()
+  local directory, parent, file = M.filename(ctx)
 
   -- Depending on which filename segments are empty we select a section to add the file icon to
   local dir_empty, parent_empty = mega.empty(directory), mega.empty(parent)
@@ -459,12 +458,12 @@ function M.s_search_result()
   return fmt("%s %d/%d", icons.misc.search, result.current, result.total)
 end
 
-function U.abnormal_buffer()
+function M.abnormal_buffer()
   -- For more information see ":h buftype"
   return vim.bo.buftype ~= ""
 end
 
-function U.get_filesize()
+function M.get_filesize()
   local size = vim.fn.getfsize(vim.fn.getreg("%"))
   if size < 1024 then
     return fmt("%dB", size)
@@ -475,7 +474,7 @@ function U.get_filesize()
   end
 end
 
-U.get_diagnostic_count = function(id) return #vim.diagnostic.get(0, { severity = id }) end
+M.get_diagnostic_count = function(id) return #vim.diagnostic.get(0, { severity = id }) end
 
 -- Sections ===================================================================
 -- Functions should return output text without whitespace on sides or empty
@@ -537,7 +536,7 @@ function M.s_hydra(args)
 end
 
 function M.s_git(args)
-  if U.abnormal_buffer() then return "" end
+  if M.abnormal_buffer() then return "" end
 
   local status = vim.b.gitsigns_status_dict or {}
   local signs = is_truncated(args.trunc_width) and "" or (vim.b.gitsigns_status or "")
@@ -564,7 +563,7 @@ function M.s_git(args)
 end
 
 local function diagnostic_info(ctx)
-  ctx = ctx or U.ctx
+  ctx = ctx or M.ctx
   ---Shim to handle getting diagnostics in nvim 0.5 and nightly
   ---@param buf number
   ---@param severity string
@@ -588,20 +587,20 @@ local function diagnostic_info(ctx)
 end
 
 function M.s_modified(args)
-  if U.ctx.filetype == "help" then return "" end
-  return unpack(item_if(U.modified(U.ctx), not is_truncated(args.trunc_width), "StModified"))
+  if M.ctx.filetype == "help" then return "" end
+  return unpack(item_if(M.modified(M.ctx), not is_truncated(args.trunc_width), "StModified"))
 end
 
 function M.s_readonly(args)
-  local readonly_hl = H.adopt_winhighlight(U.ctx.winid, "StatusLine", "StCustomError", "StError")
-  return unpack(item_if(U.readonly(U.ctx), not is_truncated(args.trunc_width), readonly_hl))
+  local readonly_hl = H.adopt_winhighlight(M.ctx.winid, "StatusLine", "StCustomError", "StError")
+  return unpack(item_if(M.readonly(M.ctx), not is_truncated(args.trunc_width), readonly_hl))
 end
 
 --- Section for file name
 --- Displays in smart short format with differing segment fg/gui
 function M.s_filename(args)
-  local ctx = U.ctx
-  local segments = U.file(ctx, args.trunc_width)
+  local ctx = M.ctx
+  local segments = M.file(ctx, args.trunc_width)
   local dir, parent, file = segments.dir, segments.parent, segments.file
   local dir_item = item(dir.item, dir.hl, dir.opts)
   local parent_item = item(parent.item, parent.hl, parent.opts)
@@ -615,11 +614,11 @@ end
 -- function M.s_fileinfo(args)
 --   local ft = vim.bo.filetype
 
---   if (ft == "") or U.isnt_normal_buffer() then
+--   if (ft == "") or M.isnt_normal_buffer() then
 --     return ""
 --   end
 
---   local icon = U.get_filetype_icon()
+--   local icon = M.get_filetype_icon()
 --   if icon ~= "" then
 --     ft = fmt("%s %s", icon, ft)
 --   end
@@ -632,7 +631,7 @@ end
 --   -- Construct output string with extra file info
 --   local encoding = vim.bo.fileencoding or vim.bo.encoding
 --   local format = vim.bo.fileformat
---   local size = U.get_filesize()
+--   local size = M.get_filesize()
 
 --   return fmt("%s %s[%s] %s", ft, encoding, format, size)
 -- end
@@ -730,9 +729,9 @@ function _G.__statusline()
     expandtab = vim.bo[curbuf].expandtab,
   }
 
-  U.ctx = ctx
+  M.ctx = ctx
 
-  local plain = U.is_plain(ctx)
+  local plain = M.is_plain(ctx)
   local focused = vim.g.vim_in_focus and is_focused()
   -- local focused = vim.g.vim_in_focus or is_focused()
   -- if not plain and focused and not disabled then

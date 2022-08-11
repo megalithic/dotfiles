@@ -53,6 +53,9 @@ local function windowFilterCallback(hsWindow, appName, event)
   end
 end
 
+function obj.start_cb(opts) end
+function obj.stop_cb(opts) end
+
 function obj:init(opts)
   opts = opts or {}
 

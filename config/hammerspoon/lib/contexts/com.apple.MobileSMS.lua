@@ -35,11 +35,13 @@ obj.actions = {
     hotkey = { "alt", "o" },
   },
   nextConversation = {
-    action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
+    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Next Conversation" }) end,
+    action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "]") end,
     hotkey = { mods.casC, "n" },
   },
   prevConversation = {
-    action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
+    -- action = function() _appObj:selectMenuItem({ "Window", "Go to Previous Conversation" }) end,
+    action = function() hs.eventtap.keyStroke({ "cmd", "shift" }, "[") end,
     hotkey = { mods.casC, "p" },
   },
   -- FIXME: it's saying ctrl-1,2,3,4 are all being used somewhere?! sooo, we use ctrl-h,j,k,l instead.
@@ -66,15 +68,7 @@ function obj:start(opts)
   _appObj = opts["appObj"]
   local event = opts["event"]
 
-  for _, value in pairs(obj.actions) do
-    local hotkey = value.hotkey
-    if hotkey then
-      local lmods, key = table.unpack(hotkey)
-      obj.modal:bind(lmods, key, value.action)
-    end
-  end
-
-  if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
+  if event == hs.application.watcher.activated then
     if obj.modal then obj.modal:enter() end
   end
 
@@ -85,15 +79,13 @@ end
 
 function obj:stop(opts)
   opts = opts or {}
-  -- local event = opts["event"]
-
-  -- if event == hs.application.watcher.deactivated or event == hs.application.watcher.terminated then
-  --   if obj.modal then obj.modal:exit() end
-  -- end
+  local event = opts["event"]
 
   obj.modal:exit()
 
-  note(fmt("[STOP] %s: %s", obj.name, self))
+  if event == hs.application.watcher.deactivated or event == hs.application.watcher.terminated then
+    note(fmt("[STOP] %s: %s", obj.name, self))
+  end
 
   return self
 end

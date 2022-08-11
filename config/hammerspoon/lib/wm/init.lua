@@ -139,7 +139,6 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
       end
     else
       context:stop({ event = event })
-      -- success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
     end
   end
 end
@@ -190,15 +189,15 @@ local function prepareContextScripts()
           -- FIXME: for some reason context applying fails on deactivate/activate
           -- so we don't exit the modal for other apps
           --
-          -- if script.actions ~= nil then
-          --   for _, value in pairs(script.actions) do
-          --     local hotkey = value.hotkey
-          --     if hotkey then
-          --       local mods, key = table.unpack(hotkey)
-          --       script.modal:bind(mods, key, value.action)
-          --     end
-          --   end
-          -- end
+          if script.actions ~= nil then
+            for _, value in pairs(script.actions) do
+              local hotkey = value.hotkey
+              if hotkey then
+                local mods, key = table.unpack(hotkey)
+                script.modal:bind(mods, key, value.action)
+              end
+            end
+          end
           obj.contextModals[basenameAndBundleID] = script
         end
       end
