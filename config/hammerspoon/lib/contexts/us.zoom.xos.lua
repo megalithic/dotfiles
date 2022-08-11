@@ -44,11 +44,9 @@ function obj:start(opts)
   _appObj = opts["appObj"]
   local event = opts["event"]
 
-  if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
-    if obj.modal then obj.modal:enter() end
-  end
+  if obj.modal then obj.modal:enter() end
 
-  if event == hs.application.watcher.launched then -- and _appObj:isRunning() then
+  if event == hs.application.watcher.launched then
     L.req("lib.dnd").on()
     hs.spotify.pause()
     L.req("lib.menubar.ptt").setState("push-to-talk")
