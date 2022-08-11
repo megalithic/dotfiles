@@ -34,7 +34,8 @@ local PKGS = {
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
-  -- @trial https://github.com/outstand/titan.nvim/pull/2
+  "williamboman/mason.nvim",
+  "williamboman/mason-lspconfig.nvim",
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   { "hrsh7th/nvim-cmp", branch = "main" },

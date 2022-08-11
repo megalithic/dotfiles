@@ -5,7 +5,7 @@ local L = vim.log.levels
 
 _G.I = vim.inspect
 _G.fmt = string.format
-
+_G.logger = require("mega.logger")
 _G.mega = mega
   or {
     functions = {},
@@ -75,13 +75,8 @@ function _G.P(...)
     table.insert(objects, vim.inspect(v))
   end
 
-  local has_logger, logger = pcall(require, "logger")
-  if has_logger then
-    logger = logger.new({ level = "debug" })
-    logger.info(table.concat(objects, "\n"))
-  else
-    print(table.concat(objects, "\n"))
-  end
+  local p_logger = logger.new({ level = "debug" })
+  p_logger.info(table.concat(objects, "\n"))
   return ...
 end
 
@@ -538,9 +533,9 @@ function mega.table_merge(t1, t2, opts)
   return t1
 end
 
-function mega.deep_merge(...) mega.table_merge(..., { strategy = "deep" }) end
+function mega.deep_merge(t1, t2) mega.table_merge(t1, t2, { strategy = "deep" }) end
 
-function mega.shallow_merge(...) mega.table_merge(..., { strategy = "shallow" }) end
+function mega.shallow_merge(t1, t2) mega.table_merge(t1, t2, { strategy = "shallow" }) end
 
 function mega.iter(list_or_iter)
   if type(list_or_iter) == "function" then return list_or_iter end

@@ -27,7 +27,7 @@ return function(on_attach)
     end
   end
 
-  mega.lsp.servers = {
+  local servers = {
     bashls = true,
     dockerls = function()
       return {
@@ -312,7 +312,6 @@ return function(on_attach)
     end,
     html = function()
       return {
-
         cmd = { "vscode-html-language-server", "--stdio" },
         filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex" },
         init_options = {
@@ -354,48 +353,47 @@ return function(on_attach)
     end,
   }
 
-  function mega.lsp.get_server_config(server)
-    local function server_capabilities()
-      local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
-
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities.offsetEncoding = { "utf-16" }
-      capabilities.textDocument.codeLens = { dynamicRegistration = false }
-      capabilities.textDocument.colorProvider = { dynamicRegistration = false }
-      capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-      capabilities.textDocument.foldingRange = {
-        dynamicRegistration = false,
-        lineFoldingOnly = true,
-      }
-      capabilities.textDocument.codeAction = {
-        dynamicRegistration = false,
-        codeActionLiteralSupport = {
-          codeActionKind = {
-            valueSet = {
-              "",
-              "quickfix",
-              "refactor",
-              "refactor.extract",
-              "refactor.inline",
-              "refactor.rewrite",
-              "source",
-              "source.organizeImports",
-            },
+  local function get_server_capabilities()
+    local capabilities = lsp.protocol.make_client_capabilities()
+    capabilities.offsetEncoding = { "utf-16" }
+    capabilities.textDocument.codeLens = { dynamicRegistration = false }
+    capabilities.textDocument.colorProvider = { dynamicRegistration = false }
+    capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+    capabilities.textDocument.foldingRange = {
+      dynamicRegistration = false,
+      lineFoldingOnly = true,
+    }
+    capabilities.textDocument.codeAction = {
+      dynamicRegistration = false,
+      codeActionLiteralSupport = {
+        codeActionKind = {
+          valueSet = {
+            "",
+            "quickfix",
+            "refactor",
+            "refactor.extract",
+            "refactor.inline",
+            "refactor.rewrite",
+            "source",
+            "source.organizeImports",
           },
         },
-      }
+      },
+    }
 
-      if nvim_lsp_ok then capabilities = cmp_nvim_lsp.update_capabilities(capabilities) end
+    local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
+    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.update_capabilities(capabilities) end
 
-      return capabilities
-    end
+    return capabilities
+  end
 
-    local conf = mega.lsp.servers[server]
+  local function get_server_config(server)
+    local conf = servers[server]
     local conf_type = type(conf)
     local config = conf_type == "table" and conf or conf_type == "function" and conf() or {}
 
-    config.flags = { debounce_text_changes = 200 }
-    config.capabilities = server_capabilities()
+    config.flags = { debounce_text_changes = 150 }
+    config.capabilities = get_server_capabilities()
     config.on_attach = on_attach
 
     -- TODO: json loaded lsp config; also @akinsho is a beast.
@@ -406,39 +404,13 @@ return function(on_attach)
   end
 
   -- Load lspconfig servers with their configs
-  for server, _ in pairs(mega.lsp.servers) do
+  for server, _ in pairs(servers) do
     if server == nil or lspconfig[server] == nil then
       vim.notify("unable to setup ls for " .. server)
       return
     end
 
-    local config = mega.lsp.get_server_config(server)
+    local config = get_server_config(server)
     lspconfig[server].setup(config)
   end
-
-  -- FIXME: doing an lsp attach via an autocmd makes for SUPER slow initial
-  -- loading of the file into the buffer
-
-  --- A set of custom overrides for specific lsp clients
-  --- This is a way of adding functionality for specific lsps
-  --- without putting all this logic in the general on_attach function
-  -- local client_overrides = {
-  --   -- ["sumneko_lua"] = function(client, bufnr) end,
-  -- }
-
-  -- mega.augroup("LspSetupCommands", {
-  --   {
-  --     event = "LspAttach",
-  --     desc = "Setup LS things on the buffer when the client attaches",
-  --     command = function(args)
-  --       local bufnr = args.buf
-  --       local client = vim.lsp.get_client_by_id(args.data.client_id)
-  --       on_attach(client, bufnr)
-
-  --       if client_overrides[client.name] then
-  --         client_overrides[client.name](client, bufnr)
-  --       end
-  --     end,
-  --   },
-  -- })
 end

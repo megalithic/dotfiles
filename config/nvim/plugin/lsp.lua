@@ -407,10 +407,10 @@ end
 
 -- [ ON_ATTACH ] ---------------------------------------------------------------
 
----Add buffer local mappings, autocommands, tagfunc etc for attaching servers
+---Add buffer local mappings, autocommands, tagfunc, etc for attaching servers
 ---@param client table lsp client
 ---@param bufnr number
-function mega.lsp.on_attach(client, bufnr)
+local function on_attach(client, bufnr)
   if not client then
     vim.notify("No LSP client found; aborting on_attach.")
     return
@@ -441,5 +441,6 @@ function mega.lsp.on_attach(client, bufnr)
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
-require("mega.lsp.null_ls")(mega.lsp.on_attach)
-require("mega.lsp.servers")(mega.lsp.on_attach)
+require("mega.lsp.null_ls")(on_attach)
+require("mega.lsp.servers")(on_attach)
+-- require("mega.lsp.mason")(on_attach)
