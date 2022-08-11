@@ -46,8 +46,6 @@ function obj:start(opts)
   _appObj = opts["appObj"]
   local event = opts["event"]
 
-  note(fmt("[START] %s: %s", obj.name, opts))
-
   if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
     if obj.modal then obj.modal:enter() end
   end
@@ -78,24 +76,18 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  note(fmt("[STOP] %s: %s", obj.name, self))
-
-  if event == hs.application.watcher.deactivated then
-    if obj.modal then obj.modal:exit() end
-  end
+  if obj.modal then obj.modal:exit() end
 
   local loom = hs.application.get("Loom")
-  if loom then
-    if event == hs.application.watcher.terminated or not loom:getWindow("Loom Control Menu") then
-      L.req("lib.menubar.ptt").setState("push-to-talk")
-      L.req("lib.dnd").off()
+  if loom and (event == hs.application.watcher.terminated or not loom:getWindow("Loom Control Menu")) then
+    L.req("lib.menubar.ptt").setState("push-to-talk")
+    L.req("lib.dnd").off()
 
-      local keycastr = hs.application.get("KeyCastr")
-      if keycastr ~= nil then keycastr:kill() end
+    local keycastr = hs.application.get("KeyCastr")
+    if keycastr ~= nil then keycastr:kill() end
 
-      -- return to default kitty fontSize
-      -- require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize))
-    end
+    -- return to default kitty fontSize
+    -- require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize))
   end
 
   return self

@@ -255,8 +255,6 @@ function obj:start(opts)
     if obj.modal then obj.modal:enter() end
   end
 
-  note(fmt("[START] %s: %s", obj.name, opts))
-
   return self
 end
 
@@ -264,11 +262,7 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  if event == hs.application.watcher.deactivated or event == hs.application.watcher.terminated then
-    if obj.modal then obj.modal:exit() end
-  end
-
-  note(fmt("[STOP] %s: %s", obj.name, self))
+  if obj.modal then obj.modal:exit() end
 
   return self
 end

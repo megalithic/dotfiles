@@ -113,6 +113,7 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
           fromWindowFilter and "/fromWindowFilter" or ""
         )
       )
+
       if appConfig then
         context:start({
           bundleID = bundleID,
@@ -134,7 +135,7 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
           end)
         elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
           context:stop({ event = event })
-          success(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
+          info(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
         end
       end
     else

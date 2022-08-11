@@ -44,8 +44,6 @@ function obj:start(opts)
   _appObj = opts["appObj"]
   local event = opts["event"]
 
-  note(fmt("[START] %s: %s", obj.name, opts))
-
   if event == hs.application.watcher.activated then -- and _appObj:isRunning() then
     if obj.modal then obj.modal:enter() end
   end
@@ -82,11 +80,7 @@ function obj:stop(opts)
   opts = opts or {}
   local event = opts["event"]
 
-  note(fmt("[STOP] %s: %s", obj.name, self))
-
-  if event == hs.application.watcher.deactivated then
-    if obj.modal then obj.modal:exit() end
-  end
+  if obj.modal then obj.modal:exit() end
 
   if event == hs.application.watcher.terminated then
     L.req("lib.menubar.ptt").setState("push-to-talk")

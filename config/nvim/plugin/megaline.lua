@@ -22,7 +22,7 @@ mega.augroup("megaline", {
     command = function() vim.g.vim_in_focus = false end,
   },
   {
-    event = { "VimEnter" },
+    event = { "WinEnter", "BufEnter" },
     command = function()
       vim.g.vim_in_focus = true
       vim.go.statusline = "%{%v:lua.__statusline()%}"
