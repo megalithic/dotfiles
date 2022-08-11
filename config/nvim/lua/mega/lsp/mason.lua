@@ -149,7 +149,7 @@ return function(on_attach)
       lsp_setup(server_name, server_opts)
     end,
     cssls = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         cmd = { "vscode-css-language-server", "--stdio" },
         filetypes = { "css", "scss" },
         settings = {
@@ -171,12 +171,12 @@ return function(on_attach)
             },
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
     dockerls = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         single_file_support = true,
         settings = {
           docker = {
@@ -187,12 +187,12 @@ return function(on_attach)
             },
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
     elixirls = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         filetypes = { "elixir", "eelixir", "heex" },
         settings = {
           elixirLS = {
@@ -204,14 +204,14 @@ return function(on_attach)
             suggestSpecs = true,
           },
         },
-      }, server_opts)
+      })
 
       lsp_cmd_override(server_name, opts, ".elixir-ls-release/language_server.sh")
 
       lsp_setup(server_name, opts)
     end,
     html = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         cmd = { "vscode-html-language-server", "--stdio" },
         filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex" },
         init_options = {
@@ -223,12 +223,12 @@ return function(on_attach)
             heex = true,
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
     jsonls = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         commands = {
           Format = {
             function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
@@ -242,12 +242,12 @@ return function(on_attach)
             schemas = require("schemastore").json.schemas(),
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
     pyright = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         single_file_support = false,
         settings = {
           python = {
@@ -258,12 +258,12 @@ return function(on_attach)
             },
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
     solargraph = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         settings = {
           solargraph = {
             diagnostics = true,
@@ -272,7 +272,7 @@ return function(on_attach)
             logLevel = "debug",
           },
         },
-      }, server_opts)
+      })
 
       lsp_cmd_override(server_name, opts, ".bin/solargraph", { "stdio" })
 
@@ -288,7 +288,7 @@ return function(on_attach)
       local plenary = ("%s/start/plenary.nvim"):format(plugins)
       -- local paq = ('%s/opt/paq-nvim'):format(plugins)
 
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         handlers = {
           -- Don't open quickfix list in case of multiple definitions. At the
           -- moment, this conflicts the `a = function()` code style because
@@ -361,12 +361,12 @@ return function(on_attach)
             },
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
     tailwindcss = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         cmd = { "tailwindcss-language-server", "--stdio" },
         init_options = {
           userLanguages = {
@@ -433,7 +433,7 @@ return function(on_attach)
           "node_modules",
           ".git"
         ),
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,
@@ -447,7 +447,7 @@ return function(on_attach)
         lsp.buf.execute_command(params)
       end
 
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         init_options = {
           hostInfo = "neovim",
           logVerbosity = "verbose",
@@ -466,14 +466,14 @@ return function(on_attach)
           "typescriptreact",
           "typescript.tsx",
         },
-      }, server_opts)
+      })
 
       lsp_cmd_override(server_name, opts, ".bin/typescript-language-server", { "--stdio" })
 
       lsp_setup(server_name, opts)
     end,
     yamlls = function(server_name)
-      local opts = mega.deep_merge({
+      local opts = vim.tbl_extend("keep", server_opts, {
         settings = {
           yaml = {
             format = { enable = true },
@@ -486,7 +486,7 @@ return function(on_attach)
             },
           },
         },
-      }, server_opts)
+      })
 
       lsp_setup(server_name, opts)
     end,

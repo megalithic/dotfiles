@@ -11,7 +11,6 @@ local conf = require("mega.globals").conf
 -- NOTE: add local module:
 -- vim.opt.runtimepath:append '~/path/to/your/plugin'
 local PKGS = {
-
   "savq/paq-nvim",
   ------------------------------------------------------------------------------
   -- (profiling/speed improvements) --

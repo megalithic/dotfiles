@@ -2,30 +2,58 @@ return function(on_attach)
   local fn = vim.fn
   local api = vim.api
   local lsp = vim.lsp
-  local vcmd = vim.cmd
-  -- local bufmap, bmap = mega.bufmap, mega.bmap
   local lspconfig = require("lspconfig")
-  local command = mega.command
-  local augroup = mega.augroup
-  local fmt = string.format
-  local diagnostic = vim.diagnostic
+  local lsputil = require("lspconfig.util")
 
-  local max_width = math.min(math.floor(vim.o.columns * 0.7), 100)
-  local max_height = math.min(math.floor(vim.o.lines * 0.3), 30)
-
-  -- [ SERVERS ] -----------------------------------------------------------------
+  -- [ UTILS ] -----------------------------------------------------------------
 
   local function root_pattern(...)
     local patterns = vim.tbl_flatten({ ... })
 
     return function(startpath)
       for _, pattern in ipairs(patterns) do
-        return lspconfig.util.search_ancestors(startpath, function(path)
-          if lspconfig.util.path.exists(fn.glob(lspconfig.util.path.join(path, pattern))) then return path end
+        return lsputil.search_ancestors(startpath, function(path)
+          if lsputil.path.exists(fn.glob(lsputil.path.join(path, pattern))) then return path end
         end)
       end
     end
   end
+
+  local function get_server_capabilities()
+    local capabilities = lsp.protocol.make_client_capabilities()
+    capabilities.offsetEncoding = { "utf-16" }
+    capabilities.textDocument.codeLens = { dynamicRegistration = false }
+    capabilities.textDocument.colorProvider = { dynamicRegistration = false }
+    capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
+    capabilities.textDocument.foldingRange = {
+      dynamicRegistration = false,
+      lineFoldingOnly = true,
+    }
+    capabilities.textDocument.codeAction = {
+      dynamicRegistration = false,
+      codeActionLiteralSupport = {
+        codeActionKind = {
+          valueSet = {
+            "",
+            "quickfix",
+            "refactor",
+            "refactor.extract",
+            "refactor.inline",
+            "refactor.rewrite",
+            "source",
+            "source.organizeImports",
+          },
+        },
+      },
+    }
+
+    local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
+    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.update_capabilities(capabilities) end
+
+    return capabilities
+  end
+
+  -- [ SERVERS ] ---------------------------------------------------------------
 
   local servers = {
     bashls = true,
@@ -352,40 +380,6 @@ return function(on_attach)
       }
     end,
   }
-
-  local function get_server_capabilities()
-    local capabilities = lsp.protocol.make_client_capabilities()
-    capabilities.offsetEncoding = { "utf-16" }
-    capabilities.textDocument.codeLens = { dynamicRegistration = false }
-    capabilities.textDocument.colorProvider = { dynamicRegistration = false }
-    capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
-    capabilities.textDocument.foldingRange = {
-      dynamicRegistration = false,
-      lineFoldingOnly = true,
-    }
-    capabilities.textDocument.codeAction = {
-      dynamicRegistration = false,
-      codeActionLiteralSupport = {
-        codeActionKind = {
-          valueSet = {
-            "",
-            "quickfix",
-            "refactor",
-            "refactor.extract",
-            "refactor.inline",
-            "refactor.rewrite",
-            "source",
-            "source.organizeImports",
-          },
-        },
-      },
-    }
-
-    local nvim_lsp_ok, cmp_nvim_lsp = mega.require("cmp_nvim_lsp")
-    if nvim_lsp_ok then capabilities = cmp_nvim_lsp.update_capabilities(capabilities) end
-
-    return capabilities
-  end
 
   local function get_server_config(server)
     local conf = servers[server]

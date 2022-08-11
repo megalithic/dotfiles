@@ -29,7 +29,7 @@ return function()
       ["n <localleader>gre"] = "<cmd>lua require\"gitsigns\".reset_buffer()<CR>",
       ["n <localleader>gbl"] = "<cmd>lua require\"gitsigns\".blame_line()<CR>",
       ["n <localleader>gbd"] = "<cmd>lua require\"gitsigns\".toggle_word_diff()<CR>",
-      ["n <leader>lm"] = "<cmd>lua require\"gitsigns\".setqflist(\"all\")<CR>",
+      -- ["n <leader>lm"] = "<cmd>lua require\"gitsigns\".setqflist(\"all\")<CR>",
       -- Text objects
       ["o ih"] = ":<C-U>lua require\"gitsigns\".select_hunk()<CR>",
       ["x ih"] = ":<C-U>lua require\"gitsigns\".select_hunk()<CR>",

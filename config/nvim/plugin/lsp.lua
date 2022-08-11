@@ -2,7 +2,6 @@ local fn = vim.fn
 local api = vim.api
 local lsp = vim.lsp
 local vcmd = vim.cmd
--- local bufmap, bmap = mega.bufmap, mega.bmap
 local command = mega.command
 local augroup = mega.augroup
 local fmt = string.format
@@ -43,7 +42,7 @@ local function format(opts)
   -- if vim.fn.bufloaded(bufnr) then
   vim.lsp.buf.format({
     bufnr = opts.bufnr,
-    async = opts.async, -- NOTE: this is super dangerous
+    async = opts.async, -- NOTE: this is super dangerous. no sir; i don't like it.
     filter = formatting_filter,
   })
   -- end
@@ -201,6 +200,7 @@ local function setup_mappings(client, bufnr)
   inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))
+  nnoremap("<leader>lm", [[<cmd>Mason<CR>]], desc("lsp: show mason info"))
   nnoremap(
     "<leader>lic",
     [[<cmd>lua =vim.lsp.get_active_clients()[1].server_capabilities<CR>]],
@@ -442,5 +442,5 @@ local function on_attach(client, bufnr)
 end
 
 require("mega.lsp.null_ls")(on_attach)
-require("mega.lsp.servers")(on_attach)
--- require("mega.lsp.mason")(on_attach)
+-- require("mega.lsp.servers")(on_attach)
+require("mega.lsp.mason")(on_attach)
