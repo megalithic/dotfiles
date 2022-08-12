@@ -34,8 +34,8 @@ do_install() {
 }
 
 do_post_install() {
-  sudo xcode-select -switch /Library/Developer/CommandLineTools
-  softwareupdate --all --install --force --agree-to-license &&
+  sudo xcode-select -switch /Library/Developer/CommandLineTools &&
+    # softwareupdate --all --install --force --agree-to-license &&
     log_ok "finished setting up more things for Xcode CLI tools" ||
     log_error "failed to setup Xcode CLI tools things.."
   sudo xcode-select -switch /Applications/Xcode.app
