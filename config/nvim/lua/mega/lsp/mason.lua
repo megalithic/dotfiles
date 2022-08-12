@@ -42,17 +42,14 @@ return function(on_attach)
     return dir_has_file(root, name)
   end
 
-  local function lsp_setup(server_name, opts)
-    logger.debug("Adding", server_name, "to lspconfig")
-    lspconfig[server_name].setup(opts)
-  end
+  local function lsp_setup(server_name, opts) lspconfig[server_name].setup(opts) end
 
   local function build_command(server_name, path, args)
     args = args or {}
 
     local exists, dir = workspace_has_file(path)
-    logger.debug("workspace_has_file", exists, dir)
     if exists then
+      logger.debug(fmt("workspace_has_file: %s", dir))
       dir = fn.expand(dir)
       logger.fmt_debug("%s: %s %s", server_name, dir, args)
       return vim.list_extend({ dir }, args)
@@ -119,6 +116,7 @@ return function(on_attach)
   require("mason").setup()
 
   mason_lspconfig.setup({
+    automatic_installation = true,
     ensure_installed = {
       "bashls",
       "clangd",
@@ -150,7 +148,7 @@ return function(on_attach)
     end,
     cssls = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
-        cmd = { "vscode-css-language-server", "--stdio" },
+        -- cmd = { "vscode-css-language-server", "--stdio" },
         filetypes = { "css", "scss" },
         settings = {
           css = {
@@ -212,7 +210,7 @@ return function(on_attach)
     end,
     html = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
-        cmd = { "vscode-html-language-server", "--stdio" },
+        -- cmd = { "vscode-html-language-server", "--stdio" },
         filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex" },
         init_options = {
           configurationSection = { "html", "css", "javascript", "eelixir", "heex", "html.heex" },
@@ -367,7 +365,7 @@ return function(on_attach)
     end,
     tailwindcss = function(server_name)
       local opts = vim.tbl_extend("keep", server_opts, {
-        cmd = { "tailwindcss-language-server", "--stdio" },
+        -- cmd = { "tailwindcss-language-server", "--stdio" },
         init_options = {
           userLanguages = {
             elixir = "phoenix-heex",

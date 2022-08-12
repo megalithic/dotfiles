@@ -430,6 +430,22 @@ local function on_attach(client, bufnr)
     vim.bo[bufnr].formatexpr = "v:lua.vim.lsp.formatexpr()"
   end
 
+  --- Guard against servers without the signatureHelper capability
+  if client.server_capabilities.signatureHelpProvider then
+    require("lsp-overloads").setup(client, {
+      ui = {
+        -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+        border = mega.get_border(),
+      },
+      keymaps = {
+        next_signature = "<C-j>",
+        previous_signature = "<C-k>",
+        next_parameter = "<C-l>",
+        previous_parameter = "<C-h>",
+      },
+    })
+  end
+
   require("mega.lsp.handlers")
   setup_formatting(client, bufnr)
   setup_commands()

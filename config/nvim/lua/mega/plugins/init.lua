@@ -10,6 +10,7 @@ local conf = require("mega.globals").conf
 
 -- NOTE: add local module:
 -- vim.opt.runtimepath:append '~/path/to/your/plugin'
+
 local PKGS = {
   "savq/paq-nvim",
   ------------------------------------------------------------------------------
@@ -20,7 +21,7 @@ local PKGS = {
   -- (UI/appearance/visuals) --
   "rktjmp/lush.nvim",
   "NvChad/nvim-colorizer.lua",
-  -- "brenoprata10/nvim-highlight-colors",
+  "brenoprata10/nvim-highlight-colors",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
   "lukas-reineke/virt-column.nvim",
@@ -52,8 +53,8 @@ local PKGS = {
   "ray-x/cmp-treesitter",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  -- @trial: Issafalcon/lsp-overloads.nvim
-  "ray-x/lsp_signature.nvim",
+  "Issafalcon/lsp-overloads.nvim",
+  -- "ray-x/lsp_signature.nvim",
   -- "j-hui/fidget.nvim",
   "ZenLian/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
@@ -331,7 +332,7 @@ function M.config()
     end,
   })
 
-  -- conf("nvim-highlight-colors", { render = "background" })
+  conf("nvim-highlight-colors", { render = "first_column" })
 
   conf(
     "colorizer",
