@@ -106,7 +106,7 @@ local PKGS = {
   "itchyny/vim-gitbranch",
   "rhysd/git-messenger.vim",
   "tpope/vim-fugitive",
-  { "lewis6991/gitsigns.nvim", opt = true }, -- conf via autocmd
+  { "lewis6991/gitsigns.nvim" }, -- conf via autocmd
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
   ------------------------------------------------------------------------------
@@ -276,6 +276,8 @@ function M.config()
   if pcall(require, "paq") then vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer") end
 
   vim.cmd("packadd cfilter")
+
+  conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })
   conf("cmp", { config = "cmp" })

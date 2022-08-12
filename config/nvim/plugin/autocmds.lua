@@ -269,14 +269,6 @@ augroup("LazyLoads", {
     pattern = { "help" },
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
-  {
-    event = { "BufReadPost" },
-    pattern = { "*" },
-    command = function()
-      vim.cmd([[packadd! gitsigns.nvim]])
-      mega.conf("gitsigns", { config = "gitsigns" })
-    end,
-  },
 })
 
 do

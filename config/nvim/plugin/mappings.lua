@@ -178,30 +178,30 @@ if has_wk then
         name = "+reset",
         e = "gitsigns: reset entire buffer",
       },
-      -- b = {
-      --   function() gs.blame_line({ full = true }) end,
-      --   "gitsigns: blame current line",
-      -- },
+      b = {
+        function() gs.blame_line({ full = true }) end,
+        "gitsigns: blame current line",
+      },
       h = {
         name = "+gitsigns hunk",
-        -- s = { gs.stage_hunk, "stage" },
-        -- u = { gs.undo_stage_hunk, "undo stage" },
-        -- r = { gs.reset_hunk, "reset hunk" },
-        -- p = { gs.preview_hunk, "preview current hunk" },
-        -- d = { gs.diffthis, "diff this line" },
-        -- D = {
-        --   function() gs.diffthis("~") end,
-        --   "diff this with ~",
-        -- },
-        -- b = {
-        --   name = "+blame",
-        --   l = "gitsigns: blame current line",
-        --   d = "gitsigns: toggle word diff",
-        --   b = {
-        --     function() gs.blame_line({ full = true }) end,
-        --     "blame current line",
-        --   },
-        -- },
+        s = { gs.stage_hunk, "stage" },
+        u = { gs.undo_stage_hunk, "undo stage" },
+        r = { gs.reset_hunk, "reset hunk" },
+        p = { gs.preview_hunk, "preview current hunk" },
+        d = { gs.diffthis, "diff this line" },
+        D = {
+          function() gs.diffthis("~") end,
+          "diff this with ~",
+        },
+        b = {
+          name = "+blame",
+          l = "gitsigns: blame current line",
+          d = "gitsigns: toggle word diff",
+          b = {
+            function() gs.blame_line({ full = true }) end,
+            "blame current line",
+          },
+        },
       },
       w = "gitsigns: stage entire buffer",
       m = "gitsigns: list modified in quickfix",
