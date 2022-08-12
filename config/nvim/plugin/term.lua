@@ -106,6 +106,7 @@ function mega.term_open(opts)
 
   if precmd ~= nil then cmd = fmt("%s; %s", precmd, cmd) end
 
+  -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
   vim.fn.termopen(cmd, {
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(jobid, exit_code, event)

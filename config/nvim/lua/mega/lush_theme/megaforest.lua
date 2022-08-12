@@ -756,6 +756,7 @@ return lush(function()
     StIdentifier({ fg = blue, bg = bg1 }),
     StTitle({ bg = bg1, fg = grey2, gui = "bold" }),
     StComment({ Comment, bg = bg1 }),
+    StClient({ bg = bg1, fg = fg, gui = "bold" }),
     StError({ fg = pale_red, bg = bg1 }),
     StWarn({ fg = orange, bg = bg1 }),
     StInfo({ fg = cyan, bg = bg1, gui = "bold" }),

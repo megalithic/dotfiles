@@ -19,9 +19,14 @@ _G.mega = mega
 -- [ global variables ] --------------------------------------------------------
 
 local function get_hostname()
+  local hostname = ""
   local handle = io.popen("hostname")
-  local hostname = handle:read("*l")
-  handle:close()
+
+  if handle then
+    hostname = handle:read("*l")
+    handle:close()
+  end
+
   return hostname
 end
 
@@ -166,21 +171,7 @@ function mega.opt(o, v, scopes)
 end
 
 ---Require a module using `pcall` and report any errors
----@param module string
----@param opts table?
----@return boolean, any
--- function mega.require(module, opts)
---   opts = opts or { silent = true }
---   local ok, result = pcall(require, module)
---   if not ok and not opts.silent then
---     if opts.message then result = opts.message .. "\n" .. result end
---     vim.notify(result, vim.log.levels.ERROR, { title = fmt("Error requiring: %s", module) })
---   end
---   return ok, result
--- end
-
----Require a module using `pcall` and report any errors
----@param module string
+---@param module string | table
 ---@param opts table?
 ---@return boolean, any
 function mega.require(module, opts)
@@ -942,9 +933,57 @@ end
 function mega.fold(callback, list, accum)
   for k, v in pairs(list) do
     accum = callback(accum, v, k)
-    assert(accum, "The accumulator must be return on each iteration")
+    assert(accum ~= nil, "The accumulator must be returned on each iteration")
   end
   return accum
+end
+
+---@generic T : table
+---@param callback fun(item: T, key: string | number, list: T[]): T
+---@param list T[]
+---@return T[]
+function mega.map(callback, list)
+  return mega.fold(function(accum, v, k)
+    accum[#accum + 1] = callback(v, k, accum)
+    return accum
+  end, list, {})
+end
+
+---@generic T : table
+---@param callback fun(T, key: string | number): T
+---@param list T[]
+function mega.foreach(callback, list)
+  for k, v in pairs(list) do
+    callback(v, k)
+  end
+end
+
+--- Check if the target matches  any item in the list.
+---@param target string
+---@param list string[]
+---@return boolean | string
+function mega.any(target, list)
+  return mega.fold(function(accum, item)
+    if accum then return accum end
+    if target:match(item) then return true end
+    return accum
+  end, list, false)
+end
+
+---Find an item in a list
+---@generic T
+---@param haystack T[]
+---@param matcher fun(arg: T):boolean
+---@return T
+function mega.find(haystack, matcher)
+  local found
+  for _, needle in ipairs(haystack) do
+    if matcher(needle) then
+      found = needle
+      break
+    end
+  end
+  return found
 end
 
 -- [ commands ] ----------------------------------------------------------------

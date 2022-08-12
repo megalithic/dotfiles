@@ -36,6 +36,7 @@ local PKGS = {
   "neovim/nvim-lspconfig",
   "williamboman/mason.nvim",
   "williamboman/mason-lspconfig.nvim",
+  -- "WhoIsSethDaniel/mason-tool-installer.nvim",
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   { "hrsh7th/nvim-cmp", branch = "main" },
@@ -53,10 +54,11 @@ local PKGS = {
   "ray-x/cmp-treesitter",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  "Issafalcon/lsp-overloads.nvim",
   -- "ray-x/lsp_signature.nvim",
+  "Issafalcon/lsp-overloads.nvim",
+  "lewis6991/hover.nvim",
   -- "j-hui/fidget.nvim",
-  "ZenLian/fidget.nvim",
+  -- "ZenLian/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
@@ -96,14 +98,6 @@ local PKGS = {
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
   ------------------------------------------------------------------------------
-  -- (text OBJECTS) --
-  -- "tpope/vim-rsi",
-  -- "kana/vim-textobj-user",
-  -- "kana/vim-operator-user",
-  -- "kana/vim-textobj-entire", -- ae/ie for entire buffer
-  -- "michaeljsmith/vim-indent-object", -- ai/ii for indentation area
-  -- "wellle/targets.vim",
-  ------------------------------------------------------------------------------
   -- (GIT) --
   -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
   "TimUntersberger/neogit",
@@ -112,7 +106,7 @@ local PKGS = {
   "itchyny/vim-gitbranch",
   "rhysd/git-messenger.vim",
   "tpope/vim-fugitive",
-  "lewis6991/gitsigns.nvim",
+  { "lewis6991/gitsigns.nvim", opt = true }, -- conf via autocmd
   { "ruifm/gitlinker.nvim" },
   { "ruanyl/vim-gh-line" },
   ------------------------------------------------------------------------------
@@ -282,8 +276,6 @@ function M.config()
   if pcall(require, "paq") then vim.opt.runtimepath:remove("~/.local/share/nvim/site/pack/packer") end
 
   vim.cmd("packadd cfilter")
-
-  conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
   conf("neo-tree", { config = "neo-tree" })
   conf("cmp", { config = "cmp" })
@@ -478,6 +470,20 @@ function M.config()
     -- },
     -- zindex = 99, -- Keep signature popup below the completion PUM
     -- toggle_key = "<C-k>",
+  })
+
+  conf("hover", {
+    init = function()
+      -- Require providers
+      require("hover.providers.lsp")
+      require("hover.providers.gh")
+      require("hover.providers.man")
+      require("hover.providers.dictionary")
+    end,
+    preview_opts = {
+      border = mega.get_border(),
+    },
+    title = true,
   })
 
   conf("vim-matchup", function()

@@ -63,6 +63,7 @@ local function hover()
   local existing_float_win = vim.b.lsp_floating_preview
   if next(vim.lsp.get_active_clients()) == nil then
     vim.cmd([[execute printf('h %s', expand('<cword>'))]])
+    -- require("hover").hover_select()
   else
     if existing_float_win and vim.api.nvim_win_is_valid(existing_float_win) then
       vim.b.lsp_floating_preview = nil
@@ -72,6 +73,7 @@ local function hover()
       vim.api.nvim_win_close(existing_float_win, true)
     else
       vim.lsp.buf.hover()
+      -- require("hover").hover()
     end
   end
 end
@@ -197,6 +199,7 @@ local function setup_mappings(client, bufnr)
   nnoremap("gl", vim.lsp.codelens.run, desc("lsp: code lens"))
   nnoremap("gn", require("mega.lsp.rename").rename, desc("lsp: rename"))
   nnoremap("K", hover, desc("lsp: hover"))
+  nnoremap("gK", require("hover").hover_select, desc("lsp: hover (select)"))
   inoremap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   imap("<c-k>", vim.lsp.buf.signature_help, desc("lsp: signature help"))
   nnoremap("<leader>li", [[<cmd>LspInfo<CR>]], desc("lsp: show client info"))

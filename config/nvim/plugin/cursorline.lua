@@ -65,7 +65,7 @@ local function is_floating_win() return vim.fn.win_gettype() == "popup" end
 ---Determines whether or not a buffer/window should be ignored by this plugin
 ---@return boolean
 local function is_ignored()
-  should_ignore = vim.bo.filetype == ""
+  local should_ignore = vim.bo.filetype == ""
     or vim.tbl_contains(M.buftype_exclusions, vim.bo.buftype)
     or vim.tbl_contains(M.filetype_exclusions, vim.bo.filetype)
     or is_floating_win()
@@ -166,7 +166,7 @@ local function should_change_cursorline()
   local current_row = cursor[1]
   local current_col = cursor[2]
 
-  local col_diff = math.abs(current_col - M.prev_col)
+  -- local col_diff = math.abs(current_col - M.prev_col)
   local row_diff = math.abs(current_row - M.prev_row)
 
   should_blink = row_diff >= M.minimal_jump

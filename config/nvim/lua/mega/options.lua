@@ -49,7 +49,6 @@ vim.opt.fillchars = {
   foldsep = "│",
   foldclose = mega.icons.misc.fold_close, -- alts: ▸
 }
-
 -----------------------------------------------------------------------------//
 -- Diff {{{1
 -----------------------------------------------------------------------------//
@@ -116,7 +115,6 @@ vim.opt.formatoptions = vim.opt.formatoptions
   + "n" -- Indent past the formatlistpat, not underneath it.
   + "j" -- Auto-remove comments if possible.
   - "2" -- I'm not in gradeschool anymore
-
 -----------------------------------------------------------------------------//
 -- Folds {{{1
 -----------------------------------------------------------------------------//
@@ -379,21 +377,22 @@ vim.opt.fileformats = { "unix", "mac", "dos" }
 -----------------------------------------------------------------------------//
 -- Mouse {{{1
 -----------------------------------------------------------------------------//
-vim.opt.mouse = "a"
+-- vim.opt.mouse = "a"
+vim.opt.mouse = "nvi"
 vim.opt.mousefocus = true
 -----------------------------------------------------------------------------//
 -- these only read ".vim" files
 vim.opt.secure = true -- Disable autocmd etc for project local vimrc files.
 vim.opt.exrc = true -- Allow project local vimrc files example .nvimrc see :h exrc
 -----------------------------------------------------------------------------//
--- Git editor
+-- Git editor {{{1
 -----------------------------------------------------------------------------//
 if mega.executable("nvr") then
   vim.env.GIT_EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
   vim.env.EDITOR = "nvr -cc split --remote-wait +'set bufhidden=wipe'"
 end
 -----------------------------------------------------------------------------//
--- Disable built-ins
+-- Disable built-ins {{{1
 -----------------------------------------------------------------------------//
 -- Disable some in built plugins completely
 local disabled_built_ins = {
@@ -446,7 +445,7 @@ mega.exec([[
   let &t_ut=''
 ]])
 -----------------------------------------------------------------------------//
--- Random Other Things
+-- Random Other Things {{{1
 -----------------------------------------------------------------------------//
 -- vim.opt.shortmess = "IToOlxfitnw" -- https://neovim.io/doc/user/options.html#'shortmess'
 vim.g.no_man_maps = true
@@ -468,7 +467,11 @@ vim.g.registers_register_key_sleep = 0 -- "0 by default, seconds to wait before 
 vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line with the registers without content
 
 -----------------------------------------------------------------------------//
--- Abbreviations/Cabbreviations
+-- GUI {{{1
+-----------------------------------------------------------------------------//
+vim.opt.guifont = "JetBrains Mono:h12"
+-----------------------------------------------------------------------------//
+-- Abbreviations/Cabbreviations {{{1
 -----------------------------------------------------------------------------//
 -- REF: https://github.com/lukas-reineke/lsp-format.nvim#wq-will-not-format
 vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.formatting_sync()" <bar> wq]])

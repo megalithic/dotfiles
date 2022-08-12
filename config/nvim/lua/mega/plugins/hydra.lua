@@ -82,8 +82,8 @@ return function()
   --   },
   -- })
 
-  local ok, gitsigns = pcall(require, "gitsigns")
-  if ok then
+  local gs_ok, gs = mega.require("gitsigns")
+  if gs_ok then
     local hint = [[
  _J_: next hunk   _s_: stage hunk        _d_: show deleted   _b_: blame line
  _K_: prev hunk   _u_: undo stage hunk   _p_: preview hunk   _B_: blame show full
@@ -103,12 +103,12 @@ return function()
           border = border,
         },
         on_enter = function()
-          gitsigns.toggle_linehl(true)
-          gitsigns.toggle_deleted(true)
+          gs.toggle_linehl(true)
+          gs.toggle_deleted(true)
         end,
         on_exit = function()
-          gitsigns.toggle_linehl(false)
-          gitsigns.toggle_deleted(false)
+          gs.toggle_linehl(false)
+          gs.toggle_deleted(false)
         end,
       },
       mode = { "n", "x" },
@@ -118,7 +118,7 @@ return function()
           "J",
           function()
             if vim.wo.diff then return "]c" end
-            vim.schedule(function() gitsigns.next_hunk() end)
+            vim.schedule(function() gs.next_hunk() end)
             return "<Ignore>"
           end,
           { expr = true },
@@ -127,22 +127,22 @@ return function()
           "K",
           function()
             if vim.wo.diff then return "[c" end
-            vim.schedule(function() gitsigns.prev_hunk() end)
+            vim.schedule(function() gs.prev_hunk() end)
             return "<Ignore>"
           end,
           { expr = true },
         },
         { "s", ":Gitsigns stage_hunk<CR>", { silent = true } },
-        { "u", gitsigns.undo_stage_hunk },
-        { "S", gitsigns.stage_buffer },
-        { "p", gitsigns.preview_hunk },
-        { "d", gitsigns.toggle_deleted, { nowait = true } },
-        { "b", gitsigns.blame_line },
+        { "u", gs.undo_stage_hunk },
+        { "S", gs.stage_buffer },
+        { "p", gs.preview_hunk },
+        { "d", gs.toggle_deleted, { nowait = true } },
+        { "b", gs.blame_line },
         {
           "B",
-          function() gitsigns.blame_line({ full = true }) end,
+          function() gs.blame_line({ full = true }) end,
         },
-        { "/", gitsigns.show, { exit = true } }, -- show the base of the file
+        { "/", gs.show, { exit = true } }, -- show the base of the file
         { "<Enter>", "<cmd>Neogit<CR>", { exit = true } },
         { "q", nil, { exit = true, nowait = true } },
       },

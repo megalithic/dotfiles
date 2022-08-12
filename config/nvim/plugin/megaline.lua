@@ -190,7 +190,7 @@ end
 
 --- Creates a spacer statusline component i.e. for padding
 --- or to represent an empty component
---- @param size integer
+--- @param size integer | nil
 --- @param filler string | nil
 local function spacer(size, filler)
   filler = filler or " "
@@ -202,7 +202,7 @@ local function spacer(size, filler)
   end
 end
 
---- @param component string
+--- @param component string | number
 --- @param hl string
 --- @param opts table
 local function item(component, hl, opts)
@@ -234,7 +234,7 @@ local function item(component, hl, opts)
   return { table.concat(parts), #component + #before + #after + prefix_size + suffix_size }
 end
 
---- @param sl_item string
+--- @param sl_item string | number
 --- @param condition boolean
 --- @param hl string
 --- @param opts table
@@ -272,6 +272,7 @@ local function build(groups)
     if not s then return "" end
 
     if type(s) == "string" then return s end
+    if type(s) == "function" then return s() end
 
     local t = vim.tbl_filter(function(x) return not (x == nil or x == "") end, s.strings)
     -- Return highlight group to allow inheritance from later sections
@@ -281,6 +282,18 @@ local function build(groups)
   end, groups)
 
   return table.concat(t, "")
+end
+
+---Aggregate pieces of the statusline
+---@param groups table
+---@return function
+local function add(groups)
+  return function(...)
+    logger.debug(...)
+    for i = 1, select("#", ...) do
+      groups[#groups + 1] = select(i, ...)
+    end
+  end
 end
 
 --- This function allow me to specify titles for special case buffers
@@ -365,7 +378,7 @@ function M.highlight_ft_icon(color, hl, bg_hl)
   if bg_color and fg_color then
     mega.augroup(name, {
       {
-        event = "ColorScheme",
+        event = { "ColorScheme" },
         command = function() create_hl(name, fg_color, bg_color) end,
       },
     })
@@ -526,13 +539,56 @@ function M.s_hydra(args)
   if is_truncated(args.trunc_width) then return "" end
 
   if ok then
-    hydra_statusline = require("hydra.statusline")
+    local hydra_statusline = require("hydra.statusline")
     return unpack(
       item_if(hydra_statusline.get_name(), hydra_statusline.is_active(), "StMetadata", { before = "", after = " " })
     )
   end
 
   return ""
+end
+
+---Return a sorted list of lsp client names and their priorities
+---@param ctx table
+---@return table[]
+function M.get_lsp_clients(ctx)
+  local clients = vim.lsp.get_active_clients({ bufnr = ctx.bufnum })
+  if mega.empty(clients) then return { { name = "No LSP clients available", priority = 7 } } end
+  table.sort(clients, function(a, b)
+    if a.name == "null-ls" then
+      return false
+    elseif b.name == "null-ls" then
+      return true
+    end
+    return a.name < b.name
+  end)
+
+  return vim.tbl_map(function(client)
+    if client.name:match("null") then
+      local sources = require("null-ls.sources").get_available(vim.bo[ctx.bufnum].filetype)
+      local source_names = vim.tbl_map(function(s) return s.name end, sources)
+      return { name = table.concat(source_names, ", "), priority = 7 }
+    end
+    return { name = client.name, priority = 4 }
+  end, clients)
+end
+
+function M.s_lsp_clients(args)
+  local lsp_clients = mega.map(function(client, index)
+    return item(client.name, "StClient", {
+      prefix = index == 1 and " LSP(s):" or nil,
+      prefix_color = index == 1 and "StMetadata" or nil,
+      suffix = "", -- │
+      suffix_color = "StMetadataPrefix",
+      priority = client.priority,
+    })
+  end, M.get_lsp_clients(M.ctx))
+
+  logger.debug(lsp_clients)
+  logger.debug(unpack(lsp_clients))
+
+  -- return unpack(lsp_clients)
+  return add(unpack(lsp_clients))
 end
 
 function M.s_git(args)
@@ -744,7 +800,6 @@ function _G.__statusline()
     local diag_info                   = unpack(item_if(diags.info.count, not is_truncated(100) and diags.info, "StInfo", { prefix = diags.info.sign }))
     local diag_hint                   = unpack(item_if(diags.hint.count, not is_truncated(100) and diags.hint, "StHint", { prefix = diags.hint.sign }))
     local hydra_active, hydra         = M.hydra()
-
     -- stylua: ignore end
 
     if plain then
@@ -767,7 +822,9 @@ function _G.__statusline()
       -- mode
       M.s_mode({ trunc_width = 120 }),
       -- M.s_hydra({ trunc_width = 75 }),
+      --------------------------------------------------------------------------
       "%<", -- mark general truncate point
+      --------------------------------------------------------------------------
       -- filename parts
       M.s_filename({ trunc_width = 120 }),
       -- modified indicator
@@ -785,14 +842,21 @@ function _G.__statusline()
           { before = " ", after = " ", prefix = " ", suffix = " " }
         )
       ),
+      --------------------------------------------------------------------------
       "%=", -- end left alignment/begin middle section
+      --------------------------------------------------------------------------
       -- hydra
       unpack(item_if(hydra.name:upper(), hydra_active, hydra.color, {
         prefix = string.rep(" ", 5) .. "🐙",
         suffix = string.rep(" ", 5),
         priority = 5,
       })),
+      --------------------------------------------------------------------------
       "%=", -- end middle seciond/begin right alignment
+      --------------------------------------------------------------------------
+      -- lsp clients
+      -- FIXME: not unpacking correctly; debug further
+      -- M.s_lsp_clients({ trunc_width = 120 }),
       -- diagnostics
       { hl = "Statusline", strings = { diag_error, diag_warn, diag_info, diag_hint } },
       -- git status/branch
@@ -802,19 +866,6 @@ function _G.__statusline()
       -- suffix
       -- unpack(item_if(icons.misc.rblock, not is_truncated(100), M.modes[vim.fn.mode()].hl, { before = "", after = "" })),
     })
-    -- elseif plain and focused and not disabled then
-    --   return build({
-    --     "%<", -- mark general truncate point
-    --     -- filename parts
-    --     M.s_filename({ trunc_width = 120 }),
-    --     -- modified indicator
-    --     M.s_modified({ trunc_width = 100 }),
-    --     -- readonly indicator
-    --     M.s_readonly({ trunc_width = 100 }),
-    --     "%=", -- end left alignment
-    --     -- middle section for whatever we want..
-    --     "%=",
-    --   })
   else
     -- barebones inactive mode
     return "%#StInactive#%F %m%="
