@@ -77,6 +77,17 @@ local function bind(t, id, bindFn)
   bindFn(t)
 end
 
+local function mouse()
+  -- bind mouse side buttons to forward/back
+  hs.eventtap
+    .new({ hs.eventtap.event.types.otherMouseUp }, function(event)
+      local button = event:getProperty(hs.eventtap.event.properties.mouseEventButtonNumber)
+      if button == 3 then hs.eventtap.keyStroke({ "cmd" }, "[") end
+      if button == 4 then hs.eventtap.keyStroke({ "cmd" }, "]") end
+    end)
+    :start()
+end
+
 function obj:init(opts)
   opts = opts or {}
   Hyper = L.load("lib.hyper", { id = obj.name }):start()
@@ -138,6 +149,9 @@ function obj:start()
   --     end
   --   end)
   -- end)
+
+  -- [ mouse bindings ] --------------------------------------------------------
+  mouse()
 
   return self
 end

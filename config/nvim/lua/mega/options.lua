@@ -294,7 +294,7 @@ vim.opt.guicursor = {
 
 -- NOTE: plugin/cursorline.lua has more...
 vim.opt.cursorline = true -- Show a line where the current cursor is
-vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number"
+vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number,both"
 -----------------------------------------------------------------------------//
 -- Utilities {{{1
 -----------------------------------------------------------------------------//

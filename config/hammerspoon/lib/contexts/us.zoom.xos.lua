@@ -46,6 +46,10 @@ function obj:start(opts)
 
   if obj.modal then obj.modal:enter() end
 
+  -- TODO: add ability to auto-quit zoom when all relevant windows are closed;
+  -- aka, the meeting has ended.
+  -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/zoom-killer.lua
+
   if event == hs.application.watcher.launched then
     L.req("lib.dnd").on()
     hs.spotify.pause()

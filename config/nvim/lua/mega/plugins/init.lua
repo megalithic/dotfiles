@@ -97,6 +97,7 @@ local PKGS = {
   "natecraddock/telescope-zf-native.nvim",
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
+  -- "windwp/nvim-spectre",
   ------------------------------------------------------------------------------
   -- (GIT) --
   -- {"keith/gist.vim", run = "chmod -HR 0600 ~/.netrc"}, -- TODO: find lua replacement (i don't want python)
@@ -197,6 +198,7 @@ local PKGS = {
   "nanotee/luv-vimdocs",
   "fladson/vim-kitty",
   "SirJson/fzf-gitignore",
+  "axelvc/template-string.nvim",
 }
 
 local M = {
@@ -443,6 +445,8 @@ function M.config()
       -- let g:gh_open_command = 'fn() { echo "$@" | pbcopy; }; fn '
     end
   end)
+
+  conf("template-string", {})
 
   -- FIXME:
   --Error executing vim.schedule lua callback: /usr/local/share/nvim/runtime/lua/vim/lsp/util.lua:1569: Window was closed immediately

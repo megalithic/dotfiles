@@ -135,6 +135,8 @@ function obj:init()
 end
 
 function obj:start()
+  -- TODO; kill apple music to open spotify instead; genius
+  -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/apple-music-spotify-redirect.lua
   obj.menubar:setTitle(updateTitle())
   obj.updateTimer = hs.timer.new(obj.refreshInterval, function() obj.menubar:setTitle(updateTitle()) end):start()
 
