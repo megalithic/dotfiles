@@ -116,10 +116,17 @@ function to_session() {
 function new_session() {
   local session="$1"
 
-  (sh "$layouts_dir/$session.zsh" &&
-    to_session "$session" ||
-    tmux new-session -d -s "$session" &&
-    to_session "$session") && exit
+  if [[ -f "$layouts_dir/$session.zsh" ]]; then
+    (sh "$layouts_dir/$session.zsh" &&
+      to_session "$session" ||
+      tmux new-session -d -s "$session" &&
+      to_session "$session") && exit
+  else
+    (sh "$layouts_dir/default.zsh" "$session" &&
+      to_session "$session" ||
+      tmux new-session -d -s "$session" &&
+      to_session "$session") && exit
+  fi
 }
 
 # -- try to change to an existing session; otherwise, create a new one
