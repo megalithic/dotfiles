@@ -69,6 +69,7 @@ local PKGS = {
   "antoinemadec/FixCursorHold.nvim", -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
   "ojroques/nvim-bufdel",
   "abecodes/tabout.nvim",
+  "mrshmllow/document-color.nvim",
   ------------------------------------------------------------------------------
   -- (TS/treesitter) --
   {

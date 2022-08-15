@@ -161,7 +161,9 @@ return function()
           n = { ["<c-x>"] = "delete_buffer" },
         },
       }),
+      -- TODO: https://github.com/mrjones2014/dotfiles/commit/0408fac7e4517688b6b453bebd3ece1534ed8809
       oldfiles = dropdown({}),
+      -- TODO: https://github.com/mrjones2014/dotfiles/commit/0408fac7e4517688b6b453bebd3ece1534ed8809#diff-43316736621af785e272c133be1664c9859bda4b8567b9462180d238f9de030cR88-R108
       live_grep = {
         max_results = 500,
         file_ignore_patterns = { ".git/", "%.lock" },
