@@ -273,34 +273,6 @@ local function setup_diagnostics()
         local m = max_severity_per_line[d.lnum]
         if not m or d.severity < m.severity then max_severity_per_line[d.lnum] = d end
       end
-
-      -- FIXME: this still throws errors in ElixirLS land:
-      -- stack traceback:
-      -- 	[C]: in function 'sign_place'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:876: in function 'callback'
-      -- 	/home/ubuntu/.dotfiles/config/nvim/plugin/lsp.lua:277: in function 'callback'
-      -- 	/home/ubuntu/.dotfiles/config/nvim/plugin/lsp.lua:277: in function 'callback'
-      -- 	/home/ubuntu/.dotfiles/config/nvim/plugin/lsp.lua:277: in function 'show'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1172: in function 'show'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:690: in function 'set'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/lsp/diagnostic.lua:217: in function 'handler'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/lsp.lua:824: in function ''
-      -- 	vim/_editor.lua: in function <vim/_editor.lua:0>
-      -- and
-      --
-      -- Error executing lua callback: /usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1018: line value outside range
-      -- stack traceback:
-      -- 	[C]: in function 'nvim_buf_set_extmark'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1018: in function 'callback'
-      -- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:307: in function 'callback'
-      -- 	/Users/seth/.dotfiles/config/nvim/plugin/lsp.lua:307: in function 'show'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1183: in function 'show'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1139: in function 'show'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1133: in function 'show'
-      -- 	/usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1513: in function </usr/local/share/nvim/runtime/lua/vim/diagnostic.lua:1491>
-
-      -- Pass the filtered diagnostics (with our custom namespace) to the original handler
-      -- P(I(vim.tbl_values(max_severity_per_line)))
       callback(ns, bufnr, vim.tbl_values(max_severity_per_line), opts)
     end
   end
@@ -328,18 +300,7 @@ local function setup_diagnostics()
     -- TODO: https://github.com/akinsho/dotfiles/commit/dd1518bb8d60f9ae13686b85d8ea40762893c3c9
     severity_sort = true,
     -- Show virtual text only for errors
-    virtual_text = { severity = { min = "ERROR", max = "ERROR" } },
-    -- {
-    --   spacing = 1,
-    --   prefix = "",
-    --   format = function(d)
-    --     -- return ""
-    --     local level = diagnostic.severity[d.severity]
-    --     -- if level ~= "ERROR" then return "" end
-    --     return fmt("%s %s", mega.icons.lsp[level:lower()], d.message)
-    --     -- return fmt("%s", mega.icons.lsp[level:lower()])
-    --   end,
-    -- },
+    virtual_text = { spacing = 1, prefix = "", severity = { min = "ERROR", max = "ERROR" } },
     update_in_insert = false,
     float = {
       show_header = true,
@@ -361,30 +322,10 @@ local function setup_diagnostics()
       },
       header = { "Diagnostics:", "DiagnosticHeader" },
       ---@diagnostic disable-next-line: unused-local
-      prefix = function(diag, i, _total)
-        -- local icon, highlight
-        -- if diag.severity == 1 then
-        --   icon = mega.icons.lsp.error
-        --   highlight = "DiagnosticError"
-        -- elseif diag.severity == 2 then
-        --   icon = mega.icons.lsp.warn
-        --   highlight = "DiagnosticWarn"
-        -- elseif diag.severity == 3 then
-        --   icon = mega.icons.lsp.info
-        --   highlight = "DiagnosticInfo"
-        -- elseif diag.severity == 4 then
-        --   icon = mega.icons.lsp.hint
-        --   highlight = "DiagnosticHint"
-        -- end
-        -- -- return i .. "/" .. total .. " " .. icon .. "  ", highlight
-        -- return fmt("%s ", icon), highlight
+      prefix = function(diag, i, total)
         local level = diagnostic.severity[diag.severity]
         local prefix = fmt("%d. %s ", i, mega.icons.lsp[level:lower()])
         return prefix, "Diagnostic" .. level:gsub("^%l", string.upper)
-
-        -- local level = diagnostic_types[diag.severity]
-        -- local prefix = fmt("%d. %s ", i, level.icon)
-        -- return prefix, "Diagnostic" .. level[1]
       end,
     },
   })

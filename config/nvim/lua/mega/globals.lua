@@ -577,7 +577,7 @@ end
 function mega.open_uri()
   local file = fn.expand("<cfile>")
   if fn.isdirectory(file) > 0 then return vim.cmd("edit " .. file) end
-  if file:match("https://") then return open(file) end
+  if file:match("http[s]?://") then return open(file) end
   -- Any URI with a protocol segment
   local protocol_uri_regex = "%a*:%/%/[%a%d%#%[%]%-%%+:;!$@/?&=_.,~*()]*"
   if file:match(protocol_uri_regex) then return vim.cmd("norm! gf") end
@@ -694,10 +694,10 @@ end
 
 ---Find an item in a list
 ---@generic T
----@param haystack T[]
 ---@param matcher fun(arg: T):boolean
+---@param haystack T[]
 ---@return T
-function mega.find(haystack, matcher)
+function mega.find(matcher, haystack)
   local found
   for _, needle in ipairs(haystack) do
     if matcher(needle) then

@@ -336,6 +336,59 @@ cnoremap("/", [[getcmdtype() == "/" ? "\/" : "/"]], { expr = true })
 inoremap("<C-a>", "<Home>")
 inoremap("<C-e>", "<End>")
 
+-----------------------------------------------------------------------------//
+-- MACROS {{{
+-----------------------------------------------------------------------------//
+-- Absolutely fantastic function from stoeffel/.dotfiles which allows you to
+-- repeat macros across a visual range
+------------------------------------------------------------------------------
+-- TODO: converting this to lua does not work for some obscure reason.
+vim.cmd([[
+  function! ExecuteMacroOverVisualRange()
+    echo "@".getcmdline()
+    execute ":'<,'>normal @".nr2char(getchar())
+  endfunction
+]])
+
+xnoremap("@", ":<C-u>call ExecuteMacroOverVisualRange()<CR>", { silent = false })
+--}}}
+
+-- TLDR: Conditionally modify character at end of line
+-- Description:
+-- This function takes a delimiter character and:
+--   * removes that character from the end of the line if the character at the end
+--     of the line is that character
+--   * removes the character at the end of the line if that character is a
+--     delimiter that is not the input character and appends that character to
+--     the end of the line
+--   * adds that character to the end of the line if the line does not end with
+--     a delimiter
+-- Delimiters:
+-- - ","
+-- - ";"
+---@param character string
+---@return function
+local function modify_line_end_delimiter(character)
+  local delimiters = { ",", ";" }
+  return function()
+    local line = api.nvim_get_current_line()
+    local last_char = line:sub(-1)
+    if last_char == character then
+      api.nvim_set_current_line(line:sub(1, #line - 1))
+    elseif vim.tbl_contains(delimiters, last_char) then
+      api.nvim_set_current_line(line:sub(1, #line - 1) .. character)
+    else
+      api.nvim_set_current_line(line .. character)
+    end
+  end
+end
+
+nnoremap("<localleader>,", modify_line_end_delimiter(","))
+nnoremap("<localleader>;", modify_line_end_delimiter(";"))
+
+-- Enter key should repeat the last macro recorded or just act as enter
+nnoremap("<leader><CR>", [[empty(&buftype) ? '@@' : '<CR>']], { expr = true })
+
 -- [overrides/remaps mappings] ---------------------------------------------------------
 
 exec([[
@@ -406,6 +459,8 @@ nmap([[<Esc>]], [[<Nop>]])
 nnoremap([[<Esc>]], function()
   -- vcmd([[nnoremap <silent><ESC> :syntax sync fromstart<CR>:nohlsearch<CR>:redrawstatus!<CR><ESC> ]])
   vim.cmd("nohlsearch")
+  vim.cmd("diffupdate")
+  vim.cmd("syntax sync fromstart")
   mega.close_float_wins()
   vim.cmd("echo ''")
   mega.blink_cursorline()
@@ -598,42 +653,26 @@ cnoremap("::", "<C-r>=fnameescape(expand('%:p:h'))<cr>/")
 -----------------------------------------------------------------------------//
 -- Multiple Cursor Replacement
 -- http://www.kevinli.co/posts/2017-01-19-multiple-cursors-in-500-bytes-of-vimscript/
--- REF:
--- https://github.com/akinsho/dotfiles/issues/10#issuecomment-1098265323
--- https://github.com/akinsho/dotfiles/issues/9
--- https://github.com/olimorris/dotfiles/blob/main/.config/nvim/lua/Oli/core/mappings.lua#L70-L130
-
--- - Go on top of a word you want to change
--- - Press cn or cN
--- - Type the new word you want to replace it with
--- - Smash that dot '.' multiple times to change all the other occurrences of the word
--- It's quicker than searching or replacing. It's pure magic.
 -----------------------------------------------------------------------------//
-nnoremap("cn", "*``cgn", "multi-cursors forward")
-nnoremap("cN", "*``cgN", "multi-cursors backward")
+nnoremap("cn", "*``cgn")
+nnoremap("cN", "*``cgN")
 
 -- 1. Position the cursor over a word; alternatively, make a selection.
 -- 2. Hit cq to start recording the macro.
 -- 3. Once you are done with the macro, go back to normal mode.
 -- 4. Hit Enter to repeat the macro over search matches.
-function mega.mappings.setup_CR()
-  nmap("<Enter>", [[:nnoremap <lt>Enter> n@z<CR>q:<C-u>let @z=strpart(@z,0,strlen(@z)-1)<CR>n@z]])
-end
+function mega.mappings.setup_map() nnoremap("M", [[:nnoremap M n@z<CR>q:<C-u>let @z=strpart(@z,0,strlen(@z)-1)<CR>n@z]]) end
 
 vim.g.mc = mega.replace_termcodes([[y/\V<C-r>=escape(@", '/')<CR><CR>]])
-xnoremap("cn", [[g:mc . "``cgn"]], { expr = true, silent = true, desc = "multi-cursor forward" })
-xnoremap("cN", [[g:mc . "``cgN"]], { expr = true, silent = true, desc = "multi-cursor backward" })
-nnoremap("cq", [[:\<C-u>call v:lua.mega.mappings.setup_CR()<CR>*``qz]], "multi-cursor macro forward")
-nnoremap("cQ", [[:\<C-u>call v:lua.mega.mappings.setup_CR()<CR>#``qz]], "multi-cursor macro backward")
-xnoremap(
-  "cq",
-  [[":\<C-u>call v:lua.mega.mappings.setup_CR()<CR>gv" . g:mc . "``qz"]],
-  { expr = true, desc = "multi cursor macro forward" }
-)
+xnoremap("cn", [[g:mc . "``cgn"]], { expr = true, silent = true })
+xnoremap("cN", [[g:mc . "``cgN"]], { expr = true, silent = true })
+nnoremap("cq", [[:\<C-u>call v:lua.mega.mappings.setup_map()<CR>*``qz]])
+nnoremap("cQ", [[:\<C-u>call v:lua.mega.mappings.setup_map()<CR>#``qz]])
+xnoremap("cq", [[":\<C-u>call v:lua.mega.mappings.setup_map()<CR>gv" . g:mc . "``qz"]], { expr = true })
 xnoremap(
   "cQ",
-  [[":\<C-u>call v:lua.mega.mappings.setup_CR()<CR>gv" . substitute(g:mc, '/', '?', 'g') . "``qz"]],
-  { expr = true, desc = "multi cursor macro forward" }
+  [[":\<C-u>call v:lua.mega.mappings.setup_map()<CR>gv" . substitute(g:mc, '/', '?', 'g') . "``qz"]],
+  { expr = true }
 )
 
 ---------------------------------------------------------------------------------
