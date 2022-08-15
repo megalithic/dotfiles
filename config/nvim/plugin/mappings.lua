@@ -653,6 +653,7 @@ cnoremap("::", "<C-r>=fnameescape(expand('%:p:h'))<cr>/")
 -----------------------------------------------------------------------------//
 -- Multiple Cursor Replacement
 -- http://www.kevinli.co/posts/2017-01-19-multiple-cursors-in-500-bytes-of-vimscript/
+-- @trial: https://github.com/otavioschwanck/cool-substitute.nvim
 -----------------------------------------------------------------------------//
 nnoremap("cn", "*``cgn")
 nnoremap("cN", "*``cgN")

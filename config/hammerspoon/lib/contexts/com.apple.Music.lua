@@ -16,17 +16,14 @@ function obj:start(opts)
 
   -- Never run Apple Music; I never use it!
   if event == hs.application.watcher.launched and bundleID == "com.apple.Music" then
-    -- kill Apple Music
-    dbg(bundleID)
     local app = hs.application.get(bundleID)
-    -- local killed = false
 
-    local killTimer = hs.timer.doUntil(function() return app == nil end, function() app:kill() end, 0.5)
+    local killTimer = hs.timer.doUntil(function() return app == nil end, function() app:kill() end, 0.1)
 
-    if not killTimer:running() then
+    hs.timer.waitUntil(function() return not killTimer:running() end, function()
       hs.application.launchOrFocus("Spotify")
       hs.spotify.play()
-    end
+    end, 0.1)
   end
 
   return self

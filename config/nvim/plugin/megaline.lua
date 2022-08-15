@@ -468,6 +468,7 @@ function M.s_search_result()
       return fmt("%s %d/>%d", icons.misc.search, result.current, result.total)
     end
   end
+
   return fmt("%s %d/%d", icons.misc.search, result.current, result.total)
 end
 
@@ -834,6 +835,7 @@ function _G.__statusline()
       -- saving indicator
       unpack(item_if("Saving…", vim.g.is_saving, "StComment", { before = " " })),
       -- search results
+      -- FIXME: return unpacked conditionally so that a 0/0 match has a different highlight, vs. StCount
       unpack(
         item_if(
           M.s_search_result(),
