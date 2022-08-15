@@ -50,9 +50,7 @@ function obj:start(opts)
   -- aka, the meeting has ended.
   -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/zoom-killer.lua
 
-  local zoom = hs.application.get("zoom.us")
-
-  if event == hs.application.watcher.launched and zoom then
+  if event == hs.application.watcher.launched then
     L.req("lib.dnd").on()
     hs.spotify.pause()
     L.req("lib.menubar.ptt").setState("push-to-talk")
@@ -60,6 +58,7 @@ function obj:start(opts)
 
     do
       local kitty = hs.application.get("kitty")
+      local zoom = hs.application.get("zoom.us")
 
       hs.timer.waitUntil(function() return zoom:getWindow("Zoom Meeting") end, function()
         local target_close_window = zoom:getWindow("Zoom")
@@ -77,9 +76,9 @@ function obj:start(opts)
   end
 
   if
-    zoom
+    _appObj
     and (event == hs.application.watcher.hidden or event == hs.application.watcher.terminated or event == hs.application.watcher.deactivated)
-    and (#zoom:allWindows() == 0 or (#zoom:allWindows() == 1 and zoom:getWindow("") ~= nil))
+    and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
   then
     -- make Zoom kill itself when I leave a meeting or there's just the "ending meeting" window like when someone else kills the meeting.
     _appObj:kill()
