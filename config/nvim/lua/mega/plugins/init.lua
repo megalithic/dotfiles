@@ -28,6 +28,7 @@ local PKGS = {
   "MunifTanjim/nui.nvim",
   "folke/which-key.nvim",
   { "echasnovski/mini.nvim" },
+  "phaazon/hop.nvim",
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
@@ -329,8 +330,6 @@ function M.config()
     end,
   })
 
-  -- conf("nvim-highlight-colors", { render = "first_column" })
-
   conf(
     "colorizer",
     function()
@@ -340,6 +339,14 @@ function M.config()
       })
     end
   )
+
+  conf("hop", function()
+    local hop = require("hop")
+
+    -- remove h,j,k,l from hops list of keys
+    hop.setup({ keys = "etovxqpdygfbzcisuran" })
+    mega.nnoremap("s", function() hop.hint_char1({ multi_windows = false }) end)
+  end)
 
   conf("golden_size", function()
     local gs = require("golden_size")

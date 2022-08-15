@@ -718,7 +718,7 @@ return lush(function()
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 
     MiniJump({ fg = magenta, bg = bg_dark, gui = "bold,underline" }),
-    MiniJump2dSpot({ fg = white, bg = bg_dark, gui = "bold,underline" }),
+    MiniJump2dSpot({ fg = white, bg = bg_dark, gui = "bold" }),
 
     ---- :help tabline ---------------------------------------------------------
 

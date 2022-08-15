@@ -367,6 +367,7 @@ local function on_attach(client, bufnr)
   if client.server_capabilities.colorProvider then
     -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
     require("document-color").buf_attach(bufnr, { mode = "background" })
+    require("colorizer").detach_from_buffer()
   end
 
   if client.server_capabilities.definitionProvider then vim.bo[bufnr].tagfunc = "v:lua.vim.lsp.tagfunc" end

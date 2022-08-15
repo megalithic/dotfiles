@@ -201,7 +201,8 @@ return {
   col_sep = "",
   sep = "⋮",
   perc_sep = "",
-  modified = "綠", -- alts: ○●綠
+  modified = "", -- alts: ○∘●綠●∘■ □ ▪ ▫● ◯ ◔ ◕ ◌ ◎ ◦ ◆ ◇ ∘∙
+
   mode = "",
   vcs = "",
   readonly = "",
