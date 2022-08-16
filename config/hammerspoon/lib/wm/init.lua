@@ -101,7 +101,7 @@ end
 -- also allows for total customization of what should happen for certain app events (see below for supported watcher events).
 function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   for key, context in pairs(obj.contextModals) do
-    if key == bundleID and Application.get(bundleID) then
+    if key == bundleID then
       local appConfig = obj.apps[bundleID]
       note(
         fmt(
@@ -128,6 +128,8 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
         info(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
       end
     end
+
+    -- we want to always make sure the modal is inactive if we're not presently focused on our app
     if context.modal then context.modal:exit() end
   end
 end

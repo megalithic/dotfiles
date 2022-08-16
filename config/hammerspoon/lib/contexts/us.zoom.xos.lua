@@ -75,14 +75,14 @@ function obj:start(opts)
     end
   end
 
-  if
-    _appObj
-    and (event == hs.application.watcher.hidden or event == hs.application.watcher.terminated or event == hs.application.watcher.deactivated)
-    and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
-  then
-    -- make Zoom kill itself when I leave a meeting or there's just the "ending meeting" window like when someone else kills the meeting.
-    _appObj:kill()
-  end
+  -- if
+  --   _appObj
+  --   and (event == hs.application.watcher.hidden or event == hs.application.watcher.terminated or event == hs.application.watcher.deactivated)
+  --   and (#_appObj:allWindows() == 0 or (#_appObj:allWindows() == 1 and _appObj:getWindow("") ~= nil))
+  -- then
+  --   -- make Zoom kill itself when I leave a meeting or there's just the "ending meeting" window like when someone else kills the meeting.
+  --   _appObj:kill()
+  -- end
 
   return self
 end

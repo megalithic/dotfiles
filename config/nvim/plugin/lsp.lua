@@ -366,7 +366,7 @@ local function on_attach(client, bufnr)
   -- HT: kabouzeid
   if client.server_capabilities.colorProvider then
     -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
-    require("document-color").buf_attach(bufnr, { mode = "background" })
+    require("document-color").buf_attach(bufnr, { mode = "single" })
     require("colorizer").detach_from_buffer()
   end
 

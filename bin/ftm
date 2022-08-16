@@ -33,7 +33,7 @@ __invocation="$(printf %q "${__file}")$( (($#)) && printf ' %q' "$@" || true)"
 
 TMUX="${TMUX:-}"
 POPUP="false"
-DEBUG="false"
+SAVED_SESSION_NAME="${SAVED_SESSION_NAME:-}"
 
 # -- check for our dependencies..
 [[ -n $TMUX ]] && TMUX_RUNNING="running" || TMUX_RUNNING="not running"
@@ -63,7 +63,7 @@ if [[ $FZF_FOUND == "not installed" ]]; then
   exit 1
 fi
 
-while getopts "ph" OPTION; do
+while getopts "phs:" OPTION; do
   case $OPTION in
 
     p)
@@ -73,16 +73,26 @@ while getopts "ph" OPTION; do
     h)
       __help
       ;;
+    s)
+      SAVED_SESSION_NAME="$OPTARG"
+      echo "Saving session with session name: $OPTARG"
+      exit 0
+      ;;
 
     \?)
+      # NOTE: this covers the case where an optarg may not be provided
+      # and will exit errored
       echo "Invalid Option: -$OPTARG" 1>&2
       exit 1
       ;;
-
+    :)
+      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
   esac
 done
-shift $((OPTIND - 1))
-
+# shift $((OPTIND - 1))
+shift "$(($OPTIND - 1))"
 # -- this is our given session_name param, sans options
 session_name="${1:-}"
 
