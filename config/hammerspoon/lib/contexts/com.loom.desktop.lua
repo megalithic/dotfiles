@@ -5,7 +5,6 @@ local _appObj = nil
 obj.__index = obj
 obj.name = "context.loom"
 obj.debug = true
-obj.enable = true
 
 obj.modal = nil
 obj.actions = {}
@@ -40,8 +39,6 @@ local function success(...)
 end
 
 function obj:start(opts)
-  if not obj.enable then return self end
-
   opts = opts or {}
   _appObj = opts["appObj"]
   local event = opts["event"]
@@ -71,15 +68,15 @@ function obj:start(opts)
 end
 
 function obj:stop(opts)
-  if not obj.enable then return self end
-
   opts = opts or {}
   local event = opts["event"]
 
   if obj.modal then obj.modal:exit() end
 
-  local loom = hs.application.get("Loom")
-  if loom and (event == hs.application.watcher.terminated or not loom:getWindow("Loom Control Menu")) then
+  if
+    event == hs.application.watcher.terminated
+    or hs.application.get("com.loom.desktop"):getWindow("Loom Control Menu") == nil
+  then
     L.req("lib.menubar.ptt").setState("push-to-talk")
     L.req("lib.dnd").off()
 
