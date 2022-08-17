@@ -24,29 +24,19 @@ return function(on_attach)
     return lsputil.path.exists(lsputil.path.join(dir, name)), lsputil.path.join(dir, name)
   end
 
-  local function workspace_root(root_file)
+  local function workspace_root()
     local cwd = vim.loop.cwd()
 
-    if
-      dir_has_file(cwd, "compose.yml")
-      or dir_has_file(cwd, "docker-compose.yml")
-      or (root_file and dir_has_file(cwd, root_file))
-    then
-      return cwd
-    end
+    if dir_has_file(cwd, "compose.yml") or dir_has_file(cwd, "docker-compose.yml") then return cwd end
 
-    local function cb(dir, _)
-      return dir_has_file(dir, "compose.yml")
-        or dir_has_file(dir, "docker-compose.yml")
-        or (root_file and dir_has_file(cwd, root_file))
-    end
+    local function cb(dir, _) return dir_has_file(dir, "compose.yml") or dir_has_file(dir, "docker-compose.yml") end
 
     local root, _ = lsputil.path.traverse_parents(cwd, cb)
     return root
   end
 
-  local function workspace_has_file(name, root_file)
-    local root = workspace_root(root_file)
+  local function workspace_has_file(name)
+    local root = workspace_root()
     if not root then root = vim.loop.cwd() end
 
     return dir_has_file(root, name)
@@ -54,34 +44,29 @@ return function(on_attach)
 
   local function lsp_setup(server_name, opts) lspconfig[server_name].setup(opts) end
 
-  local function build_command(server_name, cmd_paths, args)
+  local function build_command(server_name, cmd_path, args)
     args = args or {}
 
-    -- ensure we're dealing with a table always
-    if type(cmd_paths) == "string" then cmd_paths = { cmd_paths } end
+    local exists, dir = workspace_has_file(cmd_path)
 
-    for _, path in ipairs(cmd_paths) do
-      local exists, dir = workspace_has_file(path, args.root_file)
-
-      if exists then
-        logger.debug(fmt("workspace_has_file: %s", dir))
-        dir = fn.expand(dir)
-        logger.fmt_debug("%s: %s %s", server_name, dir, args)
-        return vim.list_extend({ dir }, args)
-      else
-        return nil
-      end
+    if exists then
+      logger.debug(fmt("workspace_has_file: %s", dir))
+      dir = fn.expand(dir)
+      logger.fmt_debug("%s: %s %s", server_name, dir, args)
+      return vim.list_extend({ dir }, args)
+    else
+      return nil
     end
   end
 
-  local function lsp_cmd_override(server_name, opts, cmd_paths, args)
+  local function lsp_cmd_override(server_name, opts, cmd_path, args)
     args = args or {}
 
-    local cmd = build_command(server_name, cmd_paths, args)
+    local cmd = build_command(server_name, cmd_path, args)
     if cmd ~= nil then opts.cmd = cmd end
 
     opts.on_new_config = function(new_config, _)
-      local new_cmd = build_command(server_name, cmd_paths, args)
+      local new_cmd = build_command(server_name, cmd_path, args)
       if new_cmd ~= nil then new_config.cmd = new_cmd end
     end
   end
@@ -260,10 +245,7 @@ return function(on_attach)
         },
       })
 
-      lsp_cmd_override(server_name, opts, {
-        ".elixir-ls-release/language_server.sh",
-        fmt("%s/mason/bin/elixir-ls", vim.fn.stdpath("data")),
-      })
+      lsp_cmd_override(server_name, opts, ".elixir-ls-release/language_server.sh")
 
       lsp_setup(server_name, opts)
     end,
@@ -330,10 +312,7 @@ return function(on_attach)
         },
       })
 
-      lsp_cmd_override(server_name, opts, {
-        ".bin/solargraph",
-        fmt("%s/mason/bin/solargraph", vim.fn.stdpath("data")),
-      }, { "stdio" })
+      lsp_cmd_override(server_name, opts, ".bin/solargraph", { "stdio" })
 
       lsp_setup(server_name, opts)
     end,
@@ -526,10 +505,7 @@ return function(on_attach)
         },
       })
 
-      lsp_cmd_override(server_name, opts, {
-        ".bin/typescript-language-server",
-        fmt("%s/mason/bin/typescript-language-server", vim.fn.stdpath("data")),
-      }, { "stdio" })
+      lsp_cmd_override(server_name, opts, ".bin/typescript-language-server", { "stdio" })
 
       lsp_setup(server_name, opts)
     end,
