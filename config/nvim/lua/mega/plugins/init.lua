@@ -53,6 +53,7 @@ local PKGS = {
   "hrsh7th/cmp-nvim-lsp-document-symbol",
   "hrsh7th/cmp-nvim-lsp-signature-help",
   "ray-x/cmp-treesitter",
+  "rcarriga/cmp-dap",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
   -- "ray-x/lsp_signature.nvim",
@@ -99,6 +100,7 @@ local PKGS = {
   "natecraddock/telescope-zf-native.nvim",
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
+  "benfowler/telescope-luasnip.nvim",
   -- "windwp/nvim-spectre",
   ------------------------------------------------------------------------------
   -- (GIT) --
@@ -126,6 +128,7 @@ local PKGS = {
   "rcarriga/nvim-dap-ui",
   "theHamsta/nvim-dap-virtual-text",
   "jbyuki/one-small-step-for-vimkind",
+  "suketa/nvim-dap-ruby",
   "tpope/vim-ragtag",
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
@@ -203,6 +206,10 @@ local PKGS = {
   "fladson/vim-kitty",
   "SirJson/fzf-gitignore",
   "axelvc/template-string.nvim",
+
+  -- @trial:
+  -- napmn/react-extract.nvim
+  -- sultanahamer/nvim-dap-reactnative
 }
 
 local M = {
@@ -331,6 +338,9 @@ function M.config()
       end
     end,
   })
+
+  -- TODO: determine if we want/use spellsitter
+  -- conf("spellsitter", {})
 
   conf(
     "colorizer",

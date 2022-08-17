@@ -198,4 +198,10 @@ return function()
     },
     { name = "buffer" },
   })
+
+  cmp.setup.filetype({ "dap-repl", "dapui_watches" }, {
+    sources = {
+      { name = "dap" },
+    },
+  })
 end

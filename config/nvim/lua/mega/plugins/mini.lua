@@ -69,6 +69,11 @@ return function()
             "^[%s]*()().-[^%s].-()()[%s]+$", -- sentence at end of paragraph (no final punctuation)
           },
         },
+        -- function
+        F = gen_spec.treesitter({
+          a = "@function.outer",
+          i = "@function.inner",
+        }),
         -- git hunks
         h = miniAiGitsigns,
         -- blOck

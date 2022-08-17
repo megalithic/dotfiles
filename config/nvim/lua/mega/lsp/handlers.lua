@@ -174,11 +174,14 @@ do
       local client_id = ctx.client_id
       local client = vim.lsp.get_client_by_id(client_id)
       if
-        client.name == "elixirls"
-        or client.name == "sumneko_lua"
-        or client.name == "rust_analyzer"
-        or client.name == "clangd"
-        or client.name == "shellcheck"
+        client
+        and (
+          client.name == "elixirls"
+          or client.name == "sumneko_lua"
+          or client.name == "rust_analyzer"
+          or client.name == "clangd"
+          or client.name == "shellcheck"
+        )
       then
         return
       end

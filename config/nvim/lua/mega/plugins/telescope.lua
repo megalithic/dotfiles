@@ -298,6 +298,8 @@ return function()
   --   }))
   -- end
 
+  local function luasnips() require("telescope").extensions.luasnip.luasnip(dropdown({})) end
+
   local function installed_plugins()
     builtin.find_files({
       prompt_title = "~ installed plugins ~",
@@ -326,6 +328,7 @@ return function()
   nmap("<leader>fgC", delta_git_bcommits, "buffer commits")
   nmap("<leader>fgb", builtin.git_branches, "branches")
 
+  nmap("<leader>fL", luasnips, "luasnip: available snippets")
   nmap("<leader>fM", builtin.man_pages, "man pages")
   nmap("<leader>fm", builtin.man_pages, "oldfiles (mru)")
   nmap("<leader>fk", builtin.keymaps, "keymaps")
@@ -358,4 +361,5 @@ return function()
   -- require("telescope").load_extension("fzf")
   require("telescope").load_extension("zf-native")
   require("telescope").load_extension("live_grep_args")
+  require("telescope").load_extension("luasnip")
 end

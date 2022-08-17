@@ -2,6 +2,12 @@ return function()
   local dap_ok, dap = pcall(require, "dap")
   if not dap_ok then return end
 
+  -- extra dap plugins/extensions/adapters
+  mega.conf("dap-ruby", {})
+  mega.conf("nvim-dap-virtual-text", {
+    commented = true,
+  })
+
   local fn = vim.fn
 
   local function repl_toggle() require("dap").repl.toggle(nil, "botright split") end
@@ -22,10 +28,6 @@ return function()
   nnoremap("<localleader>dl", run_last, "dap REPL: run last")
   nnoremap("<localleader>dt", repl_toggle, "dap REPL: toggle")
 
-  mega.conf("nvim-dap-virtual-text", {
-    commented = true,
-  })
-
   local icons = mega.icons
 
   fn.sign_define({
@@ -45,6 +47,86 @@ return function()
     },
   })
 
+  -- [ adapters ] --------------------------------------------------------------
+
+  dap.adapters.nlua = function(cb, config) cb({ type = "server", host = config.host, port = config.port }) end
+
+  dap.adapters.mix_task = function(cb, config)
+    if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end
+    cb({
+      type = "executable",
+      command = require("mega.utils").lsp.elixirls_cmd({ debugger = true }),
+      args = {},
+    })
+  end
+
+  -- dap.adapters.chrome = {
+  --   type = "executable",
+  --   command = "node",
+  --   args = { vim.fn.stdpath("data") .. "/mason/packages/chrome-debug-adapter/out/src/chromeDebug.js" },
+  -- }
+
+  dap.adapters.node2 = function(cb, config)
+    if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end
+    cb({
+      type = "executable",
+      command = "node",
+      args = {
+        -- os.getenv("HOME") .. "/build/vscode-node-debug2/out/src/nodeDebug.js",
+        vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+      },
+    })
+  end
+
+  dap.adapters.expo = function(cb, config)
+    if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end
+    cb({
+      name = "Debug in Exponent",
+      request = "launch",
+      type = "reactnative",
+      cwd = "${workspaceFolder}",
+      platform = "exponent",
+      expoHostType = "local",
+    })
+  end
+
+  -- -- WIP does not execute
+  -- dap.adapters.deno = function(cb)
+  --   local adapter = {
+  --     type = "executable",
+  --     command = "deno",
+  --   }
+  --   cb(adapter)
+  -- end
+
+  -- dap.adapters.firefox = {
+  --   type = "executable",
+  --   command = "node",
+  --   args = {
+  --     os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
+  --   },
+  -- }
+
+  -- dap.adapters.yarn = {
+  --   type = "executable",
+  --   command = "yarn",
+  --   args = {
+  --     "node",
+  --     os.getenv("HOME") .. "/build/vscode-node-debug2/out/src/nodeDebug.js",
+  --   },
+  -- }
+
+  -- dap.adapters.yarn_firefox = {
+  --   type = "executable",
+  --   command = "yarn",
+  --   args = {
+  --     "node",
+  --     os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
+  --   },
+  -- }
+
+  -- [ configs ] ---------------------------------------------------------------
+
   dap.configurations.lua = {
     {
       type = "nlua",
@@ -60,15 +142,6 @@ return function()
         return val
       end,
     },
-  }
-
-  dap.adapters.nlua =
-    function(callback, config) callback({ type = "server", host = config.host, port = config.port }) end
-
-  dap.adapters.mix_task = {
-    type = "executable",
-    command = require("mega.utils").lsp.elixirls_cmd({ debugger = true }),
-    args = {},
   }
 
   dap.configurations.elixir = {

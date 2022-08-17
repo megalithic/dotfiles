@@ -263,12 +263,35 @@ do
   })
 end
 
-augroup("LazyLoads", {
+augroup("General", {
   {
     event = { "FileType" },
     pattern = { "help" },
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
+  {
+    event = { "BufWritePost" },
+    pattern = { "*/spell/*.add" },
+    command = "silent! :mkspell! %",
+  },
+  {
+    event = { "InsertLeave" },
+    pattern = { "*" },
+    command = [[execute 'normal! mI']],
+    desc = "global mark I for last edit",
+  },
+  {
+    event = { "BufEnter", "WinEnter" },
+    pattern = { "*/node_modules/*" },
+    command = ":LspStop",
+  },
+  { event = { "BufLeave" }, pattern = { "*/node_modules/*" }, command = ":LspStart" },
+  -- {
+  --   event = { "FileType" },
+  --   pattern = { "lua", "vim", "dart", "python", "javascript", "typescript", "rust", "md", "gitcommit" },
+  --   -- FIXME: spellsitter is slow in large files
+  --   command = function(args) vim.opt_local.spell = vim.api.nvim_buf_line_count(args.buf) < 8000 end,
+  -- },
 })
 
 do
