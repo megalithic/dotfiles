@@ -187,8 +187,8 @@ end
 local function setup_mappings(client, bufnr)
   local desc = function(desc) return { desc = desc, buffer = bufnr } end
 
-  nnoremap("[d", function() diagnostic.goto_prev({ float = false }) end, desc("lsp: prev diagnostic"))
-  nnoremap("]d", function() diagnostic.goto_next({ float = false }) end, desc("lsp: next diagnostic"))
+  nnoremap("[d", function() diagnostic.goto_prev({ float = true }) end, desc("lsp: prev diagnostic"))
+  nnoremap("]d", function() diagnostic.goto_next({ float = true }) end, desc("lsp: next diagnostic"))
   nnoremap("gd", vim.lsp.buf.definition, desc("lsp: definition"))
   nnoremap("gr", vim.lsp.buf.references, desc("lsp: references"))
   nnoremap("gt", vim.lsp.buf.type_definition, desc("lsp: type definition"))
@@ -403,6 +403,10 @@ local function on_attach(client, bufnr)
   api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 end
 
+-- [ SERVERS ] -----------------------------------------------------------------
+
+-- setup null-ls
 require("mega.lsp.null_ls")(on_attach)
--- require("mega.lsp.servers")(on_attach)
-require("mega.lsp.mason")(on_attach)
+
+-- setup lsp servers via mason
+require("mega.lsp.servers")(on_attach)

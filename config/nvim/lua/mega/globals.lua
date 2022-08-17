@@ -1005,6 +1005,7 @@ do
   command("SaveAsFile", [[noautocmd clear | :execute "saveas %:p:h/" .input('save as -> ') | :e ]])
   command("RenameFile", [[noautocmd clear | :execute "Rename " .input('rename to -> ') | :e ]])
   command("Flash", function() mega.blink_cursorline() end)
+  command("P", "<cmd>lua P(<args>)", { nargs = "?" })
 end
 
 return mega

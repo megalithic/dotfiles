@@ -3,6 +3,7 @@ return function(on_attach)
   local api = vim.api
   local lsp = vim.lsp
   local lspconfig = require("lspconfig")
+  local mason_lspconfig = require("mason-lspconfig")
   local lsputil = require("lspconfig.util")
 
   -- [ UTILS ] -----------------------------------------------------------------
@@ -12,17 +13,85 @@ return function(on_attach)
 
     return function(startpath)
       for _, pattern in ipairs(patterns) do
-        return lsputil.search_ancestors(startpath, function(path)
-          if lsputil.path.exists(fn.glob(lsputil.path.join(path, pattern))) then return path end
+        return lspconfig.util.search_ancestors(startpath, function(path)
+          if lspconfig.util.path.exists(fn.glob(lspconfig.util.path.join(path, pattern))) then return path end
         end)
       end
     end
   end
 
+  local function dir_has_file(dir, name)
+    return lsputil.path.exists(lsputil.path.join(dir, name)), lsputil.path.join(dir, name)
+  end
+
+  local function workspace_root(root_file)
+    local cwd = vim.loop.cwd()
+
+    if
+      dir_has_file(cwd, "compose.yml")
+      or dir_has_file(cwd, "docker-compose.yml")
+      or (root_file and dir_has_file(cwd, root_file))
+    then
+      return cwd
+    end
+
+    local function cb(dir, _)
+      return dir_has_file(dir, "compose.yml")
+        or dir_has_file(dir, "docker-compose.yml")
+        or (root_file and dir_has_file(cwd, root_file))
+    end
+
+    local root, _ = lsputil.path.traverse_parents(cwd, cb)
+    return root
+  end
+
+  local function workspace_has_file(name, root_file)
+    local root = workspace_root(root_file)
+    if not root then root = vim.loop.cwd() end
+
+    return dir_has_file(root, name)
+  end
+
+  local function lsp_setup(server_name, opts) lspconfig[server_name].setup(opts) end
+
+  local function build_command(server_name, cmd_paths, args)
+    args = args or {}
+
+    -- ensure we're dealing with a table always
+    if type(cmd_paths) == "string" then cmd_paths = { cmd_paths } end
+
+    for _, path in ipairs(cmd_paths) do
+      local exists, dir = workspace_has_file(path, args.root_file)
+
+      if exists then
+        logger.debug(fmt("workspace_has_file: %s", dir))
+        dir = fn.expand(dir)
+        logger.fmt_debug("%s: %s %s", server_name, dir, args)
+        return vim.list_extend({ dir }, args)
+      else
+        return nil
+      end
+    end
+  end
+
+  local function lsp_cmd_override(server_name, opts, cmd_paths, args)
+    args = args or {}
+
+    local cmd = build_command(server_name, cmd_paths, args)
+    if cmd ~= nil then opts.cmd = cmd end
+
+    opts.on_new_config = function(new_config, _)
+      local new_cmd = build_command(server_name, cmd_paths, args)
+      if new_cmd ~= nil then new_config.cmd = new_cmd end
+    end
+  end
+
+  -- all the server capabilities we could want
   local function get_server_capabilities()
     local capabilities = lsp.protocol.make_client_capabilities()
     capabilities.offsetEncoding = { "utf-16" }
     capabilities.textDocument.codeLens = { dynamicRegistration = false }
+    -- TODO: what is dynamicRegistration doing here? should I not always set to true?
     capabilities.textDocument.colorProvider = { dynamicRegistration = false }
     capabilities.textDocument.completion.completionItem.documentationFormat = { "markdown" }
     capabilities.textDocument.foldingRange = {
@@ -53,12 +122,115 @@ return function(on_attach)
     return capabilities
   end
 
+  -- default opts for each lsp server
+  local server_opts = {}
+  server_opts.flags = { debounce_text_changes = 150 }
+  server_opts.capabilities = get_server_capabilities()
+  server_opts.on_attach = on_attach
+
   -- [ SERVERS ] ---------------------------------------------------------------
 
-  local servers = {
-    bashls = true,
-    dockerls = function()
-      return {
+  require("mason").setup()
+
+  mason_lspconfig.setup({
+    automatic_installation = true,
+    ensure_installed = {
+      "bashls",
+      "clangd",
+      "cssls",
+      "dockerls",
+      "elixirls",
+      "elmls",
+      "html",
+      "jsonls",
+      "pyright",
+      "rust_analyzer",
+      "solargraph",
+      "sumneko_lua",
+      "tailwindcss",
+      "terraformls",
+      "tsserver",
+      "vimls",
+      "yamlls",
+      "zk",
+    },
+  })
+
+  -- require("mason-tool-installer").setup({
+
+  --   -- a list of all tools you want to ensure are installed upon
+  --   -- start; they should be the names Mason uses for each tool
+  --   ensure_installed = {
+  --     "stylua",
+  --     "shellcheck",
+  --     "editorconfig-checker",
+  --     "luacheck",
+  --     "misspell",
+  --     "shfmt",
+  --     "staticcheck",
+  --     "vint",
+  --     "prettierd",
+  --     "prettier",
+  --     "cbfmt",
+  --     "black",
+  --     "elm_format"
+  --   },
+
+  --   -- if set to true this will check each tool for updates. If updates
+  --   -- are available the tool will be updated. This setting does not
+  --   -- affect :MasonToolsUpdate or :MasonToolsInstall.
+  --   -- Default: false
+  --   auto_update = false,
+
+  --   -- automatically install / update on startup. If set to false nothing
+  --   -- will happen on startup. You can use :MasonToolsInstall or
+  --   -- :MasonToolsUpdate to install tools and check for updates.
+  --   -- Default: true
+  --   run_on_start = true,
+
+  --   -- set a delay (in ms) before the installation starts. This is only
+  --   -- effective if run_on_start is set to true.
+  --   -- e.g.: 5000 = 5 second delay, 10000 = 10 second delay, etc...
+  --   -- Default: 0
+  --   start_delay = 3000,  -- 3 second delay
+  -- })
+
+  mason_lspconfig.setup_handlers({
+    -- The first entry (without a key) will be the default handler
+    -- and will be called for each installed server that doesn't have
+    -- a dedicated handler.
+    function(server_name) -- default handler (optional)
+      lsp_setup(server_name, server_opts)
+    end,
+    cssls = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        -- cmd = { "vscode-css-language-server", "--stdio" },
+        filetypes = { "css", "scss" },
+        settings = {
+          css = {
+            lint = {
+              unknownProperties = "ignore",
+              unknownAtRules = "ignore",
+            },
+          },
+          scss = {
+            lint = {
+              idSelector = "warning",
+              zeroUnits = "warning",
+              duplicateProperties = "warning",
+            },
+            completion = {
+              completePropertyWithSemicolon = true,
+              triggerPropertyValueCompletion = true,
+            },
+          },
+        },
+      })
+
+      lsp_setup(server_name, opts)
+    end,
+    dockerls = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
         single_file_support = true,
         settings = {
           docker = {
@@ -69,29 +241,50 @@ return function(on_attach)
             },
           },
         },
-      }
+      })
+
+      lsp_setup(server_name, opts)
     end,
-    elmls = true,
-    clangd = true,
-    rust_analyzer = true,
-    vimls = true,
-    zk = true,
-    pyright = function()
-      return {
-        single_file_support = false,
+    elixirls = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        filetypes = { "elixir", "eelixir", "heex" },
         settings = {
-          python = {
-            analysis = {
-              autoSearchPaths = true,
-              diagnosticMode = "workspace",
-              useLibraryCodeForTypes = true,
-            },
+          elixirLS = {
+            mixEnv = "test",
+            fetchDeps = false,
+            dialyzerEnabled = true,
+            dialyzerFormat = "dialyxir_short",
+            enableTestLenses = false,
+            suggestSpecs = true,
           },
         },
-      }
+      })
+
+      lsp_cmd_override(server_name, opts, {
+        ".elixir-ls-release/language_server.sh",
+        fmt("%s/mason/bin/elixir-ls", vim.fn.stdpath("data")),
+      })
+
+      lsp_setup(server_name, opts)
     end,
-    jsonls = function()
-      return {
+    html = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex" },
+        init_options = {
+          configurationSection = { "html", "css", "javascript", "eelixir", "heex", "html.heex" },
+          embeddedLanguages = {
+            css = true,
+            javascript = true,
+            elixir = true,
+            heex = true,
+          },
+        },
+      })
+
+      lsp_setup(server_name, opts)
+    end,
+    jsonls = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
         commands = {
           Format = {
             function() lsp.buf.range_formatting({}, { 0, 0 }, { fn.line("$"), 0 }) end,
@@ -105,29 +298,46 @@ return function(on_attach)
             schemas = require("schemastore").json.schemas(),
           },
         },
-      }
+      })
+
+      lsp_setup(server_name, opts)
     end,
-    yamlls = function()
-      return {
+    pyright = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        single_file_support = false,
         settings = {
-          yaml = {
-            format = { enable = true },
-            validate = true,
-            hover = true,
-            completion = true,
-            schemas = require("schemastore").json.schemas(),
-            customTags = {
-              "!reference sequence", -- necessary for gitlab-ci.yaml files
+          python = {
+            analysis = {
+              autoSearchPaths = true,
+              diagnosticMode = "workspace",
+              useLibraryCodeForTypes = true,
             },
           },
         },
-      }
-    end,
+      })
 
-    -- @see https://gist.github.com/folke/fe5d28423ea5380929c3f7ce674c41d8
-    -- NOTE: we return a function here so that the lua dev dependency is not
-    -- required until the setup function is called.
-    sumneko_lua = function()
+      lsp_setup(server_name, opts)
+    end,
+    solargraph = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        settings = {
+          solargraph = {
+            diagnostics = true,
+            useBundler = true,
+            folding = false,
+            logLevel = "debug",
+          },
+        },
+      })
+
+      lsp_cmd_override(server_name, opts, {
+        ".bin/solargraph",
+        fmt("%s/mason/bin/solargraph", vim.fn.stdpath("data")),
+      }, { "stdio" })
+
+      lsp_setup(server_name, opts)
+    end,
+    sumneko_lua = function(server_name)
       local path = vim.split(package.path, ";")
       table.insert(path, "lua/?.lua")
       table.insert(path, "lua/?/init.lua")
@@ -137,7 +347,7 @@ return function(on_attach)
       local plenary = ("%s/start/plenary.nvim"):format(plugins)
       -- local paq = ('%s/opt/paq-nvim'):format(plugins)
 
-      return {
+      local opts = vim.tbl_extend("keep", server_opts, {
         handlers = {
           -- Don't open quickfix list in case of multiple definitions. At the
           -- moment, this conflicts the `a = function()` code style because
@@ -146,10 +356,10 @@ return function(on_attach)
             -- Adapted from source:
             -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/handlers.lua#L341-L366
             if result == nil or vim.tbl_isempty(result) then return nil end
-            local client = vim.lsp.get_client_by_id(ctx.client_id)
+            local client = lsp.get_client_by_id(ctx.client_id)
 
             local res = vim.tbl_islist(result) and result[1] or result
-            vim.lsp.util.jump_to_location(res, client.offset_encoding)
+            lsp.util.jump_to_location(res, client.offset_encoding)
           end,
         },
         settings = {
@@ -202,7 +412,7 @@ return function(on_attach)
             workspace = {
               -- Don't analyze code from submodules
               ignoreSubmodules = true,
-              library = { vim.fn.expand("$VIMRUNTIME/lua"), emmy, plenary },
+              library = { fn.expand("$VIMRUNTIME/lua"), emmy, plenary },
               checkThirdParty = false,
             },
             telemetry = {
@@ -210,12 +420,12 @@ return function(on_attach)
             },
           },
         },
-      }
-    end,
+      })
 
-    tailwindcss = function()
-      return {
-        cmd = { "tailwindcss-language-server", "--stdio" },
+      lsp_setup(server_name, opts)
+    end,
+    tailwindcss = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
         init_options = {
           userLanguages = {
             elixir = "phoenix-heex",
@@ -225,7 +435,7 @@ return function(on_attach)
         },
         handlers = {
           ["tailwindcss/getConfiguration"] = function(_, _, params, _, bufnr, _)
-            vim.lsp.buf_notify(bufnr, "tailwindcss/getConfigurationResponse", { _id = params._id })
+            lsp.buf_notify(bufnr, "tailwindcss/getConfigurationResponse", { _id = params._id })
           end,
         },
         settings = {
@@ -281,79 +491,11 @@ return function(on_attach)
           "node_modules",
           ".git"
         ),
-      }
+      })
+
+      lsp_setup(server_name, opts)
     end,
-    elixirls = function()
-      return {
-        cmd = { require("mega.utils").lsp.elixirls_cmd() },
-        settings = {
-          elixirLS = {
-            fetchDeps = false,
-            dialyzerEnabled = true,
-            dialyzerFormat = "dialyxir_short",
-            enableTestLenses = false,
-            suggestSpecs = true,
-          },
-        },
-        filetypes = { "elixir", "eelixir", "heex" },
-        root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
-      }
-    end,
-    solargraph = function()
-      return {
-        cmd = { "solargraph", "stdio" },
-        filetypes = { "ruby" },
-        settings = {
-          solargraph = {
-            diagnostics = true,
-            useBundler = true,
-          },
-        },
-      }
-    end,
-    cssls = function()
-      return {
-        -- REF: https://github.com/microsoft/vscode/issues/103163
-        --      - custom css linting rules and custom data
-        cmd = { "vscode-css-language-server", "--stdio" },
-        filetypes = { "css", "scss" },
-        settings = {
-          css = {
-            lint = {
-              unknownProperties = "ignore",
-              unknownAtRules = "ignore",
-            },
-          },
-          scss = {
-            lint = {
-              idSelector = "warning",
-              zeroUnits = "warning",
-              duplicateProperties = "warning",
-            },
-            completion = {
-              completePropertyWithSemicolon = true,
-              triggerPropertyValueCompletion = true,
-            },
-          },
-        },
-      }
-    end,
-    html = function()
-      return {
-        cmd = { "vscode-html-language-server", "--stdio" },
-        filetypes = { "html", "javascriptreact", "typescriptreact", "eelixir", "html.heex", "heex" },
-        init_options = {
-          configurationSection = { "html", "css", "javascript", "eelixir", "heex", "html.heex" },
-          embeddedLanguages = {
-            css = true,
-            javascript = true,
-            elixir = true,
-            heex = true,
-          },
-        },
-      }
-    end,
-    tsserver = function()
+    tsserver = function(server_name)
       local function do_organize_imports()
         local params = {
           command = "_typescript.organizeImports",
@@ -362,7 +504,18 @@ return function(on_attach)
         }
         lsp.buf.execute_command(params)
       end
-      return {
+
+      local opts = vim.tbl_extend("keep", server_opts, {
+        init_options = {
+          hostInfo = "neovim",
+          logVerbosity = "verbose",
+        },
+        commands = {
+          OrganizeImports = {
+            do_organize_imports,
+            description = "Organize Imports",
+          },
+        },
         filetypes = {
           "javascript",
           "javascriptreact",
@@ -371,40 +524,32 @@ return function(on_attach)
           "typescriptreact",
           "typescript.tsx",
         },
-        commands = {
-          OrganizeImports = {
-            do_organize_imports,
-            description = "Organize Imports",
+      })
+
+      lsp_cmd_override(server_name, opts, {
+        ".bin/typescript-language-server",
+        fmt("%s/mason/bin/typescript-language-server", vim.fn.stdpath("data")),
+      }, { "stdio" })
+
+      lsp_setup(server_name, opts)
+    end,
+    yamlls = function(server_name)
+      local opts = vim.tbl_extend("keep", server_opts, {
+        settings = {
+          yaml = {
+            format = { enable = true },
+            validate = true,
+            hover = true,
+            completion = true,
+            schemas = require("schemastore").json.schemas(),
+            customTags = {
+              "!reference sequence", -- necessary for gitlab-ci.yaml files
+            },
           },
         },
-      }
+      })
+
+      lsp_setup(server_name, opts)
     end,
-  }
-
-  local function get_server_config(server)
-    local conf = servers[server]
-    local conf_type = type(conf)
-    local config = conf_type == "table" and conf or conf_type == "function" and conf() or {}
-
-    config.flags = { debounce_text_changes = 150 }
-    config.capabilities = get_server_capabilities()
-    config.on_attach = on_attach
-
-    -- TODO: json loaded lsp config; also @akinsho is a beast.
-    -- https://github.com/akinsho/dotfiles/commit/c087fd471f0d80b8bf41502799aeb612222333ff
-    -- config.on_init = mega.lsp.on_init
-
-    return config
-  end
-
-  -- Load lspconfig servers with their configs
-  for server, _ in pairs(servers) do
-    if server == nil or lspconfig[server] == nil then
-      vim.notify("unable to setup ls for " .. server)
-      return
-    end
-
-    local config = get_server_config(server)
-    lspconfig[server].setup(config)
-  end
+  })
 end
