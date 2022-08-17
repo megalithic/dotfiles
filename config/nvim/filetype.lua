@@ -30,6 +30,8 @@ vim.filetype.add({
     exs = "elixir",
     eex = "eelixir",
     keymap = "keymap",
+    cts = "typescript",
+    mts = "typescript",
   },
   pattern = {
     [".*%.conf"] = "conf",

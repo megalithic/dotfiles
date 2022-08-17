@@ -114,6 +114,9 @@ logger.new = function(config, standalone)
         end
 
         if config.highlights and level_config.hl then vim.cmd("echohl NONE") end
+
+        -- so that our clear messages autocmd fires
+        vim.api.nvim_command("doautocmd CmdlineChanged")
       end
       if config.use_console == "sync" and not vim.in_fast_event() then
         log_to_console()
