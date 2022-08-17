@@ -135,6 +135,9 @@ obj.setState = function(s)
   obj.state = s
   log.df("Setting PTT state to %s", s)
 
+  local muted = obj.state == "push-to-talk"
+  hs.audiodevice.defaultInputDevice():setInputMuted(muted)
+
   if obj.menubar ~= nil then
     obj.menubar:setMenu(buildMenu())
     obj.menubar:setTitle(obj.icons[obj.state])
