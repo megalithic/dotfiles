@@ -54,16 +54,16 @@ local function hover_handler(_, result, ctx, config)
   local bufnr = util.open_floating_preview(lines, "markdown", config)
   -- local lines = vim.split(result.contents.value, "\n")
 
-  local ok, _ = pcall(require, "colorizer")
-  if ok then
-    require("colorizer").highlight_buffer(
-      bufnr,
-      nil,
-      vim.list_slice(lines, 2, #lines),
-      0,
-      require("colorizer").get_buffer_options(0)
-    )
-  end
+  -- local ok, _ = pcall(require, "colorizer")
+  -- if ok then
+  --   require("colorizer").highlight_buffer(
+  --     bufnr,
+  --     nil,
+  --     vim.list_slice(lines, 2, #lines),
+  --     0,
+  --     require("colorizer").get_buffer_options(0)
+  --   )
+  -- end
 
   return bufnr
 end
