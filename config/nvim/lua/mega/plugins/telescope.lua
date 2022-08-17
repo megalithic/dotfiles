@@ -41,6 +41,22 @@ return function()
     }))
   end
 
+  local function file_extension_filter(prompt)
+    -- if prompt starts with escaped @ then treat it as a literal
+    if (prompt):sub(1, 2) == "\\@" then return { prompt = prompt:sub(2) } end
+
+    local result = vim.split(prompt, " ")
+    -- if prompt starts with, for example:
+    --    prompt: @lua <search_term>
+    -- then only search files ending in *.lua
+    if #result == 2 and result[1]:sub(1, 1) == "@" and (#result[1] == 2 or #result[1] == 3 or #result[1] == 4) then
+      print(result[2], result[1]:sub(2))
+      return { prompt = result[2] .. "." .. result[1]:sub(2) }
+    else
+      return { prompt = prompt }
+    end
+  end
+
   telescope.setup({
     defaults = {
       set_env = { ["TERM"] = vim.env.TERM, ["COLORTERM"] = "truecolor" },
@@ -161,16 +177,13 @@ return function()
           n = { ["<c-x>"] = "delete_buffer" },
         },
       }),
-      -- TODO: https://github.com/mrjones2014/dotfiles/commit/0408fac7e4517688b6b453bebd3ece1534ed8809
-      oldfiles = dropdown({}),
-      -- TODO: https://github.com/mrjones2014/dotfiles/commit/0408fac7e4517688b6b453bebd3ece1534ed8809#diff-43316736621af785e272c133be1664c9859bda4b8567b9462180d238f9de030cR88-R108
+      oldfiles = dropdown({
+        on_input_filter_cb = file_extension_filter,
+      }),
       live_grep = {
         max_results = 500,
         file_ignore_patterns = { ".git/", "%.lock" },
-        on_input_filter_cb = function(prompt)
-          -- AND operator for live_grep like how fzf handles spaces with wildcards in rg
-          return { prompt = prompt:gsub("%s", ".*") }
-        end,
+        on_input_filter_cb = file_extension_filter,
       },
       current_buffer_fuzzy_find = dropdown({
         previewer = false,
@@ -185,6 +198,7 @@ return function()
       find_files = {
         hidden = true,
         find_command = { "fd", "--type", "f", "--no-ignore-vcs" },
+        on_input_filter_cb = file_extension_filter,
       },
       keymaps = dropdown({
         layout_config = {
