@@ -116,7 +116,7 @@ return function()
     sources = cmp.config.sources({
       { name = "luasnip" },
       { name = "nvim_lsp" },
-      { name = "nvim_lsp_signature_help" },
+      -- { name = "nvim_lsp_signature_help" },
       -- { name = "treesitter" },
       -- { name = "buffer", keyword_length = 3 },
       { name = "path" },
