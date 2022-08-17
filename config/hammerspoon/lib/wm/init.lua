@@ -9,7 +9,6 @@ local Snap = nil
 
 obj.__index = obj
 obj.name = "wm"
-obj.settingsKey = "_mega_wm"
 obj.mode = "layout" -- "layout"|"snap"
 obj.watcher = nil
 obj.debug = false

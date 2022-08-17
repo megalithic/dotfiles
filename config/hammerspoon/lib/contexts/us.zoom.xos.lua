@@ -49,18 +49,17 @@ function obj:start(opts)
   -- TODO: add ability to auto-quit zoom when all relevant windows are closed;
   -- aka, the meeting has ended.
   -- REF: https://github.com/mrjones2014/dotfiles/blob/master/.config/hammerspoon/zoom-killer.lua
-
   if event == hs.application.watcher.launched then
-    L.req("lib.dnd").on()
-    hs.spotify.pause()
-    L.req("lib.menubar.ptt").setState("push-to-talk")
-    L.req("lib.browser").killTabsByDomain("us02web.zoom.us")
-
     do
       local kitty = hs.application.get("kitty")
       local zoom = hs.application.get("zoom.us")
 
       hs.timer.waitUntil(function() return zoom:getWindow("Zoom Meeting") end, function()
+        L.req("lib.dnd").on()
+        hs.spotify.pause()
+        L.req("lib.menubar.ptt").setState("push-to-talk")
+        L.req("lib.browser").killTabsByDomain("us02web.zoom.us")
+
         local target_close_window = zoom:getWindow("Zoom")
         if target_close_window ~= nil then target_close_window:close() end
 
@@ -89,13 +88,12 @@ function obj:stop(opts)
     L.req("lib.dnd").off()
 
     do
-      local kitty = hs.application.get("kitty")
-
       if browser ~= nil then
         local browser_win = browser:mainWindow()
         if browser_win ~= nil then browser_win:moveToUnit(hs.layout.maximized) end
       end
 
+      local kitty = hs.application.get("kitty")
       if kitty ~= nil then
         local kitty_win = kitty:mainWindow()
         if kitty_win ~= nil then kitty_win:moveToUnit(hs.layout.maximized) end
