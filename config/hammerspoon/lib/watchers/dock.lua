@@ -65,20 +65,22 @@ local function dockHandler(watcher, path, key, oldValue, isConnected)
     task:start()
   end
 
-  WM.layoutRunningApps(Config.bindings.apps)
-
   if isConnected then
     hs.timer.doAfter(2, function()
       setWifi(DockConfig.docked.wifi)
       setInput(DockConfig.docked.input)
       success("[dock] dock connected")
       hs.notify.new({ title = "dock watcher", subTitle = fmt("%s connected", DockConfig.target.productName) }):send()
+      WM.layoutRunningApps(Config.bindings.apps)
     end)
   else
-    setWifi(DockConfig.undocked.wifi)
-    setInput(DockConfig.undocked.input)
-    warn("[dock] dock disconnected")
-    hs.notify.new({ title = "dock watcher", subTitle = fmt("%s disconnected", DockConfig.target.productName) }):send()
+    hs.timer.doAfter(2, function()
+      setWifi(DockConfig.undocked.wifi)
+      setInput(DockConfig.undocked.input)
+      warn("[dock] dock disconnected")
+      hs.notify.new({ title = "dock watcher", subTitle = fmt("%s disconnected", DockConfig.target.productName) }):send()
+      WM.layoutRunningApps(Config.bindings.apps)
+    end)
   end
 end
 
