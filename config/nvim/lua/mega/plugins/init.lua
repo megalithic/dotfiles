@@ -138,7 +138,7 @@ local PKGS = {
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   -- "mbbill/undotree",
-  "danymat/neogen",
+  -- "danymat/neogen",
   "smjonas/live-command.nvim",
   ------------------------------------------------------------------------------
   -- (REST) --
@@ -625,10 +625,10 @@ function M.config()
   conf("fzf_gitignore", function() vim.g.fzf_gitignore_no_maps = true end)
   conf("vim-kitty-navigator", { enabled = not vim.env.TMUX })
 
-  conf("neogen", function()
-    require("neogen").setup({ snippet_engine = "luasnip" })
-    mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
-  end)
+  -- conf("neogen", function()
+  --   require("neogen").setup({ snippet_engine = "luasnip" })
+  --   mega.nnoremap("<localleader>cg", require("neogen").generate, "comment: generate")
+  -- end)
 
   conf("notify", {
     timeout = 3000,

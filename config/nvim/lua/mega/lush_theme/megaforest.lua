@@ -55,10 +55,12 @@ local orange = C.orange
 local dark_orange = C.dark_orange
 local bright_yellow = C.bright_yellow
 local bright_blue = C.bright_blue
+local bright_blue_alt = C.bright_blue_alt
 local yellow = C.yellow
 local green = C.green
 local bright_green = C.bright_green
 local cyan = C.cyan
+local teal = C.teal
 local aqua = C.aqua
 local blue = C.blue
 local purple = C.purple
@@ -713,7 +715,7 @@ return lush(function()
     IndentBlanklineContextStart({ sp = blue, bg = "NONE", gui = "underline" }),
 
     ---- :help mini.indentscope ------------------------------------------------
-    MiniIndentscopeSymbol({ fg = bg_red, bg = "NONE" }),
+    MiniIndentscopeSymbol({ fg = teal, bg = "NONE" }),
 
     ---- :help mini.jump.txt / mini.jump2d.txt  --------------------------------
 

@@ -8,8 +8,8 @@ return function()
 
   mega.augroup("TelescopePreviews", {
     {
-      event = "User",
-      pattern = "TelescopePreviewerLoaded",
+      event = { "User" },
+      pattern = { "TelescopePreviewerLoaded" },
       -- FIXME: https://github.com/nvim-telescope/telescope.nvim/issues/1661
       command = "setlocal number wrap",
     },

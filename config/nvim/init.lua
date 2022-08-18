@@ -1,10 +1,8 @@
 -- [ speed ] -------------------------------------------------------------------
 
 vim.api.nvim_create_augroup("vimrc", {})
-do
-  local ok, impatient = pcall(require, "impatient")
-  if ok then impatient.enable_profile() end
-end
+local ok, impatient = pcall(require, "impatient")
+if ok then impatient.enable_profile() end
 
 -- [ loaders ] -----------------------------------------------------------------
 

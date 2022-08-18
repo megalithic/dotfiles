@@ -269,23 +269,23 @@ augroup("General", {
     pattern = { "help" },
     command = function() vim.cmd([[wincmd J | :resize 40]]) end,
   },
-  {
-    event = { "BufWritePost" },
-    pattern = { "*/spell/*.add" },
-    command = "silent! :mkspell! %",
-  },
-  {
-    event = { "InsertLeave" },
-    pattern = { "*" },
-    command = [[execute 'normal! mI']],
-    desc = "global mark I for last edit",
-  },
-  {
-    event = { "BufEnter", "WinEnter" },
-    pattern = { "*/node_modules/*" },
-    command = ":LspStop",
-  },
-  { event = { "BufLeave" }, pattern = { "*/node_modules/*" }, command = ":LspStart" },
+  -- {
+  --   event = { "BufWritePost" },
+  --   pattern = { "*/spell/*.add" },
+  --   command = "silent! :mkspell! %",
+  -- },
+  -- {
+  --   event = { "InsertLeave" },
+  --   pattern = { "*" },
+  --   command = [[execute 'normal! mI']],
+  --   desc = "global mark I for last edit",
+  -- },
+  -- {
+  --   event = { "BufEnter", "WinEnter" },
+  --   pattern = { "*/node_modules/*" },
+  --   command = ":LspStop",
+  -- },
+  -- { event = { "BufLeave" }, pattern = { "*/node_modules/*" }, command = ":LspStart" },
   -- {
   --   event = { "FileType" },
   --   pattern = { "lua", "vim", "dart", "python", "javascript", "typescript", "rust", "md", "gitcommit" },

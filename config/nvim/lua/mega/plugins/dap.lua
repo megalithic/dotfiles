@@ -18,6 +18,45 @@ return function()
   local function run_last() require("dap").run_last() end
   local function toggle_breakpoint() require("dap").toggle_breakpoint() end
   local function set_breakpoint() require("dap").set_breakpoint(fn.input("Breakpoint condition: ")) end
+  local function active_sessions()
+    local api = vim.api
+    local function new_buf()
+      local buf = api.nvim_create_buf(false, true)
+      api.nvim_buf_set_option(buf, "modifiable", false)
+      api.nvim_buf_set_option(buf, "buftype", "nofile")
+      api.nvim_buf_set_option(buf, "modifiable", false)
+      api.nvim_buf_set_keymap(
+        buf,
+        "n",
+        "<CR>",
+        "<Cmd>lua require('dap.ui').trigger_actions({ mode = 'first' })<CR>",
+        {}
+      )
+      api.nvim_buf_set_keymap(buf, "n", "a", "<Cmd>lua require('dap.ui').trigger_actions()<CR>", {})
+      api.nvim_buf_set_keymap(buf, "n", "o", "<Cmd>lua require('dap.ui').trigger_actions()<CR>", {})
+      api.nvim_buf_set_keymap(buf, "n", "<2-LeftMouse>", "<Cmd>lua require('dap.ui').trigger_actions()<CR>", {})
+      return buf
+    end
+    local widgets = require("dap.ui.widgets")
+
+    local new_cursor_anchored_float_win = function(buf)
+      vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+      vim.api.nvim_buf_set_option(buf, "filetype", "dap-float")
+      local opts = vim.lsp.util.make_floating_popup_options(50, 30, { border = false })
+      local win = vim.api.nvim_open_win(buf, true, opts)
+      vim.api.nvim_win_set_option(win, "scrolloff", 0)
+      return win
+    end
+
+    local widget = widgets
+      .builder(widgets.expression)
+      .new_buf(new_buf)
+      .new_win(widgets.with_resize(new_cursor_anchored_float_win))
+      .build()
+
+    widget.open()
+    -- widgets.hover("<cexpr>", { border = false })
+  end
 
   nnoremap("<localleader>db", toggle_breakpoint, "dap: toggle breakpoint")
   nnoremap("<localleader>dB", set_breakpoint, "dap: set breakpoint")
@@ -27,6 +66,7 @@ return function()
   nnoremap("<localleader>do", step_over, "dap: step over")
   nnoremap("<localleader>dl", run_last, "dap REPL: run last")
   nnoremap("<localleader>dt", repl_toggle, "dap REPL: toggle")
+  nnoremap("<localleader>K", active_sessions, "dap: show active sessions")
 
   local icons = mega.icons
 
@@ -94,76 +134,76 @@ return function()
     })
   end
 
-  dap.adapters.firefox = {
-    type = "executable",
-    command = "node",
-    args = {
-      -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
-      os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
-    },
-  }
+  -- dap.adapters.firefox = {
+  --   type = "executable",
+  --   command = "node",
+  --   args = {
+  --     -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+  --     os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
+  --   },
+  -- }
 
-  dap.adapters.yarn = {
-    type = "executable",
-    command = "yarn",
-    args = {
-      "node",
-      -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
-      os.getenv("HOME") .. "/build/vscode-node-debug2/out/src/nodeDebug.js",
-    },
-  }
+  -- dap.adapters.yarn = {
+  --   type = "executable",
+  --   command = "yarn",
+  --   args = {
+  --     "node",
+  --     -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+  --     os.getenv("HOME") .. "/build/vscode-node-debug2/out/src/nodeDebug.js",
+  --   },
+  -- }
 
-  dap.adapters.yarn_firefox = {
-    type = "executable",
-    command = "yarn",
-    args = {
-      "node",
-      -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
-      os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
-    },
-  }
+  -- dap.adapters.yarn_firefox = {
+  --   type = "executable",
+  --   command = "yarn",
+  --   args = {
+  --     "node",
+  --     -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+  --     os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
+  --   },
+  -- }
 
   -- [ launchers ] ---------------------------------------------------------------
 
-  local firefox = {
-    name = "Debug with Firefox",
-    type = "firefox",
-    request = "launch",
-    reAttach = true,
-    sourceMaps = true,
-    url = "http://localhost:6969",
-    webRoot = "${workspaceFolder}",
-    firefoxExecutable = "/usr/bin/firefox",
-  }
+  -- local firefox = {
+  --   name = "Debug with Firefox",
+  --   type = "firefox",
+  --   request = "launch",
+  --   reAttach = true,
+  --   sourceMaps = true,
+  --   url = "http://localhost:6969",
+  --   webRoot = "${workspaceFolder}",
+  --   firefoxExecutable = "/usr/bin/firefox",
+  -- }
 
-  local node = {
-    name = "Launch node",
-    type = "node2",
-    request = "launch",
-    program = "${file}",
-    cwd = vim.fn.getcwd(),
-    sourceMaps = true,
-    protocol = "inspector",
-    console = "integratedTerminal",
-  }
+  -- local node = {
+  --   name = "Launch node",
+  --   type = "node2",
+  --   request = "launch",
+  --   program = "${file}",
+  --   cwd = vim.fn.getcwd(),
+  --   sourceMaps = true,
+  --   protocol = "inspector",
+  --   console = "integratedTerminal",
+  -- }
 
-  local node_attach = {
-    -- For this to work you need to make sure the node process is started with the `--inspect` flag.
-    name = "Attach to node process",
-    type = "node2",
-    request = "attach",
-    processId = require("dap.utils").pick_process,
-  }
+  -- local node_attach = {
+  --   -- For this to work you need to make sure the node process is started with the `--inspect` flag.
+  --   name = "Attach to node process",
+  --   type = "node2",
+  --   request = "attach",
+  --   processId = require("dap.utils").pick_process,
+  -- }
 
-  local react_native = {
-    name = "Debug in Exponent",
-    request = "launch",
-    type = "reactnative",
-    cwd = "${workspaceFolder}",
-    platform = "exponent",
-    expoHostType = "local",
-    processId = require("dap.utils").pick_process,
-  }
+  -- local react_native = {
+  --   name = "Debug in Exponent",
+  --   request = "launch",
+  --   type = "reactnative",
+  --   cwd = "${workspaceFolder}",
+  --   platform = "exponent",
+  --   expoHostType = "local",
+  --   processId = require("dap.utils").pick_process,
+  -- }
 
   -- [ configs ] ---------------------------------------------------------------
 

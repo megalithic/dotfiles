@@ -109,7 +109,7 @@ return function(on_attach)
 
   -- default opts for each lsp server
   local server_opts = {}
-  server_opts.flags = { debounce_text_changes = 150, allow_incremental_sync = true }
+  server_opts.flags = { debounce_text_changes = 150 }
   server_opts.capabilities = get_server_capabilities()
   server_opts.on_attach = on_attach
 
