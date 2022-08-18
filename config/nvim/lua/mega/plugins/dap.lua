@@ -60,11 +60,16 @@ return function()
     })
   end
 
-  -- dap.adapters.chrome = {
-  --   type = "executable",
-  --   command = "node",
-  --   args = { vim.fn.stdpath("data") .. "/mason/packages/chrome-debug-adapter/out/src/chromeDebug.js" },
-  -- }
+  require("dap-vscode-js").setup({
+    log_file_level = vim.log.levels.TRACE,
+    adapters = {
+      "pwa-node",
+      "pwa-chrome",
+      "pwa-msedge",
+      "node-terminal",
+      "pwa-extensionHost",
+    }, -- which adapters to register in nvim-dap
+  })
 
   dap.adapters.node2 = function(cb, config)
     if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end
@@ -77,53 +82,88 @@ return function()
       },
     })
   end
-
-  dap.adapters.expo = function(cb, config)
+  dap.adapters.reactnative = function(cb, config)
     if config.preLaunchTask then vim.fn.system(config.preLaunchTask) end
+
     cb({
-      name = "Debug in Exponent",
-      request = "launch",
-      type = "reactnative",
-      cwd = "${workspaceFolder}",
-      platform = "exponent",
-      expoHostType = "local",
+      type = "executable",
+      command = "node",
+      args = {
+        vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+      },
     })
   end
 
-  -- -- WIP does not execute
-  -- dap.adapters.deno = function(cb)
-  --   local adapter = {
-  --     type = "executable",
-  --     command = "deno",
-  --   }
-  --   cb(adapter)
-  -- end
+  dap.adapters.firefox = {
+    type = "executable",
+    command = "node",
+    args = {
+      -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+      os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
+    },
+  }
 
-  -- dap.adapters.firefox = {
-  --   type = "executable",
-  --   command = "node",
-  --   args = {
-  --     os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
-  --   },
-  -- }
+  dap.adapters.yarn = {
+    type = "executable",
+    command = "yarn",
+    args = {
+      "node",
+      -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+      os.getenv("HOME") .. "/build/vscode-node-debug2/out/src/nodeDebug.js",
+    },
+  }
 
-  -- dap.adapters.yarn = {
-  --   type = "executable",
-  --   command = "yarn",
-  --   args = {
-  --     "node",
-  --     os.getenv("HOME") .. "/build/vscode-node-debug2/out/src/nodeDebug.js",
-  --   },
-  -- }
+  dap.adapters.yarn_firefox = {
+    type = "executable",
+    command = "yarn",
+    args = {
+      "node",
+      -- vim.fn.stdpath("data") .. "/mason/packages/node-debug2-adapter/out/src/nodeDebug.js",
+      os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
+    },
+  }
 
-  -- dap.adapters.yarn_firefox = {
-  --   type = "executable",
-  --   command = "yarn",
-  --   args = {
-  --     "node",
-  --     os.getenv("HOME") .. "/build/vscode-firefox-debug/dist/adapter.bundle.js",
-  --   },
-  -- }
+  -- [ launchers ] ---------------------------------------------------------------
+
+  local firefox = {
+    name = "Debug with Firefox",
+    type = "firefox",
+    request = "launch",
+    reAttach = true,
+    sourceMaps = true,
+    url = "http://localhost:6969",
+    webRoot = "${workspaceFolder}",
+    firefoxExecutable = "/usr/bin/firefox",
+  }
+
+  local node = {
+    name = "Launch node",
+    type = "node2",
+    request = "launch",
+    program = "${file}",
+    cwd = vim.fn.getcwd(),
+    sourceMaps = true,
+    protocol = "inspector",
+    console = "integratedTerminal",
+  }
+
+  local node_attach = {
+    -- For this to work you need to make sure the node process is started with the `--inspect` flag.
+    name = "Attach to node process",
+    type = "node2",
+    request = "attach",
+    processId = require("dap.utils").pick_process,
+  }
+
+  local react_native = {
+    name = "Debug in Exponent",
+    request = "launch",
+    type = "reactnative",
+    cwd = "${workspaceFolder}",
+    platform = "exponent",
+    expoHostType = "local",
+    processId = require("dap.utils").pick_process,
+  }
 
   -- [ configs ] ---------------------------------------------------------------
 
@@ -168,4 +208,64 @@ return function()
       projectDir = ".",
     },
   }
+
+  for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact" }) do
+    dap.configurations[language] = {
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Launch file",
+        program = "${file}",
+        cwd = "${workspaceFolder}",
+      },
+      {
+        type = "pwa-node",
+        request = "attach",
+        name = "Attach",
+        processId = require("dap.utils").pick_process,
+        cwd = "${workspaceFolder}",
+      },
+      {
+        type = "pwa-node",
+        request = "launch",
+        name = "Debug Jest Tests",
+        -- trace = true, -- include debugger info
+        runtimeExecutable = "node",
+        runtimeArgs = {
+          "./node_modules/jest/bin/jest.js",
+          "--runInBand",
+        },
+        rootPath = "${workspaceFolder}",
+        cwd = "${workspaceFolder}",
+        console = "integratedTerminal",
+        internalConsoleOptions = "neverOpen",
+      },
+    }
+  end
+
+  -- dap.configurations.javascript = { firefox, node, node_attach, react_native }
+  -- dap.configurations.javascriptreact = {
+  --   firefox,
+  --   node,
+
+  --   node_attach,
+  --   react_native,
+  -- }
+
+  -- dap.configurations.typescript = { firefox, node, node_attach, react_native }
+  -- dap.configurations.typescriptreact = {
+  --   firefox,
+  --   node,
+  --   node_attach,
+  --   react_native,
+  -- }
+
+  -- NOTE: see rcarriga/cmp-dap instead
+  -- mega.augroup("DapAutocmds", {
+  --   {
+  --     event = { "FileType", "CmdlineChanged" },
+  --     pattern = { "dap-repl" },
+  --     callback = function() require("dap.ext.autocompl").attach() end,
+  --   },
+  -- })
 end

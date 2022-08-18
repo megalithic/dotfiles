@@ -20,10 +20,10 @@ local function set_keymaps(bufnr, winnr)
   tmap("<esc>", [[<C-\><C-n>]], opts)
 
   -- move around splits
-  -- tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
-  -- tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
-  -- tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
-  -- tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+  tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+  tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+  tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+  tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
 
   tmap("<C-h>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
   tmap("<C-k>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
@@ -128,7 +128,7 @@ function mega.term_open(opts)
     end,
   })
 
-  P(cmd)
+  -- P(cmd)
 
   if on_after_open ~= nil and type(on_after_open) == "function" then
     on_after_open(term_buf_id, winnr)

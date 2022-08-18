@@ -211,6 +211,8 @@ local function setup_mappings(client, bufnr)
   )
   -- nnoremap("<leader>ll", [[<cmd>LspLog<CR>]], desc("lsp: show log"))
   nnoremap("<leader>rf", vim.lsp.buf.format, desc("lsp: format buffer"))
+  nnoremap("=", function() vim.lsp.buf.format({ async = true }) end, desc("lsp: format buffer"))
+  vnoremap("=", vim.lsp.buf.range_formatting, desc("lsp: format buffer range"))
 end
 
 -- [ FORMATTING ] ---------------------------------------------------------------
