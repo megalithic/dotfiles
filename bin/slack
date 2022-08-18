@@ -439,9 +439,10 @@ function dnd() {
 }
 
 function here() {
-  here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top o the mornin!"
-  here_messages[1]=":coffee: :croissant: gluten morgen!"
-  here_messages[2]=":coffee: :tea: good morning!"
+  here_messages[0]=":coffee:"
+  # here_messages[0]=":wave: :sunrise_over_mountains: :coffee: top o the mornin!"
+  # here_messages[1]=":coffee: :croissant: gluten morgen!"
+  # here_messages[2]=":coffee: :tea: good morning!"
   local rand=$((RANDOM % ${#here_messages[@]}))
 
   __set_presence "auto"

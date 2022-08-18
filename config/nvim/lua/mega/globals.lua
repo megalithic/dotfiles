@@ -200,7 +200,7 @@ function mega.ftplugin_conf(name, callback)
   local info = debug.getinfo(1, "S")
   local ok, plugin = mega.require(module, { message = fmt("In file: %s", info.source) })
 
-  if ok then
+  if ok and plugin then
     callback(plugin)
   else
     callback()
