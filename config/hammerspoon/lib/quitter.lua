@@ -38,10 +38,11 @@ local function teardown()
 end
 
 function obj.pressedFn()
-  maybe_force_quit()
-
   if obj.mode == "double" then obj.quit() end
-  if obj.mode == "long" then longTimer:start() end
+  if obj.mode == "long" then
+    maybe_force_quit()
+    longTimer:start()
+  end
 end
 
 function obj:releasedFn()

@@ -144,6 +144,16 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
+  ["com.apple.SafariTechnologyPreview"] = {
+    bundleID = "com.apple.SafariTechnologyPreview",
+    name = "Safari Technology Preview",
+    quitter = true,
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
   ["com.kapeli.dashdoc"] = {
     bundleID = "com.kapeli.dashdoc",
     name = "Dash",

@@ -14,7 +14,6 @@ obj.watcher = nil
 obj.debug = false
 obj.log = true
 obj.contextModals = {}
-obj.layoutComplete = true
 
 local function info(...)
   if obj.log then return _G.info(...) end
@@ -56,19 +55,19 @@ end
 function obj.applyLayout(appConfig)
   if appConfig == nil then return end
   local bundleID = appConfig["bundleID"]
+  local app = Application.get(bundleID)
 
-  if appConfig.rules and #appConfig.rules > 0 then
-    obj.layoutComplete = false
-
+  if app and appConfig.rules and #appConfig.rules > 0 then
     if obj.mode == "snap" then
       fnutils.each(appConfig.rules, function(rule)
         local winTitlePattern, screenNum, positionStr = table.unpack(rule)
         winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
 
-        hs.timer.waitUntil(function() return getWindow(winTitlePattern, appConfig.bundleID) ~= nil end, function()
-          Snap.snapper(getWindow(winTitlePattern, appConfig.bundleID), positionStr, targetDisplay(screenNum))
-          obj.layoutComplete = true
-        end, 0.5)
+        hs.timer.waitUntil(
+          function() return getWindow(winTitlePattern, appConfig.bundleID) ~= nil end,
+          function() Snap.snapper(getWindow(winTitlePattern, appConfig.bundleID), positionStr, targetDisplay(screenNum)) end,
+          0.5
+        )
       end)
     elseif obj.mode == "layout" then
       local layouts = {}
@@ -78,7 +77,7 @@ function obj.applyLayout(appConfig)
         winTitlePattern = (winTitlePattern ~= "") and winTitlePattern or nil
 
         local layout = {
-          hs.application.get(bundleID), -- application name
+          app, -- application name
           winTitlePattern, -- window title
           targetDisplay(screenNum), -- screen #
           Snap.grid[positionStr], -- layout/postion
@@ -88,15 +87,17 @@ function obj.applyLayout(appConfig)
         table.insert(layouts, layout)
       end)
 
-      hs.timer.waitUntil(function() return Application.get(appConfig.bundleID) ~= nil end, function()
-        hs.layout.apply(layouts, string.match)
-        obj.layoutComplete = true
-      end, 0.5)
+      -- hs.timer.waitUntil(
+      --   function() return Application.frontmostApplication() == app end,
+      --   function() hs.layout.apply(layouts, string.match) end,
+      --   0.1
+      -- )
+      hs.layout.apply(layouts, string.match)
     end
   end
 end
 
--- full-scale customization of an app; auto spins up a context-based modal, binding defined actions to keys for that modal;
+-- full-scale customization of an app; auto spins-up a context-based modal, binding defined actions to keys for that modal;
 -- also allows for total customization of what should happen for certain app events (see below for supported watcher events).
 function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   for key, context in pairs(obj.contextModals) do
@@ -112,7 +113,7 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
       )
 
       if event == Application.watcher.activated or event == Application.watcher.launched then
-        hs.timer.waitUntil(function() return obj.layoutComplete end, function()
+        hs.timer.doAfter(0.1, function()
           context:start({
             bundleID = bundleID,
             appObj = appObj,
@@ -121,7 +122,7 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
             appModal = context,
           })
           success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
-        end, 0.5)
+        end)
       elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
         context:stop({ event = event })
         info(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
@@ -147,14 +148,12 @@ function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
-  if event == Application.watcher.launched and bundleID then
+  if event == Application.watcher.launched and bundleID ~= nil then
     note(fmt("[LAUNCHED] %s", bundleID))
     local appConfig = obj.apps[bundleID]
     if appConfig then obj.applyLayout(appConfig) end
-  elseif event == Application.watcher.terminated and bundleID then
+  elseif event == Application.watcher.terminated and bundleID ~= nil then
     note(fmt("[TERMINATED] %s", bundleID))
-  else
-    obj.layoutComplete = true
   end
 
   obj.applyContext(bundleID, appObj, event, fromWindowFilter)
