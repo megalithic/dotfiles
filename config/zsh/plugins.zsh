@@ -12,6 +12,7 @@ PLUGINS="$ZDOTDIR/plugins/"
 source "$PLUGINS/zsh-defer/zsh-defer.plugin.zsh"
 
 function zsh_add_file() {
+  # echo "adding file $1"
   [[ -f "$ZDOTDIR/$1" ]] && source "$ZDOTDIR/$1"
 }
 
@@ -25,6 +26,8 @@ function zsh_source_plugin () {
 
 function zsh_add_plugin() {
   PLUGIN_NAME=$(echo $1 | cut -d "/" -f 2)
+
+  # echo "adding plugin $PLUGIN_NAME"
 
   if [[ -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ]]; then
     zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh" || \

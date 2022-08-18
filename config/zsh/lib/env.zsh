@@ -327,6 +327,7 @@ done
 unset path_file
 
 fpath+=(
+  "$ZDOTDIR"
   "$HOMEBREW_PREFIX/share/zsh/site-functions"
   "$ZDOTDIR/prompt"
   "$ZDOTDIR/completions"
