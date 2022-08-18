@@ -217,7 +217,7 @@ map("gL", "g$");
 map("F", "gf");
 
 mapkey("gl", "#4Go to last used tab", function () {
-  RUNTIME("goToLastTab")
+  RUNTIME("goToLastTab");
 });
 
 mapkey("::", "#8Open commands", function () {
@@ -361,7 +361,7 @@ addSearchAlias(
 settings.theme = `
   :root {
     --font: "JetBrains Mono", Arial, sans-serif;
-    --font-size: 16;
+    --font-size: 16px;
     --font-weight: bold;
     --fg: #E5E9F0;
     --bg: #3B4252;
@@ -448,6 +448,9 @@ settings.theme = `
   .sk_theme .omnibar_visitcount {
     color: var(--accent-fg);
   }
+  .sk_theme #sk_omnibarSearchResult ul li .url {
+    font-size: calc(var(--font-size) - 2px);
+  }
   .sk_theme #sk_omnibarSearchResult ul li:nth-child(odd) {
     background: var(--border);
     padding: 5px;
@@ -458,6 +461,7 @@ settings.theme = `
   }
   .sk_theme #sk_omnibarSearchResult ul li.focused {
     background: var(--bg-dark);
+    border-left: 2px solid var(--orange);
     padding: 5px;
     padding-left: 15px;
   }
