@@ -17,6 +17,19 @@ __DOTS[ITALIC_OFF]=$'\e[23m'
 PLATFORM=$(uname -s)
 export PLATFORM="$PLATFORM"
 
+# ====================== from .zshenv ==========================================
+XDG_CONFIG_HOME="$HOME/.config"
+XDG_CACHE_HOME="$HOME/.cache"
+XDG_DATA_HOME="$HOME/.local/share"
+
+ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
+
+if [ ! -d "$ZSH_CACHE_DIR" ]; then
+	mkdir -p "$ZSH_CACHE_DIR"
+fi
+# / =================== from .zshenv ===========================================
+
 export XDG_CONFIG_HOME
 export XDG_CACHE_HOME
 export XDG_DATA_HOME
@@ -31,6 +44,33 @@ export PROJECTS="$CODE"
 export PROJECTS_DIR="$CODE"
 export PERSONAL_PROJECTS_DIR="${CODE}/personal"
 export GIT_REPO_DIR="$CODE"
+
+# ===================== from .zprofile =========================================
+case `uname` in
+  Darwin)
+    # -- intel mac:
+    [ -f "/usr/local/bin/brew" ] && eval "$(/usr/local/bin/brew shellenv)"
+    # -- M1 mac:
+    [ -f "/opt/homebrew/bin/brew" ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+  ;;
+  Linux)
+    [ -d "/home/linuxbrew/.linuxbrew" ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  ;;
+esac
+
+export BREW_PREFIX="$(brew --prefix)"
+export HOMEBREW_PREFIX="$BREW_PREFIX"
+
+path=(
+  "$BREW_PREFIX/opt/ruby/bin"
+  "$BREW_PREFIX/lib/ruby/gems/3.0.0/bin"
+  # NOTE: Add coreutils which make commands like ls run as they do on Linux rather than the BSD flavoured variant macos ships with
+  "$BREW_PREFIX/opt/coreutils/libexec/gnubin"
+  $path
+)
+
+export MANPATH="$BREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
+# / =================== from .zprofile =========================================
 
 # -- term
 export TERM=${TERM:=xterm-kitty}
