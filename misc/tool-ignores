@@ -19,7 +19,11 @@ public
 **/dotbot
 **/dotbot-plugins
 **/config/zsh/plugins
-**/config/hammerspoon/Spoons
+!**/config/hammerspoon/Spoons
+**/config/hammerspoon/Spoons/URLDispatcher.spoon
+**/config/hammerspoon/Spoons/EmmyLua.spoon
+**/config/hammerspoon/Spoons/SpoonInstall.spoon
+**/config/hammerspoon/Spoons/VimMode.spoon
 **/config/tmux/plugins
 **/config/karabiner/automatic_backups
 .DS_Store

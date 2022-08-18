@@ -29,17 +29,10 @@ Window.setShadows(false)
 ipc.cliUninstall()
 ipc.cliInstall()
 
--- [ SPOONS ] ------------------------------------------------------------------
-
-hs.loadSpoon("SpoonInstall")
-hs.loadSpoon("EmmyLua")
--- @trial URLDispatcher: https://github.com/ahmedelgabri/dotfiles/commit/2c5c9f96bdf5e800f9932b7ba025a9aabb235de3#diff-13ac59e8e0af48d2afe1d4904f4c8d8705f12886b70dda63a31044284748a96aR18-R37
-
 -- [ LOADERS ] -----------------------------------------------------------------
 
 --  NOTE: order matters
 L.load("config")
--- L.load("lib.vim")
 L.load("lib.bindings"):start()
 L.load("lib.menubar.ptt"):start()
 L.load("lib.menubar.spotify"):start()
@@ -55,6 +48,29 @@ hs.shutdownCallback = function()
   FNUtils.each(loaders, function(l) unload(l) end)
   _G.mega = nil
 end
+
+-- [ SPOONS ] ------------------------------------------------------------------
+
+hs.loadSpoon("SpoonInstall")
+Install = spoon.SpoonInstall
+
+Install:andUse("EmmyLua")
+-- @trial URLDispatcher: https://github.com/ahmedelgabri/dotfiles/commit/2c5c9f96bdf5e800f9932b7ba025a9aabb235de3#diff-13ac59e8e0af48d2afe1d4904f4c8d8705f12886b70dda63a31044284748a96aR18-R37
+Install:andUse("URLDispatcher", {
+  start = false,
+  config = {
+    default_handler = "com.brave.Browser",
+    url_patterns = {
+      -- { "https?://slack.com/openid/*", "com.google.Chrome" },
+      -- { "https?://github.com/[mM]iroapp.*", "com.google.Chrome" },
+      -- { "https?://[mM]iro.*", "com.google.Chrome" },
+      -- { "https?://dev.*.com", "com.google.Chrome" },
+      -- { "https?://localhost:*", "com.google.Chrome" },
+      -- { "https?://.*devrtb.com", "com.google.Chrome" },
+      -- { "https?://docs.google.com", "com.google.Chrome" },
+    },
+  },
+})
 
 hs.notify.new({ title = "Hammerspoon", subTitle = "Configuration successfully loaded" }):send()
 

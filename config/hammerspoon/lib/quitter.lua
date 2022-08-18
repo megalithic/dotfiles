@@ -8,68 +8,86 @@ obj.__index = obj
 obj.name = "quitter"
 obj.debug = true
 obj.mode = "double" -- or "long"
+obj.longDelay = 1
 
 local modal = nil
-local longPressKey = nil
-local pressDelay = 0.1
+local longTimer = nil
+local longHotkey = nil
 local afterDelay = 1
-local activeModalApp = nil
 
-local appExited = false
+local function guarded()
+  local app = hs.application.frontmostApplication()
+  local appConfig = apps[app:bundleID()]
+  local enabled = appConfig and appConfig.quitter ~= nil and appConfig.quitter
 
-local dbg = function(...)
-  if obj.debug then return _G.dbg(fmt(...), false) end
+  if enabled then note(fmt(":: quitter activated for %s", app:bundleID())) end
+
+  return enabled
+end
+
+local function maybe_force_quit()
+  if not guarded() then
+    obj.quit()
+    return
+  end
 end
 
 local function teardown()
   if modal then modal:exit() end
-
-  if longPressKey then longPressKey:delete() end
-
-  activeModalApp = nil
+  if longTimer then longTimer:stop() end
 end
 
 function obj.pressedFn()
-  alert.show("Hold ⌘Q")
-  appExited = false
+  maybe_force_quit()
 
-  hs.timer.usleep(1000000 * pressDelay)
+  if obj.mode == "double" then obj.quit() end
+  if obj.mode == "long" then longTimer:start() end
+end
+
+function obj:releasedFn()
+  maybe_force_quit()
+
+  if longTimer:running() then
+    longTimer:stop()
+    local app = hs.application.frontmostApplication()
+    hs.alert.show("Hold ⌘Q to quit " .. app:name())
+  end
 end
 
 function obj.quit()
-  if obj.mode == "long" and appExited then return end
   local app = hs.application.frontmostApplication()
-
   app:kill()
-  appExited = true
   hs.alert.closeAll()
-
-  if obj.mode == "double" then obj:stop() end
+  obj:stop()
 end
 
 function obj:start(opts)
   opts = opts or {}
   obj.mode = opts["mode"]
+
   if obj.mode == "double" then
     modal = hs.hotkey.modal.new(mods.Casc, "q", "Press Cmd+Q again to quit")
 
     function modal:entered()
-      local app = hs.application.frontmostApplication()
-      activeModalApp = app:bundleID()
-      local enabled = apps[app:bundleID()] and apps[app:bundleID()].quitGuard
-
-      if not enabled then
-        obj.quit()
-        obj:stop()
-      end
-
-      hs.timer.doAfter(afterDelay, function() obj:stop({ id = activeModalApp }) end)
+      maybe_force_quit()
+      -- kill our modal after a time of no follow-up keypresses
+      hs.timer.doAfter(afterDelay, function() obj:stop() end)
     end
 
-    modal:bind(mods.Casc, "q", obj.quit)
-    modal:bind("", "escape", function() obj:stop({ id = activeModalApp }) end)
+    modal:bind(mods.Casc, "q", obj.pressedFn)
+    modal:bind("", "escape", function() obj:stop() end)
   elseif obj.mode == "long" then
-    hs.hotkey.bind(mods.Casc, "q", obj.pressedFn, nil, obj.quit)
+    if longTimer then
+      longTimer:start()
+    else
+      longTimer = hs.timer.delayed.new(obj.longDelay, obj.quit)
+    end
+
+    if longHotkey then
+      longHotkey:enable()
+    else
+      longHotkey = hs.hotkey.bind(mods.Casc, "q", obj.pressedFn, obj.releasedFn)
+    end
   end
 
   note(fmt("[START] %s", obj.name))

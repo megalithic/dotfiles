@@ -68,7 +68,7 @@ function obj.applyLayout(appConfig)
         hs.timer.waitUntil(function() return getWindow(winTitlePattern, appConfig.bundleID) ~= nil end, function()
           Snap.snapper(getWindow(winTitlePattern, appConfig.bundleID), positionStr, targetDisplay(screenNum))
           obj.layoutComplete = true
-        end, 0.1)
+        end, 0.5)
       end)
     elseif obj.mode == "layout" then
       local layouts = {}
@@ -91,7 +91,7 @@ function obj.applyLayout(appConfig)
       hs.timer.waitUntil(function() return Application.get(appConfig.bundleID) ~= nil end, function()
         hs.layout.apply(layouts, string.match)
         obj.layoutComplete = true
-      end, 0.1)
+      end, 0.5)
     end
   end
 end
@@ -121,7 +121,7 @@ function obj.applyContext(bundleID, appObj, event, fromWindowFilter)
             appModal = context,
           })
           success(fmt(":: started %s context (%s)", bundleID, U.eventName(event)))
-        end, 0.1)
+        end, 0.5)
       elseif event == Application.watcher.deactivated or event == Application.watcher.terminated then
         context:stop({ event = event })
         info(fmt(":: stopped %s context (%s)", bundleID, U.eventName(event)))
