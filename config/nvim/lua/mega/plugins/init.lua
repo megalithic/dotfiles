@@ -21,7 +21,6 @@ local PKGS = {
   -- (UI/appearance/visuals) --
   "rktjmp/lush.nvim",
   "NvChad/nvim-colorizer.lua",
-  -- "brenoprata10/nvim-highlight-colors",
   "dm1try/golden_size",
   "kyazdani42/nvim-web-devicons",
   "lukas-reineke/virt-column.nvim",
@@ -37,7 +36,6 @@ local PKGS = {
   "neovim/nvim-lspconfig",
   "williamboman/mason.nvim",
   "williamboman/mason-lspconfig.nvim",
-  -- "WhoIsSethDaniel/mason-tool-installer.nvim",
   "nvim-lua/plenary.nvim",
   "nvim-lua/popup.nvim",
   { "hrsh7th/nvim-cmp", branch = "main" },
@@ -121,9 +119,6 @@ local PKGS = {
   "tpope/vim-projectionist",
   -- @trial "tjdevries/edit_alternate.vim", -- REF: https://github.com/tjdevries/config_manager/blob/master/xdg_config/nvim/lua/tj/plugins.lua#L467-L480
   "vim-test/vim-test",
-  -- "rcarriga/neotest",
-  -- "rcarriga/neotest-plenary",
-  -- "rcarriga/neotest-vim-test",
   "mfussenegger/nvim-dap", -- REF: https://github.com/dbernheisel/dotfiles/blob/master/.config/nvim/lua/dbern/test.lua
   "rcarriga/nvim-dap-ui",
   "theHamsta/nvim-dap-virtual-text",

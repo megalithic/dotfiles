@@ -286,6 +286,11 @@ end
 
 -- [convenience mappings] ------------------------------------------------------
 
+nnoremap("<C-h>", "<cmd>wincmd h<CR>")
+nnoremap("<C-j>", "<cmd>wincmd j<CR>")
+nnoremap("<C-k>", "<cmd>wincmd k<CR>")
+nnoremap("<C-l>", "<cmd>wincmd l<CR>")
+
 nmap("gb", string.format("<cmd>ls<CR>:b<space>%s", mega.replace_termcodes("<tab>")), "current buffers")
 nmap("gs", "i<CR><ESC>^mwgk:silent! s/\v +$//<CR>:noh<CR>`w", "split line")
 nmap("gj", "mzJ`z", "join lines")
