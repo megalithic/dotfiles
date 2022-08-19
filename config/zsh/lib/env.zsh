@@ -118,6 +118,9 @@ export LC_ALL="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export TZ="/usr/share/zoneinfo/US/Central"
 
+# -- kitty
+export KITTYMUX_STATE_DIR=$HOME/.local/state
+
 # -- qmk
 export QMK_HOME="$PROJECTS_DIR/qmk_firmware"
 

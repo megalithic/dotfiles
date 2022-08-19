@@ -4,12 +4,25 @@ from kittens.tui.handler import result_handler
 from kitty.key_encoding import KeyEvent, parse_shortcut
 
 
-def is_window_vim(window, vim_id):
+def is_cmdline_vim(window, vim_id):
     fp = window.child.foreground_processes
+    print("CMDLINE:", fp)
     return any(
         re.search(vim_id, p["cmdline"][0] if len(p["cmdline"]) else "", re.I)
         for p in fp
     )
+
+
+def is_title_vim(window, vim_id):
+    title = window.child_title
+    print("TITLE:", title)
+    return re.search(vim_id, title, re.I)
+
+
+def is_window_vim(window, vim_id):
+    is_cmdline = is_cmdline_vim(window, vim_id)
+    is_title = is_title_vim(window, vim_id)
+    return is_cmdline or is_title
 
 
 def encode_key_mapping(window, key_mapping):

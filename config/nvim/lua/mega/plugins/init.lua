@@ -134,7 +134,7 @@ local PKGS = {
   { "zenbro/mirror.vim", opt = true },
   -- "mbbill/undotree",
   -- "danymat/neogen",
-  "smjonas/live-command.nvim",
+  -- "smjonas/live-command.nvim",
   ------------------------------------------------------------------------------
   -- (REST) --
   "nacro90/numb.nvim",
@@ -352,11 +352,11 @@ function M.config()
   )
 
   -- REF: https://github.com/smjonas/live-command.nvim#gear-usage-and-customization
-  conf("live_command", {
-    commands = {
-      Norm = { cmd = "norm" },
-    },
-  })
+  -- conf("live_command", {
+  --   commands = {
+  --     Norm = { cmd = "norm" },
+  --   },
+  -- })
 
   conf("hop", function()
     local hop = require("hop")

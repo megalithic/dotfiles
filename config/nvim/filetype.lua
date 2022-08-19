@@ -4,6 +4,7 @@ vim.filetype.add({
   filename = {
     [".gitignore"] = "conf",
     ["kitty.conf"] = "kitty",
+    ["default.session"] = "kitty",
     [".env"] = "sh",
     ["Deskfile"] = "sh",
     ["tool-versions"] = "conf",
