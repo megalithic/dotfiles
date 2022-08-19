@@ -1,6 +1,7 @@
 local Settings = require("hs.settings")
 local obj = {}
 local _appObj = nil
+local defaultKittyFont = 15.0
 
 obj.__index = obj
 obj.name = "context.loom"
@@ -57,9 +58,7 @@ function obj:start(opts)
         hs.spotify.pause()
         L.req("lib.menubar.ptt").setState("push-to-mute")
 
-        -- increase font-size of kitty instance
-        -- local font_size_factor = 8.0
-        -- require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize) + font_size_factor)
+        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + 8.0), true)
       end)
     end
   end
@@ -83,8 +82,7 @@ function obj:stop(opts)
     local keycastr = hs.application.get("KeyCastr")
     if keycastr ~= nil then keycastr:kill() end
 
-    -- return to default kitty fontSize
-    -- require("controlplane.dock").set_kitty_config(tonumber(Config.docking.docked.fontSize))
+    hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
   end
 
   return self

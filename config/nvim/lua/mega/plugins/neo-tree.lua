@@ -30,7 +30,12 @@ return function()
       },
       {
         event = "neo_tree_buffer_leave",
-        handler = function() vim.cmd("highlight! Cursor blend=0") end,
+        handler = function()
+          require("golden_size").on_win_enter()
+          require("virt-column").refresh()
+          vim.cmd([[wincmd =]])
+          vim.cmd("highlight! Cursor blend=0")
+        end,
       },
     },
     filesystem = {
@@ -70,6 +75,8 @@ return function()
       width = 80,
       mappings = {
         o = "toggle_node",
+        ["/"] = "noop",
+        ["g/"] = "fuzzy_finder",
         -- ["<c-o>"] = "open",
         -- ["<c-s>"] = "open_split",
         -- ["<CR>"] = "open_vsplit",

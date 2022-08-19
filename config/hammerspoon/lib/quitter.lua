@@ -1,3 +1,5 @@
+-- @REF https://github.com/Hammerspoon/Spoons/blob/master/Source/HoldToQuit.spoon/init.lua
+
 local alert = require("utils.alert")
 local Settings = require("hs.settings")
 local mods = Settings.get(CONFIG_KEY).keys.mods

@@ -219,6 +219,7 @@ alias eb="nvim $DOTS/brew/Brewfile"
 alias essh="nvim $PRIVATES/home/ssh/config"
 
 alias ek="nvim $DOTS/config/kitty/kitty.conf"
+alias eks="nvim $DOTS/config/kitty/sessions/default.session"
 
 alias eq="nvim $DOTS/home/qutebrowser/config.py"
 
@@ -227,6 +228,11 @@ alias wezup="brew upgrade --cask wezterm-nightly --no-quarantine --greedy-latest
 
 alias ezmk="nvim $HOME/code/zmk-config/config/leeloo.keymap"
 alias eqmk="nvim $HOME/code/megalithic_qmk/keyboards/atreus62/keymaps/megalithic/keymap.c"
+
+# kitty session connections:
+alias kapp="et -c 'cd ~/code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
+alias katlas="et -c 'cd ~/code/atlas && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
+alias kpages="et -c 'cd ~/code/pages && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
 
 # see ~/.dotfiles/bin/et
 # alias et="nvim $DOTS/config/tmux/tmux.conf"

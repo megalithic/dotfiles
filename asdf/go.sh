@@ -34,6 +34,8 @@ do_install() {
     # -- install lemonade from copy/paste over tcp
     GO111MODULE=on go get -u github.com/lemonade-command/lemonade@HEAD
 
+    GO111MODULE=on go get -u github.com/guysherman/kittymux/go
+
     # TODO: still need to install zk from source?
     # zk_build_path="$HOME/code/oss/zk"
     # _do_zk_install() {

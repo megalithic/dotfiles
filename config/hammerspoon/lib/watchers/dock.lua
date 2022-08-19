@@ -56,7 +56,6 @@ local function dockHandler(watcher, path, key, oldValue, isConnected)
       "/usr/local/bin/SwitchAudioSource",
       function() end, -- Fake callback
       function(task, stdOut, stdErr)
-        -- dbg(fmt(":: setInput -> task: %s, stdOut: %s, stdErr: %s", task, stdOut, stdErr))
         local continue = stdOut == string.format([[input audio device set to "%s"]], state)
         return continue
       end,

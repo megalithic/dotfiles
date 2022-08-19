@@ -78,6 +78,7 @@ local apps = {
     bundleID = "net.kovidgoyal.kitty",
     name = "kitty",
     key = "k",
+    quitter = true,
     localBindings = {},
     rules = {
       { "", 1, "maximized" },
@@ -303,14 +304,12 @@ local dock = {
     input = "Samson GoMic", -- microphone source
     -- https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/headphones.lua
     output = "megapods", -- speaker source
-    fontSize = 15.0,
   },
   ["undocked"] = {
     wifi = "on",
     profile = "internal",
     input = "MacBook Pro Microphone",
     output = "MacBook Pro Speakers",
-    fontSize = 17.0,
   },
 }
 

@@ -9,6 +9,7 @@ params="${*:-}"
 
 # no running session called $session_name, so let's create it
 if ! tmux has-session -t "$session_name" 2>/dev/null; then
+  # create our new session, but immediately detached
   tmux new-session -d -s "$session_name"
 fi
 

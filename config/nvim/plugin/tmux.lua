@@ -1,7 +1,10 @@
 -- NOTE:
 -- This plugin is meant to work with the tmux-navigate tmux navigation plugin.
 --
-function tmux_navigate_directions()
+
+if not vim.env.TMUX then return end
+
+function Tmux_navigate_directions()
   local pos = vim.api.nvim_win_get_position(0)
   local row = pos[1]
   local col = pos[2]
@@ -18,7 +21,7 @@ function tmux_navigate_directions()
 end
 
 vim.opt.titlestring =
-  [[%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), ":t")} #%{v:lua.tmux_navigate_directions()}]]
+  [[%{substitute($VIM, '.*[/\\]', '', '')} %{fnamemodify(getcwd(), ":t")} #%{v:lua.Tmux_navigate_directions()}]]
 vim.opt.title = true
 
 vim.cmd([[

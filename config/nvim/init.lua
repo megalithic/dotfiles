@@ -16,3 +16,4 @@ end
 R("mega.globals")
 R("mega.options")
 R("mega.plugins").config()
+-- vim.schedule(function() R("mega.plugins").config() end)

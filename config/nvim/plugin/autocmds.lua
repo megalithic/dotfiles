@@ -154,11 +154,11 @@ end
 augroup("Kitty", {
   {
     event = { "BufWritePost" },
-    pattern = { "*/kitty/*.conf" },
+    pattern = { "*/kitty/*.conf", "*/kitty/*.py" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
       -- vim.notify(fmt(" sourced %s", vim.fn.expand("%")))
-      vcmd(":silent !kill -SIGUSR1 $(pgrep kitty)")
+      vcmd(":silent !kill -SIGUSR1 $(grep kitty =(ps auxwww))")
     end,
   },
 })

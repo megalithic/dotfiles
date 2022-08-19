@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+session_name="weechat"
+
+if ! tmux has-session -t "$session_name" 2>/dev/null; then
+  tmux -2 new-session -d -s "$session_name"
+else
+  tmux -2 attach-session -t "$session_name"
+fi
+
+tmux -2 send-keys -t "$session_name" "tmux set status off" C-m
+tmux -2 send-keys -t "$session_name" weechat C-m
+
+tmux -2 set status off
+tmux -2 select-window -t "$session_name:1"
+tmux -2 select-pane -t "$session_name:1.1"
+
+tmux -2 attach-session -t "$session_name"

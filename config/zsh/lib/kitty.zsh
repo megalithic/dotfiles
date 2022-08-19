@@ -11,5 +11,5 @@ if [[ ! -z "${KITTY_WINDOW_ID}" ]]; then
   kitty + complete setup zsh | source /dev/stdin
 fi
 
-export KITTY_LISTEN_ON="unix:/tmp/kitty"
+export KITTY_LISTEN_ON="unix:/tmp/mykitty"
 

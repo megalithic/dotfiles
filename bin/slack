@@ -255,7 +255,8 @@ function __request() {
     }
   else
     __log 'Executing request command' "warn"
-    zsh -ic "${request_cmd}" | $spinner || {
+    # /usr/local/bin/kitty @ --to unix:/tmp/mykitty launch --type=background /usr/local/bin/zsh -ic "${request_cmd}" | $spinner || {
+    /usr/local/bin/kitty @ --to unix:/tmp/mykitty launch --type=background /usr/local/bin/zsh -ic "${request_cmd} &!" || {
       __log "OOPS! Failed to make slack request" "error"
       exit 1
     }

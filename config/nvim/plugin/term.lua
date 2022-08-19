@@ -20,13 +20,17 @@ local function set_keymaps(bufnr, winnr)
   tmap("<esc>", [[<C-\><C-n>]], opts)
 
   -- move around splits
-  -- tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
-  -- tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
-  -- tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
-  -- tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+  imap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+  imap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+  imap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+  imap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
+  tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
+  tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
+  tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
+  tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
 
-  tmap("<C-h>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
-  tmap("<C-k>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
+  -- tmap("<C-h>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
+  -- tmap("<C-k>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
 end
 
 --- @class TermOpts
