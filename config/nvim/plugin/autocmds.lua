@@ -12,17 +12,17 @@ local augroup = mega.augroup
 local fmt = string.format
 local contains = vim.tbl_contains
 
-augroup("Startup", {
-  {
-    event = { "VimEnter" },
-    pattern = { "*" },
-    once = true,
-    command = function()
-      -- our basic dashboard/startify/alpha:
-      require("mega.start").start()
-    end,
-  },
-})
+-- augroup("Startup", {
+--   {
+--     event = { "VimEnter" },
+--     pattern = { "*" },
+--     once = true,
+--     command = function()
+--       -- our basic dashboard/startify/alpha:
+--       require("mega.start").start()
+--     end,
+--   },
+-- })
 
 augroup("CheckOutsideTime", {
   {
