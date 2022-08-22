@@ -794,8 +794,8 @@ return lush(function()
 
     TelescopePreviewTitle({ fg = bg0, bg = green, gui = "italic" }),
     -- darkens the whole preview panel + my faux-no-border
-    TelescopePreviewBorder({ bg = PanelBackground.bg }),
-    TelescopePreviewNormal({ bg = PanelBackground.bg }),
+    TelescopePreviewBorder({ bg = PanelBackground.bg, fg = "NONE" }),
+    TelescopePreviewNormal({ bg = PanelBackground.bg, fg = "NONE" }),
 
     TelescopePrompt({ bg = bg2.darken(10) }),
     TelescopePromptPrefix({ Statement, bg = bg2.darken(10) }),

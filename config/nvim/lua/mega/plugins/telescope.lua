@@ -35,8 +35,19 @@ return function()
 
   local function ivy(opts)
     return themes.get_ivy(vim.tbl_deep_extend("keep", opts or {}, {
+      border = false,
+      -- prompt position top:
+      -- borderchars = {
+      --   prompt = { "─", " ", " ", " ", "─", "─", " ", " " },
+      --   results = { " " },
+      --   preview = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+      -- },
+      -- prompt position bottom:
       borderchars = {
-        preview = { "▔", "▕", "▁", "▏", "🭽", "🭾", "🭿", "🭼" },
+        -- preview = { "▔", "▕", "▁", "▏", "🭽", "🭾", "🭿", "🭼" },
+        prompt = { " ", " ", "─", " ", " ", " ", "─", "─" },
+        results = { "─", " ", " ", " ", "─", "─", " ", " " },
+        preview = { "─", " ", "─", "│", "┬", "─", "─", "╰" },
       },
     }))
   end
@@ -180,11 +191,11 @@ return function()
       oldfiles = dropdown({
         on_input_filter_cb = file_extension_filter,
       }),
-      live_grep = {
+      live_grep = ivy({
         max_results = 500,
         file_ignore_patterns = { ".git/", "%.lock" },
         on_input_filter_cb = file_extension_filter,
-      },
+      }),
       current_buffer_fuzzy_find = dropdown({
         previewer = false,
         shorten_path = false,
@@ -265,7 +276,7 @@ return function()
     -- if not pcall(builtin.git_files, opts) then
     --   builtin.find_files(opts)
     -- end
-    builtin.find_files(opts)
+    builtin.find_files(ivy(opts))
   end
 
   local function dotfiles()

@@ -148,6 +148,8 @@ function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
+  obj.applyContext(bundleID, appObj, event, fromWindowFilter)
+
   if event == Application.watcher.launched and bundleID ~= nil then
     note(fmt("[LAUNCHED] %s", bundleID))
     local appConfig = obj.apps[bundleID]
@@ -156,7 +158,6 @@ local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
     note(fmt("[TERMINATED] %s", bundleID))
   end
 
-  obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 
