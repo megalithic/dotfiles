@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+sessions_path="$HOME/.dotfiles/config/kitty/sessions"
+# find "$sessions_path" -maxdepth 1 -mindepth 1 -type d
+
+selected_session=$(fd session "$sessions_path" |
+  sed "s~$sessions_path/~~" |
+  fzf-tmux -p --cycle --layout=reverse --preview-window="hidden" --prompt 'session> ' |
+  sed "s~^~$sessions_path/~")
+
+if [[ -n $selected_session ]]; then
+  tab_name=$(echo "$selected_session" | xargs basename | sed 's/\.[^.]*$//')
+  # echo "$tab_name found"
+  kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
+fi
+
+# function kt -d "kitty tab from ~/Dev/*"
+#   set -l path $HOME/Dev
+#   set -l selected_dir (
+#     find $path/* -maxdepth 1 -mindepth 1 -type d |
+#       sed "s~$path/~~" |
+#       fzf-tmux -p --cycle --layout=reverse --prompt 't> ' |
+#       sed "s~^~$path/~"
+#   )
+
+#   if test -n "$selected_dir"
+#     set -l tab_name (echo $selected_dir | sed "s~$path/~~")
+#     kitty @ focus-tab --match title:$tab_name 2>/dev/null || kitty @ new-window --new-tab --tab-title $tab_name --cwd $selected_dir
+#   end
+# end

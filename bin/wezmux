@@ -1,10 +1,10 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
 
-set -m
+set -em #uo pipefail
 
-self=$(stat -f $0)
-cmd="$1"
-target="$2"
+self=$(stat -f "$0")
+cmd="${1:-}"
+target="${2:-}"
 base_path="$HOME/.local/share/wezterm/sessions"
 
 if ! [ -d "$base_path" ]; then
@@ -14,7 +14,7 @@ fi
 if [ "$cmd" == "_spawn" ]; then
   cd /
   mkdir -p "$target"
-  cd $target
+  cd "$target"
 
   echo "$$" >"$target/pid"
   exec >"$target/daemon.log"
@@ -24,7 +24,7 @@ if [ "$cmd" == "_spawn" ]; then
 
   function cleanup() {
     echo "Exiting..." >>"$target/daemon.log"
-    kill -9 $child_pid || echo "Subprocess not found."
+    kill -9 "$child_pid" || echo "Subprocess not found."
     if [ -f "$target/pid" ]; then rm "$target/pid"; fi
     if [ -S "$target/sock" ]; then rm -rf "$target/sock"; fi
     exit
@@ -35,7 +35,7 @@ if [ "$cmd" == "_spawn" ]; then
   trap cleanup SIGTERM
   trap cleanup CHLD
 
-  env -i HOME=$HOME PATH=$PATH \
+  env -i HOME="$HOME" PATH="$PATH" \
     $(which wezterm-mux-server) --cwd "$HOME" --config "unix_domains={{name=\"$name\",socket_path=\"$target/sock\",connect_automatically=true}}" \
     &>"$target/daemon.log" &
   child_pid="$!"

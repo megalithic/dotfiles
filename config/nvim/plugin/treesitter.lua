@@ -146,7 +146,7 @@ mega.conf("nvim-ts-autotag", {
 require("tsht").config.hint_keys = { "h", "j", "f", "d", "n", "v", "s", "l", "a" }
 
 mega.conf("treesitter-context", {
-  enable = true,
+  enable = false,
   multiline_threshold = 4,
   separator = { "▁", "TreesitterContextBorder" }, -- ─▁
   mode = "topline",

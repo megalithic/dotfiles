@@ -7,8 +7,11 @@
 --- https://github.com/wez/wezterm/issues/1978
 --- https://github.com/V1RE/dotfiles/blob/main/dot_config/wezterm/wezterm.lua
 --- https://github.com/Omochice/dotfiles/blob/main/config/wezterm/wezterm.lua
+--- https://github.com/yutkat/dotfiles/blob/main/.config/wezterm/wezterm.lua
 
 local wezterm = require("wezterm")
+local act = wezterm.action
+local mux = wezterm.mux
 local os = require("os")
 local homedir = os.getenv("HOME")
 local fmt = string.format
@@ -45,21 +48,15 @@ local palette = {
   bright_white = "#cccccc",
 }
 
-local function log(msg)
-  wezterm.log_info(msg)
-end
+local function log(msg) wezterm.log_info(msg) end
 
 -- Equivalent to POSIX basename(3)
 -- Given "/foo/bar" returns "bar"
 -- Given "c:\\foo\\bar" returns "bar"
-local function basename(s)
-  return string.gsub(s, "(.*[/\\])(.*)", "%2")
-end
+local function basename(s) return string.gsub(s, "(.*[/\\])(.*)", "%2") end
 
 local function notifier(opts)
-  if opts.window == nil then
-    return
-  end
+  if opts.window == nil then return end
 
   opts = opts or {}
   local title = opts.title or "wezterm"
@@ -80,82 +77,92 @@ local function format_tab_title(tab, tabs, panes, config, hover, max_width)
   local title = dir
   local icon = ""
 
-  if dir == nil or dir == "" then
-    title = basename(pane.foreground_process_name)
-  end
+  if dir == nil or dir == "" then title = basename(pane.foreground_process_name) end
 
-  if dir == basename(wezterm.home_dir) then
-    title = "~"
-  end
-  local SUP_IDX = {
-    "¹",
-    "²",
-    "³",
-    "⁴",
-    "⁵",
-    "⁶",
-    "⁷",
-    "⁸",
-    "⁹",
-    "¹⁰",
-    "¹¹",
-    "¹²",
-    "¹³",
-    "¹⁴",
-    "¹⁵",
-    "¹⁶",
-    "¹⁷",
-    "¹⁸",
-    "¹⁹",
-    "²⁰",
-  }
+  if dir == basename(wezterm.home_dir) then title = "~" end
+  -- local SUP_IDX = {
+  --   "¹",
+  --   "²",
+  --   "³",
+  --   "⁴",
+  --   "⁵",
+  --   "⁶",
+  --   "⁷",
+  --   "⁸",
+  --   "⁹",
+  --   "¹⁰",
+  --   "¹¹",
+  --   "¹²",
+  --   "¹³",
+  --   "¹⁴",
+  --   "¹⁵",
+  --   "¹⁶",
+  --   "¹⁷",
+  --   "¹⁸",
+  --   "¹⁹",
+  --   "²⁰",
+  -- }
 
-  local NUM_IDX_ACTIVE = {
-    "0xf8a3",
-    "0xf8a6",
-    "0xf8a9",
-    "0xf8ac",
-    "0xf8af",
-    "0xf8b2",
-    "0xf8b5",
-    "0xf8b8",
-    "0xf8bb",
-  }
-  local NUM_IDX_INACTIVE = {
-    "0xf8a5",
-    "0xf8a8",
-    "0xf8ab",
-    "0xf8ae",
-    "0xf8b1",
-    "0xf8b4",
-    "0xf8b7",
-    "0xf8ba",
-    "0xf8bd",
-  }
+  -- local NUM_IDX_ACTIVE = {
+  --   "0xf8a3",
+  --   "0xf8a6",
+  --   "0xf8a9",
+  --   "0xf8ac",
+  --   "0xf8af",
+  --   "0xf8b2",
+  --   "0xf8b5",
+  --   "0xf8b8",
+  --   "0xf8bb",
+  -- }
+  -- local NUM_IDX_INACTIVE = {
+  --   "0xf8a5",
+  --   "0xf8a8",
+  --   "0xf8ab",
+  --   "0xf8ae",
+  --   "0xf8b1",
+  --   "0xf8b4",
+  --   "0xf8b7",
+  --   "0xf8ba",
+  --   "0xf8bd",
+  -- }
   local tab_prefix = tab.tab_index == 0 and "  " or " "
   local tab_index = tab.tab_index + 1
 
   if tab.is_active then
-    icon = tab.active_pane.is_zoomed and " " or "綠"
-    tab_index = utf8.char(NUM_IDX_ACTIVE[tab.tab_index + 1])
+    icon = tab.active_pane.is_zoomed and "" or ""
+    -- tab_index = utf8.char(NUM_IDX_ACTIVE[tab.tab_index + 1])
 
     -- utf8.char(0xf490)
     return {
       { Text = tab_prefix },
       -- { Text = fmt("%s%s:%s ", icon, tab_index, title) },
-      { Text = fmt("%s %s ", tab_index, title) },
-      { Text = "" },
-    }
-  else
-    icon = tab.active_pane.is_zoomed and " " or "○"
-    tab_index = utf8.char(NUM_IDX_INACTIVE[tab.tab_index + 1])
-    return {
-      { Text = tab_prefix },
-      { Text = fmt("%s %s ", tab_index, title) },
-      -- { Text = fmt("%s %s:%s ", icon, tab_index, title) },
+      -- { Text = fmt("%s:%s ", tab.tab_index + 1, title) },
+      { Text = fmt("%s %s:%s ", icon, tab_index, title) },
       { Text = "" },
     }
   end
+
+  -- local has_unseen_output = false
+  -- for _, pane in ipairs(tab.panes) do
+  --   if pane.has_unseen_output then
+  --     has_unseen_output = true
+  --     break
+  --   end
+  -- end
+  -- if has_unseen_output then
+  --   return {
+  --     { Background = { Color = "Orange" } },
+  --     { Text = " " .. tab.active_pane.title .. " " },
+  --   }
+  -- end
+
+  icon = tab.active_pane.is_zoomed and "" or ""
+  return {
+    { Text = tab_prefix },
+    -- { Text = fmt("%s %s ", tab_index, title) },
+    { Text = fmt("%s %s:%s ", icon, tab_index, title) },
+    { Text = "" },
+  }
 end
 
 local function update_right_status(window, pane)
@@ -176,6 +183,7 @@ local function update_right_status(window, pane)
       session_name = window:active_workspace()
     end
   end
+  session_name = window:active_workspace()
   table.insert(
     cells,
     wezterm.format({
@@ -201,9 +209,7 @@ local function update_right_status(window, pane)
   -- Translate a cell into elements
   function push(text, is_last)
     table.insert(formatted_cells, { Text = "" .. text .. "" })
-    if not is_last then
-      table.insert(formatted_cells, { Text = " ⋮ " })
-    end
+    if not is_last then table.insert(formatted_cells, { Text = " ⋮ " }) end
     formatted_cells_count = formatted_cells_count + 1
   end
 
@@ -259,6 +265,47 @@ wezterm.on("window-config-reloaded", window_config_reloaded)
 wezterm.on("format-tab-title", format_tab_title)
 wezterm.on("update-right-status", update_right_status)
 wezterm.on("trigger-nvim-with-scrollback", trigger_nvim_with_scrollback)
+
+-- This produces a window split horizontally into three equal parts
+wezterm.on("gui-startup", function(cmd)
+  local args = {}
+  if cmd then args = cmd.args end
+
+  -- Set a workspace for coding on a current project
+  -- Top pane is for the editor, bottom pane is for the build tool
+  local project_dir = wezterm.home_dir .. "/.dotfiles"
+  local tab, pane, window = mux.spawn_window({
+    workspace = "mega",
+    cwd = project_dir,
+    args = args,
+  })
+
+  local editor_pane = pane:split({
+    direction = "Top",
+    size = 0.6,
+    cwd = project_dir,
+  })
+  -- may as well kick off a build in that pane
+  pane:send_text("echo \"hi in coding\"\n")
+
+  -- A workspace for interacting with a local machine that
+  -- runs some docker containners for home automation
+  -- local tab, pane, window = mux.spawn_window({
+  --   workspace = "automation",
+  --   args = { "ssh", "vault" },
+  -- })
+
+  -- We want to startup in the coding workspace
+  mux.set_active_workspace("coding")
+end)
+
+-- this is called by the mux server when it starts up.
+-- It makes a window split top/bottom
+wezterm.on("mux-startup", function()
+  wezterm.log_info("doing mux startup")
+  local tab, pane, window = mux.spawn_window({})
+  mux.split_pane(pane, { direction = "Top" })
+end)
 
 --- [ COLORS ] -----------------------------------------------------------------
 -- foreground = "#d3c6aa"
@@ -338,8 +385,11 @@ local function font_with_fallback(font, params)
   local names = {
     font,
     { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = true },
-    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false },
-    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true },
+    { family = "JetBrainsMono Nerd Font Mono", italic = true },
+    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold" },
+    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false, weight = "ExtraBold" },
+    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true, weight = "ExtraBold" },
+    "Dank Mono",
     "Symbols Nerd Font Mono",
     "codicon",
   }
@@ -347,9 +397,11 @@ local function font_with_fallback(font, params)
 end
 
 local fonts = {
-  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Medium" }, {}),
-  allow_square_glyphs_to_overflow_width = "WhenFollowedBySpace", -- "Always"
-  custom_block_glyphs = false,
+  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Bold" }, {}),
+  -- font = wezterm.font_with_fallback({ "Dank Mono", "codicon", "JetBrainsMono Nerd Font Mono" }),
+
+  allow_square_glyphs_to_overflow_width = "Always", -- alts: WhenFollowedBySpace, Always
+  custom_block_glyphs = true,
   freetype_load_target = "Light",
   freetype_render_target = "HorizontalLcd",
   font_size = 15.0,
@@ -391,7 +443,21 @@ local mappings = {
 
     -- tabs
     { key = "t", mods = "SUPER", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
-    { key = "w", mods = "CTRL", action = wezterm.action({ CloseCurrentTab = { confirm = false } }) },
+    { key = "w", mods = "CTRL", action = wezterm.action({ CloseCurrentTab = { confirm = true } }) },
+    { key = "x", mods = "LEADER|CTRL", action = act({ CloseCurrentPane = { confirm = true } }) },
+
+    { key = "1", mods = "LEADER|CTRL", action = act({ ActivateTab = 0 }) },
+    { key = "2", mods = "LEADER|CTRL", action = act({ ActivateTab = 1 }) },
+    { key = "3", mods = "LEADER|CTRL", action = act({ ActivateTab = 2 }) },
+    { key = "4", mods = "LEADER|CTRL", action = act({ ActivateTab = 3 }) },
+    { key = "5", mods = "LEADER|CTRL", action = act({ ActivateTab = 4 }) },
+    { key = "6", mods = "LEADER|CTRL", action = act({ ActivateTab = 5 }) },
+    { key = "7", mods = "LEADER|CTRL", action = act({ ActivateTab = 6 }) },
+    { key = "8", mods = "LEADER|CTRL", action = act({ ActivateTab = 7 }) },
+    { key = "9", mods = "LEADER|CTRL", action = act({ ActivateTab = 8 }) },
+
+    { key = "h", mods = "LEADER", action = act.ActivateTabRelative(-1) },
+    { key = "l", mods = "LEADER", action = act.ActivateTabRelative(1) },
 
     -- panes
     {
@@ -400,6 +466,31 @@ local mappings = {
       action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }),
     },
     { key = "h", mods = "LEADER", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
+    {
+      key = "z",
+      mods = "LEADER|CTRL",
+      action = wezterm.action.TogglePaneZoomState,
+    },
+    {
+      key = "h",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Left"),
+    },
+    {
+      key = "l",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Right"),
+    },
+    {
+      key = "k",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Up"),
+    },
+    {
+      key = "j",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Down"),
+    },
 
     -- launchers
     {
@@ -411,14 +502,36 @@ local mappings = {
         },
       }),
     },
-    { key = "b", mods = "LEADER", action = wezterm.action({ EmitEvent = "trigger-nvim-with-scrollback" }) },
+    { key = "n", mods = "LEADER|CTRL", action = wezterm.action.SwitchWorkspaceRelative(1) },
+    { key = "p", mods = "LEADER|CTRL", action = wezterm.action.SwitchWorkspaceRelative(-1) },
+    { key = "b", mods = "LEADER|CTRL", action = wezterm.action({ EmitEvent = "trigger-nvim-with-scrollback" }) },
+    { key = "d", mods = "LEADER|CTRL", action = wezterm.action.ShowDebugOverlay },
+
+    { key = "Enter", mods = "LEADER|CTRL", action = "QuickSelect" },
+    { key = "/", mods = "LEADER|CTRL", action = act.Search("CurrentSelectionOrEmptyString") },
+    {
+      key = "O",
+      mods = "CMD",
+      action = wezterm.action({
+        QuickSelectArgs = {
+          patterns = {
+            "https?://\\S+",
+          },
+          action = wezterm.action_callback(function(window, pane)
+            local url = window:get_selection_text_for_pane(pane)
+            wezterm.log_info("opening: " .. url)
+            wezterm.open_with(url)
+          end),
+        },
+      }),
+    },
   },
 }
 
 --- [ TABS ] -------------------------------------------------------------------
 local tabs = {
   use_fancy_tab_bar = false,
-  hide_tab_bar_if_only_one_tab = true,
+  hide_tab_bar_if_only_one_tab = false,
   tab_max_width = 300,
   tab_bar_at_bottom = false,
   tab_bar_style = {},
@@ -431,10 +544,10 @@ local windows = {
   initial_rows = 20,
   window_background_opacity = 1.0,
   window_padding = {
-    left = 15.0,
-    right = 15.0,
-    top = 15.0,
-    bottom = 15.0,
+    left = "15px",
+    right = "15px",
+    top = "15px",
+    bottom = "15px",
   },
   window_close_confirmation = "NeverPrompt",
   adjust_window_size_when_changing_font_size = false,
@@ -456,7 +569,9 @@ local panes = {
 
 --- [ DOMAINS ] ----------------------------------------------------------------
 local domains = {
-  -- unix_domains = nil,
+  unix_domains = {
+    { name = "megabook" },
+  },
   ssh_domains = {
     {
       name = "seth-dev",
@@ -472,6 +587,7 @@ local mouse = {}
 local misc = {
   default_cwd = homedir .. "/.dotfiles",
   default_prog = { "/usr/local/bin/zsh", "-l" },
+  default_workspace = "default",
   -- TODO: figure out why we need this?
   -- @ht: kitten
   mux_env_remove = {
@@ -493,16 +609,52 @@ local misc = {
   debug_key_events = true,
   use_ime = true,
   status_update_interval = 10000,
-
+  cell_width = 1,
   quick_select_patterns = {
     "[A-Za-z0-9-_.]{6,100}",
   },
-
   launch_menu = {
     {
       label = "dotfiles",
       args = { "zsh", "-l" },
       cwd = "~/.dotfiles",
+    },
+  },
+  window_decorations = "RESIZE",
+  hyperlink_rules = {
+    -- Linkify things that look like URLs and the host has a TLD name.
+    {
+      regex = "\\b\\w+://[\\w.-]+\\.[a-z]{2,15}\\S*\\b",
+      format = "$0",
+    },
+
+    -- linkify email addresses
+    {
+      regex = [[\b\w+@[\w-]+(\.[\w-]+)+\b]],
+      format = "mailto:$0",
+    },
+
+    -- file:// URI
+    {
+      regex = [[\bfile://\S*\b]],
+      format = "$0",
+    },
+
+    -- Linkify things that look like URLs with numeric addresses as hosts.
+    -- E.g. http://127.0.0.1:8000 for a local development server,
+    -- or http://192.168.1.1 for the web interface of many routers.
+    {
+      regex = [[\b\w+://(?:[\d]{1,3}\.){3}[\d]{1,3}\S*\b]],
+      format = "$0",
+    },
+
+    -- Make username/project paths clickable. This implies paths like the following are for GitHub.
+    -- ( "nvim-treesitter/nvim-treesitter" | wbthomason/packer.nvim | wez/wezterm | "wez/wezterm.git" )
+    -- As long as a full URL hyperlink regex exists above this it should not match a full URL to
+    -- GitHub or GitLab / BitBucket (i.e. https://gitlab.com/user/project.git is still a whole clickable URL)
+    {
+      regex = [["([\w\d]{1}[-\w\d]+)(/){1}([-\w\d\.]+)"]],
+      format = "https://www.github.com/$1/$3",
     },
   },
 }

@@ -18,3 +18,4 @@ tmux -2 select-window -t "$session_name:1"
 tmux -2 select-pane -t "$session_name:1.1"
 
 tmux -2 attach-session -t "$session_name"
+tmux -2 set status off

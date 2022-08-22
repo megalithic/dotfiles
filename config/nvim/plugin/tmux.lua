@@ -60,3 +60,5 @@ if &term =~ '^screen' && !has('nvim')
   execute "set t_ts=\e]2; t_fs=\7"
 endif
 ]])
+
+-- P(vim.opt.titlestring:get())

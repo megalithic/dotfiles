@@ -1,5 +1,5 @@
 # creates my default session when firing up kitty for the first time
-title mega
+title app
 layout splits
 
 # -- chats
@@ -10,11 +10,12 @@ launch /usr/local/bin/zsh -ci "source ~/.config/zsh/.zshrc && ~/.dotfiles/bin/tm
 # -- code
 new_tab code
 cd ~/.dotfiles
-launch kitty @ kitten ssh -t seth-dev "cd ~/code/app; exec zsh -l"
-# launch /usr/local/bin/zsh -c "et -c 'cd ~/.code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
+# launch kitty @ kitten ssh -t seth-dev "cd ~/code/app; exec zsh -l"
+launch /usr/local/bin/zsh -c "et -c 'cd ~/.code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
 
 # services
 new_tab services
 cd ~/.dotfiles
-launch kitty @ kitten ssh -t seth-dev "cd ~/code/app; exec zsh -l"
-# launch /usr/local/bin/zsh -c "et -c 'cd ~/.code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
+# launch kitty @ kitten ssh -t seth-dev "cd ~/code/app; exec zsh -l"
+launch /usr/local/bin/zsh -c "et -c 'cd ~/.code/app && ls; exec /usr/bin/zsh' seth-dev; /usr/local/bin/zsh"
+

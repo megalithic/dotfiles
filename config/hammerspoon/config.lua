@@ -84,6 +84,16 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
+  ["com.github.wez.wezterm"] = {
+    bundleID = "com.github.wez.wezterm",
+    name = "wezterm",
+    key = "k",
+    quitter = true,
+    localBindings = {},
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
   ["org.mozilla.firefox"] = {
     bundleID = "org.mozilla.firefox",
     name = "Firefox",

@@ -36,6 +36,7 @@ vim.filetype.add({
   },
   pattern = {
     [".*%.conf"] = "conf",
+    [".*%.session"] = "kitty",
     [".*%.theme"] = "conf",
     [".*ignore"] = "conf",
     ["default-*%-packages"] = "conf",
