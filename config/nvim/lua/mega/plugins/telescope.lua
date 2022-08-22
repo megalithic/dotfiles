@@ -10,7 +10,6 @@ return function()
     {
       event = { "User" },
       pattern = { "TelescopePreviewerLoaded" },
-      -- FIXME: https://github.com/nvim-telescope/telescope.nvim/issues/1661
       command = "setlocal number wrap",
     },
   })
@@ -33,24 +32,7 @@ return function()
   ---@return table
   local function dropdown(opts) return themes.get_dropdown(get_border(opts)) end
 
-  local function ivy(opts)
-    return themes.get_ivy(vim.tbl_deep_extend("keep", opts or {}, {
-      border = false,
-      -- prompt position top:
-      -- borderchars = {
-      --   prompt = { "─", " ", " ", " ", "─", "─", " ", " " },
-      --   results = { " " },
-      --   preview = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
-      -- },
-      -- prompt position bottom:
-      borderchars = {
-        -- preview = { "▔", "▕", "▁", "▏", "🭽", "🭾", "🭿", "🭼" },
-        prompt = { " ", " ", "─", " ", " ", " ", "─", "─" },
-        results = { "─", " ", " ", " ", "─", "─", " ", " " },
-        preview = { "─", " ", "─", "│", "┬", "─", "─", "╰" },
-      },
-    }))
-  end
+  local function ivy(opts) return themes.get_ivy(get_border(opts)) end
 
   local function file_extension_filter(prompt)
     -- if prompt starts with escaped @ then treat it as a literal
@@ -68,6 +50,14 @@ return function()
     end
   end
 
+  local function stopinsert(callback)
+    return function(prompt_bufnr)
+      vim.cmd.stopinsert()
+      callback(prompt_bufnr)
+      -- vim.schedule(function() callback(prompt_bufnr) end)
+    end
+  end
+
   telescope.setup({
     defaults = {
       set_env = { ["TERM"] = vim.env.TERM, ["COLORTERM"] = "truecolor" },
@@ -81,9 +71,10 @@ return function()
         i = {
           ["<c-q>"] = actions.send_selected_to_qflist,
           ["<c-l>"] = actions.send_to_qflist,
-          ["<c-c>"] = function() vim.cmd("stopinsert!") end,
+          ["<c-c>"] = function() vim.cmd.stopinsert() end,
           ["<esc>"] = actions.close,
-          ["<cr>"] = actions.select_vertical,
+          -- ["<cr>"] = actions.select_vertical,
+          ["<CR>"] = stopinsert(actions.select_vertical),
           ["<c-o>"] = actions.select_default,
           ["<c-s>"] = actions.select_horizontal,
           ["<c-b>"] = actions.preview_scrolling_up,
@@ -136,7 +127,7 @@ return function()
           height = 0.5,
           preview_cutoff = 1,
           preview_width = 0.65,
-          prompt_position = "bottom",
+          prompt_position = "top",
         },
       },
       winblend = 0,

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# @REF:
+# https://github.com/kovidgoyal/kitty/issues/3328#issuecomment-785435092
+
 set -euo pipefail
 
 sessions_path="$HOME/.dotfiles/config/kitty/sessions"
@@ -13,7 +16,9 @@ selected_session=$(fd session "$sessions_path" |
 if [[ -n $selected_session ]]; then
   tab_name=$(echo "$selected_session" | xargs basename | sed 's/\.[^.]*$//')
   # echo "$tab_name found"
-  kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
+  # kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
+  echo "Switching to $tab_name session.."
+  kitty --session "$selected_session"
 fi
 
 # function kt -d "kitty tab from ~/Dev/*"
