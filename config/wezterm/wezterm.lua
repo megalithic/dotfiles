@@ -9,9 +9,9 @@
 --- https://github.com/Omochice/dotfiles/blob/main/config/wezterm/wezterm.lua
 --- https://github.com/yutkat/dotfiles/blob/main/.config/wezterm/wezterm.lua
 
-local wezterm = require("wezterm")
-local act = wezterm.action
-local mux = wezterm.mux
+local wt = require("wezterm")
+local act = wt.action
+local mux = wt.mux
 local os = require("os")
 local homedir = os.getenv("HOME")
 local fmt = string.format
@@ -48,7 +48,7 @@ local palette = {
   bright_white = "#cccccc",
 }
 
-local function log(msg) wezterm.log_info(msg) end
+local function log(msg) wt.log_info(msg) end
 
 -- Equivalent to POSIX basename(3)
 -- Given "/foo/bar" returns "bar"
@@ -79,7 +79,7 @@ local function format_tab_title(tab, tabs, panes, config, hover, max_width)
 
   if dir == nil or dir == "" then title = basename(pane.foreground_process_name) end
 
-  if dir == basename(wezterm.home_dir) then title = "~" end
+  if dir == basename(wt.home_dir) then title = "~" end
   -- local SUP_IDX = {
   --   "¹",
   --   "²",
@@ -186,7 +186,7 @@ local function update_right_status(window, pane)
   session_name = window:active_workspace()
   table.insert(
     cells,
-    wezterm.format({
+    wt.format({
       { Attribute = { Intensity = "Bold" } },
       { Foreground = { Color = session_color } },
       { Text = " " .. session_icon .. " " .. session_name },
@@ -194,12 +194,12 @@ local function update_right_status(window, pane)
   )
 
   -- insert battery percentage
-  for _, b in ipairs(wezterm.battery_info()) do
+  for _, b in ipairs(wt.battery_info()) do
     table.insert(cells, fmt("%.0f%%", b.state_of_charge * 100))
   end
 
   -- insert local datetime and utc
-  local datetime = fmt("%s (UTC %s)", wezterm.strftime("%H:%M"), wezterm.strftime_utc("%H:%M"))
+  local datetime = fmt("%s (UTC %s)", wt.strftime("%H:%M"), wt.strftime_utc("%H:%M"))
   table.insert(cells, datetime)
 
   -- The elements to be formatted
@@ -220,7 +220,7 @@ local function update_right_status(window, pane)
 
   -- push a spacer cell
   push(" ", #cells == 0)
-  window:set_right_status(wezterm.format(formatted_cells))
+  window:set_right_status(wt.format(formatted_cells))
 end
 
 local function trigger_nvim_with_scrollback(window, pane)
@@ -234,12 +234,12 @@ local function trigger_nvim_with_scrollback(window, pane)
     f:close()
     local command = "nvim " .. name
     window:perform_action(
-      wezterm.action({ SpawnCommandInNewTab = {
+      wt.action({ SpawnCommandInNewTab = {
         args = { "/usr/local/bin/zsh", "-l", "-c", command },
       } }),
       pane
     )
-    wezterm.sleep_ms(1000)
+    wt.sleep_ms(1000)
     os.remove(name)
   end
 end
@@ -247,7 +247,7 @@ end
 local function trigger_fzf_example(window, pane)
   local command = "cd (ghq root)/(ghq list | fzf +m --reverse --prompt='Project > ') && vim"
   window:perform_action(
-    wezterm.action({
+    wt.action({
       -- SwitchToWorkspace = {
       --   spawn = {
       --     args = { "/usr/local/bin/fish", "-l", "-c", command },
@@ -261,32 +261,31 @@ local function trigger_fzf_example(window, pane)
   )
 end
 
-wezterm.on("window-config-reloaded", window_config_reloaded)
-wezterm.on("format-tab-title", format_tab_title)
-wezterm.on("update-right-status", update_right_status)
-wezterm.on("trigger-nvim-with-scrollback", trigger_nvim_with_scrollback)
+wt.on("window-config-reloaded", window_config_reloaded)
+wt.on("format-tab-title", format_tab_title)
+wt.on("update-right-status", update_right_status)
+wt.on("trigger-nvim-with-scrollback", trigger_nvim_with_scrollback)
 
 -- This produces a window split horizontally into three equal parts
-wezterm.on("gui-startup", function(cmd)
+wt.on("gui-startup", function(cmd)
   local args = {}
   if cmd then args = cmd.args end
 
   -- Set a workspace for coding on a current project
   -- Top pane is for the editor, bottom pane is for the build tool
-  local project_dir = wezterm.home_dir .. "/.dotfiles"
+  local project_dir = wt.home_dir .. "/.dotfiles"
   local tab, pane, window = mux.spawn_window({
     workspace = "mega",
     cwd = project_dir,
     args = args,
   })
 
-  local editor_pane = pane:split({
-    direction = "Top",
-    size = 0.6,
-    cwd = project_dir,
-  })
+  -- local editor_pane = pane:split({
+  --   direction = "Top",
+  --   size = 0.6,
+  --   cwd = project_dir,
+  -- })
   -- may as well kick off a build in that pane
-  pane:send_text("echo \"hi in coding\"\n")
 
   -- A workspace for interacting with a local machine that
   -- runs some docker containners for home automation
@@ -295,16 +294,19 @@ wezterm.on("gui-startup", function(cmd)
   --   args = { "ssh", "vault" },
   -- })
 
+  wt.log_info("doing gui startup")
   -- We want to startup in the coding workspace
   mux.set_active_workspace("coding")
+  window:gui_window():maximize()
 end)
 
 -- this is called by the mux server when it starts up.
 -- It makes a window split top/bottom
-wezterm.on("mux-startup", function()
-  wezterm.log_info("doing mux startup")
+wt.on("mux-startup", function()
+  wt.log_info("doing mux startup")
   local tab, pane, window = mux.spawn_window({})
-  mux.split_pane(pane, { direction = "Top" })
+  window:gui_window():maximize()
+  -- mux.split_pane(pane, { direction = "Top" })
 end)
 
 --- [ COLORS ] -----------------------------------------------------------------
@@ -362,7 +364,6 @@ colors.tab_bar = {
     fg_color = palette.blue,
     bg_color = palette.bright_background,
     intensity = "Bold",
-    weight = "ExtraBold",
     italic = true,
   },
   inactive_tab_edge = palette.bright_background,
@@ -393,7 +394,7 @@ local function font_with_fallback(font, params)
     "Symbols Nerd Font Mono",
     "codicon",
   }
-  return wezterm.font_with_fallback(names, params)
+  return wt.font_with_fallback(names, params)
 end
 
 local fonts = {
@@ -442,8 +443,8 @@ local mappings = {
     { key = "f", mods = "LEADER|CTRL", action = "QuickSelect" },
 
     -- tabs
-    { key = "t", mods = "SUPER", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
-    { key = "w", mods = "CTRL", action = wezterm.action({ CloseCurrentTab = { confirm = true } }) },
+    { key = "t", mods = "SUPER", action = wt.action({ SpawnTab = "CurrentPaneDomain" }) },
+    { key = "w", mods = "CTRL", action = wt.action({ CloseCurrentTab = { confirm = true } }) },
     { key = "x", mods = "LEADER|CTRL", action = act({ CloseCurrentPane = { confirm = true } }) },
 
     { key = "1", mods = "LEADER|CTRL", action = act({ ActivateTab = 0 }) },
@@ -463,13 +464,13 @@ local mappings = {
     {
       key = "v",
       mods = "LEADER",
-      action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }),
+      action = wt.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }),
     },
-    { key = "h", mods = "LEADER", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
+    { key = "h", mods = "LEADER", action = wt.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
     {
       key = "z",
       mods = "LEADER|CTRL",
-      action = wezterm.action.TogglePaneZoomState,
+      action = wt.action.TogglePaneZoomState,
     },
     {
       key = "h",
@@ -496,31 +497,31 @@ local mappings = {
     {
       key = " ",
       mods = "LEADER|CTRL",
-      action = wezterm.action({
+      action = wt.action({
         ShowLauncherArgs = {
           flags = "FUZZY|WORKSPACES",
         },
       }),
     },
-    { key = "n", mods = "LEADER|CTRL", action = wezterm.action.SwitchWorkspaceRelative(1) },
-    { key = "p", mods = "LEADER|CTRL", action = wezterm.action.SwitchWorkspaceRelative(-1) },
-    { key = "b", mods = "LEADER|CTRL", action = wezterm.action({ EmitEvent = "trigger-nvim-with-scrollback" }) },
-    { key = "d", mods = "LEADER|CTRL", action = wezterm.action.ShowDebugOverlay },
+    { key = "n", mods = "LEADER|CTRL", action = wt.action.SwitchWorkspaceRelative(1) },
+    { key = "p", mods = "LEADER|CTRL", action = wt.action.SwitchWorkspaceRelative(-1) },
+    { key = "b", mods = "LEADER|CTRL", action = wt.action({ EmitEvent = "trigger-nvim-with-scrollback" }) },
+    { key = "d", mods = "LEADER|CTRL", action = wt.action.ShowDebugOverlay },
 
     { key = "Enter", mods = "LEADER|CTRL", action = "QuickSelect" },
     { key = "/", mods = "LEADER|CTRL", action = act.Search("CurrentSelectionOrEmptyString") },
     {
       key = "O",
       mods = "CMD",
-      action = wezterm.action({
+      action = wt.action({
         QuickSelectArgs = {
           patterns = {
             "https?://\\S+",
           },
-          action = wezterm.action_callback(function(window, pane)
+          action = wt.action_callback(function(window, pane)
             local url = window:get_selection_text_for_pane(pane)
-            wezterm.log_info("opening: " .. url)
-            wezterm.open_with(url)
+            wt.log_info("opening: " .. url)
+            wt.open_with(url)
           end),
         },
       }),
@@ -598,7 +599,7 @@ local misc = {
   },
   set_environment_variables = {
     LANG = "en_US.UTF-8",
-    PATH = wezterm.executable_dir .. ";" .. os.getenv("PATH"),
+    PATH = wt.executable_dir .. ";" .. os.getenv("PATH"),
   },
   scrollback_lines = 5000,
   enable_scroll_bar = false,

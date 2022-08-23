@@ -48,7 +48,9 @@ def handle_result(args, result, target_window_id, boss):
         boss.active_tab.neighboring_window(direction)
 
 
-# from @guysherman
+# @REF: from @guysherman
+# - https://github.com/guysherman/dotfiles/commit/9f4cbe0d27efb216ece2b3b3dfcddaf891c82dff
+
 # import re
 
 # from kittens.tui.handler import result_handler

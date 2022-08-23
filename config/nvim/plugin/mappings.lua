@@ -27,27 +27,7 @@ local fn = vim.fn
 local exec = mega.exec
 -- NOTE: all convenience mode mappers are on the _G global; so no local assigns needed
 
--- FIXME: i'm not so sure these are doing the right things...
--- at all.
--- mega.augroup("AddTerminalMappings", {
---   {
---     event = { "TermOpen" },
---     pattern = { "term://*" },
---     command = function()
---       local opts = { silent = false, buffer = 0 }
---       tnoremap("<esc>", [[<C-\><C-n>]], opts)
---       tnoremap("jk", [[<C-\><C-n>]], opts)
---       tnoremap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
---       tnoremap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
---       tnoremap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
---       tnoremap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
---       tnoremap("]t", [[<C-\><C-n>:tablast<CR>]])
---       tnoremap("[t", [[<C-\><C-n>:tabnext<CR>]])
---       tnoremap("<S-Tab>", [[<C-\><C-n>:bprev<CR>]])
---       tnoremap("<leader><Tab>", [[<C-\><C-n>:close \| :bnext<cr>]])
---     end,
---   },
--- })
+-- if you only want these mappings for toggle term use term://*toggleterm#* instead
 
 local has_wk, wk = mega.require("which-key")
 if has_wk then
@@ -98,7 +78,7 @@ if has_wk then
       width = { min = 10, max = 40 }, -- min and max width of the columns
       spacing = 3, -- spacing between columns
     },
-    hidden = { "<silent>", "<cmd>", "<Cmd>", "<CR>", "call", "lua", "^:", "^ " }, -- hide mapping boilerplate
+    hidden = { ":w", "<silent>", "<cmd>", "<Cmd>", "<CR>", "call", "lua", "^:", "^ " }, -- hide mapping boilerplate
     show_help = true, -- show help message on the command line when the popup is visible
     triggers = "auto", -- automatically setup triggers
     -- triggers = {"<leader>"} -- or specifiy a list manually

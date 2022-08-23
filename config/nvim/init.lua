@@ -4,6 +4,10 @@ vim.api.nvim_create_augroup("vimrc", {})
 local ok, impatient = pcall(require, "impatient")
 if ok then impatient.enable_profile() end
 
+-- [ settings ] ----------------------------------------------------------------
+
+vim.g.term_plugin = true
+
 -- [ loaders ] -----------------------------------------------------------------
 
 local ok, reload = pcall(require, "plenary.reload")

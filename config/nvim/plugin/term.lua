@@ -11,26 +11,16 @@ local function set_keymaps(bufnr, winnr)
   nmap("q", function()
     api.nvim_buf_delete(bufnr, { force = true })
     bufnr = nil_buf_id
-
     -- jump back to our last window
-    vim.cmd(winnr .. [[wincmd w]])
+    vim.cmd(winnr .. [[wincmd p]])
   end, opts)
 
-  -- get back to normal mode
   tmap("<esc>", [[<C-\><C-n>]], opts)
-
-  -- move around splits
-  -- imap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
-  -- imap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
-  -- imap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
-  -- imap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
-  tmap("<C-h>", [[<C-\><C-n><C-W>h]], opts)
-  tmap("<C-j>", [[<C-\><C-n><C-W>j]], opts)
-  tmap("<C-k>", [[<C-\><C-n><C-W>k]], opts)
-  tmap("<C-l>", [[<C-\><C-n><C-W>l]], opts)
-
-  -- tmap("<C-h>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
-  -- tmap("<C-k>", function() vim.cmd([[<C-\><C-n>]] .. winnr .. [[wincmd w]]) end, opts)
+  tmap("<C-c>", [[<C-\><C-n>]], opts)
+  tmap("<C-h>", [[<Cmd>wincmd h<CR>]], opts)
+  tmap("<C-j>", [[<Cmd>wincmd j<CR>]], opts)
+  tmap("<C-k>", [[<Cmd>wincmd k<CR>]], opts)
+  tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
 end
 
 --- @class TermOpts
@@ -56,22 +46,31 @@ function mega.term_open(opts)
   local notifier = opts.notifier
   local height = opts.height or 25
   local width = opts.width or 80
+  local is_existing_term = false
 
   -- delete the current buffer if it's still open
-  if api.nvim_buf_is_valid(term_buf_id) then
-    api.nvim_buf_delete(term_buf_id, { force = true })
-    term_buf_id = nil_buf_id
+  if term_buf_id and api.nvim_buf_is_valid(term_buf_id) then
+    -- if we want to split terms:
+    is_existing_term = true
+    -- else, only one big one at a time:
+    -- api.nvim_buf_delete(term_buf_id, { force = true })
+    -- term_buf_id = nil_buf_id
   end
 
-  local h_direction_cmd = fmt("botright new | lua vim.api.nvim_win_set_height(0, %s)", height)
+  local split_cmd = is_existing_term and "rightbelow vnew" or "botright new"
+  local term_cmd = fmt("%s | lua vim.api.nvim_win_set_height(0, %s)", split_cmd, height)
 
   if direction == "horizontal" then
-    vim.cmd(h_direction_cmd)
+    vim.cmd(term_cmd)
     term_buf_id = api.nvim_get_current_buf()
     vim.opt_local.filetype = "megaterm"
+    vim.opt_local.signcolumn = "no"
   elseif direction == "vertical" then
-    vim.cmd(fmt("vnew | lua vim.api.nvim_win_set_width(0, %s)", width))
+    split_cmd = is_existing_term and "rightbelow new" or "botright vnew"
+    vim.cmd(fmt("%s | lua vim.api.nvim_win_set_width(0, %s)", split_cmd, width))
+    term_buf_id = api.nvim_get_current_buf()
     vim.opt_local.filetype = "megaterm"
+    vim.opt_local.signcolumn = "no"
   elseif direction == "float" then
     local buf_id = api.nvim_create_buf(true, true)
     local win_id = api.nvim_open_win(buf_id, true, {
@@ -103,7 +102,7 @@ function mega.term_open(opts)
     term_buf_id = buf_id
   else
     vim.notify("[megaterm] direction must either be `horizontal` or `vertical`.", "WARN")
-    vim.cmd(h_direction_cmd)
+    vim.cmd(term_cmd)
   end
 
   set_keymaps(term_buf_id, winnr)
@@ -138,7 +137,7 @@ function mega.term_open(opts)
     on_after_open(term_buf_id, winnr)
   else
     vim.cmd([[normal! G]])
-    if direction ~= "float" then vim.cmd(winnr .. [[wincmd w]]) end
+    if direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
   end
 end
 
@@ -149,6 +148,7 @@ mega.open_term = mega.term_open
 mega.command("TermElixir", function()
   local precmd = ""
   local cmd = ""
+  -- load up our Deskfile if we have one..
   if require("mega.utils").root_has_file("Deskfile") then precmd = "eval $(desk load)" end
   if require("mega.utils").root_has_file("mix.exs") then
     cmd = "iex -S mix"
@@ -241,7 +241,24 @@ end)
 mega.command("Term", function()
   mega.open_term({
     winnr = vim.fn.winnr(),
-    on_exit = function() end,
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
+  })
+end)
+
+mega.command("TermFloat", function()
+  mega.open_term({
+    direction = "float",
+    winnr = vim.fn.winnr(),
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
+  })
+end)
+
+mega.command("TermVertical", function()
+  mega.open_term({
+    direction = "vertical",
+    winnr = vim.fn.winnr(),
     ---@diagnostic disable-next-line: unused-local
     on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
   })
@@ -252,12 +269,17 @@ if has_wk then
   wk.register({
     t = {
       name = "terminal",
-      e = { "<cmd>TermElixir<cr>", "repl > elixir" },
-      r = { "<cmd>TermRuby<cr>", "repl > ruby" },
-      l = { "<cmd>TermLua<cr>", "repl > lua" },
-      n = { "<cmd>TermNode<cr>", "repl > node" },
-      p = { "<cmd>TermPython<cr>", "repl > python" },
       t = { "<cmd>Term<cr>", "term" },
+      f = { "<cmd>TermFloat<cr>", "term (float)" },
+      v = { "<cmd>TermVertical<cr>", "term (vertical)" },
+      r = {
+        name = "repls",
+        e = { "<cmd>TermElixir<cr>", "repl > elixir" },
+        r = { "<cmd>TermRuby<cr>", "repl > ruby" },
+        l = { "<cmd>TermLua<cr>", "repl > lua" },
+        n = { "<cmd>TermNode<cr>", "repl > node" },
+        p = { "<cmd>TermPython<cr>", "repl > python" },
+      },
     },
   }, {
     prefix = "<leader>",

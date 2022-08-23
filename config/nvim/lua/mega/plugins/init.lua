@@ -54,8 +54,8 @@ local PKGS = {
   "rcarriga/cmp-dap",
   "L3MON4D3/LuaSnip",
   "rafamadriz/friendly-snippets",
-  -- "ray-x/lsp_signature.nvim",
-  "Issafalcon/lsp-overloads.nvim",
+  "ray-x/lsp_signature.nvim",
+  -- "Issafalcon/lsp-overloads.nvim",
   "lewis6991/hover.nvim",
   -- "j-hui/fidget.nvim",
   -- "ZenLian/fidget.nvim",
@@ -95,6 +95,7 @@ local PKGS = {
   { "s1n7ax/nvim-window-picker" },
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+  "nvim-telescope/telescope-file-browser.nvim",
   "natecraddock/telescope-zf-native.nvim",
   "camgraff/telescope-tmux.nvim",
   "nvim-telescope/telescope-live-grep-args.nvim",
@@ -132,6 +133,9 @@ local PKGS = {
   -- @trial { "mrjones2014/dash.nvim", run = "make install", opt = true },
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
+  "akinsho/toggleterm.nvim",
+  "natecraddock/sessions.nvim",
+  "natecraddock/workspaces.nvim",
   -- "mbbill/undotree",
   -- "danymat/neogen",
   -- "smjonas/live-command.nvim",
@@ -161,7 +165,7 @@ local PKGS = {
   -- :Time     <- measure how long it takes to run some stuff.
   "tpope/vim-scriptease",
   -- "aca/wezterm.nvim",
-  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.config/kitty", opt = true },
+  { "knubie/vim-kitty-navigator", run = "cp -L ./*.py ~/.dotfiles/config/kitty" },
   "RRethy/nvim-align",
   "junegunn/vim-easy-align",
   ------------------------------------------------------------------------------
@@ -291,6 +295,7 @@ function M.config()
 
   conf("gitsigns", { config = "gitsigns" })
   conf("telescope", { config = "telescope" })
+  conf("toggleterm", { config = "toggleterm" })
   conf("neo-tree", { config = "neo-tree" })
   conf("cmp", { config = "cmp" })
   conf("luasnip", { config = "luasnip" })

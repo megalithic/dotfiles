@@ -17,7 +17,9 @@ function Tmux_navigate_directions()
   local can_go_left = (col > 1) and "L" or ""
   local can_go_right = ((col + w) < vim.o.columns) and "R" or ""
 
-  return string.format("%s%s%s%s", can_go_up, can_go_down, can_go_left, can_go_right)
+  local directions = string.format("%s%s%s%s", can_go_up, can_go_down, can_go_left, can_go_right)
+  -- P(directions)
+  return directions
 end
 
 vim.opt.titlestring =

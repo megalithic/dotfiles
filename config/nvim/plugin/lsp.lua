@@ -370,7 +370,10 @@ local function on_attach(client, bufnr)
     -- require("mega.lsp.document_colors").buf_attach(bufnr, { single_column = true, col_count = 2 })
     if client.name == "tailwindcss" then
       require("document-color").buf_attach(bufnr, { mode = "single" })
-      require("colorizer").detach_from_buffer()
+      do
+        local ok, colorizer = pcall(require, "colorizer")
+        if ok and colorizer then colorizer.detach_from_buffer() end
+      end
     end
   end
 
@@ -381,20 +384,20 @@ local function on_attach(client, bufnr)
   end
 
   --- Guard against servers without the signatureHelper capability
-  if client.server_capabilities.signatureHelpProvider then
-    require("lsp-overloads").setup(client, {
-      ui = {
-        -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
-        border = mega.get_border(),
-      },
-      keymaps = {
-        next_signature = "<C-j>",
-        previous_signature = "<C-k>",
-        next_parameter = "<C-l>",
-        previous_parameter = "<C-h>",
-      },
-    })
-  end
+  -- if client.server_capabilities.signatureHelpProvider then
+  --   require("lsp-overloads").setup(client, {
+  --     ui = {
+  --       -- The border to use for the signature popup window. Accepts same border values as |nvim_open_win()|.
+  --       border = mega.get_border(),
+  --     },
+  --     keymaps = {
+  --       next_signature = "<C-j>",
+  --       previous_signature = "<C-k>",
+  --       next_parameter = "<C-l>",
+  --       previous_parameter = "<C-h>",
+  --     },
+  --   })
+  -- end
 
   require("mega.lsp.handlers")
   setup_formatting(client, bufnr)
