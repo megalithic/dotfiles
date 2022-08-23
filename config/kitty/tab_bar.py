@@ -23,7 +23,7 @@ icon_fg = as_rgb(color_as_int(Color(255, 250, 205)))
 icon_bg = as_rgb(color_as_int(Color(47, 61, 68)))
 # OR icon_bg = as_rgb(0x2f3d44)
 bat_text_color = as_rgb(0x999F93)
-clock_color = as_rgb(color_as_int(Color(135, 192, 149)))
+clock_color = as_rgb(0x7FBBB3)
 utc_color = as_rgb(color_as_int(Color(113, 115, 116)))
 
 # BATTERY_CMD = "pmset -g batt | awk -F '; *' 'NR==2 { print $2 }'"
@@ -228,11 +228,12 @@ def draw_tab(
     # clock = datetime.now().strftime(" %H:%M")
     # date = datetime.now().strftime(" %d.%m.%Y")
 
-    date = datetime.now().strftime(" %d.%m.%Y")
-    clock = datetime.now().strftime(" %H:%M")
+    date = datetime.now().strftime("%d.%m.%Y")
+    clock = datetime.now().strftime("%H:%M")
     utc = datetime.now(timezone.utc).strftime(" (UTC %H:%M)")
 
     cells = get_battery_cells()
+    cells.append((as_rgb(color_as_int(opts.color255)), " ⋮ "))
     cells.append((clock_color, clock))
     cells.append((utc_color, utc))
 
