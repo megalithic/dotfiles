@@ -51,10 +51,10 @@ function mega.term_open(opts)
   -- delete the current buffer if it's still open
   if term_buf_id and api.nvim_buf_is_valid(term_buf_id) then
     -- if we want to split terms:
-    is_existing_term = true
+    -- is_existing_term = true
     -- else, only one big one at a time:
-    -- api.nvim_buf_delete(term_buf_id, { force = true })
-    -- term_buf_id = nil_buf_id
+    api.nvim_buf_delete(term_buf_id, { force = true })
+    term_buf_id = nil_buf_id
   end
 
   local split_cmd = is_existing_term and "rightbelow vnew" or "botright new"
