@@ -359,12 +359,14 @@ function away() {
   __set_presence "away"
   __set_status "afk" ":afk:"
   __set_chan_text "bbl"
+  hs -c "hs.spotify.pause()"
 }
 
 function brb() {
   __set_presence "away"
   __set_status "be right back" ":brb:"
   __set_chan_text "brb"
+  hs -c "hs.spotify.pause()"
 }
 
 function lunch() {
@@ -379,36 +381,42 @@ function lunch() {
   __set_status "lunch" "${lunch_emojis[$rand]}"
   __set_chan_text "bbl, ${lunch_emojis[$rand]} lunch"
   unset lunch_emojis
+  hs -c "hs.spotify.pause()"
 }
 
 function errand() {
   __set_presence "away"
   __set_status "running an errand" ":car:"
   __set_chan_text "bbiab, running an errand"
+  hs -c "hs.spotify.pause()"
 }
 
 function coffee() {
   __set_presence "away"
   __set_status "covfefe" ":coffee:"
   __set_chan_text "brb, coffee"
+  hs -c "hs.spotify.pause()"
 }
 
 function tea() {
   __set_presence "away"
   __set_status "tea" ":tea:"
   __set_chan_text "brb, tea"
+  hs -c "hs.spotify.pause()"
 }
 
 function dog() {
   __set_presence "away"
   __set_status "walking the puppers" ":doge:"
   __set_chan_text "bbiab, walking the puppers"
+  hs -c "hs.spotify.pause()"
 }
 
 function run() {
   __set_presence "away"
   __set_status "gone for a run" ":runner:"
   __set_chan_text "bbiab, gone for a run"
+  hs -c "hs.spotify.pause()"
 }
 
 function gone() {
@@ -422,6 +430,7 @@ function gone() {
   __set_dnd 930
   __set_chan_text "${gone_messages[$rand]}"
   unset gone_messages
+  hs -c "hs.spotify.pause()"
 }
 
 function pair() {

@@ -17,7 +17,7 @@ if [[ -n $selected_session ]]; then
   # echo "$tab_name found"
   # kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
   echo "Switching to $tab_name session.."
-  kitty --session "$selected_session" --title "$tab_name"
+  kitty --session "$selected_session" @ launch --os-window-title "$tab_name" --title "$tab_name" &
   # kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
 fi
 

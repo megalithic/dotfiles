@@ -1,6 +1,7 @@
 # pyright: reportMissingImports=false
 
 # REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-3240635
+import subprocess
 from datetime import datetime, timezone
 
 from kitty.boss import get_boss
@@ -20,14 +21,15 @@ from kitty.utils import color_as_int
 opts = get_options()
 icon_fg = as_rgb(color_as_int(Color(255, 250, 205)))
 icon_bg = as_rgb(color_as_int(Color(47, 61, 68)))
-bat_text_color = as_rgb(color_as_int(opts.color15))
+# OR icon_bg = as_rgb(0x2f3d44)
+bat_text_color = as_rgb(0x999F93)
 clock_color = as_rgb(color_as_int(Color(135, 192, 149)))
 utc_color = as_rgb(color_as_int(Color(113, 115, 116)))
 
-
+# BATTERY_CMD = "pmset -g batt | awk -F '; *' 'NR==2 { print $2 }'"
 SEPARATOR_SYMBOL, SOFT_SEPARATOR_SYMBOL = ("", "")
 RIGHT_MARGIN = 1
-REFRESH_TIME = 1
+REFRESH_TIME = 5
 ICON = "  "
 UNPLUGGED_ICONS = {
     10: "",
@@ -52,7 +54,7 @@ PLUGGED_COLORS = {
     15: as_rgb(color_as_int(opts.color1)),
     16: as_rgb(color_as_int(opts.color6)),
     99: as_rgb(color_as_int(opts.color6)),
-    100: as_rgb(color_as_int(opts.color2)),
+    100: as_rgb(0xA7C080),
 }
 
 
@@ -93,7 +95,25 @@ def _draw_left_status(
         screen.cursor.x = len(ICON)
     # screen.draw(" ")
     screen.cursor.bg = tab_bg
+
+    # @REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-3459140
     draw_title(draw_data, screen, tab, index)
+    # title = f"{get_options().os_window_class}{tab.title}"
+    # tab = TabBarData(
+    #     title,
+    #     tab.is_active,
+    #     tab.needs_attention,
+    #     tab.num_windows,
+    #     tab.num_window_groups,
+    #     tab.layout_name,
+    #     tab.has_activity_since_last_focus,
+    #     tab.active_fg,
+    #     tab.active_bg,
+    #     tab.inactive_fg,
+    #     tab.inactive_bg,
+    # )
+    # draw_title(draw_data, screen, tab, index)
+
     if not needs_soft_separator:
         # screen.draw(" ")
         screen.cursor.fg = tab_bg
@@ -134,39 +154,57 @@ def _redraw_tab_bar(_):
 
 
 def get_battery_cells() -> list:
-    try:
-        with open("pmset -g batt | awk -F '; *' 'NR==2 { print $2 }'", "r") as f:
-            status = f.read()
-            percent = 100
-        # with open("/sys/class/power_supply/BAT0/capacity", "r") as f:
-        # percent = int(f.read())
-        if status == "Discharging\n":
-            # TODO: declare the lambda once and don't repeat the code
-            icon_color = UNPLUGGED_COLORS[
-                min(UNPLUGGED_COLORS.keys(), key=lambda x: abs(x - percent))
-            ]
-            icon = UNPLUGGED_ICONS[
-                min(UNPLUGGED_ICONS.keys(), key=lambda x: abs(x - percent))
-            ]
-        elif status == "Not charging\n":
-            icon_color = UNPLUGGED_COLORS[
-                min(UNPLUGGED_COLORS.keys(), key=lambda x: abs(x - percent))
-            ]
-            icon = PLUGGED_ICONS[
-                min(PLUGGED_ICONS.keys(), key=lambda x: abs(x - percent))
-            ]
-        else:
-            icon_color = PLUGGED_COLORS[
-                min(PLUGGED_COLORS.keys(), key=lambda x: abs(x - percent))
-            ]
-            icon = PLUGGED_ICONS[
-                min(PLUGGED_ICONS.keys(), key=lambda x: abs(x - percent))
-            ]
-        percent_cell = (bat_text_color, str(percent) + "% ")
-        icon_cell = (icon_color, icon)
-        return [percent_cell, icon_cell]
-    except FileNotFoundError:
-        return []
+    s_result = subprocess.run(
+        "~/.dotfiles/bin/btry -s", shell=True, capture_output=True
+    )
+    status = ""
+    print(s_result.stdout)
+
+    if s_result.stderr:
+        raise subprocess.CalledProcessError(
+            returncode=s_result.returncode, cmd=s_result.args, stderr=s_result.stderr
+        )
+
+    if s_result.stdout:
+        status = s_result.stdout.decode("utf-8").strip()
+
+    p_result = subprocess.run(
+        "~/.dotfiles/bin/btry -p", shell=True, capture_output=True
+    )
+    percent = ""
+
+    print(p_result.stdout)
+
+    if p_result.stderr:
+        raise subprocess.CalledProcessError(
+            returncode=p_result.returncode, cmd=p_result.args, stderr=p_result.stderr
+        )
+
+    if p_result.stdout:
+        percent = int(p_result.stdout.decode("utf-8").strip())
+
+    if status == "Discharging \n":
+        # TODO: declare the lambda once and don't repeat the code
+        icon_color = UNPLUGGED_COLORS[
+            min(UNPLUGGED_COLORS.keys(), key=lambda x: abs(x - percent))
+        ]
+        icon = UNPLUGGED_ICONS[
+            min(UNPLUGGED_ICONS.keys(), key=lambda x: abs(x - percent))
+        ]
+    elif status == "Not charging \n":
+        icon_color = UNPLUGGED_COLORS[
+            min(UNPLUGGED_COLORS.keys(), key=lambda x: abs(x - percent))
+        ]
+        icon = PLUGGED_ICONS[min(PLUGGED_ICONS.keys(), key=lambda x: abs(x - percent))]
+    else:
+        icon_color = PLUGGED_COLORS[
+            min(PLUGGED_COLORS.keys(), key=lambda x: abs(x - percent))
+        ]
+        icon = PLUGGED_ICONS[min(PLUGGED_ICONS.keys(), key=lambda x: abs(x - percent))]
+
+    percent_cell = (bat_text_color, " " + str(percent) + "%")
+    icon_cell = (icon_color, icon)
+    return [icon_cell, percent_cell]
 
 
 timer_id = None
