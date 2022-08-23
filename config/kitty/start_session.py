@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Generic, Iterable, Iterator, List, Sequence, TypeVar, Union
 
 from kittens.tui.handler import Handler
-from kittens.tui.loop import Loop
+from kittens.tui.loop import Loop, debug
 from kittens.tui.operations import styled
 from kitty.boss import Boss
 from kitty.fast_data_types import get_options
@@ -121,4 +121,5 @@ def handle_result(
     startup_session = next(
         create_sessions(get_options(), default_session=session_file_path)
     )
+
     boss.add_os_window(startup_session)
