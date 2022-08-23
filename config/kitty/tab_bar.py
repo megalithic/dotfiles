@@ -3,19 +3,13 @@
 # REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-3240635
 import subprocess
 from datetime import datetime, timezone
+from pprint import pprint
 
 from kitty.boss import get_boss
 from kitty.fast_data_types import Screen, add_timer, get_options
 from kitty.rgb import Color
-from kitty.tab_bar import (
-    DrawData,
-    ExtraData,
-    Formatter,
-    TabBarData,
-    as_rgb,
-    draw_attributed_string,
-    draw_title,
-)
+from kitty.tab_bar import (DrawData, ExtraData, Formatter, TabBarData, as_rgb,
+                           draw_attributed_string, draw_title)
 from kitty.utils import color_as_int
 
 opts = get_options()
@@ -97,8 +91,7 @@ def _draw_left_status(
     screen.cursor.bg = tab_bg
 
     # @REF: https://github.com/kovidgoyal/kitty/discussions/4447#discussioncomment-3459140
-    draw_title(draw_data, screen, tab, index)
-    # title = f"{get_options().os_window_class}{tab.title}"
+    # title = f"{opts.os_window_class}{tab.title}"
     # tab = TabBarData(
     #     title,
     #     tab.is_active,
@@ -112,7 +105,9 @@ def _draw_left_status(
     #     tab.inactive_fg,
     #     tab.inactive_bg,
     # )
-    # draw_title(draw_data, screen, tab, index)
+    # pprint(dir(tab))
+    # pprint(vars(screen))
+    draw_title(draw_data, screen, tab, index)
 
     if not needs_soft_separator:
         # screen.draw(" ")
@@ -158,7 +153,6 @@ def get_battery_cells() -> list:
         "~/.dotfiles/bin/btry -s", shell=True, capture_output=True
     )
     status = ""
-    print(s_result.stdout)
 
     if s_result.stderr:
         raise subprocess.CalledProcessError(
@@ -172,8 +166,6 @@ def get_battery_cells() -> list:
         "~/.dotfiles/bin/btry -p", shell=True, capture_output=True
     )
     percent = ""
-
-    print(p_result.stdout)
 
     if p_result.stderr:
         raise subprocess.CalledProcessError(
@@ -221,12 +213,11 @@ def draw_tab(
     is_last: bool,
     extra_data: ExtraData,
 ) -> int:
+    # pprint(vars(extra_data))
     global timer_id
     global right_status_length
-    if timer_id is None:
-        timer_id = add_timer(_redraw_tab_bar, REFRESH_TIME, True)
-    # clock = datetime.now().strftime(" %H:%M")
-    # date = datetime.now().strftime(" %d.%m.%Y")
+    # if timer_id is None:
+    #     timer_id = add_timer(_redraw_tab_bar, REFRESH_TIME, True)
 
     date = datetime.now().strftime("%d.%m.%Y")
     clock = datetime.now().strftime("%H:%M")

@@ -289,6 +289,7 @@ return function(on_attach)
         single_file_support = false,
         settings = {
           python = {
+            format = false,
             analysis = {
               autoSearchPaths = true,
               diagnosticMode = "workspace",
