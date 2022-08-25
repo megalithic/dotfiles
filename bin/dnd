@@ -53,10 +53,21 @@ status() {
   fi
 }
 
+status_kitty() {
+  if [[ $(status) == "on" ]]; then
+    echo "\uf59f DND"
+  else
+    echo ""
+  fi
+}
+
 subcommand="${1:-}"
 case $subcommand in
   '')
     toggle
+    ;;
+  '-k')
+    status_kitty
     ;;
   '-h' | '--help')
     help

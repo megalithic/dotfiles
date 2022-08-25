@@ -121,7 +121,7 @@ local function updateTitle()
     end
 
     icon = stext(icon, { font = { name = defaultFont.name, size = 13 } })
-    titleInfo = icon .. fmt(" %s - %s", artist, track)
+    titleInfo = icon .. fmt(" %s - %s", artist, U.truncate(track, 25))
   end
 
   return titleInfo

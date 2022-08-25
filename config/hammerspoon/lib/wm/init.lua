@@ -57,7 +57,7 @@ function obj.applyLayout(appConfig)
   local bundleID = appConfig["bundleID"]
   local app = Application.get(bundleID)
 
-  if app and appConfig.rules and #appConfig.rules > 0 then
+  if appConfig.rules and #appConfig.rules > 0 then
     if obj.mode == "snap" then
       fnutils.each(appConfig.rules, function(rule)
         local winTitlePattern, screenNum, positionStr = table.unpack(rule)
@@ -92,7 +92,8 @@ function obj.applyLayout(appConfig)
       --   function() hs.layout.apply(layouts, string.match) end,
       --   0.1
       -- )
-      hs.layout.apply(layouts, string.match)
+      hs.timer.doAfter(0.1, function() hs.layout.apply(layouts, string.match) end)
+      -- hs.layout.apply(layouts, string.match)
     end
   end
 end
@@ -148,8 +149,6 @@ function obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 
 local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
-  obj.applyContext(bundleID, appObj, event, fromWindowFilter)
-
   if event == Application.watcher.launched and bundleID ~= nil then
     note(fmt("[LAUNCHED] %s", bundleID))
     local appConfig = obj.apps[bundleID]
@@ -158,6 +157,7 @@ local function handleWatcher(bundleID, appObj, event, fromWindowFilter)
     note(fmt("[TERMINATED] %s", bundleID))
   end
 
+  obj.applyContext(bundleID, appObj, event, fromWindowFilter)
   obj.applyHandlers(bundleID, appObj, event, fromWindowFilter)
 end
 

@@ -150,6 +150,7 @@ local exception_types = {
     calendar = "",
     minimap = "",
     octo = "",
+    kittybuf = "",
     ["dap-repl"] = "",
   },
   names = {
@@ -175,6 +176,7 @@ local exception_types = {
     toggleterm = get_toggleterm_name,
     megaterm = get_megaterm_name,
     ["dap-repl"] = "Debugger REPL",
+    kittybuf = "Kitty Scrollback Buffer",
   },
 }
 

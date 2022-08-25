@@ -4,7 +4,6 @@ vim.filetype.add({
   filename = {
     [".gitignore"] = "conf",
     ["kitty.conf"] = "kitty",
-    ["default.session"] = "kitty",
     [".env"] = "sh",
     ["Deskfile"] = "sh",
     ["tool-versions"] = "conf",
@@ -36,7 +35,6 @@ vim.filetype.add({
   },
   pattern = {
     [".*%.conf"] = "conf",
-    [".*%.session"] = "kitty",
     [".*%.theme"] = "conf",
     [".*ignore"] = "conf",
     ["default-*%-packages"] = "conf",
