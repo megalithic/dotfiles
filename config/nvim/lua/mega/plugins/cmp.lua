@@ -176,7 +176,7 @@ return function()
     sources = cmp.config.sources({
       { name = "cmdline", keyword_pattern = [=[[^[:blank:]\!]*]=] },
       { name = "path" },
-      { name = "cmdline_history", priority = 10, max_item_count = 5 },
+      -- { name = "cmdline_history", priority = 10, max_item_count = 5 },
     }),
   })
 

@@ -9,9 +9,10 @@ from kitty.boss import Boss
 from kitty.fast_data_types import get_options
 from kitty.key_encoding import KeyEvent
 from kitty.session import create_sessions
-from pyfzf.pyfzf import FzfPrompt
 
-fzf = FzfPrompt()
+# from pyfzf.pyfzf import FzfPrompt
+
+# fzf = FzfPrompt()
 
 Selectable = TypeVar("Selectable")
 

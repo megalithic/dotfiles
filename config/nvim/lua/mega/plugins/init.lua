@@ -159,7 +159,7 @@ local PKGS = {
   "EinfachToll/DidYouMean",
   "wsdjeg/vim-fetch", -- vim path/to/file.ext:12:3
   "ConradIrwin/vim-bracketed-paste", -- FIXME: delete?
-  "kevinhwang91/nvim-hclipboard",
+  -- "kevinhwang91/nvim-hclipboard", -- FIXME: throwing errors in weird situations
   -- :Messages <- view messages in quickfix list
   -- :Verbose  <- view verbose output in preview window.
   -- :Time     <- measure how long it takes to run some stuff.
@@ -606,7 +606,7 @@ function M.config()
     },
   })
 
-  conf("hclipboard", function() require("hclipboard").start() end)
+  -- conf("hclipboard", function() require("hclipboard").start() end)
 
   conf("git-messenger", function()
     vim.g.git_messenger_floating_win_opts = { border = mega.get_border() }

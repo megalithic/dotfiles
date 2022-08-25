@@ -284,6 +284,16 @@ local apps = {
     name = "Bartender 4",
     localBindings = { "\\" },
   },
+  ["com.apple.iphonesimulator"] = {
+    bundleID = "com.apple.iphonesimulator",
+    name = "iPhone Simulator",
+    key = "i",
+    quitter = false,
+    localBindings = {},
+    rules = {
+      { "", 1, "right30" },
+    },
+  },
 }
 
 local utils = {

@@ -5,9 +5,11 @@ vim.opt.indentexpr = "nvim_treesitter#indent()"
 
 local treesitter_parsers = require("nvim-treesitter.parsers")
 local ft_to_parser = treesitter_parsers.filetype_to_parsername
+
 ft_to_parser.json = "jsonc"
 ft_to_parser.keymap = "devicetree"
 ft_to_parser.zsh = "bash"
+ft_to_parser.kittybuf = "bash"
 
 require("nvim-treesitter.configs").setup({
   auto_install = true,

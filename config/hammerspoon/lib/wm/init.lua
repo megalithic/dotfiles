@@ -87,13 +87,7 @@ function obj.applyLayout(appConfig)
         table.insert(layouts, layout)
       end)
 
-      -- hs.timer.waitUntil(
-      --   function() return Application.frontmostApplication() == app end,
-      --   function() hs.layout.apply(layouts, string.match) end,
-      --   0.1
-      -- )
-      hs.timer.doAfter(0.1, function() hs.layout.apply(layouts, string.match) end)
-      -- hs.layout.apply(layouts, string.match)
+      hs.layout.apply(layouts, string.match)
     end
   end
 end
