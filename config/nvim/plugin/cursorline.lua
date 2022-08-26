@@ -37,6 +37,7 @@ local M = {
     "NvimTree",
     "dashboard",
     "qf",
+    "kittybuf",
   },
   buftype_exclusions = {
     "acwrite",

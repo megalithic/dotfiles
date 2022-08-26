@@ -289,6 +289,7 @@ local apps = {
     name = "iPhone Simulator",
     key = "i",
     quitter = false,
+    launchMode = "focus",
     localBindings = {},
     rules = {
       { "", 1, "right30" },

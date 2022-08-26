@@ -20,3 +20,4 @@ dotbot
 dotbot-plugins
 config/zsh/plugins
 config/hammerspoon/Spoons
+home/emacs.d

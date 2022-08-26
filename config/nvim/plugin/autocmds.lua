@@ -154,7 +154,7 @@ end
 augroup("Kitty", {
   {
     event = { "BufWritePost" },
-    pattern = { "*/kitty/*.conf", "*/kitty/*.py" },
+    pattern = { "*/kitty/*.conf" },
     command = function()
       -- auto-reload kitty upon kitty.conf write
       -- vim.notify(fmt(" sourced %s", vim.fn.expand("%")))

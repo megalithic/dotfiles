@@ -84,7 +84,7 @@ obj.tile = function()
     if choice ~= nil then
       local focused = hs.window.focusedWindow()
       local toRead = hs.window.find(choice.id)
-      if hs.eventtap.checkKeyboardModifiers()["alt"] then
+      if hs.eventtap.checkKeyboardModifiers()["shift"] then
         alert.show("  70 ◱ 30  ")
         hs.layout.apply({
           { nil, focused, focused:screen(), obj.grid.left70, 0, 0 },
@@ -104,7 +104,7 @@ obj.tile = function()
   end)
 
   chooser
-    :placeholderText("Choose window for 50/50 split. Hold ⎇ for 70/30.")
+    :placeholderText("Choose window for 50/50 split. Hold ⇧ for 70/30.")
     :searchSubText(true)
     :choices(windows)
     :show()

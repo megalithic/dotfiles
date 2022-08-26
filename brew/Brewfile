@@ -85,7 +85,7 @@ brew "fswatch"
 brew "superfly/tap/flyctl"
 brew "fontforge" if OS.mac?
 brew "fop" # used for asdf erlang
-brew "fx"
+brew "fx" # jq but better
 brew "fzf" # -> $(brew --prefix)/opt/fzf/install
 brew "fzy"
 brew "gawk"
@@ -100,6 +100,7 @@ brew "glow" if OS.mac?
 brew "gnutls"
 brew "gnupg"
 brew "gnu-sed" if OS.mac?
+brew "gotop"
 brew "gpg" # required for asdf-nodejs
 brew "grc"
 brew "heroku" if OS.mac?

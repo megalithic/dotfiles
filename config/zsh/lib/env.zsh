@@ -313,6 +313,7 @@ path=(
   ./vendor/bundle/bin
   $HOME/bin
   $HOME/.bin
+  $HOME/.emacs.d/bin
   ${HOME}/.local/bin(N-/)
   ${DOTS}/bin(N-/)
   $PRIVATES/bin
@@ -346,6 +347,7 @@ path=(
   ${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin(N-/)
   ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin(N-/)
   ${HOMEBREW_PREFIX}/opt/python@3.10/libexec/bin(Nn[-1]-/)
+  ${HOMEBREW_PREFIX}/opt/python@3.9/libexec/bin(Nn[-1]-/)
   ${HOMEBREW_CELLAR}/git/*/share/git-core/contrib/git-jump(Nn[-1]-/)
 
   ${CARGO_HOME}/bin(N-/)
@@ -355,8 +357,8 @@ path=(
 
   ${HOME}/Library/Python/3.10/bin(Nn[-1]-/)
   ${HOME}/Library/Python/2.*/bin(Nn[-1]-/)
-  /usr/local/lib/python3.10/bin(Nn[-1]-/)
   /usr/local/lib/python3.10/site-packages(N-/)
+  /usr/local/lib/python3.9/site-packages(N-/)
   /usr/local/lib/python2.*/bin(Nn[-1]-/)
   /usr/local/lib/python2.*/site-packages(N-/)
   /usr/local/opt/python@3.*/bin(Nn[-1]-/)
