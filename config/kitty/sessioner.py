@@ -8,7 +8,7 @@ from typing import Generic, Iterable, Iterator, List, Optional, Sequence, TypeVa
 from kittens.tui.handler import Handler
 from kittens.tui.loop import Loop, debug
 from kittens.tui.operations import styled
-from kitty.boss import Boss
+from kitty.boss import Boss, get_boss
 from kitty.fast_data_types import get_options
 from kitty.key_encoding import KeyEvent
 from kitty.session import create_sessions
@@ -28,6 +28,7 @@ def find_session_files(directory: str) -> Iterable[Path]:
 
 
 def main(args: List[str]) -> str:
+    debug(get_boss())
     session_files = [KittySession(path) for path in find_session_files(args[1])]
     if session_files:
         fzf = FzfPrompt("/usr/local/bin/fzf")
@@ -38,6 +39,7 @@ def main(args: List[str]) -> str:
         if selected_session:
             selected_path = "{}/{}.conf".format(args[1], selected_session[0])
             return str(selected_path)
+
     raise SystemExit(1)
 
 
@@ -45,6 +47,9 @@ def handle_result(
     args: List[str], session_path: str, target_window_id: int, boss: Boss
 ) -> None:
     startup_session = next(create_sessions(get_options(), default_session=session_path))
+
+    for os_window in boss.list_os_windows():
+        print(os_window.wm_class)
 
     boss.add_os_window(startup_session)
 

@@ -30,7 +30,8 @@ local PKGS = {
   "phaazon/hop.nvim",
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
-  "rcarriga/nvim-notify",
+  { "akinsho/nvim-notify", branch = "feature/direction-config" },
+  -- "akinsho:feature/direction-config"
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -172,9 +173,10 @@ local PKGS = {
   -- (LANGS, syntax, et al) --
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
+  "gaoDean/autolist.nvim",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install", opt = true },
   "ellisonleao/glow.nvim",
-  "dkarter/bullets.vim",
+  -- "dkarter/bullets.vim",
   -- "dhruvasagar/vim-table-mode",
   "lukas-reineke/headlines.nvim",
   -- @trial https://github.com/ekickx/clipboard-image.nvim
@@ -633,6 +635,7 @@ function M.config()
   conf("notify", {
     timeout = 3000,
     stages = "slide",
+    direction = "bottom_up",
     background_colour = "NotifyFloat",
     max_width = function() return math.floor(vim.o.columns * 0.8) end,
     max_height = function() return math.floor(vim.o.lines * 0.8) end,
@@ -647,6 +650,8 @@ function M.config()
       require("notify.render")[style](...)
     end,
   })
+
+  conf("autolist", {})
 end
 
 return M

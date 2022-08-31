@@ -65,7 +65,7 @@ local function dockHandler(watcher, path, key, oldValue, isConnected)
   end
 
   if isConnected then
-    hs.timer.doAfter(2, function()
+    hs.timer.doAfter(3, function()
       setWifi(DockConfig.docked.wifi)
       setInput(DockConfig.docked.input)
       success("[dock] dock connected")
@@ -73,7 +73,7 @@ local function dockHandler(watcher, path, key, oldValue, isConnected)
       WM.layoutRunningApps(Config.bindings.apps)
     end)
   else
-    hs.timer.doAfter(2, function()
+    hs.timer.doAfter(3, function()
       setWifi(DockConfig.undocked.wifi)
       setInput(DockConfig.undocked.input)
       warn("[dock] dock disconnected")
