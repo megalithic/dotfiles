@@ -173,7 +173,7 @@ local PKGS = {
   -- (LANGS, syntax, et al) --
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  -- "gaoDean/autolist.nvim",
+  "gaoDean/autolist.nvim",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install", opt = true },
   "ellisonleao/glow.nvim",
   -- "dkarter/bullets.vim",
