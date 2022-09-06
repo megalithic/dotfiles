@@ -356,25 +356,49 @@ colors.tab_bar = {
 }
 
 --- [ FONTS ] ------------------------------------------------------------------
-local function font_with_fallback(font, params)
-  local names = {
-    font,
-    { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = true },
-    { family = "JetBrainsMono Nerd Font Mono", italic = true },
-    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold" },
-    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false, weight = "ExtraBold" },
-    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true, weight = "ExtraBold" },
-    "Dank Mono",
-    "Symbols Nerd Font Mono",
-    "codicon",
-  }
-  return wezterm.font_with_fallback(names, params)
-end
+-- local function font_with_fallback(font, params)
+--   local names = {
+--     font,
+--     { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = true },
+--     { family = "JetBrainsMono Nerd Font Mono", italic = true },
+--     { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold" },
+--     { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false, weight = "ExtraBold" },
+--     { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true, weight = "ExtraBold" },
+--     "Dank Mono",
+--     "Symbols Nerd Font Mono",
+--     "codicon",
+--   }
+--   return wezterm.font_with_fallback(names, params)
+-- end
 
 local fonts = {
-  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Bold" }, {}),
-  -- font = wezterm.font_with_fallback({ "Dank Mono", "codicon", "JetBrainsMono Nerd Font Mono" }),
-
+  -- font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Bold" }, {}),
+  font = wezterm.font("JetBrainsMono Nerd Font Mono", { weight = "Medium", stretch = "Normal", style = "Normal" }),
+  font_rules = {
+    {
+      italic = true,
+      font = wezterm.font("JetBrainsMono Nerd Font Mono", { weight = "Medium", stretch = "Normal", style = "Italic" }),
+    },
+    {
+      intensity = "Bold",
+      font = wezterm.font(
+        "JetBrainsMono Nerd Font Mono",
+        { weight = "ExtraBold", stretch = "Normal", style = "Normal" }
+      ),
+    },
+    {
+      intensity = "Bold",
+      italic = true,
+      font = wezterm.font(
+        "JetBrainsMono Nerd Font Mono",
+        { weight = "ExtraBold", stretch = "Normal", style = "Italic" }
+      ),
+    },
+    {
+      intensity = "Half",
+      font = wezterm.font("JetBrainsMono Nerd Font", { weight = "Thin" }),
+    },
+  },
   allow_square_glyphs_to_overflow_width = "Always", -- alts: WhenFollowedBySpace, Always
   custom_block_glyphs = true,
   freetype_load_target = "Light",

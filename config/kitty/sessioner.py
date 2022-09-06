@@ -27,27 +27,32 @@ def find_session_files(directory: str) -> Iterable[Path]:
     return Path(directory).expanduser().glob("*.conf")
 
 
-def main(args: List[str]) -> str:
-    debug(get_boss())
+def main(args: List[str]) -> tuple:
     session_files = [KittySession(path) for path in find_session_files(args[1])]
     if session_files:
         fzf = FzfPrompt("/usr/local/bin/fzf")
+        # selected_session = fzf.prompt(session_files)
         selected_session = fzf.prompt(
             session_files,
             '--prompt=" new or existing session  " --bind="enter:replace-query+print-query"',
         )
         if selected_session:
             selected_path = "{}/{}.conf".format(args[1], selected_session[0])
-            return str(selected_path)
+            # print("i hate python")
+            # debug(selected_session)
+            # debug(selected_path)
+            return (selected_session, str(selected_path))
 
     raise SystemExit(1)
 
 
 def handle_result(
-    args: List[str], session_path: str, target_window_id: int, boss: Boss
+    args: List[str], session_data: tuple, target_window_id: int, boss: Boss
 ) -> None:
+    session_name, session_path = session_data
+    # debug(session_name)
+    # debug(session_path)
     startup_session = next(create_sessions(get_options(), default_session=session_path))
-    debug(startup_session)
 
     # for os_window in boss.list_os_windows():
     #     print(os_window.wm_class)
