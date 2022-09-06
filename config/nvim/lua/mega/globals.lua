@@ -11,6 +11,7 @@ _G.mega = mega
     functions = {},
     dirs = {},
     mappings = {},
+    term = {},
     lsp = {},
     colors = require("mega.lush_theme.colors"),
     icons = require("mega.icons"),

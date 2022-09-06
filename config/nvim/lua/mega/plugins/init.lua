@@ -30,7 +30,7 @@ local PKGS = {
   "phaazon/hop.nvim",
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
-  { "akinsho/nvim-notify", branch = "feature/direction-config" },
+  "rcarriga/nvim-notify",
   -- "akinsho:feature/direction-config"
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -127,7 +127,7 @@ local PKGS = {
   "jbyuki/one-small-step-for-vimkind",
   "suketa/nvim-dap-ruby",
   "mxsdev/nvim-dap-vscode-js",
-  { "microsoft/vscode-js-debug", opt = true, run = "npm install --legacy-peer-deps; npm run-script compile" },
+  -- { "microsoft/vscode-js-debug", opt = true, run = "npm install --legacy-peer-deps; npm run-script compile" },
   { "microsoft/vscode-react-native", opt = true },
   -- { "sultanahamer/nvim-dap-reactnative", opt = true },
   "tpope/vim-ragtag",
@@ -173,7 +173,7 @@ local PKGS = {
   -- (LANGS, syntax, et al) --
   "ixru/nvim-markdown",
   -- "rhysd/vim-gfm-syntax",
-  "gaoDean/autolist.nvim",
+  -- "gaoDean/autolist.nvim",
   { "iamcco/markdown-preview.nvim", run = "cd app && yarn install", opt = true },
   "ellisonleao/glow.nvim",
   -- "dkarter/bullets.vim",
@@ -348,15 +348,27 @@ function M.config()
   -- TODO: determine if we want/use spellsitter
   -- conf("spellsitter", {})
 
-  conf(
-    "colorizer",
-    function()
-      require("colorizer").setup({ "*" }, {
-        names = false,
-        mode = "background",
-      })
-    end
-  )
+  conf("colorizer", function()
+    require("colorizer").setup({
+      filetypes = { "*" },
+      user_default_options = {
+        RGB = true, -- #RGB hex codes
+        RRGGBB = true, -- #RRGGBB hex codes
+        names = false, -- "Name" codes like Blue or blue
+        RRGGBBAA = false, -- #RRGGBBAA hex codes
+        AARRGGBB = false, -- 0xAARRGGBB hex codes
+        rgb_fn = false, -- CSS rgb() and rgba() functions
+        hsl_fn = false, -- CSS hsl() and hsla() functions
+        css = false, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
+        css_fn = false, -- Enable all CSS *functions*: rgb_fn, hsl_fn
+        -- Available modes for `mode`: foreground, background,  virtualtext
+        mode = "background", -- Set the display mode.
+        virtualtext = "■",
+      },
+      -- all the sub-options of filetypes apply to buftypes
+      buftypes = {},
+    })
+  end)
 
   -- REF: https://github.com/smjonas/live-command.nvim#gear-usage-and-customization
   -- conf("live_command", {
@@ -634,8 +646,8 @@ function M.config()
 
   conf("notify", {
     timeout = 3000,
-    stages = "slide",
-    direction = "bottom_up",
+    stages = "fade_in_slide_out",
+    top_down = false,
     background_colour = "NotifyFloat",
     max_width = function() return math.floor(vim.o.columns * 0.8) end,
     max_height = function() return math.floor(vim.o.lines * 0.8) end,

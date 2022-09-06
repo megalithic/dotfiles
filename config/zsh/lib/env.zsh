@@ -123,7 +123,7 @@ export KITTYMUX_STATE_DIR=$HOME/.local/state
 
 # -- wezterm
 export WEZTERM_CONFIG_FILE="$XDG_CONFIG_HOME/wezterm/wezterm.lua"
-[ -n "$WEZTERM_PANE" ] && export NVIM_LISTEN_ADDRESS="/tmp/nvim$WEZTERM_PANE"
+# [ -n "$WEZTERM_PANE" ] && export NVIM_LISTEN_ADDRESS="/tmp/nvim$WEZTERM_PANE"
 
 # -- qmk
 export QMK_HOME="$PROJECTS_DIR/qmk_firmware"

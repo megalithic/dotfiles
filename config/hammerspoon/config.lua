@@ -155,6 +155,16 @@ local apps = {
       { "", 1, "maximized" },
     },
   },
+  ["com.kagi.kagimacOS"] = {
+    bundleID = "com.kagi.kagimacOS",
+    name = "Orion",
+    quitter = true,
+    localBindings = {},
+    tags = { "browsers" },
+    rules = {
+      { "", 1, "maximized" },
+    },
+  },
   ["com.apple.SafariTechnologyPreview"] = {
     bundleID = "com.apple.SafariTechnologyPreview",
     name = "Safari Technology Preview",

@@ -1,11 +1,151 @@
 local fmt = string.format
 local api = vim.api
+local fn = vim.fn
 
 local nil_buf_id = 999999
 local term_buf_id = nil_buf_id
+local term_win_id = nil
+
+local cmd_opts = {
+  ["horizontal"] = {
+    new = "botright new",
+    split = "rightbelow sbuffer",
+    dimension = "height",
+    dim = "vim.api.nvim_win_set_height",
+    size = 25,
+    res = "resize",
+    winc = "J",
+  },
+  ["vertical"] = {
+    new = "botright vnew",
+    split = "rightbelow sbuffer",
+    dimension = "width",
+    dim = "vim.api.nvim_win_set_width",
+    size = 70,
+    res = "vertical-resize",
+    winc = "L",
+  },
+  ["float"] = {
+    new = function(size)
+      local parsed_size = (size / 100)
+      term_buf_id = api.nvim_create_buf(true, true)
+      term_win_id = api.nvim_open_win(term_buf_id, true, {
+        relative = "editor",
+        style = "minimal",
+        border = mega.get_border(),
+        width = math.floor(parsed_size * vim.o.columns),
+        height = math.floor(parsed_size * vim.o.lines),
+        row = math.floor(0.1 * vim.o.lines),
+        col = math.floor(0.1 * vim.o.columns),
+        zindex = 99,
+      })
+      vim.opt_local.relativenumber = false
+      vim.opt_local.number = false
+      vim.opt_local.signcolumn = "no"
+      api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
+      api.nvim_win_set_option(
+        term_win_id,
+        "winhl",
+        table.concat({
+          "Normal:NormalFloat",
+          "FloatBorder:FloatBorder",
+          "CursorLine:Visual",
+          "Search:None",
+        }, ",")
+      )
+
+      vim.cmd("setlocal bufhidden=wipe")
+    end,
+    split = function(size, bufnr)
+      local parsed_size = (size / 100)
+      -- term_buf_id = api.nvim_create_buf(true, true)
+      term_win_id = api.nvim_open_win(bufnr, true, {
+        relative = "editor",
+        style = "minimal",
+        border = mega.get_border(),
+        width = math.floor(parsed_size * vim.o.columns),
+        height = math.floor(parsed_size * vim.o.lines),
+        row = math.floor(0.1 * vim.o.lines),
+        col = math.floor(0.1 * vim.o.columns),
+        zindex = 99,
+      })
+      vim.opt_local.relativenumber = false
+      vim.opt_local.number = false
+      vim.opt_local.signcolumn = "no"
+      api.nvim_buf_set_option(bufnr, "filetype", "megaterm")
+      api.nvim_win_set_option(
+        term_win_id,
+        "winhl",
+        table.concat({
+          "Normal:NormalFloat",
+          "FloatBorder:FloatBorder",
+          "CursorLine:Visual",
+          "Search:None",
+        }, ",")
+      )
+
+      vim.cmd("setlocal bufhidden=wipe")
+    end,
+    size = 80,
+  },
+}
+
+---@class ParsedArgs
+---@field direction string?
+---@field cmd string?
+---@field dir string?
+---@field size number?
+---@field go_back boolean?
+---@field open boolean?
+
+---Take a users command arguments in the format "cmd='git commit' dir=~/dotfiles"
+---and parse this into a table of arguments
+---{cmd = "git commit", dir = "~/dotfiles"}
+---@see https://stackoverflow.com/a/27007701
+---@param args string
+---@return ParsedArgs
+function mega.term.parse(args)
+  local p = {
+    single = "'(.-)'",
+    double = "\"(.-)\"",
+  }
+
+  local result = {}
+  if args then
+    local quotes = args:match(p.single) and p.single or args:match(p.double) and p.double or nil
+    if quotes then
+      -- 1. extract the quoted command
+      local pattern = "(%S+)=" .. quotes
+      for key, value in args:gmatch(pattern) do
+        -- Check if the current OS is Windows so we can determine if +shellslash
+        -- exists and if it exists, then determine if it is enabled. In that way,
+        -- we can determine if we should match the value with single or double quotes.
+        quotes = p.single
+        value = fn.shellescape(value)
+        result[vim.trim(key)] = fn.expandcmd(value:match(quotes))
+      end
+      -- 2. then remove it from the rest of the argument string
+      args = args:gsub(pattern, "")
+    end
+
+    for _, part in ipairs(vim.split(args, " ")) do
+      if #part > 1 then
+        local arg = vim.split(part, "=")
+        local key, value = arg[1], arg[2]
+        if key == "size" then
+          value = tonumber(value)
+        elseif key == "go_back" or key == "open" then
+          value = value ~= "0"
+        end
+        result[key] = value
+      end
+    end
+  end
+  return result
+end
 
 -- REF: https://github.com/outstand/titan.nvim/blob/main/lua/titan/plugins/toggleterm.lua
-local function set_keymaps(bufnr, winnr)
+local function create_keymaps(bufnr, winnr)
   local opts = { buffer = bufnr, silent = false }
   -- quit terminal and go back to last window
   nmap("q", function()
@@ -23,98 +163,16 @@ local function set_keymaps(bufnr, winnr)
   tmap("<C-l>", [[<Cmd>wincmd l<CR>]], opts)
 end
 
---- @class TermOpts
---- @field cmd string,
---- @field precmd string,
---- @field direction "horizontal"|"vertical"|"float",
---- @field on_after_open function,
---- @field on_exit function,
---- @field winnr number,
---- @field notifier function,
---- @field height integer,
---- @field width integer,
-
----Opens a custom terminal
----@param opts TermOpts
-function mega.term_open(opts)
-  local cmd = opts.cmd or "zsh -i"
+local function create_term(cmd, opts)
+  opts = opts or {}
   local custom_on_exit = opts.on_exit or nil
-  local precmd = opts.precmd or nil
-  local on_after_open = opts.on_after_open or nil
   local winnr = opts.winnr
-  local direction = opts.direction or "horizontal"
   local notifier = opts.notifier
-  local height = opts.height or 25
-  local width = opts.width or 80
-  local is_existing_term = false
-
-  -- delete the current buffer if it's still open
-  if term_buf_id and api.nvim_buf_is_valid(term_buf_id) then
-    -- if we want to split terms:
-    -- is_existing_term = true
-    -- else, only one big one at a time:
-    api.nvim_buf_delete(term_buf_id, { force = true })
-    term_buf_id = nil_buf_id
-  end
-
-  local split_cmd = is_existing_term and "rightbelow vnew" or "botright new"
-  local term_cmd = fmt("%s | lua vim.api.nvim_win_set_height(0, %s)", split_cmd, height)
-
-  if direction == "horizontal" then
-    vim.cmd(term_cmd)
-    term_buf_id = api.nvim_get_current_buf()
-    vim.opt_local.filetype = "megaterm"
-    vim.opt_local.signcolumn = "no"
-  elseif direction == "vertical" then
-    split_cmd = is_existing_term and "rightbelow new" or "botright vnew"
-    vim.cmd(fmt("%s | lua vim.api.nvim_win_set_width(0, %s)", split_cmd, width))
-    term_buf_id = api.nvim_get_current_buf()
-    vim.opt_local.filetype = "megaterm"
-    vim.opt_local.signcolumn = "no"
-  elseif direction == "float" then
-    local buf_id = api.nvim_create_buf(true, true)
-    local win_id = api.nvim_open_win(buf_id, true, {
-      relative = "editor",
-      style = "minimal",
-      border = mega.get_border(),
-      width = math.floor(0.8 * vim.o.columns),
-      height = math.floor(0.8 * vim.o.lines),
-      row = math.floor(0.1 * vim.o.lines),
-      col = math.floor(0.1 * vim.o.columns),
-      zindex = 99,
-    })
-    api.nvim_win_set_option(win_id, "number", false)
-    api.nvim_win_set_option(win_id, "relativenumber", false)
-    api.nvim_buf_set_option(buf_id, "filetype", "megaterm")
-    api.nvim_win_set_option(
-      win_id,
-      "winhl",
-      table.concat({
-        "Normal:NormalFloat",
-        "FloatBorder:FloatBorder",
-        "CursorLine:Visual",
-        "Search:None",
-      }, ",")
-    )
-
-    vim.cmd("setlocal bufhidden=wipe")
-
-    term_buf_id = buf_id
-  else
-    vim.notify("[megaterm] direction must either be `horizontal` or `vertical`.", "WARN")
-    vim.cmd(term_cmd)
-  end
-
-  set_keymaps(term_buf_id, winnr)
-
-  if precmd ~= nil then cmd = fmt("%s; %s", precmd, cmd) end
 
   -- REF: https://github.com/seblj/dotfiles/commit/fcdfc17e2987631cbfd4727c9ba94e6294948c40#diff-bbe1851dbfaaa99c8fdbb7229631eafc4f8048e09aa116ef3ad59cde339ef268L56-R90
   vim.fn.termopen(cmd, {
     ---@diagnostic disable-next-line: unused-local
     on_exit = function(jobid, exit_code, event)
-      set_keymaps(term_buf_id, winnr)
-
       -- if we get a custom on_exit, run it instead...
       if custom_on_exit ~= nil and type(custom_on_exit) == "function" then
         custom_on_exit(jobid, exit_code, event, cmd, winnr, term_buf_id)
@@ -130,21 +188,136 @@ function mega.term_open(opts)
       end
     end,
   })
+end
 
-  P(cmd)
+local function handle_existing(cmd, opts)
+  local size = opts["size"] or cmd.size
+  local on_after_open = opts.on_after_open or nil
+  local winnr = opts.winnr
+
+  if cmd.direction == "float" then
+    cmd.split(size, term_buf_id)
+  else
+    local c = fmt(
+      "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)",
+      cmd.split,
+      term_buf_id,
+      cmd.winc,
+      cmd.dimension,
+      size
+    )
+    api.nvim_command(c)
+    term_win_id = api.nvim_get_current_win()
+  end
 
   if on_after_open ~= nil and type(on_after_open) == "function" then
     on_after_open(term_buf_id, winnr)
   else
-    vim.cmd([[normal! G]])
-    if direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+    api.nvim_command([[normal! G]])
+    if cmd.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
   end
 end
 
--- Convenience
-mega.open_term = mega.term_open
+local function handle_new(cmd, opts)
+  local size = opts["size"] or cmd.size
+  local init_cmd = opts.cmd or "zsh -i"
+  local precmd = opts.precmd or nil
+  local on_after_open = opts.on_after_open or nil
+  local winnr = opts.winnr
 
--- Commands that wrap open_term:
+  if cmd.direction == "float" then
+    cmd.new(size)
+  else
+    local c = fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)", cmd.new, cmd.winc, cmd.dimension, size)
+    api.nvim_command(c)
+
+    term_win_id = api.nvim_get_current_win()
+    term_buf_id = api.nvim_get_current_buf()
+
+    vim.opt_local.relativenumber = false
+    vim.opt_local.number = false
+    vim.opt_local.signcolumn = "no"
+    api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
+  end
+
+  create_keymaps(term_buf_id, term_win_id)
+
+  if precmd ~= nil then init_cmd = fmt("%s; %s", precmd, init_cmd) end
+
+  create_term(init_cmd, opts)
+
+  if on_after_open ~= nil and type(on_after_open) == "function" then
+    on_after_open(term_buf_id, winnr)
+  else
+    api.nvim_command([[normal! G]])
+    if cmd.direction ~= "float" then vim.cmd(winnr .. [[wincmd p]]) end
+  end
+end
+
+function mega.term.open(opts)
+  opts = opts or {}
+  local direction = opts["direction"] or "horizontal"
+  local cmd = cmd_opts[direction]
+
+  if fn.bufexists(term_buf_id) ~= 1 then
+    handle_new(cmd, opts)
+  elseif fn.win_gotoid(term_win_id) ~= 1 then
+    handle_existing(cmd, opts)
+  end
+end
+
+function mega.term.hide()
+  if fn.win_gotoid(term_win_id) == 1 then api.nvim_command("hide") end
+end
+
+-- --- @class TermOpts
+-- --- @field cmd string,
+-- --- @field precmd string,
+-- --- @field direction "horizontal"|"vertical"|"float",
+-- --- @field on_after_open function,
+-- --- @field on_exit function,
+-- --- @field winnr number,
+-- --- @field notifier function,
+-- --- @field height integer,
+-- --- @field width integer,
+-- --- @field persist boolean,
+--
+-- ---Opens a custom terminal
+-- ---@param opts TermOpts
+function mega.term.toggle(opts)
+  local parsed = opts
+
+  if type(opts) == "string" then
+    parsed = mega.term.parse(opts)
+
+    vim.validate({
+      size = { parsed.size, "number", true },
+      direction = { parsed.direction, "string", true },
+    })
+    if parsed.size then parsed.size = tonumber(parsed.size) end
+  end
+
+  if not parsed.winnr then parsed["winnr"] = vim.fn.winnr() end -- api.nvim_get_current_win()
+  if not parsed.cmd then parsed["cmd"] = "zsh -i" end
+  if not parsed.on_after_open then parsed["on_after_open"] = function() vim.cmd("startinsert") end end
+
+  if fn.win_gotoid(term_win_id) == 1 then
+    mega.term.hide()
+  else
+    mega.term.open(parsed)
+  end
+end
+
+mega.command("Term", function()
+  mega.term.toggle({
+    winnr = vim.fn.winnr(),
+    ---@diagnostic disable-next-line: unused-local
+    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
+  })
+end)
+
+mega.command("T", function(opts) mega.term.toggle(opts.args) end, { nargs = "*" })
+
 mega.command("TermElixir", function()
   local precmd = ""
   local cmd = ""
@@ -156,8 +329,7 @@ mega.command("TermElixir", function()
     cmd = "iex"
   end
 
-  mega.open_term({
-    winnr = vim.fn.winnr(),
+  mega.term_open({
     cmd = cmd,
     precmd = precmd,
     on_exit = function() end,
@@ -179,8 +351,7 @@ mega.command("TermRuby", function()
     cmd = "irb"
   end
 
-  mega.open_term({
-    winnr = vim.fn.winnr(),
+  mega.term_open({
     cmd = cmd,
     precmd = precmd,
     on_exit = function() end,
@@ -195,8 +366,7 @@ end)
 mega.command("TermLua", function()
   local cmd = "lua"
 
-  mega.open_term({
-    winnr = vim.fn.winnr(),
+  mega.term_open({
     cmd = cmd,
     direction = "horizontal",
     on_exit = function() end,
@@ -211,8 +381,7 @@ end)
 mega.command("TermPython", function()
   local cmd = "python"
 
-  mega.open_term({
-    winnr = vim.fn.winnr(),
+  mega.term_open({
     cmd = cmd,
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
@@ -226,8 +395,7 @@ end)
 mega.command("TermNode", function()
   local cmd = "node"
 
-  mega.open_term({
-    winnr = vim.fn.winnr(),
+  mega.term_open({
     cmd = cmd,
     on_exit = function() end,
     ---@diagnostic disable-next-line: unused-local
@@ -238,50 +406,13 @@ mega.command("TermNode", function()
   })
 end)
 
-mega.command("Term", function()
-  mega.open_term({
-    winnr = vim.fn.winnr(),
-    ---@diagnostic disable-next-line: unused-local
-    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
-  })
-end)
-
-mega.command("TermFloat", function()
-  mega.open_term({
-    direction = "float",
-    winnr = vim.fn.winnr(),
-    ---@diagnostic disable-next-line: unused-local
-    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
-  })
-end)
-
-mega.command("TermVertical", function()
-  mega.open_term({
-    direction = "vertical",
-    winnr = vim.fn.winnr(),
-    ---@diagnostic disable-next-line: unused-local
-    on_after_open = function(bufnr, _winnr) vim.cmd("startinsert") end,
-  })
-end)
-
-local has_wk, wk = mega.require("which-key")
-if has_wk then
-  wk.register({
-    t = {
-      name = "terminal",
-      t = { "<cmd>Term<cr>", "term" },
-      f = { "<cmd>TermFloat<cr>", "term (float)" },
-      v = { "<cmd>TermVertical<cr>", "term (vertical)" },
-      r = {
-        name = "repls",
-        e = { "<cmd>TermElixir<cr>", "repl > elixir" },
-        r = { "<cmd>TermRuby<cr>", "repl > ruby" },
-        l = { "<cmd>TermLua<cr>", "repl > lua" },
-        n = { "<cmd>TermNode<cr>", "repl > node" },
-        p = { "<cmd>TermPython<cr>", "repl > python" },
-      },
-    },
-  }, {
-    prefix = "<leader>",
-  })
+if vim.g.term_plugin then
+  nnoremap("<leader>tt", "<cmd>T<cr>", "term")
+  nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
+  nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
+  nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
+  nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")
+  nnoremap("<leader>trl", "<cmd>TermLua<cr>", "repl > lua")
+  nnoremap("<leader>trn", "<cmd>TermNode<cr>", "repl > node")
+  nnoremap("<leader>trp", "<cmd>TermPython<cr>", "repl > python")
 end

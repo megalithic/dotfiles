@@ -82,7 +82,8 @@ local function get_toggleterm_name(_, buf)
 end
 local function get_megaterm_name(_, buf)
   local shell = fnamemodify(vim.env.SHELL, ":t")
-  return fmt("Terminal(%s)[%s]", shell, buf)
+  local mode = M.modes[api.nvim_get_mode().mode]
+  return fmt("megaterm(%s)[%s]⋮%s", shell, buf, mode.short)
   -- return fmt("Terminal(%s)[%s]", shell, api.nvim_buf_get_var(buf, "cmd") or buf)
 end
 -- Capture the type of the neo tree buffer opened
@@ -519,8 +520,8 @@ M.modes = setmetatable({
   ['c']    = { long = 'Command',  short = 'C',   hl = 'StModeCommand' },
   ['r']    = { long = 'Prompt',   short = 'P',   hl = 'StModeOther' },
   ['!']    = { long = 'Shell',    short = 'Sh',  hl = 'StModeOther' },
-  ['t']    = { long = 'Terminal', short = 'T',   hl = 'StModeOther' },
-  ['nt']    = { long = 'N-Terminal', short = 'T',   hl = 'StModeNormal' },
+  ['t']    = { long = 'Terminal', short = 'TI',   hl = 'StModeOther' },
+  ['nt']    = { long = 'N-Terminal', short = 'TN',   hl = 'StModeNormal' },
 }, {
   -- By default return 'Unknown' but this shouldn't be needed
   __index = function()

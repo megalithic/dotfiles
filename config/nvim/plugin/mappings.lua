@@ -219,6 +219,20 @@ if has_wk then
       l = { "<cmd>TestLast<cr>", "Run _last test" },
       v = { "<cmd>TestVisit<cr>", "Run test file _visit" },
     },
+    ["<leader>t"] = {
+      name = "terminal",
+      t = { "term" },
+      f = { "term (float)" },
+      v = { "term (vertical)" },
+      r = {
+        name = "repls",
+        e = { "elixir" },
+        r = { "ruby" },
+        l = { "lua" },
+        n = { "node" },
+        p = { "python" },
+      },
+    },
     ["<leader>z"] = {
       name = "zk",
     },

@@ -8,22 +8,279 @@
 --- https://github.com/V1RE/dotfiles/blob/main/dot_config/wezterm/wezterm.lua
 --- https://github.com/Omochice/dotfiles/blob/main/config/wezterm/wezterm.lua
 --- https://github.com/yutkat/dotfiles/blob/main/.config/wezterm/wezterm.lua
---- https://github.com/katsyoshi/dotfiles/blob/master/wezterm/wezterm.lua
 
-local wt = require("wezterm")
-local act = wt.action
-local mux = wt.mux
+local wezterm = require("wezterm")
+local act = wezterm.action
+local mux = wezterm.mux
 local os = require("os")
 local homedir = os.getenv("HOME")
 local fmt = string.format
 local is_tmux = os.getenv("TMUX") ~= ""
 
--- load our wezterm.on/1 events
-require("events")
-local mappings = require("keys")
-local palette = require("palette")
+-- @note: megaforest
+local palette = {
+  background = "rgba(50,61,67,1.000)", -- "#323d43", -- #323d43 #273433
+  bright_background = "#323d43", -- #3a464d
+  foreground = "#d3c6aa", -- #d8cacc
+  bright_foreground = "#d8cacc",
+  cursor = "#83b6af",
+  visual = "#4e6053",
+  split = "#3e4c53",
+  -- ansi
+  black = "#4b565c",
+  red = "#e67e80",
+  green = "#a7c080",
+  yellow = "#dbbc7f",
+  blue = "#83b6af",
+  orange = "#e39b7b",
+  purple = "#d699b6",
+  cyan = "#719d7c",
+  white = "#cccccc",
+  -- brights
+  bright_black = "#273433",
+  bright_red = "#e67e80",
+  bright_green = "#a7c080",
+  bright_yellow = "#d9bb80",
+  bright_blue = "#7fbbb3",
+  bright_orange = "#e39b7b",
+  bright_purple = "#d39bb6",
+  bright_cyan = "#719d7c",
+  bright_white = "#cccccc",
+}
 
-local function log(msg) wt.log_info(msg) end
+local function log(msg) wezterm.log_info(msg) end
+
+-- Equivalent to POSIX basename(3)
+-- Given "/foo/bar" returns "bar"
+-- Given "c:\\foo\\bar" returns "bar"
+local function basename(s) return string.gsub(s, "(.*[/\\])(.*)", "%2") end
+
+local function notifier(opts)
+  if opts.window == nil then return end
+
+  opts = opts or {}
+  local title = opts.title or "wezterm"
+  local message = opts.message or ""
+  local timeout = opts.timeout or 4000
+  local window = opts.window
+
+  window:toast_notification(title, message, nil, timeout)
+end
+
+local function window_config_reloaded(window, pane)
+  notifier({ title = "wezterm", message = "configuration reloaded!", window = window, timeout = 4000 })
+end
+
+local function format_tab_title(tab, tabs, panes, config, hover, max_width)
+  local pane = tab.active_pane
+  local dir = basename(pane.current_working_dir)
+  local title = dir
+  local icon = ""
+
+  if dir == nil or dir == "" then title = basename(pane.foreground_process_name) end
+
+  if dir == basename(wezterm.home_dir) then title = "~" end
+  -- local SUP_IDX = {
+  --   "¹",
+  --   "²",
+  --   "³",
+  --   "⁴",
+  --   "⁵",
+  --   "⁶",
+  --   "⁷",
+  --   "⁸",
+  --   "⁹",
+  --   "¹⁰",
+  --   "¹¹",
+  --   "¹²",
+  --   "¹³",
+  --   "¹⁴",
+  --   "¹⁵",
+  --   "¹⁶",
+  --   "¹⁷",
+  --   "¹⁸",
+  --   "¹⁹",
+  --   "²⁰",
+  -- }
+
+  -- local NUM_IDX_ACTIVE = {
+  --   "0xf8a3",
+  --   "0xf8a6",
+  --   "0xf8a9",
+  --   "0xf8ac",
+  --   "0xf8af",
+  --   "0xf8b2",
+  --   "0xf8b5",
+  --   "0xf8b8",
+  --   "0xf8bb",
+  -- }
+  -- local NUM_IDX_INACTIVE = {
+  --   "0xf8a5",
+  --   "0xf8a8",
+  --   "0xf8ab",
+  --   "0xf8ae",
+  --   "0xf8b1",
+  --   "0xf8b4",
+  --   "0xf8b7",
+  --   "0xf8ba",
+  --   "0xf8bd",
+  -- }
+  local tab_prefix = tab.tab_index == 0 and "  " or " "
+  local tab_index = tab.tab_index + 1
+
+  if tab.is_active then
+    icon = tab.active_pane.is_zoomed and "" or ""
+    -- tab_index = utf8.char(NUM_IDX_ACTIVE[tab.tab_index + 1])
+
+    -- utf8.char(0xf490)
+    return {
+      { Text = tab_prefix },
+      -- { Text = fmt("%s%s:%s ", icon, tab_index, title) },
+      -- { Text = fmt("%s:%s ", tab.tab_index + 1, title) },
+      { Text = fmt("%s %s:%s ", icon, tab_index, title) },
+      { Text = "" },
+    }
+  end
+
+  -- local has_unseen_output = false
+  -- for _, pane in ipairs(tab.panes) do
+  --   if pane.has_unseen_output then
+  --     has_unseen_output = true
+  --     break
+  --   end
+  -- end
+  -- if has_unseen_output then
+  --   return {
+  --     { Background = { Color = "Orange" } },
+  --     { Text = " " .. tab.active_pane.title .. " " },
+  --   }
+  -- end
+
+  icon = tab.active_pane.is_zoomed and "" or ""
+  return {
+    { Text = tab_prefix },
+    -- { Text = fmt("%s %s ", tab_index, title) },
+    { Text = fmt("%s %s:%s ", icon, tab_index, title) },
+    { Text = "" },
+  }
+end
+
+local function update_right_status(window, pane)
+  -- Each element holds the text for a cell in a "powerline" style << fade
+  local cells = {}
+
+  local config = window:effective_config()
+  local session_color = palette.yellow
+  local session_name = ""
+
+  -- insert session name
+  local session_icon = utf8.char(0xf490)
+  for i, v in ipairs(config.unix_domains) do
+    if v.name ~= nil and v.name ~= "" then
+      session_name = v.name
+      break
+    else
+      session_name = window:active_workspace()
+    end
+  end
+  session_name = window:active_workspace()
+  table.insert(
+    cells,
+    wezterm.format({
+      { Attribute = { Intensity = "Bold" } },
+      { Foreground = { Color = session_color } },
+      { Text = " " .. session_icon .. " " .. session_name },
+    })
+  )
+
+  -- insert battery percentage
+  for _, b in ipairs(wezterm.battery_info()) do
+    table.insert(cells, fmt("%.0f%%", b.state_of_charge * 100))
+  end
+
+  -- insert local datetime and utc
+  local datetime = fmt("%s (UTC %s)", wezterm.strftime("%H:%M"), wezterm.strftime_utc("%H:%M"))
+  table.insert(cells, datetime)
+
+  -- The elements to be formatted
+  local formatted_cells = {}
+  -- How many cells have been formatted
+  local formatted_cells_count = 0
+  -- Translate a cell into elements
+  function push(text, is_last)
+    table.insert(formatted_cells, { Text = "" .. text .. "" })
+    if not is_last then table.insert(formatted_cells, { Text = " ⋮ " }) end
+    formatted_cells_count = formatted_cells_count + 1
+  end
+
+  while #cells > 0 do
+    local cell = table.remove(cells, 1)
+    push(cell, #cells == 0)
+  end
+
+  -- push a spacer cell
+  push(" ", #cells == 0)
+  window:set_right_status(wezterm.format(formatted_cells))
+end
+
+local function trigger_nvim_with_scrollback(window, pane)
+  local scrollback = pane:get_lines_as_text()
+  local name = os.tmpname()
+  local f = io.open(name, "w+")
+
+  if f ~= nil then
+    f:write(scrollback)
+    f:flush()
+    f:close()
+    local command = "nvim " .. name
+    window:perform_action(
+      wezterm.action({ SpawnCommandInNewTab = {
+        args = { "/usr/local/bin/zsh", "-l", "-c", command },
+      } }),
+      pane
+    )
+    wezterm.sleep_ms(1000)
+    os.remove(name)
+  end
+end
+
+local function trigger_fzf_example(window, pane)
+  local command = "cd (ghq root)/(ghq list | fzf +m --reverse --prompt='Project > ') && vim"
+  window:perform_action(
+    wezterm.action({
+      -- SwitchToWorkspace = {
+      --   spawn = {
+      --     args = { "/usr/local/bin/fish", "-l", "-c", command },
+      --   },
+      -- },
+      SpawnCommandInNewTab = {
+        args = { "/usr/local/bin/fish", "-l", "-c", command },
+      },
+    }),
+    pane
+  )
+end
+
+wezterm.on("window-config-reloaded", window_config_reloaded)
+wezterm.on("format-tab-title", format_tab_title)
+wezterm.on("update-right-status", update_right_status)
+wezterm.on("trigger-nvim-with-scrollback", trigger_nvim_with_scrollback)
+
+-- This produces a window split horizontally into three equal parts
+wezterm.on("gui-startup", function()
+  wezterm.log_info("doing gui startup")
+  local tab, pane, window = mux.spawn_window({})
+  mux.split_pane(pane, { size = 0.3 })
+  mux.split_pane(pane, { size = 0.5 })
+end)
+
+-- this is called by the mux server when it starts up.
+-- It makes a window split top/bottom
+wezterm.on("mux-startup", function()
+  wezterm.log_info("doing mux startup")
+  local tab, pane, window = mux.spawn_window({})
+  mux.split_pane(pane, { direction = "Top" })
+end)
 
 --- [ COLORS ] -----------------------------------------------------------------
 -- foreground = "#d3c6aa"
@@ -80,6 +337,7 @@ colors.tab_bar = {
     fg_color = palette.blue,
     bg_color = palette.bright_background,
     intensity = "Bold",
+    weight = "ExtraBold",
     italic = true,
   },
   inactive_tab_edge = palette.bright_background,
@@ -101,25 +359,20 @@ colors.tab_bar = {
 local function font_with_fallback(font, params)
   local names = {
     font,
-    -- { family = "Hack Nerd Font Mono", weight = "Regular", stretch = "Normal", style = "Normal", italic = false },
-    -- { family = "Hack Nerd Font Mono", weight = "Regular", stretch = "Normal", style = "Italic", italic = true },
-    -- { family = "Hack Nerd Font Mono", weight = "Bold", stretch = "Normal", style = "Normal", italic = false },
-    -- { family = "Hack Nerd Font Mono", weight = "Bold", stretch = "Normal", style = "Italic", italic = true },
-    { family = "JetBrainsMonoMedium Nerd Font Mono", weight = "Medium", italic = true },
-    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false, weight = "Bold" },
-    { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true, weight = "Bold" },
+    { family = "JetBrainsMono Nerd Font Mono", weight = "Medium", italic = true },
+    { family = "JetBrainsMono Nerd Font Mono", italic = true },
+    { family = "JetBrainsMono Nerd Font Mono", weight = "ExtraBold" },
     { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = false, weight = "ExtraBold" },
     { family = "JetBrainsMonoExtraBold Nerd Font Mono", italic = true, weight = "ExtraBold" },
     "Dank Mono",
     "Symbols Nerd Font Mono",
     "codicon",
   }
-  return wt.font_with_fallback(names, params)
+  return wezterm.font_with_fallback(names, params)
 end
 
 local fonts = {
-  font = font_with_fallback({ family = "JetBrainsMonoMedium Nerd Font Mono" }, {}),
-  -- font = font_with_fallback({ family = "Hack Nerd Font Mono" }, {}),
+  font = font_with_fallback({ family = "JetBrainsMono Nerd Font Mono", weight = "Bold" }, {}),
   -- font = wezterm.font_with_fallback({ "Dank Mono", "codicon", "JetBrainsMono Nerd Font Mono" }),
 
   allow_square_glyphs_to_overflow_width = "Always", -- alts: WhenFollowedBySpace, Always
@@ -142,6 +395,112 @@ local fonts = {
   -- },
   cursor_blink_rate = 0,
   force_reverse_video_cursor = true,
+}
+
+--- [ MAPPINGS ] ---------------------------------------------------------------
+-- local tmux_map = function() end
+
+local mappings = {
+  -- tmux-style leader prefix <C-space>
+  leader = { key = " ", mods = "CTRL", timeout_milliseconds = 1000 },
+  keys = {
+    { key = "x", mods = "ALT", action = "ShowLauncher" },
+    { key = "w", mods = "CTRL", action = "QuickSelect" },
+
+    -- Font Size
+    { key = "0", mods = "SUPER", action = "ResetFontSize" },
+    { key = "+", mods = "SUPER", action = "IncreaseFontSize" },
+    { key = "-", mods = "SUPER", action = "DecreaseFontSize" },
+
+    -- Copy Mode/Select
+    { key = " ", mods = "LEADER", action = "ActivateCopyMode" },
+    { key = "f", mods = "LEADER|CTRL", action = "QuickSelect" },
+
+    -- tabs
+    { key = "t", mods = "SUPER", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
+    { key = "w", mods = "CTRL", action = wezterm.action({ CloseCurrentTab = { confirm = true } }) },
+    { key = "x", mods = "LEADER|CTRL", action = act({ CloseCurrentPane = { confirm = true } }) },
+
+    { key = "1", mods = "LEADER|CTRL", action = act({ ActivateTab = 0 }) },
+    { key = "2", mods = "LEADER|CTRL", action = act({ ActivateTab = 1 }) },
+    { key = "3", mods = "LEADER|CTRL", action = act({ ActivateTab = 2 }) },
+    { key = "4", mods = "LEADER|CTRL", action = act({ ActivateTab = 3 }) },
+    { key = "5", mods = "LEADER|CTRL", action = act({ ActivateTab = 4 }) },
+    { key = "6", mods = "LEADER|CTRL", action = act({ ActivateTab = 5 }) },
+    { key = "7", mods = "LEADER|CTRL", action = act({ ActivateTab = 6 }) },
+    { key = "8", mods = "LEADER|CTRL", action = act({ ActivateTab = 7 }) },
+    { key = "9", mods = "LEADER|CTRL", action = act({ ActivateTab = 8 }) },
+
+    { key = "h", mods = "LEADER", action = act.ActivateTabRelative(-1) },
+    { key = "l", mods = "LEADER", action = act.ActivateTabRelative(1) },
+
+    -- panes
+    {
+      key = "v",
+      mods = "LEADER",
+      action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }),
+    },
+    { key = "h", mods = "LEADER", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
+    {
+      key = "z",
+      mods = "LEADER|CTRL",
+      action = wezterm.action.TogglePaneZoomState,
+    },
+    {
+      key = "h",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Left"),
+    },
+    {
+      key = "l",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Right"),
+    },
+    {
+      key = "k",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Up"),
+    },
+    {
+      key = "j",
+      mods = "CTRL",
+      action = act.ActivatePaneDirection("Down"),
+    },
+
+    -- launchers
+    {
+      key = " ",
+      mods = "LEADER|CTRL",
+      action = wezterm.action({
+        ShowLauncherArgs = {
+          flags = "FUZZY|WORKSPACES",
+        },
+      }),
+    },
+    { key = "n", mods = "LEADER|CTRL", action = wezterm.action.SwitchWorkspaceRelative(1) },
+    { key = "p", mods = "LEADER|CTRL", action = wezterm.action.SwitchWorkspaceRelative(-1) },
+    { key = "b", mods = "LEADER|CTRL", action = wezterm.action({ EmitEvent = "trigger-nvim-with-scrollback" }) },
+    { key = "d", mods = "LEADER|CTRL", action = wezterm.action.ShowDebugOverlay },
+
+    { key = "Enter", mods = "LEADER|CTRL", action = "QuickSelect" },
+    { key = "/", mods = "LEADER|CTRL", action = act.Search("CurrentSelectionOrEmptyString") },
+    {
+      key = "O",
+      mods = "CMD",
+      action = wezterm.action({
+        QuickSelectArgs = {
+          patterns = {
+            "https?://\\S+",
+          },
+          action = wezterm.action_callback(function(window, pane)
+            local url = window:get_selection_text_for_pane(pane)
+            wezterm.log_info("opening: " .. url)
+            wezterm.open_with(url)
+          end),
+        },
+      }),
+    },
+  },
 }
 
 --- [ TABS ] -------------------------------------------------------------------
@@ -214,7 +573,7 @@ local misc = {
   },
   set_environment_variables = {
     LANG = "en_US.UTF-8",
-    PATH = wt.executable_dir .. ";" .. os.getenv("PATH"),
+    PATH = wezterm.executable_dir .. ";" .. os.getenv("PATH"),
   },
   scrollback_lines = 5000,
   enable_scroll_bar = false,
