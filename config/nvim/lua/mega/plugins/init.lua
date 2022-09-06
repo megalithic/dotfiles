@@ -31,7 +31,7 @@ local PKGS = {
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
-  -- "akinsho:feature/direction-config"
+  "levouh/tint.nvim",
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
   "neovim/nvim-lspconfig",
@@ -355,12 +355,12 @@ function M.config()
         RGB = true, -- #RGB hex codes
         RRGGBB = true, -- #RRGGBB hex codes
         names = false, -- "Name" codes like Blue or blue
-        RRGGBBAA = false, -- #RRGGBBAA hex codes
-        AARRGGBB = false, -- 0xAARRGGBB hex codes
-        rgb_fn = false, -- CSS rgb() and rgba() functions
-        hsl_fn = false, -- CSS hsl() and hsla() functions
-        css = false, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
-        css_fn = false, -- Enable all CSS *functions*: rgb_fn, hsl_fn
+        RRGGBBAA = true, -- #RRGGBBAA hex codes
+        AARRGGBB = true, -- 0xAARRGGBB hex codes
+        rgb_fn = true, -- CSS rgb() and rgba() functions
+        hsl_fn = true, -- CSS hsl() and hsla() functions
+        -- css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
+        css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
         -- Available modes for `mode`: foreground, background,  virtualtext
         mode = "background", -- Set the display mode.
         virtualtext = "■",
@@ -383,6 +383,27 @@ function M.config()
     -- remove h,j,k,l from hops list of keys
     hop.setup({ keys = "etovxqpdygfbzcisuran" })
     mega.nnoremap("s", function() hop.hint_char1({ multi_windows = false }) end)
+  end)
+
+  conf("tint", function()
+    require("tint").setup({
+      tint = -30,
+      highlight_ignore_patterns = {
+        "WinSeparator",
+        "St.*",
+        "Comment",
+        "Panel.*",
+        "Telescope.*",
+      },
+      window_ignore_function = function(win_id)
+        if vim.wo[win_id].diff or vim.fn.win_gettype(win_id) ~= "" then return true end
+        local buf = vim.api.nvim_win_get_buf(win_id)
+        local b = vim.bo[buf]
+        local ignore_bt = { "terminal", "prompt", "nofile" }
+        local ignore_ft = { "neo-tree", "packer", "diff", "toggleterm", "Neogit.*", "Telescope.*" }
+        return mega.any(b.bt, ignore_bt) or mega.any(b.ft, ignore_ft)
+      end,
+    })
   end)
 
   conf("golden_size", function()

@@ -59,6 +59,7 @@ local bright_blue_alt = C.bright_blue_alt
 local yellow = C.yellow
 local green = C.green
 local bright_green = C.bright_green
+local dark_green = C.dark_green
 local cyan = C.cyan
 local teal = C.teal
 local aqua = C.aqua
@@ -437,7 +438,7 @@ return lush(function()
     TSVariable({ Fg }),
     TSVariableBuiltin({ PurpleItalic }),
     TSComment({ fg = light_grey, gui = "italic" }),
-    TSError({ gui = "undercurl", sp = red }), -- ErrorText
+    TSError({ fg = "NONE", bg = "NONE", gui = "undercurl", sp = red }), -- ErrorText
     -- highlight FIXME/TODO/NOTE/REF: comments
     commentTSWarning({ fg = orange, gui = "bold" }),
     commentTSDanger({ bg = red, fg = bg_dark, gui = "bold" }),
@@ -792,7 +793,7 @@ return lush(function()
     TelescopeMatching({ Title }),
     TelescopeTitle({ Normal, gui = "bold" }),
 
-    TelescopePreviewTitle({ fg = bg0, bg = green, gui = "italic" }),
+    TelescopePreviewTitle({ fg = bg0, bg = dark_green, gui = "italic" }),
     -- darkens the whole preview panel + my faux-no-border
     TelescopePreviewBorder({ bg = PanelBackground.bg, fg = "NONE" }),
     TelescopePreviewNormal({ bg = PanelBackground.bg, fg = "NONE" }),
@@ -801,7 +802,7 @@ return lush(function()
     TelescopePromptPrefix({ Statement, bg = bg2.darken(10) }),
     TelescopePromptBorder({ fg = bg2.darken(10), bg = bg2.darken(10) }),
     TelescopePromptNormal({ fg = fg, bg = bg2.darken(10) }),
-    TelescopePromptTitle({ fg = bg0, bg = red }),
+    TelescopePromptTitle({ fg = bg0, bg = dark_red }),
 
     TelescopeSelection({ bg = bg3, gui = "bold,italic" }),
     TelescopeSelectionCaret({ fg = fg, bg = bg3 }),
