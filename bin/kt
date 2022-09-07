@@ -5,11 +5,11 @@
 
 set -euo pipefail
 
-sessions_path="$HOME/.dotfiles/config/kitty/sessions"
+sessions_path="$HOME/.config/kitty/sessions"
 
 selected_session=$(fd conf "$sessions_path" |
   sed "s~$sessions_path/~~" |
-  fzf-tmux --cycle --layout=reverse --preview-window="hidden" --prompt 'session> ' |
+  fzf-tmux --cycle --layout=reverse --preview-window="hidden" --prompt ' new or existing session  ' |
   sed "s~^~$sessions_path/~")
 
 if [[ -n $selected_session ]]; then
@@ -17,8 +17,8 @@ if [[ -n $selected_session ]]; then
   # echo "$tab_name found"
   # kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
   echo "Switching to $tab_name session.."
-  kitty --session "$selected_session" @ launch --os-window-title "$tab_name" --title "$tab_name" &
-  # kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
+  # kitty --session "$selected_session" @ launch --os-window-title "$tab_name" --title "$tab_name" &
+  kitty @ focus-tab --match title:"$tab_name" 2>/dev/null || kitty @ new-window --new-tab --tab-title "$tab_name" --cwd "$selected_session"
 fi
 
 # function kt -d "kitty tab from ~/Dev/*"

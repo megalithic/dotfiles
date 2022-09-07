@@ -5,6 +5,7 @@ local fn = vim.fn
 local nil_buf_id = 999999
 local term_buf_id = nil_buf_id
 local term_win_id = nil
+local term_tab_id = nil
 
 local cmd_opts = {
   ["horizontal"] = {
@@ -24,6 +25,10 @@ local cmd_opts = {
     size = 70,
     res = "vertical-resize",
     winc = "L",
+  },
+  ["tab"] = {
+    new = "tabnew",
+    split = "tabnext",
   },
   ["float"] = {
     new = function(size)
@@ -58,7 +63,6 @@ local cmd_opts = {
     end,
     split = function(size, bufnr)
       local parsed_size = (size / 100)
-      -- term_buf_id = api.nvim_create_buf(true, true)
       term_win_id = api.nvim_open_win(bufnr, true, {
         relative = "editor",
         style = "minimal",
@@ -178,7 +182,6 @@ local function create_term(cmd, opts)
         custom_on_exit(jobid, exit_code, event, cmd, winnr, term_buf_id)
       else
         if notifier ~= nil and type(notifier) == "function" then notifier(cmd, exit_code) end
-
         -- test passed/process ended with an "ok" exit code, so let's close it.
         if exit_code == 0 then
           -- TODO: send results to quickfixlist
@@ -195,8 +198,12 @@ local function handle_existing(cmd, opts)
   local on_after_open = opts.on_after_open or nil
   local winnr = opts.winnr
 
-  if cmd.direction == "float" then
+  if opts.direction == "float" then
     cmd.split(size, term_buf_id)
+  elseif opts.direction == "tab" then
+    local c = fmt("%s%s", term_tab_id, cmd.split)
+    api.nvim_command(c)
+    term_win_id = api.nvim_get_current_win()
   else
     local c = fmt(
       "%s %s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)",
@@ -225,8 +232,20 @@ local function handle_new(cmd, opts)
   local on_after_open = opts.on_after_open or nil
   local winnr = opts.winnr
 
-  if cmd.direction == "float" then
+  if opts.direction == "float" then
     cmd.new(size)
+  elseif opts.direction == "tab" then
+    local c = fmt("%s", cmd.new)
+    api.nvim_command(c)
+
+    term_win_id = api.nvim_get_current_win()
+    term_buf_id = api.nvim_get_current_buf()
+    term_tab_id = api.nvim_get_current_tabpage()
+
+    vim.opt_local.relativenumber = false
+    vim.opt_local.number = false
+    vim.opt_local.signcolumn = "no"
+    api.nvim_buf_set_option(term_buf_id, "filetype", "megaterm")
   else
     local c = fmt("%s | wincmd %s | lua vim.api.nvim_win_set_%s(0, %s)", cmd.new, cmd.winc, cmd.dimension, size)
     api.nvim_command(c)
@@ -273,7 +292,7 @@ end
 -- --- @class TermOpts
 -- --- @field cmd string,
 -- --- @field precmd string,
--- --- @field direction "horizontal"|"vertical"|"float",
+-- --- @field direction "horizontal"|"vertical"|"float"|"tab",
 -- --- @field on_after_open function,
 -- --- @field on_exit function,
 -- --- @field winnr number,
@@ -410,6 +429,7 @@ if vim.g.term_plugin then
   nnoremap("<leader>tt", "<cmd>T<cr>", "term")
   nnoremap("<leader>tf", "<cmd>T direction=float<cr>", "term (float)")
   nnoremap("<leader>tv", "<cmd>T direction=vertical<cr>", "term (vertical)")
+  nnoremap("<leader>ttt", "<cmd>T direction=tab<cr>", "term (tab)")
   nnoremap("<leader>tre", "<cmd>TermElixir<cr>", "repl > elixir")
   nnoremap("<leader>trr", "<cmd>TermRuby<cr>", "repl > ruby")
   nnoremap("<leader>trl", "<cmd>TermLua<cr>", "repl > lua")

@@ -31,6 +31,7 @@ local PKGS = {
   "jghauser/fold-cycle.nvim",
   "anuvyklack/hydra.nvim",
   "rcarriga/nvim-notify",
+  "nanozuki/tabby.nvim",
   -- "levouh/tint.nvim",
   ------------------------------------------------------------------------------
   -- (LSP/completion) --
@@ -138,7 +139,7 @@ local PKGS = {
   "mg979/vim-visual-multi",
   "natecraddock/sessions.nvim",
   "natecraddock/workspaces.nvim",
-  "ryansch/habitats.nvim",
+  "megalithic/habitats.nvim",
   -- "mbbill/undotree",
   -- "danymat/neogen",
   -- "smjonas/live-command.nvim",
@@ -310,6 +311,7 @@ function M.config()
   conf("dap", { config = "dap" })
   conf("dapui", { config = "dapui" })
   conf("hydra", { config = "hydra" })
+  conf("tabby", { config = "tabby" })
 
   conf("nvim-web-devicons", {})
   conf("nvim-surround", {

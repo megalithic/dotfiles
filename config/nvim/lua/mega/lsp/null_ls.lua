@@ -1,6 +1,11 @@
 return function(on_attach)
-  local nls = require("null-ls")
-  local b = nls.builtins
+  local ok, nls = pcall(require, "null-ls")
+  if not ok then return end
+
+  local format = nls.builtins.formatting
+  local diag = nls.builtins.diagnostics
+  -- local actions = nls.builtins.code_actions
+  -- local completion = nls.builtins.completion
 
   nls.setup({
     debug = false,
@@ -9,8 +14,8 @@ return function(on_attach)
     autostart = true,
     save_after_format = false,
     sources = {
-      b.formatting.trim_whitespace.with({ filetypes = { "*" } }),
-      b.formatting.prettierd.with({
+      format.trim_whitespace.with({ filetypes = { "*" } }),
+      format.prettierd.with({
         filetypes = {
           "javascript",
           "javascriptreact",
@@ -28,12 +33,12 @@ return function(on_attach)
         },
         condition = function() return mega.executable("prettierd") end,
       }),
-      b.formatting.fixjson.with({ filetypes = { "jsonc", "json" } }),
-      -- b.formatting.isort,
-      b.formatting.cbfmt:with({
+      format.fixjson.with({ filetypes = { "jsonc", "json" } }),
+      -- format.isort,
+      format.cbfmt:with({
         condition = function() return mega.executable("cbfmt") end,
       }),
-      b.formatting.stylua.with({ -- sumneko now formats!
+      format.stylua.with({ -- sumneko now formats!
         condition = function()
           return mega.executable("stylua")
             and not vim.tbl_isempty(vim.fs.find({ ".stylua.toml", "stylua.toml" }, {
@@ -42,13 +47,24 @@ return function(on_attach)
             }))
         end,
       }),
-      b.formatting.isort,
-      b.formatting.black,
-      b.formatting.elm_format,
+      format.isort,
+      format.black.with({
+        extra_args = function(_)
+          return {
+            "--fast",
+            "--quiet",
+            "--target-version",
+            "py310",
+            "-l",
+            vim.opt_local.colorcolumn:get()[1] or "88",
+          }
+        end,
+      }),
+      format.elm_format,
       -- FIXME: doesn't work on heex for some reason
-      -- b.formatting.mix.with({ extra_filetypes = { "heex", "phoenix-html" } }),
-      -- b.formatting.surface.with({ filetypes = { "elixir", "eelixir", "heex", "html.heex", "surface" } }),
-      -- b.formatting.rustywind.with({
+      -- format.mix.with({ extra_filetypes = { "heex", "phoenix-html" } }),
+      -- format.surface.with({ filetypes = { "elixir", "eelixir", "heex", "html.heex", "surface" } }),
+      -- format.rustywind.with({
       --   filetypes = {
       --     "javascript",
       --     "javascriptreact",
@@ -61,15 +77,18 @@ return function(on_attach)
       --     "surface",
       --   },
       -- }),
-      b.formatting.shfmt.with({
+      format.shfmt.with({
         extra_args = { "-i", "2", "-ci" }, -- suggested: { "-i", "2", "-ci" } or { "-ci", "-s", "-bn", "-i", "2" }
         -- extra_args = { "-ci", "-s", "-bn", "-i", "2" }, -- suggested: { "-i", "2", "-ci" }
         filetypes = { "sh", "bash" },
       }),
-      b.diagnostics.shellcheck.with({
+      diag.flake8.with({
+        extra_args = function(_) return { "--max-line-lenth", vim.opt_local.colorcolumn:get()[1] or "88" } end,
+      }),
+      diag.shellcheck.with({
         filetypes = { "sh", "bash" },
       }),
-      b.diagnostics.zsh.with({
+      diag.zsh.with({
         filetypes = { "zsh" },
       }),
       -- b.diagnostics.credo,

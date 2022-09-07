@@ -431,19 +431,27 @@ nnoremap =- V`]=
 ]])
 
 nnoremap("<leader>w", function()
-  vim.cmd("write")
   do
-    local ok, n = require("notify")
-    if ok and n then n.dismiss() end
+    local ok, n = pcall(require, "notify")
+    if ok then n.dismiss() end
   end
+  do
+    local ok, mj = pcall(require, "mini.jump")
+    if ok then mj.stop_jumping() end
+  end
+  vim.api.nvim_command("write")
 end, "write buffer and stuff")
 
 nnoremap("<leader>W", function()
-  vim.cmd("write !sudo -S tee > /dev/null %")
   do
-    local ok, n = require("notify")
-    if ok and n then n.dismiss() end
+    local ok, n = pcall(require, "notify")
+    if ok then n.dismiss() end
   end
+  do
+    local ok, mj = pcall(require, "mini.jump")
+    if ok then mj.stop_jumping() end
+  end
+  vim.api.nvim_command("write !sudo -S tee > /dev/null %")
 end, "sudo write buffer and stuff")
 
 nnoremap("<leader>q", function() vim.cmd("q") end, "quit")
@@ -484,8 +492,8 @@ nnoremap([[<Esc>]], function()
   end
 
   do
-    local ok, n = require("notify")
-    if ok and n then n.dismiss() end
+    local ok, n = pcall(require, "notify")
+    if ok then n.dismiss() end
   end
 end, { silent = true, desc = "Clear UI" })
 

@@ -5,7 +5,16 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generic, Iterable, Iterator, List, Optional, Sequence, TypeVar, Union
+from typing import (
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
 from kittens.tui.handler import Handler, result_handler
 from kittens.tui.loop import Loop, debug
@@ -69,7 +78,9 @@ def handle_result(
 ) -> None:
     # tuple containing our selected session name and path
     session_name, session_path = session_data
-    startup_session = next(create_sessions(get_options(), default_session=session_path))
+    startup_session = next(
+        create_sessions(get_options(), default_session=session_path)
+    )
 
     # close current os_window; note: we're ok doing this here as we use tmux for longer running processes.
     boss.close_os_window()
