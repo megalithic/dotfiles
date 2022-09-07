@@ -58,7 +58,7 @@ function obj:start(opts)
         hs.spotify.pause()
         L.req("lib.menubar.ptt").setState("push-to-mute")
 
-        hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. (defaultKittyFont + 8.0), true)
+        hs.execute("kitty @ --to tcp:localhost:45876 set-font-size " .. (defaultKittyFont + 8.0), true)
       end)
     end
   end
@@ -82,7 +82,7 @@ function obj:stop(opts)
     local keycastr = hs.application.get("KeyCastr")
     if keycastr ~= nil then keycastr:kill() end
 
-    hs.execute("kitty @ --to unix:/tmp/mykitty set-font-size " .. defaultKittyFont, true)
+    hs.execute("kitty @ --to tcp:localhost:45876 set-font-size " .. defaultKittyFont, true)
   end
 
   return self

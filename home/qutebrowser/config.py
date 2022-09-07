@@ -52,7 +52,7 @@ config.source("themes/megaforest.py")
 # --> SETTINGS:
 editor = [
     "kitty",
-    "@ --to unix:/tmp/mykitty --type=tab launch nvim",
+    "@ --to tcp:localhost:45876 --type=tab launch nvim",
     "-f {file}",
     # "tmux attach -t mega;",
     # "new-window nvim",
@@ -60,9 +60,7 @@ editor = [
 ]
 
 commands = {
-    # "edit": "kitty @ --to unix:/tmp/mykitty --type=tab launch nvim -f {file}".split(),
-    "edit": "kitty @ --to unix:/tmp/mykitty launch --type=tab nvim -f {file}".split()
-    # "edit": "kitty @ --to unix:/tmp/mykitty launch --type=overlay tmux attach -t mega ; new-window nvim -f {file}".split()
+    "edit": "kitty @ --to tcp:localhost:45876 launch --type=tab nvim -f {file}".split()
     # "edit": editor
     # [which("qutebrowser-edit"), '-l{line}', '-c{column}', '-f{file}']
     # 'pick_dir':   'foot -T float ranger --choosedir={}'.split(),
