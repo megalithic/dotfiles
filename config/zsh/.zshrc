@@ -27,6 +27,7 @@ zsh_add_file "lib/completion.zsh"
 # -- prompt
 autoload -U promptinit; promptinit # Enable prompt themes
 prompt megalithic                  # Set prompt
+# eval "$(starship init zsh)"
 
 # -- scripts/libs/etc
 for file in $ZLIB/{keybindings,opts,aliases,funcs,ssh,tmux,kitty,gpg}.zsh; do

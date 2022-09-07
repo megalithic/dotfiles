@@ -9,7 +9,7 @@ $hostname)\
 $shlvl\
 $directory\
 $vcsh\
-$git_branch\
+($git_branch)\
 $git_commit\
 $git_state\
 $git_metrics\
@@ -75,8 +75,8 @@ when = "sudo -vn &>/dev/null"
 
 [git_branch]
 symbol = "[](bold fg:#626262) " # 
-format = "[$symbol$branch]($style) "
-style = "bold fg:#7c8377" # 245
+format = "[$branch]($style) "
+style = "italic fg:#7c8377" # 245
 
 [git_status]
 # # REF:
