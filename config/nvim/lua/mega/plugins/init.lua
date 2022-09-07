@@ -705,14 +705,13 @@ function M.config()
   })
 
   conf("auto-session", function()
-    local fn = vim.fn
-    local fmt = string.format
-    local data = fn.stdpath("data")
+    fmt = string.format
+    local data = vim.fn.stdpath("data")
     require("auto-session").setup({
       log_level = "error",
       auto_session_root_dir = fmt("%s/session/auto/", data),
       -- ignore project/code directories as I choose those myself
-      auto_restore_enabled = not vim.startswith(fn.getcwd(), vim.env.PROJECTS_DIR),
+      auto_restore_enabled = not vim.startswith(vim.fn.getcwd(), vim.env.PROJECTS_DIR or "~/code"),
       auto_session_suppress_dirs = {
         vim.env.HOME,
         vim.env.PROJECTS_DIR,

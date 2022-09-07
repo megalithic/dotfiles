@@ -13,5 +13,8 @@ vim.cmd([[
   autocmd VimEnter * normal G
 ]])
 
+-- disable auto-session things
+vim.g.auto_session_enabled = false
+
 nnoremap("q", [[:q!<cr>]], { buffer = 0, label = "quit kittybuf" })
 nnoremap(",q", [[:q!<cr>]], { buffer = 0, label = "quit kittybuf" })
