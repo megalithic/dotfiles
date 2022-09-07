@@ -6,7 +6,7 @@ local api = vim.api
 
 local M = {
   -- ft's that i have explicit settings for; so let's just ignore all of this..
-  column_ignore = { "gitcommit" },
+  column_ignore = { "gitcommit", "NeogitCommitMessage" },
   -- ft's that need to have their colorcolumn cleared
   column_clear = {
     "startify",
@@ -23,6 +23,9 @@ local M = {
     "megaterm",
     "toggleterm",
     "neo-tree",
+    "NeogitCommitSelectView",
+    "DiffviewFileHistory",
+    "NeogitStatus",
   },
 }
 

@@ -29,6 +29,7 @@ vim.g.number_filetype_exclusions = {
   "dirbuf",
   "org",
   "Trouble",
+  "NeogitCommitMessage",
 }
 
 vim.g.number_buftype_exclusions = {

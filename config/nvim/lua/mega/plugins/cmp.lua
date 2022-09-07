@@ -181,7 +181,7 @@ return function()
   })
 
   -- FT specific cmp configs
-  cmp.setup.filetype("gitcommit", {
+  cmp.setup.filetype({ "gitcommit", "NeogitCommitMessage" }, {
     sources = {
       { name = "spell" },
       { name = "path" },

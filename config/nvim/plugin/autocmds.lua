@@ -99,7 +99,16 @@ do
 end
 
 do
-  local save_excluded = { "lua.luapad", "gitcommit", "NeogitCommitMessage", "dirbuf" }
+  local save_excluded = {
+    "lua.luapad",
+    "gitcommit",
+    "NeogitCommitMessage",
+    "dirbuf",
+    "neo-tree",
+    "neo-tree-popup",
+    "megaterm",
+    "kittybuf",
+  }
   local function can_save()
     return mega.empty(fn.win_gettype())
       and mega.empty(vim.bo.buftype)
@@ -144,12 +153,25 @@ do
     },
     {
       event = { "BufLeave" },
+      pattern = { "*" },
       command = function()
-        if can_save() then vim.cmd("silent! update") end
+        if can_save() then vim.cmd.update({ mods = { silent = true } }) end
       end,
     },
   })
 end
+
+-- @trial this (or move it to `term.lua`?)
+augroup("Terminal", {
+  {
+    event = { "TermClose" },
+    pattern = { "*" },
+    command = function()
+      --- automatically close a terminal if the job was successful
+      if not vim.v.event.status == 0 then vim.cmd.bdelete({ fn.expand("<abuf>"), bang = true }) end
+    end,
+  },
+})
 
 augroup("Kitty", {
   {

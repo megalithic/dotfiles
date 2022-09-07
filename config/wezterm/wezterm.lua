@@ -555,6 +555,10 @@ local windows = {
     hue = 1.0,
     saturation = 1.0,
   },
+  -- window_frame = {
+  --   font = wezterm.font({ family = "JetBrainsMono NF" }),
+  --   font_size = 9,
+  -- },
 }
 
 --- [ PANES ] ------------------------------------------------------------------

@@ -20,6 +20,7 @@ local M = {
     "vimwiki",
     "vim-plug",
     "gitcommit",
+    "NeogitCommitMessage",
     "toggleterm",
     "megaterm",
     "fugitive",
@@ -206,7 +207,7 @@ mega.augroup("ToggleCursorLine", {
     command = function() enable_cursorline(true) end,
   },
   {
-    event = { "InsertLeave" },
+    event = { "InsertLeave", "FocusLost" },
     command = function() enable_cursorline(false) end,
   },
   {
