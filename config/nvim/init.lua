@@ -1,8 +1,8 @@
 -- [ speed ] -------------------------------------------------------------------
 
 vim.api.nvim_create_augroup("vimrc", {})
-local ok, impatient = pcall(require, "impatient")
-if ok then impatient.enable_profile() end
+local impatient_ok, impatient = pcall(require, "impatient")
+if impatient_ok then impatient.enable_profile() end
 
 -- [ settings ] ----------------------------------------------------------------
 
@@ -10,8 +10,8 @@ vim.g.term_plugin = true
 
 -- [ loaders ] -----------------------------------------------------------------
 
-local ok, reload = pcall(require, "plenary.reload")
-RELOAD = ok and reload.reload_module or function(...) return ... end
+local reload_ok, reload = pcall(require, "plenary.reload")
+RELOAD = reload_ok and reload.reload_module or function(...) return ... end
 function R(name)
   RELOAD(name)
   return require(name)

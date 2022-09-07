@@ -58,8 +58,6 @@ local PKGS = {
   "ray-x/lsp_signature.nvim",
   -- "Issafalcon/lsp-overloads.nvim",
   "lewis6991/hover.nvim",
-  -- "j-hui/fidget.nvim",
-  -- "ZenLian/fidget.nvim",
   "nvim-lua/lsp_extensions.nvim",
   "jose-elias-alvarez/nvim-lsp-ts-utils",
   "jose-elias-alvarez/null-ls.nvim",
@@ -135,8 +133,11 @@ local PKGS = {
   "editorconfig/editorconfig-vim",
   { "zenbro/mirror.vim", opt = true },
   "akinsho/toggleterm.nvim",
-  "natecraddock/sessions.nvim",
-  "natecraddock/workspaces.nvim",
+  "rmagatti/auto-session",
+  "ahmedkhalf/project.nvim",
+  "mg979/vim-visual-multi",
+  -- "natecraddock/sessions.nvim",
+  -- "natecraddock/workspaces.nvim",
   -- "mbbill/undotree",
   -- "danymat/neogen",
   -- "smjonas/live-command.nvim",
@@ -685,6 +686,62 @@ function M.config()
   })
 
   conf("autolist", {})
+
+  -- conf("vim-visual-multi", function()
+  --   vim.g.VM_highlight_matches = "underline"
+  --   vim.g.VM_theme = "codedark"
+  --   vim.g.VM_maps = {
+  --     ["Find Under"] = "<C-e>",
+  --     ["Find Subword Under"] = "<C-e>",
+  --     ["Select Cursor Down"] = "\\j",
+  --     ["Select Cursor Up"] = "\\k",
+  --   }
+  -- end)
+
+  conf("project", {
+    detection_methods = { "pattern", "lsp" },
+    ignore_lsp = { "null-ls" },
+    patterns = { ".git" },
+  })
+
+  conf("auto-session", function()
+    local fn = vim.fn
+    local fmt = string.format
+    local data = fn.stdpath("data")
+    require("auto-session").setup({
+      log_level = "error",
+      auto_session_root_dir = fmt("%s/session/auto/", data),
+      -- ignore project/code directories as I choose those myself
+      auto_restore_enabled = not vim.startswith(fn.getcwd(), vim.env.PROJECTS_DIR),
+      auto_session_suppress_dirs = {
+        vim.env.HOME,
+        vim.env.PROJECTS_DIR,
+        fmt("%s/Desktop", vim.env.HOME),
+        fmt("%s/site/pack/packer/opt/*", data),
+        fmt("%s/site/pack/packer/start/*", data),
+        fmt("%s/site/pack/paqs/opt/*", data),
+        fmt("%s/site/pack/paqs/start/*", data),
+      },
+      auto_session_use_git_branch = true, -- FIXME: potentially causes inconsistent results
+    })
+  end)
+
+  -- conf("sessions", {
+  --   events = { "WinEnter" },
+  --   session_filepath = vim.fn.stdpath("data") .. "/sessions/session",
+  -- })
+
+  -- conf("workspaces", {
+  --   hooks = {
+  --     open_pre = {
+  --       "SessionsStop",
+  --       "silent %bdelete!",
+  --     },
+  --     open = {
+  --       function() require("sessions").load(nil, { silent = true }) end,
+  --     },
+  --   },
+  -- })
 end
 
 return M

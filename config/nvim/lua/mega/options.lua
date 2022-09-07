@@ -19,16 +19,16 @@ vim.opt.shortmess = {
 -----------------------------------------------------------------------------//
 -- Timings {{{1
 -----------------------------------------------------------------------------//
-vim.opt.updatetime = 300
-vim.opt.timeout = true
-vim.opt.timeoutlen = 500
-vim.opt.ttimeoutlen = 10
+vim.o.updatetime = 300
+vim.o.timeout = true
+vim.o.timeoutlen = 500
+vim.o.ttimeoutlen = 10
 -----------------------------------------------------------------------------//
 -- Window splitting and buffers {{{1
 -----------------------------------------------------------------------------//
-vim.opt.splitbelow = true
-vim.opt.splitright = true
-vim.opt.eadirection = "hor"
+vim.o.splitbelow = true
+vim.o.splitright = true
+vim.o.eadirection = "hor"
 -- exclude usetab as we do not want to jump to buffers in already open tabs
 -- do not use split or vsplit to ensure we don't open any new windows
 vim.o.switchbuf = "useopen,uselast"
@@ -118,19 +118,19 @@ vim.opt.formatoptions = vim.opt.formatoptions
 -----------------------------------------------------------------------------//
 -- Folds {{{1
 -----------------------------------------------------------------------------//
-vim.opt.foldenable = false -- enable folding
-vim.opt.foldcolumn = "0" -- presently disabled until we can use foldcolumndigits
+vim.o.foldenable = false -- enable folding
+vim.o.foldcolumn = "0" -- presently disabled until we can use foldcolumndigits
 -- vim.wo.foldcolumndigits = false
 -- vim.opt.foldtext = "v:lua.mega.folds()"
 vim.opt.foldopen = vim.opt.foldopen + "search"
-vim.opt.foldlevel = 99 -- feel free to decrease the value
-vim.opt.foldlevelstart = 10 -- open most folds by default
-vim.opt.foldnestmax = 10 -- 10 nested fold max
+vim.o.foldlevel = 99 -- feel free to decrease the value
+vim.o.foldlevelstart = 10 -- open most folds by default
+vim.o.foldnestmax = 10 -- 10 nested fold max
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-vim.opt.foldmethod = "expr"
+vim.o.foldmethod = "expr"
 -- vim.wo.foldcolumndigits = false -- if disabled, 'foldsep' from 'fillchars' used.
 -- or --
-vim.opt.foldmethod = "indent" -- fold based on indent level
+vim.o.foldmethod = "indent" -- fold based on indent level
 -----------------------------------------------------------------------------//
 -- Quickfix {{{1
 -----------------------------------------------------------------------------//
@@ -150,9 +150,9 @@ end
 -----------------------------------------------------------------------------//
 -- Wild and file globbing stuff in command mode {{{1
 -----------------------------------------------------------------------------//
-vim.opt.wildcharm = fn.char2nr(mega.replace_termcodes([[<Tab>]]))
-vim.opt.wildmode = "longest:full,full" -- Shows a menu bar as opposed to an enormous list
-vim.opt.wildignorecase = true -- Ignore case when completing file names and directories
+vim.o.wildcharm = fn.char2nr(mega.replace_termcodes([[<Tab>]]))
+vim.o.wildmode = "longest:full,full" -- Shows a menu bar as opposed to an enormous list
+vim.o.wildignorecase = true -- Ignore case when completing file names and directories
 -- Binary
 vim.opt.wildignore = {
   "*.aux",
@@ -180,29 +180,29 @@ vim.opt.wildignore = {
   ".DS_Store",
   "tags.lock",
 }
-vim.opt.wildoptions = "pum"
-vim.opt.pumblend = 3 -- Make popup window translucent
-vim.opt.pumheight = 20 -- completion menu height
+vim.o.wildoptions = "pum"
+vim.o.pumblend = 3 -- Make popup window translucent
+vim.o.pumheight = 20 -- completion menu height
 -----------------------------------------------------------------------------//
 -- Display {{{1
 -----------------------------------------------------------------------------//
-vim.opt.conceallevel = 2
-vim.opt.wrap = true
--- vim.opt.wrapmargin = 2
-vim.opt.textwidth = 79
-vim.opt.textwidth = 0 --  0 disables
-vim.opt.linebreak = true -- lines wrap at words rather than random characters
-vim.opt.synmaxcol = 1024 -- don't syntax highlight long lines
+vim.o.conceallevel = 2
+vim.o.wrap = true
+-- vim.o.wrapmargin = 2
+vim.o.textwidth = 79
+vim.o.textwidth = 0 --  0 disables
+vim.o.linebreak = true -- lines wrap at words rather than random characters
+vim.o.synmaxcol = 1024 -- don't syntax highlight long lines
 -- FIXME: use 'auto:2-4' when the ability to set only a single lsp sign is restored
 --@see: https://github.com/neovim/neovim/issues?q=set_signs
--- vim.opt.signcolumn = "auto:2-5"
-vim.opt.signcolumn = "auto:3-9"
-vim.opt.ruler = false
-vim.opt.cmdheight = 1 -- Set command line height to two lines
-vim.opt.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
-vim.opt.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
-vim.opt.lazyredraw = true -- should make scrolling faster
-vim.opt.ttyfast = true -- more faster scrolling (thanks @morganick!)
+-- vim.o.signcolumn = "auto:2-5"
+vim.o.signcolumn = "auto:3-9"
+vim.o.ruler = false
+vim.o.cmdheight = 1 -- Set command line height to two lines
+vim.o.showbreak = [[↪ ]] -- Options include -> '…', '↳ ', '→','↪ '
+vim.o.showbreak = string.rep(" ", 3) -- Make it so that long lines wrap smartly
+vim.o.lazyredraw = true -- should make scrolling faster
+vim.o.ttyfast = true -- more faster scrolling (thanks @morganick!)
 --- This is used to handle markdown code blocks where the language might
 --- be set to a value that isn't equivalent to a vim filetype
 vim.g.markdown_fenced_languages = {
@@ -223,7 +223,7 @@ vim.g.markdown_fenced_languages = {
   "yaml",
   "json",
 }
-vim.opt.winminwidth = 20
+vim.o.winminwidth = 20
 -----------------------------------------------------------------------------//
 -- Jumplist
 -----------------------------------------------------------------------------//
@@ -231,7 +231,7 @@ vim.opt.jumpoptions = { "stack", "view" } -- make the jumplist behave like a bro
 -----------------------------------------------------------------------------//
 -- List chars {{{1
 -----------------------------------------------------------------------------//
-vim.opt.list = true -- invisible chars
+vim.o.list = true -- invisible chars
 vim.opt.listchars = {
   eol = nil,
   tab = "│ ",
@@ -242,25 +242,25 @@ vim.opt.listchars = {
 -----------------------------------------------------------------------------//
 -- Indentation
 -----------------------------------------------------------------------------//
-vim.opt.breakindentopt = "sbr"
-vim.opt.autoindent = true
-vim.opt.shiftround = true
-vim.opt.expandtab = true
-vim.opt.shiftwidth = 2
+vim.o.breakindentopt = "sbr"
+vim.o.autoindent = true
+vim.o.shiftround = true
+vim.o.expandtab = true
+vim.o.shiftwidth = 2
 -----------------------------------------------------------------------------//
 -- vim.o.debug = "msg"
-vim.opt.gdefault = true
-vim.opt.confirm = true -- make vim prompt me to save before doing destructive things
+vim.o.gdefault = true
+vim.o.confirm = true -- make vim prompt me to save before doing destructive things
 vim.opt.completeopt = { "menuone", "noselect" }
-vim.opt.hlsearch = true
-vim.opt.autowriteall = true -- will automatically :write before running commands and changing files
+vim.o.hlsearch = true
+vim.o.autowriteall = true -- will automatically :write before running commands and changing files
 vim.opt.clipboard = { "unnamedplus" }
 
 -- statusline:
 -- 2 = statusline in each window;
 -- 3 = global statusline
-vim.opt.laststatus = 2
-vim.opt.statusline = ""
+vim.o.laststatus = 2
+vim.o.statusline = ""
 -- fallback in the event our statusline plugins fail to load
 -- vim.opt.statusline = table.concat({
 --   "%2{toupper(mode())} ",
@@ -280,7 +280,7 @@ vim.opt.statusline = ""
 -- emoji is true by default but makes (n)vim treat all emoji as double width
 -- which breaks rendering so we turn this off.
 -- CREDIT: https://www.youtube.com/watch?v=F91VWOelFNE
-vim.opt.emoji = false
+vim.o.emoji = false
 -----------------------------------------------------------------------------//
 -- Cursor {{{1
 -----------------------------------------------------------------------------//
@@ -293,30 +293,30 @@ vim.opt.guicursor = {
 -- ]])
 
 -- NOTE: plugin/cursorline.lua has more...
-vim.opt.cursorline = true -- Show a line where the current cursor is
-vim.opt.cursorlineopt = "number" -- optionally -> "screenline,number,both"
+vim.o.cursorline = true -- Show a line where the current cursor is
+vim.o.cursorlineopt = "number" -- optionally -> "screenline,number,both"
 -----------------------------------------------------------------------------//
 -- Utilities {{{1
 -----------------------------------------------------------------------------//
-vim.opt.showmode = false -- show current mode (insert, etc) under the cmdline
-vim.opt.showcmd = true -- show current mode (insert, etc) under the cmdline
+vim.o.showmode = false -- show current mode (insert, etc) under the cmdline
+vim.o.showcmd = true -- show current mode (insert, etc) under the cmdline
 -- NOTE: Don't remember
 -- * help files since that will error if they are from a lazy loaded plugin
 -- * folds since they are created dynamically and might be missing on startup
 vim.opt.sessionoptions = {
   "blank",
-  "globals",
   "buffers",
   "curdir",
   "folds",
+  "globals",
   -- "help",
+  -- "tabpages",
+  -- "terminal"
   "winpos",
   "winsize",
-  -- "tabpages",
 }
--- vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize"
 vim.opt.viewoptions = { "cursor", "folds" } -- save/restore just these (with `:{mk,load}view`)
-vim.opt.virtualedit = "block" -- allow cursor to move where there is no text in visual block mode
+vim.o.virtualedit = "block" -- allow cursor to move where there is no text in visual block mode
 -----------------------------------------------------------------------------//
 -- ShaDa (viminfo for vim): session data history
 -----------------------------------------------------------------------------//
@@ -342,48 +342,50 @@ vim.opt.virtualedit = "block" -- allow cursor to move where there is no text in 
   :wshada   - write the shada file (:wrviminfo for vim)
 ]]
 -- vim.opt.shada = [[!,'0,f0,<50,s10,h]]
-vim.opt.shada = [[!,'100,<0,s100,h]]
+vim.o.shada = [[!,'100,<0,s100,h]]
 -------------------------------------------------------------------------------
 -- BACKUP AND SWAPS {{{
 -------------------------------------------------------------------------------
-vim.opt.backup = false
-vim.opt.writebackup = false
+vim.o.backup = false
+vim.o.writebackup = false
 if fn.isdirectory(vim.o.undodir) == 0 then fn.mkdir(vim.o.undodir, "p") end
-vim.opt.undofile = true
-vim.opt.swapfile = false
-vim.opt.directory = fn.stdpath("state") .. "/swap//"
+vim.o.undofile = true
+vim.o.swapfile = false
+vim.o.directory = fn.stdpath("state") .. "/swap//"
 if fn.isdirectory(vim.o.directory) == 0 then fn.mkdir(vim.o.directory, "p") end
 --}}}
 -----------------------------------------------------------------------------//
 -- Match and search {{{1
 -----------------------------------------------------------------------------//
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
-vim.opt.wrapscan = true -- Searches wrap around the end of the file
-vim.opt.scrolloff = 9 -- for typerwritering (HT: @evantravers), see https://randomdeterminism.wordpress.com/2011/08/15/typewriter-scroll-mode-in-vim/
-vim.opt.sidescrolloff = 10
-vim.opt.sidescroll = 1
+vim.o.ignorecase = true
+vim.o.smartcase = true
+vim.o.wrapscan = true -- Searches wrap around the end of the file
+vim.o.scrolloff = 9 -- for typerwritering (HT: @evantravers), see https://randomdeterminism.wordpress.com/2011/08/15/typewriter-scroll-mode-in-vim/
+vim.o.sidescrolloff = 10
+vim.o.sidescroll = 1
 -----------------------------------------------------------------------------//
 -- Spelling {{{1
 -----------------------------------------------------------------------------//
 vim.opt.spellsuggest:prepend({ 12 })
-vim.opt.spelloptions = "camel"
-vim.opt.spellcapcheck = "" -- don't check for capital letters at start of sentence
-vim.opt.dictionary = "/usr/share/dict/words"
+vim.o.spelloptions = "camel"
+vim.o.spellcapcheck = "" -- don't check for capital letters at start of sentence
+vim.o.dictionary = "/usr/share/dict/words"
 
-vim.opt.spellfile = fn.expand("$DOTS/config/nvim/spell/en.utf-8.add")
-vim.opt.spelllang = "en"
+vim.o.spellfile = fn.expand("$DOTS/config/nvim/spell/en.utf-8.add")
+vim.o.spelllang = "en"
 vim.opt.fileformats = { "unix", "mac", "dos" }
 -----------------------------------------------------------------------------//
 -- Mouse {{{1
 -----------------------------------------------------------------------------//
--- vim.opt.mouse = "a"
-vim.opt.mouse = "nvi"
-vim.opt.mousefocus = true
+-- vim.o.mouse = "a"
+-- vim.o.mouse = "nvi"
+vim.o.mousefocus = true
+vim.o.mousemoveevent = true
+vim.opt.mousescroll = { "ver:1", "hor:6" }
 -----------------------------------------------------------------------------//
 -- these only read ".vim" files
-vim.opt.secure = true -- Disable autocmd etc for project local vimrc files.
-vim.opt.exrc = true -- Allow project local vimrc files example .nvimrc see :h exrc
+vim.o.secure = true -- Disable autocmd etc for project local vimrc files.
+vim.o.exrc = true -- Allow project local vimrc files example .nvimrc see :h exrc
 -----------------------------------------------------------------------------//
 -- Git editor {{{1
 -----------------------------------------------------------------------------//
@@ -469,7 +471,7 @@ vim.g.registers_show_empty_registers = 0 -- "1 by default, an additional line wi
 -----------------------------------------------------------------------------//
 -- GUI {{{1
 -----------------------------------------------------------------------------//
-vim.opt.guifont = "JetBrains Mono:h12"
+vim.o.guifont = "JetBrains Mono:h12"
 -----------------------------------------------------------------------------//
 -- Abbreviations/Cabbreviations {{{1
 -----------------------------------------------------------------------------//
@@ -478,7 +480,7 @@ vim.cmd([[cabbrev wq execute "lua vim.lsp.buf.formatting_sync()" <bar> wq]])
 
 -- [ colorscheme ] -------------------------------------------------------------
 do
-  vim.opt.termguicolors = true
+  vim.o.termguicolors = true
   pcall(vim.cmd, fmt("colorscheme %s", vim.g.colorscheme))
 
   -- local ok, msg = pcall(vim.cmd.colorscheme, vim.g.colorscheme)
